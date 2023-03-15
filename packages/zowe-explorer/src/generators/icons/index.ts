@@ -69,6 +69,7 @@ const items = [
     require("./items/home"),
     require("./items/filterFolder"),
     require("./items/filterFolderOpen"),
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
 ].map((item) => item.default) as IIconItem[];
 
 export function getIconById(id: IconId): IIconItem {

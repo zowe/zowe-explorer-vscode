@@ -123,7 +123,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         }
 
         // push nodes to an object with property names to avoid duplicates
-        const elementChildren = {};
+        const elementChildren: { [k: string]: ZoweDatasetNode } = {};
         for (const response of responses) {
             // Throws reject if the Zowe command does not throw an error but does not succeed
             if (!response.success) {
@@ -234,11 +234,11 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     null,
                     globals.INFORMATION_CONTEXT
                 ),
-            ]
+            ];
         } else {
             this.children = Object.keys(elementChildren)
                 .sort()
-                .map((labels) => elementChildren[labels])
+                .map((labels) => elementChildren[labels]);
         }
 
         return this.children;

@@ -160,7 +160,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             syncSessionNode(Profiles.getInstance())((profileValue) => ZoweExplorerApiRegister.getUssApi(profileValue).getSession())(sessNode);
         }
         // push nodes to an object with property names to avoid duplicates
-        const elementChildren = {};
+        const elementChildren: { [k: string]: IZoweUSSTreeNode } = {};
         responses.forEach((response) => {
             // Throws reject if the Zowe command does not throw an error but does not succeed
             if (!response.success) {
@@ -226,9 +226,10 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         if (contextually.isSession(this)) {
             this.dirty = false;
         }
-        return (this.children = Object.keys(elementChildren)
+        this.children = Object.keys(elementChildren)
             .sort()
-            .map((labels) => elementChildren[labels]));
+            .map((labels) => elementChildren[labels]);
+        return this.children;
     }
 
     public setBinary(binary: boolean): void {

@@ -135,14 +135,14 @@ export class Profiles extends ProfilesCache {
     public async getProfileSetting(theProfile: zowe.imperative.IProfileLoaded): Promise<IProfileValidation> {
         let profileStatus: IProfileValidation;
         let found: boolean = false;
-        this.profilesValidationSetting.filter((instance) => {
+        this.profilesValidationSetting.forEach((instance) => {
             if (instance.name === theProfile.name && instance.setting === false) {
                 profileStatus = {
                     status: "unverified",
                     name: instance.name,
                 };
                 if (this.profilesForValidation.length > 0) {
-                    this.profilesForValidation.filter((profile) => {
+                    this.profilesForValidation.forEach((profile) => {
                         if (profile.name === theProfile.name && profile.status === "unverified") {
                             found = true;
                         }
@@ -210,7 +210,7 @@ export class Profiles extends ProfilesCache {
         let found: boolean = false;
         let profileSetting: IValidationSetting;
         if (this.profilesValidationSetting.length > 0) {
-            this.profilesValidationSetting.filter((instance) => {
+            this.profilesValidationSetting.forEach((instance) => {
                 if (instance.name === theProfile.name && instance.setting === validationSetting) {
                     found = true;
                     profileSetting = {
@@ -278,6 +278,8 @@ export class Profiles extends ProfilesCache {
                                 return jesProfileTypes.includes(profile.type);
                             }
                         }
+
+                        return false;
                     })
                     .filter(
                         (profileName) =>
@@ -425,7 +427,8 @@ export class Profiles extends ProfilesCache {
             return;
         }
         const editSession = this.loadNamedProfile(profileLoaded.name, profileLoaded.type).profile;
-        const editURL = editSession.host + ":" + editSession.port;
+        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+        const editURL = `${editSession.host}:${editSession.port}`;
         const editUser = editSession.user;
         const editPass = editSession.password;
         const editrej = editSession.rejectUnauthorized;
@@ -438,7 +441,9 @@ export class Profiles extends ProfilesCache {
         const schema: {} = this.getSchema(profileLoaded.type);
         const schemaArray = Object.keys(schema);
 
-        const updSchemaValues: any = {};
+        const updSchemaValues: {
+            [k: string]: any;
+        } = {};
         updSchemaValues.name = profileName;
 
         // Go through array of schema for input values
@@ -496,10 +501,10 @@ export class Profiles extends ProfilesCache {
                     break;
                 case "tokenValue":
                     break;
-                default:
+                default: {
                     const response = this.checkType(schema[value].type);
                     switch (response) {
-                        case "number":
+                        case "number": {
                             const updValue = await Gui.showInputBox(this.optionsValue(value, schema, editSession[value]));
                             if (!Number.isNaN(Number(updValue))) {
                                 updSchemaValues[value] = Number(updValue);
@@ -517,16 +522,17 @@ export class Profiles extends ProfilesCache {
                                 }
                             }
                             break;
-                        case "boolean":
-                            let updIsTrue: boolean;
-                            updIsTrue = await this.boolInfo(value, schema);
+                        }
+                        case "boolean": {
+                            const updIsTrue = await this.boolInfo(value, schema);
                             if (updIsTrue === undefined) {
                                 Gui.showMessage(localize("editConnection.booleanValue", "Operation Cancelled"));
                                 return undefined;
                             }
                             updSchemaValues[value] = updIsTrue;
                             break;
-                        default:
+                        }
+                        default: {
                             const updDefValue = await Gui.showInputBox(this.optionsValue(value, schema, editSession[value]));
                             if (updDefValue === undefined) {
                                 Gui.showMessage(localize("editConnection.default", "Operation Cancelled"));
@@ -537,12 +543,14 @@ export class Profiles extends ProfilesCache {
                             }
                             updSchemaValues[value] = updDefValue;
                             break;
+                        }
                     }
+                }
             }
         }
 
         try {
-            const updSession = await zowe.ZosmfSession.createSessCfgFromArgs(updSchemaValues);
+            const updSession = await zowe.ZosmfSession.createSessCfgFromArgs(updSchemaValues as zowe.imperative.ICommandArguments);
             updSchemaValues.base64EncodedAuth = updSession.base64EncodedAuth;
             await this.updateProfile({
                 profile: updSchemaValues,
@@ -771,11 +779,11 @@ export class Profiles extends ProfilesCache {
                     break;
                 case "tokenValue":
                     break;
-                default:
+                default: {
                     let options: vscode.InputBoxOptions;
                     const response = this.checkType(schema[value].type);
                     switch (response) {
-                        case "number":
+                        case "number": {
                             options = this.optionsValue(value, schema);
                             const enteredValue = Number(await Gui.showInputBox(options));
                             if (!Number.isNaN(Number(enteredValue))) {
@@ -792,16 +800,17 @@ export class Profiles extends ProfilesCache {
                                 }
                             }
                             break;
-                        case "boolean":
-                            let isTrue: boolean;
-                            isTrue = await this.boolInfo(value, schema);
+                        }
+                        case "boolean": {
+                            const isTrue = await this.boolInfo(value, schema);
                             if (isTrue === undefined) {
                                 Gui.showMessage(localize("createNewConnection.booleanValue", "Operation Cancelled"));
                                 return undefined;
                             }
                             schemaValues[value] = isTrue;
                             break;
-                        default:
+                        }
+                        default: {
                             options = this.optionsValue(value, schema);
                             const defValue = await Gui.showInputBox(options);
                             if (defValue === undefined) {
@@ -814,7 +823,9 @@ export class Profiles extends ProfilesCache {
                                 schemaValues[value] = defValue;
                             }
                             break;
+                        }
                     }
+                }
             }
         }
 
@@ -905,7 +916,6 @@ export class Profiles extends ProfilesCache {
         jobsProvider: IZoweTree<IZoweJobTreeNode>,
         node?: IZoweNodeType
     ): Promise<void> {
-        let deleteLabel: string;
         let deletedProfile: zowe.imperative.IProfileLoaded;
         if (!node) {
             deletedProfile = await this.getDeleteProfile();
@@ -915,7 +925,8 @@ export class Profiles extends ProfilesCache {
         if (!deletedProfile) {
             return;
         }
-        deleteLabel = deletedProfile.name;
+
+        const deleteLabel = deletedProfile.name;
 
         if ((await this.getProfileInfo()).usingTeamConfig) {
             const currentProfile = await this.getProfileFromConfig(deleteLabel);
@@ -1048,15 +1059,14 @@ export class Profiles extends ProfilesCache {
         let profileStatus;
         const getSessStatus = await ZoweExplorerApiRegister.getInstance().getCommonApi(theProfile);
 
-        // Filter profilesForValidation to check if the profile is already validated as active
-        this.profilesForValidation.filter((profile) => {
-            if (profile.name === theProfile.name && profile.status === "active") {
-                filteredProfile = {
-                    status: profile.status,
-                    name: profile.name,
-                };
-            }
-        });
+        // Check if the profile is already validated as active
+        const desiredProfile = this.profilesForValidation.find((profile) => profile.name === theProfile.name && profile.status === "active");
+        if (desiredProfile) {
+            filteredProfile = {
+                status: desiredProfile.status,
+                name: desiredProfile.name,
+            };
+        }
 
         // If not yet validated or inactive, call getStatus and validate the profile
         // status will be stored in profilesForValidation
@@ -1109,7 +1119,9 @@ export class Profiles extends ProfilesCache {
                 }
             } catch (error) {
                 await errorHandling(error, theProfile.name);
-                this.log.debug("Validate Error - Invalid Profile: " + error);
+                if (error instanceof Error) {
+                    this.log.debug("Validate Error - Invalid Profile: " + error.message);
+                }
                 filteredProfile = {
                     status: "inactive",
                     name: theProfile.name,
@@ -1168,7 +1180,9 @@ export class Profiles extends ProfilesCache {
                 });
             } catch (error) {
                 this.log.error(error);
-                Gui.errorMessage(localize("ssoLogin.unableToLogin", "Unable to log in. ") + error.message);
+                if (error instanceof Error) {
+                    Gui.errorMessage(localize("ssoLogin.unableToLogin", "Unable to log in. ") + error.message);
+                }
                 return;
             }
         } else {
@@ -1202,7 +1216,9 @@ export class Profiles extends ProfilesCache {
                     });
                 } catch (error) {
                     this.log.error(error);
-                    Gui.errorMessage(localize("ssoLogin.unableToLogin", "Unable to log in. ") + error.message);
+                    if (error instanceof Error) {
+                        Gui.errorMessage(localize("ssoLogin.unableToLogin", "Unable to log in. ") + error.message);
+                    }
                     return;
                 }
             }
@@ -1242,7 +1258,9 @@ export class Profiles extends ProfilesCache {
             Gui.showMessage(localize("ssoLogout.successful", "Logout from authentication service was successful."));
         } catch (error) {
             this.log.error(error);
-            Gui.errorMessage(localize("ssoLogout.unableToLogout", "Unable to log out. ") + error.message);
+            if (error instanceof Error) {
+                Gui.errorMessage(localize("ssoLogout.unableToLogout", "Unable to log out. ") + error.message);
+            }
             return;
         }
     }
@@ -1702,13 +1720,15 @@ export class Profiles extends ProfilesCache {
         const updateParms: zowe.imperative.IUpdateProfile = {
             name: this.loadedProfile.name,
             merge: false,
-            profile: OrigProfileInfo as zowe.imperative.IProfile,
+            profile: OrigProfileInfo,
         };
         try {
             this.getCliProfileManager(this.loadedProfile.type).update(updateParms);
         } catch (error) {
             this.log.error(error);
-            Gui.errorMessage(error.message);
+            if (error instanceof Error) {
+                Gui.errorMessage(error.message);
+            }
         }
     }
 

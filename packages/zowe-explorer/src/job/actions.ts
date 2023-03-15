@@ -362,8 +362,12 @@ async function deleteMultipleJobs(jobs: ReadonlyArray<IZoweJobTreeNode>, jobsPro
                 return job;
             } catch (error) {
                 globals.LOG.error(error);
-                return error;
+                if (error instanceof Error) {
+                    return error;
+                }
             }
+
+            return undefined;
         })
     );
     const deletedJobs: ReadonlyArray<IZoweJobTreeNode> = deletionResult

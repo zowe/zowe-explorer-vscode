@@ -148,7 +148,9 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
                     if (icon) {
                         spoolNode.iconPath = icon.path;
                     }
-                    const arr = Object.keys(spool).filter((k) => k !== "records-url").map((key) => ({[key]: spool[key]}));
+                    const arr = Object.keys(spool)
+                        .filter((k) => k !== "records-url")
+                        .map((key) => ({ [key]: spool[key] }));
                     let newTooltip = "";
                     arr.forEach((item) => {
                         newTooltip += `${JSON.stringify(item).replace(/({|})/g, "")}\n`;
@@ -324,9 +326,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
                 }, []);
             } catch (error) {
                 await errorHandling(error, this.label, localize("getChildren.error.response", "Retrieving response from ") + `zowe.GetJobs`);
-                syncSessionNode(Profiles.getInstance())((profileValue) => ZoweExplorerApiRegister.getJesApi(profileValue).getSession())(
-                    sessNode
-                );
+                syncSessionNode(Profiles.getInstance())((profileValue) => ZoweExplorerApiRegister.getJesApi(profileValue).getSession())(sessNode);
             }
         }
         return jobsInternal;

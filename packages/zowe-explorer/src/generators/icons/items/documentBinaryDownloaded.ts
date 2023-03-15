@@ -22,7 +22,7 @@ const icon: IIconItem = {
         const generalizedNode = node as any;
         if (typeof generalizedNode.downloaded !== "undefined") {
             const parentCheck = documentBinaryIcon.check(generalizedNode);
-            return parentCheck && generalizedNode.downloaded;
+            return parentCheck && (generalizedNode.downloaded as boolean);
         }
 
         return false;

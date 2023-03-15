@@ -45,6 +45,8 @@ export async function errorHandling(errorDetails: any, label?: string, moreInfo?
         "errorHandling.invalid.token",
         "Your connection is no longer active. Please log in to an authentication service to restore the connection."
     );
+
+    // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
     globals.LOG.error(`${errorDetails}\n` + JSON.stringify({ errorDetails, label, moreInfo }));
 
     if (errorDetails.mDetails !== undefined) {
@@ -112,6 +114,7 @@ export async function errorHandling(errorDetails: any, label?: string, moreInfo?
             if (moreInfo === undefined) {
                 moreInfo = errorDetails.toString().includes("Error") ? "" : "Error:";
             }
+            // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
             Gui.errorMessage(moreInfo + " " + errorDetails);
             break;
     }
@@ -235,9 +238,9 @@ export function getProfileInfo(envTheia: boolean): imperative.ProfileInfo {
     return mProfileInfo;
 }
 
-export function getProfile(node: vscode.TreeItem): imperative.IProfileLoaded {
+export function getProfile(node: vscode.TreeItem | ZoweTreeNode): imperative.IProfileLoaded {
     if (node instanceof ZoweTreeNode) {
-        return (node as ZoweTreeNode).getProfile();
+        return node.getProfile();
     }
     throw new Error(localize("getProfile.notTreeItem", "Tree Item is not a Zowe Explorer item."));
 }

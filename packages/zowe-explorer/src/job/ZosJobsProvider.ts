@@ -864,7 +864,10 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         return choice;
     }
 
-    private async handleEditingMultiJobParameters(jobProperties: IJobPickerOption[], node: IZoweJobTreeNode): Promise<any> {
+    private async handleEditingMultiJobParameters(
+        jobProperties: IJobPickerOption[],
+        node: IZoweJobTreeNode
+    ): Promise<IJobSearchCriteria | undefined> {
         const editableItems: FilterItem[] = [];
         editableItems.push(new FilterItem({ text: ZosJobsProvider.submitJobQueryLabel, show: true }));
         jobProperties.forEach((prop) => {
@@ -880,7 +883,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         });
         if (!choice) {
             Gui.showMessage(localize("enterPattern.pattern", "No selection made. Operation cancelled."));
-            return;
+            return undefined;
         }
         const pattern = choice.label;
 
@@ -888,7 +891,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             case ZosJobsProvider.chooseJobStatusLabel:
                 jobProperties.find((prop) => prop.key === "job-status").value = (await this.setJobStatus(node)).label;
                 break;
-            case ZosJobsProvider.submitJobQueryLabel:
+            case ZosJobsProvider.submitJobQueryLabel: {
                 node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
                 node.searchId = "";
                 node.prefix = jobProperties.find((prop) => prop.key === "prefix").value;
@@ -900,9 +903,11 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                     JobId: undefined,
                     Status: node.status,
                 };
+
                 this.resetJobProperties(jobProperties);
-                return Promise.resolve(searchCriteriaObj);
-            default:
+                return searchCriteriaObj;
+            }
+            default: {
                 const property = jobProperties.find((prop) => prop.label === pattern);
                 if (property != null) {
                     const options: vscode.InputBoxOptions = {
@@ -914,8 +919,9 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                     };
                     property.value = await Gui.showInputBox(options);
                 }
+            }
         }
-        return Promise.resolve(this.handleEditingMultiJobParameters(jobProperties, node));
+        return this.handleEditingMultiJobParameters(jobProperties, node);
     }
     private resetJobProperties(jobProperties: IJobPickerOption[]): IJobPickerOption[] {
         jobProperties.forEach((prop) => {

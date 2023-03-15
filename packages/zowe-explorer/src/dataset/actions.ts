@@ -681,7 +681,7 @@ async function handleUserSelection(newDSProperties, dsType): Promise<string> {
     const pattern = choice2.label;
     quickpick.dispose();
 
-    const showPatternOptions = async () => {
+    const showPatternOptions = async (): Promise<void> => {
         const options: vscode.InputBoxOptions = {
             value: newDSProperties.find((prop) => prop.label === pattern).value,
             placeHolder: newDSProperties.find((prop) => prop.label === pattern).placeHolder,
@@ -763,6 +763,7 @@ export async function showAttributes(node: api.IZoweDatasetTreeNode, datasetProv
                     <td align="left" style="color: var(--vscode-editorLink-activeForeground); font-weight: bold">${key}:</td>
                     <td align="right" style="color: ${
                         isNaN(attributes[0][key]) ? "var(--vscode-settings-textInputForeground)" : "var(--vscode-problemsWarningIcon-foreground)"
+                        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
                     }">${attributes[0][key]}</td>
                 </tr>
         `),

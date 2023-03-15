@@ -141,29 +141,17 @@ export async function initUSSProvider(context: vscode.ExtensionContext): Promise
         vscode.commands.registerCommand("zowe.uss.saveSearch", (node: IZoweUSSTreeNode): void => ussFileProvider.saveSearch(node))
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand(
-            "zowe.uss.removeSavedSearch",
-            (node: IZoweUSSTreeNode): void => ussFileProvider.removeFavorite(node)
-        )
+        vscode.commands.registerCommand("zowe.uss.removeSavedSearch", (node: IZoweUSSTreeNode): void => ussFileProvider.removeFavorite(node))
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand(
-            "zowe.uss.removeFavProfile",
-            (node): void => ussFileProvider.removeFavProfile(node.label, true)
-        )
+        vscode.commands.registerCommand("zowe.uss.removeFavProfile", (node): void => ussFileProvider.removeFavProfile(node.label, true))
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.uss.disableValidation", (node) => Profiles.getInstance().disableValidation(node))
     );
-    context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.uss.enableValidation", (node) => Profiles.getInstance().enableValidation(node))
-    );
-    context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.uss.ssoLogin", (node: IZoweTreeNode): void => ussFileProvider.ssoLogin(node))
-    );
-    context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.uss.ssoLogout", (node: IZoweTreeNode): void => ussFileProvider.ssoLogout(node))
-    );
+    context.subscriptions.push(vscode.commands.registerCommand("zowe.uss.enableValidation", (node) => Profiles.getInstance().enableValidation(node)));
+    context.subscriptions.push(vscode.commands.registerCommand("zowe.uss.ssoLogin", (node: IZoweTreeNode): void => ussFileProvider.ssoLogin(node)));
+    context.subscriptions.push(vscode.commands.registerCommand("zowe.uss.ssoLogout", (node: IZoweTreeNode): void => ussFileProvider.ssoLogout(node)));
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.uss.pasteUssFile", async (node: IZoweUSSTreeNode) => {
             if (ussFileProvider.copying != null) {

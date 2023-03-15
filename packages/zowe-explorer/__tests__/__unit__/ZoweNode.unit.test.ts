@@ -237,10 +237,10 @@ describe("Unit Tests (Jest)", () => {
                 {
                     success: true,
                     apiResponse: {
-                        items: []
-                    }
-                }
-            ])
+                        items: [],
+                    },
+                },
+            ]);
             subNode.dirty = true;
             const response = await subNode.getChildren();
             expect(response[0].label).toBe("No datasets found");

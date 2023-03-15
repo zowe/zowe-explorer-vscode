@@ -54,9 +54,7 @@ export async function initJobsProvider(context: vscode.ExtensionContext): Promis
             await refreshActions.refreshAll(jobsProvider);
         })
     );
-    context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.jobs.refreshJob", (job) => jobActions.refreshJob(job.mParent, jobsProvider))
-    );
+    context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.refreshJob", (job) => jobActions.refreshJob(job.mParent, jobsProvider)));
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.jobs.refreshSpool", async (node) => {
             await jobActions.getSpoolContentFromMainframe(node);
