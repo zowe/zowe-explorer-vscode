@@ -236,3 +236,20 @@ export async function resetValidationSettings(node: IZoweNodeType, setting: bool
     }
     return node;
 }
+
+/**
+ * Reports the progress of a Gui.withProgress action results in visual update for users.
+ *
+ * @export
+ * @param {any} progress - Gui.withProgress progress
+ * @param {number} valueLength - values array length used to calculate progress
+ * @param {number} index - withProgress loop array's index
+ * @param {string} action - the action the progress is reported for, ie. Uploading
+ */
+export function reportProgress(progress: any, valueLength: number, index: number, action: string): void {
+    progress.report({
+        message: `${action} ${index + 1} of ${valueLength}`,
+        // eslint-disable-next-line no-magic-numbers
+        increment: 100 / valueLength,
+    });
+}
