@@ -6,6 +6,8 @@
   "allocateLike.noNewName": "You must enter a new data set name.",
   "createDataSet.log.error": "Error encountered when creating data set! ",
   "createDataSet.error": "Error encountered when creating data set! ",
+  "uploadFile.response.upload.title": "Uploading to data set.",
+  "uploadFile.uploadCancelled": "Upload action was cancelled.",
   "enterPattern.pattern": "You must enter a pattern.",
   "deleteDatasetPrompt.nodesToDelete.empty": "No data sets selected for deletion, cancelling...",
   "deleteDatasetPrompt.log.debug": "Deleting data set(s): ",

@@ -148,16 +148,39 @@ export async function uploadDialog(node: ZoweDatasetNode, datasetProvider: api.I
     const value = await api.Gui.showOpenDialog(fileOpenOptions);
 
     if (value && value.length) {
-        await Promise.all(
-            value.map(async (item) => {
-                // Convert to vscode.TextDocument
-                const doc = await vscode.workspace.openTextDocument(item);
-                await uploadFile(node, doc);
-            })
+        console.log(value.length);
+        await api.Gui.withProgress(
+            {
+                location: vscode.ProgressLocation.Notification,
+                title: localize("uploadFile.response.upload.title", "Uploading to data set."),
+                cancellable: true,
+            },
+            async (progress, token) => {
+                const total = 100;
+                let index = 0;
+                for (const item of value) {
+                    if (token.isCancellationRequested) {
+                        api.Gui.showMessage(localize("uploadFile.uploadCancelled", "Upload action was cancelled."));
+                        break;
+                    }
+                    progress.report({
+                        message: `Uploading ${index + 1} of ${value.length}`,
+                        increment: total / value.length,
+                    });
+                    const doc = await vscode.workspace.openTextDocument(item);
+                    const response = await uploadFile(node, doc);
+                    console.log(response.success);
+                    if (!response.success) {
+                        await errorHandling(response.apiResponse, node.getProfileName(), response.commandResponse);
+                        break;
+                    }
+                    index++;
+                }
+            }
         );
 
         // refresh Tree View & favorites
-        datasetProvider.refreshElement(node);
+        await datasetProvider.refreshElement(node);
         if (contextually.isFavorite(node) || contextually.isFavoriteContext(node.getParent())) {
             const nonFavNode = datasetProvider.findNonFavoritedNode(node);
             if (nonFavNode) {
@@ -178,10 +201,12 @@ export async function uploadFile(node: ZoweDatasetNode, doc: vscode.TextDocument
     try {
         const datasetName = node.label as string;
         const prof = node.getProfile();
-        await ZoweExplorerApiRegister.getMvsApi(prof).putContents(doc.fileName, datasetName, {
+
+        const response = await ZoweExplorerApiRegister.getMvsApi(prof).putContents(doc.fileName, datasetName, {
             encoding: prof.profile?.encoding,
             responseTimeout: prof.profile?.responseTimeout,
         });
+        return response;
     } catch (e) {
         await errorHandling(e, node.getProfileName(), e.message);
     }
