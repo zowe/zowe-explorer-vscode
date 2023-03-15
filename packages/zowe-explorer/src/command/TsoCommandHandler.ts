@@ -305,7 +305,6 @@ export class TsoCommandHandler extends ZoweCommandProvider {
                     return newObj;
                 }, {}),
             };
-            //iStartTso.forEach((p) => (tsoParms[p] = tsoProfile.profile[p]));
         }
 
         if (tsoParms.account == null || tsoParms.account === "") {

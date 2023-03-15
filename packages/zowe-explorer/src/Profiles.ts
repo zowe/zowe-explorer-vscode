@@ -88,11 +88,6 @@ export class Profiles extends ProfilesCache {
             this.profilesForValidation = this.profilesForValidation.filter(
                 (profile) => profile.status === "unverified" && profile.name !== theProfile.name
             );
-            // this.profilesForValidation.filter((profile, index) => {
-            //     if (profile.name === theProfile.name && profile.status !== "unverified") {
-            //         this.profilesForValidation.splice(index, 1);
-            //     }
-            // });
             let values: string[];
             try {
                 values = await Profiles.getInstance().promptCredentials(theProfile.name);
