@@ -70,7 +70,9 @@ export async function moveTempFolder(previousTempPath: string, currentTempPath: 
         moveSync(previousTemp, globals.ZOWETEMPFOLDER, { overwrite: true });
     } catch (err) {
         globals.LOG.error("Error moving temporary folder! " + JSON.stringify(err));
-        Gui.errorMessage(err.message);
+        if (err instanceof Error) {
+            Gui.errorMessage(err.message);
+        }
     }
 }
 
@@ -110,8 +112,8 @@ export function cleanTempDir(): Promise<void> {
     try {
         cleanDir(globals.ZOWETEMPFOLDER);
     } catch (err) {
-        globals.LOG.error(err);
         if (err instanceof Error) {
+            globals.LOG.error(err.message);
             Gui.errorMessage(`${localize("deactivate.error", "Unable to delete temporary folder. ")}${err.message}`);
         }
     }

@@ -27,8 +27,8 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 // Globals
 export let SETTINGS_TEMP_FOLDER_LOCATION;
-export let ZOWETEMPFOLDER;
-export let ZOWE_TMP_FOLDER;
+export let ZOWETEMPFOLDER: string;
+export let ZOWE_TMP_FOLDER: string;
 export let USS_DIR: string;
 export let DS_DIR: string;
 export let CONFIG_PATH; // set during activate
@@ -103,7 +103,7 @@ export let SAVED_PROFILE_CONTENTS = new Uint8Array();
 export const JOBS_MAX_PREFIX = 8;
 
 // Dictionary describing translation from old configuration names to new standardized names
-export const configurationDictionary = {
+export const configurationDictionary: { [k: string]: string } = {
     "Zowe-Default-Datasets-Binary": SETTINGS_DS_DEFAULT_BINARY,
     "Zowe-Default-Datasets-C": SETTINGS_DS_DEFAULT_C,
     "Zowe-Default-Datasets-Classic": SETTINGS_DS_DEFAULT_CLASSIC,
