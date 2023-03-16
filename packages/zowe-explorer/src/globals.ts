@@ -77,6 +77,7 @@ export const SETTINGS_VERSION = "zowe.settings.version";
 export const SETTINGS_TEMP_FOLDER_PATH = "zowe.files.temporaryDownloadsFolder.path";
 export const SETTINGS_TEMP_FOLDER_CLEANUP = "zowe.files.temporaryDownloadsFolder.cleanup";
 export const SETTINGS_TEMP_FOLDER_HIDE = "zowe.files.temporaryDownloadsFolder.hide";
+export const SETTINGS_LOGS_FOLDER_PATH = "zowe.files.logsFolder.path";
 export const SETTINGS_DS_DEFAULT_BINARY = "zowe.ds.default.binary";
 export const SETTINGS_DS_DEFAULT_C = "zowe.ds.default.c";
 export const SETTINGS_DS_DEFAULT_CLASSIC = "zowe.ds.default.classic";
@@ -311,7 +312,7 @@ export function setConfigPath(configPath: string | undefined): void {
 export function initLogger(context: vscode.ExtensionContext) {
     for (const appenderName of Object.keys(loggerConfig.log4jsConfig.appenders)) {
         loggerConfig.log4jsConfig.appenders[appenderName].filename = path.join(
-            context.extensionPath,
+            SettingsConfig.getDirectValue(this.SETTINGS_LOGS_FOLDER_PATH) ?? context.extensionPath,
             loggerConfig.log4jsConfig.appenders[appenderName].filename
         );
     }
