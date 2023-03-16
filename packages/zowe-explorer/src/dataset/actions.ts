@@ -33,7 +33,7 @@ import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { DatasetTree } from "./DatasetTree";
 import * as contextually from "../shared/context";
 import { markDocumentUnsaved, setFileSaved } from "../utils/workspace";
-import { IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
+import { IUploadOptions, IZosFilesResponse } from "@zowe/zos-files-for-zowe-sdk";
 import { reportProgress } from "../shared/actions";
 
 // Set up localization
@@ -163,8 +163,8 @@ export async function uploadDialog(node: ZoweDatasetNode, datasetProvider: api.I
                     reportProgress(progress, value.length, index, "Uploading");
                     const doc = await vscode.workspace.openTextDocument(item);
                     const response = await uploadFile(node, doc);
-                    if (!response.success) {
-                        await errorHandling(response.commandResponse, node.getProfileName(), response.commandResponse);
+                    if (!response?.success) {
+                        await errorHandling(response?.commandResponse, node.getProfileName(), response?.commandResponse);
                         break;
                     }
                     index++;
@@ -191,7 +191,7 @@ export async function uploadDialog(node: ZoweDatasetNode, datasetProvider: api.I
     }
 }
 
-export async function uploadFile(node: ZoweDatasetNode, doc: vscode.TextDocument) {
+export async function uploadFile(node: ZoweDatasetNode, doc: vscode.TextDocument): Promise<IZosFilesResponse> {
     try {
         const datasetName = node.label as string;
         const prof = node.getProfile();

@@ -12,124 +12,160 @@
 import * as vscode from "vscode";
 import * as dsActions from "../../../src/dataset/actions";
 import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
-import { imperative } from "@zowe/cli";
 import * as globals from "../../../src/globals";
+import { createIProfile, createISession, createTreeView } from "../../../__mocks__/mockCreators/shared";
+import { createDatasetSessionNode, createDatasetTree } from "../../../__mocks__/mockCreators/datasets";
+import { bindMvsApi, createMvsApi } from "../../../__mocks__/mockCreators/api";
 
-const mockRefresh = jest.fn();
-const showOpenDialog = jest.fn();
-const showInformationMessage = jest.fn();
-const openTextDocument = jest.fn();
-const mockRefreshElement = jest.fn();
-const mockFindFavoritedNode = jest.fn();
-const mockFindNonFavoritedNode = jest.fn();
-
-Object.defineProperty(globals, "LOG", { value: jest.fn(), configurable: true });
-Object.defineProperty(globals.LOG, "error", { value: jest.fn(), configurable: true });
-Object.defineProperty(vscode.window, "showOpenDialog", { value: showOpenDialog });
-Object.defineProperty(vscode.window, "showInformationMessage", { value: showInformationMessage });
-Object.defineProperty(vscode.workspace, "openTextDocument", { value: openTextDocument });
-const DatasetTree = jest.fn().mockImplementation(() => {
-    return {
-        mSessionNodes: [],
-        mFavorites: [],
-        refresh: mockRefresh,
-        refreshElement: mockRefreshElement,
-        findFavoritedNode: mockFindFavoritedNode,
-        findNonFavoritedNode: mockFindNonFavoritedNode,
+function createGlobalMocks() {
+    let newMocks = {
+        mockRefresh: jest.fn(),
+        showOpenDialog: jest.fn(),
+        showInformationMessage: jest.fn(),
+        openTextDocument: jest.fn(),
+        mockRefreshElement: jest.fn(),
+        mockFindFavoritedNode: jest.fn(),
+        mockFindNonFavoritedNode: jest.fn(),
+        mockUploadFile: jest.fn(),
+        treeView: createTreeView(),
+        session: createISession(),
+        profileOne: createIProfile(),
+        mvsApi: null,
+        getContentsSpy: null,
     };
-});
 
-const session = new imperative.Session({
-    user: "fake",
-    password: "fake",
-    hostname: "fake",
-    protocol: "https",
-    type: "basic",
-});
+    Object.defineProperty(globals, "LOG", { value: jest.fn(), configurable: true });
+    Object.defineProperty(globals.LOG, "error", { value: jest.fn(), configurable: true });
+    Object.defineProperty(vscode.window, "showOpenDialog", { value: newMocks.showOpenDialog, configurable: true });
+    Object.defineProperty(vscode.window, "showInformationMessage", { value: newMocks.showInformationMessage, configurable: true });
+    Object.defineProperty(vscode.workspace, "openTextDocument", { value: newMocks.openTextDocument, configurable: true });
+    Object.defineProperty(vscode, "ProgressLocation", { value: jest.fn(), configurable: true });
+    Object.defineProperty(vscode.window, "withProgress", { value: jest.fn(), configurable: true });
+    Object.defineProperty(vscode.window, "withProgress", {
+        value: jest.fn().mockImplementation((progLocation, callback) => {
+            const progress = {
+                report: (message) => {
+                    return;
+                },
+            };
+            const token = {
+                isCancellationRequested: false,
+                onCancellationRequested: undefined,
+            };
+            return callback(progress, token);
+        }),
+        configurable: true,
+    });
 
-const testTree = DatasetTree();
-const profileOne: imperative.IProfileLoaded = {
-    name: "profile1",
-    profile: {},
-    type: "zosmf",
-    message: "",
-    failNotFound: false,
-};
-const sessNode = new ZoweDatasetNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, session, undefined, undefined, profileOne);
+    return newMocks;
+}
 
 describe("mvsNodeActions", () => {
+    function createBlockMocks(globalMocks) {
+        const newMocks = {
+            sessNode: createDatasetSessionNode(globalMocks.session, globalMocks.profileOne),
+            mvsApi: createMvsApi(globalMocks.profileOne),
+        };
+        return newMocks;
+    }
     afterEach(() => {
         jest.resetAllMocks();
     });
-    // TODO this test is actually throwing an error biut gets away with it from the tests perspective
-    it("should call upload dialog and upload file", async () => {
-        const node = new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null, null, null, profileOne);
-        const nodeAsFavorite = new ZoweDatasetNode(
-            "[sestest]: node",
+    it("should call upload dialog and upload file from session node", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+        const testTree = createDatasetTree(blockMocks.sessNode, globalMocks.treeView);
+        const node = new ZoweDatasetNode(
+            "node",
             vscode.TreeItemCollapsibleState.Collapsed,
-            sessNode,
-            null,
-            null,
-            globals.PDS_FAV_CONTEXT,
-            profileOne
+            blockMocks.sessNode,
+            null as any,
+            null as any,
+            null as any,
+            globalMocks.profileOne
         );
-        testTree.mFavorites.push(nodeAsFavorite);
+        testTree.getTreeView.mockReturnValueOnce(createTreeView());
         const fileUri = { fsPath: "/tmp/foo" };
-
-        showOpenDialog.mockReturnValue([fileUri]);
-        openTextDocument.mockReturnValue({});
-        mockFindFavoritedNode.mockReturnValue(nodeAsFavorite);
+        globalMocks.showOpenDialog.mockReturnValueOnce([fileUri]);
+        globalMocks.openTextDocument.mockReturnValueOnce({});
+        const contentSpy = jest.spyOn(blockMocks.mvsApi, "putContents");
+        bindMvsApi(blockMocks.mvsApi);
+        contentSpy.mockResolvedValueOnce({
+            success: true,
+            commandResponse: "",
+            apiResponse: {},
+        });
 
         await dsActions.uploadDialog(node, testTree);
 
-        expect(showOpenDialog).toBeCalled();
-        expect(openTextDocument).toBeCalled();
+        expect(globalMocks.showOpenDialog).toBeCalled();
+        expect(globalMocks.openTextDocument).toBeCalled();
         expect(testTree.refreshElement).toBeCalledWith(node);
-        expect(testTree.refreshElement).toBeCalledWith(nodeAsFavorite);
+        contentSpy.mockClear();
     });
-    it("shouldn't call upload dialog and not upload file if selection is empty", async () => {
-        const node = new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null, null, null, profileOne);
+    it("should call upload dialog and upload file from favorites node", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+        const testTree = createDatasetTree(blockMocks.sessNode, globalMocks.treeView);
+        const node = new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.Collapsed, blockMocks.sessNode, null as any);
         const nodeAsFavorite = new ZoweDatasetNode(
             "[sestest]: node",
             vscode.TreeItemCollapsibleState.Collapsed,
-            sessNode,
-            null,
-            null,
-            globals.PDS_FAV_CONTEXT,
-            profileOne
-        );
-        testTree.mFavorites.push(nodeAsFavorite);
-
-        showOpenDialog.mockReturnValue(undefined);
-
-        await dsActions.uploadDialog(node, testTree);
-
-        expect(showOpenDialog).toBeCalled();
-        expect(showInformationMessage.mock.calls.map((call) => call[0])).toEqual(["No selection made. Operation cancelled."]);
-        expect(openTextDocument).not.toBeCalled();
-        expect(testTree.refreshElement).not.toBeCalled();
-    });
-    it("should call upload dialog and upload file (from favorites)", async () => {
-        const node = new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null);
-        const nodeAsFavorite = new ZoweDatasetNode(
-            "[sestest]: node",
-            vscode.TreeItemCollapsibleState.Collapsed,
-            sessNode,
-            null,
+            blockMocks.sessNode,
+            null as any,
             globals.PDS_FAV_CONTEXT
         );
         testTree.mFavorites.push(nodeAsFavorite);
+        testTree.getTreeView.mockReturnValueOnce(createTreeView());
         const fileUri = { fsPath: "/tmp/foo" };
 
-        showOpenDialog.mockReturnValue([fileUri]);
-        openTextDocument.mockReturnValue({});
-        mockFindNonFavoritedNode.mockReturnValue(node);
+        globalMocks.showOpenDialog.mockReturnValueOnce([fileUri]);
+        globalMocks.openTextDocument.mockReturnValueOnce({});
+        const putContentSpy = jest.spyOn(blockMocks.mvsApi, "putContents");
+        bindMvsApi(blockMocks.mvsApi);
+        putContentSpy.mockResolvedValueOnce({
+            success: true,
+            commandResponse: "",
+            apiResponse: {},
+        });
+        globalMocks.mockFindNonFavoritedNode.mockReturnValueOnce(node);
 
         await dsActions.uploadDialog(nodeAsFavorite, testTree);
 
-        expect(showOpenDialog).toBeCalled();
-        expect(openTextDocument).toBeCalled();
-        expect(testTree.refreshElement).toBeCalledWith(node);
+        expect(globalMocks.showOpenDialog).toBeCalled();
+        expect(globalMocks.openTextDocument).toBeCalled();
         expect(testTree.refreshElement).toBeCalledWith(nodeAsFavorite);
+        putContentSpy.mockClear();
+    });
+    it("shouldn't call upload dialog and not upload file if selection is empty", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+        const testTree = createDatasetTree(blockMocks.sessNode, globalMocks.treeView);
+        const node = new ZoweDatasetNode(
+            "node",
+            vscode.TreeItemCollapsibleState.Collapsed,
+            blockMocks.sessNode,
+            null as any,
+            null as any,
+            null as any,
+            globalMocks.profileOne
+        );
+        const nodeAsFavorite = new ZoweDatasetNode(
+            "[sestest]: node",
+            vscode.TreeItemCollapsibleState.Collapsed,
+            blockMocks.sessNode,
+            null as any,
+            null as any,
+            globals.PDS_FAV_CONTEXT,
+            globalMocks.profileOne
+        );
+        testTree.mFavorites.push(nodeAsFavorite);
+        globalMocks.showOpenDialog.mockReturnValueOnce(undefined);
+        await dsActions.uploadDialog(node, testTree);
+
+        expect(globalMocks.showOpenDialog).toBeCalled();
+        expect(globalMocks.showInformationMessage.mock.calls.map((call) => call[0])).toEqual(["No selection made. Operation cancelled."]);
+        expect(globalMocks.openTextDocument).not.toBeCalled();
+        expect(testTree.refreshElement).not.toBeCalled();
     });
 });
