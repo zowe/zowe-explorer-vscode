@@ -27,10 +27,11 @@ import {
     ProfilesCache,
     getZoweDir,
     getFullPath,
+    MessageSeverity,
 } from "@zowe/zowe-explorer-api";
 import { Profiles } from "./Profiles";
 import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
-import { getProfileInfo, getProfile } from "./utils/ProfilesUtils";
+import { getProfileInfo, getProfile, errorHandling } from "./utils/ProfilesUtils";
 
 // Set up localization
 import * as nls from "vscode-nls";
@@ -52,39 +53,45 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
      * @param errorDetails Details of the error (to be parsed for config name and path)
      */
     public static async showZoweConfigError(errorDetails: string) {
-        vscode.window
-            .showErrorMessage(
-                localize("initialize.profiles.error", 'Error encountered when loading your Zowe config. Click "Show Config" for more details.'),
-                "Show Config"
-            )
-            .then((selection) => {
-                if (selection !== "Show Config") {
+        if (errorDetails.includes("imperative.json")) {
+            // Handle errors parsing Imperative overrides file separately from errors in config
+            errorHandling(errorDetails);
+            return;
+        }
+        Gui.showMessage(
+            localize("initialize.profiles.error", 'Error encountered when loading your Zowe config. Click "Show Config" for more details.'),
+            {
+                severity: MessageSeverity.ERROR,
+                items: ["Show Config"],
+            }
+        ).then((selection) => {
+            if (selection !== "Show Config") {
+                return;
+            }
+
+            // Parse the v2 config path, or a v1 config path depending on the error message
+            const configMatch = errorDetails.includes("Error parsing JSON in the file")
+                ? errorDetails.match(/Error parsing JSON in the file \'(.+?)\'/)
+                : errorDetails.match(/Error reading profile file \(\"(.+?)\"\)/);
+
+            let configPath = configMatch != null ? configMatch[1] : null;
+            // If configPath is null, build a v2 config location based on the error details
+            if (configPath == null) {
+                const isRootConfigError = errorDetails.match(/(?:[\\]{1,2}|\/)(\.zowe)(?:[\\]{1,2}|\/)/) != null;
+                // If the v2 config error does not apply to the global Zowe config, check for a project-level config.
+                if (vscode.workspace.workspaceFolders != null && !isRootConfigError) {
+                    configPath = this.getConfigLocation(vscode.workspace.workspaceFolders[0].uri.fsPath);
+                } else {
+                    configPath = this.getConfigLocation(getZoweDir());
+                }
+
+                // If the config w/ culprits cannot be found, all v2 config locations have been exhausted - exit.
+                if (configPath == null) {
                     return;
                 }
-
-                // Parse the v2 config path, or a v1 config path depending on the error message
-                const configMatch = errorDetails.includes("Error parsing JSON in the file")
-                    ? errorDetails.match(/Error parsing JSON in the file \'(.+?)\'/)
-                    : errorDetails.match(/Error reading profile file \(\"(.+?)\"\)/);
-
-                let configPath = configMatch != null ? configMatch[1] : null;
-                // If configPath is null, build a v2 config location based on the error details
-                if (configPath == null) {
-                    const isRootConfigError = errorDetails.match(/(?:[\\]{1,2}|\/)(\.zowe)(?:[\\]{1,2}|\/)/) != null;
-                    // If the v2 config error does not apply to the global Zowe config, check for a project-level config.
-                    if (vscode.workspace.workspaceFolders != null && !isRootConfigError) {
-                        configPath = this.getConfigLocation(vscode.workspace.workspaceFolders[0].uri.fsPath);
-                    } else {
-                        configPath = this.getConfigLocation(getZoweDir());
-                    }
-
-                    // If the config w/ culprits cannot be found, all v2 config locations have been exhausted - exit.
-                    if (configPath == null) {
-                        return;
-                    }
-                }
-                Gui.showTextDocument(vscode.Uri.file(configPath));
-            });
+            }
+            Gui.showTextDocument(vscode.Uri.file(configPath));
+        });
     }
 
     /**
@@ -176,9 +183,7 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
             usingTeamConfig = mProfileInfo.usingTeamConfig;
         } catch (error) {
             globals.LOG.warn(error);
-            if (error.toString().includes("Error parsing JSON")) {
-                usingTeamConfig = true;
-            }
+            usingTeamConfig = error.toString().includes("Error parsing JSON");
             ZoweExplorerExtender.showZoweConfigError(error.message);
         }
 

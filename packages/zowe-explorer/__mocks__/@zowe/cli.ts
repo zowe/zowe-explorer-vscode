@@ -29,6 +29,10 @@ export function getZoweDir(): string {
     return imperative.ImperativeConfig.instance.cliHome;
 }
 
+export function getImperativeConfig() {
+    return {};
+}
+
 export namespace ZosmfSession {
     export function createSessCfgFromArgs(cmdArgs: imperative.ICommandArguments) {
         return {

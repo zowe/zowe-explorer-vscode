@@ -318,7 +318,9 @@ export async function initializeZoweFolder(): Promise<void> {
     if (!fs.existsSync(settingsPath)) {
         fs.mkdirSync(settingsPath);
     }
-    writeOverridesFile();
+    if (!fs.existsSync(path.join(settingsPath, "imperative.json"))) {
+        writeOverridesFile();
+    }
     // If not using team config, ensure that the ~/.zowe/profiles directory
     // exists with appropriate types within
     if (!imperative.ImperativeConfig.instance.config?.exists) {
@@ -345,7 +347,11 @@ export function writeOverridesFile() {
     try {
         let settings: any;
         if (fileContent) {
-            settings = JSON.parse(fileContent);
+            try {
+                settings = JSON.parse(fileContent);
+            } catch (err) {
+                throw new Error(localize("writeOverridesFile.jsonParseError", "Failed to parse JSON file {0}:", settingsFile) + " " + err.message);
+            }
             if (settings && settings?.overrides && settings?.overrides?.CredentialManager !== globals.PROFILE_SECURITY) {
                 settings.overrides.CredentialManager = globals.PROFILE_SECURITY;
             } else {
@@ -355,7 +361,7 @@ export function writeOverridesFile() {
             settings = { overrides: { CredentialManager: globals.PROFILE_SECURITY } };
         }
         fileContent = JSON.stringify(settings, null, 2);
-        fs.writeSync(fd, fileContent, 0, "utf-8");
+        fs.writeFileSync(fd, fileContent);
     } finally {
         fs.closeSync(fd);
     }
