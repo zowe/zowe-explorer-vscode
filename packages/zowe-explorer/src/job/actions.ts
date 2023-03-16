@@ -195,6 +195,7 @@ export const focusOnJob = async (jobsProvider: IZoweTree<IZoweJobTreeNode>, sess
         return;
     }
     sessionNode.searchId = jobId;
+    sessionNode.filtered = true;
     const jobs: IZoweJobTreeNode[] = await sessionNode.getChildren();
     const job = jobs.find((jobNode) => jobNode.job.jobid === jobId);
     if (job) {
