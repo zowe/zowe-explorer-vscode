@@ -66,3 +66,9 @@ export namespace ZoweVsCodeExtension {
         };
     }
 }
+
+export class ZoweVsCodeExtension {
+    public static get customLoggingPath(): string | undefined {
+        return undefined;
+    }
+}
