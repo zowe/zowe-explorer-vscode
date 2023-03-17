@@ -1,5 +1,11 @@
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
+## TBD Release
+
+### New features and enhancements
+
+### Bug fixes
+
 ## `2.7.0`
 
 ### New features and enhancements
