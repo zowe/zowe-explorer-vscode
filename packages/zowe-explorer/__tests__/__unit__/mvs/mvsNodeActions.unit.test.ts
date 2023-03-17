@@ -15,9 +15,9 @@ import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
 import * as globals from "../../../src/globals";
 import { createIProfile, createISession, createTreeView } from "../../../__mocks__/mockCreators/shared";
 import { createDatasetSessionNode, createDatasetTree } from "../../../__mocks__/mockCreators/datasets";
-import { bindMvsApi, createMvsApi } from "../../../__mocks__/mockCreators/api";
+import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 
-function createGlobalMocks() {
+async function createGlobalMocks() {
     let newMocks = {
         mockRefresh: jest.fn(),
         showOpenDialog: jest.fn(),
@@ -30,8 +30,6 @@ function createGlobalMocks() {
         treeView: createTreeView(),
         session: createISession(),
         profileOne: createIProfile(),
-        mvsApi: null,
-        getContentsSpy: null,
     };
 
     Object.defineProperty(globals, "LOG", { value: jest.fn(), configurable: true });
@@ -57,6 +55,16 @@ function createGlobalMocks() {
         configurable: true,
     });
 
+    const mockMvsApi = await ZoweExplorerApiRegister.getMvsApi(newMocks.profileOne);
+    const getMvsApiMock = jest.fn();
+    getMvsApiMock.mockReturnValue(mockMvsApi);
+    ZoweExplorerApiRegister.getMvsApi = getMvsApiMock.bind(ZoweExplorerApiRegister);
+    jest.spyOn(mockMvsApi, "putContents").mockResolvedValue({
+        success: true,
+        commandResponse: "",
+        apiResponse: {},
+    });
+
     return newMocks;
 }
 
@@ -64,15 +72,11 @@ describe("mvsNodeActions", () => {
     function createBlockMocks(globalMocks) {
         const newMocks = {
             sessNode: createDatasetSessionNode(globalMocks.session, globalMocks.profileOne),
-            mvsApi: createMvsApi(globalMocks.profileOne),
         };
         return newMocks;
     }
-    afterEach(() => {
-        jest.resetAllMocks();
-    });
     it("should call upload dialog and upload file from session node", async () => {
-        const globalMocks = createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
         const testTree = createDatasetTree(blockMocks.sessNode, globalMocks.treeView);
         const node = new ZoweDatasetNode(
@@ -88,23 +92,15 @@ describe("mvsNodeActions", () => {
         const fileUri = { fsPath: "/tmp/foo" };
         globalMocks.showOpenDialog.mockReturnValueOnce([fileUri]);
         globalMocks.openTextDocument.mockReturnValueOnce({});
-        const contentSpy = jest.spyOn(blockMocks.mvsApi, "putContents");
-        bindMvsApi(blockMocks.mvsApi);
-        contentSpy.mockResolvedValueOnce({
-            success: true,
-            commandResponse: "",
-            apiResponse: {},
-        });
 
         await dsActions.uploadDialog(node, testTree);
 
         expect(globalMocks.showOpenDialog).toBeCalled();
         expect(globalMocks.openTextDocument).toBeCalled();
         expect(testTree.refreshElement).toBeCalledWith(node);
-        contentSpy.mockClear();
     });
     it("should call upload dialog and upload file from favorites node", async () => {
-        const globalMocks = createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
         const testTree = createDatasetTree(blockMocks.sessNode, globalMocks.treeView);
         const node = new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.Collapsed, blockMocks.sessNode, null as any);
@@ -121,13 +117,17 @@ describe("mvsNodeActions", () => {
 
         globalMocks.showOpenDialog.mockReturnValueOnce([fileUri]);
         globalMocks.openTextDocument.mockReturnValueOnce({});
-        const putContentSpy = jest.spyOn(blockMocks.mvsApi, "putContents");
-        bindMvsApi(blockMocks.mvsApi);
-        putContentSpy.mockResolvedValueOnce({
-            success: true,
-            commandResponse: "",
-            apiResponse: {},
-        });
+
+        // const mockMvsApi = await ZoweExplorerApiRegister.getMvsApi(globalMocks.profileOne);
+        // const getMvsApiMock = jest.fn();
+        // getMvsApiMock.mockReturnValue(mockMvsApi);
+        // ZoweExplorerApiRegister.getMvsApi = getMvsApiMock.bind(ZoweExplorerApiRegister);
+        // jest.spyOn(mockMvsApi, "putContents").mockResolvedValue({
+        //     success: true,
+        //     commandResponse: "",
+        //     apiResponse: {},
+        // });
+
         globalMocks.mockFindNonFavoritedNode.mockReturnValueOnce(node);
 
         await dsActions.uploadDialog(nodeAsFavorite, testTree);
@@ -135,10 +135,9 @@ describe("mvsNodeActions", () => {
         expect(globalMocks.showOpenDialog).toBeCalled();
         expect(globalMocks.openTextDocument).toBeCalled();
         expect(testTree.refreshElement).toBeCalledWith(nodeAsFavorite);
-        putContentSpy.mockClear();
     });
     it("shouldn't call upload dialog and not upload file if selection is empty", async () => {
-        const globalMocks = createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
         const testTree = createDatasetTree(blockMocks.sessNode, globalMocks.treeView);
         const node = new ZoweDatasetNode(
