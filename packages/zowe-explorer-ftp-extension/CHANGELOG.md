@@ -4,9 +4,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
-- Added `putContent` to `FtpUssApi` for compatibility with optimizations to USS copy/paste actions.
-
-### Bug fixes
+- Updated the extension to use Zowe Explorer API's newer API for uploading content to USS for compatibility with the optimizations to copy/paste actions.
 
 ## `2.6.2`
 

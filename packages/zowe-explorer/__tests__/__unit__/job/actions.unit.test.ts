@@ -11,7 +11,7 @@
 
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
-import { Gui, ValidProfileEnum } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweJobTreeNode, ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import { Job, Spool } from "../../../src/job/ZoweJobNode";
 import {
     createISession,
@@ -829,6 +829,7 @@ describe("focusing on a job in the tree view", () => {
         newJobSession.getChildren = jest.fn().mockReturnValueOnce(Promise.resolve(updatedJobs));
         // act
         await jobActions.focusOnJob(jobTreeProvider, datasetSessionName, submittedJob.jobid);
+        expect((newJobSession as IZoweJobTreeNode).filtered).toBe(true);
         // assert
         expect(mocked(jobTreeProvider.addSession)).toHaveBeenCalledWith(datasetSessionName);
         expect(mocked(jobTreeProvider.refreshElement)).toHaveBeenCalledWith(newJobSession);
