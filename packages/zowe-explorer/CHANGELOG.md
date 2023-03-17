@@ -13,6 +13,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 - Fixed issue where job search queries were not working properly when favorited. [#2122](https://github.com/zowe/vscode-extension-for-zowe/issues/2122)
 - Fixed issues where document changes may fail to upload if the environment has a slow filesystem or mainframe connection, or when VS Code exits during an upload operation. [#1948](https://github.com/zowe/vscode-extension-for-zowe/issues/1948)
+- Fixed custom credential manager in `~/.zowe/settings/imperative.json` file being overwritten with invalid JSON. [#2187](https://github.com/zowe/vscode-extension-for-zowe/issues/2187)
 
 ## `2.6.2`
 
