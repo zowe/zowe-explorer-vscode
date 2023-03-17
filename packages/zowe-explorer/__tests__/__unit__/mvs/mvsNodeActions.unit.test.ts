@@ -117,17 +117,6 @@ describe("mvsNodeActions", () => {
 
         globalMocks.showOpenDialog.mockReturnValueOnce([fileUri]);
         globalMocks.openTextDocument.mockReturnValueOnce({});
-
-        // const mockMvsApi = await ZoweExplorerApiRegister.getMvsApi(globalMocks.profileOne);
-        // const getMvsApiMock = jest.fn();
-        // getMvsApiMock.mockReturnValue(mockMvsApi);
-        // ZoweExplorerApiRegister.getMvsApi = getMvsApiMock.bind(ZoweExplorerApiRegister);
-        // jest.spyOn(mockMvsApi, "putContents").mockResolvedValue({
-        //     success: true,
-        //     commandResponse: "",
-        //     apiResponse: {},
-        // });
-
         globalMocks.mockFindNonFavoritedNode.mockReturnValueOnce(node);
 
         await dsActions.uploadDialog(nodeAsFavorite, testTree);
