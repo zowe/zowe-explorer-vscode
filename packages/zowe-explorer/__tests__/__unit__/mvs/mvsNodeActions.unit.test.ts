@@ -13,6 +13,7 @@ import * as vscode from "vscode";
 import * as dsActions from "../../../src/dataset/actions";
 import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
 import * as globals from "../../../src/globals";
+import * as profUtils from "../../../src/utils/ProfilesUtils";
 import { createIProfile, createISession, createTreeView } from "../../../__mocks__/mockCreators/shared";
 import { createDatasetSessionNode, createDatasetTree } from "../../../__mocks__/mockCreators/datasets";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
@@ -155,5 +156,73 @@ describe("mvsNodeActions", () => {
         expect(globalMocks.showInformationMessage.mock.calls.map((call) => call[0])).toEqual(["No selection made. Operation cancelled."]);
         expect(globalMocks.openTextDocument).not.toBeCalled();
         expect(testTree.refreshElement).not.toBeCalled();
+    });
+    it("should cancel upload when info message cancel clicked", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+        const testTree = createDatasetTree(blockMocks.sessNode, globalMocks.treeView);
+        const node = new ZoweDatasetNode(
+            "node",
+            vscode.TreeItemCollapsibleState.Collapsed,
+            blockMocks.sessNode,
+            null as any,
+            null as any,
+            null as any,
+            globalMocks.profileOne
+        );
+        testTree.getTreeView.mockReturnValueOnce(createTreeView());
+        const fileUri = { fsPath: "/tmp/foo" };
+        globalMocks.showOpenDialog.mockReturnValueOnce([fileUri]);
+        Object.defineProperty(vscode.window, "withProgress", {
+            value: jest.fn().mockImplementation((progLocation, callback) => {
+                const progress = {
+                    report: (message) => {
+                        return;
+                    },
+                };
+                const token = {
+                    isCancellationRequested: true,
+                    onCancellationRequested: undefined,
+                };
+                return callback(progress, token);
+            }),
+            configurable: true,
+        });
+
+        await dsActions.uploadDialog(node, testTree);
+
+        expect(globalMocks.showOpenDialog).toBeCalled();
+        expect(globalMocks.openTextDocument).not.toBeCalled();
+        expect(testTree.refreshElement).toBeCalledWith(node);
+    });
+    it("should return error from host", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+        const testTree = createDatasetTree(blockMocks.sessNode, globalMocks.treeView);
+        const node = new ZoweDatasetNode(
+            "node",
+            vscode.TreeItemCollapsibleState.Collapsed,
+            blockMocks.sessNode,
+            null as any,
+            null as any,
+            null as any,
+            globalMocks.profileOne
+        );
+        testTree.getTreeView.mockReturnValueOnce(createTreeView());
+        const fileUri = { fsPath: "/tmp/foo" };
+        globalMocks.showOpenDialog.mockReturnValueOnce([fileUri]);
+        const mockMvsApi2 = await ZoweExplorerApiRegister.getMvsApi(globalMocks.profileOne);
+        const getMvsApiMock2 = jest.fn();
+        getMvsApiMock2.mockReturnValue(mockMvsApi2);
+        ZoweExplorerApiRegister.getMvsApi = getMvsApiMock2.bind(ZoweExplorerApiRegister);
+        jest.spyOn(mockMvsApi2, "putContents").mockResolvedValue({
+            success: false,
+            commandResponse: "",
+            apiResponse: {},
+        });
+        const errHandlerSpy = jest.spyOn(profUtils, "errorHandling").mockImplementation();
+        await dsActions.uploadDialog(node, testTree);
+
+        expect(errHandlerSpy).toBeCalled();
     });
 });
