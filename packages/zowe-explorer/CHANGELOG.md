@@ -6,7 +6,13 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
-- Added Job search label to the Jobs tree. Label will show current search query. [#2062](https://github.com/zowe/vscode-extension-for-zowe/pull/2064)
+### Bug fixes
+
+## `2.7.0`
+
+### New features and enhancements
+
+- Added Job search query label to the session in the Jobs tree. [#2062](https://github.com/zowe/vscode-extension-for-zowe/pull/2064)
 - Added feature to copy datasets (pds, sequential, members across pds) with multi-select capabilities. [#1150](https://github.com/zowe/vscode-extension-for-zowe/issues/1550)
 
 ### Bug fixes

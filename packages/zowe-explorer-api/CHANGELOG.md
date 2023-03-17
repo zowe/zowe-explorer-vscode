@@ -6,11 +6,15 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### New features and enhancements
 
-- Added `description` variable to `IZoweTreeNode` to prevent compilation errors when updating node descriptions.
-- Added `filtered` variable to `IZoweJobTreeNode` to track whether a job session node has been filtered.
-- Added copy datasets APIs. [#1550] (https://github.com/zowe/vscode-extension-for-zowe/issues/1550)
-
 ### Bug fixes
+
+## `2.7.0`
+
+### New features and enhancements
+
+- Updated `IZoweTreeNode` with additional variable `description` to prevent compilation errors when updating node descriptions. [#2122](https://github.com/zowe/vscode-extension-for-zowe/issues/2122)
+- Updated `IZoweJobTreeNode` with additional variable `filtered` to track whether a job session node has been filtered. [#2122](https://github.com/zowe/vscode-extension-for-zowe/issues/2122)
+- Added new API `IMvs.copyDataSet`. [#1550](https://github.com/zowe/vscode-extension-for-zowe/issues/1550)
 
 ## `2.6.2`
 
