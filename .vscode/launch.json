@@ -17,11 +17,17 @@
       "skipFiles": ["<node_internals>/**"]
     },
     {
+      // TODO: This launch-configuration should be updated to run the Theia container locally
+      //       and run through a single suite of tests (Firefox or Chrome)
       "name": "Run Zowe Explorer VS Code Extension (Theia)",
       "type": "extensionHost",
       "request": "launch",
       "runtimeExecutable": "${execPath}",
-      "args": ["--extensionDevelopmentPath=${workspaceFolder}/packages/zowe-explorer", "--verbose"],
+      "args": [
+        "--verbose",
+        "--extensionDevelopmentPath=${workspaceFolder}/packages/zowe-explorer",
+        "--extensionTestsPath=${workspaceFolder}/packages/zowe-explorer/out/__tests__/__theia__/index"
+      ],
       "outFiles": ["${workspaceFolder}/packages/zowe-explorer/out/**/*.js"],
       "smartStep": true
     },

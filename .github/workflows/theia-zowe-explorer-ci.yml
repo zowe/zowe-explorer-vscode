@@ -6,6 +6,7 @@ on:
     paths:
       - packages/zowe-explorer/**
       - packages/zowe-explorer-api/**
+      - .github/workflows/theia-zowe-explorer-ci.yml
   pull_request:
     paths:
       - packages/zowe-explorer/**
