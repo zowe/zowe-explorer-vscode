@@ -1,4 +1,5 @@
 .github
+.vscode-test
 dist
 out
 lib

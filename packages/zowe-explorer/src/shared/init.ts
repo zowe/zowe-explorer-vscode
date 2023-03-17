@@ -20,10 +20,10 @@ import { Profiles } from "../Profiles";
 import { hideTempFolder, moveTempFolder } from "../utils/TempFolder";
 import { TsoCommandHandler } from "../command/TsoCommandHandler";
 import { MvsCommandHandler } from "../command/MvsCommandHandler";
-import { handleSaving } from "../utils/workspace";
 import { saveFile } from "../dataset/actions";
 import { saveUSSFile } from "../uss/actions";
 import { promptCredentials, writeOverridesFile } from "../utils/ProfilesUtils";
+import { ZoweSaveQueue } from "../abstract/ZoweSaveQueue";
 
 // Set up localization
 nls.config({
@@ -41,7 +41,7 @@ export interface IZoweProviders {
 
 export function registerRefreshCommand(
     context: vscode.ExtensionContext,
-    activate: (context: vscode.ExtensionContext) => Promise<ZoweExplorerApiRegister>,
+    activate: (_context: vscode.ExtensionContext) => Promise<ZoweExplorerApiRegister>,
     deactivate: () => Promise<void>
 ) {
     // set a command to silently reload extension
@@ -116,34 +116,28 @@ export async function registerCommonCommands(context: vscode.ExtensionContext, p
             )
         );
         context.subscriptions.push(
-            vscode.workspace.onWillSaveTextDocument(async (savedFile) => {
+            vscode.workspace.onDidSaveTextDocument((savedFile) => {
                 globals.LOG.debug(
                     localize(
                         "onDidSaveTextDocument1",
                         "File was saved -- determining whether the file is a USS file or Data set.\n Comparing (case insensitive) "
                     ) +
-                        savedFile.document.fileName +
+                        savedFile.fileName +
                         localize("onDidSaveTextDocument2", " against directory ") +
                         globals.DS_DIR +
                         localize("onDidSaveTextDocument3", "and") +
                         globals.USS_DIR
                 );
-                if (!savedFile.document.isDirty) {
-                    globals.LOG.debug(
-                        localize("activate.didSaveText.file", "File ") +
-                            savedFile.document.fileName +
-                            localize("activate.didSaveText.notDirty", " is not a dirty file ")
-                    );
-                } else if (savedFile.document.fileName.toUpperCase().indexOf(globals.DS_DIR.toUpperCase()) >= 0) {
+                if (savedFile.fileName.toUpperCase().indexOf(globals.DS_DIR.toUpperCase()) >= 0) {
                     globals.LOG.debug(localize("activate.didSaveText.isDataSet", "File is a data set-- saving "));
-                    await handleSaving(saveFile, savedFile.document, providers.ds);
-                } else if (savedFile.document.fileName.toUpperCase().indexOf(globals.USS_DIR.toUpperCase()) >= 0) {
+                    ZoweSaveQueue.push({ uploadRequest: saveFile, savedFile, fileProvider: providers.ds });
+                } else if (savedFile.fileName.toUpperCase().indexOf(globals.USS_DIR.toUpperCase()) >= 0) {
                     globals.LOG.debug(localize("activate.didSaveText.isUSSFile", "File is a USS file -- saving"));
-                    await handleSaving(saveUSSFile, savedFile.document, providers.uss);
+                    ZoweSaveQueue.push({ uploadRequest: saveUSSFile, savedFile, fileProvider: providers.uss });
                 } else {
                     globals.LOG.debug(
                         localize("activate.didSaveText.file", "File ") +
-                            savedFile.document.fileName +
+                            savedFile.fileName +
                             localize("activate.didSaveText.notDataSet", " is not a data set or USS file ")
                     );
                 }

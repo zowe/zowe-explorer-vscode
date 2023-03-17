@@ -12,6 +12,8 @@ rules:
   "@typescript-eslint/no-var-requires": warn
   no-unused-expressions: off
   "@typescript-eslint/no-unused-expressions": warn
+  no-unused-vars: off
+  "@typescript-eslint/no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }]
   curly: warn
   max-len:
     - warn
@@ -37,3 +39,8 @@ rules:
       filePathPattern: ".*\\.unit\\.test\\..*"
 parserOptions:
   sourceType: module
+overrides:
+  - files: "**/__tests__/**"
+    rules:
+      no-magic-numbers: off
+      "@typescript-eslint/no-unused-vars": off

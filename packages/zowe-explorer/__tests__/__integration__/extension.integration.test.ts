@@ -33,7 +33,7 @@ import { SettingsConfig } from "../../src/utils/SettingsConfig";
 import * as globals from "../../src/globals";
 
 const TIMEOUT = 45000;
-declare var it: Mocha.ITestDefinition;
+declare var it: Mocha.TestFunction;
 // declare var describe: any;
 
 const testProfile: zowe.imperative.IProfileLoaded = {
@@ -455,8 +455,9 @@ describe("Extension Integration Tests", async () => {
                     try {
                         const fromNode = new ZoweDatasetNode(fromDataSetName, vscode.TreeItemCollapsibleState.None, sessionNode, session);
                         const toNode = new ZoweDatasetNode(toDataSetName, vscode.TreeItemCollapsibleState.None, sessionNode, session);
+                        const nodeList: ZoweDatasetNode[] = [fromNode];
+                        await dsActions.copyDataSets(nodeList, null, null);
 
-                        await dsActions.copyDataSet(fromNode);
                         await dsActions.pasteMember(toNode, testTree);
 
                         contents = await zowe.Get.dataSet(sessionNode.getSession(), fromDataSetName);
@@ -496,7 +497,6 @@ describe("Extension Integration Tests", async () => {
 
                         const inputBoxStub = sandbox.stub(vscode.window, "showInputBox");
                         inputBoxStub.returns(toMemberName);
-
                         await dsActions.copyDataSet(fromNode);
                         await dsActions.pasteMember(parentNode, testTree);
 
@@ -546,8 +546,8 @@ describe("Extension Integration Tests", async () => {
 
                         const inputBoxStub = sandbox.stub(vscode.window, "showInputBox");
                         inputBoxStub.returns(toMemberName);
-
-                        await dsActions.copyDataSet(fromNode);
+                        const nodeList: ZoweDatasetNode[] = [fromNode];
+                        await dsActions.copyDataSets(nodeList, null, null);
                         await dsActions.pasteMember(toNode, testTree);
 
                         contents = await zowe.Get.dataSet(sessionNode.getSession(), `${toDataSetName}(${toMemberName})`);
@@ -597,8 +597,8 @@ describe("Extension Integration Tests", async () => {
                         fromParentNode.contextValue = globals.DS_PDS_CONTEXT;
                         fromMemberNode.contextValue = globals.DS_MEMBER_CONTEXT;
                         toNode.contextValue = globals.DS_DS_CONTEXT;
-
-                        await dsActions.copyDataSet(fromMemberNode);
+                        const nodeList: ZoweDatasetNode[] = [fromMemberNode];
+                        await dsActions.copyDataSets(nodeList, null, null);
                         await dsActions.pasteMember(toNode, testTree);
 
                         contents = await zowe.Get.dataSet(sessionNode.getSession(), toDataSetName);

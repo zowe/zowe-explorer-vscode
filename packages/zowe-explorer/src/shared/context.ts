@@ -169,6 +169,15 @@ export function isFavorite(node: TreeItem): boolean {
 }
 
 /**
+ * Helper function which identifies if the node is a favorited profile
+ * @param node
+ * @return true if a favorited profile, false otherwise
+ */
+export function isFavProfile(node: TreeItem): boolean {
+    return new RegExp(globals.FAV_PROFILE_CONTEXT).test(node.contextValue);
+}
+
+/**
  * Helper function which identifies if the node is a favorite root
  * or search
  * @param node
@@ -383,6 +392,22 @@ export function isVsam(node: TreeItem): boolean {
  */
 export function asFavorite(node: TreeItem): string {
     return isFavorite(node) ? node.contextValue : node.contextValue + globals.FAV_SUFFIX;
+}
+
+export function withProfile(node: IZoweTreeNode): string {
+    if (!node) {
+        return;
+    }
+    const hasProfile = (n: IZoweTreeNode) => n?.contextValue?.includes(".profile=") ?? false;
+    if (hasProfile(node)) {
+        return node.contextValue;
+    }
+    const nodeParent = node.getParent();
+    if (hasProfile(nodeParent)) {
+        const pContext = nodeParent.contextValue.split(".profile=");
+        return node.contextValue + ".profile=" + pContext[1].split(".")[0] + ".";
+    }
+    return node.contextValue;
 }
 
 /**

@@ -188,7 +188,7 @@ describe("Test src/dataset/extension", () => {
             },
             {
                 name: "zowe.uss.pasteUssFile",
-                mock: [{ spy: jest.spyOn(ussActions, "pasteUssFile"), arg: [ussFileProvider, test.value] }],
+                mock: [{ spy: jest.spyOn(ussActions, "pasteUss"), arg: [ussFileProvider, test.value] }],
             },
             {
                 name: "zowe.uss.copyUssFile",

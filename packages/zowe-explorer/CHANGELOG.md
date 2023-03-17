@@ -6,9 +6,25 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
-- Added Job search label to the Jobs tree. Label will show current search query [2062](https://github.com/zowe/vscode-extension-for-zowe/pull/2064).
+### Bug fixes
+
+## `2.7.0`
+
+### New features and enhancements
+
+- Added Job search query label to the session in the Jobs tree. [#2062](https://github.com/zowe/vscode-extension-for-zowe/pull/2064)
+- Added feature to copy datasets (pds, sequential, members across pds) with multi-select capabilities. [#1150](https://github.com/zowe/vscode-extension-for-zowe/issues/1550)
 
 ### Bug fixes
+
+- Fixed issue where job search queries were not working properly when favorited. [#2122](https://github.com/zowe/vscode-extension-for-zowe/issues/2122)
+- Fixed issues where document changes may fail to upload if the environment has a slow filesystem or mainframe connection, or when VS Code exits during an upload operation. [#1948](https://github.com/zowe/vscode-extension-for-zowe/issues/1948)
+
+## `2.6.2`
+
+### Bug fixes
+
+- Updated dependencies for security audits.
 
 ## `2.6.1`
 
@@ -32,6 +48,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Added confirmation message for "Submit Job" feature as an option in extension settings (set to "All jobs" by default). [#998](https://github.com/zowe/vscode-extension-for-zowe/issues/998)
 - Updated UI/UX method calls to use standalone `Gui` module for better usability and maintainability. [#1967](https://github.com/zowe/vscode-extension-for-zowe/issues/1967)
 - Updated error dialog when Zowe config is invalid, with option to "Show Config" within VS Code for diagnostics. [#1986](https://github.com/zowe/vscode-extension-for-zowe/issues/1986)
+- Added support for pasting at top-level of USS tree (if filtered), and optimized copy/paste operations to avoid using local paths when possible. [#2041](https://github.com/zowe/vscode-extension-for-zowe/issues/2041)
 
 ### Bug fixes
 

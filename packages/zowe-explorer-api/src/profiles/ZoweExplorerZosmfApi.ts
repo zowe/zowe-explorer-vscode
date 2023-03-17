@@ -118,6 +118,10 @@ export class ZosmfUssApi extends ZosmfApiCommon implements ZoweExplorerApi.IUss 
         return zowe.Download.ussFile(this.getSession(), inputFilePath, options);
     }
 
+    public copy(outputPath: string, options?: Omit<object, "request">): Promise<Buffer> {
+        return zowe.Utilities.putUSSPayload(this.getSession(), outputPath, { ...(options ?? {}), request: "copy" });
+    }
+
     /**
      * API method to wrap to the newer `putContent`.
      * @deprecated
@@ -247,6 +251,9 @@ export class ZosmfMvsApi extends ZosmfApiCommon implements ZoweExplorerApi.IMvs 
 
     public dataSetsMatchingPattern(filter: string[], options?: zowe.IDsmListOptions): Promise<zowe.IZosFilesResponse> {
         return zowe.List.dataSetsMatchingPattern(this.getSession(), filter, options);
+    }
+    public copyDataSet(fromDataSetName: string, toDataSetName: string, enq?: string, replace?: boolean): Promise<zowe.IZosFilesResponse> {
+        return zowe.Copy.dataSet(this.getSession(), { dsn: toDataSetName }, { "from-dataset": { dsn: fromDataSetName }, enq, replace });
     }
 }
 

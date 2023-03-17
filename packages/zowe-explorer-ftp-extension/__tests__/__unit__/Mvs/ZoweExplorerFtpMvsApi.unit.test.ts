@@ -209,6 +209,16 @@ describe("FtpMvsApi", () => {
         expect(MvsApi.releaseConnection).toBeCalled();
     });
 
+    it("should give error copy datasets.", async () => {
+        try {
+            await MvsApi.copyDataSet(null, null);
+        } catch (error) {
+            // do nth
+        }
+        const copySpy = jest.spyOn(Gui, "errorMessage");
+        expect(copySpy).toHaveBeenCalled();
+    });
+
     it("should throw an error when hMigrateDataSet is called", async () => {
         jest.spyOn(Gui, "errorMessage").mockImplementation();
         await expect(MvsApi.hMigrateDataSet("test")).rejects.toThrowError();
