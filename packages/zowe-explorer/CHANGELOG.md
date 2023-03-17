@@ -6,6 +6,14 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
+### Bug fixes
+
+- Fixed issue with silent failures when uploading members into a data set. [#2167](https://github.com/zowe/vscode-extension-for-zowe/issues/2167)
+
+## `2.7.0`
+
+### New features and enhancements
+
 - Added Job search label to the Jobs tree. Label will show current search query. [#2062](https://github.com/zowe/vscode-extension-for-zowe/pull/2064)
 - Added feature to copy datasets (pds, sequential, members across pds) with multi-select capabilities. [#1150](https://github.com/zowe/vscode-extension-for-zowe/issues/1550)
 
