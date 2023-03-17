@@ -312,7 +312,7 @@ export function setConfigPath(configPath: string | undefined): void {
 export function initLogger(context: vscode.ExtensionContext) {
     for (const appenderName of Object.keys(loggerConfig.log4jsConfig.appenders)) {
         loggerConfig.log4jsConfig.appenders[appenderName].filename = path.join(
-            SettingsConfig.getDirectValue(this.SETTINGS_LOGS_FOLDER_PATH) ?? context.extensionPath,
+            SettingsConfig.getDirectValue(this.SETTINGS_LOGS_FOLDER_PATH) || context.extensionPath,
             loggerConfig.log4jsConfig.appenders[appenderName].filename
         );
     }

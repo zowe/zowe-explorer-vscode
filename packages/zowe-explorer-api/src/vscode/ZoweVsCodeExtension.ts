@@ -29,7 +29,7 @@ export class ZoweVsCodeExtension {
      * Get custom logging path if one is defined in VS Code settings.
      */
     public static get customLoggingPath(): string | undefined {
-        return vscode.workspace.getConfiguration("zowe").get("files.logsFolder.path");
+        return vscode.workspace.getConfiguration("zowe").get("files.logsFolder.path") || undefined;
     }
 
     /**
