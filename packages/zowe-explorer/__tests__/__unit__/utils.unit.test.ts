@@ -52,10 +52,8 @@ function createGlobalMocks() {
             return { value: globalMocks.mockProfileInfo, configurable: true };
         }),
     });
-    Object.defineProperty(ZoweLogger, "logError", {
-        value: jest.fn(),
-        configurable: true,
-    });
+    Object.defineProperty(ZoweLogger, "logError", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "logTrace", { value: jest.fn(), configurable: true });
 
     return {
         isTheia,

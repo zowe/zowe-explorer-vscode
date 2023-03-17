@@ -11,9 +11,11 @@
 
 import { IZoweTree, IZoweTreeNode, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
 import * as globals from "../globals";
+import { ZoweLogger } from "./LoggerUtils";
 import { SettingsConfig } from "./SettingsConfig";
 
 export async function removeSession(treeProvider: IZoweTree<IZoweTreeNode>, profileName: string): Promise<void> {
+    ZoweLogger.logTrace("SessionUtils.removeSession called.");
     const treeType = treeProvider.getTreeType();
     let schema;
     switch (treeType) {

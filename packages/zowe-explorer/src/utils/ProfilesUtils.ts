@@ -36,6 +36,7 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
  * @param {moreInfo} - additional/customized error messages
  *************************************************************************************************************/
 export async function errorHandling(errorDetails: any, label?: string, moreInfo?: string) {
+    ZoweLogger.logTrace("ProfileUtils.errorHandling called.");
     let httpErrCode = null;
     const errMsg = localize(
         "errorHandling.invalid.credentials",
@@ -121,6 +122,7 @@ export async function errorHandling(errorDetails: any, label?: string, moreInfo?
 
 // TODO: remove this second occurence
 export function isTheia(): boolean {
+    ZoweLogger.logTrace("ProfileUtils.isTheia called.");
     const VSCODE_APPNAME: string[] = ["Visual Studio Code", "VSCodium"];
     const appName = vscode.env.appName;
     if (appName && !VSCODE_APPNAME.includes(appName)) {
