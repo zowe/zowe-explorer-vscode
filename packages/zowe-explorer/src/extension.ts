@@ -36,10 +36,10 @@ import { ZoweSaveQueue } from "./abstract/ZoweSaveQueue";
 export async function activate(context: vscode.ExtensionContext): Promise<ZoweExplorerApiRegister> {
     // Get temp folder location from settings
     const tempPath: string = SettingsConfig.getDirectValue(globals.SETTINGS_TEMP_FOLDER_PATH);
-
+    await ZoweLogger.initializeZoweLogger(context);
     // Determine the runtime framework to support special behavior for Theia
     globals.defineGlobals(tempPath);
-    await ZoweLogger.initializeZoweLogger(context);
+
     hideTempFolder(getZoweDir());
     await initializeZoweProfiles();
     initializeZoweTempFolder();
@@ -60,7 +60,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     await SettingsConfig.standardizeSettings();
     await watchConfigProfile(context, providers);
     globals.setActivated(true);
-    ZoweLogger.info("Zowe Explorer has activated.");
     return ZoweExplorerApiRegister.getInstance();
 }
 /**

@@ -18,6 +18,7 @@ import * as loggerConfig from "../log4jsconfig.json";
 import * as nls from "vscode-nls";
 import { getZoweDir } from "@zowe/zowe-explorer-api";
 import { SettingsConfig } from "./utils/SettingsConfig";
+import { ZoweLogger } from "./utils/LoggerUtils";
 
 nls.config({
     messageFormat: nls.MessageFormat.bundle,
@@ -286,12 +287,13 @@ export function defineGlobals(tempPath: string | undefined) {
         vscode.env.uiKind === vscode.UIKind.Web
     ) {
         this.ISTHEIA = true;
+        ZoweLogger.info(localize("globals.defineGlobals.isTheia", "Zowe Explorer is running in Theia environment."));
     }
 
     SETTINGS_TEMP_FOLDER_LOCATION = tempPath;
     // Set temp path & folder paths
     ZOWETEMPFOLDER = tempPath ? path.join(tempPath, "temp") : path.join(__dirname, "..", "..", "resources", "temp");
-
+    ZoweLogger.info(localize("globals.defineGlobals.tempFolder", "Zowe Explorer's temp folder is located at {0}", ZOWETEMPFOLDER));
     ZOWE_TMP_FOLDER = path.join(ZOWETEMPFOLDER, "tmp");
     USS_DIR = path.join(ZOWETEMPFOLDER, "_U_");
     DS_DIR = path.join(ZOWETEMPFOLDER, "_D_");
@@ -322,6 +324,9 @@ export function initLogger(context: vscode.ExtensionContext): string {
 }
 
 export function setActivated(value: boolean) {
+    if (value) {
+        ZoweLogger.info(localize("globals.setActivated.success", "Zowe Explorer has activated successfully."));
+    }
     ACTIVATED = value;
 }
 
@@ -338,7 +343,9 @@ export async function setGlobalSecurityValue() {
     const settingEnabled: boolean = SettingsConfig.getDirectValue(this.SETTINGS_SECURE_CREDENTIALS_ENABLED);
     if (!settingEnabled) {
         PROFILE_SECURITY = false;
+        ZoweLogger.info(localize("globals.setGlobalSecurityValue.unsecured", "Zowe explorer profiles are not secured."));
     } else {
         PROFILE_SECURITY = ZOWE_CLI_SCM;
+        ZoweLogger.info(localize("globals.setGlobalSecurityValue.secured", "Zowe explorer profiles are secured."));
     }
 }

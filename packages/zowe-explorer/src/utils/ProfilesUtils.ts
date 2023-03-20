@@ -343,7 +343,7 @@ export async function initializeZoweFolder(): Promise<void> {
             profileRootDirectory: path.join(zoweDir, "profiles"),
         });
     }
-    ZoweLogger.info(localize("initializeZoweFolder.success", "Zowe Folder successfully initialized."));
+    ZoweLogger.info(localize("initializeZoweFolder.location", "Zowe home directory is located at {0}", zoweDir));
 }
 
 export function writeOverridesFile() {
