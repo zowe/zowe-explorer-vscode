@@ -181,7 +181,7 @@ describe("Test src/dataset/extension", () => {
                 name: "zowe.ds.pasteDataSets:1",
                 parm: [false],
                 mock: [
-                    { spy: jest.spyOn(dsProvider, "getTreeView"), arg: [], ret: { selection: [test.value] } },
+                    { spy: jest.spyOn(dsProvider, "getTreeView"), arg: [], ret: { reveal: jest.fn(), selection: [test.value] } },
                     { spy: jest.spyOn(dsActions, "pasteDataSetMembers"), arg: [dsProvider, test.value] },
                     { spy: jest.spyOn(dsActions, "refreshDataset"), arg: ["test", dsProvider] },
                 ],
@@ -189,6 +189,7 @@ describe("Test src/dataset/extension", () => {
             {
                 name: "zowe.ds.pasteDataSets:2",
                 mock: [
+                    { spy: jest.spyOn(dsProvider, "getTreeView"), arg: [], ret: { reveal: jest.fn(), selection: [test.value] } },
                     { spy: jest.spyOn(dsActions, "pasteDataSetMembers"), arg: [dsProvider, test.value] },
                     { spy: jest.spyOn(dsActions, "refreshDataset"), arg: ["test", dsProvider] },
                 ],
