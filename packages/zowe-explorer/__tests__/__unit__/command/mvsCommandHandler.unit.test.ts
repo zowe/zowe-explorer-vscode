@@ -57,8 +57,8 @@ describe("mvsCommandActions unit testing", () => {
             };
         }),
     });
-    Object.defineProperty(ZoweLogger, "logTrace", { value: jest.fn(), configurable: true });
-    Object.defineProperty(ZoweLogger, "logError", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "error", { value: jest.fn(), configurable: true });
 
     createQuickPick.mockReturnValue({
         placeholder: 'Choose "Create new..." to define a new profile or select an existing profile to add to the Data Set Explorer',

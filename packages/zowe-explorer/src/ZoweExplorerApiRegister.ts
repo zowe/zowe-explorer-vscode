@@ -297,19 +297,19 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
         try {
             result = this.getUssApi(profile);
         } catch (error) {
-            ZoweLogger.logDebug(error);
+            ZoweLogger.debug(error);
             try {
                 result = this.getMvsApi(profile);
             } catch (error) {
-                ZoweLogger.logDebug(error);
+                ZoweLogger.debug(error);
                 try {
                     result = this.getJesApi(profile);
                 } catch (error) {
-                    ZoweLogger.logDebug(error);
+                    ZoweLogger.debug(error);
                     try {
                         result = this.getCommandApi(profile);
                     } catch (error) {
-                        ZoweLogger.logError(error);
+                        ZoweLogger.error(error);
                         throw new Error(
                             localize("getCommonApi.error", "Internal error: Tried to call a non-existing Common API in API register: ") + profile.type
                         );

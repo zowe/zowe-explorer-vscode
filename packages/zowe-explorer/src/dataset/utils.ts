@@ -14,7 +14,7 @@ import { IZoweNodeType } from "@zowe/zowe-explorer-api";
 import { ZoweLogger } from "../utils/LoggerUtils";
 
 export function getProfileAndDataSetName(node: IZoweNodeType) {
-    ZoweLogger.logTrace("dataset.utils.getProfileAndDataSetName called.");
+    ZoweLogger.trace("dataset.utils.getProfileAndDataSetName called.");
     let profileName;
     let dataSetName;
     profileName = node.getParent().getLabel();
@@ -23,7 +23,7 @@ export function getProfileAndDataSetName(node: IZoweNodeType) {
 }
 
 export function getNodeLabels(node: IZoweNodeType) {
-    ZoweLogger.logTrace("dataset.utils.getNodeLabels called.");
+    ZoweLogger.trace("dataset.utils.getNodeLabels called.");
     if (node.contextValue.includes(globals.DS_MEMBER_CONTEXT)) {
         return {
             ...getProfileAndDataSetName(node.getParent()),
@@ -35,7 +35,7 @@ export function getNodeLabels(node: IZoweNodeType) {
     }
 }
 export function validateDataSetName(dsName: string): boolean {
-    ZoweLogger.logTrace("dataset.utils.validateDataSetName called.");
+    ZoweLogger.trace("dataset.utils.validateDataSetName called.");
     if (dsName.length > globals.MAX_DATASET_LENGTH) {
         return false;
     }
@@ -43,7 +43,7 @@ export function validateDataSetName(dsName: string): boolean {
 }
 
 export function validateMemberName(member: string): boolean {
-    ZoweLogger.logTrace("dataset.utils.validateMemberName called.");
+    ZoweLogger.trace("dataset.utils.validateMemberName called.");
     if (member.length > globals.MAX_MEMBER_LENGTH) {
         return false;
     }

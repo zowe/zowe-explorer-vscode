@@ -84,7 +84,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
      * @returns {string}
      */
     public getProfileName(): string {
-        ZoweLogger.logTrace("ZoweDatasetNode.getProfileName called.");
+        ZoweLogger.trace("ZoweDatasetNode.getProfileName called.");
         return this.getProfile() ? this.getProfile().name : undefined;
     }
 
@@ -94,7 +94,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
      * @returns {Promise<ZoweDatasetNode[]>}
      */
     public async getChildren(): Promise<ZoweDatasetNode[]> {
-        ZoweLogger.logTrace("ZoweDatasetNode.getChildren called.");
+        ZoweLogger.trace("ZoweDatasetNode.getChildren called.");
         if (!this.pattern && contextually.isSessionNotFav(this)) {
             return [
                 new ZoweDatasetNode(
@@ -246,7 +246,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     }
 
     public getSessionNode(): IZoweDatasetTreeNode {
-        ZoweLogger.logTrace("ZoweDatasetNode.getSessionNode called.");
+        ZoweLogger.trace("ZoweDatasetNode.getSessionNode called.");
         return this.getParent() ? this.getParent().getSessionNode() : this;
     }
     /**
@@ -255,7 +255,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
      * @returns {string}
      */
     public getEtag(): string {
-        ZoweLogger.logTrace("ZoweDatasetNode.getEtag called.");
+        ZoweLogger.trace("ZoweDatasetNode.getEtag called.");
         return this.etag;
     }
 
@@ -265,12 +265,12 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
      * @returns {void}
      */
     public setEtag(etagValue): void {
-        ZoweLogger.logTrace("ZoweDatasetNode.setEtag called.");
+        ZoweLogger.trace("ZoweDatasetNode.setEtag called.");
         this.etag = etagValue;
     }
 
     private async getDatasets(): Promise<zowe.IZosFilesResponse[]> {
-        ZoweLogger.logTrace("ZoweDatasetNode.getDatasets called.");
+        ZoweLogger.trace("ZoweDatasetNode.getDatasets called.");
         const sessNode = this.getSessionNode();
         const responses: zowe.IZosFilesResponse[] = [];
         try {

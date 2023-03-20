@@ -40,7 +40,7 @@ export class ZoweSaveQueue {
      * operations.
      */
     public static push(request: SaveRequest) {
-        ZoweLogger.logTrace("ZoweSaveQueue.push called.");
+        ZoweLogger.trace("ZoweSaveQueue.push called.");
         this.savingQueue.push(request);
         this.ongoingSave = this.all().then(this.processNext.bind(this));
     }
@@ -49,7 +49,7 @@ export class ZoweSaveQueue {
      * Wait for all items in the queue to be processed.
      */
     public static async all() {
-        ZoweLogger.logTrace("ZoweSaveQueue.all called.");
+        ZoweLogger.trace("ZoweSaveQueue.all called.");
         await this.ongoingSave;
     }
 
@@ -60,7 +60,7 @@ export class ZoweSaveQueue {
      * Iterate over the queue and process next item until it is empty.
      */
     private static async processNext() {
-        ZoweLogger.logTrace("ZoweSaveQueue.processNext called.");
+        ZoweLogger.trace("ZoweSaveQueue.processNext called.");
         const nextRequest = this.savingQueue.shift();
         if (nextRequest == null || this.savingQueue.some(({ savedFile }) => savedFile.fileName === nextRequest.savedFile.fileName)) {
             return;
@@ -69,7 +69,7 @@ export class ZoweSaveQueue {
         try {
             await nextRequest.uploadRequest(nextRequest.savedFile, nextRequest.fileProvider);
         } catch (err) {
-            ZoweLogger.logError(err);
+            ZoweLogger.error(err);
             await markDocumentUnsaved(nextRequest.savedFile);
             await Gui.errorMessage(
                 localize(
@@ -86,7 +86,7 @@ export class ZoweSaveQueue {
      * Generate hyperlink for document to show in VS Code message.
      */
     private static buildFileHyperlink(document: vscode.TextDocument) {
-        ZoweLogger.logTrace("ZoweSaveQueue.buildFileHyperlink called.");
+        ZoweLogger.trace("ZoweSaveQueue.buildFileHyperlink called.");
         const encodedUrl = JSON.stringify([document.uri.toString()]);
         return `[${path.basename(document.fileName)}](command:vscode.open?${encodedUrl})`;
     }

@@ -26,7 +26,7 @@ const globalMocks = {
     mockIJobFile: createIJobFile(),
 };
 describe("ZoweCommandProvider Unit Tests", () => {
-    Object.defineProperty(ZoweLogger, "logTrace", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
     describe("ZoweCommandProvider Unit Tests - function refreshElement", () => {
         it("should refresh the tree data", async () => {
             const testNode = new (ZoweTreeNode as any)("test", vscode.TreeItemCollapsibleState.None, undefined);

@@ -44,7 +44,7 @@ function createGlobalMocks() {
     globalMocks.mockLoadNamedProfile.mockReturnValue(globalMocks.testProfile);
     const profilesForValidation = { status: "active", name: "fake" };
     Object.defineProperty(vscode.window, "createTreeView", { value: globalMocks.createTreeView, configurable: true });
-    Object.defineProperty(ZoweLogger, "logTrace", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
     Object.defineProperty(Profiles, "getInstance", {
         value: jest.fn(() => {
             return {
@@ -84,9 +84,8 @@ function createGlobalMocks() {
         value: jest.fn().mockImplementationOnce(() => Promise.resolve()),
         configurable: true,
     });
-    Object.defineProperty(ZoweLogger, "logError", { value: jest.fn(), configurable: true });
-    Object.defineProperty(ZoweLogger, "logDebug", { value: jest.fn(), configurable: true });
-    Object.defineProperty(ZoweLogger, "logTrace", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "error", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "debug", { value: jest.fn(), configurable: true });
 
     return globalMocks;
 }

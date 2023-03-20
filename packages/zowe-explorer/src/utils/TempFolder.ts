@@ -32,7 +32,7 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 //  * @param currentTempPath temp path settings value after updated by user
 //  */
 export async function moveTempFolder(previousTempPath: string, currentTempPath: string) {
-    ZoweLogger.logTrace("TempFolder.moveTempFolder called.");
+    ZoweLogger.trace("TempFolder.moveTempFolder called.");
     // Re-define globals with updated path
     globals.defineGlobals(currentTempPath);
 
@@ -68,7 +68,7 @@ export async function moveTempFolder(previousTempPath: string, currentTempPath: 
 
         moveSync(previousTemp, globals.ZOWETEMPFOLDER, { overwrite: true });
     } catch (err) {
-        ZoweLogger.logError("Error moving temporary folder! " + JSON.stringify(err));
+        ZoweLogger.error("Error moving temporary folder! " + JSON.stringify(err));
         Gui.errorMessage(err.message);
     }
 }
@@ -79,7 +79,7 @@ export async function moveTempFolder(previousTempPath: string, currentTempPath: 
  * @param directory path to directory to be deleted
  */
 export async function cleanDir(directory) {
-    ZoweLogger.logTrace("TempFolder.cleanDir called.");
+    ZoweLogger.trace("TempFolder.cleanDir called.");
     if (!fs.existsSync(directory)) {
         return;
     }
@@ -101,7 +101,7 @@ export async function cleanDir(directory) {
  * @export
  */
 export async function cleanTempDir() {
-    ZoweLogger.logTrace("TempFolder.cleanTempDir called.");
+    ZoweLogger.trace("TempFolder.cleanTempDir called.");
     // Get temp folder cleanup preference from settings
     const preferencesTempCleanupEnabled: boolean = SettingsConfig.getDirectValue(globals.SETTINGS_TEMP_FOLDER_CLEANUP);
     // logger hasn't necessarily been initialized yet, don't use the `log` in this function
@@ -111,7 +111,7 @@ export async function cleanTempDir() {
     try {
         await cleanDir(globals.ZOWETEMPFOLDER);
     } catch (err) {
-        ZoweLogger.logError(err);
+        ZoweLogger.error(err);
         Gui.errorMessage(localize("deactivate.error", "Unable to delete temporary folder. ") + err);
     }
 }
@@ -122,7 +122,7 @@ export async function cleanTempDir() {
  * @export
  */
 export async function hideTempFolder(zoweDir: string) {
-    ZoweLogger.logTrace("TempFolder.hideTempFolder called.");
+    ZoweLogger.trace("TempFolder.hideTempFolder called.");
     if (SettingsConfig.getDirectValue<boolean>(globals.SETTINGS_TEMP_FOLDER_HIDE)) {
         await SettingsConfig.setDirectValue("files.exclude", { [zoweDir]: true, [globals.ZOWETEMPFOLDER]: true });
     }

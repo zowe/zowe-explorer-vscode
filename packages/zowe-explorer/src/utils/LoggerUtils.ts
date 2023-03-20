@@ -40,32 +40,47 @@ export class ZoweLogger {
         }
     }
 
-    public static async logTrace(message: string): Promise<void> {
+    public static async trace(message: string): Promise<void> {
         await this.writeLogMessage(message, MessageSeverity.TRACE);
     }
 
-    public static async logDebug(message: string): Promise<void> {
+    public static async debug(message: string): Promise<void> {
         await this.writeLogMessage(message, MessageSeverity.DEBUG);
     }
 
-    public static async logInfo(message: string): Promise<void> {
+    public static async info(message: string): Promise<void> {
         await this.writeLogMessage(message, MessageSeverity.INFO);
     }
 
-    public static async logWarn(message: string): Promise<void> {
+    public static async warn(message: string): Promise<void> {
         await this.writeLogMessage(message, MessageSeverity.WARN);
     }
 
-    public static async logError(message: string): Promise<void> {
+    public static async error(message: string): Promise<void> {
         await this.writeLogMessage(message, MessageSeverity.ERROR);
     }
 
-    public static async logFatal(message: string): Promise<void> {
+    public static async fatal(message: string): Promise<void> {
         await this.writeLogMessage(message, MessageSeverity.FATAL);
     }
 
     public static disposeZoweLogger(): void {
         this.zoweExplOutput.dispose();
+    }
+
+    private static async initVscLogger(context: vscode.ExtensionContext, logFileLocation: string): Promise<void> {
+        this.zoweExplOutput = Gui.createOutputChannel(localize("zoweExplorer.outputchannel.title", "Zowe Explorer"));
+        const packageInfo = context.extension.packageJSON;
+        await this.logLoggerInfo(logFileLocation, packageInfo);
+        await this.verifyLogSetting();
+    }
+
+    private static async logLoggerInfo(logFileLocation: string, packageInfo: any) {
+        this.zoweExplOutput.appendLine(`${packageInfo.displayName} ${packageInfo.version}`);
+        this.zoweExplOutput.appendLine(localize("initialize.log.location", "This log file can be found at {0}", logFileLocation));
+        this.zoweExplOutput.appendLine(localize("initialize.log.level", "Zowe Explorer log level: {0}", await this.getLogSetting()));
+        const initMessage = localize("initialize.log.info", "Initialized logger for Zowe Explorer");
+        this.info(initMessage);
     }
 
     private static async getLogSetting(): Promise<string> {
@@ -107,21 +122,6 @@ export class ZoweLogger {
             }
             this.zoweExplOutput.appendLine(this.setMessage(message, this.messageSeverityStrings[severity]));
         }
-    }
-
-    private static async initVscLogger(context: vscode.ExtensionContext, logFileLocation: string): Promise<void> {
-        this.zoweExplOutput = Gui.createOutputChannel(localize("zoweExplorer.outputchannel.title", "Zowe Explorer"));
-        const packageInfo = context.extension.packageJSON;
-        await this.logLoggerInfo(logFileLocation, packageInfo);
-        await this.verifyLogSetting();
-    }
-
-    private static async logLoggerInfo(logFileLocation: string, packageInfo: any) {
-        this.zoweExplOutput.appendLine(`${packageInfo.displayName} ${packageInfo.version}`);
-        this.zoweExplOutput.appendLine(localize("initialize.log.location", "This log file can be found at {0}", logFileLocation));
-        this.zoweExplOutput.appendLine(localize("initialize.log.level", "Zowe Explorer log level: {0}", await this.getLogSetting()));
-        const initMessage = localize("initialize.log.info", "Initialized logger for Zowe Explorer");
-        this.logInfo(initMessage);
     }
 
     private static getDate(): string {

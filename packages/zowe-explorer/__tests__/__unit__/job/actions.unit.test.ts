@@ -71,9 +71,9 @@ function createGlobalMocks() {
     const executeCommand = jest.fn();
     Object.defineProperty(vscode.commands, "executeCommand", { value: executeCommand, configurable: true });
     Object.defineProperty(SpoolProvider, "toUniqueJobFileUri", { value: jest.fn(), configurable: true });
-    Object.defineProperty(ZoweLogger, "logError", { value: jest.fn(), configurable: true });
-    Object.defineProperty(ZoweLogger, "logDebug", { value: jest.fn(), configurable: true });
-    Object.defineProperty(ZoweLogger, "logTrace", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "error", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "debug", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
 }
 
 // Idea is borrowed from: https://github.com/kulshekhar/ts-jest/blob/master/src/util/testing.ts
@@ -427,7 +427,7 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
         await dsActions.submitJcl(blockMocks.testDatasetTree);
 
         expect(submitJclSpy).not.toBeCalled();
-        expect(mocked(ZoweLogger.logError)).toBeCalled();
+        expect(mocked(ZoweLogger.error)).toBeCalled();
     });
 });
 

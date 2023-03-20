@@ -120,9 +120,9 @@ function createGlobalMocks() {
     Object.defineProperty(vscode, "ProgressLocation", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "createWebviewPanel", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.env, "clipboard", { value: clipboard, configurable: true });
-    Object.defineProperty(ZoweLogger, "logError", { value: jest.fn(), configurable: true });
-    Object.defineProperty(ZoweLogger, "logTrace", { value: jest.fn(), configurable: true });
-    Object.defineProperty(ZoweLogger, "logDebug", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "error", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "debug", { value: jest.fn(), configurable: true });
     mocked(Profiles.getInstance).mockReturnValue(newMocks.profileInstance);
 
     return newMocks;
@@ -2657,7 +2657,7 @@ describe("Dataset Actions Unit Tests - Function showFileErrorDetails", () => {
         );
 
         const spyRecall = jest.spyOn(blockMocks.mvsApi, "hRecallDataSet");
-        const spyLogError = mocked(ZoweLogger.logError);
+        const spyLogError = mocked(ZoweLogger.error);
 
         // succeeded at recalling the dataset
         spyRecall.mockResolvedValueOnce({ success: true } as any);
@@ -3306,7 +3306,7 @@ describe("Dataset Actions Unit Tests - Function openPS", () => {
             blockMocks.imperativeProfile
         );
         const showErrorMessageSpy = jest.spyOn(Gui, "errorMessage");
-        const logErrorSpy = jest.spyOn(ZoweLogger, "logError");
+        const logErrorSpy = jest.spyOn(ZoweLogger, "error");
 
         try {
             await dsActions.openPS(node, true, blockMocks.testDatasetTree);

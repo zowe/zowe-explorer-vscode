@@ -79,7 +79,7 @@ describe("SpoolProvider Unit Tests", () => {
             };
         }),
     });
-    Object.defineProperty(ZoweLogger, "logTrace", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
 
     afterEach(() => {
         jest.resetAllMocks();

@@ -49,8 +49,8 @@ describe("Unit Tests (Jest)", () => {
     Object.defineProperty(globals.LOG, "error", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode, "ProgressLocation", { value: ProgressLocation });
     Object.defineProperty(vscode.window, "withProgress", { value: withProgress });
-    Object.defineProperty(ZoweLogger, "logError", { value: jest.fn(), configurable: true });
-    Object.defineProperty(ZoweLogger, "logTrace", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "error", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
 
     beforeEach(() => {
         withProgress.mockImplementation((progLocation, callback) => {

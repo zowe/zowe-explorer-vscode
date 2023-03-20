@@ -265,7 +265,7 @@ describe("Test src/dataset/extension", () => {
             jest.spyOn(sharedExtension, "initSubscribers").mockImplementation(jest.fn());
             Object.defineProperty(vscode.commands, "registerCommand", { value: registerCommand });
             Object.defineProperty(vscode.workspace, "onDidChangeConfiguration", { value: onDidChangeConfiguration });
-            Object.defineProperty(ZoweLogger, "logTrace", { value: jest.fn(), configurable: true });
+            Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
 
             spyCreateDatasetTree.mockResolvedValue(dsProvider as any);
             spyOnSubscriptions(commands);

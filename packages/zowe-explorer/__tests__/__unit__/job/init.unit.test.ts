@@ -200,7 +200,7 @@ describe("Test src/jobs/extension", () => {
             jest.spyOn(sharedExtension, "initSubscribers").mockImplementation(jest.fn());
             Object.defineProperty(vscode.commands, "registerCommand", { value: registerCommand });
             Object.defineProperty(vscode.workspace, "onDidChangeConfiguration", { value: onDidChangeConfiguration });
-            Object.defineProperty(ZoweLogger, "logTrace", { value: jest.fn(), configurable: true });
+            Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
 
             spyCreateJobsTree.mockResolvedValue(jobsProvider as any);
             spyOnSubscriptions(commands);

@@ -44,7 +44,7 @@ async function createGlobalMocks() {
     };
     newMocks.mockProfilesCache = new ProfilesCache(imperative.Logger.getAppLogger());
     newMocks.mockProfileInstance = createInstanceOfProfile(createIProfile());
-    Object.defineProperty(ZoweLogger, "logTrace", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
     Object.defineProperty(Profiles, "CreateInstance", {
         value: () => newMocks.mockProfileInstance,
         configurable: true,

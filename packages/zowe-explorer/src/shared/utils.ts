@@ -42,7 +42,7 @@ export const JOB_SUBMIT_DIALOG_OPTS = [
 ];
 
 export function filterTreeByString(value: string, treeItems: vscode.QuickPickItem[]): vscode.QuickPickItem[] {
-    ZoweLogger.logTrace("shared.utils.filterTreeByString called.");
+    ZoweLogger.trace("shared.utils.filterTreeByString called.");
     const filteredArray = [];
     value = value.toUpperCase().replace(/\*/g, "(.*)");
     const regex = new RegExp(value);
@@ -70,7 +70,7 @@ export function getIconPathInResources(iconFileName: string) {
  * Returns array of all subnodes of given node
  *************************************************************************************************************/
 export function concatChildNodes(nodes: IZoweNodeType[]) {
-    ZoweLogger.logTrace("shared.utils.concatChildNodes called.");
+    ZoweLogger.trace("shared.utils.concatChildNodes called.");
     let allNodes = new Array<IZoweNodeType>();
 
     for (const node of nodes) {
@@ -86,7 +86,7 @@ export function concatChildNodes(nodes: IZoweNodeType[]) {
  * @param {TreeItem} node - the node element
  */
 export function labelRefresh(node: vscode.TreeItem): void {
-    ZoweLogger.logTrace("shared.utils.labelRefresh called.");
+    ZoweLogger.trace("shared.utils.labelRefresh called.");
     node.label = node.label.toString().endsWith(" ") ? node.label.toString().substring(0, node.label.toString().length - 1) : node.label + " ";
 }
 

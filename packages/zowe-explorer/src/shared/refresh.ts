@@ -28,7 +28,7 @@ import { ZoweLogger } from "../utils/LoggerUtils";
  * @param {IZoweTree} treeProvider
  */
 export async function refreshAll(treeProvider: IZoweTree<IZoweTreeNode>) {
-    ZoweLogger.logTrace("refresh.refreshAll called.");
+    ZoweLogger.trace("refresh.refreshAll called.");
     await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
     treeProvider.mSessionNodes.forEach(async (sessNode) => {
         const profiles = await Profiles.getInstance().fetchAllProfiles();

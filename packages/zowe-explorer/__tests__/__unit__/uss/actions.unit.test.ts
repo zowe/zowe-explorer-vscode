@@ -174,10 +174,11 @@ function createGlobalMocks() {
             return { value: globalMocks.mockProfileInfo, configurable: true };
         }),
     });
-    Object.defineProperty(ZoweLogger, "logDebug", { value: jest.fn(), configurable: true });
-    Object.defineProperty(ZoweLogger, "logError", { value: jest.fn(), configurable: true });
-    Object.defineProperty(ZoweLogger, "logWarn", { value: jest.fn(), configurable: true });
-    Object.defineProperty(ZoweLogger, "logTrace", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "error", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "debug", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "warn", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "info", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
 
     return globalMocks;
 }
@@ -398,7 +399,7 @@ describe("USS Action Unit Tests - Function deleteFromDisk", () => {
         jest.spyOn(fs, "unlinkSync").mockImplementation(() => {
             throw new Error();
         });
-        Object.defineProperty(ZoweLogger, "logWarn", {
+        Object.defineProperty(ZoweLogger, "warn", {
             value: globalsLogWarnSpy,
         });
         ussNodeActions.deleteFromDisk(null, "some/where/that/does/not/exist");

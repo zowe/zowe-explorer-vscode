@@ -66,7 +66,7 @@ describe("ZoweExplorerExtender unit tests", () => {
             value: newMocks.mockGetConfiguration,
             configurable: true,
         });
-        Object.defineProperty(ZoweLogger, "logWarn", {
+        Object.defineProperty(ZoweLogger, "warn", {
             value: jest.fn(),
             configurable: true,
         });

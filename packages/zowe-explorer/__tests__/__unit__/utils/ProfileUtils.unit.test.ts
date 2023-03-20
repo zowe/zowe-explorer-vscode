@@ -46,11 +46,11 @@ describe("ProfileUtils.writeOverridesFile Unit Tests", () => {
         Object.defineProperty(Gui, "errorMessage", { value: jest.fn(), configurable: true });
         Object.defineProperty(globals, "LOG", { value: jest.fn(), configurable: true });
         Object.defineProperty(globals.LOG, "error", { value: jest.fn(), configurable: true });
-        Object.defineProperty(ZoweLogger, "logError", { value: jest.fn(), configurable: true });
-        Object.defineProperty(ZoweLogger, "logDebug", { value: jest.fn(), configurable: true });
-        Object.defineProperty(ZoweLogger, "logWarn", { value: jest.fn(), configurable: true });
-        Object.defineProperty(ZoweLogger, "logInfo", { value: jest.fn(), configurable: true });
-        Object.defineProperty(ZoweLogger, "logTrace", { value: jest.fn(), configurable: true });
+        Object.defineProperty(ZoweLogger, "error", { value: jest.fn(), configurable: true });
+        Object.defineProperty(ZoweLogger, "debug", { value: jest.fn(), configurable: true });
+        Object.defineProperty(ZoweLogger, "warn", { value: jest.fn(), configurable: true });
+        Object.defineProperty(ZoweLogger, "info", { value: jest.fn(), configurable: true });
+        Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
         return newMocks;
     }
     it("should have file exist", async () => {
@@ -106,7 +106,7 @@ describe("ProfileUtils.writeOverridesFile Unit Tests", () => {
         const moreInfo = "Task failed successfully";
         await profileUtils.errorHandling(errorDetails, label, moreInfo);
         expect(Gui.errorMessage).toBeCalledWith(`${moreInfo} ` + errorDetails);
-        expect(ZoweLogger.logError).toBeCalledWith(`Error: ${errorDetails.message}\n` + JSON.stringify({ errorDetails, label, moreInfo }));
+        expect(ZoweLogger.error).toBeCalledWith(`Error: ${errorDetails.message}\n` + JSON.stringify({ errorDetails, label, moreInfo }));
     });
     it("should handle error and open config file", async () => {
         const errorDetails = {

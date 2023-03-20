@@ -36,7 +36,7 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
  * @param {moreInfo} - additional/customized error messages
  *************************************************************************************************************/
 export async function errorHandling(errorDetails: any, label?: string, moreInfo?: string) {
-    ZoweLogger.logTrace("ProfileUtils.errorHandling called.");
+    ZoweLogger.trace("ProfileUtils.errorHandling called.");
     let httpErrCode = null;
     const errMsg = localize(
         "errorHandling.invalid.credentials",
@@ -47,7 +47,7 @@ export async function errorHandling(errorDetails: any, label?: string, moreInfo?
         "errorHandling.invalid.token",
         "Your connection is no longer active. Please log in to an authentication service to restore the connection."
     );
-    ZoweLogger.logError(`${errorDetails}\n` + JSON.stringify({ errorDetails, label, moreInfo }));
+    ZoweLogger.error(`${errorDetails}\n` + JSON.stringify({ errorDetails, label, moreInfo }));
 
     if (errorDetails.mDetails !== undefined) {
         httpErrCode = errorDetails.mDetails.errorCode;
@@ -122,7 +122,7 @@ export async function errorHandling(errorDetails: any, label?: string, moreInfo?
 
 // TODO: remove this second occurence
 export function isTheia(): boolean {
-    ZoweLogger.logTrace("ProfileUtils.isTheia called.");
+    ZoweLogger.trace("ProfileUtils.isTheia called.");
     const VSCODE_APPNAME: string[] = ["Visual Studio Code", "VSCodium"];
     const appName = vscode.env.appName;
     if (appName && !VSCODE_APPNAME.includes(appName)) {
@@ -142,7 +142,7 @@ export const syncSessionNode =
     (_profiles: Profiles) =>
     (getSessionForProfile: SessionForProfile) =>
     async (sessionNode: IZoweTreeNode): Promise<void> => {
-        ZoweLogger.logTrace("ProfilesUtils.syncSessionNode called.");
+        ZoweLogger.trace("ProfilesUtils.syncSessionNode called.");
         sessionNode.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
 
         const profileType = sessionNode.getProfile().type;
@@ -152,7 +152,7 @@ export const syncSessionNode =
         try {
             profile = Profiles.getInstance().loadNamedProfile(profileName, profileType);
         } catch (e) {
-            ZoweLogger.logWarn(e);
+            ZoweLogger.warn(e);
             return;
         }
         sessionNode.setProfileToChoice(profile);
@@ -215,7 +215,7 @@ export class FilterDescriptor implements vscode.QuickPickItem {
  * Function to update the node profile information
  */
 export async function setProfile(node: IZoweTreeNode, profile: imperative.IProfile) {
-    ZoweLogger.logTrace("ProfilesUtils.setProfile called.");
+    ZoweLogger.trace("ProfilesUtils.setProfile called.");
     node.getProfile().profile = profile;
 }
 
@@ -223,7 +223,7 @@ export async function setProfile(node: IZoweTreeNode, profile: imperative.IProfi
  * Function to update the node session information
  */
 export async function setSession(node: IZoweTreeNode, combinedSessionProfile: imperative.IProfile) {
-    ZoweLogger.logTrace("ProfilesUtils.setSession called.");
+    ZoweLogger.trace("ProfilesUtils.setSession called.");
     const sessionNode = node.getSession();
     for (const prop of Object.keys(combinedSessionProfile)) {
         if (prop === "host") {
@@ -235,7 +235,7 @@ export async function setSession(node: IZoweTreeNode, combinedSessionProfile: im
 }
 
 export async function getProfileInfo(envTheia: boolean): Promise<imperative.ProfileInfo> {
-    ZoweLogger.logTrace("ProfilesUtils.getProfileInfo called.");
+    ZoweLogger.trace("ProfilesUtils.getProfileInfo called.");
     const mProfileInfo = new imperative.ProfileInfo("zowe", {
         requireKeytar: () => getSecurityModules("keytar", envTheia),
     });
@@ -243,7 +243,7 @@ export async function getProfileInfo(envTheia: boolean): Promise<imperative.Prof
 }
 
 export function getProfile(node: vscode.TreeItem) {
-    ZoweLogger.logTrace("ProfilesUtils.getProfile called.");
+    ZoweLogger.trace("ProfilesUtils.getProfile called.");
     if (node instanceof ZoweTreeNode) {
         return (node as ZoweTreeNode).getProfile();
     }
@@ -251,7 +251,7 @@ export function getProfile(node: vscode.TreeItem) {
 }
 
 export async function readConfigFromDisk() {
-    ZoweLogger.logTrace("ProfilesUtils.readConfigFromDisk called.");
+    ZoweLogger.trace("ProfilesUtils.readConfigFromDisk called.");
     let rootPath: string;
     try {
         const mProfileInfo = await getProfileInfo(globals.ISTHEIA);
@@ -263,7 +263,7 @@ export async function readConfigFromDisk() {
         }
         if (mProfileInfo.usingTeamConfig) {
             globals.setConfigPath(rootPath);
-            ZoweLogger.logInfo(`Zowe Explorer is using the team configuration file "${mProfileInfo.getTeamConfig().configName}"`);
+            ZoweLogger.info(`Zowe Explorer is using the team configuration file "${mProfileInfo.getTeamConfig().configName}"`);
             const layers = mProfileInfo.getTeamConfig().layers || [];
             const layerSummary = layers.map(
                 (config: imperative.IConfigLayer) =>
@@ -273,20 +273,20 @@ export async function readConfigFromDisk() {
                             : "Not available"
                     } `
             );
-            ZoweLogger.logDebug(`Summary of team configuration files considered for Zowe Explorer: ${JSON.stringify(layerSummary)}`);
+            ZoweLogger.debug(`Summary of team configuration files considered for Zowe Explorer: ${JSON.stringify(layerSummary)}`);
         }
     } catch (error) {
-        ZoweLogger.logError(error);
+        ZoweLogger.error(error);
         throw new Error(error);
     }
 }
 
 export async function promptCredentials(node: IZoweTreeNode) {
-    ZoweLogger.logTrace("ProfilesUtils.promptCredentials called.");
+    ZoweLogger.trace("ProfilesUtils.promptCredentials called.");
     const mProfileInfo = await Profiles.getInstance().getProfileInfo();
     if (mProfileInfo.usingTeamConfig && !mProfileInfo.getTeamConfig().properties.autoStore) {
         const msg = localize("zowe.promptCredentials.notSupported", '"Update Credentials" operation not supported when "autoStore" is false');
-        ZoweLogger.logWarn(msg);
+        ZoweLogger.warn(msg);
         Gui.showMessage(msg);
         return;
     }
@@ -312,13 +312,13 @@ export async function promptCredentials(node: IZoweTreeNode) {
 
     if (creds != null) {
         const successMsg = localize("promptCredentials.updatedCredentials", "Credentials for {0} were successfully updated", profileName);
-        ZoweLogger.logInfo(successMsg);
+        ZoweLogger.info(successMsg);
         Gui.showMessage(successMsg);
     }
 }
 
 export async function initializeZoweFolder(): Promise<void> {
-    ZoweLogger.logTrace("ProfilesUtils.initializeZoweFolder called.");
+    ZoweLogger.trace("ProfilesUtils.initializeZoweFolder called.");
     // ensure the Secure Credentials Enabled value is read
     // set globals.PROFILE_SECURITY value accordingly
     await globals.setGlobalSecurityValue();
@@ -343,11 +343,11 @@ export async function initializeZoweFolder(): Promise<void> {
             profileRootDirectory: path.join(zoweDir, "profiles"),
         });
     }
-    ZoweLogger.logInfo(localize("initializeZoweFolder.success", "Zowe Folder successfully initialized."));
+    ZoweLogger.info(localize("initializeZoweFolder.success", "Zowe Folder successfully initialized."));
 }
 
 export function writeOverridesFile() {
-    ZoweLogger.logTrace("ProfilesUtils.writeOverridesFile called.");
+    ZoweLogger.trace("ProfilesUtils.writeOverridesFile called.");
     let fd: number;
     let fileContent: string;
     const settingsFile = path.join(getZoweDir(), "settings", "imperative.json");
@@ -380,29 +380,29 @@ export function writeOverridesFile() {
 }
 
 export async function initializeZoweProfiles(): Promise<void> {
-    ZoweLogger.logTrace("ProfilesUtils.initializeZoweProfiles called.");
+    ZoweLogger.trace("ProfilesUtils.initializeZoweProfiles called.");
     try {
         await initializeZoweFolder();
         await readConfigFromDisk();
-        ZoweLogger.logInfo(localize("initializeZoweProfiles.success", "Zowe Profiles initialized successfully."));
+        ZoweLogger.info(localize("initializeZoweProfiles.success", "Zowe Profiles initialized successfully."));
     } catch (err) {
-        ZoweLogger.logError(err);
+        ZoweLogger.error(err);
         ZoweExplorerExtender.showZoweConfigError(err.message);
     }
 }
 
 export function initializeZoweTempFolder(): void {
-    ZoweLogger.logTrace("ProfilesUtils.initializeZoweTempFolder called.");
+    ZoweLogger.trace("ProfilesUtils.initializeZoweTempFolder called.");
     try {
         if (!fs.existsSync(globals.ZOWETEMPFOLDER)) {
             fs.mkdirSync(globals.ZOWETEMPFOLDER);
             fs.mkdirSync(globals.ZOWE_TMP_FOLDER);
             fs.mkdirSync(globals.USS_DIR);
             fs.mkdirSync(globals.DS_DIR);
-            ZoweLogger.logInfo(localize("initializeZoweTempFolder.success", "Zowe Temp folder initialized successfully."));
+            ZoweLogger.info(localize("initializeZoweTempFolder.success", "Zowe Temp folder initialized successfully."));
         }
     } catch (err) {
-        ZoweLogger.logError(err);
+        ZoweLogger.error(err);
         ZoweExplorerExtender.showZoweConfigError(err.message);
     }
 }

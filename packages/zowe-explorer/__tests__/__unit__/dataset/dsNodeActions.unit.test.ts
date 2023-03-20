@@ -170,7 +170,7 @@ describe("dsNodeActions", () => {
     Object.defineProperty(vscode.workspace, "getConfiguration", { value: getConfiguration });
     Object.defineProperty(ZosmfSession, "createSessCfgFromArgs", { value: createSessCfgFromArgs });
     Object.defineProperty(refreshActions, "refreshAll", { value: jest.fn() });
-    Object.defineProperty(ZoweLogger, "logTrace", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
 
     beforeEach(() => {
         showErrorMessage.mockReset();

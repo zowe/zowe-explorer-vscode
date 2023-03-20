@@ -176,7 +176,7 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
             }
             usingTeamConfig = mProfileInfo.usingTeamConfig;
         } catch (error) {
-            ZoweLogger.logWarn(error);
+            ZoweLogger.warn(error);
             if (error.toString().includes("Error parsing JSON")) {
                 usingTeamConfig = true;
             }

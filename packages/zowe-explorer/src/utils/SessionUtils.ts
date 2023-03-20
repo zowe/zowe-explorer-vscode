@@ -15,7 +15,7 @@ import { ZoweLogger } from "./LoggerUtils";
 import { SettingsConfig } from "./SettingsConfig";
 
 export async function removeSession(treeProvider: IZoweTree<IZoweTreeNode>, profileName: string): Promise<void> {
-    ZoweLogger.logTrace("SessionUtils.removeSession called.");
+    ZoweLogger.trace("SessionUtils.removeSession called.");
     const treeType = treeProvider.getTreeType();
     let schema;
     switch (treeType) {

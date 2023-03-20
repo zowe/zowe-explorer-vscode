@@ -54,7 +54,7 @@ export class UssFileUtils {
      * @returns true if the tree will be pasted in the same session, and false if otherwise.
      */
     public static toSameSession(fileTree: UssFileTree, destSessionName: string) {
-        ZoweLogger.logTrace("UssFileUtils.toSameSession called.");
+        ZoweLogger.trace("UssFileUtils.toSameSession called.");
         if (fileTree.sessionName && fileTree.sessionName !== destSessionName) {
             return false;
         }

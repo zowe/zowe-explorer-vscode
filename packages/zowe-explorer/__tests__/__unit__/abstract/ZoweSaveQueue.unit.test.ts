@@ -30,9 +30,9 @@ describe("ZoweSaveQueue - unit tests", () => {
             },
         };
 
-        Object.defineProperty(ZoweLogger, "logError", { value: jest.fn(), configurable: true });
-        Object.defineProperty(ZoweLogger, "logTrace", { value: jest.fn(), configurable: true });
-        Object.defineProperty(ZoweLogger, "logDebug", { value: jest.fn(), configurable: true });
+        Object.defineProperty(ZoweLogger, "error", { value: jest.fn(), configurable: true });
+        Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
+        Object.defineProperty(ZoweLogger, "debug", { value: jest.fn(), configurable: true });
 
         return globalMocks;
     };
@@ -110,7 +110,7 @@ describe("ZoweSaveQueue - unit tests", () => {
             await ZoweSaveQueue.all();
             fail("ZoweSaveQueue.all should fail here");
         } catch (err) {
-            expect(ZoweLogger.logError).toHaveBeenCalledWith(EXAMPLE_ERROR);
+            expect(ZoweLogger.error).toHaveBeenCalledWith(EXAMPLE_ERROR);
             expect(globalMocks.markDocumentUnsavedSpy).toHaveBeenCalledWith(FAILING_FILE);
             expect(globalMocks.errorMessageSpy).toHaveBeenCalledWith(
                 'Failed to upload changes for [failingFile](command:vscode.open?["/some/failing/path"]): Example error'

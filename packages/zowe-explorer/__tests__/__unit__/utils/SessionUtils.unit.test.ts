@@ -36,7 +36,7 @@ describe("SessionUtils removeSession Unit Tests", () => {
             value: newMocks.mockGetConfiguration,
             configurable: true,
         });
-        Object.defineProperty(ZoweLogger, "logTrace", { value: jest.fn(), configurable: true });
+        Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
 
         return newMocks;
     }
