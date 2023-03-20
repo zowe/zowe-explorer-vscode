@@ -78,33 +78,33 @@ export class ZoweLogger {
     }
 
     private static async writeLogMessage(message: string, severity: MessageSeverity): Promise<void> {
-        switch (severity) {
-            case 0: {
-                globals.LOG?.trace(message);
-                break;
-            }
-            case 1: {
-                globals.LOG?.debug(message);
-                break;
-            }
-            case 2: {
-                globals.LOG?.info(message);
-                break;
-            }
-            case 3: {
-                globals.LOG?.warn(message);
-                break;
-            }
-            case 4: {
-                globals.LOG?.error(message);
-                break;
-            }
-            case 5: {
-                globals.LOG?.fatal(message);
-                break;
-            }
-        }
         if (+MessageSeverity[await this.getLogSetting()] <= +severity) {
+            switch (severity) {
+                case 0: {
+                    globals.LOG?.trace(message);
+                    break;
+                }
+                case 1: {
+                    globals.LOG?.debug(message);
+                    break;
+                }
+                case 2: {
+                    globals.LOG?.info(message);
+                    break;
+                }
+                case 3: {
+                    globals.LOG?.warn(message);
+                    break;
+                }
+                case 4: {
+                    globals.LOG?.error(message);
+                    break;
+                }
+                case 5: {
+                    globals.LOG?.fatal(message);
+                    break;
+                }
+            }
             this.zoweExplOutput.appendLine(this.setMessage(message, this.messageSeverityStrings[severity]));
         }
     }
