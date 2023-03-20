@@ -1773,7 +1773,7 @@
         },
         "zowe.logger": {
           "type": "string",
-          "default": "%zowe.logger.debug%",
+          "default": "%zowe.logger.info%",
           "enum": [
             "%zowe.logger.trace%",
             "%zowe.logger.debug%",
@@ -1784,6 +1784,11 @@
           ],
           "description": "%zowe.logger%",
           "scope": "window"
+        },
+        "zowe.cliLoggerSetting.presented": {
+          "type": "boolean",
+          "description": "%zowe.cliLoggerSetting.presented%",
+          "scope": "application"
         }
       }
     },

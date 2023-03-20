@@ -1,7 +1,9 @@
 {
   "initialize.log.location": "This log file can be found at ",
-  "initialize.log.level": "Zowe Explorer log level: ",
+  "initialize.log.level": "Zowe Explorer log level: {0}",
   "initialize.log.info": "Initialized logger for Zowe Explorer",
   "initialize.log.error": "Error encountered while activating and initializing logger! ",
-  "zoweExplorer.outputchannel.title": "Zowe Explorer"
+  "zoweExplorer.outputchannel.title": "Zowe Explorer",
+  "ZoweLogger.updateLoggerSetting.update": "Update",
+  "ZoweLogger.updateLoggerSetting.message": "We see the Zowe CLI ZOWE_APP_LOG_LEVEL is set to {0}.  Would you like Zowe Explorer to update to the the same setting?"
 }
