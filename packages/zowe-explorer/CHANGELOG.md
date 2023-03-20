@@ -6,6 +6,9 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
+- Added a new Zowe Explorer setting, `zowe.logger`, with a default setting of `INFO`.
+- Added an output channel, `Zowe Explorer`, for logging within VS Code's Output view. The log level is set by the new Zowe Explorer setting, `zowe.logger`.
+
 ### Bug fixes
 
 ## `2.7.0`

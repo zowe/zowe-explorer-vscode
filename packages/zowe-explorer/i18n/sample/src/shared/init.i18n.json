@@ -1,5 +1,4 @@
 {
-  "shared.init.logSettingChanged": "Zowe Explorer log setting changed to {0}.",
   "onDidSaveTextDocument1": "File was saved -- determining whether the file is a USS file or Data set.\n Comparing (case insensitive) ",
   "onDidSaveTextDocument2": " against directory ",
   "onDidSaveTextDocument3": "and",

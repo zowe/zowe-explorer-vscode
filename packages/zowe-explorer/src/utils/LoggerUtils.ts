@@ -118,7 +118,7 @@ export class ZoweLogger {
 
     private static async logLoggerInfo(logFileLocation: string, packageInfo: any) {
         this.zoweExplOutput.appendLine(`${packageInfo.displayName} ${packageInfo.version}`);
-        this.zoweExplOutput.appendLine(localize("initialize.log.location", "This log file can be found at ") + logFileLocation);
+        this.zoweExplOutput.appendLine(localize("initialize.log.location", "This log file can be found at {0}", logFileLocation));
         this.zoweExplOutput.appendLine(localize("initialize.log.level", "Zowe Explorer log level: {0}", await this.getLogSetting()));
         const initMessage = localize("initialize.log.info", "Initialized logger for Zowe Explorer");
         this.logInfo(initMessage);
@@ -167,12 +167,13 @@ export class ZoweLogger {
         const updateLoggerButton = localize("ZoweLogger.updateLoggerSetting.update", "Update");
         const message = localize(
             "ZoweLogger.updateLoggerSetting.message",
-            "We see the Zowe CLI ZOWE_APP_LOG_LEVEL is set to {0}.  Would you like Zowe Explorer to update to the the same setting?",
+            // eslint-disable-next-line max-len
+            "Zowe Explorer now has a VS Code logger with a default log level of INFO.\nIt looks like the Zowe CLI's ZOWE_APP_LOG_LEVEL={0}.\nWould you like Zowe Explorer to update to the the same log level?",
             cliSetting
         );
         await Gui.infoMessage(message, {
             items: [updateLoggerButton],
-            vsCodeOpts: { modal: false },
+            vsCodeOpts: { modal: true },
         }).then(async (selection) => {
             if (selection === updateLoggerButton) {
                 await this.setLogSetting(cliSetting);
