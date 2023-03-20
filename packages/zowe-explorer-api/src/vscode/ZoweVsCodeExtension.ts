@@ -108,7 +108,7 @@ export class ZoweVsCodeExtension {
         const cache = this.profilesCache;
         const profInfo = await cache.getProfileInfo();
         const setSecure = options.secure ?? profInfo.isSecured();
-        const loadProfile = await cache.getLoadedProfConfig(options.sessionName);
+        const loadProfile = await cache.getLoadedProfConfig(options.sessionName, options.sessionType);
         const loadSession = loadProfile.profile as imperative.ISession;
         const creds = await ZoweVsCodeExtension.promptUserPass({ session: loadSession, ...options });
 

@@ -58,12 +58,9 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
             errorHandling(errorDetails);
             return;
         }
-        Gui.showMessage(
+        Gui.errorMessage(
             localize("initialize.profiles.error", 'Error encountered when loading your Zowe config. Click "Show Config" for more details.'),
-            {
-                severity: MessageSeverity.ERROR,
-                items: ["Show Config"],
-            }
+            { items: ["Show Config"] }
         ).then((selection) => {
             if (selection !== "Show Config") {
                 return;
