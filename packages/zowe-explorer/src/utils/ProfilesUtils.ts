@@ -244,30 +244,26 @@ export function getProfile(node: vscode.TreeItem) {
 
 export async function readConfigFromDisk() {
     let rootPath: string;
-    try {
-        const mProfileInfo = await getProfileInfo(globals.ISTHEIA);
-        if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders[0]) {
-            rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
-            await mProfileInfo.readProfilesFromDisk({ homeDir: getZoweDir(), projectDir: getFullPath(rootPath) });
-        } else {
-            await mProfileInfo.readProfilesFromDisk({ homeDir: getZoweDir(), projectDir: undefined });
-        }
-        if (mProfileInfo.usingTeamConfig) {
-            globals.setConfigPath(rootPath);
-            globals.LOG.debug('Zowe Explorer is using the team configuration file "%s"', mProfileInfo.getTeamConfig().configName);
-            const layers = mProfileInfo.getTeamConfig().layers || [];
-            const layerSummary = layers.map(
-                (config: imperative.IConfigLayer) =>
-                    `Path: ${config.path}: ${
-                        config.exists
-                            ? "Found, with the following defaults:" + JSON.stringify(config.properties?.defaults || "Undefined default")
-                            : "Not available"
-                    } `
-            );
-            globals.LOG.debug("Summary of team configuration files considered for Zowe Explorer: %s", JSON.stringify(layerSummary));
-        }
-    } catch (error) {
-        throw new Error(error);
+    const mProfileInfo = await getProfileInfo(globals.ISTHEIA);
+    if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders[0]) {
+        rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
+        await mProfileInfo.readProfilesFromDisk({ homeDir: getZoweDir(), projectDir: getFullPath(rootPath) });
+    } else {
+        await mProfileInfo.readProfilesFromDisk({ homeDir: getZoweDir(), projectDir: undefined });
+    }
+    if (mProfileInfo.usingTeamConfig) {
+        globals.setConfigPath(rootPath);
+        globals.LOG.debug('Zowe Explorer is using the team configuration file "%s"', mProfileInfo.getTeamConfig().configName);
+        const layers = mProfileInfo.getTeamConfig().layers || [];
+        const layerSummary = layers.map(
+            (config: imperative.IConfigLayer) =>
+                `Path: ${config.path}: ${
+                    config.exists
+                        ? "Found, with the following defaults:" + JSON.stringify(config.properties?.defaults || "Undefined default")
+                        : "Not available"
+                } `
+        );
+        globals.LOG.debug("Summary of team configuration files considered for Zowe Explorer: %s", JSON.stringify(layerSummary));
     }
 }
 
@@ -361,7 +357,7 @@ export function writeOverridesFile() {
             settings = { overrides: { CredentialManager: globals.PROFILE_SECURITY } };
         }
         fileContent = JSON.stringify(settings, null, 2);
-        fs.writeFileSync(fd, fileContent);
+        fs.writeFileSync(fd, fileContent, "utf-8");
     } finally {
         fs.closeSync(fd);
     }

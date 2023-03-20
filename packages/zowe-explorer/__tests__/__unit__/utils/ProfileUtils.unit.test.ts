@@ -181,6 +181,28 @@ describe("ProfileUtils unit tests", () => {
             await expect(profileUtils.readConfigFromDisk()).resolves.not.toThrow();
             expect(mockReadProfilesFromDisk).toHaveBeenCalledTimes(1);
         });
+
+        it("should keep Imperative error details if readConfigFromDisk fails", async () => {
+            Object.defineProperty(vscode.workspace, "workspaceFolders", {
+                value: [
+                    {
+                        uri: {
+                            fsPath: "./test",
+                        },
+                    },
+                ],
+                configurable: true,
+            });
+            const impErr = new zowe.imperative.ImperativeError({ msg: "Unexpected Imperative error" });
+            const mockReadProfilesFromDisk = jest.fn().mockRejectedValue(impErr);
+            jest.spyOn(zowe.imperative, "ProfileInfo").mockResolvedValue({
+                readProfilesFromDisk: mockReadProfilesFromDisk,
+                usingTeamConfig: true,
+                getTeamConfig: () => [],
+            } as never);
+            await expect(profileUtils.readConfigFromDisk()).rejects.toBe(impErr);
+            expect(mockReadProfilesFromDisk).toHaveBeenCalledTimes(1);
+        });
     });
 
     describe("promptCredentials", () => {
@@ -262,7 +284,7 @@ describe("ProfileUtils unit tests", () => {
             blockMocks.mockReadFileSync.mockReturnValueOnce(JSON.stringify({ overrides: { CredentialManager: false, testValue: true } }, null, 2));
             profileUtils.writeOverridesFile();
             expect(blockMocks.mockOpenSync).toBeCalledWith(blockMocks.zoweDir, "r+");
-            expect(blockMocks.mockWriteFileSync).toBeCalledWith(blockMocks.fileHandle, content);
+            expect(blockMocks.mockWriteFileSync).toBeCalledWith(blockMocks.fileHandle, content, "utf-8");
         });
 
         it("should have no change to global variable PROFILE_SECURITY and returns", async () => {
@@ -285,7 +307,7 @@ describe("ProfileUtils unit tests", () => {
             });
             const content = JSON.stringify(blockMocks.mockFileRead, null, 2);
             profileUtils.writeOverridesFile();
-            expect(blockMocks.mockWriteFileSync).toBeCalledWith(blockMocks.fileHandle, content);
+            expect(blockMocks.mockWriteFileSync).toBeCalledWith(blockMocks.fileHandle, content, "utf-8");
             expect(blockMocks.mockOpenSync).toBeCalledTimes(2);
             expect(blockMocks.mockReadFileSync).toBeCalledTimes(0);
         });

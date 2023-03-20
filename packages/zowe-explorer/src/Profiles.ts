@@ -555,7 +555,7 @@ export class Profiles extends ProfilesCache {
 
             return updSchemaValues;
         } catch (error) {
-            await errorHandling(error.message);
+            await errorHandling(error, profileName, error.message);
         }
     }
 
@@ -839,7 +839,7 @@ export class Profiles extends ProfilesCache {
             await readConfigFromDisk();
             return newProfileName;
         } catch (error) {
-            await errorHandling(error.message);
+            await errorHandling(error, profileName, error.message);
             ZoweExplorerExtender.showZoweConfigError(error.message);
         }
     }

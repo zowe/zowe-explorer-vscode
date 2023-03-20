@@ -317,7 +317,7 @@ export class ProfilesCache {
     public async getProfileFromConfig(profileName: string): Promise<zowe.imperative.IProfAttrs | undefined> {
         const mProfileInfo = await this.getProfileInfo();
         const configAllProfiles = mProfileInfo.getAllProfiles().filter((prof) => prof.profLoc.osLoc.length !== 0);
-        return configAllProfiles.find((prof) => prof.profName === profileName);
+        return configAllProfiles.find((prof) => prof.profName === profileName && this.allTypes.includes(prof.profType));
     }
 
     public async getLoadedProfConfig(profileName: string): Promise<zowe.imperative.IProfileLoaded | undefined> {

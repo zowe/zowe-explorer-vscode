@@ -352,6 +352,7 @@ describe("ProfilesCache", () => {
 
     it("getProfileFromConfig should return profile attributes for given name", async () => {
         const profCache = new ProfilesCache(fakeLogger as any);
+        (profCache as any).allTypes = ["zosmf", "zftp"];
         jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([{ name: "lpar1", type: "zosmf" }]));
         const profAttrs = await profCache.getProfileFromConfig("lpar1");
         expect(profAttrs).toMatchObject({ profName: "lpar1", profType: "zosmf" });
@@ -359,13 +360,23 @@ describe("ProfilesCache", () => {
 
     it("getProfileFromConfig not return profile if name not found", async () => {
         const profCache = new ProfilesCache(fakeLogger as any);
+        (profCache as any).allTypes = ["zosmf", "zftp"];
         jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([{ name: "lpar1", type: "zosmf" }]));
         const profAttrs = await profCache.getProfileFromConfig("lpar2");
         expect(profAttrs).toBeUndefined();
     });
 
+    it("getProfileFromConfig not return profile if type not found", async () => {
+        const profCache = new ProfilesCache(fakeLogger as any);
+        (profCache as any).allTypes = ["zosmf"];
+        jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([{ name: "lpar1", type: "zftp" }]));
+        const profAttrs = await profCache.getProfileFromConfig("lpar1");
+        expect(profAttrs).toBeUndefined();
+    });
+
     it("getLoadedProfConfig should return profile object for given name", async () => {
         const profCache = new ProfilesCache(fakeLogger as any);
+        (profCache as any).allTypes = ["zosmf", "zftp"];
         jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([lpar1Profile]));
         const profile = await profCache.getLoadedProfConfig("lpar1");
         expect(profile).toMatchObject(lpar1Profile);
@@ -373,8 +384,17 @@ describe("ProfilesCache", () => {
 
     it("getLoadedProfConfig should not return profile if name not found", async () => {
         const profCache = new ProfilesCache(fakeLogger as any);
+        (profCache as any).allTypes = ["zosmf", "zftp"];
         jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([{ name: "lpar1", type: "zosmf" }]));
         const profile = await profCache.getLoadedProfConfig("lpar2");
+        expect(profile).toBeUndefined();
+    });
+
+    it("getLoadedProfConfig should not return profile if type not found", async () => {
+        const profCache = new ProfilesCache(fakeLogger as any);
+        (profCache as any).allTypes = ["zosmf"];
+        jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([{ name: "lpar1", type: "zftp" }]));
+        const profile = await profCache.getLoadedProfConfig("lpar1");
         expect(profile).toBeUndefined();
     });
 
