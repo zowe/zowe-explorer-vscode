@@ -26,7 +26,6 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 export class ZoweLogger {
     private static zoweExplOutput: vscode.OutputChannel;
-    private static messageSeverityStrings: string[] = ["TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL"];
     private static defaultLogLevel: "INFO";
 
     public static async initializeZoweLogger(context: vscode.ExtensionContext): Promise<void> {
@@ -71,16 +70,16 @@ export class ZoweLogger {
     private static async initVscLogger(context: vscode.ExtensionContext, logFileLocation: string): Promise<void> {
         this.zoweExplOutput = Gui.createOutputChannel(localize("zoweExplorer.outputchannel.title", "Zowe Explorer"));
         const packageInfo = context.extension.packageJSON;
-        await this.logLoggerInfo(logFileLocation, packageInfo);
-        await this.verifyLogSetting();
+        await this.writeVscLoggerInfo(logFileLocation, packageInfo);
+        const initMessage = localize("initialize.log.info", "Initialized logger for Zowe Explorer");
+        this.info(initMessage);
+        await this.compareCliLogSetting();
     }
 
-    private static async logLoggerInfo(logFileLocation: string, packageInfo: any) {
+    private static async writeVscLoggerInfo(logFileLocation: string, packageInfo: any) {
         this.zoweExplOutput.appendLine(`${packageInfo.displayName} ${packageInfo.version}`);
         this.zoweExplOutput.appendLine(localize("initialize.log.location", "This log file can be found at {0}", logFileLocation));
         this.zoweExplOutput.appendLine(localize("initialize.log.level", "Zowe Explorer log level: {0}", await this.getLogSetting()));
-        const initMessage = localize("initialize.log.info", "Initialized logger for Zowe Explorer");
-        this.info(initMessage);
     }
 
     private static async getLogSetting(): Promise<string> {
@@ -96,7 +95,7 @@ export class ZoweLogger {
         if (+MessageSeverity[await this.getLogSetting()] <= +severity) {
             const severityName = MessageSeverity[severity];
             globals.LOG[severityName.toLowerCase()](message);
-            this.zoweExplOutput.appendLine(this.setMessage(message, this.messageSeverityStrings[severity]));
+            this.zoweExplOutput.appendLine(this.setMessage(message, severityName));
         }
     }
 
@@ -116,10 +115,10 @@ export class ZoweLogger {
         return `[${this.getDate()} ${this.getTime()}] [${level}] ${msg}`;
     }
 
-    private static async verifyLogSetting() {
+    private static async compareCliLogSetting() {
         const cliLogSetting = this.getZoweLogEnVar();
         if (cliLogSetting && +MessageSeverity[await this.getLogSetting()] !== +MessageSeverity[cliLogSetting]) {
-            const notified = await this.getSettingOfNotification();
+            const notified = await this.getCliLoggerSetting();
             if (!notified) {
                 await this.updateLoggerSetting(cliLogSetting);
             }
@@ -130,12 +129,12 @@ export class ZoweLogger {
         return process.env.ZOWE_APP_LOG_LEVEL;
     }
 
-    private static async getSettingOfNotification(): Promise<boolean> {
+    private static async getCliLoggerSetting(): Promise<boolean> {
         const notified: boolean = await vscode.workspace.getConfiguration().get("zowe.cliLoggerSetting.presented");
         return notified ? notified : false;
     }
 
-    private static async setSettingOfNotification(setting: boolean): Promise<void> {
+    private static async setCliLoggerSetting(setting: boolean): Promise<void> {
         await SettingsConfig.setDirectValue("zowe.cliLoggerSetting.presented", setting, vscode.ConfigurationTarget.Global);
     }
 
@@ -154,7 +153,7 @@ export class ZoweLogger {
             if (selection === updateLoggerButton) {
                 await this.setLogSetting(cliSetting);
             }
-            await this.setSettingOfNotification(true);
+            await this.setCliLoggerSetting(true);
         });
     }
 }
