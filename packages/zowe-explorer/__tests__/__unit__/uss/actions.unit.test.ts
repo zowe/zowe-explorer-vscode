@@ -675,22 +675,6 @@ describe("USS Action Unit Tests - function uploadFile", () => {
         return newMocks;
     }
 
-    it("Tests upload file works with old API method", async () => {
-        const globalMocks = createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
-        const putContents = jest.fn();
-        ZoweExplorerApiRegister.getUssApi = jest.fn<any, Parameters<typeof ZoweExplorerApiRegister.getUssApi>>(
-            (profile: zowe.imperative.IProfileLoaded) => {
-                return {
-                    putContents,
-                };
-            }
-        );
-
-        await ussNodeActions.uploadFile(blockMocks.ussNode, { fileName: "madeup" } as any);
-        expect(ZoweExplorerApiRegister.getUssApi(null).putContents).toBeCalled();
-    });
-
     it("Tests upload file works with new API method", async () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);

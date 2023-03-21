@@ -43,7 +43,6 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T> {
     mFavoriteSession: IZoweTreeNode;
     /**
      * Array of favorite nodes
-     * @deprecated should not be visible outside of class
      */
     mFavorites: IZoweTreeNode[];
 
@@ -214,14 +213,12 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T> {
      * Finds an equivalent node but not as a favorite
      *
      * @param {IZoweTreeNode} node
-     * @deprecated should not be visible outside of class
      */
     findFavoritedNode(node: IZoweTreeNode): IZoweTreeNode;
     /**
      * Finds the equivalent node but not as a favorite
      *
      * @param {IZoweTreeNode} node
-     * @deprecated should not be visible outside of class
      */
     findNonFavoritedNode(node: IZoweTreeNode): IZoweTreeNode;
     /**
@@ -231,20 +228,16 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T> {
     findEquivalentNode(node: IZoweTreeNode, isFavorite: boolean): IZoweTreeNode;
     /**
      * Updates favorite
-     *
-     * @deprecated should not be visible outside of class
      */
     updateFavorites();
     /**
      * Renames a node from the favorites list
      *
      * @param {IZoweTreeNode} node
-     * @deprecated should not be visible outside of class
      */
     renameFavorite(node: IZoweTreeNode, newLabel: string);
     /**
      * Renames a node based on the profile and it's label
-     * @deprecated should not be visible outside of class
      *
      * @param {string} criteria the member name to add
      */

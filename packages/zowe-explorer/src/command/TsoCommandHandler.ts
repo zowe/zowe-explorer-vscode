@@ -223,17 +223,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
                         title: localize("issueTsoCommand.command.submitted", "TSO command submitted."),
                     },
                     () => {
-                        if (ZoweExplorerApiRegister.getCommandApi(profile).issueTsoCommandWithParms) {
-                            return ZoweExplorerApiRegister.getCommandApi(profile).issueTsoCommandWithParms(command, tsoParams);
-                        } else {
-                            let acctNum: string;
-                            if (!tsoParams) {
-                                acctNum = undefined;
-                            } else {
-                                acctNum = tsoParams.account;
-                            }
-                            return ZoweExplorerApiRegister.getCommandApi(profile).issueTsoCommand(command, acctNum);
-                        }
+                        return ZoweExplorerApiRegister.getCommandApi(profile).issueTsoCommandWithParms(command, tsoParams);
                     }
                 );
                 if (submitResponse.success) {

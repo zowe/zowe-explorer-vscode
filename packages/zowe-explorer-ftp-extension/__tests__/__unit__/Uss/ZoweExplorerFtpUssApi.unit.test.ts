@@ -89,7 +89,10 @@ describe("FtpUssApi", () => {
                 file: localFile,
             },
         };
-        const result = await UssApi.putContents(mockParams.inputFilePath, mockParams.ussFilePath, undefined, undefined, "test", true);
+        const result = await UssApi.putContent(mockParams.inputFilePath, mockParams.ussFilePath, {
+            etag: "test",
+            returnEtag: true,
+        });
         jest.spyOn(UssApi as any, "getContentsTag").mockReturnValue("test");
         expect(result.commandResponse).toContain("File uploaded successfully.");
         expect(UssUtils.downloadFile).toBeCalledTimes(1);
@@ -107,9 +110,9 @@ describe("FtpUssApi", () => {
             options: {},
         };
         const response = {};
-        UssApi.putContents = jest.fn().mockReturnValue(response);
+        UssApi.putContent = jest.fn().mockReturnValue(response);
         await UssApi.uploadDirectory(mockParams.inputDirectoryPath, mockParams.ussDirectoryPath, mockParams.options);
-        expect(UssApi.putContents).toBeCalledTimes(2);
+        expect(UssApi.putContent).toBeCalledTimes(2);
     });
 
     it("should create uss directory.", async () => {
