@@ -5,11 +5,22 @@ extends:
 env:
   node: true
   es6: true
+ignorePatterns: ["**/scripts", "**/__mocks__", "**/lib"]
 overrides:
   - files: "**/__tests__/**"
     rules:
       no-magic-numbers: off
+      # There are several errors falling under these rules; resolve
+      "@typescript-eslint/require-await": off
+      "@typescript-eslint/no-unsafe-return": off
+      "@typescript-eslint/explicit-function-return-type": off
 parser: "@typescript-eslint/parser"
+parserOptions:
+  ecmaVersion: 6
+  sourceType: module
+  project:
+    - "./tsconfig.json"
+    - "./tsconfig-tests.json"
 plugins:
   - "@typescript-eslint"
   - zowe-explorer
@@ -30,7 +41,9 @@ rules:
   "@typescript-eslint/no-unused-expressions": error
   "@typescript-eslint/no-var-requires": warn
   array-callback-return: error
-  # complexity: off
+  complexity:
+    - warn
+    - 15
   constructor-super: error
   curly: warn
   getter-return: error
@@ -72,6 +85,4 @@ rules:
     - coreModuleNames:
         - fs
       filePathPattern: ".*\\.unit\\.test\\..*"
-parserOptions:
-  sourceType: module
 root: true

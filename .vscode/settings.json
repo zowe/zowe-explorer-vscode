@@ -25,6 +25,7 @@
   "eslint.packageManager": "yarn",
   "eslint.workingDirectories": [
     { "directory": "packages/zowe-explorer-ftp-extension", "changeProcessCWD": true },
-    { "directory": "packages/zowe-explorer-api", "changeProcessCWD": true }
+    { "directory": "packages/zowe-explorer-api", "changeProcessCWD": true },
+    { "directory": "packages/zowe-explorer", "changeProcessCWD": true }
   ]
 }

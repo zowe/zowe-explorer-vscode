@@ -299,10 +299,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
         if (tsoProfile) {
             tsoParms = {
                 ...iStartTso.reduce((obj, parm) => {
-                    const newObj = obj;
-                    newObj[parm] = tsoProfile.profile[parm];
-
-                    return newObj;
+                    return { ...obj, [parm]: tsoProfile.profile[parm] };
                 }, {}),
             };
         }

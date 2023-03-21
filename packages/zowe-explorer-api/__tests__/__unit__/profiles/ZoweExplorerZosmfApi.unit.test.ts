@@ -66,12 +66,12 @@ describe("ZosmfUssApi", () => {
         const zosmfApi = new ZosmfUssApi();
         const session = zosmfApi.getSessionFromCommandArgument(fakeProfile as unknown as zowe.imperative.ICommandArguments);
         expect(session).toBeDefined();
-        const sessCfg: Partial<ITestProfile> & { hostname: string; type: string } = {
+        const sessCfg: zowe.imperative.ISession = {
             ...fakeProfile,
             hostname: fakeProfile.host,
             type: zowe.imperative.SessConstants.AUTH_TYPE_BASIC,
         };
-        delete sessCfg.host;
+        delete sessCfg["host"];
         expect(session.ISession).toMatchObject(sessCfg);
     });
 

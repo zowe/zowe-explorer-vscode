@@ -259,28 +259,26 @@ export class Profiles extends ProfilesCache {
                     .map((profile) => profile.name)
                     .filter((profileName) => {
                         const profile = Profiles.getInstance().loadNamedProfile(profileName);
+                        const notInSessionNodes = !zoweFileProvider.mSessionNodes?.find(
+                            (sessionNode) => sessionNode.getProfileName() === profileName
+                        );
                         if (profile) {
                             if (zoweFileProvider.getTreeType() === PersistenceSchemaEnum.USS) {
                                 const ussProfileTypes = ZoweExplorerApiRegister.getInstance().registeredUssApiTypes();
-                                return ussProfileTypes.includes(profile.type);
+                                return ussProfileTypes.includes(profile.type) && notInSessionNodes;
                             }
                             if (zoweFileProvider.getTreeType() === PersistenceSchemaEnum.Dataset) {
                                 const mvsProfileTypes = ZoweExplorerApiRegister.getInstance().registeredMvsApiTypes();
-                                return mvsProfileTypes.includes(profile.type);
+                                return mvsProfileTypes.includes(profile.type) && notInSessionNodes;
                             }
                             if (zoweFileProvider.getTreeType() === PersistenceSchemaEnum.Job) {
                                 const jesProfileTypes = ZoweExplorerApiRegister.getInstance().registeredJesApiTypes();
-                                return jesProfileTypes.includes(profile.type);
+                                return jesProfileTypes.includes(profile.type) && notInSessionNodes;
                             }
                         }
 
                         return false;
-                    })
-                    .filter(
-                        (profileName) =>
-                            // Find all cases where a profile is not already displayed
-                            !zoweFileProvider.mSessionNodes?.find((sessionNode) => sessionNode.getProfileName() === profileName)
-                    );
+                    });
             }
         } catch (err) {
             this.log.warn(err);
@@ -422,8 +420,7 @@ export class Profiles extends ProfilesCache {
             return;
         }
         const editSession = this.loadNamedProfile(profileLoaded.name, profileLoaded.type).profile;
-        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-        const editURL = `${editSession.host}:${editSession.port}`;
+        const editURL = `${editSession.host as string}:${editSession.port as string}`;
         const editUser = editSession.user;
         const editPass = editSession.password;
         const editrej = editSession.rejectUnauthorized;
