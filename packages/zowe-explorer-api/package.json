@@ -1,6 +1,6 @@
 {
   "name": "@zowe/zowe-explorer-api",
-  "version": "2.6.3-SNAPSHOT",
+  "version": "2.7.1-SNAPSHOT",
   "description": "Extensibility API for Zowe Explorer.",
   "publisher": "Zowe",
   "author": "Zowe",
@@ -16,28 +16,22 @@
     "@types/semver": "^7.3.6"
   },
   "dependencies": {
-    "@zowe/cli": "^7.10.4",
+    "@zowe/cli": "^7.11.0",
     "semver": "^7.3.5"
   },
   "scripts": {
-    "build": "yarn clean && tsc -p ./",
+    "build": "yarn clean && tsc -p ./ && yarn license",
     "test:unit": "jest \".*__tests__.*\\.unit\\.test\\.ts\" --coverage",
     "test": "yarn test:unit",
-    "lint": "concurrently -n \"_eslint_,prettier\" \"eslint . --ext .ts\" \"prettier --check .\"",
+    "lint": "concurrently -n \"_eslint_,prettier\" \"eslint .\" \"prettier --check .\"",
     "lintErrors": "echo \"zowe-explorer-api: coming soon.\"",
     "pretty": "prettier --write .",
     "clean": "rimraf lib",
     "fresh-clone": "yarn clean && rimraf node_modules",
-    "license": "node ../../scripts/license.js",
-    "package": "yarn license && yarn lint && yarn build && npm pack && node ../../scripts/mv-pack.js zowe-zowe-explorer-api tgz"
+    "license": "node ../../scripts/updateLicenses.js",
+    "package": "yarn build && npm pack && node ../../scripts/mv-pack.js zowe-zowe-explorer-api tgz"
   },
   "jest": {
-    "globals": {
-      "ts-jest": {
-        "diagnostics": false,
-        "tsconfig": "tsconfig-tests.json"
-      }
-    },
     "moduleFileExtensions": [
       "js",
       "ts",
@@ -50,12 +44,16 @@
       "<rootDir>/results/unit"
     ],
     "transform": {
-      "^.+\\.(ts|tsx)$": "ts-jest"
+      "^.+\\.tsx?$": [
+        "ts-jest",
+        {
+          "diagnostics": false,
+          "tsconfig": "tsconfig-tests.json"
+        }
+      ]
     },
     "testRegex": "__tests__.*\\.(spec|test)\\.ts$",
     "modulePathIgnorePatterns": [
-      "__tests__/__integration__/",
-      "__tests__/__theia__/",
       "out/"
     ],
     "reporters": [
@@ -74,7 +72,7 @@
     "preset": "ts-jest"
   },
   "jest-html-reporter": {
-    "pageTitle": "Zowe Extension Tests",
+    "pageTitle": "Zowe Explorer API Tests",
     "outputPath": "results/unit/results.html"
   },
   "jest-stare": {

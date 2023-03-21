@@ -1,12 +1,12 @@
-/*
- * This program and the accompanying materials are made available under the terms of the *
- * Eclipse Public License v2.0 which accompanies this distribution, and is available at *
- * https://www.eclipse.org/legal/epl-v20.html                                      *
- *                                                                                 *
- * SPDX-License-Identifier: EPL-2.0                                                *
- *                                                                                 *
- * Copyright Contributors to the Zowe Project.                                     *
- *                                                                                 *
+/**
+ * This program and the accompanying materials are made available under the terms of the
+ * Eclipse Public License v2.0 which accompanies this distribution, and is available at
+ * https://www.eclipse.org/legal/epl-v20.html
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Copyright Contributors to the Zowe Project.
+ *
  */
 
 import * as dsUtils from "../dataset/utils";
@@ -21,9 +21,10 @@ import {
     getDocumentFilePath,
     concatChildNodes,
     checkForAddedSuffix,
+    willForceUpload,
+    getSelectedNodeList,
     JobSubmitDialogOpts,
     JOB_SUBMIT_DIALOG_OPTS,
-    willForceUpload,
 } from "../shared/utils";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { Profiles } from "../Profiles";
@@ -178,7 +179,7 @@ export async function uploadFile(node: ZoweDatasetNode, doc: vscode.TextDocument
         const datasetName = node.label as string;
         const prof = node.getProfile();
         await ZoweExplorerApiRegister.getMvsApi(prof).putContents(doc.fileName, datasetName, {
-            encoding: prof.profile.encoding,
+            encoding: prof.profile?.encoding,
             responseTimeout: prof.profile?.responseTimeout,
         });
     } catch (e) {
@@ -427,7 +428,7 @@ export async function openPS(node: api.IZoweDatasetTreeNode, previewMember: bool
                 const response = await ZoweExplorerApiRegister.getMvsApi(prof).getContents(label, {
                     file: documentFilePath,
                     returnEtag: true,
-                    encoding: prof.profile.encoding,
+                    encoding: prof.profile?.encoding,
                     responseTimeout: prof.profile?.responseTimeout,
                 });
                 node.setEtag(response?.apiResponse?.etag);
@@ -1039,7 +1040,7 @@ export async function refreshPS(node: api.IZoweDatasetTreeNode) {
         const response = await ZoweExplorerApiRegister.getMvsApi(prof).getContents(label, {
             file: documentFilePath,
             returnEtag: true,
-            encoding: prof.profile.encoding,
+            encoding: prof.profile?.encoding,
             responseTimeout: prof.profile?.responseTimeout,
         });
         node.setEtag(response.apiResponse.etag);
@@ -1127,10 +1128,51 @@ export async function enterPattern(node: api.IZoweDatasetTreeNode, datasetProvid
  * Copy data set info
  *
  * @export
+ * @deprecated Please use copyDataSets
  * @param {IZoweNodeType} node - The node to copy
  */
 export async function copyDataSet(node: api.IZoweNodeType) {
     return vscode.env.clipboard.writeText(JSON.stringify(dsUtils.getNodeLabels(node)));
+}
+
+/**
+ * Copy data sets
+ *
+ * @export
+ * @param {ZoweDatasetNode} node Node to copy,
+ * @param {ZoweDatasetNode[]} nodeList - Multiple selected Nodes to copy
+ * @param datasetProvider
+ */
+export async function copyDataSets(node, nodeList: ZoweDatasetNode[], datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>) {
+    let selectedNodes;
+    if (!(node || nodeList)) {
+        selectedNodes = datasetProvider.getTreeView().selection;
+    } else {
+        selectedNodes = getSelectedNodeList(node, nodeList);
+    }
+
+    const unique = [...new Set(selectedNodes.map((item) => item.contextValue))];
+    if (unique.length > 1) {
+        api.Gui.showMessage(
+            localize("copyDataSet.multitype.error", "Cannot perform the copy operation as the datasets selected have different types")
+        );
+        return;
+    }
+    if (contextually.isDsMember(selectedNodes[0])) {
+        // multiple member
+        const filePaths = [];
+        selectedNodes.forEach((el) => {
+            filePaths.push(dsUtils.getNodeLabels(el));
+        });
+        return vscode.env.clipboard.writeText(JSON.stringify(filePaths.length > 1 ? filePaths : filePaths[0]));
+    }
+    if (contextually.isDs(selectedNodes[0])) {
+        await copySequentialDatasets(selectedNodes);
+        return refreshDataset(selectedNodes[0].getParent(), datasetProvider);
+    } else if (contextually.isPds(selectedNodes[0])) {
+        await copyPartitionedDatasets(selectedNodes);
+        return refreshDataset(selectedNodes[0].getParent(), datasetProvider);
+    }
 }
 
 /**
@@ -1254,38 +1296,36 @@ export async function pasteMember(node: api.IZoweDatasetTreeNode, datasetProvide
         }
 
         if (beforeProfileName === profileName) {
+            let replace: shouldReplace;
             if (memberName) {
-                const nodeProfile = node.getProfile();
-                const responseItem: zowe.IZosFilesResponse = await ZoweExplorerApiRegister.getMvsApi(nodeProfile).allMembers(`${dataSetName}`, {
-                    responseTimeout: nodeProfile?.profile?.responseTimeout,
-                });
-                if (responseItem.apiResponse.items.some((singleItem) => singleItem.member === memberName.toUpperCase())) {
-                    throw Error(`${dataSetName}(${memberName}) already exists. You cannot replace a member`);
+                replace = await determineReplacement(node.getProfile(), `${dataSetName}(${memberName})`, "mem");
+            }
+            if (replace !== "cancel") {
+                try {
+                    await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).copyDataSetMember(
+                        { dsn: beforeDataSetName, member: beforeMemberName },
+                        { dsn: dataSetName, member: memberName },
+                        { replace: replace === "replace" }
+                    );
+                } catch (err) {
+                    globals.LOG.error(err);
+                    api.Gui.errorMessage(err.message);
+                    return;
                 }
-            }
-            try {
-                await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).copyDataSetMember(
-                    { dsn: beforeDataSetName, member: beforeMemberName },
-                    { dsn: dataSetName, member: memberName }
-                );
-            } catch (err) {
-                globals.LOG.error(err);
-                api.Gui.errorMessage(err.message);
-                return;
-            }
-            if (memberName) {
-                datasetProvider.refreshElement(node);
-                let node2;
-                if (node.contextValue.includes(globals.FAV_SUFFIX)) {
-                    node2 = datasetProvider.findNonFavoritedNode(node);
+                if (memberName) {
+                    datasetProvider.refreshElement(node);
+                    let node2;
+                    if (node.contextValue.includes(globals.FAV_SUFFIX)) {
+                        node2 = datasetProvider.findNonFavoritedNode(node);
+                    } else {
+                        node2 = datasetProvider.findFavoritedNode(node);
+                    }
+                    if (node2) {
+                        datasetProvider.refreshElement(node2);
+                    }
                 } else {
-                    node2 = datasetProvider.findFavoritedNode(node);
+                    refreshPS(node);
                 }
-                if (node2) {
-                    datasetProvider.refreshElement(node2);
-                }
-            } else {
-                refreshPS(node);
             }
         }
     }
@@ -1297,7 +1337,7 @@ export async function pasteMember(node: api.IZoweDatasetTreeNode, datasetProvide
  * @export
  * @param {vscode.TextDocument} doc - TextDocument that is being saved
  */
-export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>) {
+export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>): Promise<void> {
     // Check if file is a data set, instead of some other file
     globals.LOG.debug(localize("saveFile.log.debug.request", "requested to save data set: ") + doc.fileName);
     const docPath = path.join(doc.fileName, "..");
@@ -1316,7 +1356,8 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
     const profile = Profiles.getInstance().loadNamedProfile(sesName);
     if (!profile) {
         globals.LOG.error(localize("saveFile.log.error.session", "Couldn't locate session when saving data set!"));
-        return api.Gui.errorMessage(localize("saveFile.log.error.session", "Couldn't locate session when saving data set!"));
+        await api.Gui.errorMessage(localize("saveFile.log.error.session", "Couldn't locate session when saving data set!"));
+        return;
     }
 
     // get session from session name
@@ -1333,18 +1374,18 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
     );
     label = label.toUpperCase().trim();
     globals.LOG.debug(localize("saveFile.log.debug.saving", "Saving file ") + label);
-    if (!label.includes("(")) {
-        try {
-            // Checks if file still exists on server
-            const response = await ZoweExplorerApiRegister.getMvsApi(profile).dataSet(label, { responseTimeout: profile.profile?.responseTimeout });
-            if (!response.apiResponse.items.length) {
-                return api.Gui.errorMessage(
-                    localize("saveFile.error.saveFailed", "Data set failed to save. Data set may have been deleted on mainframe.")
-                );
-            }
-        } catch (err) {
-            await errorHandling(err, sesName, err.message);
+    const dsname = label.includes("(") ? label.slice(0, label.indexOf("(")) : label;
+    try {
+        // Checks if file still exists on server
+        const response = await ZoweExplorerApiRegister.getMvsApi(profile).dataSet(dsname, { responseTimeout: profile.profile?.responseTimeout });
+        if (!response.apiResponse.items.length) {
+            await api.Gui.errorMessage(
+                localize("saveFile.error.saveFailed", "Data set failed to save. Data set may have been deleted or renamed on mainframe.")
+            );
+            return;
         }
+    } catch (err) {
+        await errorHandling(err, sesName, err.message);
     }
     // Get specific node based on label and parent tree (session / favorites)
     const nodes: api.IZoweNodeType[] = concatChildNodes(sesNode ? [sesNode] : datasetProvider.mSessionNodes);
@@ -1373,7 +1414,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
             },
             () => {
                 const prof = node?.getProfile() ?? profile;
-                if (prof.profile.encoding) {
+                if (prof.profile?.encoding) {
                     uploadOptions.encoding = prof.profile.encoding;
                 }
                 return ZoweExplorerApiRegister.getMvsApi(prof).putContents(doc.fileName, label, {
@@ -1399,13 +1440,10 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
                 const oldDoc = doc;
                 const oldDocText = oldDoc.getText();
                 const prof = node ? node.getProfile() : profile;
-                if (prof.profile.encoding) {
-                    uploadOptions.encoding = prof.profile.encoding;
-                }
                 const downloadResponse = await ZoweExplorerApiRegister.getMvsApi(prof).getContents(label, {
                     file: doc.fileName,
                     returnEtag: true,
-                    encoding: prof.profile.encoding,
+                    encoding: prof.profile?.encoding,
                     responseTimeout: prof.profile?.responseTimeout,
                 });
                 // re-assign etag, so that it can be used with subsequent requests
@@ -1440,5 +1478,245 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
         globals.LOG.error(localize("saveFile.log.error.save", "Error encountered when saving data set: ") + JSON.stringify(err));
         await markDocumentUnsaved(doc);
         await errorHandling(err, sesName, err.message);
+    }
+}
+
+/**
+ * Paste members
+ *
+ * @export
+ * @param {DatasetTree} datasetProvider - the tree which contains the nodes
+ */
+export async function pasteDataSetMembers(datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>, node: ZoweDatasetNode) {
+    let clipboardContent;
+    try {
+        clipboardContent = JSON.parse(await vscode.env.clipboard.readText());
+    } catch (err) {
+        api.Gui.errorMessage(localize("paste.dataSet", "Invalid paste. Copy dataset(s) first"));
+        return;
+    }
+    if (!Array.isArray(clipboardContent) && clipboardContent.memberName) {
+        return pasteMember(node, datasetProvider);
+    }
+
+    await api.Gui.withProgress(
+        {
+            location: vscode.ProgressLocation.Window,
+            title: localize("paste.dataSet.InPrg", "Copying File(s)"),
+        },
+        async function copyDsMember() {
+            for (const content of clipboardContent) {
+                if (content.memberName) {
+                    try {
+                        await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).copyDataSetMember(
+                            { dsn: content.dataSetName, member: content.memberName },
+                            { dsn: node.getLabel().toString(), member: content.memberName }
+                        );
+                    } catch (err) {
+                        api.Gui.errorMessage(err.message);
+                        return;
+                    }
+                }
+            }
+            datasetProvider.refreshElement(node);
+            vscode.env.clipboard.writeText("");
+        }
+    );
+}
+
+/**
+ * download given dataset node
+ *
+ * @export
+ * @param {ZoweDatasetNode} node - node to be downloaded
+ */
+export async function downloadDs(node: ZoweDatasetNode) {
+    const profile = node.getProfile();
+    let lbl: string;
+    switch (true) {
+        case contextually.isFavorite(node):
+        case contextually.isSessionNotFav(node.getParent()):
+            lbl = node.label as string;
+            break;
+        case contextually.isFavoritePds(node.getParent()):
+        case contextually.isPdsNotFav(node.getParent()):
+            lbl = node.getParent().getLabel().toString() + "(" + node.getLabel().toString() + ")";
+            break;
+        default:
+            vscode.window.showErrorMessage(localize("download.invalidNode", "downloadDataset() called with invalid node."));
+            throw Error(localize("download.invalidNode", "downloadDataset() called with invalid node. "));
+    }
+    const filePath = getDocumentFilePath(lbl, node);
+    return ZoweExplorerApiRegister.getMvsApi(profile).getContents(lbl, {
+        file: filePath,
+        returnEtag: true,
+        encoding: profile.profile.encoding,
+    });
+}
+
+/**
+ * copies given sequential dataset nodes
+ *
+ * @export
+ * @param {ZoweDatasetNode[]} nodes - nodes to be copied
+ */
+export async function copySequentialDatasets(nodes: ZoweDatasetNode[]) {
+    await _copyProcessor(nodes, "ps", async (node: ZoweDatasetNode, dsname: string, replace: shouldReplace) => {
+        const lbl = node.getLabel().toString();
+        const mvsApi = ZoweExplorerApiRegister.getMvsApi(node.getProfile());
+        if (mvsApi?.copyDataSet == null) {
+            await api.Gui.errorMessage(localize("copyDataSet.error.notSupported", "Copying datasets is not supported."));
+        } else {
+            await api.Gui.withProgress(
+                {
+                    location: vscode.ProgressLocation.Window,
+                    title: localize("paste.dataSet.InPrg", "Copying File(s)"),
+                },
+                () => {
+                    return mvsApi.copyDataSet(lbl, dsname, null, replace === "replace");
+                }
+            );
+        }
+    });
+}
+
+/**
+ * copies given partitioned dataset nodes
+ *
+ * @export
+ * @param {ZoweDatasetNode[]} nodes - nodes to be copied
+ */
+export async function copyPartitionedDatasets(nodes: ZoweDatasetNode[]) {
+    await _copyProcessor(nodes, "po", async (node: ZoweDatasetNode, dsname: string, replace: shouldReplace) => {
+        const lbl = node.getLabel().toString();
+        const uploadOptions: IUploadOptions = {
+            etag: node.getEtag(),
+            returnEtag: true,
+        };
+
+        const children = await node.getChildren();
+        const prof = node.getProfile();
+        if (prof.profile.encoding) {
+            uploadOptions.encoding = prof.profile.encoding;
+        }
+
+        await api.Gui.withProgress(
+            {
+                location: vscode.ProgressLocation.Window,
+                title: localize("paste.dataSet.InPrg", "Copying File(s)"),
+            },
+            () => {
+                for (const child of children) {
+                    ZoweExplorerApiRegister.getMvsApi(node.getProfile()).copyDataSetMember(
+                        { dsn: lbl, member: child.getLabel().toString() },
+                        { dsn: dsname, member: child.getLabel().toString() },
+                        { replace: replace === "replace" }
+                    );
+                }
+                return Promise.resolve();
+            }
+        );
+    });
+}
+
+/**
+ * Type of z/os dataset or member intended for replacement
+ * @export
+ */
+export type replaceDstype = "ps" | "po" | "mem";
+
+/**
+ * String type to determine whether or not the z/os dataset should be replaced
+ * @export
+ */
+export type shouldReplace = "replace" | "cancel" | "notFound";
+
+/**
+ * Helper function to determine whether or not we should replace some z/os content
+ *
+ * @param nodeProfile The node for which we are going to determine replacement
+ * @param name The fully quallified name of the dataset (member included)
+ * @param type The type of z/os dataset (or member) that we should determine whether or not to replace
+ * @returns string that explain whether or not to replace the z/os content
+ */
+export async function determineReplacement(nodeProfile: zowe.imperative.IProfileLoaded, name: string, type: replaceDstype): Promise<shouldReplace> {
+    const mvsApi = ZoweExplorerApiRegister.getMvsApi(nodeProfile);
+    const options = { responseTimeout: nodeProfile.profile?.responseTimeout };
+    const stringReplace = localize("copyDataSet.replace.option1", "Replace");
+    const stringCancel = localize("copyDataSet.replace.option2", "Cancel");
+    let q: string = null;
+    let replace = false;
+    if (type === "mem") {
+        const dsname = name.split("(")[0];
+        const member = name.split("(")[1].slice(0, -1);
+        const res = await mvsApi.allMembers(dsname, options);
+        if (res?.success && res.apiResponse?.items.some((m) => m.member === member.toUpperCase())) {
+            q = localize("copyDataSet.replace.mem.question", "The dataset member already exists.\nDo you want to replace it?");
+            replace = stringReplace === (await api.Gui.showMessage(q, { items: [stringReplace, stringCancel] }));
+        }
+    } else {
+        const res = await mvsApi.dataSet(name, options);
+        if (res?.success && res.apiResponse?.items.length > 0) {
+            if (type === "ps") {
+                q = localize("copyDataSet.replace.ps.question", "The physical sequential (PS) dataset already exists.\nDo you want to replace it?");
+            } else if (type === "po") {
+                q = localize(
+                    "copyDataSet.replace.po.question",
+                    "The partitioned (PO) dataset already exists.\nDo you want to merge them while replacing any existing members?"
+                );
+            }
+            replace = stringReplace === (await api.Gui.showMessage(q, { items: [stringReplace, stringCancel] }));
+        }
+    }
+    // Sonar cloud code-smell :'(
+    const returnValueIfNotReplacing = q === null ? "notFound" : "cancel";
+    return replace ? "replace" : returnValueIfNotReplacing;
+}
+
+/**
+ * Helper funciton to process the copy operation on all selected nodes
+ *
+ * @param nodes List of selected nodes to process
+ * @param type Type of replacement that should occur
+ * @param action Function that will perform the actual replacement/copy operation
+ * @returns void - Please don't expect a return value from this method
+ */
+export async function _copyProcessor(
+    nodes: ZoweDatasetNode[],
+    type: replaceDstype,
+    action: (_node: ZoweDatasetNode, _dsname: string, _shouldReplace: shouldReplace) => Promise<void>
+): Promise<void> {
+    for (const node of nodes) {
+        try {
+            const lbl = node.getLabel().toString();
+            const inputBoxOptions: vscode.InputBoxOptions = {
+                prompt: localize("allocateLike.inputBox.placeHolder", "Enter a name for the new data set"),
+                value: lbl,
+                placeHolder: localize("pasteMember.inputBox.placeHolder", "Name of Data Set"),
+                validateInput: (text) => {
+                    return dsUtils.validateDataSetName(text) && (lbl !== text) === true ? null : "Enter valid dataset name";
+                },
+            };
+
+            const dsname = await api.Gui.showInputBox(inputBoxOptions);
+            if (!dsname) {
+                return;
+            }
+            const replace = await determineReplacement(nodes[0].getProfile(), dsname, type);
+            let res: zowe.IZosFilesResponse;
+            if (replace === "notFound") {
+                res = await ZoweExplorerApiRegister.getMvsApi(nodes[0].getProfile()).allocateLikeDataSet(dsname, lbl);
+            }
+            if (res?.success || replace !== "cancel") {
+                await action(node, dsname, replace);
+            }
+        } catch (error) {
+            globals.LOG.error(localize("copyDataSet.log.error", "Error encountered when copy data set! ") + JSON.stringify(error));
+            await errorHandling(
+                error,
+                dsUtils.getNodeLabels(node).dataSetName,
+                localize("copyDataSet.error", "Unable to copy data set: ") + error.message
+            );
+        }
     }
 }

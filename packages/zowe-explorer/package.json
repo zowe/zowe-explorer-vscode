@@ -2,7 +2,7 @@
   "name": "vscode-extension-for-zowe",
   "displayName": "%displayName%",
   "description": "%description%",
-  "version": "2.6.3-SNAPSHOT",
+  "version": "2.7.1-SNAPSHOT",
   "publisher": "Zowe",
   "author": "Zowe",
   "license": "EPL-2.0",
@@ -101,6 +101,18 @@
         "key": "ctrl+v",
         "mac": "cmd+v",
         "when": "focusedView == zowe.uss.explorer || viewItem =~ /^(directory.*|ussSession.*)/ && !listSupportsMultiselect"
+      },
+      {
+        "command": "zowe.ds.copyDataSets",
+        "key": "ctrl+c",
+        "mac": "cmd+c",
+        "when": "focusedView == zowe.ds.explorer"
+      },
+      {
+        "command": "zowe.ds.pasteDataSets",
+        "key": "ctrl+v",
+        "mac": "cmd+v",
+        "when": "focusedView == zowe.ds.explorer"
       }
     ],
     "commands": [
@@ -274,13 +286,8 @@
         "category": "Zowe Explorer"
       },
       {
-        "command": "zowe.ds.copyMember",
-        "title": "%copyMember%",
-        "category": "Zowe Explorer"
-      },
-      {
-        "command": "zowe.ds.copyDataSet",
-        "title": "%copyDataSet%",
+        "command": "zowe.ds.copyDataSets",
+        "title": "%copyFile%",
         "category": "Zowe Explorer"
       },
       {
@@ -299,7 +306,7 @@
         "category": "Zowe Explorer"
       },
       {
-        "command": "zowe.ds.pasteMember",
+        "command": "zowe.ds.pasteDataSets",
         "title": "%paste%",
         "category": "Zowe Explorer"
       },
@@ -822,7 +829,7 @@
           "group": "001_zowe_ussCreate@4"
         },
         {
-          "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)(textFile.*|binaryFile.*|directory.*)/",
+          "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)(textFile.*|binaryFile.*|directory.*|ussSession.*_isFilterSearch)/",
           "command": "zowe.uss.pasteUssFile",
           "group": "001_zowe_ussCreate@5"
         },
@@ -1002,18 +1009,13 @@
           "group": "001_zowe_dsCreate@5"
         },
         {
-          "when": "view == zowe.ds.explorer && viewItem =~ /^member.*/  && !listMultiSelection",
-          "command": "zowe.ds.copyMember",
+          "when": "view == zowe.ds.explorer && viewItem =~ /^(?!.*profile=zftp.*)(ds|member|pds).*/",
+          "command": "zowe.ds.copyDataSets",
           "group": "001_zowe_dsCreate@6"
         },
         {
-          "when": "view == zowe.ds.explorer && viewItem =~ /^ds.*/ && !listMultiSelection",
-          "command": "zowe.ds.copyDataSet",
-          "group": "001_zowe_dsCreate@6"
-        },
-        {
-          "when": "view == zowe.ds.explorer && viewItem =~ /^pds.*/ && !listMultiSelection",
-          "command": "zowe.ds.pasteMember",
+          "when": "view == zowe.ds.explorer && viewItem =~ /^(?!.*profile=zftp.*)(session|pds).*/",
+          "command": "zowe.ds.pasteDataSets",
           "group": "001_zowe_dsCreate@7"
         },
         {
@@ -1290,7 +1292,7 @@
           "when": "never"
         },
         {
-          "command": "zowe.ds.copyDataSet",
+          "command": "zowe.ds.copyDataSets",
           "when": "never"
         },
         {
@@ -1310,11 +1312,7 @@
           "when": "never"
         },
         {
-          "command": "zowe.ds.copyMember",
-          "when": "never"
-        },
-        {
-          "command": "zowe.ds.pasteMember",
+          "command": "zowe.ds.pasteDataSets",
           "when": "never"
         },
         {
@@ -1785,21 +1783,21 @@
     ]
   },
   "scripts": {
-    "vscode:prepublish": "yarn createTestProfileData && gulp build && yarn license && yarn lint && webpack --mode production && yarn updateStrings && yarn run compile-web",
-    "build": "yarn createTestProfileData && gulp build && yarn license && webpack --mode development",
-    "build:integration": "yarn createTestProfileData && gulp build && yarn license && tsc --build --pretty",
+    "build": "gulp build && yarn license && webpack --mode development",
+    "build:integration": "yarn createTestProfileData && yarn license && tsc --pretty --project tsconfig-tests.json",
     "test:unit": "jest \".*__tests__.*\\.unit\\.test\\.ts\" --coverage",
     "test:theia": "mocha ./out/__tests__/__theia__/*.theia.test.js --timeout 50000 --reporter mocha-multi-reporters --reporter-options configFile=.mocharc.json",
     "test": "yarn test:unit",
-    "updateStrings": "node ../../scripts/stringUpdateScript.js && prettier --write  --loglevel warn ./i18n package.nls*",
+    "vscode:prepublish": "gulp build && webpack --mode production && yarn updateStrings && yarn run compile-web",
+    "updateStrings": "node ../../scripts/stringUpdateScript.js && prettier --write --loglevel warn ./i18n package.nls*",
     "package": "vsce package --allow-star-activation --yarn && node ../../scripts/mv-pack.js vscode-extension-for-zowe vsix",
-    "license": "node ../../scripts/license.js",
-    "watch": "yarn createTestProfileData && gulp build && webpack --mode development --watch --info-verbosity verbose",
+    "license": "node ../../scripts/updateLicenses.js",
+    "watch": "gulp build && webpack --mode development --watch --info-verbosity verbose",
     "compile": "tsc -b",
     "compile-web": "webpack --target webworker --entry ./src/web/extension.ts --output-path ./out/src/web",
     "markdown": "markdownlint CHANGELOG.md README.md",
     "lint:pretty": "prettier --check .",
-    "lint": "yarn lint:src && yarn lint:pretty && yarn markdown",
+    "lint": "yarn lint:src && yarn lint:tests && yarn lint:pretty && yarn markdown",
     "lint:src": "eslint --format stylish src/**/*.ts",
     "lint:tests": "eslint --format stylish __tests__/**/*.ts",
     "clean": "gulp clean",
@@ -1825,7 +1823,7 @@
     "chalk": "^2.4.1",
     "cross-env": "^5.2.0",
     "del": "^4.1.1",
-    "eslint-plugin-zowe-explorer": "2.6.3-SNAPSHOT",
+    "eslint-plugin-zowe-explorer": "2.7.1-SNAPSHOT",
     "event-stream": "^4.0.1",
     "expect": "^24.8.0",
     "geckodriver": "^1.19.1",
@@ -1851,7 +1849,7 @@
     "webpack-cli": "^3.3.11"
   },
   "dependencies": {
-    "@zowe/zowe-explorer-api": "2.6.3-SNAPSHOT",
+    "@zowe/zowe-explorer-api": "2.7.1-SNAPSHOT",
     "fs-extra": "8.0.1",
     "isbinaryfile": "4.0.4",
     "js-yaml": "3.13.1",
@@ -1874,7 +1872,7 @@
       "^.+\\.(ts|tsx)$": [
         "ts-jest",
         {
-          "tsconfig": "tsconfig.json",
+          "tsconfig": "tsconfig-tests.json",
           "diagnostics": false
         }
       ]

@@ -1,12 +1,12 @@
-/*
- * This program and the accompanying materials are made available under the terms of the *
- * Eclipse Public License v2.0 which accompanies this distribution, and is available at *
- * https://www.eclipse.org/legal/epl-v20.html                                      *
- *                                                                                 *
- * SPDX-License-Identifier: EPL-2.0                                                *
- *                                                                                 *
- * Copyright Contributors to the Zowe Project.                                     *
- *                                                                                 *
+/**
+ * This program and the accompanying materials are made available under the terms of the
+ * Eclipse Public License v2.0 which accompanies this distribution, and is available at
+ * https://www.eclipse.org/legal/epl-v20.html
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Copyright Contributors to the Zowe Project.
+ *
  */
 
 import * as vscode from "vscode";
@@ -39,6 +39,7 @@ import * as workspaceUtils from "../../../src/utils/workspace";
 import { PersistentFilters } from "../../../src/PersistentFilters";
 import * as dsUtils from "../../../src/dataset/utils";
 import { SettingsConfig } from "../../../src/utils/SettingsConfig";
+import * as sharedActions from "../../../src/shared/actions";
 
 jest.mock("fs");
 jest.mock("util");
@@ -940,6 +941,27 @@ describe("Dataset Tree Unit Tests - Function addSession", () => {
         testTree.addSession("fake");
 
         expect(testTree.mSessionNodes[1]).not.toBeDefined();
+    });
+
+    it("Checking failed attempt to add a session due to the missing profile", async () => {
+        createGlobalMocks();
+        const blockMocks = await createBlockMocks();
+
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes = [
+            {
+                label: {
+                    toString: () => "test",
+                },
+                getProfileName: () => "sestest",
+            } as any,
+        ];
+        jest.spyOn((testTree as any).mHistory, "getSessions").mockReturnValue(["sestest"]);
+        jest.spyOn(Profiles.getInstance(), "fetchAllProfiles").mockReturnValue(Promise.resolve([blockMocks.imperativeProfile]));
+        jest.spyOn(sharedActions, "resetValidationSettings").mockImplementation();
+
+        await expect(testTree.addSession(null, "test")).resolves.not.toThrow();
     });
 });
 
@@ -2411,5 +2433,114 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
 
         await testValidDsName("HLQ.TEST.RENAME.NODE.NEW.TEST");
         await testValidDsName("INVALID-DATASET-NAME");
+    });
+});
+
+describe("Dataset Tree Unit Tests - Function checkFilterPattern", () => {
+    function createBlockMocks() {
+        const session = createISession();
+        const imperativeProfile = createIProfile();
+        const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
+        const testTree = new DatasetTree();
+
+        testTree.mSessionNodes.push(datasetSessionNode);
+
+        return {
+            session,
+            imperativeProfile,
+            datasetSessionNode,
+            testTree,
+        };
+    }
+
+    it("should return true when pattern is *", () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        expect(blockMocks.testTree.checkFilterPattern("*", "*")).toEqual(true);
+    });
+
+    it("should return true when pattern ends with *", () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        expect(blockMocks.testTree.checkFilterPattern("SAMPLE*", "SAMPLE*")).toEqual(true);
+    });
+
+    it("should return true when pattern starts with *", () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        expect(blockMocks.testTree.checkFilterPattern("*SAMPLE", "*SAMPLE")).toEqual(true);
+    });
+
+    it("should return true when pattern is of word*word*", () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        expect(blockMocks.testTree.checkFilterPattern("SAMPLE*TEST*", "SAMPLE*TEST*")).toEqual(true);
+    });
+
+    it("should return true when pattern is of *word*word", () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        expect(blockMocks.testTree.checkFilterPattern("*SAMPLE*TEST", "*SAMPLE*TEST")).toEqual(true);
+    });
+
+    it("should return true when pattern is of *word*word*", () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        expect(blockMocks.testTree.checkFilterPattern("*SAMPLE*TEST*", "*SAMPLE*TEST*")).toEqual(true);
+    });
+});
+
+describe("Dataset Tree Unit Tests - Function initializeFavorites", () => {
+    function createBlockMocks() {
+        const session = createISession();
+        const imperativeProfile = createIProfile();
+        const profileInstance = createInstanceOfProfile(imperativeProfile);
+        const treeView = createTreeView();
+        const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
+        const datasetFavoritesNode = createDatasetFavoritesNode();
+        const mvsApi = createMvsApi(imperativeProfile);
+        const mockCheckCurrentProfile = jest.fn();
+        bindMvsApi(mvsApi);
+
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(datasetSessionNode);
+
+        return {
+            session,
+            imperativeProfile,
+            datasetSessionNode,
+            datasetFavoritesNode,
+            treeView,
+            mvsApi,
+            profileInstance,
+            mockCheckCurrentProfile,
+            testTree,
+        };
+    }
+
+    it("successfully initialize favorites", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        const log = zowe.imperative.Logger.getAppLogger();
+
+        Object.defineProperty(testTree, "mHistory", {
+            value: {
+                readFavorites: () => ["[SAMPLE]: SAMPLE.{session}", "*SAMPLE", "SAMPLE*"],
+            },
+        });
+
+        await expect(testTree.initializeFavorites(log)).resolves.not.toThrow();
     });
 });

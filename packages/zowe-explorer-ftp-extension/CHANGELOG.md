@@ -6,6 +6,12 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
+## `2.7.0`
+
+### New features and enhancements
+
+- Updated the extension to use Zowe Explorer API's newer API for uploading content to USS for compatibility with the optimizations to copy/paste actions.
+
 ## `2.6.2`
 
 ### Bug fixes

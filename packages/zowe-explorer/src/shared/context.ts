@@ -1,12 +1,12 @@
-/*
- * This program and the accompanying materials are made available under the terms of the *
- * Eclipse Public License v2.0 which accompanies this distribution, and is available at *
- * https://www.eclipse.org/legal/epl-v20.html                                      *
- *                                                                                 *
- * SPDX-License-Identifier: EPL-2.0                                                *
- *                                                                                 *
- * Copyright Contributors to the Zowe Project.                                     *
- *                                                                                 *
+/**
+ * This program and the accompanying materials are made available under the terms of the
+ * Eclipse Public License v2.0 which accompanies this distribution, and is available at
+ * https://www.eclipse.org/legal/epl-v20.html
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Copyright Contributors to the Zowe Project.
+ *
  */
 
 import * as globals from "../globals";
@@ -166,6 +166,15 @@ export function hasFileError(node: TreeItem): boolean {
  */
 export function isFavorite(node: TreeItem): boolean {
     return new RegExp(globals.FAV_SUFFIX).test(node.contextValue);
+}
+
+/**
+ * Helper function which identifies if the node is a favorited profile
+ * @param node
+ * @return true if a favorited profile, false otherwise
+ */
+export function isFavProfile(node: TreeItem): boolean {
+    return new RegExp(globals.FAV_PROFILE_CONTEXT).test(node.contextValue);
 }
 
 /**
@@ -383,6 +392,22 @@ export function isVsam(node: TreeItem): boolean {
  */
 export function asFavorite(node: TreeItem): string {
     return isFavorite(node) ? node.contextValue : node.contextValue + globals.FAV_SUFFIX;
+}
+
+export function withProfile(node: IZoweTreeNode): string {
+    if (!node) {
+        return;
+    }
+    const hasProfile = (n: IZoweTreeNode) => n?.contextValue?.includes(".profile=") ?? false;
+    if (hasProfile(node)) {
+        return node.contextValue;
+    }
+    const nodeParent = node.getParent();
+    if (hasProfile(nodeParent)) {
+        const pContext = nodeParent.contextValue.split(".profile=");
+        return node.contextValue + ".profile=" + pContext[1].split(".")[0] + ".";
+    }
+    return node.contextValue;
 }
 
 /**

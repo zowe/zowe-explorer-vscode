@@ -1,12 +1,12 @@
-/*
- * This program and the accompanying materials are made available under the terms of the *
- * Eclipse Public License v2.0 which accompanies this distribution, and is available at *
- * https://www.eclipse.org/legal/epl-v20.html                                      *
- *                                                                                 *
- * SPDX-License-Identifier: EPL-2.0                                                *
- *                                                                                 *
- * Copyright Contributors to the Zowe Project.                                     *
- *                                                                                 *
+/**
+ * This program and the accompanying materials are made available under the terms of the
+ * Eclipse Public License v2.0 which accompanies this distribution, and is available at
+ * https://www.eclipse.org/legal/epl-v20.html
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Copyright Contributors to the Zowe Project.
+ *
  */
 
 // Generic utility functions (not node type related). See ./src/shared/utils.ts
@@ -19,6 +19,7 @@ import { getSecurityModules, IZoweTreeNode, ZoweTreeNode, getZoweDir, getFullPat
 import { Profiles } from "../Profiles";
 import * as nls from "vscode-nls";
 import { imperative, getImperativeConfig } from "@zowe/cli";
+import { ZoweExplorerExtender } from "../ZoweExplorerExtender";
 
 // Set up localization
 nls.config({
@@ -133,9 +134,9 @@ export function isTheia(): boolean {
  * @param getSessionForProfile is a function to build a valid specific session based on provided profile
  * @param sessionNode is a tree node, containing session information
  */
-type SessionForProfile = (profile: imperative.IProfileLoaded) => imperative.Session;
+type SessionForProfile = (_profile: imperative.IProfileLoaded) => imperative.Session;
 export const syncSessionNode =
-    (profiles: Profiles) =>
+    (_profiles: Profiles) =>
     (getSessionForProfile: SessionForProfile) =>
     async (sessionNode: IZoweTreeNode): Promise<void> => {
         sessionNode.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
@@ -329,21 +330,50 @@ export async function initializeZoweFolder(): Promise<void> {
 }
 
 export function writeOverridesFile() {
-    let content;
+    let fd: number;
     let fileContent: string;
     const settingsFile = path.join(getZoweDir(), "settings", "imperative.json");
-    if (fs.existsSync(settingsFile)) {
-        content = JSON.parse(fs.readFileSync(settingsFile).toString());
-        if (content && content?.overrides) {
-            if (content?.overrides?.CredentialManager === globals.PROFILE_SECURITY) {
+    try {
+        fd = fs.openSync(settingsFile, "r+");
+        fileContent = fs.readFileSync(fd, "utf-8");
+    } catch {
+        // If reading the file failed because it does not exist, then create it
+        // This should never fail, unless file system is read-only or the file
+        // was created by another process after first openSync call
+        fd = fs.openSync(settingsFile, "wx");
+    }
+    try {
+        let settings: any;
+        if (fileContent) {
+            settings = JSON.parse(fileContent);
+            if (settings && settings?.overrides && settings?.overrides?.CredentialManager !== globals.PROFILE_SECURITY) {
+                settings.overrides.CredentialManager = globals.PROFILE_SECURITY;
+            } else {
                 return;
             }
-            content.overrides.CredentialManager = globals.PROFILE_SECURITY;
-            fileContent = JSON.stringify(content, null, 2);
-            fs.writeFileSync(settingsFile, fileContent, "utf8");
+        } else {
+            settings = { overrides: { CredentialManager: globals.PROFILE_SECURITY } };
         }
-    } else {
-        fileContent = JSON.stringify({ overrides: { CredentialManager: globals.PROFILE_SECURITY } }, null, 2);
-        fs.writeFileSync(settingsFile, fileContent, "utf8");
+        fileContent = JSON.stringify(settings, null, 2);
+        fs.writeSync(fd, fileContent, 0, "utf-8");
+    } finally {
+        fs.closeSync(fd);
+    }
+}
+
+export async function initializeZoweProfiles(): Promise<void> {
+    try {
+        await initializeZoweFolder();
+        await readConfigFromDisk();
+    } catch (err) {
+        globals.LOG.error(err);
+        ZoweExplorerExtender.showZoweConfigError(err.message);
+    }
+
+    if (!fs.existsSync(globals.ZOWETEMPFOLDER)) {
+        fs.mkdirSync(globals.ZOWETEMPFOLDER);
+        fs.mkdirSync(globals.ZOWE_TMP_FOLDER);
+        fs.mkdirSync(globals.USS_DIR);
+        fs.mkdirSync(globals.DS_DIR);
     }
 }

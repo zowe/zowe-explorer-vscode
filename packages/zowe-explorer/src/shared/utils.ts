@@ -1,12 +1,12 @@
-/*
- * This program and the accompanying materials are made available under the terms of the *
- * Eclipse Public License v2.0 which accompanies this distribution, and is available at *
- * https://www.eclipse.org/legal/epl-v20.html                                      *
- *                                                                                 *
- * SPDX-License-Identifier: EPL-2.0                                                *
- *                                                                                 *
- * Copyright Contributors to the Zowe Project.                                     *
- *                                                                                 *
+/**
+ * This program and the accompanying materials are made available under the terms of the
+ * Eclipse Public License v2.0 which accompanies this distribution, and is available at
+ * https://www.eclipse.org/legal/epl-v20.html
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Copyright Contributors to the Zowe Project.
+ *
  */
 
 // Generic utility functions related to all node types. See ./src/utils.ts for other utility functions.
@@ -42,7 +42,7 @@ export const JOB_SUBMIT_DIALOG_OPTS = [
 
 export function filterTreeByString(value: string, treeItems: vscode.QuickPickItem[]): vscode.QuickPickItem[] {
     const filteredArray = [];
-    value = value.toUpperCase().replace(".", ".").replace(/\*/g, "(.*)");
+    value = value.toUpperCase().replace(/\*/g, "(.*)");
     const regex = new RegExp(value);
     treeItems.forEach((item) => {
         if (item.label.toUpperCase().match(regex)) {
@@ -236,7 +236,7 @@ export async function uploadContent(
                 localEncoding: null,
                 etag: etagToUpload,
                 returnEtag,
-                encoding: profile.profile.encoding,
+                encoding: profile.profile?.encoding,
                 task,
                 responseTimeout: profile.profile?.responseTimeout,
             };
@@ -274,36 +274,31 @@ export async function willForceUpload(
             )
         );
     }
-    vscode.window
-        .showInformationMessage(
-            localize("saveFile.info.confirmUpload", "Would you like to overwrite the remote file?"),
-            localize("saveFile.overwriteConfirmation.yes", "Yes"),
-            localize("saveFile.overwriteConfirmation.no", "No")
-        )
-        .then(async (selection) => {
-            if (selection === localize("saveFile.overwriteConfirmation.yes", "Yes")) {
-                const uploadResponse = Gui.withProgress(
-                    {
-                        location: vscode.ProgressLocation.Notification,
-                        title,
-                    },
-                    () => {
-                        return uploadContent(node, doc, remotePath, profile, binary, null, returnEtag);
-                    }
-                );
-                uploadResponse.then((response) => {
-                    if (response.success) {
-                        Gui.showMessage(response.commandResponse);
-                        if (node) {
-                            node.setEtag(response.apiResponse[0].etag);
-                        }
-                    }
-                });
-            } else {
-                Gui.showMessage(localize("uploadContent.cancelled", "Upload cancelled."));
-                await markFileAsDirty(doc);
+    // Don't wait for prompt to return since this would block the save queue
+    Gui.infoMessage(localize("saveFile.info.confirmUpload", "Would you like to overwrite the remote file?"), {
+        items: [localize("saveFile.overwriteConfirmation.yes", "Yes"), localize("saveFile.overwriteConfirmation.no", "No")],
+    }).then(async (selection) => {
+        if (selection === localize("saveFile.overwriteConfirmation.yes", "Yes")) {
+            const uploadResponse = await Gui.withProgress(
+                {
+                    location: vscode.ProgressLocation.Notification,
+                    title,
+                },
+                () => {
+                    return uploadContent(node, doc, remotePath, profile, binary, null, returnEtag);
+                }
+            );
+            if (uploadResponse.success) {
+                Gui.showMessage(uploadResponse.commandResponse);
+                if (node) {
+                    node.setEtag(uploadResponse.apiResponse[0].etag);
+                }
             }
-        });
+        } else {
+            Gui.showMessage(localize("uploadContent.cancelled", "Upload cancelled."));
+            await markFileAsDirty(doc);
+        }
+    });
 }
 
 // Type guarding for current IZoweNodeType.

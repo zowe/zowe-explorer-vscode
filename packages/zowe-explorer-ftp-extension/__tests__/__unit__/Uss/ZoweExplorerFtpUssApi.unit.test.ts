@@ -1,12 +1,12 @@
-/*
- * This program and the accompanying materials are made available under the terms of the *
- * Eclipse Public License v2.0 which accompanies this distribution, and is available at *
- * https://www.eclipse.org/legal/epl-v20.html                                      *
- *                                                                                 *
- * SPDX-License-Identifier: EPL-2.0                                                *
- *                                                                                 *
- * Copyright Contributors to the Zowe Project.                                     *
- *                                                                                 *
+/**
+ * This program and the accompanying materials are made available under the terms of the
+ * Eclipse Public License v2.0 which accompanies this distribution, and is available at
+ * https://www.eclipse.org/legal/epl-v20.html
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Copyright Contributors to the Zowe Project.
+ *
  */
 
 /* eslint-disable @typescript-eslint/unbound-method */
@@ -75,25 +75,42 @@ describe("FtpUssApi", () => {
         expect(response._readableState.buffer.head.data.toString()).toContain("Hello world");
     });
 
+    const mockUssFileParams = {
+        inputFilePath: "/tmp/testfile1.txt",
+        ussFilePath: "/a/b/c.txt",
+        etag: "123",
+        returnEtag: true,
+        options: {
+            file: "/tmp/testfile1.txt",
+        },
+    };
+
     it("should upload uss files.", async () => {
         const localFile = "/tmp/testfile1.txt";
         const response = TestUtils.getSingleLineStream();
         UssUtils.uploadFile = jest.fn().mockReturnValue(response);
-        UssApi.getContents = jest.fn().mockReturnValue({ apiResponse: { etag: "123" } });
+        UssApi.getContents = jest.fn().mockReturnValue({ apiResponse: { etag: "test" } });
         const mockParams = {
             inputFilePath: localFile,
             ussFilePath: "/a/b/c.txt",
-            etag: "123",
+            etag: "test",
             returnEtag: true,
             options: {
                 file: localFile,
             },
         };
-        const result = await UssApi.putContents(mockParams.inputFilePath, mockParams.ussFilePath);
+        const result = await UssApi.putContents(mockParams.inputFilePath, mockParams.ussFilePath, undefined, undefined, "test", true);
+        jest.spyOn(UssApi as any, "getContentsTag").mockReturnValue("test");
         expect(result.commandResponse).toContain("File uploaded successfully.");
         expect(UssUtils.downloadFile).toBeCalledTimes(1);
         expect(UssUtils.uploadFile).toBeCalledTimes(1);
         expect(UssApi.releaseConnection).toBeCalled();
+    });
+
+    it("should call putContents when calling putContent", async () => {
+        const putContentsMock = jest.spyOn(UssApi, "putContents").mockImplementation();
+        await UssApi.putContent(mockUssFileParams.inputFilePath, mockUssFileParams.ussFilePath);
+        expect(putContentsMock).toHaveBeenCalled();
     });
 
     it("should upload uss directory.", async () => {
@@ -108,7 +125,9 @@ describe("FtpUssApi", () => {
         const response = {};
         UssApi.putContents = jest.fn().mockReturnValue(response);
         await UssApi.uploadDirectory(mockParams.inputDirectoryPath, mockParams.ussDirectoryPath, mockParams.options);
-        expect(UssApi.putContents).toBeCalledTimes(2);
+
+        // One call to make the folder, one call per file
+        expect(UssApi.putContents).toBeCalledTimes(3);
     });
 
     it("should create uss directory.", async () => {
@@ -177,5 +196,9 @@ describe("FtpUssApi", () => {
         expect(result.commandResponse).toContain("Rename completed.");
         expect(UssUtils.renameFile).toBeCalledTimes(1);
         expect(UssApi.releaseConnection).toBeCalled();
+    });
+
+    it("should receive false from isFileTagBinOrAscii as it is not implemented in the FTP extension.", async () => {
+        expect(await UssApi.isFileTagBinOrAscii("")).toBe(false);
     });
 });

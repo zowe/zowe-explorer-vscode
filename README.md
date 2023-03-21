@@ -2,6 +2,8 @@
 
 [![version](https://img.shields.io/visual-studio-marketplace/v/Zowe.vscode-extension-for-zowe.svg)](https://img.shields.io/visual-studio-marketplace/v/Zowe.vscode-extension-for-zowe.svg)
 [![downloads](https://img.shields.io/visual-studio-marketplace/d/Zowe.vscode-extension-for-zowe.svg)](https://img.shields.io/visual-studio-marketplace/d/Zowe.vscode-extension-for-zowe.svg)
+[![codecov](https://codecov.io/gh/zowe/vscode-extension-for-zowe/branch/main/graph/badge.svg)](https://codecov.io/gh/zowe/vscode-extension-for-zowe)
+[![slack](https://img.shields.io/badge/chat-on%20Slack-blue)](https://slack.openmainframeproject.org/)
 
 Welcome to Zowe Explorer! Zowe Explorer brings mainframe capabilities to modern IDEs, such as VS Code. [Zowe](https://www.zowe.org/) is a project hosted by the [Open Mainframe Project](https://www.openmainframeproject.org/), a [Linux Foundation](https://www.linuxfoundation.org/) project.
 
@@ -37,7 +39,7 @@ Clone the repository, build a VSIX file, and start working with the extension.
 1. Clone the repository by issuing the following command in your local command-line interface:
 
    ```shell
-   git clone --origin=upstream --branch=main --single-branch https://github.com/zowe/vscode-extension-for-zowe.git
+   git clone https://github.com/zowe/vscode-extension-for-zowe.git
    ```
 
 2. Change directories into the newly-cloned repository:
@@ -62,7 +64,7 @@ Now install the extension to VS Code.
 
 You can now use the extension.
 
-For more information on how to run tests for the extension, see [Developer's ReadMe](https://github.com/zowe/vscode-extension-for-zowe/blob/main/docs/Developer's%20ReadMe.md).
+For more information on how to run tests for the extension, see [Developer's ReadMe](https://github.com/zowe/vscode-extension-for-zowe/blob/main/docs/README-Developer.md).
 
 ## Available Documentation
 

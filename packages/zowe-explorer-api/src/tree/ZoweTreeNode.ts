@@ -1,12 +1,12 @@
-/*
- * This program and the accompanying materials are made available under the terms of the *
- * Eclipse Public License v2.0 which accompanies this distribution, and is available at *
- * https://www.eclipse.org/legal/epl-v20.html                                      *
- *                                                                                 *
- * SPDX-License-Identifier: EPL-2.0                                                *
- *                                                                                 *
- * Copyright Contributors to the Zowe Project.                                     *
- *                                                                                 *
+/**
+ * This program and the accompanying materials are made available under the terms of the
+ * Eclipse Public License v2.0 which accompanies this distribution, and is available at
+ * https://www.eclipse.org/legal/epl-v20.html
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Copyright Contributors to the Zowe Project.
+ *
  */
 
 import * as vscode from "vscode";
@@ -68,7 +68,7 @@ export class ZoweTreeNode extends vscode.TreeItem {
      * @returns {imperative.Session}
      */
     public getSession(): imperative.Session {
-        return this.session || (this.getParent() ? this.getParent().getSession() : undefined);
+        return this.session ?? this.getParent()?.getSession();
     }
 
     /**
@@ -77,7 +77,7 @@ export class ZoweTreeNode extends vscode.TreeItem {
      * @returns {imperative.IProfileLoaded}
      */
     public getProfile(): imperative.IProfileLoaded {
-        return this.profile ? this.profile : this.getParent() ? this.getParent().getProfile() : undefined;
+        return this.profile ?? this.getParent()?.getProfile();
     }
 
     /**
@@ -86,7 +86,7 @@ export class ZoweTreeNode extends vscode.TreeItem {
      * @returns {string}
      */
     public getProfileName(): string {
-        return this.getProfile() ? this.getProfile().name : undefined;
+        return this.getProfile()?.name;
     }
 
     /**

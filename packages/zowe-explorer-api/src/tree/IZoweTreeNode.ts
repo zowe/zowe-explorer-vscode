@@ -1,12 +1,12 @@
-/*
- * This program and the accompanying materials are made available under the terms of the *
- * Eclipse Public License v2.0 which accompanies this distribution, and is available at *
- * https://www.eclipse.org/legal/epl-v20.html                                      *
- *                                                                                 *
- * SPDX-License-Identifier: EPL-2.0                                                *
- *                                                                                 *
- * Copyright Contributors to the Zowe Project.                                     *
- *                                                                                 *
+/**
+ * This program and the accompanying materials are made available under the terms of the
+ * Eclipse Public License v2.0 which accompanies this distribution, and is available at
+ * https://www.eclipse.org/legal/epl-v20.html
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Copyright Contributors to the Zowe Project.
+ *
  */
 
 import * as vscode from "vscode";
@@ -34,6 +34,10 @@ export interface IZoweTreeNode {
      *  A human-readable string describing this item.
      */
     label?: string | vscode.TreeItemLabel;
+    /**
+     * A description for this tree item.
+     */
+    description?: string | boolean;
     /**
      * The tooltip text when you hover over this item.
      */
@@ -242,9 +246,14 @@ export interface IZoweUSSTreeNode extends IZoweTreeNode {
     saveSearch?(ussFileProvider: IZoweTree<IZoweUSSTreeNode>);
     /**
      * uploads selected uss node(s) to from clipboard to mainframe
-     *
+     * @deprecated in favor of `pasteUssTree`
      */
     copyUssFile?();
+
+    /**
+     * Uploads a tree of USS file(s)/folder(s) to mainframe
+     */
+    pasteUssTree?();
 }
 
 /**
@@ -283,6 +292,10 @@ export interface IZoweJobTreeNode extends IZoweTreeNode {
      * Attribute of Job query
      */
     status?: string;
+    /**
+     * Returns whether the job node is a filtered search
+     */
+    filtered?: boolean;
     /**
      * Retrieves child nodes of this IZoweJobTreeNode
      *

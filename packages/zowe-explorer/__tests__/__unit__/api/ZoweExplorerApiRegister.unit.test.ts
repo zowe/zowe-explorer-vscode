@@ -1,12 +1,12 @@
-/*
- * This program and the accompanying materials are made available under the terms of the *
- * Eclipse Public License v2.0 which accompanies this distribution, and is available at *
- * https://www.eclipse.org/legal/epl-v20.html                                      *
- *                                                                                 *
- * SPDX-License-Identifier: EPL-2.0                                                *
- *                                                                                 *
- * Copyright Contributors to the Zowe Project.                                     *
- *                                                                                 *
+/**
+ * This program and the accompanying materials are made available under the terms of the
+ * Eclipse Public License v2.0 which accompanies this distribution, and is available at
+ * https://www.eclipse.org/legal/epl-v20.html
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Copyright Contributors to the Zowe Project.
+ *
  */
 
 import * as zowe from "@zowe/cli";
@@ -22,6 +22,9 @@ class MockUssApi1 implements ZoweExplorerApi.IUss {
         return "api1typename";
     }
     public fileList(ussFilePath: string): Promise<zowe.IZosFilesResponse> {
+        throw new Error("Method not implemented.");
+    }
+    public copy(outputPath: string, options?: Omit<object, "request">): Promise<Buffer> {
         throw new Error("Method not implemented.");
     }
     public isFileTagBinOrAscii(ussFilePath: string): Promise<boolean> {
@@ -78,6 +81,9 @@ class MockUssApi2 implements ZoweExplorerApi.IUss {
         return "api2typename";
     }
     public fileList(ussFilePath: string): Promise<zowe.IZosFilesResponse> {
+        throw new Error("Method not implemented.");
+    }
+    public copy(outputPath: string, options?: Omit<object, "request">): Promise<Buffer> {
         throw new Error("Method not implemented.");
     }
     public isFileTagBinOrAscii(ussFilePath: string): Promise<boolean> {

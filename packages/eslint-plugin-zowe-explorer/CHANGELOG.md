@@ -6,7 +6,7 @@ All notable changes to the "eslint-plugin-zowe-explorer" package will be documen
 
 ### Bug fixes
 
-## `2.6.2`
+## `2.7.0`
 
 ### New features and enhancements
 

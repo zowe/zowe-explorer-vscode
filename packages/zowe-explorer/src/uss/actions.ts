@@ -1,12 +1,12 @@
-/*
- * This program and the accompanying materials are made available under the terms of the *
- * Eclipse Public License v2.0 which accompanies this distribution, and is available at *
- * https://www.eclipse.org/legal/epl-v20.html                                      *
- *                                                                                 *
- * SPDX-License-Identifier: EPL-2.0                                                *
- *                                                                                 *
- * Copyright Contributors to the Zowe Project.                                     *
- *                                                                                 *
+/**
+ * This program and the accompanying materials are made available under the terms of the
+ * Eclipse Public License v2.0 which accompanies this distribution, and is available at
+ * https://www.eclipse.org/legal/epl-v20.html
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Copyright Contributors to the Zowe Project.
+ *
  */
 
 import * as vscode from "vscode";
@@ -26,6 +26,7 @@ import * as nls from "vscode-nls";
 import { refreshAll } from "../shared/refresh";
 import { IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
 import { fileExistsCaseSensitveSync } from "./utils";
+import { UssFileTree, UssFileType } from "./FileStructure";
 
 // Set up localization
 nls.config({
@@ -229,7 +230,7 @@ export async function changeFileType(node: IZoweUSSTreeNode, binary: boolean, us
  * @param {Session} session - Desired session
  * @param {vscode.TextDocument} doc - TextDocument that is being saved
  */
-export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZoweTree<IZoweUSSTreeNode>) {
+export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZoweTree<IZoweUSSTreeNode>): Promise<void> {
     globals.LOG.debug(localize("saveUSSFile.log.debug.saveRequest", "save requested for USS file ") + doc.fileName);
     const start = path.join(globals.USS_DIR + path.sep).length;
     const ending = doc.fileName.substring(start);
@@ -237,7 +238,6 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
     const remote = ending.substring(sesName.length).replace(/\\/g, "/");
 
     // get session from session name
-    let documentSession: imperative.Session;
     let binary;
     let node: IZoweUSSTreeNode;
 
@@ -245,7 +245,6 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
         (child) => child.getProfileName() && child.getProfileName() === sesName.trim()
     );
     if (sesNode) {
-        documentSession = sesNode.getSession();
         binary = Object.keys(sesNode.binaryFiles).find((child) => child === remote) !== undefined;
     }
     // Get specific node based on label and parent tree (session / favorites)
@@ -314,7 +313,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
                     file: node.getUSSDocumentFilePath(),
                     binary,
                     returnEtag: true,
-                    encoding: prof.profile.encoding,
+                    encoding: prof.profile?.encoding,
                     responseTimeout: prof.profile?.responseTimeout,
                 });
                 // re-assign etag, so that it can be used with subsequent requests
@@ -373,18 +372,76 @@ export async function deleteUSSFilesPrompt(nodes: IZoweUSSTreeNode[]): Promise<b
     });
     return cancelled;
 }
-export async function copyUssFilesToClipboard(selectedNodes: IZoweUSSTreeNode[]) {
-    const filePaths: any[] = [];
-    for (const node of selectedNodes) {
-        if (contextually.isUssDirectory(node)) {
-            await refreshChildNodesDirectory(node);
-            filePaths.push(node.getUSSDocumentFilePath() + "/");
-        } else {
-            await node.refreshUSS();
-            filePaths.push(node.getUSSDocumentFilePath());
+
+/**
+ * Builds a file/directory structure that can be traversed from root to the innermost children.
+ *
+ * @param node Build a tree structure starting at this node
+ * @returns A tree structure containing all files/directories within this node
+ */
+export async function buildFileStructure(node: IZoweUSSTreeNode): Promise<UssFileTree> {
+    if (contextually.isUssDirectory(node)) {
+        let directory: UssFileTree = {
+            localPath: node.getUSSDocumentFilePath(),
+            ussPath: node.fullPath,
+            baseName: node.getLabel() as string,
+            sessionName: node.getSessionNode().getLabel() as string,
+            type: UssFileType.Directory,
+            children: [],
+        };
+
+        const children = await node.getChildren();
+        if (children != null && children.length > 0) {
+            for (const child of children) {
+                // This node is either another directory or a file
+                const subnode = await buildFileStructure(child);
+                directory.children.push(subnode);
+            }
         }
+
+        return directory;
     }
-    vscode.env.clipboard.writeText(filePaths.join(","));
+
+    return {
+        children: [],
+        binary: node.binary,
+        localPath: node.getUSSDocumentFilePath(),
+        ussPath: node.fullPath,
+        baseName: node.getLabel() as string,
+        sessionName: node.getSessionNode().getLabel() as string,
+        type: UssFileType.File,
+    };
+}
+
+/**
+ * Collects USS file info and builds a tree used for copying and pasting files/folders.
+ *
+ * @param selectedNodes The list of USS tree nodes that were selected for copying.
+ * @returns A file tree containing the USS file/directory paths to be pasted.
+ */
+export async function ussFileStructure(selectedNodes: IZoweUSSTreeNode[]): Promise<UssFileTree> {
+    let rootStructure: UssFileTree = {
+        ussPath: "",
+        type: UssFileType.Directory,
+        children: [],
+    };
+
+    for (const node of selectedNodes) {
+        rootStructure.children.push(await buildFileStructure(node));
+    }
+
+    return rootStructure;
+}
+
+/**
+ * Helper function for `copyUssFiles` that will copy the USS file structure to a JSON
+ * object, saving it into a clipboard for future use.
+ *
+ * @param selectedNodes The list of USS tree nodes that were selected for copying.
+ */
+export async function copyUssFilesToClipboard(selectedNodes: IZoweUSSTreeNode[]) {
+    const filePaths = await ussFileStructure(selectedNodes);
+    vscode.env.clipboard.writeText(JSON.stringify(filePaths));
 }
 
 export async function copyUssFiles(node: IZoweUSSTreeNode, nodeList: IZoweUSSTreeNode[], ussFileProvider: IZoweTree<IZoweUSSTreeNode>) {
@@ -397,7 +454,7 @@ export async function copyUssFiles(node: IZoweUSSTreeNode, nodeList: IZoweUSSTre
     await Gui.withProgress(
         {
             location: vscode.ProgressLocation.Window,
-            title: localize("ZoweUssNode.copyDownload.progress", "Downloading copied files ..."),
+            title: localize("ZoweUssNode.copyDownload.progress", "Copying file structure..."),
         },
         () => {
             return copyUssFilesToClipboard(selectedNodes);
@@ -407,7 +464,7 @@ export async function copyUssFiles(node: IZoweUSSTreeNode, nodeList: IZoweUSSTre
 
 export async function refreshChildNodesDirectory(node: IZoweUSSTreeNode) {
     const childNodes = await node.getChildren();
-    if (childNodes.length > 0) {
+    if (childNodes != null && childNodes.length > 0) {
         for (const child of childNodes) {
             await refreshChildNodesDirectory(child);
         }
@@ -418,23 +475,36 @@ export async function refreshChildNodesDirectory(node: IZoweUSSTreeNode) {
     }
 }
 
+/**
+ * @deprecated use `pasteUss`
+ * @param ussFileProvider File provider for USS tree
+ * @param node The node to paste within
+ */
 export async function pasteUssFile(ussFileProvider: IZoweTree<IZoweUSSTreeNode>, node: IZoweUSSTreeNode) {
+    pasteUss(ussFileProvider, node);
+}
+
+/**
+ * Paste copied USS nodes into the selected node.
+ * @param ussFileProvider File provider for USS tree
+ * @param node The node to paste within
+ */
+export async function pasteUss(ussFileProvider: IZoweTree<IZoweUSSTreeNode>, node: IZoweUSSTreeNode) {
     const a = ussFileProvider.getTreeView().selection as IZoweUSSTreeNode[];
-    let selectedNode;
-    if (node) {
-        selectedNode = node;
-    } else {
+    let selectedNode = node;
+    if (!selectedNode) {
         selectedNode = a.length > 0 ? a[0] : (a as unknown as IZoweUSSTreeNode);
     }
 
     await Gui.withProgress(
         {
             location: vscode.ProgressLocation.Window,
-            title: localize("ZoweUssNode.copyUpload.progress", "Uploading copied files ..."),
+            title: localize("ZoweUssNode.copyUpload.progress", "Pasting files..."),
         },
         () => {
-            return selectedNode.copyUssFile();
+            return selectedNode.pasteUssTree ? selectedNode.pasteUssTree() : selectedNode.copyUssFile();
         }
     );
-    ussFileProvider.refreshElement(selectedNode.getParent());
+    const nodeToRefresh = node?.contextValue != null && contextually.isUssSession(node) ? selectedNode : selectedNode.getParent();
+    ussFileProvider.refreshElement(nodeToRefresh);
 }

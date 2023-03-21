@@ -1,12 +1,12 @@
-/*
- * This program and the accompanying materials are made available under the terms of the *
- * Eclipse Public License v2.0 which accompanies this distribution, and is available at *
- * https://www.eclipse.org/legal/epl-v20.html                                      *
- *                                                                                 *
- * SPDX-License-Identifier: EPL-2.0                                                *
- *                                                                                 *
- * Copyright Contributors to the Zowe Project.                                     *
- *                                                                                 *
+/**
+ * This program and the accompanying materials are made available under the terms of the
+ * Eclipse Public License v2.0 which accompanies this distribution, and is available at
+ * https://www.eclipse.org/legal/epl-v20.html
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Copyright Contributors to the Zowe Project.
+ *
  */
 
 jest.mock("fs");
@@ -14,6 +14,7 @@ jest.mock("fs");
 import * as zowe from "@zowe/cli";
 import { Gui, ProfilesCache, ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import * as ussNodeActions from "../../../src/uss/actions";
+import { UssFileTree, UssFileType, UssFileUtils } from "../../../src/uss/FileStructure";
 import { createUSSTree, createUSSNode, createFavoriteUSSNode } from "../../../__mocks__/mockCreators/uss";
 import {
     createIProfile,
@@ -385,6 +386,19 @@ describe("USS Action Unit Tests - Function deleteFromDisk", () => {
         expect(fs.existsSync).toBeCalledTimes(1);
         expect(fs.unlinkSync).toBeCalledTimes(0);
     });
+
+    it("should catch the error when thrown", () => {
+        const globalsLogWarnSpy = jest.fn();
+        jest.spyOn(fs, "existsSync").mockReturnValue(true);
+        jest.spyOn(fs, "unlinkSync").mockImplementation(() => {
+            throw new Error();
+        });
+        Object.defineProperty(globals.LOG, "warn", {
+            value: globalsLogWarnSpy,
+        });
+        ussNodeActions.deleteFromDisk(null, "some/where/that/does/not/exist");
+        expect(globalsLogWarnSpy).toBeCalledTimes(1);
+    });
 });
 
 describe("USS Action Unit Tests - Function copyPath", () => {
@@ -726,6 +740,7 @@ describe("USS Action Unit Tests - copy file / directory", () => {
             ussApi: createUssApi(globalMocks.testProfile),
             ussNodes: null,
         };
+
         newMocks.treeNodes.testUSSTree = createUSSTree(
             [createFavoriteUSSNode(globalMocks.testSession, globalMocks.testProfile)],
             [newMocks.treeNodes.ussNode],
@@ -738,14 +753,95 @@ describe("USS Action Unit Tests - copy file / directory", () => {
     it("Copy file(s), Directory(s) paths into clipboard", async () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
-
+        const fileStructure = JSON.stringify(await ussNodeActions.ussFileStructure(blockMocks.nodes));
         await ussNodeActions.copyUssFilesToClipboard(blockMocks.nodes);
 
-        expect(globalMocks.writeText).toBeCalledWith(
-            blockMocks.nodes[0].getUSSDocumentFilePath() + "," + blockMocks.nodes[1].getUSSDocumentFilePath() + "/"
+        expect(globalMocks.writeText).toBeCalledWith(fileStructure);
+    });
+
+    it("Has the proper responses for toSameSession in UssFileUtils", async () => {
+        // Test toSameSession where one of the files has a diff LPAR
+        let isSameSession = UssFileUtils.toSameSession(
+            {
+                localPath: "C:/some/local/path",
+                ussPath: "/z/SOMEUSER/path",
+                baseName: "<ROOT>",
+                children: [],
+                sessionName: "session1",
+                type: UssFileType.Directory,
+            },
+            "diffSessionLPAR"
         );
-        expect(blockMocks.nodes[0].refreshUSS).toBeCalled();
-        expect(blockMocks.nodes[1].refreshUSS).toHaveBeenCalledTimes(0);
+        expect(isSameSession).toBe(false);
+
+        // Test toSameSession where the LPAR is the same, and the file node has no children
+        isSameSession = UssFileUtils.toSameSession(
+            {
+                localPath: "C:/some/local/path",
+                ussPath: "/z/SOMEUSER/path",
+                baseName: "<ROOT>",
+                children: [],
+                sessionName: "session1",
+                type: UssFileType.Directory,
+            },
+            "session1"
+        );
+        expect(isSameSession).toBe(true);
+    });
+
+    it("paste calls relevant USS API functions", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+        let rootTree: UssFileTree = {
+            children: [],
+            baseName: blockMocks.nodes[1].getLabel() as string,
+            ussPath: "",
+            sessionName: blockMocks.treeNodes.ussNode.getLabel() as string,
+            type: UssFileType.Directory,
+        };
+        blockMocks.treeNodes.ussApi.fileList = jest.fn().mockResolvedValue({
+            apiResponse: {
+                items: [blockMocks.nodes[0].getLabel() as string, blockMocks.nodes[1].getLabel() as string],
+            },
+        });
+        blockMocks.treeNodes.ussApi.copy = jest.fn();
+        await blockMocks.nodes[1].paste(rootTree.sessionName, rootTree.ussPath, { tree: rootTree, api: blockMocks.treeNodes.ussApi });
+        expect(blockMocks.treeNodes.ussApi.fileList).toHaveBeenCalled();
+        expect(blockMocks.treeNodes.ussApi.copy).toHaveBeenCalledWith(`/${blockMocks.nodes[1].getLabel()}`, {
+            from: "",
+            recursive: true,
+        });
+    });
+
+    it("paste throws an error if required APIs are not available", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+        let rootTree: UssFileTree = {
+            children: [],
+            baseName: blockMocks.nodes[1].getLabel() as string,
+            ussPath: "",
+            sessionName: blockMocks.treeNodes.ussNode.getLabel() as string,
+            type: UssFileType.Directory,
+        };
+
+        const originalFileList = blockMocks.treeNodes.ussApi.fileList;
+        blockMocks.treeNodes.ussApi.copy = blockMocks.treeNodes.ussApi.fileList = undefined;
+        try {
+            await blockMocks.nodes[1].paste(rootTree.sessionName, rootTree.ussPath, { tree: rootTree, api: blockMocks.treeNodes.ussApi });
+        } catch (err) {
+            expect(err).toBeDefined();
+            expect(err.message).toBe("Required API functions for pasting (fileList, copy and/or putContent) were not found.");
+        }
+
+        // Test for putContent also being undefined
+        blockMocks.treeNodes.ussApi.fileList = originalFileList;
+        blockMocks.treeNodes.ussApi.putContent = undefined;
+        try {
+            await blockMocks.nodes[1].paste(rootTree.sessionName, rootTree.ussPath, { tree: rootTree, api: blockMocks.treeNodes.ussApi });
+        } catch (err) {
+            expect(err).toBeDefined();
+            expect(err.message).toBe("Required API functions for pasting (fileList, copy and/or putContent) were not found.");
+        }
     });
 
     it("tests refreshChildNodesDirectory executed successfully with empty directory", async () => {
@@ -804,5 +900,40 @@ describe("USS Action Unit Tests - copy file / directory", () => {
         jest.spyOn(ussNodeActions, "copyUssFilesToClipboard").mockResolvedValueOnce();
         ussNodeActions.pasteUssFile(blockMocks.treeNodes.testUSSTree, blockMocks.nodes[0]);
         expect(sharedUtils.getSelectedNodeList(blockMocks.treeNodes.ussNode, blockMocks.treeNodes.ussNodes)).toEqual([blockMocks.treeNodes.ussNode]);
+    });
+});
+
+describe("USS Action Unit Tests - function deleteUSSFilesPrompt", () => {
+    it("should return true", async () => {
+        const nodes = [createUSSNode(createISession(), createIProfile())];
+        jest.spyOn(Gui, "warningMessage").mockReturnValue(Promise.resolve("Cancel"));
+        await expect(ussNodeActions.deleteUSSFilesPrompt(nodes)).resolves.toEqual(true);
+    });
+});
+
+describe("USS Action Unit Tests - function refreshDirectory", () => {
+    const globalMocks = createGlobalMocks();
+    const testUSSTree = createUSSTree(
+        [createFavoriteUSSNode(globalMocks.testSession, globalMocks.testProfile)],
+        [createUSSNode(globalMocks.testSession, createIProfile())],
+        createTreeView()
+    );
+    const testNode = createUSSNode(createISession(), createIProfile());
+
+    it("should call refreshElement with node passed in", async () => {
+        jest.spyOn(testNode, "getChildren").mockImplementation();
+        const refreshElementSpy = jest.spyOn(testUSSTree, "refreshElement");
+        await expect(ussNodeActions.refreshDirectory(testNode, testUSSTree)).resolves.not.toThrow();
+        expect(refreshElementSpy).toBeCalledTimes(1);
+        expect(refreshElementSpy).toBeCalledWith(testNode);
+    });
+
+    it("should call errorHandling when error is thrown", async () => {
+        jest.spyOn(testNode, "getChildren").mockImplementation(() => {
+            throw new Error();
+        });
+        const errorHandlingSpy = jest.spyOn(utils, "errorHandling").mockImplementation();
+        await expect(ussNodeActions.refreshDirectory(testNode, testUSSTree)).resolves.not.toThrow();
+        expect(errorHandlingSpy).toBeCalledTimes(1);
     });
 });

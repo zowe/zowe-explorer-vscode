@@ -1,15 +1,14 @@
-/*
- * This program and the accompanying materials are made available under the terms of the *
- * Eclipse Public License v2.0 which accompanies this distribution, and is available at *
- * https://www.eclipse.org/legal/epl-v20.html                                      *
- *                                                                                 *
- * SPDX-License-Identifier: EPL-2.0                                                *
- *                                                                                 *
- * Copyright Contributors to the Zowe Project.                                     *
- *                                                                                 *
+/**
+ * This program and the accompanying materials are made available under the terms of the
+ * Eclipse Public License v2.0 which accompanies this distribution, and is available at
+ * https://www.eclipse.org/legal/epl-v20.html
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Copyright Contributors to the Zowe Project.
+ *
  */
 
-import { IZoweDatasetTreeNode, IZoweTree, IZoweUSSTreeNode } from "@zowe/zowe-explorer-api";
 import * as vscode from "vscode";
 import {
     workspaceUtilTabSwitchDelay,
@@ -129,32 +128,6 @@ export async function closeOpenedTextFile(path: string) {
     }
 
     return false;
-}
-
-/**
- * Handle auto/regular save by prioritizing the last ongoing save of a series queued saves
- */
-const savingQueue = [];
-let latestSavedFile: vscode.TextDocument;
-let ongoingSave = false;
-export async function handleSaving(
-    uploadRequest: (document, provider) => Promise<void | string | vscode.MessageItem>,
-    savedFile: vscode.TextDocument,
-    fileProvider: IZoweTree<IZoweUSSTreeNode | IZoweDatasetTreeNode>
-): Promise<void> {
-    const saving = {
-        savedFile,
-    };
-    savingQueue.push(saving);
-    if (ongoingSave) {
-        return;
-    }
-    ongoingSave = true;
-    while (savingQueue.length !== 0) {
-        latestSavedFile = savingQueue.shift().savedFile;
-        await uploadRequest(latestSavedFile, fileProvider);
-    }
-    ongoingSave = false;
 }
 
 /**

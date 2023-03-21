@@ -1,12 +1,12 @@
-/*
- * This program and the accompanying materials are made available under the terms of the *
- * Eclipse Public License v2.0 which accompanies this distribution, and is available at *
- * https://www.eclipse.org/legal/epl-v20.html                                      *
- *                                                                                 *
- * SPDX-License-Identifier: EPL-2.0                                                *
- *                                                                                 *
- * Copyright Contributors to the Zowe Project.                                     *
- *                                                                                 *
+/**
+ * This program and the accompanying materials are made available under the terms of the
+ * Eclipse Public License v2.0 which accompanies this distribution, and is available at
+ * https://www.eclipse.org/legal/epl-v20.html
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Copyright Contributors to the Zowe Project.
+ *
  */
 
 import * as path from "path";
@@ -26,6 +26,7 @@ nls.config({
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 // Globals
+export let SETTINGS_TEMP_FOLDER_LOCATION;
 export let ZOWETEMPFOLDER;
 export let ZOWE_TMP_FOLDER;
 export let USS_DIR;
@@ -33,7 +34,7 @@ export let DS_DIR;
 export let CONFIG_PATH; // set during activate
 export let ISTHEIA: boolean = false; // set during activate
 export let LOG: imperative.Logger;
-export const COMMAND_COUNT = 103;
+export const COMMAND_COUNT = 102;
 export const MAX_SEARCH_HISTORY = 5;
 export const MAX_FILE_HISTORY = 10;
 export const STATUS_BAR_TIMEOUT_MS = 5000;
@@ -96,6 +97,7 @@ export const DS_NAME_REGEX_CHECK = /^[a-zA-Z#@\$][a-zA-Z0-9#@\$\-]{0,7}(\.[a-zA-
 export const MEMBER_NAME_REGEX_CHECK = /^[a-zA-Z#@\$][a-zA-Z0-9#@\$]{0,7}$/;
 export let ACTIVATED = false;
 export let PROFILE_SECURITY: string | boolean = ZOWE_CLI_SCM;
+export let SAVED_PROFILE_CONTENTS = new Uint8Array();
 export const JOBS_MAX_PREFIX = 8;
 
 // Dictionary describing translation from old configuration names to new standardized names
@@ -285,6 +287,7 @@ export function defineGlobals(tempPath: string | undefined) {
         this.ISTHEIA = true;
     }
 
+    SETTINGS_TEMP_FOLDER_LOCATION = tempPath;
     // Set temp path & folder paths
     ZOWETEMPFOLDER = tempPath ? path.join(tempPath, "temp") : path.join(__dirname, "..", "..", "resources", "temp");
 
@@ -318,6 +321,10 @@ export function initLogger(context: vscode.ExtensionContext) {
 
 export function setActivated(value: boolean) {
     ACTIVATED = value;
+}
+
+export function setSavedProfileContents(value: Uint8Array) {
+    SAVED_PROFILE_CONTENTS = value;
 }
 
 export async function setGlobalSecurityValue() {

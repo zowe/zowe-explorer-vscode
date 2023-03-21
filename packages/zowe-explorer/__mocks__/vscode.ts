@@ -1,12 +1,12 @@
-/*
- * This program and the accompanying materials are made available under the terms of the *
- * Eclipse Public License v2.0 which accompanies this distribution, and is available at *
- * https://www.eclipse.org/legal/epl-v20.html                                      *
- *                                                                                 *
- * SPDX-License-Identifier: EPL-2.0                                                *
- *                                                                                 *
- * Copyright Contributors to the Zowe Project.                                     *
- *                                                                                 *
+/**
+ * This program and the accompanying materials are made available under the terms of the
+ * Eclipse Public License v2.0 which accompanies this distribution, and is available at
+ * https://www.eclipse.org/legal/epl-v20.html
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Copyright Contributors to the Zowe Project.
+ *
  */
 
 /**
@@ -96,6 +96,33 @@ export namespace extensions {
 
 export namespace window {
     /**
+     * Options for creating a {@link TreeView}
+     */
+    export interface TreeViewOptions<T> {
+        /**
+         * A data provider that provides tree data.
+         */
+        treeDataProvider: TreeDataProvider<T>;
+
+        /**
+         * Whether to show collapse all action or not.
+         */
+        showCollapseAll?: boolean;
+
+        /**
+         * Whether the tree supports multi-select. When the tree supports multi-select and a command is executed from the tree,
+         * the first argument to the command is the tree item that the command was executed on and the second argument is an
+         * array containing all selected tree items.
+         */
+        canSelectMany?: boolean;
+
+        /**
+         * An optional interface to implement drag and drop in the tree view.
+         */
+        dragAndDropController?: any;
+    }
+
+    /**
      * Show an information message to users. Optionally provide an array of items which will be presented as
      * clickable buttons.
      *
@@ -115,6 +142,10 @@ export namespace window {
         return {
             dispose: () => {},
         };
+    }
+
+    export function createTreeView<T>(viewId: string, options: TreeViewOptions<T>) {
+        return this;
     }
 
     /**
@@ -145,6 +176,10 @@ export namespace window {
          * Note: this option is ignored for non-modal messages.
          */
         isCloseAffordance?: boolean;
+    }
+
+    export function createOutputChannel(name: string, languageId?: string): any {
+        return {};
     }
 }
 export namespace commands {
@@ -378,6 +413,8 @@ export class EventEmitter<T> {
  * the editor-process so that they should be always used instead of nodejs-equivalents.
  */
 export namespace workspace {
+    export function onDidSaveTextDocument<T>(listener: (e: T) => any, thisArgs?: any, disposables?: Disposable[]) {}
+
     export function getConfiguration(configuration: string) {
         return {
             update: () => {
@@ -386,6 +423,7 @@ export namespace workspace {
             inspect: () => {
                 return {};
             },
+            get: () => {},
         };
     }
 
@@ -395,10 +433,6 @@ export namespace workspace {
             onDidChange: () => {},
             onDidDelete: () => {},
         };
-    }
-
-    export function onWillSaveTextDocument(event) {
-        return Disposable;
     }
 
     export function applyEdit() {
@@ -451,7 +485,7 @@ export interface TextDocument {
 
 export class Uri {
     public static parse(value: string, strict?: boolean): Uri {
-        return this;
+        return value;
     }
     public static file(path: string): Uri {
         return this;
