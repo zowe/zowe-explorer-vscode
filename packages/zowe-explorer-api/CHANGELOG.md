@@ -8,6 +8,8 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### Bug fixes
 
+- Fixed credentials being updated for wrong v1 profile if multiple profiles had different types but same name.
+
 ## `2.7.0`
 
 ### New features and enhancements
