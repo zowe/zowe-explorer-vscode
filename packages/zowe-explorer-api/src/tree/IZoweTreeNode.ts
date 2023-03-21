@@ -190,11 +190,6 @@ export interface IZoweUSSTreeNode extends IZoweTreeNode {
      * @param binary true is a binary file otherwise false
      */
     setBinary?(binary: boolean);
-    // /**
-    //  * Opens the text document
-    //  * @return vscode.TextDocument
-    //  */
-    // getOpenedDocumentInstance?(): vscode.TextDocument;
     /**
      * Downloads and displays a file in a text editor view
      *
@@ -227,12 +222,6 @@ export interface IZoweUSSTreeNode extends IZoweTreeNode {
      * @param {string} filePath
      */
     renameUSSNode?(ussFileProvider: IZoweTree<IZoweUSSTreeNode>, filePath: string);
-    /**
-     * Refreshes node and reopens it.
-     * @param hasClosedInstance
-     * @deprecated Use reopen instead. Will be removed by version 2.0.
-     */
-    refreshAndReopen?(hasClosedInstance?: boolean);
     /**
      * Reopens a file if it was closed (e.g. while it was being renamed).
      * @param hasClosedInstance

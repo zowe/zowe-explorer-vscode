@@ -32,24 +32,6 @@ export default class SpoolProvider implements vscode.TextDocumentContentProvider
 }
 
 /**
- * @deprecated because of lack of the VSCode built in cache invalidation support
- * Please, use the {@link toUniqueJobFileUri} instead
- *
- * Encode the information needed to get the Spool content.
- *
- * @param session The name of the Zowe profile to use to get the Spool Content
- * @param spool The IJobFile to get the spool content for.
- */
-export function encodeJobFile(session: string, spool: zowe.IJobFile): vscode.Uri {
-    const query = JSON.stringify([session, spool]);
-    return vscode.Uri.parse("").with({
-        scheme: SpoolProvider.scheme,
-        path: `${spool.jobname}.${spool.jobid}.${spool.ddname}`,
-        query,
-    });
-}
-
-/**
  * Encode the information needed to get the Spool content with support of the built in VSCode cache invalidation.
  *
  * VSCode built in cache will be applied automatically in case of several requests for the same URI,
@@ -69,6 +51,22 @@ export const toUniqueJobFileUri =
             fragment: uniqueFragment,
         });
     };
+
+/**
+ * Helper function called by {@link toUniqueJobFileUri}
+ * Encode the information needed to get the Spool content.
+ *
+ * @param profileName The name of the Zowe profile to use to get the Spool Content
+ * @param spool The IJobFile to get the spool content for.
+ */
+export function encodeJobFile(profileName: string, spool: zowe.IJobFile): vscode.Uri {
+    const query = JSON.stringify([profileName, spool]);
+    return vscode.Uri.parse("").with({
+        scheme: SpoolProvider.scheme,
+        path: `${spool.jobname}.${spool.jobid}.${spool.ddname}`,
+        query,
+    });
+}
 
 /**
  * Decode the information needed to get the Spool content.

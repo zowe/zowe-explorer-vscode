@@ -99,18 +99,15 @@ describe("FtpUssApi", () => {
                 file: localFile,
             },
         };
-        const result = await UssApi.putContents(mockParams.inputFilePath, mockParams.ussFilePath, undefined, undefined, "test", true);
+        const result = await UssApi.putContent(mockParams.inputFilePath, mockParams.ussFilePath, {
+            etag: "test",
+            returnEtag: true,
+        });
         jest.spyOn(UssApi as any, "getContentsTag").mockReturnValue("test");
         expect(result.commandResponse).toContain("File uploaded successfully.");
         expect(UssUtils.downloadFile).toBeCalledTimes(1);
         expect(UssUtils.uploadFile).toBeCalledTimes(1);
         expect(UssApi.releaseConnection).toBeCalled();
-    });
-
-    it("should call putContents when calling putContent", async () => {
-        const putContentsMock = jest.spyOn(UssApi, "putContents").mockImplementation();
-        await UssApi.putContent(mockUssFileParams.inputFilePath, mockUssFileParams.ussFilePath);
-        expect(putContentsMock).toHaveBeenCalled();
     });
 
     it("should upload uss directory.", async () => {
@@ -123,11 +120,9 @@ describe("FtpUssApi", () => {
             options: {},
         };
         const response = {};
-        UssApi.putContents = jest.fn().mockReturnValue(response);
+        UssApi.putContent = jest.fn().mockReturnValue(response);
         await UssApi.uploadDirectory(mockParams.inputDirectoryPath, mockParams.ussDirectoryPath, mockParams.options);
-
-        // One call to make the folder, one call per file
-        expect(UssApi.putContents).toBeCalledTimes(3);
+        expect(UssApi.putContent).toBeCalledTimes(3);
     });
 
     it("should create uss directory.", async () => {
