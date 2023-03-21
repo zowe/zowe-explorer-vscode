@@ -75,6 +75,16 @@ describe("FtpUssApi", () => {
         expect(response._readableState.buffer.head.data.toString()).toContain("Hello world");
     });
 
+    const mockUssFileParams = {
+        inputFilePath: "/tmp/testfile1.txt",
+        ussFilePath: "/a/b/c.txt",
+        etag: "123",
+        returnEtag: true,
+        options: {
+            file: "/tmp/testfile1.txt",
+        },
+    };
+
     it("should upload uss files.", async () => {
         const localFile = "/tmp/testfile1.txt";
         const response = TestUtils.getSingleLineStream();
@@ -112,7 +122,7 @@ describe("FtpUssApi", () => {
         const response = {};
         UssApi.putContent = jest.fn().mockReturnValue(response);
         await UssApi.uploadDirectory(mockParams.inputDirectoryPath, mockParams.ussDirectoryPath, mockParams.options);
-        expect(UssApi.putContent).toBeCalledTimes(2);
+        expect(UssApi.putContent).toBeCalledTimes(3);
     });
 
     it("should create uss directory.", async () => {
@@ -181,5 +191,9 @@ describe("FtpUssApi", () => {
         expect(result.commandResponse).toContain("Rename completed.");
         expect(UssUtils.renameFile).toBeCalledTimes(1);
         expect(UssApi.releaseConnection).toBeCalled();
+    });
+
+    it("should receive false from isFileTagBinOrAscii as it is not implemented in the FTP extension.", async () => {
+        expect(await UssApi.isFileTagBinOrAscii("")).toBe(false);
     });
 });

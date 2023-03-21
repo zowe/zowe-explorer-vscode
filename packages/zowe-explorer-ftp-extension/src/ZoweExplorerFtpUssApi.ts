@@ -49,8 +49,8 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
         return result;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/require-await, require-await
-    public async isFileTagBinOrAscii(ussFilePath: string): Promise<boolean> {
+    // eslint-disable-next-line @typescript-eslint/require-await, require-await
+    public async isFileTagBinOrAscii(_ussFilePath: string): Promise<boolean> {
         return false; // TODO: needs to be implemented checking file type
     }
 
@@ -105,6 +105,7 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
                 }
             }
             await UssUtils.uploadFile(connection, ussFilePath, transferOptions);
+
             result.success = true;
             if (options?.returnEtag) {
                 const contentsTag = await this.getContentsTag(ussFilePath);
@@ -118,12 +119,7 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
         }
     }
 
-    public async uploadDirectory(
-        inputDirectoryPath: string,
-        ussDirectoryPath: string,
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        options: IUploadOptions
-    ): Promise<zowe.IZosFilesResponse> {
+    public async uploadDirectory(inputDirectoryPath: string, ussDirectoryPath: string, _options: IUploadOptions): Promise<zowe.IZosFilesResponse> {
         let result = this.getDefaultResponse();
 
         // Check if inputDirectory is directory
@@ -131,6 +127,10 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
             await Gui.errorMessage("The local directory path provided does not exist.", { logger: ZoweLogger });
             throw new Error();
         }
+
+        // Make directory before copying inner files
+        await this.putContent(inputDirectoryPath, ussDirectoryPath);
+
         // getting list of files from directory
         const files = zowe.ZosFilesUtils.getFileListFromPath(inputDirectoryPath, false);
         // TODO: this solution will not perform very well; rewrite this and putContents methods
@@ -142,12 +142,7 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
         return result;
     }
 
-    public async create(
-        ussPath: string,
-        type: string,
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        mode?: string
-    ): Promise<zowe.IZosFilesResponse> {
+    public async create(ussPath: string, type: string, _mode?: string): Promise<zowe.IZosFilesResponse> {
         const result = this.getDefaultResponse();
         let connection;
         try {
@@ -255,7 +250,7 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
             input.on("readable", () => {
                 const data = input.read();
                 if (data) {
-                    hash.update(data);
+                    hash.update(data as unknown as crypto.BinaryLike);
                 } else {
                     resolve(`${hash.digest("hex")}`);
                 }

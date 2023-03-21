@@ -95,7 +95,7 @@ export class FtpJesApi extends AbstractFtpApi implements ZoweExplorerApi.IJes {
             connection = await this.ftpClient(this.checkedProfile());
             if (connection) {
                 const response: IJobStatus = await JobUtils.findJobByID(connection, jobid);
-                const files: any = response.spoolFiles;
+                const files = response.spoolFiles;
                 if (files) {
                     // eslint-disable-next-line @typescript-eslint/no-unsafe-return,@typescript-eslint/no-unsafe-call
                     return files.map((file: ISpoolFile) => {
@@ -109,7 +109,7 @@ export class FtpJesApi extends AbstractFtpApi implements ZoweExplorerApi.IJes {
                             procstep: (file as ISpoolFileRefactor).procStep || file.procstep,
                             class: file.class,
                             ddname: (file as ISpoolFileRefactor).ddName || file.ddname,
-                        };
+                        } as unknown as zowe.IJobFile;
                     });
                 }
             }
@@ -184,14 +184,12 @@ export class FtpJesApi extends AbstractFtpApi implements ZoweExplorerApi.IJes {
         }
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    public async getJclForJob(job: zowe.IJob): Promise<string> {
+    public async getJclForJob(_job: zowe.IJob): Promise<string> {
         await Gui.errorMessage("Get jcl is not supported in the FTP extension.", { logger: ZoweLogger });
         throw new Error();
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    public async submitJcl(jcl: string, internalReaderRecfm?: string, internalReaderLrecl?: string): Promise<zowe.IJob> {
+    public async submitJcl(_jcl: string, _internalReaderRecfm?: string, _internalReaderLrecl?: string): Promise<zowe.IJob> {
         await Gui.errorMessage("Submit jcl is not supported in the FTP extension.", { logger: ZoweLogger });
         throw new Error();
     }

@@ -28,6 +28,7 @@ import { SettingsConfig } from "../../src/utils/SettingsConfig";
 import { ZoweExplorerExtender } from "../../src/ZoweExplorerExtender";
 import { DatasetTree } from "../../src/dataset/DatasetTree";
 import { USSTree } from "../../src/uss/USSTree";
+import { ZoweSaveQueue } from "../../src/abstract/ZoweSaveQueue";
 
 jest.mock("vscode");
 jest.mock("fs");
@@ -164,9 +165,8 @@ async function createGlobalMocks() {
             "zowe.ds.submitMember",
             "zowe.ds.showAttributes",
             "zowe.ds.renameDataSet",
-            "zowe.ds.copyMember",
-            "zowe.ds.copyDataSet",
-            "zowe.ds.pasteMember",
+            "zowe.ds.copyDataSets",
+            "zowe.ds.pasteDataSets",
             "zowe.ds.renameDataSetMember",
             "zowe.ds.hMigrateDataSet",
             "zowe.ds.hRecallDataSet",
@@ -432,9 +432,9 @@ describe("Extension Unit Tests", () => {
         globalMocks.mockExistsSync.mockReturnValueOnce(false);
         globalMocks.mockGetConfiguration.mockReturnValue({
             persistence: true,
-            get: (setting: string) => "",
+            get: (_setting: string) => "",
             update: jest.fn(),
-            inspect: (configuration: string) => {
+            inspect: (_configuration: string) => {
                 return {
                     workspaceValue: undefined,
                     globalValue: undefined,
@@ -481,9 +481,9 @@ describe("Extension Unit Tests", () => {
         globalMocks.mockExistsSync.mockReturnValueOnce(false);
         globalMocks.mockGetConfiguration.mockReturnValue({
             persistence: true,
-            get: (setting: string) => "",
+            get: (_setting: string) => "",
             update: jest.fn(),
-            inspect: (configuration: string) => {
+            inspect: (_configuration: string) => {
                 return {
                     workspaceValue: undefined,
                     globalValue: undefined,
@@ -495,10 +495,14 @@ describe("Extension Unit Tests", () => {
         expect(ZoweExplorerExtender.showZoweConfigError).toHaveBeenCalled();
     });
     it("should deactivate the extension", async () => {
+        const spyAwaitAllSaves = jest.spyOn(ZoweSaveQueue, "all");
         const spyCleanTempDir = jest.spyOn(tempFolderUtils, "cleanTempDir");
         spyCleanTempDir.mockImplementation(jest.fn());
         await extension.deactivate();
+        expect(spyAwaitAllSaves).toHaveBeenCalled();
         expect(spyCleanTempDir).toHaveBeenCalled();
+        // Test that upload operations complete before cleaning temp dir
+        expect(spyAwaitAllSaves.mock.invocationCallOrder[0]).toBeLessThan(spyCleanTempDir.mock.invocationCallOrder[0]);
         expect(globals.ACTIVATED).toBe(false);
     });
 
@@ -536,9 +540,9 @@ describe("Extension Unit Tests - THEIA", () => {
         globalMocks.mockExistsSync.mockReturnValueOnce(false);
         globalMocks.mockGetConfiguration.mockReturnValue({
             persistence: true,
-            get: (setting: string) => "",
+            get: (_setting: string) => "",
             update: jest.fn(),
-            inspect: (configuration: string) => {
+            inspect: (_configuration: string) => {
                 return {
                     workspaceValue: undefined,
                     globalValue: undefined,

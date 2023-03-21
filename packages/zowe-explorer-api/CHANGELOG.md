@@ -10,12 +10,27 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### Bug fixes
 
+## `2.7.0`
+
+### New features and enhancements
+
+- Updated `IZoweTreeNode` with additional variable `description` to prevent compilation errors when updating node descriptions. [#2122](https://github.com/zowe/vscode-extension-for-zowe/issues/2122)
+- Updated `IZoweJobTreeNode` with additional variable `filtered` to track whether a job session node has been filtered. [#2122](https://github.com/zowe/vscode-extension-for-zowe/issues/2122)
+- Added new API `IMvs.copyDataSet`. [#1550](https://github.com/zowe/vscode-extension-for-zowe/issues/1550)
+
+## `2.6.2`
+
+### Bug fixes
+
+- Updated dependencies for security audits.
+
 ## `2.6.0`
 
 ### New features and enhancements
 
 - Refactored UI/UX methods into standalone `Gui` module for usability and maintainability. [#1967](https://github.com/zowe/vscode-extension-for-zowe/issues/1967)
 - New API call `dataSetsMatchingPattern` to allow filtering datasets via a pattern.
+- Added `copy` function to USS API to facilitate with copying files.
 
 ### Bug fixes
 

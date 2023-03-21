@@ -30,7 +30,7 @@ export function run(): Promise<void> {
     const mocha = new Mocha({
         ui: "bdd",
     });
-    mocha.useColors(true);
+    mocha.options.color = true;
 
     const testsRoot = __dirname;
 
@@ -53,6 +53,7 @@ export function run(): Promise<void> {
                     }
                 });
             } catch (err) {
+                // eslint-disable-next-line no-console
                 console.error(err);
                 e(err);
             }

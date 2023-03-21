@@ -35,6 +35,10 @@ export interface IZoweTreeNode {
      */
     label?: string | vscode.TreeItemLabel;
     /**
+     * A description for this tree item.
+     */
+    description?: string | boolean;
+    /**
      * The tooltip text when you hover over this item.
      */
     tooltip?: string | vscode.MarkdownString | undefined;
@@ -231,9 +235,14 @@ export interface IZoweUSSTreeNode extends IZoweTreeNode {
     saveSearch?(ussFileProvider: IZoweTree<IZoweUSSTreeNode>);
     /**
      * uploads selected uss node(s) to from clipboard to mainframe
-     *
+     * @deprecated in favor of `pasteUssTree`
      */
     copyUssFile?();
+
+    /**
+     * Uploads a tree of USS file(s)/folder(s) to mainframe
+     */
+    pasteUssTree?();
 }
 
 /**
@@ -272,6 +281,10 @@ export interface IZoweJobTreeNode extends IZoweTreeNode {
      * Attribute of Job query
      */
     status?: string;
+    /**
+     * Returns whether the job node is a filtered search
+     */
+    filtered?: boolean;
     /**
      * Retrieves child nodes of this IZoweJobTreeNode
      *
