@@ -224,6 +224,8 @@ export class CliProfileManager {
             },
         ];
     }
+
+    public static initialize() {}
 }
 
 export class ProfileInfo {
