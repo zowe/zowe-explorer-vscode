@@ -96,7 +96,7 @@ export class Profiles extends ProfilesCache {
             });
             let values: string[];
             try {
-                values = await Profiles.getInstance().promptCredentials(theProfile.name);
+                values = await Profiles.getInstance().promptCredentials(theProfile);
             } catch (error) {
                 errorHandling(
                     error,
@@ -567,7 +567,7 @@ export class Profiles extends ProfilesCache {
 
             return updSchemaValues;
         } catch (error) {
-            await errorHandling(error.message);
+            await errorHandling(error, profileName, error.message);
         }
     }
 
@@ -855,13 +855,12 @@ export class Profiles extends ProfilesCache {
             await readConfigFromDisk();
             return newProfileName;
         } catch (error) {
-            await errorHandling(error.message);
+            await errorHandling(error, profileName, error.message);
             ZoweExplorerExtender.showZoweConfigError(error.message);
         }
     }
 
-    public async promptCredentials(sessionName: string, rePrompt?: boolean): Promise<string[]> {
-        ZoweLogger.trace("Profiles.promptCredentials called.");
+    public async promptCredentials(profile: string | zowe.imperative.IProfileLoaded, rePrompt?: boolean): Promise<string[]> {
         const userInputBoxOptions: vscode.InputBoxOptions = {
             placeHolder: localize("createNewConnection.option.prompt.username.placeholder", "User Name"),
             prompt: localize("createNewConnection.option.prompt.username", "Enter the user name for the connection. Leave blank to not store."),
@@ -873,7 +872,8 @@ export class Profiles extends ProfilesCache {
 
         const promptInfo = await ZoweVsCodeExtension.updateCredentials(
             {
-                sessionName,
+                sessionName: typeof profile !== "string" ? profile.name : profile,
+                sessionType: typeof profile !== "string" ? profile.type : undefined,
                 rePrompt,
                 secure: (await this.getProfileInfo()).isSecured(),
                 userInputBoxOptions,

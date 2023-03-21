@@ -253,31 +253,26 @@ export function getProfile(node: vscode.TreeItem) {
 export async function readConfigFromDisk() {
     ZoweLogger.trace("ProfilesUtils.readConfigFromDisk called.");
     let rootPath: string;
-    try {
-        const mProfileInfo = await getProfileInfo(globals.ISTHEIA);
-        if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders[0]) {
-            rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
-            await mProfileInfo.readProfilesFromDisk({ homeDir: getZoweDir(), projectDir: getFullPath(rootPath) });
-        } else {
-            await mProfileInfo.readProfilesFromDisk({ homeDir: getZoweDir(), projectDir: undefined });
-        }
-        if (mProfileInfo.usingTeamConfig) {
-            globals.setConfigPath(rootPath);
-            ZoweLogger.info(`Zowe Explorer is using the team configuration file "${mProfileInfo.getTeamConfig().configName}"`);
-            const layers = mProfileInfo.getTeamConfig().layers || [];
-            const layerSummary = layers.map(
-                (config: imperative.IConfigLayer) =>
-                    `Path: ${config.path}: ${
-                        config.exists
-                            ? "Found, with the following defaults:" + JSON.stringify(config.properties?.defaults || "Undefined default")
-                            : "Not available"
-                    } `
-            );
-            ZoweLogger.debug(`Summary of team configuration files considered for Zowe Explorer: ${JSON.stringify(layerSummary)}`);
-        }
-    } catch (error) {
-        ZoweLogger.error(error);
-        throw new Error(error);
+    const mProfileInfo = await getProfileInfo(globals.ISTHEIA);
+    if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders[0]) {
+        rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
+        await mProfileInfo.readProfilesFromDisk({ homeDir: getZoweDir(), projectDir: getFullPath(rootPath) });
+    } else {
+        await mProfileInfo.readProfilesFromDisk({ homeDir: getZoweDir(), projectDir: undefined });
+    }
+    if (mProfileInfo.usingTeamConfig) {
+        globals.setConfigPath(rootPath);
+        ZoweLogger.info(`Zowe Explorer is using the team configuration file "${mProfileInfo.getTeamConfig().configName}"`);
+        const layers = mProfileInfo.getTeamConfig().layers || [];
+        const layerSummary = layers.map(
+            (config: imperative.IConfigLayer) =>
+                `Path: ${config.path}: ${
+                    config.exists
+                        ? "Found, with the following defaults:" + JSON.stringify(config.properties?.defaults || "Undefined default")
+                        : "Not available"
+                } `
+        );
+        ZoweLogger.debug(`Summary of team configuration files considered for Zowe Explorer: ${JSON.stringify(layerSummary)}`);
     }
 }
 
@@ -304,11 +299,9 @@ export async function promptCredentials(node: IZoweTreeNode) {
             return;
         }
         profileName = profileName.trim();
-    } else {
-        profileName = node.getProfile().name;
     }
 
-    const creds = await Profiles.getInstance().promptCredentials(profileName, true);
+    const creds = await Profiles.getInstance().promptCredentials(profileName ?? node.getProfile(), true);
 
     if (creds != null) {
         const successMsg = localize("promptCredentials.updatedCredentials", "Credentials for {0} were successfully updated", profileName);
@@ -334,7 +327,9 @@ export async function initializeZoweFolder(): Promise<void> {
     if (!fs.existsSync(settingsPath)) {
         fs.mkdirSync(settingsPath);
     }
-    writeOverridesFile();
+    if (!fs.existsSync(path.join(settingsPath, "imperative.json"))) {
+        writeOverridesFile();
+    }
     // If not using team config, ensure that the ~/.zowe/profiles directory
     // exists with appropriate types within
     if (!imperative.ImperativeConfig.instance.config?.exists) {
@@ -363,7 +358,11 @@ export function writeOverridesFile() {
     try {
         let settings: any;
         if (fileContent) {
-            settings = JSON.parse(fileContent);
+            try {
+                settings = JSON.parse(fileContent);
+            } catch (err) {
+                throw new Error(localize("writeOverridesFile.jsonParseError", "Failed to parse JSON file {0}:", settingsFile) + " " + err.message);
+            }
             if (settings && settings?.overrides && settings?.overrides?.CredentialManager !== globals.PROFILE_SECURITY) {
                 settings.overrides.CredentialManager = globals.PROFILE_SECURITY;
             } else {
@@ -373,7 +372,7 @@ export function writeOverridesFile() {
             settings = { overrides: { CredentialManager: globals.PROFILE_SECURITY } };
         }
         fileContent = JSON.stringify(settings, null, 2);
-        fs.writeSync(fd, fileContent, 0, "utf-8");
+        fs.writeFileSync(fd, fileContent, "utf-8");
     } finally {
         fs.closeSync(fd);
     }
