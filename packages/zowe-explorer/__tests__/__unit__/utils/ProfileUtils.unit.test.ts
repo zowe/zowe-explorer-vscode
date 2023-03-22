@@ -73,7 +73,7 @@ describe("ProfileUtils.writeOverridesFile Unit Tests", () => {
     it("should have not exist and create default file", async () => {
         const blockMocks = createBlockMocks();
         Object.defineProperty(fs, "openSync", {
-            value: (path: string, mode: string) => {
+            value: (filepath: string, mode: string) => {
                 if (mode.startsWith("r")) {
                     throw new Error("ENOENT");
                 }

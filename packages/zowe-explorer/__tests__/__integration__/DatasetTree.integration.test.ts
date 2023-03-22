@@ -20,7 +20,7 @@ import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
 import * as globals from "../../src/globals";
 
-declare var it: any;
+declare let it: any;
 
 const testProfile: imperative.IProfileLoaded = {
     name: testConst.profile.name,
