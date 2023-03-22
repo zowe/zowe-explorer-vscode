@@ -25,7 +25,7 @@ nls.config({
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 export class ZoweLogger {
-    private static zoweExplOutput: vscode.OutputChannel;
+    public static zoweExplOutput: vscode.OutputChannel;
     private static defaultLogLevel: "INFO";
 
     public static async initializeZoweLogger(context: vscode.ExtensionContext): Promise<void> {
@@ -94,25 +94,13 @@ export class ZoweLogger {
     private static async writeLogMessage(message: string, severity: MessageSeverity): Promise<void> {
         if (+MessageSeverity[await this.getLogSetting()] <= +severity) {
             const severityName = MessageSeverity[severity];
-            globals.LOG[severityName.toLowerCase()](message);
+            globals.LOG[severityName?.toLowerCase()](message);
             this.zoweExplOutput.appendLine(this.setMessage(message, severityName));
         }
     }
 
-    private static getDate(): string {
-        const dateObj = new Date(Date.now());
-        const day = ("0" + dateObj.getDate()).slice(-2);
-        const month = ("0" + (dateObj.getMonth() + 1)).slice(-2);
-        return `${dateObj.getFullYear()}/${month}/${day}`;
-    }
-
-    private static getTime(): string {
-        const dateObj = new Date(Date.now());
-        return `${dateObj.getHours()}:${dateObj.getMinutes()}:${dateObj.getSeconds()}`;
-    }
-
     private static setMessage(msg: string, level: string): string {
-        return `[${this.getDate()} ${this.getTime()}] [${level}] ${msg}`;
+        return `[${getDate()} ${getTime()}] [${level}] ${msg}`;
     }
 
     private static async compareCliLogSetting() {
@@ -156,4 +144,16 @@ export class ZoweLogger {
             await this.setCliLoggerSetting(true);
         });
     }
+}
+
+export function getDate(): string {
+    const dateObj = new Date(Date.now());
+    const day = ("0" + dateObj.getDate()).slice(-2);
+    const month = ("0" + (dateObj.getMonth() + 1)).slice(-2);
+    return `${dateObj.getFullYear()}/${month}/${day}`;
+}
+
+export function getTime(): string {
+    const dateObj = new Date(Date.now());
+    return `${dateObj.getHours()}:${dateObj.getMinutes()}:${dateObj.getSeconds()}`;
 }
