@@ -23,6 +23,7 @@ import * as path from "path";
 import * as fs from "fs";
 import { getZoweDir, Gui } from "@zowe/zowe-explorer-api";
 import * as profilesUtils from "../../src/utils/ProfilesUtils";
+import * as globals from "../../src/globals";
 jest.mock("fs");
 
 describe("ZoweExplorerExtender unit tests", () => {
@@ -65,6 +66,8 @@ describe("ZoweExplorerExtender unit tests", () => {
             value: newMocks.mockGetConfiguration,
             configurable: true,
         });
+        Object.defineProperty(globals, "LOG", { value: jest.fn(), configurable: true });
+        Object.defineProperty(globals.LOG, "error", { value: jest.fn(), configurable: true });
 
         return newMocks;
     }
@@ -157,6 +160,7 @@ describe("ZoweExplorerExtender unit tests", () => {
             await ZoweExplorerExtender.showZoweConfigError(userInput.configError);
             expect(blockMocks.mockErrorMessage).toHaveBeenCalledWith(
                 'Error encountered when loading your Zowe config. Click "Show Config" for more details.',
+                undefined,
                 "Show Config"
             );
             if (userInput.choice == null) {
@@ -176,6 +180,15 @@ describe("ZoweExplorerExtender unit tests", () => {
                 }
             }
         }
+    });
+
+    it("properly handles error parsing Imperative overrides json", async () => {
+        const blockMocks = await createBlockMocks();
+        ZoweExplorerExtender.createInstance();
+        const errMsg = "Failed to parse JSON file imperative.json";
+
+        await ZoweExplorerExtender.showZoweConfigError(errMsg);
+        expect(blockMocks.mockErrorMessage).toHaveBeenCalledWith("Error: " + errMsg, undefined);
     });
 
     it("should initialize zowe", async () => {

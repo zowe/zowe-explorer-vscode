@@ -345,9 +345,10 @@ describe("Profiles Unit Tests - Function createNewConnection for v1 Profiles", (
     it("Tests that createNewConnection throws an exception and shows a config error", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
+        const testError = new Error("saveProfile error");
 
         const mockSaveProfile = jest.spyOn(ProfilesCache.prototype as any, "saveProfile").mockImplementationOnce(async (_values, _name, _type) => {
-            throw new Error("saveProfile error");
+            throw testError;
         });
         const mockShowZoweConfigError = jest.spyOn(ZoweExplorerExtender, "showZoweConfigError").mockImplementation();
 
@@ -361,7 +362,7 @@ describe("Profiles Unit Tests - Function createNewConnection for v1 Profiles", (
         await Profiles.getInstance().createNewConnection("fake", "zosmf");
         expect(mockSaveProfile).toHaveBeenCalled();
         expect(globalMocks.mockShowInformationMessage).not.toHaveBeenCalled();
-        expect(errorHandlingSpy).toHaveBeenCalledWith("saveProfile error");
+        expect(errorHandlingSpy).toHaveBeenCalledWith(testError, "fake", testError.message);
         expect(mockShowZoweConfigError).toHaveBeenCalledWith("saveProfile error");
     });
 

@@ -15,7 +15,7 @@
     "vscode": "^1.53.2"
   },
   "dependencies": {
-    "@zowe/cli": "7.10.4",
+    "@zowe/cli": "7.11.0",
     "vscode-nls": "4.1.2"
   },
   "devDependencies": {

@@ -18,7 +18,9 @@ jobs:
             effort to reduce noise, please do not comment any further.
           days-before-issue-stale: 14
           days-before-issue-close: 90
-          exempt-all-issue-assignees: true
+          exempt-all-assignees: true
+          exempt-all-milestones: true
+          exempt-issue-labels: "bug, priority-critical, priority-high, Epic, community-upvoted, for-review, keep, security"
           stale-issue-label: "pending closure"
           stale-issue-message: >
             This issue has been automatically marked as stale because it has not had
