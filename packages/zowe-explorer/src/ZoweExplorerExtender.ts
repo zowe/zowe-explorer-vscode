@@ -51,7 +51,7 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
      *
      * @param errorDetails Details of the error (to be parsed for config name and path)
      */
-    public static async showZoweConfigError(errorDetails: string) {
+    public static showZoweConfigError(errorDetails: string): void {
         if (errorDetails.includes("imperative.json")) {
             // Handle errors parsing Imperative overrides file separately from errors in config
             errorHandling(errorDetails);
@@ -65,10 +65,10 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
                 return;
             }
 
-                // Parse the v2 config path, or a v1 config path depending on the error message
-                const configMatch = errorDetails.includes("Error parsing JSON in the file")
-                    ? errorDetails.match(/Error parsing JSON in the file '(.+?)'/)
-                    : errorDetails.match(/Error reading profile file \("(.+?)"\)/);
+            // Parse the v2 config path, or a v1 config path depending on the error message
+            const configMatch = errorDetails.includes("Error parsing JSON in the file")
+                ? errorDetails.match(/Error parsing JSON in the file '(.+?)'/)
+                : errorDetails.match(/Error reading profile file \("(.+?)"\)/);
 
             let configPath = configMatch != null ? configMatch[1] : null;
             // If configPath is null, build a v2 config location based on the error details

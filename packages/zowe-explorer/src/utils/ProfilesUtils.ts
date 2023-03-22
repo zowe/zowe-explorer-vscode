@@ -347,7 +347,11 @@ export function writeOverridesFile(): void {
             try {
                 settings = JSON.parse(fileContent);
             } catch (err) {
-                throw new Error(localize("writeOverridesFile.jsonParseError", "Failed to parse JSON file {0}:", settingsFile) + " " + err.message);
+                if (err instanceof Error) {
+                    throw new Error(
+                        localize("writeOverridesFile.jsonParseError", "Failed to parse JSON file {0}:", settingsFile) + " " + err.message
+                    );
+                }
             }
             if (settings && settings?.overrides && settings?.overrides?.CredentialManager !== globals.PROFILE_SECURITY) {
                 settings.overrides.CredentialManager = globals.PROFILE_SECURITY;
