@@ -69,10 +69,9 @@ export class ZoweLogger {
 
     private static async initVscLogger(context: vscode.ExtensionContext, logFileLocation: string): Promise<void> {
         this.zoweExplOutput = Gui.createOutputChannel(localize("zoweExplorer.outputchannel.title", "Zowe Explorer"));
-        const packageInfo = context.extension.packageJSON;
-        await this.writeVscLoggerInfo(logFileLocation, packageInfo);
+        await this.writeVscLoggerInfo(logFileLocation, context.extension.packageJSON);
         const initMessage = localize("initialize.log.info", "Initialized logger for Zowe Explorer");
-        this.info(initMessage);
+        await this.info(initMessage);
         await this.compareCliLogSetting();
     }
 
