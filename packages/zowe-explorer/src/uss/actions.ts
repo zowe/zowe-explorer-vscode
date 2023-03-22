@@ -84,7 +84,7 @@ export async function createUSSNode(node: IZoweUSSTreeNode, ussFileProvider: IZo
                 ussFileProvider.refreshElement(node);
             }
         } catch (err) {
-            await errorHandling(err, node.mProfileName, localize("createUSSNode.error.create", "Unable to create node: ") + err.message);
+            await errorHandling(err, node.mProfileName, localize("createUSSNode.error.create", "Unable to create node:"));
             throw err;
         }
     }
@@ -99,7 +99,7 @@ export async function refreshDirectory(node: IZoweUSSTreeNode, ussFileProvider: 
         await node.getChildren();
         ussFileProvider.refreshElement(node);
     } catch (err) {
-        await errorHandling(err, node.getProfileName(), err.message);
+        await errorHandling(err, node.getProfileName());
     }
 }
 
@@ -162,7 +162,7 @@ export async function uploadBinaryFile(node: IZoweUSSTreeNode, filePath: string)
         const ussName = `${node.fullPath}/${localFileName}`;
         await ZoweExplorerApiRegister.getUssApi(node.getProfile()).putContents(filePath, ussName, true);
     } catch (e) {
-        await errorHandling(e, node.mProfileName, e.message);
+        await errorHandling(e, node.mProfileName);
     }
 }
 
@@ -191,7 +191,7 @@ export async function uploadFile(node: IZoweUSSTreeNode, doc: vscode.TextDocumen
             await ZoweExplorerApiRegister.getUssApi(prof).putContents(doc.fileName, ussName);
         }
     } catch (e) {
-        await errorHandling(e, node.mProfileName, e.message);
+        await errorHandling(e, node.mProfileName);
     }
 }
 
@@ -343,7 +343,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
         } else {
             globals.LOG.error(localize("saveUSSFile.log.error.save", "Error encountered when saving USS file: ") + JSON.stringify(err));
             await markDocumentUnsaved(doc);
-            await errorHandling(err, sesName, err.message);
+            await errorHandling(err, sesName);
         }
     }
 }

@@ -1109,7 +1109,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 node.tooltip = afterMemberName;
             } catch (err) {
                 this.log.error(localize("renameDataSet.log.error", "Error encountered when renaming data set! ") + JSON.stringify(err));
-                await errorHandling(err, dataSetName, localize("renameDataSet.error", "Unable to rename data set: ") + err.message);
+                await errorHandling(err, dataSetName, localize("renameDataSet.error", "Unable to rename data set:"));
                 throw err;
             }
             const otherParent = this.findEquivalentNode(node.getParent(), contextually.isFavorite(node.getParent()));
@@ -1179,7 +1179,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 }
             } catch (err) {
                 this.log.error(localize("renameDataSet.log.error", "Error encountered when renaming data set! ") + JSON.stringify(err));
-                await errorHandling(err, node.label.toString(), localize("renameDataSet.error", "Unable to rename data set: ") + err.message);
+                await errorHandling(err, node.label.toString(), localize("renameDataSet.error", "Unable to rename data set:"));
                 throw err;
             }
         }
