@@ -92,12 +92,10 @@ describe("mvsNodeActions", () => {
         testTree.getTreeView.mockReturnValueOnce(createTreeView());
         const fileUri = { fsPath: "/tmp/foo" };
         globalMocks.showOpenDialog.mockReturnValueOnce([fileUri]);
-        globalMocks.openTextDocument.mockReturnValueOnce({});
 
         await dsActions.uploadDialog(node, testTree);
 
         expect(globalMocks.showOpenDialog).toBeCalled();
-        expect(globalMocks.openTextDocument).toBeCalled();
         expect(testTree.refreshElement).toBeCalledWith(node);
     });
     it("should call upload dialog and upload file from favorites node", async () => {
@@ -117,13 +115,11 @@ describe("mvsNodeActions", () => {
         const fileUri = { fsPath: "/tmp/foo" };
 
         globalMocks.showOpenDialog.mockReturnValueOnce([fileUri]);
-        globalMocks.openTextDocument.mockReturnValueOnce({});
         globalMocks.mockFindNonFavoritedNode.mockReturnValueOnce(node);
 
         await dsActions.uploadDialog(nodeAsFavorite, testTree);
 
         expect(globalMocks.showOpenDialog).toBeCalled();
-        expect(globalMocks.openTextDocument).toBeCalled();
         expect(testTree.refreshElement).toBeCalledWith(nodeAsFavorite);
     });
     it("shouldn't call upload dialog and not upload file if selection is empty", async () => {

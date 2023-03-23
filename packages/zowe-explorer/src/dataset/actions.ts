@@ -34,7 +34,6 @@ import { DatasetTree } from "./DatasetTree";
 import * as contextually from "../shared/context";
 import { markDocumentUnsaved, setFileSaved } from "../utils/workspace";
 import { IUploadOptions, IZosFilesResponse } from "@zowe/zos-files-for-zowe-sdk";
-import { reportProgress } from "../shared/actions";
 
 // Set up localization
 import * as nls from "vscode-nls";
@@ -160,9 +159,8 @@ export async function uploadDialog(node: ZoweDatasetNode, datasetProvider: api.I
                         api.Gui.showMessage(localize("uploadFile.uploadCancelled", "Upload action was cancelled."));
                         break;
                     }
-                    reportProgress(progress, value.length, index, "Uploading");
-                    const doc = await vscode.workspace.openTextDocument(item);
-                    const response = await uploadFile(node, doc);
+                    api.Gui.reportProgress(progress, value.length, index, "Uploading");
+                    const response = await uploadFile(node, item.path);
                     if (!response?.success) {
                         await errorHandling(response?.commandResponse, node.getProfileName(), response?.commandResponse);
                         break;
@@ -191,12 +189,12 @@ export async function uploadDialog(node: ZoweDatasetNode, datasetProvider: api.I
     }
 }
 
-export async function uploadFile(node: ZoweDatasetNode, doc: vscode.TextDocument): Promise<IZosFilesResponse> {
+export async function uploadFile(node: ZoweDatasetNode, docPath: string): Promise<IZosFilesResponse> {
     try {
         const datasetName = node.label as string;
         const prof = node.getProfile();
 
-        const response = await ZoweExplorerApiRegister.getMvsApi(prof).putContents(doc.fileName, datasetName, {
+        const response = await ZoweExplorerApiRegister.getMvsApi(prof).putContents(docPath, datasetName, {
             encoding: prof.profile?.encoding,
             responseTimeout: prof.profile?.responseTimeout,
         });
@@ -329,7 +327,7 @@ export async function deleteDatasetPrompt(datasetProvider: api.IZoweTree<api.IZo
                         api.Gui.showMessage(localize("deleteDatasetPrompt.deleteCancelled", "Delete action was cancelled."));
                         return;
                     }
-                    reportProgress(progress, nodes.length, index, "Deleting");
+                    api.Gui.reportProgress(progress, nodes.length, index, "Deleting");
                     try {
                         await deleteDataset(currNode, datasetProvider);
                         const deleteItemName = contextually.isDsMember(currNode)
