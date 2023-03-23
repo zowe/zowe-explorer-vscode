@@ -723,7 +723,7 @@ describe("Jobs Actions Unit Tests - Function getSpoolContent", () => {
         await jobActions.getSpoolContent(session, spoolFile, anyTimestamp);
 
         expect(mocked(vscode.window.showTextDocument)).not.toBeCalled();
-        expect(mocked(Gui.errorMessage)).toBeCalledWith("Test Error: Test");
+        expect(mocked(Gui.errorMessage)).toBeCalledWith("Error: Test");
     });
     it("should show an error message in case document cannot be shown for some reason", async () => {
         createGlobalMocks();
@@ -739,7 +739,7 @@ describe("Jobs Actions Unit Tests - Function getSpoolContent", () => {
 
         await jobActions.getSpoolContent(session, spoolFile, anyTimestamp);
 
-        expect(mocked(Gui.errorMessage)).toBeCalledWith("Test Error: Test");
+        expect(mocked(Gui.errorMessage)).toBeCalledWith("Error: Test");
     });
     it("should fetch the spool content successfully", async () => {
         createGlobalMocks();

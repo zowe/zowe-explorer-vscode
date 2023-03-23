@@ -630,11 +630,7 @@ export async function createFile(node: api.IZoweDatasetTreeNode, datasetProvider
             }
         } catch (err) {
             globals.LOG.error(localize("createDataSet.error", "Error encountered when creating data set! ") + JSON.stringify(err));
-            await errorHandling(
-                err,
-                node.getProfileName(),
-                localize("createDataSet.error", "Error encountered when creating data set!")
-            );
+            await errorHandling(err, node.getProfileName(), localize("createDataSet.error", "Error encountered when creating data set!"));
             throw err as Error;
         }
     }
@@ -1430,10 +1426,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
                 node.setEtag(uploadResponse.apiResponse[0].etag);
                 setFileSaved(true);
             }
-        } else if (
-            !uploadResponse.success &&
-            uploadResponse.commandResponse.includes(localize("saveFile.error.ZosmfEtagMismatchError", "Rest API failure with HTTP(S) status 412"))
-        ) {
+        } else if (!uploadResponse.success && uploadResponse.commandResponse.includes("Rest API failure with HTTP(S) status 412")) {
             if (globals.ISTHEIA) {
                 await willForceUpload(node, doc, label, node ? node.getProfile() : profile);
             } else {
@@ -1712,11 +1705,7 @@ export async function _copyProcessor(
             }
         } catch (error) {
             globals.LOG.error(localize("copyDataSet.log.error", "Error encountered when copy data set! ") + JSON.stringify(error));
-            await errorHandling(
-                error,
-                dsUtils.getNodeLabels(node).dataSetName,
-                localize("copyDataSet.error", "Unable to copy data set:")
-            );
+            await errorHandling(error, dsUtils.getNodeLabels(node).dataSetName, localize("copyDataSet.error", "Unable to copy data set:"));
         }
     }
 }

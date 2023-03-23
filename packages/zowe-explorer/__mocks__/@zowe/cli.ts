@@ -13,9 +13,10 @@ import * as path from "path";
 import * as os from "os";
 import { Session } from "../Session";
 import { IListOptions } from "@zowe/cli";
-import * as imperative from "./imperative";
+import * as imperative from "@zowe/imperative";
 
-export * as imperative from "./imperative";
+jest.mock("@zowe/imperative");
+export * as imperative from "@zowe/imperative";
 
 export function getZoweDir(): string {
     const defaultHome = path.join(os.homedir(), ".zowe");

@@ -8,6 +8,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
+- Fixed redundant text in error messages that included the same error details twice.
+
 ## `2.7.0`
 
 ### New features and enhancements
