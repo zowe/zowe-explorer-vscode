@@ -20,6 +20,7 @@ import { getSelectedNodeList } from "../shared/utils";
 import { createUSSTree } from "./USSTree";
 import { initSubscribers } from "../shared/init";
 import { ZoweLogger } from "../utils/LoggerUtils";
+import { TreeViewUtils } from "../utils/TreeViewUtils";
 
 export async function initUSSProvider(context: vscode.ExtensionContext) {
     ZoweLogger.trace("init.initUSSProvider called.");
@@ -87,6 +88,7 @@ export async function initUSSProvider(context: vscode.ExtensionContext) {
             for (const item of selectedNodes) {
                 ussFileProvider.deleteSession(item);
             }
+            TreeViewUtils.fixVsCodeMultiSelect(ussFileProvider);
         })
     );
     context.subscriptions.push(

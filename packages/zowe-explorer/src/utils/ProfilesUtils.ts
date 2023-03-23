@@ -285,26 +285,31 @@ export async function promptCredentials(node: IZoweTreeNode) {
         Gui.showMessage(msg);
         return;
     }
-    let profileName: string;
-    if (node == null) {
+    let profile: string | imperative.IProfileLoaded = node?.getProfile();
+    if (profile == null) {
         // prompt for profile
-        profileName = await Gui.showInputBox({
-            placeHolder: localize("createNewConnection.option.prompt.profileName.placeholder", "Connection Name"),
-            prompt: localize("createNewConnection.option.prompt.profileName", "Enter a name for the connection."),
-            ignoreFocusOut: true,
-        });
+        profile = (
+            await Gui.showInputBox({
+                placeHolder: localize("createNewConnection.option.prompt.profileName.placeholder", "Connection Name"),
+                prompt: localize("createNewConnection.option.prompt.profileName", "Enter a name for the connection."),
+                ignoreFocusOut: true,
+            })
+        ).trim();
 
-        if (profileName === undefined) {
+        if (!profile) {
             Gui.showMessage(localize("createNewConnection.undefined.passWord", "Operation Cancelled"));
             return;
         }
-        profileName = profileName.trim();
     }
 
-    const creds = await Profiles.getInstance().promptCredentials(profileName ?? node.getProfile(), true);
+    const creds = await Profiles.getInstance().promptCredentials(profile, true);
 
     if (creds != null) {
-        const successMsg = localize("promptCredentials.updatedCredentials", "Credentials for {0} were successfully updated", profileName);
+        const successMsg = localize(
+            "promptCredentials.updatedCredentials",
+            "Credentials for {0} were successfully updated",
+            typeof profile === "string" ? profile : profile.name
+        );
         ZoweLogger.info(successMsg);
         Gui.showMessage(successMsg);
     }

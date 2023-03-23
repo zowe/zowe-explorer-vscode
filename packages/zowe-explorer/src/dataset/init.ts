@@ -21,6 +21,7 @@ import * as contextuals from "../shared/context";
 import { getSelectedNodeList } from "../shared/utils";
 import { initSubscribers } from "../shared/init";
 import { ZoweLogger } from "../utils/LoggerUtils";
+import { TreeViewUtils } from "../utils/TreeViewUtils";
 
 export async function initDatasetProvider(context: vscode.ExtensionContext) {
     ZoweLogger.trace("dataset.init.initDatasetProvider called.");
@@ -106,6 +107,7 @@ export async function initDatasetProvider(context: vscode.ExtensionContext) {
             for (const select of selectedNodes) {
                 datasetProvider.deleteSession(select);
             }
+            TreeViewUtils.fixVsCodeMultiSelect(datasetProvider);
         })
     );
     context.subscriptions.push(
