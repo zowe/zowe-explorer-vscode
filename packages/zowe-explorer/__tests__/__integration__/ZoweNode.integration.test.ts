@@ -95,13 +95,7 @@ describe("ZoweNode Integration Tests", async () => {
      * Creates sample ZoweDatasetNode list and checks that getChildren() returns the correct array
      *************************************************************************************************************/
     it("Testing that getChildren returns the correct Thenable<ZoweDatasetNode[]>", async () => {
-        let sessChildren;
-
-        try {
-            sessChildren = await sessNode.getChildren();
-        } catch (err) {
-            throw err;
-        }
+        const sessChildren = await sessNode.getChildren();
 
         // Creating structure of files and folders under BRTVS99 profile
         const sampleChildren: ZoweDatasetNode[] = [
@@ -150,13 +144,7 @@ describe("ZoweNode Integration Tests", async () => {
     it("Testing that getChildren works as expected on a PS node", async () => {
         // The method should return an empty array.
         const PSNode = new ZoweDatasetNode(pattern + ".TPS", vscode.TreeItemCollapsibleState.None, sessNode, null);
-        let PSNodeChildren;
-
-        try {
-            PSNodeChildren = await PSNode.getChildren();
-        } catch (err) {
-            throw err;
-        }
+        const PSNodeChildren = await PSNode.getChildren();
 
         expect(PSNodeChildren).toEqual([]);
     }).timeout(TIMEOUT);

@@ -26,7 +26,6 @@ export class KeytarApi {
         if (scsActive) {
             const keytar = KeytarCredentialManager.getSecurityModules("keytar", isTheia);
             if (!initialized && keytar) {
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
                 KeytarCredentialManager.keytar = keytar as unknown as KeytarModule;
                 await imperative.CredentialManagerFactory.initialize({
                     service: globals.SETTINGS_SCS_DEFAULT,

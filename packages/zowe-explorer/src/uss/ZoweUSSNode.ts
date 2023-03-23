@@ -722,7 +722,6 @@ let saveListener = null;
  * Helper function which sets up listener for save wiping out the data after certain delay to prevent the fact of second save
  * @param wipeOutTime {number}
  */
-// eslint-disable-next-line no-magic-numbers
 export function attachRecentSaveListener(wipeOutTime: number = 500): void {
     if (saveListener) {
         saveListener.dispose();

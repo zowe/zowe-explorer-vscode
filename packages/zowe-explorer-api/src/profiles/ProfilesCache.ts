@@ -488,7 +488,6 @@ export class ProfilesCache {
         if (profAttrs != null) {
             const mergedArgs = mProfileInfo.mergeArgsForProfile(profAttrs, { getSecureVals: true });
             for (const arg of mergedArgs.knownArgs) {
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
                 profile[arg.argName] = arg.argValue;
             }
         }
