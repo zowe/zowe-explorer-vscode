@@ -112,7 +112,7 @@
         "command": "zowe.ds.pasteDataSets",
         "key": "ctrl+v",
         "mac": "cmd+v",
-        "when": "focusedView == zowe.ds.explorer"
+        "when": "focusedView == zowe.ds.explorer && !listSupportsMultiselect"
       }
     ],
     "commands": [
@@ -1014,7 +1014,7 @@
           "group": "001_zowe_dsCreate@6"
         },
         {
-          "when": "view == zowe.ds.explorer && viewItem =~ /^(?!.*profile=zftp.*)(session|pds).*/",
+          "when": "view == zowe.ds.explorer && viewItem =~ /^(?!.*profile=zftp.*)(session|pds).*/ && !listMultiSelection",
           "command": "zowe.ds.pasteDataSets",
           "group": "001_zowe_dsCreate@7"
         },
