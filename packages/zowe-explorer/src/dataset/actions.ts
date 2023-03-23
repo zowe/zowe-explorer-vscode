@@ -146,20 +146,35 @@ export async function uploadDialog(node: ZoweDatasetNode, datasetProvider: api.I
         openLabel: "Upload File",
         canSelectMany: true,
     };
-
     const value = await api.Gui.showOpenDialog(fileOpenOptions);
-
-    if (value && value.length) {
-        await Promise.all(
-            value.map(async (item) => {
-                // Convert to vscode.TextDocument
-                const doc = await vscode.workspace.openTextDocument(item);
-                await uploadFile(node, doc);
-            })
+    if (value?.length > 0) {
+        await api.Gui.withProgress(
+            {
+                location: vscode.ProgressLocation.Notification,
+                title: localize("uploadFile.response.upload.title", "Uploading to data set"),
+                cancellable: true,
+            },
+            async (progress, token) => {
+                let index = 0;
+                for (const item of value) {
+                    if (token.isCancellationRequested) {
+                        api.Gui.showMessage(localize("uploadFile.uploadCancelled", "Upload action was cancelled."));
+                        break;
+                    }
+                    api.Gui.reportProgress(progress, value.length, index, "Uploading");
+                    const response = await uploadFile(node, item.path);
+                    if (!response?.success) {
+                        await errorHandling(response?.commandResponse, node.getProfileName(), response?.commandResponse);
+                        break;
+                    }
+                    index++;
+                }
+            }
         );
 
         // refresh Tree View & favorites
         datasetProvider.refreshElement(node);
+        datasetProvider.getTreeView().reveal(node, { expand: true, focus: true });
         if (contextually.isFavorite(node) || contextually.isFavoriteContext(node.getParent())) {
             const nonFavNode = datasetProvider.findNonFavoritedNode(node);
             if (nonFavNode) {
@@ -176,15 +191,17 @@ export async function uploadDialog(node: ZoweDatasetNode, datasetProvider: api.I
     }
 }
 
-export async function uploadFile(node: ZoweDatasetNode, doc: vscode.TextDocument) {
+export async function uploadFile(node: ZoweDatasetNode, docPath: string): Promise<zowe.IZosFilesResponse> {
     ZoweLogger.trace("dataset.actions.uploadFile called.");
     try {
         const datasetName = node.label as string;
         const prof = node.getProfile();
-        await ZoweExplorerApiRegister.getMvsApi(prof).putContents(doc.fileName, datasetName, {
+
+        const response = await ZoweExplorerApiRegister.getMvsApi(prof).putContents(docPath, datasetName, {
             encoding: prof.profile?.encoding,
             responseTimeout: prof.profile?.responseTimeout,
         });
+        return response;
     } catch (e) {
         await errorHandling(e, node.getProfileName(), e.message);
     }
@@ -305,20 +322,16 @@ export async function deleteDatasetPrompt(datasetProvider: api.IZoweTree<api.IZo
         await api.Gui.withProgress(
             {
                 location: vscode.ProgressLocation.Notification,
-                title: localize("deleteDatasetPrompt.deleteCounter", "Deleting nodes"),
+                title: localize("deleteDatasetPrompt.deleteCounter", "Deleting items"),
                 cancellable: true,
             },
             async (progress, token) => {
-                const total = 100;
                 for (const [index, currNode] of nodes.entries()) {
                     if (token.isCancellationRequested) {
                         api.Gui.showMessage(localize("deleteDatasetPrompt.deleteCancelled", "Delete action was cancelled."));
                         return;
                     }
-                    progress.report({
-                        message: `Deleting ${index + 1} of ${nodes.length}`,
-                        increment: total / nodes.length,
-                    });
+                    api.Gui.reportProgress(progress, nodes.length, index, "Deleting");
                     try {
                         await deleteDataset(currNode, datasetProvider);
                         const deleteItemName = contextually.isDsMember(currNode)
