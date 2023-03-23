@@ -273,26 +273,33 @@ export async function promptCredentials(node: IZoweTreeNode) {
         Gui.showMessage(localize("zowe.promptCredentials.notSupported", '"Update Credentials" operation not supported when "autoStore" is false'));
         return;
     }
-    let profileName: string;
-    if (node == null) {
+    let profile: string | imperative.IProfileLoaded = node?.getProfile();
+    if (profile == null) {
         // prompt for profile
-        profileName = await Gui.showInputBox({
-            placeHolder: localize("createNewConnection.option.prompt.profileName.placeholder", "Connection Name"),
-            prompt: localize("createNewConnection.option.prompt.profileName", "Enter a name for the connection."),
-            ignoreFocusOut: true,
-        });
+        profile = (
+            await Gui.showInputBox({
+                placeHolder: localize("createNewConnection.option.prompt.profileName.placeholder", "Connection Name"),
+                prompt: localize("createNewConnection.option.prompt.profileName", "Enter a name for the connection."),
+                ignoreFocusOut: true,
+            })
+        ).trim();
 
-        if (profileName === undefined) {
+        if (!profile) {
             Gui.showMessage(localize("createNewConnection.undefined.passWord", "Operation Cancelled"));
             return;
         }
-        profileName = profileName.trim();
     }
 
-    const creds = await Profiles.getInstance().promptCredentials(profileName ?? node.getProfile(), true);
+    const creds = await Profiles.getInstance().promptCredentials(profile, true);
 
     if (creds != null) {
-        Gui.showMessage(localize("promptCredentials.updatedCredentials", "Credentials for {0} were successfully updated", profileName));
+        Gui.showMessage(
+            localize(
+                "promptCredentials.updatedCredentials",
+                "Credentials for {0} were successfully updated",
+                typeof profile === "string" ? profile : profile.name
+            )
+        );
     }
 }
 
