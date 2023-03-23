@@ -27,6 +27,7 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 export class ZoweLogger {
     public static zoweExplOutput: vscode.OutputChannel;
     private static defaultLogLevel: "INFO";
+    private static zeLogLevel: string;
 
     public static async initializeZoweLogger(context: vscode.ExtensionContext): Promise<void> {
         try {
@@ -70,8 +71,7 @@ export class ZoweLogger {
     private static async initVscLogger(context: vscode.ExtensionContext, logFileLocation: string): Promise<void> {
         this.zoweExplOutput = Gui.createOutputChannel(localize("zoweExplorer.outputchannel.title", "Zowe Explorer"));
         await this.writeVscLoggerInfo(logFileLocation, context.extension.packageJSON);
-        const initMessage = localize("initialize.log.info", "Initialized logger for Zowe Explorer");
-        await this.info(initMessage);
+        await this.info(localize("initialize.log.info", "Initialized logger for Zowe Explorer"));
         await this.compareCliLogSetting();
     }
 
@@ -82,8 +82,8 @@ export class ZoweLogger {
     }
 
     private static async getLogSetting(): Promise<string> {
-        let logSetting: string = await vscode.workspace.getConfiguration().get("zowe.logger");
-        return logSetting ? logSetting : this.defaultLogLevel;
+        this.zeLogLevel = await vscode.workspace.getConfiguration().get("zowe.logger");
+        return this.zeLogLevel ? this.zeLogLevel : this.defaultLogLevel;
     }
 
     private static async setLogSetting(setting: string): Promise<void> {
@@ -104,7 +104,8 @@ export class ZoweLogger {
 
     private static async compareCliLogSetting() {
         const cliLogSetting = this.getZoweLogEnVar();
-        if (cliLogSetting && +MessageSeverity[await this.getLogSetting()] !== +MessageSeverity[cliLogSetting]) {
+        const zeLogSetting = this.zeLogLevel ? this.zeLogLevel : await this.getLogSetting();
+        if (cliLogSetting && +MessageSeverity[zeLogSetting] !== +MessageSeverity[cliLogSetting]) {
             const notified = await this.getCliLoggerSetting();
             if (!notified) {
                 await this.updateLoggerSetting(cliLogSetting);
