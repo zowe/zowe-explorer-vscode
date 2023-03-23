@@ -19,6 +19,7 @@ import * as contextuals from "../shared/context";
 import { getSelectedNodeList } from "../shared/utils";
 import { createUSSTree } from "./USSTree";
 import { initSubscribers } from "../shared/init";
+import { TreeViewUtils } from "../utils/TreeViewUtils";
 
 export async function initUSSProvider(context: vscode.ExtensionContext) {
     const ussFileProvider: IZoweTree<IZoweUSSTreeNode> = await createUSSTree(globals.LOG);
@@ -85,6 +86,7 @@ export async function initUSSProvider(context: vscode.ExtensionContext) {
             for (const item of selectedNodes) {
                 ussFileProvider.deleteSession(item);
             }
+            TreeViewUtils.fixVsCodeMultiSelect(ussFileProvider);
         })
     );
     context.subscriptions.push(
