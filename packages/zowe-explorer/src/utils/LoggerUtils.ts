@@ -83,7 +83,7 @@ export class ZoweLogger {
 
     private static async getLogSetting(): Promise<string> {
         this.zeLogLevel = await vscode.workspace.getConfiguration().get("zowe.logger");
-        return this.zeLogLevel ? this.zeLogLevel : this.defaultLogLevel;
+        return this.zeLogLevel ?? this.defaultLogLevel;
     }
 
     private static async setLogSetting(setting: string): Promise<void> {
@@ -104,7 +104,7 @@ export class ZoweLogger {
 
     private static async compareCliLogSetting() {
         const cliLogSetting = this.getZoweLogEnVar();
-        const zeLogSetting = this.zeLogLevel ? this.zeLogLevel : await this.getLogSetting();
+        const zeLogSetting = this.zeLogLevel ?? (await this.getLogSetting());
         if (cliLogSetting && +MessageSeverity[zeLogSetting] !== +MessageSeverity[cliLogSetting]) {
             const notified = await this.getCliLoggerSetting();
             if (!notified) {
@@ -114,7 +114,7 @@ export class ZoweLogger {
     }
 
     private static getZoweLogEnVar(): string {
-        return process.env.ZOWE_APP_LOG_LEVEL;
+        return process.env?.ZOWE_APP_LOG_LEVEL;
     }
 
     private static async getCliLoggerSetting(): Promise<boolean> {
