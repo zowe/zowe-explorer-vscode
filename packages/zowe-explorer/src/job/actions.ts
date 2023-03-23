@@ -39,6 +39,7 @@ export async function downloadSpool(jobs: IZoweJobTreeNode[]) {
             canSelectFolders: true,
             canSelectFiles: false,
             canSelectMany: false,
+            defaultUri: globals.OPEN_DIALOG_DEFAULTURI,
         });
         if (dirUri !== undefined) {
             for (const job of jobs) {

@@ -137,6 +137,7 @@ export async function uploadDialog(node: IZoweUSSTreeNode, ussFileProvider: IZow
         canSelectFiles: true,
         openLabel: "Upload Files",
         canSelectMany: true,
+        defaultUri: globals.OPEN_DIALOG_DEFAULTURI,
     };
 
     const value = await Gui.showOpenDialog(fileOpenOptions);

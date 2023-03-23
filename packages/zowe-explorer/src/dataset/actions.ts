@@ -16,6 +16,7 @@ import * as zowe from "@zowe/cli";
 import * as globals from "../globals";
 import * as path from "path";
 import * as api from "@zowe/zowe-explorer-api";
+import * as os from "os";
 import { FilterItem, errorHandling } from "../utils/ProfilesUtils";
 import {
     getDocumentFilePath,
@@ -143,6 +144,7 @@ export async function uploadDialog(node: ZoweDatasetNode, datasetProvider: api.I
         canSelectFiles: true,
         openLabel: "Upload File",
         canSelectMany: true,
+        defaultUri: globals.OPEN_DIALOG_DEFAULTURI,
     };
     const value = await api.Gui.showOpenDialog(fileOpenOptions);
     if (value?.length > 0) {

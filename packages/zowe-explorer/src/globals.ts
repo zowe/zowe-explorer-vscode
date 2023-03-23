@@ -10,6 +10,7 @@
  */
 
 import * as path from "path";
+import * as os from "os";
 import { imperative } from "@zowe/cli";
 import * as vscode from "vscode";
 import * as loggerConfig from "../log4jsconfig.json";
@@ -99,6 +100,7 @@ export let ACTIVATED = false;
 export let PROFILE_SECURITY: string | boolean = ZOWE_CLI_SCM;
 export let SAVED_PROFILE_CONTENTS = new Uint8Array();
 export const JOBS_MAX_PREFIX = 8;
+export const OPEN_DIALOG_DEFAULTURI = vscode.workspace.workspaceFolders?.[0]?.uri ?? vscode.Uri.file(os.homedir());
 
 // Dictionary describing translation from old configuration names to new standardized names
 export const configurationDictionary = {
