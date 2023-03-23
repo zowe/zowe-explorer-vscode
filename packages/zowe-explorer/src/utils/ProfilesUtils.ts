@@ -47,7 +47,7 @@ export async function errorHandling(errorDetails: any, label?: string, moreInfo?
     );
     globals.LOG.error(`${errorDetails}\n` + JSON.stringify({ errorDetails, label, moreInfo }));
 
-    if (errorDetails.mDetails !== undefined) {
+    if (errorDetails?.mDetails !== undefined) {
         httpErrCode = errorDetails.mDetails.errorCode;
         // open config file for missing hostname error
         const msg = errorDetails.toString();

@@ -38,6 +38,7 @@ export function createUSSTree(favoriteNodes: ZoweUSSNode[], sessionNodes: ZoweUS
     newTree.getTreeType = jest.fn().mockImplementation(() => PersistenceSchemaEnum.USS);
     newTree.setItem = jest.fn();
     newTree.addSearchHistory = jest.fn();
+    newTree.getFileHistory = jest.fn();
 
     return newTree;
 }
@@ -56,7 +57,7 @@ export function createUSSSessionNode(session: imperative.Session, profile: imper
     const zoweUSSNode = new ZoweUSSNode(
         "sestest",
         vscode.TreeItemCollapsibleState.Collapsed,
-        null,
+        null as any,
         session,
         "/",
         false,
