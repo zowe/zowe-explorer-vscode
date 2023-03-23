@@ -123,7 +123,7 @@ describe("Logger Utils Unit Tests - function initializeZoweLogger", () => {
         messageSpy.mockClear();
         updateSpy.mockClear();
     });
-    it("should initialize loggers successfully with not changing to cli logger setting", async () => {
+    it("should initialize loggers successfully with changing to cli logger setting", async () => {
         const globalMocks = createGlobalMocks();
         jest.spyOn(globals, "initLogger").mockImplementationOnce(() => {
             return "/fake/file/path";
@@ -242,5 +242,13 @@ describe("It should pass the correct message severity", () => {
         });
         await logger.ZoweLogger.fatal(globalMocks.mockMessage);
         expect(globals.LOG.fatal).toHaveBeenCalled();
+    });
+});
+
+describe("ZoweLogger.dispose()", () => {
+    it("Output channel disposed", async () => {
+        const spy = jest.spyOn(logger.ZoweLogger.zoweExplOutput, "dispose");
+        expect(logger.ZoweLogger.disposeZoweLogger()).toBeUndefined();
+        expect(spy).toBeCalled();
     });
 });
