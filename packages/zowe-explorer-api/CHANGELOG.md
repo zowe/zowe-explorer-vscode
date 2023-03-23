@@ -6,9 +6,6 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### New features and enhancements
 
-- Added `description` variable to `IZoweTreeNode` to prevent compilation errors when updating node descriptions.
-- Added `filtered` variable to `IZoweJobTreeNode` to track whether a job session node has been filtered.
-- Added copy datasets APIs. [#1550] (https://github.com/zowe/vscode-extension-for-zowe/issues/1550)
 - Fixed several linter errors throughout the codebase and consolidated linter rules. [#2184](https://github.com/zowe/vscode-extension-for-zowe/issues/2184)
 
 ### Bug fixes

@@ -6,6 +6,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
+- Fixed several linter errors throughout the codebase and consolidated linter rules. [#2184](https://github.com/zowe/vscode-extension-for-zowe/issues/2184)
+
 ### Bug fixes
 
 - Added back fix that was accidentally removed between updates: Resolved an issue where VSCode did not provide all context menu options for a profile node after a multi-select operation. [#2108](https://github.com/zowe/vscode-extension-for-zowe/pull/2108)

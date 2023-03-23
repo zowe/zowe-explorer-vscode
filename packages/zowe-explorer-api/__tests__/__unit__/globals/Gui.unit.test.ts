@@ -15,7 +15,6 @@ import * as vscode from "vscode";
 import { DOUBLE_CLICK_SPEED_MS } from "../../../src/globals";
 jest.mock("vscode");
 
-// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 function createGlobalMocks() {
     const mocks = {
         showInfoMessage: jest.fn(),
@@ -79,7 +78,6 @@ describe("Gui unit tests", () => {
 
     it("can create a tree view", () => {
         Gui.createTreeView("Test_ID", {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment
             treeDataProvider: undefined as any,
         });
         expect(mocks.createTreeView).toHaveBeenCalled();
@@ -117,7 +115,7 @@ describe("Gui unit tests", () => {
                     viewId: "test-view-id",
                 },
             },
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument
+
             undefined as any
         );
         expect(mocks.withProgress).toHaveBeenCalled();
@@ -152,7 +150,6 @@ describe("Gui unit tests", () => {
     });
 
     it("can resolve a quick pick when accepted", async () => {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
         const mockDidAccept = jest.fn((callback: Function) => callback());
         await Gui.resolveQuickPick({
             activeItems: ["test"],
@@ -163,7 +160,6 @@ describe("Gui unit tests", () => {
     });
 
     it("can resolve a quick pick when hidden", async () => {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
         const mockDidHide = jest.fn((callback: Function) => callback());
         await Gui.resolveQuickPick({
             activeItems: ["test"],

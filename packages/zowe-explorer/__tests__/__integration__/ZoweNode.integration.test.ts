@@ -96,7 +96,7 @@ describe("ZoweNode Integration Tests", async () => {
      *************************************************************************************************************/
     it("Testing that getChildren returns the correct Thenable<ZoweDatasetNode[]>", async () => {
         let sessChildren;
-        // eslint-disable-next-line no-useless-catch
+
         try {
             sessChildren = await sessNode.getChildren();
         } catch (err) {
@@ -151,7 +151,7 @@ describe("ZoweNode Integration Tests", async () => {
         // The method should return an empty array.
         const PSNode = new ZoweDatasetNode(pattern + ".TPS", vscode.TreeItemCollapsibleState.None, sessNode, null);
         let PSNodeChildren;
-        // eslint-disable-next-line no-useless-catch
+
         try {
             PSNodeChildren = await PSNode.getChildren();
         } catch (err) {

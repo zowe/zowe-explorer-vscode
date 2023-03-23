@@ -202,7 +202,7 @@ describe("Profiles Unit Test - Function createInstance", () => {
 
     it("should create instance when there is no workspace", async () => {
         mockWorkspaceFolders.mockClear().mockReturnValue(undefined);
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
+
         const { Profiles: testProfiles } = require("../../src/Profiles");
         jest.spyOn(testProfiles.prototype, "refresh").mockResolvedValueOnce(undefined);
         const profilesInstance = await testProfiles.createInstance(undefined);
@@ -212,7 +212,7 @@ describe("Profiles Unit Test - Function createInstance", () => {
 
     it("should create instance when there is empty workspace", async () => {
         mockWorkspaceFolders.mockClear().mockReturnValue([undefined]);
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
+
         const { Profiles: testProfiles } = require("../../src/Profiles");
         jest.spyOn(testProfiles.prototype, "refresh").mockResolvedValueOnce(undefined);
         const profilesInstance = await testProfiles.createInstance(undefined);
@@ -226,7 +226,7 @@ describe("Profiles Unit Test - Function createInstance", () => {
                 uri: { fsPath: "fakePath" },
             },
         ]);
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
+
         const { Profiles: testProfiles } = require("../../src/Profiles");
         jest.spyOn(testProfiles.prototype, "refresh").mockResolvedValueOnce(undefined);
         const profilesInstance = await testProfiles.createInstance(undefined);

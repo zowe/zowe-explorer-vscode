@@ -4,7 +4,6 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
-- Added `putContent` to `FtpUssApi` for compatibility with optimizations to USS copy/paste actions.
 - Fixed several linter errors throughout the codebase and consolidated linter rules. [#2184](https://github.com/zowe/vscode-extension-for-zowe/issues/2184)
 
 ### Bug fixes
