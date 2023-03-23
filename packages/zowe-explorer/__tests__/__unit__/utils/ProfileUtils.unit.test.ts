@@ -11,7 +11,7 @@
 
 import * as fs from "fs";
 import * as path from "path";
-import { Gui } from "@zowe/zowe-explorer-api";
+import { Gui, ProfilesCache, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import * as globals from "../../../src/globals";
 import * as profileUtils from "../../../src/utils/ProfilesUtils";
 import * as vscode from "vscode";
@@ -208,24 +208,70 @@ describe("ProfileUtils unit tests", () => {
     describe("promptCredentials", () => {
         it("calls getProfileInfo", async () => {
             const mockProfileInstance = new Profiles(zowe.imperative.Logger.getAppLogger());
-            Object.defineProperty(Profiles, "getInstance", {
-                value: () => mockProfileInstance,
-                configurable: true,
-            });
-            Object.defineProperty(mockProfileInstance, "getProfileInfo", {
-                value: jest.fn(() => {
-                    return {
-                        profileName: "emptyConfig",
-                    };
-                }),
-                configurable: true,
-            });
+            const getProfileInfoSpy = jest.spyOn(Profiles.prototype, "getProfileInfo");
+            const prof = {
+                getAllProfiles: jest.fn().mockReturnValue([]),
+                isSecured: jest.fn().mockReturnValue(true),
+                readProfilesFromDisk: jest.fn(),
+            };
+            jest.spyOn(ProfilesCache.prototype, "getProfileInfo").mockResolvedValue(prof as unknown as zowe.imperative.ProfileInfo);
+            jest.spyOn(ProfilesCache.prototype, "getLoadedProfConfig").mockResolvedValue({
+                profile: prof,
+            } as unknown as zowe.imperative.IProfileLoaded);
+            jest.spyOn(Profiles, "getInstance").mockReturnValue(mockProfileInstance);
             Object.defineProperty(vscode.window, "showInputBox", {
-                value: jest.fn().mockResolvedValue(undefined),
+                value: jest.fn().mockResolvedValue("emptyConfig"),
                 configurable: true,
             });
+            jest.spyOn(ZoweVsCodeExtension as any, "promptUserPass").mockResolvedValue([]);
             await profileUtils.promptCredentials(null);
-            expect(mockProfileInstance.getProfileInfo).toHaveBeenCalled();
+            expect(getProfileInfoSpy).toHaveBeenCalled();
+        });
+
+        it("shows an error message if the profile input is undefined", async () => {
+            const mockProfileInstance = new Profiles(zowe.imperative.Logger.getAppLogger());
+            const prof = {
+                getAllProfiles: jest.fn().mockReturnValue([]),
+                isSecured: jest.fn().mockReturnValue(true),
+                readProfilesFromDisk: jest.fn(),
+            };
+            jest.spyOn(ProfilesCache.prototype, "getProfileInfo").mockResolvedValue(prof as unknown as zowe.imperative.ProfileInfo);
+            jest.spyOn(ProfilesCache.prototype, "getLoadedProfConfig").mockResolvedValue({
+                profile: prof,
+            } as unknown as zowe.imperative.IProfileLoaded);
+            jest.spyOn(Profiles, "getInstance").mockReturnValue(mockProfileInstance);
+            Object.defineProperty(vscode.window, "showInputBox", {
+                value: jest.fn().mockResolvedValue(""),
+                configurable: true,
+            });
+            jest.spyOn(ZoweVsCodeExtension as any, "promptUserPass").mockResolvedValue([]);
+            await profileUtils.promptCredentials(null);
+            expect(Gui.showMessage).toHaveBeenCalledWith("Operation Cancelled");
+        });
+
+        it("shows an info message if the profile credentials were updated", async () => {
+            const mockProfileInstance = new Profiles(zowe.imperative.Logger.getAppLogger());
+            const prof = {
+                getAllProfiles: jest.fn().mockReturnValue([]),
+                isSecured: jest.fn().mockReturnValue(true),
+                readProfilesFromDisk: jest.fn(),
+            };
+            jest.spyOn(ProfilesCache.prototype, "getProfileInfo").mockResolvedValue(prof as unknown as zowe.imperative.ProfileInfo);
+            jest.spyOn(ProfilesCache.prototype, "getLoadedProfConfig").mockResolvedValue({
+                profile: prof,
+            } as unknown as zowe.imperative.IProfileLoaded);
+            jest.spyOn(Profiles, "getInstance").mockReturnValue(mockProfileInstance);
+            Object.defineProperty(vscode.window, "showInputBox", {
+                value: jest.fn().mockResolvedValue("testConfig"),
+                configurable: true,
+            });
+            Object.defineProperty(Gui, "showMessage", {
+                value: jest.fn(),
+                configurable: true,
+            });
+            jest.spyOn(Profiles.prototype, "promptCredentials").mockResolvedValue(["some_user", "some_pass", "c29tZV9iYXNlNjRfc3RyaW5n"]);
+            await profileUtils.promptCredentials(null);
+            expect(Gui.showMessage).toHaveBeenCalledWith("Credentials for testConfig were successfully updated");
         });
 
         it("shows a message if Update Credentials operation is called when autoStore = false", async () => {
