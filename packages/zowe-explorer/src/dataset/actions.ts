@@ -16,7 +16,6 @@ import * as zowe from "@zowe/cli";
 import * as globals from "../globals";
 import * as path from "path";
 import * as api from "@zowe/zowe-explorer-api";
-import * as os from "os";
 import { FilterItem, errorHandling } from "../utils/ProfilesUtils";
 import {
     getDocumentFilePath,
