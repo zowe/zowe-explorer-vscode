@@ -76,10 +76,7 @@ describe("Logger Utils Unit Tests - function initializeZoweLogger", () => {
             update: jest.fn(),
         });
         const infoSpy = jest.spyOn(logger.ZoweLogger, "info");
-        Object.defineProperty(process.env, "ZOWE_APP_LOG_LEVEL", {
-            value: undefined,
-            configurable: true,
-        });
+        globalMocks.mockCliEnVar.mockReturnValueOnce(undefined);
         globalMocks.mockGetConfiguration.mockReturnValueOnce({
             get: (setting: string) => "true",
             update: jest.fn(),
@@ -99,10 +96,7 @@ describe("Logger Utils Unit Tests - function initializeZoweLogger", () => {
             update: jest.fn(),
         });
         const infoSpy = jest.spyOn(logger.ZoweLogger, "info");
-        Object.defineProperty(process.env, "ZOWE_APP_LOG_LEVEL", {
-            value: "DEBUG",
-            configurable: true,
-        });
+        globalMocks.mockCliEnVar.mockReturnValueOnce("DEBUG");
         globalMocks.mockGetConfiguration.mockReturnValueOnce({
             get: (setting: string) => "INFO",
             update: jest.fn(),
