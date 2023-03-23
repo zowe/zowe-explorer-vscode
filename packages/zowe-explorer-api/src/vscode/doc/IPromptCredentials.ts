@@ -20,6 +20,7 @@ export interface IPromptCredentialsCommonOptions {
 
 export interface IPromptCredentialsOptions extends IPromptCredentialsCommonOptions {
     sessionName: string;
+    sessionType?: string;
     secure?: boolean;
 }
 

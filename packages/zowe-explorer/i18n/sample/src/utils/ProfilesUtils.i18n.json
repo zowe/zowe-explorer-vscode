@@ -10,5 +10,6 @@
   "createNewConnection.option.prompt.profileName.placeholder": "Connection Name",
   "createNewConnection.option.prompt.profileName": "Enter a name for the connection.",
   "createNewConnection.undefined.passWord": "Operation Cancelled",
-  "promptCredentials.updatedCredentials": "Credentials for {0} were successfully updated"
+  "promptCredentials.updatedCredentials": "Credentials for {0} were successfully updated",
+  "writeOverridesFile.jsonParseError": "Failed to parse JSON file {0}:"
 }
