@@ -53,15 +53,13 @@ export async function errorHandling(errorDetails: any, label?: string, moreInfo?
         const msg = errorDetails.toString();
         if (msg.includes("hostname")) {
             const mProfileInfo = await Profiles.getInstance().getProfileInfo();
-            if (mProfileInfo.usingTeamConfig) {
-                Gui.errorMessage(localize("errorHandling.invalid.host", "Required parameter 'host' must not be blank."));
-                const profAllAttrs = mProfileInfo.getAllProfiles();
-                for (const prof of profAllAttrs) {
-                    if (prof.profName === label.trim()) {
-                        const filePath = prof.profLoc.osLoc[0];
-                        await Profiles.getInstance().openConfigFile(filePath);
-                        return;
-                    }
+            Gui.errorMessage(localize("errorHandling.invalid.host", "Required parameter 'host' must not be blank."));
+            const profAllAttrs = mProfileInfo.getAllProfiles();
+            for (const prof of profAllAttrs) {
+                if (prof.profName === label.trim()) {
+                    const filePath = prof.profLoc.osLoc[0];
+                    await Profiles.getInstance().openConfigFile(filePath);
+                    return;
                 }
             }
         }
@@ -240,20 +238,18 @@ export async function readConfigFromDisk() {
         } else {
             await mProfileInfo.readProfilesFromDisk({ homeDir: getZoweDir(), projectDir: undefined });
         }
-        if (mProfileInfo.usingTeamConfig) {
-            globals.setConfigPath(rootPath);
-            globals.LOG.debug('Zowe Explorer is using the team configuration file "%s"', mProfileInfo.getTeamConfig().configName);
-            const layers = mProfileInfo.getTeamConfig().layers || [];
-            const layerSummary = layers.map(
-                (config: imperative.IConfigLayer) =>
-                    `Path: ${config.path}: ${
-                        config.exists
-                            ? "Found, with the following defaults:" + JSON.stringify(config.properties?.defaults || "Undefined default")
-                            : "Not available"
-                    } `
-            );
-            globals.LOG.debug("Summary of team configuration files considered for Zowe Explorer: %s", JSON.stringify(layerSummary));
-        }
+        globals.setConfigPath(rootPath);
+        globals.LOG.debug('Zowe Explorer is using the team configuration file "%s"', mProfileInfo.getTeamConfig().configName);
+        const layers = mProfileInfo.getTeamConfig().layers || [];
+        const layerSummary = layers.map(
+            (config: imperative.IConfigLayer) =>
+                `Path: ${config.path}: ${
+                    config.exists
+                        ? "Found, with the following defaults:" + JSON.stringify(config.properties?.defaults || "Undefined default")
+                        : "Not available"
+                } `
+        );
+        globals.LOG.debug("Summary of team configuration files considered for Zowe Explorer: %s", JSON.stringify(layerSummary));
     } catch (error) {
         throw new Error(error);
     }
@@ -261,7 +257,7 @@ export async function readConfigFromDisk() {
 
 export async function promptCredentials(node: IZoweTreeNode) {
     const mProfileInfo = await Profiles.getInstance().getProfileInfo();
-    if (mProfileInfo.usingTeamConfig && !mProfileInfo.getTeamConfig().properties.autoStore) {
+    if (!mProfileInfo.getTeamConfig().properties.autoStore) {
         Gui.showMessage(localize("zowe.promptCredentials.notSupported", '"Update Credentials" operation not supported when "autoStore" is false'));
         return;
     }
