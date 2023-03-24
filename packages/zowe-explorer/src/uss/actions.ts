@@ -14,7 +14,7 @@ import { imperative, IZosFilesResponse } from "@zowe/cli";
 import * as fs from "fs";
 import * as globals from "../globals";
 import * as path from "path";
-import { concatChildNodes, willForceUpload, uploadContent, getSelectedNodeList } from "../shared/utils";
+import { concatChildNodes, willForceUpload, uploadContent, getSelectedNodeList, getDefaultUri } from "../shared/utils";
 import { errorHandling } from "../utils/ProfilesUtils";
 import { Gui, ValidProfileEnum, IZoweTree, IZoweUSSTreeNode } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
@@ -137,7 +137,7 @@ export async function uploadDialog(node: IZoweUSSTreeNode, ussFileProvider: IZow
         canSelectFiles: true,
         openLabel: "Upload Files",
         canSelectMany: true,
-        defaultUri: globals.OPEN_DIALOG_DEFAULTURI,
+        defaultUri: getDefaultUri(),
     };
 
     const value = await Gui.showOpenDialog(fileOpenOptions);

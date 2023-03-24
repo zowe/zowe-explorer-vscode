@@ -25,6 +25,7 @@ import {
     getSelectedNodeList,
     JobSubmitDialogOpts,
     JOB_SUBMIT_DIALOG_OPTS,
+    getDefaultUri,
 } from "../shared/utils";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { Profiles } from "../Profiles";
@@ -143,7 +144,7 @@ export async function uploadDialog(node: ZoweDatasetNode, datasetProvider: api.I
         canSelectFiles: true,
         openLabel: "Upload File",
         canSelectMany: true,
-        defaultUri: globals.OPEN_DIALOG_DEFAULTURI,
+        defaultUri: getDefaultUri(),
     };
     const value = await api.Gui.showOpenDialog(fileOpenOptions);
     if (value?.length > 0) {
