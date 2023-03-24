@@ -238,7 +238,7 @@ describe("It should pass the correct message severity", () => {
 
 describe("ZoweLogger.dispose()", () => {
     it("Output channel disposed", async () => {
-        const spy = jest.spyOn(logger.ZoweLogger.zoweExplOutput, "dispose");
+        const spy = jest.spyOn(logger.ZoweLogger.zeOutputChannel, "dispose");
         expect(logger.ZoweLogger.disposeZoweLogger()).toBeUndefined();
         expect(spy).toBeCalled();
     });

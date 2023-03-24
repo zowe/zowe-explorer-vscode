@@ -255,7 +255,7 @@ describe("Profiles Unit Tests - Function createNewConnection for v1 Profiles", (
 
         await Profiles.getInstance().createNewConnection("");
         expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
-        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Profile name was not supplied. Operation Cancelled");
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
     });
 
     it("Tests that createNewConnection fails if profileType is missing", async () => {
@@ -264,7 +264,7 @@ describe("Profiles Unit Tests - Function createNewConnection for v1 Profiles", (
 
         await Profiles.getInstance().createNewConnection(globalMocks.testProfile.name, undefined);
         expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
-        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("No profile type was chosen. Operation Cancelled");
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
     });
 
     it("Tests that createNewConnection fails if zOSMF URL is missing", async () => {
@@ -276,7 +276,7 @@ describe("Profiles Unit Tests - Function createNewConnection for v1 Profiles", (
 
         await Profiles.getInstance().createNewConnection(globalMocks.testProfile.name, "zosmf");
         expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
-        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("No valid value for z/OS URL. Operation Cancelled");
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
     });
 
     it("Tests that createNewConnection fails if user escapes create at username", async () => {
@@ -542,7 +542,7 @@ describe("Profiles Unit Tests - Function createZoweSession", () => {
         jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(undefined);
         await Profiles.getInstance().createZoweSession(blockMocks.testDatasetTree);
         expect(spy).toBeCalled();
-        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("No selection made. Operation cancelled.");
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Profile selection has been cancelled.");
         spy.mockClear();
     });
 

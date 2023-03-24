@@ -576,12 +576,12 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
         try {
             await dsActions.submitMember(corruptedSubNode);
         } catch (e) {
-            expect(e.message).toEqual("submitMember() called from invalid node.");
+            expect(e.message).toEqual("Cannot submit, item invalid.");
         }
         expect(submitJobSpy).not.toBeCalled();
         expect(mocked(Gui.showMessage)).not.toBeCalled();
         expect(mocked(Gui.errorMessage)).toBeCalled();
-        expect(mocked(Gui.errorMessage).mock.calls[0][0]).toEqual("submitMember() called from invalid node.");
+        expect(mocked(Gui.errorMessage).mock.calls[0][0]).toEqual("Cannot submit, item invalid.");
     });
 
     it("has proper Submit Job output for all confirmation dialog options", async () => {

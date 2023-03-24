@@ -78,12 +78,11 @@ export class ZoweCommandProvider {
             }
 
             await errorHandling(
-                localize("validateProfiles.invalid1", "Profile Name ") +
-                    profile.name +
-                    localize(
-                        "validateProfiles.invalid2",
-                        " is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct."
-                    )
+                localize(
+                    "validateProfiles.invalid",
+                    "Profile Name {0} is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct.",
+                    profile.name
+                )
             );
         } else if (profileStatus.status === "active") {
             if (

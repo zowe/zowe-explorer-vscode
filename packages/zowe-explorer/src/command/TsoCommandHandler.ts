@@ -247,10 +247,11 @@ export class TsoCommandHandler extends ZoweCommandProvider {
             this.history.addSearchHistory(command);
         } catch (error) {
             if (error.toString().includes("account number")) {
-                ZoweLogger.error(error);
-                Gui.errorMessage(localize("issueTsoCommand.accountNumberNotSupplied", "Error: No account number was supplied."));
+                const message = localize("issueTsoCommand.error", "No account number was supplied.");
+                ZoweLogger.error(message);
+                Gui.errorMessage(message);
             } else {
-                await errorHandling(error.toString(), profile.name, error.message.toString());
+                await errorHandling(error, profile.name, error?.message);
             }
         }
     }
