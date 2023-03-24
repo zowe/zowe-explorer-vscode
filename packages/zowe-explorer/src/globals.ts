@@ -9,6 +9,7 @@
  *
  */
 
+import * as fs from "fs";
 import * as path from "path";
 import { imperative } from "@zowe/cli";
 import * as vscode from "vscode";
@@ -295,6 +296,12 @@ export function defineGlobals(tempPath: string | undefined) {
     ZOWE_TMP_FOLDER = path.join(ZOWETEMPFOLDER, "tmp");
     USS_DIR = path.join(ZOWETEMPFOLDER, "_U_");
     DS_DIR = path.join(ZOWETEMPFOLDER, "_D_");
+
+    try {
+        fs.accessSync(ZOWETEMPFOLDER, fs.constants.W_OK);
+    } catch (err) {
+        throw new Error(localize("initialize.tempFolder.readonly", "Missing write access to temp folder: {0}", ZOWETEMPFOLDER));
+    }
 }
 
 export function setConfigPath(configPath: string | undefined): void {
@@ -307,12 +314,12 @@ export function setConfigPath(configPath: string | undefined): void {
 
 /**
  * Initializes Imperative Logger
- * @param context The extension context
+ * @param logsPath File path for logs folder defined in preferences
  */
-export function initLogger(context: vscode.ExtensionContext) {
+export function initLogger(logsPath: string) {
     for (const appenderName of Object.keys(loggerConfig.log4jsConfig.appenders)) {
         loggerConfig.log4jsConfig.appenders[appenderName].filename = path.join(
-            SettingsConfig.getDirectValue(this.SETTINGS_LOGS_FOLDER_PATH) || context.extensionPath,
+            logsPath,
             loggerConfig.log4jsConfig.appenders[appenderName].filename
         );
     }
