@@ -6,6 +6,8 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### New features and enhancements
 
+- Added `Gui.reportProgress` that can be used to notify users of action progress in conjunction with the `Gui.withProgress` call. [#2167](https://github.com/zowe/vscode-extension-for-zowe/issues/2167)
+
 ### Bug fixes
 
 - Fixed credentials being updated for wrong v1 profile if multiple profiles had different types but same name.

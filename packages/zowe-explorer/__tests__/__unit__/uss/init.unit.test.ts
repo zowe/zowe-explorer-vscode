@@ -42,6 +42,9 @@ describe("Test src/dataset/extension", () => {
             ssoLogin: jest.fn(),
             ssoLogout: jest.fn(),
             onDidChangeConfiguration: jest.fn(),
+            getTreeView: jest.fn().mockReturnValue({
+                reveal: jest.fn(),
+            }),
         };
         const commands: IJestIt[] = [
             {
