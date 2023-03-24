@@ -9,7 +9,6 @@
  *
  */
 
-import * as fs from "fs";
 import { Gui } from "@zowe/zowe-explorer-api";
 import * as vscode from "vscode";
 import * as nls from "vscode-nls";
@@ -24,18 +23,13 @@ nls.config({
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 export async function initializeZoweLogger(context: vscode.ExtensionContext): Promise<void> {
-    const logsFolder: string = SettingsConfig.getDirectValue(this.SETTINGS_LOGS_FOLDER_PATH) || context.extensionPath;
     try {
-        try {
-            fs.accessSync(logsFolder, fs.constants.W_OK);
-        } catch (err) {
-            throw new Error(localize("initialize.logsFolder.readonly", "Missing write access to logs folder: {0}", logsFolder));
-        }
-        globals.initLogger(logsFolder);
+        const logsPath: string = SettingsConfig.getDirectValue(globals.SETTINGS_LOGS_FOLDER_PATH) || context.extensionPath;
+        globals.initLogger(logsPath);
         globals.LOG.debug(localize("initialize.log.debug", "Initialized logger from VSCode extension"));
     } catch (err) {
-        globals.LOG.error(err);
-        const errorMessage = localize("initialize.log.error", "Error encountered while activating and initializing logger! ");
+        // Don't log error if log failed to initialize
+        const errorMessage = localize("initialize.log.error", "Error encountered while activating and initializing logger");
         await Gui.errorMessage(`${errorMessage}: ${err.message}`);
     }
 }

@@ -1,5 +1,4 @@
 {
-  "initialize.logsFolder.readonly": "Missing write access to logs folder: {0}",
   "initialize.log.debug": "Initialized logger from VSCode extension",
-  "initialize.log.error": "Error encountered while activating and initializing logger! "
+  "initialize.log.error": "Error encountered while activating and initializing logger"
 }
