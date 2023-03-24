@@ -187,30 +187,37 @@ describe("ZoweJobNode unit tests - Function editSession", () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
         const checkSession = jest.spyOn(blockMocks.testJobsProvider, "editSession");
-
+        const spy = jest.spyOn(ZoweLogger, "trace");
         await blockMocks.testJobsProvider.editSession(blockMocks.jobNode, globalMocks.testUSSTree);
         expect(globalMocks.mockEditSession).toHaveBeenCalled();
+        expect(spy).toBeCalled();
+        spy.mockClear();
     });
 });
 
 describe("Tree Provider unit tests, function getTreeItem", () => {
     it("Tests that getTreeItem returns an object of type vscode.TreeItem", async () => {
         const globalMocks = await createGlobalMocks();
+        const spy = jest.spyOn(ZoweLogger, "trace");
         const sampleElement = new ZoweUSSNode("/u/myUser", vscode.TreeItemCollapsibleState.None, null, null, null);
         expect(globalMocks.testUSSTree.getTreeItem(sampleElement)).toBeInstanceOf(vscode.TreeItem);
+        expect(spy).toBeCalled();
+        spy.mockClear();
     });
 });
 
 describe("Tree Provider unit tests, function getParent", () => {
     it("Tests that getParent returns null when called on a root node", async () => {
         const globalMocks = await createGlobalMocks();
-
+        const spy = jest.spyOn(ZoweLogger, "trace");
         // Await return value from getChildren
         try {
             const rootChildren = await globalMocks.testUSSTree.getChildren();
             const parent = globalMocks.testUSSTree.getParent(rootChildren[1]);
 
             expect(parent).toEqual(null);
+            expect(spy).toBeCalled();
+            spy.mockClear();
         } catch (err) {}
     });
 
@@ -250,7 +257,7 @@ describe("Tree Provider unit tests, function getTreeItem", () => {
 describe("Tree Provider unit tests, function getTreeItem", () => {
     it("Testing that expand tree is executed successfully", async () => {
         const globalMocks = await createGlobalMocks();
-
+        const spy = jest.spyOn(ZoweLogger, "trace");
         const folder = new ZoweUSSNode(
             "/u/myuser",
             vscode.TreeItemCollapsibleState.Collapsed,
@@ -267,6 +274,8 @@ describe("Tree Provider unit tests, function getTreeItem", () => {
         // Testing flipState to closed
         await globalMocks.testUSSTree.flipState(folder, false);
         expect(JSON.stringify(folder.iconPath)).toContain("folder-closed.svg");
+        expect(spy).toBeCalled();
+        spy.mockClear();
     });
 });
 
@@ -331,7 +340,6 @@ describe("ZoweJobNode unit tests - Function checkCurrentProfile", () => {
             status: "inactive",
         });
         const checkSession = jest.spyOn(blockMocks.testJobsProvider, "checkCurrentProfile");
-
         await blockMocks.testJobsProvider.checkCurrentProfile(blockMocks.jobNode);
         expect(globalMocks.mockCheckCurrentProfile).toHaveBeenCalled();
     });
@@ -342,42 +350,60 @@ describe("Tree Provider Unit Tests - refreshHomeProfileContext", () => {
         const globalMocks = await createGlobalMocks();
         globalMocks.mockProfileInfo.usingTeamConfig = true;
         globalMocks.mockProfileInfo.getOsLocInfo = () => [{ global: true }];
+        const spy = jest.spyOn(ZoweLogger, "trace");
         await expect(globalMocks.testUSSTree.refreshHomeProfileContext(globalMocks.testUSSNode)).resolves.not.toThrow();
         expect(globalMocks.testUSSNode.contextValue).toEqual("directory_home");
+        expect(spy).toBeCalled();
+        spy.mockClear();
     });
 });
 
 describe("Tree Provider Unit Tests - function getTreeType", () => {
     it("should return the persistence schema of the tree", async () => {
         const globalMocks = await createGlobalMocks();
+        const spy = jest.spyOn(ZoweLogger, "trace");
         expect(globalMocks.testUSSTree.getTreeType()).toEqual(globalMocks.testUSSTree.persistenceSchema);
+        expect(spy).toBeCalled();
+        spy.mockClear();
     });
 });
 
 describe("Tree Provider Unit Tests - function findNonFavoritedNode", () => {
     it("should return undefined", async () => {
         const globalMocks = await createGlobalMocks();
+        const spy = jest.spyOn(ZoweLogger, "trace");
         expect(globalMocks.testTreeProvider.findNonFavoritedNode(globalMocks.testUSSNode)).toEqual(undefined);
+        expect(spy).toBeCalled();
+        spy.mockClear();
     });
 });
 
 describe("Tree Provider Unit Tests - function findFavoritedNode", () => {
     it("should return undefined", async () => {
         const globalMocks = await createGlobalMocks();
+        const spy = jest.spyOn(ZoweLogger, "trace");
         expect(globalMocks.testTreeProvider.findFavoritedNode(globalMocks.testUSSNode)).toEqual(undefined);
+        expect(spy).toBeCalled();
+        spy.mockClear();
     });
 });
 
 describe("Tree Provider Unit Tests - function renameFavorite", () => {
     it("should return undefined", async () => {
         const globalMocks = await createGlobalMocks();
+        const spy = jest.spyOn(ZoweLogger, "trace");
         expect(globalMocks.testTreeProvider.renameFavorite(globalMocks.testUSSNode, "test")).toEqual(undefined);
+        expect(spy).toBeCalled();
+        spy.mockClear();
     });
 });
 
 describe("Tree Provider Unit Tests - function renameNode", () => {
     it("should return undefined", async () => {
         const globalMocks = await createGlobalMocks();
+        const spy = jest.spyOn(ZoweLogger, "trace");
         expect(globalMocks.testTreeProvider.renameNode("test", "test1", "test2")).toEqual(undefined);
+        expect(spy).toBeCalled();
+        spy.mockClear();
     });
 });
