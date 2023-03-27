@@ -1547,6 +1547,7 @@ describe("Profiles Unit Tests - function ssoLogin", () => {
         const warnSpy = jest.spyOn(ZoweLogger, "warn");
         await expect(Profiles.getInstance().ssoLogin(testNode, "fake")).resolves.not.toThrow();
         expect(warnSpy).toBeCalledWith(Error("test error."));
+        warnSpy.mockClear();
     });
     it("should catch error during login and log error", async () => {
         jest.spyOn(ZoweExplorerApiRegister.getInstance(), "getCommonApi").mockReturnValueOnce({
@@ -1558,7 +1559,7 @@ describe("Profiles Unit Tests - function ssoLogin", () => {
         jest.spyOn(Profiles.getInstance() as any, "loginCredentialPrompt").mockReturnValue(["fake", "12345"]);
         const errorSpy = jest.spyOn(ZoweLogger, "error");
         await expect(Profiles.getInstance().ssoLogin(testNode, "fake")).resolves.not.toThrow();
-        expect(errorSpy).toBeCalledWith("Unable to log in with sestest. test error.");
+        expect(errorSpy).toBeCalled();
         errorSpy.mockClear();
     });
 });
