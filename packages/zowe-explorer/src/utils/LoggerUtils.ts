@@ -9,11 +9,10 @@
  *
  */
 
-import { Gui } from "@zowe/zowe-explorer-api";
+import { Gui, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import * as vscode from "vscode";
 import * as nls from "vscode-nls";
 import * as globals from "../globals";
-import { SettingsConfig } from "./SettingsConfig";
 
 // Set up localization
 nls.config({
@@ -24,11 +23,11 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 export async function initializeZoweLogger(context: vscode.ExtensionContext): Promise<void> {
     try {
-        const logsPath: string = SettingsConfig.getDirectValue(globals.SETTINGS_LOGS_FOLDER_PATH) || context.extensionPath;
+        const logsPath: string = ZoweVsCodeExtension.customLoggingPath ?? context.extensionPath;
         globals.initLogger(logsPath);
         globals.LOG.debug(localize("initialize.log.debug", "Initialized logger from VSCode extension"));
     } catch (err) {
-        // Don't log error if log failed to initialize
+        // Don't log error if logger failed to initialize
         const errorMessage = localize("initialize.log.error", "Error encountered while activating and initializing logger");
         await Gui.errorMessage(`${errorMessage}: ${err.message}`);
     }

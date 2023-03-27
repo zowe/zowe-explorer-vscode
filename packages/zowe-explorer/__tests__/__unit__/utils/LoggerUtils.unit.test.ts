@@ -21,9 +21,7 @@ describe("Logger Utils Unit Tests - function initializeZoweLogger", () => {
         });
 
         Object.defineProperty(globals, "LOG", {
-            value: {
-                error: jest.fn(),
-            },
+            value: jest.fn(), // Mock logger to fail if called
             configurable: true,
         });
 
@@ -33,8 +31,9 @@ describe("Logger Utils Unit Tests - function initializeZoweLogger", () => {
             LoggerUtils.initializeZoweLogger({
                 subscriptions: [],
                 extensionPath: "./test",
-            } as vscode.ExtensionContext)
+            } as unknown as vscode.ExtensionContext)
         ).resolves.toEqual(undefined);
         expect(errorMessageSpy).toBeCalledTimes(1);
+        expect(globals.LOG).not.toHaveBeenCalled();
     });
 });
