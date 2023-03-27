@@ -580,8 +580,6 @@ describe("Profiles Unit Tests - Function createZoweSession", () => {
         } as any);
         jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(new utils.FilterDescriptor("Test"));
         jest.spyOn(Profiles.getInstance(), "getProfileInfo").mockRejectedValueOnce(new Error("test error"));
-        // jest.spyOn(Gui, "showInputBox").mockResolvedValue("test");
-        // jest.spyOn(Profiles.getInstance(), "createNewConnection").mockRejectedValueOnce(new Error("test error"));
         const warnSpy = jest.spyOn(ZoweLogger, "warn");
         await expect(Profiles.getInstance().createZoweSession(globalMocks.testUSSTree)).resolves.not.toThrow();
         expect(warnSpy).toBeCalledTimes(1);
@@ -1521,7 +1519,6 @@ describe("Profiles Unit Tests - function ssoLogin", () => {
         });
         jest.spyOn(Gui, "showMessage").mockImplementation();
     });
-
     it("should perform an SSOLogin successfully while fetching the base profile", async () => {
         jest.spyOn(ZoweExplorerApiRegister.getInstance(), "getCommonApi").mockReturnValue({
             getTokenTypeName: () => zowe.imperative.SessConstants.TOKEN_TYPE_APIML,
@@ -1531,7 +1528,6 @@ describe("Profiles Unit Tests - function ssoLogin", () => {
         jest.spyOn(Profiles.getInstance() as any, "updateBaseProfileFileLogin").mockImplementation();
         await expect(Profiles.getInstance().ssoLogin(testNode, "fake")).resolves.not.toThrow();
     });
-
     it("should perform an SSOLogin successfully while fetching from session", async () => {
         jest.spyOn(ZoweExplorerApiRegister.getInstance(), "getCommonApi").mockReturnValue({
             getTokenTypeName: () => "tokenType",
@@ -1540,6 +1536,30 @@ describe("Profiles Unit Tests - function ssoLogin", () => {
         } as never);
         jest.spyOn(Profiles.getInstance() as any, "loginCredentialPrompt").mockReturnValue(["fake", "12345"]);
         await expect(Profiles.getInstance().ssoLogin(testNode, "fake")).resolves.not.toThrow();
+    });
+    it("should catch error getting token type and log warning", async () => {
+        jest.spyOn(ZoweExplorerApiRegister.getInstance(), "getCommonApi").mockReturnValueOnce({
+            getTokenTypeName: () => {
+                throw new Error("test error.");
+            },
+            login: () => "ajshdlfkjshdalfjhas",
+        } as never);
+        const warnSpy = jest.spyOn(ZoweLogger, "warn");
+        await expect(Profiles.getInstance().ssoLogin(testNode, "fake")).resolves.not.toThrow();
+        expect(warnSpy).toBeCalledWith(Error("test error."));
+    });
+    it("should catch error during login and log error", async () => {
+        jest.spyOn(ZoweExplorerApiRegister.getInstance(), "getCommonApi").mockReturnValueOnce({
+            getTokenTypeName: () => zowe.imperative.SessConstants.TOKEN_TYPE_APIML,
+            login: () => {
+                throw new Error("test error.");
+            },
+        } as never);
+        jest.spyOn(Profiles.getInstance() as any, "loginCredentialPrompt").mockReturnValue(["fake", "12345"]);
+        const errorSpy = jest.spyOn(ZoweLogger, "error");
+        await expect(Profiles.getInstance().ssoLogin(testNode, "fake")).resolves.not.toThrow();
+        expect(errorSpy).toBeCalledWith("Unable to log in with sestest. test error.");
+        errorSpy.mockClear();
     });
 });
 
