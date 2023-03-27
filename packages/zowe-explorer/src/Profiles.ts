@@ -350,8 +350,10 @@ export class Profiles extends ProfilesCache {
         quickpick.show();
         const choice = await Gui.resolveQuickPick(quickpick);
         quickpick.hide();
+        const debugMsg = localize("createZoweSession.cancelled", "Profile selection has been cancelled.");
         if (!choice) {
-            Gui.showMessage(localize("createZoweSession.cancelled", "Profile selection has been cancelled."));
+            ZoweLogger.debug(debugMsg);
+            Gui.showMessage(debugMsg);
             return;
         }
         if (choice === configPick) {
@@ -397,7 +399,8 @@ export class Profiles extends ProfilesCache {
                 };
                 profileName = await Gui.showInputBox(options);
                 if (!profileName) {
-                    Gui.showMessage(localize("createZoweSession.cancelled", "Profile selection has been cancelled."));
+                    ZoweLogger.debug(debugMsg);
+                    Gui.showMessage(debugMsg);
                     return;
                 }
                 chosenProfile = profileName.trim();
@@ -421,7 +424,7 @@ export class Profiles extends ProfilesCache {
             ZoweLogger.info(localize("createZoweSession.addProfile", "The profile {0} has been added to the {1} tree.", chosenProfile, treeType));
             await zoweFileProvider.addSession(chosenProfile);
         } else {
-            ZoweLogger.debug(localize("createZoweSession.cancelled", "Profile selection has been cancelled."));
+            ZoweLogger.debug(debugMsg);
         }
     }
 

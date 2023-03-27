@@ -539,15 +539,19 @@ describe("Profiles Unit Tests - Function createZoweSession", () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
         const spy = jest.spyOn(Gui, "createQuickPick");
+        const spyDebug = jest.spyOn(ZoweLogger, "debug");
         jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(undefined);
         await Profiles.getInstance().createZoweSession(blockMocks.testDatasetTree);
         expect(spy).toBeCalled();
         expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Profile selection has been cancelled.");
+        expect(spyDebug).toBeCalledWith("Profile selection has been cancelled.");
         spy.mockClear();
+        spyDebug.mockClear();
     });
 
     it("Tests that createZoweSession runs successfully", async () => {
         const globalMocks = await createGlobalMocks();
+        const spyInfo = jest.spyOn(ZoweLogger, "info");
         jest.spyOn(Gui, "createQuickPick").mockReturnValue({
             show: jest.fn(),
             hide: jest.fn(),
@@ -562,6 +566,27 @@ describe("Profiles Unit Tests - Function createZoweSession", () => {
         const refreshSpy = jest.spyOn(Profiles.getInstance(), "refresh").mockImplementation();
         await expect(Profiles.getInstance().createZoweSession(globalMocks.testUSSTree)).resolves.not.toThrow();
         expect(refreshSpy).toBeCalledTimes(1);
+        expect(spyInfo).toBeCalledWith("New profile created, test.");
+        refreshSpy.mockClear();
+        spyInfo.mockClear();
+    });
+
+    it("Tests that createZoweSession catches error and log warning", async () => {
+        const globalMocks = await createGlobalMocks();
+        jest.spyOn(Gui, "createQuickPick").mockReturnValue({
+            show: jest.fn(),
+            hide: jest.fn(),
+            value: "test",
+        } as any);
+        jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(new utils.FilterDescriptor("Test"));
+        jest.spyOn(Profiles.getInstance(), "getProfileInfo").mockRejectedValueOnce(new Error("test error"));
+        // jest.spyOn(Gui, "showInputBox").mockResolvedValue("test");
+        // jest.spyOn(Profiles.getInstance(), "createNewConnection").mockRejectedValueOnce(new Error("test error"));
+        const warnSpy = jest.spyOn(ZoweLogger, "warn");
+        await expect(Profiles.getInstance().createZoweSession(globalMocks.testUSSTree)).resolves.not.toThrow();
+        expect(warnSpy).toBeCalledTimes(1);
+        expect(warnSpy).toBeCalledWith(Error("test error"));
+        warnSpy.mockClear();
     });
 });
 
@@ -1435,6 +1460,7 @@ describe("Profiles Unit Tests - function getProfileSetting", () => {
 describe("Profiles Unit Tests - function disableValidationContext", () => {
     it("should disable validation context and return updated node", async () => {
         const globalMocks = await createGlobalMocks();
+        const spy = jest.spyOn(ZoweLogger, "trace");
         const testNode = new (ZoweTreeNode as any)(
             "test",
             vscode.TreeItemCollapsibleState.None,
@@ -1446,12 +1472,15 @@ describe("Profiles Unit Tests - function disableValidationContext", () => {
         const expectNode = testNode;
         expectNode.contextValue = globals.VALIDATE_SUFFIX + "false";
         await expect(Profiles.getInstance().disableValidationContext(testNode)).resolves.toEqual(expectNode);
+        expect(spy).toBeCalled();
+        spy.mockClear();
     });
 });
 
 describe("Profiles Unit Tests - function enableValidationContext", () => {
     it("should enable validation context and return updated node", async () => {
         const globalMocks = await createGlobalMocks();
+        const spy = jest.spyOn(ZoweLogger, "trace");
         const testNode = new (ZoweTreeNode as any)(
             "test",
             vscode.TreeItemCollapsibleState.None,
@@ -1463,6 +1492,8 @@ describe("Profiles Unit Tests - function enableValidationContext", () => {
         const expectedNode = testNode;
         expectedNode.contextValue = globals.VALIDATE_SUFFIX + "true";
         await expect(Profiles.getInstance().enableValidationContext(testNode)).resolves.toEqual(expectedNode);
+        expect(spy).toBeCalled();
+        spy.mockClear();
     });
 });
 
