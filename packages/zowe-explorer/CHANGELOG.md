@@ -6,6 +6,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
+- Added a new setting `zowe.files.logsFolder.path` that can be used to override Zowe Explorer logs folder if default location is read-only. [#2186](https://github.com/zowe/vscode-extension-for-zowe/issues/2186)
+
 ### Bug fixes
 
 - Fixed issue with silent failures when uploading members into a data set. [#2167](https://github.com/zowe/vscode-extension-for-zowe/issues/2167)

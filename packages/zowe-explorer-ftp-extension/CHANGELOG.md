@@ -4,6 +4,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
+- Added support for new setting `zowe.files.logsFolder.path` that can be used to override Zowe Explorer logs folder. [#2186](https://github.com/zowe/vscode-extension-for-zowe/issues/2186)
+
 ### Bug fixes
 
 ## `2.7.0`
