@@ -19,6 +19,7 @@ import { Job, Spool } from "./ZoweJobNode";
 import * as nls from "vscode-nls";
 import { toUniqueJobFileUri } from "../SpoolProvider";
 import * as globals from "../globals";
+import { getDefaultUri } from "../shared/utils";
 
 // Set up localization
 nls.config({
@@ -39,6 +40,7 @@ export async function downloadSpool(jobs: IZoweJobTreeNode[]) {
             canSelectFolders: true,
             canSelectFiles: false,
             canSelectMany: false,
+            defaultUri: getDefaultUri(),
         });
         if (dirUri !== undefined) {
             for (const job of jobs) {
