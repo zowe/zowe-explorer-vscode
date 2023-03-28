@@ -12,6 +12,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 ### Bug fixes
 
 - Fixed credentials being updated for wrong v1 profile if multiple profiles had different types but same name.
+- Updated dependencies for security audits.
 
 ## `2.7.0`
 
