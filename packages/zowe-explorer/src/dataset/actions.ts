@@ -882,9 +882,10 @@ export async function submitJcl(datasetProvider: api.IZoweTree<api.IZoweDatasetT
     if (Profiles.getInstance().validProfile !== api.ValidProfileEnum.INVALID) {
         try {
             const job = await ZoweExplorerApiRegister.getJesApi(sessProfile).submitJcl(doc.getText());
-            const successMsg = localize("submitJcl.jobSubmitted", "Job submitted {0} using profile {1}.", job.jobid, sessProfileName);
-            api.Gui.showMessage(successMsg);
-            ZoweLogger.info(successMsg);
+            const args = [sessProfileName, job.jobid];
+            const setJobCmd = `command:zowe.jobs.setJobSpool?${encodeURIComponent(JSON.stringify(args))}`;
+            api.Gui.showMessage(localize("submitJcl.jobSubmitted", "Job submitted ") + `[${job.jobid}](${setJobCmd})`);
+            ZoweLogger.info(localize("submitJcl.jobSubmitted", "Job submitted {0} using profile {1}.", job.jobid, sessProfileName));
         } catch (error) {
             if (error instanceof Error) {
                 await errorHandling(
@@ -987,9 +988,10 @@ export async function submitMember(node: api.IZoweTreeNode): Promise<void> {
         }
         try {
             const job = await ZoweExplorerApiRegister.getJesApi(sessProfile).submitJob(label);
-            const successMsg = localize("submitMember.success", "Job submitted {0} using profile {1}.", job.jobid, sesName);
-            api.Gui.showMessage(successMsg);
-            ZoweLogger.info(successMsg);
+            const args = [sesName, job.jobid];
+            const setJobCmd = `command:zowe.jobs.setJobSpool?${encodeURIComponent(JSON.stringify(args))}`;
+            api.Gui.showMessage(localize("submitMember.jobSubmitted", "Job submitted ") + `[${job.jobid}](${setJobCmd})`);
+            ZoweLogger.info(localize("submitMember.success", "Job submitted {0} using profile {1}.", job.jobid, sesName));
         } catch (error) {
             if (error instanceof Error) {
                 await errorHandling(
