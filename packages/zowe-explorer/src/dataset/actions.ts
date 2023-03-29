@@ -446,6 +446,7 @@ export async function openPS(
     if (Profiles.getInstance().validProfile !== api.ValidProfileEnum.INVALID) {
         try {
             let label: string;
+            const defaultMessage = localize("openPS.error", "Invalid data set or member.");
             switch (true) {
                 // For favorited or non-favorited sequential DS:
                 case contextually.isFavorite(node):
@@ -458,9 +459,8 @@ export async function openPS(
                     label = node.getParent().getLabel().toString() + "(" + node.getLabel().toString() + ")";
                     break;
                 default:
-                    const message = localize("openPS.error", "Invalid data set or member.");
-                    api.Gui.errorMessage(message);
-                    throw Error(message);
+                    api.Gui.errorMessage(defaultMessage);
+                    throw Error(defaultMessage);
             }
             // if local copy exists, open that instead of pulling from mainframe
             const documentFilePath = getDocumentFilePath(label, node);
@@ -966,6 +966,7 @@ export async function submitMember(node: api.IZoweTreeNode): Promise<void> {
     }
 
     if (Profiles.getInstance().validProfile !== api.ValidProfileEnum.INVALID) {
+        const defaultMessage = localize("submitMember.invalidNode.error", "Cannot submit, item invalid.");
         switch (true) {
             // For favorited or non-favorited sequential DS:
             case contextually.isFavorite(node):
@@ -982,9 +983,8 @@ export async function submitMember(node: api.IZoweTreeNode): Promise<void> {
                 sessProfile = node.getProfile();
                 break;
             default:
-                const message = localize("submitMember.invalidNode.error", "Cannot submit, item invalid.");
-                api.Gui.errorMessage(message);
-                throw Error(message);
+                api.Gui.errorMessage(defaultMessage);
+                throw Error(defaultMessage);
         }
         try {
             const job = await ZoweExplorerApiRegister.getJesApi(sessProfile).submitJob(label);
@@ -1614,6 +1614,7 @@ export async function downloadDs(node: ZoweDatasetNode): Promise<zowe.IZosFilesR
     ZoweLogger.trace("dataset.actions.downloadDs called.");
     const profile = node.getProfile();
     let lbl: string;
+    const invalidMsg = localize("downloadDs.invalidNode.error", "Cannot download, item invalid.");
     switch (true) {
         case contextually.isFavorite(node):
         case contextually.isSessionNotFav(node.getParent()):
@@ -1624,7 +1625,6 @@ export async function downloadDs(node: ZoweDatasetNode): Promise<zowe.IZosFilesR
             lbl = node.getParent().getLabel().toString() + "(" + node.getLabel().toString() + ")";
             break;
         default:
-            const invalidMsg = localize("downloadDs.invalidNode.error", "Cannot download, item invalid.");
             vscode.window.showErrorMessage(invalidMsg);
             throw Error(invalidMsg);
     }

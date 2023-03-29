@@ -47,7 +47,8 @@ export async function errorHandling(errorDetails: any, label?: string, moreInfo?
         "errorHandling.invalid.token",
         "Your connection is no longer active. Please log in to an authentication service to restore the connection."
     );
-    ZoweLogger.error(`${errorDetails}\n` + JSON.stringify({ errorDetails, label, moreInfo }));
+    // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+    ZoweLogger.error(`${errorDetails.toString()}\n` + JSON.stringify({ errorDetails, label, moreInfo }));
 
     if (errorDetails?.mDetails !== undefined) {
         httpErrCode = errorDetails.mDetails.errorCode;

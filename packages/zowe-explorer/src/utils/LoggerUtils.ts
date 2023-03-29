@@ -9,7 +9,7 @@
  *
  */
 
-/* eslint-disable no-magic-numbers */
+/* eslint-disable @typescript-eslint/restrict-plus-operands */
 
 import { Gui, MessageSeverity } from "@zowe/zowe-explorer-api";
 import * as vscode from "vscode";
@@ -72,13 +72,13 @@ export class ZoweLogger {
 
     private static async initVscLogger(context: vscode.ExtensionContext, logFileLocation: string): Promise<void> {
         this.zeOutputChannel = Gui.createOutputChannel(localize("zoweExplorer.outputchannel.title", "Zowe Explorer"));
-        await this.writeVscLoggerInfo(logFileLocation, context.extension.packageJSON);
+        await this.writeVscLoggerInfo(logFileLocation, context);
         await this.info(localize("initialize.log.info", "Initialized logger for Zowe Explorer"));
         await this.compareCliLogSetting();
     }
 
-    private static async writeVscLoggerInfo(logFileLocation: string, packageInfo: any): Promise<void> {
-        this.zeOutputChannel?.appendLine(`${packageInfo.displayName} ${packageInfo.version}`);
+    private static async writeVscLoggerInfo(logFileLocation: string, context: vscode.ExtensionContext): Promise<void> {
+        this.zeOutputChannel?.appendLine(`${context.extension.packageJSON.displayName as string} ${context.extension.packageJSON.version as string}`);
         this.zeOutputChannel?.appendLine(localize("initialize.log.location", "This log file can be found at {0}", logFileLocation));
         this.zeOutputChannel?.appendLine(localize("initialize.log.level", "Zowe Explorer log level: {0}", await this.getLogSetting()));
     }
@@ -95,8 +95,8 @@ export class ZoweLogger {
         return `[${getDate()} ${getTime()}] [${level}] ${msg}`;
     }
 
-    private static async compareCliLogSetting() {
-        const cliLogSetting = await this.getZoweLogEnVar();
+    private static async compareCliLogSetting(): Promise<void> {
+        const cliLogSetting = this.getZoweLogEnVar();
         const zeLogSetting = this.zeLogLevel ?? (await this.getLogSetting());
         if (cliLogSetting && +MessageSeverity[zeLogSetting] !== +MessageSeverity[cliLogSetting]) {
             const notified = await this.getCliLoggerSetting();
@@ -134,7 +134,7 @@ export class ZoweLogger {
         await SettingsConfig.setDirectValue("zowe.logger", setting, vscode.ConfigurationTarget.Global);
     }
 
-    private static async getZoweLogEnVar(): Promise<string> {
+    private static getZoweLogEnVar(): string {
         return process.env.ZOWE_APP_LOG_LEVEL;
     }
 
