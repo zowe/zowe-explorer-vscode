@@ -378,9 +378,7 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
         expect(submitJclSpy).toBeCalled();
         expect(mocked(Gui.showMessage)).toBeCalled();
         expect(mocked(Gui.showMessage).mock.calls.length).toBe(1);
-        expect(mocked(Gui.showMessage).mock.calls[0][0]).toEqual(
-            "Job submitted [JOB1234](command:zowe.jobs.setJobSpool?%5B%22sestest%22%2C%22JOB1234%22%5D)"
-        );
+        expect(mocked(Gui.showMessage).mock.calls[0][0]).toEqual("Job submitted JOB1234 using profile sestest.");
     });
 
     it("Checking submit of active text editor content as JCL with Unverified Profile", async () => {
@@ -406,9 +404,7 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
         expect(submitJclSpy).toBeCalled();
         expect(mocked(Gui.showMessage)).toBeCalled();
         expect(mocked(Gui.showMessage).mock.calls.length).toBe(1);
-        expect(mocked(Gui.showMessage).mock.calls[0][0]).toEqual(
-            "Job submitted [JOB1234](command:zowe.jobs.setJobSpool?%5B%22sestest%22%2C%22JOB1234%22%5D)"
-        );
+        expect(mocked(Gui.showMessage).mock.calls[0][0]).toEqual("Job submitted JOB1234 using profile sestest.");
     });
 
     it("Checking failed attempt to submit of active text editor content as JCL", async () => {
@@ -470,9 +466,7 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
         expect(submitJobSpy).toBeCalled();
         expect(submitJobSpy.mock.calls[0][0]).toEqual("dataset(member)");
         expect(mocked(Gui.showMessage)).toBeCalled();
-        expect(mocked(Gui.showMessage).mock.calls[0][0]).toEqual(
-            "Job submitted [JOB1234](command:zowe.jobs.setJobSpool?%5B%22sestest%22%2C%22JOB1234%22%5D)"
-        );
+        expect(mocked(Gui.showMessage).mock.calls[0][0]).toEqual("Job submitted JOB1234 using profile sestest.");
     });
     it("Checking Submit Job for PDS Member content with Unverified Profile", async () => {
         createGlobalMocks();
@@ -500,9 +494,7 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
         expect(submitJobSpy).toBeCalled();
         expect(submitJobSpy.mock.calls[0][0]).toEqual("dataset(member)");
         expect(mocked(Gui.showMessage)).toBeCalled();
-        expect(mocked(Gui.showMessage).mock.calls[0][0]).toEqual(
-            "Job submitted [JOB1234](command:zowe.jobs.setJobSpool?%5B%22sestest%22%2C%22JOB1234%22%5D)"
-        );
+        expect(mocked(Gui.showMessage).mock.calls[0][0]).toEqual("Job submitted JOB1234 using profile sestest.");
     });
     it("Checking Submit Job for PS Dataset content", async () => {
         createGlobalMocks();
@@ -518,9 +510,7 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
         expect(submitJobSpy).toBeCalled();
         expect(submitJobSpy.mock.calls[0][0]).toEqual("dataset");
         expect(mocked(Gui.showMessage)).toBeCalled();
-        expect(mocked(Gui.showMessage).mock.calls[0][0]).toEqual(
-            "Job submitted [JOB1234](command:zowe.jobs.setJobSpool?%5B%22sestest%22%2C%22JOB1234%22%5D)"
-        );
+        expect(mocked(Gui.showMessage).mock.calls[0][0]).toEqual("Job submitted JOB1234 using profile sestest.");
     });
     it("Checking Submit Job for Favourite PDS Member content", async () => {
         createGlobalMocks();
@@ -540,9 +530,7 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
         expect(submitJobSpy).toBeCalled();
         expect(submitJobSpy.mock.calls[0][0]).toEqual("TEST.JCL(pds)");
         expect(mocked(Gui.showMessage)).toBeCalled();
-        expect(mocked(Gui.showMessage).mock.calls[0][0]).toEqual(
-            "Job submitted [JOB1234](command:zowe.jobs.setJobSpool?%5B%22test%22%2C%22JOB1234%22%5D)"
-        );
+        expect(mocked(Gui.showMessage).mock.calls[0][0]).toEqual("Job submitted JOB1234 using profile test.");
     });
     it("Checking Submit Job for Favourite PS Dataset content", async () => {
         createGlobalMocks();
@@ -560,9 +548,7 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
         expect(submitJobSpy).toBeCalled();
         expect(submitJobSpy.mock.calls[0][0]).toEqual("TEST.JCL");
         expect(mocked(Gui.showMessage)).toBeCalled();
-        expect(mocked(Gui.showMessage).mock.calls[0][0]).toEqual(
-            "Job submitted [JOB1234](command:zowe.jobs.setJobSpool?%5B%22test%22%2C%22JOB1234%22%5D)"
-        );
+        expect(mocked(Gui.showMessage).mock.calls[0][0]).toEqual("Job submitted JOB1234 using profile test.");
     });
     it("Checking Submit Job for unsupported Dataset content", async () => {
         createGlobalMocks();
