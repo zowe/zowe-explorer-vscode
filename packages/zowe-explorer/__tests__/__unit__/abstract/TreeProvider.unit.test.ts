@@ -211,14 +211,12 @@ describe("Tree Provider unit tests, function getParent", () => {
         const globalMocks = await createGlobalMocks();
         const spy = jest.spyOn(ZoweLogger, "trace");
         // Await return value from getChildren
-        try {
-            const rootChildren = await globalMocks.testUSSTree.getChildren();
-            const parent = globalMocks.testUSSTree.getParent(rootChildren[1]);
+        const rootChildren = await globalMocks.testUSSTree.getChildren();
+        const parent = globalMocks.testUSSTree.getParent(rootChildren[1]);
 
-            expect(parent).toEqual(null);
-            expect(spy).toBeCalled();
-            spy.mockClear();
-        } catch (err) {}
+        expect(parent).toEqual(null);
+        expect(spy).toBeCalled();
+        spy.mockClear();
     });
 
     it("Tests that getParent returns the correct ZoweUSSNode when called on a non-root node", async () => {

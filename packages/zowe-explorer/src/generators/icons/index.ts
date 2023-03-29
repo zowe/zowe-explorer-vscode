@@ -69,13 +69,14 @@ const items = [
     require("./items/home"),
     require("./items/filterFolder"),
     require("./items/filterFolderOpen"),
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
 ].map((item) => item.default) as IIconItem[];
 
 export function getIconById(id: IconId): IIconItem {
     return items.find((item) => item.id === id);
 }
 
-export function getIconByNode(node: CombinedNode) {
+export function getIconByNode(node: CombinedNode): IIconItem {
     const targetItems = items.filter((item) => item.check(node));
 
     if (targetItems.some((item) => item.type === IconHierarchyType.derived)) {

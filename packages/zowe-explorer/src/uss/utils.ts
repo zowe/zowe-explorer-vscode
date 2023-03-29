@@ -21,7 +21,7 @@ import { ZoweLogger } from "../utils/LoggerUtils";
  * @param tooltip
  * @returns {string}
  */
-export function injectAdditionalDataToTooltip(node: ZoweUSSNode, tooltip: string) {
+export function injectAdditionalDataToTooltip(node: ZoweUSSNode, tooltip: string): string {
     ZoweLogger.trace("uss.utils.injectAdditionalDataToTooltip called.");
     if (node.downloaded && node.downloadedTime) {
         // TODO: Add time formatter to localization so we will use not just US variant
@@ -38,7 +38,7 @@ export function injectAdditionalDataToTooltip(node: ZoweUSSNode, tooltip: string
  * @param filepath
  * @returns {boolean}
  */
-export function fileExistsCaseSensitveSync(filepath) {
+export function fileExistsCaseSensitveSync(filepath: string): boolean {
     ZoweLogger.trace("uss.utils.fileExistsCaseSensitveSync called.");
     const dir = path.dirname(filepath);
     if (dir === path.dirname(dir)) {
@@ -55,7 +55,7 @@ export function fileExistsCaseSensitveSync(filepath) {
  * Removes clipboard contents
  * @returns {void}
  */
-export function disposeClipboardContents() {
+export function disposeClipboardContents(): void {
     ZoweLogger.trace("uss.utils.disposeClipboardContents called.");
     vscode.env.clipboard.writeText("");
 }

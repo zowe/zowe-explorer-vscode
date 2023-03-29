@@ -36,7 +36,9 @@ export class ZoweLogger {
         } catch (err) {
             globals.LOG?.error(err);
             const errorMessage = localize("initialize.log.error", "Error encountered while activating and initializing logger! ");
-            await Gui.errorMessage(`${errorMessage}: ${err?.message}`);
+            if (err instanceof Error) {
+                await Gui.errorMessage(`${errorMessage}: ${err?.message}`);
+            }
         }
     }
 
@@ -75,7 +77,7 @@ export class ZoweLogger {
         await this.compareCliLogSetting();
     }
 
-    private static async writeVscLoggerInfo(logFileLocation: string, packageInfo: any) {
+    private static async writeVscLoggerInfo(logFileLocation: string, packageInfo: any): Promise<void> {
         this.zeOutputChannel?.appendLine(`${packageInfo.displayName} ${packageInfo.version}`);
         this.zeOutputChannel?.appendLine(localize("initialize.log.location", "This log file can be found at {0}", logFileLocation));
         this.zeOutputChannel?.appendLine(localize("initialize.log.level", "Zowe Explorer log level: {0}", await this.getLogSetting()));

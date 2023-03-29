@@ -9,6 +9,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Added a new Zowe Explorer setting, `zowe.logger`, with a default setting of `INFO`.
 - Added an output channel, `Zowe Explorer`, for logging within VS Code's Output view. The log level is set by the new Zowe Explorer setting, `zowe.logger`.
 - Opening a dialog for Upload or Download of files will now open at the project level directory or the user's home directory if no project is opened. [#2203](https://github.com/zowe/vscode-extension-for-zowe/issues/2203)
+- Updated linter rules and addressed linter errors throughout the codebase. [#2184](https://github.com/zowe/vscode-extension-for-zowe/issues/2184)
 
 ### Bug fixes
 
@@ -29,6 +30,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed issue where job search queries were not working properly when favorited. [#2122](https://github.com/zowe/vscode-extension-for-zowe/issues/2122)
 - Fixed issues where document changes may fail to upload if the environment has a slow filesystem or mainframe connection, or when VS Code exits during an upload operation. [#1948](https://github.com/zowe/vscode-extension-for-zowe/issues/1948)
 - Fixed custom credential manager in `~/.zowe/settings/imperative.json` file being overwritten with invalid JSON. [#2187](https://github.com/zowe/vscode-extension-for-zowe/issues/2187)
+- Fixed several linter errors throughout the codebase and consolidated linter rules. [#2184](https://github.com/zowe/vscode-extension-for-zowe/issues/2184)
 
 ## `2.6.2`
 

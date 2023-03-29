@@ -35,7 +35,7 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
  * @param {label} - additional information such as profile name, credentials, messageID etc
  * @param {moreInfo} - additional/customized error messages
  *************************************************************************************************************/
-export async function errorHandling(errorDetails: any, label?: string, moreInfo?: string) {
+export async function errorHandling(errorDetails: any, label?: string, moreInfo?: string): Promise<void> {
     ZoweLogger.trace("ProfileUtils.errorHandling called.");
     let httpErrCode = null;
     const errMsg = localize(
@@ -114,6 +114,7 @@ export async function errorHandling(errorDetails: any, label?: string, moreInfo?
             if (moreInfo === undefined) {
                 moreInfo = errorDetails.toString().includes("Error") ? "" : "Error:";
             }
+            // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
             Gui.errorMessage(moreInfo + " " + errorDetails);
             break;
     }
@@ -141,7 +142,7 @@ type SessionForProfile = (_profile: imperative.IProfileLoaded) => imperative.Ses
 export const syncSessionNode =
     (_profiles: Profiles) =>
     (getSessionForProfile: SessionForProfile) =>
-    async (sessionNode: IZoweTreeNode): Promise<void> => {
+    (sessionNode: IZoweTreeNode): void => {
         ZoweLogger.trace("ProfilesUtils.syncSessionNode called.");
         sessionNode.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
 
@@ -181,32 +182,32 @@ export interface IFilterItem {
 }
 
 export class FilterItem implements vscode.QuickPickItem {
-    constructor(public filterItem: IFilterItem) {}
-    get label(): string {
+    public constructor(public filterItem: IFilterItem) {}
+    public get label(): string {
         const icon = this.filterItem.icon ? this.filterItem.icon + " " : null;
         return (icon ?? "") + this.filterItem.text;
     }
-    get description(): string {
+    public get description(): string {
         if (this.filterItem.description) {
             return this.filterItem.description;
         } else {
             return "";
         }
     }
-    get alwaysShow(): boolean {
+    public get alwaysShow(): boolean {
         return this.filterItem.show;
     }
 }
 
 export class FilterDescriptor implements vscode.QuickPickItem {
-    constructor(private text: string) {}
-    get label(): string {
+    public constructor(private text: string) {}
+    public get label(): string {
         return this.text;
     }
-    get description(): string {
+    public get description(): string {
         return "";
     }
-    get alwaysShow(): boolean {
+    public get alwaysShow(): boolean {
         return true;
     }
 }
@@ -214,7 +215,7 @@ export class FilterDescriptor implements vscode.QuickPickItem {
 /**
  * Function to update the node profile information
  */
-export async function setProfile(node: IZoweTreeNode, profile: imperative.IProfile) {
+export function setProfile(node: IZoweTreeNode, profile: imperative.IProfile): void {
     ZoweLogger.trace("ProfilesUtils.setProfile called.");
     node.getProfile().profile = profile;
 }
@@ -222,7 +223,7 @@ export async function setProfile(node: IZoweTreeNode, profile: imperative.IProfi
 /**
  * Function to update the node session information
  */
-export async function setSession(node: IZoweTreeNode, combinedSessionProfile: imperative.IProfile) {
+export function setSession(node: IZoweTreeNode, combinedSessionProfile: imperative.IProfile): void {
     ZoweLogger.trace("ProfilesUtils.setSession called.");
     const sessionNode = node.getSession();
     for (const prop of Object.keys(combinedSessionProfile)) {
@@ -234,7 +235,7 @@ export async function setSession(node: IZoweTreeNode, combinedSessionProfile: im
     }
 }
 
-export async function getProfileInfo(envTheia: boolean): Promise<imperative.ProfileInfo> {
+export function getProfileInfo(envTheia: boolean): imperative.ProfileInfo {
     ZoweLogger.trace("ProfilesUtils.getProfileInfo called.");
     const mProfileInfo = new imperative.ProfileInfo("zowe", {
         requireKeytar: () => getSecurityModules("keytar", envTheia),
@@ -242,15 +243,15 @@ export async function getProfileInfo(envTheia: boolean): Promise<imperative.Prof
     return mProfileInfo;
 }
 
-export function getProfile(node: vscode.TreeItem) {
+export function getProfile(node: vscode.TreeItem | ZoweTreeNode): imperative.IProfileLoaded {
     ZoweLogger.trace("ProfilesUtils.getProfile called.");
     if (node instanceof ZoweTreeNode) {
-        return (node as ZoweTreeNode).getProfile();
+        return node.getProfile();
     }
     throw new Error(localize("getProfile.notTreeItem", "Tree Item is not a Zowe Explorer item."));
 }
 
-export async function readConfigFromDisk() {
+export async function readConfigFromDisk(): Promise<void> {
     ZoweLogger.trace("ProfilesUtils.readConfigFromDisk called.");
     let rootPath: string;
     const mProfileInfo = await getProfileInfo(globals.ISTHEIA);
@@ -276,7 +277,7 @@ export async function readConfigFromDisk() {
     }
 }
 
-export async function promptCredentials(node: IZoweTreeNode) {
+export async function promptCredentials(node: IZoweTreeNode): Promise<void> {
     ZoweLogger.trace("ProfilesUtils.promptCredentials called.");
     const mProfileInfo = await Profiles.getInstance().getProfileInfo();
     if (mProfileInfo.usingTeamConfig && !mProfileInfo.getTeamConfig().properties.autoStore) {
@@ -346,7 +347,7 @@ export async function initializeZoweFolder(): Promise<void> {
     ZoweLogger.info(localize("initializeZoweFolder.location", "Zowe home directory is located at {0}", zoweDir));
 }
 
-export function writeOverridesFile() {
+export function writeOverridesFile(): void {
     ZoweLogger.trace("ProfilesUtils.writeOverridesFile called.");
     let fd: number;
     let fileContent: string;
@@ -366,7 +367,11 @@ export function writeOverridesFile() {
             try {
                 settings = JSON.parse(fileContent);
             } catch (err) {
-                throw new Error(localize("writeOverridesFile.jsonParseError", "Failed to parse JSON file {0}:", settingsFile) + " " + err.message);
+                if (err instanceof Error) {
+                    throw new Error(
+                        localize("writeOverridesFile.jsonParseError", "Failed to parse JSON file {0}:", settingsFile) + " " + err.message
+                    );
+                }
             }
             if (settings && settings?.overrides && settings?.overrides?.CredentialManager !== globals.PROFILE_SECURITY) {
                 settings.overrides.CredentialManager = globals.PROFILE_SECURITY;

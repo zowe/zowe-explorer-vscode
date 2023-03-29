@@ -7,6 +7,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 ### New features and enhancements
 
 - Added `Gui.reportProgress` that can be used to notify users of action progress in conjunction with the `Gui.withProgress` call. [#2167](https://github.com/zowe/vscode-extension-for-zowe/issues/2167)
+- Updated linter rules and addressed linter errors throughout the codebase. [#2184](https://github.com/zowe/vscode-extension-for-zowe/issues/2184)
 
 ### Bug fixes
 

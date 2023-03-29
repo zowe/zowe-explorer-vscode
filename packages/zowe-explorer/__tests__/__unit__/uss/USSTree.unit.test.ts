@@ -1107,7 +1107,9 @@ describe("USSTree Unit Tests - Function USSTree.rename()", () => {
 
         try {
             await globalMocks.testTree.rename(globalMocks.testUSSNode);
-        } catch (err) {}
+        } catch (err) {
+            // Prevent exception from failing test
+        }
         expect(globalMocks.showErrorMessage.mock.calls.length).toBe(1);
     });
 });

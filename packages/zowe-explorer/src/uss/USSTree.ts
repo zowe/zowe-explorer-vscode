@@ -40,7 +40,7 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
  *
  * @export
  */
-export async function createUSSTree(log: imperative.Logger) {
+export async function createUSSTree(log: imperative.Logger): Promise<USSTree> {
     ZoweLogger.trace("uss.USSTree.createUSSTree called.");
     const tree = new USSTree();
     await tree.initializeFavorites(log);
@@ -64,7 +64,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
     public lastOpened: NodeInteraction = {};
     private treeView: vscode.TreeView<IZoweUSSTreeNode>;
 
-    constructor() {
+    public constructor() {
         super(
             USSTree.persistenceSchema,
             new ZoweUSSNode(localize("Favorites", "Favorites"), vscode.TreeItemCollapsibleState.Collapsed, null, null, null)
@@ -87,7 +87,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
      * @param originalNode
      * @param {string} filePath
      */
-    public async rename(originalNode: IZoweUSSTreeNode) {
+    public async rename(originalNode: IZoweUSSTreeNode): Promise<void> {
         ZoweLogger.trace("USSTree.rename called.");
         const currentFilePath = originalNode.getUSSDocumentFilePath(); // The user's complete local file path for the node
         const openedTextDocuments: readonly vscode.TextDocument[] = vscode.workspace.textDocuments; // Array of all documents open in VS Code
@@ -154,13 +154,15 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 await originalNode.reopen(hasClosedTab);
                 this.updateFavorites();
             } catch (err) {
-                await errorHandling(err, originalNode.mProfileName, localize("renameUSS.error", "Unable to rename node: ") + err.message);
+                if (err instanceof Error) {
+                    await errorHandling(err, originalNode.mProfileName, `${localize("renameUSS.error", "Unable to rename node: ")}${err.message}`);
+                }
                 throw err;
             }
         }
     }
 
-    public checkDuplicateLabel(newFullPath: string, nodesToCheck: IZoweUSSTreeNode[]) {
+    public checkDuplicateLabel(newFullPath: string, nodesToCheck: IZoweUSSTreeNode[]): string {
         ZoweLogger.trace("USSTree.checkDuplicateLabel called.");
         for (const node of nodesToCheck) {
             const nodeType = contextually.isFolder(node) ? "folder" : "file";
@@ -171,25 +173,25 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         return null;
     }
 
-    public open(_node: IZoweUSSTreeNode, _preview: boolean) {
+    public open(_node: IZoweUSSTreeNode, _preview: boolean): void {
         throw new Error("Method not implemented.");
     }
-    public copy(_node: IZoweUSSTreeNode) {
+    public copy(_node: IZoweUSSTreeNode): void {
         throw new Error("Method not implemented.");
     }
-    public paste(_node: IZoweUSSTreeNode) {
+    public paste(_node: IZoweUSSTreeNode): void {
         throw new Error("Method not implemented.");
     }
-    public delete(_node: IZoweUSSTreeNode) {
+    public delete(_node: IZoweUSSTreeNode): void {
         throw new Error("Method not implemented.");
     }
-    public saveFile(_document: vscode.TextDocument) {
+    public saveFile(_document: vscode.TextDocument): void {
         throw new Error("Method not implemented.");
     }
-    public refreshPS(_node: IZoweUSSTreeNode) {
+    public refreshPS(_node: IZoweUSSTreeNode): void {
         throw new Error("Method not implemented.");
     }
-    public uploadDialog(_node: IZoweUSSTreeNode) {
+    public uploadDialog(_node: IZoweUSSTreeNode): void {
         throw new Error("Method not implemented.");
     }
 
@@ -200,7 +202,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
      *
      * @param node
      */
-    public findFavoritedNode(node: IZoweUSSTreeNode) {
+    public findFavoritedNode(node: IZoweUSSTreeNode): IZoweUSSTreeNode {
         ZoweLogger.trace("USSTree.findFavoriteNode called.");
         let matchingNodeInFavs: IZoweUSSTreeNode;
         // Get node's profile node in favorites
@@ -243,7 +245,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
      * @param oldNamePath
      * @param newNamePath
      */
-    public async renameUSSNode(node: IZoweUSSTreeNode, newNamePath: string) {
+    public renameUSSNode(node: IZoweUSSTreeNode, newNamePath: string): void {
         ZoweLogger.trace("USSTree.renameUSSNode called.");
         const matchingNode: IZoweUSSTreeNode = this.findNonFavoritedNode(node);
         if (matchingNode) {
@@ -256,7 +258,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
      *
      * @param node
      */
-    public async renameFavorite(node: IZoweUSSTreeNode, newNamePath: string) {
+    public async renameFavorite(node: IZoweUSSTreeNode, newNamePath: string): Promise<void> {
         ZoweLogger.trace("USSTree.renameFavorite called.");
         const matchingNode: IZoweUSSTreeNode = this.findFavoritedNode(node);
         if (matchingNode) {
@@ -302,7 +304,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
      * @param {string} [sessionName] - optional; loads persisted profiles or default if not passed
      * @param {string} [profileType] - optional; loads profiles of a certain type if passed
      */
-    public async addSession(sessionName?: string, profileType?: string) {
+    public async addSession(sessionName?: string, profileType?: string): Promise<void> {
         ZoweLogger.trace("USSTree.addSession called.");
         const setting: boolean = SettingsConfig.getDirectValue(globals.SETTINGS_AUTOMATIC_PROFILE_VALIDATION);
         // Loads profile associated with passed sessionName, persisted profiles or default if none passed
@@ -357,7 +359,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
      *
      * @param {IZoweUSSTreeNode} [node]
      */
-    public deleteSession(node: IZoweUSSTreeNode) {
+    public deleteSession(node: IZoweUSSTreeNode): void {
         ZoweLogger.trace("USSTree.deleteSession called.");
         this.mSessionNodes = this.mSessionNodes.filter((tempNode) => tempNode.label.toString() !== node.label.toString());
         this.mHistory.removeSession(node.label as string);
@@ -369,7 +371,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
      *
      * @param {IZoweUSSTreeNode} node
      */
-    public async addFavorite(node: IZoweUSSTreeNode) {
+    public async addFavorite(node: IZoweUSSTreeNode): Promise<void> {
         ZoweLogger.trace("USSTree.addFavorite called.");
         let temp: ZoweUSSNode;
         const label = node.fullPath;
@@ -420,7 +422,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
      *
      * @param {IZoweUSSTreeNode} node
      */
-    public async saveSearch(node: IZoweUSSTreeNode) {
+    public async saveSearch(node: IZoweUSSTreeNode): Promise<IZoweUSSTreeNode> {
         ZoweLogger.trace("USSTree.saveSearch called.");
         const fullPathLabel = node.fullPath;
         node.label = node.tooltip = fullPathLabel;
@@ -434,7 +436,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
      *
      * @param {IZoweUSSTreeNode} node
      */
-    public async removeFavorite(node: IZoweUSSTreeNode) {
+    public async removeFavorite(node: IZoweUSSTreeNode): Promise<void> {
         ZoweLogger.trace("USSTree.removeFavorite called.");
         // Get node's profile node in favorites
         const profileName = node.getProfileName();
@@ -453,7 +455,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         return;
     }
 
-    public async updateFavorites() {
+    public updateFavorites(): void {
         ZoweLogger.trace("USSTree.upldateFavorites called.");
         const favoritesArray = [];
         this.mFavorites.forEach((profileNode) => {
@@ -470,7 +472,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
      * @param profileName Name of profile
      * @param userSelected True if the function is being called directly because the user selected to remove the profile from Favorites
      */
-    public async removeFavProfile(profileName: string, userSelected: boolean) {
+    public async removeFavProfile(profileName: string, userSelected: boolean): Promise<void> {
         ZoweLogger.trace("USSTree.removeFavProfile called.");
         // If user selected the "Remove profile from Favorites option", confirm they are okay with deleting all favorited items for that profile.
         let cancelled = false;
@@ -513,7 +515,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
      * Fetches an array of all nodes loaded in the tree
      *
      */
-    public async getAllLoadedItems() {
+    public async getAllLoadedItems(): Promise<IZoweUSSTreeNode[]> {
         ZoweLogger.trace("USSTree.getAllLoadedItems called.");
         if (this.log) {
             ZoweLogger.debug(localize("enterPattern.log.debug.prompt", "Prompting the user to choose a member from the filtered list"));
@@ -526,7 +528,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             if (!session.contextValue.includes(globals.FAVORITE_CONTEXT)) {
                 const nodes = await session.getChildren();
 
-                const checkForChildren = async (nodeToCheck: IZoweUSSTreeNode) => {
+                const checkForChildren = async (nodeToCheck: IZoweUSSTreeNode): Promise<void> => {
                     const children = nodeToCheck.children;
                     if (children.length !== 0) {
                         for (const child of children) {
@@ -552,7 +554,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
      * @param {IZoweUSSTreeNode} node - The session node
      * @returns {Promise<void>}
      */
-    public async filterPrompt(node: IZoweUSSTreeNode) {
+    public async filterPrompt(node: IZoweUSSTreeNode): Promise<void> {
         ZoweLogger.trace("USSTree.filterPrompt called.");
         if (this.log) {
             ZoweLogger.debug(localize("filterPrompt.log.debug.promptUSSPath", "Prompting the user for a USS path"));
@@ -623,7 +625,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 }
             }
             // Get session for sessionNode
-            await syncSessionNode(Profiles.getInstance())((profileValue) => ZoweExplorerApiRegister.getUssApi(profileValue).getSession())(node);
+            syncSessionNode(Profiles.getInstance())((profileValue) => ZoweExplorerApiRegister.getUssApi(profileValue).getSession())(node);
             // Sanitization: Replace multiple forward slashes with just one forward slash
             const sanitizedPath = remotepath.replace(/\/+/g, "/").replace(/(\/*)$/, "");
             sessionNode.tooltip = sessionNode.fullPath = sanitizedPath;
@@ -683,7 +685,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
      * Profile loading only occurs in loadProfilesForFavorites when the profile node in Favorites is clicked on.
      * @param log
      */
-    public async initializeFavorites(log: imperative.Logger) {
+    public async initializeFavorites(log: imperative.Logger): Promise<void> {
         ZoweLogger.trace("USSTree.initializeFavorites called.");
         this.log = log;
         ZoweLogger.debug(localize("initializeFavorites.log.debug", "Initializing profiles with USS favorites."));
@@ -692,7 +694,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             ZoweLogger.debug(localize("initializeFavorites.no.favorites", "No USS favorites found."));
             return;
         }
-        lines.forEach(async (line) => {
+        for (const line of lines) {
             const profileName = line.substring(1, line.lastIndexOf("]"));
             const favLabel = line.substring(line.indexOf(":") + 1, line.indexOf("{")).trim();
             // The profile node used for grouping respective favorited items. (Undefined if not created yet.)
@@ -704,7 +706,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             // Initialize and attach favorited item nodes under their respective profile node in Favorrites
             const favChildNodeForProfile = await this.initializeFavChildNodeForProfile(favLabel, line, profileNodeInFavorites);
             profileNodeInFavorites.children.push(favChildNodeForProfile);
-        });
+        }
     }
 
     /**
@@ -715,10 +717,10 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
      * @param parentNode The profile node in this.mFavorites that the favorite belongs to
      * @returns IZoweUssTreeNode
      */
-    public async initializeFavChildNodeForProfile(label: string, line: string, parentNode: IZoweUSSTreeNode) {
+    public initializeFavChildNodeForProfile(label: string, line: string, parentNode: IZoweUSSTreeNode): ZoweUSSNode {
         ZoweLogger.trace("USSTree.initializeFavChildNodeForProfile called.");
-        const favoriteSearchPattern = /^\[.+\]\:\s.*\{ussSession\}$/;
-        const directorySearchPattern = /^\[.+\]\:\s.*\{directory\}$/;
+        const favoriteSearchPattern = /^\[.+\]:\s.*\{ussSession\}$/;
+        const directorySearchPattern = /^\[.+\]:\s.*\{directory\}$/;
         let node: ZoweUSSNode;
         if (directorySearchPattern.test(line)) {
             node = new ZoweUSSNode(label, vscode.TreeItemCollapsibleState.Collapsed, parentNode, null, "", false, null);
@@ -750,7 +752,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
      * @param log
      * @param parentNode
      */
-    public async loadProfilesForFavorites(log: imperative.Logger, parentNode: IZoweUSSTreeNode) {
+    public async loadProfilesForFavorites(log: imperative.Logger, parentNode: IZoweUSSTreeNode): Promise<IZoweUSSTreeNode[] | ZoweUSSNode[]> {
         ZoweLogger.trace("USSTree.loadProfilesForFavorites called.");
         const profileName = parentNode.label as string;
         const updatedFavsForProfile: IZoweUSSTreeNode[] = [];
@@ -829,7 +831,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         return updatedFavsForProfile;
     }
 
-    public async addFileHistory(criteria: string) {
+    public addFileHistory(criteria: string): void {
         ZoweLogger.trace("USSTree.addFileHistory called.");
         this.mHistory.addFileHistory(criteria);
         this.refresh();
@@ -840,7 +842,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         return this.mHistory.getFileHistory();
     }
 
-    public removeFileHistory(name: string) {
+    public removeFileHistory(name: string): void {
         ZoweLogger.trace("USSTree.removeFileHistory called.");
         this.mHistory.removeFileHistory(name);
     }
@@ -849,7 +851,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
      * Opens a USS item & reveals it in the tree
      *
      */
-    public async openItemFromPath(itemPath: string, sessionNode: IZoweUSSTreeNode) {
+    public async openItemFromPath(itemPath: string, sessionNode: IZoweUSSTreeNode): Promise<void> {
         ZoweLogger.trace("USSTree.openItemFromPath called.");
         // USS file was selected
         const nodePath = itemPath
@@ -902,7 +904,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
      * Adds a single session to the USS tree
      *
      */
-    private async addSingleSession(profile: imperative.IProfileLoaded) {
+    private async addSingleSession(profile: imperative.IProfileLoaded): Promise<void> {
         ZoweLogger.trace("USSTree.addSingleSession called.");
         if (profile) {
             // If session is already added, do nothing

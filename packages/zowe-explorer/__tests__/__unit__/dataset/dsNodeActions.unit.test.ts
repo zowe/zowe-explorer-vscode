@@ -62,10 +62,7 @@ const profileOne: imperative.IProfileLoaded = {
 getConfiguration.mockReturnValue({
     persistence: true,
     get: (setting: string) => ["[test]: /u{session}"],
-    update: jest.fn(() => {
-        {
-        }
-    }),
+    update: jest.fn(),
 });
 
 function getDSNode() {

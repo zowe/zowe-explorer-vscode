@@ -236,11 +236,17 @@ describe("Unit Tests (Jest)", () => {
                 undefined,
                 profileOne
             );
+            jest.spyOn(subNode as any, "getDatasets").mockReturnValueOnce([
+                {
+                    success: true,
+                    apiResponse: {
+                        items: [],
+                    },
+                },
+            ]);
             subNode.dirty = true;
             const response = await subNode.getChildren();
-            for (const item of response) {
-                expect(item.label).toEqual("No datasets found");
-            }
+            expect(response[0].label).toBe("No datasets found");
         }
     );
 

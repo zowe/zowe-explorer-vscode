@@ -72,19 +72,19 @@ export class SettingsConfig {
         }
     }
 
-    private static get configurations() {
+    private static get configurations(): vscode.WorkspaceConfiguration {
         ZoweLogger.trace("SettingsConfig.configurations called.");
         return vscode.workspace.getConfiguration();
     }
 
-    private static get zoweOldConfigurations() {
+    private static get zoweOldConfigurations(): string[] {
         ZoweLogger.trace("SettingsConfig.zoweOldConfiguration called.");
         return Object.keys(SettingsConfig.configurations).filter((key) => key.match(new RegExp("Zowe-*|Zowe\\s*", "g")));
     }
 
-    private static get currentVersionNumber() {
+    private static get currentVersionNumber(): unknown {
         ZoweLogger.trace("SettingsConfig.currentVersionNumber called.");
-        return vscode.extensions.getExtension("zowe.vscode-extension-for-zowe").packageJSON.version;
+        return vscode.extensions.getExtension("zowe.vscode-extension-for-zowe").packageJSON.version as unknown;
     }
 
     private static async promptReload(): Promise<void> {
@@ -109,7 +109,7 @@ export class SettingsConfig {
 
         // Standardize global settings when old Zowe settings were found
         if (SettingsConfig.zoweOldConfigurations.length > 0) {
-            SettingsConfig.zoweOldConfigurations.forEach(async (configuration) => {
+            for (const configuration of SettingsConfig.zoweOldConfigurations) {
                 let globalValue: any = SettingsConfig.configurations.inspect(configuration).globalValue;
 
                 // Adjust fetching of value due to schema change
@@ -123,7 +123,7 @@ export class SettingsConfig {
                     await SettingsConfig.setDirectValue(newSetting, globalValue);
                     globalIsMigrated = true;
                 }
-            });
+            }
         }
 
         if (globalIsMigrated) {

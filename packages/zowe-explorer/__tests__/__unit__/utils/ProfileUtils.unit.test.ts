@@ -351,7 +351,7 @@ describe("ProfileUtils unit tests", () => {
 
         it("should have not exist and create default file", async () => {
             const blockMocks = createBlockMocks();
-            blockMocks.mockOpenSync.mockImplementation((path: string, mode: string) => {
+            blockMocks.mockOpenSync.mockImplementation((filepath: string, mode: string) => {
                 if (mode.startsWith("r")) {
                     throw new Error("ENOENT");
                 }

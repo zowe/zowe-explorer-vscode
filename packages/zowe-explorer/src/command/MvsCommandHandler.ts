@@ -52,9 +52,8 @@ export class MvsCommandHandler extends ZoweCommandProvider {
     private static instance: MvsCommandHandler;
     public outputChannel: vscode.OutputChannel;
 
-    constructor() {
+    public constructor() {
         super();
-
         this.outputChannel = Gui.createOutputChannel(localize("issueMvsCommand.outputchannel.title", "Zowe MVS Command"));
     }
 
@@ -64,7 +63,7 @@ export class MvsCommandHandler extends ZoweCommandProvider {
      * @param session the session the command is to run against (optional) user is prompted if not supplied
      * @param command the command string (optional) user is prompted if not supplied
      */
-    public async issueMvsCommand(session?: imperative.Session, command?: string, node?: IZoweTreeNode) {
+    public async issueMvsCommand(session?: imperative.Session, command?: string, node?: IZoweTreeNode): Promise<void> {
         ZoweLogger.trace("MvsCommandHandler.issueMvsCommand called.");
         let profile: imperative.IProfileLoaded;
         if (node) {
@@ -134,7 +133,7 @@ export class MvsCommandHandler extends ZoweCommandProvider {
         }
     }
 
-    private async getQuickPick(hostname: string) {
+    private async getQuickPick(hostname: string): Promise<string> {
         ZoweLogger.trace("MvsCommandHandler.getQuickPick called.");
         let response = "";
         const alwaysEdit: boolean = SettingsConfig.getDirectValue(globals.SETTINGS_COMMANDS_ALWAYS_EDIT);
@@ -204,7 +203,7 @@ export class MvsCommandHandler extends ZoweCommandProvider {
      * @param session The Session object
      * @param command the command string
      */
-    private async issueCommand(profile: imperative.IProfileLoaded, command: string) {
+    private async issueCommand(profile: imperative.IProfileLoaded, command: string): Promise<void> {
         ZoweLogger.trace("MvsCommandHandler.issueCommand called.");
         try {
             if (command) {

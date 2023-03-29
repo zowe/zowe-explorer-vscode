@@ -37,7 +37,7 @@ export class ZoweCommandProvider {
     public mOnDidChangeTreeData: vscode.EventEmitter<IZoweTreeNode | void> = new vscode.EventEmitter<IZoweTreeNode | undefined>();
     public readonly onDidChangeTreeData: vscode.Event<IZoweTreeNode | void> = this.mOnDidChangeTreeData.event;
 
-    constructor() {
+    public constructor() {
         this.history = new PersistentFilters(ZoweCommandProvider.persistenceSchema, ZoweCommandProvider.totalFilters);
     }
 
@@ -45,7 +45,7 @@ export class ZoweCommandProvider {
      * Called whenever the tree needs to be refreshed, and fires the data change event
      *
      */
-    public async refreshElement(element: IZoweTreeNode): Promise<void> {
+    public refreshElement(element: IZoweTreeNode): void {
         ZoweLogger.trace("ZoweCommandProvider.refreshElement called.");
         element.dirty = true;
         this.mOnDidChangeTreeData.fire(element);
@@ -55,12 +55,12 @@ export class ZoweCommandProvider {
      * Called whenever the tree needs to be refreshed, and fires the data change event
      *
      */
-    public async refresh(): Promise<void> {
+    public refresh(): void {
         ZoweLogger.trace("ZoweCommandProvider.refresh called.");
         this.mOnDidChangeTreeData.fire();
     }
 
-    public async checkCurrentProfile(node: IZoweTreeNode) {
+    public async checkCurrentProfile(node: IZoweTreeNode): Promise<void> {
         ZoweLogger.trace("ZoweCommandProvider.checkCurrentProfile called.");
         const profile = node.getProfile();
         const profileStatus = await Profiles.getInstance().checkCurrentProfile(profile);
@@ -105,6 +105,6 @@ export class ZoweCommandProvider {
                 node.contextValue = node.contextValue + globals.UNVERIFIED_CONTEXT;
             }
         }
-        await this.refresh();
+        this.refresh();
     }
 }

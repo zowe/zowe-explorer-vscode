@@ -39,7 +39,7 @@ export class ZoweSaveQueue {
      * processing the next item in the queue if there are no active upload
      * operations.
      */
-    public static push(request: SaveRequest) {
+    public static push(request: SaveRequest): void {
         ZoweLogger.trace("ZoweSaveQueue.push called.");
         this.savingQueue.push(request);
         this.ongoingSave = this.all().then(this.processNext.bind(this));
@@ -48,7 +48,7 @@ export class ZoweSaveQueue {
     /**
      * Wait for all items in the queue to be processed.
      */
-    public static async all() {
+    public static async all(): Promise<void> {
         ZoweLogger.trace("ZoweSaveQueue.all called.");
         await this.ongoingSave;
     }
@@ -59,7 +59,7 @@ export class ZoweSaveQueue {
     /**
      * Iterate over the queue and process next item until it is empty.
      */
-    private static async processNext() {
+    private static async processNext(): Promise<void> {
         ZoweLogger.trace("ZoweSaveQueue.processNext called.");
         const nextRequest = this.savingQueue.shift();
         if (nextRequest == null || this.savingQueue.some(({ savedFile }) => savedFile.fileName === nextRequest.savedFile.fileName)) {
@@ -85,7 +85,7 @@ export class ZoweSaveQueue {
     /**
      * Generate hyperlink for document to show in VS Code message.
      */
-    private static buildFileHyperlink(document: vscode.TextDocument) {
+    private static buildFileHyperlink(document: vscode.TextDocument): string {
         ZoweLogger.trace("ZoweSaveQueue.buildFileHyperlink called.");
         const encodedUrl = JSON.stringify([document.uri.toString()]);
         return `[${path.basename(document.fileName)}](command:vscode.open?${encodedUrl})`;

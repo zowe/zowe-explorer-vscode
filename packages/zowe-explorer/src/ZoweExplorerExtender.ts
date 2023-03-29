@@ -52,7 +52,7 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
      *
      * @param errorDetails Details of the error (to be parsed for config name and path)
      */
-    public static async showZoweConfigError(errorDetails: string) {
+    public static showZoweConfigError(errorDetails: string): void {
         if (errorDetails.includes("imperative.json")) {
             // Handle errors parsing Imperative overrides file separately from errors in config
             errorHandling(errorDetails);
@@ -68,8 +68,8 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
 
             // Parse the v2 config path, or a v1 config path depending on the error message
             const configMatch = errorDetails.includes("Error parsing JSON in the file")
-                ? errorDetails.match(/Error parsing JSON in the file \'(.+?)\'/)
-                : errorDetails.match(/Error reading profile file \(\"(.+?)\"\)/);
+                ? errorDetails.match(/Error parsing JSON in the file '(.+?)'/)
+                : errorDetails.match(/Error reading profile file \("(.+?)"\)/);
 
             let configPath = configMatch != null ? configMatch[1] : null;
             // If configPath is null, build a v2 config location based on the error details
@@ -155,7 +155,7 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
      * @param {string} profileType
      * @param {imperative.ICommandProfileTypeConfiguration[]} profileTypeConfigurations
      */
-    public async initForZowe(profileType: string, profileTypeConfigurations?: zowe.imperative.ICommandProfileTypeConfiguration[]) {
+    public async initForZowe(profileType: string, profileTypeConfigurations?: zowe.imperative.ICommandProfileTypeConfiguration[]): Promise<void> {
         // Ensure that when a user has not installed the profile type's CLI plugin
         // and/or created a profile that the profile directory in ~/.zowe/profiles
         // will be created with the appropriate meta data. If not called the user will
@@ -170,7 +170,7 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
          */
         let usingTeamConfig: boolean;
         try {
-            const mProfileInfo = await getProfileInfo(globals.ISTHEIA);
+            const mProfileInfo = getProfileInfo(globals.ISTHEIA);
             if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders[0]) {
                 const rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
                 await mProfileInfo.readProfilesFromDisk({ homeDir: zoweDir, projectDir: getFullPath(rootPath) });
@@ -239,7 +239,6 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
     public async reloadProfiles(profileType?: string): Promise<void> {
         // sequentially reload the internal profiles cache to satisfy all the newly added profile types
         await ZoweExplorerExtender.refreshProfilesQueue.add(async (): Promise<void> => {
-            // eslint-disable-next-line no-return-await
             await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
         });
         // profileType is used to load a default extender profile if no other profiles are populating the trees

@@ -85,16 +85,14 @@ export class Profiles extends ProfilesCache {
         return this.mProfileInfo;
     }
 
-    public async checkCurrentProfile(theProfile: zowe.imperative.IProfileLoaded) {
+    public async checkCurrentProfile(theProfile: zowe.imperative.IProfileLoaded): Promise<IProfileValidation> {
         ZoweLogger.trace("Profiles.checkCurrentProfile called.");
         let profileStatus: IProfileValidation;
         if (!theProfile.profile.tokenType && (!theProfile.profile.user || !theProfile.profile.password)) {
             // The profile will need to be reactivated, so remove it from profilesForValidation
-            this.profilesForValidation.filter((profile, index) => {
-                if (profile.name === theProfile.name && profile.status !== "unverified") {
-                    this.profilesForValidation.splice(index, 1);
-                }
-            });
+            this.profilesForValidation = this.profilesForValidation.filter(
+                (profile) => profile.status === "unverified" && profile.name !== theProfile.name
+            );
             let values: string[];
             try {
                 values = await Profiles.getInstance().promptCredentials(theProfile);
@@ -134,14 +132,14 @@ export class Profiles extends ProfilesCache {
         ZoweLogger.trace("Profiles.getProfileSetting called.");
         let profileStatus: IProfileValidation;
         let found: boolean = false;
-        this.profilesValidationSetting.filter(async (instance) => {
+        this.profilesValidationSetting.forEach((instance) => {
             if (instance.name === theProfile.name && instance.setting === false) {
                 profileStatus = {
                     status: "unverified",
                     name: instance.name,
                 };
                 if (this.profilesForValidation.length > 0) {
-                    this.profilesForValidation.filter((profile) => {
+                    this.profilesForValidation.forEach((profile) => {
                         if (profile.name === theProfile.name && profile.status === "unverified") {
                             found = true;
                         }
@@ -163,13 +161,13 @@ export class Profiles extends ProfilesCache {
         return profileStatus;
     }
 
-    public async disableValidation(node: IZoweNodeType): Promise<IZoweNodeType> {
+    public disableValidation(node: IZoweNodeType): IZoweNodeType {
         ZoweLogger.trace("Profiles.disableValidation called.");
         this.disableValidationContext(node);
         return node;
     }
 
-    public async disableValidationContext(node: IZoweNodeType) {
+    public disableValidationContext(node: IZoweNodeType): IZoweNodeType {
         ZoweLogger.trace("Profiles.disableValidationContext called.");
         const theProfile: zowe.imperative.IProfileLoaded = node.getProfile();
         this.validationArraySetup(theProfile, false);
@@ -187,13 +185,13 @@ export class Profiles extends ProfilesCache {
         return node;
     }
 
-    public async enableValidation(node: IZoweNodeType): Promise<IZoweNodeType> {
+    public enableValidation(node: IZoweNodeType): IZoweNodeType {
         ZoweLogger.trace("Profiles.enableValidation called.");
         this.enableValidationContext(node);
         return node;
     }
 
-    public async enableValidationContext(node: IZoweNodeType) {
+    public enableValidationContext(node: IZoweNodeType): IZoweNodeType {
         ZoweLogger.trace("Profiles.enableValidationContext called.");
         const theProfile: zowe.imperative.IProfileLoaded = node.getProfile();
         this.validationArraySetup(theProfile, true);
@@ -209,12 +207,12 @@ export class Profiles extends ProfilesCache {
         return node;
     }
 
-    public async validationArraySetup(theProfile: zowe.imperative.IProfileLoaded, validationSetting: boolean): Promise<IValidationSetting> {
+    public validationArraySetup(theProfile: zowe.imperative.IProfileLoaded, validationSetting: boolean): IValidationSetting {
         ZoweLogger.trace("Profiles.validationArraySetup called.");
         let found: boolean = false;
         let profileSetting: IValidationSetting;
         if (this.profilesValidationSetting.length > 0) {
-            this.profilesValidationSetting.filter((instance) => {
+            this.profilesValidationSetting.forEach((instance) => {
                 if (instance.name === theProfile.name && instance.setting === validationSetting) {
                     found = true;
                     profileSetting = {
@@ -258,40 +256,38 @@ export class Profiles extends ProfilesCache {
      * @export
      * @param {USSTree} zoweFileProvider - either the USS, MVS, JES tree
      */
-    public async createZoweSession(zoweFileProvider: IZoweTree<IZoweTreeNode>) {
+    public async createZoweSession(zoweFileProvider: IZoweTree<IZoweTreeNode>): Promise<void> {
         ZoweLogger.trace("Profiles.createZoweSession called.");
         let profileNamesList: string[] = [];
         const treeType = zoweFileProvider.getTreeType();
         try {
             const allProfiles = Profiles.getInstance().allProfiles;
             if (allProfiles) {
-                // Get all profiles
-                profileNamesList = allProfiles.map((profile) => {
-                    return profile.name;
-                });
-                // Filter to list of the APIs available for current tree explorer
-                profileNamesList = profileNamesList.filter((profileName) => {
-                    const profile = Profiles.getInstance().loadNamedProfile(profileName);
-                    if (profile) {
-                        if (treeType === PersistenceSchemaEnum.USS) {
-                            const ussProfileTypes = ZoweExplorerApiRegister.getInstance().registeredUssApiTypes();
-                            return ussProfileTypes.includes(profile.type);
+                // Get all profiles and filter to list of the APIs available for current tree explorer
+                profileNamesList = allProfiles
+                    .map((profile) => profile.name)
+                    .filter((profileName) => {
+                        const profile = Profiles.getInstance().loadNamedProfile(profileName);
+                        const notInSessionNodes = !zoweFileProvider.mSessionNodes?.find(
+                            (sessionNode) => sessionNode.getProfileName() === profileName
+                        );
+                        if (profile) {
+                            if (zoweFileProvider.getTreeType() === PersistenceSchemaEnum.USS) {
+                                const ussProfileTypes = ZoweExplorerApiRegister.getInstance().registeredUssApiTypes();
+                                return ussProfileTypes.includes(profile.type) && notInSessionNodes;
+                            }
+                            if (zoweFileProvider.getTreeType() === PersistenceSchemaEnum.Dataset) {
+                                const mvsProfileTypes = ZoweExplorerApiRegister.getInstance().registeredMvsApiTypes();
+                                return mvsProfileTypes.includes(profile.type) && notInSessionNodes;
+                            }
+                            if (zoweFileProvider.getTreeType() === PersistenceSchemaEnum.Job) {
+                                const jesProfileTypes = ZoweExplorerApiRegister.getInstance().registeredJesApiTypes();
+                                return jesProfileTypes.includes(profile.type) && notInSessionNodes;
+                            }
                         }
-                        if (treeType === PersistenceSchemaEnum.Dataset) {
-                            const mvsProfileTypes = ZoweExplorerApiRegister.getInstance().registeredMvsApiTypes();
-                            return mvsProfileTypes.includes(profile.type);
-                        }
-                        if (treeType === PersistenceSchemaEnum.Job) {
-                            const jesProfileTypes = ZoweExplorerApiRegister.getInstance().registeredJesApiTypes();
-                            return jesProfileTypes.includes(profile.type);
-                        }
-                    }
-                });
-                profileNamesList = profileNamesList.filter(
-                    (profileName) =>
-                        // Find all cases where a profile is not already displayed
-                        !zoweFileProvider.mSessionNodes?.find((sessionNode) => sessionNode.getProfileName() === profileName)
-                );
+
+                        return false;
+                    });
             }
         } catch (err) {
             ZoweLogger.warn(err);
@@ -437,7 +433,7 @@ export class Profiles extends ProfilesCache {
             return;
         }
         const editSession = this.loadNamedProfile(profileLoaded.name, profileLoaded.type).profile;
-        const editURL = editSession.host + ":" + editSession.port;
+        const editURL = `${editSession.host as string}:${editSession.port as string}`;
         const editUser = editSession.user;
         const editPass = editSession.password;
         const editrej = editSession.rejectUnauthorized;
@@ -450,7 +446,9 @@ export class Profiles extends ProfilesCache {
         const schema: {} = this.getSchema(profileLoaded.type);
         const schemaArray = Object.keys(schema);
 
-        const updSchemaValues: any = {};
+        const updSchemaValues: {
+            [k: string]: any;
+        } = {};
         updSchemaValues.name = profileName;
 
         // Go through array of schema for input values
@@ -508,13 +506,11 @@ export class Profiles extends ProfilesCache {
                     break;
                 case "tokenValue":
                     break;
-                default:
-                    let options: vscode.InputBoxOptions;
-                    const response = await this.checkType(schema[value].type);
+                default: {
+                    const response = this.checkType(schema[value].type);
                     switch (response) {
-                        case "number":
-                            options = await this.optionsValue(value, schema, editSession[value]);
-                            const updValue = await Gui.showInputBox(options);
+                        case "number": {
+                            const updValue = await Gui.showInputBox(this.optionsValue(value, schema, editSession[value]));
                             if (!Number.isNaN(Number(updValue))) {
                                 updSchemaValues[value] = Number(updValue);
                             } else {
@@ -522,7 +518,7 @@ export class Profiles extends ProfilesCache {
                                     case updValue === undefined:
                                         Gui.showMessage(this.profilesOpCancelled);
                                         return undefined;
-                                    case schema[value].optionDefinition.hasOwnProperty("defaultValue"):
+                                    case "defaultValue" in schema[value].optionDefinition:
                                         updSchemaValues[value] = schema[value].optionDefinition.defaultValue;
                                         break;
                                     default:
@@ -531,18 +527,18 @@ export class Profiles extends ProfilesCache {
                                 }
                             }
                             break;
-                        case "boolean":
-                            let updIsTrue: boolean;
-                            updIsTrue = await this.boolInfo(value, schema);
+                        }
+                        case "boolean": {
+                            const updIsTrue = await this.boolInfo(value, schema);
                             if (updIsTrue === undefined) {
                                 Gui.showMessage(this.profilesOpCancelled);
                                 return undefined;
                             }
                             updSchemaValues[value] = updIsTrue;
                             break;
-                        default:
-                            options = await this.optionsValue(value, schema, editSession[value]);
-                            const updDefValue = await Gui.showInputBox(options);
+                        }
+                        default: {
+                            const updDefValue = await Gui.showInputBox(this.optionsValue(value, schema, editSession[value]));
                             if (updDefValue === undefined) {
                                 Gui.showMessage(this.profilesOpCancelled);
                                 return undefined;
@@ -552,12 +548,14 @@ export class Profiles extends ProfilesCache {
                             }
                             updSchemaValues[value] = updDefValue;
                             break;
+                        }
                     }
+                }
             }
         }
 
         try {
-            const updSession = await zowe.ZosmfSession.createSessCfgFromArgs(updSchemaValues);
+            const updSession = await zowe.ZosmfSession.createSessCfgFromArgs(updSchemaValues as zowe.imperative.ICommandArguments);
             updSchemaValues.base64EncodedAuth = updSession.base64EncodedAuth;
             await this.updateProfile({
                 profile: updSchemaValues,
@@ -669,7 +667,7 @@ export class Profiles extends ProfilesCache {
         }
     }
 
-    public async editZoweConfigFile() {
+    public async editZoweConfigFile(): Promise<void> {
         ZoweLogger.trace("Profiles.editZoweConfigFile called.");
         const existingLayers = await this.getConfigLayers();
         if (existingLayers.length === 1) {
@@ -788,12 +786,12 @@ export class Profiles extends ProfilesCache {
                     break;
                 case "tokenValue":
                     break;
-                default:
+                default: {
                     let options: vscode.InputBoxOptions;
-                    const response = await this.checkType(schema[value].type);
+                    const response = this.checkType(schema[value].type);
                     switch (response) {
-                        case "number":
-                            options = await this.optionsValue(value, schema);
+                        case "number": {
+                            options = this.optionsValue(value, schema);
                             const enteredValue = Number(await Gui.showInputBox(options));
                             if (!Number.isNaN(Number(enteredValue))) {
                                 if ((value === "encoding" || value === "responseTimeout") && enteredValue === 0) {
@@ -802,24 +800,25 @@ export class Profiles extends ProfilesCache {
                                     schemaValues[value] = Number(enteredValue);
                                 }
                             } else {
-                                if (schema[value].optionDefinition.hasOwnProperty("defaultValue")) {
+                                if ("defaultValue" in schema[value].optionDefinition) {
                                     schemaValues[value] = schema[value].optionDefinition.defaultValue;
                                 } else {
                                     delete schemaValues[value];
                                 }
                             }
                             break;
-                        case "boolean":
-                            let isTrue: boolean;
-                            isTrue = await this.boolInfo(value, schema);
+                        }
+                        case "boolean": {
+                            const isTrue = await this.boolInfo(value, schema);
                             if (isTrue === undefined) {
                                 Gui.showMessage(this.profilesOpCancelled);
                                 return undefined;
                             }
                             schemaValues[value] = isTrue;
                             break;
-                        default:
-                            options = await this.optionsValue(value, schema);
+                        }
+                        default: {
+                            options = this.optionsValue(value, schema);
                             const defValue = await Gui.showInputBox(options);
                             if (defValue === undefined) {
                                 Gui.showMessage(this.profilesOpCancelled);
@@ -831,7 +830,9 @@ export class Profiles extends ProfilesCache {
                                 schemaValues[value] = defValue;
                             }
                             break;
+                        }
                     }
+                }
             }
         }
 
@@ -891,7 +892,7 @@ export class Profiles extends ProfilesCache {
         return returnValue;
     }
 
-    public async getDeleteProfile() {
+    public async getDeleteProfile(): Promise<zowe.imperative.IProfileLoaded> {
         ZoweLogger.trace("Profiles.getDeleteProfile called.");
         const allProfiles: zowe.imperative.IProfileLoaded[] = this.allProfiles;
         const profileNamesList = allProfiles.map((temprofile) => {
@@ -923,9 +924,8 @@ export class Profiles extends ProfilesCache {
         ussTree: IZoweTree<IZoweUSSTreeNode>,
         jobsProvider: IZoweTree<IZoweJobTreeNode>,
         node?: IZoweNodeType
-    ) {
+    ): Promise<void> {
         ZoweLogger.trace("Profiles.deleteProfile called.");
-        let deleteLabel: string;
         let deletedProfile: zowe.imperative.IProfileLoaded;
         if (!node) {
             deletedProfile = await this.getDeleteProfile();
@@ -935,7 +935,8 @@ export class Profiles extends ProfilesCache {
         if (!deletedProfile) {
             return;
         }
-        deleteLabel = deletedProfile.name;
+
+        const deleteLabel = deletedProfile.name;
 
         if ((await this.getProfileInfo()).usingTeamConfig) {
             const currentProfile = await this.getProfileFromConfig(deleteLabel);
@@ -1063,21 +1064,20 @@ export class Profiles extends ProfilesCache {
         }
     }
 
-    public async validateProfiles(theProfile: zowe.imperative.IProfileLoaded) {
+    public async validateProfiles(theProfile: zowe.imperative.IProfileLoaded): Promise<IProfileValidation> {
         ZoweLogger.trace("Profiles.validateProfiles called.");
         let filteredProfile: IProfileValidation;
         let profileStatus;
         const getSessStatus = await ZoweExplorerApiRegister.getInstance().getCommonApi(theProfile);
 
-        // Filter profilesForValidation to check if the profile is already validated as active
-        this.profilesForValidation.filter((profile) => {
-            if (profile.name === theProfile.name && profile.status === "active") {
-                filteredProfile = {
-                    status: profile.status,
-                    name: profile.name,
-                };
-            }
-        });
+        // Check if the profile is already validated as active
+        const desiredProfile = this.profilesForValidation.find((profile) => profile.name === theProfile.name && profile.status === "active");
+        if (desiredProfile) {
+            filteredProfile = {
+                status: desiredProfile.status,
+                name: desiredProfile.name,
+            };
+        }
 
         // If not yet validated or inactive, call getStatus and validate the profile
         // status will be stored in profilesForValidation
@@ -1187,7 +1187,7 @@ export class Profiles extends ProfilesCache {
                     profile: { ...node.getProfile().profile, ...session },
                 });
             } catch (error) {
-                const message = localize("ssoLogin.error", "Unable to log in with {0}. {1}", serviceProfile.name, error.message);
+                const message = localize("ssoLogin.error", "Unable to log in with {0}. {1}", serviceProfile.name, error?.message);
                 ZoweLogger.error(message);
                 Gui.errorMessage(message);
                 return;
@@ -1222,7 +1222,7 @@ export class Profiles extends ProfilesCache {
                         profile: { ...node.getProfile().profile, ...updBaseProfile },
                     });
                 } catch (error) {
-                    const errMsg = localize("ssoLogin.unableToLogin", "Unable to log in with {0}. {1}", serviceProfile.name, error.message);
+                    const errMsg = localize("ssoLogin.unableToLogin", "Unable to log in with {0}. {1}", serviceProfile.name, error?.message);
                     ZoweLogger.error(errMsg);
                     Gui.errorMessage(errMsg);
                     return;
@@ -1264,14 +1264,14 @@ export class Profiles extends ProfilesCache {
             }
             Gui.showMessage(localize("ssoLogout.successful", "Logout from authentication service was successful for {0}.", serviceProfile.name));
         } catch (error) {
-            const message = localize("ssoLogout.error", "Unable to log out with {0}. {1}", serviceProfile.name, error.message);
+            const message = localize("ssoLogout.error", "Unable to log out with {0}. {1}", serviceProfile.name, error?.message);
             ZoweLogger.error(message);
             Gui.errorMessage(message);
             return;
         }
     }
 
-    public async openConfigFile(filePath: string) {
+    public async openConfigFile(filePath: string): Promise<void> {
         ZoweLogger.trace("Profiles.openConfigFile called.");
         const document = await vscode.workspace.openTextDocument(filePath);
         await Gui.showTextDocument(document);
@@ -1303,7 +1303,7 @@ export class Profiles extends ProfilesCache {
         return;
     }
 
-    private async checkExistingConfig(filePath: string) {
+    private async checkExistingConfig(filePath: string): Promise<string> {
         ZoweLogger.trace("Profiles.checkExistingConfig called.");
         let found = false;
         let location: string;
@@ -1350,7 +1350,7 @@ export class Profiles extends ProfilesCache {
         return existingLayers;
     }
 
-    private async promptToRefreshForProfiles(rootPath: string) {
+    private async promptToRefreshForProfiles(rootPath: string): Promise<void> {
         ZoweLogger.trace("Profiles.promptToRefreshForProfiles called.");
         if (globals.ISTHEIA) {
             const reloadButton = localize("createZoweSchema.reload.button", "Refresh Zowe Explorer");
@@ -1365,7 +1365,6 @@ export class Profiles extends ProfilesCache {
                 }
             });
         }
-        return undefined;
     }
 
     private getProfileIcon(osLocInfo: zowe.imperative.IProfLocOsLoc[]): string[] {
@@ -1381,7 +1380,7 @@ export class Profiles extends ProfilesCache {
         return ret;
     }
 
-    private async updateBaseProfileFileLogin(profile: zowe.imperative.IProfileLoaded, updProfile: zowe.imperative.IProfile) {
+    private async updateBaseProfileFileLogin(profile: zowe.imperative.IProfileLoaded, updProfile: zowe.imperative.IProfile): Promise<void> {
         ZoweLogger.trace("Profiles.updateBaseProfileFileLogin called.");
         const upd = { profileName: profile.name, profileType: profile.type };
         const mProfileInfo = await this.getProfileInfo();
@@ -1390,7 +1389,7 @@ export class Profiles extends ProfilesCache {
         await mProfileInfo.updateProperty({ ...upd, property: "tokenValue", value: updProfile.tokenValue, setSecure });
     }
 
-    private async updateBaseProfileFileLogout(profile: zowe.imperative.IProfileLoaded) {
+    private async updateBaseProfileFileLogout(profile: zowe.imperative.IProfileLoaded): Promise<void> {
         ZoweLogger.trace("Profiles.updateBaseProfileFileLogout called.");
         const mProfileInfo = await this.getProfileInfo();
         const setSecure = mProfileInfo.isSecured();
@@ -1417,7 +1416,7 @@ export class Profiles extends ProfilesCache {
         return [newUser, newPass];
     }
 
-    private async deletePrompt(deletedProfile: zowe.imperative.IProfileLoaded) {
+    private async deletePrompt(deletedProfile: zowe.imperative.IProfileLoaded): Promise<string> {
         ZoweLogger.trace("Profiles.deletePrompt called.");
         const profileName = deletedProfile.name;
         ZoweLogger.info(localize("deletePrompt.deleting", "Deleting profile {0}", profileName));
@@ -1500,11 +1499,11 @@ export class Profiles extends ProfilesCache {
         return url;
     }
 
-    private async portInfo(input: string, schema: {}) {
+    private async portInfo(input: string, schema: {}): Promise<number> {
         ZoweLogger.trace("Profiles.portInfo called.");
         let options: vscode.InputBoxOptions;
         let port: number;
-        if (schema[input].optionDefinition.hasOwnProperty("defaultValue")) {
+        if ("defaultValue" in schema[input].optionDefinition) {
             options = {
                 prompt: schema[input].optionDefinition.description.toString(),
                 value: schema[input].optionDefinition.defaultValue.toString(),
@@ -1517,7 +1516,7 @@ export class Profiles extends ProfilesCache {
         }
         port = Number(await Gui.showInputBox(options));
 
-        if (port === 0 && schema[input].optionDefinition.hasOwnProperty("defaultValue")) {
+        if (port === 0 && "defaultValue" in schema[input].optionDefinition) {
             port = Number(schema[input].optionDefinition.defaultValue.toString());
         } else {
             return port;
@@ -1525,7 +1524,7 @@ export class Profiles extends ProfilesCache {
         return port;
     }
 
-    private async userInfo(input?) {
+    private async userInfo(input?: string): Promise<string> {
         ZoweLogger.trace("Profiles.userInfo called.");
         let userName: string;
 
@@ -1548,7 +1547,7 @@ export class Profiles extends ProfilesCache {
         return userName.trim();
     }
 
-    private async passwordInfo(input?) {
+    private async passwordInfo(input?: string): Promise<string> {
         ZoweLogger.trace("Profiles.passwordInfo called.");
         let passWord: string;
 
@@ -1573,7 +1572,7 @@ export class Profiles extends ProfilesCache {
         return passWord.trim();
     }
 
-    private async ruInfo(input?) {
+    private async ruInfo(input?: boolean): Promise<boolean> {
         ZoweLogger.trace("Profiles.ruInfo called.");
         let rejectUnauthorize: boolean;
         let placeholder: string;
@@ -1617,7 +1616,7 @@ export class Profiles extends ProfilesCache {
         return rejectUnauthorize;
     }
 
-    private async boolInfo(input: string, schema: {}) {
+    private async boolInfo(input: string, schema: {}): Promise<boolean> {
         ZoweLogger.trace("Profiles.boolInfo called.");
         let isTrue: boolean;
         const description: string = schema[input].optionDefinition.description.toString();
@@ -1638,7 +1637,7 @@ export class Profiles extends ProfilesCache {
         return isTrue;
     }
 
-    private async optionsValue(value: string, schema: {}, input?: string): Promise<vscode.InputBoxOptions> {
+    private optionsValue(value: string, schema: {}, input?: string): vscode.InputBoxOptions {
         ZoweLogger.trace("Profiles.optionsValue called.");
         let options: vscode.InputBoxOptions;
         const description: string = schema[value].optionDefinition.description.toString();
@@ -1650,7 +1649,7 @@ export class Profiles extends ProfilesCache {
                 prompt: description,
                 value: editValue,
             };
-        } else if (schema[value].optionDefinition.hasOwnProperty("defaultValue")) {
+        } else if ("defaultValue" in schema[value].optionDefinition) {
             options = {
                 prompt: description,
                 value: schema[value].optionDefinition.defaultValue,
@@ -1664,7 +1663,7 @@ export class Profiles extends ProfilesCache {
         return options;
     }
 
-    private async checkType(input?): Promise<string> {
+    private checkType(input?): string {
         ZoweLogger.trace("Profiles.checkType called.");
         const isTrue = Array.isArray(input);
         let test: string;
@@ -1698,7 +1697,7 @@ export class Profiles extends ProfilesCache {
      * @returns
      */
 
-    private async updateProfile(updProfileInfo, rePrompt?: boolean) {
+    private async updateProfile(updProfileInfo, rePrompt?: boolean): Promise<void> {
         ZoweLogger.trace("Profiles.updateProfile called.");
         if (zowe.imperative.ImperativeConfig.instance.config?.exists) {
             return;
@@ -1749,7 +1748,7 @@ export class Profiles extends ProfilesCache {
         const updateParms: zowe.imperative.IUpdateProfile = {
             name: this.loadedProfile.name,
             merge: false,
-            profile: OrigProfileInfo as zowe.imperative.IProfile,
+            profile: OrigProfileInfo,
         };
         try {
             this.getCliProfileManager(this.loadedProfile.type).update(updateParms);

@@ -134,7 +134,7 @@ describe("TempFolder Unit Tests", () => {
             isFile: () => true,
         } as any);
 
-        await expect(TempFolder.cleanDir("./sampleDir")).resolves.toEqual(undefined);
+        TempFolder.cleanDir("./sampleDir");
         expect(readdirSyncSpy).toBeCalledTimes(1);
     });
 

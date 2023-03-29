@@ -18,7 +18,7 @@ import { ZoweUSSNode } from "../../src/uss/ZoweUSSNode";
 import * as testConst from "../../resources/testProfileData";
 import { DS_PDS_CONTEXT, USS_SESSION_CONTEXT } from "../../src/globals";
 
-declare var it: any;
+declare let it: any;
 
 const testProfile: imperative.IProfileLoaded = {
     name: testConst.profile.name,
@@ -84,12 +84,7 @@ describe("ZoweUSSNode Integration Tests", async () => {
      * Creates sample ZoweUSSNode list and checks that getChildren() returns the correct array
      *************************************************************************************************************/
     it("Testing that getChildren returns the correct Thenable<ZoweUSSNode[]>", async () => {
-        let sessChildren;
-        try {
-            sessChildren = await sessNode.getChildren();
-        } catch (err) {
-            throw err;
-        }
+        const sessChildren = await sessNode.getChildren();
 
         // Creating structure of files and directories
         const sampleChildren: ZoweUSSNode[] = [
@@ -142,13 +137,7 @@ describe("ZoweUSSNode Integration Tests", async () => {
     it("Testing that getChildren works as expected on an empty directory", async () => {
         // The method should return an empty array.
         const PSNode = new ZoweUSSNode(path + "/aDir6", vscode.TreeItemCollapsibleState.None, sessNode, null, null);
-        let PSNodeChildren;
-        try {
-            PSNodeChildren = await PSNode.getChildren();
-        } catch (err) {
-            throw err;
-        }
-
+        const PSNodeChildren = await PSNode.getChildren();
         expect(PSNodeChildren).toEqual([]);
     }).timeout(TIMEOUT);
 
