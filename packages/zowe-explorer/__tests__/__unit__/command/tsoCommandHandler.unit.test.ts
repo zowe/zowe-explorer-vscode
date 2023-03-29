@@ -584,8 +584,48 @@ describe("TsoCommandHandler unit testing", () => {
         expect(showInformationMessage.mock.calls.length).toBe(0);
     });
 
+    it("tests the issueTsoCommand handles error thrown by API register", async () => {
+        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [{ name: "firstName", profile: { user: "firstName", password: "12345" } }, { name: "secondName" }],
+                    defaultProfile: { name: "firstName" },
+                    zosmfProfile: mockLoadNamedProfile,
+                    checkCurrentProfile: jest.fn(() => {
+                        return profilesForValidation;
+                    }),
+                    validateProfiles: jest.fn(),
+                    getBaseProfile: jest.fn(),
+                    validProfile: ValidProfileEnum.VALID,
+                };
+            }),
+        });
+        const mockMvsApi = apiRegisterInstance.getMvsApi(profileOne);
+        const getMvsApiMock = jest.fn();
+        getMvsApiMock.mockReturnValue(mockMvsApi);
+        apiRegisterInstance.getMvsApi = getMvsApiMock.bind(apiRegisterInstance);
+        jest.spyOn(mockMvsApi, "getSession").mockReturnValue(session);
+
+        showQuickPick.mockReturnValueOnce("firstName");
+        const testError = new Error("getCommandApi failed");
+        apiRegisterInstance.getCommandApi = jest.fn().mockImplementation(() => { throw testError; });
+
+        await tsoActions.issueTsoCommand();
+
+        expect(showQuickPick.mock.calls.length).toBe(1);
+        expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName", "secondName"]);
+        expect(showQuickPick.mock.calls[0][1]).toEqual({
+            canPickMany: false,
+            ignoreFocusOut: true,
+            placeHolder: "Select the Profile to use to submit the TSO command",
+        });
+        expect(showInputBox.mock.calls.length).toBe(0);
+        expect(showErrorMessage.mock.calls.length).toBe(1);
+        expect(showErrorMessage.mock.calls[0][0]).toContain(testError.message);
+    });
+
     it("tests the selectTsoProfile function", async () => {
-        jest.spyOn(Gui, "showQuickPick").mockReturnValue("test1" as any);
+        showQuickPick.mockReturnValueOnce("test1" as any);
 
         await expect(
             (tsoActions as any).selectTsoProfile([

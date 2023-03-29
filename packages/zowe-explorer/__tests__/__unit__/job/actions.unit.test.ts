@@ -78,6 +78,10 @@ function createGlobalMocks() {
 // Idea is borrowed from: https://github.com/kulshekhar/ts-jest/blob/master/src/util/testing.ts
 const mocked = <T extends (...args: any[]) => any>(fn: T): jest.Mock<ReturnType<T>> => fn as any;
 
+afterEach(() => {
+    jest.clearAllMocks();
+});
+
 describe("Jobs Actions Unit Tests - Function setPrefix", () => {
     function createBlockMocks() {
         const session = createISession();
@@ -421,12 +425,38 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
         activeTextEditorDocument.mockReturnValue(blockMocks.textDocument);
         const submitJclSpy = jest.spyOn(blockMocks.jesApi, "submitJcl");
         submitJclSpy.mockClear();
-        submitJclSpy.mockResolvedValueOnce(blockMocks.iJob);
 
         await dsActions.submitJcl(blockMocks.testDatasetTree);
 
         expect(submitJclSpy).not.toBeCalled();
         expect(mocked(globals.LOG.error)).toBeCalled();
+        expect(mocked(globals.LOG.error).mock.calls[0][0]).toEqual("Session for submitting JCL was null or undefined!");
+    });
+
+    it("Checking API error on submit of active text editor content as JCL", async () => {
+        createGlobalMocks();
+        const blockMocks: any = createBlockMocks();
+        mocked(zowe.ZosmfSession.createSessCfgFromArgs).mockReturnValue(blockMocks.session);
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        mocked(vscode.window.showQuickPick).mockReturnValueOnce(
+            new Promise((resolve) => {
+                resolve(blockMocks.datasetSessionNode.label);
+            })
+        );
+        blockMocks.testDatasetTree.getChildren.mockResolvedValueOnce([
+            new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null),
+            blockMocks.datasetSessionNode,
+        ]);
+        activeTextEditorDocument.mockReturnValue(blockMocks.textDocument);
+        const submitJclSpy = jest.spyOn(blockMocks.jesApi, "submitJcl");
+        submitJclSpy.mockClear();
+        const testError = new Error("submitJcl failed");
+        submitJclSpy.mockRejectedValueOnce(testError);
+        await dsActions.submitJcl(blockMocks.testDatasetTree);
+
+        expect(submitJclSpy).toBeCalled();
+        expect(mocked(Gui.errorMessage)).toBeCalled();
+        expect(mocked(Gui.errorMessage).mock.calls[0][0]).toContain(testError.message);
     });
 });
 
@@ -837,6 +867,43 @@ describe("focusing on a job in the tree view", () => {
         // const expectedTreeView = jobTree;
         const expectedTreeView = expect.anything();
         expect(mocked(jobTreeProvider.setItem)).toHaveBeenCalledWith(expectedTreeView, submittedJobNode);
+    });
+    it("should handle error focusing on the job", async () => {
+        // arrange
+        const submittedJob = createIJobObject();
+        const profile = createIProfile();
+        const session = createISessionWithoutCredentials();
+        const existingJobSession = createJobSessionNode(session, profile);
+        const datasetSessionName = existingJobSession.label as string;
+        const jobTree = createTreeView();
+        const jobTreeProvider = createJobsTree(session, submittedJob, profile, jobTree);
+        jobTreeProvider.mSessionNodes.push(existingJobSession);
+        const testError = new Error("focusOnJob failed");
+        jest.spyOn(jobTreeProvider, "refreshElement").mockImplementationOnce(() => { throw testError; });
+        // act
+        await jobActions.focusOnJob(jobTreeProvider, datasetSessionName, submittedJob.jobid);
+        // assert
+        expect(mocked(jobTreeProvider.refreshElement)).toHaveBeenCalledWith(existingJobSession);
+        expect(mocked(Gui.errorMessage)).toHaveBeenCalled();
+        expect(mocked(Gui.errorMessage).mock.calls[0][0]).toContain(testError.message);
+    });
+    it("should handle error adding a new tree view session", async () => {
+        // arrange
+        const submittedJob = createIJobObject();
+        const profile = createIProfile();
+        const session = createISessionWithoutCredentials();
+        const newJobSession = createJobSessionNode(session, profile);
+        const datasetSessionName = newJobSession.label as string;
+        const jobTree = createTreeView();
+        const jobTreeProvider = createJobsTree(session, submittedJob, profile, jobTree);
+        const testError = new Error("focusOnJob failed");
+        jest.spyOn(jobTreeProvider, "addSession").mockRejectedValueOnce(testError);
+        // act
+        await jobActions.focusOnJob(jobTreeProvider, datasetSessionName, submittedJob.jobid);
+        // assert
+        expect(mocked(jobTreeProvider.addSession)).toHaveBeenCalledWith(datasetSessionName);
+        expect(mocked(Gui.errorMessage)).toHaveBeenCalled();
+        expect(mocked(Gui.errorMessage).mock.calls[0][0]).toContain(testError.message);
     });
 });
 

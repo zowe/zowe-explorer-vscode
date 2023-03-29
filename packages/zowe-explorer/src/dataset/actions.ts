@@ -1549,8 +1549,8 @@ export async function downloadDs(node: ZoweDatasetNode) {
             lbl = node.getParent().getLabel().toString() + "(" + node.getLabel().toString() + ")";
             break;
         default:
-            vscode.window.showErrorMessage(localize("download.invalidNode", "downloadDataset() called with invalid node."));
-            throw Error(localize("download.invalidNode", "downloadDataset() called with invalid node. "));
+            api.Gui.errorMessage(localize("download.invalidNode", "downloadDataset() called with invalid node."));
+            throw Error(localize("download.invalidNode", "downloadDataset() called with invalid node."));
     }
     const filePath = getDocumentFilePath(lbl, node);
     return ZoweExplorerApiRegister.getMvsApi(profile).getContents(lbl, {

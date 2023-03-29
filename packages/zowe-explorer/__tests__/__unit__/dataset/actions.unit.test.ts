@@ -1752,7 +1752,7 @@ describe("Dataset Actions Unit Tests - Function copyDataSets", () => {
         await dsActions.copyDataSets(child, null, blockMocks.testDatasetTree);
         expect(clipboard.readText()).toBe(`{"profileName":"sestest","dataSetName":"parent","memberName":"child","contextValue":"${contextValue}"}`);
     });
-    it("Checking copy the label of a node (with a very complext context value) to the clipboard", async () => {
+    it("Checking copy the label of a node (with a very complex context value) to the clipboard", async () => {
         globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
@@ -1846,27 +1846,17 @@ describe("Dataset Actions Unit Tests - Function copyDataSets", () => {
             options.validateInput("test");
             return Promise.resolve("test");
         });
-        const allocSpy = jest.spyOn(blockMocks.mvsApi, "allocateLikeDataSet");
-        allocSpy.mockRejectedValueOnce({
-            success: true,
-            commandResponse: "",
-            apiResponse: {},
-        });
-
-        const copyFun = jest.spyOn(dsActions, "copySequentialDatasets").mockImplementation();
-        const refreshFun = jest.spyOn(dsActions, "refreshDataset").mockImplementation();
+        const testError = new Error("copyDataSets failed");
+        const allocSpy = jest.spyOn(blockMocks.mvsApi, "allocateLikeDataSet").mockRejectedValueOnce(testError);
         mocked(vscode.window.withProgress).mockImplementation((params, fn) => {
             fn();
             return Promise.resolve(params);
         });
-        try {
-            await dsActions.copyDataSets(child, null, blockMocks.testDatasetTree);
-            expect(mocked(vscode.window.showErrorMessage)).not.toHaveBeenCalled();
-            expect(copyFun).toHaveBeenCalled();
-            expect(refreshFun).toHaveBeenCalled();
-        } catch (error) {
-            // do nth
-        }
+
+        await dsActions.copyDataSets(child, null, blockMocks.testDatasetTree);
+        expect(allocSpy).toHaveBeenCalled();
+        expect(mocked(Gui.errorMessage)).toHaveBeenCalled();
+        expect(mocked(Gui.errorMessage).mock.calls[0][0]).toContain(testError.message);
     });
     it("Checking copy of partitioned datasets", async () => {
         globals.defineGlobals("");
@@ -1923,18 +1913,17 @@ describe("Dataset Actions Unit Tests - Function copyDataSets", () => {
             options.validateInput("test");
             return Promise.resolve("test");
         });
-        jest.spyOn(blockMocks.datasetSessionNode, "getChildren").mockRejectedValue([child]);
-        await mocked(vscode.window.withProgress).mockImplementation((params, fn) => {
+        const testError = new Error("copyDataSets failed");
+        const allocSpy = jest.spyOn(blockMocks.mvsApi, "allocateLikeDataSet").mockRejectedValueOnce(testError);
+        mocked(vscode.window.withProgress).mockImplementation((params, fn) => {
             fn();
             return Promise.resolve(params);
         });
-        try {
-            await dsActions.copyDataSets(blockMocks.datasetSessionNode, null, blockMocks.testDatasetTree);
-            await expect(mocked(vscode.window.showErrorMessage)).not.toHaveBeenCalled();
-            await expect(dsActions.copyDataSets(blockMocks.datasetSessionNode, null, blockMocks.testDatasetTree)).toStrictEqual(Promise.resolve());
-        } catch (error) {
-            // do nth
-        }
+
+        await dsActions.copyDataSets(child, null, blockMocks.testDatasetTree);
+        expect(allocSpy).toHaveBeenCalled();
+        expect(mocked(Gui.errorMessage)).toHaveBeenCalled();
+        expect(mocked(Gui.errorMessage).mock.calls[0][0]).toContain(testError.message);
     });
     it("Checking copy the label of a favorite member to the clipboard", async () => {
         globals.defineGlobals("");
@@ -1986,7 +1975,7 @@ describe("Dataset Actions Unit Tests - Function copyDataSets", () => {
         await expect(dsActions.pasteDataSetMembers(blockMocks.testDatasetTree, blockMocks.pdsMemberNode)).toEqual(Promise.resolve());
     });
 
-    it("Testing pasteDataSetMembers() succesfully runs with multiple members", async () => {
+    it("Testing pasteDataSetMembers() successfully runs with multiple members", async () => {
         globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
@@ -2056,11 +2045,12 @@ describe("Dataset Actions Unit Tests - Function copyDataSets", () => {
             blockMocks.imperativeProfile
         );
         blockMocks.pdsSessionNode.contextValue = "fakeContext";
+
         try {
             await dsActions.downloadDs(node);
-        } catch (err) {
-            // do nth
-        }
+        } catch (err) {}
+
+        expect(mocked(Gui.errorMessage)).toBeCalledWith("downloadDataset() called with invalid node.");
     });
 
     it("Testing downloadDs() called with a member", async () => {
@@ -2081,6 +2071,18 @@ describe("Dataset Actions Unit Tests - Function copyDataSets", () => {
         const filePathSpy = jest.spyOn(sharedUtils, "getDocumentFilePath");
         await dsActions.downloadDs(node);
         expect(filePathSpy).toBeCalledWith(label, node);
+    });
+
+    it("Testing refreshDataset() error handling", async () => {
+        globals.defineGlobals("");
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        const testError = new Error("refreshDataset failed");
+        const refreshSpy = jest.spyOn(blockMocks.pdsSessionNode, "getChildren").mockRejectedValueOnce(testError);
+        await dsActions.refreshDataset(blockMocks.pdsSessionNode, blockMocks.testDatasetTree);
+        expect(refreshSpy).toHaveBeenCalled();
+        expect(mocked(Gui.errorMessage)).toHaveBeenCalled();
+        expect(mocked(Gui.errorMessage).mock.calls[0][0]).toContain(testError.message);
     });
 
     it("Should ask to replace the sequential and partitioned dataset if it already exists", async () => {

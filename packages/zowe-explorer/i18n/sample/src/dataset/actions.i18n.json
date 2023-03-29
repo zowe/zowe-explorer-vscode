@@ -91,7 +91,7 @@
   "saveFile.log.error.save": "Error encountered when saving data set: ",
   "paste.dataSet": "Invalid paste. Copy dataset(s) first",
   "paste.dataSet.InPrg": "Copying File(s)",
-  "download.invalidNode": "downloadDataset() called with invalid node. ",
+  "download.invalidNode": "downloadDataset() called with invalid node.",
   "copyDataSet.error.notSupported": "Copying datasets is not supported.",
   "copyDataSet.replace.option1": "Replace",
   "copyDataSet.replace.option2": "Cancel",
