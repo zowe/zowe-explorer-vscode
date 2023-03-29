@@ -31,7 +31,7 @@ import { createDatasetSessionNode, createDatasetTree } from "../../../__mocks__/
 import { Profiles } from "../../../src/Profiles";
 import * as SpoolProvider from "../../../src/SpoolProvider";
 import * as refreshActions from "../../../src/shared/refresh";
-import { JobSubmitDialogOpts, JOB_SUBMIT_DIALOG_OPTS } from "../../../src/shared/utils";
+import * as sharedUtils from "../../../src/shared/utils";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 
 const activeTextEditorDocument = jest.fn();
@@ -44,6 +44,8 @@ function createGlobalMocks() {
     Object.defineProperty(Gui, "showMessage", { value: jest.fn(), configurable: true });
     Object.defineProperty(Gui, "warningMessage", { value: jest.fn(), configurable: true });
     Object.defineProperty(Gui, "errorMessage", { value: jest.fn(), configurable: true });
+    Object.defineProperty(Gui, "showOpenDialog", { value: jest.fn(), configurable: true });
+    Object.defineProperty(sharedUtils, "getDefaultUri", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showWarningMessage", { value: jest.fn(), configurable: true });
     Object.defineProperty(zowe, "IssueCommand", { value: jest.fn(), configurable: true });
     Object.defineProperty(zowe.IssueCommand, "issueSimple", { value: jest.fn(), configurable: true });
@@ -266,11 +268,11 @@ describe("Jobs Actions Unit Tests - Function downloadSpool", () => {
             query: "",
         };
         jobs.push(node);
-        mocked(vscode.window.showOpenDialog).mockResolvedValue([fileUri as vscode.Uri]);
+        mocked(Gui.showOpenDialog).mockResolvedValue([fileUri as vscode.Uri]);
         const downloadFileSpy = jest.spyOn(blockMocks.jesApi, "downloadSpoolContent");
 
         await jobActions.downloadSpool(jobs);
-        expect(mocked(vscode.window.showOpenDialog)).toBeCalled();
+        expect(mocked(Gui.showOpenDialog)).toBeCalled();
         expect(downloadFileSpy).toBeCalled();
         expect(downloadFileSpy.mock.calls[0][0]).toEqual({
             jobid: node.job.jobid,
@@ -289,7 +291,7 @@ describe("Jobs Actions Unit Tests - Function downloadSpool", () => {
             path: "",
             query: "",
         };
-        mocked(vscode.window.showOpenDialog).mockResolvedValue([fileUri as vscode.Uri]);
+        mocked(Gui.showOpenDialog).mockResolvedValue([fileUri as vscode.Uri]);
         await jobActions.downloadSpool(undefined);
         expect(mocked(Gui.errorMessage).mock.calls.length).toBe(1);
     });
@@ -621,17 +623,17 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
         const dataset = new ZoweDatasetNode("TESTUSER.DATASET", vscode.TreeItemCollapsibleState.Collapsed, blockMocks.datasetSessionNode, null);
         dataset.contextValue = globals.DS_DS_CONTEXT;
 
-        for (let o = 0; o < JOB_SUBMIT_DIALOG_OPTS.length; o++) {
-            const option = JOB_SUBMIT_DIALOG_OPTS[o];
+        for (let o = 0; o < sharedUtils.JOB_SUBMIT_DIALOG_OPTS.length; o++) {
+            const option = sharedUtils.JOB_SUBMIT_DIALOG_OPTS[o];
             Object.defineProperty(vscode.workspace, "getConfiguration", {
                 value: jest.fn().mockImplementation(() => new Map([["zowe.jobs.confirmSubmission", option]])),
                 configurable: true,
             });
 
-            if (option === JOB_SUBMIT_DIALOG_OPTS[JobSubmitDialogOpts.Disabled]) {
+            if (option === sharedUtils.JOB_SUBMIT_DIALOG_OPTS[sharedUtils.JobSubmitDialogOpts.Disabled]) {
                 await dsActions.submitMember(dataset);
                 expect(mocked(Gui.warningMessage)).not.toHaveBeenCalled();
-            } else if (option === JOB_SUBMIT_DIALOG_OPTS[JobSubmitDialogOpts.OtherUserJobs]) {
+            } else if (option === sharedUtils.JOB_SUBMIT_DIALOG_OPTS[sharedUtils.JobSubmitDialogOpts.OtherUserJobs]) {
                 dataset.label = "OTHERUSER.DATASET";
                 mocked(Gui.warningMessage).mockResolvedValueOnce({ title: "Submit" });
                 await dsActions.submitMember(dataset);
@@ -640,8 +642,8 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
                     vsCodeOpts: { modal: true },
                 });
             } else if (
-                option === JOB_SUBMIT_DIALOG_OPTS[JobSubmitDialogOpts.AllJobs] ||
-                option === JOB_SUBMIT_DIALOG_OPTS[JobSubmitDialogOpts.YourJobs]
+                option === sharedUtils.JOB_SUBMIT_DIALOG_OPTS[sharedUtils.JobSubmitDialogOpts.AllJobs] ||
+                option === sharedUtils.JOB_SUBMIT_DIALOG_OPTS[sharedUtils.JobSubmitDialogOpts.YourJobs]
             ) {
                 dataset.label = "TESTUSER.DATASET";
                 mocked(Gui.warningMessage).mockResolvedValueOnce({ title: "Submit" });

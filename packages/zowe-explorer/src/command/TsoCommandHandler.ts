@@ -51,9 +51,8 @@ export class TsoCommandHandler extends ZoweCommandProvider {
     private static instance: TsoCommandHandler;
     public outputChannel: vscode.OutputChannel;
 
-    constructor() {
+    public constructor() {
         super();
-
         this.outputChannel = Gui.createOutputChannel(localize("issueTsoCommand.outputchannel.title", "Zowe TSO Command"));
     }
 
@@ -63,7 +62,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
      * @param session the session the command is to run against (optional) user is prompted if not supplied
      * @param command the command string (optional) user is prompted if not supplied
      */
-    public async issueTsoCommand(session?: imperative.Session, command?: string, node?: IZoweTreeNode) {
+    public async issueTsoCommand(session?: imperative.Session, command?: string, node?: IZoweTreeNode): Promise<void> {
         let profile: imperative.IProfileLoaded;
         if (node) {
             await this.checkCurrentProfile(node);
@@ -139,7 +138,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
         }
     }
 
-    private async getQuickPick(hostname: string) {
+    private async getQuickPick(hostname: string): Promise<string> {
         let response = "";
         const alwaysEdit: boolean = SettingsConfig.getDirectValue(globals.SETTINGS_COMMANDS_ALWAYS_EDIT);
         if (this.history.getSearchHistory().length > 0) {
@@ -208,7 +207,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
      * @param profile profile to be used
      * @param tsoParams parameters (from TSO profile, when used)
      */
-    private async issueCommand(command: string, profile: imperative.IProfileLoaded, tsoParams?: IStartTsoParms) {
+    private async issueCommand(command: string, profile: imperative.IProfileLoaded, tsoParams?: IStartTsoParms): Promise<void> {
         try {
             if (command) {
                 // If the user has started their command with a / then remove it
@@ -283,7 +282,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
      */
     private async getTsoParams(): Promise<IStartTsoParms> {
         const profileInfo = await Profiles.getInstance().getProfileInfo();
-        const tsoParms: IStartTsoParms = {};
+        let tsoParms: IStartTsoParms = {};
 
         // Keys in the IStartTsoParms interface
         // TODO(zFernand0): Request the CLI squad that all interfaces are also exported as values that we can iterate
@@ -298,7 +297,11 @@ export class TsoCommandHandler extends ZoweCommandProvider {
             }
         }
         if (tsoProfile) {
-            iStartTso.forEach((p) => (tsoParms[p] = tsoProfile.profile[p]));
+            tsoParms = {
+                ...iStartTso.reduce((obj, parm) => {
+                    return { ...obj, [parm]: tsoProfile.profile[parm] };
+                }, {}),
+            };
         }
 
         if (tsoParms.account == null || tsoParms.account === "") {

@@ -747,7 +747,9 @@ describe("ZoweUSSNode Unit Tests - Function node.deleteUSSNode()", () => {
 
         try {
             await blockMocks.ussNode.deleteUSSNode(blockMocks.testUSSTree, "", false);
-        } catch (err) {}
+        } catch (err) {
+            // Prevent exception from failing test
+        }
 
         expect(globalMocks.showErrorMessage.mock.calls.length).toBe(1);
         expect(blockMocks.testUSSTree.refresh).not.toHaveBeenCalled();
@@ -1149,7 +1151,9 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
 
         try {
             await child.openUSS(false, true, blockMocks.testUSSTree);
-        } catch (err) {}
+        } catch (err) {
+            // Prevent exception from failing test
+        }
 
         expect(globalMocks.ussFile.mock.calls.length).toBe(0);
         expect(globalMocks.openTextDocument.mock.calls.length).toBe(1);
@@ -1287,7 +1291,9 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
 
         try {
             await brat.openUSS(false, true, blockMocks.testUSSTree);
-        } catch (err) {}
+        } catch (err) {
+            // Prevent exception from failing test
+        }
 
         expect(globalMocks.ussFile.mock.calls.length).toBe(0);
         expect(globalMocks.showErrorMessage.mock.calls.length).toBe(2);

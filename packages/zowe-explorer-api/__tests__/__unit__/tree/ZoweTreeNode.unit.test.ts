@@ -11,50 +11,69 @@
 
 import * as vscode from "vscode";
 import { ZoweTreeNode } from "../../../src/tree/ZoweTreeNode";
-
+import { IZoweTreeNode } from "../../../src/tree/IZoweTreeNode";
+import { imperative } from "@zowe/cli";
 describe("ZoweTreeNode", () => {
+    const makeNode = (
+        name: string,
+        collapseState: vscode.TreeItemCollapsibleState,
+        parent: IZoweTreeNode | ZoweTreeNode | undefined,
+        session?: imperative.Session | string | undefined,
+        profile?: imperative.IProfileLoaded | string | any
+    ): ZoweTreeNode => {
+        const node = new ZoweTreeNode(
+            name,
+            collapseState,
+            parent as unknown as IZoweTreeNode,
+            session as unknown as imperative.Session,
+            profile as unknown as imperative.IProfileLoaded
+        );
+
+        return node;
+    };
+
     it("getSession should return session of current node", () => {
-        const node = new (ZoweTreeNode as any)("test", vscode.TreeItemCollapsibleState.None, undefined);
-        node.setSessionToChoice("mySession");
+        const node = makeNode("test", vscode.TreeItemCollapsibleState.None, undefined);
+        node.setSessionToChoice("mySession" as unknown as imperative.Session);
         expect(node.getSession()).toBe("mySession");
     });
 
     it("getSession should return session of parent node", () => {
-        const parentNode = new (ZoweTreeNode as any)("test", vscode.TreeItemCollapsibleState.None, undefined, "parentSession");
-        const node = new (ZoweTreeNode as any)("test", vscode.TreeItemCollapsibleState.None, parentNode);
+        const parentNode = makeNode("test", vscode.TreeItemCollapsibleState.None, undefined, "parentSession");
+        const node = makeNode("test", vscode.TreeItemCollapsibleState.None, parentNode);
         expect(node.getSession()).toBe("parentSession");
     });
 
     it("getProfile should return profile of current node", () => {
-        const node = new (ZoweTreeNode as any)("test", vscode.TreeItemCollapsibleState.None, undefined);
-        node.setProfileToChoice("myProfile");
+        const node = makeNode("test", vscode.TreeItemCollapsibleState.None, undefined);
+        node.setProfileToChoice("myProfile" as unknown as imperative.IProfileLoaded);
         expect(node.getProfile()).toBe("myProfile");
     });
 
     it("getProfile should return profile of parent node", () => {
-        const parentNode = new (ZoweTreeNode as any)("test", vscode.TreeItemCollapsibleState.None, undefined, undefined, "parentProfile");
-        const node = new (ZoweTreeNode as any)("test", vscode.TreeItemCollapsibleState.None, parentNode);
+        const parentNode = makeNode("test", vscode.TreeItemCollapsibleState.None, undefined, undefined, "parentProfile");
+        const node = makeNode("test", vscode.TreeItemCollapsibleState.None, parentNode);
         expect(node.getProfile()).toBe("parentProfile");
     });
 
     it("getProfileName should return profile name of current node", () => {
-        const node = new (ZoweTreeNode as any)("test", vscode.TreeItemCollapsibleState.None, undefined, undefined, { name: "myProfile" });
+        const node = makeNode("test", vscode.TreeItemCollapsibleState.None, undefined, undefined, { name: "myProfile" });
         expect(node.getProfileName()).toBe("myProfile");
     });
 
     it("getProfileName should return profile name of parent node", () => {
-        const parentNode = new (ZoweTreeNode as any)("test", vscode.TreeItemCollapsibleState.None, undefined, undefined, { name: "parentProfile" });
-        const node = new (ZoweTreeNode as any)("test", vscode.TreeItemCollapsibleState.None, parentNode, undefined, undefined);
+        const parentNode = makeNode("test", vscode.TreeItemCollapsibleState.None, undefined, undefined, { name: "parentProfile" });
+        const node = makeNode("test", vscode.TreeItemCollapsibleState.None, parentNode, undefined, undefined);
         expect(node.getProfileName()).toBe("parentProfile");
     });
 
     it("getLabel should return label of current node", () => {
-        const node = new (ZoweTreeNode as any)("test", vscode.TreeItemCollapsibleState.None, undefined);
+        const node = makeNode("test", vscode.TreeItemCollapsibleState.None, undefined);
         expect(node.getLabel()).toBe("test");
     });
 
     it("profile and session info should be undefined for empty node", () => {
-        const node = new (ZoweTreeNode as any)("test", vscode.TreeItemCollapsibleState.None, undefined);
+        const node = makeNode("test", vscode.TreeItemCollapsibleState.None, undefined);
         expect(node.getSession()).toBeUndefined();
         expect(node.getProfile()).toBeUndefined();
         expect(node.getProfileName()).toBeUndefined();

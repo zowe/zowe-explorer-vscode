@@ -16,7 +16,7 @@
     "@types/semver": "^7.3.6"
   },
   "dependencies": {
-    "@zowe/cli": "^7.11.0",
+    "@zowe/cli": "^7.11.3",
     "semver": "^7.3.5"
   },
   "scripts": {
@@ -24,7 +24,7 @@
     "test:unit": "jest \".*__tests__.*\\.unit\\.test\\.ts\" --coverage",
     "test": "yarn test:unit",
     "lint": "concurrently -n \"_eslint_,prettier\" \"eslint .\" \"prettier --check .\"",
-    "lintErrors": "echo \"zowe-explorer-api: coming soon.\"",
+    "lint:html": "eslint . --format html > results/eslint.html",
     "pretty": "prettier --write .",
     "clean": "rimraf lib",
     "fresh-clone": "yarn clean && rimraf node_modules",

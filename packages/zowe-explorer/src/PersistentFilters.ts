@@ -30,7 +30,7 @@ export class PersistentFilters {
     private mFileHistory: string[] = [];
     private mSessions: string[] = [];
 
-    constructor(schema: string, private maxSearchHistory = globals.MAX_SEARCH_HISTORY, private maxFileHistory = globals.MAX_FILE_HISTORY) {
+    public constructor(schema: string, private maxSearchHistory = globals.MAX_SEARCH_HISTORY, private maxFileHistory = globals.MAX_FILE_HISTORY) {
         this.schema = schema;
         this.initialize();
     }
@@ -51,7 +51,7 @@ export class PersistentFilters {
      *
      * @param {string} criteria - a line of search criteria
      */
-    public async addSearchHistory(criteria: string) {
+    public addSearchHistory(criteria: string): void {
         if (criteria) {
             // Remove any entries that match
             this.mSearchHistory = this.mSearchHistory.filter((element) => {
@@ -81,7 +81,7 @@ export class PersistentFilters {
      *
      * @param {string} criteria - a line of search criteria
      */
-    public async addFileHistory(criteria: string) {
+    public addFileHistory(criteria: string): void {
         if (criteria) {
             criteria = criteria.toUpperCase();
             // Remove any entries that match
@@ -109,7 +109,7 @@ export class PersistentFilters {
      *
      * @param {string} criteria - a session name
      */
-    public async addSession(criteria: string) {
+    public addSession(criteria: string): void {
         // Remove any entries that match
         this.mSessions = this.mSessions.filter((element) => {
             return element.trim() !== criteria.trim();
@@ -148,7 +148,7 @@ export class PersistentFilters {
     /* Remove functions, for removing one item from the persistent arrays
     /*********************************************************************************************************************************************/
 
-    public async removeSession(name: string) {
+    public removeSession(name: string): void {
         // Remove any entries that match
         this.mSessions = this.mSessions.filter((element) => {
             return element.trim() !== name.trim();
@@ -159,7 +159,7 @@ export class PersistentFilters {
     /**
      * @param name - Should be in format "[session]: DATASET.QUALIFIERS" or "[session]: /file/path", as appropriate
      */
-    public async removeFileHistory(name: string) {
+    public async removeFileHistory(name: string): Promise<void> {
         const index = this.mFileHistory.findIndex((fileHistoryItem) => {
             return fileHistoryItem.includes(name.toUpperCase());
         });
@@ -173,17 +173,17 @@ export class PersistentFilters {
     /* Reset functions, for resetting the persistent array to empty (in the extension and in settings.json)
     /*********************************************************************************************************************************************/
 
-    public async resetSearchHistory() {
+    public resetSearchHistory(): void {
         this.mSearchHistory = [];
         this.updateSearchHistory();
     }
 
-    public async resetSessions() {
+    public resetSessions(): void {
         this.mSessions = [];
         this.updateSessions();
     }
 
-    public async resetFileHistory() {
+    public resetFileHistory(): void {
         this.mFileHistory = [];
         this.updateFileHistory();
     }
@@ -192,7 +192,7 @@ export class PersistentFilters {
     /* Update functions, for updating the settings.json file in VSCode
     /*********************************************************************************************************************************************/
 
-    public async updateFavorites(favorites: string[]) {
+    public async updateFavorites(favorites: string[]): Promise<void> {
         // settings are read-only, so were cloned
         const settings: any = { ...vscode.workspace.getConfiguration(this.schema) };
         if (settings.persistence) {
@@ -201,7 +201,7 @@ export class PersistentFilters {
         }
     }
 
-    private async updateSearchHistory() {
+    private async updateSearchHistory(): Promise<void> {
         // settings are read-only, so make a clone
         const settings: any = { ...vscode.workspace.getConfiguration(this.schema) };
         if (settings.persistence) {
@@ -210,7 +210,7 @@ export class PersistentFilters {
         }
     }
 
-    private async updateSessions() {
+    private async updateSessions(): Promise<void> {
         // settings are read-only, so make a clone
         const settings: any = { ...vscode.workspace.getConfiguration(this.schema) };
         if (settings.persistence) {
@@ -219,7 +219,7 @@ export class PersistentFilters {
         }
     }
 
-    private async updateFileHistory() {
+    private async updateFileHistory(): Promise<void> {
         // settings are read-only, so make a clone
         const settings: any = { ...vscode.workspace.getConfiguration(this.schema) };
         if (settings.persistence) {
@@ -228,7 +228,7 @@ export class PersistentFilters {
         }
     }
 
-    private async initialize() {
+    private initialize(): void {
         let searchHistoryLines: string[];
         let sessionLines: string[];
         let fileHistoryLines: string[];

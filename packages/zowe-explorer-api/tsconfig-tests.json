@@ -15,6 +15,6 @@
     "newLine": "lf",
     "resolveJsonModule": true
   },
-  "include": ["__tests__", "__mocks__"],
+  "include": ["__tests__/**/*.ts", "__mocks__"],
   "exclude": ["lib", "node_modules"]
 }

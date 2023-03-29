@@ -43,7 +43,7 @@ export function registerRefreshCommand(
     context: vscode.ExtensionContext,
     activate: (_context: vscode.ExtensionContext) => Promise<ZoweExplorerApiRegister>,
     deactivate: () => Promise<void>
-) {
+): void {
     // set a command to silently reload extension
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.extRefresh", async () => {
@@ -64,7 +64,7 @@ export function registerRefreshCommand(
     );
 }
 
-export async function registerCommonCommands(context: vscode.ExtensionContext, providers: IZoweProviders) {
+export function registerCommonCommands(context: vscode.ExtensionContext, providers: IZoweProviders): void {
     // Update imperative.json to false only when VS Code setting is set to false
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.updateSecureCredentials", async () => {
@@ -168,27 +168,27 @@ export async function registerCommonCommands(context: vscode.ExtensionContext, p
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.issueTsoCmd", async (node?, command?) => {
                 if (node) {
-                    TsoCommandHandler.getInstance().issueTsoCommand(node.session, command, node);
+                    await TsoCommandHandler.getInstance().issueTsoCommand(node.session, command, node);
                 } else {
-                    TsoCommandHandler.getInstance().issueTsoCommand();
+                    await TsoCommandHandler.getInstance().issueTsoCommand();
                 }
             })
         );
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.issueMvsCmd", async (node?, command?) => {
                 if (node) {
-                    MvsCommandHandler.getInstance().issueMvsCommand(node.session, command, node);
+                    await MvsCommandHandler.getInstance().issueMvsCommand(node.session, command, node);
                 } else {
-                    MvsCommandHandler.getInstance().issueMvsCommand();
+                    await MvsCommandHandler.getInstance().issueMvsCommand();
                 }
             })
         );
     }
 }
 
-export async function watchConfigProfile(context: vscode.ExtensionContext, providers: IZoweProviders) {
+export function watchConfigProfile(context: vscode.ExtensionContext, providers: IZoweProviders): void {
     if (globals.ISTHEIA) {
-        return undefined;
+        return;
     }
 
     const watchers: vscode.FileSystemWatcher[] = [];
@@ -224,7 +224,7 @@ export async function watchConfigProfile(context: vscode.ExtensionContext, provi
     });
 }
 
-export function initSubscribers(context: vscode.ExtensionContext, theProvider: IZoweTree<IZoweTreeNode>) {
+export function initSubscribers(context: vscode.ExtensionContext, theProvider: IZoweTree<IZoweTreeNode>): void {
     const theTreeView = theProvider.getTreeView();
     context.subscriptions.push(theTreeView);
     if (!globals.ISTHEIA) {

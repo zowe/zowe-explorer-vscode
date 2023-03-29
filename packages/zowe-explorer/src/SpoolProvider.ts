@@ -26,7 +26,7 @@ export default class SpoolProvider implements vscode.TextDocumentContentProvider
         return result;
     }
 
-    public dispose() {
+    public dispose(): void {
         this.mOnDidChange.dispose();
     }
 }
@@ -80,7 +80,7 @@ export function decodeJobFile(uri: vscode.Uri): [string, zowe.IJobFile] {
     return [session, spool];
 }
 
-export function initializeSpoolProvider(context: vscode.ExtensionContext) {
+export function initializeSpoolProvider(context: vscode.ExtensionContext): void {
     const spoolProvider = new SpoolProvider();
     const providerRegistration = vscode.Disposable.from(vscode.workspace.registerTextDocumentContentProvider(SpoolProvider.scheme, spoolProvider));
     context.subscriptions.push(spoolProvider, providerRegistration);

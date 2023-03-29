@@ -602,7 +602,9 @@ describe("USS Action Unit Tests - Functions uploadDialog & uploadFile", () => {
 
         try {
             await ussNodeActions.uploadDialog(blockMocks.ussNode, blockMocks.testUSSTree);
-        } catch (err) {}
+        } catch (err) {
+            // prevent exception from failing test
+        }
         expect(globalMocks.showErrorMessage.mock.calls.length).toBe(1);
     });
 });
@@ -792,7 +794,7 @@ describe("USS Action Unit Tests - copy file / directory", () => {
     it("paste calls relevant USS API functions", async () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
-        let rootTree: UssFileTree = {
+        const rootTree: UssFileTree = {
             children: [],
             baseName: blockMocks.nodes[1].getLabel() as string,
             ussPath: "",
@@ -816,7 +818,7 @@ describe("USS Action Unit Tests - copy file / directory", () => {
     it("paste throws an error if required APIs are not available", async () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
-        let rootTree: UssFileTree = {
+        const rootTree: UssFileTree = {
             children: [],
             baseName: blockMocks.nodes[1].getLabel() as string,
             ussPath: "",

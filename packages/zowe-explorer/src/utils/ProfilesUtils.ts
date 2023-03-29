@@ -34,7 +34,8 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
  * @param {label} - additional information such as profile name, credentials, messageID etc
  * @param {moreInfo} - additional/customized error messages
  *************************************************************************************************************/
-export async function errorHandling(errorDetails: Error | string, label?: string, moreInfo?: string) {
+export async function errorHandling(errorDetails: Error | string, label?: string, moreInfo?: string): Promise<void> {
+    // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
     globals.LOG.error(`${errorDetails}\n` + JSON.stringify({ errorDetails, label, moreInfo }));
 
     if (errorDetails instanceof imperative.ImperativeError && errorDetails.mDetails !== undefined) {
@@ -110,7 +111,7 @@ export async function errorHandling(errorDetails: Error | string, label?: string
     } else {
         moreInfo += " ";
     }
-    Gui.errorMessage(moreInfo + errorDetails);
+    Gui.errorMessage(moreInfo + errorDetails.toString());
 }
 
 // TODO: remove this second occurence
@@ -133,7 +134,7 @@ type SessionForProfile = (_profile: imperative.IProfileLoaded) => imperative.Ses
 export const syncSessionNode =
     (_profiles: Profiles) =>
     (getSessionForProfile: SessionForProfile) =>
-    async (sessionNode: IZoweTreeNode): Promise<void> => {
+    (sessionNode: IZoweTreeNode): void => {
         sessionNode.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
 
         const profileType = sessionNode.getProfile().type;
@@ -172,32 +173,32 @@ export interface IFilterItem {
 }
 
 export class FilterItem implements vscode.QuickPickItem {
-    constructor(public filterItem: IFilterItem) {}
-    get label(): string {
+    public constructor(public filterItem: IFilterItem) {}
+    public get label(): string {
         const icon = this.filterItem.icon ? this.filterItem.icon + " " : null;
         return (icon ?? "") + this.filterItem.text;
     }
-    get description(): string {
+    public get description(): string {
         if (this.filterItem.description) {
             return this.filterItem.description;
         } else {
             return "";
         }
     }
-    get alwaysShow(): boolean {
+    public get alwaysShow(): boolean {
         return this.filterItem.show;
     }
 }
 
 export class FilterDescriptor implements vscode.QuickPickItem {
-    constructor(private text: string) {}
-    get label(): string {
+    public constructor(private text: string) {}
+    public get label(): string {
         return this.text;
     }
-    get description(): string {
+    public get description(): string {
         return "";
     }
-    get alwaysShow(): boolean {
+    public get alwaysShow(): boolean {
         return true;
     }
 }
@@ -205,14 +206,14 @@ export class FilterDescriptor implements vscode.QuickPickItem {
 /**
  * Function to update the node profile information
  */
-export async function setProfile(node: IZoweTreeNode, profile: imperative.IProfile) {
+export function setProfile(node: IZoweTreeNode, profile: imperative.IProfile): void {
     node.getProfile().profile = profile;
 }
 
 /**
  * Function to update the node session information
  */
-export async function setSession(node: IZoweTreeNode, combinedSessionProfile: imperative.IProfile) {
+export function setSession(node: IZoweTreeNode, combinedSessionProfile: imperative.IProfile): void {
     const sessionNode = node.getSession();
     for (const prop of Object.keys(combinedSessionProfile)) {
         if (prop === "host") {
@@ -223,21 +224,21 @@ export async function setSession(node: IZoweTreeNode, combinedSessionProfile: im
     }
 }
 
-export async function getProfileInfo(envTheia: boolean): Promise<imperative.ProfileInfo> {
+export function getProfileInfo(envTheia: boolean): imperative.ProfileInfo {
     const mProfileInfo = new imperative.ProfileInfo("zowe", {
         requireKeytar: () => getSecurityModules("keytar", envTheia),
     });
     return mProfileInfo;
 }
 
-export function getProfile(node: vscode.TreeItem) {
+export function getProfile(node: vscode.TreeItem | ZoweTreeNode): imperative.IProfileLoaded {
     if (node instanceof ZoweTreeNode) {
-        return (node as ZoweTreeNode).getProfile();
+        return node.getProfile();
     }
     throw new Error(localize("getProfile.notTreeItem", "Tree Item is not a Zowe Explorer item."));
 }
 
-export async function readConfigFromDisk() {
+export async function readConfigFromDisk(): Promise<void> {
     let rootPath: string;
     const mProfileInfo = await getProfileInfo(globals.ISTHEIA);
     if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders[0]) {
@@ -262,7 +263,7 @@ export async function readConfigFromDisk() {
     }
 }
 
-export async function promptCredentials(node: IZoweTreeNode) {
+export async function promptCredentials(node: IZoweTreeNode): Promise<void> {
     const mProfileInfo = await Profiles.getInstance().getProfileInfo();
     if (mProfileInfo.usingTeamConfig && !mProfileInfo.getTeamConfig().properties.autoStore) {
         Gui.showMessage(localize("zowe.promptCredentials.notSupported", '"Update Credentials" operation not supported when "autoStore" is false'));
@@ -327,7 +328,7 @@ export async function initializeZoweFolder(): Promise<void> {
     }
 }
 
-export function writeOverridesFile() {
+export function writeOverridesFile(): void {
     let fd: number;
     let fileContent: string;
     const settingsFile = path.join(getZoweDir(), "settings", "imperative.json");
@@ -346,7 +347,11 @@ export function writeOverridesFile() {
             try {
                 settings = JSON.parse(fileContent);
             } catch (err) {
-                throw new Error(localize("writeOverridesFile.jsonParseError", "Failed to parse JSON file {0}:", settingsFile) + " " + err.message);
+                if (err instanceof Error) {
+                    throw new Error(
+                        localize("writeOverridesFile.jsonParseError", "Failed to parse JSON file {0}:", settingsFile) + " " + err.message
+                    );
+                }
             }
             if (settings && settings?.overrides && settings?.overrides?.CredentialManager !== globals.PROFILE_SECURITY) {
                 settings.overrides.CredentialManager = globals.PROFILE_SECURITY;
