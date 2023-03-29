@@ -111,7 +111,8 @@ export async function errorHandling(errorDetails: Error | string, label?: string
     } else {
         moreInfo += " ";
     }
-    Gui.errorMessage(moreInfo + errorDetails.toString());
+    // Try to keep message readable since VS Code doesn't support newlines in error messages
+    Gui.errorMessage(moreInfo + errorDetails.toString().replace(/\n/g, " | "));
 }
 
 // TODO: remove this second occurence

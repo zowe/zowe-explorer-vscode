@@ -656,11 +656,7 @@ export async function createFile(node: api.IZoweDatasetTreeNode, datasetProvider
             }
         } catch (err) {
             if (err instanceof Error) {
-                await errorHandling(
-                    err,
-                    node.getProfileName(),
-                    localize("createDataSet.error", "Error encountered when creating data set!")
-                );
+                await errorHandling(err, node.getProfileName(), localize("createDataSet.error", "Error encountered when creating data set!"));
             }
             throw err as Error;
         }
@@ -1747,11 +1743,7 @@ export async function _copyProcessor(
         } catch (error) {
             globals.LOG.error(localize("copyDataSet.log.error", "Error encountered when copy data set! ") + JSON.stringify(error));
             if (error instanceof Error) {
-                await errorHandling(
-                    error,
-                    dsUtils.getNodeLabels(node).dataSetName,
-                    localize("copyDataSet.error", "Unable to copy data set:")
-                );
+                await errorHandling(error, dsUtils.getNodeLabels(node).dataSetName, localize("copyDataSet.error", "Unable to copy data set:"));
             }
         }
     }

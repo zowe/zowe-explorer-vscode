@@ -608,7 +608,9 @@ describe("TsoCommandHandler unit testing", () => {
 
         showQuickPick.mockReturnValueOnce("firstName");
         const testError = new Error("getCommandApi failed");
-        apiRegisterInstance.getCommandApi = jest.fn().mockImplementation(() => { throw testError; });
+        apiRegisterInstance.getCommandApi = jest.fn().mockImplementation(() => {
+            throw testError;
+        });
 
         await tsoActions.issueTsoCommand();
 

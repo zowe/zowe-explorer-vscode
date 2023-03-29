@@ -881,7 +881,9 @@ describe("focusing on a job in the tree view", () => {
         const jobTreeProvider = createJobsTree(session, submittedJob, profile, jobTree);
         jobTreeProvider.mSessionNodes.push(existingJobSession);
         const testError = new Error("focusOnJob failed");
-        jest.spyOn(jobTreeProvider, "refreshElement").mockImplementationOnce(() => { throw testError; });
+        jest.spyOn(jobTreeProvider, "refreshElement").mockImplementationOnce(() => {
+            throw testError;
+        });
         // act
         await jobActions.focusOnJob(jobTreeProvider, datasetSessionName, submittedJob.jobid);
         // assert
