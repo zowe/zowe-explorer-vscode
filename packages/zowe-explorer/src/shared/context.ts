@@ -398,7 +398,7 @@ export function withProfile(node: IZoweTreeNode): string {
     if (!node) {
         return;
     }
-    const hasProfile = (n: IZoweTreeNode) => n?.contextValue?.includes(".profile=") ?? false;
+    const hasProfile = (n: IZoweTreeNode): boolean => n?.contextValue?.includes(".profile=") ?? false;
     if (hasProfile(node)) {
         return node.contextValue;
     }

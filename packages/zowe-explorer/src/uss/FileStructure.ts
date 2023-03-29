@@ -51,7 +51,7 @@ export class UssFileUtils {
      * @param destSessionName The name of the destination session
      * @returns true if the tree will be pasted in the same session, and false if otherwise.
      */
-    public static toSameSession(fileTree: UssFileTree, destSessionName: string) {
+    public static toSameSession(fileTree: UssFileTree, destSessionName: string): boolean {
         if (fileTree.sessionName && fileTree.sessionName !== destSessionName) {
             return false;
         }

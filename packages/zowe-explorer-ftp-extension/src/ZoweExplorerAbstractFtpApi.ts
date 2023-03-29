@@ -70,13 +70,11 @@ export abstract class AbstractFtpApi implements ZoweExplorerApi.ICommon {
 
     public ftpClient(profile: imperative.IProfileLoaded): Promise<unknown> {
         const ftpProfile = profile.profile as IZosFTPProfile;
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
         return FTPConfig.connectFromArguments(ftpProfile);
     }
 
     public releaseConnection<T extends ConnectionType>(connection: T): void {
         if (connection != null) {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-call,@typescript-eslint/no-unsafe-member-access
             connection.close();
             return;
         }
@@ -98,20 +96,19 @@ export abstract class AbstractFtpApi implements ZoweExplorerApi.ICommon {
             try {
                 sessionStatus = await this.ftpClient(this.checkedProfile());
             } catch (e) {
-                /* The errMsg should be consistent with the errMsg in ProfilesUtils.ts of zowe-explorer */
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-call,@typescript-eslint/no-unsafe-member-access
-                if (e.message.indexOf("failed") !== -1 || e.message.indexOf("missing") !== -1) {
-                    const errMsg =
-                        // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
-                        "Invalid Credentials. Please ensure the username and password for " +
-                        validateProfile?.name +
-                        " are valid or this may lead to a lock-out.";
-                    await Gui.errorMessage(errMsg, { logger: ZoweLogger });
-                    throw new Error();
-                } else {
-                    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-                    await Gui.errorMessage(e.message as string, { logger: ZoweLogger });
-                    throw new Error();
+                if (e instanceof Error) {
+                    /* The errMsg should be consistent with the errMsg in ProfilesUtils.ts of zowe-explorer */
+                    if (e.message.indexOf("failed") !== -1 || e.message.indexOf("missing") !== -1) {
+                        const errMsg =
+                            "Invalid Credentials. Please ensure the username and password for " +
+                            validateProfile?.name +
+                            " are valid or this may lead to a lock-out.";
+                        await Gui.errorMessage(errMsg, { logger: ZoweLogger });
+                        throw new Error();
+                    } else {
+                        await Gui.errorMessage(e.message, { logger: ZoweLogger });
+                        throw new Error();
+                    }
                 }
             }
             if (sessionStatus) {

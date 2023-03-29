@@ -20,7 +20,7 @@ import { USSTree } from "../../src/uss/USSTree";
 import { ZoweUSSNode } from "../../src/uss/ZoweUSSNode";
 import * as globals from "../../src/globals";
 
-declare var it: any;
+declare let it: any;
 
 const testProfile: imperative.IProfileLoaded = {
     name: testConst.profile.name,

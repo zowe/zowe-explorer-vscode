@@ -44,7 +44,7 @@ describe("FtpJesApi", () => {
             prefix: "*",
         };
         const result = await JesApi.getJobsByOwnerAndPrefix(mockParams.owner, mockParams.prefix);
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+
         expect(result[0].jobname).toContain("JOB1");
         expect(JobUtils.listJobs).toBeCalledTimes(1);
         expect(JesApi.releaseConnection).toHaveBeenCalledTimes(0);
@@ -57,7 +57,7 @@ describe("FtpJesApi", () => {
             jobid: "123",
         };
         const result = await JesApi.getJob(mockParams.jobid);
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+
         expect(result.jobname).toContain("JOB1");
         expect(JobUtils.findJobByID).toBeCalledTimes(1);
         expect(JesApi.releaseConnection).toBeCalled();
@@ -71,7 +71,7 @@ describe("FtpJesApi", () => {
             jobid: "123",
         };
         const result = await JesApi.getSpoolFiles(mockParams.jobname, mockParams.jobid);
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+
         expect(result[0].id).toContain("1");
         expect(JobUtils.findJobByID).toBeCalledTimes(1);
         expect(JesApi.releaseConnection).toBeCalled();
@@ -104,7 +104,7 @@ describe("FtpJesApi", () => {
             spoolID: 1,
         };
         await JesApi.getSpoolContentById(mockParams.jobname, mockParams.jobid, mockParams.spoolID);
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,@typescript-eslint/no-unsafe-call
+
         expect(response._readableState.buffer.head.data.toString()).toContain("Hello world");
         expect(JobUtils.getSpoolFileContent).toBeCalledTimes(1);
         expect(JesApi.releaseConnection).toBeCalled();

@@ -27,10 +27,10 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 // Globals
 export let SETTINGS_TEMP_FOLDER_LOCATION;
-export let ZOWETEMPFOLDER;
-export let ZOWE_TMP_FOLDER;
-export let USS_DIR;
-export let DS_DIR;
+export let ZOWETEMPFOLDER: string;
+export let ZOWE_TMP_FOLDER: string;
+export let USS_DIR: string;
+export let DS_DIR: string;
 export let CONFIG_PATH; // set during activate
 export let ISTHEIA: boolean = false; // set during activate
 export let LOG: imperative.Logger;
@@ -93,15 +93,15 @@ export const EXTENDER_CONFIG: imperative.ICommandProfileTypeConfiguration[] = []
 export const ZOWE_CLI_SCM = "@zowe/cli";
 export const MAX_DATASET_LENGTH = 44;
 export const MAX_MEMBER_LENGTH = 8;
-export const DS_NAME_REGEX_CHECK = /^[a-zA-Z#@\$][a-zA-Z0-9#@\$\-]{0,7}(\.[a-zA-Z#@\$][a-zA-Z0-9#@\$\-]{0,7})*$/;
-export const MEMBER_NAME_REGEX_CHECK = /^[a-zA-Z#@\$][a-zA-Z0-9#@\$]{0,7}$/;
+export const DS_NAME_REGEX_CHECK = /^[a-zA-Z#@$][a-zA-Z0-9#@$-]{0,7}(\.[a-zA-Z#@$][a-zA-Z0-9#@$-]{0,7})*$/;
+export const MEMBER_NAME_REGEX_CHECK = /^[a-zA-Z#@$][a-zA-Z0-9#@$]{0,7}$/;
 export let ACTIVATED = false;
 export let PROFILE_SECURITY: string | boolean = ZOWE_CLI_SCM;
 export let SAVED_PROFILE_CONTENTS = new Uint8Array();
 export const JOBS_MAX_PREFIX = 8;
 
 // Dictionary describing translation from old configuration names to new standardized names
-export const configurationDictionary = {
+export const configurationDictionary: { [k: string]: string } = {
     "Zowe-Default-Datasets-Binary": SETTINGS_DS_DEFAULT_BINARY,
     "Zowe-Default-Datasets-C": SETTINGS_DS_DEFAULT_C,
     "Zowe-Default-Datasets-Classic": SETTINGS_DS_DEFAULT_CLASSIC,
@@ -276,7 +276,7 @@ export const plusSign = "\uFF0B ";
  * Defines all global variables
  * @param tempPath File path for temporary folder defined in preferences
  */
-export function defineGlobals(tempPath: string | undefined) {
+export function defineGlobals(tempPath: string | undefined): void {
     // check if Theia environment
     const appName = vscode.env.appName;
     const uriScheme = vscode.env.uriScheme;
@@ -284,7 +284,7 @@ export function defineGlobals(tempPath: string | undefined) {
         ((appName && appName.toLowerCase().includes("theia")) || (uriScheme && uriScheme.toLowerCase().includes("theia"))) &&
         vscode.env.uiKind === vscode.UIKind.Web
     ) {
-        this.ISTHEIA = true;
+        ISTHEIA = true;
     }
 
     SETTINGS_TEMP_FOLDER_LOCATION = tempPath;
@@ -308,7 +308,7 @@ export function setConfigPath(configPath: string | undefined): void {
  * Initializes Imperative Logger
  * @param context The extension context
  */
-export function initLogger(context: vscode.ExtensionContext) {
+export function initLogger(context: vscode.ExtensionContext): void {
     for (const appenderName of Object.keys(loggerConfig.log4jsConfig.appenders)) {
         loggerConfig.log4jsConfig.appenders[appenderName].filename = path.join(
             context.extensionPath,
@@ -319,16 +319,16 @@ export function initLogger(context: vscode.ExtensionContext) {
     this.LOG = imperative.Logger.getAppLogger();
 }
 
-export function setActivated(value: boolean) {
+export function setActivated(value: boolean): void {
     ACTIVATED = value;
 }
 
-export function setSavedProfileContents(value: Uint8Array) {
+export function setSavedProfileContents(value: Uint8Array): void {
     SAVED_PROFILE_CONTENTS = value;
 }
 
-export async function setGlobalSecurityValue() {
-    if (this.ISTHEIA) {
+export async function setGlobalSecurityValue(): Promise<void> {
+    if (ISTHEIA) {
         PROFILE_SECURITY = false;
         await SettingsConfig.setDirectValue(this.SETTINGS_SECURE_CREDENTIALS_ENABLED, false, vscode.ConfigurationTarget.Global);
         return;

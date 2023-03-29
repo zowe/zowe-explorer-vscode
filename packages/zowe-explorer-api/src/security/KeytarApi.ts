@@ -12,7 +12,7 @@
 import * as vscode from "vscode";
 import { imperative } from "@zowe/cli";
 import { ProfilesCache } from "../profiles";
-import { KeytarCredentialManager } from "./KeytarCredentialManager";
+import { KeytarCredentialManager, KeytarModule } from "./KeytarCredentialManager";
 import * as globals from "../globals";
 
 export class KeytarApi {
@@ -26,8 +26,7 @@ export class KeytarApi {
         if (scsActive) {
             const keytar = KeytarCredentialManager.getSecurityModules("keytar", isTheia);
             if (!initialized && keytar) {
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-                KeytarCredentialManager.keytar = keytar;
+                KeytarCredentialManager.keytar = keytar as unknown as KeytarModule;
                 await imperative.CredentialManagerFactory.initialize({
                     service: globals.SETTINGS_SCS_DEFAULT,
                     Manager: KeytarCredentialManager,

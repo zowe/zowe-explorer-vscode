@@ -93,7 +93,7 @@ describe("mvsCommandActions unit testing", () => {
     Object.defineProperty(vscode.window, "withProgress", { value: withProgress });
 
     getConfiguration.mockReturnValue({
-        get: (setting: string) => undefined,
+        get: (_setting: string) => undefined,
         update: jest.fn(() => {
             return {};
         }),

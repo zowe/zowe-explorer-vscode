@@ -83,7 +83,6 @@ export class IZoweLogger {
     public logImperativeMessage(message: string, severity?: MessageSeverity): void {
         const messageWithExtensionName = `[${this.extensionName}] ${message}`;
         const severityName = MessageSeverity[severity ?? MessageSeverity.DEBUG];
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         this.log[severityName.toLowerCase()](messageWithExtensionName);
     }
 }

@@ -234,7 +234,7 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
     public getUssApi(profile: imperative.IProfileLoaded): ZoweExplorerApi.IUss {
         if (profile && profile.type && this.registeredUssApiTypes().includes(profile.type)) {
             // create a clone of the API object that remembers the profile with which it was created
-            const api = Object.create(this.ussApiImplementations.get(profile.type));
+            const api = Object.create(this.ussApiImplementations.get(profile.type)) as ZoweExplorerApi.IUss;
             api.profile = profile;
             return api;
         } else {
@@ -250,7 +250,7 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
     public getMvsApi(profile: imperative.IProfileLoaded): ZoweExplorerApi.IMvs {
         if (profile && profile.type && this.registeredMvsApiTypes().includes(profile.type)) {
             // create a clone of the API object that remembers the profile with which it was created
-            const api = Object.create(this.mvsApiImplementations.get(profile.type));
+            const api = Object.create(this.mvsApiImplementations.get(profile.type)) as ZoweExplorerApi.IMvs;
             api.profile = profile;
             return api;
         } else {
@@ -266,7 +266,7 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
     public getJesApi(profile: imperative.IProfileLoaded): ZoweExplorerApi.IJes {
         if (profile && profile.type && this.registeredJesApiTypes().includes(profile.type)) {
             // create a clone of the API object that remembers the profile with which it was created
-            const api = Object.create(this.jesApiImplementations.get(profile.type));
+            const api = Object.create(this.jesApiImplementations.get(profile.type)) as ZoweExplorerApi.IJes;
             api.profile = profile;
             return api;
         } else {
@@ -282,7 +282,7 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
     public getCommandApi(profile: imperative.IProfileLoaded): ZoweExplorerApi.ICommand {
         if (profile && profile.type && this.registeredCommandApiTypes().includes(profile.type)) {
             // create a clone of the API object that remembers the profile with which it was created
-            const api = Object.create(this.commandApiImplementations.get(profile.type));
+            const api = Object.create(this.commandApiImplementations.get(profile.type)) as ZoweExplorerApi.ICommand;
             api.profile = profile;
             return api;
         } else {
@@ -296,20 +296,20 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
         let result: ZoweExplorerApi.ICommon;
         try {
             result = this.getUssApi(profile);
-        } catch (error) {
-            globals.LOG.debug(error);
+        } catch (ussErr) {
+            globals.LOG.debug(ussErr);
             try {
                 result = this.getMvsApi(profile);
-            } catch (error) {
-                globals.LOG.debug(error);
+            } catch (mvsErr) {
+                globals.LOG.debug(mvsErr);
                 try {
                     result = this.getJesApi(profile);
-                } catch (error) {
-                    globals.LOG.debug(error);
+                } catch (jesErr) {
+                    globals.LOG.debug(jesErr);
                     try {
                         result = this.getCommandApi(profile);
-                    } catch (error) {
-                        globals.LOG.error(error);
+                    } catch (cmdErr) {
+                        globals.LOG.error(cmdErr);
                         throw new Error(
                             localize("getCommonApi.error", "Internal error: Tried to call a non-existing Common API in API register: ") + profile.type
                         );
