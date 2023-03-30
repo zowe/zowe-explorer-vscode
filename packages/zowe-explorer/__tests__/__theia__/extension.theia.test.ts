@@ -20,7 +20,7 @@ const SLEEPTIME = 15000;
 const SHORTSLEEPTIME = 2000;
 const wait5sec = 5000;
 const SCREENSHOT_DIR = "./results/integration/failed";
-declare var it: any;
+declare let it: any;
 const expect = chai.expect;
 chai.use(chaiAsPromised);
 

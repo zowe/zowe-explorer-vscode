@@ -39,7 +39,7 @@ describe("Extension Unit Tests - function registerFtpApis", () => {
             extension.activate({
                 subscriptions: [],
                 extensionPath: "./test",
-            } as vscode.ExtensionContext)
+            } as unknown as vscode.ExtensionContext)
         ).toEqual(undefined);
         expect(registerUssApiMock).toBeCalledTimes(1);
         expect(registerMvsApiMock).toBeCalledTimes(1);
@@ -53,7 +53,7 @@ describe("Extension Unit Tests - function registerFtpApis", () => {
             extension.activate({
                 subscriptions: [],
                 extensionPath: "./test",
-            } as vscode.ExtensionContext)
+            } as unknown as vscode.ExtensionContext)
         ).toEqual(undefined);
         expect(showMessageSpy).toBeCalledTimes(1);
     });

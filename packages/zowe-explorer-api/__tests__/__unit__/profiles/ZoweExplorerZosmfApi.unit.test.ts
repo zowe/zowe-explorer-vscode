@@ -10,6 +10,7 @@
  */
 
 import * as zowe from "@zowe/cli";
+import { IZosmfInfoResponse } from "@zowe/cli";
 import { ZoweExplorerApi } from "../../../src/profiles/ZoweExplorerApi";
 import { ZosmfCommandApi, ZosmfJesApi, ZosmfMvsApi, ZosmfUssApi } from "../../../src/profiles/ZoweExplorerZosmfApi";
 
@@ -22,7 +23,16 @@ type ITestApi<T> = {
     };
 }[keyof T];
 
-const fakeProfile: { [key: string]: string | number | boolean } = {
+type ITestProfile = {
+    host: string;
+    port: number;
+    basePath: string;
+    rejectUnauthorized: boolean;
+    user?: string;
+    password?: string;
+};
+
+const fakeProfile: ITestProfile = {
     host: "example.com",
     port: 443,
     basePath: "/api/v1",
@@ -35,9 +45,9 @@ const fakeSession = zowe.imperative.Session.createFromUrl(new URL("https://examp
 async function expectApiWithSession<T>({ name, spy, args, transform }: ITestApi<T>, apiInstance: ZoweExplorerApi.ICommon): Promise<void> {
     spy.mockClear().mockResolvedValue(undefined);
     const getSessionSpy = jest.spyOn(apiInstance, "getSession").mockReturnValue(fakeSession);
-    await (apiInstance as any)[name](...args);
+    await apiInstance[name as string](...args);
     expect(getSessionSpy).toHaveBeenCalledTimes(1);
-    const params = transform ? transform(args) : args;
+    const params: unknown[] = transform ? transform(args) : args;
     expect(spy).toHaveBeenCalledWith(fakeSession, ...params);
 }
 
@@ -54,24 +64,24 @@ describe("ZosmfUssApi", () => {
 
     it("getSessionFromCommandArgument should build session from arguments", () => {
         const zosmfApi = new ZosmfUssApi();
-        const session = zosmfApi.getSessionFromCommandArgument(fakeProfile as any);
+        const session = zosmfApi.getSessionFromCommandArgument(fakeProfile as unknown as zowe.imperative.ICommandArguments);
         expect(session).toBeDefined();
-        const sessCfg: any = {
+        const sessCfg: zowe.imperative.ISession = {
             ...fakeProfile,
             hostname: fakeProfile.host,
             type: zowe.imperative.SessConstants.AUTH_TYPE_BASIC,
         };
-        delete sessCfg.host;
+        delete sessCfg["host"];
         expect(session.ISession).toMatchObject(sessCfg);
     });
 
     it("getSession should build session from profile with user and password", () => {
         const zosmfApi = new ZosmfUssApi({
             profile: fakeProfile,
-        } as any);
+        } as unknown as zowe.imperative.IProfileLoaded);
         const session = zosmfApi.getSession();
         expect(session).toBeDefined();
-        const sessCfg: any = {
+        const sessCfg: Partial<ITestProfile> & { hostname: string; type: string } = {
             ...fakeProfile,
             hostname: fakeProfile.host,
             type: zowe.imperative.SessConstants.AUTH_TYPE_BASIC,
@@ -81,7 +91,7 @@ describe("ZosmfUssApi", () => {
     });
 
     it("getSession should build session from profile with token", () => {
-        const fakeProfileWithToken: any = {
+        const fakeProfileWithToken = {
             ...fakeProfile,
             tokenType: zowe.imperative.SessConstants.TOKEN_TYPE_JWT,
             tokenValue: "fakeToken",
@@ -90,10 +100,10 @@ describe("ZosmfUssApi", () => {
         delete fakeProfileWithToken.password;
         const zosmfApi = new ZosmfUssApi({
             profile: fakeProfileWithToken,
-        } as any);
+        } as unknown as zowe.imperative.IProfileLoaded);
         const session = zosmfApi.getSession();
         expect(session).toBeDefined();
-        const sessCfg: any = {
+        const sessCfg: Partial<ITestProfile> & { hostname: string; type: string } = {
             ...fakeProfileWithToken,
             hostname: fakeProfileWithToken.host,
             type: zowe.imperative.SessConstants.AUTH_TYPE_TOKEN,
@@ -103,8 +113,8 @@ describe("ZosmfUssApi", () => {
     });
 
     it("getSession should log error when it fails", () => {
-        const zosmfApi = new ZosmfUssApi({} as any);
-        const loggerSpy = jest.spyOn(zowe.imperative.Logger.prototype, "error").mockReturnValue(undefined);
+        const zosmfApi = new ZosmfUssApi({} as unknown as zowe.imperative.IProfileLoaded);
+        const loggerSpy = jest.spyOn(zowe.imperative.Logger.prototype, "error").mockReturnValue("");
         const session = zosmfApi.getSession();
         expect(session).toBeUndefined();
         expect(loggerSpy).toHaveBeenCalledTimes(1);
@@ -113,15 +123,15 @@ describe("ZosmfUssApi", () => {
     it("getStatus should validate active profile", async () => {
         const zosmfApi = new ZosmfUssApi();
         const checkStatusSpy = jest.spyOn(zowe.CheckStatus, "getZosmfInfo").mockResolvedValue({});
-        const status = await zosmfApi.getStatus({ profile: fakeProfile } as any, "zosmf");
+        const status = await zosmfApi.getStatus({ profile: fakeProfile } as unknown as zowe.imperative.IProfileLoaded, "zosmf");
         expect(status).toBe("active");
         expect(checkStatusSpy).toHaveBeenCalledTimes(1);
     });
 
     it("getStatus should validate inactive profile", async () => {
         const zosmfApi = new ZosmfUssApi();
-        const checkStatusSpy = jest.spyOn(zowe.CheckStatus, "getZosmfInfo").mockResolvedValue(undefined);
-        const status = await zosmfApi.getStatus({ profile: fakeProfile } as any, "zosmf");
+        const checkStatusSpy = jest.spyOn(zowe.CheckStatus, "getZosmfInfo").mockResolvedValue(undefined as unknown as IZosmfInfoResponse);
+        const status = await zosmfApi.getStatus({ profile: fakeProfile } as unknown as zowe.imperative.IProfileLoaded, "zosmf");
         expect(status).toBe("inactive");
         expect(checkStatusSpy).toHaveBeenCalledTimes(1);
     });
@@ -140,14 +150,14 @@ describe("ZosmfUssApi", () => {
 
     it("getStatus should validate unverified profile", async () => {
         const zosmfApi = new ZosmfUssApi();
-        const status = await zosmfApi.getStatus({ profile: fakeProfile } as any, "sample");
+        const status = await zosmfApi.getStatus({ profile: fakeProfile } as unknown as zowe.imperative.IProfileLoaded, "sample");
         expect(status).toBe("unverified");
     });
 
     it("login and logout should call APIML endpoints", async () => {
         const zosmfApi = new ZosmfUssApi();
-        const loginSpy = jest.spyOn(zowe.Login, "apimlLogin").mockResolvedValue(undefined);
-        const logoutSpy = jest.spyOn(zowe.Logout, "apimlLogout").mockResolvedValue(undefined);
+        const loginSpy = jest.spyOn(zowe.Login, "apimlLogin").mockResolvedValue("");
+        const logoutSpy = jest.spyOn(zowe.Logout, "apimlLogout").mockResolvedValue();
 
         await zosmfApi.login(fakeSession);
         expect(loginSpy).toHaveBeenCalledWith(fakeSession);
@@ -216,7 +226,7 @@ describe("ZosmfUssApi", () => {
         },
     ];
     ussApis.forEach((ussApi) => {
-        it(`${ussApi.name} should inject session into Zowe API`, async () => {
+        it(`${ussApi?.name} should inject session into Zowe API`, async () => {
             await expectApiWithSession(ussApi, new ZosmfUssApi());
         });
     });
@@ -312,7 +322,7 @@ describe("ZosmfMvsApi", () => {
         },
     ];
     mvsApis.forEach((mvsApi) => {
-        it(`${mvsApi.name} should inject session into Zowe API`, async () => {
+        it(`${mvsApi?.name} should inject session into Zowe API`, async () => {
             await expectApiWithSession(mvsApi, new ZosmfMvsApi());
         });
     });
@@ -377,7 +387,7 @@ describe("ZosmfJesApi", () => {
         },
     ];
     jesApis.forEach((jesApi) => {
-        it(`${jesApi.name} should inject session into Zowe API`, async () => {
+        it(`${jesApi?.name} should inject session into Zowe API`, async () => {
             await expectApiWithSession(jesApi, new ZosmfJesApi());
         });
     });
@@ -404,7 +414,7 @@ describe("ZosmfCommandApi", () => {
         },
     ];
     commandApis.forEach((commandApi) => {
-        it(`${commandApi.name} should inject session into Zowe API`, async () => {
+        it(`${commandApi?.name} should inject session into Zowe API`, async () => {
             await expectApiWithSession(commandApi, new ZosmfCommandApi());
         });
     });

@@ -15,7 +15,7 @@
     "vscode": "^1.53.2"
   },
   "dependencies": {
-    "@zowe/cli": "7.11.0",
+    "@zowe/cli": "7.11.3",
     "vscode-nls": "4.1.2"
   },
   "devDependencies": {
@@ -53,7 +53,7 @@
     "fresh-clone": "yarn workspaces run fresh-clone && rimraf node_modules",
     "prepare": "husky install && yarn build",
     "lint": "yarn workspaces run lint",
-    "lintErrors": "yarn workspaces run lintErrors",
+    "lint:html": "yarn workspaces run lint:html",
     "pretty": "prettier --write .",
     "build": "yarn workspaces run build",
     "test": "yarn workspaces run test",

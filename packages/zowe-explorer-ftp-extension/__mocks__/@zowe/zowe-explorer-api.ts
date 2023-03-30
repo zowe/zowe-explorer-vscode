@@ -10,7 +10,6 @@
  */
 
 // This shouldn't be considered redeclared, as its contained within a mock.
-// eslint-disable-next-line no-shadow
 export class MessageSeverity {
     public static TRACE = 0;
     public static DEBUG = 1;

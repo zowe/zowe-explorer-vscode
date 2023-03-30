@@ -52,10 +52,10 @@ export function run(): Promise<void> {
                         c();
                     }
                 });
-            } catch (err) {
+            } catch (error) {
                 // eslint-disable-next-line no-console
-                console.error(err);
-                e(err);
+                console.error(error);
+                e(error);
             }
         });
     });
