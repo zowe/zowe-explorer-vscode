@@ -310,10 +310,14 @@ export function setConfigPath(configPath: string | undefined): void {
  * @param logsPath File path for logs folder defined in preferences
  */
 export function initLogger(logsPath: string): void {
-    for (const appenderName of Object.keys(loggerConfig.log4jsConfig.appenders)) {
-        loggerConfig.log4jsConfig.appenders[appenderName].filename = path.join(logsPath, loggerConfig.log4jsConfig.appenders[appenderName].filename);
+    const loggerConfigCopy = JSON.parse(JSON.stringify(loggerConfig));
+    for (const appenderName of Object.keys(loggerConfigCopy.log4jsConfig.appenders)) {
+        loggerConfigCopy.log4jsConfig.appenders[appenderName].filename = path.join(
+            logsPath,
+            loggerConfigCopy.log4jsConfig.appenders[appenderName].filename
+        );
     }
-    imperative.Logger.initLogger(loggerConfig);
+    imperative.Logger.initLogger(loggerConfigCopy);
     this.LOG = imperative.Logger.getAppLogger();
 }
 
@@ -328,10 +332,10 @@ export function setSavedProfileContents(value: Uint8Array): void {
 export async function setGlobalSecurityValue(): Promise<void> {
     if (ISTHEIA) {
         PROFILE_SECURITY = false;
-        await SettingsConfig.setDirectValue(this.SETTINGS_SECURE_CREDENTIALS_ENABLED, false, vscode.ConfigurationTarget.Global);
+        await SettingsConfig.setDirectValue(SETTINGS_SECURE_CREDENTIALS_ENABLED, false, vscode.ConfigurationTarget.Global);
         return;
     }
-    const settingEnabled: boolean = SettingsConfig.getDirectValue(this.SETTINGS_SECURE_CREDENTIALS_ENABLED);
+    const settingEnabled: boolean = SettingsConfig.getDirectValue(SETTINGS_SECURE_CREDENTIALS_ENABLED);
     if (!settingEnabled) {
         PROFILE_SECURITY = false;
     } else {

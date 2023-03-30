@@ -9,12 +9,43 @@
  *
  */
 
+import * as path from "path";
 import * as LoggerUtils from "../../../src/utils/LoggerUtils";
 import * as vscode from "vscode";
 import * as globals from "../../../src/globals";
+import { imperative } from "@zowe/cli";
 import { Gui } from "@zowe/zowe-explorer-api";
 
 describe("Logger Utils Unit Tests - function initializeZoweLogger", () => {
+    it("should reinitialize logger with new path", async () => {
+        const oldLogsPath = path.join("..", "logs1");
+        const newLogsPath = path.join("..", "logs2");
+        const initLoggerSpy = jest.spyOn(imperative.Logger, "initLogger").mockImplementation();
+
+        Object.defineProperty(globals, "LOG", {
+            value: {
+                debug: jest.fn(),
+            },
+            configurable: true,
+        });
+
+        await LoggerUtils.initializeZoweLogger({
+            subscriptions: [],
+            extensionPath: oldLogsPath,
+        } as unknown as vscode.ExtensionContext);
+        await LoggerUtils.initializeZoweLogger({
+            subscriptions: [],
+            extensionPath: newLogsPath,
+        } as unknown as vscode.ExtensionContext);
+
+        expect(initLoggerSpy).toHaveBeenCalledTimes(2);
+        const loggerConfig: Record<string, any> = initLoggerSpy.mock.calls[0][0];
+        expect(loggerConfig.log4jsConfig.appenders.default.filename.indexOf(oldLogsPath)).toBe(0);
+        const loggerConfig2: Record<string, any> = initLoggerSpy.mock.calls[1][0];
+        expect(loggerConfig2.log4jsConfig.appenders.default.filename.indexOf(oldLogsPath)).toBe(-1);
+        expect(loggerConfig2.log4jsConfig.appenders.default.filename.indexOf(newLogsPath)).toBe(0);
+    });
+
     it("should throw an error if logger was not able to initialize", async () => {
         jest.spyOn(globals, "initLogger").mockImplementation(() => {
             throw new Error("failed to initialize logger");

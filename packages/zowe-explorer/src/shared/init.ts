@@ -24,6 +24,7 @@ import { saveFile } from "../dataset/actions";
 import { saveUSSFile } from "../uss/actions";
 import { promptCredentials, writeOverridesFile } from "../utils/ProfilesUtils";
 import { ZoweSaveQueue } from "../abstract/ZoweSaveQueue";
+import { initializeZoweLogger } from "../utils/LoggerUtils";
 
 // Set up localization
 nls.config({
@@ -82,12 +83,13 @@ export function registerCommonCommands(context: vscode.ExtensionContext, provide
     // Register functions & event listeners
     context.subscriptions.push(
         vscode.workspace.onDidChangeConfiguration(async (e) => {
+            // If the log folder location has been changed, update current log folder preference
+            if (e.affectsConfiguration(globals.SETTINGS_LOGS_FOLDER_PATH)) {
+                await initializeZoweLogger(context);
+            }
             // If the temp folder location has been changed, update current temp folder preference
             if (e.affectsConfiguration(globals.SETTINGS_TEMP_FOLDER_PATH)) {
-                const updatedPreferencesTempPath: string = vscode.workspace
-                    .getConfiguration()
-                    /* tslint:disable:no-string-literal */
-                    .get(globals.SETTINGS_TEMP_FOLDER_PATH);
+                const updatedPreferencesTempPath: string = vscode.workspace.getConfiguration().get(globals.SETTINGS_TEMP_FOLDER_PATH);
                 moveTempFolder(globals.SETTINGS_TEMP_FOLDER_LOCATION, updatedPreferencesTempPath);
             }
             if (e.affectsConfiguration(globals.SETTINGS_AUTOMATIC_PROFILE_VALIDATION)) {
