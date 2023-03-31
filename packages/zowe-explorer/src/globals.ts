@@ -327,13 +327,8 @@ export function setSavedProfileContents(value: Uint8Array): void {
     SAVED_PROFILE_CONTENTS = value;
 }
 
-export async function setGlobalSecurityValue(): Promise<void> {
-    if (ISTHEIA) {
-        PROFILE_SECURITY = false;
-        await SettingsConfig.setDirectValue(this.SETTINGS_SECURE_CREDENTIALS_ENABLED, false, vscode.ConfigurationTarget.Global);
-        return;
-    }
-    const settingEnabled: boolean = SettingsConfig.getDirectValue(this.SETTINGS_SECURE_CREDENTIALS_ENABLED);
+export function setGlobalSecurityValue(): void {
+    const settingEnabled: boolean = SettingsConfig.getDirectValue(this.SETTINGS_SECURE_CREDENTIALS_ENABLED, !ISTHEIA);
     if (!settingEnabled) {
         PROFILE_SECURITY = false;
     } else {

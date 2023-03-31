@@ -309,7 +309,7 @@ export async function promptCredentials(node: IZoweTreeNode): Promise<void> {
 export async function initializeZoweFolder(): Promise<void> {
     // ensure the Secure Credentials Enabled value is read
     // set globals.PROFILE_SECURITY value accordingly
-    await globals.setGlobalSecurityValue();
+    globals.setGlobalSecurityValue();
     // Ensure that ~/.zowe folder exists
     // Ensure that the ~/.zowe/settings/imperative.json exists
     // TODO: update code below once this imperative issue is resolved.
