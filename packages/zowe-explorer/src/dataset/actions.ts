@@ -517,7 +517,7 @@ export async function createFile(node: api.IZoweDatasetTreeNode, datasetProvider
     let dsName: string;
     let typeEnum: number;
     let propertiesFromDsType: any;
-    const stepTwoOptions = {
+    const stepTwoOptions: vscode.QuickPickOptions = {
         placeHolder: localize("createFile.quickPickOption.dataSetType", "Type of Data Set to be Created"),
         ignoreFocusOut: true,
         canPickMany: false,
@@ -526,7 +526,18 @@ export async function createFile(node: api.IZoweDatasetTreeNode, datasetProvider
         ignoreFocusOut: true,
         canPickMany: false,
     };
+    //get array of template names
+    const stepTwoTemplates = datasetProvider.getDsTemplates();
+    // eslint-disable-next-line no-console
+    console.log(stepTwoTemplates);
+    const templateNames: string[] = [];
+    stepTwoTemplates.forEach((item) => {
+        templateNames.push(`Template ${item.name.toString()}`);
+    });
+    // eslint-disable-next-line no-console
+    console.log(templateNames);
     const stepTwoChoices = [
+        ...templateNames,
         localize("createFile.dataSetBinary", "Data Set Binary"),
         localize("createFile.dataSetC", "Data Set C"),
         localize("createFile.dataSetClassic", "Data Set Classic"),
@@ -569,12 +580,20 @@ export async function createFile(node: api.IZoweDatasetTreeNode, datasetProvider
             api.Gui.showMessage(localize("createFile.operationCancelled", "Operation cancelled."));
             return;
         } else {
-            // Add the default property values to the list of items
-            // that will be shown in DS attributes for editing
-            typeEnum = getDataSetTypeAndOptions(type).typeEnum;
-            const cliDefaultsKey = globals.CreateDataSetTypeWithKeysEnum[typeEnum].replace("DATA_SET_", "");
+            // Look for template
+            stepTwoTemplates.forEach((template) => {
+                if (type === template.name) {
+                    propertiesFromDsType = template;
+                }
+            });
+            if (!propertiesFromDsType) {
+                // Add the default property values to the list of items
+                // that will be shown in DS attributes for editing
+                typeEnum = getDataSetTypeAndOptions(type).typeEnum;
+                const cliDefaultsKey = globals.CreateDataSetTypeWithKeysEnum[typeEnum].replace("DATA_SET_", "");
 
-            propertiesFromDsType = zowe.CreateDefaults.DATA_SET[cliDefaultsKey];
+                propertiesFromDsType = zowe.CreateDefaults.DATA_SET[cliDefaultsKey];
+            }
             newDSProperties.forEach((property) => {
                 Object.keys(propertiesFromDsType).forEach((typeProperty) => {
                     if (typeProperty === property.key) {
@@ -716,6 +735,9 @@ async function handleUserSelection(newDSProperties, dsType): Promise<string> {
         return Promise.resolve(handleUserSelection(newDSProperties, dsType));
     }
 }
+
+// async function compareWithDefaults() {
+// }
 
 /**
  * Shows data set attributes in a new text editor

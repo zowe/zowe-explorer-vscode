@@ -35,8 +35,8 @@ export let CONFIG_PATH; // set during activate
 export let ISTHEIA: boolean = false; // set during activate
 export let LOG: imperative.Logger;
 export const COMMAND_COUNT = 102;
-export const MAX_SEARCH_HISTORY = 5;
-export const MAX_FILE_HISTORY = 10;
+export const MAX_OF_FIVE = 5;
+export const MAX_OF_TEN = 10;
 export const STATUS_BAR_TIMEOUT_MS = 5000;
 export const CONTEXT_PREFIX = "_";
 export const FAV_SUFFIX = CONTEXT_PREFIX + "fav";

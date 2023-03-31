@@ -16,6 +16,7 @@ import * as globals from "../globals";
 import * as dsActions from "./actions";
 import {
     Gui,
+    dsAlloc,
     ValidProfileEnum,
     IZoweTree,
     IZoweDatasetTreeNode,
@@ -719,6 +720,15 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
 
     public removeFileHistory(name: string): Promise<void> {
         return this.mHistory.removeFileHistory(name);
+    }
+
+    public addDsTemplate(criteria: dsAlloc): void {
+        this.mHistory.addDsTemplateHistory(criteria);
+        this.refresh();
+    }
+
+    public getDsTemplates(): dsAlloc[] {
+        return this.mHistory.getDsTemplates();
     }
 
     public createFilterString(newFilter: string, node: IZoweDatasetTreeNode): string {

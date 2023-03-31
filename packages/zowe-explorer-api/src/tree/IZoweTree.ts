@@ -11,7 +11,7 @@
 
 import * as vscode from "vscode";
 import { IZoweTreeNode } from "./IZoweTreeNode";
-import { PersistenceSchemaEnum } from "../profiles/UserSettings";
+import { dsAlloc, PersistenceSchemaEnum } from "../profiles/UserSettings";
 
 /**
  * The base interface for Zowe tree browsers that implement the
@@ -288,4 +288,16 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T> {
      * @param {IZoweTreeNode} sessionNode the session to use
      */
     openItemFromPath?(path: string, sessionNode: IZoweTreeNode);
+    /**
+     * Adds template for data set creation attributes
+     *
+     * @param {any} criteria the member name to add
+     */
+    addDsTemplate?(criteria: dsAlloc);
+    /**
+     * Returns the array of saved templates for data set creation attributes
+     *
+     * @returns {dsAlloc[]} the array of recently-opened member names
+     */
+    getDsTemplates?(): dsAlloc[];
 }
