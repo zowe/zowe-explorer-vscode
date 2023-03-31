@@ -71,5 +71,5 @@ export async function deactivate(): Promise<void> {
     await ZoweSaveQueue.all();
     cleanTempDir();
     globals.setActivated(false);
-    ZoweLogger.disposeZoweLogger();
+    await ZoweLogger.disposeZoweLogger();
 }

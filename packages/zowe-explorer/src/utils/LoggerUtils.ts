@@ -66,8 +66,8 @@ export class ZoweLogger {
         await this.writeLogMessage(message, MessageSeverity.FATAL);
     }
 
-    public static disposeZoweLogger(): void {
-        this.zeOutputChannel.dispose();
+    public static async disposeZoweLogger(): Promise<void> {
+        await this.zeOutputChannel.dispose();
     }
 
     private static async initVscLogger(context: vscode.ExtensionContext, logFileLocation: string): Promise<void> {
