@@ -26,6 +26,7 @@
     "lint": "concurrently -n \"_eslint_,prettier\" \"eslint .\" \"prettier --check .\"",
     "lintErrors": "echo \"zowe-explorer-api: coming soon.\"",
     "pretty": "prettier --write .",
+    "postinstall": "yarn",
     "clean": "rimraf lib",
     "fresh-clone": "yarn clean && rimraf node_modules",
     "license": "node ../../scripts/updateLicenses.js",
