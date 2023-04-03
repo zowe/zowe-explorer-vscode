@@ -231,11 +231,47 @@ export function setSession(node: IZoweTreeNode, combinedSessionProfile: imperati
     }
 }
 
+export function getCredentialManagerOverride(): string | undefined {
+    let fd: number;
+    let fileContent: string;
+    const settingsFile = path.join(getZoweDir(), "settings", "imperative.json");
+
+    try {
+        fd = fs.openSync(settingsFile, "r+");
+        fileContent = fs.readFileSync(fd, "utf-8");
+    } catch {
+        return;
+    }
+
+    try {
+        let settings: any;
+        try {
+            settings = JSON.parse(fileContent);
+        } catch (err) {
+            if (err instanceof Error) {
+                throw new Error(localize("writeOverridesFile.jsonParseError", "Failed to parse JSON file {0}:", settingsFile) + " " + err.message);
+            }
+        }
+        if (settings && settings.overrides && settings.overrides.CredentialManager) {
+            return settings.overrides.CredentialManager as string;
+        }
+        return undefined;
+    } finally {
+        fs.closeSync(fd);
+    }
+}
+
 export function getProfileInfo(envTheia: boolean): imperative.ProfileInfo {
-    const mProfileInfo = new imperative.ProfileInfo("zowe", {
+    // const credentialManagerOverride = getCredentialManagerOverride();
+
+    // if (credentialManagerOverride) {
+    //     return new imperative.ProfileInfo("zowe", {
+    //         override: credentialManagerOverride,
+    //     });
+    // }
+    return new imperative.ProfileInfo("zowe", {
         requireKeytar: () => getSecurityModules("keytar", envTheia),
     });
-    return mProfileInfo;
 }
 
 export function getProfile(node: vscode.TreeItem | ZoweTreeNode): imperative.IProfileLoaded {
