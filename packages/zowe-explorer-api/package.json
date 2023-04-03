@@ -20,13 +20,14 @@
     "semver": "^7.3.5"
   },
   "scripts": {
-    "build": "yarn clean && tsc -p ./ && yarn license",
+    "build": "yarn check-cli && yarn clean && tsc -p ./ && yarn license",
     "test:unit": "jest \".*__tests__.*\\.unit\\.test\\.ts\" --coverage",
     "test": "yarn test:unit",
     "lint": "concurrently -n \"_eslint_,prettier\" \"eslint .\" \"prettier --check .\"",
     "lintErrors": "echo \"zowe-explorer-api: coming soon.\"",
+    "postinstall": "bash scripts/check-cli.sh",
     "pretty": "prettier --write .",
-    "postinstall": "yarn",
+    "check-cli": "bash scripts/check-cli.sh",
     "clean": "rimraf lib",
     "fresh-clone": "yarn clean && rimraf node_modules",
     "license": "node ../../scripts/updateLicenses.js",
