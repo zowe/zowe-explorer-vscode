@@ -42,7 +42,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
     private _jobStatus: string;
     private _tooltip: string;
 
-    constructor(
+    public constructor(
         label: string,
         collapsibleState: vscode.TreeItemCollapsibleState,
         mParent: IZoweJobTreeNode,
@@ -148,12 +148,9 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
                     if (icon) {
                         spoolNode.iconPath = icon.path;
                     }
-                    const arr = [];
-                    Object.keys(spool).map((key) => {
-                        if (key !== "records-url") {
-                            arr.push({ [key]: spool[key] });
-                        }
-                    });
+                    const arr = Object.keys(spool)
+                        .filter((k) => k !== "records-url")
+                        .map((key) => ({ [key]: spool[key] }));
                     let newTooltip = "";
                     arr.forEach((item) => {
                         newTooltip += `${JSON.stringify(item).replace(/({|})/g, "")}\n`;
@@ -213,13 +210,13 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
         return this.getParent() ? this.getParent().getSessionNode() : this;
     }
 
-    set tooltip(newTooltip: string) {
+    public set tooltip(newTooltip: string) {
         if (newTooltip) {
             this._tooltip = newTooltip;
         }
     }
 
-    get tooltip(): string {
+    public get tooltip(): string {
         if (this._tooltip) {
             return this._tooltip;
         }
@@ -234,7 +231,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
         }
     }
 
-    set owner(newOwner: string) {
+    public set owner(newOwner: string) {
         if (newOwner !== undefined) {
             if (newOwner.length === 0) {
                 this._owner = this.session.ISession.user;
@@ -244,21 +241,21 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
         }
     }
 
-    get owner() {
+    public get owner(): string {
         return this._owner;
     }
 
-    set status(newStatus: string) {
+    public set status(newStatus: string) {
         if (newStatus) {
             this._jobStatus = newStatus;
         }
     }
 
-    get status() {
+    public get status(): string {
         return this._jobStatus;
     }
 
-    set prefix(newPrefix: string) {
+    public set prefix(newPrefix: string) {
         if (newPrefix !== undefined) {
             if (newPrefix.length === 0) {
                 this._prefix = "*";
@@ -268,7 +265,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
         }
     }
 
-    get prefix() {
+    public get prefix(): string {
         return this._prefix;
     }
 
@@ -278,11 +275,11 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
         }
     }
 
-    public get searchId() {
+    public get searchId(): string {
         return this._searchId;
     }
 
-    private statusNotSupportedMsg(status: string) {
+    private statusNotSupportedMsg(status: string): void {
         if (status !== "*") {
             Gui.warningMessage(
                 localize(
@@ -319,7 +316,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
                  *    filters only the unique jobs present by comparing the ids of these returned
                  *    jobs.
                  */
-                jobsInternal = jobsInternal.reduce((acc, current) => {
+                jobsInternal = jobsInternal.reduce((acc: zowe.IJob[], current) => {
                     const duplicateJobExists = acc.find((job) => job.jobid === current.jobid);
                     if (!duplicateJobExists) {
                         return acc.concat([current]);
@@ -329,9 +326,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
                 }, []);
             } catch (error) {
                 await errorHandling(error, this.label, localize("getChildren.error.response", "Retrieving response from ") + `zowe.GetJobs`);
-                await syncSessionNode(Profiles.getInstance())((profileValue) => ZoweExplorerApiRegister.getJesApi(profileValue).getSession())(
-                    sessNode
-                );
+                syncSessionNode(Profiles.getInstance())((profileValue) => ZoweExplorerApiRegister.getJesApi(profileValue).getSession())(sessNode);
             }
         }
         return jobsInternal;
@@ -339,7 +334,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
 }
 
 export class Spool extends Job {
-    constructor(
+    public constructor(
         label: string,
         mCollapsibleState: vscode.TreeItemCollapsibleState,
         mParent: IZoweJobTreeNode,

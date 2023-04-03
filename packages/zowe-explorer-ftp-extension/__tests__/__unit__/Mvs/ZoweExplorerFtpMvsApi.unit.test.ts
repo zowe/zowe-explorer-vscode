@@ -26,10 +26,10 @@ Gui.errorMessage = jest.fn();
 jest.mock("../../../src/extension.ts");
 jest.mock("vscode");
 const stream = require("stream");
-// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,@typescript-eslint/no-unsafe-call
+
 const readableStream = stream.Readable.from([]);
 const fs = require("fs");
-// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+
 fs.createReadStream = jest.fn().mockReturnValue(readableStream);
 const MvsApi = new FtpMvsApi();
 
@@ -51,7 +51,7 @@ describe("FtpMvsApi", () => {
             filter: "IBMUSER",
         };
         const result = await MvsApi.dataSet(mockParams.filter);
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+
         expect(result.apiResponse.items[0].dsname).toContain("IBMUSER.DS1");
         expect(DataSetUtils.listDataSets).toBeCalledTimes(1);
         expect(MvsApi.releaseConnection).toHaveBeenCalledTimes(0);
@@ -64,7 +64,7 @@ describe("FtpMvsApi", () => {
             dataSetName: "IBMUSER.DS1",
         };
         const result = await MvsApi.allMembers(mockParams.dataSetName);
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+
         expect(result.apiResponse.items[0].member).toContain("M1");
         expect(DataSetUtils.listMembers).toBeCalledTimes(1);
         expect(MvsApi.releaseConnection).toBeCalled();
@@ -83,17 +83,17 @@ describe("FtpMvsApi", () => {
             },
         };
         const result = await MvsApi.getContents(mockParams.dataSetName, mockParams.options);
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+
         expect(result.apiResponse.etag).toHaveLength(40);
         expect(DataSetUtils.downloadDataSet).toBeCalledTimes(1);
         expect(MvsApi.releaseConnection).toBeCalled();
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,@typescript-eslint/no-unsafe-call
+
         expect(response._readableState.buffer.head.data.toString()).toContain("Hello world");
     });
 
     it("should upload content to dataset.", async () => {
         const localFile = tmp.tmpNameSync({ tmpdir: "/tmp" });
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,@typescript-eslint/no-unsafe-call
+
         fs.writeFileSync(localFile, "hello");
         const response = TestUtils.getSingleLineStream();
         const response2 = [{ dsname: "IBMUSER.DS2", dsorg: "PS", lrecl: 2 }];

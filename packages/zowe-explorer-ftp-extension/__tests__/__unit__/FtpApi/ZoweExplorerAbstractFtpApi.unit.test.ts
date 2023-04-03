@@ -44,7 +44,7 @@ describe("AbstractFtpApi", () => {
         session.releaseConnections = jest.fn();
 
         await instance.logout(session);
-        // eslint-disable-next-line @typescript-eslint/unbound-method
+
         expect(session.releaseConnections).toBeCalledTimes(1);
         expect(sessionMap.size).toBe(0);
     });
@@ -179,7 +179,7 @@ describe("AbstractFtpApi", () => {
         };
         const createConfigFromArgsSpy = jest.spyOn(FTPConfig, "createConfigFromArguments");
         const instance = new Dummy();
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+
         await instance.ftpClient({ ...profile, profile: ftpProfile });
 
         expect(createConfigFromArgsSpy).toHaveBeenLastCalledWith(ftpProfile);

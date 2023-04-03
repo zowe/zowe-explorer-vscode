@@ -28,6 +28,8 @@ export async function initializeZoweLogger(context: vscode.ExtensionContext): Pr
     } catch (err) {
         globals.LOG.error(err);
         const errorMessage = localize("initialize.log.error", "Error encountered while activating and initializing logger! ");
-        await Gui.errorMessage(`${errorMessage}: ${err.message}`);
+        if (err instanceof Error) {
+            await Gui.errorMessage(`${errorMessage}: ${err.message}`);
+        }
     }
 }

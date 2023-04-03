@@ -192,7 +192,9 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
 
         try {
             await dsActions.createMember(parent, blockMocks.testDatasetTree);
-        } catch (err) {}
+        } catch (err) {
+            // Prevent exception from failing test
+        }
 
         expect(mocked(Gui.errorMessage)).toBeCalledWith("Unable to create member: test Error: test");
         mocked(zowe.Upload.bufferToDataSet).mockReset();
@@ -2078,7 +2080,7 @@ describe("Dataset Actions Unit Tests - Function copyDataSets", () => {
             blockMocks.imperativeProfile
         );
 
-        let label = node.getParent().getLabel().toString() + "(" + node.getLabel().toString() + ")";
+        const label = node.getParent().getLabel().toString() + "(" + node.getLabel().toString() + ")";
         const filePathSpy = jest.spyOn(sharedUtils, "getDocumentFilePath");
         await dsActions.downloadDs(node);
         expect(filePathSpy).toBeCalledWith(label, node);
@@ -2731,7 +2733,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
 
         const quickPickContent = createQuickPickContent("", [], "");
         mocked(vscode.window.createQuickPick).mockReturnValueOnce(quickPickContent);
-        blockMocks.testDatasetTree.createFilterString.mockResolvedValue("test");
+        blockMocks.testDatasetTree.createFilterString.mockReturnValue("test");
         blockMocks.testDatasetTree.getSearchHistory.mockReturnValue([]);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         mocked(vscode.window.showInputBox).mockResolvedValue("test");
@@ -2771,7 +2773,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         const quickPickContent = createQuickPickContent("", [], "");
         mocked(vscode.window.createQuickPick).mockReturnValueOnce(quickPickContent);
         blockMocks.profileInstance.promptCredentials.mockReturnValue(["fake", "fake", "fake"]);
-        blockMocks.testDatasetTree.createFilterString.mockResolvedValue("test");
+        blockMocks.testDatasetTree.createFilterString.mockReturnValue("test");
         blockMocks.testDatasetTree.getSearchHistory.mockReturnValue([]);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         mocked(vscode.window.showInputBox).mockResolvedValue("test");
@@ -2814,7 +2816,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         const quickPickContent = createQuickPickContent("", [], "");
         mocked(vscode.window.createQuickPick).mockReturnValueOnce(quickPickContent);
         blockMocks.profileInstance.promptCredentials.mockReturnValue(["fake", "fake", "fake"]);
-        blockMocks.testDatasetTree.createFilterString.mockResolvedValue("test");
+        blockMocks.testDatasetTree.createFilterString.mockReturnValue("test");
         blockMocks.testDatasetTree.getSearchHistory.mockReturnValue([]);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         mocked(vscode.window.showInputBox).mockResolvedValue("test");
@@ -2855,7 +2857,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
 
         const quickPickContent = createQuickPickContent("", [], "");
         mocked(vscode.window.createQuickPick).mockReturnValueOnce(quickPickContent);
-        blockMocks.testDatasetTree.createFilterString.mockResolvedValue("test");
+        blockMocks.testDatasetTree.createFilterString.mockReturnValue("test");
         blockMocks.testDatasetTree.getSearchHistory.mockReturnValue([]);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         mocked(vscode.window.showInputBox).mockImplementation((options) => {
@@ -2899,7 +2901,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
 
         const quickPickContent = createQuickPickContent("", [], "");
         mocked(vscode.window.createQuickPick).mockReturnValueOnce(quickPickContent);
-        blockMocks.testDatasetTree.createFilterString.mockResolvedValue("test");
+        blockMocks.testDatasetTree.createFilterString.mockReturnValue("test");
         blockMocks.testDatasetTree.getSearchHistory.mockReturnValue([]);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         mocked(vscode.window.showInputBox).mockResolvedValue("test");
@@ -2932,7 +2934,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
 
-        blockMocks.testDatasetTree.createFilterString.mockResolvedValue("test");
+        blockMocks.testDatasetTree.createFilterString.mockReturnValue("test");
         blockMocks.testDatasetTree.getSearchHistory.mockReturnValue([]);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         mocked(vscode.window.showInputBox).mockResolvedValue("test");
@@ -2954,7 +2956,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
 
         const quickPickContent = createQuickPickContent("", [], "");
         mocked(vscode.window.createQuickPick).mockReturnValueOnce(quickPickContent);
-        blockMocks.testDatasetTree.createFilterString.mockResolvedValue("NODE1,NODE.*");
+        blockMocks.testDatasetTree.createFilterString.mockReturnValue("NODE1,NODE.*");
         blockMocks.testDatasetTree.getSearchHistory.mockReturnValue(["NODE1"]);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         mocked(vscode.window.showInputBox).mockResolvedValue("test");
@@ -2975,7 +2977,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
 
         const quickPickContent = createQuickPickContent("", [], "");
         mocked(vscode.window.createQuickPick).mockReturnValueOnce(quickPickContent);
-        blockMocks.testDatasetTree.createFilterString.mockResolvedValue("NODE1,NODE.*");
+        blockMocks.testDatasetTree.createFilterString.mockReturnValue("NODE1,NODE.*");
         blockMocks.testDatasetTree.getSearchHistory.mockReturnValue([null]);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         mocked(vscode.window.showInputBox).mockResolvedValue("test");
@@ -2995,7 +2997,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
 
-        blockMocks.testDatasetTree.createFilterString.mockResolvedValue("NODE1,NODE.*");
+        blockMocks.testDatasetTree.createFilterString.mockReturnValue("NODE1,NODE.*");
         blockMocks.testDatasetTree.getSearchHistory.mockReturnValue([null]);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         const createDataSetSpy = jest.spyOn(blockMocks.mvsApi, "createDataSet");
@@ -3039,7 +3041,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
 
-        blockMocks.testDatasetTree.createFilterString.mockResolvedValue("NODE1,NODE.*");
+        blockMocks.testDatasetTree.createFilterString.mockReturnValue("NODE1,NODE.*");
         blockMocks.testDatasetTree.getSearchHistory.mockReturnValue([null]);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         const createDataSetSpy = jest.spyOn(blockMocks.mvsApi, "createDataSet");
@@ -3275,7 +3277,9 @@ describe("Dataset Actions Unit Tests - Function openPS", () => {
 
         try {
             await dsActions.openPS(node, true, blockMocks.testDatasetTree);
-        } catch (err) {}
+        } catch (err) {
+            // Prevent exception from failing test
+        }
 
         expect(mocked(Gui.errorMessage)).toBeCalledWith("openPS() called from invalid node.");
     });
@@ -3340,7 +3344,7 @@ describe("Dataset Actions Unit Tests - Function allocateLike", () => {
             return Promise.resolve("test");
         });
         jest.spyOn(datasetSessionNode, "getChildren").mockResolvedValue([testNode, testSDSNode]);
-        testDatasetTree.createFilterString.mockResolvedValue("test");
+        testDatasetTree.createFilterString.mockReturnValue("test");
         jest.spyOn(Gui, "resolveQuickPick").mockResolvedValue(quickPickItem);
         jest.spyOn(dsActions, "openPS").mockImplementation(() => null);
 

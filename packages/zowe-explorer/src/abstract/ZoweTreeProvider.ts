@@ -38,7 +38,7 @@ export class ZoweTreeProvider {
     protected log: imperative.Logger = imperative.Logger.getAppLogger();
     protected validProfile: number = -1;
 
-    constructor(protected persistenceSchema: PersistenceSchemaEnum, public mFavoriteSession: IZoweTreeNode) {
+    public constructor(protected persistenceSchema: PersistenceSchemaEnum, public mFavoriteSession: IZoweTreeNode) {
         this.mHistory = new PersistentFilters(this.persistenceSchema);
     }
 
@@ -61,7 +61,7 @@ export class ZoweTreeProvider {
      *
      * @param {IZoweTreeNode}
      */
-    public setItem(treeView: vscode.TreeView<IZoweTreeNode>, item: IZoweTreeNode) {
+    public setItem(treeView: vscode.TreeView<IZoweTreeNode>, item: IZoweTreeNode): void {
         treeView.reveal(item, { select: true, focus: true });
     }
 
@@ -69,7 +69,7 @@ export class ZoweTreeProvider {
      * Call whenever the context of a node needs to be refreshed to add the home suffix
      * @param node Node to refresh
      */
-    public async refreshHomeProfileContext(node) {
+    public async refreshHomeProfileContext(node): Promise<void> {
         const mProfileInfo = await Profiles.getInstance().getProfileInfo();
         if (mProfileInfo.usingTeamConfig && !contextually.isHomeProfile(node)) {
             const prof = mProfileInfo.getAllProfiles().find((p) => p.profName === node.getProfileName());
@@ -103,7 +103,7 @@ export class ZoweTreeProvider {
      * @param element the node being flipped
      * @param isOpen the intended state of the the tree view provider, true or false
      */
-    public async flipState(element: IZoweTreeNode, isOpen: boolean = false) {
+    public flipState(element: IZoweTreeNode, isOpen: boolean = false): void {
         element.collapsibleState = isOpen ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.Collapsed;
         const icon = getIconByNode(element);
         if (icon) {
@@ -115,7 +115,7 @@ export class ZoweTreeProvider {
         }
     }
 
-    public async onDidChangeConfiguration(e: vscode.ConfigurationChangeEvent) {
+    public async onDidChangeConfiguration(e: vscode.ConfigurationChangeEvent): Promise<void> {
         if (e.affectsConfiguration(this.persistenceSchema)) {
             const setting: any = {
                 ...SettingsConfig.getDirectValue(this.persistenceSchema),
@@ -128,44 +128,44 @@ export class ZoweTreeProvider {
         }
     }
 
-    public getSearchHistory() {
+    public getSearchHistory(): string[] {
         return this.mHistory.getSearchHistory();
     }
 
-    public getTreeType() {
+    public getTreeType(): PersistenceSchemaEnum {
         return this.persistenceSchema;
     }
 
-    public async addSearchHistory(criteria: string) {
+    public addSearchHistory(criteria: string): void {
         if (criteria) {
             this.mHistory.addSearchHistory(criteria);
             this.refresh();
         }
     }
 
-    public findNonFavoritedNode(_element: IZoweTreeNode) {
+    public findNonFavoritedNode(_element: IZoweTreeNode): any {
         return undefined;
     }
 
-    public findFavoritedNode(_element: IZoweTreeNode) {
+    public findFavoritedNode(_element: IZoweTreeNode): any {
         return undefined;
     }
-    public renameFavorite(_node: IZoweTreeNode, _newLabel: string) {
+    public renameFavorite(_node: IZoweTreeNode, _newLabel: string): any {
         return undefined;
     }
-    public renameNode(_profile: string, _beforeDataSetName: string, _afterDataSetName: string) {
+    public renameNode(_profile: string, _beforeDataSetName: string, _afterDataSetName: string): any {
         return undefined;
     }
 
-    public async editSession(node: IZoweTreeNode, zoweFileProvider: IZoweTree<IZoweNodeType>) {
+    public async editSession(node: IZoweTreeNode, zoweFileProvider: IZoweTree<IZoweNodeType>): Promise<void> {
         const profile = node.getProfile();
         const profileName = node.getProfileName();
         const EditSession = await Profiles.getInstance().editSession(profile, profileName);
         if (EditSession) {
             node.getProfile().profile = EditSession as imperative.IProfile;
-            await setProfile(node, EditSession as imperative.IProfile);
+            setProfile(node, EditSession as imperative.IProfile);
             if (await node.getSession()) {
-                await setSession(node, EditSession as imperative.ISession);
+                setSession(node, EditSession as imperative.ISession);
             } else {
                 zoweFileProvider.deleteSession(node.getSessionNode());
                 this.mHistory.addSession(node.label as string);
@@ -178,7 +178,7 @@ export class ZoweTreeProvider {
         }
     }
 
-    public async checkCurrentProfile(node: IZoweTreeNode) {
+    public async checkCurrentProfile(node: IZoweTreeNode): Promise<void> {
         const profile = node.getProfile();
         const profileStatus = await Profiles.getInstance().checkCurrentProfile(profile);
         if (profileStatus.status === "inactive") {
@@ -234,29 +234,29 @@ export class ZoweTreeProvider {
         await this.refresh();
     }
 
-    public async ssoLogin(node: IZoweTreeNode) {
+    public async ssoLogin(node: IZoweTreeNode): Promise<void> {
         await Profiles.getInstance().ssoLogin(node);
         await vscode.commands.executeCommand("zowe.ds.refreshAll");
         await vscode.commands.executeCommand("zowe.uss.refreshAll");
         await vscode.commands.executeCommand("zowe.jobs.refreshAllJobs");
     }
 
-    public async ssoLogout(node: IZoweTreeNode) {
+    public async ssoLogout(node: IZoweTreeNode): Promise<void> {
         await Profiles.getInstance().ssoLogout(node);
         await vscode.commands.executeCommand("zowe.ds.refreshAll");
         await vscode.commands.executeCommand("zowe.uss.refreshAll");
         await vscode.commands.executeCommand("zowe.jobs.refreshAllJobs");
     }
 
-    public async createZoweSchema(zoweFileProvider: IZoweTree<IZoweNodeType>) {
+    public async createZoweSchema(zoweFileProvider: IZoweTree<IZoweNodeType>): Promise<void> {
         await Profiles.getInstance().createZoweSchema(zoweFileProvider);
     }
 
-    public async createZoweSession(zoweFileProvider: IZoweTree<IZoweNodeType>) {
+    public async createZoweSession(zoweFileProvider: IZoweTree<IZoweNodeType>): Promise<void> {
         await Profiles.getInstance().createZoweSession(zoweFileProvider);
     }
 
-    protected deleteSessionByLabel(revisedLabel: string) {
+    protected deleteSessionByLabel(revisedLabel: string): void {
         this.mHistory.removeSession(revisedLabel);
         this.refresh();
     }
@@ -266,7 +266,7 @@ export class ZoweTreeProvider {
      * @param element the node being flipped
      * @param provider the tree view provider
      */
-    public async expandSession(element: IZoweTreeNode, provider: IZoweTree<IZoweNodeType>) {
+    public async expandSession(element: IZoweTreeNode, provider: IZoweTree<IZoweNodeType>): Promise<void> {
         await provider.getTreeView().reveal(element, { expand: false });
         await provider.getTreeView().reveal(element, { expand: true });
         element.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;

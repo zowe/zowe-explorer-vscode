@@ -200,12 +200,10 @@ describe("Tree Provider unit tests, function getParent", () => {
         const globalMocks = await createGlobalMocks();
 
         // Await return value from getChildren
-        try {
-            const rootChildren = await globalMocks.testUSSTree.getChildren();
-            const parent = globalMocks.testUSSTree.getParent(rootChildren[1]);
+        const rootChildren = await globalMocks.testUSSTree.getChildren();
+        const parent = globalMocks.testUSSTree.getParent(rootChildren[1]);
 
-            expect(parent).toEqual(null);
-        } catch (err) {}
+        expect(parent).toEqual(null);
     });
 
     it("Tests that getParent returns the correct ZoweUSSNode when called on a non-root node", async () => {

@@ -81,15 +81,13 @@ export class Profiles extends ProfilesCache {
         return this.mProfileInfo;
     }
 
-    public async checkCurrentProfile(theProfile: zowe.imperative.IProfileLoaded) {
+    public async checkCurrentProfile(theProfile: zowe.imperative.IProfileLoaded): Promise<IProfileValidation> {
         let profileStatus: IProfileValidation;
         if (!theProfile.profile.tokenType && (!theProfile.profile.user || !theProfile.profile.password)) {
             // The profile will need to be reactivated, so remove it from profilesForValidation
-            this.profilesForValidation.filter((profile, index) => {
-                if (profile.name === theProfile.name && profile.status !== "unverified") {
-                    this.profilesForValidation.splice(index, 1);
-                }
-            });
+            this.profilesForValidation = this.profilesForValidation.filter(
+                (profile) => profile.status === "unverified" && profile.name !== theProfile.name
+            );
             let values: string[];
             try {
                 values = await Profiles.getInstance().promptCredentials(theProfile);
@@ -132,14 +130,14 @@ export class Profiles extends ProfilesCache {
     public async getProfileSetting(theProfile: zowe.imperative.IProfileLoaded): Promise<IProfileValidation> {
         let profileStatus: IProfileValidation;
         let found: boolean = false;
-        this.profilesValidationSetting.filter(async (instance) => {
+        this.profilesValidationSetting.forEach((instance) => {
             if (instance.name === theProfile.name && instance.setting === false) {
                 profileStatus = {
                     status: "unverified",
                     name: instance.name,
                 };
                 if (this.profilesForValidation.length > 0) {
-                    this.profilesForValidation.filter((profile) => {
+                    this.profilesForValidation.forEach((profile) => {
                         if (profile.name === theProfile.name && profile.status === "unverified") {
                             found = true;
                         }
@@ -161,12 +159,12 @@ export class Profiles extends ProfilesCache {
         return profileStatus;
     }
 
-    public async disableValidation(node: IZoweNodeType): Promise<IZoweNodeType> {
+    public disableValidation(node: IZoweNodeType): IZoweNodeType {
         this.disableValidationContext(node);
         return node;
     }
 
-    public async disableValidationContext(node: IZoweNodeType) {
+    public disableValidationContext(node: IZoweNodeType): IZoweNodeType {
         const theProfile: zowe.imperative.IProfileLoaded = node.getProfile();
         this.validationArraySetup(theProfile, false);
         if (node.contextValue.includes(`${globals.VALIDATE_SUFFIX}true`)) {
@@ -183,12 +181,12 @@ export class Profiles extends ProfilesCache {
         return node;
     }
 
-    public async enableValidation(node: IZoweNodeType): Promise<IZoweNodeType> {
+    public enableValidation(node: IZoweNodeType): IZoweNodeType {
         this.enableValidationContext(node);
         return node;
     }
 
-    public async enableValidationContext(node: IZoweNodeType) {
+    public enableValidationContext(node: IZoweNodeType): IZoweNodeType {
         const theProfile: zowe.imperative.IProfileLoaded = node.getProfile();
         this.validationArraySetup(theProfile, true);
         if (node.contextValue.includes(`${globals.VALIDATE_SUFFIX}false`)) {
@@ -203,11 +201,11 @@ export class Profiles extends ProfilesCache {
         return node;
     }
 
-    public async validationArraySetup(theProfile: zowe.imperative.IProfileLoaded, validationSetting: boolean): Promise<IValidationSetting> {
+    public validationArraySetup(theProfile: zowe.imperative.IProfileLoaded, validationSetting: boolean): IValidationSetting {
         let found: boolean = false;
         let profileSetting: IValidationSetting;
         if (this.profilesValidationSetting.length > 0) {
-            this.profilesValidationSetting.filter((instance) => {
+            this.profilesValidationSetting.forEach((instance) => {
                 if (instance.name === theProfile.name && instance.setting === validationSetting) {
                     found = true;
                     profileSetting = {
@@ -251,38 +249,36 @@ export class Profiles extends ProfilesCache {
      * @export
      * @param {USSTree} zoweFileProvider - either the USS, MVS, JES tree
      */
-    public async createZoweSession(zoweFileProvider: IZoweTree<IZoweTreeNode>) {
+    public async createZoweSession(zoweFileProvider: IZoweTree<IZoweTreeNode>): Promise<void> {
         let profileNamesList: string[] = [];
         try {
             const allProfiles = Profiles.getInstance().allProfiles;
             if (allProfiles) {
-                // Get all profiles
-                profileNamesList = allProfiles.map((profile) => {
-                    return profile.name;
-                });
-                // Filter to list of the APIs available for current tree explorer
-                profileNamesList = profileNamesList.filter((profileName) => {
-                    const profile = Profiles.getInstance().loadNamedProfile(profileName);
-                    if (profile) {
-                        if (zoweFileProvider.getTreeType() === PersistenceSchemaEnum.USS) {
-                            const ussProfileTypes = ZoweExplorerApiRegister.getInstance().registeredUssApiTypes();
-                            return ussProfileTypes.includes(profile.type);
+                // Get all profiles and filter to list of the APIs available for current tree explorer
+                profileNamesList = allProfiles
+                    .map((profile) => profile.name)
+                    .filter((profileName) => {
+                        const profile = Profiles.getInstance().loadNamedProfile(profileName);
+                        const notInSessionNodes = !zoweFileProvider.mSessionNodes?.find(
+                            (sessionNode) => sessionNode.getProfileName() === profileName
+                        );
+                        if (profile) {
+                            if (zoweFileProvider.getTreeType() === PersistenceSchemaEnum.USS) {
+                                const ussProfileTypes = ZoweExplorerApiRegister.getInstance().registeredUssApiTypes();
+                                return ussProfileTypes.includes(profile.type) && notInSessionNodes;
+                            }
+                            if (zoweFileProvider.getTreeType() === PersistenceSchemaEnum.Dataset) {
+                                const mvsProfileTypes = ZoweExplorerApiRegister.getInstance().registeredMvsApiTypes();
+                                return mvsProfileTypes.includes(profile.type) && notInSessionNodes;
+                            }
+                            if (zoweFileProvider.getTreeType() === PersistenceSchemaEnum.Job) {
+                                const jesProfileTypes = ZoweExplorerApiRegister.getInstance().registeredJesApiTypes();
+                                return jesProfileTypes.includes(profile.type) && notInSessionNodes;
+                            }
                         }
-                        if (zoweFileProvider.getTreeType() === PersistenceSchemaEnum.Dataset) {
-                            const mvsProfileTypes = ZoweExplorerApiRegister.getInstance().registeredMvsApiTypes();
-                            return mvsProfileTypes.includes(profile.type);
-                        }
-                        if (zoweFileProvider.getTreeType() === PersistenceSchemaEnum.Job) {
-                            const jesProfileTypes = ZoweExplorerApiRegister.getInstance().registeredJesApiTypes();
-                            return jesProfileTypes.includes(profile.type);
-                        }
-                    }
-                });
-                profileNamesList = profileNamesList.filter(
-                    (profileName) =>
-                        // Find all cases where a profile is not already displayed
-                        !zoweFileProvider.mSessionNodes?.find((sessionNode) => sessionNode.getProfileName() === profileName)
-                );
+
+                        return false;
+                    });
             }
         } catch (err) {
             this.log.warn(err);
@@ -424,7 +420,7 @@ export class Profiles extends ProfilesCache {
             return;
         }
         const editSession = this.loadNamedProfile(profileLoaded.name, profileLoaded.type).profile;
-        const editURL = editSession.host + ":" + editSession.port;
+        const editURL = `${editSession.host as string}:${editSession.port as string}`;
         const editUser = editSession.user;
         const editPass = editSession.password;
         const editrej = editSession.rejectUnauthorized;
@@ -437,7 +433,9 @@ export class Profiles extends ProfilesCache {
         const schema: {} = this.getSchema(profileLoaded.type);
         const schemaArray = Object.keys(schema);
 
-        const updSchemaValues: any = {};
+        const updSchemaValues: {
+            [k: string]: any;
+        } = {};
         updSchemaValues.name = profileName;
 
         // Go through array of schema for input values
@@ -495,13 +493,11 @@ export class Profiles extends ProfilesCache {
                     break;
                 case "tokenValue":
                     break;
-                default:
-                    let options: vscode.InputBoxOptions;
-                    const response = await this.checkType(schema[value].type);
+                default: {
+                    const response = this.checkType(schema[value].type);
                     switch (response) {
-                        case "number":
-                            options = await this.optionsValue(value, schema, editSession[value]);
-                            const updValue = await Gui.showInputBox(options);
+                        case "number": {
+                            const updValue = await Gui.showInputBox(this.optionsValue(value, schema, editSession[value]));
                             if (!Number.isNaN(Number(updValue))) {
                                 updSchemaValues[value] = Number(updValue);
                             } else {
@@ -509,7 +505,7 @@ export class Profiles extends ProfilesCache {
                                     case updValue === undefined:
                                         Gui.showMessage(localize("editConnection.number", "Operation Cancelled"));
                                         return undefined;
-                                    case schema[value].optionDefinition.hasOwnProperty("defaultValue"):
+                                    case "defaultValue" in schema[value].optionDefinition:
                                         updSchemaValues[value] = schema[value].optionDefinition.defaultValue;
                                         break;
                                     default:
@@ -518,18 +514,18 @@ export class Profiles extends ProfilesCache {
                                 }
                             }
                             break;
-                        case "boolean":
-                            let updIsTrue: boolean;
-                            updIsTrue = await this.boolInfo(value, schema);
+                        }
+                        case "boolean": {
+                            const updIsTrue = await this.boolInfo(value, schema);
                             if (updIsTrue === undefined) {
                                 Gui.showMessage(localize("editConnection.booleanValue", "Operation Cancelled"));
                                 return undefined;
                             }
                             updSchemaValues[value] = updIsTrue;
                             break;
-                        default:
-                            options = await this.optionsValue(value, schema, editSession[value]);
-                            const updDefValue = await Gui.showInputBox(options);
+                        }
+                        default: {
+                            const updDefValue = await Gui.showInputBox(this.optionsValue(value, schema, editSession[value]));
                             if (updDefValue === undefined) {
                                 Gui.showMessage(localize("editConnection.default", "Operation Cancelled"));
                                 return undefined;
@@ -539,12 +535,14 @@ export class Profiles extends ProfilesCache {
                             }
                             updSchemaValues[value] = updDefValue;
                             break;
+                        }
                     }
+                }
             }
         }
 
         try {
-            const updSession = await zowe.ZosmfSession.createSessCfgFromArgs(updSchemaValues);
+            const updSession = await zowe.ZosmfSession.createSessCfgFromArgs(updSchemaValues as zowe.imperative.ICommandArguments);
             updSchemaValues.base64EncodedAuth = updSession.base64EncodedAuth;
             await this.updateProfile({
                 profile: updSchemaValues,
@@ -654,7 +652,7 @@ export class Profiles extends ProfilesCache {
         }
     }
 
-    public async editZoweConfigFile() {
+    public async editZoweConfigFile(): Promise<void> {
         const existingLayers = await this.getConfigLayers();
         if (existingLayers.length === 1) {
             await this.openConfigFile(existingLayers[0].path);
@@ -773,12 +771,12 @@ export class Profiles extends ProfilesCache {
                     break;
                 case "tokenValue":
                     break;
-                default:
+                default: {
                     let options: vscode.InputBoxOptions;
-                    const response = await this.checkType(schema[value].type);
+                    const response = this.checkType(schema[value].type);
                     switch (response) {
-                        case "number":
-                            options = await this.optionsValue(value, schema);
+                        case "number": {
+                            options = this.optionsValue(value, schema);
                             const enteredValue = Number(await Gui.showInputBox(options));
                             if (!Number.isNaN(Number(enteredValue))) {
                                 if ((value === "encoding" || value === "responseTimeout") && enteredValue === 0) {
@@ -787,24 +785,25 @@ export class Profiles extends ProfilesCache {
                                     schemaValues[value] = Number(enteredValue);
                                 }
                             } else {
-                                if (schema[value].optionDefinition.hasOwnProperty("defaultValue")) {
+                                if ("defaultValue" in schema[value].optionDefinition) {
                                     schemaValues[value] = schema[value].optionDefinition.defaultValue;
                                 } else {
                                     delete schemaValues[value];
                                 }
                             }
                             break;
-                        case "boolean":
-                            let isTrue: boolean;
-                            isTrue = await this.boolInfo(value, schema);
+                        }
+                        case "boolean": {
+                            const isTrue = await this.boolInfo(value, schema);
                             if (isTrue === undefined) {
                                 Gui.showMessage(localize("createNewConnection.booleanValue", "Operation Cancelled"));
                                 return undefined;
                             }
                             schemaValues[value] = isTrue;
                             break;
-                        default:
-                            options = await this.optionsValue(value, schema);
+                        }
+                        default: {
+                            options = this.optionsValue(value, schema);
                             const defValue = await Gui.showInputBox(options);
                             if (defValue === undefined) {
                                 Gui.showMessage(localize("createNewConnection.default", "Operation Cancelled"));
@@ -816,7 +815,9 @@ export class Profiles extends ProfilesCache {
                                 schemaValues[value] = defValue;
                             }
                             break;
+                        }
                     }
+                }
             }
         }
 
@@ -876,7 +877,7 @@ export class Profiles extends ProfilesCache {
         return returnValue;
     }
 
-    public async getDeleteProfile() {
+    public async getDeleteProfile(): Promise<zowe.imperative.IProfileLoaded> {
         const allProfiles: zowe.imperative.IProfileLoaded[] = this.allProfiles;
         const profileNamesList = allProfiles.map((temprofile) => {
             return temprofile.name;
@@ -907,8 +908,7 @@ export class Profiles extends ProfilesCache {
         ussTree: IZoweTree<IZoweUSSTreeNode>,
         jobsProvider: IZoweTree<IZoweJobTreeNode>,
         node?: IZoweNodeType
-    ) {
-        let deleteLabel: string;
+    ): Promise<void> {
         let deletedProfile: zowe.imperative.IProfileLoaded;
         if (!node) {
             deletedProfile = await this.getDeleteProfile();
@@ -918,7 +918,8 @@ export class Profiles extends ProfilesCache {
         if (!deletedProfile) {
             return;
         }
-        deleteLabel = deletedProfile.name;
+
+        const deleteLabel = deletedProfile.name;
 
         if ((await this.getProfileInfo()).usingTeamConfig) {
             const currentProfile = await this.getProfileFromConfig(deleteLabel);
@@ -1046,20 +1047,19 @@ export class Profiles extends ProfilesCache {
         }
     }
 
-    public async validateProfiles(theProfile: zowe.imperative.IProfileLoaded) {
+    public async validateProfiles(theProfile: zowe.imperative.IProfileLoaded): Promise<IProfileValidation> {
         let filteredProfile: IProfileValidation;
         let profileStatus;
         const getSessStatus = await ZoweExplorerApiRegister.getInstance().getCommonApi(theProfile);
 
-        // Filter profilesForValidation to check if the profile is already validated as active
-        this.profilesForValidation.filter((profile) => {
-            if (profile.name === theProfile.name && profile.status === "active") {
-                filteredProfile = {
-                    status: profile.status,
-                    name: profile.name,
-                };
-            }
-        });
+        // Check if the profile is already validated as active
+        const desiredProfile = this.profilesForValidation.find((profile) => profile.name === theProfile.name && profile.status === "active");
+        if (desiredProfile) {
+            filteredProfile = {
+                status: desiredProfile.status,
+                name: desiredProfile.name,
+            };
+        }
 
         // If not yet validated or inactive, call getStatus and validate the profile
         // status will be stored in profilesForValidation
@@ -1112,7 +1112,9 @@ export class Profiles extends ProfilesCache {
                 }
             } catch (error) {
                 await errorHandling(error, theProfile.name);
-                this.log.debug("Validate Error - Invalid Profile: " + error);
+                if (error instanceof Error) {
+                    this.log.debug("Validate Error - Invalid Profile: " + error.message);
+                }
                 filteredProfile = {
                     status: "inactive",
                     name: theProfile.name,
@@ -1171,7 +1173,9 @@ export class Profiles extends ProfilesCache {
                 });
             } catch (error) {
                 this.log.error(error);
-                Gui.errorMessage(localize("ssoLogin.unableToLogin", "Unable to log in. ") + error.message);
+                if (error instanceof Error) {
+                    Gui.errorMessage(localize("ssoLogin.unableToLogin", "Unable to log in. ") + error.message);
+                }
                 return;
             }
         } else {
@@ -1205,7 +1209,9 @@ export class Profiles extends ProfilesCache {
                     });
                 } catch (error) {
                     this.log.error(error);
-                    Gui.errorMessage(localize("ssoLogin.unableToLogin", "Unable to log in. ") + error.message);
+                    if (error instanceof Error) {
+                        Gui.errorMessage(localize("ssoLogin.unableToLogin", "Unable to log in. ") + error.message);
+                    }
                     return;
                 }
             }
@@ -1245,12 +1251,14 @@ export class Profiles extends ProfilesCache {
             Gui.showMessage(localize("ssoLogout.successful", "Logout from authentication service was successful."));
         } catch (error) {
             this.log.error(error);
-            Gui.errorMessage(localize("ssoLogout.unableToLogout", "Unable to log out. ") + error.message);
+            if (error instanceof Error) {
+                Gui.errorMessage(localize("ssoLogout.unableToLogout", "Unable to log out. ") + error.message);
+            }
             return;
         }
     }
 
-    public async openConfigFile(filePath: string) {
+    public async openConfigFile(filePath: string): Promise<void> {
         const document = await vscode.workspace.openTextDocument(filePath);
         await Gui.showTextDocument(document);
     }
@@ -1280,7 +1288,7 @@ export class Profiles extends ProfilesCache {
         return;
     }
 
-    private async checkExistingConfig(filePath: string) {
+    private async checkExistingConfig(filePath: string): Promise<string> {
         let found = false;
         let location: string;
         const existingLayers = await this.getConfigLayers();
@@ -1325,7 +1333,7 @@ export class Profiles extends ProfilesCache {
         return existingLayers;
     }
 
-    private async promptToRefreshForProfiles(rootPath: string) {
+    private async promptToRefreshForProfiles(rootPath: string): Promise<void> {
         if (globals.ISTHEIA) {
             const reloadButton = localize("createZoweSchema.reload.button", "Refresh Zowe Explorer");
             const infoMsg = localize(
@@ -1339,7 +1347,6 @@ export class Profiles extends ProfilesCache {
                 }
             });
         }
-        return undefined;
     }
 
     private getProfileIcon(osLocInfo: zowe.imperative.IProfLocOsLoc[]): string[] {
@@ -1354,7 +1361,7 @@ export class Profiles extends ProfilesCache {
         return ret;
     }
 
-    private async updateBaseProfileFileLogin(profile: zowe.imperative.IProfileLoaded, updProfile: zowe.imperative.IProfile) {
+    private async updateBaseProfileFileLogin(profile: zowe.imperative.IProfileLoaded, updProfile: zowe.imperative.IProfile): Promise<void> {
         const upd = { profileName: profile.name, profileType: profile.type };
         const mProfileInfo = await this.getProfileInfo();
         const setSecure = mProfileInfo.isSecured();
@@ -1362,7 +1369,7 @@ export class Profiles extends ProfilesCache {
         await mProfileInfo.updateProperty({ ...upd, property: "tokenValue", value: updProfile.tokenValue, setSecure });
     }
 
-    private async updateBaseProfileFileLogout(profile: zowe.imperative.IProfileLoaded) {
+    private async updateBaseProfileFileLogout(profile: zowe.imperative.IProfileLoaded): Promise<void> {
         const mProfileInfo = await this.getProfileInfo();
         const setSecure = mProfileInfo.isSecured();
         const prof = mProfileInfo.getAllProfiles(profile.type).find((p) => p.profName === profile.name);
@@ -1387,7 +1394,7 @@ export class Profiles extends ProfilesCache {
         return [newUser, newPass];
     }
 
-    private async deletePrompt(deletedProfile: zowe.imperative.IProfileLoaded) {
+    private async deletePrompt(deletedProfile: zowe.imperative.IProfileLoaded): Promise<string> {
         const profileName = deletedProfile.name;
         this.log.debug(localize("deleteProfile.log.debug", "Deleting profile ") + profileName);
         const quickPickOptions: vscode.QuickPickOptions = {
@@ -1465,10 +1472,10 @@ export class Profiles extends ProfilesCache {
         return url;
     }
 
-    private async portInfo(input: string, schema: {}) {
+    private async portInfo(input: string, schema: {}): Promise<number> {
         let options: vscode.InputBoxOptions;
         let port: number;
-        if (schema[input].optionDefinition.hasOwnProperty("defaultValue")) {
+        if ("defaultValue" in schema[input].optionDefinition) {
             options = {
                 prompt: schema[input].optionDefinition.description.toString(),
                 value: schema[input].optionDefinition.defaultValue.toString(),
@@ -1481,7 +1488,7 @@ export class Profiles extends ProfilesCache {
         }
         port = Number(await Gui.showInputBox(options));
 
-        if (port === 0 && schema[input].optionDefinition.hasOwnProperty("defaultValue")) {
+        if (port === 0 && "defaultValue" in schema[input].optionDefinition) {
             port = Number(schema[input].optionDefinition.defaultValue.toString());
         } else {
             return port;
@@ -1489,7 +1496,7 @@ export class Profiles extends ProfilesCache {
         return port;
     }
 
-    private async userInfo(input?) {
+    private async userInfo(input?: string): Promise<string> {
         let userName: string;
 
         if (input) {
@@ -1511,7 +1518,7 @@ export class Profiles extends ProfilesCache {
         return userName.trim();
     }
 
-    private async passwordInfo(input?) {
+    private async passwordInfo(input?: string): Promise<string> {
         let passWord: string;
 
         if (input) {
@@ -1535,7 +1542,7 @@ export class Profiles extends ProfilesCache {
         return passWord.trim();
     }
 
-    private async ruInfo(input?) {
+    private async ruInfo(input?: boolean): Promise<boolean> {
         let rejectUnauthorize: boolean;
         let placeholder: string;
         let selectRU: string[];
@@ -1578,7 +1585,7 @@ export class Profiles extends ProfilesCache {
         return rejectUnauthorize;
     }
 
-    private async boolInfo(input: string, schema: {}) {
+    private async boolInfo(input: string, schema: {}): Promise<boolean> {
         let isTrue: boolean;
         const description: string = schema[input].optionDefinition.description.toString();
         const quickPickBooleanOptions: vscode.QuickPickOptions = {
@@ -1598,7 +1605,7 @@ export class Profiles extends ProfilesCache {
         return isTrue;
     }
 
-    private async optionsValue(value: string, schema: {}, input?: string): Promise<vscode.InputBoxOptions> {
+    private optionsValue(value: string, schema: {}, input?: string): vscode.InputBoxOptions {
         let options: vscode.InputBoxOptions;
         const description: string = schema[value].optionDefinition.description.toString();
         let editValue: any;
@@ -1609,7 +1616,7 @@ export class Profiles extends ProfilesCache {
                 prompt: description,
                 value: editValue,
             };
-        } else if (schema[value].optionDefinition.hasOwnProperty("defaultValue")) {
+        } else if ("defaultValue" in schema[value].optionDefinition) {
             options = {
                 prompt: description,
                 value: schema[value].optionDefinition.defaultValue,
@@ -1623,7 +1630,7 @@ export class Profiles extends ProfilesCache {
         return options;
     }
 
-    private async checkType(input?): Promise<string> {
+    private checkType(input?): string {
         const isTrue = Array.isArray(input);
         let test: string;
         let index: number;
@@ -1656,7 +1663,7 @@ export class Profiles extends ProfilesCache {
      * @returns
      */
 
-    private async updateProfile(updProfileInfo, rePrompt?: boolean) {
+    private async updateProfile(updProfileInfo, rePrompt?: boolean): Promise<void> {
         if (zowe.imperative.ImperativeConfig.instance.config?.exists) {
             return;
         }
@@ -1706,13 +1713,15 @@ export class Profiles extends ProfilesCache {
         const updateParms: zowe.imperative.IUpdateProfile = {
             name: this.loadedProfile.name,
             merge: false,
-            profile: OrigProfileInfo as zowe.imperative.IProfile,
+            profile: OrigProfileInfo,
         };
         try {
             this.getCliProfileManager(this.loadedProfile.type).update(updateParms);
         } catch (error) {
             this.log.error(error);
-            Gui.errorMessage(error.message);
+            if (error instanceof Error) {
+                Gui.errorMessage(error.message);
+            }
         }
     }
 

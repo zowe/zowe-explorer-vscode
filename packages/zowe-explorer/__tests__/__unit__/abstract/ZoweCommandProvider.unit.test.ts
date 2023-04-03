@@ -34,7 +34,7 @@ describe("ZoweCommandProvider Unit Tests - function refreshElement", () => {
             },
             configurable: true,
         });
-        await expect(ZoweCommandProvider.prototype.refreshElement(testNode)).resolves.toEqual(undefined);
+        await expect(ZoweCommandProvider.prototype.refreshElement(testNode)).toEqual(undefined);
     });
 });
 

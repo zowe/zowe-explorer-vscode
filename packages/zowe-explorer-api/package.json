@@ -24,7 +24,7 @@
     "test:unit": "jest \".*__tests__.*\\.unit\\.test\\.ts\" --coverage",
     "test": "yarn test:unit",
     "lint": "concurrently -n \"_eslint_,prettier\" \"eslint .\" \"prettier --check .\"",
-    "lintErrors": "echo \"zowe-explorer-api: coming soon.\"",
+    "lint:html": "eslint . --format html > results/eslint.html",
     "postinstall": "bash scripts/check-cli.sh",
     "pretty": "prettier --write .",
     "check-cli": "bash scripts/check-cli.sh",

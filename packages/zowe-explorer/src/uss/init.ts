@@ -21,7 +21,7 @@ import { createUSSTree } from "./USSTree";
 import { initSubscribers } from "../shared/init";
 import { TreeViewUtils } from "../utils/TreeViewUtils";
 
-export async function initUSSProvider(context: vscode.ExtensionContext) {
+export async function initUSSProvider(context: vscode.ExtensionContext): Promise<IZoweTree<IZoweUSSTreeNode>> {
     const ussFileProvider: IZoweTree<IZoweUSSTreeNode> = await createUSSTree(globals.LOG);
     if (ussFileProvider == null) {
         return null;
@@ -72,15 +72,17 @@ export async function initUSSProvider(context: vscode.ExtensionContext) {
             }
         })
     );
-    context.subscriptions.push(vscode.commands.registerCommand("zowe.uss.fullPath", (node: IZoweUSSTreeNode) => ussFileProvider.filterPrompt(node)));
+    context.subscriptions.push(
+        vscode.commands.registerCommand("zowe.uss.fullPath", (node: IZoweUSSTreeNode): void => ussFileProvider.filterPrompt(node))
+    );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.uss.editSession", async (node) => ussFileProvider.editSession(node, ussFileProvider))
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.uss.ZoweUSSNode.open", (node: IZoweUSSTreeNode) => node.openUSS(false, true, ussFileProvider))
+        vscode.commands.registerCommand("zowe.uss.ZoweUSSNode.open", (node: IZoweUSSTreeNode): void => node.openUSS(false, true, ussFileProvider))
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.uss.removeSession", async (node: IZoweUSSTreeNode, nodeList) => {
+        vscode.commands.registerCommand("zowe.uss.removeSession", (node: IZoweUSSTreeNode, nodeList) => {
             let selectedNodes = getSelectedNodeList(node, nodeList);
             selectedNodes = selectedNodes.filter((element) => contextuals.isUssSession(element));
             for (const item of selectedNodes) {
@@ -128,35 +130,33 @@ export async function initUSSProvider(context: vscode.ExtensionContext) {
         })
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.uss.renameNode", async (node: IZoweUSSTreeNode) => ussFileProvider.rename(node))
+        vscode.commands.registerCommand("zowe.uss.renameNode", (node: IZoweUSSTreeNode): void => ussFileProvider.rename(node))
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.uss.uploadDialog", async (node: IZoweUSSTreeNode) => ussActions.uploadDialog(node, ussFileProvider))
     );
-    context.subscriptions.push(vscode.commands.registerCommand("zowe.uss.copyPath", async (node: IZoweUSSTreeNode) => ussActions.copyPath(node)));
+    context.subscriptions.push(vscode.commands.registerCommand("zowe.uss.copyPath", (node: IZoweUSSTreeNode): void => ussActions.copyPath(node)));
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.uss.editFile", (node: IZoweUSSTreeNode) => node.openUSS(false, false, ussFileProvider))
+        vscode.commands.registerCommand("zowe.uss.editFile", (node: IZoweUSSTreeNode): void => node.openUSS(false, false, ussFileProvider))
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.uss.saveSearch", async (node: IZoweUSSTreeNode) => ussFileProvider.saveSearch(node))
+        vscode.commands.registerCommand("zowe.uss.saveSearch", (node: IZoweUSSTreeNode): void => ussFileProvider.saveSearch(node))
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.uss.removeSavedSearch", async (node: IZoweUSSTreeNode) => ussFileProvider.removeFavorite(node))
+        vscode.commands.registerCommand("zowe.uss.removeSavedSearch", (node: IZoweUSSTreeNode): void => ussFileProvider.removeFavorite(node))
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.uss.removeFavProfile", async (node) => ussFileProvider.removeFavProfile(node.label, true))
+        vscode.commands.registerCommand("zowe.uss.removeFavProfile", (node): void => ussFileProvider.removeFavProfile(node.label, true))
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.uss.disableValidation", async (node) => Profiles.getInstance().disableValidation(node))
+        vscode.commands.registerCommand("zowe.uss.disableValidation", (node) => Profiles.getInstance().disableValidation(node))
     );
-    context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.uss.enableValidation", async (node) => Profiles.getInstance().enableValidation(node))
-    );
-    context.subscriptions.push(vscode.commands.registerCommand("zowe.uss.ssoLogin", async (node: IZoweTreeNode) => ussFileProvider.ssoLogin(node)));
-    context.subscriptions.push(vscode.commands.registerCommand("zowe.uss.ssoLogout", async (node: IZoweTreeNode) => ussFileProvider.ssoLogout(node)));
+    context.subscriptions.push(vscode.commands.registerCommand("zowe.uss.enableValidation", (node) => Profiles.getInstance().enableValidation(node)));
+    context.subscriptions.push(vscode.commands.registerCommand("zowe.uss.ssoLogin", (node: IZoweTreeNode): void => ussFileProvider.ssoLogin(node)));
+    context.subscriptions.push(vscode.commands.registerCommand("zowe.uss.ssoLogout", (node: IZoweTreeNode): void => ussFileProvider.ssoLogout(node)));
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.uss.pasteUssFile", async (node: IZoweUSSTreeNode) => {
-            if (ussFileProvider.copying) {
+            if (ussFileProvider.copying != null) {
                 await ussFileProvider.copying;
             }
 
