@@ -855,7 +855,7 @@ export async function submitJcl(datasetProvider: api.IZoweTree<api.IZoweDatasetT
             api.Gui.showMessage(localize("submitJcl.jobSubmitted", "Job submitted ") + `[${job.jobid}](${setJobCmd})`);
         } catch (error) {
             if (error instanceof Error) {
-                await errorHandling(error, sessProfileName, localize("submitJcl.jobSubmissionFailed", "Job submission failed"));
+                await errorHandling(error, sessProfileName, localize("submitJcl.jobSubmissionFailed", "Job submission failed:"));
             }
         }
     } else {
@@ -954,7 +954,7 @@ export async function submitMember(node: api.IZoweTreeNode): Promise<void> {
             api.Gui.showMessage(localize("submitMember.jobSubmitted", "Job submitted ") + `[${job.jobid}](${setJobCmd})`);
         } catch (error) {
             if (error instanceof Error) {
-                await errorHandling(error, sesName, localize("submitMember.jobSubmissionFailed", "Job submission failed"));
+                await errorHandling(error, sesName, localize("submitMember.jobSubmissionFailed", "Job submission failed:"));
             }
         }
     }
