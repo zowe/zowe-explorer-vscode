@@ -28,9 +28,9 @@ export class SettingsConfig {
      * }</pre>
      * @param {string} key - The config property that needs retrieving
      */
-    public static getDirectValue<T>(key: string, defaultValue?: T): T {
+    public static getDirectValue<T>(key: string): T {
         const [first, ...rest] = key.split(".");
-        return vscode.workspace.getConfiguration(first).get(rest.join("."), defaultValue);
+        return vscode.workspace.getConfiguration(first).get(rest.join("."));
     }
 
     /**
@@ -45,6 +45,23 @@ export class SettingsConfig {
     public static setDirectValue(key: string, value: any, target: vscode.ConfigurationTarget = vscode.ConfigurationTarget.Global): Thenable<void> {
         const [first, ...rest] = key.split(".");
         return vscode.workspace.getConfiguration(first).update(rest.join("."), value, target);
+    }
+
+    public static isConfigSettingSetByUser(key: string): boolean {
+        const [first, ...rest] = key.split(".");
+        const inspect = vscode.workspace.getConfiguration(first).inspect(rest.join("."));
+        if (inspect === undefined) {
+            return false;
+        }
+
+        return (
+            inspect.globalValue !== undefined ||
+            inspect.workspaceValue !== undefined ||
+            inspect.workspaceFolderValue !== undefined ||
+            inspect.globalLanguageValue !== undefined ||
+            inspect.workspaceLanguageValue !== undefined ||
+            inspect.workspaceFolderLanguageValue !== undefined
+        );
     }
 
     public static async standardizeSettings(): Promise<void> {

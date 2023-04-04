@@ -303,7 +303,7 @@ export async function promptCredentials(node: IZoweTreeNode): Promise<void> {
 export async function initializeZoweFolder(): Promise<void> {
     // ensure the Secure Credentials Enabled value is read
     // set globals.PROFILE_SECURITY value accordingly
-    globals.setGlobalSecurityValue();
+    await globals.setGlobalSecurityValue();
     // Ensure that ~/.zowe folder exists
     // Ensure that the ~/.zowe/settings/imperative.json exists
     // TODO: update code below once this imperative issue is resolved.
@@ -372,10 +372,24 @@ export function writeOverridesFile(): void {
 export async function initializeZoweProfiles(): Promise<void> {
     try {
         await initializeZoweFolder();
-        await readConfigFromDisk();
     } catch (err) {
         globals.LOG.error(err);
-        ZoweExplorerExtender.showZoweConfigError(err.message);
+        Gui.errorMessage(localize(
+            "initializeZoweFolder.error",
+            "Failed to initialize Zowe folder: {0}",
+            err.message
+        ));
+    }
+
+    try {
+        await readConfigFromDisk();
+    } catch (err) {
+        if (err instanceof imperative.ImperativeError) {
+            errorHandling(err, undefined, err.details.causeErrors);
+        } else {
+            globals.LOG.error(err);
+            ZoweExplorerExtender.showZoweConfigError(err.message);
+        }
     }
 
     if (!fs.existsSync(globals.ZOWETEMPFOLDER)) {

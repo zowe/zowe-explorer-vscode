@@ -52,11 +52,6 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
      * @param errorDetails Details of the error (to be parsed for config name and path)
      */
     public static showZoweConfigError(errorDetails: string): void {
-        if (errorDetails.includes("imperative.json")) {
-            // Handle errors parsing Imperative overrides file separately from errors in config
-            errorHandling(errorDetails);
-            return;
-        }
         Gui.errorMessage(
             localize("initialize.profiles.error", 'Error encountered when loading your Zowe config. Click "Show Config" for more details.'),
             { items: ["Show Config"] }
