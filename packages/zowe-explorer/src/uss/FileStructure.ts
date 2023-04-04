@@ -9,6 +9,8 @@
  *
  */
 
+import { ZoweLogger } from "../utils/LoggerUtils";
+
 /**
  * File types within the USS tree structure
  */
@@ -52,6 +54,7 @@ export class UssFileUtils {
      * @returns true if the tree will be pasted in the same session, and false if otherwise.
      */
     public static toSameSession(fileTree: UssFileTree, destSessionName: string): boolean {
+        ZoweLogger.trace("UssFileUtils.toSameSession called.");
         if (fileTree.sessionName && fileTree.sessionName !== destSessionName) {
             return false;
         }

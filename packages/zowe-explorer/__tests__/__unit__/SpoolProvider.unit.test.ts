@@ -13,6 +13,7 @@ import * as spoolprovider from "../../src/SpoolProvider";
 import * as zowe from "@zowe/cli";
 import * as vscode from "vscode";
 import { Profiles } from "../../src/Profiles";
+import { ZoweLogger } from "../../src/utils/LoggerUtils";
 
 describe("SpoolProvider Unit Tests", () => {
     const iJobFile: zowe.IJobFile = {
@@ -78,6 +79,7 @@ describe("SpoolProvider Unit Tests", () => {
             };
         }),
     });
+    Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
 
     afterEach(() => {
         jest.resetAllMocks();

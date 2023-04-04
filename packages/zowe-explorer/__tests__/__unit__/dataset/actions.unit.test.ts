@@ -40,6 +40,7 @@ import { Profiles } from "../../../src/Profiles";
 import * as utils from "../../../src/utils/ProfilesUtils";
 
 import { getNodeLabels } from "../../../src/dataset/utils";
+import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 
 // Missing the definition of path module, because I need the original logic for tests
 jest.mock("fs");
@@ -119,6 +120,11 @@ function createGlobalMocks() {
     Object.defineProperty(vscode, "ProgressLocation", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "createWebviewPanel", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.env, "clipboard", { value: clipboard, configurable: true });
+    Object.defineProperty(ZoweLogger, "error", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "debug", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "info", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "warn", { value: jest.fn(), configurable: true });
     mocked(Profiles.getInstance).mockReturnValue(newMocks.profileInstance);
 
     return newMocks;
@@ -196,7 +202,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
             // Prevent exception from failing test
         }
 
-        expect(mocked(Gui.errorMessage)).toBeCalledWith("Unable to create member: Error: test");
+        expect(mocked(Gui.errorMessage)).toBeCalledWith("Unable to create member. Error: test");
         mocked(zowe.Upload.bufferToDataSet).mockReset();
     });
     it("Checking of attempt to create member without name", async () => {
@@ -298,7 +304,7 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
 
         await dsActions.refreshPS(node);
 
-        expect(mocked(Gui.showMessage)).toBeCalledWith("Unable to find file: " + node.label + " was probably deleted.");
+        expect(mocked(Gui.showMessage)).toBeCalledWith("Unable to find file " + node.label);
         expect(mocked(vscode.commands.executeCommand)).not.toBeCalled();
     });
     it("Checking failed attempt to refresh PDS Member", async () => {
@@ -753,7 +759,7 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
 
         await expect(dsActions.deleteDataset(node, blockMocks.testDatasetTree)).rejects.toEqual(Error("not found"));
 
-        expect(mocked(Gui.showMessage)).toBeCalledWith("Unable to find file: " + node.label + " was probably already deleted.");
+        expect(mocked(Gui.showMessage)).toBeCalledWith("Unable to find file " + node.label);
     });
     it("Checking common PS dataset failed deletion attempt", async () => {
         globals.defineGlobals("");
@@ -880,7 +886,7 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
         const deleteSpy = jest.spyOn(blockMocks.mvsApi, "deleteDataSet");
         deleteSpy.mockClear();
 
-        await expect(dsActions.deleteDataset(child, blockMocks.testDatasetTree)).rejects.toEqual(Error("deleteDataSet() called from invalid node."));
+        await expect(dsActions.deleteDataset(child, blockMocks.testDatasetTree)).rejects.toEqual(Error("Cannot delete, item invalid."));
         expect(deleteSpy).not.toBeCalled();
     });
 });
@@ -1007,7 +1013,7 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
 
         await dsActions.saveFile(testDocument, blockMocks.testDatasetTree);
 
-        expect(mocked(Gui.errorMessage)).toBeCalledWith("Couldn't locate session when saving data set!");
+        expect(mocked(Gui.errorMessage)).toBeCalledWith("Could not locate session when saving data set.");
     });
     it("Checking common dataset saving failed attempt due to its absence on the side of the server", async () => {
         globals.defineGlobals("");
@@ -1646,7 +1652,7 @@ describe("Dataset Actions Unit Tests - Function showAttributes", () => {
             Error("No matching names found for query: AUSER.A1557332.A996850.TEST1")
         );
         expect(mocked(Gui.errorMessage)).toBeCalledWith(
-            "Unable to list attributes: Error: No matching names found for query: AUSER.A1557332.A996850.TEST1"
+            "Unable to list attributes. Error: No matching names found for query: AUSER.A1557332.A996850.TEST1"
         );
         expect(mocked(vscode.window.createWebviewPanel)).not.toBeCalled();
     });
@@ -2052,7 +2058,7 @@ describe("Dataset Actions Unit Tests - Function copyDataSets", () => {
             await dsActions.downloadDs(node);
         } catch (err) {}
 
-        expect(mocked(Gui.errorMessage)).toBeCalledWith("downloadDataset() called with invalid node.");
+        expect(mocked(Gui.errorMessage)).toBeCalledWith("Cannot download, item invalid.");
     });
 
     it("Testing downloadDs() called with a member", async () => {
@@ -2264,7 +2270,7 @@ describe("Dataset Actions Unit Tests - Function pasteMember", () => {
         });
         clipboard.writeText("INVALID");
 
-        await expect(dsActions.pasteMember(node, blockMocks.testDatasetTree)).rejects.toEqual(Error("Invalid clipboard. Copy from data set first"));
+        await expect(dsActions.pasteMember(node, blockMocks.testDatasetTree)).rejects.toEqual(Error("Invalid paste. Copy dataset(s) first."));
         expect(copySpy).not.toBeCalled();
     });
     it("Should not call zowe.Copy.dataSet when pasting to partitioned data set with no member name", async () => {
@@ -2656,7 +2662,7 @@ describe("Dataset Actions Unit Tests - Function showFileErrorDetails", () => {
         );
 
         const spyRecall = jest.spyOn(blockMocks.mvsApi, "hRecallDataSet");
-        const spyLogError = mocked(globals.LOG.error);
+        const spyLogError = mocked(ZoweLogger.error);
 
         // succeeded at recalling the dataset
         spyRecall.mockResolvedValueOnce({ success: true } as any);
@@ -2920,7 +2926,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
             // do nothing
         }
 
-        expect(mocked(Gui.errorMessage)).toHaveBeenCalledWith("Error encountered when creating data set! Error: Generic Error");
+        expect(mocked(Gui.errorMessage)).toHaveBeenCalledWith("Error encountered when creating data set. Error: Generic Error");
         expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(globals.SETTINGS_DS_DEFAULT_PS);
         expect(createDataSetSpy).toHaveBeenCalledWith(zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, "TEST", {
             alcunit: "CYL",
@@ -2947,7 +2953,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce(undefined);
         await dsActions.createFile(node, blockMocks.testDatasetTree);
 
-        expect(mocked(Gui.showMessage)).toHaveBeenCalledWith("Operation cancelled.");
+        expect(mocked(Gui.showMessage)).toHaveBeenCalledWith("Operation Cancelled");
         expect(mocked(vscode.workspace.getConfiguration)).not.toBeCalled();
         expect(createDataSetSpy).not.toHaveBeenCalled();
     });
@@ -3282,7 +3288,7 @@ describe("Dataset Actions Unit Tests - Function openPS", () => {
             // Prevent exception from failing test
         }
 
-        expect(mocked(Gui.errorMessage)).toBeCalledWith("openPS() called from invalid node.");
+        expect(mocked(Gui.errorMessage)).toBeCalledWith("Invalid data set or member.");
     });
     it("Checking that error is displayed and logged for opening of node with invalid context value", async () => {
         createGlobalMocks();
@@ -3307,7 +3313,7 @@ describe("Dataset Actions Unit Tests - Function openPS", () => {
             blockMocks.imperativeProfile
         );
         const showErrorMessageSpy = jest.spyOn(Gui, "errorMessage");
-        const logErrorSpy = jest.spyOn(globals.LOG, "error");
+        const logErrorSpy = jest.spyOn(ZoweLogger, "error");
 
         try {
             await dsActions.openPS(node, true, blockMocks.testDatasetTree);
@@ -3315,8 +3321,8 @@ describe("Dataset Actions Unit Tests - Function openPS", () => {
             // Do nothing
         }
 
-        expect(showErrorMessageSpy).toBeCalledWith("openPS() called from invalid node.");
-        expect(logErrorSpy).toBeCalledTimes(2);
+        expect(showErrorMessageSpy).toBeCalledWith("Invalid data set or member.");
+        expect(logErrorSpy).toBeCalledTimes(1);
     });
 });
 

@@ -19,6 +19,7 @@ import * as vscode from "vscode";
 import * as TempFolder from "../../../src/utils/TempFolder";
 import { SettingsConfig } from "../../../src/utils/SettingsConfig";
 import { Gui } from "@zowe/zowe-explorer-api";
+import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 
 jest.mock("fs");
 jest.mock("fs", () => ({
@@ -58,6 +59,9 @@ describe("TempFolder Unit Tests", () => {
         Object.defineProperty(Gui, "showMessage", { value: jest.fn() });
         Object.defineProperty(globals, "LOG", { value: jest.fn(), configurable: true });
         Object.defineProperty(globals.LOG, "error", { value: jest.fn(), configurable: true });
+        Object.defineProperty(ZoweLogger, "error", { value: jest.fn(), configurable: true });
+        Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
+        Object.defineProperty(ZoweLogger, "info", { value: jest.fn(), configurable: true });
         jest.spyOn(ProfileUtils, "errorHandling").mockImplementationOnce(jest.fn());
         return newMocks;
     }
@@ -83,7 +87,7 @@ describe("TempFolder Unit Tests", () => {
         });
         const errorMessageSpy = jest.spyOn(Gui, "errorMessage").mockImplementation();
         const globalsLogErrorSpy = jest.fn();
-        Object.defineProperty(globals.LOG, "error", { value: globalsLogErrorSpy, configurable: true });
+        Object.defineProperty(ZoweLogger, "error", { value: globalsLogErrorSpy, configurable: true });
         await expect(TempFolder.moveTempFolder("testpath32", "testpath123")).resolves.toEqual(undefined);
         expect(errorMessageSpy).toBeCalledTimes(1);
         expect(globalsLogErrorSpy).toBeCalledTimes(1);

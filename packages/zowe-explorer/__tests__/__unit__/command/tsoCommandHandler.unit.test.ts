@@ -20,6 +20,7 @@ import { imperative } from "@zowe/cli";
 import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import * as globals from "../../../src/globals";
+import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 
 describe("TsoCommandHandler unit testing", () => {
     const showErrorMessage = jest.fn();
@@ -56,6 +57,8 @@ describe("TsoCommandHandler unit testing", () => {
             };
         }),
     });
+    Object.defineProperty(ZoweLogger, "error", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
 
     createQuickPick.mockReturnValue({
         placeholder: 'Choose "Create new..." to define a new profile or select an existing profile to add to the Data Set Explorer',

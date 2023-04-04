@@ -10,8 +10,10 @@
  */
 
 import { PersistentFilters } from "../../src/PersistentFilters";
+import { ZoweLogger } from "../../src/utils/LoggerUtils";
 
 describe("PersistentFilters Unit Test", () => {
+    Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
     describe("addSearchHistory()", () => {
         it("should pop search history if history length is larger than max length", () => {
             const pf: PersistentFilters = new PersistentFilters("", 1, 1);

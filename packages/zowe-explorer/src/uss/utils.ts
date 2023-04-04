@@ -13,6 +13,7 @@ import * as path from "path";
 import * as fs from "fs";
 import * as vscode from "vscode";
 import { ZoweUSSNode } from "../uss/ZoweUSSNode";
+import { ZoweLogger } from "../utils/LoggerUtils";
 
 /**
  * Injects extra data to tooltip based on node status and other conditions
@@ -21,6 +22,7 @@ import { ZoweUSSNode } from "../uss/ZoweUSSNode";
  * @returns {string}
  */
 export function injectAdditionalDataToTooltip(node: ZoweUSSNode, tooltip: string): string {
+    ZoweLogger.trace("uss.utils.injectAdditionalDataToTooltip called.");
     if (node.downloaded && node.downloadedTime) {
         // TODO: Add time formatter to localization so we will use not just US variant
         return `${tooltip} (Downloaded: ${new Date(node.downloadedTime)
@@ -37,6 +39,7 @@ export function injectAdditionalDataToTooltip(node: ZoweUSSNode, tooltip: string
  * @returns {boolean}
  */
 export function fileExistsCaseSensitveSync(filepath: string): boolean {
+    ZoweLogger.trace("uss.utils.fileExistsCaseSensitveSync called.");
     const dir = path.dirname(filepath);
     if (dir === path.dirname(dir)) {
         return true;
@@ -53,5 +56,6 @@ export function fileExistsCaseSensitveSync(filepath: string): boolean {
  * @returns {void}
  */
 export function disposeClipboardContents(): void {
+    ZoweLogger.trace("uss.utils.disposeClipboardContents called.");
     vscode.env.clipboard.writeText("");
 }
