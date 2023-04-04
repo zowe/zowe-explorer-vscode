@@ -30,30 +30,18 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 /*************************************************************************************************************
  * Error Handling
- * @param {errorDetails} error.mDetails
+ * @param {errorDetails} - string or error object
  * @param {label} - additional information such as profile name, credentials, messageID etc
  * @param {moreInfo} - additional/customized error messages
  *************************************************************************************************************/
-export async function errorHandling(errorDetails: any, label?: string, moreInfo?: string): Promise<void> {
-    let httpErrCode = null;
-    const errMsg = localize(
-        "errorHandling.invalid.credentials",
-        "Invalid Credentials. Please ensure the username and password for {0} are valid or this may lead to a lock-out.",
-        label
-    );
-    const errToken = localize(
-        "errorHandling.invalid.token",
-        "Your connection is no longer active. Please log in to an authentication service to restore the connection."
-    );
-
+export async function errorHandling(errorDetails: Error | string, label?: string, moreInfo?: string): Promise<void> {
     // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
     globals.LOG.error(`${errorDetails}\n` + JSON.stringify({ errorDetails, label, moreInfo }));
 
-    if (errorDetails?.mDetails !== undefined) {
-        httpErrCode = errorDetails.mDetails.errorCode;
+    if (errorDetails instanceof imperative.ImperativeError && errorDetails.mDetails !== undefined) {
+        const httpErrorCode = errorDetails.mDetails.errorCode as unknown as number;
         // open config file for missing hostname error
-        const msg = errorDetails.toString();
-        if (msg.includes("hostname")) {
+        if (errorDetails.toString().includes("hostname")) {
             const mProfileInfo = await Profiles.getInstance().getProfileInfo();
             if (mProfileInfo.usingTeamConfig) {
                 Gui.errorMessage(localize("errorHandling.invalid.host", "Required parameter 'host' must not be blank."));
@@ -66,11 +54,16 @@ export async function errorHandling(errorDetails: any, label?: string, moreInfo?
                     }
                 }
             }
-        }
-    }
-
-    switch (httpErrCode) {
-        case imperative.RestConstants.HTTP_STATUS_401:
+        } else if (httpErrorCode === imperative.RestConstants.HTTP_STATUS_401) {
+            const errMsg = localize(
+                "errorHandling.invalid.credentials",
+                "Invalid Credentials. Please ensure the username and password for {0} are valid or this may lead to a lock-out.",
+                label
+            );
+            const errToken = localize(
+                "errorHandling.invalid.token",
+                "Your connection is no longer active. Please log in to an authentication service to restore the connection."
+            );
             if (label.includes("[")) {
                 label = label.substring(0, label.indexOf(" [")).trim();
             }
@@ -90,7 +83,7 @@ export async function errorHandling(errorDetails: any, label?: string, moreInfo?
                             }
                         });
                     }
-                    break;
+                    return;
                 }
             }
 
@@ -109,16 +102,17 @@ export async function errorHandling(errorDetails: any, label?: string, moreInfo?
                     }
                 });
             }
-            break;
-        default:
-            if (moreInfo === undefined) {
-                moreInfo = errorDetails.toString().includes("Error") ? "" : "Error:";
-            }
-            // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
-            Gui.errorMessage(moreInfo + " " + errorDetails);
-            break;
+            return;
+        }
     }
-    return;
+
+    if (moreInfo === undefined) {
+        moreInfo = errorDetails.toString().includes("Error") ? "" : "Error: ";
+    } else {
+        moreInfo += " ";
+    }
+    // Try to keep message readable since VS Code doesn't support newlines in error messages
+    Gui.errorMessage(moreInfo + errorDetails.toString().replace(/\n/g, " | "));
 }
 
 // TODO: remove this second occurence
