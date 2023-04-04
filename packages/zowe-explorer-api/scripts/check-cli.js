@@ -2,38 +2,34 @@
  * Script to scan for the required @zowe/cli dependency for zowe-explorer-api.
  */
 
-const { readdirSync } = require("fs");
-const { join, resolve } = require("path");
+const { resolve } = require("path");
 const { exit } = require("process");
 
 const logWithPrefix = (msg) => console.log(`[Zowe Explorer API] ${msg}`);
 
 // Looks for the scoped @zowe folder & inner "cli" module folder in node_modules
 const findCli = (folderToScan) => {
-    const nodeModuleDirs = readdirSync(folderToScan);
-    if (nodeModuleDirs.find((d) => d === "@zowe")) {
-        const scopedModulePath = join(folderToScan, "@zowe");
-        const scopedModuleDirs = readdirSync(scopedModulePath);
-        if (scopedModuleDirs.find((d) => d === "cli")) {
-            logWithPrefix("OK ✔ @zowe/cli was found in node_modules");
-            exit(0);
-        }
+    const resolvedModule = require.resolve("@zowe/cli", {
+        paths: [folderToScan],
+    });
+
+    if (resolvedModule.includes(folderToScan)) {
+        logWithPrefix("OK ✔ @zowe/cli was found in node_modules");
+        return 0;
     }
 
     logWithPrefix("ERR ✘ @zowe/cli was not found in node_modules");
-    exit(1);
+    return 1;
 };
 
 logWithPrefix("Checking for @zowe/cli in node_modules...");
 
-if (__dirname.includes("packages") && __dirname.includes("scripts")) {
-    // Within the API scripts folder of the monorepo
-    findCli(resolve(__dirname, "../../../node_modules"));
-} else if (__dirname.includes("packages")) {
-    // Within the context of the monorepo
-    findCli(resolve(__dirname, "../../node_modules"));
-} else if (__dirname.includes("node_modules")) {
-    findCli(resolve(__dirname, "../../"));
+let exitCode = 0;
+if (__dirname.includes("packages") || __dirname.includes("scripts")) {
+    // Modify starting path to point to zowe-explorer-api folder
+    exitCode = findCli(resolve(__dirname, "../../../"));
 } else {
-    findCli(__dirname);
+    exitCode = findCli(__dirname);
 }
+
+exit(exitCode);
