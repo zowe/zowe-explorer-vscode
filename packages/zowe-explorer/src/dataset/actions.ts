@@ -44,6 +44,10 @@ nls.config({
 })();
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
+let typeEnum: zowe.CreateDataSetTypeEnum;
+// Make a nice new mutable array for the DS properties
+const newDSProperties = JSON.parse(JSON.stringify(globals.DATA_SET_PROPERTIES));
+
 /**
  * Allocates a copy of a data set or member
  *
@@ -474,26 +478,25 @@ export function getDataSetTypeAndOptions(type: string): {
     typeEnum: zowe.CreateDataSetTypeEnum;
     createOptions: vscode.WorkspaceConfiguration;
 } {
-    let typeEnum: zowe.CreateDataSetTypeEnum;
     let createOptions: vscode.WorkspaceConfiguration;
     switch (type) {
-        case localize("createFile.dataSetBinary", "Data Set Binary"):
+        case localize("createFile.dataSetBinary", "Partitioned Data Set: Binary"):
             typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_BINARY;
             createOptions = vscode.workspace.getConfiguration(globals.SETTINGS_DS_DEFAULT_BINARY);
             break;
-        case localize("createFile.dataSetC", "Data Set C"):
+        case localize("createFile.dataSetC", "Partitioned Data Set: C"):
             typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_C;
             createOptions = vscode.workspace.getConfiguration(globals.SETTINGS_DS_DEFAULT_C);
             break;
-        case localize("createFile.dataSetClassic", "Data Set Classic"):
+        case localize("createFile.dataSetClassic", "Partitioned Data Set: Classic"):
             typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_CLASSIC;
             createOptions = vscode.workspace.getConfiguration(globals.SETTINGS_DS_DEFAULT_CLASSIC);
             break;
-        case localize("createFile.dataSetPartitioned", "Data Set Partitioned"):
+        case localize("createFile.dataSetPartitioned", "Partitioned Data Set: Defalut"):
             typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_PARTITIONED;
             createOptions = vscode.workspace.getConfiguration(globals.SETTINGS_DS_DEFAULT_PDS);
             break;
-        case localize("createFile.dataSetSequential", "Data Set Sequential"):
+        case localize("createFile.dataSetSequential", "Sequential Data Set"):
             typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL;
             createOptions = vscode.workspace.getConfiguration(globals.SETTINGS_DS_DEFAULT_PS);
             break;
@@ -506,188 +509,74 @@ export function getDataSetTypeAndOptions(type: string): {
 
 /**
  * Creates a new file and uploads to the server
- * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
- * TODO: Consider changing configuration to allow "custom" data set specifications
- * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
  * @export
  * @param {IZoweDatasetTreeNode} node - Desired Zowe session
  * @param {DatasetTree} datasetProvider - the tree which contains the nodes
  */
 export async function createFile(node: api.IZoweDatasetTreeNode, datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>): Promise<void> {
-    let dsName: string;
-    let typeEnum: number;
-    let propertiesFromDsType: any;
-    const stepTwoOptions: vscode.QuickPickOptions = {
-        placeHolder: localize("createFile.quickPickOption.dataSetType", "Type of Data Set to be Created"),
-        ignoreFocusOut: true,
-        canPickMany: false,
-    };
-    const stepThreeOptions: vscode.QuickPickOptions = {
-        ignoreFocusOut: true,
-        canPickMany: false,
-    };
-    //get array of template names
-    const stepTwoTemplates = datasetProvider.getDsTemplates();
-    // eslint-disable-next-line no-console
-    console.log(stepTwoTemplates);
-    const templateNames: string[] = [];
-    stepTwoTemplates.forEach((item) => {
-        templateNames.push(`Template ${item.name.toString()}`);
-    });
-    // eslint-disable-next-line no-console
-    console.log(templateNames);
-    const stepTwoChoices = [
-        ...templateNames,
-        localize("createFile.dataSetBinary", "Data Set Binary"),
-        localize("createFile.dataSetC", "Data Set C"),
-        localize("createFile.dataSetClassic", "Data Set Classic"),
-        localize("createFile.dataSetPartitioned", "Data Set Partitioned"),
-        localize("createFile.dataSetSequential", "Data Set Sequential"),
-    ];
-    const stepThreeChoices = [localize("createFile.allocate", " + Allocate Data Set"), localize("createFile.editAttributes", "Edit Attributes")];
-    // Make a nice new mutable array for the DS properties
-    const newDSProperties = JSON.parse(JSON.stringify(globals.DATA_SET_PROPERTIES));
-
     datasetProvider.checkCurrentProfile(node);
-    if (Profiles.getInstance().validProfile !== api.ValidProfileEnum.INVALID) {
-        // 1st step: Get data set name
-        const options: vscode.InputBoxOptions = {
-            placeHolder: localize("createFile.inputBox.placeHolder", "Name of Data Set"),
-            ignoreFocusOut: true,
-            validateInput: (text) => {
-                return dsUtils.validateDataSetName(text) === true ? null : localize("dataset.validation", "Enter valid dataset name");
-            },
-        };
-        dsName = await api.Gui.showInputBox(options);
-        if (dsName) {
-            dsName = dsName.trim().toUpperCase();
-            newDSProperties.forEach((property) => {
-                if (property.key === `dsName`) {
-                    property.value = dsName;
-                    property.placeHolder = dsName;
-                }
-            });
-        } else {
-            globals.LOG.debug(localize("createFile.noValidNameEntered", "No valid data set name entered. Operation cancelled"));
-            api.Gui.showMessage(localize("createFile.operationCancelled", "Operation cancelled."));
-            return;
-        }
+    if (Profiles.getInstance().validProfile === api.ValidProfileEnum.INVALID) {
+        return;
+    }
+    // 1st step: Get data set name
+    let dsName = await getDataSetName();
+    if (!dsName) {
+        globals.LOG.debug(localize("createFile.noValidNameEntered", "No valid data set name entered. Operation cancelled"));
+        api.Gui.showMessage(localize("createFile.operationCancelled", "Operation cancelled."));
+        return;
+    }
 
-        // 2nd step: Get data set type
-        const type = await api.Gui.showQuickPick(stepTwoChoices, stepTwoOptions);
-        if (type == null) {
-            globals.LOG.debug(localize("createFile.noValidTypeSelected", "No valid data set type selected. Operation cancelled."));
-            api.Gui.showMessage(localize("createFile.operationCancelled", "Operation cancelled."));
-            return;
-        } else {
-            // Look for template
-            stepTwoTemplates.forEach((template) => {
-                if (type === template.name) {
-                    propertiesFromDsType = template;
-                }
-            });
-            if (!propertiesFromDsType) {
-                // Add the default property values to the list of items
-                // that will be shown in DS attributes for editing
-                typeEnum = getDataSetTypeAndOptions(type).typeEnum;
-                const cliDefaultsKey = globals.CreateDataSetTypeWithKeysEnum[typeEnum].replace("DATA_SET_", "");
+    // 2nd step: Get data set type
+    const selection = await getDsTypeForCreation(datasetProvider);
+    if (!selection) {
+        globals.LOG.debug(localize("createFile.noValidTypeSelected", "No valid data set type selected. Operation cancelled."));
+        api.Gui.showMessage(localize("createFile.operationCancelled", "Operation cancelled."));
+        return;
+    }
 
-                propertiesFromDsType = zowe.CreateDefaults.DATA_SET[cliDefaultsKey];
-            }
-            newDSProperties.forEach((property) => {
-                Object.keys(propertiesFromDsType).forEach((typeProperty) => {
-                    if (typeProperty === property.key) {
-                        property.value = propertiesFromDsType[typeProperty].toString();
-                        property.placeHolder = propertiesFromDsType[typeProperty];
-                    }
-                });
-            });
-        }
+    const propertiesFromDsType = getDsProperties(selection, datasetProvider);
 
-        // 3rd step: Ask if we allocate, or show DS attributes
-        const choice = await api.Gui.showQuickPick(stepThreeChoices, stepThreeOptions);
-        if (choice == null) {
+    // 3rd step: Ask if we allocate, or show DS attributes
+    const choice = await allocateOrEditAttributes();
+    if (!choice) {
+        globals.LOG.debug(localize("createFile.noOptionSelected", "No option selected. Operation cancelled."));
+        api.Gui.showMessage(localize("createFile.operationCancelled", "Operation cancelled."));
+        return;
+    }
+    if (choice === " + Allocate Data Set") {
+        // User wants to allocate straightaway - skip Step 4
+        globals.LOG.debug(localize("createFile.allocatingNewDataSet", "Allocating new data set"));
+        api.Gui.showMessage(localize("createFile.allocatingNewDataSet", "Allocating new data set"));
+    } else {
+        // 4th step (optional): Show data set attributes
+        const choice2 = await handleUserSelection();
+        if (!choice2) {
             globals.LOG.debug(localize("createFile.noOptionSelected", "No option selected. Operation cancelled."));
             api.Gui.showMessage(localize("createFile.operationCancelled", "Operation cancelled."));
             return;
-        } else {
-            if (choice === " + Allocate Data Set") {
-                // User wants to allocate straightaway - skip Step 4
-                globals.LOG.debug(localize("createFile.allocatingNewDataSet", "Allocating new data set"));
-                api.Gui.showMessage(localize("createFile.allocatingNewDataSet", "Allocating new data set"));
-            } else {
-                // 4th step (optional): Show data set attributes
-                const choice2 = await handleUserSelection(newDSProperties, type);
-                if (choice2 == null) {
-                    globals.LOG.debug(localize("createFile.noOptionSelected", "No option selected. Operation cancelled."));
-                    api.Gui.showMessage(localize("createFile.operationCancelled", "Operation cancelled."));
-                    return;
-                } else {
-                    globals.LOG.debug(localize("createFile.allocatingNewDataSet", "Attempting to allocate new data set"));
-                }
-            }
         }
-
-        // Format properties for use by API
-        const dsPropsForAPI = {};
-        newDSProperties.forEach((property) => {
-            if (property.value) {
-                if (property.key === `dsName`) {
-                    dsName = property.value;
-                } else {
-                    if (typeof propertiesFromDsType[property.key] === "number") {
-                        dsPropsForAPI[property.key] = Number(property.value);
-                    } else {
-                        dsPropsForAPI[property.key] = property.value;
-                    }
-                }
-            }
-        });
-
-        const profile = node.getProfile();
-        try {
-            // Allocate the data set
-            await ZoweExplorerApiRegister.getMvsApi(profile).createDataSet(typeEnum, dsName, {
-                responseTimeout: profile?.profile?.responseTimeout,
-                ...dsPropsForAPI,
-            });
-            node.dirty = true;
-
-            const theFilter = datasetProvider.createFilterString(dsName, node);
-            datasetProvider.addSearchHistory(theFilter);
-            datasetProvider.refresh();
-
-            // Show newly-created data set in expanded tree view
-            if (dsName) {
-                node.tooltip = node.pattern = theFilter.toUpperCase();
-                node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
-                const icon = getIconByNode(node);
-                if (icon) {
-                    node.iconPath = icon.path;
-                }
-                node.dirty = true;
-
-                const newNode = await node.getChildren().then((children) => children.find((child) => child.label === dsName));
-                datasetProvider
-                    .getTreeView()
-                    .reveal(node, { select: true, focus: true })
-                    .then(() => datasetProvider.getTreeView().reveal(newNode, { select: true, focus: true }));
-            }
-        } catch (err) {
-            globals.LOG.error(localize("createDataSet.error", "Error encountered when creating data set! ") + JSON.stringify(err));
-            if (err instanceof Error) {
-                await errorHandling(
-                    err,
-                    node.getProfileName(),
-                    localize("createDataSet.error", "Error encountered when creating data set! ") + err.message
-                );
-            }
-            throw err as Error;
-        }
+        globals.LOG.debug(localize("createFile.allocatingNewDataSet", "Attempting to allocate new data set"));
     }
+
+    // Format properties for use by API
+    const dsPropsForAPI = {};
+    newDSProperties.forEach((property) => {
+        if (property.value) {
+            if (property.key === `dsName`) {
+                dsName = property.value;
+            } else {
+                if (typeof propertiesFromDsType[property.key] === "number") {
+                    dsPropsForAPI[property.key] = Number(property.value);
+                } else {
+                    dsPropsForAPI[property.key] = property.value;
+                }
+            }
+        }
+    });
+    await allocateNewDataSet(node, dsName, dsPropsForAPI, datasetProvider);
 }
 
-async function handleUserSelection(newDSProperties, dsType): Promise<string> {
+async function handleUserSelection(): Promise<string> {
     // Create the array of items in the quickpick list
     const qpItems = [];
     qpItems.push(new FilterItem({ text: ` + Allocate Data Set`, show: true }));
@@ -712,9 +601,11 @@ async function handleUserSelection(newDSProperties, dsType): Promise<string> {
     // Show quickpick and store the user's input
     quickpick.show();
     const choice2 = await api.Gui.resolveQuickPick(quickpick);
-    const pattern = choice2.label;
     quickpick.dispose();
-
+    if (!choice2) {
+        return;
+    }
+    const pattern = choice2.label;
     const showPatternOptions = async (): Promise<void> => {
         const options: vscode.InputBoxOptions = {
             value: newDSProperties.find((prop) => prop.label === pattern).value,
@@ -732,12 +623,162 @@ async function handleUserSelection(newDSProperties, dsType): Promise<string> {
                 await showPatternOptions();
                 break;
         }
-        return Promise.resolve(handleUserSelection(newDSProperties, dsType));
+        return Promise.resolve(handleUserSelection());
     }
 }
 
-// async function compareWithDefaults() {
-// }
+async function getDataSetName(): Promise<string> {
+    const options: vscode.InputBoxOptions = {
+        placeHolder: localize("createFile.inputBox.placeHolder", "Name of Data Set"),
+        ignoreFocusOut: true,
+        validateInput: (text) => {
+            return dsUtils.validateDataSetName(text) === true ? null : localize("dataset.validation", "Enter valid dataset name");
+        },
+    };
+    let dsName = await api.Gui.showInputBox(options);
+    if (!dsName) {
+        return;
+    }
+    dsName = dsName.trim().toUpperCase();
+    newDSProperties.forEach((property) => {
+        if (property.key === `dsName`) {
+            property.value = dsName;
+            property.placeHolder = dsName;
+        }
+    });
+    return dsName;
+}
+
+async function getDsTypeForCreation(datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>): Promise<string> {
+    const stepTwoOptions: vscode.QuickPickOptions = {
+        placeHolder: localize("createFile.quickPickOption.dataSetType", "Type of Data Set to be Created"),
+        ignoreFocusOut: true,
+        canPickMany: false,
+    };
+    //get array of template names
+    const dsTemplateNames = getTemplateNames(datasetProvider);
+    const stepTwoChoices = [
+        ...dsTemplateNames,
+        localize("createFile.dataSetBinary", "Partitioned Data Set: Binary"),
+        localize("createFile.dataSetC", "Partitioned Data Set: C"),
+        localize("createFile.dataSetClassic", "Partitioned Data Set: Classic"),
+        localize("createFile.dataSetPartitioned", "Partitioned Data Set: Default"),
+        localize("createFile.dataSetSequential", "Sequential Data Set"),
+    ];
+    // eslint-disable-next-line no-return-await
+    return await api.Gui.showQuickPick(stepTwoChoices, stepTwoOptions);
+}
+
+function getTemplateNames(datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>): string[] {
+    const templates = datasetProvider.getDsTemplates();
+    const templateNames: string[] = [];
+    templates.forEach((item) => {
+        templateNames.push(item.name);
+    });
+    return templateNames;
+}
+
+function getDsProperties(type: string, datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>): api.dsAlloc {
+    const templates: api.dsAlloc[] = datasetProvider.getDsTemplates();
+    let propertiesFromDsType: api.dsAlloc;
+    let dsType: string;
+    // Look for template
+    templates.forEach((template) => {
+        if (type === template.name) {
+            if (template.dsorg === "PS") {
+                typeEnum = 4;
+            } else {
+                typeEnum = 3;
+            }
+            propertiesFromDsType = template;
+        }
+    });
+    if (!dsType) {
+        dsType = type;
+    }
+    if (!propertiesFromDsType) {
+        // Add the default property values to the list of items
+        // that will be shown in DS attributes for editing
+        typeEnum = getDataSetTypeAndOptions(dsType).typeEnum;
+        const cliDefaultsKey = globals.CreateDataSetTypeWithKeysEnum[typeEnum].replace("DATA_SET_", "");
+        // eslint-disable-next-line no-console
+        console.log(cliDefaultsKey);
+        propertiesFromDsType = zowe.CreateDefaults.DATA_SET[cliDefaultsKey];
+    }
+    newDSProperties.forEach((property) => {
+        Object.keys(propertiesFromDsType).forEach((typeProperty) => {
+            if (typeProperty === property.key) {
+                property.value = propertiesFromDsType[typeProperty].toString();
+                property.placeHolder = propertiesFromDsType[typeProperty];
+            }
+        });
+    });
+    return propertiesFromDsType;
+}
+
+async function allocateOrEditAttributes(): Promise<string> {
+    const stepThreeOptions: vscode.QuickPickOptions = {
+        ignoreFocusOut: true,
+        canPickMany: false,
+    };
+    const stepThreeChoices = [localize("createFile.allocate", " + Allocate Data Set"), localize("createFile.editAttributes", "Edit Attributes")];
+    // eslint-disable-next-line no-return-await
+    return await api.Gui.showQuickPick(stepThreeChoices, stepThreeOptions);
+}
+
+async function allocateNewDataSet(
+    node: api.IZoweDatasetTreeNode,
+    dsName: string,
+    dsPropsForAPI: {},
+    datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>
+): Promise<void> {
+    const profile = node.getProfile();
+    try {
+        // Allocate the data set
+        await ZoweExplorerApiRegister.getMvsApi(profile).createDataSet(typeEnum, dsName, {
+            responseTimeout: profile?.profile?.responseTimeout,
+            ...dsPropsForAPI,
+        });
+        node.dirty = true;
+        const theFilter = datasetProvider.createFilterString(dsName, node);
+        datasetProvider.addSearchHistory(theFilter);
+        datasetProvider.refresh();
+
+        // Show newly-created data set in expanded tree view
+        await focusOnNewDs(node, dsName, datasetProvider, theFilter);
+    } catch (err) {
+        globals.LOG.error(localize("createDataSet.error", "Error encountered when creating data set! ") + JSON.stringify(err));
+        if (err instanceof Error) {
+            await errorHandling(
+                err,
+                node.getProfileName(),
+                localize("createDataSet.error", "Error encountered when creating data set! ") + err.message
+            );
+        }
+        throw new Error(err);
+    }
+}
+
+async function focusOnNewDs(
+    node: api.IZoweDatasetTreeNode,
+    dsName: string,
+    datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>,
+    theFilter: any
+): Promise<void> {
+    node.tooltip = node.pattern = theFilter.toUpperCase();
+    node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+    const icon = getIconByNode(node);
+    if (icon) {
+        node.iconPath = icon.path;
+    }
+    node.dirty = true;
+
+    const newNode = await node.getChildren().then((children) => children.find((child) => child.label === dsName));
+    datasetProvider
+        .getTreeView()
+        .reveal(node, { select: true, focus: true })
+        .then(() => datasetProvider.getTreeView().reveal(newNode, { select: true, focus: true }));
+}
 
 /**
  * Shows data set attributes in a new text editor
