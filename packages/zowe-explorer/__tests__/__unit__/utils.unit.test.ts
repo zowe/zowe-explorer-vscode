@@ -77,9 +77,13 @@ describe("Utils Unit Tests - Function errorHandling", () => {
         createGlobalMocks();
 
         mocked(vscode.window.showErrorMessage).mockResolvedValueOnce({ title: "Check Credentials" });
+        const errorDetails = new imperative.ImperativeError({
+            msg: "Invalid credentials",
+            errorCode: 401 as unknown as string,
+        });
         const label = "invalidCred";
 
-        await utils.errorHandling({ mDetails: { errorCode: 401 } }, label);
+        await utils.errorHandling(errorDetails, label);
 
         expect(vscode.window.showErrorMessage).toHaveBeenCalledWith(
             `Invalid Credentials. Please ensure the username and password for ${label} are valid or this may lead to a lock-out.`,
@@ -91,9 +95,13 @@ describe("Utils Unit Tests - Function errorHandling", () => {
         createGlobalMocks();
 
         mocked(vscode.window.showErrorMessage).mockResolvedValueOnce({ title: "Check Credentials" });
+        const errorDetails = new imperative.ImperativeError({
+            msg: "Invalid credentials",
+            errorCode: 401 as unknown as string,
+        });
         const label = "invalidCred [/tmp]";
 
-        await utils.errorHandling({ mDetails: { errorCode: 401 } }, label);
+        await utils.errorHandling(errorDetails, label);
 
         expect(vscode.window.showErrorMessage).toHaveBeenCalledWith(
             `Invalid Credentials. Please ensure the username and password for ${label} are valid or this may lead to a lock-out.`,
@@ -107,9 +115,13 @@ describe("Utils Unit Tests - Function errorHandling", () => {
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profile);
         mocked(vscode.window.showErrorMessage).mockResolvedValueOnce({ title: "Check Credentials" });
         mocked(utils.isTheia).mockReturnValue(true);
+        const errorDetails = new imperative.ImperativeError({
+            msg: "Invalid credentials",
+            errorCode: 401 as unknown as string,
+        });
         const label = "invalidCred";
 
-        await utils.errorHandling({ mDetails: { errorCode: 401 } }, label);
+        await utils.errorHandling(errorDetails, label);
 
         // TODO: check why this return two messages?
         expect(vscode.window.showErrorMessage).toHaveBeenCalledWith(

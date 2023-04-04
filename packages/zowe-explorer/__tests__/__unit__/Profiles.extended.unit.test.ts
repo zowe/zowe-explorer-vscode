@@ -366,7 +366,7 @@ describe("Profiles Unit Tests - Function createNewConnection for v1 Profiles", (
         await Profiles.getInstance().createNewConnection("fake", "zosmf");
         expect(mockSaveProfile).toHaveBeenCalled();
         expect(globalMocks.mockShowInformationMessage).not.toHaveBeenCalled();
-        expect(errorHandlingSpy).toHaveBeenCalledWith(testError, "fake", testError.message);
+        expect(errorHandlingSpy).toHaveBeenCalledWith(testError, "fake");
         expect(mockShowZoweConfigError).toHaveBeenCalledWith("saveProfile error");
     });
 

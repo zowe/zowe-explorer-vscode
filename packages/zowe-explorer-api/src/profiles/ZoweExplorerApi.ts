@@ -282,7 +282,11 @@ export namespace ZoweExplorerApi {
          * @returns {Promise<zowe.IZosFilesResponse>}
          */
         copyDataSetMember(
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore: Renamed variable is not unused
             { dsn: fromDataSetName, member: fromMemberName }: zowe.IDataSet,
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore: Renamed variable is not unused
             { dsn: toDataSetName, member: toMemberName }: zowe.IDataSet,
             options?: { replace?: boolean }
         ): Promise<zowe.IZosFilesResponse>;

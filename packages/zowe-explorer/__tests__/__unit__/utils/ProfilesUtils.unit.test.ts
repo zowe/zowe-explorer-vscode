@@ -22,13 +22,12 @@ import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 jest.mock("fs");
 jest.mock("vscode");
 jest.mock("@zowe/cli");
-jest.mock("@zowe/imperative");
 
-afterEach(() => {
-    jest.clearAllMocks();
-});
+describe("ProfilesUtils unit tests", () => {
+    afterEach(() => {
+        jest.clearAllMocks();
+    });
 
-describe("ProfileUtils unit tests", () => {
     function createBlockMocks() {
         const newMocks = {
             mockExistsSync: jest.fn().mockReturnValue(true),
@@ -69,12 +68,10 @@ describe("ProfileUtils unit tests", () => {
         });
 
         it("should handle error and open config file", async () => {
-            const errorDetails = {
-                mDetails: {
-                    errorCode: 404,
-                },
-                toString: () => "hostname",
-            };
+            const errorDetails = new zowe.imperative.ImperativeError({
+                msg: "Invalid hostname",
+                errorCode: 404 as unknown as string,
+            });
             const label = "test";
             const moreInfo = "Task failed successfully";
             const spyOpenConfigFile = jest.fn();
@@ -99,13 +96,11 @@ describe("ProfileUtils unit tests", () => {
         });
 
         it("should handle error and prompt for authentication", async () => {
-            const errorDetails = {
-                mDetails: {
-                    errorCode: 401,
-                    additionalDetails: "Token is not valid or expired.",
-                },
-                toString: () => "error",
-            };
+            const errorDetails = new zowe.imperative.ImperativeError({
+                msg: "Invalid credentials",
+                errorCode: 401 as unknown as string,
+                additionalDetails: "Token is not valid or expired.",
+            });
             const label = "test";
             const moreInfo = "Task failed successfully";
             jest.spyOn(profileUtils, "isTheia").mockReturnValue(false);

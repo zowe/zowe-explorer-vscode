@@ -512,7 +512,7 @@ describe("USS Action Unit Tests - Function saveUSSFile", () => {
 
         await ussNodeActions.saveUSSFile(blockMocks.testDoc, blockMocks.testUSSTree);
         expect(globalMocks.showErrorMessage.mock.calls.length).toBe(1);
-        expect(globalMocks.showErrorMessage.mock.calls[0][0]).toBe("Test Error Error: Test Error");
+        expect(globalMocks.showErrorMessage.mock.calls[0][0]).toBe("Error: Test Error");
         expect(mocked(vscode.workspace.applyEdit)).toHaveBeenCalledTimes(2);
     });
 

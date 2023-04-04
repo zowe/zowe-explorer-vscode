@@ -135,7 +135,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
                 ZoweLogger.error(error);
                 Gui.errorMessage(localize("issueTsoCommand.apiNonExisting", "Not implemented yet for profile of type: ") + profile.type);
             } else {
-                await errorHandling(error.toString(), profile.name, error.message.toString());
+                await errorHandling(error, profile.name);
             }
         }
     }
@@ -250,7 +250,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
                 ZoweLogger.error(message);
                 Gui.errorMessage(message);
             } else {
-                await errorHandling(error, profile.name, error?.message);
+                await errorHandling(error, profile.name);
             }
         }
     }

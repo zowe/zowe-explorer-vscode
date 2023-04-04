@@ -134,7 +134,7 @@ export async function allocateLike(datasetProvider: api.IZoweTree<api.IZoweDatas
             await ZoweExplorerApiRegister.getMvsApi(profile).allocateLikeDataSet(newDSName.toUpperCase(), likeDSName);
         } catch (err) {
             if (err instanceof Error) {
-                await errorHandling(err, newDSName, localize("createDataSet.error", "Unable to create data set: ") + err.message);
+                await errorHandling(err, newDSName, localize("createDataSet.error", "Unable to create data set:"));
             }
             throw err;
         }
@@ -221,7 +221,7 @@ export async function uploadFile(node: ZoweDatasetNode, docPath: string): Promis
         });
         return response;
     } catch (e) {
-        await errorHandling(e, node.getProfileName(), e.message);
+        await errorHandling(e, node.getProfileName());
     }
 }
 
@@ -403,7 +403,7 @@ export async function createMember(parent: api.IZoweDatasetTreeNode, datasetProv
             });
         } catch (err) {
             if (err instanceof Error) {
-                await errorHandling(err, label, localize("createMember.error", "Unable to create member. {0}", err?.message ?? err.toString()));
+                await errorHandling(err, label, localize("createMember.error", "Unable to create member."));
             }
             throw err;
         }
@@ -483,7 +483,7 @@ export async function openPS(
                 datasetProvider.addFileHistory(`[${node.getProfileName()}]: ${label}`);
             }
         } catch (err) {
-            await errorHandling(err, node.getProfileName(), err.message);
+            await errorHandling(err, node.getProfileName());
             throw err;
         }
     }
@@ -677,11 +677,7 @@ export async function createFile(node: api.IZoweDatasetTreeNode, datasetProvider
             }
         } catch (err) {
             if (err instanceof Error) {
-                await errorHandling(
-                    err,
-                    node.getProfileName(),
-                    localize("createDataSet.error", "Error encountered when creating data set. {0}", err?.message)
-                );
+                await errorHandling(err, node.getProfileName(), localize("createDataSet.error", "Error encountered when creating data set."));
             }
             throw err as Error;
         }
@@ -777,11 +773,7 @@ export async function showAttributes(node: api.IZoweDatasetTreeNode, datasetProv
             }
         } catch (err) {
             if (err instanceof Error) {
-                await errorHandling(
-                    err,
-                    node.getProfileName(),
-                    localize("showAttributes.error", "Unable to list attributes. {0}", err?.message ?? err.toString())
-                );
+                await errorHandling(err, node.getProfileName(), localize("showAttributes.error", "Unable to list attributes."));
             }
             throw err;
         }
@@ -888,11 +880,7 @@ export async function submitJcl(datasetProvider: api.IZoweTree<api.IZoweDatasetT
             ZoweLogger.info(localize("submitJcl.jobSubmitted", "Job submitted {0} using profile {1}.", job.jobid, sessProfileName));
         } catch (error) {
             if (error instanceof Error) {
-                await errorHandling(
-                    error,
-                    sessProfileName,
-                    localize("submitJcl.error", "Job submission failed\n{0}", error?.message ?? error.toString())
-                );
+                await errorHandling(error, sessProfileName, localize("submitJcl.jobSubmissionFailed", "Job submission failed."));
             }
         }
     } else {
@@ -994,11 +982,7 @@ export async function submitMember(node: api.IZoweTreeNode): Promise<void> {
             ZoweLogger.info(localize("submitMember.success", "Job submitted {0} using profile {1}.", job.jobid, sesName));
         } catch (error) {
             if (error instanceof Error) {
-                await errorHandling(
-                    error,
-                    sesName,
-                    localize("submitMember.error", "Job submission failed.\n{0}", error?.message ?? error.toString())
-                );
+                await errorHandling(error, sesName, localize("submitMember.jobSubmissionFailed", "Job submission failed."));
             }
         }
     }
@@ -1044,7 +1028,7 @@ export async function deleteDataset(node: api.IZoweTreeNode, datasetProvider: ap
             ZoweLogger.error(localize("deleteDataSet.error", "Error encountered when deleting data set. {0}", JSON.stringify(err)));
             api.Gui.showMessage(localize("deleteDataSet.notFound.error", "Unable to find file {0}", label));
         } else {
-            await errorHandling(err, node.getProfileName(), err?.message);
+            await errorHandling(err, node.getProfileName());
         }
         throw err;
     }
@@ -1132,7 +1116,7 @@ export async function refreshPS(node: api.IZoweDatasetTreeNode): Promise<void> {
             ZoweLogger.error(localize("refreshPS.error", "Error encountered when refreshing data set view. {0}", JSON.stringify(err)));
             api.Gui.showMessage(localize("refreshPS.file", "Unable to find file {0}", label));
         } else {
-            await errorHandling(err, node.getProfileName(), err?.message);
+            await errorHandling(err, node.getProfileName());
         }
     }
 }
@@ -1149,7 +1133,7 @@ export async function refreshDataset(node: api.IZoweDatasetTreeNode, datasetProv
         await node.getChildren();
         datasetProvider.refreshElement(node);
     } catch (err) {
-        await errorHandling(err, node.getProfileName(), err.message);
+        await errorHandling(err, node.getProfileName());
     }
 }
 
@@ -1464,7 +1448,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
             return;
         }
     } catch (err) {
-        await errorHandling(err, sesName, err.message);
+        await errorHandling(err, sesName);
     }
     // Get specific node based on label and parent tree (session / favorites)
     const nodes: api.IZoweNodeType[] = concatChildNodes(sesNode ? [sesNode] : datasetProvider.mSessionNodes);
@@ -1509,10 +1493,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
                 node.setEtag(uploadResponse.apiResponse[0].etag);
                 setFileSaved(true);
             }
-        } else if (
-            !uploadResponse.success &&
-            uploadResponse.commandResponse.includes(localize("saveFile.ZosmfEtagMismatchError.error", "Rest API failure with HTTP(S) status 412"))
-        ) {
+        } else if (!uploadResponse.success && uploadResponse.commandResponse.includes("Rest API failure with HTTP(S) status 412")) {
             if (globals.ISTHEIA) {
                 willForceUpload(node, doc, label, node ? node.getProfile() : profile);
             } else {
@@ -1556,7 +1537,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
         }
     } catch (err) {
         await markDocumentUnsaved(doc);
-        await errorHandling(err, sesName, err.message);
+        await errorHandling(err, sesName);
     }
 }
 
@@ -1625,7 +1606,7 @@ export async function downloadDs(node: ZoweDatasetNode): Promise<zowe.IZosFilesR
             lbl = node.getParent().getLabel().toString() + "(" + node.getLabel().toString() + ")";
             break;
         default:
-            vscode.window.showErrorMessage(invalidMsg);
+            api.Gui.errorMessage(invalidMsg);
             throw Error(invalidMsg);
     }
     const filePath = getDocumentFilePath(lbl, node);
@@ -1798,11 +1779,7 @@ export async function _copyProcessor(
             }
         } catch (error) {
             if (error instanceof Error) {
-                await errorHandling(
-                    error,
-                    dsUtils.getNodeLabels(node).dataSetName,
-                    localize("copyDataSet.error", "Unable to copy data set. {0}", error?.message ?? error.toString())
-                );
+                await errorHandling(error, dsUtils.getNodeLabels(node).dataSetName, localize("copyDataSet.error", "Unable to copy data set."));
             }
         }
     }

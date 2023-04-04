@@ -53,7 +53,7 @@ export async function downloadSpool(jobs: IZoweJobTreeNode[]): Promise<void> {
             }
         }
     } catch (error) {
-        await errorHandling(error, null, error.message);
+        await errorHandling(error);
     }
 }
 
@@ -71,7 +71,7 @@ export async function getSpoolContent(session: string, spool: zowe.IJobFile, ref
     try {
         zosmfProfile = profiles.loadNamedProfile(session);
     } catch (error) {
-        await errorHandling(error, session, error.message);
+        await errorHandling(error, session);
         return;
     }
 
@@ -90,7 +90,7 @@ export async function getSpoolContent(session: string, spool: zowe.IJobFile, ref
             if (isTextDocActive && String(error.message).includes("Failed to show text document")) {
                 return;
             }
-            await errorHandling(error, session, error.message);
+            await errorHandling(error, session);
             return;
         }
     }
@@ -175,7 +175,7 @@ export async function downloadJcl(job: Job): Promise<void> {
         const jclDoc = await vscode.workspace.openTextDocument({ language: "jcl", content: jobJcl });
         await Gui.showTextDocument(jclDoc, { preview: false });
     } catch (error) {
-        await errorHandling(error, null, error.message);
+        await errorHandling(error);
     }
 }
 
@@ -192,7 +192,7 @@ export const focusOnJob = async (jobsProvider: IZoweTree<IZoweJobTreeNode>, sess
         try {
             await jobsProvider.addSession(sessionName.trim());
         } catch (error) {
-            await errorHandling(error, null, error.message);
+            await errorHandling(error);
             return;
         }
         sessionNode = jobsProvider.mSessionNodes.find((jobNode) => jobNode.label.toString().trim() === sessionName.trim());
@@ -200,7 +200,7 @@ export const focusOnJob = async (jobsProvider: IZoweTree<IZoweJobTreeNode>, sess
     try {
         jobsProvider.refreshElement(sessionNode);
     } catch (error) {
-        await errorHandling(error, null, error.message);
+        await errorHandling(error);
         return;
     }
     sessionNode.searchId = jobId;
@@ -238,7 +238,7 @@ export async function modifyCommand(job: Job): Promise<void> {
                 localize("jobActions.modifyCommand.apiNonExisting", "Not implemented yet for profile of type: ") + job.getProfile().type
             );
         } else {
-            await errorHandling(error.toString(), job.getProfile().name, error.message.toString());
+            await errorHandling(error, job.getProfile().name);
         }
     }
 }
@@ -261,7 +261,7 @@ export async function stopCommand(job: Job): Promise<void> {
             ZoweLogger.error(error);
             Gui.errorMessage(localize("jobActions.stopCommand.apiNonExisting", "Not implemented yet for profile of type: ") + job.getProfile().type);
         } else {
-            await errorHandling(error.toString(), job.getProfile().name, error.message.toString());
+            await errorHandling(error, job.getProfile().name);
         }
     }
 }
@@ -347,7 +347,7 @@ async function deleteSingleJob(job: IZoweJobTreeNode, jobsProvider: IZoweTree<IZ
         await jobsProvider.delete(job);
         Gui.infoMessage(localize("deleteCommand.job", "Job {0} was deleted.", jobName));
     } catch (error) {
-        await errorHandling(error.toString(), job.getProfile().name, error.message.toString());
+        await errorHandling(error, job.getProfile().name);
     }
 
     Gui.showMessage(localize("deleteCommand.job", "Job {0} was deleted.", jobName));
