@@ -11,6 +11,7 @@
 
 import * as logger from "../../../src/utils/LoggerUtils";
 import * as vscode from "vscode";
+import * as zowe from "@zowe/cli";
 import * as globals from "../../../src/globals";
 import { Gui } from "@zowe/zowe-explorer-api";
 import * as shared from "../../../__mocks__/mockCreators/shared";
@@ -52,6 +53,7 @@ function createGlobalMocks() {
     });
     Object.defineProperty(logger, "getDate", { value: "2023/1/1", configurable: true });
     Object.defineProperty(logger, "getTime", { value: "08:00:00", configurable: true });
+    Object.defineProperty(zowe, "padLeft", { value: jest.fn(), configurable: true });
     Object.defineProperty(SettingsConfig, "setDirectValue", { value: jest.fn(), configurable: true });
 
     return newMocks;

@@ -12,6 +12,7 @@
 /* eslint-disable @typescript-eslint/restrict-plus-operands */
 
 import { Gui, MessageSeverity } from "@zowe/zowe-explorer-api";
+import * as zowe from "@zowe/cli";
 import * as vscode from "vscode";
 import * as nls from "vscode-nls";
 import * as globals from "../globals";
@@ -150,12 +151,15 @@ export class ZoweLogger {
 
 export function getDate(): string {
     const dateObj = new Date(Date.now());
-    const day = ("0" + dateObj.getDate()).slice(-2);
-    const month = ("0" + (dateObj.getMonth() + 1)).slice(-2);
+    const day = ("0" + dateObj?.getDate()).slice(-2);
+    const month = ("0" + (dateObj?.getMonth() + 1)).slice(-2);
     return `${dateObj.getFullYear()}/${month}/${day}`;
 }
 
 export function getTime(): string {
     const dateObj = new Date(Date.now());
-    return `${dateObj.getHours()}:${dateObj.getMinutes()}:${dateObj.getSeconds()}`;
+    const hours = zowe.padLeft(dateObj?.getHours().toString(), 2, "0");
+    const minutes = zowe.padLeft(dateObj?.getMinutes().toString(), 2, "0");
+    const seconds = zowe.padLeft(dateObj?.getSeconds().toString(), 2, "0");
+    return `${hours}:${minutes}:${seconds}`;
 }

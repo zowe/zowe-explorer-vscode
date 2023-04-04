@@ -1782,6 +1782,14 @@
             "%zowe.logger.error%",
             "%zowe.logger.fatal%"
           ],
+          "markdownEnumDescriptions": [
+            "%zowe.logger.trace.description%",
+            "%zowe.logger.debug.description%",
+            "%zowe.logger.info.description%",
+            "%zowe.logger.warn.description%",
+            "%zowe.logger.error.description%",
+            "%zowe.logger.fatal.description%"
+          ],
           "description": "%zowe.logger%",
           "scope": "window"
         },
