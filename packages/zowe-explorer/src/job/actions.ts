@@ -33,7 +33,7 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
  *
  * @param job The job to download the spool content from
  */
-export async function downloadSpool(jobs: IZoweJobTreeNode[]): Promise<void> {
+export async function downloadSpool(jobs: IZoweJobTreeNode[], binary?: boolean): Promise<void> {
     try {
         const dirUri = await Gui.showOpenDialog({
             openLabel: localize("downloadSpool.select", "Select"),
@@ -48,6 +48,7 @@ export async function downloadSpool(jobs: IZoweJobTreeNode[]): Promise<void> {
                     jobid: job.job.jobid,
                     jobname: job.job.jobname,
                     outDir: dirUri[0].fsPath,
+                    binary,
                 });
             }
         }

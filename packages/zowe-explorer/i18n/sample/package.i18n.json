@@ -60,6 +60,7 @@
   "addJobsSession": "Add Profile to Jobs View",
   "removeJobsSession": "Hide Profile",
   "downloadSpool": "Download Spool",
+  "downloadSpoolBinary": "Download Spool (Binary)",
   "getJobJcl": "Get JCL",
   "setJobSpool": "Set Spool",
   "configuration.title": "Zowe Explorer",

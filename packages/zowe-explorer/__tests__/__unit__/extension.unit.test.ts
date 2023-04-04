@@ -217,6 +217,7 @@ async function createGlobalMocks() {
             "zowe.jobs.setPrefix",
             "zowe.jobs.removeJobsSession",
             "zowe.jobs.downloadSpool",
+            "zowe.jobs.downloadSpoolBinary",
             "zowe.jobs.getJobJcl",
             "zowe.jobs.setJobSpool",
             "zowe.jobs.search",
@@ -371,10 +372,10 @@ async function createGlobalMocks() {
     // Create a mocked extension context
     const mockExtensionCreator = jest.fn(
         () =>
-            ({
-                subscriptions: [],
-                extensionPath: path.join(__dirname, ".."),
-            } as vscode.ExtensionContext)
+        ({
+            subscriptions: [],
+            extensionPath: path.join(__dirname, ".."),
+        } as vscode.ExtensionContext)
     );
     globalMocks.mockExtension = new mockExtensionCreator();
 

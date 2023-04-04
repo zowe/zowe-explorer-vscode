@@ -80,6 +80,12 @@ export async function initJobsProvider(context: vscode.ExtensionContext): Promis
         })
     );
     context.subscriptions.push(
+        vscode.commands.registerCommand("zowe.jobs.downloadSpoolBinary", async (node, nodeList) => {
+            const selectedNodes = getSelectedNodeList(node, nodeList) as IZoweJobTreeNode[];
+            await jobActions.downloadSpool(selectedNodes, true);
+        })
+    );
+    context.subscriptions.push(
         vscode.commands.registerCommand("zowe.jobs.getJobJcl", async (node, nodeList) => {
             let selectedNodes = getSelectedNodeList(node, nodeList) as IZoweJobTreeNode[];
             selectedNodes = selectedNodes.filter((x) => contextuals.isJob(x));

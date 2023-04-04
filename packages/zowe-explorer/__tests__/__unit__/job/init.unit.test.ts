@@ -114,6 +114,14 @@ describe("Test src/jobs/extension", () => {
                 ],
             },
             {
+                name: "zowe.jobs.downloadSpoolBinary",
+                mock: [
+                    // Selected nodes array is passed to the downloadSpool method
+                    // Hence why the expected value is `[test.value]`
+                    { spy: jest.spyOn(jobActions, "downloadSpool"), arg: [[test.value], true] },
+                ],
+            },
+            {
                 name: "zowe.jobs.getJobJcl",
                 mock: [
                     { spy: jest.spyOn(contextuals, "isJob"), arg: [test.value], ret: true },
