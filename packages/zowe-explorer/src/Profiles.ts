@@ -392,13 +392,13 @@ export class Profiles extends ProfilesCache {
                 try {
                     newprofile = await Profiles.getInstance().createNewConnection(chosenProfile);
                 } catch (error) {
-                    await errorHandling(error, chosenProfile, error.message);
+                    await errorHandling(error, chosenProfile);
                 }
                 if (newprofile) {
                     try {
                         await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
                     } catch (error) {
-                        await errorHandling(error, newprofile, error.message);
+                        await errorHandling(error, newprofile);
                     }
                     await zoweFileProvider.addSession(newprofile);
                     await zoweFileProvider.refresh();
@@ -553,7 +553,7 @@ export class Profiles extends ProfilesCache {
 
             return updSchemaValues;
         } catch (error) {
-            await errorHandling(error, profileName, error.message);
+            await errorHandling(error, profileName);
         }
     }
 
@@ -840,7 +840,7 @@ export class Profiles extends ProfilesCache {
             await readConfigFromDisk();
             return newProfileName;
         } catch (error) {
-            await errorHandling(error, profileName, error.message);
+            await errorHandling(error, profileName);
             ZoweExplorerExtender.showZoweConfigError(error.message);
         }
     }
@@ -1417,7 +1417,7 @@ export class Profiles extends ProfilesCache {
             await this.deleteProfileOnDisk(deletedProfile);
         } catch (error) {
             this.log.error(localize("deleteProfile.delete.log.error", "Error encountered when deleting profile! ") + JSON.stringify(error));
-            await errorHandling(error, profileName, error.message);
+            await errorHandling(error, profileName);
             throw error;
         }
 

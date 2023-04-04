@@ -126,7 +126,7 @@ export class MvsCommandHandler extends ZoweCommandProvider {
                 globals.LOG.error(error);
                 Gui.errorMessage(localize("issueMvsCommand.apiNonExisting", "Not implemented yet for profile of type: ") + profile.type);
             } else {
-                await errorHandling(error.toString(), profile.name, error.message.toString());
+                await errorHandling(error, profile.name);
             }
         }
     }
@@ -223,7 +223,7 @@ export class MvsCommandHandler extends ZoweCommandProvider {
                 }
             }
         } catch (error) {
-            await errorHandling(error, profile.name, error.message);
+            await errorHandling(error, profile.name);
         }
         this.history.addSearchHistory(command);
     }
