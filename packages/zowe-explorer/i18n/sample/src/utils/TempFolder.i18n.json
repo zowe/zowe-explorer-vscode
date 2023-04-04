@@ -1,4 +1,4 @@
 {
-  "moveTempFolder.error": "Error encountered when creating temporary folder! ",
+  "moveTempFolder.error": "Error encountered when creating temporary folder!",
   "deactivate.error": "Unable to delete temporary folder. "
 }

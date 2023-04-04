@@ -483,7 +483,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                     await this.initializeFileOpening(documentFilePath, shouldPreview);
                 }
             } catch (err) {
-                await errorHandling(err, this.mProfileName, err.message);
+                await errorHandling(err, this.mProfileName);
                 throw err;
             }
         }
@@ -550,7 +550,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                     localize("refreshUSS.file1", "Unable to find file: ") + label + localize("refreshUSS.file2", " was probably deleted.")
                 );
             } else {
-                await errorHandling(err, this.mProfileName, err.message);
+                await errorHandling(err, this.mProfileName);
             }
         }
     }
