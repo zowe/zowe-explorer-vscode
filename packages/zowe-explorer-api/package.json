@@ -20,12 +20,13 @@
     "semver": "^7.3.5"
   },
   "scripts": {
-    "build": "yarn clean && tsc -p ./ && yarn license",
+    "build": "yarn check-cli && yarn clean && tsc -p ./ && yarn license",
     "test:unit": "jest \".*__tests__.*\\.unit\\.test\\.ts\" --coverage",
     "test": "yarn test:unit",
     "lint": "concurrently -n \"_eslint_,prettier\" \"eslint .\" \"prettier --check .\"",
     "lint:html": "eslint . --format html > results/eslint.html",
     "pretty": "prettier --write .",
+    "check-cli": "node scripts/check-cli.js",
     "clean": "rimraf lib",
     "fresh-clone": "yarn clean && rimraf node_modules",
     "license": "node ../../scripts/updateLicenses.js",
