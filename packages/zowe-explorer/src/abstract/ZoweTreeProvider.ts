@@ -21,6 +21,7 @@ import { setProfile, setSession, errorHandling } from "../utils/ProfilesUtils";
 
 import * as nls from "vscode-nls";
 import { SettingsConfig } from "../utils/SettingsConfig";
+import { ZoweLogger } from "../utils/LoggerUtils";
 
 // Set up localization
 nls.config({
@@ -49,10 +50,12 @@ export class ZoweTreeProvider {
      * @returns {vscode.TreeItem}
      */
     public getTreeItem(element: IZoweTreeNode): vscode.TreeItem | Thenable<vscode.TreeItem> {
+        ZoweLogger.trace("ZoweTreeProvider.getTreeItem called.");
         return element;
     }
 
     public getParent(element: IZoweTreeNode): IZoweTreeNode {
+        ZoweLogger.trace("ZoweTreeProvider.getParent called.");
         return element.getParent();
     }
 
@@ -62,6 +65,7 @@ export class ZoweTreeProvider {
      * @param {IZoweTreeNode}
      */
     public setItem(treeView: vscode.TreeView<IZoweTreeNode>, item: IZoweTreeNode): void {
+        ZoweLogger.trace("ZoweTreeProvider.setItem called.");
         treeView.reveal(item, { select: true, focus: true });
     }
 
@@ -70,6 +74,7 @@ export class ZoweTreeProvider {
      * @param node Node to refresh
      */
     public async refreshHomeProfileContext(node): Promise<void> {
+        ZoweLogger.trace("ZoweTreeProvider.refreshHomeProfileContext called.");
         const mProfileInfo = await Profiles.getInstance().getProfileInfo();
         if (mProfileInfo.usingTeamConfig && !contextually.isHomeProfile(node)) {
             const prof = mProfileInfo.getAllProfiles().find((p) => p.profName === node.getProfileName());
@@ -85,6 +90,7 @@ export class ZoweTreeProvider {
      *
      */
     public refreshElement(element: IZoweDatasetTreeNode): void {
+        ZoweLogger.trace("ZoweTreeProvider.refreshElement called.");
         element.dirty = true;
         this.mOnDidChangeTreeData.fire(element);
     }
@@ -94,6 +100,7 @@ export class ZoweTreeProvider {
      *
      */
     public refresh(): void {
+        ZoweLogger.trace("ZoweTreeProvider.refresh called.");
         this.mOnDidChangeTreeData.fire();
     }
 
@@ -104,6 +111,7 @@ export class ZoweTreeProvider {
      * @param isOpen the intended state of the the tree view provider, true or false
      */
     public flipState(element: IZoweTreeNode, isOpen: boolean = false): void {
+        ZoweLogger.trace("ZoweTreeProvider.flipState called.");
         element.collapsibleState = isOpen ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.Collapsed;
         const icon = getIconByNode(element);
         if (icon) {
@@ -116,6 +124,7 @@ export class ZoweTreeProvider {
     }
 
     public async onDidChangeConfiguration(e: vscode.ConfigurationChangeEvent): Promise<void> {
+        ZoweLogger.trace("ZoweTreeProvider.onDidChangeConfiguration called.");
         if (e.affectsConfiguration(this.persistenceSchema)) {
             const setting: any = {
                 ...SettingsConfig.getDirectValue(this.persistenceSchema),
@@ -129,14 +138,17 @@ export class ZoweTreeProvider {
     }
 
     public getSearchHistory(): string[] {
+        ZoweLogger.trace("ZoweTreeProvider.getSearchHistory called.");
         return this.mHistory.getSearchHistory();
     }
 
     public getTreeType(): PersistenceSchemaEnum {
+        ZoweLogger.trace("ZoweTreeProvider.getTreeType called.");
         return this.persistenceSchema;
     }
 
     public addSearchHistory(criteria: string): void {
+        ZoweLogger.trace("ZoweTreeProvider.addSearchHistory called.");
         if (criteria) {
             this.mHistory.addSearchHistory(criteria);
             this.refresh();
@@ -144,20 +156,25 @@ export class ZoweTreeProvider {
     }
 
     public findNonFavoritedNode(_element: IZoweTreeNode): any {
+        ZoweLogger.trace("ZoweTreeProvider.findNonFavoritedNode called.");
         return undefined;
     }
 
     public findFavoritedNode(_element: IZoweTreeNode): any {
+        ZoweLogger.trace("ZoweTreeProvider.findFavoritedNode called.");
         return undefined;
     }
     public renameFavorite(_node: IZoweTreeNode, _newLabel: string): any {
+        ZoweLogger.trace("ZoweTreeProvider.renameFavorite called.");
         return undefined;
     }
     public renameNode(_profile: string, _beforeDataSetName: string, _afterDataSetName: string): any {
+        ZoweLogger.trace("ZoweTreeProvider.renameNode called.");
         return undefined;
     }
 
     public async editSession(node: IZoweTreeNode, zoweFileProvider: IZoweTree<IZoweNodeType>): Promise<void> {
+        ZoweLogger.trace("ZoweTreeProvider.editSession called.");
         const profile = node.getProfile();
         const profileName = node.getProfileName();
         const EditSession = await Profiles.getInstance().editSession(profile, profileName);
@@ -179,6 +196,7 @@ export class ZoweTreeProvider {
     }
 
     public async checkCurrentProfile(node: IZoweTreeNode): Promise<void> {
+        ZoweLogger.trace("ZoweTreeProvider.checkCurrentProfile called.");
         const profile = node.getProfile();
         const profileStatus = await Profiles.getInstance().checkCurrentProfile(profile);
         if (profileStatus.status === "inactive") {
@@ -197,14 +215,6 @@ export class ZoweTreeProvider {
             await errorHandling(
                 localize("validateProfiles.invalid1", "Profile Name ") +
                     profile.name +
-                    localize(
-                        "validateProfiles.invalid2",
-                        " is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct."
-                    )
-            );
-            this.log.debug(
-                localize("validateProfiles.invalid1", "Profile Name ") +
-                    node.getProfileName() +
                     localize(
                         "validateProfiles.invalid2",
                         " is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct."
@@ -235,6 +245,7 @@ export class ZoweTreeProvider {
     }
 
     public async ssoLogin(node: IZoweTreeNode): Promise<void> {
+        ZoweLogger.trace("ZoweTreeProvider.ssoLogin called.");
         await Profiles.getInstance().ssoLogin(node);
         await vscode.commands.executeCommand("zowe.ds.refreshAll");
         await vscode.commands.executeCommand("zowe.uss.refreshAll");
@@ -242,6 +253,7 @@ export class ZoweTreeProvider {
     }
 
     public async ssoLogout(node: IZoweTreeNode): Promise<void> {
+        ZoweLogger.trace("ZoweTreeProvider.ssoLogout called.");
         await Profiles.getInstance().ssoLogout(node);
         await vscode.commands.executeCommand("zowe.ds.refreshAll");
         await vscode.commands.executeCommand("zowe.uss.refreshAll");
@@ -249,14 +261,17 @@ export class ZoweTreeProvider {
     }
 
     public async createZoweSchema(zoweFileProvider: IZoweTree<IZoweNodeType>): Promise<void> {
+        ZoweLogger.trace("ZoweTreeProvider.createZoweSchema called.");
         await Profiles.getInstance().createZoweSchema(zoweFileProvider);
     }
 
     public async createZoweSession(zoweFileProvider: IZoweTree<IZoweNodeType>): Promise<void> {
+        ZoweLogger.trace("ZoweTreeProvider.createZoweSession called.");
         await Profiles.getInstance().createZoweSession(zoweFileProvider);
     }
 
     protected deleteSessionByLabel(revisedLabel: string): void {
+        ZoweLogger.trace("ZoweTreeProvider.deleteSessionByLabel called.");
         this.mHistory.removeSession(revisedLabel);
         this.refresh();
     }
@@ -267,6 +282,7 @@ export class ZoweTreeProvider {
      * @param provider the tree view provider
      */
     public async expandSession(element: IZoweTreeNode, provider: IZoweTree<IZoweNodeType>): Promise<void> {
+        ZoweLogger.trace("ZoweTreeProvider.expandSession called.");
         await provider.getTreeView().reveal(element, { expand: false });
         await provider.getTreeView().reveal(element, { expand: true });
         element.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;

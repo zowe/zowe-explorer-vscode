@@ -24,6 +24,7 @@ import * as contextually from "../shared/context";
 import { closeOpenedTextFile } from "../utils/workspace";
 import * as nls from "vscode-nls";
 import { UssFileTree, UssFileType, UssFileUtils } from "./FileStructure";
+import { ZoweLogger } from "../utils/LoggerUtils";
 
 // Set up localization
 nls.config({
@@ -120,10 +121,12 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      * @returns {string}
      */
     public getProfileName(): string {
+        ZoweLogger.trace("ZoweUSSNode.getProfileName called.");
         return this.returnmProfileName();
     }
 
     public getSessionNode(): IZoweUSSTreeNode {
+        ZoweLogger.trace("ZoweUSSNode.getSessionNode called.");
         return this.session ? this : this.getParent()?.getSessionNode() ?? this;
     }
 
@@ -133,6 +136,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      * @returns {Promise<IZoweUSSTreeNode[]>}
      */
     public async getChildren(): Promise<IZoweUSSTreeNode[]> {
+        ZoweLogger.trace("ZoweUSSNode.getChildren called.");
         if ((!this.fullPath && contextually.isSession(this)) || contextually.isDocument(this)) {
             return [];
         }
@@ -233,6 +237,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     }
 
     public setBinary(binary: boolean): void {
+        ZoweLogger.trace("ZoweUSSNode.setBinary called.");
         this.binary = binary;
         if (this.binary) {
             this.contextValue = globals.DS_BINARY_FILE_CONTEXT;
@@ -259,6 +264,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      * @returns {boolean}
      */
     public get isDirtyInEditor(): boolean {
+        ZoweLogger.trace("ZoweUSSNode.isDirtyInEditor called.");
         const openedTextDocuments = vscode.workspace.textDocuments;
         const currentFilePath = this.getUSSDocumentFilePath();
 
@@ -272,6 +278,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     }
 
     public get openedDocumentInstance(): vscode.TextDocument {
+        ZoweLogger.trace("ZoweUSSNode.openedDocumentInstance called.");
         const openedTextDocuments = vscode.workspace.textDocuments;
         const currentFilePath = this.getUSSDocumentFilePath();
 
@@ -289,6 +296,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      * @param newFullPath string
      */
     public async rename(newFullPath: string): Promise<boolean> {
+        ZoweLogger.trace("ZoweUSSNode.rename called.");
         const currentFilePath = this.getUSSDocumentFilePath();
         const hasClosedInstance = await closeOpenedTextFile(currentFilePath);
         this.fullPath = newFullPath;
@@ -311,6 +319,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      * @param hasClosedInstance
      */
     public async reopen(hasClosedInstance = false): Promise<void> {
+        ZoweLogger.trace("ZoweUSSNode.reopen called.");
         if (!this.isFolder && (hasClosedInstance || (this.binary && this.downloaded))) {
             await vscode.commands.executeCommand("zowe.uss.ZoweUSSNode.open", this);
         }
@@ -322,6 +331,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      * @deprecated To be removed by version 2.0. Use reopen instead.
      */
     public async refreshAndReopen(hasClosedInstance = false): Promise<void> {
+        ZoweLogger.trace("ZoweUSSNode.refreshAndReopen called.");
         await this.reopen(hasClosedInstance);
     }
 
@@ -330,11 +340,13 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      * @param iconPath
      */
     public setIcon(iconPath: { light: string; dark: string }): void {
+        ZoweLogger.trace("ZoweUSSNode.setIcon called.");
         this.iconPath = iconPath;
         vscode.commands.executeCommand("zowe.uss.refreshUSSInTree", this);
     }
 
     public async deleteUSSNode(ussFileProvider: IZoweTree<IZoweUSSTreeNode>, filePath: string, cancelled: boolean = false): Promise<void> {
+        ZoweLogger.trace("ZoweUSSNode.deleteUSSNode called.");
         const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
         if (cancelled) {
             Gui.showMessage(localize("deleteUssPrompt.deleteCancelled", "Delete action was cancelled."));
@@ -351,7 +363,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 // ignore error as the path likely doesn't exist
             }
         } catch (err) {
-            globals.LOG.error(err);
+            ZoweLogger.error(err);
             if (err instanceof Error) {
                 Gui.errorMessage(localize("deleteUSSNode.error.node", "Unable to delete node: ") + err.message);
             }
@@ -372,6 +384,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      * @returns {string}
      */
     public getEtag(): string {
+        ZoweLogger.trace("ZoweUSSNode.getEtag called.");
         return this.etag;
     }
 
@@ -381,6 +394,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      * @returns {void}
      */
     public setEtag(etagValue): void {
+        ZoweLogger.trace("ZoweUSSNode.setEtag called.");
         this.etag = etagValue;
     }
 
@@ -424,6 +438,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      * @param {IZoweTreeNode} node
      */
     public async openUSS(download: boolean, previewFile: boolean, ussFileProvider?: IZoweTree<IZoweUSSTreeNode>): Promise<void> {
+        ZoweLogger.trace("ZoweUSSNode.openUSS called.");
         await ussFileProvider.checkCurrentProfile(this);
 
         const doubleClicked = Gui.utils.wasDoubleClicked(this, ussFileProvider);
@@ -496,6 +511,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      */
     // This is not a UI refresh.
     public async refreshUSS(): Promise<void> {
+        ZoweLogger.trace("ZoweUSSNode.refreshUSS called.");
         let label: string;
         switch (true) {
             case contextually.isUssDirectory(this.getParent()):
@@ -545,7 +561,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             }
         } catch (err) {
             if (err instanceof Error && err.message.includes(localize("refreshUSS.error.notFound", "not found"))) {
-                globals.LOG.warn(err.message);
+                ZoweLogger.warn(err.toString());
                 Gui.showMessage(
                     localize("refreshUSS.file1", "Unable to find file: ") + label + localize("refreshUSS.file2", " was probably deleted.")
                 );
@@ -556,6 +572,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     }
 
     public async initializeFileOpening(documentPath: string, previewFile?: boolean): Promise<void> {
+        ZoweLogger.trace("ZoweUSSNode.initializeFileOpening called.");
         let document;
         let openingTextFailed = false;
 
@@ -563,7 +580,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             try {
                 document = await vscode.workspace.openTextDocument(documentPath);
             } catch (err) {
-                globals.LOG.warn(err);
+                ZoweLogger.warn(err);
                 openingTextFailed = true;
             }
 
@@ -597,6 +614,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      *
      */
     public getUSSDocumentFilePath(): string {
+        ZoweLogger.trace("ZoweUSSNode.getUSSDocumentFilePath called.");
         return path.join(globals.USS_DIR || "", "/" + this.getSessionNode().getProfileName() + "/", this.fullPath);
     }
 
@@ -612,6 +630,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         rootPath: string,
         uss: { tree: UssFileTree; api: ZoweExplorerApi.IUss; options?: IUploadOptions }
     ): Promise<void> {
+        ZoweLogger.trace("ZoweUSSNode.paste called.");
         const hasCopyApi = uss.api.copy != null;
         const hasPutContentApi = uss.api.putContent != null;
         if (!uss.api.fileList || (!hasCopyApi && !hasPutContentApi)) {
@@ -679,6 +698,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      * Initializes paste action for a USS tree
      */
     public async pasteUssTree(): Promise<void> {
+        ZoweLogger.trace("ZoweUSSNode.pasteUssTree called.");
         const clipboardContents = await vscode.env.clipboard.readText();
         if (clipboardContents == null || clipboardContents.length < 1) {
             return;
@@ -723,6 +743,7 @@ let saveListener = null;
  * @param wipeOutTime {number}
  */
 export function attachRecentSaveListener(wipeOutTime: number = 500): void {
+    ZoweLogger.trace("ZoweUSSNode.attachRecentSaveListener called.");
     if (saveListener) {
         saveListener.dispose();
     }
@@ -742,6 +763,7 @@ export function attachRecentSaveListener(wipeOutTime: number = 500): void {
  * @returns {boolean}
  */
 export function getRecentSaveStatus(): boolean {
+    ZoweLogger.trace("ZoweUSSNode.getRecentSaveStatus called.");
     return wasSavedRecently;
 }
 
@@ -749,6 +771,7 @@ export function getRecentSaveStatus(): boolean {
  * Helper function which disposes recent save listener
  */
 export function disposeRecentSaveListener(): void {
+    ZoweLogger.trace("ZoweUSSNode.disposeRecentSaveListener called.");
     if (saveListener) {
         saveListener.dispose();
     }

@@ -12,9 +12,9 @@
 import { imperative } from "@zowe/cli";
 import { ZoweExplorerApi, ZosmfUssApi, ZosmfMvsApi, ZosmfJesApi, ZosmfCommandApi } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerExtender } from "./ZoweExplorerExtender";
-import * as globals from "./globals";
-
+import { ZoweLogger } from "./utils/LoggerUtils";
 import * as nls from "vscode-nls";
+
 // Set up localization
 nls.config({
     messageFormat: nls.MessageFormat.bundle,
@@ -296,20 +296,20 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
         let result: ZoweExplorerApi.ICommon;
         try {
             result = this.getUssApi(profile);
-        } catch (ussErr) {
-            globals.LOG.debug(ussErr);
+        } catch (ussError) {
+            ZoweLogger.debug(ussError);
             try {
                 result = this.getMvsApi(profile);
-            } catch (mvsErr) {
-                globals.LOG.debug(mvsErr);
+            } catch (mvsError) {
+                ZoweLogger.debug(mvsError);
                 try {
                     result = this.getJesApi(profile);
-                } catch (jesErr) {
-                    globals.LOG.debug(jesErr);
+                } catch (JesError) {
+                    ZoweLogger.debug(JesError);
                     try {
                         result = this.getCommandApi(profile);
-                    } catch (cmdErr) {
-                        globals.LOG.error(cmdErr);
+                    } catch (cmdError) {
+                        ZoweLogger.error(cmdError);
                         throw new Error(
                             localize("getCommonApi.error", "Internal error: Tried to call a non-existing Common API in API register: ") + profile.type
                         );

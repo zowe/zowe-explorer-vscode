@@ -20,8 +20,10 @@ import * as contextuals from "../shared/context";
 import { Job } from "./ZoweJobNode";
 import { getSelectedNodeList } from "../shared/utils";
 import { initSubscribers } from "../shared/init";
+import { ZoweLogger } from "../utils/LoggerUtils";
 
 export async function initJobsProvider(context: vscode.ExtensionContext): Promise<IZoweTree<IZoweJobTreeNode>> {
+    ZoweLogger.trace("job.init.initJobsProvider called.");
     const jobsProvider: IZoweTree<IZoweJobTreeNode> = await createJobsTree(globals.LOG);
     if (jobsProvider == null) {
         return null;

@@ -18,6 +18,7 @@ import * as sharedExtension from "../../../src/shared/init";
 import { initJobsProvider } from "../../../src/job/init";
 import { Profiles } from "../../../src/Profiles";
 import { IJestIt, ITestContext, processSubscriptions, spyOnSubscriptions } from "../../__common__/testUtils";
+import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 
 describe("Test src/jobs/extension", () => {
     describe("initJobsProvider", () => {
@@ -207,6 +208,7 @@ describe("Test src/jobs/extension", () => {
             jest.spyOn(sharedExtension, "initSubscribers").mockImplementation(jest.fn());
             Object.defineProperty(vscode.commands, "registerCommand", { value: registerCommand });
             Object.defineProperty(vscode.workspace, "onDidChangeConfiguration", { value: onDidChangeConfiguration });
+            Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
 
             spyCreateJobsTree.mockResolvedValue(jobsProvider as any);
             spyOnSubscriptions(commands);
