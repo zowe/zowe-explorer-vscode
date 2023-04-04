@@ -5,8 +5,6 @@
 const { resolve } = require("path");
 const { exit } = require("process");
 
-const logWithPrefix = (msg) => console.log(`[Zowe Explorer API] ${msg}`);
-
 // Looks for the scoped @zowe folder & inner "cli" module folder in node_modules
 const findCli = (folderToScan) => {
     const resolvedModule = require.resolve("@zowe/cli", {
@@ -14,15 +12,15 @@ const findCli = (folderToScan) => {
     });
 
     if (resolvedModule.includes(folderToScan)) {
-        logWithPrefix("OK ✔ @zowe/cli was found in node_modules");
+        console.log("[Zowe Explorer API] OK ✔ @zowe/cli was found in node_modules");
         return 0;
     }
 
-    logWithPrefix("ERR ✘ @zowe/cli was not found in node_modules");
+    console.error("[Zowe Explorer API] ERR ✘ @zowe/cli was not found in node_modules");
     return 1;
 };
 
-logWithPrefix("Checking for @zowe/cli in node_modules...");
+console.log("[Zowe Explorer API] Checking for @zowe/cli in node_modules...");
 
 let exitCode = 0;
 if (__dirname.includes("packages") || __dirname.includes("scripts")) {
