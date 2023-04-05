@@ -25,9 +25,11 @@ export default class SpoolProvider implements vscode.TextDocumentContentProvider
     public async provideTextDocumentContent(uri: vscode.Uri): Promise<string> {
         const spoolFile = SpoolProvider.files[uri.path];
         if (spoolFile) {
+            // Use latest cached content from stored SpoolFile object
             return spoolFile.content;
         }
 
+        // Track the new spool file and pass the event emitter for future updates
         const newSpoolFile = new SpoolFile(uri, SpoolProvider.onDidChangeEmitter);
         await newSpoolFile.fetchContent();
         SpoolProvider.files[uri.path] = newSpoolFile;
@@ -55,6 +57,9 @@ export class SpoolFile {
         [this.sessionName, this.spool] = decodeJobFile(this.uri);
     }
 
+    /**
+     * Caches content changes to the spool file for the SpoolProvider to display. 
+     */
     public async fetchContent(): Promise<void> {
         const profile = Profiles.getInstance().loadNamedProfile(this.sessionName);
         const result = await ZoweExplorerApiRegister.getJesApi(profile).getSpoolContentById(this.spool.jobname, this.spool.jobid, this.spool.id);
