@@ -23,7 +23,7 @@ import * as path from "path";
 import * as fs from "fs";
 import { getZoweDir, Gui } from "@zowe/zowe-explorer-api";
 import * as profilesUtils from "../../src/utils/ProfilesUtils";
-import * as globals from "../../src/globals";
+import { ZoweLogger } from "../../src/utils/LoggerUtils";
 jest.mock("fs");
 
 describe("ZoweExplorerExtender unit tests", () => {
@@ -66,8 +66,18 @@ describe("ZoweExplorerExtender unit tests", () => {
             value: newMocks.mockGetConfiguration,
             configurable: true,
         });
-        Object.defineProperty(globals, "LOG", { value: jest.fn(), configurable: true });
-        Object.defineProperty(globals.LOG, "error", { value: jest.fn(), configurable: true });
+        Object.defineProperty(ZoweLogger, "warn", {
+            value: jest.fn(),
+            configurable: true,
+        });
+        Object.defineProperty(ZoweLogger, "error", {
+            value: jest.fn(),
+            configurable: true,
+        });
+        Object.defineProperty(ZoweLogger, "trace", {
+            value: jest.fn(),
+            configurable: true,
+        });
 
         return newMocks;
     }

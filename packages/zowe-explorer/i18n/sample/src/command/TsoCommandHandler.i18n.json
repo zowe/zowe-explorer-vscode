@@ -12,7 +12,7 @@
   "issueTsoCommand.command": "Enter or update the TSO command",
   "issueTsoCommand.enter.command": "No command entered.",
   "issueTsoCommand.command.submitted": "TSO command submitted.",
-  "issueTsoCommand.accountNumberNotSupplied": "Error: No account number was supplied.",
+  "issueTsoCommand.error": "No account number was supplied.",
   "issueTsoCommand.tsoProfile.quickPickOption": "Select the TSO Profile to use for account number.",
   "issueTsoCommand.command.account": "Account Number",
   "issueTsoCommand.option.prompt.acctNum": "Enter the account number for the TSO connection.",
