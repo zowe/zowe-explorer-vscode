@@ -45,17 +45,19 @@ export default class SpoolProvider implements vscode.TextDocumentContentProvider
 export class SpoolFile {
     public content: string = "";
     private readonly emitter: vscode.EventEmitter<vscode.Uri>;
+    private sessionName: string = "";
+    private spool: zowe.IJobFile;
     public uri: vscode.Uri;
 
     public constructor(uri: vscode.Uri, emitter: vscode.EventEmitter<vscode.Uri>) {
         this.uri = uri;
         this.emitter = emitter;
+        [this.sessionName, this.spool] = decodeJobFile(this.uri);
     }
 
     public async fetchContent(): Promise<void> {
-        const [sessionName, spool] = decodeJobFile(this.uri);
-        const profile = Profiles.getInstance().loadNamedProfile(sessionName);
-        const result = await ZoweExplorerApiRegister.getJesApi(profile).getSpoolContentById(spool.jobname, spool.jobid, spool.id);
+        const profile = Profiles.getInstance().loadNamedProfile(this.sessionName);
+        const result = await ZoweExplorerApiRegister.getJesApi(profile).getSpoolContentById(this.spool.jobname, this.spool.jobid, this.spool.id);
         this.content = result;
 
         // Signal to the SpoolProvider that the new contents should be rendered for this file
