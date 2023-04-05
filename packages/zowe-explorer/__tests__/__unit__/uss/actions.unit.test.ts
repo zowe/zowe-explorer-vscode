@@ -156,7 +156,6 @@ function createGlobalMocks() {
             };
         }),
     });
-
     Object.defineProperty(ZoweLogger, "error", { value: jest.fn(), configurable: true });
     Object.defineProperty(ZoweLogger, "debug", { value: jest.fn(), configurable: true });
     Object.defineProperty(ZoweLogger, "warn", { value: jest.fn(), configurable: true });
