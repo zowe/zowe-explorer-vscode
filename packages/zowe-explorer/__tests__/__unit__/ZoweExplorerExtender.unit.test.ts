@@ -192,15 +192,6 @@ describe("ZoweExplorerExtender unit tests", () => {
         }
     });
 
-    it("properly handles error parsing Imperative overrides json", async () => {
-        const blockMocks = await createBlockMocks();
-        ZoweExplorerExtender.createInstance();
-        const errMsg = "Failed to parse JSON file imperative.json";
-
-        await ZoweExplorerExtender.showZoweConfigError(errMsg);
-        expect(blockMocks.mockErrorMessage).toHaveBeenCalledWith("Error: " + errMsg, undefined);
-    });
-
     it("should initialize zowe", async () => {
         const blockMocks = await createBlockMocks();
         Object.defineProperty(vscode.workspace, "workspaceFolders", {

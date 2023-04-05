@@ -386,22 +386,18 @@ export function writeOverridesFile(): void {
 export async function initializeZoweProfiles(): Promise<void> {
     ZoweLogger.trace("ProfilesUtils.initializeZoweProfiles called.");
     try {
-        await initializeZoweFolder();
+        await this.initializeZoweFolder();
     } catch (err) {
         ZoweLogger.error(err);
-        Gui.errorMessage(localize(
-            "initializeZoweFolder.error",
-            "Failed to initialize Zowe folder: {0}",
-            err.message
-        ));
+        Gui.errorMessage(localize("initializeZoweFolder.error", "Failed to initialize Zowe folder: {0}", err.message));
     }
 
     try {
-        await readConfigFromDisk();
+        await this.readConfigFromDisk();
         ZoweLogger.info(localize("initializeZoweProfiles.success", "Zowe Profiles initialized successfully."));
     } catch (err) {
         if (err instanceof imperative.ImperativeError) {
-            errorHandling(err, undefined, err.details.causeErrors);
+            errorHandling(err, undefined, err.mDetails.causeErrors);
         } else {
             ZoweLogger.error(err);
             ZoweExplorerExtender.showZoweConfigError(err.message);
