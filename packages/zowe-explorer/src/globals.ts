@@ -18,6 +18,7 @@ import * as loggerConfig from "../log4jsconfig.json";
 import * as nls from "vscode-nls";
 import { getZoweDir } from "@zowe/zowe-explorer-api";
 import { SettingsConfig } from "./utils/SettingsConfig";
+import { ZoweLogger } from "./utils/LoggerUtils";
 
 nls.config({
     messageFormat: nls.MessageFormat.bundle,
@@ -90,6 +91,7 @@ export const SETTINGS_DS_HISTORY = "zowe.ds.history";
 export const SETTINGS_USS_HISTORY = "zowe.uss.history";
 export const SETTINGS_JOBS_HISTORY = "zowe.jobs.history";
 export const SETTINGS_SECURE_CREDENTIALS_ENABLED = "zowe.security.secureCredentialsEnabled";
+export const LOGGER_SETTINGS = "zowe.logger";
 export const EXTENDER_CONFIG: imperative.ICommandProfileTypeConfiguration[] = [];
 export const ZOWE_CLI_SCM = "@zowe/cli";
 export const MAX_DATASET_LENGTH = 44;
@@ -285,13 +287,14 @@ export function defineGlobals(tempPath: string | undefined): void {
         ((appName && appName.toLowerCase().includes("theia")) || (uriScheme && uriScheme.toLowerCase().includes("theia"))) &&
         vscode.env.uiKind === vscode.UIKind.Web
     ) {
-        ISTHEIA = true;
+        this.ISTHEIA = true;
+        ZoweLogger.info(localize("globals.defineGlobals.isTheia", "Zowe Explorer is running in Theia environment."));
     }
 
     SETTINGS_TEMP_FOLDER_LOCATION = tempPath;
     // Set temp path & folder paths
     ZOWETEMPFOLDER = tempPath ? path.join(tempPath, "temp") : path.join(__dirname, "..", "..", "resources", "temp");
-
+    ZoweLogger.info(localize("globals.defineGlobals.tempFolder", "Zowe Explorer's temp folder is located at {0}", ZOWETEMPFOLDER));
     ZOWE_TMP_FOLDER = path.join(ZOWETEMPFOLDER, "tmp");
     USS_DIR = path.join(ZOWETEMPFOLDER, "_U_");
     DS_DIR = path.join(ZOWETEMPFOLDER, "_D_");
@@ -309,7 +312,7 @@ export function setConfigPath(configPath: string | undefined): void {
  * Initializes Imperative Logger
  * @param logsPath File path for logs folder defined in preferences
  */
-export function initLogger(logsPath: string): void {
+export function initLogger(logsPath: string): string {
     const loggerConfigCopy = JSON.parse(JSON.stringify(loggerConfig));
     for (const appenderName of Object.keys(loggerConfigCopy.log4jsConfig.appenders)) {
         loggerConfigCopy.log4jsConfig.appenders[appenderName].filename = path.join(
@@ -319,9 +322,13 @@ export function initLogger(logsPath: string): void {
     }
     imperative.Logger.initLogger(loggerConfigCopy);
     this.LOG = imperative.Logger.getAppLogger();
+    return loggerConfig.log4jsConfig.appenders.app.filename;
 }
 
 export function setActivated(value: boolean): void {
+    if (value) {
+        ZoweLogger.info(localize("globals.setActivated.success", "Zowe Explorer has activated successfully."));
+    }
     ACTIVATED = value;
 }
 
@@ -338,7 +345,9 @@ export async function setGlobalSecurityValue(): Promise<void> {
     const settingEnabled: boolean = SettingsConfig.getDirectValue(SETTINGS_SECURE_CREDENTIALS_ENABLED);
     if (!settingEnabled) {
         PROFILE_SECURITY = false;
+        ZoweLogger.info(localize("globals.setGlobalSecurityValue.unsecured", "Zowe explorer profiles are not secured."));
     } else {
         PROFILE_SECURITY = ZOWE_CLI_SCM;
+        ZoweLogger.info(localize("globals.setGlobalSecurityValue.secured", "Zowe explorer profiles are secured."));
     }
 }

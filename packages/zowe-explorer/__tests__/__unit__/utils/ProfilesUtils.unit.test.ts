@@ -18,17 +18,17 @@ import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
 import { Profiles } from "../../../src/Profiles";
 import { SettingsConfig } from "../../../src/utils/SettingsConfig";
+import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 
 jest.mock("fs");
 jest.mock("vscode");
 jest.mock("@zowe/cli");
-jest.mock("@zowe/imperative");
 
-afterEach(() => {
-    jest.clearAllMocks();
-});
+describe("ProfilesUtils unit tests", () => {
+    afterEach(() => {
+        jest.clearAllMocks();
+    });
 
-describe("ProfileUtils unit tests", () => {
     function createBlockMocks() {
         const newMocks = {
             mockExistsSync: jest.fn().mockReturnValue(true),
@@ -51,6 +51,11 @@ describe("ProfileUtils unit tests", () => {
         Object.defineProperty(globals, "LOG", { value: jest.fn(), configurable: true });
         Object.defineProperty(globals.LOG, "error", { value: jest.fn(), configurable: true });
         Object.defineProperty(globals, "PROFILE_SECURITY", { value: globals.ZOWE_CLI_SCM, configurable: true });
+        Object.defineProperty(ZoweLogger, "error", { value: jest.fn(), configurable: true });
+        Object.defineProperty(ZoweLogger, "debug", { value: jest.fn(), configurable: true });
+        Object.defineProperty(ZoweLogger, "warn", { value: jest.fn(), configurable: true });
+        Object.defineProperty(ZoweLogger, "info", { value: jest.fn(), configurable: true });
+        Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
         return newMocks;
     }
 
@@ -62,16 +67,14 @@ describe("ProfileUtils unit tests", () => {
             const moreInfo = "Task failed successfully";
             await profileUtils.errorHandling(errorDetails, label, moreInfo);
             expect(Gui.errorMessage).toBeCalledWith(`${moreInfo} ` + errorDetails);
-            expect(globals.LOG.error).toBeCalledWith(`Error: ${errorDetails.message}\n` + JSON.stringify({ errorDetails, label, moreInfo }));
+            expect(ZoweLogger.error).toBeCalledWith(`Error: ${errorDetails.message}\n` + JSON.stringify({ errorDetails, label, moreInfo }));
         });
 
         it("should handle error and open config file", async () => {
-            const errorDetails = {
-                mDetails: {
-                    errorCode: 404,
-                },
-                toString: () => "hostname",
-            };
+            const errorDetails = new zowe.imperative.ImperativeError({
+                msg: "Invalid hostname",
+                errorCode: 404 as unknown as string,
+            });
             const label = "test";
             const moreInfo = "Task failed successfully";
             const spyOpenConfigFile = jest.fn();
@@ -96,13 +99,11 @@ describe("ProfileUtils unit tests", () => {
         });
 
         it("should handle error and prompt for authentication", async () => {
-            const errorDetails = {
-                mDetails: {
-                    errorCode: 401,
-                    additionalDetails: "Token is not valid or expired.",
-                },
-                toString: () => "error",
-            };
+            const errorDetails = new zowe.imperative.ImperativeError({
+                msg: "Invalid credentials",
+                errorCode: 401 as unknown as string,
+                additionalDetails: "Token is not valid or expired.",
+            });
             const label = "test";
             const moreInfo = "Task failed successfully";
             jest.spyOn(profileUtils, "isTheia").mockReturnValue(false);

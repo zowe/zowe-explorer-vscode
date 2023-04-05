@@ -31,6 +31,7 @@ import { createUSSNode, createFavoriteUSSNode, createUSSSessionNode } from "../.
 import { getIconByNode } from "../../../src/generators/icons";
 import * as workspaceUtils from "../../../src/utils/workspace";
 import { createUssApi, bindUssApi } from "../../../__mocks__/mockCreators/api";
+import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 
 async function createGlobalMocks() {
     const globalMocks = {
@@ -153,6 +154,11 @@ async function createGlobalMocks() {
     Object.defineProperty(globals, "LOG", { value: jest.fn(), configurable: true });
     Object.defineProperty(globals.LOG, "error", { value: jest.fn(), configurable: true });
     Object.defineProperty(globals.LOG, "warn", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "error", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "debug", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "warn", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "info", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
 
     globalMocks.withProgress.mockImplementation((progLocation, callback) => callback());
     globalMocks.withProgress.mockReturnValue(globalMocks.testResponse);

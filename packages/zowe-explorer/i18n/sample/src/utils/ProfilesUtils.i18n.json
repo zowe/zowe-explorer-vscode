@@ -1,7 +1,7 @@
 {
+  "errorHandling.invalid.host": "Required parameter 'host' must not be blank.",
   "errorHandling.invalid.credentials": "Invalid Credentials. Please ensure the username and password for {0} are valid or this may lead to a lock-out.",
   "errorHandling.invalid.token": "Your connection is no longer active. Please log in to an authentication service to restore the connection.",
-  "errorHandling.invalid.host": "Required parameter 'host' must not be blank.",
   "errorHandling.authentication.login": "Log in to Authentication Service",
   "errorHandling.checkCredentials.button": "Check Credentials",
   "errorHandling.checkCredentials.cancelled": "Operation Cancelled",
@@ -11,5 +11,8 @@
   "createNewConnection.option.prompt.profileName": "Enter a name for the connection.",
   "createNewConnection.undefined.passWord": "Operation Cancelled",
   "promptCredentials.updatedCredentials": "Credentials for {0} were successfully updated",
-  "writeOverridesFile.jsonParseError": "Failed to parse JSON file {0}:"
+  "initializeZoweFolder.location": "Zowe home directory is located at {0}",
+  "writeOverridesFile.jsonParseError": "Failed to parse JSON file {0}:",
+  "initializeZoweProfiles.success": "Zowe Profiles initialized successfully.",
+  "initializeZoweTempFolder.success": "Zowe Temp folder initialized successfully."
 }

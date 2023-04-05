@@ -13,6 +13,7 @@ import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
 import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
 import { Profiles } from "./Profiles";
+import { ZoweLogger } from "./utils/LoggerUtils";
 
 export default class SpoolProvider implements vscode.TextDocumentContentProvider {
     public static scheme = "zosspool";
@@ -20,6 +21,7 @@ export default class SpoolProvider implements vscode.TextDocumentContentProvider
     private mOnDidChange = new vscode.EventEmitter<vscode.Uri>();
 
     public async provideTextDocumentContent(uri: vscode.Uri): Promise<string> {
+        ZoweLogger.trace("SpoolProvider.provideTextDocumentContent called.");
         const [sessionName, spool] = decodeJobFile(uri);
         const profile = Profiles.getInstance().loadNamedProfile(sessionName);
         const result = await ZoweExplorerApiRegister.getJesApi(profile).getSpoolContentById(spool.jobname, spool.jobid, spool.id);
@@ -41,6 +43,7 @@ export default class SpoolProvider implements vscode.TextDocumentContentProvider
  * @param spool The IJobFile to get the spool content for.
  */
 export function encodeJobFile(session: string, spool: zowe.IJobFile): vscode.Uri {
+    ZoweLogger.trace("SpoolProvider.encodeJobFile called.");
     const query = JSON.stringify([session, spool]);
     return vscode.Uri.parse("").with({
         scheme: SpoolProvider.scheme,
@@ -64,6 +67,7 @@ export function encodeJobFile(session: string, spool: zowe.IJobFile): vscode.Uri
 export const toUniqueJobFileUri =
     (session: string, spool: zowe.IJobFile) =>
     (uniqueFragment: string): vscode.Uri => {
+        ZoweLogger.trace("SpoolProvider.toUniqueJobFileUri called.");
         const encodedUri = encodeJobFile(session, spool);
         return encodedUri.with({
             fragment: uniqueFragment,
@@ -76,11 +80,13 @@ export const toUniqueJobFileUri =
  * @param uri The URI passed to TextDocumentContentProvider
  */
 export function decodeJobFile(uri: vscode.Uri): [string, zowe.IJobFile] {
+    ZoweLogger.trace("SpoolProvider.decodeJobFile called.");
     const [session, spool] = JSON.parse(uri.query) as [string, zowe.IJobFile];
     return [session, spool];
 }
 
 export function initializeSpoolProvider(context: vscode.ExtensionContext): void {
+    ZoweLogger.trace("SpoolProvider.initializeSpoolProvider called.");
     const spoolProvider = new SpoolProvider();
     const providerRegistration = vscode.Disposable.from(vscode.workspace.registerTextDocumentContentProvider(SpoolProvider.scheme, spoolProvider));
     context.subscriptions.push(spoolProvider, providerRegistration);

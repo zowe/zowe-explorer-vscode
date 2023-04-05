@@ -6,6 +6,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
+- Added a new Zowe Explorer setting, `zowe.logger`, with a default setting of `INFO`.
+- Added an output channel, `Zowe Explorer`, for logging within VS Code's Output view. The log level is set by the new Zowe Explorer setting, `zowe.logger`.
 - Opening a dialog for Upload or Download of files will now open at the project level directory or the user's home directory if no project is opened. [#2203](https://github.com/zowe/vscode-extension-for-zowe/issues/2203)
 - Updated linter rules and addressed linter errors throughout the codebase. [#2184](https://github.com/zowe/vscode-extension-for-zowe/issues/2184)
 - Added a new setting `zowe.files.logsFolder.path` that can be used to override Zowe Explorer logs folder if default location is read-only. [#2186](https://github.com/zowe/vscode-extension-for-zowe/issues/2186)
@@ -16,6 +18,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Added back fix that was accidentally removed between updates: Resolved an issue where VSCode did not provide all context menu options for a profile node after a multi-select operation. [#2108](https://github.com/zowe/vscode-extension-for-zowe/pull/2108)
 - Fixed issue where "Paste" option is shown for a multi-select operation in the "Data Sets" pane.
 - Fixed z/OSMF profiles issue with Data Sets and Jobs with special characters in the names. [#2175](https://github.com/zowe/vscode-extension-for-zowe/issues/2175)
+- Fixed redundant text in error messages that included the same error details twice.
 
 ## `2.7.0`
 

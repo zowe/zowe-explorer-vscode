@@ -24,8 +24,7 @@
   "member.validation": "Enter valid member name",
   "renameDataSet.cancelled": "Rename operation cancelled.",
   "renameDataSet.log.debug": "Renaming data set ",
-  "renameDataSet.log.error": "Error encountered when renaming data set! ",
-  "renameDataSet.error": "Unable to rename data set: ",
+  "renameDataSet.error": "Unable to rename data set:",
   "dataset.validation": "Enter valid dataset name",
   "defaultFilterPrompt.option.prompt.search": "Create a new filter. For example: HLQ.*, HLQ.aaa.bbb, HLQ.ccc.ddd(member)"
 }
