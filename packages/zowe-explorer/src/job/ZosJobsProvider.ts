@@ -783,7 +783,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
 
             if (isSessionNotFav) {
                 searchCriteria = await this.applyRegularSessionSearchLabel(node);
-                node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+                this.expandSession(node, this);
 
                 if (searchCriteria != null) {
                     node.label = node.getProfileName();

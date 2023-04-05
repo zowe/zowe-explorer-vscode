@@ -17,7 +17,7 @@ import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { Gui, ValidProfileEnum, IZoweTree, IZoweJobTreeNode } from "@zowe/zowe-explorer-api";
 import { Job, Spool } from "./ZoweJobNode";
 import * as nls from "vscode-nls";
-import { toUniqueJobFileUri } from "../SpoolProvider";
+import SpoolProvider, { toUniqueJobFileUri } from "../SpoolProvider";
 import * as globals from "../globals";
 import { getDefaultUri } from "../shared/utils";
 
@@ -78,6 +78,11 @@ export async function getSpoolContent(session: string, spool: zowe.IJobFile, ref
     if (profiles.validProfile !== ValidProfileEnum.INVALID) {
         const uri = toUniqueJobFileUri(session, spool)(refreshTimestamp.toString());
         try {
+            const spoolFile = SpoolProvider.files[uri.path];
+            if (spoolFile) {
+                // Fetch any changes to the spool file if it exists in the SpoolProvider
+                spoolFile.fetchContent();
+            }
             await Gui.showTextDocument(uri, { preview: false });
         } catch (error) {
             const isTextDocActive =
@@ -97,6 +102,7 @@ export async function getSpoolContent(session: string, spool: zowe.IJobFile, ref
 
 export async function getSpoolContentFromMainframe(node: IZoweJobTreeNode): Promise<void> {
     let spools: zowe.IJobFile[] = [];
+    const statusMsg = await Gui.setStatusBarMessage(localize("jobActions.fetchSpoolFile", "$(sync~spin) Fetching spool files..."));
     spools = await ZoweExplorerApiRegister.getJesApi(node.getProfile()).getSpoolFiles(node.job?.jobname, node.job?.jobid);
     spools = spools
         // filter out all the objects which do not seem to be correct Job File Document types
@@ -130,9 +136,9 @@ export async function getSpoolContentFromMainframe(node: IZoweJobTreeNode): Prom
                 node.getParent()
             );
             node = spoolNode;
-            await getSpoolContent(node.getProfile().name, spool, Date.now());
         }
     }
+    statusMsg.dispose();
 }
 
 /**

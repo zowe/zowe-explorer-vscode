@@ -15,19 +15,51 @@ import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
 import { Profiles } from "./Profiles";
 
 export default class SpoolProvider implements vscode.TextDocumentContentProvider {
-    public static scheme = "zosspool";
+    // Track files that have been opened previously through the SpoolProvider
+    public static files: { [key: string]: SpoolFile } = {};
 
-    private mOnDidChange = new vscode.EventEmitter<vscode.Uri>();
+    public static scheme = "zosspool";
+    public static onDidChangeEmitter = new vscode.EventEmitter<vscode.Uri>();
+    public onDidChange = SpoolProvider.onDidChangeEmitter.event;
 
     public async provideTextDocumentContent(uri: vscode.Uri): Promise<string> {
-        const [sessionName, spool] = decodeJobFile(uri);
-        const profile = Profiles.getInstance().loadNamedProfile(sessionName);
-        const result = await ZoweExplorerApiRegister.getJesApi(profile).getSpoolContentById(spool.jobname, spool.jobid, spool.id);
-        return result;
+        const spoolFile = SpoolProvider.files[uri.path];
+        if (spoolFile) {
+            return spoolFile.content;
+        }
+
+        const newSpoolFile = new SpoolFile(uri, SpoolProvider.onDidChangeEmitter);
+        await newSpoolFile.fetchContent();
+        SpoolProvider.files[uri.path] = newSpoolFile;
+        return newSpoolFile.content;
     }
 
     public dispose(): void {
-        this.mOnDidChange.dispose();
+        SpoolProvider.onDidChangeEmitter.dispose();
+    }
+}
+
+/**
+ * Manage spool content for each file that is opened through the SpoolProvider.
+ */
+export class SpoolFile {
+    public content: string = "";
+    private readonly emitter: vscode.EventEmitter<vscode.Uri>;
+    public uri: vscode.Uri;
+
+    public constructor(uri: vscode.Uri, emitter: vscode.EventEmitter<vscode.Uri>) {
+        this.uri = uri;
+        this.emitter = emitter;
+    }
+
+    public async fetchContent(): Promise<void> {
+        const [sessionName, spool] = decodeJobFile(this.uri);
+        const profile = Profiles.getInstance().loadNamedProfile(sessionName);
+        const result = await ZoweExplorerApiRegister.getJesApi(profile).getSpoolContentById(spool.jobname, spool.jobid, spool.id);
+        this.content = result;
+
+        // Signal to the SpoolProvider that the new contents should be rendered for this file
+        this.emitter.fire(this.uri);
     }
 }
 
