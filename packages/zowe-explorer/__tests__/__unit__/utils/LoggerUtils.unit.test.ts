@@ -21,7 +21,6 @@ import { SettingsConfig } from "../../../src/utils/SettingsConfig";
 function createGlobalMocks() {
     const newMocks = {
         mockMessage: "fake message",
-        mockPath: "/fake/file/path",
         outputChannel: shared.createOutputChannel(),
         mockGetConfiguration: jest.fn(),
         mockLogger: jest.fn(),
