@@ -53,14 +53,16 @@ const newDSProperties = JSON.parse(JSON.stringify(globals.DATA_SET_PROPERTIES));
  * Localized strings that are used multiple times within the file
  */
 const localizedStrings = {
-    dsBinary: localize("dsActions.dataSetBinary", "Data Set Binary"),
-    dsC: localize("dsActions.dataSetC", "Data Set C"),
-    dsClassic: localize("dsActions.dataSetClassic", "Data Set Classic"),
-    dsPartitioned: localize("dsActions.dataSetPartitioned", "Data Set Partitioned"),
-    dsSequential: localize("dsActions.dataSetSequential", "Data Set Sequential"),
-    dsActionCancelled: localize("dsActions.cancelled", "Operation Cancelled"),
+    dsBinary: localize("createFile.dataSetBinary", "Partitioned Data Set: Binary"),
+    dsC: localize("createFile.dataSetC", "Partitioned Data Set: C"),
+    dsClassic: localize("createFile.dataSetClassic", "Partitioned Data Set: Classic"),
+    dsPartitioned: localize("createFile.dataSetPartitioned", "Partitioned Data Set: Default"),
+    dsSequential: localize("createFile.dataSetSequential", "Sequential Data Set"),
+    opCancelled: localize("dsActions.cancelled", "Operation Cancelled"),
     copyingFiles: localize("dsActions.copy.inProgress", "Copying File(s)"),
     profileInvalid: localize("dsActions.profileInvalid", "Profile is invalid, check connection details."),
+    allocString: localize("dsActions.allocate", "Allocate Data Set"),
+    editString: localize("dsActions.editAttributes", "Edit Attributes"),
 };
 
 /**
@@ -68,7 +70,6 @@ const localizedStrings = {
  *
  */
 export async function allocateLike(datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>, node?: api.IZoweDatasetTreeNode): Promise<void> {
-    ZoweLogger.trace("dataset.actions.allocateLike called.");
     let profile: zowe.imperative.IProfileLoaded;
     let likeDSName: string;
     let currSession: api.IZoweDatasetTreeNode;
@@ -94,6 +95,7 @@ export async function allocateLike(datasetProvider: api.IZoweTree<api.IZoweDatas
             api.Gui.showMessage(localize("allocateLike.noSelection", "You must select a profile."));
             return;
         } else {
+            ZoweLogger.trace(`${selection.toString()} was profile chosen to allocate a data set.`);
             currSession = datasetProvider.mSessionNodes.find((thisSession) => thisSession.label === selection.label);
             profile = currSession.getProfile();
         }
@@ -114,11 +116,13 @@ export async function allocateLike(datasetProvider: api.IZoweTree<api.IZoweDatas
             api.Gui.showMessage(localize("allocateLike.noNewName", "You must enter a new data set name."));
             return;
         }
+        ZoweLogger.trace(`${likeDSName} was entered to use attributes for new data set.`);
     } else {
         // User called allocateLike by right-clicking a node
         profile = node.getProfile();
         likeDSName = node.label.toString().replace(/\[.*\]: /g, "");
     }
+    ZoweLogger.info(localize("allocateLike.logger.info1", "Allocating data set like {0}.", likeDSName));
 
     // Get new data set name
     const options: vscode.InputBoxOptions = {
@@ -133,12 +137,13 @@ export async function allocateLike(datasetProvider: api.IZoweTree<api.IZoweDatas
         api.Gui.showMessage(localize("allocateLike.noNewName", "You must enter a new data set name."));
         return;
     } else {
+        ZoweLogger.trace(`${newDSName} was entered for the name of the new data set.`);
         // Allocate the data set, or throw an error
         try {
             await ZoweExplorerApiRegister.getMvsApi(profile).allocateLikeDataSet(newDSName.toUpperCase(), likeDSName);
         } catch (err) {
             if (err instanceof Error) {
-                await errorHandling(err, newDSName, localize("createDataSet.error", "Unable to create data set:"));
+                await errorHandling(err, newDSName, localize("createDataSet.error", "Unable to create data set."));
             }
             throw err;
         }
@@ -158,6 +163,7 @@ export async function allocateLike(datasetProvider: api.IZoweTree<api.IZoweDatas
     const newNode = (await currSession.getChildren()).find((child) => child.label.toString() === newDSName.toUpperCase());
     await datasetProvider.getTreeView().reveal(currSession, { select: true, focus: true });
     datasetProvider.getTreeView().reveal(newNode, { select: true, focus: true });
+    ZoweLogger.info(localize("allocateLike.logger.info2", "{0} was created like {0}.", newDSName, likeDSName));
 }
 
 export async function uploadDialog(node: ZoweDatasetNode, datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>): Promise<void> {
@@ -209,7 +215,7 @@ export async function uploadDialog(node: ZoweDatasetNode, datasetProvider: api.I
             }
         }
     } else {
-        api.Gui.showMessage(localizedStrings.dsActionCancelled);
+        api.Gui.showMessage(localizedStrings.opCancelled);
     }
 }
 
@@ -322,7 +328,7 @@ export async function deleteDatasetPrompt(datasetProvider: api.IZoweTree<api.IZo
         vsCodeOpts: { modal: true },
     }).then((selection) => {
         if (!selection || selection === "Cancel") {
-            ZoweLogger.debug(localizedStrings.dsActionCancelled);
+            ZoweLogger.debug(localizedStrings.opCancelled);
             nodes = [];
             return;
         }
@@ -350,7 +356,7 @@ export async function deleteDatasetPrompt(datasetProvider: api.IZoweTree<api.IZo
             async (progress, token) => {
                 for (const [index, currNode] of nodes.entries()) {
                     if (token.isCancellationRequested) {
-                        api.Gui.showMessage(localizedStrings.dsActionCancelled);
+                        api.Gui.showMessage(localizedStrings.opCancelled);
                         return;
                     }
                     api.Gui.reportProgress(progress, nodes.length, index, "Deleting");
@@ -499,23 +505,23 @@ export function getDataSetTypeAndOptions(type: string): {
 } {
     let createOptions: vscode.WorkspaceConfiguration;
     switch (type) {
-        case localize("createFile.dataSetBinary", "Partitioned Data Set: Binary"):
+        case localizedStrings.dsBinary:
             typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_BINARY;
             createOptions = vscode.workspace.getConfiguration(globals.SETTINGS_DS_DEFAULT_BINARY);
             break;
-        case localize("createFile.dataSetC", "Partitioned Data Set: C"):
+        case localizedStrings.dsC:
             typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_C;
             createOptions = vscode.workspace.getConfiguration(globals.SETTINGS_DS_DEFAULT_C);
             break;
-        case localize("createFile.dataSetClassic", "Partitioned Data Set: Classic"):
+        case localizedStrings.dsClassic:
             typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_CLASSIC;
             createOptions = vscode.workspace.getConfiguration(globals.SETTINGS_DS_DEFAULT_CLASSIC);
             break;
-        case localize("createFile.dataSetPartitioned", "Partitioned Data Set: Defalut"):
+        case localizedStrings.dsPartitioned:
             typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_PARTITIONED;
             createOptions = vscode.workspace.getConfiguration(globals.SETTINGS_DS_DEFAULT_PDS);
             break;
-        case localize("createFile.dataSetSequential", "Sequential Data Set"):
+        case localizedStrings.dsSequential:
             typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL;
             createOptions = vscode.workspace.getConfiguration(globals.SETTINGS_DS_DEFAULT_PS);
             break;
@@ -540,38 +546,36 @@ export async function createFile(node: api.IZoweDatasetTreeNode, datasetProvider
     // 1st step: Get data set name
     let dsName = await getDataSetName();
     if (!dsName) {
-        globals.LOG.debug(localize("createFile.noValidNameEntered", "No valid data set name entered. Operation cancelled"));
-        api.Gui.showMessage(localize("createFile.operationCancelled", "Operation cancelled."));
+        ZoweLogger.debug(localizedStrings.opCancelled);
+        api.Gui.showMessage(localizedStrings.opCancelled);
         return;
     }
-
     // 2nd step: Get data set type
     const selection = await getDsTypeForCreation(datasetProvider);
     if (!selection) {
-        globals.LOG.debug(localize("createFile.noValidTypeSelected", "No valid data set type selected. Operation cancelled."));
-        api.Gui.showMessage(localize("createFile.operationCancelled", "Operation cancelled."));
+        ZoweLogger.debug(localizedStrings.opCancelled);
+        api.Gui.showMessage(localizedStrings.opCancelled);
         return;
     }
-
     const propertiesFromDsType = getDsProperties(selection, datasetProvider);
-
     // 3rd step: Ask if we allocate, or show DS attributes
     const choice = await allocateOrEditAttributes();
     if (!choice) {
-        ZoweLogger.debug(localize("createFile.noOptionSelected", "No option selected. Operation cancelled."));
-        api.Gui.showMessage(localize("createFile.operationCancelled", "Operation cancelled."));
+        ZoweLogger.debug(localizedStrings.opCancelled);
+        api.Gui.showMessage(localizedStrings.opCancelled);
         return;
     }
-    if (choice === " + Allocate Data Set") {
+    if (choice.includes(localizedStrings.allocString)) {
         // User wants to allocate straightaway - skip Step 4
-        ZoweLogger.debug(localize("createFile.allocatingNewDataSet", "Allocating new data set"));
-        api.Gui.showMessage(localize("createFile.allocatingNewDataSet", "Allocating new data set"));
+        const allocMsg = localize("createFile.allocatingNewDataSet", "Allocating new data set");
+        ZoweLogger.debug(allocMsg);
+        api.Gui.showMessage(allocMsg);
     } else {
         // 4th step (optional): Show data set attributes
         const choice2 = await handleUserSelection();
         if (!choice2) {
-            ZoweLogger.debug(localize("createFile.noOptionSelected", "No option selected. Operation cancelled."));
-            api.Gui.showMessage(localize("createFile.operationCancelled", "Operation cancelled."));
+            ZoweLogger.debug(localizedStrings.opCancelled);
+            api.Gui.showMessage(localizedStrings.opCancelled);
             return;
         }
         ZoweLogger.debug(localize("createFile.allocatingNewDataSet", "Attempting to allocate new data set"));
@@ -612,7 +616,7 @@ async function handleUserSelection(): Promise<string> {
     quickpick.onDidHide(() => {
         if (quickpick.selectedItems.length === 0) {
             ZoweLogger.debug(localize("handleUserSelection.cancelled", "No option selected. Operation cancelled."));
-            api.Gui.showMessage(localizedStrings.dsActionCancelled);
+            api.Gui.showMessage(localizedStrings.opCancelled);
         }
     });
 
@@ -669,7 +673,7 @@ async function getDataSetName(): Promise<string> {
 
 async function getDsTypeForCreation(datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>): Promise<string> {
     const stepTwoOptions: vscode.QuickPickOptions = {
-        placeHolder: localize("createFile.quickPickOption.dataSetType", "Type of Data Set to be Created"),
+        placeHolder: localize("createFile.quickPickOption.dataSetType", "Template of Data Set to be Created"),
         ignoreFocusOut: true,
         canPickMany: false,
     };
@@ -677,11 +681,11 @@ async function getDsTypeForCreation(datasetProvider: api.IZoweTree<api.IZoweData
     const dsTemplateNames = getTemplateNames(datasetProvider);
     const stepTwoChoices = [
         ...dsTemplateNames,
-        localize("createFile.dataSetBinary", "Partitioned Data Set: Binary"),
-        localize("createFile.dataSetC", "Partitioned Data Set: C"),
-        localize("createFile.dataSetClassic", "Partitioned Data Set: Classic"),
-        localize("createFile.dataSetPartitioned", "Partitioned Data Set: Default"),
-        localize("createFile.dataSetSequential", "Sequential Data Set"),
+        localizedStrings.dsBinary,
+        localizedStrings.dsC,
+        localizedStrings.dsClassic,
+        localizedStrings.dsPartitioned,
+        localizedStrings.dsSequential,
     ];
     // eslint-disable-next-line no-return-await
     return await api.Gui.showQuickPick(stepTwoChoices, stepTwoOptions);
@@ -739,7 +743,9 @@ async function allocateOrEditAttributes(): Promise<string> {
         ignoreFocusOut: true,
         canPickMany: false,
     };
-    const stepThreeChoices = [localize("createFile.allocate", " + Allocate Data Set"), localize("createFile.editAttributes", "Edit Attributes")];
+    const allocate = `\u002B ${localizedStrings.allocString}`;
+    const editAtts = `\u270F ${localizedStrings.editString}`;
+    const stepThreeChoices = [allocate, editAtts];
     // eslint-disable-next-line no-return-await
     return await api.Gui.showQuickPick(stepThreeChoices, stepThreeOptions);
 }
@@ -765,13 +771,10 @@ async function allocateNewDataSet(
         // Show newly-created data set in expanded tree view
         await focusOnNewDs(node, dsName, datasetProvider, theFilter);
     } catch (err) {
-        globals.LOG.error(localize("createDataSet.error", "Error encountered when creating data set! ") + JSON.stringify(err));
+        const errorMsg = localize("allocateNewDataSet.error", "Error encountered when creating data set.");
+        ZoweLogger.error(errorMsg + JSON.stringify(err));
         if (err instanceof Error) {
-            await errorHandling(
-                err,
-                node.getProfileName(),
-                localize("createDataSet.error", "Error encountered when creating data set! ") + err.message
-            );
+            await errorHandling(err, node.getProfileName(), errorMsg);
         }
         throw new Error(err);
     }
