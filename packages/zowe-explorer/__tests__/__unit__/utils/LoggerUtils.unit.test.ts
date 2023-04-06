@@ -74,7 +74,7 @@ describe("Logger Utils Unit Tests - function initializeZoweLogger", () => {
     });
     it("should initialize loggers successfully with no cli logger setting", async () => {
         const globalMocks = createGlobalMocks();
-        process.env.ZOWE_APP_LOG_LEVEL = undefined;
+        jest.spyOn(globals, "initLogger").mockResolvedValueOnce();
         globalMocks.mockGetConfiguration
             .mockReturnValueOnce({
                 get: jest.fn(() => ""),
@@ -93,7 +93,7 @@ describe("Logger Utils Unit Tests - function initializeZoweLogger", () => {
     });
     it("should initialize loggers successfully with not changing to cli logger setting", async () => {
         const globalMocks = createGlobalMocks();
-        jest.spyOn(globals, "initLogger").mockResolvedValue();
+        jest.spyOn(globals, "initLogger").mockResolvedValueOnce();
         globalMocks.mockGetConfiguration
             .mockReturnValueOnce({
                 get: jest.fn(() => ""),
@@ -123,7 +123,7 @@ describe("Logger Utils Unit Tests - function initializeZoweLogger", () => {
     });
     it("should initialize loggers successfully with changing to cli logger setting", async () => {
         const globalMocks = createGlobalMocks();
-        jest.spyOn(globals, "initLogger").mockResolvedValue();
+        jest.spyOn(globals, "initLogger").mockResolvedValueOnce();
         globalMocks.mockGetConfiguration
             .mockReturnValueOnce({
                 get: jest.fn(() => ""),
