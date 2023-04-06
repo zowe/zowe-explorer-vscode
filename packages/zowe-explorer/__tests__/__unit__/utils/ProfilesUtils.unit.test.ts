@@ -17,6 +17,7 @@ import * as profileUtils from "../../../src/utils/ProfilesUtils";
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
 import { Profiles } from "../../../src/Profiles";
+import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 
 jest.mock("fs");
 jest.mock("vscode");
@@ -47,6 +48,11 @@ describe("ProfilesUtils unit tests", () => {
         Object.defineProperty(globals, "setGlobalSecurityValue", { value: jest.fn(), configurable: true });
         Object.defineProperty(globals, "LOG", { value: jest.fn(), configurable: true });
         Object.defineProperty(globals.LOG, "error", { value: jest.fn(), configurable: true });
+        Object.defineProperty(ZoweLogger, "error", { value: jest.fn(), configurable: true });
+        Object.defineProperty(ZoweLogger, "debug", { value: jest.fn(), configurable: true });
+        Object.defineProperty(ZoweLogger, "warn", { value: jest.fn(), configurable: true });
+        Object.defineProperty(ZoweLogger, "info", { value: jest.fn(), configurable: true });
+        Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
         return newMocks;
     }
 
@@ -58,7 +64,7 @@ describe("ProfilesUtils unit tests", () => {
             const moreInfo = "Task failed successfully";
             await profileUtils.errorHandling(errorDetails, label, moreInfo);
             expect(Gui.errorMessage).toBeCalledWith(`${moreInfo} ` + errorDetails);
-            expect(globals.LOG.error).toBeCalledWith(`Error: ${errorDetails.message}\n` + JSON.stringify({ errorDetails, label, moreInfo }));
+            expect(ZoweLogger.error).toBeCalledWith(`Error: ${errorDetails.message}\n` + JSON.stringify({ errorDetails, label, moreInfo }));
         });
 
         it("should handle error and open config file", async () => {

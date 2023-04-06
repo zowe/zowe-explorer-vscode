@@ -31,6 +31,7 @@ import {
 import { Profiles } from "./Profiles";
 import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
 import { getProfileInfo, getProfile, errorHandling } from "./utils/ProfilesUtils";
+import { ZoweLogger } from "./utils/LoggerUtils";
 
 // Set up localization
 import * as nls from "vscode-nls";
@@ -178,8 +179,10 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
             }
             usingTeamConfig = mProfileInfo.usingTeamConfig;
         } catch (error) {
-            globals.LOG.warn(error);
-            usingTeamConfig = error.toString().includes("Error parsing JSON");
+            ZoweLogger.warn(error);
+            if (error.toString().includes("Error parsing JSON")) {
+                usingTeamConfig = true;
+            }
             ZoweExplorerExtender.showZoweConfigError(error.message);
         }
 
