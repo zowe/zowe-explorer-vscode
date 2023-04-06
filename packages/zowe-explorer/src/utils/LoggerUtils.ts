@@ -33,8 +33,8 @@ export class ZoweLogger {
     public static async initializeZoweLogger(context: vscode.ExtensionContext): Promise<void> {
         try {
             const logsPath: string = ZoweVsCodeExtension.customLoggingPath ?? context.extensionPath;
-            const logFileLocation = globals.initLogger(logsPath);
-            await this.initVscLogger(context, logFileLocation);
+            await globals.initLogger(logsPath);
+            await this.initVscLogger(context, logsPath);
         } catch (err) {
             // Don't log error if logger failed to initialize
             if (err instanceof Error) {
@@ -72,6 +72,11 @@ export class ZoweLogger {
         await this.zeOutputChannel.dispose();
     }
 
+    public static async getLogSetting(): Promise<string> {
+        this.zeLogLevel = await vscode.workspace.getConfiguration().get("zowe.logger");
+        return this.zeLogLevel ?? this.defaultLogLevel;
+    }
+
     private static async initVscLogger(context: vscode.ExtensionContext, logFileLocation: string): Promise<void> {
         this.zeOutputChannel = Gui.createOutputChannel(localize("zoweExplorer.outputchannel.title", "Zowe Explorer"));
         await this.writeVscLoggerInfo(logFileLocation, context);
@@ -99,7 +104,11 @@ export class ZoweLogger {
 
     private static async compareCliLogSetting(): Promise<void> {
         const cliLogSetting = this.getZoweLogEnVar();
+        // eslint-disable-next-line no-console
+        console.log(cliLogSetting);
         const zeLogSetting = this.zeLogLevel ?? (await this.getLogSetting());
+        // eslint-disable-next-line no-console
+        console.log(zeLogSetting);
         if (cliLogSetting && +MessageSeverity[zeLogSetting] !== +MessageSeverity[cliLogSetting]) {
             const notified = await this.getCliLoggerSetting();
             if (!notified) {
@@ -125,11 +134,6 @@ export class ZoweLogger {
             }
             await this.setCliLoggerSetting(true);
         });
-    }
-
-    private static async getLogSetting(): Promise<string> {
-        this.zeLogLevel = await vscode.workspace.getConfiguration().get("zowe.logger");
-        return this.zeLogLevel ?? this.defaultLogLevel;
     }
 
     private static async setLogSetting(setting: string): Promise<void> {

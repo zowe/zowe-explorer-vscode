@@ -21,6 +21,7 @@ import { SettingsConfig } from "../../../src/utils/SettingsConfig";
 function createGlobalMocks() {
     const newMocks = {
         mockMessage: "fake message",
+        mockPath: "/fake/file/path",
         outputChannel: shared.createOutputChannel(),
         mockGetConfiguration: jest.fn(),
         mockLogger: jest.fn(),
@@ -73,9 +74,7 @@ describe("Logger Utils Unit Tests - function initializeZoweLogger", () => {
     });
     it("should initialize loggers successfully with no cli logger setting", async () => {
         const globalMocks = createGlobalMocks();
-        jest.spyOn(globals, "initLogger").mockImplementationOnce(() => {
-            return "/fake/file/path";
-        });
+        process.env.ZOWE_APP_LOG_LEVEL = undefined;
         globalMocks.mockGetConfiguration
             .mockReturnValueOnce({
                 get: jest.fn(() => ""),
@@ -87,7 +86,6 @@ describe("Logger Utils Unit Tests - function initializeZoweLogger", () => {
                 get: jest.fn(() => true),
             });
         const infoSpy = jest.spyOn(logger.ZoweLogger, "info");
-        process.env.ZOWE_APP_LOG_LEVEL = undefined;
 
         expect(await logger.ZoweLogger.initializeZoweLogger(globalMocks.testContext)).toBeUndefined();
         expect(infoSpy).toHaveBeenCalled();
@@ -95,9 +93,7 @@ describe("Logger Utils Unit Tests - function initializeZoweLogger", () => {
     });
     it("should initialize loggers successfully with not changing to cli logger setting", async () => {
         const globalMocks = createGlobalMocks();
-        jest.spyOn(globals, "initLogger").mockImplementationOnce(() => {
-            return "/fake/file/path";
-        });
+        jest.spyOn(globals, "initLogger").mockResolvedValue();
         globalMocks.mockGetConfiguration
             .mockReturnValueOnce({
                 get: jest.fn(() => ""),
@@ -127,9 +123,7 @@ describe("Logger Utils Unit Tests - function initializeZoweLogger", () => {
     });
     it("should initialize loggers successfully with changing to cli logger setting", async () => {
         const globalMocks = createGlobalMocks();
-        jest.spyOn(globals, "initLogger").mockImplementationOnce(() => {
-            return "/fake/file/path";
-        });
+        jest.spyOn(globals, "initLogger").mockResolvedValue();
         globalMocks.mockGetConfiguration
             .mockReturnValueOnce({
                 get: jest.fn(() => ""),
@@ -199,9 +193,7 @@ describe("Logger Utils Unit Tests - function initializeZoweLogger", () => {
     });
     it("should throw an error if output channel was not able to initialize", async () => {
         const globalMocks = createGlobalMocks();
-        jest.spyOn(globals, "initLogger").mockImplementationOnce(() => {
-            return "/fake/file/path";
-        });
+        jest.spyOn(globals, "initLogger").mockResolvedValue();
         jest.spyOn(Gui, "createOutputChannel").mockImplementationOnce(() => {
             throw new Error("failed to initialize output channel");
         });
