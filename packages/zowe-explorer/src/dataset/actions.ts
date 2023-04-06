@@ -551,13 +551,13 @@ export async function createFile(node: api.IZoweDatasetTreeNode, datasetProvider
         return;
     }
     // 2nd step: Get data set type
-    const selection = await getDsTypeForCreation(datasetProvider);
-    if (!selection) {
+    const type = await getDsTypeForCreation(datasetProvider);
+    if (!type) {
         ZoweLogger.debug(localizedStrings.opCancelled);
         api.Gui.showMessage(localizedStrings.opCancelled);
         return;
     }
-    const propertiesFromDsType = getDsProperties(selection, datasetProvider);
+    const propertiesFromDsType = getDsProperties(type, datasetProvider);
     // 3rd step: Ask if we allocate, or show DS attributes
     const choice = await allocateOrEditAttributes();
     if (!choice) {
@@ -580,7 +580,7 @@ export async function createFile(node: api.IZoweDatasetTreeNode, datasetProvider
         }
         ZoweLogger.debug(localize("createFile.allocatingNewDataSet", "Attempting to allocate new data set"));
     }
-
+    const isMatch = compareDsProperties(type, datasetProvider);
     // Format properties for use by API
     const dsPropsForAPI = {};
     newDSProperties.forEach((property) => {
@@ -597,6 +597,9 @@ export async function createFile(node: api.IZoweDatasetTreeNode, datasetProvider
         }
     });
     await allocateNewDataSet(node, dsName, dsPropsForAPI, datasetProvider);
+    if (!isMatch) {
+        await saveDsTemplate(datasetProvider, dsPropsForAPI);
+    }
 }
 
 async function handleUserSelection(): Promise<string> {
@@ -615,7 +618,7 @@ async function handleUserSelection(): Promise<string> {
     quickpick.matchOnDescription = false;
     quickpick.onDidHide(() => {
         if (quickpick.selectedItems.length === 0) {
-            ZoweLogger.debug(localize("handleUserSelection.cancelled", "No option selected. Operation cancelled."));
+            ZoweLogger.debug(localizedStrings.opCancelled);
             api.Gui.showMessage(localizedStrings.opCancelled);
         }
     });
@@ -700,12 +703,37 @@ function getTemplateNames(datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNod
     return templateNames;
 }
 
+function compareDsProperties(type: string, datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>): boolean {
+    let isMatch = true;
+    const templates: api.dsAlloc[] = datasetProvider.getDsTemplates();
+    let propertiesFromDsType: api.dsAlloc;
+    // Look for template
+    templates?.forEach((template) => {
+        if (type === template.name) {
+            propertiesFromDsType = template;
+        }
+    });
+    if (!propertiesFromDsType) {
+        propertiesFromDsType = getDefaultDsTypeProperties(type);
+    }
+    newDSProperties.forEach((property) => {
+        Object.keys(propertiesFromDsType).forEach((typeProperty) => {
+            if (typeProperty === property.key) {
+                if (property.value !== propertiesFromDsType[typeProperty].toString()) {
+                    isMatch = false;
+                    return;
+                }
+            }
+        });
+    });
+    return isMatch;
+}
+
 function getDsProperties(type: string, datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>): api.dsAlloc {
     const templates: api.dsAlloc[] = datasetProvider.getDsTemplates();
     let propertiesFromDsType: api.dsAlloc;
-    let dsType: string;
     // Look for template
-    templates.forEach((template) => {
+    templates?.forEach((template) => {
         if (type === template.name) {
             if (template.dsorg === "PS") {
                 typeEnum = 4;
@@ -715,17 +743,8 @@ function getDsProperties(type: string, datasetProvider: api.IZoweTree<api.IZoweD
             propertiesFromDsType = template;
         }
     });
-    if (!dsType) {
-        dsType = type;
-    }
     if (!propertiesFromDsType) {
-        // Add the default property values to the list of items
-        // that will be shown in DS attributes for editing
-        typeEnum = getDataSetTypeAndOptions(dsType).typeEnum;
-        const cliDefaultsKey = globals.CreateDataSetTypeWithKeysEnum[typeEnum].replace("DATA_SET_", "");
-        // eslint-disable-next-line no-console
-        console.log(cliDefaultsKey);
-        propertiesFromDsType = zowe.CreateDefaults.DATA_SET[cliDefaultsKey];
+        propertiesFromDsType = getDefaultDsTypeProperties(type);
     }
     newDSProperties.forEach((property) => {
         Object.keys(propertiesFromDsType).forEach((typeProperty) => {
@@ -736,6 +755,12 @@ function getDsProperties(type: string, datasetProvider: api.IZoweTree<api.IZoweD
         });
     });
     return propertiesFromDsType;
+}
+
+function getDefaultDsTypeProperties(dsType: string): api.dsAlloc {
+    typeEnum = getDataSetTypeAndOptions(dsType).typeEnum;
+    const cliDefaultsKey = globals.CreateDataSetTypeWithKeysEnum[typeEnum].replace("DATA_SET_", "");
+    return zowe.CreateDefaults.DATA_SET[cliDefaultsKey] as api.dsAlloc;
 }
 
 async function allocateOrEditAttributes(): Promise<string> {
@@ -765,7 +790,6 @@ async function allocateNewDataSet(
         });
         node.dirty = true;
         const theFilter = datasetProvider.createFilterString(dsName, node);
-        datasetProvider.addSearchHistory(theFilter);
         datasetProvider.refresh();
 
         // Show newly-created data set in expanded tree view
@@ -799,6 +823,29 @@ async function focusOnNewDs(
         .getTreeView()
         .reveal(node, { select: true, focus: true })
         .then(() => datasetProvider.getTreeView().reveal(newNode, { select: true, focus: true }));
+}
+
+async function saveDsTemplate(datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>, dsPropsForAPI: any): Promise<void> {
+    // newDSProperties
+    await api.Gui.infoMessage("Would you like to save these attributes as a template for future data set creation?", {
+        items: ["Save"],
+        vsCodeOpts: { modal: true },
+    }).then(async (selection) => {
+        if (selection) {
+            const options: vscode.InputBoxOptions = {
+                placeHolder: localize("saveDsTemplate.inputBox.placeHolder", "Name of Data Set Template"),
+                ignoreFocusOut: true,
+            };
+            const templateName = await vscode.window.showInputBox(options);
+            if (!templateName) {
+                ZoweLogger.debug(localizedStrings.opCancelled);
+                api.Gui.showMessage(localizedStrings.opCancelled);
+                return;
+            }
+            dsPropsForAPI.name = templateName;
+            await datasetProvider.addDsTemplate(dsPropsForAPI);
+        }
+    });
 }
 
 /**

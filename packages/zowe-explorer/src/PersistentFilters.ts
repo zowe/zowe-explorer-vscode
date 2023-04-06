@@ -107,12 +107,10 @@ export class PersistentFilters {
         if (criteria) {
             // Remove any entries that match
             this.mDsTemplates = this.mDsTemplates.filter((element) => {
-                return element !== criteria;
+                return element.name !== criteria.name;
             });
-
             // Add value to front of stack
             this.mDsTemplates.unshift(criteria);
-
             this.updateDsTemplateHistory();
         }
     }
@@ -262,7 +260,7 @@ export class PersistentFilters {
         // settings are read-only, so make a clone
         const settings: any = { ...vscode.workspace.getConfiguration(this.schema) };
         if (settings.persistence) {
-            settings.dsTemplateHistory = this.mDsTemplates;
+            settings.templates = this.mDsTemplates;
             await SettingsConfig.setDirectValue(this.schema, settings);
         }
     }

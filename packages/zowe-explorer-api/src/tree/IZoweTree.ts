@@ -293,7 +293,7 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T> {
      *
      * @param {any} criteria the member name to add
      */
-    addDsTemplate?(criteria: dsAlloc);
+    addDsTemplate?(criteria: dsAlloc): void;
     /**
      * Returns the array of saved templates for data set creation attributes
      *

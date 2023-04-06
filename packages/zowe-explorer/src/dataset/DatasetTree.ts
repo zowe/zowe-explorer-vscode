@@ -756,6 +756,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
     }
 
     public getDsTemplates(): dsAlloc[] {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
         return this.mHistory.getDsTemplates();
     }
 
