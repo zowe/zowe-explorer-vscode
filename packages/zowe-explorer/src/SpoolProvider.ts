@@ -58,7 +58,7 @@ export class SpoolFile {
     }
 
     /**
-     * Caches content changes to the spool file for the SpoolProvider to display. 
+     * Caches content changes to the spool file for the SpoolProvider to display.
      */
     public async fetchContent(): Promise<void> {
         const profile = Profiles.getInstance().loadNamedProfile(this.sessionName);
