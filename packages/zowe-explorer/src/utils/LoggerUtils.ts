@@ -104,11 +104,7 @@ export class ZoweLogger {
 
     private static async compareCliLogSetting(): Promise<void> {
         const cliLogSetting = this.getZoweLogEnVar();
-        // eslint-disable-next-line no-console
-        console.log(cliLogSetting);
         const zeLogSetting = this.zeLogLevel ?? (await this.getLogSetting());
-        // eslint-disable-next-line no-console
-        console.log(zeLogSetting);
         if (cliLogSetting && +MessageSeverity[zeLogSetting] !== +MessageSeverity[cliLogSetting]) {
             const notified = await this.getCliLoggerSetting();
             if (!notified) {
