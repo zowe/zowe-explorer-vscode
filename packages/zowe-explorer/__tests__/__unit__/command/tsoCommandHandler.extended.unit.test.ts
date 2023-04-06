@@ -15,6 +15,7 @@ import { Profiles } from "../../../src/Profiles";
 import { TsoCommandHandler } from "../../../src/command/TsoCommandHandler";
 import { imperative } from "@zowe/cli";
 import { createInstanceOfProfile, createIProfile } from "../../../__mocks__/mockCreators/shared";
+import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 
 describe("TsoCommandHandler extended testing", () => {
     // Idea is borrowed from: https://github.com/kulshekhar/ts-jest/blob/master/src/util/testing.ts
@@ -30,7 +31,8 @@ describe("TsoCommandHandler extended testing", () => {
     newMocks.profileInstance = createInstanceOfProfile(newMocks.imperativeProfile);
     Object.defineProperty(Profiles, "selectTsoProfile", { value: () => "dummy" });
     Object.defineProperty(Profiles, "getInstance", { value: jest.fn(), configurable: true });
-
+    Object.defineProperty(ZoweLogger, "error", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
     Object.defineProperty(Profiles, "getInstance", {
         value: jest.fn().mockReturnValue(newMocks.profileInstance),
         configurable: true,

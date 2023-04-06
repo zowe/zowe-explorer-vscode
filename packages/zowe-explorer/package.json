@@ -1771,6 +1771,33 @@
           "type": "boolean",
           "description": "%zowe.security.secureCredentialsEnabled%",
           "scope": "window"
+        },
+        "zowe.logger": {
+          "type": "string",
+          "default": "%zowe.logger.info%",
+          "enum": [
+            "%zowe.logger.trace%",
+            "%zowe.logger.debug%",
+            "%zowe.logger.info%",
+            "%zowe.logger.warn%",
+            "%zowe.logger.error%",
+            "%zowe.logger.fatal%"
+          ],
+          "markdownEnumDescriptions": [
+            "%zowe.logger.trace.description%",
+            "%zowe.logger.debug.description%",
+            "%zowe.logger.info.description%",
+            "%zowe.logger.warn.description%",
+            "%zowe.logger.error.description%",
+            "%zowe.logger.fatal.description%"
+          ],
+          "description": "%zowe.logger%",
+          "scope": "window"
+        },
+        "zowe.cliLoggerSetting.presented": {
+          "type": "boolean",
+          "description": "%zowe.cliLoggerSetting.presented%",
+          "scope": "application"
         }
       }
     },

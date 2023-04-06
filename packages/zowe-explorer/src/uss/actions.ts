@@ -27,6 +27,7 @@ import { refreshAll } from "../shared/refresh";
 import { IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
 import { fileExistsCaseSensitveSync } from "./utils";
 import { UssFileTree, UssFileType } from "./FileStructure";
+import { ZoweLogger } from "../utils/LoggerUtils";
 
 // Set up localization
 nls.config({
@@ -48,6 +49,7 @@ export async function createUSSNode(
     nodeType: string,
     isTopLevel?: boolean
 ): Promise<void> {
+    ZoweLogger.trace("uss.actions.createUSSNode called.");
     await ussFileProvider.checkCurrentProfile(node);
     let filePath = "";
     if (contextually.isSession(node)) {
@@ -98,10 +100,12 @@ export async function createUSSNode(
 }
 
 export async function refreshUSSInTree(node: IZoweUSSTreeNode, ussFileProvider: IZoweTree<IZoweUSSTreeNode>): Promise<void> {
+    ZoweLogger.trace("uss.actions.refreshUSSInTree called.");
     await ussFileProvider.refreshElement(node);
 }
 
 export async function refreshDirectory(node: IZoweUSSTreeNode, ussFileProvider: IZoweTree<IZoweUSSTreeNode>): Promise<void> {
+    ZoweLogger.trace("uss.actions.refreshDirectory called.");
     try {
         await node.getChildren();
         ussFileProvider.refreshElement(node);
@@ -111,6 +115,7 @@ export async function refreshDirectory(node: IZoweUSSTreeNode, ussFileProvider: 
 }
 
 export async function createUSSNodeDialog(node: IZoweUSSTreeNode, ussFileProvider: IZoweTree<IZoweUSSTreeNode>): Promise<void> {
+    ZoweLogger.trace("uss.actions.createUSSNodeDialog called.");
     await ussFileProvider.checkCurrentProfile(node);
     if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID || Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED) {
         const quickPickOptions: vscode.QuickPickOptions = {
@@ -130,16 +135,18 @@ export async function createUSSNodeDialog(node: IZoweUSSTreeNode, ussFileProvide
  * @param {ZoweUSSNode} node
  */
 export function deleteFromDisk(node: IZoweUSSTreeNode, filePath: string): void {
+    ZoweLogger.trace("uss.actions.deleteFromDisk called.");
     try {
         if (fs.existsSync(filePath)) {
             fs.unlinkSync(filePath);
         }
     } catch (err) {
-        globals.LOG.warn(err);
+        ZoweLogger.warn(err);
     }
 }
 
 export async function uploadDialog(node: IZoweUSSTreeNode, ussFileProvider: IZoweTree<IZoweUSSTreeNode>): Promise<void> {
+    ZoweLogger.trace("uss.actions.uploadDialog called.");
     const fileOpenOptions = {
         canSelectFiles: true,
         openLabel: "Upload Files",
@@ -165,6 +172,7 @@ export async function uploadDialog(node: IZoweUSSTreeNode, ussFileProvider: IZow
 }
 
 export async function uploadBinaryFile(node: IZoweUSSTreeNode, filePath: string): Promise<void> {
+    ZoweLogger.trace("uss.actions.uploadBinaryFile called.");
     try {
         const localFileName = path.parse(filePath).base;
         const ussName = `${node.fullPath}/${localFileName}`;
@@ -175,6 +183,7 @@ export async function uploadBinaryFile(node: IZoweUSSTreeNode, filePath: string)
 }
 
 export async function uploadFile(node: IZoweUSSTreeNode, doc: vscode.TextDocument): Promise<void> {
+    ZoweLogger.trace("uss.actions.uploadFile called.");
     try {
         const localFileName = path.parse(doc.fileName).base;
         const ussName = `${node.fullPath}/${localFileName}`;
@@ -209,6 +218,7 @@ export async function uploadFile(node: IZoweUSSTreeNode, doc: vscode.TextDocumen
  * @param {ZoweUSSNode} node
  */
 export function copyPath(node: IZoweUSSTreeNode): void {
+    ZoweLogger.trace("uss.actions.copyPath called.");
     if (globals.ISTHEIA) {
         // Remove when Theia supports VS Code API for accessing system clipboard
         Gui.showMessage(localize("copyPath.infoMessage", "Copy Path is not yet supported in Theia."));
@@ -225,6 +235,7 @@ export function copyPath(node: IZoweUSSTreeNode): void {
  * @param ussFileProvider Our USSTree object
  */
 export async function changeFileType(node: IZoweUSSTreeNode, binary: boolean, ussFileProvider: IZoweTree<IZoweUSSTreeNode>): Promise<void> {
+    ZoweLogger.trace("uss.actions.changeFileType called.");
     node.setBinary(binary);
     await node.openUSS(true, true, ussFileProvider);
     ussFileProvider.refresh();
@@ -238,7 +249,8 @@ export async function changeFileType(node: IZoweUSSTreeNode, binary: boolean, us
  * @param {vscode.TextDocument} doc - TextDocument that is being saved
  */
 export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZoweTree<IZoweUSSTreeNode>): Promise<void> {
-    globals.LOG.debug(localize("saveUSSFile.log.debug.saveRequest", "save requested for USS file ") + doc.fileName);
+    ZoweLogger.trace("uss.actions.saveUSSFile called.");
+    ZoweLogger.debug(localize("saveUSSFile.log.debug.saveRequest", "save requested for USS file ") + doc.fileName);
     const start = path.join(globals.USS_DIR + path.sep).length;
     const ending = doc.fileName.substring(start);
     const sesName = ending.substring(0, ending.indexOf(path.sep));
@@ -328,7 +340,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
                     node.setEtag(downloadEtag);
                 }
 
-                globals.LOG.warn(err);
+                ZoweLogger.warn(err);
                 Gui.warningMessage(
                     localize(
                         "saveFile.error.etagMismatch",
@@ -348,7 +360,6 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
                 }
             }
         } else {
-            globals.LOG.error(localize("saveUSSFile.log.error.save", "Error encountered when saving USS file: ") + JSON.stringify(err));
             await markDocumentUnsaved(doc);
             await errorHandling(err, sesName);
         }
@@ -356,6 +367,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
 }
 
 export async function deleteUSSFilesPrompt(nodes: IZoweUSSTreeNode[]): Promise<boolean> {
+    ZoweLogger.trace("uss.actions.deleteUSSFilesPrompt called.");
     const fileNames = nodes.reduce((label, currentVal) => {
         return label + currentVal.label.toString() + "\n";
     }, "");
@@ -372,7 +384,7 @@ export async function deleteUSSFilesPrompt(nodes: IZoweUSSTreeNode[]): Promise<b
         vsCodeOpts: { modal: true },
     }).then((selection) => {
         if (!selection || selection === "Cancel") {
-            globals.LOG.debug(localize("deleteUssPrompt.confirmation.cancel.log.debug", "Delete action was canceled."));
+            ZoweLogger.debug(localize("deleteUssPrompt.confirmation.cancel.log.debug", "Delete action was canceled."));
             cancelled = true;
         }
     });
@@ -386,6 +398,7 @@ export async function deleteUSSFilesPrompt(nodes: IZoweUSSTreeNode[]): Promise<b
  * @returns A tree structure containing all files/directories within this node
  */
 export async function buildFileStructure(node: IZoweUSSTreeNode): Promise<UssFileTree> {
+    ZoweLogger.trace("uss.actions.buildFileStructure called.");
     if (contextually.isUssDirectory(node)) {
         const directory: UssFileTree = {
             localPath: node.getUSSDocumentFilePath(),
@@ -426,6 +439,7 @@ export async function buildFileStructure(node: IZoweUSSTreeNode): Promise<UssFil
  * @returns A file tree containing the USS file/directory paths to be pasted.
  */
 export async function ussFileStructure(selectedNodes: IZoweUSSTreeNode[]): Promise<UssFileTree> {
+    ZoweLogger.trace("uss.actions.ussFileStructure called.");
     const rootStructure: UssFileTree = {
         ussPath: "",
         type: UssFileType.Directory,
@@ -446,6 +460,7 @@ export async function ussFileStructure(selectedNodes: IZoweUSSTreeNode[]): Promi
  * @param selectedNodes The list of USS tree nodes that were selected for copying.
  */
 export async function copyUssFilesToClipboard(selectedNodes: IZoweUSSTreeNode[]): Promise<void> {
+    ZoweLogger.trace("uss.actions.copyUssFilesToClipboard called.");
     const filePaths = await ussFileStructure(selectedNodes);
     vscode.env.clipboard.writeText(JSON.stringify(filePaths));
 }
@@ -455,6 +470,7 @@ export async function copyUssFiles(
     nodeList: IZoweUSSTreeNode[],
     ussFileProvider: IZoweTree<IZoweUSSTreeNode>
 ): Promise<void> {
+    ZoweLogger.trace("uss.actions.copyUssFiles called.");
     let selectedNodes;
     if (node || nodeList) {
         selectedNodes = getSelectedNodeList(node, nodeList) as IZoweUSSTreeNode[];
@@ -473,6 +489,7 @@ export async function copyUssFiles(
 }
 
 export async function refreshChildNodesDirectory(node: IZoweUSSTreeNode): Promise<void> {
+    ZoweLogger.trace("uss.actions.refreshChildNodesDirectory called.");
     const childNodes = await node.getChildren();
     if (childNodes != null && childNodes.length > 0) {
         for (const child of childNodes) {
@@ -491,6 +508,7 @@ export async function refreshChildNodesDirectory(node: IZoweUSSTreeNode): Promis
  * @param node The node to paste within
  */
 export async function pasteUssFile(ussFileProvider: IZoweTree<IZoweUSSTreeNode>, node: IZoweUSSTreeNode): Promise<void> {
+    ZoweLogger.trace("uss.actions.pasteUssFile called.");
     return pasteUss(ussFileProvider, node);
 }
 
@@ -500,6 +518,7 @@ export async function pasteUssFile(ussFileProvider: IZoweTree<IZoweUSSTreeNode>,
  * @param node The node to paste within
  */
 export async function pasteUss(ussFileProvider: IZoweTree<IZoweUSSTreeNode>, node: IZoweUSSTreeNode): Promise<void> {
+    ZoweLogger.trace("uss.actions.pasteUss called.");
     const a = ussFileProvider.getTreeView().selection as IZoweUSSTreeNode[];
     let selectedNode = node;
     if (!selectedNode) {

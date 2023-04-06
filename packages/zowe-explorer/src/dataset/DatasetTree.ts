@@ -38,6 +38,7 @@ import { closeOpenedTextFile } from "../utils/workspace";
 import { IDataSet, IListOptions, imperative } from "@zowe/cli";
 import { validateDataSetName, validateMemberName } from "./utils";
 import { SettingsConfig } from "../utils/SettingsConfig";
+import { ZoweLogger } from "../utils/LoggerUtils";
 
 // Set up localization
 nls.config({
@@ -101,6 +102,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      * @param node - The node
      */
     public async rename(node: IZoweDatasetTreeNode): Promise<void> {
+        ZoweLogger.trace("DatasetTree.rename called.");
         await Profiles.getInstance().checkCurrentProfile(node.getProfile());
         if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID || !contextually.isValidationEnabled(node)) {
             return contextually.isDsMember(node) ? this.renameDataSetMember(node) : this.renameDataSet(node);
@@ -132,6 +134,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         throw new Error("Method not implemented.");
     }
     public filterPrompt(node: IZoweDatasetTreeNode): Promise<void> {
+        ZoweLogger.trace("DatasetTree.filterPrompt called.");
         return this.datasetFilterPrompt(node);
     }
 
@@ -142,6 +145,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      * @returns {IZoweDatasetTreeNode[] | Promise<IZoweDatasetTreeNode[]>}
      */
     public async getChildren(element?: IZoweDatasetTreeNode | undefined): Promise<IZoweDatasetTreeNode[]> {
+        ZoweLogger.trace("DatasetTree.getChildren called.");
         if (element) {
             if (contextually.isFavoriteContext(element)) {
                 return this.mFavorites;
@@ -191,6 +195,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      * @returns {IZoweDatasetTreeNode | undefined} Returns matching profile node if found. Otherwise, returns undefined.
      */
     public findMatchingProfileInArray(datasetProvider: IZoweDatasetTreeNode[], profileName: string): IZoweDatasetTreeNode | undefined {
+        ZoweLogger.trace("DatasetTree.findMatchingProfileInArray called.");
         return datasetProvider.find((treeNode) => treeNode.label === profileName);
     }
 
@@ -200,6 +205,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      * @returns {ZoweDatasetNode}
      */
     public createProfileNodeForFavs(profileName: string): ZoweDatasetNode {
+        ZoweLogger.trace("DatasetTree.createProfileNodeForFavs called.");
         const favProfileNode = new ZoweDatasetNode(
             profileName,
             vscode.TreeItemCollapsibleState.Collapsed,
@@ -224,11 +230,12 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      * @param log
      */
     public initializeFavorites(log: imperative.Logger): void {
+        ZoweLogger.trace("DatasetTree.initializeFavorites called.");
         this.log = log;
-        this.log.debug(localize("initializeFavorites.log.debug", "Initializing profiles with data set favorites."));
+        ZoweLogger.debug(localize("initializeFavorites.log.debug", "Initializing profiles with data set favorites."));
         const lines: string[] = this.mHistory.readFavorites();
         if (lines.length === 0) {
-            this.log.debug(localize("initializeFavorites.no.favorites", "No data set favorites found."));
+            ZoweLogger.debug(localize("initializeFavorites.no.favorites", "No data set favorites found."));
             return;
         }
         // Line validation
@@ -237,7 +244,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         const favoriteSearchPattern = /^\[.+\]:\s.*\{session}$/;
         for (const line of lines) {
             if (!(favoriteDataSetPattern.test(line) || favoriteSearchPattern.test(line))) {
-                this.log.warn(
+                ZoweLogger.warn(
                     localize("initializeFavorites.invalidDsFavorite1", "Invalid Data Sets favorite: {0}.", line) +
                         localize(
                             "initializeFavorites.invalidDsFavorite2",
@@ -272,6 +279,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      * @returns IZoweDatasetTreeNode
      */
     public initializeFavChildNodeForProfile(label: string, contextValue: string, parentNode: IZoweDatasetTreeNode): ZoweDatasetNode {
+        ZoweLogger.trace("DatasetTree.initializeFavChildNodeForProfile called.");
         const profileName = parentNode.label as string;
         let node: ZoweDatasetNode;
         if (contextValue === globals.DS_PDS_CONTEXT || contextValue === globals.DS_DS_CONTEXT) {
@@ -311,12 +319,13 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      * @param log
      */
     public async loadProfilesForFavorites(log: imperative.Logger, parentNode: IZoweDatasetTreeNode): Promise<IZoweDatasetTreeNode[]> {
+        ZoweLogger.trace("DatasetTree.loadProfilesForFavorites called.");
         const profileName = parentNode.label as string;
         const updatedFavsForProfile: IZoweDatasetTreeNode[] = [];
         let profile: imperative.IProfileLoaded;
         let session: imperative.Session;
         this.log = log;
-        this.log.debug(localize("loadProfilesForFavorites.log.debug", "Loading profile: {0} for data set favorites", profileName));
+        ZoweLogger.debug(localize("loadProfilesForFavorites.log.debug", "Loading profile: {0} for data set favorites", profileName));
         // Load profile for parent profile node in this.mFavorites array
         if (!parentNode.getProfile() || !parentNode.getSession()) {
             // If no profile/session yet, then add session and profile to parent profile node in this.mFavorites array:
@@ -339,7 +348,6 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                     ];
                 }
             } catch (error) {
-                this.log.error(error);
                 const errMessage: string =
                     localize(
                         "loadProfilesForFavorites.error.profile1",
@@ -352,6 +360,8 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                         " from the Favorites section of Zowe Explorer's Data Sets view. Would you like to do this now? ",
                         getAppName(globals.ISTHEIA)
                     );
+                // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
+                ZoweLogger.error(errMessage + error.toString());
                 const btnLabelRemove = localize("loadProfilesForFavorites.error.buttonRemove", "Remove");
                 Gui.errorMessage(errMessage, {
                     items: [btnLabelRemove],
@@ -390,6 +400,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      * @returns {vscode.TreeView<IZoweDatasetTreeNode>}
      */
     public getTreeView(): vscode.TreeView<IZoweDatasetTreeNode> {
+        ZoweLogger.trace("DatasetTree.getTreeView called.");
         return this.treeView;
     }
 
@@ -400,6 +411,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      * @param {string} [profileType] - optional; loads profiles of a certain type if passed
      */
     public async addSession(sessionName?: string, profileType?: string): Promise<void> {
+        ZoweLogger.trace("DatasetTree.addSession called.");
         const setting: boolean = SettingsConfig.getDirectValue(globals.SETTINGS_AUTOMATIC_PROFILE_VALIDATION);
         // Loads profile associated with passed sessionName, default if none passed
         if (sessionName) {
@@ -444,7 +456,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 } catch (error) {
                     // catch and log error of no default,
                     // if not type passed getDefaultProfile assumes zosmf
-                    this.log.warn(error);
+                    ZoweLogger.warn(error);
                 }
             }
         }
@@ -457,6 +469,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      * @param node
      */
     public deleteSession(node: IZoweDatasetTreeNode): void {
+        ZoweLogger.trace("DatasetTree.deleteSession called.");
         this.mSessionNodes = this.mSessionNodes.filter((tempNode) => tempNode.label.toString() !== node.label.toString());
         this.mHistory.removeSession(node.label as string);
         this.refresh();
@@ -468,6 +481,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      * @param  node
      */
     public async addFavorite(node: IZoweDatasetTreeNode): Promise<void> {
+        ZoweLogger.trace("DatasetTree.addFavorite called.");
         let temp: ZoweDatasetNode;
         // Get node's profile node in favorites
         const profileName = node.getProfileName();
@@ -543,6 +557,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      */
 
     public renameNode(profileLabel: string, beforeLabel: string, afterLabel: string): void {
+        ZoweLogger.trace("DatasetTree.renameNode called.");
         const sessionNode = this.mSessionNodes.find((session) => session.label.toString() === profileLabel.trim());
         if (sessionNode) {
             const matchingNode = sessionNode.children.find((node) => node.label === beforeLabel);
@@ -560,6 +575,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      * @param node
      */
     public renameFavorite(node: IZoweDatasetTreeNode, newLabel: string): void {
+        ZoweLogger.trace("DatasetTree.renameFavorite called.");
         const matchingNode = this.findFavoritedNode(node);
         if (matchingNode) {
             matchingNode.label = newLabel;
@@ -575,6 +591,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      * @param node
      */
     public findFavoritedNode(node: IZoweDatasetTreeNode): IZoweTreeNode {
+        ZoweLogger.trace("DatasetTree.findFavoriteNode called.");
         // Get node's profile node in favorites
         const profileName = node.getProfileName();
         const profileNodeInFavorites = this.findMatchingProfileInArray(this.mFavorites, profileName);
@@ -590,6 +607,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      * @param node
      */
     public findNonFavoritedNode(node: IZoweDatasetTreeNode): IZoweTreeNode {
+        ZoweLogger.trace("DatasetTree.findNonFavoritedNode called.");
         const profileName = node.getProfileName();
         const sessionNode = this.mSessionNodes.find((session) => session.label.toString().trim() === profileName);
         return sessionNode?.children.find((temp) => temp.label === node.label);
@@ -600,6 +618,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      * @param node
      */
     public findEquivalentNode(node: IZoweDatasetTreeNode, isFavorite: boolean): IZoweTreeNode {
+        ZoweLogger.trace("DatasetTree.findEquivalentNode called.");
         return isFavorite ? this.findNonFavoritedNode(node) : this.findFavoritedNode(node);
     }
 
@@ -609,6 +628,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      * @param node
      */
     public async removeFavorite(node: IZoweDatasetTreeNode): Promise<void> {
+        ZoweLogger.trace("DatasetTree.removeFavorite called.");
         // Get node's profile node in favorites
         const profileName = node.getProfileName();
         const profileNodeInFavorites = this.findMatchingProfileInArray(this.mFavorites, profileName);
@@ -632,6 +652,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      * Writes favorites to the settings file.
      */
     public updateFavorites(): void {
+        ZoweLogger.trace("DatasetTree.updateFavorites called.");
         const favoritesArray = [];
         this.mFavorites.forEach((profileNode) => {
             profileNode.children.forEach((favorite) => {
@@ -649,6 +670,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      * @param userSelected True if the function is being called directly because the user selected to remove the profile from Favorites
      */
     public async removeFavProfile(profileName: string, userSelected: boolean): Promise<void> {
+        ZoweLogger.trace("DatasetTree.removeFavProfile called.");
         // If user selected the "Remove profile from Favorites option", confirm they are okay with deleting all favorited items for that profile.
         let cancelled = false;
         if (userSelected) {
@@ -687,6 +709,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
     }
 
     public async onDidChangeConfiguration(e): Promise<void> {
+        ZoweLogger.trace("DatasetTree.onDidChangeConfiguration called.");
         // Empties the persistent favorites & history arrays, if the user has set persistence to False
         if (e.affectsConfiguration(DatasetTree.persistenceSchema)) {
             const setting: any = {
@@ -701,24 +724,29 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
     }
 
     public addSearchHistory(criteria: string): void {
+        ZoweLogger.trace("DatasetTree.addSearchHistory called.");
         this.mHistory.addSearchHistory(criteria);
         this.refresh();
     }
 
     public getSearchHistory(): string[] {
+        ZoweLogger.trace("DatasetTree.getSearchHistory called.");
         return this.mHistory.getSearchHistory();
     }
 
     public addFileHistory(criteria: string): void {
+        ZoweLogger.trace("DatasetTree.addFileHistory called.");
         this.mHistory.addFileHistory(criteria);
         this.refresh();
     }
 
     public getFileHistory(): string[] {
+        ZoweLogger.trace("DatasetTree.getFileHistory called.");
         return this.mHistory.getFileHistory();
     }
 
     public removeFileHistory(name: string): Promise<void> {
+        ZoweLogger.trace("DatasetTree.removeFileHistory called.");
         return this.mHistory.removeFileHistory(name);
     }
 
@@ -732,6 +760,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
     }
 
     public createFilterString(newFilter: string, node: IZoweDatasetTreeNode): string {
+        ZoweLogger.trace("DatasetTree.createFilterString called.");
         // Store previous filters (before refreshing)
         let theFilter = this.getSearchHistory()[0] || null;
 
@@ -763,6 +792,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      *
      */
     public async openItemFromPath(itemPath: string, sessionNode: IZoweDatasetTreeNode): Promise<void> {
+        ZoweLogger.trace("DatasetTree.openItemFromPath called.");
         let parentNode: IZoweDatasetTreeNode = null;
         let memberNode: IZoweDatasetTreeNode;
         let parentName = "";
@@ -815,7 +845,8 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
     }
 
     public async getAllLoadedItems(): Promise<IZoweDatasetTreeNode[]> {
-        this.log.debug(localize("enterPattern.log.debug.prompt", "Prompting the user to choose a member from the filtered list"));
+        ZoweLogger.trace("DatasetTree.getAllLoadedItems called.");
+        ZoweLogger.debug(localize("enterPattern.log.debug.prompt", "Prompting the user to choose a member from the filtered list"));
         const loadedItems: IZoweDatasetTreeNode[] = [];
         const sessions = await this.getChildren();
 
@@ -840,7 +871,8 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
     }
 
     public async datasetFilterPrompt(node: IZoweDatasetTreeNode): Promise<void> {
-        this.log.debug(localize("enterPattern.log.debug.prompt", "Prompting the user for a data set pattern"));
+        ZoweLogger.trace("DatasetTree.datasetFilterPrompt called.");
+        ZoweLogger.debug(localize("enterPattern.log.debug.prompt", "Prompting the user for a data set pattern"));
         let pattern: string;
         await this.checkCurrentProfile(node);
         let nonFaveNode;
@@ -1038,6 +1070,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
     }
 
     public checkFilterPattern(dsName: string, itemName: string): boolean {
+        ZoweLogger.trace("DatasetTree.checkFilterPattern called.");
         let existing: boolean;
         if (!/(\*?)(\w+)(\*)(\w+)(\*?)/.test(itemName)) {
             if (/^[^*](\w+)[^*]$/.test(itemName)) {
@@ -1101,6 +1134,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      * @param node - The node
      */
     private async renameDataSetMember(node: IZoweDatasetTreeNode): Promise<void> {
+        ZoweLogger.trace("DatasetTree.renameDataSetMember called.");
         const beforeMemberName = node.label as string;
         const dataSetName = node.getParent().getLabel() as string;
         const options: vscode.InputBoxOptions = {
@@ -1118,14 +1152,13 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         const beforeFullPath = getDocumentFilePath(`${dataSetName}(${node.getLabel().toString()})`, node);
         const closedOpenedInstance = await closeOpenedTextFile(beforeFullPath);
 
-        this.log.debug(localize("renameDataSet.log.debug", "Renaming data set ") + afterMemberName);
+        ZoweLogger.debug(localize("renameDataSet.log.debug", "Renaming data set ") + afterMemberName);
         if (afterMemberName && afterMemberName !== beforeMemberName) {
             try {
                 await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).renameDataSetMember(dataSetName, beforeMemberName, afterMemberName);
                 node.label = afterMemberName;
                 node.tooltip = afterMemberName;
             } catch (err) {
-                this.log.error(localize("renameDataSet.log.error", "Error encountered when renaming data set! ") + JSON.stringify(err));
                 if (err instanceof Error) {
                     await errorHandling(err, dataSetName, localize("renameDataSet.error", "Unable to rename data set:"));
                 }
@@ -1156,6 +1189,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      * @param node - The node
      */
     private async renameDataSet(node: IZoweDatasetTreeNode): Promise<void> {
+        ZoweLogger.trace("DatasetTree.renameDataSet called.");
         const beforeDataSetName = node.label as string;
         const options: vscode.InputBoxOptions = {
             value: beforeDataSetName,
@@ -1172,7 +1206,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         const beforeFullPath = getDocumentFilePath(node.getLabel() as string, node);
         const closedOpenedInstance = await closeOpenedTextFile(beforeFullPath);
 
-        this.log.debug(localize("renameDataSet.log.debug", "Renaming data set ") + afterDataSetName);
+        ZoweLogger.debug(localize("renameDataSet.log.debug", "Renaming data set ") + afterDataSetName);
         if (afterDataSetName && afterDataSetName !== beforeDataSetName) {
             try {
                 await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).renameDataSet(beforeDataSetName, afterDataSetName);
@@ -1197,7 +1231,6 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                     vscode.commands.executeCommand("zowe.ds.ZoweNode.openPS", node);
                 }
             } catch (err) {
-                this.log.error(localize("renameDataSet.log.error", "Error encountered when renaming data set! ") + JSON.stringify(err));
                 if (err instanceof Error) {
                     await errorHandling(err, node.label.toString(), localize("renameDataSet.error", "Unable to rename data set:"));
                 }
@@ -1211,6 +1244,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      *
      */
     private async addSingleSession(profile: imperative.IProfileLoaded): Promise<void> {
+        ZoweLogger.trace("DatasetTree.addSingleSession called.");
         if (profile) {
             // If session is already added, do nothing
             if (this.mSessionNodes.find((tNode) => tNode.label.toString() === profile.name)) {
@@ -1222,7 +1256,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 session = await ZoweExplorerApiRegister.getMvsApi(profile).getSession();
             } catch (err) {
                 if (err.toString().includes("hostname")) {
-                    this.log.error(err);
+                    ZoweLogger.error(err);
                 } else {
                     await errorHandling(err, profile.name);
                 }

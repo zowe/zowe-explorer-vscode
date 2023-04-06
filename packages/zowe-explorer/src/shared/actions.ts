@@ -19,6 +19,7 @@ import { FilterItem, FilterDescriptor } from "../utils/ProfilesUtils";
 import * as contextually from "../shared/context";
 import * as nls from "vscode-nls";
 import { getIconById, IconId } from "../generators/icons";
+import { ZoweLogger } from "../utils/LoggerUtils";
 
 // Set up localization
 nls.config({
@@ -35,6 +36,7 @@ export async function searchInAllLoadedItems(
     datasetProvider?: IZoweTree<IZoweDatasetTreeNode>,
     ussFileProvider?: IZoweTree<IZoweUSSTreeNode>
 ): Promise<void> {
+    ZoweLogger.trace("shared.actions.searchInAllLoadedItems called.");
     let pattern: string;
     const items: IZoweNodeType[] = [];
     const qpItems = [];
@@ -156,8 +158,9 @@ export async function searchInAllLoadedItems(
 }
 
 export async function openRecentMemberPrompt(datasetTree: IZoweTree<IZoweDatasetTreeNode>, ussTree: IZoweTree<IZoweUSSTreeNode>): Promise<void> {
+    ZoweLogger.trace("shared.actions.openRecentMemberPrompt called.");
     if (globals.LOG) {
-        globals.LOG.debug(localize("enterPattern.log.debug.prompt", "Prompting the user to choose a recent member for editing"));
+        ZoweLogger.debug(localize("enterPattern.log.debug.prompt", "Prompting the user to choose a recent member for editing"));
     }
     let pattern: string;
 
@@ -217,6 +220,7 @@ export async function openRecentMemberPrompt(datasetTree: IZoweTree<IZoweDataset
 }
 
 export function returnIconState(node: IZoweNodeType): IZoweNodeType {
+    ZoweLogger.trace("shared.actions.returnIconState called.");
     const activePathClosed = getIconById(IconId.sessionActive);
     const activePathOpen = getIconById(IconId.sessionActiveOpen);
     const inactivePathClosed = getIconById(IconId.sessionInactive); // So far, we only ever reference the closed inactive icon, not the open one
@@ -230,6 +234,7 @@ export function returnIconState(node: IZoweNodeType): IZoweNodeType {
 }
 
 export function resetValidationSettings(node: IZoweNodeType, setting: boolean): IZoweNodeType {
+    ZoweLogger.trace("shared.actions.resetValidationSettings called.");
     if (setting) {
         Profiles.getInstance().enableValidationContext(node);
         // Ensure validation status is also reset

@@ -17,6 +17,7 @@ import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
 import { List, imperative } from "@zowe/cli";
 import { Profiles } from "../../src/Profiles";
 import * as globals from "../../src/globals";
+import { ZoweLogger } from "../../src/utils/LoggerUtils";
 
 describe("Unit Tests (Jest)", () => {
     // Globals
@@ -48,6 +49,8 @@ describe("Unit Tests (Jest)", () => {
     Object.defineProperty(globals.LOG, "error", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode, "ProgressLocation", { value: ProgressLocation });
     Object.defineProperty(vscode.window, "withProgress", { value: withProgress });
+    Object.defineProperty(ZoweLogger, "error", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
 
     beforeEach(() => {
         withProgress.mockImplementation((progLocation, callback) => {

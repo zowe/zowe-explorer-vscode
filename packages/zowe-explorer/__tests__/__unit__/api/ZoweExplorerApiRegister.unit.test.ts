@@ -16,6 +16,7 @@ import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { Profiles } from "../../../src/Profiles";
 import { IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
 import { createInstanceOfProfile, createValidIProfile } from "../../../__mocks__/mockCreators/shared";
+import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 
 class MockUssApi1 implements ZoweExplorerApi.IUss {
     public profile?: zowe.imperative.IProfileLoaded;
@@ -156,6 +157,10 @@ async function createGlobalMocks() {
         message: "",
         failNotFound: false,
     });
+    Object.defineProperty(ZoweLogger, "error", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "debug", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "warn", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "info", { value: jest.fn(), configurable: true });
 
     Object.defineProperty(globals, "LOG", {
         value: {

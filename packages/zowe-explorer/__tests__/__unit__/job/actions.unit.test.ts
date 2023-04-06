@@ -33,6 +33,7 @@ import * as SpoolProvider from "../../../src/SpoolProvider";
 import * as refreshActions from "../../../src/shared/refresh";
 import * as sharedUtils from "../../../src/shared/utils";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
+import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 
 const activeTextEditorDocument = jest.fn();
 
@@ -65,9 +66,6 @@ function createGlobalMocks() {
         get: activeTextEditorDocument,
         configurable: true,
     });
-    Object.defineProperty(globals, "LOG", { value: jest.fn(), configurable: true });
-    Object.defineProperty(globals.LOG, "debug", { value: jest.fn(), configurable: true });
-    Object.defineProperty(globals.LOG, "error", { value: jest.fn(), configurable: true });
     Object.defineProperty(Profiles, "getInstance", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode, "Uri", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.Uri, "parse", { value: jest.fn(), configurable: true });
@@ -75,6 +73,9 @@ function createGlobalMocks() {
     const executeCommand = jest.fn();
     Object.defineProperty(vscode.commands, "executeCommand", { value: executeCommand, configurable: true });
     Object.defineProperty(SpoolProvider, "toUniqueJobFileUri", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "error", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "debug", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
 }
 
 // Idea is borrowed from: https://github.com/kulshekhar/ts-jest/blob/master/src/util/testing.ts
@@ -431,8 +432,8 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
         await dsActions.submitJcl(blockMocks.testDatasetTree);
 
         expect(submitJclSpy).not.toBeCalled();
-        expect(mocked(globals.LOG.error)).toBeCalled();
-        expect(mocked(globals.LOG.error).mock.calls[0][0]).toEqual("Session for submitting JCL was null or undefined!");
+        expect(mocked(ZoweLogger.error)).toBeCalled();
+        expect(mocked(ZoweLogger.error).mock.calls[0][0]).toEqual("Session for submitting JCL was null or undefined!");
     });
 
     it("Checking API error on submit of active text editor content as JCL", async () => {
@@ -607,12 +608,12 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
         try {
             await dsActions.submitMember(corruptedSubNode);
         } catch (e) {
-            expect(e.message).toEqual("submitMember() called from invalid node.");
+            expect(e.message).toEqual("Cannot submit, item invalid.");
         }
         expect(submitJobSpy).not.toBeCalled();
         expect(mocked(Gui.showMessage)).not.toBeCalled();
         expect(mocked(Gui.errorMessage)).toBeCalled();
-        expect(mocked(Gui.errorMessage).mock.calls[0][0]).toEqual("submitMember() called from invalid node.");
+        expect(mocked(Gui.errorMessage).mock.calls[0][0]).toEqual("Cannot submit, item invalid.");
     });
 
     it("has proper Submit Job output for all confirmation dialog options", async () => {

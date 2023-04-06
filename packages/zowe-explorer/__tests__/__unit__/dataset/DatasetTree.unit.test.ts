@@ -40,6 +40,7 @@ import { PersistentFilters } from "../../../src/PersistentFilters";
 import * as dsUtils from "../../../src/dataset/utils";
 import { SettingsConfig } from "../../../src/utils/SettingsConfig";
 import * as sharedActions from "../../../src/shared/actions";
+import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 
 jest.mock("fs");
 jest.mock("util");
@@ -146,6 +147,11 @@ function createGlobalMocks() {
         configurable: true,
     });
     Object.defineProperty(Gui, "errorMessage", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "error", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "debug", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "warn", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "info", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
 
     return globalMocks;
 }
