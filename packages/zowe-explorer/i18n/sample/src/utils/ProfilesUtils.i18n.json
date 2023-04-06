@@ -5,7 +5,6 @@
   "errorHandling.authentication.login": "Log in to Authentication Service",
   "errorHandling.checkCredentials.button": "Check Credentials",
   "errorHandling.checkCredentials.cancelled": "Operation Cancelled",
-  "getProfile.notTreeItem": "Tree Item is not a Zowe Explorer item.",
   "zowe.promptCredentials.notSupported": "\"Update Credentials\" operation not supported when \"autoStore\" is false",
   "createNewConnection.option.prompt.profileName.placeholder": "Connection Name",
   "createNewConnection.option.prompt.profileName": "Enter a name for the connection.",
@@ -15,5 +14,6 @@
   "writeOverridesFile.jsonParseError": "Failed to parse JSON file {0}:",
   "initializeZoweFolder.error": "Failed to initialize Zowe folder: {0}",
   "initializeZoweProfiles.success": "Zowe Profiles initialized successfully.",
-  "initializeZoweTempFolder.success": "Zowe Temp folder initialized successfully."
+  "initializeZoweTempFolder.success": "Zowe Temp folder initialized successfully.",
+  "getProfile.notTreeItem": "Tree Item is not a Zowe Explorer item."
 }
