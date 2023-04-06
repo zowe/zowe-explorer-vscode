@@ -2,6 +2,10 @@
 
 All notable changes to the "zowe-explorer-api" extension will be documented in this file.
 
+## `1.22.3`
+
+- Updated dependencies for improved security.
+
 ## `1.22.2`
 
 - Updated dependencies for improved security.
