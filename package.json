@@ -57,7 +57,7 @@
     "**/log4js": "6.4.6",
     "**/diff": "^3.5.0",
     "**/markdown-it": "^12.3.2",
-    "**/http-cache-semantics": "4.1.1 "
+    "**/http-cache-semantics": "4.1.1"
   },
   "scripts": {
     "prepare": "yarn build",
