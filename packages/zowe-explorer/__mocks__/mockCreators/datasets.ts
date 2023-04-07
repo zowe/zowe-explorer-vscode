@@ -70,6 +70,7 @@ export function createDatasetTree(sessionNode: ZoweDatasetNode, treeView: any, f
         getProfileName: jest.fn(),
         getSession: jest.fn(),
         getProfiles: jest.fn(),
+        getDsTemplates: jest.fn(),
     };
     testDatasetTree.addFavorite.mockImplementation((newFavorite) => testDatasetTree.mFavorites.push(newFavorite));
     testDatasetTree.addFileHistory.mockImplementation((newFile) => testDatasetTree.mFileHistory.push(newFile));

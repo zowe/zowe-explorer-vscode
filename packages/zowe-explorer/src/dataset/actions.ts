@@ -95,7 +95,7 @@ export async function allocateLike(datasetProvider: api.IZoweTree<api.IZoweDatas
             api.Gui.showMessage(localize("allocateLike.noSelection", "You must select a profile."));
             return;
         } else {
-            ZoweLogger.trace(`${selection.toString()} was profile chosen to allocate a data set.`);
+            ZoweLogger.trace(`${selection?.toString()} was profile chosen to allocate a data set.`);
             currSession = datasetProvider.mSessionNodes.find((thisSession) => thisSession.label === selection.label);
             profile = currSession.getProfile();
         }
@@ -550,6 +550,12 @@ export async function createFile(node: api.IZoweDatasetTreeNode, datasetProvider
         api.Gui.showMessage(localizedStrings.opCancelled);
         return;
     }
+    newDSProperties.forEach((property) => {
+        if (property.key === `dsName`) {
+            property.value = dsName;
+            property.placeHolder = dsName;
+        }
+    });
     // 2nd step: Get data set type
     const type = await getDsTypeForCreation(datasetProvider);
     if (!type) {
@@ -665,12 +671,6 @@ async function getDataSetName(): Promise<string> {
         return;
     }
     dsName = dsName.trim().toUpperCase();
-    newDSProperties.forEach((property) => {
-        if (property.key === `dsName`) {
-            property.value = dsName;
-            property.placeHolder = dsName;
-        }
-    });
     return dsName;
 }
 
@@ -697,7 +697,7 @@ async function getDsTypeForCreation(datasetProvider: api.IZoweTree<api.IZoweData
 function getTemplateNames(datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>): string[] {
     const templates = datasetProvider.getDsTemplates();
     const templateNames: string[] = [];
-    templates.forEach((item) => {
+    templates?.forEach((item) => {
         templateNames.push(item.name);
     });
     return templateNames;
@@ -758,8 +758,8 @@ function getDsProperties(type: string, datasetProvider: api.IZoweTree<api.IZoweD
 }
 
 function getDefaultDsTypeProperties(dsType: string): api.dsAlloc {
-    typeEnum = getDataSetTypeAndOptions(dsType).typeEnum;
-    const cliDefaultsKey = globals.CreateDataSetTypeWithKeysEnum[typeEnum].replace("DATA_SET_", "");
+    typeEnum = getDataSetTypeAndOptions(dsType)?.typeEnum;
+    const cliDefaultsKey = globals.CreateDataSetTypeWithKeysEnum[typeEnum]?.replace("DATA_SET_", "");
     return zowe.CreateDefaults.DATA_SET[cliDefaultsKey] as api.dsAlloc;
 }
 
