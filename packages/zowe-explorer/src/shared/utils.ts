@@ -84,18 +84,6 @@ export function concatChildNodes(nodes: IZoweNodeType[]): IZoweNodeType[] {
     return allNodes;
 }
 
-/**
- * For no obvious reason a label change is often required to make a node repaint.
- * This function does this by adding or removing a blank.
- * @param {TreeItem} node - the node element
- */
-export function labelRefresh(node: vscode.TreeItem): void {
-    ZoweLogger.trace("shared.utils.labelRefresh called.");
-    node.label = node.label.toString().endsWith(" ")
-        ? node.label.toString().substring(0, node.label.toString().length - 1)
-        : `${node.label.toString()} `;
-}
-
 export function sortTreeItems(favorites: vscode.TreeItem[], specificContext): void {
     favorites.sort((a, b) => {
         if (a.contextValue === specificContext) {

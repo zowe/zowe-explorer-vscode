@@ -1263,11 +1263,4 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             this.mHistory.addSession(profile.name);
         }
     }
-
-    private _onDidChangeTreeData: vscode.EventEmitter<undefined | null | void> = new vscode.EventEmitter<undefined | null | void>();
-    private readonly onDidChangeTreeData: vscode.Event<undefined | null | void> = this._onDidChangeTreeData.event;
-
-    public refresh(): void {
-        this._onDidChangeTreeData.fire();
-    }
 }
