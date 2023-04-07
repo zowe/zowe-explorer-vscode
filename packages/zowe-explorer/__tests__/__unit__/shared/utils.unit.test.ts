@@ -98,18 +98,6 @@ describe("Shared Utils Unit Tests - Function node.concatChildNodes()", () => {
     });
 });
 
-describe("Shared Utils Unit Tests - Function node.labelRefresh()", () => {
-    it("Checks that labelRefresh subtly alters the label", async () => {
-        const globalMocks = await createGlobalMocks();
-        const rootNode = new ZoweUSSNode("gappy", vscode.TreeItemCollapsibleState.Collapsed, null, globalMocks.session, null, false, null, undefined);
-        expect(rootNode.label === "gappy");
-        sharedUtils.labelRefresh(rootNode);
-        expect(rootNode.label === "gappy ");
-        sharedUtils.labelRefresh(rootNode);
-        expect(rootNode.label === "gappy");
-    });
-});
-
 describe("syncSessionNode shared util function", () => {
     const serviceProfile = {
         name: "test",
