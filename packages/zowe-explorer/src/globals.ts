@@ -312,17 +312,18 @@ export function setConfigPath(configPath: string | undefined): void {
  * Initializes Imperative Logger
  * @param logsPath File path for logs folder defined in preferences
  */
-export function initLogger(logsPath: string): string {
+export async function initLogger(logsPath: string): Promise<void> {
+    const zeLogLevel = await ZoweLogger.getLogSetting();
     const loggerConfigCopy = JSON.parse(JSON.stringify(loggerConfig));
     for (const appenderName of Object.keys(loggerConfigCopy.log4jsConfig.appenders)) {
         loggerConfigCopy.log4jsConfig.appenders[appenderName].filename = path.join(
             logsPath,
             loggerConfigCopy.log4jsConfig.appenders[appenderName].filename
         );
+        loggerConfigCopy.log4jsConfig.categories[appenderName].level = zeLogLevel;
     }
     imperative.Logger.initLogger(loggerConfigCopy);
     this.LOG = imperative.Logger.getAppLogger();
-    return loggerConfig.log4jsConfig.appenders.app.filename;
 }
 
 export function setActivated(value: boolean): void {

@@ -33,8 +33,8 @@ export class ZoweLogger {
     public static async initializeZoweLogger(context: vscode.ExtensionContext): Promise<void> {
         try {
             const logsPath: string = ZoweVsCodeExtension.customLoggingPath ?? context.extensionPath;
-            const logFileLocation = globals.initLogger(logsPath);
-            await this.initVscLogger(context, logFileLocation);
+            await globals.initLogger(logsPath);
+            await this.initVscLogger(context, logsPath);
         } catch (err) {
             // Don't log error if logger failed to initialize
             if (err instanceof Error) {
@@ -70,6 +70,11 @@ export class ZoweLogger {
 
     public static async disposeZoweLogger(): Promise<void> {
         await this.zeOutputChannel.dispose();
+    }
+
+    public static async getLogSetting(): Promise<string> {
+        this.zeLogLevel = await vscode.workspace.getConfiguration().get("zowe.logger");
+        return this.zeLogLevel ?? this.defaultLogLevel;
     }
 
     private static async initVscLogger(context: vscode.ExtensionContext, logFileLocation: string): Promise<void> {
@@ -125,11 +130,6 @@ export class ZoweLogger {
             }
             await this.setCliLoggerSetting(true);
         });
-    }
-
-    private static async getLogSetting(): Promise<string> {
-        this.zeLogLevel = await vscode.workspace.getConfiguration().get("zowe.logger");
-        return this.zeLogLevel ?? this.defaultLogLevel;
     }
 
     private static async setLogSetting(setting: string): Promise<void> {
