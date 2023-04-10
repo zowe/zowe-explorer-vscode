@@ -66,12 +66,12 @@ export function registerRefreshCommand(
 
 export function registerCommonCommands(context: vscode.ExtensionContext, providers: IZoweProviders): void {
     // Update imperative.json to false only when VS Code setting is set to false
-    context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.updateSecureCredentials", async () => {
-            await globals.setGlobalSecurityValue();
-            writeOverridesFile();
-        })
-    );
+    // context.subscriptions.push(
+    //     vscode.commands.registerCommand("zowe.updateSecureCredentials", async () => {
+    //         await globals.setGlobalSecurityValue();
+    //         writeOverridesFile();
+    //     })
+    // );
 
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.promptCredentials", async (node: IZoweTreeNode) => {
@@ -100,9 +100,9 @@ export function registerCommonCommands(context: vscode.ExtensionContext, provide
                 hideTempFolder(getZoweDir());
             }
 
-            if (e.affectsConfiguration(globals.SETTINGS_SECURE_CREDENTIALS_ENABLED)) {
-                await vscode.commands.executeCommand("zowe.updateSecureCredentials");
-            }
+            // if (e.affectsConfiguration(globals.SETTINGS_SECURE_CREDENTIALS_ENABLED)) {
+            //     await vscode.commands.executeCommand("zowe.updateSecureCredentials");
+            // }
         })
     );
 

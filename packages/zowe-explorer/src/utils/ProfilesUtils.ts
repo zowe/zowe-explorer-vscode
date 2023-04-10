@@ -261,14 +261,30 @@ export function getCredentialManagerOverride(): string | undefined {
     }
 }
 
-export function getProfileInfo(envTheia: boolean): imperative.ProfileInfo {
-    // const credentialManagerOverride = getCredentialManagerOverride();
+export async function activateCredentialManagerOverride(
+    credentialManagerMap: imperative.ICredentialManagerNameMap
+): Promise<imperative.ICredentialManagerConstructor | undefined> {
+    const extension = vscode.extensions.getExtension(credentialManagerMap.credMgrZEName);
+    const exports = await extension.activate();
+    if (extension.isActive && exports) {
+        return extension.exports as imperative.ICredentialManagerConstructor;
+    }
+    return undefined;
+}
 
-    // if (credentialManagerOverride) {
-    //     return new imperative.ProfileInfo("zowe", {
-    //         override: credentialManagerOverride,
-    //     });
-    // }
+export async function getProfileInfo(envTheia: boolean): Promise<imperative.ProfileInfo> {
+    const credentialManagerMap = imperative.CredentialManagerOverride.getCredMgrInfoByPlugin(getCredentialManagerOverride());
+    const credentialManager = await activateCredentialManagerOverride(credentialManagerMap);
+
+    if (credentialManager) {
+        return new imperative.ProfileInfo("zowe", {
+            credMgrOverride: {
+                Manager: credentialManager,
+                service: credentialManagerMap.credMgrPluginName,
+                displayName: credentialManagerMap.credMgrDisplayName,
+            },
+        });
+    }
     return new imperative.ProfileInfo("zowe", {
         requireKeytar: () => getSecurityModules("keytar", envTheia),
     });
@@ -345,7 +361,7 @@ export async function promptCredentials(node: IZoweTreeNode): Promise<void> {
 export async function initializeZoweFolder(): Promise<void> {
     // ensure the Secure Credentials Enabled value is read
     // set globals.PROFILE_SECURITY value accordingly
-    await globals.setGlobalSecurityValue();
+    // await globals.setGlobalSecurityValue();
     // Ensure that ~/.zowe folder exists
     // Ensure that the ~/.zowe/settings/imperative.json exists
     // TODO: update code below once this imperative issue is resolved.
@@ -358,9 +374,9 @@ export async function initializeZoweFolder(): Promise<void> {
     if (!fs.existsSync(settingsPath)) {
         fs.mkdirSync(settingsPath);
     }
-    if (!fs.existsSync(path.join(settingsPath, "imperative.json"))) {
-        writeOverridesFile();
-    }
+    // if (!fs.existsSync(path.join(settingsPath, "imperative.json"))) {
+    //     writeOverridesFile();
+    // }
     // If not using team config, ensure that the ~/.zowe/profiles directory
     // exists with appropriate types within
     if (!imperative.ImperativeConfig.instance.config?.exists) {
