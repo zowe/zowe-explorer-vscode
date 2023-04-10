@@ -273,15 +273,14 @@ export async function activateCredentialManagerOverride(
 }
 
 export async function getProfileInfo(envTheia: boolean): Promise<imperative.ProfileInfo> {
-    const credentialManagerMap = imperative.CredentialManagerOverride.getCredMgrInfoByPlugin(getCredentialManagerOverride());
+    const credentialManagerMap = imperative.CredentialManagerOverride.getCredMgrInfoByDisplayName(getCredentialManagerOverride());
     const credentialManager = await activateCredentialManagerOverride(credentialManagerMap);
 
     if (credentialManager) {
         return new imperative.ProfileInfo("zowe", {
             credMgrOverride: {
                 Manager: credentialManager,
-                service: credentialManagerMap.credMgrPluginName,
-                displayName: credentialManagerMap.credMgrDisplayName,
+                service: credentialManagerMap.credMgrDisplayName,
             },
         });
     }
