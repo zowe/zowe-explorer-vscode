@@ -33,7 +33,7 @@ export class ZoweLogger {
     public static async initializeZoweLogger(context: vscode.ExtensionContext): Promise<void> {
         try {
             const logsPath: string = ZoweVsCodeExtension.customLoggingPath ?? context.extensionPath;
-            await globals.initLogger(logsPath);
+            globals.initLogger(logsPath);
             await this.initVscLogger(context, logsPath);
         } catch (err) {
             // Don't log error if logger failed to initialize
@@ -44,54 +44,54 @@ export class ZoweLogger {
         }
     }
 
-    public static async trace(message: string): Promise<void> {
-        await this.writeLogMessage(message, MessageSeverity.TRACE);
+    public static trace(message: string): void {
+        this.writeLogMessage(message, MessageSeverity.TRACE);
     }
 
-    public static async debug(message: string): Promise<void> {
-        await this.writeLogMessage(message, MessageSeverity.DEBUG);
+    public static debug(message: string): void {
+        this.writeLogMessage(message, MessageSeverity.DEBUG);
     }
 
-    public static async info(message: string): Promise<void> {
-        await this.writeLogMessage(message, MessageSeverity.INFO);
+    public static info(message: string): void {
+        this.writeLogMessage(message, MessageSeverity.INFO);
     }
 
-    public static async warn(message: string): Promise<void> {
-        await this.writeLogMessage(message, MessageSeverity.WARN);
+    public static warn(message: string): void {
+        this.writeLogMessage(message, MessageSeverity.WARN);
     }
 
-    public static async error(message: string): Promise<void> {
-        await this.writeLogMessage(message, MessageSeverity.ERROR);
+    public static error(message: string): void {
+        this.writeLogMessage(message, MessageSeverity.ERROR);
     }
 
-    public static async fatal(message: string): Promise<void> {
-        await this.writeLogMessage(message, MessageSeverity.FATAL);
+    public static fatal(message: string): void {
+        this.writeLogMessage(message, MessageSeverity.FATAL);
     }
 
-    public static async disposeZoweLogger(): Promise<void> {
-        await this.zeOutputChannel.dispose();
+    public static disposeZoweLogger(): void {
+        this.zeOutputChannel.dispose();
     }
 
-    public static async getLogSetting(): Promise<string> {
-        this.zeLogLevel = await vscode.workspace.getConfiguration().get("zowe.logger");
+    public static getLogSetting(): string {
+        this.zeLogLevel = vscode.workspace.getConfiguration("zowe").get("logger");
         return this.zeLogLevel ?? this.defaultLogLevel;
     }
 
     private static async initVscLogger(context: vscode.ExtensionContext, logFileLocation: string): Promise<void> {
         this.zeOutputChannel = Gui.createOutputChannel(localize("zoweExplorer.outputchannel.title", "Zowe Explorer"));
-        await this.writeVscLoggerInfo(logFileLocation, context);
-        await this.info(localize("initialize.log.info", "Initialized logger for Zowe Explorer"));
+        this.writeVscLoggerInfo(logFileLocation, context);
+        this.info(localize("initialize.log.info", "Initialized logger for Zowe Explorer"));
         await this.compareCliLogSetting();
     }
 
-    private static async writeVscLoggerInfo(logFileLocation: string, context: vscode.ExtensionContext): Promise<void> {
+    private static writeVscLoggerInfo(logFileLocation: string, context: vscode.ExtensionContext): void {
         this.zeOutputChannel?.appendLine(`${context.extension.packageJSON.displayName as string} ${context.extension.packageJSON.version as string}`);
         this.zeOutputChannel?.appendLine(localize("initialize.log.location", "This log file can be found at {0}", logFileLocation));
-        this.zeOutputChannel?.appendLine(localize("initialize.log.level", "Zowe Explorer log level: {0}", await this.getLogSetting()));
+        this.zeOutputChannel?.appendLine(localize("initialize.log.level", "Zowe Explorer log level: {0}", this.getLogSetting()));
     }
 
-    private static async writeLogMessage(message: string, severity: MessageSeverity): Promise<void> {
-        if (+MessageSeverity[await this.getLogSetting()] <= +severity) {
+    private static writeLogMessage(message: string, severity: MessageSeverity): void {
+        if (+MessageSeverity[this.getLogSetting()] <= +severity) {
             const severityName = MessageSeverity[severity];
             globals.LOG[severityName?.toLowerCase()](message);
             this.zeOutputChannel?.appendLine(this.createMessage(message, severityName));
@@ -104,9 +104,9 @@ export class ZoweLogger {
 
     private static async compareCliLogSetting(): Promise<void> {
         const cliLogSetting = this.getZoweLogEnVar();
-        const zeLogSetting = this.zeLogLevel ?? (await this.getLogSetting());
+        const zeLogSetting = this.zeLogLevel ?? this.getLogSetting();
         if (cliLogSetting && +MessageSeverity[zeLogSetting] !== +MessageSeverity[cliLogSetting]) {
-            const notified = await this.getCliLoggerSetting();
+            const notified = this.getCliLoggerSetting();
             if (!notified) {
                 await this.updateVscLoggerSetting(cliLogSetting);
             }
@@ -140,9 +140,8 @@ export class ZoweLogger {
         return process.env.ZOWE_APP_LOG_LEVEL;
     }
 
-    private static async getCliLoggerSetting(): Promise<boolean> {
-        const notified: boolean = await vscode.workspace.getConfiguration().get("zowe.cliLoggerSetting.presented");
-        return notified ? notified : false;
+    private static getCliLoggerSetting(): boolean {
+        return SettingsConfig.getDirectValue("zowe.cliLoggerSetting.presented") ?? false;
     }
 
     private static async setCliLoggerSetting(setting: boolean): Promise<void> {
