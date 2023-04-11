@@ -33,7 +33,7 @@ export let ZOWE_TMP_FOLDER: string;
 export let USS_DIR: string;
 export let DS_DIR: string;
 export let CONFIG_PATH; // set during activate
-export let ISTHEIA: boolean = false; // set during activate
+export let ISTHEIA = false; // set during activate
 export let LOG: imperative.Logger;
 export const COMMAND_COUNT = 102;
 export const MAX_SEARCH_HISTORY = 5;
@@ -286,7 +286,7 @@ export function defineGlobals(tempPath: string | undefined): void {
         ((appName && appName.toLowerCase().includes("theia")) || (uriScheme && uriScheme.toLowerCase().includes("theia"))) &&
         vscode.env.uiKind === vscode.UIKind.Web
     ) {
-        this.ISTHEIA = true;
+        ISTHEIA = true;
         ZoweLogger.info(localize("globals.defineGlobals.isTheia", "Zowe Explorer is running in Theia environment."));
     }
 
@@ -319,7 +319,7 @@ export function initLogger(context: vscode.ExtensionContext): string {
         );
     }
     imperative.Logger.initLogger(loggerConfig);
-    this.LOG = imperative.Logger.getAppLogger();
+    LOG = imperative.Logger.getAppLogger();
     return loggerConfig.log4jsConfig.appenders.app.filename;
 }
 
