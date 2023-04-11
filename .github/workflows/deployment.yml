@@ -32,7 +32,7 @@ jobs:
       - name: Use Node.js LTS
         uses: actions/setup-node@v3
         with:
-          node-version: 'lts/*'
+          node-version: '14.x'
           cache: 'npm'
 
       - name: Install Yarn
@@ -63,7 +63,7 @@ jobs:
       - name: Update Changelogs
         if: steps.octorelease.outcome == 'success'
         run: |
-          sed -i '0,/##/s//## TBD Release\n\n### New features and enhancements\n\n### Bug fixes\n\n##/' packages/*/CHANGELOG.md
+          sed -i '0,/##/s//## TBD Release\n\n### Bug fixes\n\n##/' packages/*/CHANGELOG.md
           git add packages/*/CHANGELOG.md
 
       - name: Create Snapshot Version
