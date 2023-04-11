@@ -129,7 +129,8 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         const elementChildren: { [k: string]: ZoweDatasetNode } = {};
         for (const response of responses) {
             // Throws reject if the Zowe command does not throw an error but does not succeed
-            if (!response.success) {
+            // The dataSetsMatchingPattern API may return success=false and apiResponse=[] when no data sets found
+            if (!response.success && !(Array.isArray(response.apiResponse) && response.apiResponse.length === 0)) {
                 await errorHandling(localize("getChildren.responses.error", "The response from Zowe CLI was not successful"));
                 return;
             }
@@ -231,7 +232,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         if (Object.keys(elementChildren).length === 0) {
             this.children = [
                 new ZoweDatasetNode(
-                    localize("getChildren.noDataset", "No datasets found"),
+                    localize("getChildren.noDataset", "No data sets found"),
                     vscode.TreeItemCollapsibleState.None,
                     this,
                     null,
