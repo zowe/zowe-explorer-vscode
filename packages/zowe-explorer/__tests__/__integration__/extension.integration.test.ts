@@ -896,7 +896,7 @@ async function getAllNodes(nodes: IZoweTreeNode[]) {
 
     for (const node of nodes) {
         let nodeChildren = await node.getChildren();
-        nodeChildren = nodeChildren.filter((item) => !item.label.toString().includes("No datasets found"));
+        nodeChildren = nodeChildren.filter((item) => !item.label.toString().includes("No data sets found"));
         allNodes = allNodes.concat(await getAllNodes(nodeChildren));
         allNodes.push(node);
     }

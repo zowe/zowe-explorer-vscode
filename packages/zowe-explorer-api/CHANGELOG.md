@@ -15,6 +15,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 - Fixed credentials being updated for wrong v1 profile if multiple profiles had different types but same name.
 - Updated dependencies for security audits.
+- Added fallback for `realPathSync` to resolve edge cases where the native call fails on Windows systems. [#1773](https://github.com/zowe/vscode-extension-for-zowe/issues/1773)
 
 ## `2.7.0`
 
