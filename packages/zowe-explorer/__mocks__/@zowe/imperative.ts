@@ -134,6 +134,12 @@ export interface ICommandArguments {
     tokenValue?: string;
 }
 
+export interface IImperativeError {
+    msg: string;
+    errorCode?: number;
+    additionalDetails?: string;
+}
+
 interface NodeModule {
     exports: any;
     require: NodeRequire;
@@ -236,9 +242,10 @@ export class ProfileInfo {
     }
 }
 
-export class ImperativeError {
-    public msg: string;
-    constructor(mDetails: ImperativeError) {
+export class ImperativeError extends Error {
+    private msg: string;
+    constructor(public mDetails: IImperativeError) {
+        super();
         this.msg = mDetails.msg;
     }
     public get message() {

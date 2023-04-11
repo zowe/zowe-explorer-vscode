@@ -19,6 +19,7 @@ import { getIconByNode } from "../generators/icons";
 import * as contextually from "../shared/context";
 import * as nls from "vscode-nls";
 import { Profiles } from "../Profiles";
+import { ZoweLogger } from "../utils/LoggerUtils";
 // Set up localization
 nls.config({
     messageFormat: nls.MessageFormat.bundle,
@@ -83,6 +84,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
      * @returns {string}
      */
     public getProfileName(): string {
+        ZoweLogger.trace("ZoweDatasetNode.getProfileName called.");
         return this.getProfile() ? this.getProfile().name : undefined;
     }
 
@@ -92,6 +94,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
      * @returns {Promise<ZoweDatasetNode[]>}
      */
     public async getChildren(): Promise<ZoweDatasetNode[]> {
+        ZoweLogger.trace("ZoweDatasetNode.getChildren called.");
         if (!this.pattern && contextually.isSessionNotFav(this)) {
             return [
                 new ZoweDatasetNode(
@@ -126,7 +129,8 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         const elementChildren: { [k: string]: ZoweDatasetNode } = {};
         for (const response of responses) {
             // Throws reject if the Zowe command does not throw an error but does not succeed
-            if (!response.success) {
+            // The dataSetsMatchingPattern API may return success=false and apiResponse=[] when no data sets found
+            if (!response.success && !(Array.isArray(response.apiResponse) && response.apiResponse.length === 0)) {
                 await errorHandling(localize("getChildren.responses.error", "The response from Zowe CLI was not successful"));
                 return;
             }
@@ -228,7 +232,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         if (Object.keys(elementChildren).length === 0) {
             this.children = [
                 new ZoweDatasetNode(
-                    localize("getChildren.noDataset", "No datasets found"),
+                    localize("getChildren.noDataset", "No data sets found"),
                     vscode.TreeItemCollapsibleState.None,
                     this,
                     null,
@@ -245,6 +249,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     }
 
     public getSessionNode(): IZoweDatasetTreeNode {
+        ZoweLogger.trace("ZoweDatasetNode.getSessionNode called.");
         return this.getParent() ? this.getParent().getSessionNode() : this;
     }
     /**
@@ -253,6 +258,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
      * @returns {string}
      */
     public getEtag(): string {
+        ZoweLogger.trace("ZoweDatasetNode.getEtag called.");
         return this.etag;
     }
 
@@ -262,10 +268,12 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
      * @returns {void}
      */
     public setEtag(etagValue): void {
+        ZoweLogger.trace("ZoweDatasetNode.setEtag called.");
         this.etag = etagValue;
     }
 
     private async getDatasets(): Promise<zowe.IZosFilesResponse[]> {
+        ZoweLogger.trace("ZoweDatasetNode.getDatasets called.");
         const sessNode = this.getSessionNode();
         const responses: zowe.IZosFilesResponse[] = [];
         try {

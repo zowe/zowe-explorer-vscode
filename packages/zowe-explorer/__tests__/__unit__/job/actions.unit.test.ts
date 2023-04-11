@@ -33,6 +33,7 @@ import * as SpoolProvider from "../../../src/SpoolProvider";
 import * as refreshActions from "../../../src/shared/refresh";
 import * as sharedUtils from "../../../src/shared/utils";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
+import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 
 const activeTextEditorDocument = jest.fn();
 
@@ -65,9 +66,6 @@ function createGlobalMocks() {
         get: activeTextEditorDocument,
         configurable: true,
     });
-    Object.defineProperty(globals, "LOG", { value: jest.fn(), configurable: true });
-    Object.defineProperty(globals.LOG, "debug", { value: jest.fn(), configurable: true });
-    Object.defineProperty(globals.LOG, "error", { value: jest.fn(), configurable: true });
     Object.defineProperty(Profiles, "getInstance", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode, "Uri", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.Uri, "parse", { value: jest.fn(), configurable: true });
@@ -75,10 +73,17 @@ function createGlobalMocks() {
     const executeCommand = jest.fn();
     Object.defineProperty(vscode.commands, "executeCommand", { value: executeCommand, configurable: true });
     Object.defineProperty(SpoolProvider, "toUniqueJobFileUri", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "error", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "debug", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
 }
 
 // Idea is borrowed from: https://github.com/kulshekhar/ts-jest/blob/master/src/util/testing.ts
 const mocked = <T extends (...args: any[]) => any>(fn: T): jest.Mock<ReturnType<T>> => fn as any;
+
+afterEach(() => {
+    jest.clearAllMocks();
+});
 
 describe("Jobs Actions Unit Tests - Function setPrefix", () => {
     function createBlockMocks() {
@@ -423,12 +428,38 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
         activeTextEditorDocument.mockReturnValue(blockMocks.textDocument);
         const submitJclSpy = jest.spyOn(blockMocks.jesApi, "submitJcl");
         submitJclSpy.mockClear();
-        submitJclSpy.mockResolvedValueOnce(blockMocks.iJob);
 
         await dsActions.submitJcl(blockMocks.testDatasetTree);
 
         expect(submitJclSpy).not.toBeCalled();
-        expect(mocked(globals.LOG.error)).toBeCalled();
+        expect(mocked(ZoweLogger.error)).toBeCalled();
+        expect(mocked(ZoweLogger.error).mock.calls[0][0]).toEqual("Session for submitting JCL was null or undefined!");
+    });
+
+    it("Checking API error on submit of active text editor content as JCL", async () => {
+        createGlobalMocks();
+        const blockMocks: any = createBlockMocks();
+        mocked(zowe.ZosmfSession.createSessCfgFromArgs).mockReturnValue(blockMocks.session);
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        mocked(vscode.window.showQuickPick).mockReturnValueOnce(
+            new Promise((resolve) => {
+                resolve(blockMocks.datasetSessionNode.label);
+            })
+        );
+        blockMocks.testDatasetTree.getChildren.mockResolvedValueOnce([
+            new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null),
+            blockMocks.datasetSessionNode,
+        ]);
+        activeTextEditorDocument.mockReturnValue(blockMocks.textDocument);
+        const submitJclSpy = jest.spyOn(blockMocks.jesApi, "submitJcl");
+        submitJclSpy.mockClear();
+        const testError = new Error("submitJcl failed");
+        submitJclSpy.mockRejectedValueOnce(testError);
+        await dsActions.submitJcl(blockMocks.testDatasetTree);
+
+        expect(submitJclSpy).toBeCalled();
+        expect(mocked(Gui.errorMessage)).toBeCalled();
+        expect(mocked(Gui.errorMessage).mock.calls[0][0]).toContain(testError.message);
     });
 });
 
@@ -577,12 +608,12 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
         try {
             await dsActions.submitMember(corruptedSubNode);
         } catch (e) {
-            expect(e.message).toEqual("submitMember() called from invalid node.");
+            expect(e.message).toEqual("Cannot submit, item invalid.");
         }
         expect(submitJobSpy).not.toBeCalled();
         expect(mocked(Gui.showMessage)).not.toBeCalled();
         expect(mocked(Gui.errorMessage)).toBeCalled();
-        expect(mocked(Gui.errorMessage).mock.calls[0][0]).toEqual("submitMember() called from invalid node.");
+        expect(mocked(Gui.errorMessage).mock.calls[0][0]).toEqual("Cannot submit, item invalid.");
     });
 
     it("has proper Submit Job output for all confirmation dialog options", async () => {
@@ -725,7 +756,7 @@ describe("Jobs Actions Unit Tests - Function getSpoolContent", () => {
         await jobActions.getSpoolContent(session, spoolFile, anyTimestamp);
 
         expect(mocked(vscode.window.showTextDocument)).not.toBeCalled();
-        expect(mocked(Gui.errorMessage)).toBeCalledWith("Test Error: Test");
+        expect(mocked(Gui.errorMessage)).toBeCalledWith("Error: Test");
     });
     it("should show an error message in case document cannot be shown for some reason", async () => {
         createGlobalMocks();
@@ -741,7 +772,7 @@ describe("Jobs Actions Unit Tests - Function getSpoolContent", () => {
 
         await jobActions.getSpoolContent(session, spoolFile, anyTimestamp);
 
-        expect(mocked(Gui.errorMessage)).toBeCalledWith("Test Error: Test");
+        expect(mocked(Gui.errorMessage)).toBeCalledWith("Error: Test");
     });
     it("should fetch the spool content successfully", async () => {
         createGlobalMocks();
@@ -839,6 +870,45 @@ describe("focusing on a job in the tree view", () => {
         // const expectedTreeView = jobTree;
         const expectedTreeView = expect.anything();
         expect(mocked(jobTreeProvider.setItem)).toHaveBeenCalledWith(expectedTreeView, submittedJobNode);
+    });
+    it("should handle error focusing on the job", async () => {
+        // arrange
+        const submittedJob = createIJobObject();
+        const profile = createIProfile();
+        const session = createISessionWithoutCredentials();
+        const existingJobSession = createJobSessionNode(session, profile);
+        const datasetSessionName = existingJobSession.label as string;
+        const jobTree = createTreeView();
+        const jobTreeProvider = createJobsTree(session, submittedJob, profile, jobTree);
+        jobTreeProvider.mSessionNodes.push(existingJobSession);
+        const testError = new Error("focusOnJob failed");
+        jest.spyOn(jobTreeProvider, "refreshElement").mockImplementationOnce(() => {
+            throw testError;
+        });
+        // act
+        await jobActions.focusOnJob(jobTreeProvider, datasetSessionName, submittedJob.jobid);
+        // assert
+        expect(mocked(jobTreeProvider.refreshElement)).toHaveBeenCalledWith(existingJobSession);
+        expect(mocked(Gui.errorMessage)).toHaveBeenCalled();
+        expect(mocked(Gui.errorMessage).mock.calls[0][0]).toContain(testError.message);
+    });
+    it("should handle error adding a new tree view session", async () => {
+        // arrange
+        const submittedJob = createIJobObject();
+        const profile = createIProfile();
+        const session = createISessionWithoutCredentials();
+        const newJobSession = createJobSessionNode(session, profile);
+        const datasetSessionName = newJobSession.label as string;
+        const jobTree = createTreeView();
+        const jobTreeProvider = createJobsTree(session, submittedJob, profile, jobTree);
+        const testError = new Error("focusOnJob failed");
+        jest.spyOn(jobTreeProvider, "addSession").mockRejectedValueOnce(testError);
+        // act
+        await jobActions.focusOnJob(jobTreeProvider, datasetSessionName, submittedJob.jobid);
+        // assert
+        expect(mocked(jobTreeProvider.addSession)).toHaveBeenCalledWith(datasetSessionName);
+        expect(mocked(Gui.errorMessage)).toHaveBeenCalled();
+        expect(mocked(Gui.errorMessage).mock.calls[0][0]).toContain(testError.message);
     });
 });
 

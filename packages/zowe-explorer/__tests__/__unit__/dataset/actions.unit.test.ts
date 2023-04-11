@@ -40,6 +40,7 @@ import { Profiles } from "../../../src/Profiles";
 import * as utils from "../../../src/utils/ProfilesUtils";
 
 import { getNodeLabels } from "../../../src/dataset/utils";
+import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 
 // Missing the definition of path module, because I need the original logic for tests
 jest.mock("fs");
@@ -119,6 +120,11 @@ function createGlobalMocks() {
     Object.defineProperty(vscode, "ProgressLocation", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "createWebviewPanel", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.env, "clipboard", { value: clipboard, configurable: true });
+    Object.defineProperty(ZoweLogger, "error", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "debug", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "info", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "warn", { value: jest.fn(), configurable: true });
     mocked(Profiles.getInstance).mockReturnValue(newMocks.profileInstance);
 
     return newMocks;
@@ -196,7 +202,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
             // Prevent exception from failing test
         }
 
-        expect(mocked(Gui.errorMessage)).toBeCalledWith("Unable to create member: test Error: test");
+        expect(mocked(Gui.errorMessage)).toBeCalledWith("Unable to create member. Error: test");
         mocked(zowe.Upload.bufferToDataSet).mockReset();
     });
     it("Checking of attempt to create member without name", async () => {
@@ -298,7 +304,7 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
 
         await dsActions.refreshPS(node);
 
-        expect(mocked(Gui.showMessage)).toBeCalledWith("Unable to find file: " + node.label + " was probably deleted.");
+        expect(mocked(Gui.showMessage)).toBeCalledWith("Unable to find file " + node.label);
         expect(mocked(vscode.commands.executeCommand)).not.toBeCalled();
     });
     it("Checking failed attempt to refresh PDS Member", async () => {
@@ -317,7 +323,7 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
             file: path.join(globals.DS_DIR, child.getSessionNode().label.toString(), `${child.getParent().label}(${child.label})`),
             returnEtag: true,
         });
-        expect(mocked(Gui.errorMessage)).toBeCalledWith(" Error");
+        expect(mocked(Gui.errorMessage)).toBeCalledWith("Error");
     });
     it("Checking favorite empty PDS refresh", async () => {
         globals.defineGlobals("");
@@ -753,7 +759,7 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
 
         await expect(dsActions.deleteDataset(node, blockMocks.testDatasetTree)).rejects.toEqual(Error("not found"));
 
-        expect(mocked(Gui.showMessage)).toBeCalledWith("Unable to find file: " + node.label + " was probably already deleted.");
+        expect(mocked(Gui.showMessage)).toBeCalledWith("Unable to find file " + node.label);
     });
     it("Checking common PS dataset failed deletion attempt", async () => {
         globals.defineGlobals("");
@@ -776,7 +782,7 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
         deleteSpy.mockRejectedValueOnce(Error(""));
 
         await expect(dsActions.deleteDataset(node, blockMocks.testDatasetTree)).rejects.toEqual(Error(""));
-        expect(mocked(Gui.errorMessage)).toBeCalledWith(" Error");
+        expect(mocked(Gui.errorMessage)).toBeCalledWith("Error");
     });
     it("Checking Favorite PDS dataset deletion", async () => {
         globals.defineGlobals("");
@@ -880,7 +886,7 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
         const deleteSpy = jest.spyOn(blockMocks.mvsApi, "deleteDataSet");
         deleteSpy.mockClear();
 
-        await expect(dsActions.deleteDataset(child, blockMocks.testDatasetTree)).rejects.toEqual(Error("deleteDataSet() called from invalid node."));
+        await expect(dsActions.deleteDataset(child, blockMocks.testDatasetTree)).rejects.toEqual(Error("Cannot delete, item invalid."));
         expect(deleteSpy).not.toBeCalled();
     });
 });
@@ -1007,7 +1013,7 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
 
         await dsActions.saveFile(testDocument, blockMocks.testDatasetTree);
 
-        expect(mocked(Gui.errorMessage)).toBeCalledWith("Couldn't locate session when saving data set!");
+        expect(mocked(Gui.errorMessage)).toBeCalledWith("Could not locate session when saving data set.");
     });
     it("Checking common dataset saving failed attempt due to its absence on the side of the server", async () => {
         globals.defineGlobals("");
@@ -1646,8 +1652,7 @@ describe("Dataset Actions Unit Tests - Function showAttributes", () => {
             Error("No matching names found for query: AUSER.A1557332.A996850.TEST1")
         );
         expect(mocked(Gui.errorMessage)).toBeCalledWith(
-            "Unable to list attributes: No matching names found for query: AUSER.A1557332.A996850.TEST1 Error: No matching names found for query: " +
-                "AUSER.A1557332.A996850.TEST1"
+            "Unable to list attributes. Error: No matching names found for query: AUSER.A1557332.A996850.TEST1"
         );
         expect(mocked(vscode.window.createWebviewPanel)).not.toBeCalled();
     });
@@ -1755,7 +1760,7 @@ describe("Dataset Actions Unit Tests - Function copyDataSets", () => {
         await dsActions.copyDataSets(child, null, blockMocks.testDatasetTree);
         expect(clipboard.readText()).toBe(`{"profileName":"sestest","dataSetName":"parent","memberName":"child","contextValue":"${contextValue}"}`);
     });
-    it("Checking copy the label of a node (with a very complext context value) to the clipboard", async () => {
+    it("Checking copy the label of a node (with a very complex context value) to the clipboard", async () => {
         globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
@@ -1849,27 +1854,17 @@ describe("Dataset Actions Unit Tests - Function copyDataSets", () => {
             options.validateInput("test");
             return Promise.resolve("test");
         });
-        const allocSpy = jest.spyOn(blockMocks.mvsApi, "allocateLikeDataSet");
-        allocSpy.mockRejectedValueOnce({
-            success: true,
-            commandResponse: "",
-            apiResponse: {},
-        });
-
-        const copyFun = jest.spyOn(dsActions, "copySequentialDatasets").mockImplementation();
-        const refreshFun = jest.spyOn(dsActions, "refreshDataset").mockImplementation();
+        const testError = new Error("copyDataSets failed");
+        const allocSpy = jest.spyOn(blockMocks.mvsApi, "allocateLikeDataSet").mockRejectedValueOnce(testError);
         mocked(vscode.window.withProgress).mockImplementation((params, fn) => {
             fn();
             return Promise.resolve(params);
         });
-        try {
-            await dsActions.copyDataSets(child, null, blockMocks.testDatasetTree);
-            expect(mocked(vscode.window.showErrorMessage)).not.toHaveBeenCalled();
-            expect(copyFun).toHaveBeenCalled();
-            expect(refreshFun).toHaveBeenCalled();
-        } catch (error) {
-            // do nth
-        }
+
+        await dsActions.copyDataSets(child, null, blockMocks.testDatasetTree);
+        expect(allocSpy).toHaveBeenCalled();
+        expect(mocked(Gui.errorMessage)).toHaveBeenCalled();
+        expect(mocked(Gui.errorMessage).mock.calls[0][0]).toContain(testError.message);
     });
     it("Checking copy of partitioned datasets", async () => {
         globals.defineGlobals("");
@@ -1926,18 +1921,17 @@ describe("Dataset Actions Unit Tests - Function copyDataSets", () => {
             options.validateInput("test");
             return Promise.resolve("test");
         });
-        jest.spyOn(blockMocks.datasetSessionNode, "getChildren").mockRejectedValue([child]);
-        await mocked(vscode.window.withProgress).mockImplementation((params, fn) => {
+        const testError = new Error("copyDataSets failed");
+        const allocSpy = jest.spyOn(blockMocks.mvsApi, "allocateLikeDataSet").mockRejectedValueOnce(testError);
+        mocked(vscode.window.withProgress).mockImplementation((params, fn) => {
             fn();
             return Promise.resolve(params);
         });
-        try {
-            await dsActions.copyDataSets(blockMocks.datasetSessionNode, null, blockMocks.testDatasetTree);
-            await expect(mocked(vscode.window.showErrorMessage)).not.toHaveBeenCalled();
-            await expect(dsActions.copyDataSets(blockMocks.datasetSessionNode, null, blockMocks.testDatasetTree)).toStrictEqual(Promise.resolve());
-        } catch (error) {
-            // do nth
-        }
+
+        await dsActions.copyDataSets(child, null, blockMocks.testDatasetTree);
+        expect(allocSpy).toHaveBeenCalled();
+        expect(mocked(Gui.errorMessage)).toHaveBeenCalled();
+        expect(mocked(Gui.errorMessage).mock.calls[0][0]).toContain(testError.message);
     });
     it("Checking copy the label of a favorite member to the clipboard", async () => {
         globals.defineGlobals("");
@@ -1989,7 +1983,7 @@ describe("Dataset Actions Unit Tests - Function copyDataSets", () => {
         await expect(dsActions.pasteDataSetMembers(blockMocks.testDatasetTree, blockMocks.pdsMemberNode)).toEqual(Promise.resolve());
     });
 
-    it("Testing pasteDataSetMembers() succesfully runs with multiple members", async () => {
+    it("Testing pasteDataSetMembers() successfully runs with multiple members", async () => {
         globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
@@ -2059,11 +2053,12 @@ describe("Dataset Actions Unit Tests - Function copyDataSets", () => {
             blockMocks.imperativeProfile
         );
         blockMocks.pdsSessionNode.contextValue = "fakeContext";
+
         try {
             await dsActions.downloadDs(node);
-        } catch (err) {
-            // do nth
-        }
+        } catch (err) {}
+
+        expect(mocked(Gui.errorMessage)).toBeCalledWith("Cannot download, item invalid.");
     });
 
     it("Testing downloadDs() called with a member", async () => {
@@ -2084,6 +2079,18 @@ describe("Dataset Actions Unit Tests - Function copyDataSets", () => {
         const filePathSpy = jest.spyOn(sharedUtils, "getDocumentFilePath");
         await dsActions.downloadDs(node);
         expect(filePathSpy).toBeCalledWith(label, node);
+    });
+
+    it("Testing refreshDataset() error handling", async () => {
+        globals.defineGlobals("");
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        const testError = new Error("refreshDataset failed");
+        const refreshSpy = jest.spyOn(blockMocks.pdsSessionNode, "getChildren").mockRejectedValueOnce(testError);
+        await dsActions.refreshDataset(blockMocks.pdsSessionNode, blockMocks.testDatasetTree);
+        expect(refreshSpy).toHaveBeenCalled();
+        expect(mocked(Gui.errorMessage)).toHaveBeenCalled();
+        expect(mocked(Gui.errorMessage).mock.calls[0][0]).toContain(testError.message);
     });
 
     it("Should ask to replace the sequential and partitioned dataset if it already exists", async () => {
@@ -2263,7 +2270,7 @@ describe("Dataset Actions Unit Tests - Function pasteMember", () => {
         });
         clipboard.writeText("INVALID");
 
-        await expect(dsActions.pasteMember(node, blockMocks.testDatasetTree)).rejects.toEqual(Error("Invalid clipboard. Copy from data set first"));
+        await expect(dsActions.pasteMember(node, blockMocks.testDatasetTree)).rejects.toEqual(Error("Invalid paste. Copy dataset(s) first."));
         expect(copySpy).not.toBeCalled();
     });
     it("Should not call zowe.Copy.dataSet when pasting to partitioned data set with no member name", async () => {
@@ -2655,7 +2662,7 @@ describe("Dataset Actions Unit Tests - Function showFileErrorDetails", () => {
         );
 
         const spyRecall = jest.spyOn(blockMocks.mvsApi, "hRecallDataSet");
-        const spyLogError = mocked(globals.LOG.error);
+        const spyLogError = mocked(ZoweLogger.error);
 
         // succeeded at recalling the dataset
         spyRecall.mockResolvedValueOnce({ success: true } as any);
@@ -2919,7 +2926,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
             // do nothing
         }
 
-        expect(mocked(Gui.errorMessage)).toHaveBeenCalledWith("Error encountered when creating data set! Generic Error Error: Generic Error");
+        expect(mocked(Gui.errorMessage)).toHaveBeenCalledWith("Error encountered when creating data set. Error: Generic Error");
         expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(globals.SETTINGS_DS_DEFAULT_PS);
         expect(createDataSetSpy).toHaveBeenCalledWith(zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, "TEST", {
             alcunit: "CYL",
@@ -2946,7 +2953,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce(undefined);
         await dsActions.createFile(node, blockMocks.testDatasetTree);
 
-        expect(mocked(Gui.showMessage)).toHaveBeenCalledWith("Operation cancelled.");
+        expect(mocked(Gui.showMessage)).toHaveBeenCalledWith("Operation Cancelled");
         expect(mocked(vscode.workspace.getConfiguration)).not.toBeCalled();
         expect(createDataSetSpy).not.toHaveBeenCalled();
     });
@@ -3171,7 +3178,7 @@ describe("Dataset Actions Unit Tests - Function openPS", () => {
             // do nothing
         }
 
-        expect(mocked(Gui.errorMessage)).toBeCalledWith("testError Error: testError");
+        expect(mocked(Gui.errorMessage)).toBeCalledWith("Error: testError");
     });
     it("Checking of opening for PDS Member", async () => {
         globals.defineGlobals("");
@@ -3281,7 +3288,7 @@ describe("Dataset Actions Unit Tests - Function openPS", () => {
             // Prevent exception from failing test
         }
 
-        expect(mocked(Gui.errorMessage)).toBeCalledWith("openPS() called from invalid node.");
+        expect(mocked(Gui.errorMessage)).toBeCalledWith("Invalid data set or member.");
     });
     it("Checking that error is displayed and logged for opening of node with invalid context value", async () => {
         createGlobalMocks();
@@ -3306,7 +3313,7 @@ describe("Dataset Actions Unit Tests - Function openPS", () => {
             blockMocks.imperativeProfile
         );
         const showErrorMessageSpy = jest.spyOn(Gui, "errorMessage");
-        const logErrorSpy = jest.spyOn(globals.LOG, "error");
+        const logErrorSpy = jest.spyOn(ZoweLogger, "error");
 
         try {
             await dsActions.openPS(node, true, blockMocks.testDatasetTree);
@@ -3314,8 +3321,8 @@ describe("Dataset Actions Unit Tests - Function openPS", () => {
             // Do nothing
         }
 
-        expect(showErrorMessageSpy).toBeCalledWith("openPS() called from invalid node.");
-        expect(logErrorSpy).toBeCalledTimes(2);
+        expect(showErrorMessageSpy).toBeCalledWith("Invalid data set or member.");
+        expect(logErrorSpy).toBeCalledTimes(1);
     });
 });
 
@@ -3428,6 +3435,6 @@ describe("Dataset Actions Unit Tests - Function allocateLike", () => {
         }
 
         expect(errorHandlingSpy).toHaveBeenCalledTimes(1);
-        expect(errorHandlingSpy).toHaveBeenCalledWith(errorMessage, "test", "Unable to create data set: Test error");
+        expect(errorHandlingSpy).toHaveBeenCalledWith(errorMessage, "test", "Unable to create data set:");
     });
 });

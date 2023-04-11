@@ -23,6 +23,7 @@ import { MvsCommandHandler } from "../command/MvsCommandHandler";
 import { saveFile } from "../dataset/actions";
 import { saveUSSFile } from "../uss/actions";
 import { promptCredentials, writeOverridesFile } from "../utils/ProfilesUtils";
+import { ZoweLogger } from "../utils/LoggerUtils";
 import { ZoweSaveQueue } from "../abstract/ZoweSaveQueue";
 
 // Set up localization
@@ -44,6 +45,7 @@ export function registerRefreshCommand(
     activate: (_context: vscode.ExtensionContext) => Promise<ZoweExplorerApiRegister>,
     deactivate: () => Promise<void>
 ): void {
+    ZoweLogger.trace("shared.init.registerRefreshCommand called.");
     // set a command to silently reload extension
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.extRefresh", async () => {
@@ -55,7 +57,7 @@ export function registerRefreshCommand(
                     try {
                         await sub.dispose();
                     } catch (e) {
-                        globals.LOG.error(e);
+                        ZoweLogger.error(e);
                     }
                 }
                 await activate(context);
@@ -65,6 +67,7 @@ export function registerRefreshCommand(
 }
 
 export function registerCommonCommands(context: vscode.ExtensionContext, providers: IZoweProviders): void {
+    ZoweLogger.trace("shared.init.registerCommonCommands called.");
     // Update imperative.json to false only when VS Code setting is set to false
     // context.subscriptions.push(
     //     vscode.commands.registerCommand("zowe.updateSecureCredentials", async () => {
@@ -103,6 +106,9 @@ export function registerCommonCommands(context: vscode.ExtensionContext, provide
             // if (e.affectsConfiguration(globals.SETTINGS_SECURE_CREDENTIALS_ENABLED)) {
             //     await vscode.commands.executeCommand("zowe.updateSecureCredentials");
             // }
+            // if (e.affectsConfiguration(globals.LOGGER_SETTINGS)) {
+            //     await vscode.commands.executeCommand("zowe.extRefresh");
+            // }
         })
     );
 
@@ -117,7 +123,7 @@ export function registerCommonCommands(context: vscode.ExtensionContext, provide
         );
         context.subscriptions.push(
             vscode.workspace.onDidSaveTextDocument((savedFile) => {
-                globals.LOG.debug(
+                ZoweLogger.debug(
                     localize(
                         "onDidSaveTextDocument1",
                         "File was saved -- determining whether the file is a USS file or Data set.\n Comparing (case insensitive) "
@@ -129,13 +135,13 @@ export function registerCommonCommands(context: vscode.ExtensionContext, provide
                         globals.USS_DIR
                 );
                 if (savedFile.fileName.toUpperCase().indexOf(globals.DS_DIR.toUpperCase()) >= 0) {
-                    globals.LOG.debug(localize("activate.didSaveText.isDataSet", "File is a data set-- saving "));
+                    ZoweLogger.debug(localize("activate.didSaveText.isDataSet", "File is a data set-- saving "));
                     ZoweSaveQueue.push({ uploadRequest: saveFile, savedFile, fileProvider: providers.ds });
                 } else if (savedFile.fileName.toUpperCase().indexOf(globals.USS_DIR.toUpperCase()) >= 0) {
-                    globals.LOG.debug(localize("activate.didSaveText.isUSSFile", "File is a USS file -- saving"));
+                    ZoweLogger.debug(localize("activate.didSaveText.isUSSFile", "File is a USS file -- saving"));
                     ZoweSaveQueue.push({ uploadRequest: saveUSSFile, savedFile, fileProvider: providers.uss });
                 } else {
-                    globals.LOG.debug(
+                    ZoweLogger.debug(
                         localize("activate.didSaveText.file", "File ") +
                             savedFile.fileName +
                             localize("activate.didSaveText.notDataSet", " is not a data set or USS file ")
@@ -187,7 +193,9 @@ export function registerCommonCommands(context: vscode.ExtensionContext, provide
 }
 
 export function watchConfigProfile(context: vscode.ExtensionContext, providers: IZoweProviders): void {
+    ZoweLogger.trace("shared.init.watchConfigProfile called.");
     if (globals.ISTHEIA) {
+        ZoweLogger.warn(localize("watchConfigProfile.theia", "Team config file watcher is disabled in Theia environment."));
         return;
     }
 
@@ -206,12 +214,15 @@ export function watchConfigProfile(context: vscode.ExtensionContext, providers: 
 
     watchers.forEach((watcher) => {
         watcher.onDidCreate(async () => {
+            ZoweLogger.info(localize("watchConfigProfile.create", "Team config file created, refreshing Zowe Expkorer."));
             await vscode.commands.executeCommand("zowe.extRefresh");
         });
         watcher.onDidDelete(async () => {
+            ZoweLogger.info(localize("watchConfigProfile.delete", "Team config file deleted, refreshing Zowe Expkorer."));
             await vscode.commands.executeCommand("zowe.extRefresh");
         });
         watcher.onDidChange(async (uri: vscode.Uri) => {
+            ZoweLogger.info(localize("watchConfigProfile.update", "Team config file updated."));
             const newProfileContents = await vscode.workspace.fs.readFile(uri);
             if (newProfileContents.toString() === globals.SAVED_PROFILE_CONTENTS.toString()) {
                 return;
@@ -225,6 +236,7 @@ export function watchConfigProfile(context: vscode.ExtensionContext, providers: 
 }
 
 export function initSubscribers(context: vscode.ExtensionContext, theProvider: IZoweTree<IZoweTreeNode>): void {
+    ZoweLogger.trace("shared.init.initSubscribers called.");
     const theTreeView = theProvider.getTreeView();
     context.subscriptions.push(theTreeView);
     if (!globals.ISTHEIA) {

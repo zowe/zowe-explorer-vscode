@@ -17,6 +17,7 @@ import * as profUtils from "../../../src/utils/ProfilesUtils";
 import { createIProfile, createISession, createTreeView } from "../../../__mocks__/mockCreators/shared";
 import { createDatasetSessionNode, createDatasetTree } from "../../../__mocks__/mockCreators/datasets";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
+import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 
 async function createGlobalMocks() {
     let newMocks = {
@@ -35,6 +36,8 @@ async function createGlobalMocks() {
 
     Object.defineProperty(globals, "LOG", { value: jest.fn(), configurable: true });
     Object.defineProperty(globals.LOG, "error", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "error", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showOpenDialog", { value: newMocks.showOpenDialog, configurable: true });
     Object.defineProperty(vscode.window, "showInformationMessage", { value: newMocks.showInformationMessage, configurable: true });
     Object.defineProperty(vscode.workspace, "openTextDocument", { value: newMocks.openTextDocument, configurable: true });
@@ -76,6 +79,9 @@ describe("mvsNodeActions", () => {
         };
         return newMocks;
     }
+    afterEach(() => {
+        jest.clearAllMocks();
+    });
     it("should call upload dialog and upload file from session node", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
@@ -149,7 +155,7 @@ describe("mvsNodeActions", () => {
         await dsActions.uploadDialog(node, testTree);
 
         expect(globalMocks.showOpenDialog).toBeCalled();
-        expect(globalMocks.showInformationMessage.mock.calls.map((call) => call[0])).toEqual(["No selection made. Operation cancelled."]);
+        expect(globalMocks.showInformationMessage.mock.calls.map((call) => call[0])).toEqual(["Operation Cancelled"]);
         expect(globalMocks.openTextDocument).not.toBeCalled();
         expect(testTree.refreshElement).not.toBeCalled();
     });
@@ -220,5 +226,32 @@ describe("mvsNodeActions", () => {
         await dsActions.uploadDialog(node, testTree);
 
         expect(errHandlerSpy).toBeCalled();
+    });
+    it("should return error from rejected promise", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+        const testTree = createDatasetTree(blockMocks.sessNode, globalMocks.treeView);
+        const node = new ZoweDatasetNode(
+            "node",
+            vscode.TreeItemCollapsibleState.Collapsed,
+            blockMocks.sessNode,
+            null as any,
+            null as any,
+            null as any,
+            globalMocks.profileOne
+        );
+        testTree.getTreeView.mockReturnValueOnce(createTreeView());
+        const fileUri = { fsPath: "/tmp/foo" };
+        globalMocks.showOpenDialog.mockReturnValueOnce([fileUri]);
+        const mockMvsApi2 = await ZoweExplorerApiRegister.getMvsApi(globalMocks.profileOne);
+        const getMvsApiMock2 = jest.fn();
+        getMvsApiMock2.mockReturnValue(mockMvsApi2);
+        ZoweExplorerApiRegister.getMvsApi = getMvsApiMock2.bind(ZoweExplorerApiRegister);
+        const testError = new Error("putContents failed");
+        jest.spyOn(mockMvsApi2, "putContents").mockRejectedValue(testError);
+        const errHandlerSpy = jest.spyOn(profUtils, "errorHandling").mockImplementation();
+        await dsActions.uploadDialog(node, testTree);
+
+        expect(errHandlerSpy).toBeCalledWith(testError, "sestest");
     });
 });

@@ -23,6 +23,7 @@ import { TsoCommandHandler } from "../../../src/command/TsoCommandHandler";
 import { MvsCommandHandler } from "../../../src/command/MvsCommandHandler";
 import { saveFile } from "../../../src/dataset/actions";
 import { saveUSSFile } from "../../../src/uss/actions";
+import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 import { ZoweSaveQueue } from "../../../src/abstract/ZoweSaveQueue";
 
 describe("Test src/shared/extension", () => {
@@ -197,6 +198,11 @@ describe("Test src/shared/extension", () => {
             Object.defineProperty(globals, "LOG", { value: testGlobals.LOG });
             Object.defineProperty(globals, "DS_DIR", { value: testGlobals.DS_DIR });
             Object.defineProperty(globals, "USS_DIR", { value: testGlobals.USS_DIR });
+            Object.defineProperty(ZoweLogger, "error", { value: jest.fn(), configurable: true });
+            Object.defineProperty(ZoweLogger, "debug", { value: jest.fn(), configurable: true });
+            Object.defineProperty(ZoweLogger, "warn", { value: jest.fn(), configurable: true });
+            Object.defineProperty(ZoweLogger, "info", { value: jest.fn(), configurable: true });
+            Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
             Object.defineProperty(vscode.workspace, "onDidSaveTextDocument", { value: onDidSaveTextDocument });
 
             spyOnSubscriptions(commands);
@@ -265,7 +271,7 @@ describe("Test src/shared/extension", () => {
             await extRefreshCallback();
             expect(spyExecuteCommand).not.toHaveBeenCalled();
             expect(deactivate).toHaveBeenCalled();
-            expect(spyLogError).toHaveBeenCalledWith(testError);
+            expect(ZoweLogger.error).toHaveBeenCalledWith(testError);
             expect(dispose).toHaveBeenCalled();
             expect(activate).toHaveBeenCalled();
         });
