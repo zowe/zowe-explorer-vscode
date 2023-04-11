@@ -277,6 +277,7 @@ export async function getProfileInfo(envTheia: boolean): Promise<imperative.Prof
     const credentialManager = await activateCredentialManagerOverride(credentialManagerMap);
 
     if (credentialManager) {
+        Object.setPrototypeOf(credentialManager.prototype, imperative.AbstractCredentialManager.prototype);
         return new imperative.ProfileInfo("zowe", {
             credMgrOverride: {
                 Manager: credentialManager,
