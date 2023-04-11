@@ -690,6 +690,11 @@
         "category": "Zowe Explorer"
       },
       {
+        "command": "zowe.jobs.pollSpoolFile",
+        "title": "%pollSpoolFile%",
+        "category": "Zowe Explorer"
+      },
+      {
         "command": "zowe.issueTsoCmd",
         "title": "%issueTsoCmd%",
         "category": "Zowe Explorer"
@@ -1227,6 +1232,11 @@
           "when": "view == zowe.jobs.explorer && viewItem =~ /^spool.*/",
           "command": "zowe.jobs.refreshSpool",
           "group": "003_zowe_jobsMainframeInteraction@0"
+        },
+        {
+          "when": "view == zowe.jobs.explorer && viewItem =~ /^spool.*/",
+          "command": "zowe.jobs.pollSpoolFile",
+          "group": "003_zowe_jobsMainframeInteraction@1"
         },
         {
           "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)job.*/",

@@ -17,7 +17,7 @@ import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { Gui, ValidProfileEnum, IZoweTree, IZoweJobTreeNode } from "@zowe/zowe-explorer-api";
 import { Job, Spool } from "./ZoweJobNode";
 import * as nls from "vscode-nls";
-import SpoolProvider, { toUniqueJobFileUri } from "../SpoolProvider";
+import SpoolProvider, { encodeJobFile } from "../SpoolProvider";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { getDefaultUri } from "../shared/utils";
 
@@ -78,7 +78,7 @@ export async function getSpoolContent(session: string, spool: zowe.IJobFile, ref
     const statusMsg = Gui.setStatusBarMessage(localize("jobActions.openSpoolFile", "$(sync~spin) Opening spool file...", this.label as string));
     await profiles.checkCurrentProfile(zosmfProfile);
     if (profiles.validProfile !== ValidProfileEnum.INVALID) {
-        const uri = toUniqueJobFileUri(session, spool)(refreshTimestamp.toString());
+        const uri = encodeJobFile(session, spool);
         try {
             const spoolFile = SpoolProvider.files[uri.path];
             if (spoolFile) {

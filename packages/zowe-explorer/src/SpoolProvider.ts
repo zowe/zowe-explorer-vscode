@@ -73,8 +73,7 @@ export class SpoolFile {
 }
 
 /**
- * @deprecated because of lack of the VSCode built in cache invalidation support
- * Please, use the {@link toUniqueJobFileUri} instead
+ * (use {@link toUniqueJobFileUri} instead to use VSCode's cache invalidation)
  *
  * Encode the information needed to get the Spool content.
  *

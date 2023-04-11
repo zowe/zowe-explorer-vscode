@@ -12,11 +12,11 @@
 import * as vscode from "vscode";
 import * as globals from "../globals";
 import { IJob, imperative } from "@zowe/cli";
-import { Gui, ValidProfileEnum, IZoweTree, IZoweJobTreeNode, PersistenceSchemaEnum, NodeInteraction } from "@zowe/zowe-explorer-api";
+import { Gui, ValidProfileEnum, IZoweTree, IZoweJobTreeNode, PersistenceSchemaEnum, NodeInteraction, PollOptions } from "@zowe/zowe-explorer-api";
 import { FilterItem, errorHandling } from "../utils/ProfilesUtils";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
-import { Job } from "./ZoweJobNode";
+import { Job, Spool } from "./ZoweJobNode";
 import { getAppName, sortTreeItems, jobStringValidator } from "../shared/utils";
 import { ZoweTreeProvider } from "../abstract/ZoweTreeProvider";
 import { getIconByNode } from "../generators/icons";
@@ -25,6 +25,9 @@ import { resetValidationSettings } from "../shared/actions";
 import { SettingsConfig } from "../utils/SettingsConfig";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import * as nls from "vscode-nls";
+import SpoolProvider, { SpoolFile, encodeJobFile, toUniqueJobFileUri } from "../SpoolProvider";
+import { Poller } from "@zowe/zowe-explorer-api/src/utils";
+import { PollDecorator } from "../utils/DecorationProviders";
 
 // Set up localization
 nls.config({
@@ -1029,6 +1032,49 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             this.mSessionNodes.push(node);
             this.mHistory.addSession(profile.name);
         }
+    }
+
+    public async pollData(node: IZoweJobTreeNode): Promise<void> {
+        // TODO: Init quick pick for poll options
+
+        // TODO: Poll all spool files for job if job is selected for polling?
+        if (!contextually.isSpoolFile(node)) {
+            return;
+        }
+
+        const session = node.getSessionNode();
+
+        // Interpret node as spool to get spool data
+        const spoolData = (node as Spool).spool;
+        const encodedUri = encodeJobFile(session.label as string, spoolData);
+
+        if (encodedUri.path in Poller.pollRequests) {
+            // If the uri is already being polled, mark it as ready for removal
+            Poller.pollRequests[encodedUri.path].dispose = true;
+            PollDecorator.updateIcon(encodedUri);
+            return;
+        }
+
+        const fileInEditor = SpoolProvider.files[encodedUri.path];
+
+        // Add spool file to provider if it wasn't previously opened in the editor
+        if (!fileInEditor) {
+            const spoolFile = new SpoolFile(encodedUri, SpoolProvider.onDidChangeEmitter);
+            await spoolFile.fetchContent();
+            SpoolProvider.files[encodedUri.path] = spoolFile;
+        }
+
+        // Pass request function to the poller for continuous updates
+        Poller.addRequest(encodedUri.path, {
+            msInterval: 10000,
+            context: node.label as string,
+            requestFn: async () => {
+                const statusMsg = Gui.setStatusBarMessage(`$(sync~spin) Polling... ${node.label as string}`);
+                await fileInEditor.fetchContent.bind(SpoolProvider.files[encodedUri.path])();
+                statusMsg.dispose();
+            },
+        });
+        PollDecorator.updateIcon(encodedUri);
     }
 }
 

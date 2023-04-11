@@ -131,6 +131,11 @@ export async function initJobsProvider(context: vscode.ExtensionContext): Promis
             jobsProvider.onDidChangeConfiguration(e);
         })
     );
+    context.subscriptions.push(
+        vscode.commands.registerCommand("zowe.jobs.pollSpoolFile", async (node: IZoweJobTreeNode) => {
+            await jobsProvider.pollData(node);
+        })
+    );
 
     initSubscribers(context, jobsProvider);
     return jobsProvider;

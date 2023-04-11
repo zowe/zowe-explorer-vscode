@@ -11,7 +11,7 @@
 
 import * as vscode from "vscode";
 import { IZoweTreeNode } from "./IZoweTreeNode";
-import { PersistenceSchemaEnum } from "../profiles/UserSettings";
+import { PersistenceSchemaEnum, PollOptions } from "../profiles/UserSettings";
 
 /**
  * The base interface for Zowe tree browsers that implement the
@@ -288,4 +288,10 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T> {
      * @param {IZoweTreeNode} sessionNode the session to use
      */
     openItemFromPath?(path: string, sessionNode: IZoweTreeNode);
+    /**
+     * Initializes polling (refresh w/ configurable interval) for the provided node.
+     *
+     * @param {IZoweTreeNode} node the node to poll data for
+     */
+    pollData?(node: IZoweTreeNode, options?: PollOptions): any;
 }
