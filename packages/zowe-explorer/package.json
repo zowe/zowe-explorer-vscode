@@ -690,8 +690,13 @@
         "category": "Zowe Explorer"
       },
       {
-        "command": "zowe.jobs.pollSpoolFile",
-        "title": "%pollSpoolFile%",
+        "command": "zowe.jobs.stopPolling",
+        "title": "%stopPolling%",
+        "category": "Zowe Explorer"
+      },
+      {
+        "command": "zowe.jobs.startPolling",
+        "title": "%startPolling%",
         "category": "Zowe Explorer"
       },
       {
@@ -1234,9 +1239,14 @@
           "group": "003_zowe_jobsMainframeInteraction@0"
         },
         {
-          "when": "view == zowe.jobs.explorer && viewItem =~ /^spool.*/",
-          "command": "zowe.jobs.pollSpoolFile",
+          "when": "view == zowe.jobs.explorer && viewItem =~ /^spool$/",
+          "command": "zowe.jobs.startPolling",
           "group": "003_zowe_jobsMainframeInteraction@1"
+        },
+        {
+          "when": "view == zowe.jobs.explorer && viewItem =~ /^spool_polling.*/",
+          "command": "zowe.jobs.stopPolling",
+          "group": "003_zowe_jobsMainframeInteraction@2"
         },
         {
           "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)job.*/",

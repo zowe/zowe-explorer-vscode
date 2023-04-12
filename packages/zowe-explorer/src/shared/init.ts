@@ -25,6 +25,7 @@ import { saveUSSFile } from "../uss/actions";
 import { promptCredentials, writeOverridesFile } from "../utils/ProfilesUtils";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { ZoweSaveQueue } from "../abstract/ZoweSaveQueue";
+import { spoolFilePollEvent } from "../job/actions";
 
 // Set up localization
 nls.config({
@@ -79,6 +80,22 @@ export function registerCommonCommands(context: vscode.ExtensionContext, provide
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.promptCredentials", async (node: IZoweTreeNode) => {
             await promptCredentials(node);
+        })
+    );
+
+    // "type" event is emitted for key presses in editor
+    context.subscriptions.push(
+        vscode.commands.registerCommand("type", (args) => {
+            if (vscode.window.activeTextEditor && args.text === "\n") {
+                // Notify spool provider for "Enter" key event in open spool files
+                const doc = vscode.window.activeTextEditor.document;
+                if (doc.uri.scheme === "zosspool") {
+                    spoolFilePollEvent(doc);
+                }
+            } else {
+                // Propagate dispatched event back to default type command handler
+                vscode.commands.executeCommand("default:type", args);
+            }
         })
     );
 

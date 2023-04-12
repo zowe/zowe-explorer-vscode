@@ -65,6 +65,7 @@ export const USS_FAV_DIR_CONTEXT = "directory_fav";
 export const JOBS_SESSION_CONTEXT = "server";
 export const JOBS_JOB_CONTEXT = "job";
 export const JOBS_SPOOL_CONTEXT = "spool";
+export const POLL_CONTEXT = CONTEXT_PREFIX + "polling";
 export const VSAM_CONTEXT = "vsam";
 export const INACTIVE_CONTEXT = CONTEXT_PREFIX + "Inactive";
 export const ACTIVE_CONTEXT = CONTEXT_PREFIX + "Active";

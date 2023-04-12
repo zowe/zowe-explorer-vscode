@@ -131,11 +131,11 @@ export async function initJobsProvider(context: vscode.ExtensionContext): Promis
             jobsProvider.onDidChangeConfiguration(e);
         })
     );
-    context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.jobs.pollSpoolFile", async (node: IZoweJobTreeNode) => {
-            await jobsProvider.pollData(node);
-        })
-    );
+    const spoolFileTogglePoll = async (node: IZoweJobTreeNode): Promise<void> => {
+        await jobsProvider.pollData(node);
+    };
+    context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.startPolling", spoolFileTogglePoll));
+    context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.stopPolling", spoolFileTogglePoll));
 
     initSubscribers(context, jobsProvider);
     return jobsProvider;

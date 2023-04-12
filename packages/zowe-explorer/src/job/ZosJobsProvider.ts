@@ -1048,10 +1048,14 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         const spoolData = (node as Spool).spool;
         const encodedUri = encodeJobFile(session.label as string, spoolData);
 
-        if (encodedUri.path in Poller.pollRequests) {
-            // If the uri is already being polled, mark it as ready for removal
+        // If the uri is already being polled, mark it as ready for removal
+        if (encodedUri.path in Poller.pollRequests && contextually.isPolling(node)) {
             Poller.pollRequests[encodedUri.path].dispose = true;
             PollDecorator.updateIcon(encodedUri);
+            node.contextValue = node.contextValue.replace(globals.POLL_CONTEXT, "");
+
+            // Fire "tree changed event" to reflect removal of polling context value
+            this.mOnDidChangeTreeData.fire();
             return;
         }
 
@@ -1059,9 +1063,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
 
         // Add spool file to provider if it wasn't previously opened in the editor
         if (!fileInEditor) {
-            const spoolFile = new SpoolFile(encodedUri, SpoolProvider.onDidChangeEmitter);
-            await spoolFile.fetchContent();
-            SpoolProvider.files[encodedUri.path] = spoolFile;
+            await Gui.showTextDocument(encodedUri);
         }
 
         // Pass request function to the poller for continuous updates
@@ -1069,12 +1071,16 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             msInterval: 10000,
             context: node.label as string,
             requestFn: async () => {
-                const statusMsg = Gui.setStatusBarMessage(`$(sync~spin) Polling... ${node.label as string}`);
+                const statusMsg = Gui.setStatusBarMessage(`$(sync~spin) Polling: ${node.label as string}...`, 500);
                 await fileInEditor.fetchContent.bind(SpoolProvider.files[encodedUri.path])();
                 statusMsg.dispose();
             },
         });
         PollDecorator.updateIcon(encodedUri);
+        node.contextValue += globals.POLL_CONTEXT;
+
+        // Fire "tree changed event" to reflect added polling context value
+        this.mOnDidChangeTreeData.fire();
     }
 }
 

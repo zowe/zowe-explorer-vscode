@@ -102,6 +102,18 @@ export async function getSpoolContent(session: string, spool: zowe.IJobFile, ref
     statusMsg.dispose();
 }
 
+/**
+ * Triggers a refresh for a spool file w/ the provided text document.
+ * @param doc The document to update, associated with the spool file
+ */
+export function spoolFilePollEvent(doc: vscode.TextDocument): void {
+    const statusMsg = Gui.setStatusBarMessage(`$(sync~spin) Polling: ${doc.fileName}`);
+    SpoolProvider.files[doc.uri.path].fetchContent();
+    setTimeout(() => {
+        statusMsg.dispose();
+    }, 250);
+}
+
 export async function getSpoolContentFromMainframe(node: IZoweJobTreeNode): Promise<void> {
     ZoweLogger.trace("job.actions.getSpoolContentFromMainframe called.");
     let spools: zowe.IJobFile[] = [];
