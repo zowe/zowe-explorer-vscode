@@ -107,7 +107,7 @@ export async function getSpoolContent(session: string, spool: zowe.IJobFile, ref
  * @param doc The document to update, associated with the spool file
  */
 export function spoolFilePollEvent(doc: vscode.TextDocument): void {
-    const statusMsg = Gui.setStatusBarMessage(`$(sync~spin) Polling: ${doc.fileName}`);
+    const statusMsg = Gui.setStatusBarMessage(localize("zowe.polling.statusBar", `$(sync~spin) Polling: {0}...`, doc.fileName));
     SpoolProvider.files[doc.uri.path].fetchContent();
     setTimeout(() => {
         statusMsg.dispose();
