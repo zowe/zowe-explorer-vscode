@@ -11,7 +11,7 @@
 
 import * as vscode from "vscode";
 import { IZoweTreeNode } from "./IZoweTreeNode";
-import { PersistenceSchemaEnum, PollOptions } from "../profiles/UserSettings";
+import { PersistenceSchemaEnum } from "../profiles/UserSettings";
 
 /**
  * The base interface for Zowe tree browsers that implement the
@@ -293,5 +293,5 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T> {
      *
      * @param {IZoweTreeNode} node the node to poll data for
      */
-    pollData?(node: IZoweTreeNode, options?: PollOptions): any;
+    pollData?(node: IZoweTreeNode): any;
 }

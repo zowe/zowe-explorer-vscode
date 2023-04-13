@@ -128,6 +128,53 @@ export interface TreeView<T> {
     reveal(element: T, options?: { select?: boolean; focus?: boolean; expand?: boolean | number }): Thenable<void>;
 }
 
+export class FileDecoration {
+    /**
+     * A very short string that represents this decoration.
+     */
+    badge?: string;
+
+    /**
+     * A human-readable tooltip for this decoration.
+     */
+    tooltip?: string;
+
+    /**
+     * The color of this decoration.
+     */
+    color?: any;
+
+    /**
+     * A flag expressing that this decoration should be
+     * propagated to its parents.
+     */
+    propagate?: boolean;
+}
+
+export interface FileDecorationProvider {
+    /**
+     * An optional event to signal that decorations for one or many files have changed.
+     *
+     * *Note* that this event should be used to propagate information about children.
+     *
+     * @see {@link EventEmitter}
+     */
+    onDidChangeFileDecorations?: Event<undefined | Uri | Uri[]>;
+
+    /**
+     * Provide decorations for a given uri.
+     *
+     * *Note* that this function is only called when a file gets rendered in the UI.
+     * This means a decoration from a descendent that propagates upwards must be signaled
+     * to the editor via the {@link FileDecorationProvider.onDidChangeFileDecorations onDidChangeFileDecorations}-event.
+     *
+     * @param uri The uri of the file to provide a decoration for.
+     * @param token A cancellation token.
+     * @returns A decoration or a thenable that resolves to such.
+     */
+    provideFileDecoration(uri: Uri, token: CancellationToken): ProviderResult<FileDecoration>;
+}
+
 export namespace window {
     /**
      * Options for creating a {@link TreeView}
@@ -179,6 +226,10 @@ export namespace window {
     }
 
     export function createTreeView<T>(viewId: string, options: TreeViewOptions<T>) {
+        return this;
+    }
+
+    export function registerFileDecorationProvider(provider: FileDecorationProvider) {
         return this;
     }
 
@@ -518,11 +569,22 @@ export interface TextDocument {
 }
 
 export class Uri {
-    public static parse(value: string, strict?: boolean): Uri {
-        return value;
-    }
     public static file(path: string): Uri {
+        return Uri.parse(path);
+    }
+    public static parse(value: string, strict?: boolean): Uri {
+        const newUri = new Uri();
+        newUri.path = value;
+
+        return newUri;
+    }
+    public with(_fragment: string): Uri {
         return this;
+    }
+
+    public path: string;
+    public toString(): string {
+        return this.path;
     }
 }
 

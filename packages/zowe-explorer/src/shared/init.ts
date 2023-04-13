@@ -69,20 +69,6 @@ export function registerRefreshCommand(
 
 export function registerCommonCommands(context: vscode.ExtensionContext, providers: IZoweProviders): void {
     ZoweLogger.trace("shared.init.registerCommonCommands called.");
-    // Update imperative.json to false only when VS Code setting is set to false
-    context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.updateSecureCredentials", async () => {
-            await globals.setGlobalSecurityValue();
-            writeOverridesFile();
-        })
-    );
-
-    context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.promptCredentials", async (node: IZoweTreeNode) => {
-            await promptCredentials(node);
-        })
-    );
-
     // "type" event is emitted for key presses in editor
     context.subscriptions.push(
         vscode.commands.registerCommand("type", (args) => {
@@ -96,6 +82,20 @@ export function registerCommonCommands(context: vscode.ExtensionContext, provide
                 // Propagate dispatched event back to default type command handler
                 vscode.commands.executeCommand("default:type", args);
             }
+        })
+    );
+
+    // Update imperative.json to false only when VS Code setting is set to false
+    context.subscriptions.push(
+        vscode.commands.registerCommand("zowe.updateSecureCredentials", async () => {
+            await globals.setGlobalSecurityValue();
+            writeOverridesFile();
+        })
+    );
+
+    context.subscriptions.push(
+        vscode.commands.registerCommand("zowe.promptCredentials", async (node: IZoweTreeNode) => {
+            await promptCredentials(node);
         })
     );
 

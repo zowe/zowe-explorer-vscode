@@ -67,11 +67,9 @@ function createGlobalMocks() {
         configurable: true,
     });
     Object.defineProperty(Profiles, "getInstance", { value: jest.fn(), configurable: true });
-    Object.defineProperty(vscode, "Uri", { value: jest.fn(), configurable: true });
-    Object.defineProperty(vscode.Uri, "parse", { value: jest.fn(), configurable: true });
-    Object.defineProperty(vscode.Uri.parse, "with", { value: jest.fn(), configurable: true });
     const executeCommand = jest.fn();
     Object.defineProperty(vscode.commands, "executeCommand", { value: executeCommand, configurable: true });
+    Object.defineProperty(SpoolProvider, "encodeJobFile", { value: jest.fn(), configurable: true });
     Object.defineProperty(SpoolProvider, "toUniqueJobFileUri", { value: jest.fn(), configurable: true });
     Object.defineProperty(ZoweLogger, "error", { value: jest.fn(), configurable: true });
     Object.defineProperty(ZoweLogger, "debug", { value: jest.fn(), configurable: true });
@@ -711,7 +709,7 @@ describe("Jobs Actions Unit Tests - Function getSpoolContent", () => {
         const session = "sessionName";
         const spoolFile = blockMocks.iJobFile;
         const anyTimestamp = Date.now();
-        mocked(SpoolProvider.toUniqueJobFileUri).mockReturnValueOnce(() => blockMocks.mockUri);
+        mocked(SpoolProvider.encodeJobFile).mockReturnValueOnce(blockMocks.mockUri);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
 
         await jobActions.getSpoolContent(session, spoolFile, anyTimestamp);
@@ -735,7 +733,7 @@ describe("Jobs Actions Unit Tests - Function getSpoolContent", () => {
                 };
             }),
         });
-        mocked(SpoolProvider.toUniqueJobFileUri).mockReturnValueOnce(() => blockMocks.mockUri);
+        mocked(SpoolProvider.encodeJobFile).mockReturnValueOnce(blockMocks.mockUri);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
 
         await jobActions.getSpoolContent(session, spoolFile, anyTimestamp);
@@ -765,7 +763,7 @@ describe("Jobs Actions Unit Tests - Function getSpoolContent", () => {
         const spoolFile = blockMocks.iJobFile;
         const anyTimestamp = Date.now();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
-        mocked(SpoolProvider.toUniqueJobFileUri).mockReturnValueOnce(() => blockMocks.mockUri);
+        mocked(SpoolProvider.encodeJobFile).mockReturnValueOnce(blockMocks.mockUri);
         mocked(vscode.window.showTextDocument).mockImplementationOnce(() => {
             throw new Error("Test");
         });

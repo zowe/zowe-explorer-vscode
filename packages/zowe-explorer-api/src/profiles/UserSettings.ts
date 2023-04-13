@@ -17,8 +17,3 @@ export enum PersistenceSchemaEnum {
     USS = "zowe.uss.history",
     Job = "zowe.jobs.history",
 }
-
-export type PollOptions = {
-    msInterval: number;
-    dataType: "text" | "binary" | "record";
-};

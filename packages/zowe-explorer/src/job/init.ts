@@ -126,16 +126,16 @@ export async function initJobsProvider(context: vscode.ExtensionContext): Promis
     );
     context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.ssoLogin", (node: IZoweTreeNode): void => jobsProvider.ssoLogin(node)));
     context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.ssoLogout", (node: IZoweTreeNode): void => jobsProvider.ssoLogout(node)));
-    context.subscriptions.push(
-        vscode.workspace.onDidChangeConfiguration((e) => {
-            jobsProvider.onDidChangeConfiguration(e);
-        })
-    );
     const spoolFileTogglePoll = async (node: IZoweJobTreeNode): Promise<void> => {
         await jobsProvider.pollData(node);
     };
     context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.startPolling", spoolFileTogglePoll));
     context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.stopPolling", spoolFileTogglePoll));
+    context.subscriptions.push(
+        vscode.workspace.onDidChangeConfiguration((e) => {
+            jobsProvider.onDidChangeConfiguration(e);
+        })
+    );
 
     initSubscribers(context, jobsProvider);
     return jobsProvider;

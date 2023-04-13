@@ -346,8 +346,10 @@ export class Spool extends Job {
         this.contextValue = globals.JOBS_SPOOL_CONTEXT;
         const icon = getIconByNode(this);
 
-        // parent of parent is the session; tie resourceUri with TreeItem for file decorator
-        this.resourceUri = encodeJobFile(mParent.getParent().label as string, spool);
+        // parent of parent should be the session; tie resourceUri with TreeItem for file decorator
+        if (mParent && mParent.getParent()) {
+            this.resourceUri = encodeJobFile(mParent.getParent().label as string, spool);
+        }
         if (icon) {
             this.iconPath = icon.path;
         }
