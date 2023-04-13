@@ -83,7 +83,7 @@ export async function getSpoolContent(session: string, spool: zowe.IJobFile, ref
             const spoolFile = SpoolProvider.files[uri.path];
             if (spoolFile) {
                 // Fetch any changes to the spool file if it exists in the SpoolProvider
-                spoolFile.fetchContent();
+                await spoolFile.fetchContent();
             }
             await Gui.showTextDocument(uri, { preview: false });
         } catch (error) {
