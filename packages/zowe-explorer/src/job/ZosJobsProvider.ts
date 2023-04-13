@@ -113,6 +113,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
     public mSessionNodes: IZoweJobTreeNode[] = [];
     public mFavorites: IZoweJobTreeNode[] = [];
     public lastOpened: NodeInteraction = {};
+    private pollInterval: number = SettingsConfig.getDirectValue<number>("zowe.jobs.pollInterval");
     public searchByQuery = new FilterItem({
         text: globals.plusSign + localize("zosJobsProvider.option.prompt.createId", "Create job search filter"),
         menuType: globals.JobPickerTypes.QuerySearch,
@@ -1034,10 +1035,40 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         }
     }
 
-    public async pollData(node: IZoweJobTreeNode): Promise<void> {
-        // TODO: Init quick pick for poll options
+    /**
+     * Show poll options before the user starts polling.
+     * @returns true if the user started polling, false if they dismiss the dialog
+     */
+    private async showPollOptions(): Promise<boolean> {
+        const pollValue = this.pollInterval === 0 ? globals.DEFAULT_POLL_INTERVAL : this.pollInterval;
+        const selection = await Gui.showQuickPick([
+            new FilterItem({
+                text: "Poll interval (in ms)",
+                description: String(pollValue),
+            }),
+            new FilterItem({
+                text: "+ Start Polling",
+            }),
+        ]);
 
-        // TODO: Poll all spool files for job if job is selected for polling?
+        if (selection.label === "Poll interval (in ms)") {
+            const intervalEntry = await Gui.showInputBox({
+                title: "Poll interval (in ms)",
+                value: String(pollValue),
+                validateInput: (value) => (!isNaN(Number(value)) ? undefined : value),
+            });
+            if (intervalEntry) {
+                this.pollInterval = Number(intervalEntry);
+                return this.showPollOptions();
+            }
+        } else if (selection.label === "+ Start Polling") {
+            return true;
+        }
+
+        return false;
+    }
+
+    public async pollData(node: IZoweJobTreeNode): Promise<void> {
         if (!contextually.isSpoolFile(node)) {
             return;
         }
@@ -1059,19 +1090,30 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             return;
         }
 
-        const fileInEditor = SpoolProvider.files[encodedUri.path];
-
         // Add spool file to provider if it wasn't previously opened in the editor
+        const fileInEditor = SpoolProvider.files[encodedUri.path];
         if (!fileInEditor) {
             await Gui.showTextDocument(encodedUri);
         }
 
+        // Always prompt the user for a poll interval if they don't have one defined
+        if (SettingsConfig.getDirectValue<number>("zowe.jobs.pollInterval") === 0) {
+            const submitted = await this.showPollOptions();
+
+            if (!submitted) {
+                return;
+            }
+        }
+
         // Pass request function to the poller for continuous updates
         Poller.addRequest(encodedUri.path, {
-            msInterval: 10000,
+            msInterval: this.pollInterval,
             context: node.label as string,
             requestFn: async () => {
-                const statusMsg = Gui.setStatusBarMessage(`$(sync~spin) Polling: ${node.label as string}...`, 500);
+                const statusMsg = Gui.setStatusBarMessage(
+                    localize("zowe.polling.statusBar", `$(sync~spin) Polling: {0}...`, node.label as string),
+                    globals.STATUS_BAR_TIMEOUT_MS
+                );
                 await fileInEditor.fetchContent.bind(SpoolProvider.files[encodedUri.path])();
                 statusMsg.dispose();
             },

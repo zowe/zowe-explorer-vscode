@@ -1817,6 +1817,11 @@
           "type": "boolean",
           "description": "%zowe.cliLoggerSetting.presented%",
           "scope": "application"
+        },
+        "zowe.jobs.pollInterval": {
+          "type": "integer",
+          "description": "%zowe.pollInterval.info%",
+          "scope": "window"
         }
       }
     },
