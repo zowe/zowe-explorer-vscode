@@ -17,7 +17,7 @@ import * as globals from "../../../src/globals";
 import * as utils from "../../../src/utils/ProfilesUtils";
 import { Gui, IZoweJobTreeNode, ProfilesCache, ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import { createIJobFile, createIJobObject, createJobFavoritesNode, createJobSessionNode, MockJobDetail } from "../../../__mocks__/mockCreators/jobs";
-import { Job } from "../../../src/job/ZoweJobNode";
+import { Job, Spool } from "../../../src/job/ZoweJobNode";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { Profiles } from "../../../src/Profiles";
 import {
@@ -33,6 +33,9 @@ import { createJesApi } from "../../../__mocks__/mockCreators/api";
 import * as sessUtils from "../../../src/utils/SessionUtils";
 import { jobStringValidator } from "../../../src/shared/utils";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
+import { Poller } from "@zowe/zowe-explorer-api/src/utils";
+import { SettingsConfig } from "../../../src/utils/SettingsConfig";
+import * as contextually from "../../../src/shared/context";
 
 async function createGlobalMocks() {
     const globalMocks = {
@@ -103,6 +106,14 @@ async function createGlobalMocks() {
     });
     Object.defineProperty(vscode.window, "showWarningMessage", {
         value: globalMocks.mockShowWarningMessage,
+        configurable: true,
+    });
+    Object.defineProperty(vscode.window, "showTextDocument", {
+        value: jest.fn().mockImplementation(),
+        configurable: true,
+    });
+    Object.defineProperty(Poller, "poll", {
+        value: jest.fn(),
         configurable: true,
     });
     Object.defineProperty(globalMocks.mockGetJobs, "getJob", { value: globalMocks.mockGetJob, configurable: true });
@@ -834,6 +845,55 @@ describe("ZosJobsProvider unit tests - Function getPopulatedPickerArray", () => 
             },
         ];
         expect(JSON.stringify(actualPickerObj)).toEqual(JSON.stringify(expectedObj));
+    });
+});
+
+describe("ZosJobsProvider unit tests - function pollData", () => {
+    it("", async () => {
+        const globalMocks = await createGlobalMocks();
+        const testJobNode = new Job(
+            "SOME(JOBNODE) - Input",
+            vscode.TreeItemCollapsibleState.Collapsed,
+            globalMocks.testJobsProvider.mSessionNodes[1],
+            globalMocks.testJobsProvider.mSessionNodes[1].getSession(),
+            globalMocks.testIJob,
+            globalMocks.testProfile
+        );
+        const spoolNode = new Spool(
+            "exampleSpool",
+            vscode.TreeItemCollapsibleState.Collapsed,
+            testJobNode,
+            globalMocks.testSession,
+            globalMocks.mockIJobFile,
+            globalMocks.testIJob,
+            testJobNode
+        );
+        // Call pollData in typical context where default poll interval is already defined
+        globalMocks.testJobsProvider.pollData(spoolNode);
+
+        jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(0);
+        Poller.pollRequests = {};
+        const quickPickSpy = jest.spyOn(Gui, "showQuickPick").mockResolvedValueOnce({ label: "Poll interval (in ms)" } as utils.FilterItem);
+        jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("5000");
+        quickPickSpy.mockResolvedValueOnce({ label: "+ Start Polling" } as utils.FilterItem);
+        // Call pollData in context where user provides poll options in quick pick
+        globalMocks.testJobsProvider.pollData(spoolNode);
+
+        jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(0);
+        quickPickSpy.mockResolvedValueOnce(undefined);
+        // Call pollData in context where user provides dismisses quick pick options and cancels polling
+        globalMocks.testJobsProvider.pollData(spoolNode);
+
+        spoolNode.contextValue += globals.POLL_CONTEXT;
+        Object.defineProperty(contextually, "isPolling", {
+            value: (_node) => true,
+            configurable: true,
+        });
+        // Call pollData again to mimic turning polling off
+        globalMocks.testJobsProvider.pollData(spoolNode);
+
+        // Call pollData with invalid node to verify spool file context check
+        globalMocks.testJobsProvider.pollData(testJobNode);
     });
 });
 

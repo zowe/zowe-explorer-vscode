@@ -1051,7 +1051,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             }),
         ]);
 
-        if (selection.label === "Poll interval (in ms)") {
+        if (selection?.label === "Poll interval (in ms)") {
             const intervalEntry = await Gui.showInputBox({
                 title: "Poll interval (in ms)",
                 value: String(pollValue),
@@ -1061,7 +1061,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                 this.pollInterval = Number(intervalEntry);
                 return this.showPollOptions();
             }
-        } else if (selection.label === "+ Start Polling") {
+        } else if (selection?.label === "+ Start Polling") {
             this.pollInterval = pollValue;
             return true;
         }
