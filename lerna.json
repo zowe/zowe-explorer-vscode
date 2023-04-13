@@ -1,0 +1,10 @@
+{
+  "version": "1.22.3",
+  "command": {
+    "version": {
+      "forcePublish": true,
+      "private": true
+    }
+  },
+  "useWorkspaces": true
+}
