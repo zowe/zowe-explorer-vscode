@@ -19,7 +19,7 @@ import { CoreUtils } from "@zowe/zos-ftp-for-zowe-cli";
 import { imperative } from "@zowe/cli";
 import { FtpSession } from "./ftpSession";
 
-export const ZoweLogger = new IZoweLogger("Zowe Explorer FTP Extension", path.join(__dirname, "..", ".."));
+export const ZoweLogger = new IZoweLogger("Zowe Explorer FTP Extension", ZoweVsCodeExtension.customLoggingPath ?? path.join(__dirname, "..", ".."));
 
 export function activate(_context: vscode.ExtensionContext): void {
     void registerFtpApis();

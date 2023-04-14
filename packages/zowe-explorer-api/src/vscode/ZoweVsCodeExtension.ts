@@ -26,6 +26,13 @@ export class ZoweVsCodeExtension {
     }
 
     /**
+     * Get custom logging path if one is defined in VS Code settings.
+     */
+    public static get customLoggingPath(): string | undefined {
+        return vscode.workspace.getConfiguration("zowe").get("files.logsFolder.path") || undefined;
+    }
+
+    /**
      * @param {string} [requiredVersion] Optional semver string specifying the minimal required version
      *           of Zowe Explorer that needs to be installed for the API to be usable to the client.
      * @returns an initialized instance `ZoweExplorerApi.IApiRegisterClient` that extenders can use
