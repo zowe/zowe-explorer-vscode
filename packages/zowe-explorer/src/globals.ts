@@ -33,7 +33,7 @@ export let ZOWE_TMP_FOLDER: string;
 export let USS_DIR: string;
 export let DS_DIR: string;
 export let CONFIG_PATH; // set during activate
-export let ISTHEIA: boolean = false; // set during activate
+export const ISTHEIA: boolean = false; // set during activate
 export let LOG: imperative.Logger;
 export const COMMAND_COUNT = 102;
 export const MAX_SEARCH_HISTORY = 5;
@@ -334,13 +334,21 @@ export function setSavedProfileContents(value: Uint8Array): void {
     SAVED_PROFILE_CONTENTS = value;
 }
 
-export async function setGlobalSecurityValue(): Promise<void> {
+export async function setGlobalSecurityValue(credentialManager?: string): Promise<void> {
+    const settingEnabled: boolean = SettingsConfig.getDirectValue(this.SETTINGS_SECURE_CREDENTIALS_ENABLED);
+    if (settingEnabled && credentialManager) {
+        PROFILE_SECURITY = credentialManager;
+        await SettingsConfig.setDirectValue(this.SETTINGS_SECURE_CREDENTIALS_ENABLED, true, vscode.ConfigurationTarget.Global);
+        ZoweLogger.info(
+            localize("globals.setGlobalSecurityValue.customSecured", "Zowe explorer profiles are secure with custom credential manager.")
+        );
+        return;
+    }
     if (ISTHEIA) {
         PROFILE_SECURITY = false;
         await SettingsConfig.setDirectValue(this.SETTINGS_SECURE_CREDENTIALS_ENABLED, false, vscode.ConfigurationTarget.Global);
         return;
     }
-    const settingEnabled: boolean = SettingsConfig.getDirectValue(this.SETTINGS_SECURE_CREDENTIALS_ENABLED);
     if (!settingEnabled) {
         PROFILE_SECURITY = false;
         ZoweLogger.info(localize("globals.setGlobalSecurityValue.unsecured", "Zowe explorer profiles are not secured."));

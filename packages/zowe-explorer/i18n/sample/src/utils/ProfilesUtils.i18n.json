@@ -5,6 +5,8 @@
   "errorHandling.authentication.login": "Log in to Authentication Service",
   "errorHandling.checkCredentials.button": "Check Credentials",
   "errorHandling.checkCredentials.cancelled": "Operation Cancelled",
+  "activateCredentialManagerOverride.failedToActivate": "Custom credential manager failed to activate",
+  "ProfilesUtils.getProfileInfo.usingDefault": "No custom credential managers found, using the default instead.",
   "getProfile.notTreeItem": "Tree Item is not a Zowe Explorer item.",
   "zowe.promptCredentials.notSupported": "\"Update Credentials\" operation not supported when \"autoStore\" is false",
   "createNewConnection.option.prompt.profileName.placeholder": "Connection Name",

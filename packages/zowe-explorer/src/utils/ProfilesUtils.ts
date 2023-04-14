@@ -230,61 +230,60 @@ export function setSession(node: IZoweTreeNode, combinedSessionProfile: imperati
     }
 }
 
-export function getCredentialManagerOverride(): string | undefined {
-    let fd: number;
-    let fileContent: string;
-    const settingsFile = path.join(getZoweDir(), "settings", "imperative.json");
-
-    try {
-        fd = fs.openSync(settingsFile, "r+");
-        fileContent = fs.readFileSync(fd, "utf-8");
-    } catch {
-        return;
-    }
-
-    try {
-        let settings: any;
+export function getCredentialManagerOverride(): imperative.ICredentialManagerNameMap | undefined {
+    ZoweLogger.trace("ProfilesUtils.getCredentialManagerOverride called.");
+    const knownCredentialManagers = imperative.CredentialManagerOverride.getKnownCredMgrs();
+    const credentialManager = knownCredentialManagers.find((knownCredentialManager) => {
         try {
-            settings = JSON.parse(fileContent);
+            return vscode.extensions.getExtension(knownCredentialManager.credMgrZEName);
         } catch (err) {
-            if (err instanceof Error) {
-                throw new Error(localize("writeOverridesFile.jsonParseError", "Failed to parse JSON file {0}:", settingsFile) + " " + err.message);
-            }
+            return false;
         }
-        if (settings && settings.overrides && settings.overrides.CredentialManager) {
-            return settings.overrides.CredentialManager as string;
-        }
+    });
+    if (!credentialManager) {
         return undefined;
-    } finally {
-        fs.closeSync(fd);
     }
+    return imperative.CredentialManagerOverride.getCredMgrInfoByDisplayName(credentialManager.credMgrDisplayName);
 }
 
 export async function activateCredentialManagerOverride(
-    credentialManagerMap: imperative.ICredentialManagerNameMap
+    credentialManagerExtension: vscode.Extension<any>
 ): Promise<imperative.ICredentialManagerConstructor | undefined> {
-    const extension = vscode.extensions.getExtension(credentialManagerMap.credMgrZEName);
-    const exports = await extension.activate();
-    if (extension.isActive && exports) {
-        return extension.exports as imperative.ICredentialManagerConstructor;
+    try {
+        ZoweLogger.trace("ProfilesUtils.activateCredentialManagerOverride called.");
+        const exports = await credentialManagerExtension.activate();
+        if (credentialManagerExtension.isActive && exports) {
+            return credentialManagerExtension.exports as imperative.ICredentialManagerConstructor;
+        }
+        return undefined;
+    } catch (err) {
+        throw new Error(localize("activateCredentialManagerOverride.failedToActivate", "Custom credential manager failed to activate"));
     }
-    return undefined;
 }
 
 export async function getProfileInfo(envTheia: boolean): Promise<imperative.ProfileInfo> {
     ZoweLogger.trace("ProfilesUtils.getProfileInfo called.");
-    const credentialManagerMap = imperative.CredentialManagerOverride.getCredMgrInfoByDisplayName(getCredentialManagerOverride());
-    const credentialManager = await activateCredentialManagerOverride(credentialManagerMap);
 
-    if (credentialManager) {
-        Object.setPrototypeOf(credentialManager.prototype, imperative.AbstractCredentialManager.prototype);
-        return new imperative.ProfileInfo("zowe", {
-            credMgrOverride: {
-                Manager: credentialManager,
-                service: credentialManagerMap.credMgrDisplayName,
-            },
-        });
+    const credentialManagerMap = getCredentialManagerOverride();
+    const customCredentialManagerExtension = vscode.extensions.getExtension(credentialManagerMap?.credMgrZEName ?? "");
+    if (credentialManagerMap && customCredentialManagerExtension) {
+        const credentialManager = await activateCredentialManagerOverride(customCredentialManagerExtension);
+        if (credentialManager) {
+            Object.setPrototypeOf(credentialManager.prototype, imperative.AbstractCredentialManager.prototype);
+            await globals.setGlobalSecurityValue(credentialManagerMap.credMgrDisplayName);
+            imperative.CredentialManagerOverride.recordCredMgrInConfig(credentialManagerMap.credMgrDisplayName);
+            return new imperative.ProfileInfo("zowe", {
+                credMgrOverride: {
+                    Manager: credentialManager,
+                    service: credentialManagerMap.credMgrDisplayName,
+                },
+            });
+        }
     }
+
+    ZoweLogger.trace(localize("ProfilesUtils.getProfileInfo.usingDefault", "No custom credential managers found, using the default instead."));
+    await globals.setGlobalSecurityValue(globals.ZOWE_CLI_SCM);
+    imperative.CredentialManagerOverride.recordCredMgrInConfig(globals.ZOWE_CLI_SCM);
     return new imperative.ProfileInfo("zowe", {
         requireKeytar: () => getSecurityModules("keytar", envTheia),
     });
@@ -367,7 +366,8 @@ export async function initializeZoweFolder(): Promise<void> {
     ZoweLogger.trace("ProfilesUtils.initializeZoweFolder called.");
     // ensure the Secure Credentials Enabled value is read
     // set globals.PROFILE_SECURITY value accordingly
-    // await globals.setGlobalSecurityValue();
+    const credentialManagerMap = getCredentialManagerOverride();
+    await globals.setGlobalSecurityValue(credentialManagerMap?.credMgrDisplayName ?? globals.ZOWE_CLI_SCM);
     // Ensure that ~/.zowe folder exists
     // Ensure that the ~/.zowe/settings/imperative.json exists
     // TODO: update code below once this imperative issue is resolved.
@@ -380,9 +380,9 @@ export async function initializeZoweFolder(): Promise<void> {
     if (!fs.existsSync(settingsPath)) {
         fs.mkdirSync(settingsPath);
     }
-    // if (!fs.existsSync(path.join(settingsPath, "imperative.json"))) {
-    //     writeOverridesFile();
-    // }
+    if (!fs.existsSync(path.join(settingsPath, "imperative.json"))) {
+        writeOverridesFile();
+    }
     // If not using team config, ensure that the ~/.zowe/profiles directory
     // exists with appropriate types within
     if (!imperative.ImperativeConfig.instance.config?.exists) {
