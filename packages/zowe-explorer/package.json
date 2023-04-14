@@ -1696,6 +1696,12 @@
           "description": "%zowe.ds.history%",
           "scope": "application"
         },
+        "zowe.files.logsFolder.path": {
+          "type": "string",
+          "default": "",
+          "description": "%zowe.files.logsFolder.path%",
+          "scope": "window"
+        },
         "zowe.files.temporaryDownloadsFolder.path": {
           "type": "string",
           "default": "",

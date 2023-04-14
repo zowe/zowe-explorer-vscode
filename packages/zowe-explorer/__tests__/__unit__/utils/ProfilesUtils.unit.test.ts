@@ -17,6 +17,7 @@ import * as profileUtils from "../../../src/utils/ProfilesUtils";
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
 import { Profiles } from "../../../src/Profiles";
+import { SettingsConfig } from "../../../src/utils/SettingsConfig";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 
 jest.mock("fs");
@@ -35,6 +36,7 @@ describe("ProfilesUtils unit tests", () => {
             mockWriteFileSync: jest.fn(),
             mockOpenSync: jest.fn().mockReturnValue(process.stdout.fd),
             mockMkdirSync: jest.fn(),
+            mockGetDirectValue: jest.fn(),
             mockFileRead: { overrides: { CredentialManager: "@zowe/cli" } },
             zoweDir: path.normalize("__tests__/.zowe/settings/imperative.json"),
             fileHandle: process.stdout.fd,
@@ -45,9 +47,10 @@ describe("ProfilesUtils unit tests", () => {
         Object.defineProperty(fs, "openSync", { value: newMocks.mockOpenSync, configurable: true });
         Object.defineProperty(fs, "mkdirSync", { value: newMocks.mockMkdirSync, configurable: true });
         Object.defineProperty(Gui, "errorMessage", { value: jest.fn(), configurable: true });
-        Object.defineProperty(globals, "setGlobalSecurityValue", { value: jest.fn(), configurable: true });
+        Object.defineProperty(SettingsConfig, "getDirectValue", { value: newMocks.mockGetDirectValue, configurable: true });
         Object.defineProperty(globals, "LOG", { value: jest.fn(), configurable: true });
         Object.defineProperty(globals.LOG, "error", { value: jest.fn(), configurable: true });
+        Object.defineProperty(globals, "PROFILE_SECURITY", { value: globals.ZOWE_CLI_SCM, configurable: true });
         Object.defineProperty(ZoweLogger, "error", { value: jest.fn(), configurable: true });
         Object.defineProperty(ZoweLogger, "debug", { value: jest.fn(), configurable: true });
         Object.defineProperty(ZoweLogger, "warn", { value: jest.fn(), configurable: true });
@@ -308,16 +311,20 @@ describe("ProfilesUtils unit tests", () => {
     describe("initializeZoweFolder", () => {
         it("should create directories and files that do not exist", async () => {
             const blockMocks = createBlockMocks();
+            blockMocks.mockGetDirectValue.mockReturnValue(true);
             blockMocks.mockExistsSync.mockReturnValue(false);
             await profileUtils.initializeZoweFolder();
+            expect(globals.PROFILE_SECURITY).toBe(globals.ZOWE_CLI_SCM);
             expect(blockMocks.mockMkdirSync).toHaveBeenCalledTimes(2);
             expect(blockMocks.mockWriteFileSync).toHaveBeenCalledTimes(1);
         });
 
         it("should skip creating directories and files that already exist", async () => {
             const blockMocks = createBlockMocks();
+            blockMocks.mockGetDirectValue.mockReturnValue(false);
             blockMocks.mockExistsSync.mockReturnValue(true);
             await profileUtils.initializeZoweFolder();
+            expect(globals.PROFILE_SECURITY).toBe(false);
             expect(blockMocks.mockMkdirSync).toHaveBeenCalledTimes(0);
             expect(blockMocks.mockWriteFileSync).toHaveBeenCalledTimes(0);
         });
