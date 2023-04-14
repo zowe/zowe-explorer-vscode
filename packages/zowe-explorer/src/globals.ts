@@ -352,7 +352,6 @@ export async function setGlobalSecurityValue(credentialManager?: string): Promis
         await SettingsConfig.setDirectValue(SETTINGS_SECURE_CREDENTIALS_ENABLED, false, vscode.ConfigurationTarget.Global);
         return;
     }
-    const settingEnabled: boolean = SettingsConfig.getDirectValue(SETTINGS_SECURE_CREDENTIALS_ENABLED);
     if (!settingEnabled) {
         PROFILE_SECURITY = false;
         ZoweLogger.info(localize("globals.setGlobalSecurityValue.unsecured", "Zowe explorer profiles are not secured."));
