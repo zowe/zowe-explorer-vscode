@@ -174,7 +174,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             if (finalResponse.length === 0) {
                 return (element.children = [
                     new ZoweDatasetNode(
-                        localize("getChildren.noDataset", "No datasets found"),
+                        localize("getChildren.noDataset", "No data sets found"),
                         vscode.TreeItemCollapsibleState.None,
                         element,
                         null,
@@ -997,7 +997,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 for (const child of response) {
                     for (const item of dsSets) {
                         const label = child.label as string;
-                        if (item.member && label !== "No datasets found") {
+                        if (item.member && label !== "No data sets found") {
                             const dsn = item.dsn.split(".");
                             const name = label.split(".");
                             let index = 0;

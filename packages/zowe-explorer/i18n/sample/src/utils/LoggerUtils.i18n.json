@@ -1,5 +1,5 @@
 {
-  "initialize.log.error": "Error encountered while activating and initializing logger! ",
+  "initialize.log.error": "Error encountered while activating and initializing logger",
   "zoweExplorer.outputchannel.title": "Zowe Explorer",
   "initialize.log.info": "Initialized logger for Zowe Explorer",
   "initialize.log.location": "This log file can be found at {0}",

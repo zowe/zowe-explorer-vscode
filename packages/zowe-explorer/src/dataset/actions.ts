@@ -828,7 +828,7 @@ export async function submitJcl(datasetProvider: api.IZoweTree<api.IZoweDatasetT
         return;
     }
     const doc = vscode.window.activeTextEditor.document;
-    ZoweLogger.debug(localize("submitJcl.submitting", "Submitting JCL in document {0}", doc?.fileName));
+    ZoweLogger.debug(localize("submitJcl.submitting", "Submitting JCL in document {0}", doc.fileName));
     // get session name
     const sessionregex = /\[(.*)(\])(?!.*\])/g;
     const regExp = sessionregex.exec(doc.fileName);

@@ -10,6 +10,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Added an output channel, `Zowe Explorer`, for logging within VS Code's Output view. The log level is set by the new Zowe Explorer setting, `zowe.logger`.
 - Opening a dialog for Upload or Download of files will now open at the project level directory or the user's home directory if no project is opened. [#2203](https://github.com/zowe/vscode-extension-for-zowe/issues/2203)
 - Updated linter rules and addressed linter errors throughout the codebase. [#2184](https://github.com/zowe/vscode-extension-for-zowe/issues/2184)
+- Added a new setting `zowe.files.logsFolder.path` that can be used to override Zowe Explorer logs folder if default location is read-only. [#2186](https://github.com/zowe/vscode-extension-for-zowe/issues/2186)
 
 ### Bug fixes
 
@@ -19,6 +20,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed z/OSMF profiles issue with Data Sets and Jobs with special characters in the names. [#2175](https://github.com/zowe/vscode-extension-for-zowe/issues/2175)
 - Fixed redundant text in error messages that included the same error details twice.
 - Fixed issue where refreshing views collapsed the respective trees. [#2215](https://github.com/zowe/vscode-extension-for-zowe/issues/2215)
+- Fixed error message when no data sets found that match pattern.
 
 ## `2.7.0`
 
