@@ -43,9 +43,9 @@ export async function refreshAll(treeProvider: IZoweTree<IZoweTreeNode>): Promis
                 returnIconState(sessNode);
                 syncSessionNode(Profiles.getInstance())((profileValue) => ZoweExplorerApiRegister.getCommonApi(profileValue).getSession())(sessNode);
             }
-            treeProvider.refresh();
         } else {
             await removeSession(treeProvider, sessNode.label.toString().trim());
         }
     }
+    treeProvider.refresh();
 }
