@@ -113,6 +113,11 @@
         "key": "ctrl+v",
         "mac": "cmd+v",
         "when": "focusedView == zowe.ds.explorer && !listSupportsMultiselect"
+      },
+      {
+        "command": "zowe.manualPoll",
+        "key": "enter",
+        "when": "editorIsOpen"
       }
     ],
     "commands": [
@@ -731,6 +736,11 @@
       {
         "command": "zowe.jobs.refreshSpool",
         "title": "%jobs.refreshSpool%",
+        "category": "Zowe Explorer"
+      },
+      {
+        "command": "zowe.manualPoll",
+        "title": "%manualPoll%",
         "category": "Zowe Explorer"
       }
     ],

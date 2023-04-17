@@ -47,7 +47,7 @@ describe("Test src/shared/extension", () => {
         };
         const commands: IJestIt[] = [
             {
-                name: "type",
+                name: "zowe.manualPoll",
                 mock: [],
             },
             {

@@ -14,7 +14,7 @@ import * as vscode from "vscode";
 import * as refreshActions from "./refresh";
 import * as nls from "vscode-nls";
 import * as sharedActions from "./actions";
-import { IZoweTreeNode, IZoweTree, getZoweDir } from "@zowe/zowe-explorer-api";
+import { getZoweDir, IZoweTree, IZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { Profiles } from "../Profiles";
 import { hideTempFolder, moveTempFolder } from "../utils/TempFolder";
@@ -70,18 +70,14 @@ export function registerRefreshCommand(
 
 export function registerCommonCommands(context: vscode.ExtensionContext, providers: IZoweProviders): void {
     ZoweLogger.trace("shared.init.registerCommonCommands called.");
-    // "type" event is emitted for key presses in editor
     context.subscriptions.push(
-        vscode.commands.registerCommand("type", (args) => {
-            if (vscode.window.activeTextEditor && args.text === "\n") {
-                // Notify spool provider for "Enter" key event in open spool files
+        vscode.commands.registerCommand("zowe.manualPoll", (_args) => {
+            if (vscode.window.activeTextEditor) {
+                // Notify spool provider for "manual poll" key event in open spool files
                 const doc = vscode.window.activeTextEditor.document;
                 if (doc.uri.scheme === "zosspool") {
                     spoolFilePollEvent(doc);
                 }
-            } else {
-                // Propagate dispatched event back to default type command handler
-                vscode.commands.executeCommand("default:type", args);
             }
         })
     );

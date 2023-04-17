@@ -233,7 +233,7 @@ async function createGlobalMocks() {
             "zowe.jobs.ssoLogout",
             "zowe.jobs.startPolling",
             "zowe.jobs.stopPolling",
-            "type",
+            "zowe.manualPoll",
             "zowe.updateSecureCredentials",
             "zowe.promptCredentials",
             "zowe.openRecentMember",
