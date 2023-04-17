@@ -30,7 +30,7 @@ import {
 } from "@zowe/zowe-explorer-api";
 import { Profiles } from "./Profiles";
 import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
-import { getProfileInfo, getProfile, errorHandling } from "./utils/ProfilesUtils";
+import { getProfile, ProfilesUtils } from "./utils/ProfilesUtils";
 import { ZoweLogger } from "./utils/LoggerUtils";
 
 // Set up localization
@@ -53,11 +53,6 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
      * @param errorDetails Details of the error (to be parsed for config name and path)
      */
     public static showZoweConfigError(errorDetails: string): void {
-        if (errorDetails.includes("imperative.json")) {
-            // Handle errors parsing Imperative overrides file separately from errors in config
-            errorHandling(errorDetails);
-            return;
-        }
         Gui.errorMessage(
             localize("initialize.profiles.error", 'Error encountered when loading your Zowe config. Click "Show Config" for more details.'),
             { items: ["Show Config"] }
@@ -170,7 +165,7 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
          */
         let usingTeamConfig: boolean;
         try {
-            const mProfileInfo = await getProfileInfo(globals.ISTHEIA);
+            const mProfileInfo = ProfilesUtils.getProfileInfo(globals.ISTHEIA);
             if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders[0]) {
                 const rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
                 await mProfileInfo.readProfilesFromDisk({ homeDir: zoweDir, projectDir: getFullPath(rootPath) });
