@@ -229,9 +229,10 @@ if (zoweExplorerApi) {
       },
     ]
   */
-}
+
   await zoweExplorerApi.getExplorerExtenderApi().initForZowe("zftp", meta);
   await zoweExplorerApi.getExplorerExtenderApi().reloadProfiles();
+}
 ```
 
 The FTP Zowe Explorer extension provides examples for providing a data provider for the FTP protocol. The extension provides data providers for USS, MVS, as well as JES. There are three modules in the source code that implement the required operations of the Zowe Explorer API for each view in the `packages/zowe-explorer-ftp-extension/src` folder:
