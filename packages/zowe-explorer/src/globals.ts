@@ -78,6 +78,7 @@ export const SETTINGS_VERSION = "zowe.settings.version";
 export const SETTINGS_TEMP_FOLDER_PATH = "zowe.files.temporaryDownloadsFolder.path";
 export const SETTINGS_TEMP_FOLDER_CLEANUP = "zowe.files.temporaryDownloadsFolder.cleanup";
 export const SETTINGS_TEMP_FOLDER_HIDE = "zowe.files.temporaryDownloadsFolder.hide";
+export const SETTINGS_LOGS_FOLDER_PATH = "zowe.files.logsFolder.path";
 export const SETTINGS_DS_DEFAULT_BINARY = "zowe.ds.default.binary";
 export const SETTINGS_DS_DEFAULT_C = "zowe.ds.default.c";
 export const SETTINGS_DS_DEFAULT_CLASSIC = "zowe.ds.default.classic";
@@ -309,18 +310,20 @@ export function setConfigPath(configPath: string | undefined): void {
 
 /**
  * Initializes Imperative Logger
- * @param context The extension context
+ * @param logsPath File path for logs folder defined in preferences
  */
-export function initLogger(context: vscode.ExtensionContext): string {
-    for (const appenderName of Object.keys(loggerConfig.log4jsConfig.appenders)) {
-        loggerConfig.log4jsConfig.appenders[appenderName].filename = path.join(
-            context.extensionPath,
-            loggerConfig.log4jsConfig.appenders[appenderName].filename
+export function initLogger(logsPath: string): void {
+    const zeLogLevel = ZoweLogger.getLogSetting();
+    const loggerConfigCopy = JSON.parse(JSON.stringify(loggerConfig));
+    for (const appenderName of Object.keys(loggerConfigCopy.log4jsConfig.appenders)) {
+        loggerConfigCopy.log4jsConfig.appenders[appenderName].filename = path.join(
+            logsPath,
+            loggerConfigCopy.log4jsConfig.appenders[appenderName].filename
         );
+        loggerConfigCopy.log4jsConfig.categories[appenderName].level = zeLogLevel;
     }
-    imperative.Logger.initLogger(loggerConfig);
+    imperative.Logger.initLogger(loggerConfigCopy);
     LOG = imperative.Logger.getAppLogger();
-    return loggerConfig.log4jsConfig.appenders.app.filename;
 }
 
 export function setActivated(value: boolean): void {

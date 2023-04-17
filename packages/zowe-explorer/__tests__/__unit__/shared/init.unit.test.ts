@@ -54,8 +54,9 @@ describe("Test src/shared/extension", () => {
             {
                 name: "onDidChangeConfiguration:1",
                 mock: [
-                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [globals.SETTINGS_TEMP_FOLDER_PATH], ret: true },
-                    { spy: jest.spyOn(tempFolder, "moveTempFolder"), arg: [undefined, test.value] },
+                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [globals.SETTINGS_LOGS_FOLDER_PATH], ret: true },
+                    { spy: jest.spyOn(globals, "initLogger"), arg: [test.value] },
+                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [globals.SETTINGS_TEMP_FOLDER_PATH], ret: false },
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [globals.SETTINGS_AUTOMATIC_PROFILE_VALIDATION], ret: false },
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [globals.SETTINGS_TEMP_FOLDER_HIDE], ret: false },
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [globals.SETTINGS_SECURE_CREDENTIALS_ENABLED], ret: false },
@@ -64,6 +65,18 @@ describe("Test src/shared/extension", () => {
             {
                 name: "onDidChangeConfiguration:2",
                 mock: [
+                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [globals.SETTINGS_LOGS_FOLDER_PATH], ret: false },
+                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [globals.SETTINGS_TEMP_FOLDER_PATH], ret: true },
+                    { spy: jest.spyOn(tempFolder, "moveTempFolder"), arg: [undefined, test.value] },
+                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [globals.SETTINGS_AUTOMATIC_PROFILE_VALIDATION], ret: false },
+                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [globals.SETTINGS_TEMP_FOLDER_HIDE], ret: false },
+                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [globals.SETTINGS_SECURE_CREDENTIALS_ENABLED], ret: false },
+                ],
+            },
+            {
+                name: "onDidChangeConfiguration:3",
+                mock: [
+                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [globals.SETTINGS_LOGS_FOLDER_PATH], ret: false },
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [globals.SETTINGS_TEMP_FOLDER_PATH], ret: false },
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [globals.SETTINGS_AUTOMATIC_PROFILE_VALIDATION], ret: true },
                     { spy: jest.spyOn(Profiles, "getInstance"), arg: [], ret: { refresh: jest.fn() } },
@@ -75,8 +88,9 @@ describe("Test src/shared/extension", () => {
                 ],
             },
             {
-                name: "onDidChangeConfiguration:3",
+                name: "onDidChangeConfiguration:4",
                 mock: [
+                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [globals.SETTINGS_LOGS_FOLDER_PATH], ret: false },
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [globals.SETTINGS_TEMP_FOLDER_PATH], ret: false },
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [globals.SETTINGS_AUTOMATIC_PROFILE_VALIDATION], ret: false },
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [globals.SETTINGS_TEMP_FOLDER_HIDE], ret: true },
@@ -85,8 +99,9 @@ describe("Test src/shared/extension", () => {
                 ],
             },
             {
-                name: "onDidChangeConfiguration:4",
+                name: "onDidChangeConfiguration:5",
                 mock: [
+                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [globals.SETTINGS_LOGS_FOLDER_PATH], ret: false },
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [globals.SETTINGS_TEMP_FOLDER_PATH], ret: false },
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [globals.SETTINGS_AUTOMATIC_PROFILE_VALIDATION], ret: false },
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [globals.SETTINGS_TEMP_FOLDER_HIDE], ret: false },

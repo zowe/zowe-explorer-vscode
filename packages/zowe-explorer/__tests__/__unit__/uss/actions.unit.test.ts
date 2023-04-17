@@ -12,7 +12,7 @@
 jest.mock("fs");
 
 import * as zowe from "@zowe/cli";
-import { Gui, ProfilesCache, ValidProfileEnum } from "@zowe/zowe-explorer-api";
+import { Gui, ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import * as ussNodeActions from "../../../src/uss/actions";
 import { UssFileTree, UssFileType, UssFileUtils } from "../../../src/uss/FileStructure";
 import { createUSSTree, createUSSNode, createFavoriteUSSNode } from "../../../__mocks__/mockCreators/uss";
@@ -23,7 +23,6 @@ import {
     createTextDocument,
     createFileResponse,
     createValidIProfile,
-    createInstanceOfProfileInfo,
 } from "../../../__mocks__/mockCreators/shared";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { Profiles } from "../../../src/Profiles";
@@ -75,23 +74,11 @@ function createGlobalMocks() {
                 Notification: 15,
             };
         }),
-        mockProfileInfo: createInstanceOfProfileInfo(),
-        mockProfilesCache: new ProfilesCache(zowe.imperative.Logger.getAppLogger()),
     };
 
     globalMocks.mockLoadNamedProfile.mockReturnValue(globalMocks.testProfile);
-    // Mock the logger
-    globals.defineGlobals("/test/path/");
-    const extensionMock = jest.fn(
-        () =>
-            ({
-                subscriptions: [],
-                extensionPath: path.join(__dirname, "..", ".."),
-            } as vscode.ExtensionContext)
-    );
-    const mock = new extensionMock();
+    globals.defineGlobals("");
     const profilesForValidation = { status: "active", name: "fake" };
-    globals.initLogger(mock);
 
     Object.defineProperty(Gui, "setStatusBarMessage", { value: globalMocks.setStatusBarMessage, configurable: true });
     Object.defineProperty(vscode.window, "showInputBox", { value: globalMocks.mockShowInputBox, configurable: true });
@@ -167,11 +154,6 @@ function createGlobalMocks() {
                 validateProfiles: jest.fn(),
                 loadNamedProfile: globalMocks.mockLoadNamedProfile,
             };
-        }),
-    });
-    Object.defineProperty(globalMocks.mockProfilesCache, "getProfileInfo", {
-        value: jest.fn(() => {
-            return { value: globalMocks.mockProfileInfo, configurable: true };
         }),
     });
     Object.defineProperty(ZoweLogger, "error", { value: jest.fn(), configurable: true });

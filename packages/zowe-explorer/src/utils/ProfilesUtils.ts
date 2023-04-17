@@ -379,7 +379,7 @@ export class ProfilesUtils {
         ZoweLogger.trace("ProfilesUtils.initializeZoweTempFolder called.");
         try {
             if (!fs.existsSync(globals.ZOWETEMPFOLDER)) {
-                fs.mkdirSync(globals.ZOWETEMPFOLDER);
+                fs.mkdirSync(globals.ZOWETEMPFOLDER, { recursive: true });
                 fs.mkdirSync(globals.ZOWE_TMP_FOLDER);
                 fs.mkdirSync(globals.USS_DIR);
                 fs.mkdirSync(globals.DS_DIR);
@@ -387,7 +387,7 @@ export class ProfilesUtils {
             }
         } catch (err) {
             ZoweLogger.error(err);
-            ZoweExplorerExtender.showZoweConfigError(err.message);
+            Gui.errorMessage(err.message);
         }
     }
 }
