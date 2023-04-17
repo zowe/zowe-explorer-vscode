@@ -342,12 +342,9 @@ export async function setGlobalSecurityValue(credentialManager?: string): Promis
     if (settingEnabled && credentialManager) {
         PROFILE_SECURITY = credentialManager;
         await SettingsConfig.setDirectValue(this.SETTINGS_SECURE_CREDENTIALS_ENABLED, true, vscode.ConfigurationTarget.Global);
-        ZoweLogger.info(
-            localize("globals.setGlobalSecurityValue.customSecured", "Zowe explorer profiles are secure with custom credential manager.")
-        );
         return;
     }
-    if (ISTHEIA && !SettingsConfig.isConfigSettingSetByUser(SETTINGS_SECURE_CREDENTIALS_ENABLED)) {
+    if (ISTHEIA && !SettingsConfig.isConfigSettingSetByUser(this.SETTINGS_SECURE_CREDENTIALS_ENABLED)) {
         PROFILE_SECURITY = false;
         await SettingsConfig.setDirectValue(SETTINGS_SECURE_CREDENTIALS_ENABLED, false, vscode.ConfigurationTarget.Global);
         return;
