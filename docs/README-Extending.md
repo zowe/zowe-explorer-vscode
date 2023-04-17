@@ -259,7 +259,7 @@ if (zoweExplorerApi) {
   // the user does not have the CICS CLI Plugin installed and profiles created, yet.
   const meta = await CoreUtils.getProfileMeta();
   await zoweExplorerApi.getExplorerExtenderApi().initForZowe("cics", meta);
-
+}
   // Get the IApiExplorerExtender instance from the API that extenders can used
   // to interact with Zowe Explorer such as accessing all the loaded profiles
   const profilesCache = zoweExplorerApi.getExplorerExtenderApi().getProfilesCache();
