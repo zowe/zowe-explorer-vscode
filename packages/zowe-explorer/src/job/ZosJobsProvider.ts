@@ -1109,8 +1109,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         // Pass request function to the poller for continuous updates
         Poller.addRequest(encodedUri.path, {
             msInterval: this.pollInterval,
-            context: node.label as string,
-            requestFn: async () => {
+            request: async () => {
                 const statusMsg = Gui.setStatusBarMessage(
                     localize("zowe.polling.statusBar", `$(sync~spin) Polling: {0}...`, node.label as string),
                     globals.STATUS_BAR_TIMEOUT_MS

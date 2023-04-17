@@ -30,14 +30,31 @@ describe("PollDecorationProvider - unit tests", () => {
     });
 
     it("updates the icon when given a URI", () => {
+        const mockUri = {
+            path: "some_uri_path",
+            query: "[some.profile], {}",
+        } as unknown as vscode.Uri;
+        Poller.pollRequests[mockUri.path] = {
+            msInterval: 1000,
+            request: (): Promise<boolean> =>
+                new Promise((resolve, reject) => {
+                    return resolve(true);
+                }),
+        };
         try {
-            PollDecorator.updateIcon({
-                path: "some_uri_path",
-                query: "[some.profile], {}",
-            } as unknown as vscode.Uri);
+            PollDecorator.updateIcon(mockUri);
         } catch (err) {
-            fail("PollDecorator.updateIcon should not throw an error.");
+            fail("PollDecorator.updateIcon should not throw an error for a new icon.");
         }
+
+        Poller.pollRequests[mockUri.path]["decoration"] = new vscode.FileDecoration("P", "Polling (1000ms)");
+        Poller.pollRequests[mockUri.path].msInterval = 500;
+
+        // Update the icon for a URI that has already been decorated
+        PollDecorator.provideFileDecoration(mockUri, undefined as any);
+
+        const decoration = Poller.pollRequests[mockUri.path]["decoration"] as vscode.FileDecoration;
+        expect(decoration.tooltip).toBe("Polling (500ms)");
     });
 
     it("provides an accurate decoration depending on file poll status", () => {
@@ -45,7 +62,7 @@ describe("PollDecorationProvider - unit tests", () => {
         (fakeUri.query as any) = "[some.profile], {}";
         Poller.pollRequests[fakeUri.path] = {
             msInterval: 500,
-            requestFn: async (): Promise<string> => "Hello world!",
+            request: async (): Promise<string> => "Hello world!",
             dispose: false,
         };
 

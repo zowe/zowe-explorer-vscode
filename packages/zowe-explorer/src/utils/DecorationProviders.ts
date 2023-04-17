@@ -30,14 +30,21 @@ class PollDecorationProvider implements vscode.FileDecorationProvider {
         PollDecorationProvider.fileDecorationsEmitter.fire(uri);
     }
 
-    public provideFileDecoration(uri: vscode.Uri, token: vscode.CancellationToken): vscode.ProviderResult<vscode.FileDecoration> {
-        // Only show polling decoration beside URIs w/ valid poll requests
+    public provideFileDecoration(uri: vscode.Uri, _token: vscode.CancellationToken): vscode.ProviderResult<vscode.FileDecoration> {
         const inPollQueue = Poller.pollRequests[uri.path];
+        // Only show polling decoration beside URIs w/ valid poll requests
         if (inPollQueue && !inPollQueue.dispose) {
-            return {
-                badge: "P",
-                tooltip: "Polling",
-            };
+            if (inPollQueue["decoration"]) {
+                // A decoration was already constructed, update existing tooltip
+                (inPollQueue["decoration"] as vscode.FileDecoration).tooltip = `Polling (${inPollQueue.msInterval}ms)`;
+                Poller.pollRequests[uri.path] = inPollQueue;
+                return inPollQueue["decoration"] as vscode.FileDecoration;
+            }
+
+            const newDecoration = new vscode.FileDecoration("P", `Polling (${inPollQueue.msInterval}ms)`);
+            // Cache latest decoration when emitter is called
+            Poller.pollRequests[uri.path]["decoration"] = newDecoration;
+            return newDecoration;
         }
 
         return null;

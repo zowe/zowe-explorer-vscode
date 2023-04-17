@@ -11,11 +11,14 @@
 
 export type PollRequest = {
     msInterval: number;
-    context?: string;
-    lastPolled?: Date;
-    resolve?: (uniqueId: string, data: any) => any;
-    requestFn: () => Promise<unknown>;
     dispose?: boolean;
+
+    reject?<T = never>(reason?: any): Promise<T>;
+    resolve?: (uniqueId: string, data: any) => any;
+    request: () => Promise<unknown>;
+
+    // Indexable for storing custom items
+    [key: string]: any;
 };
 
 export class Poller {
@@ -37,12 +40,14 @@ export class Poller {
 
             let data = null;
             try {
-                data = await requestData.requestFn();
-            } catch {
-                reject("Error when fetching request for " + uniqueId);
+                data = await requestData.request();
+            } catch (err) {
+                if (requestData.reject) {
+                    requestData.reject(err);
+                } else {
+                    reject(err);
+                }
             }
-
-            Poller.pollRequests[uniqueId].lastPolled = new Date();
 
             if (data && requestData.resolve) {
                 requestData.resolve(uniqueId, data);

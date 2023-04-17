@@ -149,6 +149,12 @@ export class FileDecoration {
      * propagated to its parents.
      */
     propagate?: boolean;
+
+    public constructor(badge?: string, tooltip?: string, color?: any) {
+        this.badge = badge;
+        this.tooltip = tooltip;
+        this.color = color;
+    }
 }
 
 export interface FileDecorationProvider {
@@ -281,7 +287,7 @@ export namespace commands {
      * @return Disposable which unregisters this command on disposal.
      */
     export function registerCommand(command: string, callback: (...args: any[]) => any, thisArg?: any): Disposable {
-        return undefined;
+        return undefined as any;
     }
 
     export function executeCommand(command: string): undefined {
