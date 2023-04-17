@@ -207,6 +207,191 @@ export class FilterDescriptor implements vscode.QuickPickItem {
     }
 }
 
+export class ProfilesUtils {
+    public static getProfileInfo(envTheia: boolean): imperative.ProfileInfo {
+        ZoweLogger.trace("ProfilesUtils.getProfileInfo called.");
+        const mProfileInfo = new imperative.ProfileInfo("zowe", {
+            requireKeytar: () => getSecurityModules("keytar", envTheia),
+        });
+        return mProfileInfo;
+    }
+
+    public static async readConfigFromDisk(): Promise<void> {
+        ZoweLogger.trace("ProfilesUtils.readConfigFromDisk called.");
+        let rootPath: string;
+        const mProfileInfo = ProfilesUtils.getProfileInfo(globals.ISTHEIA);
+        if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders[0]) {
+            rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
+            await mProfileInfo.readProfilesFromDisk({ homeDir: getZoweDir(), projectDir: getFullPath(rootPath) });
+        } else {
+            await mProfileInfo.readProfilesFromDisk({ homeDir: getZoweDir(), projectDir: undefined });
+        }
+        if (mProfileInfo.usingTeamConfig) {
+            globals.setConfigPath(rootPath);
+            ZoweLogger.info(`Zowe Explorer is using the team configuration file "${mProfileInfo.getTeamConfig().configName}"`);
+            const layers = mProfileInfo.getTeamConfig().layers || [];
+            const layerSummary = layers.map(
+                (config: imperative.IConfigLayer) =>
+                    `Path: ${config.path}: ${
+                        config.exists
+                            ? "Found, with the following defaults:" + JSON.stringify(config.properties?.defaults || "Undefined default")
+                            : "Not available"
+                    } `
+            );
+            ZoweLogger.debug(`Summary of team configuration files considered for Zowe Explorer: ${JSON.stringify(layerSummary)}`);
+        }
+    }
+
+    public static async promptCredentials(node: IZoweTreeNode): Promise<void> {
+        ZoweLogger.trace("ProfilesUtils.promptCredentials called.");
+        const mProfileInfo = await Profiles.getInstance().getProfileInfo();
+        if (mProfileInfo.usingTeamConfig && !mProfileInfo.getTeamConfig().properties.autoStore) {
+            const msg = localize("zowe.promptCredentials.notSupported", '"Update Credentials" operation not supported when "autoStore" is false');
+            ZoweLogger.warn(msg);
+            Gui.showMessage(msg);
+            return;
+        }
+        let profile: string | imperative.IProfileLoaded = node?.getProfile();
+        if (profile == null) {
+            // prompt for profile
+            profile = (
+                await Gui.showInputBox({
+                    placeHolder: localize("createNewConnection.option.prompt.profileName.placeholder", "Connection Name"),
+                    prompt: localize("createNewConnection.option.prompt.profileName", "Enter a name for the connection."),
+                    ignoreFocusOut: true,
+                })
+            ).trim();
+
+            if (!profile) {
+                Gui.showMessage(localize("createNewConnection.undefined.passWord", "Operation Cancelled"));
+                return;
+            }
+        }
+
+        const creds = await Profiles.getInstance().promptCredentials(profile, true);
+
+        if (creds != null) {
+            const successMsg = localize(
+                "promptCredentials.updatedCredentials",
+                "Credentials for {0} were successfully updated",
+                typeof profile === "string" ? profile : profile.name
+            );
+            ZoweLogger.info(successMsg);
+            Gui.showMessage(successMsg);
+        }
+    }
+
+    public static async initializeZoweFolder(): Promise<void> {
+        ZoweLogger.trace("ProfilesUtils.initializeZoweFolder called.");
+        // ensure the Secure Credentials Enabled value is read
+        // set globals.PROFILE_SECURITY value accordingly
+        await globals.setGlobalSecurityValue();
+        // Ensure that ~/.zowe folder exists
+        // Ensure that the ~/.zowe/settings/imperative.json exists
+        // TODO: update code below once this imperative issue is resolved.
+        // https://github.com/zowe/imperative/issues/840
+        const zoweDir = getZoweDir();
+        if (!fs.existsSync(zoweDir)) {
+            fs.mkdirSync(zoweDir);
+        }
+        const settingsPath = path.join(zoweDir, "settings");
+        if (!fs.existsSync(settingsPath)) {
+            fs.mkdirSync(settingsPath);
+        }
+        if (!fs.existsSync(path.join(settingsPath, "imperative.json"))) {
+            ProfilesUtils.writeOverridesFile();
+        }
+        // If not using team config, ensure that the ~/.zowe/profiles directory
+        // exists with appropriate types within
+        if (!imperative.ImperativeConfig.instance.config?.exists) {
+            await imperative.CliProfileManager.initialize({
+                configuration: getImperativeConfig().profiles,
+                profileRootDirectory: path.join(zoweDir, "profiles"),
+            });
+        }
+        ZoweLogger.info(localize("initializeZoweFolder.location", "Zowe home directory is located at {0}", zoweDir));
+    }
+
+    public static writeOverridesFile(): void {
+        ZoweLogger.trace("ProfilesUtils.writeOverridesFile called.");
+        let fd: number;
+        let fileContent: string;
+        const settingsFile = path.join(getZoweDir(), "settings", "imperative.json");
+        try {
+            fd = fs.openSync(settingsFile, "r+");
+            fileContent = fs.readFileSync(fd, "utf-8");
+        } catch {
+            // If reading the file failed because it does not exist, then create it
+            // This should never fail, unless file system is read-only or the file
+            // was created by another process after first openSync call
+            fd = fs.openSync(settingsFile, "wx");
+        }
+        try {
+            let settings: any;
+            if (fileContent) {
+                try {
+                    settings = JSON.parse(fileContent);
+                } catch (err) {
+                    if (err instanceof Error) {
+                        throw new Error(
+                            localize("writeOverridesFile.jsonParseError", "Failed to parse JSON file {0}:", settingsFile) + " " + err.message
+                        );
+                    }
+                }
+                if (settings && settings?.overrides && settings?.overrides?.CredentialManager !== globals.PROFILE_SECURITY) {
+                    settings.overrides.CredentialManager = globals.PROFILE_SECURITY;
+                } else {
+                    return;
+                }
+            } else {
+                settings = { overrides: { CredentialManager: globals.PROFILE_SECURITY } };
+            }
+            fileContent = JSON.stringify(settings, null, 2);
+            fs.writeFileSync(fd, fileContent, "utf-8");
+        } finally {
+            fs.closeSync(fd);
+        }
+    }
+
+    public static async initializeZoweProfiles(): Promise<void> {
+        ZoweLogger.trace("ProfilesUtils.initializeZoweProfiles called.");
+        try {
+            await ProfilesUtils.initializeZoweFolder();
+        } catch (err) {
+            ZoweLogger.error(err);
+            Gui.errorMessage(localize("initializeZoweFolder.error", "Failed to initialize Zowe folder: {0}", err.message));
+        }
+
+        try {
+            await ProfilesUtils.readConfigFromDisk();
+            ZoweLogger.info(localize("initializeZoweProfiles.success", "Zowe Profiles initialized successfully."));
+        } catch (err) {
+            if (err instanceof imperative.ImperativeError) {
+                errorHandling(err, undefined, err.mDetails.causeErrors);
+            } else {
+                ZoweLogger.error(err);
+                ZoweExplorerExtender.showZoweConfigError(err.message);
+            }
+        }
+    }
+
+    public static initializeZoweTempFolder(): void {
+        ZoweLogger.trace("ProfilesUtils.initializeZoweTempFolder called.");
+        try {
+            if (!fs.existsSync(globals.ZOWETEMPFOLDER)) {
+                fs.mkdirSync(globals.ZOWETEMPFOLDER, { recursive: true });
+                fs.mkdirSync(globals.ZOWE_TMP_FOLDER);
+                fs.mkdirSync(globals.USS_DIR);
+                fs.mkdirSync(globals.DS_DIR);
+                ZoweLogger.info(localize("initializeZoweTempFolder.success", "Zowe Temp folder initialized successfully."));
+            }
+        } catch (err) {
+            ZoweLogger.error(err);
+            Gui.errorMessage(err.message);
+        }
+    }
+}
+
 /**
  * Function to update the node profile information
  */
@@ -230,183 +415,10 @@ export function setSession(node: IZoweTreeNode, combinedSessionProfile: imperati
     }
 }
 
-export function getProfileInfo(envTheia: boolean): imperative.ProfileInfo {
-    ZoweLogger.trace("ProfilesUtils.getProfileInfo called.");
-    const mProfileInfo = new imperative.ProfileInfo("zowe", {
-        requireKeytar: () => getSecurityModules("keytar", envTheia),
-    });
-    return mProfileInfo;
-}
-
 export function getProfile(node: vscode.TreeItem | ZoweTreeNode): imperative.IProfileLoaded {
     ZoweLogger.trace("ProfilesUtils.getProfile called.");
     if (node instanceof ZoweTreeNode) {
         return node.getProfile();
     }
     throw new Error(localize("getProfile.notTreeItem", "Tree Item is not a Zowe Explorer item."));
-}
-
-export async function readConfigFromDisk(): Promise<void> {
-    ZoweLogger.trace("ProfilesUtils.readConfigFromDisk called.");
-    let rootPath: string;
-    const mProfileInfo = await getProfileInfo(globals.ISTHEIA);
-    if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders[0]) {
-        rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
-        await mProfileInfo.readProfilesFromDisk({ homeDir: getZoweDir(), projectDir: getFullPath(rootPath) });
-    } else {
-        await mProfileInfo.readProfilesFromDisk({ homeDir: getZoweDir(), projectDir: undefined });
-    }
-    if (mProfileInfo.usingTeamConfig) {
-        globals.setConfigPath(rootPath);
-        ZoweLogger.info(`Zowe Explorer is using the team configuration file "${mProfileInfo.getTeamConfig().configName}"`);
-        const layers = mProfileInfo.getTeamConfig().layers || [];
-        const layerSummary = layers.map(
-            (config: imperative.IConfigLayer) =>
-                `Path: ${config.path}: ${
-                    config.exists
-                        ? "Found, with the following defaults:" + JSON.stringify(config.properties?.defaults || "Undefined default")
-                        : "Not available"
-                } `
-        );
-        ZoweLogger.debug(`Summary of team configuration files considered for Zowe Explorer: ${JSON.stringify(layerSummary)}`);
-    }
-}
-
-export async function promptCredentials(node: IZoweTreeNode): Promise<void> {
-    ZoweLogger.trace("ProfilesUtils.promptCredentials called.");
-    const mProfileInfo = await Profiles.getInstance().getProfileInfo();
-    if (mProfileInfo.usingTeamConfig && !mProfileInfo.getTeamConfig().properties.autoStore) {
-        const msg = localize("zowe.promptCredentials.notSupported", '"Update Credentials" operation not supported when "autoStore" is false');
-        ZoweLogger.warn(msg);
-        Gui.showMessage(msg);
-        return;
-    }
-    let profile: string | imperative.IProfileLoaded = node?.getProfile();
-    if (profile == null) {
-        // prompt for profile
-        profile = (
-            await Gui.showInputBox({
-                placeHolder: localize("createNewConnection.option.prompt.profileName.placeholder", "Connection Name"),
-                prompt: localize("createNewConnection.option.prompt.profileName", "Enter a name for the connection."),
-                ignoreFocusOut: true,
-            })
-        ).trim();
-
-        if (!profile) {
-            Gui.showMessage(localize("createNewConnection.undefined.passWord", "Operation Cancelled"));
-            return;
-        }
-    }
-
-    const creds = await Profiles.getInstance().promptCredentials(profile, true);
-
-    if (creds != null) {
-        const successMsg = localize(
-            "promptCredentials.updatedCredentials",
-            "Credentials for {0} were successfully updated",
-            typeof profile === "string" ? profile : profile.name
-        );
-        ZoweLogger.info(successMsg);
-        Gui.showMessage(successMsg);
-    }
-}
-
-export async function initializeZoweFolder(): Promise<void> {
-    ZoweLogger.trace("ProfilesUtils.initializeZoweFolder called.");
-    // ensure the Secure Credentials Enabled value is read
-    // set globals.PROFILE_SECURITY value accordingly
-    await globals.setGlobalSecurityValue();
-    // Ensure that ~/.zowe folder exists
-    // Ensure that the ~/.zowe/settings/imperative.json exists
-    // TODO: update code below once this imperative issue is resolved.
-    // https://github.com/zowe/imperative/issues/840
-    const zoweDir = getZoweDir();
-    if (!fs.existsSync(zoweDir)) {
-        fs.mkdirSync(zoweDir);
-    }
-    const settingsPath = path.join(zoweDir, "settings");
-    if (!fs.existsSync(settingsPath)) {
-        fs.mkdirSync(settingsPath);
-    }
-    if (!fs.existsSync(path.join(settingsPath, "imperative.json"))) {
-        writeOverridesFile();
-    }
-    // If not using team config, ensure that the ~/.zowe/profiles directory
-    // exists with appropriate types within
-    if (!imperative.ImperativeConfig.instance.config?.exists) {
-        await imperative.CliProfileManager.initialize({
-            configuration: getImperativeConfig().profiles,
-            profileRootDirectory: path.join(zoweDir, "profiles"),
-        });
-    }
-    ZoweLogger.info(localize("initializeZoweFolder.location", "Zowe home directory is located at {0}", zoweDir));
-}
-
-export function writeOverridesFile(): void {
-    ZoweLogger.trace("ProfilesUtils.writeOverridesFile called.");
-    let fd: number;
-    let fileContent: string;
-    const settingsFile = path.join(getZoweDir(), "settings", "imperative.json");
-    try {
-        fd = fs.openSync(settingsFile, "r+");
-        fileContent = fs.readFileSync(fd, "utf-8");
-    } catch {
-        // If reading the file failed because it does not exist, then create it
-        // This should never fail, unless file system is read-only or the file
-        // was created by another process after first openSync call
-        fd = fs.openSync(settingsFile, "wx");
-    }
-    try {
-        let settings: any;
-        if (fileContent) {
-            try {
-                settings = JSON.parse(fileContent);
-            } catch (err) {
-                if (err instanceof Error) {
-                    throw new Error(
-                        localize("writeOverridesFile.jsonParseError", "Failed to parse JSON file {0}:", settingsFile) + " " + err.message
-                    );
-                }
-            }
-            if (settings && settings?.overrides && settings?.overrides?.CredentialManager !== globals.PROFILE_SECURITY) {
-                settings.overrides.CredentialManager = globals.PROFILE_SECURITY;
-            } else {
-                return;
-            }
-        } else {
-            settings = { overrides: { CredentialManager: globals.PROFILE_SECURITY } };
-        }
-        fileContent = JSON.stringify(settings, null, 2);
-        fs.writeFileSync(fd, fileContent, "utf-8");
-    } finally {
-        fs.closeSync(fd);
-    }
-}
-
-export async function initializeZoweProfiles(): Promise<void> {
-    ZoweLogger.trace("ProfilesUtils.initializeZoweProfiles called.");
-    try {
-        await initializeZoweFolder();
-        await readConfigFromDisk();
-        ZoweLogger.info(localize("initializeZoweProfiles.success", "Zowe Profiles initialized successfully."));
-    } catch (err) {
-        ZoweLogger.error(err);
-        ZoweExplorerExtender.showZoweConfigError(err.message);
-    }
-}
-
-export function initializeZoweTempFolder(): void {
-    ZoweLogger.trace("ProfilesUtils.initializeZoweTempFolder called.");
-    try {
-        if (!fs.existsSync(globals.ZOWETEMPFOLDER)) {
-            fs.mkdirSync(globals.ZOWETEMPFOLDER, { recursive: true });
-            fs.mkdirSync(globals.ZOWE_TMP_FOLDER);
-            fs.mkdirSync(globals.USS_DIR);
-            fs.mkdirSync(globals.DS_DIR);
-            ZoweLogger.info(localize("initializeZoweTempFolder.success", "Zowe Temp folder initialized successfully."));
-        }
-    } catch (err) {
-        ZoweLogger.error(err);
-        Gui.errorMessage(err.message);
-    }
 }

@@ -13,12 +13,13 @@ import * as fs from "fs";
 import * as path from "path";
 import { Gui, ProfilesCache, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import * as globals from "../../../src/globals";
-import * as profileUtils from "../../../src/utils/ProfilesUtils";
+import * as profUtils from "../../../src/utils/ProfilesUtils";
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
 import { Profiles } from "../../../src/Profiles";
 import { SettingsConfig } from "../../../src/utils/SettingsConfig";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
+import { ZoweExplorerExtender } from "../../../src/ZoweExplorerExtender";
 
 jest.mock("fs");
 jest.mock("vscode");
@@ -65,7 +66,7 @@ describe("ProfilesUtils unit tests", () => {
             const errorDetails = new Error("i haz error");
             const label = "test";
             const moreInfo = "Task failed successfully";
-            await profileUtils.errorHandling(errorDetails, label, moreInfo);
+            await profUtils.errorHandling(errorDetails, label, moreInfo);
             expect(Gui.errorMessage).toBeCalledWith(`${moreInfo} ` + errorDetails);
             expect(ZoweLogger.error).toBeCalledWith(`Error: ${errorDetails.message}\n` + JSON.stringify({ errorDetails, label, moreInfo }));
         });
@@ -94,7 +95,7 @@ describe("ProfilesUtils unit tests", () => {
                     openConfigFile: spyOpenConfigFile,
                 }),
             });
-            await profileUtils.errorHandling(errorDetails, label, moreInfo);
+            await profUtils.errorHandling(errorDetails, label, moreInfo);
             expect(spyOpenConfigFile).toBeCalledTimes(1);
         });
 
@@ -106,7 +107,7 @@ describe("ProfilesUtils unit tests", () => {
             });
             const label = "test";
             const moreInfo = "Task failed successfully";
-            jest.spyOn(profileUtils, "isTheia").mockReturnValue(false);
+            jest.spyOn(profUtils, "isTheia").mockReturnValue(false);
             const showMessageSpy = jest.spyOn(Gui, "showMessage").mockResolvedValue("selection");
             const ssoLoginSpy = jest.fn();
             Object.defineProperty(Profiles, "getInstance", {
@@ -114,7 +115,7 @@ describe("ProfilesUtils unit tests", () => {
                     ssoLogin: ssoLoginSpy,
                 }),
             });
-            await profileUtils.errorHandling(errorDetails, label, moreInfo);
+            await profUtils.errorHandling(errorDetails, label, moreInfo);
             expect(showMessageSpy).toBeCalledTimes(1);
             expect(ssoLoginSpy).toBeCalledTimes(1);
         });
@@ -133,7 +134,7 @@ describe("ProfilesUtils unit tests", () => {
                 configurable: true,
             });
             const mockReadProfilesFromDisk = jest.fn();
-            jest.spyOn(zowe.imperative, "ProfileInfo").mockResolvedValue({
+            const profInfoSpy = jest.spyOn(profUtils.ProfilesUtils, "getProfileInfo").mockReturnValue({
                 readProfilesFromDisk: mockReadProfilesFromDisk,
                 usingTeamConfig: true,
                 getTeamConfig: () => ({
@@ -157,8 +158,9 @@ describe("ProfilesUtils unit tests", () => {
                 value: jest.fn(),
                 configurable: true,
             });
-            await expect(profileUtils.readConfigFromDisk()).resolves.not.toThrow();
+            await expect(profUtils.ProfilesUtils.readConfigFromDisk()).resolves.not.toThrow();
             expect(mockReadProfilesFromDisk).toHaveBeenCalledTimes(1);
+            profInfoSpy.mockRestore();
         });
 
         it("should readConfigFromDisk and find with defaults", async () => {
@@ -173,7 +175,7 @@ describe("ProfilesUtils unit tests", () => {
                 configurable: true,
             });
             const mockReadProfilesFromDisk = jest.fn();
-            jest.spyOn(zowe.imperative, "ProfileInfo").mockResolvedValue({
+            const profInfoSpy = jest.spyOn(profUtils.ProfilesUtils, "getProfileInfo").mockReturnValue({
                 readProfilesFromDisk: mockReadProfilesFromDisk,
                 usingTeamConfig: true,
                 getTeamConfig: () => [],
@@ -182,8 +184,9 @@ describe("ProfilesUtils unit tests", () => {
                 value: jest.fn(),
                 configurable: true,
             });
-            await expect(profileUtils.readConfigFromDisk()).resolves.not.toThrow();
+            await expect(profUtils.ProfilesUtils.readConfigFromDisk()).resolves.not.toThrow();
             expect(mockReadProfilesFromDisk).toHaveBeenCalledTimes(1);
+            profInfoSpy.mockRestore();
         });
 
         it("should keep Imperative error details if readConfigFromDisk fails", async () => {
@@ -199,13 +202,14 @@ describe("ProfilesUtils unit tests", () => {
             });
             const impErr = new zowe.imperative.ImperativeError({ msg: "Unexpected Imperative error" });
             const mockReadProfilesFromDisk = jest.fn().mockRejectedValue(impErr);
-            jest.spyOn(zowe.imperative, "ProfileInfo").mockResolvedValue({
+            const profInfoSpy = jest.spyOn(profUtils.ProfilesUtils, "getProfileInfo").mockReturnValue({
                 readProfilesFromDisk: mockReadProfilesFromDisk,
                 usingTeamConfig: true,
                 getTeamConfig: () => [],
             } as never);
-            await expect(profileUtils.readConfigFromDisk()).rejects.toBe(impErr);
+            await expect(profUtils.ProfilesUtils.readConfigFromDisk()).rejects.toBe(impErr);
             expect(mockReadProfilesFromDisk).toHaveBeenCalledTimes(1);
+            profInfoSpy.mockRestore();
         });
     });
 
@@ -228,7 +232,7 @@ describe("ProfilesUtils unit tests", () => {
                 configurable: true,
             });
             jest.spyOn(ZoweVsCodeExtension as any, "promptUserPass").mockResolvedValue([]);
-            await profileUtils.promptCredentials(null);
+            await profUtils.ProfilesUtils.promptCredentials(null);
             expect(getProfileInfoSpy).toHaveBeenCalled();
         });
 
@@ -249,7 +253,7 @@ describe("ProfilesUtils unit tests", () => {
                 configurable: true,
             });
             jest.spyOn(ZoweVsCodeExtension as any, "promptUserPass").mockResolvedValue([]);
-            await profileUtils.promptCredentials(null);
+            await profUtils.ProfilesUtils.promptCredentials(null);
             expect(Gui.showMessage).toHaveBeenCalledWith("Operation Cancelled");
         });
 
@@ -274,7 +278,7 @@ describe("ProfilesUtils unit tests", () => {
                 configurable: true,
             });
             jest.spyOn(Profiles.prototype, "promptCredentials").mockResolvedValue(["some_user", "some_pass", "c29tZV9iYXNlNjRfc3RyaW5n"]);
-            await profileUtils.promptCredentials(null);
+            await profUtils.ProfilesUtils.promptCredentials(null);
             expect(Gui.showMessage).toHaveBeenCalledWith("Credentials for testConfig were successfully updated");
         });
 
@@ -302,7 +306,7 @@ describe("ProfilesUtils unit tests", () => {
                 value: jest.fn(),
                 configurable: true,
             });
-            await profileUtils.promptCredentials(null);
+            await profUtils.ProfilesUtils.promptCredentials(null);
             expect(mockProfileInstance.getProfileInfo).toHaveBeenCalled();
             expect(Gui.showMessage).toHaveBeenCalledWith('"Update Credentials" operation not supported when "autoStore" is false');
         });
@@ -313,7 +317,7 @@ describe("ProfilesUtils unit tests", () => {
             const blockMocks = createBlockMocks();
             blockMocks.mockGetDirectValue.mockReturnValue(true);
             blockMocks.mockExistsSync.mockReturnValue(false);
-            await profileUtils.initializeZoweFolder();
+            await profUtils.ProfilesUtils.initializeZoweFolder();
             expect(globals.PROFILE_SECURITY).toBe(globals.ZOWE_CLI_SCM);
             expect(blockMocks.mockMkdirSync).toHaveBeenCalledTimes(2);
             expect(blockMocks.mockWriteFileSync).toHaveBeenCalledTimes(1);
@@ -323,7 +327,7 @@ describe("ProfilesUtils unit tests", () => {
             const blockMocks = createBlockMocks();
             blockMocks.mockGetDirectValue.mockReturnValue(false);
             blockMocks.mockExistsSync.mockReturnValue(true);
-            await profileUtils.initializeZoweFolder();
+            await profUtils.ProfilesUtils.initializeZoweFolder();
             expect(globals.PROFILE_SECURITY).toBe(false);
             expect(blockMocks.mockMkdirSync).toHaveBeenCalledTimes(0);
             expect(blockMocks.mockWriteFileSync).toHaveBeenCalledTimes(0);
@@ -336,7 +340,7 @@ describe("ProfilesUtils unit tests", () => {
             const fileJson = { overrides: { CredentialManager: "@zowe/cli", testValue: true } };
             const content = JSON.stringify(fileJson, null, 2);
             blockMocks.mockReadFileSync.mockReturnValueOnce(JSON.stringify({ overrides: { CredentialManager: false, testValue: true } }, null, 2));
-            profileUtils.writeOverridesFile();
+            profUtils.ProfilesUtils.writeOverridesFile();
             expect(blockMocks.mockOpenSync).toBeCalledWith(blockMocks.zoweDir, "r+");
             expect(blockMocks.mockWriteFileSync).toBeCalledWith(blockMocks.fileHandle, content, "utf-8");
         });
@@ -347,7 +351,7 @@ describe("ProfilesUtils unit tests", () => {
                 test: null,
             };
             blockMocks.mockReadFileSync.mockReturnValueOnce(JSON.stringify(fileJson, null, 2));
-            profileUtils.writeOverridesFile();
+            profUtils.ProfilesUtils.writeOverridesFile();
             expect(blockMocks.mockWriteFileSync).toBeCalledTimes(0);
         });
 
@@ -360,7 +364,7 @@ describe("ProfilesUtils unit tests", () => {
                 return blockMocks.fileHandle;
             });
             const content = JSON.stringify(blockMocks.mockFileRead, null, 2);
-            profileUtils.writeOverridesFile();
+            profUtils.ProfilesUtils.writeOverridesFile();
             expect(blockMocks.mockWriteFileSync).toBeCalledWith(blockMocks.fileHandle, content, "utf-8");
             expect(blockMocks.mockOpenSync).toBeCalledTimes(2);
             expect(blockMocks.mockReadFileSync).toBeCalledTimes(0);
@@ -372,12 +376,54 @@ describe("ProfilesUtils unit tests", () => {
                 test: null,
             };
             blockMocks.mockReadFileSync.mockReturnValueOnce(JSON.stringify(fileJson, null, 2).slice(1));
-            expect(profileUtils.writeOverridesFile).toThrow();
+            expect(profUtils.ProfilesUtils.writeOverridesFile).toThrow();
+        });
+    });
+
+    describe("initializeZoweProfiles", () => {
+        it("should successfully initialize Zowe folder and read config from disk", async () => {
+            const initZoweFolderSpy = jest.spyOn(profUtils.ProfilesUtils, "initializeZoweFolder");
+            const readConfigFromDiskSpy = jest.spyOn(profUtils.ProfilesUtils, "readConfigFromDisk").mockResolvedValueOnce();
+            await profUtils.ProfilesUtils.initializeZoweProfiles();
+            expect(initZoweFolderSpy).toHaveBeenCalledTimes(1);
+            expect(readConfigFromDiskSpy).toHaveBeenCalledTimes(1);
+            expect(ZoweLogger.error).not.toHaveBeenCalled();
+        });
+
+        it("should handle error thrown on initialize Zowe folder", async () => {
+            const testError = new Error("initializeZoweFolder failed");
+            const initZoweFolderSpy = jest.spyOn(profUtils.ProfilesUtils, "initializeZoweFolder").mockRejectedValueOnce(testError);
+            const readConfigFromDiskSpy = jest.spyOn(profUtils.ProfilesUtils, "readConfigFromDisk").mockResolvedValueOnce();
+            await profUtils.ProfilesUtils.initializeZoweProfiles();
+            expect(initZoweFolderSpy).toHaveBeenCalledTimes(1);
+            expect(readConfigFromDiskSpy).toHaveBeenCalledTimes(1);
+            expect(Gui.errorMessage).toHaveBeenCalledWith(expect.stringContaining(testError.message));
+        });
+
+        it("should handle Imperative error thrown on read config from disk", async () => {
+            const testError = new zowe.imperative.ImperativeError({ msg: "readConfigFromDisk failed" });
+            const initZoweFolderSpy = jest.spyOn(profUtils.ProfilesUtils, "initializeZoweFolder").mockResolvedValueOnce();
+            const readConfigFromDiskSpy = jest.spyOn(profUtils.ProfilesUtils, "readConfigFromDisk").mockRejectedValueOnce(testError);
+            await profUtils.ProfilesUtils.initializeZoweProfiles();
+            expect(initZoweFolderSpy).toHaveBeenCalledTimes(1);
+            expect(readConfigFromDiskSpy).toHaveBeenCalledTimes(1);
+            expect(Gui.errorMessage).toHaveBeenCalledWith(expect.stringContaining(testError.message));
+        });
+
+        it("should handle JSON parse error thrown on read config from disk", async () => {
+            const testError = new Error("readConfigFromDisk failed");
+            const initZoweFolderSpy = jest.spyOn(profUtils.ProfilesUtils, "initializeZoweFolder").mockResolvedValueOnce();
+            const readConfigFromDiskSpy = jest.spyOn(profUtils.ProfilesUtils, "readConfigFromDisk").mockRejectedValueOnce(testError);
+            const showZoweConfigErrorSpy = jest.spyOn(ZoweExplorerExtender, "showZoweConfigError").mockReturnValueOnce();
+            await profUtils.ProfilesUtils.initializeZoweProfiles();
+            expect(initZoweFolderSpy).toHaveBeenCalledTimes(1);
+            expect(readConfigFromDiskSpy).toHaveBeenCalledTimes(1);
+            expect(showZoweConfigErrorSpy).toHaveBeenCalledWith(testError.message);
         });
     });
 
     it("filterItem should get label if the filterItem icon exists", () => {
-        const testFilterItem = new profileUtils.FilterItem({
+        const testFilterItem = new profUtils.FilterItem({
             icon: "test",
         } as any);
         expect(testFilterItem.label).toEqual("test undefined");
