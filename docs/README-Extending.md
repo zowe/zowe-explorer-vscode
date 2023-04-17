@@ -176,7 +176,7 @@ if (zoweExplorerApi) {
   zoweExplorerApi.registerUssApi(new FtpUssApi());
   zoweExplorerApi.registerMvsApi(new FtpMvsApi());
   zoweExplorerApi.registerJesApi(new FtpJesApi());
-
+}
   // Initialized the users ~/.zowe directory with the metadata for FTP profiles in case
   // the user does not have the FTP CLI Plugin installed and profiles created, yet.
   const meta: ICommandProfileTypeConfiguration[] = await CoreUtils.getProfileMeta();
