@@ -58,10 +58,10 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         job: await initJobsProvider(context),
     };
 
-    await registerCommonCommands(context, providers);
+    registerCommonCommands(context, providers);
     ZoweExplorerExtender.createInstance(providers.ds, providers.uss, providers.job);
     await SettingsConfig.standardizeSettings();
-    await watchConfigProfile(context, providers);
+    watchConfigProfile(context, providers);
     globals.setActivated(true);
     return ZoweExplorerApiRegister.getInstance();
 }
@@ -74,5 +74,5 @@ export async function deactivate(): Promise<void> {
     await ZoweSaveQueue.all();
     cleanTempDir();
     globals.setActivated(false);
-    await ZoweLogger.disposeZoweLogger();
+    ZoweLogger.disposeZoweLogger();
 }
