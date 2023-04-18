@@ -241,6 +241,7 @@ export class ProfilesUtils {
     }
 
     public static async updateCredentialManagerSetting(setting: string): Promise<void> {
+        ZoweLogger.trace("ProfilesUtils.updateCredentialManagerSetting called.");
         const settingEnabled: boolean = SettingsConfig.getDirectValue(globals.SETTINGS_SECURE_CREDENTIALS_ENABLED);
         if (settingEnabled) {
             await globals.setGlobalSecurityValue(setting);
