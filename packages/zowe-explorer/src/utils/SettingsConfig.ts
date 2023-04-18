@@ -50,6 +50,23 @@ export class SettingsConfig {
         return vscode.workspace.getConfiguration(first).update(rest.join("."), value, target);
     }
 
+    public static isConfigSettingSetByUser(key: string): boolean {
+        const [first, ...rest] = key.split(".");
+        const inspect = vscode.workspace.getConfiguration(first).inspect(rest.join("."));
+        if (inspect === undefined) {
+            return false;
+        }
+
+        return (
+            inspect.globalValue !== undefined ||
+            inspect.workspaceValue !== undefined ||
+            inspect.workspaceFolderValue !== undefined ||
+            inspect.globalLanguageValue !== undefined ||
+            inspect.workspaceLanguageValue !== undefined ||
+            inspect.workspaceFolderLanguageValue !== undefined
+        );
+    }
+
     public static async standardizeSettings(): Promise<void> {
         ZoweLogger.trace("SettingsConfig.standardizeSettings called.");
         const globalIsNotMigrated =
