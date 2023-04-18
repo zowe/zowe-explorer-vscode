@@ -1039,17 +1039,22 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
      * Show poll options before the user starts polling.
      * @returns true if the user started polling, false if they dismiss the dialog
      */
-    private async showPollOptions(): Promise<boolean> {
+    private async showPollOptions(node: IZoweJobTreeNode): Promise<boolean> {
         const pollValue = this.pollInterval === 0 ? globals.DEFAULT_POLL_INTERVAL : this.pollInterval;
-        const selection = await Gui.showQuickPick([
-            new FilterItem({
-                text: "Poll interval (in ms)",
-                description: String(pollValue),
-            }),
-            new FilterItem({
-                text: "+ Start Polling",
-            }),
-        ]);
+        const selection = await Gui.showQuickPick(
+            [
+                new FilterItem({
+                    text: "Poll interval (in ms)",
+                    description: String(pollValue),
+                }),
+                new FilterItem({
+                    text: "+ Start Polling",
+                }),
+            ],
+            {
+                title: localize("zowe.polling.options", "Polling: {0}", node.label as string),
+            }
+        );
 
         if (selection?.label === "Poll interval (in ms)") {
             const intervalEntry = await Gui.showInputBox({
@@ -1059,7 +1064,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             });
             if (intervalEntry) {
                 this.pollInterval = Number(intervalEntry);
-                return this.showPollOptions();
+                return this.showPollOptions(node);
             }
         } else if (selection?.label === "+ Start Polling") {
             this.pollInterval = pollValue;
@@ -1099,9 +1104,10 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
 
         // Always prompt the user for a poll interval if they don't have one defined
         if (SettingsConfig.getDirectValue<number>("zowe.jobs.pollInterval") === 0) {
-            const submitted = await this.showPollOptions();
+            const submitted = await this.showPollOptions(node);
 
             if (!submitted) {
+                Gui.showMessage(localize("zowe.polling.cancelled", "Polling dialog dismissed for {0}; operation cancelled.", node.label as string));
                 return;
             }
         }

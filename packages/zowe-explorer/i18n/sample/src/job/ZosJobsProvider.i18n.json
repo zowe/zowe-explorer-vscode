@@ -19,6 +19,8 @@
   "enterPattern.pattern": "No selection made. Operation cancelled.",
   "jobsFilterPrompt.inputBox.prompt.jobid": "Enter a Job id",
   "jobsFilterPrompt.enterPrefix": "Search Cancelled",
+  "zowe.polling.options": "Polling: {0}",
+  "zowe.polling.cancelled": "Polling dialog dismissed for {0}; operation cancelled.",
   "zowe.polling.statusBar": "$(sync~spin) Polling: {0}...",
   "SpecifyCriteria": "Create new.."
 }
