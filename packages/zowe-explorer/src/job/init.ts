@@ -63,6 +63,18 @@ export async function initJobsProvider(context: vscode.ExtensionContext): Promis
             jobActions.refreshJob(node.mParent.mParent, jobsProvider);
         })
     );
+    context.subscriptions.push(
+        vscode.commands.registerCommand("zowe.jobs.downloadSingleSpool", async (node, nodeList) => {
+            const selectedNodes = getSelectedNodeList(node, nodeList) as IZoweJobTreeNode[];
+            await jobActions.downloadSingleSpool(selectedNodes, false);
+        })
+    );
+    context.subscriptions.push(
+        vscode.commands.registerCommand("zowe.jobs.downloadSingleSpoolBinary", async (node, nodeList) => {
+            const selectedNodes = getSelectedNodeList(node, nodeList) as IZoweJobTreeNode[];
+            await jobActions.downloadSingleSpool(selectedNodes, true);
+        })
+    );
     context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.addJobsSession", () => jobsProvider.createZoweSession(jobsProvider)));
     context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.setOwner", (job) => jobActions.setOwner(job, jobsProvider)));
     context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.setPrefix", (job) => jobActions.setPrefix(job, jobsProvider)));

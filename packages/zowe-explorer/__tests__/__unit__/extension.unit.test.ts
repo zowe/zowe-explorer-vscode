@@ -213,6 +213,8 @@ async function createGlobalMocks() {
             "zowe.jobs.refreshAllJobs",
             "zowe.jobs.refreshJob",
             "zowe.jobs.refreshSpool",
+            "zowe.jobs.downloadSingleSpool",
+            "zowe.jobs.downloadSingleSpoolBinary",
             "zowe.jobs.addJobsSession",
             "zowe.jobs.setOwner",
             "zowe.jobs.setPrefix",

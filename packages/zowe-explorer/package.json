@@ -727,6 +727,16 @@
         "command": "zowe.jobs.refreshSpool",
         "title": "%jobs.refreshSpool%",
         "category": "Zowe Explorer"
+      },
+      {
+        "command": "zowe.jobs.downloadSingleSpool",
+        "title": "%downloadSingleSpool%",
+        "category": "Zowe Explorer"
+      },
+      {
+        "command": "zowe.jobs.downloadSingleSpoolBinary",
+        "title": "%downloadSingleSpoolBinary%",
+        "category": "Zowe Explorer"
       }
     ],
     "menus": {
@@ -1239,6 +1249,16 @@
           "group": "003_zowe_jobsMainframeInteraction@0"
         },
         {
+          "when": "view == zowe.jobs.explorer && viewItem =~ /^spool.*/",
+          "command": "zowe.jobs.downloadSingleSpool",
+          "group": "003_zowe_jobsMainframeInteraction@1"
+        },
+        {
+          "when": "view == zowe.jobs.explorer && viewItem =~ /^spool.*/",
+          "command": "zowe.jobs.downloadSingleSpoolBinary",
+          "group": "003_zowe_jobsMainframeInteraction@2"
+        },
+        {
           "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)job.*/",
           "command": "zowe.jobs.deleteJob",
           "group": "099_zowe_jobsModification"
@@ -1607,6 +1627,14 @@
         },
         {
           "command": "zowe.jobs.refreshSpool",
+          "when": "never"
+        },
+        {
+          "command": "zowe.jobs.downloadSingleSpool",
+          "when": "never"
+        },
+        {
+          "command": "zowe.jobs.downloadSingleSpoolBinary",
           "when": "never"
         },
         {

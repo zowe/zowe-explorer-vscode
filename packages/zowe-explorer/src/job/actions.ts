@@ -59,6 +59,40 @@ export async function downloadSpool(jobs: IZoweJobTreeNode[], binary?: boolean):
 }
 
 /**
+ * Download all the spool content for the specified job.
+ *
+ * @param job The job to download the spool content from
+ */
+export async function downloadSingleSpool(jobs: IZoweJobTreeNode[], binary?: boolean): Promise<void> {
+    ZoweLogger.trace("job.actions.downloadSingleSpool called.");
+    try {
+        const dirUri = await Gui.showOpenDialog({
+            openLabel: localize("downloadSpool.select", "Select"),
+            canSelectFolders: true,
+            canSelectFiles: false,
+            canSelectMany: false,
+            defaultUri: getDefaultUri(),
+        });
+        if (dirUri !== undefined) {
+            for (const job of jobs) {
+                await ZoweExplorerApiRegister.getJesApi(job.getProfile()).downloadSingleSpool({
+                    jobFile: {
+                        jobid: job.job.jobid,
+                        jobname: job.job.jobname,
+                        id: job.job.id,
+                        ddname: job.job.ddname,
+                        outDir: dirUri[0].fsPath,
+                        binary,
+                    },
+                });
+            }
+        }
+    } catch (error) {
+        await errorHandling(error);
+    }
+}
+
+/**
  * Download the spool content for the specified job
  *
  * @param session The session to which the job belongs
@@ -116,13 +150,7 @@ export async function getSpoolContentFromMainframe(node: IZoweJobTreeNode): Prom
                 prefix = spool.procstep;
             }
 
-            const procstep = spool.procstep ? spool.procstep : undefined;
-            let newLabel: string;
-            if (procstep) {
-                newLabel = `${spool.stepname}:${spool.ddname} - ${procstep}`;
-            } else {
-                newLabel = `${spool.stepname}:${spool.ddname} - ${spool["record-count"]}`;
-            }
+            const newLabel = `${spool.stepname}:${spool.ddname} - ${spool.procstep ?? spool["record-count"]}`;
 
             const spoolNode = new Spool(
                 newLabel,

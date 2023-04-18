@@ -21,7 +21,7 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
     }
 
     private session: zowe.imperative.Session;
-    public constructor(public profile?: zowe.imperative.IProfileLoaded) {}
+    public constructor(public profile?: zowe.imperative.IProfileLoaded) { }
 
     public getProfileTypeName(): string {
         return ZosmfApiCommon.getProfileTypeName();
@@ -276,6 +276,10 @@ export class ZosmfJesApi extends ZosmfApiCommon implements ZoweExplorerApi.IJes 
 
     public downloadSpoolContent(parms: zowe.IDownloadAllSpoolContentParms): Promise<void> {
         return zowe.DownloadJobs.downloadAllSpoolContentCommon(this.getSession(), parms);
+    }
+
+    public downloadSingleSpool(parms: zowe.IDownloadSpoolContentParms): Promise<void> {
+        return zowe.DownloadJobs.downloadSpoolContentCommon(this.getSession(), parms);
     }
 
     public getSpoolContentById(jobname: string, jobid: string, spoolId: number): Promise<string> {
