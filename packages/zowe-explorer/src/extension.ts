@@ -34,9 +34,9 @@ import { ZoweSaveQueue } from "./abstract/ZoweSaveQueue";
  * @returns {Promise<ZoweExplorerApiRegister>}
  */
 export async function activate(context: vscode.ExtensionContext): Promise<ZoweExplorerApiRegister> {
+    await ZoweLogger.initializeZoweLogger(context);
     // Get temp folder location from settings
     const tempPath: string = SettingsConfig.getDirectValue(globals.SETTINGS_TEMP_FOLDER_PATH);
-    await ZoweLogger.initializeZoweLogger(context);
     // Determine the runtime framework to support special behavior for Theia
     globals.defineGlobals(tempPath);
 
