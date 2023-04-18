@@ -20,7 +20,7 @@ Table of contents:
 
 ## Kinds of extensions
 
-The following kinds of extensions can be certified as compliant for Zowe Explorer. See the [README-Conformance.md](README-Conformance.md) file for
+The following kinds of extensions can be certified as compliant for Zowe Explorer. See the [README-Conformance Criteria V2.md](Conformance%20Criteria/README-Conformance%20Criteria%20V2.md) file for
 the specific criteria. This document will deep dive into several of these to give extenders more guidance and examples.
 
 One extension offering needs to comply with at least one of these kinds, but it can also be in several or all of the kinds listed. In addition to fulfilling all the required criteria for at least one kind (1 to 3), the candidate extension also needs to fulfill the required criteria of the (0) General category.
@@ -44,7 +44,7 @@ The Zowe Explorer API package provided in this GitHub repository is comprised of
 
 - [profiles](../packages/zowe-explorer-api/src/profiles): Contains the API declarations as well as an implementation for an in-memory Zowe CLI profiles cache. All modules in this folder have been written completely independent of VS Code and can therefore be reused also in other NPM packages such as Zowe CLI plugins.
 - [tree](../packages/zowe-explorer-api/src/tree): Contains VS Code-specific APIs such as the interfaces used to overlay the VS Code tree views with additional Zowe Explorer data. These interfaces can be used to navigate the Zowe Explorer tree views for the implementation of extensions that implement additional menus and operations.
-- [security](packages/zowe-explorer-api/src/security): Contains VS Code-specific APIs for initializing and accessing the secure credentials store used by Zowe.
+- [security](../packages/zowe-explorer-api/src/security): Contains VS Code-specific API for initializing and accessing the secure credentials store used by Zowe.
 
 ## Zowe Explorer extension dependencies and activation
 
@@ -153,9 +153,9 @@ if (zoweExplorerApi) {
 
 ### Asking the User for Credentials
 
-A Zowe Explorer extension that uses the Zowe Explorer profiles may need to ask the user for credentials in order to perform certain actions against the service. It is possible for the Zowe CLI profiles and the Zowe Explorer profiles to not contain sensitive information like user and password, thus the need to prompt for them. In order to standardize on how extenders may ask for credentials, the Zowe Explorer exposes a `ZoweVsCodeExtension.promptCredentials()` API via the Zowe Explorer API NPM package. Said function allows for customization (e.g. internationalization) by accepting a `vscode.InputBoxOptions` object for the user and the password input boxes that will be presented to end-users.
+A Zowe Explorer extension that uses the Zowe Explorer profiles may need to ask the user for credentials in order to perform certain actions against the service. It is possible for the Zowe CLI profiles and the Zowe Explorer profiles to not contain sensitive information like user and password, thus the need to prompt for them. In order to standardize on how extenders may ask for credentials, the Zowe Explorer exposes a `ZoweVsCodeExtension.updateCredentials` API via the Zowe Explorer API NPM package. Said function allows for customization (e.g. internationalization) by accepting a `vscode.InputBoxOptions` object for the user and the password input boxes that will be presented to end-users.
 
-For an example on how to use the `promptCredentials()` API, see the [`Profiles.ts#promptCredentials(...)`](https://github.com/zowe/vscode-extension-for-zowe/blob/bb75051b14f12fde7cb627c24546d0effab887cf/packages/zowe-explorer/src/Profiles.ts#L885-L906) function.
+For an example on how to use the `updateCredentials()` API, see the [`Profiles.ts#promptCredentials(...)`](https://github.com/zowe/vscode-extension-for-zowe/blob/5f8def3bbef90a2905068953c23fdab332889e2a/packages/zowe-explorer/src/Profiles.ts#L873-L883) function.
 
 **Note:** The `promptCredentials()` API will default to the English language if no customization is provided.
 
@@ -179,9 +179,60 @@ if (zoweExplorerApi) {
 
   // Initialized the users ~/.zowe directory with the metadata for FTP profiles in case
   // the user does not have the FTP CLI Plugin installed and profiles created, yet.
-  const meta = await CoreUtils.getProfileMeta();
+  const meta: ICommandProfileTypeConfiguration[] = await CoreUtils.getProfileMeta();
+
+  // The above `meta` is of type ICommandProfileTypeConfiguration[] from the `@zowe/imperative` package.
+  // When calling the `CoreUtils.getProfileMeta()`, the FTP plug-in returns the following profile configuration
+  /*
+    [
+      {
+        type: "zftp",
+        createProfileExamples: [{
+          options: "myprofile -u ibmuser -p ibmp4ss -H sys123",
+          description: "Create a zftp profile called 'myprofile' ..."
+        }],
+        schema: {
+          type: "object",
+          title: "Configuration profile for z/OS FTP",
+          description: "Configuration profile for z/OS FTP",
+          properties: {
+            host: {
+              type: "string",
+              optionDefinition: {
+                type: "string",
+                name: "host", aliases: ["H"],
+                description: "The hostname ...",
+                group: "FTP Connection options"
+              }
+            },
+            port: {
+              type: "number",
+              optionDefinition: { <similar structure as host.optionDefinition> },
+              includeInTemplate: true
+            },
+            user: {
+              type: "string",
+              optionDefinition: { <similar structure as host.optionDefinition> },
+              secure: true
+            },
+            password: {
+              type: "string",
+              optionDefinition: { <similar structure as host.optionDefinition> },
+              secure: true
+            },
+            ...
+            { <other properties with a similar structure> }
+            ...
+          },
+          optional: ["host", "port", "user", "password", ...],
+        },
+      },
+    ]
+  */
+
   await zoweExplorerApi.getExplorerExtenderApi().initForZowe("zftp", meta);
   await zoweExplorerApi.getExplorerExtenderApi().reloadProfiles();
+}
 ```
 
 The FTP Zowe Explorer extension provides examples for providing a data provider for the FTP protocol. The extension provides data providers for USS, MVS, as well as JES. There are three modules in the source code that implement the required operations of the Zowe Explorer API for each view in the `packages/zowe-explorer-ftp-extension/src` folder:
@@ -223,6 +274,7 @@ if (zoweExplorerApi) {
   const defaultCicsProfile = profilesCache.getDefaultProfile("cics");
   const profileNames = await profilesCache.getNamesForType("cics");
   const firstProfile = profilesCache.loadNamedProfile(profileNames[0]);
+}
 ```
 
 ## Creating an extension that adds menu commands
