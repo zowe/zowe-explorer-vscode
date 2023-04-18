@@ -33,7 +33,7 @@ export let ZOWE_TMP_FOLDER: string;
 export let USS_DIR: string;
 export let DS_DIR: string;
 export let CONFIG_PATH; // set during activate
-export let ISTHEIA: boolean = false; // set during activate
+export let ISTHEIA = false; // set during activate
 export let LOG: imperative.Logger;
 export const COMMAND_COUNT = 105;
 export const MAX_SEARCH_HISTORY = 5;
@@ -289,7 +289,7 @@ export function defineGlobals(tempPath: string | undefined): void {
         ((appName && appName.toLowerCase().includes("theia")) || (uriScheme && uriScheme.toLowerCase().includes("theia"))) &&
         vscode.env.uiKind === vscode.UIKind.Web
     ) {
-        this.ISTHEIA = true;
+        ISTHEIA = true;
         ZoweLogger.info(localize("globals.defineGlobals.isTheia", "Zowe Explorer is running in Theia environment."));
     }
 
@@ -325,7 +325,7 @@ export function initLogger(logsPath: string): void {
         loggerConfigCopy.log4jsConfig.categories[appenderName].level = zeLogLevel;
     }
     imperative.Logger.initLogger(loggerConfigCopy);
-    this.LOG = imperative.Logger.getAppLogger();
+    LOG = imperative.Logger.getAppLogger();
 }
 
 export function setActivated(value: boolean): void {
@@ -340,7 +340,7 @@ export function setSavedProfileContents(value: Uint8Array): void {
 }
 
 export async function setGlobalSecurityValue(): Promise<void> {
-    if (ISTHEIA) {
+    if (ISTHEIA && !SettingsConfig.isConfigSettingSetByUser(SETTINGS_SECURE_CREDENTIALS_ENABLED)) {
         PROFILE_SECURITY = false;
         await SettingsConfig.setDirectValue(SETTINGS_SECURE_CREDENTIALS_ENABLED, false, vscode.ConfigurationTarget.Global);
         return;

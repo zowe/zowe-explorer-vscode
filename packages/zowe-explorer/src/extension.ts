@@ -15,7 +15,7 @@ import { getZoweDir } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
 import { ZoweExplorerExtender } from "./ZoweExplorerExtender";
 import { Profiles } from "./Profiles";
-import { initializeZoweProfiles, initializeZoweTempFolder } from "./utils/ProfilesUtils";
+import { ProfilesUtils } from "./utils/ProfilesUtils";
 import { initializeSpoolProvider } from "./SpoolProvider";
 import { cleanTempDir, hideTempFolder } from "./utils/TempFolder";
 import { SettingsConfig } from "./utils/SettingsConfig";
@@ -42,8 +42,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     globals.defineGlobals(tempPath);
 
     hideTempFolder(getZoweDir());
-    await initializeZoweProfiles();
-    initializeZoweTempFolder();
+    await ProfilesUtils.initializeZoweProfiles();
+    ProfilesUtils.initializeZoweTempFolder();
 
     // Initialize profile manager
     await Profiles.createInstance(globals.LOG);

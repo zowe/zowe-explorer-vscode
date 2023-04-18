@@ -22,7 +22,7 @@ import { TsoCommandHandler } from "../command/TsoCommandHandler";
 import { MvsCommandHandler } from "../command/MvsCommandHandler";
 import { saveFile } from "../dataset/actions";
 import { saveUSSFile } from "../uss/actions";
-import { promptCredentials, writeOverridesFile } from "../utils/ProfilesUtils";
+import { ProfilesUtils } from "../utils/ProfilesUtils";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { ZoweSaveQueue } from "../abstract/ZoweSaveQueue";
 import { SettingsConfig } from "../utils/SettingsConfig";
@@ -86,13 +86,13 @@ export function registerCommonCommands(context: vscode.ExtensionContext, provide
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.updateSecureCredentials", async () => {
             await globals.setGlobalSecurityValue();
-            writeOverridesFile();
+            ProfilesUtils.writeOverridesFile();
         })
     );
 
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.promptCredentials", async (node: IZoweTreeNode) => {
-            await promptCredentials(node);
+            await ProfilesUtils.promptCredentials(node);
         })
     );
 

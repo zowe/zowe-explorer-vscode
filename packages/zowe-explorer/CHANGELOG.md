@@ -23,6 +23,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed issue where a spool file would open a duplicate tab when clicked between updates. [#1952](https://github.com/zowe/vscode-extension-for-zowe/issues/1952)
 - Fixed issue where a job search query would not expand the session node after it has been filtered.
 - Fixed error message when no data sets found that match pattern.
+- Fixed secure credential storage not possible to enable in Theia.
 
 ## `2.7.0`
 
