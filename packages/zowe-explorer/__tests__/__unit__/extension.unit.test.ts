@@ -376,16 +376,16 @@ async function createGlobalMocks() {
     // Create a mocked extension context
     const mockExtensionCreator = jest.fn(
         () =>
-        ({
-            subscriptions: [],
-            extensionPath: path.join(__dirname, ".."),
-            extension: {
-                packageJSON: {
-                    packageInfo: "Zowe Explorer",
-                    version: "2.x.x",
+            ({
+                subscriptions: [],
+                extensionPath: path.join(__dirname, ".."),
+                extension: {
+                    packageJSON: {
+                        packageInfo: "Zowe Explorer",
+                        version: "2.x.x",
+                    },
                 },
-            },
-        } as unknown as vscode.ExtensionContext)
+            } as unknown as vscode.ExtensionContext)
     );
     globalMocks.mockExtension = new mockExtensionCreator();
 

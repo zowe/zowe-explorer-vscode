@@ -67,13 +67,13 @@ export function encodeJobFile(session: string, spool: zowe.IJobFile): vscode.Uri
  */
 export const toUniqueJobFileUri =
     (session: string, spool: zowe.IJobFile) =>
-        (uniqueFragment: string): vscode.Uri => {
-            ZoweLogger.trace("SpoolProvider.toUniqueJobFileUri called.");
-            const encodedUri = encodeJobFile(session, spool);
-            return encodedUri.with({
-                fragment: uniqueFragment,
-            });
-        };
+    (uniqueFragment: string): vscode.Uri => {
+        ZoweLogger.trace("SpoolProvider.toUniqueJobFileUri called.");
+        const encodedUri = encodeJobFile(session, spool);
+        return encodedUri.with({
+            fragment: uniqueFragment,
+        });
+    };
 
 /**
  * Gather all spool files for a given job
@@ -100,8 +100,10 @@ export async function getSpoolFiles(node: IZoweJobTreeNode): Promise<zowe.IJobFi
  * @returns true if the selected node matches the spool file, false otherwise
  */
 export function matchSpool(spool: zowe.IJobFile, node: IZoweJobTreeNode) {
-    return `${spool.stepname}:${spool.ddname} - ${spool["record-count"]}` === node.label.toString() ||
-        `${spool.stepname}:${spool.ddname} - ${spool.procstep}` === node.label.toString();
+    return (
+        `${spool.stepname}:${spool.ddname} - ${spool["record-count"]}` === node.label.toString() ||
+        `${spool.stepname}:${spool.ddname} - ${spool.procstep}` === node.label.toString()
+    );
 }
 
 /**

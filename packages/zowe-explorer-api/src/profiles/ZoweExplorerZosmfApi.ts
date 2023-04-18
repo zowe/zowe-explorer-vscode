@@ -21,7 +21,7 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
     }
 
     private session: zowe.imperative.Session;
-    public constructor(public profile?: zowe.imperative.IProfileLoaded) { }
+    public constructor(public profile?: zowe.imperative.IProfileLoaded) {}
 
     public getProfileTypeName(): string {
         return ZosmfApiCommon.getProfileTypeName();
