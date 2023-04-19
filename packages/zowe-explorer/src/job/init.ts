@@ -133,7 +133,7 @@ export async function initJobsProvider(context: vscode.ExtensionContext): Promis
             const isMultipleSelection = selectedNodes.length > 1;
             for (const n of selectedNodes) {
                 if (isMultipleSelection) {
-                    if ((startPolling && !contextuals.isPolling(n)) || (!startPolling && contextuals.isPolling(n))) {
+                    if (startPolling != contextuals.isPolling(n)) {
                         await jobsProvider.pollData(n);
                     }
                 } else {
