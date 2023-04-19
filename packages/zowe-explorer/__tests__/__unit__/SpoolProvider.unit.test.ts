@@ -16,7 +16,6 @@ import { Profiles } from "../../src/Profiles";
 import { ZoweLogger } from "../../src/utils/LoggerUtils";
 import { createIProfile, createISessionWithoutCredentials } from "../../__mocks__/mockCreators/shared";
 import { bindJesApi, createJesApi } from "../../__mocks__/mockCreators/api";
-import { IZoweJobTreeNode } from "@zowe/zowe-explorer-api";
 import { createJobSessionNode } from "../../__mocks__/mockCreators/jobs";
 
 describe("SpoolProvider Unit Tests", () => {
