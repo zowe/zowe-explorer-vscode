@@ -217,4 +217,15 @@ For SDK packages like `zowe-explorer-api`, a TGZ is produced that can be install
 
 For VS Code extensions, a VSIX is produced that can be installed in VS Code or published to the VS Code Marketplace or Open VSX Registry.
 
-**Note:** The list of files included in the VSIX bundle is defined by an allowlist in the ".vscodeignore" file.
+> **Note**
+> The list of files included in the VSIX bundle is defined by an allowlist in the ".vscodeignore" file.
+
+The CI workflows for Zowe Explorer and Zowe Explorer FTP run the `yarn package` command and archive VSIXs as artifacts that can be downloaded for testing. If you have the GitHub CLI installed, you can define a Bash alias like the following to download the VSIX for a given pull request (for example, `dlVsix 123`):
+
+```shell
+dlVsix() {
+  branch=$(gh pr view $1 --json headRefName --jq ".headRefName")
+  runId=$(gh run list -b $branch --limit 1 --status success --workflow "Zowe Explorer CI" --json databaseId --jq ".[0].databaseId")
+  gh run download $runId -n zowe-explorer-vsix
+}
+```
