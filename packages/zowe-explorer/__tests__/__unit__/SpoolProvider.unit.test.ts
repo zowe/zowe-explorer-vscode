@@ -14,6 +14,10 @@ import * as zowe from "@zowe/cli";
 import * as vscode from "vscode";
 import { Profiles } from "../../src/Profiles";
 import { ZoweLogger } from "../../src/utils/LoggerUtils";
+import { createIProfile, createISessionWithoutCredentials } from "../../__mocks__/mockCreators/shared";
+import { bindJesApi, createJesApi } from "../../__mocks__/mockCreators/api";
+import { IZoweJobTreeNode } from "@zowe/zowe-explorer-api";
+import { createJobSessionNode } from "../../__mocks__/mockCreators/jobs";
 
 describe("SpoolProvider Unit Tests", () => {
     const iJobFile: zowe.IJobFile = {
@@ -174,5 +178,55 @@ describe("SpoolProvider Unit Tests", () => {
         expect(getSpoolContentById.mock.calls[0][1]).toEqual(iJobFile.jobname);
         expect(getSpoolContentById.mock.calls[0][2]).toEqual(iJobFile.jobid);
         expect(getSpoolContentById.mock.calls[0][3]).toEqual(iJobFile.id);
+    });
+
+    describe("matchSpool", () => {
+        it("should match spool to the selected node", () => {
+            const spool: zowe.IJobFile = { ...iJobFile, stepname: "test", ddname: "dd", "record-count": 1, procstep: "proc" };
+            let match = spoolprovider.matchSpool(spool, { label: "test:dd - 1" } as any);
+            expect(match).toBe(true);
+
+            match = spoolprovider.matchSpool(spool, { label: "test:dd - proc" } as any);
+            expect(match).toBe(true);
+
+            // Different record-count
+            match = spoolprovider.matchSpool(spool, { label: "test:dd - 2" } as any);
+            expect(match).toBe(false);
+
+            // Different procstep
+            match = spoolprovider.matchSpool(spool, { label: "test:dd - abc" } as any);
+            expect(match).toBe(false);
+
+            // Different stepname
+            match = spoolprovider.matchSpool(spool, { label: "other:dd - 1" } as any);
+            expect(match).toBe(false);
+
+            // Different ddname
+            match = spoolprovider.matchSpool(spool, { label: "test:new - proc" } as any);
+            expect(match).toBe(false);
+        });
+    });
+
+    describe("getSpoolFiles", () => {
+        it("should gather all spool files for a given job", async () => {
+            const profile = createIProfile();
+            const session = createISessionWithoutCredentials();
+            const newJobSession = createJobSessionNode(session, profile);
+
+            const jesApi = createJesApi(profile);
+            bindJesApi(jesApi);
+
+            const spoolOk: zowe.IJobFile = { ...iJobFile, stepname: "test", ddname: "dd", "record-count": 1, procstep: "proc" };
+            const { id, ddname, stepname, ...withoutIdDdStep } = spoolOk;
+
+            newJobSession.job = spoolOk as any;
+
+            const getSpoolFilesSpy = jest.spyOn(jesApi, "getSpoolFiles").mockResolvedValue([spoolOk, withoutIdDdStep] as any);
+
+            const spools = await spoolprovider.getSpoolFiles(newJobSession);
+
+            expect(getSpoolFilesSpy).toHaveBeenCalledWith("TESTJOB", "100");
+            expect(spools).toEqual([spoolOk]);
+        });
     });
 });

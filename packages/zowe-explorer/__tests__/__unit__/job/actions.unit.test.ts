@@ -298,6 +298,61 @@ describe("Jobs Actions Unit Tests - Function downloadSpool", () => {
     });
 });
 
+describe("Jobs Actions Unit Tests - Function downloadSingleSpool", () => {
+    function createBlockMocks() {
+        const session = createISession();
+        const iJob = createIJobObject();
+        const imperativeProfile = createIProfile();
+        const jesApi = createJesApi(imperativeProfile);
+        bindJesApi(jesApi);
+
+        return {
+            session,
+            iJob,
+            imperativeProfile,
+            jesApi,
+        };
+    }
+
+    it("Checking download of Job Spool", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        const iJobFile = createIJobFile();
+        const jobs: Job[] = [];
+        const node = new Job(
+            "test:dd - 1",
+            vscode.TreeItemCollapsibleState.None,
+            null,
+            blockMocks.session,
+            blockMocks.iJob,
+            blockMocks.imperativeProfile
+        );
+        const fileUri = {
+            fsPath: "/tmp/foo",
+            scheme: "",
+            authority: "",
+            fragment: "",
+            path: "",
+            query: "",
+        };
+        jobs.push(node);
+        mocked(Gui.showOpenDialog).mockResolvedValue([fileUri as vscode.Uri]);
+        const downloadFileSpy = jest.spyOn(blockMocks.jesApi, "downloadSingleSpool");
+        const spool: zowe.IJobFile = { ...iJobFile, stepname: "test", ddname: "dd", "record-count": 1 };
+        const getSpoolFilesSpy = jest.spyOn(SpoolProvider, "getSpoolFiles").mockResolvedValue([spool]);
+
+        await jobActions.downloadSingleSpool(jobs, true);
+        expect(mocked(Gui.showOpenDialog)).toBeCalled();
+        expect(getSpoolFilesSpy).toHaveBeenCalledWith(node);
+        expect(downloadFileSpy).toBeCalled();
+        expect(downloadFileSpy.mock.calls[0][0]).toEqual({
+            jobFile: spool,
+            binary: true,
+            outDir: fileUri.fsPath,
+        });
+    });
+});
+
 describe("Jobs Actions Unit Tests - Function downloadJcl", () => {
     function createBlockMocks() {
         const session = createISession();
