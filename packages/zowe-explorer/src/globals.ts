@@ -39,7 +39,6 @@ export const COMMAND_COUNT = 105;
 export const MAX_SEARCH_HISTORY = 5;
 export const MAX_FILE_HISTORY = 10;
 export const STATUS_BAR_TIMEOUT_MS = 5000;
-export const DEFAULT_POLL_INTERVAL = 5000;
 export const CONTEXT_PREFIX = "_";
 export const FAV_SUFFIX = CONTEXT_PREFIX + "fav";
 export const HOME_SUFFIX = CONTEXT_PREFIX + "home";

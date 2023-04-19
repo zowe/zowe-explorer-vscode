@@ -102,7 +102,7 @@
   "zowe.cliLoggerSetting.presented": "User has been asked to sync Zowe Explorer log setting with Zowe CL's environment variable.",
   "zowe.commands.history": "Toggle if Commands persist locally",
   "zowe.automaticProfileValidation": "Allow automatic validation of profiles.",
-  "zowe.pollInterval.info": "Default interval (in milliseconds) when polling spool files.\nSet to 0 to be prompted when polling.",
+  "zowe.pollInterval.info": "Default interval (in milliseconds) when polling spool files.",
   "zowe.settings.version": "Track if migration has been processed",
   "zowe.security.secureCredentialsEnabled": "Allow credentials to be stored securely. If disabled and autoStore is set to true, z/OS credentials are stored as clear text in zowe.config.json.",
   "issueTsoCmd": "Issue TSO Command",

@@ -113,7 +113,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
     public mSessionNodes: IZoweJobTreeNode[] = [];
     public mFavorites: IZoweJobTreeNode[] = [];
     public lastOpened: NodeInteraction = {};
-    private pollInterval: number = SettingsConfig.getDirectValue<number>("zowe.jobs.pollInterval");
+    private pollInterval: number;
     public searchByQuery = new FilterItem({
         text: globals.plusSign + localize("zosJobsProvider.option.prompt.createId", "Create job search filter"),
         menuType: globals.JobPickerTypes.QuerySearch,
@@ -1036,23 +1036,24 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
     }
 
     /**
-     * Show poll options before the user starts polling.
+     * Show poll options for the spool file matching the provided URI, before the user starts polling.
      * @returns true if the user started polling, false if they dismiss the dialog
      */
-    private async showPollOptions(node: IZoweJobTreeNode): Promise<boolean> {
-        const pollValue = this.pollInterval === 0 ? globals.DEFAULT_POLL_INTERVAL : this.pollInterval;
+    private async showPollOptions(uri: vscode.Uri): Promise<boolean> {
+        const pollValue = this.pollInterval ?? SettingsConfig.getDirectValue<number>("zowe.jobs.pollInterval");
         const selection = await Gui.showQuickPick(
             [
-                new FilterItem({
-                    text: "Poll interval (in ms)",
+                {
+                    label: "Poll interval (in ms)",
                     description: String(pollValue),
-                }),
-                new FilterItem({
-                    text: "+ Start Polling",
-                }),
+                },
+                {
+                    label: "+ Start Polling",
+                    picked: true,
+                },
             ],
             {
-                title: localize("zowe.polling.options", "Polling: {0}", node.label as string),
+                title: localize("zowe.polling.options", "Polling: {0}", uri.path),
             }
         );
 
@@ -1064,7 +1065,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             });
             if (intervalEntry) {
                 this.pollInterval = Number(intervalEntry);
-                return this.showPollOptions(node);
+                return this.showPollOptions(uri);
             }
         } else if (selection?.label === "+ Start Polling") {
             this.pollInterval = pollValue;
@@ -1102,14 +1103,12 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             await Gui.showTextDocument(encodedUri);
         }
 
-        // Always prompt the user for a poll interval if they don't have one defined
-        if (SettingsConfig.getDirectValue<number>("zowe.jobs.pollInterval") === 0) {
-            const submitted = await this.showPollOptions(node);
+        // Always prompt the user for a poll interval
+        const submitted = await this.showPollOptions(encodedUri);
 
-            if (!submitted) {
-                Gui.showMessage(localize("zowe.polling.cancelled", "Polling dialog dismissed for {0}; operation cancelled.", node.label as string));
-                return;
-            }
+        if (!submitted) {
+            Gui.showMessage(localize("zowe.polling.cancelled", "Polling dialog dismissed for {0}; operation cancelled.", encodedUri.path));
+            return;
         }
 
         // Pass request function to the poller for continuous updates
@@ -1117,7 +1116,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             msInterval: this.pollInterval,
             request: async () => {
                 const statusMsg = Gui.setStatusBarMessage(
-                    localize("zowe.polling.statusBar", `$(sync~spin) Polling: {0}...`, node.label as string),
+                    localize("zowe.polling.statusBar", `$(sync~spin) Polling: {0}...`, encodedUri.path),
                     globals.STATUS_BAR_TIMEOUT_MS
                 );
                 await fileInEditor.fetchContent.bind(SpoolProvider.files[encodedUri.path])();

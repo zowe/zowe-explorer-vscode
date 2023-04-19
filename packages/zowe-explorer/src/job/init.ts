@@ -126,14 +126,23 @@ export async function initJobsProvider(context: vscode.ExtensionContext): Promis
     );
     context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.ssoLogin", (node: IZoweTreeNode): void => jobsProvider.ssoLogin(node)));
     context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.ssoLogout", (node: IZoweTreeNode): void => jobsProvider.ssoLogout(node)));
-    const spoolFileTogglePoll = async (node: IZoweTreeNode, nodeList: IZoweTreeNode[]): Promise<void> => {
-        const selectedNodes = getSelectedNodeList(node, nodeList);
-        for (const n of selectedNodes) {
-            await jobsProvider.pollData(n);
-        }
-    };
-    context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.startPolling", spoolFileTogglePoll));
-    context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.stopPolling", spoolFileTogglePoll));
+    const spoolFileTogglePoll =
+        (startPolling: boolean) =>
+        async (node: IZoweTreeNode, nodeList: IZoweTreeNode[]): Promise<void> => {
+            const selectedNodes = getSelectedNodeList(node, nodeList);
+            const isMultipleSelection = selectedNodes.length > 1;
+            for (const n of selectedNodes) {
+                if (isMultipleSelection) {
+                    if ((startPolling && !contextuals.isPolling(n)) || (!startPolling && contextuals.isPolling(n))) {
+                        await jobsProvider.pollData(n);
+                    }
+                } else {
+                    await jobsProvider.pollData(n);
+                }
+            }
+        };
+    context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.startPolling", spoolFileTogglePoll(true)));
+    context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.stopPolling", spoolFileTogglePoll(false)));
     context.subscriptions.push(
         vscode.workspace.onDidChangeConfiguration((e) => {
             jobsProvider.onDidChangeConfiguration(e);
