@@ -33,7 +33,7 @@ export let ZOWE_TMP_FOLDER: string;
 export let USS_DIR: string;
 export let DS_DIR: string;
 export let CONFIG_PATH; // set during activate
-export let ISTHEIA: boolean = false; // set during activate
+export let ISTHEIA = false; // set during activate
 export let LOG: imperative.Logger;
 export const COMMAND_COUNT = 105;
 export const MAX_SEARCH_HISTORY = 5;
@@ -78,6 +78,7 @@ export const SETTINGS_VERSION = "zowe.settings.version";
 export const SETTINGS_TEMP_FOLDER_PATH = "zowe.files.temporaryDownloadsFolder.path";
 export const SETTINGS_TEMP_FOLDER_CLEANUP = "zowe.files.temporaryDownloadsFolder.cleanup";
 export const SETTINGS_TEMP_FOLDER_HIDE = "zowe.files.temporaryDownloadsFolder.hide";
+export const SETTINGS_LOGS_FOLDER_PATH = "zowe.files.logsFolder.path";
 export const SETTINGS_DS_DEFAULT_BINARY = "zowe.ds.default.binary";
 export const SETTINGS_DS_DEFAULT_C = "zowe.ds.default.c";
 export const SETTINGS_DS_DEFAULT_CLASSIC = "zowe.ds.default.classic";
@@ -286,7 +287,7 @@ export function defineGlobals(tempPath: string | undefined): void {
         ((appName && appName.toLowerCase().includes("theia")) || (uriScheme && uriScheme.toLowerCase().includes("theia"))) &&
         vscode.env.uiKind === vscode.UIKind.Web
     ) {
-        this.ISTHEIA = true;
+        ISTHEIA = true;
         ZoweLogger.info(localize("globals.defineGlobals.isTheia", "Zowe Explorer is running in Theia environment."));
     }
 
@@ -309,18 +310,20 @@ export function setConfigPath(configPath: string | undefined): void {
 
 /**
  * Initializes Imperative Logger
- * @param context The extension context
+ * @param logsPath File path for logs folder defined in preferences
  */
-export function initLogger(context: vscode.ExtensionContext): string {
-    for (const appenderName of Object.keys(loggerConfig.log4jsConfig.appenders)) {
-        loggerConfig.log4jsConfig.appenders[appenderName].filename = path.join(
-            context.extensionPath,
-            loggerConfig.log4jsConfig.appenders[appenderName].filename
+export function initLogger(logsPath: string): void {
+    const zeLogLevel = ZoweLogger.getLogSetting();
+    const loggerConfigCopy = JSON.parse(JSON.stringify(loggerConfig));
+    for (const appenderName of Object.keys(loggerConfigCopy.log4jsConfig.appenders)) {
+        loggerConfigCopy.log4jsConfig.appenders[appenderName].filename = path.join(
+            logsPath,
+            loggerConfigCopy.log4jsConfig.appenders[appenderName].filename
         );
+        loggerConfigCopy.log4jsConfig.categories[appenderName].level = zeLogLevel;
     }
-    imperative.Logger.initLogger(loggerConfig);
-    this.LOG = imperative.Logger.getAppLogger();
-    return loggerConfig.log4jsConfig.appenders.app.filename;
+    imperative.Logger.initLogger(loggerConfigCopy);
+    LOG = imperative.Logger.getAppLogger();
 }
 
 export function setActivated(value: boolean): void {
@@ -335,12 +338,12 @@ export function setSavedProfileContents(value: Uint8Array): void {
 }
 
 export async function setGlobalSecurityValue(): Promise<void> {
-    if (ISTHEIA) {
+    if (ISTHEIA && !SettingsConfig.isConfigSettingSetByUser(SETTINGS_SECURE_CREDENTIALS_ENABLED)) {
         PROFILE_SECURITY = false;
-        await SettingsConfig.setDirectValue(this.SETTINGS_SECURE_CREDENTIALS_ENABLED, false, vscode.ConfigurationTarget.Global);
+        await SettingsConfig.setDirectValue(SETTINGS_SECURE_CREDENTIALS_ENABLED, false, vscode.ConfigurationTarget.Global);
         return;
     }
-    const settingEnabled: boolean = SettingsConfig.getDirectValue(this.SETTINGS_SECURE_CREDENTIALS_ENABLED);
+    const settingEnabled: boolean = SettingsConfig.getDirectValue(SETTINGS_SECURE_CREDENTIALS_ENABLED);
     if (!settingEnabled) {
         PROFILE_SECURITY = false;
         ZoweLogger.info(localize("globals.setGlobalSecurityValue.unsecured", "Zowe explorer profiles are not secured."));

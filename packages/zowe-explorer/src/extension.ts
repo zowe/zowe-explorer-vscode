@@ -15,7 +15,7 @@ import { getZoweDir } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
 import { ZoweExplorerExtender } from "./ZoweExplorerExtender";
 import { Profiles } from "./Profiles";
-import { initializeZoweProfiles, initializeZoweTempFolder } from "./utils/ProfilesUtils";
+import { ProfilesUtils } from "./utils/ProfilesUtils";
 import { initializeSpoolProvider } from "./SpoolProvider";
 import { cleanTempDir, hideTempFolder } from "./utils/TempFolder";
 import { SettingsConfig } from "./utils/SettingsConfig";
@@ -34,15 +34,15 @@ import { ZoweSaveQueue } from "./abstract/ZoweSaveQueue";
  * @returns {Promise<ZoweExplorerApiRegister>}
  */
 export async function activate(context: vscode.ExtensionContext): Promise<ZoweExplorerApiRegister> {
+    await ZoweLogger.initializeZoweLogger(context);
     // Get temp folder location from settings
     const tempPath: string = SettingsConfig.getDirectValue(globals.SETTINGS_TEMP_FOLDER_PATH);
-    await ZoweLogger.initializeZoweLogger(context);
     // Determine the runtime framework to support special behavior for Theia
     globals.defineGlobals(tempPath);
 
     hideTempFolder(getZoweDir());
-    await initializeZoweProfiles();
-    initializeZoweTempFolder();
+    await ProfilesUtils.initializeZoweProfiles();
+    ProfilesUtils.initializeZoweTempFolder();
 
     // Initialize profile manager
     await Profiles.createInstance(globals.LOG);
@@ -55,10 +55,10 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         job: await initJobsProvider(context),
     };
 
-    await registerCommonCommands(context, providers);
+    registerCommonCommands(context, providers);
     ZoweExplorerExtender.createInstance(providers.ds, providers.uss, providers.job);
     await SettingsConfig.standardizeSettings();
-    await watchConfigProfile(context, providers);
+    watchConfigProfile(context, providers);
     globals.setActivated(true);
     return ZoweExplorerApiRegister.getInstance();
 }
@@ -71,5 +71,5 @@ export async function deactivate(): Promise<void> {
     await ZoweSaveQueue.all();
     cleanTempDir();
     globals.setActivated(false);
-    await ZoweLogger.disposeZoweLogger();
+    ZoweLogger.disposeZoweLogger();
 }

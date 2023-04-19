@@ -208,6 +208,10 @@ describe("SpoolProvider Unit Tests", () => {
     });
 
     describe("getSpoolFiles", () => {
+        afterEach(() => {
+            jest.restoreAllMocks();
+        });
+
         it("should gather all spool files for a given job", async () => {
             const profile = createIProfile();
             const session = createISessionWithoutCredentials();
@@ -227,6 +231,19 @@ describe("SpoolProvider Unit Tests", () => {
 
             expect(getSpoolFilesSpy).toHaveBeenCalledWith("TESTJOB", "100");
             expect(spools).toEqual([spoolOk]);
+        });
+
+        it("should return an empty array of the node.job is null", async () => {
+            const profile = createIProfile();
+            const session = createISessionWithoutCredentials();
+            const newJobSession = createJobSessionNode(session, profile);
+
+            const jesApi = createJesApi(profile);
+            bindJesApi(jesApi);
+
+            const spools = await spoolprovider.getSpoolFiles(newJobSession);
+
+            expect(spools).toEqual([]);
         });
     });
 });
