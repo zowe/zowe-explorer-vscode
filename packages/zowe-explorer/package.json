@@ -116,7 +116,7 @@
       },
       {
         "command": "zowe.manualPoll",
-        "key": "enter",
+        "key": "f5",
         "when": "editorIsOpen"
       }
     ],
