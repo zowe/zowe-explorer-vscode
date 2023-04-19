@@ -38,6 +38,7 @@ export let LOG: imperative.Logger;
 export const COMMAND_COUNT = 105;
 export const MAX_SEARCH_HISTORY = 5;
 export const MAX_FILE_HISTORY = 10;
+export const MS_PER_SEC = 1000;
 export const STATUS_BAR_TIMEOUT_MS = 5000;
 export const CONTEXT_PREFIX = "_";
 export const FAV_SUFFIX = CONTEXT_PREFIX + "fav";

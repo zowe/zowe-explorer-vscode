@@ -873,15 +873,14 @@ describe("ZosJobsProvider unit tests - function pollData", () => {
 
         jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(0);
         Poller.pollRequests = {};
-        const quickPickSpy = jest.spyOn(Gui, "showQuickPick").mockResolvedValueOnce({ label: "Poll interval (in ms)" } as utils.FilterItem);
-        jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("5000");
-        quickPickSpy.mockResolvedValueOnce({ label: "+ Start Polling" } as utils.FilterItem);
-        // Call pollData in context where user provides poll options in quick pick
+
+        const inputBoxSpy = jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("5000");
+        // Call pollData and mimic scenario where user provides poll interval in input box
         globalMocks.testJobsProvider.pollData(spoolNode);
 
         jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(0);
-        quickPickSpy.mockResolvedValueOnce(undefined);
-        // Call pollData in context where user provides dismisses quick pick options and cancels polling
+        inputBoxSpy.mockResolvedValueOnce(undefined);
+        // Call pollData in context where user provides dismisses poll interval input and cancels polling
         globalMocks.testJobsProvider.pollData(spoolNode);
 
         spoolNode.contextValue += globals.POLL_CONTEXT;

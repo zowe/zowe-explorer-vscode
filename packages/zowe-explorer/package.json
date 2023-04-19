@@ -1836,6 +1836,7 @@
         },
         "zowe.jobs.pollInterval": {
           "type": "integer",
+          "default": 5000,
           "description": "%zowe.pollInterval.info%",
           "scope": "window"
         }
