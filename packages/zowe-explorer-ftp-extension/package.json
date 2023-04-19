@@ -5,7 +5,7 @@
   "author": "Zowe",
   "license": "EPL-2.0",
   "description": "Adds zFTP support to Zowe Explorer demonstrating how to extend the Zowe Explorer using its extensibility API.",
-  "version": "1.23.0-SNAPSHOT",
+  "version": "1.22.3",
   "icon": "resources/zowe_ftp_logo.png",
   "repository": {
     "url": "https://github.com/zowe/vscode-extension-for-zowe"
@@ -38,6 +38,7 @@
     "pretty": "prettier --write .",
     "watch": "webpack --mode development --watch --info-verbosity verbose",
     "clean": "rimraf out",
+    "fresh-clone": "yarn clean && rimraf node_modules",
     "vscode:prepublish": "yarn license && yarn lint && webpack --mode production",
     "license": "node ../../scripts/license.js",
     "package": "vsce package --yarn && node ../../scripts/mv-pack.js zowe-explorer-ftp-extension vsix"
@@ -46,7 +47,7 @@
     "vscode": "^1.43.0"
   },
   "dependencies": {
-    "@zowe/zowe-explorer-api": "1.23.0-SNAPSHOT",
+    "@zowe/zowe-explorer-api": "1.22.3",
     "@zowe/zos-ftp-for-zowe-cli": "1.5.0",
     "tmp": "0.2.1"
   },

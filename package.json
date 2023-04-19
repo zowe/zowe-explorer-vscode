@@ -15,7 +15,7 @@
     "vscode": "^1.43.0"
   },
   "dependencies": {
-    "@zowe/cli": "6.40.8",
+    "@zowe/cli": "6.40.15",
     "vscode-nls": "4.1.2"
   },
   "devDependencies": {
@@ -53,7 +53,8 @@
     "**/moment": "^2.29.4",
     "**/log4js": "6.4.6",
     "**/diff": "^3.5.0",
-    "**/markdown-it": "^12.3.2"
+    "**/markdown-it": "^12.3.2",
+    "**/http-cache-semantics": "4.1.1"
   },
   "scripts": {
     "prepare": "yarn build",
@@ -64,6 +65,7 @@
     "test": "yarn workspaces run test",
     "package": "yarn workspaces run package",
     "pretest:integration": "ts-node ./scripts/create-env.ts",
-    "posttest:integration": "ts-node ./scripts/clean-env.ts"
+    "posttest:integration": "ts-node ./scripts/clean-env.ts",
+    "fresh-clone": "yarn workspaces run fresh-clone && rimraf node_modules"
   }
 }
