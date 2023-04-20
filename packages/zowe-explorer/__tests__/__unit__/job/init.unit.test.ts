@@ -89,19 +89,11 @@ describe("Test src/jobs/extension", () => {
             },
             {
                 name: "zowe.jobs.downloadSingleSpool",
-                mock: [
-                    // Selected nodes array is passed to the downloadSingleSpool method
-                    // Hence why the expected value is `[test.value]`
-                    { spy: jest.spyOn(jobActions, "downloadSingleSpool"), arg: [[test.value], false] },
-                ],
+                mock: [{ spy: jest.spyOn(jobActions, "downloadSingleSpool"), arg: [[test.value], false] }],
             },
             {
                 name: "zowe.jobs.downloadSingleSpoolBinary",
-                mock: [
-                    // Selected nodes array is passed to the downloadSingleSpool method
-                    // Hence why the expected value is `[test.value]`
-                    { spy: jest.spyOn(jobActions, "downloadSingleSpool"), arg: [[test.value], true] },
-                ],
+                mock: [{ spy: jest.spyOn(jobActions, "downloadSingleSpool"), arg: [[test.value], true] }],
             },
             {
                 name: "zowe.jobs.addJobsSession",
@@ -124,19 +116,11 @@ describe("Test src/jobs/extension", () => {
             },
             {
                 name: "zowe.jobs.downloadSpool",
-                mock: [
-                    // Selected nodes array is passed to the downloadSpool method
-                    // Hence why the expected value is `[test.value]`
-                    { spy: jest.spyOn(jobActions, "downloadSpool"), arg: [[test.value]] },
-                ],
+                mock: [{ spy: jest.spyOn(jobActions, "downloadSpool"), arg: [[test.value], false] }],
             },
             {
                 name: "zowe.jobs.downloadSpoolBinary",
-                mock: [
-                    // Selected nodes array is passed to the downloadSpool method
-                    // Hence why the expected value is `[test.value]`
-                    { spy: jest.spyOn(jobActions, "downloadSpool"), arg: [[test.value], true] },
-                ],
+                mock: [{ spy: jest.spyOn(jobActions, "downloadSpool"), arg: [[test.value], true] }],
             },
             {
                 name: "zowe.jobs.getJobJcl",
