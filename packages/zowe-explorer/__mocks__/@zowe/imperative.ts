@@ -296,7 +296,7 @@ export class CredentialManagerOverride {
 }
 
 export class ProfileCredentials {
-    public static defaultCredMgrWithKeytar(callback: Function): string {
+    public static defaultCredMgrWithKeytar(requireKeytar: () => NodeModule): string {
         return "Test";
     }
 }
