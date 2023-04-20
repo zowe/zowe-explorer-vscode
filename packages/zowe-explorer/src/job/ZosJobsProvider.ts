@@ -1035,6 +1035,20 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
     }
 
     /**
+     * Given user-provided input, determine whether the input is a valid polling interval.
+     * @param value The polling interval provided by the user
+     * @returns undefined if valid; otherwise, a description string that explains what a valid polling interval is.
+     */
+    private validatePollInterval(value: string): string {
+        const valueAsNum = Number(value);
+        if (!isNaN(valueAsNum) && valueAsNum >= globals.MS_PER_SEC) {
+            return undefined;
+        }
+
+        return localize("zowe.polling.minInterval", "The polling interval must be greater than or equal to 1000ms.");
+    }
+
+    /**
      * Show poll options for the spool file matching the provided URI, before the user starts polling.
      * @returns true if the user started polling, false if they dismiss the dialog
      */
@@ -1043,19 +1057,16 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         const intervalInput = await Gui.showInputBox({
             title: localize("zowe.polling.intervalOption", "Poll interval (in ms) for: {0}", uri.path),
             value: pollValue.toString(),
-            validateInput: (value) => {
-                const valueAsNum = Number(value);
-                if (!isNaN(valueAsNum) && valueAsNum >= globals.MS_PER_SEC) {
-                    return undefined;
-                }
-
-                return localize("zowe.polling.minInterval", "The polling interval must be greater than or equal to 1000ms.");
-            },
+            validateInput: (value: string) => this.validatePollInterval(value),
         });
 
         return intervalInput ? Number(intervalInput) : 0;
     }
 
+    /**
+     * Poll the provided spool file, given a user-provided polling interval.
+     * @param node The node to start/stop polling
+     */
     public async pollData(node: IZoweJobTreeNode): Promise<void> {
         if (!contextually.isSpoolFile(node)) {
             return;

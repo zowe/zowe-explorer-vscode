@@ -35,7 +35,6 @@ import { jobStringValidator } from "../../../src/shared/utils";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 import { Poller } from "@zowe/zowe-explorer-api/src/utils";
 import { SettingsConfig } from "../../../src/utils/SettingsConfig";
-import * as contextually from "../../../src/shared/context";
 
 async function createGlobalMocks() {
     const globalMocks = {
@@ -849,7 +848,8 @@ describe("ZosJobsProvider unit tests - Function getPopulatedPickerArray", () => 
 });
 
 describe("ZosJobsProvider unit tests - function pollData", () => {
-    it("", async () => {
+    jest.useFakeTimers();
+    it("correctly toggles polling on and off", async () => {
         const globalMocks = await createGlobalMocks();
         const testJobNode = new Job(
             "SOME(JOBNODE) - Input",
@@ -868,31 +868,41 @@ describe("ZosJobsProvider unit tests - function pollData", () => {
             globalMocks.testIJob,
             testJobNode
         );
-        // Call pollData in typical context where default poll interval is already defined
-        globalMocks.testJobsProvider.pollData(spoolNode);
 
-        jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(0);
-        Poller.pollRequests = {};
+        // Case 1: pollData called, polling dialog is dismissed
+        const getDirectValueSpy = jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(0);
+        const inputBoxSpy = jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce(undefined);
+        await globalMocks.testJobsProvider.pollData(spoolNode);
+        // Poll requests should be empty
+        expect(Poller.pollRequests).toStrictEqual({});
 
-        const inputBoxSpy = jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("5000");
-        // Call pollData and mimic scenario where user provides poll interval in input box
-        globalMocks.testJobsProvider.pollData(spoolNode);
+        // Case 2: pollData called, user provides poll interval in input box
+        getDirectValueSpy.mockReturnValueOnce(5000);
+        inputBoxSpy.mockResolvedValueOnce("5000");
+        await globalMocks.testJobsProvider.pollData(spoolNode);
+        expect(Poller.pollRequests).not.toStrictEqual({});
 
-        jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(0);
-        inputBoxSpy.mockResolvedValueOnce(undefined);
-        // Call pollData in context where user provides dismisses poll interval input and cancels polling
-        globalMocks.testJobsProvider.pollData(spoolNode);
+        // Case 3: pollData called again to turn polling off
+        await globalMocks.testJobsProvider.pollData(spoolNode);
 
-        spoolNode.contextValue += globals.POLL_CONTEXT;
-        Object.defineProperty(contextually, "isPolling", {
-            value: (_node) => true,
-            configurable: true,
-        });
-        // Call pollData again to mimic turning polling off
-        globalMocks.testJobsProvider.pollData(spoolNode);
+        // Case 4: pollData called with invalid node (verify spool file context check)
+        await globalMocks.testJobsProvider.pollData(testJobNode);
+    });
 
-        // Call pollData with invalid node to verify spool file context check
-        globalMocks.testJobsProvider.pollData(testJobNode);
+    it("properly validates the user-provided polling interval", async () => {
+        const globalMocks = await createGlobalMocks();
+
+        // a string is not a valid number, should return desc. for a valid polling interval
+        expect(globalMocks.testJobsProvider.validatePollInterval("string that should be a number")).toStrictEqual(
+            "The polling interval must be greater than or equal to 1000ms."
+        );
+        // number < 1000 should also return the desc. for a valid polling interval
+        expect(globalMocks.testJobsProvider.validatePollInterval("999")).toStrictEqual(
+            "The polling interval must be greater than or equal to 1000ms."
+        );
+        // number >= 1000 should be undefined
+        expect(globalMocks.testJobsProvider.validatePollInterval("1000")).toStrictEqual(undefined);
+        expect(globalMocks.testJobsProvider.validatePollInterval("1001")).toStrictEqual(undefined);
     });
 });
 
