@@ -30,6 +30,7 @@ export class SettingsConfig {
      * @param {string} key - The config property that needs retrieving
      */
     public static getDirectValue<T>(key: string): T {
+        ZoweLogger.trace("SettingsConfig.getDirectValue called.");
         const [first, ...rest] = key.split(".");
         return vscode.workspace.getConfiguration(first).get(rest.join("."));
     }

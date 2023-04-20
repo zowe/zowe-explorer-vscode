@@ -253,7 +253,8 @@ export class ProfilesUtils {
         ZoweLogger.trace("ProfilesUtils.getProfileInfo called.");
         const credentialManagerMap = ProfilesUtils.getCredentialManagerOverride();
         const customCredentialManagerExtension = vscode.extensions.getExtension(credentialManagerMap?.credMgrZEName ?? "");
-        if (credentialManagerMap && customCredentialManagerExtension) {
+        const settingEnabled: boolean = SettingsConfig.getDirectValue(globals.SETTINGS_SECURE_CREDENTIALS_ENABLED);
+        if (credentialManagerMap && customCredentialManagerExtension && settingEnabled) {
             ZoweLogger.info(localize("ProfilesUtils.getProfileInfo.usingCustom", "Custom credential manager found, attempting to activate."));
             const credentialManager = await ProfilesUtils.activateCredentialManagerOverride(customCredentialManagerExtension);
             if (credentialManager) {
@@ -378,7 +379,7 @@ export class ProfilesUtils {
         let fileContent: string;
         const settingsFile = path.join(getZoweDir(), "settings", "imperative.json");
         try {
-            fd = fs.openSync(settingsFile, "r+");
+            fd = fs.openSync(settingsFile, "w+");
             fileContent = fs.readFileSync(fd, "utf-8");
         } catch {
             // If reading the file failed because it does not exist, then create it
@@ -407,7 +408,10 @@ export class ProfilesUtils {
                 settings = { overrides: { CredentialManager: globals.PROFILE_SECURITY } };
             }
             fileContent = JSON.stringify(settings, null, 2);
-            fs.writeFileSync(fd, fileContent, "utf-8");
+            fs.writeFileSync(fd, fileContent, {
+                encoding: "utf-8",
+                flag: "w",
+            });
         } finally {
             fs.closeSync(fd);
         }

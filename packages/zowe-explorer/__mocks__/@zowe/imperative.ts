@@ -295,6 +295,12 @@ export class CredentialManagerOverride {
     }
 }
 
+export class ProfileCredentials {
+    public static defaultCredMgrWithKeytar(callback: Function): string {
+        return "Test";
+    }
+}
+
 export class ConfigBuilder {
     public static build() {
         return {

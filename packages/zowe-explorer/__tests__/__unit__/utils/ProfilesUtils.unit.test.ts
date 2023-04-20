@@ -341,8 +341,8 @@ describe("ProfilesUtils unit tests", () => {
             const content = JSON.stringify(fileJson, null, 2);
             blockMocks.mockReadFileSync.mockReturnValueOnce(JSON.stringify({ overrides: { CredentialManager: false, testValue: true } }, null, 2));
             profUtils.ProfilesUtils.writeOverridesFile();
-            expect(blockMocks.mockOpenSync).toBeCalledWith(blockMocks.zoweDir, "r+");
-            expect(blockMocks.mockWriteFileSync).toBeCalledWith(blockMocks.fileHandle, content, "utf-8");
+            expect(blockMocks.mockOpenSync).toBeCalledWith(blockMocks.zoweDir, "w+");
+            expect(blockMocks.mockWriteFileSync).toBeCalledWith(blockMocks.fileHandle, content, { encoding: "utf-8", flag: "w" });
         });
 
         it("should have no change to global variable PROFILE_SECURITY and returns", async () => {
@@ -357,15 +357,15 @@ describe("ProfilesUtils unit tests", () => {
 
         it("should have not exist and create default file", async () => {
             const blockMocks = createBlockMocks();
-            blockMocks.mockOpenSync.mockImplementation((filepath: string, mode: string) => {
-                if (mode.startsWith("r")) {
+            blockMocks.mockOpenSync.mockImplementationOnce((filepath: string, mode: string) => {
+                if (mode.startsWith("w")) {
                     throw new Error("ENOENT");
                 }
                 return blockMocks.fileHandle;
             });
             const content = JSON.stringify(blockMocks.mockFileRead, null, 2);
             profUtils.ProfilesUtils.writeOverridesFile();
-            expect(blockMocks.mockWriteFileSync).toBeCalledWith(blockMocks.fileHandle, content, "utf-8");
+            expect(blockMocks.mockWriteFileSync).toBeCalledWith(blockMocks.fileHandle, content, { encoding: "utf-8", flag: "w" });
             expect(blockMocks.mockOpenSync).toBeCalledTimes(2);
             expect(blockMocks.mockReadFileSync).toBeCalledTimes(0);
         });
