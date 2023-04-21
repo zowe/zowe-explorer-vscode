@@ -19,6 +19,7 @@ import TestUtils from "../utils/TestUtils";
 import * as tmp from "tmp";
 import { sessionMap, ZoweLogger } from "../../../src/extension";
 import { Gui } from "@zowe/zowe-explorer-api";
+import { ZoweFtpExtensionError } from "../../../src/ZoweFtpExtensionError";
 
 // two methods to mock modules: create a __mocks__ file for zowe-explorer-api.ts and direct mock for extension.ts
 jest.mock("../../../__mocks__/@zowe/zowe-explorer-api.ts");
@@ -40,6 +41,7 @@ describe("FtpMvsApi", () => {
         MvsApi.ftpClient = jest.fn().mockReturnValue({ host: "", user: "", password: "", port: "" });
         MvsApi.releaseConnection = jest.fn();
         sessionMap.get = jest.fn().mockReturnValue({ mvsListConnection: { connected: true } });
+        ZoweLogger.getExtensionName = jest.fn().mockReturnValue("Zowe Explorer FTP Extension");
     });
 
     afterEach(() => {
@@ -215,27 +217,57 @@ describe("FtpMvsApi", () => {
     });
 
     it("should throw an error when copyDataSet is called", async () => {
-        await expect(MvsApi.copyDataSet(null, null)).rejects.toThrowError();
-        expect(errorMessageSpy).toBeCalled();
+        try {
+            await MvsApi.copyDataSet(null, null);
+        } catch (error) {
+            expect(ZoweLogger.getExtensionName).toHaveBeenCalled();
+            expect(error.message).toContain("Zowe Explorer FTP Extension: Copy dataset is not supported in ftp extension.");
+            expect(error).not.toBeUndefined();
+            expect(error).toBeInstanceOf(ZoweFtpExtensionError);
+        }
     });
+});
 
-    it("should throw an error when hMigrateDataSet is called", async () => {
-        await expect(MvsApi.hMigrateDataSet("test")).rejects.toThrowError();
-        expect(errorMessageSpy).toBeCalled();
-    });
+it("should throw an error when hMigrateDataSet is called", async () => {
+    try {
+        await MvsApi.hMigrateDataSet("test");
+    } catch (error) {
+        expect(ZoweLogger.getExtensionName).toHaveBeenCalled();
+        expect(error.message).toContain("Zowe Explorer FTP Extension: Migrate dataset is not supported in ftp extension.");
+        expect(error).not.toBeUndefined();
+        expect(error).toBeInstanceOf(ZoweFtpExtensionError);
+    }
+});
 
-    it("should throw an error when hRecallDataSet is called", async () => {
-        await expect(MvsApi.hRecallDataSet("test")).rejects.toThrowError();
-        expect(errorMessageSpy).toBeCalled();
-    });
+it("should throw an error when hRecallDataSet is called", async () => {
+    try {
+        await MvsApi.hRecallDataSet("test");
+    } catch (error) {
+        expect(ZoweLogger.getExtensionName).toHaveBeenCalled();
+        expect(error.message).toContain("Zowe Explorer FTP Extension: Recall dataset is not supported in ftp extension.");
+        expect(error).not.toBeUndefined();
+        expect(error).toBeInstanceOf(ZoweFtpExtensionError);
+    }
+});
 
-    it("should throw an error when allocateLikeDataset is called", async () => {
-        await expect(MvsApi.allocateLikeDataSet("test", "test2")).rejects.toThrowError();
-        expect(errorMessageSpy).toBeCalled();
-    });
+it("should throw an error when allocateLikeDataset is called", async () => {
+    try {
+        await MvsApi.allocateLikeDataSet("test", "test2");
+    } catch (error) {
+        expect(ZoweLogger.getExtensionName).toHaveBeenCalled();
+        expect(error.message).toContain("Zowe Explorer FTP Extension: Allocate like dataset is not supported in ftp extension.");
+        expect(error).not.toBeUndefined();
+        expect(error).toBeInstanceOf(ZoweFtpExtensionError);
+    }
+});
 
-    it("should throw an error when copyDataSetMember is called", async () => {
-        await expect(MvsApi.copyDataSetMember({} as any, {} as any)).rejects.toThrowError();
-        expect(errorMessageSpy).toBeCalled();
-    });
+it("should throw an error when copyDataSetMember is called", async () => {
+    try {
+        await MvsApi.copyDataSetMember({} as any, {} as any);
+    } catch (error) {
+        expect(ZoweLogger.getExtensionName).toHaveBeenCalled();
+        expect(error.message).toContain("Zowe Explorer FTP Extension: Copy dataset member is not supported in ftp extension.");
+        expect(error).not.toBeUndefined();
+        expect(error).toBeInstanceOf(ZoweFtpExtensionError);
+    }
 });
