@@ -15,6 +15,7 @@ import * as vscode from "vscode";
 import * as globals from "../globals";
 import * as path from "path";
 import * as fs from "fs";
+import * as util from "util";
 import { getSecurityModules, IZoweTreeNode, ZoweTreeNode, getZoweDir, getFullPath, Gui } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import * as nls from "vscode-nls";
@@ -36,8 +37,9 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
  * @param {moreInfo} - additional/customized error messages
  *************************************************************************************************************/
 export async function errorHandling(errorDetails: Error | string, label?: string, moreInfo?: string): Promise<void> {
+    // Use util.inspect instead of JSON.stringify to handle circular references
     // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-    ZoweLogger.error(`${errorDetails.toString()}\n` + JSON.stringify({ errorDetails, label, moreInfo }));
+    ZoweLogger.error(`${errorDetails.toString()}\n` + util.inspect({ errorDetails, label, moreInfo }, { depth: null }));
 
     if (errorDetails instanceof imperative.ImperativeError && errorDetails.mDetails !== undefined) {
         const httpErrorCode = errorDetails.mDetails.errorCode as unknown as number;
