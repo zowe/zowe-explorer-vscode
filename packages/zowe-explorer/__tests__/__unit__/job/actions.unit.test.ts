@@ -34,6 +34,7 @@ import * as refreshActions from "../../../src/shared/refresh";
 import * as sharedUtils from "../../../src/shared/utils";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
+import { SpoolFile } from "../../../src/SpoolProvider";
 
 const activeTextEditorDocument = jest.fn();
 
@@ -53,6 +54,7 @@ function createGlobalMocks() {
     Object.defineProperty(vscode.window, "showOpenDialog", { value: jest.fn(), configurable: true });
     Object.defineProperty(zowe, "GetJobs", { value: jest.fn(), configurable: true });
     Object.defineProperty(zowe.GetJobs, "getJclForJob", { value: jest.fn(), configurable: true });
+    Object.defineProperty(zowe.GetJobs, "getSpoolContentById", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.workspace, "openTextDocument", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showTextDocument", { value: jest.fn(), configurable: true });
     Object.defineProperty(zowe, "ZosmfSession", { value: jest.fn(), configurable: true });
@@ -67,11 +69,9 @@ function createGlobalMocks() {
         configurable: true,
     });
     Object.defineProperty(Profiles, "getInstance", { value: jest.fn(), configurable: true });
-    Object.defineProperty(vscode, "Uri", { value: jest.fn(), configurable: true });
-    Object.defineProperty(vscode.Uri, "parse", { value: jest.fn(), configurable: true });
-    Object.defineProperty(vscode.Uri.parse, "with", { value: jest.fn(), configurable: true });
     const executeCommand = jest.fn();
     Object.defineProperty(vscode.commands, "executeCommand", { value: executeCommand, configurable: true });
+    Object.defineProperty(SpoolProvider, "encodeJobFile", { value: jest.fn(), configurable: true });
     Object.defineProperty(SpoolProvider, "toUniqueJobFileUri", { value: jest.fn(), configurable: true });
     Object.defineProperty(ZoweLogger, "error", { value: jest.fn(), configurable: true });
     Object.defineProperty(ZoweLogger, "debug", { value: jest.fn(), configurable: true });
@@ -711,7 +711,7 @@ describe("Jobs Actions Unit Tests - Function getSpoolContent", () => {
         const session = "sessionName";
         const spoolFile = blockMocks.iJobFile;
         const anyTimestamp = Date.now();
-        mocked(SpoolProvider.toUniqueJobFileUri).mockReturnValueOnce(() => blockMocks.mockUri);
+        mocked(SpoolProvider.encodeJobFile).mockReturnValueOnce(blockMocks.mockUri);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
 
         await jobActions.getSpoolContent(session, spoolFile, anyTimestamp);
@@ -735,7 +735,7 @@ describe("Jobs Actions Unit Tests - Function getSpoolContent", () => {
                 };
             }),
         });
-        mocked(SpoolProvider.toUniqueJobFileUri).mockReturnValueOnce(() => blockMocks.mockUri);
+        mocked(SpoolProvider.encodeJobFile).mockReturnValueOnce(blockMocks.mockUri);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
 
         await jobActions.getSpoolContent(session, spoolFile, anyTimestamp);
@@ -765,7 +765,7 @@ describe("Jobs Actions Unit Tests - Function getSpoolContent", () => {
         const spoolFile = blockMocks.iJobFile;
         const anyTimestamp = Date.now();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
-        mocked(SpoolProvider.toUniqueJobFileUri).mockReturnValueOnce(() => blockMocks.mockUri);
+        mocked(SpoolProvider.encodeJobFile).mockReturnValueOnce(blockMocks.mockUri);
         mocked(vscode.window.showTextDocument).mockImplementationOnce(() => {
             throw new Error("Test");
         });
@@ -1157,5 +1157,49 @@ describe("job deletion command", () => {
 
         // assert
         expect(mocked(jobsProvider.delete)).toBeCalledWith(jobNode);
+    });
+});
+
+describe("Job Actions Unit Tests - Misc. functions", () => {
+    createGlobalMocks();
+    const session = createISession();
+    const profile = createIProfile();
+    const job = createIJobObject();
+    const jobNode = new Job("job", vscode.TreeItemCollapsibleState.None, null, session, job, profile);
+
+    it("refreshJob works as intended", () => {
+        const jobsProvider = createJobsTree(session, job, profile, createTreeView());
+        const refreshElementSpy = jest.spyOn(jobsProvider, "refreshElement");
+        jobActions.refreshJob(jobNode, jobsProvider);
+        expect(refreshElementSpy).toHaveBeenCalledWith(jobNode);
+    });
+
+    it("spoolFilePollEvent works as intended", () => {
+        Object.defineProperty(Profiles, "getInstance", {
+            value: () => ({
+                loadNamedProfile: () => profile,
+            }),
+            configurable: true,
+        });
+        const testDoc = {
+            fileName: "some_spool_file",
+            uri: {
+                path: "some_random_path",
+                scheme: "zosspool",
+                // eslint-disable-next-line max-len
+                query: '["some.profile",{"recfm":"UA","records-url":"https://some.url/","stepname":"STEP1","subsystem":"SUB1","job-correlator":"someid","byte-count":1298,"lrecl":133,"jobid":"JOB12345","ddname":"JESMSGLG","id":2,"record-count":19,"class":"A","jobname":"IEFBR14T","procstep":null}]',
+            },
+        } as unknown as vscode.TextDocument;
+        const eventEmitter = {
+            fire: jest.fn(),
+        };
+        // add a fake spool file to SpoolProvider
+        SpoolProvider.default.files[testDoc.uri.path] = new SpoolFile(testDoc.uri, eventEmitter as unknown as vscode.EventEmitter<vscode.Uri>);
+
+        const fetchContentSpy = jest.spyOn(SpoolFile.prototype, "fetchContent").mockImplementation();
+        const statusMsgSpy = jest.spyOn(Gui, "setStatusBarMessage");
+        jobActions.spoolFilePollEvent(testDoc);
+        expect(fetchContentSpy).toHaveBeenCalled();
+        expect(statusMsgSpy).toHaveBeenCalledWith(`$(sync~spin) Polling: ${testDoc.fileName}...`);
     });
 });

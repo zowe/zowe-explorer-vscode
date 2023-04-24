@@ -25,6 +25,7 @@ import { initJobsProvider } from "./job/init";
 import { IZoweProviders, registerCommonCommands, registerRefreshCommand, watchConfigProfile } from "./shared/init";
 import { ZoweLogger } from "./utils/LoggerUtils";
 import { ZoweSaveQueue } from "./abstract/ZoweSaveQueue";
+import { PollDecorator } from "./utils/DecorationProviders";
 
 /**
  * The function that runs when the extension is loaded
@@ -48,6 +49,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     await Profiles.createInstance(globals.LOG);
     registerRefreshCommand(context, activate, deactivate);
     initializeSpoolProvider(context);
+
+    PollDecorator.register();
 
     const providers: IZoweProviders = {
         ds: await initDatasetProvider(context),
