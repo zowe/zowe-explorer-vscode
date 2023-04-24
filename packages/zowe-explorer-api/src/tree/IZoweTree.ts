@@ -288,4 +288,10 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T> {
      * @param {IZoweTreeNode} sessionNode the session to use
      */
     openItemFromPath?(path: string, sessionNode: IZoweTreeNode);
+    /**
+     * Initializes polling (refresh w/ configurable interval) for the provided node.
+     *
+     * @param {IZoweTreeNode} node the node to poll data for
+     */
+    pollData?(node: IZoweTreeNode): any;
 }

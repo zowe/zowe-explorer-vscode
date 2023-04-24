@@ -43,6 +43,7 @@ describe("Test src/jobs/extension", () => {
             ssoLogin: jest.fn(),
             ssoLogout: jest.fn(),
             onDidChangeConfiguration: jest.fn(),
+            pollData: jest.fn(),
         };
         const commands: IJestIt[] = [
             {
@@ -194,6 +195,14 @@ describe("Test src/jobs/extension", () => {
             {
                 name: "onDidChangeConfiguration",
                 mock: [{ spy: jest.spyOn(jobsProvider, "onDidChangeConfiguration"), arg: [test.value] }],
+            },
+            {
+                name: "zowe.jobs.startPolling",
+                mock: [{ spy: jest.spyOn(jobsProvider, "pollData"), arg: [test.value] }],
+            },
+            {
+                name: "zowe.jobs.stopPolling",
+                mock: [{ spy: jest.spyOn(jobsProvider, "pollData"), arg: [test.value] }],
             },
         ];
 

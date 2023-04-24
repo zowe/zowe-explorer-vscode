@@ -11,6 +11,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Opening a dialog for Upload or Download of files will now open at the project level directory or the user's home directory if no project is opened. [#2203](https://github.com/zowe/vscode-extension-for-zowe/issues/2203)
 - Updated linter rules and addressed linter errors throughout the codebase. [#2184](https://github.com/zowe/vscode-extension-for-zowe/issues/2184)
 - Added a new setting `zowe.files.logsFolder.path` that can be used to override Zowe Explorer logs folder if default location is read-only. [#2186](https://github.com/zowe/vscode-extension-for-zowe/issues/2186)
+- Spool files will now refresh if the file is open in the editor and clicked again in the tree view. [#1952](https://github.com/zowe/vscode-extension-for-zowe/issues/1952)
 - Added a new context menu option to allow users to download Job Spool content in binary format. [#2060](https://github.com/zowe/vscode-extension-for-zowe/issues/2060)
 
 ### Bug fixes
@@ -20,6 +21,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed issue where "Paste" option is shown for a multi-select operation in the "Data Sets" pane.
 - Fixed z/OSMF profiles issue with Data Sets and Jobs with special characters in the names. [#2175](https://github.com/zowe/vscode-extension-for-zowe/issues/2175)
 - Fixed redundant text in error messages that included the same error details twice.
+- Fixed issue where a spool file would open a duplicate tab when clicked between updates. [#1952](https://github.com/zowe/vscode-extension-for-zowe/issues/1952)
+- Fixed issue where a job search query would not expand the session node after it has been filtered.
 - Fixed error message when no data sets found that match pattern.
 - Fixed secure credential storage not possible to enable in Theia.
 

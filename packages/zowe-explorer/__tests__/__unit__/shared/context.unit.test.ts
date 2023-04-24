@@ -41,6 +41,7 @@ describe("Context helper tests", () => {
     const JOBS_SESSION_CONTEXT_FAV = "server_fav";
     const USS_SESSION_CONTEXT_FAV = "uss_session_fav";
     const DS_SESSION_CONTEXT_FAV = "session_fav";
+    const POLL_CONTEXT = "_polling";
 
     const testList: string[] = [
         INFORMATION_CONTEXT,
@@ -244,6 +245,33 @@ describe("Context helper tests", () => {
             }
         }
     });
+
+    it("Test a spool file", () => {
+        for (const ctx of testList) {
+            treeItem.contextValue = ctx;
+            switch (ctx) {
+                case JOBS_SPOOL_CONTEXT:
+                    expect(contextually.isSpoolFile(treeItem)).toBe(true);
+                    break;
+                default:
+                    expect(contextually.isSpoolFile(treeItem)).toBe(false);
+            }
+        }
+    });
+
+    it("Test items that are being polled", () => {
+        for (const ctx of testList) {
+            treeItem.contextValue = ctx;
+            switch (ctx) {
+                case POLL_CONTEXT:
+                    expect(contextually.isPolling(treeItem)).toBe(true);
+                    break;
+                default:
+                    expect(contextually.isPolling(treeItem)).toBe(false);
+            }
+        }
+    });
+
     it("Test is Favorite", async () => {
         for (const ctx of testList) {
             treeItem.contextValue = ctx;

@@ -113,6 +113,11 @@
         "key": "ctrl+v",
         "mac": "cmd+v",
         "when": "focusedView == zowe.ds.explorer && !listSupportsMultiselect"
+      },
+      {
+        "command": "zowe.manualPoll",
+        "key": "f5",
+        "when": "editorIsOpen"
       }
     ],
     "commands": [
@@ -695,6 +700,16 @@
         "category": "Zowe Explorer"
       },
       {
+        "command": "zowe.jobs.stopPolling",
+        "title": "%stopPolling%",
+        "category": "Zowe Explorer"
+      },
+      {
+        "command": "zowe.jobs.startPolling",
+        "title": "%startPolling%",
+        "category": "Zowe Explorer"
+      },
+      {
         "command": "zowe.issueTsoCmd",
         "title": "%issueTsoCmd%",
         "category": "Zowe Explorer"
@@ -726,6 +741,11 @@
       {
         "command": "zowe.jobs.refreshSpool",
         "title": "%jobs.refreshSpool%",
+        "category": "Zowe Explorer"
+      },
+      {
+        "command": "zowe.manualPoll",
+        "title": "%manualPoll%",
         "category": "Zowe Explorer"
       },
       {
@@ -1249,14 +1269,24 @@
           "group": "003_zowe_jobsMainframeInteraction@0"
         },
         {
+          "when": "view == zowe.jobs.explorer && viewItem =~ /^spool$/",
+          "command": "zowe.jobs.startPolling",
+          "group": "003_zowe_jobsMainframeInteraction@1"
+        },
+        {
+          "when": "view == zowe.jobs.explorer && viewItem =~ /^spool_polling.*/",
+          "command": "zowe.jobs.stopPolling",
+          "group": "003_zowe_jobsMainframeInteraction@2"
+        },
+        {
           "when": "view == zowe.jobs.explorer && viewItem =~ /^spool.*/",
           "command": "zowe.jobs.downloadSingleSpool",
-          "group": "003_zowe_jobsMainframeInteraction@1"
+          "group": "003_zowe_jobsMainframeInteraction@3"
         },
         {
           "when": "view == zowe.jobs.explorer && viewItem =~ /^spool.*/",
           "command": "zowe.jobs.downloadSingleSpoolBinary",
-          "group": "003_zowe_jobsMainframeInteraction@2"
+          "group": "003_zowe_jobsMainframeInteraction@4"
         },
         {
           "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)job.*/",
@@ -1845,6 +1875,12 @@
           "type": "boolean",
           "description": "%zowe.cliLoggerSetting.presented%",
           "scope": "application"
+        },
+        "zowe.jobs.pollInterval": {
+          "type": "integer",
+          "default": 5000,
+          "description": "%zowe.pollInterval.info%",
+          "scope": "window"
         }
       }
     },
