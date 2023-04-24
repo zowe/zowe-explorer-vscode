@@ -17,7 +17,7 @@ import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { Gui, ValidProfileEnum, IZoweTree, IZoweJobTreeNode } from "@zowe/zowe-explorer-api";
 import { Job, Spool } from "./ZoweJobNode";
 import * as nls from "vscode-nls";
-import SpoolProvider, { encodeJobFile } from "../SpoolProvider";
+import SpoolProvider, { encodeJobFile, getSpoolFiles, matchSpool } from "../SpoolProvider";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { getDefaultUri } from "../shared/utils";
 
@@ -33,7 +33,7 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
  *
  * @param job The job to download the spool content from
  */
-export async function downloadSpool(jobs: IZoweJobTreeNode[]): Promise<void> {
+export async function downloadSpool(jobs: IZoweJobTreeNode[], binary?: boolean): Promise<void> {
     ZoweLogger.trace("job.actions.downloadSpool called.");
     try {
         const dirUri = await Gui.showOpenDialog({
@@ -49,7 +49,48 @@ export async function downloadSpool(jobs: IZoweJobTreeNode[]): Promise<void> {
                     jobid: job.job.jobid,
                     jobname: job.job.jobname,
                     outDir: dirUri[0].fsPath,
+                    binary,
                 });
+            }
+        }
+    } catch (error) {
+        await errorHandling(error);
+    }
+}
+
+/**
+ * Download all the spool content for the specified job.
+ *
+ * @param job The job to download the spool content from
+ */
+export async function downloadSingleSpool(nodes: IZoweJobTreeNode[], binary?: boolean): Promise<void> {
+    ZoweLogger.trace("job.actions.downloadSingleSpool called.");
+    try {
+        if (ZoweExplorerApiRegister.getJesApi(nodes[0].getProfile()).downloadSingleSpool == null) {
+            throw Error(
+                localize(
+                    "downloadSingleSpool.error",
+                    "Download Single Spool operation not implemented by extender. Please contact the extension developer(s)."
+                )
+            );
+        }
+        const dirUri = await Gui.showOpenDialog({
+            openLabel: localize("downloadSpool.select", "Select"),
+            canSelectFolders: true,
+            canSelectFiles: false,
+            canSelectMany: false,
+            defaultUri: getDefaultUri(),
+        });
+        if (dirUri !== undefined) {
+            for (const node of nodes) {
+                const spools = (await getSpoolFiles(node)).filter((spool: zowe.IJobFile) => matchSpool(spool, node));
+                for (const spool of spools) {
+                    await ZoweExplorerApiRegister.getJesApi(nodes[0].getProfile()).downloadSingleSpool({
+                        jobFile: spool,
+                        binary,
+                        outDir: dirUri[0].fsPath,
+                    });
+                }
             }
         }
     } catch (error) {
@@ -116,30 +157,16 @@ export function spoolFilePollEvent(doc: vscode.TextDocument): void {
 
 export async function getSpoolContentFromMainframe(node: IZoweJobTreeNode): Promise<void> {
     ZoweLogger.trace("job.actions.getSpoolContentFromMainframe called.");
-    let spools: zowe.IJobFile[] = [];
     const statusMsg = await Gui.setStatusBarMessage(localize("jobActions.fetchSpoolFile", "$(sync~spin) Fetching spool files..."));
-    spools = await ZoweExplorerApiRegister.getJesApi(node.getProfile()).getSpoolFiles(node.job?.jobname, node.job?.jobid);
-    spools = spools
-        // filter out all the objects which do not seem to be correct Job File Document types
-        // see an issue #845 for the details
-        .filter((item) => !(item.id === undefined && item.ddname === undefined && item.stepname === undefined));
+    const spools = await getSpoolFiles(node);
     for (const spool of spools) {
-        if (
-            `${spool.stepname}:${spool.ddname} - ${spool["record-count"]}` === node.label.toString() ||
-            `${spool.stepname}:${spool.ddname} - ${spool.procstep}` === node.label.toString()
-        ) {
+        if (matchSpool(spool, node)) {
             let prefix = spool.stepname;
             if (prefix === undefined) {
                 prefix = spool.procstep;
             }
 
-            const procstep = spool.procstep ? spool.procstep : undefined;
-            let newLabel: string;
-            if (procstep) {
-                newLabel = `${spool.stepname}:${spool.ddname} - ${procstep}`;
-            } else {
-                newLabel = `${spool.stepname}:${spool.ddname} - ${spool["record-count"]}`;
-            }
+            const newLabel = `${spool.stepname}:${spool.ddname} - ${spool.procstep ?? spool["record-count"]}`;
 
             const spoolNode = new Spool(
                 newLabel,

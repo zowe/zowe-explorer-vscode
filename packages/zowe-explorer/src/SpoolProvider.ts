@@ -14,6 +14,7 @@ import * as zowe from "@zowe/cli";
 import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
 import { Profiles } from "./Profiles";
 import { ZoweLogger } from "./utils/LoggerUtils";
+import { IZoweJobTreeNode } from "@zowe/zowe-explorer-api";
 
 export default class SpoolProvider implements vscode.TextDocumentContentProvider {
     // Track files that have been opened previously through the SpoolProvider
@@ -111,6 +112,37 @@ export const toUniqueJobFileUri =
             fragment: uniqueFragment,
         });
     };
+
+/**
+ * Gather all spool files for a given job
+ * @param node Selected node for which to extract all spool files
+ * @returns Array of spool files
+ */
+export async function getSpoolFiles(node: IZoweJobTreeNode): Promise<zowe.IJobFile[]> {
+    ZoweLogger.trace("SpoolProvider.getSpoolFiles called.");
+    if (node.job == null) return [];
+    let spools: zowe.IJobFile[] = [];
+    spools = await ZoweExplorerApiRegister.getJesApi(node.getProfile()).getSpoolFiles(node.job.jobname, node.job.jobid);
+    spools = spools
+        // filter out all the objects which do not seem to be correct Job File Document types
+        // see an issue #845 for the details
+        .filter((item) => !(item.id === undefined && item.ddname === undefined && item.stepname === undefined));
+    return spools;
+}
+
+/**
+ * Determine whether or not a spool file matches a selected node
+ *
+ * @param spool Individual spool file to match the node with
+ * @param node Selected node
+ * @returns true if the selected node matches the spool file, false otherwise
+ */
+export function matchSpool(spool: zowe.IJobFile, node: IZoweJobTreeNode) {
+    return (
+        `${spool.stepname}:${spool.ddname} - ${spool["record-count"]}` === node.label.toString() ||
+        `${spool.stepname}:${spool.ddname} - ${spool.procstep}` === node.label.toString()
+    );
+}
 
 /**
  * Decode the information needed to get the Spool content.
