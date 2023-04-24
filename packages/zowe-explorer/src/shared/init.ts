@@ -14,7 +14,7 @@ import * as vscode from "vscode";
 import * as refreshActions from "./refresh";
 import * as nls from "vscode-nls";
 import * as sharedActions from "./actions";
-import { IZoweTreeNode, IZoweTree, getZoweDir } from "@zowe/zowe-explorer-api";
+import { getZoweDir, IZoweTree, IZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { Profiles } from "../Profiles";
 import { hideTempFolder, moveTempFolder } from "../utils/TempFolder";
@@ -26,6 +26,7 @@ import { ProfilesUtils } from "../utils/ProfilesUtils";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { ZoweSaveQueue } from "../abstract/ZoweSaveQueue";
 import { SettingsConfig } from "../utils/SettingsConfig";
+import { spoolFilePollEvent } from "../job/actions";
 
 // Set up localization
 nls.config({
@@ -69,6 +70,18 @@ export function registerRefreshCommand(
 
 export function registerCommonCommands(context: vscode.ExtensionContext, providers: IZoweProviders): void {
     ZoweLogger.trace("shared.init.registerCommonCommands called.");
+    context.subscriptions.push(
+        vscode.commands.registerCommand("zowe.manualPoll", (_args) => {
+            if (vscode.window.activeTextEditor) {
+                // Notify spool provider for "manual poll" key event in open spool files
+                const doc = vscode.window.activeTextEditor.document;
+                if (doc.uri.scheme === "zosspool") {
+                    spoolFilePollEvent(doc);
+                }
+            }
+        })
+    );
+
     // Update imperative.json to false only when VS Code setting is set to false
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.updateSecureCredentials", async (customCredentialManager?: string) => {
