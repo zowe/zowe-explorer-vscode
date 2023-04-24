@@ -351,6 +351,40 @@ describe("Jobs Actions Unit Tests - Function downloadSingleSpool", () => {
             outDir: fileUri.fsPath,
         });
     });
+
+    it("should fail to download single spool files if the extender has not implemented the operation", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        const iJobFile = createIJobFile();
+        const jobs: Job[] = [];
+        const node = new Job(
+            "test:dd - 1",
+            vscode.TreeItemCollapsibleState.None,
+            null,
+            blockMocks.session,
+            blockMocks.iJob,
+            blockMocks.imperativeProfile
+        );
+        const fileUri = {
+            fsPath: "/tmp/foo",
+            scheme: "",
+            authority: "",
+            fragment: "",
+            path: "",
+            query: "",
+        };
+        jobs.push(node);
+        mocked(Gui.showOpenDialog).mockResolvedValue([fileUri as vscode.Uri]);
+        blockMocks.jesApi.downloadSingleSpool = undefined;
+        const spool: zowe.IJobFile = { ...iJobFile, stepname: "test", ddname: "dd", "record-count": 1 };
+        const getSpoolFilesSpy = jest.spyOn(SpoolProvider, "getSpoolFiles").mockResolvedValue([spool]);
+
+        await jobActions.downloadSingleSpool(jobs, true);
+        expect(getSpoolFilesSpy).not.toHaveBeenCalled();
+        expect(mocked(Gui.showOpenDialog)).not.toHaveBeenCalled();
+        expect(mocked(Gui.errorMessage)).toHaveBeenCalled();
+        expect(mocked(Gui.errorMessage).mock.calls[0][0]).toContain("Download Single Spool operation not implemented by extender");
+    });
 });
 
 describe("Jobs Actions Unit Tests - Function downloadJcl", () => {

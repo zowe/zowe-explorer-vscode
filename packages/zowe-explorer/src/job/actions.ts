@@ -66,6 +66,14 @@ export async function downloadSpool(jobs: IZoweJobTreeNode[], binary?: boolean):
 export async function downloadSingleSpool(nodes: IZoweJobTreeNode[], binary?: boolean): Promise<void> {
     ZoweLogger.trace("job.actions.downloadSingleSpool called.");
     try {
+        if (ZoweExplorerApiRegister.getJesApi(nodes[0].getProfile()).downloadSingleSpool == null) {
+            throw Error(
+                localize(
+                    "downloadSingleSpool.error",
+                    "Download Single Spool operation not implemented by extender. Please contant the extension developer(s)."
+                )
+            );
+        }
         const dirUri = await Gui.showOpenDialog({
             openLabel: localize("downloadSpool.select", "Select"),
             canSelectFolders: true,
