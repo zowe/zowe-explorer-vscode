@@ -9,7 +9,7 @@
  *
  */
 
-import * as spoolprovider from "../../src/SpoolProvider";
+import SpoolProvider, { decodeJobFile, encodeJobFile, SpoolFile } from "../../src/SpoolProvider";
 import * as zowe from "@zowe/cli";
 import * as vscode from "vscode";
 import { Profiles } from "../../src/Profiles";
@@ -104,7 +104,7 @@ describe("SpoolProvider Unit Tests", () => {
         const query = jest.fn();
         Object.defineProperty(uriMock, "query", { value: query });
 
-        spoolprovider.encodeJobFile("sessionName", iJobFile);
+        encodeJobFile("sessionName", iJobFile);
         expect(mockUri.with.mock.calls.length).toEqual(1);
         expect(mockUri.with.mock.calls[0][0]).toEqual({
             path: "TESTJOB.100.STDOUT",
@@ -130,7 +130,7 @@ describe("SpoolProvider Unit Tests", () => {
     });
 
     it("Tests that the URI is decoded", () => {
-        const [sessionName, spool] = spoolprovider.decodeJobFile(uriObj);
+        const [sessionName, spool] = decodeJobFile(uriObj);
         expect(sessionName).toEqual(sessionName);
         expect(spool).toEqual(iJobFile);
     });
@@ -167,12 +167,28 @@ describe("SpoolProvider Unit Tests", () => {
         Object.defineProperty(GetJobs, "getSpoolContentById", { value: getSpoolContentById });
         getSpoolContentById.mockReturnValue("spool content");
 
-        const provider = new spoolprovider.default();
+        const provider = new SpoolProvider();
+
+        // the first time the file is provided by SpoolProvider, it will fetch the latest spool content
+        const fetchContentSpy = jest.spyOn(SpoolFile.prototype, "fetchContent");
         const content = await provider.provideTextDocumentContent(uriObj);
+        expect(fetchContentSpy).toHaveBeenCalled();
+
         expect(content).toBe("spool content");
         expect(getSpoolContentById.mock.calls.length).toEqual(1);
         expect(getSpoolContentById.mock.calls[0][1]).toEqual(iJobFile.jobname);
         expect(getSpoolContentById.mock.calls[0][2]).toEqual(iJobFile.jobid);
         expect(getSpoolContentById.mock.calls[0][3]).toEqual(iJobFile.id);
+        await provider.provideTextDocumentContent(uriObj);
+    });
+
+    it("disposes the event emitter when the content provider is disposed", () => {
+        SpoolProvider.onDidChangeEmitter = {
+            dispose: jest.fn(),
+        } as unknown as vscode.EventEmitter<vscode.Uri>;
+        const testProvider = new SpoolProvider();
+        testProvider.dispose();
+        // eslint-disable-next-line @typescript-eslint/unbound-method
+        expect(SpoolProvider.onDidChangeEmitter.dispose).toHaveBeenCalled();
     });
 });

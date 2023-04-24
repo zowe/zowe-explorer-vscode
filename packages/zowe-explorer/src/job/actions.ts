@@ -17,7 +17,7 @@ import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { Gui, ValidProfileEnum, IZoweTree, IZoweJobTreeNode } from "@zowe/zowe-explorer-api";
 import { Job, Spool } from "./ZoweJobNode";
 import * as nls from "vscode-nls";
-import { toUniqueJobFileUri } from "../SpoolProvider";
+import SpoolProvider, { encodeJobFile } from "../SpoolProvider";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { getDefaultUri } from "../shared/utils";
 
@@ -78,8 +78,13 @@ export async function getSpoolContent(session: string, spool: zowe.IJobFile, ref
     const statusMsg = Gui.setStatusBarMessage(localize("jobActions.openSpoolFile", "$(sync~spin) Opening spool file...", this.label as string));
     await profiles.checkCurrentProfile(zosmfProfile);
     if (profiles.validProfile !== ValidProfileEnum.INVALID) {
-        const uri = toUniqueJobFileUri(session, spool)(refreshTimestamp.toString());
+        const uri = encodeJobFile(session, spool);
         try {
+            const spoolFile = SpoolProvider.files[uri.path];
+            if (spoolFile) {
+                // Fetch any changes to the spool file if it exists in the SpoolProvider
+                await spoolFile.fetchContent();
+            }
             await Gui.showTextDocument(uri, { preview: false });
         } catch (error) {
             const isTextDocActive =
@@ -97,9 +102,22 @@ export async function getSpoolContent(session: string, spool: zowe.IJobFile, ref
     statusMsg.dispose();
 }
 
+/**
+ * Triggers a refresh for a spool file w/ the provided text document.
+ * @param doc The document to update, associated with the spool file
+ */
+export function spoolFilePollEvent(doc: vscode.TextDocument): void {
+    const statusMsg = Gui.setStatusBarMessage(localize("zowe.polling.statusBar", `$(sync~spin) Polling: {0}...`, doc.fileName));
+    SpoolProvider.files[doc.uri.path].fetchContent();
+    setTimeout(() => {
+        statusMsg.dispose();
+    }, 250);
+}
+
 export async function getSpoolContentFromMainframe(node: IZoweJobTreeNode): Promise<void> {
     ZoweLogger.trace("job.actions.getSpoolContentFromMainframe called.");
     let spools: zowe.IJobFile[] = [];
+    const statusMsg = await Gui.setStatusBarMessage(localize("jobActions.fetchSpoolFile", "$(sync~spin) Fetching spool files..."));
     spools = await ZoweExplorerApiRegister.getJesApi(node.getProfile()).getSpoolFiles(node.job?.jobname, node.job?.jobid);
     spools = spools
         // filter out all the objects which do not seem to be correct Job File Document types
@@ -133,9 +151,9 @@ export async function getSpoolContentFromMainframe(node: IZoweJobTreeNode): Prom
                 node.getParent()
             );
             node = spoolNode;
-            await getSpoolContent(node.getProfile().name, spool, Date.now());
         }
     }
+    statusMsg.dispose();
 }
 
 /**

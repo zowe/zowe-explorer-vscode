@@ -133,6 +133,24 @@ export function isDocument(node: TreeItem): boolean {
 }
 
 /**
+ * Helper function which identifies if the node has polling enabled
+ * @param node
+ * @returns true if the node has polling enabled, false otherwise
+ */
+export function isPolling(node: TreeItem): boolean {
+    return new RegExp(globals.POLL_CONTEXT).test(node.contextValue);
+}
+
+/**
+ * Helper function which identifies if the node is a spool file
+ * @param node
+ * @returns true if a spool file, false otherwise
+ */
+export function isSpoolFile(node: TreeItem): boolean {
+    return new RegExp("^(" + globals.JOBS_SPOOL_CONTEXT + ")").test(node.contextValue);
+}
+
+/**
  * Helper function which identifies if the node is a informational only
  * @param node
  * @return true if a informational, false otherwise

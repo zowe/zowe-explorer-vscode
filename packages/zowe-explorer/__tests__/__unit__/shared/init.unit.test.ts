@@ -36,10 +36,20 @@ describe("Test src/shared/extension", () => {
         };
         const test: ITestContext = {
             context: { subscriptions: [] },
-            value: { test: "shared", providers: { ds: "ds", uss: "uss", job: "job" }, affectsConfiguration: jest.fn(), document: jest.fn() },
+            value: {
+                test: "shared",
+                providers: { ds: "ds", uss: "uss", job: "job" },
+                affectsConfiguration: jest.fn(),
+                document: jest.fn(),
+                text: "\n",
+            },
             _: { _: "_" },
         };
         const commands: IJestIt[] = [
+            {
+                name: "zowe.manualPoll",
+                mock: [],
+            },
             {
                 name: "zowe.updateSecureCredentials",
                 mock: [
