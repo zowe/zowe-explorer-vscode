@@ -70,7 +70,7 @@ export async function downloadSingleSpool(nodes: IZoweJobTreeNode[], binary?: bo
             throw Error(
                 localize(
                     "downloadSingleSpool.error",
-                    "Download Single Spool operation not implemented by extender. Please contant the extension developer(s)."
+                    "Download Single Spool operation not implemented by extender. Please contact the extension developer(s)."
                 )
             );
         }

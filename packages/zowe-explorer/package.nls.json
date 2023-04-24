@@ -138,7 +138,7 @@
   "manualPoll": "Poll Content in Active Editor",
   "downloadSingleSpool": "Download",
   "downloadSingleSpoolBinary": "Download (Binary)",
-  "downloadSingleSpool.error": "Download Single Spool operation not implemented by extender. Please contant the extension developer(s).",
+  "downloadSingleSpool.error": "Download Single Spool operation not implemented by extender. Please contact the extension developer(s).",
   "all.configInit": "Initialize Team Configuration File",
   "createZoweSchema.reload.button": "Reload Window",
   "createZoweSchema.reload.infoMessage": "Team Configuration file created. Location: {0}. \n Please reload your window.",
