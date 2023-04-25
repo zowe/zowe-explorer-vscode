@@ -86,6 +86,8 @@
   "zowe.jobs.confirmSubmission.yourJobs.desc": "Shows a confirmation dialog when submitting your jobs.",
   "zowe.jobs.confirmSubmission.otherUserJobs.desc": "Shows a confirmation dialog when submitting jobs from another user.",
   "zowe.jobs.confirmSubmission.allJobs.desc": "Shows a confirmation dialog when submitting any job.",
+  "zowe.settings.oldSettingsMigrated": "Shows whether the v1 Zowe settings were successfully migrated to v2 Zowe settings",
+  "zowe.settings.localStorageMigrated": "Shows whether persistent settings were successfully migrated to local storage",
   "zowe.logger": "Select the log level for Zowe Explorer.  The default is INFO.",
   "zowe.logger.trace": "TRACE",
   "zowe.logger.debug": "DEBUG",

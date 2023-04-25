@@ -1801,6 +1801,18 @@
           "description": "%zowe.settings.version%",
           "scope": "window"
         },
+        "zowe.settings.oldSettingsMigrated": {
+          "default": false,
+          "type": "boolean",
+          "description": "%zowe.settings.migrated%",
+          "scope": "window"
+        },
+        "zowe.settings.localStorageMigrated": {
+          "default": false,
+          "type": "boolean",
+          "description": "%zowe.settings.migrated%",
+          "scope": "window"
+        },
         "zowe.security.secureCredentialsEnabled": {
           "default": true,
           "type": "boolean",
@@ -1831,6 +1843,7 @@
         },
         "zowe.cliLoggerSetting.presented": {
           "type": "boolean",
+          "default": false,
           "description": "%zowe.cliLoggerSetting.presented%",
           "scope": "application"
         },
