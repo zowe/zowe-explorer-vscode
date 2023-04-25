@@ -35,12 +35,10 @@ export async function refreshAll(treeProvider: IZoweTree<IZoweTreeNode>): Promis
         if (found || sessNode.label.toString() === "Favorites") {
             const setting: boolean = await SettingsConfig.getDirectValue(globals.SETTINGS_AUTOMATIC_PROFILE_VALIDATION);
             if (contextually.isSessionNotFav(sessNode)) {
-                sessNode.children = [];
                 sessNode.dirty = true;
                 if (sessNode.label.toString() !== "Favorites") {
                     resetValidationSettings(sessNode, setting);
                 }
-                returnIconState(sessNode);
                 syncSessionNode(Profiles.getInstance())((profileValue) => ZoweExplorerApiRegister.getCommonApi(profileValue).getSession())(sessNode);
             }
         } else {

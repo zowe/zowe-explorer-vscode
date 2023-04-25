@@ -13,6 +13,7 @@ ZoweUSSNode {
   "etag": "",
   "fullPath": "",
   "iconPath": "Ref: 'document.svg'",
+  "id": "<root>.root.testDir.testFile",
   "label": "testFile",
   "mParent": ZoweUSSNode {
     "binary": false,
@@ -26,6 +27,7 @@ ZoweUSSNode {
     "etag": "",
     "fullPath": "",
     "iconPath": "Ref: 'folder.svg'",
+    "id": "<root>.root.testDir",
     "label": "testDir",
     "mParent": ZoweUSSNode {
       "binary": false,
@@ -39,6 +41,7 @@ ZoweUSSNode {
       "etag": "",
       "fullPath": "",
       "iconPath": "Ref: 'folder.svg'",
+      "id": "<root>.root",
       "label": "root",
       "mParent": null,
       "mProfileName": "sestest",

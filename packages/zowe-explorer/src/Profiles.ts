@@ -294,14 +294,14 @@ export class Profiles extends ProfilesCache {
         }
         // Set Options according to profile management in use
 
-        const createNewProfile = "Create a New Connection to z/OS";
-        const createNewConfig = "Create a New Team Configuration File";
-        const editConfig = "Edit Team Configuration File";
+        const createNewProfile = localize("profiles.createNewConnection", "$(plus) Create a new connection to z/OS");
+        const createNewConfig = localize("profiles.createTeamConfig", "$(plus) Create a new Team Configuration file");
+        const editConfig = localize("profiles.editConfig", "$(pencil) Edit Team Configuration file");
 
-        const createPick = new FilterDescriptor("\uFF0B " + createNewProfile);
-        const configPick = new FilterDescriptor("\uFF0B " + createNewConfig);
-        const configEdit = new FilterDescriptor("\u270F " + editConfig);
-        const items: vscode.QuickPickItem[] = [];
+        const createPick = new FilterDescriptor(createNewProfile);
+        const configPick = new FilterDescriptor(createNewConfig);
+        const configEdit = new FilterDescriptor(editConfig);
+        const items: vscode.QuickPickItem[] = [globals.SEPARATORS.BLANK];
         let mProfileInfo: zowe.imperative.ProfileInfo;
         try {
             mProfileInfo = await this.getProfileInfo();

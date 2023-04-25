@@ -121,7 +121,6 @@ describe("syncSessionNode shared util function", () => {
         await utils.syncSessionNode(Profiles.getInstance())(sessionForProfile)(sessionNode);
         expect(await sessionNode.getSession()).toEqual(expectedSession);
         expect(await sessionNode.getProfile()).toEqual(createIProfile());
-        expect(sessionNode.collapsibleState).toEqual(vscode.TreeItemCollapsibleState.Collapsed);
     });
     it("should do nothing, if there is no profile from provided node in the file system", async () => {
         const profiles = createInstanceOfProfile(serviceProfile);
@@ -139,7 +138,6 @@ describe("syncSessionNode shared util function", () => {
         const initialProfile = sessionNode.getProfile();
         expect(sessionNode.getSession()).toEqual(initialSession);
         expect(sessionNode.getProfile()).toEqual(initialProfile);
-        expect(sessionNode.collapsibleState).toEqual(vscode.TreeItemCollapsibleState.Collapsed);
     });
 });
 

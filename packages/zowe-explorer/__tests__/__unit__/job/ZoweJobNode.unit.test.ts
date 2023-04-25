@@ -694,14 +694,14 @@ describe("ZosJobsProvider - Function handleEditingMultiJobParameters", () => {
         );
         expect(setJobStatus).toHaveBeenCalled();
     });
-    it("return search criteria object if user clciks submit in Qucik Pick", async () => {
+    it("return search criteria object if user clicks submit in Quick Pick", async () => {
         const myJobProperties = [
             {
                 key: `owner`,
                 label: `Job Owner`,
                 value: "zowe",
                 show: true,
-                placeHolder: "Enter job owner id",
+                placeHolder: "Enter job owner ID",
             },
             {
                 key: `prefix`,
@@ -720,7 +720,7 @@ describe("ZosJobsProvider - Function handleEditingMultiJobParameters", () => {
         ];
         const globalMocks = await createGlobalMocks();
         const setJobStatus = jest.spyOn(globalMocks.testJobsProvider, "setJobStatus");
-        globalMocks.mockShowQuickPick.mockReturnValueOnce({ label: " + Submit this Job Search Query" });
+        globalMocks.mockShowQuickPick.mockReturnValueOnce({ label: "$(check) Submit this query" });
         const result = await globalMocks.testJobsProvider.handleEditingMultiJobParameters(
             myJobProperties,
             globalMocks.testJobsProvider.mSessionNodes[0]

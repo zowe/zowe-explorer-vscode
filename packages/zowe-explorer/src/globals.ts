@@ -273,7 +273,10 @@ export enum JobPickerTypes {
     History = "History",
 }
 
-export const plusSign = "\uFF0B ";
+export const SEPARATORS = {
+    BLANK: { kind: vscode.QuickPickItemKind.Separator, label: "" },
+    RECENT_FILTERS: { kind: vscode.QuickPickItemKind.Separator, label: localize("zowe.separator.recentFilters", "Recent Filters") },
+};
 
 /**
  * Defines all global variables
@@ -287,7 +290,7 @@ export function defineGlobals(tempPath: string | undefined): void {
         ((appName && appName.toLowerCase().includes("theia")) || (uriScheme && uriScheme.toLowerCase().includes("theia"))) &&
         vscode.env.uiKind === vscode.UIKind.Web
     ) {
-        this.ISTHEIA = true;
+        ISTHEIA = true;
         ZoweLogger.info(localize("globals.defineGlobals.isTheia", "Zowe Explorer is running in Theia environment."));
     }
 
