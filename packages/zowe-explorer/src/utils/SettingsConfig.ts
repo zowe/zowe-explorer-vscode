@@ -14,6 +14,7 @@ import * as vscode from "vscode";
 import * as nls from "vscode-nls";
 import { Gui } from "@zowe/zowe-explorer-api";
 import { ZoweLogger } from "./LoggerUtils";
+import { ZoweLocalStorage } from "./ZoweLocalStorage";
 
 nls.config({
     messageFormat: nls.MessageFormat.bundle,
@@ -69,22 +70,26 @@ export class SettingsConfig {
 
     public static async standardizeSettings(): Promise<void> {
         ZoweLogger.trace("SettingsConfig.standardizeSettings called.");
-        const globalIsNotMigrated =
-            SettingsConfig.configurations.inspect(globals.SETTINGS_VERSION).globalValue !== SettingsConfig.currentVersionNumber;
-        const workspaceIsNotMigrated =
-            SettingsConfig.configurations.inspect(globals.SETTINGS_VERSION).workspaceValue !== SettingsConfig.currentVersionNumber;
+        const localStorageIsMigrated = ZoweLocalStorage.getValue<boolean>(globals.SETTINGS_LOCAL_STORAGE_MIGRATED);
+        const globalIsMigrated = ZoweLocalStorage.getValue<boolean>(globals.SETTINGS_OLD_SETTINGS_MIGRATED);
+        const workspaceIsMigrated = SettingsConfig.configurations.inspect<boolean>(globals.SETTINGS_OLD_SETTINGS_MIGRATED).workspaceValue;
         const workspaceIsOpen = vscode.workspace.workspaceFolders !== undefined;
         const zoweSettingsExist = SettingsConfig.zoweOldConfigurations.length > 0;
 
+        if (!localStorageIsMigrated) {
+            await SettingsConfig.migrateToLocalStorage();
+        }
+
         if (!zoweSettingsExist) {
+            ZoweLocalStorage.setValue<boolean>(globals.SETTINGS_OLD_SETTINGS_MIGRATED, true);
             return;
         }
 
-        if (workspaceIsNotMigrated && workspaceIsOpen) {
+        if (!workspaceIsMigrated && workspaceIsOpen) {
             await SettingsConfig.standardizeWorkspaceSettings();
         }
 
-        if (globalIsNotMigrated) {
+        if (!globalIsMigrated) {
             await SettingsConfig.standardizeGlobalSettings();
         }
     }
@@ -122,7 +127,7 @@ export class SettingsConfig {
 
     private static async standardizeGlobalSettings(): Promise<void> {
         ZoweLogger.trace("SettingsConfig.standardizeGlobalSettings called.");
-        let globalIsMigrated = SettingsConfig.configurations.inspect(globals.SETTINGS_VERSION).globalValue !== SettingsConfig.currentVersionNumber;
+        let globalIsMigrated = ZoweLocalStorage.getValue<boolean>(globals.SETTINGS_OLD_SETTINGS_MIGRATED);
 
         // Standardize global settings when old Zowe settings were found
         if (SettingsConfig.zoweOldConfigurations.length > 0) {
@@ -130,7 +135,7 @@ export class SettingsConfig {
                 let globalValue: any = SettingsConfig.configurations.inspect(configuration).globalValue;
 
                 // Adjust fetching of value due to schema change
-                if (configuration === "Zowe-Temp-Folder-Location") {
+                if (configuration === globals.configurationDictionary.SETTINGS_TEMP_FOLDER_PATH) {
                     globalValue = globalValue ? globalValue.folderPath : globalValue;
                 }
 
@@ -144,7 +149,7 @@ export class SettingsConfig {
         }
 
         if (globalIsMigrated) {
-            await SettingsConfig.setDirectValue(globals.SETTINGS_VERSION, SettingsConfig.currentVersionNumber);
+            ZoweLocalStorage.setValue<boolean>(globals.SETTINGS_OLD_SETTINGS_MIGRATED, true);
             await SettingsConfig.promptReload();
         }
     }
@@ -162,7 +167,7 @@ export class SettingsConfig {
             for (const configuration of filteredConfigurations) {
                 let workspaceValue: any = SettingsConfig.configurations.inspect(configuration).workspaceValue;
 
-                if (configuration === "Zowe-Temp-Folder-Location") {
+                if (configuration === globals.configurationDictionary.SETTINGS_TEMP_FOLDER_PATH) {
                     workspaceValue = workspaceValue ? workspaceValue.folderPath : workspaceValue;
                 }
 
@@ -176,7 +181,29 @@ export class SettingsConfig {
         }
 
         if (workspaceIsMigrated) {
-            await SettingsConfig.setDirectValue(globals.SETTINGS_VERSION, SettingsConfig.currentVersionNumber, vscode.ConfigurationTarget.Workspace);
+            await SettingsConfig.setDirectValue(globals.SETTINGS_OLD_SETTINGS_MIGRATED, true, vscode.ConfigurationTarget.Workspace);
+        }
+    }
+
+    private static async migrateToLocalStorage(): Promise<void> {
+        ZoweLogger.trace("SettingsConfig.migrateToLocalStorage called.");
+        // Migrate persistent settings to new LocalStorage solution
+        const persistentSettings = [
+            globals.SETTINGS_DS_HISTORY,
+            globals.SETTINGS_USS_HISTORY,
+            globals.SETTINGS_JOBS_HISTORY,
+            globals.SETTINGS_COMMANDS_HISTORY,
+            globals.SETTINGS_LOGS_SETTING_PRESENTED,
+        ];
+        const vscodePersistentSettings = persistentSettings.filter((setting) => {
+            return SettingsConfig.configurations.inspect(setting).globalValue;
+        });
+        if (vscodePersistentSettings.length > 0) {
+            vscodePersistentSettings.forEach((setting) => {
+                ZoweLocalStorage.setValue(setting, SettingsConfig.configurations.inspect(setting).globalValue);
+            });
+            ZoweLocalStorage.setValue(globals.SETTINGS_LOCAL_STORAGE_MIGRATED, true);
+            await SettingsConfig.promptReload();
         }
     }
 }
