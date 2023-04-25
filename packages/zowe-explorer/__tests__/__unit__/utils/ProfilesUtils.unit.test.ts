@@ -11,7 +11,7 @@
 
 import * as fs from "fs";
 import * as path from "path";
-import * as zeAPI from "@zowe/zowe-explorer-api";
+import { Gui, ProfilesCache, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import * as util from "util";
 import * as globals from "../../../src/globals";
 import * as profUtils from "../../../src/utils/ProfilesUtils";
@@ -48,7 +48,7 @@ describe("ProfilesUtils unit tests", () => {
         Object.defineProperty(fs, "writeFileSync", { value: newMocks.mockWriteFileSync, configurable: true });
         Object.defineProperty(fs, "openSync", { value: newMocks.mockOpenSync, configurable: true });
         Object.defineProperty(fs, "mkdirSync", { value: newMocks.mockMkdirSync, configurable: true });
-        Object.defineProperty(zeAPI.Gui, "errorMessage", { value: jest.fn(), configurable: true });
+        Object.defineProperty(Gui, "errorMessage", { value: jest.fn(), configurable: true });
         Object.defineProperty(SettingsConfig, "getDirectValue", { value: newMocks.mockGetDirectValue, configurable: true });
         Object.defineProperty(globals, "LOG", { value: jest.fn(), configurable: true });
         Object.defineProperty(globals.LOG, "error", { value: jest.fn(), configurable: true });
@@ -68,8 +68,10 @@ describe("ProfilesUtils unit tests", () => {
             const label = "test";
             const moreInfo = "Task failed successfully";
             await profUtils.errorHandling(errorDetails, label, moreInfo);
-            expect(zeAPI.Gui.errorMessage).toBeCalledWith(`${moreInfo} ` + errorDetails);
-            expect(ZoweLogger.error).toBeCalledWith(`Error: ${errorDetails.message}\n` + JSON.stringify({ errorDetails, label, moreInfo }));
+            expect(Gui.errorMessage).toBeCalledWith(moreInfo + ` Error: ${errorDetails.message}`);
+            expect(ZoweLogger.error).toBeCalledWith(
+                `${errorDetails.toString()}\n` + util.inspect({ errorDetails, label, moreInfo }, { depth: null })
+            );
         });
 
         it("should log error details for object with circular reference", async () => {
@@ -83,7 +85,7 @@ describe("ProfilesUtils unit tests", () => {
             const label = "test";
             const moreInfo = "Task failed successfully";
             await profUtils.errorHandling(errorDetails, label, moreInfo as unknown as string);
-            expect(zeAPI.Gui.errorMessage).toBeCalledWith(`${moreInfo} ` + errorDetails);
+            expect(Gui.errorMessage).toBeCalledWith(`${moreInfo} ` + errorDetails);
             expect(ZoweLogger.error).toBeCalledWith(
                 `Error: ${errorDetails.message}\n` + util.inspect({ errorDetails, label, moreInfo }, { depth: null })
             );
@@ -126,7 +128,7 @@ describe("ProfilesUtils unit tests", () => {
             const label = "test";
             const moreInfo = "Task failed successfully";
             jest.spyOn(profUtils, "isTheia").mockReturnValue(false);
-            const showMessageSpy = jest.spyOn(zeAPI.Gui, "showMessage").mockResolvedValue("selection");
+            const showMessageSpy = jest.spyOn(Gui, "showMessage").mockResolvedValue("selection");
             const ssoLoginSpy = jest.fn();
             Object.defineProperty(Profiles, "getInstance", {
                 value: () => ({
@@ -240,8 +242,8 @@ describe("ProfilesUtils unit tests", () => {
                 isSecured: jest.fn().mockReturnValue(true),
                 readProfilesFromDisk: jest.fn(),
             };
-            jest.spyOn(zeAPI.ProfilesCache.prototype, "getProfileInfo").mockResolvedValue(prof as unknown as zowe.imperative.ProfileInfo);
-            jest.spyOn(zeAPI.ProfilesCache.prototype, "getLoadedProfConfig").mockResolvedValue({
+            jest.spyOn(ProfilesCache.prototype, "getProfileInfo").mockResolvedValue(prof as unknown as zowe.imperative.ProfileInfo);
+            jest.spyOn(ProfilesCache.prototype, "getLoadedProfConfig").mockResolvedValue({
                 profile: prof,
             } as unknown as zowe.imperative.IProfileLoaded);
             jest.spyOn(Profiles, "getInstance").mockReturnValue(mockProfileInstance);
@@ -249,7 +251,7 @@ describe("ProfilesUtils unit tests", () => {
                 value: jest.fn().mockResolvedValue("emptyConfig"),
                 configurable: true,
             });
-            jest.spyOn(zeAPI.ZoweVsCodeExtension as any, "promptUserPass").mockResolvedValue([]);
+            jest.spyOn(ZoweVsCodeExtension as any, "promptUserPass").mockResolvedValue([]);
             await profUtils.ProfilesUtils.promptCredentials(null);
             expect(getProfileInfoSpy).toHaveBeenCalled();
         });
@@ -261,8 +263,8 @@ describe("ProfilesUtils unit tests", () => {
                 isSecured: jest.fn().mockReturnValue(true),
                 readProfilesFromDisk: jest.fn(),
             };
-            jest.spyOn(zeAPI.ProfilesCache.prototype, "getProfileInfo").mockResolvedValue(prof as unknown as zowe.imperative.ProfileInfo);
-            jest.spyOn(zeAPI.ProfilesCache.prototype, "getLoadedProfConfig").mockResolvedValue({
+            jest.spyOn(ProfilesCache.prototype, "getProfileInfo").mockResolvedValue(prof as unknown as zowe.imperative.ProfileInfo);
+            jest.spyOn(ProfilesCache.prototype, "getLoadedProfConfig").mockResolvedValue({
                 profile: prof,
             } as unknown as zowe.imperative.IProfileLoaded);
             jest.spyOn(Profiles, "getInstance").mockReturnValue(mockProfileInstance);
@@ -270,9 +272,9 @@ describe("ProfilesUtils unit tests", () => {
                 value: jest.fn().mockResolvedValue(""),
                 configurable: true,
             });
-            jest.spyOn(zeAPI.ZoweVsCodeExtension as any, "promptUserPass").mockResolvedValue([]);
+            jest.spyOn(ZoweVsCodeExtension as any, "promptUserPass").mockResolvedValue([]);
             await profUtils.ProfilesUtils.promptCredentials(null);
-            expect(zeAPI.Gui.showMessage).toHaveBeenCalledWith("Operation Cancelled");
+            expect(Gui.showMessage).toHaveBeenCalledWith("Operation Cancelled");
         });
 
         it("shows an info message if the profile credentials were updated", async () => {
@@ -282,8 +284,8 @@ describe("ProfilesUtils unit tests", () => {
                 isSecured: jest.fn().mockReturnValue(true),
                 readProfilesFromDisk: jest.fn(),
             };
-            jest.spyOn(zeAPI.ProfilesCache.prototype, "getProfileInfo").mockResolvedValue(prof as unknown as zowe.imperative.ProfileInfo);
-            jest.spyOn(zeAPI.ProfilesCache.prototype, "getLoadedProfConfig").mockResolvedValue({
+            jest.spyOn(ProfilesCache.prototype, "getProfileInfo").mockResolvedValue(prof as unknown as zowe.imperative.ProfileInfo);
+            jest.spyOn(ProfilesCache.prototype, "getLoadedProfConfig").mockResolvedValue({
                 profile: prof,
             } as unknown as zowe.imperative.IProfileLoaded);
             jest.spyOn(Profiles, "getInstance").mockReturnValue(mockProfileInstance);
@@ -291,13 +293,13 @@ describe("ProfilesUtils unit tests", () => {
                 value: jest.fn().mockResolvedValue("testConfig"),
                 configurable: true,
             });
-            Object.defineProperty(zeAPI.Gui, "showMessage", {
+            Object.defineProperty(Gui, "showMessage", {
                 value: jest.fn(),
                 configurable: true,
             });
             jest.spyOn(Profiles.prototype, "promptCredentials").mockResolvedValue(["some_user", "some_pass", "c29tZV9iYXNlNjRfc3RyaW5n"]);
             await profUtils.ProfilesUtils.promptCredentials(null);
-            expect(zeAPI.Gui.showMessage).toHaveBeenCalledWith("Credentials for testConfig were successfully updated");
+            expect(Gui.showMessage).toHaveBeenCalledWith("Credentials for testConfig were successfully updated");
         });
 
         it("shows a message if Update Credentials operation is called when autoStore = false", async () => {
@@ -320,13 +322,13 @@ describe("ProfilesUtils unit tests", () => {
                 }),
                 configurable: true,
             });
-            Object.defineProperty(zeAPI.Gui, "showMessage", {
+            Object.defineProperty(Gui, "showMessage", {
                 value: jest.fn(),
                 configurable: true,
             });
             await profUtils.ProfilesUtils.promptCredentials(null);
             expect(mockProfileInstance.getProfileInfo).toHaveBeenCalled();
-            expect(zeAPI.Gui.showMessage).toHaveBeenCalledWith('"Update Credentials" operation not supported when "autoStore" is false');
+            expect(Gui.showMessage).toHaveBeenCalledWith('"Update Credentials" operation not supported when "autoStore" is false');
         });
     });
 
@@ -415,7 +417,7 @@ describe("ProfilesUtils unit tests", () => {
             await profUtils.ProfilesUtils.initializeZoweProfiles();
             expect(initZoweFolderSpy).toHaveBeenCalledTimes(1);
             expect(readConfigFromDiskSpy).toHaveBeenCalledTimes(1);
-            expect(zeAPI.Gui.errorMessage).toHaveBeenCalledWith(expect.stringContaining(testError.message));
+            expect(Gui.errorMessage).toHaveBeenCalledWith(expect.stringContaining(testError.message));
         });
 
         it("should handle Imperative error thrown on read config from disk", async () => {
@@ -425,7 +427,7 @@ describe("ProfilesUtils unit tests", () => {
             await profUtils.ProfilesUtils.initializeZoweProfiles();
             expect(initZoweFolderSpy).toHaveBeenCalledTimes(1);
             expect(readConfigFromDiskSpy).toHaveBeenCalledTimes(1);
-            expect(zeAPI.Gui.errorMessage).toHaveBeenCalledWith(expect.stringContaining(testError.message));
+            expect(Gui.errorMessage).toHaveBeenCalledWith(expect.stringContaining(testError.message));
         });
 
         it("should handle JSON parse error thrown on read config from disk", async () => {
