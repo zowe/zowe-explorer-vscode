@@ -397,13 +397,22 @@ export namespace ZoweExplorerApi {
         getSpoolFiles(jobname: string, jobid: string): Promise<zowe.IJobFile[]>;
 
         /**
-         * Retrieves spool file content as specified in the parms
+         * Retrieves content for all spool files as specified in the parms
          * to be store in a file.
          *
          * @param {zowe.IDownloadAllSpoolContentParms} parms
          * @returns {Promise<void>}
          */
         downloadSpoolContent(parms: zowe.IDownloadAllSpoolContentParms): Promise<void>;
+
+        /**
+         * Retrieves a single spool file content as specified in the parms
+         * to be store in a file.
+         *
+         * @param {zowe.IDownloadSpoolContentParms} parms
+         * @returns {Promise<void>}
+         */
+        downloadSingleSpool?(parms: zowe.IDownloadSpoolContentParms): Promise<void>;
 
         /**
          * Returns spool file content as a string.

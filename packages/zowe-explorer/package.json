@@ -685,6 +685,11 @@
         }
       },
       {
+        "command": "zowe.jobs.downloadSpoolBinary",
+        "title": "%downloadSpoolBinary%",
+        "category": "Zowe Explorer"
+      },
+      {
         "command": "zowe.jobs.getJobJcl",
         "title": "%getJobJcl%",
         "category": "Zowe Explorer"
@@ -741,6 +746,16 @@
       {
         "command": "zowe.manualPoll",
         "title": "%manualPoll%",
+        "category": "Zowe Explorer"
+      },
+      {
+        "command": "zowe.jobs.downloadSingleSpool",
+        "title": "%downloadSingleSpool%",
+        "category": "Zowe Explorer"
+      },
+      {
+        "command": "zowe.jobs.downloadSingleSpoolBinary",
+        "title": "%downloadSingleSpoolBinary%",
         "category": "Zowe Explorer"
       }
     ],
@@ -1214,6 +1229,11 @@
           "group": "000_zowe_jobsMainframeInteraction@2"
         },
         {
+          "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)job.*/",
+          "command": "zowe.jobs.downloadSpoolBinary",
+          "group": "000_zowe_jobsMainframeInteraction@3"
+        },
+        {
           "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)job.*/ && !listMultiSelection",
           "command": "zowe.jobs.runModifyCommand",
           "group": "001_zowe_jobsSystemSpecific@2"
@@ -1257,6 +1277,16 @@
           "when": "view == zowe.jobs.explorer && viewItem =~ /^spool_polling.*/",
           "command": "zowe.jobs.stopPolling",
           "group": "003_zowe_jobsMainframeInteraction@2"
+        },
+        {
+          "when": "view == zowe.jobs.explorer && viewItem =~ /^spool.*/",
+          "command": "zowe.jobs.downloadSingleSpool",
+          "group": "003_zowe_jobsMainframeInteraction@3"
+        },
+        {
+          "when": "view == zowe.jobs.explorer && viewItem =~ /^spool.*/",
+          "command": "zowe.jobs.downloadSingleSpoolBinary",
+          "group": "003_zowe_jobsMainframeInteraction@4"
         },
         {
           "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)job.*/",
@@ -1606,6 +1636,10 @@
           "when": "never"
         },
         {
+          "command": "zowe.jobs.downloadSpoolBinary",
+          "when": "never"
+        },
+        {
           "command": "zowe.jobs.editSession",
           "when": "never"
         },
@@ -1623,6 +1657,14 @@
         },
         {
           "command": "zowe.jobs.refreshSpool",
+          "when": "never"
+        },
+        {
+          "command": "zowe.jobs.downloadSingleSpool",
+          "when": "never"
+        },
+        {
+          "command": "zowe.jobs.downloadSingleSpoolBinary",
           "when": "never"
         },
         {
