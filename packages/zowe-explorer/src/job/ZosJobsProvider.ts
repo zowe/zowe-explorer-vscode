@@ -28,6 +28,7 @@ import * as nls from "vscode-nls";
 import SpoolProvider, { encodeJobFile } from "../SpoolProvider";
 import { Poller } from "@zowe/zowe-explorer-api/src/utils";
 import { PollDecorator } from "../utils/DecorationProviders";
+import { TreeViewUtils } from "../utils/TreeViewUtils";
 
 // Set up localization
 nls.config({
@@ -814,7 +815,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
 
             if (isSessionNotFav) {
                 searchCriteria = await this.applyRegularSessionSearchLabel(node);
-                this.expandSession(node);
+                await TreeViewUtils.expandNode(node, this);
 
                 if (searchCriteria != null) {
                     node.label = node.getProfileName();
@@ -944,7 +945,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                 };
 
                 this.resetJobProperties(jobProperties);
-                this.expandSession(node);
+                await TreeViewUtils.expandNode(node, this);
                 return searchCriteriaObj;
             }
             default: {

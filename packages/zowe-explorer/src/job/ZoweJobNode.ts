@@ -88,7 +88,9 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
         if (icon) {
             this.iconPath = icon.path;
         }
-        this.id = `${mParent?.id ?? "<root>"}.${this.label as string}`;
+        if (!globals.ISTHEIA) {
+            this.id = `${mParent?.id ?? "<root>"}.${this.label as string}`;
+        }
     }
 
     /**
@@ -354,6 +356,8 @@ export class Spool extends Job {
         if (icon) {
             this.iconPath = icon.path;
         }
-        this.id = `${mParent?.id ?? "<root>"}.${this.label as string}`;
+        if (!globals.ISTHEIA) {
+            this.id = `${mParent?.id ?? "<root>"}.${this.label as string}`;
+        }
     }
 }

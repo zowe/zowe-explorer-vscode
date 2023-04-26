@@ -38,6 +38,7 @@ import { IDataSet, IListOptions, imperative } from "@zowe/cli";
 import { validateDataSetName, validateMemberName } from "./utils";
 import { SettingsConfig } from "../utils/SettingsConfig";
 import { ZoweLogger } from "../utils/LoggerUtils";
+import { TreeViewUtils } from "../utils/TreeViewUtils";
 
 // Set up localization
 nls.config({
@@ -917,7 +918,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                     Gui.showMessage(localize("datasetFilterPrompt.enterPattern", "You must enter a pattern."));
                     return;
                 }
-                this.expandSession(node);
+                await TreeViewUtils.expandNode(node, this);
             } else {
                 // executing search from saved search in favorites
                 pattern = node.getLabel() as string;
@@ -929,7 +930,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                     nonFaveNode.getSession().ISession.password = node.getSession().ISession.password;
                     nonFaveNode.getSession().ISession.base64EncodedAuth = node.getSession().ISession.base64EncodedAuth;
                 }
-                this.expandSession(nonFaveNode);
+                await TreeViewUtils.expandNode(nonFaveNode, this);
             }
             // looking for members in pattern
             node.children = [];

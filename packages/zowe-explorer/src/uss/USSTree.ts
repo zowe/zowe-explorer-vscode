@@ -27,6 +27,7 @@ import * as nls from "vscode-nls";
 import { resetValidationSettings } from "../shared/actions";
 import { SettingsConfig } from "../utils/SettingsConfig";
 import { ZoweLogger } from "../utils/LoggerUtils";
+import { TreeViewUtils } from "../utils/TreeViewUtils";
 
 // Set up localization
 nls.config({
@@ -637,7 +638,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             if (!contextually.isFilterFolder(sessionNode)) {
                 sessionNode.contextValue += `_${globals.FILTER_SEARCH}`;
             }
-            this.expandSession(sessionNode);
+            await TreeViewUtils.expandNode(sessionNode, this);
             sessionNode.dirty = true;
             this.addSearchHistory(sanitizedPath);
         }

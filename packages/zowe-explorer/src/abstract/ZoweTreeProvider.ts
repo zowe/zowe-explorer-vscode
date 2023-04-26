@@ -275,19 +275,4 @@ export class ZoweTreeProvider {
         this.mHistory.removeSession(revisedLabel);
         this.refresh();
     }
-
-    /**
-     * Expand a node
-     * @param element the node being flipped
-     * @param provider the tree view provider
-     */
-    public async expandSession(element: IZoweTreeNode): Promise<void> {
-        // Classes that derive ZoweTreeProvider should also implement IZoweTree<IZoweNodeType>
-        const treeProvider = this as unknown as IZoweTree<IZoweNodeType>;
-        ZoweLogger.trace("ZoweTreeProvider.expandSession called.");
-        await treeProvider.getTreeView().reveal(element, { expand: false });
-        await treeProvider.getTreeView().reveal(element, { expand: true });
-        element.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
-        element.dirty = true;
-    }
 }

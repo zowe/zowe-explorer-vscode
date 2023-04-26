@@ -75,7 +75,9 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         if (icon) {
             this.iconPath = icon.path;
         }
-        this.id = `${mParent?.id ?? "<root>"}.${this.label as string}`;
+        if (!globals.ISTHEIA) {
+            this.id = `${mParent?.id ?? "<root>"}.${this.label as string}`;
+        }
     }
 
     /**
