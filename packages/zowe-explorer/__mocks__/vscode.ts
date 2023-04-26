@@ -94,6 +94,12 @@ export namespace extensions {
     }
 }
 
+export class TreeView<T> {
+    public reveal(element: T, options?: { select?: boolean; focus?: boolean; expand?: boolean | number }): Thenable<void> {
+        return null as unknown as any;
+    }
+}
+
 export namespace window {
     /**
      * Options for creating a {@link TreeView}

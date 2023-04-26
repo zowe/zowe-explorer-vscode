@@ -917,7 +917,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                     Gui.showMessage(localize("datasetFilterPrompt.enterPattern", "You must enter a pattern."));
                     return;
                 }
-                this.expandSession(node, this);
+                this.expandSession(node);
             } else {
                 // executing search from saved search in favorites
                 pattern = node.getLabel() as string;
@@ -929,7 +929,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                     nonFaveNode.getSession().ISession.password = node.getSession().ISession.password;
                     nonFaveNode.getSession().ISession.base64EncodedAuth = node.getSession().ISession.base64EncodedAuth;
                 }
-                this.expandSession(nonFaveNode, this);
+                this.expandSession(nonFaveNode);
             }
             // looking for members in pattern
             node.children = [];

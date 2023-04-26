@@ -941,6 +941,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                 };
 
                 this.resetJobProperties(jobProperties);
+                this.expandSession(node);
                 return searchCriteriaObj;
             }
             default: {

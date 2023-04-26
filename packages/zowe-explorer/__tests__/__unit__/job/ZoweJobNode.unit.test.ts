@@ -37,7 +37,9 @@ async function createGlobalMocks() {
         mockGetJob: jest.fn(),
         mockRefresh: jest.fn(),
         mockAffectsConfig: jest.fn(),
-        createTreeView: jest.fn(),
+        createTreeView: jest.fn(() => ({
+            reveal: jest.fn(),
+        })),
         mockCreateSessCfgFromArgs: jest.fn(),
         mockGetSpoolFiles: jest.fn(),
         testSessionNode: null,
@@ -165,7 +167,6 @@ async function createGlobalMocks() {
 
     globalMocks.mockCreateSessCfgFromArgs.mockReturnValue(globalMocks.testSession);
     globalMocks.testSessionNode = createJobSessionNode(globalMocks.testSession, globalMocks.testProfile);
-    globalMocks.createTreeView.mockReturnValue("testTreeView");
     globalMocks.mockGetJob.mockReturnValue(globalMocks.testIJob);
     globalMocks.mockGetJobsByOwnerAndPrefix.mockReturnValue([globalMocks.testIJob, globalMocks.testIJobComplete]);
     globalMocks.mockProfileInstance.editSession = jest.fn(() => globalMocks.testProfile);
