@@ -356,6 +356,11 @@ describe("ZosmfJesApi", () => {
             args: [{ jobname: "jobname", jobid: "jobid" }],
         },
         {
+            name: "downloadSingleSpool",
+            spy: jest.spyOn(zowe.DownloadJobs, "downloadSpoolContentCommon"),
+            args: [{ jobname: "jobname", jobid: "jobid" }],
+        },
+        {
             name: "getSpoolContentById",
             spy: jest.spyOn(zowe.GetJobs, "getSpoolContentById"),
             args: ["jobname", "jobid", 100],
