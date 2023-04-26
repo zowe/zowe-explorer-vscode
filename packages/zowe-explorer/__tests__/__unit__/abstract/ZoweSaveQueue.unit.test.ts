@@ -14,12 +14,20 @@ import { createUSSTree } from "../../../__mocks__/mockCreators/uss";
 import { saveUSSFile } from "../../../src/uss/actions";
 import * as workspaceUtils from "../../../src/utils/workspace";
 import { Gui } from "@zowe/zowe-explorer-api";
-import * as globals from "../../../src/globals";
 import * as vscode from "vscode";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
+import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
 
 describe("ZoweSaveQueue - unit tests", () => {
     const createGlobalMocks = () => {
+        Object.defineProperty(ZoweLocalStorage, "storage", {
+            value: {
+                get: () => ({ persistence: true, favorites: [], history: [], sessions: ["zosmf"], searchHistory: [], fileHistory: [] }),
+                update: jest.fn(),
+                keys: () => [],
+            },
+            configurable: true,
+        });
         const globalMocks = {
             errorMessageSpy: jest.spyOn(Gui, "errorMessage"),
             markDocumentUnsavedSpy: jest.spyOn(workspaceUtils, "markDocumentUnsaved"),

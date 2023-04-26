@@ -30,8 +30,17 @@ import { createJobsTree } from "../../../src/job/ZosJobsProvider";
 import { SettingsConfig } from "../../../src/utils/SettingsConfig";
 import { ZoweTreeProvider } from "../../../src/abstract/ZoweTreeProvider";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
+import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
 
 async function createGlobalMocks() {
+    Object.defineProperty(ZoweLocalStorage, "storage", {
+        value: {
+            get: () => ({ persistence: true, favorites: [], history: [], sessions: ["zosmf"], searchHistory: [], fileHistory: [] }),
+            update: jest.fn(),
+            keys: () => [],
+        },
+        configurable: true,
+    });
     const globalMocks = {
         mockLoadNamedProfile: jest.fn(),
         mockDefaultProfile: jest.fn(),
@@ -69,7 +78,6 @@ async function createGlobalMocks() {
         mockProfileInfo: createInstanceOfProfileInfo(),
         mockProfilesCache: new ProfilesCache(imperative.Logger.getAppLogger()),
     };
-
     Object.defineProperty(globals, "LOG", { value: jest.fn(), configurable: true });
     Object.defineProperty(globals.LOG, "error", { value: jest.fn(), configurable: true });
     Object.defineProperty(globalMocks.mockProfilesCache, "getProfileInfo", {
@@ -157,7 +165,6 @@ async function createGlobalMocks() {
             return {};
         }),
     });
-
     return globalMocks;
 }
 

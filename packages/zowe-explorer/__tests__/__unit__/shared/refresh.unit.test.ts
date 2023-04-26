@@ -23,10 +23,10 @@ import { createFavoriteUSSNode, createUSSNode, createUSSTree } from "../../../__
 import { createIJobObject, createJobsTree } from "../../../__mocks__/mockCreators/jobs";
 import * as refreshActions from "../../../src/shared/refresh";
 import { createDatasetSessionNode, createDatasetTree } from "../../../__mocks__/mockCreators/datasets";
-import * as globals from "../../../src/globals";
 import * as sessUtils from "../../../src/utils/SessionUtils";
 import { SettingsConfig } from "../../../src/utils/SettingsConfig";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
+import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
 
 function createGlobalMocks() {
     const globalMocks = {
@@ -86,6 +86,14 @@ function createGlobalMocks() {
     });
     Object.defineProperty(ZoweLogger, "error", { value: jest.fn(), configurable: true });
     Object.defineProperty(ZoweLogger, "debug", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLocalStorage, "storage", {
+        value: {
+            get: () => ({ persistence: true, favorites: [], history: [], sessions: ["zosmf"], searchHistory: [], fileHistory: [] }),
+            update: jest.fn(),
+            keys: () => [],
+        },
+        configurable: true,
+    });
 
     return globalMocks;
 }

@@ -14,6 +14,7 @@ import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
 import { imperative } from "@zowe/cli";
 import { DatasetTree } from "../../../src/dataset/DatasetTree";
 import * as vscode from "vscode";
+import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
 
 jest.mock("vscode");
 
@@ -21,9 +22,19 @@ describe("Checking message generator's basics", () => {
     const setGlobalMocks = () => {
         const createTreeView = jest.fn();
         const getConfiguration = jest.fn();
-
         Object.defineProperty(vscode.window, "createTreeView", { value: createTreeView });
         Object.defineProperty(vscode.workspace, "getConfiguration", { value: getConfiguration });
+        Object.defineProperty(ZoweLocalStorage, "storage", {
+            value: {
+                get: () => ({ persistence: true, favorites: [], history: [], sessions: ["zosmf"], searchHistory: [], fileHistory: [] }),
+                update: jest.fn(),
+                keys: () => [],
+            },
+            configurable: true,
+        });
+        jest.spyOn(vscode.workspace, "getConfiguration").mockReturnValue({
+            get: jest.fn(),
+        } as any);
     };
     const generateTestSessionNode = () => {
         const session = new imperative.Session({

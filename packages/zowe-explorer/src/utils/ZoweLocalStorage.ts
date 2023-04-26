@@ -21,12 +21,12 @@ export class ZoweLocalStorage {
 
     public static getValue<T>(key: string): T {
         ZoweLogger.trace("ZoweLocalStorage.getValue called.");
-        const defaultValue = meta.contributes.configuration.properties[key].default;
-        return this.storage.get<T>(key, defaultValue);
+        const defaultValue = meta.contributes.configuration.properties[key]?.default;
+        return ZoweLocalStorage.storage.get<T>(key, defaultValue);
     }
 
     public static setValue<T>(key: string, value: T): void {
         ZoweLogger.trace("ZoweLocalStorage.setValue called.");
-        this.storage.update(key, value);
+        ZoweLocalStorage.storage.update(key, value);
     }
 }

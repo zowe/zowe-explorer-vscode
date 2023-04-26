@@ -19,6 +19,7 @@ import { initJobsProvider } from "../../../src/job/init";
 import { Profiles } from "../../../src/Profiles";
 import { IJestIt, ITestContext, processSubscriptions, spyOnSubscriptions } from "../../__common__/testUtils";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
+import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
 
 describe("Test src/jobs/extension", () => {
     describe("initJobsProvider", () => {
@@ -218,6 +219,14 @@ describe("Test src/jobs/extension", () => {
             Object.defineProperty(vscode.commands, "registerCommand", { value: registerCommand });
             Object.defineProperty(vscode.workspace, "onDidChangeConfiguration", { value: onDidChangeConfiguration });
             Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
+            Object.defineProperty(ZoweLocalStorage, "storage", {
+                value: {
+                    get: () => ({ persistence: true, favorites: [], history: [], sessions: ["zosmf"], searchHistory: [], fileHistory: [] }),
+                    update: jest.fn(),
+                    keys: () => [],
+                },
+                configurable: true,
+            });
 
             spyCreateJobsTree.mockResolvedValue(jobsProvider as any);
             spyOnSubscriptions(commands);

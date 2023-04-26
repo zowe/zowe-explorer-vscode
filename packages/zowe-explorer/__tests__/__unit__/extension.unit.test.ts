@@ -30,6 +30,7 @@ import { DatasetTree } from "../../src/dataset/DatasetTree";
 import { USSTree } from "../../src/uss/USSTree";
 import { ZoweLogger } from "../../src/utils/LoggerUtils";
 import { ZoweSaveQueue } from "../../src/abstract/ZoweSaveQueue";
+import { ZoweLocalStorage } from "../../src/utils/ZoweLocalStorage";
 
 jest.mock("vscode");
 jest.mock("fs");
@@ -398,6 +399,18 @@ async function createGlobalMocks() {
     Object.defineProperty(ZoweLogger, "warn", { value: jest.fn(), configurable: true });
     Object.defineProperty(ZoweLogger, "info", { value: jest.fn(), configurable: true });
     Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLocalStorage, "initializeZoweLocalStorage", {
+        value: jest.fn(),
+        configurable: true,
+    });
+    Object.defineProperty(ZoweLocalStorage, "storage", {
+        value: {
+            get: () => ({ persistence: true, favorites: [], history: [], sessions: ["zosmf"], searchHistory: [], fileHistory: [] }),
+            update: jest.fn(),
+            keys: () => [],
+        },
+        configurable: true,
+    });
 
     globalMocks.mockLoadNamedProfile.mockReturnValue(globalMocks.testProfile);
     globalMocks.mockCreateSessCfgFromArgs.mockReturnValue(globalMocks.testSession.ISession);

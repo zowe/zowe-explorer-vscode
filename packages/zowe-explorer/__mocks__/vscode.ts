@@ -352,6 +352,12 @@ export interface TreeDataProvider<T> {
     getParent?(element: T): ProviderResult<T>;
 }
 
+export interface Memento {
+    get: <T>(key: string, defaultValue: T) => {};
+    update: (key: string, value: any) => {};
+    keys: readonly string[];
+}
+
 export class TreeItem {
     /**
      * A human-readable string describing this item. When `falsy`, it is derived from [resourceUri](#TreeItem.resourceUri).
