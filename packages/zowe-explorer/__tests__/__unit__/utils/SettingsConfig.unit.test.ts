@@ -23,6 +23,35 @@ afterEach(() => {
     jest.resetAllMocks();
 });
 
+describe("SettingsConfig Unit Tests - function isConfigSettingSetByUser", () => {
+    it("should return false if setting is undefined or empty", () => {
+        const falseCases = [undefined, {}];
+        for (const retVal of falseCases) {
+            jest.spyOn(vscode.workspace, "getConfiguration").mockReturnValueOnce({
+                inspect: jest.fn().mockReturnValue(retVal),
+            } as any);
+            expect(SettingsConfig.isConfigSettingSetByUser("zowe.setting")).toBe(false);
+        }
+    });
+
+    it("should return true if setting is defined in any scope", () => {
+        const trueCases = [
+            { globalValue: "a" },
+            { workspaceValue: "b" },
+            { workspaceFolderValue: "c" },
+            { globalLanguageValue: "d" },
+            { workspaceLanguageValue: "e" },
+            { workspaceFolderLanguageValue: "f" },
+        ];
+        for (const retVal of trueCases) {
+            jest.spyOn(vscode.workspace, "getConfiguration").mockReturnValueOnce({
+                inspect: jest.fn().mockReturnValue(retVal),
+            } as any);
+            expect(SettingsConfig.isConfigSettingSetByUser("zowe.setting")).toBe(true);
+        }
+    });
+});
+
 describe("SettingsConfig Unit Tests - function promptReload", () => {
     it("should trigger a reload when prompted", async () => {
         const privateSettingsConfig = SettingsConfig as any;

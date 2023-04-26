@@ -33,11 +33,12 @@ export let ZOWE_TMP_FOLDER: string;
 export let USS_DIR: string;
 export let DS_DIR: string;
 export let CONFIG_PATH; // set during activate
-export let ISTHEIA: boolean = false; // set during activate
+export let ISTHEIA = false; // set during activate
 export let LOG: imperative.Logger;
-export const COMMAND_COUNT = 102;
+export const COMMAND_COUNT = 108;
 export const MAX_SEARCH_HISTORY = 5;
 export const MAX_FILE_HISTORY = 10;
+export const MS_PER_SEC = 1000;
 export const STATUS_BAR_TIMEOUT_MS = 5000;
 export const CONTEXT_PREFIX = "_";
 export const FAV_SUFFIX = CONTEXT_PREFIX + "fav";
@@ -65,6 +66,7 @@ export const USS_FAV_DIR_CONTEXT = "directory_fav";
 export const JOBS_SESSION_CONTEXT = "server";
 export const JOBS_JOB_CONTEXT = "job";
 export const JOBS_SPOOL_CONTEXT = "spool";
+export const POLL_CONTEXT = CONTEXT_PREFIX + "polling";
 export const VSAM_CONTEXT = "vsam";
 export const INACTIVE_CONTEXT = CONTEXT_PREFIX + "Inactive";
 export const ACTIVE_CONTEXT = CONTEXT_PREFIX + "Active";
@@ -326,7 +328,7 @@ export function initLogger(logsPath: string): void {
         loggerConfigCopy.log4jsConfig.categories[appenderName].level = zeLogLevel;
     }
     imperative.Logger.initLogger(loggerConfigCopy);
-    this.LOG = imperative.Logger.getAppLogger();
+    LOG = imperative.Logger.getAppLogger();
 }
 
 export function setActivated(value: boolean): void {
@@ -341,7 +343,7 @@ export function setSavedProfileContents(value: Uint8Array): void {
 }
 
 export async function setGlobalSecurityValue(): Promise<void> {
-    if (ISTHEIA) {
+    if (ISTHEIA && !SettingsConfig.isConfigSettingSetByUser(SETTINGS_SECURE_CREDENTIALS_ENABLED)) {
         PROFILE_SECURITY = false;
         await SettingsConfig.setDirectValue(SETTINGS_SECURE_CREDENTIALS_ENABLED, false, vscode.ConfigurationTarget.Global);
         return;

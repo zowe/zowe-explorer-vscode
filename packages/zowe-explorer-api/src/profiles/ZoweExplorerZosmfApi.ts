@@ -278,6 +278,10 @@ export class ZosmfJesApi extends ZosmfApiCommon implements ZoweExplorerApi.IJes 
         return zowe.DownloadJobs.downloadAllSpoolContentCommon(this.getSession(), parms);
     }
 
+    public downloadSingleSpool(parms: zowe.IDownloadSpoolContentParms): Promise<void> {
+        return zowe.DownloadJobs.downloadSpoolContentCommon(this.getSession(), parms);
+    }
+
     public getSpoolContentById(jobname: string, jobid: string, spoolId: number): Promise<string> {
         return zowe.GetJobs.getSpoolContentById(this.getSession(), jobname, jobid, spoolId);
     }

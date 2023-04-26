@@ -15,7 +15,7 @@ import * as refreshActions from "../../../src/shared/refresh";
 import * as sharedActions from "../../../src/shared/actions";
 import * as sharedExtension from "../../../src/shared/init";
 import { Profiles } from "../../../src/Profiles";
-import * as profileUtils from "../../../src/utils/ProfilesUtils";
+import * as profUtils from "../../../src/utils/ProfilesUtils";
 import * as tempFolder from "../../../src/utils/TempFolder";
 import * as zowe from "@zowe/cli";
 import { IJestIt, ITestContext, processSubscriptions, spyOnSubscriptions } from "../../__common__/testUtils";
@@ -36,20 +36,30 @@ describe("Test src/shared/extension", () => {
         };
         const test: ITestContext = {
             context: { subscriptions: [] },
-            value: { test: "shared", providers: { ds: "ds", uss: "uss", job: "job" }, affectsConfiguration: jest.fn(), document: jest.fn() },
+            value: {
+                test: "shared",
+                providers: { ds: "ds", uss: "uss", job: "job" },
+                affectsConfiguration: jest.fn(),
+                document: jest.fn(),
+                text: "\n",
+            },
             _: { _: "_" },
         };
         const commands: IJestIt[] = [
             {
+                name: "zowe.manualPoll",
+                mock: [],
+            },
+            {
                 name: "zowe.updateSecureCredentials",
                 mock: [
                     { spy: jest.spyOn(globals, "setGlobalSecurityValue"), arg: [] },
-                    { spy: jest.spyOn(profileUtils, "writeOverridesFile"), arg: [] },
+                    { spy: jest.spyOn(profUtils.ProfilesUtils, "writeOverridesFile"), arg: [] },
                 ],
             },
             {
                 name: "zowe.promptCredentials",
-                mock: [{ spy: jest.spyOn(profileUtils, "promptCredentials"), arg: [test.value] }],
+                mock: [{ spy: jest.spyOn(profUtils.ProfilesUtils, "promptCredentials"), arg: [test.value] }],
             },
             {
                 name: "onDidChangeConfiguration:1",

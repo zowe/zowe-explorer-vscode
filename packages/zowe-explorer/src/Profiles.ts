@@ -30,7 +30,7 @@ import {
     getFullPath,
     getZoweDir,
 } from "@zowe/zowe-explorer-api";
-import { errorHandling, FilterDescriptor, FilterItem, readConfigFromDisk } from "./utils/ProfilesUtils";
+import { errorHandling, FilterDescriptor, FilterItem, ProfilesUtils } from "./utils/ProfilesUtils";
 import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
 import { ZoweExplorerExtender } from "./ZoweExplorerExtender";
 import * as globals from "./globals";
@@ -852,7 +852,7 @@ export class Profiles extends ProfilesCache {
             Gui.showMessage(localize("createNewConnection.success", "Profile {0} was created.", newProfileName));
             // Trigger a ProfilesCache.createConfigInstance with a fresh Config.load
             // This shall capture any profiles created (v1 or v2)
-            await readConfigFromDisk();
+            await ProfilesUtils.readConfigFromDisk();
             return newProfileName;
         } catch (error) {
             await errorHandling(error, profileName);

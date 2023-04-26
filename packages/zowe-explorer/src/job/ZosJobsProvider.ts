@@ -16,7 +16,7 @@ import { Gui, ValidProfileEnum, IZoweTree, IZoweJobTreeNode, PersistenceSchemaEn
 import { FilterItem, errorHandling } from "../utils/ProfilesUtils";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
-import { Job } from "./ZoweJobNode";
+import { Job, Spool } from "./ZoweJobNode";
 import { getAppName, sortTreeItems, jobStringValidator } from "../shared/utils";
 import { ZoweTreeProvider } from "../abstract/ZoweTreeProvider";
 import { getIconByNode } from "../generators/icons";
@@ -25,6 +25,9 @@ import { resetValidationSettings } from "../shared/actions";
 import { SettingsConfig } from "../utils/SettingsConfig";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import * as nls from "vscode-nls";
+import SpoolProvider, { encodeJobFile } from "../SpoolProvider";
+import { Poller } from "@zowe/zowe-explorer-api/src/utils";
+import { PollDecorator } from "../utils/DecorationProviders";
 
 // Set up localization
 nls.config({
@@ -811,7 +814,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
 
             if (isSessionNotFav) {
                 searchCriteria = await this.applyRegularSessionSearchLabel(node);
-                node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+                this.expandSession(node, this);
 
                 if (searchCriteria != null) {
                     node.label = node.getProfileName();
@@ -1032,6 +1035,94 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             this.mSessionNodes.push(node);
             this.mHistory.addSession(profile.name);
         }
+    }
+
+    /**
+     * Given user-provided input, determine whether the input is a valid polling interval.
+     * @param value The polling interval provided by the user
+     * @returns undefined if valid; otherwise, a description string that explains what a valid polling interval is.
+     */
+    private validatePollInterval(value: string): string {
+        const valueAsNum = Number(value);
+        if (!isNaN(valueAsNum) && valueAsNum >= globals.MS_PER_SEC) {
+            return undefined;
+        }
+
+        return localize("zowe.polling.minInterval", "The polling interval must be greater than or equal to 1000ms.");
+    }
+
+    /**
+     * Show poll options for the spool file matching the provided URI, before the user starts polling.
+     * @returns true if the user started polling, false if they dismiss the dialog
+     */
+    private async showPollOptions(uri: vscode.Uri): Promise<number> {
+        const pollValue = SettingsConfig.getDirectValue<number>("zowe.jobs.pollInterval");
+        const intervalInput = await Gui.showInputBox({
+            title: localize("zowe.polling.intervalOption", "Poll interval (in ms) for: {0}", uri.path),
+            value: pollValue.toString(),
+            validateInput: (value: string) => this.validatePollInterval(value),
+        });
+
+        return intervalInput ? Number(intervalInput) : 0;
+    }
+
+    /**
+     * Poll the provided spool file, given a user-provided polling interval.
+     * @param node The node to start/stop polling
+     */
+    public async pollData(node: IZoweJobTreeNode): Promise<void> {
+        if (!contextually.isSpoolFile(node)) {
+            return;
+        }
+
+        const session = node.getSessionNode();
+
+        // Interpret node as spool to get spool data
+        const spoolData = (node as Spool).spool;
+        const encodedUri = encodeJobFile(session.label as string, spoolData);
+
+        // If the uri is already being polled, mark it as ready for removal
+        if (encodedUri.path in Poller.pollRequests && contextually.isPolling(node)) {
+            Poller.pollRequests[encodedUri.path].dispose = true;
+            PollDecorator.updateIcon(encodedUri);
+            node.contextValue = node.contextValue.replace(globals.POLL_CONTEXT, "");
+
+            // Fire "tree changed event" to reflect removal of polling context value
+            this.mOnDidChangeTreeData.fire();
+            return;
+        }
+
+        // Add spool file to provider if it wasn't previously opened in the editor
+        const fileInEditor = SpoolProvider.files[encodedUri.path];
+        if (!fileInEditor) {
+            await Gui.showTextDocument(encodedUri);
+        }
+
+        // Always prompt the user for a poll interval
+        const pollInterval = await this.showPollOptions(encodedUri);
+
+        if (pollInterval === 0) {
+            Gui.showMessage(localize("zowe.polling.cancelled", "Polling dismissed for {0}; operation cancelled.", encodedUri.path));
+            return;
+        }
+
+        // Pass request function to the poller for continuous updates
+        Poller.addRequest(encodedUri.path, {
+            msInterval: pollInterval,
+            request: async () => {
+                const statusMsg = Gui.setStatusBarMessage(
+                    localize("zowe.polling.statusBar", `$(sync~spin) Polling: {0}...`, encodedUri.path),
+                    globals.STATUS_BAR_TIMEOUT_MS
+                );
+                await fileInEditor.fetchContent.bind(SpoolProvider.files[encodedUri.path])();
+                statusMsg.dispose();
+            },
+        });
+        PollDecorator.updateIcon(encodedUri);
+        node.contextValue += globals.POLL_CONTEXT;
+
+        // Fire "tree changed event" to reflect added polling context value
+        this.mOnDidChangeTreeData.fire();
     }
 }
 
