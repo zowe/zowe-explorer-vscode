@@ -38,6 +38,7 @@ import { createIJobObject, createJobsTree } from "../../__mocks__/mockCreators/j
 import * as path from "path";
 import { SettingsConfig } from "../../src/utils/SettingsConfig";
 import { ZoweLogger } from "../../src/utils/LoggerUtils";
+import { ZoweLocalStorage } from "../../src/utils/ZoweLocalStorage";
 
 jest.mock("child_process");
 jest.mock("fs");
@@ -128,6 +129,15 @@ async function createGlobalMocks() {
     Object.defineProperty(ZoweLogger, "warn", { value: jest.fn(), configurable: true });
     Object.defineProperty(ZoweLogger, "info", { value: jest.fn(), configurable: true });
     Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
+
+    Object.defineProperty(ZoweLocalStorage, "storage", {
+        value: {
+            get: jest.fn(() => ({ persistence: true })),
+            update: jest.fn(),
+            keys: jest.fn(),
+        },
+        configurable: true,
+    });
 
     newMocks.mockProfileInstance = new Profiles(newMocks.log);
     Object.defineProperty(Profiles, "CreateInstance", {

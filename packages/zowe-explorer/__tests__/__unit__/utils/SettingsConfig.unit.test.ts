@@ -13,9 +13,18 @@ import { SettingsConfig } from "../../../src/utils/SettingsConfig";
 import * as vscode from "vscode";
 import { Gui } from "@zowe/zowe-explorer-api";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
+import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
 
 beforeEach(() => {
     Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLocalStorage, "storage", {
+        value: {
+            get: () => ({ persistence: true, favorites: [], history: [], sessions: ["zosmf"], searchHistory: [], fileHistory: [] }),
+            update: jest.fn(),
+            keys: () => [],
+        },
+        configurable: true,
+    });
 });
 
 afterEach(() => {
@@ -128,10 +137,12 @@ describe("SettingsConfig Unit Tests - function standardizeSettings", () => {
     it("should standardize global settings if not migrated", async () => {
         jest.spyOn(SettingsConfig as any, "configurations", "get").mockReturnValue({
             inspect: () => ({
-                globalValue: "",
+                globalValue: "test",
                 workspaceValue: "vtest",
             }),
         });
+        jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValueOnce(true);
+        jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValueOnce(false);
         const standardizeGlobalSettingsSpy = jest.spyOn(SettingsConfig as any, "standardizeGlobalSettings").mockImplementation();
         await expect(SettingsConfig.standardizeSettings()).resolves.not.toThrow();
         expect(standardizeGlobalSettingsSpy).toHaveBeenCalledTimes(1);

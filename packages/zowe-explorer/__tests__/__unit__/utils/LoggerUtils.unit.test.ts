@@ -104,17 +104,10 @@ describe("Logger Utils Unit Tests - function initializeZoweLogger", () => {
         });
         const infoSpy = jest.spyOn(logger.ZoweLogger, "info");
         process.env.ZOWE_APP_LOG_LEVEL = "DEBUG";
-        const messageSpy = jest.spyOn(Gui, "infoMessage").mockResolvedValueOnce(undefined);
-        const updateSpy = jest.spyOn(SettingsConfig, "setDirectValue");
 
         expect(await logger.ZoweLogger.initializeZoweLogger(globalMocks.testContext)).toBeUndefined();
         expect(infoSpy).toHaveBeenCalled();
-        expect(messageSpy).toHaveBeenCalled();
-        expect(updateSpy).toHaveBeenCalledWith("zowe.cliLoggerSetting.presented", true, 1);
-        expect(updateSpy).not.toHaveBeenCalledWith("zowe.logger", "DEBUG", 1);
         infoSpy.mockClear();
-        messageSpy.mockClear();
-        updateSpy.mockClear();
     });
     it("should initialize loggers successfully with changing to cli logger setting", async () => {
         const globalMocks = createGlobalMocks();
@@ -124,16 +117,10 @@ describe("Logger Utils Unit Tests - function initializeZoweLogger", () => {
         });
         const infoSpy = jest.spyOn(logger.ZoweLogger, "info");
         process.env.ZOWE_APP_LOG_LEVEL = "DEBUG";
-        const messageSpy = jest.spyOn(Gui, "infoMessage").mockResolvedValueOnce("Update");
-        const updateSpy = jest.spyOn(SettingsConfig, "setDirectValue");
 
         expect(await logger.ZoweLogger.initializeZoweLogger(globalMocks.testContext)).toBeUndefined();
         expect(infoSpy).toHaveBeenCalled();
-        expect(messageSpy).toHaveBeenCalled();
-        expect(updateSpy).toHaveBeenCalledTimes(2);
         infoSpy.mockClear();
-        messageSpy.mockClear();
-        updateSpy.mockClear();
     });
     it("should reinitialize loggers successfully with new path", async () => {
         const globalMocks = createGlobalMocks();
