@@ -33,7 +33,6 @@ import * as workspaceUtils from "../../../src/utils/workspace";
 import { createUssApi, bindUssApi } from "../../../__mocks__/mockCreators/api";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
-import { ZoweTreeProvider } from "../../../src/abstract/ZoweTreeProvider";
 import { PersistentFilters } from "../../../src/PersistentFilters";
 
 async function createGlobalMocks() {

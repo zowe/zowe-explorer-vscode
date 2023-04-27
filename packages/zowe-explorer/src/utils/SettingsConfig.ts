@@ -72,7 +72,7 @@ export class SettingsConfig {
         ZoweLogger.trace("SettingsConfig.standardizeSettings called.");
         const localStorageIsMigrated = ZoweLocalStorage.getValue<boolean>(globals.SETTINGS_LOCAL_STORAGE_MIGRATED);
         const globalIsMigrated = ZoweLocalStorage.getValue<boolean>(globals.SETTINGS_OLD_SETTINGS_MIGRATED);
-        const workspaceIsMigrated = SettingsConfig.configurations.inspect<boolean>(globals.SETTINGS_OLD_SETTINGS_MIGRATED).workspaceValue;
+        const workspaceIsMigrated = SettingsConfig.configurations.inspect(globals.SETTINGS_OLD_SETTINGS_MIGRATED).workspaceValue;
         const workspaceIsOpen = vscode.workspace.workspaceFolders !== undefined;
         const zoweSettingsExist = SettingsConfig.zoweOldConfigurations.length > 0;
 
@@ -102,11 +102,6 @@ export class SettingsConfig {
     private static get zoweOldConfigurations(): string[] {
         ZoweLogger.trace("SettingsConfig.zoweOldConfiguration called.");
         return Object.keys(SettingsConfig.configurations).filter((key) => key.match(new RegExp("Zowe-*|Zowe\\s*", "g")));
-    }
-
-    private static get currentVersionNumber(): unknown {
-        ZoweLogger.trace("SettingsConfig.currentVersionNumber called.");
-        return vscode.extensions.getExtension("zowe.vscode-extension-for-zowe").packageJSON.version as unknown;
     }
 
     private static async promptReload(): Promise<void> {
