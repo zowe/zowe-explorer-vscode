@@ -17,6 +17,7 @@ import * as globals from "../../../src/globals";
 import { Gui } from "@zowe/zowe-explorer-api";
 import * as shared from "../../../__mocks__/mockCreators/shared";
 import { SettingsConfig } from "../../../src/utils/SettingsConfig";
+import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
 
 function createGlobalMocks() {
     const newMocks = {
@@ -51,6 +52,14 @@ function createGlobalMocks() {
     Object.defineProperty(globals.LOG, "fatal", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.workspace, "getConfiguration", {
         value: newMocks.mockGetConfiguration,
+        configurable: true,
+    });
+    Object.defineProperty(ZoweLocalStorage, "storage", {
+        value: {
+            get: () => ({ persistence: true, favorites: [], history: [], sessions: ["zosmf"], searchHistory: [], fileHistory: [] }),
+            update: jest.fn(),
+            keys: () => [],
+        },
         configurable: true,
     });
     Object.defineProperty(logger, "getDate", { value: "2023/1/1", configurable: true });
@@ -236,5 +245,19 @@ describe("ZoweLogger.dispose()", () => {
         const spy = jest.spyOn(logger.ZoweLogger.zeOutputChannel, "dispose");
         expect(await logger.ZoweLogger.disposeZoweLogger()).toBeUndefined();
         expect(spy).toBeCalled();
+    });
+});
+
+describe("ZoweLogger.updateVscLoggerSetting", () => {
+    it("should set the CLI logger setting", async () => {
+        const testCLISetting = {};
+        const setCliLoggerSettingSpy = jest.spyOn(logger.ZoweLogger as any, "setCliLoggerSetting");
+        const guiInfoSpy = jest.spyOn(Gui, "infoMessage");
+        guiInfoSpy.mockResolvedValue("Test");
+        jest.spyOn(vscode.workspace, "getConfiguration").mockReturnValue({
+            get: jest.fn(),
+        } as any);
+        await (logger.ZoweLogger as any).updateVscLoggerSetting(testCLISetting);
+        expect(setCliLoggerSettingSpy).toBeCalledWith(true);
     });
 });
