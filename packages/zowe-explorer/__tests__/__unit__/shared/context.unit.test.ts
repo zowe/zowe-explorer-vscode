@@ -42,6 +42,8 @@ describe("Context helper tests", () => {
     const USS_SESSION_CONTEXT_FAV = "uss_session_fav";
     const DS_SESSION_CONTEXT_FAV = "session_fav";
     const POLL_CONTEXT = "_polling";
+    const VALIDATE_SUFFIX = "_validate";
+    const NO_VALIDATE_SUFFIX = "_noValidate";
 
     const testList: string[] = [
         INFORMATION_CONTEXT,
@@ -67,6 +69,8 @@ describe("Context helper tests", () => {
         JOBS_JOB_FAVORITE1,
         JOBS_JOB_FAVORITE2,
         JOBS_JOB_FAVORITE3,
+        VALIDATE_SUFFIX,
+        NO_VALIDATE_SUFFIX,
     ];
 
     const testListA: string[] = [DS_FAV_CONTEXT, PDS_FAV_CONTEXT, DS_FAV_TEXT_FILE_CONTEXT, USS_FAV_DIR_CONTEXT, JOBS_JOB_FAVORITE3];
@@ -378,6 +382,29 @@ describe("Context helper tests", () => {
             }
         }
     });
+
+    it("Test a session with validation enabled", async () => {
+        for (const ctx of testList) {
+            // Test below will verify whether NO_VALIDATE_SUFFIX works
+            if (ctx === NO_VALIDATE_SUFFIX) {
+                continue;
+            }
+            treeItem.contextValue = ctx;
+            expect(contextually.isValidationEnabled(treeItem)).toBe(treeItem.contextValue.includes(VALIDATE_SUFFIX));
+        }
+    });
+
+    it("Test a session with validation disabled", async () => {
+        for (const ctx of testList) {
+            // Test above will verify whether VALIDATE_SUFFIX works
+            if (ctx === VALIDATE_SUFFIX) {
+                continue;
+            }
+            treeItem.contextValue = ctx;
+            expect(contextually.isValidationEnabled(treeItem)).toBe(false);
+        }
+    });
+
     it("Test that this is a folder", async () => {
         for (const ctx of testList) {
             treeItem.contextValue = ctx;

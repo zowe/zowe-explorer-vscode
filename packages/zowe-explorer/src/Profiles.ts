@@ -171,16 +171,13 @@ export class Profiles extends ProfilesCache {
         ZoweLogger.trace("Profiles.disableValidationContext called.");
         const theProfile: zowe.imperative.IProfileLoaded = node.getProfile();
         this.validationArraySetup(theProfile, false);
-        if (node.contextValue.includes(`${globals.VALIDATE_SUFFIX}true`)) {
-            node.contextValue = node.contextValue
-                .replace(/(_validate=true)/g, "")
-                .replace(/(_Active)/g, "")
-                .replace(/(_Inactive)/g, "");
-            node.contextValue = node.contextValue + `${globals.VALIDATE_SUFFIX}false`;
-        } else if (node.contextValue.includes(`${globals.VALIDATE_SUFFIX}false`)) {
+        if (node.contextValue.includes(globals.VALIDATE_SUFFIX)) {
+            node.contextValue = node.contextValue.replace(globals.VALIDATE_SUFFIX, "");
+            node.contextValue += globals.NO_VALIDATE_SUFFIX;
+        } else if (node.contextValue.includes(globals.NO_VALIDATE_SUFFIX)) {
             return node;
         } else {
-            node.contextValue = node.contextValue + `${globals.VALIDATE_SUFFIX}false`;
+            node.contextValue += globals.VALIDATE_SUFFIX;
         }
         return node;
     }
@@ -195,13 +192,13 @@ export class Profiles extends ProfilesCache {
         ZoweLogger.trace("Profiles.enableValidationContext called.");
         const theProfile: zowe.imperative.IProfileLoaded = node.getProfile();
         this.validationArraySetup(theProfile, true);
-        if (node.contextValue.includes(`${globals.VALIDATE_SUFFIX}false`)) {
-            node.contextValue = node.contextValue.replace(/(_validate=false)/g, "").replace(/(_Unverified)/g, "");
-            node.contextValue = node.contextValue + `${globals.VALIDATE_SUFFIX}true`;
-        } else if (node.contextValue.includes(`${globals.VALIDATE_SUFFIX}true`)) {
+        if (node.contextValue.includes(globals.NO_VALIDATE_SUFFIX)) {
+            node.contextValue = node.contextValue.replace(globals.NO_VALIDATE_SUFFIX, "");
+            node.contextValue += globals.VALIDATE_SUFFIX;
+        } else if (node.contextValue.includes(globals.VALIDATE_SUFFIX)) {
             return node;
         } else {
-            node.contextValue = node.contextValue + `${globals.VALIDATE_SUFFIX}true`;
+            node.contextValue += globals.VALIDATE_SUFFIX;
         }
 
         return node;
