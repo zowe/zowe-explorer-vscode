@@ -1,6 +1,6 @@
 {
   "name": "@zowe/zowe-explorer-api",
-  "version": "2.7.1-SNAPSHOT",
+  "version": "2.8.1-SNAPSHOT",
   "description": "Extensibility API for Zowe Explorer.",
   "publisher": "Zowe",
   "author": "Zowe",
@@ -16,16 +16,17 @@
     "@types/semver": "^7.3.6"
   },
   "dependencies": {
-    "@zowe/cli": "^7.11.0",
+    "@zowe/cli": "^7.14.0",
     "semver": "^7.3.5"
   },
   "scripts": {
-    "build": "yarn clean && tsc -p ./ && yarn license",
+    "build": "yarn check-cli && yarn clean && tsc -p ./ && yarn license",
     "test:unit": "jest \".*__tests__.*\\.unit\\.test\\.ts\" --coverage",
     "test": "yarn test:unit",
     "lint": "concurrently -n \"_eslint_,prettier\" \"eslint .\" \"prettier --check .\"",
-    "lintErrors": "echo \"zowe-explorer-api: coming soon.\"",
+    "lint:html": "eslint . --format html > results/eslint.html",
     "pretty": "prettier --write .",
+    "check-cli": "node scripts/check-cli.js",
     "clean": "rimraf lib",
     "fresh-clone": "yarn clean && rimraf node_modules",
     "license": "node ../../scripts/updateLicenses.js",

@@ -31,6 +31,7 @@ import * as path from "path";
 import * as workspaceUtils from "../../../src/utils/workspace";
 import * as globals from "../../../src/globals";
 import * as ussUtils from "../../../src/uss/utils";
+import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 jest.mock("fs");
 jest.mock("path");
 
@@ -168,7 +169,11 @@ async function createGlobalMocks() {
     });
     Object.defineProperty(vscode.env.clipboard, "readText", { value: globalMocks.readText, configurable: true });
     Object.defineProperty(path, "basename", { value: globalMocks.basePath, configurable: true });
-
+    Object.defineProperty(ZoweLogger, "error", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "debug", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "warn", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "info", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
     return globalMocks;
 }
 
@@ -747,7 +752,9 @@ describe("ZoweUSSNode Unit Tests - Function node.deleteUSSNode()", () => {
 
         try {
             await blockMocks.ussNode.deleteUSSNode(blockMocks.testUSSTree, "", false);
-        } catch (err) {}
+        } catch (err) {
+            // Prevent exception from failing test
+        }
 
         expect(globalMocks.showErrorMessage.mock.calls.length).toBe(1);
         expect(blockMocks.testUSSTree.refresh).not.toHaveBeenCalled();
@@ -1149,14 +1156,16 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
 
         try {
             await child.openUSS(false, true, blockMocks.testUSSTree);
-        } catch (err) {}
+        } catch (err) {
+            // Prevent exception from failing test
+        }
 
         expect(globalMocks.ussFile.mock.calls.length).toBe(0);
         expect(globalMocks.openTextDocument.mock.calls.length).toBe(1);
         expect(globalMocks.openTextDocument.mock.calls[0][0]).toBe(child.getUSSDocumentFilePath());
         expect(globalMocks.mockShowTextDocument.mock.calls.length).toBe(1);
         expect(globalMocks.showErrorMessage.mock.calls.length).toBe(1);
-        expect(globalMocks.showErrorMessage.mock.calls[0][0]).toBe("testError Error: testError");
+        expect(globalMocks.showErrorMessage.mock.calls[0][0]).toBe("Error: testError");
     });
 
     it("Tests that node.openUSS() executes successfully for favorited file", async () => {
@@ -1287,12 +1296,14 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
 
         try {
             await brat.openUSS(false, true, blockMocks.testUSSTree);
-        } catch (err) {}
+        } catch (err) {
+            // Prevent exception from failing test
+        }
 
         expect(globalMocks.ussFile.mock.calls.length).toBe(0);
         expect(globalMocks.showErrorMessage.mock.calls.length).toBe(2);
         expect(globalMocks.showErrorMessage.mock.calls[0][0]).toBe("open() called from invalid node.");
-        expect(globalMocks.showErrorMessage.mock.calls[1][0]).toBe("open() called from invalid node. Error: open() called from invalid node.");
+        expect(globalMocks.showErrorMessage.mock.calls[1][0]).toBe("Error: open() called from invalid node.");
     });
 });
 

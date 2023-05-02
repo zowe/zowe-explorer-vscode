@@ -19,6 +19,7 @@ import { errorHandling, FilterDescriptor, FilterItem } from "../utils/ProfilesUt
 import { ZoweCommandProvider } from "../abstract/ZoweCommandProvider";
 import { IStartTsoParms, imperative } from "@zowe/cli";
 import { SettingsConfig } from "../utils/SettingsConfig";
+import { ZoweLogger } from "../utils/LoggerUtils";
 
 // Set up localization
 nls.config({
@@ -51,9 +52,8 @@ export class TsoCommandHandler extends ZoweCommandProvider {
     private static instance: TsoCommandHandler;
     public outputChannel: vscode.OutputChannel;
 
-    constructor() {
+    public constructor() {
         super();
-
         this.outputChannel = Gui.createOutputChannel(localize("issueTsoCommand.outputchannel.title", "Zowe TSO Command"));
     }
 
@@ -63,7 +63,8 @@ export class TsoCommandHandler extends ZoweCommandProvider {
      * @param session the session the command is to run against (optional) user is prompted if not supplied
      * @param command the command string (optional) user is prompted if not supplied
      */
-    public async issueTsoCommand(session?: imperative.Session, command?: string, node?: IZoweTreeNode) {
+    public async issueTsoCommand(session?: imperative.Session, command?: string, node?: IZoweTreeNode): Promise<void> {
+        ZoweLogger.trace("TsoCommandHandler.issueTsoCommand called.");
         let profile: imperative.IProfileLoaded;
         if (node) {
             await this.checkCurrentProfile(node);
@@ -131,15 +132,16 @@ export class TsoCommandHandler extends ZoweCommandProvider {
             }
         } catch (error) {
             if (error.toString().includes("non-existing")) {
-                globals.LOG.error(error);
+                ZoweLogger.error(error);
                 Gui.errorMessage(localize("issueTsoCommand.apiNonExisting", "Not implemented yet for profile of type: ") + profile.type);
             } else {
-                await errorHandling(error.toString(), profile.name, error.message.toString());
+                await errorHandling(error, profile.name);
             }
         }
     }
 
-    private async getQuickPick(hostname: string) {
+    private async getQuickPick(hostname: string): Promise<string> {
+        ZoweLogger.trace("TsoCommandHandler.getQuickPick called.");
         let response = "";
         const alwaysEdit: boolean = SettingsConfig.getDirectValue(globals.SETTINGS_COMMANDS_ALWAYS_EDIT);
         if (this.history.getSearchHistory().length > 0) {
@@ -208,7 +210,8 @@ export class TsoCommandHandler extends ZoweCommandProvider {
      * @param profile profile to be used
      * @param tsoParams parameters (from TSO profile, when used)
      */
-    private async issueCommand(command: string, profile: imperative.IProfileLoaded, tsoParams?: IStartTsoParms) {
+    private async issueCommand(command: string, profile: imperative.IProfileLoaded, tsoParams?: IStartTsoParms): Promise<void> {
+        ZoweLogger.trace("TsoCommandHandler.issueCommand called.");
         try {
             if (command) {
                 // If the user has started their command with a / then remove it
@@ -243,15 +246,17 @@ export class TsoCommandHandler extends ZoweCommandProvider {
             this.history.addSearchHistory(command);
         } catch (error) {
             if (error.toString().includes("account number")) {
-                globals.LOG.error(error);
-                Gui.errorMessage(localize("issueTsoCommand.accountNumberNotSupplied", "Error: No account number was supplied."));
+                const message = localize("issueTsoCommand.error", "No account number was supplied.");
+                ZoweLogger.error(message);
+                Gui.errorMessage(message);
             } else {
-                await errorHandling(error.toString(), profile.name, error.message.toString());
+                await errorHandling(error, profile.name);
             }
         }
     }
 
     private async selectTsoProfile(tsoProfiles: imperative.IProfileLoaded[] = []): Promise<imperative.IProfileLoaded> {
+        ZoweLogger.trace("TsoCommandHandler.selectTsoProfile called.");
         let tsoProfile: imperative.IProfileLoaded;
         if (tsoProfiles.length > 1) {
             const tsoProfileNamesList = tsoProfiles.map((temprofile) => {
@@ -282,8 +287,9 @@ export class TsoCommandHandler extends ZoweCommandProvider {
      * @returns Promise<IStartTsoParms>
      */
     private async getTsoParams(): Promise<IStartTsoParms> {
+        ZoweLogger.trace("TsoCommandHandler.getTsoParams called.");
         const profileInfo = await Profiles.getInstance().getProfileInfo();
-        const tsoParms: IStartTsoParms = {};
+        let tsoParms: IStartTsoParms = {};
 
         // Keys in the IStartTsoParms interface
         // TODO(zFernand0): Request the CLI squad that all interfaces are also exported as values that we can iterate
@@ -298,7 +304,11 @@ export class TsoCommandHandler extends ZoweCommandProvider {
             }
         }
         if (tsoProfile) {
-            iStartTso.forEach((p) => (tsoParms[p] = tsoProfile.profile[p]));
+            tsoParms = {
+                ...iStartTso.reduce((obj, parm) => {
+                    return { ...obj, [parm]: tsoProfile.profile[parm] };
+                }, {}),
+            };
         }
 
         if (tsoParms.account == null || tsoParms.account === "") {

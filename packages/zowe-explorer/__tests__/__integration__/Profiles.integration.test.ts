@@ -17,7 +17,7 @@ import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
 import * as testConst from "../../resources/testProfileData";
 
-declare var it: Mocha.TestFunction;
+declare let it: Mocha.TestFunction;
 const TIMEOUT = 45000;
 
 const testProfile: imperative.IProfile = {

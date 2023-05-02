@@ -1,6 +1,6 @@
 {
   "name": "eslint-plugin-zowe-explorer",
-  "version": "2.7.1-SNAPSHOT",
+  "version": "2.8.1-SNAPSHOT",
   "description": "Custom ESLint Rules for ZOWE Explorer",
   "keywords": [
     "eslint",
@@ -16,7 +16,7 @@
     "test": "jest",
     "build": "echo \"eslint-plugin: nothing to build.\"",
     "lint": "echo \"eslint-plugin: nothing to lint.\"",
-    "lintErrors": "echo \"eslint-plugin: nothing to lint.\"",
+    "lint:html": "echo \"eslint-plugin: nothing to lint.\"",
     "pretty": "echo \"eslint-plugin: nothing to pretty.\"",
     "package": "echo \"eslint-plugin: nothing to package.\""
   },

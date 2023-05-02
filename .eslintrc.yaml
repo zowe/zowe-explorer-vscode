@@ -1,27 +1,70 @@
-root: true
-parser: "@typescript-eslint/parser"
-plugins:
-  - "@typescript-eslint"
-  - zowe-explorer
+extends:
+  - eslint:recommended
+  - plugin:@typescript-eslint/recommended-requiring-type-checking
+  - prettier
 env:
   node: true
   es6: true
+ignorePatterns: ["**/scripts", "**/__mocks__", "**/lib"]
+overrides:
+  - files: "**/__tests__/**"
+    rules:
+      no-magic-numbers: off
+      # There are several errors falling under these rules; resolve
+      "@typescript-eslint/require-await": warn
+      "@typescript-eslint/no-misused-promises": warn
+      "@typescript-eslint/no-unsafe-return": warn
+      "@typescript-eslint/restrict-plus-operands": warn
+      "@typescript-eslint/restrict-template-expressions": warn
+      "@typescript-eslint/explicit-function-return-type": warn
+      "@typescript-eslint/unbound-method": warn
+parser: "@typescript-eslint/parser"
+parserOptions:
+  ecmaVersion: 6
+  sourceType: module
+  project:
+    - "./tsconfig.json"
+    - "./tsconfig-tests.json"
+plugins:
+  - "@typescript-eslint"
+  - zowe-explorer
 rules:
+  "@typescript-eslint/await-thenable": off
   "@typescript-eslint/consistent-type-assertions": warn
-  "@typescript-eslint/no-namespace": warn
+  "@typescript-eslint/explicit-function-return-type": error
+  "@typescript-eslint/explicit-member-accessibility": error
+
+  # There are several errors falling under these rules; resolve
+  "@typescript-eslint/no-floating-promises": off
+  "@typescript-eslint/no-unsafe-assignment": off
+  "@typescript-eslint/no-unsafe-argument": off
+  "@typescript-eslint/no-unsafe-call": off
+  "@typescript-eslint/no-unsafe-member-access": off
+
+  "@typescript-eslint/no-shadow": error
+  "@typescript-eslint/no-unused-expressions": error
   "@typescript-eslint/no-var-requires": warn
-  no-unused-expressions: off
-  "@typescript-eslint/no-unused-expressions": warn
-  no-unused-vars: off
-  "@typescript-eslint/no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }]
+  array-callback-return: error
+  complexity:
+    - warn
+    - 15
+  constructor-super: error
   curly: warn
+  getter-return: error
   max-len:
     - warn
     - code: 150
-  no-console: warn
-  no-duplicate-case: warn
-  no-duplicate-imports: warn
+  # no-array-constructor: off
+  no-console: error
+  no-const-assign: error
+  no-dupe-keys: error
+  no-duplicate-case: error
+  no-duplicate-imports: error
   no-extra-bind: warn
+  no-extra-semi: error
+  # no-func-assign: error
+  no-implicit-globals: error
+  # no-import-assign: error
   no-irregular-whitespace: warn
   no-magic-numbers:
     - warn
@@ -29,7 +72,16 @@ rules:
   no-multiple-empty-lines: warn
   no-return-await: warn
   no-sequences: warn
+  no-shadow: off
   no-sparse-arrays: warn
+  # no-this-before-super: error
+  # no-undef: warn
+  no-unreachable: error
+  no-unsafe-negation: error
+  no-unused-expressions: off
+  no-unused-vars: off
+  "@typescript-eslint/no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }]
+  # prefer-const: warn
   prefer-object-spread: warn
   space-in-parens: warn
   zowe-explorer/no-unmocked-core-modules:
@@ -37,10 +89,4 @@ rules:
     - coreModuleNames:
         - fs
       filePathPattern: ".*\\.unit\\.test\\..*"
-parserOptions:
-  sourceType: module
-overrides:
-  - files: "**/__tests__/**"
-    rules:
-      no-magic-numbers: off
-      "@typescript-eslint/no-unused-vars": off
+root: true

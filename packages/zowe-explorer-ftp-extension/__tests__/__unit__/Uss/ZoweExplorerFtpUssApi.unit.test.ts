@@ -24,10 +24,10 @@ jest.mock("../../../__mocks__/@zowe/zowe-explorer-api.ts");
 jest.mock("../../../src/extension.ts");
 
 const stream = require("stream");
-// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,@typescript-eslint/no-unsafe-call
+
 const readableStream = stream.Readable.from([]);
 const fs = require("fs");
-// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+
 fs.createReadStream = jest.fn().mockReturnValue(readableStream);
 const UssApi = new FtpUssApi();
 
@@ -49,7 +49,7 @@ describe("FtpUssApi", () => {
             ussFilePath: "/a/b/c",
         };
         const result = await UssApi.fileList(mockParams.ussFilePath);
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+
         expect(result.apiResponse.items[0].name).toContain("file1");
         expect(UssUtils.listFiles).toBeCalledTimes(1);
         expect(UssApi.releaseConnection).toHaveBeenCalledTimes(0);
@@ -67,11 +67,11 @@ describe("FtpUssApi", () => {
             },
         };
         const result = await UssApi.getContents(mockParams.ussFilePath, mockParams.options);
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+
         expect(result.apiResponse.etag).toHaveLength(40);
         expect(UssUtils.downloadFile).toBeCalledTimes(1);
         expect(UssApi.releaseConnection).toBeCalled();
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,@typescript-eslint/no-unsafe-call
+
         expect(response._readableState.buffer.head.data.toString()).toContain("Hello world");
     });
 
