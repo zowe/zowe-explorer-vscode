@@ -12,7 +12,7 @@
 jest.mock("fs");
 
 import * as zowe from "@zowe/cli";
-import { Gui, ProfilesCache, ValidProfileEnum } from "@zowe/zowe-explorer-api";
+import { Gui, ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import * as ussNodeActions from "../../../src/uss/actions";
 import { UssFileTree, UssFileType, UssFileUtils } from "../../../src/uss/FileStructure";
 import { createUSSTree, createUSSNode, createFavoriteUSSNode } from "../../../__mocks__/mockCreators/uss";
@@ -23,7 +23,6 @@ import {
     createTextDocument,
     createFileResponse,
     createValidIProfile,
-    createInstanceOfProfileInfo,
 } from "../../../__mocks__/mockCreators/shared";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { Profiles } from "../../../src/Profiles";
@@ -37,6 +36,7 @@ import * as isbinaryfile from "isbinaryfile";
 import * as fs from "fs";
 import { createUssApi, bindUssApi } from "../../../__mocks__/mockCreators/api";
 import * as refreshActions from "../../../src/shared/refresh";
+import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 
 function createGlobalMocks() {
     const globalMocks = {
@@ -74,23 +74,11 @@ function createGlobalMocks() {
                 Notification: 15,
             };
         }),
-        mockProfileInfo: createInstanceOfProfileInfo(),
-        mockProfilesCache: new ProfilesCache(zowe.imperative.Logger.getAppLogger()),
     };
 
     globalMocks.mockLoadNamedProfile.mockReturnValue(globalMocks.testProfile);
-    // Mock the logger
-    globals.defineGlobals("/test/path/");
-    const extensionMock = jest.fn(
-        () =>
-            ({
-                subscriptions: [],
-                extensionPath: path.join(__dirname, "..", ".."),
-            } as vscode.ExtensionContext)
-    );
-    const mock = new extensionMock();
+    globals.defineGlobals("");
     const profilesForValidation = { status: "active", name: "fake" };
-    globals.initLogger(mock);
 
     Object.defineProperty(Gui, "setStatusBarMessage", { value: globalMocks.setStatusBarMessage, configurable: true });
     Object.defineProperty(vscode.window, "showInputBox", { value: globalMocks.mockShowInputBox, configurable: true });
@@ -168,11 +156,11 @@ function createGlobalMocks() {
             };
         }),
     });
-    Object.defineProperty(globalMocks.mockProfilesCache, "getProfileInfo", {
-        value: jest.fn(() => {
-            return { value: globalMocks.mockProfileInfo, configurable: true };
-        }),
-    });
+    Object.defineProperty(ZoweLogger, "error", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "debug", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "warn", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "info", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
 
     return globalMocks;
 }
@@ -393,7 +381,7 @@ describe("USS Action Unit Tests - Function deleteFromDisk", () => {
         jest.spyOn(fs, "unlinkSync").mockImplementation(() => {
             throw new Error();
         });
-        Object.defineProperty(globals.LOG, "warn", {
+        Object.defineProperty(ZoweLogger, "warn", {
             value: globalsLogWarnSpy,
         });
         ussNodeActions.deleteFromDisk(null, "some/where/that/does/not/exist");
@@ -506,7 +494,7 @@ describe("USS Action Unit Tests - Function saveUSSFile", () => {
 
         await ussNodeActions.saveUSSFile(blockMocks.testDoc, blockMocks.testUSSTree);
         expect(globalMocks.showErrorMessage.mock.calls.length).toBe(1);
-        expect(globalMocks.showErrorMessage.mock.calls[0][0]).toBe("Test Error Error: Test Error");
+        expect(globalMocks.showErrorMessage.mock.calls[0][0]).toBe("Error: Test Error");
         expect(mocked(vscode.workspace.applyEdit)).toHaveBeenCalledTimes(2);
     });
 
@@ -602,7 +590,9 @@ describe("USS Action Unit Tests - Functions uploadDialog & uploadFile", () => {
 
         try {
             await ussNodeActions.uploadDialog(blockMocks.ussNode, blockMocks.testUSSTree);
-        } catch (err) {}
+        } catch (err) {
+            // prevent exception from failing test
+        }
         expect(globalMocks.showErrorMessage.mock.calls.length).toBe(1);
     });
 });
@@ -776,7 +766,7 @@ describe("USS Action Unit Tests - copy file / directory", () => {
     it("paste calls relevant USS API functions", async () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
-        let rootTree: UssFileTree = {
+        const rootTree: UssFileTree = {
             children: [],
             baseName: blockMocks.nodes[1].getLabel() as string,
             ussPath: "",
@@ -800,7 +790,7 @@ describe("USS Action Unit Tests - copy file / directory", () => {
     it("paste throws an error if required APIs are not available", async () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
-        let rootTree: UssFileTree = {
+        const rootTree: UssFileTree = {
             children: [],
             baseName: blockMocks.nodes[1].getLabel() as string,
             ussPath: "",

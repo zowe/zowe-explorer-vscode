@@ -20,7 +20,7 @@ import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
 import * as globals from "../../../src/globals";
 
 const TIMEOUT = 45000;
-declare var it: Mocha.TestFunction;
+declare let it: Mocha.TestFunction;
 // declare var describe: any;
 
 const testProfile: imperative.IProfileLoaded = {
@@ -81,7 +81,6 @@ describe("ussNodeActions integration test", async () => {
 
     describe("Initialize USS Favorites", async () => {
         it("should still create favorite nodes when given a favorite with invalid profile name", async () => {
-            const log = imperative.Logger.getAppLogger();
             const profileName = testConst.profile.name;
             // Reset testTree's favorites to be empty
             testTree.mFavorites = [];

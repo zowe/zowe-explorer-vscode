@@ -45,8 +45,7 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
                     recfm: element.recfm,
                     blksz: element.blksz,
                     lrecl: element.lrecl,
-                    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-                    migr: element.volume && element.volume.toUpperCase() === "MIGRATED" ? "YES" : "NO",
+                    migr: element.volume && (element.volume as string).toUpperCase() === "MIGRATED" ? "YES" : "NO",
                 }));
             }
         }
@@ -189,33 +188,28 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
         const result = this.getDefaultResponse();
         const dcbList = [];
         if (options?.alcunit) {
-            dcbList.push("ALCUNIT=" + options.alcunit);
+            dcbList.push(`ALCUNIT=${options.alcunit}`);
         }
         if (options?.blksize) {
-            // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
-            dcbList.push("BLKSIZE=" + options.blksize);
+            dcbList.push(`BLKSIZE=${options.blksize}`);
         }
         if (options?.dirblk) {
-            // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
-            dcbList.push("DIRECTORY=" + options.dirblk);
+            dcbList.push(`DIRECTORY=${options.dirblk}`);
         }
         if (options?.dsorg) {
-            dcbList.push("DSORG=" + options.dsorg);
+            dcbList.push(`DSORG=${options.dsorg}`);
         }
         if (options?.lrecl) {
-            // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
-            dcbList.push("LRECL=" + options.lrecl);
+            dcbList.push(`LRECL=${options.lrecl}`);
         }
         if (options?.primary) {
-            // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
-            dcbList.push("PRIMARY=" + options.primary);
+            dcbList.push(`PRIMARY=${options.primary}`);
         }
         if (options?.recfm) {
-            dcbList.push("RECFM=" + options.recfm);
+            dcbList.push(`RECFM=${options.recfm}`);
         }
         if (options?.secondary) {
-            // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
-            dcbList.push("SECONDARY=" + options.secondary);
+            dcbList.push(`SECONDARY=${options.secondary}`);
         }
         const dcb = dcbList.join(" ");
         const allocateOptions = {

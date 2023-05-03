@@ -9,7 +9,7 @@
  *
  */
 
-import { mkdirSync } from "fs";
+import { mkdirSync, rmSync } from "fs";
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
 import * as driverFirefox from "./theia/extension.theiaFirefox";
@@ -20,7 +20,7 @@ const SLEEPTIME = 15000;
 const SHORTSLEEPTIME = 2000;
 const wait5sec = 5000;
 const SCREENSHOT_DIR = "./results/integration/failed";
-declare var it: any;
+declare let it: any;
 const expect = chai.expect;
 chai.use(chaiAsPromised);
 
@@ -32,6 +32,10 @@ function screenshotIfFailed(driver: any) {
         }
     };
 }
+
+before(() => {
+    rmSync(SCREENSHOT_DIR, { recursive: true, force: true });
+});
 
 describe("Locate Tree Nodes", () => {
     before(async () => {

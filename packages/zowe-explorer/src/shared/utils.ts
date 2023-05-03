@@ -14,11 +14,13 @@
 import * as vscode from "vscode";
 import * as path from "path";
 import * as globals from "../globals";
+import * as os from "os";
 import { Gui, IZoweTreeNode, IZoweNodeType, IZoweDatasetTreeNode, IZoweUSSTreeNode, IZoweJobTreeNode } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import * as nls from "vscode-nls";
 import { IZosFilesResponse, imperative } from "@zowe/cli";
 import { IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
+import { ZoweLogger } from "../utils/LoggerUtils";
 
 // Set up localization
 nls.config({
@@ -41,7 +43,8 @@ export const JOB_SUBMIT_DIALOG_OPTS = [
 ];
 
 export function filterTreeByString(value: string, treeItems: vscode.QuickPickItem[]): vscode.QuickPickItem[] {
-    const filteredArray = [];
+    ZoweLogger.trace("shared.utils.filterTreeByString called.");
+    const filteredArray: vscode.QuickPickItem[] = [];
     value = value.toUpperCase().replace(/\*/g, "(.*)");
     const regex = new RegExp(value);
     treeItems.forEach((item) => {
@@ -57,7 +60,10 @@ export function filterTreeByString(value: string, treeItems: vscode.QuickPickIte
  * @param iconFileName {string} Name of icon file with extension
  * @returns {object}
  */
-export function getIconPathInResources(iconFileName: string) {
+export function getIconPathInResources(iconFileName: string): {
+    light: string;
+    dark: string;
+} {
     return {
         light: path.join(globals.ROOTPATH, "resources", "light", iconFileName),
         dark: path.join(globals.ROOTPATH, "resources", "dark", iconFileName),
@@ -67,7 +73,8 @@ export function getIconPathInResources(iconFileName: string) {
 /*************************************************************************************************************
  * Returns array of all subnodes of given node
  *************************************************************************************************************/
-export function concatChildNodes(nodes: IZoweNodeType[]) {
+export function concatChildNodes(nodes: IZoweNodeType[]): IZoweNodeType[] {
+    ZoweLogger.trace("shared.utils.concatChildNodes called.");
     let allNodes = new Array<IZoweNodeType>();
 
     for (const node of nodes) {
@@ -83,10 +90,13 @@ export function concatChildNodes(nodes: IZoweNodeType[]) {
  * @param {TreeItem} node - the node element
  */
 export function labelRefresh(node: vscode.TreeItem): void {
-    node.label = node.label.toString().endsWith(" ") ? node.label.toString().substring(0, node.label.toString().length - 1) : node.label + " ";
+    ZoweLogger.trace("shared.utils.labelRefresh called.");
+    node.label = node.label.toString().endsWith(" ")
+        ? node.label.toString().substring(0, node.label.toString().length - 1)
+        : `${node.label.toString()} `;
 }
 
-export function sortTreeItems(favorites: vscode.TreeItem[], specificContext) {
+export function sortTreeItems(favorites: vscode.TreeItem[], specificContext): void {
     favorites.sort((a, b) => {
         if (a.contextValue === specificContext) {
             if (b.contextValue === specificContext) {
@@ -104,7 +114,7 @@ export function sortTreeItems(favorites: vscode.TreeItem[], specificContext) {
 /*************************************************************************************************************
  * Determine IDE name to display based on app environment
  *************************************************************************************************************/
-export function getAppName(isTheia: boolean) {
+export function getAppName(isTheia: boolean): "Theia" | "VS Code" {
     return isTheia ? "Theia" : "VS Code";
 }
 
@@ -115,7 +125,7 @@ export function getAppName(isTheia: boolean) {
  * @param {string} label - If node is a member, label includes the name of the PDS
  * @param {IZoweTreeNode} node
  */
-export function getDocumentFilePath(label: string, node: IZoweTreeNode) {
+export function getDocumentFilePath(label: string, node: IZoweTreeNode): string {
     const dsDir = globals.DS_DIR;
     const profName = node.getProfileName();
     const suffix = appendSuffix(label);
@@ -190,7 +200,7 @@ export function checkIfChildPath(parentPath: string, childPath: string): boolean
  * @returns void
  */
 
-export async function markFileAsDirty(doc: vscode.TextDocument): Promise<void> {
+export function markFileAsDirty(doc: vscode.TextDocument): void {
     const docText = doc.getText();
     const startPosition = new vscode.Position(0, 0);
     const endPosition = new vscode.Position(doc.lineCount, 0);
@@ -246,14 +256,14 @@ export async function uploadContent(
 /**
  * Function that will forcefully upload a file and won't check for matching Etag
  */
-export async function willForceUpload(
+export function willForceUpload(
     node: IZoweDatasetTreeNode | IZoweUSSTreeNode,
     doc: vscode.TextDocument,
     remotePath: string,
     profile?: imperative.IProfileLoaded,
     binary?: boolean,
     returnEtag?: boolean
-): Promise<void> {
+): void {
     // setup to handle both cases (dataset & USS)
     let title: string;
     if (isZoweDatasetTreeNode(node)) {
@@ -291,7 +301,7 @@ export async function willForceUpload(
             }
         } else {
             Gui.showMessage(localize("uploadContent.cancelled", "Upload cancelled."));
-            await markFileAsDirty(doc);
+            markFileAsDirty(doc);
         }
     });
 }
@@ -325,7 +335,7 @@ export function getSelectedNodeList(node: IZoweTreeNode, nodeList: IZoweTreeNode
  * @param {string} text - prefix text
  * @returns undefined | string
  */
-export function jobStringValidator(text: string, localizedParam: "owner" | "prefix"): any {
+export function jobStringValidator(text: string, localizedParam: "owner" | "prefix"): string | null {
     switch (localizedParam) {
         case "owner":
             return text.length > globals.JOBS_MAX_PREFIX ? localize("searchJobs.owner.invalid", "Invalid job owner") : null;
@@ -333,4 +343,8 @@ export function jobStringValidator(text: string, localizedParam: "owner" | "pref
         default:
             return text.length > globals.JOBS_MAX_PREFIX ? localize("searchJobs.prefix.invalid", "Invalid job prefix") : null;
     }
+}
+
+export function getDefaultUri(): vscode.Uri {
+    return vscode.workspace.workspaceFolders?.[0]?.uri ?? vscode.Uri.file(os.homedir());
 }

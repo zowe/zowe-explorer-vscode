@@ -28,6 +28,7 @@ import {
     createInstanceOfProfileInfo,
 } from "../../../__mocks__/mockCreators/shared";
 import * as contextually from "../../../src/shared/context";
+import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 
 async function createGlobalMocks() {
     const globalMocks = {
@@ -137,6 +138,11 @@ async function createGlobalMocks() {
         value: jest.fn().mockImplementationOnce(() => Promise.resolve()),
         configurable: true,
     });
+    Object.defineProperty(ZoweLogger, "error", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "debug", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "warn", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "info", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
 
     // Profile instance mocks
     globalMocks.mockProfileInstance = createInstanceOfProfile(globalMocks.testProfile);
@@ -159,7 +165,9 @@ async function createGlobalMocks() {
 
     globalMocks.mockCreateSessCfgFromArgs.mockReturnValue(globalMocks.testSession);
     globalMocks.testSessionNode = createJobSessionNode(globalMocks.testSession, globalMocks.testProfile);
-    globalMocks.createTreeView.mockReturnValue("testTreeView");
+    globalMocks.createTreeView.mockReturnValue({
+        reveal: jest.fn(),
+    });
     globalMocks.mockGetJob.mockReturnValue(globalMocks.testIJob);
     globalMocks.mockGetJobsByOwnerAndPrefix.mockReturnValue([globalMocks.testIJob, globalMocks.testIJobComplete]);
     globalMocks.mockProfileInstance.editSession = jest.fn(() => globalMocks.testProfile);

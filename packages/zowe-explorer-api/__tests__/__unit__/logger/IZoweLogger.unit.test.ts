@@ -74,13 +74,14 @@ describe("IZoweLogger", () => {
 
     it("should fail to log Imperative message with invalid severity", () => {
         const testLogger = new IZoweLogger(extensionName, loggingPath);
-        let caughtError;
         try {
             testLogger.logImperativeMessage("i haz error", -1);
+            fail("Imperative message w/ invalid severity should throw an exception.");
         } catch (error) {
-            caughtError = error;
+            expect(error).toBeDefined();
+            if (error instanceof Error) {
+                expect(error.message).toMatch(/^Cannot read propert(y|ies)/);
+            }
         }
-        expect(caughtError).toBeDefined();
-        expect(caughtError.message).toMatch(/^Cannot read propert(y|ies)/);
     });
 });

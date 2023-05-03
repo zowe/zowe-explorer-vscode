@@ -20,8 +20,10 @@ import * as contextuals from "../shared/context";
 import { Job } from "./ZoweJobNode";
 import { getSelectedNodeList } from "../shared/utils";
 import { initSubscribers } from "../shared/init";
+import { ZoweLogger } from "../utils/LoggerUtils";
 
-export async function initJobsProvider(context: vscode.ExtensionContext) {
+export async function initJobsProvider(context: vscode.ExtensionContext): Promise<IZoweTree<IZoweJobTreeNode>> {
+    ZoweLogger.trace("job.init.initJobsProvider called.");
     const jobsProvider: IZoweTree<IZoweJobTreeNode> = await createJobsTree(globals.LOG);
     if (jobsProvider == null) {
         return null;
@@ -54,17 +56,21 @@ export async function initJobsProvider(context: vscode.ExtensionContext) {
             await refreshActions.refreshAll(jobsProvider);
         })
     );
-    context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.jobs.refreshJob", async (job) => {
-            jobActions.refreshJob(job.mParent, jobsProvider);
-        })
-    );
+    context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.refreshJob", (job) => jobActions.refreshJob(job.mParent, jobsProvider)));
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.jobs.refreshSpool", async (node) => {
             await jobActions.getSpoolContentFromMainframe(node);
             jobActions.refreshJob(node.mParent.mParent, jobsProvider);
         })
     );
+
+    const downloadSingleSpoolHandler = (binary: boolean) => async (node, nodeList) => {
+        const selectedNodes = getSelectedNodeList(node, nodeList) as IZoweJobTreeNode[];
+        await jobActions.downloadSingleSpool(selectedNodes, binary);
+    };
+    context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.downloadSingleSpool", downloadSingleSpoolHandler(false)));
+    context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.downloadSingleSpoolBinary", downloadSingleSpoolHandler(true)));
+
     context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.addJobsSession", () => jobsProvider.createZoweSession(jobsProvider)));
     context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.setOwner", (job) => jobActions.setOwner(job, jobsProvider)));
     context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.setPrefix", (job) => jobActions.setPrefix(job, jobsProvider)));
@@ -77,12 +83,14 @@ export async function initJobsProvider(context: vscode.ExtensionContext) {
             }
         })
     );
-    context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.jobs.downloadSpool", async (node, nodeList) => {
-            const selectedNodes = getSelectedNodeList(node, nodeList) as IZoweJobTreeNode[];
-            await jobActions.downloadSpool(selectedNodes);
-        })
-    );
+
+    const downloadSpoolHandler = (binary: boolean) => async (node, nodeList) => {
+        const selectedNodes = getSelectedNodeList(node, nodeList) as IZoweJobTreeNode[];
+        await jobActions.downloadSpool(selectedNodes, binary);
+    };
+    context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.downloadSpool", downloadSpoolHandler(false)));
+    context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.downloadSpoolBinary", downloadSpoolHandler(true)));
+
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.jobs.getJobJcl", async (node, nodeList) => {
             let selectedNodes = getSelectedNodeList(node, nodeList) as IZoweJobTreeNode[];
@@ -95,9 +103,9 @@ export async function initJobsProvider(context: vscode.ExtensionContext) {
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.jobs.setJobSpool", async (session, jobId) => jobActions.focusOnJob(jobsProvider, session, jobId))
     );
-    context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.search", (node) => jobsProvider.filterPrompt(node)));
+    context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.search", (node): void => jobsProvider.filterPrompt(node)));
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.jobs.editSession", async (node) => jobsProvider.editSession(node, jobsProvider))
+        vscode.commands.registerCommand("zowe.jobs.editSession", async (node): Promise<void> => jobsProvider.editSession(node, jobsProvider))
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.jobs.addFavorite", async (node, nodeList) => {
@@ -115,19 +123,36 @@ export async function initJobsProvider(context: vscode.ExtensionContext) {
             }
         })
     );
-    context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.saveSearch", async (node) => jobsProvider.saveSearch(node)));
-    context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.removeSearchFavorite", async (node) => jobsProvider.removeFavorite(node)));
+    context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.saveSearch", (node): void => jobsProvider.saveSearch(node)));
+    context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.removeSearchFavorite", (node): void => jobsProvider.removeFavorite(node)));
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.jobs.removeFavProfile", async (node) => jobsProvider.removeFavProfile(node.label, true))
+        vscode.commands.registerCommand("zowe.jobs.removeFavProfile", (node): void => jobsProvider.removeFavProfile(node.label, true))
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.jobs.disableValidation", async (node) => Profiles.getInstance().disableValidation(node))
+        vscode.commands.registerCommand("zowe.jobs.disableValidation", (node) => Profiles.getInstance().disableValidation(node))
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.jobs.enableValidation", async (node) => Profiles.getInstance().enableValidation(node))
+        vscode.commands.registerCommand("zowe.jobs.enableValidation", (node) => Profiles.getInstance().enableValidation(node))
     );
-    context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.ssoLogin", async (node: IZoweTreeNode) => jobsProvider.ssoLogin(node)));
-    context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.ssoLogout", async (node: IZoweTreeNode) => jobsProvider.ssoLogout(node)));
+    context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.ssoLogin", (node: IZoweTreeNode): void => jobsProvider.ssoLogin(node)));
+    context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.ssoLogout", (node: IZoweTreeNode): void => jobsProvider.ssoLogout(node)));
+    const spoolFileTogglePoll =
+        (startPolling: boolean) =>
+        async (node: IZoweTreeNode, nodeList: IZoweTreeNode[]): Promise<void> => {
+            const selectedNodes = getSelectedNodeList(node, nodeList);
+            const isMultipleSelection = selectedNodes.length > 1;
+            for (const n of selectedNodes) {
+                if (isMultipleSelection) {
+                    if (startPolling != contextuals.isPolling(n)) {
+                        await jobsProvider.pollData(n);
+                    }
+                } else {
+                    await jobsProvider.pollData(n);
+                }
+            }
+        };
+    context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.startPolling", spoolFileTogglePoll(true)));
+    context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.stopPolling", spoolFileTogglePoll(false)));
     context.subscriptions.push(
         vscode.workspace.onDidChangeConfiguration((e) => {
             jobsProvider.onDidChangeConfiguration(e);
