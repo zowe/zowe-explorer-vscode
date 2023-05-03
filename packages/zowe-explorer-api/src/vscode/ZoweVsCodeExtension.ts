@@ -15,6 +15,7 @@ import { ProfilesCache, ZoweExplorerApi } from "../profiles";
 import { imperative } from "@zowe/cli";
 import { IPromptCredentialsOptions, IPromptUserPassOptions } from "./doc/IPromptCredentials";
 import { Gui } from "../globals/Gui";
+import { MessageSeverity, IZoweLogger } from "../logger";
 
 /**
  * Collection of utility functions for writing Zowe Explorer VS Code extensions.
