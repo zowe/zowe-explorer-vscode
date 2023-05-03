@@ -18,23 +18,26 @@ import { createIJobFile } from "../../../__mocks__/mockCreators/jobs";
 import * as contextually from "../../../src/shared/context";
 import { createIProfile, createISession } from "../../../__mocks__/mockCreators/shared";
 import * as utils from "../../../src/utils/ProfilesUtils";
+import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 
 const globalMocks = {
     testSession: createISession(),
     testProfile: createIProfile(),
     mockIJobFile: createIJobFile(),
 };
-
-describe("ZoweCommandProvider Unit Tests - function refreshElement", () => {
-    it("should refresh the tree data", async () => {
-        const testNode = new (ZoweTreeNode as any)("test", vscode.TreeItemCollapsibleState.None, undefined);
-        Object.defineProperty(ZoweCommandProvider.prototype, "mOnDidChangeTreeData", {
-            value: {
-                fire: jest.fn(),
-            },
-            configurable: true,
+describe("ZoweCommandProvider Unit Tests", () => {
+    Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
+    describe("ZoweCommandProvider Unit Tests - function refreshElement", () => {
+        it("should refresh the tree data", async () => {
+            const testNode = new (ZoweTreeNode as any)("test", vscode.TreeItemCollapsibleState.None, undefined);
+            Object.defineProperty(ZoweCommandProvider.prototype, "mOnDidChangeTreeData", {
+                value: {
+                    fire: jest.fn(),
+                },
+                configurable: true,
+            });
+            await expect(ZoweCommandProvider.prototype.refreshElement(testNode)).toEqual(undefined);
         });
-        await expect(ZoweCommandProvider.prototype.refreshElement(testNode)).resolves.toEqual(undefined);
     });
 });
 

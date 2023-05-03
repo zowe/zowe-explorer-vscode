@@ -70,7 +70,6 @@ export class FtpJesApi extends AbstractFtpApi implements ZoweExplorerApi.IJes {
             if (connection) {
                 const jobStatus: IJobStatus = await JobUtils.findJobByID(connection, jobid);
                 if (jobStatus) {
-                    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
                     return {
                         ...result,
                         /* it’s prepared for the potential change in zftp api, renaming jobid to jobId, jobname to jobName. */
@@ -97,10 +96,12 @@ export class FtpJesApi extends AbstractFtpApi implements ZoweExplorerApi.IJes {
                 const response: IJobStatus = await JobUtils.findJobByID(connection, jobid);
                 const files = response.spoolFiles;
                 if (files) {
-                    // eslint-disable-next-line @typescript-eslint/no-unsafe-return,@typescript-eslint/no-unsafe-call
                     return files.map((file: ISpoolFile) => {
                         return {
-                            /* it’s prepared for the potential change in zftp api, renaming stepname to stepName, procstep to procStep, ddname to ddName. */
+                            /**
+                             * prepared for the potential change in zftp api:
+                             * renaming stepname to stepName, procstep to procStep, ddname to ddName.
+                             **/
                             jobid: jobid,
                             jobname: jobname,
                             "byte-count": file.byteCount,
@@ -174,7 +175,6 @@ export class FtpJesApi extends AbstractFtpApi implements ZoweExplorerApi.IJes {
                 };
                 const response: Buffer = await JobUtils.getSpoolFileContent(connection, options);
                 if (response) {
-                    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
                     return response.toString();
                 }
             }

@@ -17,8 +17,9 @@ import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { Gui, ValidProfileEnum, IZoweTree, IZoweJobTreeNode } from "@zowe/zowe-explorer-api";
 import { Job, Spool } from "./ZoweJobNode";
 import * as nls from "vscode-nls";
-import { toUniqueJobFileUri } from "../SpoolProvider";
-import * as globals from "../globals";
+import SpoolProvider, { encodeJobFile, getSpoolFiles, matchSpool } from "../SpoolProvider";
+import { ZoweLogger } from "../utils/LoggerUtils";
+import { getDefaultUri } from "../shared/utils";
 
 // Set up localization
 nls.config({
@@ -32,13 +33,15 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
  *
  * @param job The job to download the spool content from
  */
-export async function downloadSpool(jobs: IZoweJobTreeNode[]) {
+export async function downloadSpool(jobs: IZoweJobTreeNode[], binary?: boolean): Promise<void> {
+    ZoweLogger.trace("job.actions.downloadSpool called.");
     try {
         const dirUri = await Gui.showOpenDialog({
             openLabel: localize("downloadSpool.select", "Select"),
             canSelectFolders: true,
             canSelectFiles: false,
             canSelectMany: false,
+            defaultUri: getDefaultUri(),
         });
         if (dirUri !== undefined) {
             for (const job of jobs) {
@@ -46,11 +49,52 @@ export async function downloadSpool(jobs: IZoweJobTreeNode[]) {
                     jobid: job.job.jobid,
                     jobname: job.job.jobname,
                     outDir: dirUri[0].fsPath,
+                    binary,
                 });
             }
         }
     } catch (error) {
-        await errorHandling(error, null, error.message);
+        await errorHandling(error);
+    }
+}
+
+/**
+ * Download all the spool content for the specified job.
+ *
+ * @param job The job to download the spool content from
+ */
+export async function downloadSingleSpool(nodes: IZoweJobTreeNode[], binary?: boolean): Promise<void> {
+    ZoweLogger.trace("job.actions.downloadSingleSpool called.");
+    try {
+        if (ZoweExplorerApiRegister.getJesApi(nodes[0].getProfile()).downloadSingleSpool == null) {
+            throw Error(
+                localize(
+                    "downloadSingleSpool.error",
+                    "Download Single Spool operation not implemented by extender. Please contact the extension developer(s)."
+                )
+            );
+        }
+        const dirUri = await Gui.showOpenDialog({
+            openLabel: localize("downloadSpool.select", "Select"),
+            canSelectFolders: true,
+            canSelectFiles: false,
+            canSelectMany: false,
+            defaultUri: getDefaultUri(),
+        });
+        if (dirUri !== undefined) {
+            for (const node of nodes) {
+                const spools = (await getSpoolFiles(node)).filter((spool: zowe.IJobFile) => matchSpool(spool, node));
+                for (const spool of spools) {
+                    await ZoweExplorerApiRegister.getJesApi(nodes[0].getProfile()).downloadSingleSpool({
+                        jobFile: spool,
+                        binary,
+                        outDir: dirUri[0].fsPath,
+                    });
+                }
+            }
+        }
+    } catch (error) {
+        await errorHandling(error);
     }
 }
 
@@ -61,21 +105,27 @@ export async function downloadSpool(jobs: IZoweJobTreeNode[]) {
  * @param spool The IJobFile to get the spool content for
  * @param refreshTimestamp The timestamp of the last job node refresh
  */
-export async function getSpoolContent(session: string, spool: zowe.IJobFile, refreshTimestamp: number) {
+export async function getSpoolContent(session: string, spool: zowe.IJobFile, refreshTimestamp: number): Promise<void> {
+    ZoweLogger.trace("job.actions.getSpoolContent called.");
     const profiles = Profiles.getInstance();
     let zosmfProfile: zowe.imperative.IProfileLoaded;
     try {
         zosmfProfile = profiles.loadNamedProfile(session);
     } catch (error) {
-        await errorHandling(error, session, error.message);
+        await errorHandling(error, session);
         return;
     }
 
     const statusMsg = Gui.setStatusBarMessage(localize("jobActions.openSpoolFile", "$(sync~spin) Opening spool file...", this.label as string));
     await profiles.checkCurrentProfile(zosmfProfile);
     if (profiles.validProfile !== ValidProfileEnum.INVALID) {
-        const uri = toUniqueJobFileUri(session, spool)(refreshTimestamp.toString());
+        const uri = encodeJobFile(session, spool);
         try {
+            const spoolFile = SpoolProvider.files[uri.path];
+            if (spoolFile) {
+                // Fetch any changes to the spool file if it exists in the SpoolProvider
+                await spoolFile.fetchContent();
+            }
             await Gui.showTextDocument(uri, { preview: false });
         } catch (error) {
             const isTextDocActive =
@@ -86,37 +136,37 @@ export async function getSpoolContent(session: string, spool: zowe.IJobFile, ref
             if (isTextDocActive && String(error.message).includes("Failed to show text document")) {
                 return;
             }
-            await errorHandling(error, session, error.message);
+            await errorHandling(error, session);
             return;
         }
     }
     statusMsg.dispose();
 }
 
-export async function getSpoolContentFromMainframe(node: IZoweJobTreeNode) {
-    let spools: zowe.IJobFile[] = [];
-    spools = await ZoweExplorerApiRegister.getJesApi(node.getProfile()).getSpoolFiles(node.job?.jobname, node.job?.jobid);
-    spools = spools
-        // filter out all the objects which do not seem to be correct Job File Document types
-        // see an issue #845 for the details
-        .filter((item) => !(item.id === undefined && item.ddname === undefined && item.stepname === undefined));
-    spools.forEach(async (spool) => {
-        if (
-            `${spool.stepname}:${spool.ddname} - ${spool["record-count"]}` === node.label.toString() ||
-            `${spool.stepname}:${spool.ddname} - ${spool.procstep}` === node.label.toString()
-        ) {
+/**
+ * Triggers a refresh for a spool file w/ the provided text document.
+ * @param doc The document to update, associated with the spool file
+ */
+export function spoolFilePollEvent(doc: vscode.TextDocument): void {
+    const statusMsg = Gui.setStatusBarMessage(localize("zowe.polling.statusBar", `$(sync~spin) Polling: {0}...`, doc.fileName));
+    SpoolProvider.files[doc.uri.path].fetchContent();
+    setTimeout(() => {
+        statusMsg.dispose();
+    }, 250);
+}
+
+export async function getSpoolContentFromMainframe(node: IZoweJobTreeNode): Promise<void> {
+    ZoweLogger.trace("job.actions.getSpoolContentFromMainframe called.");
+    const statusMsg = await Gui.setStatusBarMessage(localize("jobActions.fetchSpoolFile", "$(sync~spin) Fetching spool files..."));
+    const spools = await getSpoolFiles(node);
+    for (const spool of spools) {
+        if (matchSpool(spool, node)) {
             let prefix = spool.stepname;
             if (prefix === undefined) {
                 prefix = spool.procstep;
             }
 
-            const procstep = spool.procstep ? spool.procstep : undefined;
-            let newLabel: string;
-            if (procstep) {
-                newLabel = `${spool.stepname}:${spool.ddname} - ${procstep}`;
-            } else {
-                newLabel = `${spool.stepname}:${spool.ddname} - ${spool["record-count"]}`;
-            }
+            const newLabel = `${spool.stepname}:${spool.ddname} - ${spool.procstep ?? spool["record-count"]}`;
 
             const spoolNode = new Spool(
                 newLabel,
@@ -128,9 +178,9 @@ export async function getSpoolContentFromMainframe(node: IZoweJobTreeNode) {
                 node.getParent()
             );
             node = spoolNode;
-            await getSpoolContent(node.getProfile().name, spool, Date.now());
         }
-    });
+    }
+    statusMsg.dispose();
 }
 
 /**
@@ -139,7 +189,8 @@ export async function getSpoolContentFromMainframe(node: IZoweJobTreeNode) {
  * @param node The node to refresh
  * @param jobsProvider The tree to which the refreshed node belongs
  */
-export async function refreshJobsServer(node: IZoweJobTreeNode, jobsProvider: IZoweTree<IZoweJobTreeNode>) {
+export async function refreshJobsServer(node: IZoweJobTreeNode, jobsProvider: IZoweTree<IZoweJobTreeNode>): Promise<void> {
+    ZoweLogger.trace("job.actions.refreshJobsServer called.");
     jobsProvider.checkCurrentProfile(node);
     if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID || Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED) {
         await jobsProvider.refreshElement(node);
@@ -152,7 +203,8 @@ export async function refreshJobsServer(node: IZoweJobTreeNode, jobsProvider: IZ
  * @param job The job node to refresh
  * @param jobsProvider The tree to which the refreshed node belongs
  */
-export function refreshJob(job: Job, jobsProvider: IZoweTree<IZoweJobTreeNode>) {
+export function refreshJob(job: Job, jobsProvider: IZoweTree<IZoweJobTreeNode>): void {
+    ZoweLogger.trace("job.actions.refreshJob called.");
     jobsProvider.refreshElement(job);
 }
 
@@ -161,13 +213,14 @@ export function refreshJob(job: Job, jobsProvider: IZoweTree<IZoweJobTreeNode>) 
  *
  * @param job The job to download the JCL content from
  */
-export async function downloadJcl(job: Job) {
+export async function downloadJcl(job: Job): Promise<void> {
+    ZoweLogger.trace("job.actions.downloadJcl called.");
     try {
         const jobJcl = await ZoweExplorerApiRegister.getJesApi(job.getProfile()).getJclForJob(job.job);
         const jclDoc = await vscode.workspace.openTextDocument({ language: "jcl", content: jobJcl });
         await Gui.showTextDocument(jclDoc, { preview: false });
     } catch (error) {
-        await errorHandling(error, null, error.message);
+        await errorHandling(error);
     }
 }
 
@@ -177,13 +230,14 @@ export async function downloadJcl(job: Job) {
  * @param sessionName is a profile name to use in the jobs tree
  * @param jobId is a job to focus on
  */
-export const focusOnJob = async (jobsProvider: IZoweTree<IZoweJobTreeNode>, sessionName: string, jobId: string) => {
+export const focusOnJob = async (jobsProvider: IZoweTree<IZoweJobTreeNode>, sessionName: string, jobId: string): Promise<void> => {
+    ZoweLogger.trace("job.actions.focusOnJob called.");
     let sessionNode: IZoweJobTreeNode | undefined = jobsProvider.mSessionNodes.find((jobNode) => jobNode.label.toString() === sessionName.trim());
     if (!sessionNode) {
         try {
             await jobsProvider.addSession(sessionName.trim());
         } catch (error) {
-            await errorHandling(error, null, error.message);
+            await errorHandling(error);
             return;
         }
         sessionNode = jobsProvider.mSessionNodes.find((jobNode) => jobNode.label.toString().trim() === sessionName.trim());
@@ -191,7 +245,7 @@ export const focusOnJob = async (jobsProvider: IZoweTree<IZoweJobTreeNode>, sess
     try {
         jobsProvider.refreshElement(sessionNode);
     } catch (error) {
-        await errorHandling(error, null, error.message);
+        await errorHandling(error);
         return;
     }
     sessionNode.searchId = jobId;
@@ -208,7 +262,8 @@ export const focusOnJob = async (jobsProvider: IZoweTree<IZoweJobTreeNode>, sess
  *
  * @param job The job on which to modify a command
  */
-export async function modifyCommand(job: Job) {
+export async function modifyCommand(job: Job): Promise<void> {
+    ZoweLogger.trace("job.actions.modifyCommand called.");
     try {
         const options: vscode.InputBoxOptions = {
             prompt: localize("modifyCommand.inputBox.prompt", "Modify Command"),
@@ -223,12 +278,12 @@ export async function modifyCommand(job: Job) {
         }
     } catch (error) {
         if (error.toString().includes("non-existing")) {
-            globals.LOG.error(error);
+            ZoweLogger.error(error);
             Gui.errorMessage(
                 localize("jobActions.modifyCommand.apiNonExisting", "Not implemented yet for profile of type: ") + job.getProfile().type
             );
         } else {
-            await errorHandling(error.toString(), job.getProfile().name, error.message.toString());
+            await errorHandling(error, job.getProfile().name);
         }
     }
 }
@@ -238,7 +293,8 @@ export async function modifyCommand(job: Job) {
  *
  * @param job The job on which to stop a command
  */
-export async function stopCommand(job: Job) {
+export async function stopCommand(job: Job): Promise<void> {
+    ZoweLogger.trace("job.actions.stopCommand called.");
     try {
         const commandApi = ZoweExplorerApiRegister.getInstance().getCommandApi(job.getProfile());
         if (commandApi) {
@@ -247,10 +303,10 @@ export async function stopCommand(job: Job) {
         }
     } catch (error) {
         if (error.toString().includes("non-existing")) {
-            globals.LOG.error(error);
+            ZoweLogger.error(error);
             Gui.errorMessage(localize("jobActions.stopCommand.apiNonExisting", "Not implemented yet for profile of type: ") + job.getProfile().type);
         } else {
-            await errorHandling(error.toString(), job.getProfile().name, error.message.toString());
+            await errorHandling(error, job.getProfile().name);
         }
     }
 }
@@ -262,7 +318,8 @@ export async function stopCommand(job: Job) {
  * @param jobsProvider The tree to which the updated node belongs
  */
 // Is this redundant with the setter in the Job class (ZoweJobNode.ts)?
-export async function setOwner(job: IZoweJobTreeNode, jobsProvider: IZoweTree<IZoweJobTreeNode>) {
+export async function setOwner(job: IZoweJobTreeNode, jobsProvider: IZoweTree<IZoweJobTreeNode>): Promise<void> {
+    ZoweLogger.trace("job.actions.setOwner called.");
     const options: vscode.InputBoxOptions = {
         prompt: localize("setOwner.inputBox.prompt", "Owner"),
     };
@@ -277,7 +334,8 @@ export async function setOwner(job: IZoweJobTreeNode, jobsProvider: IZoweTree<IZ
  * @param job The job to set the prefix of
  * @param jobsProvider The tree to which the updated node belongs
  */
-export async function setPrefix(job: IZoweJobTreeNode, jobsProvider: IZoweTree<IZoweJobTreeNode>) {
+export async function setPrefix(job: IZoweJobTreeNode, jobsProvider: IZoweTree<IZoweJobTreeNode>): Promise<void> {
+    ZoweLogger.trace("job.actions.setPrefix called.");
     const options: vscode.InputBoxOptions = {
         prompt: localize("setPrefix.inputBox.prompt", "Prefix"),
     };
@@ -291,7 +349,8 @@ export async function setPrefix(job: IZoweJobTreeNode, jobsProvider: IZoweTree<I
  *
  * @param jobsProvider The tree to which the node belongs
  */
-export async function deleteCommand(jobsProvider: IZoweTree<IZoweJobTreeNode>, job?: IZoweJobTreeNode, jobs?: IZoweJobTreeNode[]) {
+export async function deleteCommand(jobsProvider: IZoweTree<IZoweJobTreeNode>, job?: IZoweJobTreeNode, jobs?: IZoweJobTreeNode[]): Promise<void> {
+    ZoweLogger.trace("job.actions.deleteCommand called.");
     if (jobs && jobs.length) {
         await deleteMultipleJobs(
             jobs.filter((jobNode) => jobNode.job !== undefined && jobNode.job !== null),
@@ -311,6 +370,7 @@ export async function deleteCommand(jobsProvider: IZoweTree<IZoweJobTreeNode>, j
 }
 
 async function deleteSingleJob(job: IZoweJobTreeNode, jobsProvider: IZoweTree<IZoweJobTreeNode>): Promise<void> {
+    ZoweLogger.trace("job.actions.deleteSingleJob called.");
     const jobName = `${job.job.jobname}(${job.job.jobid})`;
     const message = localize(
         "deleteJobPrompt.confirmation.message",
@@ -323,7 +383,7 @@ async function deleteSingleJob(job: IZoweJobTreeNode, jobsProvider: IZoweTree<IZ
         vsCodeOpts: { modal: true },
     });
     if (!result || result === "Cancel") {
-        globals.LOG.debug(localize("deleteJobPrompt.confirmation.cancel.log.debug", "Delete action was canceled."));
+        ZoweLogger.debug(localize("deleteJobPrompt.confirmation.cancel.log.debug", "Delete action was canceled."));
         Gui.showMessage(localize("deleteJobPrompt.deleteCancelled", "Delete action was cancelled."));
         return;
     }
@@ -332,15 +392,16 @@ async function deleteSingleJob(job: IZoweJobTreeNode, jobsProvider: IZoweTree<IZ
         await jobsProvider.delete(job);
         Gui.infoMessage(localize("deleteCommand.job", "Job {0} was deleted.", jobName));
     } catch (error) {
-        await errorHandling(error.toString(), job.getProfile().name, error.message.toString());
+        await errorHandling(error, job.getProfile().name);
     }
 
     Gui.showMessage(localize("deleteCommand.job", "Job {0} was deleted.", jobName));
 }
 
 async function deleteMultipleJobs(jobs: ReadonlyArray<IZoweJobTreeNode>, jobsProvider: IZoweTree<IZoweJobTreeNode>): Promise<void> {
+    ZoweLogger.trace("job.actions.deleteMultipleJobs called.");
     const deleteButton = localize("deleteJobPrompt.confirmation.delete", "Delete");
-    const toJobname = (jobNode: IZoweJobTreeNode) => `${jobNode.job.jobname}(${jobNode.job.jobid})`;
+    const toJobname = (jobNode: IZoweJobTreeNode): string => `${jobNode.job.jobname}(${jobNode.job.jobid})`;
     const message = localize(
         "deleteJobPrompt.confirmation.message",
         "Are you sure you want to delete the following {0} items?\nThis will permanently remove the following jobs from your system.\n\n{1}",
@@ -352,7 +413,7 @@ async function deleteMultipleJobs(jobs: ReadonlyArray<IZoweJobTreeNode>, jobsPro
         vsCodeOpts: { modal: true },
     });
     if (!deleteChoice || deleteChoice === "Cancel") {
-        globals.LOG.debug(localize("deleteJobPrompt.confirmation.cancel.log.debug", "Delete action was canceled."));
+        ZoweLogger.debug(localize("deleteJobPrompt.confirmation.cancel.log.debug", "Delete action was canceled."));
         Gui.showMessage(localize("deleteJobPrompt.deleteCancelled", "Delete action was cancelled."));
         return;
     }
@@ -362,9 +423,13 @@ async function deleteMultipleJobs(jobs: ReadonlyArray<IZoweJobTreeNode>, jobsPro
                 await jobsProvider.delete(job);
                 return job;
             } catch (error) {
-                globals.LOG.error(error);
-                return error;
+                ZoweLogger.error(error);
+                if (error instanceof Error) {
+                    return error;
+                }
             }
+
+            return undefined;
         })
     );
     const deletedJobs: ReadonlyArray<IZoweJobTreeNode> = deletionResult

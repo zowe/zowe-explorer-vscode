@@ -10,7 +10,6 @@
  */
 
 // This shouldn't be considered redeclared, as its contained within a mock.
-// eslint-disable-next-line no-shadow
 export class MessageSeverity {
     public static TRACE = 0;
     public static DEBUG = 1;
@@ -53,8 +52,12 @@ export namespace Gui {
     }
 }
 
-export namespace ZoweVsCodeExtension {
-    export function getZoweExplorerApi(requiredVersion?: string): any {
+export class ZoweVsCodeExtension {
+    public static get customLoggingPath(): string | undefined {
+        return undefined;
+    }
+
+    public static getZoweExplorerApi(requiredVersion?: string): any {
         return {
             registerUssApi: () => {},
             registerJesApi: () => {},

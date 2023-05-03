@@ -94,6 +94,93 @@ export namespace extensions {
     }
 }
 
+export interface TreeView<T> {
+    /**
+     * An optional human-readable message that will be rendered in the view.
+     * Setting the message to null, undefined, or empty string will remove the message from the view.
+     */
+    message?: string;
+
+    /**
+     * The tree view title is initially taken from the extension package.json
+     * Changes to the title property will be properly reflected in the UI in the title of the view.
+     */
+    title?: string;
+
+    /**
+     * An optional human-readable description which is rendered less prominently in the title of the view.
+     * Setting the title description to null, undefined, or empty string will remove the description from the view.
+     */
+    description?: string;
+
+    /**
+     * Reveals the given element in the tree view.
+     * If the tree view is not visible then the tree view is shown and element is revealed.
+     *
+     * By default revealed element is selected.
+     * In order to not to select, set the option `select` to `false`.
+     * In order to focus, set the option `focus` to `true`.
+     * In order to expand the revealed element, set the option `expand` to `true`. To expand recursively set `expand` to the number of levels to expand.
+     * **NOTE:** You can expand only to 3 levels maximum.
+     *
+     * **NOTE:** The {@link TreeDataProvider} that the `TreeView` {@link window.createTreeView is registered with} with must implement {@link TreeDataProvider.getParent getParent} method to access this API.
+     */
+    reveal(element: T, options?: { select?: boolean; focus?: boolean; expand?: boolean | number }): Thenable<void>;
+}
+
+export class FileDecoration {
+    /**
+     * A very short string that represents this decoration.
+     */
+    badge?: string;
+
+    /**
+     * A human-readable tooltip for this decoration.
+     */
+    tooltip?: string;
+
+    /**
+     * The color of this decoration.
+     */
+    color?: any;
+
+    /**
+     * A flag expressing that this decoration should be
+     * propagated to its parents.
+     */
+    propagate?: boolean;
+
+    public constructor(badge?: string, tooltip?: string, color?: any) {
+        this.badge = badge;
+        this.tooltip = tooltip;
+        this.color = color;
+    }
+}
+
+export interface FileDecorationProvider {
+    /**
+     * An optional event to signal that decorations for one or many files have changed.
+     *
+     * *Note* that this event should be used to propagate information about children.
+     *
+     * @see {@link EventEmitter}
+     */
+    onDidChangeFileDecorations?: Event<undefined | Uri | Uri[]>;
+
+    /**
+     * Provide decorations for a given uri.
+     *
+     * *Note* that this function is only called when a file gets rendered in the UI.
+     * This means a decoration from a descendent that propagates upwards must be signaled
+     * to the editor via the {@link FileDecorationProvider.onDidChangeFileDecorations onDidChangeFileDecorations}-event.
+     *
+     * @param uri The uri of the file to provide a decoration for.
+     * @param token A cancellation token.
+     * @returns A decoration or a thenable that resolves to such.
+     */
+    provideFileDecoration(uri: Uri, token: CancellationToken): ProviderResult<FileDecoration>;
+}
+
 export namespace window {
     /**
      * Options for creating a {@link TreeView}
@@ -148,6 +235,10 @@ export namespace window {
         return this;
     }
 
+    export function registerFileDecorationProvider(provider: FileDecorationProvider) {
+        return this;
+    }
+
     /**
      * Options to configure the behavior of the message.
      *
@@ -196,7 +287,7 @@ export namespace commands {
      * @return Disposable which unregisters this command on disposal.
      */
     export function registerCommand(command: string, callback: (...args: any[]) => any, thisArg?: any): Disposable {
-        return undefined;
+        return undefined as any;
     }
 
     export function executeCommand(command: string): undefined {
@@ -474,11 +565,22 @@ export interface TextDocument {
 }
 
 export class Uri {
-    public static parse(value: string, strict?: boolean): Uri {
-        return value;
-    }
     public static file(path: string): Uri {
+        return Uri.parse(path);
+    }
+    public static parse(value: string, strict?: boolean): Uri {
+        const newUri = new Uri();
+        newUri.path = value;
+
+        return newUri;
+    }
+    public with(_fragment: string): Uri {
         return this;
+    }
+
+    public path: string;
+    public toString(): string {
+        return this.path;
     }
 }
 

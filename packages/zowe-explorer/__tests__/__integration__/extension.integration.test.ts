@@ -33,7 +33,7 @@ import { SettingsConfig } from "../../src/utils/SettingsConfig";
 import * as globals from "../../src/globals";
 
 const TIMEOUT = 45000;
-declare var it: Mocha.TestFunction;
+declare let it: Mocha.TestFunction;
 // declare var describe: any;
 
 const testProfile: zowe.imperative.IProfileLoaded = {
@@ -896,7 +896,7 @@ async function getAllNodes(nodes: IZoweTreeNode[]) {
 
     for (const node of nodes) {
         let nodeChildren = await node.getChildren();
-        nodeChildren = nodeChildren.filter((item) => !item.label.toString().includes("No datasets found"));
+        nodeChildren = nodeChildren.filter((item) => !item.label.toString().includes("No data sets found"));
         allNodes = allNodes.concat(await getAllNodes(nodeChildren));
         allNodes.push(node);
     }

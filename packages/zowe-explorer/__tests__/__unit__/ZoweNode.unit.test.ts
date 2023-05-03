@@ -17,6 +17,7 @@ import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
 import { List, imperative } from "@zowe/cli";
 import { Profiles } from "../../src/Profiles";
 import * as globals from "../../src/globals";
+import { ZoweLogger } from "../../src/utils/LoggerUtils";
 
 describe("Unit Tests (Jest)", () => {
     // Globals
@@ -48,6 +49,8 @@ describe("Unit Tests (Jest)", () => {
     Object.defineProperty(globals.LOG, "error", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode, "ProgressLocation", { value: ProgressLocation });
     Object.defineProperty(vscode.window, "withProgress", { value: withProgress });
+    Object.defineProperty(ZoweLogger, "error", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
 
     beforeEach(() => {
         withProgress.mockImplementation((progLocation, callback) => {
@@ -211,7 +214,7 @@ describe("Unit Tests (Jest)", () => {
      * Checks that returning an unsuccessful response results in an error being thrown and caught
      *************************************************************************************************************/
     it(
-        "Checks that when bright.List.dataSet/allMembers() returns an unsuccessful response, " + "it returns a label of 'No datasets found'",
+        "Checks that when bright.List.dataSet/allMembers() returns an unsuccessful response, " + "it returns a label of 'No data sets found'",
         async () => {
             Object.defineProperty(Profiles, "getInstance", {
                 value: jest.fn(() => {
@@ -233,11 +236,17 @@ describe("Unit Tests (Jest)", () => {
                 undefined,
                 profileOne
             );
+            jest.spyOn(subNode as any, "getDatasets").mockReturnValueOnce([
+                {
+                    success: true,
+                    apiResponse: {
+                        items: [],
+                    },
+                },
+            ]);
             subNode.dirty = true;
             const response = await subNode.getChildren();
-            for (const item of response) {
-                expect(item.label).toEqual("No datasets found");
-            }
+            expect(response[0].label).toBe("No data sets found");
         }
     );
 
@@ -394,6 +403,6 @@ describe("Unit Tests (Jest)", () => {
             };
         });
         Object.defineProperty(List, "allMembers", { value: allMembers });
-        expect((await pds.getChildren())[0].label).toEqual("No datasets found");
+        expect((await pds.getChildren())[0].label).toEqual("No data sets found");
     });
 });
