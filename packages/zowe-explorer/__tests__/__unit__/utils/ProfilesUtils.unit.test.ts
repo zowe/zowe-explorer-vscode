@@ -11,6 +11,7 @@
 
 import * as fs from "fs";
 import * as path from "path";
+import * as util from "util";
 import { Gui, ProfilesCache, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import * as globals from "../../../src/globals";
 import * as profUtils from "../../../src/utils/ProfilesUtils";
@@ -68,7 +69,24 @@ describe("ProfilesUtils unit tests", () => {
             const moreInfo = "Task failed successfully";
             await profUtils.errorHandling(errorDetails, label, moreInfo);
             expect(Gui.errorMessage).toBeCalledWith(`${moreInfo} ` + errorDetails);
-            expect(ZoweLogger.error).toBeCalledWith(`Error: ${errorDetails.message}\n` + JSON.stringify({ errorDetails, label, moreInfo }));
+            expect(ZoweLogger.error).toBeCalledWith(`Error: ${errorDetails.message}\n` + util.inspect({ errorDetails, label, moreInfo }));
+        });
+
+        it("should log error details for object with circular reference", async () => {
+            createBlockMocks();
+            const errorJson: Record<string, any> = { details: "i haz error" };
+            errorJson.details2 = errorJson;
+            const errorDetails = new zowe.imperative.ImperativeError({
+                msg: "Circular reference",
+                causeErrors: errorJson,
+            });
+            const label = "test";
+            const moreInfo = "Task failed successfully";
+            await profUtils.errorHandling(errorDetails, label, moreInfo as unknown as string);
+            expect(Gui.errorMessage).toBeCalledWith(`${moreInfo} ` + errorDetails);
+            expect(ZoweLogger.error).toBeCalledWith(
+                `Error: ${errorDetails.message}\n` + util.inspect({ errorDetails, label, moreInfo }, { depth: null })
+            );
         });
 
         it("should handle error and open config file", async () => {

@@ -43,6 +43,7 @@ describe("Test src/jobs/extension", () => {
             ssoLogin: jest.fn(),
             ssoLogout: jest.fn(),
             onDidChangeConfiguration: jest.fn(),
+            pollData: jest.fn(),
         };
         const commands: IJestIt[] = [
             {
@@ -88,6 +89,14 @@ describe("Test src/jobs/extension", () => {
                 ],
             },
             {
+                name: "zowe.jobs.downloadSingleSpool",
+                mock: [{ spy: jest.spyOn(jobActions, "downloadSingleSpool"), arg: [[test.value], false] }],
+            },
+            {
+                name: "zowe.jobs.downloadSingleSpoolBinary",
+                mock: [{ spy: jest.spyOn(jobActions, "downloadSingleSpool"), arg: [[test.value], true] }],
+            },
+            {
                 name: "zowe.jobs.addJobsSession",
                 mock: [{ spy: jest.spyOn(jobsProvider, "createZoweSession"), arg: [jobsProvider] }],
             },
@@ -108,11 +117,11 @@ describe("Test src/jobs/extension", () => {
             },
             {
                 name: "zowe.jobs.downloadSpool",
-                mock: [
-                    // Selected nodes array is passed to the downloadSpool method
-                    // Hence why the expected value is `[test.value]`
-                    { spy: jest.spyOn(jobActions, "downloadSpool"), arg: [[test.value]] },
-                ],
+                mock: [{ spy: jest.spyOn(jobActions, "downloadSpool"), arg: [[test.value], false] }],
+            },
+            {
+                name: "zowe.jobs.downloadSpoolBinary",
+                mock: [{ spy: jest.spyOn(jobActions, "downloadSpool"), arg: [[test.value], true] }],
             },
             {
                 name: "zowe.jobs.getJobJcl",
@@ -186,6 +195,14 @@ describe("Test src/jobs/extension", () => {
             {
                 name: "onDidChangeConfiguration",
                 mock: [{ spy: jest.spyOn(jobsProvider, "onDidChangeConfiguration"), arg: [test.value] }],
+            },
+            {
+                name: "zowe.jobs.startPolling",
+                mock: [{ spy: jest.spyOn(jobsProvider, "pollData"), arg: [test.value] }],
+            },
+            {
+                name: "zowe.jobs.stopPolling",
+                mock: [{ spy: jest.spyOn(jobsProvider, "pollData"), arg: [test.value] }],
             },
         ];
 
