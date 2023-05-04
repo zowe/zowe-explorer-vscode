@@ -6,25 +6,32 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
+### Bug fixes
+
+## `2.8.0`
+
+### New features and enhancements
+
 - Added a new Zowe Explorer setting, `zowe.logger`, with a default setting of `INFO`.
 - Added an output channel, `Zowe Explorer`, for logging within VS Code's Output view. The log level is set by the new Zowe Explorer setting, `zowe.logger`.
-- Opening a dialog for Upload or Download of files will now open at the project level directory or the user's home directory if no project is opened. [#2203](https://github.com/zowe/vscode-extension-for-zowe/issues/2203)
-- Updated linter rules and addressed linter errors throughout the codebase. [#2184](https://github.com/zowe/vscode-extension-for-zowe/issues/2184)
 - Added a new setting `zowe.files.logsFolder.path` that can be used to override Zowe Explorer logs folder if default location is read-only. [#2186](https://github.com/zowe/vscode-extension-for-zowe/issues/2186)
-- Spool files will now refresh if the file is open in the editor and clicked again in the tree view. [#1952](https://github.com/zowe/vscode-extension-for-zowe/issues/1952)
-- Added a new context menu option to allow users to download Job Spool content in binary format. [#2060](https://github.com/zowe/vscode-extension-for-zowe/issues/2060)
+- Opening a dialog for Upload or Download of files will now open at the project level directory or the user's home directory if no project is opened. [#2203](https://github.com/zowe/vscode-extension-for-zowe/issues/2203)
+- Updated linter rules and addressed linter errors. [#2184](https://github.com/zowe/vscode-extension-for-zowe/issues/2184)
+- Added polling options for JES Spool files. Spool files can be polled manually by clicking on the spool file name or automatic polling can be set with `Start Polling` option in context menu. [#1952](https://github.com/zowe/vscode-extension-for-zowe/issues/1952)
+- Added the JOBS context menu option to download all spool files in binary format. [#2060](https://github.com/zowe/vscode-extension-for-zowe/issues/2060)
+- Added two new options to download a single spool file from a Job in plain text or in binary format. [#2060](https://github.com/zowe/vscode-extension-for-zowe/issues/2060)
+- Added the option for secure credential storage to be enable in Theia environment.
 
 ### Bug fixes
 
 - Fixed issue with silent failures when uploading members into a data set. [#2167](https://github.com/zowe/vscode-extension-for-zowe/issues/2167)
-- Added back fix that was accidentally removed between updates: Resolved an issue where VSCode did not provide all context menu options for a profile node after a multi-select operation. [#2108](https://github.com/zowe/vscode-extension-for-zowe/pull/2108)
-- Fixed issue where "Paste" option is shown for a multi-select operation in the "Data Sets" pane.
-- Fixed z/OSMF profiles issue with Data Sets and Jobs with special characters in the names. [#2175](https://github.com/zowe/vscode-extension-for-zowe/issues/2175)
+- Fixed an issue where VSCode did not provide all context menu options for a profile node after a multi-select operation. [#2108](https://github.com/zowe/vscode-extension-for-zowe/pull/2108)
+- Fixed an issue where the "Paste" option is shown for a multi-select operation in the "Data Sets" view.
+- Fixed a z/OSMF issue for Data Sets and Jobs with special characters in the names. [#2175](https://github.com/zowe/vscode-extension-for-zowe/issues/2175)
 - Fixed redundant text in error messages that included the same error details twice.
 - Fixed issue where a spool file would open a duplicate tab when clicked between updates. [#1952](https://github.com/zowe/vscode-extension-for-zowe/issues/1952)
 - Fixed issue where a job search query would not expand the session node after it has been filtered.
 - Fixed error message when no data sets found that match pattern.
-- Fixed secure credential storage not possible to enable in Theia.
 
 ## `2.7.0`
 
