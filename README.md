@@ -64,7 +64,7 @@ Now install the extension to VS Code.
 
 You can now use the extension.
 
-For more information on how to run tests for the extension, see [Developer's ReadMe](https://github.com/zowe/vscode-extension-for-zowe/blob/main/docs/README-Developer.md).
+For more information on how to run tests for the extension, see [Developer Setup](https://github.com/zowe/vscode-extension-for-zowe/wiki/Developer-Setup).
 
 ## Available Documentation
 
@@ -82,9 +82,9 @@ Use the following list with the description and links to find the topics of your
 
 **Note**: Zowe Explorer FTP extension is an example that shows how the extensibility API is used to add new capabilities to Zowe Explorer.
 
-[Zowe Explorer Developer's ReadMe](https://github.com/zowe/vscode-extension-for-zowe/blob/main/docs/README-Developer.md) — contains information on how to install, build, and test Zowe Explorer.
+[Zowe Explorer Developer Setup](https://github.com/zowe/vscode-extension-for-zowe/wiki/Developer-Setup) — contains information on how to install, build, and test Zowe Explorer.
 
-[Zowe Explorer in Theia ReadMe](https://github.com/zowe/vscode-extension-for-zowe/blob/main/docs/README-Theia.md) — contains information on how to develop for the Web-based IDE Eclipse Theia.
+[Zowe Explorer Developing for Theia](https://github.com/zowe/vscode-extension-for-zowe/wiki/Developing-for-Theia) — contains information on how to develop for the Web-based IDE Eclipse Theia.
 
 ## How to Contribute
 
@@ -96,7 +96,7 @@ To report a bug or request a specific feature, please open a GitHub issue using 
 
 Also, you can check our [Zenhub Communities boards](https://github.com/zowe/vscode-extension-for-zowe#workspaces/zowe-cli-explorers-5d77ca38fb288f0001ceae92/board?repos=150100207) for a more convenient view of issues and access to other boards of Zowe-related projects.
 
-For more information on how to contribute, see [Contributor Guidance](https://github.com/zowe/vscode-extension-for-zowe/wiki/Best-Practices:-Contributor-Guidance).
+For more information on how to contribute, see [Contributor Guidance](https://github.com/zowe/vscode-extension-for-zowe/wiki/Contributor-Guidance).
 
 ## External Links
 
