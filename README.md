@@ -11,12 +11,12 @@ Join our [Slack channel](https://slack.openmainframeproject.org/) to connect wit
 
 ## Requirements
 
-Client-side prerequisites:
+Client-side prerequisites for development:
 
 - Install [Node.js](https://nodejs.org/en/download/) v14.0 or later.
 - Install [Yarn](https://yarnpkg.com/getting-started/install).
 
-Host-side prerequisites:
+Host-side prerequisites for connection:
 
 - Configure TSO/E address space services, z/OS data set, file REST interface and z/OS jobs REST interface. For more information, see [z/OS Requirements](https://docs.zowe.org/stable/user-guide/systemrequirements-zosmf.html#z-os-requirements).
 
