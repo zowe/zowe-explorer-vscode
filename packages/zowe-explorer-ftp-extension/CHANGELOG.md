@@ -6,6 +6,15 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
+## `2.8.0`
+
+### New features and enhancements
+
+- Updated linter rules and addressed linter errors. [#2184](https://github.com/zowe/vscode-extension-for-zowe/issues/2184)
+- Added support for new setting `zowe.files.logsFolder.path` that can be used to override Zowe Explorer logs folder. [#2186](https://github.com/zowe/vscode-extension-for-zowe/issues/2186)
+
+### Bug fixes
+
 ## `2.7.0`
 
 ### New features and enhancements

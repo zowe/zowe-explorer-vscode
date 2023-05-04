@@ -18,6 +18,7 @@ import * as loggerConfig from "../log4jsconfig.json";
 import * as nls from "vscode-nls";
 import { getZoweDir } from "@zowe/zowe-explorer-api";
 import { SettingsConfig } from "./utils/SettingsConfig";
+import { ZoweLogger } from "./utils/LoggerUtils";
 
 nls.config({
     messageFormat: nls.MessageFormat.bundle,
@@ -27,16 +28,17 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 // Globals
 export let SETTINGS_TEMP_FOLDER_LOCATION;
-export let ZOWETEMPFOLDER;
-export let ZOWE_TMP_FOLDER;
-export let USS_DIR;
-export let DS_DIR;
+export let ZOWETEMPFOLDER: string;
+export let ZOWE_TMP_FOLDER: string;
+export let USS_DIR: string;
+export let DS_DIR: string;
 export let CONFIG_PATH; // set during activate
-export let ISTHEIA: boolean = false; // set during activate
+export let ISTHEIA = false; // set during activate
 export let LOG: imperative.Logger;
-export const COMMAND_COUNT = 102;
+export const COMMAND_COUNT = 108;
 export const MAX_SEARCH_HISTORY = 5;
 export const MAX_FILE_HISTORY = 10;
+export const MS_PER_SEC = 1000;
 export const STATUS_BAR_TIMEOUT_MS = 5000;
 export const CONTEXT_PREFIX = "_";
 export const FAV_SUFFIX = CONTEXT_PREFIX + "fav";
@@ -64,6 +66,7 @@ export const USS_FAV_DIR_CONTEXT = "directory_fav";
 export const JOBS_SESSION_CONTEXT = "server";
 export const JOBS_JOB_CONTEXT = "job";
 export const JOBS_SPOOL_CONTEXT = "spool";
+export const POLL_CONTEXT = CONTEXT_PREFIX + "polling";
 export const VSAM_CONTEXT = "vsam";
 export const INACTIVE_CONTEXT = CONTEXT_PREFIX + "Inactive";
 export const ACTIVE_CONTEXT = CONTEXT_PREFIX + "Active";
@@ -77,6 +80,7 @@ export const SETTINGS_VERSION = "zowe.settings.version";
 export const SETTINGS_TEMP_FOLDER_PATH = "zowe.files.temporaryDownloadsFolder.path";
 export const SETTINGS_TEMP_FOLDER_CLEANUP = "zowe.files.temporaryDownloadsFolder.cleanup";
 export const SETTINGS_TEMP_FOLDER_HIDE = "zowe.files.temporaryDownloadsFolder.hide";
+export const SETTINGS_LOGS_FOLDER_PATH = "zowe.files.logsFolder.path";
 export const SETTINGS_DS_DEFAULT_BINARY = "zowe.ds.default.binary";
 export const SETTINGS_DS_DEFAULT_C = "zowe.ds.default.c";
 export const SETTINGS_DS_DEFAULT_CLASSIC = "zowe.ds.default.classic";
@@ -89,19 +93,20 @@ export const SETTINGS_DS_HISTORY = "zowe.ds.history";
 export const SETTINGS_USS_HISTORY = "zowe.uss.history";
 export const SETTINGS_JOBS_HISTORY = "zowe.jobs.history";
 export const SETTINGS_SECURE_CREDENTIALS_ENABLED = "zowe.security.secureCredentialsEnabled";
+export const LOGGER_SETTINGS = "zowe.logger";
 export const EXTENDER_CONFIG: imperative.ICommandProfileTypeConfiguration[] = [];
 export const ZOWE_CLI_SCM = "@zowe/cli";
 export const MAX_DATASET_LENGTH = 44;
 export const MAX_MEMBER_LENGTH = 8;
-export const DS_NAME_REGEX_CHECK = /^[a-zA-Z#@\$][a-zA-Z0-9#@\$\-]{0,7}(\.[a-zA-Z#@\$][a-zA-Z0-9#@\$\-]{0,7})*$/;
-export const MEMBER_NAME_REGEX_CHECK = /^[a-zA-Z#@\$][a-zA-Z0-9#@\$]{0,7}$/;
+export const DS_NAME_REGEX_CHECK = /^[a-zA-Z#@$][a-zA-Z0-9#@$-]{0,7}(\.[a-zA-Z#@$][a-zA-Z0-9#@$-]{0,7})*$/;
+export const MEMBER_NAME_REGEX_CHECK = /^[a-zA-Z#@$][a-zA-Z0-9#@$]{0,7}$/;
 export let ACTIVATED = false;
 export let PROFILE_SECURITY: string | boolean = ZOWE_CLI_SCM;
 export let SAVED_PROFILE_CONTENTS = new Uint8Array();
 export const JOBS_MAX_PREFIX = 8;
 
 // Dictionary describing translation from old configuration names to new standardized names
-export const configurationDictionary = {
+export const configurationDictionary: { [k: string]: string } = {
     "Zowe-Default-Datasets-Binary": SETTINGS_DS_DEFAULT_BINARY,
     "Zowe-Default-Datasets-C": SETTINGS_DS_DEFAULT_C,
     "Zowe-Default-Datasets-Classic": SETTINGS_DS_DEFAULT_CLASSIC,
@@ -276,7 +281,7 @@ export const plusSign = "\uFF0B ";
  * Defines all global variables
  * @param tempPath File path for temporary folder defined in preferences
  */
-export function defineGlobals(tempPath: string | undefined) {
+export function defineGlobals(tempPath: string | undefined): void {
     // check if Theia environment
     const appName = vscode.env.appName;
     const uriScheme = vscode.env.uriScheme;
@@ -284,13 +289,14 @@ export function defineGlobals(tempPath: string | undefined) {
         ((appName && appName.toLowerCase().includes("theia")) || (uriScheme && uriScheme.toLowerCase().includes("theia"))) &&
         vscode.env.uiKind === vscode.UIKind.Web
     ) {
-        this.ISTHEIA = true;
+        ISTHEIA = true;
+        ZoweLogger.info(localize("globals.defineGlobals.isTheia", "Zowe Explorer is running in Theia environment."));
     }
 
     SETTINGS_TEMP_FOLDER_LOCATION = tempPath;
     // Set temp path & folder paths
     ZOWETEMPFOLDER = tempPath ? path.join(tempPath, "temp") : path.join(__dirname, "..", "..", "resources", "temp");
-
+    ZoweLogger.info(localize("globals.defineGlobals.tempFolder", "Zowe Explorer's temp folder is located at {0}", ZOWETEMPFOLDER));
     ZOWE_TMP_FOLDER = path.join(ZOWETEMPFOLDER, "tmp");
     USS_DIR = path.join(ZOWETEMPFOLDER, "_U_");
     DS_DIR = path.join(ZOWETEMPFOLDER, "_D_");
@@ -306,37 +312,45 @@ export function setConfigPath(configPath: string | undefined): void {
 
 /**
  * Initializes Imperative Logger
- * @param context The extension context
+ * @param logsPath File path for logs folder defined in preferences
  */
-export function initLogger(context: vscode.ExtensionContext) {
-    for (const appenderName of Object.keys(loggerConfig.log4jsConfig.appenders)) {
-        loggerConfig.log4jsConfig.appenders[appenderName].filename = path.join(
-            context.extensionPath,
-            loggerConfig.log4jsConfig.appenders[appenderName].filename
+export function initLogger(logsPath: string): void {
+    const zeLogLevel = ZoweLogger.getLogSetting();
+    const loggerConfigCopy = JSON.parse(JSON.stringify(loggerConfig));
+    for (const appenderName of Object.keys(loggerConfigCopy.log4jsConfig.appenders)) {
+        loggerConfigCopy.log4jsConfig.appenders[appenderName].filename = path.join(
+            logsPath,
+            loggerConfigCopy.log4jsConfig.appenders[appenderName].filename
         );
+        loggerConfigCopy.log4jsConfig.categories[appenderName].level = zeLogLevel;
     }
-    imperative.Logger.initLogger(loggerConfig);
-    this.LOG = imperative.Logger.getAppLogger();
+    imperative.Logger.initLogger(loggerConfigCopy);
+    LOG = imperative.Logger.getAppLogger();
 }
 
-export function setActivated(value: boolean) {
+export function setActivated(value: boolean): void {
+    if (value) {
+        ZoweLogger.info(localize("globals.setActivated.success", "Zowe Explorer has activated successfully."));
+    }
     ACTIVATED = value;
 }
 
-export function setSavedProfileContents(value: Uint8Array) {
+export function setSavedProfileContents(value: Uint8Array): void {
     SAVED_PROFILE_CONTENTS = value;
 }
 
-export async function setGlobalSecurityValue() {
-    if (this.ISTHEIA) {
+export async function setGlobalSecurityValue(): Promise<void> {
+    if (ISTHEIA && !SettingsConfig.isConfigSettingSetByUser(SETTINGS_SECURE_CREDENTIALS_ENABLED)) {
         PROFILE_SECURITY = false;
-        await SettingsConfig.setDirectValue(this.SETTINGS_SECURE_CREDENTIALS_ENABLED, false, vscode.ConfigurationTarget.Global);
+        await SettingsConfig.setDirectValue(SETTINGS_SECURE_CREDENTIALS_ENABLED, false, vscode.ConfigurationTarget.Global);
         return;
     }
-    const settingEnabled: boolean = SettingsConfig.getDirectValue(this.SETTINGS_SECURE_CREDENTIALS_ENABLED);
+    const settingEnabled: boolean = SettingsConfig.getDirectValue(SETTINGS_SECURE_CREDENTIALS_ENABLED);
     if (!settingEnabled) {
         PROFILE_SECURITY = false;
+        ZoweLogger.info(localize("globals.setGlobalSecurityValue.unsecured", "Zowe explorer profiles are not secured."));
     } else {
         PROFILE_SECURITY = ZOWE_CLI_SCM;
+        ZoweLogger.info(localize("globals.setGlobalSecurityValue.secured", "Zowe explorer profiles are secured."));
     }
 }

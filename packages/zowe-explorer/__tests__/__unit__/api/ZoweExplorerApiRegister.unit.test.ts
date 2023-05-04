@@ -9,12 +9,14 @@
  *
  */
 
+import * as globals from "../../../src/globals";
 import * as zowe from "@zowe/cli";
 import { ZoweExplorerApi, ZosmfUssApi, ZosmfJesApi, ZosmfMvsApi } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { Profiles } from "../../../src/Profiles";
 import { IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
 import { createInstanceOfProfile, createValidIProfile } from "../../../__mocks__/mockCreators/shared";
+import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 
 class MockUssApi1 implements ZoweExplorerApi.IUss {
     public profile?: zowe.imperative.IProfileLoaded;
@@ -155,6 +157,17 @@ async function createGlobalMocks() {
         message: "",
         failNotFound: false,
     });
+    Object.defineProperty(ZoweLogger, "error", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "debug", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "warn", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "info", { value: jest.fn(), configurable: true });
+
+    Object.defineProperty(globals, "LOG", {
+        value: {
+            debug: jest.fn(),
+            error: jest.fn(),
+        },
+    });
 
     return newMocks;
 }
@@ -245,6 +258,9 @@ describe("ZoweExplorerApiRegister unit testing", () => {
 
     it("throws errors when invalid APIs requested", async () => {
         const globalMocks = await createGlobalMocks();
+        const invalidProfile = {
+            type: "invalid_profile_type",
+        } as zowe.imperative.IProfileLoaded;
         expect(() => {
             globalMocks.registry.getUssApi(undefined);
         }).toThrow();
@@ -254,6 +270,18 @@ describe("ZoweExplorerApiRegister unit testing", () => {
         expect(() => {
             globalMocks.registry.getJesApi(undefined);
         }).toThrow();
+        expect(() => {
+            ZoweExplorerApiRegister.getCommonApi(invalidProfile);
+        }).toThrowError("Internal error: Tried to call a non-existing Common API in API register: invalid_profile_type");
+        expect(() => {
+            ZoweExplorerApiRegister.getCommandApi(invalidProfile);
+        }).toThrowError("Internal error: Tried to call a non-existing Command API in API register: invalid_profile_type");
+    });
+
+    it("returns an API extender instance for getExplorerExtenderApi()", () => {
+        const explorerExtenderApiSpy = jest.spyOn(ZoweExplorerApiRegister.getInstance(), "getExplorerExtenderApi");
+        ZoweExplorerApiRegister.getExplorerExtenderApi();
+        expect(explorerExtenderApiSpy).toHaveBeenCalled();
     });
 
     it("provides access to the common api for a profile registered to any api regsitry", async () => {

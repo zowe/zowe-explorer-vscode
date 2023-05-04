@@ -19,6 +19,7 @@ import { FilterItem, FilterDescriptor } from "../utils/ProfilesUtils";
 import * as contextually from "../shared/context";
 import * as nls from "vscode-nls";
 import { getIconById, IconId } from "../generators/icons";
+import { ZoweLogger } from "../utils/LoggerUtils";
 
 // Set up localization
 nls.config({
@@ -31,14 +32,18 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
  * Search for matching items loaded in data set or USS tree
  *
  */
-export async function searchInAllLoadedItems(datasetProvider?: IZoweTree<IZoweDatasetTreeNode>, ussFileProvider?: IZoweTree<IZoweUSSTreeNode>) {
+export async function searchInAllLoadedItems(
+    datasetProvider?: IZoweTree<IZoweDatasetTreeNode>,
+    ussFileProvider?: IZoweTree<IZoweUSSTreeNode>
+): Promise<void> {
+    ZoweLogger.trace("shared.actions.searchInAllLoadedItems called.");
     let pattern: string;
     const items: IZoweNodeType[] = [];
     const qpItems = [];
     const quickpick = Gui.createQuickPick();
     quickpick.placeholder = localize("searchHistory.options.prompt", "Enter a filter");
     quickpick.ignoreFocusOut = true;
-    quickpick.onDidChangeValue(async (value) => {
+    quickpick.onDidChangeValue((value) => {
         if (value) {
             quickpick.items = filterTreeByString(value, qpItems);
         } else {
@@ -152,9 +157,10 @@ export async function searchInAllLoadedItems(datasetProvider?: IZoweTree<IZoweDa
     }
 }
 
-export async function openRecentMemberPrompt(datasetTree: IZoweTree<IZoweDatasetTreeNode>, ussTree: IZoweTree<IZoweUSSTreeNode>) {
+export async function openRecentMemberPrompt(datasetTree: IZoweTree<IZoweDatasetTreeNode>, ussTree: IZoweTree<IZoweUSSTreeNode>): Promise<void> {
+    ZoweLogger.trace("shared.actions.openRecentMemberPrompt called.");
     if (globals.LOG) {
-        globals.LOG.debug(localize("enterPattern.log.debug.prompt", "Prompting the user to choose a recent member for editing"));
+        ZoweLogger.debug(localize("enterPattern.log.debug.prompt", "Prompting the user to choose a recent member for editing"));
     }
     let pattern: string;
 
@@ -213,7 +219,8 @@ export async function openRecentMemberPrompt(datasetTree: IZoweTree<IZoweDataset
     }
 }
 
-export async function returnIconState(node: IZoweNodeType) {
+export function returnIconState(node: IZoweNodeType): IZoweNodeType {
+    ZoweLogger.trace("shared.actions.returnIconState called.");
     const activePathClosed = getIconById(IconId.sessionActive);
     const activePathOpen = getIconById(IconId.sessionActiveOpen);
     const inactivePathClosed = getIconById(IconId.sessionInactive); // So far, we only ever reference the closed inactive icon, not the open one
@@ -226,13 +233,14 @@ export async function returnIconState(node: IZoweNodeType) {
     return node;
 }
 
-export async function resetValidationSettings(node: IZoweNodeType, setting: boolean) {
+export function resetValidationSettings(node: IZoweNodeType, setting: boolean): IZoweNodeType {
+    ZoweLogger.trace("shared.actions.resetValidationSettings called.");
     if (setting) {
-        await Profiles.getInstance().enableValidationContext(node);
+        Profiles.getInstance().enableValidationContext(node);
         // Ensure validation status is also reset
         node.contextValue = node.contextValue.replace(/(_Active)/g, "").replace(/(_Inactive)/g, "");
     } else {
-        await Profiles.getInstance().disableValidationContext(node);
+        Profiles.getInstance().disableValidationContext(node);
     }
     return node;
 }

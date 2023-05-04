@@ -19,6 +19,7 @@ import { getIconByNode } from "../generators/icons";
 import * as contextually from "../shared/context";
 import * as nls from "vscode-nls";
 import { Profiles } from "../Profiles";
+import { ZoweLogger } from "../utils/LoggerUtils";
 // Set up localization
 nls.config({
     messageFormat: nls.MessageFormat.bundle,
@@ -49,7 +50,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
      * @param {ZoweDatasetNode} mParent
      * @param {Session} session
      */
-    constructor(
+    public constructor(
         label: string,
         collapsibleState: vscode.TreeItemCollapsibleState,
         mParent: IZoweDatasetTreeNode,
@@ -83,6 +84,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
      * @returns {string}
      */
     public getProfileName(): string {
+        ZoweLogger.trace("ZoweDatasetNode.getProfileName called.");
         return this.getProfile() ? this.getProfile().name : undefined;
     }
 
@@ -92,6 +94,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
      * @returns {Promise<ZoweDatasetNode[]>}
      */
     public async getChildren(): Promise<ZoweDatasetNode[]> {
+        ZoweLogger.trace("ZoweDatasetNode.getChildren called.");
         if (!this.pattern && contextually.isSessionNotFav(this)) {
             return [
                 new ZoweDatasetNode(
@@ -123,11 +126,12 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         }
 
         // push nodes to an object with property names to avoid duplicates
-        const elementChildren = {};
-        responses.forEach(async (response) => {
+        const elementChildren: { [k: string]: ZoweDatasetNode } = {};
+        for (const response of responses) {
             // Throws reject if the Zowe command does not throw an error but does not succeed
-            if (!response.success) {
-                errorHandling(localize("getChildren.responses.error", "The response from Zowe CLI was not successful"));
+            // The dataSetsMatchingPattern API may return success=false and apiResponse=[] when no data sets found
+            if (!response.success && !(Array.isArray(response.apiResponse) && response.apiResponse.length === 0)) {
+                await errorHandling(localize("getChildren.responses.error", "The response from Zowe CLI was not successful"));
                 return;
             }
 
@@ -222,27 +226,30 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     elementChildren[temp.label.toString()] = temp;
                 }
             }
-        });
+        }
 
         this.dirty = false;
         if (Object.keys(elementChildren).length === 0) {
-            return (this.children = [
+            this.children = [
                 new ZoweDatasetNode(
-                    localize("getChildren.noDataset", "No datasets found"),
+                    localize("getChildren.noDataset", "No data sets found"),
                     vscode.TreeItemCollapsibleState.None,
                     this,
                     null,
                     globals.INFORMATION_CONTEXT
                 ),
-            ]);
+            ];
         } else {
-            return (this.children = Object.keys(elementChildren)
+            this.children = Object.keys(elementChildren)
                 .sort()
-                .map((labels) => elementChildren[labels]));
+                .map((labels) => elementChildren[labels]);
         }
+
+        return this.children;
     }
 
     public getSessionNode(): IZoweDatasetTreeNode {
+        ZoweLogger.trace("ZoweDatasetNode.getSessionNode called.");
         return this.getParent() ? this.getParent().getSessionNode() : this;
     }
     /**
@@ -251,6 +258,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
      * @returns {string}
      */
     public getEtag(): string {
+        ZoweLogger.trace("ZoweDatasetNode.getEtag called.");
         return this.etag;
     }
 
@@ -260,10 +268,12 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
      * @returns {void}
      */
     public setEtag(etagValue): void {
+        ZoweLogger.trace("ZoweDatasetNode.setEtag called.");
         this.etag = etagValue;
     }
 
     private async getDatasets(): Promise<zowe.IZosFilesResponse[]> {
+        ZoweLogger.trace("ZoweDatasetNode.getDatasets called.");
         const sessNode = this.getSessionNode();
         const responses: zowe.IZosFilesResponse[] = [];
         try {
@@ -300,7 +310,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             }
         } catch (err) {
             await errorHandling(err, this.label.toString(), localize("getChildren.error.response", "Retrieving response from ") + `zowe.List`);
-            await syncSessionNode(Profiles.getInstance())((profileValue) => ZoweExplorerApiRegister.getMvsApi(profileValue).getSession())(sessNode);
+            syncSessionNode(Profiles.getInstance())((profileValue) => ZoweExplorerApiRegister.getMvsApi(profileValue).getSession())(sessNode);
         }
         return responses;
     }

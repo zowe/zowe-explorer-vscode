@@ -17,6 +17,7 @@ import * as globals from "../../../src/globals";
 import * as utils from "../../../src/utils/ProfilesUtils";
 import { imperative } from "@zowe/cli";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
+import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 
 describe("mvsCommandActions unit testing", () => {
     const showErrorMessage = jest.fn();
@@ -51,6 +52,8 @@ describe("mvsCommandActions unit testing", () => {
             };
         }),
     });
+    Object.defineProperty(ZoweLogger, "error", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
 
     const ProgressLocation = jest.fn().mockImplementation(() => {
         return {
@@ -93,7 +96,7 @@ describe("mvsCommandActions unit testing", () => {
     Object.defineProperty(vscode.window, "withProgress", { value: withProgress });
 
     getConfiguration.mockReturnValue({
-        get: (setting: string) => undefined,
+        get: (_setting: string) => undefined,
         update: jest.fn(() => {
             return {};
         }),

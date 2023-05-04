@@ -15,7 +15,6 @@ import { ZoweExplorerApi } from "./ZoweExplorerApi";
 /**
  * An implementation of the Zowe Explorer API Common interface for zOSMF.
  */
-// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
     public static getProfileTypeName(): string {
         return zowe.ZosmfProfile.type;
@@ -104,7 +103,6 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
 /**
  * An implementation of the Zowe Explorer USS API interface for zOSMF.
  */
-// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 export class ZosmfUssApi extends ZosmfApiCommon implements ZoweExplorerApi.IUss {
     public fileList(ussFilePath: string): Promise<zowe.IZosFilesResponse> {
         return zowe.List.fileList(this.getSession(), ussFilePath);
@@ -173,7 +171,6 @@ export class ZosmfUssApi extends ZosmfApiCommon implements ZoweExplorerApi.IUss 
 /**
  * An implementation of the Zowe Explorer MVS API interface for zOSMF.
  */
-// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 export class ZosmfMvsApi extends ZosmfApiCommon implements ZoweExplorerApi.IMvs {
     public dataSet(filter: string, options?: zowe.IListOptions): Promise<zowe.IZosFilesResponse> {
         return zowe.List.dataSet(this.getSession(), filter, options);
@@ -260,7 +257,6 @@ export class ZosmfMvsApi extends ZosmfApiCommon implements ZoweExplorerApi.IMvs 
 /**
  * An implementation of the Zowe Explorer JES API interface for zOSMF.
  */
-// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 export class ZosmfJesApi extends ZosmfApiCommon implements ZoweExplorerApi.IJes {
     public getJobsByParameters(params: zowe.IGetJobsParms): Promise<zowe.IJob[]> {
         return zowe.GetJobs.getJobsByParameters(this.getSession(), params);
@@ -280,6 +276,10 @@ export class ZosmfJesApi extends ZosmfApiCommon implements ZoweExplorerApi.IJes 
 
     public downloadSpoolContent(parms: zowe.IDownloadAllSpoolContentParms): Promise<void> {
         return zowe.DownloadJobs.downloadAllSpoolContentCommon(this.getSession(), parms);
+    }
+
+    public downloadSingleSpool(parms: zowe.IDownloadSpoolContentParms): Promise<void> {
+        return zowe.DownloadJobs.downloadSpoolContentCommon(this.getSession(), parms);
     }
 
     public getSpoolContentById(jobname: string, jobid: string, spoolId: number): Promise<string> {
@@ -310,7 +310,6 @@ export class ZosmfJesApi extends ZosmfApiCommon implements ZoweExplorerApi.IJes 
 /**
  * An implementation of the Zowe Explorer Command API interface for zOSMF.
  */
-// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 export class ZosmfCommandApi extends ZosmfApiCommon implements ZoweExplorerApi.ICommand {
     public issueTsoCommand(command: string, acctNum: string): Promise<zowe.IIssueResponse> {
         return zowe.IssueTso.issueTsoCommand(this.getSession(), acctNum, command);

@@ -18,6 +18,7 @@ import * as sharedExtension from "../../../src/shared/init";
 import { initJobsProvider } from "../../../src/job/init";
 import { Profiles } from "../../../src/Profiles";
 import { IJestIt, ITestContext, processSubscriptions, spyOnSubscriptions } from "../../__common__/testUtils";
+import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 
 describe("Test src/jobs/extension", () => {
     describe("initJobsProvider", () => {
@@ -42,6 +43,7 @@ describe("Test src/jobs/extension", () => {
             ssoLogin: jest.fn(),
             ssoLogout: jest.fn(),
             onDidChangeConfiguration: jest.fn(),
+            pollData: jest.fn(),
         };
         const commands: IJestIt[] = [
             {
@@ -87,6 +89,14 @@ describe("Test src/jobs/extension", () => {
                 ],
             },
             {
+                name: "zowe.jobs.downloadSingleSpool",
+                mock: [{ spy: jest.spyOn(jobActions, "downloadSingleSpool"), arg: [[test.value], false] }],
+            },
+            {
+                name: "zowe.jobs.downloadSingleSpoolBinary",
+                mock: [{ spy: jest.spyOn(jobActions, "downloadSingleSpool"), arg: [[test.value], true] }],
+            },
+            {
                 name: "zowe.jobs.addJobsSession",
                 mock: [{ spy: jest.spyOn(jobsProvider, "createZoweSession"), arg: [jobsProvider] }],
             },
@@ -107,11 +117,11 @@ describe("Test src/jobs/extension", () => {
             },
             {
                 name: "zowe.jobs.downloadSpool",
-                mock: [
-                    // Selected nodes array is passed to the downloadSpool method
-                    // Hence why the expected value is `[test.value]`
-                    { spy: jest.spyOn(jobActions, "downloadSpool"), arg: [[test.value]] },
-                ],
+                mock: [{ spy: jest.spyOn(jobActions, "downloadSpool"), arg: [[test.value], false] }],
+            },
+            {
+                name: "zowe.jobs.downloadSpoolBinary",
+                mock: [{ spy: jest.spyOn(jobActions, "downloadSpool"), arg: [[test.value], true] }],
             },
             {
                 name: "zowe.jobs.getJobJcl",
@@ -186,6 +196,14 @@ describe("Test src/jobs/extension", () => {
                 name: "onDidChangeConfiguration",
                 mock: [{ spy: jest.spyOn(jobsProvider, "onDidChangeConfiguration"), arg: [test.value] }],
             },
+            {
+                name: "zowe.jobs.startPolling",
+                mock: [{ spy: jest.spyOn(jobsProvider, "pollData"), arg: [test.value] }],
+            },
+            {
+                name: "zowe.jobs.stopPolling",
+                mock: [{ spy: jest.spyOn(jobsProvider, "pollData"), arg: [test.value] }],
+            },
         ];
 
         beforeAll(async () => {
@@ -199,6 +217,7 @@ describe("Test src/jobs/extension", () => {
             jest.spyOn(sharedExtension, "initSubscribers").mockImplementation(jest.fn());
             Object.defineProperty(vscode.commands, "registerCommand", { value: registerCommand });
             Object.defineProperty(vscode.workspace, "onDidChangeConfiguration", { value: onDidChangeConfiguration });
+            Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
 
             spyCreateJobsTree.mockResolvedValue(jobsProvider as any);
             spyOnSubscriptions(commands);

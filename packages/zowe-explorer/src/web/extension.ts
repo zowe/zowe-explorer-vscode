@@ -10,4 +10,4 @@
  */
 
 export function activate(): void {}
-export async function deactivate() {}
+export async function deactivate(): Promise<void> {}

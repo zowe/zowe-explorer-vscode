@@ -22,7 +22,8 @@ import { Profiles } from "../../src/Profiles";
 import * as path from "path";
 import * as fs from "fs";
 import { getZoweDir, Gui } from "@zowe/zowe-explorer-api";
-import * as profilesUtils from "../../src/utils/ProfilesUtils";
+import * as profUtils from "../../src/utils/ProfilesUtils";
+import { ZoweLogger } from "../../src/utils/LoggerUtils";
 jest.mock("fs");
 
 describe("ZoweExplorerExtender unit tests", () => {
@@ -63,6 +64,18 @@ describe("ZoweExplorerExtender unit tests", () => {
         });
         Object.defineProperty(vscode.workspace, "getConfiguration", {
             value: newMocks.mockGetConfiguration,
+            configurable: true,
+        });
+        Object.defineProperty(ZoweLogger, "warn", {
+            value: jest.fn(),
+            configurable: true,
+        });
+        Object.defineProperty(ZoweLogger, "error", {
+            value: jest.fn(),
+            configurable: true,
+        });
+        Object.defineProperty(ZoweLogger, "trace", {
+            value: jest.fn(),
             configurable: true,
         });
 
@@ -157,6 +170,7 @@ describe("ZoweExplorerExtender unit tests", () => {
             await ZoweExplorerExtender.showZoweConfigError(userInput.configError);
             expect(blockMocks.mockErrorMessage).toHaveBeenCalledWith(
                 'Error encountered when loading your Zowe config. Click "Show Config" for more details.',
+                undefined,
                 "Show Config"
             );
             if (userInput.choice == null) {
@@ -197,7 +211,7 @@ describe("ZoweExplorerExtender unit tests", () => {
 
         const readProfilesFromDiskSpy = jest.fn();
         const refreshProfilesQueueAddSpy = jest.spyOn((ZoweExplorerExtender as any).refreshProfilesQueue, "add");
-        jest.spyOn(profilesUtils, "getProfileInfo").mockResolvedValue({
+        jest.spyOn(profUtils.ProfilesUtils, "getProfileInfo").mockReturnValue({
             readProfilesFromDisk: readProfilesFromDiskSpy,
         } as any);
         await expect(blockMocks.instTest.initForZowe("USS", ["" as any])).resolves.not.toThrow();

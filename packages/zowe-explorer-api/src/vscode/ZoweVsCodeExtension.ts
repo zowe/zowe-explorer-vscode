@@ -26,6 +26,13 @@ export class ZoweVsCodeExtension {
     }
 
     /**
+     * Get custom logging path if one is defined in VS Code settings.
+     */
+    public static get customLoggingPath(): string | undefined {
+        return vscode.workspace.getConfiguration("zowe").get("files.logsFolder.path") || undefined;
+    }
+
+    /**
      * @param {string} [requiredVersion] Optional semver string specifying the minimal required version
      *           of Zowe Explorer that needs to be installed for the API to be usable to the client.
      * @returns an initialized instance `ZoweExplorerApi.IApiRegisterClient` that extenders can use
@@ -74,7 +81,9 @@ export class ZoweVsCodeExtension {
      */
     public static async promptCredentials(options: IPromptCredentialsOptions): Promise<imperative.IProfileLoaded> {
         const loadProfile = await this.profilesCache.getLoadedProfConfig(options.sessionName.trim());
-        if (loadProfile == null) return undefined;
+        if (loadProfile == null) {
+            return undefined;
+        }
         const loadSession = loadProfile.profile as imperative.ISession;
 
         const creds = await ZoweVsCodeExtension.promptUserPass({ session: loadSession, ...options });
@@ -108,7 +117,7 @@ export class ZoweVsCodeExtension {
         const cache = this.profilesCache;
         const profInfo = await cache.getProfileInfo();
         const setSecure = options.secure ?? profInfo.isSecured();
-        const loadProfile = await cache.getLoadedProfConfig(options.sessionName);
+        const loadProfile = await cache.getLoadedProfConfig(options.sessionName, options.sessionType);
         const loadSession = loadProfile.profile as imperative.ISession;
         const creds = await ZoweVsCodeExtension.promptUserPass({ session: loadSession, ...options });
 
@@ -137,7 +146,10 @@ export class ZoweVsCodeExtension {
     private static async saveCredentials(profile: imperative.IProfileLoaded): Promise<boolean> {
         let save = false;
         const saveButton = "Save Credentials";
-        const message = `Save entered credentials in plain text for future use with profile ${profile.name}?\nSaving credentials will update the local information file.`;
+        const message = [
+            `Save entered credentials in plain text for future use with profile ${profile.name}?`,
+            "Saving credentials will update the local information file.",
+        ].join("\n");
         await Gui.showMessage(message, { items: [saveButton], vsCodeOpts: { modal: true } }).then((selection) => {
             if (selection) {
                 save = true;
