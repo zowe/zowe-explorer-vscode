@@ -9,7 +9,8 @@
  *
  */
 
-import { IZoweTree } from "@zowe/zowe-explorer-api";
+import { IZoweNodeType, IZoweTree, IZoweTreeNode } from "@zowe/zowe-explorer-api";
+import { ZoweLogger } from "./LoggerUtils";
 
 export class TreeViewUtils {
     /**
@@ -21,5 +22,15 @@ export class TreeViewUtils {
         const treeView = treeProvider.getTreeView();
         await treeView.reveal(treeProvider.mFavoriteSession, { select: true });
         await treeView.reveal(treeProvider.mFavoriteSession, { select: false });
+    }
+
+    /**
+     * Expand a node using the given tree provider
+     * @param node the node to expand
+     * @param provider the tree view provider that this node belongs to
+     */
+    public static async expandNode(node: IZoweTreeNode, provider: IZoweTree<IZoweNodeType>): Promise<void> {
+        ZoweLogger.trace("ZoweTreeProvider.expandNode called.");
+        await provider.getTreeView().reveal(node, { expand: true });
     }
 }

@@ -142,7 +142,6 @@ export const syncSessionNode =
     (getSessionForProfile: SessionForProfile) =>
     (sessionNode: IZoweTreeNode): void => {
         ZoweLogger.trace("ProfilesUtils.syncSessionNode called.");
-        sessionNode.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
 
         const profileType = sessionNode.getProfile().type;
         const profileName = sessionNode.getProfileName();
