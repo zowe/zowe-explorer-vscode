@@ -50,7 +50,11 @@ export function getZoweDir(): string {
 
 export function getFullPath(anyPath: string): string {
     if (os.platform() === "win32") {
-        return fs.realpathSync.native(anyPath);
+        try {
+            return fs.realpathSync.native(anyPath);
+        } catch (err) {
+            // Fallback to realpathSync below
+        }
     }
     return fs.realpathSync(anyPath);
 }

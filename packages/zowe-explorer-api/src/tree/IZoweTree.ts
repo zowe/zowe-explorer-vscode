@@ -300,4 +300,9 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T> {
      * @returns {dsAlloc[]} the array of recently-opened member names
      */
     getDsTemplates?(): dsAlloc[];
+    /* Initializes polling (refresh w/ configurable interval) for the provided node.
+     *
+     * @param {IZoweTreeNode} node the node to poll data for
+     */
+    pollData?(node: IZoweTreeNode): any;
 }

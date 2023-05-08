@@ -9,8 +9,4 @@
  *
  */
 
-import { createSystemTestEnvironment } from "./systemTestEnv";
-
-(async () => {
-    await createSystemTestEnvironment();
-})();
+export * from "./Poller";

@@ -214,7 +214,7 @@ describe("Unit Tests (Jest)", () => {
      * Checks that returning an unsuccessful response results in an error being thrown and caught
      *************************************************************************************************************/
     it(
-        "Checks that when bright.List.dataSet/allMembers() returns an unsuccessful response, " + "it returns a label of 'No datasets found'",
+        "Checks that when bright.List.dataSet/allMembers() returns an unsuccessful response, " + "it returns a label of 'No data sets found'",
         async () => {
             Object.defineProperty(Profiles, "getInstance", {
                 value: jest.fn(() => {
@@ -246,7 +246,7 @@ describe("Unit Tests (Jest)", () => {
             ]);
             subNode.dirty = true;
             const response = await subNode.getChildren();
-            expect(response[0].label).toBe("No datasets found");
+            expect(response[0].label).toBe("No data sets found");
         }
     );
 
@@ -257,7 +257,7 @@ describe("Unit Tests (Jest)", () => {
         // Creating a rootNode
         const rootNode = new ZoweDatasetNode("root", vscode.TreeItemCollapsibleState.Collapsed, null, session, undefined, undefined, profileOne);
         const infoChild = new ZoweDatasetNode(
-            "Use the search button to display datasets",
+            "Use the search button to display data sets",
             vscode.TreeItemCollapsibleState.None,
             rootNode,
             null,
@@ -277,7 +277,7 @@ describe("Unit Tests (Jest)", () => {
         // Creating a rootNode
         const rootNode = new ZoweDatasetNode("root", vscode.TreeItemCollapsibleState.Collapsed, null, session, undefined, undefined, profileOne);
         const infoChild = new ZoweDatasetNode(
-            "Use the search button to display datasets",
+            "Use the search button to display data sets",
             vscode.TreeItemCollapsibleState.None,
             rootNode,
             null,
@@ -403,6 +403,6 @@ describe("Unit Tests (Jest)", () => {
             };
         });
         Object.defineProperty(List, "allMembers", { value: allMembers });
-        expect((await pds.getChildren())[0].label).toEqual("No datasets found");
+        expect((await pds.getChildren())[0].label).toEqual("No data sets found");
     });
 });

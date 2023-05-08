@@ -1,7 +1,7 @@
 {
-  "getChildren.search": "Use the search button to display datasets",
+  "getChildren.search": "Use the search button to display data sets",
   "getChildren.error.invalidNode": "Invalid node",
   "getChildren.responses.error": "The response from Zowe CLI was not successful",
-  "getChildren.noDataset": "No datasets found",
+  "getChildren.noDataset": "No data sets found",
   "getChildren.error.response": "Retrieving response from "
 }

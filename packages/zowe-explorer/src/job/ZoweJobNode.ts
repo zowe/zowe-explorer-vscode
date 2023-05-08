@@ -22,6 +22,7 @@ import * as contextually from "../shared/context";
 import * as nls from "vscode-nls";
 import { Profiles } from "../Profiles";
 import { ZoweLogger } from "../utils/LoggerUtils";
+import { encodeJobFile } from "../SpoolProvider";
 // Set up localization
 nls.config({
     messageFormat: nls.MessageFormat.bundle,
@@ -87,6 +88,9 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
         if (icon) {
             this.iconPath = icon.path;
         }
+        if (!globals.ISTHEIA) {
+            this.id = `${mParent?.id ?? "<root>"}.${this.label as string}`;
+        }
     }
 
     /**
@@ -150,14 +154,6 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
                     if (icon) {
                         spoolNode.iconPath = icon.path;
                     }
-                    const arr = Object.keys(spool)
-                        .filter((k) => k !== "records-url")
-                        .map((key) => ({ [key]: spool[key] }));
-                    let newTooltip = "";
-                    arr.forEach((item) => {
-                        newTooltip += `${JSON.stringify(item).replace(/({|})/g, "")}\n`;
-                    });
-                    spoolNode.tooltip = newTooltip;
                     spoolNode.command = {
                         command: "zowe.jobs.zosJobsOpenspool",
                         title: "",
@@ -344,15 +340,24 @@ export class Spool extends Job {
         mCollapsibleState: vscode.TreeItemCollapsibleState,
         mParent: IZoweJobTreeNode,
         session: zowe.imperative.Session,
-        spool: zowe.IJobFile,
+        public spool: zowe.IJobFile,
         job: zowe.IJob,
         parent: IZoweJobTreeNode
     ) {
         super(label, mCollapsibleState, mParent, session, job, parent.getProfile());
+        this.tooltip = label;
         this.contextValue = globals.JOBS_SPOOL_CONTEXT;
         const icon = getIconByNode(this);
+
+        // parent of parent should be the session; tie resourceUri with TreeItem for file decorator
+        if (mParent && mParent.getParent()) {
+            this.resourceUri = encodeJobFile(mParent.getParent().label as string, spool);
+        }
         if (icon) {
             this.iconPath = icon.path;
+        }
+        if (!globals.ISTHEIA) {
+            this.id = `${mParent?.id ?? "<root>"}.${this.label as string}`;
         }
     }
 }

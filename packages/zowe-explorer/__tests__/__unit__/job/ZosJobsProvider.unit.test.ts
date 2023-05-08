@@ -17,7 +17,7 @@ import * as globals from "../../../src/globals";
 import * as utils from "../../../src/utils/ProfilesUtils";
 import { Gui, IZoweJobTreeNode, ProfilesCache, ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import { createIJobFile, createIJobObject, createJobFavoritesNode, createJobSessionNode, MockJobDetail } from "../../../__mocks__/mockCreators/jobs";
-import { Job } from "../../../src/job/ZoweJobNode";
+import { Job, Spool } from "../../../src/job/ZoweJobNode";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { Profiles } from "../../../src/Profiles";
 import {
@@ -33,6 +33,8 @@ import { createJesApi } from "../../../__mocks__/mockCreators/api";
 import * as sessUtils from "../../../src/utils/SessionUtils";
 import { jobStringValidator } from "../../../src/shared/utils";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
+import { Poller } from "@zowe/zowe-explorer-api/src/utils";
+import { SettingsConfig } from "../../../src/utils/SettingsConfig";
 
 async function createGlobalMocks() {
     const globalMocks = {
@@ -103,6 +105,14 @@ async function createGlobalMocks() {
     });
     Object.defineProperty(vscode.window, "showWarningMessage", {
         value: globalMocks.mockShowWarningMessage,
+        configurable: true,
+    });
+    Object.defineProperty(vscode.window, "showTextDocument", {
+        value: jest.fn().mockImplementation(),
+        configurable: true,
+    });
+    Object.defineProperty(Poller, "poll", {
+        value: jest.fn(),
         configurable: true,
     });
     Object.defineProperty(globalMocks.mockGetJobs, "getJob", { value: globalMocks.mockGetJob, configurable: true });
@@ -814,7 +824,7 @@ describe("ZosJobsProvider unit tests - Function getPopulatedPickerArray", () => 
                 label: `Job Owner`,
                 value: "kristina",
                 show: true,
-                placeHolder: `Enter job owner id`,
+                placeHolder: `Enter job owner ID`,
                 validateInput: (text) => jobStringValidator(text, "owner"),
             },
             {
@@ -834,6 +844,65 @@ describe("ZosJobsProvider unit tests - Function getPopulatedPickerArray", () => 
             },
         ];
         expect(JSON.stringify(actualPickerObj)).toEqual(JSON.stringify(expectedObj));
+    });
+});
+
+describe("ZosJobsProvider unit tests - function pollData", () => {
+    jest.useFakeTimers();
+    it("correctly toggles polling on and off", async () => {
+        const globalMocks = await createGlobalMocks();
+        const testJobNode = new Job(
+            "SOME(JOBNODE) - Input",
+            vscode.TreeItemCollapsibleState.Collapsed,
+            globalMocks.testJobsProvider.mSessionNodes[1],
+            globalMocks.testJobsProvider.mSessionNodes[1].getSession(),
+            globalMocks.testIJob,
+            globalMocks.testProfile
+        );
+        const spoolNode = new Spool(
+            "exampleSpool",
+            vscode.TreeItemCollapsibleState.Collapsed,
+            testJobNode,
+            globalMocks.testSession,
+            globalMocks.mockIJobFile,
+            globalMocks.testIJob,
+            testJobNode
+        );
+
+        // Case 1: pollData called, polling dialog is dismissed
+        const getDirectValueSpy = jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(0);
+        const inputBoxSpy = jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce(undefined);
+        await globalMocks.testJobsProvider.pollData(spoolNode);
+        // Poll requests should be empty
+        expect(Poller.pollRequests).toStrictEqual({});
+
+        // Case 2: pollData called, user provides poll interval in input box
+        getDirectValueSpy.mockReturnValueOnce(5000);
+        inputBoxSpy.mockResolvedValueOnce("5000");
+        await globalMocks.testJobsProvider.pollData(spoolNode);
+        expect(Poller.pollRequests).not.toStrictEqual({});
+
+        // Case 3: pollData called again to turn polling off
+        await globalMocks.testJobsProvider.pollData(spoolNode);
+
+        // Case 4: pollData called with invalid node (verify spool file context check)
+        await globalMocks.testJobsProvider.pollData(testJobNode);
+    });
+
+    it("properly validates the user-provided polling interval", async () => {
+        const globalMocks = await createGlobalMocks();
+
+        // a string is not a valid number, should return desc. for a valid polling interval
+        expect(globalMocks.testJobsProvider.validatePollInterval("string that should be a number")).toStrictEqual(
+            "The polling interval must be greater than or equal to 1000ms."
+        );
+        // number < 1000 should also return the desc. for a valid polling interval
+        expect(globalMocks.testJobsProvider.validatePollInterval("999")).toStrictEqual(
+            "The polling interval must be greater than or equal to 1000ms."
+        );
+        // number >= 1000 should be undefined
+        expect(globalMocks.testJobsProvider.validatePollInterval("1000")).toStrictEqual(undefined);
+        expect(globalMocks.testJobsProvider.validatePollInterval("1001")).toStrictEqual(undefined);
     });
 });
 

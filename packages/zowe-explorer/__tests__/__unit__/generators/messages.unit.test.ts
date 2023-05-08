@@ -72,7 +72,7 @@ describe("Checking message generator's basics", () => {
         const resultMessage = getMessageById(targetId, MessageContentType.upload);
 
         expect(resultMessage).not.toBeNull();
-        expect(resultMessage).toBe("Saving dataset...");
+        expect(resultMessage).toBe("Saving data set...");
     });
     it("Testing that you can't get Message with not existing ID", () => {
         const targetId = "some-not-existing-id";
@@ -85,7 +85,7 @@ describe("Checking message generator's basics", () => {
         const resultMessage = getMessageByNode(sessionNode, MessageContentType.upload);
 
         expect(resultMessage).not.toBeNull();
-        expect(resultMessage).toBe("Saving dataset...");
+        expect(resultMessage).toBe("Saving data set...");
     });
     it("Testing that you can correctly get Specific Message By Node", () => {
         const sessionNode = generateTestSessionNode();
@@ -93,7 +93,7 @@ describe("Checking message generator's basics", () => {
         const resultMessage = getMessageByNode(memberNode, MessageContentType.upload);
 
         expect(resultMessage).not.toBeNull();
-        expect(resultMessage).toBe("Saving dataset member...");
+        expect(resultMessage).toBe("Saving data set member...");
     });
     it("Testing that you can't get Specific Message using incorrect Node", () => {
         const randomNode = {};

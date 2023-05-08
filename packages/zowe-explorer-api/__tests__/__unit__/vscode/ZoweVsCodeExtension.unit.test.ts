@@ -26,6 +26,16 @@ describe("ZoweVsCodeExtension", () => {
         jest.clearAllMocks();
     });
 
+    it("customLoggingPath should return value if defined in VS Code settings", () => {
+        const mockGetConfig = jest.fn().mockReturnValueOnce(__dirname);
+        jest.spyOn(vscode.workspace, "getConfiguration").mockReturnValue({
+            get: mockGetConfig,
+        } as unknown as vscode.WorkspaceConfiguration);
+        expect(ZoweVsCodeExtension.customLoggingPath).toBe(__dirname);
+        expect(ZoweVsCodeExtension.customLoggingPath).toBeUndefined();
+        expect(mockGetConfig).toHaveBeenCalledTimes(2);
+    });
+
     describe("getZoweExplorerApi", () => {
         it("should return client API", () => {
             jest.spyOn(vscode.extensions, "getExtension").mockReturnValueOnce(fakeVsce);

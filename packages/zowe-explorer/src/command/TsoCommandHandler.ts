@@ -48,7 +48,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
         return this.instance;
     }
 
-    private static readonly defaultDialogText: string = "\uFF0B " + localize("command.option.prompt.search", "Create a new TSO Command");
+    private static readonly defaultDialogText: string = localize("command.option.prompt.search", "$(plus) Create a new TSO command");
     private static instance: TsoCommandHandler;
     public outputChannel: vscode.OutputChannel;
 
