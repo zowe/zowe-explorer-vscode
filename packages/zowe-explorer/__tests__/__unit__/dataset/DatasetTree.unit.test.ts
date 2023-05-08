@@ -1788,7 +1788,7 @@ describe("Dataset Tree Unit Tests - Function renameNode", () => {
 
         await testTree.renameNode("sestest", "TO.RENAME", "RENAMED");
 
-        expect(testTree.mSessionNodes[1].children[0]).toEqual(afterNode);
+        expect(testTree.mSessionNodes[1].children[0]).toEqual({ ...afterNode, id: beforeNode.id });
     });
 });
 describe("Dataset Tree Unit Tests - Function renameFavorite", () => {
@@ -1844,7 +1844,7 @@ describe("Dataset Tree Unit Tests - Function renameFavorite", () => {
 
         await testTree.renameFavorite(nodeFromSession, "RENAMED");
 
-        expect(matchingFavNode).toEqual(expectedMatchingFavNodeResult);
+        expect(matchingFavNode).toEqual({ ...expectedMatchingFavNodeResult, id: matchingFavNode.id });
     });
 });
 describe("Dataset Tree Unit Tests - Function findFavoritedNode", () => {

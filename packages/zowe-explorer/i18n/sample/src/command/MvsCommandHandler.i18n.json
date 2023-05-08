@@ -12,5 +12,5 @@
   "issueMvsCommand.command": "Enter or update the MVS command",
   "issueMvsCommand.enter.command": "No command entered.",
   "issueMvsCommand.command.submitted": "MVS command submitted.",
-  "command.option.prompt.search": "Create a new MVS Command"
+  "command.option.prompt.search": "$(plus) Create a new MVS command"
 }

@@ -278,7 +278,10 @@ export enum JobPickerTypes {
     History = "History",
 }
 
-export const plusSign = "\uFF0B ";
+export const SEPARATORS = {
+    BLANK: { kind: vscode.QuickPickItemKind.Separator, label: "" },
+    RECENT_FILTERS: { kind: vscode.QuickPickItemKind.Separator, label: localize("zowe.separator.recentFilters", "Recent Filters") },
+};
 
 /**
  * Defines all global variables

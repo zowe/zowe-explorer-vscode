@@ -833,7 +833,7 @@ describe("ZosJobsProvider unit tests - Function getPopulatedPickerArray", () => 
                 label: `Job Owner`,
                 value: "kristina",
                 show: true,
-                placeHolder: `Enter job owner id`,
+                placeHolder: `Enter job owner ID`,
                 validateInput: (text) => jobStringValidator(text, "owner"),
             },
             {
