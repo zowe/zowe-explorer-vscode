@@ -257,7 +257,7 @@ describe("Unit Tests (Jest)", () => {
         // Creating a rootNode
         const rootNode = new ZoweDatasetNode("root", vscode.TreeItemCollapsibleState.Collapsed, null, session, undefined, undefined, profileOne);
         const infoChild = new ZoweDatasetNode(
-            "Use the search button to display datasets",
+            "Use the search button to display data sets",
             vscode.TreeItemCollapsibleState.None,
             rootNode,
             null,
@@ -277,7 +277,7 @@ describe("Unit Tests (Jest)", () => {
         // Creating a rootNode
         const rootNode = new ZoweDatasetNode("root", vscode.TreeItemCollapsibleState.Collapsed, null, session, undefined, undefined, profileOne);
         const infoChild = new ZoweDatasetNode(
-            "Use the search button to display datasets",
+            "Use the search button to display data sets",
             vscode.TreeItemCollapsibleState.None,
             rootNode,
             null,

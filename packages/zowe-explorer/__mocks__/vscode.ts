@@ -313,6 +313,11 @@ export interface QuickPickOptions {
     canPickMany: string;
 }
 
+export enum QuickPickItemKind {
+    Separator = -1,
+    Default = 0,
+}
+
 /**
  * A data provider that provides tree data
  */

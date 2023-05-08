@@ -14,7 +14,6 @@ import { Profiles } from "../Profiles";
 import { syncSessionNode } from "../utils/ProfilesUtils";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { returnIconState } from "./actions";
-import { labelRefresh } from "./utils";
 import * as contextually from "../shared/context";
 import { removeSession } from "../utils/SessionUtils";
 import { ZoweLogger } from "../utils/LoggerUtils";
@@ -33,15 +32,13 @@ export async function refreshAll(treeProvider: IZoweTree<IZoweTreeNode>): Promis
         const found = profiles.some((prof) => prof.name === sessNode.label.toString().trim());
         if (found || sessNode.label.toString() === "Favorites") {
             if (contextually.isSessionNotFav(sessNode)) {
-                labelRefresh(sessNode);
-                sessNode.children = [];
                 sessNode.dirty = true;
                 returnIconState(sessNode);
                 syncSessionNode(Profiles.getInstance())((profileValue) => ZoweExplorerApiRegister.getCommonApi(profileValue).getSession())(sessNode);
             }
-            treeProvider.refresh();
         } else {
             await removeSession(treeProvider, sessNode.label.toString().trim());
         }
     }
+    treeProvider.refresh();
 }
