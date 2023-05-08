@@ -75,6 +75,9 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         if (icon) {
             this.iconPath = icon.path;
         }
+        if (!globals.ISTHEIA) {
+            this.id = `${mParent?.id ?? "<root>"}.${this.label as string}`;
+        }
     }
 
     /**
@@ -98,7 +101,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         if (!this.pattern && contextually.isSessionNotFav(this)) {
             return [
                 new ZoweDatasetNode(
-                    localize("getChildren.search", "Use the search button to display datasets"),
+                    localize("getChildren.search", "Use the search button to display data sets"),
                     vscode.TreeItemCollapsibleState.None,
                     this,
                     null,

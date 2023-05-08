@@ -27,6 +27,7 @@ import * as nls from "vscode-nls";
 import { resetValidationSettings } from "../shared/actions";
 import { SettingsConfig } from "../utils/SettingsConfig";
 import { ZoweLogger } from "../utils/LoggerUtils";
+import { TreeViewUtils } from "../utils/TreeViewUtils";
 
 // Set up localization
 nls.config({
@@ -56,7 +57,7 @@ export async function createUSSTree(log: imperative.Logger): Promise<USSTree> {
  * @implements {vscode.TreeDataProvider}
  */
 export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeNode> {
-    public static readonly defaultDialogText: string = "\uFF0B " + localize("filterPrompt.option.prompt.search", "Create a new filter");
+    public static readonly defaultDialogText: string = localize("filterPrompt.option.prompt.search", "$(plus) Create a new filter");
     private static readonly persistenceSchema: PersistenceSchemaEnum = PersistenceSchemaEnum.USS;
     public mFavoriteSession: ZoweUSSNode;
     public mSessionNodes: IZoweUSSTreeNode[] = [];
@@ -569,11 +570,10 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                     const createPick = new FilterDescriptor(USSTree.defaultDialogText);
                     const items: vscode.QuickPickItem[] = this.mHistory.getSearchHistory().map((element) => new FilterItem({ text: element }));
                     if (globals.ISTHEIA) {
-                        const options1: vscode.QuickPickOptions = {
-                            placeHolder: localize("searchHistory.options.prompt", "Select a filter"),
-                        };
                         // get user selection
-                        const choice = await Gui.showQuickPick([createPick, ...items], options1);
+                        const choice = await Gui.showQuickPick([createPick, globals.SEPARATORS.RECENT_FILTERS, ...items], {
+                            placeHolder: localize("searchHistory.options.prompt", "Select a filter"),
+                        });
                         if (!choice) {
                             Gui.showMessage(localize("enterPattern.pattern", "No selection made. Operation cancelled."));
                             return;
@@ -582,7 +582,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                     } else {
                         const quickpick = Gui.createQuickPick();
                         quickpick.placeholder = localize("searchHistory.options.prompt", "Select a filter");
-                        quickpick.items = [createPick, ...items];
+                        quickpick.items = [createPick, globals.SEPARATORS.RECENT_FILTERS, ...items];
                         quickpick.ignoreFocusOut = true;
                         quickpick.show();
                         const choice = await Gui.resolveQuickPick(quickpick);
@@ -602,7 +602,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 }
                 // manually entering a search - switch to an input box
                 const options: vscode.InputBoxOptions = {
-                    prompt: localize("filterPrompt.option.prompt.search", "Create a new filter"),
+                    placeHolder: localize("filterPrompt.option.prompt.placeholder", "New filter"),
                     value: remotepath,
                 };
                 // get user input
@@ -638,7 +638,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             if (!contextually.isFilterFolder(sessionNode)) {
                 sessionNode.contextValue += `_${globals.FILTER_SEARCH}`;
             }
-            this.expandSession(sessionNode, this);
+            await TreeViewUtils.expandNode(sessionNode, this);
             sessionNode.dirty = true;
             this.addSearchHistory(sanitizedPath);
         }

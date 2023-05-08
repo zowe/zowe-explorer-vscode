@@ -10,7 +10,7 @@
   "filterPrompt.log.debug.promptUSSPath": "Prompting the user for a USS path",
   "searchHistory.options.prompt": "Select a filter",
   "enterPattern.pattern": "No selection made. Operation cancelled.",
-  "filterPrompt.option.prompt.search": "Create a new filter",
+  "filterPrompt.option.prompt.placeholder": "New filter",
   "filterPrompt.enterPath": "You must enter a path.",
   "initializeFavorites.log.debug": "Initializing profiles with USS favorites.",
   "initializeFavorites.no.favorites": "No USS favorites found.",
@@ -21,5 +21,6 @@
   "initializeUSSFavorites.error.profile2": ". To resolve this, you can remove {0}",
   "initializeUSSFavorites.error.profile3": " from the Favorites section of Zowe Explorer's USS view. Would you like to do this now? ",
   "initializeUSSFavorites.error.buttonRemove": "Remove",
-  "findUSSItem.unsuccessful": "File does not exist. It may have been deleted."
+  "findUSSItem.unsuccessful": "File does not exist. It may have been deleted.",
+  "filterPrompt.option.prompt.search": "$(plus) Create a new filter"
 }
