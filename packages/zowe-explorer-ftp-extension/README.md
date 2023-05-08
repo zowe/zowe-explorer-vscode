@@ -131,4 +131,4 @@ Zowe Explorer's FTP extension is now part of the [Zowe Explorer monorepo on Gith
 
 To file issues, use the [Zowe Explorer issue list](https://github.com/zowe/vscode-extension-for-zowe/issues).
 
-For [instructions on how to build](https://github.com/zowe/vscode-extension-for-zowe/tree/main/packages/zowe-explorer-ftp-extension/docs/README.md) the extension, see the `docs` sub-folder.
+For [instructions on how to build](https://github.com/zowe/vscode-extension-for-zowe#build-locally).
