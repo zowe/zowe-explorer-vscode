@@ -68,7 +68,7 @@ export class PersistentFilters {
             if (this.mSearchHistory.length > this.maxSearchHistory) {
                 this.mSearchHistory.pop();
             }
-            this.updateSearchHistory().then();
+            this.updateSearchHistory();
         }
     }
 
@@ -99,7 +99,7 @@ export class PersistentFilters {
             if (this.mFileHistory.length > this.maxFileHistory) {
                 this.mFileHistory.pop();
             }
-            this.updateFileHistory().then();
+            this.updateFileHistory();
         }
     }
 
@@ -111,7 +111,7 @@ export class PersistentFilters {
             });
             // Add value to front of stack
             this.mDsTemplates.unshift(criteria);
-            this.updateDsTemplateHistory().then();
+            this.updateDsTemplateHistory();
         }
     }
 
@@ -133,7 +133,7 @@ export class PersistentFilters {
 
         // Use standard sorting
         this.mSessions.sort();
-        this.updateSessions().then();
+        this.updateSessions();
     }
 
     /*********************************************************************************************************************************************/
@@ -176,7 +176,7 @@ export class PersistentFilters {
         this.mSessions = this.mSessions.filter((element) => {
             return element.trim() !== name.trim();
         });
-        this.updateSessions().then();
+        this.updateSessions();
     }
 
     /**
@@ -198,22 +198,22 @@ export class PersistentFilters {
 
     public resetSearchHistory(): void {
         this.mSearchHistory = [];
-        this.updateSearchHistory().then();
+        this.updateSearchHistory();
     }
 
     public resetSessions(): void {
         this.mSessions = [];
-        this.updateSessions().then();
+        this.updateSessions();
     }
 
     public resetFileHistory(): void {
         this.mFileHistory = [];
-        this.updateFileHistory().then();
+        this.updateFileHistory();
     }
 
     public resetDsTemplateHistory(): void {
         this.mDsTemplates = [];
-        this.updateDsTemplateHistory().then();
+        this.updateDsTemplateHistory();
     }
 
     /*********************************************************************************************************************************************/
