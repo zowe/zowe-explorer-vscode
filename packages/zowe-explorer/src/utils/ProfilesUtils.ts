@@ -253,7 +253,8 @@ export class ProfilesUtils {
     public static async getProfileInfo(envTheia: boolean): Promise<imperative.ProfileInfo> {
         ZoweLogger.trace("ProfilesUtils.getProfileInfo called.");
         const credentialManagerMap = ProfilesUtils.getCredentialManagerOverride();
-        const customCredentialManagerExtension = vscode.extensions.getExtension(credentialManagerMap?.credMgrZEName ?? "");
+        const customCredentialManagerExtension =
+            credentialManagerMap?.credMgrZEName && vscode.extensions.getExtension(credentialManagerMap.credMgrZEName);
         const settingEnabled: boolean = SettingsConfig.getDirectValue(globals.SETTINGS_SECURE_CREDENTIALS_ENABLED);
         if (credentialManagerMap && customCredentialManagerExtension && settingEnabled) {
             ZoweLogger.info(localize("ProfilesUtils.getProfileInfo.usingCustom", "Custom credential manager found, attempting to activate."));
@@ -376,19 +377,10 @@ export class ProfilesUtils {
 
     public static writeOverridesFile(): void {
         ZoweLogger.trace("ProfilesUtils.writeOverridesFile called.");
-        let fd: number;
-        let fileContent: string;
         const settingsFile = path.join(getZoweDir(), "settings", "imperative.json");
+        const fd = fs.openSync(settingsFile, "w+");
         try {
-            fd = fs.openSync(settingsFile, "w+");
-            fileContent = fs.readFileSync(fd, "utf-8");
-        } catch {
-            // If reading the file failed because it does not exist, then create it
-            // This should never fail, unless file system is read-only or the file
-            // was created by another process after first openSync call
-            fd = fs.openSync(settingsFile, "wx");
-        }
-        try {
+            let fileContent = fs.readFileSync(fd, "utf-8");
             let settings: any;
             if (fileContent) {
                 try {
@@ -400,11 +392,10 @@ export class ProfilesUtils {
                         );
                     }
                 }
-                if (settings && settings?.overrides && settings?.overrides?.CredentialManager !== globals.PROFILE_SECURITY) {
-                    settings.overrides.CredentialManager = globals.PROFILE_SECURITY;
-                } else {
+                if (!settings || !settings?.overrides || settings?.overrides?.CredentialManager === globals.PROFILE_SECURITY) {
                     return;
                 }
+                settings.overrides.CredentialManager = globals.PROFILE_SECURITY;
             } else {
                 settings = { overrides: { CredentialManager: globals.PROFILE_SECURITY } };
             }

@@ -346,7 +346,6 @@ export async function setGlobalSecurityValue(credentialManager?: string): Promis
     const settingEnabled: boolean = SettingsConfig.getDirectValue(this.SETTINGS_SECURE_CREDENTIALS_ENABLED);
     if (settingEnabled && credentialManager) {
         PROFILE_SECURITY = credentialManager;
-        await SettingsConfig.setDirectValue(this.SETTINGS_SECURE_CREDENTIALS_ENABLED, true, vscode.ConfigurationTarget.Global);
         return;
     }
     if (ISTHEIA && !SettingsConfig.isConfigSettingSetByUser(this.SETTINGS_SECURE_CREDENTIALS_ENABLED)) {
