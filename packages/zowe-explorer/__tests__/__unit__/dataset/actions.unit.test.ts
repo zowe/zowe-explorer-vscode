@@ -3003,12 +3003,13 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         });
     });
 
-    it("Tests that user can edit the attributes", async () => {
+    it("Tests that user can edit the attributes and save as new template", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
 
         blockMocks.testDatasetTree.createFilterString.mockReturnValue("NODE1,NODE.*");
         blockMocks.testDatasetTree.getSearchHistory.mockReturnValue([null]);
+
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         const createDataSetSpy = jest.spyOn(blockMocks.mvsApi, "createDataSet");
         createDataSetSpy.mockReset();
@@ -3035,6 +3036,9 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         mocked(vscode.window.createQuickPick).mockReturnValueOnce(quickPickContent);
         jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce({ label: "Allocate Data Set" });
 
+        const templateSpy = jest.spyOn(Gui, "infoMessage").mockResolvedValueOnce("Save");
+        mocked(vscode.window.showInputBox).mockResolvedValueOnce("TestTemplate");
+        const addTempSpy = jest.spyOn(blockMocks.testDatasetTree, "addDsTemplate");
         await dsActions.createFile(node, blockMocks.testDatasetTree);
 
         expect(createDataSetSpy).toHaveBeenCalledWith(zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, "TEST", {
@@ -3045,6 +3049,10 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
             primary: 1,
             recfm: "FB",
         });
+        expect(templateSpy).toBeCalled();
+        expect(addTempSpy).toBeCalled();
+        templateSpy.mockClear();
+        addTempSpy.mockClear();
     });
 });
 

@@ -836,7 +836,7 @@ async function saveDsTemplate(datasetProvider: api.IZoweTree<api.IZoweDatasetTre
                 return;
             }
             dsPropsForAPI.name = templateName;
-            await datasetProvider.addDsTemplate(dsPropsForAPI);
+            datasetProvider.addDsTemplate(dsPropsForAPI);
         }
     });
 }
