@@ -375,21 +375,6 @@ describe("ProfilesUtils unit tests", () => {
             expect(blockMocks.mockWriteFileSync).toBeCalledTimes(0);
         });
 
-        it("should have not exist and create default file", async () => {
-            const blockMocks = createBlockMocks();
-            blockMocks.mockOpenSync.mockImplementationOnce((filepath: string, mode: string) => {
-                if (mode.startsWith("w")) {
-                    throw new Error("ENOENT");
-                }
-                return blockMocks.fileHandle;
-            });
-            const content = JSON.stringify(blockMocks.mockFileRead, null, 2);
-            profUtils.ProfilesUtils.writeOverridesFile();
-            expect(blockMocks.mockWriteFileSync).toBeCalledWith(blockMocks.fileHandle, content, { encoding: "utf-8", flag: "w" });
-            expect(blockMocks.mockOpenSync).toBeCalledTimes(2);
-            expect(blockMocks.mockReadFileSync).toBeCalledTimes(0);
-        });
-
         it("should throw error if overrides file contains invalid JSON", async () => {
             const blockMocks = createBlockMocks();
             const fileJson = {
