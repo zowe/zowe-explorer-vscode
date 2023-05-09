@@ -195,7 +195,18 @@ export class SettingsConfig {
         });
         if (vscodePersistentSettings.length > 0) {
             vscodePersistentSettings.forEach((setting) => {
+                ZoweLogger.debug(
+                    localize(
+                        "SettingsConfig.migrateToLocalStorage.migrating",
+                        "Migrating setting {0} from VS Code user settings to Local Storage.",
+                        setting
+                    )
+                );
                 ZoweLocalStorage.setValue(setting, SettingsConfig.configurations.inspect(setting).globalValue);
+                ZoweLogger.debug(
+                    localize("SettingsConfig.migrateToLocalStorage.deleting", "Removing setting {0} from VS Code user settings.", setting)
+                );
+                SettingsConfig.setDirectValue(setting, undefined, vscode.ConfigurationTarget.Global);
             });
             ZoweLocalStorage.setValue(globals.SETTINGS_LOCAL_STORAGE_MIGRATED, true);
             await SettingsConfig.promptReload();
