@@ -47,7 +47,7 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 let typeEnum: zowe.CreateDataSetTypeEnum;
 // Make a nice new mutable array for the DS properties
-const newDSProperties = JSON.parse(JSON.stringify(globals.DATA_SET_PROPERTIES));
+let newDSProperties;
 
 /**
  * Localized strings that are used multiple times within the file
@@ -543,6 +543,7 @@ export async function createFile(node: api.IZoweDatasetTreeNode, datasetProvider
     if (Profiles.getInstance().validProfile === api.ValidProfileEnum.INVALID) {
         return;
     }
+    newDSProperties = JSON.parse(JSON.stringify(globals.DATA_SET_PROPERTIES));
     // 1st step: Get data set name
     let dsName = await getDataSetName();
     if (!dsName) {
@@ -583,7 +584,7 @@ export async function createFile(node: api.IZoweDatasetTreeNode, datasetProvider
     const isMatch = compareDsProperties(type, datasetProvider);
     // Format properties for use by API
     const dsPropsForAPI = {};
-    newDSProperties.forEach((property) => {
+    newDSProperties?.forEach((property) => {
         if (property.value) {
             if (property.key === `dsName`) {
                 dsName = property.value;
@@ -605,8 +606,8 @@ export async function createFile(node: api.IZoweDatasetTreeNode, datasetProvider
 async function handleUserSelection(): Promise<string> {
     // Create the array of items in the quickpick list
     const qpItems = [];
-    qpItems.push(new FilterItem({ text: ` + Allocate Data Set`, show: true }));
-    newDSProperties.forEach((prop) => {
+    qpItems.push(new FilterItem({ text: localizedStrings.allocString, show: true }));
+    newDSProperties?.forEach((prop) => {
         qpItems.push(new FilterItem({ text: prop.label, description: prop.value, show: true }));
     });
 
@@ -633,8 +634,8 @@ async function handleUserSelection(): Promise<string> {
     const pattern = choice2.label;
     const showPatternOptions = async (): Promise<void> => {
         const options: vscode.InputBoxOptions = {
-            value: newDSProperties.find((prop) => prop.label === pattern).value,
-            placeHolder: newDSProperties.find((prop) => prop.label === pattern).placeHolder,
+            value: newDSProperties?.find((prop) => prop.label === pattern)?.value,
+            placeHolder: newDSProperties?.find((prop) => prop.label === pattern)?.placeHolder,
         };
         newDSProperties.find((prop) => prop.label === pattern).value = await api.Gui.showInputBox(options);
     };
@@ -642,8 +643,8 @@ async function handleUserSelection(): Promise<string> {
     if (pattern) {
         // Parse pattern for selected attribute
         switch (pattern) {
-            case " + Allocate Data Set":
-                return new Promise((resolve) => resolve(` + Allocate Data Set`));
+            case localizedStrings.allocString:
+                return new Promise((resolve) => resolve(localizedStrings.allocString));
             default:
                 await showPatternOptions();
                 break;
@@ -710,7 +711,7 @@ function compareDsProperties(type: string, datasetProvider: api.IZoweTree<api.IZ
     if (!propertiesFromDsType) {
         propertiesFromDsType = getDefaultDsTypeProperties(type);
     }
-    newDSProperties.forEach((property) => {
+    newDSProperties?.forEach((property) => {
         Object.keys(propertiesFromDsType).forEach((typeProperty) => {
             if (typeProperty === property.key) {
                 if (property.value !== propertiesFromDsType[typeProperty].toString()) {
@@ -740,7 +741,7 @@ function getDsProperties(type: string, datasetProvider: api.IZoweTree<api.IZoweD
     if (!propertiesFromDsType) {
         propertiesFromDsType = getDefaultDsTypeProperties(type);
     }
-    newDSProperties.forEach((property) => {
+    newDSProperties?.forEach((property) => {
         Object.keys(propertiesFromDsType).forEach((typeProperty) => {
             if (typeProperty === property.key) {
                 property.value = propertiesFromDsType[typeProperty].toString();
