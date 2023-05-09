@@ -103,7 +103,7 @@ export class PersistentFilters {
         }
     }
 
-    public addDsTemplateHistory(criteria: api.dsAlloc): void {
+    public async addDsTemplateHistory(criteria: api.dsAlloc): Promise<void> {
         if (criteria) {
             // Remove any entries that match
             this.mDsTemplates = this.mDsTemplates.filter((element) => {
@@ -111,7 +111,7 @@ export class PersistentFilters {
             });
             // Add value to front of stack
             this.mDsTemplates.unshift(criteria);
-            this.updateDsTemplateHistory();
+            await this.updateDsTemplateHistory();
         }
     }
 
@@ -211,9 +211,9 @@ export class PersistentFilters {
         this.updateFileHistory();
     }
 
-    public resetDsTemplateHistory(): void {
+    public async resetDsTemplateHistory(): Promise<void> {
         this.mDsTemplates = [];
-        this.updateDsTemplateHistory();
+        await this.updateDsTemplateHistory();
     }
 
     /*********************************************************************************************************************************************/

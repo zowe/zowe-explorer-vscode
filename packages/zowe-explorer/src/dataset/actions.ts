@@ -642,12 +642,10 @@ async function handleUserSelection(): Promise<string> {
 
     if (pattern) {
         // Parse pattern for selected attribute
-        switch (pattern) {
-            case localizedStrings.allocString:
-                return new Promise((resolve) => resolve(localizedStrings.allocString));
-            default:
-                await showPatternOptions();
-                break;
+        if (pattern === localizedStrings.allocString) {
+            return Promise.resolve(localizedStrings.allocString);
+        } else {
+            await showPatternOptions();
         }
         return Promise.resolve(handleUserSelection());
     }
