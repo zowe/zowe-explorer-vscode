@@ -6,7 +6,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
-- Added option to save unique data set attributes as a template after creation for future use. [#1425](https://github.com/zowe/vscode-extension-for-zowe/issues/1425)
+- Added option to save unique data set attributes as a template after allocation for future use. [#1425](https://github.com/zowe/vscode-extension-for-zowe/issues/1425)
 
 ### Bug fixes
 

@@ -15,7 +15,7 @@ export interface DataSetAllocTemplate extends zowe.ICreateDataSetOptions {
     /**
      * Name of data creation template
      */
-    name: string;
+    name?: string;
 }
 export type dsAlloc = DataSetAllocTemplate;
 

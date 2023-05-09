@@ -6,6 +6,9 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### New features and enhancements
 
+- Added new optional IZoweTree functions, `addDsTemplate` and `getDSTemplates`.
+- Added a new interface `DataSetAllocTemplate` that extends `@zowe/cli.ICreateDataSetOptions` adding a name field for data set allocation templates, and a new type `dsAlloc` that uses the new interface.
+
 ### Bug fixes
 
 ## `2.8.0`

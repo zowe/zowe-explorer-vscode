@@ -702,7 +702,7 @@ function compareDsProperties(type: string, datasetProvider: api.IZoweTree<api.IZ
     let propertiesFromDsType: api.dsAlloc;
     // Look for template
     templates?.forEach((template) => {
-        if (type === template.name) {
+        if (type === template?.name) {
             propertiesFromDsType = template;
         }
     });
@@ -727,7 +727,7 @@ function getDsProperties(type: string, datasetProvider: api.IZoweTree<api.IZoweD
     let propertiesFromDsType: api.dsAlloc;
     // Look for template
     templates?.forEach((template) => {
-        if (type === template.name) {
+        if (type === template?.name) {
             if (template.dsorg === "PS") {
                 typeEnum = 4;
             } else {

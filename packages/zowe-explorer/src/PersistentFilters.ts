@@ -68,7 +68,7 @@ export class PersistentFilters {
             if (this.mSearchHistory.length > this.maxSearchHistory) {
                 this.mSearchHistory.pop();
             }
-            this.updateSearchHistory();
+            this.updateSearchHistory().then();
         }
     }
 
@@ -99,11 +99,11 @@ export class PersistentFilters {
             if (this.mFileHistory.length > this.maxFileHistory) {
                 this.mFileHistory.pop();
             }
-            this.updateFileHistory();
+            this.updateFileHistory().then();
         }
     }
 
-    public async addDsTemplateHistory(criteria: api.dsAlloc): Promise<void> {
+    public addDsTemplateHistory(criteria: api.dsAlloc): void {
         if (criteria) {
             // Remove any entries that match
             this.mDsTemplates = this.mDsTemplates.filter((element) => {
@@ -111,7 +111,7 @@ export class PersistentFilters {
             });
             // Add value to front of stack
             this.mDsTemplates.unshift(criteria);
-            await this.updateDsTemplateHistory();
+            this.updateDsTemplateHistory().then();
         }
     }
 
@@ -133,7 +133,7 @@ export class PersistentFilters {
 
         // Use standard sorting
         this.mSessions.sort();
-        this.updateSessions();
+        this.updateSessions().then();
     }
 
     /*********************************************************************************************************************************************/
@@ -176,7 +176,7 @@ export class PersistentFilters {
         this.mSessions = this.mSessions.filter((element) => {
             return element.trim() !== name.trim();
         });
-        this.updateSessions();
+        this.updateSessions().then();
     }
 
     /**
@@ -198,22 +198,22 @@ export class PersistentFilters {
 
     public resetSearchHistory(): void {
         this.mSearchHistory = [];
-        this.updateSearchHistory();
+        this.updateSearchHistory().then();
     }
 
     public resetSessions(): void {
         this.mSessions = [];
-        this.updateSessions();
+        this.updateSessions().then();
     }
 
     public resetFileHistory(): void {
         this.mFileHistory = [];
-        this.updateFileHistory();
+        this.updateFileHistory().then();
     }
 
-    public async resetDsTemplateHistory(): Promise<void> {
+    public resetDsTemplateHistory(): void {
         this.mDsTemplates = [];
-        await this.updateDsTemplateHistory();
+        this.updateDsTemplateHistory().then();
     }
 
     /*********************************************************************************************************************************************/
