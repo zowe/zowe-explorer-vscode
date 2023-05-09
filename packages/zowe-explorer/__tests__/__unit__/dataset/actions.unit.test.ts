@@ -3054,6 +3054,49 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         templateSpy.mockClear();
         addTempSpy.mockClear();
     });
+    it("Checking dataset creation of saved template", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        const quickPickContent = createQuickPickContent("", [], "");
+        mocked(vscode.window.createQuickPick).mockReturnValueOnce(quickPickContent);
+        blockMocks.testDatasetTree.createFilterString.mockReturnValue("test");
+        blockMocks.testDatasetTree.getSearchHistory.mockReturnValue([]);
+        blockMocks.testDatasetTree.getDsTemplates.mockReturnValue([
+            {
+                name: "TEMPTST",
+                alcunit: "CYL",
+                blksize: 6160,
+                dsorg: "PO",
+                lrecl: 80,
+                primary: 1,
+                recfm: "FB",
+            },
+        ]);
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        mocked(vscode.window.showInputBox).mockImplementation((options) => {
+            options.validateInput("test");
+            return Promise.resolve("test");
+        });
+        mocked(vscode.window.showQuickPick).mockResolvedValue("Allocate Data Set" as any);
+        const createDataSetSpy = jest.spyOn(blockMocks.mvsApi, "createDataSet");
+        createDataSetSpy.mockReset();
+        const node = new ZoweDatasetNode("HLQ.TEST.TO.NODE", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null);
+        node.contextValue = globals.DS_DS_CONTEXT;
+
+        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("TEMPTST" as any);
+        await dsActions.createFile(node, blockMocks.testDatasetTree);
+
+        expect(createDataSetSpy).toHaveBeenCalledWith(zowe.CreateDataSetTypeEnum.DATA_SET_PARTITIONED, "TEST", {
+            alcunit: "CYL",
+            blksize: 6160,
+            dsorg: "PO",
+            lrecl: 80,
+            primary: 1,
+            recfm: "FB",
+            responseTimeout: undefined,
+        });
+    });
 });
 
 describe("Dataset Actions Unit Tests - Function openPS", () => {
