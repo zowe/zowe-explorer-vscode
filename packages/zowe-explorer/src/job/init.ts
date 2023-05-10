@@ -129,10 +129,16 @@ export async function initJobsProvider(context: vscode.ExtensionContext): Promis
         vscode.commands.registerCommand("zowe.jobs.removeFavProfile", (node): void => jobsProvider.removeFavProfile(node.label, true))
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.jobs.disableValidation", (node) => Profiles.getInstance().disableValidation(node))
+        vscode.commands.registerCommand("zowe.jobs.disableValidation", (node) => {
+            Profiles.getInstance().disableValidation(node);
+            jobsProvider.refreshElement(node);
+        })
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.jobs.enableValidation", (node) => Profiles.getInstance().enableValidation(node))
+        vscode.commands.registerCommand("zowe.jobs.enableValidation", (node) => {
+            Profiles.getInstance().enableValidation(node);
+            jobsProvider.refreshElement(node);
+        })
     );
     context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.ssoLogin", (node: IZoweTreeNode): void => jobsProvider.ssoLogin(node)));
     context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.ssoLogout", (node: IZoweTreeNode): void => jobsProvider.ssoLogout(node)));
