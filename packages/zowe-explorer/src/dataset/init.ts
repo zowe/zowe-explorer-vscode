@@ -185,9 +185,17 @@ export async function initDatasetProvider(context: vscode.ExtensionContext): Pro
         })
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.ds.disableValidation", (node) => Profiles.getInstance().disableValidation(node))
+        vscode.commands.registerCommand("zowe.ds.disableValidation", (node) => {
+            Profiles.getInstance().disableValidation(node);
+            datasetProvider.refreshElement(node);
+        })
     );
-    context.subscriptions.push(vscode.commands.registerCommand("zowe.ds.enableValidation", (node) => Profiles.getInstance().enableValidation(node)));
+    context.subscriptions.push(
+        vscode.commands.registerCommand("zowe.ds.enableValidation", (node) => {
+            Profiles.getInstance().enableValidation(node);
+            datasetProvider.refreshElement(node);
+        })
+    );
     context.subscriptions.push(vscode.commands.registerCommand("zowe.ds.ssoLogin", (node: IZoweTreeNode): void => datasetProvider.ssoLogin(node)));
     context.subscriptions.push(vscode.commands.registerCommand("zowe.ds.ssoLogout", (node: IZoweTreeNode): void => datasetProvider.ssoLogout(node)));
     context.subscriptions.push(
