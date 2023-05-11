@@ -206,6 +206,7 @@ async function createGlobalMocks() {
             "zowe.uss.pasteUssFile",
             "zowe.uss.copyUssFile",
             "zowe.jobs.zosJobsOpenspool",
+            "zowe.jobs.cancelJob",
             "zowe.jobs.deleteJob",
             "zowe.jobs.runModifyCommand",
             "zowe.jobs.runStopCommand",

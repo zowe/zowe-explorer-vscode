@@ -14,12 +14,13 @@ import * as zowe from "@zowe/cli";
 import { errorHandling } from "../utils/ProfilesUtils";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
-import { Gui, ValidProfileEnum, IZoweTree, IZoweJobTreeNode } from "@zowe/zowe-explorer-api";
+import { Gui, ValidProfileEnum, IZoweTree, IZoweJobTreeNode, IZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { Job, Spool } from "./ZoweJobNode";
 import * as nls from "vscode-nls";
 import SpoolProvider, { encodeJobFile, getSpoolFiles, matchSpool } from "../SpoolProvider";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { getDefaultUri } from "../shared/utils";
+import { isJobsSession } from "../shared/context";
 
 // Set up localization
 nls.config({
@@ -462,5 +463,57 @@ async function deleteMultipleJobs(jobs: ReadonlyArray<IZoweJobTreeNode>, jobsPro
         const errorMessages = deletionErrors.map((error) => error.message).join(", ");
         const userMessage = `There were errors during jobs deletion: ${errorMessages}`;
         await errorHandling(userMessage);
+    }
+}
+
+export async function cancelJobs(jobsProvider: IZoweTree<IZoweJobTreeNode>, nodes: IZoweJobTreeNode[]): Promise<void> {
+    if (!nodes.length) {
+        return;
+    }
+
+    // Filter out nodes that have already been cancelled
+    const filteredNodes = nodes.filter((n) => n.job == null || n.job.retcode == null || !n.job.retcode.includes("CANCEL"));
+    if (!filteredNodes.length) {
+        await Gui.showMessage(localize("cancelJobs.alreadyCancelled", "The selected jobs were already cancelled."));
+        return;
+    }
+
+    const failedJobs: { job: zowe.IJob; error: string }[] = [];
+    // Build list of common sessions from node selection
+    const sessionNodes = [];
+    for (const jobNode of nodes) {
+        const sesNode = jobNode.getSessionNode();
+
+        try {
+            const cancelled = await jobsProvider.cancel(jobNode);
+            if (!cancelled) {
+                failedJobs.push({ job: jobNode.job, error: "Job was not cancelled" });
+            } else if (!sessionNodes.includes(sesNode)) {
+                sessionNodes.push(sesNode);
+            }
+        } catch (err) {
+            if (err instanceof Error) {
+                failedJobs.push({ job: jobNode.job, error: err.message });
+            }
+        }
+    }
+
+    // Refresh unique list of sessions
+    sessionNodes.forEach((s) => jobsProvider.refreshElement(s));
+
+    if (failedJobs.length > 0) {
+        // Display any errors from the API
+        await Gui.warningMessage(
+            localize(
+                "cancelJobs.failed",
+                "One or more jobs failed to cancel: {0}",
+                failedJobs.reduce((prev, j) => prev.concat(`\n${j.job.jobname}(${j.job.jobid}): ${j.error}`), "\n")
+            ),
+            {
+                vsCodeOpts: { modal: true },
+            }
+        );
+    } else {
+        await Gui.showMessage(localize("cancelJobs.succeeded", "Cancelled selected jobs successfully."));
     }
 }

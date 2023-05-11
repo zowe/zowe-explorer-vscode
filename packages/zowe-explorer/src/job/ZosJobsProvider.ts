@@ -11,7 +11,7 @@
 
 import * as vscode from "vscode";
 import * as globals from "../globals";
-import { IJob, imperative } from "@zowe/cli";
+import { CancelJobs, GetJobs, IJob, imperative } from "@zowe/cli";
 import { Gui, ValidProfileEnum, IZoweTree, IZoweJobTreeNode, PersistenceSchemaEnum, NodeInteraction } from "@zowe/zowe-explorer-api";
 import { FilterItem, errorHandling } from "../utils/ProfilesUtils";
 import { Profiles } from "../Profiles";
@@ -265,6 +265,19 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             }
         }
         this.refresh();
+    }
+
+    public async cancel(node: IZoweJobTreeNode): Promise<boolean> {
+        if (!contextually.isJob(node)) {
+            return false;
+        }
+
+        const session = node.getSession();
+
+        // use 1.0 so that all JES subsystems are supported out-of-the-box
+        await CancelJobs.cancelJobForJob(session, node.job, "1.0");
+        const jobResult = await GetJobs.getStatusForJob(session, node.job);
+        return jobResult.retcode != null && jobResult.retcode.includes("CANCEL");
     }
 
     public async delete(node: IZoweJobTreeNode): Promise<void> {
