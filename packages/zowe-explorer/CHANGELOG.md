@@ -6,6 +6,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
+- Added "Cancel Job" feature for job nodes in Jobs tree view. [#2251](https://github.com/zowe/vscode-extension-for-zowe/issues/2251)
+
 ### Bug fixes
 
 - Fixed issue where the "Disable Validation for Profile" context menu option did not update to "Enable Validation for Profile" after use. [#1897](https://github.com/zowe/vscode-extension-for-zowe/issues/1897)
