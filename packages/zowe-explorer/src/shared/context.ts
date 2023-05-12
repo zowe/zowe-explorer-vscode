@@ -445,7 +445,7 @@ export function getBaseContext(node: TreeItem): string {
  * @return true if validation is enabled, false otherwise
  */
 export function isValidationEnabled(node: TreeItem): boolean {
-    return new RegExp("(" + globals.VALIDATE_SUFFIX + "true)").test(node.contextValue);
+    return new RegExp(globals.VALIDATE_SUFFIX).test(node.contextValue);
 }
 
 /**

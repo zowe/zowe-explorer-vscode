@@ -53,6 +53,7 @@ describe("Test src/jobs/extension", () => {
             ssoLogout: jest.fn(),
             onDidChangeConfiguration: jest.fn(),
             pollData: jest.fn(),
+            refreshElement: jest.fn(),
             cancel: jest.fn(),
         };
         const commands: IJestIt[] = [
