@@ -3226,6 +3226,51 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
 
         expect(createDataSetSpy).toBeCalledWith("Operation Cancelled");
     });
+    it("Checking opCancelled message shown when no template name supplied", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        blockMocks.testDatasetTree.createFilterString.mockReturnValue("NODE1,NODE.*");
+        blockMocks.testDatasetTree.getSearchHistory.mockReturnValue([null]);
+
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        const createDataSetSpy = jest.spyOn(blockMocks.mvsApi, "createDataSet");
+        createDataSetSpy.mockReset();
+        const node = new ZoweDatasetNode("HLQ.TEST.TO.NODE", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null);
+        node.contextValue = globals.DS_DS_CONTEXT;
+
+        // 1st step: User names DS
+        mocked(vscode.window.showInputBox).mockResolvedValueOnce("test");
+
+        // 2nd step: User selects DS type
+        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Sequential Data Set" as any);
+
+        // 3rd step: User selects Edit attributes
+        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Edit Attributes" as any);
+
+        // 4th step: User tries to edit Record Length
+        const quickPickContent = createQuickPickContent("", [], "");
+        mocked(vscode.window.createQuickPick).mockReturnValueOnce(quickPickContent);
+        const selectedItem: vscode.QuickPickItem = { label: "Allocation Unit" };
+        jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(selectedItem);
+        mocked(vscode.window.showInputBox).mockResolvedValueOnce("TRK");
+
+        // Then they try to allocate
+        mocked(vscode.window.createQuickPick).mockReturnValueOnce(quickPickContent);
+        jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce({ label: "Allocate Data Set" });
+
+        const templateSpy = jest.spyOn(Gui, "infoMessage").mockResolvedValueOnce("Save");
+        mocked(vscode.window.showInputBox).mockResolvedValueOnce(undefined);
+        const opCancelledSpy = jest.spyOn(Gui, "showMessage");
+        const addTempSpy = jest.spyOn(blockMocks.testDatasetTree, "addDsTemplate");
+        await dsActions.createFile(node, blockMocks.testDatasetTree);
+
+        expect(templateSpy).toBeCalled();
+        expect(addTempSpy).toBeCalledTimes(0);
+        expect(opCancelledSpy).toBeCalledWith("Operation Cancelled");
+        templateSpy.mockClear();
+        addTempSpy.mockClear();
+    });
 });
 
 describe("Dataset Actions Unit Tests - Function openPS", () => {
