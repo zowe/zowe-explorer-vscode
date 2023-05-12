@@ -21,7 +21,14 @@ import {
     createTextDocument,
     createInstanceOfProfile,
 } from "../../../__mocks__/mockCreators/shared";
-import { createIJobFile, createIJobObject, createJobFavoritesNode, createJobSessionNode, createJobsTree } from "../../../__mocks__/mockCreators/jobs";
+import {
+    createIJobFile,
+    createIJobObject,
+    createJobFavoritesNode,
+    createJobNode,
+    createJobSessionNode,
+    createJobsTree,
+} from "../../../__mocks__/mockCreators/jobs";
 import { createJesApi, bindJesApi } from "../../../__mocks__/mockCreators/api";
 import * as jobActions from "../../../src/job/actions";
 import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
@@ -1153,6 +1160,36 @@ describe("Jobs Actions Unit Tests - Function refreshJobsServer", () => {
         expect(blockMocks.testJobTree.refreshElement).toHaveBeenCalledWith(job);
     });
 });
+
+describe("cancelJob", () => {
+    createGlobalMocks();
+    const session = createISession();
+    const profile = createIProfile();
+    const jobSessionNode = createJobSessionNode(session, profile);
+    const jobNode = createJobNode(jobSessionNode, profile);
+    const jobsProvider = createJobsTree(session, jobNode.job, profile, createTreeView());
+
+    it("returns early if no nodes are specified", async () => {
+        await jobActions.cancelJobs(jobsProvider, []);
+        expect(Gui.showMessage).not.toHaveBeenCalled();
+    });
+
+    it("returns early if all nodes in selection have been cancelled", async () => {
+        jobNode.job.retcode = "CANCELED";
+        await jobActions.cancelJobs(jobsProvider, [jobNode]);
+        expect(Gui.showMessage).toHaveBeenCalledWith("The selected jobs were already cancelled.");
+    });
+
+    it("shows a warning message if one or more jobs failed to cancel", async () => {
+        jobNode.job.retcode = "ACTIVE";
+        jobsProvider.cancel.mockReturnValueOnce(false);
+        await jobActions.cancelJobs(jobsProvider, [jobNode]);
+        expect(Gui.warningMessage).toHaveBeenCalledWith("One or more jobs failed to cancel: \n\nTESTJOB(JOB1234): Job was not cancelled", {
+            vsCodeOpts: { modal: true },
+        });
+    });
+});
+
 describe("job deletion command", () => {
     // general mocks
     createGlobalMocks();

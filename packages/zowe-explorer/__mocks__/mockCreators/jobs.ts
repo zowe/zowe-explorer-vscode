@@ -97,6 +97,7 @@ export function createJobsTree(session: imperative.Session, iJob: IJob, profile:
         getProfiles: jest.fn(),
         getProfileName: jest.fn(),
         getSession: jest.fn(),
+        cancel: jest.fn(),
         delete: jest.fn(),
         setItem: jest.fn(),
     };
