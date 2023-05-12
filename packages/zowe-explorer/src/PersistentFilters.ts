@@ -33,7 +33,7 @@ export class PersistentFilters {
     private mSessions: string[] = [];
     private mDsTemplates: api.dsAlloc[] = [];
 
-    public constructor(schema: string, private maxSearchHistory = globals.MAX_OF_FIVE, private maxFileHistory = globals.MAX_OF_TEN) {
+    public constructor(schema: string, private maxSearchHistory = globals.MAX_SEARCH_HISTORY, private maxFileHistory = globals.MAX_FILE_HISTORY) {
         this.schema = schema;
         this.initialize();
     }
