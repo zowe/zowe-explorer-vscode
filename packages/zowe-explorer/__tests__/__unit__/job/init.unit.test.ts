@@ -19,6 +19,8 @@ import { initJobsProvider } from "../../../src/job/init";
 import { Profiles } from "../../../src/Profiles";
 import { IJestIt, ITestContext, processSubscriptions, spyOnSubscriptions } from "../../__common__/testUtils";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
+import { createISession, createIProfile } from "../../../__mocks__/mockCreators/shared";
+import { createJobNode, createJobSessionNode } from "../../../__mocks__/mockCreators/jobs";
 
 describe("Test src/jobs/extension", () => {
     describe("initJobsProvider", () => {
@@ -30,6 +32,13 @@ describe("Test src/jobs/extension", () => {
             value: { test: "job" },
             _: { _: "_" },
         };
+        const exampleData: Record<string, any> = {
+            profile: createIProfile(),
+            session: createISession(),
+        };
+        exampleData["jobSession"] = createJobSessionNode(exampleData.session, exampleData.profile);
+        exampleData["job"] = createJobNode(exampleData["jobSession"], exampleData.profile);
+
         const jobsProvider: { [key: string]: jest.Mock } = {
             createZoweSchema: jest.fn(),
             createZoweSession: jest.fn(),
@@ -44,6 +53,7 @@ describe("Test src/jobs/extension", () => {
             ssoLogout: jest.fn(),
             onDidChangeConfiguration: jest.fn(),
             pollData: jest.fn(),
+            cancel: jest.fn(),
         };
         const commands: IJestIt[] = [
             {
@@ -204,6 +214,11 @@ describe("Test src/jobs/extension", () => {
                 name: "zowe.jobs.stopPolling",
                 mock: [{ spy: jest.spyOn(jobsProvider, "pollData"), arg: [test.value] }],
             },
+            {
+                name: "zowe.jobs.cancelJob",
+                mock: [{ spy: jest.spyOn(jobsProvider, "cancel"), arg: [exampleData.job] }],
+                parm: [exampleData.job],
+            },
         ];
 
         beforeAll(async () => {
@@ -217,6 +232,7 @@ describe("Test src/jobs/extension", () => {
             jest.spyOn(sharedExtension, "initSubscribers").mockImplementation(jest.fn());
             Object.defineProperty(vscode.commands, "registerCommand", { value: registerCommand });
             Object.defineProperty(vscode.workspace, "onDidChangeConfiguration", { value: onDidChangeConfiguration });
+            Object.defineProperty(vscode.window, "showWarningMessage", { value: onDidChangeConfiguration });
             Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
 
             spyCreateJobsTree.mockResolvedValue(jobsProvider as any);
