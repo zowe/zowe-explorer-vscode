@@ -1153,7 +1153,6 @@ describe("Jobs Actions Unit Tests - Function refreshJobsServer", () => {
         expect(blockMocks.testJobTree.refreshElement).toHaveBeenCalledWith(job);
     });
 });
-
 describe("job deletion command", () => {
     // general mocks
     createGlobalMocks();
