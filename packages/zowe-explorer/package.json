@@ -1304,11 +1304,6 @@
           "group": "099_zowe_jobsModification"
         },
         {
-          "when": "view == zowe.jobs.explorer && viewItem =~ /^job.*/",
-          "command": "zowe.jobs.cancelJob",
-          "group": "099_zowe_jobsModification"
-        },
-        {
           "when": "view == zowe.jobs.explorer && viewItem =~ /_validate/ && !listMultiSelection",
           "command": "zowe.jobs.disableValidation",
           "group": "098_zowe_jobsProfileAuthentication@3"
