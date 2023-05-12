@@ -1188,6 +1188,13 @@ describe("cancelJob", () => {
             vsCodeOpts: { modal: true },
         });
     });
+    
+    it("shows a message confirming the jobs were cancelled", async () => {
+        jobNode.job.retcode = "ACTIVE";
+        jobsProvider.cancel.mockReturnValueOnce(true);
+        await jobActions.cancelJobs(jobsProvider, [jobNode]);
+        expect(Gui.showMessage).toHaveBeenCalledWith("Cancelled selected jobs successfully.");
+    });
 });
 
 describe("job deletion command", () => {
