@@ -225,13 +225,12 @@ describe("ZoweJobNode unit tests - Function addSession", () => {
 
     it("Tests that addSession adds the session to the tree with disabled global setting", async () => {
         const globalMocks = await createGlobalMocks();
-        globalMocks.mockProfileInstance.mockDisableValidationContext =
-            globalMocks.testJobsProvider.mSessionNodes[1].contextValue += `_validate=false`;
+        globalMocks.mockProfileInstance.mockDisableValidationContext = globalMocks.testJobsProvider.mSessionNodes[1].contextValue += `_noValidate`;
         await globalMocks.testJobsProvider.addSession("sestest");
 
         expect(globalMocks.testJobsProvider.mSessionNodes[1]).toBeDefined();
         expect(globalMocks.testJobsProvider.mSessionNodes[1].label).toEqual("sestest");
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].contextValue).toContain(`${globals.VALIDATE_SUFFIX}false`);
+        expect(globalMocks.testJobsProvider.mSessionNodes[1].contextValue).toContain(globals.NO_VALIDATE_SUFFIX);
     });
 });
 

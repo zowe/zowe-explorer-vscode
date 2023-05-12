@@ -1466,10 +1466,17 @@ describe("Profiles Unit Tests - function disableValidationContext", () => {
             globalMocks.testSession,
             globalMocks.testProfile
         );
-        testNode.contextValue = globals.VALIDATE_SUFFIX + "true";
-        const expectNode = testNode;
-        expectNode.contextValue = globals.VALIDATE_SUFFIX + "false";
-        await expect(Profiles.getInstance().disableValidationContext(testNode)).toEqual(expectNode);
+
+        // Mimic scenario for toggling validation (branch 1)
+        testNode.contextValue = globals.VALIDATE_SUFFIX;
+        await Profiles.getInstance().disableValidationContext(testNode);
+        expect(testNode.contextValue).toContain(globals.NO_VALIDATE_SUFFIX);
+
+        // Mimic scenario where validation is already disabled, but function was called again (branch 2)
+        const prevContext = testNode.contextValue;
+        await Profiles.getInstance().disableValidationContext(testNode);
+        expect(prevContext).toBe(testNode.contextValue);
+
         expect(spy).toBeCalled();
         spy.mockClear();
     });
@@ -1486,10 +1493,16 @@ describe("Profiles Unit Tests - function enableValidationContext", () => {
             globalMocks.testSession,
             globalMocks.testProfile
         );
-        testNode.contextValue = globals.VALIDATE_SUFFIX + "false";
-        const expectedNode = testNode;
-        expectedNode.contextValue = globals.VALIDATE_SUFFIX + "true";
-        await expect(Profiles.getInstance().enableValidationContext(testNode)).toEqual(expectedNode);
+        // Mimic scenario for toggling validation (branch 1)
+        testNode.contextValue = globals.NO_VALIDATE_SUFFIX;
+        await Profiles.getInstance().enableValidationContext(testNode);
+        expect(testNode.contextValue).toContain(globals.VALIDATE_SUFFIX);
+
+        // Mimic scenario where validation is already enabled, but function was called again (branch 2)
+        const prevContext = testNode.contextValue;
+        await Profiles.getInstance().enableValidationContext(testNode);
+        expect(prevContext).toBe(testNode.contextValue);
+
         expect(spy).toBeCalled();
         spy.mockClear();
     });
