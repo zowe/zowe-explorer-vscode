@@ -502,3 +502,16 @@ const originalGetDirectValue = SettingsConfig.getDirectValue;
 export function createGetConfigMock(settings: { [key: string]: any }) {
     return jest.fn((key: string) => settings[key] ?? originalGetDirectValue(key));
 }
+
+export function createOutputChannel() {
+    return {
+        append: jest.fn(),
+        name: "Zowe Explorer",
+        appendLine: jest.fn(),
+        clear: jest.fn(),
+        show: jest.fn(),
+        hide: jest.fn(),
+        dispose: jest.fn(),
+        replace: jest.fn(),
+    } as vscode.OutputChannel;
+}

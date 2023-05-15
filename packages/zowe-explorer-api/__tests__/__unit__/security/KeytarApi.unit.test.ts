@@ -25,9 +25,9 @@ describe("KeytarApi", () => {
 
     it("should initialize Imperative credential manager", async () => {
         isCredsSecuredSpy.mockReturnValueOnce(true);
-        (getSecurityModulesSpy as any).mockReturnValueOnce(true);
+        getSecurityModulesSpy.mockReturnValueOnce({} as NodeModule);
         credMgrInitializeSpy.mockResolvedValueOnce();
-        await new KeytarApi(undefined as any).activateKeytar(false, false);
+        await new KeytarApi(undefined as unknown as imperative.Logger).activateKeytar(false, false);
         expect(isCredsSecuredSpy).toBeCalledTimes(1);
         expect(getSecurityModulesSpy).toBeCalledTimes(1);
         expect(credMgrInitializeSpy).toBeCalledTimes(1);
@@ -35,7 +35,7 @@ describe("KeytarApi", () => {
 
     it("should do nothing if secure credential plugin is not active", async () => {
         isCredsSecuredSpy.mockReturnValueOnce(false);
-        await new KeytarApi(undefined as any).activateKeytar(false, false);
+        await new KeytarApi(undefined as unknown as imperative.Logger).activateKeytar(false, false);
         expect(isCredsSecuredSpy).toBeCalledTimes(1);
         expect(getSecurityModulesSpy).not.toBeCalled();
         expect(credMgrInitializeSpy).not.toBeCalled();
@@ -43,8 +43,8 @@ describe("KeytarApi", () => {
 
     it("should do nothing if API has already been initialized", async () => {
         isCredsSecuredSpy.mockReturnValueOnce(true);
-        (getSecurityModulesSpy as any).mockReturnValueOnce(true);
-        await new KeytarApi(undefined as any).activateKeytar(true, false);
+        getSecurityModulesSpy.mockReturnValueOnce({} as NodeModule);
+        await new KeytarApi(undefined as unknown as imperative.Logger).activateKeytar(true, false);
         expect(isCredsSecuredSpy).toBeCalledTimes(1);
         expect(getSecurityModulesSpy).toBeCalledTimes(1);
         expect(credMgrInitializeSpy).not.toBeCalled();
@@ -52,8 +52,8 @@ describe("KeytarApi", () => {
 
     it("should do nothing if Keytar module is missing", async () => {
         isCredsSecuredSpy.mockReturnValueOnce(true);
-        (getSecurityModulesSpy as any).mockReturnValueOnce(false);
-        await new KeytarApi(undefined as any).activateKeytar(false, false);
+        getSecurityModulesSpy.mockReturnValueOnce(undefined);
+        await new KeytarApi(undefined as unknown as imperative.Logger).activateKeytar(false, false);
         expect(isCredsSecuredSpy).toBeCalledTimes(1);
         expect(getSecurityModulesSpy).toBeCalledTimes(1);
         expect(credMgrInitializeSpy).not.toBeCalled();

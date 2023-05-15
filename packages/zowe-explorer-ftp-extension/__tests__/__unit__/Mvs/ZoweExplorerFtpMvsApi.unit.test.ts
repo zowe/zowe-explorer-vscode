@@ -22,23 +22,28 @@ import { Gui } from "@zowe/zowe-explorer-api";
 
 // two methods to mock modules: create a __mocks__ file for zowe-explorer-api.ts and direct mock for extension.ts
 jest.mock("../../../__mocks__/@zowe/zowe-explorer-api.ts");
-Gui.errorMessage = jest.fn();
 jest.mock("../../../src/extension.ts");
 jest.mock("vscode");
 const stream = require("stream");
-// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,@typescript-eslint/no-unsafe-call
+
 const readableStream = stream.Readable.from([]);
 const fs = require("fs");
-// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+
 fs.createReadStream = jest.fn().mockReturnValue(readableStream);
 const MvsApi = new FtpMvsApi();
 
 describe("FtpMvsApi", () => {
+    const errorMessageSpy = jest.spyOn(Gui, "errorMessage").mockImplementation();
+
     beforeAll(() => {
         MvsApi.checkedProfile = jest.fn().mockReturnValue({ message: "success", type: "zftp", failNotFound: false });
         MvsApi.ftpClient = jest.fn().mockReturnValue({ host: "", user: "", password: "", port: "" });
         MvsApi.releaseConnection = jest.fn();
         sessionMap.get = jest.fn().mockReturnValue({ mvsListConnection: { connected: true } });
+    });
+
+    afterEach(() => {
+        jest.clearAllMocks();
     });
 
     it("should list datasets.", async () => {
@@ -51,7 +56,7 @@ describe("FtpMvsApi", () => {
             filter: "IBMUSER",
         };
         const result = await MvsApi.dataSet(mockParams.filter);
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+
         expect(result.apiResponse.items[0].dsname).toContain("IBMUSER.DS1");
         expect(DataSetUtils.listDataSets).toBeCalledTimes(1);
         expect(MvsApi.releaseConnection).toHaveBeenCalledTimes(0);
@@ -64,7 +69,7 @@ describe("FtpMvsApi", () => {
             dataSetName: "IBMUSER.DS1",
         };
         const result = await MvsApi.allMembers(mockParams.dataSetName);
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+
         expect(result.apiResponse.items[0].member).toContain("M1");
         expect(DataSetUtils.listMembers).toBeCalledTimes(1);
         expect(MvsApi.releaseConnection).toBeCalled();
@@ -83,17 +88,17 @@ describe("FtpMvsApi", () => {
             },
         };
         const result = await MvsApi.getContents(mockParams.dataSetName, mockParams.options);
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+
         expect(result.apiResponse.etag).toHaveLength(40);
         expect(DataSetUtils.downloadDataSet).toBeCalledTimes(1);
         expect(MvsApi.releaseConnection).toBeCalled();
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,@typescript-eslint/no-unsafe-call
+
         expect(response._readableState.buffer.head.data.toString()).toContain("Hello world");
     });
 
     it("should upload content to dataset.", async () => {
         const localFile = tmp.tmpNameSync({ tmpdir: "/tmp" });
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,@typescript-eslint/no-unsafe-call
+
         fs.writeFileSync(localFile, "hello");
         const response = TestUtils.getSingleLineStream();
         const response2 = [{ dsname: "IBMUSER.DS2", dsorg: "PS", lrecl: 2 }];
@@ -176,7 +181,7 @@ describe("FtpMvsApi", () => {
         try {
             await MvsApi.getContents(mockParams.dataSetName, mockParams.options);
         } catch (err) {
-            expect(Gui.errorMessage).toHaveBeenCalledWith("Could not get a valid FTP connection.", {
+            expect(errorMessageSpy).toHaveBeenCalledWith("Could not get a valid FTP connection.", {
                 logger: ZoweLogger,
             });
         }
@@ -209,33 +214,28 @@ describe("FtpMvsApi", () => {
         expect(MvsApi.releaseConnection).toBeCalled();
     });
 
-    it("should give error copy datasets.", async () => {
-        try {
-            await MvsApi.copyDataSet(null, null);
-        } catch (error) {
-            // do nth
-        }
-        const copySpy = jest.spyOn(Gui, "errorMessage");
-        expect(copySpy).toHaveBeenCalled();
+    it("should throw an error when copyDataSet is called", async () => {
+        await expect(MvsApi.copyDataSet(null, null)).rejects.toThrowError();
+        expect(errorMessageSpy).toBeCalled();
     });
 
     it("should throw an error when hMigrateDataSet is called", async () => {
-        jest.spyOn(Gui, "errorMessage").mockImplementation();
         await expect(MvsApi.hMigrateDataSet("test")).rejects.toThrowError();
+        expect(errorMessageSpy).toBeCalled();
     });
 
     it("should throw an error when hRecallDataSet is called", async () => {
-        jest.spyOn(Gui, "errorMessage").mockImplementation();
         await expect(MvsApi.hRecallDataSet("test")).rejects.toThrowError();
+        expect(errorMessageSpy).toBeCalled();
     });
 
     it("should throw an error when allocateLikeDataset is called", async () => {
-        jest.spyOn(Gui, "errorMessage").mockImplementation();
         await expect(MvsApi.allocateLikeDataSet("test", "test2")).rejects.toThrowError();
+        expect(errorMessageSpy).toBeCalled();
     });
 
     it("should throw an error when copyDataSetMember is called", async () => {
-        jest.spyOn(Gui, "errorMessage").mockImplementation();
         await expect(MvsApi.copyDataSetMember({} as any, {} as any)).rejects.toThrowError();
+        expect(errorMessageSpy).toBeCalled();
     });
 });

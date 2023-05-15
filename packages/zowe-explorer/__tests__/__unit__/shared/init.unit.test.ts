@@ -15,7 +15,7 @@ import * as refreshActions from "../../../src/shared/refresh";
 import * as sharedActions from "../../../src/shared/actions";
 import * as sharedExtension from "../../../src/shared/init";
 import { Profiles } from "../../../src/Profiles";
-import * as profileUtils from "../../../src/utils/ProfilesUtils";
+import * as profUtils from "../../../src/utils/ProfilesUtils";
 import * as tempFolder from "../../../src/utils/TempFolder";
 import * as zowe from "@zowe/cli";
 import { IJestIt, ITestContext, processSubscriptions, spyOnSubscriptions } from "../../__common__/testUtils";
@@ -23,6 +23,7 @@ import { TsoCommandHandler } from "../../../src/command/TsoCommandHandler";
 import { MvsCommandHandler } from "../../../src/command/MvsCommandHandler";
 import { saveFile } from "../../../src/dataset/actions";
 import { saveUSSFile } from "../../../src/uss/actions";
+import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 import { ZoweSaveQueue } from "../../../src/abstract/ZoweSaveQueue";
 
 describe("Test src/shared/extension", () => {
@@ -35,26 +36,37 @@ describe("Test src/shared/extension", () => {
         };
         const test: ITestContext = {
             context: { subscriptions: [] },
-            value: { test: "shared", providers: { ds: "ds", uss: "uss", job: "job" }, affectsConfiguration: jest.fn(), document: jest.fn() },
+            value: {
+                test: "shared",
+                providers: { ds: "ds", uss: "uss", job: "job" },
+                affectsConfiguration: jest.fn(),
+                document: jest.fn(),
+                text: "\n",
+            },
             _: { _: "_" },
         };
         const commands: IJestIt[] = [
             {
+                name: "zowe.manualPoll",
+                mock: [],
+            },
+            {
                 name: "zowe.updateSecureCredentials",
                 mock: [
                     { spy: jest.spyOn(globals, "setGlobalSecurityValue"), arg: [] },
-                    { spy: jest.spyOn(profileUtils, "writeOverridesFile"), arg: [] },
+                    { spy: jest.spyOn(profUtils.ProfilesUtils, "writeOverridesFile"), arg: [] },
                 ],
             },
             {
                 name: "zowe.promptCredentials",
-                mock: [{ spy: jest.spyOn(profileUtils, "promptCredentials"), arg: [test.value] }],
+                mock: [{ spy: jest.spyOn(profUtils.ProfilesUtils, "promptCredentials"), arg: [test.value] }],
             },
             {
                 name: "onDidChangeConfiguration:1",
                 mock: [
-                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [globals.SETTINGS_TEMP_FOLDER_PATH], ret: true },
-                    { spy: jest.spyOn(tempFolder, "moveTempFolder"), arg: [undefined, test.value] },
+                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [globals.SETTINGS_LOGS_FOLDER_PATH], ret: true },
+                    { spy: jest.spyOn(globals, "initLogger"), arg: [test.value] },
+                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [globals.SETTINGS_TEMP_FOLDER_PATH], ret: false },
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [globals.SETTINGS_AUTOMATIC_PROFILE_VALIDATION], ret: false },
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [globals.SETTINGS_TEMP_FOLDER_HIDE], ret: false },
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [globals.SETTINGS_SECURE_CREDENTIALS_ENABLED], ret: false },
@@ -63,6 +75,18 @@ describe("Test src/shared/extension", () => {
             {
                 name: "onDidChangeConfiguration:2",
                 mock: [
+                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [globals.SETTINGS_LOGS_FOLDER_PATH], ret: false },
+                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [globals.SETTINGS_TEMP_FOLDER_PATH], ret: true },
+                    { spy: jest.spyOn(tempFolder, "moveTempFolder"), arg: [undefined, test.value] },
+                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [globals.SETTINGS_AUTOMATIC_PROFILE_VALIDATION], ret: false },
+                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [globals.SETTINGS_TEMP_FOLDER_HIDE], ret: false },
+                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [globals.SETTINGS_SECURE_CREDENTIALS_ENABLED], ret: false },
+                ],
+            },
+            {
+                name: "onDidChangeConfiguration:3",
+                mock: [
+                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [globals.SETTINGS_LOGS_FOLDER_PATH], ret: false },
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [globals.SETTINGS_TEMP_FOLDER_PATH], ret: false },
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [globals.SETTINGS_AUTOMATIC_PROFILE_VALIDATION], ret: true },
                     { spy: jest.spyOn(Profiles, "getInstance"), arg: [], ret: { refresh: jest.fn() } },
@@ -74,8 +98,9 @@ describe("Test src/shared/extension", () => {
                 ],
             },
             {
-                name: "onDidChangeConfiguration:3",
+                name: "onDidChangeConfiguration:4",
                 mock: [
+                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [globals.SETTINGS_LOGS_FOLDER_PATH], ret: false },
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [globals.SETTINGS_TEMP_FOLDER_PATH], ret: false },
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [globals.SETTINGS_AUTOMATIC_PROFILE_VALIDATION], ret: false },
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [globals.SETTINGS_TEMP_FOLDER_HIDE], ret: true },
@@ -84,8 +109,9 @@ describe("Test src/shared/extension", () => {
                 ],
             },
             {
-                name: "onDidChangeConfiguration:4",
+                name: "onDidChangeConfiguration:5",
                 mock: [
+                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [globals.SETTINGS_LOGS_FOLDER_PATH], ret: false },
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [globals.SETTINGS_TEMP_FOLDER_PATH], ret: false },
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [globals.SETTINGS_AUTOMATIC_PROFILE_VALIDATION], ret: false },
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [globals.SETTINGS_TEMP_FOLDER_HIDE], ret: false },
@@ -197,6 +223,11 @@ describe("Test src/shared/extension", () => {
             Object.defineProperty(globals, "LOG", { value: testGlobals.LOG });
             Object.defineProperty(globals, "DS_DIR", { value: testGlobals.DS_DIR });
             Object.defineProperty(globals, "USS_DIR", { value: testGlobals.USS_DIR });
+            Object.defineProperty(ZoweLogger, "error", { value: jest.fn(), configurable: true });
+            Object.defineProperty(ZoweLogger, "debug", { value: jest.fn(), configurable: true });
+            Object.defineProperty(ZoweLogger, "warn", { value: jest.fn(), configurable: true });
+            Object.defineProperty(ZoweLogger, "info", { value: jest.fn(), configurable: true });
+            Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
             Object.defineProperty(vscode.workspace, "onDidSaveTextDocument", { value: onDidSaveTextDocument });
 
             spyOnSubscriptions(commands);
@@ -265,7 +296,7 @@ describe("Test src/shared/extension", () => {
             await extRefreshCallback();
             expect(spyExecuteCommand).not.toHaveBeenCalled();
             expect(deactivate).toHaveBeenCalled();
-            expect(spyLogError).toHaveBeenCalledWith(testError);
+            expect(ZoweLogger.error).toHaveBeenCalledWith(testError);
             expect(dispose).toHaveBeenCalled();
             expect(activate).toHaveBeenCalled();
         });

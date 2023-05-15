@@ -28,8 +28,7 @@ The Zowe Explorer extension modernizes the way developers and system administrat
 - [Known Issues](#known-issues)
 - [More information](#more-information)
 
-> Zowe Explorer is compatible only with Theia 1.18.0 or higher.
-> Zowe Explorer could experience possible unexpected behaviors with the latest Theia releases.
+> Zowe Explorer is compatible only with Theia 1.18.0 or higher. We recommend using a [Theia community release](https://theia-ide.org/releases/) as Zowe Explorer could experience possible unexpected behaviors with the latest Theia releases.
 
 ## Sample use cases
 

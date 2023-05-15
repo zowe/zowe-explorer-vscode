@@ -34,6 +34,7 @@
     "test:unit": "jest \".*__tests__.*\\.unit\\.test\\.ts\" --coverage",
     "test": "yarn test:unit",
     "lint": "concurrently -n \"_eslint_,prettier\" \"eslint .\" \"prettier --check .\"",
+    "lint:html": "eslint . --format html > results/eslint.html",
     "pretty": "prettier --write .",
     "watch": "webpack --mode development --watch --info-verbosity verbose",
     "clean": "rimraf out",

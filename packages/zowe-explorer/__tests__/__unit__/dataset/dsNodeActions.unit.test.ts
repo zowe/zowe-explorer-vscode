@@ -16,6 +16,7 @@ import * as dsNodeActions from "../../../src/dataset/actions";
 import * as refreshActions from "../../../src/shared/refresh";
 import { Profiles } from "../../../src/Profiles";
 import { FAVORITE_CONTEXT, DS_SESSION_CONTEXT, FAV_SUFFIX } from "../../../src/globals";
+import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 
 jest.mock("vscode");
 jest.mock("Session");
@@ -61,10 +62,7 @@ const profileOne: imperative.IProfileLoaded = {
 getConfiguration.mockReturnValue({
     persistence: true,
     get: (setting: string) => ["[test]: /u{session}"],
-    update: jest.fn(() => {
-        {
-        }
-    }),
+    update: jest.fn(),
 });
 
 function getDSNode() {
@@ -169,6 +167,7 @@ describe("dsNodeActions", () => {
     Object.defineProperty(vscode.workspace, "getConfiguration", { value: getConfiguration });
     Object.defineProperty(ZosmfSession, "createSessCfgFromArgs", { value: createSessCfgFromArgs });
     Object.defineProperty(refreshActions, "refreshAll", { value: jest.fn() });
+    Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
 
     beforeEach(() => {
         showErrorMessage.mockReset();

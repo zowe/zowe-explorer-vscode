@@ -12,6 +12,7 @@
 import * as path from "path";
 import * as zowe from "@zowe/cli";
 import { ProfilesCache } from "../../../src/profiles/ProfilesCache";
+import { ZoweExplorerApi } from "../../../src";
 
 jest.mock("fs");
 jest.mock("@zowe/cli", () => {
@@ -22,7 +23,7 @@ jest.mock("@zowe/cli", () => {
     };
 });
 
-const fakeSchema: any = {
+const fakeSchema: { properties: object } = {
     properties: {
         host: { type: "string" },
         port: { type: "number" },
@@ -84,7 +85,7 @@ const baseProfileWithToken = {
     },
 };
 
-function createProfInfoMock(profiles: Partial<zowe.imperative.IProfileLoaded>[]): any {
+function createProfInfoMock(profiles: Partial<zowe.imperative.IProfileLoaded>[]): zowe.imperative.ProfileInfo {
     return {
         getAllProfiles: (profType?: string) =>
             profiles
@@ -96,13 +97,23 @@ function createProfInfoMock(profiles: Partial<zowe.imperative.IProfileLoaded>[])
                     isDefaultProfile: prof.name === profiles.find((p) => p.type === profType)?.name,
                 })),
         getDefaultProfile: (profType: string) => {
-            const profile: any = profiles.find((prof) => prof.type === profType);
-            return profile && { profName: profile.name, profType: profile.type, profLoc: { osLoc: "fakePath" } };
+            const profile: Partial<zowe.imperative.IProfileLoaded> | undefined = profiles.find((prof) => prof.type === profType);
+            if (!profile) {
+                return undefined;
+            }
+
+            return { profName: profile.name, profType: profile.type, profLoc: { osLoc: "fakePath" } };
         },
         mergeArgsForProfile: (profAttrs: zowe.imperative.IProfAttrs) => {
-            const profile: any = profiles.find((prof) => prof.name === profAttrs.profName && prof.type === profAttrs.profType);
+            const profile: Partial<zowe.imperative.IProfileLoaded> | undefined = profiles.find(
+                (prof) => prof.name === profAttrs.profName && prof.type === profAttrs.profType
+            );
+            if (profile === undefined) {
+                return { knownArgs: [] };
+            }
+
             return {
-                knownArgs: Object.entries(profile.profile).map(([k, v]) => ({ argName: k, argValue: v })),
+                knownArgs: Object.entries(profile.profile as object).map(([k, v]) => ({ argName: k, argValue: v as unknown })),
             };
         },
     } as any;
@@ -118,7 +129,7 @@ describe("ProfilesCache", () => {
     });
 
     it("getProfileInfo should initialize ProfileInfo API", async () => {
-        const profInfo = await new ProfilesCache(fakeLogger as any, __dirname).getProfileInfo();
+        const profInfo = await new ProfilesCache(fakeLogger as unknown as zowe.imperative.Logger, __dirname).getProfileInfo();
         expect(readProfilesFromDiskSpy).toHaveBeenCalledTimes(1);
         const teamConfig = profInfo.getTeamConfig();
         expect(teamConfig.appName).toBe("zowe");
@@ -131,69 +142,74 @@ describe("ProfilesCache", () => {
     });
 
     it("loadNamedProfile should find profiles by name and type", () => {
-        const profCache = new ProfilesCache(fakeLogger as any);
-        profCache.allProfiles = [lpar1Profile as any, zftpProfile as any];
+        const profCache = new ProfilesCache(fakeLogger as unknown as zowe.imperative.Logger);
+        profCache.allProfiles = [lpar1Profile as zowe.imperative.IProfileLoaded, zftpProfile as zowe.imperative.IProfileLoaded];
         expect(profCache.loadNamedProfile("lpar1").type).toBe("zosmf");
         expect(profCache.loadNamedProfile("lpar2", "zftp").type).toBe("zftp");
     });
 
     it("loadNamedProfile should fail to find non-existent profile", () => {
-        const profCache = new ProfilesCache(fakeLogger as any);
-        profCache.allProfiles = [lpar1Profile as any];
-        let caughtError;
+        const profCache = new ProfilesCache(fakeLogger as unknown as zowe.imperative.Logger);
+        profCache.allProfiles = [lpar1Profile as zowe.imperative.IProfileLoaded];
         try {
             profCache.loadNamedProfile("lpar2");
+            fail('loadNamedProfile("lpar2") should have thrown an exception here.');
         } catch (error) {
-            caughtError = error;
+            expect(error).toBeDefined();
+            if (error instanceof Error) {
+                expect(error.message).toContain("Could not find profile");
+            }
         }
-        expect(caughtError.message).toContain("Could not find profile");
     });
 
     it("loadNamedProfile should fail to find invalid profile", () => {
-        const profCache = new ProfilesCache(fakeLogger as any);
-        profCache.allProfiles = [lpar1Profile as any];
-        let caughtError;
+        const profCache = new ProfilesCache(fakeLogger as unknown as zowe.imperative.Logger);
+        profCache.allProfiles = [lpar1Profile as zowe.imperative.IProfileLoaded];
+
         try {
             profCache.loadNamedProfile("lpar1", "zftp");
+            fail('loadNamedProfile("lpar1", "zftp") should have thrown an exception here.');
         } catch (error) {
-            caughtError = error;
+            expect(error).toBeDefined();
+            if (error instanceof Error) {
+                expect(error.message).toContain("Could not find profile");
+            }
         }
-        expect(caughtError.message).toContain("Could not find profile");
     });
 
     it("updateProfilesArrays should process profile properties and defaults", () => {
-        const profCache = new ProfilesCache(fakeLogger as any);
-        profCache.allProfiles = [lpar1Profile as any];
+        const profCache = new ProfilesCache(fakeLogger as unknown as zowe.imperative.Logger);
+        profCache.allProfiles = [lpar1Profile as zowe.imperative.IProfileLoaded];
         (profCache as any).defaultProfileByType = new Map([["zosmf", { ...profCache.allProfiles[0] }]]);
         expect(profCache.allProfiles[0].profile).toMatchObject(lpar1Profile.profile);
         profCache.updateProfilesArrays({
             ...lpar1Profile,
             profile: lpar2Profile.profile,
-        } as any);
+        } as zowe.imperative.IProfileLoaded);
         expect(profCache.allProfiles[0].profile).toMatchObject(lpar2Profile.profile);
         expect((profCache as any).defaultProfileByType.get("zosmf").profile).toMatchObject(lpar2Profile.profile);
     });
 
     it("getDefaultProfile should find default profile given type", () => {
-        const profCache = new ProfilesCache(fakeLogger as any);
+        const profCache = new ProfilesCache(fakeLogger as unknown as zowe.imperative.Logger);
         (profCache as any).defaultProfileByType = new Map([["zosmf", lpar1Profile]]);
         expect(profCache.getDefaultProfile("zosmf").name).toBe("lpar1");
     });
 
     it("getDefaultConfigProfile should find default profile given type", () => {
-        const profCache = new ProfilesCache(fakeLogger as any);
+        const profCache = new ProfilesCache(fakeLogger as unknown as zowe.imperative.Logger);
         const profAttrs = profCache.getDefaultConfigProfile(createProfInfoMock([lpar1Profile]), "zosmf");
         expect(profAttrs.profName).toBe("lpar1");
     });
 
     it("getProfiles should find profiles given type", () => {
-        const profCache = new ProfilesCache(fakeLogger as any);
+        const profCache = new ProfilesCache(fakeLogger as unknown as zowe.imperative.Logger);
         (profCache as any).profilesByType = new Map([["zosmf", [lpar1Profile, lpar2Profile]]]);
         expect(profCache.getProfiles("zosmf").length).toBe(2);
     });
 
     it("registerCustomProfilesType should register new profile type", () => {
-        const profCache = new ProfilesCache(fakeLogger as any);
+        const profCache = new ProfilesCache(fakeLogger as unknown as zowe.imperative.Logger);
         expect((profCache as any).allExternalTypes.size).toBe(0);
         profCache.registerCustomProfilesType("zosmf");
         expect((profCache as any).allExternalTypes.size).toBe(1);
@@ -207,9 +223,9 @@ describe("ProfilesCache", () => {
         };
 
         it("should refresh profile data for multiple profile types", async () => {
-            const profCache = new ProfilesCache({ ...fakeLogger, error: mockLogError } as any);
+            const profCache = new ProfilesCache({ ...fakeLogger, error: mockLogError } as unknown as zowe.imperative.Logger);
             jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([lpar1Profile, zftpProfile]));
-            await profCache.refresh(fakeApiRegister as any);
+            await profCache.refresh(fakeApiRegister as unknown as ZoweExplorerApi.IApiRegisterClient);
             expect(profCache.allProfiles.length).toEqual(2);
             expect(profCache.allProfiles[0]).toMatchObject(lpar1Profile);
             expect(profCache.allProfiles[1]).toMatchObject(zftpProfile);
@@ -218,11 +234,11 @@ describe("ProfilesCache", () => {
         });
 
         it("should refresh profile data for and merge tokens with base profile", async () => {
-            const profCache = new ProfilesCache({ ...fakeLogger, error: mockLogError } as any);
+            const profCache = new ProfilesCache({ ...fakeLogger, error: mockLogError } as unknown as zowe.imperative.Logger);
             jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(
                 createProfInfoMock([lpar1ProfileWithToken, lpar2ProfileWithToken, baseProfileWithToken])
             );
-            await profCache.refresh(fakeApiRegister as any);
+            await profCache.refresh(fakeApiRegister as unknown as ZoweExplorerApi.IApiRegisterClient);
             expect(profCache.allProfiles.length).toEqual(3);
             expect(profCache.allProfiles[0]).toMatchObject(lpar1ProfileWithToken);
             expect(profCache.allProfiles[1]).toMatchObject(lpar2Profile); // without token
@@ -233,11 +249,11 @@ describe("ProfilesCache", () => {
 
         it("should handle error when refreshing profile data", async () => {
             const fakeError = "Profile IO Error";
-            const profCache = new ProfilesCache({ ...fakeLogger, error: mockLogError } as any);
+            const profCache = new ProfilesCache({ ...fakeLogger, error: mockLogError } as unknown as zowe.imperative.Logger);
             jest.spyOn(profCache, "getProfileInfo").mockImplementation(() => {
                 throw fakeError;
             });
-            await profCache.refresh(fakeApiRegister as any);
+            await profCache.refresh(fakeApiRegister as unknown as ZoweExplorerApi.IApiRegisterClient);
             expect(profCache.allProfiles.length).toEqual(0);
             expect(profCache.getAllTypes().length).toEqual(0);
             expect(mockLogError).toHaveBeenCalledWith(fakeError);
@@ -246,7 +262,7 @@ describe("ProfilesCache", () => {
 
     describe("validateAndParseUrl", () => {
         it("should successfully parse URL with default port", () => {
-            const profCache = new ProfilesCache(fakeLogger as any);
+            const profCache = new ProfilesCache(fakeLogger as unknown as zowe.imperative.Logger);
             const result = profCache.validateAndParseUrl("https://example.com:443");
             expect(result).toMatchObject({
                 valid: true,
@@ -257,7 +273,7 @@ describe("ProfilesCache", () => {
         });
 
         it("should successfully parse URL with custom port", () => {
-            const profCache = new ProfilesCache(fakeLogger as any);
+            const profCache = new ProfilesCache(fakeLogger as unknown as zowe.imperative.Logger);
             const result = profCache.validateAndParseUrl("https://example.com:8443");
             expect(result).toMatchObject({
                 valid: true,
@@ -268,7 +284,7 @@ describe("ProfilesCache", () => {
         });
 
         it("should fail to parse invalid URL", () => {
-            const profCache = new ProfilesCache(fakeLogger as any);
+            const profCache = new ProfilesCache(fakeLogger as unknown as zowe.imperative.Logger);
             const result = profCache.validateAndParseUrl("invalid URL");
             expect(result).toMatchObject({
                 valid: false,
@@ -280,7 +296,7 @@ describe("ProfilesCache", () => {
     });
 
     it("getNamesForType should return array of profile names for given type", async () => {
-        const profCache = new ProfilesCache(fakeLogger as any);
+        const profCache = new ProfilesCache(fakeLogger as unknown as zowe.imperative.Logger);
         jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([lpar1Profile, lpar2Profile]));
         const profileNames = await profCache.getNamesForType("zosmf");
         expect(profileNames).toEqual(["lpar1", "lpar2"]);
@@ -288,7 +304,7 @@ describe("ProfilesCache", () => {
 
     describe("fetchAllProfilesByType", () => {
         it("should return array of profile objects for given type", async () => {
-            const profCache = new ProfilesCache(fakeLogger as any);
+            const profCache = new ProfilesCache(fakeLogger as unknown as zowe.imperative.Logger);
             jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([lpar1Profile, lpar2Profile]));
             const profiles = await profCache.fetchAllProfilesByType("zosmf");
             expect(profiles.length).toBe(2);
@@ -297,7 +313,7 @@ describe("ProfilesCache", () => {
         });
 
         it("should remove token from service profile if base profile overrides it", async () => {
-            const profCache = new ProfilesCache(fakeLogger as any);
+            const profCache = new ProfilesCache(fakeLogger as unknown as zowe.imperative.Logger);
             (profCache as any).defaultProfileByType = new Map([["base", baseProfileWithToken]]);
             jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([lpar1ProfileWithToken, lpar2ProfileWithToken]));
             const profiles = await profCache.fetchAllProfilesByType("zosmf");
@@ -309,7 +325,7 @@ describe("ProfilesCache", () => {
         });
 
         it("should return empty array for unknown profile type", async () => {
-            const profCache = new ProfilesCache(fakeLogger as any);
+            const profCache = new ProfilesCache(fakeLogger as unknown as zowe.imperative.Logger);
             jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([lpar1Profile]));
             const profiles = await profCache.fetchAllProfilesByType("zftp");
             expect(profiles.length).toBe(0);
@@ -317,7 +333,7 @@ describe("ProfilesCache", () => {
     });
 
     it("fetchAllProfiles should return array of profile objects for all types", async () => {
-        const profCache = new ProfilesCache(fakeLogger as any);
+        const profCache = new ProfilesCache(fakeLogger as unknown as zowe.imperative.Logger);
         (profCache as any).allTypes = ["zosmf", "zftp"];
         jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([lpar1Profile, zftpProfile]));
         const profiles = await profCache.fetchAllProfiles();
@@ -328,21 +344,21 @@ describe("ProfilesCache", () => {
 
     describe("directLoad", () => {
         it("should return profile object if name and type match", async () => {
-            const profCache = new ProfilesCache(fakeLogger as any);
+            const profCache = new ProfilesCache(fakeLogger as unknown as zowe.imperative.Logger);
             jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([lpar1Profile]));
             const profile = await profCache.directLoad("zosmf", "lpar1");
             expect(profile).toMatchObject(lpar1Profile);
         });
 
         it("should not return profile if type not found", async () => {
-            const profCache = new ProfilesCache(fakeLogger as any);
+            const profCache = new ProfilesCache(fakeLogger as unknown as zowe.imperative.Logger);
             jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([lpar1Profile]));
             const profile = await profCache.directLoad("zftp", "lpar1");
             expect(profile).toBeUndefined();
         });
 
         it("should not return profile if name not found", async () => {
-            const profCache = new ProfilesCache(fakeLogger as any);
+            const profCache = new ProfilesCache(fakeLogger as unknown as zowe.imperative.Logger);
             jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([lpar1Profile]));
             const profile = await profCache.directLoad("zosmf", "lpar2");
             expect(profile).toBeUndefined();
@@ -350,54 +366,68 @@ describe("ProfilesCache", () => {
     });
 
     it("getProfileFromConfig should return profile attributes for given name", async () => {
-        const profCache = new ProfilesCache(fakeLogger as any);
+        const profCache = new ProfilesCache(fakeLogger as unknown as zowe.imperative.Logger);
         jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([{ name: "lpar1", type: "zosmf" }]));
         const profAttrs = await profCache.getProfileFromConfig("lpar1");
         expect(profAttrs).toMatchObject({ profName: "lpar1", profType: "zosmf" });
     });
 
     it("getProfileFromConfig not return profile if name not found", async () => {
-        const profCache = new ProfilesCache(fakeLogger as any);
+        const profCache = new ProfilesCache(fakeLogger as unknown as zowe.imperative.Logger);
         jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([{ name: "lpar1", type: "zosmf" }]));
         const profAttrs = await profCache.getProfileFromConfig("lpar2");
         expect(profAttrs).toBeUndefined();
     });
 
-    it("getLoadedProfConfig should return profile object for given name", async () => {
+    it("getProfileFromConfig not return profile if type not found", async () => {
         const profCache = new ProfilesCache(fakeLogger as any);
+        jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([{ name: "lpar1", type: "zosmf" }]));
+        const profAttrs = await profCache.getProfileFromConfig("lpar1", "zftp");
+        expect(profAttrs).toBeUndefined();
+    });
+
+    it("getLoadedProfConfig should return profile object for given name", async () => {
+        const profCache = new ProfilesCache(fakeLogger as unknown as zowe.imperative.Logger);
         jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([lpar1Profile]));
         const profile = await profCache.getLoadedProfConfig("lpar1");
         expect(profile).toMatchObject(lpar1Profile);
     });
 
     it("getLoadedProfConfig should not return profile if name not found", async () => {
-        const profCache = new ProfilesCache(fakeLogger as any);
+        const profCache = new ProfilesCache(fakeLogger as unknown as zowe.imperative.Logger);
         jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([{ name: "lpar1", type: "zosmf" }]));
         const profile = await profCache.getLoadedProfConfig("lpar2");
         expect(profile).toBeUndefined();
     });
 
-    it("getBaseProfile should find base profile if one exists", () => {
+    it("getLoadedProfConfig should not return profile if type not found", async () => {
         const profCache = new ProfilesCache(fakeLogger as any);
-        profCache.allProfiles = [{ name: "my_base", type: "base" } as any];
+        jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([{ name: "lpar1", type: "zosmf" }]));
+        const profile = await profCache.getLoadedProfConfig("lpar1", "zftp");
+        expect(profile).toBeUndefined();
+    });
+
+    it("getBaseProfile should find base profile if one exists", () => {
+        const profCache = new ProfilesCache(fakeLogger as unknown as zowe.imperative.Logger);
+        profCache.allProfiles = [{ name: "my_base", type: "base" } as zowe.imperative.IProfileLoaded];
         expect(profCache.getBaseProfile()?.type).toBe("base");
     });
 
     it("getBaseProfile should return undefined if base profile not found", () => {
-        const profCache = new ProfilesCache(fakeLogger as any);
-        profCache.allProfiles = [{ name: "lpar1", type: "zosmf" } as any];
+        const profCache = new ProfilesCache(fakeLogger as unknown as zowe.imperative.Logger);
+        profCache.allProfiles = [{ name: "lpar1", type: "zosmf" } as zowe.imperative.IProfileLoaded];
         expect(profCache.getBaseProfile()).toBeUndefined();
     });
 
     it("fetchBaseProfile should return base profile object", async () => {
-        const profCache = new ProfilesCache(fakeLogger as any);
+        const profCache = new ProfilesCache(fakeLogger as unknown as zowe.imperative.Logger);
         jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([baseProfile]));
         const profile = await profCache.fetchBaseProfile();
         expect(profile).toMatchObject(baseProfile);
     });
 
     it("fetchBaseProfile should return undefined if base profile not found", async () => {
-        const profCache = new ProfilesCache(fakeLogger as any);
+        const profCache = new ProfilesCache(fakeLogger as unknown as zowe.imperative.Logger);
         jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([lpar1Profile]));
         const profile = await profCache.fetchBaseProfile();
         expect(profile).toBeUndefined();
@@ -405,44 +435,44 @@ describe("ProfilesCache", () => {
 
     it("isCredentialsSecured should invoke ProfileInfo API", async () => {
         const isSecuredMock = jest.fn().mockReturnValue(false).mockReturnValueOnce(true);
-        const profCache = new ProfilesCache(fakeLogger as any);
-        jest.spyOn(profCache, "getProfileInfo").mockResolvedValue({ isSecured: isSecuredMock } as any);
+        const profCache = new ProfilesCache(fakeLogger as unknown as zowe.imperative.Logger);
+        jest.spyOn(profCache, "getProfileInfo").mockResolvedValue({ isSecured: isSecuredMock } as unknown as zowe.imperative.ProfileInfo);
         expect(await profCache.isCredentialsSecured()).toBe(true);
         expect(await profCache.isCredentialsSecured()).toBe(false);
     });
 
     it("isCredentialsSecured should handle errors from ProfileInfo API", async () => {
-        const profCache = new ProfilesCache({ error: jest.fn() } as any);
-        jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(undefined as any);
+        const profCache = new ProfilesCache({ error: jest.fn() } as unknown as zowe.imperative.Logger);
+        jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(undefined as unknown as zowe.imperative.ProfileInfo);
         expect(await profCache.isCredentialsSecured()).toBe(true);
         expect((profCache as any).log.error).toHaveBeenCalledTimes(1);
     });
 
     describe("v1 profiles", () => {
         it("getSchema should return schema properties for v1 profile", () => {
-            const profCache = new ProfilesCache(fakeLogger as any);
+            const profCache = new ProfilesCache(fakeLogger as unknown as zowe.imperative.Logger);
             jest.spyOn(profCache, "getCliProfileManager").mockReturnValue({
                 configurations: [
                     {
                         type: "zosmf",
-                        schema: fakeSchema,
+                        schema: fakeSchema as object,
                     },
                 ],
-            } as any);
+            } as unknown as zowe.imperative.CliProfileManager);
             const schema = profCache.getSchema("zosmf");
             expect(schema).toMatchObject(fakeSchema.properties);
         });
 
         it("getSchema should return empty schema for unknown profile type", () => {
-            const profCache = new ProfilesCache(fakeLogger as any);
+            const profCache = new ProfilesCache(fakeLogger as unknown as zowe.imperative.Logger);
             jest.spyOn(profCache, "getCliProfileManager").mockReturnValue({
                 configurations: [
                     {
                         type: "zosmf",
-                        schema: fakeSchema,
+                        schema: fakeSchema as object,
                     },
                 ],
-            } as any);
+            } as zowe.imperative.CliProfileManager);
             const schema = profCache.getSchema("zftp");
             expect(schema).toEqual({});
         });
@@ -450,7 +480,7 @@ describe("ProfilesCache", () => {
         describe("getCliProfileManager", () => {
             const getAllProfDirsSpy = jest.spyOn(zowe.imperative.ProfileIO, "getAllProfileDirectories");
             const readMetaFileSpy = jest.spyOn(zowe.imperative.ProfileIO, "readMetaFile");
-            const profCache = new ProfilesCache(fakeLogger as any);
+            const profCache = new ProfilesCache(fakeLogger as unknown as zowe.imperative.Logger);
 
             it("should create new v1 profile manager", () => {
                 getAllProfDirsSpy.mockReturnValueOnce(["zosmf"]);
@@ -459,7 +489,7 @@ describe("ProfilesCache", () => {
                         type: "zosmf",
                         schema: { properties: {} },
                     },
-                } as any);
+                } as zowe.imperative.IMetaProfile<zowe.imperative.IProfileTypeConfiguration>);
                 const profMgr = profCache.getCliProfileManager("zosmf");
                 expect(profMgr).toBeInstanceOf(zowe.imperative.CliProfileManager);
                 expect(getAllProfDirsSpy).toHaveBeenCalledTimes(1);
@@ -484,10 +514,10 @@ describe("ProfilesCache", () => {
             const deleteParams: zowe.imperative.IDeleteProfile = {
                 name: lpar1Profile.name,
             };
-            const profCache = new ProfilesCache(fakeLogger as any);
+            const profCache = new ProfilesCache(fakeLogger as unknown as zowe.imperative.Logger);
             jest.spyOn(profCache, "getCliProfileManager").mockReturnValue({
                 delete: mockDeleteProfile,
-            } as any);
+            } as unknown as zowe.imperative.CliProfileManager);
             await (profCache as any).deleteProfileOnDisk(lpar1Profile);
             expect(mockDeleteProfile).toHaveBeenCalledTimes(1);
             expect(mockDeleteProfile.mock.calls[0][0]).toMatchObject(deleteParams);
@@ -500,13 +530,79 @@ describe("ProfilesCache", () => {
                 name: lpar1Profile.name,
                 type: lpar1Profile.type,
             };
-            const profCache = new ProfilesCache(fakeLogger as any);
+            const profCache = new ProfilesCache(fakeLogger as unknown as zowe.imperative.Logger);
             jest.spyOn(profCache, "getCliProfileManager").mockReturnValue({
                 save: mockSaveProfile,
-            } as any);
+            } as unknown as zowe.imperative.CliProfileManager);
             await (profCache as any).saveProfile(lpar1Profile.profile, lpar1Profile.name, lpar1Profile.type);
             expect(mockSaveProfile).toHaveBeenCalledTimes(1);
             expect(mockSaveProfile.mock.calls[0][0]).toMatchObject(saveParams);
+        });
+    });
+
+    describe("deprecated methods", () => {
+        describe("isSecureCredentialPluginActive", () => {
+            const scsPluginName = "@zowe/secure-credential-store-for-zowe-cli";
+            const mockLogError = jest.fn();
+            const profCache = new ProfilesCache({ error: mockLogError } as unknown as zowe.imperative.Logger);
+
+            it("should handle CredentialManager in Imperative settings", () => {
+                jest.spyOn(fs, "existsSync").mockReturnValueOnce(true);
+                const readFileSyncSpy = jest.spyOn(fs, "readFileSync").mockReturnValue(
+                    JSON.stringify({
+                        overrides: {
+                            CredentialManager: scsPluginName,
+                        },
+                    })
+                );
+                const isScsActive = profCache.isSecureCredentialPluginActive();
+                expect(mockLogError).not.toHaveBeenCalled();
+                expect(readFileSyncSpy).toHaveBeenCalledTimes(1);
+                expect(isScsActive).toBe(true);
+            });
+
+            it("should handle credential-manager in Imperative settings", () => {
+                jest.spyOn(fs, "existsSync").mockReturnValueOnce(true);
+                const readFileSyncSpy = jest.spyOn(fs, "readFileSync").mockReturnValue(
+                    JSON.stringify({
+                        overrides: {
+                            "credential-manager": scsPluginName,
+                        },
+                    })
+                );
+                const isScsActive = profCache.isSecureCredentialPluginActive();
+                expect(mockLogError).not.toHaveBeenCalled();
+                expect(readFileSyncSpy).toHaveBeenCalledTimes(1);
+                expect(isScsActive).toBe(true);
+            });
+
+            it("should handle empty Imperative settings", () => {
+                jest.spyOn(fs, "existsSync").mockReturnValueOnce(true);
+                const readFileSyncSpy = jest.spyOn(fs, "readFileSync").mockReturnValue(JSON.stringify({}));
+                const isScsActive = profCache.isSecureCredentialPluginActive();
+                expect(mockLogError).not.toHaveBeenCalled();
+                expect(readFileSyncSpy).toHaveBeenCalledTimes(1);
+                expect(isScsActive).toBe(false);
+            });
+
+            it("should handle non-existent Imperative settings", () => {
+                jest.spyOn(fs, "existsSync").mockReturnValueOnce(false);
+                const readFileSyncSpy = jest.spyOn(fs, "readFileSync");
+                const isScsActive = profCache.isSecureCredentialPluginActive();
+                expect(mockLogError).not.toHaveBeenCalled();
+                expect(readFileSyncSpy).not.toHaveBeenCalled();
+                expect(isScsActive).toBe(false);
+            });
+
+            it("should handle error loading Imperative settings", () => {
+                jest.spyOn(fs, "existsSync").mockReturnValueOnce(true);
+                const readFileSyncSpy = jest.spyOn(fs, "readFileSync").mockReturnValueOnce("invalid json");
+                const isScsActive = profCache.isSecureCredentialPluginActive();
+                expect(mockLogError).toHaveBeenCalledTimes(1);
+                expect(mockLogError.mock.calls[0][0].message).toContain("Unexpected token");
+                expect(readFileSyncSpy).toHaveBeenCalledTimes(1);
+                expect(isScsActive).toBe(false);
+            });
         });
     });
 });
