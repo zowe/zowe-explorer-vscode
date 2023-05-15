@@ -95,7 +95,7 @@ export class Profiles extends ProfilesCache {
             );
             let values: string[];
             try {
-                values = await Profiles.getInstance().promptCredentials(theProfile);
+                values = await Profiles.getInstance().promptCredentials(theProfile?.name);
             } catch (error) {
                 errorHandling(error, theProfile.name, error.message);
                 return profileStatus;
@@ -334,7 +334,12 @@ export class Profiles extends ProfilesCache {
                     'Choose "Create new..." to define or select a profile to add to the USS Explorer'
                 );
         }
-        quickpick.items = [configPick, configEdit, ...items];
+        if (mProfileInfo.usingTeamConfig) {
+            quickpick.items = [configPick, configEdit, ...items];
+        } else {
+            quickpick.items = [configPick, ...items];
+        }
+
         quickpick.placeholder = addProfilePlaceholder;
         quickpick.ignoreFocusOut = true;
         quickpick.show();
@@ -487,35 +492,38 @@ export class Profiles extends ProfilesCache {
     public async editZoweConfigFile(): Promise<void> {
         ZoweLogger.trace("Profiles.editZoweConfigFile called.");
         const existingLayers = await this.getConfigLayers();
-        if (existingLayers.length === 1) {
-            await this.openConfigFile(existingLayers[0].path);
-        }
-        if (existingLayers && existingLayers.length > 1) {
-            const choice = await this.getConfigLocationPrompt("edit");
-            switch (choice) {
-                case "project":
-                    for (const file of existingLayers) {
-                        if (file.user) {
-                            await this.openConfigFile(file.path);
-                        }
-                    }
-                    break;
-                case "global":
-                    for (const file of existingLayers) {
-                        if (file.global) {
-                            await this.openConfigFile(file.path);
-                        }
-                    }
-                    break;
-                default:
-                    Gui.showMessage(this.profilesOpCancelled);
-                    return;
+        if (existingLayers) {
+            if (existingLayers.length === 1) {
+                await this.openConfigFile(existingLayers[0].path);
             }
-            return;
+            if (existingLayers.length > 1) {
+                const choice = await this.getConfigLocationPrompt("edit");
+                switch (choice) {
+                    case "project":
+                        for (const file of existingLayers) {
+                            if (file.user) {
+                                await this.openConfigFile(file.path);
+                            }
+                        }
+                        break;
+                    case "global":
+                        for (const file of existingLayers) {
+                            if (file.global) {
+                                await this.openConfigFile(file.path);
+                            }
+                        }
+                        break;
+                    default:
+                        Gui.showMessage(this.profilesOpCancelled);
+                        return;
+                }
+                return;
+            }
+        } else {
         }
     }
 
-    public async promptCredentials(sessionName: string, rePrompt?: boolean): Promise<string[]> {
+    public async promptCredentials(profile: string | zowe.imperative.IProfileLoaded, rePrompt?: boolean): Promise<string[]> {
         const userInputBoxOptions: vscode.InputBoxOptions = {
             placeHolder: localize("promptCredentials.userInputBoxOptions.placeholder", "User Name"),
             prompt: localize("promptCredentials.userInputBoxOptions.prompt", "Enter the user name for the connection. Leave blank to not store."),
