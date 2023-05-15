@@ -1170,9 +1170,9 @@ describe("cancelJob", () => {
     const jobsProvider = createJobsTree(session, jobNode.job, profile, createTreeView());
     const jesCancelJobMock = jest.fn();
 
-    const mockJesApi = (): void => {
+    const mockJesApi = (mockFn?: jest.Mock<any, any>): void => {
         const jesApi = createJesApi(profile);
-        jesApi.cancelJob = jesCancelJobMock;
+        jesApi.cancelJob = mockFn;
         bindJesApi(jesApi);
     };
 
@@ -1181,11 +1181,11 @@ describe("cancelJob", () => {
         bindJesApi(jesApi);
     };
 
-    beforeAll(() => {
-        mockJesApi();
+    beforeEach(() => {
+        mockJesApi(jesCancelJobMock);
     });
 
-    afterAll(() => {
+    beforeEach(() => {
         restoreJesApi();
     });
 
@@ -1202,16 +1202,41 @@ describe("cancelJob", () => {
 
     it("shows a warning message if one or more jobs failed to cancel", async () => {
         jobNode.job.retcode = "ACTIVE";
-        jesCancelJobMock.mockReturnValueOnce(false);
+        jesCancelJobMock.mockResolvedValueOnce(false);
         await jobActions.cancelJobs(jobsProvider, [jobNode]);
         expect(Gui.warningMessage).toHaveBeenCalledWith("One or more jobs failed to cancel: \n\nTESTJOB(JOB1234): The job was not cancelled.", {
             vsCodeOpts: { modal: true },
         });
     });
 
+    it("shows a warning message if one or more APIs do not support cancelJob", async () => {
+        // Make cancelJob undefined
+        mockJesApi();
+        jobNode.job.retcode = "ACTIVE";
+        await jobActions.cancelJobs(jobsProvider, [jobNode]);
+        expect(Gui.warningMessage).toHaveBeenCalledWith(
+            "One or more jobs failed to cancel: " + "\n\nTESTJOB(JOB1234): The cancel function is not implemented in this API.",
+            {
+                vsCodeOpts: { modal: true },
+            }
+        );
+    });
+
+    it("shows matching error messages for one or more failed jobs", async () => {
+        jobNode.job.retcode = "ACTIVE";
+        jesCancelJobMock.mockRejectedValueOnce(new Error("Failed to cancel job... something went wrong."));
+        await jobActions.cancelJobs(jobsProvider, [jobNode]);
+        expect(Gui.warningMessage).toHaveBeenCalledWith(
+            "One or more jobs failed to cancel: " + "\n\nTESTJOB(JOB1234): Failed to cancel job... something went wrong.",
+            {
+                vsCodeOpts: { modal: true },
+            }
+        );
+    });
+
     it("shows a message confirming the jobs were cancelled", async () => {
         jobNode.job.retcode = "ACTIVE";
-        jesCancelJobMock.mockReturnValueOnce(true);
+        jesCancelJobMock.mockResolvedValueOnce(true);
         await jobActions.cancelJobs(jobsProvider, [jobNode]);
         expect(Gui.showMessage).toHaveBeenCalledWith("Cancelled selected jobs successfully.");
     });

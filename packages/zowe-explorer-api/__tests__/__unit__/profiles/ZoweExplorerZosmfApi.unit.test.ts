@@ -406,7 +406,7 @@ describe("ZosmfJesApi", () => {
         });
 
         it("returns true if the job was cancelled", async () => {
-            cancelJobForJob.mockReturnValue({
+            cancelJobForJob.mockResolvedValue({
                 status: "0",
             });
             expect(
@@ -417,7 +417,7 @@ describe("ZosmfJesApi", () => {
         });
 
         it("returns false if the job did not cancel", async () => {
-            cancelJobForJob.mockReturnValue({
+            cancelJobForJob.mockResolvedValue({
                 status: "0222",
             });
             expect(
