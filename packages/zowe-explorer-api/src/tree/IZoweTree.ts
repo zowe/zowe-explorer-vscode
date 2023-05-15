@@ -158,11 +158,6 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T> {
      */
     paste(node: IZoweTreeNode);
     /**
-     * Cancels a node.
-     * @param node: the node to be cancelled
-     */
-    cancel?(node: IZoweTreeNode);
-    /**
      * Deletes a node.
      * @param node: the node to be deleted
      */

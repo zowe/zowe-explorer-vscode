@@ -18,6 +18,8 @@
   "deleteCommand.job": "Job {0} was deleted.",
   "deleteCommand.multipleJobs": "The following jobs were deleted: {0}",
   "cancelJobs.alreadyCancelled": "The selected jobs were already cancelled.",
+  "cancelJobs.notImplemented": "The cancel function is not implemented in this API.",
+  "cancelJobs.notCancelled": "The job was not cancelled.",
   "cancelJobs.failed": "One or more jobs failed to cancel: {0}",
   "cancelJobs.succeeded": "Cancelled selected jobs successfully."
 }

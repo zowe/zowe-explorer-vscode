@@ -471,22 +471,41 @@ export async function cancelJobs(jobsProvider: IZoweTree<IZoweJobTreeNode>, node
     }
 
     // Filter out nodes that have already been cancelled
-    const filteredNodes = nodes.filter((n) => n.job == null || n.job.retcode == null || !n.job.retcode.includes("CANCEL"));
+    const filteredNodes = nodes.filter(
+        (n) => n.job == null || n.job.retcode == null || !(n.job.retcode.includes("CANCEL") || n.job.retcode?.includes("ABEND"))
+    );
     if (!filteredNodes.length) {
         await Gui.showMessage(localize("cancelJobs.alreadyCancelled", "The selected jobs were already cancelled."));
         return;
     }
 
+    const jesApis = {};
+
     const failedJobs: { job: zowe.IJob; error: string }[] = [];
     // Build list of common sessions from node selection
     const sessionNodes = [];
     for (const jobNode of nodes) {
+        if (!jobNode.job) {
+            continue;
+        }
         const sesNode = jobNode.getSessionNode();
+        const sesLabel = sesNode.label as string;
+        if (!(sesLabel in jesApis)) {
+            jesApis[sesLabel] = ZoweExplorerApiRegister.getJesApi(sesNode.getProfile());
+        }
+
+        if (!jesApis[sesLabel].cancelJob) {
+            failedJobs.push({
+                job: jobNode.job,
+                error: localize("cancelJobs.notImplemented", "The cancel function is not implemented in this API."),
+            });
+            continue;
+        }
 
         try {
-            const cancelled = await jobsProvider.cancel(jobNode);
+            const cancelled = await jesApis[sesLabel].cancelJob(jobNode.job);
             if (!cancelled) {
-                failedJobs.push({ job: jobNode.job, error: "Job was not cancelled" });
+                failedJobs.push({ job: jobNode.job, error: localize("cancelJobs.notCancelled", "The job was not cancelled.") });
             } else if (!sessionNodes.includes(sesNode)) {
                 sessionNodes.push(sesNode);
             }

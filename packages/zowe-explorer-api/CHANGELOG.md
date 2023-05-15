@@ -6,7 +6,8 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### New features and enhancements
 
-- Added optional `cancel` function to `IZoweTree` interface to allow use by extenders. [#2251](https://github.com/zowe/vscode-extension-for-zowe/issues/2251)
+- Added optional `cancelJob` function to `ZoweExplorerApi.IJes` interface.
+- Added z/OSMF API implementation for `cancelJob` function.
 
 ### Bug fixes
 

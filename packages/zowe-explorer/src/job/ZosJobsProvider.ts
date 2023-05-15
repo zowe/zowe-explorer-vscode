@@ -267,19 +267,6 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         this.refresh();
     }
 
-    public async cancel(node: IZoweJobTreeNode): Promise<boolean> {
-        if (!contextually.isJob(node)) {
-            return false;
-        }
-
-        const session = node.getSession();
-
-        // use 1.0 so that all JES subsystems are supported out-of-the-box
-        await CancelJobs.cancelJobForJob(session, node.job, "1.0");
-        const jobResult = await GetJobs.getStatusForJob(session, node.job);
-        return jobResult.retcode?.includes("CANCEL");
-    }
-
     public async delete(node: IZoweJobTreeNode): Promise<void> {
         ZoweLogger.trace("ZosJobsProvider.delete called.");
         await ZoweExplorerApiRegister.getJesApi(node.getProfile()).deleteJob(node.job.jobname, node.job.jobid);
