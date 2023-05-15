@@ -67,15 +67,52 @@ export class SettingsConfig {
         );
     }
 
+    /**
+     * Checks if the Zowe Explorer major version matches the version
+     * defined in the user's `settings.json` file.
+     *
+     * @param userVersion The user's version defined in settings.json
+     * @param versionString The current version string for Zowe Explorer
+     * @returns true if the version *roughly* matches, false otherwise - e.g.:
+     *
+     * `versionMatches("2.6.1", "2")` will return `true`
+     *
+     * `versionMatches("3", "2")` will return `false`
+     */
+    public static matchesMajorVersion(userVersion: string, versionString: string): boolean {
+        if (userVersion == null) {
+            return true;
+        }
+
+        if (userVersion.startsWith(versionString)) {
+            return false;
+        }
+
+        return userVersion !== versionString;
+    }
+
     public static async standardizeSettings(): Promise<void> {
         ZoweLogger.trace("SettingsConfig.standardizeSettings called.");
-        const globalIsNotMigrated =
-            SettingsConfig.configurations.inspect(globals.SETTINGS_VERSION).globalValue !== SettingsConfig.currentVersionNumber;
-        const workspaceIsNotMigrated =
-            SettingsConfig.configurations.inspect(globals.SETTINGS_VERSION).workspaceValue !== SettingsConfig.currentVersionNumber;
+        // Need to coerce all possible version values to a string to correct previous values
+        const globalVersion = String(SettingsConfig.configurations.inspect(globals.SETTINGS_VERSION).globalValue);
+        const workspaceVersion = String(SettingsConfig.configurations.inspect(globals.SETTINGS_VERSION).workspaceValue);
+        const currentVersion = String(SettingsConfig.currentVersionNumber);
+
+        const globalIsNotMigrated = SettingsConfig.matchesMajorVersion(globalVersion, currentVersion);
+        const workspaceIsNotMigrated = SettingsConfig.matchesMajorVersion(workspaceVersion, currentVersion);
         const workspaceIsOpen = vscode.workspace.workspaceFolders !== undefined;
         const zoweSettingsExist = SettingsConfig.zoweOldConfigurations.length > 0;
 
+        // Update version value if there is a mismatch (coerces previous values into numeric ["2.6.1" -> 2])
+        if (globalVersion == null || globalVersion !== currentVersion) {
+            SettingsConfig.setDirectValue(globals.SETTINGS_VERSION, SettingsConfig.currentVersionNumber);
+        }
+
+        if (workspaceVersion != null && workspaceVersion !== currentVersion) {
+            SettingsConfig.setDirectValue(globals.SETTINGS_VERSION, SettingsConfig.currentVersionNumber, vscode.ConfigurationTarget.Workspace);
+        }
+
+        // Do not migrate unless there are old configurations
         if (!zoweSettingsExist) {
             return;
         }
@@ -99,9 +136,15 @@ export class SettingsConfig {
         return Object.keys(SettingsConfig.configurations).filter((key) => key.match(new RegExp("Zowe-*|Zowe\\s*", "g")));
     }
 
-    private static get currentVersionNumber(): unknown {
+    private static get currentVersionNumber(): number {
         ZoweLogger.trace("SettingsConfig.currentVersionNumber called.");
-        return vscode.extensions.getExtension("zowe.vscode-extension-for-zowe").packageJSON.version as unknown;
+        const version = vscode.extensions.getExtension("zowe.vscode-extension-for-zowe").packageJSON.version as string;
+        // Strip off minor and patch version from number if defined w/ old method
+        if (version.includes(".")) {
+            return parseInt(version.substring(0, version.indexOf(".")));
+        }
+
+        return parseInt(version);
     }
 
     private static async promptReload(): Promise<void> {
