@@ -16,14 +16,7 @@ import * as zowe from "@zowe/cli";
 import * as globals from "../../../src/globals";
 import * as utils from "../../../src/utils/ProfilesUtils";
 import { Gui, IZoweJobTreeNode, ProfilesCache, ValidProfileEnum } from "@zowe/zowe-explorer-api";
-import {
-    createIJobFile,
-    createIJobObject,
-    createJobFavoritesNode,
-    createJobNode,
-    createJobSessionNode,
-    MockJobDetail,
-} from "../../../__mocks__/mockCreators/jobs";
+import { createIJobFile, createIJobObject, createJobFavoritesNode, createJobSessionNode, MockJobDetail } from "../../../__mocks__/mockCreators/jobs";
 import { Job, Spool } from "../../../src/job/ZoweJobNode";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { Profiles } from "../../../src/Profiles";
@@ -930,55 +923,5 @@ describe("Jobs utils unit tests - Function jobStringValidator", () => {
             ["job1234567*", "prefix"],
         ];
         invalidOpts.forEach((invalidOpt) => expect(jobStringValidator(invalidOpt[0], invalidOpt[1])).toContain("Invalid"));
-    });
-});
-
-describe("ZosJobsProvider unit tests - function cancel", () => {
-    const session = createISession();
-    const profile = createIProfile();
-    const jobSessionNode = createJobSessionNode(session, profile);
-    const jobNode = createJobNode(jobSessionNode, profile);
-
-    const jobMocks = {
-        cancelJobForJob: jest.fn(),
-        getStatusForJob: jest.fn(),
-    };
-
-    Object.defineProperty(zowe, "CancelJobs", {
-        value: {
-            cancelJobForJob: jobMocks.cancelJobForJob,
-        },
-    });
-
-    it("does not work for job session nodes", async () => {
-        const globalMocks = await createGlobalMocks();
-        globalMocks.mockGetJobs.getStatusForJob = jobMocks.getStatusForJob;
-        await globalMocks.testJobsProvider.cancel(jobSessionNode);
-        expect(jobMocks.cancelJobForJob).not.toHaveBeenCalled();
-        expect(jobMocks.getStatusForJob).not.toHaveBeenCalled();
-    });
-
-    it("returns true for a job that has been cancelled", async () => {
-        const globalMocks = await createGlobalMocks();
-        globalMocks.mockGetJobs.getStatusForJob = jobMocks.getStatusForJob;
-
-        jobMocks.getStatusForJob.mockReturnValueOnce({
-            retcode: "CANCELED",
-        });
-        expect(await globalMocks.testJobsProvider.cancel(jobNode)).toBe(true);
-        expect(jobMocks.cancelJobForJob).toHaveBeenCalled();
-        expect(jobMocks.getStatusForJob).toHaveBeenCalled();
-    });
-
-    it("returns false for a job that was not cancelled", async () => {
-        const globalMocks = await createGlobalMocks();
-        globalMocks.mockGetJobs.getStatusForJob = jobMocks.getStatusForJob;
-
-        jobMocks.getStatusForJob.mockReturnValueOnce({
-            retcode: "ABEND S222",
-        });
-        expect(await globalMocks.testJobsProvider.cancel(jobNode)).toBe(false);
-        expect(jobMocks.cancelJobForJob).toHaveBeenCalled();
-        expect(jobMocks.getStatusForJob).toHaveBeenCalled();
     });
 });

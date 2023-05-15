@@ -396,6 +396,37 @@ describe("ZosmfJesApi", () => {
             await expectApiWithSession(jesApi, new ZosmfJesApi());
         });
     });
+
+    describe("cancelJob", () => {
+        const api = new ZosmfJesApi();
+        const cancelJobForJob = jest.fn();
+
+        beforeAll(() => {
+            Object.defineProperty(zowe.CancelJobs, "cancelJobForJob", { value: cancelJobForJob });
+        });
+
+        it("returns true if the job was cancelled", async () => {
+            cancelJobForJob.mockReturnValue({
+                status: "0",
+            });
+            expect(
+                await api.cancelJob({
+                    retcode: "ACTIVE",
+                } as zowe.IJob)
+            ).toBe(true);
+        });
+
+        it("returns false if the job did not cancel", async () => {
+            cancelJobForJob.mockReturnValue({
+                status: "0222",
+            });
+            expect(
+                await api.cancelJob({
+                    retcode: "ACTIVE",
+                } as zowe.IJob)
+            ).toBe(false);
+        });
+    });
 });
 
 describe("ZosmfCommandApi", () => {
