@@ -265,6 +265,7 @@ describe("Unit Tests (Jest)", () => {
             undefined,
             profileOne
         );
+        infoChild.id = "<root>.Use the search button to display datasets";
         rootNode.contextValue = globals.DS_SESSION_CONTEXT;
         rootNode.dirty = false;
         await expect(await rootNode.getChildren()).toEqual([infoChild]);
@@ -285,6 +286,7 @@ describe("Unit Tests (Jest)", () => {
             undefined,
             profileOne
         );
+        infoChild.id = "<root>.Use the search button to display datasets";
         rootNode.contextValue = globals.DS_SESSION_CONTEXT;
         await expect(await rootNode.getChildren()).toEqual([infoChild]);
     });
