@@ -35,11 +35,13 @@ function createGlobalMocks() {
     globalMocks.mockLoadNamedProfile.mockReturnValue(globalMocks.testProfile);
     const profilesForValidation = { status: "active", name: "fake" };
     Object.defineProperty(vscode.window, "createTreeView", { value: globalMocks.createTreeView, configurable: true });
+    Object.defineProperty(vscode.workspace, "getConfiguration", { value: jest.fn(), configurable: true });
     Object.defineProperty(Profiles, "getInstance", {
         value: jest.fn(() => {
             return {
                 allProfiles: [{ name: "firstName" }, { name: "secondName" }],
                 defaultProfile: { name: "firstName" },
+                getBaseProfile: jest.fn(),
                 type: "zosmf",
                 validProfile: ValidProfileEnum.VALID,
                 checkCurrentProfile: jest.fn(() => {
@@ -48,6 +50,7 @@ function createGlobalMocks() {
                 profilesForValidation: [],
                 validateProfiles: jest.fn(),
                 loadNamedProfile: globalMocks.mockLoadNamedProfile,
+                enableValidationContext: jest.fn(),
             };
         }),
     });
@@ -91,7 +94,6 @@ describe("Refresh Unit Tests - Function refreshAll", () => {
         newMocks.jobsTree.mSessionNodes.push(newMocks.datasetSessionNode);
         newMocks.testDatasetTree = createDatasetTree(newMocks.datasetSessionNode, newMocks.treeView);
         newMocks.testDatasetTree.mSessionNodes.push(newMocks.datasetSessionNode);
-
         Object.defineProperty(PersistentFilters, "getDirectValue", {
             value: jest.fn(() => {
                 return {
