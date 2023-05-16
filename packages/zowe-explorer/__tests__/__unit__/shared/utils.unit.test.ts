@@ -223,51 +223,6 @@ describe("Test uploadContents", () => {
         );
         expect(ZoweExplorerApiRegister.getUssApi(null).putContent).toBeCalled();
     });
-
-    it("should test with uss node that old API method is called", async () => {
-        const putContents = jest.fn();
-        ZoweExplorerApiRegister.getUssApi = jest.fn<any, Parameters<typeof ZoweExplorerApiRegister.getUssApi>>(
-            (profile: imperative.IProfileLoaded) => {
-                return {
-                    putContents,
-                };
-            }
-        );
-
-        await sharedUtils.uploadContent(
-            new ZoweUSSNode(null, null, null, null, null),
-            {
-                fileName: "whatever",
-            } as any,
-            null
-        );
-        expect(ZoweExplorerApiRegister.getUssApi(null).putContents).toBeCalled();
-    });
-
-    it("should test with data set node that old API method is called", async () => {
-        const putContents = jest.fn();
-        ZoweExplorerApiRegister.getMvsApi = jest.fn<any, Parameters<typeof ZoweExplorerApiRegister.getMvsApi>>(
-            (profile: imperative.IProfileLoaded) => {
-                return {
-                    putContents,
-                };
-            }
-        );
-
-        const session = createISessionWithoutCredentials();
-        const imperativeProfile = createIProfile();
-        const codepage = 285;
-        imperativeProfile.profile.encoding = codepage;
-        const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
-        await sharedUtils.uploadContent(
-            datasetSessionNode,
-            {
-                fileName: "whatever",
-            } as any,
-            null
-        );
-        expect(ZoweExplorerApiRegister.getMvsApi(null).putContents).toBeCalled();
-    });
 });
 
 describe("Test force upload", () => {

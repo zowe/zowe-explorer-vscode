@@ -81,41 +81,9 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
         }
     }
 
-    /**
-     * Upload a file (located at the input path) to the destination path.
-     * @param inputFilePath The input file path
-     * @param ussFilePath The destination file path on USS
-     * @param options Any options for the upload
-     *
-     * @returns A file response containing the results of the operation.
-     */
-    public putContent(inputFilePath: string, ussFilePath: string, options?: zowe.IUploadOptions): Promise<zowe.IZosFilesResponse> {
-        return this.putContents(inputFilePath, ussFilePath, options?.binary, options?.localEncoding, options?.etag, options?.returnEtag);
-    }
-
-    /**
-     * Upload a file (located at the input path) to the destination path.
-     *
-     * @deprecated in favor of `putContent`
-     * @param inputFilePath The input file path
-     * @param ussFilePath The destination file path on USS
-     * @param binary Whether the contents are binary
-     * @param localEncoding The local encoding for the file
-     * @param etag The e-tag associated with the file on the mainframe (optional)
-     * @param returnEtag Whether to return the e-tag after uploading the file
-     *
-     * @returns A file response containing the results of the operation.
-     */
-    public async putContents(
-        inputFilePath: string,
-        ussFilePath: string,
-        binary?: boolean,
-        localEncoding?: string,
-        etag?: string,
-        returnEtag?: boolean
-    ): Promise<zowe.IZosFilesResponse> {
+    public async putContent(inputFilePath: string, ussFilePath: string, options: zowe.IUploadOptions = {}): Promise<zowe.IZosFilesResponse> {
         const transferOptions = {
-            transferType: binary ? TRANSFER_TYPE_BINARY : TRANSFER_TYPE_ASCII,
+            transferType: options?.binary ? TRANSFER_TYPE_BINARY : TRANSFER_TYPE_ASCII,
             localFile: inputFilePath,
         };
         const result = this.getDefaultResponse();
@@ -127,9 +95,9 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
                 throw new Error();
             }
             // Save-Save with FTP requires loading the file first
-            if (returnEtag && etag) {
+            if (options?.returnEtag && options?.etag) {
                 const contentsTag = await this.getContentsTag(ussFilePath);
-                if (contentsTag && contentsTag !== etag) {
+                if (contentsTag && contentsTag !== options.etag) {
                     await Gui.errorMessage("Save conflict. Please pull the latest content from mainframe first.", {
                         logger: ZoweLogger,
                     });
@@ -139,7 +107,7 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
             await UssUtils.uploadFile(connection, ussFilePath, transferOptions);
 
             result.success = true;
-            if (returnEtag) {
+            if (options?.returnEtag) {
                 const contentsTag = await this.getContentsTag(ussFilePath);
                 result.apiResponse.etag = contentsTag;
             }

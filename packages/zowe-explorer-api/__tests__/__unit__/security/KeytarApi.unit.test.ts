@@ -15,7 +15,7 @@ import { KeytarApi } from "../../../src/security/KeytarApi";
 import { KeytarCredentialManager } from "../../../src/security/KeytarCredentialManager";
 
 describe("KeytarApi", () => {
-    const isCredsSecuredSpy = jest.spyOn(ProfilesCache.prototype, "isSecureCredentialPluginActive");
+    const isCredsSecuredSpy = jest.spyOn(ProfilesCache.prototype, "isCredentialsSecured");
     const getSecurityModulesSpy = jest.spyOn(KeytarCredentialManager, "getSecurityModules");
     const credMgrInitializeSpy = jest.spyOn(imperative.CredentialManagerFactory, "initialize");
 

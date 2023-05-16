@@ -176,7 +176,7 @@ export async function uploadBinaryFile(node: IZoweUSSTreeNode, filePath: string)
     try {
         const localFileName = path.parse(filePath).base;
         const ussName = `${node.fullPath}/${localFileName}`;
-        await ZoweExplorerApiRegister.getUssApi(node.getProfile()).putContents(filePath, ussName, true);
+        await ZoweExplorerApiRegister.getUssApi(node.getProfile()).putContent(filePath, ussName, { binary: true });
     } catch (e) {
         await errorHandling(e, node.mProfileName);
     }
@@ -189,24 +189,19 @@ export async function uploadFile(node: IZoweUSSTreeNode, doc: vscode.TextDocumen
         const ussName = `${node.fullPath}/${localFileName}`;
         const prof = node.getProfile();
 
-        // if new api method exists, use it
-        if (ZoweExplorerApiRegister.getUssApi(prof).putContent) {
-            const task: imperative.ITaskWithStatus = {
-                percentComplete: 0,
-                statusMessage: localize("uploadFile.putContents", "Uploading USS file"),
-                stageName: 0, // TaskStage.IN_PROGRESS - https://github.com/kulshekhar/ts-jest/issues/281
-            };
-            const options: IUploadOptions = {
-                task,
-                responseTimeout: prof.profile?.responseTimeout,
-            };
-            if (prof.profile.encoding) {
-                options.encoding = prof.profile.encoding;
-            }
-            await ZoweExplorerApiRegister.getUssApi(prof).putContent(doc.fileName, ussName, options);
-        } else {
-            await ZoweExplorerApiRegister.getUssApi(prof).putContents(doc.fileName, ussName);
+        const task: imperative.ITaskWithStatus = {
+            percentComplete: 0,
+            statusMessage: localize("uploadFile.putContents", "Uploading USS file"),
+            stageName: 0, // TaskStage.IN_PROGRESS - https://github.com/kulshekhar/ts-jest/issues/281
+        };
+        const options: IUploadOptions = {
+            task,
+            responseTimeout: prof.profile?.responseTimeout,
+        };
+        if (prof.profile.encoding) {
+            options.encoding = prof.profile.encoding;
         }
+        await ZoweExplorerApiRegister.getUssApi(prof).putContent(doc.fileName, ussName, options);
     } catch (e) {
         await errorHandling(e, node.mProfileName);
     }

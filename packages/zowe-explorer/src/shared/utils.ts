@@ -222,27 +222,22 @@ export async function uploadContent(
             ...uploadOptions,
         });
     } else {
-        // if new api method exists, use it
-        if (ZoweExplorerApiRegister.getUssApi(profile).putContent) {
-            const task: imperative.ITaskWithStatus = {
-                percentComplete: 0,
-                statusMessage: localize("uploadContent.putContents", "Uploading USS file"),
-                stageName: 0, // TaskStage.IN_PROGRESS - https://github.com/kulshekhar/ts-jest/issues/281
-            };
-            const options: IUploadOptions = {
-                binary,
-                localEncoding: null,
-                etag: etagToUpload,
-                returnEtag,
-                encoding: profile.profile?.encoding,
-                task,
-                responseTimeout: profile.profile?.responseTimeout,
-            };
-            const result = ZoweExplorerApiRegister.getUssApi(profile).putContent(doc.fileName, remotePath, options);
-            return result;
-        } else {
-            return ZoweExplorerApiRegister.getUssApi(profile).putContents(doc.fileName, remotePath, binary, null, etagToUpload, returnEtag);
-        }
+        const task: imperative.ITaskWithStatus = {
+            percentComplete: 0,
+            statusMessage: localize("uploadContent.putContents", "Uploading USS file"),
+            stageName: 0, // TaskStage.IN_PROGRESS - https://github.com/kulshekhar/ts-jest/issues/281
+        };
+        const options: IUploadOptions = {
+            binary,
+            localEncoding: null,
+            etag: etagToUpload,
+            returnEtag,
+            encoding: profile.profile?.encoding,
+            task,
+            responseTimeout: profile.profile?.responseTimeout,
+        };
+        const result = ZoweExplorerApiRegister.getUssApi(profile).putContent(doc.fileName, remotePath, options);
+        return result;
     }
 }
 

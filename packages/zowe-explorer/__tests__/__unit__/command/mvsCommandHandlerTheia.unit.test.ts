@@ -11,7 +11,7 @@
 
 import * as vscode from "vscode";
 import * as profileLoader from "../../../src/Profiles";
-import { ValidProfileEnum } from "@zowe/zowe-explorer-api";
+import { Gui, ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import { MvsCommandHandler } from "../../../src/command/MvsCommandHandler";
 import * as globals from "../../../src/globals";
 import * as utils from "../../../src/utils/ProfilesUtils";
@@ -178,7 +178,7 @@ describe("mvsCommandActions unit testing", () => {
         // Second run selects previously added run
         showQuickPick.mockReturnValueOnce("firstName");
         showQuickPick.mockReturnValueOnce({ label: "d iplinfo2" });
-        jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(() => Promise.resolve(qpItem));
+        jest.spyOn(Gui, "resolveQuickPick").mockImplementation(() => Promise.resolve(qpItem));
 
         await mvsActions.issueMvsCommand();
 
@@ -200,7 +200,7 @@ describe("mvsCommandActions unit testing", () => {
         // Third run selects an alternative value
         showQuickPick.mockReturnValueOnce("firstName");
         showQuickPick.mockReturnValueOnce(new utils.FilterItem({ text: "/d m=cpu" }));
-        jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(() => Promise.resolve(qpItem));
+        jest.spyOn(Gui, "resolveQuickPick").mockImplementation(() => Promise.resolve(qpItem));
 
         await mvsActions.issueMvsCommand();
 
@@ -221,7 +221,7 @@ describe("mvsCommandActions unit testing", () => {
 
         showQuickPick.mockReturnValueOnce("firstName");
         showQuickPick.mockReturnValueOnce(undefined);
-        jest.spyOn(utils, "resolveQuickPickHelper").mockImplementation(() => Promise.resolve(qpItem));
+        jest.spyOn(Gui, "resolveQuickPick").mockImplementation(() => Promise.resolve(qpItem));
 
         await mvsActions.issueMvsCommand();
 

@@ -396,31 +396,6 @@ export class ProfilesCache {
         return true;
     }
 
-    /**
-     * This returns true or false depending on if SCS plugin is installed. Use isCredentialsSecured().
-     * @deprecated
-     * @returns {boolean}
-     */
-    public isSecureCredentialPluginActive(): boolean {
-        let imperativeIsSecure = false;
-        try {
-            const fileName = path.join(getZoweDir(), "settings", "imperative.json");
-            let settings: Record<string, unknown>;
-            if (fs.existsSync(fileName)) {
-                settings = JSON.parse(fs.readFileSync(fileName, "utf-8")) as Record<string, unknown>;
-            }
-            if (settings) {
-                const baseValue = settings.overrides as Record<string, unknown>;
-                const value1 = baseValue?.CredentialManager;
-                const value2 = baseValue?.["credential-manager"];
-                imperativeIsSecure = (typeof value1 === "string" && value1.length > 0) || (typeof value2 === "string" && value2.length > 0);
-            }
-        } catch (error) {
-            this.log.error(error as string);
-        }
-        return imperativeIsSecure;
-    }
-
     public getProfileLoaded(profileName: string, profileType: string, profile: zowe.imperative.IProfile): zowe.imperative.IProfileLoaded {
         return {
             message: "",

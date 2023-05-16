@@ -9,7 +9,6 @@
  *
  */
 
-import * as fs from "fs";
 import * as path from "path";
 import * as zowe from "@zowe/cli";
 import { ProfilesCache } from "../../../src/profiles/ProfilesCache";
