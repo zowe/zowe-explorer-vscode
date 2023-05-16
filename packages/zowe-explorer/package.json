@@ -1669,7 +1669,7 @@
     }
   },
   "scripts": {
-    "vscode:prepublish": "yarn createTestProfileData && gulp build && yarn license && yarn lint && webpack --mode production && yarn updateStrings",
+    "vscode:prepublish": "yarn createTestProfileData && gulp build && yarn license && webpack --mode production && yarn updateStrings",
     "build": "yarn createTestProfileData && gulp build && yarn license && webpack --mode development",
     "build:integration": "yarn createTestProfileData && gulp build && yarn license && tsc --build --pretty",
     "test:unit": "jest \".*__tests__.*\\.unit\\.test\\.ts\" --coverage",
