@@ -359,7 +359,7 @@ export function createInstanceOfProfileInfo() {
         updateKnownProperty: jest.fn(),
         getTeamConfig: jest.fn(),
         createSession: jest.fn(),
-        usingTeamConfig: jest.fn(),
+        usingTeamConfig: true,
         mergeArgsForProfile: jest.fn().mockReturnValue({
             knownArgs: [
                 {

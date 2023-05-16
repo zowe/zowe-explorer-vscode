@@ -178,7 +178,12 @@ async function createGlobalMocks() {
     globalMocks.testTree.addSearchHistory("/u/myuser");
 
     Object.defineProperty(globalMocks.mockProfilesCache, "getProfileInfo", {
-        value: jest.fn().mockReturnValue({ usingTeamConfig: false }),
+        value: jest.fn().mockReturnValue({ usingTeamConfig: true }),
+    });
+
+    Object.defineProperty(utils.ProfilesUtils, "usingTeamConfig", {
+        value: jest.fn().mockReturnValue(true),
+        configurable: true,
     });
 
     return globalMocks;

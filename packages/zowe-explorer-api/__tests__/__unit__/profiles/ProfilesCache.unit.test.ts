@@ -116,6 +116,7 @@ function createProfInfoMock(profiles: Partial<zowe.imperative.IProfileLoaded>[])
                 knownArgs: Object.entries(profile.profile as object).map(([k, v]) => ({ argName: k, argValue: v as unknown })),
             };
         },
+        usingTeamConfig: true,
     } as any;
 }
 
@@ -224,7 +225,7 @@ describe("ProfilesCache", () => {
 
         it("should refresh profile data for multiple profile types", async () => {
             const profCache = new ProfilesCache({ ...fakeLogger, error: mockLogError } as unknown as zowe.imperative.Logger);
-            jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([lpar1Profile, zftpProfile]));
+            const getProfInfoSpy = jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([lpar1Profile, zftpProfile]));
             await profCache.refresh(fakeApiRegister as unknown as ZoweExplorerApi.IApiRegisterClient);
             expect(profCache.allProfiles.length).toEqual(2);
             expect(profCache.allProfiles[0]).toMatchObject(lpar1Profile);
