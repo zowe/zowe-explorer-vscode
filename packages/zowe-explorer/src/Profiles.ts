@@ -25,12 +25,11 @@ import {
     IValidationSetting,
     ValidProfileEnum,
     ProfilesCache,
-    IUrlValidator,
     ZoweVsCodeExtension,
     getFullPath,
     getZoweDir,
 } from "@zowe/zowe-explorer-api";
-import { errorHandling, FilterDescriptor, FilterItem, ProfilesUtils } from "./utils/ProfilesUtils";
+import { errorHandling, FilterDescriptor, FilterItem } from "./utils/ProfilesUtils";
 import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
 import { ZoweExplorerExtender } from "./ZoweExplorerExtender";
 import * as globals from "./globals";
@@ -957,77 +956,6 @@ export class Profiles extends ProfilesCache {
         }
         return [newUser, newPass];
     }
-    private async urlInfo(input?): Promise<IUrlValidator | undefined> {
-        ZoweLogger.trace("Profiles.urlInfo called.");
-        let zosURL: string;
-        if (input) {
-            zosURL = input;
-        }
-        const options: vscode.InputBoxOptions = {
-            prompt: localize("urlInfo.inputBoxOptions.prompt", "Enter a z/OS URL in the format 'https://url:port'."),
-            value: zosURL,
-            ignoreFocusOut: true,
-            placeHolder: localize("urlInfo.inputBoxOptions.placeholder", "https://url:port"),
-            validateInput: (text: string): string | undefined => {
-                const host = this.getUrl(text);
-                if (this.validateAndParseUrl(host).valid) {
-                    return undefined;
-                } else {
-                    return localize("urlInfo.invalidzosURL", "Please enter a valid host URL in the format 'company.com'.");
-                }
-            },
-        };
-        zosURL = await Gui.showInputBox(options);
-
-        let hostName: string;
-        if (!zosURL) {
-            return undefined;
-        } else {
-            hostName = this.getUrl(zosURL);
-        }
-
-        return this.validateAndParseUrl(hostName);
-    }
-
-    private getUrl(host: string): string {
-        ZoweLogger.trace("Profiles.getUrl called.");
-        let url: string;
-        if (host.includes(":")) {
-            if (host.includes("/")) {
-                url = host;
-            } else {
-                url = `https://${host}`;
-            }
-        } else {
-            url = `https://${host}`;
-        }
-        return url;
-    }
-
-    private async portInfo(input: string, schema: {}): Promise<number> {
-        ZoweLogger.trace("Profiles.portInfo called.");
-        let options: vscode.InputBoxOptions;
-        let port: number;
-        if ("defaultValue" in schema[input].optionDefinition) {
-            options = {
-                prompt: schema[input].optionDefinition.description.toString(),
-                value: schema[input].optionDefinition.defaultValue.toString(),
-            };
-        } else {
-            options = {
-                placeHolder: localize("portInfo.inputBoxOptions.placeholder", "Port Number"),
-                prompt: schema[input].optionDefinition.description.toString(),
-            };
-        }
-        port = Number(await Gui.showInputBox(options));
-
-        if (port === 0 && "defaultValue" in schema[input].optionDefinition) {
-            port = Number(schema[input].optionDefinition.defaultValue.toString());
-        } else {
-            return port;
-        }
-        return port;
-    }
 
     private async userInfo(input?: string): Promise<string> {
         ZoweLogger.trace("Profiles.userInfo called.");
@@ -1075,123 +1003,6 @@ export class Profiles extends ProfilesCache {
         }
 
         return passWord.trim();
-    }
-    private async ruInfo(input?: boolean): Promise<boolean> {
-        ZoweLogger.trace("Profiles.ruInfo called.");
-        let rejectUnauthorize: boolean;
-        let placeholder: string;
-        let selectRU: string[];
-        const falseString = localize("ruInfo.qp.placeholder.false", "False - Accept connections with self-signed certificates");
-        const trueString = localize("ruInfo.qp.placeholder.true", "True - Reject connections with self-signed certificates");
-
-        if (input !== undefined) {
-            rejectUnauthorize = input;
-            if (!input) {
-                placeholder = falseString;
-                selectRU = [falseString, trueString];
-            } else {
-                placeholder = trueString;
-                selectRU = [trueString, falseString];
-            }
-        } else {
-            placeholder = localize("ruInfo.qp.placeholder.default", "Reject Unauthorized Connections");
-            selectRU = [trueString, falseString];
-        }
-
-        const quickPickOptions: vscode.QuickPickOptions = {
-            placeHolder: placeholder,
-            ignoreFocusOut: true,
-            canPickMany: false,
-        };
-
-        const ruOptions = Array.from(selectRU);
-
-        const chosenRU = await Gui.showQuickPick(ruOptions, quickPickOptions);
-
-        if (chosenRU && chosenRU.includes(trueString)) {
-            rejectUnauthorize = true;
-        } else if (chosenRU && chosenRU.includes(falseString)) {
-            rejectUnauthorize = false;
-        } else {
-            Gui.showMessage(this.profilesOpCancelled);
-            return undefined;
-        }
-
-        return rejectUnauthorize;
-    }
-
-    private async boolInfo(input: string, schema: {}): Promise<boolean> {
-        ZoweLogger.trace("Profiles.boolInfo called.");
-        let isTrue: boolean;
-        const description: string = schema[input].optionDefinition.description.toString();
-        const quickPickBooleanOptions: vscode.QuickPickOptions = {
-            placeHolder: description,
-            ignoreFocusOut: true,
-            canPickMany: false,
-        };
-        const selectBoolean = ["True", "False"];
-        const chosenValue = await Gui.showQuickPick(selectBoolean, quickPickBooleanOptions);
-        if (chosenValue === selectBoolean[0]) {
-            isTrue = true;
-        } else if (chosenValue === selectBoolean[1]) {
-            isTrue = false;
-        } else {
-            return undefined;
-        }
-        return isTrue;
-    }
-
-    private optionsValue(value: string, schema: {}, input?: string): vscode.InputBoxOptions {
-        ZoweLogger.trace("Profiles.optionsValue called.");
-        let options: vscode.InputBoxOptions;
-        const description: string = schema[value].optionDefinition.description.toString();
-        let editValue: any;
-
-        if (input !== undefined) {
-            editValue = input;
-            options = {
-                prompt: description,
-                value: editValue,
-            };
-        } else if ("defaultValue" in schema[value].optionDefinition) {
-            options = {
-                prompt: description,
-                value: schema[value].optionDefinition.defaultValue,
-            };
-        } else {
-            options = {
-                placeHolder: description,
-                prompt: description,
-            };
-        }
-        return options;
-    }
-
-    private checkType(input?): string {
-        ZoweLogger.trace("Profiles.checkType called.");
-        const isTrue = Array.isArray(input);
-        let test: string;
-        let index: number;
-        if (isTrue) {
-            if (input.includes("boolean")) {
-                index = input.indexOf("boolean");
-                test = input[index];
-                return test;
-            }
-            if (input.includes("number")) {
-                index = input.indexOf("number");
-                test = input[index];
-                return test;
-            }
-            if (input.includes("string")) {
-                index = input.indexOf("string");
-                test = input[index];
-                return test;
-            }
-        } else {
-            test = input;
-        }
-        return test;
     }
 
     // Temporary solution for handling unsecure profiles until CLI team's work is made
