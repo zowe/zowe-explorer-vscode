@@ -19,6 +19,7 @@ import * as dsNodeActions from "../../../src/dataset/actions";
 import * as refreshActions from "../../../src/shared/refresh";
 import { Profiles } from "../../../src/Profiles";
 import { FAVORITE_CONTEXT, DS_SESSION_CONTEXT, FAV_SUFFIX } from "../../../src/globals";
+import { PersistentFilters } from "../../../src/PersistentFilters";
 
 jest.mock("vscode");
 jest.mock("Session");
@@ -184,6 +185,13 @@ describe("dsNodeActions", () => {
     Object.defineProperty(vscode.window, "showInformationMessage", { value: showInformationMessage });
     Object.defineProperty(vscode.workspace, "getConfiguration", { value: getConfiguration });
     Object.defineProperty(zowe.ZosmfSession, "createBasicZosmfSession", { value: createBasicZosmfSession });
+    Object.defineProperty(PersistentFilters, "getDirectValue", {
+        value: jest.fn(() => {
+            return {
+                "Zowe-Automatic-Validation": true,
+            };
+        }),
+    });
 
     beforeEach(() => {
         showErrorMessage.mockReset();
@@ -217,6 +225,8 @@ describe("dsNodeActions", () => {
                         }),
                         profilesForValidation: [],
                         validateProfiles: jest.fn(),
+                        enableValidationContext: jest.fn(),
+                        getBaseProfile: jest.fn(),
                     };
                 }),
             });
