@@ -47,7 +47,7 @@ import {
 import { PersistentFilters } from "../../src/PersistentFilters";
 
 const TIMEOUT = 45000;
-declare var it: Mocha.ITestDefinition;
+declare var it: Mocha.TestFunction;
 // declare var describe: any;
 
 const testProfile: IProfileLoaded = {

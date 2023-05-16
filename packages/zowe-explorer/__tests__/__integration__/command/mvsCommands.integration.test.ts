@@ -21,7 +21,7 @@ import { MvsCommandHandler } from "../../../src/command/MvsCommandHandler";
 import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
 
 const TIMEOUT = 45000;
-declare var it: Mocha.ITestDefinition;
+declare var it: Mocha.TestFunction;
 
 describe("mvsCommands integration test", async () => {
     const testProfile: imperative.IProfileLoaded = {

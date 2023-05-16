@@ -21,7 +21,7 @@ import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
 import { TsoCommandHandler } from "../../../src/command/TsoCommandHandler";
 
 const TIMEOUT = 45000;
-declare var it: Mocha.ITestDefinition;
+declare var it: Mocha.TestFunction;
 
 describe("tsoCommands integration test", async () => {
     const testProfile: imperative.IProfileLoaded = {

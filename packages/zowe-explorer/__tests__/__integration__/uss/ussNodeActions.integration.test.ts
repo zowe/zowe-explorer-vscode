@@ -22,7 +22,7 @@ import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
 import { DS_SESSION_CONTEXT } from "../../../src/globals";
 
 const TIMEOUT = 45000;
-declare var it: Mocha.ITestDefinition;
+declare var it: Mocha.TestFunction;
 // declare var describe: any;
 
 const testProfile: IProfileLoaded = {
