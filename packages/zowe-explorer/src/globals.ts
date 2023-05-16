@@ -76,7 +76,6 @@ export const ICON_STATE_CLOSED = "closed";
 export const FILTER_SEARCH = "isFilterSearch";
 export const VSCODE_APPNAME: string[] = ["Visual Studio Code", "VSCodium"];
 export const ROOTPATH = path.join(__dirname, "..", "..");
-export const SETTINGS_VERSION = "zowe.settings.version";
 export const SETTINGS_OLD_SETTINGS_MIGRATED = "zowe.settings.oldSettingsMigrated";
 export const SETTINGS_LOCAL_STORAGE_MIGRATED = "zowe.settings.localStorageMigrated";
 export const SETTINGS_TEMP_FOLDER_PATH = "zowe.files.temporaryDownloadsFolder.path";

@@ -1838,11 +1838,6 @@
           "description": "%zowe.automaticProfileValidation%",
           "scope": "window"
         },
-        "zowe.settings.version": {
-          "type": "integer",
-          "description": "%zowe.settings.version%",
-          "scope": "window"
-        },
         "zowe.settings.oldSettingsMigrated": {
           "default": false,
           "type": "boolean",
