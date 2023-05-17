@@ -183,7 +183,6 @@ export function checkIfChildPath(parentPath: string, childPath: string): boolean
  */
 
 export async function markFileAsDirty(doc: vscode.TextDocument): Promise<void> {
-    if (doc == null) return;
     const docText = doc.getText();
     const startPosition = new vscode.Position(0, 0);
     const endPosition = new vscode.Position(doc.lineCount, 0);

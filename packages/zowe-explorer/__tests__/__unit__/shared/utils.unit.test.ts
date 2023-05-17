@@ -21,6 +21,7 @@ import {
     createISession,
     createFileResponse,
     createInstanceOfProfile,
+    createTextDocument,
 } from "../../../__mocks__/mockCreators/shared";
 import { createDatasetSessionNode } from "../../../__mocks__/mockCreators/datasets";
 import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
@@ -363,6 +364,15 @@ describe("Test force upload", () => {
         Object.defineProperty(vscode.window, "withProgress", { value: newVariables.withProgress, configurable: true });
         Object.defineProperty(vscode, "ProgressLocation", { value: newVariables.ProgressLocation, configurable: true });
 
+        Object.defineProperty(vscode, "Position", { value: jest.fn(), configurable: true });
+        Object.defineProperty(vscode, "Range", { value: jest.fn(), configurable: true });
+        Object.defineProperty(vscode.window, "activeTextEditor", {
+            value: {
+                edit: jest.fn(),
+            },
+            configurable: true,
+        });
+
         return newVariables;
     }
 
@@ -397,7 +407,7 @@ describe("Test force upload", () => {
     it("should cancel upload if user clicks 'No'", async () => {
         const blockMocks = await createBlockMocks();
         blockMocks.showInformationMessage.mockResolvedValueOnce("No");
-        await sharedUtils.willForceUpload(blockMocks.dsNode, null, null);
+        await sharedUtils.willForceUpload(blockMocks.dsNode, createTextDocument("/u/myuser/testFile"), null);
         expect(blockMocks.showInformationMessage.mock.calls[1][0]).toBe("Upload cancelled.");
     });
 
@@ -405,7 +415,7 @@ describe("Test force upload", () => {
         const blockMocks = await createBlockMocks();
         Object.defineProperty(globals, "ISTHEIA", { value: true });
         blockMocks.showInformationMessage.mockResolvedValueOnce("No");
-        await sharedUtils.willForceUpload(blockMocks.dsNode, null, null);
+        await sharedUtils.willForceUpload(blockMocks.dsNode, createTextDocument("/u/myuser/testFile"), null);
         expect(blockMocks.showWarningMessage.mock.calls[0][0]).toBe(
             "A merge conflict has been detected. Since you are running inside Theia editor, a merge conflict resolution is not available yet."
         );
