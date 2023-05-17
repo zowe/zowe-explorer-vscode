@@ -784,11 +784,15 @@ describe("Dataset Tree Unit Tests - Function addSession", () => {
 
         return newMocks;
     }
-    xit("Checking successful adding of session", async () => {
+    it("Checking successful adding of session", async () => {
         await createGlobalMocks();
         const blockMocks = await createBlockMocks();
 
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        mocked(Profiles.getInstance).mockReturnValueOnce({
+            ...blockMocks.mockProfileInstance,
+            loadNamedProfile: jest.fn().mockReturnValue(blockMocks.imperativeProfile),
+        });
         const testTree = new DatasetTree();
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
 
@@ -828,7 +832,7 @@ describe("Dataset Tree Unit Tests - Function addSession", () => {
         expect(testTree.mSessionNodes[1].label).toBe(blockMocks.imperativeProfile.name);
     });
 
-    xit("Checking failed attempt to add a session due to the missing profile", async () => {
+    it("Checking failed attempt to add a session due to the missing profile", async () => {
         await createGlobalMocks();
         const blockMocks = await createBlockMocks();
 
@@ -1361,7 +1365,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
             { name: "firstName" },
             { name: "secondName" },
         ];
-        globalMocks.mockProfileInstance.loadNamedProfile.mockReturnValueOnce(newMocks.imperativeProfile);
+        globalMocks.mockProfileInstance.loadNamedProfile.mockReturnValue(newMocks.imperativeProfile);
         globalMocks.mockProfileInstance.resetValidationSettings.mockReturnValue(newMocks.datasetSessionNode);
         globalMocks.mockProfileInstance.getProfileSetting.mockReturnValue({
             name: newMocks.imperativeProfile.name,
@@ -1441,7 +1445,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
 
         expect(mocked(vscode.window.showInformationMessage)).toBeCalledWith("No selection made. Operation cancelled.");
     });
-    xit("Checking function on favorites", async () => {
+    it("Checking function on favorites", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 

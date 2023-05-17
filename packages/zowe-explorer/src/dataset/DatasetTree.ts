@@ -452,7 +452,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             }
             for (const node of this.mSessionNodes) {
                 const name = node.getProfileName();
-                if (name === profile.name) {
+                if (name === profile?.name) {
                     await resetValidationSettings(node, setting);
                 }
             }
