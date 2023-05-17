@@ -20,6 +20,7 @@ import * as nls from "vscode-nls";
 import SpoolProvider, { encodeJobFile, getSpoolFiles, matchSpool } from "../SpoolProvider";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { getDefaultUri } from "../shared/utils";
+import * as globals from "../globals";
 
 // Set up localization
 nls.config({
@@ -506,8 +507,14 @@ export async function cancelJobs(jobsProvider: IZoweTree<IZoweJobTreeNode>, node
             const cancelled = await jesApis[sesLabel].cancelJob(jobNode.job);
             if (!cancelled) {
                 failedJobs.push({ job: jobNode.job, error: localize("cancelJobs.notCancelled", "The job was not cancelled.") });
-            } else if (!sessionNodes.includes(sesNode)) {
-                sessionNodes.push(sesNode);
+            } else {
+                if (!sessionNodes.includes(sesNode)) {
+                    // Introduce small delay before refresh so that API returns updated values
+                    setTimeout(() => {
+                        jobsProvider.refreshElement(sesNode);
+                    }, globals.MS_PER_SEC);
+                    sessionNodes.push(sesNode);
+                }
             }
         } catch (err) {
             if (err instanceof Error) {
@@ -515,9 +522,6 @@ export async function cancelJobs(jobsProvider: IZoweTree<IZoweJobTreeNode>, node
             }
         }
     }
-
-    // Refresh unique list of sessions
-    sessionNodes.forEach((s) => jobsProvider.refreshElement(s));
 
     if (failedJobs.length > 0) {
         // Display any errors from the API
