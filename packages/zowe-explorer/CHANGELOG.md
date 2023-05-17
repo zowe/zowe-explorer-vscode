@@ -8,6 +8,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
+- Fixed issue where Zowe Explorer was setting incorrect values for `zowe.settings.version`. [#2166](https://github.com/zowe/vscode-extension-for-zowe/issues/2166)
+
 ## `2.8.0`
 
 ### New features and enhancements
