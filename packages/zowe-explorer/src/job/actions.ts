@@ -20,7 +20,6 @@ import * as nls from "vscode-nls";
 import SpoolProvider, { encodeJobFile, getSpoolFiles, matchSpool } from "../SpoolProvider";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { getDefaultUri } from "../shared/utils";
-import * as globals from "../globals";
 
 // Set up localization
 nls.config({
@@ -511,7 +510,7 @@ export async function cancelJobs(jobsProvider: IZoweTree<IZoweJobTreeNode>, node
                 // Introduce small delay before refresh so that API returns updated values
                 setTimeout(() => {
                     jobsProvider.refreshElement(sesNode);
-                }, globals.MS_PER_SEC);
+                }, 0);
                 sessionNodes.push(sesNode);
             }
         } catch (err) {
