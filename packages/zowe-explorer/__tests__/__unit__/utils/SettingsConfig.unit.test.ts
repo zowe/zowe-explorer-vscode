@@ -111,6 +111,9 @@ describe("SettingsConfig Unit Tests - function standardizeSettings", () => {
         });
         jest.spyOn(SettingsConfig as any, "currentVersionNumber", "get").mockReturnValue("vtest");
         jest.spyOn(SettingsConfig as any, "zoweOldConfigurations", "get").mockReturnValue(["zowe.settings.test"]);
+        jest.spyOn(vscode.workspace, "getConfiguration").mockReturnValue({
+            update: jest.fn(),
+        } as any);
     });
 
     it("should standardize workspace settings if not migrated and workspace is open", async () => {
