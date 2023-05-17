@@ -139,6 +139,7 @@ async function createGlobalMocks() {
     globalMocks.jesApi = ZoweExplorerApiRegister.getJesApi(globalMocks.testProfile);
     globalMocks.mockGetJesApi.mockReturnValue(globalMocks.jesApi);
     ZoweExplorerApiRegister.getJesApi = globalMocks.mockGetJesApi.bind(ZoweExplorerApiRegister);
+    globalMocks.jesApi.getSession = jest.fn().mockReturnValue(globalMocks.testSession);
 
     globalMocks.createTreeView.mockReturnValue("testTreeView");
     globalMocks.testSessionNode = createJobSessionNode(globalMocks.testSession, globalMocks.testProfile);
@@ -251,7 +252,6 @@ describe("ZosJobsProvider unit tests - Function getChildren", () => {
     it("Tests that getChildren gets children of a session element", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
-        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profile);
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
 
         const testTree = new ZosJobsProvider();
@@ -374,7 +374,7 @@ describe("ZosJobsProvider unit tests - Function loadProfilesForFavorites", () =>
     }
 
     it("Checks that loaded profile and session values are added to the profile grouping node in Favorites", async () => {
-        createGlobalMocks();
+        const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks();
         const favProfileNode = new Job(
             "testProfile",
@@ -397,23 +397,13 @@ describe("ZosJobsProvider unit tests - Function loadProfilesForFavorites", () =>
         );
         expectedFavProfileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
 
-        // Mock successful loading of profile/session
-        Object.defineProperty(Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    loadNamedProfile: jest.fn(() => {
-                        return blockMocks.imperativeProfile;
-                    }),
-                    checkCurrentProfile: jest.fn(() => {
-                        return {
-                            name: blockMocks.imperativeProfile.name,
-                            status: "unverified",
-                        };
-                    }),
-                    validProfile: ValidProfileEnum.VALID,
-                };
-            }),
+        mocked(Profiles.getInstance).mockReturnValue({
+            ...(await globalMocks).mockProfileInstance,
+            loadNamedProfile: jest.fn(() => blockMocks.imperativeProfile),
+            checkCurrentProfile: jest.fn(() => ({ name: blockMocks.imperativeProfile.name, status: "unverified" })),
+            validProfile: ValidProfileEnum.VALID,
         });
+
         Object.defineProperty(blockMocks.jesApi, "getSession", {
             value: jest.fn(() => {
                 return blockMocks.session;
@@ -426,7 +416,7 @@ describe("ZosJobsProvider unit tests - Function loadProfilesForFavorites", () =>
         expect(resultFavProfileNode).toEqual(expectedFavProfileNode);
     });
     it("Checks that the error is handled if profile fails to load", async () => {
-        createGlobalMocks();
+        const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks();
         const testTree = new ZosJobsProvider();
         const favProfileNode = new Job(
@@ -441,15 +431,13 @@ describe("ZosJobsProvider unit tests - Function loadProfilesForFavorites", () =>
         testTree.mFavorites.push(favProfileNode);
         const showErrorMessageSpy = jest.spyOn(vscode.window, "showErrorMessage");
 
-        Object.defineProperty(Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    loadNamedProfile: jest.fn(() => {
-                        throw new Error();
-                    }),
-                };
+        mocked(Profiles.getInstance).mockReturnValue({
+            ...(await globalMocks).mockProfileInstance,
+            loadNamedProfile: jest.fn(() => {
+                throw new Error();
             }),
         });
+
         mocked(vscode.window.showErrorMessage).mockResolvedValueOnce({ title: "Remove" });
         await testTree.loadProfilesForFavorites(blockMocks.log, favProfileNode);
         expect(showErrorMessageSpy).toBeCalledTimes(1);
