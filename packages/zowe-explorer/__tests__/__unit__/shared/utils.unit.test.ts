@@ -337,7 +337,7 @@ describe("Test force upload", () => {
             getMvsApi: jest.fn(),
             getUssApi: jest.fn(),
             withProgress: jest.fn(),
-            fileResponse: createFileResponse({ etag: null }),
+            fileResponse: createFileResponse([{ etag: null }]),
             ProgressLocation: jest.fn().mockImplementation(() => {
                 return {
                     Notification: 15,
