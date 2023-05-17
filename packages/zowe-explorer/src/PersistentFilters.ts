@@ -111,7 +111,7 @@ export class PersistentFilters {
             });
             // Add value to front of stack
             this.mDsTemplates.unshift(criteria);
-            Promise.resolve(this.updateDsTemplateHistory());
+            this.updateDsTemplateHistory();
         }
     }
 
@@ -213,7 +213,7 @@ export class PersistentFilters {
 
     public resetDsTemplateHistory(): void {
         this.mDsTemplates = [];
-        Promise.resolve(this.updateDsTemplateHistory());
+        this.updateDsTemplateHistory();
     }
 
     /*********************************************************************************************************************************************/
@@ -256,12 +256,12 @@ export class PersistentFilters {
         }
     }
 
-    private async updateDsTemplateHistory(): Promise<void> {
+    private updateDsTemplateHistory(): void {
         // settings are read-only, so make a clone
         const settings: any = { ...vscode.workspace.getConfiguration(this.schema) };
         if (settings.persistence) {
             settings.templates = this.mDsTemplates;
-            await SettingsConfig.setDirectValue(this.schema, settings);
+            SettingsConfig.setDirectValue(this.schema, settings);
         }
     }
 
