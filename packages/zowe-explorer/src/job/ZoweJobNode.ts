@@ -80,7 +80,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
         if (session) {
             this._owner = "*";
             if (session.ISession?.user) {
-                this._owner = session.ISession?.user;
+                this._owner = session.ISession.user;
             }
         }
 

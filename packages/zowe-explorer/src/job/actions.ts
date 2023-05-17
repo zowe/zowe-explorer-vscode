@@ -507,14 +507,12 @@ export async function cancelJobs(jobsProvider: IZoweTree<IZoweJobTreeNode>, node
             const cancelled = await jesApis[sesLabel].cancelJob(jobNode.job);
             if (!cancelled) {
                 failedJobs.push({ job: jobNode.job, error: localize("cancelJobs.notCancelled", "The job was not cancelled.") });
-            } else {
-                if (!sessionNodes.includes(sesNode)) {
-                    // Introduce small delay before refresh so that API returns updated values
-                    setTimeout(() => {
-                        jobsProvider.refreshElement(sesNode);
-                    }, globals.MS_PER_SEC);
-                    sessionNodes.push(sesNode);
-                }
+            } else if (!sessionNodes.includes(sesNode)) {
+                // Introduce small delay before refresh so that API returns updated values
+                setTimeout(() => {
+                    jobsProvider.refreshElement(sesNode);
+                }, globals.MS_PER_SEC);
+                sessionNodes.push(sesNode);
             }
         } catch (err) {
             if (err instanceof Error) {
