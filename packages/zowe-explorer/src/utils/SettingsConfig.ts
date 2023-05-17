@@ -107,7 +107,6 @@ export class SettingsConfig {
         if (globalVersion == null || globalVersion !== currentVersion) {
             SettingsConfig.setDirectValue(globals.SETTINGS_VERSION, SettingsConfig.currentVersionNumber);
         }
-
         if (workspaceVersion != null && workspaceVersion !== currentVersion) {
             SettingsConfig.setDirectValue(globals.SETTINGS_VERSION, SettingsConfig.currentVersionNumber, vscode.ConfigurationTarget.Workspace);
         }
@@ -139,7 +138,7 @@ export class SettingsConfig {
     private static get currentVersionNumber(): number {
         ZoweLogger.trace("SettingsConfig.currentVersionNumber called.");
         const version = vscode.extensions.getExtension("zowe.vscode-extension-for-zowe").packageJSON.version as string;
-        // Strip off minor and patch version from number if defined w/ old method
+        // Strip off minor and patch from version number
         if (version.includes(".")) {
             return parseInt(version.substring(0, version.indexOf(".")));
         }
