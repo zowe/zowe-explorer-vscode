@@ -68,18 +68,18 @@ export class SettingsConfig {
     }
 
     /**
-     * Checks if the Zowe Explorer major version matches the version
-     * defined in the user's `settings.json` file.
+     * Checks if the Zowe Explorer major version does not match
+     * the version defined in the user's `settings.json` file.
      *
      * @param userVersion The user's version defined in settings.json
      * @param versionString The current version string for Zowe Explorer
-     * @returns true if the version *roughly* matches, false otherwise - e.g.:
+     * @returns false if the version *roughly* matches, true otherwise - e.g.:
      *
-     * `versionMatches("2.6.1", "2")` will return `true`
+     * `majorVersionMismatch("2.6.1", "2")` will return `false`
      *
-     * `versionMatches("3", "2")` will return `false`
+     * `majorVersionMismatch("3", "2")` will return `true`
      */
-    public static matchesMajorVersion(userVersion: string, versionString: string): boolean {
+    public static majorVersionMismatch(userVersion: string, versionString: string): boolean {
         if (userVersion == null) {
             return true;
         }
@@ -98,8 +98,8 @@ export class SettingsConfig {
         const workspaceVersion = String(SettingsConfig.configurations.inspect(globals.SETTINGS_VERSION).workspaceValue);
         const currentVersion = String(SettingsConfig.currentVersionNumber);
 
-        const globalIsNotMigrated = SettingsConfig.matchesMajorVersion(globalVersion, currentVersion);
-        const workspaceIsNotMigrated = SettingsConfig.matchesMajorVersion(workspaceVersion, currentVersion);
+        const globalIsNotMigrated = SettingsConfig.majorVersionMismatch(globalVersion, currentVersion);
+        const workspaceIsNotMigrated = SettingsConfig.majorVersionMismatch(workspaceVersion, currentVersion);
         const workspaceIsOpen = vscode.workspace.workspaceFolders !== undefined;
         const zoweSettingsExist = SettingsConfig.zoweOldConfigurations.length > 0;
 
