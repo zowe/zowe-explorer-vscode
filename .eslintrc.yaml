@@ -84,6 +84,7 @@ rules:
   # prefer-const: warn
   prefer-object-spread: warn
   space-in-parens: warn
+  zowe-explorer/no-floating-promises: error
   zowe-explorer/no-unmocked-core-modules:
     - error
     - coreModuleNames:
