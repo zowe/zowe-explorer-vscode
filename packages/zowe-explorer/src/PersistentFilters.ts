@@ -111,7 +111,7 @@ export class PersistentFilters {
             });
             // Add value to front of stack
             this.mDsTemplates.unshift(criteria);
-            this.updateDsTemplateHistory();
+            Promise.resolve(this.updateDsTemplateHistory());
         }
     }
 
@@ -213,7 +213,7 @@ export class PersistentFilters {
 
     public resetDsTemplateHistory(): void {
         this.mDsTemplates = [];
-        this.updateDsTemplateHistory();
+        Promise.resolve(this.updateDsTemplateHistory());
     }
 
     /*********************************************************************************************************************************************/
