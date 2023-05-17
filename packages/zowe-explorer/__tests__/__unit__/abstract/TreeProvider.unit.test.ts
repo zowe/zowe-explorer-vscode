@@ -107,6 +107,12 @@ async function createGlobalMocks() {
             };
         }),
     });
+    Object.defineProperty(ZoweExplorerApiRegister, "getJesApi", {
+        value: jest.fn().mockReturnValue({
+            getSession: jest.fn().mockReturnValue(null),
+        }),
+        configurable: true,
+    });
     Object.defineProperty(ZoweExplorerApiRegister, "getMvsApi", {
         value: jest.fn().mockReturnValue({
             getSession: jest.fn().mockReturnValue(null),

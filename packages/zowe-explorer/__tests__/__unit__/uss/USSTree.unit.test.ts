@@ -105,6 +105,10 @@ async function createGlobalMocks() {
         value: globalMocks.renameUSSFile,
         configurable: true,
     });
+    Object.defineProperty(globalMocks.Utilities, "isFileTagBinOrAscii", {
+        value: jest.fn(),
+        configurable: true,
+    });
     Object.defineProperty(vscode.window, "showQuickPick", { value: globalMocks.showQuickPick, configurable: true });
     Object.defineProperty(vscode.window, "showInformationMessage", {
         value: globalMocks.showInformationMessage,
@@ -153,6 +157,7 @@ async function createGlobalMocks() {
     globalMocks.testUSSNode = createUSSNode(globalMocks.testSession, globalMocks.testProfile);
     globalMocks.testTree.mSessionNodes.push(ussSessionTestNode);
     globalMocks.testTree.addSearchHistory("/u/myuser");
+    globalMocks.testTree.getTreeView = jest.fn().mockReturnValue({ reveal: jest.fn() });
 
     return globalMocks;
 }
@@ -1090,7 +1095,7 @@ describe("USSTree Unit Tests - Function USSTree.rename()", () => {
         globalMocks.showInputBox.mockReturnValueOnce("new name");
         Object.defineProperty(globalMocks.testTree, "findFavoritedNode", {
             value: jest.fn(() => {
-                return { ussFavNode };
+                return { ...ussFavNode, rename: jest.fn() };
             }),
         });
 
@@ -1755,6 +1760,8 @@ describe("USSTree Unit Tests - Function USSTree.editSession()", () => {
             globalMocks.testSession,
             null
         );
+        testSessionNode.getProfile = jest.fn().mockReturnValue(globalMocks.testProfile);
+
         const checkSession = jest.spyOn(globalMocks.testTree, "editSession");
         Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
@@ -1787,6 +1794,8 @@ describe("USSTree Unit Tests - Function USSTree.editSession()", () => {
             globalMocks.testSession,
             globalMocks.testProfile.name
         );
+        testSessionNode.getProfile = jest.fn().mockReturnValue(globalMocks.testProfile);
+
         const checkSession = jest.spyOn(globalMocks.testTree, "editSession");
         Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {

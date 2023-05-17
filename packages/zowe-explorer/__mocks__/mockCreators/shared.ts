@@ -210,7 +210,7 @@ export function createFileResponse(theResponse) {
     return {
         success: true,
         commandResponse: "",
-        apiResponse: [theResponse],
+        apiResponse: theResponse,
     } as any;
 }
 
