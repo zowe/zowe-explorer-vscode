@@ -8,6 +8,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
+- Addressed issue where "Zowe Explorer: Poll Content in Active Editor" keybind was interfering with debug capabilities in VScode. [#2285](https://github.com/zowe/vscode-extension-for-zowe/issues/2285)
+
 ## `2.8.0`
 
 ### New features and enhancements
