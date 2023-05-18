@@ -17,11 +17,9 @@ ruleTester.run("no-floating-promises", rule, {
   valid: [
     {
       code: "await Promise.resolve(true);",
-      options: [{ ignoreVoid: false }],
     },
     {
       code: "import * as vscode from 'vscode';\nvscode.window.showInformationMessage('hello');",
-      options: [{ ignoreVoid: false }],
     }
   ],
 
