@@ -136,7 +136,7 @@ describe("Refresh Unit Tests - Function refreshAll", () => {
             return {};
         });
         const spy = jest.spyOn(refreshActions, "refreshAll");
-        refreshActions.refreshAll(blockMocks.testUSSTree);
+        await refreshActions.refreshAll(blockMocks.testUSSTree);
         expect(spy).toHaveBeenCalledTimes(1);
         expect(refreshActions.refreshAll(blockMocks.testUSSTree)).toEqual(response);
         spy.mockClear();
@@ -149,7 +149,7 @@ describe("Refresh Unit Tests - Function refreshAll", () => {
             return {};
         });
         const submitJclSpy = jest.spyOn(refreshActions, "refreshAll");
-        refreshActions.refreshAll(blockMocks.jobsTree);
+        await refreshActions.refreshAll(blockMocks.jobsTree);
         expect(submitJclSpy).toHaveBeenCalledTimes(1);
         expect(refreshActions.refreshAll(blockMocks.jobsTree)).toEqual(response);
         submitJclSpy.mockClear();
@@ -161,7 +161,7 @@ describe("Refresh Unit Tests - Function refreshAll", () => {
             return {};
         });
         const spy = jest.spyOn(refreshActions, "refreshAll");
-        refreshActions.refreshAll(blockMocks.testUSSTree);
+        await refreshActions.refreshAll(blockMocks.testUSSTree);
         expect(spy).toHaveBeenCalledTimes(1);
         expect(refreshActions.refreshAll(blockMocks.testDatasetTree)).toEqual(response);
         spy.mockClear();

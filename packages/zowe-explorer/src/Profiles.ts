@@ -97,7 +97,7 @@ export class Profiles extends ProfilesCache {
             try {
                 values = await Profiles.getInstance().promptCredentials(theProfile);
             } catch (error) {
-                errorHandling(error, theProfile.name, error.message);
+                await errorHandling(error, theProfile.name, error.message);
                 return profileStatus;
             }
             if (values) {
@@ -1751,7 +1751,7 @@ export class Profiles extends ProfilesCache {
             profile: OrigProfileInfo,
         };
         try {
-            this.getCliProfileManager(this.loadedProfile.type).update(updateParms);
+            await this.getCliProfileManager(this.loadedProfile.type).update(updateParms);
         } catch (error) {
             const message = localize(
                 "updateProfile.error",
