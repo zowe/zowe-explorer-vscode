@@ -316,40 +316,37 @@ export class ProfilesUtils {
 
     public static writeOverridesFile(): void {
         ZoweLogger.trace("ProfilesUtils.writeOverridesFile called.");
-        let fd: number;
-        let fileContent: string;
         const settingsFile = path.join(getZoweDir(), "settings", "imperative.json");
+        const fd = fs.openSync(settingsFile, "w+");
         try {
-            fd = fs.openSync(settingsFile, "r+");
-            fileContent = fs.readFileSync(fd, "utf-8");
-        } catch {
-            // If reading the file failed because it does not exist, then create it
-            // This should never fail, unless file system is read-only or the file
-            // was created by another process after first openSync call
-            fd = fs.openSync(settingsFile, "wx");
-        }
-        try {
+            let fileContent = fs.readFileSync(fd, "utf-8");
             let settings: any;
             if (fileContent) {
                 try {
                     settings = JSON.parse(fileContent);
                 } catch (err) {
                     if (err instanceof Error) {
-                        throw new Error(
-                            localize("writeOverridesFile.jsonParseError", "Failed to parse JSON file {0}:", settingsFile) + " " + err.message
-                        );
+                        const errorMsg =
+                            localize("writeOverridesFile.jsonParse.error", "Failed to parse JSON file {0}:", settingsFile) + " " + err.message;
+                        ZoweLogger.error(errorMsg);
+                        throw new Error(errorMsg);
                     }
                 }
-                if (settings && settings?.overrides && settings?.overrides?.CredentialManager !== globals.PROFILE_SECURITY) {
-                    settings.overrides.CredentialManager = globals.PROFILE_SECURITY;
-                } else {
+                if (!settings || !settings?.overrides || settings?.overrides?.CredentialManager === globals.PROFILE_SECURITY) {
                     return;
                 }
+                settings.overrides.CredentialManager = globals.PROFILE_SECURITY;
             } else {
                 settings = { overrides: { CredentialManager: globals.PROFILE_SECURITY } };
             }
             fileContent = JSON.stringify(settings, null, 2);
-            fs.writeFileSync(fd, fileContent, "utf-8");
+            ZoweLogger.debug(
+                localize("writeOverridesFile.updateFile", "Updating imperative.json Credential Manager to {0}", globals.PROFILE_SECURITY)
+            );
+            fs.writeFileSync(fd, fileContent, {
+                encoding: "utf-8",
+                flag: "w",
+            });
         } finally {
             fs.closeSync(fd);
         }
