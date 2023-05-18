@@ -8,6 +8,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
+- Fixed issue with updating imperative.json file's Credential Manager value. [#2289](https://github.com/zowe/vscode-extension-for-zowe/issues/2289)
+
 ## `2.8.0`
 
 ### New features and enhancements
