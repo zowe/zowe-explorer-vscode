@@ -300,9 +300,7 @@ export class ProfilesUtils {
         if (!fs.existsSync(settingsPath)) {
             fs.mkdirSync(settingsPath);
         }
-        if (!fs.existsSync(path.join(settingsPath, "imperative.json"))) {
-            ProfilesUtils.writeOverridesFile();
-        }
+        ProfilesUtils.writeOverridesFile();
         // If not using team config, ensure that the ~/.zowe/profiles directory
         // exists with appropriate types within
         if (!imperative.ImperativeConfig.instance.config?.exists) {

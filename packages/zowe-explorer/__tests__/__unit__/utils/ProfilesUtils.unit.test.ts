@@ -41,7 +41,6 @@ describe("ProfilesUtils unit tests", () => {
             mockGetDirectValue: jest.fn(),
             mockFileRead: { overrides: { CredentialManager: "@zowe/cli" } },
             zoweDir: path.normalize("__tests__/.zowe/settings/imperative.json"),
-            fileHandle: "__tests__/.zowe/settings/imperative.json", // process.stdout.fd,
         };
         Object.defineProperty(fs, "existsSync", { value: newMocks.mockExistsSync, configurable: true });
         Object.defineProperty(fs, "readFileSync", { value: newMocks.mockReadFileSync, configurable: true });
@@ -346,10 +345,11 @@ describe("ProfilesUtils unit tests", () => {
             const blockMocks = createBlockMocks();
             blockMocks.mockGetDirectValue.mockReturnValue(false);
             blockMocks.mockExistsSync.mockReturnValue(true);
+            blockMocks.mockReadFileSync.mockReturnValueOnce(JSON.stringify(blockMocks.mockFileRead));
             await profUtils.ProfilesUtils.initializeZoweFolder();
             expect(globals.PROFILE_SECURITY).toBe(false);
             expect(blockMocks.mockMkdirSync).toHaveBeenCalledTimes(0);
-            expect(blockMocks.mockWriteFileSync).toHaveBeenCalledTimes(0);
+            expect(blockMocks.mockWriteFileSync).toHaveBeenCalledTimes(1);
         });
     });
 
@@ -360,7 +360,7 @@ describe("ProfilesUtils unit tests", () => {
             const content = JSON.stringify(fileJson, null, 2);
             blockMocks.mockReadFileSync.mockReturnValueOnce(JSON.stringify({ overrides: { CredentialManager: false, testValue: true } }, null, 2));
             profUtils.ProfilesUtils.writeOverridesFile();
-            expect(blockMocks.mockWriteFileSync).toBeCalledWith(blockMocks.fileHandle, content, { encoding: "utf-8", flag: "w" });
+            expect(blockMocks.mockWriteFileSync).toBeCalledWith(blockMocks.zoweDir, content, { encoding: "utf-8", flag: "w" });
         });
 
         it("should return and have no change to the existing file if PROFILE_SECURITY matches file", () => {
@@ -381,7 +381,7 @@ describe("ProfilesUtils unit tests", () => {
             const mergedString = JSON.stringify(mergedJson, null, 2);
             profUtils.ProfilesUtils.writeOverridesFile();
             expect(blockMocks.mockWriteFileSync).toBeCalledTimes(1);
-            expect(blockMocks.mockWriteFileSync).toBeCalledWith(blockMocks.fileHandle, mergedString, { encoding: "utf-8", flag: "w" });
+            expect(blockMocks.mockWriteFileSync).toBeCalledWith(blockMocks.zoweDir, mergedString, { encoding: "utf-8", flag: "w" });
         });
 
         it("should have not exist and create default file", () => {
@@ -396,7 +396,7 @@ describe("ProfilesUtils unit tests", () => {
             const content = JSON.stringify(blockMocks.mockFileRead, null, 2);
             profUtils.ProfilesUtils.writeOverridesFile();
             expect(loggerSpy).toBeCalledWith("Reading imperative.json failed. Will try to create file.");
-            expect(blockMocks.mockWriteFileSync).toBeCalledWith(blockMocks.fileHandle, content, { encoding: "utf-8", flag: "w" });
+            expect(blockMocks.mockWriteFileSync).toBeCalledWith(blockMocks.zoweDir, content, { encoding: "utf-8", flag: "w" });
             expect(blockMocks.mockWriteFileSync).not.toThrowError();
         });
 
