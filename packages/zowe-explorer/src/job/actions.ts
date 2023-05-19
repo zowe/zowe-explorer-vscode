@@ -507,10 +507,9 @@ export async function cancelJobs(jobsProvider: IZoweTree<IZoweJobTreeNode>, node
             if (!cancelled) {
                 failedJobs.push({ job: jobNode.job, error: localize("cancelJobs.notCancelled", "The job was not cancelled.") });
             } else if (!sessionNodes.includes(sesNode)) {
-                // Introduce small delay before refresh so that API returns updated values
-                setTimeout(() => {
+                setImmediate(() => {
                     jobsProvider.refreshElement(sesNode);
-                }, 0);
+                });
                 sessionNodes.push(sesNode);
             }
         } catch (err) {

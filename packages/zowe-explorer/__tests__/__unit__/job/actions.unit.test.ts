@@ -1237,7 +1237,12 @@ describe("cancelJob", () => {
     it("shows a message confirming the jobs were cancelled", async () => {
         jobNode.job.retcode = "ACTIVE";
         jesCancelJobMock.mockResolvedValueOnce(true);
+        const setImmediateSpy = jest.spyOn(global, "setImmediate");
         await jobActions.cancelJobs(jobsProvider, [jobNode]);
+
+        // Check that refreshElement was called through setImmediate
+        expect(setImmediateSpy).toHaveBeenCalled();
+
         expect(Gui.showMessage).toHaveBeenCalledWith("Cancelled selected jobs successfully.");
     });
 
