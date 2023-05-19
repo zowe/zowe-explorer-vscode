@@ -639,7 +639,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             if (!contextually.isFilterFolder(sessionNode)) {
                 sessionNode.contextValue += `_${globals.FILTER_SEARCH}`;
             }
-            this.expandSession(sessionNode, this);
+            await this.expandSession(sessionNode, this);
             sessionNode.dirty = true;
             this.addSearchHistory(sanitizedPath);
         }
