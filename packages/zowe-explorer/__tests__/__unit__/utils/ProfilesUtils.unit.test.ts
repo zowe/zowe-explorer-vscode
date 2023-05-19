@@ -343,13 +343,14 @@ describe("ProfilesUtils unit tests", () => {
 
         it("should skip creating directories and files that already exist", async () => {
             const blockMocks = createBlockMocks();
-            blockMocks.mockGetDirectValue.mockReturnValue(false);
+            blockMocks.mockGetDirectValue.mockReturnValue("@zowe/cli");
             blockMocks.mockExistsSync.mockReturnValue(true);
-            blockMocks.mockReadFileSync.mockReturnValueOnce(JSON.stringify(blockMocks.mockFileRead));
+            const fileJson = blockMocks.mockFileRead;
+            blockMocks.mockReadFileSync.mockReturnValueOnce(JSON.stringify(fileJson, null, 2));
             await profUtils.ProfilesUtils.initializeZoweFolder();
-            expect(globals.PROFILE_SECURITY).toBe(false);
+            expect(globals.PROFILE_SECURITY).toBe("@zowe/cli");
             expect(blockMocks.mockMkdirSync).toHaveBeenCalledTimes(0);
-            expect(blockMocks.mockWriteFileSync).toHaveBeenCalledTimes(1);
+            expect(blockMocks.mockWriteFileSync).toHaveBeenCalledTimes(0);
         });
     });
 
