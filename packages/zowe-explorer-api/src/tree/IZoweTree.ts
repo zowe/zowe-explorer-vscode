@@ -11,7 +11,7 @@
 
 import * as vscode from "vscode";
 import { IZoweTreeNode } from "./IZoweTreeNode";
-import { dsAlloc, PersistenceSchemaEnum } from "../profiles/UserSettings";
+import { DataSetAllocTemplate, PersistenceSchemaEnum } from "../profiles/UserSettings";
 
 /**
  * The base interface for Zowe tree browsers that implement the
@@ -293,13 +293,13 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T> {
      *
      * @param {any} criteria the member name to add
      */
-    addDsTemplate?(criteria: dsAlloc): void;
+    addDsTemplate?(criteria: DataSetAllocTemplate): void;
     /**
      * Returns the array of saved templates for data set creation attributes
      *
-     * @returns {dsAlloc[]} the array of recently-opened member names
+     * @returns {DataSetAllocTemplate[]} the array of recently-opened member names
      */
-    getDsTemplates?(): dsAlloc[];
+    getDsTemplates?(): DataSetAllocTemplate[];
     /* Initializes polling (refresh w/ configurable interval) for the provided node.
      *
      * @param {IZoweTreeNode} node the node to poll data for

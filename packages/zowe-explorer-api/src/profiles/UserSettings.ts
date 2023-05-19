@@ -9,15 +9,15 @@
  *
  */
 
-import * as zowe from "@zowe/cli";
+import { ICreateDataSetOptions } from "@zowe/cli";
 
-export interface DataSetAllocTemplate extends zowe.ICreateDataSetOptions {
+export interface CreateDSOptionsWithTemplate extends ICreateDataSetOptions {
     /**
      * Name of data creation template
      */
     name?: string;
 }
-export type dsAlloc = DataSetAllocTemplate;
+export type DataSetAllocTemplate = CreateDSOptionsWithTemplate;
 
 /**
  * The types of persistence schemas wich are available in settings.json

@@ -606,9 +606,10 @@ export async function createFile(node: api.IZoweDatasetTreeNode, datasetProvider
 async function handleUserSelection(): Promise<string> {
     // Create the array of items in the quickpick list
     const qpItems = [];
-    qpItems.push(new FilterItem({ text: localizedStrings.allocString, show: true }));
+    qpItems.push(new FilterItem({ text: `\u002B ${localizedStrings.allocString}`, show: true }));
     newDSProperties?.forEach((prop) => {
-        qpItems.push(new FilterItem({ text: prop.label, description: prop.value, show: true }));
+        const propLabel = `\u270F ${prop?.label as string}`;
+        qpItems.push(new FilterItem({ text: propLabel, description: prop.value, show: true }));
     });
 
     // Provide the settings for the quickpick's appearance & behavior
@@ -634,15 +635,15 @@ async function handleUserSelection(): Promise<string> {
     const pattern = choice2.label;
     const showPatternOptions = async (): Promise<void> => {
         const options: vscode.InputBoxOptions = {
-            value: newDSProperties?.find((prop) => prop.label === pattern)?.value,
+            value: newDSProperties?.find((prop) => pattern.includes(prop.label))?.value,
             placeHolder: newDSProperties?.find((prop) => prop.label === pattern)?.placeHolder,
         };
-        newDSProperties.find((prop) => prop.label === pattern).value = await api.Gui.showInputBox(options);
+        newDSProperties.find((prop) => pattern.includes(prop.label)).value = await api.Gui.showInputBox(options);
     };
 
     if (pattern) {
         // Parse pattern for selected attribute
-        if (pattern === localizedStrings.allocString) {
+        if (pattern.includes(localizedStrings.allocString)) {
             return Promise.resolve(localizedStrings.allocString);
         } else {
             await showPatternOptions();
@@ -683,8 +684,7 @@ async function getDsTypeForCreation(datasetProvider: api.IZoweTree<api.IZoweData
         localizedStrings.dsPartitioned,
         localizedStrings.dsSequential,
     ];
-    // eslint-disable-next-line no-return-await
-    return await api.Gui.showQuickPick(stepTwoChoices, stepTwoOptions);
+    return Promise.resolve(api.Gui.showQuickPick(stepTwoChoices, stepTwoOptions));
 }
 
 function getTemplateNames(datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>): string[] {
@@ -698,8 +698,8 @@ function getTemplateNames(datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNod
 
 function compareDsProperties(type: string, datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>): boolean {
     let isMatch = true;
-    const templates: api.dsAlloc[] = datasetProvider.getDsTemplates();
-    let propertiesFromDsType: api.dsAlloc;
+    const templates: api.DataSetAllocTemplate[] = datasetProvider.getDsTemplates();
+    let propertiesFromDsType: api.DataSetAllocTemplate;
     // Look for template
     templates?.forEach((template) => {
         if (type === template?.name) {
@@ -722,9 +722,9 @@ function compareDsProperties(type: string, datasetProvider: api.IZoweTree<api.IZ
     return isMatch;
 }
 
-function getDsProperties(type: string, datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>): api.dsAlloc {
-    const templates: api.dsAlloc[] = datasetProvider.getDsTemplates();
-    let propertiesFromDsType: api.dsAlloc;
+function getDsProperties(type: string, datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>): api.DataSetAllocTemplate {
+    const templates: api.DataSetAllocTemplate[] = datasetProvider.getDsTemplates();
+    let propertiesFromDsType: api.DataSetAllocTemplate;
     // Look for template
     templates?.forEach((template) => {
         if (type === template?.name) {
@@ -750,10 +750,10 @@ function getDsProperties(type: string, datasetProvider: api.IZoweTree<api.IZoweD
     return propertiesFromDsType;
 }
 
-function getDefaultDsTypeProperties(dsType: string): api.dsAlloc {
+function getDefaultDsTypeProperties(dsType: string): api.DataSetAllocTemplate {
     typeEnum = getDataSetTypeAndOptions(dsType)?.typeEnum;
     const cliDefaultsKey = globals.CreateDataSetTypeWithKeysEnum[typeEnum]?.replace("DATA_SET_", "");
-    return zowe.CreateDefaults.DATA_SET[cliDefaultsKey] as api.dsAlloc;
+    return zowe.CreateDefaults.DATA_SET[cliDefaultsKey] as api.DataSetAllocTemplate;
 }
 
 async function allocateOrEditAttributes(): Promise<string> {
@@ -764,8 +764,7 @@ async function allocateOrEditAttributes(): Promise<string> {
     const allocate = `\u002B ${localizedStrings.allocString}`;
     const editAtts = `\u270F ${localizedStrings.editString}`;
     const stepThreeChoices = [allocate, editAtts];
-    // eslint-disable-next-line no-return-await
-    return await api.Gui.showQuickPick(stepThreeChoices, stepThreeOptions);
+    return Promise.resolve(api.Gui.showQuickPick(stepThreeChoices, stepThreeOptions));
 }
 
 async function allocateNewDataSet(

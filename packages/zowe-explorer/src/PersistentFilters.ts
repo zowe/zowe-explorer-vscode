@@ -31,7 +31,7 @@ export class PersistentFilters {
     private mSearchHistory: string[] = [];
     private mFileHistory: string[] = [];
     private mSessions: string[] = [];
-    private mDsTemplates: api.dsAlloc[] = [];
+    private mDsTemplates: api.DataSetAllocTemplate[] = [];
 
     public constructor(schema: string, private maxSearchHistory = globals.MAX_SEARCH_HISTORY, private maxFileHistory = globals.MAX_FILE_HISTORY) {
         this.schema = schema;
@@ -103,7 +103,7 @@ export class PersistentFilters {
         }
     }
 
-    public addDsTemplateHistory(criteria: api.dsAlloc): void {
+    public addDsTemplateHistory(criteria: api.DataSetAllocTemplate): void {
         if (criteria) {
             // Remove any entries that match
             this.mDsTemplates = this.mDsTemplates.filter((element) => {
@@ -152,8 +152,8 @@ export class PersistentFilters {
         return this.mFileHistory;
     }
 
-    public getDsTemplates(): api.dsAlloc[] {
-        const dsTemplateLines: api.dsAlloc[] = vscode.workspace.getConfiguration(this.schema).get(PersistentFilters.templates);
+    public getDsTemplates(): api.DataSetAllocTemplate[] {
+        const dsTemplateLines: api.DataSetAllocTemplate[] = vscode.workspace.getConfiguration(this.schema).get(PersistentFilters.templates);
         if (dsTemplateLines.length !== this.mDsTemplates.length) {
             this.mDsTemplates = dsTemplateLines;
         }
@@ -269,7 +269,7 @@ export class PersistentFilters {
         let searchHistoryLines: string[];
         let sessionLines: string[];
         let fileHistoryLines: string[];
-        let dsTemplateLines: api.dsAlloc[];
+        let dsTemplateLines: api.DataSetAllocTemplate[];
         if (vscode.workspace.getConfiguration(this.schema)) {
             searchHistoryLines = vscode.workspace.getConfiguration(this.schema).get(PersistentFilters.searchHistory);
             sessionLines = vscode.workspace.getConfiguration(this.schema).get(PersistentFilters.sessions);
