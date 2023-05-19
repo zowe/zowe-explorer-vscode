@@ -9,6 +9,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 ### Bug fixes
 
 - Fixed issue with updating imperative.json file's Credential Manager value. [#2289](https://github.com/zowe/vscode-extension-for-zowe/issues/2289)
+- Fixed issue with "Zowe Explorer: Poll Content in Active Editor" keybind interfering with debug capabilities in VScode. The keybind to poll JES Spool file content will require the spool file to be active in the text editor. [#2285](https://github.com/zowe/vscode-extension-for-zowe/issues/2285)
 
 ## `2.8.0`
 
