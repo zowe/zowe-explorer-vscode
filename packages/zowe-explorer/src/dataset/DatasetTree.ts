@@ -421,7 +421,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                     if (node.label !== "Favorites") {
                         const name = node.getProfileName();
                         if (name === profile.name) {
-                            await resetValidationSettings(node, setting);
+                            resetValidationSettings(node, setting);
                         }
                     }
                 }
@@ -441,7 +441,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                                 if (node.label !== "Favorites") {
                                     const name = node.getProfileName();
                                     if (name === theProfile.name) {
-                                        await resetValidationSettings(node, setting);
+                                        resetValidationSettings(node, setting);
                                     }
                                 }
                             }
@@ -495,7 +495,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 Gui.showMessage(localize("addFavorite", "PDS already in favorites"));
                 return;
             }
-            this.addFavorite(node.getParent());
+            await this.addFavorite(node.getParent());
             return;
         } else if (contextually.isDsSession(node)) {
             temp = new ZoweDatasetNode(
@@ -744,7 +744,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         return this.mHistory.getFileHistory();
     }
 
-    public removeFileHistory(name: string): Promise<void> {
+    public removeFileHistory(name: string): Thenable<void> {
         ZoweLogger.trace("DatasetTree.removeFileHistory called.");
         return this.mHistory.removeFileHistory(name);
     }
@@ -826,11 +826,11 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             } else {
                 memberNode.getParent().collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
                 this.addSearchHistory(`${parentName}(${memberName})`);
-                dsActions.openPS(memberNode, true, this);
+                await dsActions.openPS(memberNode, true, this);
             }
         } else {
             this.addSearchHistory(parentName);
-            dsActions.openPS(parentNode, true, this);
+            await dsActions.openPS(parentNode, true, this);
         }
     }
 
@@ -915,7 +915,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                     Gui.showMessage(localize("datasetFilterPrompt.enterPattern", "You must enter a pattern."));
                     return;
                 }
-                this.expandSession(node, this);
+                await this.expandSession(node, this);
             } else {
                 // executing search from saved search in favorites
                 pattern = node.getLabel() as string;
@@ -927,7 +927,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                     nonFaveNode.getSession().ISession.password = node.getSession().ISession.password;
                     nonFaveNode.getSession().ISession.base64EncodedAuth = node.getSession().ISession.base64EncodedAuth;
                 }
-                this.expandSession(nonFaveNode, this);
+                await this.expandSession(nonFaveNode, this);
             }
             // looking for members in pattern
             node.children = [];

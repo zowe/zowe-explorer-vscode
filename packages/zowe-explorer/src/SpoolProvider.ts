@@ -120,7 +120,9 @@ export const toUniqueJobFileUri =
  */
 export async function getSpoolFiles(node: IZoweJobTreeNode): Promise<zowe.IJobFile[]> {
     ZoweLogger.trace("SpoolProvider.getSpoolFiles called.");
-    if (node.job == null) return [];
+    if (node.job == null) {
+        return [];
+    }
     let spools: zowe.IJobFile[] = [];
     spools = await ZoweExplorerApiRegister.getJesApi(node.getProfile()).getSpoolFiles(node.job.jobname, node.job.jobid);
     spools = spools
@@ -137,7 +139,7 @@ export async function getSpoolFiles(node: IZoweJobTreeNode): Promise<zowe.IJobFi
  * @param node Selected node
  * @returns true if the selected node matches the spool file, false otherwise
  */
-export function matchSpool(spool: zowe.IJobFile, node: IZoweJobTreeNode) {
+export function matchSpool(spool: zowe.IJobFile, node: IZoweJobTreeNode): boolean {
     return (
         `${spool.stepname}:${spool.ddname} - ${spool["record-count"]}` === node.label.toString() ||
         `${spool.stepname}:${spool.ddname} - ${spool.procstep}` === node.label.toString()

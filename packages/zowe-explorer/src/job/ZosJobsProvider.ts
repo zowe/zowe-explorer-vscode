@@ -814,7 +814,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
 
             if (isSessionNotFav) {
                 searchCriteria = await this.applyRegularSessionSearchLabel(node);
-                this.expandSession(node, this);
+                await this.expandSession(node, this);
 
                 if (searchCriteria != null) {
                     node.label = node.getProfileName();

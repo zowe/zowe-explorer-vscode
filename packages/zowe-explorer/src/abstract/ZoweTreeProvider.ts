@@ -181,12 +181,12 @@ export class ZoweTreeProvider {
         if (EditSession) {
             node.getProfile().profile = EditSession as imperative.IProfile;
             setProfile(node, EditSession as imperative.IProfile);
-            if (await node.getSession()) {
+            if (node.getSession()) {
                 setSession(node, EditSession as imperative.ISession);
             } else {
                 zoweFileProvider.deleteSession(node.getSessionNode());
                 this.mHistory.addSession(node.label as string);
-                zoweFileProvider.addSession(node.getProfileName());
+                await zoweFileProvider.addSession(node.getProfileName());
             }
             this.refresh();
             // Remove the edited profile from profilesForValidation
