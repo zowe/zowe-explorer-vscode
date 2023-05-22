@@ -85,11 +85,15 @@ export function encodeJobFile(session: string, spool: zowe.IJobFile): vscode.Uri
     ZoweLogger.trace("SpoolProvider.encodeJobFile called.");
     const query = JSON.stringify([session, spool]);
 
-    let path = `${spool.jobname}.${spool.jobid}.${spool.ddname}`;
+    const spoolSegments = [
+        spool.jobname,
+        spool.jobid,
+        spool.stepname,
+        spool.procstep,
+        spool.ddname
+    ];
 
-    if (spool.stepname) {
-        path = `${spool.jobname}.${spool.jobid}.${spool.stepname}.${spool.ddname}`;
-    }
+    const path = spoolSegments.filter(v => v && v.length).join(".");
 
     return vscode.Uri.parse("").with({
         scheme: SpoolProvider.scheme,
