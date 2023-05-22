@@ -254,29 +254,13 @@ export class PersistentFilters {
     private initialize(): void {
         ZoweLogger.trace("PersistentFilters.initialize called.");
         const settings = ZoweLocalStorage.getValue<PersistentFilter>(this.schema);
-        let searchHistoryLines: string[];
-        let sessionLines: string[];
-        let fileHistoryLines: string[];
-
         if (settings) {
-            searchHistoryLines = settings[PersistentFilters.searchHistory];
-            sessionLines = settings[PersistentFilters.sessions];
-            fileHistoryLines = settings[PersistentFilters.fileHistory];
+            this.mSearchHistory = settings[PersistentFilters.searchHistory] ?? [];
+            this.mSessions = settings[PersistentFilters.searchHistory] ?? [];
+            this.mFileHistory = settings[PersistentFilters.searchHistory] ?? [];
         }
-        if (searchHistoryLines) {
-            this.mSearchHistory = searchHistoryLines;
-        } else {
-            this.resetSearchHistory();
-        }
-        if (sessionLines) {
-            this.mSessions = sessionLines;
-        } else {
-            this.resetSessions();
-        }
-        if (fileHistoryLines) {
-            this.mFileHistory = fileHistoryLines;
-        } else {
-            this.resetFileHistory();
-        }
+        this.updateFileHistory();
+        this.updateSearchHistory();
+        this.updateSessions();
     }
 }

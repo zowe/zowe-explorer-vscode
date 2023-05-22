@@ -198,7 +198,7 @@ export class SettingsConfig {
                 ZoweLogger.debug(
                     localize(
                         "SettingsConfig.migrateToLocalStorage.migrating",
-                        "Migrating setting {0} from VS Code user settings to Local Storage.",
+                        "Migrating setting {0} from VS Code user settings to local storage.",
                         setting
                     )
                 );
