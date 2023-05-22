@@ -55,6 +55,7 @@ If you do not have an existing Zowe FTP profile, you can create one graphically 
 4. Select **Create a New Team Configuration File**.
 5. If no workspace is opened a global configuration file will be created. If a workspace is opened, chose either a global configuration file or a project-level configuration file.
 6. Edit the config file to include the host and other connection information:
+
    ```
    "zftp": {
          "type": "zftp",
