@@ -142,12 +142,13 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 // Handle rename in UI:
                 if (oldFavorite) {
                     if (originalNodeInFavorites) {
-                        this.renameUSSNode(originalNode, newNamePath); // Rename corresponding node in Sessions
+                        await this.renameUSSNode(originalNode, newNamePath); // Rename corresponding node in Sessions
                     }
                     // Below handles if originalNode is in a session node or is only indirectly in Favorites (e.g. is only a child of a favorite).
                     // Also handles if there are multiple appearances of originalNode in Favorites.
                     // This has to happen before renaming originalNode.rename, as originalNode's label is used to find the favorite equivalent.
-                    this.renameFavorite(originalNode, newNamePath); // Doesn't do anything if there aren't any appearances of originalNode in Favs
+                    // Doesn't do anything if there aren't any appearances of originalNode in Favs
+                    await this.renameFavorite(originalNode, newNamePath);
                 }
                 // Rename originalNode in UI
                 const hasClosedTab = await originalNode.rename(newNamePath);
@@ -245,11 +246,11 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
      * @param oldNamePath
      * @param newNamePath
      */
-    public renameUSSNode(node: IZoweUSSTreeNode, newNamePath: string): void {
+    public async renameUSSNode(node: IZoweUSSTreeNode, newNamePath: string): Promise<void> {
         ZoweLogger.trace("USSTree.renameUSSNode called.");
         const matchingNode: IZoweUSSTreeNode = this.findNonFavoritedNode(node);
         if (matchingNode) {
-            matchingNode.rename(newNamePath);
+            await matchingNode.rename(newNamePath);
         }
     }
 
@@ -386,7 +387,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             // Favorite a USS search
             temp = new ZoweUSSNode(label, vscode.TreeItemCollapsibleState.None, profileNodeInFavorites, node.getSession(), null, false, profileName);
             temp.fullPath = node.fullPath;
-            this.saveSearch(temp);
+            await this.saveSearch(temp);
             temp.command = { command: "zowe.uss.fullPath", title: "", arguments: [temp] };
         } else {
             // Favorite USS files and directories
@@ -638,7 +639,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             if (!contextually.isFilterFolder(sessionNode)) {
                 sessionNode.contextValue += `_${globals.FILTER_SEARCH}`;
             }
-            this.expandSession(sessionNode, this);
+            await this.expandSession(sessionNode, this);
             sessionNode.dirty = true;
             this.addSearchHistory(sanitizedPath);
         }

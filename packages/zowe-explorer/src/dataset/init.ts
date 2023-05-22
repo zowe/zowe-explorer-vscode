@@ -109,13 +109,13 @@ export async function initDatasetProvider(context: vscode.ExtensionContext): Pro
         })
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.ds.removeSession", (node: IZoweDatasetTreeNode, nodeList: IZoweDatasetTreeNode[]) => {
+        vscode.commands.registerCommand("zowe.ds.removeSession", async (node: IZoweDatasetTreeNode, nodeList: IZoweDatasetTreeNode[]) => {
             let selectedNodes = getSelectedNodeList(node, nodeList);
             selectedNodes = selectedNodes.filter((sNode) => contextuals.isDsSession(sNode));
             for (const select of selectedNodes) {
                 datasetProvider.deleteSession(select);
             }
-            TreeViewUtils.fixVsCodeMultiSelect(datasetProvider);
+            await TreeViewUtils.fixVsCodeMultiSelect(datasetProvider);
         })
     );
     context.subscriptions.push(
