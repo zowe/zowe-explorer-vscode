@@ -353,3 +353,58 @@ export function jobStringValidator(text: string, localizedParam: "owner" | "pref
 export function getDefaultUri(): vscode.Uri {
     return vscode.workspace.workspaceFolders?.[0]?.uri ?? vscode.Uri.file(os.homedir());
 }
+
+export async function compareFileEdit(
+    doc: vscode.TextDocument,
+    node: IZoweDatasetTreeNode | IZoweUSSTreeNode,
+    label?: string,
+    binary?: boolean,
+    profile?: imperative.IProfileLoaded
+): Promise<void> {
+    const oldDoc = doc;
+    const oldDocText = oldDoc.getText();
+    const prof = node ? node.getProfile() : profile;
+    let downloadResponse;
+
+    if (isTypeUssTreeNode(node)) {
+        downloadResponse = await ZoweExplorerApiRegister.getUssApi(prof).getContents(node.fullPath, {
+            file: node.getUSSDocumentFilePath(),
+            binary,
+            returnEtag: true,
+            encoding: prof.profile?.encoding,
+            responseTimeout: prof.profile?.responseTimeout,
+        });
+    } else {
+        downloadResponse = await ZoweExplorerApiRegister.getMvsApi(prof).getContents(label, {
+            file: doc.fileName,
+            returnEtag: true,
+            encoding: prof.profile?.encoding,
+            responseTimeout: prof.profile?.responseTimeout,
+        });
+    }
+    // re-assign etag, so that it can be used with subsequent requests
+    const downloadEtag = downloadResponse?.apiResponse?.etag;
+    if (node && downloadEtag !== node.getEtag()) {
+        node.setEtag(downloadEtag);
+    }
+    ZoweLogger.warn(localize("saveFile.etagMismatch.log.warning", "Remote file has changed. Presented with way to resolve file."));
+    Gui.warningMessage(
+        localize("saveFile.etagMismatch.warning", "Remote file has been modified in the meantime.\nSelect 'Compare' to resolve the conflict.")
+    );
+    if (vscode.window.activeTextEditor) {
+        // Store document in a separate variable, to be used on merge conflict
+        const startPosition = new vscode.Position(0, 0);
+        const endPosition = new vscode.Position(oldDoc.lineCount, 0);
+        const deleteRange = new vscode.Range(startPosition, endPosition);
+        await vscode.window.activeTextEditor.edit((editBuilder) => {
+            // re-write the old content in the editor view
+            editBuilder.delete(deleteRange);
+            editBuilder.insert(startPosition, oldDocText);
+        });
+        await vscode.window.activeTextEditor.document.save();
+    }
+}
+
+export function isTypeUssTreeNode(node): node is IZoweUSSTreeNode {
+    return (node as IZoweUSSTreeNode).getUSSDocumentFilePath !== undefined;
+}
