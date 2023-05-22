@@ -59,7 +59,9 @@ If you do not have an existing Zowe FTP profile, you can create one graphically 
    ```
    "zftp": {
          "type": "zftp",
-         "properties": {YOURHOSTNAME},
+         "properties": {
+            "host": "YOURHOSTNAME"
+         },
          "secure": []
         }
    ```
