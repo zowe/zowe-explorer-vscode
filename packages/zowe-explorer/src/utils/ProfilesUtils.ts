@@ -369,7 +369,7 @@ export class ProfilesUtils {
             ZoweLogger.info(localize("initializeZoweProfiles.success", "Zowe Profiles initialized successfully."));
         } catch (err) {
             if (err instanceof imperative.ImperativeError) {
-                errorHandling(err, undefined, err.mDetails.causeErrors);
+                await errorHandling(err, undefined, err.mDetails.causeErrors);
             } else {
                 ZoweLogger.error(err);
                 ZoweExplorerExtender.showZoweConfigError(err.message);

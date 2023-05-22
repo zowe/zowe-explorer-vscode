@@ -390,7 +390,7 @@ describe("Extension Integration Tests", async () => {
             const doc2 = await vscode.workspace.openTextDocument(
                 path.join(globals.ZOWETEMPFOLDER, children[0].label.toString() + "(" + childrenMembers[0].label.toString() + ")")
             );
-            dsActions.saveFile(doc2, testTree);
+            await dsActions.saveFile(doc2, testTree);
 
             // Download file
             await dsActions.openPS(childrenMembers[0], true);
