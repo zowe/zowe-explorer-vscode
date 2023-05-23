@@ -5,6 +5,7 @@
   "errorHandling.authentication.login": "Log in to Authentication Service",
   "errorHandling.checkCredentials.button": "Check Credentials",
   "errorHandling.checkCredentials.cancelled": "Operation Cancelled",
+  "readConfigFromDisk.v1profile.error": "Zowe v1 profiles in use.  Zowe Explorer no longer supports v1 profiles.",
   "zowe.promptCredentials.notSupported": "\"Update Credentials\" operation not supported when \"autoStore\" is false",
   "createNewConnection.option.prompt.profileName.placeholder": "Connection Name",
   "createNewConnection.option.prompt.profileName": "Enter a name for the connection.",

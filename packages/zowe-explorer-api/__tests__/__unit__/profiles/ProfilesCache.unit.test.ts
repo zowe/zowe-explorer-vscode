@@ -116,6 +116,7 @@ function createProfInfoMock(profiles: Partial<zowe.imperative.IProfileLoaded>[])
                 knownArgs: Object.entries(profile.profile as object).map(([k, v]) => ({ argName: k, argValue: v as unknown })),
             };
         },
+        usingTeamConfig: true,
     } as any;
 }
 
@@ -224,7 +225,7 @@ describe("ProfilesCache", () => {
 
         it("should refresh profile data for multiple profile types", async () => {
             const profCache = new ProfilesCache({ ...fakeLogger, error: mockLogError } as unknown as zowe.imperative.Logger);
-            jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([lpar1Profile, zftpProfile]));
+            const getProfInfoSpy = jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([lpar1Profile, zftpProfile]));
             await profCache.refresh(fakeApiRegister as unknown as ZoweExplorerApi.IApiRegisterClient);
             expect(profCache.allProfiles.length).toEqual(2);
             expect(profCache.allProfiles[0]).toMatchObject(lpar1Profile);
@@ -537,72 +538,6 @@ describe("ProfilesCache", () => {
             await (profCache as any).saveProfile(lpar1Profile.profile, lpar1Profile.name, lpar1Profile.type);
             expect(mockSaveProfile).toHaveBeenCalledTimes(1);
             expect(mockSaveProfile.mock.calls[0][0]).toMatchObject(saveParams);
-        });
-    });
-
-    describe("deprecated methods", () => {
-        describe("isSecureCredentialPluginActive", () => {
-            const scsPluginName = "@zowe/secure-credential-store-for-zowe-cli";
-            const mockLogError = jest.fn();
-            const profCache = new ProfilesCache({ error: mockLogError } as unknown as zowe.imperative.Logger);
-
-            it("should handle CredentialManager in Imperative settings", () => {
-                jest.spyOn(fs, "existsSync").mockReturnValueOnce(true);
-                const readFileSyncSpy = jest.spyOn(fs, "readFileSync").mockReturnValue(
-                    JSON.stringify({
-                        overrides: {
-                            CredentialManager: scsPluginName,
-                        },
-                    })
-                );
-                const isScsActive = profCache.isSecureCredentialPluginActive();
-                expect(mockLogError).not.toHaveBeenCalled();
-                expect(readFileSyncSpy).toHaveBeenCalledTimes(1);
-                expect(isScsActive).toBe(true);
-            });
-
-            it("should handle credential-manager in Imperative settings", () => {
-                jest.spyOn(fs, "existsSync").mockReturnValueOnce(true);
-                const readFileSyncSpy = jest.spyOn(fs, "readFileSync").mockReturnValue(
-                    JSON.stringify({
-                        overrides: {
-                            "credential-manager": scsPluginName,
-                        },
-                    })
-                );
-                const isScsActive = profCache.isSecureCredentialPluginActive();
-                expect(mockLogError).not.toHaveBeenCalled();
-                expect(readFileSyncSpy).toHaveBeenCalledTimes(1);
-                expect(isScsActive).toBe(true);
-            });
-
-            it("should handle empty Imperative settings", () => {
-                jest.spyOn(fs, "existsSync").mockReturnValueOnce(true);
-                const readFileSyncSpy = jest.spyOn(fs, "readFileSync").mockReturnValue(JSON.stringify({}));
-                const isScsActive = profCache.isSecureCredentialPluginActive();
-                expect(mockLogError).not.toHaveBeenCalled();
-                expect(readFileSyncSpy).toHaveBeenCalledTimes(1);
-                expect(isScsActive).toBe(false);
-            });
-
-            it("should handle non-existent Imperative settings", () => {
-                jest.spyOn(fs, "existsSync").mockReturnValueOnce(false);
-                const readFileSyncSpy = jest.spyOn(fs, "readFileSync");
-                const isScsActive = profCache.isSecureCredentialPluginActive();
-                expect(mockLogError).not.toHaveBeenCalled();
-                expect(readFileSyncSpy).not.toHaveBeenCalled();
-                expect(isScsActive).toBe(false);
-            });
-
-            it("should handle error loading Imperative settings", () => {
-                jest.spyOn(fs, "existsSync").mockReturnValueOnce(true);
-                const readFileSyncSpy = jest.spyOn(fs, "readFileSync").mockReturnValueOnce("invalid json");
-                const isScsActive = profCache.isSecureCredentialPluginActive();
-                expect(mockLogError).toHaveBeenCalledTimes(1);
-                expect(mockLogError.mock.calls[0][0].message).toContain("Unexpected token");
-                expect(readFileSyncSpy).toHaveBeenCalledTimes(1);
-                expect(isScsActive).toBe(false);
-            });
         });
     });
 });
