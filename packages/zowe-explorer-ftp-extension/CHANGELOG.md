@@ -6,6 +6,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
+- Updated dependencies for security audits.
+
 ## `2.8.0`
 
 ### New features and enhancements
