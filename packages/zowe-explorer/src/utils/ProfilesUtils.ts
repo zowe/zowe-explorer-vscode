@@ -46,15 +46,13 @@ export async function errorHandling(errorDetails: Error | string, label?: string
         // open config file for missing hostname error
         if (errorDetails.toString().includes("hostname")) {
             const mProfileInfo = await Profiles.getInstance().getProfileInfo();
-            if (mProfileInfo.usingTeamConfig) {
-                Gui.errorMessage(localize("errorHandling.invalid.host", "Required parameter 'host' must not be blank."));
-                const profAllAttrs = mProfileInfo.getAllProfiles();
-                for (const prof of profAllAttrs) {
-                    if (prof.profName === label.trim()) {
-                        const filePath = prof.profLoc.osLoc[0];
-                        await Profiles.getInstance().openConfigFile(filePath);
-                        return;
-                    }
+            Gui.errorMessage(localize("errorHandling.invalid.host", "Required parameter 'host' must not be blank."));
+            const profAllAttrs = mProfileInfo.getAllProfiles();
+            for (const prof of profAllAttrs) {
+                if (prof.profName === label.trim()) {
+                    const filePath = prof.profLoc.osLoc[0];
+                    await Profiles.getInstance().openConfigFile(filePath);
+                    return;
                 }
             }
         } else if (httpErrorCode === imperative.RestConstants.HTTP_STATUS_401) {
@@ -229,7 +227,27 @@ export class ProfilesUtils {
                     } `
             );
             ZoweLogger.debug(`Summary of team configuration files considered for Zowe Explorer: ${JSON.stringify(layerSummary)}`);
+        } else {
+            if (mProfileInfo.getAllProfiles()?.length > 0) {
+                const v1ProfileErrorMsg = localize(
+                    "readConfigFromDisk.v1profile.error",
+                    "Zowe v1 profiles in use.  Zowe Explorer no longer supports v1 profiles."
+                );
+                ZoweLogger.error(v1ProfileErrorMsg);
+                await errorHandling(v1ProfileErrorMsg);
+            }
         }
+    }
+
+    public static async usingTeamConfig(): Promise<boolean> {
+        const mProfileInfo = ProfilesUtils.getProfileInfo(globals.ISTHEIA);
+        if (vscode.workspace.workspaceFolders?.[0]) {
+            const rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
+            await mProfileInfo.readProfilesFromDisk({ homeDir: getZoweDir(), projectDir: getFullPath(rootPath) });
+        } else {
+            await mProfileInfo.readProfilesFromDisk({ homeDir: getZoweDir(), projectDir: undefined });
+        }
+        return mProfileInfo.usingTeamConfig;
     }
 
     public static async promptCredentials(node: IZoweTreeNode): Promise<void> {

@@ -13,7 +13,7 @@ import * as vscode from "vscode";
 import * as globals from "../globals";
 import { IJob, imperative } from "@zowe/cli";
 import { Gui, ValidProfileEnum, IZoweTree, IZoweJobTreeNode, PersistenceSchemaEnum, NodeInteraction } from "@zowe/zowe-explorer-api";
-import { FilterItem, errorHandling } from "../utils/ProfilesUtils";
+import { FilterItem, ProfilesUtils, errorHandling } from "../utils/ProfilesUtils";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { Job, Spool } from "./ZoweJobNode";
@@ -1004,7 +1004,8 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
      */
     private async addSingleSession(profile: imperative.IProfileLoaded): Promise<void> {
         ZoweLogger.trace("ZosJobsProvider.addSingleSession called.");
-        if (profile) {
+        const isV2 = await ProfilesUtils.usingTeamConfig();
+        if (profile && isV2) {
             // If session is already added, do nothing
             if (this.mSessionNodes.find((tNode) => tNode.label.toString() === profile.name)) {
                 return;

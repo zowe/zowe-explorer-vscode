@@ -1,5 +1,9 @@
 # Version 3.0.0 Changes Affecting Zowe Explorer Extenders
 
+## No longer supported
+
+- Removed support for v1 Profiles
+
 ## Removal of deprecated APIs from Extensibility API for Zowe Explorer
 
 - Logger type `MessageSeverityEnum` removed in favor of `MessageSeverity`.

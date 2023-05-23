@@ -161,6 +161,10 @@ function createGlobalMocks() {
         },
         configurable: true,
     });
+    Object.defineProperty(utils.ProfilesUtils, "usingTeamConfig", {
+        value: jest.fn().mockReturnValue(true),
+        configurable: true,
+    });
 
     return globalMocks;
 }

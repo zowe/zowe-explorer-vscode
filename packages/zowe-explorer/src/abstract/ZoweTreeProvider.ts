@@ -76,7 +76,7 @@ export class ZoweTreeProvider {
     public async refreshHomeProfileContext(node): Promise<void> {
         ZoweLogger.trace("ZoweTreeProvider.refreshHomeProfileContext called.");
         const mProfileInfo = await Profiles.getInstance().getProfileInfo();
-        if (mProfileInfo.usingTeamConfig && !contextually.isHomeProfile(node)) {
+        if (!contextually.isHomeProfile(node)) {
             const prof = mProfileInfo.getAllProfiles().find((p) => p.profName === node.getProfileName());
             const osLocInfo = mProfileInfo.getOsLocInfo(prof);
             if (osLocInfo?.[0]?.global) {
