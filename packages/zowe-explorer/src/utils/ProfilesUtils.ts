@@ -329,9 +329,18 @@ export class ProfilesUtils {
                 ZoweLogger.debug(localize("writeOverridesFile.readFile", "Reading imperative.json Credential Manager.\n {0}", fileContent));
             } catch (err) {
                 if (err instanceof Error) {
-                    const errorMsg = localize("writeOverridesFile.jsonParse.error", "Failed to parse JSON file {0}: {1}", settingsFile, err.message);
+                    const errorMsg = localize(
+                        "writeOverridesFile.jsonParse.error",
+                        "Failed to parse JSON file {0}. Will try to re-create the file.",
+                        settingsFile
+                    );
                     ZoweLogger.error(errorMsg);
-                    throw new Error(errorMsg);
+                    ZoweLogger.debug(fileContent.toString());
+                    settings = { ...defaultImperativeJson };
+                    fs.writeFileSync(settingsFile, JSON.stringify(settings, null, 2), {
+                        encoding: "utf-8",
+                        flag: "w",
+                    });
                 }
             }
             if (settings?.overrides?.CredentialManager === globals.PROFILE_SECURITY) {

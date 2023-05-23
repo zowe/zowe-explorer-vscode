@@ -401,13 +401,15 @@ describe("ProfilesUtils unit tests", () => {
             expect(blockMocks.mockWriteFileSync).not.toThrowError();
         });
 
-        it("should throw error if overrides file contains invalid JSON", () => {
+        it("should re-create file if overrides file contains invalid JSON", () => {
             const blockMocks = createBlockMocks();
             const fileJson = {
                 test: null,
             };
             blockMocks.mockReadFileSync.mockReturnValueOnce(JSON.stringify(fileJson, null, 2).slice(1));
-            expect(profUtils.ProfilesUtils.writeOverridesFile).toThrow();
+            const writeFileSpy = jest.spyOn(fs, "writeFileSync");
+            expect(profUtils.ProfilesUtils.writeOverridesFile).not.toThrow();
+            expect(writeFileSpy).toBeCalled();
         });
     });
 
