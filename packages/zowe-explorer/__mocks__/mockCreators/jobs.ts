@@ -122,6 +122,13 @@ export function createJobSessionNode(session: imperative.Session, profile: imper
     return jobSessionNode;
 }
 
+export function createJobNode(session: any, profile: imperative.IProfileLoaded) {
+    const jobNode = new Job("sampleJob", vscode.TreeItemCollapsibleState.Collapsed, session.getSessionNode(), session, createIJobObject(), profile);
+    jobNode.contextValue = globals.JOBS_JOB_CONTEXT;
+
+    return jobNode;
+}
+
 export function createJobFavoritesNode() {
     const jobFavoritesNode = new Job("Favorites", vscode.TreeItemCollapsibleState.Collapsed, null, null, null, null);
     jobFavoritesNode.contextValue = globals.FAVORITE_CONTEXT;
