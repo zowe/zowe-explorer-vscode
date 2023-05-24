@@ -10,6 +10,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 - Addressed issue where "Zowe Explorer: Poll Content in Active Editor" keybind was interfering with debug capabilities in VScode. [#2285](https://github.com/zowe/vscode-extension-for-zowe/issues/2285)
 - Updated linter rules and addressed linter errors. [#2291](https://github.com/zowe/vscode-extension-for-zowe/issues/2291)
+- Updated dependencies for security audits.
 
 ## `2.8.0`
 
