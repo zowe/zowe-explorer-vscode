@@ -256,8 +256,8 @@ export class PersistentFilters {
         const settings = ZoweLocalStorage.getValue<PersistentFilter>(this.schema);
         if (settings) {
             this.mSearchHistory = settings[PersistentFilters.searchHistory] ?? [];
-            this.mSessions = settings[PersistentFilters.searchHistory] ?? [];
-            this.mFileHistory = settings[PersistentFilters.searchHistory] ?? [];
+            this.mSessions = settings[PersistentFilters.sessions] ?? [];
+            this.mFileHistory = settings[PersistentFilters.fileHistory] ?? [];
         }
         this.updateFileHistory();
         this.updateSearchHistory();
