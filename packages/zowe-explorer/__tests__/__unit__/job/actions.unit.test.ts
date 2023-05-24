@@ -21,7 +21,14 @@ import {
     createTextDocument,
     createInstanceOfProfile,
 } from "../../../__mocks__/mockCreators/shared";
-import { createIJobFile, createIJobObject, createJobFavoritesNode, createJobSessionNode, createJobsTree } from "../../../__mocks__/mockCreators/jobs";
+import {
+    createIJobFile,
+    createIJobObject,
+    createJobFavoritesNode,
+    createJobNode,
+    createJobSessionNode,
+    createJobsTree,
+} from "../../../__mocks__/mockCreators/jobs";
 import { createJesApi, bindJesApi } from "../../../__mocks__/mockCreators/api";
 import * as jobActions from "../../../src/job/actions";
 import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
@@ -32,7 +39,6 @@ import { Profiles } from "../../../src/Profiles";
 import * as SpoolProvider from "../../../src/SpoolProvider";
 import * as refreshActions from "../../../src/shared/refresh";
 import * as sharedUtils from "../../../src/shared/utils";
-import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 import { SpoolFile } from "../../../src/SpoolProvider";
 
@@ -52,8 +58,11 @@ function createGlobalMocks() {
     Object.defineProperty(zowe, "IssueCommand", { value: jest.fn(), configurable: true });
     Object.defineProperty(zowe.IssueCommand, "issueSimple", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showOpenDialog", { value: jest.fn(), configurable: true });
+    Object.defineProperty(zowe, "CancelJobs", { value: jest.fn(), configurable: true });
+    Object.defineProperty(zowe.CancelJobs, "cancelJobForJob", { value: jest.fn(), configurable: true });
     Object.defineProperty(zowe, "GetJobs", { value: jest.fn(), configurable: true });
     Object.defineProperty(zowe.GetJobs, "getJclForJob", { value: jest.fn(), configurable: true });
+    Object.defineProperty(zowe.GetJobs, "getStatusForJob", { value: jest.fn(), configurable: true });
     Object.defineProperty(zowe.GetJobs, "getSpoolContentById", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.workspace, "openTextDocument", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showTextDocument", { value: jest.fn(), configurable: true });
@@ -767,6 +776,14 @@ describe("Jobs Actions Unit Tests - Function getSpoolContent", () => {
         const treeView = createTreeView();
         const testJobTree = createJobsTree(session, iJob, imperativeProfile, treeView);
         const jesApi = createJesApi(imperativeProfile);
+        jesApi.getSpoolFiles = jest.fn().mockReturnValue([
+            {
+                stepName: undefined,
+                ddname: "test",
+                "record-count": "testJob",
+                procstep: "testJob",
+            },
+        ]);
         const mockCheckCurrentProfile = jest.fn();
         const mockUri: vscode.Uri = {
             scheme: "testScheme",
@@ -874,16 +891,6 @@ describe("Jobs Actions Unit Tests - Function getSpoolContent", () => {
             null,
             createIProfile()
         );
-        jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValue({
-            getSpoolFiles: () => [
-                {
-                    stepName: undefined,
-                    ddname: "test",
-                    "record-count": "testJob",
-                    procstep: "testJob",
-                },
-            ],
-        } as any);
         jest.spyOn(Spool.prototype, "getProfile").mockReturnValue({
             name: "test",
         } as any);
@@ -1151,6 +1158,97 @@ describe("Jobs Actions Unit Tests - Function refreshJobsServer", () => {
 
         expect(blockMocks.testJobTree.checkCurrentProfile).toHaveBeenCalledWith(job);
         expect(blockMocks.testJobTree.refreshElement).toHaveBeenCalledWith(job);
+    });
+});
+
+describe("cancelJob", () => {
+    createGlobalMocks();
+    const session = createISession();
+    const profile = createIProfile();
+    const jobSessionNode = createJobSessionNode(session, profile);
+    const jobNode = createJobNode(jobSessionNode, profile);
+    const jobsProvider = createJobsTree(session, jobNode.job, profile, createTreeView());
+    const jesCancelJobMock = jest.fn();
+
+    const mockJesApi = (mockFn?: jest.Mock<any, any>): void => {
+        const jesApi = createJesApi(profile);
+        jesApi.cancelJob = mockFn;
+        bindJesApi(jesApi);
+    };
+
+    const restoreJesApi = (): void => {
+        const jesApi = createJesApi(profile);
+        bindJesApi(jesApi);
+    };
+
+    beforeEach(() => {
+        mockJesApi(jesCancelJobMock);
+    });
+
+    beforeEach(() => {
+        restoreJesApi();
+    });
+
+    it("returns early if no nodes are specified", async () => {
+        await jobActions.cancelJobs(jobsProvider, []);
+        expect(Gui.showMessage).not.toHaveBeenCalled();
+    });
+
+    it("returns early if all nodes in selection have been cancelled", async () => {
+        jobNode.job.retcode = "CANCELED";
+        await jobActions.cancelJobs(jobsProvider, [jobNode]);
+        expect(Gui.showMessage).toHaveBeenCalledWith("The selected jobs were already cancelled.");
+    });
+
+    it("shows a warning message if one or more jobs failed to cancel", async () => {
+        jobNode.job.retcode = "ACTIVE";
+        jesCancelJobMock.mockResolvedValueOnce(false);
+        await jobActions.cancelJobs(jobsProvider, [jobNode]);
+        expect(Gui.warningMessage).toHaveBeenCalledWith("One or more jobs failed to cancel: \n\nTESTJOB(JOB1234): The job was not cancelled.", {
+            vsCodeOpts: { modal: true },
+        });
+    });
+
+    it("shows a warning message if one or more APIs do not support cancelJob", async () => {
+        // Make cancelJob undefined
+        mockJesApi();
+        jobNode.job.retcode = "ACTIVE";
+        await jobActions.cancelJobs(jobsProvider, [jobNode]);
+        expect(Gui.warningMessage).toHaveBeenCalledWith(
+            "One or more jobs failed to cancel: " + "\n\nTESTJOB(JOB1234): The cancel function is not implemented in this API.",
+            {
+                vsCodeOpts: { modal: true },
+            }
+        );
+    });
+
+    it("shows matching error messages for one or more failed jobs", async () => {
+        jobNode.job.retcode = "ACTIVE";
+        jesCancelJobMock.mockRejectedValueOnce(new Error("Failed to cancel job... something went wrong."));
+        await jobActions.cancelJobs(jobsProvider, [jobNode]);
+        expect(Gui.warningMessage).toHaveBeenCalledWith(
+            "One or more jobs failed to cancel: " + "\n\nTESTJOB(JOB1234): Failed to cancel job... something went wrong.",
+            {
+                vsCodeOpts: { modal: true },
+            }
+        );
+    });
+
+    it("shows a message confirming the jobs were cancelled", async () => {
+        jobNode.job.retcode = "ACTIVE";
+        jesCancelJobMock.mockResolvedValueOnce(true);
+        const setImmediateSpy = jest.spyOn(global, "setImmediate");
+        await jobActions.cancelJobs(jobsProvider, [jobNode]);
+
+        // Check that refreshElement was called through setImmediate
+        expect(setImmediateSpy).toHaveBeenCalled();
+
+        expect(Gui.showMessage).toHaveBeenCalledWith("Cancelled selected jobs successfully.");
+    });
+
+    it("does not work for job session nodes", async () => {
+        await jobActions.cancelJobs(jobsProvider, [jobSessionNode]);
+        expect(jesCancelJobMock).not.toHaveBeenCalled();
     });
 });
 

@@ -8,6 +8,8 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 - Added new optional IZoweTree functions, `addDsTemplate` and `getDSTemplates`.
 - Added a new interface `CreateDSOptionsWithTemplate` that extends `@zowe/cli.ICreateDataSetOptions` adding a name field for data set allocation templates, and a new type `DataSetAllocTemplate` that uses the new interface.
+- Added optional `cancelJob` function to `ZoweExplorerApi.IJes` interface.
+- Added z/OSMF API implementation for `cancelJob` function.
 
 ### Bug fixes
 
