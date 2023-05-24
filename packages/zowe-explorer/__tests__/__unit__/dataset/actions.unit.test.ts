@@ -3114,13 +3114,14 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         blockMocks.testDatasetTree.getSearchHistory.mockReturnValue([]);
         blockMocks.testDatasetTree.getDsTemplates.mockReturnValue([
             {
-                name: "TEMPTST",
-                alcunit: "CYL",
-                blksize: 6160,
-                dsorg: "PO",
-                lrecl: 80,
-                primary: 1,
-                recfm: "FB",
+                TEMPTST: {
+                    alcunit: "CYL",
+                    blksize: 6160,
+                    dsorg: "PO",
+                    lrecl: 80,
+                    primary: 1,
+                    recfm: "FB",
+                },
             },
         ]);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);

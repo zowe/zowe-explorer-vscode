@@ -690,8 +690,10 @@ async function getDsTypeForCreation(datasetProvider: api.IZoweTree<api.IZoweData
 function getTemplateNames(datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>): string[] {
     const templates = datasetProvider.getDsTemplates();
     const templateNames: string[] = [];
-    templates?.forEach((item) => {
-        templateNames.push(item.name);
+    templates?.forEach((template) => {
+        Object.entries(template).forEach(([key, value]) => {
+            templateNames.push(key);
+        });
     });
     return templateNames;
 }
@@ -699,11 +701,13 @@ function getTemplateNames(datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNod
 function compareDsProperties(type: string, datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>): boolean {
     let isMatch = true;
     const templates: api.DataSetAllocTemplate[] = datasetProvider.getDsTemplates();
-    let propertiesFromDsType: api.DataSetAllocTemplate;
+    let propertiesFromDsType: Partial<zowe.ICreateDataSetOptions>;
     // Look for template
     templates?.forEach((template) => {
-        if (type === template?.name) {
-            propertiesFromDsType = template;
+        for (const [key, value] of Object.entries(template)) {
+            if (type === key) {
+                propertiesFromDsType = value;
+            }
         }
     });
     if (!propertiesFromDsType) {
@@ -722,19 +726,21 @@ function compareDsProperties(type: string, datasetProvider: api.IZoweTree<api.IZ
     return isMatch;
 }
 
-function getDsProperties(type: string, datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>): api.DataSetAllocTemplate {
+function getDsProperties(type: string, datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>): Partial<zowe.ICreateDataSetOptions> {
     const templates: api.DataSetAllocTemplate[] = datasetProvider.getDsTemplates();
-    let propertiesFromDsType: api.DataSetAllocTemplate;
+    let propertiesFromDsType: Partial<zowe.ICreateDataSetOptions>;
     // Look for template
     templates?.forEach((template) => {
-        if (type === template?.name) {
-            if (template.dsorg === "PS") {
-                typeEnum = 4;
-            } else {
-                typeEnum = 3;
+        Object.entries(template).forEach(([key, value]) => {
+            if (type === key) {
+                if (template[key].dsorg === "PS") {
+                    typeEnum = 4;
+                } else {
+                    typeEnum = 3;
+                }
+                propertiesFromDsType = value;
             }
-            propertiesFromDsType = template;
-        }
+        });
     });
     if (!propertiesFromDsType) {
         propertiesFromDsType = getDefaultDsTypeProperties(type);
@@ -750,10 +756,10 @@ function getDsProperties(type: string, datasetProvider: api.IZoweTree<api.IZoweD
     return propertiesFromDsType;
 }
 
-function getDefaultDsTypeProperties(dsType: string): api.DataSetAllocTemplate {
+function getDefaultDsTypeProperties(dsType: string): zowe.ICreateDataSetOptions {
     typeEnum = getDataSetTypeAndOptions(dsType)?.typeEnum;
     const cliDefaultsKey = globals.CreateDataSetTypeWithKeysEnum[typeEnum]?.replace("DATA_SET_", "");
-    return zowe.CreateDefaults.DATA_SET[cliDefaultsKey] as api.DataSetAllocTemplate;
+    return zowe.CreateDefaults.DATA_SET[cliDefaultsKey] as zowe.ICreateDataSetOptions;
 }
 
 async function allocateOrEditAttributes(): Promise<string> {
@@ -834,8 +840,10 @@ async function saveDsTemplate(datasetProvider: api.IZoweTree<api.IZoweDatasetTre
                 api.Gui.showMessage(localizedStrings.opCancelled);
                 return;
             }
-            dsPropsForAPI.name = templateName;
-            datasetProvider.addDsTemplate(dsPropsForAPI);
+            const newTemplate: api.DataSetAllocTemplate = {
+                [templateName]: dsPropsForAPI,
+            };
+            datasetProvider.addDsTemplate(newTemplate);
         }
     });
 }

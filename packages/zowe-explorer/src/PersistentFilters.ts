@@ -105,9 +105,17 @@ export class PersistentFilters {
 
     public addDsTemplateHistory(criteria: api.DataSetAllocTemplate): void {
         if (criteria) {
+            let newTemplateName: string;
+            Object.entries(criteria).forEach(([key, value]) => {
+                newTemplateName = key;
+            });
             // Remove any entries that match
-            this.mDsTemplates = this.mDsTemplates.filter((element) => {
-                return element.name !== criteria.name;
+            this.mDsTemplates = this.mDsTemplates.filter((template) => {
+                let historyName: string;
+                Object.entries(template).forEach(([key1, value]) => {
+                    historyName = key1;
+                });
+                return historyName !== newTemplateName;
             });
             // Add value to front of stack
             this.mDsTemplates.unshift(criteria);
