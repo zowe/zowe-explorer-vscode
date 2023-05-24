@@ -41,7 +41,7 @@ jobs:
 
       - name: Upload test results
         uses: actions/upload-artifact@v3
-        if: matrix.os == 'ubuntu-latest' && matrix.node-version == '16x'
+        if: matrix.os == 'ubuntu-latest' && matrix.node-version == '16.x'
         with:
           name: zowe-explorer-results
           path: packages/zowe-explorer/results/
