@@ -385,9 +385,9 @@ Your token has been successfully invalidated.
 
 - **Delete a profile**: For Zowe V1 profiles, right-click a profile and select the **Delete Profile** option to permanently delete the profile and delete the profile from your `.zowe` folder.
 
-   For Zowe V2 profiles, **Delete Profile** opens the `zowe.config.json` file for the user to delete the profile manually:
+  For Zowe V2 profiles, **Delete Profile** opens the `zowe.config.json` file for the user to delete the profile manually:
 
-   ![Delete a V2 profile](/docs/images/ZE-v2-delete-profile.gif)
+  ![Delete a V2 profile](/docs/images/ZE-v2-delete-profile.gif)
 
 - **Hide a profile**: You can hide a profile from the profile tree by right-clicking the profile and selecting the **Hide Profile** option. To unhide the profile, click the **+** button and select the profile from the quick pick list.
 
