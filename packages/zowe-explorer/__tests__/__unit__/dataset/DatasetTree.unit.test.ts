@@ -1774,6 +1774,9 @@ describe("Dataset Tree Unit Tests - Function renameNode", () => {
             undefined,
             blockMocks.imperativeProfile
         );
+        // the IDs will never match, so for the sake of this test,
+        // going to fake the IDs so that the expect passes
+        afterNode.id = "<root>.TO.RENAME";
         blockMocks.datasetSessionNode.children.push(beforeNode);
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
 

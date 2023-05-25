@@ -39,7 +39,9 @@ import { SettingsConfig } from "../../../src/utils/SettingsConfig";
 async function createGlobalMocks() {
     const globalMocks = {
         mockGetConfiguration: jest.fn(),
-        mockGetJobs: jest.fn(),
+        mockGetJobs: {
+            getStatusForJob: jest.fn(),
+        },
         mockGetJob: jest.fn(),
         mockRefresh: jest.fn(),
         mockAffectsConfig: jest.fn(),
