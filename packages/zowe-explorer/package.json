@@ -1847,7 +1847,7 @@
           "default": true,
           "type": "boolean",
           "description": "%zowe.security.secureCredentialsEnabled%",
-          "scope": "window"
+          "scope": "machine"
         },
         "zowe.logger": {
           "type": "string",
