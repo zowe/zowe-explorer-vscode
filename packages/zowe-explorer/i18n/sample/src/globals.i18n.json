@@ -19,6 +19,6 @@
   "globals.defineGlobals.isTheia": "Zowe Explorer is running in Theia environment.",
   "globals.defineGlobals.tempFolder": "Zowe Explorer's temp folder is located at {0}",
   "globals.setActivated.success": "Zowe Explorer has activated successfully.",
-  "globals.setGlobalSecurityValue.unsecured": "Zowe explorer profiles are not secured.",
-  "globals.setGlobalSecurityValue.secured": "Zowe explorer profiles are secured."
+  "globals.setGlobalSecurityValue.unsecured": "Zowe explorer profiles are being set as unsecured.",
+  "globals.setGlobalSecurityValue.secured": "Zowe explorer profiles are being set as secured."
 }

@@ -109,8 +109,11 @@ describe("SettingsConfig Unit Tests - function standardizeSettings", () => {
             value: ["test"],
             configurable: true,
         });
-        jest.spyOn(SettingsConfig as any, "currentVersionNumber", "get").mockReturnValue("vtest");
+        jest.spyOn(SettingsConfig as any, "currentVersionNumber", "get").mockReturnValueOnce("vtest");
         jest.spyOn(SettingsConfig as any, "zoweOldConfigurations", "get").mockReturnValue(["zowe.settings.test"]);
+        jest.spyOn(vscode.workspace, "getConfiguration").mockReturnValue({
+            update: jest.fn(),
+        } as any);
     });
 
     it("should standardize workspace settings if not migrated and workspace is open", async () => {
@@ -135,5 +138,32 @@ describe("SettingsConfig Unit Tests - function standardizeSettings", () => {
         const standardizeGlobalSettingsSpy = jest.spyOn(SettingsConfig as any, "standardizeGlobalSettings").mockImplementation();
         await expect(SettingsConfig.standardizeSettings()).resolves.not.toThrow();
         expect(standardizeGlobalSettingsSpy).toHaveBeenCalledTimes(1);
+    });
+});
+
+describe("SettingsConfig Unit Tests - function currentVersionNumber", () => {
+    beforeAll(() => {
+        jest.restoreAllMocks();
+        jest.resetAllMocks();
+    });
+
+    it("should remove the minor and patch version from the version number", () => {
+        jest.spyOn(vscode.extensions, "getExtension").mockReturnValueOnce({
+            packageJSON: {
+                version: "3.2.1",
+            },
+        } as any);
+
+        expect((SettingsConfig as any).currentVersionNumber).toBe(3);
+    });
+
+    it("should parse the version as-is if it doesn't respect semver", () => {
+        jest.spyOn(vscode.extensions, "getExtension").mockReturnValueOnce({
+            packageJSON: {
+                version: "2",
+            },
+        } as any);
+
+        expect((SettingsConfig as any).currentVersionNumber).toBe(2);
     });
 });
