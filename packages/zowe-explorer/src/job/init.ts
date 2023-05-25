@@ -164,6 +164,11 @@ export async function initJobsProvider(context: vscode.ExtensionContext): Promis
             jobsProvider.onDidChangeConfiguration(e);
         })
     );
+    context.subscriptions.push(
+        vscode.commands.registerCommand("zowe.jobs.cancelJob", async (node, nodeList) => {
+            await jobActions.cancelJobs(jobsProvider, getSelectedNodeList(node, nodeList));
+        })
+    );
 
     initSubscribers(context, jobsProvider);
     return jobsProvider;

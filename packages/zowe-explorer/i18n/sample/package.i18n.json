@@ -63,6 +63,7 @@
   "removeJobsSession": "Hide Profile",
   "downloadSpool": "Download All",
   "downloadSpoolBinary": "Download All (Binary)",
+  "cancelJobs": "Cancel Job",
   "getJobJcl": "Get JCL",
   "setJobSpool": "Set Spool",
   "configuration.title": "Zowe Explorer",
