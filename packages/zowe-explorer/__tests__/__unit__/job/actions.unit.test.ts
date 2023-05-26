@@ -37,6 +37,7 @@ import { Profiles } from "../../../src/Profiles";
 import * as SpoolProvider from "../../../src/SpoolProvider";
 import * as refreshActions from "../../../src/shared/refresh";
 import { UIViews } from "../../../src/shared/ui-views";
+import { PersistentFilters } from "../../../src/PersistentFilters";
 
 const activeTextEditorDocument = jest.fn();
 
@@ -69,6 +70,13 @@ function createGlobalMocks() {
     const executeCommand = jest.fn();
     Object.defineProperty(vscode.commands, "executeCommand", { value: executeCommand, configurable: true });
     Object.defineProperty(SpoolProvider, "toUniqueJobFileUri", { value: jest.fn(), configurable: true });
+
+    Object.defineProperty(zowe, "DownloadJobs", { value: jest.fn(), configurable: true });
+    Object.defineProperty(zowe.DownloadJobs, "downloadAllSpoolContentCommon", { value: jest.fn(), configurable: true });
+    Object.defineProperty(vscode.workspace, "getConfiguration", { value: jest.fn(), configurable: true });
+    Object.defineProperty(PersistentFilters, "getDirectValue", {
+        value: jest.fn(() => ({ "Zowe-Automatic-Validation": true })),
+    });
 }
 
 // Idea is borrowed from: https://github.com/kulshekhar/ts-jest/blob/master/src/util/testing.ts
@@ -300,7 +308,6 @@ describe("Jobs Actions Unit Tests - Function downloadSpool", () => {
         };
         mocked(vscode.window.showOpenDialog).mockResolvedValue([fileUri as vscode.Uri]);
         const downloadFileSpy = jest.spyOn(blockMocks.jesApi, "downloadSpoolContent");
-
         await jobActions.downloadSpool(node);
         expect(mocked(vscode.window.showOpenDialog)).toBeCalled();
         expect(downloadFileSpy).toBeCalled();
@@ -1023,6 +1030,10 @@ describe("job deletion command", () => {
         const jobsProvider = createJobsTree(session, job, profile, createTreeView());
         jobsProvider.delete.mockResolvedValueOnce(Promise.resolve());
         const jobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, null, session, job, profile);
+        mocked(Profiles.getInstance).mockReturnValue({
+            ...createInstanceOfProfile(profile),
+            loadNamedProfile: jest.fn().mockReturnValue(profile),
+        });
         // act
         await jobActions.deleteCommand(jobsProvider, jobNode);
         // assert

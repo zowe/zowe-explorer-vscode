@@ -19,12 +19,11 @@ import * as testConst from "../../../resources/testProfileData";
 import * as vscode from "vscode";
 import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
 import { DatasetTree } from "../../../src/dataset/DatasetTree";
-import * as dsActions from "../../../src/dataset/actions";
 import * as refreshActions from "../../../src/shared/refresh";
 import { DS_SESSION_CONTEXT } from "../../../src/globals";
 
 const TIMEOUT = 45000;
-declare var it: Mocha.ITestDefinition;
+declare var it: Mocha.TestFunction;
 // declare var describe: any;
 
 const testProfile: IProfileLoaded = {

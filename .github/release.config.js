@@ -44,7 +44,7 @@ module.exports = {
             {
                 $cwd: "packages/zowe-explorer-api",
                 aliasTags: {
-                    "latest": ["zowe-v2-lts"],
+                    latest: ["zowe-v2-lts"],
                 },
                 npmPublish: true,
                 tarballDir: "dist",

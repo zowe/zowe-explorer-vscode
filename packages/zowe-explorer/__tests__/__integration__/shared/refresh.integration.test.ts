@@ -26,7 +26,7 @@ import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
 import { createInstanceOfProfile } from "../../../__mocks__/mockCreators/shared";
 
 const TIMEOUT = 45000;
-declare var it: Mocha.ITestDefinition;
+declare var it: Mocha.TestFunction;
 
 describe("jobNodeActions integration test", async () => {
     const expect = chai.expect;

@@ -250,7 +250,7 @@ describe("Unit Tests (Jest)", () => {
      * Checks that the catch block is reached when an error is thrown
      *************************************************************************************************************/
     it(
-        "Checks that when bright.List.dataSet/allMembers() causes an error on the zowe call, " +
+        "Checks that when zowe.List.dataSet/allMembers() causes an error on the zowe call, " +
             "it throws an error and the catch block is reached",
         async () => {
             showErrorMessage.mockReset();
@@ -279,7 +279,7 @@ describe("Unit Tests (Jest)", () => {
      * Checks that returning an unsuccessful response results in an error being thrown and caught
      *************************************************************************************************************/
     it(
-        "Checks that when bright.List.dataSet/allMembers() returns an unsuccessful response, " +
+        "Checks that when zowe.List.dataSet/allMembers() returns an unsuccessful response, " +
             "it returns a label of 'No datasets found'",
         async () => {
             // Creating a rootNode
@@ -304,6 +304,7 @@ describe("Unit Tests (Jest)", () => {
                 profileOne
             );
             subNode.dirty = true;
+            withProgress.mockReturnValue([{ success: true, apiResponse: { items: [] } }]);
             const response = await subNode.getChildren();
             for (const item of response) {
                 expect(item.label).toEqual("No datasets found");

@@ -20,7 +20,7 @@ import {
     createValidIProfile,
 } from "../../../__mocks__/mockCreators/shared";
 import { createDatasetSessionNode, createDatasetTree } from "../../../__mocks__/mockCreators/datasets";
-import { IZoweNodeType } from "@zowe/zowe-explorer-api";
+import { IZoweNodeType, ZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../../src/Profiles";
 import * as utils from "../../../src/utils/ProfilesUtils";
 import * as globals from "../../../src/globals";
@@ -30,6 +30,7 @@ import { createUSSSessionNode, createUSSTree } from "../../../__mocks__/mockCrea
 import * as dsActions from "../../../src/dataset/actions";
 import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
 import { getIconById, IconId, getIconByNode } from "../../../src/generators/icons";
+import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 
 async function createGlobalMocks() {
     const globalMocks = {
@@ -47,6 +48,11 @@ async function createGlobalMocks() {
     Object.defineProperty(globals, "LOG", { value: jest.fn(), configurable: true });
     Object.defineProperty(globals.LOG, "debug", { value: jest.fn(), configurable: true });
     Object.defineProperty(globals.LOG, "error", { value: jest.fn(), configurable: true });
+
+    Object.defineProperty(vscode.workspace, "getConfiguration", {
+        value: jest.fn(),
+        configurable: true,
+    });
 
     return globalMocks;
 }
@@ -74,6 +80,13 @@ describe("Shared Actions Unit Tests - Function searchForLoadedItems", () => {
         newMocks.ussSessionNode = createUSSSessionNode(newMocks.session, newMocks.imperativeProfile);
         newMocks.testUssTree = createUSSTree([], [newMocks.ussSessionNode], newMocks.treeView);
         newMocks.testDatasetTree = createDatasetTree(newMocks.datasetSessionNode, newMocks.treeView);
+
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn().mockReturnValue({
+                profile: newMocks.imperativeProfile,
+                loadNamedProfile: jest.fn().mockReturnValue(newMocks.imperativeProfile),
+            }),
+        });
 
         return newMocks;
     }

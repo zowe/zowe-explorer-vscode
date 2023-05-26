@@ -108,6 +108,17 @@ function createGlobalMocks() {
         configurable: true,
     });
 
+    Object.defineProperty(zowe, "Download", { value: jest.fn(), configurable: true });
+    Object.defineProperty(zowe.Download, "dataSet", {
+        value: jest.fn().mockReturnValue({ apiResponse: {} }),
+        configurable: true,
+    });
+    Object.defineProperty(globals, "LOG", { value: jest.fn(), configurable: true });
+    Object.defineProperty(globals.LOG, "debug", { value: jest.fn(), configurable: true });
+    Object.defineProperty(globals.LOG, "error", { value: jest.fn(), configurable: true });
+    Object.defineProperty(vscode.workspace, "openTextDocument", { value: jest.fn(), configurable: true });
+    Object.defineProperty(vscode.window, "showTextDocument", { value: jest.fn(), configurable: true });
+
     return globalMocks;
 }
 
@@ -778,6 +789,10 @@ describe("Dataset Tree Unit Tests - Function addSession", () => {
         const blockMocks = await createBlockMocks();
 
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        mocked(Profiles.getInstance).mockReturnValueOnce({
+            ...blockMocks.mockProfileInstance,
+            loadNamedProfile: jest.fn().mockReturnValue(blockMocks.imperativeProfile),
+        });
         const testTree = new DatasetTree();
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
 
@@ -1350,7 +1365,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
             { name: "firstName" },
             { name: "secondName" },
         ];
-        globalMocks.mockProfileInstance.loadNamedProfile.mockReturnValueOnce(newMocks.imperativeProfile);
+        globalMocks.mockProfileInstance.loadNamedProfile.mockReturnValue(newMocks.imperativeProfile);
         globalMocks.mockProfileInstance.resetValidationSettings.mockReturnValue(newMocks.datasetSessionNode);
         globalMocks.mockProfileInstance.getProfileSetting.mockReturnValue({
             name: newMocks.imperativeProfile.name,
@@ -1936,6 +1951,7 @@ describe("Dataset Tree Unit Tests - Function openItemFromPath", () => {
 
     it("Checking opening of PS Dataset", async () => {
         createGlobalMocks();
+        globals.defineGlobals("");
         const blockMocks = createBlockMocks();
 
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);

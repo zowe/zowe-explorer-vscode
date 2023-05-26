@@ -22,6 +22,7 @@ import { createIJobObject } from "../../../__mocks__/mockCreators/jobs";
 import { Job } from "../../../src/job/ZoweJobNode";
 import { createJobsTree } from "../../../src/job/ZosJobsProvider";
 import { PersistentFilters } from "../../../src/PersistentFilters";
+import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 
 async function createGlobalMocks() {
     const globalMocks = {
@@ -70,6 +71,7 @@ async function createGlobalMocks() {
         value: jest.fn(() => {
             return {
                 allProfiles: [globalMocks.testProfile, { name: "firstName" }, { name: "secondName" }],
+                getBaseProfile: jest.fn().mockReturnValue(null),
                 getDefaultProfile: globalMocks.mockDefaultProfile,
                 validProfile: ValidProfileEnum.VALID,
                 validateProfiles: jest.fn(),
@@ -105,7 +107,18 @@ async function createGlobalMocks() {
             };
         }),
     });
-
+    Object.defineProperty(ZoweExplorerApiRegister, "getJesApi", {
+        value: jest.fn().mockReturnValue({
+            getSession: jest.fn().mockReturnValue(null),
+        }),
+        configurable: true,
+    });
+    Object.defineProperty(ZoweExplorerApiRegister, "getMvsApi", {
+        value: jest.fn().mockReturnValue({
+            getSession: jest.fn().mockReturnValue(null),
+        }),
+        configurable: true,
+    });
     globalMocks.mockAffects.mockReturnValue(true);
     globalMocks.withProgress.mockImplementation((progLocation, callback) => callback());
     globalMocks.withProgress.mockReturnValue(globalMocks.testResponse);

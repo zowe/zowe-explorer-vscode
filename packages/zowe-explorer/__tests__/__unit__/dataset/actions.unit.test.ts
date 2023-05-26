@@ -47,6 +47,7 @@ let mockClipboardData = null;
 let clipboard;
 
 function createGlobalMocks() {
+    globals.defineGlobals("");
     clipboard = {
         writeText: jest.fn().mockImplementation((value) => (mockClipboardData = value)),
         readText: jest.fn().mockImplementation(() => mockClipboardData),
@@ -276,7 +277,6 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
     afterAll(() => jest.restoreAllMocks());
 
     it("Checking common PS dataset refresh", async () => {
-        globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         const node = new ZoweDatasetNode(
@@ -308,7 +308,6 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
         expect(mocked(vscode.commands.executeCommand)).toBeCalledWith("workbench.action.closeActiveEditor");
     });
     it("Checking duplicate PS dataset refresh attempt", async () => {
-        globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         const node = new ZoweDatasetNode(
@@ -332,7 +331,6 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
         expect(mocked(vscode.commands.executeCommand)).not.toBeCalled();
     });
     it("Checking failed attempt to refresh PS dataset (not found exception)", async () => {
-        globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         const node = new ZoweDatasetNode(
@@ -353,7 +351,6 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
         expect(mocked(vscode.commands.executeCommand)).not.toBeCalled();
     });
     it("Checking failed attempt to refresh PDS Member", async () => {
-        globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         const parent = new ZoweDatasetNode(
@@ -384,7 +381,6 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
         expect(mocked(vscode.window.showErrorMessage)).toBeCalledWith(" Error");
     });
     it("Checking favorite empty PDS refresh", async () => {
-        globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         const node = new ZoweDatasetNode(
@@ -410,7 +406,6 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
         expect(mocked(vscode.commands.executeCommand)).toBeCalledWith("workbench.action.closeActiveEditor");
     });
     it("Checking favorite PDS Member refresh", async () => {
-        globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         const parent = new ZoweDatasetNode(
@@ -437,7 +432,6 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
         expect(mocked(vscode.commands.executeCommand)).toBeCalledWith("workbench.action.closeActiveEditor");
     });
     it("Checking favorite PS refresh", async () => {
-        globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         const parent = new ZoweDatasetNode(
@@ -736,7 +730,6 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
     afterAll(() => jest.restoreAllMocks());
 
     it("Checking common PS dataset deletion", async () => {
-        globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
@@ -765,7 +758,6 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
         );
     });
     it("Checking common PS dataset deletion with Unverified profile", async () => {
-        globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
@@ -805,7 +797,6 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
         );
     });
     it("Checking common PS dataset deletion with not existing local file", async () => {
-        globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
@@ -829,7 +820,6 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
         expect(deleteSpy).toBeCalledWith(node.label);
     });
     it("Checking common PS dataset failed deletion attempt due to absence on remote", async () => {
-        globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
@@ -855,7 +845,6 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
         );
     });
     it("Checking common PS dataset failed deletion attempt", async () => {
-        globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
@@ -878,7 +867,6 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
         expect(mocked(vscode.window.showErrorMessage)).toBeCalledWith(" Error");
     });
     it("Checking Favorite PDS dataset deletion", async () => {
-        globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
@@ -916,7 +904,6 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
         );
     });
     it("Checking Favorite PDS Member deletion", async () => {
-        globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
@@ -945,7 +932,6 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
         );
     });
     it("Checking Favorite PS dataset deletion", async () => {
-        globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
@@ -985,7 +971,6 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
         );
     });
     it("Checking incorrect dataset failed deletion attempt", async () => {
-        globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
@@ -1126,7 +1111,6 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
     afterAll(() => jest.restoreAllMocks());
 
     it("Checking common dataset saving action when no session is defined", async () => {
-        globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         const nodeWithoutSession = new ZoweDatasetNode(
@@ -1154,7 +1138,6 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
         expect(getSessionSpy).toReturnWith(blockMocks.sessionWithoutCredentials);
     });
     it("Checking common dataset saving failed attempt due to inability to locate session and profile", async () => {
-        globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         const nodeWithoutSession = new ZoweDatasetNode(
@@ -1178,7 +1161,6 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
         expect(mocked(vscode.window.showErrorMessage)).toBeCalledWith("Couldn't locate session when saving data set!");
     });
     it("Checking common dataset saving failed attempt due to its absence on the side of the server", async () => {
-        globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         const node = new ZoweDatasetNode(
@@ -1212,7 +1194,6 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
         );
     });
     it("Checking common dataset saving", async () => {
-        globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         const node = new ZoweDatasetNode(
@@ -1260,7 +1241,6 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
         expect(mocked(vscode.window.setStatusBarMessage)).toBeCalledWith("success", globals.STATUS_BAR_TIMEOUT_MS);
     });
     it("Checking common dataset failed saving attempt", async () => {
-        globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         const node = new ZoweDatasetNode(
@@ -1306,7 +1286,6 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
         expect(mocked(vscode.window.showErrorMessage)).toBeCalledWith("failed");
     });
     it("Checking favorite dataset saving", async () => {
-        globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         const favoriteNode = new ZoweDatasetNode(
@@ -1369,7 +1348,6 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
         expect(mocked(vscode.window.setStatusBarMessage)).toBeCalledWith("success", globals.STATUS_BAR_TIMEOUT_MS);
     });
     it("Checking favorite PDS Member saving", async () => {
-        globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         // Create nodes for Session section
@@ -1464,7 +1442,6 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
         expect(blockMocks.profileInstance.loadNamedProfile).toBeCalledWith(blockMocks.imperativeProfile.name);
     });
     it("Checking common dataset failed saving attempt due to incorrect document path", async () => {
-        globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         const node = new ZoweDatasetNode(
@@ -1490,7 +1467,6 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
         expect(mocked(zowe.Upload.pathToDataSet)).not.toBeCalled();
     });
     it("Checking PDS member saving attempt", async () => {
-        globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         const node = new ZoweDatasetNode(
@@ -1536,7 +1512,6 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
         expect(mocked(vscode.window.setStatusBarMessage)).toBeCalledWith("success", globals.STATUS_BAR_TIMEOUT_MS);
     });
     it("Checking common dataset saving failed due to conflict with server version", async () => {
-        globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         const node = new ZoweDatasetNode(
@@ -1620,7 +1595,6 @@ describe("Dataset Actions Unit Tests - Function showDSAttributes", () => {
     afterAll(() => jest.restoreAllMocks());
 
     it("Checking PS dataset attributes showing", async () => {
-        globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
@@ -1652,7 +1626,6 @@ describe("Dataset Actions Unit Tests - Function showDSAttributes", () => {
         expect(mocked(vscode.window.createWebviewPanel)).toBeCalled();
     });
     it("Checking PS dataset attributes showing with Unverified Profile", async () => {
-        globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
@@ -1691,7 +1664,6 @@ describe("Dataset Actions Unit Tests - Function showDSAttributes", () => {
         expect(mocked(vscode.window.createWebviewPanel)).toBeCalled();
     });
     it("Checking PDS dataset attributes showing", async () => {
-        globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
@@ -1723,7 +1695,6 @@ describe("Dataset Actions Unit Tests - Function showDSAttributes", () => {
         expect(mocked(vscode.window.createWebviewPanel)).toBeCalled();
     });
     it("Checking Favorite PS dataset attributes showing", async () => {
-        globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
@@ -1756,7 +1727,6 @@ describe("Dataset Actions Unit Tests - Function showDSAttributes", () => {
         expect(mocked(vscode.window.createWebviewPanel)).toBeCalled();
     });
     it("Checking Favorite PDS dataset attributes showing", async () => {
-        globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
@@ -1789,7 +1759,6 @@ describe("Dataset Actions Unit Tests - Function showDSAttributes", () => {
         expect(mocked(vscode.window.createWebviewPanel)).toBeCalled();
     });
     it("Checking failed attempt of dataset attributes showing (empty response)", async () => {
-        globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
@@ -1854,7 +1823,6 @@ describe("Dataset Actions Unit Tests - Function copyDataSet", () => {
     afterAll(() => jest.restoreAllMocks());
 
     it("Checking copy the label of a node to the clipboard", async () => {
-        globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         const node = new ZoweDatasetNode(
@@ -1870,7 +1838,6 @@ describe("Dataset Actions Unit Tests - Function copyDataSet", () => {
         expect(clipboard.readText()).toBe('{"profileName":"sestest","dataSetName":"HLQ.TEST.DELETE.NODE"}');
     });
     it("Checking copy the label of a favorite node to the clipboard", async () => {
-        globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         const node = new ZoweDatasetNode(
@@ -1886,7 +1853,6 @@ describe("Dataset Actions Unit Tests - Function copyDataSet", () => {
         expect(clipboard.readText()).toBe('{"profileName":"sestest","dataSetName":"HLQ.TEST.DELETE.NODE"}');
     });
     it("Checking copy the label of a member to the clipboard", async () => {
-        globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         const parent = new ZoweDatasetNode(
@@ -1904,7 +1870,6 @@ describe("Dataset Actions Unit Tests - Function copyDataSet", () => {
         expect(clipboard.readText()).toBe('{"profileName":"sestest","dataSetName":"parent","memberName":"child"}');
     });
     it("Checking copy the label of a favorite member to the clipboard", async () => {
-        globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         const parent = new ZoweDatasetNode(
@@ -1954,7 +1919,6 @@ describe("Dataset Actions Unit Tests - Function pasteMember", () => {
     afterAll(() => jest.restoreAllMocks());
 
     it("Should call zowe.Copy.dataSet when pasting to sequential data set", async () => {
-        globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
@@ -1990,7 +1954,6 @@ describe("Dataset Actions Unit Tests - Function pasteMember", () => {
         );
     });
     it("Should call zowe.Copy.dataSet when pasting to sequential data set of Unverified profile", async () => {
-        globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
@@ -2037,7 +2000,6 @@ describe("Dataset Actions Unit Tests - Function pasteMember", () => {
         );
     });
     it("Should throw an error if invalid clipboard data is supplied when pasting to sequential data set", async () => {
-        globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
@@ -2067,7 +2029,6 @@ describe("Dataset Actions Unit Tests - Function pasteMember", () => {
         expect(copySpy).not.toBeCalled();
     });
     it("Should not call zowe.Copy.dataSet when pasting to partitioned data set with no member name", async () => {
-        globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
@@ -2096,7 +2057,6 @@ describe("Dataset Actions Unit Tests - Function pasteMember", () => {
         expect(copySpy).not.toBeCalled();
     });
     it("Should call zowe.Copy.dataSet when pasting to partitioned data set", async () => {
-        globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
@@ -2139,7 +2099,6 @@ describe("Dataset Actions Unit Tests - Function pasteMember", () => {
         expect(blockMocks.testDatasetTree.findFavoritedNode).toHaveBeenCalledWith(node);
     });
     it("Should throw an error when pasting to a member that already exists", async () => {
-        globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
@@ -2175,7 +2134,6 @@ describe("Dataset Actions Unit Tests - Function pasteMember", () => {
         expect(copySpy).not.toBeCalled();
     });
     it("Should call zowe.Copy.dataSet when pasting to a favorited partitioned data set", async () => {
-        globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
@@ -2263,7 +2221,6 @@ describe("Dataset Actions Unit Tests - Function hMigrateDataSet", () => {
     afterAll(() => jest.restoreAllMocks());
 
     it("Checking that hMigrateDataSet successfully migrates a data set", async () => {
-        globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
@@ -2291,7 +2248,6 @@ describe("Dataset Actions Unit Tests - Function hMigrateDataSet", () => {
     });
 
     it("Checking that hMigrateDataSet throws an error if the user is invalid", async () => {
-        globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
 
@@ -2310,7 +2266,6 @@ describe("Dataset Actions Unit Tests - Function hMigrateDataSet", () => {
         expect(mocked(vscode.window.showErrorMessage)).toHaveBeenCalled();
     });
     it("Checking PS dataset migrate for Unverified Profile", async () => {
-        globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
@@ -2380,7 +2335,6 @@ describe("Dataset Actions Unit Tests - Function hRecallDataSet", () => {
     afterAll(() => jest.restoreAllMocks());
 
     it("Checking PS dataset recall", async () => {
-        globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
@@ -2408,7 +2362,6 @@ describe("Dataset Actions Unit Tests - Function hRecallDataSet", () => {
     });
 
     it("Checking PS dataset recall for Unverified profile", async () => {
-        globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
@@ -2904,7 +2857,6 @@ describe("Dataset Actions Unit Tests - Function openPS", () => {
     }
 
     it("Checking of opening for common dataset", async () => {
-        globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
 
@@ -2934,7 +2886,6 @@ describe("Dataset Actions Unit Tests - Function openPS", () => {
     });
 
     it("Checking of opening for common dataset with unverified profile", async () => {
-        globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
 
@@ -2971,7 +2922,6 @@ describe("Dataset Actions Unit Tests - Function openPS", () => {
     });
 
     it("Checking of failed attempt to open dataset", async () => {
-        globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
 
@@ -2993,7 +2943,6 @@ describe("Dataset Actions Unit Tests - Function openPS", () => {
         expect(mocked(vscode.window.showErrorMessage)).toBeCalledWith("testError Error: testError");
     });
     it("Checking of opening for PDS Member", async () => {
-        globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
 
@@ -3025,7 +2974,6 @@ describe("Dataset Actions Unit Tests - Function openPS", () => {
         );
     });
     it("Checking of opening for PDS Member of favorite dataset", async () => {
-        globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
 
@@ -3057,7 +3005,6 @@ describe("Dataset Actions Unit Tests - Function openPS", () => {
         );
     });
     it("Checking of opening for sequential DS of favorite session", async () => {
-        globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
 
@@ -3092,7 +3039,6 @@ describe("Dataset Actions Unit Tests - Function openPS", () => {
         );
     });
     it("Checks that openPS fails if called from an invalid node", async () => {
-        globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
 
