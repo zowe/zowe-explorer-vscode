@@ -11,6 +11,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 ### Bug fixes
 
 - Fixed issue where the "Disable Validation for Profile" context menu option did not update to "Enable Validation for Profile" after use. [#1897](https://github.com/zowe/vscode-extension-for-zowe/issues/1897)
+- Removed "/" characters in `path.join()` calls [#2172](https://github.com/zowe/vscode-extension-for-zowe/issues/2172)
 
 ## `2.8.0`
 

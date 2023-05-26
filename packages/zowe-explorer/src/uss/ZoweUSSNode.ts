@@ -619,7 +619,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      */
     public getUSSDocumentFilePath(): string {
         ZoweLogger.trace("ZoweUSSNode.getUSSDocumentFilePath called.");
-        return path.join(globals.USS_DIR || "", "/" + this.getSessionNode().getProfileName() + "/", this.fullPath);
+        return path.join(globals.USS_DIR || "", this.getSessionNode().getProfileName() || "", this.fullPath);
     }
 
     /**
