@@ -249,9 +249,9 @@ describe("DatasetTree Integration Tests", async () => {
     });
 
     describe("removeFavorite()", () => {
-        beforeEach(() => {
+        beforeEach(async () => {
             const favoriteNode1 = new ZoweDatasetNode(pattern + ".TPDS1", vscode.TreeItemCollapsibleState.Collapsed, sessNode, null);
-            testTree.addFavorite(favoriteNode1);
+            await testTree.addFavorite(favoriteNode1);
         });
         afterEach(() => {
             testTree.mFavorites = [];

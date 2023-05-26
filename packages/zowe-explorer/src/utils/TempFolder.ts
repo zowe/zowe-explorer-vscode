@@ -41,7 +41,7 @@ export async function moveTempFolder(previousTempPath: string, currentTempPath: 
     }
 
     // Make certain that "temp" folder is cleared
-    cleanTempDir();
+    await cleanTempDir();
 
     try {
         fs.mkdirSync(globals.ZOWETEMPFOLDER);
