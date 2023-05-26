@@ -94,9 +94,9 @@ export class SettingsConfig {
     public static async standardizeSettings(): Promise<void> {
         ZoweLogger.trace("SettingsConfig.standardizeSettings called.");
         // Need to coerce all possible version values to a string to correct previous values
-        const globalVersion = String(SettingsConfig.configurations.inspect(globals.SETTINGS_VERSION).globalValue);
-        const workspaceVersion = String(SettingsConfig.configurations.inspect(globals.SETTINGS_VERSION).workspaceValue);
-        const currentVersion = String(SettingsConfig.currentVersionNumber);
+        const globalVersion = SettingsConfig.configurations.inspect(globals.SETTINGS_VERSION).globalValue?.toString();
+        const workspaceVersion = SettingsConfig.configurations.inspect(globals.SETTINGS_VERSION).workspaceValue?.toString();
+        const currentVersion = SettingsConfig.currentVersionNumber.toString();
 
         const globalIsNotMigrated = SettingsConfig.majorVersionMismatch(globalVersion, currentVersion);
         const workspaceIsNotMigrated = SettingsConfig.majorVersionMismatch(workspaceVersion, currentVersion);

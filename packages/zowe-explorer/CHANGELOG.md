@@ -8,6 +8,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
+- Fixed `zowe.settings.version` being added to settings.json in workspaces. [#2312](https://github.com/zowe/vscode-extension-for-zowe/issues/2312)
+
 ## `2.8.1`
 
 ### Bug fixes
