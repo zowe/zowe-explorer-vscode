@@ -21,12 +21,11 @@ import {
     getDocumentFilePath,
     concatChildNodes,
     checkForAddedSuffix,
-    willForceUpload,
     getSelectedNodeList,
     JobSubmitDialogOpts,
     JOB_SUBMIT_DIALOG_OPTS,
     getDefaultUri,
-    compareFileEdit,
+    compareFileContent,
 } from "../shared/utils";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { Profiles } from "../Profiles";
@@ -1495,12 +1494,12 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
                 setFileSaved(true);
             }
         } else if (!uploadResponse.success && uploadResponse.commandResponse.includes("Rest API failure with HTTP(S) status 412")) {
-            if (globals.ISTHEIA) {
-                ZoweLogger.debug(localize("globals.ISTHEIA.forceUpload", "When was forcing an upload ever a good idea?"));
-                willForceUpload(node, doc, label, node ? node.getProfile() : profile);
-            } else {
-                await compareFileEdit(doc, node, label, null, profile);
-            }
+            // if (globals.ISTHEIA) {
+            //     ZoweLogger.debug(localize("globals.ISTHEIA.forceUpload", "When was forcing an upload ever a good idea?"));
+            //     willForceUpload(node, doc, label, node ? node.getProfile() : profile);
+            // } else {
+            await compareFileContent(doc, node, label, null, profile);
+            // }
         } else {
             await markDocumentUnsaved(doc);
             api.Gui.errorMessage(uploadResponse.commandResponse);

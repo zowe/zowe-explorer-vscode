@@ -14,7 +14,7 @@ import { imperative, IZosFilesResponse } from "@zowe/cli";
 import * as fs from "fs";
 import * as globals from "../globals";
 import * as path from "path";
-import { concatChildNodes, willForceUpload, uploadContent, getSelectedNodeList, getDefaultUri, compareFileEdit } from "../shared/utils";
+import { concatChildNodes, uploadContent, getSelectedNodeList, getDefaultUri, compareFileContent } from "../shared/utils";
 import { errorHandling } from "../utils/ProfilesUtils";
 import { Gui, ValidProfileEnum, IZoweTree, IZoweUSSTreeNode } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
@@ -321,12 +321,12 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
         // TODO: error handling must not be zosmf specific
         const errorMessage = err?.message ? err.message : err.toString();
         if (errorMessage.includes("Rest API failure with HTTP(S) status 412")) {
-            if (globals.ISTHEIA) {
-                ZoweLogger.debug(localize("globals.ISTHEIA.forceUpload", "When was forcing an upload ever a good idea?"));
-                willForceUpload(node, doc, remote, node.getProfile(), binary, returnEtag);
-            } else {
-                await compareFileEdit(doc, node, null, binary);
-            }
+            // if (globals.ISTHEIA) {
+            //     ZoweLogger.debug(localize("globals.ISTHEIA.forceUpload", "When was forcing an upload ever a good idea?"));
+            //     willForceUpload(node, doc, remote, node.getProfile(), binary, returnEtag);
+            // } else {
+            await compareFileContent(doc, node, null, binary);
+            // }
         } else {
             await markDocumentUnsaved(doc);
             await errorHandling(err, sesName);

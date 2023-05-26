@@ -354,7 +354,16 @@ export function getDefaultUri(): vscode.Uri {
     return vscode.workspace.workspaceFolders?.[0]?.uri ?? vscode.Uri.file(os.homedir());
 }
 
-export async function compareFileEdit(
+/**
+ * Function that triggers compare of the old and new document in the active editor
+ * @param {vscode.TextDocument} doc - document to update and compare with previous content
+ * @param {IZoweDatasetTreeNode | IZoweUSSTreeNode} node - IZoweTreeNode
+ * @param {string} label - {optional} used by IZoweDatasetTreeNode to getContents of file
+ * @param {boolean} binary - {optional} used by IZoweUSSTreeNode to getContents of file
+ * @param {imperative.IProfileLoaded} profile - {optional}
+ * @returns {Promise<void>}
+ */
+export async function compareFileContent(
     doc: vscode.TextDocument,
     node: IZoweDatasetTreeNode | IZoweUSSTreeNode,
     label?: string,
