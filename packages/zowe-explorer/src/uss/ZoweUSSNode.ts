@@ -678,7 +678,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                     await uss.api.create(outputPath, "directory");
                     if (uss.tree.children) {
                         for (const child of uss.tree.children) {
-                            this.paste(sessionName, outputPath, { api: uss.api, tree: child, options: uss.options });
+                            await this.paste(sessionName, outputPath, { api: uss.api, tree: child, options: uss.options });
                         }
                     }
                     break;

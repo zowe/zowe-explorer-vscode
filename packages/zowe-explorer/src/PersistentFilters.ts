@@ -159,14 +159,14 @@ export class PersistentFilters {
     /**
      * @param name - Should be in format "[session]: DATASET.QUALIFIERS" or "[session]: /file/path", as appropriate
      */
-    public async removeFileHistory(name: string): Promise<void> {
+    public removeFileHistory(name: string): Thenable<void> {
         const index = this.mFileHistory.findIndex((fileHistoryItem) => {
             return fileHistoryItem.includes(name.toUpperCase());
         });
         if (index >= 0) {
             this.mFileHistory.splice(index, 1);
         }
-        await this.updateFileHistory();
+        return this.updateFileHistory();
     }
 
     /*********************************************************************************************************************************************/
@@ -192,39 +192,39 @@ export class PersistentFilters {
     /* Update functions, for updating the settings.json file in VSCode
     /*********************************************************************************************************************************************/
 
-    public async updateFavorites(favorites: string[]): Promise<void> {
+    public updateFavorites(favorites: string[]): Thenable<void> {
         // settings are read-only, so were cloned
         const settings: any = { ...vscode.workspace.getConfiguration(this.schema) };
         if (settings.persistence) {
             settings.favorites = favorites;
-            await SettingsConfig.setDirectValue(this.schema, settings);
+            return SettingsConfig.setDirectValue(this.schema, settings);
         }
     }
 
-    private async updateSearchHistory(): Promise<void> {
+    private updateSearchHistory(): Thenable<void> {
         // settings are read-only, so make a clone
         const settings: any = { ...vscode.workspace.getConfiguration(this.schema) };
         if (settings.persistence) {
             settings.searchHistory = this.mSearchHistory;
-            await SettingsConfig.setDirectValue(this.schema, settings);
+            return SettingsConfig.setDirectValue(this.schema, settings);
         }
     }
 
-    private async updateSessions(): Promise<void> {
+    private updateSessions(): Thenable<void> {
         // settings are read-only, so make a clone
         const settings: any = { ...vscode.workspace.getConfiguration(this.schema) };
         if (settings.persistence) {
             settings.sessions = this.mSessions;
-            await SettingsConfig.setDirectValue(this.schema, settings);
+            return SettingsConfig.setDirectValue(this.schema, settings);
         }
     }
 
-    private async updateFileHistory(): Promise<void> {
+    private updateFileHistory(): Thenable<void> {
         // settings are read-only, so make a clone
         const settings: any = { ...vscode.workspace.getConfiguration(this.schema) };
         if (settings.persistence) {
             settings.fileHistory = this.mFileHistory;
-            await SettingsConfig.setDirectValue(this.schema, settings);
+            return SettingsConfig.setDirectValue(this.schema, settings);
         }
     }
 
