@@ -363,6 +363,9 @@ export async function compareFileEdit(
 ): Promise<void> {
     const oldDoc = doc;
     const oldDocText = oldDoc.getText();
+    const startPosition = oldDoc.lineAt(0).range.start;
+    const endPosition = oldDoc.lineAt(oldDoc.lineCount - 1).range.end;
+    const deleteRange = new vscode.Range(startPosition, endPosition);
     const prof = node ? node.getProfile() : profile;
     let downloadResponse;
 
@@ -382,26 +385,19 @@ export async function compareFileEdit(
             responseTimeout: prof.profile?.responseTimeout,
         });
     }
+    ZoweLogger.warn(localize("saveFile.etagMismatch.log.warning", "Remote file has changed. Presented with way to resolve file."));
+    const editor = vscode.window.activeTextEditor;
+    if (editor) {
+        // Store document in a separate variable, to be used on merge conflict
+        await editor.edit((editBuilder) => {
+            editBuilder.replace(deleteRange, oldDocText);
+        });
+    }
+    vscode.commands.executeCommand("workbench.files.action.compareWithSaved");
     // re-assign etag, so that it can be used with subsequent requests
     const downloadEtag = downloadResponse?.apiResponse?.etag;
     if (node && downloadEtag !== node.getEtag()) {
         node.setEtag(downloadEtag);
-    }
-    ZoweLogger.warn(localize("saveFile.etagMismatch.log.warning", "Remote file has changed. Presented with way to resolve file."));
-    Gui.warningMessage(
-        localize("saveFile.etagMismatch.warning", "Remote file has been modified in the meantime.\nSelect 'Compare' to resolve the conflict.")
-    );
-    if (vscode.window.activeTextEditor) {
-        // Store document in a separate variable, to be used on merge conflict
-        const startPosition = new vscode.Position(0, 0);
-        const endPosition = new vscode.Position(oldDoc.lineCount, 0);
-        const deleteRange = new vscode.Range(startPosition, endPosition);
-        await vscode.window.activeTextEditor.edit((editBuilder) => {
-            // re-write the old content in the editor view
-            editBuilder.delete(deleteRange);
-            editBuilder.insert(startPosition, oldDocText);
-        });
-        await vscode.window.activeTextEditor.document.save();
     }
 }
 
