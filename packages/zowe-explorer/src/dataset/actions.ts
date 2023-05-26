@@ -420,7 +420,7 @@ export async function createMember(parent: api.IZoweDatasetTreeNode, datasetProv
         parent.dirty = true;
         datasetProvider.refreshElement(parent);
 
-        openPS(
+        await openPS(
             new ZoweDatasetNode(name, vscode.TreeItemCollapsibleState.None, parent, null, undefined, undefined, parent.getProfile()),
             true,
             datasetProvider
@@ -1498,7 +1498,7 @@ export async function pasteMember(node: api.IZoweDatasetTreeNode, datasetProvide
                         datasetProvider.refreshElement(node2);
                     }
                 } else {
-                    refreshPS(node);
+                    await refreshPS(node);
                 }
             }
         }
@@ -1786,14 +1786,15 @@ export async function copyPartitionedDatasets(nodes: ZoweDatasetNode[]): Promise
                 title: localizedStrings.copyingFiles,
             },
             () => {
-                for (const child of children) {
-                    ZoweExplorerApiRegister.getMvsApi(node.getProfile()).copyDataSetMember(
-                        { dsn: lbl, member: child.getLabel().toString() },
-                        { dsn: dsname, member: child.getLabel().toString() },
-                        { replace: replace === "replace" }
-                    );
-                }
-                return Promise.resolve();
+                return Promise.all(
+                    children.map((child) =>
+                        ZoweExplorerApiRegister.getMvsApi(node.getProfile()).copyDataSetMember(
+                            { dsn: lbl, member: child.getLabel().toString() },
+                            { dsn: dsname, member: child.getLabel().toString() },
+                            { replace: replace === "replace" }
+                        )
+                    )
+                );
             }
         );
     });

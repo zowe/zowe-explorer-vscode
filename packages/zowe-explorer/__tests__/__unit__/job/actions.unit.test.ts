@@ -1361,7 +1361,7 @@ describe("Job Actions Unit Tests - Misc. functions", () => {
         expect(refreshElementSpy).toHaveBeenCalledWith(jobNode);
     });
 
-    it("spoolFilePollEvent works as intended", () => {
+    it("spoolFilePollEvent works as intended", async () => {
         Object.defineProperty(Profiles, "getInstance", {
             value: () => ({
                 loadNamedProfile: () => profile,
@@ -1385,7 +1385,7 @@ describe("Job Actions Unit Tests - Misc. functions", () => {
 
         const fetchContentSpy = jest.spyOn(SpoolFile.prototype, "fetchContent").mockImplementation();
         const statusMsgSpy = jest.spyOn(Gui, "setStatusBarMessage");
-        jobActions.spoolFilePollEvent(testDoc);
+        await jobActions.spoolFilePollEvent(testDoc);
         expect(fetchContentSpy).toHaveBeenCalled();
         expect(statusMsgSpy).toHaveBeenCalledWith(`$(sync~spin) Polling: ${testDoc.fileName}...`);
     });

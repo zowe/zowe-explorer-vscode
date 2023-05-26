@@ -2056,7 +2056,9 @@ describe("Dataset Actions Unit Tests - Function copyDataSets", () => {
 
         try {
             await dsActions.downloadDs(node);
-        } catch (err) {}
+        } catch (err) {
+            /* Do nothing */
+        }
 
         expect(mocked(Gui.errorMessage)).toBeCalledWith("Cannot download, item invalid.");
     });

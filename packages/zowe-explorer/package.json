@@ -117,7 +117,7 @@
       {
         "command": "zowe.manualPoll",
         "key": "f5",
-        "when": "editorIsOpen"
+        "when": "editorIsOpen && resourceScheme == zosspool"
       }
     ],
     "commands": [
@@ -1858,7 +1858,7 @@
           "default": true,
           "type": "boolean",
           "description": "%zowe.security.secureCredentialsEnabled%",
-          "scope": "window"
+          "scope": "machine"
         },
         "zowe.logger": {
           "type": "string",
