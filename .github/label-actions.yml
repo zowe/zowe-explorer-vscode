@@ -1,8 +1,11 @@
 bug:
   comment: |
-    Thank you for creating a bug report. If you haven't already, please ensure you have provided steps to reproduce it and as much context as possible.
+    Thank you for creating a bug report.
+    We will investigate the bug and evaluate its impact on the product.
+    If you haven't already, please ensure you have provided steps to reproduce the bug and as much context as possible.
 enhancement:
   comment: |
-    Thank you for raising this issue.
-    The community has 90 days to upvote 👍 the issue.
-    If it receives 10 upvotes, we will move it to our backlog. If not, we will close it.
+    Thank you for raising this enhancement request.
+    The community has 90 days to vote on it.
+    If the enhancement receives at least 10 upvotes, it is added to our development backlog.
+    If it receives fewer votes, the issue is closed.
