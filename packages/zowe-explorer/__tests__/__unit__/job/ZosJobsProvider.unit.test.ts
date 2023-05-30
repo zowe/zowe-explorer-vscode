@@ -288,7 +288,7 @@ describe("ZosJobsProvider unit tests - Function initializeFavChildNodeForProfile
         return newMocks;
     }
     it("Checks that profile-less node is initiated for favorited Job", async () => {
-        createGlobalMocks();
+        await createGlobalMocks();
         const blockMocks = createBlockMocks();
         const testTree = new ZosJobsProvider();
 
@@ -314,7 +314,7 @@ describe("ZosJobsProvider unit tests - Function initializeFavChildNodeForProfile
         expect(favChildNodeForProfile).toEqual(node);
     });
     it("Checks that profile-less node is initiated for favorited search", async () => {
-        createGlobalMocks();
+        await createGlobalMocks();
         const blockMocks = createBlockMocks();
         const testTree = new ZosJobsProvider();
 
@@ -356,7 +356,7 @@ describe("ZosJobsProvider unit tests - Function loadProfilesForFavorites", () =>
     }
 
     it("Checks that loaded profile and session values are added to the profile grouping node in Favorites", async () => {
-        createGlobalMocks();
+        await createGlobalMocks();
         const blockMocks = createBlockMocks();
         const favProfileNode = new Job("testProfile", vscode.TreeItemCollapsibleState.Collapsed, blockMocks.jobFavoritesNode, null, null, null);
         favProfileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
@@ -412,7 +412,7 @@ describe("ZosJobsProvider unit tests - Function loadProfilesForFavorites", () =>
         expect(resultFavProfileNode).toEqual(expectedFavProfileNode);
     });
     it("Checks that the error is handled if profile fails to load", async () => {
-        createGlobalMocks();
+        await createGlobalMocks();
         const blockMocks = createBlockMocks();
         const testTree = new ZosJobsProvider();
         const favProfileNode = new Job("badTestProfile", vscode.TreeItemCollapsibleState.Collapsed, blockMocks.jobFavoritesNode, null, null, null);
@@ -447,7 +447,7 @@ describe("ZosJobsProvider unit tests - Function loadProfilesForFavorites", () =>
         showErrorMessageSpy.mockClear();
     });
     it("Checks that favorite nodes with pre-existing profile/session values continue using those values", async () => {
-        createGlobalMocks();
+        await createGlobalMocks();
         const blockMocks = createBlockMocks();
         const favProfileNode = new Job(
             "testProfile",
@@ -487,7 +487,7 @@ describe("ZosJobsProvider unit tests - Function loadProfilesForFavorites", () =>
         expect(resultFavJobNode).toEqual(expectedFavJobNode);
     });
     it("Checks that profile, session, and owner from profile node in Favorites get passed to child favorites without those values", async () => {
-        createGlobalMocks();
+        await createGlobalMocks();
         const blockMocks = createBlockMocks();
         const favProfileNode = new Job(
             "testProfile",

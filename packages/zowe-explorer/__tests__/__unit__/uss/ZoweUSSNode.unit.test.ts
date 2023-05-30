@@ -917,6 +917,7 @@ describe("ZoweUSSNode Unit Tests - Function node.getChildren()", () => {
         blockMocks.rootNode.label = "";
         blockMocks.rootNode.dirty = true;
 
+        // eslint-disable-next-line zowe-explorer/no-floating-promises
         expect(blockMocks.rootNode.getChildren()).rejects.toEqual(Error("Invalid node"));
     });
 
@@ -1725,7 +1726,7 @@ describe("ZoweUSSNode Unit Tests - Function node.pasteUssTree()", () => {
         jest.spyOn(blockMocks.mockUssApi, "putContent").mockResolvedValueOnce(blockMocks.fileResponseSame);
         jest.spyOn(blockMocks.mockUssApi, "uploadDirectory").mockResolvedValueOnce(blockMocks.fileResponseSame);
 
-        blockMocks.testNode.pasteUssTree();
+        await blockMocks.testNode.pasteUssTree();
     });
 
     it("Tests node.pasteUssTree() could not retrieve fileList api response", async () => {
@@ -1736,7 +1737,7 @@ describe("ZoweUSSNode Unit Tests - Function node.pasteUssTree()", () => {
         jest.spyOn(blockMocks.mockUssApi, "putContent").mockResolvedValueOnce(blockMocks.fileResponseSame);
         jest.spyOn(blockMocks.mockUssApi, "uploadDirectory").mockResolvedValueOnce(blockMocks.fileResponseSame);
 
-        blockMocks.testNode.pasteUssTree();
+        await blockMocks.testNode.pasteUssTree();
     });
     it("Tests util disposeClipboardContents function correctly free clipboardContents", async () => {
         vscode.env.clipboard.writeText("test");
@@ -1765,6 +1766,6 @@ describe("ZoweUSSNode Unit Tests - Function node.pasteUssTree()", () => {
         jest.spyOn(blockMocks.mockUssApi, "putContent").mockResolvedValueOnce(blockMocks.fileResponse);
         jest.spyOn(blockMocks.mockUssApi, "uploadDirectory").mockRejectedValueOnce(blockMocks.fileResponse);
 
-        blockMocks.testNode.pasteUssTree();
+        await blockMocks.testNode.pasteUssTree();
     });
 });

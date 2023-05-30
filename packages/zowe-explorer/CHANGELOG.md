@@ -12,8 +12,17 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 - Fixed issue where the "Disable Validation for Profile" context menu option did not update to "Enable Validation for Profile" after use. [#1897](https://github.com/zowe/vscode-extension-for-zowe/issues/1897)
 - Removed "/" characters in `path.join()` calls [#2172](https://github.com/zowe/vscode-extension-for-zowe/issues/2172)
-
 - Fixed issue where user was not able to view job spool file with the same DD name in different steps because of duplicated local file name. [#2279](https://github.com/zowe/vscode-extension-for-zowe/issues/2279)
+
+## `2.8.1`
+
+### Bug fixes
+
+- Fixed an issue with updating imperative.json file's Credential Manager value. [#2289](https://github.com/zowe/vscode-extension-for-zowe/issues/2289)
+- Fixed an issue with "Zowe Explorer: Poll Content in Active Editor" keybind interfering with debug capabilities in VScode. The keybind to poll JES Spool file content will require the spool file to be active in the text editor. [#2285](https://github.com/zowe/vscode-extension-for-zowe/issues/2285)
+- Updated linter rules and addressed linter errors. [#2291](https://github.com/zowe/vscode-extension-for-zowe/issues/2291)
+- Fixed an issue with `zowe.settings.version` setting being updated with incorrect type. [#2166](https://github.com/zowe/vscode-extension-for-zowe/issues/2166)
+- Updated dependencies for security audits.
 
 ## `2.8.0`
 
