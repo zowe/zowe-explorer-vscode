@@ -171,30 +171,3 @@ describe("SettingsConfig Unit Tests", () => {
         });
     });
 });
-
-describe("SettingsConfig Unit Tests - function currentVersionNumber", () => {
-    beforeAll(() => {
-        jest.restoreAllMocks();
-        jest.resetAllMocks();
-    });
-
-    it("should remove the minor and patch version from the version number", () => {
-        jest.spyOn(vscode.extensions, "getExtension").mockReturnValueOnce({
-            packageJSON: {
-                version: "3.2.1",
-            },
-        } as any);
-
-        expect((SettingsConfig as any).currentVersionNumber).toBe(3);
-    });
-
-    it("should parse the version as-is if it doesn't respect semver", () => {
-        jest.spyOn(vscode.extensions, "getExtension").mockReturnValueOnce({
-            packageJSON: {
-                version: "2",
-            },
-        } as any);
-
-        expect((SettingsConfig as any).currentVersionNumber).toBe(2);
-    });
-});
