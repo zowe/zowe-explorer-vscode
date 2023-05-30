@@ -54,7 +54,18 @@ If you do not have an existing Zowe FTP profile, you can create one graphically 
 3. Click the **+** icon.
 4. Select **Create a New Team Configuration File**.
 5. If no workspace is opened a global configuration file will be created. If a workspace is opened, chose either a global configuration file or a project-level configuration file.
-6. Edit the config file to include the host and other connection information.
+6. Edit the config file to include the host and other connection information:
+
+   ```
+   "zftp": {
+         "type": "zftp",
+         "properties": {
+            "host": "YOURHOSTNAME"
+         },
+         "secure": []
+        }
+   ```
+
 7. Refresh Zowe Explorer by either clicking the button in the notification message shown after creation, `alt+z`, or the `Zowe Explorer: Refresh Zowe Explorer` command palette option.
 
 ### Create a v1 Profile
@@ -131,4 +142,4 @@ Zowe Explorer's FTP extension is now part of the [Zowe Explorer monorepo on Gith
 
 To file issues, use the [Zowe Explorer issue list](https://github.com/zowe/vscode-extension-for-zowe/issues).
 
-For [instructions on how to build](https://github.com/zowe/vscode-extension-for-zowe/tree/main/packages/zowe-explorer-ftp-extension/docs/README.md) the extension, see the `docs` sub-folder.
+For [instructions on how to build](https://github.com/zowe/vscode-extension-for-zowe#build-locally).

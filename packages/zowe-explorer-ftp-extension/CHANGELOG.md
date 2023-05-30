@@ -1,4 +1,4 @@
-All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
+All notable changes to the "zowe-explorer-ftp-extension" extension will be documented in this file.
 
 ## TBD Release
 
@@ -17,6 +17,12 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
+## `2.8.1`
+
+### Bug fixes
+
+- Updated dependencies for security audits.
+
 ## `2.8.0`
 
 ### New features and enhancements
@@ -25,6 +31,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Added support for new setting `zowe.files.logsFolder.path` that can be used to override Zowe Explorer logs folder. [#2186](https://github.com/zowe/vscode-extension-for-zowe/issues/2186)
 
 ### Bug fixes
+
+- Renamed instances of "dataset" to "data set" for consistency across Zowe Explorer.
 
 ## `2.7.0`
 

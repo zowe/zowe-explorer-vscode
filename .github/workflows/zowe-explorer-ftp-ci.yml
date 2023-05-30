@@ -32,7 +32,7 @@ jobs:
 
     steps:
       - name: Check out code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v3
@@ -50,16 +50,16 @@ jobs:
           NODE_OPTIONS: --max_old_space_size=4096
 
       - name: Upload test results
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         if: matrix.os == 'ubuntu-latest' && matrix.node-version == '16.x'
         with:
           name: zowe-explorer-ftp-extension-results
           path: packages/zowe-explorer-ftp-extension/results/
 
       # Run codecov upload for only one run
-      # - name: Upload Results to Codecov from Windows / Node 12.x
-      #   if: matrix.os == 'windows-latest' && matrix.node-version == '12.x'
-      #   uses: codecov/codecov-action@v1.0.7
+      # - name: Upload Results to Codecov
+      #   if: matrix.os == 'ubuntu-latest' && matrix.node-version == '16.x'
+      #   uses: codecov/codecov-action@v3
       #   with:
       #     env_vars: OS,NODE
 
@@ -70,7 +70,7 @@ jobs:
 
       - name: Archive VSIX artifact
         if: matrix.os == 'ubuntu-latest' && matrix.node-version == '16.x'
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: zowe-explorer-ftp-extension-vsix
           path: dist/*.vsix
