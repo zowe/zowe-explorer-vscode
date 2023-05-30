@@ -9,9 +9,18 @@
  *
  */
 
-import * as vscode from "vscode";
 import * as globals from "./globals";
-import { SettingsConfig } from "./utils/SettingsConfig";
+import { ZoweLogger } from "./utils/LoggerUtils";
+import { ZoweLocalStorage } from "./utils/ZoweLocalStorage";
+
+export type PersistentFilter = {
+    persistence: boolean;
+    favorites: string[];
+    history: string[];
+    sessions: string[];
+    searchHistory: string[];
+    fileHistory: string[];
+};
 
 /**
  * Standard history and favorite persistance handling routines
@@ -31,6 +40,7 @@ export class PersistentFilters {
     private mSessions: string[] = [];
 
     public constructor(schema: string, private maxSearchHistory = globals.MAX_SEARCH_HISTORY, private maxFileHistory = globals.MAX_FILE_HISTORY) {
+        ZoweLogger.trace("PersistentFilters.constructor called.");
         this.schema = schema;
         this.initialize();
     }
@@ -52,6 +62,7 @@ export class PersistentFilters {
      * @param {string} criteria - a line of search criteria
      */
     public addSearchHistory(criteria: string): void {
+        ZoweLogger.trace("PersistentFilters.addSearchHistory called.");
         if (criteria) {
             // Remove any entries that match
             this.mSearchHistory = this.mSearchHistory.filter((element) => {
@@ -82,6 +93,7 @@ export class PersistentFilters {
      * @param {string} criteria - a line of search criteria
      */
     public addFileHistory(criteria: string): void {
+        ZoweLogger.trace("PersistentFilters.addFileHistory called.");
         if (criteria) {
             criteria = criteria.toUpperCase();
             // Remove any entries that match
@@ -110,6 +122,7 @@ export class PersistentFilters {
      * @param {string} criteria - a session name
      */
     public addSession(criteria: string): void {
+        ZoweLogger.trace("PersistentFilters.addSession called.");
         // Remove any entries that match
         this.mSessions = this.mSessions.filter((element) => {
             return element.trim() !== criteria.trim();
@@ -126,20 +139,25 @@ export class PersistentFilters {
     /*********************************************************************************************************************************************/
 
     public getSearchHistory(): string[] {
+        ZoweLogger.trace("PersistentFilters.getSearchHistory called.");
         return this.mSearchHistory;
     }
 
     public getSessions(): string[] {
+        ZoweLogger.trace("PersistentFilters.getSessions called.");
         return this.mSessions;
     }
 
     public getFileHistory(): string[] {
+        ZoweLogger.trace("PersistentFilters.getFileHistory called.");
         return this.mFileHistory;
     }
 
     public readFavorites(): string[] {
-        if (vscode.workspace.getConfiguration(this.schema)) {
-            return vscode.workspace.getConfiguration(this.schema).get(PersistentFilters.favorites);
+        ZoweLogger.trace("PersistentFilters.readFavorites called.");
+        const localStorageSchema = ZoweLocalStorage.getValue<PersistentFilter>(this.schema);
+        if (localStorageSchema) {
+            return localStorageSchema[PersistentFilters.favorites] as string[];
         }
         return [];
     }
@@ -149,6 +167,7 @@ export class PersistentFilters {
     /*********************************************************************************************************************************************/
 
     public removeSession(name: string): void {
+        ZoweLogger.trace("PersistentFilters.removeSession called.");
         // Remove any entries that match
         this.mSessions = this.mSessions.filter((element) => {
             return element.trim() !== name.trim();
@@ -159,14 +178,15 @@ export class PersistentFilters {
     /**
      * @param name - Should be in format "[session]: DATASET.QUALIFIERS" or "[session]: /file/path", as appropriate
      */
-    public async removeFileHistory(name: string): Promise<void> {
+    public removeFileHistory(name: string): void {
+        ZoweLogger.trace("PersistentFilters.removeFileHistory called.");
         const index = this.mFileHistory.findIndex((fileHistoryItem) => {
             return fileHistoryItem.includes(name.toUpperCase());
         });
         if (index >= 0) {
             this.mFileHistory.splice(index, 1);
         }
-        await this.updateFileHistory();
+        this.updateFileHistory();
     }
 
     /*********************************************************************************************************************************************/
@@ -174,16 +194,19 @@ export class PersistentFilters {
     /*********************************************************************************************************************************************/
 
     public resetSearchHistory(): void {
+        ZoweLogger.trace("PersistentFilters.resetSearchHistory called.");
         this.mSearchHistory = [];
         this.updateSearchHistory();
     }
 
     public resetSessions(): void {
+        ZoweLogger.trace("PersistentFilters.resetSessions called.");
         this.mSessions = [];
         this.updateSessions();
     }
 
     public resetFileHistory(): void {
+        ZoweLogger.trace("PersistentFilters.resetFileHistory called.");
         this.mFileHistory = [];
         this.updateFileHistory();
     }
@@ -192,65 +215,52 @@ export class PersistentFilters {
     /* Update functions, for updating the settings.json file in VSCode
     /*********************************************************************************************************************************************/
 
-    public async updateFavorites(favorites: string[]): Promise<void> {
-        // settings are read-only, so were cloned
-        const settings: any = { ...vscode.workspace.getConfiguration(this.schema) };
+    public updateFavorites(favorites: string[]): void {
+        ZoweLogger.trace("PersistentFilters.updateFavorites called.");
+        const settings = ZoweLocalStorage.getValue<PersistentFilter>(this.schema);
         if (settings.persistence) {
             settings.favorites = favorites;
-            await SettingsConfig.setDirectValue(this.schema, settings);
+            ZoweLocalStorage.setValue<PersistentFilter>(this.schema, settings);
         }
     }
 
-    private async updateSearchHistory(): Promise<void> {
-        // settings are read-only, so make a clone
-        const settings: any = { ...vscode.workspace.getConfiguration(this.schema) };
+    private updateSearchHistory(): void {
+        ZoweLogger.trace("PersistentFilters.updateSearchHistory called.");
+        const settings = { ...ZoweLocalStorage.getValue<PersistentFilter>(this.schema) };
         if (settings.persistence) {
             settings.searchHistory = this.mSearchHistory;
-            await SettingsConfig.setDirectValue(this.schema, settings);
+            ZoweLocalStorage.setValue<PersistentFilter>(this.schema, settings);
         }
     }
 
-    private async updateSessions(): Promise<void> {
-        // settings are read-only, so make a clone
-        const settings: any = { ...vscode.workspace.getConfiguration(this.schema) };
+    private updateSessions(): void {
+        ZoweLogger.trace("PersistentFilters.updateSessions called.");
+        const settings = { ...ZoweLocalStorage.getValue<PersistentFilter>(this.schema) };
         if (settings.persistence) {
             settings.sessions = this.mSessions;
-            await SettingsConfig.setDirectValue(this.schema, settings);
+            ZoweLocalStorage.setValue<PersistentFilter>(this.schema, settings);
         }
     }
 
-    private async updateFileHistory(): Promise<void> {
-        // settings are read-only, so make a clone
-        const settings: any = { ...vscode.workspace.getConfiguration(this.schema) };
+    private updateFileHistory(): void {
+        ZoweLogger.trace("PersistentFilters.updateFileHistory called.");
+        const settings = { ...ZoweLocalStorage.getValue<PersistentFilter>(this.schema) };
         if (settings.persistence) {
             settings.fileHistory = this.mFileHistory;
-            await SettingsConfig.setDirectValue(this.schema, settings);
+            ZoweLocalStorage.setValue<PersistentFilter>(this.schema, settings);
         }
     }
 
     private initialize(): void {
-        let searchHistoryLines: string[];
-        let sessionLines: string[];
-        let fileHistoryLines: string[];
-        if (vscode.workspace.getConfiguration(this.schema)) {
-            searchHistoryLines = vscode.workspace.getConfiguration(this.schema).get(PersistentFilters.searchHistory);
-            sessionLines = vscode.workspace.getConfiguration(this.schema).get(PersistentFilters.sessions);
-            fileHistoryLines = vscode.workspace.getConfiguration(this.schema).get(PersistentFilters.fileHistory);
+        ZoweLogger.trace("PersistentFilters.initialize called.");
+        const settings = ZoweLocalStorage.getValue<PersistentFilter>(this.schema);
+        if (settings) {
+            this.mSearchHistory = settings[PersistentFilters.searchHistory] ?? [];
+            this.mSessions = settings[PersistentFilters.sessions] ?? [];
+            this.mFileHistory = settings[PersistentFilters.fileHistory] ?? [];
         }
-        if (searchHistoryLines) {
-            this.mSearchHistory = searchHistoryLines;
-        } else {
-            this.resetSearchHistory();
-        }
-        if (sessionLines) {
-            this.mSessions = sessionLines;
-        } else {
-            this.resetSessions();
-        }
-        if (fileHistoryLines) {
-            this.mFileHistory = fileHistoryLines;
-        } else {
-            this.resetFileHistory();
-        }
+        this.updateFileHistory();
+        this.updateSearchHistory();
+        this.updateSessions();
     }
 }

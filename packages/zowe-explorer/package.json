@@ -1838,9 +1838,16 @@
           "description": "%zowe.automaticProfileValidation%",
           "scope": "window"
         },
-        "zowe.settings.version": {
-          "type": "integer",
-          "description": "%zowe.settings.version%",
+        "zowe.settings.oldSettingsMigrated": {
+          "default": false,
+          "type": "boolean",
+          "description": "%zowe.settings.migrated%",
+          "scope": "window"
+        },
+        "zowe.settings.localStorageMigrated": {
+          "default": false,
+          "type": "boolean",
+          "description": "%zowe.settings.migrated%",
           "scope": "window"
         },
         "zowe.security.secureCredentialsEnabled": {
@@ -1873,6 +1880,7 @@
         },
         "zowe.cliLoggerSetting.presented": {
           "type": "boolean",
+          "default": false,
           "description": "%zowe.cliLoggerSetting.presented%",
           "scope": "application"
         },

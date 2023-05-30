@@ -32,6 +32,8 @@ import { getIconByNode } from "../../../src/generators/icons";
 import * as workspaceUtils from "../../../src/utils/workspace";
 import { createUssApi, bindUssApi } from "../../../__mocks__/mockCreators/api";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
+import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
+import { PersistentFilters } from "../../../src/PersistentFilters";
 
 async function createGlobalMocks() {
     const globalMocks = {
@@ -159,6 +161,21 @@ async function createGlobalMocks() {
     Object.defineProperty(ZoweLogger, "warn", { value: jest.fn(), configurable: true });
     Object.defineProperty(ZoweLogger, "info", { value: jest.fn(), configurable: true });
     Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLocalStorage, "storage", {
+        value: {
+            get: () => ({
+                persistence: true,
+                favorites: [{ children: ["test", "test2"] }],
+                history: [],
+                sessions: ["zosmf"],
+                searchHistory: [],
+                fileHistory: [],
+            }),
+            update: jest.fn(),
+            keys: () => [],
+        },
+        configurable: true,
+    });
 
     globalMocks.withProgress.mockImplementation((progLocation, callback) => callback());
     globalMocks.withProgress.mockReturnValue(globalMocks.testResponse);
@@ -192,6 +209,9 @@ async function createGlobalMocks() {
 describe("USSTree Unit Tests - Function USSTree.initializeFavorites()", () => {
     it("Tests that initializeFavorites() is executed successfully", async () => {
         const globalMocks = await createGlobalMocks();
+
+        jest.spyOn(PersistentFilters.prototype, "readFavorites").mockReturnValue(["[test]: /u/aDir{directory}", "[test]: /u/myFile.txt{textFile}"]);
+
         const testTree1 = await createUSSTree(zowe.imperative.Logger.getAppLogger());
         const favProfileNode = testTree1.mFavorites[0];
         expect(testTree1.mSessionNodes).toBeDefined();

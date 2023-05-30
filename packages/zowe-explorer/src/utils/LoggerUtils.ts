@@ -17,6 +17,7 @@ import * as vscode from "vscode";
 import * as nls from "vscode-nls";
 import * as globals from "../globals";
 import { SettingsConfig } from "./SettingsConfig";
+import { ZoweLocalStorage } from "./ZoweLocalStorage";
 
 // Set up localization
 nls.config({
@@ -128,7 +129,7 @@ export class ZoweLogger {
             if (selection === updateLoggerButton) {
                 await this.setLogSetting(cliSetting);
             }
-            await this.setCliLoggerSetting(true);
+            this.setCliLoggerSetting(true);
         });
     }
 
@@ -141,11 +142,11 @@ export class ZoweLogger {
     }
 
     private static getCliLoggerSetting(): boolean {
-        return SettingsConfig.getDirectValue("zowe.cliLoggerSetting.presented") ?? false;
+        return ZoweLocalStorage.getValue(globals.SETTINGS_LOGS_SETTING_PRESENTED) ?? false;
     }
 
-    private static async setCliLoggerSetting(setting: boolean): Promise<void> {
-        await SettingsConfig.setDirectValue("zowe.cliLoggerSetting.presented", setting, vscode.ConfigurationTarget.Global);
+    private static setCliLoggerSetting(setting: boolean): void {
+        ZoweLocalStorage.setValue(globals.SETTINGS_LOGS_SETTING_PRESENTED, setting);
     }
 }
 
