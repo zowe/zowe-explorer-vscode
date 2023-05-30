@@ -25,6 +25,7 @@
     "test": "yarn test:unit",
     "lint": "concurrently -n \"_eslint_,prettier\" \"eslint .\" \"prettier --check .\"",
     "lint:html": "eslint . --format html > results/eslint.html",
+    "madge": "madge -c --extensions js,ts src/ || true",
     "pretty": "prettier --write .",
     "check-cli": "node scripts/check-cli.js",
     "clean": "rimraf lib",

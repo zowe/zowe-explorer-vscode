@@ -1914,6 +1914,7 @@
     "lint:tests": "eslint --format stylish __tests__/**/*.ts",
     "clean": "gulp clean",
     "fresh-clone": "yarn clean && rimraf node_modules",
+    "madge": "madge -c --extensions js,ts src/ || true",
     "pretty": "prettier --write .",
     "createTestProfileData": "ts-node ./scripts/createTestProfileData.ts",
     "createDemoNodes": "ts-node ./scripts/createDemoNodes.ts"
