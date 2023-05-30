@@ -43,7 +43,7 @@ export async function refreshAll(treeProvider: IZoweTree<IZoweTreeNode>): Promis
                     resetValidationSettings(sessNode, setting);
                 }
                 returnIconState(sessNode);
-                syncSessionNode(Profiles.getInstance())((profileValue) => ZoweExplorerApiRegister.getCommonApi(profileValue).getSession())(sessNode);
+                syncSessionNode((profile) => ZoweExplorerApiRegister.getCommonApi(profile), sessNode);
             }
             treeProvider.refresh();
         } else {

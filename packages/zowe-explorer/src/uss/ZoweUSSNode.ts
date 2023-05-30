@@ -19,7 +19,7 @@ import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { errorHandling, syncSessionNode } from "../utils/ProfilesUtils";
 import { getIconByNode } from "../generators/icons/index";
-import { fileExistsCaseSensitveSync, injectAdditionalDataToTooltip } from "../uss/utils";
+import { fileExistsCaseSensitveSync } from "../uss/utils";
 import * as contextually from "../shared/context";
 import { closeOpenedTextFile } from "../utils/workspace";
 import * as nls from "vscode-nls";
@@ -32,6 +32,24 @@ nls.config({
     bundleFormat: nls.BundleFormat.standalone,
 })();
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
+
+/**
+ * Injects extra data to tooltip based on node status and other conditions
+ * @param node
+ * @param tooltip
+ * @returns {string}
+ */
+function injectAdditionalDataToTooltip(node: ZoweUSSNode, tooltip: string): string {
+    ZoweLogger.trace("uss.utils.injectAdditionalDataToTooltip called.");
+    if (node.downloaded && node.downloadedTime) {
+        // TODO: Add time formatter to localization so we will use not just US variant
+        return `${tooltip} (Downloaded: ${new Date(node.downloadedTime)
+            .toISOString()
+            .replace(/(\d{4})-(\d{2})-(\d{2})T((\d{2}):(\d{2}):([^Z]+))Z/, "$5:$6 $2/$3/$1")})`;
+    }
+
+    return tooltip;
+}
 
 /**
  * A type of TreeItem used to represent sessions and USS directories and files
@@ -161,7 +179,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             responses.push(await ZoweExplorerApiRegister.getUssApi(cachedProfile).fileList(this.fullPath));
         } catch (err) {
             await errorHandling(err, this.label.toString(), localize("getChildren.error.response", "Retrieving response from ") + `uss-file-list`);
-            syncSessionNode(Profiles.getInstance())((profileValue) => ZoweExplorerApiRegister.getUssApi(profileValue).getSession())(sessNode);
+            syncSessionNode((profile) => ZoweExplorerApiRegister.getUssApi(profile), sessNode);
         }
         // push nodes to an object with property names to avoid duplicates
         const elementChildren: { [k: string]: IZoweUSSTreeNode } = {};

@@ -932,7 +932,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             // looking for members in pattern
             node.children = [];
             node.dirty = true;
-            syncSessionNode(Profiles.getInstance())((profileValue) => ZoweExplorerApiRegister.getMvsApi(profileValue).getSession())(nonFaveNode);
+            syncSessionNode((profile) => ZoweExplorerApiRegister.getMvsApi(profile), nonFaveNode);
             let dataSet: IDataSet;
             const dsSets: (IDataSet & { memberPattern?: string })[] = [];
             const dsNames = pattern.split(",");
