@@ -257,7 +257,7 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
     }
 
     public async allocateLikeDataSet(_dataSetName: string, _likeDataSetName: string): Promise<zowe.IZosFilesResponse> {
-        await Gui.errorMessage("Allocate like dataset is not supported in ftp extension.", { logger: ZoweLogger });
+        await Gui.errorMessage("Allocate like data set is not supported in ftp extension.", { logger: ZoweLogger });
         throw new Error();
     }
 
@@ -266,12 +266,12 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
         { dsn: _toDataSetName, member: _toMemberName }: zowe.IDataSet,
         _options?: { replace?: boolean }
     ): Promise<zowe.IZosFilesResponse> {
-        await Gui.errorMessage("Copy dataset is not supported in ftp extension.", { logger: ZoweLogger });
+        await Gui.errorMessage("Copy data set is not supported in ftp extension.", { logger: ZoweLogger });
         throw new Error();
     }
 
     public async copyDataSet(_fromDataSetName: string, _toDataSetName: string, _enq?: string, _replace?: boolean): Promise<zowe.IZosFilesResponse> {
-        await Gui.errorMessage("Copy dataset is not supported in ftp extension.", { logger: ZoweLogger });
+        await Gui.errorMessage("Copy data set is not supported in ftp extension.", { logger: ZoweLogger });
         throw new Error();
     }
 
@@ -316,12 +316,12 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
     }
 
     public async hMigrateDataSet(_dataSetName: string): Promise<zowe.IZosFilesResponse> {
-        await Gui.errorMessage("Migrate dataset is not supported in ftp extension.", { logger: ZoweLogger });
+        await Gui.errorMessage("Migrate data set is not supported in ftp extension.", { logger: ZoweLogger });
         throw new Error();
     }
 
     public async hRecallDataSet(_dataSetName: string): Promise<zowe.IZosFilesResponse> {
-        await Gui.errorMessage("Recall dataset is not supported in ftp extension.", { logger: ZoweLogger });
+        await Gui.errorMessage("Recall data set is not supported in ftp extension.", { logger: ZoweLogger });
         throw new Error();
     }
     public async deleteDataSet(dataSetName: string, _options?: zowe.IDeleteDatasetOptions): Promise<zowe.IZosFilesResponse> {

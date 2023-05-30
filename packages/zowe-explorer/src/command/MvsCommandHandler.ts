@@ -48,7 +48,7 @@ export class MvsCommandHandler extends ZoweCommandProvider {
         return this.instance;
     }
 
-    private static readonly defaultDialogText: string = "\uFF0B " + localize("command.option.prompt.search", "Create a new MVS Command");
+    private static readonly defaultDialogText: string = localize("command.option.prompt.search", "$(plus) Create a new MVS command");
     private static instance: MvsCommandHandler;
     public outputChannel: vscode.OutputChannel;
 

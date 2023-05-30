@@ -32,8 +32,7 @@ jobs:
       - name: Use Node.js LTS
         uses: actions/setup-node@v3
         with:
-          node-version: 'lts/*'
-          cache: 'npm'
+          node-version: '16.x'
 
       - name: Install Yarn
         run: npm install -g yarn
@@ -45,7 +44,7 @@ jobs:
         id: lerna
         run: echo "version=$(jq -r .version lerna.json)" >> $GITHUB_OUTPUT
 
-      - uses: zowe-actions/octorelease@master
+      - uses: zowe-actions/octorelease@v1
         id: octorelease
         if: ${{ !contains(github.event.inputs.version || steps.lerna.outputs.version, '-SNAPSHOT') }}
         env:
@@ -68,7 +67,7 @@ jobs:
 
       - name: Create Snapshot Version
         if: steps.octorelease.outcome == 'success'
-        uses: zowe-actions/octorelease/script@master
+        uses: zowe-actions/octorelease/script@v1
         env:
           VERSION_STRING: "%s-SNAPSHOT"
         with:

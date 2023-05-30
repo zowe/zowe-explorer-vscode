@@ -181,12 +181,12 @@ export class ZoweTreeProvider {
         if (EditSession) {
             node.getProfile().profile = EditSession as imperative.IProfile;
             setProfile(node, EditSession as imperative.IProfile);
-            if (await node.getSession()) {
+            if (node.getSession()) {
                 setSession(node, EditSession as imperative.ISession);
             } else {
                 zoweFileProvider.deleteSession(node.getSessionNode());
                 this.mHistory.addSession(node.label as string);
-                zoweFileProvider.addSession(node.getProfileName());
+                await zoweFileProvider.addSession(node.getProfileName());
             }
             this.refresh();
             // Remove the edited profile from profilesForValidation
@@ -274,18 +274,5 @@ export class ZoweTreeProvider {
         ZoweLogger.trace("ZoweTreeProvider.deleteSessionByLabel called.");
         this.mHistory.removeSession(revisedLabel);
         this.refresh();
-    }
-
-    /**
-     * Expand a node
-     * @param element the node being flipped
-     * @param provider the tree view provider
-     */
-    public async expandSession(element: IZoweTreeNode, provider: IZoweTree<IZoweNodeType>): Promise<void> {
-        ZoweLogger.trace("ZoweTreeProvider.expandSession called.");
-        await provider.getTreeView().reveal(element, { expand: false });
-        await provider.getTreeView().reveal(element, { expand: true });
-        element.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
-        element.dirty = true;
     }
 }
