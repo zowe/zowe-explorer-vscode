@@ -20,7 +20,7 @@ import { Gui, IUss } from "@zowe/zowe-explorer-api";
 import { CoreUtils, UssUtils, TRANSFER_TYPE_ASCII, TRANSFER_TYPE_BINARY } from "@zowe/zos-ftp-for-zowe-cli";
 import { Buffer } from "buffer";
 import { AbstractFtpApi } from "./ZoweExplorerAbstractFtpApi";
-import { ZoweLogger } from "./extension";
+import * as globals from "./globals";
 
 // The Zowe FTP CLI plugin is written and uses mostly JavaScript, so relax the rules here.
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
@@ -72,7 +72,7 @@ export class FtpUssApi extends AbstractFtpApi implements IUss {
                 result.commandResponse = "";
                 result.apiResponse.etag = await this.hashFile(targetFile);
             } else {
-                await Gui.errorMessage(result.commandResponse, { logger: ZoweLogger });
+                await Gui.errorMessage(result.commandResponse, { logger: globals.LOGGER });
                 throw new Error();
             }
             return result;
@@ -91,7 +91,7 @@ export class FtpUssApi extends AbstractFtpApi implements IUss {
         try {
             connection = await this.ftpClient(this.checkedProfile());
             if (!connection) {
-                await Gui.errorMessage(result.commandResponse, { logger: ZoweLogger });
+                await Gui.errorMessage(result.commandResponse, { logger: globals.LOGGER });
                 throw new Error();
             }
             // Save-Save with FTP requires loading the file first
@@ -99,7 +99,7 @@ export class FtpUssApi extends AbstractFtpApi implements IUss {
                 const contentsTag = await this.getContentsTag(ussFilePath);
                 if (contentsTag && contentsTag !== options.etag) {
                     await Gui.errorMessage("Save conflict. Please pull the latest content from mainframe first.", {
-                        logger: ZoweLogger,
+                        logger: globals.LOGGER,
                     });
                     throw new Error();
                 }
@@ -124,7 +124,7 @@ export class FtpUssApi extends AbstractFtpApi implements IUss {
 
         // Check if inputDirectory is directory
         if (!zowe.imperative.IO.isDir(inputDirectoryPath)) {
-            await Gui.errorMessage("The local directory path provided does not exist.", { logger: ZoweLogger });
+            await Gui.errorMessage("The local directory path provided does not exist.", { logger: globals.LOGGER });
             throw new Error();
         }
 
@@ -161,7 +161,7 @@ export class FtpUssApi extends AbstractFtpApi implements IUss {
                 result.success = true;
                 result.commandResponse = "Directory or file created.";
             } else {
-                await Gui.errorMessage(result.commandResponse, { logger: ZoweLogger });
+                await Gui.errorMessage(result.commandResponse, { logger: globals.LOGGER });
                 throw new Error();
             }
             return result;
@@ -184,7 +184,7 @@ export class FtpUssApi extends AbstractFtpApi implements IUss {
                 result.success = true;
                 result.commandResponse = "Delete completed.";
             } else {
-                await Gui.errorMessage(result.commandResponse, { logger: ZoweLogger });
+                await Gui.errorMessage(result.commandResponse, { logger: globals.LOGGER });
                 throw new Error();
             }
             return result;
@@ -203,7 +203,7 @@ export class FtpUssApi extends AbstractFtpApi implements IUss {
                 result.success = true;
                 result.commandResponse = "Rename completed.";
             } else {
-                await Gui.errorMessage(result.commandResponse, { logger: ZoweLogger });
+                await Gui.errorMessage(result.commandResponse, { logger: globals.LOGGER });
                 throw new Error();
             }
             return result;
