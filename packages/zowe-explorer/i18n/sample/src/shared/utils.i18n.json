@@ -13,6 +13,5 @@
   "uploadContent.cancelled": "Upload cancelled.",
   "searchJobs.owner.invalid": "Invalid job owner",
   "searchJobs.prefix.invalid": "Invalid job prefix",
-  "saveFile.etagMismatch.log.warning": "Remote file has changed. Presented with way to resolve file.",
-  "saveFile.etagMismatch.warning": "Remote file has been modified in the meantime.\nSelect 'Compare' to resolve the conflict."
+  "saveFile.etagMismatch.log.warning": "Remote file has changed. Presented with way to resolve file."
 }

@@ -322,7 +322,6 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
         const errorMessage = err?.message ? err.message : err.toString();
         if (errorMessage.includes("Rest API failure with HTTP(S) status 412")) {
             // if (globals.ISTHEIA) {
-            //     ZoweLogger.debug(localize("globals.ISTHEIA.forceUpload", "When was forcing an upload ever a good idea?"));
             //     willForceUpload(node, doc, remote, node.getProfile(), binary, returnEtag);
             // } else {
             await compareFileContent(doc, node, null, binary);

@@ -1495,7 +1495,6 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
             }
         } else if (!uploadResponse.success && uploadResponse.commandResponse.includes("Rest API failure with HTTP(S) status 412")) {
             // if (globals.ISTHEIA) {
-            //     ZoweLogger.debug(localize("globals.ISTHEIA.forceUpload", "When was forcing an upload ever a good idea?"));
             //     willForceUpload(node, doc, label, node ? node.getProfile() : profile);
             // } else {
             await compareFileContent(doc, node, label, null, profile);

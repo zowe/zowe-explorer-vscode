@@ -79,7 +79,6 @@
   "saveFile.saving": "Saving file {0}",
   "saveFile.saveFailed.error": "Data set failed to save. Data set may have been deleted or renamed on mainframe.",
   "saveFile.progress.title": "Saving data set...",
-  "globals.ISTHEIA.forceUpload": "When was forcing an upload ever a good idea?",
   "pasteDataSetMembers.paste.error": "Invalid paste. Copy dataset(s) first.",
   "downloadDs.invalidNode.error": "Cannot download, item invalid.",
   "copySequentialDatasets.notSupported.error": "Copying datasets is not supported.",
