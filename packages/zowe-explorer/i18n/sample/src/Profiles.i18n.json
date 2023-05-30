@@ -1,8 +1,5 @@
 {
   "profiles.operation.cancelled": "Operation Cancelled",
-  "profiles.createNewConnection": "$(plus) Create a new connection to z/OS",
-  "profiles.createTeamConfig": "$(plus) Create a new Team Configuration file",
-  "profiles.editConfig": "$(pencil) Edit Team Configuration file",
   "createZoweSession.ds.quickPickOption": "Choose \"Create new...\" to define or select a profile to add to the DATA SETS Explorer",
   "createZoweSession.job.quickPickOption": "Choose \"Create new...\" to define or select a profile to add to the JOBS Explorer",
   "createZoweSession.uss.quickPickOption": "Choose \"Create new...\" to define or select a profile to add to the USS Explorer",
