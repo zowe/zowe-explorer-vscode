@@ -88,7 +88,7 @@ Then you will be able to get access to initialized Zowe Explorer API objects pro
 
 ```typescript
 export function activate(context: vscode.ExtensionContext) {
-  // this is the main operation to call to retrieve the ZoweExplorerApi.IApiRegisterClient object
+  // this is the main operation to call to retrieve the IApiRegisterClient object
   // use the optional parameter to constrain the version or newer of Zowe Explorer your extension is supporting
   const zoweExplorerApi = ZoweVsCodeExtension.getZoweExplorerApi("1.16.1");
   if (zoweExplorerApi) {
@@ -101,7 +101,7 @@ export function activate(context: vscode.ExtensionContext) {
 }
 ```
 
-Once you have access to the `ZoweExplorerApi.IApiRegisterClient` instance returned by the call shown above you have access to various methods. Check all the declarations in the [interface specification in the source code](../packages/zowe-explorer-api/src/profiles/ZoweExplorerApi.ts).
+Once you have access to the `IApiRegisterClient` instance returned by the call shown above you have access to various methods. Check all the declarations in the [interface specification in the source code](../packages/zowe-explorer-api/src/extend/interfaces.ts).
 
 Most of the operations listed are needed for registering new implementations of a new data provider as described further below in the Section [Creating an extension that adds a data provider](#creating-an-extension-that-adds-a-data-provider).
 
@@ -165,7 +165,7 @@ A data provider Zowe Explorer extension is a VS Code extension that accesses Zow
 
 To implement as data provider Zowe Explorer extension you need to
 
-1. Implement at least one of the four available interfaces used by the API for data providers (`IUss`, `IMvs`, `IJes`, `ICommand`) as well as the `ICommon` interface as specified in [ZoweExplorerApi.ts](../packages/zowe-explorer-api/src/profiles/ZoweExplorerApi.ts). The new implementation must be using a new Zowe CLI profile type name for identification.
+1. Implement at least one of the four available interfaces used by the API for data providers (`IUss`, `IMvs`, `IJes`, `ICommand`) as well as the `ICommon` interface as specified in [interfaces.ts](../packages/zowe-explorer-api/src/extend/interfaces.ts). The new implementation must be using a new Zowe CLI profile type name for identification.
 2. Register your API implementation with the `IApiRegisterClient` returned by Zowe Explorer during activation of your VS Code extension as shown below.
 3. Initialize the user's .zowe directory with meta-data for the new profile type.
 

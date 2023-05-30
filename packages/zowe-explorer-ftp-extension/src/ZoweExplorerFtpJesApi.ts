@@ -10,7 +10,7 @@
  */
 
 import * as zowe from "@zowe/cli";
-import { Gui, ZoweExplorerApi } from "@zowe/zowe-explorer-api";
+import { Gui, IJes } from "@zowe/zowe-explorer-api";
 import { JobUtils, DataSetUtils, TRANSFER_TYPE_ASCII } from "@zowe/zos-ftp-for-zowe-cli";
 import { DownloadJobs, IJobFile } from "@zowe/cli";
 import { IJob, IJobStatus, ISpoolFile } from "@zowe/zos-ftp-for-zowe-cli/lib/api/JobInterface";
@@ -31,7 +31,7 @@ interface ISpoolFileRefactor extends ISpoolFile {
     ddName: string;
 }
 
-export class FtpJesApi extends AbstractFtpApi implements ZoweExplorerApi.IJes {
+export class FtpJesApi extends AbstractFtpApi implements IJes {
     public async getJobsByOwnerAndPrefix(owner: string, prefix: string): Promise<zowe.IJob[]> {
         const result = this.getIJobResponse();
         const session = this.getSession(this.profile);

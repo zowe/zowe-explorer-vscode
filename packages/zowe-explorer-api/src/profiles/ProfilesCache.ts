@@ -15,7 +15,7 @@ import * as fs from "fs";
 import { URL } from "url";
 
 import * as zowe from "@zowe/cli";
-import { ZoweExplorerApi } from "./ZoweExplorerApi";
+import { IRegisterClient } from "../extend/IRegisterClient";
 
 // TODO: find a home for constants
 export const CONTEXT_PREFIX = "_";
@@ -159,7 +159,7 @@ export class ProfilesCache {
         this.allExternalTypes.add(profileTypeName);
     }
 
-    public async refresh(apiRegister?: ZoweExplorerApi.IApiRegisterClient): Promise<void> {
+    public async refresh(apiRegister?: IRegisterClient): Promise<void> {
         this.allProfiles = [];
         this.allTypes = [];
         let mProfileInfo: zowe.imperative.ProfileInfo;

@@ -12,7 +12,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { imperative } from "@zowe/cli";
 import { FTPConfig, IZosFTPProfile } from "@zowe/zos-ftp-for-zowe-cli";
-import { Gui, MessageSeverity, ZoweExplorerApi } from "@zowe/zowe-explorer-api";
+import { Gui, ICommon, MessageSeverity } from "@zowe/zowe-explorer-api";
 import { sessionMap, ZoweLogger } from "./extension";
 import { FtpSession } from "./ftpSession";
 
@@ -20,7 +20,7 @@ export interface ConnectionType {
     close(): void;
 }
 
-export abstract class AbstractFtpApi implements ZoweExplorerApi.ICommon {
+export abstract class AbstractFtpApi implements ICommon {
     private session?: FtpSession;
 
     public constructor(public profile?: imperative.IProfileLoaded) {}

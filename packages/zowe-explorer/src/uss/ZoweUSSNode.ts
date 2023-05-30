@@ -14,7 +14,7 @@ import * as globals from "../globals";
 import * as vscode from "vscode";
 import * as fs from "fs";
 import * as path from "path";
-import { Gui, IZoweUSSTreeNode, ZoweTreeNode, IZoweTree, ValidProfileEnum, ZoweExplorerApi } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweUSSTreeNode, ZoweTreeNode, IZoweTree, ValidProfileEnum, IUss } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { errorHandling, syncSessionNode } from "../utils/ProfilesUtils";
@@ -625,11 +625,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      * @param tree The structure of files and folders to paste
      * @param ussApi The USS API to use for this operation
      */
-    public async paste(
-        sessionName: string,
-        rootPath: string,
-        uss: { tree: UssFileTree; api: ZoweExplorerApi.IUss; options?: IUploadOptions }
-    ): Promise<void> {
+    public async paste(sessionName: string, rootPath: string, uss: { tree: UssFileTree; api: IUss; options?: IUploadOptions }): Promise<void> {
         ZoweLogger.trace("ZoweUSSNode.paste called.");
         const hasCopyApi = uss.api.copy != null;
         const hasPutContentApi = uss.api.putContent != null;

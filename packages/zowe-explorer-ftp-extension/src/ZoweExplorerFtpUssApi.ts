@@ -16,7 +16,7 @@ import * as tmp from "tmp";
 import * as zowe from "@zowe/cli";
 import { IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
 
-import { Gui, ZoweExplorerApi } from "@zowe/zowe-explorer-api";
+import { Gui, IUss } from "@zowe/zowe-explorer-api";
 import { CoreUtils, UssUtils, TRANSFER_TYPE_ASCII, TRANSFER_TYPE_BINARY } from "@zowe/zos-ftp-for-zowe-cli";
 import { Buffer } from "buffer";
 import { AbstractFtpApi } from "./ZoweExplorerAbstractFtpApi";
@@ -26,7 +26,7 @@ import { ZoweLogger } from "./extension";
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 
-export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
+export class FtpUssApi extends AbstractFtpApi implements IUss {
     public async fileList(ussFilePath: string): Promise<zowe.IZosFilesResponse> {
         const result = this.getDefaultResponse();
         const session = this.getSession(this.profile);
