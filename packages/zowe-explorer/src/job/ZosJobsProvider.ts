@@ -66,10 +66,10 @@ interface IJobPickerOption {
  * @class ZosJobsProvider
  * @implements {vscode.TreeDataProvider}
  */
-export async function createJobsTree(log: imperative.Logger): Promise<ZosJobsProvider> {
+export async function createJobsTree(): Promise<ZosJobsProvider> {
     ZoweLogger.trace("ZosJobsProvider.createJobsTree called.");
     const tree = new ZosJobsProvider();
-    await tree.initializeJobsTree(log);
+    await tree.initializeJobsTree();
     await tree.addSession();
     return tree;
 }
@@ -193,7 +193,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                 return this.mFavorites;
             }
             if (element.contextValue && element.contextValue === globals.FAV_PROFILE_CONTEXT) {
-                const favsForProfile = this.loadProfilesForFavorites(this.log, element);
+                const favsForProfile = this.loadProfilesForFavorites(element);
                 return favsForProfile;
             }
             return element.getChildren();
@@ -342,9 +342,8 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
      * Initialize the favorites and history information
      * @param log - Logger
      */
-    public async initializeJobsTree(log: imperative.Logger): Promise<void> {
+    public async initializeJobsTree(): Promise<void> {
         ZoweLogger.trace("ZosJobsProvider.initializeJobsTree called.");
-        this.log = log;
         ZoweLogger.debug(localize("initializeJobsTree.log.debug", "Initializing profiles with jobs favorites."));
         const lines: string[] = this.mHistory.readFavorites();
         if (lines.length === 0) {
@@ -400,13 +399,12 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
      * @param log
      * @param parentNode
      */
-    public async loadProfilesForFavorites(log: imperative.Logger, parentNode: IZoweJobTreeNode): Promise<IZoweJobTreeNode[] | Job[]> {
+    public async loadProfilesForFavorites(parentNode: IZoweJobTreeNode): Promise<IZoweJobTreeNode[] | Job[]> {
         ZoweLogger.trace("ZosJobsProvider.loadProfilesForFavorites called.");
         const profileName = parentNode.label as string;
         const updatedFavsForProfile: IZoweJobTreeNode[] = [];
         let profile: imperative.IProfileLoaded;
         let session: imperative.Session;
-        this.log = log;
         ZoweLogger.debug(localize("loadProfilesForFavorites.log.debug", "Loading profile: {0} for jobs favorites", profileName));
         // Load profile for parent profile node in this.mFavorites array
         if (!parentNode.getProfile() || !parentNode.getSession()) {

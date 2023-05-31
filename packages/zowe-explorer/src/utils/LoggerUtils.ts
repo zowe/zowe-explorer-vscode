@@ -15,8 +15,9 @@ import { Gui, MessageSeverity, ZoweVsCodeExtension } from "@zowe/zowe-explorer-a
 import * as zowe from "@zowe/cli";
 import * as vscode from "vscode";
 import * as nls from "vscode-nls";
-import * as globals from "../globals";
+import { join as joinPath } from "path";
 import { SettingsConfig } from "./SettingsConfig";
+import * as loggerConfig from "../../log4jsconfig.json";
 
 // Set up localization
 nls.config({
@@ -30,10 +31,12 @@ export class ZoweLogger {
     private static defaultLogLevel: "INFO";
     private static zeLogLevel: string;
 
+    private static impLogger: zowe.imperative.Logger;
+
     public static async initializeZoweLogger(context: vscode.ExtensionContext): Promise<void> {
         try {
             const logsPath: string = ZoweVsCodeExtension.customLoggingPath ?? context.extensionPath;
-            globals.initLogger(logsPath);
+            this.initializeImperativeLogger(logsPath);
             await this.initVscLogger(context, logsPath);
         } catch (err) {
             // Don't log error if logger failed to initialize
@@ -42,6 +45,24 @@ export class ZoweLogger {
                 await Gui.errorMessage(`${errorMessage}: ${err.message}`);
             }
         }
+    }
+
+    /**
+     * Initializes Imperative Logger
+     * @param logsPath File path for logs folder defined in preferences
+     */
+    private static initializeImperativeLogger(logsPath: string): void {
+        const zeLogLevel = ZoweLogger.getLogSetting();
+        const loggerConfigCopy = JSON.parse(JSON.stringify(loggerConfig));
+        for (const appenderName of Object.keys(loggerConfigCopy.log4jsConfig.appenders)) {
+            loggerConfigCopy.log4jsConfig.appenders[appenderName].filename = joinPath(
+                logsPath,
+                loggerConfigCopy.log4jsConfig.appenders[appenderName].filename
+            );
+            loggerConfigCopy.log4jsConfig.categories[appenderName].level = zeLogLevel;
+        }
+        zowe.imperative.Logger.initLogger(loggerConfigCopy);
+        this.impLogger = zowe.imperative.Logger.getAppLogger();
     }
 
     public static trace(message: string): void {
@@ -77,6 +98,10 @@ export class ZoweLogger {
         return this.zeLogLevel ?? this.defaultLogLevel;
     }
 
+    public static get imperativeLogger(): zowe.imperative.Logger {
+        return this.impLogger;
+    }
+
     private static async initVscLogger(context: vscode.ExtensionContext, logFileLocation: string): Promise<void> {
         this.zeOutputChannel = Gui.createOutputChannel(localize("zoweExplorer.outputchannel.title", "Zowe Explorer"));
         this.writeVscLoggerInfo(logFileLocation, context);
@@ -93,7 +118,7 @@ export class ZoweLogger {
     private static writeLogMessage(message: string, severity: MessageSeverity): void {
         if (+MessageSeverity[this.getLogSetting()] <= +severity) {
             const severityName = MessageSeverity[severity];
-            globals.LOG[severityName?.toLowerCase()](message);
+            this.imperativeLogger[severityName?.toLowerCase()](message);
             this.zeOutputChannel?.appendLine(this.createMessage(message, severityName));
         }
     }

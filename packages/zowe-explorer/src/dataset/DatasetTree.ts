@@ -51,9 +51,9 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
  *
  * @export
  */
-export async function createDatasetTree(log: imperative.Logger): Promise<DatasetTree> {
+export async function createDatasetTree(): Promise<DatasetTree> {
     const tree = new DatasetTree();
-    tree.initializeFavorites(log);
+    tree.initializeFavorites(ZoweLogger.imperativeLogger);
     await tree.addSession();
     return tree;
 }

@@ -20,7 +20,6 @@ import { getSecurityModules, IZoweTreeNode, ZoweTreeNode, getZoweDir, getFullPat
 import { Profiles } from "../Profiles";
 import * as nls from "vscode-nls";
 import { imperative, getImperativeConfig } from "@zowe/cli";
-import { ZoweExplorerExtender } from "../ZoweExplorerExtender";
 import { ZoweLogger } from "./LoggerUtils";
 
 // Set up localization
@@ -357,7 +356,7 @@ export class ProfilesUtils {
         }
     }
 
-    public static async initializeZoweProfiles(): Promise<void> {
+    public static async initializeZoweProfiles(errorCallback: (msg: string) => unknown): Promise<void> {
         ZoweLogger.trace("ProfilesUtils.initializeZoweProfiles called.");
         try {
             await ProfilesUtils.initializeZoweFolder();
@@ -374,7 +373,7 @@ export class ProfilesUtils {
                 errorHandling(err, undefined, err.mDetails.causeErrors);
             } else {
                 ZoweLogger.error(err);
-                ZoweExplorerExtender.showZoweConfigError(err.message);
+                errorCallback(err.message);
             }
         }
     }

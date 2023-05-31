@@ -42,11 +42,11 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     globals.defineGlobals(tempPath);
 
     hideTempFolder(getZoweDir());
-    await ProfilesUtils.initializeZoweProfiles();
+    await ProfilesUtils.initializeZoweProfiles((msg) => ZoweExplorerExtender.showZoweConfigError(msg));
     ProfilesUtils.initializeZoweTempFolder();
 
     // Initialize profile manager
-    await Profiles.createInstance(globals.LOG);
+    await Profiles.createInstance(ZoweLogger.imperativeLogger);
     registerRefreshCommand(context, activate, deactivate);
     initializeSpoolProvider(context);
 

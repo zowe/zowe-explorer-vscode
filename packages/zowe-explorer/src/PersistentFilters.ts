@@ -139,7 +139,7 @@ export class PersistentFilters {
 
     public readFavorites(): string[] {
         if (vscode.workspace.getConfiguration(this.schema)) {
-            return vscode.workspace.getConfiguration(this.schema).get(PersistentFilters.favorites);
+            return vscode.workspace.getConfiguration(this.schema).get(PersistentFilters.favorites) ?? [];
         }
         return [];
     }
