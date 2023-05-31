@@ -103,10 +103,6 @@ async function createGlobalMocks() {
         value: globalMocks.mockTextDocuments,
         configurable: true,
     });
-    Object.defineProperty(vscode.workspace, "getConfiguration", {
-        value: globalMocks.getConfiguration,
-        configurable: true,
-    });
     Object.defineProperty(vscode.commands, "executeCommand", {
         value: globalMocks.mockExecuteCommand,
         configurable: true,
@@ -160,20 +156,12 @@ async function createGlobalMocks() {
     });
     Object.defineProperty(vscode, "ProgressLocation", { value: globalMocks.ProgressLocation, configurable: true });
     Object.defineProperty(vscode.window, "withProgress", { value: globalMocks.withProgress, configurable: true });
-    Object.defineProperty(globals, "LOG", { value: jest.fn(), configurable: true });
-    Object.defineProperty(globals.LOG, "error", { value: jest.fn(), configurable: true });
-    Object.defineProperty(globals.LOG, "warn", { value: jest.fn(), configurable: true });
     Object.defineProperty(ussUtils, "fileExistsCaseSensitveSync", {
         value: globalMocks.fileExistsCaseSensitveSync,
         configurable: true,
     });
     Object.defineProperty(vscode.env.clipboard, "readText", { value: globalMocks.readText, configurable: true });
     Object.defineProperty(path, "basename", { value: globalMocks.basePath, configurable: true });
-    Object.defineProperty(ZoweLogger, "error", { value: jest.fn(), configurable: true });
-    Object.defineProperty(ZoweLogger, "debug", { value: jest.fn(), configurable: true });
-    Object.defineProperty(ZoweLogger, "warn", { value: jest.fn(), configurable: true });
-    Object.defineProperty(ZoweLogger, "info", { value: jest.fn(), configurable: true });
-    Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
     return globalMocks;
 }
 

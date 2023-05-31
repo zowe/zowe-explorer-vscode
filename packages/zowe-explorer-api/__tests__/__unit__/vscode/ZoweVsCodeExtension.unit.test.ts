@@ -28,7 +28,7 @@ describe("ZoweVsCodeExtension", () => {
 
     it("customLoggingPath should return value if defined in VS Code settings", () => {
         const mockGetConfig = jest.fn().mockReturnValueOnce(__dirname);
-        jest.spyOn(vscode.workspace, "getConfiguration").mockReturnValue({
+        jest.spyOn(vscode.workspace, "getConfiguration").mockReturnValueOnce({
             get: mockGetConfig,
         } as unknown as vscode.WorkspaceConfiguration);
         expect(ZoweVsCodeExtension.customLoggingPath).toBe(__dirname);

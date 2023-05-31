@@ -11,7 +11,6 @@
 
 import { PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
 import * as vscode from "vscode";
-import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 import { removeSession } from "../../../src/utils/SessionUtils";
 import { createDatasetSessionNode, createDatasetTree } from "../../../__mocks__/mockCreators/datasets";
 import { createIProfile, createISession, createPersistentConfig, createTreeView } from "../../../__mocks__/mockCreators/shared";
@@ -32,11 +31,6 @@ describe("SessionUtils removeSession Unit Tests", () => {
         Object.defineProperty(vscode.window, "createTreeView", { value: jest.fn(), configurable: true });
         Object.defineProperty(vscode, "ConfigurationTarget", { value: jest.fn(), configurable: true });
         newMocks.mockGetConfiguration.mockReturnValue(createPersistentConfig());
-        Object.defineProperty(vscode.workspace, "getConfiguration", {
-            value: newMocks.mockGetConfiguration,
-            configurable: true,
-        });
-        Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
 
         return newMocks;
     }

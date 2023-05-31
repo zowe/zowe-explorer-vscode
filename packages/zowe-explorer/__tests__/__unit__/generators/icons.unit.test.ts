@@ -23,7 +23,6 @@ describe("Checking icon generator's basics", () => {
         const getConfiguration = jest.fn();
 
         Object.defineProperty(vscode.window, "createTreeView", { value: createTreeView });
-        Object.defineProperty(vscode.workspace, "getConfiguration", { value: getConfiguration });
     };
     const generateTestSessionNode = () => {
         const session = new imperative.Session({

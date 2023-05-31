@@ -31,6 +31,8 @@ import { SettingsConfig } from "../../../src/utils/SettingsConfig";
 import { ZoweTreeProvider } from "../../../src/abstract/ZoweTreeProvider";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 
+jest.mock("../../../src/utils/LoggerUtils");
+
 async function createGlobalMocks() {
     const globalMocks = {
         mockLoadNamedProfile: jest.fn(),
@@ -70,8 +72,6 @@ async function createGlobalMocks() {
         mockProfilesCache: new ProfilesCache(imperative.Logger.getAppLogger()),
     };
 
-    Object.defineProperty(globals, "LOG", { value: jest.fn(), configurable: true });
-    Object.defineProperty(globals.LOG, "error", { value: jest.fn(), configurable: true });
     Object.defineProperty(globalMocks.mockProfilesCache, "getProfileInfo", {
         value: jest.fn(() => {
             return { value: globalMocks.mockProfileInfo, configurable: true };
@@ -81,10 +81,6 @@ async function createGlobalMocks() {
     Object.defineProperty(vscode.window, "createTreeView", { value: globalMocks.createTreeView, configurable: true });
     Object.defineProperty(vscode, "ProgressLocation", { value: globalMocks.ProgressLocation, configurable: true });
     Object.defineProperty(vscode.window, "withProgress", { value: globalMocks.withProgress, configurable: true });
-    Object.defineProperty(vscode.workspace, "getConfiguration", {
-        value: globalMocks.getConfiguration,
-        configurable: true,
-    });
     Object.defineProperty(Profiles, "getInstance", {
         value: jest.fn(() => {
             return {
@@ -128,17 +124,12 @@ async function createGlobalMocks() {
             "zowe.automaticProfileValidation": true,
         }),
     });
-    Object.defineProperty(ZoweLogger, "error", { value: jest.fn(), configurable: true });
-    Object.defineProperty(ZoweLogger, "debug", { value: jest.fn(), configurable: true });
-    Object.defineProperty(ZoweLogger, "warn", { value: jest.fn(), configurable: true });
-    Object.defineProperty(ZoweLogger, "info", { value: jest.fn(), configurable: true });
-    Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
 
     globalMocks.mockAffects.mockReturnValue(true);
     globalMocks.withProgress.mockImplementation((progLocation, callback) => callback());
     globalMocks.withProgress.mockReturnValue(globalMocks.testResponse);
     globalMocks.testSessionNode = createUSSSessionNode(globalMocks.testSession, globalMocks.testProfile);
-    globalMocks.testUSSTree = await createUSSTree(imperative.Logger.getAppLogger());
+    globalMocks.testUSSTree = await createUSSTree();
     Object.defineProperty(globalMocks.testUSSTree, "refresh", { value: globalMocks.refresh, configurable: true });
     globalMocks.testUSSTree.mSessionNodes.push(globalMocks.testSessionNode);
     globalMocks.testUSSNode = new ZoweUSSNode(
@@ -165,7 +156,7 @@ describe("ZoweJobNode unit tests - Function editSession", () => {
     async function createBlockMocks(globalMocks) {
         const newMocks = {
             testIJob: createIJobObject(),
-            testJobsProvider: await createJobsTree(imperative.Logger.getAppLogger()),
+            testJobsProvider: await createJobsTree(),
             jobNode: null,
         };
 
@@ -245,6 +236,8 @@ describe("Tree Provider unit tests, function getTreeItem", () => {
             };
         });
         const e = new Event();
+        jest.spyOn(vscode.workspace, "getConfiguration").mockImplementationOnce(globalMocks.getConfiguration);
+        jest.spyOn(vscode.workspace, "getConfiguration").mockImplementationOnce(globalMocks.getConfiguration);
         globalMocks.getConfiguration.mockClear();
 
         await globalMocks.testUSSTree.onDidChangeConfiguration(e);
@@ -281,7 +274,7 @@ describe("ZoweJobNode unit tests - Function checkCurrentProfile", () => {
     async function createBlockMocks(globalMocks) {
         const newMocks = {
             testIJob: createIJobObject(),
-            testJobsProvider: await createJobsTree(imperative.Logger.getAppLogger()),
+            testJobsProvider: await createJobsTree(),
             jobNode: null,
         };
 

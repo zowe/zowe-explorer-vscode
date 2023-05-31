@@ -53,7 +53,7 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
  */
 export async function createDatasetTree(): Promise<DatasetTree> {
     const tree = new DatasetTree();
-    tree.initializeFavorites(ZoweLogger.imperativeLogger);
+    tree.initializeFavorites();
     await tree.addSession();
     return tree;
 }
@@ -150,7 +150,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 return this.mFavorites;
             }
             if (element.contextValue && element.contextValue === globals.FAV_PROFILE_CONTEXT) {
-                const favsForProfile = this.loadProfilesForFavorites(this.log, element);
+                const favsForProfile = this.loadProfilesForFavorites(element);
                 return favsForProfile;
             }
             await Profiles.getInstance().checkCurrentProfile(element.getProfile());
@@ -228,9 +228,8 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      * Profile loading only occurs in loadProfilesForFavorites when the profile node in Favorites is clicked on.
      * @param log
      */
-    public initializeFavorites(log: imperative.Logger): void {
+    public initializeFavorites(): void {
         ZoweLogger.trace("DatasetTree.initializeFavorites called.");
-        this.log = log;
         ZoweLogger.debug(localize("initializeFavorites.log.debug", "Initializing profiles with data set favorites."));
         const lines: string[] = this.mHistory.readFavorites();
         if (lines.length === 0) {
@@ -317,13 +316,12 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      * Loads profile for the profile node in Favorites that was clicked on, as well as for its children favorites.
      * @param log
      */
-    public async loadProfilesForFavorites(log: imperative.Logger, parentNode: IZoweDatasetTreeNode): Promise<IZoweDatasetTreeNode[]> {
+    public async loadProfilesForFavorites(parentNode: IZoweDatasetTreeNode): Promise<IZoweDatasetTreeNode[]> {
         ZoweLogger.trace("DatasetTree.loadProfilesForFavorites called.");
         const profileName = parentNode.label as string;
         const updatedFavsForProfile: IZoweDatasetTreeNode[] = [];
         let profile: imperative.IProfileLoaded;
         let session: imperative.Session;
-        this.log = log;
         ZoweLogger.debug(localize("loadProfilesForFavorites.log.debug", "Loading profile: {0} for data set favorites", profileName));
         // Load profile for parent profile node in this.mFavorites array
         if (!parentNode.getProfile() || !parentNode.getSession()) {

@@ -63,7 +63,6 @@ function createGlobalMocks() {
     Object.defineProperty(Gui, "showMessage", { value: jest.fn(), configurable: true });
     Object.defineProperty(Gui, "setStatusBarMessage", { value: jest.fn().mockReturnValue({ dispose: jest.fn() }), configurable: true });
     Object.defineProperty(vscode.window, "showTextDocument", { value: jest.fn(), configurable: true });
-    Object.defineProperty(vscode.workspace, "getConfiguration", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.workspace, "openTextDocument", { value: jest.fn(), configurable: true });
     Object.defineProperty(Profiles, "getInstance", {
         value: jest.fn().mockReturnValue(globalMocks.mockProfileInstance),
@@ -77,9 +76,6 @@ function createGlobalMocks() {
     Object.defineProperty(zowe.Rename, "dataSetMember", { value: jest.fn(), configurable: true });
     Object.defineProperty(zowe, "Download", { value: jest.fn(), configurable: true });
     Object.defineProperty(globals, "ISTHEIA", { get: globalMocks.isTheia, configurable: true });
-    Object.defineProperty(globals, "LOG", { value: jest.fn(), configurable: true });
-    Object.defineProperty(globals.LOG, "debug", { value: jest.fn(), configurable: true });
-    Object.defineProperty(globals.LOG, "error", { value: jest.fn(), configurable: true });
     Object.defineProperty(fs, "unlinkSync", { value: jest.fn(), configurable: true });
     Object.defineProperty(fs, "existsSync", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.commands, "executeCommand", { value: jest.fn(), configurable: true });
@@ -147,11 +143,6 @@ function createGlobalMocks() {
         configurable: true,
     });
     Object.defineProperty(Gui, "errorMessage", { value: jest.fn(), configurable: true });
-    Object.defineProperty(ZoweLogger, "error", { value: jest.fn(), configurable: true });
-    Object.defineProperty(ZoweLogger, "debug", { value: jest.fn(), configurable: true });
-    Object.defineProperty(ZoweLogger, "warn", { value: jest.fn(), configurable: true });
-    Object.defineProperty(ZoweLogger, "info", { value: jest.fn(), configurable: true });
-    Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
     Object.defineProperty(utils.ProfilesUtils, "usingTeamConfig", {
         value: jest.fn().mockReturnValue(true),
         configurable: true,
@@ -529,7 +520,7 @@ describe("Dataset Tree Unit Tests - Function getChildren", () => {
 
         await testTree.getChildren(favProfileNode);
 
-        expect(loadProfilesForFavoritesSpy).toHaveBeenCalledWith(log, favProfileNode);
+        expect(loadProfilesForFavoritesSpy).toHaveBeenCalledWith(favProfileNode);
     });
     it("Checking function for PDS Dataset node", async () => {
         createGlobalMocks();
@@ -623,7 +614,7 @@ describe("Dataset Tree Unit Tests - Function loadProfilesForFavorites", () => {
             }),
         });
 
-        await testTree.loadProfilesForFavorites(blockMocks.log, favProfileNode);
+        await testTree.loadProfilesForFavorites(favProfileNode);
         const resultFavProfileNode = testTree.mFavorites[0];
 
         expect(resultFavProfileNode).toEqual(expectedFavProfileNode);
@@ -656,7 +647,7 @@ describe("Dataset Tree Unit Tests - Function loadProfilesForFavorites", () => {
             }),
         });
         mocked(Gui.errorMessage).mockResolvedValueOnce("Remove");
-        await testTree.loadProfilesForFavorites(blockMocks.log, favProfileNode);
+        await testTree.loadProfilesForFavorites(favProfileNode);
         expect(showErrorMessageSpy).toBeCalledTimes(1);
         showErrorMessageSpy.mockClear();
     });
@@ -694,7 +685,7 @@ describe("Dataset Tree Unit Tests - Function loadProfilesForFavorites", () => {
             blockMocks.imperativeProfile
         );
 
-        await testTree.loadProfilesForFavorites(blockMocks.log, favProfileNode);
+        await testTree.loadProfilesForFavorites(favProfileNode);
         const resultFavPdsNode = testTree.mFavorites[0].children[0];
 
         expect(resultFavPdsNode).toEqual(expectedFavPdsNode);
@@ -734,7 +725,7 @@ describe("Dataset Tree Unit Tests - Function loadProfilesForFavorites", () => {
             blockMocks.imperativeProfile
         );
 
-        await testTree.loadProfilesForFavorites(blockMocks.log, favProfileNode);
+        await testTree.loadProfilesForFavorites(favProfileNode);
         const resultFavPdsNode = testTree.mFavorites[0].children[0];
 
         expect(resultFavPdsNode).toEqual(expectedFavPdsNode);
@@ -1715,7 +1706,7 @@ describe("Dataset Tree Unit Tests - Function onDidConfiguration", () => {
         const imperativeProfile = createIProfile();
         const treeView = createTreeView();
         const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
-        const workspaceConfiguration = createWorkspaceConfiguration();
+        const workspaceConfiguration = jest.spyOn(vscode.workspace, "getConfiguration").mockReturnValueOnce(createWorkspaceConfiguration());
 
         return {
             session,
@@ -1729,7 +1720,6 @@ describe("Dataset Tree Unit Tests - Function onDidConfiguration", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
 
-        mocked(vscode.workspace.getConfiguration).mockReturnValue(blockMocks.workspaceConfiguration);
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
         const testTree = new DatasetTree();
         const event = {
@@ -1740,7 +1730,7 @@ describe("Dataset Tree Unit Tests - Function onDidConfiguration", () => {
 
         await testTree.onDidChangeConfiguration(event);
 
-        expect(mocked(vscode.workspace.getConfiguration)).toBeCalledTimes(2);
+        expect(mocked(vscode.workspace.getConfiguration)).toHaveBeenCalled();
     });
 });
 describe("Dataset Tree Unit Tests - Function renameNode", () => {
@@ -2550,6 +2540,6 @@ describe("Dataset Tree Unit Tests - Function initializeFavorites", () => {
                 readFavorites: () => ["[SAMPLE]: SAMPLE.{session}", "*SAMPLE", "SAMPLE*"],
             },
         });
-        expect(() => testTree.initializeFavorites(log)).not.toThrow();
+        expect(() => testTree.initializeFavorites()).not.toThrow();
     });
 });

@@ -11,14 +11,14 @@
 
 import * as globals from "../../../src/globals";
 import * as zowe from "@zowe/cli";
-import { ZoweExplorerApi, ZosmfUssApi, ZosmfJesApi, ZosmfMvsApi } from "@zowe/zowe-explorer-api";
+import { IUss, ZosmfUssApi, ZosmfJesApi, ZosmfMvsApi } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { Profiles } from "../../../src/Profiles";
 import { IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
 import { createInstanceOfProfile, createValidIProfile } from "../../../__mocks__/mockCreators/shared";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 
-class MockUssApi1 implements ZoweExplorerApi.IUss {
+class MockUssApi1 implements IUss {
     public profile?: zowe.imperative.IProfileLoaded;
     public getProfileTypeName(): string {
         return "api1typename";
@@ -77,7 +77,7 @@ class MockUssApi1 implements ZoweExplorerApi.IUss {
     }
 }
 
-class MockUssApi2 implements ZoweExplorerApi.IUss {
+class MockUssApi2 implements IUss {
     public profile?: zowe.imperative.IProfileLoaded;
     public getProfileTypeName(): string {
         return "api2typename";
@@ -156,17 +156,6 @@ async function createGlobalMocks() {
         type: "zosmf",
         message: "",
         failNotFound: false,
-    });
-    Object.defineProperty(ZoweLogger, "error", { value: jest.fn(), configurable: true });
-    Object.defineProperty(ZoweLogger, "debug", { value: jest.fn(), configurable: true });
-    Object.defineProperty(ZoweLogger, "warn", { value: jest.fn(), configurable: true });
-    Object.defineProperty(ZoweLogger, "info", { value: jest.fn(), configurable: true });
-
-    Object.defineProperty(globals, "LOG", {
-        value: {
-            debug: jest.fn(),
-            error: jest.fn(),
-        },
     });
 
     return newMocks;

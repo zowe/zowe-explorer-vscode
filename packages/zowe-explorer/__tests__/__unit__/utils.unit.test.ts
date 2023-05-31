@@ -16,7 +16,7 @@ import * as utils from "../../src/utils/ProfilesUtils";
 import * as globals from "../../src/globals";
 import { createInstanceOfProfile, createInstanceOfProfileInfo, createIProfile, createValidIProfile } from "../../__mocks__/mockCreators/shared";
 import { Profiles } from "../../src/Profiles";
-import { ZoweLogger } from "../../src/utils/LoggerUtils";
+jest.mock("../../src/utils/LoggerUtils");
 
 function createGlobalMocks() {
     const globalMocks = {
@@ -43,8 +43,6 @@ function createGlobalMocks() {
         configurable: true,
     });
     Object.defineProperty(globals, "ISTHEIA", { get: isTheia, configurable: true });
-    Object.defineProperty(globals, "LOG", { value: jest.fn(), configurable: true });
-    Object.defineProperty(globals.LOG, "error", { value: jest.fn(), configurable: true });
     Object.defineProperty(utils, "isTheia", { value: jest.fn(), configurable: true });
 
     Object.defineProperty(globalMocks.mockProfilesCache, "getProfileInfo", {
@@ -52,8 +50,6 @@ function createGlobalMocks() {
             return { value: globalMocks.mockProfileInfo, configurable: true };
         }),
     });
-    Object.defineProperty(ZoweLogger, "error", { value: jest.fn(), configurable: true });
-    Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
 
     return {
         isTheia,

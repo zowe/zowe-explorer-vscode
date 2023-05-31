@@ -25,14 +25,11 @@ describe("TsoCommandHandler extended testing", () => {
         profileInstance: null,
         mockProfilesCache: new ProfilesCache(imperative.Logger.getAppLogger()),
     };
-    Object.defineProperty(vscode.workspace, "getConfiguration", { value: jest.fn() });
     Object.defineProperty(vscode.window, "createOutputChannel", { value: jest.fn() });
     Object.defineProperty(imperative.ProfileInfo, "profAttrsToProfLoaded", { value: () => ({ profile: {} }) });
     newMocks.profileInstance = createInstanceOfProfile(newMocks.imperativeProfile);
     Object.defineProperty(Profiles, "selectTsoProfile", { value: () => "dummy" });
     Object.defineProperty(Profiles, "getInstance", { value: jest.fn(), configurable: true });
-    Object.defineProperty(ZoweLogger, "error", { value: jest.fn(), configurable: true });
-    Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
     Object.defineProperty(Profiles, "getInstance", {
         value: jest.fn().mockReturnValue(newMocks.profileInstance),
         configurable: true,

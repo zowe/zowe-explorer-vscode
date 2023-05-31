@@ -85,8 +85,6 @@ async function createGlobalMocks() {
         mockProfilesCache: new ProfilesCache(zowe.imperative.Logger.getAppLogger()),
     };
 
-    Object.defineProperty(globals, "LOG", { value: jest.fn(), configurable: true });
-    Object.defineProperty(globals.LOG, "error", { value: jest.fn(), configurable: true });
     Object.defineProperty(globalMocks.mockProfilesCache, "getProfileInfo", {
         value: jest.fn(() => {
             return { value: globalMocks.mockProfileInfo, configurable: true };
@@ -117,10 +115,7 @@ async function createGlobalMocks() {
     Object.defineProperty(vscode.window, "showQuickPick", { value: globalMocks.mockShowQuickPick, configurable: true });
     Object.defineProperty(vscode, "ConfigurationTarget", { value: globalMocks.enums, configurable: true });
     Object.defineProperty(vscode.window, "showInputBox", { value: globalMocks.mockShowInputBox, configurable: true });
-    Object.defineProperty(vscode.workspace, "getConfiguration", {
-        value: globalMocks.getConfiguration,
-        configurable: true,
-    });
+
     Object.defineProperty(Profiles, "getInstance", {
         value: jest.fn(() => globalMocks.mockProfileInstance),
         configurable: true,
@@ -138,11 +133,6 @@ async function createGlobalMocks() {
         value: jest.fn().mockImplementationOnce(() => Promise.resolve()),
         configurable: true,
     });
-    Object.defineProperty(ZoweLogger, "error", { value: jest.fn(), configurable: true });
-    Object.defineProperty(ZoweLogger, "debug", { value: jest.fn(), configurable: true });
-    Object.defineProperty(ZoweLogger, "warn", { value: jest.fn(), configurable: true });
-    Object.defineProperty(ZoweLogger, "info", { value: jest.fn(), configurable: true });
-    Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
 
     // Profile instance mocks
     globalMocks.mockProfileInstance = createInstanceOfProfile(globalMocks.testProfile);
@@ -183,13 +173,13 @@ async function createGlobalMocks() {
     globalMocks.testJobNode.dirty = true;
     globalMocks.testIJobComplete.jobid = "JOB1235";
     globalMocks.testIJobComplete.retcode = "0";
-    globalMocks.getConfiguration.mockReturnValue({
+    globalMocks.getConfiguration.mockReturnValueOnce({
         get: (setting: string) => ["[test]: /u/aDir{directory}", "[test]: /u/myFile.txt{textFile}"],
         update: jest.fn(() => {
             return {};
         }),
     });
-    globalMocks.testJobsProvider = await createJobsTree(zowe.imperative.Logger.getAppLogger());
+    globalMocks.testJobsProvider = await createJobsTree();
     globalMocks.testJobsProvider.mSessionNodes.push(globalMocks.testSessionNode);
     Object.defineProperty(globalMocks.testJobsProvider, "refresh", {
         value: globalMocks.mockRefresh,
@@ -206,7 +196,7 @@ describe("ZoweJobNode unit tests - Function createJobsTree", () => {
     it("Tests that createJobsTree is executed successfully", async () => {
         const globalMocks = await createGlobalMocks();
 
-        const newJobsProvider = await createJobsTree(zowe.imperative.Logger.getAppLogger());
+        const newJobsProvider = await createJobsTree();
         const newProviderKeys = JSON.stringify(Object.keys(newJobsProvider).sort());
         const testProviderKeys = JSON.stringify(Object.keys(globalMocks.testJobsProvider).sort());
 
@@ -280,9 +270,9 @@ describe("ZoweJobNode unit tests - Function onDidConfiguration", () => {
         const e = new Event();
         globalMocks.mockAffectsConfig.mockReturnValue(true);
 
+        jest.spyOn(vscode.workspace, "getConfiguration").mockImplementationOnce(globalMocks.getConfiguration);
         await globalMocks.testJobsProvider.onDidChangeConfiguration(e);
         expect(globalMocks.getConfiguration).toHaveBeenCalled();
-        expect(globalMocks.getConfiguration).toHaveBeenCalledTimes(2);
     });
 });
 

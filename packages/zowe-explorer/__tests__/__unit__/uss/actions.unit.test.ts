@@ -38,6 +38,8 @@ import { createUssApi, bindUssApi } from "../../../__mocks__/mockCreators/api";
 import * as refreshActions from "../../../src/shared/refresh";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 
+jest.mock("../../../src/utils/LoggerUtils");
+
 function createGlobalMocks() {
     const globalMocks = {
         renameUSSFile: jest.fn(),
@@ -93,7 +95,6 @@ function createGlobalMocks() {
     Object.defineProperty(sharedUtils, "concatChildNodes", { value: globalMocks.concatChildNodes, configurable: true });
     Object.defineProperty(globalMocks.Create, "uss", { value: globalMocks.uss, configurable: true });
     Object.defineProperty(vscode.window, "showOpenDialog", { value: globalMocks.showOpenDialog, configurable: true });
-    Object.defineProperty(vscode.workspace, "getConfiguration", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.workspace, "openTextDocument", {
         value: globalMocks.openTextDocument,
         configurable: true,
@@ -134,10 +135,6 @@ function createGlobalMocks() {
     });
     Object.defineProperty(vscode.env.clipboard, "writeText", { value: globalMocks.writeText, configurable: true });
     Object.defineProperty(globals, "ISTHEIA", { get: () => globalMocks.theia, configurable: true });
-    Object.defineProperty(globals, "LOG", { value: jest.fn(), configurable: true });
-    Object.defineProperty(globals.LOG, "debug", { value: jest.fn(), configurable: true });
-    Object.defineProperty(globals.LOG, "error", { value: jest.fn(), configurable: true });
-    Object.defineProperty(globals.LOG, "warn", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode, "ProgressLocation", { value: globalMocks.ProgressLocation, configurable: true });
     Object.defineProperty(vscode.workspace, "applyEdit", { value: jest.fn(), configurable: true });
     Object.defineProperty(Profiles, "getInstance", {
@@ -156,11 +153,6 @@ function createGlobalMocks() {
             };
         }),
     });
-    Object.defineProperty(ZoweLogger, "error", { value: jest.fn(), configurable: true });
-    Object.defineProperty(ZoweLogger, "debug", { value: jest.fn(), configurable: true });
-    Object.defineProperty(ZoweLogger, "warn", { value: jest.fn(), configurable: true });
-    Object.defineProperty(ZoweLogger, "info", { value: jest.fn(), configurable: true });
-    Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
 
     return globalMocks;
 }
@@ -376,16 +368,12 @@ describe("USS Action Unit Tests - Function deleteFromDisk", () => {
     });
 
     it("should catch the error when thrown", () => {
-        const globalsLogWarnSpy = jest.fn();
         jest.spyOn(fs, "existsSync").mockReturnValue(true);
         jest.spyOn(fs, "unlinkSync").mockImplementation(() => {
             throw new Error();
         });
-        Object.defineProperty(ZoweLogger, "warn", {
-            value: globalsLogWarnSpy,
-        });
         ussNodeActions.deleteFromDisk(null, "some/where/that/does/not/exist");
-        expect(globalsLogWarnSpy).toBeCalledTimes(1);
+        expect(ZoweLogger.warn).toBeCalledTimes(1);
     });
 });
 

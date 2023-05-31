@@ -37,6 +37,7 @@ import { createIJobObject, createJobsTree } from "../../__mocks__/mockCreators/j
 import * as path from "path";
 import { SettingsConfig } from "../../src/utils/SettingsConfig";
 import { ZoweLogger } from "../../src/utils/LoggerUtils";
+jest.mock("../../src/utils/LoggerUtils");
 
 jest.mock("child_process");
 jest.mock("fs");
@@ -104,7 +105,6 @@ async function createGlobalMocks() {
         }),
         configurable: true,
     });
-    Object.defineProperty(globals, "LOG", { value: newMocks.mockLog, configurable: true });
     Object.defineProperty(vscode.window, "createInputBox", { value: newMocks.mockCreateInputBox, configurable: true });
     Object.defineProperty(zowe.ZosmfSession, "createSessCfgFromArgs", {
         value: newMocks.mockCreateSessCfgFromArgs,
@@ -112,21 +112,12 @@ async function createGlobalMocks() {
     });
     Object.defineProperty(globals, "ISTHEIA", { get: () => false, configurable: true });
     Object.defineProperty(vscode.window, "createTreeView", { value: jest.fn(), configurable: true });
-    Object.defineProperty(vscode.workspace, "getConfiguration", {
-        value: newMocks.mockGetConfiguration,
-        configurable: true,
-    });
     Object.defineProperty(vscode, "ConfigurationTarget", {
         value: newMocks.mockConfigurationTarget,
         configurable: true,
     });
     Object.defineProperty(vscode, "ProgressLocation", { value: newMocks.ProgressLocation, configurable: true });
     Object.defineProperty(vscode.window, "withProgress", { value: newMocks.withProgress, configurable: true });
-    Object.defineProperty(ZoweLogger, "error", { value: jest.fn(), configurable: true });
-    Object.defineProperty(ZoweLogger, "debug", { value: jest.fn(), configurable: true });
-    Object.defineProperty(ZoweLogger, "warn", { value: jest.fn(), configurable: true });
-    Object.defineProperty(ZoweLogger, "info", { value: jest.fn(), configurable: true });
-    Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
 
     newMocks.mockProfileInstance = new Profiles(newMocks.log);
     Object.defineProperty(Profiles, "CreateInstance", {
@@ -264,14 +255,12 @@ describe("Profiles Unit Tests - Function createZoweSession", () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
         const spy = jest.spyOn(Gui, "createQuickPick");
-        const spyDebug = jest.spyOn(ZoweLogger, "debug");
         jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(undefined);
         await Profiles.getInstance().createZoweSession(blockMocks.testDatasetTree);
         expect(spy).toBeCalled();
         expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Profile selection has been cancelled.");
-        expect(spyDebug).toBeCalledWith("Profile selection has been cancelled.");
+        expect(ZoweLogger.debug).toBeCalledWith("Profile selection has been cancelled.");
         spy.mockClear();
-        spyDebug.mockClear();
     });
 
     it("Tests that createZoweSession runs successfully", async () => {
@@ -300,11 +289,9 @@ describe("Profiles Unit Tests - Function createZoweSession", () => {
         } as any);
         jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(new utils.FilterDescriptor("Test"));
         jest.spyOn(Profiles.getInstance(), "getProfileInfo").mockRejectedValueOnce(new Error("test error"));
-        const warnSpy = jest.spyOn(ZoweLogger, "warn");
         await expect(Profiles.getInstance().createZoweSession(globalMocks.testUSSTree)).resolves.not.toThrow();
-        expect(warnSpy).toBeCalledTimes(1);
-        expect(warnSpy).toBeCalledWith(Error("test error"));
-        warnSpy.mockClear();
+        expect(ZoweLogger.warn).toBeCalledTimes(1);
+        expect(ZoweLogger.warn).toBeCalledWith(Error("test error"));
     });
 });
 
@@ -925,7 +912,6 @@ describe("Profiles Unit Tests - function getProfileSetting", () => {
 describe("Profiles Unit Tests - function disableValidationContext", () => {
     it("should disable validation context and return updated node", async () => {
         const globalMocks = await createGlobalMocks();
-        const spy = jest.spyOn(ZoweLogger, "trace");
         const testNode = new (ZoweTreeNode as any)(
             "test",
             vscode.TreeItemCollapsibleState.None,
@@ -937,15 +923,13 @@ describe("Profiles Unit Tests - function disableValidationContext", () => {
         const expectNode = testNode;
         expectNode.contextValue = globals.VALIDATE_SUFFIX + "false";
         await expect(Profiles.getInstance().disableValidationContext(testNode)).toEqual(expectNode);
-        expect(spy).toBeCalled();
-        spy.mockClear();
+        expect(ZoweLogger.trace).toBeCalled();
     });
 });
 
 describe("Profiles Unit Tests - function enableValidationContext", () => {
     it("should enable validation context and return updated node", async () => {
         const globalMocks = await createGlobalMocks();
-        const spy = jest.spyOn(ZoweLogger, "trace");
         const testNode = new (ZoweTreeNode as any)(
             "test",
             vscode.TreeItemCollapsibleState.None,
@@ -957,8 +941,7 @@ describe("Profiles Unit Tests - function enableValidationContext", () => {
         const expectedNode = testNode;
         expectedNode.contextValue = globals.VALIDATE_SUFFIX + "true";
         await expect(Profiles.getInstance().enableValidationContext(testNode)).toEqual(expectedNode);
-        expect(spy).toBeCalled();
-        spy.mockClear();
+        expect(ZoweLogger.trace).toBeCalled();
     });
 });
 
@@ -1011,10 +994,8 @@ describe("Profiles Unit Tests - function ssoLogin", () => {
             },
             login: () => "ajshdlfkjshdalfjhas",
         } as never);
-        const warnSpy = jest.spyOn(ZoweLogger, "warn");
         await expect(Profiles.getInstance().ssoLogin(testNode, "fake")).resolves.not.toThrow();
-        expect(warnSpy).toBeCalledWith(Error("test error."));
-        warnSpy.mockClear();
+        expect(ZoweLogger.warn).toBeCalledWith(Error("test error."));
     });
     it("should catch error during login and log error", async () => {
         jest.spyOn(ZoweExplorerApiRegister.getInstance(), "getCommonApi").mockReturnValueOnce({
@@ -1024,10 +1005,8 @@ describe("Profiles Unit Tests - function ssoLogin", () => {
             },
         } as never);
         jest.spyOn(Profiles.getInstance() as any, "loginCredentialPrompt").mockReturnValue(["fake", "12345"]);
-        const errorSpy = jest.spyOn(ZoweLogger, "error");
         await expect(Profiles.getInstance().ssoLogin(testNode, "fake")).resolves.not.toThrow();
-        expect(errorSpy).toBeCalled();
-        errorSpy.mockClear();
+        expect(ZoweLogger.error).toBeCalled();
     });
 });
 

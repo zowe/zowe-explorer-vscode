@@ -21,6 +21,8 @@ import { SettingsConfig } from "../../../src/utils/SettingsConfig";
 import { Gui } from "@zowe/zowe-explorer-api";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 
+jest.mock("../../../src/utils/LoggerUtils");
+
 jest.mock("fs");
 jest.mock("fs", () => ({
     existsSync: jest.fn(() => true),
@@ -48,20 +50,11 @@ describe("TempFolder Unit Tests", () => {
             unixPath: "testpath12/temp",
             unixPath2: "testpath123/temp",
         };
-        Object.defineProperty(vscode.workspace, "getConfiguration", {
-            value: jest.fn(),
-            configurable: true,
-        });
         Object.defineProperty(SettingsConfig, "getDirectValue", {
             value: jest.fn(),
             configurable: true,
         });
         Object.defineProperty(Gui, "showMessage", { value: jest.fn() });
-        Object.defineProperty(globals, "LOG", { value: jest.fn(), configurable: true });
-        Object.defineProperty(globals.LOG, "error", { value: jest.fn(), configurable: true });
-        Object.defineProperty(ZoweLogger, "error", { value: jest.fn(), configurable: true });
-        Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
-        Object.defineProperty(ZoweLogger, "info", { value: jest.fn(), configurable: true });
         jest.spyOn(ProfileUtils, "errorHandling").mockImplementationOnce(jest.fn());
         return newMocks;
     }
@@ -86,11 +79,9 @@ describe("TempFolder Unit Tests", () => {
             throw ERROR_EXAMPLE;
         });
         const errorMessageSpy = jest.spyOn(Gui, "errorMessage").mockImplementation();
-        const globalsLogErrorSpy = jest.fn();
-        Object.defineProperty(ZoweLogger, "error", { value: globalsLogErrorSpy, configurable: true });
         await expect(TempFolder.moveTempFolder("testpath32", "testpath123")).resolves.toEqual(undefined);
         expect(errorMessageSpy).toBeCalledTimes(1);
-        expect(globalsLogErrorSpy).toBeCalledTimes(1);
+        expect(ZoweLogger.error).toBeCalledTimes(1);
     });
 
     it("moveTempFolder should throw errors when a filesystem exception occurs", async () => {
@@ -102,7 +93,7 @@ describe("TempFolder Unit Tests", () => {
             await TempFolder.moveTempFolder("testpath1", "testpath2");
         } catch (err) {
             expect(ProfileUtils.errorHandling).toHaveBeenCalledWith(err, null, "Error encountered when creating temporary folder! " + err.message);
-            expect(globals.LOG.error).toHaveBeenCalledWith("Error encountered when creating temporary folder! {}");
+            expect(ZoweLogger.error).toHaveBeenCalledWith("Error encountered when creating temporary folder! {}");
         }
     });
 
@@ -122,7 +113,7 @@ describe("TempFolder Unit Tests", () => {
         try {
             await TempFolder.cleanTempDir();
         } catch (err) {
-            expect(globals.LOG.error).toHaveBeenCalledWith(err);
+            expect(ZoweLogger.error).toHaveBeenCalledWith(err);
             expect(Gui.showMessage).toHaveBeenCalledWith("Unable to delete temporary folder. example cleanDir error");
         }
     });

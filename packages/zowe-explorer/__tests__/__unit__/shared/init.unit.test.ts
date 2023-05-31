@@ -26,6 +26,8 @@ import { saveUSSFile } from "../../../src/uss/actions";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 import { ZoweSaveQueue } from "../../../src/abstract/ZoweSaveQueue";
 
+jest.mock("../../../src/utils/LoggerUtils");
+
 describe("Test src/shared/extension", () => {
     describe("registerCommonCommands", () => {
         const executeCommand = { fun: jest.fn() };
@@ -65,7 +67,6 @@ describe("Test src/shared/extension", () => {
                 name: "onDidChangeConfiguration:1",
                 mock: [
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [globals.SETTINGS_LOGS_FOLDER_PATH], ret: true },
-                    { spy: jest.spyOn(globals, "initLogger"), arg: [test.value] },
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [globals.SETTINGS_TEMP_FOLDER_PATH], ret: false },
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [globals.SETTINGS_AUTOMATIC_PROFILE_VALIDATION], ret: false },
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [globals.SETTINGS_TEMP_FOLDER_HIDE], ret: false },
@@ -77,7 +78,7 @@ describe("Test src/shared/extension", () => {
                 mock: [
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [globals.SETTINGS_LOGS_FOLDER_PATH], ret: false },
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [globals.SETTINGS_TEMP_FOLDER_PATH], ret: true },
-                    { spy: jest.spyOn(tempFolder, "moveTempFolder"), arg: [undefined, test.value] },
+                    { spy: jest.spyOn(tempFolder, "moveTempFolder"), arg: ["/some/old/temp/location", undefined] },
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [globals.SETTINGS_AUTOMATIC_PROFILE_VALIDATION], ret: false },
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [globals.SETTINGS_TEMP_FOLDER_HIDE], ret: false },
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [globals.SETTINGS_SECURE_CREDENTIALS_ENABLED], ret: false },
@@ -217,17 +218,11 @@ describe("Test src/shared/extension", () => {
             };
             Object.defineProperty(vscode.commands, "registerCommand", { value: registerCommand });
             Object.defineProperty(vscode.workspace, "onDidChangeConfiguration", { value: onDidChangeConfiguration });
-            Object.defineProperty(vscode.workspace, "getConfiguration", { value: () => ({ get: jest.fn().mockReturnValue(test.value) }) });
             Object.defineProperty(zowe, "getZoweDir", { value: () => test.value });
             Object.defineProperty(vscode.commands, "executeCommand", { value: executeCommand.fun });
-            Object.defineProperty(globals, "LOG", { value: testGlobals.LOG });
             Object.defineProperty(globals, "DS_DIR", { value: testGlobals.DS_DIR });
             Object.defineProperty(globals, "USS_DIR", { value: testGlobals.USS_DIR });
-            Object.defineProperty(ZoweLogger, "error", { value: jest.fn(), configurable: true });
-            Object.defineProperty(ZoweLogger, "debug", { value: jest.fn(), configurable: true });
-            Object.defineProperty(ZoweLogger, "warn", { value: jest.fn(), configurable: true });
-            Object.defineProperty(ZoweLogger, "info", { value: jest.fn(), configurable: true });
-            Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
+            Object.defineProperty(globals, "SETTINGS_TEMP_FOLDER_LOCATION", { value: "/some/old/temp/location" });
             Object.defineProperty(vscode.workspace, "onDidSaveTextDocument", { value: onDidSaveTextDocument });
 
             spyOnSubscriptions(commands);
@@ -256,7 +251,6 @@ describe("Test src/shared/extension", () => {
                 },
             });
             Object.defineProperty(vscode.commands, "executeCommand", { value: spyExecuteCommand });
-            Object.defineProperty(globals, "LOG", { value: { error: spyLogError } });
             sharedExtension.registerRefreshCommand(context, activate, deactivate);
         });
 

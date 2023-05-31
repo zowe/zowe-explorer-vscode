@@ -13,10 +13,10 @@ import SpoolProvider, { decodeJobFile, encodeJobFile, SpoolFile, matchSpool, get
 import * as zowe from "@zowe/cli";
 import * as vscode from "vscode";
 import { Profiles } from "../../src/Profiles";
-import { ZoweLogger } from "../../src/utils/LoggerUtils";
 import { createIProfile, createISessionWithoutCredentials } from "../../__mocks__/mockCreators/shared";
 import { bindJesApi, createJesApi } from "../../__mocks__/mockCreators/api";
 import { createJobSessionNode } from "../../__mocks__/mockCreators/jobs";
+jest.mock("../../src/utils/LoggerUtils");
 
 describe("SpoolProvider Unit Tests", () => {
     const iJobFile: zowe.IJobFile = {
@@ -82,7 +82,6 @@ describe("SpoolProvider Unit Tests", () => {
             };
         }),
     });
-    Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
 
     afterEach(() => {
         jest.resetAllMocks();

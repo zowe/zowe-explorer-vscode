@@ -12,11 +12,6 @@
 import { SettingsConfig } from "../../../src/utils/SettingsConfig";
 import * as vscode from "vscode";
 import { Gui } from "@zowe/zowe-explorer-api";
-import { ZoweLogger } from "../../../src/utils/LoggerUtils";
-
-beforeEach(() => {
-    Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
-});
 
 afterEach(() => {
     jest.clearAllMocks();
@@ -56,6 +51,13 @@ describe("SettingsConfig Unit Tests - function promptReload", () => {
     it("should trigger a reload when prompted", async () => {
         const privateSettingsConfig = SettingsConfig as any;
         jest.spyOn(Gui, "showMessage").mockResolvedValueOnce("Reload Window");
+        jest.spyOn(vscode.workspace, "getConfiguration").mockReturnValueOnce({
+            get: jest.fn(),
+            inspect: () => ({
+                globalValue: "test",
+            }),
+            update: jest.fn(),
+        } as any);
         const executeCommandSpy = jest.spyOn(vscode.commands, "executeCommand");
         await expect(privateSettingsConfig.promptReload()).resolves.toEqual(undefined);
         expect(executeCommandSpy).toHaveBeenCalledWith("workbench.action.reloadWindow");
@@ -65,33 +67,42 @@ describe("SettingsConfig Unit Tests - function promptReload", () => {
 describe("SettingsConfig Unit Tests - function standardizeGlobalSettings", () => {
     it("should standardize the global settings", async () => {
         const privateSettingsConfig = SettingsConfig as any;
-        jest.spyOn(vscode.workspace, "getConfiguration").mockReturnValue({
+        jest.spyOn(privateSettingsConfig, "configurations", "get").mockReturnValue({
+            get: jest.fn(),
             inspect: () => ({
                 globalValue: "test",
             }),
             update: jest.fn(),
+        });
+        const configSpy = jest.spyOn(vscode.workspace, "getConfiguration").mockReturnValue({
+            get: jest.fn(),
+            update: jest.fn(),
         } as any);
-
         jest.spyOn(privateSettingsConfig, "zoweOldConfigurations", "get").mockReturnValue([
             "Zowe-DS-Persistent",
             "Zowe-USS-Persistent",
             "Zowe-Jobs-Persistent",
             "Zowe-Temp-Folder-Location",
         ]);
-        await expect(privateSettingsConfig.standardizeGlobalSettings()).resolves.toEqual(undefined);
+        await expect(privateSettingsConfig.standardizeGlobalSettings()).resolves.toBe(undefined);
+        configSpy.mockRestore();
     });
 });
 
 describe("SettingsConfig Unit Tests - function standardizeWorkspaceSettings", () => {
     it("should standardize workspace settings", async () => {
         const privateSettingsConfig = SettingsConfig as any;
-        jest.spyOn(vscode.workspace, "getConfiguration").mockReturnValue({
+        jest.spyOn(privateSettingsConfig, "configurations", "get").mockReturnValue({
+            get: jest.fn(),
             inspect: () => ({
                 workspaceValue: "test",
             }),
             update: jest.fn(),
+        });
+        const configSpy = jest.spyOn(vscode.workspace, "getConfiguration").mockReturnValue({
+            get: jest.fn(),
+            update: jest.fn(),
         } as any);
-
         jest.spyOn(privateSettingsConfig, "zoweOldConfigurations", "get").mockReturnValue([
             "Zowe-DS-Persistent",
             "Zowe-USS-Persistent",
@@ -99,7 +110,8 @@ describe("SettingsConfig Unit Tests - function standardizeWorkspaceSettings", ()
             "Zowe-Temp-Folder-Location",
             "Zowe-Automatic-Validation",
         ]);
-        await expect(privateSettingsConfig.standardizeWorkspaceSettings()).resolves.toEqual(undefined);
+        await expect(privateSettingsConfig.standardizeWorkspaceSettings()).resolves.toBe(undefined);
+        configSpy.mockRestore();
     });
 });
 
@@ -111,6 +123,13 @@ describe("SettingsConfig Unit Tests - function standardizeSettings", () => {
         });
         jest.spyOn(SettingsConfig as any, "currentVersionNumber", "get").mockReturnValue("vtest");
         jest.spyOn(SettingsConfig as any, "zoweOldConfigurations", "get").mockReturnValue(["zowe.settings.test"]);
+        jest.spyOn(vscode.workspace, "getConfiguration").mockReturnValueOnce({
+            get: jest.fn(),
+            inspect: () => ({
+                globalValue: "test",
+            }),
+            update: jest.fn(),
+        } as any);
     });
 
     it("should standardize workspace settings if not migrated and workspace is open", async () => {

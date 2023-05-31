@@ -145,7 +145,7 @@ describe("ZosmfUssApi", () => {
             configurable: true,
         });
 
-        expect(api.copy("/")).toStrictEqual(Promise.resolve(zowe.Utilities.putUSSPayload(api.getSession(), "/", { request: "copy" })));
+        expect(api.copy("/")).toStrictEqual(zowe.Utilities.putUSSPayload(api.getSession(), "/", { request: "copy" }));
     });
 
     it("getStatus should validate unverified profile", async () => {

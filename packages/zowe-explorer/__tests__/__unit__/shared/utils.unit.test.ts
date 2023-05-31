@@ -44,7 +44,6 @@ async function createGlobalMocks() {
     };
     newMocks.mockProfilesCache = new ProfilesCache(imperative.Logger.getAppLogger());
     newMocks.mockProfileInstance = createInstanceOfProfile(createIProfile());
-    Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
     Object.defineProperty(Profiles, "CreateInstance", {
         value: () => newMocks.mockProfileInstance,
         configurable: true,
@@ -128,9 +127,13 @@ describe("syncSessionNode shared util function", () => {
             value: jest.fn().mockReturnValue(createIProfile()),
         });
         const expectedSession = new imperative.Session({});
-        const sessionForProfile = () => new imperative.Session({});
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+        const sessionForProfile = (_profile) =>
+            ({
+                getSession: () => new imperative.Session({}),
+            } as any);
         // when
-        await utils.syncSessionNode(Profiles.getInstance())(sessionForProfile)(sessionNode);
+        await utils.syncSessionNode(sessionForProfile, sessionNode);
         expect(await sessionNode.getSession()).toEqual(expectedSession);
         expect(await sessionNode.getProfile()).toEqual(createIProfile());
         expect(sessionNode.collapsibleState).toEqual(vscode.TreeItemCollapsibleState.Collapsed);
@@ -144,8 +147,12 @@ describe("syncSessionNode shared util function", () => {
         );
         profiles.getBaseProfile = jest.fn(() => undefined);
         // when
-        const dummyFn = () => new imperative.Session({});
-        await utils.syncSessionNode(profiles)(dummyFn)(sessionNode);
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+        const dummyFn = (_profile) =>
+            ({
+                getSession: () => new imperative.Session({}),
+            } as any);
+        await utils.syncSessionNode(dummyFn, sessionNode);
         // then
         const initialSession = sessionNode.getSession();
         const initialProfile = sessionNode.getProfile();

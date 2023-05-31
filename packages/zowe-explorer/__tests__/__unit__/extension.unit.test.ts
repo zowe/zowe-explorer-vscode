@@ -28,8 +28,8 @@ import { SettingsConfig } from "../../src/utils/SettingsConfig";
 import { ZoweExplorerExtender } from "../../src/ZoweExplorerExtender";
 import { DatasetTree } from "../../src/dataset/DatasetTree";
 import { USSTree } from "../../src/uss/USSTree";
-import { ZoweLogger } from "../../src/utils/LoggerUtils";
 import { ZoweSaveQueue } from "../../src/abstract/ZoweSaveQueue";
+jest.mock("../../src/utils/LoggerUtils");
 
 jest.mock("vscode");
 jest.mock("fs");
@@ -280,10 +280,8 @@ async function createGlobalMocks() {
         value: globalMocks.mockOnDidExpandElement,
         configurable: true,
     });
-    Object.defineProperty(vscode.workspace, "getConfiguration", {
-        value: globalMocks.mockGetConfiguration,
-        configurable: true,
-    });
+
+    jest.spyOn(vscode.workspace, "getConfiguration").mockImplementationOnce(globalMocks.mockGetConfiguration);
     Object.defineProperty(vscode.workspace, "onDidChangeConfiguration", {
         value: globalMocks.mockOnDidChangeConfiguration,
         configurable: true,
@@ -372,9 +370,6 @@ async function createGlobalMocks() {
         value: globalMocks.mockImperativeProfileInfo,
         configurable: true,
     });
-    Object.defineProperty(globals, "LOG", { value: jest.fn(), configurable: true });
-    Object.defineProperty(globals.LOG, "error", { value: jest.fn(), configurable: true });
-    Object.defineProperty(globals.LOG, "debug", { value: jest.fn(), configurable: true });
 
     // Create a mocked extension context
     const mockExtensionCreator = jest.fn(
@@ -391,13 +386,6 @@ async function createGlobalMocks() {
             } as unknown as vscode.ExtensionContext)
     );
     globalMocks.mockExtension = new mockExtensionCreator();
-
-    Object.defineProperty(ZoweLogger, "initializeZoweLogger", { value: jest.fn(), configurable: true });
-    Object.defineProperty(ZoweLogger, "error", { value: jest.fn(), configurable: true });
-    Object.defineProperty(ZoweLogger, "debug", { value: jest.fn(), configurable: true });
-    Object.defineProperty(ZoweLogger, "warn", { value: jest.fn(), configurable: true });
-    Object.defineProperty(ZoweLogger, "info", { value: jest.fn(), configurable: true });
-    Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
 
     globalMocks.mockLoadNamedProfile.mockReturnValue(globalMocks.testProfile);
     globalMocks.mockCreateSessCfgFromArgs.mockReturnValue(globalMocks.testSession.ISession);
@@ -519,10 +507,6 @@ describe("Extension Unit Tests", () => {
         const spyAwaitAllSaves = jest.spyOn(ZoweSaveQueue, "all");
         const spyCleanTempDir = jest.spyOn(tempFolderUtils, "cleanTempDir");
         spyCleanTempDir.mockImplementation(jest.fn());
-        Object.defineProperty(ZoweLogger, "disposeZoweLogger", {
-            value: jest.fn(),
-            configurable: true,
-        });
         await extension.deactivate();
         expect(spyAwaitAllSaves).toHaveBeenCalled();
         expect(spyCleanTempDir).toHaveBeenCalled();
@@ -545,6 +529,19 @@ describe("Extension Unit Tests", () => {
     }
 
     it("zowe.ds.removeSession", async () => {
+        globalMocks.mockGetConfiguration.mockReturnValueOnce({
+            persistence: true,
+            get: (setting: string) => {
+                return [];
+            },
+            update: jest.fn(),
+            inspect: (_configuration: string) => {
+                return {
+                    workspaceValue: undefined,
+                    globalValue: undefined,
+                };
+            },
+        });
         await removeSessionTest("zowe.ds.removeSession", globals.DS_SESSION_CONTEXT, DatasetTree);
     });
 
