@@ -319,7 +319,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
         }
     } catch (err) {
         // TODO: error handling must not be zosmf specific
-        const errorMessage = err?.message ? err.message : err.toString();
+        const errorMessage = err ? err.message : err.toString();
         if (errorMessage.includes("Rest API failure with HTTP(S) status 412")) {
             // if (globals.ISTHEIA) {
             //     willForceUpload(node, doc, remote, node.getProfile(), binary, returnEtag);
