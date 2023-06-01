@@ -21,6 +21,8 @@ import * as nls from "vscode-nls";
 import { IZosFilesResponse, imperative } from "@zowe/cli";
 import { IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
 import { ZoweLogger } from "../utils/LoggerUtils";
+import { isTypeUssTreeNode } from "./context";
+import { markDocumentUnsaved } from "../utils/workspace";
 
 // Set up localization
 nls.config({
@@ -358,11 +360,7 @@ export async function compareFileContent(
     binary?: boolean,
     profile?: imperative.IProfileLoaded
 ): Promise<void> {
-    const oldDoc = doc;
-    const oldDocText = oldDoc.getText();
-    const startPosition = oldDoc.lineAt(0).range.start;
-    const endPosition = oldDoc.lineAt(oldDoc.lineCount - 1).range.end;
-    const deleteRange = new vscode.Range(startPosition, endPosition);
+    await markDocumentUnsaved(doc);
     const prof = node ? node.getProfile() : profile;
     let downloadResponse;
 
@@ -382,22 +380,11 @@ export async function compareFileContent(
             responseTimeout: prof.profile?.responseTimeout,
         });
     }
-    ZoweLogger.warn(localize("saveFile.etagMismatch.log.warning", "Remote file has changed. Presented with way to resolve file."));
-    const editor = vscode.window.activeTextEditor;
-    if (editor) {
-        // Store document in a separate variable, to be used on merge conflict
-        await editor.edit((editBuilder) => {
-            editBuilder.replace(deleteRange, oldDocText);
-        });
-    }
+    ZoweLogger.warn(localize("saveFile.etagMismatch.log.warning", "Remote file has changed. Presenting with way to resolve file."));
     vscode.commands.executeCommand("workbench.files.action.compareWithSaved");
     // re-assign etag, so that it can be used with subsequent requests
     const downloadEtag = downloadResponse?.apiResponse?.etag;
     if (node && downloadEtag !== node.getEtag()) {
         node.setEtag(downloadEtag);
     }
-}
-
-export function isTypeUssTreeNode(node): node is IZoweUSSTreeNode {
-    return (node as IZoweUSSTreeNode).getUSSDocumentFilePath !== undefined;
 }

@@ -12,6 +12,7 @@
 import * as globals from "../globals";
 import { TreeItem } from "vscode";
 import { IZoweTreeNode } from "@zowe/zowe-explorer-api";
+import { IZoweUSSTreeNode } from "@zowe/zowe-explorer-api";
 
 /**
  *
@@ -455,4 +456,13 @@ export function isValidationEnabled(node: TreeItem): boolean {
  */
 export function isJobsSession(node: TreeItem): boolean {
     return new RegExp("^(" + globals.JOBS_SESSION_CONTEXT + ")").test(node.contextValue);
+}
+
+/**
+ * Helper function which identifies if the node is part of the USS tree view
+ * @param node
+ * @return true if part of the USS tree, false otherwise
+ */
+export function isTypeUssTreeNode(node): node is IZoweUSSTreeNode {
+    return (node as IZoweUSSTreeNode).getUSSDocumentFilePath !== undefined;
 }
