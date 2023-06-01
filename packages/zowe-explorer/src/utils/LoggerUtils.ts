@@ -13,6 +13,7 @@
 
 import { Gui, MessageSeverity, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import * as zowe from "@zowe/cli";
+import * as globals from "../globals";
 import * as vscode from "vscode";
 import * as nls from "vscode-nls";
 import { join as joinPath } from "path";

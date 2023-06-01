@@ -226,6 +226,11 @@ describe("USSTree Unit Tests - Function USSTree.initializeFavorites()", () => {
 describe("USSTree Unit Tests - Function initializeFavChildNodeForProfile()", () => {
     it("Tests initializeFavChildNodeForProfile() for favorited search", async () => {
         createGlobalMocks();
+
+        jest.spyOn(PersistentFilters.prototype, "readFavorites").mockReturnValueOnce([
+            "[test]: /u/aDir{directory}",
+            "[test]: /u/myFile.txt{textFile}",
+        ]);
         const testTree1 = await createUSSTree();
         const favProfileNode = testTree1.mFavorites[0];
         const label = "/u/fakeuser";

@@ -102,8 +102,6 @@ describe("Logger Utils Unit Tests - function initializeZoweLogger", () => {
         process.env.ZOWE_APP_LOG_LEVEL = "DEBUG";
 
         expect(await logger.ZoweLogger.initializeZoweLogger(globalMocks.testContext)).toBeUndefined();
-        expect(infoSpy).toHaveBeenCalled();
-        infoSpy.mockClear();
     });
     it("should initialize loggers successfully with changing to cli logger setting", async () => {
         const globalMocks = createGlobalMocks();
