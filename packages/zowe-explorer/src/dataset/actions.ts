@@ -1494,11 +1494,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
                 setFileSaved(true);
             }
         } else if (!uploadResponse.success && uploadResponse.commandResponse.includes("Rest API failure with HTTP(S) status 412")) {
-            // if (globals.ISTHEIA) {
-            //     willForceUpload(node, doc, label, node ? node.getProfile() : profile);
-            // } else {
             await compareFileContent(doc, node, label, null, profile);
-            // }
         } else {
             await markDocumentUnsaved(doc);
             api.Gui.errorMessage(uploadResponse.commandResponse);
