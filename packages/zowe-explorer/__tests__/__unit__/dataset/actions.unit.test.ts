@@ -2272,7 +2272,7 @@ describe("Dataset Actions Unit Tests - Function pasteMember", () => {
         });
         clipboard.writeText("INVALID");
 
-        await expect(dsActions.pasteMember(node, blockMocks.testDatasetTree)).rejects.toEqual(Error("Invalid paste. Copy dataset(s) first."));
+        await expect(dsActions.pasteMember(node, blockMocks.testDatasetTree)).rejects.toEqual(Error("Invalid paste. Copy data set(s) first."));
         expect(copySpy).not.toBeCalled();
     });
     it("Should not call zowe.Copy.dataSet when pasting to partitioned data set with no member name", async () => {

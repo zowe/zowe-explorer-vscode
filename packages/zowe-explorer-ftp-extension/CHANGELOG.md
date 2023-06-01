@@ -27,6 +27,8 @@ All notable changes to the "zowe-explorer-ftp-extension" extension will be docum
 
 ### Bug fixes
 
+- Renamed instances of "dataset" to "data set" for consistency across Zowe Explorer.
+
 ## `2.7.0`
 
 ### New features and enhancements

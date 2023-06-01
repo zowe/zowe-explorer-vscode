@@ -426,7 +426,7 @@ describe("USS Action Unit Tests - Function saveUSSFile", () => {
             mockGetEtag: null,
             testUSSTree: null,
             testResponse: createFileResponse({ items: [] }),
-            testDoc: createTextDocument(path.join(globals.USS_DIR, "usstest", "/u/myuser/testFile")),
+            testDoc: createTextDocument(path.join(globals.USS_DIR, "usstest", "u", "myuser", "testFile")),
             ussNode: createUSSNode(globalMocks.testSession, createIProfile()),
         };
 

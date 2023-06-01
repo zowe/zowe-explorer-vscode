@@ -38,6 +38,7 @@ import { IDataSet, IListOptions, imperative } from "@zowe/cli";
 import { validateDataSetName, validateMemberName } from "./utils";
 import { SettingsConfig } from "../utils/SettingsConfig";
 import { ZoweLogger } from "../utils/LoggerUtils";
+import { TreeViewUtils } from "../utils/TreeViewUtils";
 
 // Set up localization
 nls.config({
@@ -67,8 +68,10 @@ export async function createDatasetTree(log: imperative.Logger): Promise<Dataset
  */
 export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweDatasetTreeNode> {
     private static readonly persistenceSchema: PersistenceSchemaEnum = PersistenceSchemaEnum.Dataset;
-    private static readonly defaultDialogText: string =
-        "\uFF0B " + localize("defaultFilterPrompt.option.prompt.search", "Create a new filter. For example: HLQ.*, HLQ.aaa.bbb, HLQ.ccc.ddd(member)");
+    private static readonly defaultDialogText: string = localize(
+        "defaultFilterPrompt.option.prompt.search",
+        "$(plus) Create a new filter. For example: HLQ.*, HLQ.aaa.bbb, HLQ.ccc.ddd(member)"
+    );
     public mFavoriteSession: ZoweDatasetNode;
 
     public mSessionNodes: IZoweDatasetTreeNode[] = [];
@@ -878,7 +881,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                             placeHolder: localize("searchHistory.options.prompt", "Select a filter"),
                         };
                         // get user selection
-                        const choice = await Gui.showQuickPick([createPick, ...items], options1);
+                        const choice = await Gui.showQuickPick([createPick, globals.SEPARATORS.RECENT_FILTERS, ...items], options1);
                         if (!choice) {
                             Gui.showMessage(localize("enterPattern.pattern", "No selection made. Operation cancelled."));
                             return;
@@ -886,7 +889,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                         pattern = choice === createPick ? "" : choice.label;
                     } else {
                         const quickpick = Gui.createQuickPick();
-                        quickpick.items = [createPick, ...items];
+                        quickpick.items = [createPick, globals.SEPARATORS.RECENT_FILTERS, ...items];
                         quickpick.placeholder = localize("searchHistory.options.prompt", "Select a filter");
                         quickpick.ignoreFocusOut = true;
                         quickpick.show();
@@ -915,7 +918,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                     Gui.showMessage(localize("datasetFilterPrompt.enterPattern", "You must enter a pattern."));
                     return;
                 }
-                await this.expandSession(node, this);
+                await TreeViewUtils.expandNode(node, this);
             } else {
                 // executing search from saved search in favorites
                 pattern = node.getLabel() as string;
@@ -927,7 +930,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                     nonFaveNode.getSession().ISession.password = node.getSession().ISession.password;
                     nonFaveNode.getSession().ISession.base64EncodedAuth = node.getSession().ISession.base64EncodedAuth;
                 }
-                await this.expandSession(nonFaveNode, this);
+                await TreeViewUtils.expandNode(nonFaveNode, this);
             }
             // looking for members in pattern
             node.children = [];
@@ -1184,7 +1187,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         const options: vscode.InputBoxOptions = {
             value: beforeDataSetName,
             validateInput: (text) => {
-                return validateDataSetName(text) === true ? null : localize("dataset.validation", "Enter valid dataset name");
+                return validateDataSetName(text) === true ? null : localize("dataset.validation", "Enter a valid data set name.");
             },
         };
         let afterDataSetName = await Gui.showInputBox(options);

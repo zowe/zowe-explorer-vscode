@@ -102,7 +102,7 @@ export async function allocateLike(datasetProvider: api.IZoweTree<api.IZoweDatas
             placeHolder: localize("allocateLike.inputBox.placeHolder", "Enter the name of the data set to copy attributes from"),
             value: currSelection as string,
             validateInput: (text) => {
-                return dsUtils.validateDataSetName(text) === true ? null : localize("dataset.validation", "Enter valid dataset name");
+                return dsUtils.validateDataSetName(text) === true ? null : localize("dataset.validation", "Enter a valid data set name.");
             },
         };
         likeDSName = await api.Gui.showInputBox(inputBoxOptions);
@@ -121,7 +121,7 @@ export async function allocateLike(datasetProvider: api.IZoweTree<api.IZoweDatas
         ignoreFocusOut: true,
         placeHolder: localize("allocateLike.inputBox.placeHolder", "Enter a name for the new data set"),
         validateInput: (text) => {
-            return dsUtils.validateDataSetName(text) === true ? null : localize("dataset.validation", "Enter valid dataset name");
+            return dsUtils.validateDataSetName(text) === true ? null : localize("dataset.validation", "Enter a valid data set name.");
         },
     };
     const newDSName = await api.Gui.showInputBox(options);
@@ -565,7 +565,7 @@ export async function createFile(node: api.IZoweDatasetTreeNode, datasetProvider
             placeHolder: localize("createFile.inputBox.placeHolder", "Name of Data Set"),
             ignoreFocusOut: true,
             validateInput: (text) => {
-                return dsUtils.validateDataSetName(text) === true ? null : localize("createFile.dataset.validation", "Enter valid dataset name");
+                return dsUtils.validateDataSetName(text) === true ? null : localize("dataset.validation", "Enter a valid data set name.");
             },
         };
         dsName = await api.Gui.showInputBox(options);
@@ -1215,7 +1215,7 @@ export async function copyDataSets(node, nodeList: ZoweDatasetNode[], datasetPro
     const unique = [...new Set(selectedNodes.map((item) => item.contextValue))];
     if (unique.length > 1) {
         api.Gui.showMessage(
-            localize("copyDataSet.multitype.error", "Cannot perform the copy operation as the datasets selected have different types")
+            localize("copyDataSet.multitype.error", "Cannot perform the copy operation as the data sets selected have different types")
         );
         return;
     }
@@ -1249,7 +1249,7 @@ export async function hMigrateDataSet(node: ZoweDatasetNode): Promise<zowe.IZosF
         const { dataSetName } = dsUtils.getNodeLabels(node);
         try {
             const response = await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).hMigrateDataSet(dataSetName);
-            api.Gui.showMessage(localize("hMigrateDataSet.requestSent", "Migration of dataset {0} requested.", dataSetName));
+            api.Gui.showMessage(localize("hMigrateDataSet.requestSent", "Migration of data set {0} requested.", dataSetName));
             return response;
         } catch (err) {
             ZoweLogger.error(err);
@@ -1274,7 +1274,7 @@ export async function hRecallDataSet(node: ZoweDatasetNode): Promise<zowe.IZosFi
         const { dataSetName } = dsUtils.getNodeLabels(node);
         try {
             const response = await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).hRecallDataSet(dataSetName);
-            api.Gui.showMessage(localize("hRecallDataSet.requestSent", "Recall of dataset {0} requested.", dataSetName));
+            api.Gui.showMessage(localize("hRecallDataSet.requestSent", "Recall of data set {0} requested.", dataSetName));
             return response;
         } catch (err) {
             ZoweLogger.error(err);
@@ -1338,7 +1338,7 @@ export async function pasteMember(node: api.IZoweDatasetTreeNode, datasetProvide
                 profileName: beforeProfileName,
             } = JSON.parse(await vscode.env.clipboard.readText()));
         } catch (err) {
-            throw Error(localize("pasteMember.paste.error", "Invalid paste. Copy dataset(s) first."));
+            throw Error(localize("pasteMember.paste.error", "Invalid paste. Copy data set(s) first."));
         }
         if (node.contextValue.includes(globals.DS_PDS_CONTEXT)) {
             const inputBoxOptions: vscode.InputBoxOptions = {
@@ -1521,7 +1521,7 @@ export async function pasteDataSetMembers(datasetProvider: api.IZoweTree<api.IZo
     try {
         clipboardContent = JSON.parse(await vscode.env.clipboard.readText());
     } catch (err) {
-        api.Gui.errorMessage(localize("pasteDataSetMembers.paste.error", "Invalid paste. Copy dataset(s) first."));
+        api.Gui.errorMessage(localize("pasteDataSetMembers.paste.error", "Invalid paste. Copy data set(s) first."));
         return;
     }
     if (!Array.isArray(clipboardContent) && clipboardContent.memberName) {
@@ -1597,7 +1597,7 @@ export async function copySequentialDatasets(nodes: ZoweDatasetNode[]): Promise<
         const lbl = node.getLabel().toString();
         const mvsApi = ZoweExplorerApiRegister.getMvsApi(node.getProfile());
         if (mvsApi?.copyDataSet == null) {
-            await api.Gui.errorMessage(localize("copySequentialDatasets.notSupported.error", "Copying datasets is not supported."));
+            await api.Gui.errorMessage(localize("copySequentialDatasets.notSupported.error", "Copying data sets is not supported."));
         } else {
             await api.Gui.withProgress(
                 {
@@ -1686,18 +1686,18 @@ export async function determineReplacement(nodeProfile: zowe.imperative.IProfile
         const member = name.split("(")[1].slice(0, -1);
         const res = await mvsApi.allMembers(dsname, options);
         if (res?.success && res.apiResponse?.items.some((m) => m.member === member.toUpperCase())) {
-            q = localize("copyDataSet.replace.mem.question", "The dataset member already exists.\nDo you want to replace it?");
+            q = localize("copyDataSet.replace.mem.question", "The data set member already exists.\nDo you want to replace it?");
             replace = stringReplace === (await api.Gui.showMessage(q, { items: [stringReplace, stringCancel] }));
         }
     } else {
         const res = await mvsApi.dataSet(name, options);
         if (res?.success && res.apiResponse?.items.length > 0) {
             if (type === "ps") {
-                q = localize("copyDataSet.replace.ps.question", "The physical sequential (PS) dataset already exists.\nDo you want to replace it?");
+                q = localize("copyDataSet.replace.ps.question", "The physical sequential (PS) data set already exists.\nDo you want to replace it?");
             } else if (type === "po") {
                 q = localize(
                     "copyDataSet.replace.po.question",
-                    "The partitioned (PO) dataset already exists.\nDo you want to merge them while replacing any existing members?"
+                    "The partitioned (PO) data set already exists.\nDo you want to merge them while replacing any existing members?"
                 );
             }
             replace = stringReplace === (await api.Gui.showMessage(q, { items: [stringReplace, stringCancel] }));
@@ -1730,7 +1730,9 @@ export async function _copyProcessor(
                 value: lbl,
                 placeHolder: localize("copyProcessor.inputBox.placeHolder", "Name of Data Set"),
                 validateInput: (text) => {
-                    return dsUtils.validateDataSetName(text) && (lbl !== text) === true ? null : "Enter valid dataset name";
+                    return dsUtils.validateDataSetName(text) && (lbl !== text) === true
+                        ? null
+                        : localize("dataset.validation", "Enter a valid data set name.");
                 },
             };
 

@@ -35,7 +35,7 @@ export let DS_DIR: string;
 export let CONFIG_PATH; // set during activate
 export let ISTHEIA = false; // set during activate
 export let LOG: imperative.Logger;
-export const COMMAND_COUNT = 108;
+export const COMMAND_COUNT = 109;
 export const MAX_SEARCH_HISTORY = 5;
 export const MAX_FILE_HISTORY = 10;
 export const MS_PER_SEC = 1000;
@@ -45,7 +45,8 @@ export const FAV_SUFFIX = CONTEXT_PREFIX + "fav";
 export const HOME_SUFFIX = CONTEXT_PREFIX + "home";
 export const FAV_PROFILE_CONTEXT = "profile_fav";
 export const RC_SUFFIX = CONTEXT_PREFIX + "rc=";
-export const VALIDATE_SUFFIX = CONTEXT_PREFIX + "validate=";
+export const VALIDATE_SUFFIX = CONTEXT_PREFIX + "validate";
+export const NO_VALIDATE_SUFFIX = CONTEXT_PREFIX + "noValidate";
 export const INFORMATION_CONTEXT = "information";
 export const FAVORITE_CONTEXT = "favorite";
 export const DS_FAV_CONTEXT = "ds_fav";
@@ -275,7 +276,10 @@ export enum JobPickerTypes {
     History = "History",
 }
 
-export const plusSign = "\uFF0B ";
+export const SEPARATORS = {
+    BLANK: { kind: vscode.QuickPickItemKind.Separator, label: "" },
+    RECENT_FILTERS: { kind: vscode.QuickPickItemKind.Separator, label: localize("zowe.separator.recentFilters", "Recent Filters") },
+};
 
 /**
  * Defines all global variables
