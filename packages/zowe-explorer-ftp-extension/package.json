@@ -35,7 +35,7 @@
     "test": "yarn test:unit",
     "lint": "concurrently -n \"_eslint_,prettier\" \"eslint .\" \"prettier --check .\"",
     "lint:html": "eslint . --format html > results/eslint.html",
-    "madge": "madge -c --extensions js,ts src/ || true",
+    "madge": "madge -c --exclude __mocks__ --extensions js,ts src/ || true",
     "pretty": "prettier --write .",
     "watch": "webpack --mode development --watch --info-verbosity verbose",
     "clean": "rimraf out",

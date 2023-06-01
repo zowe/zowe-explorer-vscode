@@ -18,6 +18,7 @@ import * as nls from "vscode-nls";
 import { getZoweDir } from "@zowe/zowe-explorer-api";
 import { SettingsConfig } from "./utils/SettingsConfig";
 import { ZoweLogger } from "./utils/LoggerUtils";
+export { ZoweLogger } from "./utils/LoggerUtils";
 
 nls.config({
     messageFormat: nls.MessageFormat.bundle,
