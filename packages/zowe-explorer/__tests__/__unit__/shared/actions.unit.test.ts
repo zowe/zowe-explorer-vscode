@@ -31,6 +31,7 @@ import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
 import { getIconById, IconId, getIconByNode } from "../../../src/generators/icons";
 import * as zowe from "@zowe/cli";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
+import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
 
 async function createGlobalMocks() {
     const globalMocks = {
@@ -94,6 +95,14 @@ async function createGlobalMocks() {
     });
     Object.defineProperty(zowe, "Utilities", { value: jest.fn(), configurable: true });
     Object.defineProperty(zowe.Utilities, "isFileTagBinOrAscii", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLocalStorage, "storage", {
+        value: {
+            get: () => ({ persistence: true, favorites: [], history: [], sessions: ["zosmf"], searchHistory: [], fileHistory: [] }),
+            update: jest.fn(),
+            keys: () => [],
+        },
+        configurable: true,
+    });
 
     return globalMocks;
 }

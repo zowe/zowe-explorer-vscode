@@ -24,6 +24,7 @@ import * as fs from "fs";
 import { getZoweDir, Gui } from "@zowe/zowe-explorer-api";
 import * as profUtils from "../../src/utils/ProfilesUtils";
 import { ZoweLogger } from "../../src/utils/LoggerUtils";
+import { ZoweLocalStorage } from "../../src/utils/ZoweLocalStorage";
 jest.mock("fs");
 
 describe("ZoweExplorerExtender unit tests", () => {
@@ -60,6 +61,14 @@ describe("ZoweExplorerExtender unit tests", () => {
         });
         Object.defineProperty(vscode.window, "showTextDocument", {
             value: newMocks.mockTextDocument,
+            configurable: true,
+        });
+        Object.defineProperty(ZoweLocalStorage, "storage", {
+            value: {
+                get: () => ({ persistence: true, favorites: [], history: [], sessions: ["zosmf"], searchHistory: [], fileHistory: [] }),
+                update: jest.fn(),
+                keys: () => [],
+            },
             configurable: true,
         });
 

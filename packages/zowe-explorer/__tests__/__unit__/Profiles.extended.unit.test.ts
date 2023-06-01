@@ -37,6 +37,7 @@ import { createIJobObject, createJobsTree } from "../../__mocks__/mockCreators/j
 import * as path from "path";
 import { SettingsConfig } from "../../src/utils/SettingsConfig";
 import { ZoweLogger } from "../../src/utils/LoggerUtils";
+import { ZoweLocalStorage } from "../../src/utils/ZoweLocalStorage";
 jest.mock("../../src/utils/LoggerUtils");
 
 jest.mock("child_process");
@@ -118,6 +119,15 @@ async function createGlobalMocks() {
     });
     Object.defineProperty(vscode, "ProgressLocation", { value: newMocks.ProgressLocation, configurable: true });
     Object.defineProperty(vscode.window, "withProgress", { value: newMocks.withProgress, configurable: true });
+
+    Object.defineProperty(ZoweLocalStorage, "storage", {
+        value: {
+            get: jest.fn(() => ({ persistence: true })),
+            update: jest.fn(),
+            keys: jest.fn(),
+        },
+        configurable: true,
+    });
 
     newMocks.mockProfileInstance = new Profiles(newMocks.log);
     Object.defineProperty(Profiles, "CreateInstance", {

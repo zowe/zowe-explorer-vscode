@@ -1,4 +1,6 @@
 {
   "standardization.reload.button": "Reload Window",
-  "standardization.reload.infoMessage": "Settings have been successfully migrated for Zowe Explorer version 2 and above. To apply these settings, please reload your VS Code window."
+  "standardization.reload.infoMessage": "Settings have been successfully migrated for Zowe Explorer version 2 and above. To apply these settings, please reload your VS Code window.",
+  "SettingsConfig.migrateToLocalStorage.migrating": "Migrating setting {0} from VS Code user settings to local storage.",
+  "SettingsConfig.migrateToLocalStorage.deleting": "Removing setting {0} from VS Code user settings."
 }

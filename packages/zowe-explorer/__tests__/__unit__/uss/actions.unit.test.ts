@@ -37,6 +37,7 @@ import * as fs from "fs";
 import { createUssApi, bindUssApi } from "../../../__mocks__/mockCreators/api";
 import * as refreshActions from "../../../src/shared/refresh";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
+import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
 
 jest.mock("../../../src/utils/LoggerUtils");
 
@@ -152,6 +153,14 @@ function createGlobalMocks() {
                 loadNamedProfile: globalMocks.mockLoadNamedProfile,
             };
         }),
+    });
+    Object.defineProperty(ZoweLocalStorage, "storage", {
+        value: {
+            get: () => ({ persistence: true, favorites: [], history: [], sessions: ["zosmf"], searchHistory: [], fileHistory: [] }),
+            update: jest.fn(),
+            keys: () => [],
+        },
+        configurable: true,
     });
 
     return globalMocks;

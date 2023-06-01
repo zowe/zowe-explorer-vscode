@@ -16,6 +16,7 @@ import { getIconById, getIconByNode, IconId } from "../../../src/generators/icon
 import { imperative } from "@zowe/cli";
 import { DatasetTree } from "../../../src/dataset/DatasetTree";
 import * as vscode from "vscode";
+import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
 
 describe("Checking icon generator's basics", () => {
     const setGlobalMocks = () => {
@@ -23,6 +24,17 @@ describe("Checking icon generator's basics", () => {
         const getConfiguration = jest.fn();
 
         Object.defineProperty(vscode.window, "createTreeView", { value: createTreeView });
+        Object.defineProperty(ZoweLocalStorage, "storage", {
+            value: {
+                get: () => ({ persistence: true, favorites: [], history: [], sessions: ["zosmf"], searchHistory: [], fileHistory: [] }),
+                update: jest.fn(),
+                keys: () => [],
+            },
+            configurable: true,
+        });
+        jest.spyOn(vscode.workspace, "getConfiguration").mockReturnValue({
+            get: jest.fn(),
+        } as any);
     };
     const generateTestSessionNode = () => {
         const session = new imperative.Session({

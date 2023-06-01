@@ -742,7 +742,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         return this.mHistory.getFileHistory();
     }
 
-    public removeFileHistory(name: string): Promise<void> {
+    public removeFileHistory(name: string): void {
         ZoweLogger.trace("DatasetTree.removeFileHistory called.");
         return this.mHistory.removeFileHistory(name);
     }

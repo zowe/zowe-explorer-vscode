@@ -32,6 +32,7 @@ import { getIconByNode } from "../../../src/generators/icons";
 import * as workspaceUtils from "../../../src/utils/workspace";
 import { createUssApi, bindUssApi } from "../../../__mocks__/mockCreators/api";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
+import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
 import { PersistentFilters } from "../../../src/PersistentFilters";
 
 async function createGlobalMocks() {
@@ -146,6 +147,21 @@ async function createGlobalMocks() {
     });
     Object.defineProperty(Profiles, "getInstance", {
         value: jest.fn().mockReturnValue(globalMocks.mockProfilesInstance),
+        configurable: true,
+    });
+    Object.defineProperty(ZoweLocalStorage, "storage", {
+        value: {
+            get: () => ({
+                persistence: true,
+                favorites: [{ children: ["test", "test2"] }],
+                history: [],
+                sessions: ["zosmf"],
+                searchHistory: [],
+                fileHistory: [],
+            }),
+            update: jest.fn(),
+            keys: () => [],
+        },
         configurable: true,
     });
 

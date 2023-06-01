@@ -29,6 +29,7 @@ import {
 } from "../../../__mocks__/mockCreators/shared";
 import * as contextually from "../../../src/shared/context";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
+import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
 
 async function createGlobalMocks() {
     const globalMocks = {
@@ -131,6 +132,14 @@ async function createGlobalMocks() {
     });
     Object.defineProperty(sessUtils, "removeSession", {
         value: jest.fn().mockImplementationOnce(() => Promise.resolve()),
+        configurable: true,
+    });
+    Object.defineProperty(ZoweLocalStorage, "storage", {
+        value: {
+            get: () => ({ persistence: true, favorites: [], history: [], sessions: ["zosmf"], searchHistory: [], fileHistory: [] }),
+            update: jest.fn(),
+            keys: () => [],
+        },
         configurable: true,
     });
 
