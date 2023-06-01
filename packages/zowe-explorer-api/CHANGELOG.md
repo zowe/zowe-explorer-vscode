@@ -11,12 +11,6 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### Bug fixes
 
-## `2.8.2`
-
-### New features and enhancements
-
-### Bug fixes
-
 ## `2.8.1`
 
 ### Bug fixes
