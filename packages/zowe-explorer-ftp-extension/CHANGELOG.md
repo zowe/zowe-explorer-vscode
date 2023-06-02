@@ -4,6 +4,8 @@ All notable changes to the "zowe-explorer-ftp-extension" extension will be docum
 
 ### New features and enhancements
 
+- Enhance throw error in zowe ftp extension. [#2143](https://github.com/zowe/vscode-extension-for-zowe/issues/2143)
+
 ### Bug fixes
 
 ## `2.8.1`

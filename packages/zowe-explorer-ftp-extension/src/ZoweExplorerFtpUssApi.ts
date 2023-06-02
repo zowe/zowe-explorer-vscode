@@ -16,11 +16,11 @@ import * as tmp from "tmp";
 import * as zowe from "@zowe/cli";
 import { IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
 
-import { Gui, ZoweExplorerApi } from "@zowe/zowe-explorer-api";
+import { ZoweExplorerApi } from "@zowe/zowe-explorer-api";
 import { CoreUtils, UssUtils, TRANSFER_TYPE_ASCII, TRANSFER_TYPE_BINARY } from "@zowe/zos-ftp-for-zowe-cli";
 import { Buffer } from "buffer";
 import { AbstractFtpApi } from "./ZoweExplorerAbstractFtpApi";
-import { ZoweLogger } from "./extension";
+import { ZoweFtpExtensionError } from "./ZoweFtpExtensionError";
 
 // The Zowe FTP CLI plugin is written and uses mostly JavaScript, so relax the rules here.
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
@@ -30,23 +30,27 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
     public async fileList(ussFilePath: string): Promise<zowe.IZosFilesResponse> {
         const result = this.getDefaultResponse();
         const session = this.getSession(this.profile);
-        if (session.ussListConnection === undefined || session.ussListConnection.connected === false) {
-            session.ussListConnection = await this.ftpClient(this.checkedProfile());
-        }
-
-        if (session.ussListConnection.connected === true) {
-            const response = await UssUtils.listFiles(session.ussListConnection, ussFilePath);
-            if (response) {
-                result.success = true;
-                result.apiResponse.items = response.map((element) => ({
-                    name: element.name,
-                    size: element.size,
-                    mtime: element.lastModified,
-                    mode: element.permissions,
-                }));
+        try {
+            if (session.ussListConnection === undefined || session.ussListConnection.connected === false) {
+                session.ussListConnection = await this.ftpClient(this.checkedProfile());
             }
+
+            if (session.ussListConnection.connected === true) {
+                const response = await UssUtils.listFiles(session.ussListConnection, ussFilePath);
+                if (response) {
+                    result.success = true;
+                    result.apiResponse.items = response.map((element) => ({
+                        name: element.name,
+                        size: element.size,
+                        mtime: element.lastModified,
+                        mode: element.permissions,
+                    }));
+                }
+            }
+            return result;
+        } catch (err) {
+            throw new ZoweFtpExtensionError(err.message);
         }
-        return result;
     }
 
     // eslint-disable-next-line @typescript-eslint/require-await, require-await
@@ -72,10 +76,11 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
                 result.commandResponse = "";
                 result.apiResponse.etag = await this.hashFile(targetFile);
             } else {
-                await Gui.errorMessage(result.commandResponse, { logger: ZoweLogger });
-                throw new Error();
+                throw new Error(result.commandResponse);
             }
             return result;
+        } catch (err) {
+            throw new ZoweFtpExtensionError(err.message);
         } finally {
             this.releaseConnection(connection);
         }
@@ -123,17 +128,13 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
         try {
             connection = await this.ftpClient(this.checkedProfile());
             if (!connection) {
-                await Gui.errorMessage(result.commandResponse, { logger: ZoweLogger });
-                throw new Error();
+                throw new Error(result.commandResponse);
             }
             // Save-Save with FTP requires loading the file first
             if (returnEtag && etag) {
                 const contentsTag = await this.getContentsTag(ussFilePath);
                 if (contentsTag && contentsTag !== etag) {
-                    await Gui.errorMessage("Save conflict. Please pull the latest content from mainframe first.", {
-                        logger: ZoweLogger,
-                    });
-                    throw new Error();
+                    throw new Error("Save conflict. Please pull the latest content from mainframe first.");
                 }
             }
             await UssUtils.uploadFile(connection, ussFilePath, transferOptions);
@@ -146,6 +147,8 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
             result.commandResponse = "File uploaded successfully.";
 
             return result;
+        } catch (err) {
+            throw new ZoweFtpExtensionError(err.message);
         } finally {
             this.releaseConnection(connection);
         }
@@ -153,25 +156,27 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
 
     public async uploadDirectory(inputDirectoryPath: string, ussDirectoryPath: string, _options: IUploadOptions): Promise<zowe.IZosFilesResponse> {
         let result = this.getDefaultResponse();
+        try {
+            // Check if inputDirectory is directory
+            if (!zowe.imperative.IO.isDir(inputDirectoryPath)) {
+                throw new ZoweFtpExtensionError("The local directory path provided does not exist.");
+            }
 
-        // Check if inputDirectory is directory
-        if (!zowe.imperative.IO.isDir(inputDirectoryPath)) {
-            await Gui.errorMessage("The local directory path provided does not exist.", { logger: ZoweLogger });
-            throw new Error();
+            // Make directory before copying inner files
+            await this.putContent(inputDirectoryPath, ussDirectoryPath);
+
+            // getting list of files from directory
+            const files = zowe.ZosFilesUtils.getFileListFromPath(inputDirectoryPath, false);
+            // TODO: this solution will not perform very well; rewrite this and putContents methods
+            for (const file of files) {
+                const relativePath = path.relative(inputDirectoryPath, file).replace(/\\/g, "/");
+                const putResult = await this.putContent(file, path.posix.join(ussDirectoryPath, relativePath));
+                result = putResult;
+            }
+            return result;
+        } catch (err) {
+            throw new ZoweFtpExtensionError(err.message);
         }
-
-        // Make directory before copying inner files
-        await this.putContent(inputDirectoryPath, ussDirectoryPath);
-
-        // getting list of files from directory
-        const files = zowe.ZosFilesUtils.getFileListFromPath(inputDirectoryPath, false);
-        // TODO: this solution will not perform very well; rewrite this and putContents methods
-        for (const file of files) {
-            const relativePath = path.relative(inputDirectoryPath, file).replace(/\\/g, "/");
-            const putResult = await this.putContent(file, path.posix.join(ussDirectoryPath, relativePath));
-            result = putResult;
-        }
-        return result;
     }
 
     public async create(ussPath: string, type: string, _mode?: string): Promise<zowe.IZosFilesResponse> {
@@ -193,10 +198,11 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
                 result.success = true;
                 result.commandResponse = "Directory or file created.";
             } else {
-                await Gui.errorMessage(result.commandResponse, { logger: ZoweLogger });
-                throw new Error();
+                throw new Error(result.commandResponse);
             }
             return result;
+        } catch (err) {
+            throw new ZoweFtpExtensionError(err.message);
         } finally {
             this.releaseConnection(connection);
         }
@@ -216,10 +222,11 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
                 result.success = true;
                 result.commandResponse = "Delete completed.";
             } else {
-                await Gui.errorMessage(result.commandResponse, { logger: ZoweLogger });
-                throw new Error();
+                throw new Error(result.commandResponse);
             }
             return result;
+        } catch (err) {
+            throw new ZoweFtpExtensionError(err.message);
         } finally {
             this.releaseConnection(connection);
         }
@@ -235,10 +242,11 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
                 result.success = true;
                 result.commandResponse = "Rename completed.";
             } else {
-                await Gui.errorMessage(result.commandResponse, { logger: ZoweLogger });
-                throw new Error();
+                throw new Error(result.commandResponse);
             }
             return result;
+        } catch (err) {
+            throw new ZoweFtpExtensionError(err.message);
         } finally {
             this.releaseConnection(connection);
         }

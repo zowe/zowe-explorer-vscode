@@ -14,8 +14,10 @@ import { AbstractFtpApi } from "../../../src/ZoweExplorerAbstractFtpApi";
 import { FtpSession } from "../../../src/ftpSession";
 import { FTPConfig, IZosFTPProfile } from "@zowe/zos-ftp-for-zowe-cli";
 import { Gui, MessageSeverity } from "@zowe/zowe-explorer-api";
+import { ZoweFtpExtensionError } from "../../../src/ZoweFtpExtensionError";
 
 jest.mock("zos-node-accessor");
+ZoweLogger.getExtensionName = jest.fn().mockReturnValue("Zowe Explorer FTP Extension");
 
 class Dummy extends AbstractFtpApi {}
 
@@ -85,14 +87,12 @@ describe("AbstractFtpApi", () => {
         try {
             await instance.getStatus(undefined, "zftp");
         } catch (err) {
-            expect(Gui.errorMessage).toHaveBeenCalledWith(
-                "Invalid Credentials. Please ensure the username and password for undefined are valid or this may lead to a lock-out.",
-                {
-                    logger: ZoweLogger,
-                }
+            expect(ZoweLogger.getExtensionName).toHaveBeenCalled();
+            expect(err.message).toContain(
+                "Invalid Credentials. Please ensure the username and password for undefined are valid or this may lead to a lock-out."
             );
             expect(err).not.toBeUndefined();
-            expect(err).toBeInstanceOf(Error);
+            expect(err).toBeInstanceOf(ZoweFtpExtensionError);
         }
     });
 
@@ -113,11 +113,10 @@ describe("AbstractFtpApi", () => {
         try {
             await instance.getStatus(undefined, "zftp");
         } catch (err) {
-            expect(Gui.errorMessage).toHaveBeenCalledWith("Something happened", {
-                logger: ZoweLogger,
-            });
+            expect(ZoweLogger.getExtensionName).toHaveBeenCalled();
+            expect(err.message).toContain("Something happened");
             expect(err).not.toBeUndefined();
-            expect(err).toBeInstanceOf(Error);
+            expect(err).toBeInstanceOf(ZoweFtpExtensionError);
         }
     });
 
