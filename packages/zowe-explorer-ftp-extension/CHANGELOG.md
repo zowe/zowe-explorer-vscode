@@ -6,6 +6,8 @@ All notable changes to the "zowe-explorer-ftp-extension" extension will be docum
 
 ### Bug fixes
 
+- Fixed an issue with mismatch etag, correcting error message sent to Zowe Explorer to trigger diff editor. [#2312](https://github.com/zowe/vscode-extension-for-zowe/issues/2312)
+
 ## `2.8.1`
 
 ### Bug fixes
