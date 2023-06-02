@@ -243,7 +243,7 @@ describe("ZoweLogger.dispose()", () => {
 describe("ZoweLogger.updateVscLoggerSetting", () => {
     it("should set the CLI logger setting", async () => {
         const testCLISetting = {};
-        const setCliLoggerSettingSpy = jest.spyOn(logger.ZoweLogger as any, "setCliLoggerSetting");
+        const setCliLoggerSettingSpy = jest.spyOn(SettingsConfig, "setCliLoggerSetting");
         const guiInfoSpy = jest.spyOn(Gui, "infoMessage");
         guiInfoSpy.mockResolvedValue("Test");
         jest.spyOn(vscode.workspace, "getConfiguration").mockReturnValue({

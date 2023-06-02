@@ -9,9 +9,9 @@
  *
  */
 
-import * as globals from "../globals";
 import * as vscode from "vscode";
 import * as nls from "vscode-nls";
+import * as globals from "../globals";
 import { Gui } from "@zowe/zowe-explorer-api";
 import { ZoweLocalStorage } from "./ZoweLocalStorage";
 
@@ -215,5 +215,13 @@ export class SettingsConfig {
             ZoweLocalStorage.setValue(globals.SETTINGS_LOCAL_STORAGE_MIGRATED, true);
             await SettingsConfig.promptReload();
         }
+    }
+
+    public static getCliLoggerSetting(): boolean {
+        return ZoweLocalStorage.getValue(globals.SETTINGS_LOGS_SETTING_PRESENTED) ?? false;
+    }
+
+    public static setCliLoggerSetting(setting: boolean): void {
+        ZoweLocalStorage.setValue(globals.SETTINGS_LOGS_SETTING_PRESENTED, setting);
     }
 }

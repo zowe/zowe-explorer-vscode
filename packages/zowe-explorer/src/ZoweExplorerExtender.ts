@@ -29,7 +29,6 @@ import {
     ZoweExplorerTreeApi,
 } from "@zowe/zowe-explorer-api";
 import { Profiles } from "./Profiles";
-import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
 import { getProfile, ProfilesUtils } from "./utils/ProfilesUtils";
 import { ZoweLogger } from "./utils/LoggerUtils";
 
@@ -197,7 +196,7 @@ export class ZoweExplorerExtender implements IApiExplorerExtender, ZoweExplorerT
         });
         // sequentially reload the internal profiles cache to satisfy all the newly added profile types
         await ZoweExplorerExtender.refreshProfilesQueue.add(async (): Promise<void> => {
-            await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
+            await Profiles.getInstance().refresh();
         });
     }
 
@@ -234,7 +233,7 @@ export class ZoweExplorerExtender implements IApiExplorerExtender, ZoweExplorerT
     public async reloadProfiles(profileType?: string): Promise<void> {
         // sequentially reload the internal profiles cache to satisfy all the newly added profile types
         await ZoweExplorerExtender.refreshProfilesQueue.add(async (): Promise<void> => {
-            await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
+            await Profiles.getInstance().refresh();
         });
         // profileType is used to load a default extender profile if no other profiles are populating the trees
         this.datasetProvider?.addSession(undefined, profileType);

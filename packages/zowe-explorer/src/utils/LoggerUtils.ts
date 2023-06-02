@@ -13,12 +13,10 @@
 
 import { Gui, MessageSeverity, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import * as zowe from "@zowe/cli";
-import * as globals from "../globals";
 import * as vscode from "vscode";
 import * as nls from "vscode-nls";
 import { join as joinPath } from "path";
 import { SettingsConfig } from "./SettingsConfig";
-import { ZoweLocalStorage } from "./ZoweLocalStorage";
 import * as loggerConfig from "../../log4jsconfig.json";
 
 // Set up localization
@@ -133,7 +131,7 @@ export class ZoweLogger {
         const cliLogSetting = this.getZoweLogEnVar();
         const zeLogSetting = this.zeLogLevel ?? this.getLogSetting();
         if (cliLogSetting && +MessageSeverity[zeLogSetting] !== +MessageSeverity[cliLogSetting]) {
-            const notified = this.getCliLoggerSetting();
+            const notified = SettingsConfig.getCliLoggerSetting();
             if (!notified) {
                 await this.updateVscLoggerSetting(cliLogSetting);
             }
@@ -155,7 +153,7 @@ export class ZoweLogger {
             if (selection === updateLoggerButton) {
                 await this.setLogSetting(cliSetting);
             }
-            this.setCliLoggerSetting(true);
+            SettingsConfig.setCliLoggerSetting(true);
         });
     }
 
@@ -165,14 +163,6 @@ export class ZoweLogger {
 
     private static getZoweLogEnVar(): string {
         return process.env.ZOWE_APP_LOG_LEVEL;
-    }
-
-    private static getCliLoggerSetting(): boolean {
-        return ZoweLocalStorage.getValue(globals.SETTINGS_LOGS_SETTING_PRESENTED) ?? false;
-    }
-
-    private static setCliLoggerSetting(setting: boolean): void {
-        ZoweLocalStorage.setValue(globals.SETTINGS_LOGS_SETTING_PRESENTED, setting);
     }
 }
 
