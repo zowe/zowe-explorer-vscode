@@ -42,10 +42,7 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 function injectAdditionalDataToTooltip(node: ZoweUSSNode, tooltip: string): string {
     ZoweLogger.trace("uss.utils.injectAdditionalDataToTooltip called.");
     if (node.downloaded && node.downloadedTime) {
-        // TODO: Add time formatter to localization so we will use not just US variant
-        return `${tooltip} (Downloaded: ${new Date(node.downloadedTime)
-            .toISOString()
-            .replace(/(\d{4})-(\d{2})-(\d{2})T((\d{2}):(\d{2}):([^Z]+))Z/, "$5:$6 $2/$3/$1")})`;
+        return `${tooltip}\n(Downloaded: ${new Date(node.downloadedTime).toLocaleString(vscode.env.language)})`;
     }
 
     return tooltip;
