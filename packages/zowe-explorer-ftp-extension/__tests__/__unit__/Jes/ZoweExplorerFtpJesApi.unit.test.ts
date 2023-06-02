@@ -95,6 +95,13 @@ describe("FtpJesApi", () => {
         expect(JesApi.releaseConnection).toBeCalled();
     });
 
+    it("should throw an error when downloading spool content if no spool files are available.", async () => {
+        const jobDetails = { jobid: "123", jobname: "JOB1" };
+        JobUtils.findJobByID = jest.fn().mockReturnValue(jobDetails);
+
+        expect(JesApi.downloadSpoolContent).rejects.toThrowError();
+    });
+
     it("should get spool content by id.", async () => {
         const response = TestUtils.getSingleLineStream();
         JobUtils.getSpoolFileContent = jest.fn().mockReturnValue(response);
@@ -134,5 +141,13 @@ describe("FtpJesApi", () => {
         await JesApi.deleteJob(mockParams.jobname, mockParams.jobid);
         expect(JobUtils.deleteJob).toBeCalledTimes(1);
         expect(JesApi.releaseConnection).toBeCalled();
+    });
+
+    it("does not support getJclForJob", () => {
+        expect(JesApi.getJclForJob({} as any)).rejects.toThrowError();
+    });
+
+    it("does not support submitJcl", () => {
+        expect(JesApi.submitJcl("", "", "")).rejects.toThrowError();
     });
 });

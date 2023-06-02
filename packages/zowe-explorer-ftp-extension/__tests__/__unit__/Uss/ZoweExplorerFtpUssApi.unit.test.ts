@@ -75,15 +75,15 @@ describe("FtpUssApi", () => {
         expect(response._readableState.buffer.head.data.toString()).toContain("Hello world");
     });
 
-    const mockUssFileParams = {
-        inputFilePath: "/tmp/testfile1.txt",
-        ussFilePath: "/a/b/c.txt",
-        etag: "123",
-        returnEtag: true,
-        options: {
-            file: "/tmp/testfile1.txt",
-        },
-    };
+    it("should throw error for getContents if connection to FTP client fails.", async () => {
+        jest.spyOn(UssApi, "ftpClient").mockReturnValueOnce(null);
+        expect(UssApi.getContents("/some/example/path", {})).rejects.toThrowError();
+    });
+
+    it("should throw error for putContent if connection to FTP client fails.", async () => {
+        jest.spyOn(UssApi, "ftpClient").mockReturnValueOnce(null);
+        expect(UssApi.putContent("/some/example/input/path", "/some/uss/path")).rejects.toThrowError();
+    });
 
     it("should upload uss files.", async () => {
         const localFile = "/tmp/testfile1.txt";

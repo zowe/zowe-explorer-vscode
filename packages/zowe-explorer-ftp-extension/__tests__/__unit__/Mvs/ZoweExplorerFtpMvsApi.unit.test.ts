@@ -14,7 +14,7 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 
 import { FtpMvsApi } from "../../../src/ZoweExplorerFtpMvsApi";
-import { DataSetUtils, FTPConfig } from "@zowe/zos-ftp-for-zowe-cli";
+import { DataSetUtils } from "@zowe/zos-ftp-for-zowe-cli";
 import TestUtils from "../utils/TestUtils";
 import * as tmp from "tmp";
 import { Gui } from "@zowe/zowe-explorer-api";
@@ -104,7 +104,6 @@ describe("FtpMvsApi", () => {
         const response2 = [{ dsname: "IBMUSER.DS2", dsorg: "PS", lrecl: 2 }];
         DataSetUtils.listDataSets = jest.fn().mockReturnValue(response2);
         DataSetUtils.uploadDataSet = jest.fn().mockReturnValue(response);
-        MvsApi.getContents = jest.fn().mockReturnValue({ apiResponse: { etag: "123" } });
         const mockParams = {
             inputFilePath: localFile,
             dataSetName: "   (IBMUSER).DS2",
@@ -175,16 +174,8 @@ describe("FtpMvsApi", () => {
             type: "file",
             options: { encoding: "" },
         };
-        jest.spyOn(FTPConfig, "connectFromArguments").mockImplementationOnce((val) => {
-            throw new Error("getContents example error");
-        });
-        try {
-            await MvsApi.getContents(mockParams.dataSetName, mockParams.options);
-        } catch (err) {
-            expect(errorMessageSpy).toHaveBeenCalledWith("Could not get a valid FTP connection.", {
-                logger: globals.LOGGER,
-            });
-        }
+        jest.spyOn(MvsApi, "ftpClient").mockReturnValueOnce(null);
+        expect(MvsApi.getContents(mockParams.dataSetName, mockParams.options)).rejects.toThrowError();
     });
 
     it("should rename dataset or dataset member.", async () => {
