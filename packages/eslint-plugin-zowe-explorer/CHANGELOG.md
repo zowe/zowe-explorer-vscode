@@ -8,6 +8,8 @@ All notable changes to the "eslint-plugin-zowe-explorer" package will be documen
 
 ## `2.8.1`
 
+### New features and enhancements
+
 ### Bug fixes
 
 - Added `no-floating-promises` rule that ignores floating thenables without a `.catch` method. [#2291](https://github.com/zowe/vscode-extension-for-zowe/issues/2291)
