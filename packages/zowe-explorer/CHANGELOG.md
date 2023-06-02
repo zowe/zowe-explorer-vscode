@@ -7,6 +7,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 ### New features and enhancements
 
 - Added "Cancel Job" feature for job nodes in Jobs tree view. [#2251](https://github.com/zowe/vscode-extension-for-zowe/issues/2251)
+- Enhanced ID generation for parent tree nodes to ensure uniqueness.
 
 ### Bug fixes
 
