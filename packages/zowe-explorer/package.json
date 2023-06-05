@@ -1919,7 +1919,7 @@
     "test": "yarn test:unit",
     "vscode:prepublish": "gulp build && webpack --mode production && yarn updateStrings && yarn run compile-web",
     "updateStrings": "node ../../scripts/stringUpdateScript.js && prettier --write --loglevel warn ./i18n package.nls*",
-    "package": "vsce package --allow-star-activation --yarn && node ../../scripts/mv-pack.js vscode-extension-for-zowe vsix",
+    "package": "vsce package --yarn && node ../../scripts/mv-pack.js vscode-extension-for-zowe vsix",
     "license": "node ../../scripts/updateLicenses.js",
     "watch": "gulp build && webpack --mode development --watch --info-verbosity verbose",
     "compile": "tsc -b",
