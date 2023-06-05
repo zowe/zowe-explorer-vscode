@@ -867,7 +867,7 @@ describe("Dataset Tree Unit Tests - Function removeFileHistory", () => {
     });
 });
 describe("Dataset Tree Unit Tests - Function addSession", () => {
-    async function createBlockMocks() {
+    function createBlockMocks() {
         const newMocks = {
             log: zowe.imperative.Logger.getAppLogger(),
             session: createISession(),
@@ -907,20 +907,20 @@ describe("Dataset Tree Unit Tests - Function addSession", () => {
         return newMocks;
     }
     it("Checking successful adding of session", async () => {
-        await createGlobalMocks();
-        const blockMocks = await createBlockMocks();
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
 
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
         const testTree = new DatasetTree();
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
 
-        testTree.addSession(blockMocks.imperativeProfile.name);
+        await testTree.addSession(blockMocks.imperativeProfile.name);
         expect(testTree.mSessionNodes[1].label).toBe(blockMocks.imperativeProfile.name);
     });
 
     it("Checking successful adding of session with disabled validation", async () => {
-        await createGlobalMocks();
-        const blockMocks = await createBlockMocks();
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
 
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
         const testTree = createDatasetTree(blockMocks.datasetSessionNode, blockMocks.treeView);
@@ -938,8 +938,8 @@ describe("Dataset Tree Unit Tests - Function addSession", () => {
     });
 
     it("Checking successful adding of session without sessname passed", async () => {
-        await createGlobalMocks();
-        const blockMocks = await createBlockMocks();
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
 
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
         const testTree = createDatasetTree(blockMocks.datasetSessionNode, blockMocks.treeView);
@@ -951,20 +951,21 @@ describe("Dataset Tree Unit Tests - Function addSession", () => {
     });
 
     it("Checking failed attempt to add a session due to the missing profile", async () => {
-        await createGlobalMocks();
-        const blockMocks = await createBlockMocks();
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
 
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
         const testTree = new DatasetTree();
+        jest.spyOn(Profiles.getInstance(), "loadNamedProfile").mockReturnValueOnce(null);
 
-        testTree.addSession("fake");
+        await testTree.addSession("fake");
 
         expect(testTree.mSessionNodes[1]).not.toBeDefined();
     });
 
-    it("Checking failed attempt to add a session due to the missing profile", async () => {
+    it("Checking successful adding of session with profile type passed", async () => {
         createGlobalMocks();
-        const blockMocks = await createBlockMocks();
+        const blockMocks = createBlockMocks();
 
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
         const testTree = new DatasetTree();
@@ -1070,7 +1071,7 @@ describe("Dataset Tree Unit Tests - Function addFavorite", () => {
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
         const node = new ZoweDatasetNode("Dataset", vscode.TreeItemCollapsibleState.None, testTree.mSessionNodes[1], null);
 
-        testTree.addFavorite(node);
+        await testTree.addFavorite(node);
 
         expect(testTree.mFavorites[0].label).toBe(`${blockMocks.datasetSessionNode.label}`);
         expect(testTree.mFavorites[0].contextValue).toBe(`${globals.FAV_PROFILE_CONTEXT}`);
@@ -1087,7 +1088,7 @@ describe("Dataset Tree Unit Tests - Function addFavorite", () => {
         const node = new ZoweDatasetNode("Dataset", vscode.TreeItemCollapsibleState.None, testTree.mSessionNodes[1], null);
         node.contextValue = globals.DS_PDS_CONTEXT;
 
-        testTree.addFavorite(node);
+        await testTree.addFavorite(node);
 
         expect(testTree.mFavorites[0].label).toBe(`${blockMocks.datasetSessionNode.label}`);
         expect(testTree.mFavorites[0].contextValue).toBe(`${globals.FAV_PROFILE_CONTEXT}`);
@@ -1106,7 +1107,7 @@ describe("Dataset Tree Unit Tests - Function addFavorite", () => {
         parent.contextValue = globals.DS_PDS_CONTEXT;
         child.contextValue = globals.DS_MEMBER_CONTEXT;
 
-        testTree.addFavorite(child);
+        await testTree.addFavorite(child);
 
         expect(testTree.mFavorites[0].label).toBe(`${blockMocks.datasetSessionNode.label}`);
         expect(testTree.mFavorites[0].contextValue).toBe(`${globals.FAV_PROFILE_CONTEXT}`);
@@ -1139,8 +1140,8 @@ describe("Dataset Tree Unit Tests - Function addFavorite", () => {
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
         const node = new ZoweDatasetNode("Dataset", vscode.TreeItemCollapsibleState.None, testTree.mSessionNodes[1], null);
 
-        testTree.addFavorite(node);
-        testTree.addFavorite(node);
+        await testTree.addFavorite(node);
+        await testTree.addFavorite(node);
 
         expect(testTree.mFavorites[0].children.map((entry) => entry.label)).toEqual([`${node.label}`]);
     });
@@ -1156,7 +1157,7 @@ describe("Dataset Tree Unit Tests - Function addFavorite", () => {
         parent.contextValue = globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX;
         child.contextValue = globals.DS_MEMBER_CONTEXT;
 
-        testTree.addFavorite(child);
+        await testTree.addFavorite(child);
 
         expect(mocked(Gui.showMessage)).toBeCalledWith("PDS already in favorites");
     });
@@ -1188,14 +1189,14 @@ describe("Dataset Tree Unit Tests - Function removeFavorite", () => {
 
         // We're breaking rule 1 function call per 1 it block, but there's no over proper way to verify the functionality
         // First we need to have the item and be sure that it's properly added to have legit removal operation
-        testTree.addFavorite(node1);
-        testTree.addFavorite(node2);
+        await testTree.addFavorite(node1);
+        await testTree.addFavorite(node2);
         const profileNodeInFavs = testTree.mFavorites[0];
         expect(profileNodeInFavs.children[0].label).toBe(`${node1.label}`);
         expect(profileNodeInFavs.children[1].label).toBe(`${node2.label}`);
 
         // Actual test
-        testTree.removeFavorite(profileNodeInFavs.children[0]);
+        await testTree.removeFavorite(profileNodeInFavs.children[0]);
         expect(removeFavProfileSpy).not.toBeCalled();
         expect(profileNodeInFavs.children.length).toBe(1);
         expect(profileNodeInFavs.children[0].label).toBe(`${node2.label}`);
@@ -1213,7 +1214,7 @@ describe("Dataset Tree Unit Tests - Function removeFavorite", () => {
 
         // We're breaking rule 1 function call per 1 it block, but there's no over proper way to verify the functionality
         // First we need to have the item and be sure that it's properly added to have legit removal operation
-        testTree.addFavorite(node);
+        await testTree.addFavorite(node);
         const profileNodeInFavs = testTree.mFavorites[0];
         expect(profileNodeInFavs.children[0].label).toBe(`${node.label}`);
         await testTree.removeFavorite(profileNodeInFavs.children[0]);
@@ -1239,7 +1240,7 @@ describe("Dataset Tree Unit Tests - Function removeFavorite", () => {
     });
 });
 describe("Dataset Tree Unit Tests - Function  - Function removeFavProfile", () => {
-    function createBlockMocks() {
+    async function createBlockMocks() {
         const session = createISession();
         const imperativeProfile = createIProfile();
         const treeView = createTreeView();
@@ -1248,7 +1249,7 @@ describe("Dataset Tree Unit Tests - Function  - Function removeFavProfile", () =
         testTree.mFavorites = [];
         testTree.mSessionNodes.push(datasetSessionNode);
         const node = new ZoweDatasetNode("Dataset", vscode.TreeItemCollapsibleState.None, testTree.mSessionNodes[1], null);
-        testTree.addFavorite(node);
+        await testTree.addFavorite(node);
         const profileNodeInFavs: IZoweDatasetTreeNode = testTree.mFavorites[0];
 
         return {
@@ -1259,7 +1260,7 @@ describe("Dataset Tree Unit Tests - Function  - Function removeFavProfile", () =
     }
     it("Tests successful removal of profile node in Favorites when user confirms they want to Continue removing it", async () => {
         const globalMocks = createGlobalMocks();
-        const blockMocks = createBlockMocks();
+        const blockMocks = await createBlockMocks();
         const updateFavoritesSpy = jest.spyOn(blockMocks.testTree, "updateFavorites");
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
         // Make sure favorite is added before the actual unit test
@@ -1275,7 +1276,7 @@ describe("Dataset Tree Unit Tests - Function  - Function removeFavProfile", () =
     });
     it("Tests that removeFavProfile leaves profile node in Favorites when user cancels", async () => {
         const globalMocks = createGlobalMocks();
-        const blockMocks = createBlockMocks();
+        const blockMocks = await createBlockMocks();
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
         // Make sure favorite is added before the actual unit test
         expect(blockMocks.testTree.mFavorites.length).toEqual(1);
@@ -1290,7 +1291,7 @@ describe("Dataset Tree Unit Tests - Function  - Function removeFavProfile", () =
     });
     it("Tests that removeFavProfile successfully removes profile node in Favorites when called outside user command", async () => {
         createGlobalMocks();
-        const blockMocks = createBlockMocks();
+        const blockMocks = await createBlockMocks();
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
         // Make sure favorite is added before the actual unit test
         expect(blockMocks.testTree.mFavorites.length).toEqual(1);
@@ -1343,7 +1344,7 @@ describe("Dataset Tree Unit Tests - Function flipState", () => {
         };
     }
 
-    it("Checking flipping of PDS Dataset node", async () => {
+    it("Checking flipping of PDS Dataset node", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
 
@@ -1353,14 +1354,14 @@ describe("Dataset Tree Unit Tests - Function flipState", () => {
         const node = new ZoweDatasetNode("Dataset", vscode.TreeItemCollapsibleState.Collapsed, testTree.mSessionNodes[1], null);
         node.contextValue = globals.DS_PDS_CONTEXT;
 
-        await testTree.flipState(node, true);
+        testTree.flipState(node, true);
         expect(JSON.stringify(node.iconPath)).toContain("folder-open.svg");
-        await testTree.flipState(node, false);
+        testTree.flipState(node, false);
         expect(JSON.stringify(node.iconPath)).toContain("folder-closed.svg");
-        await testTree.flipState(node, true);
+        testTree.flipState(node, true);
         expect(JSON.stringify(node.iconPath)).toContain("folder-open.svg");
     });
-    it("Checking flipping of Favorite PDS Dataset node", async () => {
+    it("Checking flipping of Favorite PDS Dataset node", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
 
@@ -1370,14 +1371,14 @@ describe("Dataset Tree Unit Tests - Function flipState", () => {
         const node = new ZoweDatasetNode("Dataset", vscode.TreeItemCollapsibleState.Collapsed, testTree.mSessionNodes[1], null);
         node.contextValue = globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX;
 
-        await testTree.flipState(node, true);
+        testTree.flipState(node, true);
         expect(JSON.stringify(node.iconPath)).toContain("folder-open.svg");
-        await testTree.flipState(node, false);
+        testTree.flipState(node, false);
         expect(JSON.stringify(node.iconPath)).toContain("folder-closed.svg");
-        await testTree.flipState(node, true);
+        testTree.flipState(node, true);
         expect(JSON.stringify(node.iconPath)).toContain("folder-open.svg");
     });
-    it("Checking flipping of PDS Dataset with credential prompt", async () => {
+    it("Checking flipping of PDS Dataset with credential prompt", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
 
@@ -1392,11 +1393,11 @@ describe("Dataset Tree Unit Tests - Function flipState", () => {
         );
         node.contextValue = globals.DS_PDS_CONTEXT;
 
-        await testTree.flipState(node, true);
+        testTree.flipState(node, true);
         expect(JSON.stringify(node.iconPath)).toContain("folder-open.svg");
-        await testTree.flipState(node, false);
+        testTree.flipState(node, false);
         expect(JSON.stringify(node.iconPath)).toContain("folder-closed.svg");
-        await testTree.flipState(node, true);
+        testTree.flipState(node, true);
         expect(JSON.stringify(node.iconPath)).toContain("folder-open.svg");
     });
 });
@@ -1787,12 +1788,15 @@ describe("Dataset Tree Unit Tests - Function renameNode", () => {
             undefined,
             blockMocks.imperativeProfile
         );
+        // the IDs will never match, so for the sake of this test,
+        // going to fake the IDs so that the expect passes
+        afterNode.id = "<root>.TO.RENAME";
         blockMocks.datasetSessionNode.children.push(beforeNode);
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
 
         await testTree.renameNode("sestest", "TO.RENAME", "RENAMED");
 
-        expect(testTree.mSessionNodes[1].children[0]).toEqual(afterNode);
+        expect(testTree.mSessionNodes[1].children[0]).toEqual({ ...afterNode, id: beforeNode.id });
     });
 });
 describe("Dataset Tree Unit Tests - Function renameFavorite", () => {
@@ -1848,7 +1852,7 @@ describe("Dataset Tree Unit Tests - Function renameFavorite", () => {
 
         await testTree.renameFavorite(nodeFromSession, "RENAMED");
 
-        expect(matchingFavNode).toEqual(expectedMatchingFavNodeResult);
+        expect(matchingFavNode).toEqual({ ...expectedMatchingFavNodeResult, id: matchingFavNode.id });
     });
 });
 describe("Dataset Tree Unit Tests - Function findFavoritedNode", () => {

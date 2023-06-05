@@ -9,8 +9,10 @@
  *
  */
 
+import * as vscode from "vscode";
 import * as globals from "./globals";
 import { ZoweLogger } from "./utils/LoggerUtils";
+import { SettingsConfig } from "./utils/SettingsConfig";
 import { ZoweLocalStorage } from "./utils/ZoweLocalStorage";
 
 export type PersistentFilter = {
@@ -178,15 +180,14 @@ export class PersistentFilters {
     /**
      * @param name - Should be in format "[session]: DATASET.QUALIFIERS" or "[session]: /file/path", as appropriate
      */
-    public removeFileHistory(name: string): void {
-        ZoweLogger.trace("PersistentFilters.removeFileHistory called.");
+    public removeFileHistory(name: string): Thenable<void> {
         const index = this.mFileHistory.findIndex((fileHistoryItem) => {
             return fileHistoryItem.includes(name.toUpperCase());
         });
         if (index >= 0) {
             this.mFileHistory.splice(index, 1);
         }
-        this.updateFileHistory();
+        return this.updateFileHistory();
     }
 
     /*********************************************************************************************************************************************/
@@ -215,39 +216,39 @@ export class PersistentFilters {
     /* Update functions, for updating the settings.json file in VSCode
     /*********************************************************************************************************************************************/
 
-    public updateFavorites(favorites: string[]): void {
-        ZoweLogger.trace("PersistentFilters.updateFavorites called.");
-        const settings = ZoweLocalStorage.getValue<PersistentFilter>(this.schema);
+    public updateFavorites(favorites: string[]): Thenable<void> {
+        // settings are read-only, so were cloned
+        const settings: any = { ...vscode.workspace.getConfiguration(this.schema) };
         if (settings.persistence) {
             settings.favorites = favorites;
-            ZoweLocalStorage.setValue<PersistentFilter>(this.schema, settings);
+            return SettingsConfig.setDirectValue(this.schema, settings);
         }
     }
 
-    private updateSearchHistory(): void {
-        ZoweLogger.trace("PersistentFilters.updateSearchHistory called.");
-        const settings = { ...ZoweLocalStorage.getValue<PersistentFilter>(this.schema) };
+    private updateSearchHistory(): Thenable<void> {
+        // settings are read-only, so make a clone
+        const settings: any = { ...vscode.workspace.getConfiguration(this.schema) };
         if (settings.persistence) {
             settings.searchHistory = this.mSearchHistory;
-            ZoweLocalStorage.setValue<PersistentFilter>(this.schema, settings);
+            return SettingsConfig.setDirectValue(this.schema, settings);
         }
     }
 
-    private updateSessions(): void {
-        ZoweLogger.trace("PersistentFilters.updateSessions called.");
-        const settings = { ...ZoweLocalStorage.getValue<PersistentFilter>(this.schema) };
+    private updateSessions(): Thenable<void> {
+        // settings are read-only, so make a clone
+        const settings: any = { ...vscode.workspace.getConfiguration(this.schema) };
         if (settings.persistence) {
             settings.sessions = this.mSessions;
-            ZoweLocalStorage.setValue<PersistentFilter>(this.schema, settings);
+            return SettingsConfig.setDirectValue(this.schema, settings);
         }
     }
 
-    private updateFileHistory(): void {
-        ZoweLogger.trace("PersistentFilters.updateFileHistory called.");
-        const settings = { ...ZoweLocalStorage.getValue<PersistentFilter>(this.schema) };
+    private updateFileHistory(): Thenable<void> {
+        // settings are read-only, so make a clone
+        const settings: any = { ...vscode.workspace.getConfiguration(this.schema) };
         if (settings.persistence) {
             settings.fileHistory = this.mFileHistory;
-            ZoweLocalStorage.setValue<PersistentFilter>(this.schema, settings);
+            return SettingsConfig.setDirectValue(this.schema, settings);
         }
     }
 

@@ -390,7 +390,7 @@ describe("Extension Integration Tests", async () => {
             const doc2 = await vscode.workspace.openTextDocument(
                 path.join(globals.ZOWETEMPFOLDER, children[0].label.toString() + "(" + childrenMembers[0].label.toString() + ")")
             );
-            dsActions.saveFile(doc2, testTree);
+            await dsActions.saveFile(doc2, testTree);
 
             // Download file
             await dsActions.openPS(childrenMembers[0], true);
@@ -1057,7 +1057,7 @@ describe("Extension Integration Tests - USS", () => {
             const sessChildren2 = await ussTestTree.getChildren(sessChildren1[3]);
             sessChildren2[2].dirty = true;
             const dirChildren = await ussTestTree.getChildren(sessChildren2[2]);
-            const localPath = path.join(globals.USS_DIR, "/", testConst.profile.name, dirChildren[0].fullPath);
+            const localPath = path.join(globals.USS_DIR, testConst.profile.name, dirChildren[0].fullPath || "");
 
             await dirChildren[0].openUSS(false, true, ussTestTree);
             const doc = await vscode.workspace.openTextDocument(localPath);
