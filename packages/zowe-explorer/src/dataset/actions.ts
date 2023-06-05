@@ -190,7 +190,7 @@ export async function uploadDialog(node: ZoweDatasetNode, datasetProvider: api.I
                         break;
                     }
                     api.Gui.reportProgress(progress, value.length, index, "Uploading");
-                    const response = await uploadFile(node, item.path);
+                    const response = await uploadFile(node, item.fsPath);
                     if (!response?.success) {
                         await errorHandling(response?.commandResponse, node.getProfileName(), response?.commandResponse);
                         break;
