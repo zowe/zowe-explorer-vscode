@@ -43,6 +43,7 @@ export class Poller {
                 data = await requestData.request();
             } catch (err) {
                 if (requestData.reject) {
+                    // eslint-disable-next-line zowe-explorer/no-floating-promises
                     requestData.reject(err);
                 } else {
                     reject(err);
@@ -65,6 +66,7 @@ export class Poller {
         Poller.pollRequests[uniqueId] = request;
 
         // Initialize the poll request
+        // eslint-disable-next-line zowe-explorer/no-floating-promises
         this.poll(uniqueId, request);
     }
 

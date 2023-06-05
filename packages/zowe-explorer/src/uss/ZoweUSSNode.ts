@@ -619,7 +619,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      */
     public getUSSDocumentFilePath(): string {
         ZoweLogger.trace("ZoweUSSNode.getUSSDocumentFilePath called.");
-        return path.join(globals.USS_DIR || "", "/" + this.getSessionNode().getProfileName() + "/", this.fullPath);
+        return path.join(globals.USS_DIR || "", this.getSessionNode().getProfileName() || "", this.fullPath);
     }
 
     /**
@@ -678,7 +678,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                     await uss.api.create(outputPath, "directory");
                     if (uss.tree.children) {
                         for (const child of uss.tree.children) {
-                            this.paste(sessionName, outputPath, { api: uss.api, tree: child, options: uss.options });
+                            await this.paste(sessionName, outputPath, { api: uss.api, tree: child, options: uss.options });
                         }
                     }
                     break;

@@ -71,12 +71,12 @@ export function registerRefreshCommand(
 export function registerCommonCommands(context: vscode.ExtensionContext, providers: IZoweProviders): void {
     ZoweLogger.trace("shared.init.registerCommonCommands called.");
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.manualPoll", (_args) => {
+        vscode.commands.registerCommand("zowe.manualPoll", async (_args) => {
             if (vscode.window.activeTextEditor) {
                 // Notify spool provider for "manual poll" key event in open spool files
                 const doc = vscode.window.activeTextEditor.document;
                 if (doc.uri.scheme === "zosspool") {
-                    spoolFilePollEvent(doc);
+                    await spoolFilePollEvent(doc);
                 }
             }
         })
@@ -106,7 +106,7 @@ export function registerCommonCommands(context: vscode.ExtensionContext, provide
             // If the temp folder location has been changed, update current temp folder preference
             if (e.affectsConfiguration(globals.SETTINGS_TEMP_FOLDER_PATH)) {
                 const updatedPreferencesTempPath: string = SettingsConfig.getDirectValue(globals.SETTINGS_TEMP_FOLDER_PATH);
-                moveTempFolder(globals.SETTINGS_TEMP_FOLDER_LOCATION, updatedPreferencesTempPath);
+                await moveTempFolder(globals.SETTINGS_TEMP_FOLDER_LOCATION, updatedPreferencesTempPath);
             }
             if (e.affectsConfiguration(globals.SETTINGS_AUTOMATIC_PROFILE_VALIDATION)) {
                 await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
@@ -115,7 +115,7 @@ export function registerCommonCommands(context: vscode.ExtensionContext, provide
                 await refreshActions.refreshAll(providers.job);
             }
             if (e.affectsConfiguration(globals.SETTINGS_TEMP_FOLDER_HIDE)) {
-                hideTempFolder(getZoweDir());
+                await hideTempFolder(getZoweDir());
             }
 
             if (e.affectsConfiguration(globals.SETTINGS_SECURE_CREDENTIALS_ENABLED)) {

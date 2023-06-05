@@ -356,9 +356,9 @@ export async function setGlobalSecurityValue(credentialManager?: string): Promis
     }
     if (!settingEnabled) {
         PROFILE_SECURITY = false;
-        ZoweLogger.info(localize("globals.setGlobalSecurityValue.unsecured", "Zowe explorer profiles are not secured."));
+        ZoweLogger.info(localize("globals.setGlobalSecurityValue.unsecured", "Zowe explorer profiles are being set as unsecured."));
     } else {
         PROFILE_SECURITY = ZOWE_CLI_SCM;
-        ZoweLogger.info(localize("globals.setGlobalSecurityValue.secured", "Zowe explorer profiles are secured."));
+        ZoweLogger.info(localize("globals.setGlobalSecurityValue.secured", "Zowe explorer profiles are being set as secured."));
     }
 }

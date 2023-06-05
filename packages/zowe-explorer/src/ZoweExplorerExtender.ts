@@ -237,8 +237,8 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
             await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
         });
         // profileType is used to load a default extender profile if no other profiles are populating the trees
-        this.datasetProvider?.addSession(undefined, profileType);
-        this.ussFileProvider?.addSession(undefined, profileType);
-        this.jobsProvider?.addSession(undefined, profileType);
+        await this.datasetProvider?.addSession(undefined, profileType);
+        await this.ussFileProvider?.addSession(undefined, profileType);
+        await this.jobsProvider?.addSession(undefined, profileType);
     }
 }

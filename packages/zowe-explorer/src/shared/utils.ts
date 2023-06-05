@@ -117,7 +117,7 @@ export function getDocumentFilePath(label: string, node: IZoweTreeNode): string 
     const dsDir = globals.DS_DIR;
     const profName = node.getProfileName();
     const suffix = appendSuffix(label);
-    return path.join(dsDir, "/" + profName + "/" + suffix);
+    return path.join(dsDir, profName || "", suffix);
 }
 
 /**

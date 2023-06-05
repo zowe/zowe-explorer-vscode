@@ -66,11 +66,11 @@ export async function initUSSProvider(context: vscode.ExtensionContext): Promise
         vscode.commands.registerCommand("zowe.uss.refreshUSSInTree", (node: IZoweUSSTreeNode) => ussActions.refreshUSSInTree(node, ussFileProvider))
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.uss.refreshDirectory", (node, nodeList) => {
+        vscode.commands.registerCommand("zowe.uss.refreshDirectory", async (node, nodeList) => {
             let selectedNodes = getSelectedNodeList(node, nodeList) as IZoweUSSTreeNode[];
             selectedNodes = selectedNodes.filter((x) => contextuals.isUssDirectory(x));
             for (const item of selectedNodes) {
-                ussActions.refreshDirectory(item, ussFileProvider);
+                await ussActions.refreshDirectory(item, ussFileProvider);
             }
         })
     );
@@ -84,13 +84,13 @@ export async function initUSSProvider(context: vscode.ExtensionContext): Promise
         vscode.commands.registerCommand("zowe.uss.ZoweUSSNode.open", (node: IZoweUSSTreeNode): void => node.openUSS(false, true, ussFileProvider))
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.uss.removeSession", (node: IZoweUSSTreeNode, nodeList) => {
+        vscode.commands.registerCommand("zowe.uss.removeSession", async (node: IZoweUSSTreeNode, nodeList) => {
             let selectedNodes = getSelectedNodeList(node, nodeList);
             selectedNodes = selectedNodes.filter((element) => contextuals.isUssSession(element));
             for (const item of selectedNodes) {
                 ussFileProvider.deleteSession(item);
             }
-            TreeViewUtils.fixVsCodeMultiSelect(ussFileProvider);
+            await TreeViewUtils.fixVsCodeMultiSelect(ussFileProvider);
         })
     );
     context.subscriptions.push(
@@ -170,7 +170,7 @@ export async function initUSSProvider(context: vscode.ExtensionContext): Promise
                 await ussFileProvider.copying;
             }
 
-            ussActions.pasteUss(ussFileProvider, node);
+            await ussActions.pasteUss(ussFileProvider, node);
         })
     );
     context.subscriptions.push(

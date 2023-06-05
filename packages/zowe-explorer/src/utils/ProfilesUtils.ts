@@ -361,9 +361,7 @@ export class ProfilesUtils {
         if (!fs.existsSync(settingsPath)) {
             fs.mkdirSync(settingsPath);
         }
-        if (!fs.existsSync(path.join(settingsPath, "imperative.json"))) {
-            ProfilesUtils.writeOverridesFile();
-        }
+        ProfilesUtils.writeOverridesFile();
         // If not using team config, ensure that the ~/.zowe/profiles directory
         // exists with appropriate types within
         if (!imperative.ImperativeConfig.instance.config?.exists) {
@@ -377,36 +375,53 @@ export class ProfilesUtils {
 
     public static writeOverridesFile(): void {
         ZoweLogger.trace("ProfilesUtils.writeOverridesFile called.");
+        const defaultImperativeJson = { overrides: { CredentialManager: globals.ZOWE_CLI_SCM } };
         const settingsFile = path.join(getZoweDir(), "settings", "imperative.json");
-        const fd = fs.openSync(settingsFile, "w+");
+        let fileContent: string;
         try {
-            let fileContent = fs.readFileSync(fd, "utf-8");
-            let settings: any;
-            if (fileContent) {
-                try {
-                    settings = JSON.parse(fileContent);
-                } catch (err) {
-                    if (err instanceof Error) {
-                        throw new Error(
-                            localize("writeOverridesFile.jsonParseError", "Failed to parse JSON file {0}:", settingsFile) + " " + err.message
-                        );
-                    }
-                }
-                if (!settings || !settings?.overrides || settings?.overrides?.CredentialManager === globals.PROFILE_SECURITY) {
-                    return;
-                }
-                settings.overrides.CredentialManager = globals.PROFILE_SECURITY;
-            } else {
-                settings = { overrides: { CredentialManager: globals.PROFILE_SECURITY } };
-            }
-            fileContent = JSON.stringify(settings, null, 2);
-            fs.writeFileSync(fd, fileContent, {
-                encoding: "utf-8",
-                flag: "w",
-            });
-        } finally {
-            fs.closeSync(fd);
+            fileContent = fs.readFileSync(settingsFile, { encoding: "utf-8" });
+        } catch (error) {
+            ZoweLogger.debug(localize("writeOverridesFile.readFile.error", "Reading imperative.json failed. Will try to create file."));
         }
+        let settings: any;
+        if (fileContent) {
+            try {
+                settings = JSON.parse(fileContent);
+                ZoweLogger.debug(localize("writeOverridesFile.readFile", "Reading imperative.json Credential Manager.\n {0}", fileContent));
+            } catch (err) {
+                if (err instanceof Error) {
+                    const errorMsg = localize(
+                        "writeOverridesFile.jsonParse.error",
+                        "Failed to parse JSON file {0}. Will try to re-create the file.",
+                        settingsFile
+                    );
+                    ZoweLogger.error(errorMsg);
+                    ZoweLogger.debug(fileContent.toString());
+                    settings = { ...defaultImperativeJson };
+                    fs.writeFileSync(settingsFile, JSON.stringify(settings, null, 2), {
+                        encoding: "utf-8",
+                        flag: "w",
+                    });
+                }
+            }
+            if (settings?.overrides?.CredentialManager === globals.PROFILE_SECURITY) {
+                return;
+            }
+            if (!settings?.overrides?.CredentialManager) {
+                settings = { ...defaultImperativeJson, ...settings };
+            }
+        } else {
+            settings = { ...defaultImperativeJson };
+        }
+        settings.overrides.CredentialManager = globals.PROFILE_SECURITY;
+        const newData = JSON.stringify(settings, null, 2);
+        ZoweLogger.debug(
+            localize("writeOverridesFile.updateFile", "Updating imperative.json Credential Manager to {0}.\n{1}", globals.PROFILE_SECURITY, newData)
+        );
+        fs.writeFileSync(settingsFile, newData, {
+            encoding: "utf-8",
+            flag: "w",
+        });
     }
 
     public static async initializeZoweProfiles(): Promise<void> {
@@ -423,7 +438,7 @@ export class ProfilesUtils {
             ZoweLogger.info(localize("initializeZoweProfiles.success", "Zowe Profiles initialized successfully."));
         } catch (err) {
             if (err instanceof imperative.ImperativeError) {
-                errorHandling(err, undefined, err.mDetails.causeErrors);
+                await errorHandling(err, undefined, err.mDetails.causeErrors);
             } else {
                 ZoweLogger.error(err);
                 ZoweExplorerExtender.showZoweConfigError(err.message);
