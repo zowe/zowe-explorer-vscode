@@ -13,6 +13,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 - Fixed issue where the "Disable Validation for Profile" context menu option did not update to "Enable Validation for Profile" after use. [#1897](https://github.com/zowe/vscode-extension-for-zowe/issues/1897)
 - Removed "/" characters in `path.join()` calls [#2172](https://github.com/zowe/vscode-extension-for-zowe/issues/2172)
+- Fixed issue where user was not able to view job spool file with the same DD name in different steps because of duplicated local file name. [#2279](https://github.com/zowe/vscode-extension-for-zowe/issues/2279)
+- Fixed issue where user was not able to view job spool file from jobs with duplicated step names because of duplicated local file name. [#2315](https://github.com/zowe/vscode-extension-for-zowe/issues/2315)
 
 ## `2.8.1`
 
