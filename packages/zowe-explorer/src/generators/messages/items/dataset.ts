@@ -21,8 +21,8 @@ const message: IMessageItem = {
     id: MessageCategoryId.dataset,
     type: MessageHierarchyType.generic,
     messages: {
-        [MessageContentType.open]: localize("openPS.response.title", "Opening dataset..."),
-        [MessageContentType.upload]: localize("saveFile.response.save.title", "Saving dataset..."),
+        [MessageContentType.open]: localize("openPS.response.title", "Opening data set..."),
+        [MessageContentType.upload]: localize("saveFile.response.save.title", "Saving data set..."),
     },
     check: (node) => {
         const contexts = [

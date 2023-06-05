@@ -23,8 +23,8 @@ const message: IMessageItem = {
     type: MessageHierarchyType.specific,
     generic: datasetMessage,
     messages: {
-        [MessageContentType.open]: localize("openMember.response.title", "Opening dataset member..."),
-        [MessageContentType.upload]: localize("saveMember.response.title", "Saving dataset member..."),
+        [MessageContentType.open]: localize("openMember.response.title", "Opening data set member..."),
+        [MessageContentType.upload]: localize("saveMember.response.title", "Saving data set member..."),
     },
     check: (node) => {
         const contexts = [globals.DS_MEMBER_CONTEXT, globals.DS_MEMBER_CONTEXT + globals.FAV_SUFFIX];

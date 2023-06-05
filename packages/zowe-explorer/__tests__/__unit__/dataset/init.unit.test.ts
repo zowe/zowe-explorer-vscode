@@ -44,6 +44,7 @@ describe("Test src/dataset/extension", () => {
             ssoLogout: jest.fn(),
             onDidChangeConfiguration: jest.fn(),
             getTreeView: jest.fn(),
+            refreshElement: jest.fn(),
         };
         const commands: IJestIt[] = [
             {
