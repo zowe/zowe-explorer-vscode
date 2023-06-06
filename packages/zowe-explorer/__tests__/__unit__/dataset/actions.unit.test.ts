@@ -38,9 +38,11 @@ import * as fs from "fs";
 import * as sharedUtils from "../../../src/shared/utils";
 import { Profiles } from "../../../src/Profiles";
 import * as utils from "../../../src/utils/ProfilesUtils";
-
+import * as wsUtils from "../../../src/utils/workspace";
 import { getNodeLabels } from "../../../src/dataset/utils";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
+import * as context from "../../../src/shared/context";
+import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 
 // Missing the definition of path module, because I need the original logic for tests
 jest.mock("fs");
@@ -1393,30 +1395,39 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
             commandResponse: "Rest API failure with HTTP(S) status 412",
             apiResponse: [],
         });
-        mocked(zowe.Download.dataSet).mockResolvedValueOnce({
-            success: true,
-            commandResponse: "",
-            apiResponse: {
-                etag: "",
-            },
-        });
+
         mocked(vscode.window.withProgress).mockImplementation((progLocation, callback) => {
             return callback();
         });
         const profile = blockMocks.imperativeProfile;
-        const mainframeCodePage = 1047;
-        profile.profile.encoding = mainframeCodePage;
+        profile.profile.encoding = 1047;
         blockMocks.profileInstance.loadNamedProfile.mockReturnValueOnce(blockMocks.imperativeProfile);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        Object.defineProperty(wsUtils, "markDocumentUnsaved", {
+            value: jest.fn(),
+            configurable: true,
+        });
+        Object.defineProperty(context, "isTypeUssTreeNode", {
+            value: jest.fn().mockReturnValueOnce(false),
+            configurable: true,
+        });
+        Object.defineProperty(ZoweExplorerApiRegister.getMvsApi, "getContents", {
+            value: jest.fn(),
+            configurable: true,
+        });
+
         const testDocument = createTextDocument("HLQ.TEST.AFILE", blockMocks.datasetSessionNode);
         (testDocument as any).fileName = path.join(globals.DS_DIR, testDocument.fileName);
+        const logSpy = jest.spyOn(ZoweLogger, "warn");
+        const commandSpy = jest.spyOn(vscode.commands, "executeCommand");
 
         await dsActions.saveFile(testDocument, blockMocks.testDatasetTree);
 
-        expect(mocked(Gui.warningMessage)).toBeCalledWith(
-            "Remote file has been modified in the meantime.\nSelect 'Compare' to resolve the conflict."
-        );
+        expect(logSpy).toBeCalledWith("Remote file has changed. Presenting with way to resolve file.");
         expect(mocked(sharedUtils.concatChildNodes)).toBeCalled();
+        expect(commandSpy).toBeCalledWith("workbench.files.action.compareWithSaved");
+        logSpy.mockClear();
+        commandSpy.mockClear();
     });
 });
 
