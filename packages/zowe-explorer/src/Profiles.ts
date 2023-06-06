@@ -883,8 +883,15 @@ export class Profiles extends ProfilesCache {
             return; // See https://github.com/zowe/vscode-extension-for-zowe/issues/1827
         }
 
-        const updSession = promptInfo.profile as zowe.imperative.ISession;
-        const returnValue = [updSession.user, updSession.password, updSession.base64EncodedAuth];
+        const isImperativeProfile = (prof: string | zowe.imperative.IProfileLoaded): prof is zowe.imperative.IProfileLoaded =>
+            typeof prof !== "string";
+
+        if (isImperativeProfile(profile)) {
+            if (profile.profile?.tokenValue == null || profile.profile?.tokenType == null) {
+                promptInfo.profile.tokenType = promptInfo.profile.tokenValue = null;
+            }
+        }
+        const returnValue: string[] = [promptInfo.profile.user, promptInfo.profile.password, promptInfo.profile.base64EncodedAuth];
         this.updateProfilesArrays(promptInfo);
         return returnValue;
     }
@@ -1213,7 +1220,7 @@ export class Profiles extends ProfilesCache {
                     };
                     await this.updateBaseProfileFileLogin(baseProfile, updBaseProfile);
                     const baseIndex = this.allProfiles.findIndex((profile) => profile.name === baseProfile.name);
-                    this.allProfiles[baseIndex] = { ...baseProfile, profile: { ...baseProfile, ...updBaseProfile } };
+                    this.allProfiles[baseIndex] = { ...baseProfile, profile: { ...baseProfile.profile, ...updBaseProfile } };
                     node.setProfileToChoice({
                         ...node.getProfile(),
                         profile: { ...node.getProfile().profile, ...updBaseProfile },
