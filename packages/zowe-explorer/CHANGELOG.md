@@ -6,6 +6,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
+- Added option to save unique data set attributes as a template after allocation for future use. [#1425](https://github.com/zowe/vscode-extension-for-zowe/issues/1425)
 - Added "Cancel Job" feature for job nodes in Jobs tree view. [#2251](https://github.com/zowe/vscode-extension-for-zowe/issues/2251)
 - Enhanced ID generation for parent tree nodes to ensure uniqueness.
 
@@ -33,6 +34,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 - Added a new Zowe Explorer setting, `zowe.logger`, with a default setting of `INFO`.
 - Added an output channel, `Zowe Explorer`, for logging within VS Code's Output view. The log level is set by the new Zowe Explorer setting, `zowe.logger`.
+- Added support for custom credential manager extensions in Zowe Explorer [#2212](https://github.com/zowe/vscode-extension-for-zowe/issues/2212)
 - Added a new setting `zowe.files.logsFolder.path` that can be used to override Zowe Explorer logs folder if default location is read-only. [#2186](https://github.com/zowe/vscode-extension-for-zowe/issues/2186)
 - Opening a dialog for Upload or Download of files will now open at the project level directory or the user's home directory if no project is opened. [#2203](https://github.com/zowe/vscode-extension-for-zowe/issues/2203)
 - Updated linter rules and addressed linter errors. [#2184](https://github.com/zowe/vscode-extension-for-zowe/issues/2184)
