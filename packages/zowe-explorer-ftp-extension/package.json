@@ -30,7 +30,7 @@
     "Zowe.vscode-extension-for-zowe"
   ],
   "scripts": {
-    "build": "yarn clean && yarn license && webpack --mode development",
+    "build": "yarn clean && yarn madge && yarn license && webpack --mode development",
     "test:unit": "jest \".*__tests__.*\\.unit\\.test\\.ts\" --coverage",
     "test": "yarn test:unit",
     "lint": "concurrently -n \"_eslint_,prettier\" \"eslint .\" \"prettier --check .\"",

@@ -20,7 +20,7 @@
     "semver": "^7.3.5"
   },
   "scripts": {
-    "build": "yarn check-cli && yarn clean && tsc -p ./ && yarn license",
+    "build": "yarn check-cli && yarn clean && yarn madge && tsc -p ./ && yarn license",
     "test:unit": "jest \".*__tests__.*\\.unit\\.test\\.ts\" --coverage",
     "test": "yarn test:unit",
     "lint": "concurrently -n \"_eslint_,prettier\" \"eslint .\" \"prettier --check .\"",
