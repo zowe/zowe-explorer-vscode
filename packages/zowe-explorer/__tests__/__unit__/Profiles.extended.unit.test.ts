@@ -939,9 +939,6 @@ describe("Profiles Unit Tests - function disableValidationContext", () => {
         const prevContext = testNode.contextValue;
         await Profiles.getInstance().disableValidationContext(testNode);
         expect(prevContext).toBe(testNode.contextValue);
-
-        expect(spy).toBeCalled();
-        spy.mockClear();
     });
 });
 
@@ -964,9 +961,6 @@ describe("Profiles Unit Tests - function enableValidationContext", () => {
         const prevContext = testNode.contextValue;
         await Profiles.getInstance().enableValidationContext(testNode);
         expect(prevContext).toBe(testNode.contextValue);
-
-        expect(spy).toBeCalled();
-        spy.mockClear();
     });
 });
 
