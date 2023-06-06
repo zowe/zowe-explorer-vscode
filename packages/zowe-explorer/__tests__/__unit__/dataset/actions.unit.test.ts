@@ -2735,7 +2735,6 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
             mockCheckCurrentProfile,
         };
     }
-
     it("Checking of proper configuration being picked up for different DS types", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
@@ -2751,25 +2750,25 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         const getChildrenSpy = jest.spyOn(blockMocks.datasetSessionNode, "getChildren");
         getChildrenSpy.mockResolvedValue([]);
 
-        mocked(vscode.window.showQuickPick).mockResolvedValue(" + Allocate Data Set" as any);
+        mocked(vscode.window.showQuickPick).mockResolvedValue("Allocate Data Set" as any);
 
-        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Data Set Binary" as any);
+        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Partitioned Data Set: Binary" as any);
         await dsActions.createFile(blockMocks.datasetSessionNode, blockMocks.testDatasetTree);
         expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(globals.SETTINGS_DS_DEFAULT_BINARY);
 
-        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Data Set C" as any);
+        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Partitioned Data Set: C" as any);
         await dsActions.createFile(blockMocks.datasetSessionNode, blockMocks.testDatasetTree);
         expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(globals.SETTINGS_DS_DEFAULT_C);
 
-        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Data Set Classic" as any);
+        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Partitioned Data Set: Classic" as any);
         await dsActions.createFile(blockMocks.datasetSessionNode, blockMocks.testDatasetTree);
         expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(globals.SETTINGS_DS_DEFAULT_CLASSIC);
 
-        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Data Set Partitioned" as any);
+        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Partitioned Data Set: Default" as any);
         await dsActions.createFile(blockMocks.datasetSessionNode, blockMocks.testDatasetTree);
         expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(globals.SETTINGS_DS_DEFAULT_PDS);
 
-        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Data Set Sequential" as any);
+        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Sequential Data Set" as any);
         await dsActions.createFile(blockMocks.datasetSessionNode, blockMocks.testDatasetTree);
         expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(globals.SETTINGS_DS_DEFAULT_PS);
 
@@ -2794,25 +2793,25 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         const getChildrenSpy = jest.spyOn(node, "getChildren");
         getChildrenSpy.mockResolvedValue([]);
 
-        mocked(vscode.window.showQuickPick).mockResolvedValue(" + Allocate Data Set" as any);
+        mocked(vscode.window.showQuickPick).mockResolvedValue("Allocate Data Set" as any);
 
-        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Data Set Binary" as any);
+        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Partitioned Data Set: Binary" as any);
         await dsActions.createFile(node, blockMocks.testDatasetTree);
         expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(globals.SETTINGS_DS_DEFAULT_BINARY);
 
-        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Data Set C" as any);
+        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Partitioned Data Set: C" as any);
         await dsActions.createFile(node, blockMocks.testDatasetTree);
         expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(globals.SETTINGS_DS_DEFAULT_C);
 
-        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Data Set Classic" as any);
+        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Partitioned Data Set: Classic" as any);
         await dsActions.createFile(node, blockMocks.testDatasetTree);
         expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(globals.SETTINGS_DS_DEFAULT_CLASSIC);
 
-        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Data Set Partitioned" as any);
+        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Partitioned Data Set: Default" as any);
         await dsActions.createFile(node, blockMocks.testDatasetTree);
         expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(globals.SETTINGS_DS_DEFAULT_PDS);
 
-        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Data Set Sequential" as any);
+        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Sequential Data Set" as any);
         await dsActions.createFile(node, blockMocks.testDatasetTree);
         expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(globals.SETTINGS_DS_DEFAULT_PS);
 
@@ -2836,29 +2835,30 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         const getChildrenSpy = jest.spyOn(node, "getChildren");
         getChildrenSpy.mockResolvedValue([]);
 
-        mocked(vscode.window.showQuickPick).mockResolvedValue(" + Allocate Data Set" as any);
+        mocked(vscode.window.showQuickPick).mockResolvedValue("Allocate Data Set" as any);
 
-        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Data Set Binary" as any);
+        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Partitioned Data Set: Binary" as any);
         await dsActions.createFile(node, blockMocks.testDatasetTree);
         expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(globals.SETTINGS_DS_DEFAULT_BINARY);
 
-        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Data Set C" as any);
+        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Partitioned Data Set: C" as any);
         await dsActions.createFile(node, blockMocks.testDatasetTree);
         expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(globals.SETTINGS_DS_DEFAULT_C);
 
-        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Data Set Classic" as any);
+        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Partitioned Data Set: Classic" as any);
         await dsActions.createFile(node, blockMocks.testDatasetTree);
         expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(globals.SETTINGS_DS_DEFAULT_CLASSIC);
 
-        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Data Set Partitioned" as any);
+        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Partitioned Data Set: Default" as any);
         await dsActions.createFile(node, blockMocks.testDatasetTree);
         expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(globals.SETTINGS_DS_DEFAULT_PDS);
 
-        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Data Set Sequential" as any);
+        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Sequential Data Set" as any);
         await dsActions.createFile(node, blockMocks.testDatasetTree);
         expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(globals.SETTINGS_DS_DEFAULT_PS);
 
         expect(createDataSetSpy).toHaveBeenCalledTimes(5);
+        createDataSetSpy.mockClear();
     });
     it("Checking PS dataset creation", async () => {
         createGlobalMocks();
@@ -2873,13 +2873,13 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
             options.validateInput("test");
             return Promise.resolve("test");
         });
-        mocked(vscode.window.showQuickPick).mockResolvedValue(" + Allocate Data Set" as any);
+        mocked(vscode.window.showQuickPick).mockResolvedValue("Allocate Data Set" as any);
         const createDataSetSpy = jest.spyOn(blockMocks.mvsApi, "createDataSet");
         createDataSetSpy.mockReset();
         const node = new ZoweDatasetNode("HLQ.TEST.TO.NODE", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null);
         node.contextValue = globals.DS_DS_CONTEXT;
 
-        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Data Set Sequential" as any);
+        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Sequential Data Set" as any);
         await dsActions.createFile(node, blockMocks.testDatasetTree);
 
         expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(globals.SETTINGS_DS_DEFAULT_PS);
@@ -2890,6 +2890,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
             lrecl: 80,
             primary: 1,
             recfm: "FB",
+            responseTimeout: undefined,
         });
     });
     it("Checking PS dataset errored creation with Unverified profile", async () => {
@@ -2914,14 +2915,14 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         blockMocks.testDatasetTree.getSearchHistory.mockReturnValue([]);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         mocked(vscode.window.showInputBox).mockResolvedValue("test");
-        mocked(vscode.window.showQuickPick).mockResolvedValue(" + Allocate Data Set" as any);
+        mocked(vscode.window.showQuickPick).mockResolvedValue("Allocate Data Set" as any);
         const createDataSetSpy = jest.spyOn(blockMocks.mvsApi, "createDataSet");
         createDataSetSpy.mockReset();
         createDataSetSpy.mockRejectedValueOnce(Error("Generic Error"));
         const node = new ZoweDatasetNode("HLQ.TEST.TO.NODE", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null);
         node.contextValue = globals.DS_DS_CONTEXT;
 
-        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Data Set Sequential" as any);
+        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Sequential Data Set" as any);
         try {
             await dsActions.createFile(node, blockMocks.testDatasetTree);
         } catch (err) {
@@ -2937,6 +2938,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
             lrecl: 80,
             primary: 1,
             recfm: "FB",
+            responseTimeout: undefined,
         });
     });
     it("Checking dataset attempt of creation with empty type", async () => {
@@ -2959,49 +2961,6 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         expect(mocked(vscode.workspace.getConfiguration)).not.toBeCalled();
         expect(createDataSetSpy).not.toHaveBeenCalled();
     });
-    it("Checking of history being properly updated for new query", async () => {
-        createGlobalMocks();
-        const blockMocks = createBlockMocks();
-
-        const quickPickContent = createQuickPickContent("", [], "");
-        mocked(vscode.window.createQuickPick).mockReturnValueOnce(quickPickContent);
-        blockMocks.testDatasetTree.createFilterString.mockReturnValue("NODE1,NODE.*");
-        blockMocks.testDatasetTree.getSearchHistory.mockReturnValue(["NODE1"]);
-        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
-        mocked(vscode.window.showInputBox).mockResolvedValue("test");
-        mocked(vscode.window.showQuickPick).mockResolvedValue(" + Allocate Data Set" as any);
-        const createDataSetSpy = jest.spyOn(blockMocks.mvsApi, "createDataSet");
-        createDataSetSpy.mockReset();
-        const node = new ZoweDatasetNode("HLQ.TEST.TO.NODE", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null);
-        node.contextValue = globals.DS_DS_CONTEXT;
-
-        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Data Set Sequential" as any);
-        await dsActions.createFile(node, blockMocks.testDatasetTree);
-
-        expect(blockMocks.testDatasetTree.addSearchHistory).toHaveBeenCalledWith("NODE1,NODE.*");
-    });
-    it("Checking history was overwritten with new query if empty", async () => {
-        createGlobalMocks();
-        const blockMocks = createBlockMocks();
-
-        const quickPickContent = createQuickPickContent("", [], "");
-        mocked(vscode.window.createQuickPick).mockReturnValueOnce(quickPickContent);
-        blockMocks.testDatasetTree.createFilterString.mockReturnValue("NODE1,NODE.*");
-        blockMocks.testDatasetTree.getSearchHistory.mockReturnValue([null]);
-        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
-        mocked(vscode.window.showInputBox).mockResolvedValue("test");
-        mocked(vscode.window.showQuickPick).mockResolvedValue(" + Allocate Data Set" as any);
-        const createDataSetSpy = jest.spyOn(blockMocks.mvsApi, "createDataSet");
-        createDataSetSpy.mockReset();
-        const node = new ZoweDatasetNode("HLQ.TEST.TO.NODE", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null);
-        node.contextValue = globals.DS_DS_CONTEXT;
-
-        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Data Set Sequential" as any);
-        await dsActions.createFile(node, blockMocks.testDatasetTree);
-
-        expect(blockMocks.testDatasetTree.addSearchHistory).toHaveBeenCalledWith("NODE1,NODE.*");
-    });
-
     it("Tests that user can edit the node label", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
@@ -3018,7 +2977,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         mocked(vscode.window.showInputBox).mockResolvedValueOnce("test");
 
         // 2nd step: User selects DS type
-        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Data Set Sequential" as any);
+        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Sequential Data Set" as any);
 
         // 3rd step: User selects Edit attributes
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Edit Attributes" as any);
@@ -3032,7 +2991,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
 
         // Then they try to allocate
         mocked(vscode.window.createQuickPick).mockReturnValueOnce(quickPickContent);
-        jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce({ label: " + Allocate Data Set" });
+        jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce({ label: "Allocate Data Set" });
 
         await dsActions.createFile(node, blockMocks.testDatasetTree);
 
@@ -3046,12 +3005,13 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         });
     });
 
-    it("Tests that user can edit the attributes", async () => {
+    it("Tests that user can edit the attributes and save as new template", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
 
         blockMocks.testDatasetTree.createFilterString.mockReturnValue("NODE1,NODE.*");
         blockMocks.testDatasetTree.getSearchHistory.mockReturnValue([null]);
+
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         const createDataSetSpy = jest.spyOn(blockMocks.mvsApi, "createDataSet");
         createDataSetSpy.mockReset();
@@ -3062,7 +3022,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         mocked(vscode.window.showInputBox).mockResolvedValueOnce("test");
 
         // 2nd step: User selects DS type
-        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Data Set Sequential" as any);
+        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Sequential Data Set" as any);
 
         // 3rd step: User selects Edit attributes
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Edit Attributes" as any);
@@ -3076,8 +3036,11 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
 
         // Then they try to allocate
         mocked(vscode.window.createQuickPick).mockReturnValueOnce(quickPickContent);
-        jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce({ label: " + Allocate Data Set" });
+        jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce({ label: "Allocate Data Set" });
 
+        const templateSpy = jest.spyOn(Gui, "infoMessage").mockResolvedValueOnce("Save");
+        mocked(vscode.window.showInputBox).mockResolvedValueOnce("TestTemplate");
+        const addTempSpy = jest.spyOn(blockMocks.testDatasetTree, "addDsTemplate");
         await dsActions.createFile(node, blockMocks.testDatasetTree);
 
         expect(createDataSetSpy).toHaveBeenCalledWith(zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, "TEST", {
@@ -3088,6 +3051,228 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
             primary: 1,
             recfm: "FB",
         });
+        expect(templateSpy).toBeCalled();
+        expect(addTempSpy).toBeCalled();
+        templateSpy.mockClear();
+        addTempSpy.mockClear();
+    });
+    it("Tests that user can edit the attributes and don't save as new template", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        blockMocks.testDatasetTree.createFilterString.mockReturnValue("NODE1,NODE.*");
+        blockMocks.testDatasetTree.getSearchHistory.mockReturnValue([null]);
+
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        const createDataSetSpy = jest.spyOn(blockMocks.mvsApi, "createDataSet");
+        createDataSetSpy.mockReset();
+        const node = new ZoweDatasetNode("HLQ.TEST.TO.NODE", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null);
+        node.contextValue = globals.DS_DS_CONTEXT;
+
+        // 1st step: User names DS
+        mocked(vscode.window.showInputBox).mockResolvedValueOnce("test");
+
+        // 2nd step: User selects DS type
+        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Sequential Data Set" as any);
+
+        // 3rd step: User selects Edit attributes
+        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Edit Attributes" as any);
+
+        // 4th step: User tries to edit Record Length
+        const quickPickContent = createQuickPickContent("", [], "");
+        mocked(vscode.window.createQuickPick).mockReturnValueOnce(quickPickContent);
+        const selectedItem: vscode.QuickPickItem = { label: "Allocation Unit" };
+        jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(selectedItem);
+        mocked(vscode.window.showInputBox).mockResolvedValueOnce("TRK");
+
+        // Then they try to allocate
+        mocked(vscode.window.createQuickPick).mockReturnValueOnce(quickPickContent);
+        jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce({ label: "Allocate Data Set" });
+
+        const templateSpy = jest.spyOn(Gui, "infoMessage").mockResolvedValueOnce(undefined);
+        const addTempSpy = jest.spyOn(blockMocks.testDatasetTree, "addDsTemplate");
+        await dsActions.createFile(node, blockMocks.testDatasetTree);
+
+        expect(createDataSetSpy).toHaveBeenCalledWith(zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, "TEST", {
+            alcunit: "TRK",
+            blksize: 6160,
+            dsorg: "PS",
+            lrecl: 80,
+            primary: 1,
+            recfm: "FB",
+        });
+        expect(templateSpy).toBeCalled();
+        expect(addTempSpy).toBeCalledTimes(0);
+        templateSpy.mockClear();
+        addTempSpy.mockClear();
+    });
+    it("Checking dataset creation of saved template", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        const quickPickContent = createQuickPickContent("", [], "");
+        mocked(vscode.window.createQuickPick).mockReturnValueOnce(quickPickContent);
+        blockMocks.testDatasetTree.createFilterString.mockReturnValue("test");
+        blockMocks.testDatasetTree.getSearchHistory.mockReturnValue([]);
+        blockMocks.testDatasetTree.getDsTemplates.mockReturnValue([
+            {
+                TEMPTST: {
+                    alcunit: "CYL",
+                    blksize: 6160,
+                    dsorg: "PO",
+                    lrecl: 80,
+                    primary: 1,
+                    recfm: "FB",
+                },
+            },
+        ]);
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        mocked(vscode.window.showInputBox).mockImplementation((options) => {
+            options.validateInput("test");
+            return Promise.resolve("test");
+        });
+        mocked(vscode.window.showQuickPick).mockResolvedValue("Allocate Data Set" as any);
+        const createDataSetSpy = jest.spyOn(blockMocks.mvsApi, "createDataSet");
+        createDataSetSpy.mockReset();
+        const node = new ZoweDatasetNode("HLQ.TEST.TO.NODE", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null);
+        node.contextValue = globals.DS_DS_CONTEXT;
+
+        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("TEMPTST" as any);
+        await dsActions.createFile(node, blockMocks.testDatasetTree);
+
+        expect(createDataSetSpy).toHaveBeenCalledWith(zowe.CreateDataSetTypeEnum.DATA_SET_PARTITIONED, "TEST", {
+            alcunit: "CYL",
+            blksize: 6160,
+            dsorg: "PO",
+            lrecl: 80,
+            primary: 1,
+            recfm: "FB",
+            responseTimeout: undefined,
+        });
+    });
+    it("Checking correct opCancelled message with no dsName returned", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        const quickPickContent = createQuickPickContent("", [], "");
+        mocked(vscode.window.createQuickPick).mockReturnValueOnce(quickPickContent);
+        blockMocks.testDatasetTree.createFilterString.mockReturnValue(undefined);
+        const createDataSetSpy = jest.spyOn(Gui, "showMessage");
+        const node = new ZoweDatasetNode("HLQ.TEST.TO.NODE", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, "" as any);
+        node.contextValue = globals.DS_DS_CONTEXT;
+        await dsActions.createFile(node, blockMocks.testDatasetTree);
+
+        expect(createDataSetSpy).toBeCalledWith("Operation Cancelled");
+    });
+    it("Checking opCancelled message shown when no ds type chosen", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        const quickPickContent = createQuickPickContent("", [], "");
+        mocked(vscode.window.createQuickPick).mockReturnValueOnce(quickPickContent);
+        blockMocks.testDatasetTree.createFilterString.mockReturnValue("test");
+        blockMocks.testDatasetTree.getSearchHistory.mockReturnValue([]);
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        mocked(vscode.window.showInputBox).mockImplementation((options) => {
+            options.validateInput("test");
+            return Promise.resolve("test");
+        });
+        const node = new ZoweDatasetNode("HLQ.TEST.TO.NODE", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, "" as any);
+        node.contextValue = globals.DS_DS_CONTEXT;
+        mocked(vscode.window.showQuickPick).mockResolvedValueOnce(undefined);
+        const createDataSetSpy = jest.spyOn(Gui, "showMessage");
+        await dsActions.createFile(node, blockMocks.testDatasetTree);
+
+        expect(createDataSetSpy).toBeCalledWith("Operation Cancelled");
+    });
+    it("Checking opCancelled message shown when user escapes allocate or edit attributes options", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        const quickPickContent = createQuickPickContent("", [], "");
+        mocked(vscode.window.createQuickPick).mockReturnValueOnce(quickPickContent);
+        blockMocks.testDatasetTree.createFilterString.mockReturnValue("test");
+        blockMocks.testDatasetTree.getSearchHistory.mockReturnValue([]);
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        mocked(vscode.window.showInputBox).mockImplementation((options) => {
+            options.validateInput("test");
+            return Promise.resolve("test");
+        });
+        const node = new ZoweDatasetNode("HLQ.TEST.TO.NODE", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, "" as any);
+        node.contextValue = globals.DS_DS_CONTEXT;
+        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Sequential Data Set" as any);
+        mocked(vscode.window.showQuickPick).mockResolvedValueOnce(undefined);
+        const createDataSetSpy = jest.spyOn(Gui, "showMessage");
+        await dsActions.createFile(node, blockMocks.testDatasetTree);
+
+        expect(createDataSetSpy).toBeCalledWith("Operation Cancelled");
+    });
+    it("Checking opCancelled message shown when user escapes during edit attributes", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        const quickPickContent = createQuickPickContent("", [], "");
+        mocked(vscode.window.createQuickPick).mockReturnValueOnce(quickPickContent);
+        blockMocks.testDatasetTree.createFilterString.mockReturnValue("test");
+        blockMocks.testDatasetTree.getSearchHistory.mockReturnValue([]);
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        mocked(vscode.window.showInputBox).mockImplementation((options) => {
+            options.validateInput("test");
+            return Promise.resolve("test");
+        });
+        const node = new ZoweDatasetNode("HLQ.TEST.TO.NODE", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, "" as any);
+        node.contextValue = globals.DS_DS_CONTEXT;
+
+        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Sequential Data Set" as any);
+        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Edit Attributes" as any);
+        mocked(vscode.window.createQuickPick).mockReturnValueOnce(quickPickContent);
+        const selectedItem: vscode.QuickPickItem = undefined as any;
+        jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(selectedItem);
+        const createDataSetSpy = jest.spyOn(Gui, "showMessage");
+        await dsActions.createFile(node, blockMocks.testDatasetTree);
+
+        expect(createDataSetSpy).toBeCalledWith("Operation Cancelled");
+    });
+    it("Checking opCancelled message shown when no template name supplied", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        blockMocks.testDatasetTree.createFilterString.mockReturnValue("NODE1,NODE.*");
+        blockMocks.testDatasetTree.getSearchHistory.mockReturnValue([null]);
+
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        const createDataSetSpy = jest.spyOn(blockMocks.mvsApi, "createDataSet");
+        createDataSetSpy.mockReset();
+        const node = new ZoweDatasetNode("HLQ.TEST.TO.NODE", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null);
+        node.contextValue = globals.DS_DS_CONTEXT;
+
+        // 1st step: User names DS
+        mocked(vscode.window.showInputBox).mockResolvedValueOnce("test");
+
+        // 2nd step: User selects DS type
+        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Sequential Data Set" as any);
+
+        // 3rd step: User selects Edit attributes
+        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Edit Attributes" as any);
+
+        // 4th step: User tries to edit Record Length
+        const quickPickContent = createQuickPickContent("", [], "");
+        mocked(vscode.window.createQuickPick).mockReturnValueOnce(quickPickContent);
+        const selectedItem: vscode.QuickPickItem = { label: "Allocation Unit" };
+        jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(selectedItem);
+        mocked(vscode.window.showInputBox).mockResolvedValueOnce("TRK");
+
+        // Then they try to allocate
+        mocked(vscode.window.createQuickPick).mockReturnValueOnce(quickPickContent);
+        jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce({ label: "Allocate Data Set" });
+
+        const templateSpy = jest.spyOn(Gui, "infoMessage").mockResolvedValueOnce("Save");
+        mocked(vscode.window.showInputBox).mockResolvedValueOnce(undefined);
+        const opCancelledSpy = jest.spyOn(Gui, "showMessage");
+        const addTempSpy = jest.spyOn(blockMocks.testDatasetTree, "addDsTemplate");
+        await dsActions.createFile(node, blockMocks.testDatasetTree);
+
+        expect(templateSpy).toBeCalled();
+        expect(addTempSpy).toBeCalledTimes(0);
+        expect(opCancelledSpy).toBeCalledWith("Operation Cancelled");
+        templateSpy.mockClear();
+        addTempSpy.mockClear();
     });
 });
 
@@ -3437,6 +3622,6 @@ describe("Dataset Actions Unit Tests - Function allocateLike", () => {
         }
 
         expect(errorHandlingSpy).toHaveBeenCalledTimes(1);
-        expect(errorHandlingSpy).toHaveBeenCalledWith(errorMessage, "test", "Unable to create data set:");
+        expect(errorHandlingSpy).toHaveBeenCalledWith(errorMessage, "test", "Unable to create data set.");
     });
 });

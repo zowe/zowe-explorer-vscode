@@ -1773,7 +1773,8 @@
             "persistence": true,
             "favorites": [],
             "history": [],
-            "sessions": []
+            "sessions": [],
+            "templates": []
           },
           "description": "%zowe.ds.history%",
           "scope": "application"
