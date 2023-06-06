@@ -20,7 +20,7 @@ import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 
 async function createGlobalMocks() {
-    let newMocks = {
+    const newMocks = {
         mockRefresh: jest.fn(),
         showOpenDialog: jest.fn(),
         showInformationMessage: jest.fn(),

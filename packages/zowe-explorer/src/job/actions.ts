@@ -147,9 +147,9 @@ export async function getSpoolContent(session: string, spool: zowe.IJobFile, ref
  * Triggers a refresh for a spool file w/ the provided text document.
  * @param doc The document to update, associated with the spool file
  */
-export function spoolFilePollEvent(doc: vscode.TextDocument): void {
+export async function spoolFilePollEvent(doc: vscode.TextDocument): Promise<void> {
     const statusMsg = Gui.setStatusBarMessage(localize("zowe.polling.statusBar", `$(sync~spin) Polling: {0}...`, doc.fileName));
-    SpoolProvider.files[doc.uri.path].fetchContent();
+    await SpoolProvider.files[doc.uri.path].fetchContent();
     setTimeout(() => {
         statusMsg.dispose();
     }, 250);
@@ -462,5 +462,76 @@ async function deleteMultipleJobs(jobs: ReadonlyArray<IZoweJobTreeNode>, jobsPro
         const errorMessages = deletionErrors.map((error) => error.message).join(", ");
         const userMessage = `There were errors during jobs deletion: ${errorMessages}`;
         await errorHandling(userMessage);
+    }
+}
+
+export async function cancelJobs(jobsProvider: IZoweTree<IZoweJobTreeNode>, nodes: IZoweJobTreeNode[]): Promise<void> {
+    if (!nodes.length) {
+        return;
+    }
+
+    // Filter out nodes that have already been cancelled
+    const filteredNodes = nodes.filter(
+        (n) => n.job == null || n.job.retcode == null || !(n.job.retcode.includes("CANCEL") || n.job.retcode?.includes("ABEND"))
+    );
+    if (!filteredNodes.length) {
+        await Gui.showMessage(localize("cancelJobs.alreadyCancelled", "The selected jobs were already cancelled."));
+        return;
+    }
+
+    const jesApis = {};
+
+    const failedJobs: { job: zowe.IJob; error: string }[] = [];
+    // Build list of common sessions from node selection
+    const sessionNodes = [];
+    for (const jobNode of nodes) {
+        if (!jobNode.job) {
+            continue;
+        }
+        const sesNode = jobNode.getSessionNode();
+        const sesLabel = sesNode.label as string;
+        if (!(sesLabel in jesApis)) {
+            jesApis[sesLabel] = ZoweExplorerApiRegister.getJesApi(sesNode.getProfile());
+        }
+
+        if (!jesApis[sesLabel].cancelJob) {
+            failedJobs.push({
+                job: jobNode.job,
+                error: localize("cancelJobs.notImplemented", "The cancel function is not implemented in this API."),
+            });
+            continue;
+        }
+
+        try {
+            const cancelled = await jesApis[sesLabel].cancelJob(jobNode.job);
+            if (!cancelled) {
+                failedJobs.push({ job: jobNode.job, error: localize("cancelJobs.notCancelled", "The job was not cancelled.") });
+            } else if (!sessionNodes.includes(sesNode)) {
+                setImmediate(() => {
+                    jobsProvider.refreshElement(sesNode);
+                });
+                sessionNodes.push(sesNode);
+            }
+        } catch (err) {
+            if (err instanceof Error) {
+                failedJobs.push({ job: jobNode.job, error: err.message });
+            }
+        }
+    }
+
+    if (failedJobs.length > 0) {
+        // Display any errors from the API
+        await Gui.warningMessage(
+            localize(
+                "cancelJobs.failed",
+                "One or more jobs failed to cancel: {0}",
+                failedJobs.reduce((prev, j) => prev.concat(`\n${j.job.jobname}(${j.job.jobid}): ${j.error}`), "\n")
+            ),
+            {
+                vsCodeOpts: { modal: true },
+            }
+        );
+    } else {
+        await Gui.showMessage(localize("cancelJobs.succeeded", "Cancelled selected jobs successfully."));
     }
 }

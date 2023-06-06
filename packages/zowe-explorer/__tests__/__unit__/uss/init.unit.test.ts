@@ -46,6 +46,7 @@ describe("Test src/dataset/extension", () => {
             getTreeView: jest.fn().mockReturnValue({
                 reveal: jest.fn(),
             }),
+            refreshElement: jest.fn(),
         };
         const commands: IJestIt[] = [
             {

@@ -409,6 +409,15 @@ export interface IJes extends ICommon {
     submitJob(jobDataSet: string): Promise<zowe.IJob>;
 
     /**
+     * Cancels the job provided.
+     *
+     * @param {zowe.IJob} job The job object to cancel
+     * @returns {Promise<boolean>} Whether the job was successfully cancelled
+     * @memberof IJes
+     */
+    cancelJob?(job: zowe.IJob): Promise<boolean>;
+
+    /**
      * Cancels and purges a job identified by name and id.
      *
      * @param {string} jobname

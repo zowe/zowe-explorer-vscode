@@ -97,18 +97,6 @@ describe("Shared Utils Unit Tests - Function node.concatChildNodes()", () => {
     });
 });
 
-describe("Shared Utils Unit Tests - Function node.labelRefresh()", () => {
-    it("Checks that labelRefresh subtly alters the label", async () => {
-        const globalMocks = await createGlobalMocks();
-        const rootNode = new ZoweUSSNode("gappy", vscode.TreeItemCollapsibleState.Collapsed, null, globalMocks.session, null, false, null, undefined);
-        expect(rootNode.label === "gappy");
-        sharedUtils.labelRefresh(rootNode);
-        expect(rootNode.label === "gappy ");
-        sharedUtils.labelRefresh(rootNode);
-        expect(rootNode.label === "gappy");
-    });
-});
-
 describe("syncSessionNode shared util function", () => {
     const serviceProfile = {
         name: "test",
@@ -136,7 +124,6 @@ describe("syncSessionNode shared util function", () => {
         await utils.syncSessionNode(sessionForProfile, sessionNode);
         expect(await sessionNode.getSession()).toEqual(expectedSession);
         expect(await sessionNode.getProfile()).toEqual(createIProfile());
-        expect(sessionNode.collapsibleState).toEqual(vscode.TreeItemCollapsibleState.Collapsed);
     });
     it("should do nothing, if there is no profile from provided node in the file system", async () => {
         const profiles = createInstanceOfProfile(serviceProfile);
@@ -158,7 +145,6 @@ describe("syncSessionNode shared util function", () => {
         const initialProfile = sessionNode.getProfile();
         expect(sessionNode.getSession()).toEqual(initialSession);
         expect(sessionNode.getProfile()).toEqual(initialProfile);
-        expect(sessionNode.collapsibleState).toEqual(vscode.TreeItemCollapsibleState.Collapsed);
     });
 });
 

@@ -127,6 +127,9 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         if (icon) {
             this.iconPath = icon.path;
         }
+        if (!globals.ISTHEIA && this.getParent() && contextually.isSession(this.getParent())) {
+            this.id = `${mParent?.id ?? "<root>"}.${this.label as string}`;
+        }
     }
 
     /**
@@ -178,14 +181,14 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             await errorHandling(err, this.label.toString(), localize("getChildren.error.response", "Retrieving response from ") + `uss-file-list`);
             syncSessionNode((profile) => ZoweExplorerApiRegister.getUssApi(profile), sessNode);
         }
-        // push nodes to an object with property names to avoid duplicates
-        const elementChildren: { [k: string]: IZoweUSSTreeNode } = {};
+
+        const newChildren: Record<string, IZoweUSSTreeNode> = {};
+
         responses.forEach((response) => {
             // Throws reject if the Zowe command does not throw an error but does not succeed
             if (!response.success) {
                 throw Error(localize("getChildren.responses.error.response", "The response from Zowe CLI was not successful"));
             }
-
             // Loops through all the returned file references members and creates nodes for them
             for (const item of response.apiResponse.items) {
                 const existing = this.children.find(
@@ -194,7 +197,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                     (element: ZoweUSSNode) => element.parentPath === this.fullPath && element.label.toString() === item.name
                 );
                 if (existing) {
-                    elementChildren[existing.label.toString()] = existing;
+                    newChildren[existing.label.toString()] = existing;
                 } else if (item.name !== "." && item.name !== "..") {
                     // Creates a ZoweUSSNode for a directory
                     if (item.mode.startsWith("d")) {
@@ -207,7 +210,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                             false,
                             item.mProfileName
                         );
-                        elementChildren[temp.label.toString()] = temp;
+                        newChildren[temp.label.toString()] = temp;
                     } else {
                         // Creates a ZoweUSSNode for a file
                         let temp;
@@ -237,17 +240,18 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                             title: localize("getChildren.responses.open", "Open"),
                             arguments: [temp],
                         };
-                        elementChildren[temp.label] = temp;
+                        newChildren[temp.label.toString()] = temp;
                     }
                 }
             }
         });
+
         if (contextually.isSession(this)) {
             this.dirty = false;
         }
-        this.children = Object.keys(elementChildren)
+        this.children = Object.keys(newChildren)
             .sort()
-            .map((labels) => elementChildren[labels]);
+            .map((labels) => newChildren[labels]);
         return this.children;
     }
 
@@ -630,7 +634,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      */
     public getUSSDocumentFilePath(): string {
         ZoweLogger.trace("ZoweUSSNode.getUSSDocumentFilePath called.");
-        return path.join(globals.USS_DIR || "", "/" + this.getSessionNode().getProfileName() + "/", this.fullPath);
+        return path.join(globals.USS_DIR || "", this.getSessionNode().getProfileName() || "", this.fullPath);
     }
 
     /**
@@ -685,7 +689,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                     await uss.api.create(outputPath, "directory");
                     if (uss.tree.children) {
                         for (const child of uss.tree.children) {
-                            this.paste(sessionName, outputPath, { api: uss.api, tree: child, options: uss.options });
+                            await this.paste(sessionName, outputPath, { api: uss.api, tree: child, options: uss.options });
                         }
                     }
                     break;

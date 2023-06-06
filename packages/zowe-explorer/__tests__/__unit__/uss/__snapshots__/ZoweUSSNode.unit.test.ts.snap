@@ -26,6 +26,7 @@ ZoweUSSNode {
     "etag": "",
     "fullPath": "",
     "iconPath": "Ref: 'folder.svg'",
+    "id": "<root>.testDir",
     "label": "testDir",
     "mParent": ZoweUSSNode {
       "binary": false,

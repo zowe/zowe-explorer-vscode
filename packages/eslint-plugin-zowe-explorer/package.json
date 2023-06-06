@@ -22,7 +22,8 @@
     "package": "echo \"eslint-plugin: nothing to package.\""
   },
   "dependencies": {
-    "requireindex": "^1.1.0"
+    "requireindex": "^1.1.0",
+    "rewire": "^6.0.0"
   },
   "engines": {
     "node": ">=0.10.0"

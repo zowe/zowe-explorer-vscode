@@ -281,6 +281,13 @@ export class ZosmfJesApi extends ZosmfApiCommon implements IJes {
     public deleteJobWithInfo(jobname: string, jobid: string): Promise<undefined | zowe.IJobFeedback> {
         return zowe.DeleteJobs.deleteJob(this.getSession(), jobname, jobid);
     }
+
+    public async cancelJob(job: zowe.IJob): Promise<boolean> {
+        const session = this.getSession();
+        // use 1.0 so that all JES subsystems are supported out-of-the-box
+        const jobResult = await zowe.CancelJobs.cancelJobForJob(session, job, "2.0");
+        return jobResult.status === "0";
+    }
 }
 
 /**

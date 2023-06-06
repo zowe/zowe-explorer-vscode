@@ -207,7 +207,7 @@ describe("ZoweExplorerApiRegister unit testing", () => {
         const api2 = new MockUssApi2();
 
         globalMocks.registry.registerUssApi(api1);
-        globalMocks.registry.getExplorerExtenderApi().reloadProfiles();
+        await globalMocks.registry.getExplorerExtenderApi().reloadProfiles();
         globalMocks.registry.registerUssApi(api2);
         await globalMocks.registry.getExplorerExtenderApi().reloadProfiles();
 

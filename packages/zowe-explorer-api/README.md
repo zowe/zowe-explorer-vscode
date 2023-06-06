@@ -43,11 +43,11 @@ import * as vscode from "vscode";
 
 imports.
 
-See this [special extension document](../../docs/README-Extending.md) to learn more about the Tree APIs available.
+See this [documentation on Extending Zowe Explorer](https://github.com/zowe/vscode-extension-for-zowe/wiki/Extending-Zowe-Explorer) to learn more about the Tree APIs available.
 
 ## Logger API
 
-See this [special extension document](https://github.com/zowe/vscode-extension-for-zowe/blob/main/docs/extenders/Error%20Handling.md#logging-of-error-message) for more information about using the Logger API.
+See this [special extension document](https://github.com/zowe/vscode-extension-for-zowe/wiki/Error-Handling-for-Extenders#logging-of-error-message) for more information about using the Logger API.
 
 ## Providing feedback or help contributing
 

@@ -67,6 +67,30 @@ export class SettingsConfig {
         );
     }
 
+    /**
+     * Checks if the Zowe Explorer major version does not match
+     * the version defined in the user's `settings.json` file.
+     *
+     * @param userVersion The user's version defined in settings.json
+     * @param versionString The current version string for Zowe Explorer
+     * @returns false if the version *roughly* matches, true otherwise - e.g.:
+     *
+     * `majorVersionMismatch("2.6.1", "2")` will return `false`
+     *
+     * `majorVersionMismatch("3", "2")` will return `true`
+     */
+    public static majorVersionMismatch(userVersion: string, versionString: string): boolean {
+        if (userVersion == null) {
+            return true;
+        }
+
+        if (userVersion.startsWith(versionString)) {
+            return false;
+        }
+
+        return userVersion !== versionString;
+    }
+
     public static async standardizeSettings(): Promise<void> {
         globals.ZoweLogger.trace("SettingsConfig.standardizeSettings called.");
         const localStorageIsMigrated = ZoweLocalStorage.getValue<boolean>(globals.SETTINGS_LOCAL_STORAGE_MIGRATED);

@@ -1,6 +1,7 @@
 node_modules
 out
 lib
+!packages/eslint-plugin-zowe-explorer/**/lib
 logs
 testProfileData.ts
 results

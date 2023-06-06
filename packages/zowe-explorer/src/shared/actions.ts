@@ -142,7 +142,7 @@ export async function searchInAllLoadedItems(
 
                 // Open in workspace
                 datasetProvider.addSearchHistory(`${nodeName}(${memberName})`);
-                openPS(member, true, datasetProvider);
+                await openPS(member, true, datasetProvider);
             } else {
                 // PDS & SDS
                 await datasetProvider.getTreeView().reveal(node, { select: true, focus: true, expand: false });
@@ -150,7 +150,7 @@ export async function searchInAllLoadedItems(
                 // If selected node was SDS, open it in workspace
                 if (contextually.isDs(node)) {
                     datasetProvider.addSearchHistory(nodeName);
-                    openPS(node, true, datasetProvider);
+                    await openPS(node, true, datasetProvider);
                 }
             }
         }

@@ -27,6 +27,7 @@ import * as nls from "vscode-nls";
 import { resetValidationSettings } from "../shared/actions";
 import { SettingsConfig } from "../utils/SettingsConfig";
 import { ZoweLogger } from "../utils/LoggerUtils";
+import { TreeViewUtils } from "../utils/TreeViewUtils";
 
 // Set up localization
 nls.config({
@@ -56,7 +57,7 @@ export async function createUSSTree(): Promise<USSTree> {
  * @implements {vscode.TreeDataProvider}
  */
 export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeNode> {
-    public static readonly defaultDialogText: string = "\uFF0B " + localize("filterPrompt.option.prompt.search", "Create a new filter");
+    public static readonly defaultDialogText: string = localize("filterPrompt.option.prompt.search", "$(plus) Create a new filter");
     private static readonly persistenceSchema: PersistenceSchemaEnum = PersistenceSchemaEnum.USS;
     public mFavoriteSession: ZoweUSSNode;
     public mSessionNodes: IZoweUSSTreeNode[] = [];
@@ -142,12 +143,13 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 // Handle rename in UI:
                 if (oldFavorite) {
                     if (originalNodeInFavorites) {
-                        this.renameUSSNode(originalNode, newNamePath); // Rename corresponding node in Sessions
+                        await this.renameUSSNode(originalNode, newNamePath); // Rename corresponding node in Sessions
                     }
                     // Below handles if originalNode is in a session node or is only indirectly in Favorites (e.g. is only a child of a favorite).
                     // Also handles if there are multiple appearances of originalNode in Favorites.
                     // This has to happen before renaming originalNode.rename, as originalNode's label is used to find the favorite equivalent.
-                    this.renameFavorite(originalNode, newNamePath); // Doesn't do anything if there aren't any appearances of originalNode in Favs
+                    // Doesn't do anything if there aren't any appearances of originalNode in Favs
+                    await this.renameFavorite(originalNode, newNamePath);
                 }
                 // Rename originalNode in UI
                 const hasClosedTab = await originalNode.rename(newNamePath);
@@ -245,11 +247,11 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
      * @param oldNamePath
      * @param newNamePath
      */
-    public renameUSSNode(node: IZoweUSSTreeNode, newNamePath: string): void {
+    public async renameUSSNode(node: IZoweUSSTreeNode, newNamePath: string): Promise<void> {
         ZoweLogger.trace("USSTree.renameUSSNode called.");
         const matchingNode: IZoweUSSTreeNode = this.findNonFavoritedNode(node);
         if (matchingNode) {
-            matchingNode.rename(newNamePath);
+            await matchingNode.rename(newNamePath);
         }
     }
 
@@ -386,7 +388,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             // Favorite a USS search
             temp = new ZoweUSSNode(label, vscode.TreeItemCollapsibleState.None, profileNodeInFavorites, node.getSession(), null, false, profileName);
             temp.fullPath = node.fullPath;
-            this.saveSearch(temp);
+            await this.saveSearch(temp);
             temp.command = { command: "zowe.uss.fullPath", title: "", arguments: [temp] };
         } else {
             // Favorite USS files and directories
@@ -565,11 +567,10 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                     const createPick = new FilterDescriptor(USSTree.defaultDialogText);
                     const items: vscode.QuickPickItem[] = this.mHistory.getSearchHistory().map((element) => new FilterItem({ text: element }));
                     if (globals.ISTHEIA) {
-                        const options1: vscode.QuickPickOptions = {
-                            placeHolder: localize("searchHistory.options.prompt", "Select a filter"),
-                        };
                         // get user selection
-                        const choice = await Gui.showQuickPick([createPick, ...items], options1);
+                        const choice = await Gui.showQuickPick([createPick, globals.SEPARATORS.RECENT_FILTERS, ...items], {
+                            placeHolder: localize("searchHistory.options.prompt", "Select a filter"),
+                        });
                         if (!choice) {
                             Gui.showMessage(localize("enterPattern.pattern", "No selection made. Operation cancelled."));
                             return;
@@ -578,7 +579,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                     } else {
                         const quickpick = Gui.createQuickPick();
                         quickpick.placeholder = localize("searchHistory.options.prompt", "Select a filter");
-                        quickpick.items = [createPick, ...items];
+                        quickpick.items = [createPick, globals.SEPARATORS.RECENT_FILTERS, ...items];
                         quickpick.ignoreFocusOut = true;
                         quickpick.show();
                         const choice = await Gui.resolveQuickPick(quickpick);
@@ -598,7 +599,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 }
                 // manually entering a search - switch to an input box
                 const options: vscode.InputBoxOptions = {
-                    prompt: localize("filterPrompt.option.prompt.search", "Create a new filter"),
+                    placeHolder: localize("filterPrompt.option.prompt.placeholder", "New filter"),
                     value: remotepath,
                 };
                 // get user input
@@ -634,7 +635,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             if (!contextually.isFilterFolder(sessionNode)) {
                 sessionNode.contextValue += `_${globals.FILTER_SEARCH}`;
             }
-            this.expandSession(sessionNode, this);
+            await TreeViewUtils.expandNode(sessionNode, this);
             sessionNode.dirty = true;
             this.addSearchHistory(sanitizedPath);
         }

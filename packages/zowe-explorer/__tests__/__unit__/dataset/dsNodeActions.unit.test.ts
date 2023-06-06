@@ -207,7 +207,7 @@ describe("dsNodeActions", () => {
                 }),
             });
             const spy = jest.spyOn(refreshActions, "refreshAll");
-            refreshActions.refreshAll(testDSTree);
+            await refreshActions.refreshAll(testDSTree);
             expect(spy).toHaveBeenCalledTimes(1);
         });
     });

@@ -79,7 +79,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
 
         if (session) {
             this._owner = "*";
-            if (session.ISession.user) {
+            if (session.ISession?.user) {
                 this._owner = session.ISession.user;
             }
         }
@@ -87,6 +87,10 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
         const icon = getIconByNode(this);
         if (icon) {
             this.iconPath = icon.path;
+        }
+
+        if (!globals.ISTHEIA && !(this instanceof Spool)) {
+            this.id = `${mParent?.id ?? "<root>"}.${this.label as string}`;
         }
     }
 
@@ -146,17 +150,22 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
                     } else {
                         newLabel = `${spool.stepname}:${spool.ddname} - ${spool["record-count"]}`;
                     }
-                    const spoolNode = new Spool(newLabel, vscode.TreeItemCollapsibleState.None, this, this.session, spool, this.job, this);
-                    const icon = getIconByNode(spoolNode);
-                    if (icon) {
-                        spoolNode.iconPath = icon.path;
+                    const existing = this.children.find((element) => element.label.trim() === newLabel);
+                    if (existing) {
+                        elementChildren.push(existing);
+                    } else {
+                        const spoolNode = new Spool(newLabel, vscode.TreeItemCollapsibleState.None, this, this.session, spool, this.job, this);
+                        const icon = getIconByNode(spoolNode);
+                        if (icon) {
+                            spoolNode.iconPath = icon.path;
+                        }
+                        spoolNode.command = {
+                            command: "zowe.jobs.zosJobsOpenspool",
+                            title: "",
+                            arguments: [sessionName, spool, refreshTimestamp],
+                        };
+                        elementChildren.push(spoolNode);
                     }
-                    spoolNode.command = {
-                        command: "zowe.jobs.zosJobsOpenspool",
-                        title: "",
-                        arguments: [sessionName, spool, refreshTimestamp],
-                    };
-                    elementChildren.push(spoolNode);
                 });
             } else {
                 const jobs = await this.getJobs(this._owner, this._prefix, this._searchId, this._jobStatus);

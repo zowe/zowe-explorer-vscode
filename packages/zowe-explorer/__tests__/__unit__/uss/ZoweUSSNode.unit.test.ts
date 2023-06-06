@@ -41,7 +41,7 @@ async function createGlobalMocks() {
         ussFile: jest.fn(),
         Download: jest.fn(),
         mockIsDirtyInEditor: jest.fn(),
-        mockTextDocument: { fileName: `/test/path/temp/_U_/sestest//test/node`, isDirty: true },
+        mockTextDocument: { fileName: `/test/path/temp/_U_/sestest/test/node`, isDirty: true },
         mockTextDocuments: [],
         openedDocumentInstance: jest.fn(),
         onDidSaveTextDocument: jest.fn(),
@@ -914,6 +914,7 @@ describe("ZoweUSSNode Unit Tests - Function node.getChildren()", () => {
         blockMocks.rootNode.label = "";
         blockMocks.rootNode.dirty = true;
 
+        // eslint-disable-next-line zowe-explorer/no-floating-promises
         expect(blockMocks.rootNode.getChildren()).rejects.toEqual(Error("Invalid node"));
     });
 
@@ -1076,7 +1077,7 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
         // Tests that correct file is downloaded
         await node.openUSS(false, true, blockMocks.testUSSTree);
         expect(globalMocks.existsSync.mock.calls.length).toBe(1);
-        expect(globalMocks.existsSync.mock.calls[0][0]).toBe(path.join(globals.USS_DIR, "/" + node.mProfileName + "/", node.fullPath));
+        expect(globalMocks.existsSync.mock.calls[0][0]).toBe(path.join(globals.USS_DIR, node.mProfileName || "", node.fullPath));
         expect(globalMocks.setStatusBarMessage).toBeCalledWith("$(sync~spin) Opening USS file...");
 
         // Tests that correct file is opened in editor
@@ -1121,7 +1122,7 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
         // Tests that correct file is downloaded
         await node.openUSS(false, true, blockMocks.testUSSTree);
         expect(globalMocks.existsSync.mock.calls.length).toBe(1);
-        expect(globalMocks.existsSync.mock.calls[0][0]).toBe(path.join(globals.USS_DIR, "/" + node.mProfileName + "/", node.fullPath));
+        expect(globalMocks.existsSync.mock.calls[0][0]).toBe(path.join(globals.USS_DIR, node.mProfileName || "", node.fullPath));
         expect(globalMocks.setStatusBarMessage).toBeCalledWith("$(sync~spin) Opening USS file...");
         // Tests that correct file is opened in editor
         globalMocks.withProgress(globalMocks.downloadUSSFile);
@@ -1273,7 +1274,7 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
         // Make sure correct file is downloaded
         await node.openUSS(false, true, blockMocks.testUSSTree);
         expect(globalMocks.existsSync.mock.calls.length).toBe(1);
-        expect(globalMocks.existsSync.mock.calls[0][0]).toBe(path.join(globals.USS_DIR, "/" + node.getProfileName() + "/", node.fullPath));
+        expect(globalMocks.existsSync.mock.calls[0][0]).toBe(path.join(globals.USS_DIR, node.getProfileName() || "", node.fullPath));
         expect(globalMocks.setStatusBarMessage).toBeCalledWith("$(sync~spin) Opening USS file...");
         // Make sure correct file is displayed in the editor
         globalMocks.withProgress(globalMocks.downloadUSSFile);
@@ -1722,7 +1723,7 @@ describe("ZoweUSSNode Unit Tests - Function node.pasteUssTree()", () => {
         jest.spyOn(blockMocks.mockUssApi, "putContent").mockResolvedValueOnce(blockMocks.fileResponseSame);
         jest.spyOn(blockMocks.mockUssApi, "uploadDirectory").mockResolvedValueOnce(blockMocks.fileResponseSame);
 
-        blockMocks.testNode.pasteUssTree();
+        await blockMocks.testNode.pasteUssTree();
     });
 
     it("Tests node.pasteUssTree() could not retrieve fileList api response", async () => {
@@ -1733,7 +1734,7 @@ describe("ZoweUSSNode Unit Tests - Function node.pasteUssTree()", () => {
         jest.spyOn(blockMocks.mockUssApi, "putContent").mockResolvedValueOnce(blockMocks.fileResponseSame);
         jest.spyOn(blockMocks.mockUssApi, "uploadDirectory").mockResolvedValueOnce(blockMocks.fileResponseSame);
 
-        blockMocks.testNode.pasteUssTree();
+        await blockMocks.testNode.pasteUssTree();
     });
     it("Tests util disposeClipboardContents function correctly free clipboardContents", async () => {
         vscode.env.clipboard.writeText("test");
@@ -1762,6 +1763,6 @@ describe("ZoweUSSNode Unit Tests - Function node.pasteUssTree()", () => {
         jest.spyOn(blockMocks.mockUssApi, "putContent").mockResolvedValueOnce(blockMocks.fileResponse);
         jest.spyOn(blockMocks.mockUssApi, "uploadDirectory").mockRejectedValueOnce(blockMocks.fileResponse);
 
-        blockMocks.testNode.pasteUssTree();
+        await blockMocks.testNode.pasteUssTree();
     });
 });

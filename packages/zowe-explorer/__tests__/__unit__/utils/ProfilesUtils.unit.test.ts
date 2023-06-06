@@ -42,7 +42,6 @@ describe("ProfilesUtils unit tests", () => {
             mockGetDirectValue: jest.fn(),
             mockFileRead: { overrides: { CredentialManager: "@zowe/cli" } },
             zoweDir: path.normalize("__tests__/.zowe/settings/imperative.json"),
-            fileHandle: process.stdout.fd,
         };
         Object.defineProperty(fs, "existsSync", { value: newMocks.mockExistsSync, configurable: true });
         Object.defineProperty(fs, "readFileSync", { value: newMocks.mockReadFileSync, configurable: true });
@@ -321,66 +320,82 @@ describe("ProfilesUtils unit tests", () => {
             const blockMocks = createBlockMocks();
             blockMocks.mockGetDirectValue.mockReturnValue(true);
             blockMocks.mockExistsSync.mockReturnValue(false);
+            const createFileSpy = jest.spyOn(profUtils.ProfilesUtils, "writeOverridesFile");
             await profUtils.ProfilesUtils.initializeZoweFolder();
             expect(globals.PROFILE_SECURITY).toBe(globals.ZOWE_CLI_SCM);
             expect(blockMocks.mockMkdirSync).toHaveBeenCalledTimes(2);
-            expect(blockMocks.mockWriteFileSync).toHaveBeenCalledTimes(1);
+            expect(createFileSpy).toHaveBeenCalledTimes(1);
         });
 
         it("should skip creating directories and files that already exist", async () => {
             const blockMocks = createBlockMocks();
-            blockMocks.mockGetDirectValue.mockReturnValue(false);
+            blockMocks.mockGetDirectValue.mockReturnValue("@zowe/cli");
             blockMocks.mockExistsSync.mockReturnValue(true);
+            const fileJson = blockMocks.mockFileRead;
+            blockMocks.mockReadFileSync.mockReturnValueOnce(JSON.stringify(fileJson, null, 2));
             await profUtils.ProfilesUtils.initializeZoweFolder();
-            expect(globals.PROFILE_SECURITY).toBe(false);
+            expect(globals.PROFILE_SECURITY).toBe("@zowe/cli");
             expect(blockMocks.mockMkdirSync).toHaveBeenCalledTimes(0);
             expect(blockMocks.mockWriteFileSync).toHaveBeenCalledTimes(0);
         });
     });
 
     describe("writeOverridesFile", () => {
-        it("should have file exist", async () => {
+        it("should have file exist", () => {
             const blockMocks = createBlockMocks();
             const fileJson = { overrides: { CredentialManager: "@zowe/cli", testValue: true } };
             const content = JSON.stringify(fileJson, null, 2);
             blockMocks.mockReadFileSync.mockReturnValueOnce(JSON.stringify({ overrides: { CredentialManager: false, testValue: true } }, null, 2));
             profUtils.ProfilesUtils.writeOverridesFile();
-            expect(blockMocks.mockOpenSync).toBeCalledWith(blockMocks.zoweDir, "r+");
-            expect(blockMocks.mockWriteFileSync).toBeCalledWith(blockMocks.fileHandle, content, "utf-8");
+            expect(blockMocks.mockWriteFileSync).toBeCalledWith(blockMocks.zoweDir, content, { encoding: "utf-8", flag: "w" });
         });
 
-        it("should have no change to global variable PROFILE_SECURITY and returns", async () => {
+        it("should return and have no change to the existing file if PROFILE_SECURITY matches file", () => {
             const blockMocks = createBlockMocks();
-            const fileJson = {
-                test: null,
-            };
+            const fileJson = blockMocks.mockFileRead;
             blockMocks.mockReadFileSync.mockReturnValueOnce(JSON.stringify(fileJson, null, 2));
             profUtils.ProfilesUtils.writeOverridesFile();
             expect(blockMocks.mockWriteFileSync).toBeCalledTimes(0);
         });
 
-        it("should have not exist and create default file", async () => {
+        it("should add credential manager overrides object to existing object", () => {
             const blockMocks = createBlockMocks();
-            blockMocks.mockOpenSync.mockImplementation((filepath: string, mode: string) => {
-                if (mode.startsWith("r")) {
-                    throw new Error("ENOENT");
-                }
-                return blockMocks.fileHandle;
-            });
-            const content = JSON.stringify(blockMocks.mockFileRead, null, 2);
+            const fileJson = {
+                test: null,
+            };
+            blockMocks.mockReadFileSync.mockReturnValueOnce(JSON.stringify(fileJson, null, 2));
+            const mergedJson = { ...blockMocks.mockFileRead, ...fileJson };
+            const mergedString = JSON.stringify(mergedJson, null, 2);
             profUtils.ProfilesUtils.writeOverridesFile();
-            expect(blockMocks.mockWriteFileSync).toBeCalledWith(blockMocks.fileHandle, content, "utf-8");
-            expect(blockMocks.mockOpenSync).toBeCalledTimes(2);
-            expect(blockMocks.mockReadFileSync).toBeCalledTimes(0);
+            expect(blockMocks.mockWriteFileSync).toBeCalledTimes(1);
+            expect(blockMocks.mockWriteFileSync).toBeCalledWith(blockMocks.zoweDir, mergedString, { encoding: "utf-8", flag: "w" });
         });
 
-        it("should throw error if overrides file contains invalid JSON", async () => {
+        it("should have not exist and create default file", () => {
+            const blockMocks = createBlockMocks();
+            Object.defineProperty(fs, "readFileSync", {
+                value: jest.fn().mockImplementationOnce(() => {
+                    throw new Error("ENOENT");
+                }),
+                configurable: true,
+            });
+            const loggerSpy = jest.spyOn(ZoweLogger, "debug");
+            const content = JSON.stringify(blockMocks.mockFileRead, null, 2);
+            profUtils.ProfilesUtils.writeOverridesFile();
+            expect(loggerSpy).toBeCalledWith("Reading imperative.json failed. Will try to create file.");
+            expect(blockMocks.mockWriteFileSync).toBeCalledWith(blockMocks.zoweDir, content, { encoding: "utf-8", flag: "w" });
+            expect(blockMocks.mockWriteFileSync).not.toThrowError();
+        });
+
+        it("should re-create file if overrides file contains invalid JSON", () => {
             const blockMocks = createBlockMocks();
             const fileJson = {
                 test: null,
             };
             blockMocks.mockReadFileSync.mockReturnValueOnce(JSON.stringify(fileJson, null, 2).slice(1));
-            expect(profUtils.ProfilesUtils.writeOverridesFile).toThrow();
+            const writeFileSpy = jest.spyOn(fs, "writeFileSync");
+            expect(profUtils.ProfilesUtils.writeOverridesFile).not.toThrow();
+            expect(writeFileSpy).toBeCalled();
         });
     });
 
