@@ -22,7 +22,7 @@
     "zFTP"
   ],
   "activationEvents": [
-    "*"
+    "onStartupFinished"
   ],
   "main": "./out/src/extension.js",
   "contributes": {},
@@ -41,7 +41,7 @@
     "fresh-clone": "yarn clean && rimraf node_modules",
     "vscode:prepublish": "webpack --mode production",
     "license": "node ../../scripts/updateLicenses.js",
-    "package": "vsce package --allow-star-activation --yarn && node ../../scripts/mv-pack.js zowe-explorer-ftp-extension vsix"
+    "package": "vsce package --yarn && node ../../scripts/mv-pack.js zowe-explorer-ftp-extension vsix"
   },
   "engines": {
     "vscode": "^1.53.2"

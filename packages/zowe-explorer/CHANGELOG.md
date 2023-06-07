@@ -9,6 +9,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Removal of v1 profile support. [#2072](https://github.com/zowe/vscode-extension-for-zowe/issues/2072)
 - Removal of support for Zowe Explorer APIs that have been removed. Check the [list](https://github.com/zowe/vscode-extension-for-zowe/tree/next/docs/early-access/v3/Extenders.md) of APIs that were removed.
 - Added support for Local Storage settings for persistent settings in Zowe Explorer [#2208](https://github.com/zowe/vscode-extension-for-zowe/issues/2208)
+- Updated activation event to `onStartupFinished`. [#1910](https://github.com/zowe/vscode-extension-for-zowe/issues/1910)
 
 ### Bug fixes
 
