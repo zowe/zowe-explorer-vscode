@@ -869,7 +869,8 @@ export class Profiles extends ProfilesCache {
 
         const promptInfo = await ZoweVsCodeExtension.updateCredentials(
             {
-                profile,
+                profile: typeof profile === "string" ? undefined : profile,
+                sessionName: typeof profile === "string" ? profile : undefined,
                 rePrompt,
                 secure: (await this.getProfileInfo()).isSecured(),
                 userInputBoxOptions,
