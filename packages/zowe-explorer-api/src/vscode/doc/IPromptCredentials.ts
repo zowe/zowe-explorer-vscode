@@ -19,7 +19,7 @@ export interface IPromptCredentialsCommonOptions {
 }
 
 export interface IPromptCredentialsOptions extends IPromptCredentialsCommonOptions {
-    profile?: string | imperative.IProfileLoaded;
+    profile?: imperative.IProfileLoaded;
     sessionName?: string;
     sessionType?: string;
     secure?: boolean;
