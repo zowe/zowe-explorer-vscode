@@ -120,11 +120,11 @@ export class ZoweVsCodeExtension {
 
         const loadProfile = typeof options.profile === "string" ? await cache.getLoadedProfConfig(options.profile, undefined) : options.profile;
         const loadSession = loadProfile?.profile as imperative.ISession;
-        const creds = await ZoweVsCodeExtension.promptUserPass({ session: loadSession, ...options });
 
         if (loadProfile == null || loadSession == null) {
-            return;
+            return undefined;
         }
+        const creds = await ZoweVsCodeExtension.promptUserPass({ session: loadSession, ...options });
 
         if (creds && creds.length > 0) {
             loadProfile.profile.user = loadSession.user = creds[0];
