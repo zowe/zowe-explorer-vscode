@@ -109,35 +109,55 @@ describe("SettingsConfig Unit Tests - function standardizeSettings", () => {
             value: ["test"],
             configurable: true,
         });
-        jest.spyOn(SettingsConfig as any, "currentVersionNumber", "get").mockReturnValueOnce("vtest");
+        jest.spyOn(SettingsConfig as any, "currentVersionNumber", "get").mockReturnValueOnce("v2");
         jest.spyOn(SettingsConfig as any, "zoweOldConfigurations", "get").mockReturnValue(["zowe.settings.test"]);
         jest.spyOn(vscode.workspace, "getConfiguration").mockReturnValue({
             update: jest.fn(),
         } as any);
     });
 
+    afterEach(() => {
+        jest.clearAllMocks();
+    });
+
     it("should standardize workspace settings if not migrated and workspace is open", async () => {
         jest.spyOn(SettingsConfig as any, "configurations", "get").mockReturnValue({
             inspect: () => ({
-                globalValue: "vtest",
-                workspaceValue: "",
+                globalValue: "v2",
+                workspaceValue: "v1",
             }),
         });
+        const setDirectValueSpy = jest.spyOn(SettingsConfig as any, "setDirectValue").mockImplementation();
         const standardizeWorkspaceSettingsSpy = jest.spyOn(SettingsConfig as any, "standardizeWorkspaceSettings").mockImplementation();
         await expect(SettingsConfig.standardizeSettings()).resolves.not.toThrow();
+        expect(setDirectValueSpy).toHaveBeenCalledTimes(1);
         expect(standardizeWorkspaceSettingsSpy).toHaveBeenCalledTimes(1);
     });
 
     it("should standardize global settings if not migrated", async () => {
         jest.spyOn(SettingsConfig as any, "configurations", "get").mockReturnValue({
             inspect: () => ({
-                globalValue: "",
-                workspaceValue: "vtest",
+                globalValue: "v1",
+                workspaceValue: "v2",
             }),
         });
+        const setDirectValueSpy = jest.spyOn(SettingsConfig as any, "setDirectValue").mockImplementation();
         const standardizeGlobalSettingsSpy = jest.spyOn(SettingsConfig as any, "standardizeGlobalSettings").mockImplementation();
         await expect(SettingsConfig.standardizeSettings()).resolves.not.toThrow();
+        expect(setDirectValueSpy).toHaveBeenCalledTimes(1);
         expect(standardizeGlobalSettingsSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it("should not update settings if global is migrated and workspace is undefined", async () => {
+        jest.spyOn(SettingsConfig as any, "configurations", "get").mockReturnValue({
+            inspect: () => ({
+                globalValue: "v2",
+                workspaceValue: undefined,
+            }),
+        });
+        const setDirectValueSpy = jest.spyOn(SettingsConfig as any, "setDirectValue").mockImplementation();
+        await expect(SettingsConfig.standardizeSettings()).resolves.not.toThrow();
+        expect(setDirectValueSpy).toHaveBeenCalledTimes(0);
     });
 });
 
