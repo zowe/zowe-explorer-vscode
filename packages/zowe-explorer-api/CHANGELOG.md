@@ -18,8 +18,11 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 - Added a new type `DataSetAllocTemplate` for data set attributes.
 - Added optional `cancelJob` function to `ZoweExplorerApi.IJes` interface.
 - Added z/OSMF API implementation for `cancelJob` function.
+- Added optional `profile` parameter to `IPromptCredentialsOptions` so developers can choose to skip rebuilding the profile with ProfilesCache.
 - Added optional `id` variable to `IZoweTreeNode` interface, which can be used to designate a unique ID for a tree node. [#2215](https://github.com/zowe/vscode-extension-for-zowe/issues/2215)
 - Fixed error shown by API when accessing the `name` and `type` property of a profile when updating the profile arrays [#2334](https://github.com/zowe/vscode-extension-for-zowe/issues/2334).
+
+- Fixed issue where profiles with authentication tokens were breaking functionality for direct-to-service profiles after user interaction. [#2111](https://github.com/zowe/vscode-extension-for-zowe/issues/2111)
 
 ## `2.8.1`
 
