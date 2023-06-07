@@ -869,8 +869,7 @@ export class Profiles extends ProfilesCache {
 
         const promptInfo = await ZoweVsCodeExtension.updateCredentials(
             {
-                sessionName: typeof profile !== "string" ? profile.name : profile,
-                sessionType: typeof profile !== "string" ? profile.type : undefined,
+                profile,
                 rePrompt,
                 secure: (await this.getProfileInfo()).isSecured(),
                 userInputBoxOptions,
@@ -883,14 +882,6 @@ export class Profiles extends ProfilesCache {
             return; // See https://github.com/zowe/vscode-extension-for-zowe/issues/1827
         }
 
-        const isImperativeProfile = (prof: string | zowe.imperative.IProfileLoaded): prof is zowe.imperative.IProfileLoaded =>
-            typeof prof !== "string";
-
-        if (isImperativeProfile(profile)) {
-            if (profile.profile?.tokenValue == null || profile.profile?.tokenType == null) {
-                promptInfo.profile.tokenType = promptInfo.profile.tokenValue = null;
-            }
-        }
         const returnValue: string[] = [promptInfo.profile.user, promptInfo.profile.password, promptInfo.profile.base64EncodedAuth];
         this.updateProfilesArrays(promptInfo);
         return returnValue;

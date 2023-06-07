@@ -80,8 +80,8 @@ export class ZoweVsCodeExtension {
      * @deprecated
      */
     public static async promptCredentials(options: IPromptCredentialsOptions): Promise<imperative.IProfileLoaded> {
-        const loadProfile = await this.profilesCache.getLoadedProfConfig(options.sessionName.trim());
-        if (loadProfile == null) {
+        const loadProfile = options.sessionName ? await this.profilesCache.getLoadedProfConfig(options.sessionName.trim()) : options.profile;
+        if (typeof loadProfile === "string" || loadProfile == null) {
             return undefined;
         }
         const loadSession = loadProfile.profile as imperative.ISession;
@@ -117,9 +117,14 @@ export class ZoweVsCodeExtension {
         const cache = this.profilesCache;
         const profInfo = await cache.getProfileInfo();
         const setSecure = options.secure ?? profInfo.isSecured();
-        const loadProfile = await cache.getLoadedProfConfig(options.sessionName, options.sessionType);
-        const loadSession = loadProfile.profile as imperative.ISession;
+
+        const loadProfile = typeof options.profile === "string" ? await cache.getLoadedProfConfig(options.profile, undefined) : options.profile;
+        const loadSession = loadProfile?.profile as imperative.ISession;
         const creds = await ZoweVsCodeExtension.promptUserPass({ session: loadSession, ...options });
+
+        if (loadProfile == null || loadSession == null) {
+            return;
+        }
 
         if (creds && creds.length > 0) {
             loadProfile.profile.user = loadSession.user = creds[0];
