@@ -13,11 +13,11 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 ### Bug fixes
 
 - Fixed issue where the "Disable Validation for Profile" context menu option did not update to "Enable Validation for Profile" after use. [#1897](https://github.com/zowe/vscode-extension-for-zowe/issues/1897)
-- Removed "/" characters in `path.join()` calls [#2172](https://github.com/zowe/vscode-extension-for-zowe/issues/2172)
-- Fixed issue where user was not able to view job spool file with the same DD name in different steps because of duplicated local file name. [#2279](https://github.com/zowe/vscode-extension-for-zowe/issues/2279)
-- Fixed issue where user was not able to view job spool file from jobs with duplicated step names because of duplicated local file name. [#2315](https://github.com/zowe/vscode-extension-for-zowe/issues/2315)
-- Fixed issue with Windows path when uploading file to data set. [#2323](https://github.com/zowe/vscode-extension-for-zowe/issues/2323)
-- Fixed an issue with mismatch etag error returned not triggering the diff editor and possible loss of data due to the issue. [#2277](https://github.com/zowe/vscode-extension-for-zowe/issues/2277)
+- Fixed parameters passed to `path.join()` calls [#2172](https://github.com/zowe/vscode-extension-for-zowe/issues/2172)
+- Fixed issue handling job files with the same DD names across different steps. [#2279](https://github.com/zowe/vscode-extension-for-zowe/issues/2279)
+- Fixed issue handling job files with unnamed steps. [#2315](https://github.com/zowe/vscode-extension-for-zowe/issues/2315)
+- Fixed issue with Windows path when uploading a file to a data set. [#2323](https://github.com/zowe/vscode-extension-for-zowe/issues/2323)
+- Fixed an issue where the mismatch etag error returned was not triggering the diff editor, resulting in possible loss of data due to the issue. [#2277](https://github.com/zowe/vscode-extension-for-zowe/issues/2277)
 
 ## `2.8.2`
 
