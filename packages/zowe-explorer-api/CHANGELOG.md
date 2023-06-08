@@ -10,6 +10,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 - Added a new type `DataSetAllocTemplate` for data set attributes.
 - Added optional `cancelJob` function to `ZoweExplorerApi.IJes` interface.
 - Added z/OSMF API implementation for `cancelJob` function.
+- Added optional `id` variable to `IZoweTreeNode` interface, which can be used to designate a unique ID for a tree node. [#2215](https://github.com/zowe/vscode-extension-for-zowe/issues/2215)
 
 ## `2.8.1`
 
@@ -29,7 +30,6 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 - Added `Poller` utility singleton for handling continuous poll requests: see `Poller.addRequest, Poller.removeRequest` functions.
 - Added `pollData` optional function to `IZoweTree` class.
 - Added `ZosmfJesApi.downloadSingleSpool` optional api that can be used to download a single spool file in text or binary formats. [#2060](https://github.com/zowe/vscode-extension-for-zowe/issues/2060)
-- Added optional `id` variable to `IZoweTreeNode` interface, which can be used to designate a unique ID for a tree node. [#2215](https://github.com/zowe/vscode-extension-for-zowe/issues/2215)
 - Added new optional API, `IJes.downloadSingleSpool`, that can be used to download a single spool file in text or binary formats. [#2060](https://github.com/zowe/vscode-extension-for-zowe/issues/2060)
 
 ### Bug fixes

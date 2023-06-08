@@ -9,6 +9,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Added option to save unique data set attributes as a template after allocation for future use. [#1425](https://github.com/zowe/vscode-extension-for-zowe/issues/1425)
 - Added "Cancel Job" feature for job nodes in Jobs tree view. [#2251](https://github.com/zowe/vscode-extension-for-zowe/issues/2251)
 - Enhanced ID generation for parent tree nodes to ensure uniqueness.
+- Added support for custom credential manager extensions in Zowe Explorer [#2212](https://github.com/zowe/vscode-extension-for-zowe/issues/2212)
 
 ### Bug fixes
 
@@ -18,6 +19,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed issue handling job files with unnamed steps. [#2315](https://github.com/zowe/vscode-extension-for-zowe/issues/2315)
 - Fixed issue with Windows path when uploading a file to a data set. [#2323](https://github.com/zowe/vscode-extension-for-zowe/issues/2323)
 - Fixed an issue where the mismatch etag error returned was not triggering the diff editor, resulting in possible loss of data due to the issue. [#2277](https://github.com/zowe/vscode-extension-for-zowe/issues/2277)
+- Fixed issue where refreshing views collapsed the respective trees. [#2215](https://github.com/zowe/vscode-extension-for-zowe/issues/2215)
 
 ## `2.8.2`
 
@@ -48,7 +50,6 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Added polling options for JES Spool files. Spool files can be polled manually by clicking on the spool file name or automatic polling can be set with `Start Polling` option in context menu. [#1952](https://github.com/zowe/vscode-extension-for-zowe/issues/1952)
 - Added the JOBS context menu option to download all spool files in binary format. [#2060](https://github.com/zowe/vscode-extension-for-zowe/issues/2060)
 - Added two new options to download a single spool file from a Job in plain text or in binary format. [#2060](https://github.com/zowe/vscode-extension-for-zowe/issues/2060)
-- Added the option for secure credential storage to be enable in Theia environment.
 
 ### Bug fixes
 
@@ -59,7 +60,6 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed redundant text in error messages that included the same error details twice.
 - Fixed issue where a spool file would open a duplicate tab when clicked between updates. [#1952](https://github.com/zowe/vscode-extension-for-zowe/issues/1952)
 - Fixed issue where a job search query would not expand the session node after it has been filtered.
-- Fixed issue where refreshing views collapsed the respective trees. [#2215](https://github.com/zowe/vscode-extension-for-zowe/issues/2215)
 - Fixed error message when no data sets found that match pattern.
 - Fixed secure credential storage not possible to enable in Theia.
 
