@@ -41,11 +41,11 @@ export async function errorHandling(errorDetails: Error | string, label?: string
     // Use util.inspect instead of JSON.stringify to handle circular references
     // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
     ZoweLogger.error(`${errorDetails.toString()}\n` + util.inspect({ errorDetails, label, moreInfo }, { depth: null }));
-
-    if (errorDetails instanceof imperative.ImperativeError && errorDetails.mDetails !== undefined) {
-        const httpErrorCode = errorDetails.mDetails.errorCode as unknown as number;
+    if (typeof errorDetails !== "string" && (errorDetails as imperative.ImperativeError)?.mDetails !== undefined) {
+        const imperativeError: imperative.ImperativeError = errorDetails as imperative.ImperativeError;
+        const httpErrorCode = Number(imperativeError.mDetails.errorCode);
         // open config file for missing hostname error
-        if (errorDetails.toString().includes("hostname")) {
+        if (imperativeError.toString().includes("hostname")) {
             const mProfileInfo = await Profiles.getInstance().getProfileInfo();
             if (mProfileInfo.usingTeamConfig) {
                 Gui.errorMessage(localize("errorHandling.invalid.host", "Required parameter 'host' must not be blank."));
@@ -72,8 +72,8 @@ export async function errorHandling(errorDetails: Error | string, label?: string
                 label = label.substring(0, label.indexOf(" [")).trim();
             }
 
-            if (errorDetails.mDetails.additionalDetails) {
-                const tokenError: string = errorDetails.mDetails.additionalDetails;
+            if (imperativeError.mDetails.additionalDetails) {
+                const tokenError: string = imperativeError.mDetails.additionalDetails;
                 if (tokenError.includes("Token is not valid or expired.")) {
                     if (isTheia()) {
                         Gui.errorMessage(errToken).then(async () => {

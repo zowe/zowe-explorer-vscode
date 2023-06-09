@@ -14,6 +14,7 @@ import { AbstractFtpApi } from "../../../src/ZoweExplorerAbstractFtpApi";
 import { FtpSession } from "../../../src/ftpSession";
 import { FTPConfig, IZosFTPProfile } from "@zowe/zos-ftp-for-zowe-cli";
 import { Gui, MessageSeverity } from "@zowe/zowe-explorer-api";
+import { imperative } from "@zowe/cli";
 
 jest.mock("zos-node-accessor");
 
@@ -75,6 +76,10 @@ describe("AbstractFtpApi", () => {
                 throw new Error("Failed: missing credentials");
             })
         );
+        const imperativeError = new imperative.ImperativeError({
+            msg: "Rest API failure with HTTP(S) status 401 Authentication error.",
+            errorCode: `${imperative.RestConstants.HTTP_STATUS_401}`,
+        });
         const instance = new Dummy();
         instance.profile = {
             profile: {},
@@ -85,14 +90,9 @@ describe("AbstractFtpApi", () => {
         try {
             await instance.getStatus(undefined, "zftp");
         } catch (err) {
-            expect(Gui.errorMessage).toHaveBeenCalledWith(
-                "Invalid Credentials. Please ensure the username and password for undefined are valid or this may lead to a lock-out.",
-                {
-                    logger: ZoweLogger,
-                }
-            );
             expect(err).not.toBeUndefined();
             expect(err).toBeInstanceOf(Error);
+            expect(err).toEqual(imperativeError);
         }
     });
 
@@ -104,6 +104,10 @@ describe("AbstractFtpApi", () => {
             })
         );
         const instance = new Dummy();
+        const imperativeError = new imperative.ImperativeError({
+            msg: "Rest API failure with HTTP(S) status 401 Authentication error.",
+            errorCode: `${imperative.RestConstants.HTTP_STATUS_401}`,
+        });
         instance.profile = {
             profile: {},
             message: undefined,
@@ -113,11 +117,9 @@ describe("AbstractFtpApi", () => {
         try {
             await instance.getStatus(undefined, "zftp");
         } catch (err) {
-            expect(Gui.errorMessage).toHaveBeenCalledWith("Something happened", {
-                logger: ZoweLogger,
-            });
             expect(err).not.toBeUndefined();
             expect(err).toBeInstanceOf(Error);
+            expect(err).toEqual(imperativeError);
         }
     });
 
