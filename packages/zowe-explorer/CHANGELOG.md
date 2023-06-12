@@ -49,6 +49,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Added polling options for JES Spool files. Spool files can be polled manually by clicking on the spool file name or automatic polling can be set with `Start Polling` option in context menu. [#1952](https://github.com/zowe/vscode-extension-for-zowe/issues/1952)
 - Added the JOBS context menu option to download all spool files in binary format. [#2060](https://github.com/zowe/vscode-extension-for-zowe/issues/2060)
 - Added two new options to download a single spool file from a Job in plain text or in binary format. [#2060](https://github.com/zowe/vscode-extension-for-zowe/issues/2060)
+- Added the option for secure credential storage to be enable in Theia environment.
 
 ### Bug fixes
 
