@@ -12,6 +12,8 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 - Added z/OSMF API implementation for `cancelJob` function.
 - Added optional `id` variable to `IZoweTreeNode` interface, which can be used to designate a unique ID for a tree node. [#2215](https://github.com/zowe/vscode-extension-for-zowe/issues/2215)
 
+- Fixed error shown by API when accessing the `name` and `type` property of a profile when updating the profile arrays [#2334](https://github.com/zowe/vscode-extension-for-zowe/issues/2334).
+
 ## `2.8.1`
 
 ### Bug fixes
