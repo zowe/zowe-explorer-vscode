@@ -18,6 +18,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed issue where user was not able to view job spool file from jobs with duplicated step names because of duplicated local file name. [#2315](https://github.com/zowe/vscode-extension-for-zowe/issues/2315)
 - Fixed issue with Windows path when uploading file to data set. [#2323](https://github.com/zowe/vscode-extension-for-zowe/issues/2323)
 - Fixed an issue with mismatch etag error returned not triggering the diff editor and possible loss of data due to the issue. [#2277](https://github.com/zowe/vscode-extension-for-zowe/issues/2277)
+- Fixed an issue where user would not get prompted when authentication error is thrown. [#2334](https://github.com/zowe/vscode-extension-for-zowe/issues/2334)
 
 ## `2.8.2`
 
