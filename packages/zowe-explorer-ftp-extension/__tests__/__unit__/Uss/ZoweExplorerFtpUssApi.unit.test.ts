@@ -17,7 +17,8 @@ import { FtpUssApi } from "../../../src/ZoweExplorerFtpUssApi";
 import { UssUtils } from "@zowe/zos-ftp-for-zowe-cli";
 import TestUtils from "../utils/TestUtils";
 import * as zowe from "@zowe/cli";
-import { sessionMap } from "../../../src/extension";
+import { ZoweLogger, sessionMap } from "../../../src/extension";
+import { ZoweFtpExtensionError } from "../../../src/ZoweFtpExtensionError";
 
 // two methods to mock modules: create a __mocks__ file for zowe-explorer-api.ts and direct mock for extension.ts
 jest.mock("../../../__mocks__/@zowe/zowe-explorer-api.ts");
@@ -32,11 +33,16 @@ fs.createReadStream = jest.fn().mockReturnValue(readableStream);
 const UssApi = new FtpUssApi();
 
 describe("FtpUssApi", () => {
-    beforeAll(() => {
+    beforeEach(() => {
         UssApi.checkedProfile = jest.fn().mockReturnValue({ message: "success", type: "zftp", failNotFound: false });
         UssApi.ftpClient = jest.fn().mockReturnValue({ host: "", user: "", password: "", port: "" });
         UssApi.releaseConnection = jest.fn();
         sessionMap.get = jest.fn().mockReturnValue({ ussListConnection: { connected: true } });
+        ZoweLogger.getExtensionName = jest.fn().mockReturnValue("Zowe Explorer FTP Extension");
+    });
+
+    afterEach(() => {
+        jest.restoreAllMocks();
     });
 
     it("should list uss files.", async () => {
@@ -89,7 +95,7 @@ describe("FtpUssApi", () => {
         const localFile = "/tmp/testfile1.txt";
         const response = TestUtils.getSingleLineStream();
         UssUtils.uploadFile = jest.fn().mockReturnValue(response);
-        UssApi.getContents = jest.fn().mockReturnValue({ apiResponse: { etag: "test" } });
+        jest.spyOn(UssApi, "getContents").mockResolvedValue({ apiResponse: { etag: "test" } } as any);
         const mockParams = {
             inputFilePath: localFile,
             ussFilePath: "/a/b/c.txt",
@@ -123,7 +129,7 @@ describe("FtpUssApi", () => {
             options: {},
         };
         const response = {};
-        UssApi.putContents = jest.fn().mockReturnValue(response);
+        jest.spyOn(UssApi, "putContents").mockResolvedValue(response as any);
         await UssApi.uploadDirectory(mockParams.inputDirectoryPath, mockParams.ussDirectoryPath, mockParams.options);
 
         // One call to make the folder, one call per file
@@ -200,5 +206,99 @@ describe("FtpUssApi", () => {
 
     it("should receive false from isFileTagBinOrAscii as it is not implemented in the FTP extension.", async () => {
         expect(await UssApi.isFileTagBinOrAscii("")).toBe(false);
+    });
+
+    it("should throw error when list files failed", async () => {
+        jest.spyOn(UssUtils, "listFiles").mockImplementationOnce(
+            jest.fn((val) => {
+                throw new Error("List files failed.");
+            })
+        );
+        await expect(async () => {
+            await UssApi.fileList("/a/b/c");
+        }).rejects.toThrow(ZoweFtpExtensionError);
+    });
+
+    it("should throw error when get content failed", async () => {
+        jest.spyOn(UssUtils, "downloadFile").mockImplementationOnce(() => {
+            throw new Error("Download file failed.");
+        });
+        const localFile = "/tmp/testfile1.txt";
+        const mockParams = {
+            ussFilePath: "/a/b/d.txt",
+            options: {
+                file: localFile,
+            },
+        };
+        await expect(async () => {
+            await UssApi.getContents(mockParams.ussFilePath, mockParams.options);
+        }).rejects.toThrow(ZoweFtpExtensionError);
+    });
+
+    it("should throw error when put content failed", async () => {
+        jest.spyOn(UssUtils, "uploadFile").mockImplementationOnce(() => {
+            throw new Error("Upload file failed.");
+        });
+        const mockParams = {
+            inputFilePath: "/a/b/c.txt",
+            ussFilePath: "/a/b/c.txt",
+            etag: "test",
+            returnEtag: true,
+            options: {
+                file: "c.txt",
+            },
+        };
+        await expect(async () => {
+            await UssApi.putContent(mockParams.inputFilePath, mockParams.ussFilePath);
+        }).rejects.toThrow(ZoweFtpExtensionError);
+    });
+
+    it("should throw error when upload directory failed", async () => {
+        jest.spyOn(UssUtils, "uploadFile").mockImplementationOnce(
+            jest.fn((val) => {
+                throw new Error("Upload file failed.");
+            })
+        );
+        const mockParams = {
+            inputDirectoryPath: "/a/b/c",
+            ussDirectoryPath: "/a/b/c",
+            options: {},
+        };
+        await expect(async () => {
+            await UssApi.uploadDirectory(mockParams.inputDirectoryPath, mockParams.ussDirectoryPath, mockParams.options);
+        }).rejects.toThrow(ZoweFtpExtensionError);
+    });
+
+    it("should throw error when create file failed", async () => {
+        jest.spyOn(UssUtils, "uploadFile").mockImplementationOnce(
+            jest.fn((val) => {
+                throw new Error("Upload file failed.");
+            })
+        );
+        await expect(async () => {
+            await UssApi.create("/a/b/c", "file");
+        }).rejects.toThrow(ZoweFtpExtensionError);
+    });
+
+    it("should throw error when delete file failed", async () => {
+        jest.spyOn(UssUtils, "deleteFile").mockImplementationOnce(
+            jest.fn((val) => {
+                throw new Error("Delete file failed.");
+            })
+        );
+        await expect(async () => {
+            await UssApi.delete("/a/b/c");
+        }).rejects.toThrow(ZoweFtpExtensionError);
+    });
+
+    it("should throw error when rename file failed", async () => {
+        jest.spyOn(UssUtils, "renameFile").mockImplementationOnce(
+            jest.fn((val) => {
+                throw new Error("Rename file failed.");
+            })
+        );
+        await expect(async () => {
+            await UssApi.rename("/a/b/c", "a/b/d");
+        }).rejects.toThrow(ZoweFtpExtensionError);
     });
 });

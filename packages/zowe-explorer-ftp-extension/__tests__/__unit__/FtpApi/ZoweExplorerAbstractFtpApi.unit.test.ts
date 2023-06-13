@@ -84,16 +84,9 @@ describe("AbstractFtpApi", () => {
             type: undefined,
             failNotFound: undefined,
         };
-        try {
+        await expect(async () => {
             await instance.getStatus(undefined, "zftp");
-        } catch (err) {
-            expect(ZoweLogger.getExtensionName).toHaveBeenCalled();
-            expect(err.message).toContain(
-                "Invalid Credentials. Please ensure the username and password for undefined are valid or this may lead to a lock-out."
-            );
-            expect(err).not.toBeUndefined();
-            expect(err).toBeInstanceOf(ZoweFtpExtensionError);
-        }
+        }).rejects.toThrow(ZoweFtpExtensionError);
     });
 
     it("should show a different fatal message when trying to call getStatus and an exception occurs.", async () => {
@@ -110,14 +103,9 @@ describe("AbstractFtpApi", () => {
             type: undefined,
             failNotFound: undefined,
         };
-        try {
+        await expect(async () => {
             await instance.getStatus(undefined, "zftp");
-        } catch (err) {
-            expect(ZoweLogger.getExtensionName).toHaveBeenCalled();
-            expect(err.message).toContain("Something happened");
-            expect(err).not.toBeUndefined();
-            expect(err).toBeInstanceOf(ZoweFtpExtensionError);
-        }
+        }).rejects.toThrow(ZoweFtpExtensionError);
     });
 
     it("should show a fatal message when using checkedProfile on an invalid profile", () => {
