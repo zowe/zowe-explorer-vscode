@@ -89,18 +89,11 @@ export abstract class AbstractFtpApi implements ZoweExplorerApi.ICommon {
             try {
                 sessionStatus = await this.ftpClient(this.checkedProfile());
             } catch (e) {
-                if (e instanceof Error) {
-                    /* The errMsg should be consistent with the errMsg in ProfilesUtils.ts of zowe-explorer */
-                    if (e.message.indexOf("failed") !== -1 || e.message.indexOf("missing") !== -1) {
-                        const errMsg =
-                            "Invalid Credentials. Please ensure the username and password for " +
-                            validateProfile?.name +
-                            " are valid or this may lead to a lock-out.";
-                        throw new ZoweFtpExtensionError(errMsg);
-                    } else {
-                        throw new ZoweFtpExtensionError(e.message);
-                    }
-                }
+                const imperativeError = new imperative.ImperativeError({
+                    msg: "Rest API failure with HTTP(S) status 401 Authentication error.",
+                    errorCode: `${imperative.RestConstants.HTTP_STATUS_401}`,
+                });
+                throw imperativeError;
             }
             if (sessionStatus) {
                 return "active";

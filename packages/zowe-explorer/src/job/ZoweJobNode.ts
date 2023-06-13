@@ -90,7 +90,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
         }
 
         if (!globals.ISTHEIA && !(this instanceof Spool)) {
-            this.id = `${mParent?.id ?? "<root>"}.${this.label as string}`;
+            this.id = `${mParent?.id ?? mParent?.label?.toString() ?? "<root>"}.${this.label as string}`;
         }
     }
 

@@ -146,8 +146,9 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
             if (options.returnEtag && options.etag) {
                 const contentsTag = await this.getContentsTag(dataSetName);
                 if (contentsTag && contentsTag !== options.etag) {
-                    // TODO: extension.ts should not check for zosmf errors.
-                    throw new Error("Save conflict. Please pull the latest content from mainframe first.");
+                    result.success = false;
+                    result.commandResponse = "Rest API failure with HTTP(S) status 412 Save conflict.";
+                    return result;
                 }
             }
             const lrecl: number = dsAtrribute.apiResponse.items[0].lrecl;

@@ -22,6 +22,7 @@ import * as nls from "vscode-nls";
 import { imperative, getImperativeConfig } from "@zowe/cli";
 import { ZoweExplorerExtender } from "../ZoweExplorerExtender";
 import { ZoweLogger } from "./LoggerUtils";
+import { SettingsConfig } from "./SettingsConfig";
 
 // Set up localization
 nls.config({
@@ -40,11 +41,11 @@ export async function errorHandling(errorDetails: Error | string, label?: string
     // Use util.inspect instead of JSON.stringify to handle circular references
     // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
     ZoweLogger.error(`${errorDetails.toString()}\n` + util.inspect({ errorDetails, label, moreInfo }, { depth: null }));
-
-    if (errorDetails instanceof imperative.ImperativeError && errorDetails.mDetails !== undefined) {
-        const httpErrorCode = errorDetails.mDetails.errorCode as unknown as number;
+    if (typeof errorDetails !== "string" && (errorDetails as imperative.ImperativeError)?.mDetails !== undefined) {
+        const imperativeError: imperative.ImperativeError = errorDetails as imperative.ImperativeError;
+        const httpErrorCode = Number(imperativeError.mDetails.errorCode);
         // open config file for missing hostname error
-        if (errorDetails.toString().includes("hostname")) {
+        if (imperativeError.toString().includes("hostname")) {
             const mProfileInfo = await Profiles.getInstance().getProfileInfo();
             if (mProfileInfo.usingTeamConfig) {
                 Gui.errorMessage(localize("errorHandling.invalid.host", "Required parameter 'host' must not be blank."));
@@ -71,8 +72,8 @@ export async function errorHandling(errorDetails: Error | string, label?: string
                 label = label.substring(0, label.indexOf(" [")).trim();
             }
 
-            if (errorDetails.mDetails.additionalDetails) {
-                const tokenError: string = errorDetails.mDetails.additionalDetails;
+            if (imperativeError.mDetails.additionalDetails) {
+                const tokenError: string = imperativeError.mDetails.additionalDetails;
                 if (tokenError.includes("Token is not valid or expired.")) {
                     if (isTheia()) {
                         Gui.errorMessage(errToken).then(async () => {
@@ -209,18 +210,78 @@ export class FilterDescriptor implements vscode.QuickPickItem {
 }
 
 export class ProfilesUtils {
-    public static getProfileInfo(envTheia: boolean): imperative.ProfileInfo {
-        ZoweLogger.trace("ProfilesUtils.getProfileInfo called.");
-        const mProfileInfo = new imperative.ProfileInfo("zowe", {
-            requireKeytar: () => getSecurityModules("keytar", envTheia),
+    public static getCredentialManagerOverride(): imperative.ICredentialManagerNameMap | undefined {
+        ZoweLogger.trace("ProfilesUtils.getCredentialManagerOverride called.");
+        const knownCredentialManagers = imperative.CredentialManagerOverride.getKnownCredMgrs();
+        const credentialManager = knownCredentialManagers.find((knownCredentialManager) => {
+            try {
+                return vscode.extensions.getExtension(knownCredentialManager.credMgrZEName);
+            } catch (err) {
+                return false;
+            }
         });
-        return mProfileInfo;
+        if (!credentialManager) {
+            return undefined;
+        }
+        return imperative.CredentialManagerOverride.getCredMgrInfoByDisplayName(credentialManager.credMgrDisplayName);
+    }
+
+    public static async activateCredentialManagerOverride(
+        credentialManagerExtension: vscode.Extension<any>
+    ): Promise<imperative.ICredentialManagerConstructor | undefined> {
+        try {
+            ZoweLogger.trace("ProfilesUtils.activateCredentialManagerOverride called.");
+            const exports = await credentialManagerExtension.activate();
+            if (credentialManagerExtension.isActive && exports) {
+                return credentialManagerExtension.exports as imperative.ICredentialManagerConstructor;
+            }
+            return undefined;
+        } catch (err) {
+            throw new Error(localize("activateCredentialManagerOverride.failedToActivate", "Custom credential manager failed to activate"));
+        }
+    }
+
+    public static async updateCredentialManagerSetting(setting: string): Promise<void> {
+        ZoweLogger.trace("ProfilesUtils.updateCredentialManagerSetting called.");
+        const settingEnabled: boolean = SettingsConfig.getDirectValue(globals.SETTINGS_SECURE_CREDENTIALS_ENABLED);
+        if (settingEnabled) {
+            await globals.setGlobalSecurityValue(setting);
+            imperative.CredentialManagerOverride.recordCredMgrInConfig(setting);
+        }
+    }
+
+    public static async getProfileInfo(envTheia: boolean): Promise<imperative.ProfileInfo> {
+        ZoweLogger.trace("ProfilesUtils.getProfileInfo called.");
+        const credentialManagerMap = ProfilesUtils.getCredentialManagerOverride();
+        const customCredentialManagerExtension =
+            credentialManagerMap?.credMgrZEName && vscode.extensions.getExtension(credentialManagerMap.credMgrZEName);
+        const settingEnabled: boolean = SettingsConfig.getDirectValue(globals.SETTINGS_SECURE_CREDENTIALS_ENABLED);
+        if (credentialManagerMap && customCredentialManagerExtension && settingEnabled) {
+            ZoweLogger.info(localize("ProfilesUtils.getProfileInfo.usingCustom", "Custom credential manager found, attempting to activate."));
+            const credentialManager = await ProfilesUtils.activateCredentialManagerOverride(customCredentialManagerExtension);
+            if (credentialManager) {
+                Object.setPrototypeOf(credentialManager.prototype, imperative.AbstractCredentialManager.prototype);
+                await ProfilesUtils.updateCredentialManagerSetting(credentialManagerMap.credMgrDisplayName);
+                return new imperative.ProfileInfo("zowe", {
+                    credMgrOverride: {
+                        Manager: credentialManager,
+                        service: credentialManagerMap.credMgrDisplayName,
+                    },
+                });
+            }
+        }
+
+        ZoweLogger.info(localize("ProfilesUtils.getProfileInfo.usingDefault", "No custom credential managers found, using the default instead."));
+        await ProfilesUtils.updateCredentialManagerSetting(globals.ZOWE_CLI_SCM);
+        return new imperative.ProfileInfo("zowe", {
+            credMgrOverride: imperative.ProfileCredentials.defaultCredMgrWithKeytar(() => getSecurityModules("keytar", envTheia)),
+        });
     }
 
     public static async readConfigFromDisk(): Promise<void> {
         ZoweLogger.trace("ProfilesUtils.readConfigFromDisk called.");
         let rootPath: string;
-        const mProfileInfo = ProfilesUtils.getProfileInfo(globals.ISTHEIA);
+        const mProfileInfo = await ProfilesUtils.getProfileInfo(globals.ISTHEIA);
         if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders[0]) {
             rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
             await mProfileInfo.readProfilesFromDisk({ homeDir: getZoweDir(), projectDir: getFullPath(rootPath) });
@@ -286,7 +347,8 @@ export class ProfilesUtils {
         ZoweLogger.trace("ProfilesUtils.initializeZoweFolder called.");
         // ensure the Secure Credentials Enabled value is read
         // set globals.PROFILE_SECURITY value accordingly
-        await globals.setGlobalSecurityValue();
+        const credentialManagerMap = ProfilesUtils.getCredentialManagerOverride();
+        await globals.setGlobalSecurityValue(credentialManagerMap?.credMgrDisplayName ?? globals.ZOWE_CLI_SCM);
         // Ensure that ~/.zowe folder exists
         // Ensure that the ~/.zowe/settings/imperative.json exists
         // TODO: update code below once this imperative issue is resolved.

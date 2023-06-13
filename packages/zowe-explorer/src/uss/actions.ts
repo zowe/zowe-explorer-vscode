@@ -14,7 +14,7 @@ import { imperative, IZosFilesResponse } from "@zowe/cli";
 import * as fs from "fs";
 import * as globals from "../globals";
 import * as path from "path";
-import { concatChildNodes, willForceUpload, uploadContent, getSelectedNodeList, getDefaultUri } from "../shared/utils";
+import { concatChildNodes, uploadContent, getSelectedNodeList, getDefaultUri, compareFileContent } from "../shared/utils";
 import { errorHandling } from "../utils/ProfilesUtils";
 import { Gui, ValidProfileEnum, IZoweTree, IZoweUSSTreeNode } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
@@ -319,46 +319,9 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
         }
     } catch (err) {
         // TODO: error handling must not be zosmf specific
-        if (err.message.includes("Rest API failure with HTTP(S) status 412")) {
-            if (globals.ISTHEIA) {
-                willForceUpload(node, doc, remote, node.getProfile(), binary, returnEtag);
-            } else {
-                // Store old document text in a separate variable, to be used on merge conflict
-                const oldDocText = doc.getText();
-                const oldDocLineCount = doc.lineCount;
-                const prof = node.getProfile();
-                const downloadResponse = await ZoweExplorerApiRegister.getUssApi(prof).getContents(node.fullPath, {
-                    file: node.getUSSDocumentFilePath(),
-                    binary,
-                    returnEtag: true,
-                    encoding: prof.profile?.encoding,
-                    responseTimeout: prof.profile?.responseTimeout,
-                });
-                // re-assign etag, so that it can be used with subsequent requests
-                const downloadEtag = downloadResponse.apiResponse.etag;
-                if (downloadEtag !== etagToUpload) {
-                    node.setEtag(downloadEtag);
-                }
-
-                ZoweLogger.warn(err);
-                Gui.warningMessage(
-                    localize(
-                        "saveFile.error.etagMismatch",
-                        "Remote file has been modified in the meantime.\nSelect 'Compare' to resolve the conflict."
-                    )
-                );
-                if (vscode.window.activeTextEditor) {
-                    const startPosition = new vscode.Position(0, 0);
-                    const endPosition = new vscode.Position(oldDocLineCount, 0);
-                    const deleteRange = new vscode.Range(startPosition, endPosition);
-                    await vscode.window.activeTextEditor.edit((editBuilder) => {
-                        // re-write the old content in the editor view
-                        editBuilder.delete(deleteRange);
-                        editBuilder.insert(startPosition, oldDocText);
-                    });
-                    await vscode.window.activeTextEditor.document.save();
-                }
-            }
+        const errorMessage = err ? err.message : err.toString();
+        if (errorMessage.includes("Rest API failure with HTTP(S) status 412")) {
+            await compareFileContent(doc, node, null, binary);
         } else {
             await markDocumentUnsaved(doc);
             await errorHandling(err, sesName);

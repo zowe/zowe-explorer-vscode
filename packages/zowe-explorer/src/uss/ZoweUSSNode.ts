@@ -113,7 +113,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             this.iconPath = icon.path;
         }
         if (!globals.ISTHEIA && this.getParent() && contextually.isSession(this.getParent())) {
-            this.id = `${mParent?.id ?? "<root>"}.${this.label as string}`;
+            this.id = `${mParent?.id ?? mParent?.label?.toString() ?? "<root>"}.${this.label as string}`;
         }
     }
 

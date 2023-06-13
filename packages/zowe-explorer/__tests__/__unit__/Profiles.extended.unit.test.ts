@@ -250,6 +250,10 @@ describe("Profiles Unit Tests - Function createNewConnection for v1 Profiles", (
         return newMocks;
     }
 
+    beforeEach(() => {
+        jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(false);
+    });
+
     it("Tests that createNewConnection fails if profileName is missing", async () => {
         const globalMocks = await createGlobalMocks();
 
