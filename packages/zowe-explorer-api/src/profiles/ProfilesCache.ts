@@ -16,6 +16,7 @@ import { URL } from "url";
 
 import * as zowe from "@zowe/cli";
 import { ZoweExplorerApi } from "./ZoweExplorerApi";
+import { getSecurityModules } from "../security";
 
 // TODO: find a home for constants
 export const CONTEXT_PREFIX = "_";
@@ -72,8 +73,10 @@ export class ProfilesCache {
         this.cwd = cwd != null ? getFullPath(cwd) : undefined;
     }
 
-    public async getProfileInfo(): Promise<zowe.imperative.ProfileInfo> {
-        const mProfileInfo = new zowe.imperative.ProfileInfo("zowe");
+    public async getProfileInfo(envTheia = false): Promise<zowe.imperative.ProfileInfo> {
+        const mProfileInfo = new zowe.imperative.ProfileInfo("zowe", {
+            credMgrOverride: zowe.imperative.ProfileCredentials.defaultCredMgrWithKeytar(() => getSecurityModules("keytar", envTheia)),
+        });
         await mProfileInfo.readProfilesFromDisk({ homeDir: getZoweDir(), projectDir: this.cwd ?? undefined });
         return mProfileInfo;
     }
