@@ -608,7 +608,7 @@ async function handleUserSelection(): Promise<string> {
     const qpItems = [];
     qpItems.push(new FilterItem({ text: `\u002B ${localizedStrings.allocString}`, show: true }));
     newDSProperties?.forEach((prop) => {
-        const propLabel = `\u270F ${prop?.label as string}`;
+        const propLabel = `\u270F ${prop.label as string}`;
         qpItems.push(new FilterItem({ text: propLabel, description: prop.value, show: true }));
     });
 
