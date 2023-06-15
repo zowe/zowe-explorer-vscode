@@ -14,8 +14,6 @@ import * as path from "path";
 import * as zowe from "@zowe/cli";
 import { ProfilesCache } from "../../../src/profiles/ProfilesCache";
 import { ZoweExplorerApi } from "../../../src";
-import { getSecurityModules } from "../../../src/security/KeytarCredentialManager";
-jest.mock("../../../src/security/KeytarCredentialManager");
 
 jest.mock("fs");
 jest.mock("@zowe/cli", () => {
