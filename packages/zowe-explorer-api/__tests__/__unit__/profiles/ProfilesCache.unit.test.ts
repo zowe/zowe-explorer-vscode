@@ -14,6 +14,8 @@ import * as path from "path";
 import * as zowe from "@zowe/cli";
 import { ProfilesCache } from "../../../src/profiles/ProfilesCache";
 import { ZoweExplorerApi } from "../../../src";
+import { getSecurityModules } from "../../../src/security/KeytarCredentialManager";
+jest.mock("../../../src/security/KeytarCredentialManager");
 
 jest.mock("fs");
 jest.mock("@zowe/cli", () => {
@@ -124,6 +126,7 @@ describe("ProfilesCache", () => {
     const fakeLogger = { debug: jest.fn() };
     const fakeZoweDir = zowe.getZoweDir();
     const readProfilesFromDiskSpy = jest.spyOn(zowe.imperative.ProfileInfo.prototype, "readProfilesFromDisk");
+    const defaultCredMgrWithKeytarSpy = jest.spyOn(zowe.imperative.ProfileCredentials, "defaultCredMgrWithKeytar");
 
     afterEach(() => {
         jest.clearAllMocks();
@@ -132,6 +135,7 @@ describe("ProfilesCache", () => {
     it("getProfileInfo should initialize ProfileInfo API", async () => {
         const profInfo = await new ProfilesCache(fakeLogger as unknown as zowe.imperative.Logger, __dirname).getProfileInfo();
         expect(readProfilesFromDiskSpy).toHaveBeenCalledTimes(1);
+        expect(defaultCredMgrWithKeytarSpy).toHaveBeenCalledTimes(1);
         const teamConfig = profInfo.getTeamConfig();
         expect(teamConfig.appName).toBe("zowe");
         expect(teamConfig.paths).toEqual([
