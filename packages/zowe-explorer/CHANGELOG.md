@@ -6,18 +6,26 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
+### Bug fixes
+
+## `2.9.0`
+
+### New features and enhancements
+
 - Added option to save unique data set attributes as a template after allocation for future use. [#1425](https://github.com/zowe/vscode-extension-for-zowe/issues/1425)
 - Added "Cancel Job" feature for job nodes in Jobs tree view. [#2251](https://github.com/zowe/vscode-extension-for-zowe/issues/2251)
 - Enhanced ID generation for parent tree nodes to ensure uniqueness.
+- Added support for custom credential manager extensions in Zowe Explorer [#2212](https://github.com/zowe/vscode-extension-for-zowe/issues/2212)
 
 ### Bug fixes
 
 - Fixed issue where the "Disable Validation for Profile" context menu option did not update to "Enable Validation for Profile" after use. [#1897](https://github.com/zowe/vscode-extension-for-zowe/issues/1897)
-- Removed "/" characters in `path.join()` calls [#2172](https://github.com/zowe/vscode-extension-for-zowe/issues/2172)
-- Fixed issue where user was not able to view job spool file with the same DD name in different steps because of duplicated local file name. [#2279](https://github.com/zowe/vscode-extension-for-zowe/issues/2279)
-- Fixed issue where user was not able to view job spool file from jobs with duplicated step names because of duplicated local file name. [#2315](https://github.com/zowe/vscode-extension-for-zowe/issues/2315)
-- Fixed issue with Windows path when uploading file to data set. [#2323](https://github.com/zowe/vscode-extension-for-zowe/issues/2323)
-- Fixed an issue with mismatch etag error returned not triggering the diff editor and possible loss of data due to the issue. [#2277](https://github.com/zowe/vscode-extension-for-zowe/issues/2277)
+- Fixed parameters passed to `path.join()` calls [#2172](https://github.com/zowe/vscode-extension-for-zowe/issues/2172)
+- Fixed issue handling job files with the same DD names across different steps. [#2279](https://github.com/zowe/vscode-extension-for-zowe/issues/2279)
+- Fixed issue handling job files with unnamed steps. [#2315](https://github.com/zowe/vscode-extension-for-zowe/issues/2315)
+- Fixed issue with Windows path when uploading a file to a data set. [#2323](https://github.com/zowe/vscode-extension-for-zowe/issues/2323)
+- Fixed an issue where the mismatch etag error returned was not triggering the diff editor, resulting in possible loss of data due to the issue. [#2277](https://github.com/zowe/vscode-extension-for-zowe/issues/2277)
+- Fixed issue where refreshing views collapsed the respective trees. [#2215](https://github.com/zowe/vscode-extension-for-zowe/issues/2215)
 - Fixed an issue where user would not get prompted when authentication error is thrown. [#2334](https://github.com/zowe/vscode-extension-for-zowe/issues/2334)
 
 ## `2.8.2`
@@ -42,7 +50,6 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 - Added a new Zowe Explorer setting, `zowe.logger`, with a default setting of `INFO`.
 - Added an output channel, `Zowe Explorer`, for logging within VS Code's Output view. The log level is set by the new Zowe Explorer setting, `zowe.logger`.
-- Added support for custom credential manager extensions in Zowe Explorer [#2212](https://github.com/zowe/vscode-extension-for-zowe/issues/2212)
 - Added a new setting `zowe.files.logsFolder.path` that can be used to override Zowe Explorer logs folder if default location is read-only. [#2186](https://github.com/zowe/vscode-extension-for-zowe/issues/2186)
 - Opening a dialog for Upload or Download of files will now open at the project level directory or the user's home directory if no project is opened. [#2203](https://github.com/zowe/vscode-extension-for-zowe/issues/2203)
 - Updated linter rules and addressed linter errors. [#2184](https://github.com/zowe/vscode-extension-for-zowe/issues/2184)
@@ -60,7 +67,6 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed redundant text in error messages that included the same error details twice.
 - Fixed issue where a spool file would open a duplicate tab when clicked between updates. [#1952](https://github.com/zowe/vscode-extension-for-zowe/issues/1952)
 - Fixed issue where a job search query would not expand the session node after it has been filtered.
-- Fixed issue where refreshing views collapsed the respective trees. [#2215](https://github.com/zowe/vscode-extension-for-zowe/issues/2215)
 - Fixed error message when no data sets found that match pattern.
 - Fixed secure credential storage not possible to enable in Theia.
 
