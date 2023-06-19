@@ -84,8 +84,8 @@ export function registerCommonCommands(context: vscode.ExtensionContext, provide
 
     // Update imperative.json to false only when VS Code setting is set to false
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.updateSecureCredentials", async () => {
-            await globals.setGlobalSecurityValue();
+        vscode.commands.registerCommand("zowe.updateSecureCredentials", async (customCredentialManager?: string) => {
+            await globals.setGlobalSecurityValue(customCredentialManager);
             ProfilesUtils.writeOverridesFile();
         })
     );

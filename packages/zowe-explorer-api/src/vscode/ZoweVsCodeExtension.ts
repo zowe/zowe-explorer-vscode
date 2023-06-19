@@ -92,7 +92,7 @@ export class ZoweVsCodeExtension {
             loadProfile.profile.user = loadSession.user = creds[0];
             loadProfile.profile.password = loadSession.password = creds[1];
 
-            const upd = { profileName: loadProfile.name, profileType: loadProfile.type };
+            const upd = { profileName: loadProfile?.name, profileType: loadProfile.type };
             await (
                 await this.profilesCache.getProfileInfo()
             ).updateProperty({ ...upd, property: "user", value: creds[0], setSecure: options.secure });

@@ -907,8 +907,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
      */
     private async addSingleSession(profile: imperative.IProfileLoaded): Promise<void> {
         ZoweLogger.trace("USSTree.addSingleSession called.");
-        const isV2 = await ProfilesUtils.usingTeamConfig();
-        if (profile && isV2) {
+        if (profile) {
             // If session is already added, do nothing
             if (this.mSessionNodes.find((tNode) => tNode.label.toString() === profile.name)) {
                 return;

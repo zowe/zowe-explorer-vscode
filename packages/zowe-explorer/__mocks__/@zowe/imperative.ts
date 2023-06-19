@@ -161,6 +161,12 @@ export interface IConfigOpts {
     vault?: string;
 }
 
+export interface ICredentialManagerNameMap {
+    credMgrDisplayName: string;
+    credMgrPluginName?: string;
+    credMgrZEName?: string;
+}
+
 export class BrightProfile {
     constructor(public profile: Profile) {}
 }
@@ -272,6 +278,26 @@ export class ImperativeConfig {
 export class ConfigSchema {
     public static buildSchema() {
         return {};
+    }
+}
+
+export class CredentialManagerOverride {
+    public static getKnownCredMgrs(): ICredentialManagerNameMap[] {
+        return [];
+    }
+
+    public static getCredMgrInfoByDisplayName(displayName: string): ICredentialManagerNameMap | null {
+        return null;
+    }
+
+    public static recordCredMgrInConfig(displayName: string): void {
+        return;
+    }
+}
+
+export class ProfileCredentials {
+    public static defaultCredMgrWithKeytar(requireKeytar: () => NodeModule): string {
+        return "Test";
     }
 }
 
