@@ -1057,7 +1057,7 @@ describe("Extension Integration Tests - USS", () => {
             const sessChildren2 = await ussTestTree.getChildren(sessChildren1[3]);
             sessChildren2[2].dirty = true;
             const dirChildren = await ussTestTree.getChildren(sessChildren2[2]);
-            const localPath = path.join(globals.USS_DIR, "/", testConst.profile.name, dirChildren[0].fullPath);
+            const localPath = path.join(globals.USS_DIR, testConst.profile.name, dirChildren[0].fullPath || "");
 
             await dirChildren[0].openUSS(false, true, ussTestTree);
             const doc = await vscode.workspace.openTextDocument(localPath);

@@ -130,10 +130,7 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
             if (returnEtag && etag) {
                 const contentsTag = await this.getContentsTag(ussFilePath);
                 if (contentsTag && contentsTag !== etag) {
-                    await Gui.errorMessage("Save conflict. Please pull the latest content from mainframe first.", {
-                        logger: ZoweLogger,
-                    });
-                    throw new Error();
+                    throw new Error("Rest API failure with HTTP(S) status 412 Save conflict.");
                 }
             }
             await UssUtils.uploadFile(connection, ussFilePath, transferOptions);

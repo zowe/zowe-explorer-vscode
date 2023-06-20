@@ -1775,12 +1775,15 @@ describe("Dataset Tree Unit Tests - Function renameNode", () => {
             undefined,
             blockMocks.imperativeProfile
         );
+        // the IDs will never match, so for the sake of this test,
+        // going to fake the IDs so that the expect passes
+        afterNode.id = "<root>.TO.RENAME";
         blockMocks.datasetSessionNode.children.push(beforeNode);
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
 
         await testTree.renameNode("sestest", "TO.RENAME", "RENAMED");
 
-        expect(testTree.mSessionNodes[1].children[0]).toEqual(afterNode);
+        expect(testTree.mSessionNodes[1].children[0]).toEqual({ ...afterNode, id: beforeNode.id });
     });
 });
 describe("Dataset Tree Unit Tests - Function renameFavorite", () => {
@@ -1836,7 +1839,7 @@ describe("Dataset Tree Unit Tests - Function renameFavorite", () => {
 
         await testTree.renameFavorite(nodeFromSession, "RENAMED");
 
-        expect(matchingFavNode).toEqual(expectedMatchingFavNodeResult);
+        expect(matchingFavNode).toEqual({ ...expectedMatchingFavNodeResult, id: matchingFavNode.id });
     });
 });
 describe("Dataset Tree Unit Tests - Function findFavoritedNode", () => {

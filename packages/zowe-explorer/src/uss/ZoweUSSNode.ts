@@ -113,6 +113,9 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         if (icon) {
             this.iconPath = icon.path;
         }
+        if (!globals.ISTHEIA && this.getParent() && contextually.isSession(this.getParent())) {
+            this.id = `${mParent?.id ?? mParent?.label?.toString() ?? "<root>"}.${this.label as string}`;
+        }
     }
 
     /**
@@ -164,14 +167,14 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             await errorHandling(err, this.label.toString(), localize("getChildren.error.response", "Retrieving response from ") + `uss-file-list`);
             syncSessionNode(Profiles.getInstance())((profileValue) => ZoweExplorerApiRegister.getUssApi(profileValue).getSession())(sessNode);
         }
-        // push nodes to an object with property names to avoid duplicates
-        const elementChildren: { [k: string]: IZoweUSSTreeNode } = {};
+
+        const elementChildren: Record<string, IZoweUSSTreeNode> = {};
+
         responses.forEach((response) => {
             // Throws reject if the Zowe command does not throw an error but does not succeed
             if (!response.success) {
                 throw Error(localize("getChildren.responses.error.response", "The response from Zowe CLI was not successful"));
             }
-
             // Loops through all the returned file references members and creates nodes for them
             for (const item of response.apiResponse.items) {
                 const existing = this.children.find(
@@ -223,7 +226,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                             title: localize("getChildren.responses.open", "Open"),
                             arguments: [temp],
                         };
-                        elementChildren[temp.label] = temp;
+                        elementChildren[temp.label.toString()] = temp;
                     }
                 }
             }
@@ -627,7 +630,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      */
     public getUSSDocumentFilePath(): string {
         ZoweLogger.trace("ZoweUSSNode.getUSSDocumentFilePath called.");
-        return path.join(globals.USS_DIR || "", "/" + this.getSessionNode().getProfileName() + "/", this.fullPath);
+        return path.join(globals.USS_DIR || "", this.getSessionNode().getProfileName() || "", this.fullPath);
     }
 
     /**

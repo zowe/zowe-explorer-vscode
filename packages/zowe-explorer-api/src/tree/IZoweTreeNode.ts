@@ -39,6 +39,11 @@ export interface IZoweTreeNode {
      */
     description?: string | boolean;
     /**
+     * A unique identifier for this tree item.
+     * Used to prevent VScode from losing track of TreeItems in a TreeProvider.
+     */
+    id?: string;
+    /**
      * The tooltip text when you hover over this item.
      */
     tooltip?: string | vscode.MarkdownString | undefined;
