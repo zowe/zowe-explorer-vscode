@@ -121,7 +121,7 @@ describe("syncSessionNode shared util function", () => {
                 getSession: () => new imperative.Session({}),
             } as any);
         // when
-        await utils.syncSessionNode(sessionForProfile, sessionNode);
+        utils.syncSessionNode(sessionForProfile, sessionNode);
         expect(await sessionNode.getSession()).toEqual(expectedSession);
         expect(await sessionNode.getProfile()).toEqual(createIProfile());
     });
@@ -139,7 +139,7 @@ describe("syncSessionNode shared util function", () => {
             ({
                 getSession: () => new imperative.Session({}),
             } as any);
-        await utils.syncSessionNode(dummyFn, sessionNode);
+        utils.syncSessionNode(dummyFn, sessionNode);
         // then
         const initialSession = sessionNode.getSession();
         const initialProfile = sessionNode.getProfile();
