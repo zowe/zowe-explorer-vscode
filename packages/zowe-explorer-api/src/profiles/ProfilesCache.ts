@@ -104,12 +104,14 @@ export class ProfilesCache {
      */
     public updateProfilesArrays(profileLoaded: zowe.imperative.IProfileLoaded): void {
         // update allProfiles array
-        const promptedTypeIndex = this.allProfiles.findIndex((profile) => profile.type === profileLoaded.type && profile.name === profileLoaded.name);
+        const promptedTypeIndex = this.allProfiles.findIndex(
+            (profile) => profile?.type === profileLoaded?.type && profile?.name === profileLoaded?.name
+        );
         this.allProfiles[promptedTypeIndex] = profileLoaded;
         // checks if default, if true update defaultProfileByType
-        const defaultProf = this.defaultProfileByType.get(profileLoaded.type);
-        if (defaultProf.name === profileLoaded.name) {
-            this.defaultProfileByType.set(profileLoaded.type, profileLoaded);
+        const defaultProf = this.defaultProfileByType.get(profileLoaded?.type);
+        if (defaultProf?.name === profileLoaded?.name) {
+            this.defaultProfileByType.set(profileLoaded?.type, profileLoaded);
         }
     }
 

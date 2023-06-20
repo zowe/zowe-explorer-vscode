@@ -53,6 +53,23 @@ describe("SpoolProvider Unit Tests", () => {
         with: jest.fn(),
         toJSON: jest.fn(),
     };
+    const fullIJobFile: zowe.IJobFile = {
+        "byte-count": 128,
+        "job-correlator": "",
+        "record-count": 1,
+        "records-url": "fake/records",
+        class: "A",
+        ddname: "STDOUT",
+        id: 100,
+        jobid: "JOB100",
+        jobname: "TESTJOB",
+        lrecl: 80,
+        procstep: "TESTPROC",
+        recfm: "FB",
+        stepname: "TESTSTEP",
+        subsystem: "",
+    };
+    const fullSpoolFilePath = "TESTJOB.JOB100.TESTSTEP.TESTPROC.STDOUT.100";
     const profilesForValidation = { status: "active", name: "fake" };
 
     Object.defineProperty(Profiles, "getInstance", {
@@ -109,7 +126,7 @@ describe("SpoolProvider Unit Tests", () => {
         encodeJobFile("sessionName", iJobFile);
         expect(mockUri.with.mock.calls.length).toEqual(1);
         expect(mockUri.with.mock.calls[0][0]).toEqual({
-            path: "TESTJOB.100.STDOUT",
+            path: "TESTJOB.100.STDOUT.100",
             query:
                 '["sessionName",{' +
                 '"byte-count":128,' +
@@ -129,6 +146,28 @@ describe("SpoolProvider Unit Tests", () => {
                 "}]",
             scheme: "zosspool",
         });
+    });
+
+    it("Tests that URI is encoded with all present segments", () => {
+        const uriMock = jest.fn();
+        Object.defineProperty(vscode, "Uri", { value: uriMock });
+        const mockUri = {
+            with: jest.fn().mockImplementation((v) => ({
+                scheme: "testScheme",
+                authority: "testAuthority",
+                path: v.path,
+                query: "testQuery",
+                fragment: "testFragment",
+                fsPath: "testFsPath",
+            })),
+            toJSON: jest.fn(),
+        };
+
+        const parse = jest.fn().mockReturnValue(mockUri);
+        Object.defineProperty(uriMock, "parse", { value: parse });
+
+        const uri = encodeJobFile("sessionName", fullIJobFile);
+        expect(uri.path).toEqual(fullSpoolFilePath);
     });
 
     it("Tests that the URI is decoded", () => {

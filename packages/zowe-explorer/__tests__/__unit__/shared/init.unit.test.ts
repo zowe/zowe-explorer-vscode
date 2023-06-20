@@ -55,7 +55,7 @@ describe("Test src/shared/extension", () => {
             {
                 name: "zowe.updateSecureCredentials",
                 mock: [
-                    { spy: jest.spyOn(globals, "setGlobalSecurityValue"), arg: [] },
+                    { spy: jest.spyOn(globals, "setGlobalSecurityValue"), arg: [test.value] },
                     { spy: jest.spyOn(profUtils.ProfilesUtils, "writeOverridesFile"), arg: [] },
                 ],
             },

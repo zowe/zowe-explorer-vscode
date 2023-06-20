@@ -21,6 +21,8 @@ import * as nls from "vscode-nls";
 import { IZosFilesResponse, imperative } from "@zowe/cli";
 import { IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
 import { ZoweLogger } from "../utils/LoggerUtils";
+import { isTypeUssTreeNode } from "./context";
+import { markDocumentUnsaved } from "../utils/workspace";
 
 // Set up localization
 nls.config({
@@ -335,4 +337,49 @@ export function jobStringValidator(text: string, localizedParam: "owner" | "pref
 
 export function getDefaultUri(): vscode.Uri {
     return vscode.workspace.workspaceFolders?.[0]?.uri ?? vscode.Uri.file(os.homedir());
+}
+
+/**
+ * Function that triggers compare of the old and new document in the active editor
+ * @param {vscode.TextDocument} doc - document to update and compare with previous content
+ * @param {IZoweDatasetTreeNode | IZoweUSSTreeNode} node - IZoweTreeNode
+ * @param {string} label - {optional} used by IZoweDatasetTreeNode to getContents of file
+ * @param {boolean} binary - {optional} used by IZoweUSSTreeNode to getContents of file
+ * @param {imperative.IProfileLoaded} profile - {optional}
+ * @returns {Promise<void>}
+ */
+export async function compareFileContent(
+    doc: vscode.TextDocument,
+    node: IZoweDatasetTreeNode | IZoweUSSTreeNode,
+    label?: string,
+    binary?: boolean,
+    profile?: imperative.IProfileLoaded
+): Promise<void> {
+    await markDocumentUnsaved(doc);
+    const prof = node ? node.getProfile() : profile;
+    let downloadResponse;
+
+    if (isTypeUssTreeNode(node)) {
+        downloadResponse = await ZoweExplorerApiRegister.getUssApi(prof).getContents(node.fullPath, {
+            file: node.getUSSDocumentFilePath(),
+            binary,
+            returnEtag: true,
+            encoding: prof.profile?.encoding,
+            responseTimeout: prof.profile?.responseTimeout,
+        });
+    } else {
+        downloadResponse = await ZoweExplorerApiRegister.getMvsApi(prof).getContents(label, {
+            file: doc.fileName,
+            returnEtag: true,
+            encoding: prof.profile?.encoding,
+            responseTimeout: prof.profile?.responseTimeout,
+        });
+    }
+    ZoweLogger.warn(localize("saveFile.etagMismatch.log.warning", "Remote file has changed. Presenting with way to resolve file."));
+    vscode.commands.executeCommand("workbench.files.action.compareWithSaved");
+    // re-assign etag, so that it can be used with subsequent requests
+    const downloadEtag = downloadResponse?.apiResponse?.etag;
+    if (node && downloadEtag !== node.getEtag()) {
+        node.setEtag(downloadEtag);
+    }
 }

@@ -16,6 +16,7 @@ import * as globals from "../globals";
 import * as dsActions from "./actions";
 import {
     Gui,
+    DataSetAllocTemplate,
     ValidProfileEnum,
     IZoweTree,
     IZoweDatasetTreeNode,
@@ -750,6 +751,16 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         return this.mHistory.removeFileHistory(name);
     }
 
+    public addDsTemplate(criteria: DataSetAllocTemplate): void {
+        this.mHistory.addDsTemplateHistory(criteria);
+        this.refresh();
+    }
+
+    public getDsTemplates(): DataSetAllocTemplate[] {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+        return this.mHistory.getDsTemplates();
+    }
+
     public createFilterString(newFilter: string, node: IZoweDatasetTreeNode): string {
         ZoweLogger.trace("DatasetTree.createFilterString called.");
         // Store previous filters (before refreshing)
@@ -1236,8 +1247,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      */
     private async addSingleSession(profile: imperative.IProfileLoaded): Promise<void> {
         ZoweLogger.trace("DatasetTree.addSingleSession called.");
-        const isV2 = await ProfilesUtils.usingTeamConfig();
-        if (profile && isV2) {
+        if (profile) {
             // If session is already added, do nothing
             if (this.mSessionNodes.find((tNode) => tNode.label.toString() === profile.name)) {
                 return;

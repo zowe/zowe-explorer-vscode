@@ -10,6 +10,7 @@
  */
 
 import * as vscode from "vscode";
+import * as api from "@zowe/zowe-explorer-api";
 import * as globals from "./globals";
 import { ZoweLogger } from "./utils/LoggerUtils";
 import { SettingsConfig } from "./utils/SettingsConfig";
@@ -35,11 +36,13 @@ export class PersistentFilters {
     private static readonly searchHistory: string = "searchHistory";
     private static readonly fileHistory: string = "fileHistory";
     private static readonly sessions: string = "sessions";
+    private static readonly templates: string = "templates";
 
     public schema: string;
     private mSearchHistory: string[] = [];
     private mFileHistory: string[] = [];
     private mSessions: string[] = [];
+    private mDsTemplates: api.DataSetAllocTemplate[] = [];
 
     public constructor(schema: string, private maxSearchHistory = globals.MAX_SEARCH_HISTORY, private maxFileHistory = globals.MAX_FILE_HISTORY) {
         ZoweLogger.trace("PersistentFilters.constructor called.");
@@ -114,6 +117,26 @@ export class PersistentFilters {
         }
     }
 
+    public addDsTemplateHistory(criteria: api.DataSetAllocTemplate): void {
+        if (criteria) {
+            let newTemplateName: string;
+            Object.entries(criteria).forEach(([key, value]) => {
+                newTemplateName = key;
+            });
+            // Remove any entries that match
+            this.mDsTemplates = this.mDsTemplates.filter((template) => {
+                let historyName: string;
+                Object.entries(template).forEach(([key1, value]) => {
+                    historyName = key1;
+                });
+                return historyName !== newTemplateName;
+            });
+            // Add value to front of stack
+            this.mDsTemplates.unshift(criteria);
+            this.updateDsTemplateHistory();
+        }
+    }
+
     /**
      * Adds one line of session history to the local store and
      * updates persistent store.
@@ -153,6 +176,14 @@ export class PersistentFilters {
     public getFileHistory(): string[] {
         ZoweLogger.trace("PersistentFilters.getFileHistory called.");
         return this.mFileHistory;
+    }
+
+    public getDsTemplates(): api.DataSetAllocTemplate[] {
+        const dsTemplateLines: api.DataSetAllocTemplate[] = vscode.workspace.getConfiguration(this.schema).get(PersistentFilters.templates);
+        if (dsTemplateLines.length !== this.mDsTemplates.length) {
+            this.mDsTemplates = dsTemplateLines;
+        }
+        return this.mDsTemplates;
     }
 
     public readFavorites(): string[] {
@@ -212,6 +243,11 @@ export class PersistentFilters {
         this.updateFileHistory();
     }
 
+    public resetDsTemplateHistory(): void {
+        this.mDsTemplates = [];
+        this.updateDsTemplateHistory();
+    }
+
     /*********************************************************************************************************************************************/
     /* Update functions, for updating the settings.json file in VSCode
     /*********************************************************************************************************************************************/
@@ -249,6 +285,15 @@ export class PersistentFilters {
         if (settings.persistence) {
             settings.fileHistory = this.mFileHistory;
             return SettingsConfig.setDirectValue(this.schema, settings);
+        }
+    }
+
+    private updateDsTemplateHistory(): void {
+        // settings are read-only, so make a clone
+        const settings: any = { ...vscode.workspace.getConfiguration(this.schema) };
+        if (settings.persistence) {
+            settings.templates = this.mDsTemplates;
+            SettingsConfig.setDirectValue(this.schema, settings);
         }
     }
 

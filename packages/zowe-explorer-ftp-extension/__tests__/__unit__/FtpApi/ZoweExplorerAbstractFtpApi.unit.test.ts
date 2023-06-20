@@ -14,6 +14,7 @@ import { AbstractFtpApi } from "../../../src/ZoweExplorerAbstractFtpApi";
 import { FtpSession } from "../../../src/ftpSession";
 import { FTPConfig, IZosFTPProfile } from "@zowe/zos-ftp-for-zowe-cli";
 import { Gui, MessageSeverity } from "@zowe/zowe-explorer-api";
+import { imperative } from "@zowe/cli";
 
 jest.mock("zos-node-accessor");
 
@@ -75,6 +76,10 @@ describe("AbstractFtpApi", () => {
                 throw new Error("Failed: missing credentials");
             })
         );
+        const imperativeError = new imperative.ImperativeError({
+            msg: "Rest API failure with HTTP(S) status 401 Authentication error.",
+            errorCode: `${imperative.RestConstants.HTTP_STATUS_401}`,
+        });
         const instance = new Dummy();
         instance.profile = {
             profile: {},
@@ -93,6 +98,7 @@ describe("AbstractFtpApi", () => {
             );
             expect(err).not.toBeUndefined();
             expect(err).toBeInstanceOf(Error);
+            expect(err).toEqual(imperativeError);
         }
     });
 
@@ -104,6 +110,10 @@ describe("AbstractFtpApi", () => {
             })
         );
         const instance = new Dummy();
+        const imperativeError = new imperative.ImperativeError({
+            msg: "Rest API failure with HTTP(S) status 401 Authentication error.",
+            errorCode: `${imperative.RestConstants.HTTP_STATUS_401}`,
+        });
         instance.profile = {
             profile: {},
             message: undefined,
@@ -118,6 +128,7 @@ describe("AbstractFtpApi", () => {
             });
             expect(err).not.toBeUndefined();
             expect(err).toBeInstanceOf(Error);
+            expect(err).toEqual(imperativeError);
         }
     });
 
