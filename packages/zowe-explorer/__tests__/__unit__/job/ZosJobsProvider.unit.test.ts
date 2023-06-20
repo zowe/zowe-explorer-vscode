@@ -39,7 +39,9 @@ import { SettingsConfig } from "../../../src/utils/SettingsConfig";
 async function createGlobalMocks() {
     const globalMocks = {
         mockGetConfiguration: jest.fn(),
-        mockGetJobs: jest.fn(),
+        mockGetJobs: {
+            getStatusForJob: jest.fn(),
+        },
         mockGetJob: jest.fn(),
         mockRefresh: jest.fn(),
         mockAffectsConfig: jest.fn(),
@@ -824,7 +826,7 @@ describe("ZosJobsProvider unit tests - Function getPopulatedPickerArray", () => 
                 label: `Job Owner`,
                 value: "kristina",
                 show: true,
-                placeHolder: `Enter job owner id`,
+                placeHolder: `Enter job owner ID`,
                 validateInput: (text) => jobStringValidator(text, "owner"),
             },
             {

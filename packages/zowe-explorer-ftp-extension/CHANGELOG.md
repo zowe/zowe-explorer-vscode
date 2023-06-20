@@ -6,11 +6,13 @@ All notable changes to the "zowe-explorer-ftp-extension" extension will be docum
 
 ### Bug fixes
 
-## `2.8.2`
-
-### New features and enhancements
+## `2.9.0`
 
 ### Bug fixes
+
+- Fixed an issue with mismatch etag, correcting error message sent to Zowe Explorer to trigger diff editor. [#2277](https://github.com/zowe/vscode-extension-for-zowe/issues/2277)
+- Renamed instances of "dataset" to "data set" for consistency across Zowe Explorer.
+- Fixed an issue with prompting for credentials by correcting the 401 error when throwing an auth error. [#2334](https://github.com/zowe/vscode-extension-for-zowe/issues/2334)
 
 ## `2.8.1`
 
@@ -24,8 +26,6 @@ All notable changes to the "zowe-explorer-ftp-extension" extension will be docum
 
 - Updated linter rules and addressed linter errors. [#2184](https://github.com/zowe/vscode-extension-for-zowe/issues/2184)
 - Added support for new setting `zowe.files.logsFolder.path` that can be used to override Zowe Explorer logs folder. [#2186](https://github.com/zowe/vscode-extension-for-zowe/issues/2186)
-
-### Bug fixes
 
 ## `2.7.0`
 

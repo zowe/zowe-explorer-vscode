@@ -171,16 +171,13 @@ export class Profiles extends ProfilesCache {
         ZoweLogger.trace("Profiles.disableValidationContext called.");
         const theProfile: zowe.imperative.IProfileLoaded = node.getProfile();
         this.validationArraySetup(theProfile, false);
-        if (node.contextValue.includes(`${globals.VALIDATE_SUFFIX}true`)) {
-            node.contextValue = node.contextValue
-                .replace(/(_validate=true)/g, "")
-                .replace(/(_Active)/g, "")
-                .replace(/(_Inactive)/g, "");
-            node.contextValue = node.contextValue + `${globals.VALIDATE_SUFFIX}false`;
-        } else if (node.contextValue.includes(`${globals.VALIDATE_SUFFIX}false`)) {
+        if (node.contextValue.includes(globals.VALIDATE_SUFFIX)) {
+            node.contextValue = node.contextValue.replace(globals.VALIDATE_SUFFIX, "");
+            node.contextValue += globals.NO_VALIDATE_SUFFIX;
+        } else if (node.contextValue.includes(globals.NO_VALIDATE_SUFFIX)) {
             return node;
         } else {
-            node.contextValue = node.contextValue + `${globals.VALIDATE_SUFFIX}false`;
+            node.contextValue += globals.VALIDATE_SUFFIX;
         }
         return node;
     }
@@ -195,13 +192,13 @@ export class Profiles extends ProfilesCache {
         ZoweLogger.trace("Profiles.enableValidationContext called.");
         const theProfile: zowe.imperative.IProfileLoaded = node.getProfile();
         this.validationArraySetup(theProfile, true);
-        if (node.contextValue.includes(`${globals.VALIDATE_SUFFIX}false`)) {
-            node.contextValue = node.contextValue.replace(/(_validate=false)/g, "").replace(/(_Unverified)/g, "");
-            node.contextValue = node.contextValue + `${globals.VALIDATE_SUFFIX}true`;
-        } else if (node.contextValue.includes(`${globals.VALIDATE_SUFFIX}true`)) {
+        if (node.contextValue.includes(globals.NO_VALIDATE_SUFFIX)) {
+            node.contextValue = node.contextValue.replace(globals.NO_VALIDATE_SUFFIX, "");
+            node.contextValue += globals.VALIDATE_SUFFIX;
+        } else if (node.contextValue.includes(globals.VALIDATE_SUFFIX)) {
             return node;
         } else {
-            node.contextValue = node.contextValue + `${globals.VALIDATE_SUFFIX}true`;
+            node.contextValue += globals.VALIDATE_SUFFIX;
         }
 
         return node;
@@ -294,14 +291,14 @@ export class Profiles extends ProfilesCache {
         }
         // Set Options according to profile management in use
 
-        const createNewProfile = "Create a New Connection to z/OS";
-        const createNewConfig = "Create a New Team Configuration File";
-        const editConfig = "Edit Team Configuration File";
+        const createNewProfile = localize("profiles.createNewConnection", "$(plus) Create a new connection to z/OS");
+        const createNewConfig = localize("profiles.createTeamConfig", "$(plus) Create a new Team Configuration file");
+        const editConfig = localize("profiles.editConfig", "$(pencil) Edit Team Configuration file");
 
-        const createPick = new FilterDescriptor("\uFF0B " + createNewProfile);
-        const configPick = new FilterDescriptor("\uFF0B " + createNewConfig);
-        const configEdit = new FilterDescriptor("\u270F " + editConfig);
-        const items: vscode.QuickPickItem[] = [];
+        const createPick = new FilterDescriptor(createNewProfile);
+        const configPick = new FilterDescriptor(createNewConfig);
+        const configEdit = new FilterDescriptor(editConfig);
+        const items: vscode.QuickPickItem[] = [globals.SEPARATORS.BLANK];
         let mProfileInfo: zowe.imperative.ProfileInfo;
         try {
             mProfileInfo = await this.getProfileInfo();

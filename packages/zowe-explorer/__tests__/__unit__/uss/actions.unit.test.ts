@@ -37,6 +37,8 @@ import * as fs from "fs";
 import { createUssApi, bindUssApi } from "../../../__mocks__/mockCreators/api";
 import * as refreshActions from "../../../src/shared/refresh";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
+import * as wsUtils from "../../../src/utils/workspace";
+import * as context from "../../../src/shared/context";
 
 function createGlobalMocks() {
     const globalMocks = {
@@ -426,7 +428,7 @@ describe("USS Action Unit Tests - Function saveUSSFile", () => {
             mockGetEtag: null,
             testUSSTree: null,
             testResponse: createFileResponse({ items: [] }),
-            testDoc: createTextDocument(path.join(globals.USS_DIR, "usstest", "/u/myuser/testFile")),
+            testDoc: createTextDocument(path.join(globals.USS_DIR, "usstest", "u", "myuser", "testFile")),
             ussNode: createUSSNode(globalMocks.testSession, createIProfile()),
         };
 
@@ -511,15 +513,26 @@ describe("USS Action Unit Tests - Function saveUSSFile", () => {
 
         globalMocks.withProgress.mockRejectedValueOnce(Error("Rest API failure with HTTP(S) status 412"));
         globalMocks.ussFile.mockResolvedValueOnce(downloadResponse);
+        Object.defineProperty(wsUtils, "markDocumentUnsaved", {
+            value: jest.fn(),
+            configurable: true,
+        });
+        Object.defineProperty(context, "isTypeUssTreeNode", {
+            value: jest.fn().mockReturnValueOnce(true),
+            configurable: true,
+        });
+        const logSpy = jest.spyOn(ZoweLogger, "warn");
+        const commandSpy = jest.spyOn(vscode.commands, "executeCommand");
 
         try {
             await ussNodeActions.saveUSSFile(blockMocks.testDoc, blockMocks.testUSSTree);
         } catch (e) {
             expect(e.message).toBe("vscode.Position is not a constructor");
         }
-        expect(globalMocks.showWarningMessage.mock.calls[0][0]).toBe(
-            "Remote file has been modified in the meantime.\nSelect 'Compare' to resolve the conflict."
-        );
+        expect(logSpy).toBeCalledWith("Remote file has changed. Presenting with way to resolve file.");
+        expect(commandSpy).toBeCalledWith("workbench.files.action.compareWithSaved");
+        logSpy.mockClear();
+        commandSpy.mockClear();
     });
 });
 
