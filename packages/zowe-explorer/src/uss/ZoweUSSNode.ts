@@ -42,6 +42,7 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
  */
 export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     public command: vscode.Command;
+    public prevPath = "";
     public fullPath = "";
     public dirty = true;
     public children: IZoweUSSTreeNode[] = [];
@@ -227,12 +228,23 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 }
             }
         });
+
         if (contextually.isSession(this)) {
             this.dirty = false;
         }
-        this.children = Object.keys(elementChildren)
+
+        // If search path has changed, invalidate all children
+        if (this.fullPath?.length > 0 && this.prevPath !== this.fullPath) {
+            this.children = [];
+        }
+
+        const newChildren = Object.keys(elementChildren)
             .sort()
-            .map((labels) => elementChildren[labels]);
+            .filter((label) => this.children.find((c) => (c.label as string) === label) == null)
+            .map((label) => elementChildren[label]);
+
+        this.children = this.children.concat(newChildren).filter((c) => (c.label as string) in elementChildren);
+        this.prevPath = this.fullPath;
         return this.children;
     }
 
