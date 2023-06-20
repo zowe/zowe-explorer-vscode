@@ -303,12 +303,12 @@ describe("Test src/shared/extension", () => {
         beforeEach(() => {
             context = { subscriptions: [] };
             jest.clearAllMocks();
-            Object.defineProperty(globals, "ISTHEIA", { value: false });
-            Object.defineProperty(vscode.workspace, "createFileSystemWatcher", { value: () => watcher });
-            Object.defineProperty(vscode.workspace, "workspaceFolders", { value: [{ uri: { fsPath: "fsPath" } }] });
-            Object.defineProperty(vscode.commands, "executeCommand", { value: spyExecuteCommand });
-            Object.defineProperty(vscode.workspace, "fs", { value: { readFile: spyReadFile } });
-            Object.defineProperty(globals, "SAVED_PROFILE_CONTENTS", { value: "test" });
+            Object.defineProperty(globals, "ISTHEIA", { value: false, configurable: true });
+            Object.defineProperty(vscode.workspace, "createFileSystemWatcher", { value: () => watcher, configurable: true });
+            Object.defineProperty(vscode.workspace, "workspaceFolders", { value: [{ uri: { fsPath: "fsPath" } }], configurable: true });
+            Object.defineProperty(vscode.commands, "executeCommand", { value: spyExecuteCommand, configurable: true });
+            Object.defineProperty(vscode.workspace, "fs", { value: { readFile: spyReadFile }, configurable: true });
+            Object.defineProperty(globals, "SAVED_PROFILE_CONTENTS", { value: "test", configurable: true });
         });
 
         afterAll(() => {
@@ -326,6 +326,20 @@ describe("Test src/shared/extension", () => {
             spyReadFile.mockReturnValue("other");
             await sharedExtension.watchConfigProfile(context, { ds: "ds", uss: "uss", job: "job" } as any);
             expect(spyRefreshAll).toHaveBeenCalled();
+        });
+
+        it("should be able to refresh zowe explorer on theia after updating config file", async () => {
+            Object.defineProperty(globals, "ISTHEIA", { value: true, configurable: true });
+            const spyRefreshAll = jest.spyOn(refreshActions, "refreshAll").mockImplementation(jest.fn());
+            await sharedExtension.watchConfigProfile(context, { ds: "ds", uss: "uss", job: "job" } as any);
+            expect(context.subscriptions).toContain(watcher);
+            expect(spyReadFile).toHaveBeenCalledWith("uri");
+            expect(spyRefreshAll).toHaveBeenCalled();
+
+            spyReadFile.mockReturnValue("other");
+            await sharedExtension.watchConfigProfile(context, { ds: "ds", uss: "uss", job: "job" } as any);
+            expect(spyRefreshAll).toHaveBeenCalled();
+            expect(spyExecuteCommand).toHaveBeenCalledWith("zowe.extRefresh");
         });
     });
 

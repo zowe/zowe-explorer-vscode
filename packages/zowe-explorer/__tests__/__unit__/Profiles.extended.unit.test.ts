@@ -772,6 +772,7 @@ describe("Profiles Unit Tests - Function createZoweSchema", () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
+        Object.defineProperty(globals, "ISTHEIA", { value: true, configurable: true });
         Object.defineProperty(vscode.workspace, "workspaceFolders", {
             value: undefined,
             configurable: true,
