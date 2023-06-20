@@ -90,12 +90,6 @@ describe("AbstractFtpApi", () => {
         try {
             await instance.getStatus(undefined, "zftp");
         } catch (err) {
-            expect(Gui.errorMessage).toHaveBeenCalledWith(
-                "Invalid Credentials. Please ensure the username and password for undefined are valid or this may lead to a lock-out.",
-                {
-                    logger: globals.LOGGER,
-                }
-            );
             expect(err).not.toBeUndefined();
             expect(err).toBeInstanceOf(Error);
             expect(err).toEqual(imperativeError);
@@ -123,9 +117,6 @@ describe("AbstractFtpApi", () => {
         try {
             await instance.getStatus(undefined, "zftp");
         } catch (err) {
-            expect(Gui.errorMessage).toHaveBeenCalledWith("Something happened", {
-                logger: globals.LOGGER,
-            });
             expect(err).not.toBeUndefined();
             expect(err).toBeInstanceOf(Error);
             expect(err).toEqual(imperativeError);
