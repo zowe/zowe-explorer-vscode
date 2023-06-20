@@ -80,7 +80,7 @@ export class ZoweVsCodeExtension {
      * @deprecated
      */
     public static async promptCredentials(options: IPromptCredentialsOptions): Promise<imperative.IProfileLoaded> {
-        const loadProfile = await this.profilesCache.getLoadedProfConfig(options.sessionName.trim());
+        const loadProfile = options.sessionName ? await this.profilesCache.getLoadedProfConfig(options.sessionName.trim()) : options.profile;
         if (loadProfile == null) {
             return undefined;
         }
@@ -117,8 +117,17 @@ export class ZoweVsCodeExtension {
         const cache = this.profilesCache;
         const profInfo = await cache.getProfileInfo();
         const setSecure = options.secure ?? profInfo.isSecured();
-        const loadProfile = await cache.getLoadedProfConfig(options.sessionName, options.sessionType);
-        const loadSession = loadProfile.profile as imperative.ISession;
+
+        if (options.profile == null && options.sessionName == null) {
+            return undefined;
+        }
+
+        const loadProfile = options.sessionName ? await cache.getLoadedProfConfig(options.sessionName) : options.profile;
+        const loadSession = loadProfile?.profile as imperative.ISession;
+
+        if (loadProfile == null || loadSession == null) {
+            return undefined;
+        }
         const creds = await ZoweVsCodeExtension.promptUserPass({ session: loadSession, ...options });
 
         if (creds && creds.length > 0) {
