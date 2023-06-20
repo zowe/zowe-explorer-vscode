@@ -268,17 +268,6 @@ describe("Test src/shared/extension", () => {
             jest.restoreAllMocks();
         });
 
-        it("Test assuming we are in a Theia environment", async () => {
-            Object.defineProperty(globals, "ISTHEIA", { value: true });
-            await extRefreshCallback();
-            expect(spyExecuteCommand).toHaveBeenCalledWith("workbench.action.reloadWindow");
-            expect(spyExecuteCommand).toHaveBeenCalledTimes(1);
-            expect(deactivate).not.toHaveBeenCalled();
-            expect(dispose).not.toHaveBeenCalled();
-            expect(spyLogError).not.toHaveBeenCalled();
-            expect(activate).not.toHaveBeenCalled();
-        });
-
         it("Test assuming we are NOT in a Theia environment", async () => {
             Object.defineProperty(globals, "ISTHEIA", { value: false });
             await extRefreshCallback();

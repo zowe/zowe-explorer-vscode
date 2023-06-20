@@ -1671,18 +1671,6 @@ describe("Profiles Unit Tests - function validationArraySetup", () => {
     });
 });
 
-describe("Profiles Unit Tests - function promptToRefreshForProfiles", () => {
-    it("should reload extension", async () => {
-        jest.spyOn(Gui, "showMessage").mockResolvedValueOnce("Refresh Zowe Explorer");
-        Object.defineProperty(globals, "ISTHEIA", {
-            value: true,
-        });
-        const refreshSpy = jest.spyOn(vscode.commands, "executeCommand").mockImplementation();
-        await expect((Profiles.getInstance() as any).promptToRefreshForProfiles("./test")).resolves.not.toThrow();
-        expect(refreshSpy).toBeCalledTimes(1);
-    });
-});
-
 describe("Profiles Unit Tests - function loginCredentialPrompt", () => {
     afterEach(() => {
         jest.resetAllMocks();
