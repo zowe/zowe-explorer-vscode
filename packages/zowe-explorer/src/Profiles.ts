@@ -869,8 +869,8 @@ export class Profiles extends ProfilesCache {
 
         const promptInfo = await ZoweVsCodeExtension.updateCredentials(
             {
-                sessionName: typeof profile !== "string" ? profile.name : profile,
-                sessionType: typeof profile !== "string" ? profile.type : undefined,
+                profile: typeof profile === "string" ? undefined : profile,
+                sessionName: typeof profile === "string" ? profile : undefined,
                 rePrompt,
                 secure: (await this.getProfileInfo()).isSecured(),
                 userInputBoxOptions,
@@ -883,8 +883,7 @@ export class Profiles extends ProfilesCache {
             return; // See https://github.com/zowe/vscode-extension-for-zowe/issues/1827
         }
 
-        const updSession = promptInfo.profile as zowe.imperative.ISession;
-        const returnValue = [updSession.user, updSession.password, updSession.base64EncodedAuth];
+        const returnValue: string[] = [promptInfo.profile.user, promptInfo.profile.password, promptInfo.profile.base64EncodedAuth];
         this.updateProfilesArrays(promptInfo);
         return returnValue;
     }
@@ -1213,7 +1212,7 @@ export class Profiles extends ProfilesCache {
                     };
                     await this.updateBaseProfileFileLogin(baseProfile, updBaseProfile);
                     const baseIndex = this.allProfiles.findIndex((profile) => profile.name === baseProfile.name);
-                    this.allProfiles[baseIndex] = { ...baseProfile, profile: { ...baseProfile, ...updBaseProfile } };
+                    this.allProfiles[baseIndex] = { ...baseProfile, profile: { ...baseProfile.profile, ...updBaseProfile } };
                     node.setProfileToChoice({
                         ...node.getProfile(),
                         profile: { ...node.getProfile().profile, ...updBaseProfile },
