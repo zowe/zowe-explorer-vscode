@@ -8,6 +8,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
+- Optimized fetching and caching of child nodes across the primary tree views (Data Sets, Unix System Services, Jobs).
+
 ## `2.9.0`
 
 ### New features and enhancements
