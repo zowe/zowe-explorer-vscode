@@ -186,7 +186,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
                         nodeTitle = `${job.jobname}(${job.jobid}) - ${job.status}`;
                     }
                     // Do not look for status code as it might have changed from previous refresh
-                    const existing = this.children.find((element) => element.label?.includes(`${job.jobname}(${job.jobid})`));
+                    const existing = this.children.find((element) => element.label?.startsWith(`${job.jobname}(${job.jobid})`));
                     if (existing) {
                         // If matched, update the label to reflect latest retcode/status
                         existing.label = nodeTitle;
@@ -216,15 +216,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
 
             // Only add new children that are not in the list of existing child nodes
             const newChildren = Object.values(elementChildren)
-                .sort((a, b) => {
-                    if (a.job.jobid > b.job.jobid) {
-                        return 1;
-                    }
-                    if (a.job.jobid < b.job.jobid) {
-                        return -1;
-                    }
-                    return 0;
-                })
+                .sort((a, b) => a.job.jobid - b.job.jobid)
                 .filter((c) => this.children.find((ch) => ch.label === c.label) == null);
             // Remove any children that are no longer present in the built record
             this.children = this.children.concat(newChildren).filter((ch) => ch.label in elementChildren);
