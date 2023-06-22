@@ -154,10 +154,9 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
                     }
 
                     // Only look for existing node w/ procstep if spool file has a procstep,
-                    // otherwise look for the step:dd to update the record count in the label
-                    const existing = this.children.find((element) =>
-                        element.label?.includes(`${spool.stepname}:${spool.ddname}${procstep ? ` - ${procstep}` : ""}`)
-                    );
+                    // otherwise look for only stepname:ddname to update the record count in the label
+                    const spoolSuffix = procstep ? ` - ${procstep}` : "";
+                    const existing = this.children.find((element) => element.label?.includes(`${spool.stepname}:${spool.ddname}${spoolSuffix}`));
                     if (existing) {
                         existing.label = newLabel;
                         unmodifiedCount--;
