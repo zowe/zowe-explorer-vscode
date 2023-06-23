@@ -8,6 +8,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
+- Fixed profile watcher for browser based environments. [#2211](https://github.com/zowe/vscode-extension-for-zowe/issues/2211)
+
 ## `2.9.0`
 
 ### New features and enhancements
