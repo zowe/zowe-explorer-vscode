@@ -649,6 +649,9 @@ export class Profiles extends ProfilesCache {
 
             config.api.layers.merge(newConfig);
             await config.save(false);
+            if (globals.ISTHEIA) {
+                vscode.commands.executeCommand("zowe.extRefresh");
+            }
             let configName;
             if (user) {
                 configName = config.userConfigName;
@@ -656,7 +659,6 @@ export class Profiles extends ProfilesCache {
                 configName = config.configName;
             }
             await this.openConfigFile(path.join(rootPath, configName));
-            await this.promptToRefreshForProfiles(rootPath);
             return path.join(rootPath, configName);
         } catch (err) {
             ZoweLogger.error(err);
@@ -1345,23 +1347,6 @@ export class Profiles extends ProfilesCache {
             }
         });
         return existingLayers;
-    }
-
-    private async promptToRefreshForProfiles(rootPath: string): Promise<void> {
-        ZoweLogger.trace("Profiles.promptToRefreshForProfiles called.");
-        if (globals.ISTHEIA) {
-            const reloadButton = localize("createZoweSchema.reload.button", "Refresh Zowe Explorer");
-            const infoMsg = localize(
-                "createZoweSchema.reload.infoMessage",
-                "Team Configuration file created. Location: {0}. \n Please update file and refresh Zowe Explorer via button or command palette.",
-                rootPath
-            );
-            await Gui.showMessage(infoMsg, { items: [reloadButton] }).then(async (selection) => {
-                if (selection === reloadButton) {
-                    await vscode.commands.executeCommand("zowe.extRefresh");
-                }
-            });
-        }
     }
 
     private getProfileIcon(osLocInfo: zowe.imperative.IProfLocOsLoc[]): string[] {

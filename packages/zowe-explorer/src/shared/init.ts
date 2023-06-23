@@ -51,19 +51,15 @@ export function registerRefreshCommand(
     // set a command to silently reload extension
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.extRefresh", async () => {
-            if (globals.ISTHEIA) {
-                await vscode.commands.executeCommand("workbench.action.reloadWindow");
-            } else {
-                await deactivate();
-                for (const sub of context.subscriptions) {
-                    try {
-                        await sub.dispose();
-                    } catch (e) {
-                        ZoweLogger.error(e);
-                    }
+            await deactivate();
+            for (const sub of context.subscriptions) {
+                try {
+                    await sub.dispose();
+                } catch (e) {
+                    ZoweLogger.error(e);
                 }
-                await activate(context);
             }
+            await activate(context);
         })
     );
 }
@@ -209,11 +205,6 @@ export function registerCommonCommands(context: vscode.ExtensionContext, provide
 
 export function watchConfigProfile(context: vscode.ExtensionContext, providers: IZoweProviders): void {
     ZoweLogger.trace("shared.init.watchConfigProfile called.");
-    if (globals.ISTHEIA) {
-        ZoweLogger.warn(localize("watchConfigProfile.theia", "Team config file watcher is disabled in Theia environment."));
-        return;
-    }
-
     const watchers: vscode.FileSystemWatcher[] = [];
     watchers.push(vscode.workspace.createFileSystemWatcher(new vscode.RelativePattern(getZoweDir(), "{zowe.config,zowe.config.user}.json")));
 
@@ -229,11 +220,11 @@ export function watchConfigProfile(context: vscode.ExtensionContext, providers: 
 
     watchers.forEach((watcher) => {
         watcher.onDidCreate(async () => {
-            ZoweLogger.info(localize("watchConfigProfile.create", "Team config file created, refreshing Zowe Expkorer."));
+            ZoweLogger.info(localize("watchConfigProfile.create", "Team config file created, refreshing Zowe Explorer."));
             await vscode.commands.executeCommand("zowe.extRefresh");
         });
         watcher.onDidDelete(async () => {
-            ZoweLogger.info(localize("watchConfigProfile.delete", "Team config file deleted, refreshing Zowe Expkorer."));
+            ZoweLogger.info(localize("watchConfigProfile.delete", "Team config file deleted, refreshing Zowe Explorer."));
             await vscode.commands.executeCommand("zowe.extRefresh");
         });
         watcher.onDidChange(async (uri: vscode.Uri) => {
@@ -246,6 +237,9 @@ export function watchConfigProfile(context: vscode.ExtensionContext, providers: 
             await refreshActions.refreshAll(providers.ds);
             await refreshActions.refreshAll(providers.uss);
             await refreshActions.refreshAll(providers.job);
+            if (globals.ISTHEIA) {
+                await vscode.commands.executeCommand("zowe.extRefresh");
+            }
         });
     });
 }
