@@ -8,6 +8,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
+- Fixed issue where profiles with authentication tokens were breaking functionality for direct-to-service profiles after user interaction. [#2330](https://github.com/zowe/vscode-extension-for-zowe/issues/2330)
+
 ## `2.9.0`
 
 ### New features and enhancements
@@ -27,7 +29,6 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed an issue where the mismatch etag error returned was not triggering the diff editor, resulting in possible loss of data due to the issue. [#2277](https://github.com/zowe/vscode-extension-for-zowe/issues/2277)
 - Fixed issue where refreshing views collapsed the respective trees. [#2215](https://github.com/zowe/vscode-extension-for-zowe/issues/2215)
 - Fixed an issue where user would not get prompted when authentication error is thrown. [#2334](https://github.com/zowe/vscode-extension-for-zowe/issues/2334)
-- Fixed issue where profiles with authentication tokens were breaking functionality for direct-to-service profiles after user interaction. [#2111](https://github.com/zowe/vscode-extension-for-zowe/issues/2111)
 
 ## `2.8.2`
 
