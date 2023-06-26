@@ -247,17 +247,25 @@ export class ZoweTreeProvider {
     public async ssoLogin(node: IZoweTreeNode): Promise<void> {
         ZoweLogger.trace("ZoweTreeProvider.ssoLogin called.");
         await Profiles.getInstance().ssoLogin(node);
-        await vscode.commands.executeCommand("zowe.ds.refreshAll");
-        await vscode.commands.executeCommand("zowe.uss.refreshAll");
-        await vscode.commands.executeCommand("zowe.jobs.refreshAllJobs");
+        if (contextually.isDsSession(node)) {
+            await vscode.commands.executeCommand("zowe.ds.refreshAll");
+        } else if (contextually.isUssSession(node)) {
+            await vscode.commands.executeCommand("zowe.uss.refreshAll");
+        } else {
+            await vscode.commands.executeCommand("zowe.jobs.refreshAllJobs");
+        }
     }
 
     public async ssoLogout(node: IZoweTreeNode): Promise<void> {
         ZoweLogger.trace("ZoweTreeProvider.ssoLogout called.");
         await Profiles.getInstance().ssoLogout(node);
-        await vscode.commands.executeCommand("zowe.ds.refreshAll");
-        await vscode.commands.executeCommand("zowe.uss.refreshAll");
-        await vscode.commands.executeCommand("zowe.jobs.refreshAllJobs");
+        if (contextually.isDsSession(node)) {
+            await vscode.commands.executeCommand("zowe.ds.refreshAll");
+        } else if (contextually.isUssSession(node)) {
+            await vscode.commands.executeCommand("zowe.uss.refreshAll");
+        } else {
+            await vscode.commands.executeCommand("zowe.jobs.refreshAllJobs");
+        }
     }
 
     public async createZoweSchema(zoweFileProvider: IZoweTree<IZoweNodeType>): Promise<void> {
