@@ -10,7 +10,6 @@
  */
 
 import { TreeItem } from "vscode";
-import { ZoweUSSNode } from "../../uss/ZoweUSSNode";
 import { ZoweTreeNode } from "@zowe/zowe-explorer-api";
 
 export enum IconId {
@@ -40,12 +39,13 @@ export enum IconHierarchyType {
     "derived" = "derived",
 }
 
-type CombinedNode = TreeItem | ZoweUSSNode | ZoweTreeNode;
+type TreeNode = TreeItem | ZoweTreeNode;
+
 export interface IIconItem {
     id: IconId;
     type: IconHierarchyType;
     path: { light: string; dark: string };
-    check: (node: CombinedNode) => boolean;
+    check: (node: TreeNode) => boolean;
 }
 
 const items = [
@@ -76,7 +76,7 @@ export function getIconById(id: IconId): IIconItem {
     return items.find((item) => item.id === id);
 }
 
-export function getIconByNode(node: CombinedNode): IIconItem {
+export function getIconByNode(node: TreeNode): IIconItem {
     const targetItems = items.filter((item) => item.check(node));
 
     if (targetItems.some((item) => item.type === IconHierarchyType.derived)) {

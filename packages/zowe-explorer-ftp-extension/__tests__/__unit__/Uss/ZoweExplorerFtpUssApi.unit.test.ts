@@ -17,7 +17,7 @@ import { FtpUssApi } from "../../../src/ZoweExplorerFtpUssApi";
 import { UssUtils } from "@zowe/zos-ftp-for-zowe-cli";
 import TestUtils from "../utils/TestUtils";
 import * as zowe from "@zowe/cli";
-import { sessionMap } from "../../../src/extension";
+import * as globals from "../../../src/globals";
 
 // two methods to mock modules: create a __mocks__ file for zowe-explorer-api.ts and direct mock for extension.ts
 jest.mock("../../../__mocks__/@zowe/zowe-explorer-api.ts");
@@ -36,7 +36,7 @@ describe("FtpUssApi", () => {
         UssApi.checkedProfile = jest.fn().mockReturnValue({ message: "success", type: "zftp", failNotFound: false });
         UssApi.ftpClient = jest.fn().mockReturnValue({ host: "", user: "", password: "", port: "" });
         UssApi.releaseConnection = jest.fn();
-        sessionMap.get = jest.fn().mockReturnValue({ ussListConnection: { connected: true } });
+        globals.SESSION_MAP.get = jest.fn().mockReturnValue({ ussListConnection: { connected: true } });
     });
 
     it("should list uss files.", async () => {
@@ -75,15 +75,15 @@ describe("FtpUssApi", () => {
         expect(response._readableState.buffer.head.data.toString()).toContain("Hello world");
     });
 
-    const mockUssFileParams = {
-        inputFilePath: "/tmp/testfile1.txt",
-        ussFilePath: "/a/b/c.txt",
-        etag: "123",
-        returnEtag: true,
-        options: {
-            file: "/tmp/testfile1.txt",
-        },
-    };
+    it("should throw error for getContents if connection to FTP client fails.", async () => {
+        jest.spyOn(UssApi, "ftpClient").mockReturnValueOnce(null);
+        expect(UssApi.getContents("/some/example/path", {})).rejects.toThrowError();
+    });
+
+    it("should throw error for putContent if connection to FTP client fails.", async () => {
+        jest.spyOn(UssApi, "ftpClient").mockReturnValueOnce(null);
+        expect(UssApi.putContent("/some/example/input/path", "/some/uss/path")).rejects.toThrowError();
+    });
 
     it("should upload uss files.", async () => {
         const localFile = "/tmp/testfile1.txt";

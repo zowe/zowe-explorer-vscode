@@ -12,15 +12,15 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { imperative } from "@zowe/cli";
 import { FTPConfig, IZosFTPProfile } from "@zowe/zos-ftp-for-zowe-cli";
-import { Gui, MessageSeverity, ZoweExplorerApi } from "@zowe/zowe-explorer-api";
-import { sessionMap, ZoweLogger } from "./extension";
+import { Gui, ICommon, MessageSeverity } from "@zowe/zowe-explorer-api";
+import * as globals from "./globals";
 import { FtpSession } from "./ftpSession";
 
 export interface ConnectionType {
     close(): void;
 }
 
-export abstract class AbstractFtpApi implements ZoweExplorerApi.ICommon {
+export abstract class AbstractFtpApi implements ICommon {
     private session?: FtpSession;
 
     public constructor(public profile?: imperative.IProfileLoaded) {}
@@ -30,13 +30,13 @@ export abstract class AbstractFtpApi implements ZoweExplorerApi.ICommon {
     }
 
     public getSession(profile?: imperative.IProfileLoaded): FtpSession {
-        this.session = sessionMap.get(this.profile);
+        this.session = globals.SESSION_MAP.get(this.profile);
         if (!this.session) {
             const ftpProfile = (profile || this.profile)?.profile;
             if (!ftpProfile) {
                 void Gui.showMessage("Internal error: ZoweVscFtpRestApi instance was not initialized with a valid Zowe profile.", {
                     severity: MessageSeverity.FATAL,
-                    logger: ZoweLogger,
+                    logger: globals.LOGGER,
                 });
                 throw new Error();
             }
@@ -48,7 +48,7 @@ export abstract class AbstractFtpApi implements ZoweExplorerApi.ICommon {
                 password: ftpProfile.password,
                 rejectUnauthorized: ftpProfile.rejectUnauthorized,
             });
-            sessionMap.set(this.profile, this.session);
+            globals.SESSION_MAP.set(this.profile, this.session);
         }
         return this.session;
     }
@@ -61,7 +61,7 @@ export abstract class AbstractFtpApi implements ZoweExplorerApi.ICommon {
         if (!this.profile?.profile) {
             void Gui.showMessage("Internal error: ZoweVscFtpRestApi instance was not initialized with a valid Zowe profile.", {
                 severity: MessageSeverity.FATAL,
-                logger: ZoweLogger,
+                logger: globals.LOGGER,
             });
             throw new Error();
         }
@@ -81,10 +81,10 @@ export abstract class AbstractFtpApi implements ZoweExplorerApi.ICommon {
     }
 
     public logout(_session): Promise<void> {
-        const ftpsession = sessionMap.get(this.profile);
+        const ftpsession = globals.SESSION_MAP.get(this.profile);
         if (ftpsession !== undefined) {
             ftpsession.releaseConnections();
-            sessionMap.delete(this.profile);
+            globals.SESSION_MAP.delete(this.profile);
         }
         return;
     }

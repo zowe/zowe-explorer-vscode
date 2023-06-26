@@ -13,8 +13,7 @@ import * as path from "path";
 import * as logger from "../../../src/utils/LoggerUtils";
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
-import * as globals from "../../../src/globals";
-import { Gui } from "@zowe/zowe-explorer-api";
+import { Gui, MessageSeverity } from "@zowe/zowe-explorer-api";
 import * as shared from "../../../__mocks__/mockCreators/shared";
 import { SettingsConfig } from "../../../src/utils/SettingsConfig";
 import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
@@ -43,17 +42,7 @@ function createGlobalMocks() {
         configurable: true,
     });
     Object.defineProperty(Gui, "infoMessage", { value: jest.fn(), configurable: true });
-    Object.defineProperty(globals, "LOG", { value: newMocks.mockLogger, configurable: true });
-    Object.defineProperty(globals.LOG, "trace", { value: jest.fn(), configurable: true });
-    Object.defineProperty(globals.LOG, "debug", { value: jest.fn(), configurable: true });
-    Object.defineProperty(globals.LOG, "info", { value: jest.fn(), configurable: true });
-    Object.defineProperty(globals.LOG, "warn", { value: jest.fn(), configurable: true });
-    Object.defineProperty(globals.LOG, "error", { value: jest.fn(), configurable: true });
-    Object.defineProperty(globals.LOG, "fatal", { value: jest.fn(), configurable: true });
-    Object.defineProperty(vscode.workspace, "getConfiguration", {
-        value: newMocks.mockGetConfiguration,
-        configurable: true,
-    });
+    jest.spyOn(vscode.workspace, "getConfiguration").mockImplementationOnce(newMocks.mockGetConfiguration);
     Object.defineProperty(ZoweLocalStorage, "storage", {
         value: {
             get: () => ({ persistence: true, favorites: [], history: [], sessions: ["zosmf"], searchHistory: [], fileHistory: [] }),
@@ -93,34 +82,29 @@ describe("Logger Utils Unit Tests - function initializeZoweLogger", () => {
     afterEach(() => {
         process.env = env;
     });
+
     it("should initialize loggers successfully with no cli logger setting", async () => {
         const globalMocks = createGlobalMocks();
-        jest.spyOn(globals, "initLogger").mockReturnValueOnce();
+        jest.spyOn(zowe.imperative.Logger, "initLogger").mockImplementation(globalMocks.mockLogger);
+        const infoMock = jest.spyOn(logger.ZoweLogger, "info").mockImplementationOnce((_msg) => {});
         globalMocks.mockGetConfiguration.mockReturnValue({
             get: getSettingMock,
         });
-        const infoSpy = jest.spyOn(logger.ZoweLogger, "info");
 
         expect(await logger.ZoweLogger.initializeZoweLogger(globalMocks.testContext)).toBeUndefined();
-        expect(infoSpy).toHaveBeenCalled();
-        infoSpy.mockClear();
+        expect(infoMock).toHaveBeenCalled();
     });
     it("should initialize loggers successfully with not changing to cli logger setting", async () => {
         const globalMocks = createGlobalMocks();
-        jest.spyOn(globals, "initLogger").mockReturnValueOnce();
         globalMocks.mockGetConfiguration.mockReturnValue({
             get: getSettingMock,
         });
-        const infoSpy = jest.spyOn(logger.ZoweLogger, "info");
         process.env.ZOWE_APP_LOG_LEVEL = "DEBUG";
 
         expect(await logger.ZoweLogger.initializeZoweLogger(globalMocks.testContext)).toBeUndefined();
-        expect(infoSpy).toHaveBeenCalled();
-        infoSpy.mockClear();
     });
     it("should initialize loggers successfully with changing to cli logger setting", async () => {
         const globalMocks = createGlobalMocks();
-        jest.spyOn(globals, "initLogger").mockReturnValueOnce();
         globalMocks.mockGetConfiguration.mockReturnValue({
             get: getSettingMock,
         });
@@ -139,6 +123,7 @@ describe("Logger Utils Unit Tests - function initializeZoweLogger", () => {
             get: getSettingMock,
         });
         const initLoggerSpy = jest.spyOn(zowe.imperative.Logger, "initLogger").mockImplementation();
+        initLoggerSpy.mockClear();
         jest.spyOn(logger.ZoweLogger as any, "initVscLogger").mockImplementation();
 
         await logger.ZoweLogger.initializeZoweLogger({
@@ -159,22 +144,22 @@ describe("Logger Utils Unit Tests - function initializeZoweLogger", () => {
     });
     it("should throw an error if global logger was not able to initialize", async () => {
         const globalMocks = createGlobalMocks();
-        jest.spyOn(globals, "initLogger").mockImplementationOnce(() => {
+        jest.spyOn(zowe.imperative.Logger, "initLogger").mockImplementationOnce(() => {
             throw new Error("failed to initialize logger");
         });
         globalMocks.mockLogger.mockImplementationOnce(() => {
             throw new Error("should not call invalid logger");
         });
         const errorMessageSpy = jest.spyOn(Gui, "errorMessage").mockImplementation();
-
         expect(await logger.ZoweLogger.initializeZoweLogger(globalMocks.testContext)).toBeUndefined();
         expect(errorMessageSpy).toBeCalledTimes(1);
-        expect(globals.LOG).not.toHaveBeenCalled();
         errorMessageSpy.mockClear();
     });
     it("should throw an error if output channel was not able to initialize", async () => {
         const globalMocks = createGlobalMocks();
-        jest.spyOn(globals, "initLogger").mockReturnValueOnce();
+        jest.spyOn(zowe.imperative.Logger, "initLogger").mockImplementationOnce(() => {
+            return zowe.imperative.Logger.getAppLogger();
+        });
         jest.spyOn(Gui, "createOutputChannel").mockImplementationOnce(() => {
             throw new Error("failed to initialize output channel");
         });
@@ -190,13 +175,20 @@ describe("It should pass the correct message severity", () => {
     beforeEach(() => {
         jest.clearAllMocks();
     });
+
+    const writeLogMessageMock = jest.spyOn(logger.ZoweLogger as any, "writeLogMessage");
+
+    afterAll(() => {
+        writeLogMessageMock.mockRestore();
+    });
+
     it("ZoweLogger.trace passes TRACE as severity", async () => {
         const globalMocks = createGlobalMocks();
         globalMocks.mockGetConfiguration.mockReturnValueOnce({
             get: jest.fn(() => "TRACE"),
         });
         await logger.ZoweLogger.trace(globalMocks.mockMessage);
-        expect(globals.LOG.trace).toHaveBeenCalled();
+        expect(writeLogMessageMock).toHaveBeenCalledWith(globalMocks.mockMessage, MessageSeverity.TRACE);
     });
     it("ZoweLogger.debug passes DEBUG as severity", async () => {
         const globalMocks = createGlobalMocks();
@@ -204,7 +196,7 @@ describe("It should pass the correct message severity", () => {
             get: jest.fn(() => "DEBUG"),
         });
         await logger.ZoweLogger.debug(globalMocks.mockMessage);
-        expect(globals.LOG.debug).toHaveBeenCalled();
+        expect(writeLogMessageMock).toHaveBeenCalledWith(globalMocks.mockMessage, MessageSeverity.DEBUG);
     });
     it("ZoweLogger.info passes INFO as severity", async () => {
         const globalMocks = createGlobalMocks();
@@ -212,7 +204,7 @@ describe("It should pass the correct message severity", () => {
             get: jest.fn(() => "INFO"),
         });
         await logger.ZoweLogger.info(globalMocks.mockMessage);
-        expect(globals.LOG.info).toHaveBeenCalled();
+        expect(writeLogMessageMock).toHaveBeenCalledWith(globalMocks.mockMessage, MessageSeverity.INFO);
     });
     it("ZoweLogger.warn passes WARN as severity", async () => {
         const globalMocks = createGlobalMocks();
@@ -220,7 +212,7 @@ describe("It should pass the correct message severity", () => {
             get: jest.fn(() => "WARN"),
         });
         await logger.ZoweLogger.warn(globalMocks.mockMessage);
-        expect(globals.LOG.warn).toHaveBeenCalled();
+        expect(writeLogMessageMock).toHaveBeenCalledWith(globalMocks.mockMessage, MessageSeverity.WARN);
     });
     it("ZoweLogger.error passes ERROR as severity", async () => {
         const globalMocks = createGlobalMocks();
@@ -228,7 +220,7 @@ describe("It should pass the correct message severity", () => {
             get: jest.fn(() => "ERROR"),
         });
         await logger.ZoweLogger.error(globalMocks.mockMessage);
-        expect(globals.LOG.error).toHaveBeenCalled();
+        expect(writeLogMessageMock).toHaveBeenCalledWith(globalMocks.mockMessage, MessageSeverity.ERROR);
     });
     it("ZoweLogger.fatal passes FATAL as severity", async () => {
         const globalMocks = createGlobalMocks();
@@ -236,7 +228,7 @@ describe("It should pass the correct message severity", () => {
             get: jest.fn(() => "FATAL"),
         });
         await logger.ZoweLogger.fatal(globalMocks.mockMessage);
-        expect(globals.LOG.fatal).toHaveBeenCalled();
+        expect(writeLogMessageMock).toHaveBeenCalledWith(globalMocks.mockMessage, MessageSeverity.FATAL);
     });
 });
 
@@ -251,7 +243,7 @@ describe("ZoweLogger.dispose()", () => {
 describe("ZoweLogger.updateVscLoggerSetting", () => {
     it("should set the CLI logger setting", async () => {
         const testCLISetting = {};
-        const setCliLoggerSettingSpy = jest.spyOn(logger.ZoweLogger as any, "setCliLoggerSetting");
+        const setCliLoggerSettingSpy = jest.spyOn(SettingsConfig, "setCliLoggerSetting");
         const guiInfoSpy = jest.spyOn(Gui, "infoMessage");
         guiInfoSpy.mockResolvedValue("Test");
         jest.spyOn(vscode.workspace, "getConfiguration").mockReturnValue({

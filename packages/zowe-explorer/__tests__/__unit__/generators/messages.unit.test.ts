@@ -23,7 +23,6 @@ describe("Checking message generator's basics", () => {
         const createTreeView = jest.fn();
         const getConfiguration = jest.fn();
         Object.defineProperty(vscode.window, "createTreeView", { value: createTreeView });
-        Object.defineProperty(vscode.workspace, "getConfiguration", { value: getConfiguration });
         Object.defineProperty(ZoweLocalStorage, "storage", {
             value: {
                 get: () => ({ persistence: true, favorites: [], history: [], sessions: ["zosmf"], searchHistory: [], fileHistory: [] }),

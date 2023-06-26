@@ -159,9 +159,7 @@ export async function searchInAllLoadedItems(
 
 export async function openRecentMemberPrompt(datasetTree: IZoweTree<IZoweDatasetTreeNode>, ussTree: IZoweTree<IZoweUSSTreeNode>): Promise<void> {
     ZoweLogger.trace("shared.actions.openRecentMemberPrompt called.");
-    if (globals.LOG) {
-        ZoweLogger.debug(localize("enterPattern.log.debug.prompt", "Prompting the user to choose a recent member for editing"));
-    }
+    ZoweLogger.debug(localize("enterPattern.log.debug.prompt", "Prompting the user to choose a recent member for editing"));
     let pattern: string;
 
     const fileHistory = [...datasetTree.getFileHistory(), ...ussTree.getFileHistory()];

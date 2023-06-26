@@ -14,12 +14,12 @@ import * as globals from "../globals";
 import * as vscode from "vscode";
 import * as fs from "fs";
 import * as path from "path";
-import { Gui, IZoweUSSTreeNode, ZoweTreeNode, IZoweTree, ValidProfileEnum, ZoweExplorerApi } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweUSSTreeNode, ZoweTreeNode, IZoweTree, ValidProfileEnum, IUss } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { errorHandling, syncSessionNode } from "../utils/ProfilesUtils";
 import { getIconByNode } from "../generators/icons/index";
-import { fileExistsCaseSensitveSync, injectAdditionalDataToTooltip } from "../uss/utils";
+import { fileExistsCaseSensitveSync } from "../uss/utils";
 import * as contextually from "../shared/context";
 import { closeOpenedTextFile } from "../utils/workspace";
 import * as nls from "vscode-nls";
@@ -32,6 +32,21 @@ nls.config({
     bundleFormat: nls.BundleFormat.standalone,
 })();
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
+
+/**
+ * Injects extra data to tooltip based on node status and other conditions
+ * @param node
+ * @param tooltip
+ * @returns {string}
+ */
+function injectAdditionalDataToTooltip(node: ZoweUSSNode, tooltip: string): string {
+    ZoweLogger.trace("uss.utils.injectAdditionalDataToTooltip called.");
+    if (node.downloaded && node.downloadedTime) {
+        return `${tooltip}\n(Downloaded: ${new Date(node.downloadedTime).toLocaleString(vscode.env.language)})`;
+    }
+
+    return tooltip;
+}
 
 /**
  * A type of TreeItem used to represent sessions and USS directories and files
@@ -164,7 +179,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             responses.push(await ZoweExplorerApiRegister.getUssApi(cachedProfile).fileList(this.fullPath));
         } catch (err) {
             await errorHandling(err, this.label.toString(), localize("getChildren.error.response", "Retrieving response from ") + `uss-file-list`);
-            syncSessionNode(Profiles.getInstance())((profileValue) => ZoweExplorerApiRegister.getUssApi(profileValue).getSession())(sessNode);
+            syncSessionNode((profile) => ZoweExplorerApiRegister.getUssApi(profile), sessNode);
         }
 
         const newChildren: Record<string, IZoweUSSTreeNode> = {};
@@ -629,11 +644,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      * @param tree The structure of files and folders to paste
      * @param ussApi The USS API to use for this operation
      */
-    public async paste(
-        sessionName: string,
-        rootPath: string,
-        uss: { tree: UssFileTree; api: ZoweExplorerApi.IUss; options?: IUploadOptions }
-    ): Promise<void> {
+    public async paste(sessionName: string, rootPath: string, uss: { tree: UssFileTree; api: IUss; options?: IUploadOptions }): Promise<void> {
         ZoweLogger.trace("ZoweUSSNode.paste called.");
         const hasCopyApi = uss.api.copy != null;
         const hasPutContentApi = uss.api.putContent != null;

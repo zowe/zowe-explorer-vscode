@@ -10,12 +10,12 @@
  */
 
 import * as zowe from "@zowe/cli";
-import { ZoweExplorerApi } from "./ZoweExplorerApi";
+import { ICommand, ICommon, IJes, IMvs, IUss } from "../extend";
 
 /**
  * An implementation of the Zowe Explorer API Common interface for zOSMF.
  */
-class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
+class ZosmfApiCommon implements ICommon {
     public static getProfileTypeName(): string {
         return zowe.ZosmfProfile.type;
     }
@@ -103,7 +103,7 @@ class ZosmfApiCommon implements ZoweExplorerApi.ICommon {
 /**
  * An implementation of the Zowe Explorer USS API interface for zOSMF.
  */
-export class ZosmfUssApi extends ZosmfApiCommon implements ZoweExplorerApi.IUss {
+export class ZosmfUssApi extends ZosmfApiCommon implements IUss {
     public fileList(ussFilePath: string): Promise<zowe.IZosFilesResponse> {
         return zowe.List.fileList(this.getSession(), ussFilePath);
     }
@@ -151,7 +151,7 @@ export class ZosmfUssApi extends ZosmfApiCommon implements ZoweExplorerApi.IUss 
 /**
  * An implementation of the Zowe Explorer MVS API interface for zOSMF.
  */
-export class ZosmfMvsApi extends ZosmfApiCommon implements ZoweExplorerApi.IMvs {
+export class ZosmfMvsApi extends ZosmfApiCommon implements IMvs {
     public dataSet(filter: string, options?: zowe.IListOptions): Promise<zowe.IZosFilesResponse> {
         return zowe.List.dataSet(this.getSession(), filter, options);
     }
@@ -237,7 +237,7 @@ export class ZosmfMvsApi extends ZosmfApiCommon implements ZoweExplorerApi.IMvs 
 /**
  * An implementation of the Zowe Explorer JES API interface for zOSMF.
  */
-export class ZosmfJesApi extends ZosmfApiCommon implements ZoweExplorerApi.IJes {
+export class ZosmfJesApi extends ZosmfApiCommon implements IJes {
     public getJobsByParameters(params: zowe.IGetJobsParms): Promise<zowe.IJob[]> {
         return zowe.GetJobs.getJobsByParameters(this.getSession(), params);
     }
@@ -293,7 +293,7 @@ export class ZosmfJesApi extends ZosmfApiCommon implements ZoweExplorerApi.IJes 
 /**
  * An implementation of the Zowe Explorer Command API interface for zOSMF.
  */
-export class ZosmfCommandApi extends ZosmfApiCommon implements ZoweExplorerApi.ICommand {
+export class ZosmfCommandApi extends ZosmfApiCommon implements ICommand {
     public issueTsoCommandWithParms(command: string, parms: zowe.IStartTsoParms): Promise<zowe.IIssueResponse> {
         return zowe.IssueTso.issueTsoCommand(this.getSession(), parms.account, command, parms);
     }

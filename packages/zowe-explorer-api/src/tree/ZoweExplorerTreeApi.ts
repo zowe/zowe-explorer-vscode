@@ -22,7 +22,7 @@ import { imperative } from "@zowe/cli";
  * const explorerApi = extensions.getExtension('zowe.vscode-extension-for-zowe');\
  * if (explorerApi && explorerApi.exports) {\
  *   // Cast the returned object to the IApiRegisterClient interface\
- *   const importedApi: ZoweExplorerApi.IApiRegisterClient = explorerApi.exports;\
+ *   const importedApi: IApiRegisterClient = explorerApi.exports;\
  *   const extenderTreeApi = (importedApi as unknown) as ZoweExplorerTreeApi;\
  *   // create an instance of my API and register it with Zowe Explorer\
  *   importedApi.registerUssApi(new MyZoweExplorerAppUssApi());\

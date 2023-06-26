@@ -1913,7 +1913,7 @@
     ]
   },
   "scripts": {
-    "build": "gulp build && yarn license && webpack --mode development",
+    "build": "gulp build && yarn madge && yarn license && webpack --mode development",
     "build:integration": "yarn createTestProfileData && yarn license && tsc --pretty --project tsconfig-tests.json",
     "test:unit": "jest \".*__tests__.*\\.unit\\.test\\.ts\" --coverage",
     "test:theia": "mocha ./out/__tests__/__theia__/*.theia.test.js --timeout 50000 --reporter mocha-multi-reporters --reporter-options configFile=.mocharc.json",
@@ -1933,6 +1933,7 @@
     "lint:tests": "eslint --format stylish __tests__/**/*.ts",
     "clean": "gulp clean",
     "fresh-clone": "yarn clean && rimraf node_modules",
+    "madge": "madge -c --no-color --no-spinner --exclude __mocks__ --extensions js,ts src/ || true",
     "pretty": "prettier --write .",
     "createTestProfileData": "ts-node ./scripts/createTestProfileData.ts",
     "createDemoNodes": "ts-node ./scripts/createDemoNodes.ts"

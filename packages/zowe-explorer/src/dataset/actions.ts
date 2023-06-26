@@ -31,7 +31,6 @@ import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { Profiles } from "../Profiles";
 import { getIconByNode } from "../generators/icons";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
-import { DatasetTree } from "./DatasetTree";
 import * as contextually from "../shared/context";
 import { markDocumentUnsaved, setFileSaved } from "../utils/workspace";
 import { IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
@@ -240,7 +239,7 @@ export async function uploadFile(node: ZoweDatasetNode, docPath: string): Promis
  *
  * @export
  * @param {IZoweDatasetTreeNode} node - The node selected for deletion
- * @param {DatasetTree} datasetProvider - the tree which contains the nodes
+ * @param datasetProvider - the tree which contains the nodes
  */
 export async function deleteDatasetPrompt(datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>, node?: api.IZoweDatasetTreeNode): Promise<void> {
     ZoweLogger.trace("dataset.actions.deleteDatasetPrompt called.");
@@ -392,7 +391,7 @@ export async function deleteDatasetPrompt(datasetProvider: api.IZoweTree<api.IZo
  *
  * @export
  * @param {IZoweDatasetTreeNode} parent - The parent Node
- * @param {DatasetTree} datasetProvider - the tree which contains the nodes
+ * @param datasetProvider - the tree which contains the nodes
  */
 export async function createMember(parent: api.IZoweDatasetTreeNode, datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>): Promise<void> {
     ZoweLogger.trace("dataset.actions.createMember called.");
@@ -536,7 +535,7 @@ export function getDataSetTypeAndOptions(type: string): {
  * Creates a new file and uploads to the server
  * @export
  * @param {IZoweDatasetTreeNode} node - Desired Zowe session
- * @param {DatasetTree} datasetProvider - the tree which contains the nodes
+ * @param datasetProvider - the tree which contains the nodes
  */
 export async function createFile(node: api.IZoweDatasetTreeNode, datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>): Promise<void> {
     datasetProvider.checkCurrentProfile(node);
@@ -853,7 +852,7 @@ async function saveDsTemplate(datasetProvider: api.IZoweTree<api.IZoweDatasetTre
  *
  * @export
  * @param {IZoweDatasetTreeNode} node   - The node to show attributes for
- * @param {DatasetTree} datasetProvider - the tree which contains the nodes
+ * @param datasetProvider - the tree which contains the nodes
  */
 export async function showAttributes(node: api.IZoweDatasetTreeNode, datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>): Promise<void> {
     ZoweLogger.trace("dataset.actions.showAttributes called.");
@@ -931,7 +930,7 @@ export async function showAttributes(node: api.IZoweDatasetTreeNode, datasetProv
  * Submit the contents of the editor as JCL.
  *
  * @export
- * @param {DatasetTree} datasetProvider - our DatasetTree object
+ * @param datasetProvider DatasetTree object
  */
 // This function does not appear to currently be made available in the UI
 export async function submitJcl(datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>): Promise<void> {
@@ -1256,11 +1255,11 @@ export async function refreshDataset(node: api.IZoweDatasetTreeNode, datasetProv
  * Prompts the user for a pattern, and populates the [TreeView]{@link vscode.TreeView} based on the pattern
  *
  * @param {IZoweDatasetTreeNode} node - The session node
- * @param {DatasetTree} datasetProvider - Current DatasetTree used to populate the TreeView
+ * @param datasetProvider - Current DatasetTree used to populate the TreeView
  * @returns {Promise<void>}
  */
 // This function does not appear to be called by anything except unit and integration tests.
-export async function enterPattern(node: api.IZoweDatasetTreeNode, datasetProvider: DatasetTree): Promise<void> {
+export async function enterPattern(node: api.IZoweDatasetTreeNode, datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>): Promise<void> {
     ZoweLogger.trace("dataset.actions.enterPattern called.");
     let pattern: string;
     if (contextually.isSessionNotFav(node)) {
@@ -1434,7 +1433,7 @@ export async function showFileErrorDetails(node: ZoweDatasetNode): Promise<void>
  *
  * @export
  * @param {ZoweNode} node - The node to paste to
- * @param {DatasetTree} datasetProvider - the tree which contains the nodes
+ * @param datasetProvider - the tree which contains the nodes
  */
 export async function pasteMember(node: api.IZoweDatasetTreeNode, datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>): Promise<void> {
     ZoweLogger.trace("dataset.actions.pasteMember called.");
@@ -1624,7 +1623,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
  * Paste members
  *
  * @export
- * @param {DatasetTree} datasetProvider - the tree which contains the nodes
+ * @param datasetProvider - the tree which contains the nodes
  */
 export async function pasteDataSetMembers(datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>, node: ZoweDatasetNode): Promise<void> {
     ZoweLogger.trace("dataset.actions.pasteDataSetMembers called.");

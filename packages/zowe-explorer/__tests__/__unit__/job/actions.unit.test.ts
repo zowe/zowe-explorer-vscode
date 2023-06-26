@@ -42,13 +42,11 @@ import * as sharedUtils from "../../../src/shared/utils";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 import { SpoolFile } from "../../../src/SpoolProvider";
 
+jest.mock("../../../src/utils/LoggerUtils");
+
 const activeTextEditorDocument = jest.fn();
 
 function createGlobalMocks() {
-    Object.defineProperty(vscode.workspace, "getConfiguration", {
-        value: jest.fn().mockImplementation(() => new Map([["zowe.jobs.confirmSubmission", false]])),
-        configurable: true,
-    });
     Object.defineProperty(Gui, "showMessage", { value: jest.fn(), configurable: true });
     Object.defineProperty(Gui, "warningMessage", { value: jest.fn(), configurable: true });
     Object.defineProperty(Gui, "errorMessage", { value: jest.fn(), configurable: true });
@@ -82,9 +80,6 @@ function createGlobalMocks() {
     Object.defineProperty(vscode.commands, "executeCommand", { value: executeCommand, configurable: true });
     Object.defineProperty(SpoolProvider, "encodeJobFile", { value: jest.fn(), configurable: true });
     Object.defineProperty(SpoolProvider, "toUniqueJobFileUri", { value: jest.fn(), configurable: true });
-    Object.defineProperty(ZoweLogger, "error", { value: jest.fn(), configurable: true });
-    Object.defineProperty(ZoweLogger, "debug", { value: jest.fn(), configurable: true });
-    Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
 }
 
 // Idea is borrowed from: https://github.com/kulshekhar/ts-jest/blob/master/src/util/testing.ts
@@ -724,9 +719,13 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
 
         for (let o = 0; o < sharedUtils.JOB_SUBMIT_DIALOG_OPTS.length; o++) {
             const option = sharedUtils.JOB_SUBMIT_DIALOG_OPTS[o];
-            Object.defineProperty(vscode.workspace, "getConfiguration", {
-                value: jest.fn().mockImplementation(() => new Map([["zowe.jobs.confirmSubmission", option]])),
-                configurable: true,
+            jest.spyOn(vscode.workspace, "getConfiguration").mockReturnValueOnce({
+                has: jest.fn(),
+                get: (_setting) => {
+                    return option;
+                },
+                inspect: jest.fn(),
+                update: jest.fn(),
             });
 
             if (option === sharedUtils.JOB_SUBMIT_DIALOG_OPTS[sharedUtils.JobSubmitDialogOpts.Disabled]) {

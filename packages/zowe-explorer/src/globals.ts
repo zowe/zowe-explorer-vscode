@@ -12,13 +12,13 @@
 import * as path from "path";
 import { imperative } from "@zowe/cli";
 import * as vscode from "vscode";
-import * as loggerConfig from "../log4jsconfig.json";
 
 // Set up localization
 import * as nls from "vscode-nls";
 import { getZoweDir } from "@zowe/zowe-explorer-api";
 import { SettingsConfig } from "./utils/SettingsConfig";
 import { ZoweLogger } from "./utils/LoggerUtils";
+export { ZoweLogger } from "./utils/LoggerUtils";
 
 nls.config({
     messageFormat: nls.MessageFormat.bundle,
@@ -34,7 +34,6 @@ export let USS_DIR: string;
 export let DS_DIR: string;
 export let CONFIG_PATH; // set during activate
 export let ISTHEIA = false; // set during activate
-export let LOG: imperative.Logger;
 export const COMMAND_COUNT = 109;
 export const MAX_SEARCH_HISTORY = 5;
 export const MAX_FILE_HISTORY = 10;
@@ -314,24 +313,6 @@ export function setConfigPath(configPath: string | undefined): void {
     } else {
         CONFIG_PATH = getZoweDir();
     }
-}
-
-/**
- * Initializes Imperative Logger
- * @param logsPath File path for logs folder defined in preferences
- */
-export function initLogger(logsPath: string): void {
-    const zeLogLevel = ZoweLogger.getLogSetting();
-    const loggerConfigCopy = JSON.parse(JSON.stringify(loggerConfig));
-    for (const appenderName of Object.keys(loggerConfigCopy.log4jsConfig.appenders)) {
-        loggerConfigCopy.log4jsConfig.appenders[appenderName].filename = path.join(
-            logsPath,
-            loggerConfigCopy.log4jsConfig.appenders[appenderName].filename
-        );
-        loggerConfigCopy.log4jsConfig.categories[appenderName].level = zeLogLevel;
-    }
-    imperative.Logger.initLogger(loggerConfigCopy);
-    LOG = imperative.Logger.getAppLogger();
 }
 
 export function setActivated(value: boolean): void {

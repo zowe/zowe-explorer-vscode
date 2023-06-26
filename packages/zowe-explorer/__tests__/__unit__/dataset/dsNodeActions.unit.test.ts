@@ -59,7 +59,7 @@ const profileOne: imperative.IProfileLoaded = {
     message: "",
     failNotFound: false,
 };
-getConfiguration.mockReturnValue({
+getConfiguration.mockReturnValueOnce({
     persistence: true,
     get: (setting: string) => ["[test]: /u{session}"],
     update: jest.fn(),
@@ -164,10 +164,8 @@ describe("dsNodeActions", () => {
     Object.defineProperty(vscode.window, "showErrorMessage", { value: showErrorMessage });
     Object.defineProperty(vscode.window, "showQuickPick", { value: showQuickPick });
     Object.defineProperty(vscode.window, "showInformationMessage", { value: showInformationMessage });
-    Object.defineProperty(vscode.workspace, "getConfiguration", { value: getConfiguration });
     Object.defineProperty(ZosmfSession, "createSessCfgFromArgs", { value: createSessCfgFromArgs });
     Object.defineProperty(refreshActions, "refreshAll", { value: jest.fn() });
-    Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
 
     beforeEach(() => {
         showErrorMessage.mockReset();

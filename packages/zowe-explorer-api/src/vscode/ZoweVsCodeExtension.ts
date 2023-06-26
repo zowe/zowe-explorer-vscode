@@ -11,11 +11,12 @@
 
 import * as semver from "semver";
 import * as vscode from "vscode";
-import { ProfilesCache, ZoweExplorerApi } from "../profiles";
+import { ProfilesCache } from "../profiles";
 import { imperative } from "@zowe/cli";
 import { IPromptCredentialsOptions, IPromptUserPassOptions } from "./doc/IPromptCredentials";
 import { Gui } from "../globals/Gui";
 import { MessageSeverity, IZoweLogger } from "../logger";
+import { IApiRegisterClient } from "../extend";
 
 /**
  * Collection of utility functions for writing Zowe Explorer VS Code extensions.
@@ -35,18 +36,18 @@ export class ZoweVsCodeExtension {
     /**
      * @param {string} [requiredVersion] Optional semver string specifying the minimal required version
      *           of Zowe Explorer that needs to be installed for the API to be usable to the client.
-     * @returns an initialized instance `ZoweExplorerApi.IApiRegisterClient` that extenders can use
+     * @returns an initialized instance `IApiRegisterClient` that extenders can use
      *          to access the Zowe Explorer APIs or `undefined`. Also `undefined` if requiredVersion
      *          is larger than the version of Zowe Explorer found.
      */
-    public static getZoweExplorerApi(requiredVersion?: string): ZoweExplorerApi.IApiRegisterClient {
+    public static getZoweExplorerApi(requiredVersion?: string): IApiRegisterClient {
         const zoweExplorerApi = vscode.extensions.getExtension("Zowe.vscode-extension-for-zowe");
         if (zoweExplorerApi?.exports) {
             const zoweExplorerVersion = (zoweExplorerApi.packageJSON as Record<string, unknown>).version as string;
             if (requiredVersion && semver.valid(requiredVersion) && zoweExplorerVersion && !semver.gte(zoweExplorerVersion, requiredVersion)) {
                 return undefined;
             }
-            return zoweExplorerApi.exports as ZoweExplorerApi.IApiRegisterClient;
+            return zoweExplorerApi.exports as IApiRegisterClient;
         }
         return undefined;
     }
@@ -110,10 +111,7 @@ export class ZoweVsCodeExtension {
      * @param options Set of options to use when prompting for credentials
      * @returns Instance of imperative.IProfileLoaded containing information about the updated profile
      */
-    public static async updateCredentials(
-        options: IPromptCredentialsOptions,
-        apiRegister: ZoweExplorerApi.IApiRegisterClient
-    ): Promise<imperative.IProfileLoaded> {
+    public static async updateCredentials(options: IPromptCredentialsOptions, apiRegister: IApiRegisterClient): Promise<imperative.IProfileLoaded> {
         const cache = this.profilesCache;
         const profInfo = await cache.getProfileInfo();
         const setSecure = options.secure ?? profInfo.isSecured();

@@ -22,6 +22,7 @@ import { SettingsConfig } from "../../../src/utils/SettingsConfig";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 import { ZoweExplorerExtender } from "../../../src/ZoweExplorerExtender";
 
+jest.mock("../../../src/utils/LoggerUtils");
 jest.mock("fs");
 jest.mock("vscode");
 jest.mock("@zowe/cli");
@@ -49,14 +50,7 @@ describe("ProfilesUtils unit tests", () => {
         Object.defineProperty(fs, "mkdirSync", { value: newMocks.mockMkdirSync, configurable: true });
         Object.defineProperty(Gui, "errorMessage", { value: jest.fn(), configurable: true });
         Object.defineProperty(SettingsConfig, "getDirectValue", { value: newMocks.mockGetDirectValue, configurable: true });
-        Object.defineProperty(globals, "LOG", { value: jest.fn(), configurable: true });
-        Object.defineProperty(globals.LOG, "error", { value: jest.fn(), configurable: true });
         Object.defineProperty(globals, "PROFILE_SECURITY", { value: globals.ZOWE_CLI_SCM, configurable: true });
-        Object.defineProperty(ZoweLogger, "error", { value: jest.fn(), configurable: true });
-        Object.defineProperty(ZoweLogger, "debug", { value: jest.fn(), configurable: true });
-        Object.defineProperty(ZoweLogger, "warn", { value: jest.fn(), configurable: true });
-        Object.defineProperty(ZoweLogger, "info", { value: jest.fn(), configurable: true });
-        Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
         return newMocks;
     }
 
@@ -173,10 +167,6 @@ describe("ProfilesUtils unit tests", () => {
                     ],
                 }),
             } as never);
-            Object.defineProperty(globals.LOG, "debug", {
-                value: jest.fn(),
-                configurable: true,
-            });
             await expect(profUtils.ProfilesUtils.readConfigFromDisk()).resolves.not.toThrow();
             expect(mockReadProfilesFromDisk).toHaveBeenCalledTimes(1);
             profInfoSpy.mockRestore();
@@ -199,10 +189,6 @@ describe("ProfilesUtils unit tests", () => {
                 usingTeamConfig: true,
                 getTeamConfig: () => [],
             } as never);
-            Object.defineProperty(globals.LOG, "debug", {
-                value: jest.fn(),
-                configurable: true,
-            });
             await expect(profUtils.ProfilesUtils.readConfigFromDisk()).resolves.not.toThrow();
             expect(mockReadProfilesFromDisk).toHaveBeenCalledTimes(1);
             profInfoSpy.mockRestore();
@@ -419,7 +405,7 @@ describe("ProfilesUtils unit tests", () => {
         it("should successfully initialize Zowe folder and read config from disk", async () => {
             const initZoweFolderSpy = jest.spyOn(profUtils.ProfilesUtils, "initializeZoweFolder");
             const readConfigFromDiskSpy = jest.spyOn(profUtils.ProfilesUtils, "readConfigFromDisk").mockResolvedValueOnce();
-            await profUtils.ProfilesUtils.initializeZoweProfiles();
+            await profUtils.ProfilesUtils.initializeZoweProfiles((msg) => ZoweExplorerExtender.showZoweConfigError(msg));
             expect(initZoweFolderSpy).toHaveBeenCalledTimes(1);
             expect(readConfigFromDiskSpy).toHaveBeenCalledTimes(1);
             expect(ZoweLogger.error).not.toHaveBeenCalled();
@@ -429,7 +415,7 @@ describe("ProfilesUtils unit tests", () => {
             const testError = new Error("initializeZoweFolder failed");
             const initZoweFolderSpy = jest.spyOn(profUtils.ProfilesUtils, "initializeZoweFolder").mockRejectedValueOnce(testError);
             const readConfigFromDiskSpy = jest.spyOn(profUtils.ProfilesUtils, "readConfigFromDisk").mockResolvedValueOnce();
-            await profUtils.ProfilesUtils.initializeZoweProfiles();
+            await profUtils.ProfilesUtils.initializeZoweProfiles((msg) => ZoweExplorerExtender.showZoweConfigError(msg));
             expect(initZoweFolderSpy).toHaveBeenCalledTimes(1);
             expect(readConfigFromDiskSpy).toHaveBeenCalledTimes(1);
             expect(Gui.errorMessage).toHaveBeenCalledWith(expect.stringContaining(testError.message));
@@ -439,7 +425,7 @@ describe("ProfilesUtils unit tests", () => {
             const testError = new zowe.imperative.ImperativeError({ msg: "readConfigFromDisk failed" });
             const initZoweFolderSpy = jest.spyOn(profUtils.ProfilesUtils, "initializeZoweFolder").mockResolvedValueOnce();
             const readConfigFromDiskSpy = jest.spyOn(profUtils.ProfilesUtils, "readConfigFromDisk").mockRejectedValueOnce(testError);
-            await profUtils.ProfilesUtils.initializeZoweProfiles();
+            await profUtils.ProfilesUtils.initializeZoweProfiles((msg) => ZoweExplorerExtender.showZoweConfigError(msg));
             expect(initZoweFolderSpy).toHaveBeenCalledTimes(1);
             expect(readConfigFromDiskSpy).toHaveBeenCalledTimes(1);
             expect(Gui.errorMessage).toHaveBeenCalledWith(expect.stringContaining(testError.message));
@@ -450,7 +436,7 @@ describe("ProfilesUtils unit tests", () => {
             const initZoweFolderSpy = jest.spyOn(profUtils.ProfilesUtils, "initializeZoweFolder").mockResolvedValueOnce();
             const readConfigFromDiskSpy = jest.spyOn(profUtils.ProfilesUtils, "readConfigFromDisk").mockRejectedValueOnce(testError);
             const showZoweConfigErrorSpy = jest.spyOn(ZoweExplorerExtender, "showZoweConfigError").mockReturnValueOnce();
-            await profUtils.ProfilesUtils.initializeZoweProfiles();
+            await profUtils.ProfilesUtils.initializeZoweProfiles((msg) => ZoweExplorerExtender.showZoweConfigError(msg));
             expect(initZoweFolderSpy).toHaveBeenCalledTimes(1);
             expect(readConfigFromDiskSpy).toHaveBeenCalledTimes(1);
             expect(showZoweConfigErrorSpy).toHaveBeenCalledWith(testError.message);

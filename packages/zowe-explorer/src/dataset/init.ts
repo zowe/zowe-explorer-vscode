@@ -9,7 +9,6 @@
  *
  */
 
-import * as globals from "../globals";
 import * as vscode from "vscode";
 import * as dsActions from "./actions";
 import * as refreshActions from "../shared/refresh";
@@ -25,7 +24,7 @@ import { TreeViewUtils } from "../utils/TreeViewUtils";
 
 export async function initDatasetProvider(context: vscode.ExtensionContext): Promise<IZoweTree<IZoweDatasetTreeNode>> {
     ZoweLogger.trace("dataset.init.initDatasetProvider called.");
-    const datasetProvider: IZoweTree<IZoweDatasetTreeNode> = await createDatasetTree(globals.LOG);
+    const datasetProvider: IZoweTree<IZoweDatasetTreeNode> = await createDatasetTree();
     if (datasetProvider == null) {
         return null;
     }

@@ -9,7 +9,7 @@
  *
  */
 
-import { ZoweExplorerApi } from "@zowe/zowe-explorer-api";
+import { IJes, IMvs, IUss } from "@zowe/zowe-explorer-api";
 import { imperative } from "@zowe/cli";
 
 import { ZoweExplorerApiRegister } from "../../src/ZoweExplorerApiRegister";
@@ -17,7 +17,7 @@ import { ZoweExplorerApiRegister } from "../../src/ZoweExplorerApiRegister";
 export function createJesApi(profile: imperative.IProfileLoaded) {
     return ZoweExplorerApiRegister.getJesApi(profile);
 }
-export function bindJesApi(api: ZoweExplorerApi.IJes) {
+export function bindJesApi(api: IJes) {
     const getJesApiMock = jest.fn();
     getJesApiMock.mockReturnValue(api);
     ZoweExplorerApiRegister.getJesApi = getJesApiMock.bind(ZoweExplorerApiRegister);
@@ -26,7 +26,7 @@ export function bindJesApi(api: ZoweExplorerApi.IJes) {
 export function createMvsApi(profile: imperative.IProfileLoaded) {
     return ZoweExplorerApiRegister.getMvsApi(profile);
 }
-export function bindMvsApi(api: ZoweExplorerApi.IMvs) {
+export function bindMvsApi(api: IMvs) {
     const getMvsApiMock = jest.fn();
     getMvsApiMock.mockReturnValue(api);
     ZoweExplorerApiRegister.getMvsApi = getMvsApiMock.bind(ZoweExplorerApiRegister);
@@ -35,7 +35,7 @@ export function bindMvsApi(api: ZoweExplorerApi.IMvs) {
 export function createUssApi(profile: imperative.IProfileLoaded) {
     return ZoweExplorerApiRegister.getUssApi(profile);
 }
-export function bindUssApi(api: ZoweExplorerApi.IUss) {
+export function bindUssApi(api: IUss) {
     const getUssApiMock = jest.fn();
     getUssApiMock.mockReturnValue(api);
     ZoweExplorerApiRegister.getUssApi = getUssApiMock.bind(ZoweExplorerApiRegister);

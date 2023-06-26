@@ -9,7 +9,6 @@
  *
  */
 
-import * as globals from "../globals";
 import * as vscode from "vscode";
 import * as ussActions from "./actions";
 import * as refreshActions from "../shared/refresh";
@@ -24,7 +23,7 @@ import { TreeViewUtils } from "../utils/TreeViewUtils";
 
 export async function initUSSProvider(context: vscode.ExtensionContext): Promise<IZoweTree<IZoweUSSTreeNode>> {
     ZoweLogger.trace("init.initUSSProvider called.");
-    const ussFileProvider: IZoweTree<IZoweUSSTreeNode> = await createUSSTree(globals.LOG);
+    const ussFileProvider: IZoweTree<IZoweUSSTreeNode> = await createUSSTree();
     if (ussFileProvider == null) {
         return null;
     }

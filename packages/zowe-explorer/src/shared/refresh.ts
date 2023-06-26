@@ -34,7 +34,7 @@ export async function refreshAll(treeProvider: IZoweTree<IZoweTreeNode>): Promis
             if (contextually.isSessionNotFav(sessNode)) {
                 sessNode.dirty = true;
                 returnIconState(sessNode);
-                syncSessionNode(Profiles.getInstance())((profileValue) => ZoweExplorerApiRegister.getCommonApi(profileValue).getSession())(sessNode);
+                syncSessionNode((profile) => ZoweExplorerApiRegister.getCommonApi(profile), sessNode);
             }
         } else {
             await removeSession(treeProvider, sessNode.label.toString().trim());

@@ -29,7 +29,7 @@ This repo uses [Yarn](https://yarnpkg.com/) for building.
 
 ## Review the sources
 
-As you will see, the implementation of this extension is very small and minimal. The main file to explore is `packages/zowe-explorer-ftp-extension/src/ZoweExplorerFtpApi.ts`, which is the FTP implementation of all the Zowe Explorer API methods required for USS. You can find the interface defining these operations in the Zowe Explorer API package under `packages/zowe-explorer-api/src/profiles/ZoweExplorerApi.ts`.
+As you will see, the implementation of this extension is very small and minimal. The main file to explore is `packages/zowe-explorer-ftp-extension/src/ZoweExplorerFtpApi.ts`, which is the FTP implementation of all the Zowe Explorer API methods required for USS. You can find the interface defining these operations in the Zowe Explorer API package under `packages/zowe-explorer-api/src/extend/interfaces.ts`.
 
 These FTP operations are not directly implemented in that file, but rather reuse and call the code provided by the z/OS FTP Plug-in for Zowe™ CLI, and are linked via the `@zowe/zos-ftp-for-zowe-cli` NPM dependency.
 

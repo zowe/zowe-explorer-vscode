@@ -9,7 +9,7 @@
  *
  */
 
-import { sessionMap, ZoweLogger } from "../../../src/extension";
+import * as globals from "../../../src/globals";
 import { AbstractFtpApi } from "../../../src/ZoweExplorerAbstractFtpApi";
 import { FtpSession } from "../../../src/ftpSession";
 import { FTPConfig, IZosFTPProfile } from "@zowe/zos-ftp-for-zowe-cli";
@@ -34,20 +34,20 @@ describe("AbstractFtpApi", () => {
 
         expect(result).toBeInstanceOf(FtpSession);
         expect(result.ISession.hostname).toBe("1.1.1.1");
-        expect(sessionMap.size).toBe(1);
+        expect(globals.SESSION_MAP.size).toBe(1);
     });
 
     it("should remove the record in sessionMap when call logout function.", async () => {
         const instance = new Dummy();
         const result = instance.getSession(profile);
         const session = new FtpSession(result.ISession);
-        sessionMap.get = jest.fn().mockReturnValue(session);
+        globals.SESSION_MAP.get = jest.fn().mockReturnValue(session);
         session.releaseConnections = jest.fn();
 
         await instance.logout(session);
 
         expect(session.releaseConnections).toBeCalledTimes(1);
-        expect(sessionMap.size).toBe(0);
+        expect(globals.SESSION_MAP.size).toBe(0);
     });
 
     it("should show a fatal message when trying to load an invalid profile.", () => {
@@ -63,7 +63,7 @@ describe("AbstractFtpApi", () => {
                 "Internal error: ZoweVscFtpRestApi instance was not initialized with a valid Zowe profile.",
                 {
                     severity: MessageSeverity.FATAL,
-                    logger: ZoweLogger,
+                    logger: globals.LOGGER,
                 }
             );
         }
@@ -134,7 +134,7 @@ describe("AbstractFtpApi", () => {
         try {
             expect(Gui.showMessage).toBeCalledWith("Internal error: ZoweVscFtpRestApi instance was not initialized with a valid Zowe profile.", {
                 severity: MessageSeverity.FATAL,
-                logger: ZoweLogger,
+                logger: globals.LOGGER,
             });
             instance.checkedProfile();
         } catch (err) {

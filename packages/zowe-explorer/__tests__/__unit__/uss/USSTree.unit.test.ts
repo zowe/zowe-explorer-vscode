@@ -138,10 +138,6 @@ async function createGlobalMocks() {
         value: globalMocks.showErrorMessage,
         configurable: true,
     });
-    Object.defineProperty(vscode.workspace, "getConfiguration", {
-        value: globalMocks.getConfiguration,
-        configurable: true,
-    });
     Object.defineProperty(vscode.window, "showInputBox", { value: globalMocks.showInputBox, configurable: true });
     Object.defineProperty(vscode, "ProgressLocation", { value: globalMocks.ProgressLocation, configurable: true });
     Object.defineProperty(vscode.window, "withProgress", { value: globalMocks.withProgress, configurable: true });
@@ -153,14 +149,6 @@ async function createGlobalMocks() {
         value: jest.fn().mockReturnValue(globalMocks.mockProfilesInstance),
         configurable: true,
     });
-    Object.defineProperty(globals, "LOG", { value: jest.fn(), configurable: true });
-    Object.defineProperty(globals.LOG, "error", { value: jest.fn(), configurable: true });
-    Object.defineProperty(globals.LOG, "warn", { value: jest.fn(), configurable: true });
-    Object.defineProperty(ZoweLogger, "error", { value: jest.fn(), configurable: true });
-    Object.defineProperty(ZoweLogger, "debug", { value: jest.fn(), configurable: true });
-    Object.defineProperty(ZoweLogger, "warn", { value: jest.fn(), configurable: true });
-    Object.defineProperty(ZoweLogger, "info", { value: jest.fn(), configurable: true });
-    Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
     Object.defineProperty(ZoweLocalStorage, "storage", {
         value: {
             get: () => ({
@@ -181,7 +169,7 @@ async function createGlobalMocks() {
     globalMocks.withProgress.mockReturnValue(globalMocks.testResponse);
     globalMocks.getFilters.mockReturnValue(["/u/aDir{directory}", "/u/myFile.txt{textFile}"]);
     globalMocks.mockDefaultProfile.mockReturnValue(globalMocks.testProfile);
-    globalMocks.getConfiguration.mockReturnValue({
+    globalMocks.getConfiguration.mockReturnValueOnce({
         get: (setting: string) => ["[test]: /u/aDir{directory}", "[test]: /u/myFile.txt{textFile}"],
         update: jest.fn(() => {
             return {};
@@ -209,10 +197,11 @@ async function createGlobalMocks() {
 describe("USSTree Unit Tests - Function USSTree.initializeFavorites()", () => {
     it("Tests that initializeFavorites() is executed successfully", async () => {
         const globalMocks = await createGlobalMocks();
-
-        jest.spyOn(PersistentFilters.prototype, "readFavorites").mockReturnValue(["[test]: /u/aDir{directory}", "[test]: /u/myFile.txt{textFile}"]);
-
-        const testTree1 = await createUSSTree(zowe.imperative.Logger.getAppLogger());
+        jest.spyOn(PersistentFilters.prototype, "readFavorites").mockReturnValueOnce([
+            "[test]: /u/aDir{directory}",
+            "[test]: /u/myFile.txt{textFile}",
+        ]);
+        const testTree1 = await createUSSTree();
         const favProfileNode = testTree1.mFavorites[0];
         expect(testTree1.mSessionNodes).toBeDefined();
         expect(testTree1.mFavorites.length).toBe(1);
@@ -237,7 +226,12 @@ describe("USSTree Unit Tests - Function USSTree.initializeFavorites()", () => {
 describe("USSTree Unit Tests - Function initializeFavChildNodeForProfile()", () => {
     it("Tests initializeFavChildNodeForProfile() for favorited search", async () => {
         await createGlobalMocks();
-        const testTree1 = await createUSSTree(zowe.imperative.Logger.getAppLogger());
+
+        jest.spyOn(PersistentFilters.prototype, "readFavorites").mockReturnValueOnce([
+            "[test]: /u/aDir{directory}",
+            "[test]: /u/myFile.txt{textFile}",
+        ]);
+        const testTree1 = await createUSSTree();
         const favProfileNode = testTree1.mFavorites[0];
         const label = "/u/fakeuser";
         const line = "[test]: /u/fakeuser{ussSession}";
@@ -1425,7 +1419,7 @@ describe("USSTree Unit Tests - Function USSTree.getChildren()", () => {
 
         await globalMocks.testTree.getChildren(favProfileNode);
 
-        expect(loadProfilesForFavoritesSpy).toHaveBeenCalledWith(log, favProfileNode);
+        expect(loadProfilesForFavoritesSpy).toHaveBeenCalledWith(favProfileNode);
     });
 });
 
@@ -1492,7 +1486,7 @@ describe("USSTree Unit Tests - Function USSTree.loadProfilesForFavorites", () =>
             }),
         });
 
-        await globalMocks.testTree.loadProfilesForFavorites(blockMocks.log, favProfileNode);
+        await globalMocks.testTree.loadProfilesForFavorites(favProfileNode);
         const resultFavProfileNode = globalMocks.testTree.mFavorites[0];
 
         expect(resultFavProfileNode).toEqual(expectedFavProfileNode);
@@ -1525,7 +1519,7 @@ describe("USSTree Unit Tests - Function USSTree.loadProfilesForFavorites", () =>
             configurable: true,
         });
         mocked(vscode.window.showErrorMessage).mockResolvedValueOnce({ title: "Remove" });
-        await globalMocks.testTree.loadProfilesForFavorites(blockMocks.log, favProfileNode);
+        await globalMocks.testTree.loadProfilesForFavorites(favProfileNode);
         expect(showErrorMessageSpy).toBeCalledTimes(1);
         showErrorMessageSpy.mockClear();
     });
@@ -1568,7 +1562,7 @@ describe("USSTree Unit Tests - Function USSTree.loadProfilesForFavorites", () =>
             globalMocks.testProfile
         );
 
-        await globalMocks.testTree.loadProfilesForFavorites(blockMocks.log, favProfileNode);
+        await globalMocks.testTree.loadProfilesForFavorites(favProfileNode);
         const resultFavDirNode = globalMocks.testTree.mFavorites[0].children[0];
 
         expect(resultFavDirNode).toEqual(expectedFavDirNode);
@@ -1613,7 +1607,7 @@ describe("USSTree Unit Tests - Function USSTree.loadProfilesForFavorites", () =>
             globalMocks.testProfile
         );
 
-        await globalMocks.testTree.loadProfilesForFavorites(blockMocks.log, favProfileNode);
+        await globalMocks.testTree.loadProfilesForFavorites(favProfileNode);
         const resultFavDirNode = globalMocks.testTree.mFavorites[0].children[0];
 
         expect(resultFavDirNode).toEqual(expectedFavDirNode);

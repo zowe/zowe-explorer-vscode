@@ -63,22 +63,6 @@ describe("ZoweExplorerExtender unit tests", () => {
             value: newMocks.mockTextDocument,
             configurable: true,
         });
-        Object.defineProperty(vscode.workspace, "getConfiguration", {
-            value: newMocks.mockGetConfiguration,
-            configurable: true,
-        });
-        Object.defineProperty(ZoweLogger, "warn", {
-            value: jest.fn(),
-            configurable: true,
-        });
-        Object.defineProperty(ZoweLogger, "error", {
-            value: jest.fn(),
-            configurable: true,
-        });
-        Object.defineProperty(ZoweLogger, "trace", {
-            value: jest.fn(),
-            configurable: true,
-        });
         Object.defineProperty(ZoweLocalStorage, "storage", {
             value: {
                 get: () => ({ persistence: true, favorites: [], history: [], sessions: ["zosmf"], searchHistory: [], fileHistory: [] }),

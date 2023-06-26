@@ -16,11 +16,10 @@ import * as globals from "../globals";
 import * as path from "path";
 import * as fs from "fs";
 import * as util from "util";
-import { getSecurityModules, IZoweTreeNode, ZoweTreeNode, getZoweDir, getFullPath, Gui } from "@zowe/zowe-explorer-api";
+import { getSecurityModules, IZoweTreeNode, ZoweTreeNode, getZoweDir, getFullPath, Gui, ICommon } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import * as nls from "vscode-nls";
 import { imperative, getImperativeConfig } from "@zowe/cli";
-import { ZoweExplorerExtender } from "../ZoweExplorerExtender";
 import { ZoweLogger } from "./LoggerUtils";
 import { SettingsConfig } from "./SettingsConfig";
 
@@ -134,27 +133,23 @@ export function isTheia(): boolean {
  * @param getSessionForProfile is a function to build a valid specific session based on provided profile
  * @param sessionNode is a tree node, containing session information
  */
-type SessionForProfile = (_profile: imperative.IProfileLoaded) => imperative.Session;
-export const syncSessionNode =
-    (_profiles: Profiles) =>
-    (getSessionForProfile: SessionForProfile) =>
-    (sessionNode: IZoweTreeNode): void => {
-        ZoweLogger.trace("ProfilesUtils.syncSessionNode called.");
+export const syncSessionNode = (getCommonApi: (profile: imperative.IProfileLoaded) => ICommon, sessionNode: IZoweTreeNode): void => {
+    ZoweLogger.trace("ProfilesUtils.syncSessionNode called.");
 
-        const profileType = sessionNode.getProfile().type;
-        const profileName = sessionNode.getProfileName();
+    const profileType = sessionNode.getProfile().type;
+    const profileName = sessionNode.getProfileName();
 
-        let profile: imperative.IProfileLoaded;
-        try {
-            profile = Profiles.getInstance().loadNamedProfile(profileName, profileType);
-        } catch (e) {
-            ZoweLogger.warn(e);
-            return;
-        }
-        sessionNode.setProfileToChoice(profile);
-        const session = getSessionForProfile(profile);
-        sessionNode.setSessionToChoice(session);
-    };
+    let profile: imperative.IProfileLoaded;
+    try {
+        profile = Profiles.getInstance().loadNamedProfile(profileName, profileType);
+    } catch (e) {
+        ZoweLogger.warn(e);
+        return;
+    }
+    sessionNode.setProfileToChoice(profile);
+    const session = getCommonApi(profile).getSession();
+    sessionNode.setSessionToChoice(session);
+};
 
 export interface IFilterItem {
     text: string;
@@ -419,7 +414,7 @@ export class ProfilesUtils {
         });
     }
 
-    public static async initializeZoweProfiles(): Promise<void> {
+    public static async initializeZoweProfiles(errorCallback: (msg: string) => unknown): Promise<void> {
         ZoweLogger.trace("ProfilesUtils.initializeZoweProfiles called.");
         try {
             await ProfilesUtils.initializeZoweFolder();
@@ -436,7 +431,7 @@ export class ProfilesUtils {
                 await errorHandling(err, undefined, err.mDetails.causeErrors);
             } else {
                 ZoweLogger.error(err);
-                ZoweExplorerExtender.showZoweConfigError(err.message);
+                errorCallback(err.message);
             }
         }
     }

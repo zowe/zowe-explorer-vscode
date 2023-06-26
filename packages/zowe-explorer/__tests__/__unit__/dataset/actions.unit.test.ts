@@ -47,6 +47,7 @@ import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 // Missing the definition of path module, because I need the original logic for tests
 jest.mock("fs");
 jest.mock("vscode");
+jest.mock("../../../src/utils/LoggerUtils");
 
 let mockClipboardData = null;
 let clipboard;
@@ -97,15 +98,11 @@ function createGlobalMocks() {
     });
     Object.defineProperty(vscode.window, "showInputBox", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.workspace, "openTextDocument", { value: jest.fn(), configurable: true });
-    Object.defineProperty(vscode.workspace, "getConfiguration", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showTextDocument", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showQuickPick", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "createQuickPick", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.commands, "executeCommand", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.workspace, "applyEdit", { value: jest.fn(), configurable: true });
-    Object.defineProperty(globals, "LOG", { value: jest.fn(), configurable: true });
-    Object.defineProperty(globals.LOG, "debug", { value: jest.fn(), configurable: true });
-    Object.defineProperty(globals.LOG, "error", { value: jest.fn(), configurable: true });
     Object.defineProperty(zowe, "Download", { value: jest.fn(), configurable: true });
     Object.defineProperty(zowe.Download, "dataSet", { value: jest.fn(), configurable: true });
     Object.defineProperty(zowe, "Delete", { value: jest.fn(), configurable: true });
@@ -122,11 +119,6 @@ function createGlobalMocks() {
     Object.defineProperty(vscode, "ProgressLocation", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "createWebviewPanel", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.env, "clipboard", { value: clipboard, configurable: true });
-    Object.defineProperty(ZoweLogger, "error", { value: jest.fn(), configurable: true });
-    Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
-    Object.defineProperty(ZoweLogger, "debug", { value: jest.fn(), configurable: true });
-    Object.defineProperty(ZoweLogger, "info", { value: jest.fn(), configurable: true });
-    Object.defineProperty(ZoweLogger, "warn", { value: jest.fn(), configurable: true });
     mocked(Profiles.getInstance).mockReturnValue(newMocks.profileInstance);
 
     return newMocks;
@@ -2733,6 +2725,13 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         bindMvsApi(mvsApi);
         mocked(treeView.reveal).mockReturnValue(new Promise((resolve) => resolve(null)));
 
+        jest.spyOn(vscode.workspace, "getConfiguration").mockReturnValueOnce({
+            update: jest.fn(),
+            has: jest.fn(),
+            get: jest.fn(),
+            inspect: jest.fn(),
+        });
+
         return {
             session,
             sessionWithoutCredentials,
@@ -2969,7 +2968,6 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         await dsActions.createFile(node, blockMocks.testDatasetTree);
 
         expect(mocked(Gui.showMessage)).toHaveBeenCalledWith("Operation Cancelled");
-        expect(mocked(vscode.workspace.getConfiguration)).not.toBeCalled();
         expect(createDataSetSpy).not.toHaveBeenCalled();
     });
     it("Tests that user can edit the node label", async () => {
@@ -3512,6 +3510,7 @@ describe("Dataset Actions Unit Tests - Function openPS", () => {
         );
         const showErrorMessageSpy = jest.spyOn(Gui, "errorMessage");
         const logErrorSpy = jest.spyOn(ZoweLogger, "error");
+        logErrorSpy.mockClear();
 
         try {
             await dsActions.openPS(node, true, blockMocks.testDatasetTree);

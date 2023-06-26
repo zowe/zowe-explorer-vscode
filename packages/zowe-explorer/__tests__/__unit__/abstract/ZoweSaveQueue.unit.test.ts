@@ -18,6 +18,8 @@ import * as vscode from "vscode";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
 
+jest.mock("../../../src/utils/LoggerUtils");
+
 describe("ZoweSaveQueue - unit tests", () => {
     const createGlobalMocks = () => {
         Object.defineProperty(ZoweLocalStorage, "storage", {
@@ -37,10 +39,6 @@ describe("ZoweSaveQueue - unit tests", () => {
                 uss: createUSSTree([], []),
             },
         };
-
-        Object.defineProperty(ZoweLogger, "error", { value: jest.fn(), configurable: true });
-        Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
-        Object.defineProperty(ZoweLogger, "debug", { value: jest.fn(), configurable: true });
 
         return globalMocks;
     };

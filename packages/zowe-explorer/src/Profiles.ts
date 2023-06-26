@@ -28,6 +28,7 @@ import {
     ZoweVsCodeExtension,
     getFullPath,
     getZoweDir,
+    IRegisterClient,
 } from "@zowe/zowe-explorer-api";
 import { errorHandling, FilterDescriptor, FilterItem } from "./utils/ProfilesUtils";
 import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
@@ -515,7 +516,6 @@ export class Profiles extends ProfilesCache {
                 }
                 return;
             }
-        } else {
         }
     }
 
@@ -1013,5 +1013,9 @@ export class Profiles extends ProfilesCache {
             }
             newConfig.autoStore = false;
         }
+    }
+
+    public async refresh(apiRegister?: IRegisterClient): Promise<void> {
+        return super.refresh(apiRegister ?? ZoweExplorerApiRegister.getInstance());
     }
 }

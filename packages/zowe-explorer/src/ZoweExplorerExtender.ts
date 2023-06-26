@@ -16,20 +16,19 @@ import * as fs from "fs";
 import * as globals from "./globals";
 import * as vscode from "vscode";
 import {
+    IApiExplorerExtender,
+    getFullPath,
+    getZoweDir,
     Gui,
-    ZoweExplorerApi,
-    ZoweExplorerTreeApi,
     IZoweTree,
     IZoweTreeNode,
     IZoweDatasetTreeNode,
     IZoweUSSTreeNode,
     IZoweJobTreeNode,
     ProfilesCache,
-    getZoweDir,
-    getFullPath,
+    ZoweExplorerTreeApi,
 } from "@zowe/zowe-explorer-api";
 import { Profiles } from "./Profiles";
-import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
 import { getProfile, ProfilesUtils } from "./utils/ProfilesUtils";
 import { ZoweLogger } from "./utils/LoggerUtils";
 
@@ -43,7 +42,7 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
  * extensions to contribute their implementations.
  * @export
  */
-export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtender, ZoweExplorerTreeApi {
+export class ZoweExplorerExtender implements IApiExplorerExtender, ZoweExplorerTreeApi {
     public static ZoweExplorerExtenderInst: ZoweExplorerExtender;
 
     /**
@@ -146,7 +145,7 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
 
     /**
      *
-     * @implements ZoweExplorerApi.IApiExplorerExtender.initForZowe()
+     * @implements IApiExplorerExtender.initForZowe()
      * @param {string} profileType
      * @param {imperative.ICommandProfileTypeConfiguration[]} profileTypeConfigurations
      */
@@ -197,7 +196,7 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
         });
         // sequentially reload the internal profiles cache to satisfy all the newly added profile types
         await ZoweExplorerExtender.refreshProfilesQueue.add(async (): Promise<void> => {
-            await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
+            await Profiles.getInstance().refresh();
         });
     }
 
@@ -215,7 +214,7 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
     /**
      * Gives extenders access to the profiles loaded into memory by Zowe Explorer.
      *
-     * @implements ZoweExplorerApi.IApiExplorerExtender.getProfilesCache()
+     * @implements IApiExplorerExtender.getProfilesCache()
      * @returns {ProfilesCache}
      */
     public getProfilesCache(): ProfilesCache {
@@ -228,13 +227,13 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
      * to make them automatically appears in the Explorer drop-
      * down dialogs.
      *
-     * @implements ZoweExplorerApi.IApiExplorerExtender.reloadProfiles()
+     * @implements IApiExplorerExtender.reloadProfiles()
      * @param profileType optional profile type that the extender can specify
      */
     public async reloadProfiles(profileType?: string): Promise<void> {
         // sequentially reload the internal profiles cache to satisfy all the newly added profile types
         await ZoweExplorerExtender.refreshProfilesQueue.add(async (): Promise<void> => {
-            await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
+            await Profiles.getInstance().refresh();
         });
         // profileType is used to load a default extender profile if no other profiles are populating the trees
         await this.datasetProvider?.addSession(undefined, profileType);

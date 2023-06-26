@@ -14,7 +14,7 @@ import { Gui } from "../../../src/globals/Gui";
 import { MessageSeverity, IZoweLogger } from "../../../src/logger/IZoweLogger";
 import { IProfileLoaded } from "@zowe/imperative";
 import { IPromptCredentialsOptions, ZoweVsCodeExtension } from "../../../src/vscode";
-import { ZoweExplorerApi } from "../../../src";
+import { IApiRegisterClient } from "../../../src";
 
 describe("ZoweVsCodeExtension", () => {
     const fakeVsce = {
@@ -28,9 +28,11 @@ describe("ZoweVsCodeExtension", () => {
 
     it("customLoggingPath should return value if defined in VS Code settings", () => {
         const mockGetConfig = jest.fn().mockReturnValueOnce(__dirname);
-        jest.spyOn(vscode.workspace, "getConfiguration").mockReturnValue({
+        const vscodeMock = {
             get: mockGetConfig,
-        } as unknown as vscode.WorkspaceConfiguration);
+        } as unknown as vscode.WorkspaceConfiguration;
+        jest.spyOn(vscode.workspace, "getConfiguration").mockReturnValueOnce(vscodeMock);
+        jest.spyOn(vscode.workspace, "getConfiguration").mockReturnValueOnce(vscodeMock);
         expect(ZoweVsCodeExtension.customLoggingPath).toBe(__dirname);
         expect(ZoweVsCodeExtension.customLoggingPath).toBeUndefined();
         expect(mockGetConfig).toHaveBeenCalledTimes(2);
@@ -196,7 +198,7 @@ describe("ZoweVsCodeExtension", () => {
             const saveCredentialsSpy = jest.spyOn(ZoweVsCodeExtension as any, "saveCredentials");
             const profileLoaded: IProfileLoaded = await ZoweVsCodeExtension.updateCredentials(
                 promptCredsOptions,
-                undefined as unknown as ZoweExplorerApi.IApiRegisterClient
+                undefined as unknown as IApiRegisterClient
             );
             expect(profileLoaded.profile?.user).toBe("fakeUser");
             expect(profileLoaded.profile?.password).toBe("fakePassword");
@@ -224,7 +226,7 @@ describe("ZoweVsCodeExtension", () => {
                     ...promptCredsOptions,
                     rePrompt: true,
                 },
-                undefined as unknown as ZoweExplorerApi.IApiRegisterClient
+                undefined as unknown as IApiRegisterClient
             );
             expect(profileLoaded.profile?.user).toBe("fakeUser");
             expect(profileLoaded.profile?.password).toBe("fakePassword");
@@ -250,7 +252,7 @@ describe("ZoweVsCodeExtension", () => {
             const saveCredentialsSpy = jest.spyOn(ZoweVsCodeExtension as any, "saveCredentials");
             const profileLoaded: IProfileLoaded = await ZoweVsCodeExtension.updateCredentials(
                 promptCredsOptions,
-                undefined as unknown as ZoweExplorerApi.IApiRegisterClient
+                undefined as unknown as IApiRegisterClient
             );
             expect(profileLoaded.profile?.user).toBe("fakeUser");
             expect(profileLoaded.profile?.password).toBe("fakePassword");
@@ -276,7 +278,7 @@ describe("ZoweVsCodeExtension", () => {
             const saveCredentialsSpy = jest.spyOn(ZoweVsCodeExtension as any, "saveCredentials");
             const profileLoaded: IProfileLoaded = await ZoweVsCodeExtension.updateCredentials(
                 promptCredsOptions,
-                undefined as unknown as ZoweExplorerApi.IApiRegisterClient
+                undefined as unknown as IApiRegisterClient
             );
             expect(profileLoaded.profile?.user).toBe("fakeUser");
             expect(profileLoaded.profile?.password).toBe("fakePassword");
@@ -298,10 +300,7 @@ describe("ZoweVsCodeExtension", () => {
                 refresh: jest.fn(),
             });
             const showInputBoxSpy = jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce(undefined);
-            const profileLoaded = await ZoweVsCodeExtension.updateCredentials(
-                promptCredsOptions,
-                undefined as unknown as ZoweExplorerApi.IApiRegisterClient
-            );
+            const profileLoaded = await ZoweVsCodeExtension.updateCredentials(promptCredsOptions, undefined as unknown as IApiRegisterClient);
             expect(profileLoaded).toBeUndefined();
             expect(showInputBoxSpy).toHaveBeenCalledTimes(1);
             expect(mockUpdateProperty).toHaveBeenCalledTimes(0);
@@ -320,10 +319,7 @@ describe("ZoweVsCodeExtension", () => {
                 refresh: jest.fn(),
             });
             const showInputBoxSpy = jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("fakeUser").mockResolvedValueOnce(undefined);
-            const profileLoaded = await ZoweVsCodeExtension.updateCredentials(
-                promptCredsOptions,
-                undefined as unknown as ZoweExplorerApi.IApiRegisterClient
-            );
+            const profileLoaded = await ZoweVsCodeExtension.updateCredentials(promptCredsOptions, undefined as unknown as IApiRegisterClient);
             expect(profileLoaded).toBeUndefined();
             expect(showInputBoxSpy).toHaveBeenCalledTimes(2);
             expect(mockUpdateProperty).toHaveBeenCalledTimes(0);

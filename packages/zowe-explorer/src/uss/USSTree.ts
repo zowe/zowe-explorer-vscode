@@ -41,10 +41,10 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
  *
  * @export
  */
-export async function createUSSTree(log: imperative.Logger): Promise<USSTree> {
+export async function createUSSTree(): Promise<USSTree> {
     ZoweLogger.trace("uss.USSTree.createUSSTree called.");
     const tree = new USSTree();
-    await tree.initializeFavorites(log);
+    await tree.initializeFavorites();
     await tree.addSession();
     return tree;
 }
@@ -292,7 +292,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 return this.mFavorites;
             }
             if (element.contextValue && element.contextValue === globals.FAV_PROFILE_CONTEXT) {
-                const favsForProfile = await this.loadProfilesForFavorites(this.log, element);
+                const favsForProfile = await this.loadProfilesForFavorites(element);
                 return favsForProfile;
             }
             return element.getChildren();
@@ -519,9 +519,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
      */
     public async getAllLoadedItems(): Promise<IZoweUSSTreeNode[]> {
         ZoweLogger.trace("USSTree.getAllLoadedItems called.");
-        if (this.log) {
-            ZoweLogger.debug(localize("enterPattern.log.debug.prompt", "Prompting the user to choose a member from the filtered list"));
-        }
+        ZoweLogger.debug(localize("enterPattern.log.debug.prompt", "Prompting the user to choose a member from the filtered list"));
         const loadedNodes: IZoweUSSTreeNode[] = [];
         const sessions = await this.getChildren();
 
@@ -558,9 +556,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
      */
     public async filterPrompt(node: IZoweUSSTreeNode): Promise<void> {
         ZoweLogger.trace("USSTree.filterPrompt called.");
-        if (this.log) {
-            ZoweLogger.debug(localize("filterPrompt.log.debug.promptUSSPath", "Prompting the user for a USS path"));
-        }
+        ZoweLogger.debug(localize("filterPrompt.log.debug.promptUSSPath", "Prompting the user for a USS path"));
         await this.checkCurrentProfile(node);
         if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID || !contextually.isValidationEnabled(node)) {
             let sessionNode;
@@ -626,7 +622,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 }
             }
             // Get session for sessionNode
-            syncSessionNode(Profiles.getInstance())((profileValue) => ZoweExplorerApiRegister.getUssApi(profileValue).getSession())(node);
+            syncSessionNode((profile) => ZoweExplorerApiRegister.getUssApi(profile), node);
             // Sanitization: Replace multiple forward slashes with just one forward slash
             const sanitizedPath = remotepath.replace(/\/+/g, "/").replace(/(\/*)$/, "");
             sessionNode.tooltip = sessionNode.fullPath = sanitizedPath;
@@ -686,9 +682,8 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
      * Profile loading only occurs in loadProfilesForFavorites when the profile node in Favorites is clicked on.
      * @param log
      */
-    public async initializeFavorites(log: imperative.Logger): Promise<void> {
+    public async initializeFavorites(): Promise<void> {
         ZoweLogger.trace("USSTree.initializeFavorites called.");
-        this.log = log;
         ZoweLogger.debug(localize("initializeFavorites.log.debug", "Initializing profiles with USS favorites."));
         const lines: string[] = this.mHistory.readFavorites();
         if (lines.length === 0) {
@@ -753,13 +748,12 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
      * @param log
      * @param parentNode
      */
-    public async loadProfilesForFavorites(log: imperative.Logger, parentNode: IZoweUSSTreeNode): Promise<IZoweUSSTreeNode[] | ZoweUSSNode[]> {
+    public async loadProfilesForFavorites(parentNode: IZoweUSSTreeNode): Promise<IZoweUSSTreeNode[] | ZoweUSSNode[]> {
         ZoweLogger.trace("USSTree.loadProfilesForFavorites called.");
         const profileName = parentNode.label as string;
         const updatedFavsForProfile: IZoweUSSTreeNode[] = [];
         let profile: imperative.IProfileLoaded;
         let session: imperative.Session;
-        this.log = log;
         ZoweLogger.debug(localize("loadProfilesForFavorites.log.debug", "Loading profile: {0} for USS favorites", profileName));
         // Load profile for parent profile node in this.mFavorites array
         if (!parentNode.getProfile() || !parentNode.getSession()) {
