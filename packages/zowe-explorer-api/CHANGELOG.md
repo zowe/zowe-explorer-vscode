@@ -4,9 +4,14 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ## TBD Release
 
+### New features and enhancements
+
+- Added optional `profile` parameter to `IPromptCredentialsOptions` so developers can choose to skip rebuilding the profile with ProfilesCache.
+
 ### Bug fixes
 
 - Fixed error when an extender's extension attempts to access the keyring in a remote VSCode session [#324](https://github.com/zowe/vscode-extension-for-cics/issues/324).
+- Fixed issue where profiles with authentication tokens were breaking functionality for direct-to-service profiles after user interaction. [#2330](https://github.com/zowe/vscode-extension-for-zowe/issues/2330)
 
 ## `2.9.0`
 
