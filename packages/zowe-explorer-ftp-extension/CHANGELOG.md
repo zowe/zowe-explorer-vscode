@@ -2,9 +2,9 @@ All notable changes to the "zowe-explorer-ftp-extension" extension will be docum
 
 ## TBD Release
 
-### New features and enhancements
-
 ### Bug fixes
+
+- Updated dependencies for security audits.
 
 ## `2.9.0`
 
