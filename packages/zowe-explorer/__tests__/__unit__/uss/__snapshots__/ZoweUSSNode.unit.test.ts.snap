@@ -44,6 +44,7 @@ ZoweUSSNode {
       "mParent": null,
       "mProfileName": "sestest",
       "parentPath": null,
+      "prevPath": "",
       "profile": undefined,
       "profileName": "",
       "session": Session {
@@ -60,6 +61,7 @@ ZoweUSSNode {
     },
     "mProfileName": "sestest",
     "parentPath": null,
+    "prevPath": "",
     "profile": undefined,
     "profileName": "",
     "session": null,
@@ -67,6 +69,7 @@ ZoweUSSNode {
   },
   "mProfileName": "sestest",
   "parentPath": null,
+  "prevPath": "",
   "profile": undefined,
   "profileName": "",
   "session": null,
