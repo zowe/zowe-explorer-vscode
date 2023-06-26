@@ -4,8 +4,6 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ## TBD Release
 
-### New features and enhancements
-
 ### Bug fixes
 
 - Fixed error when an extender's extension attempts to access the keyring in a remote VSCode session [#324](https://github.com/zowe/vscode-extension-for-cics/issues/324).
