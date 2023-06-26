@@ -24,12 +24,13 @@ import { Profiles } from "../../../src/Profiles";
 import { imperative } from "@zowe/cli";
 import * as globals from "../../../src/globals";
 import { createUSSTree } from "../../../src/uss/USSTree";
-import { createIJobObject } from "../../../__mocks__/mockCreators/jobs";
+import { createIJobObject, createJobSessionNode } from "../../../__mocks__/mockCreators/jobs";
 import { Job } from "../../../src/job/ZoweJobNode";
 import { createJobsTree } from "../../../src/job/ZosJobsProvider";
 import { SettingsConfig } from "../../../src/utils/SettingsConfig";
 import { ZoweTreeProvider } from "../../../src/abstract/ZoweTreeProvider";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
+import { createDatasetSessionNode } from "../../../__mocks__/mockCreators/datasets";
 
 async function createGlobalMocks() {
     const globalMocks = {
@@ -54,6 +55,8 @@ async function createGlobalMocks() {
         mockGetProfileSetting: jest.fn(),
         mockProfilesForValidation: jest.fn(),
         mockProfilesValidationSetting: jest.fn(),
+        mockSsoLogin: jest.fn(),
+        mockSsoLogout: jest.fn(),
         ProgressLocation: jest.fn().mockImplementation(() => {
             return {
                 Notification: 15,
@@ -115,6 +118,8 @@ async function createGlobalMocks() {
                     name: globalMocks.testProfile.name,
                     setting: true,
                 }),
+                ssoLogin: globalMocks.mockSsoLogin,
+                ssoLogout: globalMocks.mockSsoLogout,
                 getProfileInfo: () => globalMocks.mockProfileInfo,
                 fetchAllProfiles: jest.fn(() => {
                     return [{ name: "sestest" }, { name: "profile1" }, { name: "profile2" }];
@@ -403,5 +408,105 @@ describe("Tree Provider Unit Tests - function renameNode", () => {
         expect(globalMocks.testTreeProvider.renameNode("test", "test1", "test2")).toEqual(undefined);
         expect(spy).toBeCalled();
         spy.mockClear();
+    });
+});
+
+describe("Tree Provider Unit Tests - function ssoLogin", () => {
+    const createBlockMocks = () => {
+        const executeCommandSpy = jest.spyOn(vscode.commands, "executeCommand");
+        return {
+            executeCommandSpy,
+        };
+    };
+
+    const blockMocks = createBlockMocks();
+
+    afterEach(() => {
+        blockMocks.executeCommandSpy.mockClear();
+    });
+
+    it("should only call zowe.ds.refreshAll for a Data Set session node", async () => {
+        const globalMocks = await createGlobalMocks();
+        const dsNode = createDatasetSessionNode(globalMocks.testSession, globalMocks.testProfile);
+
+        await globalMocks.testTreeProvider.ssoLogin(dsNode);
+        expect(globalMocks.mockSsoLogin).toHaveBeenCalled();
+        expect(blockMocks.executeCommandSpy).toHaveBeenCalledWith("zowe.ds.refreshAll");
+        expect(blockMocks.executeCommandSpy).not.toHaveBeenCalledWith("zowe.uss.refreshAll");
+        expect(blockMocks.executeCommandSpy).not.toHaveBeenCalledWith("zowe.jobs.refreshAllJobs");
+    });
+
+    it("should only call zowe.uss.refreshAll for a USS session node", async () => {
+        const globalMocks = await createGlobalMocks();
+        const ussNode = createUSSSessionNode(globalMocks.testSession, globalMocks.testProfile);
+
+        await globalMocks.testTreeProvider.ssoLogin(ussNode);
+        expect(globalMocks.mockSsoLogin).toHaveBeenCalled();
+        expect(blockMocks.executeCommandSpy).toHaveBeenCalledWith("zowe.uss.refreshAll");
+        expect(blockMocks.executeCommandSpy).not.toHaveBeenCalledWith("zowe.ds.refreshAll");
+        expect(blockMocks.executeCommandSpy).not.toHaveBeenCalledWith("zowe.jobs.refreshAllJobs");
+    });
+
+    it("should only call zowe.jobs.refreshAllJobs for a Job session node", async () => {
+        const globalMocks = await createGlobalMocks();
+        const jobNode = createJobSessionNode(globalMocks.testSession, globalMocks.testProfile);
+
+        await globalMocks.testTreeProvider.ssoLogin(jobNode);
+        expect(globalMocks.mockSsoLogin).toHaveBeenCalled();
+        expect(blockMocks.executeCommandSpy).toHaveBeenCalledWith("zowe.jobs.refreshAllJobs");
+        expect(blockMocks.executeCommandSpy).not.toHaveBeenCalledWith("zowe.uss.refreshAll");
+        expect(blockMocks.executeCommandSpy).not.toHaveBeenCalledWith("zowe.ds.refreshAll");
+    });
+});
+
+describe("Tree Provider Unit Tests - function ssoLogout", () => {
+    const createBlockMocks = () => {
+        const executeCommandSpy = jest.spyOn(vscode.commands, "executeCommand");
+        return {
+            executeCommandSpy,
+        };
+    };
+
+    const blockMocks = createBlockMocks();
+
+    afterEach(() => {
+        blockMocks.executeCommandSpy.mockClear();
+    });
+
+    afterAll(() => {
+        blockMocks.executeCommandSpy.mockRestore();
+    });
+
+    it("should only call zowe.ds.refreshAll for a Data Set session node", async () => {
+        const globalMocks = await createGlobalMocks();
+        const dsNode = createDatasetSessionNode(globalMocks.testSession, globalMocks.testProfile);
+
+        await globalMocks.testTreeProvider.ssoLogout(dsNode);
+        expect(globalMocks.mockSsoLogout).toHaveBeenCalled();
+        expect(blockMocks.executeCommandSpy).toHaveBeenCalledWith("zowe.ds.refreshAll");
+        expect(blockMocks.executeCommandSpy).not.toHaveBeenCalledWith("zowe.uss.refreshAll");
+        expect(blockMocks.executeCommandSpy).not.toHaveBeenCalledWith("zowe.jobs.refreshAllJobs");
+    });
+
+    it("should only call zowe.uss.refreshAll for a USS session node", async () => {
+        const globalMocks = await createGlobalMocks();
+        const ussNode = createUSSSessionNode(globalMocks.testSession, globalMocks.testProfile);
+
+        await globalMocks.testTreeProvider.ssoLogout(ussNode);
+        expect(globalMocks.mockSsoLogout).toHaveBeenCalled();
+        expect(blockMocks.executeCommandSpy).toHaveBeenCalledWith("zowe.uss.refreshAll");
+        expect(blockMocks.executeCommandSpy).not.toHaveBeenCalledWith("zowe.ds.refreshAll");
+        expect(blockMocks.executeCommandSpy).not.toHaveBeenCalledWith("zowe.jobs.refreshAllJobs");
+    });
+
+    it("should only call zowe.jobs.refreshAllJobs for a Job session node", async () => {
+        const globalMocks = await createGlobalMocks();
+        const jobNode = createJobSessionNode(globalMocks.testSession, globalMocks.testProfile);
+
+        await globalMocks.testTreeProvider.ssoLogout(jobNode);
+        expect(globalMocks.mockSsoLogout).toHaveBeenCalled();
+        expect(blockMocks.executeCommandSpy).toHaveBeenCalledWith("zowe.jobs.refreshAllJobs");
+        expect(blockMocks.executeCommandSpy).not.toHaveBeenCalledWith("zowe.uss.refreshAll");
+        expect(blockMocks.executeCommandSpy).not.toHaveBeenCalledWith("zowe.ds.refreshAll");
     });
 });

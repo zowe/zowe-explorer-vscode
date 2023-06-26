@@ -9,6 +9,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 ### Bug fixes
 
 - Optimized fetching and caching of child nodes across the primary tree views (Data Sets, Unix System Services, Jobs). [#2347](https://github.com/zowe/vscode-extension-for-zowe/issues/2347)
+- Fixed issue where profiles with authentication tokens were breaking functionality for direct-to-service profiles after user interaction. [#2330](https://github.com/zowe/vscode-extension-for-zowe/issues/2330)
 - Fixed profile watcher for browser based environments. [#2211](https://github.com/zowe/vscode-extension-for-zowe/issues/2211)
 
 ## `2.9.0`
