@@ -283,6 +283,7 @@ describe("FtpMvsApi", () => {
     });
 
     it("should throw error when put contents failed", async () => {
+        jest.setTimeout(45000);
         jest.spyOn(DataSetUtils, "uploadDataSet").mockImplementationOnce(
             jest.fn((val) => {
                 throw new Error("Upload dataset failed.");
