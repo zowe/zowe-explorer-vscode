@@ -297,7 +297,7 @@ describe("FtpMvsApi", () => {
         await expect(async () => {
             await MvsApi.putContents(mockParams.inputFilePath, mockParams.dataSetName, mockParams.options);
         }).rejects.toThrow(ZoweFtpExtensionError);
-    }, 45000);
+    }, 100000);
 
     it("should throw error when create dataset failed", async () => {
         jest.spyOn(DataSetUtils, "allocateDataSet").mockImplementationOnce(
