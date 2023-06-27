@@ -283,7 +283,6 @@ describe("FtpMvsApi", () => {
     });
 
     it("should throw error when put contents failed", async () => {
-        jest.setTimeout(45000);
         jest.spyOn(DataSetUtils, "uploadDataSet").mockImplementationOnce(
             jest.fn((val) => {
                 throw new Error("Upload dataset failed.");
@@ -298,7 +297,7 @@ describe("FtpMvsApi", () => {
         await expect(async () => {
             await MvsApi.putContents(mockParams.inputFilePath, mockParams.dataSetName, mockParams.options);
         }).rejects.toThrow(ZoweFtpExtensionError);
-    });
+    }, 45000);
 
     it("should throw error when create dataset failed", async () => {
         jest.spyOn(DataSetUtils, "allocateDataSet").mockImplementationOnce(
