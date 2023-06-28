@@ -204,7 +204,21 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
                 }
                 return 0;
             });
-            this.children = elementChildren;
+            if (!elementChildren.length) {
+                const noJobsNode = new Job(
+                    localize("getChildren.noJobs", "No jobs found"),
+                    vscode.TreeItemCollapsibleState.None,
+                    null,
+                    null,
+                    null,
+                    null
+                );
+                noJobsNode.contextValue = globals.INFORMATION_CONTEXT;
+                noJobsNode.iconPath = null;
+                this.children = [noJobsNode];
+            } else {
+                this.children = elementChildren;
+            }
         }
         this.dirty = false;
         return this.children;

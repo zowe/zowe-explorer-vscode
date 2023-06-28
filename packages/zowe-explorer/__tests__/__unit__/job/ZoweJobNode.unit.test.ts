@@ -351,6 +351,18 @@ describe("ZoweJobNode unit tests - Function getChildren", () => {
         jest.spyOn(contextually, "isSession").mockReturnValueOnce(true);
         await expect(globalMocks.testJobNode.getChildren()).resolves.toEqual([expectedJob]);
     });
+
+    it("should return 'No jobs found' if no children is found", async () => {
+        const expectedJob = [new Job("No jobs found", vscode.TreeItemCollapsibleState.None, null, null, null, null)];
+        expectedJob[0].iconPath = null;
+        expectedJob[0].contextValue = "information";
+        const globalMocks = await createGlobalMocks();
+        await globalMocks.testJobsProvider.addSession("fake");
+        globalMocks.testJobsProvider.mSessionNodes[1].filtered = true;
+        jest.spyOn(globalMocks.testJobsProvider.mSessionNodes[1], "getJobs").mockResolvedValue([]);
+        const jobs = await globalMocks.testJobsProvider.mSessionNodes[1].getChildren();
+        expect(jobs).toEqual(expectedJob);
+    });
 });
 
 describe("ZoweJobNode unit tests - Function flipState", () => {
