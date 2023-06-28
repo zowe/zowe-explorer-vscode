@@ -206,7 +206,6 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
                     }
                 });
             }
-
             // Child nodes already exist and every node was updated.
             // Return cached list of child nodes
             if (this.children.length && unmodifiedCount === 0) {
@@ -219,6 +218,20 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
                 .filter((c) => this.children.find((ch) => ch.label === c.label) == null);
             // Remove any children that are no longer present in the built record
             this.children = this.children.concat(newChildren).filter((ch) => ch.label in elementChildren);
+
+            if (!this.children.length) {
+                const noJobsNode = new Job(
+                    localize("getChildren.noJobs", "No jobs found"),
+                    vscode.TreeItemCollapsibleState.None,
+                    this,
+                    null,
+                    null,
+                    null
+                );
+                noJobsNode.contextValue = globals.INFORMATION_CONTEXT;
+                noJobsNode.iconPath = null;
+                this.children = [noJobsNode];
+            }
         }
         this.dirty = false;
         return this.children;
