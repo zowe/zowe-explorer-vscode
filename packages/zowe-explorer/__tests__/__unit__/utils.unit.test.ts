@@ -76,7 +76,7 @@ describe("Utils Unit Tests - Function errorHandling", () => {
     it("Checking common error handling", async () => {
         createGlobalMocks();
 
-        mocked(vscode.window.showErrorMessage).mockResolvedValueOnce({ title: "Check Credentials" });
+        mocked(vscode.window.showErrorMessage).mockResolvedValueOnce({ title: "Update Credentials" });
         const errorDetails = new imperative.ImperativeError({
             msg: "Invalid credentials",
             errorCode: 401 as unknown as string,
@@ -88,13 +88,13 @@ describe("Utils Unit Tests - Function errorHandling", () => {
         expect(vscode.window.showErrorMessage).toHaveBeenCalledWith(
             `Invalid Credentials. Please ensure the username and password for ${label} are valid or this may lead to a lock-out.`,
             { modal: true },
-            "Check Credentials"
+            "Update Credentials"
         );
     });
     it("Checking USS error handling", async () => {
         createGlobalMocks();
 
-        mocked(vscode.window.showErrorMessage).mockResolvedValueOnce({ title: "Check Credentials" });
+        mocked(vscode.window.showErrorMessage).mockResolvedValueOnce({ title: "Update Credentials" });
         const errorDetails = new imperative.ImperativeError({
             msg: "Invalid credentials",
             errorCode: 401 as unknown as string,
@@ -106,14 +106,14 @@ describe("Utils Unit Tests - Function errorHandling", () => {
         expect(vscode.window.showErrorMessage).toHaveBeenCalledWith(
             `Invalid Credentials. Please ensure the username and password for ${label} are valid or this may lead to a lock-out.`,
             { modal: true },
-            "Check Credentials"
+            "Update Credentials"
         );
     });
     it("Checking common error handling - Theia", async () => {
         const blockMocks = createBlockMocks();
 
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profile);
-        mocked(vscode.window.showErrorMessage).mockResolvedValueOnce({ title: "Check Credentials" });
+        mocked(vscode.window.showErrorMessage).mockResolvedValueOnce({ title: "Update Credentials" });
         mocked(utils.isTheia).mockReturnValue(true);
         const errorDetails = new imperative.ImperativeError({
             msg: "Invalid credentials",
@@ -127,7 +127,7 @@ describe("Utils Unit Tests - Function errorHandling", () => {
         expect(vscode.window.showErrorMessage).toHaveBeenCalledWith(
             `Invalid Credentials. Please ensure the username and password for ${label} are valid or this may lead to a lock-out.`,
             { modal: true },
-            "Check Credentials"
+            "Update Credentials"
         );
     });
 });

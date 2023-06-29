@@ -160,7 +160,11 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             await Profiles.getInstance().checkCurrentProfile(element.getProfile());
             const finalResponse: IZoweDatasetTreeNode[] = [];
             const response = await element.getChildren();
-            if (!response) {
+            // eslint-disable-next-line no-console
+            console.log(response);
+            if (!response || response.length === 0) {
+                // eslint-disable-next-line no-console
+                console.log("returning undefined dataset.getchildren");
                 return undefined;
             }
             for (const item of response) {

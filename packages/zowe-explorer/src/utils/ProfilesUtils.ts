@@ -38,85 +38,92 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
  * @param {moreInfo} - additional/customized error messages
  *************************************************************************************************************/
 export async function errorHandling(errorDetails: Error | string, label?: string, moreInfo?: string): Promise<void> {
-    // Use util.inspect instead of JSON.stringify to handle circular references
-    // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
     ZoweLogger.error(`${errorDetails.toString()}\n` + util.inspect({ errorDetails, label, moreInfo }, { depth: null }));
-    if (typeof errorDetails !== "string" && (errorDetails as imperative.ImperativeError)?.mDetails !== undefined) {
-        const imperativeError: imperative.ImperativeError = errorDetails as imperative.ImperativeError;
+    if (typeof errorDetails !== "string" && (errorDetails as imperative.ImperativeError)?.mDetails) {
+        const imperativeError = errorDetails as imperative.ImperativeError;
         const httpErrorCode = Number(imperativeError.mDetails.errorCode);
-        // open config file for missing hostname error
-        if (imperativeError.toString().includes("hostname")) {
-            const mProfileInfo = await Profiles.getInstance().getProfileInfo();
-            if (mProfileInfo.usingTeamConfig) {
-                Gui.errorMessage(localize("errorHandling.invalid.host", "Required parameter 'host' must not be blank."));
-                const profAllAttrs = mProfileInfo.getAllProfiles();
-                for (const prof of profAllAttrs) {
-                    if (prof.profName === label.trim()) {
-                        const filePath = prof.profLoc.osLoc[0];
-                        await Profiles.getInstance().openConfigFile(filePath);
-                        return;
-                    }
-                }
-            }
-        } else if (httpErrorCode === imperative.RestConstants.HTTP_STATUS_401) {
-            const errMsg = localize(
-                "errorHandling.invalid.credentials",
-                "Invalid Credentials. Please ensure the username and password for {0} are valid or this may lead to a lock-out.",
-                label
-            );
-            const errToken = localize(
-                "errorHandling.invalid.token",
-                "Your connection is no longer active. Please log in to an authentication service to restore the connection."
-            );
-            if (label.includes("[")) {
+        if (errorDetails?.toString().includes("hostname")) {
+            await handleNoHostname(label);
+            return;
+        }
+        if (httpErrorCode === imperative.RestConstants.HTTP_STATUS_401) {
+            if (label?.includes("[")) {
                 label = label.substring(0, label.indexOf(" [")).trim();
             }
-
             if (imperativeError.mDetails.additionalDetails) {
                 const tokenError: string = imperativeError.mDetails.additionalDetails;
                 if (tokenError.includes("Token is not valid or expired.")) {
-                    if (isTheia()) {
-                        Gui.errorMessage(errToken).then(async () => {
-                            await Profiles.getInstance().ssoLogin(null, label);
-                        });
-                    } else {
-                        const message = localize("errorHandling.authentication.login", "Log in to Authentication Service");
-                        Gui.showMessage(errToken, { items: [message] }).then(async (selection) => {
-                            if (selection) {
-                                await Profiles.getInstance().ssoLogin(null, label);
-                            }
-                        });
-                    }
+                    await handleInvalidToken(label);
                     return;
                 }
             }
-
-            if (isTheia()) {
-                Gui.errorMessage(errMsg);
-            } else {
-                const checkCredsButton = localize("errorHandling.checkCredentials.button", "Check Credentials");
-                await Gui.errorMessage(errMsg, {
-                    items: [checkCredsButton],
-                    vsCodeOpts: { modal: true },
-                }).then(async (selection) => {
-                    if (selection === checkCredsButton) {
-                        await Profiles.getInstance().promptCredentials(label.trim(), true);
-                    } else {
-                        Gui.showMessage(localize("errorHandling.checkCredentials.cancelled", "Operation Cancelled"));
-                    }
-                });
-            }
+            await handleInvalidCredentials(label);
             return;
         }
     }
-
-    if (moreInfo === undefined) {
+    if (!moreInfo) {
         moreInfo = errorDetails.toString().includes("Error") ? "" : "Error: ";
     } else {
         moreInfo += " ";
     }
     // Try to keep message readable since VS Code doesn't support newlines in error messages
     Gui.errorMessage(moreInfo + errorDetails.toString().replace(/\n/g, " | "));
+}
+
+export async function handleInvalidToken(label: string): Promise<void> {
+    const tokenErrMsg = localize(
+        "errorHandling.invalid.token",
+        "Your connection is no longer active. Please log in to an authentication service to restore the connection."
+    );
+    if (isTheia()) {
+        Gui.errorMessage(tokenErrMsg).then(async () => {
+            await Profiles.getInstance().ssoLogin(null, label);
+        });
+    } else {
+        const message = localize("errorHandling.authentication.login", "Log in to Authentication Service");
+        await Gui.showMessage(tokenErrMsg, { items: [message] }).then(async (selection) => {
+            if (selection) {
+                await Profiles.getInstance().ssoLogin(null, label);
+            }
+        });
+    }
+}
+
+export async function handleInvalidCredentials(label: string): Promise<void> {
+    const genErrMsg = localize(
+        "errorHandling.invalid.credentials",
+        "Invalid Credentials. Please ensure the username and password for {0} are valid or this may lead to a lock-out.",
+        label
+    );
+    if (isTheia()) {
+        Gui.errorMessage(genErrMsg);
+    } else {
+        const updateCredsButton = localize("errorHandling.updateCredentials.button", "Update Credentials");
+        await Gui.errorMessage(genErrMsg, {
+            items: [updateCredsButton],
+            vsCodeOpts: { modal: true },
+        }).then(async (selection) => {
+            if (selection === updateCredsButton) {
+                await Profiles.getInstance().promptCredentials(label.trim(), true);
+            } else {
+                Gui.showMessage(localize("errorHandling.checkCredentials.cancelled", "Operation Cancelled"));
+            }
+        });
+    }
+}
+
+export async function handleNoHostname(label: string): Promise<void> {
+    const mProfileInfo = await Profiles.getInstance().getProfileInfo();
+    if (mProfileInfo.usingTeamConfig) {
+        Gui.errorMessage(localize("errorHandling.invalid.host", "Required parameter 'host' must not be blank."));
+        const profAllAttrs = mProfileInfo.getAllProfiles();
+        for (const prof of profAllAttrs) {
+            if (prof.profName === label.trim()) {
+                const filePath = prof.profLoc.osLoc[0];
+                await Profiles.getInstance().openConfigFile(filePath);
+            }
+        }
+    }
 }
 
 // TODO: remove this second occurence

@@ -124,7 +124,9 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
 
         // Gets the datasets from the pattern or members of the dataset and displays any thrown errors
         const responses = await this.getDatasets();
-        if (responses.length === 0) {
+        // eslint-disable-next-line no-console
+        console.log(responses);
+        if (!responses || responses.length === 0) {
             return undefined;
         }
 
@@ -134,8 +136,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             // Throws reject if the Zowe command does not throw an error but does not succeed
             // The dataSetsMatchingPattern API may return success=false and apiResponse=[] when no data sets found
             if (!response.success && !(Array.isArray(response.apiResponse) && response.apiResponse.length === 0)) {
-                await errorHandling(localize("getChildren.responses.error", "The response from Zowe CLI was not successful"));
-                return;
+                return void errorHandling(localize("getChildren.responses.error", "The response from Zowe CLI was not successful"));
             }
 
             // Loops through all the returned dataset members and creates nodes for them
@@ -316,6 +317,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             }
         } catch (err) {
             await errorHandling(err, this.label.toString(), localize("getChildren.error.response", "Retrieving response from ") + `zowe.List`);
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-return
             syncSessionNode(Profiles.getInstance())((profileValue) => ZoweExplorerApiRegister.getMvsApi(profileValue).getSession())(sessNode);
         }
         return responses;
