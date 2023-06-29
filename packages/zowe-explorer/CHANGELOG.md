@@ -8,6 +8,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
+- Added jobs not found message when no results are returned from filter [#2362](https://github.com/zowe/vscode-extension-for-zowe/issues/2362)
+
 ## `2.9.0`
 
 ### New features and enhancements
