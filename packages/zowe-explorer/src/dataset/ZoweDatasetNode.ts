@@ -135,7 +135,8 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             // Throws reject if the Zowe command does not throw an error but does not succeed
             // The dataSetsMatchingPattern API may return success=false and apiResponse=[] when no data sets found
             if (!response.success && !(Array.isArray(response.apiResponse) && response.apiResponse.length === 0)) {
-                return void errorHandling(localize("getChildren.responses.error", "The response from Zowe CLI was not successful"));
+                await errorHandling(localize("getChildren.responses.error", "The response from Zowe CLI was not successful"));
+                return;
             }
 
             // Loops through all the returned dataset members and creates nodes for them
@@ -318,5 +319,6 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             return responses;
         }
         responses.push(await ZoweExplorerApiRegister.getMvsApi(cachedProfile).allMembers(this.label as string, options));
+        return responses;
     }
 }

@@ -99,16 +99,22 @@ export async function handleInvalidCredentials(label: string): Promise<void> {
         Gui.errorMessage(genErrMsg);
     } else {
         const updateCredsButton = localize("errorHandling.updateCredentials.button", "Update Credentials");
-        await Gui.errorMessage(genErrMsg, {
+        const choice = await Gui.errorMessage(genErrMsg, {
             items: [updateCredsButton],
             vsCodeOpts: { modal: true },
-        }).then(async (selection) => {
-            if (selection === updateCredsButton) {
-                await Profiles.getInstance().promptCredentials(label.trim(), true);
-            } else {
-                Gui.showMessage(localize("errorHandling.checkCredentials.cancelled", "Operation Cancelled"));
-            }
         });
+        if (!choice) {
+            Gui.showMessage(localize("errorHandling.checkCredentials.cancelled", "Operation Cancelled"));
+            return;
+        }
+        await Profiles.getInstance().promptCredentials(label.trim(), true);
+        // .then(async (selection) => {
+        //     if (selection === updateCredsButton) {
+
+        //     } else {
+
+        //     }
+        // });
     }
 }
 
