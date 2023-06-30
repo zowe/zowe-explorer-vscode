@@ -159,13 +159,11 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
 
         // Gets the directories from the fullPath and displays any thrown errors
         const responses: IZosFilesResponse[] = [];
-        const sessNode = this.getSessionNode();
+        const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
         try {
-            const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
             responses.push(await ZoweExplorerApiRegister.getUssApi(cachedProfile).fileList(this.fullPath));
-        } catch (err) {
-            await errorHandling(err, this.label.toString(), localize("getChildren.error.response", "Retrieving response from ") + `uss-file-list`);
-            syncSessionNode(Profiles.getInstance())((profileValue) => ZoweExplorerApiRegister.getUssApi(profileValue).getSession())(sessNode);
+        } catch (error) {
+            return void errorHandling(error, String(this.label));
         }
 
         const elementChildren: Record<string, IZoweUSSTreeNode> = {};

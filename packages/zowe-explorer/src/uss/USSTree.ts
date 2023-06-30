@@ -562,7 +562,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             ZoweLogger.debug(localize("filterPrompt.log.debug.promptUSSPath", "Prompting the user for a USS path"));
         }
         await this.checkCurrentProfile(node);
-        if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID || !contextually.isValidationEnabled(node)) {
+        if (Profiles.getInstance().validProfile !== ValidProfileEnum.INVALID || !contextually.isValidationEnabled(node)) {
             let sessionNode;
             let remotepath: string;
             if (contextually.isSessionNotFav(node)) {

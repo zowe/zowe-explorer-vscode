@@ -124,9 +124,8 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
 
         // Gets the datasets from the pattern or members of the dataset and displays any thrown errors
         const responses = await this.getDatasets();
-        // eslint-disable-next-line no-console
-        console.log(responses);
         if (!responses || responses.length === 0) {
+            ZoweLogger.debug("returning undefined node.getchildren");
             return undefined;
         }
 
@@ -282,44 +281,42 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     private async getDatasets(): Promise<zowe.IZosFilesResponse[]> {
         ZoweLogger.trace("ZoweDatasetNode.getDatasets called.");
         const sessNode = this.getSessionNode();
+        const cachedProfile = sessNode.getProfile();
         const responses: zowe.IZosFilesResponse[] = [];
-        try {
-            const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
-            const options: zowe.IListOptions = {
-                attributes: true,
-                responseTimeout: cachedProfile.profile.responseTimeout,
-            };
-            if (contextually.isSessionNotFav(this)) {
-                const dsPatterns = [
-                    ...new Set(
-                        this.pattern
-                            .toUpperCase()
-                            .split(",")
-                            .map((p) => p.trim())
-                    ),
-                ];
-                const mvsApi = ZoweExplorerApiRegister.getMvsApi(cachedProfile);
-                if (mvsApi.dataSetsMatchingPattern) {
-                    responses.push(await mvsApi.dataSetsMatchingPattern(dsPatterns));
-                } else {
-                    for (const dsp of dsPatterns) {
-                        responses.push(await mvsApi.dataSet(dsp));
-                    }
-                }
-            } else if (this.memberPattern) {
-                this.memberPattern = this.memberPattern.toUpperCase();
-                for (const memPattern of this.memberPattern.split(",")) {
-                    options.pattern = memPattern;
-                    responses.push(await ZoweExplorerApiRegister.getMvsApi(cachedProfile).allMembers(this.label as string, options));
-                }
-            } else {
+        const options: zowe.IListOptions = {
+            attributes: true,
+            responseTimeout: cachedProfile.profile.responseTimeout,
+        };
+        if (contextually.isSessionNotFav(this)) {
+            const dsPatterns = [
+                ...new Set(
+                    this.pattern
+                        .toUpperCase()
+                        .split(",")
+                        .map((p) => p.trim())
+                ),
+            ];
+            const mvsApi = ZoweExplorerApiRegister.getMvsApi(cachedProfile);
+            if (mvsApi.dataSetsMatchingPattern) {
+                responses.push(await mvsApi.dataSetsMatchingPattern(dsPatterns));
+                ZoweLogger.debug(String(responses));
+                return responses;
+            }
+            for (const dsp of dsPatterns) {
+                responses.push(await mvsApi.dataSet(dsp));
+            }
+            ZoweLogger.debug(String(responses));
+            return responses;
+        }
+        if (this.memberPattern) {
+            this.memberPattern = this.memberPattern.toUpperCase();
+            for (const memPattern of this.memberPattern.split(",")) {
+                options.pattern = memPattern;
                 responses.push(await ZoweExplorerApiRegister.getMvsApi(cachedProfile).allMembers(this.label as string, options));
             }
-        } catch (err) {
-            await errorHandling(err, this.label.toString(), localize("getChildren.error.response", "Retrieving response from ") + `zowe.List`);
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-            syncSessionNode(Profiles.getInstance())((profileValue) => ZoweExplorerApiRegister.getMvsApi(profileValue).getSession())(sessNode);
+            ZoweLogger.debug(String(responses));
+            return responses;
         }
-        return responses;
+        responses.push(await ZoweExplorerApiRegister.getMvsApi(cachedProfile).allMembers(this.label as string, options));
     }
 }
