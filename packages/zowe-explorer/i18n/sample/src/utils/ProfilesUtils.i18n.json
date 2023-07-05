@@ -1,10 +1,10 @@
 {
-  "errorHandling.invalid.host": "Required parameter 'host' must not be blank.",
-  "errorHandling.invalid.credentials": "Invalid Credentials. Please ensure the username and password for {0} are valid or this may lead to a lock-out.",
   "errorHandling.invalid.token": "Your connection is no longer active. Please log in to an authentication service to restore the connection.",
   "errorHandling.authentication.login": "Log in to Authentication Service",
+  "errorHandling.invalid.credentials": "Invalid Credentials. Please ensure the username and password for {0} are valid or this may lead to a lock-out.",
   "errorHandling.updateCredentials.button": "Update Credentials",
   "errorHandling.checkCredentials.cancelled": "Operation Cancelled",
+  "errorHandling.invalid.host": "Required parameter 'host' must not be blank.",
   "activateCredentialManagerOverride.failedToActivate": "Custom credential manager failed to activate",
   "ProfilesUtils.getProfileInfo.usingCustom": "Custom credential manager found, attempting to activate.",
   "ProfilesUtils.getProfileInfo.usingDefault": "No custom credential managers found, using the default instead.",
