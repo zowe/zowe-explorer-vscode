@@ -934,9 +934,7 @@ describe("ZoweUSSNode Unit Tests - Function node.getChildren()", () => {
 
             await blockMocks.childNode.getChildren();
             expect(globalMocks.showErrorMessage.mock.calls.length).toEqual(1);
-            expect(globalMocks.showErrorMessage.mock.calls[0][0]).toEqual(
-                "Retrieving response from uss-file-list Error: Throwing an error to check error handling for unit tests!"
-            );
+            expect(globalMocks.showErrorMessage.mock.calls[0][0]).toEqual("Error: Throwing an error to check error handling for unit tests!");
         }
     );
 
@@ -964,9 +962,7 @@ describe("ZoweUSSNode Unit Tests - Function node.getChildren()", () => {
 
             await subNode.getChildren();
             expect(globalMocks.showErrorMessage.mock.calls.length).toEqual(1);
-            expect(globalMocks.showErrorMessage.mock.calls[0][0]).toEqual(
-                "Retrieving response from uss-file-list Error: Throwing an error to check error handling for unit tests!"
-            );
+            expect(globalMocks.showErrorMessage.mock.calls[0][0]).toEqual("Error: Throwing an error to check error handling for unit tests!");
         }
     );
 

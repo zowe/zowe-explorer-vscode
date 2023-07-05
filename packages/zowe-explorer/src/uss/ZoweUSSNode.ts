@@ -17,7 +17,7 @@ import * as path from "path";
 import { Gui, IZoweUSSTreeNode, ZoweTreeNode, IZoweTree, ValidProfileEnum, ZoweExplorerApi } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
-import { errorHandling, syncSessionNode } from "../utils/ProfilesUtils";
+import { errorHandling } from "../utils/ProfilesUtils";
 import { getIconByNode } from "../generators/icons/index";
 import { fileExistsCaseSensitveSync, injectAdditionalDataToTooltip } from "../uss/utils";
 import * as contextually from "../shared/context";
@@ -163,7 +163,8 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         try {
             responses.push(await ZoweExplorerApiRegister.getUssApi(cachedProfile).fileList(this.fullPath));
         } catch (error) {
-            return void errorHandling(error, String(this.label));
+            await errorHandling(error, String(this.label));
+            return;
         }
 
         const elementChildren: Record<string, IZoweUSSTreeNode> = {};

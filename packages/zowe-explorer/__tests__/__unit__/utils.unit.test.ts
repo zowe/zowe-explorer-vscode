@@ -100,11 +100,12 @@ describe("Utils Unit Tests - Function errorHandling", () => {
             errorCode: 401 as unknown as string,
         });
         const label = "invalidCred [/tmp]";
+        const alteredLabel = label.substring(0, label.indexOf(" [")).trim();
 
         await utils.errorHandling(errorDetails, label);
 
         expect(vscode.window.showErrorMessage).toHaveBeenCalledWith(
-            `Invalid Credentials. Please ensure the username and password for ${label} are valid or this may lead to a lock-out.`,
+            `Invalid Credentials. Please ensure the username and password for ${alteredLabel} are valid or this may lead to a lock-out.`,
             { modal: true },
             "Update Credentials"
         );

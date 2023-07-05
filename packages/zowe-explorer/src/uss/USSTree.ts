@@ -295,7 +295,12 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 const favsForProfile = await this.loadProfilesForFavorites(this.log, element);
                 return favsForProfile;
             }
-            return element.getChildren();
+            try {
+                return element.getChildren();
+            } catch (error) {
+                await errorHandling(error, String(element.label));
+                return;
+            }
         }
         return this.mSessionNodes;
     }
