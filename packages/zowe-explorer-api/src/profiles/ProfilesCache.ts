@@ -75,7 +75,7 @@ export class ProfilesCache {
 
     public async getProfileInfo(envTheia = false): Promise<zowe.imperative.ProfileInfo> {
         const mProfileInfo = new zowe.imperative.ProfileInfo("zowe", {
-            credMgrOverride: zowe.imperative.ProfileCredentials.defaultCredMgrWithKeytar(() => getSecurityModules("keytar", envTheia)),
+            credMgrOverride: zowe.imperative.ProfileCredentials.defaultCredMgrWithKeytar(() => getSecurityModules("@traeok/keytar-rs", envTheia)),
         });
         await mProfileInfo.readProfilesFromDisk({ homeDir: getZoweDir(), projectDir: this.cwd ?? undefined });
         return mProfileInfo;

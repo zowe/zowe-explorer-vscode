@@ -46,7 +46,9 @@
     "yarn": "1.22.19"
   },
   "resolutions": {
-    "**/json5": "^2.2.2"
+    "**/json5": "^2.2.2",
+    "**/@zowe/cli": "file:../zowe-cli/packages/cli",
+    "**/@zowe/imperative": "file:../imperative"
   },
   "scripts": {
     "clean": "yarn workspaces run clean",

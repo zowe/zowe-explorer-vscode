@@ -1933,6 +1933,7 @@
     "vscode": "^1.53.2"
   },
   "devDependencies": {
+    "@traeok/keytar-rs": "https://github.com/traeok/keytar-rs.git",
     "@types/chai": "^4.2.6",
     "@types/chai-as-promised": "^7.1.0",
     "@types/expect": "^1.20.3",
@@ -1958,7 +1959,6 @@
     "gulp-typescript": "^5.0.1",
     "jsdoc": "^3.6.3",
     "jsdom": "^16.0.0",
-    "keytar": "^7.2.0",
     "log4js": "^6.4.6",
     "markdownlint-cli": "^0.33.0",
     "mem": "^6.0.1",
