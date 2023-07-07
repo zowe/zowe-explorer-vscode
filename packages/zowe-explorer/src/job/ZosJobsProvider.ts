@@ -817,12 +817,11 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                 searchCriteria = await this.applyRegularSessionSearchLabel(node);
                 await TreeViewUtils.expandNode(node, this);
 
-                if (searchCriteria != null) {
+                if (searchCriteria) {
                     node.label = node.getProfileName();
                     node.description = searchCriteria;
                     this.addSearchHistory(searchCriteria);
                     node.dirty = true;
-                    this.refreshElement(node);
                 }
             } else {
                 if (isExpanded) {
