@@ -115,7 +115,6 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
         }
         if (this.dirty) {
             const elementChildren: Record<string, ZoweJobNode> = {};
-            let unmodifiedCount = this.children.length;
             if (contextually.isJob(this)) {
                 // Fetch spool files under job node
                 const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
@@ -159,7 +158,6 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
                     const existing = this.children.find((element) => element.label?.includes(`${spool.stepname}:${spool.ddname}${spoolSuffix}`));
                     if (existing) {
                         existing.label = newLabel;
-                        unmodifiedCount--;
                     } else {
                         const spoolNode = new Spool(newLabel, vscode.TreeItemCollapsibleState.None, this, this.session, spool, this.job, this);
                         const icon = getIconByNode(spoolNode);
@@ -177,6 +175,19 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
             } else {
                 // Fetch jobs under session node
                 const jobs = await this.getJobs(this._owner, this._prefix, this._searchId, this._jobStatus);
+                if (!jobs.length) {
+                    const noJobsNode = new Spool(
+                        localize("getChildren.noJobs", "There are no jobs to display"),
+                        vscode.TreeItemCollapsibleState.None,
+                        this,
+                        null,
+                        null,
+                        null,
+                        this
+                    );
+                    noJobsNode.iconPath = null;
+                    return [noJobsNode];
+                }
                 jobs.forEach((job) => {
                     let nodeTitle: string;
                     if (job.retcode) {
@@ -189,7 +200,6 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
                     if (existing) {
                         // If matched, update the label to reflect latest retcode/status
                         existing.label = nodeTitle;
-                        unmodifiedCount--;
                     } else {
                         const jobNode = new Job(nodeTitle, vscode.TreeItemCollapsibleState.Collapsed, this, this.session, job, this.getProfile());
                         jobNode.contextValue = globals.JOBS_JOB_CONTEXT;
@@ -207,18 +217,21 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
                 });
             }
 
-            // Child nodes already exist and every node was updated.
-            // Return cached list of child nodes
-            if (this.children.length && unmodifiedCount === 0) {
-                return this.children;
-            }
-
             // Only add new children that are not in the list of existing child nodes
             const newChildren = Object.values(elementChildren)
                 .sort((a, b) => a.job.jobid - b.job.jobid)
                 .filter((c) => this.children.find((ch) => ch.label === c.label) == null);
+
+            // If there are no new children to add, return the cached list
+            if (Object.keys(elementChildren).length > 0 && newChildren.length == 0) {
+                this.dirty = false;
+                return this.children;
+            }
+
             // Remove any children that are no longer present in the built record
-            this.children = this.children.concat(newChildren).filter((ch) => ch.label in elementChildren);
+            this.children = this.children
+                .concat(newChildren)
+                .filter((ch) => Object.values(elementChildren).find((recordCh) => recordCh.jobid === ch.job.jobid) == null);
         }
         this.dirty = false;
         return this.children;
