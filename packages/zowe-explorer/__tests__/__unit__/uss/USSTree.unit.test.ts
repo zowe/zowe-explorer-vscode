@@ -1424,6 +1424,24 @@ describe("USSTree Unit Tests - Function USSTree.getChildren()", () => {
 
         expect(loadProfilesForFavoritesSpy).toHaveBeenCalledWith(log, favProfileNode);
     });
+    it("Testing that getChildren() catches error from element.getChildren()", async () => {
+        const globalMocks = await createGlobalMocks();
+
+        const testDir = new ZoweUSSNode("aDir", vscode.TreeItemCollapsibleState.Collapsed, globalMocks.testTree.mSessionNodes[1], null, "test");
+        globalMocks.testTree.mSessionNodes[1].children.push(testDir);
+        Object.defineProperty(globalMocks.testTree.mSessionNodes[1], "getChildren", {
+            value: jest.fn(() => {
+                throw new Error("test error");
+            }),
+        });
+        // jest.fn(globalMocks.testTree.mSessionNodes[1].getChildren).mockRejectedValueOnce(new Error("test error"));
+        const errorSpy = jest.spyOn(utils, "errorHandling");
+        await globalMocks.testTree.getChildren(globalMocks.testTree.mSessionNodes[1]);
+        // const sampleChildren: ZoweUSSNode[] = [testDir];
+
+        expect(errorSpy).toBeCalled();
+        errorSpy.mockClear();
+    });
 });
 
 // Idea is borrowed from: https://github.com/kulshekhar/ts-jest/blob/master/src/util/testing.ts

@@ -1615,6 +1615,27 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
 
         expect(mocked(Gui.showMessage)).toBeCalledWith("No selection made. Operation cancelled.");
     });
+    it("Checking adding of new filter error is caught on getChildren", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        mocked(vscode.window.showQuickPick).mockResolvedValueOnce(new utils.FilterDescriptor("\uFF0B " + "Create a new filter"));
+        mocked(vscode.window.showInputBox).mockResolvedValueOnce("HLQ.PROD1.STUFF");
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        Object.defineProperty(testTree.mSessionNodes[1], "getChildren", {
+            value: jest.fn(() => {
+                throw new Error("test error");
+            }),
+        });
+        const errorSpy = jest.spyOn(utils, "errorHandling");
+
+        await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
+
+        expect(errorSpy).toBeCalled();
+        errorSpy.mockClear();
+    });
 });
 describe("Dataset Tree Unit Tests - Function editSession", () => {
     async function createBlockMocks() {
