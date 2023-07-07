@@ -1616,6 +1616,11 @@
     "@jridgewell/resolve-uri" "^3.0.3"
     "@jridgewell/sourcemap-codec" "^1.4.10"
 
+"@napi-rs/cli@^2.16.1":
+  version "2.16.1"
+  resolved "https://registry.npmjs.org/@napi-rs/cli/-/cli-2.16.1.tgz#912e1169be6ff8bb5e1e22bb702adcc5e73e232b"
+  integrity sha512-L0Gr5iEQIDEbvWdDr1HUaBOxBSHL1VZhWSk1oryawoT8qJIY+KGfLFelU+Qma64ivCPbxYpkfPoKYVG3rcoGIA==
+
 "@nodelib/fs.scandir@2.1.5":
   version "2.1.5"
   resolved "https://registry.npmjs.org/@nodelib/fs.scandir/-/fs.scandir-2.1.5.tgz#7619c2eb21b25483f6d167548b4cfd5a7488c3d5"
@@ -1756,11 +1761,7 @@
 
 "@traeok/keytar-rs@github:traeok/keytar-rs":
   version "0.0.0"
-  resolved "https://codeload.github.com/traeok/keytar-rs/tar.gz/0b00af3fb1ae1b70ef68b049071d5c392218dbc5"
-
-"@traeok/keytar-rs@https://github.com/traeok/keytar-rs.git":
-  version "0.0.0"
-  resolved "https://github.com/traeok/keytar-rs.git#0b00af3fb1ae1b70ef68b049071d5c392218dbc5"
+  resolved "https://codeload.github.com/traeok/keytar-rs/tar.gz/4d4f1aa222b85357242fa1df85089e467c2e1d6b"
 
 "@types/babel__core@^7.1.14":
   version "7.1.20"

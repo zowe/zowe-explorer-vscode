@@ -1933,7 +1933,8 @@
     "vscode": "^1.53.2"
   },
   "devDependencies": {
-    "@traeok/keytar-rs": "https://github.com/traeok/keytar-rs.git",
+    "@napi-rs/cli": "^2.16.1",
+    "@traeok/keytar-rs": "github:traeok/keytar-rs",
     "@types/chai": "^4.2.6",
     "@types/chai-as-promised": "^7.1.0",
     "@types/expect": "^1.20.3",
