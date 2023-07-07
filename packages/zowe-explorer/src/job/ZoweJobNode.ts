@@ -176,14 +176,13 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
                 // Fetch jobs under session node
                 const jobs = await this.getJobs(this._owner, this._prefix, this._searchId, this._jobStatus);
                 if (!jobs.length) {
-                    const noJobsNode = new Spool(
+                    const noJobsNode = new Job(
                         localize("getChildren.noJobs", "There are no jobs to display"),
                         vscode.TreeItemCollapsibleState.None,
                         this,
                         null,
                         null,
-                        null,
-                        this
+                        null
                     );
                     noJobsNode.iconPath = null;
                     return [noJobsNode];
