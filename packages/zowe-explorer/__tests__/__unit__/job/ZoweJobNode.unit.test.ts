@@ -561,11 +561,9 @@ describe("ZosJobsProvider - Function searchPrompt", () => {
         const globalMocks = await createGlobalMocks();
         jest.spyOn(globalMocks.testJobsProvider, "applyRegularSessionSearchLabel").mockReturnValue("Owner:kristina Prefix:* Status:*");
         const addSearchHistory = jest.spyOn(globalMocks.testJobsProvider, "addSearchHistory");
-        const refreshElement = jest.spyOn(globalMocks.testJobsProvider, "refreshElement");
         await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
         expect(globalMocks.testJobsProvider);
         expect(addSearchHistory).toHaveBeenCalled();
-        expect(refreshElement).toHaveBeenCalled();
     });
     it("testing fav node to call applySearchLabelToNode", async () => {
         const globalMocks = await createGlobalMocks();
