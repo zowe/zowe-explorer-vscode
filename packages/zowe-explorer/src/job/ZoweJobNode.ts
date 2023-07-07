@@ -217,14 +217,23 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
             }
 
             // Only add new children that are not in the list of existing child nodes
-            const newChildren = Object.values(elementChildren)
-                .sort((a, b) => a.job.jobid - b.job.jobid)
-                .filter((c) => this.children.find((ch) => ch.label === c.label) == null);
+            const newChildren = Object.values(elementChildren).filter((c) => this.children.find((ch) => ch.label === c.label) == null);
 
             // Remove any children that are no longer present in the built record
             this.children = this.children
                 .concat(newChildren)
-                .filter((ch) => Object.values(elementChildren).find((recordCh) => recordCh.jobid === ch.job.jobid) == null);
+                .filter((ch) => Object.values(elementChildren).find((recordCh) => recordCh.jobid === ch.job.jobid) == null)
+                .sort((a, b) => {
+                    if (a.job.jobid > b.job.jobid) {
+                        return 1;
+                    }
+
+                    if (a.job.jobid < b.job.jobid) {
+                        return -1;
+                    }
+
+                    return 0;
+                });
         }
         this.dirty = false;
         return this.children;
