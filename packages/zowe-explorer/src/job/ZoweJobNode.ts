@@ -177,6 +177,21 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
             } else {
                 // Fetch jobs under session node
                 const jobs = await this.getJobs(this._owner, this._prefix, this._searchId, this._jobStatus);
+
+                if (!jobs.length) {
+                    const noJobsNode = new Job(
+                        localize("getChildren.noJobs", "No jobs found"),
+                        vscode.TreeItemCollapsibleState.None,
+                        this,
+                        null,
+                        null,
+                        null
+                    );
+                    noJobsNode.contextValue = globals.INFORMATION_CONTEXT;
+                    noJobsNode.iconPath = null;
+                    return [noJobsNode];
+                }
+
                 jobs.forEach((job) => {
                     let nodeTitle: string;
                     if (job.retcode) {
@@ -218,20 +233,6 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
                 .filter((c) => this.children.find((ch) => ch.label === c.label) == null);
             // Remove any children that are no longer present in the built record
             this.children = this.children.concat(newChildren).filter((ch) => ch.label in elementChildren);
-
-            if (!this.children.length) {
-                const noJobsNode = new Job(
-                    localize("getChildren.noJobs", "No jobs found"),
-                    vscode.TreeItemCollapsibleState.None,
-                    this,
-                    null,
-                    null,
-                    null
-                );
-                noJobsNode.contextValue = globals.INFORMATION_CONTEXT;
-                noJobsNode.iconPath = null;
-                this.children = [noJobsNode];
-            }
         }
         this.dirty = false;
         return this.children;
