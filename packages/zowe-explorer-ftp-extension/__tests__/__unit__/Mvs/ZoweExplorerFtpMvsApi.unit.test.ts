@@ -45,6 +45,7 @@ describe("FtpMvsApi", () => {
 
     afterEach(() => {
         jest.restoreAllMocks();
+        jest.clearAllMocks();
     });
 
     it("should list datasets.", async () => {
@@ -292,12 +293,12 @@ describe("FtpMvsApi", () => {
         const mockParams = {
             inputFilePath: localFile,
             dataSetName: "IBMUSER.DS2",
-            options: { encoding: "", returnEtag: true, etag: "utf8" },
+            options: { encoding: "", returnEtag: false, etag: "utf8" },
         };
         await expect(async () => {
             await MvsApi.putContents(mockParams.inputFilePath, mockParams.dataSetName, mockParams.options);
         }).rejects.toThrow(ZoweFtpExtensionError);
-    }, 100000);
+    });
 
     it("should throw error when create dataset failed", async () => {
         jest.spyOn(DataSetUtils, "allocateDataSet").mockImplementationOnce(

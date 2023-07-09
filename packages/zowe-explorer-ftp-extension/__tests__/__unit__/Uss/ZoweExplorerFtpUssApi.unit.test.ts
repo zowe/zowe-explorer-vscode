@@ -244,7 +244,7 @@ describe("FtpUssApi", () => {
             inputFilePath: "/a/b/c.txt",
             ussFilePath: "/a/b/c.txt",
             etag: "test",
-            returnEtag: true,
+            returnEtag: false,
             options: {
                 file: "c.txt",
             },
