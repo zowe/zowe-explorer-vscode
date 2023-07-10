@@ -226,20 +226,22 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
             this.children = this.children
                 .concat(newChildren)
                 .filter((ch) => Object.values(elementChildren).find((recordCh) => recordCh.jobid === ch.job.jobid) == null)
-                .sort((a, b) => {
-                    if (a.job.jobid > b.job.jobid) {
-                        return 1;
-                    }
-
-                    if (a.job.jobid < b.job.jobid) {
-                        return -1;
-                    }
-
-                    return 0;
-                });
+                .sort((a, b) => Job.sortJobs(a, b));
         }
         this.dirty = false;
         return this.children;
+    }
+
+    public static sortJobs(a: IZoweJobTreeNode, b: IZoweJobTreeNode): number {
+        if (a.job.jobid > b.job.jobid) {
+            return 1;
+        }
+
+        if (a.job.jobid < b.job.jobid) {
+            return -1;
+        }
+
+        return 0;
     }
 
     public getSessionNode(): IZoweJobTreeNode {

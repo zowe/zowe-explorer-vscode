@@ -808,3 +808,30 @@ describe("ZosJobsProvider - getJobs", () => {
         await expect(globalMocks.testJobNode.getJobs("test", "test", "test", "test")).resolves.not.toThrow();
     });
 });
+
+describe("Job - sortJobs", () => {
+    it("should sort jobs based on job ID", () => {
+        const jobs = [
+            {
+                job: {
+                    jobid: "JOBID123",
+                },
+            } as IZoweJobTreeNode,
+            {
+                job: {
+                    jobid: "JOBID124",
+                },
+            } as IZoweJobTreeNode,
+            {
+                job: {
+                    jobid: "JOBID120",
+                },
+            } as IZoweJobTreeNode,
+        ];
+
+        const sorted = jobs.sort((a, b) => Job.sortJobs(a, b));
+        expect(sorted[0].job.jobid).toBe("JOBID120");
+        expect(sorted[1].job.jobid).toBe("JOBID123");
+        expect(sorted[2].job.jobid).toBe("JOBID124");
+    });
+});
