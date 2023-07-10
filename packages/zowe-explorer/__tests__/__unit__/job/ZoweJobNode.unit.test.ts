@@ -340,6 +340,18 @@ describe("ZoweJobNode unit tests - Function getChildren", () => {
         expect(spoolFilesAfter[0].owner).toEqual("fake");
     });
 
+    it("Tests that getChildren returns a placeholder node if no spool files are available", async () => {
+        const globalMocks = await createGlobalMocks();
+
+        jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValueOnce({
+            getSpoolFiles: jest.fn().mockReturnValueOnce([]),
+        } as any);
+        globalMocks.testJobNode.dirty = true;
+        const spoolFilesAfter = await globalMocks.testJobNode.getChildren();
+        expect(spoolFilesAfter.length).toBe(1);
+        expect(spoolFilesAfter[0].label).toEqual("There are no JES spool messages to display");
+    });
+
     it("Tests that getChildren returns the spool files if user/owner is not defined", async () => {
         const globalMocks = await createGlobalMocks();
 
