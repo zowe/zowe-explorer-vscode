@@ -1,7 +1,7 @@
 {
   "getChildren.search": "Use the search button to display jobs",
   "getChildren.noSpoolFiles": "There are no JES spool messages to display",
-  "getChildren.noJobs": "There are no jobs to display",
+  "getChildren.noJobs": "No jobs found",
   "getJobs.status.not.supported": "Filtering by job status is not yet supported with this profile type. Will show jobs with all statuses.",
   "getChildren.error.response": "Retrieving response from "
 }
