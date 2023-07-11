@@ -811,7 +811,7 @@ describe("ZosJobsProvider - getJobs", () => {
 
 describe("Job - sortJobs", () => {
     it("should sort jobs based on job ID", () => {
-        const jobs = [
+        const sorted = [
             {
                 job: {
                     jobid: "JOBID123",
@@ -819,19 +819,24 @@ describe("Job - sortJobs", () => {
             } as IZoweJobTreeNode,
             {
                 job: {
+                    jobid: "JOBID120",
+                },
+            } as IZoweJobTreeNode,
+            {
+                job: {
                     jobid: "JOBID124",
                 },
             } as IZoweJobTreeNode,
+            // In most cases, there won't be two identical job IDs. In case of overflow, this covers the case for equal job IDs.
             {
                 job: {
                     jobid: "JOBID120",
                 },
             } as IZoweJobTreeNode,
-        ];
-
-        const sorted = jobs.sort((a, b) => Job.sortJobs(a, b));
+        ].sort((a, b) => Job.sortJobs(a, b));
         expect(sorted[0].job.jobid).toBe("JOBID120");
-        expect(sorted[1].job.jobid).toBe("JOBID123");
-        expect(sorted[2].job.jobid).toBe("JOBID124");
+        expect(sorted[1].job.jobid).toBe("JOBID120");
+        expect(sorted[2].job.jobid).toBe("JOBID123");
+        expect(sorted[3].job.jobid).toBe("JOBID124");
     });
 });
