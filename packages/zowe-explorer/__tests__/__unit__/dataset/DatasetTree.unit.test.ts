@@ -548,6 +548,22 @@ describe("Dataset Tree Unit Tests - Function getChildren", () => {
 
         expect(children).toEqual(sampleChildren);
     });
+    it("Checking function for return if element.getChildren is undefined", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profile);
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        const parent = new ZoweDatasetNode("BRTVS99.PUBLIC", vscode.TreeItemCollapsibleState.Collapsed, testTree.mSessionNodes[1], null);
+        parent.dirty = true;
+        jest.spyOn(parent, "getChildren").mockResolvedValueOnce(undefined as any);
+
+        const children = await testTree.getChildren(parent);
+
+        expect(children).not.toBeDefined();
+    });
 });
 describe("Dataset Tree Unit Tests - Function loadProfilesForFavorites", () => {
     function createBlockMocks() {
@@ -1628,12 +1644,35 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
             value: jest.fn(() => {
                 throw new Error("test error");
             }),
+            configurable: true,
         });
         const errorSpy = jest.spyOn(utils, "errorHandling");
 
         await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
 
         expect(errorSpy).toBeCalled();
+        errorSpy.mockClear();
+    });
+    it("Checking function for return if getChildren is undefined", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        mocked(vscode.window.showQuickPick).mockResolvedValueOnce(new utils.FilterDescriptor("\uFF0B " + "Create a new filter"));
+        mocked(vscode.window.showInputBox).mockResolvedValueOnce("HLQ.PROD1.STUFF");
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        Object.defineProperty(testTree.mSessionNodes[1], "getChildren", {
+            value: jest.fn(() => {
+                return;
+            }),
+            configurable: true,
+        });
+        const errorSpy = jest.spyOn(utils, "errorHandling");
+
+        expect(await testTree.datasetFilterPrompt(testTree.mSessionNodes[1])).not.toBeDefined();
+
+        expect(errorSpy).not.toBeCalled();
         errorSpy.mockClear();
     });
 });

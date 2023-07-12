@@ -988,7 +988,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             } catch (err) {
                 return void errorHandling(err, String(node.label));
             }
-            if (!response || response.length === 0) {
+            if (!response) {
                 return;
             }
             // reset and remove previous search patterns for each child of getChildren
