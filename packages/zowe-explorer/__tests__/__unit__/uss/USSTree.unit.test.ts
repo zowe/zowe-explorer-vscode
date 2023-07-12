@@ -1434,10 +1434,8 @@ describe("USSTree Unit Tests - Function USSTree.getChildren()", () => {
                 throw new Error("test error");
             }),
         });
-        // jest.fn(globalMocks.testTree.mSessionNodes[1].getChildren).mockRejectedValueOnce(new Error("test error"));
         const errorSpy = jest.spyOn(utils, "errorHandling");
         await globalMocks.testTree.getChildren(globalMocks.testTree.mSessionNodes[1]);
-        // const sampleChildren: ZoweUSSNode[] = [testDir];
 
         expect(errorSpy).toBeCalled();
         errorSpy.mockClear();

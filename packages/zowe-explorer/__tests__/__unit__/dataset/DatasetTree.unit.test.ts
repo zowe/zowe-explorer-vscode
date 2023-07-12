@@ -1654,7 +1654,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         errorSpy.mockClear();
     });
     it("Checking function for return if getChildren is undefined", async () => {
-        const globalMocks = await createGlobalMocks();
+        const globalMocks = createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce(new utils.FilterDescriptor("\uFF0B " + "Create a new filter"));
