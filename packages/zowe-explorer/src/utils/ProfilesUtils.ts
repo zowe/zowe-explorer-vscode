@@ -75,18 +75,18 @@ export async function handleInvalidToken(label: string): Promise<void> {
         "errorHandling.invalid.token",
         "Your connection is no longer active. Please log in to an authentication service to restore the connection."
     );
-    if (isTheia()) {
+    if (globals.ISTHEIA) {
         Gui.errorMessage(tokenErrMsg).then(async () => {
             await Profiles.getInstance().ssoLogin(null, label);
         });
-    } else {
-        const message = localize("errorHandling.authentication.login", "Log in to Authentication Service");
-        await Gui.showMessage(tokenErrMsg, { items: [message] }).then(async (selection) => {
-            if (selection) {
-                await Profiles.getInstance().ssoLogin(null, label);
-            }
-        });
+        return;
     }
+    const message = localize("errorHandling.authentication.login", "Log in to Authentication Service");
+    await Gui.showMessage(tokenErrMsg, { items: [message] }).then(async (selection) => {
+        if (selection) {
+            await Profiles.getInstance().ssoLogin(null, label);
+        }
+    });
 }
 
 export async function handleInvalidCredentials(label: string): Promise<void> {
@@ -95,27 +95,20 @@ export async function handleInvalidCredentials(label: string): Promise<void> {
         "Invalid Credentials. Please ensure the username and password for {0} are valid or this may lead to a lock-out.",
         label
     );
-    if (isTheia()) {
+    if (globals.ISTHEIA) {
         Gui.errorMessage(genErrMsg);
-    } else {
-        const updateCredsButton = localize("errorHandling.updateCredentials.button", "Update Credentials");
-        const choice = await Gui.errorMessage(genErrMsg, {
-            items: [updateCredsButton],
-            vsCodeOpts: { modal: true },
-        });
-        if (!choice) {
-            Gui.showMessage(localize("errorHandling.checkCredentials.cancelled", "Operation Cancelled"));
-            return;
-        }
-        await Profiles.getInstance().promptCredentials(label.trim(), true);
-        // .then(async (selection) => {
-        //     if (selection === updateCredsButton) {
-
-        //     } else {
-
-        //     }
-        // });
+        return;
     }
+    const updateCredsButton = localize("errorHandling.updateCredentials.button", "Update Credentials");
+    const choice = await Gui.errorMessage(genErrMsg, {
+        items: [updateCredsButton],
+        vsCodeOpts: { modal: true },
+    });
+    if (!choice) {
+        Gui.showMessage(localize("errorHandling.checkCredentials.cancelled", "Operation Cancelled"));
+        return;
+    }
+    await Profiles.getInstance().promptCredentials(label.trim(), true);
 }
 
 export async function handleNoHostname(label: string): Promise<void> {
@@ -130,17 +123,6 @@ export async function handleNoHostname(label: string): Promise<void> {
             }
         }
     }
-}
-
-// TODO: remove this second occurence
-export function isTheia(): boolean {
-    ZoweLogger.trace("ProfileUtils.isTheia called.");
-    const VSCODE_APPNAME: string[] = ["Visual Studio Code", "VSCodium"];
-    const appName = vscode.env.appName;
-    if (appName && !VSCODE_APPNAME.includes(appName)) {
-        return true;
-    }
-    return false;
 }
 
 /**

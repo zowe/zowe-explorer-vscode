@@ -115,7 +115,10 @@ describe("Utils Unit Tests - Function errorHandling", () => {
 
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profile);
         mocked(vscode.window.showErrorMessage).mockResolvedValueOnce({ title: "Update Credentials" });
-        mocked(utils.isTheia).mockReturnValue(true);
+        Object.defineProperty(globals, "ISTHEIA", {
+            value: true,
+            configurable: true,
+        });
         const errorDetails = new imperative.ImperativeError({
             msg: "Invalid credentials",
             errorCode: 401 as unknown as string,
