@@ -400,10 +400,7 @@ describe("Unit Tests (Jest)", () => {
             return {
                 success: true,
                 apiResponse: {
-                    items: [
-                        { member: "BADMEM\ufffd" },
-                        { member: "GOODMEM1" }
-                    ]
+                    items: [{ member: "BADMEM\ufffd" }, { member: "GOODMEM1" }],
                 },
             };
         });

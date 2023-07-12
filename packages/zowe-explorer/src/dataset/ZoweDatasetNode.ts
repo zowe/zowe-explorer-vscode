@@ -230,7 +230,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                         temp.command = { command: "zowe.ds.ZoweNode.openPS", title: "", arguments: [temp] };
                     } else {
                         temp.errorDetails = new zowe.imperative.ImperativeError({
-                            msg: localize("getChildren.invalidMember", "Cannot access member with control characters in the name: {0}", item.member)
+                            msg: localize("getChildren.invalidMember", "Cannot access member with control characters in the name: {0}", item.member),
                         });
                     }
                     elementChildren[temp.label.toString()] = temp;
