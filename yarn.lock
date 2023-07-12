@@ -2335,10 +2335,10 @@
   resolved "https://registry.npmjs.org/@zowe/zos-console-for-zowe-sdk/-/zos-console-for-zowe-sdk-7.16.1.tgz#a793daa0d93d9323127a2e844b0cb425bcb3c023"
   integrity sha512-Yu9sKPjwYL1+3OAAxql1iJ0wMhn+lnnCw1B1WMXDDaY4kDV8pNKCOG/plbbXhEeUJ/UtUYh9Srr+S0Z0wKQWPA==
 
-"@zowe/zos-files-for-zowe-sdk@7.16.1":
-  version "7.16.1"
-  resolved "https://registry.npmjs.org/@zowe/zos-files-for-zowe-sdk/-/zos-files-for-zowe-sdk-7.16.1.tgz#39405d4ea13e1501a52fb039be046ad7c1a5b10d"
-  integrity sha512-lFVWpLTkjtbd6Xw7OGsfMmNqhYVZYK+iSVXNW3w+qoJGVeC0GtzFlZBqD/a4SzjLSBK00tAc3SEaiiqiprHJIA==
+"@zowe/zos-files-for-zowe-sdk@7.16.1", "@zowe/zos-files-for-zowe-sdk@7.16.6":
+  version "7.16.6"
+  resolved "https://registry.npmjs.org/@zowe/zos-files-for-zowe-sdk/-/zos-files-for-zowe-sdk-7.16.6.tgz#7de7268ef9360da1aba03f7b83cb5b83eb091823"
+  integrity sha512-+BT3vPFkX0WfEi7hu+HtJs0QnkXt5YbqxfAIE2VwTMELRoOdQCOIFsoe9cGVtZrJ3zluzlqbXbqpX8ymEKcevQ==
   dependencies:
     minimatch "5.0.1"
 
