@@ -10,13 +10,11 @@
  */
 
 import { writeFileSync } from "fs";
-import { Builder, By, Key, until, Button } from "selenium-webdriver";
+import { Builder, By, Key, until } from "selenium-webdriver";
 import * as firefox from "selenium-webdriver/firefox";
 import { TheiaLocator, DatasetsLocators, UssLocators, JobsLocators } from "./Locators";
 
 const WAITTIME = 30000;
-const SHORTSLEEPTIME = 2000;
-const wait5sec = 5000;
 let driverFirefox: any;
 
 export async function openBrowser() {
@@ -102,8 +100,8 @@ export async function getJobsProfilename() {
     return jobsProfile;
 }
 
-export async function getFavouritesNode() {
-    const favoriteLink = await driverFirefox.wait(until.elementLocated(By.id(DatasetsLocators.favoriteTabId)), WAITTIME).getAttribute("title");
+export async function getFavoritesNode() {
+    const favoriteLink = await driverFirefox.wait(until.elementLocated(By.xpath(DatasetsLocators.favoriteTabXpath)), WAITTIME).getAttribute("title");
     return favoriteLink;
 }
 
