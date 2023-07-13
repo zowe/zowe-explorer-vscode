@@ -49,7 +49,7 @@ describe("Locate Tree Nodes", () => {
     afterEach(screenshotIfFailed(driverFirefox));
 
     it("should open Zowe Explorer and find the Favorites node", async () => {
-        const favoriteLink = await driverFirefox.getFavouritesNode();
+        const favoriteLink = await driverFirefox.getFavoritesNode();
         expect(favoriteLink).to.equal("Favorites");
     }).timeout(TIMEOUT);
 
@@ -186,7 +186,7 @@ describe("Test Adding and Removing Favorites", () => {
         await driverChrome.sleepTime(SHORTSLEEPTIME);
         await driverChrome.clickOnFavoriteTabInDatasets();
         await driverChrome.sleepTime(SHORTSLEEPTIME);
-        const favoriteProfile = await driverChrome.getFavoritePrfileNameFromDatasets();
+        const favoriteProfile = await driverChrome.getFavoriteProfileNameFromDatasets();
         expect(favoriteProfile).to.equal("TestSeleniumProfile");
     });
 
@@ -206,7 +206,7 @@ describe("Test Adding and Removing Favorites", () => {
         await driverChrome.sleepTime(SHORTSLEEPTIME);
         await driverChrome.clickOnFavoriteTabInUss();
         await driverChrome.sleepTime(SHORTSLEEPTIME);
-        const favoriteProfile = await driverChrome.getFavoritePrfileNameFromUss();
+        const favoriteProfile = await driverChrome.getFavoriteProfileNameFromUss();
         expect(favoriteProfile).to.equal("TestSeleniumProfile");
     });
 
@@ -226,7 +226,7 @@ describe("Test Adding and Removing Favorites", () => {
         await driverChrome.sleepTime(SHORTSLEEPTIME);
         await driverChrome.clickOnFavoriteTabInJobs();
         await driverChrome.sleepTime(SHORTSLEEPTIME);
-        const favoriteProfile = await driverChrome.getFavoritePrfileNameFromJobs();
+        const favoriteProfile = await driverChrome.getFavoriteProfileNameFromJobs();
         expect(favoriteProfile).to.equal("TestSeleniumProfile");
     });
 

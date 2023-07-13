@@ -43,7 +43,7 @@ export async function clickOnZoweExplorer() {
 }
 
 export async function clickOnFavoriteTabInDatasets() {
-    await driverChrome.wait(until.elementLocated(By.id(DatasetsLocators.favoriteTabId)), WAITTIME).click();
+    await driverChrome.wait(until.elementLocated(By.xpath(DatasetsLocators.favoriteTabXpath)), WAITTIME).click();
 }
 
 export async function clickOnFavoriteTabInUss() {
@@ -52,10 +52,6 @@ export async function clickOnFavoriteTabInUss() {
 
 export async function clickOnFavoriteTabInJobs() {
     await driverChrome.wait(until.elementLocated(By.xpath(JobsLocators.favoriteTabXpath)), WAITTIME).click();
-}
-
-export async function clickOnFavoriteTabInJobsAfterRefresh() {
-    await driverChrome.wait(until.elementLocated(By.xpath(JobsLocators.favoriteTabAfterRefreshXpath)), WAITTIME).click();
 }
 
 export async function clickOnDatasetsTab() {
@@ -74,22 +70,24 @@ export async function clickOnJobsTab() {
     await driverChrome.findElement(By.id(JobsLocators.jobTabId)).click();
 }
 
-export async function getFavoritePrfileNameFromDatasets() {
-    const favoriteProfile = await driverChrome.wait(until.elementLocated(By.id(DatasetsLocators.favoriteProfileInDatasetId)), WAITTIME).getText();
+export async function getFavoriteProfileNameFromDatasets() {
+    const favoriteProfile = await driverChrome
+        .wait(until.elementLocated(By.xpath(DatasetsLocators.favoriteProfileInDatasetXpath)), WAITTIME)
+        .getText();
     return favoriteProfile;
 }
 
-export async function getFavoritePrfileNameFromUss() {
+export async function getFavoriteProfileNameFromUss() {
     const favoriteProfile = await driverChrome.wait(until.elementLocated(By.xpath(UssLocators.favoriteProfileInUssXpath)), WAITTIME).getText();
     return favoriteProfile;
 }
 
-export async function getFavoritePrfileNameFromJobs() {
+export async function getFavoriteProfileNameFromJobs() {
     return driverChrome.wait(until.elementLocated(By.xpath(JobsLocators.favoriteProfileInJobsXpath)), WAITTIME).getText();
 }
 
 export async function removeFavoriteProfileFromDatasets() {
-    const removeFromFavorite = await driverChrome.wait(until.elementLocated(By.id(DatasetsLocators.favoriteProfileInDatasetId)), WAITTIME);
+    const removeFromFavorite = await driverChrome.wait(until.elementLocated(By.xpath(DatasetsLocators.favoriteProfileInDatasetXpath)), WAITTIME);
     await driverChrome.actions().click(removeFromFavorite, Button.RIGHT).perform();
     await driverChrome.sleep(SHORTSLEEPTIME);
     await driverChrome.wait(until.elementLocated(By.xpath(DatasetsLocators.removeFavoriteProfileFromDatasetsOptionXpath)), WAITTIME).click();
@@ -98,7 +96,7 @@ export async function removeFavoriteProfileFromDatasets() {
 }
 
 export async function removeFavoriteProfileFromUss() {
-    const removeFromFavorite = await driverChrome.wait(until.elementLocated(By.xpath(UssLocators.favoriteProfileInUssBeforeRemovingXpath)), WAITTIME);
+    const removeFromFavorite = await driverChrome.wait(until.elementLocated(By.xpath(UssLocators.favoriteProfileInUssXpath)), WAITTIME);
     await driverChrome.actions().click(removeFromFavorite, Button.RIGHT).perform();
     await driverChrome.sleep(SHORTSLEEPTIME);
     await driverChrome.wait(until.elementLocated(By.xpath(UssLocators.removeFavoriteProfileFromUssOptionXpath)), WAITTIME).click();
@@ -107,7 +105,7 @@ export async function removeFavoriteProfileFromUss() {
 }
 
 export async function removeFavoriteProfileFromJobs() {
-    const removeFromFavorite = await driverChrome.wait(until.elementLocated(By.xpath(JobsLocators.favoriteprofile)), WAITTIME);
+    const removeFromFavorite = await driverChrome.wait(until.elementLocated(By.xpath(JobsLocators.favoriteProfileInJobsXpath)), WAITTIME);
     await driverChrome.actions().click(removeFromFavorite, Button.RIGHT).perform();
     await driverChrome.sleep(SHORTSLEEPTIME);
     await driverChrome.wait(until.elementLocated(By.xpath(JobsLocators.removeFavoriteProfileFromJobsOptionXpath)), WAITTIME).click();
@@ -116,7 +114,7 @@ export async function removeFavoriteProfileFromJobs() {
 }
 
 export async function addProfileToFavoritesInDatasets() {
-    const addTofavorite = await driverChrome.wait(until.elementLocated(By.id(DatasetsLocators.secondDatasetProfileId)), WAITTIME);
+    const addTofavorite = await driverChrome.wait(until.elementLocated(By.xpath(DatasetsLocators.secondDatasetProfileXpath)), WAITTIME);
     await driverChrome.actions().click(addTofavorite, Button.RIGHT).perform();
     await driverChrome.sleep(SHORTSLEEPTIME);
     await driverChrome.wait(until.elementLocated(By.xpath(DatasetsLocators.addToFavoriteOptionXpath)), WAITTIME).click();
@@ -138,13 +136,13 @@ export async function addProfileToFavoritesInJobs() {
 }
 
 export async function hideProfileInUss() {
-    const hideProfileFromUss = await driverChrome.wait(until.elementLocated(By.xpath(UssLocators.secondUssProfileXpath)), WAITTIME);
+    const hideProfileFromUss = await driverChrome.wait(until.elementLocated(By.xpath(UssLocators.secondUssProfileBeforeHidingXpath)), WAITTIME);
     await driverChrome.actions().click(hideProfileFromUss, Button.RIGHT).perform();
     await driverChrome.wait(until.elementLocated(By.xpath(UssLocators.hideProfileFromUssOptionXpath)), WAITTIME).click();
 }
 
 export async function hideProfileInJobs() {
-    const hideProfileFromJobs = await driverChrome.wait(until.elementLocated(By.xpath(JobsLocators.secondJobsProfileIdBeforeHidingXpath)), WAITTIME);
+    const hideProfileFromJobs = await driverChrome.wait(until.elementLocated(By.xpath(JobsLocators.secondJobsProfileBeforeHidingXpath)), WAITTIME);
     await driverChrome.actions().click(hideProfileFromJobs, Button.RIGHT).perform();
     await driverChrome.wait(until.elementLocated(By.xpath(JobsLocators.hideProfileFromJobsOptionXpath)), WAITTIME).click();
 }
@@ -160,7 +158,7 @@ export async function verifyProfileIsHideInUss() {
 
 export async function verifyProfileIsHideInJobs() {
     const hideProfileFromJobs = await driverChrome
-        .findElements(By.xpath(JobsLocators.secondJobsProfileIdBeforeHidingXpath))
+        .findElements(By.xpath(JobsLocators.secondJobsProfileBeforeHidingXpath))
         .then((found) => !!found.length);
     if (!hideProfileFromJobs) {
         return true;
@@ -170,7 +168,7 @@ export async function verifyProfileIsHideInJobs() {
 }
 
 export async function deleteDefaultProfileInDatasets() {
-    const profileName = await driverChrome.wait(until.elementLocated(By.id(DatasetsLocators.defaultDatasetsProfileId)), WAITTIME);
+    const profileName = await driverChrome.wait(until.elementLocated(By.xpath(DatasetsLocators.defaultDatasetsProfileXpath)), WAITTIME);
     await driverChrome.actions().click(profileName, Button.RIGHT).perform();
     await driverChrome.wait(until.elementLocated(By.xpath(DatasetsLocators.deleteProfileFromDatasetsXpath)), WAITTIME).click();
     await driverChrome.sleep(SHORTSLEEPTIME);
@@ -181,7 +179,7 @@ export async function deleteDefaultProfileInDatasets() {
 }
 
 export async function deleteProfileInDatasets() {
-    const favprofile = await driverChrome.wait(until.elementLocated(By.id(DatasetsLocators.secondDatasetProfileBeforeDeletingId)), WAITTIME);
+    const favprofile = await driverChrome.wait(until.elementLocated(By.xpath(DatasetsLocators.secondDatasetProfileXpath)), WAITTIME);
     await driverChrome.actions().click(favprofile, Button.RIGHT).perform();
     await driverChrome.wait(until.elementLocated(By.xpath(DatasetsLocators.deleteProfileFromDatasetsXpath)), WAITTIME).click();
     await driverChrome.sleep(SHORTSLEEPTIME);
@@ -192,7 +190,7 @@ export async function deleteProfileInDatasets() {
 }
 
 export async function verifyRemovedFavoriteProfileInDatasets() {
-    const favoriteProfile = await driverChrome.findElements(By.id(DatasetsLocators.favoriteProfileInDatasetId)).then((found) => !!found.length);
+    const favoriteProfile = await driverChrome.findElements(By.xpath(DatasetsLocators.favoriteProfileInDatasetXpath)).then((found) => !!found.length);
     if (!favoriteProfile) {
         return true;
     } else {
@@ -219,7 +217,7 @@ export async function verifyRemovedFavoriteProfileInJobs() {
 }
 
 export async function verifyRemovedDefaultProfileInDataSet() {
-    const defaultProfile = await driverChrome.findElements(By.id(DatasetsLocators.defaultDatasetsProfileId)).then((found) => !!found.length);
+    const defaultProfile = await driverChrome.findElements(By.xpath(DatasetsLocators.defaultDatasetsProfileXpath)).then((found) => !!found.length);
     if (!defaultProfile) {
         return true;
     } else {
@@ -228,7 +226,7 @@ export async function verifyRemovedDefaultProfileInDataSet() {
 }
 
 export async function verifyRemovedOtherProfileInDataSet() {
-    const defaultProfile = await driverChrome.findElements(By.id(DatasetsLocators.secondDatasetProfileId)).then((found) => !!found.length);
+    const defaultProfile = await driverChrome.findElements(By.xpath(DatasetsLocators.secondDatasetProfileXpath)).then((found) => !!found.length);
     if (!defaultProfile) {
         return true;
     } else {
@@ -319,11 +317,11 @@ export async function clickOnAddSessionInDatasets() {
 }
 
 export async function getDatasetsDefaultProfilename() {
-    const datasetProfile = await driverChrome.wait(until.elementLocated(By.id(DatasetsLocators.defaultDatasetsProfileId)), WAITTIME).getText();
+    const datasetProfile = await driverChrome.wait(until.elementLocated(By.xpath(DatasetsLocators.defaultDatasetsProfileXpath)), WAITTIME).getText();
     return datasetProfile;
 }
 
 export async function getDatasetsProfilename() {
-    const datasetProfile = await driverChrome.wait(until.elementLocated(By.id(DatasetsLocators.secondDatasetProfileId)), WAITTIME).getText();
+    const datasetProfile = await driverChrome.wait(until.elementLocated(By.xpath(DatasetsLocators.secondDatasetProfileXpath)), WAITTIME).getText();
     return datasetProfile;
 }
