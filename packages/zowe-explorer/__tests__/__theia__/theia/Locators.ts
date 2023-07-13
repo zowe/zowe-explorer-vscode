@@ -44,7 +44,6 @@ export const UssLocators = {
     addToFavoriteOptionXpath: "//li[@data-command='zowe.uss.addFavorite']",
     removeFavoriteProfileFromUssOptionXpath: "//li[@data-command='zowe.uss.removeFavProfile']",
     hideProfileFromUssOptionXpath: "//li[@data-command='zowe.uss.removeSession']",
-    secondUssProfileBeforeHidingXpath: "(//div[contains(@id,'TestSeleniumProfile')])[1]",
 };
 
 export const JobsLocators = {
@@ -60,7 +59,7 @@ export const JobsLocators = {
     addToFavoriteOptionXpath: "//li[@data-command='zowe.jobs.addFavorite']",
     removeFavoriteProfileFromJobsOptionXpath: "//li[@data-command='zowe.jobs.removeFavProfile']",
     hideProfileFromJobsOptionXpath: "//li[@data-command='zowe.jobs.removeJobsSession']",
-    secondJobsProfileBeforeHidingXpath: "(//div[contains(@id,'TestSeleniumProfile')])[1]",
+    secondJobsProfileBeforeHidingXpath: "(//div[contains(@id,'TestSeleniumProfile')])[2]",
 };
 
 export const TheiaNotificationMessages = {
