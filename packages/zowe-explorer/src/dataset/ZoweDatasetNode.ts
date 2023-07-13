@@ -125,8 +125,8 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         // Gets the datasets from the pattern or members of the dataset and displays any thrown errors
         const responses = await this.getDatasets();
         if (!responses || responses.length === 0) {
-            ZoweLogger.debug("returning undefined node.getchildren");
-            return undefined;
+            ZoweLogger.debug("Something went wrong.");
+            return;
         }
 
         // push nodes to an object with property names to avoid duplicates
@@ -279,7 +279,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         this.etag = etagValue;
     }
 
-    private async getDatasets(): Promise<zowe.IZosFilesResponse[]> {
+    public async getDatasets(): Promise<zowe.IZosFilesResponse[]> {
         ZoweLogger.trace("ZoweDatasetNode.getDatasets called.");
         const sessNode = this.getSessionNode();
         const cachedProfile = sessNode.getProfile();
@@ -299,7 +299,11 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             ];
             const mvsApi = ZoweExplorerApiRegister.getMvsApi(cachedProfile);
             if (mvsApi.dataSetsMatchingPattern) {
-                responses.push(await mvsApi.dataSetsMatchingPattern(dsPatterns));
+                const response = await mvsApi.dataSetsMatchingPattern(dsPatterns);
+                if (!response) {
+                    return;
+                }
+                responses.push(response);
                 ZoweLogger.debug(String(responses));
                 return responses;
             }
