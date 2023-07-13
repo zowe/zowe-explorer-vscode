@@ -136,7 +136,7 @@ export async function addProfileToFavoritesInJobs() {
 }
 
 export async function hideProfileInUss() {
-    const hideProfileFromUss = await driverChrome.wait(until.elementLocated(By.xpath(UssLocators.secondUssProfileBeforeHidingXpath)), WAITTIME);
+    const hideProfileFromUss = await driverChrome.wait(until.elementLocated(By.xpath(UssLocators.secondUssProfileXpath)), WAITTIME);
     await driverChrome.actions().click(hideProfileFromUss, Button.RIGHT).perform();
     await driverChrome.wait(until.elementLocated(By.xpath(UssLocators.hideProfileFromUssOptionXpath)), WAITTIME).click();
 }
