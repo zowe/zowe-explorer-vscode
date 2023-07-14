@@ -158,6 +158,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
                     const existing = this.children.find((element) => element.label?.includes(`${spool.stepname}:${spool.ddname}${spoolSuffix}`));
                     if (existing) {
                         existing.label = newLabel;
+                        elementChildren[newLabel] = existing;
                     } else {
                         const spoolNode = new Spool(newLabel, vscode.TreeItemCollapsibleState.None, this, this.session, spool, this.job, this);
                         const icon = getIconByNode(spoolNode);
@@ -202,6 +203,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
                     if (existing) {
                         // If matched, update the label to reflect latest retcode/status
                         existing.label = nodeTitle;
+                        elementChildren[nodeTitle] = existing;
                     } else {
                         const jobNode = new Job(nodeTitle, vscode.TreeItemCollapsibleState.Collapsed, this, this.session, job, this.getProfile());
                         jobNode.contextValue = globals.JOBS_JOB_CONTEXT;
@@ -225,7 +227,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
             // Remove any children that are no longer present in the built record
             this.children = this.children
                 .concat(newChildren)
-                .filter((ch) => Object.values(elementChildren).find((recordCh) => recordCh.jobid === ch.job.jobid) == null)
+                .filter((ch) => Object.values(elementChildren).find((recordCh) => recordCh.label === ch.label) != null)
                 .sort((a, b) => Job.sortJobs(a, b));
         }
         this.dirty = false;
