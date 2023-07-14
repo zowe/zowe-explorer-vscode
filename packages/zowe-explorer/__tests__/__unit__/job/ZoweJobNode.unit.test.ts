@@ -29,6 +29,7 @@ import {
 } from "../../../__mocks__/mockCreators/shared";
 import * as contextually from "../../../src/shared/context";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
+import { bindJesApi, createJesApi } from "../../../__mocks__/mockCreators/api";
 
 async function createGlobalMocks() {
     const globalMocks = {
@@ -51,7 +52,6 @@ async function createGlobalMocks() {
         mockLoadNamedProfile: jest.fn(),
         mockCreateQuickPick: jest.fn(),
         mockLoadDefaultProfile: jest.fn(),
-        mockGetJesApi: jest.fn(),
         mockShowQuickPick: jest.fn(),
         testJobsProvider: null,
         jesApi: null,
@@ -161,9 +161,8 @@ async function createGlobalMocks() {
     globalMocks.mockProfileInstance.disableValidationContext = globalMocks.mockDisableValidationContext;
 
     // Jes API mocks
-    globalMocks.jesApi = ZoweExplorerApiRegister.getJesApi(globalMocks.testProfile);
-    globalMocks.mockGetJesApi.mockReturnValue(globalMocks.jesApi);
-    ZoweExplorerApiRegister.getJesApi = globalMocks.mockGetJesApi.bind(ZoweExplorerApiRegister);
+    globalMocks.jesApi = createJesApi(globalMocks.testProfile);
+    bindJesApi(globalMocks.jesApi);
 
     globalMocks.mockCreateSessCfgFromArgs.mockReturnValue(globalMocks.testSession);
     globalMocks.testSessionNode = createJobSessionNode(globalMocks.testSession, globalMocks.testProfile);
@@ -321,6 +320,24 @@ describe("ZoweJobNode unit tests - Function getChildren", () => {
         expect(spoolFiles.length).toBe(1);
         expect(spoolFiles[0].label).toEqual("STEP:STDOUT - 1");
         expect(spoolFiles[0].owner).toEqual("fake");
+    });
+
+    it("Tests that getChildren updates existing spool nodes if called again on a job", async () => {
+        const globalMocks = await createGlobalMocks();
+
+        const spoolFiles = await globalMocks.testJobNode.getChildren();
+        expect(spoolFiles.length).toBe(1);
+        expect(spoolFiles[0].label).toEqual("STEP:STDOUT - 1");
+        expect(spoolFiles[0].owner).toEqual("fake");
+
+        jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValueOnce({
+            getSpoolFiles: jest.fn().mockReturnValueOnce([{ ...globalMocks.mockIJobFile, "record-count": 2 }]),
+        } as any);
+        globalMocks.testJobNode.dirty = true;
+        const spoolFilesAfter = await globalMocks.testJobNode.getChildren();
+        expect(spoolFilesAfter.length).toBe(1);
+        expect(spoolFilesAfter[0].label).toEqual("STEP:STDOUT - 2");
+        expect(spoolFilesAfter[0].owner).toEqual("fake");
     });
 
     it("Tests that getChildren returns the spool files if user/owner is not defined", async () => {
