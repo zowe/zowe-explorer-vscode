@@ -34,6 +34,12 @@ function createGlobalMocks() {
     Object.defineProperty(vscode.window, "createQuickPick", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showInputBox", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showErrorMessage", { value: jest.fn(), configurable: true });
+    Object.defineProperty(vscode, "env", {
+        value: jest.fn().mockResolvedValue({
+            appName: "vscode",
+        }),
+        configurable: true,
+    });
     Object.defineProperty(Profiles, "getInstance", {
         value: jest
             .fn(() => {
@@ -115,10 +121,7 @@ describe("Utils Unit Tests - Function errorHandling", () => {
 
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profile);
         mocked(vscode.window.showErrorMessage).mockResolvedValueOnce({ title: "Update Credentials" });
-        Object.defineProperty(globals, "ISTHEIA", {
-            value: true,
-            configurable: true,
-        });
+        Object.defineProperty(globals, "ISTHEIA", { value: true, writable: true });
         const errorDetails = new imperative.ImperativeError({
             msg: "Invalid credentials",
             errorCode: 401 as unknown as string,

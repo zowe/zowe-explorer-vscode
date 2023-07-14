@@ -126,10 +126,7 @@ describe("ProfilesUtils unit tests", () => {
             });
             const label = "test";
             const moreInfo = "Task failed successfully";
-            Object.defineProperty(globals, "ISTHEIA", {
-                value: false,
-                configurable: true,
-            });
+            Object.defineProperty(globals, "ISTHEIA", { value: false, writable: true });
             const showMessageSpy = jest.spyOn(Gui, "showMessage").mockResolvedValue("selection");
             const ssoLoginSpy = jest.fn();
             Object.defineProperty(Profiles, "getInstance", {
@@ -151,10 +148,7 @@ describe("ProfilesUtils unit tests", () => {
             });
             const label = "test";
             const moreInfo = "Task failed successfully";
-            Object.defineProperty(globals, "ISTHEIA", {
-                value: true,
-                configurable: true,
-            });
+            Object.defineProperty(globals, "ISTHEIA", { value: true, writable: true });
             const showErrorSpy = jest.spyOn(Gui, "errorMessage").mockResolvedValue(undefined);
             const showMessageSpy = jest.spyOn(Gui, "showMessage");
             const ssoLoginSpy = jest.fn();
@@ -179,10 +173,7 @@ describe("ProfilesUtils unit tests", () => {
             });
             const label = "test";
             const moreInfo = "Task failed successfully";
-            Object.defineProperty(globals, "ISTHEIA", {
-                value: false,
-                configurable: true,
-            });
+            Object.defineProperty(globals, "ISTHEIA", { value: false, writable: true });
             const showErrorSpy = jest.spyOn(Gui, "errorMessage").mockResolvedValue("selection");
             const promptCredentialsSpy = jest.fn();
             Object.defineProperty(Profiles, "getInstance", {
@@ -204,10 +195,7 @@ describe("ProfilesUtils unit tests", () => {
             });
             const label = "test";
             const moreInfo = "Task failed successfully";
-            Object.defineProperty(globals, "ISTHEIA", {
-                value: false,
-                configurable: true,
-            });
+            Object.defineProperty(globals, "ISTHEIA", { value: false, writable: true });
             const showErrorSpy = jest.spyOn(Gui, "errorMessage").mockResolvedValue(undefined);
             const showMsgSpy = jest.spyOn(Gui, "showMessage");
             const promptCredentialsSpy = jest.fn();
@@ -232,10 +220,7 @@ describe("ProfilesUtils unit tests", () => {
             });
             const label = "test";
             const moreInfo = "Task failed successfully";
-            Object.defineProperty(globals, "ISTHEIA", {
-                value: true,
-                configurable: true,
-            });
+            Object.defineProperty(globals, "ISTHEIA", { value: true, writable: true });
             const showErrorSpy = jest.spyOn(Gui, "errorMessage");
             const promptCredentialsSpy = jest.fn();
             Object.defineProperty(Profiles, "getInstance", {
