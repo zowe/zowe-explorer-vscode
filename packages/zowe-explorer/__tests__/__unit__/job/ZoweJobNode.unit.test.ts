@@ -298,6 +298,23 @@ describe("ZoweJobNode unit tests - Function getChildren", () => {
         expect(jobs[1].tooltip).toEqual("TESTJOB(JOB1235) - 0");
     });
 
+    it("Tests that getChildren updates existing job nodes with new statuses", async () => {
+        const globalMocks = await createGlobalMocks();
+
+        await globalMocks.testJobsProvider.addSession("fake");
+        globalMocks.testJobsProvider.mSessionNodes[1].searchId = "JOB1234";
+        globalMocks.testJobsProvider.mSessionNodes[1].dirty = true;
+        globalMocks.testJobsProvider.mSessionNodes[1].filtered = true;
+        const jobs = await globalMocks.testJobsProvider.mSessionNodes[1].getChildren();
+        expect(jobs[0].label).toEqual("TESTJOB(JOB1234) - ACTIVE");
+
+        globalMocks.mockGetJob.mockReturnValueOnce({ ...globalMocks.testIJob, retcode: "CC 0000" });
+        globalMocks.testJobsProvider.mSessionNodes[1].dirty = true;
+        const newJobs = await globalMocks.testJobsProvider.mSessionNodes[1].getChildren();
+
+        expect(newJobs[0].label).toEqual("TESTJOB(JOB1234) - CC 0000");
+    });
+
     it("Tests that getChildren retrieves only child jobs which match a provided searchId", async () => {
         const globalMocks = await createGlobalMocks();
 
