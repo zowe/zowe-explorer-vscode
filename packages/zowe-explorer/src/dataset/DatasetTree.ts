@@ -1051,7 +1051,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                                 if (existing) {
                                     child.memberPattern = item.member;
                                     if (!child.contextValue.includes(globals.FILTER_SEARCH)) {
-                                        child.contextValue = child.contextValue + globals.FILTER_SEARCH;
+                                        child.contextValue = String(child.contextValue) + globals.FILTER_SEARCH;
                                     }
                                     let setIcon: IIconItem;
                                     if (child.collapsibleState === vscode.TreeItemCollapsibleState.Collapsed) {
