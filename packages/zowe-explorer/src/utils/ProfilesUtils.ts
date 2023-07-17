@@ -95,13 +95,13 @@ export async function errorHandling(errorDetails: Error | string, label?: string
                 Gui.errorMessage(errMsg);
                 return;
             }
-            const checkCredsButton = localize("errorHandling.updateCredentials.button", "Update Credentials");
+            const checkCredsButton = localize("errorHandling.checkCredentials.button", "Update Credentials");
             await Gui.errorMessage(errMsg, {
                 items: [checkCredsButton],
                 vsCodeOpts: { modal: true },
             }).then(async (selection) => {
                 if (selection !== checkCredsButton) {
-                    Gui.showMessage(localize("errorHandling.updateCredentials.cancelled", "Operation Cancelled"));
+                    Gui.showMessage(localize("errorHandling.checkCredentials.cancelled", "Operation Cancelled"));
                     return;
                 }
                 await Profiles.getInstance().promptCredentials(label.trim(), true);
