@@ -1531,11 +1531,47 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
         const testTree = new DatasetTree();
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        const node = new ZoweDatasetNode(
+            "HLQ.PROD2.STUFF",
+            vscode.TreeItemCollapsibleState.Collapsed,
+            testTree.mSessionNodes[1],
+            blockMocks.session,
+            globals.DS_DS_CONTEXT
+        );
+        node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+        node.contextValue = globals.FILTER_SEARCH;
+        jest.spyOn(testTree.mSessionNodes[1], "getChildren").mockResolvedValueOnce([node]);
 
         await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
 
         expect(testTree.mSessionNodes[1].contextValue).toEqual(globals.DS_SESSION_CONTEXT + globals.ACTIVE_CONTEXT);
         expect(testTree.mSessionNodes[1].pattern).toEqual("HLQ.PROD1.STUFF");
+    });
+    it("Checking adding of new filter of multiple ds search", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        mocked(vscode.window.showQuickPick).mockResolvedValueOnce(new utils.FilterDescriptor("\uFF0B " + "Create a new filter"));
+        mocked(vscode.window.showInputBox).mockResolvedValueOnce("HLQ.PROD(STUF*),HLQ.PROD1*");
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        testTree.mSessionNodes[1].collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+        const node = new ZoweDatasetNode(
+            "STUFF",
+            vscode.TreeItemCollapsibleState.Collapsed,
+            testTree.mSessionNodes[1],
+            blockMocks.session,
+            globals.DS_DS_CONTEXT
+        );
+
+        jest.spyOn(testTree.mSessionNodes[1], "getChildren").mockReturnValueOnce([node] as any);
+        jest.spyOn(testTree, "checkFilterPattern").mockReturnValue(true);
+
+        await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
+
+        expect(testTree.mSessionNodes[1].contextValue).toEqual(globals.DS_SESSION_CONTEXT + globals.ACTIVE_CONTEXT);
+        expect(testTree.mSessionNodes[1].pattern).toEqual("HLQ.PROD, HLQ.PROD1*");
     });
     it("Checking adding of new filter with data set member", async () => {
         const globalMocks = createGlobalMocks();
