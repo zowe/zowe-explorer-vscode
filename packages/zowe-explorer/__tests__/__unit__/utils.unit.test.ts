@@ -76,7 +76,7 @@ describe("Utils Unit Tests - Function errorHandling", () => {
     it("Checking common error handling", async () => {
         createGlobalMocks();
 
-        mocked(vscode.window.showErrorMessage).mockResolvedValueOnce({ title: "Check Credentials" });
+        mocked(vscode.window.showErrorMessage).mockResolvedValueOnce({ title: "Update Credentials" });
         const errorDetails = new imperative.ImperativeError({
             msg: "Invalid credentials",
             errorCode: 401 as unknown as string,
@@ -94,12 +94,13 @@ describe("Utils Unit Tests - Function errorHandling", () => {
     it("Checking USS error handling", async () => {
         createGlobalMocks();
 
-        mocked(vscode.window.showErrorMessage).mockResolvedValueOnce({ title: "Check Credentials" });
+        mocked(vscode.window.showErrorMessage).mockResolvedValueOnce({ title: "Update Credentials" });
         const errorDetails = new imperative.ImperativeError({
             msg: "Invalid credentials",
             errorCode: 401 as unknown as string,
         });
-        const label = "invalidCred [/tmp]";
+        let label = "invalidCred [/tmp]";
+        label = label.substring(0, label.indexOf(" [")).trim();
 
         await utils.errorHandling(errorDetails, label);
 
@@ -113,8 +114,8 @@ describe("Utils Unit Tests - Function errorHandling", () => {
         const blockMocks = createBlockMocks();
 
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profile);
-        mocked(vscode.window.showErrorMessage).mockResolvedValueOnce({ title: "Check Credentials" });
-        mocked(utils.isTheia).mockReturnValue(true);
+        mocked(vscode.window.showErrorMessage).mockResolvedValueOnce({ title: "Update Credentials" });
+        jest.spyOn(utils, "isTheia").mockReturnValue(true);
         const errorDetails = new imperative.ImperativeError({
             msg: "Invalid credentials",
             errorCode: 401 as unknown as string,
