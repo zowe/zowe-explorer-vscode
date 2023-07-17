@@ -88,7 +88,7 @@ describe("Utils Unit Tests - Function errorHandling", () => {
         expect(vscode.window.showErrorMessage).toHaveBeenCalledWith(
             `Invalid Credentials. Please ensure the username and password for ${label} are valid or this may lead to a lock-out.`,
             { modal: true },
-            "Check Credentials"
+            "Update Credentials"
         );
     });
     it("Checking USS error handling", async () => {
@@ -106,7 +106,7 @@ describe("Utils Unit Tests - Function errorHandling", () => {
         expect(vscode.window.showErrorMessage).toHaveBeenCalledWith(
             `Invalid Credentials. Please ensure the username and password for ${label} are valid or this may lead to a lock-out.`,
             { modal: true },
-            "Check Credentials"
+            "Update Credentials"
         );
     });
     it("Checking common error handling - Theia", async () => {
@@ -127,7 +127,7 @@ describe("Utils Unit Tests - Function errorHandling", () => {
         expect(vscode.window.showErrorMessage).toHaveBeenCalledWith(
             `Invalid Credentials. Please ensure the username and password for ${label} are valid or this may lead to a lock-out.`,
             { modal: true },
-            "Check Credentials"
+            "Update Credentials"
         );
     });
 });

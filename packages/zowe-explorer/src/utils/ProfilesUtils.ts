@@ -94,7 +94,7 @@ export async function errorHandling(errorDetails: Error | string, label?: string
             if (isTheia()) {
                 Gui.errorMessage(errMsg);
             } else {
-                const checkCredsButton = localize("errorHandling.checkCredentials.button", "Check Credentials");
+                const checkCredsButton = localize("errorHandling.checkCredentials.button", "Update Credentials");
                 await Gui.errorMessage(errMsg, {
                     items: [checkCredsButton],
                     vsCodeOpts: { modal: true },
