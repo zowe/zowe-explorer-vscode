@@ -806,8 +806,6 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             const isSessionNotFav = contextually.isSessionNotFav(node);
             const isExpanded = node.collapsibleState === vscode.TreeItemCollapsibleState.Expanded;
 
-            node.filtered = true;
-
             const icon = getIconByNode(node);
             if (icon) {
                 node.iconPath = icon.path;
@@ -815,14 +813,14 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
 
             if (isSessionNotFav) {
                 searchCriteria = await this.applyRegularSessionSearchLabel(node);
-                await TreeViewUtils.expandNode(node, this);
 
                 if (searchCriteria != null) {
+                    node.filtered = true;
+                    await TreeViewUtils.expandNode(node, this);
                     node.label = node.getProfileName();
                     node.description = searchCriteria;
-                    this.addSearchHistory(searchCriteria);
                     node.dirty = true;
-                    this.refreshElement(node);
+                    this.addSearchHistory(searchCriteria);
                 }
             } else {
                 if (isExpanded) {

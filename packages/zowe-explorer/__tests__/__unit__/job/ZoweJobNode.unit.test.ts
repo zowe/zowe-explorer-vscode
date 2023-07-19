@@ -298,6 +298,23 @@ describe("ZoweJobNode unit tests - Function getChildren", () => {
         expect(jobs[1].tooltip).toEqual("TESTJOB(JOB1235) - 0");
     });
 
+    it("Tests that getChildren updates existing job nodes with new statuses", async () => {
+        const globalMocks = await createGlobalMocks();
+
+        await globalMocks.testJobsProvider.addSession("fake");
+        globalMocks.testJobsProvider.mSessionNodes[1].searchId = "JOB1234";
+        globalMocks.testJobsProvider.mSessionNodes[1].dirty = true;
+        globalMocks.testJobsProvider.mSessionNodes[1].filtered = true;
+        const jobs = await globalMocks.testJobsProvider.mSessionNodes[1].getChildren();
+        expect(jobs[0].label).toEqual("TESTJOB(JOB1234) - ACTIVE");
+
+        globalMocks.mockGetJob.mockReturnValueOnce({ ...globalMocks.testIJob, retcode: "CC 0000" });
+        globalMocks.testJobsProvider.mSessionNodes[1].dirty = true;
+        const newJobs = await globalMocks.testJobsProvider.mSessionNodes[1].getChildren();
+
+        expect(newJobs[0].label).toEqual("TESTJOB(JOB1234) - CC 0000");
+    });
+
     it("Tests that getChildren retrieves only child jobs which match a provided searchId", async () => {
         const globalMocks = await createGlobalMocks();
 
@@ -338,6 +355,18 @@ describe("ZoweJobNode unit tests - Function getChildren", () => {
         expect(spoolFilesAfter.length).toBe(1);
         expect(spoolFilesAfter[0].label).toEqual("STEP:STDOUT - 2");
         expect(spoolFilesAfter[0].owner).toEqual("fake");
+    });
+
+    it("Tests that getChildren returns a placeholder node if no spool files are available", async () => {
+        const globalMocks = await createGlobalMocks();
+
+        jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValueOnce({
+            getSpoolFiles: jest.fn().mockReturnValueOnce([]),
+        } as any);
+        globalMocks.testJobNode.dirty = true;
+        const spoolFilesAfter = await globalMocks.testJobNode.getChildren();
+        expect(spoolFilesAfter.length).toBe(1);
+        expect(spoolFilesAfter[0].label).toEqual("There are no JES spool messages to display");
     });
 
     it("Tests that getChildren returns the spool files if user/owner is not defined", async () => {
@@ -575,11 +604,9 @@ describe("ZosJobsProvider - Function searchPrompt", () => {
         const globalMocks = await createGlobalMocks();
         jest.spyOn(globalMocks.testJobsProvider, "applyRegularSessionSearchLabel").mockReturnValue("Owner:kristina Prefix:* Status:*");
         const addSearchHistory = jest.spyOn(globalMocks.testJobsProvider, "addSearchHistory");
-        const refreshElement = jest.spyOn(globalMocks.testJobsProvider, "refreshElement");
         await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
         expect(globalMocks.testJobsProvider);
         expect(addSearchHistory).toHaveBeenCalled();
-        expect(refreshElement).toHaveBeenCalled();
     });
     it("testing fav node to call applySearchLabelToNode", async () => {
         const globalMocks = await createGlobalMocks();
@@ -796,5 +823,37 @@ describe("ZosJobsProvider - getJobs", () => {
         });
         jest.spyOn(Gui, "warningMessage").mockImplementation();
         await expect(globalMocks.testJobNode.getJobs("test", "test", "test", "test")).resolves.not.toThrow();
+    });
+});
+
+describe("Job - sortJobs", () => {
+    it("should sort jobs based on job ID", () => {
+        const sorted = [
+            {
+                job: {
+                    jobid: "JOBID123",
+                },
+            } as IZoweJobTreeNode,
+            {
+                job: {
+                    jobid: "JOBID120",
+                },
+            } as IZoweJobTreeNode,
+            {
+                job: {
+                    jobid: "JOBID124",
+                },
+            } as IZoweJobTreeNode,
+            // In most cases, there won't be two identical job IDs. In case of overflow, this covers the case for equal job IDs.
+            {
+                job: {
+                    jobid: "JOBID120",
+                },
+            } as IZoweJobTreeNode,
+        ].sort((a, b) => Job.sortJobs(a, b));
+        expect(sorted[0].job.jobid).toBe("JOBID120");
+        expect(sorted[1].job.jobid).toBe("JOBID120");
+        expect(sorted[2].job.jobid).toBe("JOBID123");
+        expect(sorted[3].job.jobid).toBe("JOBID124");
     });
 });
