@@ -1419,9 +1419,10 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
             mockResetValidationSettings: jest.fn(),
             qpPlaceholder: 'Choose "Create new..." to define a new profile or select an existing profile to add to the Data Set Explorer',
             mockEnableValidationContext: jest.fn(),
+            testTree: new DatasetTree(),
         };
 
-        newMocks.datasetSessionNode = await createDatasetSessionNode(newMocks.session, newMocks.imperativeProfile);
+        newMocks.datasetSessionNode = createDatasetSessionNode(newMocks.session, newMocks.imperativeProfile);
         globalMocks.mockProfileInstance.allProfiles = [newMocks.imperativeProfile, { name: "firstName" }, { name: "secondName" }];
         globalMocks.mockProfileInstance.loadNamedProfile.mockReturnValueOnce(newMocks.imperativeProfile);
         globalMocks.mockProfileInstance.resetValidationSettings.mockReturnValue(newMocks.datasetSessionNode);
@@ -1433,6 +1434,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
             name: newMocks.imperativeProfile.name,
             status: "active",
         });
+        newMocks.testTree.mSessionNodes.push(newMocks.datasetSessionNode);
 
         return newMocks;
     }
@@ -1564,6 +1566,8 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
             blockMocks.session,
             globals.DS_DS_CONTEXT
         );
+        node.pattern = undefined as any;
+        node.contextValue += "pds";
 
         jest.spyOn(testTree.mSessionNodes[1], "getChildren").mockReturnValueOnce([node] as any);
         jest.spyOn(testTree, "checkFilterPattern").mockReturnValue(true);
