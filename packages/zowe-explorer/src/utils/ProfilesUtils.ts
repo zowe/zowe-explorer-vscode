@@ -91,7 +91,7 @@ export async function errorHandling(errorDetails: Error | string, label?: string
                 }
             }
 
-            if (this.isTheia()) {
+            if (isTheia()) {
                 Gui.errorMessage(errMsg);
                 return;
             }

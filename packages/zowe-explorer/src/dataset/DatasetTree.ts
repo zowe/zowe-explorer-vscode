@@ -988,7 +988,6 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 response = await this.getChildren(nonFaveNode);
             } catch (err) {
                 await errorHandling(err, String(node.label));
-                return;
             }
             if (!response) {
                 return;
