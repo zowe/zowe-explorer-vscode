@@ -10,6 +10,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 - Added jobs not found message when no results are returned from filter [#2362](https://github.com/zowe/vscode-extension-for-zowe/issues/2362)
 - Fixed loop when user selects Cancel on the Check Credentials message. [#2262](https://github.com/zowe/vscode-extension-for-zowe/issues/2262)
+- Fixed issue where job session nodes were not adding new job nodes when refreshed. [#2370](https://github.com/zowe/vscode-extension-for-zowe/issues/2370)
 
 ## `2.9.1`
 
