@@ -159,7 +159,12 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             }
             await Profiles.getInstance().checkCurrentProfile(element.getProfile());
             const finalResponse: IZoweDatasetTreeNode[] = [];
-            const response = await element.getChildren();
+            let response;
+            try {
+                response = await element.getChildren();
+            } catch (error) {
+                await errorHandling(error, String(element.label));
+            }
             if (!response) {
                 return;
             }
@@ -929,7 +934,6 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                     Gui.showMessage(localize("datasetFilterPrompt.enterPattern", "You must enter a pattern."));
                     return;
                 }
-                await TreeViewUtils.expandNode(node, this);
             } else {
                 // executing search from saved search in favorites
                 pattern = node.getLabel() as string;
@@ -941,7 +945,6 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                     nonFaveNode.getSession().ISession.password = node.getSession().ISession.password;
                     nonFaveNode.getSession().ISession.base64EncodedAuth = node.getSession().ISession.base64EncodedAuth;
                 }
-                await TreeViewUtils.expandNode(nonFaveNode, this);
             }
             // looking for members in pattern
             node.children = [];
@@ -1077,6 +1080,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             }
             this.addSearchHistory(pattern);
         }
+        await TreeViewUtils.expandNode(nonFaveNode, this);
     }
 
     public checkFilterPattern(dsName: string, itemName: string): boolean {
