@@ -340,6 +340,8 @@ export class ProfilesUtils {
             );
             ZoweLogger.info(successMsg);
             Gui.showMessage(successMsg);
+            // config file watcher isn't noticing changes for secure fields
+            await vscode.commands.executeCommand("zowe.extRefresh");
         }
     }
 
