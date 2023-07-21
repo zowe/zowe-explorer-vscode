@@ -45,7 +45,9 @@
     "vscode-test": "^1.4.0"
   },
   "overrides": {
-    "**/json5": "^2.2.2"
+    "**/json5": "^2.2.2",
+    "**/optionator": "^0.9.3",
+    "**/semver": "^7.5.2"
   },
   "scripts": {
     "clean": "pnpm -r run clean",

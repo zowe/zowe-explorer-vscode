@@ -13,11 +13,11 @@
     "lib"
   ],
   "devDependencies": {
-    "@types/semver": "^7.3.6"
+    "@types/semver": "^7.5.0"
   },
   "dependencies": {
     "@zowe/cli": "^7.16.2",
-    "semver": "^7.3.5"
+    "semver": "^7.5.3"
   },
   "scripts": {
     "build": "pnpm check-cli && pnpm clean && pnpm madge && tsc -p ./ && pnpm license",

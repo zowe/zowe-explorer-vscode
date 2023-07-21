@@ -114,8 +114,10 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
             ];
         }
         if (this.dirty) {
-            const elementChildren = [];
+            const elementChildren: Record<string, ZoweJobNode> = {};
+            let unmodifiedCount = this.children.length;
             if (contextually.isJob(this)) {
+                // Fetch spool files under job node
                 const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
                 const spools: zowe.IJobFile[] = (
                     (await ZoweExplorerApiRegister.getJesApi(cachedProfile).getSpoolFiles(this.job.jobname, this.job.jobid)) ?? []
@@ -150,9 +152,14 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
                     } else {
                         newLabel = `${spool.stepname}:${spool.ddname} - ${spool["record-count"]}`;
                     }
-                    const existing = this.children.find((element) => element.label.trim() === newLabel);
+
+                    // Only look for existing node w/ procstep if spool file has a procstep,
+                    // otherwise look for only stepname:ddname to update the record count in the label
+                    const spoolSuffix = procstep ? ` - ${procstep}` : "";
+                    const existing = this.children.find((element) => element.label?.includes(`${spool.stepname}:${spool.ddname}${spoolSuffix}`));
                     if (existing) {
-                        elementChildren.push(existing);
+                        existing.label = newLabel;
+                        unmodifiedCount--;
                     } else {
                         const spoolNode = new Spool(newLabel, vscode.TreeItemCollapsibleState.None, this, this.session, spool, this.job, this);
                         const icon = getIconByNode(spoolNode);
@@ -164,10 +171,11 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
                             title: "",
                             arguments: [sessionName, spool, refreshTimestamp],
                         };
-                        elementChildren.push(spoolNode);
+                        elementChildren[newLabel] = spoolNode;
                     }
                 });
             } else {
+                // Fetch jobs under session node
                 const jobs = await this.getJobs(this._owner, this._prefix, this._searchId, this._jobStatus);
                 jobs.forEach((job) => {
                     let nodeTitle: string;
@@ -176,9 +184,12 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
                     } else {
                         nodeTitle = `${job.jobname}(${job.jobid}) - ${job.status}`;
                     }
-                    const existing = this.children.find((element) => element.label.trim() === nodeTitle);
+                    // Do not look for status code as it might have changed from previous refresh
+                    const existing = this.children.find((element) => element.label?.startsWith(`${job.jobname}(${job.jobid})`));
                     if (existing) {
-                        elementChildren.push(existing);
+                        // If matched, update the label to reflect latest retcode/status
+                        existing.label = nodeTitle;
+                        unmodifiedCount--;
                     } else {
                         const jobNode = new Job(nodeTitle, vscode.TreeItemCollapsibleState.Collapsed, this, this.session, job, this.getProfile());
                         jobNode.contextValue = globals.JOBS_JOB_CONTEXT;
@@ -191,20 +202,23 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
                                 jobNode.iconPath = icon.path;
                             }
                         }
-                        elementChildren.push(jobNode);
+                        elementChildren[nodeTitle] = jobNode;
                     }
                 });
             }
-            elementChildren.sort((a, b) => {
-                if (a.job.jobid > b.job.jobid) {
-                    return 1;
-                }
-                if (a.job.jobid < b.job.jobid) {
-                    return -1;
-                }
-                return 0;
-            });
-            this.children = elementChildren;
+
+            // Child nodes already exist and every node was updated.
+            // Return cached list of child nodes
+            if (this.children.length && unmodifiedCount === 0) {
+                return this.children;
+            }
+
+            // Only add new children that are not in the list of existing child nodes
+            const newChildren = Object.values(elementChildren)
+                .sort((a, b) => a.job.jobid - b.job.jobid)
+                .filter((c) => this.children.find((ch) => ch.label === c.label) == null);
+            // Remove any children that are no longer present in the built record
+            this.children = this.children.concat(newChildren).filter((ch) => ch.label in elementChildren);
         }
         this.dirty = false;
         return this.children;
