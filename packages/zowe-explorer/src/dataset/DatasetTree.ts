@@ -993,6 +993,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 await errorHandling(err, String(node.label));
             }
             if (!response) {
+                nonFaveNode.tooltip = nonFaveNode.pattern = undefined;
                 return;
             }
             // reset and remove previous search patterns for each child of getChildren
