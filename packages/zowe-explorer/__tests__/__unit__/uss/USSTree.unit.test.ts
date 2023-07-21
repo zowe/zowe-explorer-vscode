@@ -1399,8 +1399,30 @@ describe("USSTree Unit Tests - Function USSTree.getChildren()", () => {
         const mockApiResponseWithItems = createFileResponse(mockApiResponseItems);
         globalMocks.withProgress.mockReturnValue(mockApiResponseWithItems);
 
+        jest.spyOn(zowe.List, "fileList").mockResolvedValueOnce({
+            success: true,
+            apiResponse: {
+                items: [
+                    {
+                        name: "myFile.txt",
+                        mode: "-rw-r--r--",
+                        size: 20,
+                        uid: 0,
+                        user: "WSADMIN",
+                        gid: 1,
+                        group: "OMVSGRP",
+                        mtime: "2015-11-24T02:12:04",
+                    },
+                ],
+                returnedRows: 1,
+                totalRows: 1,
+                JSONversion: 1,
+            },
+            commandResponse: undefined as any,
+        });
+
         const dirChildren = await globalMocks.testTree.getChildren(directory);
-        expect(dirChildren[1].label).toEqual(sampleChildren[0].label);
+        expect(dirChildren[0].label).toEqual(sampleChildren[0].label);
     });
     it("Testing that getChildren() gets profile-loaded favorites for profile node in Favorites section", async () => {
         const globalMocks = await createGlobalMocks();

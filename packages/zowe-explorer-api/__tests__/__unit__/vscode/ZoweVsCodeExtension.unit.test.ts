@@ -14,7 +14,8 @@ import { Gui } from "../../../src/globals/Gui";
 import { MessageSeverity, IZoweLogger } from "../../../src/logger/IZoweLogger";
 import { IProfileLoaded } from "@zowe/imperative";
 import { IPromptCredentialsOptions, ZoweVsCodeExtension } from "../../../src/vscode";
-import { IApiRegisterClient } from "../../../src";
+import { ProfilesCache, IApiRegisterClient } from "../../../src";
+import { imperative } from "@zowe/cli";
 
 describe("ZoweVsCodeExtension", () => {
     const fakeVsce = {
@@ -323,6 +324,51 @@ describe("ZoweVsCodeExtension", () => {
             expect(profileLoaded).toBeUndefined();
             expect(showInputBoxSpy).toHaveBeenCalledTimes(2);
             expect(mockUpdateProperty).toHaveBeenCalledTimes(0);
+        });
+
+        it("should do nothing if profile and sessionName args are not provided", async () => {
+            const mockUpdateProperty = jest.fn();
+            jest.spyOn(ZoweVsCodeExtension as any, "profilesCache", "get").mockReturnValue({
+                getLoadedProfConfig: jest.fn().mockReturnValue({
+                    profile: {},
+                }),
+                getProfileInfo: jest.fn().mockReturnValue({
+                    isSecured: jest.fn().mockReturnValue(true),
+                    updateProperty: mockUpdateProperty,
+                }),
+                refresh: jest.fn(),
+            });
+            const showInputBoxSpy = jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("fakeUser").mockResolvedValueOnce(undefined);
+            const profileLoaded = await ZoweVsCodeExtension.updateCredentials({}, undefined as unknown as IApiRegisterClient);
+            expect(profileLoaded).toBeUndefined();
+            expect(showInputBoxSpy).not.toHaveBeenCalled();
+            expect(mockUpdateProperty).not.toHaveBeenCalled();
+        });
+
+        it("should not call ProfilesCache.getLoadedProfConfig if profile object is provided", async () => {
+            const mockUpdateProperty = jest.fn();
+            jest.spyOn(ZoweVsCodeExtension as any, "profilesCache", "get").mockReturnValue({
+                getLoadedProfConfig: jest.fn().mockReturnValue({
+                    profile: {
+                        name: "someExampleProfile",
+                        profile: {
+                            user: "testUser",
+                            password: "testPassword",
+                        } as imperative.IProfile,
+                    } as imperative.IProfileLoaded,
+                }),
+                getProfileInfo: jest.fn().mockReturnValue({
+                    isSecured: jest.fn().mockReturnValue(true),
+                    updateProperty: mockUpdateProperty,
+                }),
+                refresh: jest.fn(),
+            });
+            const getLoadedProfConfigSpy = jest.spyOn(ProfilesCache.prototype, "getLoadedProfConfig");
+            const showInputBoxSpy = jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("fakeUser").mockResolvedValueOnce(undefined);
+            const profileLoaded = await ZoweVsCodeExtension.updateCredentials({}, undefined as unknown as IApiRegisterClient);
+            expect(profileLoaded).toBeUndefined();
+            expect(getLoadedProfConfigSpy).not.toHaveBeenCalled();
+            expect(showInputBoxSpy).not.toHaveBeenCalled();
         });
     });
 });
