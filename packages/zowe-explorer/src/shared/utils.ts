@@ -91,12 +91,15 @@ export function sortTreeItems(favorites: vscode.TreeItem[], specificContext): vo
         if (a.contextValue === specificContext) {
             if (b.contextValue === specificContext) {
                 return a.label.toString().toUpperCase() > b.label.toString().toUpperCase() ? 1 : -1;
-            } else {
-                return -1;
             }
-        } else if (b.contextValue === specificContext) {
+
+            return -1;
+        }
+
+        if (b.contextValue === specificContext) {
             return 1;
         }
+
         return a.label.toString().toUpperCase() > b.label.toString().toUpperCase() ? 1 : -1;
     });
 }

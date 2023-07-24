@@ -819,8 +819,8 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                     node.label = node.getProfileName();
                     node.description = searchCriteria;
                     this.addSearchHistory(searchCriteria);
-                    this.refreshElement(node);
                     node.dirty = true;
+                    this.refreshElement(node);
                 }
             } else {
                 if (isExpanded) {

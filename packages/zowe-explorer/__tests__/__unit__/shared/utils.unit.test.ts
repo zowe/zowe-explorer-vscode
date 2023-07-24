@@ -496,3 +496,31 @@ describe("Shared Utils Unit Tests - Function getSelectedNodeList", () => {
         return node;
     }
 });
+
+describe("Shared utils unit tests - function sortTreeItems", () => {
+    it("prioritizes context value when sorting", () => {
+        const toSort = [
+            { label: "A", contextValue: "some_context" },
+            { label: "Z", contextValue: "some_other_context" },
+            { label: "Y", contextValue: "some_context" },
+            { label: "X", contextValue: "some_context" },
+            { label: "W", contextValue: "some_other_context" },
+            { label: "V", contextValue: "some_context" },
+            { label: "U", contextValue: "some_other_context" },
+            { label: "T", contextValue: "some_other_context" },
+            { label: "B", contextValue: "some_other_context" },
+        ];
+        sharedUtils.sortTreeItems(toSort, "some_context");
+        expect(toSort).toStrictEqual([
+            { label: "A", contextValue: "some_context" },
+            { label: "V", contextValue: "some_context" },
+            { label: "X", contextValue: "some_context" },
+            { label: "Y", contextValue: "some_context" },
+            { label: "B", contextValue: "some_other_context" },
+            { label: "T", contextValue: "some_other_context" },
+            { label: "U", contextValue: "some_other_context" },
+            { label: "W", contextValue: "some_other_context" },
+            { label: "Z", contextValue: "some_other_context" },
+        ]);
+    });
+});
