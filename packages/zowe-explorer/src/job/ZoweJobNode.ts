@@ -369,7 +369,6 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
                 }, []);
             } catch (error) {
                 await errorHandling(error, this.label, localize("getChildren.error.response", "Retrieving response from ") + `zowe.GetJobs`);
-                syncSessionNode(Profiles.getInstance())((profileValue) => ZoweExplorerApiRegister.getJesApi(profileValue).getSession())(sessNode);
             }
         }
         return jobsInternal;
