@@ -56,7 +56,7 @@ Review the following use cases and their procedures to understand how to work wi
 
 This section includes steps for the tasks you need to complete to get started using Zowe Explorer.
 
-Configure Zowe Explorer, create a [team configuration file](#create-a-team-configuration-file) for profile manangement, review the [sample use cases](#sample-use-cases) to familiarize yourself with the capabilities of Zowe Explorer, and you are ready to use Zowe Explorer.
+Configure Zowe Explorer, create a [team configuration file](#create-a-team-configuration-file) for profile management, review the [sample use cases](#sample-use-cases) to familiarize yourself with the capabilities of Zowe Explorer, and you are ready to use Zowe Explorer.
 
 ### Configuring Zowe Explorer
 
@@ -118,7 +118,7 @@ By default, this feature is automatically enabled. You can disable the feature b
 
 As a Zowe user, you can leverage the base profile functionality to access multiple services through Single Sign-on. Base profiles enable you to authenticate using the Zowe API Mediation Layer (API ML). You can use base profiles with more than one service profile. For more information, see [Base Profiles](https://docs.zowe.org/stable/user-guide/cli-using-using-profiles/#base-profiles).
 
-Zowe Explorer has a right click action for profiles to log in and log out of the authentication service for existing Base profiles.
+Zowe Explorer has a right click action for profiles to log in and log out of the authentication service for existing base profiles.
 
 1. Open VS Code and select the **Zowe Explorer** icon in the **Side Bar**.
 1. Hover over **DATA SETS**, **USS**, or **JOBS**.
@@ -282,7 +282,7 @@ As a result, VS Code extensions like Zowe Explorer, Zowe Explorer CICS Extension
    The data set member is displayed in the text editor window of VS Code.
 
 1. Edit the document.
-1. Navigate back to the data set member in the explorer tree, and press `Ctrl`+`S` or `Command`+`S` (OSx) to upload the member.
+1. Navigate back to the data set member in the explorer tree, and press `Ctrl`+`S` or `Command`+`S` (macOS) to upload the member.
 
    Your data set member is uploaded.
 
@@ -301,7 +301,7 @@ As a result, VS Code extensions like Zowe Explorer, Zowe Explorer CICS Extension
 1. Open the **DATA SETS** bar.
 1. Open a member of a data set you want to edit.
 1. Edit the selected member.
-1. Press `Ctrl`+`S` or `Command`+`S` (OSx) to save the changes.
+1. Press `Ctrl`+`S` or `Command`+`S` (macOS) to save the changes.
 
    If the original content in your local version no longer matches the same file in the mainframe, a warning message displays advising the user to compare both versions.
 
