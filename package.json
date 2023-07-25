@@ -15,7 +15,7 @@
     "vscode": "^1.53.2"
   },
   "dependencies": {
-    "@zowe/cli": "7.16.2",
+    "@zowe/cli": "7.16.6",
     "vscode-nls": "4.1.2"
   },
   "devDependencies": {
@@ -44,11 +44,6 @@
     "vscode-nls-dev": "^4.0.0",
     "vscode-test": "^1.4.0",
     "yarn": "1.22.19"
-  },
-  "resolutions": {
-    "**/json5": "^2.2.2",
-    "**/optionator": "^0.9.3",
-    "**/semver": "^7.5.2"
   },
   "scripts": {
     "clean": "yarn workspaces run clean",

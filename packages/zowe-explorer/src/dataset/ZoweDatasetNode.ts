@@ -216,16 +216,23 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     elementChildren[temp.label.toString()] = temp;
                 } else {
                     // Creates a ZoweDatasetNode for a PDS member
+                    const memberInvalid = item.member?.includes("\ufffd");
                     const temp = new ZoweDatasetNode(
                         item.member,
                         vscode.TreeItemCollapsibleState.None,
                         this,
                         null,
-                        undefined,
+                        memberInvalid ? globals.DS_FILE_ERROR_CONTEXT : undefined,
                         undefined,
                         this.getProfile()
                     );
-                    temp.command = { command: "zowe.ds.ZoweNode.openPS", title: "", arguments: [temp] };
+                    if (!memberInvalid) {
+                        temp.command = { command: "zowe.ds.ZoweNode.openPS", title: "", arguments: [temp] };
+                    } else {
+                        temp.errorDetails = new zowe.imperative.ImperativeError({
+                            msg: localize("getChildren.invalidMember", "Cannot access member with control characters in the name: {0}", item.member),
+                        });
+                    }
                     elementChildren[temp.label.toString()] = temp;
                 }
             }

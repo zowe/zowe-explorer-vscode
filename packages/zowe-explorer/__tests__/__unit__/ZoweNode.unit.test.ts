@@ -373,9 +373,49 @@ describe("Unit Tests (Jest)", () => {
     });
 
     /*************************************************************************************************************
+     * Multiple member names returned
+     *************************************************************************************************************/
+    it("Testing what happens when response has multiple members", async () => {
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    loadNamedProfile: jest.fn().mockReturnValue(profileOne),
+                };
+            }),
+        });
+        // Creating a rootNode
+        const pds = new ZoweDatasetNode(
+            "[root]: something",
+            vscode.TreeItemCollapsibleState.Collapsed,
+            { getSessionNode: jest.fn() } as unknown as ZoweDatasetNode,
+            session,
+            undefined,
+            undefined,
+            profileOne
+        );
+        pds.dirty = true;
+        pds.contextValue = globals.DS_PDS_CONTEXT;
+        const allMembers = jest.fn();
+        allMembers.mockImplementationOnce(() => {
+            return {
+                success: true,
+                apiResponse: {
+                    items: [{ member: "BADMEM\ufffd" }, { member: "GOODMEM1" }],
+                },
+            };
+        });
+        Object.defineProperty(List, "allMembers", { value: allMembers });
+        const pdsChildren = await pds.getChildren();
+        expect(pdsChildren[0].label).toEqual("BADMEM\ufffd");
+        expect(pdsChildren[0].contextValue).toEqual(globals.DS_FILE_ERROR_CONTEXT);
+        expect(pdsChildren[1].label).toEqual("GOODMEM1");
+        expect(pdsChildren[1].contextValue).toEqual(globals.DS_MEMBER_CONTEXT);
+    });
+
+    /*************************************************************************************************************
      * No values returned
      *************************************************************************************************************/
-    it("Testing what happens when response is zero", async () => {
+    it("Testing what happens when response has no members", async () => {
         Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
