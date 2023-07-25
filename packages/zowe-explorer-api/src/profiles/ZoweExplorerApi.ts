@@ -648,5 +648,17 @@ export namespace ZoweExplorerApi {
          * @returns {string[]}
          */
         registeredApiTypes(): string[];
+
+        /**
+         * Register a callback function to be used when a change to the team config profile is performed.
+         * @param callback
+         */
+        registerProfileChangeCallback(callback: Function): void;
+
+        /**
+         * Get function that is called when a change to the team config profile is performed.
+         * @returns Function
+         */
+        getProfileChangeCallback(): Function;
     }
 }

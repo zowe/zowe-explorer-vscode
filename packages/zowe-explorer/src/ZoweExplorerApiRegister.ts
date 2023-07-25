@@ -103,6 +103,9 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
     private jesApiImplementations = new Map<string, ZoweExplorerApi.IJes>();
     private commandApiImplementations = new Map<string, ZoweExplorerApi.ICommand>();
 
+    // Callback defined from extender to be called after the team config profile is updated
+    private onProfilesUpdateCallback: (eventType: any) => Promise<void>;
+
     /**
      * Private constructor that creates the singleton instance of ZoweExplorerApiRegister.
      * It automatically registers the zosmf implementation as it is the default for Zowe Explorer.
@@ -172,6 +175,10 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
                 localize("registerCommandApi.error", "Internal error: A Zowe Explorer extension client tried to register an invalid Command API.")
             );
         }
+    }
+
+    public registerProfileChangeCallback(callback: (eventType: any) => Promise<void>): void {
+        this.onProfilesUpdateCallback = callback;
     }
 
     /**
@@ -318,6 +325,10 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
             }
         }
         return result;
+    }
+
+    public getProfileChangeCallback(): (eventType: any) => Promise<void> {
+        return this.onProfilesUpdateCallback;
     }
 
     /**

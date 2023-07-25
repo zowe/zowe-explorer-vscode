@@ -122,6 +122,12 @@ export const configurationDictionary: { [k: string]: string } = {
     "Zowe-Jobs-Persistent": SETTINGS_JOBS_HISTORY,
 };
 
+export enum EVENT_TYPES {
+    CREATE,
+    UPDATE,
+    DELETE,
+}
+
 export enum CreateDataSetTypeWithKeysEnum {
     DATA_SET_BINARY,
     DATA_SET_C,
