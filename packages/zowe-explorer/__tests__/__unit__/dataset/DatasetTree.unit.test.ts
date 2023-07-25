@@ -427,7 +427,7 @@ describe("Dataset Tree Unit Tests - Function getChildren", () => {
         expect(children).toEqual(sampleChildren);
         spyOnDataSetsMatchingPattern.mockRestore();
     });
-    it("Checking that we fallback to old dataSet API if newer dataSetsMattchingPattern does not exist", async () => {
+    it("Checking that we fallback to old dataSet API if newer dataSetsMatchingPattern does not exist", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
 
