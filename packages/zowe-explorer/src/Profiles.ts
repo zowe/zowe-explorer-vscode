@@ -257,8 +257,8 @@ export class Profiles extends ProfilesCache {
         ZoweLogger.trace("Profiles.createZoweSession called.");
         let profileNamesList: string[] = [];
         const treeType = zoweFileProvider.getTreeType();
+        const allProfiles = Profiles.getInstance().allProfiles;
         try {
-            const allProfiles = Profiles.getInstance().allProfiles;
             if (allProfiles) {
                 // Get all profiles and filter to list of the APIs available for current tree explorer
                 profileNamesList = allProfiles
@@ -331,7 +331,7 @@ export class Profiles extends ProfilesCache {
                     'Choose "Create new..." to define or select a profile to add to the USS Explorer'
                 );
         }
-        if (mProfileInfo?.usingTeamConfig) {
+        if (allProfiles.length > 0) {
             quickpick.items = [configPick, configEdit, ...items];
         } else {
             quickpick.items = [configPick, ...items];
