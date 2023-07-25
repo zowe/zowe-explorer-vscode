@@ -100,7 +100,8 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
      * @returns {Promise<IZoweJobTreeNode[]>}
      */
     public async getChildren(): Promise<IZoweJobTreeNode[]> {
-        ZoweLogger.trace("ZoweJobNode.getChildren called.");
+        const thisSessionNode = this.getSessionNode();
+        ZoweLogger.trace(`ZoweJobNode.getChildren called for ${String(thisSessionNode.label)}.`);
         if (contextually.isSession(this) && !this.filtered) {
             return [
                 new Job(
@@ -177,7 +178,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
                 // Fetch jobs under session node
                 const jobs = await this.getJobs(this._owner, this._prefix, this._searchId, this._jobStatus);
 
-                if (!jobs.length) {
+                if (!jobs || !jobs.length > 0) {
                     const noJobsNode = new Job(
                         localize("getChildren.noJobs", "No jobs found"),
                         vscode.TreeItemCollapsibleState.None,
@@ -335,12 +336,11 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
     private async getJobs(owner: string, prefix: string, searchId: string, status: string): Promise<zowe.IJob[]> {
         ZoweLogger.trace("ZoweJobNode.getJobs called.");
         let jobsInternal: zowe.IJob[] = [];
-        const sessNode = this.getSessionNode();
         const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
-        if (this.searchId.length > 0) {
-            jobsInternal.push(await ZoweExplorerApiRegister.getJesApi(cachedProfile).getJob(searchId));
-        } else {
-            try {
+        try {
+            if (this.searchId.length > 0) {
+                jobsInternal.push(await ZoweExplorerApiRegister.getJesApi(cachedProfile).getJob(searchId));
+            } else {
                 if (ZoweExplorerApiRegister.getJesApi(cachedProfile).getJobsByParameters) {
                     jobsInternal = await ZoweExplorerApiRegister.getJesApi(cachedProfile).getJobsByParameters({
                         owner,
@@ -367,11 +367,15 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
                         return acc;
                     }
                 }, []);
-            } catch (error) {
-                await errorHandling(error, this.label, localize("getChildren.error.response", "Retrieving response from ") + `zowe.GetJobs`);
             }
+            return jobsInternal;
+        } catch (error) {
+            ZoweLogger.trace("Error getting jobs from Rest API.");
+            await errorHandling(error, this.label, localize("getChildren.error.response", "Retrieving response from ") + `zowe.GetJobs`);
+            syncSessionNode(Profiles.getInstance())((profileValue) => ZoweExplorerApiRegister.getJesApi(profileValue).getSession())(
+                this.getSessionNode()
+            );
         }
-        return jobsInternal;
     }
 }
 
