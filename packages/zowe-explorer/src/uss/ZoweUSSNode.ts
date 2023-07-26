@@ -42,6 +42,7 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
  */
 export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     public command: vscode.Command;
+    public prevPath = "";
     public fullPath = "";
     public dirty = true;
     public children: IZoweUSSTreeNode[] = [];
@@ -167,7 +168,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             syncSessionNode(Profiles.getInstance())((profileValue) => ZoweExplorerApiRegister.getUssApi(profileValue).getSession())(sessNode);
         }
 
-        const newChildren: Record<string, IZoweUSSTreeNode> = {};
+        const elementChildren: Record<string, IZoweUSSTreeNode> = {};
 
         responses.forEach((response) => {
             // Throws reject if the Zowe command does not throw an error but does not succeed
@@ -182,7 +183,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                     (element: ZoweUSSNode) => element.parentPath === this.fullPath && element.label.toString() === item.name
                 );
                 if (existing) {
-                    newChildren[existing.label.toString()] = existing;
+                    elementChildren[existing.label.toString()] = existing;
                 } else if (item.name !== "." && item.name !== "..") {
                     // Creates a ZoweUSSNode for a directory
                     if (item.mode.startsWith("d")) {
@@ -195,7 +196,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                             false,
                             item.mProfileName
                         );
-                        newChildren[temp.label.toString()] = temp;
+                        elementChildren[temp.label.toString()] = temp;
                     } else {
                         // Creates a ZoweUSSNode for a file
                         let temp;
@@ -225,7 +226,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                             title: localize("getChildren.responses.open", "Open"),
                             arguments: [temp],
                         };
-                        newChildren[temp.label.toString()] = temp;
+                        elementChildren[temp.label.toString()] = temp;
                     }
                 }
             }
@@ -234,9 +235,19 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         if (contextually.isSession(this)) {
             this.dirty = false;
         }
-        this.children = Object.keys(newChildren)
+
+        // If search path has changed, invalidate all children
+        if (this.fullPath?.length > 0 && this.prevPath !== this.fullPath) {
+            this.children = [];
+        }
+
+        const newChildren = Object.keys(elementChildren)
             .sort()
-            .map((labels) => newChildren[labels]);
+            .filter((label) => this.children.find((c) => (c.label as string) === label) == null)
+            .map((label) => elementChildren[label]);
+
+        this.children = this.children.concat(newChildren).filter((c) => (c.label as string) in elementChildren);
+        this.prevPath = this.fullPath;
         return this.children;
     }
 

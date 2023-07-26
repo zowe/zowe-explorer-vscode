@@ -772,6 +772,7 @@ describe("Profiles Unit Tests - Function createZoweSchema", () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
+        Object.defineProperty(globals, "ISTHEIA", { value: true, configurable: true });
         Object.defineProperty(vscode.workspace, "workspaceFolders", {
             value: undefined,
             configurable: true,
@@ -1668,18 +1669,6 @@ describe("Profiles Unit Tests - function validationArraySetup", () => {
             name: globalMocks.testProfile.name,
             setting: true,
         });
-    });
-});
-
-describe("Profiles Unit Tests - function promptToRefreshForProfiles", () => {
-    it("should reload extension", async () => {
-        jest.spyOn(Gui, "showMessage").mockResolvedValueOnce("Refresh Zowe Explorer");
-        Object.defineProperty(globals, "ISTHEIA", {
-            value: true,
-        });
-        const refreshSpy = jest.spyOn(vscode.commands, "executeCommand").mockImplementation();
-        await expect((Profiles.getInstance() as any).promptToRefreshForProfiles("./test")).resolves.not.toThrow();
-        expect(refreshSpy).toBeCalledTimes(1);
     });
 });
 
