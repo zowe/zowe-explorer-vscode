@@ -25,6 +25,7 @@ import { saveFile } from "../../../src/dataset/actions";
 import { saveUSSFile } from "../../../src/uss/actions";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 import { ZoweSaveQueue } from "../../../src/abstract/ZoweSaveQueue";
+import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 
 describe("Test src/shared/extension", () => {
     describe("registerCommonCommands", () => {
@@ -317,6 +318,7 @@ describe("Test src/shared/extension", () => {
 
         it("should be able to trigger all listeners", async () => {
             const spyRefreshAll = jest.spyOn(refreshActions, "refreshAll").mockImplementation(jest.fn());
+            jest.spyOn(ZoweExplorerApiRegister.getInstance(), "getProfileChangeCallback").mockReturnValueOnce(undefined);
             await sharedExtension.watchConfigProfile(context, { ds: "ds", uss: "uss", job: "job" } as any);
             expect(spyExecuteCommand).toHaveBeenCalledWith("zowe.extRefresh");
             expect(context.subscriptions).toContain(watcher);
@@ -328,8 +330,21 @@ describe("Test src/shared/extension", () => {
             expect(spyRefreshAll).toHaveBeenCalled();
         });
 
+        it("should be able to perform callback if the callback was defined by the extender", async () => {
+            const spyRefreshAll = jest.spyOn(refreshActions, "refreshAll").mockImplementation(jest.fn());
+            const extenderCallbackSpy = jest.fn();
+            jest.spyOn(ZoweExplorerApiRegister.getInstance(), "getProfileChangeCallback").mockReturnValueOnce(extenderCallbackSpy);
+            await sharedExtension.watchConfigProfile(context, { ds: "ds", uss: "uss", job: "job" } as any);
+            expect(spyExecuteCommand).toHaveBeenCalledWith("zowe.extRefresh");
+            expect(context.subscriptions).toContain(watcher);
+            expect(spyReadFile).toHaveBeenCalledWith("uri");
+            expect(spyRefreshAll).toHaveBeenCalled();
+            expect(extenderCallbackSpy).toHaveBeenCalled();
+        });
+
         it("should be able to refresh zowe explorer on theia after updating config file", async () => {
             Object.defineProperty(globals, "ISTHEIA", { value: true, configurable: true });
+            jest.spyOn(ZoweExplorerApiRegister.getInstance(), "getProfileChangeCallback").mockReturnValueOnce(undefined);
             const spyRefreshAll = jest.spyOn(refreshActions, "refreshAll").mockImplementation(jest.fn());
             await sharedExtension.watchConfigProfile(context, { ds: "ds", uss: "uss", job: "job" } as any);
             expect(context.subscriptions).toContain(watcher);

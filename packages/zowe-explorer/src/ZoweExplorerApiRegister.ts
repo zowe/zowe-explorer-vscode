@@ -104,8 +104,7 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
     private commandApiImplementations = new Map<string, ZoweExplorerApi.ICommand>();
 
     // Callback defined from extender to be called after the team config profile is updated
-    private onProfilesUpdateCallback: (eventType: any) => Promise<void>;
-
+    private onProfilesUpdateCallback: Function | undefined;
     /**
      * Private constructor that creates the singleton instance of ZoweExplorerApiRegister.
      * It automatically registers the zosmf implementation as it is the default for Zowe Explorer.
@@ -327,7 +326,7 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
         return result;
     }
 
-    public getProfileChangeCallback(): (eventType: any) => Promise<void> {
+    public getProfileChangeCallback(): Function | undefined {
         return this.onProfilesUpdateCallback;
     }
 
