@@ -305,4 +305,11 @@ describe("ZoweExplorerApiRegister unit testing", () => {
             ZoweExplorerApiRegister.getCommonApi(profileUnused);
         }).toThrow();
     });
+
+    it("provides access to the callback defined by the extender if available", () => {
+        const mockExtenderImplementation = jest.fn();
+        ZoweExplorerApiRegister.getInstance().registerProfileChangeCallback(mockExtenderImplementation);
+        expect(ZoweExplorerApiRegister.getInstance().getProfileChangeCallback()).toEqual(mockExtenderImplementation);
+        ZoweExplorerApiRegister.getInstance()["onProfilesUpdateCallback"] = undefined;
+    });
 });
