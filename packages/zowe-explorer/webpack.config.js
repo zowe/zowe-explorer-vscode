@@ -40,7 +40,6 @@ const config = {
     externals: {
         // Add modules that cannot be webpack'ed, 📖 -> https://webpack.js.org/configuration/externals/
         vscode: "commonjs vscode", // the vscode-module is created on-the-fly and must be excluded. Add other modules that cannot be webpack'ed, 📖 -> https://webpack.js.org/configuration/externals/
-        keytar: "commonjs keytar",
         "spdx-exceptions": "commonjs spdx-exceptions",
         "spdx-license-ids": "commonjs spdx-license-ids",
         "spdx-license-ids/deprecated": "commonjs spdx-license-ids/deprecated",

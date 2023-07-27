@@ -24,7 +24,7 @@ export class KeytarApi {
         const profiles = new ProfilesCache(log, vscode.workspace.workspaceFolders?.[0]?.uri.fsPath);
         const scsActive = profiles.isSecureCredentialPluginActive();
         if (scsActive) {
-            const keytar = KeytarCredentialManager.getSecurityModules("@traeok/keytar-rs", isTheia);
+            const { keyring: keytar } = await import("@zowe/secrets-for-zowe-sdk");
             if (!initialized && keytar) {
                 KeytarCredentialManager.keytar = keytar as unknown as KeytarModule;
                 await imperative.CredentialManagerFactory.initialize({

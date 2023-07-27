@@ -212,9 +212,7 @@ export class KeytarCredentialManager extends imperative.AbstractCredentialManage
  */
 export function getSecurityModules(moduleName: string, isTheia: boolean): NodeModule | undefined {
     const r = typeof __webpack_require__ === "function" ? __non_webpack_require__ : require;
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-    return r(moduleName);
-    /*// Workaround for Theia issue (https://github.com/eclipse-theia/theia/issues/4935)
+    // Workaround for Theia issue (https://github.com/eclipse-theia/theia/issues/4935)
     const appRoot = isTheia ? process.cwd() : vscode.env.appRoot;
     try {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-return
@@ -228,5 +226,5 @@ export function getSecurityModules(moduleName: string, isTheia: boolean): NodeMo
     } catch (err) {
         imperative.Logger.getAppLogger().warn(err as string);
     }
-    return undefined;*/
+    return undefined;
 }

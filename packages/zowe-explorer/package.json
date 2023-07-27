@@ -1905,12 +1905,12 @@
     ]
   },
   "scripts": {
-    "build": "gulp build && yarn license && webpack --mode development",
+    "build": "gulp build && yarn license && ts-node ./scripts/getSecretsPrebuilds.ts && webpack --mode development",
     "build:integration": "yarn createTestProfileData && yarn license && tsc --pretty --project tsconfig-tests.json",
     "test:unit": "jest \".*__tests__.*\\.unit\\.test\\.ts\" --coverage",
     "test:theia": "mocha ./out/__tests__/__theia__/*.theia.test.js --timeout 50000 --reporter mocha-multi-reporters --reporter-options configFile=.mocharc.json",
     "test": "yarn test:unit",
-    "vscode:prepublish": "gulp build && webpack --mode production && yarn updateStrings && yarn run compile-web",
+    "vscode:prepublish": "gulp build && ts-node ./scripts/getSecretsPrebuilds.ts && webpack --mode production && yarn updateStrings && yarn run compile-web",
     "updateStrings": "node ../../scripts/stringUpdateScript.js && prettier --write --loglevel warn ./i18n package.nls*",
     "package": "vsce package --allow-star-activation --yarn && node ../../scripts/mv-pack.js vscode-extension-for-zowe vsix",
     "license": "node ../../scripts/updateLicenses.js",
@@ -1934,7 +1934,6 @@
   },
   "devDependencies": {
     "@napi-rs/cli": "^2.16.1",
-    "@traeok/keytar-rs": "github:traeok/keytar-rs",
     "@types/chai": "^4.2.6",
     "@types/chai-as-promised": "^7.1.0",
     "@types/expect": "^1.20.3",
@@ -1972,6 +1971,7 @@
     "webpack-cli": "^3.3.11"
   },
   "dependencies": {
+    "@zowe/secrets-for-zowe-sdk": "7.18.0-next.1",
     "@zowe/zowe-explorer-api": "2.10.0-SNAPSHOT",
     "fs-extra": "8.0.1",
     "isbinaryfile": "4.0.4",

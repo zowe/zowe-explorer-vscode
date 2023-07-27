@@ -55,7 +55,7 @@ describe("KeytarCredentialManager", () => {
             loggerWarnSpy = jest.spyOn(imperative.Logger.prototype, "warn").mockImplementation();
         });
 
-        it("should handle CredentialManager in Imperative settings", () => {
+        it("should handle CredentialManager in Imperative settings", async () => {
             jest.spyOn(fs, "existsSync").mockReturnValueOnce(true);
             const readFileSyncSpy = jest.spyOn(fs, "readFileSync").mockReturnValue(
                 JSON.stringify({
@@ -64,14 +64,14 @@ describe("KeytarCredentialManager", () => {
                     },
                 })
             );
-            const keytar = KeytarCredentialManager.getSecurityModules("@traeok/keytar-rs", false);
+            const { keyring: keytar } = await import("@zowe/secrets-for-zowe-sdk");
             expect(keytar).toBeDefined();
             expect(loggerWarnSpy).not.toHaveBeenCalled();
             expect(readFileSyncSpy).toHaveBeenCalledTimes(1);
             expect(Object.keys(keytar as object).length).toBe(5);
         });
 
-        it("should handle credential-manager in Imperative settings", () => {
+        it("should handle credential-manager in Imperative settings", async () => {
             jest.spyOn(fs, "existsSync").mockReturnValueOnce(true);
             const readFileSyncSpy = jest.spyOn(fs, "readFileSync").mockReturnValue(
                 JSON.stringify({
@@ -80,14 +80,14 @@ describe("KeytarCredentialManager", () => {
                     },
                 })
             );
-            const keytar = KeytarCredentialManager.getSecurityModules("@traeok/keytar-rs", false);
+            const { keyring: keytar } = await import("@zowe/secrets-for-zowe-sdk");
             expect(keytar).toBeDefined();
             expect(loggerWarnSpy).not.toHaveBeenCalled();
             expect(readFileSyncSpy).toHaveBeenCalledTimes(1);
             expect(Object.keys(keytar as object).length).toBe(5);
         });
 
-        it("should handle CredentialManager in Imperative settings - Theia", () => {
+        it("should handle CredentialManager in Imperative settings - Theia", async () => {
             jest.spyOn(fs, "existsSync").mockReturnValueOnce(true);
             const readFileSyncSpy = jest.spyOn(fs, "readFileSync").mockReturnValue(
                 JSON.stringify({
@@ -97,42 +97,42 @@ describe("KeytarCredentialManager", () => {
                 })
             );
             jest.spyOn(process, "cwd").mockReturnValueOnce(__dirname + "/../../../../..");
-            const keytar = KeytarCredentialManager.getSecurityModules("@traeok/keytar-rs", true);
+            const { keyring: keytar } = await import("@zowe/secrets-for-zowe-sdk");
             expect(keytar).toBeDefined();
             expect(loggerWarnSpy).not.toHaveBeenCalled();
             expect(readFileSyncSpy).toHaveBeenCalledTimes(1);
             expect(Object.keys(keytar as object).length).toBe(5);
         });
 
-        it("should handle empty Imperative settings", () => {
+        it("should handle empty Imperative settings", async () => {
             jest.spyOn(fs, "existsSync").mockReturnValueOnce(true);
             const readFileSyncSpy = jest.spyOn(fs, "readFileSync").mockReturnValue(JSON.stringify({}));
-            const keytar = KeytarCredentialManager.getSecurityModules("@traeok/keytar-rs", false);
+            const { keyring: keytar } = await import("@zowe/secrets-for-zowe-sdk");
             expect(loggerWarnSpy).not.toHaveBeenCalled();
             expect(readFileSyncSpy).toHaveBeenCalledTimes(1);
             expect(keytar).toBeUndefined();
         });
 
-        it("should handle non-existent Imperative settings", () => {
+        it("should handle non-existent Imperative settings", async () => {
             jest.spyOn(fs, "existsSync").mockReturnValueOnce(false);
             const readFileSyncSpy = jest.spyOn(fs, "readFileSync");
-            const keytar = KeytarCredentialManager.getSecurityModules("@traeok/keytar-rs", false);
+            const { keyring: keytar } = await import("@zowe/secrets-for-zowe-sdk");
             expect(loggerWarnSpy).not.toHaveBeenCalled();
             expect(readFileSyncSpy).not.toHaveBeenCalled();
             expect(keytar).toBeUndefined();
         });
 
-        it("should handle error loading Imperative settings", () => {
+        it("should handle error loading Imperative settings", async () => {
             jest.spyOn(fs, "existsSync").mockReturnValueOnce(true);
             const readFileSyncSpy = jest.spyOn(fs, "readFileSync").mockReturnValueOnce("invalid json");
-            const keytar = KeytarCredentialManager.getSecurityModules("@traeok/keytar-rs", false);
+            const { keyring: keytar } = await import("@zowe/secrets-for-zowe-sdk");
             expect(loggerWarnSpy).toHaveBeenCalledTimes(1);
             expect(loggerWarnSpy.mock.calls[0][0].message).toContain("Unexpected token");
             expect(readFileSyncSpy).toHaveBeenCalledTimes(1);
             expect(keytar).toBeUndefined();
         });
 
-        it("should handle error loading invalid security module", () => {
+        it("should handle error loading invalid security module", async () => {
             jest.spyOn(fs, "existsSync").mockReturnValueOnce(true);
             const readFileSyncSpy = jest.spyOn(fs, "readFileSync").mockReturnValue(
                 JSON.stringify({
@@ -141,7 +141,7 @@ describe("KeytarCredentialManager", () => {
                     },
                 })
             );
-            const keytar = KeytarCredentialManager.getSecurityModules("keytar_bad", false);
+            const keytar = require("nonexistent-keytar");
             expect(loggerWarnSpy).toHaveBeenCalledTimes(2);
             expect(loggerWarnSpy.mock.calls[0][0].message).toContain("Cannot find module");
             expect(readFileSyncSpy).toHaveBeenCalledTimes(1);

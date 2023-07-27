@@ -51,9 +51,6 @@
     "@zowe/zowe-explorer-api": "2.10.0-SNAPSHOT",
     "tmp": "0.2.1"
   },
-  "resolutions": {
-    "**/@zowe/imperative": "file:../imperative"
-  },
   "devDependencies": {
     "@types/tmp": "0.2.0",
     "concurrently": "^5.2.0",
