@@ -257,8 +257,8 @@ export class Profiles extends ProfilesCache {
         ZoweLogger.trace("Profiles.createZoweSession called.");
         let profileNamesList: string[] = [];
         const treeType = zoweFileProvider.getTreeType();
+        const allProfiles = Profiles.getInstance().allProfiles;
         try {
-            const allProfiles = Profiles.getInstance().allProfiles;
             if (allProfiles) {
                 // Get all profiles and filter to list of the APIs available for current tree explorer
                 profileNamesList = allProfiles
@@ -331,7 +331,7 @@ export class Profiles extends ProfilesCache {
                     'Choose "Create new..." to define or select a profile to add to the USS Explorer'
                 );
         }
-        if (mProfileInfo?.usingTeamConfig) {
+        if (allProfiles.length > 0) {
             quickpick.items = [configPick, configEdit, ...items];
         } else {
             quickpick.items = [configPick, ...items];
@@ -471,6 +471,9 @@ export class Profiles extends ProfilesCache {
 
             config.api.layers.merge(newConfig);
             await config.save(false);
+            if (globals.ISTHEIA) {
+                vscode.commands.executeCommand("zowe.extRefresh");
+            }
             let configName;
             if (user) {
                 configName = config.userConfigName;
@@ -478,7 +481,6 @@ export class Profiles extends ProfilesCache {
                 configName = config.configName;
             }
             await this.openConfigFile(path.join(rootPath, configName));
-            await this.promptToRefreshForProfiles(rootPath);
             return path.join(rootPath, configName);
         } catch (err) {
             ZoweLogger.error(err);
@@ -531,8 +533,8 @@ export class Profiles extends ProfilesCache {
 
         const promptInfo = await ZoweVsCodeExtension.updateCredentials(
             {
-                sessionName: typeof profile !== "string" ? profile.name : profile,
-                sessionType: typeof profile !== "string" ? profile.type : undefined,
+                profile: typeof profile === "string" ? undefined : profile,
+                sessionName: typeof profile === "string" ? profile : undefined,
                 rePrompt,
                 secure: (await this.getProfileInfo()).isSecured(),
                 userInputBoxOptions,
@@ -545,8 +547,7 @@ export class Profiles extends ProfilesCache {
             return; // See https://github.com/zowe/vscode-extension-for-zowe/issues/1827
         }
 
-        const updSession = promptInfo.profile as zowe.imperative.ISession;
-        const returnValue = [updSession.user, updSession.password, updSession.base64EncodedAuth];
+        const returnValue: string[] = [promptInfo.profile.user, promptInfo.profile.password, promptInfo.profile.base64EncodedAuth];
         this.updateProfilesArrays(promptInfo);
         return returnValue;
     }
@@ -754,7 +755,7 @@ export class Profiles extends ProfilesCache {
                     };
                     await this.updateBaseProfileFileLogin(baseProfile, updBaseProfile);
                     const baseIndex = this.allProfiles.findIndex((profile) => profile.name === baseProfile.name);
-                    this.allProfiles[baseIndex] = { ...baseProfile, profile: { ...baseProfile, ...updBaseProfile } };
+                    this.allProfiles[baseIndex] = { ...baseProfile, profile: { ...baseProfile.profile, ...updBaseProfile } };
                     node.setProfileToChoice({
                         ...node.getProfile(),
                         profile: { ...node.getProfile().profile, ...updBaseProfile },
@@ -886,23 +887,6 @@ export class Profiles extends ProfilesCache {
             }
         });
         return existingLayers;
-    }
-
-    private async promptToRefreshForProfiles(rootPath: string): Promise<void> {
-        ZoweLogger.trace("Profiles.promptToRefreshForProfiles called.");
-        if (globals.ISTHEIA) {
-            const reloadButton = localize("createZoweSchema.reload.button", "Refresh Zowe Explorer");
-            const infoMsg = localize(
-                "createZoweSchema.reload.infoMessage",
-                "Team Configuration file created. Location: {0}. \n Please update file and refresh Zowe Explorer via button or command palette.",
-                rootPath
-            );
-            await Gui.showMessage(infoMsg, { items: [reloadButton] }).then(async (selection) => {
-                if (selection === reloadButton) {
-                    await vscode.commands.executeCommand("zowe.extRefresh");
-                }
-            });
-        }
     }
 
     private getProfileIcon(osLocInfo: zowe.imperative.IProfLocOsLoc[]): string[] {
