@@ -17,6 +17,7 @@ import { Gui, MessageSeverity } from "@zowe/zowe-explorer-api";
 import { imperative } from "@zowe/cli";
 
 jest.mock("zos-node-accessor");
+ZoweLogger.getExtensionName = jest.fn().mockReturnValue("Zowe Explorer FTP Extension");
 
 class Dummy extends AbstractFtpApi {}
 
@@ -87,13 +88,9 @@ describe("AbstractFtpApi", () => {
             type: undefined,
             failNotFound: undefined,
         };
-        try {
+        await expect(async () => {
             await instance.getStatus(undefined, "zftp");
-        } catch (err) {
-            expect(err).not.toBeUndefined();
-            expect(err).toBeInstanceOf(Error);
-            expect(err).toEqual(imperativeError);
-        }
+        }).rejects.toThrow(imperativeError);
     });
 
     it("should show a different fatal message when trying to call getStatus and an exception occurs.", async () => {
@@ -114,13 +111,9 @@ describe("AbstractFtpApi", () => {
             type: undefined,
             failNotFound: undefined,
         };
-        try {
+        await expect(async () => {
             await instance.getStatus(undefined, "zftp");
-        } catch (err) {
-            expect(err).not.toBeUndefined();
-            expect(err).toBeInstanceOf(Error);
-            expect(err).toEqual(imperativeError);
-        }
+        }).rejects.toThrow(imperativeError);
     });
 
     it("should show a fatal message when using checkedProfile on an invalid profile", () => {
