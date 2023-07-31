@@ -6,7 +6,7 @@
 [![slack](https://img.shields.io/badge/chat-on%20Slack-blue)](https://slack.openmainframeproject.org/)
 
 > ## :rotating_light: With the removal of keytar shim from VS Code we will be replacing `node-keytar` with `keytar-rs` in our v2.10.0 release to avoid user interuptions
-
+>
 > ## :rotating_light: v3 Pre-release coming soon with the removal of v1 profile support. Extenders, keep an eye on [changes affecting extenders](https://github.com/zowe/vscode-extension-for-zowe/wiki/Changes-Affecting-Extenders) for the full list of changes
 
 ## Introduction
