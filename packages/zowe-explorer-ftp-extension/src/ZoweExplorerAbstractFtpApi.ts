@@ -12,9 +12,10 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { imperative } from "@zowe/cli";
 import { FTPConfig, IZosFTPProfile } from "@zowe/zos-ftp-for-zowe-cli";
-import { Gui, MessageSeverity, ZoweExplorerApi } from "@zowe/zowe-explorer-api";
-import { sessionMap, ZoweLogger } from "./extension";
+import { ZoweExplorerApi } from "@zowe/zowe-explorer-api";
+import { sessionMap } from "./extension";
 import { FtpSession } from "./ftpSession";
+import { ZoweFtpExtensionError } from "./ZoweFtpExtensionError";
 
 export interface ConnectionType {
     close(): void;
@@ -34,11 +35,7 @@ export abstract class AbstractFtpApi implements ZoweExplorerApi.ICommon {
         if (!this.session) {
             const ftpProfile = (profile || this.profile)?.profile;
             if (!ftpProfile) {
-                void Gui.showMessage("Internal error: ZoweVscFtpRestApi instance was not initialized with a valid Zowe profile.", {
-                    severity: MessageSeverity.FATAL,
-                    logger: ZoweLogger,
-                });
-                throw new Error();
+                throw new ZoweFtpExtensionError("Internal error: ZoweVscFtpRestApi instance was not initialized with a valid Zowe profile.");
             }
 
             this.session = new FtpSession({
@@ -59,11 +56,7 @@ export abstract class AbstractFtpApi implements ZoweExplorerApi.ICommon {
 
     public checkedProfile(): imperative.IProfileLoaded {
         if (!this.profile?.profile) {
-            void Gui.showMessage("Internal error: ZoweVscFtpRestApi instance was not initialized with a valid Zowe profile.", {
-                severity: MessageSeverity.FATAL,
-                logger: ZoweLogger,
-            });
-            throw new Error();
+            throw new ZoweFtpExtensionError("Internal error: ZoweVscFtpRestApi instance was not initialized with a valid Zowe profile.");
         }
         return this.profile;
     }
