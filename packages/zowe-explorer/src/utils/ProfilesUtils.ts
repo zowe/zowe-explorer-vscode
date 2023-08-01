@@ -75,37 +75,37 @@ export async function errorHandling(errorDetails: Error | string, label?: string
             if (imperativeError.mDetails.additionalDetails) {
                 const tokenError: string = imperativeError.mDetails.additionalDetails;
                 if (tokenError.includes("Token is not valid or expired.")) {
-                    if (isTheia()) {
+                    if (this.isTheia()) {
                         Gui.errorMessage(errToken).then(async () => {
                             await Profiles.getInstance().ssoLogin(null, label);
                         });
-                    } else {
-                        const message = localize("errorHandling.authentication.login", "Log in to Authentication Service");
-                        Gui.showMessage(errToken, { items: [message] }).then(async (selection) => {
-                            if (selection) {
-                                await Profiles.getInstance().ssoLogin(null, label);
-                            }
-                        });
+                        return;
                     }
+                    const message = localize("errorHandling.authentication.login", "Log in to Authentication Service");
+                    Gui.showMessage(errToken, { items: [message] }).then(async (selection) => {
+                        if (selection) {
+                            await Profiles.getInstance().ssoLogin(null, label);
+                        }
+                    });
                     return;
                 }
             }
 
             if (isTheia()) {
                 Gui.errorMessage(errMsg);
-            } else {
-                const checkCredsButton = localize("errorHandling.checkCredentials.button", "Check Credentials");
-                await Gui.errorMessage(errMsg, {
-                    items: [checkCredsButton],
-                    vsCodeOpts: { modal: true },
-                }).then(async (selection) => {
-                    if (selection === checkCredsButton) {
-                        await Profiles.getInstance().promptCredentials(label.trim(), true);
-                    } else {
-                        Gui.showMessage(localize("errorHandling.checkCredentials.cancelled", "Operation Cancelled"));
-                    }
-                });
+                return;
             }
+            const checkCredsButton = localize("errorHandling.checkCredentials.button", "Update Credentials");
+            await Gui.errorMessage(errMsg, {
+                items: [checkCredsButton],
+                vsCodeOpts: { modal: true },
+            }).then(async (selection) => {
+                if (selection !== checkCredsButton) {
+                    Gui.showMessage(localize("errorHandling.checkCredentials.cancelled", "Operation Cancelled"));
+                    return;
+                }
+                await Profiles.getInstance().promptCredentials(label.trim(), true);
+            });
             return;
         }
     }
@@ -340,6 +340,8 @@ export class ProfilesUtils {
             );
             ZoweLogger.info(successMsg);
             Gui.showMessage(successMsg);
+            // config file watcher isn't noticing changes for secure fields
+            await vscode.commands.executeCommand("zowe.extRefresh");
         }
     }
 
