@@ -8,6 +8,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
+- Fix the USS refresh icon (replacing "download" with "refresh")
+
 ## `2.9.1`
 
 ### Bug fixes
