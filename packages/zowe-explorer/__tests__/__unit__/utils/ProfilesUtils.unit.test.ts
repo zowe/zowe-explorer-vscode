@@ -162,12 +162,17 @@ describe("ProfilesUtils unit tests", () => {
         it("should handle token error and procede to login - Theia", async () => {
             const errorDetails = new zowe.imperative.ImperativeError({
                 msg: "Invalid credentials",
-                errorCode: 401 as unknown as string,
+                errorCode: String(401),
                 additionalDetails: "Token is not valid or expired.",
             });
             const label = "test";
             const moreInfo = "Task failed successfully";
-            jest.spyOn(profUtils, "isTheia").mockReturnValue(true);
+            Object.defineProperty(vscode, "env", {
+                value: {
+                    appName: "Theia",
+                },
+                configurable: true,
+            });
             const showErrorSpy = jest.spyOn(Gui, "errorMessage").mockImplementation(() => Promise.resolve(undefined));
             const showMessageSpy = jest.spyOn(Gui, "showMessage");
             const ssoLoginSpy = jest.fn();
@@ -187,12 +192,17 @@ describe("ProfilesUtils unit tests", () => {
         it("should handle credential error and no selection made for update", async () => {
             const errorDetails = new zowe.imperative.ImperativeError({
                 msg: "Invalid credentials",
-                errorCode: 401 as unknown as string,
+                errorCode: String(401),
                 additionalDetails: "Authentication failed.",
             });
             const label = "test";
             const moreInfo = "Task failed successfully";
-            jest.spyOn(profUtils, "isTheia").mockReturnValue(false);
+            Object.defineProperty(vscode, "env", {
+                value: {
+                    appName: "Visual Studio Code",
+                },
+                configurable: true,
+            });
             const showErrorSpy = jest.spyOn(Gui, "errorMessage").mockResolvedValue(undefined);
             const showMsgSpy = jest.spyOn(Gui, "showMessage");
             const promptCredentialsSpy = jest.fn();
