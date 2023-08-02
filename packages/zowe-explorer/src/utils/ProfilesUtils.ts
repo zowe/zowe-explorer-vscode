@@ -76,9 +76,8 @@ export async function errorHandling(errorDetails: Error | string, label?: string
                 const tokenError: string = imperativeError.mDetails.additionalDetails;
                 if (tokenError.includes("Token is not valid or expired.")) {
                     if (isTheia()) {
-                        Gui.errorMessage(errToken).then(async () => {
-                            await Profiles.getInstance().ssoLogin(null, label);
-                        });
+                        Gui.errorMessage(errToken);
+                        await Profiles.getInstance().ssoLogin(null, label);
                         return;
                     }
                     const message = localize("errorHandling.authentication.login", "Log in to Authentication Service");
