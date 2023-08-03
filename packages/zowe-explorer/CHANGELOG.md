@@ -9,6 +9,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 ### Bug fixes
 
 - Fix the USS refresh icon (replacing "download" with "refresh")
+- Fix error for Theia check when token authentication returns 401.
 
 ## `2.9.2`
 
