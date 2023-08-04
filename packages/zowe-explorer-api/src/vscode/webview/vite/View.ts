@@ -33,7 +33,7 @@ export class View {
     private title: string;
 
     /**
-     * Constructs a Preact View.
+     * Constructs a webview for use with Vite-bundled assets.
      * @param title The title for the new webview
      * @param dirName The directory name (in the "webviews" folder) that contains the bundled "index.js" file.
      * @param context The extension context
@@ -63,7 +63,7 @@ export class View {
             title: this.title,
         });
 
-        this.panel = window.createWebviewPanel("preact", this.title, ViewColumn.Beside, {
+        this.panel = window.createWebviewPanel("vite", this.title, ViewColumn.Beside, {
             enableScripts: true,
             localResourceRoots: [
                 this.uris.disk.build

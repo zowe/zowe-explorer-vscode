@@ -9,4 +9,4 @@
  *
  */
 
-export * as Preact from "./preact/View";
+export * as Vite from "./vite/View";
