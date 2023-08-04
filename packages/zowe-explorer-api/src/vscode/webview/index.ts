@@ -9,6 +9,4 @@
  *
  */
 
-export * from "./doc";
-export * from "./ZoweVsCodeExtension";
-export * from "./webview";
+export * as Preact from "./preact/View";

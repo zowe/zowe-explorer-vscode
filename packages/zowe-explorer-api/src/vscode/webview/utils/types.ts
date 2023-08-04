@@ -9,6 +9,9 @@
  *
  */
 
-export * from "./doc";
-export * from "./ZoweVsCodeExtension";
-export * from "./webview";
+import { Uri } from "vscode"
+
+export type WebviewUris = {
+    build: Uri,
+    script: Uri,
+};

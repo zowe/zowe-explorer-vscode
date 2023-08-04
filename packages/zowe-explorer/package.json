@@ -286,6 +286,11 @@
         "category": "Zowe Explorer"
       },
       {
+        "command": "zowe.uss.editAttributes",
+        "title": "%editAttributes%",
+        "category": "Zowe Explorer"
+      },
+      {
         "command": "zowe.ds.renameDataSet",
         "title": "%renameDataSet%",
         "category": "Zowe Explorer"
@@ -919,6 +924,11 @@
           "group": "099_zowe_ussModification:@0"
         },
         {
+          "when": "view == zowe.uss.explorer && viewItem =~ /^(textFile.*|binaryFile.*|directory.*)/",
+          "command": "zowe.uss.editAttributes",
+          "group": "099_zowe_ussModification:@1"
+        },
+        {
           "when": "view == zowe.uss.explorer && viewItem =~ /^(?!(ussSession|favorite|profile_fav))/ && !listMultiSelection",
           "command": "zowe.uss.renameNode",
           "group": "099_zowe_ussModification:@3"
@@ -1539,6 +1549,10 @@
         },
         {
           "command": "zowe.uss.editFile",
+          "when": "never"
+        },
+        {
+          "command": "zowe.uss.editAttributes",
           "when": "never"
         },
         {

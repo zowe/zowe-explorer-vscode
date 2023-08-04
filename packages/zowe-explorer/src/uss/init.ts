@@ -13,7 +13,7 @@ import * as globals from "../globals";
 import * as vscode from "vscode";
 import * as ussActions from "./actions";
 import * as refreshActions from "../shared/refresh";
-import { IZoweUSSTreeNode, IZoweTreeNode, IZoweTree } from "@zowe/zowe-explorer-api";
+import { IZoweUSSTreeNode, IZoweTreeNode, IZoweTree, Preact } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import * as contextuals from "../shared/context";
 import { getSelectedNodeList } from "../shared/utils";
@@ -140,6 +140,32 @@ export async function initUSSProvider(context: vscode.ExtensionContext): Promise
     context.subscriptions.push(vscode.commands.registerCommand("zowe.uss.copyPath", (node: IZoweUSSTreeNode): void => ussActions.copyPath(node)));
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.uss.editFile", (node: IZoweUSSTreeNode): void => node.openUSS(false, false, ussFileProvider))
+    );
+    context.subscriptions.push(
+        vscode.commands.registerCommand("zowe.uss.editAttributes", async (node: IZoweUSSTreeNode) => {
+            const editView = new Preact.View(
+                `Edit Attributes: ${node.label as string}`,
+                "edit-attributes",
+                context,
+                (message: any) => {
+                    switch (message.command) {
+                        case 'update-attributes':
+                            // eslint-disable-next-line no-console
+                            console.log(message.attrs);
+                            break;
+                    }
+                }
+            );
+            process.nextTick((): void => {
+                    editView.panel.webview.postMessage({
+                    gid: (node as any).gid,
+                    group: (node as any).group,
+                    name: node.fullPath,
+                    owner: (node as any).owner,
+                    perms: (node as any).perms
+                });
+            });
+        })
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.uss.saveSearch", (node: IZoweUSSTreeNode): void => ussFileProvider.saveSearch(node))

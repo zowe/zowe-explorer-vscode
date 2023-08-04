@@ -246,7 +246,7 @@ export function createTreeView(selection?): vscode.TreeView<ZoweTreeProvider> {
         visible: true,
         onDidChangeVisibility: jest.fn(),
         dispose: jest.fn(),
-    };
+    } as unknown as vscode.TreeView<ZoweTreeProvider>;
 }
 
 export function createTextDocument(name: string, sessionNode?: ZoweDatasetNode | ZoweUSSNode): vscode.TextDocument {
@@ -436,6 +436,7 @@ export function createInputBox(value: string): any {
         onDidTriggerButton: jest.fn(),
         prompt: undefined,
         validationMessage: undefined,
+        valueSelection: undefined
     };
     return inputBox;
 }

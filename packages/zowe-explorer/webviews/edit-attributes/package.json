@@ -1,0 +1,26 @@
+{
+  "name": "edit-attributes",
+  "private": true,
+  "type": "module",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@types/vscode-webview": "^1.57.1",
+    "@vscode/webview-ui-toolkit": "^1.2.2",
+    "lodash.isequal": "^4.5.0",
+    "preact": "^10.16.0",
+    "styled-components": "^6.0.7"
+  },
+  "devDependencies": {
+    "@preact/preset-vite": "^2.5.0",
+    "@vscode/codicons": "^0.0.33",
+    "typescript": "^5.1.6",
+    "vite": "^4.4.8"
+  }
+}
