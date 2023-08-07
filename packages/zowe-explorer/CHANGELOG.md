@@ -11,6 +11,16 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 ### Bug fixes
 
 - Fix the USS refresh icon (replacing "download" with "refresh")
+- Fix error for Theia check when token authentication returns 401.
+
+## `2.9.2`
+
+### Bug fixes
+
+- Added jobs not found message when no results are returned from filter [#2362](https://github.com/zowe/vscode-extension-for-zowe/issues/2362)
+- Fixed loop when user selects Cancel on the Check Credentials message. [#2262](https://github.com/zowe/vscode-extension-for-zowe/issues/2262)
+- Fixed issue where job session nodes were not adding new job nodes when refreshed. [#2370](https://github.com/zowe/vscode-extension-for-zowe/issues/2370)
+- Fixed error when listing data set members that include control characters in the name.
 
 ## `2.9.1`
 
