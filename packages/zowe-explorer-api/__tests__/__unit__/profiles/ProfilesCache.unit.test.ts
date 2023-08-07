@@ -134,6 +134,7 @@ describe("ProfilesCache", () => {
         const profInfo = await new ProfilesCache(fakeLogger as unknown as zowe.imperative.Logger, __dirname).getProfileInfo();
         expect(readProfilesFromDiskSpy).toHaveBeenCalledTimes(1);
         expect(defaultCredMgrWithKeytarSpy).toHaveBeenCalledTimes(1);
+        expect(defaultCredMgrWithKeytarSpy).toHaveBeenCalledWith(ProfilesCache.requireKeyring);
         const teamConfig = profInfo.getTeamConfig();
         expect(teamConfig.appName).toBe("zowe");
         expect(teamConfig.paths).toEqual([

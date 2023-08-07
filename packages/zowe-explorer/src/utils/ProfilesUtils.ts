@@ -16,7 +16,7 @@ import * as globals from "../globals";
 import * as path from "path";
 import * as fs from "fs";
 import * as util from "util";
-import { IZoweTreeNode, ZoweTreeNode, getZoweDir, getFullPath, Gui } from "@zowe/zowe-explorer-api";
+import { IZoweTreeNode, ZoweTreeNode, getZoweDir, getFullPath, Gui, ProfilesCache } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import * as nls from "vscode-nls";
 import { imperative, getImperativeConfig } from "@zowe/cli";
@@ -274,7 +274,7 @@ export class ProfilesUtils {
         await ProfilesUtils.updateCredentialManagerSetting(globals.ZOWE_CLI_SCM);
         return new imperative.ProfileInfo("zowe", {
             // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-            credMgrOverride: imperative.ProfileCredentials.defaultCredMgrWithKeytar(() => require("@zowe/secrets-for-zowe-sdk").keyring),
+            credMgrOverride: imperative.ProfileCredentials.defaultCredMgrWithKeytar(ProfilesCache.requireKeyring),
         });
     }
 
