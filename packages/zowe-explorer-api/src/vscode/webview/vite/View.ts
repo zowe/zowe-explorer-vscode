@@ -39,7 +39,7 @@ export class View {
      * @param context The extension context
      */
     public constructor(title: string, dirName: string, 
-        context: ExtensionContext, onDidReceiveMessage?: (message: object) => void) {
+        context: ExtensionContext, onDidReceiveMessage?: (message: object) => void | Promise<void>) {
         this.disposables = [];
 
         // Generate random nonce for loading the bundled script
@@ -70,11 +70,10 @@ export class View {
             ]
         });
         if (onDidReceiveMessage) {
-            this.panel.webview.onDidReceiveMessage((message) => onDidReceiveMessage(message));
+            this.panel.webview.onDidReceiveMessage(async (message) => onDidReceiveMessage(message));
         }
         this.panel.onDidDispose(() => this.dispose(), null, this.disposables);
         this.panel.webview.html = this.webviewContent;
-        // TODO: handle `onDidDispose`, `onDidReceiveMessage` for.panel
     }
 
     private dispose(): void {
@@ -84,6 +83,7 @@ export class View {
             disp.dispose();
         }
         this.disposables = [];
+        this.panel = undefined;
     }
 
     public get htmlContent(): string {

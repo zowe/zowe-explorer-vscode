@@ -7,6 +7,7 @@ import {
   VSCodeDataGridCell,
   VSCodeDataGridRow,
   VSCodeDivider,
+  VSCodeProgressRing,
   VSCodeTextField,
 } from "@vscode/webview-ui-toolkit/react";
 import isEqual from "lodash.isequal";
@@ -16,31 +17,25 @@ const vscodeApi = acquireVsCodeApi();
 
 export function App() {
   const [allowUpdate, setAllowUpdate] = useState(false);
-  const [allowUndo, setAllowUndo] = useState(false);
   const [fileAttributes, setFileAttributes] = useState<FileAttributes | null>(null);
   const [initialAttributes, setInitialAttributes] = useState<FileAttributes | null>(null);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
-  const updateButtons = () => {
-    if (!isEqual(initialAttributes, fileAttributes)) {
-      setAllowUpdate(true);
-      setAllowUndo(true);
-    } else {
-      setAllowUpdate(false);
-      setAllowUndo(false);
-    }
-  };
-
-  useEffect(() => {
-    updateButtons();
-  }, [fileAttributes]);
+  const updateButtons = (newAttributes: FileAttributes) => setAllowUpdate(!isEqual(initialAttributes, newAttributes));
 
   const updateFileAttributes = (key: keyof FileAttributes, value: unknown) => {
     if (fileAttributes && fileAttributes[key] != value) {
-      setFileAttributes((prev) => ({ ...(prev ?? {}), [key]: value } as FileAttributes));
+      setFileAttributes((prev) => {
+        const newAttrs = { ...(prev ?? {}), [key]: value } as FileAttributes;
+        updateButtons(newAttrs);
+        return newAttrs;
+      });
     }
   };
 
   const applyAttributes = () => {
+    setIsUpdating(true);
     if (fileAttributes) {
       // convert perm booleans to string
       const permString = Object.values(fileAttributes.perms).reduce((all, perm) => {
@@ -54,25 +49,41 @@ export function App() {
         attrs: { ...fileAttributes, perms: permString },
       });
       setAllowUpdate(false);
+      setInitialAttributes({ ...fileAttributes });
     }
   };
 
   useEffect(() => {
     window.addEventListener("message", (event) => {
-      const message = event.data;
+      if (!event.data) {
+        return;
+      }
 
-      const isDirectory = message.perms.charAt(0) == "d";
+      console.log(event.data);
+
+      if ("updated" in event.data) {
+        setIsUpdating(false);
+        setLastUpdated(new Date());
+        return;
+      }
+
+      if (!("name" in event.data && "attributes" in event.data)) {
+        return;
+      }
+      const { name, attributes } = event.data;
+
+      const isDirectory = attributes.perms.charAt(0) == "d";
       // remove directory flag from perms string
-      const perms = message.perms.substring(1);
+      const perms = attributes.perms.substring(1);
       console.log(perms);
       // split into 3 groups:
       const [group, user, other] = perms.match(/.{1,3}/g);
       let attrs: FileAttributes = {
         directory: isDirectory,
-        name: message.name,
-        gid: message.gid,
-        group: message.group,
-        owner: message.owner,
+        name: name,
+        gid: attributes.gid,
+        group: attributes.group,
+        owner: attributes.owner,
         perms: [group, user, other].reduce((all, permGroup, i) => {
           let key: string = "";
           switch (i) {
@@ -101,7 +112,6 @@ export function App() {
 
       setFileAttributes({ ...attrs });
       setInitialAttributes({ ...attrs });
-      setAllowUndo(false);
     });
     // signal to extension that webview is ready for data; prevents race condition during initialization
     vscodeApi.postMessage({ command: "ready" });
@@ -117,7 +127,9 @@ export function App() {
     fileAttributes && (
       <div>
         <h1>File properties</h1>
-        <h3>{fileAttributes.name}</h3>
+        <strong>
+          <pre style={{ fontSize: "1.25em" }}>{fileAttributes.name}</pre>
+        </strong>
         <VSCodeDivider />
         <div style={{ marginTop: "1em" }}>
           <div style={{ maxWidth: "fit-content" }}>
@@ -176,22 +188,18 @@ export function App() {
                 })}
               </VSCodeDataGrid>
             ) : null}
-            <div style={{ display: "flex", marginLeft: "1em", marginTop: "1em" }}>
-              <VSCodeButton disabled={!allowUpdate} onClick={() => applyAttributes()}>
+            <div style={{ display: "flex", alignItems: "center", marginLeft: "1em", marginTop: "1em" }}>
+              <VSCodeButton
+                disabled={!allowUpdate}
+                onClick={() => {
+                  applyAttributes();
+                }}
+              >
                 Apply changes
               </VSCodeButton>
-              {initialAttributes && (
-                <VSCodeButton
-                  disabled={!allowUndo}
-                  style={{ marginLeft: "1em" }}
-                  onClick={() => {
-                    setFileAttributes({ ...initialAttributes });
-                  }}
-                >
-                  Undo
-                </VSCodeButton>
-              )}
+              {isUpdating && <VSCodeProgressRing style={{ marginLeft: "1em" }} />}
             </div>
+            {lastUpdated && <p style={{ fontStyle: "italic", marginLeft: "1em" }}>Last updated: {lastUpdated.toLocaleString(navigator.language)}</p>}
           </div>
         </div>
       </div>

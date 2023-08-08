@@ -14,7 +14,7 @@ import * as globals from "../globals";
 import * as vscode from "vscode";
 import * as fs from "fs";
 import * as path from "path";
-import { Gui, IZoweUSSTreeNode, ZoweTreeNode, IZoweTree, ValidProfileEnum, ZoweExplorerApi } from "@zowe/zowe-explorer-api";
+import { FileAttributes, Gui, IZoweUSSTreeNode, ZoweTreeNode, IZoweTree, ValidProfileEnum, ZoweExplorerApi } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { errorHandling, syncSessionNode } from "../utils/ProfilesUtils";
@@ -54,10 +54,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     public profile: imperative.IProfileLoaded; // TODO: This reference should be stored instead of the name
     private downloadedInternal = false;
 
-    public gid?: number;
-    public group?: string;
-    public owner?: string;
-    public perms?: string;
+    public attributes?: FileAttributes;
 
     /**
      * Creates an instance of ZoweUSSNode
@@ -188,6 +185,12 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                     (element: ZoweUSSNode) => element.parentPath === this.fullPath && element.label.toString() === item.name
                 );
                 if (existing) {
+                    existing.attributes = {
+                        gid: item.gid,
+                        group: item.group,
+                        perms: item.mode,
+                        owner: item.user
+                    };
                     elementChildren[existing.label.toString()] = existing;
                 } else if (item.name !== "." && item.name !== "..") {
                     // Creates a ZoweUSSNode for a directory
@@ -201,10 +204,12 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                             false,
                             item.mProfileName
                         );
-                        temp.gid = item.gid;
-                        temp.group = item.group;
-                        temp.perms = item.mode;
-                        temp.owner = item.user;
+                        temp.attributes = {
+                            gid: item.gid,
+                            group: item.group,
+                            perms: item.mode,
+                            owner: item.user
+                        };
                         elementChildren[temp.label.toString()] = temp;
                     } else {
                         // Creates a ZoweUSSNode for a file
@@ -230,10 +235,12 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                                 item.mProfileName
                             );
                         }
-                        temp.gid = item.gid;
-                        temp.group = item.group;
-                        temp.perms = item.mode;
-                        temp.owner = item.user;
+                        temp.attributes = {
+                            gid: item.gid,
+                            group: item.group,
+                            perms: item.mode,
+                            owner: item.user
+                        };
                         temp.command = {
                             command: "zowe.uss.ZoweUSSNode.open",
                             title: localize("getChildren.responses.open", "Open"),

@@ -13,7 +13,7 @@ import * as globals from "../globals";
 import * as vscode from "vscode";
 import * as ussActions from "./actions";
 import * as refreshActions from "../shared/refresh";
-import { IZoweUSSTreeNode, IZoweTreeNode, IZoweTree, Vite } from "@zowe/zowe-explorer-api";
+import { IZoweUSSTreeNode, IZoweTreeNode, IZoweTree, Vite, Gui } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import * as contextuals from "../shared/context";
 import { getSelectedNodeList } from "../shared/utils";
@@ -21,6 +21,8 @@ import { createUSSTree } from "./USSTree";
 import { initSubscribers } from "../shared/init";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { TreeViewUtils } from "../utils/TreeViewUtils";
+import { Utilities } from "@zowe/cli";
+import { permStringToOctal } from "@zowe/zowe-explorer-api/src/utils";
 
 export async function initUSSProvider(context: vscode.ExtensionContext): Promise<IZoweTree<IZoweUSSTreeNode>> {
     ZoweLogger.trace("init.initUSSProvider called.");
@@ -142,26 +144,60 @@ export async function initUSSProvider(context: vscode.ExtensionContext): Promise
         vscode.commands.registerCommand("zowe.uss.editFile", (node: IZoweUSSTreeNode): void => node.openUSS(false, false, ussFileProvider))
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.uss.editAttributes", async (node: IZoweUSSTreeNode) => {
+        vscode.commands.registerCommand("zowe.uss.editAttributes", (node: IZoweUSSTreeNode) => {
             const editView = new Vite.View(
                 `Edit Attributes: ${node.label as string}`,
                 "edit-attributes",
                 context,
-                (message: any) => {
+                // eslint-disable-next-line @typescript-eslint/no-misused-promises
+                async (message: any) => {
                     switch (message.command) {
                         case 'ready': 
-                            editView.panel.webview.postMessage({
-                                gid: (node as any).gid,
-                                group: (node as any).group,
-                                name: node.fullPath,
-                                owner: (node as any).owner,
-                                perms: (node as any).perms
+                            await editView.panel.webview.postMessage({
+                                attributes: node.attributes,
+                                name: node.fullPath
                             });
                             break;
                         case 'update-attributes':
-                            // eslint-disable-next-line no-console
-                            console.log(message.attrs);
+                            if (Object.keys(message.attrs).length > 0) {
+                                const attrs = message.attrs;
+                                if (node.attributes.owner !== attrs.owner) {
+                                    await Utilities.putUSSPayload(node.getSession(), node.fullPath, {
+                                        request: "chown",
+                                        owner: attrs.owner,
+                                        group: attrs.group,
+                                        links: "follow",
+                                        recursive: true
+                                    });
+                                    node.attributes.owner = attrs.owner;
+                                }
+                                if (node.attributes.gid !== attrs.gid) {
+                                    await Utilities.putUSSPayload(node.getSession(), node.fullPath, {
+                                        request: "chown",
+                                        owner: attrs.owner,
+                                        group: attrs.gid,
+                                        links: "follow",
+                                        recursive: true
+                                    });
+                                    node.attributes.gid = attrs.gid;
+                                }
+                                if (node.attributes.perms !== attrs.perms) {
+                                    const permsAsOctal = permStringToOctal(attrs.perms);
+                                    await Utilities.putUSSPayload(node.getSession(), node.fullPath, {
+                                        request: "chmod",
+                                        mode: permsAsOctal,
+                                        links: "follow",
+                                        recursive: true 
+                                    });
+                                    node.attributes.perms = attrs.perms;
+                                }
+                                await editView.panel.webview.postMessage({
+                                    updated: true
+                                });
+                                await Gui.infoMessage(`Updated file attributes for ${node.fullPath}`);
+                            }
                             break;
+                        default: break;
                     }
                 }
             );

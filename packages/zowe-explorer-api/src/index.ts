@@ -23,3 +23,4 @@ export * from "./vscode/webview";
 export * from "./security/KeytarApi";
 export * from "./security/KeytarCredentialManager";
 export * from "./globals/Gui";
+export * from "./utils";
