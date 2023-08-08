@@ -431,7 +431,7 @@ describe("Dataset Tree Unit Tests - Function getChildren", () => {
         expect(children).toEqual(sampleChildren);
         spyOnDataSetsMatchingPattern.mockRestore();
     });
-    it("Checking that we fallback to old dataSet API if newer dataSetsMattchingPattern does not exist", async () => {
+    it("Checking that we fallback to old dataSet API if newer dataSetsMatchingPattern does not exist", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
 
@@ -551,6 +551,22 @@ describe("Dataset Tree Unit Tests - Function getChildren", () => {
         const children = await testTree.getChildren(parent);
 
         expect(children).toEqual(sampleChildren);
+    });
+    it("Checking function for return if element.getChildren is undefined", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profile);
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        const parent = new ZoweDatasetNode("BRTVS99.PUBLIC", vscode.TreeItemCollapsibleState.Collapsed, testTree.mSessionNodes[1], null);
+        parent.dirty = true;
+        jest.spyOn(parent, "getChildren").mockResolvedValueOnce(undefined as any);
+
+        const children = await testTree.getChildren(parent);
+
+        expect(children).not.toBeDefined();
     });
 });
 describe("Dataset Tree Unit Tests - Function loadProfilesForFavorites", () => {
@@ -1407,9 +1423,10 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
             mockResetValidationSettings: jest.fn(),
             qpPlaceholder: 'Choose "Create new..." to define a new profile or select an existing profile to add to the Data Set Explorer',
             mockEnableValidationContext: jest.fn(),
+            testTree: new DatasetTree(),
         };
 
-        newMocks.datasetSessionNode = await createDatasetSessionNode(newMocks.session, newMocks.imperativeProfile);
+        newMocks.datasetSessionNode = createDatasetSessionNode(newMocks.session, newMocks.imperativeProfile);
         globalMocks.mockProfileInstance.allProfiles = [newMocks.imperativeProfile, { name: "firstName" }, { name: "secondName" }];
         globalMocks.mockProfileInstance.loadNamedProfile.mockReturnValueOnce(newMocks.imperativeProfile);
         globalMocks.mockProfileInstance.resetValidationSettings.mockReturnValue(newMocks.datasetSessionNode);
@@ -1421,12 +1438,13 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
             name: newMocks.imperativeProfile.name,
             status: "active",
         });
+        newMocks.testTree.mSessionNodes.push(newMocks.datasetSessionNode);
 
         return newMocks;
     }
 
     it("Checking adding of new filter - Theia", async () => {
-        const globalMocks = await createGlobalMocks();
+        const globalMocks = createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
         globalMocks.isTheia.mockReturnValue(true);
@@ -1442,7 +1460,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         expect(testTree.mSessionNodes[1].pattern).toEqual("HLQ.PROD1.STUFF");
     });
     it("Checking cancelled attempt to add a filter - Theia", async () => {
-        const globalMocks = await createGlobalMocks();
+        const globalMocks = createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
         globalMocks.isTheia.mockReturnValue(true);
@@ -1457,7 +1475,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         expect(mocked(Gui.showMessage)).toBeCalledWith("You must enter a pattern.");
     });
     it("Checking usage of existing filter - Theia", async () => {
-        const globalMocks = await createGlobalMocks();
+        const globalMocks = createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
         globalMocks.isTheia.mockReturnValue(true);
@@ -1473,7 +1491,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         expect(testTree.mSessionNodes[1].pattern).toEqual("HLQ.PROD1.STUFF");
     });
     it("Checking cancelling of filter prompt with available filters - Theia", async () => {
-        const globalMocks = await createGlobalMocks();
+        const globalMocks = createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
         globalMocks.isTheia.mockReturnValue(true);
@@ -1488,7 +1506,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         expect(mocked(Gui.showMessage)).toBeCalledWith("No selection made. Operation cancelled.");
     });
     it("Checking function on favorites", async () => {
-        const globalMocks = await createGlobalMocks();
+        const globalMocks = createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
@@ -1511,7 +1529,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         expect(addSessionSpy).toHaveBeenLastCalledWith(blockMocks.datasetSessionNode.label.trim());
     });
     it("Checking adding of new filter", async () => {
-        const globalMocks = await createGlobalMocks();
+        const globalMocks = createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce(new utils.FilterDescriptor("\uFF0B " + "Create a new filter"));
@@ -1519,14 +1537,52 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
         const testTree = new DatasetTree();
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        const node = new ZoweDatasetNode(
+            "HLQ.PROD2.STUFF",
+            vscode.TreeItemCollapsibleState.Collapsed,
+            testTree.mSessionNodes[1],
+            blockMocks.session,
+            globals.DS_DS_CONTEXT
+        );
+        node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+        node.contextValue = globals.FILTER_SEARCH;
+        jest.spyOn(testTree.mSessionNodes[1], "getChildren").mockResolvedValueOnce([node]);
 
         await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
 
         expect(testTree.mSessionNodes[1].contextValue).toEqual(globals.DS_SESSION_CONTEXT + globals.ACTIVE_CONTEXT);
         expect(testTree.mSessionNodes[1].pattern).toEqual("HLQ.PROD1.STUFF");
     });
+    it("Checking adding of new filter of multiple ds search", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        mocked(vscode.window.showQuickPick).mockResolvedValueOnce(new utils.FilterDescriptor("\uFF0B " + "Create a new filter"));
+        mocked(vscode.window.showInputBox).mockResolvedValueOnce("HLQ.PROD(STUF*),HLQ.PROD1*");
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        testTree.mSessionNodes[1].collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+        const node = new ZoweDatasetNode(
+            "STUFF",
+            vscode.TreeItemCollapsibleState.Collapsed,
+            testTree.mSessionNodes[1],
+            blockMocks.session,
+            globals.DS_DS_CONTEXT
+        );
+        node.pattern = undefined as any;
+        node.contextValue += "pds";
+
+        jest.spyOn(testTree.mSessionNodes[1], "getChildren").mockReturnValueOnce([node] as any);
+        jest.spyOn(testTree, "checkFilterPattern").mockReturnValue(true);
+
+        await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
+
+        expect(testTree.mSessionNodes[1].contextValue).toEqual(globals.DS_SESSION_CONTEXT + globals.ACTIVE_CONTEXT);
+        expect(testTree.mSessionNodes[1].pattern).toEqual("HLQ.PROD, HLQ.PROD1*");
+    });
     it("Checking adding of new filter with data set member", async () => {
-        const globalMocks = await createGlobalMocks();
+        const globalMocks = createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce(new utils.FilterDescriptor("\uFF0B " + "Create a new filter"));
@@ -1539,7 +1595,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         expect(testTree.mSessionNodes[1].pattern).toEqual("HLQ.PROD1");
     });
     it("Checking adding of new filter with Unverified profile", async () => {
-        const globalMocks = await createGlobalMocks();
+        const globalMocks = createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
         Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
@@ -1567,7 +1623,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         expect(testTree.mSessionNodes[1].pattern).toEqual("HLQ.PROD1.STUFF");
     });
     it("Checking cancelled attempt to add a filter", async () => {
-        const globalMocks = await createGlobalMocks();
+        const globalMocks = createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce(new utils.FilterDescriptor("\uFF0B " + "Create a new filter"));
@@ -1581,7 +1637,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         expect(mocked(Gui.showMessage)).toBeCalledWith("You must enter a pattern.");
     });
     it("Checking usage of existing filter", async () => {
-        const globalMocks = await createGlobalMocks();
+        const globalMocks = createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
         const quickPickItem = new utils.FilterDescriptor("HLQ.PROD1.STUFF");
@@ -1602,7 +1658,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         expect(testTree.mSessionNodes[1].pattern).toEqual("HLQ.PROD1.STUFF");
     });
     it("Checking cancelling of filter prompt with available filters", async () => {
-        const globalMocks = await createGlobalMocks();
+        const globalMocks = createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
         const quickPickItem = undefined;
@@ -1618,6 +1674,95 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
 
         expect(mocked(Gui.showMessage)).toBeCalledWith("No selection made. Operation cancelled.");
+    });
+    it("Checking adding of new filter error is caught on getChildren", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        mocked(vscode.window.showQuickPick).mockResolvedValueOnce(new utils.FilterDescriptor("\uFF0B " + "Create a new filter"));
+        mocked(vscode.window.showInputBox).mockResolvedValueOnce("HLQ.PROD1.STUFF");
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        Object.defineProperty(testTree.mSessionNodes[1], "getChildren", {
+            value: jest.fn(() => {
+                throw new Error("test error");
+            }),
+            configurable: true,
+        });
+        const errorSpy = jest.spyOn(utils, "errorHandling");
+
+        await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
+
+        expect(errorSpy).toBeCalled();
+        errorSpy.mockClear();
+    });
+    it("Checking function for return if getChildren is undefined", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        mocked(vscode.window.showQuickPick).mockResolvedValueOnce(new utils.FilterDescriptor("\uFF0B " + "Create a new filter"));
+        mocked(vscode.window.showInputBox).mockResolvedValueOnce("HLQ.PROD1.STUFF");
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        Object.defineProperty(testTree.mSessionNodes[1], "getChildren", {
+            value: jest.fn(() => {
+                return;
+            }),
+            configurable: true,
+        });
+        const errorSpy = jest.spyOn(utils, "errorHandling");
+
+        expect(await testTree.datasetFilterPrompt(testTree.mSessionNodes[1])).not.toBeDefined();
+
+        expect(errorSpy).not.toBeCalled();
+        errorSpy.mockClear();
+    });
+    it("Checking function for return if element.getChildren calls error handling for success: false", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        const errorSpy = jest.spyOn(utils, "errorHandling");
+        const debugSpy = jest.spyOn(ZoweLogger, "debug");
+
+        mocked(vscode.window.showQuickPick).mockResolvedValueOnce(new utils.FilterDescriptor("\uFF0B " + "Create a new filter"));
+        mocked(vscode.window.showInputBox).mockResolvedValueOnce("HLQ.PROD1.STUFF");
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        Object.defineProperty(testTree.mSessionNodes[1], "getDatasets", {
+            value: jest.fn().mockResolvedValueOnce([
+                {
+                    success: false,
+                    commandResponse: null,
+                    apiResponse: "Error: test error",
+                },
+            ]),
+            configurable: true,
+        });
+
+        expect(await testTree.datasetFilterPrompt(testTree.mSessionNodes[1])).not.toBeDefined();
+        expect(debugSpy).toBeCalled();
+        expect(errorSpy).toBeCalled();
+        debugSpy.mockClear();
+        errorSpy.mockClear();
+    });
+    it("Checking function for return if element.getChildren returns undefined", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        mocked(vscode.window.showQuickPick).mockResolvedValueOnce(new utils.FilterDescriptor("\uFF0B " + "Create a new filter"));
+        mocked(vscode.window.showInputBox).mockResolvedValueOnce("HLQ.PROD1.STUFF");
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        Object.defineProperty(testTree.mSessionNodes[1], "getDatasets", {
+            value: jest.fn().mockResolvedValueOnce(undefined),
+            configurable: true,
+        });
+
+        expect(await testTree.datasetFilterPrompt(testTree.mSessionNodes[1])).not.toBeDefined();
     });
 });
 describe("Dataset Tree Unit Tests - Function editSession", () => {
@@ -1662,7 +1807,7 @@ describe("Dataset Tree Unit Tests - Function editSession", () => {
     }
 
     it("Checking common run of function", async () => {
-        const globalMocks = await createGlobalMocks();
+        createGlobalMocks();
         const blockMocks = await createBlockMocks();
 
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);

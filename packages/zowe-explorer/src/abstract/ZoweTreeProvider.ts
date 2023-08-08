@@ -151,7 +151,6 @@ export class ZoweTreeProvider {
         ZoweLogger.trace("ZoweTreeProvider.addSearchHistory called.");
         if (criteria) {
             this.mHistory.addSearchHistory(criteria);
-            this.refresh();
         }
     }
 
