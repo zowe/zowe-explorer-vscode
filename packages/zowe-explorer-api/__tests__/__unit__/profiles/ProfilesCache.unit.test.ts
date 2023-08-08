@@ -145,6 +145,12 @@ describe("ProfilesCache", () => {
         ]);
     });
 
+    it("requireKeyring returns keyring module from Secrets SDK", async () => {
+        const keyring = ProfilesCache.requireKeyring();
+        expect(keyring).toBeDefined();
+        expect(Object.keys(keyring).length).toBe(5);
+    });
+
     it("loadNamedProfile should find profiles by name and type", () => {
         const profCache = new ProfilesCache(fakeLogger as unknown as zowe.imperative.Logger);
         profCache.allProfiles = [lpar1Profile as zowe.imperative.IProfileLoaded, zftpProfile as zowe.imperative.IProfileLoaded];
