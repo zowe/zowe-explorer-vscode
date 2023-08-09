@@ -11,6 +11,7 @@
 
 import * as globals from "./globals";
 import * as vscode from "vscode";
+import * as zowe from "@zowe/cli";
 import { getZoweDir } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
 import { ZoweExplorerExtender } from "./ZoweExplorerExtender";
@@ -40,6 +41,16 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     const tempPath: string = SettingsConfig.getDirectValue(globals.SETTINGS_TEMP_FOLDER_PATH);
     // Determine the runtime framework to support special behavior for Theia
     globals.defineGlobals(tempPath);
+    zowe.ZosmfRestClient.prototype.request = function (options: zowe.imperative.IRestOptions): Promise<string> {
+        const sessCfg = JSON.parse(JSON.stringify(this.mSession.ISession));
+        for (const secureProp of ["user", "password", "base64EncodedAuth", "tokenValue"]) {
+            if (sessCfg[secureProp] != null) {
+                sessCfg[secureProp] = sessCfg[secureProp].replace(/./g, "*");
+            }
+        }
+        ZoweLogger.debug(`${options.request} ${options.resource} ${JSON.stringify(sessCfg)}`);
+        return zowe.imperative.AbstractRestClient.prototype.request.call(this, options); // eslint-disable-line
+    };
 
     await hideTempFolder(getZoweDir());
     await ProfilesUtils.initializeZoweProfiles();
