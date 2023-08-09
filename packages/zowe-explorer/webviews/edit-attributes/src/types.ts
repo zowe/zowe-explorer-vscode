@@ -13,7 +13,6 @@ export type FileAttributes = {
     name: string;
     owner: string;
     directory: boolean;
-    gid: number;
     group: string;
     perms: FilePermissions;
 };

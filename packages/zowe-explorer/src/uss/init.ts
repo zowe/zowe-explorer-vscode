@@ -178,15 +178,27 @@ export async function initUSSProvider(context: vscode.ExtensionContext): Promise
                                     });
                                     node.attributes.owner = attrs.owner;
                                 }
-                                if (node.attributes.gid !== attrs.gid) {
+                                if (!isNaN(attrs.group) && !isNaN(parseFloat(attrs.group))) {
+                                    const gid = parseInt(attrs.group);
+                                    if (node.attributes.gid !== gid) {
+                                        await Utilities.putUSSPayload(node.getSession(), node.fullPath, {
+                                            request: "chown",
+                                            owner: attrs.owner,
+                                            group: attrs.gid,
+                                            links: "follow",
+                                            recursive: true
+                                        });
+                                        node.attributes.gid = gid;
+                                    }
+                                } else if (node.attributes.group !== attrs.group) {
                                     await Utilities.putUSSPayload(node.getSession(), node.fullPath, {
                                         request: "chown",
                                         owner: attrs.owner,
-                                        group: attrs.gid,
+                                        group: attrs.group,
                                         links: "follow",
                                         recursive: true
                                     });
-                                    node.attributes.gid = attrs.gid;
+                                    node.attributes.group = attrs.group;
                                 }
                                 if (node.attributes.perms !== attrs.perms) {
                                     const permsAsOctal = permStringToOctal(attrs.perms);

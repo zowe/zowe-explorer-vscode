@@ -22,10 +22,7 @@ export function App() {
     initial: null,
   });
   const [isUpdating, setIsUpdating] = useState(false);
-  const [timestamps, setTimestamps] = useState<Record<"updated" | "refreshed", Date | null>>({
-    updated: null,
-    refreshed: null,
-  });
+  const [timestamp, setTimestamp] = useState<Date | null>();
 
   const updateButtons = (newAttributes: FileAttributes) => setAllowUpdate(!isEqual(attributes.initial, newAttributes));
 
@@ -66,7 +63,7 @@ export function App() {
 
       if ("updated" in event.data) {
         setIsUpdating(false);
-        setTimestamps((prev) => ({ ...prev, updated: new Date() }));
+        setTimestamp(new Date());
         return;
       }
 
@@ -83,7 +80,6 @@ export function App() {
       let attrs: FileAttributes = {
         directory: isDirectory,
         name: name,
-        gid: attributes.gid,
         group: attributes.group,
         owner: attributes.owner,
         perms: [group, user, other].reduce((all, permGroup, i) => {
@@ -143,17 +139,15 @@ export function App() {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <h1>File properties</h1>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            {timestamps.refreshed && (
-              <p style={{ fontStyle: "italic", marginRight: "1em" }}>Last refreshed: {timestamps.refreshed.toLocaleString(navigator.language)}</p>
-            )}
+            {timestamp && <p style={{ fontStyle: "italic", marginRight: "1em" }}>Last refreshed: {timestamp.toLocaleString(navigator.language)}</p>}
             <VSCodeButton
               appearance="secondary"
               onClick={() => {
                 vscodeApi.postMessage({ command: "refresh" });
-                setTimestamps((prev) => ({ ...prev, refreshed: new Date() }));
+                setTimestamp(new Date());
               }}
             >
-              Refresh
+              <span style={{ marginRight: "0.5em" }}>⟳</span>Refresh
             </VSCodeButton>
           </div>
         </div>
@@ -173,13 +167,6 @@ export function App() {
                 value={attributes.current.group}
               >
                 Group
-              </VSCodeTextField>
-              <VSCodeTextField
-                style={{ marginLeft: "1em" }}
-                onInput={(e: any) => updateFileAttributes("gid", e.target.value)}
-                value={attributes.current.gid}
-              >
-                Group ID
               </VSCodeTextField>
             </div>
             {attributes.current.perms ? (
@@ -229,9 +216,6 @@ export function App() {
               </VSCodeButton>
               {isUpdating && <VSCodeProgressRing style={{ marginLeft: "1em" }} />}
             </div>
-            {timestamps.updated && (
-              <p style={{ fontStyle: "italic", marginLeft: "1em" }}>Date modified: {timestamps.updated.toLocaleString(navigator.language)}</p>
-            )}
           </div>
         </div>
       </div>
