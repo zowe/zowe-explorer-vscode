@@ -19,3 +19,4 @@ temp
 *.tgz
 .tmp
 coverage/
+packages/zowe-explorer/webviews/*/dist/*

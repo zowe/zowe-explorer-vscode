@@ -17,19 +17,23 @@ const vscodeApi = acquireVsCodeApi();
 
 export function App() {
   const [allowUpdate, setAllowUpdate] = useState(false);
-  const [fileAttributes, setFileAttributes] = useState<FileAttributes | null>(null);
-  const [initialAttributes, setInitialAttributes] = useState<FileAttributes | null>(null);
+  const [attributes, setAttributes] = useState<Record<"current" | "initial", FileAttributes | null>>({
+    current: null,
+    initial: null,
+  });
   const [isUpdating, setIsUpdating] = useState(false);
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
-  const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null);
+  const [timestamps, setTimestamps] = useState<Record<"updated" | "refreshed", Date | null>>({
+    updated: null,
+    refreshed: null,
+  });
 
-  const updateButtons = (newAttributes: FileAttributes) => setAllowUpdate(!isEqual(initialAttributes, newAttributes));
+  const updateButtons = (newAttributes: FileAttributes) => setAllowUpdate(!isEqual(attributes.initial, newAttributes));
 
   const updateFileAttributes = (key: keyof FileAttributes, value: unknown) => {
-    if (fileAttributes && fileAttributes[key] != value) {
-      setFileAttributes((prev) => {
-        const newAttrs = { ...(prev ?? {}), [key]: value } as FileAttributes;
-        updateButtons(newAttrs);
+    if (attributes.current && attributes.current[key] != value) {
+      setAttributes((prev) => {
+        const newAttrs = { ...(prev ?? {}), current: { ...prev.current, [key]: value } as FileAttributes };
+        updateButtons(newAttrs.current);
         return newAttrs;
       });
     }
@@ -37,20 +41,20 @@ export function App() {
 
   const applyAttributes = () => {
     setIsUpdating(true);
-    if (fileAttributes) {
+    if (attributes.current) {
       // convert perm booleans to string
-      const permString = Object.values(fileAttributes.perms).reduce((all, perm) => {
+      const permString = Object.values(attributes.current.perms).reduce((all, perm) => {
         const read = perm.read ? "r" : "-";
         const write = perm.write ? "w" : "-";
         const execute = perm.execute ? "x" : "-";
         return all.concat(read, write, execute);
-      }, `${fileAttributes.directory ? "d" : "-"}`);
+      }, `${attributes.current.directory ? "d" : "-"}`);
       vscodeApi.postMessage({
         command: "update-attributes",
-        attrs: { ...fileAttributes, perms: permString },
+        attrs: { ...attributes.current, perms: permString },
       });
       setAllowUpdate(false);
-      setInitialAttributes({ ...fileAttributes });
+      setAttributes((prev) => ({ ...prev, initial: attributes.current }));
     }
   };
 
@@ -62,7 +66,7 @@ export function App() {
 
       if ("updated" in event.data) {
         setIsUpdating(false);
-        setLastUpdated(new Date());
+        setTimestamps((prev) => ({ ...prev, updated: new Date() }));
         return;
       }
 
@@ -108,37 +112,45 @@ export function App() {
         }, {}),
       };
 
-      setFileAttributes({ ...attrs });
-      setInitialAttributes({ ...attrs });
+      setAttributes({
+        initial: attrs,
+        current: attrs,
+      });
     });
     // signal to extension that webview is ready for data; prevents race condition during initialization
     vscodeApi.postMessage({ command: "ready" });
   }, []);
 
   const updatePerm = (group: keyof FilePermissions, perm: keyof PermissionSet, value: boolean) => {
-    if (fileAttributes) {
-      setFileAttributes((prev) => {
-        const newAttrs = { ...(prev ?? {}), perms: { ...prev?.perms, [group]: { ...prev?.perms[group], [perm]: value } } } as FileAttributes;
-        updateButtons(newAttrs);
+    if (attributes.current) {
+      setAttributes((prev) => {
+        const newAttrs = {
+          ...(prev ?? {}),
+          current: {
+            ...prev.current,
+            perms: { ...prev.current!.perms, [group]: { ...prev.current!.perms[group], [perm]: value } },
+          } as FileAttributes,
+        };
+        updateButtons(newAttrs.current);
         return newAttrs;
       });
     }
   };
 
   return (
-    fileAttributes && (
+    attributes.current && (
       <div>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <h1>File properties</h1>
-          <div style={{ display: "flex" }}>
-            {lastRefreshed && (
-              <p style={{ fontStyle: "italic", marginRight: "1em" }}>Date modified: {lastRefreshed.toLocaleString(navigator.language)}</p>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            {timestamps.refreshed && (
+              <p style={{ fontStyle: "italic", marginRight: "1em" }}>Last refreshed: {timestamps.refreshed.toLocaleString(navigator.language)}</p>
             )}
             <VSCodeButton
               appearance="secondary"
-              onClick={(_e) => {
+              onClick={() => {
                 vscodeApi.postMessage({ command: "refresh" });
-                setLastRefreshed(new Date());
+                setTimestamps((prev) => ({ ...prev, refreshed: new Date() }));
               }}
             >
               Refresh
@@ -146,31 +158,31 @@ export function App() {
           </div>
         </div>
         <strong>
-          <pre style={{ fontSize: "1.25em" }}>{fileAttributes.name}</pre>
+          <pre style={{ fontSize: "1.25em" }}>{attributes.current.name}</pre>
         </strong>
         <VSCodeDivider />
         <div style={{ marginTop: "1em" }}>
           <div style={{ maxWidth: "fit-content" }}>
             <div style={{ display: "flex", marginLeft: "1em" }}>
-              <VSCodeTextField value={fileAttributes.owner} onInput={(e: any) => updateFileAttributes("owner", e.target.value)}>
+              <VSCodeTextField value={attributes.current.owner} onInput={(e: any) => updateFileAttributes("owner", e.target.value)}>
                 Owner
               </VSCodeTextField>
               <VSCodeTextField
                 style={{ marginLeft: "1em" }}
                 onInput={(e: any) => updateFileAttributes("group", e.target.value)}
-                value={fileAttributes.group}
+                value={attributes.current.group}
               >
                 Group
               </VSCodeTextField>
               <VSCodeTextField
                 style={{ marginLeft: "1em" }}
                 onInput={(e: any) => updateFileAttributes("gid", e.target.value)}
-                value={fileAttributes.gid}
+                value={attributes.current.gid}
               >
                 Group ID
               </VSCodeTextField>
             </div>
-            {fileAttributes.perms ? (
+            {attributes.current.perms ? (
               <VSCodeDataGrid style={{ marginTop: "1em" }}>
                 <VSCodeDataGridRow>
                   <VSCodeDataGridCell cellType="columnheader" gridColumn="1">
@@ -196,7 +208,7 @@ export function App() {
                       {PERMISSION_GROUPS.map((group, i) => (
                         <VSCodeDataGridCell gridColumn={(i + 2).toString()}>
                           <VSCodeCheckbox
-                            checked={fileAttributes.perms[group][perm]}
+                            checked={attributes.current!.perms[group][perm]}
                             onChange={(e: any) => updatePerm(group, perm, e.target.checked)}
                           />
                         </VSCodeDataGridCell>
@@ -217,7 +229,9 @@ export function App() {
               </VSCodeButton>
               {isUpdating && <VSCodeProgressRing style={{ marginLeft: "1em" }} />}
             </div>
-            {lastUpdated && <p style={{ fontStyle: "italic", marginLeft: "1em" }}>Date modified: {lastUpdated.toLocaleString(navigator.language)}</p>}
+            {timestamps.updated && (
+              <p style={{ fontStyle: "italic", marginLeft: "1em" }}>Date modified: {timestamps.updated.toLocaleString(navigator.language)}</p>
+            )}
           </div>
         </div>
       </div>

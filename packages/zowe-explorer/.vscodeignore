@@ -7,8 +7,7 @@
 !out/src/nls.metadata*.json
 !resources/**/*.png
 !resources/**/*.svg
-!webviews/**/dist
-webviews/**/node_modules
+!webviews/*/dist/
 
 !CHANGELOG.md
 !LICENSE
