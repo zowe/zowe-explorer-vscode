@@ -21,6 +21,7 @@ export function App() {
   const [initialAttributes, setInitialAttributes] = useState<FileAttributes | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null);
 
   const updateButtons = (newAttributes: FileAttributes) => setAllowUpdate(!isEqual(initialAttributes, newAttributes));
 
@@ -43,7 +44,7 @@ export function App() {
         const write = perm.write ? "w" : "-";
         const execute = perm.execute ? "x" : "-";
         return all.concat(read, write, execute);
-      }, `${fileAttributes.directory ? "d" : ""}`);
+      }, `${fileAttributes.directory ? "d" : "-"}`);
       vscodeApi.postMessage({
         command: "update-attributes",
         attrs: { ...fileAttributes, perms: permString },
@@ -59,8 +60,6 @@ export function App() {
         return;
       }
 
-      console.log(event.data);
-
       if ("updated" in event.data) {
         setIsUpdating(false);
         setLastUpdated(new Date());
@@ -75,7 +74,6 @@ export function App() {
       const isDirectory = attributes.perms.charAt(0) == "d";
       // remove directory flag from perms string
       const perms = attributes.perms.substring(1);
-      console.log(perms);
       // split into 3 groups:
       const [group, user, other] = perms.match(/.{1,3}/g);
       let attrs: FileAttributes = {
@@ -119,14 +117,34 @@ export function App() {
 
   const updatePerm = (group: keyof FilePermissions, perm: keyof PermissionSet, value: boolean) => {
     if (fileAttributes) {
-      updateFileAttributes("perms", { ...fileAttributes.perms, [group]: { ...fileAttributes.perms[group], [perm]: value } });
+      setFileAttributes((prev) => {
+        const newAttrs = { ...(prev ?? {}), perms: { ...prev?.perms, [group]: { ...prev?.perms[group], [perm]: value } } } as FileAttributes;
+        updateButtons(newAttrs);
+        return newAttrs;
+      });
     }
   };
 
   return (
     fileAttributes && (
       <div>
-        <h1>File properties</h1>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <h1>File properties</h1>
+          <div style={{ display: "flex" }}>
+            {lastRefreshed && (
+              <p style={{ fontStyle: "italic", marginRight: "1em" }}>Date modified: {lastRefreshed.toLocaleString(navigator.language)}</p>
+            )}
+            <VSCodeButton
+              appearance="secondary"
+              onClick={(_e) => {
+                vscodeApi.postMessage({ command: "refresh" });
+                setLastRefreshed(new Date());
+              }}
+            >
+              Refresh
+            </VSCodeButton>
+          </div>
+        </div>
         <strong>
           <pre style={{ fontSize: "1.25em" }}>{fileAttributes.name}</pre>
         </strong>
@@ -199,7 +217,7 @@ export function App() {
               </VSCodeButton>
               {isUpdating && <VSCodeProgressRing style={{ marginLeft: "1em" }} />}
             </div>
-            {lastUpdated && <p style={{ fontStyle: "italic", marginLeft: "1em" }}>Last updated: {lastUpdated.toLocaleString(navigator.language)}</p>}
+            {lastUpdated && <p style={{ fontStyle: "italic", marginLeft: "1em" }}>Date modified: {lastUpdated.toLocaleString(navigator.language)}</p>}
           </div>
         </div>
       </div>

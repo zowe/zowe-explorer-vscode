@@ -152,6 +152,13 @@ export async function initUSSProvider(context: vscode.ExtensionContext): Promise
                 // eslint-disable-next-line @typescript-eslint/no-misused-promises
                 async (message: any) => {
                     switch (message.command) {
+                        case 'refresh':
+                            ussFileProvider.refreshElement(node);
+                            await editView.panel.webview.postMessage({
+                                attributes: node.attributes,
+                                name: node.fullPath
+                            });
+                            break;
                         case 'ready': 
                             await editView.panel.webview.postMessage({
                                 attributes: node.attributes,
