@@ -23,6 +23,7 @@ import { imperative, getImperativeConfig } from "@zowe/cli";
 import { ZoweExplorerExtender } from "../ZoweExplorerExtender";
 import { ZoweLogger } from "./LoggerUtils";
 import { SettingsConfig } from "./SettingsConfig";
+import { ApimlAuthenticationProvider } from "../ApimlAuthProvider";
 
 // Set up localization
 nls.config({
@@ -329,7 +330,14 @@ export class ProfilesUtils {
             }
         }
 
-        const creds = await Profiles.getInstance().promptCredentials(profile, true);
+        const authTypeOptions = ["User and password", "Auth token"];
+        const authType = await Gui.showQuickPick(authTypeOptions, { title: "Select an authentication method" });
+        let creds;
+        if (authType === authTypeOptions[0]) {
+            creds = await Profiles.getInstance().promptCredentials(profile, true);
+        } else if (authType === authTypeOptions[1]) {
+            creds = await vscode.authentication.getSession(ApimlAuthenticationProvider.authId, [], { forceNewSession: true });
+        }
 
         if (creds != null) {
             const successMsg = localize(

@@ -16,7 +16,6 @@ import {
     AuthenticationProvider,
     AuthenticationProviderAuthenticationSessionsChangeEvent,
     AuthenticationSession,
-    commands,
     Disposable,
     EventEmitter,
     ExtensionContext,
@@ -42,18 +41,8 @@ export class ApimlAuthenticationProvider implements AuthenticationProvider, Disp
                 if (e.provider.id === ApimlAuthenticationProvider.authId) {
                     // TODO handle session added/removed/changed
                 }
-            }),
-            commands.registerCommand("zowe.apimlLogin", async () => {
-                await this.createSession([]);
             })
         );
-    }
-
-    public static async getApimlSession(): Promise<void> {
-        const session = await authentication.getSession(ApimlAuthenticationProvider.authId, [], { createIfNone: false });
-        if (session) {
-            window.showInformationMessage(`Welcome back ${session.account.label}`);
-        }
     }
 
     public get onDidChangeSessions() {

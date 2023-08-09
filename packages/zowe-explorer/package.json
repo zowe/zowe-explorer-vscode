@@ -762,12 +762,6 @@
         "command": "zowe.jobs.downloadSingleSpoolBinary",
         "title": "%downloadSingleSpoolBinary%",
         "category": "Zowe Explorer"
-      },
-      {
-        "command": "zowe.apimlLogin",
-        "title": "Log in to API Mediation Layer",
-        "category": "Zowe Explorer",
-        "icon": "$(sign-in)"
       }
     ],
     "menus": {
@@ -948,16 +942,6 @@
           "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)ussSession.*/ && !listMultiSelection",
           "command": "zowe.promptCredentials",
           "group": "098_zowe_ussProfileAuthentication@3"
-        },
-        {
-          "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)ussSession.*/ && !listMultiSelection",
-          "command": "zowe.uss.ssoLogin",
-          "group": "098_zowe_ussProfileAuthentication@4"
-        },
-        {
-          "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)ussSession.*/ && !listMultiSelection",
-          "command": "zowe.uss.ssoLogout",
-          "group": "098_zowe_ussProfileAuthentication@5"
         },
         {
           "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*/ && !listMultiSelection",
@@ -1161,16 +1145,6 @@
         },
         {
           "when": "view == zowe.ds.explorer && viewItem =~ /^(?!.*_fav.*)session.*/ && !listMultiSelection",
-          "command": "zowe.ds.ssoLogin",
-          "group": "098_zowe_dsProfileAuthentication@9"
-        },
-        {
-          "when": "view == zowe.ds.explorer && viewItem =~ /^(?!.*_fav.*)session.*/ && !listMultiSelection",
-          "command": "zowe.ds.ssoLogout",
-          "group": "098_zowe_dsProfileAuthentication@10"
-        },
-        {
-          "when": "view == zowe.ds.explorer && viewItem =~ /^(?!.*_fav.*)session.*/ && !listMultiSelection",
           "command": "zowe.ds.editSession",
           "group": "099_zowe_dsProfileModification@0"
         },
@@ -1323,16 +1297,6 @@
           "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/ && !listMultiSelection",
           "command": "zowe.promptCredentials",
           "group": "098_zowe_jobsProfileAuthentication@5"
-        },
-        {
-          "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/ && !listMultiSelection",
-          "command": "zowe.jobs.ssoLogin",
-          "group": "098_zowe_jobsProfileAuthentication@6"
-        },
-        {
-          "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/ && !listMultiSelection",
-          "command": "zowe.jobs.ssoLogout",
-          "group": "098_zowe_jobsProfileAuthentication@7"
         },
         {
           "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/ && !listMultiSelection",
