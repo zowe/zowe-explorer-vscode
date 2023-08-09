@@ -762,6 +762,12 @@
         "command": "zowe.jobs.downloadSingleSpoolBinary",
         "title": "%downloadSingleSpoolBinary%",
         "category": "Zowe Explorer"
+      },
+      {
+        "command": "zowe.apimlLogin",
+        "title": "Log in to API Mediation Layer",
+        "category": "Zowe Explorer",
+        "icon": "$(sign-in)"
       }
     ],
     "menus": {

@@ -26,6 +26,7 @@ import { IZoweProviders, registerCommonCommands, registerRefreshCommand, watchCo
 import { ZoweLogger } from "./utils/LoggerUtils";
 import { ZoweSaveQueue } from "./abstract/ZoweSaveQueue";
 import { PollDecorator } from "./utils/DecorationProviders";
+import { ApimlAuthenticationProvider } from "./ApimlAuthProvider";
 
 /**
  * The function that runs when the extension is loaded
@@ -59,6 +60,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     };
 
     registerCommonCommands(context, providers);
+    context.subscriptions.push(new ApimlAuthenticationProvider(context));
     ZoweExplorerExtender.createInstance(providers.ds, providers.uss, providers.job);
     await SettingsConfig.standardizeSettings();
     watchConfigProfile(context, providers);
