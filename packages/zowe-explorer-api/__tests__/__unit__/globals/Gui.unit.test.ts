@@ -15,8 +15,8 @@ import * as vscode from "vscode";
 import { DOUBLE_CLICK_SPEED_MS } from "../../../src/globals";
 jest.mock("vscode");
 
-function createGlobalMocks() {
-    const mocks = {
+function createGlobalMocks(): any {
+    const globalMocks = {
         showInfoMessage: jest.fn(),
         showErrorMessage: jest.fn(),
         showWarningMessage: jest.fn(),
@@ -46,7 +46,7 @@ function createGlobalMocks() {
     Object.defineProperty(vscode.window, "showOpenDialog", { value: mocks.showOpenDialog });
     Object.defineProperty(vscode.window, "showInputBox", { value: mocks.showInputBox });
 
-    return mocks;
+    return globalMocks;
 }
 const mocks = createGlobalMocks();
 
@@ -150,6 +150,7 @@ describe("Gui unit tests", () => {
     });
 
     it("can resolve a quick pick when accepted", async () => {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
         const mockDidAccept = jest.fn((callback: Function) => callback());
         await Gui.resolveQuickPick({
             activeItems: ["test"],
@@ -160,6 +161,7 @@ describe("Gui unit tests", () => {
     });
 
     it("can resolve a quick pick when hidden", async () => {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
         const mockDidHide = jest.fn((callback: Function) => callback());
         await Gui.resolveQuickPick({
             activeItems: ["test"],

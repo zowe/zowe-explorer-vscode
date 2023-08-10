@@ -99,7 +99,7 @@ describe("FtpJesApi", () => {
         const jobDetails = { jobid: "123", jobname: "JOB1" };
         JobUtils.findJobByID = jest.fn().mockReturnValue(jobDetails);
 
-        expect(JesApi.downloadSpoolContent).rejects.toThrowError();
+        await expect(JesApi.downloadSpoolContent).rejects.toThrowError();
     });
 
     it("should get spool content by id.", async () => {
@@ -143,11 +143,11 @@ describe("FtpJesApi", () => {
         expect(JesApi.releaseConnection).toBeCalled();
     });
 
-    it("does not support getJclForJob", () => {
-        expect(JesApi.getJclForJob({} as any)).rejects.toThrowError();
+    it("does not support getJclForJob", async () => {
+        await expect(JesApi.getJclForJob({} as any)).rejects.toThrowError();
     });
 
-    it("does not support submitJcl", () => {
-        expect(JesApi.submitJcl("", "", "")).rejects.toThrowError();
+    it("does not support submitJcl", async () => {
+        await expect(JesApi.submitJcl("", "", "")).rejects.toThrowError();
     });
 });

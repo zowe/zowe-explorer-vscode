@@ -175,7 +175,7 @@ describe("FtpMvsApi", () => {
             options: { encoding: "" },
         };
         jest.spyOn(MvsApi, "ftpClient").mockReturnValueOnce(null);
-        expect(MvsApi.getContents(mockParams.dataSetName, mockParams.options)).rejects.toThrowError();
+        await expect(MvsApi.getContents(mockParams.dataSetName, mockParams.options)).rejects.toThrowError();
     });
 
     it("should rename dataset or dataset member.", async () => {
