@@ -57,6 +57,11 @@ export function App() {
 
   useEffect(() => {
     window.addEventListener("message", (event) => {
+      // Prevent users from sending data into webview outside of extension/webview context
+      if (!event.origin || !event.origin.startsWith("vscode-webview://")) {
+        return;
+      }
+
       if (!event.data) {
         return;
       }
