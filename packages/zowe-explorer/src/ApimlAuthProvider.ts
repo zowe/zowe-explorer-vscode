@@ -18,7 +18,6 @@ import {
     AuthenticationSession,
     Disposable,
     EventEmitter,
-    ExtensionContext,
     window,
 } from "vscode";
 import * as zowe from "@zowe/cli";
@@ -28,11 +27,12 @@ import { Profiles } from "./Profiles";
 export class ApimlAuthenticationProvider implements AuthenticationProvider, Disposable {
     private _disposable: Disposable;
     private _sessionChangeEmitter = new EventEmitter<AuthenticationProviderAuthenticationSessionsChangeEvent>();
+    private static mInstance: ApimlAuthenticationProvider;
 
     public static readonly authId = "zoweapiml";
     public static readonly authName = "Zowe API ML";
 
-    public constructor(private readonly context: ExtensionContext) {
+    private constructor() {
         this._disposable = Disposable.from(
             authentication.registerAuthenticationProvider(ApimlAuthenticationProvider.authId, ApimlAuthenticationProvider.authName, this, {
                 supportsMultipleAccounts: false,
@@ -43,6 +43,13 @@ export class ApimlAuthenticationProvider implements AuthenticationProvider, Disp
                 }
             })
         );
+    }
+
+    public static get instance(): ApimlAuthenticationProvider {
+        if (this.mInstance == null) {
+            this.mInstance = new ApimlAuthenticationProvider();
+        }
+        return this.mInstance;
     }
 
     public get onDidChangeSessions() {

@@ -330,25 +330,30 @@ export class ProfilesUtils {
             }
         }
 
-        const authTypeOptions = ["User and password", "Auth token"];
+        const authTypeOptions: vscode.QuickPickItem[] = [
+            { label: "User and Password" },
+            { label: "Authentication Token" },
+            globals.SEPARATORS.BLANK,
+            { label: "Log out of Authentication Service" },
+        ];
         const authType = await Gui.showQuickPick(authTypeOptions, { title: "Select an authentication method" });
-        let creds;
         if (authType === authTypeOptions[0]) {
-            creds = await Profiles.getInstance().promptCredentials(profile, true);
+            const creds = await Profiles.getInstance().promptCredentials(profile, true);
+            if (creds != null) {
+                const successMsg = localize(
+                    "promptCredentials.updatedCredentials",
+                    "Credentials for {0} were successfully updated",
+                    typeof profile === "string" ? profile : profile.name
+                );
+                ZoweLogger.info(successMsg);
+                Gui.showMessage(successMsg);
+                // config file watcher isn't noticing changes for secure fields
+                await vscode.commands.executeCommand("zowe.extRefresh");
+            }
         } else if (authType === authTypeOptions[1]) {
-            creds = await vscode.authentication.getSession(ApimlAuthenticationProvider.authId, [], { forceNewSession: true });
-        }
-
-        if (creds != null) {
-            const successMsg = localize(
-                "promptCredentials.updatedCredentials",
-                "Credentials for {0} were successfully updated",
-                typeof profile === "string" ? profile : profile.name
-            );
-            ZoweLogger.info(successMsg);
-            Gui.showMessage(successMsg);
-            // config file watcher isn't noticing changes for secure fields
-            await vscode.commands.executeCommand("zowe.extRefresh");
+            await Profiles.getInstance().ssoLogin(node);
+        } else if (authType === authTypeOptions[3]) {
+            await Profiles.getInstance().ssoLogout(node);
         }
     }
 

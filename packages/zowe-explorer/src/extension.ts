@@ -60,7 +60,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     };
 
     registerCommonCommands(context, providers);
-    context.subscriptions.push(new ApimlAuthenticationProvider(context));
+    context.subscriptions.push(ApimlAuthenticationProvider.instance);
     ZoweExplorerExtender.createInstance(providers.ds, providers.uss, providers.job);
     await SettingsConfig.standardizeSettings();
     watchConfigProfile(context, providers);
