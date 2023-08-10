@@ -22,4 +22,3 @@ jobs:
         uses: awharn/check_changelog_action@v1
         with:
           header: "## TBD Release"
-          yarnWorkspaces: true

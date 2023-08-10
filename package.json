@@ -8,9 +8,6 @@
     "url": "https://github.com/zowe/vscode-extension-for-zowe"
   },
   "private": true,
-  "workspaces": [
-    "packages/*"
-  ],
   "engines": {
     "vscode": "^1.53.2"
   },
@@ -40,27 +37,28 @@
     "prettier": "2.6.0",
     "rimraf": "^3.0.2",
     "ts-jest": "^29.0.3",
+    "ts-loader": "^8.2.0",
     "typescript": "^4.5.3",
     "vsce": "2.15.0",
     "vscode-nls-dev": "^4.0.0",
-    "vscode-test": "^1.4.0",
-    "yarn": "1.22.19"
+    "vscode-test": "^1.4.0"
   },
-  "resolutions": {
+  "overrides": {
     "**/json5": "^2.2.2"
   },
   "scripts": {
-    "clean": "yarn workspaces run clean",
-    "fresh-clone": "yarn workspaces run fresh-clone && rimraf node_modules",
-    "prepare": "husky install && yarn build",
-    "lint": "yarn workspaces run lint",
-    "lint:html": "yarn workspaces run lint:html",
-    "madge": "yarn workspaces run madge",
+    "clean": "pnpm -r run clean",
+    "fresh-clone": "pnpm -r --parallel fresh-clone && rimraf node_modules",
+    "prepare": "husky install && pnpm build",
+    "lint": "pnpm -r run lint",
+    "lint:html": "pnpm -r run lint:html",
+    "madge": "pnpm -r run madge",
     "pretty": "prettier --write .",
-    "build": "yarn workspaces run build",
-    "test": "yarn workspaces run test",
-    "package": "yarn workspaces run package",
+    "build": "pnpm -r run build",
+    "test": "pnpm -r run test",
+    "package": "pnpm run -r package",
     "pretest:integration": "ts-node ./scripts/create-env.ts",
-    "posttest:integration": "ts-node ./scripts/clean-env.ts"
+    "posttest:integration": "ts-node ./scripts/clean-env.ts",
+    "preinstall": "npx only-allow pnpm"
   }
 }

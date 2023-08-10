@@ -29,14 +29,14 @@ jobs:
       - uses: actions/checkout@v3
 
       # install dependencies
-      - run: yarn install --frozen-lockfile
+      - run: pnpm install --frozen-lockfile
 
       # copy test data file needed for build :-(
       - name: Create test data file
         run: cp packages/zowe-explorer/resources/testProfileData.example.ts packages/zowe-explorer/resources/testProfileData.ts
 
       - name: Build vsix
-        run: yarn workspace vscode-extension-for-zowe package
+        run: pnpm workspace vscode-extension-for-zowe package
 
       - name: Create extension install directory
         run: mkdir -p temp/plugins && chmod -R 777 temp
@@ -71,9 +71,9 @@ jobs:
         run: curl --fail http://localhost:3000
 
       - name: Prep integration test files
-        run: yarn workspace vscode-extension-for-zowe build:integration
+        run: pnpm workspace vscode-extension-for-zowe build:integration
 
-      - run: yarn workspace vscode-extension-for-zowe test:theia
+      - run: pnpm workspace vscode-extension-for-zowe test:theia
 
       - name: Upload test results
         if: success() || failure()
