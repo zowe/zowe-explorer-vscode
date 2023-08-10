@@ -28,6 +28,9 @@ jobs:
       # check out source
       - uses: actions/checkout@v3
 
+      # install pnpm
+      - run: npm install -g pnpm
+
       # install dependencies
       - run: pnpm install --frozen-lockfile --shamefully-hoist=true
 
