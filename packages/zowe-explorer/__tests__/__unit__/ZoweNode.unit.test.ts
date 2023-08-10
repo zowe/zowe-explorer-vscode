@@ -184,33 +184,6 @@ describe("Unit Tests (Jest)", () => {
     });
 
     /*************************************************************************************************************
-     * Checks that the catch block is reached when an error is thrown
-     *************************************************************************************************************/
-    it(
-        "Checks that when bright.List.dataSet/allMembers() causes an error on the zowe call, " + "it throws an error and the catch block is reached",
-        async () => {
-            Object.defineProperty(Profiles, "getInstance", {
-                value: jest.fn(() => {
-                    return {
-                        loadNamedProfile: jest.fn().mockReturnValue(profileOne),
-                    };
-                }),
-            });
-            showErrorMessage.mockReset();
-            // Creating a rootNode
-            const rootNode = new ZoweDatasetNode("root", vscode.TreeItemCollapsibleState.Collapsed, null, session, undefined, undefined, profileOne);
-            rootNode.contextValue = globals.DS_SESSION_CONTEXT;
-            rootNode.pattern = "THROW ERROR";
-            rootNode.dirty = true;
-            await rootNode.getChildren();
-            expect(showErrorMessage.mock.calls.length).toEqual(1);
-            expect(showErrorMessage.mock.calls[0][0]).toEqual(
-                "Retrieving response from zowe.List Error: Throwing an error to check error handling for unit tests!"
-            );
-        }
-    );
-
-    /*************************************************************************************************************
      * Checks that returning an unsuccessful response results in an error being thrown and caught
      *************************************************************************************************************/
     it(
@@ -373,9 +346,49 @@ describe("Unit Tests (Jest)", () => {
     });
 
     /*************************************************************************************************************
+     * Multiple member names returned
+     *************************************************************************************************************/
+    it("Testing what happens when response has multiple members", async () => {
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    loadNamedProfile: jest.fn().mockReturnValue(profileOne),
+                };
+            }),
+        });
+        // Creating a rootNode
+        const pds = new ZoweDatasetNode(
+            "[root]: something",
+            vscode.TreeItemCollapsibleState.Collapsed,
+            { getSessionNode: jest.fn() } as unknown as ZoweDatasetNode,
+            session,
+            undefined,
+            undefined,
+            profileOne
+        );
+        pds.dirty = true;
+        pds.contextValue = globals.DS_PDS_CONTEXT;
+        const allMembers = jest.fn();
+        allMembers.mockImplementationOnce(() => {
+            return {
+                success: true,
+                apiResponse: {
+                    items: [{ member: "BADMEM\ufffd" }, { member: "GOODMEM1" }],
+                },
+            };
+        });
+        Object.defineProperty(List, "allMembers", { value: allMembers });
+        const pdsChildren = await pds.getChildren();
+        expect(pdsChildren[0].label).toEqual("BADMEM\ufffd");
+        expect(pdsChildren[0].contextValue).toEqual(globals.DS_FILE_ERROR_CONTEXT);
+        expect(pdsChildren[1].label).toEqual("GOODMEM1");
+        expect(pdsChildren[1].contextValue).toEqual(globals.DS_MEMBER_CONTEXT);
+    });
+
+    /*************************************************************************************************************
      * No values returned
      *************************************************************************************************************/
-    it("Testing what happens when response is zero", async () => {
+    it("Testing what happens when response has no members", async () => {
         Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
