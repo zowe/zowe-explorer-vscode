@@ -10,7 +10,7 @@
  */
 
 import * as zowe from "@zowe/cli";
-import { ProfilesCache } from "./ProfilesCache";
+import { EventTypes, ProfilesCache } from "./ProfilesCache";
 
 /**
  * This namespace provides interfaces for all the external APIs provided by this VS Code Extension.
@@ -653,12 +653,12 @@ export namespace ZoweExplorerApi {
          * Register a callback function to be used when a change to the team config profile is performed.
          * @param callback
          */
-        registerProfileChangeCallback(callback: Function): void;
+        registerProfileChangeCallback(callback: (eventType: EventTypes) => Promise<void>): void;
 
         /**
          * Get function that is called when a change to the team config profile is performed.
          * @returns Function
          */
-        getProfileChangeCallback(): Function;
+        getProfileChangeCallback(): (eventType: EventTypes) => Promise<void>;
     }
 }

@@ -45,6 +45,12 @@ export enum ValidProfileEnum {
     INVALID = -1,
 }
 
+export enum EventTypes {
+    CREATE,
+    UPDATE,
+    DELETE,
+}
+
 export function getZoweDir(): string {
     return zowe.getZoweDir();
 }
