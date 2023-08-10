@@ -44,7 +44,7 @@ jobs:
 
       - run: pnpm config set network-timeout 60000 && pnpm install --frozen-lockfile --shamefully-hoist=true
 
-      - run: pnpm workspace zowe-explorer-ftp-extension test
+      - run: pnpm --filter zowe-explorer-ftp-extension test
         env:
           CI: true
           NODE_OPTIONS: --max_old_space_size=4096
