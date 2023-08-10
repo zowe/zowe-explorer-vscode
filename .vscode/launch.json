@@ -46,7 +46,7 @@
       "type": "node",
       "name": "Zowe Explorer Unit Tests (Jest)",
       "request": "launch",
-      "program": "${workspaceFolder}/node_modules/yarn/bin/yarn.js",
+      "program": "${workspaceFolder}/node_modules/pnpm/bin/pnpm.js",
       "args": ["run", "test"],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal",

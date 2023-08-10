@@ -18,8 +18,8 @@ jobs:
           node-version: lts/*
 
       - run: |
-          npm install -g yarn
-          yarn install --frozen-lockfile
+          npm install -g pnpm
+          pnpm install --frozen-lockfile
 
       - name: Run madge to check for circular dependencies
-        run: yarn madge
+        run: pnpm madge

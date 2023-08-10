@@ -25,7 +25,7 @@
       "options": {
         "cwd": "${workspaceFolder}/packages/zowe-explorer"
       },
-      "command": "yarn",
+      "command": "pnpm",
       "args": ["watch"],
       "problemMatcher": [
         {
@@ -66,7 +66,7 @@
       "options": {
         "cwd": "${workspaceFolder}/packages/zowe-explorer-ftp-extension"
       },
-      "command": "yarn",
+      "command": "pnpm",
       "args": ["watch"],
       "problemMatcher": [
         {
@@ -117,7 +117,7 @@
       "options": {
         "cwd": "${workspaceFolder}/packages/zowe-explorer"
       },
-      "command": "yarn",
+      "command": "pnpm",
       "args": ["build:integration"],
       "dependsOn": "Pretest"
     },

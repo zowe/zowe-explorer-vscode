@@ -39,12 +39,12 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
 
-      # install yarn
-      - run: npm install -g yarn
+      # install pnpm
+      - run: npm install -g pnpm
 
-      - run: yarn config set network-timeout 60000 && yarn install --frozen-lockfile
+      - run: pnpm config set network-timeout 60000 && pnpm install --frozen-lockfile
 
-      - run: yarn workspace zowe-explorer-ftp-extension test
+      - run: pnpm workspace zowe-explorer-ftp-extension test
         env:
           CI: true
           NODE_OPTIONS: --max_old_space_size=4096
@@ -65,7 +65,7 @@ jobs:
 
       - name: Package VSIX
         if: matrix.os == 'ubuntu-latest' && matrix.node-version == '16.x'
-        run: yarn package
+        run: pnpm package
         working-directory: packages/zowe-explorer-ftp-extension
 
       - name: Archive VSIX artifact

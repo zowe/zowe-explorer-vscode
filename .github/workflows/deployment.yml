@@ -34,11 +34,11 @@ jobs:
         with:
           node-version: '16.x'
 
-      - name: Install Yarn and Lerna
-        run: npm install -g yarn lerna@6
+      - name: Install pnpm and Lerna
+        run: npm install -g pnpm lerna@6
 
       - name: Build Source
-        run: yarn
+        run: pnpm
 
       - name: Get Project Version
         id: lerna
