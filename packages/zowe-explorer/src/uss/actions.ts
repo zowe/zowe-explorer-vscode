@@ -10,13 +10,13 @@
  */
 
 import * as vscode from "vscode";
-import { imperative, IZosFilesResponse } from "@zowe/cli";
+import { imperative, IZosFilesResponse, Utilities } from "@zowe/cli";
 import * as fs from "fs";
 import * as globals from "../globals";
 import * as path from "path";
 import { concatChildNodes, uploadContent, getSelectedNodeList, getDefaultUri, compareFileContent } from "../shared/utils";
 import { errorHandling } from "../utils/ProfilesUtils";
-import { Gui, ValidProfileEnum, IZoweTree, IZoweUSSTreeNode } from "@zowe/zowe-explorer-api";
+import { Gui, ValidProfileEnum, IZoweTree, IZoweUSSTreeNode, permStringToOctal, Vite } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { isBinaryFileSync } from "isbinaryfile";
@@ -210,6 +210,84 @@ export async function uploadFile(node: IZoweUSSTreeNode, doc: vscode.TextDocumen
     } catch (e) {
         await errorHandling(e, node.mProfileName);
     }
+}
+
+export function editAttributes(context: vscode.ExtensionContext, fileProvider: IZoweTree<IZoweUSSTreeNode>, node: IZoweUSSTreeNode): void {
+    const editView = new Vite.View(
+        `Edit Attributes${node?.label ? `: ${node.label as string}` : ""}`,
+        "edit-attributes",
+        context,
+        async (message: any) => {
+            switch (message.command) {
+                case "refresh":
+                    fileProvider.refreshElement(node);
+                    await editView.panel.webview.postMessage({
+                        attributes: node.attributes,
+                        name: node.fullPath,
+                    });
+                    break;
+                case "ready":
+                    await editView.panel.webview.postMessage({
+                        attributes: node.attributes,
+                        name: node.fullPath,
+                    });
+                    break;
+                case "update-attributes":
+                    if (Object.keys(message.attrs).length > 0) {
+                        const attrs = message.attrs;
+                        if (node.attributes.owner !== attrs.owner) {
+                            await Utilities.putUSSPayload(node.getSession(), node.fullPath, {
+                                request: "chown",
+                                owner: attrs.owner,
+                                group: attrs.group,
+                                links: "follow",
+                                recursive: true,
+                            });
+                            node.attributes.owner = attrs.owner;
+                        }
+                        if (!isNaN(attrs.group) && !isNaN(parseFloat(attrs.group))) {
+                            const gid = parseInt(attrs.group);
+                            if (node.attributes.gid !== gid) {
+                                await Utilities.putUSSPayload(node.getSession(), node.fullPath, {
+                                    request: "chown",
+                                    owner: attrs.owner,
+                                    group: attrs.gid,
+                                    links: "follow",
+                                    recursive: true,
+                                });
+                                node.attributes.gid = gid;
+                            }
+                        } else if (node.attributes.group !== attrs.group) {
+                            await Utilities.putUSSPayload(node.getSession(), node.fullPath, {
+                                request: "chown",
+                                owner: attrs.owner,
+                                group: attrs.group,
+                                links: "follow",
+                                recursive: true,
+                            });
+                            node.attributes.group = attrs.group;
+                        }
+                        if (node.attributes.perms !== attrs.perms) {
+                            const permsAsOctal = permStringToOctal(attrs.perms);
+                            await Utilities.putUSSPayload(node.getSession(), node.fullPath, {
+                                request: "chmod",
+                                mode: permsAsOctal,
+                                links: "follow",
+                                recursive: true,
+                            });
+                            node.attributes.perms = attrs.perms;
+                        }
+                        await editView.panel.webview.postMessage({
+                            updated: true,
+                        });
+                        await Gui.infoMessage(`Updated file attributes for ${node.fullPath}`);
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
+    );
 }
 
 /**

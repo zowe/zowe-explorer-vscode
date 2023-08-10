@@ -51,9 +51,17 @@ export class View {
             build: Uri.file(joinPath(context.extensionPath, "webviews", dirName)),
             script: Uri.file(joinPath(context.extensionPath, "webviews", dirName, "dist", "assets", "index.js"))
         };
+
+        this.panel = window.createWebviewPanel("vite", this.title, ViewColumn.Beside, {
+            enableScripts: true,
+            localResourceRoots: [
+                this.uris.disk.build
+            ]
+        });
+
         this.uris.resource = {
-            build: this.uris.disk.build.with({ scheme: "vscode-resource" }),
-            script: this.uris.disk.script.with({ scheme: "vscode-resource" }),
+            build: this.panel.webview.asWebviewUri(this.uris.disk.build),
+            script: this.panel.webview.asWebviewUri(this.uris.disk.script),
         };
 
         const template = Handlebars.compile(HTMLTemplate);
@@ -61,13 +69,6 @@ export class View {
             uris: this.uris,
             nonce: this.nonce,
             title: this.title,
-        });
-
-        this.panel = window.createWebviewPanel("vite", this.title, ViewColumn.Beside, {
-            enableScripts: true,
-            localResourceRoots: [
-                this.uris.disk.build
-            ]
         });
         if (onDidReceiveMessage) {
             this.panel.webview.onDidReceiveMessage(async (message) => onDidReceiveMessage(message));

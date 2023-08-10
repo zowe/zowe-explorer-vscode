@@ -133,92 +133,99 @@ export function App() {
     }
   };
 
-  return (
-    attributes.current && (
-      <div>
+  return attributes.current ? (
+    <div>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <h1>File properties</h1>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <h1>File properties</h1>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            {timestamp && <p style={{ fontStyle: "italic", marginRight: "1em" }}>Last refreshed: {timestamp.toLocaleString(navigator.language)}</p>}
+          {timestamp && <p style={{ fontStyle: "italic", marginRight: "1em" }}>Last refreshed: {timestamp.toLocaleString(navigator.language)}</p>}
+          <VSCodeButton
+            appearance="secondary"
+            onClick={() => {
+              vscodeApi.postMessage({ command: "refresh" });
+              setTimestamp(new Date());
+            }}
+          >
+            <span style={{ marginRight: "0.5em" }}>⟳</span>Refresh
+          </VSCodeButton>
+        </div>
+      </div>
+      <strong>
+        <pre style={{ fontSize: "1.25em" }}>{attributes.current.name}</pre>
+      </strong>
+      <VSCodeDivider />
+      <div style={{ marginTop: "1em" }}>
+        <div style={{ maxWidth: "fit-content" }}>
+          <div style={{ display: "flex", marginLeft: "1em" }}>
+            <VSCodeTextField value={attributes.current.owner} onInput={(e: any) => updateFileAttributes("owner", e.target.value)}>
+              Owner
+            </VSCodeTextField>
+            <VSCodeTextField
+              style={{ marginLeft: "1em" }}
+              onInput={(e: any) => updateFileAttributes("group", e.target.value)}
+              value={attributes.current.group}
+            >
+              Group
+            </VSCodeTextField>
+          </div>
+          {attributes.current.perms ? (
+            <VSCodeDataGrid style={{ marginTop: "1em" }}>
+              <VSCodeDataGridRow>
+                <VSCodeDataGridCell cellType="columnheader" gridColumn="1">
+                  Permission
+                </VSCodeDataGridCell>
+                <VSCodeDataGridCell cellType="columnheader" gridColumn="2">
+                  Group
+                </VSCodeDataGridCell>
+                <VSCodeDataGridCell cellType="columnheader" gridColumn="3">
+                  Owner
+                </VSCodeDataGridCell>
+                <VSCodeDataGridCell cellType="columnheader" gridColumn="4">
+                  All
+                </VSCodeDataGridCell>
+              </VSCodeDataGridRow>
+              {PERMISSION_TYPES.map((perm) => {
+                const capitalizedPerm = perm.charAt(0).toUpperCase() + perm.slice(1);
+                return (
+                  <VSCodeDataGridRow>
+                    <VSCodeDataGridCell cellType="rowheader" gridColumn="1">
+                      {capitalizedPerm}
+                    </VSCodeDataGridCell>
+                    {PERMISSION_GROUPS.map((group, i) => (
+                      <VSCodeDataGridCell gridColumn={(i + 2).toString()}>
+                        <VSCodeCheckbox
+                          checked={attributes.current!.perms[group][perm]}
+                          onChange={(e: any) => updatePerm(group, perm, e.target.checked)}
+                        />
+                      </VSCodeDataGridCell>
+                    ))}
+                  </VSCodeDataGridRow>
+                );
+              })}
+            </VSCodeDataGrid>
+          ) : null}
+          <div style={{ display: "flex", alignItems: "center", marginLeft: "1em", marginTop: "1em" }}>
             <VSCodeButton
-              appearance="secondary"
+              disabled={!allowUpdate}
               onClick={() => {
-                vscodeApi.postMessage({ command: "refresh" });
-                setTimestamp(new Date());
+                applyAttributes();
               }}
             >
-              <span style={{ marginRight: "0.5em" }}>⟳</span>Refresh
+              Apply changes
             </VSCodeButton>
-          </div>
-        </div>
-        <strong>
-          <pre style={{ fontSize: "1.25em" }}>{attributes.current.name}</pre>
-        </strong>
-        <VSCodeDivider />
-        <div style={{ marginTop: "1em" }}>
-          <div style={{ maxWidth: "fit-content" }}>
-            <div style={{ display: "flex", marginLeft: "1em" }}>
-              <VSCodeTextField value={attributes.current.owner} onInput={(e: any) => updateFileAttributes("owner", e.target.value)}>
-                Owner
-              </VSCodeTextField>
-              <VSCodeTextField
-                style={{ marginLeft: "1em" }}
-                onInput={(e: any) => updateFileAttributes("group", e.target.value)}
-                value={attributes.current.group}
-              >
-                Group
-              </VSCodeTextField>
-            </div>
-            {attributes.current.perms ? (
-              <VSCodeDataGrid style={{ marginTop: "1em" }}>
-                <VSCodeDataGridRow>
-                  <VSCodeDataGridCell cellType="columnheader" gridColumn="1">
-                    Permission
-                  </VSCodeDataGridCell>
-                  <VSCodeDataGridCell cellType="columnheader" gridColumn="2">
-                    Group
-                  </VSCodeDataGridCell>
-                  <VSCodeDataGridCell cellType="columnheader" gridColumn="3">
-                    Owner
-                  </VSCodeDataGridCell>
-                  <VSCodeDataGridCell cellType="columnheader" gridColumn="4">
-                    All
-                  </VSCodeDataGridCell>
-                </VSCodeDataGridRow>
-                {PERMISSION_TYPES.map((perm) => {
-                  const capitalizedPerm = perm.charAt(0).toUpperCase() + perm.slice(1);
-                  return (
-                    <VSCodeDataGridRow>
-                      <VSCodeDataGridCell cellType="rowheader" gridColumn="1">
-                        {capitalizedPerm}
-                      </VSCodeDataGridCell>
-                      {PERMISSION_GROUPS.map((group, i) => (
-                        <VSCodeDataGridCell gridColumn={(i + 2).toString()}>
-                          <VSCodeCheckbox
-                            checked={attributes.current!.perms[group][perm]}
-                            onChange={(e: any) => updatePerm(group, perm, e.target.checked)}
-                          />
-                        </VSCodeDataGridCell>
-                      ))}
-                    </VSCodeDataGridRow>
-                  );
-                })}
-              </VSCodeDataGrid>
-            ) : null}
-            <div style={{ display: "flex", alignItems: "center", marginLeft: "1em", marginTop: "1em" }}>
-              <VSCodeButton
-                disabled={!allowUpdate}
-                onClick={() => {
-                  applyAttributes();
-                }}
-              >
-                Apply changes
-              </VSCodeButton>
-              {isUpdating && <VSCodeProgressRing style={{ marginLeft: "1em" }} />}
-            </div>
+            {isUpdating && <VSCodeProgressRing style={{ marginLeft: "1em" }} />}
           </div>
         </div>
       </div>
-    )
+    </div>
+  ) : (
+    <div>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <h1>File properties</h1>
+        <VSCodeProgressRing style={{ marginLeft: "1em" }} />
+      </div>
+      <VSCodeDivider />
+      <p style={{ fontStyle: "italic" }}>Waiting for data from extension...</p>
+    </div>
   );
 }
