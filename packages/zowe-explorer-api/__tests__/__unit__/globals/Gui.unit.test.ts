@@ -32,19 +32,19 @@ function createGlobalMocks(): any {
         showInputBox: jest.fn(),
     };
 
-    Object.defineProperty(vscode.window, "showInformationMessage", { value: mocks.showInfoMessage });
-    Object.defineProperty(vscode.window, "showErrorMessage", { value: mocks.showErrorMessage });
-    Object.defineProperty(vscode.window, "showWarningMessage", { value: mocks.showWarningMessage });
-    Object.defineProperty(vscode.window, "createOutputChannel", { value: mocks.createOutputChannel });
-    Object.defineProperty(vscode.window, "createQuickPick", { value: mocks.createQuickPick });
-    Object.defineProperty(vscode.window, "createTreeView", { value: mocks.createTreeView });
-    Object.defineProperty(vscode.window, "createWebviewPanel", { value: mocks.createWebviewPanel });
-    Object.defineProperty(vscode.window, "withProgress", { value: mocks.withProgress });
-    Object.defineProperty(vscode.window, "showTextDocument", { value: mocks.showTextDocument });
-    Object.defineProperty(vscode.window, "showQuickPick", { value: mocks.showQuickPick });
-    Object.defineProperty(vscode.window, "setStatusBarMessage", { value: mocks.setStatusBarMessage });
-    Object.defineProperty(vscode.window, "showOpenDialog", { value: mocks.showOpenDialog });
-    Object.defineProperty(vscode.window, "showInputBox", { value: mocks.showInputBox });
+    Object.defineProperty(vscode.window, "showInformationMessage", { value: globalMocks.showInfoMessage });
+    Object.defineProperty(vscode.window, "showErrorMessage", { value: globalMocks.showErrorMessage });
+    Object.defineProperty(vscode.window, "showWarningMessage", { value: globalMocks.showWarningMessage });
+    Object.defineProperty(vscode.window, "createOutputChannel", { value: globalMocks.createOutputChannel });
+    Object.defineProperty(vscode.window, "createQuickPick", { value: globalMocks.createQuickPick });
+    Object.defineProperty(vscode.window, "createTreeView", { value: globalMocks.createTreeView });
+    Object.defineProperty(vscode.window, "createWebviewPanel", { value: globalMocks.createWebviewPanel });
+    Object.defineProperty(vscode.window, "withProgress", { value: globalMocks.withProgress });
+    Object.defineProperty(vscode.window, "showTextDocument", { value: globalMocks.showTextDocument });
+    Object.defineProperty(vscode.window, "showQuickPick", { value: globalMocks.showQuickPick });
+    Object.defineProperty(vscode.window, "setStatusBarMessage", { value: globalMocks.setStatusBarMessage });
+    Object.defineProperty(vscode.window, "showOpenDialog", { value: globalMocks.showOpenDialog });
+    Object.defineProperty(vscode.window, "showInputBox", { value: globalMocks.showInputBox });
 
     return globalMocks;
 }
