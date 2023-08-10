@@ -8,6 +8,8 @@ debug.log
 npm-shrinkwrap.json
 vscode-extension-for-zowe*.vsix
 .vscode/settings.json
+.vscode/*.env
+.vscode-test
 .history
 .DS_Store
 .idea
