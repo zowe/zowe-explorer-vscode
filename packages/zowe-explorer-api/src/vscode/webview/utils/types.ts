@@ -9,9 +9,9 @@
  *
  */
 
-import { Uri } from "vscode"
+import { Uri } from "vscode";
 
 export type WebviewUris = {
-    build: Uri,
-    script: Uri,
+    build: Uri;
+    script: Uri;
 };

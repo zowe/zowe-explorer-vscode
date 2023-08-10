@@ -10,12 +10,12 @@
  */
 
 export const PERM_VALUES = {
-    "r": 4,
-    "w": 2,
-    "x": 1,
+    r: 4,
+    w: 2,
+    x: 1,
 };
 
-export type FileAttributes = {  
+export type FileAttributes = {
     gid: number;
     group: string;
     owner: string;

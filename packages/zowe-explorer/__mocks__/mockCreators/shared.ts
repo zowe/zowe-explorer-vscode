@@ -436,7 +436,7 @@ export function createInputBox(value: string): any {
         onDidTriggerButton: jest.fn(),
         prompt: undefined,
         validationMessage: undefined,
-        valueSelection: undefined
+        valueSelection: undefined,
     };
     return inputBox;
 }

@@ -189,7 +189,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                         gid: item.gid,
                         group: item.group,
                         perms: item.mode,
-                        owner: item.user
+                        owner: item.user,
                     };
                     elementChildren[existing.label.toString()] = existing;
                 } else if (item.name !== "." && item.name !== "..") {
@@ -208,7 +208,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                             gid: item.gid,
                             group: item.group,
                             perms: item.mode,
-                            owner: item.user
+                            owner: item.user,
                         };
                         elementChildren[temp.label.toString()] = temp;
                     } else {
@@ -239,7 +239,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                             gid: item.gid,
                             group: item.group,
                             perms: item.mode,
-                            owner: item.user
+                            owner: item.user,
                         };
                         temp.command = {
                             command: "zowe.uss.ZoweUSSNode.open",

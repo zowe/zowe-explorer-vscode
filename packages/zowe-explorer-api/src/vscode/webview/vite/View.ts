@@ -22,13 +22,13 @@ export class View {
     // The webview HTML content to render after filling the HTML template.
     private webviewContent: string;
     public panel: WebviewPanel;
-    
+
     private uris: {
-        disk?: WebviewUris,
-        resource?: WebviewUris
+        disk?: WebviewUris;
+        resource?: WebviewUris;
     } = {};
-    
-    // Unique identifier and title for the Preact webview.
+
+    // Unique identifier and title for the webview.
     private nonce: string;
     private title: string;
 
@@ -38,8 +38,7 @@ export class View {
      * @param dirName The directory name (in the "webviews" folder) that contains the bundled "index.js" file.
      * @param context The extension context
      */
-    public constructor(title: string, dirName: string, 
-        context: ExtensionContext, onDidReceiveMessage?: (message: object) => void | Promise<void>) {
+    public constructor(title: string, dirName: string, context: ExtensionContext, onDidReceiveMessage?: (message: object) => void | Promise<void>) {
         this.disposables = [];
 
         // Generate random nonce for loading the bundled script
@@ -49,16 +48,15 @@ export class View {
         // Build URIs for the webview directory and get the paths as VScode resources
         this.uris.disk = {
             build: Uri.file(joinPath(context.extensionPath, "webviews", dirName)),
-            script: Uri.file(joinPath(context.extensionPath, "webviews", dirName, "dist", "assets", "index.js"))
+            script: Uri.file(joinPath(context.extensionPath, "webviews", dirName, "dist", "assets", "index.js")),
         };
 
         this.panel = window.createWebviewPanel("vite", this.title, ViewColumn.Beside, {
             enableScripts: true,
-            localResourceRoots: [
-                this.uris.disk.build
-            ]
+            localResourceRoots: [this.uris.disk.build],
         });
 
+        // Associate URI resources with webview
         this.uris.resource = {
             build: this.panel.webview.asWebviewUri(this.uris.disk.build),
             script: this.panel.webview.asWebviewUri(this.uris.disk.script),

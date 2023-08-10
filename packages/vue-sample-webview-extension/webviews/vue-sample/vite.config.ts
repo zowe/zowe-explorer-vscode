@@ -1,9 +1,9 @@
 import { defineConfig } from "vite";
-import preact from "@preact/preset-vite";
+import vue from "@vitejs/plugin-vue";
 
 // https://vitejs.dev/config/
 export default defineConfig({
-    plugins: [preact()],
+    plugins: [vue()],
     build: {
         rollupOptions: {
             output: {
