@@ -1,7 +1,7 @@
 {
-  "name": "vue-sample-webview-extension",
-  "displayName": "vue-sample-webview-extension",
-  "description": "Sample VSCode extension leveraging ZE API Vite.View",
+  "name": "vue",
+  "displayName": "vue",
+  "description": "Sample VSCode extension leveraging ZE API Vite.View and a Vue webview",
   "private": true,
   "version": "0.0.1",
   "engines": {
@@ -22,19 +22,18 @@
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
-    "compile": "tsc -p ./",
+    "build": "npx tsc -p ./ && cd webviews/vue-sample && yarn build",
     "lint": "eslint \"src/**/*.ts\"",
-    "watch": "tsc -watch -p ./"
+    "watch": "npx tsc -watch -p ./"
   },
   "dependencies": {
-    "@zowe/zowe-explorer-api": "file:../zowe-explorer-api"
+    "@zowe/zowe-explorer-api": "file:../../zowe-explorer-api"
   },
   "devDependencies": {
     "@types/node": "^16.18.34",
-    "@types/vscode": "^1.73.0",
+    "@types/vscode": "1.80.0",
     "@typescript-eslint/eslint-plugin": "^5.42.0",
     "@typescript-eslint/parser": "^5.42.0",
-    "eslint": "^8.26.0",
-    "typescript": "^5.1.3"
+    "eslint": "^8.26.0"
   }
 }
