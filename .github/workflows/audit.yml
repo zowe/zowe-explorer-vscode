@@ -19,7 +19,7 @@ jobs:
 
       - run: |
           npm install -g pnpm
-          pnpm install --frozen-lockfile
+          pnpm install --frozen-lockfile --shamefully-hoist=true
 
       - name: Check Vulnerabilities
         run: pnpm audit --production --groups dependencies

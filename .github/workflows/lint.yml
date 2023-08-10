@@ -19,7 +19,7 @@ jobs:
 
       - run: |
           npm install -g pnpm
-          pnpm install --frozen-lockfile
+          pnpm install --frozen-lockfile --shamefully-hoist=true
 
       - name: Lint
         run: pnpm lint

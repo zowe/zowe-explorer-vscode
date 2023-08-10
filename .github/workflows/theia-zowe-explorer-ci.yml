@@ -29,7 +29,7 @@ jobs:
       - uses: actions/checkout@v3
 
       # install dependencies
-      - run: pnpm install --frozen-lockfile
+      - run: pnpm install --frozen-lockfile --shamefully-hoist=true
 
       # copy test data file needed for build :-(
       - name: Create test data file
