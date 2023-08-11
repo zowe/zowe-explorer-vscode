@@ -66,9 +66,9 @@ export class ApimlAuthenticationProvider implements AuthenticationProvider, Disp
                     accessToken: baseProfile.profile.tokenValue,
                     account: {
                         label: baseProfile.name,
-                        id: baseProfile.profile.tokenType,
+                        id: `${baseProfile.name}_${baseProfile.profile.tokenType}`,
                     },
-                    scopes: [],
+                    scopes: [baseProfile.name],
                 });
             }
         }
@@ -76,8 +76,9 @@ export class ApimlAuthenticationProvider implements AuthenticationProvider, Disp
     }
 
     public async createSession(scopes: string[]): Promise<AuthenticationSession> {
+        const profileName = scopes[0];
         const profiles = Profiles.getInstance();
-        const baseProfile = await profiles.fetchBaseProfile();
+        const baseProfile = await profiles.fetchBaseProfile(profileName);
         const defaultApimlUrlStr = "https://" + (baseProfile.profile.host || "example.com") + ":" + (baseProfile.profile.port || 7554).toString();
         const apimlUrlStr = await Gui.showInputBox({
             prompt: "Enter the URL for your API ML instance:",
@@ -135,9 +136,9 @@ export class ApimlAuthenticationProvider implements AuthenticationProvider, Disp
             accessToken: tokenValue,
             account: {
                 label: baseProfile.name,
-                id: apimlSession.ISession.tokenType,
+                id: `${baseProfile.name}_${apimlSession.ISession.tokenType}`,
             },
-            scopes: [],
+            scopes,
         };
         this._sessionChangeEmitter.fire({ added: [session], removed: [], changed: [] });
         return session;
@@ -145,8 +146,9 @@ export class ApimlAuthenticationProvider implements AuthenticationProvider, Disp
 
     public async removeSession(sessionId: string): Promise<void> {
         const session = (await this.getSessions()).find((s) => s.id === sessionId);
+        const profileName = session.scopes[0];
         const profiles = Profiles.getInstance();
-        const baseProfile = await profiles.fetchBaseProfile();
+        const baseProfile = await profiles.fetchBaseProfile(profileName);
         const apimlSession = new zowe.imperative.Session({
             hostname: baseProfile.profile.host,
             port: baseProfile.profile.port,

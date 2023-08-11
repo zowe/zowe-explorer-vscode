@@ -330,12 +330,11 @@ export class ProfilesUtils {
             }
         }
 
-        const authTypeOptions: vscode.QuickPickItem[] = [
-            { label: "User and Password" },
-            { label: "Authentication Token" },
-            globals.SEPARATORS.BLANK,
-            { label: "Log out of Authentication Service" },
-        ];
+        const hasTokenValue = typeof profile === "string" || profile.profile?.tokenValue != null;
+        const authTypeOptions: vscode.QuickPickItem[] = [{ label: "User and Password" }, { label: "Authentication Token" }];
+        if (hasTokenValue) {
+            authTypeOptions.push(globals.SEPARATORS.BLANK, { label: "Log out of Authentication Service" });
+        }
         const authType = await Gui.showQuickPick(authTypeOptions, { title: "Select an authentication method" });
         if (authType === authTypeOptions[0]) {
             const creds = await Profiles.getInstance().promptCredentials(profile, true);
@@ -352,7 +351,7 @@ export class ProfilesUtils {
             }
         } else if (authType === authTypeOptions[1]) {
             await Profiles.getInstance().ssoLogin(node);
-        } else if (authType === authTypeOptions[3]) {
+        } else if (hasTokenValue && authType === authTypeOptions[3]) {
             await Profiles.getInstance().ssoLogout(node);
         }
     }

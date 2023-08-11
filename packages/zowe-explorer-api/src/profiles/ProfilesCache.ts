@@ -377,9 +377,14 @@ export class ProfilesCache {
     }
 
     // This will retrieve the base profile from imperative
-    public async fetchBaseProfile(): Promise<zowe.imperative.IProfileLoaded | undefined> {
+    public async fetchBaseProfile(profileName?: string): Promise<zowe.imperative.IProfileLoaded | undefined> {
         const mProfileInfo = await this.getProfileInfo();
-        const baseProfileAttrs = mProfileInfo.getDefaultProfile("base");
+        let baseProfileAttrs: zowe.imperative.IProfAttrs;
+        if (profileName == null) {
+            baseProfileAttrs = mProfileInfo.getDefaultProfile("base");
+        } else {
+            baseProfileAttrs = mProfileInfo.getAllProfiles("base").find((p) => p.profName === profileName);
+        }
         if (baseProfileAttrs == null) {
             return undefined;
         }
@@ -498,6 +503,15 @@ export class ProfilesCache {
             const mergedArgs = mProfileInfo.mergeArgsForProfile(profAttrs, { getSecureVals: true });
             for (const arg of mergedArgs.knownArgs) {
                 profile[arg.argName] = arg.argValue;
+            }
+            if (profile.apimlProfile != null) {
+                const apimlProfAttrs = mProfileInfo.getAllProfiles("base").find((p) => p.profName === profile.apimlProfile);
+                if (apimlProfAttrs != null) {
+                    const apimlMergedArgs = mProfileInfo.mergeArgsForProfile(apimlProfAttrs, { getSecureVals: true });
+                    for (const arg of apimlMergedArgs.knownArgs) {
+                        profile[arg.argName] = arg.argValue;
+                    }
+                }
             }
         }
         return profile;

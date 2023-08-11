@@ -1192,7 +1192,8 @@ export class Profiles extends ProfilesCache {
                 return;
             }
         } else {
-            await vscode.authentication.getSession(ApimlAuthenticationProvider.authId, [], { forceNewSession: true });
+            const apimlProfileName = serviceProfile.profile.apimlProfile ?? "base";
+            await vscode.authentication.getSession(ApimlAuthenticationProvider.authId, [apimlProfileName], { forceNewSession: true });
             // const baseProfile = await this.fetchBaseProfile();
             // if (baseProfile) {
             //     creds = await this.loginCredentialPrompt();
@@ -1247,7 +1248,8 @@ export class Profiles extends ProfilesCache {
                     .getCommonApi(serviceProfile)
                     .logout(await node.getSession());
             } else {
-                const apimlSession = await vscode.authentication.getSession(ApimlAuthenticationProvider.authId, []);
+                const apimlProfileName = serviceProfile.profile.apimlProfile ?? "base";
+                const apimlSession = await vscode.authentication.getSession(ApimlAuthenticationProvider.authId, [apimlProfileName]);
                 if (apimlSession != null) {
                     await ApimlAuthenticationProvider.instance.removeSession(apimlSession.id);
                 }
