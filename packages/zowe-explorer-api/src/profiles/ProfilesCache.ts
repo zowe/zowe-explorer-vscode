@@ -504,15 +504,15 @@ export class ProfilesCache {
             for (const arg of mergedArgs.knownArgs) {
                 profile[arg.argName] = arg.argValue;
             }
-            if (profile.apimlProfile != null) {
-                const apimlProfAttrs = mProfileInfo.getAllProfiles("base").find((p) => p.profName === profile.apimlProfile);
-                if (apimlProfAttrs != null) {
-                    const apimlMergedArgs = mProfileInfo.mergeArgsForProfile(apimlProfAttrs, { getSecureVals: true });
-                    for (const arg of apimlMergedArgs.knownArgs) {
-                        profile[arg.argName] = arg.argValue;
-                    }
-                }
-            }
+            // if (profile.apimlProfile != null) {
+            //     const apimlProfAttrs = mProfileInfo.getAllProfiles("base").find((p) => p.profName === profile.apimlProfile);
+            //     if (apimlProfAttrs != null) {
+            //         const apimlMergedArgs = mProfileInfo.mergeArgsForProfile(apimlProfAttrs, { getSecureVals: true });
+            //         for (const arg of apimlMergedArgs.knownArgs) {
+            //             profile[arg.argName] = arg.argValue;
+            //         }
+            //     }
+            // }
         }
         return profile;
     }

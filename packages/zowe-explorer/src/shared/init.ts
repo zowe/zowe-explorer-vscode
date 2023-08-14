@@ -27,6 +27,7 @@ import { ZoweLogger } from "../utils/LoggerUtils";
 import { ZoweSaveQueue } from "../abstract/ZoweSaveQueue";
 import { SettingsConfig } from "../utils/SettingsConfig";
 import { spoolFilePollEvent } from "../job/actions";
+import { ApimlAuthenticationProvider } from "../ApimlAuthProvider";
 
 // Set up localization
 nls.config({
@@ -200,6 +201,7 @@ export function registerCommonCommands(context: vscode.ExtensionContext, provide
                 }
             })
         );
+        context.subscriptions.push(ApimlAuthenticationProvider.instance);
     }
 }
 
@@ -237,6 +239,7 @@ export function watchConfigProfile(context: vscode.ExtensionContext, providers: 
             await refreshActions.refreshAll(providers.ds);
             await refreshActions.refreshAll(providers.uss);
             await refreshActions.refreshAll(providers.job);
+            await ApimlAuthenticationProvider.instance.checkForUpdates();
             if (globals.ISTHEIA) {
                 await vscode.commands.executeCommand("zowe.extRefresh");
             }
