@@ -41,6 +41,58 @@
  */
 export type ProviderResult<T> = T | undefined | null | Thenable<T | undefined | null>;
 
+export enum ViewColumn {
+    /**
+     * A *symbolic* editor column representing the currently active column. This value
+     * can be used when opening editors, but the *resolved* {@link TextEditor.viewColumn viewColumn}-value
+     * of editors will always be `One`, `Two`, `Three`,... or `undefined` but never `Active`.
+     */
+    Active = -1,
+    /**
+     * A *symbolic* editor column representing the column to the side of the active one. This value
+     * can be used when opening editors, but the *resolved* {@link TextEditor.viewColumn viewColumn}-value
+     * of editors will always be `One`, `Two`, `Three`,... or `undefined` but never `Beside`.
+     */
+    Beside = -2,
+    /**
+     * The first editor column.
+     */
+    One = 1,
+    /**
+     * The second editor column.
+     */
+    Two = 2,
+    /**
+     * The third editor column.
+     */
+    Three = 3,
+    /**
+     * The fourth editor column.
+     */
+    Four = 4,
+    /**
+     * The fifth editor column.
+     */
+    Five = 5,
+    /**
+     * The sixth editor column.
+     */
+    Six = 6,
+    /**
+     * The seventh editor column.
+     */
+    Seven = 7,
+    /**
+     * The eighth editor column.
+     */
+    Eight = 8,
+    /**
+     * The ninth editor column.
+     */
+    Nine = 9
+}
+
+
 /**
  * Thenable is a common denominator between ES6 promises, Q, jquery.Deferred, WinJS.Promise,
  * and others. This API makes no assumption about what promise library is being used which
