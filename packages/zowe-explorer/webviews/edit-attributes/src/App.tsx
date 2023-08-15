@@ -68,7 +68,11 @@ export function App() {
 
       if ("updated" in event.data) {
         setIsUpdating(false);
-        setTimestamp(new Date());
+        if (!event.data.updated) {
+          setAllowUpdate(true);
+        } else {
+          setTimestamp(new Date());
+        }
         return;
       }
 

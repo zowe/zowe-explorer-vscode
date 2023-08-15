@@ -233,54 +233,63 @@ export function editAttributes(context: vscode.ExtensionContext, fileProvider: I
                     });
                     break;
                 case "update-attributes":
-                    if (Object.keys(message.attrs).length > 0) {
-                        const attrs = message.attrs;
-                        if (node.attributes.owner !== attrs.owner) {
-                            await Utilities.putUSSPayload(node.getSession(), node.fullPath, {
-                                request: "chown",
-                                owner: attrs.owner,
-                                group: attrs.group,
-                                links: "follow",
-                                recursive: true,
-                            });
-                            node.attributes.owner = attrs.owner;
-                        }
-                        if (!isNaN(attrs.group) && !isNaN(parseFloat(attrs.group))) {
-                            const gid = parseInt(attrs.group);
-                            if (node.attributes.gid !== gid) {
+                    try {
+                        if (Object.keys(message.attrs).length > 0) {
+                            const attrs = message.attrs;
+                            if (node.attributes.owner !== attrs.owner) {
                                 await Utilities.putUSSPayload(node.getSession(), node.fullPath, {
                                     request: "chown",
                                     owner: attrs.owner,
-                                    group: attrs.gid,
+                                    group: attrs.group,
                                     links: "follow",
                                     recursive: true,
                                 });
-                                node.attributes.gid = gid;
+                                node.attributes.owner = attrs.owner;
                             }
-                        } else if (node.attributes.group !== attrs.group) {
-                            await Utilities.putUSSPayload(node.getSession(), node.fullPath, {
-                                request: "chown",
-                                owner: attrs.owner,
-                                group: attrs.group,
-                                links: "follow",
-                                recursive: true,
+                            if (!isNaN(attrs.group) && !isNaN(parseFloat(attrs.group))) {
+                                const gid = parseInt(attrs.group);
+                                if (node.attributes.gid !== gid) {
+                                    await Utilities.putUSSPayload(node.getSession(), node.fullPath, {
+                                        request: "chown",
+                                        owner: attrs.owner,
+                                        group: attrs.gid,
+                                        links: "follow",
+                                        recursive: true,
+                                    });
+                                    node.attributes.gid = gid;
+                                }
+                            } else if (node.attributes.group !== attrs.group) {
+                                await Utilities.putUSSPayload(node.getSession(), node.fullPath, {
+                                    request: "chown",
+                                    owner: attrs.owner,
+                                    group: attrs.group,
+                                    links: "follow",
+                                    recursive: true,
+                                });
+                                node.attributes.group = attrs.group;
+                            }
+                            if (node.attributes.perms !== attrs.perms) {
+                                const permsAsOctal = permStringToOctal(attrs.perms);
+                                await Utilities.putUSSPayload(node.getSession(), node.fullPath, {
+                                    request: "chmod",
+                                    mode: permsAsOctal,
+                                    links: "follow",
+                                    recursive: true,
+                                });
+                                node.attributes.perms = attrs.perms;
+                            }
+                            await editView.panel.webview.postMessage({
+                                updated: true,
                             });
-                            node.attributes.group = attrs.group;
+                            await Gui.infoMessage(`Updated file attributes for ${node.fullPath}`);
                         }
-                        if (node.attributes.perms !== attrs.perms) {
-                            const permsAsOctal = permStringToOctal(attrs.perms);
-                            await Utilities.putUSSPayload(node.getSession(), node.fullPath, {
-                                request: "chmod",
-                                mode: permsAsOctal,
-                                links: "follow",
-                                recursive: true,
-                            });
-                            node.attributes.perms = attrs.perms;
-                        }
+                    } catch (err) {
                         await editView.panel.webview.postMessage({
-                            updated: true,
+                            updated: false,
                         });
-                        await Gui.infoMessage(`Updated file attributes for ${node.fullPath}`);
+                        if (err instanceof Error) {
+                            await Gui.errorMessage(`Failed to set file attributes for ${node.fullPath}: ${err.toString()}`);
+                        }
                     }
                     break;
                 default:
