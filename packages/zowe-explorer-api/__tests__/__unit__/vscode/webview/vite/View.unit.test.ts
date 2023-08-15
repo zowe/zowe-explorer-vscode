@@ -21,26 +21,22 @@ describe("Vite.View unit tests", () => {
                 webview: {
                     asWebviewUri: jest.fn(),
                     html: "<some html>",
-                    onDidReceiveMessage: jest.fn()
+                    onDidReceiveMessage: jest.fn(),
                 },
-                onDidDispose: jest.fn()
-            })
+                onDidDispose: jest.fn(),
+            }),
         });
         Object.defineProperty(vscode, "Uri", {
             value: {
-                file: jest.fn()
-            }
+                file: jest.fn(),
+            },
         });
     });
     it("Successfully creates a Vite WebView", () => {
         const createWebviewPanelSpy = jest.spyOn(vscode.window, "createWebviewPanel");
         const compileSpy = jest.spyOn(Handlebars, "compile");
 
-        new Vite.View(
-            "Test Webview Title",
-            "example-folder",
-            { extensionPath: "test/path" } as vscode.ExtensionContext
-        );
+        new Vite.View("Test Webview Title", "example-folder", { extensionPath: "test/path" } as vscode.ExtensionContext);
         expect(createWebviewPanelSpy).toHaveBeenCalled();
         expect(compileSpy).toHaveBeenCalled();
     });
@@ -69,5 +65,5 @@ describe("Vite.View unit tests", () => {
             async (_message: any) => {}
         );
         expect(testView.htmlContent).toBe(testView.panel.webview.html);
-    })
-})
+    });
+});

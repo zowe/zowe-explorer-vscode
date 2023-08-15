@@ -89,9 +89,8 @@ export enum ViewColumn {
     /**
      * The ninth editor column.
      */
-    Nine = 9
+    Nine = 9,
 }
-
 
 /**
  * Thenable is a common denominator between ES6 promises, Q, jquery.Deferred, WinJS.Promise,

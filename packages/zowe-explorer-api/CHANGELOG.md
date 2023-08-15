@@ -6,6 +6,8 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### New features and enhancements
 
+- Added `Vite.View` class to allow Zowe Explorer and extenders to create Vite-powered webviews (tech stack agnostic).
+
 ### Bug fixes
 
 ## `2.9.2`
