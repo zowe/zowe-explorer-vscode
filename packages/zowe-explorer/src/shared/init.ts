@@ -239,10 +239,11 @@ export function watchConfigProfile(context: vscode.ExtensionContext, providers: 
             await refreshActions.refreshAll(providers.ds);
             await refreshActions.refreshAll(providers.uss);
             await refreshActions.refreshAll(providers.job);
+            await Profiles.getInstance().refresh();
             await ApimlAuthenticationProvider.instance.checkForUpdates();
-            if (globals.ISTHEIA) {
-                await vscode.commands.executeCommand("zowe.extRefresh");
-            }
+            // if (globals.ISTHEIA) {
+            //     await vscode.commands.executeCommand("zowe.extRefresh");
+            // }
         });
     });
 }

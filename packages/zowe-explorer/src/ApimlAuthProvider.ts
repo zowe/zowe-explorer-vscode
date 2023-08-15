@@ -51,9 +51,9 @@ export class ApimlAuthenticationProvider implements AuthenticationProvider, Disp
         const added: AuthenticationSession[] = [];
         const removed: AuthenticationSession[] = [];
         const changed: AuthenticationSession[] = [];
-        for (const sessionId of new Set(...oldSessions.map((session) => session.id), ...this._sessionCache.map((session) => session.id))) {
-            const oldSession = oldSessions.find((session) => session.id === sessionId);
-            const newSession = newSessions.find((session) => session.id === sessionId);
+        for (const sessionId of new Set([...oldSessions.map((s) => s.id), ...newSessions.map((s) => s.id)])) {
+            const oldSession = oldSessions.find((s) => s.id === sessionId);
+            const newSession = newSessions.find((s) => s.id === sessionId);
             if (oldSession == null && newSession != null) {
                 added.push(newSession);
             } else if (oldSession != null && newSession == null) {
@@ -62,21 +62,25 @@ export class ApimlAuthenticationProvider implements AuthenticationProvider, Disp
                 changed.push(newSession);
             }
         }
-        this._sessionChangeEmitter.fire({ added, removed, changed });
+        if (added || removed || changed) {
+            this._sessionChangeEmitter.fire({ added, removed, changed });
+        }
     }
 
-    public async login(profileName: string, loginSession: zowe.imperative.Session): Promise<zowe.imperative.IProfile> {
-        const session = await this.createSession([profileName], loginSession);
-        return {
-            tokenType: loginSession.ISession.tokenType,
-            tokenValue: session.accessToken,
-        };
+    public async login(profile: zowe.imperative.IProfileLoaded): Promise<[string, string]> {
+        const apimlProfile = await Profiles.getInstance().findApimlProfile(profile);
+        if (apimlProfile != null) {
+            const session = await this.createSession([apimlProfile.name], profile.profile);
+            const loginTokenType = session.account.id.slice(session.account.id.indexOf(zowe.imperative.SessConstants.TOKEN_TYPE_APIML));
+            return [loginTokenType, session.accessToken];
+        }
     }
 
-    public async logout(profileName: string, logoutSession: zowe.imperative.Session): Promise<void> {
-        const apimlSession = this._sessionCache.find((session) => session.scopes[0] === profileName);
+    public async logout(profile: zowe.imperative.IProfileLoaded): Promise<void> {
+        const apimlProfile = await Profiles.getInstance().findApimlProfile(profile);
+        const apimlSession = this._sessionCache.find((session) => session.scopes[0] === apimlProfile.name);
         if (apimlSession != null) {
-            await this.removeSession(apimlSession.id, logoutSession);
+            await this.removeSession(apimlSession.id, profile.profile);
         }
     }
 
@@ -89,25 +93,23 @@ export class ApimlAuthenticationProvider implements AuthenticationProvider, Disp
         return this._sessionCache;
     }
 
-    public async createSession(scopes: string[], loginSession?: zowe.imperative.Session): Promise<AuthenticationSession> {
+    public async createSession(scopes: string[], loginProps?: zowe.imperative.IProfile): Promise<AuthenticationSession> {
         const profileName = scopes[0];
         const profiles = Profiles.getInstance();
         const baseProfile = await profiles.fetchBaseProfile(profileName);
-        if (loginSession == null) {
-            const creds = await profiles.loginCredentialPrompt();
-            if (!creds) {
-                return Promise.reject();
-            }
-            loginSession = new zowe.imperative.Session({
-                hostname: baseProfile.profile.host,
-                port: baseProfile.profile.port,
-                user: creds[0],
-                password: creds[1],
-                rejectUnauthorized: baseProfile.profile.rejectUnauthorized,
-                tokenType: zowe.imperative.SessConstants.TOKEN_TYPE_APIML,
-                type: zowe.imperative.SessConstants.AUTH_TYPE_TOKEN,
-            });
+        const creds = await profiles.loginCredentialPrompt();
+        if (!creds) {
+            return Promise.reject();
         }
+        const loginSession = new zowe.imperative.Session({
+            hostname: (loginProps ?? baseProfile.profile).host,
+            port: (loginProps ?? baseProfile.profile).port,
+            user: creds[0],
+            password: creds[1],
+            rejectUnauthorized: (loginProps ?? baseProfile.profile).rejectUnauthorized,
+            tokenType: zowe.imperative.SessConstants.TOKEN_TYPE_APIML,
+            type: zowe.imperative.SessConstants.AUTH_TYPE_TOKEN,
+        });
         const profileProps: zowe.imperative.IProfile = {
             tokenType: loginSession.ISession.tokenType,
             tokenValue: await zowe.Login.apimlLogin(loginSession),
@@ -124,21 +126,19 @@ export class ApimlAuthenticationProvider implements AuthenticationProvider, Disp
         return session;
     }
 
-    public async removeSession(sessionId: string, logoutSession?: zowe.imperative.Session): Promise<void> {
+    public async removeSession(sessionId: string, logoutProps?: zowe.imperative.IProfile): Promise<void> {
         const session = this._sessionCache.find((s) => s.id === sessionId);
         const profileName = session.scopes[0];
         const profiles = Profiles.getInstance();
         const baseProfile = await profiles.fetchBaseProfile(profileName);
-        if (logoutSession == null) {
-            logoutSession = new zowe.imperative.Session({
-                hostname: baseProfile.profile.host,
-                port: baseProfile.profile.port,
-                rejectUnauthorized: baseProfile.profile.rejectUnauthorized,
-                tokenType: baseProfile.profile.tokenType,
-                tokenValue: baseProfile.profile.tokenValue,
-                type: zowe.imperative.SessConstants.AUTH_TYPE_TOKEN,
-            });
-        }
+        const logoutSession = new zowe.imperative.Session({
+            hostname: (logoutProps ?? baseProfile.profile).host,
+            port: (logoutProps ?? baseProfile.profile).port,
+            rejectUnauthorized: (logoutProps ?? baseProfile.profile).rejectUnauthorized,
+            tokenType: (logoutProps ?? baseProfile.profile).tokenType,
+            tokenValue: (logoutProps ?? baseProfile.profile).tokenValue,
+            type: zowe.imperative.SessConstants.AUTH_TYPE_TOKEN,
+        });
         try {
             await zowe.Logout.apimlLogout(logoutSession);
         } catch (err) {
@@ -172,7 +172,7 @@ export class ApimlAuthenticationProvider implements AuthenticationProvider, Disp
     private async updateSessionCache(): Promise<void> {
         this._sessionCache = [];
         for (const baseProfile of await Profiles.getInstance().fetchAllProfilesByType("base")) {
-            if (baseProfile.profile.tokenType === zowe.imperative.SessConstants.TOKEN_TYPE_APIML && baseProfile.profile.tokenValue != null) {
+            if (baseProfile.profile.tokenType?.startsWith(zowe.imperative.SessConstants.TOKEN_TYPE_APIML) && baseProfile.profile.tokenValue != null) {
                 this._sessionCache.push(this.buildSession(baseProfile));
             }
         }

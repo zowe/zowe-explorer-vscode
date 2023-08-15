@@ -196,7 +196,7 @@ export class ProfilesCache {
                 this.allTypes.push(type);
             }
             // check for proper merging of apiml tokens
-            this.checkMergingConfigAllProfiles();
+            await this.checkMergingConfigAllProfiles();
             this.profilesForValidation = [];
         } catch (error) {
             this.log.error(error as string);
@@ -284,7 +284,7 @@ export class ProfilesCache {
             for (const prof of profilesForType) {
                 const profAttr = this.getMergedAttrs(mProfileInfo, prof);
                 let profile = this.getProfileLoaded(prof.profName, prof.profType, profAttr);
-                profile = this.checkMergingConfigSingleProfile(profile);
+                profile = await this.checkMergingConfigSingleProfile(profile);
                 profByType.push(profile);
             }
         }
@@ -458,14 +458,14 @@ export class ProfilesCache {
     }
 
     // used by refresh to check correct merging of allProfiles
-    protected checkMergingConfigAllProfiles(): void {
-        const baseProfile = this.defaultProfileByType.get("base");
+    protected async checkMergingConfigAllProfiles(): Promise<void> {
         const allProfiles: zowe.imperative.IProfileLoaded[] = [];
-        this.allTypes.forEach((type) => {
+        for (const type of this.allTypes) {
             try {
                 const allProfilesByType: zowe.imperative.IProfileLoaded[] = [];
                 const profByType = this.profilesByType.get(type);
-                profByType.forEach((profile) => {
+                for (const profile of profByType) {
+                    const baseProfile = await this.findApimlProfile(profile);
                     if (this.shouldRemoveTokenFromProfile(profile, baseProfile)) {
                         profile.profile.tokenType = undefined;
                         profile.profile.tokenValue = undefined;
@@ -476,20 +476,20 @@ export class ProfilesCache {
                     }
                     allProfiles.push(profile);
                     allProfilesByType.push(profile);
-                });
+                }
                 this.profilesByType.set(type, allProfilesByType);
             } catch (error) {
                 // do nothing, skip if profile type is not included in config file
                 this.log.debug(error as string);
             }
-        });
+        }
         this.allProfiles = [];
         this.allProfiles.push(...allProfiles);
     }
 
     // check correct merging of a single profile
-    protected checkMergingConfigSingleProfile(profile: zowe.imperative.IProfileLoaded): zowe.imperative.IProfileLoaded {
-        const baseProfile = this.defaultProfileByType.get("base");
+    protected async checkMergingConfigSingleProfile(profile: zowe.imperative.IProfileLoaded): Promise<zowe.imperative.IProfileLoaded> {
+        const baseProfile = await this.findApimlProfile(profile);
         if (this.shouldRemoveTokenFromProfile(profile, baseProfile)) {
             profile.profile.tokenType = undefined;
             profile.profile.tokenValue = undefined;
@@ -517,6 +517,25 @@ export class ProfilesCache {
         return profile;
     }
 
+    /**
+     * Look for a base profile where APIML token can be stored for SSO login.
+     * @param profile Imperative loaded profile object
+     * @returns Base profile to store APIML token
+     */
+    public async findApimlProfile(profile: zowe.imperative.IProfileLoaded): Promise<zowe.imperative.IProfileLoaded | undefined> {
+        // if (profile.profile?.apimlProfile != null) {
+        //     return profile.profile.apimlProfile as string;
+        // }
+        if ((await this.getProfileInfo()).usingTeamConfig && profile.name.includes(".")) {
+            for (const baseProfile of await this.fetchAllProfilesByType("base")) {
+                if (profile.name.startsWith(baseProfile.name + ".")) {
+                    return baseProfile;
+                }
+            }
+        }
+        return this.fetchBaseProfile();
+    }
+
     // create an array that includes registered types from apiRegister.registeredApiTypes()
     // and allExternalTypes
     private getAllProfileTypes(registeredTypes: string[]): string[] {
@@ -532,7 +551,8 @@ export class ProfilesCache {
             profile?.profile?.host &&
             profile?.profile?.port &&
             (baseProfile?.profile.host !== profile?.profile.host || baseProfile?.profile.port !== profile?.profile.port) &&
-            profile?.profile.tokenType === zowe.imperative.SessConstants.TOKEN_TYPE_APIML
+            profile?.type !== zowe.ProfileConstants.BaseProfile.type &&
+            (profile?.profile.tokenType as string)?.startsWith(zowe.imperative.SessConstants.TOKEN_TYPE_APIML)
         );
     }
 }

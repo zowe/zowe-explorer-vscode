@@ -37,7 +37,6 @@ import * as globals from "./globals";
 import * as nls from "vscode-nls";
 import { SettingsConfig } from "./utils/SettingsConfig";
 import { ZoweLogger } from "./utils/LoggerUtils";
-import { ApimlAuthenticationProvider } from "./ApimlAuthProvider";
 
 // Set up localization
 nls.config({
@@ -47,10 +46,15 @@ nls.config({
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 let InputBoxOptions: vscode.InputBoxOptions;
 
+interface IAuthProvider {
+    login: (profile: zowe.imperative.IProfileLoaded) => Promise<[string, string]>;
+    logout: (profile: zowe.imperative.IProfileLoaded) => Promise<void>;
+}
+
 export class Profiles extends ProfilesCache {
     // Processing stops if there are no profiles detected
-    public static async createInstance(log: zowe.imperative.Logger): Promise<Profiles> {
-        Profiles.loader = new Profiles(log, vscode.workspace.workspaceFolders?.[0]?.uri.fsPath);
+    public static async createInstance(log: zowe.imperative.Logger, authProvider: IAuthProvider): Promise<Profiles> {
+        Profiles.loader = new Profiles(log, vscode.workspace.workspaceFolders?.[0]?.uri.fsPath, authProvider);
         await Profiles.loader.refresh(ZoweExplorerApiRegister.getInstance());
         return Profiles.loader;
     }
@@ -69,7 +73,7 @@ export class Profiles extends ProfilesCache {
     private jobsSchema: string = globals.SETTINGS_JOBS_HISTORY;
     private mProfileInfo: zowe.imperative.ProfileInfo;
     private profilesOpCancelled = localize("profiles.operation.cancelled", "Operation Cancelled");
-    public constructor(log: zowe.imperative.Logger, cwd?: string) {
+    public constructor(log: zowe.imperative.Logger, cwd?: string, private apimlAuthProvider?: IAuthProvider) {
         super(log, cwd);
     }
 
@@ -1163,7 +1167,7 @@ export class Profiles extends ProfilesCache {
             Gui.showMessage(localize("ssoAuth.noBase", "This profile does not support token authentication."));
             return;
         }
-        if (loginTokenType && loginTokenType !== zowe.imperative.SessConstants.TOKEN_TYPE_APIML) {
+        if (loginTokenType && !loginTokenType.startsWith(zowe.imperative.SessConstants.TOKEN_TYPE_APIML)) {
             // this will handle extenders
             if (node) {
                 session = node.getSession();
@@ -1191,33 +1195,19 @@ export class Profiles extends ProfilesCache {
                 return;
             }
         } else {
-            const apimlProfileName = await this.getApimlProfileName(serviceProfile);
-            if (apimlProfileName != null) {
-                creds = await this.loginCredentialPrompt();
-                if (!creds) {
-                    return;
-                }
-                try {
-                    const updSession = new zowe.imperative.Session({
-                        hostname: serviceProfile.profile.host,
-                        port: serviceProfile.profile.port,
-                        user: creds[0],
-                        password: creds[1],
-                        rejectUnauthorized: serviceProfile.profile.rejectUnauthorized,
-                        tokenType: loginTokenType,
-                        type: zowe.imperative.SessConstants.AUTH_TYPE_TOKEN,
-                    });
-                    const updBaseProfile = await ApimlAuthenticationProvider.instance.login(apimlProfileName, updSession);
+            try {
+                creds = await this.apimlAuthProvider.login(serviceProfile);
+                if (creds != null) {
                     node.setProfileToChoice({
                         ...node.getProfile(),
-                        profile: { ...node.getProfile().profile, ...updBaseProfile },
+                        profile: { ...node.getProfile().profile, tokenType: creds[0], tokenValue: creds[1] },
                     });
-                } catch (error) {
-                    const errMsg = localize("ssoLogin.unableToLogin", "Unable to log in with {0}. {1}", serviceProfile.name, error?.message);
-                    ZoweLogger.error(errMsg);
-                    Gui.errorMessage(errMsg);
-                    return;
                 }
+            } catch (error) {
+                const errMsg = localize("ssoLogin.unableToLogin", "Unable to log in with {0}. {1}", serviceProfile.name, error?.message);
+                ZoweLogger.error(errMsg);
+                Gui.errorMessage(errMsg);
+                return;
             }
         }
         Gui.showMessage(localize("ssoLogin.successful", "Login to authentication service was successful."));
@@ -1233,23 +1223,13 @@ export class Profiles extends ProfilesCache {
         }
         try {
             // this will handle extenders
-            if (serviceProfile.type !== "zosmf" && serviceProfile.profile?.tokenType !== zowe.imperative.SessConstants.TOKEN_TYPE_APIML) {
+            if (serviceProfile.type !== "zosmf" && !serviceProfile.profile?.tokenType.startsWith(zowe.imperative.SessConstants.TOKEN_TYPE_APIML)) {
                 await ZoweExplorerApiRegister.getInstance()
                     .getCommonApi(serviceProfile)
                     .logout(await node.getSession());
             } else {
                 // this will handle base profile apiml tokens
-                const apimlProfileName = await this.getApimlProfileName(serviceProfile);
-                const loginTokenType = ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).getTokenTypeName();
-                const updSession = new zowe.imperative.Session({
-                    hostname: serviceProfile.profile.host,
-                    port: serviceProfile.profile.port,
-                    rejectUnauthorized: serviceProfile.profile.rejectUnauthorized,
-                    tokenType: loginTokenType,
-                    tokenValue: serviceProfile.profile.tokenValue,
-                    type: zowe.imperative.SessConstants.AUTH_TYPE_TOKEN,
-                });
-                await ApimlAuthenticationProvider.instance.logout(apimlProfileName, updSession);
+                await this.apimlAuthProvider.logout(serviceProfile);
             }
             Gui.showMessage(localize("ssoLogout.successful", "Logout from authentication service was successful for {0}.", serviceProfile.name));
         } catch (error) {
@@ -1271,7 +1251,7 @@ export class Profiles extends ProfilesCache {
      * @param profile Imperative loaded profile object
      * @returns Name of base profile to store APIML token
      */
-    private async getApimlProfileName(profile: zowe.imperative.IProfileLoaded): Promise<string | undefined> {
+    public async getApimlProfileName(profile: zowe.imperative.IProfileLoaded): Promise<string | undefined> {
         // if (profile.profile?.apimlProfile != null) {
         //     return profile.profile.apimlProfile as string;
         // }
