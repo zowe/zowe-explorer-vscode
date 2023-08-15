@@ -1,7 +1,7 @@
 {
   "name": "vue",
   "displayName": "vue",
-  "description": "Sample VSCode extension leveraging ZE API Vite.View and a Vue webview",
+  "description": "Sample VSCode extension leveraging ZE API WebView class and a Vite-powered Vue demo",
   "private": true,
   "version": "0.0.1",
   "engines": {
@@ -21,7 +21,7 @@
     ]
   },
   "scripts": {
-    "vscode:prepublish": "npm run compile",
+    "vscode:prepublish": "yarn build",
     "build": "npx tsc -p ./ && cd webviews/vue-sample && yarn build",
     "lint": "eslint \"src/**/*.ts\"",
     "watch": "npx tsc -watch -p ./"

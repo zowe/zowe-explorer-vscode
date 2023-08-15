@@ -10,33 +10,38 @@
  */
 
 import * as Handlebars from "handlebars";
-import HTMLTemplate from "../utils/HTMLTemplate";
-import { WebviewUris } from "../utils/types";
+import HTMLTemplate from "./utils/HTMLTemplate";
+import { WebviewUris } from "./utils/types";
 import { Disposable, ExtensionContext, Uri, ViewColumn, WebviewPanel, window } from "vscode";
 import { join as joinPath } from "path";
 import { randomUUID } from "crypto";
 
-export class View {
+export class WebView {
     private disposables: Disposable[];
 
     // The webview HTML content to render after filling the HTML template.
     private webviewContent: string;
     public panel: WebviewPanel;
 
+    // Resource identifiers for the on-disk content and vscode-webview resource.
     private uris: {
         disk?: WebviewUris;
         resource?: WebviewUris;
     } = {};
 
-    // Unique identifier and title for the webview.
+    // Unique identifier
     private nonce: string;
+
     private title: string;
 
     /**
-     * Constructs a webview for use with Vite-bundled assets.
+     * Constructs a webview for use with bundled assets.
+     * The webview entrypoint must be located at <webview folder>/dist/assets/index.js.
+     *
      * @param title The title for the new webview
-     * @param dirName The directory name (in the "webviews" folder) that contains the bundled "index.js" file.
-     * @param context The extension context
+     * @param dirName The directory name (relative to the "webviews" folder in the extension root) with a valid entrypoint (see above).
+     * @param context The VSCode extension context
+     * @param onDidReceiveMessage Event callback: called when messages are received from the webview
      */
     public constructor(title: string, dirName: string, context: ExtensionContext, onDidReceiveMessage?: (message: object) => void | Promise<void>) {
         this.disposables = [];
@@ -51,7 +56,7 @@ export class View {
             script: Uri.file(joinPath(context.extensionPath, "webviews", dirName, "dist", "assets", "index.js")),
         };
 
-        this.panel = window.createWebviewPanel("vite", this.title, ViewColumn.Beside, {
+        this.panel = window.createWebviewPanel("ZEAPIWebview", this.title, ViewColumn.Beside, {
             enableScripts: true,
             localResourceRoots: [this.uris.disk.build],
         });
@@ -75,6 +80,9 @@ export class View {
         this.panel.webview.html = this.webviewContent;
     }
 
+    /**
+     * Disposes of the webview instance
+     */
     private dispose(): void {
         this.panel.dispose();
 
@@ -85,6 +93,9 @@ export class View {
         this.panel = undefined;
     }
 
+    /**
+     * Pre-processed HTML content that loads the bundled script through the webview.
+     */
     public get htmlContent(): string {
         return this.webviewContent;
     }

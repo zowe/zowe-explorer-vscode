@@ -9,6 +9,9 @@
  *
  */
 
+/**
+ * HTML template that is compiled with Handlebars to load a WebView instance at runtime.
+ */
 const HTMLTemplate: string = `
 <!DOCTYPE html>
 <html lang="en">

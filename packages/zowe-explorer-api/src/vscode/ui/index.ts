@@ -9,4 +9,4 @@
  *
  */
 
-export * as Vite from "./vite/View";
+export * from "./WebView";

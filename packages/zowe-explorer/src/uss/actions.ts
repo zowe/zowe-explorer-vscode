@@ -16,7 +16,7 @@ import * as globals from "../globals";
 import * as path from "path";
 import { concatChildNodes, uploadContent, getSelectedNodeList, getDefaultUri, compareFileContent } from "../shared/utils";
 import { errorHandling } from "../utils/ProfilesUtils";
-import { Gui, ValidProfileEnum, IZoweTree, IZoweUSSTreeNode, permStringToOctal, Vite } from "@zowe/zowe-explorer-api";
+import { Gui, ValidProfileEnum, IZoweTree, IZoweUSSTreeNode, permStringToOctal, WebView } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { isBinaryFileSync } from "isbinaryfile";
@@ -213,7 +213,7 @@ export async function uploadFile(node: IZoweUSSTreeNode, doc: vscode.TextDocumen
 }
 
 export function editAttributes(context: vscode.ExtensionContext, fileProvider: IZoweTree<IZoweUSSTreeNode>, node: IZoweUSSTreeNode): void {
-    const editView = new Vite.View(
+    const editView = new WebView(
         `Edit Attributes${node?.label ? `: ${node.label as string}` : ""}`,
         "edit-attributes",
         context,

@@ -9,11 +9,11 @@
  *
  */
 
-import { Vite } from "../../../../../src/vscode/webview";
+import { WebView } from "../../../../src/vscode/ui";
 import * as vscode from "vscode";
 import * as Handlebars from "handlebars";
 
-describe("Vite.View unit tests", () => {
+describe("WebView unit tests", () => {
     beforeAll(() => {
         Object.defineProperty(vscode.window, "createWebviewPanel", {
             value: jest.fn().mockReturnValue({
@@ -32,24 +32,24 @@ describe("Vite.View unit tests", () => {
             },
         });
     });
-    it("Successfully creates a Vite WebView", () => {
+    it("Successfully creates a WebView", () => {
         const createWebviewPanelSpy = jest.spyOn(vscode.window, "createWebviewPanel");
         const compileSpy = jest.spyOn(Handlebars, "compile");
 
         try {
-            new Vite.View("Test Webview Title", "example-folder", { extensionPath: "test/path" } as vscode.ExtensionContext);
+            new WebView("Test Webview Title", "example-folder", { extensionPath: "test/path" } as vscode.ExtensionContext);
         } catch (err) {
-            throw new Error("Failed to create Vite Webview");
+            throw new Error("Failed to create WebView");
         }
         expect(createWebviewPanelSpy).toHaveBeenCalled();
         expect(compileSpy).toHaveBeenCalled();
     });
 
-    it("Correctly disposes a Vite WebView", () => {
+    it("Correctly disposes a WebView", () => {
         const createWebviewPanelSpy = jest.spyOn(vscode.window, "createWebviewPanel");
         const compileSpy = jest.spyOn(Handlebars, "compile");
 
-        const testView = new Vite.View(
+        const testView = new WebView(
             "Test Webview Title",
             "example-folder",
             { extensionPath: "test/path" } as vscode.ExtensionContext,
@@ -61,8 +61,8 @@ describe("Vite.View unit tests", () => {
         expect(testView.panel).toBeUndefined();
     });
 
-    it("returns HTML content from webview", () => {
-        const testView = new Vite.View(
+    it("returns HTML content from WebView", () => {
+        const testView = new WebView(
             "Test Webview Title",
             "example-folder",
             { extensionPath: "test/path" } as vscode.ExtensionContext,
