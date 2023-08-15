@@ -36,7 +36,11 @@ describe("Vite.View unit tests", () => {
         const createWebviewPanelSpy = jest.spyOn(vscode.window, "createWebviewPanel");
         const compileSpy = jest.spyOn(Handlebars, "compile");
 
-        new Vite.View("Test Webview Title", "example-folder", { extensionPath: "test/path" } as vscode.ExtensionContext);
+        try {
+            new Vite.View("Test Webview Title", "example-folder", { extensionPath: "test/path" } as vscode.ExtensionContext);
+        } catch (err) {
+            throw new Error("Failed to create Vite Webview");
+        }
         expect(createWebviewPanelSpy).toHaveBeenCalled();
         expect(compileSpy).toHaveBeenCalled();
     });
