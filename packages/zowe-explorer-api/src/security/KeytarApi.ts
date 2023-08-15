@@ -19,14 +19,19 @@ export class KeytarApi {
     public constructor(protected log: imperative.Logger) {}
 
     // v1 specific
-    public async activateKeytar(initialized: boolean, isTheia: boolean): Promise<void> {
+    public async activateKeytar(initialized: boolean, _isTheia: boolean): Promise<void> {
         const log = imperative.Logger.getAppLogger();
         const profiles = new ProfilesCache(log, vscode.workspace.workspaceFolders?.[0]?.uri.fsPath);
         const scsActive = profiles.isSecureCredentialPluginActive();
         if (scsActive) {
-            const keytar = KeytarCredentialManager.getSecurityModules("keytar", isTheia);
+            let keytar: object;
+            try {
+                keytar = (await import("@zowe/secrets-for-zowe-sdk")).keyring;
+            } catch (err) {
+                log.warn(err.toString());
+            }
             if (!initialized && keytar) {
-                KeytarCredentialManager.keytar = keytar as unknown as KeytarModule;
+                KeytarCredentialManager.keytar = keytar as KeytarModule;
                 await imperative.CredentialManagerFactory.initialize({
                     service: globals.SETTINGS_SCS_DEFAULT,
                     Manager: KeytarCredentialManager,
