@@ -72,7 +72,7 @@ export async function errorHandling(errorDetails: Error | string, label?: string
             if (imperativeError.mDetails.additionalDetails) {
                 const tokenError: string = imperativeError.mDetails.additionalDetails;
                 if (tokenError.includes("Token is not valid or expired.")) {
-                    if (this.isTheia()) {
+                    if (isTheia()) {
                         Gui.errorMessage(errToken).then(async () => {
                             await Profiles.getInstance().ssoLogin(null, label);
                         });
