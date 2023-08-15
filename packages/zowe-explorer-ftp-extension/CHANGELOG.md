@@ -5,6 +5,7 @@ All notable changes to the "zowe-explorer-ftp-extension" extension will be docum
 ### New features and enhancements
 
 - Enhance throw error in zowe ftp extension. [#2143](https://github.com/zowe/vscode-extension-for-zowe/issues/2143)
+- Removed `keytar` from list of external Webpack modules. Its usage has been replaced with the `keyring` module from [`@zowe/secrets-for-zowe-sdk`](https://github.com/zowe/zowe-cli/tree/master/packages/secrets). [#2358](https://github.com/zowe/vscode-extension-for-zowe/issues/2358)
 
 ### Bug fixes
 
