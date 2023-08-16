@@ -2,9 +2,9 @@
   "name": "edit-attributes",
   "private": true,
   "type": "module",
-  "version": "1.0.0",
+  "version": "2.10.0-SNAPSHOT",
   "main": "index.js",
-  "license": "MIT",
+  "license": "EPL-2.0",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",

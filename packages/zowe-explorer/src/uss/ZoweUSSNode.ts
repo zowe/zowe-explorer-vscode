@@ -264,10 +264,16 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             this.children = [];
         }
 
-        const newChildren = Object.keys(elementChildren)
-            .sort()
-            .filter((label) => this.children.find((c) => (c.label as string) === label) == null)
-            .map((label) => elementChildren[label]);
+        const recordValues = Object.values(elementChildren);
+
+        const newChildren = recordValues.filter((c) => this.children.find((ch) => ch.label === c.label) == null)
+            .sort();
+
+        const deletedChildren = this.children.filter((c) => recordValues.find((ch) => ch.label === c.label) == null);
+
+        if (newChildren.length == 0 && deletedChildren.length == 0) {
+            return this.children;
+        }
 
         this.children = this.children.concat(newChildren).filter((c) => (c.label as string) in elementChildren);
         this.prevPath = this.fullPath;

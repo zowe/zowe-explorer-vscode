@@ -5,7 +5,7 @@ lib
 logs
 testProfileData.ts
 results
-debug.log
+*.log
 npm-shrinkwrap.json
 vscode-extension-for-zowe*.vsix
 .vscode/settings.json

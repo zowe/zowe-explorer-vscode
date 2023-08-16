@@ -218,7 +218,11 @@ export function editAttributes(context: vscode.ExtensionContext, fileProvider: I
         const ussApi = ZoweExplorerApiRegister.getUssApi(node.getProfile());
         switch (message.command) {
             case "refresh":
-                fileProvider.refreshElement(node);
+                if (node.getParent()) {
+                    fileProvider.refreshElement(node.getParent());
+                } else {
+                    fileProvider.refresh();
+                }
                 await editView.panel.webview.postMessage({
                     attributes: node.attributes,
                     name: node.fullPath,
