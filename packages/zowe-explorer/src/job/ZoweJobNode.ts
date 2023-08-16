@@ -114,124 +114,128 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
                 ),
             ];
         }
-        if (this.dirty) {
-            const elementChildren: Record<string, ZoweJobNode> = {};
-            if (contextually.isJob(this)) {
-                // Fetch spool files under job node
-                const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
-                const spools: zowe.IJobFile[] = (
-                    (await ZoweExplorerApiRegister.getJesApi(cachedProfile).getSpoolFiles(this.job.jobname, this.job.jobid)) ?? []
-                )
-                    // filter out all the objects which do not seem to be correct Job File Document types
-                    // see an issue #845 for the details
-                    .filter((item) => !(item.id === undefined && item.ddname === undefined && item.stepname === undefined));
-                if (!spools.length) {
-                    const noSpoolNode = new Spool(
-                        localize("getChildren.noSpoolFiles", "There are no JES spool messages to display"),
-                        vscode.TreeItemCollapsibleState.None,
-                        this,
-                        null,
-                        null,
-                        null,
-                        this
-                    );
-                    noSpoolNode.iconPath = null;
-                    return [noSpoolNode];
+
+        if (!this.dirty) {
+            return this.children;
+        }
+
+        const elementChildren: Record<string, ZoweJobNode> = {};
+        if (contextually.isJob(this)) {
+            // Fetch spool files under job node
+            const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
+            const spools: zowe.IJobFile[] = (
+                (await ZoweExplorerApiRegister.getJesApi(cachedProfile).getSpoolFiles(this.job.jobname, this.job.jobid)) ?? []
+            )
+                // filter out all the objects which do not seem to be correct Job File Document types
+                // see an issue #845 for the details
+                .filter((item) => !(item.id === undefined && item.ddname === undefined && item.stepname === undefined));
+            if (!spools.length) {
+                const noSpoolNode = new Spool(
+                    localize("getChildren.noSpoolFiles", "There are no JES spool messages to display"),
+                    vscode.TreeItemCollapsibleState.None,
+                    this,
+                    null,
+                    null,
+                    null,
+                    this
+                );
+                noSpoolNode.iconPath = null;
+                return [noSpoolNode];
+            }
+            const refreshTimestamp = Date.now();
+            spools.forEach((spool) => {
+                let prefix = spool.stepname;
+                if (prefix === undefined) {
+                    prefix = spool.procstep;
                 }
-                const refreshTimestamp = Date.now();
-                spools.forEach((spool) => {
-                    let prefix = spool.stepname;
-                    if (prefix === undefined) {
-                        prefix = spool.procstep;
-                    }
-                    const sessionName = this.getProfileName();
-                    const procstep = spool.procstep ? spool.procstep : undefined;
-                    let newLabel: string;
-                    if (procstep) {
-                        newLabel = `${spool.stepname}:${spool.ddname} - ${procstep}`;
-                    } else {
-                        newLabel = `${spool.stepname}:${spool.ddname} - ${spool["record-count"]}`;
-                    }
-
-                    // Only look for existing node w/ procstep if spool file has a procstep,
-                    // otherwise look for only stepname:ddname to update the record count in the label
-                    const spoolSuffix = procstep ? ` - ${procstep}` : "";
-                    const existing = this.children.find((element) => element.label?.includes(`${spool.stepname}:${spool.ddname}${spoolSuffix}`));
-                    if (existing) {
-                        existing.label = newLabel;
-                        elementChildren[newLabel] = existing;
-                    } else {
-                        const spoolNode = new Spool(newLabel, vscode.TreeItemCollapsibleState.None, this, this.session, spool, this.job, this);
-                        const icon = getIconByNode(spoolNode);
-                        if (icon) {
-                            spoolNode.iconPath = icon.path;
-                        }
-                        spoolNode.command = {
-                            command: "zowe.jobs.zosJobsOpenspool",
-                            title: "",
-                            arguments: [sessionName, spool, refreshTimestamp],
-                        };
-                        elementChildren[newLabel] = spoolNode;
-                    }
-                });
-            } else {
-                // Fetch jobs under session node
-                const jobs = await this.getJobs(this._owner, this._prefix, this._searchId, this._jobStatus);
-
-                if (!jobs || !jobs.length > 0) {
-                    const noJobsNode = new Job(
-                        localize("getChildren.noJobs", "No jobs found"),
-                        vscode.TreeItemCollapsibleState.None,
-                        this,
-                        null,
-                        null,
-                        null
-                    );
-                    noJobsNode.contextValue = globals.INFORMATION_CONTEXT;
-                    noJobsNode.iconPath = null;
-                    return [noJobsNode];
+                const sessionName = this.getProfileName();
+                const procstep = spool.procstep ? spool.procstep : undefined;
+                let newLabel: string;
+                if (procstep) {
+                    newLabel = `${spool.stepname}:${spool.ddname} - ${procstep}`;
+                } else {
+                    newLabel = `${spool.stepname}:${spool.ddname} - ${spool["record-count"]}`;
                 }
 
-                jobs.forEach((job) => {
-                    let nodeTitle: string;
-                    if (job.retcode) {
-                        nodeTitle = `${job.jobname}(${job.jobid}) - ${job.retcode}`;
-                    } else {
-                        nodeTitle = `${job.jobname}(${job.jobid}) - ${job.status}`;
+                // Only look for existing node w/ procstep if spool file has a procstep,
+                // otherwise look for only stepname:ddname to update the record count in the label
+                const spoolSuffix = procstep ? ` - ${procstep}` : "";
+                const existing = this.children.find((element) => element.label?.includes(`${spool.stepname}:${spool.ddname}${spoolSuffix}`));
+                if (existing) {
+                    existing.label = newLabel;
+                    elementChildren[newLabel] = existing;
+                } else {
+                    const spoolNode = new Spool(newLabel, vscode.TreeItemCollapsibleState.None, this, this.session, spool, this.job, this);
+                    const icon = getIconByNode(spoolNode);
+                    if (icon) {
+                        spoolNode.iconPath = icon.path;
                     }
-                    // Do not look for status code as it might have changed from previous refresh
-                    const existing = this.children.find((element) => element.label?.startsWith(`${job.jobname}(${job.jobid})`));
-                    if (existing) {
-                        // If matched, update the label to reflect latest retcode/status
-                        existing.label = nodeTitle;
-                        elementChildren[nodeTitle] = existing;
-                    } else {
-                        const jobNode = new Job(nodeTitle, vscode.TreeItemCollapsibleState.Collapsed, this, this.session, job, this.getProfile());
-                        jobNode.contextValue = globals.JOBS_JOB_CONTEXT;
-                        if (job.retcode) {
-                            jobNode.contextValue += globals.RC_SUFFIX + job.retcode;
-                        }
-                        if (!jobNode.iconPath) {
-                            const icon = getIconByNode(jobNode);
-                            if (icon) {
-                                jobNode.iconPath = icon.path;
-                            }
-                        }
-                        elementChildren[nodeTitle] = jobNode;
-                    }
-                });
+                    spoolNode.command = {
+                        command: "zowe.jobs.zosJobsOpenspool",
+                        title: "",
+                        arguments: [sessionName, spool, refreshTimestamp],
+                    };
+                    elementChildren[newLabel] = spoolNode;
+                }
+            });
+        } else {
+            // Fetch jobs under session node
+            const jobs = await this.getJobs(this._owner, this._prefix, this._searchId, this._jobStatus);
+
+            if (!jobs || !jobs.length > 0) {
+                const noJobsNode = new Job(
+                    localize("getChildren.noJobs", "No jobs found"),
+                    vscode.TreeItemCollapsibleState.None,
+                    this,
+                    null,
+                    null,
+                    null
+                );
+                noJobsNode.contextValue = globals.INFORMATION_CONTEXT;
+                noJobsNode.iconPath = null;
+                return [noJobsNode];
             }
 
-            // Only add new children that are not in the list of existing child nodes
-            const newChildren = Object.values(elementChildren).filter((c) => this.children.find((ch) => ch.label === c.label) == null);
-
-            // Remove any children that are no longer present in the built record
-            this.children = this.children
-                .concat(newChildren)
-                .filter((ch) => Object.values(elementChildren).find((recordCh) => recordCh.label === ch.label) != null)
-                .sort((a, b) => Job.sortJobs(a, b));
+            jobs.forEach((job) => {
+                let nodeTitle: string;
+                if (job.retcode) {
+                    nodeTitle = `${job.jobname}(${job.jobid}) - ${job.retcode}`;
+                } else {
+                    nodeTitle = `${job.jobname}(${job.jobid}) - ${job.status}`;
+                }
+                // Do not look for status code as it might have changed from previous refresh
+                const existing = this.children.find((element) => element.label?.startsWith(`${job.jobname}(${job.jobid})`));
+                if (existing) {
+                    // If matched, update the label to reflect latest retcode/status
+                    existing.label = nodeTitle;
+                    elementChildren[nodeTitle] = existing;
+                } else {
+                    const jobNode = new Job(nodeTitle, vscode.TreeItemCollapsibleState.Collapsed, this, this.session, job, this.getProfile());
+                    jobNode.contextValue = globals.JOBS_JOB_CONTEXT;
+                    if (job.retcode) {
+                        jobNode.contextValue += globals.RC_SUFFIX + job.retcode;
+                    }
+                    if (!jobNode.iconPath) {
+                        const icon = getIconByNode(jobNode);
+                        if (icon) {
+                            jobNode.iconPath = icon.path;
+                        }
+                    }
+                    elementChildren[nodeTitle] = jobNode;
+                }
+            });
         }
+
+        // Only add new children that are not in the list of existing child nodes
+        const newChildren = Object.values(elementChildren).filter((c) => this.children.find((ch) => ch.label === c.label) == null);
+
+        // Remove any children that are no longer present in the built record
+        this.children = this.children
+            .concat(newChildren)
+            .filter((ch) => Object.values(elementChildren).find((recordCh) => recordCh.label === ch.label) != null)
+            .sort((a, b) => Job.sortJobs(a, b));
         this.dirty = false;
+
         return this.children;
     }
 
