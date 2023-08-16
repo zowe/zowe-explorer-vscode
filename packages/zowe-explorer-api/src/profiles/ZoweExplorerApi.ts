@@ -160,7 +160,7 @@ export namespace ZoweExplorerApi {
 
         /**
          * Updates attributes for a USS directory or file.
-         * 
+         *
          * @param ussPath The USS path of the directory or file to update
          * @param attributes The attributes that should be updated
          */

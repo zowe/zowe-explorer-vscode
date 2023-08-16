@@ -225,14 +225,14 @@ export function editAttributes(context: vscode.ExtensionContext, fileProvider: I
                     await editView.panel.webview.postMessage({
                         attributes: node.attributes,
                         name: node.fullPath,
-                        readonly: ussApi.updateAttributes == null
+                        readonly: ussApi.updateAttributes == null,
                     });
                     break;
                 case "ready":
                     await editView.panel.webview.postMessage({
                         attributes: node.attributes,
                         name: node.fullPath,
-                        readonly: ussApi.updateAttributes == null
+                        readonly: ussApi.updateAttributes == null,
                     });
                     break;
                 case "update-attributes":
@@ -273,7 +273,7 @@ export function editAttributes(context: vscode.ExtensionContext, fileProvider: I
                             }
 
                             await ussApi.updateAttributes(node.fullPath, newAttrs);
-                            node.attributes = {...(node.attributes ?? {}), ...newAttrs} as FileAttributes;
+                            node.attributes = { ...(node.attributes ?? {}), ...newAttrs } as FileAttributes;
 
                             await editView.panel.webview.postMessage({
                                 updated: true,

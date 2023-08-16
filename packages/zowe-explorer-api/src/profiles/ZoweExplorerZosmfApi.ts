@@ -152,20 +152,20 @@ export class ZosmfUssApi extends ZosmfApiCommon implements ZoweExplorerApi.IUss 
                     request: "chown",
                     owner: attributes.uid != null ? attributes.uid.toString() : attributes.owner,
                     group: attributes.gid != null ? attributes.gid.toString() : attributes.group,
-                    recursive: true
+                    recursive: true,
                 });
-            } else if ((attributes.owner || attributes.uid)) {
+            } else if (attributes.owner || attributes.uid) {
                 await zowe.Utilities.putUSSPayload(this.getSession(), ussPath, {
                     request: "chown",
                     owner: attributes.uid != null ? attributes.uid.toString() : attributes.owner,
-                    recursive: true
+                    recursive: true,
                 });
             }
 
             if (attributes.perms) {
                 await zowe.Utilities.putUSSPayload(this.getSession(), ussPath, {
                     request: "chmod",
-                    mode: permStringToOctal(attributes.perms).toString()
+                    mode: permStringToOctal(attributes.perms).toString(),
                 });
             }
         } catch (err) {
@@ -173,18 +173,18 @@ export class ZosmfUssApi extends ZosmfApiCommon implements ZoweExplorerApi.IUss 
                 return {
                     success: false,
                     commandResponse: err.toString(),
-                }
+                };
             }
 
             return {
                 success: false,
-                commandResponse: "N/A"
+                commandResponse: "N/A",
             };
         }
 
         return {
             success: true,
-            commandResponse: "The provided attributes were applied."
+            commandResponse: "The provided attributes were applied.",
         };
     }
 

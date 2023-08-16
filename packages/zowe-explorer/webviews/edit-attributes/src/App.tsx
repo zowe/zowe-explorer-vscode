@@ -90,20 +90,20 @@ export function App() {
       // remove directory flag from perms string
       const perms = attributes.perms.substring(1);
       // split into 3 groups:
-      const [group, user, other] = perms.match(/.{1,3}/g);
+      const [user, group, other] = perms.match(/.{1,3}/g);
       let attrs: FileAttributes = {
         directory: isDirectory,
         name: name,
         group: attributes.group,
         owner: attributes.owner,
-        perms: [group, user, other].reduce((all, permGroup, i) => {
+        perms: [user, group, other].reduce((all, permGroup, i) => {
           let key: string = "";
           switch (i) {
             case 0:
-              key = "group";
+              key = "user";
               break;
             case 1:
-              key = "user";
+              key = "group";
               break;
             case 2:
               key = "all";
@@ -188,24 +188,23 @@ export function App() {
                 <VSCodeDataGridCell cellType="columnheader" gridColumn="1">
                   Permission
                 </VSCodeDataGridCell>
-                <VSCodeDataGridCell cellType="columnheader" gridColumn="2">
-                  Group
-                </VSCodeDataGridCell>
-                <VSCodeDataGridCell cellType="columnheader" gridColumn="3">
-                  Owner
-                </VSCodeDataGridCell>
-                <VSCodeDataGridCell cellType="columnheader" gridColumn="4">
-                  All
-                </VSCodeDataGridCell>
+                {PERMISSION_TYPES.map((perm, i) => {
+                  const capitalizedPerm = perm.charAt(0).toUpperCase() + perm.slice(1);
+                  return (
+                    <VSCodeDataGridCell cellType="columnheader" gridColumn={(i + 2).toString()}>
+                      {capitalizedPerm}
+                    </VSCodeDataGridCell>
+                  );
+                })}
               </VSCodeDataGridRow>
-              {PERMISSION_TYPES.map((perm) => {
-                const capitalizedPerm = perm.charAt(0).toUpperCase() + perm.slice(1);
+              {PERMISSION_GROUPS.map((group) => {
+                const capitalizedGroup = group.charAt(0).toUpperCase() + group.slice(1);
                 return (
                   <VSCodeDataGridRow>
                     <VSCodeDataGridCell cellType="rowheader" gridColumn="1">
-                      {capitalizedPerm}
+                      {capitalizedGroup}
                     </VSCodeDataGridCell>
-                    {PERMISSION_GROUPS.map((group, i) => (
+                    {PERMISSION_TYPES.map((perm, i) => (
                       <VSCodeDataGridCell gridColumn={(i + 2).toString()}>
                         <VSCodeCheckbox
                           checked={attributes.current!.perms[group][perm]}
