@@ -213,7 +213,7 @@ export async function uploadFile(node: IZoweUSSTreeNode, doc: vscode.TextDocumen
 }
 
 export function editAttributes(context: vscode.ExtensionContext, fileProvider: IZoweTree<IZoweUSSTreeNode>, node: IZoweUSSTreeNode): void {
-    const webviewLabel = node.label ? `Edit Attributes ${node.label as string}` : "Edit Attributes";
+    const webviewLabel = node.label ? `Edit Attributes: ${node.label as string}` : "Edit Attributes";
     const editView = new WebView(webviewLabel, "edit-attributes", context, async (message: any) => {
         const ussApi = ZoweExplorerApiRegister.getUssApi(node.getProfile());
         switch (message.command) {
@@ -243,7 +243,7 @@ export function editAttributes(context: vscode.ExtensionContext, fileProvider: I
                     if (Object.keys(message.attrs).length > 0) {
                         const attrs = message.attrs;
                         const newAttrs: Partial<FileAttributes> = {};
-                        if (!isNaN(attrs.owner) && !isNaN(parseFloat(attrs.owner))) {
+                        if (!isNaN(parseInt(attrs.owner))) {
                             const uid = parseInt(attrs.owner);
                             newAttrs.uid = uid;
 
@@ -252,7 +252,7 @@ export function editAttributes(context: vscode.ExtensionContext, fileProvider: I
                         } else if (node.attributes.owner !== attrs.owner) {
                             newAttrs.owner = attrs.owner;
                         }
-                        if (!isNaN(attrs.group) && !isNaN(parseFloat(attrs.group))) {
+                        if (!isNaN(parseInt(attrs.group))) {
                             const gid = parseInt(attrs.group);
                             // must provide owner when changing group
                             newAttrs.owner = attrs.owner;

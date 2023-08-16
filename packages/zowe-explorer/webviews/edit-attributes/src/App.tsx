@@ -40,12 +40,15 @@ export function App() {
     setIsUpdating(true);
     if (attributes.current) {
       // convert perm booleans to string
-      const permString = Object.values(attributes.current.perms).reduce((all, perm) => {
-        const read = perm.read ? "r" : "-";
-        const write = perm.write ? "w" : "-";
-        const execute = perm.execute ? "x" : "-";
-        return all.concat(read, write, execute);
-      }, `${attributes.current.directory ? "d" : "-"}`);
+      const permString = Object.values(attributes.current.perms).reduce(
+        (all, perm) => {
+          const read = perm.read ? "r" : "-";
+          const write = perm.write ? "w" : "-";
+          const execute = perm.execute ? "x" : "-";
+          return all.concat(read, write, execute);
+        },
+        attributes.current.directory ? "d" : "-"
+      );
       vscodeApi.postMessage({
         command: "update-attributes",
         attrs: { ...attributes.current, perms: permString },
@@ -96,18 +99,7 @@ export function App() {
         group: attributes.group,
         owner: attributes.owner,
         perms: [user, group, other].reduce((all, permGroup, i) => {
-          let key: string = "";
-          switch (i) {
-            case 0:
-              key = "user";
-              break;
-            case 1:
-              key = "group";
-              break;
-            case 2:
-              key = "all";
-              break;
-          }
+          const key = PERMISSION_GROUPS[i];
 
           all = {
             ...all,
@@ -184,9 +176,7 @@ export function App() {
           {attributes.current.perms ? (
             <VSCodeDataGrid style={{ marginTop: "1em" }}>
               <VSCodeDataGridRow>
-                <VSCodeDataGridCell cellType="columnheader" gridColumn="1">
-                  Permission
-                </VSCodeDataGridCell>
+                <VSCodeDataGridCell cellType="columnheader" gridColumn="1"></VSCodeDataGridCell>
                 {PERMISSION_TYPES.map((perm, i) => {
                   const capitalizedPerm = perm.charAt(0).toUpperCase() + perm.slice(1);
                   return (
