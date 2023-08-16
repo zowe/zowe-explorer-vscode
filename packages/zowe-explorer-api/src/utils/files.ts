@@ -19,6 +19,7 @@ export type FileAttributes = {
     gid: number;
     group: string;
     owner: string;
+    uid: number;
     perms: string;
 };
 

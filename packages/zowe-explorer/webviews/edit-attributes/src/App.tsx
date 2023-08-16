@@ -16,6 +16,7 @@ const vscodeApi = acquireVsCodeApi();
 //const replaceCharAt = (str: string, char: string, index: number) => str.substring(0, index) + char + str.substring(index + 1);
 
 export function App() {
+  const [readonly, setReadonly] = useState(false);
   const [allowUpdate, setAllowUpdate] = useState(false);
   const [attributes, setAttributes] = useState<Record<"current" | "initial", FileAttributes | null>>({
     current: null,
@@ -64,6 +65,10 @@ export function App() {
 
       if (!event.data) {
         return;
+      }
+
+      if ("readonly" in event.data && event.data.readonly) {
+        setReadonly(true);
       }
 
       if ("updated" in event.data) {
@@ -213,9 +218,9 @@ export function App() {
               })}
             </VSCodeDataGrid>
           ) : null}
-          <div style={{ display: "flex", alignItems: "center", marginLeft: "1em", marginTop: "1em" }}>
+          <div style={{ display: "flex", alignItems: "center", marginLeft: "1em", marginTop: "1em", marginBottom: "1em" }}>
             <VSCodeButton
-              disabled={!allowUpdate}
+              disabled={!allowUpdate || readonly}
               onClick={() => {
                 applyAttributes();
               }}
@@ -224,6 +229,11 @@ export function App() {
             </VSCodeButton>
             {isUpdating && <VSCodeProgressRing style={{ marginLeft: "1em" }} />}
           </div>
+          {readonly && (
+            <span style={{ marginLeft: "1em", color: "var(--vscode-editorLightBulb-foreground)" }}>
+              The API does not support updating attributes for this {attributes.initial?.directory ?? false ? "directory" : "file"}.
+            </span>
+          )}
         </div>
       </div>
     </div>

@@ -10,13 +10,13 @@
  */
 
 import * as vscode from "vscode";
-import { imperative, IZosFilesResponse, Utilities } from "@zowe/cli";
+import { imperative, IZosFilesResponse } from "@zowe/cli";
 import * as fs from "fs";
 import * as globals from "../globals";
 import * as path from "path";
 import { concatChildNodes, uploadContent, getSelectedNodeList, getDefaultUri, compareFileContent } from "../shared/utils";
 import { errorHandling } from "../utils/ProfilesUtils";
-import { Gui, ValidProfileEnum, IZoweTree, IZoweUSSTreeNode, permStringToOctal, WebView } from "@zowe/zowe-explorer-api";
+import { Gui, ValidProfileEnum, IZoweTree, IZoweUSSTreeNode, WebView, FileAttributes } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { isBinaryFileSync } from "isbinaryfile";
@@ -218,66 +218,63 @@ export function editAttributes(context: vscode.ExtensionContext, fileProvider: I
         "edit-attributes",
         context,
         async (message: any) => {
+            const ussApi = ZoweExplorerApiRegister.getUssApi(node.getProfile());
             switch (message.command) {
                 case "refresh":
                     fileProvider.refreshElement(node);
                     await editView.panel.webview.postMessage({
                         attributes: node.attributes,
                         name: node.fullPath,
+                        readonly: ussApi.updateAttributes == null
                     });
                     break;
                 case "ready":
                     await editView.panel.webview.postMessage({
                         attributes: node.attributes,
                         name: node.fullPath,
+                        readonly: ussApi.updateAttributes == null
                     });
                     break;
                 case "update-attributes":
+                    if (!ussApi.updateAttributes) {
+                        // this condition should not be satisfied, as the button is disabled when this API doesn't exist.
+                        // but, this ensures the webview cannot make an update request if the API is not implemented.
+                        return;
+                    }
+
                     try {
                         if (Object.keys(message.attrs).length > 0) {
                             const attrs = message.attrs;
-                            if (node.attributes.owner !== attrs.owner) {
-                                await Utilities.putUSSPayload(node.getSession(), node.fullPath, {
-                                    request: "chown",
-                                    owner: attrs.owner,
-                                    group: attrs.group,
-                                    links: "follow",
-                                    recursive: true,
-                                });
-                                node.attributes.owner = attrs.owner;
+                            const newAttrs: Partial<FileAttributes> = {};
+                            if (!isNaN(attrs.owner) && !isNaN(parseFloat(attrs.owner))) {
+                                const uid = parseInt(attrs.owner);
+                                newAttrs.uid = uid;
+
+                                // set owner to the UID to prevent mismatched UIDs/owners
+                                newAttrs.owner = attrs.owner;
+                            } else if (node.attributes.owner !== attrs.owner) {
+                                newAttrs.owner = attrs.owner;
                             }
                             if (!isNaN(attrs.group) && !isNaN(parseFloat(attrs.group))) {
                                 const gid = parseInt(attrs.group);
-                                if (node.attributes.gid !== gid) {
-                                    await Utilities.putUSSPayload(node.getSession(), node.fullPath, {
-                                        request: "chown",
-                                        owner: attrs.owner,
-                                        group: attrs.gid,
-                                        links: "follow",
-                                        recursive: true,
-                                    });
-                                    node.attributes.gid = gid;
-                                }
+                                // must provide owner when changing group
+                                newAttrs.owner = attrs.owner;
+                                newAttrs.gid = gid;
+
+                                // set group to the GID to prevent mismatched GIDs/groups
+                                newAttrs.group = attrs.group;
                             } else if (node.attributes.group !== attrs.group) {
-                                await Utilities.putUSSPayload(node.getSession(), node.fullPath, {
-                                    request: "chown",
-                                    owner: attrs.owner,
-                                    group: attrs.group,
-                                    links: "follow",
-                                    recursive: true,
-                                });
-                                node.attributes.group = attrs.group;
+                                // must provide owner when changing group
+                                newAttrs.owner = attrs.owner;
+                                newAttrs.group = attrs.group;
                             }
                             if (node.attributes.perms !== attrs.perms) {
-                                const permsAsOctal = permStringToOctal(attrs.perms);
-                                await Utilities.putUSSPayload(node.getSession(), node.fullPath, {
-                                    request: "chmod",
-                                    mode: permsAsOctal,
-                                    links: "follow",
-                                    recursive: true,
-                                });
-                                node.attributes.perms = attrs.perms;
+                                newAttrs.perms = attrs.perms;
                             }
+
+                            await ussApi.updateAttributes(node.fullPath, newAttrs);
+                            node.attributes = {...(node.attributes ?? {}), ...newAttrs} as FileAttributes;
+
                             await editView.panel.webview.postMessage({
                                 updated: true,
                             });

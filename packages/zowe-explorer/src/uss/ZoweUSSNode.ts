@@ -187,6 +187,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 if (existing) {
                     existing.attributes = {
                         gid: item.gid,
+                        uid: item.uid,
                         group: item.group,
                         perms: item.mode,
                         owner: item.user,
@@ -206,6 +207,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                         );
                         temp.attributes = {
                             gid: item.gid,
+                            uid: item.uid,
                             group: item.group,
                             perms: item.mode,
                             owner: item.user,
@@ -237,6 +239,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                         }
                         temp.attributes = {
                             gid: item.gid,
+                            uid: item.uid,
                             group: item.group,
                             perms: item.mode,
                             owner: item.user,
