@@ -13,7 +13,6 @@ import {
 import isEqual from "lodash.isequal";
 
 const vscodeApi = acquireVsCodeApi();
-//const replaceCharAt = (str: string, char: string, index: number) => str.substring(0, index) + char + str.substring(index + 1);
 
 export function App() {
   const [readonly, setReadonly] = useState(false);
@@ -59,7 +58,7 @@ export function App() {
   useEffect(() => {
     window.addEventListener("message", (event) => {
       // Prevent users from sending data into webview outside of extension/webview context
-      if (!event.origin || !event.origin.startsWith("vscode-webview://")) {
+      if (!event.origin?.startsWith("vscode-webview://")) {
         return;
       }
 
@@ -191,7 +190,7 @@ export function App() {
                 {PERMISSION_TYPES.map((perm, i) => {
                   const capitalizedPerm = perm.charAt(0).toUpperCase() + perm.slice(1);
                   return (
-                    <VSCodeDataGridCell cellType="columnheader" gridColumn={(i + 2).toString()}>
+                    <VSCodeDataGridCell cellType="columnheader" gridColumn={(i + 2).toString()} key={`${perm}-cell-${i}`}>
                       {capitalizedPerm}
                     </VSCodeDataGridCell>
                   );
@@ -200,12 +199,12 @@ export function App() {
               {PERMISSION_GROUPS.map((group) => {
                 const capitalizedGroup = group.charAt(0).toUpperCase() + group.slice(1);
                 return (
-                  <VSCodeDataGridRow>
+                  <VSCodeDataGridRow key={`${group}-row`}>
                     <VSCodeDataGridCell cellType="rowheader" gridColumn="1">
                       {capitalizedGroup}
                     </VSCodeDataGridCell>
                     {PERMISSION_TYPES.map((perm, i) => (
-                      <VSCodeDataGridCell gridColumn={(i + 2).toString()}>
+                      <VSCodeDataGridCell gridColumn={(i + 2).toString()} key={`${perm}-checkbox-${i}`}>
                         <VSCodeCheckbox
                           checked={attributes.current!.perms[group][perm]}
                           onChange={(e: any) => updatePerm(group, perm, e.target.checked)}

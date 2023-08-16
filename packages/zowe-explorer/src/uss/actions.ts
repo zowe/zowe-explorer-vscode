@@ -213,87 +213,83 @@ export async function uploadFile(node: IZoweUSSTreeNode, doc: vscode.TextDocumen
 }
 
 export function editAttributes(context: vscode.ExtensionContext, fileProvider: IZoweTree<IZoweUSSTreeNode>, node: IZoweUSSTreeNode): void {
-    const editView = new WebView(
-        `Edit Attributes${node?.label ? `: ${node.label as string}` : ""}`,
-        "edit-attributes",
-        context,
-        async (message: any) => {
-            const ussApi = ZoweExplorerApiRegister.getUssApi(node.getProfile());
-            switch (message.command) {
-                case "refresh":
-                    fileProvider.refreshElement(node);
-                    await editView.panel.webview.postMessage({
-                        attributes: node.attributes,
-                        name: node.fullPath,
-                        readonly: ussApi.updateAttributes == null,
-                    });
-                    break;
-                case "ready":
-                    await editView.panel.webview.postMessage({
-                        attributes: node.attributes,
-                        name: node.fullPath,
-                        readonly: ussApi.updateAttributes == null,
-                    });
-                    break;
-                case "update-attributes":
-                    if (!ussApi.updateAttributes) {
-                        // this condition should not be satisfied, as the button is disabled when this API doesn't exist.
-                        // but, this ensures the webview cannot make an update request if the API is not implemented.
-                        return;
-                    }
+    const webviewLabel = node.label ? `Edit Attributes ${node.label as string}` : "Edit Attributes";
+    const editView = new WebView(webviewLabel, "edit-attributes", context, async (message: any) => {
+        const ussApi = ZoweExplorerApiRegister.getUssApi(node.getProfile());
+        switch (message.command) {
+            case "refresh":
+                fileProvider.refreshElement(node);
+                await editView.panel.webview.postMessage({
+                    attributes: node.attributes,
+                    name: node.fullPath,
+                    readonly: ussApi.updateAttributes == null,
+                });
+                break;
+            case "ready":
+                await editView.panel.webview.postMessage({
+                    attributes: node.attributes,
+                    name: node.fullPath,
+                    readonly: ussApi.updateAttributes == null,
+                });
+                break;
+            case "update-attributes":
+                if (!ussApi.updateAttributes) {
+                    // this condition should not be satisfied, as the button is disabled when this API doesn't exist.
+                    // but, this ensures the webview cannot make an update request if the API is not implemented.
+                    return;
+                }
 
-                    try {
-                        if (Object.keys(message.attrs).length > 0) {
-                            const attrs = message.attrs;
-                            const newAttrs: Partial<FileAttributes> = {};
-                            if (!isNaN(attrs.owner) && !isNaN(parseFloat(attrs.owner))) {
-                                const uid = parseInt(attrs.owner);
-                                newAttrs.uid = uid;
+                try {
+                    if (Object.keys(message.attrs).length > 0) {
+                        const attrs = message.attrs;
+                        const newAttrs: Partial<FileAttributes> = {};
+                        if (!isNaN(attrs.owner) && !isNaN(parseFloat(attrs.owner))) {
+                            const uid = parseInt(attrs.owner);
+                            newAttrs.uid = uid;
 
-                                // set owner to the UID to prevent mismatched UIDs/owners
-                                newAttrs.owner = attrs.owner;
-                            } else if (node.attributes.owner !== attrs.owner) {
-                                newAttrs.owner = attrs.owner;
-                            }
-                            if (!isNaN(attrs.group) && !isNaN(parseFloat(attrs.group))) {
-                                const gid = parseInt(attrs.group);
-                                // must provide owner when changing group
-                                newAttrs.owner = attrs.owner;
-                                newAttrs.gid = gid;
-
-                                // set group to the GID to prevent mismatched GIDs/groups
-                                newAttrs.group = attrs.group;
-                            } else if (node.attributes.group !== attrs.group) {
-                                // must provide owner when changing group
-                                newAttrs.owner = attrs.owner;
-                                newAttrs.group = attrs.group;
-                            }
-                            if (node.attributes.perms !== attrs.perms) {
-                                newAttrs.perms = attrs.perms;
-                            }
-
-                            await ussApi.updateAttributes(node.fullPath, newAttrs);
-                            node.attributes = { ...(node.attributes ?? {}), ...newAttrs } as FileAttributes;
-
-                            await editView.panel.webview.postMessage({
-                                updated: true,
-                            });
-                            await Gui.infoMessage(`Updated file attributes for ${node.fullPath}`);
+                            // set owner to the UID to prevent mismatched UIDs/owners
+                            newAttrs.owner = attrs.owner;
+                        } else if (node.attributes.owner !== attrs.owner) {
+                            newAttrs.owner = attrs.owner;
                         }
-                    } catch (err) {
+                        if (!isNaN(attrs.group) && !isNaN(parseFloat(attrs.group))) {
+                            const gid = parseInt(attrs.group);
+                            // must provide owner when changing group
+                            newAttrs.owner = attrs.owner;
+                            newAttrs.gid = gid;
+
+                            // set group to the GID to prevent mismatched GIDs/groups
+                            newAttrs.group = attrs.group;
+                        } else if (node.attributes.group !== attrs.group) {
+                            // must provide owner when changing group
+                            newAttrs.owner = attrs.owner;
+                            newAttrs.group = attrs.group;
+                        }
+                        if (node.attributes.perms !== attrs.perms) {
+                            newAttrs.perms = attrs.perms;
+                        }
+
+                        await ussApi.updateAttributes(node.fullPath, newAttrs);
+                        node.attributes = { ...(node.attributes ?? {}), ...newAttrs } as FileAttributes;
+
                         await editView.panel.webview.postMessage({
-                            updated: false,
+                            updated: true,
                         });
-                        if (err instanceof Error) {
-                            await Gui.errorMessage(`Failed to set file attributes for ${node.fullPath}: ${err.toString()}`);
-                        }
+                        await Gui.infoMessage(`Updated file attributes for ${node.fullPath}`);
                     }
-                    break;
-                default:
-                    break;
-            }
+                } catch (err) {
+                    await editView.panel.webview.postMessage({
+                        updated: false,
+                    });
+                    if (err instanceof Error) {
+                        await Gui.errorMessage(`Failed to set file attributes for ${node.fullPath}: ${err.toString()}`);
+                    }
+                }
+                break;
+            default:
+                break;
         }
-    );
+    });
 }
 
 /**
