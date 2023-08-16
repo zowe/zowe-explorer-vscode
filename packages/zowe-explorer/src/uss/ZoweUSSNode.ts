@@ -160,24 +160,20 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         }
 
         // Get the directories from the fullPath and display any thrown errors
-        let response: IZosFilesResponse = {
-            success: false,
-            commandResponse: "",
-        };
+        let response: IZosFilesResponse;
         const sessNode = this.getSessionNode();
         try {
             const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
             response = await ZoweExplorerApiRegister.getUssApi(cachedProfile).fileList(this.fullPath);
+
+            // Throws reject if the Zowe command does not throw an error but does not succeed
+            if (!response.success) {
+                throw Error(localize("getChildren.responses.error.response", "The response from Zowe CLI was not successful"));
+            }
         } catch (err) {
             await errorHandling(err, this.label.toString(), localize("getChildren.error.response", "Retrieving response from ") + `uss-file-list`);
             syncSessionNode(Profiles.getInstance())((profileValue) => ZoweExplorerApiRegister.getUssApi(profileValue).getSession())(sessNode);
-        }
-
-        console.trace(response);
-
-        // Throws reject if the Zowe command does not throw an error but does not succeed
-        if (!response.success) {
-            throw Error(localize("getChildren.responses.error.response", "The response from Zowe CLI was not successful"));
+            return this.children;
         }
 
         // Build a list of nodes based on the API response
@@ -265,7 +261,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         this.children = this.children
             .concat(nodesToAdd)
             .filter((c) => !nodesToRemove.includes(c))
-            .sort();
+            .sort((a, b) => ((a.label as string) < (b.label as string) ? -1 : 1));
         this.prevPath = this.fullPath;
         return this.children;
     }

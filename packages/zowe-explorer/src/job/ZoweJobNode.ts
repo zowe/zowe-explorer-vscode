@@ -144,10 +144,6 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
             }
             const refreshTimestamp = Date.now();
             spools.forEach((spool) => {
-                let prefix = spool.stepname;
-                if (prefix === undefined) {
-                    prefix = spool.procstep;
-                }
                 const sessionName = this.getProfileName();
                 const procstep = spool.procstep ? spool.procstep : undefined;
                 let newLabel: string;
@@ -182,7 +178,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
             // Fetch jobs under session node
             const jobs = await this.getJobs(this._owner, this._prefix, this._searchId, this._jobStatus);
 
-            if (!jobs || !jobs.length > 0) {
+            if (!jobs || jobs.length === 0) {
                 const noJobsNode = new Job(
                     localize("getChildren.noJobs", "No jobs found"),
                     vscode.TreeItemCollapsibleState.None,
