@@ -1,6 +1,6 @@
 {
-  "name": "vue",
-  "displayName": "vue",
+  "name": "vue-webview-sample",
+  "displayName": "vue-webview-sample",
   "description": "Sample VSCode extension leveraging ZE API WebView class and a Vite-powered Vue demo",
   "private": true,
   "version": "0.0.1",
