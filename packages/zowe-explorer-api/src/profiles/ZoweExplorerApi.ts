@@ -11,7 +11,7 @@
 
 import * as zowe from "@zowe/cli";
 import { ProfilesCache } from "./ProfilesCache";
-import { FileAttributes } from "../utils";
+import { FileAttributes } from "../utils/files";
 
 /**
  * This namespace provides interfaces for all the external APIs provided by this VS Code Extension.

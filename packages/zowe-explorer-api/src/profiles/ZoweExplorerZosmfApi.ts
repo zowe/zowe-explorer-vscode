@@ -11,7 +11,7 @@
 
 import * as zowe from "@zowe/cli";
 import { ZoweExplorerApi } from "./ZoweExplorerApi";
-import { FileAttributes, permStringToOctal } from "../utils";
+import { FileAttributes, permStringToOctal } from "../utils/files";
 
 /**
  * An implementation of the Zowe Explorer API Common interface for zOSMF.
