@@ -653,12 +653,12 @@ export namespace ZoweExplorerApi {
          * Register a callback function to be used when a change to the team config profile is performed.
          * @param callback
          */
-        registerProfileChangeCallback(callback: (eventType: EventTypes) => Promise<void>): void;
+        registerProfileChangeCallback?(callback: (eventType: EventTypes) => Promise<void>): void;
 
         /**
          * Get function that is called when a change to the team config profile is performed.
          * @returns Function
          */
-        getProfileChangeCallback(): (eventType: EventTypes) => Promise<void>;
+        getProfileChangeCallback?(): (eventType: EventTypes) => Promise<void>;
     }
 }
