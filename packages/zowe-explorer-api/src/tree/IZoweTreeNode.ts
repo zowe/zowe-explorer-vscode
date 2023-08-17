@@ -172,7 +172,14 @@ export interface IZoweUSSTreeNode extends IZoweTreeNode {
      * File attributes
      */
     attributes?: FileAttributes;
-
+    /**
+     * Event that fires whenever an existing node is updated.
+     */
+    onUpdateEmitter?: vscode.EventEmitter<IZoweUSSTreeNode>;
+    /**
+     * Event that fires whenever an existing node is updated.
+     */
+    onUpdate?: vscode.Event<IZoweUSSTreeNode>;
     /**
      * Retrieves child nodes of this IZoweUSSTreeNode
      *

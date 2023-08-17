@@ -214,20 +214,26 @@ export async function uploadFile(node: IZoweUSSTreeNode, doc: vscode.TextDocumen
 
 export function editAttributes(context: vscode.ExtensionContext, fileProvider: IZoweTree<IZoweUSSTreeNode>, node: IZoweUSSTreeNode): void {
     const webviewLabel = node.label ? `Edit Attributes: ${node.label as string}` : "Edit Attributes";
+    let treeDataDisposable: vscode.Disposable;
     const editView = new WebView(webviewLabel, "edit-attributes", context, async (message: any) => {
         const ussApi = ZoweExplorerApiRegister.getUssApi(node.getProfile());
         switch (message.command) {
             case "refresh":
-                if (node.getParent()) {
-                    fileProvider.refreshElement(node.getParent());
-                } else {
-                    fileProvider.refresh();
+                if (node.onUpdate != null) {
+                    treeDataDisposable = node.onUpdate(async (n) => {
+                        await editView.panel.webview.postMessage({
+                            attributes: n.attributes,
+                            name: n.fullPath,
+                            readonly: ussApi.updateAttributes == null,
+                        });
+                        treeDataDisposable.dispose();
+                    });
+                    if (node.getParent()) {
+                        fileProvider.refreshElement(node.getParent());
+                    } else {
+                        fileProvider.refresh();
+                    }
                 }
-                await editView.panel.webview.postMessage({
-                    attributes: node.attributes,
-                    name: node.fullPath,
-                    readonly: ussApi.updateAttributes == null,
-                });
                 break;
             case "ready":
                 await editView.panel.webview.postMessage({

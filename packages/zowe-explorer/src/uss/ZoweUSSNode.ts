@@ -55,6 +55,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     private downloadedInternal = false;
 
     public attributes?: FileAttributes;
+    public onUpdateEmitter: vscode.EventEmitter<IZoweUSSTreeNode>;
 
     /**
      * Creates an instance of ZoweUSSNode
@@ -115,9 +116,14 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         if (icon) {
             this.iconPath = icon.path;
         }
-        if (!globals.ISTHEIA && this.getParent() && contextually.isSession(this.getParent())) {
-            this.id = `${mParent?.id ?? mParent?.label?.toString() ?? "<root>"}.${this.label as string}`;
+        if (!globals.ISTHEIA && contextually.isSession(this)) {
+            this.id = `uss.${this.label.toString()}`;
         }
+        this.onUpdateEmitter = new vscode.EventEmitter<IZoweUSSTreeNode>();
+    }
+
+    public get onUpdate(): vscode.Event<IZoweUSSTreeNode> {
+        return this.onUpdateEmitter.event;
     }
 
     /**
@@ -199,6 +205,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                     owner: item.user,
                 };
                 responseNodes.push(existing);
+                existing.onUpdateEmitter.fire(existing);
                 return lastResult || false;
             }
 

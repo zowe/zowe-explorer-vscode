@@ -117,6 +117,8 @@ export function App() {
         initial: attrs,
         current: attrs,
       });
+      setAllowUpdate(false);
+      setTimestamp(new Date());
     });
     // signal to extension that webview is ready for data; prevents race condition during initialization
     vscodeApi.postMessage({ command: "ready" });
@@ -144,13 +146,7 @@ export function App() {
         <h1>File properties</h1>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           {timestamp && <p style={{ fontStyle: "italic", marginRight: "1em" }}>Last refreshed: {timestamp.toLocaleString(navigator.language)}</p>}
-          <VSCodeButton
-            appearance="secondary"
-            onClick={() => {
-              vscodeApi.postMessage({ command: "refresh" });
-              setTimestamp(new Date());
-            }}
-          >
+          <VSCodeButton appearance="secondary" onClick={() => vscodeApi.postMessage({ command: "refresh" })}>
             <span style={{ marginRight: "0.5em" }}>⟳</span>Refresh
           </VSCodeButton>
         </div>
