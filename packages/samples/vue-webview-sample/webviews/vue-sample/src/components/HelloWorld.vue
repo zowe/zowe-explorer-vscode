@@ -1,5 +1,6 @@
 <script setup lang="ts">
-declare var acquireVsCodeApi: Function;
+// @ts-nocheck
+declare let acquireVsCodeApi: Function;
 
 defineProps<{ msg: string }>();
 

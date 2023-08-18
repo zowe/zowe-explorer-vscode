@@ -176,7 +176,7 @@ export function App() {
                 {PERMISSION_TYPES.map((perm, i) => {
                   const capitalizedPerm = perm.charAt(0).toUpperCase() + perm.slice(1);
                   return (
-                    <VSCodeDataGridCell cellType="columnheader" gridColumn={(i + 2).toString()} key={`${perm}-cell-${i}`}>
+                    <VSCodeDataGridCell cellType="columnheader" gridColumn={(i + 2).toString()} key={`${perm}-header`}>
                       {capitalizedPerm}
                     </VSCodeDataGridCell>
                   );
@@ -190,7 +190,7 @@ export function App() {
                       {capitalizedGroup}
                     </VSCodeDataGridCell>
                     {PERMISSION_TYPES.map((perm, i) => (
-                      <VSCodeDataGridCell gridColumn={(i + 2).toString()} key={`${perm}-checkbox-${i}`}>
+                      <VSCodeDataGridCell gridColumn={(i + 2).toString()} key={`${group}-${perm}-checkbox`}>
                         <VSCodeCheckbox
                           checked={attributes.current!.perms[group][perm]}
                           onChange={(e: any) => updatePerm(group, perm, e.target.checked)}

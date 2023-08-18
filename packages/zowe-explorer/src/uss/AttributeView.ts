@@ -1,3 +1,14 @@
+/**
+ * This program and the accompanying materials are made available under the terms of the
+ * Eclipse Public License v2.0 which accompanies this distribution, and is available at
+ * https://www.eclipse.org/legal/epl-v20.html
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Copyright Contributors to the Zowe Project.
+ *
+ */
+
 import { FileAttributes, Gui, IZoweTree, IZoweUSSTreeNode, WebView, ZoweExplorerApi } from "@zowe/zowe-explorer-api";
 import { Disposable, ExtensionContext } from "vscode";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
@@ -11,7 +22,7 @@ export class AttributeView extends WebView {
     private onUpdateDisposable: Disposable;
 
     public constructor(context: ExtensionContext, treeProvider: IZoweTree<IZoweUSSTreeNode>, node: IZoweUSSTreeNode) {
-        const label = node?.label ? `Edit Attributes: ${node.label}` : "Edit Attributes";
+        const label = node.label ? `Edit Attributes: ${node.label as string}` : "Edit Attributes";
         super(label, "edit-attributes", context, (message: object) => this.onDidReceiveMessage(message));
         this.treeProvider = treeProvider;
         this.ussNode = node;

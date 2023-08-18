@@ -169,9 +169,11 @@ export class ZosmfUssApi extends ZosmfApiCommon implements ZoweExplorerApi.IUss 
                 });
             }
         } catch (err) {
+            const message = err instanceof Error ? err.toString() : "N/A";
             return {
                 success: false,
-                commandResponse: err instanceof Error ? err.toString() : "N/A",
+                commandResponse: message,
+                errorMessage: message,
             };
         }
 
