@@ -19,7 +19,7 @@ describe("Extension Unit Tests - function registerFtpApis", () => {
         jest.clearAllMocks();
     });
 
-    it("should register the ftp API's", () => {
+    it("should register the ftp API's", async () => {
         const registerUssApiMock = jest.fn();
         const registerJesApiMock = jest.fn();
         const registerMvsApiMock = jest.fn();
@@ -46,7 +46,7 @@ describe("Extension Unit Tests - function registerFtpApis", () => {
         expect(registerJesApiMock).toBeCalledTimes(1);
     });
 
-    it("should display error if zoweExplorerApi was not found", () => {
+    it("should display error if zoweExplorerApi was not found", async () => {
         jest.spyOn(ZoweVsCodeExtension, "getZoweExplorerApi").mockReturnValue(null);
         const showMessageSpy = jest.spyOn(Gui, "showMessage").mockImplementation();
         expect(

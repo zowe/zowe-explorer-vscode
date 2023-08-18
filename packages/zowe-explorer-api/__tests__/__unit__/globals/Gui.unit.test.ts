@@ -15,8 +15,8 @@ import * as vscode from "vscode";
 import { DOUBLE_CLICK_SPEED_MS } from "../../../src/globals";
 jest.mock("vscode");
 
-function createGlobalMocks(): any {
-    const globalMocks = {
+function createGlobalMocks() {
+    const mocks = {
         showInfoMessage: jest.fn(),
         showErrorMessage: jest.fn(),
         showWarningMessage: jest.fn(),
@@ -32,21 +32,21 @@ function createGlobalMocks(): any {
         showInputBox: jest.fn(),
     };
 
-    Object.defineProperty(vscode.window, "showInformationMessage", { value: globalMocks.showInfoMessage });
-    Object.defineProperty(vscode.window, "showErrorMessage", { value: globalMocks.showErrorMessage });
-    Object.defineProperty(vscode.window, "showWarningMessage", { value: globalMocks.showWarningMessage });
-    Object.defineProperty(vscode.window, "createOutputChannel", { value: globalMocks.createOutputChannel });
-    Object.defineProperty(vscode.window, "createQuickPick", { value: globalMocks.createQuickPick });
-    Object.defineProperty(vscode.window, "createTreeView", { value: globalMocks.createTreeView });
-    Object.defineProperty(vscode.window, "createWebviewPanel", { value: globalMocks.createWebviewPanel });
-    Object.defineProperty(vscode.window, "withProgress", { value: globalMocks.withProgress });
-    Object.defineProperty(vscode.window, "showTextDocument", { value: globalMocks.showTextDocument });
-    Object.defineProperty(vscode.window, "showQuickPick", { value: globalMocks.showQuickPick });
-    Object.defineProperty(vscode.window, "setStatusBarMessage", { value: globalMocks.setStatusBarMessage });
-    Object.defineProperty(vscode.window, "showOpenDialog", { value: globalMocks.showOpenDialog });
-    Object.defineProperty(vscode.window, "showInputBox", { value: globalMocks.showInputBox });
+    Object.defineProperty(vscode.window, "showInformationMessage", { value: mocks.showInfoMessage });
+    Object.defineProperty(vscode.window, "showErrorMessage", { value: mocks.showErrorMessage });
+    Object.defineProperty(vscode.window, "showWarningMessage", { value: mocks.showWarningMessage });
+    Object.defineProperty(vscode.window, "createOutputChannel", { value: mocks.createOutputChannel });
+    Object.defineProperty(vscode.window, "createQuickPick", { value: mocks.createQuickPick });
+    Object.defineProperty(vscode.window, "createTreeView", { value: mocks.createTreeView });
+    Object.defineProperty(vscode.window, "createWebviewPanel", { value: mocks.createWebviewPanel });
+    Object.defineProperty(vscode.window, "withProgress", { value: mocks.withProgress });
+    Object.defineProperty(vscode.window, "showTextDocument", { value: mocks.showTextDocument });
+    Object.defineProperty(vscode.window, "showQuickPick", { value: mocks.showQuickPick });
+    Object.defineProperty(vscode.window, "setStatusBarMessage", { value: mocks.setStatusBarMessage });
+    Object.defineProperty(vscode.window, "showOpenDialog", { value: mocks.showOpenDialog });
+    Object.defineProperty(vscode.window, "showInputBox", { value: mocks.showInputBox });
 
-    return globalMocks;
+    return mocks;
 }
 const mocks = createGlobalMocks();
 
@@ -150,7 +150,6 @@ describe("Gui unit tests", () => {
     });
 
     it("can resolve a quick pick when accepted", async () => {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
         const mockDidAccept = jest.fn((callback: Function) => callback());
         await Gui.resolveQuickPick({
             activeItems: ["test"],
@@ -161,7 +160,6 @@ describe("Gui unit tests", () => {
     });
 
     it("can resolve a quick pick when hidden", async () => {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
         const mockDidHide = jest.fn((callback: Function) => callback());
         await Gui.resolveQuickPick({
             activeItems: ["test"],

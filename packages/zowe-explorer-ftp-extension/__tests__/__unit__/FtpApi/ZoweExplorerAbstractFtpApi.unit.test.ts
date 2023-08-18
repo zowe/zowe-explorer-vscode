@@ -46,7 +46,6 @@ describe("AbstractFtpApi", () => {
 
         await instance.logout(session);
 
-        // eslint-disable-next-line @typescript-eslint/unbound-method
         expect(session.releaseConnections).toBeCalledTimes(1);
         expect(globals.SESSION_MAP.size).toBe(0);
     });
@@ -73,7 +72,7 @@ describe("AbstractFtpApi", () => {
     it("should show a fatal message when trying to call getStatus with invalid credentials.", async () => {
         Object.defineProperty(Gui, "errorMessage", { value: jest.fn(), configurable: true });
         jest.spyOn(FTPConfig, "connectFromArguments").mockImplementationOnce(
-            jest.fn(() => {
+            jest.fn((val) => {
                 throw new Error("Failed: missing credentials");
             })
         );
@@ -100,7 +99,7 @@ describe("AbstractFtpApi", () => {
     it("should show a different fatal message when trying to call getStatus and an exception occurs.", async () => {
         Object.defineProperty(Gui, "errorMessage", { value: jest.fn(), configurable: true });
         jest.spyOn(FTPConfig, "connectFromArguments").mockImplementationOnce(
-            jest.fn(() => {
+            jest.fn((prof) => {
                 throw new Error("Something happened");
             })
         );
@@ -147,7 +146,7 @@ describe("AbstractFtpApi", () => {
     it("should return active from sessionStatus when getStatus is called w/ correct profile", async () => {
         Object.defineProperty(Gui, "showMessage", { value: jest.fn(), configurable: true });
         const instance = new Dummy(profile);
-        jest.spyOn(FTPConfig, "connectFromArguments").mockImplementationOnce(jest.fn(() => Promise.resolve({ test: "Test successful object" })));
+        jest.spyOn(FTPConfig, "connectFromArguments").mockImplementationOnce(jest.fn((prof) => Promise.resolve({ test: "Test successful object" })));
 
         const status = await instance.getStatus(profile, "zftp");
         expect(status).toStrictEqual("active");
@@ -156,8 +155,7 @@ describe("AbstractFtpApi", () => {
     it("should return inactive from sessionStatus when getStatus is called w/ correct profile", async () => {
         Object.defineProperty(Gui, "showMessage", { value: jest.fn(), configurable: true });
         const instance = new Dummy(profile);
-        jest.spyOn(FTPConfig, "connectFromArguments").mockImplementationOnce(jest.fn(() => Promise.resolve(false)));
-
+        jest.spyOn(FTPConfig, "connectFromArguments").mockImplementationOnce(jest.fn((prof) => Promise.resolve(false)));
         const status = await instance.getStatus(profile, "zftp");
         expect(status).toStrictEqual("inactive");
     });
