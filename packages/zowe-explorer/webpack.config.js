@@ -82,12 +82,7 @@ const config = {
             },
         ],
     },
-    plugins: [
-        new webpack.BannerPlugin(fs.readFileSync("../../scripts/LICENSE_HEADER", "utf-8")),
-        new CopyPlugin({
-            patterns: [{ from: "./node_modules/@zowe/secrets-for-zowe-sdk/prebuilds", to: "../../prebuilds/" }],
-        }),
-    ],
+    plugins: [new webpack.BannerPlugin(fs.readFileSync("../../scripts/LICENSE_HEADER", "utf-8"))],
 };
 
 module.exports = config;
