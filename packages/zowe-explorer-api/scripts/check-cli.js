@@ -8,11 +8,11 @@ const { exit } = require("process");
 // Looks for the scoped @zowe folder & inner "cli" module folder in node_modules
 const findPackage = (folderToScan, nodePackage) => {
     console.log(`[Zowe Explorer API] Checking for ${nodePackage} in node_modules...`);
-    const resolvedModule1 = require.resolve(nodePackage, {
+    const resolvedModule = require.resolve(nodePackage, {
         paths: [folderToScan],
     });
 
-    if (resolvedModule1.includes(folderToScan)) {
+    if (resolvedModule.includes(folderToScan)) {
         console.log(`[Zowe Explorer API] OK ✔ ${nodePackage} was found in node_modules`);
         return 0;
     }
