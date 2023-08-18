@@ -156,6 +156,7 @@ describe("AbstractFtpApi", () => {
         Object.defineProperty(Gui, "showMessage", { value: jest.fn(), configurable: true });
         const instance = new Dummy(profile);
         jest.spyOn(FTPConfig, "connectFromArguments").mockImplementationOnce(jest.fn((prof) => Promise.resolve(false)));
+
         const status = await instance.getStatus(profile, "zftp");
         expect(status).toStrictEqual("inactive");
     });
