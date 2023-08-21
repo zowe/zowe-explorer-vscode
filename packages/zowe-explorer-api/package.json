@@ -16,8 +16,10 @@
     "@types/semver": "^7.5.0"
   },
   "dependencies": {
+    "@types/vscode": "^1.53.2",
     "@zowe/cli": "^7.18.0",
     "@zowe/secrets-for-zowe-sdk": "7.18.1",
+    "handlebars": "^4.7.7",
     "semver": "^7.5.3"
   },
   "scripts": {

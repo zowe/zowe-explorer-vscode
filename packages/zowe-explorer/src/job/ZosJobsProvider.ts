@@ -952,9 +952,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                     const options: vscode.InputBoxOptions = {
                         value: property.value,
                         placeHolder: property.placeHolder,
-                        validateInput: (text) => {
-                            return property.validateInput(text);
-                        },
+                        validateInput: property.validateInput,
                     };
                     property.value = await Gui.showInputBox(options);
                 }

@@ -9,6 +9,8 @@ All notable changes to the "zowe-explorer-ftp-extension" extension will be docum
 
 ### Bug fixes
 
+- Added missing `owner` and `group` attributes for the returned FTP response in `FtpUssApi.fileList`.
+
 ## `2.9.2`
 
 ### New features and enhancements
