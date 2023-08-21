@@ -26,4 +26,4 @@ export * from "./tree/IZoweTreeNode";
 export * from "./utils";
 export * from "./vscode/ZoweVsCodeExtension";
 export * from "./vscode/ui";
-export * as cli from "@zowe/cli";
+export { imperative } from "@zowe/cli";
