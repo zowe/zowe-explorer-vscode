@@ -10,7 +10,8 @@
  */
 
 import * as zowe from "@zowe/cli";
-import { ProfilesCache } from "./ProfilesCache";
+import * as vscode from "vscode";
+import { EventTypes, ProfilesCache } from "./ProfilesCache";
 import { FileAttributes } from "../utils/files";
 
 /**
@@ -656,5 +657,10 @@ export namespace ZoweExplorerApi {
          * @returns {string[]}
          */
         registeredApiTypes(): string[];
+
+        /**
+         * Define events that fire whenever an existing team config profile is updated.
+         */
+        onProfilesUpdate?: vscode.Event<EventTypes>;
     }
 }
