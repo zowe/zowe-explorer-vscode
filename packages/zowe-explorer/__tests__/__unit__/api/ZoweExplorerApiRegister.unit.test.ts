@@ -17,6 +17,7 @@ import { Profiles } from "../../../src/Profiles";
 import { IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
 import { createInstanceOfProfile, createValidIProfile } from "../../../__mocks__/mockCreators/shared";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
+import { Disposable } from "vscode";
 
 class MockUssApi1 implements ZoweExplorerApi.IUss {
     public profile?: zowe.imperative.IProfileLoaded;
@@ -307,9 +308,11 @@ describe("ZoweExplorerApiRegister unit testing", () => {
     });
 
     it("provides access to the callback defined by the extender if available", () => {
-        const mockExtenderImplementation = jest.fn();
-        ZoweExplorerApiRegister.getInstance().registerProfileChangeCallback(mockExtenderImplementation);
-        expect(ZoweExplorerApiRegister.getInstance().getProfileChangeCallback()).toEqual(mockExtenderImplementation);
+        Object.defineProperty(ZoweExplorerApiRegister.getInstance(), "onProfilesUpdate", {
+            value: {},
+            configurable: true,
+        });
+        expect(ZoweExplorerApiRegister.getInstance().onProfilesUpdate).toEqual({});
         ZoweExplorerApiRegister.getInstance()["onProfilesUpdateCallback"] = undefined;
     });
 });

@@ -14,6 +14,7 @@ import { ZoweExplorerApi, ZosmfUssApi, ZosmfMvsApi, ZosmfJesApi, ZosmfCommandApi
 import { ZoweExplorerExtender } from "./ZoweExplorerExtender";
 import { ZoweLogger } from "./utils/LoggerUtils";
 import * as nls from "vscode-nls";
+import * as vscode from "vscode";
 
 // Set up localization
 nls.config({
@@ -103,8 +104,9 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
     private jesApiImplementations = new Map<string, ZoweExplorerApi.IJes>();
     private commandApiImplementations = new Map<string, ZoweExplorerApi.ICommand>();
 
-    // Callback defined from extender to be called after the team config profile is updated
-    private onProfilesUpdateCallback: (eventType: EventTypes) => Promise<void> | undefined;
+    // Event emitter extenders can subscribe to
+    public onProfilesUpdateEmitter = new vscode.EventEmitter<EventTypes>();
+
     /**
      * Private constructor that creates the singleton instance of ZoweExplorerApiRegister.
      * It automatically registers the zosmf implementation as it is the default for Zowe Explorer.
@@ -174,10 +176,6 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
                 localize("registerCommandApi.error", "Internal error: A Zowe Explorer extension client tried to register an invalid Command API.")
             );
         }
-    }
-
-    public registerProfileChangeCallback(callback: (eventType: EventTypes) => Promise<void>): void {
-        this.onProfilesUpdateCallback = callback;
     }
 
     /**
@@ -326,15 +324,19 @@ export class ZoweExplorerApiRegister implements ZoweExplorerApi.IApiRegisterClie
         return result;
     }
 
-    public getProfileChangeCallback(): (eventType: EventTypes) => Promise<void> | undefined {
-        return this.onProfilesUpdateCallback;
-    }
-
     /**
      * Lookup of the API implementation extender implementation.
      * @returns the instance of the API for the profile provided
      */
     public getExplorerExtenderApi(): ZoweExplorerApi.IApiExplorerExtender {
         return ZoweExplorerExtender.getInstance();
+    }
+
+    /**
+     * Event for extenders to subscribe to that will fire upon profile change.
+     * @returns event that can be attached that will be called upon profile change
+     */
+    public get onProfilesUpdate(): vscode.Event<EventTypes> {
+        return this.onProfilesUpdateEmitter.event;
     }
 }

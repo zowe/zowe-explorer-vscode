@@ -16,7 +16,6 @@ import { URL } from "url";
 
 import * as zowe from "@zowe/cli";
 import { ZoweExplorerApi } from "./ZoweExplorerApi";
-import { getSecurityModules } from "../security";
 
 // TODO: find a home for constants
 export const CONTEXT_PREFIX = "_";

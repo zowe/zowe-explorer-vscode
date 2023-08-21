@@ -10,7 +10,8 @@
  */
 
 import * as zowe from "@zowe/cli";
-import { ProfilesCache, EventTypes } from "./ProfilesCache";
+import * as vscode from "vscode";
+import { EventTypes, ProfilesCache } from "./ProfilesCache";
 import { FileAttributes } from "../utils/files";
 
 /**
@@ -658,15 +659,8 @@ export namespace ZoweExplorerApi {
         registeredApiTypes(): string[];
 
         /**
-         * Register a callback function to be used when a change to the team config profile is performed.
-         * @param callback
+         * Define events that fire whenever an existing team config profile is updated.
          */
-        registerProfileChangeCallback?(callback: (eventType: EventTypes) => Promise<void>): void;
-
-        /**
-         * Get function that is called when a change to the team config profile is performed.
-         * @returns Function
-         */
-        getProfileChangeCallback?(): (eventType: EventTypes) => Promise<void>;
+        onProfilesUpdate?: vscode.Event<EventTypes>;
     }
 }

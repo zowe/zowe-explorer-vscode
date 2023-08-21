@@ -221,23 +221,16 @@ export function watchConfigProfile(context: vscode.ExtensionContext, providers: 
     watchers.forEach((watcher) => {
         watcher.onDidCreate(async () => {
             ZoweLogger.info(localize("watchConfigProfile.create", "Team config file created, refreshing Zowe Explorer."));
-            const extenderCallback = ZoweExplorerApiRegister.getInstance().getProfileChangeCallback();
             await vscode.commands.executeCommand("zowe.extRefresh");
-            if (extenderCallback) {
-                await extenderCallback(EventTypes.CREATE);
-            }
+            ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter.fire(EventTypes.CREATE);
         });
         watcher.onDidDelete(async () => {
             ZoweLogger.info(localize("watchConfigProfile.delete", "Team config file deleted, refreshing Zowe Explorer."));
-            const extenderCallback = ZoweExplorerApiRegister.getInstance().getProfileChangeCallback();
             await vscode.commands.executeCommand("zowe.extRefresh");
-            if (extenderCallback) {
-                await extenderCallback(EventTypes.DELETE);
-            }
+            ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter.fire(EventTypes.DELETE);
         });
         watcher.onDidChange(async (uri: vscode.Uri) => {
             ZoweLogger.info(localize("watchConfigProfile.update", "Team config file updated."));
-            const extenderCallback = ZoweExplorerApiRegister.getInstance().getProfileChangeCallback();
             const newProfileContents = await vscode.workspace.fs.readFile(uri);
             if (newProfileContents.toString() === globals.SAVED_PROFILE_CONTENTS.toString()) {
                 return;
@@ -246,9 +239,7 @@ export function watchConfigProfile(context: vscode.ExtensionContext, providers: 
             await refreshActions.refreshAll(providers.ds);
             await refreshActions.refreshAll(providers.uss);
             await refreshActions.refreshAll(providers.job);
-            if (extenderCallback) {
-                await extenderCallback(EventTypes.UPDATE);
-            }
+            ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter.fire(EventTypes.UPDATE);
             if (globals.ISTHEIA) {
                 await vscode.commands.executeCommand("zowe.extRefresh");
             }
