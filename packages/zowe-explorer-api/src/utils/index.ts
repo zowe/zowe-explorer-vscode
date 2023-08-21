@@ -10,3 +10,4 @@
  */
 
 export * from "./Poller";
+export * from "./files";

@@ -12,7 +12,7 @@
 jest.mock("fs");
 
 import * as zowe from "@zowe/cli";
-import { Gui, ValidProfileEnum } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweTree, IZoweUSSTreeNode, ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import * as ussNodeActions from "../../../src/uss/actions";
 import { UssFileTree, UssFileType, UssFileUtils } from "../../../src/uss/FileStructure";
 import { createUSSTree, createUSSNode, createFavoriteUSSNode } from "../../../__mocks__/mockCreators/uss";
@@ -39,6 +39,7 @@ import * as refreshActions from "../../../src/shared/refresh";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 import * as wsUtils from "../../../src/utils/workspace";
 import * as context from "../../../src/shared/context";
+import { AttributeView } from "../../../src/uss/AttributeView";
 
 function createGlobalMocks() {
     const globalMocks = {
@@ -938,5 +939,21 @@ describe("USS Action Unit Tests - function refreshDirectory", () => {
         const errorHandlingSpy = jest.spyOn(utils, "errorHandling").mockImplementation();
         await expect(ussNodeActions.refreshDirectory(testNode, testUSSTree)).resolves.not.toThrow();
         expect(errorHandlingSpy).toBeCalledTimes(1);
+    });
+});
+
+describe("USS Action Unit Tests - function editAttributes", () => {
+    it("makes an instance of AttributeView", () => {
+        jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce({
+            updateAttributes: jest.fn(),
+        } as any);
+        const view = ussNodeActions.editAttributes(
+            {
+                extensionPath: "/a/b/c",
+            } as any,
+            {} as IZoweTree<IZoweUSSTreeNode>,
+            { label: "some/node", getProfile: jest.fn() } as unknown as IZoweUSSTreeNode
+        );
+        expect(view).toBeInstanceOf(AttributeView);
     });
 });

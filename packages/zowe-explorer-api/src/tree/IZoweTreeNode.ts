@@ -12,6 +12,7 @@
 import * as vscode from "vscode";
 import { IJob, imperative } from "@zowe/cli";
 import { IZoweTree } from "./IZoweTree";
+import { FileAttributes } from "../utils/files";
 
 export type IZoweNodeType = IZoweDatasetTreeNode | IZoweUSSTreeNode | IZoweJobTreeNode;
 
@@ -166,6 +167,19 @@ export interface IZoweUSSTreeNode extends IZoweTreeNode {
      * Specific profile name in use with this node
      */
     mProfileName?: string;
+
+    /**
+     * File attributes
+     */
+    attributes?: FileAttributes;
+    /**
+     * Event that fires whenever an existing node is updated.
+     */
+    onUpdateEmitter?: vscode.EventEmitter<IZoweUSSTreeNode>;
+    /**
+     * Event that fires whenever an existing node is updated.
+     */
+    onUpdate?: vscode.Event<IZoweUSSTreeNode>;
     /**
      * Retrieves child nodes of this IZoweUSSTreeNode
      *
