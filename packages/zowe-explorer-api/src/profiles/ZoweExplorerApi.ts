@@ -11,6 +11,7 @@
 
 import * as zowe from "@zowe/cli";
 import { ProfilesCache } from "./ProfilesCache";
+import { FileAttributes } from "../utils/files";
 
 /**
  * This namespace provides interfaces for all the external APIs provided by this VS Code Extension.
@@ -157,6 +158,13 @@ export namespace ZoweExplorerApi {
          */
         putContent?(inputFilePath: string, ussFilePath: string, options?: zowe.IUploadOptions): Promise<zowe.IZosFilesResponse>;
 
+        /**
+         * Updates attributes for a USS directory or file.
+         *
+         * @param ussPath The USS path of the directory or file to update
+         * @param attributes The attributes that should be updated
+         */
+        updateAttributes?(ussPath: string, attributes: Partial<FileAttributes>): Promise<zowe.IZosFilesResponse>;
         /**
          * Uploads directory at the given path.
          *

@@ -7,6 +7,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 ### New features and enhancements
 
 - Replaced `keytar` dependency with `keyring` module from [`@zowe/secrets-for-zowe-sdk`](https://github.com/zowe/zowe-cli/tree/master/packages/secrets). [#2358](https://github.com/zowe/vscode-extension-for-zowe/issues/2358)
+- Added "Edit Attributes" option for USS files and folders. [#2254](https://github.com/zowe/vscode-extension-for-zowe/issues/2254)
 
 ### Bug fixes
 
