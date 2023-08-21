@@ -16,3 +16,4 @@ temp
 *.vsix
 *.tgz
 .tmp
+prebuilds/

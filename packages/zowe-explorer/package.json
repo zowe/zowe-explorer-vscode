@@ -1696,6 +1696,7 @@
     "vscode": "^1.43.0"
   },
   "devDependencies": {
+    "@napi-rs/cli": "^2.16.1",
     "@types/chai": "^4.2.6",
     "@types/chai-as-promised": "^7.1.0",
     "@types/expect": "^1.20.3",
@@ -1709,6 +1710,7 @@
     "chai": "^4.1.2",
     "chai-as-promised": "^7.1.1",
     "chalk": "^2.4.1",
+    "copy-webpack-plugin": "^6.4.1",
     "cross-env": "^5.2.0",
     "del": "^4.1.1",
     "eslint": "^6.8.0",
@@ -1729,7 +1731,6 @@
     "jest-stare": "^2.2.0",
     "jsdoc": "^3.6.3",
     "jsdom": "^16.0.0",
-    "keytar": "^7.2.0",
     "log4js": "^3.0.5",
     "markdownlint-cli": "^0.16.0",
     "mem": "^6.0.1",
@@ -1744,6 +1745,7 @@
     "webpack-cli": "^3.3.11"
   },
   "dependencies": {
+    "@zowe/secrets-for-zowe-sdk": "7.18.1",
     "@zowe/zowe-explorer-api": "1.22.4-SNAPSHOT",
     "fs-extra": "8.0.1",
     "isbinaryfile": "4.0.4",
