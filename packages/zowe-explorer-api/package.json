@@ -13,12 +13,12 @@
     "lib"
   ],
   "devDependencies": {
-    "@types/semver": "^7.3.6"
+    "@types/semver": "^7.5.0"
   },
   "dependencies": {
     "@zowe/cli": "6.40.15",
     "@zowe/secrets-for-zowe-sdk": "7.18.1",
-    "semver": "^7.3.5"
+    "semver": "^7.5.3"
   },
   "scripts": {
     "build": "yarn clean && tsc -p ./",
