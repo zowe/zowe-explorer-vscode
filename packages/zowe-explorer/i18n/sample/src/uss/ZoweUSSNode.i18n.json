@@ -1,7 +1,7 @@
 {
   "getChildren.error.invalidNode": "Invalid node",
-  "getChildren.error.response": "Retrieving response from ",
   "getChildren.responses.error.response": "The response from Zowe CLI was not successful",
+  "getChildren.error.response": "Retrieving response from ",
   "getChildren.responses.open": "Open",
   "deleteUssPrompt.deleteCancelled": "Delete action was cancelled.",
   "deleteUSSNode.error.node": "Unable to delete node: ",

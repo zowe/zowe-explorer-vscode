@@ -1,0 +1,6 @@
+# Create a ".env" file with the contents of this file
+
+# Make sure to get a valid DBus Session Address
+# by unlocking the keyring on a terminal, and
+# copy the contents of "echo $DBUS_SESSION_BUS_ADDRESS"
+DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/0/bus

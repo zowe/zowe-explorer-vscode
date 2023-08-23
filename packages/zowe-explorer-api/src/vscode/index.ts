@@ -11,3 +11,4 @@
 
 export * from "./doc";
 export * from "./ZoweVsCodeExtension";
+export * from "./ui";

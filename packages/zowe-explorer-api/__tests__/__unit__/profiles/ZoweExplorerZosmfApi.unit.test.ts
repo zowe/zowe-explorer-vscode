@@ -13,6 +13,7 @@ import * as zowe from "@zowe/cli";
 import { IZosmfInfoResponse } from "@zowe/cli";
 import { ZoweExplorerApi } from "../../../src/profiles/ZoweExplorerApi";
 import { ZosmfCommandApi, ZosmfJesApi, ZosmfMvsApi, ZosmfUssApi } from "../../../src/profiles/ZoweExplorerZosmfApi";
+import { permStringToOctal } from "../../../src/utils/files";
 
 type ITestApi<T> = {
     [K in keyof T]: {
@@ -54,6 +55,99 @@ async function expectApiWithSession<T>({ name, spy, args, transform }: ITestApi<
 describe("ZosmfUssApi", () => {
     afterEach(() => {
         jest.clearAllMocks();
+    });
+
+    describe("updateAttributes", () => {
+        const ussApi = new ZosmfUssApi();
+        const getSessionMock = jest.spyOn(ussApi, "getSession").mockReturnValue(fakeSession);
+        const putUSSPayload = jest.spyOn(zowe.Utilities, "putUSSPayload").mockResolvedValue(Buffer.from("test"));
+
+        it("updates group and owner if provided", async () => {
+            const resp = await ussApi.updateAttributes("/some/path", {
+                group: "usergroup",
+                owner: "admin",
+            });
+
+            expect(putUSSPayload).toHaveBeenCalledWith(fakeSession, "/some/path", {
+                request: "chown",
+                owner: "admin",
+                group: "usergroup",
+                recursive: true,
+            });
+            expect(resp.success).toBe(true);
+        });
+
+        it("updates GID and UID if provided", async () => {
+            const resp = await ussApi.updateAttributes("/some/path", {
+                gid: 100001,
+                uid: 123,
+            });
+
+            expect(putUSSPayload).toHaveBeenCalledWith(fakeSession, "/some/path", {
+                request: "chown",
+                owner: "123",
+                group: "100001",
+                recursive: true,
+            });
+            expect(resp.success).toBe(true);
+        });
+
+        it("only updates owner if provided", async () => {
+            const resp = await ussApi.updateAttributes("/some/path", {
+                owner: "admin",
+            });
+
+            expect(putUSSPayload).toHaveBeenCalledWith(fakeSession, "/some/path", {
+                request: "chown",
+                owner: "admin",
+                recursive: true,
+            });
+            expect(resp.success).toBe(true);
+        });
+
+        it("updates permissions", async () => {
+            const resp = await ussApi.updateAttributes("/some/path", {
+                perms: "-r-xr-xr-x",
+            });
+
+            expect(putUSSPayload).toHaveBeenCalledWith(fakeSession, "/some/path", {
+                request: "chmod",
+                mode: permStringToOctal("-r-xr-xr-x").toString(),
+            });
+            expect(resp.success).toBe(true);
+        });
+
+        it("handles error in putUSSPayload", async () => {
+            putUSSPayload.mockRejectedValueOnce(new Error("Error when sending USS payload"));
+            const resp = await ussApi.updateAttributes("/some/path", {
+                perms: "-r-xr-xr-x",
+            });
+
+            expect(putUSSPayload).toHaveBeenCalledWith(fakeSession, "/some/path", {
+                request: "chmod",
+                mode: permStringToOctal("-r-xr-xr-x").toString(),
+            });
+            expect(resp.success).toBe(false);
+            expect(resp.errorMessage).toBe("Error: Error when sending USS payload");
+        });
+
+        it("handles undefined error in putUSSPayload", async () => {
+            putUSSPayload.mockRejectedValueOnce(undefined);
+            const resp = await ussApi.updateAttributes("/some/path", {
+                perms: "-r-xr-xr-x",
+            });
+
+            expect(putUSSPayload).toHaveBeenCalledWith(fakeSession, "/some/path", {
+                request: "chmod",
+                mode: permStringToOctal("-r-xr-xr-x").toString(),
+            });
+            expect(resp.success).toBe(false);
+            expect(resp.errorMessage).toBe("N/A");
+        });
+
+        afterAll(() => {
+            getSessionMock.mockRestore();
+        });
     });
 
     it("constants should be unchanged", () => {

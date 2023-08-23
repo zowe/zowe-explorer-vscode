@@ -14,7 +14,7 @@ import * as vscode from "vscode";
 import * as refreshActions from "./refresh";
 import * as nls from "vscode-nls";
 import * as sharedActions from "./actions";
-import { getZoweDir, IZoweTree, IZoweTreeNode } from "@zowe/zowe-explorer-api";
+import { getZoweDir, IZoweTree, IZoweTreeNode, EventTypes } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { Profiles } from "../Profiles";
 import { hideTempFolder, moveTempFolder } from "../utils/TempFolder";
@@ -224,10 +224,12 @@ export function watchConfigProfile(context: vscode.ExtensionContext, providers: 
         watcher.onDidCreate(async () => {
             ZoweLogger.info(localize("watchConfigProfile.create", "Team config file created, refreshing Zowe Explorer."));
             await vscode.commands.executeCommand("zowe.extRefresh");
+            ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter.fire(EventTypes.CREATE);
         });
         watcher.onDidDelete(async () => {
             ZoweLogger.info(localize("watchConfigProfile.delete", "Team config file deleted, refreshing Zowe Explorer."));
             await vscode.commands.executeCommand("zowe.extRefresh");
+            ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter.fire(EventTypes.DELETE);
         });
         watcher.onDidChange(async (uri: vscode.Uri) => {
             ZoweLogger.info(localize("watchConfigProfile.update", "Team config file updated."));
@@ -240,6 +242,7 @@ export function watchConfigProfile(context: vscode.ExtensionContext, providers: 
             await refreshActions.refreshAll(providers.uss);
             await refreshActions.refreshAll(providers.job);
             await Profiles.getInstance().refresh();
+            ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter.fire(EventTypes.UPDATE);
             await ApimlAuthenticationProvider.instance.checkForUpdates();
             // if (globals.ISTHEIA) {
             //     await vscode.commands.executeCommand("zowe.extRefresh");

@@ -62,7 +62,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     registerCommonCommands(context, providers);
     ZoweExplorerExtender.createInstance(providers.ds, providers.uss, providers.job);
     await SettingsConfig.standardizeSettings();
-    watchConfigProfile(context, providers);
+    await watchConfigProfile(context, providers);
     globals.setActivated(true);
     return ZoweExplorerApiRegister.getInstance();
 }

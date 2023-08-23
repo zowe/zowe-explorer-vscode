@@ -14,7 +14,7 @@ import * as globals from "../globals";
 import * as vscode from "vscode";
 import * as fs from "fs";
 import * as path from "path";
-import { Gui, IZoweUSSTreeNode, ZoweTreeNode, IZoweTree, ValidProfileEnum, ZoweExplorerApi } from "@zowe/zowe-explorer-api";
+import { FileAttributes, Gui, IZoweUSSTreeNode, ZoweTreeNode, IZoweTree, ValidProfileEnum, ZoweExplorerApi } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { errorHandling, syncSessionNode } from "../utils/ProfilesUtils";
@@ -53,6 +53,9 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     public downloadedTime = null as string;
     public profile: imperative.IProfileLoaded; // TODO: This reference should be stored instead of the name
     private downloadedInternal = false;
+
+    public attributes?: FileAttributes;
+    public onUpdateEmitter: vscode.EventEmitter<IZoweUSSTreeNode>;
 
     /**
      * Creates an instance of ZoweUSSNode
@@ -113,9 +116,14 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         if (icon) {
             this.iconPath = icon.path;
         }
-        if (!globals.ISTHEIA && this.getParent() && contextually.isSession(this.getParent())) {
-            this.id = `${mParent?.id ?? mParent?.label?.toString() ?? "<root>"}.${this.label as string}`;
+        if (!globals.ISTHEIA && contextually.isSession(this)) {
+            this.id = `uss.${this.label.toString()}`;
         }
+        this.onUpdateEmitter = new vscode.EventEmitter<IZoweUSSTreeNode>();
+    }
+
+    public get onUpdate(): vscode.Event<IZoweUSSTreeNode> {
+        return this.onUpdateEmitter.event;
     }
 
     /**
@@ -157,83 +165,96 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             throw Error("Invalid node");
         }
 
-        // Gets the directories from the fullPath and displays any thrown errors
-        const responses: IZosFilesResponse[] = [];
+        // Get the directories from the fullPath and display any thrown errors
+        let response: IZosFilesResponse;
         const sessNode = this.getSessionNode();
         try {
             const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
-            responses.push(await ZoweExplorerApiRegister.getUssApi(cachedProfile).fileList(this.fullPath));
-        } catch (err) {
-            await errorHandling(err, this.label.toString(), localize("getChildren.error.response", "Retrieving response from ") + `uss-file-list`);
-            syncSessionNode(Profiles.getInstance())((profileValue) => ZoweExplorerApiRegister.getUssApi(profileValue).getSession())(sessNode);
-        }
+            response = await ZoweExplorerApiRegister.getUssApi(cachedProfile).fileList(this.fullPath);
 
-        const elementChildren: Record<string, IZoweUSSTreeNode> = {};
-
-        responses.forEach((response) => {
             // Throws reject if the Zowe command does not throw an error but does not succeed
             if (!response.success) {
                 throw Error(localize("getChildren.responses.error.response", "The response from Zowe CLI was not successful"));
             }
-            // Loops through all the returned file references members and creates nodes for them
-            for (const item of response.apiResponse.items) {
-                const existing = this.children.find(
-                    // Ensure both parent path and short label match.
-                    // (Can't use mParent fullPath since that is already updated with new value by this point in getChildren.)
-                    (element: ZoweUSSNode) => element.parentPath === this.fullPath && element.label.toString() === item.name
-                );
-                if (existing) {
-                    elementChildren[existing.label.toString()] = existing;
-                } else if (item.name !== "." && item.name !== "..") {
-                    // Creates a ZoweUSSNode for a directory
-                    if (item.mode.startsWith("d")) {
-                        const temp = new ZoweUSSNode(
-                            item.name,
-                            vscode.TreeItemCollapsibleState.Collapsed,
-                            this,
-                            null,
-                            this.fullPath,
-                            false,
-                            item.mProfileName
-                        );
-                        elementChildren[temp.label.toString()] = temp;
-                    } else {
-                        // Creates a ZoweUSSNode for a file
-                        let temp;
-                        if (`${this.fullPath}/${item.name as string}` in this.getSessionNode().binaryFiles) {
-                            temp = new ZoweUSSNode(
-                                item.name,
-                                vscode.TreeItemCollapsibleState.None,
-                                this,
-                                null,
-                                this.fullPath,
-                                true,
-                                item.mProfileName
-                            );
-                        } else {
-                            temp = new ZoweUSSNode(
-                                item.name,
-                                vscode.TreeItemCollapsibleState.None,
-                                this,
-                                null,
-                                this.fullPath,
-                                false,
-                                item.mProfileName
-                            );
-                        }
-                        temp.command = {
-                            command: "zowe.uss.ZoweUSSNode.open",
-                            title: localize("getChildren.responses.open", "Open"),
-                            arguments: [temp],
-                        };
-                        elementChildren[temp.label.toString()] = temp;
-                    }
-                }
-            }
-        });
+        } catch (err) {
+            await errorHandling(err, this.label.toString(), localize("getChildren.error.response", "Retrieving response from ") + `uss-file-list`);
+            syncSessionNode(Profiles.getInstance())((profileValue) => ZoweExplorerApiRegister.getUssApi(profileValue).getSession())(sessNode);
+            return this.children;
+        }
 
-        if (contextually.isSession(this)) {
-            this.dirty = false;
+        // Build a list of nodes based on the API response
+        const responseNodes: IZoweUSSTreeNode[] = [];
+        const newNodeCreated: boolean = response.apiResponse.items.reduce((lastResult: boolean, item) => {
+            if (item.name === "." || item.name === "..") {
+                return lastResult || false;
+            }
+
+            const existing = this.children.find(
+                // Ensure both parent path and short label match.
+                // (Can't use mParent fullPath since that is already updated with new value by this point in getChildren.)
+                (element: ZoweUSSNode) => element.parentPath === this.fullPath && element.label.toString() === item.name
+            );
+
+            // The child node already exists. Use that node for the list instead, and update the file attributes in case they've changed
+            if (existing) {
+                existing.attributes = {
+                    gid: item.gid,
+                    uid: item.uid,
+                    group: item.group,
+                    perms: item.mode,
+                    owner: item.user,
+                };
+                responseNodes.push(existing);
+                existing.onUpdateEmitter.fire(existing);
+                return lastResult || false;
+            }
+
+            if (item.mode.startsWith("d")) {
+                // Create a node for the USS directory.
+                const temp = new ZoweUSSNode(
+                    item.name,
+                    vscode.TreeItemCollapsibleState.Collapsed,
+                    this,
+                    null,
+                    this.fullPath,
+                    false,
+                    item.mProfileName
+                );
+                temp.attributes = {
+                    gid: item.gid,
+                    uid: item.uid,
+                    group: item.group,
+                    perms: item.mode,
+                    owner: item.user,
+                };
+                responseNodes.push(temp);
+            } else {
+                // Create a node for the USS file.
+                const isBinary = `${this.fullPath}/${item.name as string}` in this.getSessionNode().binaryFiles;
+                const temp = new ZoweUSSNode(item.name, vscode.TreeItemCollapsibleState.None, this, null, this.fullPath, isBinary, item.mProfileName);
+                temp.attributes = {
+                    gid: item.gid,
+                    uid: item.uid,
+                    group: item.group,
+                    perms: item.mode,
+                    owner: item.user,
+                };
+                temp.command = {
+                    command: "zowe.uss.ZoweUSSNode.open",
+                    title: localize("getChildren.responses.open", "Open"),
+                    arguments: [temp],
+                };
+                responseNodes.push(temp);
+            }
+
+            return lastResult || true;
+        }, false);
+
+        this.dirty = false;
+
+        // If no new nodes were created, return the cached list of children
+        if (!newNodeCreated) {
+            return this.children;
         }
 
         // If search path has changed, invalidate all children
@@ -241,12 +262,13 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             this.children = [];
         }
 
-        const newChildren = Object.keys(elementChildren)
-            .sort()
-            .filter((label) => this.children.find((c) => (c.label as string) === label) == null)
-            .map((label) => elementChildren[label]);
+        const nodesToAdd = responseNodes.filter((c) => !this.children.includes(c));
+        const nodesToRemove = this.children.filter((c) => !responseNodes.includes(c));
 
-        this.children = this.children.concat(newChildren).filter((c) => (c.label as string) in elementChildren);
+        this.children = this.children
+            .concat(nodesToAdd)
+            .filter((c) => !nodesToRemove.includes(c))
+            .sort((a, b) => ((a.label as string) < (b.label as string) ? -1 : 1));
         this.prevPath = this.fullPath;
         return this.children;
     }

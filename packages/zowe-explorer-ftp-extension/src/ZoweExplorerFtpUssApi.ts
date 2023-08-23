@@ -41,6 +41,8 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
                     result.success = true;
                     result.apiResponse.items = response.map((element) => ({
                         name: element.name,
+                        user: element.owner,
+                        group: element.group,
                         size: element.size,
                         mtime: element.lastModified,
                         mode: element.permissions,
