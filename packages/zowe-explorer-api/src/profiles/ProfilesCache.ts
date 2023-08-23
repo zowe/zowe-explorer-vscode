@@ -16,7 +16,6 @@ import { URL } from "url";
 
 import * as zowe from "@zowe/cli";
 import { ZoweExplorerApi } from "./ZoweExplorerApi";
-import { getSecurityModules } from "../security";
 
 // TODO: find a home for constants
 export const CONTEXT_PREFIX = "_";
@@ -43,6 +42,12 @@ export enum ValidProfileEnum {
     UNVERIFIED = 1,
     VALID = 0,
     INVALID = -1,
+}
+
+export enum EventTypes {
+    CREATE,
+    UPDATE,
+    DELETE,
 }
 
 export function getZoweDir(): string {
