@@ -5,7 +5,7 @@
 [![codecov](https://codecov.io/gh/zowe/vscode-extension-for-zowe/branch/main/graph/badge.svg)](https://codecov.io/gh/zowe/vscode-extension-for-zowe)
 [![slack](https://img.shields.io/badge/chat-on%20Slack-blue)](https://slack.openmainframeproject.org/)
 
-> ## With the removal of keytar shim from VS Code we will be replacing `node-keytar` with `@zowe/secrets-for-zowe-sdk` in our v2.10.0 release to avoid user interruptions
+> ## With the removal of keytar shim from VS Code we will be replacing `node-keytar` with `@zowe/secrets-for-zowe-sdk` in the v2.10.0 release to avoid user interruptions. Extenders, please check out the usage [documentation](https://github.com/zowe/vscode-extension-for-zowe/wiki/Secure-Credentials-for-Extenders)
 >
 > ## v3 Pre-release coming soon with the removal of v1 profile support. Extenders, keep an eye on [changes affecting extenders](https://github.com/zowe/vscode-extension-for-zowe/wiki/Changes-Affecting-Extenders) for the full list of changes
 
