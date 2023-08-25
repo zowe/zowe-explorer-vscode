@@ -7,7 +7,7 @@ import { ProfilesTreeProvider } from "./ProfilesTreeProvider";
 // Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
     const treeDataProvider = new ProfilesTreeProvider();
-    vscode.window.createTreeView("tree-view-sample.profiles", { treeDataProvider });
+    vscode.window.createTreeView("tree-view-sample.profiles", { treeDataProvider, showCollapseAll: true });
 
     const disposable = vscode.commands.registerCommand("tree-view-sample.refresh", () => {
         treeDataProvider.refresh();

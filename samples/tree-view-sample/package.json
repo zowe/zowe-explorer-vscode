@@ -50,11 +50,11 @@
   },
   "dependencies": {
     "@zowe/imperative": "^5.18.0",
-    "@zowe/zowe-explorer-api": "^2.9.2"
+    "@zowe/zowe-explorer-api": "^2.10.0"
   },
   "devDependencies": {
     "@types/node": "^16.18.34",
-    "@types/vscode": "^1.73.0",
+    "@types/vscode": "^1.53.2",
     "@typescript-eslint/eslint-plugin": "^5.42.0",
     "@typescript-eslint/parser": "^5.42.0",
     "eslint": "^8.26.0",
