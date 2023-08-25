@@ -16,6 +16,10 @@ import { FileAttributes } from "../utils/files";
 
 export type IZoweNodeType = IZoweDatasetTreeNode | IZoweUSSTreeNode | IZoweJobTreeNode;
 
+export enum NodeAction {
+    Download = "download",
+}
+
 /**
  * The base interface for Zowe tree nodes that are implemented by vscode.TreeItem.
  *
@@ -66,6 +70,10 @@ export interface IZoweTreeNode {
      * This will show action `extension.deleteFolder` only for items with `contextValue` is `folder`.
      */
     contextValue?: string;
+    /**
+     * Any pending actions that must be awaited before continuing
+     */
+    pendingActions?: Record<NodeAction | string, Promise<any>>;
     /**
      * Retrieves the node label
      */
@@ -123,7 +131,6 @@ export interface IZoweDatasetTreeNode extends IZoweTreeNode {
      * Search criteria for a Dataset member search
      */
     memberPattern?: string;
-
     /**
      * Retrieves child nodes of this IZoweDatasetTreeNode
      *

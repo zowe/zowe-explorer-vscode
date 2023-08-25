@@ -474,19 +474,36 @@ export async function openPS(
             }
             // if local copy exists, open that instead of pulling from mainframe
             const documentFilePath = getDocumentFilePath(label, node);
+            const statusMsg = api.Gui.setStatusBarMessage(localize("dataSet.opening", "$(sync~spin) Opening data set..."));
+            let responsePromise = node.pendingActions ? node.pendingActions[api.NodeAction.Download] : null;
             if (!fs.existsSync(documentFilePath)) {
                 const prof = node.getProfile();
                 ZoweLogger.info(localize("openPS.openDataSet", "Opening {0}", label));
-                const statusMsg = api.Gui.setStatusBarMessage(localize("dataSet.opening", "$(sync~spin) Opening data set..."));
-                const response = await ZoweExplorerApiRegister.getMvsApi(prof).getContents(label, {
-                    file: documentFilePath,
-                    returnEtag: true,
-                    encoding: prof.profile?.encoding,
-                    responseTimeout: prof.profile?.responseTimeout,
-                });
-                node.setEtag(response?.apiResponse?.etag);
-                statusMsg.dispose();
+                if (node.pendingActions) {
+                    node.pendingActions[api.NodeAction.Download] = ZoweExplorerApiRegister.getMvsApi(prof).getContents(label, {
+                        file: documentFilePath,
+                        returnEtag: true,
+                        encoding: prof.profile?.encoding,
+                        responseTimeout: prof.profile?.responseTimeout,
+                    });
+                    responsePromise = node.pendingActions[api.NodeAction.Download];
+                } else {
+                    responsePromise = ZoweExplorerApiRegister.getMvsApi(prof).getContents(label, {
+                        file: documentFilePath,
+                        returnEtag: true,
+                        encoding: prof.profile?.encoding,
+                        responseTimeout: prof.profile?.responseTimeout,
+                    });
+                }
             }
+
+            if (responsePromise == null) {
+                throw new Error("Response was null or invalid.");
+            }
+
+            const response = await responsePromise;
+            node.setEtag(response?.apiResponse?.etag);
+            statusMsg.dispose();
             const document = await vscode.workspace.openTextDocument(getDocumentFilePath(label, node));
             await api.Gui.showTextDocument(document, { preview: shouldPreview });
             if (datasetProvider) {
