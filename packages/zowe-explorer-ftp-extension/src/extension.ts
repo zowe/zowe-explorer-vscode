@@ -9,13 +9,11 @@
  *
  */
 
-import * as path from "path";
 import * as vscode from "vscode";
-import { Gui, MessageSeverity, ZoweVsCodeExtension, IZoweLogger, imperative } from "@zowe/zowe-explorer-api";
+import { Gui, MessageSeverity, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import { FtpUssApi } from "./ZoweExplorerFtpUssApi";
 import { FtpMvsApi } from "./ZoweExplorerFtpMvsApi";
 import { FtpJesApi } from "./ZoweExplorerFtpJesApi";
-import { FtpSession } from "./ftpSession";
 import { CoreUtils } from "@zowe/zos-ftp-for-zowe-cli";
 import * as globals from "./globals";
 

@@ -13,7 +13,7 @@ import * as vscode from "vscode";
 import * as globals from "../globals";
 import { IJob, imperative } from "@zowe/cli";
 import { Gui, ValidProfileEnum, IZoweTree, IZoweJobTreeNode, PersistenceSchemaEnum, NodeInteraction } from "@zowe/zowe-explorer-api";
-import { FilterItem, ProfilesUtils, errorHandling } from "../utils/ProfilesUtils";
+import { FilterItem, errorHandling } from "../utils/ProfilesUtils";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { Job, Spool } from "./ZoweJobNode";

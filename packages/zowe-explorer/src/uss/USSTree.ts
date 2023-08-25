@@ -13,7 +13,7 @@ import * as vscode from "vscode";
 import * as globals from "../globals";
 import * as path from "path";
 import { imperative } from "@zowe/cli";
-import { FilterItem, FilterDescriptor, errorHandling, syncSessionNode, ProfilesUtils } from "../utils/ProfilesUtils";
+import { FilterItem, FilterDescriptor, errorHandling, syncSessionNode } from "../utils/ProfilesUtils";
 import { sortTreeItems, getAppName, checkIfChildPath } from "../shared/utils";
 import { Gui, IZoweTree, IZoweUSSTreeNode, NodeInteraction, ValidProfileEnum, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
