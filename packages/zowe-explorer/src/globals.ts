@@ -34,7 +34,8 @@ export let USS_DIR: string;
 export let DS_DIR: string;
 export let CONFIG_PATH; // set during activate
 export let ISTHEIA = false; // set during activate
-export const COMMAND_COUNT = 109;
+export let LOG: imperative.Logger;
+export const COMMAND_COUNT = 110;
 export const MAX_SEARCH_HISTORY = 5;
 export const MAX_FILE_HISTORY = 10;
 export const MS_PER_SEC = 1000;

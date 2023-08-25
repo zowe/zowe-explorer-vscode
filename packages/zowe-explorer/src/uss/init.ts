@@ -141,6 +141,11 @@ export async function initUSSProvider(context: vscode.ExtensionContext): Promise
         vscode.commands.registerCommand("zowe.uss.editFile", (node: IZoweUSSTreeNode): void => node.openUSS(false, false, ussFileProvider))
     );
     context.subscriptions.push(
+        vscode.commands.registerCommand("zowe.uss.editAttributes", (node: IZoweUSSTreeNode) =>
+            ussActions.editAttributes(context, ussFileProvider, node)
+        )
+    );
+    context.subscriptions.push(
         vscode.commands.registerCommand("zowe.uss.saveSearch", (node: IZoweUSSTreeNode): void => ussFileProvider.saveSearch(node))
     );
     context.subscriptions.push(

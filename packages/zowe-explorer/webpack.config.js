@@ -25,6 +25,8 @@ const path = require("path");
 var webpack = require("webpack");
 var fs = require("fs");
 
+const CopyPlugin = require("copy-webpack-plugin");
+
 /**@type {import('webpack').Configuration}*/
 const config = {
     target: "node", // vscode extensions run in a Node.js-context 📖 -> https://webpack.js.org/configuration/node/
@@ -40,7 +42,6 @@ const config = {
     externals: {
         // Add modules that cannot be webpack'ed, 📖 -> https://webpack.js.org/configuration/externals/
         vscode: "commonjs vscode", // the vscode-module is created on-the-fly and must be excluded. Add other modules that cannot be webpack'ed, 📖 -> https://webpack.js.org/configuration/externals/
-        keytar: "commonjs keytar",
         "spdx-exceptions": "commonjs spdx-exceptions",
         "spdx-license-ids": "commonjs spdx-license-ids",
         "spdx-license-ids/deprecated": "commonjs spdx-license-ids/deprecated",
@@ -81,7 +82,12 @@ const config = {
             },
         ],
     },
-    plugins: [new webpack.BannerPlugin(fs.readFileSync("../../scripts/LICENSE_HEADER", "utf-8"))],
+    plugins: [
+        new webpack.BannerPlugin(fs.readFileSync("../../scripts/LICENSE_HEADER", "utf-8")),
+        new CopyPlugin({
+            patterns: [{ from: "../../node_modules/@zowe/secrets-for-zowe-sdk/prebuilds", to: "../../prebuilds/" }],
+        }),
+    ],
 };
 
 module.exports = config;

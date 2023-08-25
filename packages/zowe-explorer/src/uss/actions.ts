@@ -28,6 +28,7 @@ import { IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
 import { fileExistsCaseSensitveSync } from "./utils";
 import { UssFileTree, UssFileType } from "./FileStructure";
 import { ZoweLogger } from "../utils/LoggerUtils";
+import { AttributeView } from "./AttributeView";
 
 // Set up localization
 nls.config({
@@ -205,6 +206,10 @@ export async function uploadFile(node: IZoweUSSTreeNode, doc: vscode.TextDocumen
     } catch (e) {
         await errorHandling(e, node.mProfileName);
     }
+}
+
+export function editAttributes(context: vscode.ExtensionContext, fileProvider: IZoweTree<IZoweUSSTreeNode>, node: IZoweUSSTreeNode): AttributeView {
+    return new AttributeView(context, fileProvider, node);
 }
 
 /**

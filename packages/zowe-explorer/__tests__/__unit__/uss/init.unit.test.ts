@@ -200,6 +200,10 @@ describe("Test src/dataset/extension", () => {
                 mock: [{ spy: jest.spyOn(ussActions, "copyUssFiles"), arg: [test.value, undefined, ussFileProvider] }],
             },
             {
+                name: "zowe.uss.editAttributes",
+                mock: [{ spy: jest.spyOn(ussActions, "editAttributes"), arg: [test.context, ussFileProvider, test.value] }],
+            },
+            {
                 name: "onDidChangeConfiguration",
                 mock: [{ spy: jest.spyOn(ussFileProvider, "onDidChangeConfiguration"), arg: [test.value] }],
             },
