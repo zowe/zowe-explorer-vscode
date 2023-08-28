@@ -8,6 +8,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
+- Bump `@zowe/secrets-for-zowe-sdk` to 7.18.3 to handle install errors gracefully and to allow running without MSVC redistributables.
+
 ## `2.10.0`
 
 ### New features and enhancements
