@@ -16,7 +16,7 @@ import * as globals from "../globals";
 import * as path from "path";
 import * as fs from "fs";
 import * as util from "util";
-import { getSecurityModules, IZoweTreeNode, ZoweTreeNode, getZoweDir, getFullPath, Gui } from "@zowe/zowe-explorer-api";
+import { IZoweTreeNode, ZoweTreeNode, getZoweDir, getFullPath, Gui, ProfilesCache } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import * as nls from "vscode-nls";
 import { imperative, getImperativeConfig } from "@zowe/cli";
@@ -75,10 +75,9 @@ export async function errorHandling(errorDetails: Error | string, label?: string
             if (imperativeError.mDetails.additionalDetails) {
                 const tokenError: string = imperativeError.mDetails.additionalDetails;
                 if (tokenError.includes("Token is not valid or expired.")) {
-                    if (this.isTheia()) {
-                        Gui.errorMessage(errToken).then(async () => {
-                            await Profiles.getInstance().ssoLogin(null, label);
-                        });
+                    if (isTheia()) {
+                        Gui.errorMessage(errToken);
+                        await Profiles.getInstance().ssoLogin(null, label);
                         return;
                     }
                     const message = localize("errorHandling.authentication.login", "Log in to Authentication Service");
@@ -274,7 +273,8 @@ export class ProfilesUtils {
         ZoweLogger.info(localize("ProfilesUtils.getProfileInfo.usingDefault", "No custom credential managers found, using the default instead."));
         await ProfilesUtils.updateCredentialManagerSetting(globals.ZOWE_CLI_SCM);
         return new imperative.ProfileInfo("zowe", {
-            credMgrOverride: imperative.ProfileCredentials.defaultCredMgrWithKeytar(() => getSecurityModules("keytar", envTheia)),
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+            credMgrOverride: imperative.ProfileCredentials.defaultCredMgrWithKeytar(ProfilesCache.requireKeyring),
         });
     }
 

@@ -134,6 +134,7 @@ describe("ProfilesCache", () => {
         const profInfo = await new ProfilesCache(fakeLogger as unknown as zowe.imperative.Logger, __dirname).getProfileInfo();
         expect(readProfilesFromDiskSpy).toHaveBeenCalledTimes(1);
         expect(defaultCredMgrWithKeytarSpy).toHaveBeenCalledTimes(1);
+        expect(defaultCredMgrWithKeytarSpy).toHaveBeenCalledWith(ProfilesCache.requireKeyring);
         const teamConfig = profInfo.getTeamConfig();
         expect(teamConfig.appName).toBe("zowe");
         expect(teamConfig.paths).toEqual([
@@ -142,6 +143,12 @@ describe("ProfilesCache", () => {
             path.join(fakeZoweDir, teamConfig.userConfigName),
             path.join(fakeZoweDir, teamConfig.configName),
         ]);
+    });
+
+    it("requireKeyring returns keyring module from Secrets SDK", async () => {
+        const keyring = ProfilesCache.requireKeyring();
+        expect(keyring).toBeDefined();
+        expect(Object.keys(keyring).length).toBe(5);
     });
 
     it("loadNamedProfile should find profiles by name and type", () => {

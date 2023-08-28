@@ -8,9 +8,20 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
-## `2.9.2`
+## `2.10.0`
 
 ### New features and enhancements
+
+- Added call to callback if defined by extenders when a change to the team config profile is made. [#2385](https://github.com/zowe/vscode-extension-for-zowe/issues/2385)
+- Replaced `keytar` dependency with `keyring` module from [`@zowe/secrets-for-zowe-sdk`](https://github.com/zowe/zowe-cli/tree/master/packages/secrets). [#2358](https://github.com/zowe/vscode-extension-for-zowe/issues/2358) [#2348](https://github.com/zowe/vscode-extension-for-zowe/issues/2348)
+- Added "Edit Attributes" option for USS files and folders. [#2254](https://github.com/zowe/vscode-extension-for-zowe/issues/2254)
+
+### Bug fixes
+
+- Fix the USS refresh icon (replacing "download" with "refresh")
+- Fix error for Theia check when token authentication returns 401. [#2407](https://github.com/zowe/vscode-extension-for-zowe/issues/2407)
+
+## `2.9.2`
 
 ### Bug fixes
 
@@ -47,6 +58,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed an issue where the mismatch etag error returned was not triggering the diff editor, resulting in possible loss of data due to the issue. [#2277](https://github.com/zowe/vscode-extension-for-zowe/issues/2277)
 - Fixed issue where refreshing views collapsed the respective trees. [#2215](https://github.com/zowe/vscode-extension-for-zowe/issues/2215)
 - Fixed an issue where user would not get prompted when authentication error is thrown. [#2334](https://github.com/zowe/vscode-extension-for-zowe/issues/2334)
+- Fixed issue where profiles with authentication tokens were breaking functionality for direct-to-service profiles after user interaction. [#2111](https://github.com/zowe/vscode-extension-for-zowe/issues/2111)
 
 ## `2.8.2`
 

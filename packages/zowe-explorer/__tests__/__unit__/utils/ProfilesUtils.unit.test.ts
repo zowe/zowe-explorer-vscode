@@ -168,12 +168,17 @@ describe("ProfilesUtils unit tests", () => {
         it("should handle token error and procede to login - Theia", async () => {
             const errorDetails = new zowe.imperative.ImperativeError({
                 msg: "Invalid credentials",
-                errorCode: 401 as unknown as string,
+                errorCode: String(401),
                 additionalDetails: "Token is not valid or expired.",
             });
             const label = "test";
             const moreInfo = "Task failed successfully";
-            jest.spyOn(profUtils, "isTheia").mockReturnValue(true);
+            Object.defineProperty(vscode, "env", {
+                value: {
+                    appName: "Theia",
+                },
+                configurable: true,
+            });
             const showErrorSpy = jest.spyOn(Gui, "errorMessage").mockImplementation(() => Promise.resolve(undefined));
             const showMessageSpy = jest.spyOn(Gui, "showMessage");
             const ssoLoginSpy = jest.fn();
@@ -193,12 +198,17 @@ describe("ProfilesUtils unit tests", () => {
         it("should handle credential error and no selection made for update", async () => {
             const errorDetails = new zowe.imperative.ImperativeError({
                 msg: "Invalid credentials",
-                errorCode: 401 as unknown as string,
+                errorCode: String(401),
                 additionalDetails: "Authentication failed.",
             });
             const label = "test";
             const moreInfo = "Task failed successfully";
-            jest.spyOn(profUtils, "isTheia").mockReturnValue(false);
+            Object.defineProperty(vscode, "env", {
+                value: {
+                    appName: "Visual Studio Code",
+                },
+                configurable: true,
+            });
             const showErrorSpy = jest.spyOn(Gui, "errorMessage").mockResolvedValue(undefined);
             const showMsgSpy = jest.spyOn(Gui, "showMessage");
             const promptCredentialsSpy = jest.fn();
@@ -688,11 +698,13 @@ describe("ProfilesUtils unit tests", () => {
 
         it("should retrieve the default credential manager if no custom credential manager is found", async () => {
             jest.spyOn(profUtils.ProfilesUtils, "getCredentialManagerOverride").mockReturnValueOnce(undefined);
+            const defaultCredMgrSpy = jest.spyOn(zowe.imperative.ProfileCredentials, "defaultCredMgrWithKeytar");
             jest.spyOn(vscode.extensions, "getExtension").mockReturnValueOnce(undefined);
             jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(true);
             const updateCredentialManagerSettingSpy = jest.spyOn(profUtils.ProfilesUtils, "updateCredentialManagerSetting").mockImplementation();
             await expect(profUtils.ProfilesUtils.getProfileInfo(true)).resolves.toEqual({});
             expect(updateCredentialManagerSettingSpy).toBeCalledWith(globals.ZOWE_CLI_SCM);
+            expect(defaultCredMgrSpy).toHaveBeenCalledWith(ProfilesCache.requireKeyring);
         });
     });
 });

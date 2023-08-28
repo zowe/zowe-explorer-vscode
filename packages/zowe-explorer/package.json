@@ -2,7 +2,7 @@
   "name": "vscode-extension-for-zowe",
   "displayName": "%displayName%",
   "description": "%description%",
-  "version": "2.9.3-SNAPSHOT",
+  "version": "2.10.1-SNAPSHOT",
   "publisher": "Zowe",
   "author": "Zowe",
   "license": "EPL-2.0",
@@ -286,6 +286,11 @@
         "category": "Zowe Explorer"
       },
       {
+        "command": "zowe.uss.editAttributes",
+        "title": "%editAttributes%",
+        "category": "Zowe Explorer"
+      },
+      {
         "command": "zowe.ds.renameDataSet",
         "title": "%renameDataSet%",
         "category": "Zowe Explorer"
@@ -515,8 +520,8 @@
         "title": "%uss.refreshDirectory%",
         "category": "Zowe Explorer",
         "icon": {
-          "light": "./resources/light/download.svg",
-          "dark": "./resources/dark/download.svg"
+          "light": "./resources/light/refresh.svg",
+          "dark": "./resources/dark/refresh.svg"
         }
       },
       {
@@ -917,6 +922,11 @@
           "when": "view == zowe.uss.explorer && viewItem =~ /^textFile|binaryFile/ && !listMultiSelection",
           "command": "zowe.uss.editFile",
           "group": "099_zowe_ussModification:@0"
+        },
+        {
+          "when": "view == zowe.uss.explorer && viewItem =~ /^(textFile.*|binaryFile.*|directory.*)/",
+          "command": "zowe.uss.editAttributes",
+          "group": "099_zowe_ussModification:@1"
         },
         {
           "when": "view == zowe.uss.explorer && viewItem =~ /^(?!(ussSession|favorite|profile_fav))/ && !listMultiSelection",
@@ -1542,6 +1552,10 @@
           "when": "never"
         },
         {
+          "command": "zowe.uss.editAttributes",
+          "when": "never"
+        },
+        {
           "command": "zowe.uss.binary",
           "when": "never"
         },
@@ -1905,12 +1919,12 @@
     ]
   },
   "scripts": {
-    "build": "gulp build && yarn license && webpack --mode development",
+    "build": "gulp build && yarn license && webpack --mode development && cd webviews/edit-attributes && yarn && yarn build",
     "build:integration": "yarn createTestProfileData && yarn license && tsc --pretty --project tsconfig-tests.json",
     "test:unit": "jest \".*__tests__.*\\.unit\\.test\\.ts\" --coverage",
     "test:theia": "mocha ./out/__tests__/__theia__/*.theia.test.js --timeout 50000 --reporter mocha-multi-reporters --reporter-options configFile=.mocharc.json",
     "test": "yarn test:unit",
-    "vscode:prepublish": "gulp build && webpack --mode production && yarn updateStrings && yarn run compile-web",
+    "vscode:prepublish": "gulp build && webpack --mode production && yarn updateStrings && yarn run compile-web && cd webviews/edit-attributes && yarn && yarn build",
     "updateStrings": "node ../../scripts/stringUpdateScript.js && prettier --write --loglevel warn ./i18n package.nls*",
     "package": "vsce package --allow-star-activation --yarn && node ../../scripts/mv-pack.js vscode-extension-for-zowe vsix",
     "license": "node ../../scripts/updateLicenses.js",
@@ -1933,6 +1947,7 @@
     "vscode": "^1.53.2"
   },
   "devDependencies": {
+    "@napi-rs/cli": "^2.16.1",
     "@types/chai": "^4.2.6",
     "@types/chai-as-promised": "^7.1.0",
     "@types/expect": "^1.20.3",
@@ -1943,9 +1958,10 @@
     "chai": "^4.1.2",
     "chai-as-promised": "^7.1.1",
     "chalk": "^2.4.1",
+    "copy-webpack-plugin": "^6.4.1",
     "cross-env": "^5.2.0",
     "del": "^4.1.1",
-    "eslint-plugin-zowe-explorer": "2.9.3-SNAPSHOT",
+    "eslint-plugin-zowe-explorer": "2.10.1-SNAPSHOT",
     "event-stream": "^4.0.1",
     "expect": "^24.8.0",
     "geckodriver": "^1.19.1",
@@ -1958,7 +1974,6 @@
     "gulp-typescript": "^5.0.1",
     "jsdoc": "^3.6.3",
     "jsdom": "^16.0.0",
-    "keytar": "^7.2.0",
     "log4js": "^6.4.6",
     "markdownlint-cli": "^0.33.0",
     "mem": "^6.0.1",
@@ -1971,7 +1986,8 @@
     "webpack-cli": "^3.3.11"
   },
   "dependencies": {
-    "@zowe/zowe-explorer-api": "2.9.3-SNAPSHOT",
+    "@zowe/secrets-for-zowe-sdk": "7.18.1",
+    "@zowe/zowe-explorer-api": "2.10.1-SNAPSHOT",
     "fs-extra": "8.0.1",
     "isbinaryfile": "4.0.4",
     "js-yaml": "3.13.1",
