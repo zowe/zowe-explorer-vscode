@@ -3318,9 +3318,9 @@ describe("Dataset Actions Unit Tests - Function openPS", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
 
-        mocked(vscode.window.withProgress).mockResolvedValueOnce({
+        mocked(blockMocks.mvsApi.getContents).mockResolvedValueOnce({
             success: true,
-            commandResponse: null,
+            commandResponse: "",
             apiResponse: {
                 etag: "123",
             },
@@ -3339,9 +3339,9 @@ describe("Dataset Actions Unit Tests - Function openPS", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
 
-        mocked(vscode.window.withProgress).mockResolvedValueOnce({
+        mocked(blockMocks.mvsApi.getContents).mockResolvedValueOnce({
             success: true,
-            commandResponse: null,
+            commandResponse: "",
             apiResponse: {
                 etag: "123",
             },
@@ -3383,9 +3383,9 @@ describe("Dataset Actions Unit Tests - Function openPS", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
 
-        mocked(vscode.window.withProgress).mockResolvedValueOnce({
+        mocked(blockMocks.mvsApi.getContents).mockResolvedValueOnce({
             success: true,
-            commandResponse: null,
+            commandResponse: "",
             apiResponse: {
                 etag: "123",
             },
@@ -3410,9 +3410,9 @@ describe("Dataset Actions Unit Tests - Function openPS", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
 
-        mocked(vscode.window.withProgress).mockResolvedValueOnce({
+        mocked(blockMocks.mvsApi.getContents).mockResolvedValueOnce({
             success: true,
-            commandResponse: null,
+            commandResponse: "",
             apiResponse: {
                 etag: "123",
             },
@@ -3437,9 +3437,9 @@ describe("Dataset Actions Unit Tests - Function openPS", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
 
-        mocked(vscode.window.withProgress).mockResolvedValueOnce({
+        mocked(blockMocks.mvsApi.getContents).mockResolvedValueOnce({
             success: true,
-            commandResponse: null,
+            commandResponse: "",
             apiResponse: {
                 etag: "123",
             },

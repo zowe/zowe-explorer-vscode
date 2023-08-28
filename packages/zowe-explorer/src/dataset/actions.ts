@@ -454,6 +454,7 @@ export async function openPS(
     const doubleClicked = api.Gui.utils.wasDoubleClicked(node, datasetProvider);
     const shouldPreview = doubleClicked ? false : previewMember;
     if (Profiles.getInstance().validProfile !== api.ValidProfileEnum.INVALID) {
+        const statusMsg = api.Gui.setStatusBarMessage(localize("dataSet.opening", "$(sync~spin) Opening data set..."));
         try {
             let label: string;
             const defaultMessage = localize("openPS.error", "Invalid data set or member.");
@@ -474,7 +475,6 @@ export async function openPS(
             }
             // if local copy exists, open that instead of pulling from mainframe
             const documentFilePath = getDocumentFilePath(label, node);
-            const statusMsg = api.Gui.setStatusBarMessage(localize("dataSet.opening", "$(sync~spin) Opening data set..."));
             let responsePromise = node.pendingActions ? node.pendingActions[api.NodeAction.Download] : null;
             if (!fs.existsSync(documentFilePath)) {
                 const prof = node.getProfile();
@@ -498,7 +498,7 @@ export async function openPS(
             }
 
             if (responsePromise == null) {
-                throw new Error("Response was null or invalid.");
+                throw Error("Response was null or invalid.");
             }
 
             const response = await responsePromise;
@@ -510,6 +510,7 @@ export async function openPS(
                 datasetProvider.addFileHistory(`[${node.getProfileName()}]: ${label}`);
             }
         } catch (err) {
+            statusMsg.dispose();
             await errorHandling(err, node.getProfileName());
             throw err;
         }
