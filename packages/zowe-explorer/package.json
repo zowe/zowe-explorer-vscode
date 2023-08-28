@@ -1932,7 +1932,7 @@
     "test:unit": "jest \".*__tests__.*\\.unit\\.test\\.ts\" --coverage",
     "test:theia": "mocha ./out/__tests__/__theia__/*.theia.test.js --timeout 50000 --reporter mocha-multi-reporters --reporter-options configFile=.mocharc.json",
     "test": "pnpm test:unit",
-    "vscode:prepublish": "gulp build && webpack --mode production && pnpm updateStrings && pnpm run compile-web && cd webviews/edit-attributes && pnpm && pnpm build",
+    "vscode:prepublish": "gulp build && webpack --mode production && pnpm updateStrings && pnpm run compile-web",
     "updateStrings": "node ../../scripts/stringUpdateScript.js && prettier --write --loglevel warn ./i18n package.nls*",
     "package": "vsce package --no-dependencies && node ../../scripts/mv-pack.js vscode-extension-for-zowe vsix",
     "license": "node ../../scripts/updateLicenses.js",
