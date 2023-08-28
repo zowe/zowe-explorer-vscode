@@ -9,8 +9,10 @@
  *
  */
 
+import * as vscode from "vscode";
 import { IZoweTree } from "./IZoweTree";
 import { IZoweTreeNode } from "./IZoweTreeNode";
+import { FileAttributes } from "../utils/files";
 
 /**
  * Extended interface for Zowe USS tree nodes.
@@ -35,6 +37,18 @@ export interface IZoweUSSTreeNode extends IZoweTreeNode {
      * Specific profile name in use with this node
      */
     mProfileName?: string;
+    /**
+     * File attributes
+     */
+    attributes?: FileAttributes;
+    /**
+     * Event that fires whenever an existing node is updated.
+     */
+    onUpdateEmitter?: vscode.EventEmitter<IZoweUSSTreeNode>;
+    /**
+     * Event that fires whenever an existing node is updated.
+     */
+    onUpdate?: vscode.Event<IZoweUSSTreeNode>;
     /**
      * Retrieves child nodes of this IZoweUSSTreeNode
      *

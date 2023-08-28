@@ -22,10 +22,12 @@ import {
     ZosmfJesApi,
     ZosmfMvsApi,
     ZosmfUssApi,
+    EventTypes,
 } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerExtender } from "./ZoweExplorerExtender";
 import { ZoweLogger } from "./utils/LoggerUtils";
 import * as nls from "vscode-nls";
+import * as vscode from "vscode";
 
 // Set up localization
 nls.config({
@@ -114,6 +116,9 @@ export class ZoweExplorerApiRegister implements IApiRegisterClient {
     private mvsApiImplementations = new Map<string, IMvs>();
     private jesApiImplementations = new Map<string, IJes>();
     private commandApiImplementations = new Map<string, ICommand>();
+
+    // Event emitter extenders can subscribe to
+    public onProfilesUpdateEmitter = new vscode.EventEmitter<EventTypes>();
 
     /**
      * Private constructor that creates the singleton instance of ZoweExplorerApiRegister.
@@ -338,5 +343,13 @@ export class ZoweExplorerApiRegister implements IApiRegisterClient {
      */
     public getExplorerExtenderApi(): IApiExplorerExtender {
         return ZoweExplorerExtender.getInstance();
+    }
+
+    /**
+     * Event for extenders to subscribe to that will fire upon profile change.
+     * @returns event that can be attached that will be called upon profile change
+     */
+    public get onProfilesUpdate(): vscode.Event<EventTypes> {
+        return this.onProfilesUpdateEmitter.event;
     }
 }

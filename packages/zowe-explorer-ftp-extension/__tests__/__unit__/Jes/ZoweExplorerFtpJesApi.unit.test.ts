@@ -18,6 +18,7 @@ import { DataSetUtils, JobUtils } from "@zowe/zos-ftp-for-zowe-cli";
 import TestUtils from "../utils/TestUtils";
 import { DownloadJobs, imperative } from "@zowe/cli";
 import * as globals from "../../../src/globals";
+import { ZoweFtpExtensionError } from "../../../src/ZoweFtpExtensionError";
 
 // two methods to mock modules: create a __mocks__ file for zowe-explorer-api.ts and direct mock for extension.ts
 jest.mock("../../../__mocks__/@zowe/zowe-explorer-api.ts");
@@ -31,6 +32,7 @@ describe("FtpJesApi", () => {
         JesApi.ftpClient = jest.fn().mockReturnValue({ host: "", user: "", password: "", port: "" });
         JesApi.releaseConnection = jest.fn();
         globals.SESSION_MAP.get = jest.fn().mockReturnValue({ jesListConnection: { connected: true } });
+        globals.LOGGER.getExtensionName = jest.fn().mockReturnValue("Zowe Explorer FTP Extension");
     });
 
     it("should list jobs by owner and prefix.", async () => {
@@ -143,11 +145,83 @@ describe("FtpJesApi", () => {
         expect(JesApi.releaseConnection).toBeCalled();
     });
 
-    it("does not support getJclForJob", () => {
-        expect(JesApi.getJclForJob({} as any)).rejects.toThrowError();
+    it("should throw error when list jobs by owner and prefix failed.", async () => {
+        jest.spyOn(JobUtils, "listJobs").mockImplementationOnce(
+            jest.fn((val) => {
+                throw new Error("List jobs failed.");
+            })
+        );
+        await expect(async () => {
+            await JesApi.getJobsByOwnerAndPrefix("*", "*");
+        }).rejects.toThrow(ZoweFtpExtensionError);
     });
 
-    it("does not support submitJcl", () => {
-        expect(JesApi.submitJcl("", "", "")).rejects.toThrowError();
+    it("should throw error when get job failed.", async () => {
+        jest.spyOn(JobUtils, "findJobByID").mockImplementationOnce(
+            jest.fn((val) => {
+                throw new Error("Get jobs failed.");
+            })
+        );
+        await expect(async () => {
+            await JesApi.getJob("123");
+        }).rejects.toThrow(ZoweFtpExtensionError);
+    });
+
+    it("should throw error when get spool files failed.", async () => {
+        jest.spyOn(JobUtils, "findJobByID").mockImplementationOnce(
+            jest.fn((val) => {
+                throw new Error("Get jobs failed.");
+            })
+        );
+        await expect(async () => {
+            await JesApi.getSpoolFiles("JOB", "123");
+        }).rejects.toThrow(ZoweFtpExtensionError);
+    });
+
+    it("should throw error when download spool contents failed.", async () => {
+        jest.spyOn(JobUtils, "findJobByID").mockImplementationOnce(
+            jest.fn((val) => {
+                throw new Error("Get jobs failed.");
+            })
+        );
+        const mockParams = {
+            parms: { jobname: "JOB1", jobid: "123", outDir: "/a/b/c" },
+        };
+        await expect(async () => {
+            await JesApi.downloadSpoolContent(mockParams.parms);
+        }).rejects.toThrow(ZoweFtpExtensionError);
+    });
+
+    it("should throw error when get spool contents by id failed.", async () => {
+        jest.spyOn(JobUtils, "getSpoolFileContent").mockImplementationOnce(
+            jest.fn((val) => {
+                throw new Error("Get spool file content failed.");
+            })
+        );
+        await expect(async () => {
+            await JesApi.getSpoolContentById("JOB", "123", 1);
+        }).rejects.toThrow(ZoweFtpExtensionError);
+    });
+
+    it("should throw error when submit job failed", async () => {
+        jest.spyOn(JobUtils, "submitJob").mockImplementationOnce(
+            jest.fn((val) => {
+                throw new Error("Submit job failed.");
+            })
+        );
+        await expect(async () => {
+            await JesApi.submitJob("IBMUSER.DS");
+        }).rejects.toThrow(ZoweFtpExtensionError);
+    });
+
+    it("should throw error when delete job failed", async () => {
+        jest.spyOn(JobUtils, "deleteJob").mockImplementationOnce(
+            jest.fn((val) => {
+                throw new Error("Delete job failed.");
+            })
+        );
+        await expect(async () => {
+            await JesApi.deleteJob("JOB", "123");
+        }).rejects.toThrow(ZoweFtpExtensionError);
     });
 });

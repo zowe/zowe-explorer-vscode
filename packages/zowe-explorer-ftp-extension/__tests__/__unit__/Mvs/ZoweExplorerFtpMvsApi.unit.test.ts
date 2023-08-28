@@ -19,11 +19,13 @@ import TestUtils from "../utils/TestUtils";
 import * as tmp from "tmp";
 import { Gui } from "@zowe/zowe-explorer-api";
 import * as globals from "../../../src/globals";
+import { ZoweFtpExtensionError } from "../../../src/ZoweFtpExtensionError";
 
 // two methods to mock modules: create a __mocks__ file for zowe-explorer-api.ts and direct mock for extension.ts
 jest.mock("../../../__mocks__/@zowe/zowe-explorer-api.ts");
 jest.mock("../../../src/extension.ts");
 jest.mock("vscode");
+
 const stream = require("stream");
 
 const readableStream = stream.Readable.from([]);
@@ -33,16 +35,16 @@ fs.createReadStream = jest.fn().mockReturnValue(readableStream);
 const MvsApi = new FtpMvsApi();
 
 describe("FtpMvsApi", () => {
-    const errorMessageSpy = jest.spyOn(Gui, "errorMessage").mockImplementation();
-
-    beforeAll(() => {
+    beforeEach(() => {
         MvsApi.checkedProfile = jest.fn().mockReturnValue({ message: "success", type: "zftp", failNotFound: false });
         MvsApi.ftpClient = jest.fn().mockReturnValue({ host: "", user: "", password: "", port: "" });
         MvsApi.releaseConnection = jest.fn();
         globals.SESSION_MAP.get = jest.fn().mockReturnValue({ mvsListConnection: { connected: true } });
+        globals.LOGGER.getExtensionName = jest.fn().mockReturnValue("Zowe Explorer FTP Extension");
     });
 
     afterEach(() => {
+        jest.restoreAllMocks();
         jest.clearAllMocks();
     });
 
@@ -104,6 +106,8 @@ describe("FtpMvsApi", () => {
         const response2 = [{ dsname: "IBMUSER.DS2", dsorg: "PS", lrecl: 2 }];
         DataSetUtils.listDataSets = jest.fn().mockReturnValue(response2);
         DataSetUtils.uploadDataSet = jest.fn().mockReturnValue(response);
+        jest.spyOn(MvsApi, "getContents").mockResolvedValue({ apiResponse: { etag: "123" } } as any);
+
         const mockParams = {
             inputFilePath: localFile,
             dataSetName: "   (IBMUSER).DS2",
@@ -175,7 +179,9 @@ describe("FtpMvsApi", () => {
             options: { encoding: "" },
         };
         jest.spyOn(MvsApi, "ftpClient").mockReturnValueOnce(null);
-        expect(MvsApi.getContents(mockParams.dataSetName, mockParams.options)).rejects.toThrowError();
+        await expect(async () => {
+            await MvsApi.getContents(mockParams.dataSetName, mockParams.options);
+        }).rejects.toThrow(ZoweFtpExtensionError);
     });
 
     it("should rename dataset or dataset member.", async () => {
@@ -206,27 +212,154 @@ describe("FtpMvsApi", () => {
     });
 
     it("should throw an error when copyDataSet is called", async () => {
-        await expect(MvsApi.copyDataSet(null, null)).rejects.toThrowError();
-        expect(errorMessageSpy).toBeCalled();
+        await expect(async () => {
+            await MvsApi.copyDataSet(null, null);
+        }).rejects.toThrow(ZoweFtpExtensionError);
     });
 
     it("should throw an error when hMigrateDataSet is called", async () => {
-        await expect(MvsApi.hMigrateDataSet("test")).rejects.toThrowError();
-        expect(errorMessageSpy).toBeCalled();
+        await expect(async () => {
+            await MvsApi.hMigrateDataSet("test");
+        }).rejects.toThrow(ZoweFtpExtensionError);
     });
 
     it("should throw an error when hRecallDataSet is called", async () => {
-        await expect(MvsApi.hRecallDataSet("test")).rejects.toThrowError();
-        expect(errorMessageSpy).toBeCalled();
+        await expect(async () => {
+            await MvsApi.hRecallDataSet("test");
+        }).rejects.toThrow(ZoweFtpExtensionError);
     });
 
     it("should throw an error when allocateLikeDataset is called", async () => {
-        await expect(MvsApi.allocateLikeDataSet("test", "test2")).rejects.toThrowError();
-        expect(errorMessageSpy).toBeCalled();
+        await expect(async () => {
+            await MvsApi.allocateLikeDataSet("test", "test2");
+        }).rejects.toThrow(ZoweFtpExtensionError);
     });
 
     it("should throw an error when copyDataSetMember is called", async () => {
-        await expect(MvsApi.copyDataSetMember({} as any, {} as any)).rejects.toThrowError();
-        expect(errorMessageSpy).toBeCalled();
+        await expect(async () => {
+            await MvsApi.copyDataSetMember({} as any, {} as any);
+        }).rejects.toThrow(ZoweFtpExtensionError);
+    });
+
+    it("should throw error when list dataset failed", async () => {
+        jest.spyOn(DataSetUtils, "listDataSets").mockImplementationOnce(
+            jest.fn((val) => {
+                throw new Error("List dataset failed.");
+            })
+        );
+        await expect(async () => {
+            await MvsApi.dataSet("DS*");
+        }).rejects.toThrow(ZoweFtpExtensionError);
+    });
+
+    it("should throw error when list dataset members failed", async () => {
+        jest.spyOn(DataSetUtils, "listMembers").mockImplementationOnce(
+            jest.fn((val) => {
+                throw new Error("List members failed.");
+            })
+        );
+        await expect(async () => {
+            await MvsApi.allMembers("DS");
+        }).rejects.toThrow(ZoweFtpExtensionError);
+    });
+
+    it("should throw error when get contents failed", async () => {
+        jest.spyOn(DataSetUtils, "downloadDataSet").mockImplementationOnce(
+            jest.fn((val) => {
+                throw new Error("Download dataset failed.");
+            })
+        );
+        const mockParams = {
+            dataSetName: "IBMUSER.DS2",
+            options: {
+                file: "/a/b/c",
+                encoding: "",
+            },
+        };
+        await expect(async () => {
+            await MvsApi.getContents(mockParams.dataSetName, mockParams.options);
+        }).rejects.toThrow(ZoweFtpExtensionError);
+    });
+
+    it("should throw error when put contents failed", async () => {
+        jest.spyOn(DataSetUtils, "uploadDataSet").mockImplementationOnce(
+            jest.fn((val) => {
+                throw new Error("Upload dataset failed.");
+            })
+        );
+        const localFile = tmp.tmpNameSync({ tmpdir: "/tmp" });
+        const mockParams = {
+            inputFilePath: localFile,
+            dataSetName: "IBMUSER.DS2",
+            options: { encoding: "", returnEtag: false, etag: "utf8" },
+        };
+        await expect(async () => {
+            await MvsApi.putContents(mockParams.inputFilePath, mockParams.dataSetName, mockParams.options);
+        }).rejects.toThrow(ZoweFtpExtensionError);
+    });
+
+    it("should throw error when create dataset failed", async () => {
+        jest.spyOn(DataSetUtils, "allocateDataSet").mockImplementationOnce(
+            jest.fn((val) => {
+                throw new Error("Allocate dataset failed.");
+            })
+        );
+        const DATA_SET_SEQUENTIAL = 4;
+        const mockParams = {
+            dataSetName: "IBMUSER.DS3",
+            dataSetType: DATA_SET_SEQUENTIAL,
+        };
+        await expect(async () => {
+            await MvsApi.createDataSet(mockParams.dataSetType, mockParams.dataSetName);
+        }).rejects.toThrow(ZoweFtpExtensionError);
+    });
+
+    it("should throw error when create dataset member failed", async () => {
+        jest.spyOn(DataSetUtils, "uploadDataSet").mockImplementationOnce(
+            jest.fn((val) => {
+                throw new Error("Upload dataset failed.");
+            })
+        );
+        const mockParams = {
+            dataSetName: "IBMUSER.DS2(M1)",
+            type: "file",
+            options: { encoding: "" },
+        };
+        await expect(async () => {
+            await MvsApi.createDataSetMember(mockParams.dataSetName, mockParams.options);
+        }).rejects.toThrow(ZoweFtpExtensionError);
+    });
+
+    it("should throw error when rename dataset failed", async () => {
+        jest.spyOn(DataSetUtils, "renameDataSet").mockImplementationOnce(
+            jest.fn((val) => {
+                throw new Error("Rename dataset failed.");
+            })
+        );
+        await expect(async () => {
+            await MvsApi.renameDataSet("IBMUSER.OLD", "IBMUSER.NEW");
+        }).rejects.toThrow(ZoweFtpExtensionError);
+    });
+
+    it("should throw error when rename dataset member failed", async () => {
+        jest.spyOn(DataSetUtils, "renameDataSet").mockImplementationOnce(
+            jest.fn((val) => {
+                throw new Error("Rename dataset failed.");
+            })
+        );
+        await expect(async () => {
+            await MvsApi.renameDataSetMember("IBMUSER.DS", "OLD", "NEW");
+        }).rejects.toThrow(ZoweFtpExtensionError);
+    });
+
+    it("should throw error when delete dataset failed", async () => {
+        jest.spyOn(DataSetUtils, "deleteDataSet").mockImplementationOnce(
+            jest.fn((val) => {
+                throw new Error("Delete dataset failed.");
+            })
+        );
+        await expect(async () => {
+            await MvsApi.deleteDataSet("IBMUSER.DS");
+        }).rejects.toThrow(ZoweFtpExtensionError);
     });
 });

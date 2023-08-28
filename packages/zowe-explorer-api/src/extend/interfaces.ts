@@ -10,6 +10,7 @@
  */
 
 import * as zowe from "@zowe/cli";
+import { FileAttributes } from "../utils";
 
 export interface ICommon {
     /** The profile associated with a specific instance of an API.  */
@@ -123,6 +124,14 @@ export interface IUss extends ICommon {
      * @returns {Promise<zowe.IZosFilesResponse>}
      */
     putContent(inputFilePath: string, ussFilePath: string, options?: zowe.IUploadOptions): Promise<zowe.IZosFilesResponse>;
+
+    /**
+     * Updates attributes for a USS directory or file.
+     *
+     * @param ussPath The USS path of the directory or file to update
+     * @param attributes The attributes that should be updated
+     */
+    updateAttributes?(ussPath: string, attributes: Partial<FileAttributes>): Promise<zowe.IZosFilesResponse>;
 
     /**
      * Uploads directory at the given path.

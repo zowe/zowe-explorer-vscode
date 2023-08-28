@@ -13,7 +13,7 @@ import * as vscode from "vscode";
 import * as globals from "../globals";
 import * as path from "path";
 import { imperative } from "@zowe/cli";
-import { FilterItem, FilterDescriptor, errorHandling, syncSessionNode, ProfilesUtils } from "../utils/ProfilesUtils";
+import { FilterItem, FilterDescriptor, errorHandling, syncSessionNode } from "../utils/ProfilesUtils";
 import { sortTreeItems, getAppName, checkIfChildPath } from "../shared/utils";
 import { Gui, IZoweTree, IZoweUSSTreeNode, NodeInteraction, ValidProfileEnum, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
@@ -129,6 +129,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             prompt: localize("renameUSS.enterName", "Enter a new name for the {0}", nodeType),
             value: originalNode.label.toString().replace(/^\[.+\]:\s/, ""),
             ignoreFocusOut: true,
+            // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
             validateInput: (value) => this.checkDuplicateLabel(parentPath + value, loadedNodes),
         };
         const newName = await Gui.showInputBox(options);
