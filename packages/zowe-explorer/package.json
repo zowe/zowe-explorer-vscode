@@ -1920,7 +1920,7 @@
     "test": "pnpm test:unit",
     "vscode:prepublish": "gulp build && webpack --mode production && pnpm updateStrings && pnpm run compile-web",
     "updateStrings": "node ../../scripts/stringUpdateScript.js && prettier --write --loglevel warn ./i18n package.nls*",
-    "package": "vsce package --no-dependencies --allow-star-activation && node ../../scripts/mv-pack.js vscode-extension-for-zowe vsix",
+    "package": "vsce package --no-dependencies && node ../../scripts/mv-pack.js vscode-extension-for-zowe vsix",
     "license": "node ../../scripts/updateLicenses.js",
     "watch": "gulp build && webpack --mode development --watch --info-verbosity verbose",
     "compile": "tsc -b",

@@ -19,7 +19,7 @@ jobs:
 
       - run: |
           npm install -g pnpm
-          pnpm install --frozen-lockfile --shamefully-hoist=true
+          pnpm install
 
       - name: Run madge to check for circular dependencies
         run: pnpm madge

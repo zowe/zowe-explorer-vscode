@@ -32,7 +32,7 @@ jobs:
       - run: npm install -g pnpm
 
       # install dependencies
-      - run: pnpm install --frozen-lockfile --shamefully-hoist=true
+      - run: pnpm install
 
       # copy test data file needed for build :-(
       - name: Create test data file
