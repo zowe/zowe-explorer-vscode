@@ -19,8 +19,7 @@ export class SshUssApi implements ZoweExplorerApi.IUss {
     public async getStatus(profile: imperative.IProfileLoaded, profileType?: any): Promise<string> {
         if (profileType === ZosUssProfile.type) {
             try {
-                await this.withClient(this.getSession(profile), async () => {});
-                return Promise.resolve("active");
+                return await this.withClient(this.getSession(profile), () => Promise.resolve("active"));
             } catch (err) {
                 vscode.window.showErrorMessage((err as Error).toString());
                 return Promise.resolve("inactive");
