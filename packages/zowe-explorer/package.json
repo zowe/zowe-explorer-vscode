@@ -1927,7 +1927,7 @@
     ]
   },
   "scripts": {
-    "build": "gulp build && pnpm license && webpack --mode development && cd webviews/edit-attributes && pnpm && pnpm build",
+    "build": "gulp build && pnpm license && webpack --mode development",
     "build:integration": "pnpm createTestProfileData && pnpm license && tsc --pretty --project tsconfig-tests.json",
     "test:unit": "jest \".*__tests__.*\\.unit\\.test\\.ts\" --coverage",
     "test:theia": "mocha ./out/__tests__/__theia__/*.theia.test.js --timeout 50000 --reporter mocha-multi-reporters --reporter-options configFile=.mocharc.json",
