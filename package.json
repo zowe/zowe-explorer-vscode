@@ -61,7 +61,7 @@
     "madge": "pnpm -r run madge",
     "pretty": "prettier --write .",
     "build": "pnpm -r run build",
-    "test": "pnpm -r run test",
+    "test": "pnpm -r --parallel run test",
     "package": "pnpm run -r package",
     "pretest:integration": "ts-node ./scripts/create-env.ts",
     "posttest:integration": "ts-node ./scripts/clean-env.ts",
