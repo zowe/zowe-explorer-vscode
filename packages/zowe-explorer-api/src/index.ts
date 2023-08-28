@@ -10,12 +10,15 @@
  */
 
 export * from "./extend";
+export * from "./globals/Gui";
+export * from "./logger/IZoweLogger";
 export * from "./profiles/UserSettings";
 export * from "./profiles/ProfilesCache";
 export * from "./profiles/ZoweExplorerZosmfApi";
-export * from "./logger/IZoweLogger";
-export * from "./tree";
-export * from "./vscode/ZoweVsCodeExtension";
 export * from "./security/KeytarApi";
 export * from "./security/KeytarCredentialManager";
-export * from "./globals/Gui";
+export * from "./tree";
+export * from "./utils";
+export * from "./vscode/ZoweVsCodeExtension";
+export * from "./vscode/ui";
+export { imperative } from "@zowe/cli";

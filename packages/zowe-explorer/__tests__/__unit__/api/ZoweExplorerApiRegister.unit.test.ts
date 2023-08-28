@@ -294,4 +294,13 @@ describe("ZoweExplorerApiRegister unit testing", () => {
             ZoweExplorerApiRegister.getCommonApi(profileUnused);
         }).toThrow();
     });
+
+    it("provides access to the callback defined by the extender if available", () => {
+        Object.defineProperty(ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter, "event", {
+            value: {},
+            configurable: true,
+        });
+        expect(ZoweExplorerApiRegister.getInstance().onProfilesUpdate).toEqual({});
+        ZoweExplorerApiRegister.getInstance()["onProfilesUpdateCallback"] = undefined;
+    });
 });

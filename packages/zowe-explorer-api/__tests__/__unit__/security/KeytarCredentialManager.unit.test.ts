@@ -64,11 +64,11 @@ describe("KeytarCredentialManager", () => {
                     },
                 })
             );
-            const keytar = KeytarCredentialManager.getSecurityModules("keytar", false);
+            const keytar = KeytarCredentialManager.getSecurityModules("@zowe/secrets-for-zowe-sdk", false);
             expect(keytar).toBeDefined();
             expect(loggerWarnSpy).not.toHaveBeenCalled();
             expect(readFileSyncSpy).toHaveBeenCalledTimes(1);
-            expect(Object.keys(keytar as object).length).toBe(5);
+            expect(Object.keys((keytar as object)["keyring"]).length).toBe(5);
         });
 
         it("should handle credential-manager in Imperative settings", () => {
@@ -80,11 +80,11 @@ describe("KeytarCredentialManager", () => {
                     },
                 })
             );
-            const keytar = KeytarCredentialManager.getSecurityModules("keytar", false);
+            const keytar = KeytarCredentialManager.getSecurityModules("@zowe/secrets-for-zowe-sdk", false);
             expect(keytar).toBeDefined();
             expect(loggerWarnSpy).not.toHaveBeenCalled();
             expect(readFileSyncSpy).toHaveBeenCalledTimes(1);
-            expect(Object.keys(keytar as object).length).toBe(5);
+            expect(Object.keys((keytar as object)["keyring"]).length).toBe(5);
         });
 
         it("should handle CredentialManager in Imperative settings - Theia", () => {
@@ -97,17 +97,17 @@ describe("KeytarCredentialManager", () => {
                 })
             );
             jest.spyOn(process, "cwd").mockReturnValueOnce(__dirname + "/../../../../..");
-            const keytar = KeytarCredentialManager.getSecurityModules("keytar", true);
+            const keytar = KeytarCredentialManager.getSecurityModules("@zowe/secrets-for-zowe-sdk", true);
             expect(keytar).toBeDefined();
             expect(loggerWarnSpy).not.toHaveBeenCalled();
             expect(readFileSyncSpy).toHaveBeenCalledTimes(1);
-            expect(Object.keys(keytar as object).length).toBe(5);
+            expect(Object.keys((keytar as object)["keyring"]).length).toBe(5);
         });
 
         it("should handle empty Imperative settings", () => {
             jest.spyOn(fs, "existsSync").mockReturnValueOnce(true);
             const readFileSyncSpy = jest.spyOn(fs, "readFileSync").mockReturnValue(JSON.stringify({}));
-            const keytar = KeytarCredentialManager.getSecurityModules("keytar", false);
+            const keytar = KeytarCredentialManager.getSecurityModules("@zowe/secrets-for-zowe-sdk", false);
             expect(loggerWarnSpy).not.toHaveBeenCalled();
             expect(readFileSyncSpy).toHaveBeenCalledTimes(1);
             expect(keytar).toBeUndefined();
@@ -116,7 +116,7 @@ describe("KeytarCredentialManager", () => {
         it("should handle non-existent Imperative settings", () => {
             jest.spyOn(fs, "existsSync").mockReturnValueOnce(false);
             const readFileSyncSpy = jest.spyOn(fs, "readFileSync");
-            const keytar = KeytarCredentialManager.getSecurityModules("keytar", false);
+            const keytar = KeytarCredentialManager.getSecurityModules("@zowe/secrets-for-zowe-sdk", false);
             expect(loggerWarnSpy).not.toHaveBeenCalled();
             expect(readFileSyncSpy).not.toHaveBeenCalled();
             expect(keytar).toBeUndefined();
@@ -125,7 +125,7 @@ describe("KeytarCredentialManager", () => {
         it("should handle error loading Imperative settings", () => {
             jest.spyOn(fs, "existsSync").mockReturnValueOnce(true);
             const readFileSyncSpy = jest.spyOn(fs, "readFileSync").mockReturnValueOnce("invalid json");
-            const keytar = KeytarCredentialManager.getSecurityModules("keytar", false);
+            const keytar = KeytarCredentialManager.getSecurityModules("@zowe/secrets-for-zowe-sdk", false);
             expect(loggerWarnSpy).toHaveBeenCalledTimes(1);
             expect(loggerWarnSpy.mock.calls[0][0].message).toContain("Unexpected token");
             expect(readFileSyncSpy).toHaveBeenCalledTimes(1);

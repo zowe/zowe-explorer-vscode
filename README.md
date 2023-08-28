@@ -14,7 +14,7 @@ Join our [Slack channel](https://slack.openmainframeproject.org/) to connect wit
 Client-side prerequisites for development:
 
 - Install [Node.js](https://nodejs.org/en/download/) v14.0 or later.
-- Install [Yarn](https://yarnpkg.com/getting-started/install).
+- Install [Yarn](https://classic.yarnpkg.com) Classic.
 
 Host-side prerequisites for connection:
 

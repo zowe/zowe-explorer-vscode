@@ -684,11 +684,13 @@ describe("ProfilesUtils unit tests", () => {
 
         it("should retrieve the default credential manager if no custom credential manager is found", async () => {
             jest.spyOn(profUtils.ProfilesUtils, "getCredentialManagerOverride").mockReturnValueOnce(undefined);
+            const defaultCredMgrSpy = jest.spyOn(zowe.imperative.ProfileCredentials, "defaultCredMgrWithKeytar");
             jest.spyOn(vscode.extensions, "getExtension").mockReturnValueOnce(undefined);
             jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(true);
             const updateCredentialManagerSettingSpy = jest.spyOn(profUtils.ProfilesUtils, "updateCredentialManagerSetting").mockImplementation();
             await expect(profUtils.ProfilesUtils.getProfileInfo(true)).resolves.toEqual({});
             expect(updateCredentialManagerSettingSpy).toBeCalledWith(globals.ZOWE_CLI_SCM);
+            expect(defaultCredMgrSpy).toHaveBeenCalledWith(ProfilesCache.requireKeyring);
         });
     });
 });

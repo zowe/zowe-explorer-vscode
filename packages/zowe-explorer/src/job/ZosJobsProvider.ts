@@ -13,7 +13,7 @@ import * as vscode from "vscode";
 import * as globals from "../globals";
 import { IJob, imperative } from "@zowe/cli";
 import { Gui, ValidProfileEnum, IZoweTree, IZoweJobTreeNode, PersistenceSchemaEnum, NodeInteraction } from "@zowe/zowe-explorer-api";
-import { FilterItem, ProfilesUtils, errorHandling } from "../utils/ProfilesUtils";
+import { FilterItem, errorHandling } from "../utils/ProfilesUtils";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { Job, Spool } from "./ZoweJobNode";
@@ -950,9 +950,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                     const options: vscode.InputBoxOptions = {
                         value: property.value,
                         placeHolder: property.placeHolder,
-                        validateInput: (text) => {
-                            return property.validateInput(text);
-                        },
+                        validateInput: property.validateInput,
                     };
                     property.value = await Gui.showInputBox(options);
                 }

@@ -12,11 +12,9 @@
 import { imperative } from "@zowe/cli";
 import { ProfilesCache } from "../../../src/profiles/ProfilesCache";
 import { KeytarApi } from "../../../src/security/KeytarApi";
-import { KeytarCredentialManager } from "../../../src/security/KeytarCredentialManager";
 
 describe("KeytarApi", () => {
     const isCredsSecuredSpy = jest.spyOn(ProfilesCache.prototype, "isCredentialsSecured");
-    const getSecurityModulesSpy = jest.spyOn(KeytarCredentialManager, "getSecurityModules");
     const credMgrInitializeSpy = jest.spyOn(imperative.CredentialManagerFactory, "initialize");
 
     afterEach(() => {
@@ -25,11 +23,9 @@ describe("KeytarApi", () => {
 
     it("should initialize Imperative credential manager", async () => {
         isCredsSecuredSpy.mockReturnValueOnce(true);
-        getSecurityModulesSpy.mockReturnValueOnce({} as NodeModule);
         credMgrInitializeSpy.mockResolvedValueOnce();
         await new KeytarApi(undefined as unknown as imperative.Logger).activateKeytar(false, false);
         expect(isCredsSecuredSpy).toBeCalledTimes(1);
-        expect(getSecurityModulesSpy).toBeCalledTimes(1);
         expect(credMgrInitializeSpy).toBeCalledTimes(1);
     });
 
@@ -37,25 +33,21 @@ describe("KeytarApi", () => {
         isCredsSecuredSpy.mockReturnValueOnce(false);
         await new KeytarApi(undefined as unknown as imperative.Logger).activateKeytar(false, false);
         expect(isCredsSecuredSpy).toBeCalledTimes(1);
-        expect(getSecurityModulesSpy).not.toBeCalled();
         expect(credMgrInitializeSpy).not.toBeCalled();
     });
 
     it("should do nothing if API has already been initialized", async () => {
         isCredsSecuredSpy.mockReturnValueOnce(true);
-        getSecurityModulesSpy.mockReturnValueOnce({} as NodeModule);
         await new KeytarApi(undefined as unknown as imperative.Logger).activateKeytar(true, false);
         expect(isCredsSecuredSpy).toBeCalledTimes(1);
-        expect(getSecurityModulesSpy).toBeCalledTimes(1);
         expect(credMgrInitializeSpy).not.toBeCalled();
     });
 
     it("should do nothing if Keytar module is missing", async () => {
+        jest.mock("@zowe/secrets-for-zowe-sdk", () => {});
         isCredsSecuredSpy.mockReturnValueOnce(true);
-        getSecurityModulesSpy.mockReturnValueOnce(undefined);
         await new KeytarApi(undefined as unknown as imperative.Logger).activateKeytar(false, false);
         expect(isCredsSecuredSpy).toBeCalledTimes(1);
-        expect(getSecurityModulesSpy).toBeCalledTimes(1);
         expect(credMgrInitializeSpy).not.toBeCalled();
     });
 });

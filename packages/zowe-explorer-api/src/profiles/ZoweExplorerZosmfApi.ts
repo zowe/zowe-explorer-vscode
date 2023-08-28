@@ -11,6 +11,7 @@
 
 import * as zowe from "@zowe/cli";
 import { ICommand, ICommon, IJes, IMvs, IUss } from "../extend";
+import { FileAttributes, permStringToOctal } from "../utils/files";
 
 /**
  * An implementation of the Zowe Explorer API Common interface for zOSMF.
@@ -122,6 +123,44 @@ export class ZosmfUssApi extends ZosmfApiCommon implements IUss {
 
     public putContent(inputFilePath: string, ussFilePath: string, options: zowe.IUploadOptions): Promise<zowe.IZosFilesResponse> {
         return zowe.Upload.fileToUssFile(this.getSession(), inputFilePath, ussFilePath, options);
+    }
+
+    public async updateAttributes(ussPath: string, attributes: Partial<FileAttributes>): Promise<zowe.IZosFilesResponse> {
+        try {
+            if ((attributes.group || attributes.gid) && (attributes.owner || attributes.uid)) {
+                await zowe.Utilities.putUSSPayload(this.getSession(), ussPath, {
+                    request: "chown",
+                    owner: attributes.uid != null ? attributes.uid.toString() : attributes.owner,
+                    group: attributes.gid != null ? attributes.gid.toString() : attributes.group,
+                    recursive: true,
+                });
+            } else if (attributes.owner || attributes.uid) {
+                await zowe.Utilities.putUSSPayload(this.getSession(), ussPath, {
+                    request: "chown",
+                    owner: attributes.uid != null ? attributes.uid.toString() : attributes.owner,
+                    recursive: true,
+                });
+            }
+
+            if (attributes.perms) {
+                await zowe.Utilities.putUSSPayload(this.getSession(), ussPath, {
+                    request: "chmod",
+                    mode: permStringToOctal(attributes.perms).toString(),
+                });
+            }
+        } catch (err) {
+            const message = err instanceof Error ? err.toString() : "N/A";
+            return {
+                success: false,
+                commandResponse: message,
+                errorMessage: message,
+            };
+        }
+
+        return {
+            success: true,
+            commandResponse: "The provided attributes were applied.",
+        };
     }
 
     public uploadDirectory(inputDirectoryPath: string, ussDirectoryPath: string, options?: zowe.IUploadOptions): Promise<zowe.IZosFilesResponse> {

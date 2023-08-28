@@ -198,6 +198,7 @@ async function createGlobalMocks() {
             "zowe.uss.uploadDialog",
             "zowe.uss.copyPath",
             "zowe.uss.editFile",
+            "zowe.uss.editAttributes",
             "zowe.uss.saveSearch",
             "zowe.uss.removeSavedSearch",
             "zowe.uss.removeFavProfile",

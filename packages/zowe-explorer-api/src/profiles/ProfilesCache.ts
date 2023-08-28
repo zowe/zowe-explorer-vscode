@@ -16,7 +16,6 @@ import { URL } from "url";
 
 import * as zowe from "@zowe/cli";
 import { IRegisterClient } from "../extend/IRegisterClient";
-import { getSecurityModules } from "../security";
 
 // TODO: find a home for constants
 export const CONTEXT_PREFIX = "_";
@@ -43,6 +42,12 @@ export enum ValidProfileEnum {
     UNVERIFIED = 1,
     VALID = 0,
     INVALID = -1,
+}
+
+export enum EventTypes {
+    CREATE,
+    UPDATE,
+    DELETE,
 }
 
 export function getZoweDir(): string {
@@ -73,9 +78,15 @@ export class ProfilesCache {
         this.cwd = cwd != null ? getFullPath(cwd) : undefined;
     }
 
-    public async getProfileInfo(envTheia = false): Promise<zowe.imperative.ProfileInfo> {
+    public static requireKeyring(this: void): NodeModule {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-var-requires
+        return require("@zowe/secrets-for-zowe-sdk").keyring;
+    }
+
+    public async getProfileInfo(_envTheia = false): Promise<zowe.imperative.ProfileInfo> {
         const mProfileInfo = new zowe.imperative.ProfileInfo("zowe", {
-            credMgrOverride: zowe.imperative.ProfileCredentials.defaultCredMgrWithKeytar(() => getSecurityModules("keytar", envTheia)),
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+            credMgrOverride: zowe.imperative.ProfileCredentials.defaultCredMgrWithKeytar(ProfilesCache.requireKeyring),
         });
         await mProfileInfo.readProfilesFromDisk({ homeDir: getZoweDir(), projectDir: this.cwd ?? undefined });
         return mProfileInfo;
