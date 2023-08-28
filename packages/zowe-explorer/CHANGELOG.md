@@ -8,6 +8,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
+- Fixed issue where data set content does not always appear as soon as the editor is opened. [#2427](https://github.com/zowe/vscode-extension-for-zowe/issues/2427)
+
 ## `2.10.0`
 
 ### New features and enhancements
