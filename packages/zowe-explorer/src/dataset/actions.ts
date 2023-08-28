@@ -473,10 +473,11 @@ export async function openPS(
                     api.Gui.errorMessage(defaultMessage);
                     throw Error(defaultMessage);
             }
-            // if local copy exists, open that instead of pulling from mainframe
+
             const documentFilePath = getDocumentFilePath(label, node);
             let responsePromise = node.pendingActions ? node.pendingActions[api.NodeAction.Download] : null;
-            if (!fs.existsSync(documentFilePath)) {
+            // If the local copy does not exist, or the last request failed, attempt to fetch contents
+            if (!fs.existsSync(documentFilePath) || node.requestFailed) {
                 const prof = node.getProfile();
                 ZoweLogger.info(localize("openPS.openDataSet", "Opening {0}", label));
                 if (node.pendingActions) {
@@ -498,6 +499,7 @@ export async function openPS(
             }
 
             if (responsePromise == null) {
+                node.requestFailed = true;
                 throw Error("Response was null or invalid.");
             }
 
@@ -506,10 +508,12 @@ export async function openPS(
             statusMsg.dispose();
             const document = await vscode.workspace.openTextDocument(getDocumentFilePath(label, node));
             await api.Gui.showTextDocument(document, { preview: shouldPreview });
+            node.requestFailed = false;
             if (datasetProvider) {
                 datasetProvider.addFileHistory(`[${node.getProfileName()}]: ${label}`);
             }
         } catch (err) {
+            node.requestFailed = true;
             statusMsg.dispose();
             await errorHandling(err, node.getProfileName());
             throw err;

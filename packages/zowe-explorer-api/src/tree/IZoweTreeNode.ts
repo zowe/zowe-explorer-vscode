@@ -124,6 +124,10 @@ export interface IZoweTreeNode {
  */
 export interface IZoweDatasetTreeNode extends IZoweTreeNode {
     /**
+     * whether the previous request for the dataset node failed
+     */
+    requestFailed?: boolean;
+    /**
      * Search criteria for a Dataset search
      */
     pattern?: string;
