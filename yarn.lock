@@ -2345,10 +2345,10 @@
   resolved "https://zowe.jfrog.io/zowe/api/npm/npm-local-release/@zowe/secrets-for-zowe-sdk/-/@zowe/secrets-for-zowe-sdk-7.18.0.tgz#2741de10f4c16811b25bdf4944f669a0d15e3788"
   integrity sha512-QyZQh45pZEj9PWkqaTfMFIFDiHpMI4aCaZSbsbhanz54h/kN1s6nT4ri43EjQ3J3aUsG2wEjKkotjBZdGg3cHw==
 
-"@zowe/secrets-for-zowe-sdk@7.18.1":
-  version "7.18.1"
-  resolved "https://zowe.jfrog.io/zowe/api/npm/npm-local-release/@zowe/secrets-for-zowe-sdk/-/@zowe/secrets-for-zowe-sdk-7.18.1.tgz#79b2cb314028366c8f4b33eb2158c7e985e7989a"
-  integrity sha512-4rGo+KgYWhsfggaBBsb3xC7XZ50/GPrmtA2jOVKGrIYCjlqgJ21suMzyCzVioqlS+qNnbg9vxP/4C2Bew9wuUA==
+"@zowe/secrets-for-zowe-sdk@7.18.3":
+  version "7.18.3"
+  resolved "https://zowe.jfrog.io/zowe/api/npm/npm-local-release/@zowe/secrets-for-zowe-sdk/-/@zowe/secrets-for-zowe-sdk-7.18.3.tgz#a5fce6282f6835d58e0ec757cd9badee2defea14"
+  integrity sha512-3/TyFgpZimOUreDLQSlRfZK+GAgRr4zl31YvPD1wOB95wIgcX7dDONmsMuf/Z721eJOkVMuae7W4Ke92oyJECQ==
 
 "@zowe/zos-console-for-zowe-sdk@7.18.0":
   version "7.18.0"
