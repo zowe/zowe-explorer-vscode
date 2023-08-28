@@ -13,8 +13,8 @@ Join our [Slack channel](https://slack.openmainframeproject.org/) to connect wit
 
 Client-side prerequisites for development:
 
-- Install [Node.js](https://nodejs.org/en/download/) v14.0 or later.
-- Install [Yarn](https://classic.yarnpkg.com) Classic.
+- Install [Node.js](https://nodejs.org/en/download/) v16.0 or later.
+- Install [PNPM](https://pnpm.io/installation).
 
 Host-side prerequisites for connection:
 
@@ -51,7 +51,7 @@ Clone the repository, build a VSIX file, and start working with the extension.
 3. From your local copy of the repository, issue the following commands:
 
    ```shell
-   yarn install && yarn run package
+   pnpm install && pnpm run package
    ```
 
 You can find the VSIX file in the `dist` folder.

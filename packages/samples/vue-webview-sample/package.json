@@ -22,7 +22,7 @@
   },
   "scripts": {
     "vscode:prepublish": "pnpm build",
-    "build": "npx tsc -p ./ && cd webviews/vue-sample && pnpm && pnpm build",
+    "build": "npx tsc -p ./",
     "lint": "eslint \"src/**/*.ts\"",
     "watch": "npx tsc -watch -p ./"
   },
