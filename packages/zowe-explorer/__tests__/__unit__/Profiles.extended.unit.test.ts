@@ -1582,6 +1582,50 @@ describe("Profiles Unit Tests - function ssoLogin", () => {
     });
 });
 
+describe("Profiles Unit Tests - function ssoLogout", () => {
+    let testNode;
+    let globalMocks;
+    beforeEach(async () => {
+        globalMocks = await createGlobalMocks();
+        testNode = new (ZoweTreeNode as any)(
+            "fake",
+            vscode.TreeItemCollapsibleState.None,
+            undefined,
+            globalMocks.testSession,
+            globalMocks.testProfile
+        );
+        testNode.profile.profile.password = undefined;
+        testNode.profile.profile.user = "fake";
+        Object.defineProperty(Profiles.getInstance(), "allProfiles", {
+            value: [
+                {
+                    name: "fake",
+                },
+            ],
+            configurable: true,
+        });
+        jest.spyOn(Gui, "showMessage").mockImplementation();
+    });
+    it("should logout successfully and refresh zowe explorer", async () => {
+        const getTokenTypeNameMock = jest.fn();
+        const logoutMock = jest.fn();
+        jest.spyOn(ZoweExplorerApiRegister.getInstance(), "getCommonApi").mockImplementation(() => ({
+            logout: logoutMock,
+            getSession: jest.fn(),
+            getProfileTypeName: jest.fn(),
+            getTokenTypeName: getTokenTypeNameMock,
+        }));
+        const updateBaseProfileFileLogoutSpy = jest.spyOn(Profiles.getInstance() as any, "updateBaseProfileFileLogout").mockImplementation();
+        const zoweExtRefreshSpy = jest.spyOn(vscode.commands, "executeCommand");
+        await expect(Profiles.getInstance().ssoLogout(testNode)).resolves.not.toThrow();
+        expect(getTokenTypeNameMock).toBeCalledTimes(1);
+        expect(logoutMock).toBeCalledTimes(1);
+        expect(updateBaseProfileFileLogoutSpy).toBeCalledTimes(1);
+        expect(zoweExtRefreshSpy).toBeCalledWith("zowe.extRefresh");
+        expect(zoweExtRefreshSpy).toBeCalledTimes(1);
+    });
+});
+
 describe("Profiles Unit Tests - function updateBaseProfileFileLogin", () => {
     it("should update the property of mProfileInfo", async () => {
         const privateProfile = Profiles.getInstance() as any;
