@@ -499,7 +499,6 @@ export async function openPS(
             }
 
             if (responsePromise == null) {
-                node.requestFailed = true;
                 throw Error("Response was null or invalid.");
             }
 
