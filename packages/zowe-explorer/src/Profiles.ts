@@ -1261,6 +1261,7 @@ export class Profiles extends ProfilesCache {
                 await this.updateBaseProfileFileLogout(baseProfile);
             }
             Gui.showMessage(localize("ssoLogout.successful", "Logout from authentication service was successful for {0}.", serviceProfile.name));
+            vscode.commands.executeCommand("zowe.extRefresh");
         } catch (error) {
             const message = localize("ssoLogout.error", "Unable to log out with {0}. {1}", serviceProfile.name, error?.message);
             ZoweLogger.error(message);
