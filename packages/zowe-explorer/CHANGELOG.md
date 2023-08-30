@@ -9,6 +9,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 ### Bug fixes
 
 - Fixed issue with endless credential prompt loop when logging out. [#2262](https://github.com/zowe/vscode-extension-for-zowe/issues/2262)
+- Bump `@zowe/secrets-for-zowe-sdk` to 7.18.3 to handle install errors gracefully and to allow running without MSVC redistributables.
 
 ## `2.10.0`
 
