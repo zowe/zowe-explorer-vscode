@@ -6,8 +6,6 @@ All notable changes to the "eslint-plugin-zowe-explorer" package will be documen
 
 - Added placeholder `madge` script to `package.json` for workspace script to succeed.
 
-### Bug fixes
-
 ## `2.9.1`
 
 ### New features and enhancements

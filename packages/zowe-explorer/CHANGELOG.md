@@ -12,8 +12,6 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Updated activation event to `onStartupFinished`. [#1910](https://github.com/zowe/vscode-extension-for-zowe/issues/1910)
 - Added `madge` script in `package.json` to track circular dependencies. [#2148](https://github.com/zowe/vscode-extension-for-zowe/issues/2148)
 
-### Bug fixes
-
 ## `2.10.0`
 
 ### New features and enhancements
