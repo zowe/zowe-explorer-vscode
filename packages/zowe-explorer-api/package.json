@@ -17,7 +17,7 @@
   },
   "dependencies": {
     "@zowe/cli": "6.40.18",
-    "@zowe/secrets-for-zowe-sdk": "7.18.3",
+    "@zowe/secrets-for-zowe-sdk": "7.18.4",
     "semver": "^7.5.3"
   },
   "scripts": {

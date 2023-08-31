@@ -1745,7 +1745,7 @@
     "webpack-cli": "^3.3.11"
   },
   "dependencies": {
-    "@zowe/secrets-for-zowe-sdk": "7.18.3",
+    "@zowe/secrets-for-zowe-sdk": "7.18.4",
     "@zowe/zowe-explorer-api": "1.22.4-SNAPSHOT",
     "fs-extra": "8.0.1",
     "isbinaryfile": "4.0.4",
