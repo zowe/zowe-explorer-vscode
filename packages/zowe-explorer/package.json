@@ -1872,7 +1872,7 @@
           "default": true,
           "type": "boolean",
           "description": "%zowe.security.secureCredentialsEnabled%",
-          "scope": "machine"
+          "scope": "machine-overridable"
         },
         "zowe.logger": {
           "type": "string",
