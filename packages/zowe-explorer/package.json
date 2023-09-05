@@ -1953,7 +1953,7 @@
     "createDemoNodes": "ts-node ./scripts/createDemoNodes.ts"
   },
   "engines": {
-    "vscode": "^1.53.2"
+    "vscode": "^1.63.0"
   },
   "devDependencies": {
     "@napi-rs/cli": "^2.16.1",
