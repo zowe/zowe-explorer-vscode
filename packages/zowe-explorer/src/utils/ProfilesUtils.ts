@@ -74,7 +74,9 @@ export async function errorHandling(errorDetails: Error | string, label?: string
 
             if (imperativeError.mDetails.additionalDetails) {
                 const tokenError: string = imperativeError.mDetails.additionalDetails;
-                if (tokenError.includes("Token is not valid or expired.")) {
+                const isTokenAuth = await isUsingTokenAuth(label);
+
+                if (tokenError.includes("Token is not valid or expired.") || isTokenAuth) {
                     if (isTheia()) {
                         Gui.errorMessage(errToken);
                         await Profiles.getInstance().ssoLogin(null, label);
@@ -127,6 +129,17 @@ export function isTheia(): boolean {
         return true;
     }
     return false;
+}
+
+export async function isUsingTokenAuth(profileName: string): Promise<boolean> {
+    const config = (await Profiles.getInstance().getProfileInfo()).getTeamConfig();
+    const profile = await Profiles.getInstance().getLoadedProfConfig(profileName);
+
+    if (profile.type === "zosmf") {
+        return config.properties.profiles["base"].secure.includes("tokenValue");
+    }
+
+    return config.properties.profiles[profileName].secure.includes("tokenValue");
 }
 
 /**

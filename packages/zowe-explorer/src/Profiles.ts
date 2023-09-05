@@ -30,7 +30,7 @@ import {
     getFullPath,
     getZoweDir,
 } from "@zowe/zowe-explorer-api";
-import { errorHandling, FilterDescriptor, FilterItem, ProfilesUtils } from "./utils/ProfilesUtils";
+import { errorHandling, FilterDescriptor, FilterItem, ProfilesUtils, isUsingTokenAuth } from "./utils/ProfilesUtils";
 import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
 import { ZoweExplorerExtender } from "./ZoweExplorerExtender";
 import * as globals from "./globals";
@@ -88,7 +88,23 @@ export class Profiles extends ProfilesCache {
     public async checkCurrentProfile(theProfile: zowe.imperative.IProfileLoaded): Promise<IProfileValidation> {
         ZoweLogger.trace("Profiles.checkCurrentProfile called.");
         let profileStatus: IProfileValidation;
-        if (!theProfile.profile.tokenType && (!theProfile.profile.user || !theProfile.profile.password)) {
+        const usingTokenAuth = await isUsingTokenAuth(theProfile.name);
+
+        if (usingTokenAuth && !theProfile.profile.tokenType) {
+            const error = new zowe.imperative.ImperativeError({
+                msg: localize("checkCurrentProfile.tokenAuthError.msg", "Token auth error"),
+                additionalDetails: localize(
+                    "checkCurrentProfile.tokenAuthError.additionalDetails",
+                    "Profile was found using token auth, please log in to continue."
+                ),
+                errorCode: `${zowe.imperative.RestConstants.HTTP_STATUS_401}`,
+            });
+            await errorHandling(error, theProfile.name, error.message);
+            profileStatus = { name: theProfile.name, status: "unverified" };
+            return profileStatus;
+        }
+
+        if (!usingTokenAuth && (!theProfile.profile.user || !theProfile.profile.password)) {
             // The profile will need to be reactivated, so remove it from profilesForValidation
             this.profilesForValidation = this.profilesForValidation.filter(
                 (profile) => profile.status === "unverified" && profile.name !== theProfile.name
@@ -860,6 +876,7 @@ export class Profiles extends ProfilesCache {
     }
 
     public async promptCredentials(profile: string | zowe.imperative.IProfileLoaded, rePrompt?: boolean): Promise<string[]> {
+        ZoweLogger.trace("Profiles.promptCredentials called.");
         const userInputBoxOptions: vscode.InputBoxOptions = {
             placeHolder: localize("promptCredentials.userInputBoxOptions.placeholder", "User Name"),
             prompt: localize("promptCredentials.userInputBoxOptions.prompt", "Enter the user name for the connection. Leave blank to not store."),
@@ -1180,10 +1197,12 @@ export class Profiles extends ProfilesCache {
                 loginToken = await ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).login(session);
                 const profIndex = this.allProfiles.findIndex((profile) => profile.name === serviceProfile.name);
                 this.allProfiles[profIndex] = { ...serviceProfile, profile: { ...serviceProfile, ...session } };
-                node.setProfileToChoice({
-                    ...node.getProfile(),
-                    profile: { ...node.getProfile().profile, ...session },
-                });
+                if (node) {
+                    node.setProfileToChoice({
+                        ...node.getProfile(),
+                        profile: { ...node.getProfile().profile, ...session },
+                    });
+                }
             } catch (error) {
                 const message = localize("ssoLogin.error", "Unable to log in with {0}. {1}", serviceProfile.name, error?.message);
                 ZoweLogger.error(message);
@@ -1261,7 +1280,7 @@ export class Profiles extends ProfilesCache {
                 await this.updateBaseProfileFileLogout(baseProfile);
             }
             Gui.showMessage(localize("ssoLogout.successful", "Logout from authentication service was successful for {0}.", serviceProfile.name));
-            vscode.commands.executeCommand("zowe.extRefresh");
+            await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
         } catch (error) {
             const message = localize("ssoLogout.error", "Unable to log out with {0}. {1}", serviceProfile.name, error?.message);
             ZoweLogger.error(message);
