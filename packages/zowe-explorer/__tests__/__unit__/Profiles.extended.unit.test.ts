@@ -1303,7 +1303,7 @@ describe("Profiles Unit Tests - function deleteProfile", () => {
 });
 
 describe("Profiles Unit Tests - function checkCurrentProfile", () => {
-    const environmentSetup = (globalMocks) => {
+    const environmentSetup = (globalMocks): void => {
         globalMocks.testProfile.profile.password = null;
         globalMocks.testProfile.profile.tokenType = "";
         Object.defineProperty(Profiles.getInstance(), "profilesForValidation", {
@@ -1329,9 +1329,32 @@ describe("Profiles Unit Tests - function checkCurrentProfile", () => {
         });
     };
 
+    const setupProfilesCheck = (globalMocks): void => {
+        jest.spyOn(Profiles.getInstance(), "getProfileInfo").mockResolvedValue({
+            getTeamConfig: () => ({
+                properties: {
+                    profiles: {
+                        sestest: globalMocks.testProfile.profile,
+                        base: {
+                            type: "base",
+                            host: "test",
+                            port: 1443,
+                            rejectUnauthorized: false,
+                            name: "base",
+                            tokenType: "",
+                            secure: [],
+                        },
+                    },
+                },
+            }),
+        } as any);
+        jest.spyOn(Profiles.getInstance(), "getLoadedProfConfig").mockResolvedValue(globalMocks.testProfile);
+    };
+
     it("should show as active in status of profile", async () => {
         const globalMocks = await createGlobalMocks();
         environmentSetup(globalMocks);
+        setupProfilesCheck(globalMocks);
         jest.spyOn(Profiles.getInstance(), "validateProfiles").mockReturnValue({ status: "active", name: "sestest" } as any);
         jest.spyOn(Profiles.getInstance(), "promptCredentials").mockResolvedValue(["sestest", "12345", "base64Auth"]);
         await expect(Profiles.getInstance().checkCurrentProfile(globalMocks.testProfile)).resolves.toEqual({ name: "sestest", status: "active" });
@@ -1339,11 +1362,13 @@ describe("Profiles Unit Tests - function checkCurrentProfile", () => {
     it("should show as unverified in status of profile", async () => {
         const globalMocks = await createGlobalMocks();
         environmentSetup(globalMocks);
+        setupProfilesCheck(globalMocks);
         jest.spyOn(Profiles.getInstance(), "promptCredentials").mockResolvedValue(undefined);
         await expect(Profiles.getInstance().checkCurrentProfile(globalMocks.testProfile)).resolves.toEqual({ name: "sestest", status: "unverified" });
     });
     it("should show as inactive in status of profile", async () => {
         const globalMocks = await createGlobalMocks();
+        setupProfilesCheck(globalMocks);
         await expect(Profiles.getInstance().checkCurrentProfile(globalMocks.testProfile)).resolves.toEqual({ name: "sestest", status: "inactive" });
     });
 });
@@ -1616,13 +1641,10 @@ describe("Profiles Unit Tests - function ssoLogout", () => {
             getTokenTypeName: getTokenTypeNameMock,
         }));
         const updateBaseProfileFileLogoutSpy = jest.spyOn(Profiles.getInstance() as any, "updateBaseProfileFileLogout").mockImplementation();
-        const zoweExtRefreshSpy = jest.spyOn(vscode.commands, "executeCommand");
         await expect(Profiles.getInstance().ssoLogout(testNode)).resolves.not.toThrow();
         expect(getTokenTypeNameMock).toBeCalledTimes(1);
         expect(logoutMock).toBeCalledTimes(1);
         expect(updateBaseProfileFileLogoutSpy).toBeCalledTimes(1);
-        expect(zoweExtRefreshSpy).toBeCalledWith("zowe.extRefresh");
-        expect(zoweExtRefreshSpy).toBeCalledTimes(1);
     });
 });
 

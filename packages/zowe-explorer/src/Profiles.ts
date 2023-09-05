@@ -1234,10 +1234,12 @@ export class Profiles extends ProfilesCache {
                     await this.updateBaseProfileFileLogin(baseProfile, updBaseProfile);
                     const baseIndex = this.allProfiles.findIndex((profile) => profile.name === baseProfile.name);
                     this.allProfiles[baseIndex] = { ...baseProfile, profile: { ...baseProfile.profile, ...updBaseProfile } };
-                    node.setProfileToChoice({
-                        ...node.getProfile(),
-                        profile: { ...node.getProfile().profile, ...updBaseProfile },
-                    });
+                    if (node) {
+                        node.setProfileToChoice({
+                            ...node.getProfile(),
+                            profile: { ...node.getProfile().profile, ...updBaseProfile },
+                        });
+                    }
                 } catch (error) {
                     const errMsg = localize("ssoLogin.unableToLogin", "Unable to log in with {0}. {1}", serviceProfile.name, error?.message);
                     ZoweLogger.error(errMsg);
