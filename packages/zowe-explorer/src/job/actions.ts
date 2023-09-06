@@ -17,11 +17,9 @@ import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { Gui, ValidProfileEnum, IZoweTree, IZoweJobTreeNode } from "@zowe/zowe-explorer-api";
 import { Job, Spool } from "./ZoweJobNode";
 import * as nls from "vscode-nls";
-import SpoolProvider, { SpoolFile, encodeJobFile, getSpoolFiles, matchSpool } from "../SpoolProvider";
+import SpoolProvider, {  encodeJobFile, getSpoolFiles, matchSpool } from "../SpoolProvider";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { getDefaultUri, jobStringValidator } from "../shared/utils";
-import { isJob } from "../shared/context";
-import { JOBS_SPOOL_CONTEXT } from "../globals";
 
 // Set up localization
 nls.config({
@@ -36,7 +34,6 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
  * @param job The job to download the spool content from
  */
 export async function downloadSpool(jobs: IZoweJobTreeNode[], binary?: boolean): Promise<void> {
-    console.log(jobs);
     ZoweLogger.trace("job.actions.downloadSpool called.");
     try {
         const dirUri = await Gui.showOpenDialog({
@@ -67,7 +64,6 @@ export async function downloadSpool(jobs: IZoweJobTreeNode[], binary?: boolean):
  * @param job The job to download the spool content from
  */
 export async function downloadSingleSpool(nodes: IZoweJobTreeNode[], binary?: boolean): Promise<void> {
-    console.log(nodes);
     ZoweLogger.trace("job.actions.downloadSingleSpool called.");
     try {
         if (ZoweExplorerApiRegister.getJesApi(nodes[0].getProfile()).downloadSingleSpool == null) {
@@ -194,9 +190,6 @@ export async function getSpoolContentFromMainframe(node: IZoweJobTreeNode): Prom
  * @param jobsProvider The tree to which the refreshed node belongs
  */
 export async function refreshJobsServer(node: IZoweJobTreeNode, jobsProvider: IZoweTree<IZoweJobTreeNode>): Promise<void> {
-    console.log("NODE TO BE KNOWN");
-    console.log(node);
-    console.log(jobsProvider);
     ZoweLogger.trace("job.actions.refreshJobsServer called.");
     jobsProvider.checkCurrentProfile(node);
     if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID || Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED) {
@@ -476,7 +469,6 @@ export async function cancelJobs(jobsProvider: IZoweTree<IZoweJobTreeNode>, node
     if (!nodes.length) {
         return;
     }
-    console.log(nodes);
     // Filter out nodes that have already been cancelled
     const filteredNodes = nodes.filter(
         (n) => n.job == null || n.job.retcode == null || !(n.job.retcode.includes("CANCEL") || n.job.retcode?.includes("ABEND"))
