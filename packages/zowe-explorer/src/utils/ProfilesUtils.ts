@@ -133,13 +133,16 @@ export function isTheia(): boolean {
 
 export async function isUsingTokenAuth(profileName: string): Promise<boolean> {
     const config = (await Profiles.getInstance().getProfileInfo()).getTeamConfig();
-    const profile = await Profiles.getInstance().getLoadedProfConfig(profileName);
+    const defaultBaseProfileName = Profiles.getInstance().getDefaultProfile("base").name;
+    const baseProfile = config.properties.profiles[defaultBaseProfileName];
+    const profile = config.properties.profiles[profileName];
+    const isUsingZosmf = (await Profiles.getInstance().getLoadedProfConfig(profileName)).type === "zosmf";
 
-    if (profile.type === "zosmf") {
-        return config.properties.profiles["base"].secure.includes("tokenValue");
+    if (isUsingZosmf && baseProfile) {
+        return profile.secure.includes("tokenValue") || baseProfile.secure.includes("tokenValue");
     }
 
-    return config.properties.profiles[profileName].secure.includes("tokenValue");
+    return profile.secure.includes("tokenValue");
 }
 
 /**
