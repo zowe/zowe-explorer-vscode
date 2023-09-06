@@ -34,6 +34,12 @@
   "main": "./out/src/extension",
   "browser": "./out/src/web/extension",
   "contributes": {
+    "submenus": [
+      {
+        "id": "zowe.jobs.sortjobs",
+        "label": "Sort Jobs"
+      }
+    ],
     "viewsContainers": {
       "activitybar": [
         {
@@ -121,6 +127,21 @@
       }
     ],
     "commands": [
+      {
+        "command": "zowe.jobs.sortbyreturncode",
+        "title": "Sort by returncode",
+        "category": "Zowe Explorer"
+      },
+      {
+        "command": "zowe.jobs.sortbyname",
+        "title": "Sort by name",
+        "category": "Zowe Explorer"
+      },
+      {
+        "command": "zowe.jobs.sortbyid",
+        "title": "Sort by id",
+        "category": "Zowe Explorer"
+      },
       {
         "command": "zowe.promptCredentials",
         "title": "%zowe.promptCredentials%",
@@ -725,6 +746,11 @@
         "category": "Zowe Explorer"
       },
       {
+        "command": "zowe.jobs.sortjobs",
+        "title": "Sort Jobs",
+        "category": "Zowe Explorer"
+      },
+      {
         "command": "zowe.jobs.search",
         "title": "%jobs.search%",
         "category": "Zowe Explorer",
@@ -765,6 +791,17 @@
       }
     ],
     "menus": {
+      "zowe.jobs.sortjobs": [
+        {
+          "command": "zowe.jobs.sortbyreturncode"
+        },
+        {
+          "command": "zowe.jobs.sortbyname"
+        },
+        {
+          "command": "zowe.jobs.sortbyid"
+        }
+      ],
       "view/title": [
         {
           "when": "view == zowe.ds.explorer",
@@ -1342,6 +1379,11 @@
           "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/  && !listMultiSelection",
           "command": "zowe.jobs.deleteProfile",
           "group": "099_zowe_jobsProfileModification@99"
+        },
+        {
+          "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/  && !listMultiSelection",
+          "submenu": "zowe.jobs.sortjobs",
+          "group": "099_zowe_jobsProfileModification@99"
         }
       ],
       "commandPalette": [
@@ -1659,6 +1701,10 @@
         },
         {
           "command": "zowe.jobs.deleteProfile",
+          "when": "never"
+        },
+        {
+          "command": "zowe.jobs.sortjobs",
           "when": "never"
         },
         {
