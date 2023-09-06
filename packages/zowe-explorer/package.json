@@ -1992,6 +1992,7 @@
     "isbinaryfile": "4.0.4",
     "js-yaml": "3.13.1",
     "promise-queue": "2.2.5",
+    "promise-status-async": "^1.2.10",
     "yamljs": "0.3.0"
   },
   "jest": {

@@ -75,6 +75,10 @@ export interface IZoweTreeNode {
      */
     pendingActions?: Record<NodeAction | string, Promise<any>>;
     /**
+     * whether the node was double-clicked
+     */
+    wasDoubleClicked?: boolean;
+    /**
      * Retrieves the node label
      */
     getLabel(): string | vscode.TreeItemLabel;
@@ -123,10 +127,6 @@ export interface IZoweTreeNode {
  * @interface export interface IZoweDatasetTreeNode extends IZoweTreeNode {
  */
 export interface IZoweDatasetTreeNode extends IZoweTreeNode {
-    /**
-     * whether the previous request for the dataset node failed
-     */
-    requestFailed?: boolean;
     /**
      * Search criteria for a Dataset search
      */

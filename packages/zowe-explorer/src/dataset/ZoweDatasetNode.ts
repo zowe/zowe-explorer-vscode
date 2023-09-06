@@ -42,6 +42,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     public children: ZoweDatasetNode[] = [];
     public errorDetails: zowe.imperative.ImperativeError;
     public pendingActions: Record<NodeAction | string, Promise<any>> = {};
+    public wasDoubleClicked: boolean = false;
 
     /**
      * Creates an instance of ZoweDatasetNode

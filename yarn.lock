@@ -9077,6 +9077,11 @@ promise-retry@^2.0.1:
     err-code "^2.0.2"
     retry "^0.12.0"
 
+promise-status-async@^1.2.10:
+  version "1.2.10"
+  resolved "https://registry.npmjs.org/promise-status-async/-/promise-status-async-1.2.10.tgz#59bae260d4889d037313f4395162f038ffd7c22a"
+  integrity sha512-MECA3pc+uWN+D6IiATrNVzXtBU6WrsKvWmxS9Syd6d14roJqfEpxh/1Ocr4lpWqZ4zorxXJ+bqMTTrqqZ302yg==
+
 prompts@^2.0.1:
   version "2.4.2"
   resolved "https://registry.npmjs.org/prompts/-/prompts-2.4.2.tgz#7b57e73b3a48029ad10ebd44f74b01722a4cb069"

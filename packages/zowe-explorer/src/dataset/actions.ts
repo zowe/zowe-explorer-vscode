@@ -37,6 +37,8 @@ import { markDocumentUnsaved, setFileSaved } from "../utils/workspace";
 import { IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
 import { ZoweLogger } from "../utils/LoggerUtils";
 
+import { promiseStatus, PromiseStatuses } from "promise-status-async";
+
 // Set up localization
 import * as nls from "vscode-nls";
 nls.config({
@@ -451,8 +453,26 @@ export async function openPS(
         await datasetProvider.checkCurrentProfile(node);
     }
 
+    // Status of last "open action" promise
+    // If the node doesn't support pending actions, assume last action was rejected to pull new contents
+    const lastActionStatus =
+        node.pendingActions && node.pendingActions[api.NodeAction.Download] != null
+            ? await promiseStatus(node.pendingActions[api.NodeAction.Download])
+            : PromiseStatuses.PROMISE_REJECTED;
+
+    // Cache status of double click if the node has the "wasDoubleClicked" property:
+    // allows subsequent clicks to register as double-click if node is not done fetching contents
     const doubleClicked = api.Gui.utils.wasDoubleClicked(node, datasetProvider);
     const shouldPreview = doubleClicked ? false : previewMember;
+    if (node.wasDoubleClicked != null) {
+        node.wasDoubleClicked = doubleClicked;
+    }
+
+    // Prevent future "open actions" until last action is completed
+    if (lastActionStatus == PromiseStatuses.PROMISE_PENDING) {
+        return;
+    }
+
     if (Profiles.getInstance().validProfile !== api.ValidProfileEnum.INVALID) {
         const statusMsg = api.Gui.setStatusBarMessage(localize("dataSet.opening", "$(sync~spin) Opening data set..."));
         try {
@@ -476,8 +496,8 @@ export async function openPS(
 
             const documentFilePath = getDocumentFilePath(label, node);
             let responsePromise = node.pendingActions ? node.pendingActions[api.NodeAction.Download] : null;
-            // If the local copy does not exist, or the last request failed, attempt to fetch contents
-            if (!fs.existsSync(documentFilePath) || node.requestFailed) {
+            // If the local copy does not exist or the last action failed, fetch contents
+            if (!fs.existsSync(documentFilePath) || lastActionStatus == PromiseStatuses.PROMISE_REJECTED) {
                 const prof = node.getProfile();
                 ZoweLogger.info(localize("openPS.openDataSet", "Opening {0}", label));
                 if (node.pendingActions) {
@@ -506,13 +526,11 @@ export async function openPS(
             node.setEtag(response?.apiResponse?.etag);
             statusMsg.dispose();
             const document = await vscode.workspace.openTextDocument(getDocumentFilePath(label, node));
-            await api.Gui.showTextDocument(document, { preview: shouldPreview });
-            node.requestFailed = false;
+            await api.Gui.showTextDocument(document, { preview: node.wasDoubleClicked ? !node.wasDoubleClicked : shouldPreview });
             if (datasetProvider) {
                 datasetProvider.addFileHistory(`[${node.getProfileName()}]: ${label}`);
             }
         } catch (err) {
-            node.requestFailed = true;
             statusMsg.dispose();
             await errorHandling(err, node.getProfileName());
             throw err;
