@@ -496,8 +496,8 @@ export async function openPS(
 
             const documentFilePath = getDocumentFilePath(label, node);
             let responsePromise = node.ongoingActions ? node.ongoingActions[api.NodeAction.Download] : null;
-            // If the local copy does not exist or the last action was rejected/discarded, fetch contents
-            if (!fs.existsSync(documentFilePath) || lastActionStatus == PromiseStatuses.PROMISE_REJECTED) {
+            // If the local copy does not exist, fetch contents
+            if (!fs.existsSync(documentFilePath)) {
                 const prof = node.getProfile();
                 ZoweLogger.info(localize("openPS.openDataSet", "Opening {0}", label));
                 if (node.ongoingActions) {
