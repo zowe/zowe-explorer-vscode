@@ -802,7 +802,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         ZoweLogger.trace("ZosJobsProvider.searchPrompt called.");
         await this.checkCurrentProfile(node);
         let searchCriteria: string = "";
-        if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID || !contextually.isValidationEnabled(node)) {
+        if (Profiles.getInstance().validProfile !== ValidProfileEnum.INVALID) {
             const isSessionNotFav = contextually.isSessionNotFav(node);
             const isExpanded = node.collapsibleState === vscode.TreeItemCollapsibleState.Expanded;
 
@@ -833,6 +833,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                 }
                 node.dirty = true;
             }
+            this.refresh();
         }
     }
 
