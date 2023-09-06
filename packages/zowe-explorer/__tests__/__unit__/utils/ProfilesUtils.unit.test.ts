@@ -21,6 +21,7 @@ import { Profiles } from "../../../src/Profiles";
 import { SettingsConfig } from "../../../src/utils/SettingsConfig";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 import { ZoweExplorerExtender } from "../../../src/ZoweExplorerExtender";
+import { createValidIProfile } from "../../../__mocks__/mockCreators/shared";
 
 jest.mock("fs");
 jest.mock("vscode");
@@ -61,6 +62,25 @@ describe("ProfilesUtils unit tests", () => {
     }
 
     describe("errorHandling", () => {
+        const profileInfoMock = () => ({
+            getTeamConfig: () => ({
+                properties: {
+                    profiles: {
+                        sestest: createValidIProfile().profile,
+                        base: {
+                            type: "base",
+                            host: "test",
+                            port: 1443,
+                            rejectUnauthorized: false,
+                            name: "base",
+                            tokenType: "",
+                            secure: [],
+                        },
+                    },
+                },
+            }),
+        });
+
         it("should log error details", async () => {
             createBlockMocks();
             const errorDetails = new Error("i haz error");
@@ -132,6 +152,8 @@ describe("ProfilesUtils unit tests", () => {
             Object.defineProperty(Profiles, "getInstance", {
                 value: () => ({
                     promptCredentials: promptCredsSpy,
+                    getProfileInfo: profileInfoMock,
+                    getLoadedProfConfig: () => ({ type: "zosmf" }),
                 }),
             });
             await profUtils.errorHandling(errorDetails, label, moreInfo);
@@ -155,6 +177,8 @@ describe("ProfilesUtils unit tests", () => {
             Object.defineProperty(Profiles, "getInstance", {
                 value: () => ({
                     ssoLogin: ssoLoginSpy,
+                    getProfileInfo: profileInfoMock,
+                    getLoadedProfConfig: () => ({ type: "zosmf" }),
                 }),
             });
             await profUtils.errorHandling(errorDetails, label, moreInfo);
@@ -185,6 +209,8 @@ describe("ProfilesUtils unit tests", () => {
             Object.defineProperty(Profiles, "getInstance", {
                 value: () => ({
                     ssoLogin: ssoLoginSpy,
+                    getProfileInfo: profileInfoMock,
+                    getLoadedProfConfig: () => ({ type: "zosmf" }),
                 }),
             });
             await profUtils.errorHandling(errorDetails, label, moreInfo);
@@ -215,6 +241,8 @@ describe("ProfilesUtils unit tests", () => {
             Object.defineProperty(Profiles, "getInstance", {
                 value: () => ({
                     promptCredentials: promptCredentialsSpy,
+                    getProfileInfo: profileInfoMock,
+                    getLoadedProfConfig: () => ({ type: "zosmf" }),
                 }),
             });
             await profUtils.errorHandling(errorDetails, label, moreInfo);
@@ -239,6 +267,8 @@ describe("ProfilesUtils unit tests", () => {
             Object.defineProperty(Profiles, "getInstance", {
                 value: () => ({
                     promptCredentials: promptCredentialsSpy,
+                    getProfileInfo: profileInfoMock,
+                    getLoadedProfConfig: () => ({ type: "zosmf" }),
                 }),
             });
             await profUtils.errorHandling(errorDetails, label, moreInfo);
