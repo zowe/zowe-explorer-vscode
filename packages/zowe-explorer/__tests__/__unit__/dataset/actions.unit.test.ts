@@ -3394,14 +3394,14 @@ describe("Dataset Actions Unit Tests - Function openPS", () => {
         }
     });
 
-    it("Check for invalid/null response without supporting pending actions", async () => {
+    it("Check for invalid/null response without supporting ongoing actions", async () => {
         globals.defineGlobals("");
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks();
         globalMocks.getContentsSpy.mockResolvedValueOnce(null);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         const node = new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null);
-        node.pendingActions = undefined as any;
+        node.ongoingActions = undefined as any;
 
         try {
             await dsActions.openPS(node, true, blockMocks.testDatasetTree);

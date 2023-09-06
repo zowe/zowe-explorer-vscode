@@ -71,9 +71,9 @@ export interface IZoweTreeNode {
      */
     contextValue?: string;
     /**
-     * Any pending actions that must be awaited before continuing
+     * Any ongoing actions that must be awaited before continuing
      */
-    pendingActions?: Record<NodeAction | string, Promise<any>>;
+    ongoingActions?: Record<NodeAction | string, Promise<any>>;
     /**
      * whether the node was double-clicked
      */

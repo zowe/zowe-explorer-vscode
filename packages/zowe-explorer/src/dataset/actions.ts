@@ -456,8 +456,8 @@ export async function openPS(
     // Status of last "open action" promise
     // If the node doesn't support pending actions, assume last action was rejected to pull new contents
     const lastActionStatus =
-        node.pendingActions && node.pendingActions[api.NodeAction.Download] != null
-            ? await promiseStatus(node.pendingActions[api.NodeAction.Download])
+        node.ongoingActions?.[api.NodeAction.Download] != null
+            ? await promiseStatus(node.ongoingActions[api.NodeAction.Download])
             : PromiseStatuses.PROMISE_REJECTED;
 
     // Cache status of double click if the node has the "wasDoubleClicked" property:
@@ -495,19 +495,19 @@ export async function openPS(
             }
 
             const documentFilePath = getDocumentFilePath(label, node);
-            let responsePromise = node.pendingActions ? node.pendingActions[api.NodeAction.Download] : null;
-            // If the local copy does not exist or the last action failed, fetch contents
+            let responsePromise = node.ongoingActions ? node.ongoingActions[api.NodeAction.Download] : null;
+            // If the local copy does not exist or the last action was rejected/discarded, fetch contents
             if (!fs.existsSync(documentFilePath) || lastActionStatus == PromiseStatuses.PROMISE_REJECTED) {
                 const prof = node.getProfile();
                 ZoweLogger.info(localize("openPS.openDataSet", "Opening {0}", label));
-                if (node.pendingActions) {
-                    node.pendingActions[api.NodeAction.Download] = ZoweExplorerApiRegister.getMvsApi(prof).getContents(label, {
+                if (node.ongoingActions) {
+                    node.ongoingActions[api.NodeAction.Download] = ZoweExplorerApiRegister.getMvsApi(prof).getContents(label, {
                         file: documentFilePath,
                         returnEtag: true,
                         encoding: prof.profile?.encoding,
                         responseTimeout: prof.profile?.responseTimeout,
                     });
-                    responsePromise = node.pendingActions[api.NodeAction.Download];
+                    responsePromise = node.ongoingActions[api.NodeAction.Download];
                 } else {
                     responsePromise = ZoweExplorerApiRegister.getMvsApi(prof).getContents(label, {
                         file: documentFilePath,
@@ -518,15 +518,15 @@ export async function openPS(
                 }
             }
 
-            if (responsePromise == null) {
-                throw Error("Response was null or invalid.");
-            }
-
             const response = await responsePromise;
             node.setEtag(response?.apiResponse?.etag);
             statusMsg.dispose();
             const document = await vscode.workspace.openTextDocument(getDocumentFilePath(label, node));
             await api.Gui.showTextDocument(document, { preview: node.wasDoubleClicked ? !node.wasDoubleClicked : shouldPreview });
+            // discard ongoing action to allow new requests on this node
+            if (node.ongoingActions) {
+                node.ongoingActions[api.NodeAction.Download] = null;
+            }
             if (datasetProvider) {
                 datasetProvider.addFileHistory(`[${node.getProfileName()}]: ${label}`);
             }
