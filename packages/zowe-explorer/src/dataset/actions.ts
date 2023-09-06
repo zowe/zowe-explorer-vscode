@@ -454,11 +454,11 @@ export async function openPS(
     }
 
     // Status of last "open action" promise
-    // If the node doesn't support pending actions, assume last action was rejected to pull new contents
+    // If the node doesn't support pending actions, assume last action was resolved to pull new contents
     const lastActionStatus =
         node.ongoingActions?.[api.NodeAction.Download] != null
             ? await promiseStatus(node.ongoingActions[api.NodeAction.Download])
-            : PromiseStatuses.PROMISE_REJECTED;
+            : PromiseStatuses.PROMISE_RESOLVED;
 
     // Cache status of double click if the node has the "wasDoubleClicked" property:
     // allows subsequent clicks to register as double-click if node is not done fetching contents
