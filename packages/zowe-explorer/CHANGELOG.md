@@ -8,6 +8,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
+- Remove the 'Show Attributes' context menu action for migrated datasets.
+
 ## `2.10.0`
 
 ### New features and enhancements
