@@ -8,7 +8,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
-- Remove the 'Show Attributes' context menu action for migrated datasets.
+- Remove the 'Show Attributes' context menu action for migrated datasets. [#2033](https://github.com/zowe/vscode-extension-for-zowe/issues/2033)
 
 ## `2.10.0`
 
