@@ -737,4 +737,13 @@ describe("ProfilesUtils unit tests", () => {
             expect(defaultCredMgrSpy).toHaveBeenCalledWith(ProfilesCache.requireKeyring);
         });
     });
+
+    describe("isUsingTokenAuth", () => {
+        it("should check the profile in use if using token based auth instead of the base profile", async () => {
+            jest.spyOn(Profiles.getInstance(), "getDefaultProfile").mockReturnValueOnce({} as any);
+            jest.spyOn(Profiles.getInstance(), "getLoadedProfConfig").mockResolvedValue({ type: "test" } as any);
+            jest.spyOn(Profiles.getInstance(), "getSecurePropsForProfile").mockResolvedValue([]);
+            await expect(profUtils.isUsingTokenAuth("test")).resolves.toEqual(false);
+        });
+    });
 });
