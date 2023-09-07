@@ -522,7 +522,7 @@ export async function openPS(
             node.setEtag(response?.apiResponse?.etag);
             statusMsg.dispose();
             const document = await vscode.workspace.openTextDocument(getDocumentFilePath(label, node));
-            await api.Gui.showTextDocument(document, { preview: node.wasDoubleClicked ? !node.wasDoubleClicked : shouldPreview });
+            await api.Gui.showTextDocument(document, { preview: node.wasDoubleClicked != null ? !node.wasDoubleClicked : shouldPreview });
             // discard ongoing action to allow new requests on this node
             if (node.ongoingActions) {
                 node.ongoingActions[api.NodeAction.Download] = null;
