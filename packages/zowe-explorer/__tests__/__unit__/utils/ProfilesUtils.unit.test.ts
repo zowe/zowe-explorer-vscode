@@ -178,7 +178,8 @@ describe("ProfilesUtils unit tests", () => {
                 getProfileInfo: profileInfoMock,
                 getLoadedProfConfig: () => ({ type: "zosmf" }),
                 getDefaultProfile: () => ({}),
-                getSecurePropsForProfile: () => [],
+                getSecurePropsForProfile: () => ["tokenValue"],
+                ssoLogin: ssoLoginSpy,
             } as any);
             await profUtils.errorHandling(errorDetails, label, moreInfo);
             expect(showMessageSpy).toBeCalledTimes(1);
@@ -209,7 +210,8 @@ describe("ProfilesUtils unit tests", () => {
                 getProfileInfo: profileInfoMock,
                 getLoadedProfConfig: () => ({ type: "zosmf" }),
                 getDefaultProfile: () => ({}),
-                getSecurePropsForProfile: () => [],
+                getSecurePropsForProfile: () => ["tokenValue"],
+                ssoLogin: ssoLoginSpy,
             } as any);
             await profUtils.errorHandling(errorDetails, label, moreInfo);
             expect(showErrorSpy).toBeCalledTimes(1);
