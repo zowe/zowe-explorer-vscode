@@ -1297,6 +1297,17 @@ export class Profiles extends ProfilesCache {
         await Gui.showTextDocument(document);
     }
 
+    /**
+     * gets secure properties for a profile
+     * @param profileName the name of the profile
+     * @returns {string[]} an array with the secure properties
+     */
+    public async getSecurePropsForProfile(profileName: string): Promise<string[]> {
+        const profAttrs = await this.getProfileFromConfig(profileName);
+        const mergedArgs = (await this.getProfileInfo()).mergeArgsForProfile(profAttrs);
+        return [...mergedArgs.knownArgs, ...mergedArgs.missingArgs].filter((arg) => arg.secure).map((arg) => arg.argName);
+    }
+
     private async getConfigLocationPrompt(action: string): Promise<string> {
         ZoweLogger.trace("Profiles.getConfigLocationPrompt called.");
         let placeHolderText: string;
