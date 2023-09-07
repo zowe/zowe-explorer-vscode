@@ -1034,7 +1034,7 @@
           "group": "000_zowe_dsMainframeInteraction@8"
         },
         {
-          "when": "view == zowe.ds.explorer && viewItem =~ /^(pds|migr|member|ds|vsam).*/",
+          "when": "view == zowe.ds.explorer && viewItem =~ /^(pds|member|ds|vsam).*/",
           "command": "zowe.ds.showAttributes",
           "group": "001_zowe_dsCreate@1"
         },
