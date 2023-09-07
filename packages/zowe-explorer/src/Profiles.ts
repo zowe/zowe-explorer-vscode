@@ -1296,7 +1296,7 @@ export class Profiles extends ProfilesCache {
         session.ISession.user = creds[0];
         session.ISession.password = creds[1];
         try {
-            const loginToken = await ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).login(session);
+            await ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).login(session);
             const profIndex = this.allProfiles.findIndex((profile) => profile.name === serviceProfile.name);
             this.allProfiles[profIndex] = { ...serviceProfile, profile: { ...serviceProfile, ...session } };
             if (node) {

@@ -280,7 +280,6 @@ describe("ZosJobsProvider unit tests - Function getChildren", () => {
         const testTree = new ZosJobsProvider();
         testTree.mSessionNodes.push(blockMocks.jobSessionNode);
         testTree.mSessionNodes[1].dirty = true;
-        const sessionElement = testTree.mSessionNodes[1];
 
         await expect(testTree.getChildren(testTree.mSessionNodes[1])).resolves.toEqual([]);
     });
