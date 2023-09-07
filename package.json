@@ -55,7 +55,7 @@
   "scripts": {
     "clean": "pnpm -r run clean",
     "fresh-clone": "pnpm -r --parallel fresh-clone && rimraf node_modules",
-    "prepare": "husky install && pnpm build",
+    "prepare": "husky install",
     "lint": "pnpm -r run lint",
     "lint:html": "pnpm -r run lint:html",
     "madge": "pnpm -r run madge",
