@@ -1330,11 +1330,12 @@ describe("Profiles Unit Tests - function checkCurrentProfile", () => {
     };
 
     const setupProfilesCheck = (globalMocks): void => {
+        jest.spyOn(Profiles.getInstance(), "getDefaultProfile").mockReturnValue({ name: "base" } as any);
         jest.spyOn(Profiles.getInstance(), "getProfileInfo").mockResolvedValue({
             getTeamConfig: () => ({
                 properties: {
                     profiles: {
-                        sestest: globalMocks.testProfile.profile,
+                        sestest: { ...globalMocks.testProfile.profile, secure: [] },
                         base: {
                             type: "base",
                             host: "test",

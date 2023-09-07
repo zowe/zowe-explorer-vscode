@@ -131,18 +131,26 @@ export function isTheia(): boolean {
     return false;
 }
 
+/**
+ * Function that checks whether a profile is using token based authentication
+ * @param profileName the name of the profile to check
+ * @returns {Promise<boolean>} a boolean representing whether token based auth is being used or not
+ */
 export async function isUsingTokenAuth(profileName: string): Promise<boolean> {
     const config = (await Profiles.getInstance().getProfileInfo()).getTeamConfig();
-    const defaultBaseProfileName = Profiles.getInstance().getDefaultProfile("base").name;
-    const baseProfile = config.properties.profiles[defaultBaseProfileName];
+    const baseProfile = config.properties.profiles[Profiles.getInstance().getDefaultProfile("base")?.name];
     const profile = config.properties.profiles[profileName];
     const isUsingZosmf = (await Profiles.getInstance().getLoadedProfConfig(profileName)).type === "zosmf";
-
-    if (isUsingZosmf && baseProfile) {
+    if (isUsingZosmf && baseProfile && profile?.secure && baseProfile?.secure) {
         return profile.secure.includes("tokenValue") || baseProfile.secure.includes("tokenValue");
     }
-
-    return profile.secure.includes("tokenValue");
+    if (isUsingZosmf && baseProfile && baseProfile?.secure) {
+        return baseProfile.secure.includes("tokenValue");
+    }
+    if (profile?.secure) {
+        return profile.secure.includes("tokenValue");
+    }
+    return false;
 }
 
 /**

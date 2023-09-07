@@ -154,6 +154,7 @@ describe("ProfilesUtils unit tests", () => {
                     promptCredentials: promptCredsSpy,
                     getProfileInfo: profileInfoMock,
                     getLoadedProfConfig: () => ({ type: "zosmf" }),
+                    getDefaultProfile: () => ({}),
                 }),
             });
             await profUtils.errorHandling(errorDetails, label, moreInfo);
@@ -179,6 +180,7 @@ describe("ProfilesUtils unit tests", () => {
                     ssoLogin: ssoLoginSpy,
                     getProfileInfo: profileInfoMock,
                     getLoadedProfConfig: () => ({ type: "zosmf" }),
+                    getDefaultProfile: () => ({}),
                 }),
             });
             await profUtils.errorHandling(errorDetails, label, moreInfo);
@@ -211,6 +213,7 @@ describe("ProfilesUtils unit tests", () => {
                     ssoLogin: ssoLoginSpy,
                     getProfileInfo: profileInfoMock,
                     getLoadedProfConfig: () => ({ type: "zosmf" }),
+                    getDefaultProfile: () => ({}),
                 }),
             });
             await profUtils.errorHandling(errorDetails, label, moreInfo);
@@ -243,6 +246,7 @@ describe("ProfilesUtils unit tests", () => {
                     promptCredentials: promptCredentialsSpy,
                     getProfileInfo: profileInfoMock,
                     getLoadedProfConfig: () => ({ type: "zosmf" }),
+                    getDefaultProfile: () => ({}),
                 }),
             });
             await profUtils.errorHandling(errorDetails, label, moreInfo);
@@ -269,6 +273,7 @@ describe("ProfilesUtils unit tests", () => {
                     promptCredentials: promptCredentialsSpy,
                     getProfileInfo: profileInfoMock,
                     getLoadedProfConfig: () => ({ type: "zosmf" }),
+                    getDefaultProfile: () => ({}),
                 }),
             });
             await profUtils.errorHandling(errorDetails, label, moreInfo);
