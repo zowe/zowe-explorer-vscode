@@ -17,7 +17,7 @@ import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { Gui, ValidProfileEnum, IZoweTree, IZoweJobTreeNode } from "@zowe/zowe-explorer-api";
 import { Job, Spool } from "./ZoweJobNode";
 import * as nls from "vscode-nls";
-import SpoolProvider, {  encodeJobFile, getSpoolFiles, matchSpool } from "../SpoolProvider";
+import SpoolProvider, { encodeJobFile, getSpoolFiles, matchSpool } from "../SpoolProvider";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { getDefaultUri, jobStringValidator } from "../shared/utils";
 
@@ -536,7 +536,7 @@ export async function cancelJobs(jobsProvider: IZoweTree<IZoweJobTreeNode>, node
 }
 export async function sortByName(jobs: IZoweJobTreeNode, jobsProvider: IZoweTree<IZoweJobTreeNode>): Promise<void> {
     if (jobs["children"].length == 0) {
-        vscode.window.showInformationMessage("No jobs are present in the profile.");
+        await vscode.window.showInformationMessage("No jobs are present in the profile.");
     }
     jobs["children"].sort((x, y) => {
         if (x["job"]["jobname"] === y["job"]["jobname"]) return x["job"]["jobid"] > y["job"]["jobid"] ? 1 : -1;
@@ -546,14 +546,14 @@ export async function sortByName(jobs: IZoweJobTreeNode, jobsProvider: IZoweTree
 }
 export async function sortById(jobs: IZoweJobTreeNode, jobsProvider: IZoweTree<IZoweJobTreeNode>): Promise<void> {
     if (jobs["children"].length == 0) {
-        vscode.window.showInformationMessage("No jobs are present in the profile.");
+        await vscode.window.showInformationMessage("No jobs are present in the profile.");
     }
     jobs["children"].sort((x, y) => (x["job"]["jobid"] > y["job"]["jobid"] ? 1 : -1));
     jobsProvider.refresh();
 }
 export async function sortByReturnCode(jobs: IZoweJobTreeNode, jobsProvider: IZoweTree<IZoweJobTreeNode>): Promise<void> {
     if (jobs["children"].length == 0) {
-        vscode.window.showInformationMessage("No jobs are present in the profile.");
+        await vscode.window.showInformationMessage("No jobs are present in the profile.");
     }
     jobs["children"].sort((x, y) => {
         if (x["job"]["retcode"] === y["job"]["retcode"]) return x["job"]["jobid"] > y["job"]["jobid"] ? 1 : -1;
