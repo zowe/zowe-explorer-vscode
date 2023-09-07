@@ -139,13 +139,12 @@ export function isTheia(): boolean {
 export async function isUsingTokenAuth(profileName: string): Promise<boolean> {
     const baseProfile = Profiles.getInstance().getDefaultProfile("base");
     const isUsingZosmf = (await Profiles.getInstance().getLoadedProfConfig(profileName)).type === "zosmf";
+    const secureProfileProps = await Profiles.getInstance().getSecurePropsForProfile(profileName);
+    const secureBaseProfileProps = await Profiles.getInstance().getSecurePropsForProfile(baseProfile?.name);
     if (isUsingZosmf && baseProfile) {
-        return (
-            (await Profiles.getInstance().getSecurePropsForProfile(profileName)).includes("tokenValue") ||
-            (await Profiles.getInstance().getSecurePropsForProfile(baseProfile?.name)).includes("tokenValue")
-        );
+        return secureProfileProps.includes("tokenValue") || secureBaseProfileProps.includes("tokenValue");
     }
-    return (await Profiles.getInstance().getSecurePropsForProfile(profileName)).includes("tokenValue");
+    return secureProfileProps.includes("tokenValue");
 }
 
 /**

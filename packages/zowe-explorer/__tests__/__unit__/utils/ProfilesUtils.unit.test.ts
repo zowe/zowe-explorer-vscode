@@ -149,14 +149,13 @@ describe("ProfilesUtils unit tests", () => {
             jest.spyOn(profUtils, "isTheia").mockReturnValue(false);
             const showMessageSpy = jest.spyOn(Gui, "errorMessage").mockImplementation(() => Promise.resolve("Update Credentials"));
             const promptCredsSpy = jest.fn();
-            Object.defineProperty(Profiles, "getInstance", {
-                value: () => ({
-                    promptCredentials: promptCredsSpy,
-                    getProfileInfo: profileInfoMock,
-                    getLoadedProfConfig: () => ({ type: "zosmf" }),
-                    getDefaultProfile: () => ({}),
-                }),
-            });
+            jest.spyOn(Profiles, "getInstance").mockReturnValue({
+                promptCredentials: promptCredsSpy,
+                getProfileInfo: profileInfoMock,
+                getLoadedProfConfig: () => ({ type: "zosmf" }),
+                getDefaultProfile: () => ({}),
+                getSecurePropsForProfile: () => [],
+            } as any);
             await profUtils.errorHandling(errorDetails, label, moreInfo);
             expect(showMessageSpy).toBeCalledTimes(1);
             expect(promptCredsSpy).toBeCalledTimes(1);
@@ -175,14 +174,12 @@ describe("ProfilesUtils unit tests", () => {
             const showErrorSpy = jest.spyOn(Gui, "errorMessage");
             const showMessageSpy = jest.spyOn(Gui, "showMessage").mockImplementation(() => Promise.resolve("selection"));
             const ssoLoginSpy = jest.fn();
-            Object.defineProperty(Profiles, "getInstance", {
-                value: () => ({
-                    ssoLogin: ssoLoginSpy,
-                    getProfileInfo: profileInfoMock,
-                    getLoadedProfConfig: () => ({ type: "zosmf" }),
-                    getDefaultProfile: () => ({}),
-                }),
-            });
+            jest.spyOn(Profiles, "getInstance").mockReturnValue({
+                getProfileInfo: profileInfoMock,
+                getLoadedProfConfig: () => ({ type: "zosmf" }),
+                getDefaultProfile: () => ({}),
+                getSecurePropsForProfile: () => [],
+            } as any);
             await profUtils.errorHandling(errorDetails, label, moreInfo);
             expect(showMessageSpy).toBeCalledTimes(1);
             expect(ssoLoginSpy).toBeCalledTimes(1);
@@ -208,14 +205,12 @@ describe("ProfilesUtils unit tests", () => {
             const showErrorSpy = jest.spyOn(Gui, "errorMessage").mockImplementation(() => Promise.resolve(undefined));
             const showMessageSpy = jest.spyOn(Gui, "showMessage");
             const ssoLoginSpy = jest.fn();
-            Object.defineProperty(Profiles, "getInstance", {
-                value: () => ({
-                    ssoLogin: ssoLoginSpy,
-                    getProfileInfo: profileInfoMock,
-                    getLoadedProfConfig: () => ({ type: "zosmf" }),
-                    getDefaultProfile: () => ({}),
-                }),
-            });
+            jest.spyOn(Profiles, "getInstance").mockReturnValue({
+                getProfileInfo: profileInfoMock,
+                getLoadedProfConfig: () => ({ type: "zosmf" }),
+                getDefaultProfile: () => ({}),
+                getSecurePropsForProfile: () => [],
+            } as any);
             await profUtils.errorHandling(errorDetails, label, moreInfo);
             expect(showErrorSpy).toBeCalledTimes(1);
             expect(ssoLoginSpy).toBeCalledTimes(1);
@@ -241,14 +236,13 @@ describe("ProfilesUtils unit tests", () => {
             const showErrorSpy = jest.spyOn(Gui, "errorMessage").mockResolvedValue(undefined);
             const showMsgSpy = jest.spyOn(Gui, "showMessage");
             const promptCredentialsSpy = jest.fn();
-            Object.defineProperty(Profiles, "getInstance", {
-                value: () => ({
-                    promptCredentials: promptCredentialsSpy,
-                    getProfileInfo: profileInfoMock,
-                    getLoadedProfConfig: () => ({ type: "zosmf" }),
-                    getDefaultProfile: () => ({}),
-                }),
-            });
+            jest.spyOn(Profiles, "getInstance").mockReturnValue({
+                promptCredentials: promptCredentialsSpy,
+                getProfileInfo: profileInfoMock,
+                getLoadedProfConfig: () => ({ type: "zosmf" }),
+                getDefaultProfile: () => ({}),
+                getSecurePropsForProfile: () => [],
+            } as any);
             await profUtils.errorHandling(errorDetails, label, moreInfo);
             expect(showErrorSpy).toBeCalledTimes(1);
             expect(promptCredentialsSpy).not.toBeCalled();
@@ -268,14 +262,13 @@ describe("ProfilesUtils unit tests", () => {
             jest.spyOn(profUtils, "isTheia").mockReturnValue(true);
             const showErrorSpy = jest.spyOn(Gui, "errorMessage");
             const promptCredentialsSpy = jest.fn();
-            Object.defineProperty(Profiles, "getInstance", {
-                value: () => ({
-                    promptCredentials: promptCredentialsSpy,
-                    getProfileInfo: profileInfoMock,
-                    getLoadedProfConfig: () => ({ type: "zosmf" }),
-                    getDefaultProfile: () => ({}),
-                }),
-            });
+            jest.spyOn(Profiles, "getInstance").mockReturnValue({
+                promptCredentials: promptCredentialsSpy,
+                getProfileInfo: profileInfoMock,
+                getLoadedProfConfig: () => ({ type: "zosmf" }),
+                getDefaultProfile: () => ({}),
+                getSecurePropsForProfile: () => [],
+            } as any);
             await profUtils.errorHandling(errorDetails, label, moreInfo);
             expect(showErrorSpy).toBeCalledTimes(1);
             expect(promptCredentialsSpy).not.toBeCalled();
