@@ -356,6 +356,8 @@ export class TextUtils {
     }
 }
 
-export namespace SessConstants {
-    export declare const AUTH_TYPE_TOKEN = "token";
+export class SessConstants {
+    static readonly AUTH_TYPE_BASIC = "basic";
+    static readonly AUTH_TYPE_TOKEN = "token";
+    static readonly AUTH_TYPE_CERT_PEM = "cert-pem";
 }

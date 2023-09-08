@@ -11,7 +11,7 @@
 
 import * as fs from "fs";
 import * as path from "path";
-import { Gui, ProfilesCache, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweTreeNode, ProfilesCache } from "@zowe/zowe-explorer-api";
 import * as util from "util";
 import * as globals from "../../../src/globals";
 import * as profUtils from "../../../src/utils/ProfilesUtils";
@@ -359,7 +359,10 @@ describe("ProfilesUtils unit tests", () => {
                 value: jest.fn().mockResolvedValue("emptyConfig"),
                 configurable: true,
             });
-            jest.spyOn(ZoweVsCodeExtension as any, "promptUserPass").mockResolvedValue([]);
+            jest.spyOn(Gui, "createQuickPick").mockReturnValue({
+                show: jest.fn(),
+            } as unknown as vscode.QuickPick<vscode.QuickPickItem>);
+            jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(undefined);
             await profUtils.ProfilesUtils.promptCredentials(null);
             expect(getProfileInfoSpy).toHaveBeenCalled();
         });
@@ -380,13 +383,13 @@ describe("ProfilesUtils unit tests", () => {
                 value: jest.fn().mockResolvedValue(""),
                 configurable: true,
             });
-            jest.spyOn(ZoweVsCodeExtension as any, "promptUserPass").mockResolvedValue([]);
             await profUtils.ProfilesUtils.promptCredentials(null);
             expect(Gui.showMessage).toHaveBeenCalledWith("Operation Cancelled");
         });
 
         it("shows an info message if the profile credentials were updated", async () => {
             const mockProfileInstance = new Profiles(zowe.imperative.Logger.getAppLogger());
+            mockProfileInstance.getLoadedProfConfig = jest.fn().mockResolvedValue({ name: "testConfig" });
             const prof = {
                 getAllProfiles: jest.fn().mockReturnValue([]),
                 isSecured: jest.fn().mockReturnValue(true),
@@ -401,6 +404,10 @@ describe("ProfilesUtils unit tests", () => {
                 value: jest.fn().mockResolvedValue("testConfig"),
                 configurable: true,
             });
+            jest.spyOn(Gui, "createQuickPick").mockReturnValue({
+                show: jest.fn(),
+            } as unknown as vscode.QuickPick<vscode.QuickPickItem>);
+            jest.spyOn(Gui, "resolveQuickPick").mockImplementationOnce((qp) => Promise.resolve(qp.activeItems[0]));
             Object.defineProperty(Gui, "showMessage", {
                 value: jest.fn(),
                 configurable: true,
@@ -408,6 +415,62 @@ describe("ProfilesUtils unit tests", () => {
             jest.spyOn(Profiles.prototype, "promptCredentials").mockResolvedValue(["some_user", "some_pass", "c29tZV9iYXNlNjRfc3RyaW5n"]);
             await profUtils.ProfilesUtils.promptCredentials(null);
             expect(Gui.showMessage).toHaveBeenCalledWith("Credentials for testConfig were successfully updated");
+        });
+
+        it("proceeds with SSO login if auth token option is selected", async () => {
+            const mockProfileInstance = new Profiles(zowe.imperative.Logger.getAppLogger());
+            mockProfileInstance.getLoadedProfConfig = jest.fn().mockResolvedValue({
+                profile: { tokenType: "fakeToken" },
+            });
+            const prof = {
+                getAllProfiles: jest.fn().mockReturnValue([]),
+                isSecured: jest.fn().mockReturnValue(true),
+                readProfilesFromDisk: jest.fn(),
+            };
+            jest.spyOn(ProfilesCache.prototype, "getProfileInfo").mockResolvedValue(prof as unknown as zowe.imperative.ProfileInfo);
+            jest.spyOn(ProfilesCache.prototype, "getLoadedProfConfig").mockResolvedValue({
+                profile: prof,
+            } as unknown as zowe.imperative.IProfileLoaded);
+            jest.spyOn(Profiles, "getInstance").mockReturnValue(mockProfileInstance);
+            Object.defineProperty(vscode.window, "showInputBox", {
+                value: jest.fn().mockResolvedValue("testConfig"),
+                configurable: true,
+            });
+            jest.spyOn(Gui, "createQuickPick").mockReturnValue({
+                show: jest.fn(),
+            } as unknown as vscode.QuickPick<vscode.QuickPickItem>);
+            jest.spyOn(Gui, "resolveQuickPick").mockImplementationOnce((qp) => Promise.resolve(qp.activeItems[0]));
+            const ssoLoginSpy = jest.spyOn(Profiles.prototype, "ssoLogin").mockResolvedValueOnce();
+            await profUtils.ProfilesUtils.promptCredentials(null);
+            expect(ssoLoginSpy).toHaveBeenCalledTimes(1);
+        });
+
+        it("proceeds with SSO logout if log out option is selected", async () => {
+            const mockProfileInstance = new Profiles(zowe.imperative.Logger.getAppLogger());
+            const prof = {
+                getAllProfiles: jest.fn().mockReturnValue([]),
+                isSecured: jest.fn().mockReturnValue(true),
+                readProfilesFromDisk: jest.fn(),
+            };
+            jest.spyOn(ProfilesCache.prototype, "getProfileInfo").mockResolvedValue(prof as unknown as zowe.imperative.ProfileInfo);
+            jest.spyOn(ProfilesCache.prototype, "getLoadedProfConfig").mockResolvedValue({
+                profile: prof,
+            } as unknown as zowe.imperative.IProfileLoaded);
+            jest.spyOn(Profiles, "getInstance").mockReturnValue(mockProfileInstance);
+            jest.spyOn(Gui, "createQuickPick").mockReturnValue({
+                show: jest.fn(),
+            } as unknown as vscode.QuickPick<vscode.QuickPickItem>);
+            jest.spyOn(Gui, "resolveQuickPick").mockImplementationOnce((qp) => Promise.resolve(qp.items[3]));
+            const ssoLogoutSpy = jest.spyOn(Profiles.prototype, "ssoLogout").mockResolvedValueOnce();
+            await profUtils.ProfilesUtils.promptCredentials({
+                getProfile: jest.fn().mockReturnValue({
+                    profile: {
+                        tokenType: "fakeToken",
+                        tokenValue: "ThisIsAVeryLongToken",
+                    },
+                }),
+            } as any as IZoweTreeNode);
+            expect(ssoLogoutSpy).toHaveBeenCalledTimes(1);
         });
 
         it("shows a message if Update Credentials operation is called when autoStore = false", async () => {

@@ -313,10 +313,10 @@ export class ProfilesUtils {
             Gui.showMessage(msg);
             return;
         }
-        let profile: string | imperative.IProfileLoaded = node?.getProfile();
+        let profile: imperative.IProfileLoaded = node?.getProfile();
         if (profile == null) {
             // prompt for profile
-            profile = (
+            const profileName = (
                 await Gui.showInputBox({
                     placeHolder: localize("createNewConnection.option.prompt.profileName.placeholder", "Connection Name"),
                     prompt: localize("createNewConnection.option.prompt.profileName", "Enter a name for the connection."),
@@ -324,36 +324,38 @@ export class ProfilesUtils {
                 })
             ).trim();
 
-            if (!profile) {
+            if (profileName) {
+                profile = await Profiles.getInstance().getLoadedProfConfig(profileName);
+            } else {
                 Gui.showMessage(localize("createNewConnection.undefined.passWord", "Operation Cancelled"));
                 return;
             }
         }
 
-        const hasTokenValue = typeof profile === "string" || profile.profile?.tokenValue != null;
         const authTypeChoices: Record<string, vscode.QuickPickItem> = {
             [imperative.SessConstants.AUTH_TYPE_BASIC]: {
-                label: localize("promptCredentials.quickPick.basicAuthLabel", "$(circle-large) User and Password"),
+                label: "$(circle-large) " + localize("promptCredentials.quickPick.basicAuthLabel", "User and Password"),
                 description: localize("promptCredentials.quickPick.basicAuthDescription", "Store username and password"),
             },
             [imperative.SessConstants.AUTH_TYPE_TOKEN]: {
-                label: localize("promptCredentials.quickPick.tokenAuthLabel", "$(circle-large) Authentication Token"),
+                label: "$(circle-large) " + localize("promptCredentials.quickPick.tokenAuthLabel", "Authentication Token"),
                 description: localize("promptCredentials.quickPick.tokenAuthDescription", "Authenticate to service and store token"),
             },
             // [imperative.SessConstants.AUTH_TYPE_CERT_PEM]: {
-            //     label: localize("promptCredentials.quickPick.certAuthLabel", "$(circle-large) Certificate File"),
+            //     label: "$(circle-large) " + localize("promptCredentials.quickPick.certAuthLabel", "Certificate File"),
             //     description: localize("promptCredentials.quickPick.certAuthDescription", "Select a PEM certificate file"),
             // },
         };
         let currentAuthType = imperative.SessConstants.AUTH_TYPE_BASIC;
-        if (typeof profile !== "string" && profile.profile?.tokenType != null) {
+        if (profile.profile?.tokenType != null) {
             currentAuthType = imperative.SessConstants.AUTH_TYPE_TOKEN;
-        } else if (typeof profile !== "string" && profile.profile?.certFile != null) {
+        } else if (profile.profile?.certFile != null) {
             // currentAuthType = imperative.SessConstants.AUTH_TYPE_CERT_PEM;
         }
         authTypeChoices[currentAuthType].label = authTypeChoices[currentAuthType].label.replace("$(circle-large)", "$(record)");
+        const isSsoLoggedIn = profile.profile?.tokenValue != null;
         const quickPickOptions: vscode.QuickPickItem[] = Object.values(authTypeChoices);
-        if (hasTokenValue) {
+        if (isSsoLoggedIn) {
             quickPickOptions.push(globals.SEPARATORS.BLANK, {
                 label: localize("promptCredentials.quickPick.logOutLabel", "Log out of Authentication Service"),
             });
@@ -361,33 +363,25 @@ export class ProfilesUtils {
         const qp = Gui.createQuickPick();
         qp.items = quickPickOptions;
         qp.activeItems = [authTypeChoices[currentAuthType]];
-        qp.title = localize("promptCredentials.quickPick.title", "Select an authentication method");
-        return new Promise((resolve) => {
-            qp.onDidChangeSelection(async ([item]) => {
-                if (item === authTypeChoices[imperative.SessConstants.AUTH_TYPE_BASIC]) {
-                    const creds = await Profiles.getInstance().promptCredentials(profile, true);
-                    if (creds != null) {
-                        const successMsg = localize(
-                            "promptCredentials.updatedCredentials",
-                            "Credentials for {0} were successfully updated",
-                            typeof profile === "string" ? profile : profile.name
-                        );
-                        ZoweLogger.info(successMsg);
-                        Gui.showMessage(successMsg);
-                        // config file watcher isn't noticing changes for secure fields
-                        await vscode.commands.executeCommand("zowe.extRefresh");
-                    }
-                } else if (item === authTypeChoices[imperative.SessConstants.AUTH_TYPE_TOKEN]) {
-                    await Profiles.getInstance().ssoLogin(node);
-                } else if (item === authTypeChoices[imperative.SessConstants.AUTH_TYPE_CERT_PEM]) {
-                    // TODO Add support for certificates
-                } else if (hasTokenValue && item === quickPickOptions[quickPickOptions.length - 1]) {
-                    await Profiles.getInstance().ssoLogout(node);
-                }
-                resolve();
-            });
-            qp.show();
-        });
+        qp.placeholder = localize("promptCredentials.quickPick.title", "Select an authentication method");
+        qp.show();
+        const selectedItem = await Gui.resolveQuickPick(qp);
+        if (selectedItem === authTypeChoices[imperative.SessConstants.AUTH_TYPE_BASIC]) {
+            const creds = await Profiles.getInstance().promptCredentials(profile, true);
+            if (creds != null) {
+                const successMsg = localize("promptCredentials.updatedCredentials", "Credentials for {0} were successfully updated", profile.name);
+                ZoweLogger.info(successMsg);
+                Gui.showMessage(successMsg);
+                // config file watcher isn't noticing changes for secure fields
+                await vscode.commands.executeCommand("zowe.extRefresh");
+            }
+        } else if (selectedItem === authTypeChoices[imperative.SessConstants.AUTH_TYPE_TOKEN]) {
+            await Profiles.getInstance().ssoLogin(node);
+        } else if (selectedItem === authTypeChoices[imperative.SessConstants.AUTH_TYPE_CERT_PEM]) {
+            // TODO Add support for certificates
+        } else if (isSsoLoggedIn && selectedItem === quickPickOptions[quickPickOptions.length - 1]) {
+            await Profiles.getInstance().ssoLogout(node);
+        }
     }
 
     public static async initializeZoweFolder(): Promise<void> {
