@@ -6,6 +6,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
+- Allow deleting migrated datasets [#2447](https://github.com/zowe/vscode-extension-for-zowe/issues/2447)
+
 ### Bug fixes
 
 - Fixed issue with favorited Job filter search. [#2440](https://github.com/zowe/vscode-extension-for-zowe/issues/2440)

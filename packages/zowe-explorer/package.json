@@ -1149,6 +1149,11 @@
           "group": "099_zowe_dsModification@5"
         },
         {
+          "when": "view == zowe.ds.explorer && viewItem =~ /^migr.*/",
+          "command": "zowe.ds.deleteDataset",
+          "group": "099_zowe_dsModification@5"
+        },
+        {
           "when": "view == zowe.ds.explorer && viewItem =~ /_validate/ && !listMultiSelection",
           "command": "zowe.ds.disableValidation",
           "group": "098_zowe_dsProfileAuthentication@6"
