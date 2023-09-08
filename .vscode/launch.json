@@ -13,7 +13,9 @@
       "args": ["--extensionDevelopmentPath=${workspaceFolder}/packages/zowe-explorer", "--verbose"],
       "outFiles": ["${workspaceFolder}/packages/zowe-explorer/out/**/*.js"],
       "preLaunchTask": "build dev watch",
-      "smartStep": true
+      "smartStep": true,
+      "skipFiles": ["<node_internals>/**"],
+      "envFile": "${workspaceFolder}/.vscode/.env"
     },
     {
       "name": "Run Zowe Explorer VS Code Extension (Theia)",

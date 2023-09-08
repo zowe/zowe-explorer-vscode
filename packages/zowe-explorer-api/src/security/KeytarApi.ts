@@ -17,12 +17,12 @@ import { KeytarCredentialManager } from "./KeytarCredentialManager";
 export class KeytarApi {
     public constructor(protected log: imperative.Logger) {}
 
-    public async activateKeytar(initialized: boolean, isTheia: boolean): Promise<void> {
+    public async activateKeytar(initialized: boolean, _isTheia: boolean): Promise<void> {
         const log = imperative.Logger.getAppLogger();
         const profiles = new ProfilesCache(log);
         const scsActive = profiles.isSecureCredentialPluginActive();
         if (scsActive) {
-            const keytar: NodeRequire | undefined = KeytarCredentialManager.getSecurityModules("keytar", isTheia);
+            const keytar = (await import("@zowe/secrets-for-zowe-sdk")).keyring;
             if (!initialized && keytar) {
                 // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
                 KeytarCredentialManager.keytar = keytar;

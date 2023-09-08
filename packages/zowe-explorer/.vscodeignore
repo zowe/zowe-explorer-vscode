@@ -30,3 +30,4 @@ docs
 i18n
 scripts
 node_modules/**
+!prebuilds/**
