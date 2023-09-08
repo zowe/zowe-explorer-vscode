@@ -12,8 +12,8 @@
 import * as zowe from "@zowe/cli";
 import * as vscode from "vscode";
 import * as globals from "../globals";
-import { errorHandling, syncSessionNode } from "../utils/ProfilesUtils";
-import { Gui, IZoweDatasetTreeNode, ZoweTreeNode } from "@zowe/zowe-explorer-api";
+import { errorHandling } from "../utils/ProfilesUtils";
+import { Gui, NodeAction, IZoweDatasetTreeNode, ZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { getIconByNode } from "../generators/icons";
 import * as contextually from "../shared/context";
@@ -41,6 +41,8 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     public dirty = true;
     public children: ZoweDatasetNode[] = [];
     public errorDetails: zowe.imperative.ImperativeError;
+    public ongoingActions: Record<NodeAction | string, Promise<any>> = {};
+    public wasDoubleClicked: boolean = false;
 
     /**
      * Creates an instance of ZoweDatasetNode
