@@ -259,6 +259,12 @@ export const JOB_STATUS = [
         value: null,
         picked: false,
     },
+    {
+        key: `Held`,
+        label: `Held`,
+        value: null,
+        picked: false,
+    },
 ];
 
 export const JOB_STATUS_UNSUPPORTED = [
