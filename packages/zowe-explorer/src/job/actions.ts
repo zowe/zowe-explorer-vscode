@@ -19,7 +19,7 @@ import { Job, Spool } from "./ZoweJobNode";
 import * as nls from "vscode-nls";
 import SpoolProvider, { encodeJobFile, getSpoolFiles, matchSpool } from "../SpoolProvider";
 import { ZoweLogger } from "../utils/LoggerUtils";
-import { getDefaultUri, jobStringValidator } from "../shared/utils";
+import { getDefaultUri } from "../shared/utils";
 
 // Set up localization
 nls.config({
