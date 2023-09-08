@@ -1373,6 +1373,13 @@ describe("Profiles Unit Tests - function checkCurrentProfile", () => {
         setupProfilesCheck(globalMocks);
         await expect(Profiles.getInstance().checkCurrentProfile(globalMocks.testProfile)).resolves.toEqual({ name: "sestest", status: "inactive" });
     });
+    it("should throw an error if using token auth and is logged out or has expired token", async () => {
+        const globalMocks = await createGlobalMocks();
+        jest.spyOn(utils, "errorHandling").mockImplementation();
+        jest.spyOn(utils, "isUsingTokenAuth").mockResolvedValue(true);
+        setupProfilesCheck(globalMocks);
+        await expect(Profiles.getInstance().checkCurrentProfile(globalMocks.testProfile)).resolves.toEqual({ name: "sestest", status: "unverified" });
+    });
 });
 
 describe("Profiles Unit Tests - function editSession", () => {
@@ -1767,5 +1774,28 @@ describe("Profiles Unit Tests - function loginCredentialPrompt", () => {
         const showMessageSpy = jest.spyOn(Gui, "showMessage").mockImplementation();
         await expect(privateProfile.loginCredentialPrompt()).resolves.toEqual(undefined);
         expect(showMessageSpy).toBeCalledTimes(1);
+    });
+});
+
+describe("Profiles Unit Tests - function getSecurePropsForProfile", () => {
+    afterEach(() => {
+        jest.clearAllMocks();
+        jest.resetAllMocks();
+    });
+    it("should retrieve the secure properties of a profile", async () => {
+        const globalMocks = await createGlobalMocks();
+        jest.spyOn(Profiles.getInstance(), "getProfileInfo").mockResolvedValue({
+            mergeArgsForProfile: () => ({
+                knownArgs: [
+                    {
+                        argName: "tokenValue",
+                        secure: true,
+                    } as any,
+                ],
+                missingArgs: [],
+            }),
+            getAllProfiles: () => [],
+        } as any);
+        await expect(Profiles.getInstance().getSecurePropsForProfile(globalMocks.testProfile.name ?? "")).resolves.toEqual(["tokenValue"]);
     });
 });
