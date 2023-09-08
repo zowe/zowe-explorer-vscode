@@ -54,7 +54,7 @@
   },
   "scripts": {
     "clean": "pnpm -r run clean",
-    "fresh-clone": "pnpm -r --parallel fresh-clone && rimraf node_modules",
+    "fresh-clone": "pnpm -r --parallel fresh-clone && (rimraf node_modules || true)",
     "prepare": "husky install",
     "lint": "pnpm -r run lint",
     "lint:html": "pnpm -r run lint:html",

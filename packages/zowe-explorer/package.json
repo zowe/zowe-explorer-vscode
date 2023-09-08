@@ -1946,7 +1946,7 @@
     "lint:src": "eslint --format stylish src/**/*.ts",
     "lint:tests": "eslint --format stylish __tests__/**/*.ts",
     "clean": "gulp clean",
-    "fresh-clone": "pnpm clean && rimraf node_modules",
+    "fresh-clone": "pnpm clean && (rimraf node_modules || true)",
     "madge": "madge -c --no-color --no-spinner --exclude __mocks__ --extensions js,ts src/ || true",
     "pretty": "prettier --write .",
     "createTestProfileData": "ts-node ./scripts/createTestProfileData.ts",
