@@ -3318,9 +3318,9 @@ describe("Dataset Actions Unit Tests - Function openPS", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
 
-        mocked(vscode.window.withProgress).mockResolvedValueOnce({
+        mocked(blockMocks.mvsApi.getContents).mockResolvedValueOnce({
             success: true,
-            commandResponse: null,
+            commandResponse: "",
             apiResponse: {
                 etag: "123",
             },
@@ -3339,9 +3339,9 @@ describe("Dataset Actions Unit Tests - Function openPS", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
 
-        mocked(vscode.window.withProgress).mockResolvedValueOnce({
+        mocked(blockMocks.mvsApi.getContents).mockResolvedValueOnce({
             success: true,
-            commandResponse: null,
+            commandResponse: "",
             apiResponse: {
                 etag: "123",
             },
@@ -3378,14 +3378,31 @@ describe("Dataset Actions Unit Tests - Function openPS", () => {
 
         expect(mocked(Gui.errorMessage)).toBeCalledWith("Error: testError");
     });
+
+    it("Check for invalid/null response without supporting ongoing actions", async () => {
+        globals.defineGlobals("");
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        globalMocks.getContentsSpy.mockResolvedValueOnce(null);
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        const node = new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null);
+        node.ongoingActions = undefined as any;
+
+        try {
+            await dsActions.openPS(node, true, blockMocks.testDatasetTree);
+        } catch (err) {
+            expect(err.message).toBe("Response was null or invalid.");
+        }
+    });
+
     it("Checking of opening for PDS Member", async () => {
         globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
 
-        mocked(vscode.window.withProgress).mockResolvedValueOnce({
+        mocked(blockMocks.mvsApi.getContents).mockResolvedValueOnce({
             success: true,
-            commandResponse: null,
+            commandResponse: "",
             apiResponse: {
                 etag: "123",
             },
@@ -3410,9 +3427,9 @@ describe("Dataset Actions Unit Tests - Function openPS", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
 
-        mocked(vscode.window.withProgress).mockResolvedValueOnce({
+        mocked(blockMocks.mvsApi.getContents).mockResolvedValueOnce({
             success: true,
-            commandResponse: null,
+            commandResponse: "",
             apiResponse: {
                 etag: "123",
             },
@@ -3437,9 +3454,9 @@ describe("Dataset Actions Unit Tests - Function openPS", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
 
-        mocked(vscode.window.withProgress).mockResolvedValueOnce({
+        mocked(blockMocks.mvsApi.getContents).mockResolvedValueOnce({
             success: true,
-            commandResponse: null,
+            commandResponse: "",
             apiResponse: {
                 etag: "123",
             },

@@ -6,6 +6,9 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### New features and enhancements
 
+- Added optional `pendingActions` record to `IZoweTreeNode` to allow nodes to track pending promises.
+- Added optional `requestFailed` variable to `IZoweDatasetTreeNode` to track the result of the last fetch request made on a data set node.
+
 ### Bug fixes
 
 - Bump `@zowe/secrets-for-zowe-sdk` to 7.18.3 to handle install errors gracefully and to allow running without MSVC redistributables.
