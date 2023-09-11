@@ -961,6 +961,10 @@ export async function submitJcl(datasetProvider: api.IZoweTree<api.IZoweDatasetT
                 canPickMany: false,
             };
             sessProfileName = await api.Gui.showQuickPick(profileNamesList, quickPickOptions);
+            if (!sessProfileName) {
+                api.Gui.infoMessage(localizedStrings.opCancelled);
+                return;
+            }
         } else {
             api.Gui.showMessage(localize("submitJcl.noProfile", "No profiles available"));
         }

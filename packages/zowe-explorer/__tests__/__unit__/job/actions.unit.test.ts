@@ -513,25 +513,25 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
         );
     });
 
-    it("Checking failed attempt to submit of active text editor content as JCL", async () => {
+    it("Checking failed attempt to submit of active text editor content as JCL without profile chosen from quickpick", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(zowe.ZosmfSession.createSessCfgFromArgs).mockReturnValue(blockMocks.session.ISession);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
-        mocked(vscode.window.showQuickPick).mockResolvedValueOnce(null); // Here we imitate the case when no profile was selected
+        mocked(vscode.window.showQuickPick).mockResolvedValueOnce(undefined); // Here we imitate the case when no profile was selected
         blockMocks.testDatasetTree.getChildren.mockResolvedValueOnce([
             new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null),
             blockMocks.datasetSessionNode,
         ]);
         activeTextEditorDocument.mockReturnValue(blockMocks.textDocument);
+        const messageSpy = jest.spyOn(Gui, "infoMessage");
         const submitJclSpy = jest.spyOn(blockMocks.jesApi, "submitJcl");
         submitJclSpy.mockClear();
 
         await dsActions.submitJcl(blockMocks.testDatasetTree);
 
         expect(submitJclSpy).not.toBeCalled();
-        expect(mocked(ZoweLogger.error)).toBeCalled();
-        expect(mocked(ZoweLogger.error).mock.calls[0][0]).toEqual("Session for submitting JCL was null or undefined!");
+        expect(messageSpy).toBeCalledWith("Operation Cancelled");
     });
 
     it("Checking API error on submit of active text editor content as JCL", async () => {
