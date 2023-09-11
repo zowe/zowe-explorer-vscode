@@ -643,6 +643,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             sessionNode.dirty = true;
             this.addSearchHistory(sanitizedPath);
             await TreeViewUtils.expandNode(sessionNode, this);
+            this.refresh();
         }
     }
 
