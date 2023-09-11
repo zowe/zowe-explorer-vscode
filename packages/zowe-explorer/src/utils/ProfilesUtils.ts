@@ -23,6 +23,7 @@ import { imperative, getImperativeConfig } from "@zowe/cli";
 import { ZoweExplorerExtender } from "../ZoweExplorerExtender";
 import { ZoweLogger } from "./LoggerUtils";
 import { SettingsConfig } from "./SettingsConfig";
+import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 
 // Set up localization
 nls.config({
@@ -346,26 +347,35 @@ export class ProfilesUtils {
             //     description: localize("promptCredentials.quickPick.certAuthDescription", "Select a PEM certificate file"),
             // },
         };
-        let currentAuthType = imperative.SessConstants.AUTH_TYPE_BASIC;
-        if (profile.profile?.tokenType != null) {
-            currentAuthType = imperative.SessConstants.AUTH_TYPE_TOKEN;
-        } else if (profile.profile?.certFile != null) {
-            // currentAuthType = imperative.SessConstants.AUTH_TYPE_CERT_PEM;
+        try {
+            ZoweExplorerApiRegister.getInstance().getCommonApi(profile).getTokenTypeName();
+        } catch {
+            // This profile does not support token authentication
+            delete authTypeChoices[imperative.SessConstants.AUTH_TYPE_TOKEN];
         }
-        authTypeChoices[currentAuthType].label = authTypeChoices[currentAuthType].label.replace("$(circle-large)", "$(record)");
         const isSsoLoggedIn = profile.profile?.tokenValue != null;
         const quickPickOptions: vscode.QuickPickItem[] = Object.values(authTypeChoices);
-        if (isSsoLoggedIn) {
-            quickPickOptions.push(globals.SEPARATORS.BLANK, {
-                label: localize("promptCredentials.quickPick.logOutLabel", "Log out of Authentication Service"),
-            });
+        let selectedItem = quickPickOptions[0];
+        if (quickPickOptions.length > 1) {
+            let currentAuthType = imperative.SessConstants.AUTH_TYPE_BASIC;
+            if (profile.profile?.tokenType != null) {
+                currentAuthType = imperative.SessConstants.AUTH_TYPE_TOKEN;
+            } else if (profile.profile?.certFile != null) {
+                // currentAuthType = imperative.SessConstants.AUTH_TYPE_CERT_PEM;
+            }
+            authTypeChoices[currentAuthType].label = authTypeChoices[currentAuthType].label.replace("$(circle-large)", "$(record)");
+            if (isSsoLoggedIn) {
+                quickPickOptions.push(globals.SEPARATORS.BLANK, {
+                    label: localize("promptCredentials.quickPick.logOutLabel", "Log out of Authentication Service"),
+                });
+            }
+            const qp = Gui.createQuickPick();
+            qp.items = quickPickOptions;
+            qp.activeItems = [authTypeChoices[currentAuthType]];
+            qp.placeholder = localize("promptCredentials.quickPick.title", "Select authentication method for {0}", profile.name);
+            qp.show();
+            selectedItem = await Gui.resolveQuickPick(qp);
         }
-        const qp = Gui.createQuickPick();
-        qp.items = quickPickOptions;
-        qp.activeItems = [authTypeChoices[currentAuthType]];
-        qp.placeholder = localize("promptCredentials.quickPick.title", "Select an authentication method");
-        qp.show();
-        const selectedItem = await Gui.resolveQuickPick(qp);
         if (selectedItem === authTypeChoices[imperative.SessConstants.AUTH_TYPE_BASIC]) {
             const creds = await Profiles.getInstance().promptCredentials(profile, true);
             if (creds != null) {

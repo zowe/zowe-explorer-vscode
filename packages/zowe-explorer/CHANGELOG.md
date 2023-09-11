@@ -6,6 +6,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
+- Replaced multiple options for updating credentials with a single "Manage Credentials" option that prompts for preferred authentication type. [#2263](https://github.com/zowe/vscode-extension-for-zowe/issues/2263)
+
 ### Bug fixes
 
 ## `2.10.0`

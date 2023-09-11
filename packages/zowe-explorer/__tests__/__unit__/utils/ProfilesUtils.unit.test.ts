@@ -11,7 +11,7 @@
 
 import * as fs from "fs";
 import * as path from "path";
-import { Gui, IZoweTreeNode, ProfilesCache } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweTreeNode, ProfilesCache, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import * as util from "util";
 import * as globals from "../../../src/globals";
 import * as profUtils from "../../../src/utils/ProfilesUtils";
@@ -21,6 +21,7 @@ import { Profiles } from "../../../src/Profiles";
 import { SettingsConfig } from "../../../src/utils/SettingsConfig";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 import { ZoweExplorerExtender } from "../../../src/ZoweExplorerExtender";
+import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 
 jest.mock("fs");
 jest.mock("vscode");
@@ -359,10 +360,7 @@ describe("ProfilesUtils unit tests", () => {
                 value: jest.fn().mockResolvedValue("emptyConfig"),
                 configurable: true,
             });
-            jest.spyOn(Gui, "createQuickPick").mockReturnValue({
-                show: jest.fn(),
-            } as unknown as vscode.QuickPick<vscode.QuickPickItem>);
-            jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(undefined);
+            jest.spyOn(ZoweVsCodeExtension as any, "promptUserPass").mockResolvedValue([]);
             await profUtils.ProfilesUtils.promptCredentials(null);
             expect(getProfileInfoSpy).toHaveBeenCalled();
         });
@@ -404,10 +402,6 @@ describe("ProfilesUtils unit tests", () => {
                 value: jest.fn().mockResolvedValue("testConfig"),
                 configurable: true,
             });
-            jest.spyOn(Gui, "createQuickPick").mockReturnValue({
-                show: jest.fn(),
-            } as unknown as vscode.QuickPick<vscode.QuickPickItem>);
-            jest.spyOn(Gui, "resolveQuickPick").mockImplementationOnce((qp) => Promise.resolve(qp.activeItems[0]));
             Object.defineProperty(Gui, "showMessage", {
                 value: jest.fn(),
                 configurable: true,
@@ -417,7 +411,37 @@ describe("ProfilesUtils unit tests", () => {
             expect(Gui.showMessage).toHaveBeenCalledWith("Credentials for testConfig were successfully updated");
         });
 
-        it("proceeds with SSO login if auth token option is selected", async () => {
+        it("prompts for credentials if basic auth option is selected in quickpick", async () => {
+            const mockProfileInstance = new Profiles(zowe.imperative.Logger.getAppLogger());
+            const prof = {
+                getAllProfiles: jest.fn().mockReturnValue([]),
+                isSecured: jest.fn().mockReturnValue(true),
+                readProfilesFromDisk: jest.fn(),
+            };
+            jest.spyOn(ProfilesCache.prototype, "getProfileInfo").mockResolvedValue(prof as unknown as zowe.imperative.ProfileInfo);
+            jest.spyOn(ProfilesCache.prototype, "getLoadedProfConfig").mockResolvedValue({
+                profile: prof,
+            } as unknown as zowe.imperative.IProfileLoaded);
+            jest.spyOn(Profiles, "getInstance").mockReturnValue(mockProfileInstance);
+            jest.spyOn(ZoweExplorerApiRegister, "getInstance").mockReturnValueOnce({
+                getCommonApi: jest.fn(() => ({
+                    getTokenTypeName: jest.fn().mockReturnValue("fakeToken"),
+                })),
+            } as any);
+            Object.defineProperty(vscode.window, "showInputBox", {
+                value: jest.fn().mockResolvedValue("testConfig"),
+                configurable: true,
+            });
+            jest.spyOn(Gui, "createQuickPick").mockReturnValue({
+                show: jest.fn(),
+            } as unknown as vscode.QuickPick<vscode.QuickPickItem>);
+            jest.spyOn(Gui, "resolveQuickPick").mockImplementationOnce((qp) => Promise.resolve(qp.activeItems[0]));
+            const promptCredsSpy = jest.spyOn(mockProfileInstance, "promptCredentials").mockResolvedValueOnce([]);
+            await profUtils.ProfilesUtils.promptCredentials(null);
+            expect(promptCredsSpy).toHaveBeenCalledTimes(1);
+        });
+
+        it("proceeds with SSO login if token auth option is selected in quickpick", async () => {
             const mockProfileInstance = new Profiles(zowe.imperative.Logger.getAppLogger());
             mockProfileInstance.getLoadedProfConfig = jest.fn().mockResolvedValue({
                 profile: { tokenType: "fakeToken" },
@@ -432,6 +456,11 @@ describe("ProfilesUtils unit tests", () => {
                 profile: prof,
             } as unknown as zowe.imperative.IProfileLoaded);
             jest.spyOn(Profiles, "getInstance").mockReturnValue(mockProfileInstance);
+            jest.spyOn(ZoweExplorerApiRegister, "getInstance").mockReturnValueOnce({
+                getCommonApi: jest.fn(() => ({
+                    getTokenTypeName: jest.fn().mockReturnValue("fakeToken"),
+                })),
+            } as any);
             Object.defineProperty(vscode.window, "showInputBox", {
                 value: jest.fn().mockResolvedValue("testConfig"),
                 configurable: true,
@@ -445,7 +474,7 @@ describe("ProfilesUtils unit tests", () => {
             expect(ssoLoginSpy).toHaveBeenCalledTimes(1);
         });
 
-        it("proceeds with SSO logout if log out option is selected", async () => {
+        it("proceeds with SSO logout if log out option is selected in quickpick", async () => {
             const mockProfileInstance = new Profiles(zowe.imperative.Logger.getAppLogger());
             const prof = {
                 getAllProfiles: jest.fn().mockReturnValue([]),
@@ -457,6 +486,11 @@ describe("ProfilesUtils unit tests", () => {
                 profile: prof,
             } as unknown as zowe.imperative.IProfileLoaded);
             jest.spyOn(Profiles, "getInstance").mockReturnValue(mockProfileInstance);
+            jest.spyOn(ZoweExplorerApiRegister, "getInstance").mockReturnValueOnce({
+                getCommonApi: jest.fn(() => ({
+                    getTokenTypeName: jest.fn().mockReturnValue("fakeToken"),
+                })),
+            } as any);
             jest.spyOn(Gui, "createQuickPick").mockReturnValue({
                 show: jest.fn(),
             } as unknown as vscode.QuickPick<vscode.QuickPickItem>);
