@@ -415,6 +415,15 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
             undefined,
             globalMocks.imperativeProfile
         );
+        const testMigrNode = new ZoweDatasetNode(
+            "HLQ.TEST.MIGR",
+            vscode.TreeItemCollapsibleState.None,
+            globalMocks.datasetSessionNode,
+            globalMocks.session,
+            globals.DS_MIGRATED_FILE_CONTEXT,
+            undefined,
+            globalMocks.imperativeProfile
+        );
         const testMemberNode = new ZoweDatasetNode(
             "MEMB",
             vscode.TreeItemCollapsibleState.None,
@@ -447,6 +456,7 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
         testFavoritedNode.children.push(testFavMemberNode);
         globalMocks.datasetSessionNode.children.push(testDatasetNode);
         globalMocks.datasetSessionNode.children.push(testVsamNode);
+        globalMocks.datasetSessionNode.children.push(testMigrNode);
         globalMocks.datasetSessionFavNode.children.push(testFavoritedNode);
 
         mocked(vscode.window.withProgress).mockImplementation((progLocation, callback) => {
@@ -466,6 +476,7 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
             testDatasetTree,
             testDatasetNode,
             testVsamNode,
+            testMigrNode,
             testMemberNode,
             testFavMemberNode,
             testFavoritedNode,
@@ -516,6 +527,20 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
         await dsActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
 
         expect(mocked(Gui.showMessage)).toBeCalledWith(`The following 1 item(s) were deleted: ${blockMocks.testVsamNode.getLabel()}`);
+    });
+
+    it("Should delete one migrated dataset", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+
+        const selectedNodes = [blockMocks.testMigrNode];
+        const treeView = createTreeView(selectedNodes);
+        blockMocks.testDatasetTree.getTreeView.mockReturnValueOnce(treeView);
+        globalMocks.mockShowWarningMessage.mockResolvedValueOnce("Delete");
+
+        await dsActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
+
+        expect(mocked(Gui.showMessage)).toBeCalledWith(`The following 1 item(s) were deleted: ${blockMocks.testMigrNode.getLabel()}`);
     });
 
     it("Should delete two datasets", async () => {
