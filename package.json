@@ -9,13 +9,14 @@
   },
   "private": true,
   "workspaces": [
-    "packages/*"
+    "packages/*",
+    "packages/zowe-explorer/webviews/*"
   ],
   "engines": {
     "vscode": "^1.53.2"
   },
   "dependencies": {
-    "@zowe/cli": "7.16.6",
+    "@zowe/cli": "7.18.0",
     "vscode-nls": "4.1.2"
   },
   "devDependencies": {

@@ -2,7 +2,7 @@
   "name": "vscode-extension-for-zowe",
   "displayName": "%displayName%",
   "description": "%description%",
-  "version": "2.10.0-SNAPSHOT",
+  "version": "2.11.0-SNAPSHOT",
   "publisher": "Zowe",
   "author": "Zowe",
   "license": "EPL-2.0",
@@ -298,6 +298,11 @@
       {
         "command": "zowe.ds.showAttributes",
         "title": "%showAttributes%",
+        "category": "Zowe Explorer"
+      },
+      {
+        "command": "zowe.uss.editAttributes",
+        "title": "%editAttributes%",
         "category": "Zowe Explorer"
       },
       {
@@ -934,6 +939,11 @@
           "group": "099_zowe_ussModification:@0"
         },
         {
+          "when": "view == zowe.uss.explorer && viewItem =~ /^(textFile.*|binaryFile.*|directory.*)/",
+          "command": "zowe.uss.editAttributes",
+          "group": "099_zowe_ussModification:@1"
+        },
+        {
           "when": "view == zowe.uss.explorer && viewItem =~ /^(?!(ussSession|favorite|profile_fav))/ && !listMultiSelection",
           "command": "zowe.uss.renameNode",
           "group": "099_zowe_ussModification:@3"
@@ -1039,7 +1049,7 @@
           "group": "000_zowe_dsMainframeInteraction@8"
         },
         {
-          "when": "view == zowe.ds.explorer && viewItem =~ /^(pds|migr|member|ds|vsam).*/",
+          "when": "view == zowe.ds.explorer && viewItem =~ /^(pds|member|ds|vsam).*/",
           "command": "zowe.ds.showAttributes",
           "group": "001_zowe_dsCreate@1"
         },
@@ -1150,6 +1160,11 @@
         },
         {
           "when": "view == zowe.ds.explorer && viewItem =~ /^pds.*/",
+          "command": "zowe.ds.deleteDataset",
+          "group": "099_zowe_dsModification@5"
+        },
+        {
+          "when": "view == zowe.ds.explorer && viewItem =~ /^migr.*/",
           "command": "zowe.ds.deleteDataset",
           "group": "099_zowe_dsModification@5"
         },
@@ -1572,6 +1587,10 @@
           "when": "never"
         },
         {
+          "command": "zowe.uss.editAttributes",
+          "when": "never"
+        },
+        {
           "command": "zowe.uss.binary",
           "when": "never"
         },
@@ -1888,7 +1907,7 @@
           "default": true,
           "type": "boolean",
           "description": "%zowe.security.secureCredentialsEnabled%",
-          "scope": "machine"
+          "scope": "machine-overridable"
         },
         "zowe.logger": {
           "type": "string",
@@ -1963,6 +1982,7 @@
     "vscode": "^1.53.2"
   },
   "devDependencies": {
+    "@napi-rs/cli": "^2.16.1",
     "@types/chai": "^4.2.6",
     "@types/chai-as-promised": "^7.1.0",
     "@types/expect": "^1.20.3",
@@ -1973,9 +1993,10 @@
     "chai": "^4.1.2",
     "chai-as-promised": "^7.1.1",
     "chalk": "^2.4.1",
+    "copy-webpack-plugin": "^6.4.1",
     "cross-env": "^5.2.0",
     "del": "^4.1.1",
-    "eslint-plugin-zowe-explorer": "2.10.0-SNAPSHOT",
+    "eslint-plugin-zowe-explorer": "2.11.0-SNAPSHOT",
     "event-stream": "^4.0.1",
     "expect": "^24.8.0",
     "geckodriver": "^1.19.1",
@@ -1988,7 +2009,6 @@
     "gulp-typescript": "^5.0.1",
     "jsdoc": "^3.6.3",
     "jsdom": "^16.0.0",
-    "keytar": "^7.2.0",
     "log4js": "^6.4.6",
     "markdownlint-cli": "^0.33.0",
     "mem": "^6.0.1",
@@ -2001,11 +2021,13 @@
     "webpack-cli": "^3.3.11"
   },
   "dependencies": {
-    "@zowe/zowe-explorer-api": "2.10.0-SNAPSHOT",
+    "@zowe/secrets-for-zowe-sdk": "7.18.4",
+    "@zowe/zowe-explorer-api": "2.11.0-SNAPSHOT",
     "fs-extra": "8.0.1",
     "isbinaryfile": "4.0.4",
     "js-yaml": "3.13.1",
     "promise-queue": "2.2.5",
+    "promise-status-async": "^1.2.10",
     "yamljs": "0.3.0"
   },
   "jest": {

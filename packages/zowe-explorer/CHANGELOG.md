@@ -6,10 +6,29 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
+- Allow deleting migrated datasets [#2447](https://github.com/zowe/vscode-extension-for-zowe/issues/2447)
+
+### Bug fixes
+
+- Fixed issue with favorited Job filter search. [#2440](https://github.com/zowe/vscode-extension-for-zowe/issues/2440)
+- Remove the 'Show Attributes' context menu action for migrated datasets. [#2033](https://github.com/zowe/vscode-extension-for-zowe/issues/2033)
+- Fixed issue with endless credential prompt loop when logging out. [#2262](https://github.com/zowe/vscode-extension-for-zowe/issues/2262)
+- Bump `@zowe/secrets-for-zowe-sdk` to 7.18.4 to handle install errors gracefully and to allow running without MSVC redistributables.
+- Fixed issue where data set content does not always appear as soon as the editor is opened. [#2427](https://github.com/zowe/vscode-extension-for-zowe/issues/2427)
+- Adjust scope of "Security: Secure Credentials Enabled" setting to `machine-overridable` so it appears again in certain cloud IDEs.
+
+## `2.10.0`
+
+### New features and enhancements
+
+- Added call to callback if defined by extenders when a change to the team config profile is made. [#2385](https://github.com/zowe/vscode-extension-for-zowe/issues/2385)
+- Replaced `keytar` dependency with `keyring` module from [`@zowe/secrets-for-zowe-sdk`](https://github.com/zowe/zowe-cli/tree/master/packages/secrets). [#2358](https://github.com/zowe/vscode-extension-for-zowe/issues/2358) [#2348](https://github.com/zowe/vscode-extension-for-zowe/issues/2348)
+- Added "Edit Attributes" option for USS files and folders. [#2254](https://github.com/zowe/vscode-extension-for-zowe/issues/2254)
+
 ### Bug fixes
 
 - Fix the USS refresh icon (replacing "download" with "refresh")
-- Fix error for Theia check when token authentication returns 401.
+- Fix error for Theia check when token authentication returns 401. [#2407](https://github.com/zowe/vscode-extension-for-zowe/issues/2407)
 
 ## `2.9.2`
 

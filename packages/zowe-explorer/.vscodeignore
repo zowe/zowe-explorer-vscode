@@ -8,6 +8,8 @@
 !out/src/nls.metadata*.json
 !resources/**/*.png
 !resources/**/*.svg
+!prebuilds/**
+!webviews/*/dist/
 
 !CHANGELOG.md
 !LICENSE

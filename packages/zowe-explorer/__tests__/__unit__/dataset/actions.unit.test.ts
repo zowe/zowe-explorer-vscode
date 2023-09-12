@@ -415,6 +415,15 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
             undefined,
             globalMocks.imperativeProfile
         );
+        const testMigrNode = new ZoweDatasetNode(
+            "HLQ.TEST.MIGR",
+            vscode.TreeItemCollapsibleState.None,
+            globalMocks.datasetSessionNode,
+            globalMocks.session,
+            globals.DS_MIGRATED_FILE_CONTEXT,
+            undefined,
+            globalMocks.imperativeProfile
+        );
         const testMemberNode = new ZoweDatasetNode(
             "MEMB",
             vscode.TreeItemCollapsibleState.None,
@@ -447,6 +456,7 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
         testFavoritedNode.children.push(testFavMemberNode);
         globalMocks.datasetSessionNode.children.push(testDatasetNode);
         globalMocks.datasetSessionNode.children.push(testVsamNode);
+        globalMocks.datasetSessionNode.children.push(testMigrNode);
         globalMocks.datasetSessionFavNode.children.push(testFavoritedNode);
 
         mocked(vscode.window.withProgress).mockImplementation((progLocation, callback) => {
@@ -466,6 +476,7 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
             testDatasetTree,
             testDatasetNode,
             testVsamNode,
+            testMigrNode,
             testMemberNode,
             testFavMemberNode,
             testFavoritedNode,
@@ -516,6 +527,20 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
         await dsActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
 
         expect(mocked(Gui.showMessage)).toBeCalledWith(`The following 1 item(s) were deleted: ${blockMocks.testVsamNode.getLabel()}`);
+    });
+
+    it("Should delete one migrated dataset", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+
+        const selectedNodes = [blockMocks.testMigrNode];
+        const treeView = createTreeView(selectedNodes);
+        blockMocks.testDatasetTree.getTreeView.mockReturnValueOnce(treeView);
+        globalMocks.mockShowWarningMessage.mockResolvedValueOnce("Delete");
+
+        await dsActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
+
+        expect(mocked(Gui.showMessage)).toBeCalledWith(`The following 1 item(s) were deleted: ${blockMocks.testMigrNode.getLabel()}`);
     });
 
     it("Should delete two datasets", async () => {
@@ -3318,9 +3343,9 @@ describe("Dataset Actions Unit Tests - Function openPS", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
 
-        mocked(vscode.window.withProgress).mockResolvedValueOnce({
+        mocked(blockMocks.mvsApi.getContents).mockResolvedValueOnce({
             success: true,
-            commandResponse: null,
+            commandResponse: "",
             apiResponse: {
                 etag: "123",
             },
@@ -3339,9 +3364,9 @@ describe("Dataset Actions Unit Tests - Function openPS", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
 
-        mocked(vscode.window.withProgress).mockResolvedValueOnce({
+        mocked(blockMocks.mvsApi.getContents).mockResolvedValueOnce({
             success: true,
-            commandResponse: null,
+            commandResponse: "",
             apiResponse: {
                 etag: "123",
             },
@@ -3378,14 +3403,31 @@ describe("Dataset Actions Unit Tests - Function openPS", () => {
 
         expect(mocked(Gui.errorMessage)).toBeCalledWith("Error: testError");
     });
+
+    it("Check for invalid/null response without supporting ongoing actions", async () => {
+        globals.defineGlobals("");
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        globalMocks.getContentsSpy.mockResolvedValueOnce(null);
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        const node = new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null);
+        node.ongoingActions = undefined as any;
+
+        try {
+            await dsActions.openPS(node, true, blockMocks.testDatasetTree);
+        } catch (err) {
+            expect(err.message).toBe("Response was null or invalid.");
+        }
+    });
+
     it("Checking of opening for PDS Member", async () => {
         globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
 
-        mocked(vscode.window.withProgress).mockResolvedValueOnce({
+        mocked(blockMocks.mvsApi.getContents).mockResolvedValueOnce({
             success: true,
-            commandResponse: null,
+            commandResponse: "",
             apiResponse: {
                 etag: "123",
             },
@@ -3410,9 +3452,9 @@ describe("Dataset Actions Unit Tests - Function openPS", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
 
-        mocked(vscode.window.withProgress).mockResolvedValueOnce({
+        mocked(blockMocks.mvsApi.getContents).mockResolvedValueOnce({
             success: true,
-            commandResponse: null,
+            commandResponse: "",
             apiResponse: {
                 etag: "123",
             },
@@ -3437,9 +3479,9 @@ describe("Dataset Actions Unit Tests - Function openPS", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
 
-        mocked(vscode.window.withProgress).mockResolvedValueOnce({
+        mocked(blockMocks.mvsApi.getContents).mockResolvedValueOnce({
             success: true,
-            commandResponse: null,
+            commandResponse: "",
             apiResponse: {
                 etag: "123",
             },

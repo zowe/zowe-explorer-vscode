@@ -14,7 +14,8 @@
       "outFiles": ["${workspaceFolder}/packages/zowe-explorer/out/**/*.js"],
       "preLaunchTask": "build dev watch",
       "smartStep": true,
-      "skipFiles": ["<node_internals>/**"]
+      "skipFiles": ["<node_internals>/**"],
+      "envFile": "${workspaceFolder}/.vscode/.env"
     },
     {
       // TODO: This launch-configuration should be updated to run the Theia container locally

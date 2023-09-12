@@ -129,6 +129,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             prompt: localize("renameUSS.enterName", "Enter a new name for the {0}", nodeType),
             value: originalNode.label.toString().replace(/^\[.+\]:\s/, ""),
             ignoreFocusOut: true,
+            // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
             validateInput: (value) => this.checkDuplicateLabel(parentPath + value, loadedNodes),
         };
         const newName = await Gui.showInputBox(options);
@@ -294,6 +295,10 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             if (element.contextValue && element.contextValue === globals.FAV_PROFILE_CONTEXT) {
                 const favsForProfile = await this.loadProfilesForFavorites(this.log, element);
                 return favsForProfile;
+            }
+            const validationStatus = await Profiles.getInstance().checkCurrentProfile(element.getProfile());
+            if (validationStatus.status === "unverified") {
+                return [];
             }
             return element.getChildren();
         }
@@ -642,6 +647,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             sessionNode.dirty = true;
             this.addSearchHistory(sanitizedPath);
             await TreeViewUtils.expandNode(sessionNode, this);
+            this.refresh();
         }
     }
 

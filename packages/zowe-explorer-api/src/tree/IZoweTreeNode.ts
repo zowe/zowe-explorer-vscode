@@ -12,8 +12,13 @@
 import * as vscode from "vscode";
 import { IJob, imperative } from "@zowe/cli";
 import { IZoweTree } from "./IZoweTree";
+import { FileAttributes } from "../utils/files";
 
 export type IZoweNodeType = IZoweDatasetTreeNode | IZoweUSSTreeNode | IZoweJobTreeNode;
+
+export enum NodeAction {
+    Download = "download",
+}
 
 /**
  * The base interface for Zowe tree nodes that are implemented by vscode.TreeItem.
@@ -65,6 +70,14 @@ export interface IZoweTreeNode {
      * This will show action `extension.deleteFolder` only for items with `contextValue` is `folder`.
      */
     contextValue?: string;
+    /**
+     * Any ongoing actions that must be awaited before continuing
+     */
+    ongoingActions?: Record<NodeAction | string, Promise<any>>;
+    /**
+     * whether the node was double-clicked
+     */
+    wasDoubleClicked?: boolean;
     /**
      * Retrieves the node label
      */
@@ -122,7 +135,6 @@ export interface IZoweDatasetTreeNode extends IZoweTreeNode {
      * Search criteria for a Dataset member search
      */
     memberPattern?: string;
-
     /**
      * Retrieves child nodes of this IZoweDatasetTreeNode
      *
@@ -166,6 +178,19 @@ export interface IZoweUSSTreeNode extends IZoweTreeNode {
      * Specific profile name in use with this node
      */
     mProfileName?: string;
+
+    /**
+     * File attributes
+     */
+    attributes?: FileAttributes;
+    /**
+     * Event that fires whenever an existing node is updated.
+     */
+    onUpdateEmitter?: vscode.EventEmitter<IZoweUSSTreeNode>;
+    /**
+     * Event that fires whenever an existing node is updated.
+     */
+    onUpdate?: vscode.Event<IZoweUSSTreeNode>;
     /**
      * Retrieves child nodes of this IZoweUSSTreeNode
      *
