@@ -22,6 +22,7 @@ import { SettingsConfig } from "../../../src/utils/SettingsConfig";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 import { ZoweExplorerExtender } from "../../../src/ZoweExplorerExtender";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
+import { createValidIProfile } from "../../../__mocks__/mockCreators/shared";
 
 jest.mock("fs");
 jest.mock("vscode");
@@ -62,6 +63,25 @@ describe("ProfilesUtils unit tests", () => {
     }
 
     describe("errorHandling", () => {
+        const profileInfoMock = () => ({
+            getTeamConfig: () => ({
+                properties: {
+                    profiles: {
+                        sestest: createValidIProfile().profile,
+                        base: {
+                            type: "base",
+                            host: "test",
+                            port: 1443,
+                            rejectUnauthorized: false,
+                            name: "base",
+                            tokenType: "",
+                            secure: [],
+                        },
+                    },
+                },
+            }),
+        });
+
         it("should log error details", async () => {
             createBlockMocks();
             const errorDetails = new Error("i haz error");
@@ -130,11 +150,13 @@ describe("ProfilesUtils unit tests", () => {
             jest.spyOn(profUtils, "isTheia").mockReturnValue(false);
             const showMessageSpy = jest.spyOn(Gui, "errorMessage").mockImplementation(() => Promise.resolve("Update Credentials"));
             const promptCredsSpy = jest.fn();
-            Object.defineProperty(Profiles, "getInstance", {
-                value: () => ({
-                    promptCredentials: promptCredsSpy,
-                }),
-            });
+            jest.spyOn(Profiles, "getInstance").mockReturnValue({
+                promptCredentials: promptCredsSpy,
+                getProfileInfo: profileInfoMock,
+                getLoadedProfConfig: () => ({ type: "zosmf" }),
+                getDefaultProfile: () => ({}),
+                getSecurePropsForProfile: () => [],
+            } as any);
             await profUtils.errorHandling(errorDetails, label, moreInfo);
             expect(showMessageSpy).toBeCalledTimes(1);
             expect(promptCredsSpy).toBeCalledTimes(1);
@@ -153,11 +175,13 @@ describe("ProfilesUtils unit tests", () => {
             const showErrorSpy = jest.spyOn(Gui, "errorMessage");
             const showMessageSpy = jest.spyOn(Gui, "showMessage").mockImplementation(() => Promise.resolve("selection"));
             const ssoLoginSpy = jest.fn();
-            Object.defineProperty(Profiles, "getInstance", {
-                value: () => ({
-                    ssoLogin: ssoLoginSpy,
-                }),
-            });
+            jest.spyOn(Profiles, "getInstance").mockReturnValue({
+                getProfileInfo: profileInfoMock,
+                getLoadedProfConfig: () => ({ type: "zosmf" }),
+                getDefaultProfile: () => ({}),
+                getSecurePropsForProfile: () => ["tokenValue"],
+                ssoLogin: ssoLoginSpy,
+            } as any);
             await profUtils.errorHandling(errorDetails, label, moreInfo);
             expect(showMessageSpy).toBeCalledTimes(1);
             expect(ssoLoginSpy).toBeCalledTimes(1);
@@ -183,11 +207,13 @@ describe("ProfilesUtils unit tests", () => {
             const showErrorSpy = jest.spyOn(Gui, "errorMessage").mockImplementation(() => Promise.resolve(undefined));
             const showMessageSpy = jest.spyOn(Gui, "showMessage");
             const ssoLoginSpy = jest.fn();
-            Object.defineProperty(Profiles, "getInstance", {
-                value: () => ({
-                    ssoLogin: ssoLoginSpy,
-                }),
-            });
+            jest.spyOn(Profiles, "getInstance").mockReturnValue({
+                getProfileInfo: profileInfoMock,
+                getLoadedProfConfig: () => ({ type: "zosmf" }),
+                getDefaultProfile: () => ({}),
+                getSecurePropsForProfile: () => ["tokenValue"],
+                ssoLogin: ssoLoginSpy,
+            } as any);
             await profUtils.errorHandling(errorDetails, label, moreInfo);
             expect(showErrorSpy).toBeCalledTimes(1);
             expect(ssoLoginSpy).toBeCalledTimes(1);
@@ -213,11 +239,13 @@ describe("ProfilesUtils unit tests", () => {
             const showErrorSpy = jest.spyOn(Gui, "errorMessage").mockResolvedValue(undefined);
             const showMsgSpy = jest.spyOn(Gui, "showMessage");
             const promptCredentialsSpy = jest.fn();
-            Object.defineProperty(Profiles, "getInstance", {
-                value: () => ({
-                    promptCredentials: promptCredentialsSpy,
-                }),
-            });
+            jest.spyOn(Profiles, "getInstance").mockReturnValue({
+                promptCredentials: promptCredentialsSpy,
+                getProfileInfo: profileInfoMock,
+                getLoadedProfConfig: () => ({ type: "zosmf" }),
+                getDefaultProfile: () => ({}),
+                getSecurePropsForProfile: () => [],
+            } as any);
             await profUtils.errorHandling(errorDetails, label, moreInfo);
             expect(showErrorSpy).toBeCalledTimes(1);
             expect(promptCredentialsSpy).not.toBeCalled();
@@ -237,11 +265,13 @@ describe("ProfilesUtils unit tests", () => {
             jest.spyOn(profUtils, "isTheia").mockReturnValue(true);
             const showErrorSpy = jest.spyOn(Gui, "errorMessage");
             const promptCredentialsSpy = jest.fn();
-            Object.defineProperty(Profiles, "getInstance", {
-                value: () => ({
-                    promptCredentials: promptCredentialsSpy,
-                }),
-            });
+            jest.spyOn(Profiles, "getInstance").mockReturnValue({
+                promptCredentials: promptCredentialsSpy,
+                getProfileInfo: profileInfoMock,
+                getLoadedProfConfig: () => ({ type: "zosmf" }),
+                getDefaultProfile: () => ({}),
+                getSecurePropsForProfile: () => [],
+            } as any);
             await profUtils.errorHandling(errorDetails, label, moreInfo);
             expect(showErrorSpy).toBeCalledTimes(1);
             expect(promptCredentialsSpy).not.toBeCalled();
@@ -802,6 +832,15 @@ describe("ProfilesUtils unit tests", () => {
             await expect(profUtils.ProfilesUtils.getProfileInfo(true)).resolves.toEqual({});
             expect(updateCredentialManagerSettingSpy).toBeCalledWith(globals.ZOWE_CLI_SCM);
             expect(defaultCredMgrSpy).toHaveBeenCalledWith(ProfilesCache.requireKeyring);
+        });
+    });
+
+    describe("isUsingTokenAuth", () => {
+        it("should check the profile in use if using token based auth instead of the base profile", async () => {
+            jest.spyOn(Profiles.getInstance(), "getDefaultProfile").mockReturnValueOnce({} as any);
+            jest.spyOn(Profiles.getInstance(), "getLoadedProfConfig").mockResolvedValue({ type: "test" } as any);
+            jest.spyOn(Profiles.getInstance(), "getSecurePropsForProfile").mockResolvedValue([]);
+            await expect(profUtils.isUsingTokenAuth("test")).resolves.toEqual(false);
         });
     });
 });

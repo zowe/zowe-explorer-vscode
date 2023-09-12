@@ -75,7 +75,9 @@ export async function errorHandling(errorDetails: Error | string, label?: string
 
             if (imperativeError.mDetails.additionalDetails) {
                 const tokenError: string = imperativeError.mDetails.additionalDetails;
-                if (tokenError.includes("Token is not valid or expired.")) {
+                const isTokenAuth = await isUsingTokenAuth(label);
+
+                if (tokenError.includes("Token is not valid or expired.") || isTokenAuth) {
                     if (isTheia()) {
                         Gui.errorMessage(errToken);
                         await Profiles.getInstance().ssoLogin(null, label);
@@ -128,6 +130,22 @@ export function isTheia(): boolean {
         return true;
     }
     return false;
+}
+
+/**
+ * Function that checks whether a profile is using token based authentication
+ * @param profileName the name of the profile to check
+ * @returns {Promise<boolean>} a boolean representing whether token based auth is being used or not
+ */
+export async function isUsingTokenAuth(profileName: string): Promise<boolean> {
+    const baseProfile = Profiles.getInstance().getDefaultProfile("base");
+    const isUsingZosmf = (await Profiles.getInstance().getLoadedProfConfig(profileName)).type === "zosmf";
+    const secureProfileProps = await Profiles.getInstance().getSecurePropsForProfile(profileName);
+    const secureBaseProfileProps = await Profiles.getInstance().getSecurePropsForProfile(baseProfile?.name);
+    if (isUsingZosmf && baseProfile) {
+        return secureProfileProps.includes("tokenValue") || secureBaseProfileProps.includes("tokenValue");
+    }
+    return secureProfileProps.includes("tokenValue");
 }
 
 /**
