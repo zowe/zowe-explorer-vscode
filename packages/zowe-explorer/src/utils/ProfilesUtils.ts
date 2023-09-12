@@ -336,19 +336,24 @@ export class ProfilesUtils {
         const authTypeChoices: Record<string, vscode.QuickPickItem> = {
             [imperative.SessConstants.AUTH_TYPE_BASIC]: {
                 label: "$(circle-large) " + localize("promptCredentials.quickPick.basicAuthLabel", "User and Password"),
-                description: localize("promptCredentials.quickPick.basicAuthDescription", "Store username and password"),
+                detail: localize("promptCredentials.quickPick.basicAuthDetail", "Store username and password"),
             },
             [imperative.SessConstants.AUTH_TYPE_TOKEN]: {
                 label: "$(circle-large) " + localize("promptCredentials.quickPick.tokenAuthLabel", "Authentication Token"),
-                description: localize("promptCredentials.quickPick.tokenAuthDescription", "Authenticate to service and store token"),
+                detail: localize("promptCredentials.quickPick.tokenAuthDetail", "Authenticate to service and store token"),
             },
             // [imperative.SessConstants.AUTH_TYPE_CERT_PEM]: {
             //     label: "$(circle-large) " + localize("promptCredentials.quickPick.certAuthLabel", "Certificate File"),
-            //     description: localize("promptCredentials.quickPick.certAuthDescription", "Select a PEM certificate file"),
+            //     detail: localize("promptCredentials.quickPick.certAuthDetail", "Select a PEM certificate file"),
             // },
         };
         try {
-            ZoweExplorerApiRegister.getInstance().getCommonApi(profile).getTokenTypeName();
+            const loginTokenType = ZoweExplorerApiRegister.getInstance().getCommonApi(profile).getTokenTypeName();
+            if (loginTokenType === imperative.SessConstants.TOKEN_TYPE_APIML) {
+                // Token is stored outside this profile so show base profile name
+                const baseProfile = await Profiles.getInstance().fetchBaseProfile();
+                authTypeChoices[imperative.SessConstants.AUTH_TYPE_TOKEN].description = baseProfile?.name;
+            }
         } catch {
             // This profile does not support token authentication
             delete authTypeChoices[imperative.SessConstants.AUTH_TYPE_TOKEN];
