@@ -34,12 +34,6 @@
   "main": "./out/src/extension",
   "browser": "./out/src/web/extension",
   "contributes": {
-    "submenus": [
-      {
-        "id": "zowe.jobs.sortjobs",
-        "label": "Sort Jobs"
-      }
-    ],
     "viewsContainers": {
       "activitybar": [
         {
@@ -746,11 +740,6 @@
         "category": "Zowe Explorer"
       },
       {
-        "command": "zowe.jobs.sortjobs",
-        "title": "Sort Jobs",
-        "category": "Zowe Explorer"
-      },
-      {
         "command": "zowe.jobs.search",
         "title": "%jobs.search%",
         "category": "Zowe Explorer",
@@ -791,17 +780,6 @@
       }
     ],
     "menus": {
-      "zowe.jobs.sortjobs": [
-        {
-          "command": "zowe.jobs.sortbyreturncode"
-        },
-        {
-          "command": "zowe.jobs.sortbyname"
-        },
-        {
-          "command": "zowe.jobs.sortbyid"
-        }
-      ],
       "view/title": [
         {
           "when": "view == zowe.ds.explorer",
@@ -1382,8 +1360,18 @@
         },
         {
           "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/  && !listMultiSelection",
-          "submenu": "zowe.jobs.sortjobs",
-          "group": "099_zowe_jobsProfileModification@99"
+          "command": "zowe.jobs.sortbyid",
+          "group": "000_zowe_jobsProfileModification@1"
+        },
+        {
+          "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/  && !listMultiSelection",
+          "command": "zowe.jobs.sortbyname",
+          "group": "000_zowe_jobsProfileModification@2"
+        },
+        {
+          "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/  && !listMultiSelection",
+          "command": "zowe.jobs.sortbyreturncode",
+          "group": "000_zowe_jobsProfileModification@2"
         }
       ],
       "commandPalette": [
@@ -1701,10 +1689,6 @@
         },
         {
           "command": "zowe.jobs.deleteProfile",
-          "when": "never"
-        },
-        {
-          "command": "zowe.jobs.sortjobs",
           "when": "never"
         },
         {
