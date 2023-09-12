@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - maintenance
+      - next
       - v1-lts
     paths:
       - .github/release.config.js
