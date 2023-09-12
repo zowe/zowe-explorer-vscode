@@ -9,7 +9,8 @@
   },
   "private": true,
   "workspaces": [
-    "packages/*"
+    "packages/*",
+    "packages/zowe-explorer/webviews/*"
   ],
   "engines": {
     "vscode": "^1.53.2"
