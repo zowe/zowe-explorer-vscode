@@ -123,6 +123,32 @@ describe("FtpMvsApi", () => {
         expect(MvsApi.releaseConnection).toBeCalled();
     });
 
+    it("should upload empty contents to dataset.", async () => {
+        const localFile = tmp.tmpNameSync({ tmpdir: "/tmp" });
+
+        fs.writeFileSync(localFile, "");
+        const response = TestUtils.getSingleLineStream();
+        DataSetUtils.listDataSets = jest.fn().mockReturnValue([{ dsname: "IBMUSER.DS2", dsorg: "PS", lrecl: 2 }]);
+        DataSetUtils.uploadDataSet = jest.fn().mockReturnValue(response);
+        jest.spyOn(MvsApi, "getContents").mockResolvedValue({ apiResponse: { etag: "123" } } as any);
+
+        const mockParams = {
+            inputFilePath: localFile,
+            dataSetName: "   (IBMUSER).DS2",
+            options: { encoding: "", returnEtag: true, etag: "utf8" },
+        };
+
+        jest.spyOn(MvsApi as any, "getContentsTag").mockReturnValue(undefined);
+        jest.spyOn(fs, "readFileSync").mockReturnValue("");
+        await MvsApi.putContents(mockParams.inputFilePath, mockParams.dataSetName, mockParams.options);
+        expect(DataSetUtils.uploadDataSet).toHaveBeenCalledWith({ host: "", password: "", port: "", user: "" }, "   (IBMUSER).DS2", {
+            content: " ",
+            encoding: "",
+            transferType: "ascii",
+        });
+        expect(MvsApi.releaseConnection).toBeCalled();
+    });
+
     it("should create dataset.", async () => {
         DataSetUtils.allocateDataSet = jest.fn();
         const DATA_SET_SEQUENTIAL = 4;
