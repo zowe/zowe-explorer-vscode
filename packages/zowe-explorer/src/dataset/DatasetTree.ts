@@ -157,7 +157,11 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 const favsForProfile = this.loadProfilesForFavorites(this.log, element);
                 return favsForProfile;
             }
-            await Profiles.getInstance().checkCurrentProfile(element.getProfile());
+            const validationStatus = await Profiles.getInstance().checkCurrentProfile(element.getProfile());
+
+            if (validationStatus.status === "unverified") {
+                return [];
+            }
             const finalResponse: IZoweDatasetTreeNode[] = [];
             let response;
             try {

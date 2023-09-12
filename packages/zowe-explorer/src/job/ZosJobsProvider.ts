@@ -197,6 +197,11 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                 const favsForProfile = this.loadProfilesForFavorites(this.log, element);
                 return favsForProfile;
             }
+            const validationStatus = await Profiles.getInstance().checkCurrentProfile(element.getProfile());
+
+            if (validationStatus.status === "unverified") {
+                return [];
+            }
             return element.getChildren();
         }
         return this.mSessionNodes;
