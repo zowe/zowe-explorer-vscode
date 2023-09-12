@@ -890,7 +890,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         await this.checkCurrentProfile(node);
         let nonFaveNode;
 
-        if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID || !contextually.isValidationEnabled(node)) {
+        if (Profiles.getInstance().validProfile !== ValidProfileEnum.INVALID) {
             if (contextually.isSessionNotFav(node)) {
                 nonFaveNode = node;
                 if (this.mHistory.getSearchHistory().length > 0) {
