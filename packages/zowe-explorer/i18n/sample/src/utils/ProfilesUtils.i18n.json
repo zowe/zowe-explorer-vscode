@@ -1,6 +1,6 @@
 {
   "errorHandling.invalid.host": "Required parameter 'host' must not be blank.",
-  "errorHandling.invalid.credentials": "Invalid Credentials. Please ensure the username and password for {0} are valid or this may lead to a lock-out.",
+  "errorHandling.invalid.credentials": "Invalid Credentials for profile '{0}'. Please ensure the username and password are valid or this may lead to a lock-out.",
   "errorHandling.invalid.token": "Your connection is no longer active. Please log in to an authentication service to restore the connection.",
   "errorHandling.authentication.login": "Log in to Authentication Service",
   "errorHandling.checkCredentials.button": "Update Credentials",

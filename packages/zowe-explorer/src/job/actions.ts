@@ -117,28 +117,24 @@ export async function getSpoolContent(session: string, spool: zowe.IJobFile, ref
     }
 
     const statusMsg = Gui.setStatusBarMessage(localize("jobActions.openSpoolFile", "$(sync~spin) Opening spool file...", this.label as string));
-    await profiles.checkCurrentProfile(zosmfProfile);
-    if (profiles.validProfile !== ValidProfileEnum.INVALID) {
-        const uri = encodeJobFile(session, spool);
-        try {
-            const spoolFile = SpoolProvider.files[uri.path];
-            if (spoolFile) {
-                // Fetch any changes to the spool file if it exists in the SpoolProvider
-                await spoolFile.fetchContent();
-            }
-            await Gui.showTextDocument(uri, { preview: false });
-        } catch (error) {
-            const isTextDocActive =
-                vscode.window.activeTextEditor &&
-                vscode.window.activeTextEditor.document.uri?.path === `${spool.jobname}.${spool.jobid}.${spool.ddname}`;
+    const uri = encodeJobFile(session, spool);
+    try {
+        const spoolFile = SpoolProvider.files[uri.path];
+        if (spoolFile) {
+            // Fetch any changes to the spool file if it exists in the SpoolProvider
+            await spoolFile.fetchContent();
+        }
+        await Gui.showTextDocument(uri, { preview: false });
+    } catch (error) {
+        const isTextDocActive =
+            vscode.window.activeTextEditor && vscode.window.activeTextEditor.document.uri?.path === `${spool.jobname}.${spool.jobid}.${spool.ddname}`;
 
-            statusMsg.dispose();
-            if (isTextDocActive && String(error.message).includes("Failed to show text document")) {
-                return;
-            }
-            await errorHandling(error, session);
+        statusMsg.dispose();
+        if (isTextDocActive && String(error.message).includes("Failed to show text document")) {
             return;
         }
+        await errorHandling(error, session);
+        return;
     }
     statusMsg.dispose();
 }
@@ -191,10 +187,7 @@ export async function getSpoolContentFromMainframe(node: IZoweJobTreeNode): Prom
  */
 export async function refreshJobsServer(node: IZoweJobTreeNode, jobsProvider: IZoweTree<IZoweJobTreeNode>): Promise<void> {
     ZoweLogger.trace("job.actions.refreshJobsServer called.");
-    jobsProvider.checkCurrentProfile(node);
-    if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID || Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED) {
-        await jobsProvider.refreshElement(node);
-    }
+    await jobsProvider.refreshElement(node);
 }
 
 /**
