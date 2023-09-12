@@ -112,11 +112,6 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
     }
 
     public async putContents(inputFilePath: string, dataSetName: string, options: IUploadOptions): Promise<zowe.IZosFilesResponse> {
-        const transferOptions = {
-            transferType: options.binary ? TRANSFER_TYPE_BINARY : TRANSFER_TYPE_ASCII,
-            localFile: inputFilePath,
-            encoding: options.encoding,
-        };
         const file = path.basename(inputFilePath).replace(/[^a-z0-9]+/gi, "");
         const member = file.substr(0, MAX_MEMBER_NAME_LEN);
         let targetDataset: string;
@@ -153,6 +148,16 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
             }
             const lrecl: number = dsAtrribute.apiResponse.items[0].lrecl;
             const data = fs.readFileSync(inputFilePath, { encoding: "utf8" });
+            const transferOptions = {
+                transferType: options.binary ? TRANSFER_TYPE_BINARY : TRANSFER_TYPE_ASCII,
+                localFile: inputFilePath,
+                encoding: options.encoding,
+            };
+            if (data == "") {
+                // substitute single space for empty DS contents when saving (prevents FTP error)
+                transferOptions["content"] = " ";
+                delete transferOptions["localFile"];
+            }
             const lines = data.split(/\r?\n/);
             const foundIndex = lines.findIndex((line) => line.length > lrecl);
             if (foundIndex !== -1) {
@@ -243,8 +248,9 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
 
     public async createDataSetMember(dataSetName: string, options?: IUploadOptions): Promise<zowe.IZosFilesResponse> {
         const transferOptions = {
-            transferType: options ? TRANSFER_TYPE_BINARY : TRANSFER_TYPE_ASCII,
-            content: "",
+            transferType: options.binary ? TRANSFER_TYPE_BINARY : TRANSFER_TYPE_ASCII,
+            // we have to provide a single space for content, or zos-node-accessor will fail to upload the data set over FTP
+            content: " ",
             encoding: options.encoding,
         };
         const result = this.getDefaultResponse();
