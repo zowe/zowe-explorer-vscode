@@ -79,6 +79,18 @@ describe("Test src/jobs/extension", () => {
                 mock: [{ spy: jest.spyOn(jobActions, "refreshJobsServer"), arg: [test.value, jobsProvider] }],
             },
             {
+                name: "zowe.jobs.sortbyname",
+                mock: [{ spy: jest.spyOn(jobActions, "sortByName"), arg: [test.value, jobsProvider] }],
+            },
+            {
+                name: "zowe.jobs.sortbyid",
+                mock: [{ spy: jest.spyOn(jobActions, "sortById"), arg: [test.value, jobsProvider] }],
+            },
+            {
+                name: "zowe.jobs.sortbyreturncode",
+                mock: [{ spy: jest.spyOn(jobActions, "sortByReturnCode"), arg: [test.value, jobsProvider] }],
+            },
+            {
                 name: "zowe.jobs.refreshAllJobs",
                 mock: [{ spy: jest.spyOn(refreshActions, "refreshAll"), arg: [jobsProvider] }],
             },
