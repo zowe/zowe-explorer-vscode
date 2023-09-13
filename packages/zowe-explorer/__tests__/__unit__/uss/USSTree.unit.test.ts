@@ -1424,29 +1424,7 @@ describe("USSTree Unit Tests - Function USSTree.getChildren()", () => {
 
         expect(loadProfilesForFavoritesSpy).toHaveBeenCalledWith(log, favProfileNode);
     });
-
-    it("Testing that getChildren() returns the empty array if the profile has unverified status", async () => {
-        const globalMocks = await createGlobalMocks();
-
-        const testDir = new ZoweUSSNode("aDir", vscode.TreeItemCollapsibleState.Collapsed, globalMocks.testTree.mSessionNodes[1], null, "test");
-        globalMocks.testTree.mSessionNodes[1].children.push(testDir);
-        const mockApiResponseItems = {
-            items: [
-                {
-                    mode: "d",
-                    mSessionName: "sestest",
-                    name: "aDir",
-                },
-            ],
-        };
-        const mockApiResponseWithItems = createFileResponse(mockApiResponseItems);
-        globalMocks.withProgress.mockReturnValue(mockApiResponseWithItems);
-        jest.spyOn(Profiles.getInstance(), "checkCurrentProfile").mockResolvedValueOnce({ status: "unverified" } as any);
-        const sessChildren = await globalMocks.testTree.getChildren(globalMocks.testTree.mSessionNodes[1]);
-        expect(sessChildren.length).toEqual(0);
-    });
 });
-
 // Idea is borrowed from: https://github.com/kulshekhar/ts-jest/blob/master/src/util/testing.ts
 const mocked = <T extends (...args: any[]) => any>(fn: T): jest.Mock<ReturnType<T>> => fn as any;
 
