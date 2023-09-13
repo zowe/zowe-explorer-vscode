@@ -14,7 +14,7 @@ import * as zowe from "@zowe/cli";
 import { errorHandling } from "../utils/ProfilesUtils";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
-import { Gui, ValidProfileEnum, IZoweTree, IZoweJobTreeNode } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweTree, IZoweJobTreeNode } from "@zowe/zowe-explorer-api";
 import { Job, Spool } from "./ZoweJobNode";
 import * as nls from "vscode-nls";
 import SpoolProvider, { encodeJobFile, getSpoolFiles, matchSpool } from "../SpoolProvider";
@@ -527,4 +527,37 @@ export async function cancelJobs(jobsProvider: IZoweTree<IZoweJobTreeNode>, node
     } else {
         await Gui.showMessage(localize("cancelJobs.succeeded", "Cancelled selected jobs successfully."));
     }
+}
+export async function sortByName(jobs: IZoweJobTreeNode, jobsProvider: IZoweTree<IZoweJobTreeNode>): Promise<void> {
+    if (jobs["children"].length == 0) {
+        await vscode.window.showInformationMessage("No jobs are present in the profile.");
+    }
+    jobs["children"].sort((x, y) => {
+        if (x["job"]["jobname"] === y["job"]["jobname"]) {
+            return x["job"]["jobid"] > y["job"]["jobid"] ? 1 : -1;
+        } else {
+            return x["job"]["jobname"] > y["job"]["jobname"] ? 1 : -1;
+        }
+    });
+    jobsProvider.refresh();
+}
+export async function sortById(jobs: IZoweJobTreeNode, jobsProvider: IZoweTree<IZoweJobTreeNode>): Promise<void> {
+    if (jobs["children"].length == 0) {
+        await vscode.window.showInformationMessage("No jobs are present in the profile.");
+    }
+    jobs["children"].sort((x, y) => (x["job"]["jobid"] > y["job"]["jobid"] ? 1 : -1));
+    jobsProvider.refresh();
+}
+export async function sortByReturnCode(jobs: IZoweJobTreeNode, jobsProvider: IZoweTree<IZoweJobTreeNode>): Promise<void> {
+    if (jobs["children"].length == 0) {
+        await vscode.window.showInformationMessage("No jobs are present in the profile.");
+    }
+    jobs["children"].sort((x, y) => {
+        if (x["job"]["retcode"] === y["job"]["retcode"]) {
+            return x["job"]["jobid"] > y["job"]["jobid"] ? 1 : -1;
+        } else {
+            return x["job"]["retcode"] > y["job"]["retcode"] ? 1 : -1;
+        }
+    });
+    jobsProvider.refresh();
 }

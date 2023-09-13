@@ -122,6 +122,21 @@
     ],
     "commands": [
       {
+        "command": "zowe.jobs.sortbyreturncode",
+        "title": "Sort by returncode",
+        "category": "Zowe Explorer"
+      },
+      {
+        "command": "zowe.jobs.sortbyname",
+        "title": "Sort by name",
+        "category": "Zowe Explorer"
+      },
+      {
+        "command": "zowe.jobs.sortbyid",
+        "title": "Sort by id",
+        "category": "Zowe Explorer"
+      },
+      {
         "command": "zowe.promptCredentials",
         "title": "%zowe.promptCredentials%",
         "category": "Zowe Explorer"
@@ -1357,6 +1372,21 @@
           "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/  && !listMultiSelection",
           "command": "zowe.jobs.deleteProfile",
           "group": "099_zowe_jobsProfileModification@99"
+        },
+        {
+          "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/  && !listMultiSelection",
+          "command": "zowe.jobs.sortbyid",
+          "group": "000_zowe_jobsProfileModification@1"
+        },
+        {
+          "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/  && !listMultiSelection",
+          "command": "zowe.jobs.sortbyname",
+          "group": "000_zowe_jobsProfileModification@2"
+        },
+        {
+          "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/  && !listMultiSelection",
+          "command": "zowe.jobs.sortbyreturncode",
+          "group": "000_zowe_jobsProfileModification@2"
         }
       ],
       "commandPalette": [
