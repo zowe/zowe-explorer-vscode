@@ -128,24 +128,27 @@ describe("FtpMvsApi", () => {
 
         fs.writeFileSync(localFile, "");
         const response = TestUtils.getSingleLineStream();
-        DataSetUtils.listDataSets = jest.fn().mockReturnValue([{ dsname: "IBMUSER.DS2", dsorg: "PS", lrecl: 2 }]);
-        DataSetUtils.uploadDataSet = jest.fn().mockReturnValue(response);
+        DataSetUtils.listDataSets = jest.fn().mockReturnValue([{ dsname: "USER.EMPTYDS", dsorg: "PS", lrecl: 2 }]);
+        const uploadDataSetMock = jest.fn().mockReturnValue(response);
+        DataSetUtils.uploadDataSet = uploadDataSetMock;
         jest.spyOn(MvsApi, "getContents").mockResolvedValue({ apiResponse: { etag: "123" } } as any);
 
         const mockParams = {
             inputFilePath: localFile,
-            dataSetName: "   (IBMUSER).DS2",
+            dataSetName: "USER.EMPTYDS",
             options: { encoding: "", returnEtag: true, etag: "utf8" },
         };
 
         jest.spyOn(MvsApi as any, "getContentsTag").mockReturnValue(undefined);
         jest.spyOn(fs, "readFileSync").mockReturnValue("");
         await MvsApi.putContents(mockParams.inputFilePath, mockParams.dataSetName, mockParams.options);
-        expect(DataSetUtils.uploadDataSet).toHaveBeenCalledWith({ host: "", password: "", port: "", user: "" }, "   (IBMUSER).DS2", {
+        expect(DataSetUtils.uploadDataSet).toHaveBeenCalledWith({ host: "", password: "", port: "", user: "" }, "USER.EMPTYDS", {
             content: " ",
             encoding: "",
             transferType: "ascii",
         });
+        // ensure options object at runtime does not have localFile
+        expect(Object.keys(uploadDataSetMock.mock.calls[0][2]).find((k) => k === "localFile")).toBe(undefined);
         expect(MvsApi.releaseConnection).toBeCalled();
     });
 
