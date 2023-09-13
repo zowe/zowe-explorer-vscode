@@ -61,7 +61,7 @@ export async function errorHandling(errorDetails: Error | string, label?: string
         } else if (httpErrorCode === imperative.RestConstants.HTTP_STATUS_401) {
             const errMsg = localize(
                 "errorHandling.invalid.credentials",
-                "Invalid Credentials. Please ensure the username and password for {0} are valid or this may lead to a lock-out.",
+                "Invalid Credentials for profile '{0}'. Please ensure the username and password are valid or this may lead to a lock-out.",
                 label
             );
             const errToken = localize(
@@ -74,7 +74,9 @@ export async function errorHandling(errorDetails: Error | string, label?: string
 
             if (imperativeError.mDetails.additionalDetails) {
                 const tokenError: string = imperativeError.mDetails.additionalDetails;
-                if (tokenError.includes("Token is not valid or expired.")) {
+                const isTokenAuth = await isUsingTokenAuth(label);
+
+                if (tokenError.includes("Token is not valid or expired.") || isTokenAuth) {
                     if (isTheia()) {
                         Gui.errorMessage(errToken);
                         await Profiles.getInstance().ssoLogin(null, label);
@@ -130,6 +132,22 @@ export function isTheia(): boolean {
 }
 
 /**
+ * Function that checks whether a profile is using token based authentication
+ * @param profileName the name of the profile to check
+ * @returns {Promise<boolean>} a boolean representing whether token based auth is being used or not
+ */
+export async function isUsingTokenAuth(profileName: string): Promise<boolean> {
+    const baseProfile = Profiles.getInstance().getDefaultProfile("base");
+    const isUsingZosmf = (await Profiles.getInstance().getLoadedProfConfig(profileName)).type === "zosmf";
+    const secureProfileProps = await Profiles.getInstance().getSecurePropsForProfile(profileName);
+    const secureBaseProfileProps = await Profiles.getInstance().getSecurePropsForProfile(baseProfile?.name);
+    if (isUsingZosmf && baseProfile) {
+        return secureProfileProps.includes("tokenValue") || secureBaseProfileProps.includes("tokenValue");
+    }
+    return secureProfileProps.includes("tokenValue");
+}
+
+/**
  * Function to update session and profile information in provided node
  * @param profiles is data source to find profiles
  * @param getSessionForProfile is a function to build a valid specific session based on provided profile
@@ -142,7 +160,7 @@ export const syncSessionNode =
     (sessionNode: IZoweTreeNode): void => {
         ZoweLogger.trace("ProfilesUtils.syncSessionNode called.");
 
-        const profileType = sessionNode.getProfile().type;
+        const profileType = sessionNode.getProfile()?.type;
         const profileName = sessionNode.getProfileName();
 
         let profile: imperative.IProfileLoaded;

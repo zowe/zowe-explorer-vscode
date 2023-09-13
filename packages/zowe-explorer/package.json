@@ -1877,7 +1877,7 @@
           "default": true,
           "type": "boolean",
           "description": "%zowe.security.secureCredentialsEnabled%",
-          "scope": "machine"
+          "scope": "machine-overridable"
         },
         "zowe.logger": {
           "type": "string",
@@ -1991,12 +1991,13 @@
     "webpack-cli": "^3.3.11"
   },
   "dependencies": {
-    "@zowe/secrets-for-zowe-sdk": "7.18.1",
+    "@zowe/secrets-for-zowe-sdk": "7.18.4",
     "@zowe/zowe-explorer-api": "2.11.0-SNAPSHOT",
     "fs-extra": "8.0.1",
     "isbinaryfile": "4.0.4",
     "js-yaml": "3.13.1",
     "promise-queue": "2.2.5",
+    "promise-status-async": "^1.2.10",
     "yamljs": "0.3.0"
   },
   "jest": {
