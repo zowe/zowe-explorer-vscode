@@ -159,7 +159,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             }
             const validationStatus = await Profiles.getInstance().checkCurrentProfile(element.getProfile());
 
-            if (validationStatus.status === "unverified") {
+            if (SettingsConfig.getDirectValue(globals.SETTINGS_AUTOMATIC_PROFILE_VALIDATION) && validationStatus.status === "unverified") {
                 return [];
             }
             const finalResponse: IZoweDatasetTreeNode[] = [];

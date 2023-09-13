@@ -199,7 +199,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             }
             const validationStatus = await Profiles.getInstance().checkCurrentProfile(element.getProfile());
 
-            if (validationStatus.status === "unverified") {
+            if (SettingsConfig.getDirectValue(globals.SETTINGS_AUTOMATIC_PROFILE_VALIDATION) && validationStatus.status === "unverified") {
                 return [];
             }
             return element.getChildren();
