@@ -142,7 +142,8 @@ export async function isUsingTokenAuth(profileName: string): Promise<boolean> {
     const secureProfileProps = await Profiles.getInstance().getSecurePropsForProfile(profileName);
     const secureBaseProfileProps = await Profiles.getInstance().getSecurePropsForProfile(baseProfile?.name);
     if (isUsingZosmf && baseProfile) {
-        return secureProfileProps.includes("tokenValue") || secureBaseProfileProps.includes("tokenValue");
+        const profileUsesBasicAuth = secureProfileProps.includes("user") && secureProfileProps.includes("password");
+        return (secureProfileProps.includes("tokenValue") || secureBaseProfileProps.includes("tokenValue")) && !profileUsesBasicAuth;
     }
     return secureProfileProps.includes("tokenValue");
 }
