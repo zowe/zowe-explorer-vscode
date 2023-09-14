@@ -1,5 +1,7 @@
 {
   "getChildren.error.invalidNode": "Invalid node",
+  "getChildren.error.sessionMissing": "Profile auth error",
+  "getChildren.error.additionalDetails": "Profile is not authenticated, please log in to continue",
   "getChildren.responses.error.response": "The response from Zowe CLI was not successful",
   "getChildren.error.response": "Retrieving response from ",
   "getChildren.responses.open": "Open",
