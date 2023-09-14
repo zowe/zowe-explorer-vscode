@@ -353,28 +353,29 @@ export class ProfilesUtils {
 
         const authTypeChoices: Record<string, vscode.QuickPickItem> = {
             [imperative.SessConstants.AUTH_TYPE_BASIC]: {
-                label: "$(circle-large) " + localize("promptCredentials.quickPick.basicAuthLabel", "User and Password"),
-                detail: localize("promptCredentials.quickPick.basicAuthDetail", "Store username and password"),
+                label: "$(circle-large) " + localize("promptCredentials.qp.basicAuthLabel", "User and Password"),
+                detail: localize("promptCredentials.qp.basicAuthDetail", "Store username and password"),
             },
             [imperative.SessConstants.AUTH_TYPE_TOKEN]: {
-                label: "$(circle-large) " + localize("promptCredentials.quickPick.tokenAuthLabel", "Authentication Token"),
-                detail: localize("promptCredentials.quickPick.tokenAuthDetail", "Authenticate to service and store token"),
+                label: "$(circle-large) " + localize("promptCredentials.qp.tokenAuthLabel", "Authentication Token"),
+                detail: localize("promptCredentials.qp.tokenAuthDetail", "Authenticate to service and store token"),
             },
             // [imperative.SessConstants.AUTH_TYPE_CERT_PEM]: {
-            //     label: "$(circle-large) " + localize("promptCredentials.quickPick.certAuthLabel", "Certificate File"),
-            //     detail: localize("promptCredentials.quickPick.certAuthDetail", "Select a PEM certificate file"),
+            //     label: "$(circle-large) " + localize("promptCredentials.qp.certAuthLabel", "Certificate File"),
+            //     detail: localize("promptCredentials.qp.certAuthDetail", "Select a PEM certificate file"),
             // },
         };
+        let loginTokenType: string;
         try {
-            const loginTokenType = ZoweExplorerApiRegister.getInstance().getCommonApi(profile).getTokenTypeName();
-            if (loginTokenType === imperative.SessConstants.TOKEN_TYPE_APIML) {
-                // Token is stored outside this profile so show base profile name
-                const baseProfile = await Profiles.getInstance().fetchBaseProfile();
-                authTypeChoices[imperative.SessConstants.AUTH_TYPE_TOKEN].description = baseProfile?.name;
-            }
+            loginTokenType = ZoweExplorerApiRegister.getInstance().getCommonApi(profile).getTokenTypeName();
         } catch {
             // This profile does not support token authentication
             delete authTypeChoices[imperative.SessConstants.AUTH_TYPE_TOKEN];
+        }
+        if (loginTokenType === imperative.SessConstants.TOKEN_TYPE_APIML) {
+            // Token is stored outside this profile so show base profile name
+            const baseProfile = await Profiles.getInstance().fetchBaseProfile(profile.name);
+            authTypeChoices[imperative.SessConstants.AUTH_TYPE_TOKEN].description = baseProfile?.name;
         }
         const isSsoLoggedIn = profile.profile?.tokenValue != null;
         const quickPickOptions: vscode.QuickPickItem[] = Object.values(authTypeChoices);
@@ -389,13 +390,13 @@ export class ProfilesUtils {
             authTypeChoices[currentAuthType].label = authTypeChoices[currentAuthType].label.replace("$(circle-large)", "$(record)");
             if (isSsoLoggedIn) {
                 quickPickOptions.push(globals.SEPARATORS.BLANK, {
-                    label: localize("promptCredentials.quickPick.logOutLabel", "Log out of Authentication Service"),
+                    label: localize("promptCredentials.qp.logOutLabel", "Log out of Authentication Service"),
                 });
             }
             const qp = Gui.createQuickPick();
             qp.items = quickPickOptions;
             qp.activeItems = [authTypeChoices[currentAuthType]];
-            qp.placeholder = localize("promptCredentials.quickPick.title", "Select authentication method for {0}", profile.name);
+            qp.placeholder = localize("promptCredentials.qp.title", "Select authentication method for {0}", profile.name);
             qp.show();
             selectedItem = await Gui.resolveQuickPick(qp);
         }

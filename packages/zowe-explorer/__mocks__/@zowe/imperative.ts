@@ -360,4 +360,5 @@ export class SessConstants {
     static readonly AUTH_TYPE_BASIC = "basic";
     static readonly AUTH_TYPE_TOKEN = "token";
     static readonly AUTH_TYPE_CERT_PEM = "cert-pem";
+    static readonly TOKEN_TYPE_APIML = "apimlAuthenticationToken";
 }
