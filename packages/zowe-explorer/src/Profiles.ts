@@ -1183,7 +1183,7 @@ export class Profiles extends ProfilesCache {
             } else {
                 await this.loginWithBaseProfile(serviceProfile, loginTokenType, node);
             }
-            Gui.showMessage(localize("ssoLogin.successful", "Login to authentication service was successful."));
+            Gui.showMessage(localize("ssoLogin.successful", "Login to authentication service was successful for {0}.", serviceProfile.name));
         } catch (err) {
             const message = localize("ssoLogin.error", "Unable to log in with {0}. {1}", serviceProfile.name, err?.message);
             ZoweLogger.error(message);
@@ -1208,7 +1208,7 @@ export class Profiles extends ProfilesCache {
                     .logout(await node.getSession());
             } else {
                 // this will handle base profile apiml tokens
-                const baseProfile = await this.fetchBaseProfile();
+                const baseProfile = await this.fetchBaseProfile(serviceProfile.name);
                 const loginTokenType = ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).getTokenTypeName();
                 const updSession = new zowe.imperative.Session({
                     hostname: serviceProfile.profile.host,
@@ -1250,7 +1250,7 @@ export class Profiles extends ProfilesCache {
     }
 
     private async loginWithBaseProfile(serviceProfile: zowe.imperative.IProfileLoaded, loginTokenType: string, node?: IZoweNodeType): Promise<void> {
-        const baseProfile = await this.fetchBaseProfile();
+        const baseProfile = await this.fetchBaseProfile(serviceProfile.name);
         if (baseProfile) {
             const creds = await this.loginCredentialPrompt();
             if (!creds) {

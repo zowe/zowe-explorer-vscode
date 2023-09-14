@@ -27,7 +27,7 @@
   "validateProfiles.cancelled": "Validating {0} was cancelled.",
   "validateProfiles.error": "Profile validation failed for {0}.",
   "ssoAuth.noBase": "This profile does not support token authentication.",
-  "ssoLogin.successful": "Login to authentication service was successful.",
+  "ssoLogin.successful": "Login to authentication service was successful for {0}.",
   "ssoLogin.error": "Unable to log in with {0}. {1}",
   "ssoLogout.successful": "Logout from authentication service was successful for {0}.",
   "ssoLogout.error": "Unable to log out with {0}. {1}",

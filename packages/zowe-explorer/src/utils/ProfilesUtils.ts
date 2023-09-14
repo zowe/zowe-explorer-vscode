@@ -374,7 +374,7 @@ export class ProfilesUtils {
         }
         if (loginTokenType === imperative.SessConstants.TOKEN_TYPE_APIML) {
             // Token is stored outside this profile so show base profile name
-            const baseProfile = await Profiles.getInstance().fetchBaseProfile();
+            const baseProfile = await Profiles.getInstance().fetchBaseProfile(profile.name);
             authTypeChoices[imperative.SessConstants.AUTH_TYPE_TOKEN].description = baseProfile?.name;
         }
         const isSsoLoggedIn = profile.profile?.tokenValue != null;

@@ -388,8 +388,15 @@ export class ProfilesCache {
     }
 
     // This will retrieve the base profile from imperative
-    public async fetchBaseProfile(): Promise<zowe.imperative.IProfileLoaded | undefined> {
+    public async fetchBaseProfile(profileName?: string): Promise<zowe.imperative.IProfileLoaded | undefined> {
         const mProfileInfo = await this.getProfileInfo();
+        if (mProfileInfo.usingTeamConfig && profileName.includes(".")) {
+            for (const apimlProfile of await this.fetchAllProfilesByType("apiml")) {
+                if (profileName.startsWith(apimlProfile.name + ".")) {
+                    return apimlProfile;
+                }
+            }
+        }
         const baseProfileAttrs = mProfileInfo.getDefaultProfile("base");
         if (baseProfileAttrs == null) {
             return undefined;
@@ -529,6 +536,7 @@ export class ProfilesCache {
             profile?.profile?.host &&
             profile?.profile?.port &&
             (baseProfile?.profile.host !== profile?.profile.host || baseProfile?.profile.port !== profile?.profile.port) &&
+            profile?.type !== "apiml" &&
             profile?.profile.tokenType === zowe.imperative.SessConstants.TOKEN_TYPE_APIML
         );
     }
