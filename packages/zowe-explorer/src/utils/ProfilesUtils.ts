@@ -62,7 +62,7 @@ export async function errorHandling(errorDetails: Error | string, label?: string
         } else if (httpErrorCode === imperative.RestConstants.HTTP_STATUS_401) {
             const errMsg = localize(
                 "errorHandling.invalid.credentials",
-                "Invalid Credentials. Please ensure the username and password for {0} are valid or this may lead to a lock-out.",
+                "Invalid Credentials for profile '{0}'. Please ensure the username and password are valid or this may lead to a lock-out.",
                 label
             );
             const errToken = localize(
@@ -161,7 +161,7 @@ export const syncSessionNode =
     (sessionNode: IZoweTreeNode): void => {
         ZoweLogger.trace("ProfilesUtils.syncSessionNode called.");
 
-        const profileType = sessionNode.getProfile().type;
+        const profileType = sessionNode.getProfile()?.type;
         const profileName = sessionNode.getProfileName();
 
         let profile: imperative.IProfileLoaded;
@@ -374,7 +374,7 @@ export class ProfilesUtils {
         }
         if (loginTokenType === imperative.SessConstants.TOKEN_TYPE_APIML) {
             // Token is stored outside this profile so show base profile name
-            const baseProfile = await Profiles.getInstance().fetchBaseProfile(profile.name);
+            const baseProfile = await Profiles.getInstance().fetchBaseProfile();
             authTypeChoices[imperative.SessConstants.AUTH_TYPE_TOKEN].description = baseProfile?.name;
         }
         const isSsoLoggedIn = profile.profile?.tokenValue != null;
