@@ -30,7 +30,7 @@ import {
     getFullPath,
     getZoweDir,
 } from "@zowe/zowe-explorer-api";
-import { errorHandling, FilterDescriptor, FilterItem, ProfilesUtils } from "./utils/ProfilesUtils";
+import { errorHandling, FilterDescriptor, FilterItem, ProfilesUtils, isUsingTokenAuth } from "./utils/ProfilesUtils";
 import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
 import { ZoweExplorerExtender } from "./ZoweExplorerExtender";
 import * as globals from "./globals";
@@ -88,7 +88,23 @@ export class Profiles extends ProfilesCache {
     public async checkCurrentProfile(theProfile: zowe.imperative.IProfileLoaded): Promise<IProfileValidation> {
         ZoweLogger.trace("Profiles.checkCurrentProfile called.");
         let profileStatus: IProfileValidation;
-        if (!theProfile.profile.tokenType && (!theProfile.profile.user || !theProfile.profile.password)) {
+        const usingTokenAuth = await isUsingTokenAuth(theProfile.name);
+
+        if (usingTokenAuth && !theProfile.profile.tokenType) {
+            const error = new zowe.imperative.ImperativeError({
+                msg: localize("checkCurrentProfile.tokenAuthError.msg", "Token auth error"),
+                additionalDetails: localize(
+                    "checkCurrentProfile.tokenAuthError.additionalDetails",
+                    "Profile was found using token auth, please log in to continue."
+                ),
+                errorCode: `${zowe.imperative.RestConstants.HTTP_STATUS_401}`,
+            });
+            await errorHandling(error, theProfile.name, error.message);
+            profileStatus = { name: theProfile.name, status: "unverified" };
+            return profileStatus;
+        }
+
+        if (!usingTokenAuth && (!theProfile.profile.user || !theProfile.profile.password)) {
             // The profile will need to be reactivated, so remove it from profilesForValidation
             this.profilesForValidation = this.profilesForValidation.filter(
                 (profile) => profile.status === "unverified" && profile.name !== theProfile.name
@@ -860,6 +876,7 @@ export class Profiles extends ProfilesCache {
     }
 
     public async promptCredentials(profile: string | zowe.imperative.IProfileLoaded, rePrompt?: boolean): Promise<string[]> {
+        ZoweLogger.trace("Profiles.promptCredentials called.");
         const userInputBoxOptions: vscode.InputBoxOptions = {
             placeHolder: localize("promptCredentials.userInputBoxOptions.placeholder", "User Name"),
             prompt: localize("promptCredentials.userInputBoxOptions.prompt", "Enter the user name for the connection. Leave blank to not store."),
@@ -1140,11 +1157,8 @@ export class Profiles extends ProfilesCache {
 
     public async ssoLogin(node?: IZoweNodeType, label?: string): Promise<void> {
         ZoweLogger.trace("Profiles.ssoLogin called.");
-        let loginToken: string;
         let loginTokenType: string;
-        let creds: string[];
         let serviceProfile: zowe.imperative.IProfileLoaded;
-        let session: zowe.imperative.Session;
         if (node) {
             serviceProfile = node.getProfile();
         } else {
@@ -1163,71 +1177,19 @@ export class Profiles extends ProfilesCache {
             Gui.showMessage(localize("ssoAuth.noBase", "This profile does not support token authentication."));
             return;
         }
-        if (loginTokenType && loginTokenType !== zowe.imperative.SessConstants.TOKEN_TYPE_APIML) {
-            // this will handle extenders
-            if (node) {
-                session = node.getSession();
+        try {
+            if (loginTokenType && loginTokenType !== zowe.imperative.SessConstants.TOKEN_TYPE_APIML) {
+                await this.loginWithRegularProfile(serviceProfile, node);
             } else {
-                session = await ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).getSession();
+                await this.loginWithBaseProfile(serviceProfile, loginTokenType, node);
             }
-            creds = await this.loginCredentialPrompt();
-            if (!creds) {
-                return;
-            }
-            session.ISession.user = creds[0];
-            session.ISession.password = creds[1];
-            try {
-                loginToken = await ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).login(session);
-                const profIndex = this.allProfiles.findIndex((profile) => profile.name === serviceProfile.name);
-                this.allProfiles[profIndex] = { ...serviceProfile, profile: { ...serviceProfile, ...session } };
-                node.setProfileToChoice({
-                    ...node.getProfile(),
-                    profile: { ...node.getProfile().profile, ...session },
-                });
-            } catch (error) {
-                const message = localize("ssoLogin.error", "Unable to log in with {0}. {1}", serviceProfile.name, error?.message);
-                ZoweLogger.error(message);
-                Gui.errorMessage(message);
-                return;
-            }
-        } else {
-            const baseProfile = await this.fetchBaseProfile();
-            if (baseProfile) {
-                creds = await this.loginCredentialPrompt();
-                if (!creds) {
-                    return;
-                }
-                try {
-                    const updSession = new zowe.imperative.Session({
-                        hostname: serviceProfile.profile.host,
-                        port: serviceProfile.profile.port,
-                        user: creds[0],
-                        password: creds[1],
-                        rejectUnauthorized: serviceProfile.profile.rejectUnauthorized,
-                        tokenType: loginTokenType,
-                        type: zowe.imperative.SessConstants.AUTH_TYPE_TOKEN,
-                    });
-                    loginToken = await ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).login(updSession);
-                    const updBaseProfile: zowe.imperative.IProfile = {
-                        tokenType: loginTokenType,
-                        tokenValue: loginToken,
-                    };
-                    await this.updateBaseProfileFileLogin(baseProfile, updBaseProfile);
-                    const baseIndex = this.allProfiles.findIndex((profile) => profile.name === baseProfile.name);
-                    this.allProfiles[baseIndex] = { ...baseProfile, profile: { ...baseProfile.profile, ...updBaseProfile } };
-                    node.setProfileToChoice({
-                        ...node.getProfile(),
-                        profile: { ...node.getProfile().profile, ...updBaseProfile },
-                    });
-                } catch (error) {
-                    const errMsg = localize("ssoLogin.unableToLogin", "Unable to log in with {0}. {1}", serviceProfile.name, error?.message);
-                    ZoweLogger.error(errMsg);
-                    Gui.errorMessage(errMsg);
-                    return;
-                }
-            }
+            Gui.showMessage(localize("ssoLogin.successful", "Login to authentication service was successful."));
+        } catch (err) {
+            const message = localize("ssoLogin.error", "Unable to log in with {0}. {1}", serviceProfile.name, err?.message);
+            ZoweLogger.error(message);
+            Gui.errorMessage(message);
+            return;
         }
-        Gui.showMessage(localize("ssoLogin.successful", "Login to authentication service was successful."));
     }
 
     public async ssoLogout(node: IZoweNodeType): Promise<void> {
@@ -1261,6 +1223,7 @@ export class Profiles extends ProfilesCache {
                 await this.updateBaseProfileFileLogout(baseProfile);
             }
             Gui.showMessage(localize("ssoLogout.successful", "Logout from authentication service was successful for {0}.", serviceProfile.name));
+            await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
         } catch (error) {
             const message = localize("ssoLogout.error", "Unable to log out with {0}. {1}", serviceProfile.name, error?.message);
             ZoweLogger.error(message);
@@ -1273,6 +1236,81 @@ export class Profiles extends ProfilesCache {
         ZoweLogger.trace("Profiles.openConfigFile called.");
         const document = await vscode.workspace.openTextDocument(filePath);
         await Gui.showTextDocument(document);
+    }
+
+    /**
+     * gets secure properties for a profile
+     * @param profileName the name of the profile
+     * @returns {string[]} an array with the secure properties
+     */
+    public async getSecurePropsForProfile(profileName: string): Promise<string[]> {
+        if (!profileName) {
+            return [];
+        }
+        if ((await this.getProfileInfo()).usingTeamConfig) {
+            const config = (await this.getProfileInfo()).getTeamConfig();
+            return config.api.secure.securePropsForProfile(profileName);
+        }
+        const profAttrs = await this.getProfileFromConfig(profileName);
+        const mergedArgs = (await this.getProfileInfo()).mergeArgsForProfile(profAttrs);
+        return mergedArgs.knownArgs.filter((arg) => arg.secure).map((arg) => arg.argName);
+    }
+
+    private async loginWithBaseProfile(serviceProfile: zowe.imperative.IProfileLoaded, loginTokenType: string, node?: IZoweNodeType): Promise<void> {
+        const baseProfile = await this.fetchBaseProfile();
+        if (baseProfile) {
+            const creds = await this.loginCredentialPrompt();
+            if (!creds) {
+                return;
+            }
+            const updSession = new zowe.imperative.Session({
+                hostname: serviceProfile.profile.host,
+                port: serviceProfile.profile.port,
+                user: creds[0],
+                password: creds[1],
+                rejectUnauthorized: serviceProfile.profile.rejectUnauthorized,
+                tokenType: loginTokenType,
+                type: zowe.imperative.SessConstants.AUTH_TYPE_TOKEN,
+            });
+            const loginToken = await ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).login(updSession);
+            const updBaseProfile: zowe.imperative.IProfile = {
+                tokenType: loginTokenType,
+                tokenValue: loginToken,
+            };
+            await this.updateBaseProfileFileLogin(baseProfile, updBaseProfile);
+            const baseIndex = this.allProfiles.findIndex((profile) => profile.name === baseProfile.name);
+            this.allProfiles[baseIndex] = { ...baseProfile, profile: { ...baseProfile.profile, ...updBaseProfile } };
+            if (node) {
+                node.setProfileToChoice({
+                    ...node.getProfile(),
+                    profile: { ...node.getProfile().profile, ...updBaseProfile },
+                });
+            }
+        }
+    }
+
+    private async loginWithRegularProfile(serviceProfile: zowe.imperative.IProfileLoaded, node?: IZoweNodeType): Promise<void> {
+        let session: zowe.imperative.Session;
+        if (node) {
+            session = node.getSession();
+        } else {
+            session = await ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).getSession();
+        }
+        const creds = await this.loginCredentialPrompt();
+        if (!creds) {
+            return;
+        }
+        session.ISession.user = creds[0];
+        session.ISession.password = creds[1];
+        await ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).login(session);
+        const profIndex = this.allProfiles.findIndex((profile) => profile.name === serviceProfile.name);
+        this.allProfiles[profIndex] = { ...serviceProfile, profile: { ...serviceProfile, ...session } };
+        if (node) {
+            node.setProfileToChoice({
+                ...node.getProfile(),
+                profile: { ...node.getProfile().profile, ...session },
+            });
+        }
     }
 
     private async getConfigLocationPrompt(action: string): Promise<string> {

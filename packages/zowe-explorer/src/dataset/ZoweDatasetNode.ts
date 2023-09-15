@@ -12,8 +12,8 @@
 import * as zowe from "@zowe/cli";
 import * as vscode from "vscode";
 import * as globals from "../globals";
-import { errorHandling, syncSessionNode } from "../utils/ProfilesUtils";
-import { Gui, IZoweDatasetTreeNode, ZoweTreeNode } from "@zowe/zowe-explorer-api";
+import { errorHandling } from "../utils/ProfilesUtils";
+import { Gui, NodeAction, IZoweDatasetTreeNode, ZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { getIconByNode } from "../generators/icons";
 import * as contextually from "../shared/context";
@@ -41,6 +41,8 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     public dirty = true;
     public children: ZoweDatasetNode[] = [];
     public errorDetails: zowe.imperative.ImperativeError;
+    public ongoingActions: Record<NodeAction | string, Promise<any>> = {};
+    public wasDoubleClicked: boolean = false;
 
     /**
      * Creates an instance of ZoweDatasetNode
@@ -303,6 +305,13 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 ),
             ];
             const mvsApi = ZoweExplorerApiRegister.getMvsApi(cachedProfile);
+            if (!mvsApi.getSession(mvsApi?.profile)) {
+                throw new zowe.imperative.ImperativeError({
+                    msg: localize("getDataSets.error.sessionMissing", "Profile auth error"),
+                    additionalDetails: localize("getDataSets.error.additionalDetails", "Profile is not authenticated, please log in to continue"),
+                    errorCode: `${zowe.imperative.RestConstants.HTTP_STATUS_401}`,
+                });
+            }
             if (mvsApi.dataSetsMatchingPattern) {
                 responses.push(await mvsApi.dataSetsMatchingPattern(dsPatterns));
             } else {

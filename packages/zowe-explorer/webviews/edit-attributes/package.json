@@ -2,7 +2,7 @@
   "name": "edit-attributes",
   "private": true,
   "type": "module",
-  "version": "2.10.0-SNAPSHOT",
+  "version": "2.12.0-SNAPSHOT",
   "main": "index.js",
   "license": "EPL-2.0",
   "scripts": {
