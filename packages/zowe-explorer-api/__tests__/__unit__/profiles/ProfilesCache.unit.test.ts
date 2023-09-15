@@ -10,6 +10,7 @@
  */
 
 import * as path from "path";
+import * as fs from "fs";
 import * as zowe from "@zowe/cli";
 import { ProfilesCache } from "../../../src/profiles/ProfilesCache";
 import { ZoweExplorerApi } from "../../../src";
