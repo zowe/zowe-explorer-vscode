@@ -67,7 +67,8 @@ export async function errorHandling(errorDetails: Error | string, label?: string
             );
             const errToken = localize(
                 "errorHandling.invalid.token",
-                "Your connection is no longer active. Please log in to an authentication service to restore the connection."
+                "Your connection is no longer active for profile '{0}'. Please log in to an authentication service to restore the connection.",
+                label
             );
             if (label.includes("[")) {
                 label = label.substring(0, label.indexOf(" [")).trim();
@@ -139,13 +140,10 @@ export function isTheia(): boolean {
  */
 export async function isUsingTokenAuth(profileName: string): Promise<boolean> {
     const baseProfile = Profiles.getInstance().getDefaultProfile("base");
-    const isUsingZosmf = (await Profiles.getInstance().getLoadedProfConfig(profileName)).type === "zosmf";
     const secureProfileProps = await Profiles.getInstance().getSecurePropsForProfile(profileName);
     const secureBaseProfileProps = await Profiles.getInstance().getSecurePropsForProfile(baseProfile?.name);
-    if (isUsingZosmf && baseProfile) {
-        return secureProfileProps.includes("tokenValue") || secureBaseProfileProps.includes("tokenValue");
-    }
-    return secureProfileProps.includes("tokenValue");
+    const profileUsesBasicAuth = secureProfileProps.includes("user") && secureProfileProps.includes("password");
+    return (secureProfileProps.includes("tokenValue") || secureBaseProfileProps.includes("tokenValue")) && !profileUsesBasicAuth;
 }
 
 /**

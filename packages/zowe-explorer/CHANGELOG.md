@@ -6,6 +6,12 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
+### Bug fixes
+
+## `2.11.0`
+
+### New features and enhancements
+
 - Allow deleting migrated datasets [#2447](https://github.com/zowe/vscode-extension-for-zowe/issues/2447)
 - Replaced multiple options for updating credentials with a single "Manage Credentials" option that prompts for preferred authentication type. [#2263](https://github.com/zowe/vscode-extension-for-zowe/issues/2263)
 
@@ -17,6 +23,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Bump `@zowe/secrets-for-zowe-sdk` to 7.18.4 to handle install errors gracefully and to allow running without MSVC redistributables.
 - Fixed issue where data set content does not always appear as soon as the editor is opened. [#2427](https://github.com/zowe/vscode-extension-for-zowe/issues/2427)
 - Adjust scope of "Security: Secure Credentials Enabled" setting to `machine-overridable` so it appears again in certain cloud IDEs.
+- Fixed issue where disabling "Automatic Profile Validation" caused the search prompts to stop appearing for all tree views. [#2454](https://github.com/zowe/vscode-extension-for-zowe/issues/2454)
 
 ## `2.10.0`
 

@@ -6,6 +6,12 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### New features and enhancements
 
+### Bug fixes
+
+## `2.11.0`
+
+### New features and enhancements
+
 - Added optional `pendingActions` record to `IZoweTreeNode` to allow nodes to track pending promises.
 - Added optional `wasDoubleClicked` variable to `IZoweTreeNode` to track whether a node was double-clicked during an action.
 
