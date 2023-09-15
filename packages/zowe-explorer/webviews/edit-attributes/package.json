@@ -15,7 +15,8 @@
     "test": "echo \"edit-attributes: nothing to test\"",
     "lint": "echo \"edit-attributes: nothing to lint.\"",
     "lint:html": "echo \"edit-attributes: nothing to lint.\"",
-    "pretty": "echo \"edit-attributes: nothing to pretty.\""
+    "pretty": "echo \"edit-attributes: nothing to pretty.\"",
+    "madge": "echo \"edit-attributes: nothing to madge.\""
   },
   "dependencies": {
     "@types/vscode-webview": "^1.57.1",
