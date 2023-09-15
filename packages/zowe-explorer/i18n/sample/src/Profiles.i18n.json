@@ -1,5 +1,7 @@
 {
   "profiles.operation.cancelled": "Operation Cancelled",
+  "checkCurrentProfile.tokenAuthError.msg": "Token auth error",
+  "checkCurrentProfile.tokenAuthError.additionalDetails": "Profile was found using token auth, please log in to continue.",
   "createZoweSession.ds.quickPickOption": "Choose \"Create new...\" to define or select a profile to add to the DATA SETS Explorer",
   "createZoweSession.job.quickPickOption": "Choose \"Create new...\" to define or select a profile to add to the JOBS Explorer",
   "createZoweSession.uss.quickPickOption": "Choose \"Create new...\" to define or select a profile to add to the USS Explorer",
@@ -16,9 +18,8 @@
   "validateProfiles.cancelled": "Validating {0} was cancelled.",
   "validateProfiles.error": "Profile validation failed for {0}.",
   "ssoAuth.noBase": "This profile does not support token authentication.",
-  "ssoLogin.error": "Unable to log in with {0}. {1}",
-  "ssoLogin.unableToLogin": "Unable to log in with {0}. {1}",
   "ssoLogin.successful": "Login to authentication service was successful.",
+  "ssoLogin.error": "Unable to log in with {0}. {1}",
   "ssoLogout.successful": "Logout from authentication service was successful for {0}.",
   "ssoLogout.error": "Unable to log out with {0}. {1}",
   "getConfigLocationPrompt.placeholder.create": "Select the location where the config file will be initialized",

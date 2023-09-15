@@ -1034,7 +1034,7 @@
           "group": "000_zowe_dsMainframeInteraction@8"
         },
         {
-          "when": "view == zowe.ds.explorer && viewItem =~ /^(pds|migr|member|ds|vsam).*/",
+          "when": "view == zowe.ds.explorer && viewItem =~ /^(pds|member|ds|vsam).*/",
           "command": "zowe.ds.showAttributes",
           "group": "001_zowe_dsCreate@1"
         },
@@ -1145,6 +1145,11 @@
         },
         {
           "when": "view == zowe.ds.explorer && viewItem =~ /^pds.*/",
+          "command": "zowe.ds.deleteDataset",
+          "group": "099_zowe_dsModification@5"
+        },
+        {
+          "when": "view == zowe.ds.explorer && viewItem =~ /^migr.*/",
           "command": "zowe.ds.deleteDataset",
           "group": "099_zowe_dsModification@5"
         },
@@ -1879,7 +1884,7 @@
           "default": true,
           "type": "boolean",
           "description": "%zowe.security.secureCredentialsEnabled%",
-          "scope": "machine"
+          "scope": "machine-overridable"
         },
         "zowe.logger": {
           "type": "string",
@@ -1927,12 +1932,12 @@
     ]
   },
   "scripts": {
-    "build": "gulp build && yarn license && webpack --mode development && cd webviews/edit-attributes && yarn && yarn build",
+    "build": "gulp build && yarn license && webpack --mode development",
     "build:integration": "yarn createTestProfileData && yarn license && tsc --pretty --project tsconfig-tests.json",
     "test:unit": "jest \".*__tests__.*\\.unit\\.test\\.ts\" --coverage",
     "test:theia": "mocha ./out/__tests__/__theia__/*.theia.test.js --timeout 50000 --reporter mocha-multi-reporters --reporter-options configFile=.mocharc.json",
     "test": "yarn test:unit",
-    "vscode:prepublish": "gulp build && webpack --mode production && yarn updateStrings && yarn run compile-web && cd webviews/edit-attributes && yarn && yarn build",
+    "vscode:prepublish": "gulp build && webpack --mode production && yarn updateStrings && yarn run compile-web",
     "updateStrings": "node ../../scripts/stringUpdateScript.js && prettier --write --loglevel warn ./i18n package.nls*",
     "package": "vsce package --yarn && node ../../scripts/mv-pack.js vscode-extension-for-zowe vsix",
     "license": "node ../../scripts/updateLicenses.js",
@@ -1995,12 +2000,13 @@
     "webpack-cli": "^3.3.11"
   },
   "dependencies": {
-    "@zowe/secrets-for-zowe-sdk": "7.18.1",
     "@zowe/zowe-explorer-api": "3.0.0-next.202309141150",
+    "@zowe/secrets-for-zowe-sdk": "7.18.4",
     "fs-extra": "8.0.1",
     "isbinaryfile": "4.0.4",
     "js-yaml": "3.13.1",
     "promise-queue": "2.2.5",
+    "promise-status-async": "^1.2.10",
     "yamljs": "0.3.0"
   },
   "jest": {

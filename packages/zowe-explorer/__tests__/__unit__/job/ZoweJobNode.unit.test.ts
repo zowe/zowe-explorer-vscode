@@ -817,6 +817,7 @@ describe("ZosJobsProvider - getJobs", () => {
             value: () => ({
                 getJobsByParameters: false,
                 getJobsByOwnerAndPrefix: () => ["test"],
+                getSession: () => globalMocks.testSession,
             }),
         });
         jest.spyOn(Gui, "warningMessage").mockImplementation();

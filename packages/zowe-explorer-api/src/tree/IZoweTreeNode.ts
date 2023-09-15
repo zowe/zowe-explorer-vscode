@@ -12,6 +12,10 @@
 import * as vscode from "vscode";
 import { imperative } from "@zowe/cli";
 
+export enum NodeAction {
+    Download = "download",
+}
+
 /**
  * The base interface for Zowe tree nodes that are implemented by vscode.TreeItem.
  *
@@ -62,6 +66,14 @@ export interface IZoweTreeNode {
      * This will show action `extension.deleteFolder` only for items with `contextValue` is `folder`.
      */
     contextValue?: string;
+    /**
+     * Any ongoing actions that must be awaited before continuing
+     */
+    ongoingActions?: Record<NodeAction | string, Promise<any>>;
+    /**
+     * whether the node was double-clicked
+     */
+    wasDoubleClicked?: boolean;
     /**
      * Retrieves the node label
      */

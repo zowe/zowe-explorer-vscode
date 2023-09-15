@@ -15,7 +15,7 @@ import { imperative } from "@zowe/cli";
 import { PersistentFilters } from "../PersistentFilters";
 import { getIconByNode, getIconById, IconId } from "../generators/icons";
 import * as contextually from "../shared/context";
-import { IZoweTreeNode, IZoweDatasetTreeNode, IZoweNodeType, IZoweTree, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
+import { IZoweTreeNode, IZoweDatasetTreeNode, IZoweNodeType, IZoweTree, PersistenceSchemaEnum, ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { setProfile, setSession, errorHandling } from "../utils/ProfilesUtils";
 
@@ -209,6 +209,7 @@ export class ZoweTreeProvider {
                 if (inactiveIcon) {
                     node.iconPath = inactiveIcon.path;
                 }
+                Profiles.getInstance().validProfile = ValidProfileEnum.INVALID;
             }
 
             await errorHandling(
@@ -230,6 +231,7 @@ export class ZoweTreeProvider {
                 if (activeIcon) {
                     node.iconPath = activeIcon.path;
                 }
+                Profiles.getInstance().validProfile = ValidProfileEnum.VALID;
             }
         } else if (profileStatus.status === "unverified") {
             if (
@@ -238,6 +240,7 @@ export class ZoweTreeProvider {
             ) {
                 node.contextValue = node.contextValue.replace(/(?<=.*)(_Active|_Inactive|_Unverified)$/, "");
                 node.contextValue = node.contextValue + globals.UNVERIFIED_CONTEXT;
+                Profiles.getInstance().validProfile = ValidProfileEnum.UNVERIFIED;
             }
         }
         await this.refresh();
