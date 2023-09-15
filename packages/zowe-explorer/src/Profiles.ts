@@ -1244,9 +1244,16 @@ export class Profiles extends ProfilesCache {
      * @returns {string[]} an array with the secure properties
      */
     public async getSecurePropsForProfile(profileName: string): Promise<string[]> {
+        if (!profileName) {
+            return [];
+        }
+        if ((await this.getProfileInfo()).usingTeamConfig) {
+            const config = (await this.getProfileInfo()).getTeamConfig();
+            return config.api.secure.securePropsForProfile(profileName);
+        }
         const profAttrs = await this.getProfileFromConfig(profileName);
         const mergedArgs = (await this.getProfileInfo()).mergeArgsForProfile(profAttrs);
-        return [...mergedArgs.knownArgs, ...mergedArgs.missingArgs].filter((arg) => arg.secure).map((arg) => arg.argName);
+        return mergedArgs.knownArgs.filter((arg) => arg.secure).map((arg) => arg.argName);
     }
 
     private async loginWithBaseProfile(serviceProfile: zowe.imperative.IProfileLoaded, loginTokenType: string, node?: IZoweNodeType): Promise<void> {

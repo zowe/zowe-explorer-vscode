@@ -341,6 +341,13 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
             if (this.searchId.length > 0) {
                 jobsInternal.push(await ZoweExplorerApiRegister.getJesApi(cachedProfile).getJob(searchId));
             } else {
+                if (!ZoweExplorerApiRegister.getJesApi(cachedProfile).getSession(cachedProfile)) {
+                    throw new zowe.imperative.ImperativeError({
+                        msg: localize("getJobs.error.sessionMissing", "Profile auth error"),
+                        additionalDetails: localize("getJobs.error.additionalDetails", "Profile is not authenticated, please log in to continue"),
+                        errorCode: `${zowe.imperative.RestConstants.HTTP_STATUS_401}`,
+                    });
+                }
                 if (ZoweExplorerApiRegister.getJesApi(cachedProfile).getJobsByParameters) {
                     jobsInternal = await ZoweExplorerApiRegister.getJesApi(cachedProfile).getJobsByParameters({
                         owner,

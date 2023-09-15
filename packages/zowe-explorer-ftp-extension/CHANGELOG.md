@@ -2,9 +2,9 @@ All notable changes to the "zowe-explorer-ftp-extension" extension will be docum
 
 ## TBD Release
 
-### New features and enhancements
-
 ### Bug fixes
+
+- Bump `@zowe/zowe-explorer-api` to pick up latest, including `@zowe/secrets-for-zowe-sdk` 7.18.4 to handle install errors gracefully and to allow running without MSVC redistributables.
 
 ## `2.10.0`
 

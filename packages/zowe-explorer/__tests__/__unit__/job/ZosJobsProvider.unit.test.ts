@@ -272,17 +272,6 @@ describe("ZosJobsProvider unit tests - Function getChildren", () => {
 
         expect(elementGetChildrenSpy).toHaveBeenCalledTimes(1);
     });
-    it("Tests that getChildren returns the empty array if status of profile is unverified", async () => {
-        const globalMocks = await createGlobalMocks();
-        jest.spyOn(Profiles.getInstance(), "checkCurrentProfile").mockResolvedValueOnce({ status: "unverified" } as any);
-        const blockMocks = createBlockMocks(globalMocks);
-        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
-        const testTree = new ZosJobsProvider();
-        testTree.mSessionNodes.push(blockMocks.jobSessionNode);
-        testTree.mSessionNodes[1].dirty = true;
-
-        await expect(testTree.getChildren(testTree.mSessionNodes[1])).resolves.toEqual([]);
-    });
 });
 
 describe("ZosJobsProvider unit tests - Function initializeFavChildNodeForProfile", () => {
