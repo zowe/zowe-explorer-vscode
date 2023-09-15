@@ -151,8 +151,8 @@ export async function isUsingTokenAuth(profileName: string): Promise<boolean> {
 export const syncSessionNode = (getCommonApi: (profile: imperative.IProfileLoaded) => ICommon, sessionNode: IZoweTreeNode): void => {
     ZoweLogger.trace("ProfilesUtils.syncSessionNode called.");
 
-        const profileType = sessionNode.getProfile()?.type;
-        const profileName = sessionNode.getProfileName();
+    const profileType = sessionNode.getProfile()?.type;
+    const profileName = sessionNode.getProfileName();
 
     let profile: imperative.IProfileLoaded;
     try {
