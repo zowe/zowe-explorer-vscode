@@ -157,11 +157,6 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 const favsForProfile = this.loadProfilesForFavorites(this.log, element);
                 return favsForProfile;
             }
-            const validationStatus = await Profiles.getInstance().checkCurrentProfile(element.getProfile());
-
-            if (validationStatus.status === "unverified") {
-                return [];
-            }
             const finalResponse: IZoweDatasetTreeNode[] = [];
             let response;
             try {
@@ -890,7 +885,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         await this.checkCurrentProfile(node);
         let nonFaveNode;
 
-        if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID || !contextually.isValidationEnabled(node)) {
+        if (Profiles.getInstance().validProfile !== ValidProfileEnum.INVALID) {
             if (contextually.isSessionNotFav(node)) {
                 nonFaveNode = node;
                 if (this.mHistory.getSearchHistory().length > 0) {

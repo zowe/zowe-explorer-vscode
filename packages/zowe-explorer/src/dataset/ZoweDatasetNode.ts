@@ -305,6 +305,13 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 ),
             ];
             const mvsApi = ZoweExplorerApiRegister.getMvsApi(cachedProfile);
+            if (!mvsApi.getSession(mvsApi?.profile)) {
+                throw new zowe.imperative.ImperativeError({
+                    msg: localize("getDataSets.error.sessionMissing", "Profile auth error"),
+                    additionalDetails: localize("getDataSets.error.additionalDetails", "Profile is not authenticated, please log in to continue"),
+                    errorCode: `${zowe.imperative.RestConstants.HTTP_STATUS_401}`,
+                });
+            }
             if (mvsApi.dataSetsMatchingPattern) {
                 responses.push(await mvsApi.dataSetsMatchingPattern(dsPatterns));
             } else {
