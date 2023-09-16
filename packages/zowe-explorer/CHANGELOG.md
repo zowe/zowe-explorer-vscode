@@ -4,6 +4,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ## TBD Release
 
+- Added "Sort Jobs" feature for job nodes in Jobs tree view. [#2257](https://github.com/zowe/vscode-extension-for-zowe/issues/2251)
+
 ### New features and enhancements
 
 ### Bug fixes
@@ -61,7 +63,6 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 - Added option to save unique data set attributes as a template after allocation for future use. [#1425](https://github.com/zowe/vscode-extension-for-zowe/issues/1425)
 - Added "Cancel Job" feature for job nodes in Jobs tree view. [#2251](https://github.com/zowe/vscode-extension-for-zowe/issues/2251)
-- Added "Sort Jobs" feature for job nodes in Jobs tree view. [#2257](https://github.com/zowe/vscode-extension-for-zowe/issues/2251)
 - Enhanced ID generation for parent tree nodes to ensure uniqueness.
 - Added support for custom credential manager extensions in Zowe Explorer [#2212](https://github.com/zowe/vscode-extension-for-zowe/issues/2212)
 

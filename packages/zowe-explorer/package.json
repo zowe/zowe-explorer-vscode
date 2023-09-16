@@ -123,17 +123,17 @@
     "commands": [
       {
         "command": "zowe.jobs.sortbyreturncode",
-        "title": "Sort by returncode",
+        "title": "%jobs.sortbyreturncode%",
         "category": "Zowe Explorer"
       },
       {
         "command": "zowe.jobs.sortbyname",
-        "title": "Sort by name",
+        "title": "%jobs.sortbyname%",
         "category": "Zowe Explorer"
       },
       {
         "command": "zowe.jobs.sortbyid",
-        "title": "Sort by id",
+        "title": "%jobs.sortbyid%",
         "category": "Zowe Explorer"
       },
       {
