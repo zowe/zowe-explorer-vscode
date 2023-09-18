@@ -528,35 +528,15 @@ export async function cancelJobs(jobsProvider: IZoweTree<IZoweJobTreeNode>, node
         await Gui.showMessage(localize("cancelJobs.succeeded", "Cancelled selected jobs successfully."));
     }
 }
-export async function sortByName(jobs: IZoweJobTreeNode, jobsProvider: IZoweTree<IZoweJobTreeNode>): Promise<void> {
+export async function sortJobsBy(jobs: IZoweJobTreeNode, jobsProvider: IZoweTree<IZoweJobTreeNode>, key: keyof zowe.IJob): Promise<void> {
     if (jobs["children"].length == 0) {
         await vscode.window.showInformationMessage("No jobs are present in the profile.");
     }
     jobs["children"].sort((x, y) => {
-        if (x["job"]["jobname"] === y["job"]["jobname"]) {
+        if (key !== "jobid" && x["job"][key] == y["job"][key]) {
             return x["job"]["jobid"] > y["job"]["jobid"] ? 1 : -1;
         } else {
-            return x["job"]["jobname"] > y["job"]["jobname"] ? 1 : -1;
-        }
-    });
-    jobsProvider.refresh();
-}
-export async function sortById(jobs: IZoweJobTreeNode, jobsProvider: IZoweTree<IZoweJobTreeNode>): Promise<void> {
-    if (jobs["children"].length == 0) {
-        await vscode.window.showInformationMessage("No jobs are present in the profile.");
-    }
-    jobs["children"].sort((x, y) => (x["job"]["jobid"] > y["job"]["jobid"] ? 1 : -1));
-    jobsProvider.refresh();
-}
-export async function sortByReturnCode(jobs: IZoweJobTreeNode, jobsProvider: IZoweTree<IZoweJobTreeNode>): Promise<void> {
-    if (jobs["children"].length == 0) {
-        await vscode.window.showInformationMessage("No jobs are present in the profile.");
-    }
-    jobs["children"].sort((x, y) => {
-        if (x["job"]["retcode"] === y["job"]["retcode"]) {
-            return x["job"]["jobid"] > y["job"]["jobid"] ? 1 : -1;
-        } else {
-            return x["job"]["retcode"] > y["job"]["retcode"] ? 1 : -1;
+            return x["job"][key] > y["job"][key] ? 1 : -1;
         }
     });
     jobsProvider.refresh();
