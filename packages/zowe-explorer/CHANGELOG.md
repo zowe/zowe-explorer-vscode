@@ -4,9 +4,9 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ## TBD Release
 
-- Added "Sort Jobs" feature for job nodes in Jobs tree view. [#2257](https://github.com/zowe/vscode-extension-for-zowe/issues/2251)
-
 ### New features and enhancements
+
+- Added "Sort Jobs" feature for job nodes in Jobs tree view. [#2257](https://github.com/zowe/vscode-extension-for-zowe/issues/2251)
 
 ### Bug fixes
 
