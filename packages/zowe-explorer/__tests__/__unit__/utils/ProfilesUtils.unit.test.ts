@@ -464,6 +464,7 @@ describe("ProfilesUtils unit tests", () => {
             });
             jest.spyOn(Gui, "createQuickPick").mockReturnValue({
                 show: jest.fn(),
+                hide: jest.fn(),
             } as unknown as vscode.QuickPick<vscode.QuickPickItem>);
             jest.spyOn(Gui, "resolveQuickPick").mockImplementationOnce((qp) => Promise.resolve(qp.activeItems[0]));
             const promptCredsSpy = jest.spyOn(mockProfileInstance, "promptCredentials").mockResolvedValueOnce([]);
@@ -497,6 +498,7 @@ describe("ProfilesUtils unit tests", () => {
             });
             jest.spyOn(Gui, "createQuickPick").mockReturnValue({
                 show: jest.fn(),
+                hide: jest.fn(),
             } as unknown as vscode.QuickPick<vscode.QuickPickItem>);
             jest.spyOn(Gui, "resolveQuickPick").mockImplementationOnce((qp) => Promise.resolve(qp.activeItems[0]));
             const ssoLoginSpy = jest.spyOn(Profiles.prototype, "ssoLogin").mockResolvedValueOnce();
@@ -523,6 +525,7 @@ describe("ProfilesUtils unit tests", () => {
             } as any);
             jest.spyOn(Gui, "createQuickPick").mockReturnValue({
                 show: jest.fn(),
+                hide: jest.fn(),
             } as unknown as vscode.QuickPick<vscode.QuickPickItem>);
             jest.spyOn(Gui, "resolveQuickPick").mockImplementationOnce((qp) => Promise.resolve(qp.items[3]));
             const ssoLogoutSpy = jest.spyOn(Profiles.prototype, "ssoLogout").mockResolvedValueOnce();

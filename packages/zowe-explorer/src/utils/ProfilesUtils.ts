@@ -397,6 +397,7 @@ export class ProfilesUtils {
             qp.placeholder = localize("promptCredentials.qp.title", "Select authentication method for {0}", profile.name);
             qp.show();
             selectedItem = await Gui.resolveQuickPick(qp);
+            qp.hide();
         }
         if (selectedItem === authTypeChoices[imperative.SessConstants.AUTH_TYPE_BASIC]) {
             const creds = await Profiles.getInstance().promptCredentials(profile, true);
