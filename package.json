@@ -9,7 +9,7 @@
   },
   "private": true,
   "engines": {
-    "vscode": "^1.53.2"
+    "vscode": "^1.63.0"
   },
   "workspaces": [
     "packages/*"

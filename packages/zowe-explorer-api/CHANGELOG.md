@@ -2,7 +2,7 @@
 
 All notable changes to the "zowe-explorer-api" extension will be documented in this file.
 
-## TBD Release
+## `3.0.0-next.202309121526`
 
 ### New features and enhancements
 
@@ -10,8 +10,6 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 - Removal of deprecated APIs. Check the [list](https://github.com/zowe/vscode-extension-for-zowe/tree/next/docs/early-access/v3/Extenders.md) of APIs that were removed.
 - Added `madge` script in `package.json` to track circular dependencies. [#2148](https://github.com/zowe/vscode-extension-for-zowe/issues/2148)
 - Migrated to new package manager PNPM from Yarn.
-
-### Bug fixes
 
 ## `2.10.0`
 

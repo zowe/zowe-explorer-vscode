@@ -15,10 +15,10 @@ module.exports = {
             channel: "zowe-v1-lts",
             level: "patch",
         },
-        // {
-        //     name: "next",
-        //     prerelease: true,
-        // }
+        {
+            name: "next",
+            prerelease: true,
+        }
     ],
     plugins: [
         [

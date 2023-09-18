@@ -1,6 +1,6 @@
 All notable changes to the "zowe-explorer-ftp-extension" extension will be documented in this file.
 
-## TBD Release
+## `3.0.0-next.202309121526`
 
 ### New features and enhancements
 
@@ -8,8 +8,6 @@ All notable changes to the "zowe-explorer-ftp-extension" extension will be docum
 - Updated activation event to `onStartupFinished`. [#1910](https://github.com/zowe/vscode-extension-for-zowe/issues/1910)
 - Added `madge` script in `package.json` to track circular dependencies. [#2148](https://github.com/zowe/vscode-extension-for-zowe/issues/2148)
 - Migrated to new package manager PNPM from Yarn.
-
-### Bug fixes
 
 ## `2.10.0`
 
