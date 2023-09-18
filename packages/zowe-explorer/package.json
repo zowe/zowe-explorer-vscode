@@ -29,7 +29,8 @@
     "resources"
   ],
   "activationEvents": [
-    "*"
+    "*",
+    "onCommand:extension.showInputPrompt"
   ],
   "main": "./out/src/extension",
   "browser": "./out/src/web/extension",
@@ -739,6 +740,20 @@
         }
       },
       {
+        "command": "zowe.jobs.filterJobs",
+        "title": "Filter Jobs",
+        "category": "Zowe Explorer",
+        "icon": {
+          "light": "./resources/light/filter.svg",
+          "dark": "./resources/dark/filter.svg"
+        }
+      },
+      {
+        "command": "zowe.jobs.filterSpools",
+        "title": "Filter Spools",
+        "category": "Zowe Explorer"
+      },
+      {
         "command": "zowe.all.config.init",
         "title": "%all.configInit%",
         "category": "Zowe Explorer"
@@ -1215,6 +1230,11 @@
         },
         {
           "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/ && !listMultiSelection",
+          "command": "zowe.jobs.filterJobs",
+          "group": "inline"
+        },
+        {
+          "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/ && !listMultiSelection",
           "command": "zowe.jobs.refreshJobsServer",
           "group": "000_zowe_jobsMainframeInteraction@1"
         },
@@ -1264,6 +1284,11 @@
           "group": "002_zowe_jobsWorkspace@0"
         },
         {
+          "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/  && !listMultiSelection",
+          "command": "zowe.jobs.filterJobs",
+          "group": "002_zowe_jobsProfileModification@99"
+        },
+        {
           "when": "view == zowe.jobs.explorer && viewItem =~ /^job.*_fav.*/",
           "command": "zowe.jobs.removeFavorite",
           "group": "002_zowe_jobsWorkspace@2"
@@ -1311,6 +1336,11 @@
         {
           "when": "view == zowe.jobs.explorer && viewItem =~ /^job.*/",
           "command": "zowe.jobs.cancelJob",
+          "group": "099_zowe_jobsModification"
+        },
+        {
+          "when": "view == zowe.jobs.explorer && viewItem =~ /^job.*/",
+          "command": "zowe.jobs.filterSpools",
           "group": "099_zowe_jobsModification"
         },
         {

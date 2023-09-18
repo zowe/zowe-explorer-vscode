@@ -14,12 +14,13 @@ import * as zowe from "@zowe/cli";
 import { errorHandling } from "../utils/ProfilesUtils";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
-import { Gui, ValidProfileEnum, IZoweTree, IZoweJobTreeNode } from "@zowe/zowe-explorer-api";
+import { Gui, ValidProfileEnum, IZoweTree, IZoweJobTreeNode, IZoweNodeType } from "@zowe/zowe-explorer-api";
 import { Job, Spool } from "./ZoweJobNode";
 import * as nls from "vscode-nls";
 import SpoolProvider, { encodeJobFile, getSpoolFiles, matchSpool } from "../SpoolProvider";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { getDefaultUri } from "../shared/utils";
+import { TreeViewUtils } from "../utils/TreeViewUtils";
 
 // Set up localization
 nls.config({
@@ -117,28 +118,24 @@ export async function getSpoolContent(session: string, spool: zowe.IJobFile, ref
     }
 
     const statusMsg = Gui.setStatusBarMessage(localize("jobActions.openSpoolFile", "$(sync~spin) Opening spool file...", this.label as string));
-    await profiles.checkCurrentProfile(zosmfProfile);
-    if (profiles.validProfile !== ValidProfileEnum.INVALID) {
-        const uri = encodeJobFile(session, spool);
-        try {
-            const spoolFile = SpoolProvider.files[uri.path];
-            if (spoolFile) {
-                // Fetch any changes to the spool file if it exists in the SpoolProvider
-                await spoolFile.fetchContent();
-            }
-            await Gui.showTextDocument(uri, { preview: false });
-        } catch (error) {
-            const isTextDocActive =
-                vscode.window.activeTextEditor &&
-                vscode.window.activeTextEditor.document.uri?.path === `${spool.jobname}.${spool.jobid}.${spool.ddname}`;
+    const uri = encodeJobFile(session, spool);
+    try {
+        const spoolFile = SpoolProvider.files[uri.path];
+        if (spoolFile) {
+            // Fetch any changes to the spool file if it exists in the SpoolProvider
+            await spoolFile.fetchContent();
+        }
+        await Gui.showTextDocument(uri, { preview: false });
+    } catch (error) {
+        const isTextDocActive =
+            vscode.window.activeTextEditor && vscode.window.activeTextEditor.document.uri?.path === `${spool.jobname}.${spool.jobid}.${spool.ddname}`;
 
-            statusMsg.dispose();
-            if (isTextDocActive && String(error.message).includes("Failed to show text document")) {
-                return;
-            }
-            await errorHandling(error, session);
+        statusMsg.dispose();
+        if (isTextDocActive && String(error.message).includes("Failed to show text document")) {
             return;
         }
+        await errorHandling(error, session);
+        return;
     }
     statusMsg.dispose();
 }
@@ -191,10 +188,7 @@ export async function getSpoolContentFromMainframe(node: IZoweJobTreeNode): Prom
  */
 export async function refreshJobsServer(node: IZoweJobTreeNode, jobsProvider: IZoweTree<IZoweJobTreeNode>): Promise<void> {
     ZoweLogger.trace("job.actions.refreshJobsServer called.");
-    jobsProvider.checkCurrentProfile(node);
-    if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID || Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED) {
-        await jobsProvider.refreshElement(node);
-    }
+    await jobsProvider.refreshElement(node);
 }
 
 /**
@@ -534,4 +528,77 @@ export async function cancelJobs(jobsProvider: IZoweTree<IZoweJobTreeNode>, node
     } else {
         await Gui.showMessage(localize("cancelJobs.succeeded", "Cancelled selected jobs successfully."));
     }
+}
+
+export async function filterJobs(jobsProvider: IZoweTree<IZoweJobTreeNode>): Promise<vscode.InputBox> {
+    let acutal_jobs;
+    let flag = false;
+    jobsProvider.mSessionNodes.find((level) => {
+        if (level.label === "zosmf") {
+            acutal_jobs = level.children;
+            if (level.collapsibleState === 1) {
+                vscode.window.showInformationMessage("Inorder to filter jobs,first populate them using search icon");
+                flag = true;
+            }
+        }
+    });
+    if (flag) return;
+
+    let inputBox = vscode.window.createInputBox();
+    inputBox.placeholder = "Type here...";
+    inputBox.onDidChangeValue((query) => {
+        query = inputBox.value;
+        query = query.toUpperCase();
+        jobsProvider.mSessionNodes.find((level) => {
+            if (level.label === "zosmf") {
+                level.children = acutal_jobs.filter((item) =>
+                    (item["job"].jobname + "(" + item["job"].jobid + ")" + " - " + item["job"].retcode).toString().includes(query)
+                );
+            }
+        });
+        jobsProvider.refresh();
+    });
+    inputBox.show();
+    return inputBox;
+}
+
+export async function filterSpools(
+    jobsProvider: IZoweTree<IZoweJobTreeNode>,
+    job: IZoweJobTreeNode,
+    zoweFileProvider: IZoweTree<IZoweNodeType>
+): Promise<vscode.InputBox> {
+    if (job["collapsibleState"] == 1) {
+        const spools = await getSpoolFiles(job);
+        const Spools = spools.map((spool) => {
+            const spoolNode = new Spool(
+                spool.stepname + ":" + spool.ddname + " - " + spool["record-count"],
+                vscode.TreeItemCollapsibleState.None,
+                job.getParent(),
+                job.getSession(),
+                spool,
+                job.job,
+                job.getParent()
+            );
+            return spoolNode;
+        });
+        job.children = Spools;
+
+        await TreeViewUtils.expandNode(job, zoweFileProvider);
+        job.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+        jobsProvider.refresh();
+    }
+
+    const actual_spools = job.children;
+    let inputBox = vscode.window.createInputBox();
+    inputBox.placeholder = "Type here...";
+    inputBox.onDidChangeValue((query) => {
+        query = inputBox.value;
+        query = query.toUpperCase();
+        job["children"] = actual_spools.filter((item) =>
+            (item["spool"].stepname + ":" + item["spool"].ddname + " - " + item["spool"]["record-count"]).toString().includes(query)
+        );
+        jobsProvider.refresh();
+    });
+    inputBox.show();
+    return inputBox;
 }

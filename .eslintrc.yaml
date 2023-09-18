@@ -30,6 +30,7 @@ plugins:
   - "@typescript-eslint"
   - zowe-explorer
 rules:
+  "no-console": ["error", { "allow": ["warn", "error"] }]
   "@typescript-eslint/await-thenable": off
   "@typescript-eslint/consistent-type-assertions": warn
   "@typescript-eslint/explicit-function-return-type": error
