@@ -36,7 +36,7 @@ const MvsApi = new FtpMvsApi();
 
 describe("FtpMvsApi", () => {
     beforeEach(() => {
-        MvsApi.checkedProfile = jest.fn().mockReturnValue({ message: "success", type: "zftp", failNotFound: false });
+        MvsApi.checkedProfile = jest.fn().mockReturnValue({ message: "success", type: "zftp", profile: { secureFtp: false }, failNotFound: false });
         MvsApi.ftpClient = jest.fn().mockReturnValue({ host: "", user: "", password: "", port: "" });
         MvsApi.releaseConnection = jest.fn();
         sessionMap.get = jest.fn().mockReturnValue({ mvsListConnection: { connected: true } });
@@ -123,7 +123,7 @@ describe("FtpMvsApi", () => {
         expect(MvsApi.releaseConnection).toBeCalled();
     });
 
-    it("should upload empty contents to dataset.", async () => {
+    it("should upload single space to dataset when secureFtp is true and contents are empty", async () => {
         const localFile = tmp.tmpNameSync({ tmpdir: "/tmp" });
 
         fs.writeFileSync(localFile, "");
@@ -138,6 +138,14 @@ describe("FtpMvsApi", () => {
             dataSetName: "USER.EMPTYDS",
             options: { encoding: "", returnEtag: true, etag: "utf8" },
         };
+        jest.spyOn(MvsApi, "checkedProfile").mockReturnValueOnce({
+            type: "zftp",
+            message: "",
+            profile: {
+                secureFtp: true,
+            },
+            failNotFound: false,
+        });
 
         jest.spyOn(MvsApi as any, "getContentsTag").mockReturnValue(undefined);
         jest.spyOn(fs, "readFileSync").mockReturnValue("");
