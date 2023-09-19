@@ -130,9 +130,10 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
             targetDataset = dataSetName + "(" + member + ")";
         }
         const result = this.getDefaultResponse();
+        const profile = this.checkedProfile();
         let connection;
         try {
-            connection = await this.ftpClient(this.checkedProfile());
+            connection = await this.ftpClient(profile);
             if (!connection) {
                 ZoweLogger.logImperativeMessage(result.commandResponse, MessageSeverity.ERROR);
                 throw new Error(result.commandResponse);
@@ -153,8 +154,8 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
                 localFile: inputFilePath,
                 encoding: options.encoding,
             };
-            if (data == "") {
-                // substitute single space for empty DS contents when saving (prevents FTP error)
+            if (profile.profile["secureFtp"] && data == "") {
+                // substitute single space for empty DS contents when saving (avoids FTPS error)
                 transferOptions["content"] = " ";
                 delete transferOptions["localFile"];
             }
@@ -247,16 +248,17 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
     }
 
     public async createDataSetMember(dataSetName: string, options?: IUploadOptions): Promise<zowe.IZosFilesResponse> {
+        const profile = this.checkedProfile();
         const transferOptions = {
             transferType: options.binary ? TRANSFER_TYPE_BINARY : TRANSFER_TYPE_ASCII,
-            // we have to provide a single space for content, or zos-node-accessor will fail to upload the data set over FTP
-            content: " ",
+            // we have to provide a single space for content over FTPS, or it will fail to upload
+            content: profile.profile["secureFtp"] ? " " : "",
             encoding: options.encoding,
         };
         const result = this.getDefaultResponse();
         let connection;
         try {
-            connection = await this.ftpClient(this.checkedProfile());
+            connection = await this.ftpClient(profile);
             if (!connection) {
                 throw new Error(result.commandResponse);
             }
