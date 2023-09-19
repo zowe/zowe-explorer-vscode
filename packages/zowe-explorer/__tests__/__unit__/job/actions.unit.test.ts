@@ -59,7 +59,7 @@ const onDidChangeValueMock = {
 
 const mockInputBox: vscode.InputBox = {
     title: "",
-    value: "nagesha",
+    value: "",
     placeholder: "",
     password: false,
     onDidChangeValue: onDidChangeValueMock.event,

@@ -571,7 +571,7 @@ export async function filterSpools(
         const spools = await getSpoolFiles(job);
         const Spools = spools.map((spool) => {
             const spoolNode = new Spool(
-                spool.stepname + ":" + spool.ddname + " - " + spool["record-count"].toString(),
+                `${spool.stepname}:${spool.ddname} - ${spool["record-count"]}`,
                 vscode.TreeItemCollapsibleState.None,
                 job.getParent(),
                 job.getSession(),
