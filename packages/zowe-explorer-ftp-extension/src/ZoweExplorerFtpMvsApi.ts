@@ -149,15 +149,15 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
             }
             const lrecl: number = dsAtrribute.apiResponse.items[0].lrecl;
             const data = fs.readFileSync(inputFilePath, { encoding: "utf8" });
-            const transferOptions = {
+            const transferOptions: Record<string, any> = {
                 transferType: options.binary ? TRANSFER_TYPE_BINARY : TRANSFER_TYPE_ASCII,
                 localFile: inputFilePath,
                 encoding: options.encoding,
             };
-            if (profile.profile["secureFtp"] && data == "") {
+            if (profile.profile.secureFtp && data == "") {
                 // substitute single space for empty DS contents when saving (avoids FTPS error)
-                transferOptions["content"] = " ";
-                delete transferOptions["localFile"];
+                transferOptions.content = " ";
+                delete transferOptions.localFile;
             }
             const lines = data.split(/\r?\n/);
             const foundIndex = lines.findIndex((line) => line.length > lrecl);
@@ -252,7 +252,7 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
         const transferOptions = {
             transferType: options.binary ? TRANSFER_TYPE_BINARY : TRANSFER_TYPE_ASCII,
             // we have to provide a single space for content over FTPS, or it will fail to upload
-            content: profile.profile["secureFtp"] ? " " : "",
+            content: profile.profile.secureFtp ? " " : "",
             encoding: options.encoding,
         };
         const result = this.getDefaultResponse();
