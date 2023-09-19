@@ -21,6 +21,7 @@ export type FileAttributes = {
     owner: string;
     uid: number;
     perms: string;
+    tag?: string;
 };
 
 export function permStringToOctal(perms: string): number {
