@@ -146,5 +146,8 @@
   "createZoweSchema.reload.button": "Reload Window",
   "createZoweSchema.reload.infoMessage": "Team Configuration file created. Location: {0}. \n Please reload your window.",
   "copyFile": "Copy",
-  "pasteFile": "Paste"
+  "pasteFile": "Paste",
+  "jobs.sortbyreturncode": "Sort by ReturnCode",
+  "jobs.sortbyname": "Sort by Name",
+  "jobs.sortbyid": "Sort by ID"
 }

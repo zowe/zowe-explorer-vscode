@@ -14,7 +14,7 @@ import * as zowe from "@zowe/cli";
 import { errorHandling } from "../utils/ProfilesUtils";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
-import { Gui, ValidProfileEnum, IZoweTree, IZoweJobTreeNode } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweTree, IZoweJobTreeNode } from "@zowe/zowe-explorer-api";
 import { Job, Spool } from "./ZoweJobNode";
 import * as nls from "vscode-nls";
 import SpoolProvider, { encodeJobFile, getSpoolFiles, matchSpool } from "../SpoolProvider";
@@ -527,4 +527,17 @@ export async function cancelJobs(jobsProvider: IZoweTree<IZoweJobTreeNode>, node
     } else {
         await Gui.showMessage(localize("cancelJobs.succeeded", "Cancelled selected jobs successfully."));
     }
+}
+export async function sortJobsBy(jobs: IZoweJobTreeNode, jobsProvider: IZoweTree<IZoweJobTreeNode>, key: keyof zowe.IJob): Promise<void> {
+    if (jobs["children"].length == 0) {
+        await vscode.window.showInformationMessage("No jobs are present in the profile.");
+    }
+    jobs["children"].sort((x, y) => {
+        if (key !== "jobid" && x["job"][key] == y["job"][key]) {
+            return x["job"]["jobid"] > y["job"]["jobid"] ? 1 : -1;
+        } else {
+            return x["job"][key] > y["job"][key] ? 1 : -1;
+        }
+    });
+    jobsProvider.refresh();
 }

@@ -6,6 +6,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
+- Added "Sort Jobs" feature for job nodes in Jobs tree view. [#2257](https://github.com/zowe/vscode-extension-for-zowe/issues/2251)
+
 ### Bug fixes
 
 - Fixed submitting local JCL using command pallet option `Zowe Explorer: Submit JCL` by adding a check for chosen profile returned to continue the action. [#1625](https://github.com/zowe/vscode-extension-for-zowe/issues/1625)
