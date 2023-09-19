@@ -533,7 +533,7 @@ export async function cancelJobs(jobsProvider: IZoweTree<IZoweJobTreeNode>, node
 export async function filterJobs(jobsProvider: IZoweTree<IZoweJobTreeNode>): Promise<vscode.InputBox> {
     let acutal_jobs;
     let flag = false;
-    jobsProvider.mSessionNodes.find((level) => {
+    for (const level of jobsProvider.mSessionNodes) {
         if (level.label === "zosmf") {
             acutal_jobs = level.children;
             if (level.collapsibleState === 1) {
@@ -541,21 +541,21 @@ export async function filterJobs(jobsProvider: IZoweTree<IZoweJobTreeNode>): Pro
                 flag = true;
             }
         }
-    });
+    }
     if (flag) return;
 
-    let inputBox = vscode.window.createInputBox();
+    const inputBox = await vscode.window.createInputBox();
     inputBox.placeholder = "Type here...";
     inputBox.onDidChangeValue((query) => {
         query = inputBox.value;
         query = query.toUpperCase();
-        jobsProvider.mSessionNodes.find((level) => {
+        for (const level of jobsProvider.mSessionNodes) {
             if (level.label === "zosmf") {
                 level.children = acutal_jobs.filter((item) =>
-                    (item["job"].jobname + "(" + item["job"].jobid + ")" + " - " + item["job"].retcode).toString().includes(query)
+                    `${item["job"].jobname as string}(${item["job"].jobid as string}) - ${item["job"].retcode as string}`.includes(query)
                 );
             }
-        });
+        }
         jobsProvider.refresh();
     });
     inputBox.show();
@@ -571,7 +571,7 @@ export async function filterSpools(
         const spools = await getSpoolFiles(job);
         const Spools = spools.map((spool) => {
             const spoolNode = new Spool(
-                spool.stepname + ":" + spool.ddname + " - " + spool["record-count"],
+                spool.stepname + ":" + spool.ddname + " - " + spool["record-count"].toString(),
                 vscode.TreeItemCollapsibleState.None,
                 job.getParent(),
                 job.getSession(),
@@ -589,13 +589,13 @@ export async function filterSpools(
     }
 
     const actual_spools = job.children;
-    let inputBox = vscode.window.createInputBox();
+    const inputBox = vscode.window.createInputBox();
     inputBox.placeholder = "Type here...";
     inputBox.onDidChangeValue((query) => {
         query = inputBox.value;
         query = query.toUpperCase();
         job["children"] = actual_spools.filter((item) =>
-            (item["spool"].stepname + ":" + item["spool"].ddname + " - " + item["spool"]["record-count"]).toString().includes(query)
+            `${item["spool"].stepname as string}:${item["spool"].ddname as string} - ${item["spool"]["record-count"] as string}`.includes(query)
         );
         jobsProvider.refresh();
     });

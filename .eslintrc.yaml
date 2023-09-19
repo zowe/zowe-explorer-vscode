@@ -57,7 +57,6 @@ rules:
     - warn
     - code: 150
   # no-array-constructor: off
-  no-console: error
   no-const-assign: error
   no-dupe-keys: error
   no-duplicate-case: error
