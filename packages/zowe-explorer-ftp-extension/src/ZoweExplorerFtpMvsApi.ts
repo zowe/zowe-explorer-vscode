@@ -154,7 +154,7 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
                 localFile: inputFilePath,
                 encoding: options.encoding,
             };
-            if (profile.profile.secureFtp && data == "") {
+            if (profile.profile.secureFtp && data === "") {
                 // substitute single space for empty DS contents when saving (avoids FTPS error)
                 transferOptions.content = " ";
                 delete transferOptions.localFile;
