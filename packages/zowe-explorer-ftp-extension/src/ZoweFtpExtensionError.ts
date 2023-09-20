@@ -13,6 +13,6 @@ import * as globals from "./globals";
 
 export class ZoweFtpExtensionError extends Error {
     public constructor(message: string) {
-        super(`${String(globals.LOGGER.getExtensionName())}: ${String(message)}`);
+        super(globals.LOGGER.getExtensionName() + ": " + message);
     }
 }
