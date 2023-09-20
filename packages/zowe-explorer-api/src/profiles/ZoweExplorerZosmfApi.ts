@@ -214,15 +214,11 @@ export class ZosmfUssApi extends ZosmfApiCommon implements ZoweExplorerApi.IUss 
     }
 
     public async getTag(ussPath: string): Promise<string> {
-        const result = JSON.parse(
-            Buffer.from(
-                await zowe.Utilities.putUSSPayload(this.getSession(), ussPath, {
-                    request: "chtag",
-                    action: "list",
-                })
-            ).toString()
-        );
-        return result.stdout[0].split(" ")[1] as string;
+        const response = await zowe.Utilities.putUSSPayload(this.getSession(), ussPath, {
+            request: "chtag",
+            action: "list",
+        });
+        return JSON.parse(response.toString()).stdout[0].split(" ")[1] as string;
     }
 }
 
