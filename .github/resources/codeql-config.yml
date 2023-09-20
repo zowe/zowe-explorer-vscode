@@ -5,6 +5,5 @@ queries:
 
 paths:
   - packages
-  - packages/zowe-explorer/webviews
 paths-ignore:
   - node_modules
