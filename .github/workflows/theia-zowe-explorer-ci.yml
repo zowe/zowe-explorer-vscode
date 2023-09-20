@@ -31,8 +31,10 @@ jobs:
       # install pnpm
       - run: npm install -g pnpm
 
-      # install dependencies
-      - run: pnpm install
+      # install dependencies & build
+      - run: |
+         pnpm install
+         pnpm build
 
       # copy test data file needed for build :-(
       - name: Create test data file
