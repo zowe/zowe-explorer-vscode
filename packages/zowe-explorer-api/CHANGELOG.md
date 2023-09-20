@@ -6,6 +6,8 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### New features and enhancements
 
+- Added optional `getTag` function to `ZoweExplorerAPI.IUss` for getting the tag of a file on USS.
+
 ### Bug fixes
 
 ## `2.11.0`
