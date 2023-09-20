@@ -2,13 +2,20 @@
   "name": "edit-attributes",
   "private": true,
   "type": "module",
-  "version": "2.10.0-SNAPSHOT",
+  "version": "2.12.0-SNAPSHOT",
   "main": "index.js",
   "license": "EPL-2.0",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "fresh-clone": "yarn clean && rimraf node_modules",
+    "clean": "gulp clean",
+    "package": "echo \"edit-attributes: nothing to package.\"",
+    "test": "echo \"edit-attributes: nothing to test\"",
+    "lint": "echo \"edit-attributes: nothing to lint.\"",
+    "lint:html": "echo \"edit-attributes: nothing to lint.\"",
+    "pretty": "echo \"edit-attributes: nothing to pretty.\""
   },
   "dependencies": {
     "@types/vscode-webview": "^1.57.1",
