@@ -1375,6 +1375,10 @@
           "when": "never"
         },
         {
+          "command": "zowe.ds.editSession",
+          "when": "never"
+        },
+        {
           "command": "zowe.ds.createMember",
           "when": "never"
         },
@@ -1412,10 +1416,6 @@
         },
         {
           "command": "zowe.ds.hMigrateDataSet",
-          "when": "never"
-        },
-        {
-          "command": "zowe.ds.editSession",
           "when": "never"
         },
         {
@@ -1471,6 +1471,30 @@
           "when": "never"
         },
         {
+          "command": "zowe.ds.ssoLogin",
+          "when": "never"
+        },
+        {
+          "command": "zowe.ds.ssoLogout",
+          "when": "never"
+        },
+        {
+          "command": "zowe.uss.ssoLogin",
+          "when": "never"
+        },
+        {
+          "command": "zowe.uss.ssoLogout",
+          "when": "never"
+        },
+        {
+          "command": "zowe.jobs.ssoLogin",
+          "when": "never"
+        },
+        {
+          "command": "zowe.jobs.ssoLogout",
+          "when": "never"
+        },
+        {
           "command": "zowe.ds.saveSearch",
           "when": "never"
         },
@@ -1515,30 +1539,6 @@
           "when": "never"
         },
         {
-          "command": "zowe.ds.ssoLogin",
-          "when": "never"
-        },
-        {
-          "command": "zowe.ds.ssoLogout",
-          "when": "never"
-        },
-        {
-          "command": "zowe.uss.ssoLogin",
-          "when": "never"
-        },
-        {
-          "command": "zowe.uss.ssoLogout",
-          "when": "never"
-        },
-        {
-          "command": "zowe.jobs.ssoLogin",
-          "when": "never"
-        },
-        {
-          "command": "zowe.jobs.ssoLogout",
-          "when": "never"
-        },
-        {
           "command": "zowe.uss.pasteUssFile",
           "when": "never"
         },
@@ -1568,6 +1568,10 @@
         },
         {
           "command": "zowe.uss.saveSearch",
+          "when": "never"
+        },
+        {
+          "command": "zowe.uss.editSession",
           "when": "never"
         },
         {
@@ -1608,10 +1612,6 @@
         },
         {
           "command": "zowe.jobs.setJobSpool",
-          "when": "never"
-        },
-        {
-          "command": "zowe.uss.editSession",
           "when": "never"
         },
         {
@@ -1659,11 +1659,11 @@
           "when": "never"
         },
         {
-          "command": "zowe.jobs.removeJobsSession",
+          "command": "zowe.jobs.editSession",
           "when": "never"
         },
         {
-          "command": "zowe.jobs.editSession",
+          "command": "zowe.jobs.removeJobsSession",
           "when": "never"
         },
         {
