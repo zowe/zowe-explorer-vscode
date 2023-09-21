@@ -142,6 +142,11 @@
         "category": "Zowe Explorer"
       },
       {
+        "command": "zowe.profileManagement",
+        "title": "%zowe.profileManagement%",
+        "category": "Zowe Explorer"
+      },
+      {
         "command": "zowe.extRefresh",
         "title": "%zowe.extRefresh%",
         "category": "Zowe Explorer",
@@ -260,6 +265,15 @@
         "icon": {
           "light": "./resources/light/plus.svg",
           "dark": "./resources/dark/plus.svg"
+        }
+      },
+      {
+        "command": "zowe.ds.editSession",
+        "title": "%editSession%",
+        "category": "Zowe Explorer",
+        "icon": {
+          "light": "./resources/light/edit.svg",
+          "dark": "./resources/dark/edit.svg"
         }
       },
       {
@@ -472,6 +486,15 @@
         }
       },
       {
+        "command": "zowe.uss.editSession",
+        "title": "%editSession%",
+        "category": "Zowe Explorer",
+        "icon": {
+          "light": "./resources/light/edit.svg",
+          "dark": "./resources/dark/edit.svg"
+        }
+      },
+      {
         "command": "zowe.uss.deleteProfile",
         "title": "%deleteProfile%",
         "category": "Zowe Explorer"
@@ -638,6 +661,15 @@
         "icon": {
           "light": "./resources/light/refresh.svg",
           "dark": "./resources/dark/refresh.svg"
+        }
+      },
+      {
+        "command": "zowe.jobs.editSession",
+        "title": "%editSession%",
+        "category": "Zowe Explorer",
+        "icon": {
+          "light": "./resources/light/edit.svg",
+          "dark": "./resources/dark/edit.svg"
         }
       },
       {
@@ -938,8 +970,8 @@
         },
         {
           "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)ussSession.*/ && !listMultiSelection",
-          "command": "zowe.promptCredentials",
-          "group": "098_zowe_ussProfileAuthentication@3"
+          "command": "zowe.profileManagement",
+          "group": "099_zowe_ussProfileAuthentication@97"
         },
         {
           "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*/",
@@ -1138,8 +1170,8 @@
         },
         {
           "when": "view == zowe.ds.explorer && viewItem =~ /^(?!.*_fav.*)session.*/ && !listMultiSelection",
-          "command": "zowe.promptCredentials",
-          "group": "098_zowe_dsProfileAuthentication@8"
+          "command": "zowe.profileManagement",
+          "group": "099_zowe_dsProfileAuthentication@97"
         },
         {
           "when": "view == zowe.ds.explorer && viewItem =~ /^(?!.*_fav.*)session.*/",
@@ -1288,8 +1320,8 @@
         },
         {
           "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/ && !listMultiSelection",
-          "command": "zowe.promptCredentials",
-          "group": "098_zowe_jobsProfileAuthentication@5"
+          "command": "zowe.profileManagement",
+          "group": "098_zowe_jobsProfileAuthentication@97"
         },
         {
           "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/",
@@ -1380,6 +1412,10 @@
         },
         {
           "command": "zowe.ds.hMigrateDataSet",
+          "when": "never"
+        },
+        {
+          "command": "zowe.ds.editSession",
           "when": "never"
         },
         {
@@ -1479,6 +1515,30 @@
           "when": "never"
         },
         {
+          "command": "zowe.ds.ssoLogin",
+          "when": "never"
+        },
+        {
+          "command": "zowe.ds.ssoLogout",
+          "when": "never"
+        },
+        {
+          "command": "zowe.uss.ssoLogin",
+          "when": "never"
+        },
+        {
+          "command": "zowe.uss.ssoLogout",
+          "when": "never"
+        },
+        {
+          "command": "zowe.jobs.ssoLogin",
+          "when": "never"
+        },
+        {
+          "command": "zowe.jobs.ssoLogout",
+          "when": "never"
+        },
+        {
           "command": "zowe.uss.pasteUssFile",
           "when": "never"
         },
@@ -1551,6 +1611,10 @@
           "when": "never"
         },
         {
+          "command": "zowe.uss.editSession",
+          "when": "never"
+        },
+        {
           "command": "zowe.jobs.refreshJobsServer",
           "when": "never"
         },
@@ -1599,6 +1663,10 @@
           "when": "never"
         },
         {
+          "command": "zowe.jobs.editSession",
+          "when": "never"
+        },
+        {
           "command": "zowe.jobs.deleteProfile",
           "when": "never"
         },
@@ -1620,6 +1688,10 @@
         },
         {
           "command": "zowe.jobs.deleteJob",
+          "when": "never"
+        },
+        {
+          "command": "zowe.profileManagement",
           "when": "never"
         }
       ]

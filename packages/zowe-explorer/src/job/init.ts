@@ -104,9 +104,9 @@ export async function initJobsProvider(context: vscode.ExtensionContext): Promis
         vscode.commands.registerCommand("zowe.jobs.setJobSpool", async (session, jobId) => jobActions.focusOnJob(jobsProvider, session, jobId))
     );
     context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.search", (node): void => jobsProvider.filterPrompt(node)));
-    // context.subscriptions.push(
-    //     vscode.commands.registerCommand("zowe.jobs.editSession", async (node): Promise<void> => jobsProvider.editSession(node, jobsProvider))
-    // );
+    context.subscriptions.push(
+        vscode.commands.registerCommand("zowe.jobs.editSession", async (node): Promise<void> => jobsProvider.editSession(node, jobsProvider))
+    );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.jobs.addFavorite", async (node, nodeList) => {
             const selectedNodes = getSelectedNodeList(node, nodeList) as IZoweJobTreeNode[];
@@ -140,8 +140,8 @@ export async function initJobsProvider(context: vscode.ExtensionContext): Promis
             jobsProvider.refreshElement(node);
         })
     );
-    // context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.ssoLogin", (node: IZoweTreeNode): void => jobsProvider.ssoLogin(node)));
-    // context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.ssoLogout", (node: IZoweTreeNode): void => jobsProvider.ssoLogout(node)));
+    context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.ssoLogin", (node: IZoweTreeNode): void => jobsProvider.ssoLogin(node)));
+    context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.ssoLogout", (node: IZoweTreeNode): void => jobsProvider.ssoLogout(node)));
     const spoolFileTogglePoll =
         (startPolling: boolean) =>
         async (node: IZoweTreeNode, nodeList: IZoweTreeNode[]): Promise<void> => {
