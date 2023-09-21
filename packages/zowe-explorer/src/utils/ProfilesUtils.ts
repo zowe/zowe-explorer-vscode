@@ -315,7 +315,7 @@ export class ProfilesUtils {
                 break;
             }
             case await this.isUsingTokenAuth(profile.name): {
-                Gui.infoMessage("profile using token auth.");
+                await this.tokenAuthProfileManagement(node);
                 break;
             }
             // will need a case for isUsingCertAuth
@@ -544,7 +544,7 @@ export class ProfilesUtils {
 
     private static async basicAuthProfileManagement(node: IZoweTreeNode): Promise<void> {
         const profile = node.getProfile();
-        const selected = await this.setupProfileManagementQp(imperative.SessConstants.AUTH_TYPE_BASIC, profile.name);
+        const selected = await this.setupProfileManagementQp(imperative.SessConstants.AUTH_TYPE_BASIC, profile);
         switch (selected) {
             case this.updateBasicAuthQpItem[this.AuthQpLabels.update]: {
                 await this.promptCredentials(node);
@@ -560,7 +560,29 @@ export class ProfilesUtils {
             }
         }
     }
-    private static async setupProfileManagementQp(managementType: string, profileName: string): Promise<vscode.QuickPickItem> {
+    private static async tokenAuthProfileManagement(node: IZoweTreeNode): Promise<void> {
+        const profile = node.getProfile();
+        const selected = await this.setupProfileManagementQp("token", profile);
+        switch (selected) {
+            case this.loginQpItem[this.AuthQpLabels.login]: {
+                await Profiles.getInstance().ssoLogin(node, profile.name);
+                break;
+            }
+            case this.editProfileQpItem[this.AuthQpLabels.edit]: {
+                await Profiles.getInstance().editSession(profile, profile.name);
+                break;
+            }
+            case this.logoutQpItem[this.AuthQpLabels.logout]: {
+                await Profiles.getInstance().ssoLogout(node);
+                break;
+            }
+            default: {
+                Gui.infoMessage(localize("profiles.operation.cancelled", "Operation Cancelled"));
+                break;
+            }
+        }
+    }
+    private static async setupProfileManagementQp(managementType: string, profile: imperative.IProfileLoaded): Promise<vscode.QuickPickItem> {
         const qp = Gui.createQuickPick();
         let quickPickOptions: vscode.QuickPickItem[];
         switch (managementType) {
@@ -570,7 +592,7 @@ export class ProfilesUtils {
                 break;
             }
             case "token": {
-                quickPickOptions = this.tokenAuthQp();
+                quickPickOptions = this.tokenAuthQp(profile);
                 qp.placeholder = this.qpPlaceholders.tokenAuth;
                 break;
             }
@@ -594,9 +616,12 @@ export class ProfilesUtils {
         quickPickOptions.push(this.editProfileQpItem[this.AuthQpLabels.edit]);
         return quickPickOptions;
     }
-    private static tokenAuthQp(): vscode.QuickPickItem[] {
+    private static tokenAuthQp(profile: imperative.IProfileLoaded): vscode.QuickPickItem[] {
         const quickPickOptions: vscode.QuickPickItem[] = Object.values(this.loginQpItem);
         quickPickOptions.push(this.editProfileQpItem[this.AuthQpLabels.edit]);
+        if (profile.profile.tokenType) {
+            quickPickOptions.push(this.logoutQpItem[this.AuthQpLabels.logout]);
+        }
         return quickPickOptions;
     }
 }
