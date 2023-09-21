@@ -9,6 +9,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 ### Bug fixes
 
 - Fixed submitting local JCL using command pallet option `Zowe Explorer: Submit JCL` by adding a check for chosen profile returned to continue the action. [#1625](https://github.com/zowe/vscode-extension-for-zowe/issues/1625)
+- Fixed the issue of getting the meta data of profile types for creating the config files by adding the setters and getters in the zowe-explorer-api. [#2394](https://github.com/zowe/vscode-extension-for-zowe/issues/2394)
 
 ## `2.11.0`
 

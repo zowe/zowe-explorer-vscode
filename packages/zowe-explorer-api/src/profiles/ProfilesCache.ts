@@ -69,6 +69,7 @@ export class ProfilesCache {
     public profilesForValidation: IProfileValidation[] = [];
     public profilesValidationSetting: IValidationSetting[] = [];
     public allProfiles: zowe.imperative.IProfileLoaded[] = [];
+    public profileTypeConfigurations: zowe.imperative.ICommandProfileTypeConfiguration[] = [];
     protected allTypes: string[];
     protected allExternalTypes = new Set<string>();
     protected profilesByType = new Map<string, zowe.imperative.IProfileLoaded[]>();
@@ -81,6 +82,16 @@ export class ProfilesCache {
     public static requireKeyring(this: void): NodeModule {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-var-requires
         return require("@zowe/secrets-for-zowe-sdk").keyring;
+    }
+
+    public setConfigArray(extendermetadata: zowe.imperative.ICommandProfileTypeConfiguration[]): void {
+        extendermetadata?.forEach((item) => {
+            this.profileTypeConfigurations.push(item);
+        });
+    }
+
+    public getConfigArray(): zowe.imperative.ICommandProfileTypeConfiguration[] {
+        return this.profileTypeConfigurations;
     }
 
     public async getProfileInfo(_envTheia = false): Promise<zowe.imperative.ProfileInfo> {
