@@ -263,15 +263,6 @@
         }
       },
       {
-        "command": "zowe.ds.editSession",
-        "title": "%editSession%",
-        "category": "Zowe Explorer",
-        "icon": {
-          "light": "./resources/light/edit.svg",
-          "dark": "./resources/dark/edit.svg"
-        }
-      },
-      {
         "command": "zowe.ds.deleteProfile",
         "title": "%deleteProfile%",
         "category": "Zowe Explorer"
@@ -481,15 +472,6 @@
         }
       },
       {
-        "command": "zowe.uss.editSession",
-        "title": "%editSession%",
-        "category": "Zowe Explorer",
-        "icon": {
-          "light": "./resources/light/edit.svg",
-          "dark": "./resources/dark/edit.svg"
-        }
-      },
-      {
         "command": "zowe.uss.deleteProfile",
         "title": "%deleteProfile%",
         "category": "Zowe Explorer"
@@ -656,15 +638,6 @@
         "icon": {
           "light": "./resources/light/refresh.svg",
           "dark": "./resources/dark/refresh.svg"
-        }
-      },
-      {
-        "command": "zowe.jobs.editSession",
-        "title": "%editSession%",
-        "category": "Zowe Explorer",
-        "icon": {
-          "light": "./resources/light/edit.svg",
-          "dark": "./resources/dark/edit.svg"
         }
       },
       {
@@ -969,21 +942,6 @@
           "group": "098_zowe_ussProfileAuthentication@3"
         },
         {
-          "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)ussSession.*/ && !listMultiSelection",
-          "command": "zowe.uss.ssoLogin",
-          "group": "098_zowe_ussProfileAuthentication@4"
-        },
-        {
-          "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)ussSession.*/ && !listMultiSelection",
-          "command": "zowe.uss.ssoLogout",
-          "group": "098_zowe_ussProfileAuthentication@5"
-        },
-        {
-          "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*/ && !listMultiSelection",
-          "command": "zowe.uss.editSession",
-          "group": "099_zowe_ussProfileModification@1"
-        },
-        {
           "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*/",
           "command": "zowe.uss.removeSession",
           "group": "099_zowe_ussProfileModification@98"
@@ -1184,21 +1142,6 @@
           "group": "098_zowe_dsProfileAuthentication@8"
         },
         {
-          "when": "view == zowe.ds.explorer && viewItem =~ /^(?!.*_fav.*)session.*/ && !listMultiSelection",
-          "command": "zowe.ds.ssoLogin",
-          "group": "098_zowe_dsProfileAuthentication@9"
-        },
-        {
-          "when": "view == zowe.ds.explorer && viewItem =~ /^(?!.*_fav.*)session.*/ && !listMultiSelection",
-          "command": "zowe.ds.ssoLogout",
-          "group": "098_zowe_dsProfileAuthentication@10"
-        },
-        {
-          "when": "view == zowe.ds.explorer && viewItem =~ /^(?!.*_fav.*)session.*/ && !listMultiSelection",
-          "command": "zowe.ds.editSession",
-          "group": "099_zowe_dsProfileModification@0"
-        },
-        {
           "when": "view == zowe.ds.explorer && viewItem =~ /^(?!.*_fav.*)session.*/",
           "command": "zowe.ds.removeSession",
           "group": "099_zowe_dsProfileModification@98"
@@ -1349,21 +1292,6 @@
           "group": "098_zowe_jobsProfileAuthentication@5"
         },
         {
-          "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/ && !listMultiSelection",
-          "command": "zowe.jobs.ssoLogin",
-          "group": "098_zowe_jobsProfileAuthentication@6"
-        },
-        {
-          "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/ && !listMultiSelection",
-          "command": "zowe.jobs.ssoLogout",
-          "group": "098_zowe_jobsProfileAuthentication@7"
-        },
-        {
-          "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/ && !listMultiSelection",
-          "command": "zowe.jobs.editSession",
-          "group": "099_zowe_jobsProfileModification@0"
-        },
-        {
           "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/",
           "command": "zowe.jobs.removeJobsSession",
           "group": "099_zowe_jobsProfileModification@98"
@@ -1412,10 +1340,6 @@
         },
         {
           "command": "zowe.ds.showAttributes",
-          "when": "never"
-        },
-        {
-          "command": "zowe.ds.editSession",
           "when": "never"
         },
         {
@@ -1511,30 +1435,6 @@
           "when": "never"
         },
         {
-          "command": "zowe.ds.ssoLogin",
-          "when": "never"
-        },
-        {
-          "command": "zowe.ds.ssoLogout",
-          "when": "never"
-        },
-        {
-          "command": "zowe.uss.ssoLogin",
-          "when": "never"
-        },
-        {
-          "command": "zowe.uss.ssoLogout",
-          "when": "never"
-        },
-        {
-          "command": "zowe.jobs.ssoLogin",
-          "when": "never"
-        },
-        {
-          "command": "zowe.jobs.ssoLogout",
-          "when": "never"
-        },
-        {
           "command": "zowe.ds.saveSearch",
           "when": "never"
         },
@@ -1608,10 +1508,6 @@
         },
         {
           "command": "zowe.uss.saveSearch",
-          "when": "never"
-        },
-        {
-          "command": "zowe.uss.editSession",
           "when": "never"
         },
         {
@@ -1696,10 +1592,6 @@
         },
         {
           "command": "zowe.jobs.downloadSpoolBinary",
-          "when": "never"
-        },
-        {
-          "command": "zowe.jobs.editSession",
           "when": "never"
         },
         {

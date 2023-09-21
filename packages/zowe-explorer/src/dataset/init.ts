@@ -68,9 +68,9 @@ export async function initDatasetProvider(context: vscode.ExtensionContext): Pro
         })
     );
     context.subscriptions.push(vscode.commands.registerCommand("zowe.ds.pattern", (node): void => datasetProvider.filterPrompt(node)));
-    context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.ds.editSession", async (node) => datasetProvider.editSession(node, datasetProvider))
-    );
+    // context.subscriptions.push(
+    //     vscode.commands.registerCommand("zowe.ds.editSession", async (node) => datasetProvider.editSession(node, datasetProvider))
+    // );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.ds.ZoweNode.openPS", async (node) => dsActions.openPS(node, true, datasetProvider))
     );
@@ -196,8 +196,8 @@ export async function initDatasetProvider(context: vscode.ExtensionContext): Pro
             datasetProvider.refreshElement(node);
         })
     );
-    context.subscriptions.push(vscode.commands.registerCommand("zowe.ds.ssoLogin", (node: IZoweTreeNode): void => datasetProvider.ssoLogin(node)));
-    context.subscriptions.push(vscode.commands.registerCommand("zowe.ds.ssoLogout", (node: IZoweTreeNode): void => datasetProvider.ssoLogout(node)));
+    // context.subscriptions.push(vscode.commands.registerCommand("zowe.ds.ssoLogin", (node: IZoweTreeNode): void => datasetProvider.ssoLogin(node)));
+    // context.subscriptions.push(vscode.commands.registerCommand("zowe.ds.ssoLogout", (node: IZoweTreeNode): void => datasetProvider.ssoLogout(node)));
     context.subscriptions.push(
         vscode.workspace.onDidChangeConfiguration((e) => {
             datasetProvider.onDidChangeConfiguration(e);
