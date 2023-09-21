@@ -320,7 +320,7 @@ export class ProfilesUtils {
             }
             // will need a case for isUsingCertAuth
             default: {
-                Gui.infoMessage("profile not using stated authentication type.");
+                await this.chooseAuthProfileManagement(node);
                 break;
             }
         }
@@ -520,67 +520,42 @@ export class ProfilesUtils {
     private static editProfileQpItem: Record<string, vscode.QuickPickItem> = {
         [this.AuthQpLabels.edit]: {
             label: localize("editProfileQpItem.editProfile.qpLabel", "Edit profile"),
-            detail: localize("editProfileQpItem.editProfile.qpDetail", "Update profile information including authentication method"),
+            description: localize("editProfileQpItem.editProfile.qpDetail", "Update profile information including authentication method"),
         },
     };
     private static updateBasicAuthQpItem: Record<string, vscode.QuickPickItem> = {
         [this.AuthQpLabels.update]: {
             label: localize("updateBasicAuthQpItem.updateCredentials.qpLabel", "Update Credentials"),
-            detail: localize("updateBasicAuthQpItem.updateCredentials.qpDetail", "Update stored username and password"),
+            description: localize("updateBasicAuthQpItem.updateCredentials.qpDetail", "Update stored username and password"),
         },
     };
     private static loginQpItem: Record<string, vscode.QuickPickItem> = {
         [this.AuthQpLabels.login]: {
             label: localize("loginQpItem.login.qpLabel", "Login to authentication service"),
-            detail: localize("loginQpItem.login.qpDetail", "Login to obtain and update stored token value"),
+            description: localize("loginQpItem.login.qpDetail", "Login to obtain and update stored token value"),
         },
     };
     private static logoutQpItem: Record<string, vscode.QuickPickItem> = {
         [this.AuthQpLabels.logout]: {
             label: localize("logoutQpItem.logout.qpLabel", "Log out of authentication service"),
-            detail: localize("logoutQpItem.logout.qpDetail", "Log out to invalidate and remove stored token value"),
+            description: localize("logoutQpItem.logout.qpDetail", "Log out to invalidate and remove stored token value"),
         },
     };
 
     private static async basicAuthProfileManagement(node: IZoweTreeNode): Promise<void> {
         const profile = node.getProfile();
         const selected = await this.setupProfileManagementQp(imperative.SessConstants.AUTH_TYPE_BASIC, profile);
-        switch (selected) {
-            case this.updateBasicAuthQpItem[this.AuthQpLabels.update]: {
-                await this.promptCredentials(node);
-                break;
-            }
-            case this.editProfileQpItem[this.AuthQpLabels.edit]: {
-                await Profiles.getInstance().editSession(profile, profile.name);
-                break;
-            }
-            default: {
-                Gui.infoMessage(localize("profiles.operation.cancelled", "Operation Cancelled"));
-                break;
-            }
-        }
+        await this.handleAuthSelection(selected, node, profile);
     }
     private static async tokenAuthProfileManagement(node: IZoweTreeNode): Promise<void> {
         const profile = node.getProfile();
         const selected = await this.setupProfileManagementQp("token", profile);
-        switch (selected) {
-            case this.loginQpItem[this.AuthQpLabels.login]: {
-                await Profiles.getInstance().ssoLogin(node, profile.name);
-                break;
-            }
-            case this.editProfileQpItem[this.AuthQpLabels.edit]: {
-                await Profiles.getInstance().editSession(profile, profile.name);
-                break;
-            }
-            case this.logoutQpItem[this.AuthQpLabels.logout]: {
-                await Profiles.getInstance().ssoLogout(node);
-                break;
-            }
-            default: {
-                Gui.infoMessage(localize("profiles.operation.cancelled", "Operation Cancelled"));
-                break;
-            }
-        }
+        await this.handleAuthSelection(selected, node, profile);
+    }
+    private static async chooseAuthProfileManagement(node: IZoweTreeNode): Promise<void> {
+        const profile = node.getProfile();
+        const selected = await this.setupProfileManagementQp(null, profile);
+        await this.handleAuthSelection(selected, node, profile);
     }
     private static async setupProfileManagementQp(managementType: string, profile: imperative.IProfileLoaded): Promise<vscode.QuickPickItem> {
         const qp = Gui.createQuickPick();
@@ -596,6 +571,11 @@ export class ProfilesUtils {
                 qp.placeholder = this.qpPlaceholders.tokenAuth;
                 break;
             }
+            default: {
+                quickPickOptions = this.chooseAuthQp();
+                qp.placeholder = this.qpPlaceholders.chooseAuth;
+                break;
+            }
         }
         let selectedItem = quickPickOptions[0];
         qp.items = quickPickOptions;
@@ -605,10 +585,35 @@ export class ProfilesUtils {
         qp.hide();
         return selectedItem;
     }
+    private static async handleAuthSelection(selected: vscode.QuickPickItem, node: IZoweTreeNode, profile: imperative.IProfileLoaded): Promise<void> {
+        switch (selected) {
+            case this.loginQpItem[this.AuthQpLabels.login]: {
+                await Profiles.getInstance().ssoLogin(node, profile.name);
+                break;
+            }
+            case this.editProfileQpItem[this.AuthQpLabels.edit]: {
+                await Profiles.getInstance().editSession(profile, profile.name);
+                break;
+            }
+            case this.logoutQpItem[this.AuthQpLabels.logout]: {
+                await Profiles.getInstance().ssoLogout(node);
+                break;
+            }
+            case this.updateBasicAuthQpItem[this.AuthQpLabels.update]: {
+                await this.promptCredentials(node);
+                break;
+            }
+            default: {
+                Gui.infoMessage(localize("profiles.operation.cancelled", "Operation Cancelled"));
+                break;
+            }
+        }
+    }
 
     private static qpPlaceholders = {
         basicAuth: localize("qpPlaceholders.qp.basic", "Profile is using basic authentication. Choose a profile action."),
         tokenAuth: localize("qpPlaceholders.qp.token", "Profile is using token authentication. Choose a profile action."),
+        chooseAuth: localize("qpPlaceholders.qp.choose", "Profile doesn't specify an authentication method. Choose a profile action."),
     };
 
     private static basicAuthQp(): vscode.QuickPickItem[] {
@@ -622,6 +627,12 @@ export class ProfilesUtils {
         if (profile.profile.tokenType) {
             quickPickOptions.push(this.logoutQpItem[this.AuthQpLabels.logout]);
         }
+        return quickPickOptions;
+    }
+    private static chooseAuthQp(): vscode.QuickPickItem[] {
+        const quickPickOptions: vscode.QuickPickItem[] = Object.values(this.updateBasicAuthQpItem);
+        quickPickOptions.push(this.loginQpItem[this.AuthQpLabels.login]);
+        quickPickOptions.push(this.editProfileQpItem[this.AuthQpLabels.edit]);
         return quickPickOptions;
     }
 }

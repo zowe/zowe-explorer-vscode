@@ -32,5 +32,6 @@
   "logoutQpItem.logout.qpDetail": "Log out to invalidate and remove stored token value",
   "qpPlaceholders.qp.basic": "Profile is using basic authentication. Choose a profile action.",
   "qpPlaceholders.qp.token": "Profile is using token authentication. Choose a profile action.",
+  "qpPlaceholders.qp.choose": "Profile doesn't specify an authentication method. Choose a profile action.",
   "getProfile.notTreeItem": "Tree Item is not a Zowe Explorer item."
 }
