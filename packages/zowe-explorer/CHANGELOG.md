@@ -6,6 +6,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
+- Added "Local filtering of JOBS tree" feature for job nodes in Jobs tree view. [#2469](https://github.com/zowe/vscode-extension-for-zowe/pull/2469)
+
 ### Bug fixes
 
 ## `2.10.0`

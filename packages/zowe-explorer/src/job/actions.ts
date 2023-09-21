@@ -14,7 +14,7 @@ import * as zowe from "@zowe/cli";
 import { errorHandling } from "../utils/ProfilesUtils";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
-import { Gui, ValidProfileEnum, IZoweTree, IZoweJobTreeNode, IZoweNodeType } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweTree, IZoweJobTreeNode, IZoweNodeType } from "@zowe/zowe-explorer-api";
 import { Job, Spool } from "./ZoweJobNode";
 import * as nls from "vscode-nls";
 import SpoolProvider, { encodeJobFile, getSpoolFiles, matchSpool } from "../SpoolProvider";
@@ -547,7 +547,6 @@ export async function filterJobs(jobsProvider: IZoweTree<IZoweJobTreeNode>): Pro
     const inputBox = await vscode.window.createInputBox();
     inputBox.placeholder = "Type here...";
     inputBox.onDidChangeValue((query) => {
-        query = inputBox.value;
         query = query.toUpperCase();
         for (const level of jobsProvider.mSessionNodes) {
             if (level.label === "zosmf") {
@@ -592,7 +591,6 @@ export async function filterSpools(
     const inputBox = vscode.window.createInputBox();
     inputBox.placeholder = "Type here...";
     inputBox.onDidChangeValue((query) => {
-        query = inputBox.value;
         query = query.toUpperCase();
         job["children"] = actual_spools.filter((item) =>
             `${item["spool"].stepname as string}:${item["spool"].ddname as string} - ${item["spool"]["record-count"] as string}`.includes(query)

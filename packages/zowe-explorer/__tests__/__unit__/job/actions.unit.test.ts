@@ -79,6 +79,13 @@ const mockInputBox: vscode.InputBox = {
     onDidHide: jest.fn(),
 };
 
+function setJobObjects(job: zowe.IJob, newJobName: string, newJobId: string, newRetCode: string) {
+    job.jobname = newJobName;
+    job.jobid = newJobId;
+    job.retcode = newRetCode;
+    return job;
+}
+
 const activeTextEditorDocument = jest.fn();
 
 async function createGlobalMocks() {
@@ -1347,13 +1354,6 @@ describe("Job Actions Unit Tests - Misc. functions", () => {
 });
 
 describe("Job Actions Unit Tests - Filter Jobs", () => {
-    function setJobObjects(job: zowe.IJob, newJobName: string, newJobId: string, newRetCode: string) {
-        job.jobname = newJobName;
-        job.jobid = newJobId;
-        job.retcode = newRetCode;
-        return job;
-    }
-
     const node1 = new Job(
         "jobnew",
         vscode.TreeItemCollapsibleState.None,
@@ -1376,7 +1376,7 @@ describe("Job Actions Unit Tests - Filter Jobs", () => {
         testTree.mSessionNodes[0].label = "zosmf";
         testTree.mSessionNodes[0].collapsibleState = 1;
 
-        const inputBox = await jobActions.filterJobs(testTree);
+        await jobActions.filterJobs(testTree);
 
         expect(mocked(vscode.window.showInformationMessage)).toHaveBeenCalled();
     });
@@ -1391,7 +1391,7 @@ describe("Job Actions Unit Tests - Filter Jobs", () => {
         mockInputBox.value = "BOYINAA(JOB04945) - CC 0000";
         createInputBoxSpy.mockReturnValue(mockInputBox);
         const filterJobsSpy = jest.spyOn(jobActions, "filterJobs");
-        const inputBox = await jobActions.filterJobs(testTree);
+        await jobActions.filterJobs(testTree);
         testTree.mSessionNodes[0].children = [node1];
 
         expect(createInputBoxSpy).toHaveBeenCalled();
@@ -1419,13 +1419,6 @@ describe("Job Actions Unit Tests - Filter Spools", () => {
         };
     }
     const blockMocks = createBlockMocks();
-
-    function setJobObjects(job: zowe.IJob, newJobName: string, newJobId: string, newRetCode: string) {
-        job.jobname = newJobName;
-        job.jobid = newJobId;
-        job.retcode = newRetCode;
-        return job;
-    }
 
     function setSpoolObjects(spool: zowe.IJobFile, newStepName: string, newDdName: string, newRecordCount: number) {
         spool.stepname = newStepName;
@@ -1474,13 +1467,12 @@ describe("Job Actions Unit Tests - Filter Spools", () => {
     it("To check a job is expanded or not when filter spools option is choosen", async () => {
         const testTree = new ZosJobsProvider();
         node1.collapsibleState = 1;
-        // const mySpy = mocked(vscode.window.showInputBox).mockResolvedValue("JES2:JESMSGLG - 21");
         const filterSpoolsSpy = jest.spyOn(jobActions, "filterSpools");
         const createInputBoxSpy = jest.spyOn(vscode.window, "createInputBox");
         mockInputBox.value = "DELETE:SYSPRINT - 7";
         createInputBoxSpy.mockReturnValue(mockInputBox);
 
-        const inputBox = await jobActions.filterSpools(testTree, node1, blockMocks.testJobTree);
+        await jobActions.filterSpools(testTree, node1, blockMocks.testJobTree);
 
         expect(createInputBoxSpy).toHaveBeenCalled();
         expect(filterSpoolsSpy).toHaveBeenCalled();
