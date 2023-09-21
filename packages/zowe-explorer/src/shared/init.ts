@@ -88,7 +88,7 @@ export function registerCommonCommands(context: vscode.ExtensionContext, provide
 
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.promptCredentials", async (node: IZoweTreeNode) => {
-            await ProfilesUtils.promptCredentials(node);
+            await ProfilesUtils.manageProfile(node);
         })
     );
 

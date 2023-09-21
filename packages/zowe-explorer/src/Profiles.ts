@@ -30,7 +30,7 @@ import {
     getFullPath,
     getZoweDir,
 } from "@zowe/zowe-explorer-api";
-import { errorHandling, FilterDescriptor, FilterItem, ProfilesUtils, isUsingTokenAuth } from "./utils/ProfilesUtils";
+import { errorHandling, FilterDescriptor, FilterItem, ProfilesUtils } from "./utils/ProfilesUtils";
 import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
 import { ZoweExplorerExtender } from "./ZoweExplorerExtender";
 import * as globals from "./globals";
@@ -88,7 +88,7 @@ export class Profiles extends ProfilesCache {
     public async checkCurrentProfile(theProfile: zowe.imperative.IProfileLoaded): Promise<IProfileValidation> {
         ZoweLogger.trace("Profiles.checkCurrentProfile called.");
         let profileStatus: IProfileValidation;
-        const usingTokenAuth = await isUsingTokenAuth(theProfile.name);
+        const usingTokenAuth = await ProfilesUtils.isUsingTokenAuth(theProfile.name);
 
         if (usingTokenAuth && !theProfile.profile.tokenType) {
             const error = new zowe.imperative.ImperativeError({

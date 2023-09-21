@@ -75,7 +75,7 @@ export async function errorHandling(errorDetails: Error | string, label?: string
 
             if (imperativeError.mDetails.additionalDetails) {
                 const tokenError: string = imperativeError.mDetails.additionalDetails;
-                const isTokenAuth = await isUsingTokenAuth(label);
+                const isTokenAuth = await ProfilesUtils.isUsingTokenAuth(label);
 
                 if (tokenError.includes("Token is not valid or expired.") || isTokenAuth) {
                     if (isTheia()) {
@@ -130,19 +130,6 @@ export function isTheia(): boolean {
         return true;
     }
     return false;
-}
-
-/**
- * Function that checks whether a profile is using token based authentication
- * @param profileName the name of the profile to check
- * @returns {Promise<boolean>} a boolean representing whether token based auth is being used or not
- */
-export async function isUsingTokenAuth(profileName: string): Promise<boolean> {
-    const baseProfile = Profiles.getInstance().getDefaultProfile("base");
-    const secureProfileProps = await Profiles.getInstance().getSecurePropsForProfile(profileName);
-    const secureBaseProfileProps = await Profiles.getInstance().getSecurePropsForProfile(baseProfile?.name);
-    const profileUsesBasicAuth = secureProfileProps.includes("user") && secureProfileProps.includes("password");
-    return (secureProfileProps.includes("tokenValue") || secureBaseProfileProps.includes("tokenValue")) && !profileUsesBasicAuth;
 }
 
 /**
@@ -320,6 +307,50 @@ export class ProfilesUtils {
         }
     }
 
+    public static async manageProfile(node: IZoweTreeNode): Promise<void> {
+        const profile = node.getProfile();
+        switch (true) {
+            case this.isProfileUsingBasicAuth(profile): {
+                await this.basicAuthProfileManagement(node);
+                break;
+            }
+            case await this.isUsingTokenAuth(profile.name): {
+                Gui.infoMessage("profile using token auth.");
+                break;
+            }
+            // will need a case for isUsingCertAuth
+            default: {
+                Gui.infoMessage("profile not using stated authentication type.");
+                break;
+            }
+        }
+    }
+
+    /**
+     * Function that checks whether a profile is using basic authentication
+     * @param profile
+     * @returns {Promise<boolean>} a boolean representing whether basic auth is being used or not
+     */
+    public static isProfileUsingBasicAuth(profile: imperative.IProfileLoaded): boolean {
+        if (profile.profile.user && profile.profile.password) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Function that checks whether a profile is using token based authentication
+     * @param profileName the name of the profile to check
+     * @returns {Promise<boolean>} a boolean representing whether token based auth is being used or not
+     */
+    public static async isUsingTokenAuth(profileName: string): Promise<boolean> {
+        const baseProfile = Profiles.getInstance().getDefaultProfile("base");
+        const secureProfileProps = await Profiles.getInstance().getSecurePropsForProfile(profileName);
+        const secureBaseProfileProps = await Profiles.getInstance().getSecurePropsForProfile(baseProfile?.name);
+        const profileUsesBasicAuth = secureProfileProps.includes("user") && secureProfileProps.includes("password");
+        return (secureProfileProps.includes("tokenValue") || secureBaseProfileProps.includes("tokenValue")) && !profileUsesBasicAuth;
+    }
+
     public static async promptCredentials(node: IZoweTreeNode): Promise<void> {
         ZoweLogger.trace("ProfilesUtils.promptCredentials called.");
         const mProfileInfo = await Profiles.getInstance().getProfileInfo();
@@ -478,6 +509,95 @@ export class ProfilesUtils {
             ZoweLogger.error(err);
             Gui.errorMessage(err.message);
         }
+    }
+
+    private static AuthQpLabels = {
+        update: "update-credentials",
+        edit: "edit-profile",
+        login: "obtain-token",
+        logout: "invalidate-token",
+    };
+    private static editProfileQpItem: Record<string, vscode.QuickPickItem> = {
+        [this.AuthQpLabels.edit]: {
+            label: localize("editProfileQpItem.editProfile.qpLabel", "Edit profile"),
+            detail: localize("editProfileQpItem.editProfile.qpDetail", "Update profile information including authentication method"),
+        },
+    };
+    private static updateBasicAuthQpItem: Record<string, vscode.QuickPickItem> = {
+        [this.AuthQpLabels.update]: {
+            label: localize("updateBasicAuthQpItem.updateCredentials.qpLabel", "Update Credentials"),
+            detail: localize("updateBasicAuthQpItem.updateCredentials.qpDetail", "Update stored username and password"),
+        },
+    };
+    private static loginQpItem: Record<string, vscode.QuickPickItem> = {
+        [this.AuthQpLabels.login]: {
+            label: localize("loginQpItem.login.qpLabel", "Login to authentication service"),
+            detail: localize("loginQpItem.login.qpDetail", "Login to obtain and update stored token value"),
+        },
+    };
+    private static logoutQpItem: Record<string, vscode.QuickPickItem> = {
+        [this.AuthQpLabels.logout]: {
+            label: localize("logoutQpItem.logout.qpLabel", "Log out of authentication service"),
+            detail: localize("logoutQpItem.logout.qpDetail", "Log out to invalidate and remove stored token value"),
+        },
+    };
+
+    private static async basicAuthProfileManagement(node: IZoweTreeNode): Promise<void> {
+        const profile = node.getProfile();
+        const selected = await this.setupProfileManagementQp(imperative.SessConstants.AUTH_TYPE_BASIC, profile.name);
+        switch (selected) {
+            case this.updateBasicAuthQpItem[this.AuthQpLabels.update]: {
+                await this.promptCredentials(node);
+                break;
+            }
+            case this.editProfileQpItem[this.AuthQpLabels.edit]: {
+                await Profiles.getInstance().editSession(profile, profile.name);
+                break;
+            }
+            default: {
+                Gui.infoMessage(localize("profiles.operation.cancelled", "Operation Cancelled"));
+                break;
+            }
+        }
+    }
+    private static async setupProfileManagementQp(managementType: string, profileName: string): Promise<vscode.QuickPickItem> {
+        const qp = Gui.createQuickPick();
+        let quickPickOptions: vscode.QuickPickItem[];
+        switch (managementType) {
+            case imperative.SessConstants.AUTH_TYPE_BASIC: {
+                quickPickOptions = this.basicAuthQp();
+                qp.placeholder = this.qpPlaceholders.basicAuth;
+                break;
+            }
+            case "token": {
+                quickPickOptions = this.tokenAuthQp();
+                qp.placeholder = this.qpPlaceholders.tokenAuth;
+                break;
+            }
+        }
+        let selectedItem = quickPickOptions[0];
+        qp.items = quickPickOptions;
+        qp.activeItems = [selectedItem];
+        qp.show();
+        selectedItem = await Gui.resolveQuickPick(qp);
+        qp.hide();
+        return selectedItem;
+    }
+
+    private static qpPlaceholders = {
+        basicAuth: localize("qpPlaceholders.qp.basic", "Profile is using basic authentication. Choose a profile action."),
+        tokenAuth: localize("qpPlaceholders.qp.token", "Profile is using token authentication. Choose a profile action."),
+    };
+
+    private static basicAuthQp(): vscode.QuickPickItem[] {
+        const quickPickOptions: vscode.QuickPickItem[] = Object.values(this.updateBasicAuthQpItem);
+        quickPickOptions.push(this.editProfileQpItem[this.AuthQpLabels.edit]);
+        return quickPickOptions;
+    }
+    private static tokenAuthQp(): vscode.QuickPickItem[] {
+        const quickPickOptions: vscode.QuickPickItem[] = Object.values(this.loginQpItem);
+        quickPickOptions.push(this.editProfileQpItem[this.AuthQpLabels.edit]);
+        return quickPickOptions;
     }
 }
 

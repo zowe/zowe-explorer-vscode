@@ -2,7 +2,7 @@
   "displayName": "Zowe Explorer",
   "description": "VS Code extension, powered by Zowe CLI, that streamlines interaction with mainframe data sets, USS files, and jobs",
   "viewsContainers.activitybar": "Zowe Explorer",
-  "zowe.promptCredentials": "Update Credentials",
+  "zowe.promptCredentials": "Manage Profile",
   "zowe.extRefresh": "Refresh Zowe Explorer",
   "zowe.ds.explorer": "Data Sets",
   "zowe.uss.explorer": "Unix System Services (USS)",
@@ -146,5 +146,8 @@
   "createZoweSchema.reload.button": "Reload Window",
   "createZoweSchema.reload.infoMessage": "Team Configuration file created. Location: {0}. \n Please reload your window.",
   "copyFile": "Copy",
-  "pasteFile": "Paste"
+  "pasteFile": "Paste",
+  "jobs.sortbyreturncode": "Sort by ReturnCode",
+  "jobs.sortbyname": "Sort by Name",
+  "jobs.sortbyid": "Sort by ID"
 }
