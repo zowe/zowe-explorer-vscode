@@ -21,6 +21,7 @@ import SpoolProvider, { encodeJobFile, getSpoolFiles, matchSpool } from "../Spoo
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { getDefaultUri } from "../shared/utils";
 import { TreeViewUtils } from "../utils/TreeViewUtils";
+import { TreeViewUtils } from "../utils/TreeViewUtils";
 
 // Set up localization
 nls.config({
