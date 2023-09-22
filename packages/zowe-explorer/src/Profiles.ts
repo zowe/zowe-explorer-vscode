@@ -1165,8 +1165,10 @@ export class Profiles extends ProfilesCache {
             serviceProfile = this.loadNamedProfile(label.trim());
         }
         // This check will handle service profiles that have username and password
-        if (serviceProfile.profile.user && serviceProfile.profile.password) {
-            Gui.showMessage(localize("ssoAuth.noBase", "This profile does not support token authentication."));
+        if (ProfilesUtils.isProfileUsingBasicAuth(serviceProfile)) {
+            Gui.showMessage(
+                localize("ssoLogin.usingBasicAuth", "This profile is using basic authentication and does not support token authentication.")
+            );
             return;
         }
 
@@ -1174,7 +1176,7 @@ export class Profiles extends ProfilesCache {
             loginTokenType = await ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).getTokenTypeName();
         } catch (error) {
             ZoweLogger.warn(error);
-            Gui.showMessage(localize("ssoAuth.noBase", "This profile does not support token authentication."));
+            Gui.showMessage(localize("ssoLogin.tokenType.error", "Error getting supported tokenType value for profile {0}", serviceProfile.name));
             return;
         }
         try {
