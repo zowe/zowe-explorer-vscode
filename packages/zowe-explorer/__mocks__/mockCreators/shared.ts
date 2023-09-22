@@ -218,6 +218,24 @@ export function createValidIProfile(): imperative.IProfileLoaded {
     };
 }
 
+export function createTokenAuthIProfile(): imperative.IProfileLoaded {
+    return {
+        name: "sestest",
+        profile: {
+            type: "zosmf",
+            host: "test",
+            port: 1443,
+            rejectUnauthorized: false,
+            tokenType: "apimlAuthenticationToken",
+            tokenValue: "stringofletters",
+            name: "testName",
+        },
+        type: "zosmf",
+        message: "",
+        failNotFound: false,
+    };
+}
+
 export function createAltTypeIProfile(): imperative.IProfileLoaded {
     return {
         name: "altTypeProfile",
