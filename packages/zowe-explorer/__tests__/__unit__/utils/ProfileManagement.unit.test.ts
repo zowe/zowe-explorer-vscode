@@ -67,19 +67,24 @@ describe("ProfileManagement unit tests", () => {
         });
         Object.defineProperty(Gui, "createQuickPick", { value: newMocks.mockCreateQp, configurable: true });
 
+        newMocks.mockProfileInstance = sharedMock.createInstanceOfProfile(newMocks.mockBasicAuthProfile);
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn().mockReturnValue(newMocks.mockProfileInstance),
+            configurable: true,
+        });
+        Object.defineProperty(newMocks.mockProfileInstance, "editSession", { value: jest.fn(), configurable: true });
+        newMocks.editSpy = jest.spyOn(newMocks.mockProfileInstance, "editSession");
+        Object.defineProperty(newMocks.mockProfileInstance, "ssoLogin", { value: jest.fn(), configurable: true });
+        newMocks.loginSpy = jest.spyOn(newMocks.mockProfileInstance, "ssoLogin");
+        Object.defineProperty(newMocks.mockProfileInstance, "ssoLogout", { value: jest.fn(), configurable: true });
+        newMocks.logoutSpy = jest.spyOn(newMocks.mockProfileInstance, "ssoLogout");
+
         return newMocks;
     }
 
     describe("unit tests around basic auth selections", () => {
         function createBlockMocks(globalMocks) {
             globalMocks.logMsg = `Profile ${globalMocks.mockBasicAuthProfile.name} is using basic authentication.`;
-            globalMocks.mockProfileInstance = sharedMock.createInstanceOfProfile(globalMocks.mockBasicAuthProfile);
-            Object.defineProperty(Profiles, "getInstance", {
-                value: jest.fn().mockReturnValue(globalMocks.mockProfileInstance),
-                configurable: true,
-            });
-            Object.defineProperty(globalMocks.mockProfileInstance, "editSession", { value: jest.fn(), configurable: true });
-            globalMocks.editSpy = jest.spyOn(globalMocks.mockProfileInstance, "editSession");
             globalMocks.mockDsSessionNode = dsMock.createDatasetSessionNode(globalMocks.mockSession, globalMocks.mockBasicAuthProfile) as any;
             Object.defineProperty(globalMocks.mockDsSessionNode, "getProfile", {
                 value: jest.fn().mockReturnValue(globalMocks.mockBasicAuthProfile),
@@ -114,17 +119,6 @@ describe("ProfileManagement unit tests", () => {
     describe("unit tests around token auth selections", () => {
         function createBlockMocks(globalMocks) {
             globalMocks.logMsg = `Profile ${globalMocks.mockTokenAuthProfile.name} is using token authentication.`;
-            globalMocks.mockProfileInstance = sharedMock.createInstanceOfProfile(globalMocks.mockTokenAuthProfile);
-            Object.defineProperty(Profiles, "getInstance", {
-                value: jest.fn().mockReturnValue(globalMocks.mockProfileInstance),
-                configurable: true,
-            });
-            Object.defineProperty(globalMocks.mockProfileInstance, "editSession", { value: jest.fn(), configurable: true });
-            globalMocks.editSpy = jest.spyOn(globalMocks.mockProfileInstance, "editSession");
-            Object.defineProperty(globalMocks.mockProfileInstance, "ssoLogin", { value: jest.fn(), configurable: true });
-            globalMocks.loginSpy = jest.spyOn(Profiles.getInstance(), "ssoLogin");
-            Object.defineProperty(globalMocks.mockProfileInstance, "ssoLogout", { value: jest.fn(), configurable: true });
-            globalMocks.logoutSpy = jest.spyOn(Profiles.getInstance(), "ssoLogout");
             Object.defineProperty(profUtils.ProfilesUtils, "isUsingTokenAuth", { value: jest.fn().mockResolvedValueOnce(true), configurable: true });
             globalMocks.mockDsSessionNode = dsMock.createDatasetSessionNode(globalMocks.mockSession, globalMocks.mockTokenAuthProfile) as any;
             Object.defineProperty(globalMocks.mockDsSessionNode, "getProfile", {
@@ -160,15 +154,6 @@ describe("ProfileManagement unit tests", () => {
     describe("unit tests around no auth declared selections", () => {
         function createBlockMocks(globalMocks) {
             globalMocks.logMsg = `Profile ${globalMocks.mockNoAuthProfile.name} authentication method is unkown.`;
-            globalMocks.mockProfileInstance = sharedMock.createInstanceOfProfile(globalMocks.mockNoAuthProfile);
-            Object.defineProperty(Profiles, "getInstance", {
-                value: jest.fn().mockReturnValue(globalMocks.mockProfileInstance),
-                configurable: true,
-            });
-            Object.defineProperty(globalMocks.mockProfileInstance, "editSession", { value: jest.fn(), configurable: true });
-            globalMocks.editSpy = jest.spyOn(globalMocks.mockProfileInstance, "editSession");
-            Object.defineProperty(globalMocks.mockProfileInstance, "ssoLogin", { value: jest.fn(), configurable: true });
-            globalMocks.loginSpy = jest.spyOn(Profiles.getInstance(), "ssoLogin");
             Object.defineProperty(profUtils.ProfilesUtils, "isUsingTokenAuth", { value: jest.fn().mockResolvedValueOnce(false), configurable: true });
             globalMocks.mockDsSessionNode = dsMock.createDatasetSessionNode(globalMocks.mockSession, globalMocks.mockTokenAuthProfile) as any;
             Object.defineProperty(globalMocks.mockDsSessionNode, "getProfile", {
