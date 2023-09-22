@@ -48,11 +48,12 @@ export class ProfileManagement {
         await this.handleAuthSelection(selected, node, profile);
     }
     public static AuthQpLabels = {
-        update: "update-credentials",
+        add: "add-credentials",
+        delete: "delete",
         edit: "edit-profile",
         login: "obtain-token",
         logout: "invalidate-token",
-        add: "add-credentials",
+        update: "update-credentials",
     };
     public static basicAuthAddQpItems: Record<string, vscode.QuickPickItem> = {
         [this.AuthQpLabels.add]: {
@@ -66,7 +67,12 @@ export class ProfileManagement {
             description: localize("updateBasicAuthQpItem.updateCredentials.qpDetail", "Update stored username and password"),
         },
     };
-    public static otherProfileQpItems: Record<string, vscode.QuickPickItem> = {
+    public static deleteProfileQpItem: Record<string, vscode.QuickPickItem> = {
+        [this.AuthQpLabels.delete]: {
+            label: localize("deleteProfileQpItem.delete.qpLabel", "$(trash) Delete Profile"),
+        },
+    };
+    public static editProfileQpItems: Record<string, vscode.QuickPickItem> = {
         [this.AuthQpLabels.edit]: {
             label: localize("editProfileQpItem.editProfile.qpLabel", "$(pencil) Edit profile"),
             description: localize("editProfileQpItem.editProfile.qpDetail", "Update profile connection information"),
@@ -119,7 +125,7 @@ export class ProfileManagement {
                 await ProfilesUtils.promptCredentials(node);
                 break;
             }
-            case this.otherProfileQpItems[this.AuthQpLabels.edit]: {
+            case this.editProfileQpItems[this.AuthQpLabels.edit]: {
                 await Profiles.getInstance().editSession(profile, profile.name);
                 break;
             }
@@ -133,6 +139,10 @@ export class ProfileManagement {
             }
             case this.basicAuthUpdateQpItems[this.AuthQpLabels.update]: {
                 await ProfilesUtils.promptCredentials(node);
+                break;
+            }
+            case this.deleteProfileQpItem[this.AuthQpLabels.delete]: {
+                await this.handleDeleteProfiles(node);
                 break;
             }
             default: {
@@ -156,21 +166,32 @@ export class ProfileManagement {
 
     private static basicAuthQp(): vscode.QuickPickItem[] {
         const quickPickOptions: vscode.QuickPickItem[] = Object.values(this.basicAuthUpdateQpItems);
-        quickPickOptions.push(this.otherProfileQpItems[this.AuthQpLabels.edit]);
-        return quickPickOptions;
+        return this.addFinalQpOptions(quickPickOptions);
     }
     private static tokenAuthQp(profile: imperative.IProfileLoaded): vscode.QuickPickItem[] {
         const quickPickOptions: vscode.QuickPickItem[] = Object.values(this.tokenAuthLoginQpItem);
         if (profile.profile.tokenType) {
             quickPickOptions.push(this.tokenAuthLogoutQpItem[this.AuthQpLabels.logout]);
         }
-        quickPickOptions.push(this.otherProfileQpItems[this.AuthQpLabels.edit]);
-        return quickPickOptions;
+        return this.addFinalQpOptions(quickPickOptions);
     }
     private static chooseAuthQp(): vscode.QuickPickItem[] {
         const quickPickOptions: vscode.QuickPickItem[] = Object.values(this.basicAuthAddQpItems);
         quickPickOptions.push(this.tokenAuthLoginQpItem[this.AuthQpLabels.login]);
-        quickPickOptions.push(this.otherProfileQpItems[this.AuthQpLabels.edit]);
+        return this.addFinalQpOptions(quickPickOptions);
+    }
+    private static addFinalQpOptions(quickPickOptions: vscode.QuickPickItem[]): vscode.QuickPickItem[] {
+        quickPickOptions.push(this.editProfileQpItems[this.AuthQpLabels.edit]);
+        quickPickOptions.push(this.deleteProfileQpItem[this.AuthQpLabels.delete]);
         return quickPickOptions;
+    }
+    private static async handleDeleteProfiles(node: IZoweTreeNode): Promise<void> {
+        const profInfo = await Profiles.getInstance().getProfileInfo();
+        if (profInfo.usingTeamConfig) {
+            const profile = node.getProfile();
+            await Profiles.getInstance().editSession(profile, profile.name);
+            return;
+        }
+        await vscode.commands.executeCommand("zowe.ds.deleteProfile", node);
     }
 }

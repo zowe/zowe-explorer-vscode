@@ -17,6 +17,7 @@ import { ProfileManagement } from "../../../src/utils/ProfileManagement";
 import { Gui } from "@zowe/zowe-explorer-api";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 import { Profiles } from "../../../src/Profiles";
+import * as vscode from "vscode";
 
 jest.mock("fs");
 jest.mock("vscode");
@@ -40,7 +41,8 @@ describe("ProfileManagement unit tests", () => {
             mockAddBasicChosen: ProfileManagement.basicAuthAddQpItems[ProfileManagement.AuthQpLabels.add],
             mockLoginChosen: ProfileManagement.tokenAuthLoginQpItem[ProfileManagement.AuthQpLabels.login],
             mockLogoutChosen: ProfileManagement.tokenAuthLogoutQpItem[ProfileManagement.AuthQpLabels.logout],
-            mockEditProfChosen: ProfileManagement.otherProfileQpItems[ProfileManagement.AuthQpLabels.edit],
+            mockEditProfChosen: ProfileManagement.editProfileQpItems[ProfileManagement.AuthQpLabels.edit],
+            mockDeleteProfChosen: ProfileManagement.deleteProfileQpItem[ProfileManagement.AuthQpLabels.delete],
             mockProfileInstance: null as any,
             debugLogSpy: null as any,
             promptSpy: null as any,
@@ -89,6 +91,7 @@ describe("ProfileManagement unit tests", () => {
                 value: jest.fn().mockReturnValue(globalMocks.mockBasicAuthProfile),
                 configurable: true,
             });
+            Object.defineProperty(vscode.commands, "executeCommand", { value: jest.fn(), configurable: true });
         }
         it("profile using basic authentication should see Operation Cancelled when escaping quick pick", async () => {
             const globalMocks = createGlobalMocks();
@@ -113,6 +116,32 @@ describe("ProfileManagement unit tests", () => {
             await ProfileManagement.manageProfile(globalMocks.mockDsSessionNode as any);
             expect(globalMocks.debugLogSpy).toBeCalledWith(globalMocks.logMsg);
             expect(globalMocks.editSpy).toBeCalled();
+        });
+        it("profile using basic authentication should see editSession called when Delete Profile chosen with v2 profile", async () => {
+            const globalMocks = createGlobalMocks();
+            createBlockMocks(globalMocks);
+            globalMocks.mockResolveQp.mockResolvedValueOnce(globalMocks.mockDeleteProfChosen);
+            Object.defineProperty(globalMocks.mockProfileInstance, "getProfileInfo", {
+                value: jest.fn().mockResolvedValueOnce({ usingTeamConfig: true }),
+                configurable: true,
+            });
+            await ProfileManagement.manageProfile(globalMocks.mockDsSessionNode as any);
+            expect(globalMocks.debugLogSpy).toBeCalledWith(globalMocks.logMsg);
+            expect(globalMocks.editSpy).toBeCalled();
+        });
+        it("profile using basic authentication should see delete commands called when Delete Profile chosen with v1 profile", async () => {
+            const globalMocks = createGlobalMocks();
+            createBlockMocks(globalMocks);
+            globalMocks.mockResolveQp.mockResolvedValueOnce(globalMocks.mockDeleteProfChosen);
+            Object.defineProperty(globalMocks.mockProfileInstance, "getProfileInfo", {
+                value: jest.fn().mockResolvedValueOnce({ usingTeamConfig: false }),
+                configurable: true,
+            });
+            const commandSpy = jest.spyOn(vscode.commands, "executeCommand");
+            await ProfileManagement.manageProfile(globalMocks.mockDsSessionNode as any);
+            expect(globalMocks.debugLogSpy).toBeCalledWith(globalMocks.logMsg);
+            expect(globalMocks.editSpy).not.toBeCalled();
+            expect(commandSpy).toBeCalled();
         });
     });
     describe("unit tests around token auth selections", () => {
