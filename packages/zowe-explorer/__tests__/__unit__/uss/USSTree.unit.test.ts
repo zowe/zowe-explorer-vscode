@@ -1444,7 +1444,6 @@ describe("USSTree Unit Tests - Function USSTree.getChildren()", () => {
         expect(loadProfilesForFavoritesSpy).toHaveBeenCalledWith(favProfileNode);
     });
 });
-
 // Idea is borrowed from: https://github.com/kulshekhar/ts-jest/blob/master/src/util/testing.ts
 const mocked = <T extends (...args: any[]) => any>(fn: T): jest.Mock<ReturnType<T>> => fn as any;
 

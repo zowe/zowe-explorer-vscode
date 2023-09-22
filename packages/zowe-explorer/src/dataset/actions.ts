@@ -36,6 +36,8 @@ import { markDocumentUnsaved, setFileSaved } from "../utils/workspace";
 import { IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
 import { ZoweLogger } from "../utils/LoggerUtils";
 
+import { promiseStatus, PromiseStatuses } from "promise-status-async";
+
 // Set up localization
 import * as nls from "vscode-nls";
 nls.config({
@@ -450,9 +452,28 @@ export async function openPS(
         await datasetProvider.checkCurrentProfile(node);
     }
 
+    // Status of last "open action" promise
+    // If the node doesn't support pending actions, assume last action was resolved to pull new contents
+    const lastActionStatus =
+        node.ongoingActions?.[api.NodeAction.Download] != null
+            ? await promiseStatus(node.ongoingActions[api.NodeAction.Download])
+            : PromiseStatuses.PROMISE_RESOLVED;
+
+    // Cache status of double click if the node has the "wasDoubleClicked" property:
+    // allows subsequent clicks to register as double-click if node is not done fetching contents
     const doubleClicked = api.Gui.utils.wasDoubleClicked(node, datasetProvider);
     const shouldPreview = doubleClicked ? false : previewMember;
+    if (node.wasDoubleClicked != null) {
+        node.wasDoubleClicked = doubleClicked;
+    }
+
+    // Prevent future "open actions" until last action is completed
+    if (lastActionStatus == PromiseStatuses.PROMISE_PENDING) {
+        return;
+    }
+
     if (Profiles.getInstance().validProfile !== api.ValidProfileEnum.INVALID) {
+        const statusMsg = api.Gui.setStatusBarMessage(localize("dataSet.opening", "$(sync~spin) Opening data set..."));
         try {
             let label: string;
             const defaultMessage = localize("openPS.error", "Invalid data set or member.");
@@ -471,27 +492,45 @@ export async function openPS(
                     api.Gui.errorMessage(defaultMessage);
                     throw Error(defaultMessage);
             }
-            // if local copy exists, open that instead of pulling from mainframe
+
             const documentFilePath = getDocumentFilePath(label, node);
+            let responsePromise = node.ongoingActions ? node.ongoingActions[api.NodeAction.Download] : null;
+            // If the local copy does not exist, fetch contents
             if (!fs.existsSync(documentFilePath)) {
                 const prof = node.getProfile();
                 ZoweLogger.info(localize("openPS.openDataSet", "Opening {0}", label));
-                const statusMsg = api.Gui.setStatusBarMessage(localize("dataSet.opening", "$(sync~spin) Opening data set..."));
-                const response = await ZoweExplorerApiRegister.getMvsApi(prof).getContents(label, {
-                    file: documentFilePath,
-                    returnEtag: true,
-                    encoding: prof.profile?.encoding,
-                    responseTimeout: prof.profile?.responseTimeout,
-                });
-                node.setEtag(response?.apiResponse?.etag);
-                statusMsg.dispose();
+                if (node.ongoingActions) {
+                    node.ongoingActions[api.NodeAction.Download] = ZoweExplorerApiRegister.getMvsApi(prof).getContents(label, {
+                        file: documentFilePath,
+                        returnEtag: true,
+                        encoding: prof.profile?.encoding,
+                        responseTimeout: prof.profile?.responseTimeout,
+                    });
+                    responsePromise = node.ongoingActions[api.NodeAction.Download];
+                } else {
+                    responsePromise = ZoweExplorerApiRegister.getMvsApi(prof).getContents(label, {
+                        file: documentFilePath,
+                        returnEtag: true,
+                        encoding: prof.profile?.encoding,
+                        responseTimeout: prof.profile?.responseTimeout,
+                    });
+                }
             }
+
+            const response = await responsePromise;
+            node.setEtag(response?.apiResponse?.etag);
+            statusMsg.dispose();
             const document = await vscode.workspace.openTextDocument(getDocumentFilePath(label, node));
-            await api.Gui.showTextDocument(document, { preview: shouldPreview });
+            await api.Gui.showTextDocument(document, { preview: node.wasDoubleClicked != null ? !node.wasDoubleClicked : shouldPreview });
+            // discard ongoing action to allow new requests on this node
+            if (node.ongoingActions) {
+                node.ongoingActions[api.NodeAction.Download] = null;
+            }
             if (datasetProvider) {
                 datasetProvider.addFileHistory(`[${node.getProfileName()}]: ${label}`);
             }
         } catch (err) {
+            statusMsg.dispose();
             await errorHandling(err, node.getProfileName());
             throw err;
         }

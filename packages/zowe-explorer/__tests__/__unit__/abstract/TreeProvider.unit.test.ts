@@ -338,7 +338,7 @@ describe("ZoweJobNode unit tests - Function checkCurrentProfile", () => {
     it("Tests that checkCurrentProfile is executed successfully with inactive status", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
-        blockMocks.jobNode.contextValue = "SERVER";
+        blockMocks.jobNode.contextValue = "session";
         globalMocks.mockCheckCurrentProfile.mockReturnValueOnce({
             name: globalMocks.testProfile.name,
             status: "inactive",

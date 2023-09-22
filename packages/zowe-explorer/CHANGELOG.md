@@ -12,6 +12,22 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Updated activation event to `onStartupFinished`. [#1910](https://github.com/zowe/vscode-extension-for-zowe/issues/1910)
 - Added `madge` script in `package.json` to track circular dependencies. [#2148](https://github.com/zowe/vscode-extension-for-zowe/issues/2148)
 
+## `2.11.0`
+
+### New features and enhancements
+
+- Allow deleting migrated datasets [#2447](https://github.com/zowe/vscode-extension-for-zowe/issues/2447)
+
+### Bug fixes
+
+- Fixed issue with favorited Job filter search. [#2440](https://github.com/zowe/vscode-extension-for-zowe/issues/2440)
+- Remove the 'Show Attributes' context menu action for migrated datasets. [#2033](https://github.com/zowe/vscode-extension-for-zowe/issues/2033)
+- Fixed issue with endless credential prompt loop when logging out. [#2262](https://github.com/zowe/vscode-extension-for-zowe/issues/2262)
+- Bump `@zowe/secrets-for-zowe-sdk` to 7.18.4 to handle install errors gracefully and to allow running without MSVC redistributables.
+- Fixed issue where data set content does not always appear as soon as the editor is opened. [#2427](https://github.com/zowe/vscode-extension-for-zowe/issues/2427)
+- Adjust scope of "Security: Secure Credentials Enabled" setting to `machine-overridable` so it appears again in certain cloud IDEs.
+- Fixed issue where disabling "Automatic Profile Validation" caused the search prompts to stop appearing for all tree views. [#2454](https://github.com/zowe/vscode-extension-for-zowe/issues/2454)
+
 ## `2.10.0`
 
 ### New features and enhancements

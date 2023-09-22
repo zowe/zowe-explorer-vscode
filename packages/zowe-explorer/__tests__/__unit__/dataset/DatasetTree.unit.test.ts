@@ -116,14 +116,12 @@ function createGlobalMocks() {
         }),
     });
     Object.defineProperty(zowe.Download, "dataSet", {
-        value: jest.fn(() => {
-            return {
-                success: true,
-                commandResponse: null,
-                apiResponse: {
-                    etag: "123",
-                },
-            };
+        value: jest.fn().mockResolvedValue({
+            success: true,
+            commandResponse: null,
+            apiResponse: {
+                etag: "123",
+            },
         }),
         configurable: true,
     });
