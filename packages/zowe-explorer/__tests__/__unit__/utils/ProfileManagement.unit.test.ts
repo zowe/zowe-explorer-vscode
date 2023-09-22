@@ -43,10 +43,10 @@ describe("ProfileManagement unit tests", () => {
             value: jest.fn().mockReturnValue(newMocks.mockBasicAuthProfile),
             configurable: true,
         });
-        newMocks.mockUpdateChosen = ProfileManagement.basicAuthQpItems[ProfileManagement.AuthQpLabels.update];
-        newMocks.mockAddBasicChosen = ProfileManagement.basicAuthQpItems[ProfileManagement.AuthQpLabels.add];
-        newMocks.mockLoginChosen = ProfileManagement.tokenAuthQpItems[ProfileManagement.AuthQpLabels.login];
-        newMocks.mockLogoutChosen = ProfileManagement.tokenAuthQpItems[ProfileManagement.AuthQpLabels.logout];
+        newMocks.mockUpdateChosen = ProfileManagement.basicAuthUpdateQpItems[ProfileManagement.AuthQpLabels.update];
+        newMocks.mockAddBasicChosen = ProfileManagement.basicAuthAddQpItems[ProfileManagement.AuthQpLabels.add];
+        newMocks.mockLoginChosen = ProfileManagement.tokenAuthLoginQpItem[ProfileManagement.AuthQpLabels.login];
+        newMocks.mockLogoutChosen = ProfileManagement.tokenAuthLogoutQpItem[ProfileManagement.AuthQpLabels.logout];
         newMocks.mockEditProfChosen = ProfileManagement.otherProfileQpItems[ProfileManagement.AuthQpLabels.edit];
         newMocks.mockCreateQp.mockReturnValue({
             show: jest.fn(() => {
@@ -60,7 +60,6 @@ describe("ProfileManagement unit tests", () => {
             }),
         });
         Object.defineProperty(profUtils.ProfilesUtils, "promptCredentials", { value: jest.fn(), configurable: true });
-        Object.defineProperty(Gui, "createQuickPick", { value: jest.fn(), configurable: true });
         Object.defineProperty(Gui, "createQuickPick", { value: newMocks.mockCreateQp, configurable: true });
         Object.defineProperty(ZoweLogger, "debug", { value: jest.fn(), configurable: true });
         newMocks.debugLogSpy = jest.spyOn(ZoweLogger, "debug");

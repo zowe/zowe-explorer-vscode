@@ -54,11 +54,13 @@ export class ProfileManagement {
         logout: "invalidate-token",
         add: "add-credentials",
     };
-    public static basicAuthQpItems: Record<string, vscode.QuickPickItem> = {
+    public static basicAuthAddQpItems: Record<string, vscode.QuickPickItem> = {
         [this.AuthQpLabels.add]: {
             label: localize("addBasicAuthQpItem.addCredentials.qpLabel", "$(plus) Add Credentials"),
             description: localize("addBasicAuthQpItem.addCredentials.qpDetail", "Add username and password for basic authentication"),
         },
+    };
+    public static basicAuthUpdateQpItems: Record<string, vscode.QuickPickItem> = {
         [this.AuthQpLabels.update]: {
             label: localize("updateBasicAuthQpItem.updateCredentials.qpLabel", "$(refresh) Update Credentials"),
             description: localize("updateBasicAuthQpItem.updateCredentials.qpDetail", "Update stored username and password"),
@@ -70,11 +72,13 @@ export class ProfileManagement {
             description: localize("editProfileQpItem.editProfile.qpDetail", "Update profile connection information"),
         },
     };
-    public static tokenAuthQpItems: Record<string, vscode.QuickPickItem> = {
+    public static tokenAuthLoginQpItem: Record<string, vscode.QuickPickItem> = {
         [this.AuthQpLabels.login]: {
             label: localize("loginQpItem.login.qpLabel", "$(arrow-right) Log in to authentication service"),
             description: localize("loginQpItem.login.qpDetail", "Log in to obtain a new token value"),
         },
+    };
+    public static tokenAuthLogoutQpItem: Record<string, vscode.QuickPickItem> = {
         [this.AuthQpLabels.logout]: {
             label: localize("logoutQpItem.logout.qpLabel", "$(arrow-left) Log out of authentication service"),
             description: localize("logoutQpItem.logout.qpDetail", "Log out to invalidate and remove stored token value"),
@@ -111,7 +115,7 @@ export class ProfileManagement {
     }
     private static async handleAuthSelection(selected: vscode.QuickPickItem, node: IZoweTreeNode, profile: imperative.IProfileLoaded): Promise<void> {
         switch (selected) {
-            case this.basicAuthQpItems[this.AuthQpLabels.add]: {
+            case this.basicAuthAddQpItems[this.AuthQpLabels.add]: {
                 await ProfilesUtils.promptCredentials(node);
                 break;
             }
@@ -119,15 +123,15 @@ export class ProfileManagement {
                 await Profiles.getInstance().editSession(profile, profile.name);
                 break;
             }
-            case this.tokenAuthQpItems[this.AuthQpLabels.login]: {
+            case this.tokenAuthLoginQpItem[this.AuthQpLabels.login]: {
                 await Profiles.getInstance().ssoLogin(node, profile.name);
                 break;
             }
-            case this.tokenAuthQpItems[this.AuthQpLabels.logout]: {
+            case this.tokenAuthLogoutQpItem[this.AuthQpLabels.logout]: {
                 await Profiles.getInstance().ssoLogout(node);
                 break;
             }
-            case this.basicAuthQpItems[this.AuthQpLabels.update]: {
+            case this.basicAuthUpdateQpItems[this.AuthQpLabels.update]: {
                 await ProfilesUtils.promptCredentials(node);
                 break;
             }
@@ -138,7 +142,7 @@ export class ProfileManagement {
         }
     }
 
-    private static getQpPlaceholders(profile: imperative.IProfileLoaded) {
+    private static getQpPlaceholders(profile: imperative.IProfileLoaded): { basicAuth: string; tokenAuth: string; chooseAuth: string } {
         return {
             basicAuth: localize("qpPlaceholders.qp.basic", "Profile {0} is using basic authentication. Choose a profile action.", profile.name),
             tokenAuth: localize("qpPlaceholders.qp.token", "Profile {0} is using token authentication. Choose a profile action.", profile.name),
@@ -151,21 +155,21 @@ export class ProfileManagement {
     }
 
     private static basicAuthQp(): vscode.QuickPickItem[] {
-        const quickPickOptions: vscode.QuickPickItem[] = Object.values(this.basicAuthQpItems[this.AuthQpLabels.update]);
+        const quickPickOptions: vscode.QuickPickItem[] = Object.values(this.basicAuthUpdateQpItems);
         quickPickOptions.push(this.otherProfileQpItems[this.AuthQpLabels.edit]);
         return quickPickOptions;
     }
     private static tokenAuthQp(profile: imperative.IProfileLoaded): vscode.QuickPickItem[] {
-        const quickPickOptions: vscode.QuickPickItem[] = Object.values(this.tokenAuthQpItems[this.AuthQpLabels.login]);
+        const quickPickOptions: vscode.QuickPickItem[] = Object.values(this.tokenAuthLoginQpItem);
         if (profile.profile.tokenType) {
-            quickPickOptions.push(this.tokenAuthQpItems[this.AuthQpLabels.logout]);
+            quickPickOptions.push(this.tokenAuthLogoutQpItem[this.AuthQpLabels.logout]);
         }
         quickPickOptions.push(this.otherProfileQpItems[this.AuthQpLabels.edit]);
         return quickPickOptions;
     }
     private static chooseAuthQp(): vscode.QuickPickItem[] {
-        const quickPickOptions: vscode.QuickPickItem[] = Object.values(this.basicAuthQpItems[this.AuthQpLabels.add]);
-        quickPickOptions.push(this.tokenAuthQpItems[this.AuthQpLabels.login]);
+        const quickPickOptions: vscode.QuickPickItem[] = Object.values(this.basicAuthAddQpItems);
+        quickPickOptions.push(this.tokenAuthLoginQpItem[this.AuthQpLabels.login]);
         quickPickOptions.push(this.otherProfileQpItems[this.AuthQpLabels.edit]);
         return quickPickOptions;
     }
