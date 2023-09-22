@@ -9,6 +9,12 @@ All notable changes to the "zowe-explorer-ftp-extension" extension will be docum
 - Added `madge` script in `package.json` to track circular dependencies. [#2148](https://github.com/zowe/vscode-extension-for-zowe/issues/2148)
 - Migrated to new package manager PNPM from Yarn.
 
+## `2.11.0`
+
+### Bug fixes
+
+- Bump `@zowe/zowe-explorer-api` to pick up latest, including `@zowe/secrets-for-zowe-sdk` 7.18.4 to handle install errors gracefully and to allow running without MSVC redistributables.
+
 ## `2.10.0`
 
 ### New features and enhancements

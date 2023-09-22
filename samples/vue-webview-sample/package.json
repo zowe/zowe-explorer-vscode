@@ -21,13 +21,13 @@
     ]
   },
   "scripts": {
-    "vscode:prepublish": "pnpm build",
-    "build": "npx tsc -p ./",
+    "vscode:prepublish": "pnpm run compile",
+    "compile": "npx tsc -p ./ && cd webviews/vue-sample && pnpm i && pnpm build",
     "lint": "eslint \"src/**/*.ts\"",
     "watch": "npx tsc -watch -p ./"
   },
   "dependencies": {
-    "@zowe/zowe-explorer-api": "file:../../zowe-explorer-api"
+    "@zowe/zowe-explorer-api": "^2.10.0"
   },
   "devDependencies": {
     "@types/node": "^16.18.41",
@@ -35,6 +35,7 @@
     "@typescript-eslint/eslint-plugin": "^5.42.0",
     "@typescript-eslint/parser": "^5.42.0",
     "eslint": "^8.26.0",
+    "typescript": "^5.0.2",
     "vue-tsc": "^1.8.8"
   }
 }

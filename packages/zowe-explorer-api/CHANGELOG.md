@@ -11,6 +11,17 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 - Added `madge` script in `package.json` to track circular dependencies. [#2148](https://github.com/zowe/vscode-extension-for-zowe/issues/2148)
 - Migrated to new package manager PNPM from Yarn.
 
+## `2.11.0`
+
+### New features and enhancements
+
+- Added optional `pendingActions` record to `IZoweTreeNode` to allow nodes to track pending promises.
+- Added optional `wasDoubleClicked` variable to `IZoweTreeNode` to track whether a node was double-clicked during an action.
+
+### Bug fixes
+
+- Bump `@zowe/secrets-for-zowe-sdk` to 7.18.4 to handle install errors gracefully and to allow running without MSVC redistributables.
+
 ## `2.10.0`
 
 ### New features and enhancements

@@ -10,6 +10,7 @@
  */
 
 import * as path from "path";
+import * as fs from "fs";
 import * as zowe from "@zowe/cli";
 import { ProfilesCache } from "../../../src/profiles/ProfilesCache";
 import { ZoweExplorerApi } from "../../../src";
@@ -131,6 +132,7 @@ describe("ProfilesCache", () => {
     });
 
     it("getProfileInfo should initialize ProfileInfo API", async () => {
+        const existsSync = jest.spyOn(fs, "existsSync").mockImplementation();
         const profInfo = await new ProfilesCache(fakeLogger as unknown as zowe.imperative.Logger, __dirname).getProfileInfo();
         expect(readProfilesFromDiskSpy).toHaveBeenCalledTimes(1);
         expect(defaultCredMgrWithKeytarSpy).toHaveBeenCalledTimes(1);
@@ -143,6 +145,7 @@ describe("ProfilesCache", () => {
             path.join(fakeZoweDir, teamConfig.userConfigName),
             path.join(fakeZoweDir, teamConfig.configName),
         ]);
+        existsSync.mockRestore();
     });
 
     it("requireKeyring returns keyring module from Secrets SDK", async () => {

@@ -185,6 +185,13 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         const sessNode = this.getSessionNode();
         try {
             const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
+            if (!ZoweExplorerApiRegister.getUssApi(cachedProfile).getSession(cachedProfile)) {
+                throw new imperative.ImperativeError({
+                    msg: localize("getChildren.error.sessionMissing", "Profile auth error"),
+                    additionalDetails: localize("getChildren.error.additionalDetails", "Profile is not authenticated, please log in to continue"),
+                    errorCode: `${imperative.RestConstants.HTTP_STATUS_401}`,
+                });
+            }
             response = await ZoweExplorerApiRegister.getUssApi(cachedProfile).fileList(this.fullPath);
 
             // Throws reject if the Zowe command does not throw an error but does not succeed

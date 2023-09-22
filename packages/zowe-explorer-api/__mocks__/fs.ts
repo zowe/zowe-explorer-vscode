@@ -10,6 +10,7 @@
  */
 
 const fs = jest.genMockFromModule("fs") as any;
+const origExistsSync = jest.requireActual("fs").existsSync;
 const origReadFileSync = jest.requireActual("fs").readFileSync;
 const mockReadFileSync = fs.readFileSync;
 
@@ -28,5 +29,6 @@ function realpathSync(path: string): string {
 fs.readFileSync = readFileSync;
 fs.realpathSync = realpathSync;
 fs.realpathSync.native = realpathSync;
+fs.existsSync = origExistsSync;
 
 module.exports = fs;
