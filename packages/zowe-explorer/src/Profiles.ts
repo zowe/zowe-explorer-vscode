@@ -1167,7 +1167,7 @@ export class Profiles extends ProfilesCache {
         // This check will handle service profiles that have username and password
         if (ProfilesUtils.isProfileUsingBasicAuth(serviceProfile)) {
             Gui.showMessage(
-                localize("ssoLogin.usingBasicAuth", "This profile is using basic authentication and does not support token authentication.")
+                localize("ssoAuth.usingBasicAuth", "This profile is using basic authentication and does not support token authentication.")
             );
             return;
         }
@@ -1198,8 +1198,10 @@ export class Profiles extends ProfilesCache {
         ZoweLogger.trace("Profiles.ssoLogout called.");
         const serviceProfile = node.getProfile();
         // This check will handle service profiles that have username and password
-        if (serviceProfile.profile?.user && serviceProfile.profile?.password) {
-            Gui.showMessage(localize("ssoAuth.noBase", "This profile does not support token authentication."));
+        if (ProfilesUtils.isProfileUsingBasicAuth(serviceProfile)) {
+            Gui.showMessage(
+                localize("ssoAuth.usingBasicAuth", "This profile is using basic authentication and does not support token authentication.")
+            );
             return;
         }
         try {

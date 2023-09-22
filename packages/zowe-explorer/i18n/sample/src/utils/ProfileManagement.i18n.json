@@ -1,16 +1,16 @@
 {
   "profiles.operation.cancelled": "Operation Cancelled",
-  "editProfileQpItem.editProfile.qpLabel": "$(pencil) Edit profile",
-  "editProfileQpItem.editProfile.qpDetail": "Update profile connection information",
-  "updateBasicAuthQpItem.updateCredentials.qpLabel": "$(refresh) Update Credentials",
-  "updateBasicAuthQpItem.updateCredentials.qpDetail": "Update stored username and password",
+  "qpPlaceholders.qp.basic": "Profile {0} is using basic authentication. Choose a profile action.",
+  "qpPlaceholders.qp.token": "Profile {0} is using token authentication. Choose a profile action.",
+  "qpPlaceholders.qp.choose": "Profile {0} doesn't specify an authentication method. Choose a profile action.",
   "addBasicAuthQpItem.addCredentials.qpLabel": "$(plus) Add Credentials",
   "addBasicAuthQpItem.addCredentials.qpDetail": "Add username and password for basic authentication",
+  "updateBasicAuthQpItem.updateCredentials.qpLabel": "$(refresh) Update Credentials",
+  "updateBasicAuthQpItem.updateCredentials.qpDetail": "Update stored username and password",
+  "editProfileQpItem.editProfile.qpLabel": "$(pencil) Edit profile",
+  "editProfileQpItem.editProfile.qpDetail": "Update profile connection information",
   "loginQpItem.login.qpLabel": "$(arrow-right) Log in to authentication service",
   "loginQpItem.login.qpDetail": "Log in to obtain a new token value",
   "logoutQpItem.logout.qpLabel": "$(arrow-left) Log out of authentication service",
-  "logoutQpItem.logout.qpDetail": "Log out to invalidate and remove stored token value",
-  "qpPlaceholders.qp.basic": "Profile is using basic authentication. Choose a profile action.",
-  "qpPlaceholders.qp.token": "Profile is using token authentication. Choose a profile action.",
-  "qpPlaceholders.qp.choose": "Profile doesn't specify an authentication method. Choose a profile action."
+  "logoutQpItem.logout.qpDetail": "Log out to invalidate and remove stored token value"
 }
