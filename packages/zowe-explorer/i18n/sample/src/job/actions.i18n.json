@@ -25,5 +25,7 @@
   "jobs.selectSortOpt": "Select a sorting option for jobs in {0}",
   "setSortDirection": "$(fold) Sort Direction",
   "sort.selectDirection": "Select a sorting direction",
-  "sort.updated": "$(check) Sorting updated for {0}"
+  "sort.updated": "$(check) Sorting updated for {0}",
+  "filterJobs.message": "Use the search button to display jobs",
+  "filterJobs.prompt.message": "Enter local filter..."
 }

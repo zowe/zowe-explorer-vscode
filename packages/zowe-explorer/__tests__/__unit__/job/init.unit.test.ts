@@ -55,7 +55,6 @@ describe("Test src/jobs/extension", () => {
             pollData: jest.fn(),
             refreshElement: jest.fn(),
             filterJobs: jest.fn(),
-            filterSpools: jest.fn(),
         };
         const commands: IJestIt[] = [
             {

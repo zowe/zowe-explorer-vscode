@@ -11,6 +11,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Added new API {ZE Extender MetaData} to allow extenders to have the metadata of registered extenders to aid in team configuration file creation from a view that isn't Zowe Explorer's. [#2394](https://github.com/zowe/vscode-extension-for-zowe/issues/2394)
 - Added "Sort PDS members" feature in Data Sets tree view: accessible via sort icon on session node, or by right-clicking a PDS or session. [#2420](https://github.com/zowe/vscode-extension-for-zowe/issues/2420)
 - Added "Filter PDS members" feature in Data Sets tree view: accessible via filter icon on session node, or by right-clicking a PDS or session. [#2420](https://github.com/zowe/vscode-extension-for-zowe/issues/2420)
+- Added "Local Filtering of Jobs Tree" feature for job nodes in Jobs tree view. [#2476](https://github.com/zowe/vscode-extension-for-zowe/issues/2476)
 
 ### Bug fixes
 
