@@ -66,7 +66,7 @@ describe("ProfileManagement unit tests", () => {
             }),
         });
         Object.defineProperty(Gui, "createQuickPick", { value: newMocks.mockCreateQp, configurable: true });
-
+        newMocks.mockDsSessionNode = dsMock.createDatasetSessionNode(newMocks.mockSession, newMocks.mockBasicAuthProfile) as any;
         newMocks.mockProfileInstance = sharedMock.createInstanceOfProfile(newMocks.mockBasicAuthProfile);
         Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn().mockReturnValue(newMocks.mockProfileInstance),
@@ -85,7 +85,6 @@ describe("ProfileManagement unit tests", () => {
     describe("unit tests around basic auth selections", () => {
         function createBlockMocks(globalMocks) {
             globalMocks.logMsg = `Profile ${globalMocks.mockBasicAuthProfile.name} is using basic authentication.`;
-            globalMocks.mockDsSessionNode = dsMock.createDatasetSessionNode(globalMocks.mockSession, globalMocks.mockBasicAuthProfile) as any;
             Object.defineProperty(globalMocks.mockDsSessionNode, "getProfile", {
                 value: jest.fn().mockReturnValue(globalMocks.mockBasicAuthProfile),
                 configurable: true,
@@ -120,7 +119,6 @@ describe("ProfileManagement unit tests", () => {
         function createBlockMocks(globalMocks) {
             globalMocks.logMsg = `Profile ${globalMocks.mockTokenAuthProfile.name} is using token authentication.`;
             Object.defineProperty(profUtils.ProfilesUtils, "isUsingTokenAuth", { value: jest.fn().mockResolvedValueOnce(true), configurable: true });
-            globalMocks.mockDsSessionNode = dsMock.createDatasetSessionNode(globalMocks.mockSession, globalMocks.mockTokenAuthProfile) as any;
             Object.defineProperty(globalMocks.mockDsSessionNode, "getProfile", {
                 value: jest.fn().mockReturnValue(globalMocks.mockTokenAuthProfile),
                 configurable: true,
@@ -155,7 +153,6 @@ describe("ProfileManagement unit tests", () => {
         function createBlockMocks(globalMocks) {
             globalMocks.logMsg = `Profile ${globalMocks.mockNoAuthProfile.name} authentication method is unkown.`;
             Object.defineProperty(profUtils.ProfilesUtils, "isUsingTokenAuth", { value: jest.fn().mockResolvedValueOnce(false), configurable: true });
-            globalMocks.mockDsSessionNode = dsMock.createDatasetSessionNode(globalMocks.mockSession, globalMocks.mockTokenAuthProfile) as any;
             Object.defineProperty(globalMocks.mockDsSessionNode, "getProfile", {
                 value: jest.fn().mockReturnValue(globalMocks.mockNoAuthProfile),
                 configurable: true,
