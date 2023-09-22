@@ -1,5 +1,4 @@
 packages:
   - "packages/*"
   - "packages/zowe-explorer/webviews/*"
-  - "packages/samples/vue-webview-sample/webviews/*"
   - "!**/test/**"
