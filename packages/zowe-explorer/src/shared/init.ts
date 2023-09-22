@@ -27,6 +27,7 @@ import { ZoweLogger } from "../utils/LoggerUtils";
 import { ZoweSaveQueue } from "../abstract/ZoweSaveQueue";
 import { SettingsConfig } from "../utils/SettingsConfig";
 import { spoolFilePollEvent } from "../job/actions";
+import { ProfileManagement } from "../utils/ProfileManagement";
 
 // Set up localization
 nls.config({
@@ -94,7 +95,7 @@ export function registerCommonCommands(context: vscode.ExtensionContext, provide
 
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.profileManagement", async (node: IZoweTreeNode) => {
-            await ProfilesUtils.manageProfile(node);
+            await ProfileManagement.manageProfile(node);
         })
     );
 
