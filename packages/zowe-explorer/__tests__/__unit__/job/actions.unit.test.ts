@@ -45,6 +45,49 @@ import { ZosJobsProvider } from "../../../src/job/ZosJobsProvider";
 
 const activeTextEditorDocument = jest.fn();
 
+jest.mock("vscode");
+
+const showMock = jest.fn();
+
+const onDidChangeValueMock = {
+    event: (callback: (value: string) => void): vscode.Disposable => {
+        const disposable = {
+            dispose: jest.fn(),
+        };
+        callback("");
+        return disposable;
+    },
+};
+
+const mockInputBox: vscode.InputBox = {
+    title: "",
+    value: "",
+    placeholder: "",
+    password: false,
+    onDidChangeValue: onDidChangeValueMock.event,
+    onDidAccept: jest.fn(),
+    show: showMock,
+    hide: jest.fn(),
+    dispose: jest.fn(),
+    buttons: [],
+    onDidTriggerButton: jest.fn(),
+    prompt: "",
+    validationMessage: "",
+    step: 1,
+    totalSteps: 100,
+    enabled: true,
+    busy: false,
+    ignoreFocusOut: false,
+    onDidHide: jest.fn(),
+};
+
+function setJobObjects(job: zowe.IJob, newJobName: string, newJobId: string, newRetCode: string) {
+    job.jobname = newJobName;
+    job.jobid = newJobId;
+    job.retcode = newRetCode;
+    return job;
+}
+
 function createGlobalMocks() {
     Object.defineProperty(vscode.workspace, "getConfiguration", {
         value: jest.fn().mockImplementation(() => new Map([["zowe.jobs.confirmSubmission", false]])),
@@ -86,6 +129,12 @@ function createGlobalMocks() {
     Object.defineProperty(ZoweLogger, "error", { value: jest.fn(), configurable: true });
     Object.defineProperty(ZoweLogger, "debug", { value: jest.fn(), configurable: true });
     Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
+    Object.defineProperty(vscode.window, "createInputBox", {
+        value: jest.fn(() => mockInputBox),
+        configurable: true,
+    });
+
+    Object.defineProperty(vscode.window, "showInformationMessage", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showInformationMessage", { value: jest.fn(), configurable: true });
     function settingJobObjects(job: zowe.IJob, setjobname: string, setjobid: string, setjobreturncode: string): zowe.IJob {
         job.jobname = setjobname;
@@ -1399,5 +1448,153 @@ describe("sortjobsby function", () => {
         expect(sortbyretcodespy).toBeCalledWith(testtree.mSessionNodes[0], testtree, "retcode");
         expect(sortbyretcodespy).toHaveBeenCalled();
         expect(sortbyretcodespy.mock.calls[0][0].children).toStrictEqual(expected.mSessionNodes[0].children);
+    });
+});
+
+describe("Job Actions Unit Tests - Filter Jobs", () => {
+    const node1 = new Job(
+        "jobnew",
+        vscode.TreeItemCollapsibleState.None,
+        null,
+        null,
+        setJobObjects(createIJobObject(), "BOYINAA", "JOB04945", "CC 0000"),
+        null
+    );
+    const node2 = new Job(
+        "jobnew",
+        vscode.TreeItemCollapsibleState.None,
+        null,
+        null,
+        setJobObjects(createIJobObject(), "BOYINAA", "JOB05037", "CC 0000"),
+        null
+    );
+
+    it("To show showInformationMessage", async () => {
+        const testTree = new ZosJobsProvider();
+        testTree.mSessionNodes[0].label = "zosmf";
+        testTree.mSessionNodes[0].collapsibleState = 1;
+
+        await jobActions.filterJobs(testTree);
+
+        expect(mocked(vscode.window.showInformationMessage)).toHaveBeenCalled();
+    });
+
+    it("To filter jobs based on a combination of JobName, JobId and Return code", async () => {
+        const testTree = new ZosJobsProvider();
+        testTree.mSessionNodes[0].label = "zosmf";
+        testTree.mSessionNodes[0].collapsibleState = 2;
+        testTree.mSessionNodes[0].children = [node1, node2];
+
+        const createInputBoxSpy = jest.spyOn(vscode.window, "createInputBox");
+        mockInputBox.value = "BOYINAA(JOB04945) - CC 0000";
+        createInputBoxSpy.mockReturnValue(mockInputBox);
+        const filterJobsSpy = jest.spyOn(jobActions, "filterJobs");
+        await jobActions.filterJobs(testTree);
+        testTree.mSessionNodes[0].children = [node1];
+
+        expect(createInputBoxSpy).toHaveBeenCalled();
+        expect(filterJobsSpy).toHaveBeenCalled();
+        expect(filterJobsSpy).toBeCalledWith(testTree);
+        expect(filterJobsSpy.mock.calls[0][0].mSessionNodes[0].children).toBe(testTree.mSessionNodes[0].children);
+    });
+});
+
+describe("Job Actions Unit Tests - Filter Spools", () => {
+    function createBlockMocks() {
+        const session = createISession();
+        const treeView = createTreeView();
+        const iJob = createIJobObject();
+        const imperativeProfile = createIProfile();
+        const testJobTree = createJobsTree(session, iJob, imperativeProfile, treeView);
+
+        return {
+            session,
+            treeView,
+            iJob,
+            imperativeProfile,
+            testJobTree,
+            testJobsTree: createJobsTree(session, iJob, imperativeProfile, treeView),
+        };
+    }
+    const blockMocks = createBlockMocks();
+
+    function setSpoolObjects(spool: zowe.IJobFile, newStepName: string, newDdName: string, newRecordCount: number) {
+        spool.stepname = newStepName;
+        spool.ddname = newDdName;
+        spool["record-count"] = newRecordCount;
+        return spool;
+    }
+
+    const node2 = new Job(
+        "jobnew",
+        vscode.TreeItemCollapsibleState.None,
+        null,
+        null,
+        setJobObjects(createIJobObject(), "BOYINAA", "JOB05037", "CC 0000"),
+        null
+    );
+
+    const node1 = new Job(
+        "jobnew",
+        vscode.TreeItemCollapsibleState.None,
+        node2,
+        blockMocks.session,
+        setJobObjects(createIJobObject(), "BOYINAA", "JOB04945", "CC 0000"),
+        createIProfile()
+    );
+
+    const spoolNode1 = new Spool(
+        "JES2:JESMSGLG - 21",
+        vscode.TreeItemCollapsibleState.None,
+        node1,
+        null,
+        setSpoolObjects(createIJobFile(), "JES2", "JESMSGLG", 21),
+        createIJobObject(),
+        node1
+    );
+    const spoolNode2 = new Spool(
+        "DELETE:SYSPRINT - 7",
+        vscode.TreeItemCollapsibleState.None,
+        node1,
+        null,
+        setSpoolObjects(createIJobFile(), "DELETE", "SYSPRINT", 7),
+        createIJobObject(),
+        node1
+    );
+
+    it("To check a job is expanded or not when filter spools option is choosen", async () => {
+        const testTree = new ZosJobsProvider();
+        node1.collapsibleState = 1;
+        const filterSpoolsSpy = jest.spyOn(jobActions, "filterSpools");
+        const createInputBoxSpy = jest.spyOn(vscode.window, "createInputBox");
+        mockInputBox.value = "DELETE:SYSPRINT - 7";
+        createInputBoxSpy.mockReturnValue(mockInputBox);
+
+        await jobActions.filterSpools(testTree, node1, blockMocks.testJobTree);
+
+        expect(createInputBoxSpy).toHaveBeenCalled();
+        expect(filterSpoolsSpy).toHaveBeenCalled();
+        expect(filterSpoolsSpy).toBeCalledWith(testTree, node1, blockMocks.testJobTree);
+        expect(filterSpoolsSpy.mock.calls[0][1].collapsibleState).toBe(vscode.TreeItemCollapsibleState.Expanded);
+    });
+
+    it("To filter spools based on a combination of stepname, ddname and record-count", async () => {
+        const testTree = new ZosJobsProvider();
+        node1.collapsibleState = 1;
+        node1.children = [spoolNode1, spoolNode2];
+        testTree.mSessionNodes[0].children = [node1];
+        const createInputBoxSpy = jest.spyOn(vscode.window, "createInputBox");
+        mockInputBox.value = "JES2:JESMSGLG - 21";
+        createInputBoxSpy.mockReturnValue(mockInputBox);
+        const filterSpoolsSpy = jest.spyOn(jobActions, "filterSpools");
+
+        await jobActions.filterSpools(testTree, node1, blockMocks.testJobTree);
+        node1.children = [spoolNode1];
+        testTree.mSessionNodes[0].children = [node1];
+
+        expect(createInputBoxSpy).toHaveBeenCalled();
+        expect(filterSpoolsSpy).toHaveBeenCalled();
+        expect(filterSpoolsSpy).toBeCalledWith(testTree, node1, blockMocks.testJobTree);
+        expect(filterSpoolsSpy.mock.calls[0][0].mSessionNodes[0].children).toBe(testTree.mSessionNodes[0].children);
     });
 });
