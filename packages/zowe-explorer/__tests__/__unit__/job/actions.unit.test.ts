@@ -1482,6 +1482,7 @@ describe("Job Actions Unit Tests - Filter Jobs", () => {
         null,
         null,
         setJobObjects(createIJobObject(), "ZOWEUSR1", "JOB04945", "CC 0000"),
+        setJobObjects(createIJobObject(), "ZOWEUSR1", "JOB04945", "CC 0000"),
         null
     );
     const node2 = new Job(
@@ -1490,14 +1491,6 @@ describe("Job Actions Unit Tests - Filter Jobs", () => {
         null,
         null,
         setJobObjects(createIJobObject(), "ZOWEUSR2", "JOB05037", "CC 0000"),
-        null
-    );
-    const node3 = new Job(
-        "jobnew",
-        vscode.TreeItemCollapsibleState.None,
-        null,
-        null,
-        setJobObjects(createIJobObject(), "ZOWEUSR3", "TSU07707", "ABEND S222"),
         null
     );
 
@@ -1518,7 +1511,7 @@ describe("Job Actions Unit Tests - Filter Jobs", () => {
         node1.children = [node2, node3];
 
         const createInputBoxSpy = jest.spyOn(vscode.window, "createInputBox");
-        mockInputBox.value = "ZOWEUSR2(JOB05037) - CC 0000";
+        mockInputBox.value = "ZOWEUSR1(JOB04945) - CC 0000";
         createInputBoxSpy.mockReturnValue(mockInputBox);
         const filterJobsSpy = jest.spyOn(jobActions, "filterJobs");
         await jobActions.filterJobs(testTree, node1);
