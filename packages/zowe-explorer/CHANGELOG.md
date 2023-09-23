@@ -13,6 +13,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Added "Filter PDS members" feature in Data Sets tree view: accessible via filter icon on session node, or by right-clicking a PDS or session. [#2420](https://github.com/zowe/vscode-extension-for-zowe/issues/2420)
 - Added "Local Filtering of Jobs Tree" feature for job nodes in Jobs tree view. [#2476](https://github.com/zowe/vscode-extension-for-zowe/issues/2476)
 - Added new edit feature on `Edit Attributes` view for changing file tags on USS [#2113](https://github.com/zowe/vscode-extension-for-zowe/issues/2113)
+- Added "Local Filtering of Jobs Tree" feature for job nodes in Jobs tree view. [#2476](https://github.com/zowe/vscode-extension-for-zowe/issues/2476)
 
 ### Bug fixes
 
