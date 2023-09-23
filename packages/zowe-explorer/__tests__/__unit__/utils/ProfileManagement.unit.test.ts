@@ -18,6 +18,7 @@ import { Gui } from "@zowe/zowe-explorer-api";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 import { Profiles } from "../../../src/Profiles";
 import * as vscode from "vscode";
+import { imperative } from "@zowe/cli";
 
 jest.mock("fs");
 jest.mock("vscode");
@@ -27,7 +28,7 @@ describe("ProfileManagement unit tests", () => {
         jest.clearAllMocks();
         jest.resetAllMocks();
     });
-    function createGlobalMocks() {
+    function createGlobalMocks(): any {
         const newMocks = {
             mockSession: sharedMock.createISession(),
             mockBasicAuthProfile: sharedMock.createValidIProfile(),
@@ -43,6 +44,7 @@ describe("ProfileManagement unit tests", () => {
             mockLogoutChosen: ProfileManagement.tokenAuthLogoutQpItem[ProfileManagement.AuthQpLabels.logout],
             mockEditProfChosen: ProfileManagement.editProfileQpItems[ProfileManagement.AuthQpLabels.edit],
             mockDeleteProfChosen: ProfileManagement.deleteProfileQpItem[ProfileManagement.AuthQpLabels.delete],
+            mockProfileInfo: { usingTeamConfig: true },
             mockProfileInstance: null as any,
             debugLogSpy: null as any,
             promptSpy: null as any,
@@ -85,139 +87,118 @@ describe("ProfileManagement unit tests", () => {
     }
 
     describe("unit tests around basic auth selections", () => {
-        function createBlockMocks(globalMocks) {
+        function createBlockMocks(globalMocks): any {
             globalMocks.logMsg = `Profile ${globalMocks.mockBasicAuthProfile.name} is using basic authentication.`;
-            Object.defineProperty(globalMocks.mockDsSessionNode, "getProfile", {
-                value: jest.fn().mockReturnValue(globalMocks.mockBasicAuthProfile),
-                configurable: true,
-            });
+            globalMocks.mockDsSessionNode.getProfile = jest.fn().mockReturnValue(globalMocks.mockBasicAuthProfile);
             Object.defineProperty(vscode.commands, "executeCommand", { value: jest.fn(), configurable: true });
+            return globalMocks;
         }
         it("profile using basic authentication should see Operation Cancelled when escaping quick pick", async () => {
-            const globalMocks = createGlobalMocks();
-            createBlockMocks(globalMocks);
-            globalMocks.mockResolveQp.mockResolvedValueOnce(undefined);
-            await ProfileManagement.manageProfile(globalMocks.mockDsSessionNode as any);
-            expect(globalMocks.debugLogSpy).toBeCalledWith(globalMocks.logMsg);
-            expect(globalMocks.opCancelledSpy).toBeCalledWith("Operation Cancelled");
+            const mocks = createBlockMocks(createGlobalMocks());
+            mocks.mockResolveQp.mockResolvedValueOnce(undefined);
+            await ProfileManagement.manageProfile(mocks.mockDsSessionNode);
+            expect(mocks.debugLogSpy).toBeCalledWith(mocks.logMsg);
+            expect(mocks.opCancelledSpy).toBeCalledWith("Operation Cancelled");
         });
         it("profile using basic authentication should see promptCredentials called when Update Credentials chosen", async () => {
-            const globalMocks = createGlobalMocks();
-            createBlockMocks(globalMocks);
-            globalMocks.mockResolveQp.mockResolvedValueOnce(globalMocks.mockUpdateChosen);
-            await ProfileManagement.manageProfile(globalMocks.mockDsSessionNode as any);
-            expect(globalMocks.debugLogSpy).toBeCalledWith(globalMocks.logMsg);
-            expect(globalMocks.promptSpy).toBeCalled();
+            const mocks = createBlockMocks(createGlobalMocks());
+            mocks.mockResolveQp.mockResolvedValueOnce(mocks.mockUpdateChosen);
+            await ProfileManagement.manageProfile(mocks.mockDsSessionNode);
+            expect(mocks.debugLogSpy).toBeCalledWith(mocks.logMsg);
+            expect(mocks.promptSpy).toBeCalled();
         });
         it("profile using basic authentication should see editSession called when Edit Profile chosen", async () => {
-            const globalMocks = createGlobalMocks();
-            createBlockMocks(globalMocks);
-            globalMocks.mockResolveQp.mockResolvedValueOnce(globalMocks.mockEditProfChosen);
-            await ProfileManagement.manageProfile(globalMocks.mockDsSessionNode as any);
-            expect(globalMocks.debugLogSpy).toBeCalledWith(globalMocks.logMsg);
-            expect(globalMocks.editSpy).toBeCalled();
+            const mocks = createBlockMocks(createGlobalMocks());
+            mocks.mockResolveQp.mockResolvedValueOnce(mocks.mockEditProfChosen);
+            await ProfileManagement.manageProfile(mocks.mockDsSessionNode);
+            expect(mocks.debugLogSpy).toBeCalledWith(mocks.logMsg);
+            expect(mocks.editSpy).toBeCalled();
         });
         it("profile using basic authentication should see editSession called when Delete Profile chosen with v2 profile", async () => {
-            const globalMocks = createGlobalMocks();
-            createBlockMocks(globalMocks);
-            globalMocks.mockResolveQp.mockResolvedValueOnce(globalMocks.mockDeleteProfChosen);
-            Object.defineProperty(globalMocks.mockProfileInstance, "getProfileInfo", {
-                value: jest.fn().mockResolvedValueOnce({ usingTeamConfig: true }),
+            const mocks = createBlockMocks(createGlobalMocks());
+            Object.defineProperty(mocks.mockProfileInstance, "getProfileInfo", {
+                value: jest.fn().mockResolvedValue(mocks.mockProfileInfo as imperative.ProfileInfo),
                 configurable: true,
             });
-            await ProfileManagement.manageProfile(globalMocks.mockDsSessionNode as any);
-            expect(globalMocks.debugLogSpy).toBeCalledWith(globalMocks.logMsg);
-            expect(globalMocks.editSpy).toBeCalled();
+            mocks.mockResolveQp.mockResolvedValueOnce(mocks.mockDeleteProfChosen);
+            await ProfileManagement.manageProfile(mocks.mockDsSessionNode);
+            expect(mocks.debugLogSpy).toBeCalledWith(mocks.logMsg);
+            expect(mocks.editSpy).toBeCalled();
         });
         it("profile using basic authentication should see delete commands called when Delete Profile chosen with v1 profile", async () => {
-            const globalMocks = createGlobalMocks();
-            createBlockMocks(globalMocks);
-            globalMocks.mockResolveQp.mockResolvedValueOnce(globalMocks.mockDeleteProfChosen);
-            Object.defineProperty(globalMocks.mockProfileInstance, "getProfileInfo", {
-                value: jest.fn().mockResolvedValueOnce({ usingTeamConfig: false }),
-                configurable: true,
-            });
+            const mocks = createBlockMocks(createGlobalMocks());
+            mocks.mockResolveQp.mockResolvedValueOnce(mocks.mockDeleteProfChosen);
+            mocks.mockProfileInfo.usingTeamConfig = false;
             const commandSpy = jest.spyOn(vscode.commands, "executeCommand");
-            await ProfileManagement.manageProfile(globalMocks.mockDsSessionNode as any);
-            expect(globalMocks.debugLogSpy).toBeCalledWith(globalMocks.logMsg);
-            expect(globalMocks.editSpy).not.toBeCalled();
+            await ProfileManagement.manageProfile(mocks.mockDsSessionNode);
+            expect(mocks.debugLogSpy).toBeCalledWith(mocks.logMsg);
+            expect(mocks.editSpy).not.toBeCalled();
             expect(commandSpy).toBeCalled();
         });
     });
     describe("unit tests around token auth selections", () => {
-        function createBlockMocks(globalMocks) {
+        function createBlockMocks(globalMocks): any {
             globalMocks.logMsg = `Profile ${globalMocks.mockTokenAuthProfile.name} is using token authentication.`;
             Object.defineProperty(profUtils.ProfilesUtils, "isUsingTokenAuth", { value: jest.fn().mockResolvedValueOnce(true), configurable: true });
-            Object.defineProperty(globalMocks.mockDsSessionNode, "getProfile", {
-                value: jest.fn().mockReturnValue(globalMocks.mockTokenAuthProfile),
-                configurable: true,
-            });
+            globalMocks.mockDsSessionNode.getProfile = jest.fn().mockReturnValue(globalMocks.mockTokenAuthProfile);
+            return globalMocks;
         }
         it("profile using token authentication should see Operation Cancelled when escaping quick pick", async () => {
-            const globalMocks = createGlobalMocks();
-            createBlockMocks(globalMocks);
-            globalMocks.mockResolveQp.mockResolvedValueOnce(undefined);
-            await ProfileManagement.manageProfile(globalMocks.mockDsSessionNode as any);
-            expect(globalMocks.debugLogSpy).toBeCalledWith(globalMocks.logMsg);
-            expect(globalMocks.opCancelledSpy).toBeCalledWith("Operation Cancelled");
+            const mocks = createBlockMocks(createGlobalMocks());
+            mocks.mockResolveQp.mockResolvedValueOnce(undefined);
+            await ProfileManagement.manageProfile(mocks.mockDsSessionNode);
+            expect(mocks.debugLogSpy).toBeCalledWith(mocks.logMsg);
+            expect(mocks.opCancelledSpy).toBeCalledWith("Operation Cancelled");
         });
         it("profile using token authentication should see ssoLogin called when Log in to authentication service chosen", async () => {
-            const globalMocks = createGlobalMocks();
-            createBlockMocks(globalMocks);
-            globalMocks.mockResolveQp.mockResolvedValueOnce(globalMocks.mockLoginChosen);
-            await ProfileManagement.manageProfile(globalMocks.mockDsSessionNode as any);
-            expect(globalMocks.debugLogSpy).toBeCalledWith(globalMocks.logMsg);
-            expect(globalMocks.loginSpy).toBeCalled();
+            const mocks = createBlockMocks(createGlobalMocks());
+            mocks.mockResolveQp.mockResolvedValueOnce(mocks.mockLoginChosen);
+            await ProfileManagement.manageProfile(mocks.mockDsSessionNode);
+            expect(mocks.debugLogSpy).toBeCalledWith(mocks.logMsg);
+            expect(mocks.loginSpy).toBeCalled();
         });
         it("profile using token authentication should see ssoLogout called when Log out from authentication service chosen", async () => {
-            const globalMocks = createGlobalMocks();
-            createBlockMocks(globalMocks);
-            globalMocks.mockResolveQp.mockResolvedValueOnce(globalMocks.mockLogoutChosen);
-            await ProfileManagement.manageProfile(globalMocks.mockDsSessionNode as any);
-            expect(globalMocks.debugLogSpy).toBeCalledWith(globalMocks.logMsg);
-            expect(globalMocks.logoutSpy).toBeCalled();
+            const mocks = createBlockMocks(createGlobalMocks());
+            mocks.mockResolveQp.mockResolvedValueOnce(mocks.mockLogoutChosen);
+            await ProfileManagement.manageProfile(mocks.mockDsSessionNode);
+            expect(mocks.debugLogSpy).toBeCalledWith(mocks.logMsg);
+            expect(mocks.logoutSpy).toBeCalled();
         });
     });
     describe("unit tests around no auth declared selections", () => {
-        function createBlockMocks(globalMocks) {
+        function createBlockMocks(globalMocks): any {
             globalMocks.logMsg = `Profile ${globalMocks.mockNoAuthProfile.name} authentication method is unkown.`;
             Object.defineProperty(profUtils.ProfilesUtils, "isUsingTokenAuth", { value: jest.fn().mockResolvedValueOnce(false), configurable: true });
-            Object.defineProperty(globalMocks.mockDsSessionNode, "getProfile", {
-                value: jest.fn().mockReturnValue(globalMocks.mockNoAuthProfile),
-                configurable: true,
-            });
+            globalMocks.mockDsSessionNode.getProfile = jest.fn().mockReturnValue(globalMocks.mockNoAuthProfile);
+            return globalMocks;
         }
         it("profile with no authentication method should see Operation Cancelled when escaping quick pick", async () => {
-            const globalMocks = createGlobalMocks();
-            createBlockMocks(globalMocks);
-            globalMocks.mockResolveQp.mockResolvedValueOnce(undefined);
-            await ProfileManagement.manageProfile(globalMocks.mockDsSessionNode as any);
-            expect(globalMocks.debugLogSpy).toBeCalledWith(globalMocks.logMsg);
-            expect(globalMocks.opCancelledSpy).toBeCalledWith("Operation Cancelled");
+            const mocks = createBlockMocks(createGlobalMocks());
+            mocks.mockResolveQp.mockResolvedValueOnce(undefined);
+            await ProfileManagement.manageProfile(mocks.mockDsSessionNode);
+            expect(mocks.debugLogSpy).toBeCalledWith(mocks.logMsg);
+            expect(mocks.opCancelledSpy).toBeCalledWith("Operation Cancelled");
         });
         it("profile with no authentication method should see promptCredentials called when Add Basic Credentials chosen", async () => {
-            const globalMocks = createGlobalMocks();
-            createBlockMocks(globalMocks);
-            globalMocks.mockResolveQp.mockResolvedValueOnce(globalMocks.mockAddBasicChosen);
-            await ProfileManagement.manageProfile(globalMocks.mockDsSessionNode as any);
-            expect(globalMocks.debugLogSpy).toBeCalledWith(globalMocks.logMsg);
-            expect(globalMocks.promptSpy).toBeCalled();
+            const mocks = createBlockMocks(createGlobalMocks());
+            mocks.mockResolveQp.mockResolvedValueOnce(mocks.mockAddBasicChosen);
+            await ProfileManagement.manageProfile(mocks.mockDsSessionNode);
+            expect(mocks.debugLogSpy).toBeCalledWith(mocks.logMsg);
+            expect(mocks.promptSpy).toBeCalled();
         });
         it("profile with no authentication method should see ssoLogin called when Log in to authentication service chosen", async () => {
-            const globalMocks = createGlobalMocks();
-            createBlockMocks(globalMocks);
-            globalMocks.mockResolveQp.mockResolvedValueOnce(globalMocks.mockLoginChosen);
-            await ProfileManagement.manageProfile(globalMocks.mockDsSessionNode as any);
-            expect(globalMocks.debugLogSpy).toBeCalledWith(globalMocks.logMsg);
-            expect(globalMocks.loginSpy).toBeCalled();
+            const mocks = createBlockMocks(createGlobalMocks());
+            mocks.mockResolveQp.mockResolvedValueOnce(mocks.mockLoginChosen);
+            await ProfileManagement.manageProfile(mocks.mockDsSessionNode);
+            expect(mocks.debugLogSpy).toBeCalledWith(mocks.logMsg);
+            expect(mocks.loginSpy).toBeCalled();
         });
         it("profile with no authentication method should see editSession called when Edit Profile chosen", async () => {
-            const globalMocks = createGlobalMocks();
-            createBlockMocks(globalMocks);
-            globalMocks.mockResolveQp.mockResolvedValueOnce(globalMocks.mockEditProfChosen);
-            await ProfileManagement.manageProfile(globalMocks.mockDsSessionNode as any);
-            expect(globalMocks.debugLogSpy).toBeCalledWith(globalMocks.logMsg);
-            expect(globalMocks.editSpy).toBeCalled();
+            const mocks = createBlockMocks(createGlobalMocks());
+            mocks.mockResolveQp.mockResolvedValueOnce(mocks.mockEditProfChosen);
+            await ProfileManagement.manageProfile(mocks.mockDsSessionNode);
+            expect(mocks.debugLogSpy).toBeCalledWith(mocks.logMsg);
+            expect(mocks.editSpy).toBeCalled();
         });
     });
 });
