@@ -689,6 +689,7 @@ export class Profiles extends ProfilesCache {
         const existingLayers = await this.getConfigLayers();
         if (existingLayers.length === 1) {
             await this.openConfigFile(existingLayers[0].path);
+            Gui.showMessage(this.manualEditMsg);
         }
         if (existingLayers && existingLayers.length > 1) {
             const choice = await this.getConfigLocationPrompt("edit");
