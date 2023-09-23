@@ -28,7 +28,7 @@ export const DatasetsLocators = {
     favoriteProfileInDatasetXpath: "(//div[contains(@id,'Favorites') and contains(@id,'TestSeleniumProfile')])",
     addToFavoriteOptionXpath: "//li[@data-command='zowe.ds.saveSearch']",
     removeFavoriteProfileFromDatasetsOptionXpath: "//li[@data-command='zowe.ds.removeFavProfile']",
-    deleteProfileFromDatasetsXpath: "(//li[@data-command='zowe.ds.deleteProfile'])",
+    manageProfileFromDatasetsXpath: "(//li[@data-command='zowe.profileManagement'])",
 };
 
 export const UssLocators = {
