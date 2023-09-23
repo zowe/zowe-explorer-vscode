@@ -1,5 +1,6 @@
 {
   "profiles.operation.cancelled": "Operation Cancelled",
+  "profiles.manualEditMsg": "Edit to the config file will need to be done manually.",
   "checkCurrentProfile.tokenAuthError.msg": "Token auth error",
   "checkCurrentProfile.tokenAuthError.additionalDetails": "Profile was found using token auth, please log in to continue.",
   "profiles.createNewConnection": "$(plus) Create a new connection to z/OS",

@@ -68,6 +68,7 @@ export class Profiles extends ProfilesCache {
     private jobsSchema: string = globals.SETTINGS_JOBS_HISTORY;
     private mProfileInfo: zowe.imperative.ProfileInfo;
     private profilesOpCancelled = localize("profiles.operation.cancelled", "Operation Cancelled");
+    private manualEditMsg = localize("profiles.manualEditMsg", "Editing or removal of profiles will need to be done manually.");
     public constructor(log: zowe.imperative.Logger, cwd?: string) {
         super(log, cwd);
     }
@@ -443,6 +444,7 @@ export class Profiles extends ProfilesCache {
             const currentProfile = await this.getProfileFromConfig(profileLoaded.name);
             const filePath = currentProfile.profLoc.osLoc[0];
             await this.openConfigFile(filePath);
+            Gui.showMessage(this.manualEditMsg);
             return;
         }
         const editSession = this.loadNamedProfile(profileLoaded.name, profileLoaded.type).profile;
@@ -697,6 +699,7 @@ export class Profiles extends ProfilesCache {
                             await this.openConfigFile(file.path);
                         }
                     }
+                    Gui.showMessage(this.manualEditMsg);
                     break;
                 case "global":
                     for (const file of existingLayers) {
@@ -704,12 +707,12 @@ export class Profiles extends ProfilesCache {
                             await this.openConfigFile(file.path);
                         }
                     }
+                    Gui.showMessage(this.manualEditMsg);
                     break;
                 default:
                     Gui.showMessage(this.profilesOpCancelled);
-                    return;
+                    break;
             }
-            return;
         }
     }
 
