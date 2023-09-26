@@ -313,7 +313,8 @@ export class ProfilesUtils {
      * @returns {Promise<boolean>} a boolean representing whether basic auth is being used or not
      */
     public static isProfileUsingBasicAuth(profile: imperative.IProfileLoaded): boolean {
-        return (profile.profile.user && profile.profile.password) as boolean;
+        const prof = profile.profile;
+        return "user" in prof && "password" in prof;
     }
 
     /**

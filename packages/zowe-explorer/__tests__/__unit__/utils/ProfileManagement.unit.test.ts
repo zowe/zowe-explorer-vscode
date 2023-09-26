@@ -33,7 +33,7 @@ describe("ProfileManagement unit tests", () => {
             mockSession: sharedMock.createISession(),
             mockBasicAuthProfile: sharedMock.createValidIProfile(),
             mockTokenAuthProfile: sharedMock.createTokenAuthIProfile(),
-            mockNoAuthProfile: sharedMock.createInvalidIProfile(),
+            mockNoAuthProfile: sharedMock.createNoAuthIProfile(),
             opCancelledSpy: jest.spyOn(Gui, "infoMessage"),
             mockDsSessionNode: ZoweDatasetNode,
             mockResolveQp: jest.fn(),
