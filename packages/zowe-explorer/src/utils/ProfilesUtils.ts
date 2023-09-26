@@ -313,10 +313,7 @@ export class ProfilesUtils {
      * @returns {Promise<boolean>} a boolean representing whether basic auth is being used or not
      */
     public static isProfileUsingBasicAuth(profile: imperative.IProfileLoaded): boolean {
-        if (profile.profile.user && profile.profile.password) {
-            return true;
-        }
-        return false;
+        return (profile.profile.user && profile.profile.password) as boolean;
     }
 
     /**
@@ -325,11 +322,14 @@ export class ProfilesUtils {
      * @returns {Promise<boolean>} a boolean representing whether token based auth is being used or not
      */
     public static async isUsingTokenAuth(profileName: string): Promise<boolean> {
-        const baseProfile = Profiles.getInstance().getDefaultProfile("base");
         const secureProfileProps = await Profiles.getInstance().getSecurePropsForProfile(profileName);
-        const secureBaseProfileProps = await Profiles.getInstance().getSecurePropsForProfile(baseProfile?.name);
         const profileUsesBasicAuth = secureProfileProps.includes("user") && secureProfileProps.includes("password");
-        return (secureProfileProps.includes("tokenValue") || secureBaseProfileProps.includes("tokenValue")) && !profileUsesBasicAuth;
+        if (secureProfileProps.includes("tokenValue")) {
+            return secureProfileProps.includes("tokenValue") && !profileUsesBasicAuth;
+        }
+        const baseProfile = Profiles.getInstance().getDefaultProfile("base");
+        const secureBaseProfileProps = await Profiles.getInstance().getSecurePropsForProfile(baseProfile?.name);
+        return secureBaseProfileProps.includes("tokenValue") && !profileUsesBasicAuth;
     }
 
     public static async promptCredentials(node: IZoweTreeNode): Promise<void> {

@@ -74,7 +74,7 @@ export class ProfileManagement {
     };
     public static editProfileQpItems: Record<string, vscode.QuickPickItem> = {
         [this.AuthQpLabels.edit]: {
-            label: localize("editProfileQpItem.editProfile.qpLabel", "$(pencil) Edit profile"),
+            label: localize("editProfileQpItem.editProfile.qpLabel", "$(pencil) Edit Profile"),
             description: localize("editProfileQpItem.editProfile.qpDetail", "Update profile connection information"),
         },
     };

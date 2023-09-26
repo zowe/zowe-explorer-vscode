@@ -8,7 +8,7 @@
   "updateBasicAuthQpItem.updateCredentials.qpLabel": "$(refresh) Update Credentials",
   "updateBasicAuthQpItem.updateCredentials.qpDetail": "Update stored username and password",
   "deleteProfileQpItem.delete.qpLabel": "$(trash) Delete Profile",
-  "editProfileQpItem.editProfile.qpLabel": "$(pencil) Edit profile",
+  "editProfileQpItem.editProfile.qpLabel": "$(pencil) Edit Profile",
   "editProfileQpItem.editProfile.qpDetail": "Update profile connection information",
   "loginQpItem.login.qpLabel": "$(arrow-right) Log in to authentication service",
   "loginQpItem.login.qpDetail": "Log in to obtain a new token value",
