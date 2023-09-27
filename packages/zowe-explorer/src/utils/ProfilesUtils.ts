@@ -23,7 +23,6 @@ import { imperative, getImperativeConfig } from "@zowe/cli";
 import { ZoweExplorerExtender } from "../ZoweExplorerExtender";
 import { ZoweLogger } from "./LoggerUtils";
 import { SettingsConfig } from "./SettingsConfig";
-import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 
 // Set up localization
 nls.config({
