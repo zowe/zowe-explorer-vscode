@@ -260,6 +260,30 @@ describe("ZosmfUssApi", () => {
         expect(logoutSpy).toHaveBeenCalledWith(fakeSession);
     });
 
+    it("should retrieve the tag of a file", async () => {
+        const zosmfApi = new ZosmfUssApi();
+        jest.spyOn(JSON, "parse").mockReturnValue({
+            stdout: ["-t UTF-8 tesfile.txt"],
+        });
+
+        Object.defineProperty(zowe.Utilities, "putUSSPayload", {
+            value: () => Buffer.from(""),
+            configurable: true,
+        });
+        await expect(zosmfApi.getTag("testfile.txt")).resolves.toEqual("UTF-8");
+    });
+
+    it("should update the tag attribute when passed in", async () => {
+        const zosmfApi = new ZosmfUssApi();
+        const changeTagSpy = jest.fn();
+        Object.defineProperty(zowe.Utilities, "putUSSPayload", {
+            value: changeTagSpy,
+            configurable: true,
+        });
+        await expect(zosmfApi.updateAttributes("/test/path", { tag: "utf-8" })).resolves.not.toThrow();
+        expect(changeTagSpy).toBeCalledTimes(1);
+    });
+
     const ussApis: ITestApi<ZosmfUssApi>[] = [
         {
             name: "isFileTagBinOrAscii",

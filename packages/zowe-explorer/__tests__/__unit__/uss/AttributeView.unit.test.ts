@@ -13,6 +13,7 @@ import { ExtensionContext } from "vscode";
 import { AttributeView } from "../../../src/uss/AttributeView";
 import { IZoweTree, IZoweUSSTreeNode, ZoweExplorerApi } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
+import * as contextually from "../../../src/shared/context";
 
 describe("AttributeView unit tests", () => {
     let view: AttributeView;
@@ -21,6 +22,7 @@ describe("AttributeView unit tests", () => {
     const node = {
         attributes: {
             perms: "----------",
+            tag: undefined,
         },
         label: "example node",
         fullPath: "/z/some/path",
@@ -33,7 +35,9 @@ describe("AttributeView unit tests", () => {
     beforeAll(() => {
         jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValue({
             updateAttributes: updateAttributesMock,
+            getTag: () => Promise.resolve("UTF-8"),
         } as unknown as ZoweExplorerApi.IUss);
+        jest.spyOn(contextually, "isUssDirectory").mockReturnValue(false);
         view = new AttributeView(context, treeProvider, node);
     });
 
@@ -41,21 +45,21 @@ describe("AttributeView unit tests", () => {
         node.onUpdate = jest.fn();
     });
 
-    it("refreshes properly when webview sends 'refresh' command", () => {
+    it("refreshes properly when webview sends 'refresh' command", async () => {
         // case 1: node is a root node
-        (view as any).onDidReceiveMessage({ command: "refresh" });
+        await (view as any).onDidReceiveMessage({ command: "refresh" });
         expect(treeProvider.refresh).toHaveBeenCalled();
 
         // case 2: node is a child node
         node.getParent = jest.fn().mockReturnValueOnce({ label: "parent node" } as IZoweUSSTreeNode);
-        (view as any).onDidReceiveMessage({ command: "refresh" });
+        await (view as any).onDidReceiveMessage({ command: "refresh" });
         expect(treeProvider.refreshElement).toHaveBeenCalled();
 
         expect(node.onUpdate).toHaveBeenCalledTimes(2);
     });
 
-    it("dispatches node data to webview when 'ready' command is received", () => {
-        (view as any).onDidReceiveMessage({ command: "ready" });
+    it("dispatches node data to webview when 'ready' command is received", async () => {
+        await (view as any).onDidReceiveMessage({ command: "ready" });
         expect(view.panel.webview.postMessage).toHaveBeenCalledWith({
             attributes: node.attributes,
             name: node.fullPath,
@@ -65,7 +69,7 @@ describe("AttributeView unit tests", () => {
 
     it("updates attributes when 'update-attributes' command is received", async () => {
         // case 1: no attributes provided from webview (sanity check)
-        (view as any).onDidReceiveMessage({ command: "update-attributes" });
+        await (view as any).onDidReceiveMessage({ command: "update-attributes" });
         expect(updateAttributesMock).not.toHaveBeenCalled();
 
         const attributes = {
