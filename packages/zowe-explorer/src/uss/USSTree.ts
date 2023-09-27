@@ -81,14 +81,14 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             canSelectMany: true,
         });
         this.treeView.onDidCollapseElement((e) => {
-            if (contextually.isUssDirectory(e.element)) {
-                const newIcon = getIconByNode(e.element);
+            const newIcon = getIconByNode(e.element);
+            if (contextually.isUssDirectory(e.element) || contextually.isUssSession(e.element)) {
                 if (newIcon) {
                     e.element.iconPath = newIcon;
                     this.mOnDidChangeTreeData.fire(e.element);
                 }
             }
-        })
+        });
     }
 
     /**

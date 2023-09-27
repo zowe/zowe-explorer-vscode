@@ -14,7 +14,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed issue where USS nodes were not removed from tree during deletion. [#2479](https://github.com/zowe/vscode-extension-for-zowe/issues/2479)
 - Fixed issue where new USS nodes from a paste operation were not shown in tree until refreshed. [#2479](https://github.com/zowe/vscode-extension-for-zowe/issues/2479)
 - Fixed issue where the "Delete Job" action showed a successful deletion message, even if the API returned an error.
-- USS directories and sessions now update with their respective "collapsed icon" when collapsed.
+- USS directories, PDS nodes, job nodes and session nodes now update with their respective "collapsed icon" when collapsed.
 
 ## `2.11.0`
 
