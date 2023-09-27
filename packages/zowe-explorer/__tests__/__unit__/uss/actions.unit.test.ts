@@ -60,7 +60,7 @@ function createGlobalMocks() {
         setStatusBarMessage: jest.fn().mockReturnValue({ dispose: jest.fn() }),
         showWarningMessage: jest.fn(),
         showErrorMessage: jest.fn(),
-        createTreeView: jest.fn(),
+        createTreeView: jest.fn().mockReturnValue({ onDidCollapseElement: jest.fn() }),
         fileToUSSFile: jest.fn(),
         Upload: jest.fn(),
         isBinaryFileSync: jest.fn(),
