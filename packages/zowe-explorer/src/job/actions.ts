@@ -383,12 +383,10 @@ async function deleteSingleJob(job: IZoweJobTreeNode, jobsProvider: IZoweTree<IZ
 
     try {
         await jobsProvider.delete(job);
-        Gui.infoMessage(localize("deleteCommand.job", "Job {0} was deleted.", jobName));
+        await Gui.infoMessage(localize("deleteCommand.job", "Job {0} was deleted.", jobName));
     } catch (error) {
         await errorHandling(error, job.getProfile().name);
     }
-
-    Gui.showMessage(localize("deleteCommand.job", "Job {0} was deleted.", jobName));
 }
 
 async function deleteMultipleJobs(jobs: ReadonlyArray<IZoweJobTreeNode>, jobsProvider: IZoweTree<IZoweJobTreeNode>): Promise<void> {

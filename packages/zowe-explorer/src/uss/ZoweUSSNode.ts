@@ -189,11 +189,16 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             return this.children;
         }
 
+        // If search path has changed, invalidate all children
+        if (this.fullPath?.length > 0 && this.prevPath !== this.fullPath) {
+            this.children = [];
+        }
+
         // Build a list of nodes based on the API response
         const responseNodes: IZoweUSSTreeNode[] = [];
-        const newNodeCreated: boolean = response.apiResponse.items.reduce((lastResult: boolean, item) => {
+        for (const item of response.apiResponse.items) {
             if (item.name === "." || item.name === "..") {
-                return lastResult || false;
+                continue;
             }
 
             const existing = this.children.find(
@@ -213,7 +218,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 };
                 responseNodes.push(existing);
                 existing.onUpdateEmitter.fire(existing);
-                return lastResult || false;
+                continue;
             }
 
             if (item.mode.startsWith("d")) {
@@ -253,20 +258,6 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 };
                 responseNodes.push(temp);
             }
-
-            return lastResult || true;
-        }, false);
-
-        this.dirty = false;
-
-        // If no new nodes were created, return the cached list of children
-        if (!newNodeCreated) {
-            return this.children;
-        }
-
-        // If search path has changed, invalidate all children
-        if (this.fullPath?.length > 0 && this.prevPath !== this.fullPath) {
-            this.children = [];
         }
 
         const nodesToAdd = responseNodes.filter((c) => !this.children.includes(c));
@@ -277,6 +268,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             .filter((c) => !nodesToRemove.includes(c))
             .sort((a, b) => ((a.label as string) < (b.label as string) ? -1 : 1));
         this.prevPath = this.fullPath;
+        this.dirty = false;
         return this.children;
     }
 
@@ -749,10 +741,9 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         }
 
         const prof = this.getProfile();
-        const remotePath = this.fullPath;
         try {
+            const fileTreeToPaste: UssFileTree = JSON.parse(clipboardContents);
             const api = ZoweExplorerApiRegister.getUssApi(this.profile);
-            const fileTreeToPaste: UssFileTree = JSON.parse(await vscode.env.clipboard.readText());
             const sessionName = this.getSessionNode().getLabel() as string;
 
             const task: imperative.ITaskWithStatus = {
@@ -767,7 +758,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             };
 
             for (const subnode of fileTreeToPaste.children) {
-                await this.paste(sessionName, remotePath, { api, tree: subnode, options });
+                await this.paste(sessionName, this.fullPath, { api, tree: subnode, options });
             }
         } catch (error) {
             await errorHandling(error, this.label.toString(), localize("copyUssFile.error", "Error uploading files"));
