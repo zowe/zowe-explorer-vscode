@@ -205,6 +205,14 @@ export namespace ZoweExplorerApi {
          * @returns {Promise<zowe.IZosFilesResponse>}
          */
         rename(currentUssPath: string, newUssPath: string): Promise<zowe.IZosFilesResponse>;
+
+        /**
+         * Get the tag of a USS file
+         *
+         * @param {string} currentUssPath
+         * @returns {Promise<zowe.IZosFilesResponse>}
+         */
+        getTag?(ussPath: string): Promise<string>;
     }
 
     /**
