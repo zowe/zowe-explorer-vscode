@@ -182,7 +182,7 @@ export class ProfileManagement {
             ZoweExplorerApiRegister.getInstance().getCommonApi(profile).getTokenTypeName();
             quickPickOptions.push(this.tokenAuthLoginQpItem[this.AuthQpLabels.login]);
         } catch {
-            ZoweLogger.debug(`Profile ${profile.name} doesn't support token authentication.`);
+            ZoweLogger.debug(`Profile ${profile.name} doesn't support token authentication, will not provide option.`);
         }
         return this.addFinalQpOptions(quickPickOptions);
     }
