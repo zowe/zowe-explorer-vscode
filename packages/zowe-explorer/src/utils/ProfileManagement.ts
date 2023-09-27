@@ -15,6 +15,7 @@ import { ZoweLogger } from "./LoggerUtils";
 import { ProfilesUtils } from "./ProfilesUtils";
 import * as nls from "vscode-nls";
 import { Profiles } from "../Profiles";
+import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 
 // Set up localization
 nls.config({
@@ -106,7 +107,7 @@ export class ProfileManagement {
                 break;
             }
             default: {
-                quickPickOptions = this.chooseAuthQp();
+                quickPickOptions = this.chooseAuthQp(profile);
                 qp.placeholder = placeholders.chooseAuth;
                 break;
             }
@@ -175,9 +176,14 @@ export class ProfileManagement {
         }
         return this.addFinalQpOptions(quickPickOptions);
     }
-    private static chooseAuthQp(): vscode.QuickPickItem[] {
+    private static chooseAuthQp(profile: imperative.IProfileLoaded): vscode.QuickPickItem[] {
         const quickPickOptions: vscode.QuickPickItem[] = Object.values(this.basicAuthAddQpItems);
-        quickPickOptions.push(this.tokenAuthLoginQpItem[this.AuthQpLabels.login]);
+        try {
+            ZoweExplorerApiRegister.getInstance().getCommonApi(profile).getTokenTypeName();
+            quickPickOptions.push(this.tokenAuthLoginQpItem[this.AuthQpLabels.login]);
+        } catch {
+            ZoweLogger.debug(`Profile ${profile.name} doesn't support token authentication.`);
+        }
         return this.addFinalQpOptions(quickPickOptions);
     }
     private static addFinalQpOptions(quickPickOptions: vscode.QuickPickItem[]): vscode.QuickPickItem[] {

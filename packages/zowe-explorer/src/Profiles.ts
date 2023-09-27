@@ -68,7 +68,10 @@ export class Profiles extends ProfilesCache {
     private jobsSchema: string = globals.SETTINGS_JOBS_HISTORY;
     private mProfileInfo: zowe.imperative.ProfileInfo;
     private profilesOpCancelled = localize("profiles.operation.cancelled", "Operation Cancelled");
-    private manualEditMsg = localize("profiles.manualEditMsg", "Editing or removal of profiles will need to be done manually.");
+    private manualEditMsg = localize(
+        "profiles.manualEditMsg",
+        "The Team configuration file has been opened in the editor. Editing or removal of profiles will need to be done manually."
+    );
     public constructor(log: zowe.imperative.Logger, cwd?: string) {
         super(log, cwd);
     }
