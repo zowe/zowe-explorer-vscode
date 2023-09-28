@@ -549,8 +549,8 @@ export async function filterJobs(jobsProvider: IZoweTree<IZoweJobTreeNode>): Pro
     for (const level of jobsProvider.mSessionNodes) {
         if (level.label === "zosmf") {
             acutal_jobs = level.children;
-            if (level.collapsibleState === 1) {
-                vscode.window.showInformationMessage("Inorder to filter jobs,first populate them using search icon");
+            if (level.collapsibleState === vscode.TreeItemCollapsibleState.Collapsed) {
+                Gui.infoMessage(localize("filterJobs.message", "Inorder to filter jobs,first populate them using search icon"));
                 flag = true;
             }
         }
@@ -558,7 +558,7 @@ export async function filterJobs(jobsProvider: IZoweTree<IZoweJobTreeNode>): Pro
     if (flag) return;
 
     const inputBox = await vscode.window.createInputBox();
-    inputBox.placeholder = "Type here...";
+    inputBox.placeholder = localize("filterJobs.prompt.message", "Type here...");
     inputBox.onDidChangeValue((query) => {
         query = query.toUpperCase();
         for (const level of jobsProvider.mSessionNodes) {
@@ -579,37 +579,40 @@ export async function filterSpools(
     job: IZoweJobTreeNode,
     zoweFileProvider: IZoweTree<IZoweNodeType>
 ): Promise<vscode.InputBox> {
-    if (job["collapsibleState"] == 1) {
-        const spools = await getSpoolFiles(job);
-        const Spools = spools.map((spool) => {
-            const spoolNode = new Spool(
-                `${spool.stepname}:${spool.ddname} - ${spool["record-count"]}`,
-                vscode.TreeItemCollapsibleState.None,
-                job.getParent(),
-                job.getSession(),
-                spool,
-                job.job,
-                job.getParent()
+    try {
+        if (job["collapsibleState"] == vscode.TreeItemCollapsibleState.Collapsed) {
+            const Spools = (await getSpoolFiles(job)).map((spool) => {
+                const spoolNode = new Spool(
+                    `${spool.stepname}:${spool.ddname} - ${spool["record-count"]}`,
+                    vscode.TreeItemCollapsibleState.None,
+                    job.getParent(),
+                    job.getSession(),
+                    spool,
+                    job.job,
+                    job.getParent()
+                );
+                return spoolNode;
+            });
+            job.children = Spools;
+
+            await TreeViewUtils.expandNode(job, zoweFileProvider);
+            job.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+            jobsProvider.refresh();
+        }
+
+        const actual_spools = job.children;
+        const inputBox = vscode.window.createInputBox();
+        inputBox.placeholder = localize("filterJobs.prompt.message", "Type here...");
+        inputBox.onDidChangeValue((query) => {
+            query = query.toUpperCase();
+            job["children"] = actual_spools.filter((item) =>
+                `${item["spool"].stepname as string}:${item["spool"].ddname as string} - ${item["spool"]["record-count"] as string}`.includes(query)
             );
-            return spoolNode;
+            jobsProvider.refresh();
         });
-        job.children = Spools;
-
-        await TreeViewUtils.expandNode(job, zoweFileProvider);
-        job.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
-        jobsProvider.refresh();
+        inputBox.show();
+        return inputBox;
+    } catch (error) {
+        await errorHandling(error);
     }
-
-    const actual_spools = job.children;
-    const inputBox = vscode.window.createInputBox();
-    inputBox.placeholder = "Type here...";
-    inputBox.onDidChangeValue((query) => {
-        query = query.toUpperCase();
-        job["children"] = actual_spools.filter((item) =>
-            `${item["spool"].stepname as string}:${item["spool"].ddname as string} - ${item["spool"]["record-count"] as string}`.includes(query)
-        );
-        jobsProvider.refresh();
-    });
-    inputBox.show();
-    return inputBox;
 }

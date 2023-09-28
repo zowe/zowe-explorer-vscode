@@ -21,5 +21,7 @@
   "cancelJobs.notImplemented": "The cancel function is not implemented in this API.",
   "cancelJobs.notCancelled": "The job was not cancelled.",
   "cancelJobs.failed": "One or more jobs failed to cancel: {0}",
-  "cancelJobs.succeeded": "Cancelled selected jobs successfully."
+  "cancelJobs.succeeded": "Cancelled selected jobs successfully.",
+  "filterJobs.message": "Inorder to filter jobs,first populate them using search icon",
+  "filterJobs.prompt.message": "Type here..."
 }
