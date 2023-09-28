@@ -34,8 +34,8 @@ jobs:
         with:
           node-version: '16.x'
 
-      - name: Install Yarn
-        run: npm install -g yarn
+      - name: Install Yarn and Lerna
+        run: npm install -g yarn lerna@6
 
       - name: Build Source
         run: yarn
