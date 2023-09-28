@@ -39,11 +39,16 @@ export class WebView {
      * The webview entrypoint must be located at <webview folder>/dist/assets/index.js.
      *
      * @param title The title for the new webview
-     * @param dirName The directory name (relative to the "webviews" folder in the extension root) with a valid entrypoint (see above).
+     * @param webviewName The directory name (relative to the "webviews" folder in the extension root) with a valid entrypoint (see above).
      * @param context The VSCode extension context
      * @param onDidReceiveMessage Event callback: called when messages are received from the webview
      */
-    public constructor(title: string, dirName: string, context: ExtensionContext, onDidReceiveMessage?: (message: object) => void | Promise<void>) {
+    public constructor(
+        title: string,
+        webviewName: string,
+        context: ExtensionContext,
+        onDidReceiveMessage?: (message: object) => void | Promise<void>
+    ) {
         this.disposables = [];
 
         // Generate random nonce for loading the bundled script
@@ -52,8 +57,8 @@ export class WebView {
 
         // Build URIs for the webview directory and get the paths as VScode resources
         this.uris.disk = {
-            build: Uri.file(joinPath(context.extensionPath, "webviews", dirName)),
-            script: Uri.file(joinPath(context.extensionPath, "webviews", dirName, "dist", "assets", "index.js")),
+            build: Uri.file(joinPath(context.extensionPath, "src", "webviews")),
+            script: Uri.file(joinPath(context.extensionPath, "src", "webviews", "dist", webviewName, `${webviewName}.js`)),
         };
 
         this.panel = window.createWebviewPanel("ZEAPIWebview", this.title, ViewColumn.Beside, {
