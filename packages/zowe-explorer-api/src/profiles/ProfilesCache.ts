@@ -84,9 +84,9 @@ export class ProfilesCache {
         return require("@zowe/secrets-for-zowe-sdk").keyring;
     }
 
-    public setConfigArray(extendermetadata: zowe.imperative.ICommandProfileTypeConfiguration[]): void {
+    public addToConfigArray(extendermetadata: zowe.imperative.ICommandProfileTypeConfiguration[]): void {
         extendermetadata?.forEach((item) => {
-            this.profileTypeConfigurations.push(item);
+            if (!this.profileTypeConfigurations.some((ele) => ele.type === item.type)) this.profileTypeConfigurations.push(item);
         });
     }
 

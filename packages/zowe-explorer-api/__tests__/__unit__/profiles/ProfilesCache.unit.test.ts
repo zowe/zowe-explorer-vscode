@@ -87,11 +87,11 @@ const baseProfileWithToken = {
 };
 const profilemetadata: zowe.imperative.ICommandProfileTypeConfiguration[] = [
     {
-        type: "rse",
+        type: "acme",
         schema: {
             type: "object",
-            title: "IBM RSE API Zowe Profile",
-            description: "A profile to issue commands to z/OS system",
+            title: "acme profile1",
+            description: "A profile to execute commands",
             properties: {},
         },
     },
@@ -164,10 +164,11 @@ describe("ProfilesCache", () => {
         expect(Object.keys(keyring).length).toBe(5);
     });
 
-    it("setConfigArray should set the profileTypeConfigurations array", () => {
+    it("addToConfigArray should set the profileTypeConfigurations array", () => {
         const profCache = new ProfilesCache(fakeLogger as unknown as zowe.imperative.Logger);
-        profCache.setConfigArray(profilemetadata);
-        expect(profCache.profileTypeConfigurations).toEqual(profilemetadata);
+        profilemetadata.push(profilemetadata[0]);
+        profCache.addToConfigArray(profilemetadata);
+        expect(profCache.profileTypeConfigurations).toEqual(profilemetadata.filter((a, index) => index == 0));
     });
 
     it("getConfigArray should return the data of profileTypeConfigurations Array", () => {
