@@ -253,11 +253,13 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             ];
         } else {
             const newChildren = Object.keys(elementChildren)
-                .sort()
                 .filter((label) => this.children.find((c) => (c.label as string) === label) == null)
                 .map((label) => elementChildren[label]);
 
-            this.children = this.children.concat(newChildren).filter((c) => (c.label as string) in elementChildren);
+            this.children = this.children
+                .concat(newChildren)
+                .filter((c) => (c.label as string) in elementChildren)
+                .sort((a, b) => ((a.label as string) < (b.label as string) ? -1 : 1));
         }
 
         return this.children;
