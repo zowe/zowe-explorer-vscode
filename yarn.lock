@@ -1879,10 +1879,10 @@
   dependencies:
     js-yaml "3.14.1"
 
-"@zowe/secrets-for-zowe-sdk@7.18.3":
-  version "7.18.3"
-  resolved "https://registry.npmjs.org/@zowe/secrets-for-zowe-sdk/-/secrets-for-zowe-sdk-7.18.3.tgz#fa4a02ea0a72e6eaa651dcf9a0d653094f23c5fd"
-  integrity sha512-l/f9yzv7ijqs0epAL3UafCLI2/e+4lvs7s5eKzK9U4Bqr3hIy+Xnr31UDQSEsZaeGBjwrlD4W5koK/bHoAZqJQ==
+"@zowe/secrets-for-zowe-sdk@7.18.4":
+  version "7.18.4"
+  resolved "https://registry.npmjs.org/@zowe/secrets-for-zowe-sdk/-/secrets-for-zowe-sdk-7.18.4.tgz#b755a063217a45bdffffb8d21c30afaad136b08c"
+  integrity sha512-eeVYZ+s9OlgqnHVVopJj3Bz4Ir6gDos5ZiT9Zf+gB6DQaeHFyvC4a2JZrLu9bEMAiVyiCTJydRaspcN4xoEi9Q==
 
 "@zowe/zos-console-for-zowe-sdk@6.40.18":
   version "6.40.18"
