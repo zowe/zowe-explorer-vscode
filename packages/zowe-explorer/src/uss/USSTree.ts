@@ -80,15 +80,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             treeDataProvider: this,
             canSelectMany: true,
         });
-        this.treeView.onDidCollapseElement((e) => {
-            const newIcon = getIconByNode(e.element);
-            if (contextually.isUssDirectory(e.element) || contextually.isUssSession(e.element)) {
-                if (newIcon) {
-                    e.element.iconPath = newIcon;
-                    this.mOnDidChangeTreeData.fire(e.element);
-                }
-            }
-        });
+        this.treeView.onDidCollapseElement(TreeViewUtils.refreshIconOnCollapse([contextually.isUssDirectory, contextually.isUssSession], this));
     }
 
     /**

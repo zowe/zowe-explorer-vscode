@@ -96,15 +96,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             treeDataProvider: this,
             canSelectMany: true,
         });
-        this.treeView.onDidCollapseElement((e) => {
-            const newIcon = getIconByNode(e.element);
-            if (contextually.isPds(e.element) || contextually.isDsSession(e.element)) {
-                if (newIcon) {
-                    e.element.iconPath = newIcon;
-                    this.mOnDidChangeTreeData.fire(e.element);
-                }
-            }
-        });
+        this.treeView.onDidCollapseElement(TreeViewUtils.refreshIconOnCollapse([contextually.isPds, contextually.isDsSession], this));
     }
 
     /**
