@@ -15,4 +15,5 @@ export type FileAttributes = {
     directory: boolean;
     group: string;
     perms: FilePermissions;
+    tag?: string;
 };

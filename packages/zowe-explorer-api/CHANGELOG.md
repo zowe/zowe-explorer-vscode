@@ -6,6 +6,8 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### New features and enhancements
 
+- Added optional `getTag` function to `ZoweExplorerAPI.IUss` for getting the tag of a file on USS.
+
 ### Bug fixes
 
 - Fixed the issue of getting the meta data of profile types for creating the config files by adding the setters and getters in the zowe-explorer-api. [#2394](https://github.com/zowe/vscode-extension-for-zowe/issues/2394)
