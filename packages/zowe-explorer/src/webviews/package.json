@@ -13,10 +13,9 @@
     "clean": "gulp clean",
     "package": "echo \"webviews: nothing to package.\"",
     "test": "echo \"webviews: nothing to test\"",
-    "lint": "yarn lint:pretty",
+    "lint": "echo \"webviews: nothing to lint.\"",
     "lint:html": "echo \"webviews: nothing to lint.\"",
-    "lint:pretty": "prettier --check .",
-    "pretty": "prettier --write .",
+    "pretty": "echo \"edit-attributes: nothing to pretty.\"",
     "madge": "echo \"webviews: nothing to madge.\""
   },
   "dependencies": {
