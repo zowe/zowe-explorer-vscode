@@ -95,6 +95,7 @@ function createGlobalMocks() {
     });
     Object.defineProperty(Gui, "showMessage", { value: jest.fn(), configurable: true });
     Object.defineProperty(Gui, "infoMessage", { value: jest.fn(), configurable: true });
+    Object.defineProperty(Gui, "infoMessage", { value: jest.fn(), configurable: true });
     Object.defineProperty(Gui, "warningMessage", { value: jest.fn(), configurable: true });
     Object.defineProperty(Gui, "errorMessage", { value: jest.fn(), configurable: true });
     Object.defineProperty(Gui, "showOpenDialog", { value: jest.fn(), configurable: true });
@@ -1501,6 +1502,7 @@ describe("Job Actions Unit Tests - Filter Jobs", () => {
 
         await jobActions.filterJobs(testTree, node1);
 
+        expect(mocked(Gui.infoMessage)).toHaveBeenCalled();
         expect(mocked(Gui.infoMessage)).toHaveBeenCalled();
     });
 

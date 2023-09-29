@@ -571,6 +571,7 @@ export async function filterJobs(jobsProvider: IZoweTree<IZoweJobTreeNode>, job:
     const acutal_jobs = job["children"];
     const inputBox = await vscode.window.createInputBox();
     inputBox.placeholder = localize("filterJobs.prompt.message", "Enter local filter...");
+    inputBox.placeholder = localize("filterJobs.prompt.message", "Enter local filter...");
     inputBox.onDidChangeValue((query) => {
         query = query.toUpperCase();
         job["children"] = acutal_jobs.filter((item) => `${item["job"].jobname}(${item["job"].jobid}) - ${item["job"].retcode}`.includes(query));
