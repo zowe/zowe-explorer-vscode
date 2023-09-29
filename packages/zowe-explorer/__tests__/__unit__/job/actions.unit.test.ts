@@ -94,6 +94,7 @@ function createGlobalMocks() {
         configurable: true,
     });
     Object.defineProperty(Gui, "showMessage", { value: jest.fn(), configurable: true });
+    Object.defineProperty(Gui, "infoMessage", { value: jest.fn(), configurable: true });
     Object.defineProperty(Gui, "warningMessage", { value: jest.fn(), configurable: true });
     Object.defineProperty(Gui, "errorMessage", { value: jest.fn(), configurable: true });
     Object.defineProperty(Gui, "showOpenDialog", { value: jest.fn(), configurable: true });
@@ -1476,7 +1477,7 @@ describe("Job Actions Unit Tests - Filter Jobs", () => {
 
         await jobActions.filterJobs(testTree);
 
-        expect(mocked(vscode.window.showInformationMessage)).toHaveBeenCalled();
+        expect(mocked(Gui.infoMessage)).toHaveBeenCalled();
     });
 
     it("To filter jobs based on a combination of JobName, JobId and Return code", async () => {
@@ -1563,23 +1564,23 @@ describe("Job Actions Unit Tests - Filter Spools", () => {
     );
 
     it("To check a job is expanded or not when filter spools option is choosen", async () => {
-        const testTree = new ZosJobsProvider();
+        const testTree = blockMocks.testJobTree;
         node1.collapsibleState = 1;
         const filterSpoolsSpy = jest.spyOn(jobActions, "filterSpools");
         const createInputBoxSpy = jest.spyOn(vscode.window, "createInputBox");
         mockInputBox.value = "DELETE:SYSPRINT - 7";
         createInputBoxSpy.mockReturnValue(mockInputBox);
 
-        await jobActions.filterSpools(testTree, node1, blockMocks.testJobTree);
+        await jobActions.filterSpools(testTree, node1);
 
         expect(createInputBoxSpy).toHaveBeenCalled();
         expect(filterSpoolsSpy).toHaveBeenCalled();
-        expect(filterSpoolsSpy).toBeCalledWith(testTree, node1, blockMocks.testJobTree);
+        expect(filterSpoolsSpy).toBeCalledWith(testTree, node1);
         expect(filterSpoolsSpy.mock.calls[0][1].collapsibleState).toBe(vscode.TreeItemCollapsibleState.Expanded);
     });
 
     it("To filter spools based on a combination of stepname, ddname and record-count", async () => {
-        const testTree = new ZosJobsProvider();
+        const testTree = blockMocks.testJobTree;
         node1.collapsibleState = 1;
         node1.children = [spoolNode1, spoolNode2];
         testTree.mSessionNodes[0].children = [node1];
@@ -1588,13 +1589,13 @@ describe("Job Actions Unit Tests - Filter Spools", () => {
         createInputBoxSpy.mockReturnValue(mockInputBox);
         const filterSpoolsSpy = jest.spyOn(jobActions, "filterSpools");
 
-        await jobActions.filterSpools(testTree, node1, blockMocks.testJobTree);
+        await jobActions.filterSpools(testTree, node1);
         node1.children = [spoolNode1];
         testTree.mSessionNodes[0].children = [node1];
 
         expect(createInputBoxSpy).toHaveBeenCalled();
         expect(filterSpoolsSpy).toHaveBeenCalled();
-        expect(filterSpoolsSpy).toBeCalledWith(testTree, node1, blockMocks.testJobTree);
+        expect(filterSpoolsSpy).toBeCalledWith(testTree, node1);
         expect(filterSpoolsSpy.mock.calls[0][0].mSessionNodes[0].children).toBe(testTree.mSessionNodes[0].children);
     });
 });

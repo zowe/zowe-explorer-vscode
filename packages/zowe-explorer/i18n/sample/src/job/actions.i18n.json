@@ -22,6 +22,6 @@
   "cancelJobs.notCancelled": "The job was not cancelled.",
   "cancelJobs.failed": "One or more jobs failed to cancel: {0}",
   "cancelJobs.succeeded": "Cancelled selected jobs successfully.",
-  "filterJobs.message": "Inorder to filter jobs,first populate them using search icon",
-  "filterJobs.prompt.message": "Type here..."
+  "filterJobs.message": "Use the search button to display jobs",
+  "filterJobs.prompt.message": "Enter local filter..."
 }

@@ -24,9 +24,7 @@ import { ZoweLogger } from "../utils/LoggerUtils";
 
 export async function initJobsProvider(context: vscode.ExtensionContext): Promise<IZoweTree<IZoweJobTreeNode>> {
     ZoweLogger.trace("job.init.initJobsProvider called.");
-    const data = await createJobsTree(globals.LOG);
-    const jobsProvider: IZoweTree<IZoweJobTreeNode> = data;
-    const zoweFileProvider: IZoweTree<IZoweNodeType> = data;
+    const jobsProvider: IZoweTree<IZoweJobTreeNode> = await createJobsTree(globals.LOG);
     if (jobsProvider == null) {
         return null;
     }
@@ -181,10 +179,9 @@ export async function initJobsProvider(context: vscode.ExtensionContext): Promis
             await jobActions.filterJobs(jobsProvider);
         })
     );
-
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.jobs.filterSpools", async (job) => {
-            await jobActions.filterSpools(jobsProvider, job, zoweFileProvider);
+            await jobActions.filterSpools(jobsProvider, job);
         })
     );
 

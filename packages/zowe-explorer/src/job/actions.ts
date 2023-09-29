@@ -551,7 +551,7 @@ export async function filterJobs(jobsProvider: IZoweTree<IZoweJobTreeNode>): Pro
         if (level.label === "zosmf") {
             acutal_jobs = level.children;
             if (level.collapsibleState === vscode.TreeItemCollapsibleState.Collapsed) {
-                Gui.infoMessage(localize("filterJobs.message", "Inorder to filter jobs,first populate them using search icon"));
+                Gui.infoMessage(localize("filterJobs.message", "Use the search button to display jobs"));
                 flag = true;
             }
         }
@@ -559,7 +559,7 @@ export async function filterJobs(jobsProvider: IZoweTree<IZoweJobTreeNode>): Pro
     if (flag) return;
 
     const inputBox = await vscode.window.createInputBox();
-    inputBox.placeholder = localize("filterJobs.prompt.message", "Type here...");
+    inputBox.placeholder = localize("filterJobs.prompt.message", "Enter local filter...");
     inputBox.onDidChangeValue((query) => {
         query = query.toUpperCase();
         for (const level of jobsProvider.mSessionNodes) {
@@ -575,11 +575,7 @@ export async function filterJobs(jobsProvider: IZoweTree<IZoweJobTreeNode>): Pro
     return inputBox;
 }
 
-export async function filterSpools(
-    jobsProvider: IZoweTree<IZoweJobTreeNode>,
-    job: IZoweJobTreeNode,
-    zoweFileProvider: IZoweTree<IZoweNodeType>
-): Promise<vscode.InputBox> {
+export async function filterSpools(jobsProvider: IZoweTree<IZoweJobTreeNode>, job: IZoweJobTreeNode): Promise<vscode.InputBox> {
     try {
         if (job["collapsibleState"] == vscode.TreeItemCollapsibleState.Collapsed) {
             const Spools = (await getSpoolFiles(job)).map((spool) => {
@@ -596,14 +592,14 @@ export async function filterSpools(
             });
             job.children = Spools;
 
-            await TreeViewUtils.expandNode(job, zoweFileProvider);
+            await TreeViewUtils.expandNode(job, jobsProvider);
             job.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
             jobsProvider.refresh();
         }
 
         const actual_spools = job.children;
         const inputBox = vscode.window.createInputBox();
-        inputBox.placeholder = localize("filterJobs.prompt.message", "Type here...");
+        inputBox.placeholder = localize("filterJobs.prompt.message", "Enter local filter...");
         inputBox.onDidChangeValue((query) => {
             query = query.toUpperCase();
             job["children"] = actual_spools.filter((item) =>
