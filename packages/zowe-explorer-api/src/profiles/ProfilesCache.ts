@@ -86,7 +86,13 @@ export class ProfilesCache {
 
     public addToConfigArray(extendermetadata: zowe.imperative.ICommandProfileTypeConfiguration[]): void {
         extendermetadata?.forEach((item) => {
-            if (!this.profileTypeConfigurations.some((ele) => ele.type === item.type)) this.profileTypeConfigurations.push(item);
+            let index = this.profileTypeConfigurations.findIndex((ele) => ele.type == item.type)
+            if(index!=-1){
+                this.profileTypeConfigurations[index] = item;
+            }
+            else{
+                this.profileTypeConfigurations.push(item);
+            }
         });
     }
 
