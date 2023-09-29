@@ -225,6 +225,8 @@ export function registerCommonCommands(context: vscode.ExtensionContext, provide
                 return globals.FILE_SELECTED_TO_COMPARE;
             })
         );
+        // initialize the globals.filesToCompare array during initialization
+        globals.resetCompareChoices();
     }
 }
 
