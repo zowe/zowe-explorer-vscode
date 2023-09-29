@@ -13,7 +13,7 @@ import * as globals from "../globals";
 import * as vscode from "vscode";
 import * as jobActions from "./actions";
 import * as refreshActions from "../shared/refresh";
-import { IZoweJobTreeNode, IZoweTreeNode, IZoweTree, IZoweNodeType } from "@zowe/zowe-explorer-api";
+import { IZoweJobTreeNode, IZoweTreeNode, IZoweTree } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { createJobsTree } from "./ZosJobsProvider";
 import * as contextuals from "../shared/context";
