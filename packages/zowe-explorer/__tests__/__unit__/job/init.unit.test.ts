@@ -54,6 +54,8 @@ describe("Test src/jobs/extension", () => {
             onDidChangeConfiguration: jest.fn(),
             pollData: jest.fn(),
             refreshElement: jest.fn(),
+            filterJobs: jest.fn(),
+            filterSpools: jest.fn(),
         };
         const commands: IJestIt[] = [
             {
@@ -218,6 +220,14 @@ describe("Test src/jobs/extension", () => {
                 name: "zowe.jobs.cancelJob",
                 mock: [{ spy: jest.spyOn(jobActions, "cancelJobs"), arg: [jobsProvider, [exampleData.job]] }],
                 parm: [exampleData.job],
+            },
+            {
+                name: "zowe.jobs.filterJobs",
+                mock: [{ spy: jest.spyOn(jobActions, "filterJobs"), arg: [jobsProvider] }],
+            },
+            {
+                name: "zowe.jobs.filterSpools",
+                mock: [{ spy: jest.spyOn(jobActions, "filterSpools"), arg: [jobsProvider, test.value] }],
             },
         ];
 
