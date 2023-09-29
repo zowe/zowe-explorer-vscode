@@ -27,6 +27,7 @@ import { ZoweLogger } from "../utils/LoggerUtils";
 import { ZoweSaveQueue } from "../abstract/ZoweSaveQueue";
 import { SettingsConfig } from "../utils/SettingsConfig";
 import { spoolFilePollEvent } from "../job/actions";
+import { LocalFileManagement } from "../utils/LocalFileManagement";
 
 // Set up localization
 nls.config({
@@ -198,6 +199,30 @@ export function registerCommonCommands(context: vscode.ExtensionContext, provide
                 } else {
                     await MvsCommandHandler.getInstance().issueMvsCommand();
                 }
+            })
+        );
+        context.subscriptions.push(
+            vscode.commands.registerCommand("zowe.selectForCompare", (node: IZoweTreeNode) => {
+                if (globals.filesToCompare.length > 0) {
+                    globals.resetCompareChoices();
+                }
+                globals.filesToCompare.push(node);
+                globals.setCompareSelectionTrue();
+                ZoweLogger.trace(`${String(globals.filesToCompare[0].label)} selected for compare.`);
+            })
+        );
+        context.subscriptions.push(
+            vscode.commands.registerCommand("zowe.compareWithSelected", async (node: IZoweTreeNode) => {
+                globals.filesToCompare.push(node);
+                ZoweLogger.trace(`${String(globals.filesToCompare[0].label)} will be compared with selected.`);
+                await LocalFileManagement.compareChosenFileContent();
+                globals.resetCompareChoices();
+            })
+        );
+        context.subscriptions.push(
+            vscode.commands.registerCommand("zowe.compareFileStarted", () => {
+                ZoweLogger.trace(`Checking if any files have been chosen for compare: ${String(globals.FILE_SELECTED_TO_COMPARE)}`);
+                return globals.FILE_SELECTED_TO_COMPARE;
             })
         );
     }
