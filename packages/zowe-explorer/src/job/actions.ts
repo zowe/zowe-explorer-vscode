@@ -14,13 +14,12 @@ import * as zowe from "@zowe/cli";
 import { errorHandling } from "../utils/ProfilesUtils";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
-import { Gui, IZoweTree, IZoweJobTreeNode, IZoweNodeType } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweTree, IZoweJobTreeNode } from "@zowe/zowe-explorer-api";
 import { Job, Spool } from "./ZoweJobNode";
 import * as nls from "vscode-nls";
 import SpoolProvider, { encodeJobFile, getSpoolFiles, matchSpool } from "../SpoolProvider";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { getDefaultUri } from "../shared/utils";
-import { TreeViewUtils } from "../utils/TreeViewUtils";
 import { TreeViewUtils } from "../utils/TreeViewUtils";
 
 // Set up localization
