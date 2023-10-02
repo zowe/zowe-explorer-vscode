@@ -1,4 +1,4 @@
 out
 results
 scripts
-webviews/**/dist
+src/webviews/dist
