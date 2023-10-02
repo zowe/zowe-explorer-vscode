@@ -41,5 +41,5 @@ jobs:
       # install pnpm
       - run: npm install -g pnpm
 
-      - run: for dir in samples/*; do pushd $dir && pnpm i && pnpm run compile && popd; done
+      - run: for dir in samples/*; do pushd $dir && pnpm --ignore-workspace i && pnpm run compile && popd; done
         shell: bash
