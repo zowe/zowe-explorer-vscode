@@ -12,6 +12,7 @@
 import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
 import * as sharedMock from "../../../__mocks__/mockCreators/shared";
 import * as dsMock from "../../../__mocks__/mockCreators/datasets";
+import * as unixMock from "../../../__mocks__/mockCreators/uss";
 import * as profUtils from "../../../src/utils/ProfilesUtils";
 import { ProfileManagement } from "../../../src/utils/ProfileManagement";
 import { Gui } from "@zowe/zowe-explorer-api";
@@ -19,6 +20,7 @@ import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 import { Profiles } from "../../../src/Profiles";
 import * as vscode from "vscode";
 import { imperative } from "@zowe/cli";
+import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
 
 jest.mock("fs");
 jest.mock("vscode");
@@ -36,6 +38,7 @@ describe("ProfileManagement unit tests", () => {
             mockNoAuthProfile: sharedMock.createNoAuthIProfile(),
             opCancelledSpy: jest.spyOn(Gui, "infoMessage"),
             mockDsSessionNode: ZoweDatasetNode,
+            mockUnixSessionNode: ZoweUSSNode,
             mockResolveQp: jest.fn(),
             mockCreateQp: jest.fn(),
             mockUpdateChosen: ProfileManagement.basicAuthUpdateQpItems[ProfileManagement.AuthQpLabels.update],
@@ -44,6 +47,9 @@ describe("ProfileManagement unit tests", () => {
             mockLogoutChosen: ProfileManagement.tokenAuthLogoutQpItem[ProfileManagement.AuthQpLabels.logout],
             mockEditProfChosen: ProfileManagement.editProfileQpItems[ProfileManagement.AuthQpLabels.edit],
             mockDeleteProfChosen: ProfileManagement.deleteProfileQpItem[ProfileManagement.AuthQpLabels.delete],
+            mockHideProfChosen: ProfileManagement.hideProfileQpItems[ProfileManagement.AuthQpLabels.hide],
+            mockEnableValidationChosen: ProfileManagement.enableProfileValildationQpItem[ProfileManagement.AuthQpLabels.enable],
+            mockDisableValidationChosen: ProfileManagement.disableProfileValildationQpItem[ProfileManagement.AuthQpLabels.disable],
             mockProfileInfo: { usingTeamConfig: true },
             mockProfileInstance: null as any,
             debugLogSpy: null as any,
@@ -52,6 +58,7 @@ describe("ProfileManagement unit tests", () => {
             loginSpy: null as any,
             logoutSpy: null as any,
             logMsg: null as any,
+            commandSpy: null as any,
         };
         Object.defineProperty(profUtils.ProfilesUtils, "promptCredentials", { value: jest.fn(), configurable: true });
         newMocks.promptSpy = jest.spyOn(profUtils.ProfilesUtils, "promptCredentials");
@@ -82,6 +89,8 @@ describe("ProfileManagement unit tests", () => {
         newMocks.loginSpy = jest.spyOn(newMocks.mockProfileInstance, "ssoLogin");
         Object.defineProperty(newMocks.mockProfileInstance, "ssoLogout", { value: jest.fn(), configurable: true });
         newMocks.logoutSpy = jest.spyOn(newMocks.mockProfileInstance, "ssoLogout");
+        Object.defineProperty(vscode.commands, "executeCommand", { value: jest.fn(), configurable: true });
+        newMocks.commandSpy = jest.spyOn(vscode.commands, "executeCommand");
 
         return newMocks;
     }
@@ -90,7 +99,6 @@ describe("ProfileManagement unit tests", () => {
         function createBlockMocks(globalMocks): any {
             globalMocks.logMsg = `Profile ${globalMocks.mockBasicAuthProfile.name} is using basic authentication.`;
             globalMocks.mockDsSessionNode.getProfile = jest.fn().mockReturnValue(globalMocks.mockBasicAuthProfile);
-            Object.defineProperty(vscode.commands, "executeCommand", { value: jest.fn(), configurable: true });
             return globalMocks;
         }
         it("profile using basic authentication should see Operation Cancelled when escaping quick pick", async () => {
@@ -125,22 +133,34 @@ describe("ProfileManagement unit tests", () => {
             expect(mocks.debugLogSpy).toBeCalledWith(mocks.logMsg);
             expect(mocks.editSpy).toBeCalled();
         });
+        it("profile using basic authentication should see hide session command called for profile in data set tree view", async () => {
+            const mocks = createBlockMocks(createGlobalMocks());
+            Object.defineProperty(mocks.mockProfileInstance, "getProfileInfo", {
+                value: jest.fn().mockResolvedValue(mocks.mockProfileInfo as imperative.ProfileInfo),
+                configurable: true,
+            });
+            mocks.mockResolveQp.mockResolvedValueOnce(mocks.mockHideProfChosen);
+            await ProfileManagement.manageProfile(mocks.mockDsSessionNode);
+            expect(mocks.debugLogSpy).toBeCalledWith(mocks.logMsg);
+            expect(mocks.commandSpy).toHaveBeenLastCalledWith("zowe.ds.removeSession", mocks.mockDsSessionNode);
+        });
         it("profile using basic authentication should see delete commands called when Delete Profile chosen with v1 profile", async () => {
             const mocks = createBlockMocks(createGlobalMocks());
             mocks.mockResolveQp.mockResolvedValueOnce(mocks.mockDeleteProfChosen);
             mocks.mockProfileInfo.usingTeamConfig = false;
-            const commandSpy = jest.spyOn(vscode.commands, "executeCommand");
             await ProfileManagement.manageProfile(mocks.mockDsSessionNode);
             expect(mocks.debugLogSpy).toBeCalledWith(mocks.logMsg);
             expect(mocks.editSpy).not.toBeCalled();
-            expect(commandSpy).toBeCalled();
+            expect(mocks.commandSpy).toHaveBeenLastCalledWith("zowe.ds.deleteProfile", mocks.mockDsSessionNode);
         });
     });
     describe("unit tests around token auth selections", () => {
         function createBlockMocks(globalMocks): any {
             globalMocks.logMsg = `Profile ${globalMocks.mockTokenAuthProfile.name} is using token authentication.`;
+            globalMocks.mockUnixSessionNode = unixMock.createUSSSessionNode(globalMocks.mockSession, globalMocks.mockBasicAuthProfile) as any;
             Object.defineProperty(profUtils.ProfilesUtils, "isUsingTokenAuth", { value: jest.fn().mockResolvedValueOnce(true), configurable: true });
             globalMocks.mockDsSessionNode.getProfile = jest.fn().mockReturnValue(globalMocks.mockTokenAuthProfile);
+            globalMocks.mockUnixSessionNode.getProfile = jest.fn().mockReturnValue(globalMocks.mockTokenAuthProfile);
             return globalMocks;
         }
         it("profile using token authentication should see Operation Cancelled when escaping quick pick", async () => {
@@ -163,6 +183,27 @@ describe("ProfileManagement unit tests", () => {
             await ProfileManagement.manageProfile(mocks.mockDsSessionNode);
             expect(mocks.debugLogSpy).toBeCalledWith(mocks.logMsg);
             expect(mocks.logoutSpy).toBeCalled();
+        });
+        it("profile using token authentication should see correct command called for hiding a unix tree session node", async () => {
+            const mocks = createBlockMocks(createGlobalMocks());
+            mocks.mockResolveQp.mockResolvedValueOnce(mocks.mockHideProfChosen);
+            await ProfileManagement.manageProfile(mocks.mockUnixSessionNode);
+            expect(mocks.debugLogSpy).toBeCalledWith(mocks.logMsg);
+            expect(mocks.commandSpy).toHaveBeenLastCalledWith("zowe.uss.removeSession", mocks.mockUnixSessionNode);
+        });
+        it("profile using token authentication should see correct command called for enabling validation a unix tree session node", async () => {
+            const mocks = createBlockMocks(createGlobalMocks());
+            mocks.mockResolveQp.mockResolvedValueOnce(mocks.mockEnableValidationChosen);
+            await ProfileManagement.manageProfile(mocks.mockUnixSessionNode);
+            expect(mocks.debugLogSpy).toBeCalledWith(mocks.logMsg);
+            expect(mocks.commandSpy).toHaveBeenLastCalledWith("zowe.uss.enableValidation", mocks.mockUnixSessionNode);
+        });
+        it("profile using token authentication should see correct command called for disabling validation a unix tree session node", async () => {
+            const mocks = createBlockMocks(createGlobalMocks());
+            mocks.mockResolveQp.mockResolvedValueOnce(mocks.mockDisableValidationChosen);
+            await ProfileManagement.manageProfile(mocks.mockUnixSessionNode);
+            expect(mocks.debugLogSpy).toBeCalledWith(mocks.logMsg);
+            expect(mocks.commandSpy).toHaveBeenLastCalledWith("zowe.uss.disableValidation", mocks.mockUnixSessionNode);
         });
     });
     describe("unit tests around no auth declared selections", () => {
@@ -199,6 +240,20 @@ describe("ProfileManagement unit tests", () => {
             await ProfileManagement.manageProfile(mocks.mockDsSessionNode);
             expect(mocks.debugLogSpy).toBeCalledWith(mocks.logMsg);
             expect(mocks.editSpy).toBeCalled();
+        });
+        it("profile using token authentication should see correct command called for enabling validation a data set tree session node", async () => {
+            const mocks = createBlockMocks(createGlobalMocks());
+            mocks.mockResolveQp.mockResolvedValueOnce(mocks.mockEnableValidationChosen);
+            await ProfileManagement.manageProfile(mocks.mockDsSessionNode);
+            expect(mocks.debugLogSpy).toBeCalledWith(mocks.logMsg);
+            expect(mocks.commandSpy).toHaveBeenLastCalledWith("zowe.ds.enableValidation", mocks.mockDsSessionNode);
+        });
+        it("profile using token authentication should see correct command called for disabling validation a data set tree session node", async () => {
+            const mocks = createBlockMocks(createGlobalMocks());
+            mocks.mockResolveQp.mockResolvedValueOnce(mocks.mockDisableValidationChosen);
+            await ProfileManagement.manageProfile(mocks.mockDsSessionNode);
+            expect(mocks.debugLogSpy).toBeCalledWith(mocks.logMsg);
+            expect(mocks.commandSpy).toHaveBeenLastCalledWith("zowe.ds.disableValidation", mocks.mockDsSessionNode);
         });
     });
 });
