@@ -648,10 +648,12 @@ export class Profiles extends ProfilesCache {
 
             const impConfig: zowe.imperative.IImperativeConfig = zowe.getImperativeConfig();
             const knownCliConfig: zowe.imperative.ICommandProfileTypeConfiguration[] = impConfig.profiles;
-            // add extenders config info from global variable
-            globals.EXTENDER_CONFIG.forEach((item) => {
+
+            const extenderinfo = this.getConfigArray();
+            extenderinfo.forEach((item) => {
                 knownCliConfig.push(item);
             });
+
             knownCliConfig.push(impConfig.baseProfile);
             config.setSchema(zowe.imperative.ConfigSchema.buildSchema(knownCliConfig));
 
