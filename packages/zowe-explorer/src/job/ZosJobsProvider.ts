@@ -139,6 +139,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             treeDataProvider: this,
             canSelectMany: true,
         });
+        this.treeView.onDidCollapseElement(TreeViewUtils.refreshIconOnCollapse([contextually.isJob, contextually.isJobsSession], this));
     }
 
     public rename(_node: IZoweJobTreeNode): void {

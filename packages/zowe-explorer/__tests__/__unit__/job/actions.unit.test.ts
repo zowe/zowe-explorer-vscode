@@ -45,6 +45,7 @@ import { SpoolFile } from "../../../src/SpoolProvider";
 const activeTextEditorDocument = jest.fn();
 
 function createGlobalMocks() {
+    jest.spyOn(Gui, "createTreeView").mockReturnValue({ onDidCollapseElement: jest.fn() } as any);
     Object.defineProperty(vscode.workspace, "getConfiguration", {
         value: jest.fn().mockImplementation(() => new Map([["zowe.jobs.confirmSubmission", false]])),
         configurable: true,

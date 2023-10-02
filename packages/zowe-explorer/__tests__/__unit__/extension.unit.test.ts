@@ -45,7 +45,7 @@ async function createGlobalMocks() {
         mockMoveSync: jest.fn(),
         mockGetAllProfileNames: jest.fn(),
         mockReveal: jest.fn(),
-        mockCreateTreeView: jest.fn(),
+        mockCreateTreeView: jest.fn().mockReturnValue({ onDidCollapseElement: jest.fn() }),
         mockExecuteCommand: jest.fn(),
         mockRegisterCommand: jest.fn(),
         mockOnDidSaveTextDocument: jest.fn(),

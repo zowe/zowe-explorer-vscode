@@ -77,7 +77,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         if (icon) {
             this.iconPath = icon.path;
         }
-        if (!globals.ISTHEIA && this.getParent() && contextually.isSession(this.getParent())) {
+        if (!globals.ISTHEIA && contextually.isSession(this)) {
             this.id = `${mParent?.id ?? mParent?.label?.toString() ?? "<root>"}.${this.label as string}`;
         }
     }
@@ -256,10 +256,14 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 .filter((label) => this.children.find((c) => (c.label as string) === label) == null)
                 .map((label) => elementChildren[label]);
 
-            this.children = this.children
-                .concat(newChildren)
-                .filter((c) => (c.label as string) in elementChildren)
-                .sort((a, b) => ((a.label as string) < (b.label as string) ? -1 : 1));
+            const removedChildren = this.children.filter((c) => !((c.label as string) in elementChildren));
+
+            if (newChildren.length > 0 || removedChildren.length > 0) {
+                this.children = this.children
+                    .concat(newChildren)
+                    .filter((c) => !removedChildren.includes(c))
+                    .sort((a, b) => ((a.label as string) < (b.label as string) ? -1 : 1));
+            }
         }
 
         return this.children;
