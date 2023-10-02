@@ -10,12 +10,14 @@
  */
 
 import * as vscode from "vscode";
+import * as globals from "../globals";
 import { Gui, IZoweTreeNode, imperative } from "@zowe/zowe-explorer-api";
 import { ZoweLogger } from "./LoggerUtils";
 import { ProfilesUtils } from "./ProfilesUtils";
 import * as nls from "vscode-nls";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
+import { isZoweDatasetTreeNode, isZoweUSSTreeNode } from "../shared/utils";
 
 // Set up localization
 nls.config({
@@ -31,18 +33,18 @@ export class ProfileManagement {
         switch (true) {
             case ProfilesUtils.isProfileUsingBasicAuth(profile): {
                 ZoweLogger.debug(`Profile ${profile.name} is using basic authentication.`);
-                selected = await this.setupProfileManagementQp(imperative.SessConstants.AUTH_TYPE_BASIC, profile);
+                selected = await this.setupProfileManagementQp(imperative.SessConstants.AUTH_TYPE_BASIC, node);
                 break;
             }
             case await ProfilesUtils.isUsingTokenAuth(profile.name): {
                 ZoweLogger.debug(`Profile ${profile.name} is using token authentication.`);
-                selected = await this.setupProfileManagementQp("token", profile);
+                selected = await this.setupProfileManagementQp("token", node);
                 break;
             }
             // will need a case for isUsingCertAuth
             default: {
                 ZoweLogger.debug(`Profile ${profile.name} authentication method is unkown.`);
-                selected = await this.setupProfileManagementQp(null, profile);
+                selected = await this.setupProfileManagementQp(null, node);
                 break;
             }
         }
@@ -50,8 +52,11 @@ export class ProfileManagement {
     }
     public static AuthQpLabels = {
         add: "add-credentials",
-        delete: "delete",
+        delete: "delete-profile",
+        disable: "disable-validation",
         edit: "edit-profile",
+        enable: "enable-validation",
+        hide: "hide-profile",
         login: "obtain-token",
         logout: "invalidate-token",
         update: "update-credentials",
@@ -73,10 +78,28 @@ export class ProfileManagement {
             label: localize("deleteProfileQpItem.delete.qpLabel", "$(trash) Delete Profile"),
         },
     };
+    public static disableProfileValildationQpItem: Record<string, vscode.QuickPickItem> = {
+        [this.AuthQpLabels.disable]: {
+            label: localize("disableProfileValildationQpItem.disableValidation.qpLabel", "$(workspace-untrusted) Disable Profile Validation"),
+            description: localize("disableProfileValildationQpItem.disableValidation.qpDetail", "Disable validation of server check for profile."),
+        },
+    };
+    public static enableProfileValildationQpItem: Record<string, vscode.QuickPickItem> = {
+        [this.AuthQpLabels.enable]: {
+            label: localize("enableProfileValildationQpItem.enableValidation.qpLabel", "$(workspace-trusted) Enable Profile Validation"),
+            description: localize("enableProfileValildationQpItem.enableValidation.qpDetail", "Enable validation of server check for profile."),
+        },
+    };
     public static editProfileQpItems: Record<string, vscode.QuickPickItem> = {
         [this.AuthQpLabels.edit]: {
             label: localize("editProfileQpItem.editProfile.qpLabel", "$(pencil) Edit Profile"),
             description: localize("editProfileQpItem.editProfile.qpDetail", "Update profile connection information"),
+        },
+    };
+    public static hideProfileQpItems: Record<string, vscode.QuickPickItem> = {
+        [this.AuthQpLabels.hide]: {
+            label: localize("hideProfileQpItems.hideProfile.qpLabel", "$(eye-closed) Hide Profile"),
+            description: localize("hideProfileQpItems.hideProfile.qpDetail", "Hide profile name from tree view."),
         },
     };
     public static tokenAuthLoginQpItem: Record<string, vscode.QuickPickItem> = {
@@ -91,23 +114,24 @@ export class ProfileManagement {
             description: localize("logoutQpItem.logout.qpDetail", "Log out to invalidate and remove stored token value"),
         },
     };
-    private static async setupProfileManagementQp(managementType: string, profile: imperative.IProfileLoaded): Promise<vscode.QuickPickItem> {
+    private static async setupProfileManagementQp(managementType: string, node: IZoweTreeNode): Promise<vscode.QuickPickItem> {
+        const profile = node.getProfile();
         const qp = Gui.createQuickPick();
         let quickPickOptions: vscode.QuickPickItem[];
         const placeholders = this.getQpPlaceholders(profile);
         switch (managementType) {
             case imperative.SessConstants.AUTH_TYPE_BASIC: {
-                quickPickOptions = this.basicAuthQp();
+                quickPickOptions = this.basicAuthQp(node);
                 qp.placeholder = placeholders.basicAuth;
                 break;
             }
             case "token": {
-                quickPickOptions = this.tokenAuthQp(profile);
+                quickPickOptions = this.tokenAuthQp(node);
                 qp.placeholder = placeholders.tokenAuth;
                 break;
             }
             default: {
-                quickPickOptions = this.chooseAuthQp(profile);
+                quickPickOptions = this.chooseAuthQp(node);
                 qp.placeholder = placeholders.chooseAuth;
                 break;
             }
@@ -142,8 +166,20 @@ export class ProfileManagement {
                 await ProfilesUtils.promptCredentials(node);
                 break;
             }
+            case this.hideProfileQpItems[this.AuthQpLabels.hide]: {
+                await this.handleHideProfiles(node);
+                break;
+            }
             case this.deleteProfileQpItem[this.AuthQpLabels.delete]: {
                 await this.handleDeleteProfiles(node);
+                break;
+            }
+            case this.enableProfileValildationQpItem[this.AuthQpLabels.enable]: {
+                await this.handleEnableProfileValidation(node);
+                break;
+            }
+            case this.disableProfileValildationQpItem[this.AuthQpLabels.disable]: {
+                await this.handleDisableProfileValidation(node);
                 break;
             }
             default: {
@@ -165,18 +201,20 @@ export class ProfileManagement {
         };
     }
 
-    private static basicAuthQp(): vscode.QuickPickItem[] {
+    private static basicAuthQp(node: IZoweTreeNode): vscode.QuickPickItem[] {
         const quickPickOptions: vscode.QuickPickItem[] = Object.values(this.basicAuthUpdateQpItems);
-        return this.addFinalQpOptions(quickPickOptions);
+        return this.addFinalQpOptions(node, quickPickOptions);
     }
-    private static tokenAuthQp(profile: imperative.IProfileLoaded): vscode.QuickPickItem[] {
+    private static tokenAuthQp(node: IZoweTreeNode): vscode.QuickPickItem[] {
+        const profile = node.getProfile();
         const quickPickOptions: vscode.QuickPickItem[] = Object.values(this.tokenAuthLoginQpItem);
         if (profile.profile.tokenType) {
             quickPickOptions.push(this.tokenAuthLogoutQpItem[this.AuthQpLabels.logout]);
         }
-        return this.addFinalQpOptions(quickPickOptions);
+        return this.addFinalQpOptions(node, quickPickOptions);
     }
-    private static chooseAuthQp(profile: imperative.IProfileLoaded): vscode.QuickPickItem[] {
+    private static chooseAuthQp(node: IZoweTreeNode): vscode.QuickPickItem[] {
+        const profile = node.getProfile();
         const quickPickOptions: vscode.QuickPickItem[] = Object.values(this.basicAuthAddQpItems);
         try {
             ZoweExplorerApiRegister.getInstance().getCommonApi(profile).getTokenTypeName();
@@ -184,10 +222,16 @@ export class ProfileManagement {
         } catch {
             ZoweLogger.debug(`Profile ${profile.name} doesn't support token authentication, will not provide option.`);
         }
-        return this.addFinalQpOptions(quickPickOptions);
+        return this.addFinalQpOptions(node, quickPickOptions);
     }
-    private static addFinalQpOptions(quickPickOptions: vscode.QuickPickItem[]): vscode.QuickPickItem[] {
+    private static addFinalQpOptions(node: IZoweTreeNode, quickPickOptions: vscode.QuickPickItem[]): vscode.QuickPickItem[] {
+        if (node.contextValue.includes(globals.NO_VALIDATE_SUFFIX)) {
+            quickPickOptions.push(this.enableProfileValildationQpItem[this.AuthQpLabels.enable]);
+        } else {
+            quickPickOptions.push(this.disableProfileValildationQpItem[this.AuthQpLabels.disable]);
+        }
         quickPickOptions.push(this.editProfileQpItems[this.AuthQpLabels.edit]);
+        quickPickOptions.push(this.hideProfileQpItems[this.AuthQpLabels.hide]);
         quickPickOptions.push(this.deleteProfileQpItem[this.AuthQpLabels.delete]);
         return quickPickOptions;
     }
@@ -199,5 +243,35 @@ export class ProfileManagement {
             return;
         }
         await vscode.commands.executeCommand("zowe.ds.deleteProfile", node);
+    }
+
+    private static async handleHideProfiles(node: IZoweTreeNode): Promise<void> {
+        if (isZoweDatasetTreeNode(node)) {
+            return vscode.commands.executeCommand("zowe.ds.removeSession", node);
+        }
+        if (isZoweUSSTreeNode(node)) {
+            return vscode.commands.executeCommand("zowe.uss.removeSession", node);
+        }
+        return vscode.commands.executeCommand("zowe.jobs.removeJobsSession", node);
+    }
+
+    private static async handleEnableProfileValidation(node: IZoweTreeNode): Promise<void> {
+        if (isZoweDatasetTreeNode(node)) {
+            return vscode.commands.executeCommand("zowe.ds.enableValidation", node);
+        }
+        if (isZoweUSSTreeNode(node)) {
+            return vscode.commands.executeCommand("zowe.uss.enableValidation", node);
+        }
+        return vscode.commands.executeCommand("zowe.jobs.enableValidation", node);
+    }
+
+    private static async handleDisableProfileValidation(node: IZoweTreeNode): Promise<void> {
+        if (isZoweDatasetTreeNode(node)) {
+            return vscode.commands.executeCommand("zowe.ds.disableValidation", node);
+        }
+        if (isZoweUSSTreeNode(node)) {
+            return vscode.commands.executeCommand("zowe.uss.disableValidation", node);
+        }
+        return vscode.commands.executeCommand("zowe.jobs.disableValidation", node);
     }
 }

@@ -959,24 +959,9 @@
           "group": "099_zowe_ussModification:@4"
         },
         {
-          "when": "view == zowe.uss.explorer && viewItem =~ /_validate/ && !listMultiSelection",
-          "command": "zowe.uss.disableValidation",
-          "group": "099_zowe_ussProfileAuthentication@96"
-        },
-        {
-          "when": "view == zowe.uss.explorer && viewItem =~ /_noValidate/ && !listMultiSelection",
-          "command": "zowe.uss.enableValidation",
-          "group": "099_zowe_ussProfileAuthentication@97"
-        },
-        {
           "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)ussSession.*/ && !listMultiSelection",
           "command": "zowe.profileManagement",
           "group": "099_zowe_ussProfileAuthentication@99"
-        },
-        {
-          "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*/",
-          "command": "zowe.uss.removeSession",
-          "group": "099_zowe_ussProfileAuthentication@98"
         },
         {
           "when": "view == zowe.ds.explorer && viewItem =~ /^(?!.*_fav.*)session.*/ && !listMultiSelection",
@@ -1154,24 +1139,9 @@
           "group": "099_zowe_dsModification@5"
         },
         {
-          "when": "view == zowe.ds.explorer && viewItem =~ /_validate/ && !listMultiSelection",
-          "command": "zowe.ds.disableValidation",
-          "group": "099_zowe_dsProfileAuthentication@96"
-        },
-        {
-          "when": "view == zowe.ds.explorer && viewItem =~ /_noValidate/ && !listMultiSelection",
-          "command": "zowe.ds.enableValidation",
-          "group": "099_zowe_dsProfileAuthentication@97"
-        },
-        {
           "when": "view == zowe.ds.explorer && viewItem =~ /^(?!.*_fav.*)session.*/ && !listMultiSelection",
           "command": "zowe.profileManagement",
           "group": "099_zowe_dsProfileAuthentication@99"
-        },
-        {
-          "when": "view == zowe.ds.explorer && viewItem =~ /^(?!.*_fav.*)session.*/",
-          "command": "zowe.ds.removeSession",
-          "group": "099_zowe_dsProfileAuthentication@98"
         },
         {
           "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/ && !listMultiSelection",
@@ -1299,24 +1269,9 @@
           "group": "099_zowe_jobsModification"
         },
         {
-          "when": "view == zowe.jobs.explorer && viewItem =~ /_validate/ && !listMultiSelection",
-          "command": "zowe.jobs.disableValidation",
-          "group": "099_zowe_jobsProfileAuthentication@96"
-        },
-        {
-          "when": "view == zowe.jobs.explorer && viewItem =~ /_noValidate/ && !listMultiSelection",
-          "command": "zowe.jobs.enableValidation",
-          "group": "099_zowe_jobsProfileAuthentication@97"
-        },
-        {
           "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/ && !listMultiSelection",
           "command": "zowe.profileManagement",
           "group": "099_zowe_jobsProfileAuthentication@99"
-        },
-        {
-          "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/",
-          "command": "zowe.jobs.removeJobsSession",
-          "group": "099_zowe_jobsProfileAuthentication@98"
         },
         {
           "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/  && !listMultiSelection",
