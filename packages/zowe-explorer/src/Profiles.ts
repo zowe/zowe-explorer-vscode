@@ -1192,7 +1192,6 @@ export class Profiles extends ProfilesCache {
             } else {
                 await this.loginWithBaseProfile(serviceProfile, loginTokenType, node);
             }
-            Gui.showMessage(localize("ssoLogin.successful", "Login to authentication service was successful."));
         } catch (err) {
             const message = localize("ssoLogin.error", "Unable to log in with {0}. {1}", serviceProfile.name, err?.message);
             ZoweLogger.error(message);
@@ -1297,6 +1296,7 @@ export class Profiles extends ProfilesCache {
                     profile: { ...node.getProfile().profile, ...updBaseProfile },
                 });
             }
+            Gui.showMessage(localize("ssoLogin.successful", "Login to authentication service was successful."));
         }
     }
 
@@ -1322,6 +1322,7 @@ export class Profiles extends ProfilesCache {
                 profile: { ...node.getProfile().profile, ...session },
             });
         }
+        Gui.showMessage(localize("ssoLogin.successful", "Login to authentication service was successful."));
     }
 
     private async getConfigLocationPrompt(action: string): Promise<string> {
