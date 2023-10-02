@@ -78,7 +78,10 @@ describe("ZoweExplorerExtender unit tests", () => {
             value: jest.fn(),
             configurable: true,
         });
-
+        Object.defineProperty(Profiles.getInstance(), "addToConfigArray", {
+            value: jest.fn(),
+            configurable: true,
+        });
         return newMocks;
     }
 
