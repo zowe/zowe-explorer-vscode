@@ -305,7 +305,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 ),
             ];
             const mvsApi = ZoweExplorerApiRegister.getMvsApi(cachedProfile);
-            if (!mvsApi.getSession(mvsApi?.profile)) {
+            if (!mvsApi.getSession(cachedProfile)) {
                 throw new zowe.imperative.ImperativeError({
                     msg: localize("getDataSets.error.sessionMissing", "Profile auth error"),
                     additionalDetails: localize("getDataSets.error.additionalDetails", "Profile is not authenticated, please log in to continue"),
