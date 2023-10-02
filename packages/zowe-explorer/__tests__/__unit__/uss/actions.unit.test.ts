@@ -41,6 +41,7 @@ import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
 import * as wsUtils from "../../../src/utils/workspace";
 import * as context from "../../../src/shared/context";
 import { AttributeView } from "../../../src/uss/AttributeView";
+import { LocalFileManagement } from "../../../src/utils/LocalFileManagement";
 
 jest.mock("../../../src/utils/LoggerUtils");
 
@@ -639,6 +640,8 @@ describe("USS Action Unit Tests - Function changeFileType", () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
         const node = new ZoweUSSNode("node", vscode.TreeItemCollapsibleState.None, blockMocks.ussNode, null, null);
+        Object.defineProperty(node, "getUSSDocumentFilePath", { value: jest.fn().mockReturnValueOnce(blockMocks.testDoc), configurable: true });
+        Object.defineProperty(fs, "existsSync", { value: jest.fn().mockReturnValueOnce(false), configurable: true });
 
         node.binary = true;
         node.contextValue = globals.DS_BINARY_FILE_CONTEXT;

@@ -25,6 +25,7 @@ import { closeOpenedTextFile } from "../utils/workspace";
 import * as nls from "vscode-nls";
 import { UssFileTree, UssFileType, UssFileUtils } from "./FileStructure";
 import { ZoweLogger } from "../utils/LoggerUtils";
+import { downloadUnixFile } from "./actions";
 
 // Set up localization
 nls.config({
@@ -502,60 +503,15 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
 
         const doubleClicked = Gui.utils.wasDoubleClicked(this, ussFileProvider);
         const shouldPreview = doubleClicked ? false : previewFile;
-        if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID || Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED) {
+        if (Profiles.getInstance().validProfile !== ValidProfileEnum.INVALID) {
             try {
-                switch (true) {
-                    // For opening favorited and non-favorited files
-                    case this.getParent().contextValue === globals.FAV_PROFILE_CONTEXT:
-                        break;
-                    case contextually.isUssSession(this.getParent()):
-                        break;
-                    // Handle file path for files in directories and favorited directories
-                    case contextually.isUssDirectory(this.getParent()):
-                        break;
-                    default:
-                        Gui.errorMessage(localize("openUSS.error.invalidNode", "open() called from invalid node."));
-                        throw Error(localize("openUSS.error.invalidNode", "open() called from invalid node."));
-                }
+                const fileInfo = await downloadUnixFile(this, download);
+                this.downloaded = true;
+                // Add document name to recently-opened files
+                ussFileProvider.addFileHistory(`[${this.getProfile().name}]: ${this.fullPath}`);
+                ussFileProvider.getTreeView().reveal(this, { select: true, focus: true, expand: false });
 
-                const documentFilePath = this.getUSSDocumentFilePath();
-                // check if some other file is already created with the same name avoid opening file warn user
-                const fileExists = fs.existsSync(documentFilePath);
-                if (fileExists && !fileExistsCaseSensitveSync(documentFilePath)) {
-                    Gui.showMessage(
-                        localize(
-                            "openUSS.name.exists",
-                            // eslint-disable-next-line max-len
-                            "There is already a file with the same name. Please change your OS file system settings if you want to give case sensitive file names"
-                        )
-                    );
-                } else {
-                    // if local copy exists, open that instead of pulling from mainframe
-                    if (download || !fileExists) {
-                        const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
-                        const fullPath = this.fullPath;
-                        const chooseBinary =
-                            this.binary || (await ZoweExplorerApiRegister.getUssApi(cachedProfile).isFileTagBinOrAscii(this.fullPath));
-
-                        const statusMsg = Gui.setStatusBarMessage(localize("ussFile.opening", "$(sync~spin) Opening USS file..."));
-                        const response = await ZoweExplorerApiRegister.getUssApi(cachedProfile).getContents(fullPath, {
-                            file: documentFilePath,
-                            binary: chooseBinary,
-                            returnEtag: true,
-                            encoding: cachedProfile.profile?.encoding,
-                            responseTimeout: cachedProfile.profile?.responseTimeout,
-                        });
-                        statusMsg.dispose();
-                        this.downloaded = true;
-                        this.setEtag(response.apiResponse.etag);
-                    }
-
-                    // Add document name to recently-opened files
-                    ussFileProvider.addFileHistory(`[${this.getProfile().name}]: ${this.fullPath}`);
-                    ussFileProvider.getTreeView().reveal(this, { select: true, focus: true, expand: false });
-
-                    await this.initializeFileOpening(documentFilePath, shouldPreview);
-                }
+                await this.initializeFileOpening(fileInfo.path, shouldPreview);
             } catch (err) {
                 await errorHandling(err, this.mProfileName);
                 throw err;

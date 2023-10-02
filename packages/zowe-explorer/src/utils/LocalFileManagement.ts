@@ -18,8 +18,9 @@ import { isTypeUssTreeNode } from "../shared/context";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { ZoweLogger } from "./LoggerUtils";
 import * as nls from "vscode-nls";
-import { isZoweDatasetTreeNode, isZoweUSSTreeNode } from "../shared/utils";
+import { isZoweDatasetTreeNode, isZoweUSSTreeNode, localFileInfo } from "../shared/utils";
 import { downloadPs } from "../dataset/actions";
+import { downloadUnixFile } from "../uss/actions";
 
 // Set up localization
 nls.config({
@@ -92,18 +93,15 @@ export class LocalFileManagement {
     }
 
     private static async getCompareFilePaths(node: IZoweTreeNode): Promise<string> {
-        // ZoweLogger.info(`Getting files ${String(globals.filesToCompare[0].label)} and ${String(globals.filesToCompare[1].label)} for comparison.`);
+        ZoweLogger.info(`Getting files ${String(globals.filesToCompare[0].label)} and ${String(globals.filesToCompare[1].label)} for comparison.`);
+        let fileInfo = {} as localFileInfo;
         if (isZoweDatasetTreeNode(node)) {
-            const fileInfo = await downloadPs(node);
-            return fileInfo.path;
+            fileInfo = await downloadPs(node);
         }
         if (isZoweUSSTreeNode(node)) {
-            // do something with uss tree node
-            // documentFilePath = getUSSDocumentFilePath(node);
-            // if (!fs.existsSync(documentFilePath)) {
-            //     await downloadUnixFile(node, documentFilePath);
-            // }
+            fileInfo = await downloadUnixFile(node, true);
         }
+        return fileInfo.path;
 
         // do something with job spool tree node
         // const uri = encodeJobFile(node.getProfile().name, (node as Spool).spool);
@@ -113,6 +111,5 @@ export class LocalFileManagement {
         //     // Fetch any changes to the spool file if it exists in the SpoolProvider
         //     await spoolFile.fetchContent();
         // }
-        return "";
     }
 }
