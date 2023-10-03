@@ -20,6 +20,7 @@ import * as nls from "vscode-nls";
 import SpoolProvider, { encodeJobFile, getSpoolFiles, matchSpool } from "../SpoolProvider";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { getDefaultUri } from "../shared/utils";
+import { ZosJobsProvider } from "./ZosJobsProvider";
 
 // Set up localization
 nls.config({
@@ -528,18 +529,19 @@ export async function cancelJobs(jobsProvider: IZoweTree<IZoweJobTreeNode>, node
         await Gui.showMessage(localize("cancelJobs.succeeded", "Cancelled selected jobs successfully."));
     }
 }
-export async function sortJobsBy(jobs: IZoweJobTreeNode, jobsProvider: IZoweTree<IZoweJobTreeNode>, key: keyof zowe.IJob): Promise<void> {
-    if (jobs["children"].length == 0) {
-        await vscode.window.showInformationMessage("No jobs are present in the profile.");
+export function sortJobsBy(session: IZoweJobTreeNode, jobsProvider: ZosJobsProvider, key: keyof zowe.IJob): void {
+    if (session.children != null) {
+        session.children.sort((x, y) => {
+            if (key !== "jobid" && x["job"][key] == y["job"][key]) {
+                return x["job"]["jobid"] > y["job"]["jobid"] ? 1 : -1;
+            } else {
+                return x["job"][key] > y["job"][key] ? 1 : -1;
+            }
+        });
+        jobsProvider.nodeDataChanged(session);
+    } else {
+        jobsProvider.refreshElement(session);
     }
-    jobs["children"].sort((x, y) => {
-        if (key !== "jobid" && x["job"][key] == y["job"][key]) {
-            return x["job"]["jobid"] > y["job"]["jobid"] ? 1 : -1;
-        } else {
-            return x["job"][key] > y["job"][key] ? 1 : -1;
-        }
-    });
-    jobsProvider.refresh();
 }
 
 export async function filterJobs(jobsProvider: IZoweTree<IZoweJobTreeNode>, job: IZoweJobTreeNode): Promise<vscode.InputBox> {

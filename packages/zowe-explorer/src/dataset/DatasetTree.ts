@@ -1296,7 +1296,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      */
     public sortBy(method: DatasetSort, node: IZoweDatasetTreeNode): void {
         node.sortMethod = method;
-        if (node.children && node.children.length > 0) {
+        if (node.children != null) {
             // If children nodes already exist, sort now and avoid extra refresh
             node.children.sort(ZoweDatasetNode.sortBy(method));
             this.nodeDataChanged(node);
