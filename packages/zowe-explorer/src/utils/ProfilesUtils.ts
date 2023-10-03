@@ -406,22 +406,30 @@ export class ProfilesUtils {
             `Plugin of name "{0}" was defined for custom credential management on imperative.json file.`,
             credentialManager.credMgrDisplayName
         );
-        const message = localize(
+        const installMessage = localize(
             "ProfilesUtils.promptAndHandleMissingCredentialManager.suggestInstallMessage",
             `Please install associated VS Code extension for
         custom credential manager or revert to default.`
         );
         const revertToDefaultButton = localize("ProfilesUtils.promptAndHandleMissingCredentialManager.revertToDefault", "Use Default");
         const installButton = localize("ProfilesUtils.promptAndHandleMissingCredentialManager.install", "Install");
-        await Gui.infoMessage(header, { items: [installButton, revertToDefaultButton], vsCodeOpts: { modal: true, detail: message } }).then(
+        await Gui.infoMessage(header, { items: [installButton, revertToDefaultButton], vsCodeOpts: { modal: true, detail: installMessage } }).then(
             async (selection) => {
                 if (selection === installButton) {
                     const credentialManagerInstallURL = vscode.Uri.parse(
                         `https://marketplace.visualstudio.com/items?itemName=${credentialManager.credMgrZEName}`
                     );
-                    await vscode.env.openExternal(credentialManagerInstallURL);
-                } else {
-                    await this.setupDefaultCredentialManager();
+                    if (await vscode.env.openExternal(credentialManagerInstallURL)) {
+                        const refreshMessage = localize(
+                            "ProfilesUtils.promptAndHandleMissingCredentialManager.refreshMessage",
+                            `After installing the extension, please make sure to reload
+                             your VS Code window in order to start using the installed credential manager`
+                        );
+                        const refreshButton = localize("ProfilesUtils.promptAndHandleMissingCredentialManager.refreshButton", "Refresh");
+                        if ((await Gui.showMessage(refreshMessage, { items: [refreshButton] })) === refreshButton) {
+                            await vscode.commands.executeCommand("workbench.action.reloadWindow");
+                        }
+                    }
                 }
             }
         );
