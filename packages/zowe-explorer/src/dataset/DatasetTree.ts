@@ -23,6 +23,7 @@ import {
     PersistenceSchemaEnum,
     NodeInteraction,
     IZoweTreeNode,
+    DatasetSort,
 } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
@@ -1285,6 +1286,22 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             }
             this.mSessionNodes.push(node);
             this.mHistory.addSession(profile.name);
+        }
+    }
+
+    /**
+     * Sorts the children for a node with the given sorting method.
+     * @param method The sorting method to use
+     * @param node The node whose children should be sorted
+     */
+    public sortBy(method: DatasetSort, node: IZoweDatasetTreeNode): void {
+        node.sortMethod = method;
+        if (node.children && node.children.length > 0) {
+            // If children nodes already exist, sort now and avoid extra refresh
+            node.children.sort(ZoweDatasetNode.sortBy(method));
+            this.nodeDataChanged(node);
+        } else {
+            this.refreshElement(node);
         }
     }
 }

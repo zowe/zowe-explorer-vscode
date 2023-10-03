@@ -13,7 +13,7 @@ import * as zowe from "@zowe/cli";
 import * as vscode from "vscode";
 import * as globals from "../globals";
 import { errorHandling } from "../utils/ProfilesUtils";
-import { Gui, NodeAction, IZoweDatasetTreeNode, ZoweTreeNode } from "@zowe/zowe-explorer-api";
+import { DatasetSort, DatasetStats, Gui, NodeAction, IZoweDatasetTreeNode, ZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { getIconByNode } from "../generators/icons";
 import * as contextually from "../shared/context";
@@ -43,6 +43,8 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     public errorDetails: zowe.imperative.ImperativeError;
     public ongoingActions: Record<NodeAction | string, Promise<any>> = {};
     public wasDoubleClicked: boolean = false;
+    public sortMethod: DatasetSort = DatasetSort.Name;
+    public stats: DatasetStats;
 
     /**
      * Creates an instance of ZoweDatasetNode
@@ -77,8 +79,8 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         if (icon) {
             this.iconPath = icon.path;
         }
-        if (!globals.ISTHEIA && this.getParent() && contextually.isSession(this.getParent())) {
-            this.id = `${mParent?.id ?? mParent?.label?.toString() ?? "<root>"}.${this.label as string}`;
+        if (!globals.ISTHEIA && contextually.isSession(this)) {
+            this.id = this.label as string;
         }
     }
 
@@ -235,6 +237,12 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                             msg: localize("getChildren.invalidMember", "Cannot access member with control characters in the name: {0}", item.member),
                         });
                     }
+                    if (item.m4date) {
+                        temp.stats = {
+                            user: item.user,
+                            m4date: new Date(`${item.m4date.replace(/\//g, "-")}T${item.mtime as string}:${item.msec as string}`),
+                        };
+                    }
                     elementChildren[temp.label.toString()] = temp;
                 }
             }
@@ -253,14 +261,30 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             ];
         } else {
             const newChildren = Object.keys(elementChildren)
-                .sort()
                 .filter((label) => this.children.find((c) => (c.label as string) === label) == null)
                 .map((label) => elementChildren[label]);
 
-            this.children = this.children.concat(newChildren).filter((c) => (c.label as string) in elementChildren);
+            this.children = this.children
+                .concat(newChildren)
+                .filter((c) => (c.label as string) in elementChildren)
+                .sort(ZoweDatasetNode.sortBy(this.sortMethod));
         }
 
         return this.children;
+    }
+
+    public static sortBy(method: DatasetSort): (a: IZoweDatasetTreeNode, b: IZoweDatasetTreeNode) => number {
+        return (a, b): number => {
+            switch (method) {
+                case DatasetSort.LastModified:
+                    return a.stats?.m4date < b.stats?.m4date ? -1 : 1;
+                case DatasetSort.UserId:
+                    return a.stats?.user < b.stats?.user ? -1 : 1;
+                case DatasetSort.Name:
+                default:
+                    return (a.label as string) < (b.label as string) ? -1 : 1;
+            }
+        };
     }
 
     public getSessionNode(): IZoweDatasetTreeNode {
