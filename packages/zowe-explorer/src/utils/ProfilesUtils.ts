@@ -225,23 +225,65 @@ export class FilterDescriptor implements vscode.QuickPickItem {
 }
 
 export class ProfilesUtils {
-    public static getCredentialManagerOverride(): imperative.ICredentialManagerNameMap | undefined {
-        ZoweLogger.trace("ProfilesUtils.getCredentialManagerOverride called.");
-        const knownCredentialManagers = imperative.CredentialManagerOverride.getKnownCredMgrs();
-        const credentialManager = knownCredentialManagers.find((knownCredentialManager) => {
-            try {
-                return vscode.extensions.getExtension(knownCredentialManager.credMgrZEName);
-            } catch (err) {
-                return false;
-            }
-        });
-        if (!credentialManager) {
-            return undefined;
+    /**
+     * Check if the credential manager's vsix is installed for use
+     * @param credentialManager the display name of the credential manager
+     * @returns boolean whether the VS Code extension for the custom credential manager is installed
+     */
+    public static isVSCodeCredentialPluginInstalled(credentialManager: string): boolean {
+        ZoweLogger.trace("ProfilesUtils.isVSCodeCredentialPluginInstalled called.");
+        try {
+            const plugin = imperative.CredentialManagerOverride.getCredMgrInfoByDisplayName(credentialManager);
+            return vscode.extensions.getExtension(plugin?.credMgrZEName) !== undefined;
+        } catch (err) {
+            return false;
         }
-        return imperative.CredentialManagerOverride.getCredMgrInfoByDisplayName(credentialManager.credMgrDisplayName);
     }
 
-    public static async activateCredentialManagerOverride(
+    /**
+     * Get the current credential manager specified in imperative.json
+     * @returns string the credential manager override
+     */
+    public static getCredentialManagerOverride(): string {
+        ZoweLogger.trace("ProfilesUtils.getCredentialManagerOverride called.");
+        const settingsFile = path.join(getZoweDir(), "settings", "imperative.json");
+        const imperativeConfig = JSON.parse(fs.readFileSync(settingsFile).toString());
+        const credentialManagerOverride = imperativeConfig?.overrides[imperative.CredentialManagerOverride.CRED_MGR_SETTING_NAME];
+        if (typeof credentialManagerOverride === "string") {
+            return credentialManagerOverride;
+        }
+        return imperative.CredentialManagerOverride.DEFAULT_CRED_MGR_NAME;
+    }
+
+    /**
+     * Get the map of names associated with the custom credential manager
+     * @param string credentialManager the credential manager display name
+     * @returns imperative.ICredentialManagerNameMap the map with all names related to the credential manager
+     */
+    public static getCredentialManagerMap(credentialManager: string): imperative.ICredentialManagerNameMap | undefined {
+        ZoweLogger.trace("ProfilesUtils.getCredentialManagerNameMap called.");
+        return imperative.CredentialManagerOverride.getCredMgrInfoByDisplayName(credentialManager);
+    }
+
+    /**
+     * Update the current credential manager override
+     * @param setting the credential manager to use in imperative.json
+     */
+    public static async updateCredentialManagerSetting(setting: string): Promise<void> {
+        ZoweLogger.trace("ProfilesUtils.updateCredentialManagerSetting called.");
+        const settingEnabled: boolean = SettingsConfig.getDirectValue(globals.SETTINGS_SECURE_CREDENTIALS_ENABLED);
+        if (settingEnabled) {
+            await globals.setGlobalSecurityValue(setting);
+            imperative.CredentialManagerOverride.recordCredMgrInConfig(setting);
+        }
+    }
+
+    /**
+     * Activate a vscode extension of a custom credential manager
+     * @param credentialManagerExtension The credential manager VS Code extension name to activate
+     * @returns Promise<imperative.ICredentialManagerConstructor> the constructor of the activated credential manager
+     */
+    private static async activateCredentialManagerOverride(
         credentialManagerExtension: vscode.Extension<any>
     ): Promise<imperative.ICredentialManagerConstructor | undefined> {
         try {
@@ -256,37 +298,44 @@ export class ProfilesUtils {
         }
     }
 
-    public static async updateCredentialManagerSetting(setting: string): Promise<void> {
-        ZoweLogger.trace("ProfilesUtils.updateCredentialManagerSetting called.");
-        const settingEnabled: boolean = SettingsConfig.getDirectValue(globals.SETTINGS_SECURE_CREDENTIALS_ENABLED);
-        if (settingEnabled) {
-            await globals.setGlobalSecurityValue(setting);
-            imperative.CredentialManagerOverride.recordCredMgrInConfig(setting);
+    /**
+     * Use the custom credential manager in Zowe Explorer and setup before use
+     * @param credentialManagerMap The map with associated names of the custom credential manager
+     * @returns Promise<imperative.ProfileInfo> the object of profileInfo using the custom credential manager
+     */
+    private static async setupCustomCredentialManager(credentialManagerMap: imperative.ICredentialManagerNameMap): Promise<imperative.ProfileInfo> {
+        ZoweLogger.trace("ProfilesUtils.setupCustomCredentialManager called.");
+        ZoweLogger.info(
+            localize(
+                "ProfilesUtils.setupCustomCredentialManager.usingCustom",
+                "Custom credential manager {0} found, attempting to activate.",
+                credentialManagerMap.credMgrDisplayName
+            )
+        );
+        const customCredentialManagerExtension =
+            credentialManagerMap?.credMgrZEName && vscode.extensions.getExtension(credentialManagerMap.credMgrZEName);
+        const credentialManager = await ProfilesUtils.activateCredentialManagerOverride(customCredentialManagerExtension);
+        if (credentialManager) {
+            Object.setPrototypeOf(credentialManager.prototype, imperative.AbstractCredentialManager.prototype);
+            await ProfilesUtils.updateCredentialManagerSetting(credentialManagerMap.credMgrDisplayName);
+            return new imperative.ProfileInfo("zowe", {
+                credMgrOverride: {
+                    Manager: credentialManager,
+                    service: credentialManagerMap.credMgrDisplayName,
+                },
+            });
         }
     }
 
-    public static async getProfileInfo(envTheia: boolean): Promise<imperative.ProfileInfo> {
-        ZoweLogger.trace("ProfilesUtils.getProfileInfo called.");
-        const credentialManagerMap = ProfilesUtils.getCredentialManagerOverride();
-        const customCredentialManagerExtension =
-            credentialManagerMap?.credMgrZEName && vscode.extensions.getExtension(credentialManagerMap.credMgrZEName);
-        const settingEnabled: boolean = SettingsConfig.getDirectValue(globals.SETTINGS_SECURE_CREDENTIALS_ENABLED);
-        if (credentialManagerMap && customCredentialManagerExtension && settingEnabled) {
-            ZoweLogger.info(localize("ProfilesUtils.getProfileInfo.usingCustom", "Custom credential manager found, attempting to activate."));
-            const credentialManager = await ProfilesUtils.activateCredentialManagerOverride(customCredentialManagerExtension);
-            if (credentialManager) {
-                Object.setPrototypeOf(credentialManager.prototype, imperative.AbstractCredentialManager.prototype);
-                await ProfilesUtils.updateCredentialManagerSetting(credentialManagerMap.credMgrDisplayName);
-                return new imperative.ProfileInfo("zowe", {
-                    credMgrOverride: {
-                        Manager: credentialManager,
-                        service: credentialManagerMap.credMgrDisplayName,
-                    },
-                });
-            }
-        }
-
-        ZoweLogger.info(localize("ProfilesUtils.getProfileInfo.usingDefault", "No custom credential managers found, using the default instead."));
+    /**
+     * Use the default credential manager in Zowe Explorer and setup before use
+     * @returns Promise<imperative.ProfileInfo> the object of profileInfo using the default credential manager
+     */
+    private static async setupDefaultCredentialManager(): Promise<imperative.ProfileInfo> {
+        ZoweLogger.trace("ProfilesUtils.setupDefaultCredentialManager called.");
+        ZoweLogger.info(
+            localize("ProfilesUtils.setupDefaultCredentialManager.usingDefault", "No custom credential managers found, using the default instead.")
+        );
         await ProfilesUtils.updateCredentialManagerSetting(globals.ZOWE_CLI_SCM);
         return new imperative.ProfileInfo("zowe", {
             // eslint-disable-next-line @typescript-eslint/no-unsafe-return
@@ -294,10 +343,118 @@ export class ProfilesUtils {
         });
     }
 
+    /**
+     * Fetches the first available registered custom credential manager from installed VS Code extensions.
+     * This function will suggest changing the imperative.json file override property if the override is different
+     * from the available custom credential manager.
+     *
+     * @returns Promise<void>
+     */
+    private static async fetchRegisteredPlugins(): Promise<void> {
+        ZoweLogger.trace("ProfilesUtils.fetchRegisteredPlugins called.");
+        const knownCredentialManagers = imperative.CredentialManagerOverride.getKnownCredMgrs();
+        const credentialManager = knownCredentialManagers.find((knownCredentialManager) => {
+            try {
+                return vscode.extensions.getExtension(knownCredentialManager.credMgrZEName);
+            } catch (err) {
+                return false;
+            }
+        });
+        if (credentialManager) {
+            const header = localize(
+                "ProfilesUtils.fetchRegisteredPlugins.customCredentialManagerFound",
+                `Custom credential manager {0} found`,
+                credentialManager.credMgrDisplayName
+            );
+
+            const message = localize("ProfilesUtils.fetchRegisteredPlugins.message", "Do you wish to use this credential manager instead?");
+            const optionYes = localize("ProfilesUtils.fetchRegisteredPlugins.yes", "Yes");
+            const optionDontAskAgain = localize("ProfilesUtils.fetchRegisteredPlugins.dontAskAgain", "Don't ask again");
+
+            await Gui.infoMessage(header, { items: [optionYes, optionDontAskAgain], vsCodeOpts: { modal: true, detail: message } }).then(
+                async (selection) => {
+                    if (selection === optionYes) {
+                        await this.updateCredentialManagerSetting(credentialManager.credMgrDisplayName);
+                        SettingsConfig.setDirectValue(
+                            globals.SETTINGS_CHECK_FOR_CUSTOM_CREDENTIAL_MANAGERS,
+                            false,
+                            vscode.ConfigurationTarget.Global
+                        );
+                    }
+                    if (selection === optionDontAskAgain) {
+                        SettingsConfig.setDirectValue(
+                            globals.SETTINGS_CHECK_FOR_CUSTOM_CREDENTIAL_MANAGERS,
+                            false,
+                            vscode.ConfigurationTarget.Global
+                        );
+                    }
+                }
+            );
+        }
+    }
+
+    /**
+     * Prompts to install the missing VS Code extension associated with the credential manager override in imperative.json
+     *
+     * @param credentialManager the credential manager to handle its missing VS Code extension
+     * @returns Promise<void>
+     */
+    private static async promptAndHandleMissingCredentialManager(credentialManager: imperative.ICredentialManagerNameMap): Promise<void> {
+        ZoweLogger.trace("ProfilesUtils.promptAndHandleMissingCredentialManager called.");
+        const header = localize(
+            "ProfilesUtils.promptAndHandleMissingCredentialManager.suggestInstallHeader",
+            `Plugin of name "{0}" was defined for custom credential management on imperative.json file.`,
+            credentialManager.credMgrDisplayName
+        );
+        const message = localize(
+            "ProfilesUtils.promptAndHandleMissingCredentialManager.suggestInstallMessage",
+            `Please install associated VS Code extension for
+        custom credential manager or revert to default.`
+        );
+        const revertToDefaultButton = localize("ProfilesUtils.promptAndHandleMissingCredentialManager.revertToDefault", "Use Default");
+        const installButton = localize("ProfilesUtils.promptAndHandleMissingCredentialManager.install", "Install");
+        await Gui.infoMessage(header, { items: [installButton, revertToDefaultButton], vsCodeOpts: { modal: true, detail: message } }).then(
+            async (selection) => {
+                if (selection === installButton) {
+                    const credentialManagerInstallURL = vscode.Uri.parse(
+                        `https://marketplace.visualstudio.com/items?itemName=${credentialManager.credMgrZEName}`
+                    );
+                    await vscode.env.openExternal(credentialManagerInstallURL);
+                } else {
+                    await this.setupDefaultCredentialManager();
+                }
+            }
+        );
+    }
+
+    public static async getProfileInfo(): Promise<imperative.ProfileInfo> {
+        ZoweLogger.trace("ProfilesUtils.getProfileInfo called.");
+
+        const shouldCheckForCustomCredentialManagers = SettingsConfig.getDirectValue(globals.SETTINGS_CHECK_FOR_CUSTOM_CREDENTIAL_MANAGERS);
+        if (shouldCheckForCustomCredentialManagers) {
+            await this.fetchRegisteredPlugins();
+        }
+
+        const credentialManagerOverride = this.getCredentialManagerOverride();
+        const isVSCodeCredentialPluginInstalled = this.isVSCodeCredentialPluginInstalled(credentialManagerOverride);
+        const isCustomCredentialPluginDefined = credentialManagerOverride !== imperative.CredentialManagerOverride.DEFAULT_CRED_MGR_NAME;
+        const settingEnabled: boolean = SettingsConfig.getDirectValue(globals.SETTINGS_SECURE_CREDENTIALS_ENABLED);
+        const credentialManagerMap = ProfilesUtils.getCredentialManagerMap(credentialManagerOverride);
+
+        if (isCustomCredentialPluginDefined && !isVSCodeCredentialPluginInstalled && credentialManagerMap && settingEnabled) {
+            await this.promptAndHandleMissingCredentialManager(credentialManagerMap);
+        }
+        if (credentialManagerMap && isVSCodeCredentialPluginInstalled && settingEnabled) {
+            return this.setupCustomCredentialManager(credentialManagerMap);
+        }
+
+        return this.setupDefaultCredentialManager();
+    }
+
     public static async readConfigFromDisk(): Promise<void> {
         ZoweLogger.trace("ProfilesUtils.readConfigFromDisk called.");
         let rootPath: string;
-        const mProfileInfo = await ProfilesUtils.getProfileInfo(globals.ISTHEIA);
+        const mProfileInfo = await ProfilesUtils.getProfileInfo();
         if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders[0]) {
             rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
             await mProfileInfo.readProfilesFromDisk({ homeDir: getZoweDir(), projectDir: getFullPath(rootPath) });
@@ -365,8 +522,8 @@ export class ProfilesUtils {
         ZoweLogger.trace("ProfilesUtils.initializeZoweFolder called.");
         // ensure the Secure Credentials Enabled value is read
         // set globals.PROFILE_SECURITY value accordingly
-        const credentialManagerMap = ProfilesUtils.getCredentialManagerOverride();
-        await globals.setGlobalSecurityValue(credentialManagerMap?.credMgrDisplayName ?? globals.ZOWE_CLI_SCM);
+        const credentialManagerOverride = ProfilesUtils.getCredentialManagerOverride();
+        await globals.setGlobalSecurityValue(credentialManagerOverride ?? globals.ZOWE_CLI_SCM);
         // Ensure that ~/.zowe folder exists
         // Ensure that the ~/.zowe/settings/imperative.json exists
         // TODO: update code below once this imperative issue is resolved.
