@@ -9,6 +9,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Added "Sort Jobs" feature for job nodes in Jobs tree view. [#2257](https://github.com/zowe/vscode-extension-for-zowe/issues/2251)
 - Added new edit feature on `Edit Attributes` view for changing file tags on USS [#2113](https://github.com/zowe/vscode-extension-for-zowe/issues/2113)
 - Added new API {ZE Extender MetaData} to allow extenders to have the metadata of registered extenders to aid in team configuration file creation from a view that isn't Zowe Explorer's. [#2394](https://github.com/zowe/vscode-extension-for-zowe/issues/2394)
+- Added ability to install extension from VS Code marketplace if custom credential manager extension is missing after defining it on `imperative.json` [#2381](https://github.com/zowe/vscode-extension-for-zowe/issues/2381)
 
 ### Bug fixes
 
