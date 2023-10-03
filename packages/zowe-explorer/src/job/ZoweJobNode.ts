@@ -89,8 +89,8 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
             this.iconPath = icon.path;
         }
 
-        if (!globals.ISTHEIA && !(this instanceof Spool)) {
-            this.id = `${mParent?.id ?? mParent?.label?.toString() ?? "<root>"}.${this.label as string}`;
+        if (!globals.ISTHEIA && contextually.isSession(this)) {
+            this.id = this.label as string;
         }
     }
 

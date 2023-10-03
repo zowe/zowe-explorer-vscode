@@ -237,10 +237,13 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                             msg: localize("getChildren.invalidMember", "Cannot access member with control characters in the name: {0}", item.member),
                         });
                     }
-                    if (item.m4date) {
+
+                    // get user and last modified date for sorting, if available
+                    const { m4date, mtime, msec }: { m4date: string; mtime: string; msec: string } = item;
+                    if (m4date) {
                         temp.stats = {
                             user: item.user,
-                            m4date: new Date(`${item.m4date.replace(/\//g, "-")}T${item.mtime as string}:${item.msec as string}`),
+                            m4date: new Date(`${m4date.replace(/\//g, "-")}T${mtime}:${msec}`),
                         };
                     }
                     elementChildren[temp.label.toString()] = temp;
