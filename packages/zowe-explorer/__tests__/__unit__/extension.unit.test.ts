@@ -30,6 +30,7 @@ import { DatasetTree } from "../../src/dataset/DatasetTree";
 import { USSTree } from "../../src/uss/USSTree";
 import { ZoweLogger } from "../../src/utils/LoggerUtils";
 import { ZoweSaveQueue } from "../../src/abstract/ZoweSaveQueue";
+import { ProfilesUtils } from "../../src/utils/ProfilesUtils";
 
 jest.mock("vscode");
 jest.mock("fs");
@@ -561,6 +562,7 @@ describe("Extension Unit Tests", () => {
 describe("Extension Unit Tests - THEIA", () => {
     it("Tests that activate() works correctly for Theia", async () => {
         const globalMocks = await createGlobalMocks();
+        jest.spyOn(ProfilesUtils, "getCredentialManagerOverride").mockReturnValueOnce("@zowe/cli");
 
         Object.defineProperty(vscode.env, "appName", { value: "Eclipse Theia" });
         Object.defineProperty(vscode.env, "uriScheme", { value: "theia" });
