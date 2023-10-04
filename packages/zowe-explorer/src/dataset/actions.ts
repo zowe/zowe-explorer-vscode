@@ -475,51 +475,6 @@ export async function openPS(
     if (Profiles.getInstance().validProfile !== api.ValidProfileEnum.INVALID) {
         try {
             const fileInfo = await downloadPs(node);
-            // let label: string;
-            // const defaultMessage = localize("openPS.error", "Invalid data set or member.");
-            // switch (true) {
-            //     // For favorited or non-favorited sequential DS:
-            //     case contextually.isFavorite(node):
-            //     case contextually.isSessionNotFav(node.getParent()):
-            //         label = node.label as string;
-            //         break;
-            //     // For favorited or non-favorited data set members:
-            //     case contextually.isFavoritePds(node.getParent()):
-            //     case contextually.isPdsNotFav(node.getParent()):
-            //         label = node.getParent().getLabel().toString() + "(" + node.getLabel().toString() + ")";
-            //         break;
-            //     default:
-            //         api.Gui.errorMessage(defaultMessage);
-            //         throw Error(defaultMessage);
-            // }
-
-            // const documentFilePath = getDocumentFilePath(label, node);
-            // let responsePromise = node.ongoingActions ? node.ongoingActions[api.NodeAction.Download] : null;
-            // // If the local copy does not exist, fetch contents
-            // if (!fs.existsSync(documentFilePath)) {
-            //     const prof = node.getProfile();
-            //     ZoweLogger.info(localize("openPS.openDataSet", "Opening {0}", label));
-            //     if (node.ongoingActions) {
-            //         node.ongoingActions[api.NodeAction.Download] = ZoweExplorerApiRegister.getMvsApi(prof).getContents(label, {
-            //             file: documentFilePath,
-            //             returnEtag: true,
-            //             encoding: prof.profile?.encoding,
-            //             responseTimeout: prof.profile?.responseTimeout,
-            //         });
-            //         responsePromise = node.ongoingActions[api.NodeAction.Download];
-            //     } else {
-            //         responsePromise = ZoweExplorerApiRegister.getMvsApi(prof).getContents(label, {
-            //             file: documentFilePath,
-            //             returnEtag: true,
-            //             encoding: prof.profile?.encoding,
-            //             responseTimeout: prof.profile?.responseTimeout,
-            //         });
-            //     }
-            // }
-
-            // const response = await responsePromise;
-            // node.setEtag(response?.apiResponse?.etag);
-            // statusMsg.dispose();
             const document = await vscode.workspace.openTextDocument(getDocumentFilePath(fileInfo.name, node));
             await api.Gui.showTextDocument(document, { preview: node.wasDoubleClicked != null ? !node.wasDoubleClicked : shouldPreview });
             // discard ongoing action to allow new requests on this node

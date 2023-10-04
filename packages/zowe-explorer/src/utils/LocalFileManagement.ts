@@ -102,14 +102,5 @@ export class LocalFileManagement {
             fileInfo = await downloadUnixFile(node, true);
         }
         return fileInfo.path;
-
-        // do something with job spool tree node
-        // const uri = encodeJobFile(node.getProfile().name, (node as Spool).spool);
-        // documentFilePath = uri.fsPath;
-        // const spoolFile = SpoolProvider.files[uri.path];
-        // if (spoolFile) {
-        //     // Fetch any changes to the spool file if it exists in the SpoolProvider
-        //     await spoolFile.fetchContent();
-        // }
     }
 }

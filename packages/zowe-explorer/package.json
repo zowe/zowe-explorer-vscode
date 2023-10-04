@@ -1374,12 +1374,12 @@
           "group": "099_zowe_jobsProfileModification@99"
         },
         {
-          "when": "viewItem =~ /^(textFile|spool.*|member.*|ds.*)/ && !listMultiSelection",
+          "when": "viewItem =~ /^(textFile|member.*|ds.*)/ && !listMultiSelection",
           "command": "zowe.selectForCompare",
           "group": "010_zowe_fileOperations@1"
         },
         {
-          "when": "viewItem =~ /^(textFile|spool.*|member.*|ds.*)/ && !listMultiSelection && zowe.compareFileStarted",
+          "when": "viewItem =~ /^(textFile|member.*|ds.*)/ && !listMultiSelection && zowe.compareFileStarted",
           "command": "zowe.compareWithSelected",
           "group": "010_zowe_fileOperations@2"
         }
