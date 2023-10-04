@@ -4,8 +4,6 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ## TBD Release
 
-### New features and enhancements
-
 ### Bug fixes
 
 - Fixed submitting local JCL using command pallet option `Zowe Explorer: Submit JCL` by adding a check for chosen profile returned to continue the action. [#1625](https://github.com/zowe/vscode-extension-for-zowe/issues/1625)
