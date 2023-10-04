@@ -15,7 +15,7 @@ import * as fs from "fs";
 import * as zowe from "@zowe/cli";
 import { DatasetTree } from "../../../src/dataset/DatasetTree";
 import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
-import { Gui, IZoweDatasetTreeNode, ProfilesCache, ValidProfileEnum } from "@zowe/zowe-explorer-api";
+import { DatasetSort, Gui, IZoweDatasetTreeNode, ProfilesCache, ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { Profiles } from "../../../src/Profiles";
 import * as utils from "../../../src/utils/ProfilesUtils";
@@ -2694,5 +2694,60 @@ describe("Dataset Tree Unit Tests - Function initializeFavorites", () => {
             },
         });
         expect(() => testTree.initializeFavorites(log)).not.toThrow();
+    });
+});
+
+describe("Dataset Tree Unit Tests - Function sortBy", () => {
+    const testTree = new DatasetTree();
+    const mocks = {
+        nodeDataChanged: jest.spyOn(DatasetTree.prototype, "nodeDataChanged"),
+        refreshElement: jest.spyOn(DatasetTree.prototype, "refreshElement"),
+    };
+    const testNode = new ZoweDatasetNode("test", vscode.TreeItemCollapsibleState.Collapsed, null, createISession());
+
+    beforeEach(() => {
+        testNode.children = [
+            { label: "A", stats: { user: "someUser", m4date: Date.now() } } as unknown as ZoweDatasetNode,
+            { label: "B", stats: { user: "anotherUser", m4date: Date.parse("2022-01-01T12:00:00") } } as unknown as ZoweDatasetNode,
+            { label: "C", stats: { user: "someUser", m4date: Date.parse("2022-03-15T16:30:00") } } as unknown as ZoweDatasetNode,
+        ];
+    });
+
+    afterEach(() => {
+        mocks.nodeDataChanged.mockClear();
+        mocks.refreshElement.mockClear();
+    });
+
+    afterAll(() => {
+        mocks.nodeDataChanged.mockRestore();
+        mocks.refreshElement.mockRestore();
+    });
+
+    it("calls refreshElement if no children exist", () => {
+        testNode.children = [];
+        testTree.sortBy(DatasetSort.Name, testNode);
+        expect(mocks.nodeDataChanged).not.toHaveBeenCalled();
+        expect(mocks.refreshElement).toHaveBeenCalledWith(testNode);
+    });
+
+    it("sorts by name", () => {
+        testTree.sortBy(DatasetSort.Name, testNode);
+        expect(mocks.nodeDataChanged).toHaveBeenCalled();
+        expect(mocks.refreshElement).not.toHaveBeenCalled();
+        expect(testNode.children.map((c: IZoweDatasetTreeNode) => c.label)).toStrictEqual(["A", "B", "C"]);
+    });
+
+    it("sorts by last modified date", () => {
+        testTree.sortBy(DatasetSort.LastModified, testNode);
+        expect(mocks.nodeDataChanged).toHaveBeenCalled();
+        expect(mocks.refreshElement).not.toHaveBeenCalled();
+        expect(testNode.children.map((c: IZoweDatasetTreeNode) => c.label)).toStrictEqual(["B", "C", "A"]);
+    });
+
+    it("sorts by user ID", () => {
+        testTree.sortBy(DatasetSort.UserId, testNode);
+        expect(mocks.nodeDataChanged).toHaveBeenCalled();
+        expect(mocks.refreshElement).not.toHaveBeenCalled();
+        expect(testNode.children.map((c: IZoweDatasetTreeNode) => c.label)).toStrictEqual(["B", "A", "C"]);
     });
 });

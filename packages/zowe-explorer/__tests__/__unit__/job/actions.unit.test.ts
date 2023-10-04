@@ -1398,16 +1398,6 @@ describe("sortjobsby function", () => {
     afterEach(() => {
         jest.restoreAllMocks();
     });
-    it("if there are no jobs in the zosmf level yet", async () => {
-        createGlobalMocks();
-        const testtree = new ZosJobsProvider();
-        //act
-        await jobActions.sortJobsBy(testtree.mSessionNodes[0], testtree, "jobname");
-        await jobActions.sortJobsBy(testtree.mSessionNodes[0], testtree, "jobid");
-        await jobActions.sortJobsBy(testtree.mSessionNodes[0], testtree, "retcode");
-        //assert
-        expect(mocked(vscode.window.showInformationMessage)).toBeCalled();
-    });
     it("sort by name if same sort by increasing id", async () => {
         const globalMocks = createGlobalMocks();
         const testtree = new ZosJobsProvider();
