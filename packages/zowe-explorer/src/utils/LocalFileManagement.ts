@@ -79,8 +79,8 @@ export class LocalFileManagement {
     }
 
     /**
-     * Function that compares two chosen files in the active editor
-     * @returns {void}
+     * Function that triggers compare of the 2 files selected for compare in the active editor
+     * @returns {Promise<void>}
      */
     public static async compareChosenFileContent(): Promise<void> {
         const docUriArray: vscode.Uri[] = [];
