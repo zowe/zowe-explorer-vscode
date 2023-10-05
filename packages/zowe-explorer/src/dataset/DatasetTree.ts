@@ -15,15 +15,14 @@ import * as nls from "vscode-nls";
 import * as globals from "../globals";
 import * as dsActions from "./actions";
 import {
-    Gui,
     DataSetAllocTemplate,
+    Gui,
     ValidProfileEnum,
     IZoweTree,
     IZoweDatasetTreeNode,
     PersistenceSchemaEnum,
     NodeInteraction,
     IZoweTreeNode,
-    DatasetSort,
 } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
@@ -37,7 +36,7 @@ import * as contextually from "../shared/context";
 import { resetValidationSettings } from "../shared/actions";
 import { closeOpenedTextFile } from "../utils/workspace";
 import { IDataSet, IListOptions, imperative } from "@zowe/cli";
-import { validateDataSetName, validateMemberName } from "./utils";
+import { DATASET_SORT_OPTS, validateDataSetName, validateMemberName } from "./utils";
 import { SettingsConfig } from "../utils/SettingsConfig";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { TreeViewUtils } from "../utils/TreeViewUtils";
@@ -1290,44 +1289,56 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
     }
 
     /**
-     * Sorts all PDS children nodes within a session using the given sorting method.
+     * Sorts some (or all) PDS children nodes using the given sorting method.
      * @param method The sorting method to use
      * @param node The session whose PDS should be sorted
      */
-    public async sortPdsBy(node: IZoweDatasetTreeNode): Promise<void> {
-        const options = [localize("ds.sortByName", "Name"), localize("ds.sortByModified", "Date Modified"), localize("ds.sortByUserId", "User ID")];
+    public async sortPdsMembers(node: IZoweDatasetTreeNode): Promise<void> {
+        const isSession = contextually.isSession(node);
 
-        const selection = await Gui.showQuickPick(options, {
-            placeHolder: localize("ds.selectSortOpt", "Select a sorting option for PDS members in {0}.", node.label as string),
-        });
+        const specifier = isSession
+            ? localize("ds.allPdsSort", "all PDS members in {0}", node.label as string)
+            : localize("ds.singlePdsSort", "the PDS members in {0}", node.label as string);
+        const selection = await Gui.showQuickPick(
+            DATASET_SORT_OPTS.map((sortOpt, i) => (node.sortMethod === i ? `${sortOpt} $(check)` : sortOpt)),
+            {
+                placeHolder: localize("ds.selectSortOpt", "Select a sorting option for {0}", specifier),
+            }
+        );
         if (selection == null) {
             return;
         }
 
-        switch (selection) {
-            case options[0]:
-                node.sortMethod = DatasetSort.Name;
-                break;
-            case options[1]:
-                node.sortMethod = DatasetSort.LastModified;
-                break;
-            case options[2]:
-                node.sortMethod = DatasetSort.UserId;
-                break;
-            default:
-                return;
+        const sortMethod = DATASET_SORT_OPTS.indexOf(selection);
+        if (sortMethod == -1) {
+            return;
         }
 
-        if (node.children != null && node.children.length > 0) {
-            // children nodes already exist, sort and repaint to avoid extra refresh
-            for (const c of node.children) {
-                if (contextually.isPds(c) && c.children) {
-                    c.children.sort(ZoweDatasetNode.sortBy(node.sortMethod));
-                    this.nodeDataChanged(c);
+        node.sortMethod = sortMethod;
+
+        if (isSession) {
+            // if a session was selected, apply this sort to ALL PDS members
+            if (node.children != null && node.children.length > 0) {
+                // children nodes already exist, sort and repaint to avoid extra refresh
+                for (const c of node.children) {
+                    if (contextually.isPds(c) && c.children) {
+                        c.sortMethod = sortMethod;
+                        c.children.sort(ZoweDatasetNode.sortBy(sortMethod));
+                        this.nodeDataChanged(c);
+                    }
                 }
+            } else {
+                this.refreshElement(node);
             }
         } else {
-            this.refreshElement(node);
+            // Only sort the PDS members for this PDS
+            if (node.children != null && node.children.length > 0) {
+                // children nodes already exist, sort and repaint to avoid extra refresh
+                node.children.sort(ZoweDatasetNode.sortBy(sortMethod));
+                this.nodeDataChanged(node);
+            } else {
+                this.refreshElement(node);
+            }
         }
     }
 }

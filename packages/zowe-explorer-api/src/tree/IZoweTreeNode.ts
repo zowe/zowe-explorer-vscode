@@ -20,16 +20,23 @@ export enum NodeAction {
     Download = "download",
 }
 
-export enum DatasetSort {
-    LastModified,
-    Name,
-    UserId,
-}
-
 export type DatasetStats = {
     user: string;
     m4date: Date;
 };
+
+export enum DatasetSortOpts {
+    Name,
+    LastModified,
+    UserId,
+}
+
+export enum JobSortOpts {
+    Id,
+    DateSubmitted,
+    Name,
+    ReturnCode,
+}
 
 /**
  * The base interface for Zowe tree nodes that are implemented by vscode.TreeItem.
@@ -90,6 +97,10 @@ export interface IZoweTreeNode {
      */
     wasDoubleClicked?: boolean;
     /**
+     * Sorting method for this node's children
+     */
+    sortMethod?: DatasetSortOpts | JobSortOpts;
+    /**
      * Retrieves the node label
      */
     getLabel(): string | vscode.TreeItemLabel;
@@ -146,10 +157,6 @@ export interface IZoweDatasetTreeNode extends IZoweTreeNode {
      * Search criteria for a Dataset member search
      */
     memberPattern?: string;
-    /**
-     * Sort members of a node by the given sorting method
-     */
-    sortMethod?: DatasetSort;
     /**
      * Additional statistics about this data set
      */

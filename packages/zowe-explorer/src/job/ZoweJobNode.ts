@@ -13,11 +13,12 @@
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
 import * as globals from "../globals";
-import { Gui, IZoweJobTreeNode, ZoweTreeNode } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweJobTreeNode, JobSortOpts, ZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { errorHandling, syncSessionNode } from "../utils/ProfilesUtils";
 import { getIconByNode } from "../generators/icons";
 import * as contextually from "../shared/context";
+import { JOB_SORT_KEYS } from "./utils";
 
 import * as nls from "vscode-nls";
 import { Profiles } from "../Profiles";
@@ -38,6 +39,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
 
     public children: IZoweJobTreeNode[] = [];
     public dirty = true;
+    public sortMethod = JobSortOpts.Id;
     private _owner: string;
     private _prefix: string;
     private _searchId: string;
@@ -225,26 +227,26 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
         // Only add new children that are not in the list of existing child nodes
         const newChildren = Object.values(elementChildren).filter((c) => this.children.find((ch) => ch.label === c.label) == null);
 
+        const sortMethod = contextually.isSession(this) ? this.sortMethod : JobSortOpts.Id;
         // Remove any children that are no longer present in the built record
         this.children = this.children
             .concat(newChildren)
             .filter((ch) => Object.values(elementChildren).find((recordCh) => recordCh.label === ch.label) != null)
-            .sort((a, b) => Job.sortJobs(a, b));
+            .sort(Job.sortJobs(sortMethod));
         this.dirty = false;
 
         return this.children;
     }
 
-    public static sortJobs(a: IZoweJobTreeNode, b: IZoweJobTreeNode): number {
-        if (a.job.jobid > b.job.jobid) {
-            return 1;
-        }
-
-        if (a.job.jobid < b.job.jobid) {
-            return -1;
-        }
-
-        return 0;
+    public static sortJobs(method: JobSortOpts): (x: IZoweJobTreeNode, y: IZoweJobTreeNode) => number {
+        return (x, y) => {
+            const keyToSortBy = JOB_SORT_KEYS[method];
+            if (keyToSortBy !== "jobid" && x["job"][keyToSortBy] == y["job"][keyToSortBy]) {
+                return x["job"]["jobid"] > y["job"]["jobid"] ? 1 : -1;
+            } else {
+                return x["job"][keyToSortBy] > y["job"][keyToSortBy] ? 1 : -1;
+            }
+        };
     }
 
     public getSessionNode(): IZoweJobTreeNode {

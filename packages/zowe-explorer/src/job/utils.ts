@@ -9,8 +9,32 @@
  *
  */
 
+import { JobSortOpts } from "@zowe/zowe-explorer-api";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { FilterItem } from "../utils/ProfilesUtils";
+import * as nls from "vscode-nls";
+import { IJob } from "@zowe/cli";
+
+// Set up localization
+nls.config({
+    messageFormat: nls.MessageFormat.bundle,
+    bundleFormat: nls.BundleFormat.standalone,
+})();
+const localize: nls.LocalizeFunc = nls.loadMessageBundle();
+
+export const JOB_SORT_OPTS = [
+    localize("jobs.sortById", "Job ID"),
+    localize("jobs.sortByDateSubmitted", "Date Submitted"),
+    localize("jobs.sortByName", "Job Name"),
+    localize("jobs.sortByReturnCode", "Return Code"),
+];
+
+export const JOB_SORT_KEYS: Record<JobSortOpts, keyof (IJob & { "exec-submitted": string })> = {
+    [JobSortOpts.Id]: "jobid",
+    [JobSortOpts.DateSubmitted]: "exec-submitted",
+    [JobSortOpts.Name]: "jobname",
+    [JobSortOpts.ReturnCode]: "retcode",
+};
 
 export async function resolveQuickPickHelper(quickpick): Promise<FilterItem | undefined> {
     ZoweLogger.trace("job.utils.resolveQuickPickHelper called.");

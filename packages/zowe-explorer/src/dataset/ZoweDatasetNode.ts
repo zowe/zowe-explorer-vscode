@@ -13,13 +13,14 @@ import * as zowe from "@zowe/cli";
 import * as vscode from "vscode";
 import * as globals from "../globals";
 import { errorHandling } from "../utils/ProfilesUtils";
-import { DatasetSort, DatasetStats, Gui, NodeAction, IZoweDatasetTreeNode, ZoweTreeNode } from "@zowe/zowe-explorer-api";
+import { DatasetSortOpts, DatasetStats, Gui, NodeAction, IZoweDatasetTreeNode, ZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { getIconByNode } from "../generators/icons";
 import * as contextually from "../shared/context";
 import * as nls from "vscode-nls";
 import { Profiles } from "../Profiles";
 import { ZoweLogger } from "../utils/LoggerUtils";
+
 // Set up localization
 nls.config({
     messageFormat: nls.MessageFormat.bundle,
@@ -43,8 +44,8 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     public errorDetails: zowe.imperative.ImperativeError;
     public ongoingActions: Record<NodeAction | string, Promise<any>> = {};
     public wasDoubleClicked: boolean = false;
-    public sortMethod: DatasetSort = DatasetSort.Name;
     public stats: DatasetStats;
+    public sortMethod = DatasetSortOpts.Name;
 
     /**
      * Creates an instance of ZoweDatasetNode
@@ -267,31 +268,38 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 .filter((label) => this.children.find((c) => (c.label as string) === label) == null)
                 .map((label) => elementChildren[label]);
 
+            const sortMethod = (this.sortMethod ? this.sortMethod : this.getSessionNode().sortMethod) as DatasetSortOpts;
+
             this.children = this.children
                 .concat(newChildren)
                 .filter((c) => (c.label as string) in elementChildren)
-                .sort(ZoweDatasetNode.sortBy(this.getSessionNode().sortMethod ?? DatasetSort.Name));
+                .sort(ZoweDatasetNode.sortBy(sortMethod ?? DatasetSortOpts.Name));
         }
 
         return this.children;
     }
 
-    public static sortBy(method: DatasetSort): (a: IZoweDatasetTreeNode, b: IZoweDatasetTreeNode) => number {
+    /**
+     * Returns a sorting function based on the given sorting method.
+     * If the nodes are not PDS members, it will simply sort by name.
+     * @param method The sorting method to use
+     * @returns A function that sorts 2 nodes based on the given sorting method
+     */
+    public static sortBy(method: DatasetSortOpts): (a: IZoweDatasetTreeNode, b: IZoweDatasetTreeNode) => number {
         return (a, b): number => {
-            // we can only sort PDS members, compared nodes are at same level (same parent)
             const aParent = a.getParent();
             if (aParent == null || !contextually.isPds(aParent)) {
                 return (a.label as string) < (b.label as string) ? -1 : 1;
             }
 
             switch (method) {
-                case DatasetSort.LastModified:
-                    return a.stats?.m4date < b.stats?.m4date ? -1 : 1;
-                case DatasetSort.UserId:
-                    return a.stats?.user < b.stats?.user ? -1 : 1;
-                case DatasetSort.Name:
+                case DatasetSortOpts.Name:
                 default:
                     return (a.label as string) < (b.label as string) ? -1 : 1;
+                case DatasetSortOpts.LastModified:
+                    return a.stats?.m4date < b.stats?.m4date ? -1 : 1;
+                case DatasetSortOpts.UserId:
+                    return a.stats?.user < b.stats?.user ? -1 : 1;
             }
         };
     }
