@@ -1290,16 +1290,19 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
     }
 
     /**
-     * Sorts the children for a node with the given sorting method.
+     * Sorts all PDS children nodes within a session using the given sorting method.
      * @param method The sorting method to use
-     * @param node The node whose children should be sorted
+     * @param node The session whose PDS should be sorted
      */
-    public sortBy(method: DatasetSort, node: IZoweDatasetTreeNode): void {
-        node.sortMethod = method;
+    public sortPdsBy(method: DatasetSort, node: IZoweDatasetTreeNode): void {
         if (node.children != null && node.children.length > 0) {
-            // If children nodes already exist, sort now and avoid extra refresh
-            node.children.sort(ZoweDatasetNode.sortBy(method));
-            this.nodeDataChanged(node);
+            // children nodes already exist, sort and repaint to avoid extra refresh
+            for (const c of node.children) {
+                if (contextually.isPds(c) && c.children) {
+                    c.children.sort(ZoweDatasetNode.sortBy(method));
+                    this.nodeDataChanged(c);
+                }
+            }
         } else {
             this.refreshElement(node);
         }
