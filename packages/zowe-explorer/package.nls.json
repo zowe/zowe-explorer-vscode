@@ -153,7 +153,7 @@
   "jobs.sortByDateSubmitted": "Sort by Date Submitted",
   "sortByName": "Sort by Name",
   "ds.selectSortOpt": "Select a sorting option for PDS members in {0}.",
-  "ds.sortBy": "Sort by...",
+  "ds.sortBy": "Sort PDS members...",
   "ds.sortByName": "Name",
   "ds.sortByModified": "Date Modified",
   "ds.sortByUserId": "User ID"
