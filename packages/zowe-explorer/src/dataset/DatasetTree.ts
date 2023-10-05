@@ -1294,12 +1294,35 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      * @param method The sorting method to use
      * @param node The session whose PDS should be sorted
      */
-    public sortPdsBy(method: DatasetSort, node: IZoweDatasetTreeNode): void {
+    public async sortPdsBy(node: IZoweDatasetTreeNode): Promise<void> {
+        const options = [localize("ds.sortByName", "Name"), localize("ds.sortByModified", "Date Modified"), localize("ds.sortByUserId", "User ID")];
+
+        const selection = await Gui.showQuickPick(options, {
+            placeHolder: localize("ds.selectSortOpt", "Select a sorting option for PDS members in {0}.", node.label as string),
+        });
+        if (selection == null) {
+            return;
+        }
+
+        switch (selection) {
+            case options[0]:
+                node.sortMethod = DatasetSort.Name;
+                break;
+            case options[1]:
+                node.sortMethod = DatasetSort.LastModified;
+                break;
+            case options[2]:
+                node.sortMethod = DatasetSort.UserId;
+                break;
+            default:
+                return;
+        }
+
         if (node.children != null && node.children.length > 0) {
             // children nodes already exist, sort and repaint to avoid extra refresh
             for (const c of node.children) {
                 if (contextually.isPds(c) && c.children) {
-                    c.children.sort(ZoweDatasetNode.sortBy(method));
+                    c.children.sort(ZoweDatasetNode.sortBy(node.sortMethod));
                     this.nodeDataChanged(c);
                 }
             }
