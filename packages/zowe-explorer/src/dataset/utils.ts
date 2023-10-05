@@ -10,8 +10,22 @@
  */
 
 import * as globals from "../globals";
+import * as nls from "vscode-nls";
 import { IZoweNodeType } from "@zowe/zowe-explorer-api";
 import { ZoweLogger } from "../utils/LoggerUtils";
+
+// Set up localization
+nls.config({
+    messageFormat: nls.MessageFormat.bundle,
+    bundleFormat: nls.BundleFormat.standalone,
+})();
+const localize: nls.LocalizeFunc = nls.loadMessageBundle();
+
+export const DATASET_SORT_OPTS = [
+    localize("ds.sortByName", "Name"),
+    localize("ds.sortByModified", "Date Modified"),
+    localize("ds.sortByUserId", "User ID"),
+];
 
 export function getProfileAndDataSetName(node: IZoweNodeType): {
     profileName: string;

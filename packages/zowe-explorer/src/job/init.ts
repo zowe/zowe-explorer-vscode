@@ -171,17 +171,7 @@ export async function initJobsProvider(context: vscode.ExtensionContext): Promis
             await jobActions.cancelJobs(jobsProvider, getSelectedNodeList(node, nodeList));
         })
     );
-    context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.sortbyname", (job) => jobActions.sortJobsBy(job, jobsProvider, "jobname")));
-    context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.sortbyid", (job) => jobActions.sortJobsBy(job, jobsProvider, "jobid")));
-    context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.jobs.sortbyreturncode", (job) => jobActions.sortJobsBy(job, jobsProvider, "retcode"))
-    );
-    context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.jobs.filterJobs", async (job) => {
-            await jobActions.filterJobs(jobsProvider, job);
-        })
-    );
-
+    context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.sortBy", async (job) => jobActions.sortJobs(job, jobsProvider)));
     initSubscribers(context, jobsProvider);
     return jobsProvider;
 }

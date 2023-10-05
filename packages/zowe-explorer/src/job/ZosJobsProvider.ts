@@ -12,7 +12,7 @@
 import * as vscode from "vscode";
 import * as globals from "../globals";
 import { IJob, imperative } from "@zowe/cli";
-import { Gui, ValidProfileEnum, IZoweTree, IZoweJobTreeNode, PersistenceSchemaEnum, NodeInteraction } from "@zowe/zowe-explorer-api";
+import { Gui, ValidProfileEnum, IZoweTree, IZoweJobTreeNode, PersistenceSchemaEnum, NodeInteraction, JobSortOpts } from "@zowe/zowe-explorer-api";
 import { FilterItem, errorHandling } from "../utils/ProfilesUtils";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
@@ -1121,6 +1121,17 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
 
         // Fire "tree changed event" to reflect added polling context value
         this.mOnDidChangeTreeData.fire();
+    }
+
+    public sortBy(session: IZoweJobTreeNode): void {
+        const sortMethod = session.sortMethod as JobSortOpts;
+
+        if (session.children != null) {
+            session.children.sort(Job.sortJobs(sortMethod));
+            this.nodeDataChanged(session);
+        } else {
+            this.refreshElement(session);
+        }
     }
 }
 

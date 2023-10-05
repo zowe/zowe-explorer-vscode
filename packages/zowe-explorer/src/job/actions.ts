@@ -21,6 +21,7 @@ import SpoolProvider, { encodeJobFile, getSpoolFiles, matchSpool } from "../Spoo
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { getDefaultUri } from "../shared/utils";
 import { ZosJobsProvider } from "./ZosJobsProvider";
+import { JOB_SORT_OPTS } from "./utils";
 
 // Set up localization
 nls.config({
@@ -529,19 +530,24 @@ export async function cancelJobs(jobsProvider: IZoweTree<IZoweJobTreeNode>, node
         await Gui.showMessage(localize("cancelJobs.succeeded", "Cancelled selected jobs successfully."));
     }
 }
-export function sortJobsBy(session: IZoweJobTreeNode, jobsProvider: ZosJobsProvider, key: keyof zowe.IJob): void {
-    if (session.children != null) {
-        session.children.sort((x, y) => {
-            if (key !== "jobid" && x["job"][key] == y["job"][key]) {
-                return x["job"]["jobid"] > y["job"]["jobid"] ? 1 : -1;
-            } else {
-                return x["job"][key] > y["job"][key] ? 1 : -1;
-            }
-        });
-        jobsProvider.nodeDataChanged(session);
-    } else {
-        jobsProvider.refreshElement(session);
+export async function sortJobs(session: IZoweJobTreeNode, jobsProvider: ZosJobsProvider): Promise<void> {
+    const selection = await Gui.showQuickPick(
+        JOB_SORT_OPTS.map((sortOpt, i) => (i === session.sortMethod ? `${sortOpt} $(check)` : sortOpt)),
+        {
+            placeHolder: localize("jobs.selectSortOpt", "Select a sorting option for jobs in {0}", session.label as string),
+        }
+    );
+    if (selection == null) {
+        return;
     }
+
+    const optIndex = JOB_SORT_OPTS.indexOf(selection);
+    if (optIndex == -1) {
+        return;
+    }
+
+    session.sortMethod = optIndex;
+    jobsProvider.sortBy(session);
 }
 
 export async function filterJobs(jobsProvider: IZoweTree<IZoweJobTreeNode>, job: IZoweJobTreeNode): Promise<vscode.InputBox> {

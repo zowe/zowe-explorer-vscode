@@ -198,7 +198,9 @@ export async function initDatasetProvider(context: vscode.ExtensionContext): Pro
     );
     context.subscriptions.push(vscode.commands.registerCommand("zowe.ds.ssoLogin", (node: IZoweTreeNode) => datasetProvider.ssoLogin(node)));
     context.subscriptions.push(vscode.commands.registerCommand("zowe.ds.ssoLogout", (node: IZoweTreeNode) => datasetProvider.ssoLogout(node)));
-    context.subscriptions.push(vscode.commands.registerCommand("zowe.ds.sortBy", (node: IZoweDatasetTreeNode) => datasetProvider.sortPdsBy(node)));
+    context.subscriptions.push(
+        vscode.commands.registerCommand("zowe.ds.sortBy", async (node: IZoweDatasetTreeNode) => datasetProvider.sortPdsMembers(node))
+    );
     context.subscriptions.push(
         vscode.workspace.onDidChangeConfiguration(async (e) => {
             await datasetProvider.onDidChangeConfiguration(e);

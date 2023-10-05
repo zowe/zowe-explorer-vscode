@@ -148,13 +148,7 @@
   "createZoweSchema.reload.infoMessage": "Team Configuration file created. Location: {0}. \n Please reload your window.",
   "copyFile": "Copy",
   "pasteFile": "Paste",
-  "jobs.sortByReturnCode": "Sort by Return Code",
-  "jobs.sortById": "Sort by ID",
-  "jobs.sortByDateSubmitted": "Sort by Date Submitted",
-  "sortByName": "Sort by Name",
-  "ds.selectSortOpt": "Select a sorting option for PDS members in {0}.",
-  "ds.sortBy": "Sort by...",
-  "ds.sortByName": "Name",
-  "ds.sortByModified": "Date Modified",
-  "ds.sortByUserId": "User ID"
+  "jobs.sortBy": "Sort jobs...",
+  "jobs.selectSortOpt": "Select a sorting option for jobs in {0}",
+  "ds.sortBy": "Sort PDS members..."
 }

@@ -1141,7 +1141,7 @@
         {
           "when": "view == zowe.ds.explorer && viewItem =~ /^(ds.*|^pds.*)/",
           "command": "zowe.ds.hMigrateDataSet",
-          "group": "099_zowe_dsModification@0"
+          "group": "z_zowe_dsModification@0"
         },
         {
           "when": "view == zowe.ds.explorer && viewItem =~ /^ds.*/",
@@ -1166,7 +1166,7 @@
         {
           "when": "view == zowe.ds.explorer && viewItem =~ /^pds.*/ && !listMultiSelection",
           "command": "zowe.ds.renameDataSet",
-          "group": "099_zowe_dsModification@2"
+          "group": "z_zowe_dsModification@2"
         },
         {
           "when": "view == zowe.ds.explorer && viewItem =~ /^ds.*/",
@@ -1181,7 +1181,7 @@
         {
           "when": "view == zowe.ds.explorer && viewItem =~ /^pds.*/",
           "command": "zowe.ds.deleteDataset",
-          "group": "099_zowe_dsModification@5"
+          "group": "z_zowe_dsModification@5"
         },
         {
           "when": "view == zowe.ds.explorer && viewItem =~ /^migr.*/",
@@ -1194,9 +1194,14 @@
           "group": "099_zowe_dsProfileAuthentication@99"
         },
         {
+          "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/  && !listMultiSelection",
+          "command": "zowe.jobs.sortBy",
+          "group": "inline@0"
+        },
+        {
           "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/ && !listMultiSelection",
           "command": "zowe.jobs.search",
-          "group": "inline"
+          "group": "inline@1"
         },
         {
           "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)job.*/",
