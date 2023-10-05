@@ -284,7 +284,8 @@
       {
         "command": "zowe.ds.sortBy",
         "title": "%ds.sortBy%",
-        "category": "Zowe Explorer"
+        "category": "Zowe Explorer",
+        "icon": "$(list-ordered)"
       },
       {
         "command": "zowe.cmd.deleteProfile",
@@ -1004,9 +1005,14 @@
           "group": "099_zowe_ussProfileModification@99"
         },
         {
+          "when": "view == zowe.ds.explorer && viewItem =~ /^session.*/ && !listMultiSelection",
+          "command": "zowe.ds.sortBy",
+          "group": "inline@0"
+        },
+        {
           "when": "view == zowe.ds.explorer && viewItem =~ /^(?!.*_fav.*)session.*/ && !listMultiSelection",
           "command": "zowe.ds.pattern",
-          "group": "inline"
+          "group": "inline@1"
         },
         {
           "when": "view == zowe.ds.explorer && viewItem =~ /^(pds|ds|migr).*_fav.*/",
@@ -1119,11 +1125,6 @@
           "group": "002_zowe_dsWorkspace@4"
         },
         {
-          "when": "view == zowe.ds.explorer && viewItem =~ /^session.*/ && !listMultiSelection",
-          "command": "zowe.ds.sortBy",
-          "group": "003_zowe_dsSort@0"
-        },
-        {
           "when": "view == zowe.ds.explorer && viewItem =~ /^fileError.*/",
           "command": "zowe.ds.showFileErrorDetails",
           "group": "099_zowe_dsModification@0"
@@ -1209,19 +1210,24 @@
           "group": "098_zowe_dsProfileAuthentication@10"
         },
         {
+          "when": "view == zowe.ds.explorer && viewItem =~ /^session.*/ && !listMultiSelection",
+          "command": "zowe.ds.sortBy",
+          "group": "099_zowe_dsSort"
+        },
+        {
           "when": "view == zowe.ds.explorer && viewItem =~ /^(?!.*_fav.*)session.*/ && !listMultiSelection",
           "command": "zowe.ds.editSession",
-          "group": "099_zowe_dsProfileModification@0"
+          "group": "100_zowe_dsProfileModification@0"
         },
         {
           "when": "view == zowe.ds.explorer && viewItem =~ /^(?!.*_fav.*)session.*/",
           "command": "zowe.ds.removeSession",
-          "group": "099_zowe_dsProfileModification@98"
+          "group": "100_zowe_dsProfileModification@98"
         },
         {
           "when": "view == zowe.ds.explorer && viewItem =~ /^(?!.*_fav.*)session.*/ && !listMultiSelection",
           "command": "zowe.ds.deleteProfile",
-          "group": "099_zowe_dsProfileModification@99"
+          "group": "100_zowe_dsProfileModification@99"
         },
         {
           "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/ && !listMultiSelection",
