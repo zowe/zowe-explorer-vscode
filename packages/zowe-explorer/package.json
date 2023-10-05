@@ -122,18 +122,23 @@
     ],
     "commands": [
       {
-        "command": "zowe.jobs.sortbyreturncode",
-        "title": "%jobs.sortbyreturncode%",
+        "command": "zowe.jobs.sortByReturnCode",
+        "title": "%jobs.sortByReturnCode%",
         "category": "Zowe Explorer"
       },
       {
-        "command": "zowe.jobs.sortbyname",
+        "command": "zowe.jobs.sortByName",
         "title": "%sortByName%",
         "category": "Zowe Explorer"
       },
       {
-        "command": "zowe.jobs.sortbyid",
-        "title": "%jobs.sortbyid%",
+        "command": "zowe.jobs.sortById",
+        "title": "%jobs.sortById%",
+        "category": "Zowe Explorer"
+      },
+      {
+        "command": "zowe.jobs.sortByDateSubmitted",
+        "title": "%jobs.sortByDateSubmitted%",
         "category": "Zowe Explorer"
       },
       {
@@ -1103,19 +1108,19 @@
           "group": "002_zowe_dsWorkspace@4"
         },
         {
-          "when": "view == zowe.ds.explorer && viewItem =~ /^(pds).*/ && !listMultiSelection",
+          "when": "view == zowe.ds.explorer && viewItem =~ /^session.*/ && !listMultiSelection",
+          "command": "zowe.ds.sortByName",
+          "group": "003_zowe_dsSort@0"
+        },
+        {
+          "when": "view == zowe.ds.explorer && viewItem =~ /^session.*/ && !listMultiSelection",
           "command": "zowe.ds.sortByModified",
           "group": "003_zowe_dsSort@1"
         },
         {
-          "when": "view == zowe.ds.explorer && viewItem =~ /^(pds).*/ && !listMultiSelection",
-          "command": "zowe.ds.sortByName",
-          "group": "003_zowe_dsSort@2"
-        },
-        {
-          "when": "view == zowe.ds.explorer && viewItem =~ /^(pds).*/ && !listMultiSelection",
+          "when": "view == zowe.ds.explorer && viewItem =~ /^session.*/ && !listMultiSelection",
           "command": "zowe.ds.sortByUserId",
-          "group": "003_zowe_dsSort@3"
+          "group": "003_zowe_dsSort@2"
         },
         {
           "when": "view == zowe.ds.explorer && viewItem =~ /^fileError.*/",
@@ -1324,18 +1329,23 @@
         },
         {
           "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/  && !listMultiSelection",
-          "command": "zowe.jobs.sortbyid",
+          "command": "zowe.jobs.sortById",
           "group": "000_zowe_jobsProfileModification@1"
         },
         {
           "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/  && !listMultiSelection",
-          "command": "zowe.jobs.sortbyname",
+          "command": "zowe.jobs.sortByName",
           "group": "000_zowe_jobsProfileModification@2"
         },
         {
           "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/  && !listMultiSelection",
-          "command": "zowe.jobs.sortbyreturncode",
+          "command": "zowe.jobs.sortByReturnCode",
           "group": "000_zowe_jobsProfileModification@2"
+        },
+        {
+          "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/  && !listMultiSelection",
+          "command": "zowe.jobs.sortByDateSubmitted",
+          "group": "000_zowe_jobsProfileModification@3"
         }
       ],
       "commandPalette": [

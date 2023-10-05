@@ -199,17 +199,22 @@ export async function initDatasetProvider(context: vscode.ExtensionContext): Pro
     context.subscriptions.push(vscode.commands.registerCommand("zowe.ds.ssoLogin", (node: IZoweTreeNode) => datasetProvider.ssoLogin(node)));
     context.subscriptions.push(vscode.commands.registerCommand("zowe.ds.ssoLogout", (node: IZoweTreeNode) => datasetProvider.ssoLogout(node)));
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.ds.sortByName", (node: IZoweDatasetTreeNode): void => datasetProvider.sortBy(DatasetSort.Name, node))
+        vscode.commands.registerCommand("zowe.ds.sortByName", (node: IZoweDatasetTreeNode): void => {
+            node.sortMethod = DatasetSort.Name;
+            datasetProvider.sortPdsBy(node.sortMethod, node);
+        })
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.ds.sortByModified", (node: IZoweDatasetTreeNode): void =>
-            datasetProvider.sortBy(DatasetSort.LastModified, node)
-        )
+        vscode.commands.registerCommand("zowe.ds.sortByModified", (node: IZoweDatasetTreeNode): void => {
+            node.sortMethod = DatasetSort.LastModified;
+            datasetProvider.sortPdsBy(node.sortMethod, node);
+        })
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.ds.sortByUserId", (node: IZoweDatasetTreeNode): void =>
-            datasetProvider.sortBy(DatasetSort.UserId, node)
-        )
+        vscode.commands.registerCommand("zowe.ds.sortByUserId", (node: IZoweDatasetTreeNode): void => {
+            node.sortMethod = DatasetSort.UserId;
+            datasetProvider.sortPdsBy(node.sortMethod, node);
+        })
     );
     context.subscriptions.push(
         vscode.workspace.onDidChangeConfiguration(async (e) => {

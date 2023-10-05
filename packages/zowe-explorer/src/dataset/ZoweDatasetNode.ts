@@ -270,7 +270,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             this.children = this.children
                 .concat(newChildren)
                 .filter((c) => (c.label as string) in elementChildren)
-                .sort(ZoweDatasetNode.sortBy(this.sortMethod));
+                .sort(ZoweDatasetNode.sortBy(this.getSessionNode().sortMethod ?? DatasetSort.Name));
         }
 
         return this.children;
@@ -278,6 +278,12 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
 
     public static sortBy(method: DatasetSort): (a: IZoweDatasetTreeNode, b: IZoweDatasetTreeNode) => number {
         return (a, b): number => {
+            // we can only sort PDS members, compared nodes are at same level (same parent)
+            const aParent = a.getParent();
+            if (aParent == null || !contextually.isPds(aParent)) {
+                return (a.label as string) < (b.label as string) ? -1 : 1;
+            }
+
             switch (method) {
                 case DatasetSort.LastModified:
                     return a.stats?.m4date < b.stats?.m4date ? -1 : 1;

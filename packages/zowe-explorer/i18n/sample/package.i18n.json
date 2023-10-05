@@ -148,8 +148,9 @@
   "createZoweSchema.reload.infoMessage": "Team Configuration file created. Location: {0}. \n Please reload your window.",
   "copyFile": "Copy",
   "pasteFile": "Paste",
-  "jobs.sortbyreturncode": "Sort by Return Code",
-  "jobs.sortbyid": "Sort by ID",
+  "jobs.sortByReturnCode": "Sort by Return Code",
+  "jobs.sortById": "Sort by ID",
+  "jobs.sortByDateSubmitted": "Sort by Date Submitted",
   "sortByName": "Sort by Name",
   "ds.sortByUserId": "Sort by User ID",
   "ds.sortByModified": "Sort by Date Modified"
