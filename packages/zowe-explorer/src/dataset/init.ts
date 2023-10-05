@@ -13,7 +13,7 @@ import * as globals from "../globals";
 import * as vscode from "vscode";
 import * as dsActions from "./actions";
 import * as refreshActions from "../shared/refresh";
-import { IZoweDatasetTreeNode, IZoweTreeNode, IZoweTree, DatasetSort } from "@zowe/zowe-explorer-api";
+import { IZoweDatasetTreeNode, IZoweTreeNode, IZoweTree } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { createDatasetTree } from "./DatasetTree";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
@@ -198,24 +198,7 @@ export async function initDatasetProvider(context: vscode.ExtensionContext): Pro
     );
     context.subscriptions.push(vscode.commands.registerCommand("zowe.ds.ssoLogin", (node: IZoweTreeNode) => datasetProvider.ssoLogin(node)));
     context.subscriptions.push(vscode.commands.registerCommand("zowe.ds.ssoLogout", (node: IZoweTreeNode) => datasetProvider.ssoLogout(node)));
-    context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.ds.sortByName", (node: IZoweDatasetTreeNode): void => {
-            node.sortMethod = DatasetSort.Name;
-            datasetProvider.sortPdsBy(node.sortMethod, node);
-        })
-    );
-    context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.ds.sortByModified", (node: IZoweDatasetTreeNode): void => {
-            node.sortMethod = DatasetSort.LastModified;
-            datasetProvider.sortPdsBy(node.sortMethod, node);
-        })
-    );
-    context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.ds.sortByUserId", (node: IZoweDatasetTreeNode): void => {
-            node.sortMethod = DatasetSort.UserId;
-            datasetProvider.sortPdsBy(node.sortMethod, node);
-        })
-    );
+    context.subscriptions.push(vscode.commands.registerCommand("zowe.ds.sortBy", (node: IZoweDatasetTreeNode) => datasetProvider.sortPdsBy(node)));
     context.subscriptions.push(
         vscode.workspace.onDidChangeConfiguration(async (e) => {
             await datasetProvider.onDidChangeConfiguration(e);

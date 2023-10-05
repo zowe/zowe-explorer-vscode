@@ -26,5 +26,9 @@
   "renameDataSet.log.debug": "Renaming data set ",
   "renameDataSet.error": "Unable to rename data set:",
   "dataset.validation": "Enter a valid data set name.",
+  "ds.sortByName": "Name",
+  "ds.sortByModified": "Date Modified",
+  "ds.sortByUserId": "User ID",
+  "ds.selectSortOpt": "Select a sorting option for PDS members in {0}.",
   "defaultFilterPrompt.option.prompt.search": "$(plus) Create a new filter. For example: HLQ.*, HLQ.aaa.bbb, HLQ.ccc.ddd(member)"
 }
