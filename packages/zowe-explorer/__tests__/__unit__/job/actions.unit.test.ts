@@ -1404,11 +1404,12 @@ describe("sortjobsby function", () => {
         const expected = new ZosJobsProvider();
         testtree.mSessionNodes[0].children = [...[globalMocks()[2], globalMocks()[1], globalMocks()[0]]];
         expected.mSessionNodes[0].children = [...[globalMocks()[1], globalMocks()[0], globalMocks()[2]]];
-        const sortbynamespy = jest.spyOn(jobActions, "sortJobsBy");
+        jest.spyOn(Gui, "showQuickPick").mockResolvedValueOnce("Job Name" as any);
+        const sortbynamespy = jest.spyOn(ZosJobsProvider.prototype, "sortBy");
         //act
-        await jobActions.sortJobsBy(testtree.mSessionNodes[0], testtree, "jobname");
+        await jobActions.sortJobs(testtree.mSessionNodes[0], testtree);
         //asert
-        expect(sortbynamespy).toBeCalledWith(testtree.mSessionNodes[0], testtree, "jobname");
+        expect(sortbynamespy).toBeCalledWith(testtree.mSessionNodes[0]);
         expect(sortbynamespy).toHaveBeenCalled();
         expect(sortbynamespy.mock.calls[0][0].children).toStrictEqual(expected.mSessionNodes[0].children);
     });
@@ -1418,11 +1419,12 @@ describe("sortjobsby function", () => {
         const expected = new ZosJobsProvider();
         testtree.mSessionNodes[0].children = [...[globalMocks()[2], globalMocks()[1], globalMocks()[0]]];
         expected.mSessionNodes[0].children = [...[globalMocks()[1], globalMocks()[0], globalMocks()[2]]];
-        const sortbyidspy = jest.spyOn(jobActions, "sortJobsBy");
+        const sortbyidspy = jest.spyOn(ZosJobsProvider.prototype, "sortBy");
+        jest.spyOn(Gui, "showQuickPick").mockResolvedValueOnce("Job ID" as any);
         //act
-        await jobActions.sortJobsBy(testtree.mSessionNodes[0], testtree, "jobid");
+        await jobActions.sortJobs(testtree.mSessionNodes[0], testtree);
         //asert
-        expect(sortbyidspy).toBeCalledWith(testtree.mSessionNodes[0], testtree, "jobid");
+        expect(sortbyidspy).toBeCalledWith(testtree.mSessionNodes[0]);
         expect(sortbyidspy).toHaveBeenCalled();
         expect(sortbyidspy.mock.calls[0][0].children).toStrictEqual(expected.mSessionNodes[0].children);
     });
@@ -1432,11 +1434,13 @@ describe("sortjobsby function", () => {
         const expected = new ZosJobsProvider();
         testtree.mSessionNodes[0].children = [...[globalMocks()[2], globalMocks()[1], globalMocks()[0]]];
         expected.mSessionNodes[0].children = [...[globalMocks()[0], globalMocks()[1], globalMocks()[2]]];
-        const sortbyretcodespy = jest.spyOn(jobActions, "sortJobsBy");
+        const sortbyretcodespy = jest.spyOn(ZosJobsProvider.prototype, "sortBy");
+        jest.spyOn(Gui, "showQuickPick").mockResolvedValueOnce("Return Code" as any);
+
         //act
-        await jobActions.sortJobsBy(testtree.mSessionNodes[0], testtree, "retcode");
+        await jobActions.sortJobs(testtree.mSessionNodes[0], testtree);
         //asert
-        expect(sortbyretcodespy).toBeCalledWith(testtree.mSessionNodes[0], testtree, "retcode");
+        expect(sortbyretcodespy).toBeCalledWith(testtree.mSessionNodes[0]);
         expect(sortbyretcodespy).toHaveBeenCalled();
         expect(sortbyretcodespy.mock.calls[0][0].children).toStrictEqual(expected.mSessionNodes[0].children);
     });

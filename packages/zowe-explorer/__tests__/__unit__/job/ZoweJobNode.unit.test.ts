@@ -16,7 +16,7 @@ import * as zowe from "@zowe/cli";
 import * as globals from "../../../src/globals";
 import { createIJobFile, createIJobObject, createJobSessionNode } from "../../../__mocks__/mockCreators/jobs";
 import { Job } from "../../../src/job/ZoweJobNode";
-import { IZoweJobTreeNode, ProfilesCache, Gui } from "@zowe/zowe-explorer-api";
+import { IZoweJobTreeNode, ProfilesCache, Gui, JobSortOpts } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { Profiles } from "../../../src/Profiles";
 import * as sessUtils from "../../../src/utils/SessionUtils";
@@ -851,7 +851,7 @@ describe("Job - sortJobs", () => {
                     jobid: "JOBID120",
                 },
             } as IZoweJobTreeNode,
-        ].sort((a, b) => Job.sortJobs(a, b));
+        ].sort(Job.sortJobs(JobSortOpts.Id));
         expect(sorted[0].job.jobid).toBe("JOBID120");
         expect(sorted[1].job.jobid).toBe("JOBID120");
         expect(sorted[2].job.jobid).toBe("JOBID123");

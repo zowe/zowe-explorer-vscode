@@ -18,6 +18,7 @@ import { List, imperative } from "@zowe/cli";
 import { Profiles } from "../../src/Profiles";
 import * as globals from "../../src/globals";
 import { ZoweLogger } from "../../src/utils/LoggerUtils";
+import { DatasetSortOpts } from "@zowe/zowe-explorer-api";
 
 describe("Unit Tests (Jest)", () => {
     // Globals
@@ -354,11 +355,13 @@ describe("Unit Tests (Jest)", () => {
                 };
             }),
         });
+        const sessionNode = { getSessionNode: jest.fn(), sortMethod: DatasetSortOpts.Name } as unknown as ZoweDatasetNode;
+        jest.spyOn(ZoweDatasetNode.prototype, "getSessionNode").mockReturnValueOnce(sessionNode);
         // Creating a rootNode
         const pds = new ZoweDatasetNode(
             "[root]: something",
             vscode.TreeItemCollapsibleState.Collapsed,
-            { getSessionNode: jest.fn() } as unknown as ZoweDatasetNode,
+            sessionNode,
             session,
             undefined,
             undefined,

@@ -15,7 +15,7 @@ import * as fs from "fs";
 import * as zowe from "@zowe/cli";
 import { DatasetTree } from "../../../src/dataset/DatasetTree";
 import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
-import { DatasetSort, Gui, IZoweDatasetTreeNode, ProfilesCache, ValidProfileEnum } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweDatasetTreeNode, ProfilesCache, ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { Profiles } from "../../../src/Profiles";
 import * as utils from "../../../src/utils/ProfilesUtils";
@@ -2702,52 +2702,80 @@ describe("Dataset Tree Unit Tests - Function sortBy", () => {
     const mocks = {
         nodeDataChanged: jest.spyOn(DatasetTree.prototype, "nodeDataChanged"),
         refreshElement: jest.spyOn(DatasetTree.prototype, "refreshElement"),
+        showQuickPick: jest.spyOn(Gui, "showQuickPick"),
+        getParent: jest.spyOn(ZoweDatasetNode.prototype, "getParent"),
     };
-    const testNode = new ZoweDatasetNode("test", vscode.TreeItemCollapsibleState.Collapsed, null, createISession());
+    const testSession = new ZoweDatasetNode("testSession", vscode.TreeItemCollapsibleState.Collapsed, null, createISession());
+    const testPds = new ZoweDatasetNode("testPds", vscode.TreeItemCollapsibleState.Collapsed, testSession, createISession());
+    testPds.contextValue = globals.DS_PDS_CONTEXT;
 
     beforeEach(() => {
-        testNode.children = [
-            { label: "A", stats: { user: "someUser", m4date: Date.now() } } as unknown as ZoweDatasetNode,
-            { label: "B", stats: { user: "anotherUser", m4date: Date.parse("2022-01-01T12:00:00") } } as unknown as ZoweDatasetNode,
-            { label: "C", stats: { user: "someUser", m4date: Date.parse("2022-03-15T16:30:00") } } as unknown as ZoweDatasetNode,
+        mocks.getParent.mockReturnValue(testSession);
+        testPds.children = [
+            { label: "A", stats: { user: "someUser", m4date: Date.now() }, getParent: mocks.getParent } as unknown as ZoweDatasetNode,
+            {
+                label: "B",
+                stats: { user: "anotherUser", m4date: Date.parse("2022-01-01T12:00:00") },
+                getParent: mocks.getParent,
+            } as unknown as ZoweDatasetNode,
+            {
+                label: "C",
+                stats: { user: "someUser", m4date: Date.parse("2022-03-15T16:30:00") },
+                getParent: mocks.getParent,
+            } as unknown as ZoweDatasetNode,
         ];
+        testSession.children = [testPds];
     });
 
     afterEach(() => {
-        mocks.nodeDataChanged.mockClear();
-        mocks.refreshElement.mockClear();
+        for (const mock of Object.values(mocks)) {
+            mock.mockClear();
+        }
     });
 
     afterAll(() => {
-        mocks.nodeDataChanged.mockRestore();
-        mocks.refreshElement.mockRestore();
+        for (const mock of Object.values(mocks)) {
+            mock.mockRestore();
+        }
     });
 
-    it("calls refreshElement if no children exist", () => {
-        testNode.children = [];
-        testTree.sortBy(DatasetSort.Name, testNode);
+    it("calls refreshElement if no children exist", async () => {
+        // case 1: called on session node
+        mocks.showQuickPick.mockResolvedValueOnce("Name" as any);
+        testPds.children = [];
+        await testTree.sortPdsMembers(testPds);
         expect(mocks.nodeDataChanged).not.toHaveBeenCalled();
-        expect(mocks.refreshElement).toHaveBeenCalledWith(testNode);
+        expect(mocks.refreshElement).toHaveBeenCalledWith(testPds);
+
+        // case 2: called on PDS node
+        mocks.showQuickPick.mockResolvedValueOnce("Name" as any);
+        testSession.children = [];
+        await testTree.sortPdsMembers(testSession);
+        expect(mocks.nodeDataChanged).not.toHaveBeenCalled();
+        expect(mocks.refreshElement).toHaveBeenCalledWith(testSession);
     });
 
-    it("sorts by name", () => {
-        testTree.sortBy(DatasetSort.Name, testNode);
+    it("sorts by name", async () => {
+        mocks.showQuickPick.mockResolvedValueOnce("Name" as any);
+        await testTree.sortPdsMembers(testPds);
         expect(mocks.nodeDataChanged).toHaveBeenCalled();
         expect(mocks.refreshElement).not.toHaveBeenCalled();
-        expect(testNode.children.map((c: IZoweDatasetTreeNode) => c.label)).toStrictEqual(["A", "B", "C"]);
+        expect(testPds.children.map((c: IZoweDatasetTreeNode) => c.label)).toStrictEqual(["A", "B", "C"]);
     });
 
-    it("sorts by last modified date", () => {
-        testTree.sortBy(DatasetSort.LastModified, testNode);
+    it("sorts by last modified date", async () => {
+        mocks.showQuickPick.mockResolvedValueOnce("Date Modified" as any);
+        await testTree.sortPdsMembers(testPds);
         expect(mocks.nodeDataChanged).toHaveBeenCalled();
         expect(mocks.refreshElement).not.toHaveBeenCalled();
-        expect(testNode.children.map((c: IZoweDatasetTreeNode) => c.label)).toStrictEqual(["B", "C", "A"]);
+        expect(testPds.children.map((c: IZoweDatasetTreeNode) => c.label)).toStrictEqual(["B", "C", "A"]);
     });
 
-    it("sorts by user ID", () => {
-        testTree.sortBy(DatasetSort.UserId, testNode);
+    it("sorts by user ID", async () => {
+        mocks.showQuickPick.mockResolvedValueOnce("User ID" as any);
+        await testTree.sortPdsMembers(testPds);
         expect(mocks.nodeDataChanged).toHaveBeenCalled();
         expect(mocks.refreshElement).not.toHaveBeenCalled();
-        expect(testNode.children.map((c: IZoweDatasetTreeNode) => c.label)).toStrictEqual(["B", "A", "C"]);
+        expect(testPds.children.map((c: IZoweDatasetTreeNode) => c.label)).toStrictEqual(["B", "A", "C"]);
     });
 });
