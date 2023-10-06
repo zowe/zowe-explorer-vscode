@@ -19,7 +19,6 @@ import { initDatasetProvider } from "../../../src/dataset/init";
 import { Profiles } from "../../../src/Profiles";
 import { IJestIt, ITestContext, processSubscriptions, spyOnSubscriptions } from "../../__common__/testUtils";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
-import { DatasetSort } from "@zowe/zowe-explorer-api";
 
 describe("Test src/dataset/extension", () => {
     describe("initDatasetProvider", () => {
@@ -46,7 +45,7 @@ describe("Test src/dataset/extension", () => {
             onDidChangeConfiguration: jest.fn(),
             getTreeView: jest.fn(),
             refreshElement: jest.fn(),
-            sortBy: jest.fn(),
+            sortPdsMembers: jest.fn(),
         };
         const commands: IJestIt[] = [
             {
@@ -253,16 +252,8 @@ describe("Test src/dataset/extension", () => {
                 mock: [{ spy: jest.spyOn(dsProvider, "ssoLogout"), arg: [test.value] }],
             },
             {
-                name: "zowe.ds.sortByName",
-                mock: [{ spy: jest.spyOn(dsProvider, "sortBy"), arg: [DatasetSort.Name, test.value] }],
-            },
-            {
-                name: "zowe.ds.sortByModified",
-                mock: [{ spy: jest.spyOn(dsProvider, "sortBy"), arg: [DatasetSort.LastModified, test.value] }],
-            },
-            {
-                name: "zowe.ds.sortByUserId",
-                mock: [{ spy: jest.spyOn(dsProvider, "sortBy"), arg: [DatasetSort.UserId, test.value] }],
+                name: "zowe.ds.sortBy",
+                mock: [{ spy: jest.spyOn(dsProvider, "sortPdsMembers"), arg: [test.value] }],
             },
             {
                 name: "onDidChangeConfiguration",

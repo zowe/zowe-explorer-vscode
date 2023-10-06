@@ -268,7 +268,11 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 .filter((label) => this.children.find((c) => (c.label as string) === label) == null)
                 .map((label) => elementChildren[label]);
 
-            const sortMethod = (this.sortMethod ? this.sortMethod : this.getSessionNode().sortMethod) as DatasetSortOpts;
+            // get sort method for session
+            const sessionSortMethod = contextually.isSession(this) ? this.sortMethod : this.getSessionNode().sortMethod;
+
+            // use the PDS sort method if one is defined; otherwise, use session sort method
+            const sortMethod = (this.sortMethod ?? sessionSortMethod) as DatasetSortOpts;
 
             this.children = this.children
                 .concat(newChildren)
