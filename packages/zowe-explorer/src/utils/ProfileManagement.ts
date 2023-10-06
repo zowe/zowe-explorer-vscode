@@ -81,13 +81,13 @@ export class ProfileManagement {
     public static disableProfileValildationQpItem: Record<string, vscode.QuickPickItem> = {
         [this.AuthQpLabels.disable]: {
             label: localize("disableProfileValildationQpItem.disableValidation.qpLabel", "$(workspace-untrusted) Disable Profile Validation"),
-            description: localize("disableProfileValildationQpItem.disableValidation.qpDetail", "Disable validation of server check for profile."),
+            description: localize("disableProfileValildationQpItem.disableValidation.qpDetail", "Disable validation of server check for profile"),
         },
     };
     public static enableProfileValildationQpItem: Record<string, vscode.QuickPickItem> = {
         [this.AuthQpLabels.enable]: {
             label: localize("enableProfileValildationQpItem.enableValidation.qpLabel", "$(workspace-trusted) Enable Profile Validation"),
-            description: localize("enableProfileValildationQpItem.enableValidation.qpDetail", "Enable validation of server check for profile."),
+            description: localize("enableProfileValildationQpItem.enableValidation.qpDetail", "Enable validation of server check for profile"),
         },
     };
     public static editProfileQpItems: Record<string, vscode.QuickPickItem> = {
@@ -99,7 +99,7 @@ export class ProfileManagement {
     public static hideProfileQpItems: Record<string, vscode.QuickPickItem> = {
         [this.AuthQpLabels.hide]: {
             label: localize("hideProfileQpItems.hideProfile.qpLabel", "$(eye-closed) Hide Profile"),
-            description: localize("hideProfileQpItems.hideProfile.qpDetail", "Hide profile name from tree view."),
+            description: localize("hideProfileQpItems.hideProfile.qpDetail", "Hide profile name from tree view"),
         },
     };
     public static tokenAuthLoginQpItem: Record<string, vscode.QuickPickItem> = {
@@ -225,13 +225,13 @@ export class ProfileManagement {
         return this.addFinalQpOptions(node, quickPickOptions);
     }
     private static addFinalQpOptions(node: IZoweTreeNode, quickPickOptions: vscode.QuickPickItem[]): vscode.QuickPickItem[] {
+        quickPickOptions.push(this.editProfileQpItems[this.AuthQpLabels.edit]);
+        quickPickOptions.push(this.hideProfileQpItems[this.AuthQpLabels.hide]);
         if (node.contextValue.includes(globals.NO_VALIDATE_SUFFIX)) {
             quickPickOptions.push(this.enableProfileValildationQpItem[this.AuthQpLabels.enable]);
         } else {
             quickPickOptions.push(this.disableProfileValildationQpItem[this.AuthQpLabels.disable]);
         }
-        quickPickOptions.push(this.editProfileQpItems[this.AuthQpLabels.edit]);
-        quickPickOptions.push(this.hideProfileQpItems[this.AuthQpLabels.hide]);
         quickPickOptions.push(this.deleteProfileQpItem[this.AuthQpLabels.delete]);
         return quickPickOptions;
     }
