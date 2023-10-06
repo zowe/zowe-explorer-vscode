@@ -4,6 +4,7 @@
   "viewsContainers.activitybar": "Zowe Explorer",
   "zowe.promptCredentials": "Update Credentials",
   "zowe.extRefresh": "Refresh Zowe Explorer",
+  "zowe.editHistory": "Edit History for Zowe Explorer",
   "zowe.ds.explorer": "Data Sets",
   "zowe.uss.explorer": "Unix System Services (USS)",
   "zowe.jobs.explorer": "Jobs",

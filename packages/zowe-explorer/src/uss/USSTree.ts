@@ -850,6 +850,26 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         this.mHistory.removeFileHistory(name);
     }
 
+    public removeSearchHistory(name: string): void {
+        ZoweLogger.trace("USSTree.removeSearchHistory called.");
+        this.mHistory.removeSearchHistory(name);
+    }
+
+    public resetSearchHistory(): void {
+        ZoweLogger.trace("USSTree.resetSearchHistory called.");
+        this.mHistory.resetSearchHistory();
+    }
+
+    public getSessions(): string[] {
+        ZoweLogger.trace("DatasetTree.getSessions called.");
+        return this.mHistory.getSessions();
+    }
+
+    public getFavorites(): string[] {
+        ZoweLogger.trace("DatasetTree.getFavorites called.");
+        return this.mHistory.readFavorites();
+    }
+
     /**
      * Opens a USS item & reveals it in the tree
      *

@@ -27,6 +27,7 @@ import { ZoweLogger } from "../utils/LoggerUtils";
 import { ZoweSaveQueue } from "../abstract/ZoweSaveQueue";
 import { SettingsConfig } from "../utils/SettingsConfig";
 import { spoolFilePollEvent } from "../job/actions";
+import { HistoryView } from "./HistoryView";
 
 // Set up localization
 nls.config({
@@ -75,6 +76,13 @@ export function registerCommonCommands(context: vscode.ExtensionContext, provide
                     await spoolFilePollEvent(doc);
                 }
             }
+        })
+    );
+
+    // Webview for editing persistent items on Zowe Explorer
+    context.subscriptions.push(
+        vscode.commands.registerCommand("zowe.editHistory", () => {
+            return new HistoryView(context, providers);
         })
     );
 

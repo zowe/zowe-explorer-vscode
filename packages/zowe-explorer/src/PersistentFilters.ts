@@ -200,6 +200,16 @@ export class PersistentFilters {
         return this.updateFileHistory();
     }
 
+    public removeSearchHistory(name: string): Thenable<void> {
+        const index = this.mSearchHistory.findIndex((searchHistoryItem) => {
+            return searchHistoryItem.includes(name);
+        });
+        if (index >= 0) {
+            this.mSearchHistory.splice(index, 1);
+        }
+        return this.updateSearchHistory();
+    }
+
     /*********************************************************************************************************************************************/
     /* Reset functions, for resetting the persistent array to empty (in the extension and in settings.json)
     /*********************************************************************************************************************************************/

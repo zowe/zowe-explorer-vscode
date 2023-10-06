@@ -91,6 +91,11 @@
         "mac": "cmd+alt+z"
       },
       {
+        "command": "zowe.editHistory",
+        "key": "ctrl+y",
+        "mac": "cmd+y"
+      },
+      {
         "command": "zowe.uss.copyUssFile",
         "key": "ctrl+c",
         "mac": "cmd+c",
@@ -144,6 +149,15 @@
       {
         "command": "zowe.extRefresh",
         "title": "%zowe.extRefresh%",
+        "category": "Zowe Explorer",
+        "icon": {
+          "light": "./resources/light/refresh.svg",
+          "dark": "./resources/dark/refresh.svg"
+        }
+      },
+      {
+        "command": "zowe.editHistory",
+        "title": "%zowe.editHistory%",
         "category": "Zowe Explorer",
         "icon": {
           "light": "./resources/light/refresh.svg",
