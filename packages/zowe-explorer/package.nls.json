@@ -110,6 +110,7 @@
   "zowe.settings.version": "Track if migration has been processed",
   "zowe.security.secureCredentialsEnabled": "Allow credentials to be stored securely. If disabled and autoStore is set to true, z/OS credentials are stored as clear text in zowe.config.json.",
   "issueTsoCmd": "Issue TSO Command",
+  "issueUnixCmd": "Issue Unix Command",
   "deleteProfile": "Delete Profile",
   "cmd.deleteProfile": "Delete a Profile Permanently...",
   "renameDataSet": "Rename Data Set",

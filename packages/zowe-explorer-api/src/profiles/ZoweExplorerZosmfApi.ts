@@ -383,4 +383,12 @@ export class ZosmfCommandApi extends ZosmfApiCommon implements ZoweExplorerApi.I
     public issueMvsCommand(command: string): Promise<zowe.IConsoleResponse> {
         return zowe.IssueCommand.issueSimple(this.getSession(), command);
     }
+
+    public async issueUnixCommand(sshSession: zowe.SshSession, command: string, cwd: string): Promise<string> {
+        let stdout = "";
+        await zowe.Shell.executeSshCwd(sshSession, command,cwd, (data: string) => {
+            stdout += data;
+        });
+        return stdout;
+    }
 }

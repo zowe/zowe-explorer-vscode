@@ -532,6 +532,16 @@ export namespace ZoweExplorerApi {
          * @memberof ICommand
          */
         issueMvsCommand?(command: string): Promise<zowe.IConsoleResponse>;
+
+        /**
+         * Issues a Unix Command and returns a Console Command API response.
+         *
+         * @param {string} command
+         * @param {string} cwd
+         * @returns {string>}
+         * @memberof ICommand
+         */
+        issueUnixCommand?(sshSession: zowe.SshSession, command: string, cwd: string): Promise<string>;
     }
 
     /**

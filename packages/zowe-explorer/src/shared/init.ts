@@ -27,6 +27,7 @@ import { ZoweLogger } from "../utils/LoggerUtils";
 import { ZoweSaveQueue } from "../abstract/ZoweSaveQueue";
 import { SettingsConfig } from "../utils/SettingsConfig";
 import { spoolFilePollEvent } from "../job/actions";
+import { UnixCommandHandler } from "../command/UnixCommandHandler";
 
 // Set up localization
 nls.config({
@@ -188,6 +189,15 @@ export function registerCommonCommands(context: vscode.ExtensionContext, provide
                     await TsoCommandHandler.getInstance().issueTsoCommand(node.session, command, node);
                 } else {
                     await TsoCommandHandler.getInstance().issueTsoCommand();
+                }
+            })
+        );
+        context.subscriptions.push(
+            vscode.commands.registerCommand("zowe.issueUnixCmd", async (node?, command?) => {
+                if (node) {
+                    await UnixCommandHandler.getInstance().issueUnixCommand(node.session,command, node);
+                } else {
+                    await UnixCommandHandler.getInstance().issueUnixCommand();
                 }
             })
         );
