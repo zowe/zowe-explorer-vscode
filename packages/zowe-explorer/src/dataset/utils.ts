@@ -11,7 +11,7 @@
 
 import * as globals from "../globals";
 import * as nls from "vscode-nls";
-import { DatasetFilterOpts, IZoweNodeType } from "@zowe/zowe-explorer-api";
+import { IZoweNodeType } from "@zowe/zowe-explorer-api";
 import { ZoweLogger } from "../utils/LoggerUtils";
 
 // Set up localization
