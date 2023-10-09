@@ -321,13 +321,13 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             }
 
             switch (sort.method) {
-                case DatasetSortOpts.Name:
-                default:
-                    return (a.label as string) < (b.label as string) ? sortLessThan : sortGreaterThan;
                 case DatasetSortOpts.LastModified:
                     return a.stats?.m4date < b.stats?.m4date ? sortLessThan : sortGreaterThan;
                 case DatasetSortOpts.UserId:
                     return a.stats?.user < b.stats?.user ? sortLessThan : sortGreaterThan;
+                case DatasetSortOpts.Name:
+                default:
+                    return (a.label as string) < (b.label as string) ? sortLessThan : sortGreaterThan;
             }
         };
     }

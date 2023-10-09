@@ -123,7 +123,7 @@ export async function initJobsProvider(context: vscode.ExtensionContext): Promis
             }
         })
     );
-    context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.saveSearch", (node): void => void jobsProvider.saveSearch(node)));
+    context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.saveSearch", (node): void => jobsProvider.saveSearch(node)));
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.jobs.removeSearchFavorite", async (node): Promise<void> => jobsProvider.removeFavorite(node))
     );

@@ -12,7 +12,7 @@
 import * as vscode from "vscode";
 import * as globals from "../globals";
 import { IJob, imperative } from "@zowe/cli";
-import { Gui, ValidProfileEnum, IZoweTree, IZoweJobTreeNode, PersistenceSchemaEnum, NodeInteraction, JobSortOpts } from "@zowe/zowe-explorer-api";
+import { Gui, ValidProfileEnum, IZoweTree, IZoweJobTreeNode, PersistenceSchemaEnum, NodeInteraction } from "@zowe/zowe-explorer-api";
 import { FilterItem, errorHandling } from "../utils/ProfilesUtils";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
@@ -159,10 +159,9 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
      *
      * @param {IZoweJobTreeNode} node
      */
-    public saveSearch(node: IZoweJobTreeNode): IZoweJobTreeNode {
+    public saveSearch(node: IZoweJobTreeNode): void {
         ZoweLogger.trace("ZosJobsProvider.saveSearch called.");
         node.contextValue = contextually.asFavorite(node);
-        return node;
     }
     public saveFile(_document: vscode.TextDocument): void {
         throw new Error("Method not implemented.");
