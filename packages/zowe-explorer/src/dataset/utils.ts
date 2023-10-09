@@ -11,7 +11,7 @@
 
 import * as globals from "../globals";
 import * as nls from "vscode-nls";
-import { IZoweNodeType } from "@zowe/zowe-explorer-api";
+import { DatasetFilterOpts, IZoweNodeType } from "@zowe/zowe-explorer-api";
 import { ZoweLogger } from "../utils/LoggerUtils";
 
 // Set up localization
@@ -22,10 +22,18 @@ nls.config({
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 export const DATASET_SORT_OPTS = [
-    localize("ds.sortByName", "Name"),
-    localize("ds.sortByModified", "Date Modified"),
-    localize("ds.sortByUserId", "User ID"),
+    localize("ds.sortByName", "$(case-sensitive) Name (default)"),
+    localize("ds.sortByModified", "$(calendar) Date Modified"),
+    localize("ds.sortByUserId", "$(account) User ID"),
+    localize("setSortDirection", "$(fold) Sort Direction"),
 ];
+
+export const DATASET_FILTER_OPTS = [localize("ds.sortByModified", "$(calendar) Date Modified"), localize("ds.sortByUserId", "$(account) User ID")];
+
+export const DATASET_FILTER_KEYS: Record<string, DatasetFilterOpts> = {
+    [localize("ds.sortByModified", "$(calendar) Date Modified")]: DatasetFilterOpts.LastModified,
+    [localize("ds.sortByUserId", "$(account) User ID")]: DatasetFilterOpts.UserId,
+};
 
 export function getProfileAndDataSetName(node: IZoweNodeType): {
     profileName: string;

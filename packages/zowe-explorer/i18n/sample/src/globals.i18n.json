@@ -17,6 +17,7 @@
   "createFile.attribute.storclass": "Enter the SMS storage class",
   "createFile.attribute.volser": "Enter the volume serial on which the data set should be placed",
   "zowe.separator.recentFilters": "Recent Filters",
+  "zowe.separator.options": "Options",
   "globals.defineGlobals.isTheia": "Zowe Explorer is running in Theia environment.",
   "globals.defineGlobals.tempFolder": "Zowe Explorer's temp folder is located at {0}",
   "globals.setActivated.success": "Zowe Explorer has activated successfully.",

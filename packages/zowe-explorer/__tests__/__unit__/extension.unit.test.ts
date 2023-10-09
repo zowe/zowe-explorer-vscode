@@ -177,6 +177,7 @@ async function createGlobalMocks() {
             "zowe.ds.ssoLogin",
             "zowe.ds.ssoLogout",
             "zowe.ds.sortBy",
+            "zowe.ds.filterBy",
             "zowe.uss.addFavorite",
             "zowe.uss.removeFavorite",
             "zowe.uss.addSession",

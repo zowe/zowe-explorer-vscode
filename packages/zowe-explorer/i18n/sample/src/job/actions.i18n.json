@@ -22,5 +22,9 @@
   "cancelJobs.notCancelled": "The job was not cancelled.",
   "cancelJobs.failed": "One or more jobs failed to cancel: {0}",
   "cancelJobs.succeeded": "Cancelled selected jobs successfully.",
-  "jobs.selectSortOpt": "Select a sorting option for jobs in {0}"
+  "jobs.selectSortOpt": "Select a sorting option for jobs in {0}",
+  "setSortDirection": "$(fold) Sort Direction",
+  "sort.asc": "Ascending",
+  "sort.desc": "Descending",
+  "sort.selectDirection": "Select a sorting direction"
 }

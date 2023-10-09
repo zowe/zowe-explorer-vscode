@@ -202,6 +202,12 @@ export async function initDatasetProvider(context: vscode.ExtensionContext): Pro
         vscode.commands.registerCommand("zowe.ds.sortBy", async (node: IZoweDatasetTreeNode) => datasetProvider.sortPdsMembers(node))
     );
     context.subscriptions.push(
+        vscode.commands.registerCommand(
+            "zowe.ds.filterBy",
+            async (node: IZoweDatasetTreeNode): Promise<void> => datasetProvider.filterPdsMembers(node)
+        )
+    );
+    context.subscriptions.push(
         vscode.workspace.onDidChangeConfiguration(async (e) => {
             await datasetProvider.onDidChangeConfiguration(e);
         })
