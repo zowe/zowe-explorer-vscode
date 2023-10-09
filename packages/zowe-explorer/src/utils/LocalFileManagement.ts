@@ -85,22 +85,35 @@ export class LocalFileManagement {
     public static async compareChosenFileContent(): Promise<void> {
         const docUriArray: vscode.Uri[] = [];
         for (const node of globals.filesToCompare) {
-            const filepath = await this.getCompareFilePaths(node);
-            docUriArray.push(vscode.Uri.file(filepath));
+            const fileInfo = await this.getCompareFilePaths(node);
+            if (fileInfo.path) {
+                docUriArray.push(vscode.Uri.file(fileInfo.path));
+            } else {
+                return;
+            }
         }
-        vscode.commands.executeCommand("vscode.diff", docUriArray[0], docUriArray[1]);
         globals.resetCompareChoices();
+        if (docUriArray.length === 2) {
+            vscode.commands.executeCommand("vscode.diff", docUriArray[0], docUriArray[1]);
+        }
     }
 
-    private static async getCompareFilePaths(node: IZoweTreeNode): Promise<string> {
+    private static async getCompareFilePaths(node: IZoweTreeNode): Promise<localFileInfo> {
         ZoweLogger.info(`Getting files ${String(globals.filesToCompare[0].label)} and ${String(globals.filesToCompare[1].label)} for comparison.`);
         let fileInfo = {} as localFileInfo;
-        if (isZoweDatasetTreeNode(node)) {
-            fileInfo = await downloadPs(node);
+        switch (true) {
+            case isZoweDatasetTreeNode(node): {
+                fileInfo = await downloadPs(node);
+                break;
+            }
+            case isZoweUSSTreeNode(node): {
+                fileInfo = await downloadUnixFile(node, true);
+                break;
+            }
+            default: {
+                ZoweLogger.warn(localize("getCompareFilePaths.treeNodeCheck.fail", "Something went wrong with compare of files."));
+            }
         }
-        if (isZoweUSSTreeNode(node)) {
-            fileInfo = await downloadUnixFile(node, true);
-        }
-        return fileInfo.path;
+        return fileInfo;
     }
 }
