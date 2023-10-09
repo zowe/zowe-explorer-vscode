@@ -204,7 +204,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             return this.children;
         }
 
-        // Build a list of nodes based on the API response
+        // TODO:fsp Build a list of nodes based on the API response
         const responseNodes: IZoweUSSTreeNode[] = [];
         const newNodeCreated: boolean = response.apiResponse.items.reduce((lastResult: boolean, item) => {
             if (item.name === "." || item.name === "..") {

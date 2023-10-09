@@ -20,6 +20,7 @@ import { createUSSTree } from "./USSTree";
 import { initSubscribers } from "../shared/init";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { TreeViewUtils } from "../utils/TreeViewUtils";
+import { UssFSProvider } from "./UssFSProvider";
 
 export async function initUSSProvider(context: vscode.ExtensionContext): Promise<IZoweTree<IZoweUSSTreeNode>> {
     ZoweLogger.trace("init.initUSSProvider called.");
@@ -27,6 +28,9 @@ export async function initUSSProvider(context: vscode.ExtensionContext): Promise
     if (ussFileProvider == null) {
         return null;
     }
+
+    const ussFs = new UssFSProvider();
+    context.subscriptions.push(vscode.workspace.registerFileSystemProvider("uss", ussFs, { isCaseSensitive: true }));
 
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.uss.addFavorite", async (node, nodeList) => {
