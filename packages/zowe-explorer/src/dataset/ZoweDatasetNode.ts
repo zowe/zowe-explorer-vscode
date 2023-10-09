@@ -13,13 +13,25 @@ import * as zowe from "@zowe/cli";
 import * as vscode from "vscode";
 import * as globals from "../globals";
 import { errorHandling } from "../utils/ProfilesUtils";
-import { DatasetSortOpts, DatasetStats, Gui, NodeAction, IZoweDatasetTreeNode, ZoweTreeNode } from "@zowe/zowe-explorer-api";
+import {
+    DatasetFilter,
+    DatasetFilterOpts,
+    DatasetSortOpts,
+    DatasetStats,
+    Gui,
+    NodeAction,
+    IZoweDatasetTreeNode,
+    ZoweTreeNode,
+    SortDirection,
+    NodeSort,
+} from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { getIconByNode } from "../generators/icons";
 import * as contextually from "../shared/context";
 import * as nls from "vscode-nls";
 import { Profiles } from "../Profiles";
 import { ZoweLogger } from "../utils/LoggerUtils";
+import * as dayjs from "dayjs";
 
 // Set up localization
 nls.config({
@@ -45,7 +57,11 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     public ongoingActions: Record<NodeAction | string, Promise<any>> = {};
     public wasDoubleClicked: boolean = false;
     public stats: DatasetStats;
-    public sortMethod = DatasetSortOpts.Name;
+    public sort: NodeSort = {
+        method: DatasetSortOpts.Name,
+        direction: SortDirection.Ascending,
+    };
+    public filter: DatasetFilter;
 
     /**
      * Creates an instance of ZoweDatasetNode
@@ -268,16 +284,21 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 .filter((label) => this.children.find((c) => (c.label as string) === label) == null)
                 .map((label) => elementChildren[label]);
 
-            // get sort method for session
-            const sessionSortMethod = contextually.isSession(this) ? this.sortMethod : this.getSessionNode().sortMethod;
+            // get sort settings for session
+            const sessionSort = contextually.isSession(this) ? this.sort : this.getSessionNode().sort;
 
-            // use the PDS sort method if one is defined; otherwise, use session sort method
-            const sortMethod = (this.sortMethod ?? sessionSortMethod) as DatasetSortOpts;
+            // use the PDS sort settings if defined; otherwise, use session sort method
+            const sortOpts = this.sort ?? sessionSort;
+
+            // use the PDS filter if one is set, otherwise try using the session filter
+            const sessionFilter = contextually.isSession(this) ? this.filter : this.getSessionNode().filter;
+            const filter = this.filter ?? sessionFilter;
 
             this.children = this.children
                 .concat(newChildren)
                 .filter((c) => (c.label as string) in elementChildren)
-                .sort(ZoweDatasetNode.sortBy(sortMethod ?? DatasetSortOpts.Name));
+                .filter(filter ? ZoweDatasetNode.filterBy(filter) : (_c): boolean => true)
+                .sort(ZoweDatasetNode.sortBy(sortOpts));
         }
 
         return this.children;
@@ -289,21 +310,54 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
      * @param method The sorting method to use
      * @returns A function that sorts 2 nodes based on the given sorting method
      */
-    public static sortBy(method: DatasetSortOpts): (a: IZoweDatasetTreeNode, b: IZoweDatasetTreeNode) => number {
+    public static sortBy(sort: NodeSort): (a: IZoweDatasetTreeNode, b: IZoweDatasetTreeNode) => number {
         return (a, b): number => {
+            const sortLessThan = sort.direction == SortDirection.Ascending ? -1 : 1;
+            const sortGreaterThan = sortLessThan * -1;
+
             const aParent = a.getParent();
             if (aParent == null || !contextually.isPds(aParent)) {
-                return (a.label as string) < (b.label as string) ? -1 : 1;
+                return (a.label as string) < (b.label as string) ? sortLessThan : sortGreaterThan;
             }
 
-            switch (method) {
+            switch (sort.method) {
                 case DatasetSortOpts.Name:
                 default:
-                    return (a.label as string) < (b.label as string) ? -1 : 1;
+                    return (a.label as string) < (b.label as string) ? sortLessThan : sortGreaterThan;
                 case DatasetSortOpts.LastModified:
-                    return a.stats?.m4date < b.stats?.m4date ? -1 : 1;
+                    return a.stats?.m4date < b.stats?.m4date ? sortLessThan : sortGreaterThan;
                 case DatasetSortOpts.UserId:
-                    return a.stats?.user < b.stats?.user ? -1 : 1;
+                    return a.stats?.user < b.stats?.user ? sortLessThan : sortGreaterThan;
+            }
+        };
+    }
+
+    /**
+     * Returns a filter function based on the given method.
+     * If the nodes are not PDS members, it will not filter those nodes.
+     * @param method The sorting method to use
+     * @returns A function that sorts 2 nodes based on the given sorting method
+     */
+    public static filterBy(filter: DatasetFilter): (node: IZoweDatasetTreeNode) => boolean {
+        const isDateFilter = (f: string): boolean => {
+            return dayjs(f).isValid();
+        };
+
+        return (node): boolean => {
+            const aParent = node.getParent();
+            if (aParent == null || !contextually.isPds(aParent)) {
+                return true;
+            }
+
+            switch (filter.method) {
+                case DatasetFilterOpts.LastModified:
+                    if (!isDateFilter(filter.value)) {
+                        return true;
+                    }
+
+                    return dayjs(node.stats?.m4date).isSame(filter.value, "day");
+                case DatasetFilterOpts.UserId:
+                    return node.stats?.user === filter.value;
             }
         };
     }

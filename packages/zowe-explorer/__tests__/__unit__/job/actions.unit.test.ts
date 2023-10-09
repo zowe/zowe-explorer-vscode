@@ -11,7 +11,7 @@
 
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
-import { Gui, IZoweJobTreeNode, ValidProfileEnum } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweJobTreeNode, JobSortOpts, SortDirection, ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import { Job, Spool } from "../../../src/job/ZoweJobNode";
 import {
     createISession,
@@ -1402,9 +1402,13 @@ describe("sortjobsby function", () => {
         const globalMocks = createGlobalMocks();
         const testtree = new ZosJobsProvider();
         const expected = new ZosJobsProvider();
+        testtree.mSessionNodes[0].sort = {
+            method: JobSortOpts.Id,
+            direction: SortDirection.Ascending,
+        };
         testtree.mSessionNodes[0].children = [...[globalMocks()[2], globalMocks()[1], globalMocks()[0]]];
         expected.mSessionNodes[0].children = [...[globalMocks()[1], globalMocks()[0], globalMocks()[2]]];
-        jest.spyOn(Gui, "showQuickPick").mockResolvedValueOnce("Job Name" as any);
+        jest.spyOn(Gui, "showQuickPick").mockResolvedValueOnce({ label: "$(case-sensitive) Job Name" });
         const sortbynamespy = jest.spyOn(ZosJobsProvider.prototype, "sortBy");
         //act
         await jobActions.sortJobs(testtree.mSessionNodes[0], testtree);
@@ -1417,10 +1421,14 @@ describe("sortjobsby function", () => {
         const globalMocks = createGlobalMocks();
         const testtree = new ZosJobsProvider();
         const expected = new ZosJobsProvider();
+        testtree.mSessionNodes[0].sort = {
+            method: JobSortOpts.Id,
+            direction: SortDirection.Ascending,
+        };
         testtree.mSessionNodes[0].children = [...[globalMocks()[2], globalMocks()[1], globalMocks()[0]]];
         expected.mSessionNodes[0].children = [...[globalMocks()[1], globalMocks()[0], globalMocks()[2]]];
         const sortbyidspy = jest.spyOn(ZosJobsProvider.prototype, "sortBy");
-        jest.spyOn(Gui, "showQuickPick").mockResolvedValueOnce("Job ID" as any);
+        jest.spyOn(Gui, "showQuickPick").mockResolvedValueOnce({ label: "$(list-ordered) Job ID (default)" });
         //act
         await jobActions.sortJobs(testtree.mSessionNodes[0], testtree);
         //asert
@@ -1432,10 +1440,14 @@ describe("sortjobsby function", () => {
         const globalMocks = createGlobalMocks();
         const testtree = new ZosJobsProvider();
         const expected = new ZosJobsProvider();
+        testtree.mSessionNodes[0].sort = {
+            method: JobSortOpts.Id,
+            direction: SortDirection.Ascending,
+        };
         testtree.mSessionNodes[0].children = [...[globalMocks()[2], globalMocks()[1], globalMocks()[0]]];
         expected.mSessionNodes[0].children = [...[globalMocks()[0], globalMocks()[1], globalMocks()[2]]];
         const sortbyretcodespy = jest.spyOn(ZosJobsProvider.prototype, "sortBy");
-        jest.spyOn(Gui, "showQuickPick").mockResolvedValueOnce("Return Code" as any);
+        jest.spyOn(Gui, "showQuickPick").mockResolvedValueOnce({ label: "$(symbol-numeric) Return Code" });
 
         //act
         await jobActions.sortJobs(testtree.mSessionNodes[0], testtree);

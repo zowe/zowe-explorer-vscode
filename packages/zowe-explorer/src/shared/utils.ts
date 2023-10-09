@@ -16,7 +16,7 @@ import * as vscode from "vscode";
 import * as path from "path";
 import * as globals from "../globals";
 import * as os from "os";
-import { Gui, IZoweTreeNode, IZoweNodeType, IZoweDatasetTreeNode, IZoweUSSTreeNode, IZoweJobTreeNode } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweTreeNode, IZoweNodeType, IZoweDatasetTreeNode, IZoweUSSTreeNode, IZoweJobTreeNode, SortDirection } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import * as nls from "vscode-nls";
 import { IZosFilesResponse, imperative } from "@zowe/cli";
@@ -44,6 +44,11 @@ export const JOB_SUBMIT_DIALOG_OPTS = [
     localize("zowe.jobs.confirmSubmission.otherUserJobs", "Other user jobs"),
     localize("zowe.jobs.confirmSubmission.allJobs", "All jobs"),
 ];
+
+export const SORT_OPTS_TO_ENUM: Record<string, SortDirection> = {
+    [localize("sort.asc", "Ascending")]: SortDirection.Ascending,
+    [localize("sort.desc", "Descending")]: SortDirection.Descending,
+};
 
 export function filterTreeByString(value: string, treeItems: vscode.QuickPickItem[]): vscode.QuickPickItem[] {
     ZoweLogger.trace("shared.utils.filterTreeByString called.");

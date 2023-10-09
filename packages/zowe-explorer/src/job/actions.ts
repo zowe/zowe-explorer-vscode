@@ -14,12 +14,12 @@ import * as zowe from "@zowe/cli";
 import { errorHandling } from "../utils/ProfilesUtils";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
-import { Gui, IZoweTree, IZoweJobTreeNode } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweTree, IZoweJobTreeNode, JobSortOpts } from "@zowe/zowe-explorer-api";
 import { Job, Spool } from "./ZoweJobNode";
 import * as nls from "vscode-nls";
 import SpoolProvider, { encodeJobFile, getSpoolFiles, matchSpool } from "../SpoolProvider";
 import { ZoweLogger } from "../utils/LoggerUtils";
-import { getDefaultUri } from "../shared/utils";
+import { SORT_OPTS_TO_ENUM, getDefaultUri } from "../shared/utils";
 import { ZosJobsProvider } from "./ZosJobsProvider";
 import { JOB_SORT_OPTS } from "./utils";
 
@@ -532,7 +532,10 @@ export async function cancelJobs(jobsProvider: IZoweTree<IZoweJobTreeNode>, node
 }
 export async function sortJobs(session: IZoweJobTreeNode, jobsProvider: ZosJobsProvider): Promise<void> {
     const selection = await Gui.showQuickPick(
-        JOB_SORT_OPTS.map((sortOpt, i) => (i === session.sortMethod ? `${sortOpt} $(check)` : sortOpt)),
+        JOB_SORT_OPTS.map((sortOpt, i) => ({
+            label: i === session.sort.method ? `${sortOpt} $(check)` : sortOpt,
+            description: i === JOB_SORT_OPTS.length - 1 ? Object.keys(SORT_OPTS_TO_ENUM)[session.sort.direction] : null,
+        })),
         {
             placeHolder: localize("jobs.selectSortOpt", "Select a sorting option for jobs in {0}", session.label as string),
         }
@@ -540,13 +543,26 @@ export async function sortJobs(session: IZoweJobTreeNode, jobsProvider: ZosJobsP
     if (selection == null) {
         return;
     }
+    if (selection.label === localize("setSortDirection", "$(fold) Sort Direction")) {
+        const dir = await Gui.showQuickPick([localize("sort.asc", "Ascending"), localize("sort.desc", "Descending")], {
+            placeHolder: localize("sort.selectDirection", "Select a sorting direction"),
+        });
+        if (dir != null) {
+            session.sort = {
+                ...(session.sort ?? { method: JobSortOpts.Id }),
+                direction: SORT_OPTS_TO_ENUM[dir],
+            };
+        }
+        await sortJobs(session, jobsProvider);
+        return;
+    }
 
-    const optIndex = JOB_SORT_OPTS.indexOf(selection);
+    const optIndex = JOB_SORT_OPTS.indexOf(selection.label.replace(" $(check)", ""));
     if (optIndex == -1) {
         return;
     }
 
-    session.sortMethod = optIndex;
+    session.sort.method = optIndex;
     jobsProvider.sortBy(session);
 }
 

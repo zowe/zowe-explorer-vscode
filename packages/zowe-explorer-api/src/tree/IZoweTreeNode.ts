@@ -31,6 +31,26 @@ export enum DatasetSortOpts {
     UserId,
 }
 
+export enum SortDirection {
+    Ascending,
+    Descending,
+}
+
+export enum DatasetFilterOpts {
+    LastModified,
+    UserId,
+}
+
+export type DatasetFilter = {
+    method: DatasetFilterOpts;
+    value: string;
+};
+
+export type NodeSort = {
+    method: DatasetSortOpts | JobSortOpts;
+    direction: SortDirection;
+};
+
 export enum JobSortOpts {
     Id,
     DateSubmitted,
@@ -99,7 +119,7 @@ export interface IZoweTreeNode {
     /**
      * Sorting method for this node's children
      */
-    sortMethod?: DatasetSortOpts | JobSortOpts;
+    sort?: NodeSort;
     /**
      * Retrieves the node label
      */
@@ -161,6 +181,10 @@ export interface IZoweDatasetTreeNode extends IZoweTreeNode {
      * Additional statistics about this data set
      */
     stats?: Partial<DatasetStats>;
+    /**
+     * Filter method for this data set's children
+     */
+    filter?: DatasetFilter;
     /**
      * Retrieves child nodes of this IZoweDatasetTreeNode
      *

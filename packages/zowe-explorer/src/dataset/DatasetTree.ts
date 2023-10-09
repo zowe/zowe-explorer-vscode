@@ -23,20 +23,23 @@ import {
     PersistenceSchemaEnum,
     NodeInteraction,
     IZoweTreeNode,
+    DatasetFilter,
+    DatasetSortOpts,
 } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { FilterDescriptor, FilterItem, errorHandling, syncSessionNode } from "../utils/ProfilesUtils";
-import { sortTreeItems, getAppName, getDocumentFilePath } from "../shared/utils";
+import { sortTreeItems, getAppName, getDocumentFilePath, SORT_OPTS_TO_ENUM } from "../shared/utils";
 import { ZoweTreeProvider } from "../abstract/ZoweTreeProvider";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { getIconById, getIconByNode, IconId, IIconItem } from "../generators/icons";
+import * as dayjs from "dayjs";
 import * as fs from "fs";
 import * as contextually from "../shared/context";
 import { resetValidationSettings } from "../shared/actions";
 import { closeOpenedTextFile } from "../utils/workspace";
 import { IDataSet, IListOptions, imperative } from "@zowe/cli";
-import { DATASET_SORT_OPTS, validateDataSetName, validateMemberName } from "./utils";
+import { DATASET_FILTER_KEYS, DATASET_FILTER_OPTS, DATASET_SORT_OPTS, validateDataSetName, validateMemberName } from "./utils";
 import { SettingsConfig } from "../utils/SettingsConfig";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { TreeViewUtils } from "../utils/TreeViewUtils";
@@ -1300,7 +1303,10 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             ? localize("ds.allPdsSort", "all PDS members in {0}", node.label as string)
             : localize("ds.singlePdsSort", "the PDS members in {0}", node.label as string);
         const selection = await Gui.showQuickPick(
-            DATASET_SORT_OPTS.map((sortOpt, i) => (node.sortMethod === i ? `${sortOpt} $(check)` : sortOpt)),
+            DATASET_SORT_OPTS.map((sortOpt, i) => ({
+                label: node.sort?.method === i ? `${sortOpt} $(check)` : sortOpt,
+                description: i === DATASET_SORT_OPTS.length - 1 ? Object.keys(SORT_OPTS_TO_ENUM)[node.sort.direction] : null,
+            })),
             {
                 placeHolder: localize("ds.selectSortOpt", "Select a sorting option for {0}", specifier),
             }
@@ -1309,12 +1315,26 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             return;
         }
 
-        const sortMethod = DATASET_SORT_OPTS.indexOf(selection);
+        if (selection.label === localize("setSortDirection", "$(fold) Sort Direction")) {
+            const dir = await Gui.showQuickPick([localize("sort.asc", "Ascending"), localize("sort.desc", "Descending")], {
+                placeHolder: localize("sort.selectDirection", "Select a sorting direction"),
+            });
+            if (dir != null) {
+                node.sort = {
+                    ...(node.sort ?? { method: DatasetSortOpts.Name }),
+                    direction: SORT_OPTS_TO_ENUM[dir],
+                };
+            }
+            await this.sortPdsMembers(node);
+            return;
+        }
+
+        const sortMethod = DATASET_SORT_OPTS.indexOf(selection.label.replace(" $(check)", ""));
         if (sortMethod == -1) {
             return;
         }
 
-        node.sortMethod = sortMethod;
+        node.sort.method = sortMethod;
 
         if (isSession) {
             // if a session was selected, apply this sort to ALL PDS members
@@ -1322,8 +1342,8 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 // children nodes already exist, sort and repaint to avoid extra refresh
                 for (const c of node.children) {
                     if (contextually.isPds(c) && c.children) {
-                        c.sortMethod = sortMethod;
-                        c.children.sort(ZoweDatasetNode.sortBy(sortMethod));
+                        c.sort = node.sort;
+                        c.children.sort(ZoweDatasetNode.sortBy(node.sort));
                         this.nodeDataChanged(c);
                     }
                 }
@@ -1334,11 +1354,102 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             // Only sort the PDS members for this PDS
             if (node.children != null && node.children.length > 0) {
                 // children nodes already exist, sort and repaint to avoid extra refresh
-                node.children.sort(ZoweDatasetNode.sortBy(sortMethod));
+                node.children.sort(ZoweDatasetNode.sortBy(node.sort));
                 this.nodeDataChanged(node);
             } else {
                 this.refreshElement(node);
             }
         }
+    }
+
+    public updateFilters(node: IZoweDatasetTreeNode, newFilter: DatasetFilter | null, isSession: boolean): void {
+        node.filter = newFilter;
+
+        if (isSession) {
+            // if a session was selected, apply this sort to ALL PDS members
+            if (node.children != null && node.children.length > 0) {
+                // children nodes already exist, sort and repaint to avoid extra refresh
+                for (const c of node.children) {
+                    const asDs = c as IZoweDatasetTreeNode;
+                    if (contextually.isPds(c) && c.children) {
+                        if (asDs.filter != null) {
+                            // if there was a filter set for this PDS, refresh it to get any missing nodes back
+                            // since refreshing the PDS will filter its children, we can return early
+                            this.refreshElement(c);
+                            continue;
+                        }
+                        if (newFilter != null) {
+                            c.children = c.children.filter(ZoweDatasetNode.filterBy(newFilter));
+                            this.nodeDataChanged(c);
+                        } else {
+                            this.refreshElement(c);
+                        }
+                    }
+                }
+            } else {
+                this.refreshElement(node);
+            }
+        } else {
+            // Only sort the PDS members for this PDS
+            if (node.filter != null) {
+                // if there was a filter set for this PDS, refresh it to get any missing nodes back
+                // since refreshing the PDS will filter its children, we can return early
+                this.refreshElement(node);
+                return;
+            }
+            if (node.children != null && node.children.length > 0 && newFilter != null) {
+                // children nodes already exist, sort and repaint to avoid extra refresh
+                node.children = node.children.filter(ZoweDatasetNode.filterBy(newFilter));
+                this.nodeDataChanged(node);
+            } else {
+                this.refreshElement(node);
+            }
+        }
+    }
+
+    public async filterPdsMembers(node: IZoweDatasetTreeNode): Promise<void> {
+        const isSession = contextually.isSession(node);
+
+        const specifier = isSession
+            ? localize("ds.allPdsSort", "all PDS members in {0}", node.label as string)
+            : localize("ds.singlePdsSort", "the PDS members in {0}", node.label as string);
+        const clearFilter = isSession
+            ? localize("ds.clearAllFilters", "$(clear-all) Clear all filters")
+            : localize("ds.clearPdsFilter", "$(clear-all) Clear filters for this PDS");
+        const selection = (
+            await Gui.showQuickPick(
+                [...DATASET_FILTER_OPTS.map((sortOpt, i) => (node.filter?.method === i ? `${sortOpt} $(check)` : sortOpt)), clearFilter],
+                {
+                    placeHolder: localize("ds.selectFilterOpt", "Set a filter for {0}", specifier),
+                }
+            )
+        )?.replace(" $(check)", "");
+        if (selection === clearFilter) {
+            this.updateFilters(node, null, isSession);
+            return;
+        }
+
+        if (selection == null || !(selection in DATASET_FILTER_KEYS)) {
+            return;
+        }
+
+        const filterMethod = DATASET_FILTER_KEYS[selection];
+        const filter = await Gui.showInputBox({
+            title: localize("ds.filterEntry.title", "Enter a value to filter by"),
+            placeHolder: "",
+            validateInput(value) {
+                return dayjs(value).isValid() ? null : localize("ds.filterEntry.invalidDate", "Invalid date format specified");
+            },
+        });
+        if (filter == null) {
+            return;
+        }
+
+        const newFilter = {
+            method: filterMethod,
+            value: filter,
+        };
+
+        this.updateFilters(node, newFilter, isSession);
     }
 }

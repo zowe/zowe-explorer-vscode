@@ -287,6 +287,12 @@
         "category": "Zowe Explorer"
       },
       {
+        "command": "zowe.ds.filterBy",
+        "title": "%ds.filterBy%",
+        "category": "Zowe Explorer",
+        "icon": "$(list-filter)"
+      },
+      {
         "command": "zowe.ds.sortBy",
         "title": "%ds.sortBy%",
         "category": "Zowe Explorer",
@@ -1010,13 +1016,18 @@
         },
         {
           "when": "view == zowe.ds.explorer && viewItem =~ /^session.*/ && !listMultiSelection",
-          "command": "zowe.ds.sortBy",
+          "command": "zowe.ds.filterBy",
           "group": "inline@0"
+        },
+        {
+          "when": "view == zowe.ds.explorer && viewItem =~ /^session.*/ && !listMultiSelection",
+          "command": "zowe.ds.sortBy",
+          "group": "inline@1"
         },
         {
           "when": "view == zowe.ds.explorer && viewItem =~ /^(?!.*_fav.*)session.*/ && !listMultiSelection",
           "command": "zowe.ds.pattern",
-          "group": "inline@1"
+          "group": "inline@2"
         },
         {
           "when": "view == zowe.ds.explorer && viewItem =~ /^(pds|ds|migr).*_fav.*/",
@@ -1999,6 +2010,7 @@
   "dependencies": {
     "@zowe/secrets-for-zowe-sdk": "7.18.4",
     "@zowe/zowe-explorer-api": "2.12.0-SNAPSHOT",
+    "dayjs": "^1.11.10",
     "fs-extra": "8.0.1",
     "isbinaryfile": "4.0.4",
     "js-yaml": "3.13.1",

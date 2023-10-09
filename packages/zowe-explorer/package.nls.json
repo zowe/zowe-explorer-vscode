@@ -151,7 +151,9 @@
   "jobs.sortBy": "Sort jobs...",
   "ds.allPdsSort": "all PDS members in {0}",
   "ds.singlePdsSort": "the PDS members in {0}",
+  "ds.selectFilterOpt": "Set a filter for {0}",
   "ds.selectSortOpt": "Select a sorting option for {0}",
   "jobs.selectSortOpt": "Select a sorting option for jobs in {0}",
+  "ds.filterBy": "Filter PDS members...",
   "ds.sortBy": "Sort PDS members..."
 }

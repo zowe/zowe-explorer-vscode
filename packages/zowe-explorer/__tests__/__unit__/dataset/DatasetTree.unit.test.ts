@@ -2741,14 +2741,14 @@ describe("Dataset Tree Unit Tests - Function sortBy", () => {
 
     it("calls refreshElement if no children exist", async () => {
         // case 1: called on session node
-        mocks.showQuickPick.mockResolvedValueOnce("Name" as any);
+        mocks.showQuickPick.mockResolvedValueOnce({ label: "$(case-sensitive) Name (default)" });
         testPds.children = [];
         await testTree.sortPdsMembers(testPds);
         expect(mocks.nodeDataChanged).not.toHaveBeenCalled();
         expect(mocks.refreshElement).toHaveBeenCalledWith(testPds);
 
         // case 2: called on PDS node
-        mocks.showQuickPick.mockResolvedValueOnce("Name" as any);
+        mocks.showQuickPick.mockResolvedValueOnce({ label: "$(case-sensitive) Name (default)" });
         testSession.children = [];
         await testTree.sortPdsMembers(testSession);
         expect(mocks.nodeDataChanged).not.toHaveBeenCalled();
@@ -2756,7 +2756,7 @@ describe("Dataset Tree Unit Tests - Function sortBy", () => {
     });
 
     it("sorts by name", async () => {
-        mocks.showQuickPick.mockResolvedValueOnce("Name" as any);
+        mocks.showQuickPick.mockResolvedValueOnce({ label: "$(case-sensitive) Name (default)" });
         await testTree.sortPdsMembers(testPds);
         expect(mocks.nodeDataChanged).toHaveBeenCalled();
         expect(mocks.refreshElement).not.toHaveBeenCalled();
@@ -2764,7 +2764,7 @@ describe("Dataset Tree Unit Tests - Function sortBy", () => {
     });
 
     it("sorts by last modified date", async () => {
-        mocks.showQuickPick.mockResolvedValueOnce("Date Modified" as any);
+        mocks.showQuickPick.mockResolvedValueOnce({ label: "$(calendar) Date Modified" });
         await testTree.sortPdsMembers(testPds);
         expect(mocks.nodeDataChanged).toHaveBeenCalled();
         expect(mocks.refreshElement).not.toHaveBeenCalled();
@@ -2772,7 +2772,7 @@ describe("Dataset Tree Unit Tests - Function sortBy", () => {
     });
 
     it("sorts by user ID", async () => {
-        mocks.showQuickPick.mockResolvedValueOnce("User ID" as any);
+        mocks.showQuickPick.mockResolvedValueOnce({ label: "$(account) User ID" });
         await testTree.sortPdsMembers(testPds);
         expect(mocks.nodeDataChanged).toHaveBeenCalled();
         expect(mocks.refreshElement).not.toHaveBeenCalled();
