@@ -41,7 +41,6 @@ import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
 import * as wsUtils from "../../../src/utils/workspace";
 import * as context from "../../../src/shared/context";
 import { AttributeView } from "../../../src/uss/AttributeView";
-import { LocalFileManagement } from "../../../src/utils/LocalFileManagement";
 
 jest.mock("../../../src/utils/LoggerUtils");
 

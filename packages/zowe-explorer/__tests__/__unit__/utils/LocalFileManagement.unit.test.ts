@@ -18,6 +18,7 @@ import * as unixActions from "../../../src/uss/actions";
 import * as dsActions from "../../../src/dataset/actions";
 import { LocalFileManagement } from "../../../src/utils/LocalFileManagement";
 import * as utils from "../../../src/shared/utils";
+import { ZoweLogger } from "../../../src/globals";
 
 jest.mock("fs");
 jest.mock("vscode");
@@ -76,6 +77,21 @@ describe("LocalFileManagement unit tests", () => {
             await LocalFileManagement.compareChosenFileContent();
             expect(mocks.mockDlUnixSpy).toBeCalledTimes(2);
             expect(mocks.mockDlDsSpy).not.toBeCalled();
+        });
+        it("should log warning and return", async () => {
+            const mocks = createGlobalMocks();
+            mocks.mockFilesToCompare = [mocks.mockDsFileNode, mocks.mockDsFileNode];
+            Object.defineProperty(globals, "filesToCompare", { value: mocks.mockFilesToCompare, configurable: true });
+            mocks.mockIsDsNode = false;
+            Object.defineProperty(utils, "isZoweDatasetTreeNode", { value: jest.fn().mockReturnValue(mocks.mockIsDsNode), configurable: true });
+            mocks.mockIsUnixNode = false;
+            Object.defineProperty(utils, "isZoweUSSTreeNode", { value: jest.fn().mockReturnValue(mocks.mockIsUnixNode), configurable: true });
+            Object.defineProperty(ZoweLogger, "warn", { value: jest.fn(), configurable: true });
+            const logSpy = jest.spyOn(ZoweLogger, "warn");
+            await LocalFileManagement.compareChosenFileContent();
+            expect(mocks.mockDlUnixSpy).not.toBeCalled();
+            expect(mocks.mockDlDsSpy).not.toBeCalled();
+            expect(logSpy).toBeCalled();
         });
     });
 });
