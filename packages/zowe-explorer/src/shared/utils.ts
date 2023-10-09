@@ -45,10 +45,7 @@ export const JOB_SUBMIT_DIALOG_OPTS = [
     localize("zowe.jobs.confirmSubmission.allJobs", "All jobs"),
 ];
 
-export const SORT_OPTS_TO_ENUM: Record<string, SortDirection> = {
-    [localize("sort.asc", "Ascending")]: SortDirection.Ascending,
-    [localize("sort.desc", "Descending")]: SortDirection.Descending,
-};
+export const SORT_DIRS: string[] = [localize("sort.asc", "Ascending"), localize("sort.desc", "Descending")];
 
 export function filterTreeByString(value: string, treeItems: vscode.QuickPickItem[]): vscode.QuickPickItem[] {
     ZoweLogger.trace("shared.utils.filterTreeByString called.");

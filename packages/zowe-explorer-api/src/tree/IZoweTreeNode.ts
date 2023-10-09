@@ -13,49 +13,12 @@ import * as vscode from "vscode";
 import { IJob, imperative } from "@zowe/cli";
 import { IZoweTree } from "./IZoweTree";
 import { FileAttributes } from "../utils/files";
+import { DatasetFilter, NodeSort } from "./sorting";
 
 export type IZoweNodeType = IZoweDatasetTreeNode | IZoweUSSTreeNode | IZoweJobTreeNode;
 
 export enum NodeAction {
     Download = "download",
-}
-
-export type DatasetStats = {
-    user: string;
-    m4date: Date;
-};
-
-export enum DatasetSortOpts {
-    Name,
-    LastModified,
-    UserId,
-}
-
-export enum SortDirection {
-    Ascending,
-    Descending,
-}
-
-export enum DatasetFilterOpts {
-    LastModified,
-    UserId,
-}
-
-export type DatasetFilter = {
-    method: DatasetFilterOpts;
-    value: string;
-};
-
-export type NodeSort = {
-    method: DatasetSortOpts | JobSortOpts;
-    direction: SortDirection;
-};
-
-export enum JobSortOpts {
-    Id,
-    DateSubmitted,
-    Name,
-    ReturnCode,
 }
 
 /**
@@ -161,6 +124,11 @@ export interface IZoweTreeNode {
      */
     setSessionToChoice(sessionObj: imperative.Session): void;
 }
+
+export type DatasetStats = {
+    user: string;
+    m4date: Date;
+};
 
 /**
  * Extended interface for Zowe Dataset tree nodes.

@@ -25,11 +25,14 @@ import {
     IZoweTreeNode,
     DatasetFilter,
     DatasetSortOpts,
+    SortDirection,
+    NodeSort,
+    DatasetFilterOpts,
 } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { FilterDescriptor, FilterItem, errorHandling, syncSessionNode } from "../utils/ProfilesUtils";
-import { sortTreeItems, getAppName, getDocumentFilePath, SORT_OPTS_TO_ENUM } from "../shared/utils";
+import { sortTreeItems, getAppName, getDocumentFilePath, SORT_DIRS } from "../shared/utils";
 import { ZoweTreeProvider } from "../abstract/ZoweTreeProvider";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { getIconById, getIconByNode, IconId, IIconItem } from "../generators/icons";
@@ -39,7 +42,7 @@ import * as contextually from "../shared/context";
 import { resetValidationSettings } from "../shared/actions";
 import { closeOpenedTextFile } from "../utils/workspace";
 import { IDataSet, IListOptions, imperative } from "@zowe/cli";
-import { DATASET_FILTER_KEYS, DATASET_FILTER_OPTS, DATASET_SORT_OPTS, validateDataSetName, validateMemberName } from "./utils";
+import { DATASET_FILTER_OPTS, DATASET_SORT_OPTS, validateDataSetName, validateMemberName } from "./utils";
 import { SettingsConfig } from "../utils/SettingsConfig";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { TreeViewUtils } from "../utils/TreeViewUtils";
@@ -1293,48 +1296,12 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
 
     /**
      * Sorts some (or all) PDS children nodes using the given sorting method.
-     * @param method The sorting method to use
-     * @param node The session whose PDS should be sorted
+     * @param node The session whose PDS members should be sorted, or a PDS whose children should be sorted
+     * @param sortOpts The sorting options to use
+     * @param isSession whether the node is a session
      */
-    public async sortPdsMembers(node: IZoweDatasetTreeNode): Promise<void> {
-        const isSession = contextually.isSession(node);
-
-        const specifier = isSession
-            ? localize("ds.allPdsSort", "all PDS members in {0}", node.label as string)
-            : localize("ds.singlePdsSort", "the PDS members in {0}", node.label as string);
-        const selection = await Gui.showQuickPick(
-            DATASET_SORT_OPTS.map((sortOpt, i) => ({
-                label: node.sort?.method === i ? `${sortOpt} $(check)` : sortOpt,
-                description: i === DATASET_SORT_OPTS.length - 1 ? Object.keys(SORT_OPTS_TO_ENUM)[node.sort.direction] : null,
-            })),
-            {
-                placeHolder: localize("ds.selectSortOpt", "Select a sorting option for {0}", specifier),
-            }
-        );
-        if (selection == null) {
-            return;
-        }
-
-        if (selection.label === localize("setSortDirection", "$(fold) Sort Direction")) {
-            const dir = await Gui.showQuickPick([localize("sort.asc", "Ascending"), localize("sort.desc", "Descending")], {
-                placeHolder: localize("sort.selectDirection", "Select a sorting direction"),
-            });
-            if (dir != null) {
-                node.sort = {
-                    ...(node.sort ?? { method: DatasetSortOpts.Name }),
-                    direction: SORT_OPTS_TO_ENUM[dir],
-                };
-            }
-            await this.sortPdsMembers(node);
-            return;
-        }
-
-        const sortMethod = DATASET_SORT_OPTS.indexOf(selection.label.replace(" $(check)", ""));
-        if (sortMethod == -1) {
-            return;
-        }
-
-        node.sort.method = sortMethod;
+    public updateSortForNode(node: IZoweDatasetTreeNode, sortOpts: NodeSort, isSession: boolean): void {
+        node.sort = sortOpts;
 
         if (isSession) {
             // if a session was selected, apply this sort to ALL PDS members
@@ -1359,7 +1326,68 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         }
     }
 
-    public updateFilters(node: IZoweDatasetTreeNode, newFilter: DatasetFilter | null, isSession: boolean): void {
+    /**
+     * Presents a dialog to the user with options and methods for sorting PDS members.
+     * @param node The node that was interacted with (via icon or right-click -> "Sort PDS members...")
+     */
+    public async sortPdsMembersDialog(node: IZoweDatasetTreeNode): Promise<void> {
+        const isSession = contextually.isSession(node);
+
+        // Assume defaults if a user hasn't selected any sort options yet
+        const sortOpts = node.sort ?? {
+            method: DatasetSortOpts.Name,
+            direction: SortDirection.Ascending,
+        };
+
+        // Adapt menus to user based on the node that was interacted with
+        const specifier = isSession
+            ? localize("ds.allPdsSort", "all PDS members in {0}", node.label as string)
+            : localize("ds.singlePdsSort", "the PDS members in {0}", node.label as string);
+        const selection = await Gui.showQuickPick(
+            DATASET_SORT_OPTS.map((opt, i) => ({
+                label: sortOpts.method === i ? `${opt} $(check)` : opt,
+                description: i === DATASET_SORT_OPTS.length - 1 ? SORT_DIRS[sortOpts.direction] : null,
+            })),
+            {
+                placeHolder: localize("ds.selectSortOpt", "Select a sorting option for {0}", specifier),
+            }
+        );
+        if (selection == null) {
+            return;
+        }
+
+        if (selection.label === localize("setSortDirection", "$(fold) Sort Direction")) {
+            // Update sort direction (if a new one was provided)
+            const dir = await Gui.showQuickPick(SORT_DIRS, {
+                placeHolder: localize("sort.selectDirection", "Select a sorting direction"),
+            });
+            if (dir != null) {
+                node.sort = {
+                    ...sortOpts,
+                    direction: SORT_DIRS.indexOf(dir),
+                };
+            }
+            await this.sortPdsMembersDialog(node);
+            return;
+        }
+
+        const selectionText = selection.label.replace(" $(check)", "");
+        const sortMethod = DATASET_SORT_OPTS.indexOf(selectionText);
+        if (sortMethod === -1) {
+            return;
+        }
+
+        // Update sort for node based on selections
+        this.updateSortForNode(node, { ...sortOpts, method: sortMethod }, isSession);
+    }
+
+    /**
+     * Updates or resets the filter for a given data set node.
+     * @param node The node whose filter should be updated/reset
+     * @param newFilter Either a valid `DatasetFilter` object, or `null` to reset the filter
+     * @param isSession Whether the node is a session
+     */
+    public updateFilterForNode(node: IZoweDatasetTreeNode, newFilter: DatasetFilter | null, isSession: boolean): void {
         const oldFilter = node.filter;
         node.filter = newFilter;
 
@@ -1406,15 +1434,20 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         }
     }
 
-    public async filterPdsMembers(node: IZoweDatasetTreeNode): Promise<void> {
+    /**
+     * Presents a dialog to the user with options and methods for sorting PDS members.
+     * @param node The data set node that was interacted with (via icon or right-click => "Filter PDS members...")
+     */
+    public async filterPdsMembersDialog(node: IZoweDatasetTreeNode): Promise<void> {
         const isSession = contextually.isSession(node);
 
+        // Adapt menus to user based on the node that was interacted with
         const specifier = isSession
             ? localize("ds.allPdsSort", "all PDS members in {0}", node.label as string)
             : localize("ds.singlePdsSort", "the PDS members in {0}", node.label as string);
         const clearFilter = isSession
-            ? localize("ds.clearAllFilters", "$(clear-all) Clear all filters")
-            : localize("ds.clearPdsFilter", "$(clear-all) Clear filters for this PDS");
+            ? localize("ds.clearProfileFilter", "$(clear-all) Clear filter for profile")
+            : localize("ds.clearPdsFilter", "$(clear-all) Clear filter for PDS");
         const selection = (
             await Gui.showQuickPick(
                 [...DATASET_FILTER_OPTS.map((sortOpt, i) => (node.filter?.method === i ? `${sortOpt} $(check)` : sortOpt)), clearFilter],
@@ -1423,32 +1456,44 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 }
             )
         )?.replace(" $(check)", "");
-        if (selection === clearFilter) {
-            this.updateFilters(node, null, isSession);
+
+        const filterMethod = DATASET_FILTER_OPTS.indexOf(selection);
+
+        const userDismissed = filterMethod < 0;
+        if (userDismissed || selection === clearFilter) {
+            if (selection === clearFilter) {
+                this.updateFilterForNode(node, null, isSession);
+            }
             return;
         }
 
-        if (selection == null || !(selection in DATASET_FILTER_KEYS)) {
-            return;
-        }
+        const dateValidation = (value): string => {
+            return dayjs(value).isValid() ? null : localize("ds.filterEntry.invalidDate", "Invalid date format specified");
+        };
 
-        const filterMethod = DATASET_FILTER_KEYS[selection];
         const filter = await Gui.showInputBox({
             title: localize("ds.filterEntry.title", "Enter a value to filter by"),
             placeHolder: "",
-            validateInput(value) {
-                return dayjs(value).isValid() ? null : localize("ds.filterEntry.invalidDate", "Invalid date format specified");
-            },
+            validateInput:
+                filterMethod === DatasetFilterOpts.LastModified
+                    ? dateValidation
+                    : (val): string => (val.length > 0 ? null : localize("ds.filterEntry.invalid", "Invalid filter specified")),
         });
+
+        // User dismissed filter entry, go back to filter selection
         if (filter == null) {
+            await this.filterPdsMembersDialog(node);
             return;
         }
 
-        const newFilter = {
-            method: filterMethod,
-            value: filter,
-        };
-
-        this.updateFilters(node, newFilter, isSession);
+        // Update filter for node based on selection & filter entry
+        this.updateFilterForNode(
+            node,
+            {
+                method: filterMethod,
+                value: filter,
+            },
+            isSession
+        );
     }
 }

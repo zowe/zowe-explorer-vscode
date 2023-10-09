@@ -2697,7 +2697,7 @@ describe("Dataset Tree Unit Tests - Function initializeFavorites", () => {
     });
 });
 
-describe("Dataset Tree Unit Tests - Function sortPdsMembers", () => {
+describe("Dataset Tree Unit Tests - Function sortPdsMembersDialog", () => {
     const testTree = new DatasetTree();
     const getBlockMocks = (): Record<string, jest.SpyInstance> => ({
         nodeDataChanged: jest.spyOn(DatasetTree.prototype, "nodeDataChanged"),
@@ -2747,14 +2747,14 @@ describe("Dataset Tree Unit Tests - Function sortPdsMembers", () => {
         // case 1: called on PDS node
         mocks.showQuickPick.mockResolvedValueOnce({ label: "$(case-sensitive) Name (default)" });
         testPds.children = [];
-        await testTree.sortPdsMembers(testPds);
+        await testTree.sortPdsMembersDialog(testPds);
         expect(mocks.nodeDataChanged).not.toHaveBeenCalled();
         expect(mocks.refreshElement).toHaveBeenCalledWith(testPds);
 
         // case 2: called on session node
         mocks.showQuickPick.mockResolvedValueOnce({ label: "$(case-sensitive) Name (default)" });
         testSession.children = [];
-        await testTree.sortPdsMembers(testSession);
+        await testTree.sortPdsMembersDialog(testSession);
         expect(mocks.nodeDataChanged).not.toHaveBeenCalled();
         expect(mocks.refreshElement).toHaveBeenCalledWith(testSession);
     });
@@ -2762,7 +2762,7 @@ describe("Dataset Tree Unit Tests - Function sortPdsMembers", () => {
     it("sorts by name", async () => {
         const mocks = getBlockMocks();
         mocks.showQuickPick.mockResolvedValueOnce({ label: "$(case-sensitive) Name (default)" });
-        await testTree.sortPdsMembers(testPds);
+        await testTree.sortPdsMembersDialog(testPds);
         expect(mocks.nodeDataChanged).toHaveBeenCalled();
         expect(mocks.refreshElement).not.toHaveBeenCalled();
         expect(testPds.children.map((c: IZoweDatasetTreeNode) => c.label)).toStrictEqual(["A", "B", "C"]);
@@ -2771,7 +2771,7 @@ describe("Dataset Tree Unit Tests - Function sortPdsMembers", () => {
     it("sorts by last modified date", async () => {
         const mocks = getBlockMocks();
         mocks.showQuickPick.mockResolvedValueOnce({ label: "$(calendar) Date Modified" });
-        await testTree.sortPdsMembers(testPds);
+        await testTree.sortPdsMembersDialog(testPds);
         expect(mocks.nodeDataChanged).toHaveBeenCalled();
         expect(mocks.refreshElement).not.toHaveBeenCalled();
         expect(testPds.children.map((c: IZoweDatasetTreeNode) => c.label)).toStrictEqual(["B", "C", "A"]);
@@ -2780,14 +2780,14 @@ describe("Dataset Tree Unit Tests - Function sortPdsMembers", () => {
     it("sorts by user ID", async () => {
         const mocks = getBlockMocks();
         mocks.showQuickPick.mockResolvedValueOnce({ label: "$(account) User ID" });
-        await testTree.sortPdsMembers(testPds);
+        await testTree.sortPdsMembersDialog(testPds);
         expect(mocks.nodeDataChanged).toHaveBeenCalled();
         expect(mocks.refreshElement).not.toHaveBeenCalled();
         expect(testPds.children.map((c: IZoweDatasetTreeNode) => c.label)).toStrictEqual(["B", "A", "C"]);
     });
 });
 
-describe("Dataset Tree Unit Tests - Function filterPdsMembers", () => {
+describe("Dataset Tree Unit Tests - Function filterPdsMembersDialog", () => {
     const testTree = new DatasetTree();
     const getBlockMocks = (): Record<string, jest.SpyInstance> => ({
         nodeDataChanged: jest.spyOn(DatasetTree.prototype, "nodeDataChanged"),
@@ -2839,7 +2839,7 @@ describe("Dataset Tree Unit Tests - Function filterPdsMembers", () => {
         mocks.showQuickPick.mockResolvedValue("$(calendar) Date Modified" as any);
         mocks.showInputBox.mockResolvedValueOnce("2022-01-01");
         testPds.children = [];
-        await testTree.filterPdsMembers(testPds);
+        await testTree.filterPdsMembersDialog(testPds);
         expect(mocks.nodeDataChanged).not.toHaveBeenCalled();
         expect(mocks.refreshElement).toHaveBeenCalledWith(testPds);
         testPds.filter = undefined as any;
@@ -2848,7 +2848,7 @@ describe("Dataset Tree Unit Tests - Function filterPdsMembers", () => {
         mocks.showQuickPick.mockResolvedValue("$(calendar) Date Modified" as any);
         mocks.showInputBox.mockResolvedValueOnce("2022-01-01");
         testSession.children = [];
-        await testTree.filterPdsMembers(testSession);
+        await testTree.filterPdsMembersDialog(testSession);
         expect(mocks.nodeDataChanged).not.toHaveBeenCalled();
         expect(mocks.refreshElement).toHaveBeenCalledWith(testSession);
     });
@@ -2857,7 +2857,7 @@ describe("Dataset Tree Unit Tests - Function filterPdsMembers", () => {
         const mocks = getBlockMocks();
         mocks.showQuickPick.mockResolvedValue("$(calendar) Date Modified" as any);
         mocks.showInputBox.mockResolvedValueOnce("2022-03-15");
-        await testTree.filterPdsMembers(testPds);
+        await testTree.filterPdsMembersDialog(testPds);
         expect(mocks.nodeDataChanged).toHaveBeenCalled();
         expect(mocks.refreshElement).not.toHaveBeenCalled();
         expect(testPds.children.map((c: IZoweDatasetTreeNode) => c.label)).toStrictEqual(["C"]);
@@ -2868,7 +2868,7 @@ describe("Dataset Tree Unit Tests - Function filterPdsMembers", () => {
         const mocks = getBlockMocks();
         mocks.showQuickPick.mockResolvedValue("$(account) User ID" as any);
         mocks.showInputBox.mockResolvedValueOnce("anotherUser");
-        await testTree.filterPdsMembers(testPds);
+        await testTree.filterPdsMembersDialog(testPds);
         expect(mocks.nodeDataChanged).toHaveBeenCalled();
         expect(mocks.refreshElement).not.toHaveBeenCalled();
         expect(testPds.children.map((c: IZoweDatasetTreeNode) => c.label)).toStrictEqual(["B"]);
