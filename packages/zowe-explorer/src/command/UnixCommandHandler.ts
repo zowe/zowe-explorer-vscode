@@ -77,9 +77,10 @@ export class UnixCommandHandler extends ZoweCommandProvider {
     public async issueUnixCommand(session?: imperative.Session,command?: string, node?: IZoweTreeNode): Promise<void> {
         // console.log("Got the full path");
         // console.log(node.fullPath);
-        let cwd = node.fullPath;
+        let cwd: string;
         let profile: imperative.IProfileLoaded;
         if(node){
+            cwd = node.fullPath;
             await this.checkCurrentProfile(node);
             if (!session) {
                 session = ZoweExplorerApiRegister.getUssApi(node.getProfile()).getSession();
@@ -92,6 +93,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
         this.sshSession.ISshSession.handshakeTimeout = 40000;
         // console.log(this.sshSession);
         // console.log(session);
+        console.log(cwd);
         if (!session) {
             const profiles = Profiles.getInstance();
             const allProfiles: imperative.IProfileLoaded[] = profiles.allProfiles;
@@ -110,10 +112,18 @@ export class UnixCommandHandler extends ZoweCommandProvider {
                     return;
                 }
                 profile = allProfiles.filter((temprofile) => temprofile.name === sesName)[0];
-                // console.log(profile);
+                console.log(profile);
+                if(cwd == undefined){
+                    cwd = await vscode.window.showInputBox({
+                        prompt: "Enter the path of the directory inorder to execute the command",
+                        value: "",
+                    });
+                }
                 if (!node) {
                     await Profiles.getInstance().checkCurrentProfile(profile);
                 }
+                console.log(cwd);
+                console.log(node);
                 if (Profiles.getInstance().validProfile !== ValidProfileEnum.INVALID) {
                     session = ZoweExplorerApiRegister.getUssApi(profile).getSession();
                 } else {
@@ -134,10 +144,11 @@ export class UnixCommandHandler extends ZoweCommandProvider {
                 if (commandApi) {
                     let command1: string = command;
                     if (!command) {
-                        command1 = await this.getQuickPick(this.sshSession && this.sshSession.ISshSession.hostname ? this.sshSession.ISshSession.hostname : "unknown");
+                        // command1 = await this.getQuickPick(this.sshSession && this.sshSession.ISshSession.hostname ? this.sshSession.ISshSession.hostname : "unknown");
+                        command1 =  await this.getQuickPick(cwd);
                     }
                     // console.log(command1);
-                    await this.issueCommand(node.getProfile(), command1,cwd);
+                    await this.issueCommand(profile, command1,cwd);
                 } else {
                     Gui.errorMessage(localize("issueUnixCommand.checkProfile", "Profile is invalid"));
                     return;
@@ -170,7 +181,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
         return this.sshSession;
     }
 
-    private async getQuickPick(hostname: string): Promise<string> {
+    private async getQuickPick(cwd: string): Promise<string> {
         ZoweLogger.trace("TsoCommandHandler.getQuickPick called.");
         let response = "";
         const alwaysEdit: boolean = SettingsConfig.getDirectValue(globals.SETTINGS_COMMANDS_ALWAYS_EDIT);
@@ -181,7 +192,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
                 const options1: vscode.QuickPickOptions = {
                     placeHolder:
                         localize("issueUnixCommand.command.hostname", "Select a Unix command to run against ") +
-                        hostname +
+                        cwd +
                         (alwaysEdit ? localize("issueUnixCommand.command.edit", " (An option to edit will follow)") : ""),
                 };
                 // get user selection
@@ -194,10 +205,10 @@ export class UnixCommandHandler extends ZoweCommandProvider {
             } else {
                 const quickpick = Gui.createQuickPick();
                 quickpick.placeholder = alwaysEdit
-                    ? localize("issueUnixCommand.command.hostnameAlt", "Select a Unix command to run against ") +
-                      hostname +
+                    ? localize("issueUnixCommand.command.path", "Select a Unix command to run against ") +
+                      cwd +
                       localize("issueUnixCommand.command.edit", " (An option to edit will follow)")
-                    : localize("issueUnixCommand.command.hostname", "Select a Unix command to run immediately against ") + hostname;
+                    : localize("issueUnixCommand.command.path", "Select a Unix command to run immediately against ") + cwd;
 
                 quickpick.items = [createPick, ...items];
                 quickpick.ignoreFocusOut = true;
