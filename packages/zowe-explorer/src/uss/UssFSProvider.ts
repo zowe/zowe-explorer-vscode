@@ -60,6 +60,11 @@ export class UssFSProvider implements vscode.FileSystemProvider {
         return this._lookup(uri, false);
     }
 
+    /**
+     * TODOs:
+     * - Look into pre-fetching a directory level below the one given
+     * - Should we support symlinks and can we use z/OSMF "report" option?
+     */
     public readDirectory(uri: vscode.Uri): [string, vscode.FileType][] {
         /*
             1. Parse URI to get directory path for API endpoint
@@ -90,6 +95,10 @@ export class UssFSProvider implements vscode.FileSystemProvider {
     }
 
     public writeFile(uri: vscode.Uri, content: Uint8Array, options: { create: boolean; overwrite: boolean }): void {
+        /*
+            1. Parse URI to get file path for API endpoint
+            2. Make API call after assigning data to File object
+         */
         const basename = path.posix.basename(uri.path);
         const parent = this._lookupParentDirectory(uri);
         let entry = parent.entries.get(basename);
@@ -109,7 +118,10 @@ export class UssFSProvider implements vscode.FileSystemProvider {
         }
         entry.mtime = Date.now();
         entry.size = content.byteLength;
+        // TODO: we might want to use a callback or promise that returns data rather than saving the full contents in memory
         entry.data = content;
+
+        // call API here
 
         this._fireSoon({ type: vscode.FileChangeType.Changed, uri });
     }
@@ -117,6 +129,10 @@ export class UssFSProvider implements vscode.FileSystemProvider {
     // --- manage files/folders
 
     public rename(oldUri: vscode.Uri, newUri: vscode.Uri, options: { overwrite: boolean }): void {
+        /*
+            1. Build old path based on given URI
+            2. Call API here with old path and new name for file/directory
+        */
         if (!options.overwrite && this._lookup(newUri, true)) {
             throw vscode.FileSystemError.FileExists(newUri);
         }
@@ -135,6 +151,10 @@ export class UssFSProvider implements vscode.FileSystemProvider {
     }
 
     public delete(uri: vscode.Uri): void {
+        /*
+            1. Determine path to delete based on given URI
+            2. Call API to remove file/directory from mainframe
+        */
         const dirname = uri.with({ path: path.posix.dirname(uri.path) });
         const basename = path.posix.basename(uri.path);
         const parent = this._lookupAsDirectory(dirname, false);
@@ -148,6 +168,10 @@ export class UssFSProvider implements vscode.FileSystemProvider {
     }
 
     public createDirectory(uri: vscode.Uri): void {
+        /*
+            1. Parse URI to get desired directory path
+            2. Call API endpoint to create directory on mainframe
+        */
         const basename = path.posix.basename(uri.path);
         const dirname = uri.with({ path: path.posix.dirname(uri.path) });
         const parent = this._lookupAsDirectory(dirname, false);
@@ -164,6 +188,10 @@ export class UssFSProvider implements vscode.FileSystemProvider {
     private _lookup(uri: vscode.Uri, silent: false): Entry;
     private _lookup(uri: vscode.Uri, silent: boolean): Entry | undefined;
     private _lookup(uri: vscode.Uri, silent: boolean): Entry | undefined {
+        /*
+            1. Calls the API to get a list of files/folders at the level of the given URI
+            2.
+        */
         const parts = uri.path.split("/");
         let entry: Entry = this.root;
         for (const part of parts) {
