@@ -1,3 +1,4 @@
 {
-  "HistoryView.addItem.prompt": "Type the new pattern to add to history"
+  "HistoryView.addItem.prompt": "Type the new pattern to add to history",
+  "HistoryView.removeItem.notSupported": "action is not supported for this property type."
 }

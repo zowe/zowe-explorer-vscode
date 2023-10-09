@@ -861,12 +861,12 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
     }
 
     public getSessions(): string[] {
-        ZoweLogger.trace("DatasetTree.getSessions called.");
+        ZoweLogger.trace("USSTree.getSessions called.");
         return this.mHistory.getSessions();
     }
 
     public getFavorites(): string[] {
-        ZoweLogger.trace("DatasetTree.getFavorites called.");
+        ZoweLogger.trace("USSTree.getFavorites called.");
         return this.mHistory.readFavorites();
     }
 

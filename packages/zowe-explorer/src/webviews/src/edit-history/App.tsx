@@ -34,12 +34,15 @@ function View(): JSXInternal.Element {
 }
 
 function Body(): JSXInternal.Element {
-  const [currentTab, setCurrentTab] = useState("");
-
+  const [currentTab, setCurrentTab] = useState<{ [key: string]: string }>({});
+  const [data, setData] = useState<{ [type: string]: { [property: string]: string[] } }>({ ds: {}, uss: {}, jobs: {} });
   useEffect(() => {
     window.addEventListener("message", (event) => {
+      setData(event.data);
       if ("tab" in event.data) {
-        setCurrentTab(event.data.tab);
+        setCurrentTab(() => ({
+          tab: event.data.tab,
+        }));
       }
     });
     vscodeApi.postMessage({ command: "ready" });
@@ -48,7 +51,7 @@ function Body(): JSXInternal.Element {
   return (
     <div>
       <h1>Manage Persistent Properties</h1>
-      <VSCodePanels activeid={currentTab}>
+      <VSCodePanels activeid={currentTab.tab}>
         <VSCodePanelTab id="ds-panel-tab">
           <h2>Data Sets</h2>
         </VSCodePanelTab>
@@ -58,18 +61,18 @@ function Body(): JSXInternal.Element {
         <VSCodePanelTab id="jobs-panel-tab">
           <h2>Jobs</h2>
         </VSCodePanelTab>
-        <DsPanel />
-        <USSPanel />
-        <JobsPanel />
+        <PersistentDataPanel data={data} type="ds" />
+        <PersistentDataPanel data={data} type="uss" />
+        <PersistentDataPanel data={data} type="jobs" />
       </VSCodePanels>
     </div>
   );
 }
 
-function UtilitiesBar({ type }: { type: string }): JSXInternal.Element {
+function UtilitiesBar({ type, handleChange }: { type: string; handleChange: Function }): JSXInternal.Element {
   return (
     <div style={{ display: "flex", flexDirection: "row", alignItems: "center" }}>
-      <DropdownPersistentOptions />
+      <DropdownPersistentOptions handleChange={handleChange} />
       <AddNewHistoryItemButton type={type} />
       <RefreshButton type={type} />
       <ClearAllButton type={type} />
@@ -77,15 +80,15 @@ function UtilitiesBar({ type }: { type: string }): JSXInternal.Element {
   );
 }
 
-function DropdownPersistentOptions(): JSXInternal.Element {
+function DropdownPersistentOptions({ handleChange }: { handleChange: Function }): JSXInternal.Element {
   return (
     <div style={{ display: "flex", flexDirection: "row", alignItems: "center", margin: "15px 15px 15px 0px" }}>
-      <VSCodeDropdown id="dropdown-persistent-items" style={{ maxWidth: "20vw" }}>
-        <VSCodeOption>DS Templates</VSCodeOption>
-        <VSCodeOption>Favorites</VSCodeOption>
-        <VSCodeOption>File History</VSCodeOption>
-        <VSCodeOption>Search History</VSCodeOption>
-        <VSCodeOption>Sessions</VSCodeOption>
+      <VSCodeDropdown id="dropdown-persistent-items" style={{ maxWidth: "20vw" }} onChange={(event: any) => handleChange(event.target.value)}>
+        <VSCodeOption value="search">Search History</VSCodeOption>
+        <VSCodeOption value="dsTemplates">DS Templates</VSCodeOption>
+        <VSCodeOption value="favorites">Favorites</VSCodeOption>
+        <VSCodeOption value="fileHistory">File History</VSCodeOption>
+        <VSCodeOption value="sessions">Sessions</VSCodeOption>
       </VSCodeDropdown>
     </div>
   );
@@ -155,77 +158,92 @@ function DataGridHeaders(): JSXInternal.Element {
   );
 }
 
-function TableData({ type }: { type: string }): JSXInternal.Element {
-  const [persistentProperty, setPersistentProperty] = useState([]);
-
-  useEffect(() => {
-    window.addEventListener("message", (event) => {
-      if (type in event.data) {
-        setPersistentProperty(event.data[type]["search"]);
-      }
-    });
-  }, []);
-
+function TableData({
+  type,
+  persistentProp,
+  selection,
+}: {
+  type: string;
+  persistentProp: string[];
+  selection: { selection: string };
+}): JSXInternal.Element {
   const handleClick = (item: number) => {
     vscodeApi.postMessage({
       command: "remove-item",
       attrs: {
-        name: persistentProperty[item],
+        name: persistentProp[item],
         type,
+        selection: selection.selection,
       },
     });
   };
 
-  const data = persistentProperty.map((item, i) => {
-    return (
+  const data =
+    persistentProp && persistentProp.length ? (
+      persistentProp.map((item, i) => {
+        return (
+          <VSCodeDataGridRow>
+            <VSCodeDataGridCell grid-column="1">{item}</VSCodeDataGridCell>
+            <VSCodeDataGridCell grid-column="2" onClick={() => handleClick(i)} style={{ maxWidth: "5vw", textAlign: "center" }}>
+              <img src="./webviews/src/edit-history/assets/trash.svg" />
+            </VSCodeDataGridCell>
+          </VSCodeDataGridRow>
+        );
+      })
+    ) : (
       <VSCodeDataGridRow>
-        <VSCodeDataGridCell grid-column="1">{item}</VSCodeDataGridCell>
-        <VSCodeDataGridCell grid-column="2" onClick={() => handleClick(i)} style={{ maxWidth: "5vw", textAlign: "center" }}>
-          <img src="./webviews/src/edit-history/assets/trash.svg" />
-        </VSCodeDataGridCell>
+        <VSCodeDataGridCell grid-column="1">No records found</VSCodeDataGridCell>
+        <VSCodeDataGridCell grid-column="2" style={{ maxWidth: "5vw", textAlign: "center" }}></VSCodeDataGridCell>
       </VSCodeDataGridRow>
     );
-  });
 
   return <>{data}</>;
 }
 
-function DsPanel(): JSXInternal.Element {
-  const type = "ds";
+function PersistentDataPanel({ data, type }: { data: { [type: string]: { [property: string]: string[] } }; type: string }): JSXInternal.Element {
+  const panelId: { [key: string]: string } = {
+    ds: "ds-panel-view",
+    uss: "uss-panel-view",
+    jobs: "jobs-panel-view",
+  };
+
+  const [selection, setSelection] = useState<{ selection: string }>({ selection: "search" });
+  const [persistentProp, setPersistentProp] = useState<string[]>([]);
+
+  const handleChange = (newSelection: string) => {
+    setSelection(() => ({ selection: newSelection }));
+    vscodeApi.postMessage({
+      command: "update-selection",
+      attrs: {
+        selection: newSelection,
+      },
+    });
+  };
+
+  useEffect(() => {
+    window.addEventListener("message", (event) => {
+      if ("selection" in event.data) {
+        setSelection(() => ({
+          selection: event.data.selection,
+        }));
+      }
+    });
+  }, []);
+
+  useEffect(() => {
+    setPersistentProp(() => data[type][selection.selection]);
+  }, [data]);
+
+  useEffect(() => {
+    setPersistentProp(() => data[type][selection.selection]);
+  }, [selection]);
+
   return (
-    <VSCodePanelView id="ds-panel-view" style={{ flexDirection: "column" }}>
-      <UtilitiesBar type={type} />
+    <VSCodePanelView id={panelId[type]} style={{ flexDirection: "column" }}>
+      <UtilitiesBar type={type} handleChange={handleChange} />
       <VSCodeDataGrid>
         <DataGridHeaders />
-        <TableData type={type}></TableData>
-      </VSCodeDataGrid>
-    </VSCodePanelView>
-  );
-}
-
-function USSPanel(): JSXInternal.Element {
-  const type = "uss";
-
-  return (
-    <VSCodePanelView id="uss-panel-view" style={{ flexDirection: "column" }}>
-      <UtilitiesBar type={type} />
-      <VSCodeDataGrid>
-        <DataGridHeaders />
-        <TableData type={type}></TableData>
-      </VSCodeDataGrid>
-    </VSCodePanelView>
-  );
-}
-
-function JobsPanel(): JSXInternal.Element {
-  const type = "jobs";
-
-  return (
-    <VSCodePanelView id="jobs-panel-view" style={{ flexDirection: "column" }}>
-      <UtilitiesBar type={type} />
-      <VSCodeDataGrid>
-        <DataGridHeaders />
-        <TableData type={type}></TableData>
+        <TableData type={type} persistentProp={persistentProp} selection={selection}></TableData>
       </VSCodeDataGrid>
     </VSCodePanelView>
   );

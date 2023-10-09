@@ -8,6 +8,7 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
+
 import * as vscode from "vscode";
 import * as nls from "vscode-nls";
 import { WebView, Gui, DataSetAllocTemplate } from "@zowe/zowe-explorer-api";
@@ -39,6 +40,7 @@ const tabs = {
 export class HistoryView extends WebView {
     private treeProviders: IZoweProviders;
     private currentTab: string;
+    private currentSelection;
 
     public constructor(context: ExtensionContext, treeProviders: IZoweProviders) {
         const label = "Edit History";
@@ -57,7 +59,11 @@ export class HistoryView extends WebView {
                     uss: this.getHistoryData("uss"),
                     jobs: this.getHistoryData("job"),
                     tab: this.currentTab,
+                    selection: this.currentSelection,
                 });
+                break;
+            case "update-selection":
+                this.updateSelection(message);
                 break;
             case "add-item":
                 await this.addItem(message);
@@ -88,6 +94,11 @@ export class HistoryView extends WebView {
         };
     }
 
+    private updateSelection(message): void {
+        ZoweLogger.trace("HistoryView.updateSelection called.");
+        this.currentSelection = message.attrs.selection;
+    }
+
     private async addItem(message): Promise<void> {
         ZoweLogger.trace("HistoryView.addItem called.");
         const options: vscode.InputBoxOptions = {
@@ -103,7 +114,19 @@ export class HistoryView extends WebView {
     private async removeItem(message): Promise<void> {
         ZoweLogger.trace("HistoryView.removeItem called.");
         const treeProvider = this.getTreeProvider(message.attrs.type);
-        treeProvider.removeSearchHistory(message.attrs.name);
+        switch (message.attrs.selection) {
+            case "search":
+                treeProvider.removeSearchHistory(message.attrs.name);
+                break;
+            case "fileHistory":
+                if (!(treeProvider instanceof ZosJobsProvider)) {
+                    treeProvider.removeFileHistory(message.attrs.name);
+                }
+                break;
+            default:
+                Gui.showMessage(localize("HistoryView.removeItem.notSupported", "action is not supported for this property type."));
+                break;
+        }
         await this.refreshView(message);
     }
 
