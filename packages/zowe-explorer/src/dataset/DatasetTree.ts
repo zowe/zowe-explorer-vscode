@@ -1350,15 +1350,12 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             } else {
                 this.refreshElement(node);
             }
+        } else if (node.children != null && node.children.length > 0) {
+            // children nodes already exist, sort and repaint to avoid extra refresh
+            node.children.sort(ZoweDatasetNode.sortBy(node.sort));
+            this.nodeDataChanged(node);
         } else {
-            // Only sort the PDS members for this PDS
-            if (node.children != null && node.children.length > 0) {
-                // children nodes already exist, sort and repaint to avoid extra refresh
-                node.children.sort(ZoweDatasetNode.sortBy(node.sort));
-                this.nodeDataChanged(node);
-            } else {
-                this.refreshElement(node);
-            }
+            this.refreshElement(node);
         }
     }
 

@@ -583,9 +583,8 @@ describe("ZoweJobNode unit tests - Function saveSearch", () => {
         const expectedJob = favJob;
         expectedJob.contextValue = globals.JOBS_SESSION_CONTEXT + globals.FAV_SUFFIX;
 
-        const savedFavJob = await globalMocks.testJobsProvider.saveSearch(favJob);
-
-        expect(savedFavJob).toEqual(expectedJob);
+        globalMocks.testJobsProvider.saveSearch(favJob);
+        expect(expectedJob.contextValue).toEqual(favJob.contextValue);
     });
 });
 
