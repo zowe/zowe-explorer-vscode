@@ -133,8 +133,26 @@ export class HistoryView extends WebView {
     private async clearAll(message): Promise<void> {
         ZoweLogger.trace("HistoryView.clearAll called.");
         const treeProvider = this.getTreeProvider(message.attrs.type);
-        treeProvider.resetSearchHistory();
-        await this.refreshView(message);
+        const infoMessage = localize("HistoryView.clearAll.confirmMessage", "Clear all history contents for this persistent property?");
+        const yesButton = localize("HistoryView.clearAll.Yes", "Yes");
+        const noButton = localize("HistoryView.clearAll.No", "No");
+        const choice = await Gui.showMessage(infoMessage, { items: [yesButton, noButton], vsCodeOpts: { modal: true } });
+        if (choice === yesButton) {
+            switch (message.attrs.selection) {
+                case "search":
+                    treeProvider.resetSearchHistory();
+                    break;
+                case "fileHistory":
+                    if (!(treeProvider instanceof ZosJobsProvider)) {
+                        treeProvider.resetFileHistory();
+                    }
+                    break;
+                default:
+                    Gui.showMessage(localize("HistoryView.removeItem.notSupported", "action is not supported for this property type."));
+                    break;
+            }
+            await this.refreshView(message);
+        }
     }
 
     private async refreshView(message): Promise<void> {

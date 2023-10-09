@@ -767,6 +767,11 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         this.mHistory.resetSearchHistory();
     }
 
+    public resetFileHistory(): void {
+        ZoweLogger.trace("DatasetTree.resetFileHistory called.");
+        this.mHistory.resetFileHistory();
+    }
+
     public addDsTemplate(criteria: DataSetAllocTemplate): void {
         this.mHistory.addDsTemplateHistory(criteria);
         this.refresh();

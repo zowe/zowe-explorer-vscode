@@ -1,10 +1,10 @@
 import { useEffect, useState } from "preact/hooks";
 import { VSCodePanelView, VSCodeDataGrid } from "@vscode/webview-ui-toolkit/react";
 import { JSXInternal } from "preact/src/jsx";
-import PersistentUtilitiesBar from "./PersistentUtilitiesBar";
+import PersistentUtilitiesBar from "../PersistentUtils/PersistentUtilitiesBar";
 import PersistentTableData from "./PersistentTableData";
 import PersistentDataGridHeaders from "./PersistentDataGridHeaders";
-import PersistentVSCodeAPI from "./PersistentVSCodeAPI";
+import PersistentVSCodeAPI from "../PersistentVSCodeAPI";
 
 export default function PersistentDataPanel({
   data,
@@ -62,7 +62,7 @@ export default function PersistentDataPanel({
 
   return (
     <VSCodePanelView id={panelId[type]} style={{ flexDirection: "column" }}>
-      <PersistentUtilitiesBar type={type} handleChange={handleChange} />
+      <PersistentUtilitiesBar type={type} handleChange={handleChange} selection={selection} />
       <VSCodeDataGrid>
         <PersistentDataGridHeaders />
         <PersistentTableData type={type} persistentProp={persistentProp} selection={selection} />

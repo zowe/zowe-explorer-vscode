@@ -1,6 +1,6 @@
 import { VSCodeDataGridCell, VSCodeDataGridRow } from "@vscode/webview-ui-toolkit/react";
 import { JSXInternal } from "preact/src/jsx";
-import PersistentVSCodeAPI from "./PersistentVSCodeAPI";
+import PersistentVSCodeAPI from "../PersistentVSCodeAPI";
 
 export default function PersistentTableData({
   type,

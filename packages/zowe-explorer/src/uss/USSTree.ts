@@ -860,6 +860,11 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         this.mHistory.resetSearchHistory();
     }
 
+    public resetFileHistory(): void {
+        ZoweLogger.trace("USSTree.resetFileHistory called.");
+        this.mHistory.resetFileHistory();
+    }
+
     public getSessions(): string[] {
         ZoweLogger.trace("USSTree.getSessions called.");
         return this.mHistory.getSessions();

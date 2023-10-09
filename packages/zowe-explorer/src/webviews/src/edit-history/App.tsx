@@ -1,10 +1,12 @@
 import { useEffect, useState } from "preact/hooks";
-import { VSCodePanels, VSCodePanelTab } from "@vscode/webview-ui-toolkit/react";
+import { VSCodeDivider, VSCodePanels, VSCodePanelTab } from "@vscode/webview-ui-toolkit/react";
 import { JSXInternal } from "preact/src/jsx";
-import PersistentDataPanel from "./components/PersistentDataPanel";
+import PersistentDataPanel from "./components/PersistentTable/PersistentDataPanel";
 import PersistentVSCodeAPI from "./components/PersistentVSCodeAPI";
+import PersistentManagerHeader from "./components/PersistentManagerHeader/PersistentManagerHeader";
 
 export function App(): JSXInternal.Element {
+  const [timestamp, setTimestamp] = useState<Date | undefined>();
   const [currentTab, setCurrentTab] = useState<{ [key: string]: string }>({});
   const [data, setData] = useState<{ [type: string]: { [property: string]: string[] } }>({ ds: {}, uss: {}, jobs: {} });
 
@@ -25,13 +27,15 @@ export function App(): JSXInternal.Element {
           tab: event.data.tab,
         }));
       }
+      setTimestamp(new Date());
     });
     PersistentVSCodeAPI.getVSCodeAPI().postMessage({ command: "ready" });
   }, []);
 
   return (
     <div>
-      <h1>Manage Persistent Properties</h1>
+      <PersistentManagerHeader timestamp={timestamp} />
+      <VSCodeDivider />
       <VSCodePanels activeid={currentTab.tab}>
         <VSCodePanelTab id="ds-panel-tab">
           <h2>Data Sets</h2>

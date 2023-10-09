@@ -4,13 +4,21 @@ import PersistentRefreshButton from "./PersistentRefreshButton";
 import PersistentDropdownOptions from "./PersistentDropdownOptions";
 import PersistentAddNewHistoryItemButton from "./PersistentAddNewHistoryItemButton";
 
-export default function PersistentUtilitiesBar({ type, handleChange }: { type: string; handleChange: Function }): JSXInternal.Element {
+export default function PersistentUtilitiesBar({
+  type,
+  handleChange,
+  selection,
+}: {
+  type: string;
+  handleChange: Function;
+  selection: { selection: string };
+}): JSXInternal.Element {
   return (
     <div style={{ display: "flex", flexDirection: "row", alignItems: "center" }}>
       <PersistentDropdownOptions handleChange={handleChange} />
-      <PersistentAddNewHistoryItemButton type={type} />
+      {selection.selection === "search" && type !== "jobs" ? <PersistentAddNewHistoryItemButton type={type} /> : null}
       <PersistentRefreshButton type={type} />
-      <PersistentClearAllButton type={type} />
+      <PersistentClearAllButton type={type} selection={selection} />
     </div>
   );
 }
