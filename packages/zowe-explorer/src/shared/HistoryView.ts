@@ -140,6 +140,12 @@ export class HistoryView extends WebView {
     private async refreshView(message): Promise<void> {
         ZoweLogger.trace("HistoryView.refreshView called.");
         this.currentTab = tabs[message.attrs.type];
-        await vscode.commands.executeCommand("workbench.action.webview.reloadWebviewAction");
+        await this.panel.webview.postMessage({
+            ds: this.getHistoryData("ds"),
+            uss: this.getHistoryData("uss"),
+            jobs: this.getHistoryData("job"),
+            tab: this.currentTab,
+            selection: this.currentSelection,
+        });
     }
 }
