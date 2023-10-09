@@ -30,11 +30,6 @@ export const DATASET_SORT_OPTS = [
 
 export const DATASET_FILTER_OPTS = [localize("ds.sortByModified", "$(calendar) Date Modified"), localize("ds.sortByUserId", "$(account) User ID")];
 
-export const DATASET_FILTER_KEYS: Record<string, DatasetFilterOpts> = {
-    [localize("ds.sortByModified", "$(calendar) Date Modified")]: DatasetFilterOpts.LastModified,
-    [localize("ds.sortByUserId", "$(account) User ID")]: DatasetFilterOpts.UserId,
-};
-
 export function getProfileAndDataSetName(node: IZoweNodeType): {
     profileName: string;
     dataSetName: string;

@@ -45,7 +45,8 @@ describe("Test src/dataset/extension", () => {
             onDidChangeConfiguration: jest.fn(),
             getTreeView: jest.fn(),
             refreshElement: jest.fn(),
-            sortPdsMembers: jest.fn(),
+            sortPdsMembersDialog: jest.fn(),
+            filterPdsMembersDialog: jest.fn(),
         };
         const commands: IJestIt[] = [
             {
@@ -253,7 +254,11 @@ describe("Test src/dataset/extension", () => {
             },
             {
                 name: "zowe.ds.sortBy",
-                mock: [{ spy: jest.spyOn(dsProvider, "sortPdsMembers"), arg: [test.value] }],
+                mock: [{ spy: jest.spyOn(dsProvider, "sortPdsMembersDialog"), arg: [test.value] }],
+            },
+            {
+                name: "zowe.ds.filterBy",
+                mock: [{ spy: jest.spyOn(dsProvider, "filterPdsMembersDialog"), arg: [test.value] }],
             },
             {
                 name: "onDidChangeConfiguration",

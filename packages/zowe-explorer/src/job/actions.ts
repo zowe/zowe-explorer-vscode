@@ -19,7 +19,7 @@ import { Job, Spool } from "./ZoweJobNode";
 import * as nls from "vscode-nls";
 import SpoolProvider, { encodeJobFile, getSpoolFiles, matchSpool } from "../SpoolProvider";
 import { ZoweLogger } from "../utils/LoggerUtils";
-import { SORT_OPTS_TO_ENUM, getDefaultUri } from "../shared/utils";
+import { SORT_DIRS, getDefaultUri } from "../shared/utils";
 import { ZosJobsProvider } from "./ZosJobsProvider";
 import { JOB_SORT_OPTS } from "./utils";
 
@@ -534,7 +534,7 @@ export async function sortJobs(session: IZoweJobTreeNode, jobsProvider: ZosJobsP
     const selection = await Gui.showQuickPick(
         JOB_SORT_OPTS.map((sortOpt, i) => ({
             label: i === session.sort.method ? `${sortOpt} $(check)` : sortOpt,
-            description: i === JOB_SORT_OPTS.length - 1 ? Object.keys(SORT_OPTS_TO_ENUM)[session.sort.direction] : null,
+            description: i === JOB_SORT_OPTS.length - 1 ? SORT_DIRS[session.sort.direction] : null,
         })),
         {
             placeHolder: localize("jobs.selectSortOpt", "Select a sorting option for jobs in {0}", session.label as string),
@@ -544,13 +544,13 @@ export async function sortJobs(session: IZoweJobTreeNode, jobsProvider: ZosJobsP
         return;
     }
     if (selection.label === localize("setSortDirection", "$(fold) Sort Direction")) {
-        const dir = await Gui.showQuickPick([localize("sort.asc", "Ascending"), localize("sort.desc", "Descending")], {
+        const dir = await Gui.showQuickPick(SORT_DIRS, {
             placeHolder: localize("sort.selectDirection", "Select a sorting direction"),
         });
         if (dir != null) {
             session.sort = {
                 ...(session.sort ?? { method: JobSortOpts.Id }),
-                direction: SORT_OPTS_TO_ENUM[dir],
+                direction: SORT_DIRS.indexOf(dir),
             };
         }
         await sortJobs(session, jobsProvider);

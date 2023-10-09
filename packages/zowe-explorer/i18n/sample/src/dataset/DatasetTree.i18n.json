@@ -33,10 +33,11 @@
   "sort.asc": "Ascending",
   "sort.desc": "Descending",
   "sort.selectDirection": "Select a sorting direction",
-  "ds.clearAllFilters": "$(clear-all) Clear all filters",
-  "ds.clearPdsFilter": "$(clear-all) Clear filters for this PDS",
+  "ds.clearProfileFilter": "$(clear-all) Clear filter for profile",
+  "ds.clearPdsFilter": "$(clear-all) Clear filter for PDS",
   "ds.selectFilterOpt": "Set a filter for {0}",
-  "ds.filterEntry.title": "Enter a value to filter by",
   "ds.filterEntry.invalidDate": "Invalid date format specified",
+  "ds.filterEntry.title": "Enter a value to filter by",
+  "ds.filterEntry.invalid": "Invalid filter specified",
   "defaultFilterPrompt.option.prompt.search": "$(plus) Create a new filter. For example: HLQ.*, HLQ.aaa.bbb, HLQ.ccc.ddd(member)"
 }
