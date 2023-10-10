@@ -1420,8 +1420,9 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         }
 
         // Updating filter for PDS node
-        // if a filter was already set, just refresh to grab any missing nodes
-        if (oldFilter != null) {
+        // if a filter was already set for either session or PDS, just refresh to grab any missing nodes
+        const sessionFilterPresent = (node.getSessionNode() as IZoweDatasetTreeNode).filter;
+        if (oldFilter != null || sessionFilterPresent != null) {
             this.refreshElement(node);
             return;
         }
