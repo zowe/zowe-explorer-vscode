@@ -976,12 +976,21 @@ export async function showAttributes(node: api.IZoweDatasetTreeNode, datasetProv
 export async function submitJcl(datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>): Promise<void> {
     ZoweLogger.trace("dataset.actions.submitJcl called.");
     if (!vscode.window.activeTextEditor) {
-        const errorMsg = localize("submitJcl.noDocumentOpen", "No editor with a document that could be submitted as JCL is currently open.");
-        api.Gui.errorMessage(errorMsg);
-        ZoweLogger.error(errorMsg);
+        const notActiveEditorMsg = localize(
+            "submitJcl.notActiveEditorMsg",
+            "No editor with a document that could be submitted as JCL is currently open."
+        );
+        api.Gui.errorMessage(notActiveEditorMsg);
+        ZoweLogger.error(notActiveEditorMsg);
         return;
     }
     const doc = vscode.window.activeTextEditor.document;
+    if (doc.languageId !== "jcl") {
+        const notJclMsg = localize("submitJcl.notJclMsg", "The document being submitted is not a JCL, submission cancelled.");
+        api.Gui.errorMessage(notJclMsg);
+        ZoweLogger.error(notJclMsg);
+        return;
+    }
     ZoweLogger.debug(localize("submitJcl.submitting", "Submitting JCL in document {0}", doc.fileName));
     // get session name
     const sessionregex = /\[(.*)(\])(?!.*\])/g;
