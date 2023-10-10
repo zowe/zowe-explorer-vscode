@@ -20,7 +20,6 @@ import * as nls from "vscode-nls";
 import SpoolProvider, { encodeJobFile, getSpoolFiles, matchSpool } from "../SpoolProvider";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { getDefaultUri } from "../shared/utils";
-import { TreeViewUtils } from "../utils/TreeViewUtils";
 
 // Set up localization
 nls.config({
@@ -543,72 +542,22 @@ export async function sortJobsBy(jobs: IZoweJobTreeNode, jobsProvider: IZoweTree
     jobsProvider.refresh();
 }
 
-export async function filterJobs(jobsProvider: IZoweTree<IZoweJobTreeNode>): Promise<vscode.InputBox> {
-    let acutal_jobs;
-    let flag = false;
-    for (const level of jobsProvider.mSessionNodes) {
-        if (level.label === "zosmf") {
-            acutal_jobs = level.children;
-            if (level.collapsibleState === vscode.TreeItemCollapsibleState.Collapsed) {
-                Gui.infoMessage(localize("filterJobs.message", "Use the search button to display jobs"));
-                flag = true;
-            }
-        }
+export async function filterJobs(jobsProvider: IZoweTree<IZoweJobTreeNode>, job: IZoweJobTreeNode): Promise<vscode.InputBox> {
+    if (job.collapsibleState === vscode.TreeItemCollapsibleState.Collapsed) {
+        Gui.infoMessage(localize("filterJobs.message", "Use the search button to display jobs"));
+        return;
     }
-    if (flag) return;
-
+    const acutal_jobs = job["children"];
     const inputBox = await vscode.window.createInputBox();
     inputBox.placeholder = localize("filterJobs.prompt.message", "Enter local filter...");
     inputBox.onDidChangeValue((query) => {
         query = query.toUpperCase();
-        for (const level of jobsProvider.mSessionNodes) {
-            if (level.label === "zosmf") {
-                level.children = acutal_jobs.filter((item) =>
-                    `${item["job"].jobname as string}(${item["job"].jobid as string}) - ${item["job"].retcode as string}`.includes(query)
-                );
-            }
-        }
+        job["children"] = acutal_jobs.filter((item) => `${item["job"].jobname}(${item["job"].jobid}) - ${item["job"].retcode}`.includes(query));
         jobsProvider.refresh();
+    });
+    inputBox.onDidAccept(() => {
+        inputBox.hide();
     });
     inputBox.show();
     return inputBox;
-}
-
-export async function filterSpools(jobsProvider: IZoweTree<IZoweJobTreeNode>, job: IZoweJobTreeNode): Promise<vscode.InputBox> {
-    try {
-        if (job["collapsibleState"] == vscode.TreeItemCollapsibleState.Collapsed) {
-            const Spools = (await getSpoolFiles(job)).map((spool) => {
-                const spoolNode = new Spool(
-                    `${spool.stepname}:${spool.ddname} - ${spool["record-count"]}`,
-                    vscode.TreeItemCollapsibleState.None,
-                    job.getParent(),
-                    job.getSession(),
-                    spool,
-                    job.job,
-                    job.getParent()
-                );
-                return spoolNode;
-            });
-            job.children = Spools;
-
-            await TreeViewUtils.expandNode(job, jobsProvider);
-            job.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
-            jobsProvider.refresh();
-        }
-
-        const actual_spools = job.children;
-        const inputBox = vscode.window.createInputBox();
-        inputBox.placeholder = localize("filterJobs.prompt.message", "Enter local filter...");
-        inputBox.onDidChangeValue((query) => {
-            query = query.toUpperCase();
-            job["children"] = actual_spools.filter((item) =>
-                `${item["spool"].stepname as string}:${item["spool"].ddname as string} - ${item["spool"]["record-count"] as string}`.includes(query)
-            );
-            jobsProvider.refresh();
-        });
-        inputBox.show();
-        return inputBox;
-    } catch (error) {
-        await errorHandling(error);
-    }
 }

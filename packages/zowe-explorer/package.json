@@ -759,11 +759,6 @@
         }
       },
       {
-        "command": "zowe.jobs.filterSpools",
-        "title": "Filter Spools",
-        "category": "Zowe Explorer"
-      },
-      {
         "command": "zowe.jobs.search",
         "title": "%jobs.search%",
         "category": "Zowe Explorer",

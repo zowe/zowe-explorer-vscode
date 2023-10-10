@@ -223,11 +223,7 @@ describe("Test src/jobs/extension", () => {
             },
             {
                 name: "zowe.jobs.filterJobs",
-                mock: [{ spy: jest.spyOn(jobActions, "filterJobs"), arg: [jobsProvider] }],
-            },
-            {
-                name: "zowe.jobs.filterSpools",
-                mock: [{ spy: jest.spyOn(jobActions, "filterSpools"), arg: [jobsProvider, test.value] }],
+                mock: [{ spy: jest.spyOn(jobActions, "filterJobs"), arg: [jobsProvider, test.value] }],
             },
         ];
 
