@@ -486,6 +486,7 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
         Object.defineProperty(profileInstance, "loadNamedProfile", {
             value: jest.fn(),
         });
+        (textDocument.languageId as any) = "jcl";
 
         return {
             session,
