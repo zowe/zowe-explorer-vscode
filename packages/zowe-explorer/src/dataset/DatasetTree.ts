@@ -1305,7 +1305,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
 
         if (isSession) {
             // if a session was selected, apply this sort to ALL PDS members
-            if (node.children != null && node.children.length > 0) {
+            if (node.children?.length > 0) {
                 // children nodes already exist, sort and repaint to avoid extra refresh
                 for (const c of node.children) {
                     if (contextually.isPds(c) && c.children) {
@@ -1314,15 +1314,11 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                         this.nodeDataChanged(c);
                     }
                 }
-            } else {
-                this.refreshElement(node);
             }
-        } else if (node.children != null && node.children.length > 0) {
+        } else if (node.children?.length > 0) {
             // children nodes already exist, sort and repaint to avoid extra refresh
             node.children.sort(ZoweDatasetNode.sortBy(node.sort));
             this.nodeDataChanged(node);
-        } else {
-            this.refreshElement(node);
         }
     }
 
@@ -1391,16 +1387,22 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         const oldFilter = node.filter;
         node.filter = newFilter;
 
+        // if a session was selected, apply this sort to all PDS members
         if (isSession) {
-            // if a session was selected, apply this sort to ALL PDS members
             if (node.children?.length > 0) {
                 // children nodes already exist, sort and repaint to avoid extra refresh
                 for (const c of node.children) {
                     const asDs = c as IZoweDatasetTreeNode;
-                    if (contextually.isPds(c) && c.children) {
-                        // If a filter was NOT set for this PDS AND there was an old session-wide filter set,
-                        // refresh it to get any missing nodes back since it will use the new session-wide filter
-                        if (asDs.filter == null && oldFilter != null) {
+
+                    // PDS-level filters should have precedence over a session-level filter
+                    if (asDs.filter != null) {
+                        continue;
+                    }
+
+                    if (contextually.isPds(c)) {
+                        // If there was an old session-wide filter set: refresh to get any
+                        // missing nodes - new filter will be applied
+                        if (oldFilter != null) {
                             this.refreshElement(c);
                             continue;
                         }
@@ -1413,24 +1415,21 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                         }
                     }
                 }
-            } else {
-                this.refreshElement(node);
             }
-        } else {
-            // Only sort the PDS members for this PDS
-            if (oldFilter != null) {
-                // if there was a filter set for this PDS, refresh it w/ the new filter applied
-                this.refreshElement(node);
-                return;
-            }
+            return;
+        }
 
-            if (newFilter != null && node.children?.length > 0) {
-                // children nodes already exist, sort and repaint to avoid extra refresh
-                node.children = node.children.filter(ZoweDatasetNode.filterBy(newFilter));
-                this.nodeDataChanged(node);
-            } else {
-                this.refreshElement(node);
-            }
+        // Updating filter for PDS node
+        // if a filter was already set, just refresh to grab any missing nodes
+        if (oldFilter != null) {
+            this.refreshElement(node);
+            return;
+        }
+
+        // since there wasn't a previous filter, sort and repaint existing nodes
+        if (newFilter != null && node.children?.length > 0) {
+            node.children = node.children.filter(ZoweDatasetNode.filterBy(newFilter));
+            this.nodeDataChanged(node);
         }
     }
 
