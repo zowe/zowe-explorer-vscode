@@ -2696,36 +2696,34 @@ describe("Dataset Tree Unit Tests - Function initializeFavorites", () => {
         expect(() => testTree.initializeFavorites(log)).not.toThrow();
     });
 });
+describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
+    const tree = new DatasetTree();
+    const nodesForSuite = (): Record<string, IZoweDatasetTreeNode> => {
+        const session = new ZoweDatasetNode("testSession", vscode.TreeItemCollapsibleState.Collapsed, null, createISession());
+        session.contextValue = globals.DS_SESSION_CONTEXT;
+        const pds = new ZoweDatasetNode("testPds", vscode.TreeItemCollapsibleState.Collapsed, session, createISession());
+        pds.contextValue = globals.DS_PDS_CONTEXT;
 
-describe("Dataset Tree Unit Tests - Function sortPdsMembersDialog", () => {
-    const testTree = new DatasetTree();
+        const nodeA = new ZoweDatasetNode("A", vscode.TreeItemCollapsibleState.Collapsed, pds, createISession());
+        nodeA.stats = { user: "someUser", m4date: new Date() };
+        const nodeB = new ZoweDatasetNode("B", vscode.TreeItemCollapsibleState.Collapsed, pds, createISession());
+        nodeB.stats = { user: "anotherUser", m4date: new Date("2022-01-01T12:00:00") };
+        const nodeC = new ZoweDatasetNode("C", vscode.TreeItemCollapsibleState.Collapsed, pds, createISession());
+        nodeC.stats = { user: "someUser", m4date: new Date("2022-03-15T16:30:00") };
+        pds.children = [nodeA, nodeB, nodeC];
+        session.children = [pds];
+
+        return {
+            session,
+            pds,
+        };
+    };
+
     const getBlockMocks = (): Record<string, jest.SpyInstance> => ({
         nodeDataChanged: jest.spyOn(DatasetTree.prototype, "nodeDataChanged"),
         refreshElement: jest.spyOn(DatasetTree.prototype, "refreshElement"),
         showQuickPick: jest.spyOn(Gui, "showQuickPick"),
-        getParent: jest.spyOn(ZoweDatasetNode.prototype, "getParent"),
-    });
-    const testSession = new ZoweDatasetNode("testSession", vscode.TreeItemCollapsibleState.Collapsed, null, createISession());
-    const testPds = new ZoweDatasetNode("testPds", vscode.TreeItemCollapsibleState.Collapsed, testSession, createISession());
-    testPds.contextValue = globals.DS_PDS_CONTEXT;
-
-    beforeEach(() => {
-        const mocks = getBlockMocks();
-        mocks.getParent.mockReturnValue(testSession);
-        testPds.children = [
-            { label: "A", stats: { user: "someUser", m4date: Date.now() }, getParent: mocks.getParent } as unknown as ZoweDatasetNode,
-            {
-                label: "B",
-                stats: { user: "anotherUser", m4date: Date.parse("2022-01-01T12:00:00") },
-                getParent: mocks.getParent,
-            } as unknown as ZoweDatasetNode,
-            {
-                label: "C",
-                stats: { user: "someUser", m4date: Date.parse("2022-03-15T16:30:00") },
-                getParent: mocks.getParent,
-            } as unknown as ZoweDatasetNode,
-        ];
-        testSession.children = [testPds];
+        showInputBox: jest.spyOn(Gui, "showInputBox"),
     });
 
     afterEach(() => {
@@ -2742,180 +2740,161 @@ describe("Dataset Tree Unit Tests - Function sortPdsMembersDialog", () => {
         }
     });
 
-    // for sorting, we shouldn't need to refresh since all nodes
-    // should be intact, just in a different order
-    it("does nothing if no children exist", async () => {
-        const mocks = getBlockMocks();
-        // case 1: called on PDS node
-        mocks.showQuickPick.mockResolvedValueOnce({ label: "$(case-sensitive) Name (default)" });
-        testPds.children = [];
-        await testTree.sortPdsMembersDialog(testPds);
-        expect(mocks.nodeDataChanged).not.toHaveBeenCalled();
+    describe("sortBy & sortPdsMembersDialog", () => {
+        // for sorting, we shouldn't need to refresh since all nodes
+        // should be intact, just in a different order
+        it("does nothing if no children exist", async () => {
+            const mocks = getBlockMocks();
+            const nodes = nodesForSuite();
+            // case 1: called on PDS node
+            mocks.showQuickPick.mockResolvedValueOnce({ label: "$(case-sensitive) Name (default)" });
+            nodes.pds.children = [];
+            await tree.sortPdsMembersDialog(nodes.pds);
+            expect(mocks.nodeDataChanged).not.toHaveBeenCalled();
 
-        // case 2: called on session node
-        mocks.showQuickPick.mockResolvedValueOnce({ label: "$(case-sensitive) Name (default)" });
-        testSession.children = [];
-        await testTree.sortPdsMembersDialog(testSession);
-        expect(mocks.nodeDataChanged).not.toHaveBeenCalled();
+            // case 2: called on session node
+            mocks.showQuickPick.mockResolvedValueOnce({ label: "$(case-sensitive) Name (default)" });
+            nodes.session.children = [];
+            await tree.sortPdsMembersDialog(nodes.session);
+            expect(mocks.nodeDataChanged).not.toHaveBeenCalled();
+        });
+
+        it("sorts by name", async () => {
+            const mocks = getBlockMocks();
+            const nodes = nodesForSuite();
+            mocks.showQuickPick.mockResolvedValueOnce({ label: "$(case-sensitive) Name (default)" });
+            await tree.sortPdsMembersDialog(nodes.pds);
+            expect(mocks.nodeDataChanged).toHaveBeenCalled();
+            expect(mocks.refreshElement).not.toHaveBeenCalled();
+            expect(nodes.pds.children?.map((c: IZoweDatasetTreeNode) => c.label)).toStrictEqual(["A", "B", "C"]);
+        });
+
+        it("sorts by last modified date", async () => {
+            const mocks = getBlockMocks();
+            const nodes = nodesForSuite();
+            mocks.showQuickPick.mockResolvedValueOnce({ label: "$(calendar) Date Modified" });
+            await tree.sortPdsMembersDialog(nodes.pds);
+            expect(mocks.nodeDataChanged).toHaveBeenCalled();
+            expect(mocks.refreshElement).not.toHaveBeenCalled();
+            expect(nodes.pds.children?.map((c: IZoweDatasetTreeNode) => c.label)).toStrictEqual(["B", "C", "A"]);
+        });
+
+        it("sorts by user ID", async () => {
+            const mocks = getBlockMocks();
+            const nodes = nodesForSuite();
+            mocks.showQuickPick.mockResolvedValueOnce({ label: "$(account) User ID" });
+            await tree.sortPdsMembersDialog(nodes.pds);
+            expect(mocks.nodeDataChanged).toHaveBeenCalled();
+            expect(mocks.refreshElement).not.toHaveBeenCalled();
+            expect(nodes.pds.children?.map((c: IZoweDatasetTreeNode) => c.label)).toStrictEqual(["B", "A", "C"]);
+        });
+
+        it("returns to sort selection dialog when sort direction selection is canceled", async () => {
+            const sortPdsMembersDialog = jest.spyOn(tree, "sortPdsMembersDialog");
+            const mocks = getBlockMocks();
+            const nodes = nodesForSuite();
+            mocks.showQuickPick.mockResolvedValueOnce({ label: "$(fold) Sort Direction" });
+            mocks.showQuickPick.mockResolvedValueOnce(undefined);
+            await tree.sortPdsMembersDialog(nodes.pds);
+            expect(mocks.nodeDataChanged).not.toHaveBeenCalled();
+            expect(mocks.refreshElement).not.toHaveBeenCalled();
+            expect(sortPdsMembersDialog).toHaveBeenCalledTimes(2);
+        });
     });
 
-    it("sorts by name", async () => {
-        const mocks = getBlockMocks();
-        mocks.showQuickPick.mockResolvedValueOnce({ label: "$(case-sensitive) Name (default)" });
-        await testTree.sortPdsMembersDialog(testPds);
-        expect(mocks.nodeDataChanged).toHaveBeenCalled();
-        expect(mocks.refreshElement).not.toHaveBeenCalled();
-        expect(testPds.children.map((c: IZoweDatasetTreeNode) => c.label)).toStrictEqual(["A", "B", "C"]);
-    });
+    describe("filterBy & filterPdsMembersDialog", () => {
+        afterEach(() => {
+            const mocks = getBlockMocks();
+            for (const mock of Object.values(mocks)) {
+                mock.mockReset();
+            }
+        });
 
-    it("sorts by last modified date", async () => {
-        const mocks = getBlockMocks();
-        mocks.showQuickPick.mockResolvedValueOnce({ label: "$(calendar) Date Modified" });
-        await testTree.sortPdsMembersDialog(testPds);
-        expect(mocks.nodeDataChanged).toHaveBeenCalled();
-        expect(mocks.refreshElement).not.toHaveBeenCalled();
-        expect(testPds.children.map((c: IZoweDatasetTreeNode) => c.label)).toStrictEqual(["B", "C", "A"]);
-    });
+        afterAll(() => {
+            const mocks = getBlockMocks();
+            for (const mock of Object.values(mocks)) {
+                mock.mockRestore();
+            }
+        });
 
-    it("sorts by user ID", async () => {
-        const mocks = getBlockMocks();
-        mocks.showQuickPick.mockResolvedValueOnce({ label: "$(account) User ID" });
-        await testTree.sortPdsMembersDialog(testPds);
-        expect(mocks.nodeDataChanged).toHaveBeenCalled();
-        expect(mocks.refreshElement).not.toHaveBeenCalled();
-        expect(testPds.children.map((c: IZoweDatasetTreeNode) => c.label)).toStrictEqual(["B", "A", "C"]);
-    });
+        it("calls refreshElement if PDS children were removed from a previous filter", async () => {
+            const mocks = getBlockMocks();
+            const nodes = nodesForSuite();
+            mocks.showQuickPick.mockResolvedValueOnce("$(calendar) Date Modified" as any);
+            mocks.showInputBox.mockResolvedValueOnce("2022-01-01");
 
-    it("returns to sort selection dialog when sort direction selection is canceled", async () => {
-        const sortPdsMembersDialog = jest.spyOn(testTree, "sortPdsMembersDialog");
-        const mocks = getBlockMocks();
-        mocks.showQuickPick.mockResolvedValueOnce({ label: "$(fold) Sort Direction" });
-        mocks.showQuickPick.mockResolvedValueOnce(undefined);
-        await testTree.sortPdsMembersDialog(testPds);
-        expect(mocks.nodeDataChanged).not.toHaveBeenCalled();
-        expect(mocks.refreshElement).not.toHaveBeenCalled();
-        expect(sortPdsMembersDialog).toHaveBeenCalledTimes(2);
-    });
-});
+            nodes.pds.filter = { method: DatasetFilterOpts.UserId, value: "invalidUserId" };
+            nodes.pds.children = [];
+            await tree.filterPdsMembersDialog(nodes.pds);
+            expect(mocks.nodeDataChanged).not.toHaveBeenCalled();
+            expect(mocks.refreshElement).toHaveBeenCalledWith(nodes.pds);
+        });
 
-describe("Dataset Tree Unit Tests - Function filterPdsMembersDialog", () => {
-    const testTree = new DatasetTree();
-    const getBlockMocks = (): Record<string, jest.SpyInstance> => ({
-        nodeDataChanged: jest.spyOn(DatasetTree.prototype, "nodeDataChanged"),
-        refreshElement: jest.spyOn(DatasetTree.prototype, "refreshElement"),
-        showQuickPick: jest.spyOn(Gui, "showQuickPick"),
-        getParent: jest.spyOn(ZoweDatasetNode.prototype, "getParent"),
-        showInputBox: jest.spyOn(Gui, "showInputBox"),
-    });
-    const testSession = new ZoweDatasetNode("testSession", vscode.TreeItemCollapsibleState.Collapsed, null, createISession());
-    const testPds = new ZoweDatasetNode("testPds", vscode.TreeItemCollapsibleState.Collapsed, testSession, createISession());
-    testPds.contextValue = globals.DS_PDS_CONTEXT;
+        it("returns to filter selection dialog when filter entry is canceled", async () => {
+            const filterPdsMembersSpy = jest.spyOn(tree, "filterPdsMembersDialog");
+            const mocks = getBlockMocks();
+            const nodes = nodesForSuite();
+            mocks.showQuickPick.mockResolvedValueOnce("$(calendar) Date Modified" as any);
+            mocks.showInputBox.mockResolvedValueOnce(undefined);
+            await tree.filterPdsMembersDialog(nodes.pds);
+            expect(mocks.nodeDataChanged).not.toHaveBeenCalled();
+            expect(mocks.refreshElement).not.toHaveBeenCalled();
+            expect(filterPdsMembersSpy).toHaveBeenCalledTimes(2);
+        });
 
-    beforeEach(() => {
-        const mocks = getBlockMocks();
-        mocks.getParent.mockReturnValue(testSession);
-        testPds.children = [
-            { label: "A", stats: { user: "someUser", m4date: Date.now() }, getParent: mocks.getParent } as unknown as ZoweDatasetNode,
-            {
-                label: "B",
-                stats: { user: "anotherUser", m4date: Date.parse("2022-01-01T12:00:00") },
-                getParent: mocks.getParent,
-            } as unknown as ZoweDatasetNode,
-            {
-                label: "C",
-                stats: { user: "someUser", m4date: Date.parse("2022-03-15T16:30:00") },
-                getParent: mocks.getParent,
-            } as unknown as ZoweDatasetNode,
-        ];
-        testSession.children = [testPds];
-        testPds.filter = undefined as any;
-    });
+        it("filters single PDS by last modified date", async () => {
+            const mocks = getBlockMocks();
+            const nodes = nodesForSuite();
+            mocks.showQuickPick.mockResolvedValueOnce("$(calendar) Date Modified" as any);
+            mocks.showInputBox.mockResolvedValueOnce("2022-03-15");
+            await tree.filterPdsMembersDialog(nodes.pds);
+            expect(mocks.nodeDataChanged).toHaveBeenCalled();
+            expect(mocks.refreshElement).not.toHaveBeenCalled();
+            expect(nodes.pds.children?.map((c: IZoweDatasetTreeNode) => c.label)).toStrictEqual(["C"]);
+        });
 
-    afterEach(() => {
-        const mocks = getBlockMocks();
-        for (const mock of Object.values(mocks)) {
-            mock.mockReset();
-        }
-    });
+        it("filters single PDS by user ID", async () => {
+            const mocks = getBlockMocks();
+            const nodes = nodesForSuite();
+            mocks.showQuickPick.mockResolvedValueOnce("$(account) User ID" as any);
+            mocks.showInputBox.mockResolvedValueOnce("anotherUser");
+            await tree.filterPdsMembersDialog(nodes.pds);
+            expect(mocks.nodeDataChanged).toHaveBeenCalled();
+            expect(mocks.refreshElement).not.toHaveBeenCalled();
+            expect(nodes.pds.children?.map((c: IZoweDatasetTreeNode) => c.label)).toStrictEqual(["B"]);
+        });
 
-    afterAll(() => {
-        const mocks = getBlockMocks();
-        for (const mock of Object.values(mocks)) {
-            mock.mockRestore();
-        }
-    });
+        it("filters PDS members using the session node filter", async () => {
+            const mocks = getBlockMocks();
+            const nodes = nodesForSuite();
+            const uidString = "$(account) User ID" as any;
+            const anotherUser = "anotherUser";
+            mocks.showQuickPick.mockResolvedValueOnce(uidString).mockResolvedValueOnce(uidString);
+            mocks.showInputBox.mockResolvedValueOnce(anotherUser).mockResolvedValueOnce(anotherUser);
 
-    it("calls refreshElement if PDS children were removed from a previous filter", async () => {
-        const mocks = getBlockMocks();
-        mocks.showQuickPick.mockResolvedValueOnce("$(calendar) Date Modified" as any);
-        mocks.showInputBox.mockResolvedValueOnce("2022-01-01");
+            // case 1: old filter was set on session, just refresh PDS to use new filter
+            nodes.session.filter = {
+                method: DatasetFilterOpts.LastModified,
+                value: "2020-01-01",
+            };
+            await tree.filterPdsMembersDialog(nodes.session);
+            expect(mocks.refreshElement).toHaveBeenCalled();
 
-        testPds.filter = { method: DatasetFilterOpts.UserId, value: "invalidUserId" };
-        testPds.children = [];
-        await testTree.filterPdsMembersDialog(testPds);
-        expect(mocks.nodeDataChanged).not.toHaveBeenCalled();
-        expect(mocks.refreshElement).toHaveBeenCalledWith(testPds);
-    });
+            // case 2: no old filter present, PDS has children to be filtered
+            nodes.session.filter = undefined;
+            await tree.filterPdsMembersDialog(nodes.session);
+            expect(mocks.nodeDataChanged).toHaveBeenCalled();
+        });
 
-    it("returns to filter selection dialog when filter entry is canceled", async () => {
-        const filterPdsMembersSpy = jest.spyOn(testTree, "filterPdsMembersDialog");
-        const mocks = getBlockMocks();
-        mocks.showQuickPick.mockResolvedValueOnce("$(calendar) Date Modified" as any);
-        mocks.showInputBox.mockResolvedValueOnce(undefined);
-        await testTree.filterPdsMembersDialog(testPds);
-        expect(mocks.nodeDataChanged).not.toHaveBeenCalled();
-        expect(mocks.refreshElement).not.toHaveBeenCalled();
-        expect(filterPdsMembersSpy).toHaveBeenCalledTimes(2);
-    });
-
-    it("filters single PDS by last modified date", async () => {
-        const mocks = getBlockMocks();
-        mocks.showQuickPick.mockResolvedValueOnce("$(calendar) Date Modified" as any);
-        mocks.showInputBox.mockResolvedValueOnce("2022-03-15");
-        await testTree.filterPdsMembersDialog(testPds);
-        expect(mocks.nodeDataChanged).toHaveBeenCalled();
-        expect(mocks.refreshElement).not.toHaveBeenCalled();
-        expect(testPds.children.map((c: IZoweDatasetTreeNode) => c.label)).toStrictEqual(["C"]);
-    });
-
-    it("filters single PDS by user ID", async () => {
-        const mocks = getBlockMocks();
-        mocks.showQuickPick.mockResolvedValueOnce("$(account) User ID" as any);
-        mocks.showInputBox.mockResolvedValueOnce("anotherUser");
-        await testTree.filterPdsMembersDialog(testPds);
-        expect(mocks.nodeDataChanged).toHaveBeenCalled();
-        expect(mocks.refreshElement).not.toHaveBeenCalled();
-        expect(testPds.children.map((c: IZoweDatasetTreeNode) => c.label)).toStrictEqual(["B"]);
-    });
-
-    it("filters PDS members using the session node filter", async () => {
-        const mocks = getBlockMocks();
-        const uidString = "$(account) User ID" as any;
-        const anotherUser = "anotherUser";
-        mocks.showQuickPick.mockResolvedValueOnce(uidString).mockResolvedValueOnce(uidString);
-        mocks.showInputBox.mockResolvedValueOnce(anotherUser).mockResolvedValueOnce(anotherUser);
-
-        // case 1: old filter was set on session, just refresh PDS to use new filter
-        testSession.filter = {
-            method: DatasetFilterOpts.LastModified,
-            value: "2020-01-01",
-        };
-        await testTree.filterPdsMembersDialog(testSession);
-        expect(mocks.refreshElement).toHaveBeenCalled();
-
-        // case 2: no old filter present, PDS has children to be filtered
-        testSession.filter = undefined;
-        await testTree.filterPdsMembersDialog(testSession);
-        expect(mocks.nodeDataChanged).toHaveBeenCalled();
-    });
-
-    it("clears filter for a PDS when selected in dialog", async () => {
-        const mocks = getBlockMocks();
-        const resp = "$(clear-all) Clear filter for PDS" as any;
-        mocks.showQuickPick.mockResolvedValueOnce(resp);
-        const updateFilterForNode = jest.spyOn(DatasetTree.prototype, "updateFilterForNode");
-        await testTree.filterPdsMembersDialog(testPds);
-        expect(mocks.refreshElement).not.toHaveBeenCalled();
-        expect(updateFilterForNode).toHaveBeenCalledWith(testPds, null, false);
+        it("clears filter for a PDS when selected in dialog", async () => {
+            const mocks = getBlockMocks();
+            const nodes = nodesForSuite();
+            const resp = "$(clear-all) Clear filter for PDS" as any;
+            mocks.showQuickPick.mockResolvedValueOnce(resp);
+            const updateFilterForNode = jest.spyOn(DatasetTree.prototype, "updateFilterForNode");
+            await tree.filterPdsMembersDialog(nodes.pds);
+            expect(mocks.refreshElement).not.toHaveBeenCalled();
+            expect(updateFilterForNode).toHaveBeenCalledWith(nodes.pds, null, false);
+        });
     });
 });

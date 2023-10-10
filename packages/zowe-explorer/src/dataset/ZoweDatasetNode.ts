@@ -262,11 +262,17 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     }
 
                     // get user and last modified date for sorting, if available
-                    const { m4date, mtime, msec }: { m4date: string; mtime: string; msec: string } = item;
-                    if (m4date) {
+                    if ("m4date" in item) {
+                        const { m4date, mtime, msec }: { m4date: string; mtime: string; msec: string } = item;
                         temp.stats = {
                             user: item.user,
-                            m4date: new Date(`${m4date.replace(/\//g, "-")}T${mtime}:${msec}`),
+                            m4date: dayjs(`${m4date} ${mtime}:${msec}`).toDate(),
+                        };
+                    } else if ("id" in item || "changed" in item) {
+                        // missing keys from API response; check for FTP keys
+                        temp.stats = {
+                            user: item.id,
+                            m4date: item.changed ? dayjs(item.changed).toDate() : null,
                         };
                     }
                     elementChildren[temp.label.toString()] = temp;
