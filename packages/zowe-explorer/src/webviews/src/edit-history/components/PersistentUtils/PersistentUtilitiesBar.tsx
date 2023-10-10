@@ -15,7 +15,7 @@ export default function PersistentUtilitiesBar({
 }): JSXInternal.Element {
   return (
     <div style={{ display: "flex", flexDirection: "row", alignItems: "center" }}>
-      <PersistentDropdownOptions handleChange={handleChange} />
+      <PersistentDropdownOptions handleChange={handleChange} type={type} />
       {selection.selection === "search" && type !== "jobs" ? <PersistentAddNewHistoryItemButton type={type} /> : null}
       <PersistentRefreshButton type={type} />
       <PersistentClearAllButton type={type} selection={selection} />

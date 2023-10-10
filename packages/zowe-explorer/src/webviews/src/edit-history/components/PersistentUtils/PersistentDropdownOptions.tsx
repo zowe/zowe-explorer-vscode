@@ -1,14 +1,14 @@
 import { VSCodeDropdown, VSCodeOption } from "@vscode/webview-ui-toolkit/react";
 import { JSXInternal } from "preact/src/jsx";
 
-export default function PersistentDropdownOptions({ handleChange }: { handleChange: Function }): JSXInternal.Element {
+export default function PersistentDropdownOptions({ handleChange, type }: { handleChange: Function; type: string }): JSXInternal.Element {
   const options = [
     <VSCodeOption value="search">Search History</VSCodeOption>,
     <VSCodeOption value="dsTemplates">DS Templates</VSCodeOption>,
     <VSCodeOption value="favorites">Favorites</VSCodeOption>,
     <VSCodeOption value="fileHistory">File History</VSCodeOption>,
     <VSCodeOption value="sessions">Sessions</VSCodeOption>,
-  ];
+  ].filter((option) => type === "ds" || option.props.value !== "dsTemplates");
 
   return (
     <div style={{ display: "flex", flexDirection: "row", alignItems: "center", margin: "15px 15px 15px 0px" }}>

@@ -64,7 +64,7 @@ export default function PersistentDataPanel({
     <VSCodePanelView id={panelId[type]} style={{ flexDirection: "column" }}>
       <PersistentUtilitiesBar type={type} handleChange={handleChange} selection={selection} />
       <VSCodeDataGrid>
-        <PersistentDataGridHeaders />
+        <PersistentDataGridHeaders selection={selection} />
         <PersistentTableData type={type} persistentProp={persistentProp} selection={selection} />
       </VSCodeDataGrid>
     </VSCodePanelView>

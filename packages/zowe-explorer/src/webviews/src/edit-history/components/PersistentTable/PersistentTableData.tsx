@@ -22,24 +22,34 @@ export default function PersistentTableData({
     });
   };
 
-  const data =
-    persistentProp && persistentProp.length ? (
-      persistentProp.map((item, i) => {
-        return (
-          <VSCodeDataGridRow>
-            <VSCodeDataGridCell grid-column="1">{item}</VSCodeDataGridCell>
-            <VSCodeDataGridCell grid-column="2" onClick={() => handleClick(i)} style={{ maxWidth: "5vw", textAlign: "center" }}>
-              <img src="./webviews/src/edit-history/assets/trash.svg" />
-            </VSCodeDataGridCell>
-          </VSCodeDataGridRow>
-        );
-      })
-    ) : (
+  const renderDeleteButton = (i: number) => {
+    return selection.selection === "search" || selection.selection === "fileHistory" ? (
+      <VSCodeDataGridCell grid-column="2" onClick={() => handleClick(i)} style={{ maxWidth: "20vw", textAlign: "center" }}>
+        <img src="./webviews/src/edit-history/assets/trash.svg" />
+      </VSCodeDataGridCell>
+    ) : null;
+  };
+
+  const renderOptions = () => {
+    return persistentProp.map((item, i) => {
+      return (
+        <VSCodeDataGridRow>
+          <VSCodeDataGridCell grid-column="1">{item}</VSCodeDataGridCell>
+          {renderDeleteButton(i)}
+        </VSCodeDataGridRow>
+      );
+    });
+  };
+
+  const renderNoRecordsFound = () => {
+    return (
       <VSCodeDataGridRow>
         <VSCodeDataGridCell grid-column="1">No records found</VSCodeDataGridCell>
-        <VSCodeDataGridCell grid-column="2" style={{ maxWidth: "5vw", textAlign: "center" }}></VSCodeDataGridCell>
       </VSCodeDataGridRow>
     );
+  };
+
+  const data = persistentProp && persistentProp.length ? renderOptions() : renderNoRecordsFound();
 
   return <>{data}</>;
 }
