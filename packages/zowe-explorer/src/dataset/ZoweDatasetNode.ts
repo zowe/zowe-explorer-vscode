@@ -57,11 +57,8 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     public ongoingActions: Record<NodeAction | string, Promise<any>> = {};
     public wasDoubleClicked: boolean = false;
     public stats: DatasetStats;
-    public sort: NodeSort = {
-        method: DatasetSortOpts.Name,
-        direction: SortDirection.Ascending,
-    };
-    public filter: DatasetFilter;
+    public sort?: NodeSort;
+    public filter?: DatasetFilter;
 
     /**
      * Creates an instance of ZoweDatasetNode
@@ -96,6 +93,15 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         if (icon) {
             this.iconPath = icon.path;
         }
+
+        if (this.getParent() == null) {
+            // set default sort options for session nodes
+            this.sort = {
+                method: DatasetSortOpts.Name,
+                direction: SortDirection.Ascending,
+            };
+        }
+
         if (!globals.ISTHEIA && contextually.isSession(this)) {
             this.id = this.label as string;
         }
@@ -312,13 +318,13 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
      */
     public static sortBy(sort: NodeSort): (a: IZoweDatasetTreeNode, b: IZoweDatasetTreeNode) => number {
         return (a, b): number => {
-            const sortLessThan = sort.direction == SortDirection.Ascending ? -1 : 1;
-            const sortGreaterThan = sortLessThan * -1;
-
             const aParent = a.getParent();
             if (aParent == null || !contextually.isPds(aParent)) {
-                return (a.label as string) < (b.label as string) ? sortLessThan : sortGreaterThan;
+                return (a.label as string) < (b.label as string) ? -1 : 1;
             }
+
+            const sortLessThan = sort.direction == SortDirection.Ascending ? -1 : 1;
+            const sortGreaterThan = sortLessThan * -1;
 
             switch (sort.method) {
                 case DatasetSortOpts.LastModified:
