@@ -822,6 +822,20 @@
           "group": "navigation"
         }
       ],
+      "editor/context": [
+        {
+          "when": "resourceLangId == jcl",
+          "command": "zowe.ds.submitJcl",
+          "group": "000_zowe_dsMainframeInteraction@1"
+        }
+      ],
+      "explorer/context": [
+        {
+          "when": "resourceLangId == jcl",
+          "command": "zowe.ds.submitJcl",
+          "group": "000_zowe_dsMainframeInteraction@1"
+        }
+      ],
       "view/item/context": [
         {
           "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*/ && !listMultiSelection",
