@@ -10,10 +10,11 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Introduce a new user interface for managing profiles via right-click action "Manage Profile".
 - Added new edit feature on `Edit Attributes` view for changing file tags on USS [#2113](https://github.com/zowe/vscode-extension-for-zowe/issues/2113)
 - Added new API {ZE Extender MetaData} to allow extenders to have the metadata of registered extenders to aid in team configuration file creation from a view that isn't Zowe Explorer's. [#2394](https://github.com/zowe/vscode-extension-for-zowe/issues/2394)
+- Added new right-click action for `Submit JCL` to local JCL files in VS Code file explorer as well as JCL opened in the VS Code text editor. [#2475](https://github.com/zowe/vscode-extension-for-zowe/issues/2475)
 
 ### Bug fixes
 
-- Fixed submitting local JCL using command pallet option `Zowe Explorer: Submit JCL` by adding a check for chosen profile returned to continue the action. [#1625](https://github.com/zowe/vscode-extension-for-zowe/issues/1625)
+- Fixed submitting local JCL using command pallet option `Zowe Explorer: Submit JCL` by adding a check for chosen profile returned to continue the action and added check on the language id for JCL. [#1625](https://github.com/zowe/vscode-extension-for-zowe/issues/1625)
 - Fixed conflict resolution being skipped if local and remote file have different contents but are the same size. [#2496](https://github.com/zowe/vscode-extension-for-zowe/issues/2496)
 
 ## `2.11.0`
