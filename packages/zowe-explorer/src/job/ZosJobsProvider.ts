@@ -1126,8 +1126,6 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         if (session.children != null) {
             session.children.sort(Job.sortJobs(session.sort));
             this.nodeDataChanged(session);
-        } else {
-            this.refreshElement(session);
         }
     }
 }
