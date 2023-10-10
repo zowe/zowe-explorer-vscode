@@ -87,7 +87,7 @@ export class ZoweTreeProvider {
 
     /**
      * Fire the "onDidChangeTreeData" event to signal that a node in the tree has changed.
-     * Unlike `refreshElement`, this function does NOT signal a refresh for the given node -
+     * Unlike `refreshElement`, this function does *not* signal a refresh for the given node -
      * it simply tells VS Code to repaint the node in the tree.
      * @param node The node that should be repainted
      */
