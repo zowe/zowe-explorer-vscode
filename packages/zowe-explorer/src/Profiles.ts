@@ -30,7 +30,7 @@ import {
     getFullPath,
     getZoweDir,
 } from "@zowe/zowe-explorer-api";
-import { errorHandling, FilterDescriptor, FilterItem, ProfilesUtils, isUsingTokenAuth } from "./utils/ProfilesUtils";
+import { errorHandling, FilterDescriptor, FilterItem, ProfilesUtils } from "./utils/ProfilesUtils";
 import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
 import { ZoweExplorerExtender } from "./ZoweExplorerExtender";
 import * as globals from "./globals";
@@ -68,6 +68,10 @@ export class Profiles extends ProfilesCache {
     private jobsSchema: string = globals.SETTINGS_JOBS_HISTORY;
     private mProfileInfo: zowe.imperative.ProfileInfo;
     private profilesOpCancelled = localize("profiles.operation.cancelled", "Operation Cancelled");
+    private manualEditMsg = localize(
+        "profiles.manualEditMsg",
+        "The Team configuration file has been opened in the editor. Editing or removal of profiles will need to be done manually."
+    );
     public constructor(log: zowe.imperative.Logger, cwd?: string) {
         super(log, cwd);
     }
@@ -88,7 +92,7 @@ export class Profiles extends ProfilesCache {
     public async checkCurrentProfile(theProfile: zowe.imperative.IProfileLoaded): Promise<IProfileValidation> {
         ZoweLogger.trace("Profiles.checkCurrentProfile called.");
         let profileStatus: IProfileValidation;
-        const usingTokenAuth = await isUsingTokenAuth(theProfile.name);
+        const usingTokenAuth = await ProfilesUtils.isUsingTokenAuth(theProfile.name);
 
         if (usingTokenAuth && !theProfile.profile.tokenType) {
             const error = new zowe.imperative.ImperativeError({
@@ -443,6 +447,7 @@ export class Profiles extends ProfilesCache {
             const currentProfile = await this.getProfileFromConfig(profileLoaded.name);
             const filePath = currentProfile.profLoc.osLoc[0];
             await this.openConfigFile(filePath);
+            Gui.showMessage(this.manualEditMsg);
             return;
         }
         const editSession = this.loadNamedProfile(profileLoaded.name, profileLoaded.type).profile;
@@ -689,6 +694,7 @@ export class Profiles extends ProfilesCache {
         const existingLayers = await this.getConfigLayers();
         if (existingLayers.length === 1) {
             await this.openConfigFile(existingLayers[0].path);
+            Gui.showMessage(this.manualEditMsg);
         }
         if (existingLayers && existingLayers.length > 1) {
             const choice = await this.getConfigLocationPrompt("edit");
@@ -699,6 +705,7 @@ export class Profiles extends ProfilesCache {
                             await this.openConfigFile(file.path);
                         }
                     }
+                    Gui.showMessage(this.manualEditMsg);
                     break;
                 case "global":
                     for (const file of existingLayers) {
@@ -706,12 +713,12 @@ export class Profiles extends ProfilesCache {
                             await this.openConfigFile(file.path);
                         }
                     }
+                    Gui.showMessage(this.manualEditMsg);
                     break;
                 default:
                     Gui.showMessage(this.profilesOpCancelled);
-                    return;
+                    break;
             }
-            return;
         }
     }
 
@@ -1167,8 +1174,10 @@ export class Profiles extends ProfilesCache {
             serviceProfile = this.loadNamedProfile(label.trim());
         }
         // This check will handle service profiles that have username and password
-        if (serviceProfile.profile.user && serviceProfile.profile.password) {
-            Gui.showMessage(localize("ssoAuth.noBase", "This profile does not support token authentication."));
+        if (ProfilesUtils.isProfileUsingBasicAuth(serviceProfile)) {
+            Gui.showMessage(
+                localize("ssoAuth.usingBasicAuth", "This profile is using basic authentication and does not support token authentication.")
+            );
             return;
         }
 
@@ -1176,7 +1185,7 @@ export class Profiles extends ProfilesCache {
             loginTokenType = await ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).getTokenTypeName();
         } catch (error) {
             ZoweLogger.warn(error);
-            Gui.showMessage(localize("ssoAuth.noBase", "This profile does not support token authentication."));
+            Gui.showMessage(localize("ssoLogin.tokenType.error", "Error getting supported tokenType value for profile {0}", serviceProfile.name));
             return;
         }
         try {
@@ -1185,7 +1194,6 @@ export class Profiles extends ProfilesCache {
             } else {
                 await this.loginWithBaseProfile(serviceProfile, loginTokenType, node);
             }
-            Gui.showMessage(localize("ssoLogin.successful", "Login to authentication service was successful."));
         } catch (err) {
             const message = localize("ssoLogin.error", "Unable to log in with {0}. {1}", serviceProfile.name, err?.message);
             ZoweLogger.error(message);
@@ -1198,8 +1206,10 @@ export class Profiles extends ProfilesCache {
         ZoweLogger.trace("Profiles.ssoLogout called.");
         const serviceProfile = node.getProfile();
         // This check will handle service profiles that have username and password
-        if (serviceProfile.profile?.user && serviceProfile.profile?.password) {
-            Gui.showMessage(localize("ssoAuth.noBase", "This profile does not support token authentication."));
+        if (ProfilesUtils.isProfileUsingBasicAuth(serviceProfile)) {
+            Gui.showMessage(
+                localize("ssoAuth.usingBasicAuth", "This profile is using basic authentication and does not support token authentication.")
+            );
             return;
         }
         try {
@@ -1288,6 +1298,7 @@ export class Profiles extends ProfilesCache {
                     profile: { ...node.getProfile().profile, ...updBaseProfile },
                 });
             }
+            Gui.showMessage(localize("ssoLogin.successful", "Login to authentication service was successful."));
         }
     }
 
@@ -1313,6 +1324,7 @@ export class Profiles extends ProfilesCache {
                 profile: { ...node.getProfile().profile, ...session },
             });
         }
+        Gui.showMessage(localize("ssoLogin.successful", "Login to authentication service was successful."));
     }
 
     private async getConfigLocationPrompt(action: string): Promise<string> {
