@@ -557,12 +557,7 @@ export async function sortJobs(session: IZoweJobTreeNode, jobsProvider: ZosJobsP
         return;
     }
 
-    const optIndex = JOB_SORT_OPTS.indexOf(selection.label.replace(" $(check)", ""));
-    if (optIndex == -1) {
-        return;
-    }
-
-    session.sort.method = optIndex;
+    session.sort.method = JOB_SORT_OPTS.indexOf(selection.label.replace(" $(check)", ""));
     jobsProvider.sortBy(session);
 }
 

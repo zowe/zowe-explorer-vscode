@@ -1394,7 +1394,7 @@ describe("Job Actions Unit Tests - Misc. functions", () => {
         expect(statusMsgSpy).toHaveBeenCalledWith(`$(sync~spin) Polling: ${testDoc.fileName}...`);
     });
 });
-describe("sortjobsby function", () => {
+describe("sortJobs function", () => {
     afterEach(() => {
         jest.restoreAllMocks();
     });
@@ -1455,6 +1455,23 @@ describe("sortjobsby function", () => {
         expect(sortbyretcodespy).toBeCalledWith(testtree.mSessionNodes[0]);
         expect(sortbyretcodespy).toHaveBeenCalled();
         expect(sortbyretcodespy.mock.calls[0][0].children).toStrictEqual(expected.mSessionNodes[0].children);
+    });
+
+    it("updates sort options after selecting sort direction; returns user to sort selection", async () => {
+        const globalMocks = createGlobalMocks();
+        const testtree = new ZosJobsProvider();
+        testtree.mSessionNodes[0].sort = {
+            method: JobSortOpts.Id,
+            direction: SortDirection.Ascending,
+        };
+        testtree.mSessionNodes[0].children = [globalMocks()[0]];
+        const jobsSortBy = jest.spyOn(ZosJobsProvider.prototype, "sortBy");
+        const quickPickSpy = jest.spyOn(Gui, "showQuickPick").mockResolvedValueOnce({ label: "$(fold) Sort Direction" });
+        quickPickSpy.mockResolvedValueOnce("Descending" as any);
+        await jobActions.sortJobs(testtree.mSessionNodes[0], testtree);
+        expect(testtree.mSessionNodes[0].sort.direction).toBe(SortDirection.Descending);
+        expect(quickPickSpy).toHaveBeenCalledTimes(3);
+        expect(jobsSortBy).not.toHaveBeenCalled();
     });
 });
 
