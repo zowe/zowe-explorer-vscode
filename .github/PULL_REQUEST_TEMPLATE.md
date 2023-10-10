@@ -29,7 +29,7 @@ _Put an `x` in the boxes that apply. You can also fill these out after creating 
 - [ ] PR title follows [Conventional Commits Guidelines](https://www.conventionalcommits.org/en/v1.0.0-beta.2/)
 - [ ] PR Description is included
 - [ ] gif or screenshot is included if visual changes are made
-- [ ] `yarn workspace vscode-extension-for-zowe vscode:prepublish` has been executed
+- [ ] `pnpm --filter vscode-extension-for-zowe vscode:prepublish` has been executed
 - [ ] All checks have passed (DCO, Jenkins and Code Coverage)
 - [ ] I have added unit test and it is passing
 - [ ] I have added integration test and it is passing

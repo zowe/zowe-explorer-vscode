@@ -21,8 +21,8 @@
     ]
   },
   "scripts": {
-    "vscode:prepublish": "yarn run compile",
-    "compile": "npx tsc -p ./ && cd webviews/vue-sample && yarn && yarn build",
+    "vscode:prepublish": "pnpm run compile",
+    "compile": "npx tsc -p ./ && cd webviews/vue-sample && pnpm --ignore-workspace i && pnpm build",
     "lint": "eslint \"src/**/*.ts\"",
     "watch": "npx tsc -watch -p ./"
   },

@@ -9,6 +9,6 @@ In "extension.ts" a command is registered which runs when the menu item is click
 ## Running the sample
 
 - Open this sample in VS Code
-- `yarn`
-- `yarn run compile`
+- `pnpm i`
+- `pnpm run compile`
 - `F5` to start debugging

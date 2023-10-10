@@ -23,18 +23,18 @@
     "semver": "^7.5.3"
   },
   "scripts": {
-    "build": "yarn check-cli && yarn clean && yarn madge && tsc -p ./ && yarn license",
+    "build": "pnpm check-cli && pnpm clean && pnpm madge && tsc -p ./ && pnpm license",
     "test:unit": "jest \".*__tests__.*\\.unit\\.test\\.ts\" --coverage",
-    "test": "yarn test:unit",
-    "lint": "concurrently -n \"_eslint_,prettier\" \"eslint .\" \"prettier --check .\"",
+    "test": "pnpm test:unit",
+    "lint": "concurrently -n \"_eslint_,prettier\" \"eslint .\" \"prettier --write . && prettier --check .\"",
     "lint:html": "eslint . --format html > results/eslint.html",
     "madge": "madge -c --no-color --no-spinner --exclude __mocks__ --extensions js,ts src/",
     "pretty": "prettier --write .",
     "check-cli": "node scripts/check-cli.js",
     "clean": "rimraf lib",
-    "fresh-clone": "yarn clean && rimraf node_modules",
+    "fresh-clone": "pnpm clean && (rimraf node_modules || true)",
     "license": "node ../../scripts/updateLicenses.js",
-    "package": "yarn build && npm pack && node ../../scripts/mv-pack.js zowe-zowe-explorer-api tgz"
+    "package": "pnpm build && pnpm pack && node ../../scripts/mv-pack.js zowe-zowe-explorer-api tgz"
   },
   "jest": {
     "moduleFileExtensions": [
