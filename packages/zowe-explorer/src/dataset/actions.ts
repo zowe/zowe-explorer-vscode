@@ -967,15 +967,15 @@ export async function showAttributes(node: api.IZoweDatasetTreeNode, datasetProv
 }
 
 /**
- * Submit the contents of the editor as JCL.
+ * Submit the contents of the editor or file as JCL.
  *
  * @export
  * @param {DatasetTree} datasetProvider - our DatasetTree object
  */
 // This function does not appear to currently be made available in the UI
-export async function submitJcl(datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>): Promise<void> {
+export async function submitJcl(datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>, file?: vscode.Uri): Promise<void> {
     ZoweLogger.trace("dataset.actions.submitJcl called.");
-    if (!vscode.window.activeTextEditor) {
+    if (!vscode.window.activeTextEditor && !file) {
         const notActiveEditorMsg = localize(
             "submitJcl.notActiveEditorMsg",
             "No editor with a document that could be submitted as JCL is currently open."
@@ -984,8 +984,14 @@ export async function submitJcl(datasetProvider: api.IZoweTree<api.IZoweDatasetT
         ZoweLogger.error(notActiveEditorMsg);
         return;
     }
+    if (file) {
+        await vscode.commands.executeCommand("filesExplorer.openFilePreserveFocus", file);
+    }
     const doc = vscode.window.activeTextEditor.document;
-    if (doc.languageId !== "jcl") {
+    // run check for 'jcl' to be included in the vs code document languageId
+    const jclCheckRegex = /^.*jcl.*/i;
+    if (!jclCheckRegex.test(doc.languageId)) {
+        // if (doc.languageId !== "jcl") {
         const notJclMsg = localize("submitJcl.notJclMsg", "The document being submitted is not a JCL, submission cancelled.");
         api.Gui.errorMessage(notJclMsg);
         ZoweLogger.error(notJclMsg);
