@@ -22,9 +22,9 @@
   },
   "scripts": {
     "vscode:prepublish": "pnpm run compile",
-    "compile": "npx tsc -p ./ && cd webviews/vue-sample && pnpm --ignore-workspace i && pnpm build",
+    "compile": "pnpm --package=typescript dlx tsc -p ./ && cd webviews/vue-sample && pnpm --ignore-workspace i && pnpm build",
     "lint": "eslint \"src/**/*.ts\"",
-    "watch": "npx tsc -watch -p ./"
+    "watch": "pnpm --package=typescript dlx tsc -watch -p ./"
   },
   "dependencies": {
     "@zowe/zowe-explorer-api": "^2.10.0"

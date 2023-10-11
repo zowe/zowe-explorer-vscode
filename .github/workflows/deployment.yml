@@ -39,7 +39,9 @@ jobs:
         run: npm install -g pnpm lerna@6
 
       - name: Build Source
-        run: pnpm
+        run: |
+          pnpm install
+          pnpm build
 
       - name: Get Project Version
         id: lerna
