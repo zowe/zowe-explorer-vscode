@@ -44,9 +44,9 @@ export class HistoryView extends WebView {
 
     public constructor(context: ExtensionContext, treeProviders: IZoweProviders) {
         const label = "Edit History";
-        super(label, "edit-history", context, (message: object) => this.onDidReceiveMessage(message));
+        super(label, "edit-history", context, (message: object) => this.onDidReceiveMessage(message), true);
         this.treeProviders = treeProviders;
-        // this.currentSelection = { ds: "search", uss: "search", jobs: "search" };
+        this.currentSelection = { ds: "search", uss: "search", jobs: "search" };
     }
 
     protected async onDidReceiveMessage(message: any): Promise<void> {

@@ -4,6 +4,7 @@ import { JSXInternal } from "preact/src/jsx";
 import PersistentDataPanel from "./components/PersistentTable/PersistentDataPanel";
 import PersistentVSCodeAPI from "./components/PersistentVSCodeAPI";
 import PersistentManagerHeader from "./components/PersistentManagerHeader/PersistentManagerHeader";
+import { isSecureOrigin } from "./components/PersistentUtils";
 
 export function App(): JSXInternal.Element {
   const [timestamp, setTimestamp] = useState<Date | undefined>();
@@ -11,16 +12,9 @@ export function App(): JSXInternal.Element {
 
   useEffect(() => {
     window.addEventListener("message", (event) => {
-      const eventUrl = new URL(event.origin);
-      const isWebUser =
-        (eventUrl.protocol === document.location.protocol && eventUrl.hostname === document.location.hostname) ||
-        eventUrl.hostname.endsWith(".github.dev");
-      const isLocalVSCodeUser = eventUrl.protocol === "vscode-webview:";
-
-      if (!isWebUser && !isLocalVSCodeUser) {
+      if (!isSecureOrigin(event.origin)) {
         return;
       }
-
       if ("tab" in event.data) {
         setCurrentTab(() => ({
           tab: event.data.tab,

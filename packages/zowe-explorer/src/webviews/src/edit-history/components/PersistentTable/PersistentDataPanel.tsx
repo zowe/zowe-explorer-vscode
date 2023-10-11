@@ -1,10 +1,11 @@
 import { useEffect, useState } from "preact/hooks";
 import { VSCodePanelView, VSCodeDataGrid } from "@vscode/webview-ui-toolkit/react";
 import { JSXInternal } from "preact/src/jsx";
-import PersistentUtilitiesBar from "../PersistentUtils/PersistentUtilitiesBar";
+import PersistentToolBar from "../PersistentToolBar/PersistentToolBar";
 import PersistentTableData from "./PersistentTableData";
 import PersistentDataGridHeaders from "./PersistentDataGridHeaders";
 import PersistentVSCodeAPI from "../PersistentVSCodeAPI";
+import { isSecureOrigin } from "../PersistentUtils";
 
 export default function PersistentDataPanel({ type }: { type: string }): JSXInternal.Element {
   const panelId: { [key: string]: string } = {
@@ -30,13 +31,7 @@ export default function PersistentDataPanel({ type }: { type: string }): JSXInte
 
   useEffect(() => {
     window.addEventListener("message", (event) => {
-      const eventUrl = new URL(event.origin);
-      const isWebUser =
-        (eventUrl.protocol === document.location.protocol && eventUrl.hostname === document.location.hostname) ||
-        eventUrl.hostname.endsWith(".github.dev");
-      const isLocalVSCodeUser = eventUrl.protocol === "vscode-webview:";
-
-      if (!isWebUser && !isLocalVSCodeUser) {
+      if (!isSecureOrigin(event.origin)) {
         return;
       }
 
@@ -60,7 +55,7 @@ export default function PersistentDataPanel({ type }: { type: string }): JSXInte
 
   return (
     <VSCodePanelView id={panelId[type]} style={{ flexDirection: "column" }}>
-      <PersistentUtilitiesBar type={type} handleChange={handleChange} selection={selection} />
+      <PersistentToolBar type={type} handleChange={handleChange} selection={selection} />
       <VSCodeDataGrid>
         <PersistentDataGridHeaders selection={selection} type={type} />
         <PersistentTableData type={type} persistentProp={persistentProp} selection={selection} />

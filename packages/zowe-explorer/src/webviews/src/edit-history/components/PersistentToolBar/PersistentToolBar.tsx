@@ -4,7 +4,7 @@ import PersistentRefreshButton from "./PersistentRefreshButton";
 import PersistentDropdownOptions from "./PersistentDropdownOptions";
 import PersistentAddNewHistoryItemButton from "./PersistentAddNewHistoryItemButton";
 
-export default function PersistentUtilitiesBar({
+export default function PersistentToolBar({
   type,
   handleChange,
   selection,
