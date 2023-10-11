@@ -11,7 +11,7 @@
 
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
-import { Gui, IZoweJobTreeNode, ValidProfileEnum } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweJobTreeNode, IZoweTree, ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import { Job, Spool } from "../../../src/job/ZoweJobNode";
 import {
     createISession,
@@ -47,6 +47,10 @@ const activeTextEditorDocument = jest.fn();
 
 function createGlobalMocks() {
     const newMocks = {
+        session: createISession(),
+        treeView: createTreeView(),
+        iJob: createIJobObject(),
+        imperativeProfile: createIProfile(),
         JobNode1: new Job(
             "testProfile",
             vscode.TreeItemCollapsibleState.None,
@@ -72,8 +76,13 @@ function createGlobalMocks() {
             createIProfile()
         ),
         mockJobArray: [],
+        testJobsTree: null as any,
+        jesApi: null as any,
     };
+    newMocks.testJobsTree = createJobsTree(newMocks.session, newMocks.iJob, newMocks.imperativeProfile, newMocks.treeView);
     newMocks.mockJobArray = [newMocks.JobNode1, newMocks.JobNode2, newMocks.JobNode3] as any;
+    newMocks.jesApi = createJesApi(newMocks.imperativeProfile);
+    bindJesApi(newMocks.jesApi);
     Object.defineProperty(vscode.workspace, "getConfiguration", {
         value: jest.fn().mockImplementation(() => new Map([["zowe.jobs.confirmSubmission", false]])),
         configurable: true,
@@ -133,24 +142,8 @@ afterEach(() => {
 });
 
 describe("Jobs Actions Unit Tests - Function setPrefix", () => {
-    function createBlockMocks() {
-        const session = createISession();
-        const treeView = createTreeView();
-        const iJob = createIJobObject();
-        const imperativeProfile = createIProfile();
-
-        return {
-            session,
-            treeView,
-            iJob,
-            imperativeProfile,
-            testJobsTree: createJobsTree(session, iJob, imperativeProfile, treeView),
-        };
-    }
-
     it("Checking that the prefix is set correctly on the job", async () => {
-        createGlobalMocks();
-        const blockMocks = createBlockMocks();
+        const blockMocks = createGlobalMocks();
         const node = new Job("job", vscode.TreeItemCollapsibleState.None, null as any, blockMocks.session, null as any, null as any);
 
         const mySpy = mocked(vscode.window.showInputBox).mockResolvedValue("*");
@@ -168,24 +161,8 @@ describe("Jobs Actions Unit Tests - Function setPrefix", () => {
 });
 
 describe("Jobs Actions Unit Tests - Function setOwner", () => {
-    function createBlockMocks() {
-        const session = createISession();
-        const treeView = createTreeView();
-        const iJob = createIJobObject();
-        const imperativeProfile = createIProfile();
-
-        return {
-            session,
-            treeView,
-            iJob,
-            imperativeProfile,
-            testJobsTree: createJobsTree(session, iJob, imperativeProfile, treeView),
-        };
-    }
-
     it("Checking that the owner is set correctly on the job", async () => {
-        createGlobalMocks();
-        const blockMocks = createBlockMocks();
+        const blockMocks = createGlobalMocks();
         const node = new Job(
             "job",
             vscode.TreeItemCollapsibleState.None,
@@ -210,21 +187,8 @@ describe("Jobs Actions Unit Tests - Function setOwner", () => {
 });
 
 describe("Jobs Actions Unit Tests - Function stopCommand", () => {
-    function createBlockMocks() {
-        const session = createISession();
-        const iJob = createIJobObject();
-        const imperativeProfile = createIProfile();
-
-        return {
-            session,
-            iJob,
-            imperativeProfile,
-        };
-    }
-
     it("Checking that stop command of Job Node is executed properly", async () => {
-        createGlobalMocks();
-        const blockMocks = createBlockMocks();
+        const blockMocks = createGlobalMocks();
         const node = new Job(
             "job",
             vscode.TreeItemCollapsibleState.None,
@@ -244,8 +208,7 @@ describe("Jobs Actions Unit Tests - Function stopCommand", () => {
         expect(mocked(Gui.showMessage).mock.calls[0][0]).toEqual("Command response: fake response");
     });
     it("Checking failed attempt to issue stop command for Job Node.", async () => {
-        createGlobalMocks();
-        const blockMocks = createBlockMocks();
+        const blockMocks = createGlobalMocks();
         const node = new Job(
             "job",
             vscode.TreeItemCollapsibleState.None,
@@ -265,21 +228,8 @@ describe("Jobs Actions Unit Tests - Function stopCommand", () => {
 });
 
 describe("Jobs Actions Unit Tests - Function modifyCommand", () => {
-    function createBlockMocks() {
-        const session = createISession();
-        const iJob = createIJobObject();
-        const imperativeProfile = createIProfile();
-
-        return {
-            session,
-            iJob,
-            imperativeProfile,
-        };
-    }
-
     it("Checking modification of Job Node", async () => {
-        createGlobalMocks();
-        const blockMocks = createBlockMocks();
+        const blockMocks = createGlobalMocks();
         const node = new Job(
             "job",
             vscode.TreeItemCollapsibleState.None,
@@ -300,8 +250,7 @@ describe("Jobs Actions Unit Tests - Function modifyCommand", () => {
         expect(mocked(Gui.showMessage).mock.calls[0][0]).toEqual("Command response: fake response");
     });
     it("Checking failed attempt to modify Job Node", async () => {
-        createGlobalMocks();
-        const blockMocks = createBlockMocks();
+        const blockMocks = createGlobalMocks();
         const node = new Job(
             "job",
             vscode.TreeItemCollapsibleState.None,
@@ -322,24 +271,8 @@ describe("Jobs Actions Unit Tests - Function modifyCommand", () => {
 });
 
 describe("Jobs Actions Unit Tests - Function downloadSpool", () => {
-    function createBlockMocks() {
-        const session = createISession();
-        const iJob = createIJobObject();
-        const imperativeProfile = createIProfile();
-        const jesApi = createJesApi(imperativeProfile);
-        bindJesApi(jesApi);
-
-        return {
-            session,
-            iJob,
-            imperativeProfile,
-            jesApi,
-        };
-    }
-
     it("Checking download of Job Spool", async () => {
-        createGlobalMocks();
-        const blockMocks = createBlockMocks();
+        const blockMocks = createGlobalMocks();
         const jobs: Job[] = [];
         const node = new Job(
             "job",
@@ -372,7 +305,6 @@ describe("Jobs Actions Unit Tests - Function downloadSpool", () => {
     });
     it("Checking failed attempt to download Job Spool", async () => {
         createGlobalMocks();
-        const blockMocks = createBlockMocks();
         const fileUri = {
             fsPath: "/tmp/foo",
             scheme: "",
@@ -388,24 +320,8 @@ describe("Jobs Actions Unit Tests - Function downloadSpool", () => {
 });
 
 describe("Jobs Actions Unit Tests - Function downloadSingleSpool", () => {
-    function createBlockMocks() {
-        const session = createISession();
-        const iJob = createIJobObject();
-        const imperativeProfile = createIProfile();
-        const jesApi = createJesApi(imperativeProfile);
-        bindJesApi(jesApi);
-
-        return {
-            session,
-            iJob,
-            imperativeProfile,
-            jesApi,
-        };
-    }
-
     it("Checking download of Job Spool", async () => {
-        createGlobalMocks();
-        const blockMocks = createBlockMocks();
+        const blockMocks = createGlobalMocks();
         const iJobFile = createIJobFile();
         const jobs: Job[] = [];
         const node = new Job(
@@ -442,8 +358,7 @@ describe("Jobs Actions Unit Tests - Function downloadSingleSpool", () => {
     });
 
     it("should fail to download single spool files if the extender has not implemented the operation", async () => {
-        createGlobalMocks();
-        const blockMocks = createBlockMocks();
+        const blockMocks = createGlobalMocks();
         const iJobFile = createIJobFile();
         const jobs: Job[] = [];
         const node = new Job(
@@ -477,21 +392,8 @@ describe("Jobs Actions Unit Tests - Function downloadSingleSpool", () => {
 });
 
 describe("Jobs Actions Unit Tests - Function downloadJcl", () => {
-    function createBlockMocks() {
-        const session = createISession();
-        const iJob = createIJobObject();
-        const imperativeProfile = createIProfile();
-
-        return {
-            session,
-            iJob,
-            imperativeProfile,
-        };
-    }
-
     it("Checking download of Job JCL", async () => {
-        createGlobalMocks();
-        const blockMocks = createBlockMocks();
+        const blockMocks = createGlobalMocks();
         const node = new Job(
             "job",
             vscode.TreeItemCollapsibleState.None,
@@ -507,7 +409,6 @@ describe("Jobs Actions Unit Tests - Function downloadJcl", () => {
     });
     it("Checking failed attempt to download Job JCL", async () => {
         createGlobalMocks();
-        const blockMocks = createBlockMocks();
         await jobActions.downloadJcl(undefined as any);
         expect(mocked(Gui.errorMessage)).toBeCalled();
     });
