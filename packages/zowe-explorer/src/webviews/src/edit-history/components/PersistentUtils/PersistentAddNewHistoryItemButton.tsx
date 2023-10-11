@@ -13,8 +13,8 @@ export default function PersistentAddNewHistoryItemButton({ type }: { type: stri
   };
 
   return (
-    <VSCodeButton style={{ maxWidth: "20vw", marginRight: "15px" }} onClick={handleClick}>
-      Add Item
+    <VSCodeButton title="Add new history item" appearance="secondary" style={{ maxWidth: "20vw", marginRight: "15px" }} onClick={handleClick}>
+      <img src="./webviews/src/edit-history/assets/plus.svg" style={{ height: "16px", width: "16px" }} />
     </VSCodeButton>
   );
 }

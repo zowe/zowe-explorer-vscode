@@ -101,9 +101,13 @@ export class HistoryView extends WebView {
 
     private async addItem(message): Promise<void> {
         ZoweLogger.trace("HistoryView.addItem called.");
+
+        const example = message.attrs.type === "ds" ? "e.g: USER.PDS.*" : "e.g: /u/user/mydir";
+
         const options: vscode.InputBoxOptions = {
             prompt: localize("HistoryView.addItem.prompt", "Type the new pattern to add to history"),
             value: "",
+            placeHolder: example,
         };
         const item = await Gui.showInputBox(options);
         const treeProvider = this.getTreeProvider(message.attrs.type);

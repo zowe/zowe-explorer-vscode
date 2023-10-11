@@ -13,8 +13,8 @@ export default function PersistentRefreshButton({ type }: { type: string }): JSX
   };
 
   return (
-    <VSCodeButton style={{ maxWidth: "20vw", marginRight: "15px" }} onClick={handleClick}>
-      Refresh
+    <VSCodeButton title="Refresh" appearance="primary" style={{ maxWidth: "20vw", marginRight: "15px" }} onClick={handleClick}>
+      <img src="./webviews/src/edit-history/assets/refresh.svg" />
     </VSCodeButton>
   );
 }

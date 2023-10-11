@@ -13,12 +13,22 @@ export default function PersistentUtilitiesBar({
   handleChange: Function;
   selection: { selection: string };
 }): JSXInternal.Element {
+  const renderAddItemButton = () => {
+    return selection.selection === "search" && type !== "jobs" ? <PersistentAddNewHistoryItemButton type={type} /> : null;
+  };
+
+  const renderClearAllButton = () => {
+    return selection.selection === "search" || selection.selection === "fileHistory" ? (
+      <PersistentClearAllButton type={type} selection={selection} />
+    ) : null;
+  };
+
   return (
     <div style={{ display: "flex", flexDirection: "row", alignItems: "center" }}>
       <PersistentDropdownOptions handleChange={handleChange} type={type} />
-      {selection.selection === "search" && type !== "jobs" ? <PersistentAddNewHistoryItemButton type={type} /> : null}
       <PersistentRefreshButton type={type} />
-      <PersistentClearAllButton type={type} selection={selection} />
+      {renderClearAllButton()}
+      {renderAddItemButton()}
     </div>
   );
 }

@@ -14,8 +14,8 @@ export default function PersistentClearAllButton({ type, selection }: { type: st
   };
 
   return (
-    <VSCodeButton style={{ maxWidth: "20vw" }} onClick={handleClick}>
-      Clear All
+    <VSCodeButton title="Clear all" appearance="secondary" style={{ maxWidth: "20vw", marginRight: "15px" }} onClick={handleClick}>
+      <img src="./webviews/src/edit-history/assets/clear-all.svg" />
     </VSCodeButton>
   );
 }
