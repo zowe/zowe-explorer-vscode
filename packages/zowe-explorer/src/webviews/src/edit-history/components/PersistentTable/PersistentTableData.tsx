@@ -9,29 +9,35 @@
  *
  */
 
-import { VSCodeDataGridCell, VSCodeDataGridRow } from "@vscode/webview-ui-toolkit/react";
+import { VSCodeCheckbox, VSCodeDataGridCell, VSCodeDataGridRow } from "@vscode/webview-ui-toolkit/react";
 import { JSXInternal } from "preact/src/jsx";
 import { useDataPanelContext } from "../PersistentUtils";
-import PersistentVSCodeAPI from "../PersistentVSCodeAPI";
+import { useEffect, useState } from "preact/hooks";
+import isEqual from "lodash.isequal";
 
 export default function PersistentTableData({ persistentProp }: { persistentProp: string[] }): JSXInternal.Element {
-  const { type, selection } = useDataPanelContext();
+  const { type, selection, selectedItems } = useDataPanelContext();
+  const [oldPersistentProp, setOldPersistentProp] = useState<string[]>([]);
 
-  const handleClick = (item: number) => {
-    PersistentVSCodeAPI.getVSCodeAPI().postMessage({
-      command: "remove-item",
-      attrs: {
-        name: persistentProp[item],
-        type,
-        selection: selection[type],
-      },
-    });
+  useEffect(() => {
+    if (!isEqual(oldPersistentProp, persistentProp) && persistentProp) {
+      const newSelectedItemsList: { [key: string]: boolean } = {};
+      persistentProp.forEach((prop) => {
+        newSelectedItemsList[prop] = false;
+      });
+      selectedItems.setVal(newSelectedItemsList);
+      setOldPersistentProp(persistentProp);
+    }
+  }, [persistentProp]);
+
+  const handleClick = (event: any, item: number) => {
+    selectedItems.setVal({ ...selectedItems.val, [persistentProp[item]]: !event.target.checked });
   };
 
-  const renderDeleteButton = (i: number) => {
+  const renderDeleteButton = (item: string, i: number) => {
     return selection[type] === "search" || selection[type] === "fileHistory" ? (
-      <VSCodeDataGridCell grid-column="2" onClick={() => handleClick(i)} style={{ maxWidth: "20vw", textAlign: "center" }}>
-        <img src="./webviews/src/edit-history/assets/trash.svg" />
+      <VSCodeDataGridCell grid-column="2" style={{ maxWidth: "20vw", textAlign: "center" }}>
+        <VSCodeCheckbox key={`${i}${item}`} onClick={(event: any) => handleClick(event, i)}></VSCodeCheckbox>
       </VSCodeDataGridCell>
     ) : null;
   };
@@ -41,7 +47,7 @@ export default function PersistentTableData({ persistentProp }: { persistentProp
       return (
         <VSCodeDataGridRow>
           <VSCodeDataGridCell grid-column="1">{item}</VSCodeDataGridCell>
-          {renderDeleteButton(i)}
+          {renderDeleteButton(item, i)}
         </VSCodeDataGridRow>
       );
     });

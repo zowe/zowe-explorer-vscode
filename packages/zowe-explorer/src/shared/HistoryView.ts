@@ -121,11 +121,19 @@ export class HistoryView extends WebView {
         const treeProvider = this.getTreeProvider(message.attrs.type);
         switch (message.attrs.selection) {
             case "search":
-                treeProvider.removeSearchHistory(message.attrs.name);
+                Object.keys(message.attrs.selectedItems).forEach((selectedItem) => {
+                    if (message.attrs.selectedItems[selectedItem]) {
+                        treeProvider.removeSearchHistory(selectedItem);
+                    }
+                });
                 break;
             case "fileHistory":
                 if (!(treeProvider instanceof ZosJobsProvider)) {
-                    treeProvider.removeFileHistory(message.attrs.name);
+                    Object.keys(message.attrs.selectedItems).forEach((selectedItem) => {
+                        if (message.attrs.selectedItems[selectedItem]) {
+                            treeProvider.removeFileHistory(selectedItem);
+                        }
+                    });
                 }
                 break;
             default:

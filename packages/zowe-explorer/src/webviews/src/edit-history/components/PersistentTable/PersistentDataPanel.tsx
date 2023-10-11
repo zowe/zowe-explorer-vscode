@@ -9,7 +9,7 @@
  *
  */
 
-import { useEffect, useState } from "preact/hooks";
+import { useEffect, useMemo, useState } from "preact/hooks";
 import { VSCodePanelView, VSCodeDataGrid } from "@vscode/webview-ui-toolkit/react";
 import { JSXInternal } from "preact/src/jsx";
 import { DataPanelContext, isSecureOrigin } from "../PersistentUtils";
@@ -23,6 +23,15 @@ export default function PersistentDataPanel({ type }: { type: string }): JSXInte
   const [data, setData] = useState<{ [type: string]: { [property: string]: string[] } }>({ ds: {}, uss: {}, jobs: {} });
   const [selection, setSelection] = useState<{ [type: string]: string }>({ [type]: "search" });
   const [persistentProp, setPersistentProp] = useState<string[]>([]);
+  const [selectedItems, setSelectedItems] = useState({});
+
+  const selectedItemsMemo = useMemo(
+    () => ({
+      val: selectedItems,
+      setVal: (newVal: any) => setSelectedItems(newVal),
+    }),
+    [selectedItems]
+  );
 
   const handleChange = (newSelection: string) => {
     setSelection(() => ({ [type]: newSelection }));
@@ -33,6 +42,12 @@ export default function PersistentDataPanel({ type }: { type: string }): JSXInte
         type,
       },
     });
+
+    const newSelectedItems: { [key: string]: boolean } = { ...selectedItemsMemo.val };
+    Object.keys(newSelectedItems).forEach((item) => {
+      newSelectedItems[item] = false;
+    });
+    selectedItemsMemo.setVal(newSelectedItems);
   };
 
   useEffect(() => {
@@ -60,7 +75,7 @@ export default function PersistentDataPanel({ type }: { type: string }): JSXInte
   }, [selection]);
 
   return (
-    <DataPanelContext.Provider value={{ type, selection }}>
+    <DataPanelContext.Provider value={{ type, selection, selectedItems: selectedItemsMemo }}>
       <VSCodePanelView id={panelId[type]} style={{ flexDirection: "column" }}>
         <PersistentToolBar handleChange={handleChange} />
         <VSCodeDataGrid>

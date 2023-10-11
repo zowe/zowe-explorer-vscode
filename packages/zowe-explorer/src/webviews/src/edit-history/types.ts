@@ -18,4 +18,8 @@ export const panelId: { [key: string]: string } = {
 export type DataPanelContextType = {
     type: string;
     selection: { [type: string]: string };
+    selectedItems: {
+        val: { [type: string]: boolean };
+        setVal: (newVal: any) => void;
+    };
 };
