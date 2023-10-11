@@ -6,27 +6,19 @@ import PersistentAddNewHistoryItemButton from "./PersistentAddNewHistoryItemButt
 
 export default function PersistentToolBar({
   type,
-  handleChange,
   selection,
+  handleChange,
 }: {
   type: string;
-  handleChange: Function;
   selection: { [type: string]: string };
+  handleChange: Function;
 }): JSXInternal.Element {
-  const renderAddItemButton = () => {
-    return selection[type] === "search" && type !== "jobs" ? <PersistentAddNewHistoryItemButton type={type} /> : null;
-  };
-
-  const renderClearAllButton = () => {
-    return selection[type] === "search" || selection[type] === "fileHistory" ? <PersistentClearAllButton type={type} selection={selection} /> : null;
-  };
-
   return (
     <div style={{ display: "flex", flexDirection: "row", alignItems: "center" }}>
-      <PersistentDropdownOptions handleChange={handleChange} type={type} />
+      <PersistentDropdownOptions type={type} handleChange={handleChange} />
       <PersistentRefreshButton type={type} />
-      {renderClearAllButton()}
-      {renderAddItemButton()}
+      <PersistentClearAllButton type={type} selection={selection} />
+      <PersistentAddNewHistoryItemButton type={type} selection={selection} />
     </div>
   );
 }

@@ -1,12 +1,7 @@
 import { VSCodeDropdown, VSCodeOption } from "@vscode/webview-ui-toolkit/react";
-import { useEffect } from "preact/hooks";
 import { JSXInternal } from "preact/src/jsx";
 
-export default function PersistentDropdownOptions({ handleChange, type }: { handleChange: Function; type: string }): JSXInternal.Element {
-  useEffect(() => {
-    console.log("change");
-  });
-
+export default function PersistentDropdownOptions({ type, handleChange }: { type: string; handleChange: Function }): JSXInternal.Element {
   const options = [
     <VSCodeOption value="search">Search History</VSCodeOption>,
     <VSCodeOption value="dsTemplates">DS Templates</VSCodeOption>,

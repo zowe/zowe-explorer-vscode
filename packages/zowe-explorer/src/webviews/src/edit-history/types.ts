@@ -9,7 +9,8 @@
  *
  */
 
-import { render } from "preact";
-import { App } from "./App";
-
-render(<App />, document.getElementById("webviewRoot")!);
+export const panelId: { [key: string]: string } = {
+    ds: "ds-panel-view",
+    uss: "uss-panel-view",
+    jobs: "jobs-panel-view",
+};

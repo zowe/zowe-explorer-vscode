@@ -6,14 +6,9 @@ import PersistentTableData from "./PersistentTableData";
 import PersistentDataGridHeaders from "./PersistentDataGridHeaders";
 import PersistentVSCodeAPI from "../PersistentVSCodeAPI";
 import { isSecureOrigin } from "../PersistentUtils";
+import { panelId } from "../../types";
 
 export default function PersistentDataPanel({ type }: { type: string }): JSXInternal.Element {
-  const panelId: { [key: string]: string } = {
-    ds: "ds-panel-view",
-    uss: "uss-panel-view",
-    jobs: "jobs-panel-view",
-  };
-
   const [data, setData] = useState<{ [type: string]: { [property: string]: string[] } }>({ ds: {}, uss: {}, jobs: {} });
   const [selection, setSelection] = useState<{ [type: string]: string }>({ [type]: "search" });
   const [persistentProp, setPersistentProp] = useState<string[]>([]);
@@ -55,10 +50,10 @@ export default function PersistentDataPanel({ type }: { type: string }): JSXInte
 
   return (
     <VSCodePanelView id={panelId[type]} style={{ flexDirection: "column" }}>
-      <PersistentToolBar type={type} handleChange={handleChange} selection={selection} />
+      <PersistentToolBar type={type} selection={selection} handleChange={handleChange} />
       <VSCodeDataGrid>
-        <PersistentDataGridHeaders selection={selection} type={type} />
-        <PersistentTableData type={type} persistentProp={persistentProp} selection={selection} />
+        <PersistentDataGridHeaders type={type} selection={selection} />
+        <PersistentTableData type={type} selection={selection} persistentProp={persistentProp} />
       </VSCodeDataGrid>
     </VSCodePanelView>
   );

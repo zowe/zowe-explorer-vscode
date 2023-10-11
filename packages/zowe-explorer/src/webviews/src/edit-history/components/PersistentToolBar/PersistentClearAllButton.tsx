@@ -13,9 +13,13 @@ export default function PersistentClearAllButton({ type, selection }: { type: st
     });
   };
 
-  return (
-    <VSCodeButton title="Clear all" appearance="secondary" style={{ maxWidth: "20vw", marginRight: "15px" }} onClick={handleClick}>
-      <img src="./webviews/src/edit-history/assets/clear-all.svg" />
-    </VSCodeButton>
-  );
+  const renderClearAllButton = () => {
+    selection[type] === "search" || selection[type] === "fileHistory" ? (
+      <VSCodeButton title="Clear all" appearance="secondary" style={{ maxWidth: "20vw", marginRight: "15px" }} onClick={handleClick}>
+        <img src="./webviews/src/edit-history/assets/clear-all.svg" />
+      </VSCodeButton>
+    ) : null;
+  };
+
+  return <>{renderClearAllButton()}</>;
 }
