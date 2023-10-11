@@ -9,6 +9,12 @@
  *
  */
 
+import { createContext } from "preact";
+import { DataPanelContextType } from "../types";
+import { useContext } from "preact/hooks";
+
+export const DataPanelContext = createContext<DataPanelContextType | null>(null);
+
 export function isSecureOrigin(origin: string): boolean {
     const eventUrl = new URL(origin);
     const isWebUser =
@@ -21,4 +27,12 @@ export function isSecureOrigin(origin: string): boolean {
     }
 
     return true;
+}
+
+export function useDataPanelContext(): DataPanelContextType {
+    const dataPanelContext = useContext(DataPanelContext);
+    if (!dataPanelContext) {
+        throw new Error("DataPanelContext has to be used within <DataPanelContext.Provider>");
+    }
+    return dataPanelContext;
 }

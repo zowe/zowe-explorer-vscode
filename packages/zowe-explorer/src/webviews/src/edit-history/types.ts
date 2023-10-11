@@ -14,3 +14,8 @@ export const panelId: { [key: string]: string } = {
     uss: "uss-panel-view",
     jobs: "jobs-panel-view",
 };
+
+export type DataPanelContextType = {
+    type: string;
+    selection: { [type: string]: string };
+};

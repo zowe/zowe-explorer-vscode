@@ -1,14 +1,28 @@
+/**
+ * This program and the accompanying materials are made available under the terms of the
+ * Eclipse Public License v2.0 which accompanies this distribution, and is available at
+ * https://www.eclipse.org/legal/epl-v20.html
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Copyright Contributors to the Zowe Project.
+ *
+ */
+
 import { VSCodeDropdown, VSCodeOption } from "@vscode/webview-ui-toolkit/react";
 import { JSXInternal } from "preact/src/jsx";
+import { useDataPanelContext } from "../PersistentUtils";
 
-export default function PersistentDropdownOptions({ type, handleChange }: { type: string; handleChange: Function }): JSXInternal.Element {
+export default function PersistentDropdownOptions({ handleChange }: { handleChange: Function }): JSXInternal.Element {
+  const dataPanelContext = useDataPanelContext();
+
   const options = [
     <VSCodeOption value="search">Search History</VSCodeOption>,
     <VSCodeOption value="dsTemplates">DS Templates</VSCodeOption>,
     <VSCodeOption value="favorites">Favorites</VSCodeOption>,
     <VSCodeOption value="fileHistory">File History</VSCodeOption>,
     <VSCodeOption value="sessions">Sessions</VSCodeOption>,
-  ].filter((option) => type === "ds" || option.props.value !== "dsTemplates");
+  ].filter((option) => dataPanelContext.type === "ds" || option.props.value !== "dsTemplates");
 
   return (
     <div style={{ display: "flex", flexDirection: "row", alignItems: "center", margin: "15px 15px 15px 0px" }}>
