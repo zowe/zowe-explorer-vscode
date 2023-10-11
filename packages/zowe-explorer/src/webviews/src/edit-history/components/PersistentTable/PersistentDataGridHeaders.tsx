@@ -1,9 +1,9 @@
 import { VSCodeDataGridRow, VSCodeDataGridCell } from "@vscode/webview-ui-toolkit/react";
 import { JSXInternal } from "preact/src/jsx";
 
-export default function PersistentDataGridHeaders({ selection }: { selection: { selection: string } }): JSXInternal.Element {
+export default function PersistentDataGridHeaders({ selection, type }: { selection: { [type: string]: string }; type: string }): JSXInternal.Element {
   const renderDeleteHeader = () => {
-    return selection.selection === "search" || selection.selection === "fileHistory" ? (
+    return selection[type] === "search" || selection[type] === "fileHistory" ? (
       <VSCodeDataGridCell cell-type="columnheader" grid-column="2" style={{ maxWidth: "20vw", textAlign: "center" }}>
         Delete
       </VSCodeDataGridCell>

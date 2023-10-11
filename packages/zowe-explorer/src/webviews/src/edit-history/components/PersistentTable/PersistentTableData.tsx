@@ -9,7 +9,7 @@ export default function PersistentTableData({
 }: {
   type: string;
   persistentProp: string[];
-  selection: { selection: string };
+  selection: { [type: string]: string };
 }): JSXInternal.Element {
   const handleClick = (item: number) => {
     PersistentVSCodeAPI.getVSCodeAPI().postMessage({
@@ -17,13 +17,13 @@ export default function PersistentTableData({
       attrs: {
         name: persistentProp[item],
         type,
-        selection: selection.selection,
+        selection: selection[type],
       },
     });
   };
 
   const renderDeleteButton = (i: number) => {
-    return selection.selection === "search" || selection.selection === "fileHistory" ? (
+    return selection[type] === "search" || selection[type] === "fileHistory" ? (
       <VSCodeDataGridCell grid-column="2" onClick={() => handleClick(i)} style={{ maxWidth: "20vw", textAlign: "center" }}>
         <img src="./webviews/src/edit-history/assets/trash.svg" />
       </VSCodeDataGridCell>

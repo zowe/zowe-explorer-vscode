@@ -8,7 +8,6 @@ import PersistentManagerHeader from "./components/PersistentManagerHeader/Persis
 export function App(): JSXInternal.Element {
   const [timestamp, setTimestamp] = useState<Date | undefined>();
   const [currentTab, setCurrentTab] = useState<{ [key: string]: string }>({});
-  const [data, setData] = useState<{ [type: string]: { [property: string]: string[] } }>({ ds: {}, uss: {}, jobs: {} });
 
   useEffect(() => {
     window.addEventListener("message", (event) => {
@@ -21,7 +20,7 @@ export function App(): JSXInternal.Element {
       if (!isWebUser && !isLocalVSCodeUser) {
         return;
       }
-      setData(event.data);
+
       if ("tab" in event.data) {
         setCurrentTab(() => ({
           tab: event.data.tab,
@@ -46,9 +45,9 @@ export function App(): JSXInternal.Element {
         <VSCodePanelTab id="jobs-panel-tab">
           <h2>Jobs</h2>
         </VSCodePanelTab>
-        <PersistentDataPanel data={data} type="ds" />
-        <PersistentDataPanel data={data} type="uss" />
-        <PersistentDataPanel data={data} type="jobs" />
+        <PersistentDataPanel type="ds" />
+        <PersistentDataPanel type="uss" />
+        <PersistentDataPanel type="jobs" />
       </VSCodePanels>
     </div>
   );

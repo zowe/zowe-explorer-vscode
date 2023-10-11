@@ -11,16 +11,14 @@ export default function PersistentUtilitiesBar({
 }: {
   type: string;
   handleChange: Function;
-  selection: { selection: string };
+  selection: { [type: string]: string };
 }): JSXInternal.Element {
   const renderAddItemButton = () => {
-    return selection.selection === "search" && type !== "jobs" ? <PersistentAddNewHistoryItemButton type={type} /> : null;
+    return selection[type] === "search" && type !== "jobs" ? <PersistentAddNewHistoryItemButton type={type} /> : null;
   };
 
   const renderClearAllButton = () => {
-    return selection.selection === "search" || selection.selection === "fileHistory" ? (
-      <PersistentClearAllButton type={type} selection={selection} />
-    ) : null;
+    return selection[type] === "search" || selection[type] === "fileHistory" ? <PersistentClearAllButton type={type} selection={selection} /> : null;
   };
 
   return (

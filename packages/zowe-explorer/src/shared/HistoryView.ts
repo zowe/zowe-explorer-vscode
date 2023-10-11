@@ -40,12 +40,13 @@ const tabs = {
 export class HistoryView extends WebView {
     private treeProviders: IZoweProviders;
     private currentTab: string;
-    private currentSelection;
+    private currentSelection: { [type: string]: string };
 
     public constructor(context: ExtensionContext, treeProviders: IZoweProviders) {
         const label = "Edit History";
         super(label, "edit-history", context, (message: object) => this.onDidReceiveMessage(message));
         this.treeProviders = treeProviders;
+        // this.currentSelection = { ds: "search", uss: "search", jobs: "search" };
     }
 
     protected async onDidReceiveMessage(message: any): Promise<void> {
@@ -96,7 +97,7 @@ export class HistoryView extends WebView {
 
     private updateSelection(message): void {
         ZoweLogger.trace("HistoryView.updateSelection called.");
-        this.currentSelection = message.attrs.selection;
+        this.currentSelection[message.attrs.type] = message.attrs.selection;
     }
 
     private async addItem(message): Promise<void> {
