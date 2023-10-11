@@ -11,8 +11,8 @@
 
 import { VSCodeDataGridCell, VSCodeDataGridRow } from "@vscode/webview-ui-toolkit/react";
 import { JSXInternal } from "preact/src/jsx";
-import PersistentVSCodeAPI from "../PersistentVSCodeAPI";
 import { useDataPanelContext } from "../PersistentUtils";
+import PersistentVSCodeAPI from "../PersistentVSCodeAPI";
 
 export default function PersistentTableData({ persistentProp }: { persistentProp: string[] }): JSXInternal.Element {
   const { type, selection } = useDataPanelContext();

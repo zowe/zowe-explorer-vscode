@@ -12,10 +12,10 @@
 import { useEffect, useState } from "preact/hooks";
 import { VSCodeDivider, VSCodePanels, VSCodePanelTab } from "@vscode/webview-ui-toolkit/react";
 import { JSXInternal } from "preact/src/jsx";
+import { isSecureOrigin } from "./components/PersistentUtils";
 import PersistentDataPanel from "./components/PersistentTable/PersistentDataPanel";
 import PersistentVSCodeAPI from "./components/PersistentVSCodeAPI";
 import PersistentManagerHeader from "./components/PersistentManagerHeader/PersistentManagerHeader";
-import { isSecureOrigin } from "./components/PersistentUtils";
 
 export function App(): JSXInternal.Element {
   const [timestamp, setTimestamp] = useState<Date | undefined>();

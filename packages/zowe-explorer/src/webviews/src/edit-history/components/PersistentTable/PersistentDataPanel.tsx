@@ -12,12 +12,12 @@
 import { useEffect, useState } from "preact/hooks";
 import { VSCodePanelView, VSCodeDataGrid } from "@vscode/webview-ui-toolkit/react";
 import { JSXInternal } from "preact/src/jsx";
+import { DataPanelContext, isSecureOrigin } from "../PersistentUtils";
+import { panelId } from "../../types";
 import PersistentToolBar from "../PersistentToolBar/PersistentToolBar";
 import PersistentTableData from "./PersistentTableData";
 import PersistentDataGridHeaders from "./PersistentDataGridHeaders";
 import PersistentVSCodeAPI from "../PersistentVSCodeAPI";
-import { DataPanelContext, isSecureOrigin } from "../PersistentUtils";
-import { panelId } from "../../types";
 
 export default function PersistentDataPanel({ type }: { type: string }): JSXInternal.Element {
   const [data, setData] = useState<{ [type: string]: { [property: string]: string[] } }>({ ds: {}, uss: {}, jobs: {} });

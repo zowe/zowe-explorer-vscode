@@ -11,8 +11,11 @@
 
 import { VSCodeButton } from "@vscode/webview-ui-toolkit/react";
 import { JSXInternal } from "preact/src/jsx";
-import PersistentVSCodeAPI from "../PersistentVSCodeAPI";
 import { useDataPanelContext } from "../PersistentUtils";
+import PersistentVSCodeAPI from "../PersistentVSCodeAPI";
+import * as nls from "vscode-nls";
+
+const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 export default function PersistentClearAllButton(): JSXInternal.Element {
   const { type, selection } = useDataPanelContext();
@@ -28,8 +31,10 @@ export default function PersistentClearAllButton(): JSXInternal.Element {
   };
 
   const renderClearAllButton = () => {
-    selection[type] === "search" || selection[type] === "fileHistory" ? (
-      <VSCodeButton title="Clear all" appearance="secondary" style={{ maxWidth: "20vw", marginRight: "15px" }} onClick={handleClick}>
+    const clearAllText = localize("PersistentClearAllButton.clearAll", "Clear All");
+
+    return selection[type] === "search" || selection[type] === "fileHistory" ? (
+      <VSCodeButton title={clearAllText} appearance="secondary" style={{ maxWidth: "20vw", marginRight: "15px" }} onClick={handleClick}>
         <img src="./webviews/src/edit-history/assets/clear-all.svg" />
       </VSCodeButton>
     ) : null;

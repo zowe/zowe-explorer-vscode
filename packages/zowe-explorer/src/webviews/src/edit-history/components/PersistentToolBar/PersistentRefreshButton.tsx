@@ -11,8 +11,11 @@
 
 import { VSCodeButton } from "@vscode/webview-ui-toolkit/react";
 import { JSXInternal } from "preact/src/jsx";
-import PersistentVSCodeAPI from "../PersistentVSCodeAPI";
 import { useDataPanelContext } from "../PersistentUtils";
+import PersistentVSCodeAPI from "../PersistentVSCodeAPI";
+import * as nls from "vscode-nls";
+
+const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 export default function PersistentRefreshButton(): JSXInternal.Element {
   const { type } = useDataPanelContext();
@@ -26,8 +29,10 @@ export default function PersistentRefreshButton(): JSXInternal.Element {
     });
   };
 
+  const refreshText = localize("PersistentRefreshButton.refresh", "Refresh");
+
   return (
-    <VSCodeButton title="Refresh" appearance="primary" style={{ maxWidth: "20vw", marginRight: "15px" }} onClick={handleClick}>
+    <VSCodeButton title={refreshText} appearance="primary" style={{ maxWidth: "20vw", marginRight: "15px" }} onClick={handleClick}>
       <img src="./webviews/src/edit-history/assets/refresh.svg" />
     </VSCodeButton>
   );
