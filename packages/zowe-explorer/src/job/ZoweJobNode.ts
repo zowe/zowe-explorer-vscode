@@ -250,11 +250,22 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
             const sortGreaterThan = sortLessThan * -1;
 
             const keyToSortBy = JOB_SORT_KEYS[sortOpts.method];
-            if (keyToSortBy !== "jobid" && x["job"][keyToSortBy] == y["job"][keyToSortBy]) {
-                return x["job"]["jobid"] > y["job"]["jobid"] ? sortGreaterThan : sortLessThan;
+            let xCompare, yCompare;
+            if (keyToSortBy === "retcode") {
+                // some jobs (such as active ones) will have a null retcode
+                // in this case, use status as the key to compare for that node only
+                xCompare = x.job["retcode"] == null ? x.job["status"] : x.job["retcode"];
+                yCompare = y.job["retcode"] == null ? y.job["status"] : y.job["retcode"];
             } else {
-                return x["job"][keyToSortBy] > y["job"][keyToSortBy] ? sortGreaterThan : sortLessThan;
+                xCompare = x.job[keyToSortBy];
+                yCompare = y.job[keyToSortBy];
             }
+
+            if (xCompare === yCompare) {
+                return x.job["jobid"] > y.job["jobid"] ? sortGreaterThan : sortLessThan;
+            }
+
+            return xCompare > yCompare ? sortGreaterThan : sortLessThan;
         };
     }
 
