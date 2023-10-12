@@ -160,8 +160,8 @@
         "title": "%zowe.editHistory%",
         "category": "Zowe Explorer",
         "icon": {
-          "light": "./resources/light/refresh.svg",
-          "dark": "./resources/dark/refresh.svg"
+          "light": "./resources/light/history.svg",
+          "dark": "./resources/dark/history.svg"
         }
       },
       {
@@ -993,6 +993,11 @@
           "group": "098_zowe_ussProfileAuthentication@5"
         },
         {
+          "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)ussSession.*/ && !listMultiSelection",
+          "command": "zowe.editHistory",
+          "group": "100_zowe_editHistory@100"
+        },
+        {
           "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*/ && !listMultiSelection",
           "command": "zowe.uss.editSession",
           "group": "099_zowe_ussProfileModification@1"
@@ -1223,6 +1228,11 @@
           "group": "099_zowe_dsProfileModification@99"
         },
         {
+          "when": "view == zowe.ds.explorer && viewItem =~ /^(?!.*_fav.*)session.*/ && !listMultiSelection",
+          "command": "zowe.editHistory",
+          "group": "100_zowe_editHistory@100"
+        },
+        {
           "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/ && !listMultiSelection",
           "command": "zowe.jobs.search",
           "group": "inline"
@@ -1401,6 +1411,11 @@
           "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/  && !listMultiSelection",
           "command": "zowe.jobs.sortbyreturncode",
           "group": "000_zowe_jobsProfileModification@2"
+        },
+        {
+          "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/  && !listMultiSelection",
+          "command": "zowe.editHistory",
+          "group": "100_zowe_editHistory@100"
         }
       ],
       "commandPalette": [

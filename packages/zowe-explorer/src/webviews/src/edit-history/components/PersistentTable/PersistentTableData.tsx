@@ -34,7 +34,7 @@ export default function PersistentTableData({ persistentProp }: { persistentProp
     selectedItems.setVal({ ...selectedItems.val, [persistentProp[item]]: !event.target.checked });
   };
 
-  const renderDeleteButton = (item: string, i: number) => {
+  const renderSelectButton = (item: string, i: number) => {
     return selection[type] === "search" || selection[type] === "fileHistory" ? (
       <VSCodeDataGridCell grid-column="2" style={{ maxWidth: "20vw", textAlign: "center" }}>
         <VSCodeCheckbox key={`${i}${item}`} onClick={(event: any) => handleClick(event, i)}></VSCodeCheckbox>
@@ -47,7 +47,7 @@ export default function PersistentTableData({ persistentProp }: { persistentProp
       return (
         <VSCodeDataGridRow>
           <VSCodeDataGridCell grid-column="1">{item}</VSCodeDataGridCell>
-          {renderDeleteButton(item, i)}
+          {renderSelectButton(item, i)}
         </VSCodeDataGridRow>
       );
     });

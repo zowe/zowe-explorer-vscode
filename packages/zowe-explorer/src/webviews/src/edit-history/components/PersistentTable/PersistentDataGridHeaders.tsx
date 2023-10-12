@@ -20,8 +20,8 @@ export default function PersistentDataGridHeaders(): JSXInternal.Element {
   const { type, selection } = useDataPanelContext();
   const itemText = localize("PersistentDataGridHeaders.item", "Item");
 
-  const renderDeleteHeader = () => {
-    const deleteText = localize("PersistentDataGridHeaders.delete", "Delete");
+  const renderSelectHeader = () => {
+    const deleteText = localize("PersistentDataGridHeaders.select", "Select");
     return selection[type] === "search" || selection[type] === "fileHistory" ? (
       <VSCodeDataGridCell cell-type="columnheader" grid-column="2" style={{ maxWidth: "20vw", textAlign: "center" }}>
         {deleteText}
@@ -34,7 +34,7 @@ export default function PersistentDataGridHeaders(): JSXInternal.Element {
       <VSCodeDataGridCell cell-type="columnheader" grid-column="1">
         {itemText}
       </VSCodeDataGridCell>
-      {renderDeleteHeader()}
+      {renderSelectHeader()}
     </VSCodeDataGridRow>
   );
 }
