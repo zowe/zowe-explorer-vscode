@@ -10,7 +10,18 @@ export default function PersistentDeleteSelectedButton(): JSXInternal.Element {
   const deleteSelectedText = localize("PersistentDeleteSelectedButton.deleteSelected", "Delete Selected");
   const { selection, type, selectedItems } = useDataPanelContext();
 
-  const handleClick = () => {
+  const handleClick = async () => {
+    const hasSelectedItems = Object.keys(selectedItems.val).find((item) => selectedItems.val[item] === true);
+    if (!hasSelectedItems) {
+      PersistentVSCodeAPI.getVSCodeAPI().postMessage({
+        command: "show-error",
+        attrs: {
+          errorMsg: localize("PersistentDeleteSelectedButton.handleClick.error", "Select an item before deleting"),
+        },
+      });
+      return;
+    }
+
     PersistentVSCodeAPI.getVSCodeAPI().postMessage({
       command: "remove-item",
       attrs: {
@@ -27,9 +38,18 @@ export default function PersistentDeleteSelectedButton(): JSXInternal.Element {
     selectedItems.setVal(newSelectedItems);
   };
 
-  return (
-    <VSCodeButton title={deleteSelectedText} appearance="secondary" style={{ maxWidth: "20vw", marginRight: "15px" }} onClick={handleClick}>
-      <img src="./webviews/src/edit-history/assets/trash.svg" />
-    </VSCodeButton>
-  );
+  const renderDeleteSelectedButton = () => {
+    return selection[type] === "search" || selection[type] === "fileHistory" ? (
+      <VSCodeButton
+        title={deleteSelectedText}
+        appearance="secondary"
+        style={{ maxWidth: "20vw", marginRight: "15px" }}
+        onClick={async () => await handleClick()}
+      >
+        <img src="./webviews/src/edit-history/assets/trash.svg" />
+      </VSCodeButton>
+    ) : null;
+  };
+
+  return <>{renderDeleteSelectedButton()}</>;
 }

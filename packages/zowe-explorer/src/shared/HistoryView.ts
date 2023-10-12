@@ -63,6 +63,9 @@ export class HistoryView extends WebView {
                     selection: this.currentSelection,
                 });
                 break;
+            case "show-error":
+                this.showError(message);
+                break;
             case "update-selection":
                 this.updateSelection(message);
                 break;
@@ -93,6 +96,11 @@ export class HistoryView extends WebView {
             dsTemplates: type === "ds" ? (treeProvider as DatasetTree).getDsTemplates() : undefined,
             favorites: treeProvider.getFavorites(),
         };
+    }
+
+    private showError(message): void {
+        ZoweLogger.trace("HistoryView.showError called.");
+        Gui.errorMessage(message.attrs.errorMsg);
     }
 
     private updateSelection(message): void {
@@ -146,7 +154,7 @@ export class HistoryView extends WebView {
     private async clearAll(message): Promise<void> {
         ZoweLogger.trace("HistoryView.clearAll called.");
         const treeProvider = this.getTreeProvider(message.attrs.type);
-        const infoMessage = localize("HistoryView.clearAll.confirmMessage", "Clear all history contents for this persistent property?");
+        const infoMessage = localize("HistoryView.clearAll.confirmMessage", "Clear all history items for this persistent property?");
         const yesButton = localize("HistoryView.clearAll.Yes", "Yes");
         const noButton = localize("HistoryView.clearAll.No", "No");
         const choice = await Gui.showMessage(infoMessage, { items: [yesButton, noButton], vsCodeOpts: { modal: true } });
