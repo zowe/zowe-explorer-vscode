@@ -254,8 +254,8 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
             if (keyToSortBy === "retcode") {
                 // some jobs (such as active ones) will have a null retcode
                 // in this case, use status as the key to compare for that node only
-                xCompare = x.job["retcode"] == null ? x.job["status"] : x.job["retcode"];
-                yCompare = y.job["retcode"] == null ? y.job["status"] : y.job["retcode"];
+                xCompare = x.job["retcode"] ?? x.job["status"];
+                yCompare = y.job["retcode"] ?? y.job["status"];
             } else {
                 xCompare = x.job[keyToSortBy];
                 yCompare = y.job[keyToSortBy];
