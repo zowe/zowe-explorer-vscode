@@ -9,17 +9,30 @@
  *
  */
 
+import { imperative } from "@zowe/cli";
+import { FileAttributes } from "@zowe/zowe-explorer-api";
 import * as path from "path";
 import * as vscode from "vscode";
+import { Profiles } from "../Profiles";
+import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 
-export class File implements vscode.FileStat {
+export type FileEntryMetadata = {
+    profile: imperative.IProfileLoaded;
+    ussPath: string;
+};
+
+export class UssFile implements vscode.FileStat {
     public type: vscode.FileType;
     public ctime: number;
     public mtime: number;
     public size: number;
+    public binary: boolean;
+    public lparPath: string;
 
     public name: string;
     public data?: Uint8Array;
+    public attributes: FileAttributes;
+    public metadata: FileEntryMetadata;
 
     public constructor(name: string) {
         this.type = vscode.FileType.File;
@@ -27,17 +40,20 @@ export class File implements vscode.FileStat {
         this.mtime = Date.now();
         this.size = 0;
         this.name = name;
+        this.binary = false;
     }
 }
 
-export class Directory implements vscode.FileStat {
+export class UssDirectory implements vscode.FileStat {
     public type: vscode.FileType;
     public ctime: number;
     public mtime: number;
     public size: number;
 
     public name: string;
-    public entries: Map<string, File | Directory>;
+    public entries: Map<string, UssFile | UssDirectory>;
+    public wasAccessed: boolean;
+    public metadata: FileEntryMetadata;
 
     public constructor(name: string) {
         this.type = vscode.FileType.Directory;
@@ -46,13 +62,15 @@ export class Directory implements vscode.FileStat {
         this.size = 0;
         this.name = name;
         this.entries = new Map();
+        this.wasAccessed = false;
     }
 }
 
-export type Entry = File | Directory;
+export type Entry = UssFile | UssDirectory;
 
 export class UssFSProvider implements vscode.FileSystemProvider {
-    public root = new Directory("");
+    public root = new UssDirectory("");
+    public session: imperative.AbstractSession;
 
     // --- manage file metadata
 
@@ -60,19 +78,49 @@ export class UssFSProvider implements vscode.FileSystemProvider {
         return this._lookup(uri, false);
     }
 
+    private _getInfoFromUri(uri: vscode.Uri): {
+        profile: imperative.IProfileLoaded;
+        ussPath: string;
+    } {
+        const slashAfterProfile = uri.path.indexOf("/", 1);
+        const isRoot = slashAfterProfile === -1;
+        const startPathPos = isRoot ? uri.path.length : slashAfterProfile;
+        const sessionName = uri.path.substring(1, startPathPos);
+        const loadedProfile = Profiles.getInstance().loadNamedProfile(sessionName);
+
+        return { profile: loadedProfile, ussPath: isRoot ? "/" : uri.path.substring(slashAfterProfile) };
+    }
+
     /**
      * TODOs:
      * - Look into pre-fetching a directory level below the one given
      * - Should we support symlinks and can we use z/OSMF "report" option?
      */
-    public readDirectory(uri: vscode.Uri): [string, vscode.FileType][] {
+    public async readDirectory(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
         /*
             1. Parse URI to get directory path for API endpoint
             2. Call API endpoint to get contents of directory from mainframe
             3. Iterate over response to build entries for this level
         */
         const entry = this._lookupAsDirectory(uri, false);
+
         const result: [string, vscode.FileType][] = [];
+        // if this entry has not been accessed before, grab its file list
+        // for use in the breadcrumbs
+        if (!entry.wasAccessed) {
+            const response = await ZoweExplorerApiRegister.getUssApi(entry.metadata.profile).fileList(entry.metadata.ussPath);
+            for (const item of response.apiResponse.items) {
+                if (item.name === "." || item.name === ".." || entry.entries.has(item.name)) {
+                    continue;
+                }
+                if (item.mode.startsWith("d")) {
+                    entry.entries.set(item.name, new UssDirectory(item.name));
+                } else {
+                    entry.entries.set(item.name, new UssFile(item.name));
+                }
+            }
+        }
+
         for (const [name, child] of entry.entries) {
             result.push([name, child.type]);
         }
@@ -81,17 +129,39 @@ export class UssFSProvider implements vscode.FileSystemProvider {
 
     // --- manage file contents
 
-    public readFile(uri: vscode.Uri): Uint8Array {
+    public async readFile(uri: vscode.Uri): Promise<Uint8Array> {
         /*
-            1. Parse URI to get file path for API endpoint
-            2. Call API endpoint to get contents of file path from mainframe
+            1. Check if data exists on file entry
+            2. Call API endpoint to get contents of file path from mainframe if it does not exist
             3. Process contents of file for binary/encoding etc
         */
-        const data = this._lookupAsFile(uri, false).data;
-        if (data) {
-            return data;
+        const file = this._lookupAsFile(uri, false);
+        const startPathPos = uri.path.indexOf("/", 1);
+        const sessionName = uri.path.substring(1, startPathPos);
+        const loadedProfile = Profiles.getInstance().loadNamedProfile(sessionName);
+        //const session = SessionMap.instance.getSession(sessionName);
+
+        if (loadedProfile == null) {
+            // TODO: We can check to see if the session exists from the config data, so we can still
+            // open `uss:/` links without having the session present in the USS tree
+            throw vscode.FileSystemError.FileNotFound("Session does not exist for this file.");
         }
-        throw vscode.FileSystemError.FileNotFound();
+
+        if (!file.data) {
+            const filePath = uri.path.substring(startPathPos);
+            const resp = await ZoweExplorerApiRegister.getUssApi(loadedProfile).getContents(filePath, {
+                returnEtag: true,
+                encoding: loadedProfile.profile?.encoding,
+                responseTimeout: loadedProfile.profile?.responseTimeout,
+            });
+            if (!(resp instanceof Buffer)) {
+                throw vscode.FileSystemError.FileNotFound();
+            }
+
+            file.data = resp;
+        }
+
+        return file.data;
     }
 
     public writeFile(uri: vscode.Uri, content: Uint8Array, options: { create: boolean; overwrite: boolean }): void {
@@ -102,7 +172,7 @@ export class UssFSProvider implements vscode.FileSystemProvider {
         const basename = path.posix.basename(uri.path);
         const parent = this._lookupParentDirectory(uri);
         let entry = parent.entries.get(basename);
-        if (entry instanceof Directory) {
+        if (entry instanceof UssDirectory) {
             throw vscode.FileSystemError.FileIsADirectory(uri);
         }
         if (!entry && !options.create) {
@@ -112,14 +182,22 @@ export class UssFSProvider implements vscode.FileSystemProvider {
             throw vscode.FileSystemError.FileExists(uri);
         }
         if (!entry) {
-            entry = new File(basename);
+            const profInfo = parent.metadata
+                ? {
+                      profile: parent.metadata.profile,
+                      ussPath: parent.metadata.ussPath.concat(`${basename}`),
+                  }
+                : this._getInfoFromUri(uri);
+            entry = new UssFile(basename);
+            entry.metadata = profInfo;
             parent.entries.set(basename, entry);
             this._fireSoon({ type: vscode.FileChangeType.Created, uri });
+        } else {
+            // TODO: we might want to use a callback or promise that returns data rather than saving the full contents in memory
+            entry.data = content.length > 0 ? content : null;
         }
         entry.mtime = Date.now();
         entry.size = content.byteLength;
-        // TODO: we might want to use a callback or promise that returns data rather than saving the full contents in memory
-        entry.data = content;
 
         // call API here
 
@@ -128,7 +206,7 @@ export class UssFSProvider implements vscode.FileSystemProvider {
 
     // --- manage files/folders
 
-    public rename(oldUri: vscode.Uri, newUri: vscode.Uri, options: { overwrite: boolean }): void {
+    public async rename(oldUri: vscode.Uri, newUri: vscode.Uri, options: { overwrite: boolean }): Promise<void> {
         /*
             1. Build old path based on given URI
             2. Call API here with old path and new name for file/directory
@@ -145,6 +223,17 @@ export class UssFSProvider implements vscode.FileSystemProvider {
 
         oldParent.entries.delete(entry.name);
         entry.name = newName;
+        // rename entry at this level only
+        const lastSlashInPath = entry.metadata.ussPath.lastIndexOf("/");
+        const newPath = entry.metadata.ussPath.substring(0, lastSlashInPath + 1).concat(newName);
+        // todo: call rename API
+
+        try {
+            await ZoweExplorerApiRegister.getUssApi(entry.metadata.profile).rename(entry.metadata.ussPath, newPath);
+            entry.metadata.ussPath = newPath;
+        } catch (err) {
+            // todo: error handling
+        }
         newParent.entries.set(newName, entry);
 
         this._fireSoon({ type: vscode.FileChangeType.Deleted, uri: oldUri }, { type: vscode.FileChangeType.Created, uri: newUri });
@@ -164,6 +253,9 @@ export class UssFSProvider implements vscode.FileSystemProvider {
         parent.entries.delete(basename);
         parent.mtime = Date.now();
         parent.size -= 1;
+
+        // todo: call api x)
+
         this._fireSoon({ type: vscode.FileChangeType.Changed, uri: dirname }, { uri, type: vscode.FileChangeType.Deleted });
     }
 
@@ -175,8 +267,16 @@ export class UssFSProvider implements vscode.FileSystemProvider {
         const basename = path.posix.basename(uri.path);
         const dirname = uri.with({ path: path.posix.dirname(uri.path) });
         const parent = this._lookupAsDirectory(dirname, false);
+        const profInfo = parent.metadata
+            ? {
+                  profile: parent.metadata.profile,
+                  // we can strip profile name from path because its not involved in API calls
+                  ussPath: parent.metadata.ussPath.concat(`${basename}/`),
+              }
+            : this._getInfoFromUri(uri);
 
-        const entry = new Directory(basename);
+        const entry = new UssDirectory(basename);
+        entry.metadata = profInfo;
         parent.entries.set(entry.name, entry);
         parent.mtime = Date.now();
         parent.size += 1;
@@ -188,18 +288,15 @@ export class UssFSProvider implements vscode.FileSystemProvider {
     private _lookup(uri: vscode.Uri, silent: false): Entry;
     private _lookup(uri: vscode.Uri, silent: boolean): Entry | undefined;
     private _lookup(uri: vscode.Uri, silent: boolean): Entry | undefined {
-        /*
-            1. Calls the API to get a list of files/folders at the level of the given URI
-            2.
-        */
         const parts = uri.path.split("/");
         let entry: Entry = this.root;
+
         for (const part of parts) {
             if (!part) {
                 continue;
             }
             let child: Entry | undefined;
-            if (entry instanceof Directory) {
+            if (entry instanceof UssDirectory) {
                 child = entry.entries.get(part);
             }
             if (!child) {
@@ -214,23 +311,23 @@ export class UssFSProvider implements vscode.FileSystemProvider {
         return entry;
     }
 
-    private _lookupAsDirectory(uri: vscode.Uri, silent: boolean): Directory {
+    private _lookupAsDirectory(uri: vscode.Uri, silent: boolean): UssDirectory {
         const entry = this._lookup(uri, silent);
-        if (entry instanceof Directory) {
+        if (entry instanceof UssDirectory) {
             return entry;
         }
         throw vscode.FileSystemError.FileNotADirectory(uri);
     }
 
-    private _lookupAsFile(uri: vscode.Uri, silent: boolean): File {
+    private _lookupAsFile(uri: vscode.Uri, silent: boolean): UssFile {
         const entry = this._lookup(uri, silent);
-        if (entry instanceof File) {
+        if (entry instanceof UssFile) {
             return entry;
         }
         throw vscode.FileSystemError.FileIsADirectory(uri);
     }
 
-    private _lookupParentDirectory(uri: vscode.Uri): Directory {
+    private _lookupParentDirectory(uri: vscode.Uri): UssDirectory {
         const dirname = uri.with({ path: path.posix.dirname(uri.path) });
         return this._lookupAsDirectory(dirname, false);
     }

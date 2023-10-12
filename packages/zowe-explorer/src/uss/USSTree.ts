@@ -139,7 +139,8 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 const oldNamePath = originalNode.fullPath;
 
                 // // Handle rename in back-end:
-                await ZoweExplorerApiRegister.getUssApi(originalNode.getProfile()).rename(oldNamePath, newNamePath);
+                // we can do this in FSP now ^^
+                //await ZoweExplorerApiRegister.getUssApi(originalNode.getProfile()).rename(oldNamePath, newNamePath);
 
                 // Handle rename in UI:
                 if (oldFavorite) {
@@ -154,7 +155,12 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 }
                 // Rename originalNode in UI
                 const hasClosedTab = await originalNode.rename(newNamePath);
-                await originalNode.reopen(hasClosedTab);
+                (originalNode as ZoweUSSNode).command = {
+                    command: "vscode.open",
+                    title: localize("getChildren.responses.open", "Open"),
+                    arguments: [(originalNode as ZoweUSSNode).uri],
+                };
+                this.mOnDidChangeTreeData.fire(originalNode);
                 this.updateFavorites();
             } catch (err) {
                 if (err instanceof Error) {
