@@ -6,7 +6,7 @@ Although currently limited to USS, the plan is to complete the implementation to
 
 ## How to build
 
-This repo uses [Yarn](https://yarnpkg.com/) for building.
+This repo uses [PNPM](https://pnpm.io/) for building.
 
 1. Clone this `zowe-explorer` repo:
 
@@ -17,7 +17,7 @@ This repo uses [Yarn](https://yarnpkg.com/) for building.
 1. Build the entire repo comprising of Zowe Explorer, Zowe Explorer API, and Zowe Explorer FTP with the following command:
 
    ```bash
-   yarn && yarn package
+   pnpm install && pnpm package
    ```
 
 ## How to run and debug

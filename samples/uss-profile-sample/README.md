@@ -11,6 +11,6 @@ In "extension.ts" the Zowe Explorer API is used to load SSH profiles, and [`SshU
 ## Running the sample
 
 - Open this sample in VS Code
-- `yarn`
-- `yarn run compile`
+- `pnpm`
+- `pnpm run compile`
 - `F5` to start debugging
