@@ -9,7 +9,7 @@
  *
  */
 
-import { imperative } from "@zowe/cli";
+import { Utilities, imperative } from "@zowe/cli";
 import { FileAttributes } from "@zowe/zowe-explorer-api";
 import * as path from "path";
 import * as vscode from "vscode";
@@ -21,18 +21,23 @@ export type FileEntryMetadata = {
     ussPath: string;
 };
 
-export class UssFile implements vscode.FileStat {
+export interface UssEntry {
+    name: string;
+    metadata: FileEntryMetadata;
+    type: vscode.FileType;
+}
+
+export class UssFile implements UssEntry, vscode.FileStat {
+    public name: string;
+    public metadata: FileEntryMetadata;
     public type: vscode.FileType;
+
     public ctime: number;
     public mtime: number;
     public size: number;
     public binary: boolean;
-    public lparPath: string;
-
-    public name: string;
     public data?: Uint8Array;
     public attributes: FileAttributes;
-    public metadata: FileEntryMetadata;
 
     public constructor(name: string) {
         this.type = vscode.FileType.File;
@@ -44,16 +49,16 @@ export class UssFile implements vscode.FileStat {
     }
 }
 
-export class UssDirectory implements vscode.FileStat {
+export class UssDirectory implements UssEntry, vscode.FileStat {
+    public name: string;
+    public metadata: FileEntryMetadata;
     public type: vscode.FileType;
+
     public ctime: number;
     public mtime: number;
     public size: number;
-
-    public name: string;
     public entries: Map<string, UssFile | UssDirectory>;
     public wasAccessed: boolean;
-    public metadata: FileEntryMetadata;
 
     public constructor(name: string) {
         this.type = vscode.FileType.Directory;
@@ -72,6 +77,17 @@ export class UssFSProvider implements vscode.FileSystemProvider {
     public root = new UssDirectory("");
     public session: imperative.AbstractSession;
 
+    private static inst: UssFSProvider;
+    private constructor() {}
+
+    public static get instance(): UssFSProvider {
+        if (!UssFSProvider.inst) {
+            UssFSProvider.inst = new UssFSProvider();
+        }
+
+        return UssFSProvider.inst;
+    }
+
     // --- manage file metadata
 
     public stat(uri: vscode.Uri): vscode.FileStat {
@@ -89,6 +105,39 @@ export class UssFSProvider implements vscode.FileSystemProvider {
         const loadedProfile = Profiles.getInstance().loadNamedProfile(sessionName);
 
         return { profile: loadedProfile, ussPath: isRoot ? "/" : uri.path.substring(slashAfterProfile) };
+    }
+
+    private relocateEntry(oldUri: vscode.Uri, newUri: vscode.Uri, newUssPath: string): void {
+        const entry = this._lookup(oldUri, false);
+        if (!entry) {
+            return;
+        }
+
+        const oldParentUri = vscode.Uri.parse(oldUri.path.substring(0, oldUri.path.lastIndexOf("/")));
+        const oldParent = this._lookupAsDirectory(oldParentUri, false);
+
+        const parentUri = vscode.Uri.parse(newUri.path.substring(0, newUri.path.lastIndexOf("/")));
+        const newParent = this._lookupAsDirectory(parentUri, false);
+
+        if (!oldParent || !newParent) {
+            return;
+        }
+
+        oldParent.entries.delete(entry.name);
+        entry.metadata.ussPath = newUssPath;
+        newParent.entries.set(entry.name, entry);
+    }
+
+    public async move(oldUri: vscode.Uri, newUri: vscode.Uri): Promise<void> {
+        const info = this._getInfoFromUri(newUri);
+        const session = ZoweExplorerApiRegister.getUssApi(info.profile).getSession();
+        const oldInfo = this._getInfoFromUri(oldUri);
+
+        await Utilities.putUSSPayload(session, info.ussPath, {
+            request: "move",
+            from: oldInfo.ussPath,
+        });
+        this.relocateEntry(oldUri, newUri, info.ussPath);
     }
 
     /**
@@ -206,6 +255,17 @@ export class UssFSProvider implements vscode.FileSystemProvider {
 
     // --- manage files/folders
 
+    private updateChildPaths(entry: UssDirectory): void {
+        // update child entries
+        for (const child of entry.entries.values()) {
+            const isDir = child instanceof UssDirectory;
+            child.metadata.ussPath = entry.metadata.ussPath.concat(`${child.name}${isDir ? "/" : ""}`);
+            if (isDir) {
+                this.updateChildPaths(child);
+            }
+        }
+    }
+
     public async rename(oldUri: vscode.Uri, newUri: vscode.Uri, options: { overwrite: boolean }): Promise<void> {
         /*
             1. Build old path based on given URI
@@ -223,14 +283,19 @@ export class UssFSProvider implements vscode.FileSystemProvider {
 
         oldParent.entries.delete(entry.name);
         entry.name = newName;
+
         // rename entry at this level only
-        const lastSlashInPath = entry.metadata.ussPath.lastIndexOf("/");
-        const newPath = entry.metadata.ussPath.substring(0, lastSlashInPath + 1).concat(newName);
-        // todo: call rename API
+        const isDir = entry instanceof UssDirectory;
+        const entryPath = isDir ? entry.metadata.ussPath.slice(0, -1) : entry.metadata.ussPath;
+        const lastSlashInPath = entryPath.lastIndexOf("/");
+        const newPath = entryPath.substring(0, lastSlashInPath + 1).concat(newName);
 
         try {
             await ZoweExplorerApiRegister.getUssApi(entry.metadata.profile).rename(entry.metadata.ussPath, newPath);
             entry.metadata.ussPath = newPath;
+            if (entry instanceof UssDirectory) {
+                this.updateChildPaths(entry);
+            }
         } catch (err) {
             // todo: error handling
         }
@@ -239,7 +304,7 @@ export class UssFSProvider implements vscode.FileSystemProvider {
         this._fireSoon({ type: vscode.FileChangeType.Deleted, uri: oldUri }, { type: vscode.FileChangeType.Created, uri: newUri });
     }
 
-    public delete(uri: vscode.Uri): void {
+    public async delete(uri: vscode.Uri): Promise<void> {
         /*
             1. Determine path to delete based on given URI
             2. Call API to remove file/directory from mainframe
@@ -250,11 +315,18 @@ export class UssFSProvider implements vscode.FileSystemProvider {
         if (!parent.entries.has(basename)) {
             throw vscode.FileSystemError.FileNotFound(uri);
         }
+
+        // get the entry before deleting the URI
+        const entryToDelete = this._lookup(uri, false);
+
         parent.entries.delete(basename);
         parent.mtime = Date.now();
         parent.size -= 1;
 
-        // todo: call api x)
+        await ZoweExplorerApiRegister.getUssApi(parent.metadata.profile).delete(
+            entryToDelete.metadata.ussPath,
+            entryToDelete instanceof UssDirectory
+        );
 
         this._fireSoon({ type: vscode.FileChangeType.Changed, uri: dirname }, { uri, type: vscode.FileChangeType.Deleted });
     }
@@ -262,7 +334,7 @@ export class UssFSProvider implements vscode.FileSystemProvider {
     public createDirectory(uri: vscode.Uri): void {
         /*
             1. Parse URI to get desired directory path
-            2. Call API endpoint to create directory on mainframe
+            2. TODO: Call API endpoint to create directory on mainframe
         */
         const basename = path.posix.basename(uri.path);
         const dirname = uri.with({ path: path.posix.dirname(uri.path) });

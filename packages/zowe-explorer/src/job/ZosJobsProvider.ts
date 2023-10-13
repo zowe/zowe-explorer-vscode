@@ -85,6 +85,9 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
     private static readonly submitJobQueryLabel = localize("zosJobsProvider.option.submit", "$(check) Submit this query");
     private static readonly chooseJobStatusLabel = "Job Status";
 
+    public dragMimeTypes: string[] = ["application/vnd.code.tree.zowe.jobs.explorer"];
+    public dropMimeTypes: string[] = ["application/vnd.code.tree.zowe.jobs.explorer"];
+
     public JOB_PROPERTIES = [
         {
             key: `owner`,

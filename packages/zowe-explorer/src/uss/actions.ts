@@ -79,18 +79,6 @@ export async function createUSSNode(
             const newNode = await node.getChildren().then((children) => children.find((child) => child.label === name));
             await ussFileProvider.getTreeView().reveal(node, { select: true, focus: true });
             ussFileProvider.getTreeView().reveal(newNode, { select: true, focus: true });
-            const localPath = `${node.getUSSDocumentFilePath()}/${name}`;
-            const fileExists = fs.existsSync(localPath);
-            if (fileExists && !fileExistsCaseSensitveSync(localPath)) {
-                Gui.showMessage(
-                    localize(
-                        "createUSSNode.name.exists",
-                        // eslint-disable-next-line max-len
-                        "There is already a file with the same name. Please change your OS file system settings if you want to give case sensitive file names."
-                    )
-                );
-                ussFileProvider.refreshElement(node);
-            }
         } catch (err) {
             if (err instanceof Error) {
                 await errorHandling(err, node.mProfileName, localize("createUSSNode.error.create", "Unable to create node:"));

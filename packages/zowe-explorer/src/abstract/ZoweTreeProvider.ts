@@ -96,6 +96,15 @@ export class ZoweTreeProvider {
     }
 
     /**
+     * Called whenever the node needs to be repainted, and fires the data change event
+     * The node is NOT flagged as dirty here since we don't need to fetch any new data.
+     */
+    public nodeDataChanged(element: IZoweDatasetTreeNode): void {
+        ZoweLogger.trace("ZoweTreeProvider.refreshElement called.");
+        this.mOnDidChangeTreeData.fire(element);
+    }
+
+    /**
      * Called whenever the tree needs to be refreshed, and fires the data change event
      *
      */

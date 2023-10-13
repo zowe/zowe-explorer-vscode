@@ -81,6 +81,9 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
     // public memberPattern: IZoweDatasetTreeNode[] = [];
     private treeView: vscode.TreeView<IZoweDatasetTreeNode>;
 
+    public dragMimeTypes: string[] = ["application/vnd.code.tree.zowe.ds.explorer"];
+    public dropMimeTypes: string[] = ["application/vnd.code.tree.zowe.ds.explorer"];
+
     public constructor() {
         super(
             DatasetTree.persistenceSchema,

@@ -26,6 +26,7 @@ import * as nls from "vscode-nls";
 import { UssFileTree, UssFileType, UssFileUtils } from "./FileStructure";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { UssFile } from "./UssFSProvider";
+import { USSTree } from "./USSTree";
 
 // Set up localization
 nls.config({
@@ -68,7 +69,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     private downloadedInternal = false;
     private prevPath: string;
     public fullPath: string;
-    public uri?: vscode.Uri;
+    public uri: vscode.Uri;
 
     public onUpdateEmitter: vscode.EventEmitter<IZoweUSSTreeNode>;
 
@@ -135,6 +136,9 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             this.id = `uss.${this.label.toString()}`;
         }
         this.onUpdateEmitter = new vscode.EventEmitter<IZoweUSSTreeNode>();
+        if (label !== localize("Favorites", "Favorites")) {
+            this.uri = vscode.Uri.parse(`uss:/${this.profile.name}${this.fullPath}`);
+        }
     }
 
     public get onUpdate(): vscode.Event<IZoweUSSTreeNode> {
@@ -244,20 +248,19 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 // TODO: discuss whether its worth the overhead to make API calls for the tag
                 false
             );
-            this.uri = vscode.Uri.parse(`uss:/${this.profile.name}${temp.fullPath}`);
             if (isDir) {
-                vscode.workspace.fs.createDirectory(this.uri);
+                vscode.workspace.fs.createDirectory(temp.uri);
             } else {
                 // Create a node for the USS file.
-                vscode.workspace.fs.writeFile(this.uri, new Uint8Array());
+                vscode.workspace.fs.writeFile(temp.uri, new Uint8Array());
                 temp.command = {
                     command: "vscode.open",
                     title: localize("getChildren.responses.open", "Open"),
-                    arguments: [this.uri],
+                    arguments: [temp.uri],
                 };
             }
             responseNodes.push(temp);
-            const fsEntry = (await vscode.workspace.fs.stat(this.uri)) as UssFile;
+            const fsEntry = (await vscode.workspace.fs.stat(temp.uri)) as UssFile;
             if (!isDir) {
                 fsEntry.binary = false;
             }
@@ -407,23 +410,14 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         vscode.commands.executeCommand("zowe.uss.refreshUSSInTree", this);
     }
 
-    public async deleteUSSNode(ussFileProvider: IZoweTree<IZoweUSSTreeNode>, filePath: string, cancelled: boolean = false): Promise<void> {
+    public async deleteUSSNode(ussFileProvider: USSTree, filePath: string = "", cancelled: boolean = false): Promise<void> {
         ZoweLogger.trace("ZoweUSSNode.deleteUSSNode called.");
-        const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
         if (cancelled) {
             Gui.showMessage(localize("deleteUssPrompt.deleteCancelled", "Delete action was cancelled."));
             return;
         }
         try {
-            await ZoweExplorerApiRegister.getUssApi(cachedProfile).delete(this.fullPath, contextually.isUssDirectory(this));
-            this.getParent().dirty = true;
-            try {
-                if (fs.existsSync(filePath)) {
-                    fs.unlinkSync(filePath);
-                }
-            } catch (err) {
-                // ignore error as the path likely doesn't exist
-            }
+            await vscode.workspace.fs.delete(this.uri);
         } catch (err) {
             ZoweLogger.error(err);
             if (err instanceof Error) {
@@ -435,9 +429,11 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         Gui.showMessage(localize("deleteUssNode.itemDeleted", "The item {0} has been deleted.", this.label.toString()));
 
         // Remove node from the USS Favorites tree
-        ussFileProvider.removeFavorite(this);
+        await ussFileProvider.removeFavorite(this);
         ussFileProvider.removeFileHistory(`[${this.getProfileName()}]: ${this.parentPath}/${this.label.toString()}`);
-        ussFileProvider.refresh();
+        const parent = this.getParent();
+        parent.children = parent.children.filter((c) => c !== this);
+        ussFileProvider.nodeDataChanged(parent);
     }
 
     /**

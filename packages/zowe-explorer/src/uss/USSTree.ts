@@ -28,6 +28,7 @@ import { resetValidationSettings } from "../shared/actions";
 import { SettingsConfig } from "../utils/SettingsConfig";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { TreeViewUtils } from "../utils/TreeViewUtils";
+import { UssFSProvider } from "./UssFSProvider";
 
 // Set up localization
 nls.config({
@@ -64,6 +65,13 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
     public mFavorites: IZoweUSSTreeNode[] = [];
     public lastOpened: NodeInteraction = {};
     private treeView: vscode.TreeView<IZoweUSSTreeNode>;
+    public copying: Promise<unknown>;
+
+    // only support drag and drop ops within the USS tree at this point
+    public dragMimeTypes: string[] = [];
+    public dropMimeTypes: string[] = ["application/vnd.code.tree.zowe.uss.explorer"];
+
+    private draggedNodes: Record<string, IZoweUSSTreeNode> = {};
 
     public constructor() {
         super(
@@ -78,8 +86,49 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         this.mSessionNodes = [this.mFavoriteSession as IZoweUSSTreeNode];
         this.treeView = Gui.createTreeView("zowe.uss.explorer", {
             treeDataProvider: this,
+            dragAndDropController: this,
             canSelectMany: true,
         });
+    }
+
+    public handleDrag(source: IZoweUSSTreeNode[], dataTransfer: vscode.DataTransfer, token: vscode.CancellationToken): void {
+        const items = [];
+        for (const srcItem of source) {
+            this.draggedNodes[srcItem.uri.path] = srcItem;
+            items.push({
+                label: srcItem.label,
+                uri: srcItem.uri,
+            });
+        }
+        dataTransfer.set("application/vnd.code.tree.zowe.uss.explorer", new vscode.DataTransferItem(items));
+    }
+
+    public async handleDrop(target: IZoweUSSTreeNode | undefined, dataTransfer: vscode.DataTransfer, token: vscode.CancellationToken): Promise<void> {
+        const droppedItems = dataTransfer.get("application/vnd.code.tree.zowe.uss.explorer");
+        if (!droppedItems) {
+            return;
+        }
+
+        for (const item of droppedItems.value) {
+            const node = this.draggedNodes[item.uri.path];
+            if (node.getParent() === target) {
+                // no sense in moving an object to a different spot in the same tree level
+                continue;
+            }
+
+            const newUriForNode = vscode.Uri.parse(`uss:/${target.getProfile().name}${target.fullPath}/${item.label}`);
+            await UssFSProvider.instance.move(item.uri, newUriForNode);
+
+            // remove node from old parent and relocate to new parent
+            const oldParent = node.getParent();
+            oldParent.children = oldParent.children.filter((c) => c !== node);
+            this.nodeDataChanged(oldParent);
+            node.uri = newUriForNode;
+
+            // refresh parent to create entry in FS for moved node
+            this.refreshElement(target);
+        }
+        this.draggedNodes = {};
     }
 
     /**
@@ -155,11 +204,14 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 }
                 // Rename originalNode in UI
                 const hasClosedTab = await originalNode.rename(newNamePath);
-                (originalNode as ZoweUSSNode).command = {
-                    command: "vscode.open",
-                    title: localize("getChildren.responses.open", "Open"),
-                    arguments: [(originalNode as ZoweUSSNode).uri],
-                };
+                // only reassign URI for renamed files
+                if (!contextually.isUssDirectory(originalNode)) {
+                    (originalNode as ZoweUSSNode).command = {
+                        command: "vscode.open",
+                        title: localize("getChildren.responses.open", "Open"),
+                        arguments: [(originalNode as ZoweUSSNode).uri],
+                    };
+                }
                 this.mOnDidChangeTreeData.fire(originalNode);
                 this.updateFavorites();
             } catch (err) {

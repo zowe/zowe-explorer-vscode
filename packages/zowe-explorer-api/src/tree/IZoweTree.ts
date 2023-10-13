@@ -32,7 +32,7 @@ export class NodeInteraction {
     public date?: Date;
 }
 
-export interface IZoweTree<T> extends vscode.TreeDataProvider<T> {
+export interface IZoweTree<T> extends vscode.TreeDataProvider<T>, vscode.TreeDragAndDropController<T> {
     /**
      * Root session nodes
      */
@@ -124,6 +124,11 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T> {
      * @param favorite Node to refresh
      */
     refreshElement(node: IZoweTreeNode): void;
+    /**
+     * Signals that node data has changed in the tree view
+     * @param element to pass to event listener callback
+     */
+    nodeDataChanged(node: IZoweTreeNode): void;
     /**
      * Event Emitters used to notify subscribers that the refresh event has fired
      */
