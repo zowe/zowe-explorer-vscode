@@ -43,7 +43,7 @@ importers:
         specifier: ^4.2.1
         version: 4.2.1(eslint-config-prettier@8.10.0)(eslint@8.49.0)(prettier@2.6.0)
       eslint-plugin-zowe-explorer:
-        specifier: workspace:3.0.0-next.202309141150
+        specifier: workspace:./packages/eslint-plugin-zowe-explorer
         version: link:packages/eslint-plugin-zowe-explorer
       husky:
         specifier: ^6.0.0
