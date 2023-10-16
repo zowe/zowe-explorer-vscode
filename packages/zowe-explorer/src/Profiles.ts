@@ -1259,13 +1259,16 @@ export class Profiles extends ProfilesCache {
         if (!profileName) {
             return [];
         }
-        if ((await this.getProfileInfo()).usingTeamConfig) {
+        const usingSecureCreds = !SettingsConfig.getDirectValue(globals.SETTINGS_SECURE_CREDENTIALS_ENABLED);
+        if ((await this.getProfileInfo()).usingTeamConfig && !usingSecureCreds) {
             const config = (await this.getProfileInfo()).getTeamConfig();
             return config.api.secure.securePropsForProfile(profileName);
         }
         const profAttrs = await this.getProfileFromConfig(profileName);
         const mergedArgs = (await this.getProfileInfo()).mergeArgsForProfile(profAttrs);
-        return mergedArgs.knownArgs.filter((arg) => arg.secure).map((arg) => arg.argName);
+        return mergedArgs.knownArgs
+            .filter((arg) => arg.secure || arg.argName === "tokenType" || arg.argName === "tokenValue")
+            .map((arg) => arg.argName);
     }
 
     private async loginWithBaseProfile(serviceProfile: zowe.imperative.IProfileLoaded, loginTokenType: string, node?: IZoweNodeType): Promise<void> {
