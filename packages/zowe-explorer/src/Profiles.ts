@@ -37,6 +37,8 @@ import * as globals from "./globals";
 import * as nls from "vscode-nls";
 import { SettingsConfig } from "./utils/SettingsConfig";
 import { ZoweLogger } from "./utils/LoggerUtils";
+import { isZoweDatasetTreeNode, isZoweJobTreeNode, isZoweUSSTreeNode } from "./shared/utils";
+import { TreeProviders } from "./shared/TreeProviders";
 
 // Set up localization
 nls.config({
@@ -1202,6 +1204,37 @@ export class Profiles extends ProfilesCache {
         }
     }
 
+    public clearFiltersFromTrees(node: IZoweNodeType): void {
+        const dsNode = TreeProviders.ds.mSessionNodes.find((n) => n.getProfile()?.name === node.getProfile()?.name);
+        const ussNode = TreeProviders.uss.mSessionNodes.find((n) => n.getProfile()?.name === node.getProfile()?.name);
+        const jobNode = TreeProviders.job.mSessionNodes.find((n) => n.getProfile()?.name === node.getProfile()?.name);
+        if (isZoweDatasetTreeNode(dsNode)) {
+            dsNode.tooltip = node.getProfile()?.name;
+            dsNode.description = "";
+            dsNode.pattern = "";
+            TreeProviders.ds.flipState(dsNode, false);
+            TreeProviders.ds.refreshElement(dsNode);
+        }
+        if (isZoweUSSTreeNode(ussNode)) {
+            ussNode.tooltip = node.getProfile()?.name;
+            dsNode.description = "";
+            ussNode.fullPath = "";
+            TreeProviders.uss.flipState(ussNode, false);
+            TreeProviders.uss.refreshElement(ussNode);
+        }
+        if (isZoweJobTreeNode(jobNode)) {
+            jobNode.tooltip = node.getProfile()?.name;
+            jobNode.description = "";
+            jobNode.owner = "";
+            jobNode.prefix = "";
+            jobNode.status = "";
+            jobNode.filtered = false;
+            jobNode.children = [];
+            TreeProviders.job.flipState(jobNode, false);
+            TreeProviders.job.refreshElement(jobNode);
+        }
+    }
+
     public async ssoLogout(node: IZoweNodeType): Promise<void> {
         ZoweLogger.trace("Profiles.ssoLogout called.");
         const serviceProfile = node.getProfile();
@@ -1212,6 +1245,9 @@ export class Profiles extends ProfilesCache {
             );
             return;
         }
+
+        this.clearFiltersFromTrees(node);
+
         try {
             // this will handle extenders
             if (serviceProfile.type !== "zosmf" && serviceProfile.profile?.tokenType !== zowe.imperative.SessConstants.TOKEN_TYPE_APIML) {
