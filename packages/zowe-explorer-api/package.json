@@ -23,7 +23,7 @@
     "semver": "^7.5.3"
   },
   "scripts": {
-    "build": "yarn check-cli && yarn clean && tsc -p ./ && yarn license",
+    "build": "yarn check-cli && yarn copy-secrets && yarn clean && tsc -p ./ && yarn license",
     "test:unit": "jest \".*__tests__.*\\.unit\\.test\\.ts\" --coverage",
     "test": "yarn test:unit",
     "lint": "concurrently -n \"_eslint_,prettier\" \"eslint .\" \"prettier --check .\"",
@@ -33,7 +33,8 @@
     "clean": "rimraf lib",
     "fresh-clone": "yarn clean && rimraf node_modules",
     "license": "node ../../scripts/updateLicenses.js",
-    "package": "yarn build && npm pack && node ../../scripts/mv-pack.js zowe-zowe-explorer-api tgz"
+    "package": "yarn build && npm pack && node ../../scripts/mv-pack.js zowe-zowe-explorer-api tgz",
+    "copy-secrets": "node ./scripts/copy-zowe-secrets.js"
   },
   "jest": {
     "moduleFileExtensions": [
