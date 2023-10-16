@@ -11,6 +11,18 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### Bug fixes
 
+## `2.11.2`
+
+### Bug fixes
+
+- Bundle Zowe Secrets for issues seen by extenders that use the ProfilesCache for profile management. [#2512](https://github.com/zowe/vscode-extension-for-zowe/issues/2512)
+
+## `2.11.1`
+
+### New features and enhancements
+
+### Bug fixes
+
 ## `2.11.0`
 
 ### New features and enhancements
