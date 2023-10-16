@@ -12,6 +12,7 @@
   "issueUnixCommand.command.path": "Select a Unix command to run immediately against ",
   "issueUnixCommand.command": "Enter or update the Unix command",
   "issueUnixCommand.enter.command": "No command entered.",
+  "issueUnixCommand.notsupportedForProfile": "Action not being supported for the profile type ",
   "issueUnixCommand.command.submitted": "Unix command submitted.",
   "command.option.prompt.search": "$(plus) Create a new Unix command"
 }

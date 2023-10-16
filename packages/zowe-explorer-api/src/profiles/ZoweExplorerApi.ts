@@ -542,6 +542,7 @@ export namespace ZoweExplorerApi {
          * @memberof ICommand
          */
         issueUnixCommand?(sshSession: zowe.SshSession, command: string, cwd: string): Promise<string>;
+        sshNeededforUnixCommand(): boolean;
     }
 
     /**

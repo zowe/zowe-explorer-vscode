@@ -849,11 +849,6 @@
           "group": "000_zowe_ussMainframeInteraction@1"
         },
         {
-          "when": "view == zowe.uss.explorer && viewItem =~ /^directory.*/",
-          "command":"zowe.issueUnixCmd",
-          "group": "000_zowe_ussMainframeInteraction@2"
-        },
-        {
           "when": "view == zowe.uss.explorer && viewItem =~ /^ussSession.*/ && !listMultiSelection",
           "command": "zowe.uss.refreshDirectory",
           "group": "inline"
@@ -870,13 +865,18 @@
         },
         {
           "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)ussSession.*/ && !listMultiSelection",
-          "command": "zowe.issueUnixCmd",
-          "group": "000_zowe_ussMainframeInteraction@2"
+          "command": "zowe.issueTsoCmd",
+          "group": "000_zowe_ussMainframeInteraction@3"
         },
         {
           "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)ussSession.*/ && !listMultiSelection",
-          "command": "zowe.issueTsoCmd",
-          "group": "000_zowe_ussMainframeInteraction@3"
+          "command": "zowe.issueUnixCmd",
+          "group": "000_zowe_ussMainframeInteraction@4"
+        },
+        {
+          "when": "view == zowe.uss.explorer && viewItem =~ /^directory.*/",
+          "command":"zowe.issueUnixCmd",
+          "group": "000_zowe_ussMainframeInteraction@4"
         },
         {
           "when": "view == zowe.uss.explorer && viewItem =~ /^(?!(directory|ussSession|favorite|profile_fav))/",

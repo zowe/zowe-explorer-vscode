@@ -391,4 +391,7 @@ export class ZosmfCommandApi extends ZosmfApiCommon implements ZoweExplorerApi.I
         });
         return stdout;
     }
+    public sshNeededforUnixCommand(): boolean {
+        return true;
+    }
 }
