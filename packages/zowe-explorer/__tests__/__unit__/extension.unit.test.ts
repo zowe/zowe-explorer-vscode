@@ -245,6 +245,7 @@ async function createGlobalMocks() {
             "zowe.manualPoll",
             "zowe.updateSecureCredentials",
             "zowe.promptCredentials",
+            "zowe.profileManagement",
             "zowe.openRecentMember",
             "zowe.searchInAllLoadedItems",
             "zowe.ds.deleteProfile",
