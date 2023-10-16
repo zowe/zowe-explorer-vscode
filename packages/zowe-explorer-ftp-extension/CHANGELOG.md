@@ -2,9 +2,9 @@ All notable changes to the "zowe-explorer-ftp-extension" extension will be docum
 
 ## TBD Release
 
-### New features and enhancements
-
 ### Bug fixes
+
+- Update Zowe Explorer API dependency to pick up latest fixes for Zowe Secrets. [#2512](https://github.com/zowe/vscode-extension-for-zowe/issues/2512)
 
 ## `2.11.1`
 
