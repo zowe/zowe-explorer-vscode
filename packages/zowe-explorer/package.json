@@ -875,7 +875,7 @@
         },
         {
           "when": "view == zowe.uss.explorer && viewItem =~ /^directory.*/",
-          "command":"zowe.issueUnixCmd",
+          "command": "zowe.issueUnixCmd",
           "group": "000_zowe_ussMainframeInteraction@4"
         },
         {

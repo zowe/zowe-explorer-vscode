@@ -21,9 +21,9 @@ import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import * as globals from "../../../src/globals";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
-import { SshSession } from  "@zowe/zos-uss-for-zowe-sdk";
+import { SshSession } from "@zowe/zos-uss-for-zowe-sdk";
 
-describe("UnixCommand Actions Unit Testing",()=>{
+describe("UnixCommand Actions Unit Testing", () => {
     const showQuickPick = jest.fn();
     const showInputBox = jest.fn();
     const showInformationMessage = jest.fn();
@@ -58,7 +58,7 @@ describe("UnixCommand Actions Unit Testing",()=>{
         type: "ssh",
         message: "",
         failNotFound: false,
-    }
+    };
     const testNode = new ZoweDatasetNode("BRTVS99.DDIR", vscode.TreeItemCollapsibleState.Collapsed, null, session, undefined, undefined, profileOne);
 
     const outputChannel: vscode.OutputChannel = {
@@ -75,7 +75,7 @@ describe("UnixCommand Actions Unit Testing",()=>{
     createOutputChannel.mockReturnValue(outputChannel);
     const qpItem: vscode.QuickPickItem = new utils.FilterDescriptor("Create a new filter");
     const qpItem2 = new utils.FilterItem({ text: "/d iplinfo0" });
-      
+
     const ProgressLocation = jest.fn().mockImplementation(() => {
         return {
             Notification: 15,
@@ -128,17 +128,17 @@ describe("UnixCommand Actions Unit Testing",()=>{
     Object.defineProperty(vscode.window, "createQuickPick", { value: createQuickPick });
     Object.defineProperty(vscode.window, "createOutputChannel", { value: createOutputChannel });
     Object.defineProperty(vscode.workspace, "getConfiguration", { value: getConfiguration });
-    Object.defineProperty(imperative.ConnectionPropsForSessCfg,"addPropsOrPrompt",{
-        value: jest.fn(()=>{
-            return {privateKey: undefined, keyPassphrase: undefined, handshakeTimeout: undefined,type:'basic',port:22}
-        })
-    })
+    Object.defineProperty(imperative.ConnectionPropsForSessCfg, "addPropsOrPrompt", {
+        value: jest.fn(() => {
+            return { privateKey: undefined, keyPassphrase: undefined, handshakeTimeout: undefined, type: "basic", port: 22 };
+        }),
+    });
 
     mockLoadNamedProfile.mockReturnValue({ profile: { name: "aProfile", type: "zosmf" } });
-    mockdefaultProfile.mockReturnValue({ profile: {name: "bprofile", type:"ssh"}});
+    mockdefaultProfile.mockReturnValue({ profile: { name: "bprofile", type: "ssh" } });
 
-    getConfiguration.mockReturnValue({  
-        get: (setting: string) => undefined, 
+    getConfiguration.mockReturnValue({
+        get: (setting: string) => undefined,
         update: jest.fn(() => {
             return {};
         }),
@@ -153,10 +153,10 @@ describe("UnixCommand Actions Unit Testing",()=>{
     const profilesForValidation = { status: "active", name: "fake" };
 
     SshSession.createSshSessCfgFromArgs = jest.fn(() => {
-        return {privateKey: undefined, keyPassphrase: undefined, handshakeTimeout: undefined};
-    })
+        return { privateKey: undefined, keyPassphrase: undefined, handshakeTimeout: undefined };
+    });
 
-    it("test the issueUnixCommand function",async ()=>{
+    it("test the issueUnixCommand function", async () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
@@ -173,7 +173,7 @@ describe("UnixCommand Actions Unit Testing",()=>{
                 };
             }),
         });
-        
+
         const mockUssApi = await apiRegisterInstance.getUssApi(profileOne);
         const getUssApiMock = jest.fn();
         getUssApiMock.mockReturnValue(mockUssApi);
@@ -189,12 +189,12 @@ describe("UnixCommand Actions Unit Testing",()=>{
 
         showInputBox.mockReturnValueOnce("/u/directorypath");
         showInputBox.mockReturnValueOnce("/d iplinfo1");
-        
+
         jest.spyOn(Gui, "resolveQuickPick").mockImplementation(() => Promise.resolve(qpItem));
         jest.spyOn(mockCommandApi, "issueUnixCommand").mockReturnValue("iplinfo1" as any);
 
         await unixActions.issueUnixCommand();
-        
+
         expect(showQuickPick.mock.calls.length).toBe(1);
         expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName", "secondName"]);
         expect(showQuickPick.mock.calls[0][1]).toEqual({
@@ -207,9 +207,9 @@ describe("UnixCommand Actions Unit Testing",()=>{
         expect(appendLine.mock.calls[0][0]).toBe("> d iplinfo1");
         expect(appendLine.mock.calls[1][0]["commandResponse"]).toBe("iplinfo1");
         expect(showInformationMessage.mock.calls.length).toBe(0);
-    })
+    });
 
-    it("tests the issueUnixCommand function user selects a history item",async ()=>{
+    it("tests the issueUnixCommand function user selects a history item", async () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
@@ -246,7 +246,7 @@ describe("UnixCommand Actions Unit Testing",()=>{
         jest.spyOn(mockCommandApi, "issueUnixCommand").mockReturnValue("iplinfo0" as any);
 
         await unixActions.issueUnixCommand();
-        
+
         expect(showQuickPick.mock.calls.length).toBe(1);
         expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName", "secondName"]);
         expect(showQuickPick.mock.calls[0][1]).toEqual({
@@ -259,9 +259,9 @@ describe("UnixCommand Actions Unit Testing",()=>{
         expect(appendLine.mock.calls[0][0]).toBe("> d iplinfo0");
         expect(appendLine.mock.calls[1][0]["commandResponse"]).toBe("iplinfo0");
         expect(showInformationMessage.mock.calls.length).toBe(0);
-    })
+    });
 
-    it("tests the issueUnixCommand function - issueUnixCommand throws an error",async ()=>{
+    it("tests the issueUnixCommand function - issueUnixCommand throws an error", async () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
@@ -293,7 +293,7 @@ describe("UnixCommand Actions Unit Testing",()=>{
         jest.spyOn(mockCommandApi, "issueUnixCommand").mockReturnValue("iplinfo3" as any);
 
         await unixActions.issueUnixCommand();
-        
+
         expect(showQuickPick.mock.calls.length).toBe(1);
         expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName", "secondName"]);
         expect(showQuickPick.mock.calls[0][1]).toEqual({
@@ -304,9 +304,9 @@ describe("UnixCommand Actions Unit Testing",()=>{
         expect(showInputBox.mock.calls.length).toBe(2);
         expect(showErrorMessage.mock.calls.length).toBe(1);
         expect(showErrorMessage.mock.calls[0][0]).toEqual("Error: fake testError");
-    })
+    });
 
-    it("tests the issueUnixCommand function user escapes the quick pick box",async ()=>{
+    it("tests the issueUnixCommand function user escapes the quick pick box", async () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
@@ -335,7 +335,7 @@ describe("UnixCommand Actions Unit Testing",()=>{
         jest.spyOn(Gui, "resolveQuickPick").mockImplementation(() => Promise.resolve(undefined));
 
         await unixActions.issueUnixCommand();
-        
+
         expect(showQuickPick.mock.calls.length).toBe(1);
         expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName", "secondName"]);
         expect(showQuickPick.mock.calls[0][1]).toEqual({
@@ -346,9 +346,9 @@ describe("UnixCommand Actions Unit Testing",()=>{
         expect(showInputBox.mock.calls.length).toBe(1);
         expect(showInformationMessage.mock.calls.length).toBe(1);
         expect(showInformationMessage.mock.calls[0][0]).toEqual("No selection made. Operation cancelled.");
-    })
+    });
 
-    it("tests the issueTsoCommand function user escapes the commandbox",async ()=>{
+    it("tests the issueTsoCommand function user escapes the commandbox", async () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
@@ -378,7 +378,7 @@ describe("UnixCommand Actions Unit Testing",()=>{
         jest.spyOn(Gui, "resolveQuickPick").mockImplementation(() => Promise.resolve(qpItem));
 
         await unixActions.issueUnixCommand();
-        
+
         expect(showQuickPick.mock.calls.length).toBe(1);
         expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName", "secondName"]);
         expect(showQuickPick.mock.calls[0][1]).toEqual({
@@ -389,9 +389,9 @@ describe("UnixCommand Actions Unit Testing",()=>{
         expect(showInputBox.mock.calls.length).toBe(2);
         expect(showInformationMessage.mock.calls.length).toBe(1);
         expect(showInformationMessage.mock.calls[0][0]).toEqual("No command entered.");
-    })
+    });
 
-    it("tests the issueUnixCommand function user starts typing a value in quick pick", async () => { 
+    it("tests the issueUnixCommand function user starts typing a value in quick pick", async () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
@@ -447,7 +447,7 @@ describe("UnixCommand Actions Unit Testing",()=>{
         expect(showInputBox.mock.calls.length).toBe(1);
     });
 
-    it("tests the issueUnixCommand function no profiles error", async () => { 
+    it("tests the issueUnixCommand function no profiles error", async () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
@@ -486,8 +486,8 @@ describe("UnixCommand Actions Unit Testing",()=>{
         expect(showInformationMessage.mock.calls.length).toBe(1);
         expect(showInformationMessage.mock.calls[0][0]).toEqual("Operation Cancelled");
     });
- 
-    it("tests the issueUnixCommand function from a session", async () => { 
+
+    it("tests the issueUnixCommand function from a session", async () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
@@ -516,4 +516,4 @@ describe("UnixCommand Actions Unit Testing",()=>{
 
         expect(showInputBox.mock.calls.length).toBe(1);
     });
-})
+});

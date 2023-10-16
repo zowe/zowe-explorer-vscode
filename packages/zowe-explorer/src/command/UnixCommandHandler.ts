@@ -21,8 +21,7 @@ import { imperative } from "@zowe/cli";
 import { SettingsConfig } from "../utils/SettingsConfig";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import * as cli from "@zowe/cli";
-import { SshSession , ISshSession} from  "@zowe/zos-uss-for-zowe-sdk";
-
+import { SshSession, ISshSession } from "@zowe/zos-uss-for-zowe-sdk";
 
 // Set up localization
 nls.config({
@@ -74,10 +73,10 @@ export class UnixCommandHandler extends ZoweCommandProvider {
         return cmdArgs;
     }
 
-    public async issueUnixCommand(session?: imperative.Session,command?: string, node?: IZoweTreeNode): Promise<void> {
+    public async issueUnixCommand(session?: imperative.Session, command?: string, node?: IZoweTreeNode): Promise<void> {
         let cwd: string;
         let profile: imperative.IProfileLoaded;
-        if(node){
+        if (node) {
             cwd = node.fullPath;
             await this.checkCurrentProfile(node);
             if (!session) {
@@ -105,7 +104,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
                     return;
                 }
                 profile = allProfiles.filter((temprofile) => temprofile.name === sesName)[0];
-                if(cwd == undefined){
+                if (cwd == undefined) {
                     cwd = await vscode.window.showInputBox({
                         prompt: "Enter the path of the directory inorder to execute the command",
                         value: "",
@@ -124,10 +123,9 @@ export class UnixCommandHandler extends ZoweCommandProvider {
                 Gui.showMessage(localize("issueUnixCommand.noProfilesLoaded", "No profiles available"));
                 return;
             }
-        }
-        else{
+        } else {
             profile = node.getProfile();
-        } 
+        }
         try {
             if (Profiles.getInstance().validProfile !== ValidProfileEnum.INVALID) {
                 const commandApi = ZoweExplorerApiRegister.getInstance().getCommandApi(profile);
@@ -135,9 +133,9 @@ export class UnixCommandHandler extends ZoweCommandProvider {
                     let command1: string = command;
                     if (!command) {
                         // command1 = await this.getQuickPick(this.sshSession && this.sshSession.ISshSession.hostname ? this.sshSession.ISshSession.hostname : "unknown");
-                        command1 =  await this.getQuickPick(cwd);
+                        command1 = await this.getQuickPick(cwd);
                     }
-                    await this.issueCommand(profile, command1,cwd);
+                    await this.issueCommand(profile, command1, cwd);
                 } else {
                     Gui.errorMessage(localize("issueUnixCommand.checkProfile", "Profile is invalid"));
                     return;
@@ -154,15 +152,14 @@ export class UnixCommandHandler extends ZoweCommandProvider {
     }
 
     public async setsshSession(): Promise<SshSession> {
-        let sshprofile: imperative.IProfileLoaded;
         ZoweLogger.trace("UnixCommandHandler.setsshSession called.");
-        sshprofile = Profiles.getInstance().getDefaultProfile("ssh");
+        const sshprofile: imperative.IProfileLoaded = Profiles.getInstance().getDefaultProfile("ssh");
         if (!sshprofile) {
             Gui.errorMessage(localize("setsshProfile.couldnotfindprofile", "Could not find the zowe SSH Profile.Create One"));
         }
         const cmdArgs: imperative.ICommandArguments = this.getCmdArgs(sshprofile?.profile as imperative.IProfileLoaded);
         // create the ssh session
-        const sshSessCfg =  SshSession.createSshSessCfgFromArgs(cmdArgs);
+        const sshSessCfg = SshSession.createSshSessCfgFromArgs(cmdArgs);
         const sshSessCfgWithCreds = await imperative.ConnectionPropsForSessCfg.addPropsOrPrompt<ISshSession>(sshSessCfg, cmdArgs);
         this.sshSession = new SshSession(sshSessCfgWithCreds);
         return this.sshSession;
@@ -232,12 +229,11 @@ export class UnixCommandHandler extends ZoweCommandProvider {
         return response;
     }
 
-    private async issueCommand(profile: imperative.IProfileLoaded, command: string , cwd: string) : Promise<void> {
+    private async issueCommand(profile: imperative.IProfileLoaded, command: string, cwd: string): Promise<void> {
         ZoweLogger.trace("UnixCommandHandler.issueCommand called.");
-        if(ZoweExplorerApiRegister.getCommandApi(profile).sshNeededforUnixCommand)
-            this.sshSession = await this.setsshSession();
-        else{
-            Gui.showMessage(localize("issueUnixCommand.notsupportedForProfile", "Action not being supported for the profile type ")+profile.type);
+        if (ZoweExplorerApiRegister.getCommandApi(profile).sshNeededforUnixCommand) this.sshSession = await this.setsshSession();
+        else {
+            Gui.showMessage(localize("issueUnixCommand.notsupportedForProfile", "Action not being supported for the profile type ") + profile.type);
             return;
         }
         try {
@@ -253,9 +249,9 @@ export class UnixCommandHandler extends ZoweCommandProvider {
                         title: localize("issueUnixCommand.command.submitted", "Unix command submitted."),
                     },
                     () => {
-                        if(ZoweExplorerApiRegister.getCommandApi(profile).issueUnixCommand){
-                        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-                            return ZoweExplorerApiRegister.getCommandApi(profile).issueUnixCommand(this.sshSession,command,cwd);
+                        if (ZoweExplorerApiRegister.getCommandApi(profile).issueUnixCommand) {
+                            // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+                            return ZoweExplorerApiRegister.getCommandApi(profile).issueUnixCommand(this.sshSession, command, cwd);
                         }
                     }
                 );

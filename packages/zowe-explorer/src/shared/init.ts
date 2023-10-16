@@ -195,7 +195,7 @@ export function registerCommonCommands(context: vscode.ExtensionContext, provide
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.issueUnixCmd", async (node?, command?) => {
                 if (node) {
-                    await UnixCommandHandler.getInstance().issueUnixCommand(node.session,command, node);
+                    await UnixCommandHandler.getInstance().issueUnixCommand(node.session, command, node);
                 } else {
                     await UnixCommandHandler.getInstance().issueUnixCommand();
                 }
