@@ -11,7 +11,7 @@
 
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
-import { Gui, IZoweJobTreeNode, IZoweTree, ValidProfileEnum } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweJobTreeNode, ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import { Job, Spool } from "../../../src/job/ZoweJobNode";
 import {
     createISession,
@@ -460,6 +460,39 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
                 resolve(blockMocks.datasetSessionNode.label);
             })
         );
+        const mockFile = {
+            path: "/fake/path/file.txt",
+        } as vscode.Uri;
+        blockMocks.testDatasetTree.getChildren.mockResolvedValueOnce([
+            new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null as any),
+            blockMocks.datasetSessionNode,
+        ]);
+        const commandSpy = jest.spyOn(vscode.commands, "executeCommand");
+        activeTextEditorDocument.mockReturnValue(blockMocks.textDocument);
+        const submitJclSpy = jest.spyOn(blockMocks.jesApi, "submitJcl");
+        submitJclSpy.mockClear();
+        submitJclSpy.mockResolvedValueOnce(blockMocks.iJob);
+        await dsActions.submitJcl(blockMocks.testDatasetTree, mockFile);
+
+        expect(commandSpy).toBeCalled();
+        expect(submitJclSpy).toBeCalled();
+        expect(mocked(Gui.showMessage)).toBeCalled();
+        expect(mocked(Gui.showMessage).mock.calls.length).toBe(1);
+        expect(mocked(Gui.showMessage).mock.calls[0][0]).toEqual(
+            "Job submitted [JOB1234](command:zowe.jobs.setJobSpool?%5B%22sestest%22%2C%22JOB1234%22%5D)"
+        );
+        commandSpy.mockClear();
+    });
+    it("Checking submit of JCL file from VSC explorer tree", async () => {
+        createGlobalMocks();
+        const blockMocks: any = createBlockMocks();
+        mocked(zowe.ZosmfSession.createSessCfgFromArgs).mockReturnValue(blockMocks.session);
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        mocked(vscode.window.showQuickPick).mockReturnValueOnce(
+            new Promise((resolve) => {
+                resolve(blockMocks.datasetSessionNode.label);
+            })
+        );
         blockMocks.testDatasetTree.getChildren.mockResolvedValueOnce([
             new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null as any),
             blockMocks.datasetSessionNode,
@@ -527,20 +560,20 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
         expect(blockMocks.errorLogSpy).toBeCalledWith(errorMsg);
         expect(blockMocks.errorGuiMsgSpy).toBeCalledWith(errorMsg);
     });
-    // it("Checking failure of submitting JCL via command palette if not active text editor", async () => {
-    //     createGlobalMocks();
-    //     Object.defineProperty(vscode.workspace, "activeTextEditor", {
-    //         value: jest.fn().mockReturnValue(undefined),
-    //         configurable: true,
-    //     });
-    //     const blockMocks = createBlockMocks();
+    it("Checking failure of submitting JCL via command palette if not active text editor", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        Object.defineProperty(vscode.window, "activeTextEditor", {
+            value: undefined,
+            configurable: true,
+        });
 
-    //     await dsActions.submitJcl(blockMocks.testDatasetTree, undefined);
+        await dsActions.submitJcl(blockMocks.testDatasetTree, undefined);
 
-    //     const errorMsg = "No editor with a document that could be submitted as JCL is currently open.";
-    //     expect(blockMocks.errorLogSpy).toBeCalledWith(errorMsg);
-    //     expect(blockMocks.errorGuiMsgSpy).toBeCalledWith(errorMsg);
-    // });
+        const errorMsg = "No editor with a document that could be submitted as JCL is currently open.";
+        expect(blockMocks.errorLogSpy).toBeCalledWith(errorMsg);
+        expect(blockMocks.errorGuiMsgSpy).toBeCalledWith(errorMsg);
+    });
 
     it("Checking failed attempt to submit of active text editor content as JCL without profile chosen from quickpick", async () => {
         createGlobalMocks();
