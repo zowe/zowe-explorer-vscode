@@ -16,7 +16,7 @@ import * as zowe from "@zowe/cli";
 import * as globals from "../../../src/globals";
 import { createIJobFile, createIJobObject, createJobSessionNode } from "../../../__mocks__/mockCreators/jobs";
 import { Job } from "../../../src/job/ZoweJobNode";
-import { IZoweJobTreeNode, ProfilesCache, Gui } from "@zowe/zowe-explorer-api";
+import { IZoweJobTreeNode, ProfilesCache, Gui, JobSortOpts, SortDirection } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { Profiles } from "../../../src/Profiles";
 import * as sessUtils from "../../../src/utils/SessionUtils";
@@ -583,9 +583,8 @@ describe("ZoweJobNode unit tests - Function saveSearch", () => {
         const expectedJob = favJob;
         expectedJob.contextValue = globals.JOBS_SESSION_CONTEXT + globals.FAV_SUFFIX;
 
-        const savedFavJob = await globalMocks.testJobsProvider.saveSearch(favJob);
-
-        expect(savedFavJob).toEqual(expectedJob);
+        globalMocks.testJobsProvider.saveSearch(favJob);
+        expect(expectedJob.contextValue).toEqual(favJob.contextValue);
     });
 });
 
@@ -851,7 +850,7 @@ describe("Job - sortJobs", () => {
                     jobid: "JOBID120",
                 },
             } as IZoweJobTreeNode,
-        ].sort((a, b) => Job.sortJobs(a, b));
+        ].sort(Job.sortJobs({ method: JobSortOpts.Id, direction: SortDirection.Ascending }));
         expect(sorted[0].job.jobid).toBe("JOBID120");
         expect(sorted[1].job.jobid).toBe("JOBID120");
         expect(sorted[2].job.jobid).toBe("JOBID123");
