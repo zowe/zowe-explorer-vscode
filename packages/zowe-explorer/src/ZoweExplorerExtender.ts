@@ -137,6 +137,8 @@ export class ZoweExplorerExtender implements IApiExplorerExtender, IZoweExplorer
         // will be created with the appropriate meta data. If not called the user will
         // see errors when creating a profile of any type.
         const zoweDir = FileManagement.getZoweDir();
+        const workspaceOpen = vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders[0];
+        const projectDir = workspaceOpen ? getFullPath(vscode.workspace.workspaceFolders[0].uri.fsPath) : undefined;
 
         /**
          * This should create initialize the loadedConfig if it is not already
@@ -147,12 +149,7 @@ export class ZoweExplorerExtender implements IApiExplorerExtender, IZoweExplorer
         let usingTeamConfig: boolean;
         try {
             const mProfileInfo = await ProfilesUtils.getProfileInfo();
-            if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders[0]) {
-                const rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
-                await mProfileInfo.readProfilesFromDisk({ homeDir: zoweDir, projectDir: FileManagement.getFullPath(rootPath) });
-            } else {
-                await mProfileInfo.readProfilesFromDisk({ homeDir: zoweDir, projectDir: undefined });
-            }
+            await mProfileInfo.readProfilesFromDisk({ homeDir: zoweDir, projectDir });
             usingTeamConfig = mProfileInfo.usingTeamConfig;
         } catch (error) {
             ZoweLogger.warn(error);
@@ -163,6 +160,37 @@ export class ZoweExplorerExtender implements IApiExplorerExtender, IZoweExplorer
         }
         if (profileTypeConfigurations !== undefined) {
             Profiles.getInstance().addToConfigArray(profileTypeConfigurations);
+        }
+
+        if (usingTeamConfig && profileTypeConfigurations != null) {
+            const projSchemaLoc = projectDir ? path.join(projectDir, "zowe.schema.json") : null;
+            const projSchemaExists = projSchemaLoc ? fs.existsSync(projSchemaLoc) : false;
+
+            // use the project-level schema if it exists; update the global schema otherwise
+            const schemaPath = projSchemaExists ? path.join(projectDir, "zowe.schema.json") : path.join(getZoweDir(), "zowe.schema.json");
+
+            try {
+                const schemaContents = fs.readFileSync(schemaPath).toString();
+                const parsedSchema = JSON.parse(schemaContents);
+
+                const schemaTypes = zowe.imperative.ConfigSchema.loadSchema(parsedSchema);
+                const newSchemaTypes = Profiles.getInstance().getConfigArray();
+
+                // Check if any types need added to the schema
+                const typesToAdd = newSchemaTypes.filter((s) => schemaTypes.find((newS) => s.type === newS.type) == null);
+                if (typesToAdd.length > 0) {
+                    // Get profile types from config on-disk and merge with new profile types
+                    const mergedProfTypes = [...schemaTypes, ...typesToAdd];
+
+                    // rebuild schema to contain all (merged) profile types and write to disk
+                    const newSchema = JSON.stringify(zowe.imperative.ConfigSchema.buildSchema(mergedProfTypes));
+                    fs.writeFileSync(schemaPath, newSchema);
+                }
+            } catch (err) {
+                // TODO: Inform user only if we couldn't write the new schema to disk
+                // If we can't read the schema or parse its contents, its nothing that should
+                // hold up the initialization
+            }
         }
 
         // sequentially reload the internal profiles cache to satisfy all the newly added profile types
