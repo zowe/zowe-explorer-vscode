@@ -19,10 +19,6 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ## `2.11.1`
 
-### New features and enhancements
-
-### Bug fixes
-
 ## `2.11.0`
 
 ### New features and enhancements
@@ -43,10 +39,6 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 - Added `WebView` class to allow Zowe Explorer and extenders to create enhanced webviews (choose any JavaScript bundler and JavaScript framework). [#2254](https://github.com/zowe/vscode-extension-for-zowe/issues/2254)
 
 ## `2.9.2`
-
-### New features and enhancements
-
-### Bug fixes
 
 ## `2.9.1`
 
