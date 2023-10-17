@@ -13,6 +13,7 @@ import * as vscode from "vscode";
 import { IJob, imperative } from "@zowe/cli";
 import { IZoweTree } from "./IZoweTree";
 import { FileAttributes } from "../utils/files";
+import { DatasetFilter, NodeSort } from "./sorting";
 
 export type IZoweNodeType = IZoweDatasetTreeNode | IZoweUSSTreeNode | IZoweJobTreeNode;
 
@@ -79,6 +80,10 @@ export interface IZoweTreeNode {
      */
     wasDoubleClicked?: boolean;
     /**
+     * Sorting method for this node's children
+     */
+    sort?: NodeSort;
+    /**
      * Retrieves the node label
      */
     getLabel(): string | vscode.TreeItemLabel;
@@ -120,6 +125,12 @@ export interface IZoweTreeNode {
     setSessionToChoice(sessionObj: imperative.Session): void;
 }
 
+export type DatasetStats = {
+    user: string;
+    // built from "m4date", "mtime" and "msec" variables from z/OSMF API response
+    modifiedDate: Date;
+};
+
 /**
  * Extended interface for Zowe Dataset tree nodes.
  *
@@ -135,6 +146,14 @@ export interface IZoweDatasetTreeNode extends IZoweTreeNode {
      * Search criteria for a Dataset member search
      */
     memberPattern?: string;
+    /**
+     * Additional statistics about this data set
+     */
+    stats?: Partial<DatasetStats>;
+    /**
+     * Filter method for this data set's children
+     */
+    filter?: DatasetFilter;
     /**
      * Retrieves child nodes of this IZoweDatasetTreeNode
      *

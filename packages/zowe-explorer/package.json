@@ -122,19 +122,10 @@
     ],
     "commands": [
       {
-        "command": "zowe.jobs.sortbyreturncode",
-        "title": "%jobs.sortbyreturncode%",
-        "category": "Zowe Explorer"
-      },
-      {
-        "command": "zowe.jobs.sortbyname",
-        "title": "%jobs.sortbyname%",
-        "category": "Zowe Explorer"
-      },
-      {
-        "command": "zowe.jobs.sortbyid",
-        "title": "%jobs.sortbyid%",
-        "category": "Zowe Explorer"
+        "command": "zowe.jobs.sortBy",
+        "title": "%jobs.sortBy%",
+        "category": "Zowe Explorer",
+        "icon": "$(list-ordered)"
       },
       {
         "command": "zowe.promptCredentials",
@@ -280,6 +271,18 @@
         "command": "zowe.ds.deleteProfile",
         "title": "%deleteProfile%",
         "category": "Zowe Explorer"
+      },
+      {
+        "command": "zowe.ds.filterBy",
+        "title": "%ds.filterBy%",
+        "category": "Zowe Explorer",
+        "icon": "$(list-filter)"
+      },
+      {
+        "command": "zowe.ds.sortBy",
+        "title": "%ds.sortBy%",
+        "category": "Zowe Explorer",
+        "icon": "$(list-ordered)"
       },
       {
         "command": "zowe.cmd.deleteProfile",
@@ -978,9 +981,19 @@
           "group": "099_zowe_ussProfileAuthentication@99"
         },
         {
+          "when": "view == zowe.ds.explorer && viewItem =~ /^session.*/ && !listMultiSelection",
+          "command": "zowe.ds.filterBy",
+          "group": "inline@0"
+        },
+        {
+          "when": "view == zowe.ds.explorer && viewItem =~ /^session.*/ && !listMultiSelection",
+          "command": "zowe.ds.sortBy",
+          "group": "inline@1"
+        },
+        {
           "when": "view == zowe.ds.explorer && viewItem =~ /^(?!.*_fav.*)session.*/ && !listMultiSelection",
           "command": "zowe.ds.pattern",
-          "group": "inline"
+          "group": "inline@2"
         },
         {
           "when": "view == zowe.ds.explorer && viewItem =~ /^(pds|ds|migr).*_fav.*/",
@@ -1093,6 +1106,16 @@
           "group": "002_zowe_dsWorkspace@4"
         },
         {
+          "when": "view == zowe.ds.explorer && viewItem =~ /^(pds|session).*/ && !listMultiSelection",
+          "command": "zowe.ds.filterBy",
+          "group": "098_zowe_dsSort@0"
+        },
+        {
+          "when": "view == zowe.ds.explorer && viewItem =~ /^(pds|session).*/ && !listMultiSelection",
+          "command": "zowe.ds.sortBy",
+          "group": "098_zowe_dsSort@1"
+        },
+        {
           "when": "view == zowe.ds.explorer && viewItem =~ /^fileError.*/",
           "command": "zowe.ds.showFileErrorDetails",
           "group": "099_zowe_dsModification@0"
@@ -1155,12 +1178,17 @@
         {
           "when": "view == zowe.ds.explorer && viewItem =~ /^(?!.*_fav.*)session.*/ && !listMultiSelection",
           "command": "zowe.profileManagement",
-          "group": "099_zowe_dsProfileAuthentication@99"
+          "group": "100_zowe_dsProfileAuthentication@99"
+        },
+        {
+          "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/  && !listMultiSelection",
+          "command": "zowe.jobs.sortBy",
+          "group": "inline@0"
         },
         {
           "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/ && !listMultiSelection",
           "command": "zowe.jobs.search",
-          "group": "inline"
+          "group": "inline@1"
         },
         {
           "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)job.*/",
@@ -1283,24 +1311,14 @@
           "group": "099_zowe_jobsModification"
         },
         {
+          "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/  && !listMultiSelection",
+          "command": "zowe.jobs.sortBy",
+          "group": "099_zowe_jobsSort"
+        },
+        {
           "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/ && !listMultiSelection",
           "command": "zowe.profileManagement",
-          "group": "099_zowe_jobsProfileAuthentication@99"
-        },
-        {
-          "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/  && !listMultiSelection",
-          "command": "zowe.jobs.sortbyid",
-          "group": "000_zowe_jobsProfileModification@1"
-        },
-        {
-          "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/  && !listMultiSelection",
-          "command": "zowe.jobs.sortbyname",
-          "group": "000_zowe_jobsProfileModification@2"
-        },
-        {
-          "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/  && !listMultiSelection",
-          "command": "zowe.jobs.sortbyreturncode",
-          "group": "000_zowe_jobsProfileModification@2"
+          "group": "100_zowe_jobsProfileAuthentication@99"
         }
       ],
       "commandPalette": [
@@ -1943,6 +1961,7 @@
   "dependencies": {
     "@zowe/secrets-for-zowe-sdk": "7.18.4",
     "@zowe/zowe-explorer-api": "2.12.0-SNAPSHOT",
+    "dayjs": "^1.11.10",
     "fs-extra": "8.0.1",
     "isbinaryfile": "4.0.4",
     "js-yaml": "3.13.1",

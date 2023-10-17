@@ -11,7 +11,7 @@
 
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
-import { Gui, IZoweJobTreeNode, ValidProfileEnum } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweJobTreeNode, JobSortOpts, SortDirection, ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import { Job, Spool } from "../../../src/job/ZoweJobNode";
 import {
     createISession,
@@ -1367,31 +1367,26 @@ describe("Job Actions Unit Tests - Misc. functions", () => {
         expect(statusMsgSpy).toHaveBeenCalledWith(`$(sync~spin) Polling: ${testDoc.fileName}...`);
     });
 });
-describe("sortjobsby function", () => {
+describe("sortJobs function", () => {
     afterEach(() => {
         jest.restoreAllMocks();
-    });
-    it("if there are no jobs in the zosmf level yet", async () => {
-        createGlobalMocks();
-        const testtree = new ZosJobsProvider();
-        //act
-        await jobActions.sortJobsBy(testtree.mSessionNodes[0], testtree, "jobname");
-        await jobActions.sortJobsBy(testtree.mSessionNodes[0], testtree, "jobid");
-        await jobActions.sortJobsBy(testtree.mSessionNodes[0], testtree, "retcode");
-        //assert
-        expect(mocked(vscode.window.showInformationMessage)).toBeCalled();
     });
     it("sort by name if same sort by increasing id", async () => {
         const globalMocks = createGlobalMocks();
         const testtree = new ZosJobsProvider();
         const expected = new ZosJobsProvider();
+        testtree.mSessionNodes[0].sort = {
+            method: JobSortOpts.Id,
+            direction: SortDirection.Ascending,
+        };
         testtree.mSessionNodes[0].children = [...[globalMocks.mockJobArray[2], globalMocks.mockJobArray[1], globalMocks.mockJobArray[0]]];
         expected.mSessionNodes[0].children = [...[globalMocks.mockJobArray[1], globalMocks.mockJobArray[0], globalMocks.mockJobArray[2]]];
-        const sortbynamespy = jest.spyOn(jobActions, "sortJobsBy");
+        jest.spyOn(Gui, "showQuickPick").mockResolvedValueOnce({ label: "$(case-sensitive) Job Name" });
+        const sortbynamespy = jest.spyOn(ZosJobsProvider.prototype, "sortBy");
         //act
-        await jobActions.sortJobsBy(testtree.mSessionNodes[0], testtree, "jobname");
+        await jobActions.sortJobs(testtree.mSessionNodes[0], testtree);
         //asert
-        expect(sortbynamespy).toBeCalledWith(testtree.mSessionNodes[0], testtree, "jobname");
+        expect(sortbynamespy).toBeCalledWith(testtree.mSessionNodes[0]);
         expect(sortbynamespy).toHaveBeenCalled();
         expect(sortbynamespy.mock.calls[0][0].children).toStrictEqual(expected.mSessionNodes[0].children);
     });
@@ -1399,13 +1394,18 @@ describe("sortjobsby function", () => {
         const globalMocks = createGlobalMocks();
         const testtree = new ZosJobsProvider();
         const expected = new ZosJobsProvider();
+        testtree.mSessionNodes[0].sort = {
+            method: JobSortOpts.Id,
+            direction: SortDirection.Ascending,
+        };
         testtree.mSessionNodes[0].children = [...[globalMocks.mockJobArray[2], globalMocks.mockJobArray[1], globalMocks.mockJobArray[0]]];
         expected.mSessionNodes[0].children = [...[globalMocks.mockJobArray[1], globalMocks.mockJobArray[0], globalMocks.mockJobArray[2]]];
-        const sortbyidspy = jest.spyOn(jobActions, "sortJobsBy");
+        const sortbyidspy = jest.spyOn(ZosJobsProvider.prototype, "sortBy");
+        jest.spyOn(Gui, "showQuickPick").mockResolvedValueOnce({ label: "$(list-ordered) Job ID (default)" });
         //act
-        await jobActions.sortJobsBy(testtree.mSessionNodes[0], testtree, "jobid");
+        await jobActions.sortJobs(testtree.mSessionNodes[0], testtree);
         //asert
-        expect(sortbyidspy).toBeCalledWith(testtree.mSessionNodes[0], testtree, "jobid");
+        expect(sortbyidspy).toBeCalledWith(testtree.mSessionNodes[0]);
         expect(sortbyidspy).toHaveBeenCalled();
         expect(sortbyidspy.mock.calls[0][0].children).toStrictEqual(expected.mSessionNodes[0].children);
     });
@@ -1413,14 +1413,37 @@ describe("sortjobsby function", () => {
         const globalMocks = createGlobalMocks();
         const testtree = new ZosJobsProvider();
         const expected = new ZosJobsProvider();
+        testtree.mSessionNodes[0].sort = {
+            method: JobSortOpts.Id,
+            direction: SortDirection.Ascending,
+        };
         testtree.mSessionNodes[0].children = [...[globalMocks.mockJobArray[2], globalMocks.mockJobArray[1], globalMocks.mockJobArray[0]]];
         expected.mSessionNodes[0].children = [...[globalMocks.mockJobArray[0], globalMocks.mockJobArray[1], globalMocks.mockJobArray[2]]];
-        const sortbyretcodespy = jest.spyOn(jobActions, "sortJobsBy");
+        const sortbyretcodespy = jest.spyOn(ZosJobsProvider.prototype, "sortBy");
+        jest.spyOn(Gui, "showQuickPick").mockResolvedValueOnce({ label: "$(symbol-numeric) Return Code" });
+
         //act
-        await jobActions.sortJobsBy(testtree.mSessionNodes[0], testtree, "retcode");
+        await jobActions.sortJobs(testtree.mSessionNodes[0], testtree);
         //asert
-        expect(sortbyretcodespy).toBeCalledWith(testtree.mSessionNodes[0], testtree, "retcode");
+        expect(sortbyretcodespy).toBeCalledWith(testtree.mSessionNodes[0]);
         expect(sortbyretcodespy).toHaveBeenCalled();
         expect(sortbyretcodespy.mock.calls[0][0].children).toStrictEqual(expected.mSessionNodes[0].children);
+    });
+
+    it("updates sort options after selecting sort direction; returns user to sort selection", async () => {
+        const globalMocks = createGlobalMocks();
+        const testtree = new ZosJobsProvider();
+        testtree.mSessionNodes[0].sort = {
+            method: JobSortOpts.Id,
+            direction: SortDirection.Ascending,
+        };
+        testtree.mSessionNodes[0].children = [globalMocks.mockJobArray[0]];
+        const jobsSortBy = jest.spyOn(ZosJobsProvider.prototype, "sortBy");
+        const quickPickSpy = jest.spyOn(Gui, "showQuickPick").mockResolvedValueOnce({ label: "$(fold) Sort Direction" });
+        quickPickSpy.mockResolvedValueOnce("Descending" as any);
+        await jobActions.sortJobs(testtree.mSessionNodes[0], testtree);
+        expect(testtree.mSessionNodes[0].sort.direction).toBe(SortDirection.Descending);
+        expect(quickPickSpy).toHaveBeenCalledTimes(3);
+        expect(jobsSortBy).not.toHaveBeenCalled();
     });
 });

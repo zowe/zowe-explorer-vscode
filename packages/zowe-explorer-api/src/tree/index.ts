@@ -9,6 +9,7 @@
  *
  */
 
+export * from "./sorting";
 export * from "./ZoweExplorerTreeApi";
 export * from "./ZoweTreeNode";
 export * from "./IZoweTree";
