@@ -38,6 +38,7 @@ import { createIJobObject, createJobsTree } from "../../__mocks__/mockCreators/j
 import * as path from "path";
 import { SettingsConfig } from "../../src/utils/SettingsConfig";
 import { ZoweLogger } from "../../src/utils/LoggerUtils";
+import { TreeProviders } from "../../src/shared/TreeProviders";
 
 jest.mock("child_process");
 jest.mock("fs");
@@ -1642,6 +1643,14 @@ describe("Profiles Unit Tests - function ssoLogout", () => {
         jest.spyOn(Gui, "showMessage").mockImplementation();
     });
     it("should logout successfully and refresh zowe explorer", async () => {
+        const mockTreeProvider = {
+            mSessionNodes: [testNode],
+            flipState: jest.fn(),
+            refreshElement: jest.fn(),
+        } as any;
+        jest.spyOn(TreeProviders, "ds", "get").mockReturnValue(mockTreeProvider);
+        jest.spyOn(TreeProviders, "uss", "get").mockReturnValue(mockTreeProvider);
+        jest.spyOn(TreeProviders, "job", "get").mockReturnValue(mockTreeProvider);
         const getTokenTypeNameMock = jest.fn();
         const logoutMock = jest.fn();
         jest.spyOn(ZoweExplorerApiRegister.getInstance(), "getCommonApi").mockImplementation(() => ({
