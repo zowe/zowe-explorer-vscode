@@ -1375,6 +1375,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
 
         // Update sort for node based on selections
         this.updateSortForNode(node, { ...sortOpts, method: sortMethod }, isSession);
+        Gui.setStatusBarMessage(localize("sort.updated", "$(check) Sorting updated for {0}", node.label as string), globals.MS_PER_SEC * 4);
     }
 
     /**
@@ -1463,6 +1464,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         if (userDismissed || selection === clearFilter) {
             if (selection === clearFilter) {
                 this.updateFilterForNode(node, null, isSession);
+                Gui.setStatusBarMessage(localize("filter.cleared", "$(check) Filter cleared for {0}", node.label as string), globals.MS_PER_SEC * 4);
             }
             return;
         }
@@ -1495,5 +1497,6 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             },
             isSession
         );
+        Gui.setStatusBarMessage(localize("filter.updated", "$(check) Filter updated for {0}", node.label as string), globals.MS_PER_SEC * 4);
     }
 }

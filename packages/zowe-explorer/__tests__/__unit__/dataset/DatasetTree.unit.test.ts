@@ -2705,11 +2705,11 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
         pds.contextValue = globals.DS_PDS_CONTEXT;
 
         const nodeA = new ZoweDatasetNode("A", vscode.TreeItemCollapsibleState.Collapsed, pds, createISession());
-        nodeA.stats = { user: "someUser", m4date: new Date() };
+        nodeA.stats = { user: "someUser", modifiedDate: new Date() };
         const nodeB = new ZoweDatasetNode("B", vscode.TreeItemCollapsibleState.Collapsed, pds, createISession());
-        nodeB.stats = { user: "anotherUser", m4date: new Date("2022-01-01T12:00:00") };
+        nodeB.stats = { user: "anotherUser", modifiedDate: new Date("2022-01-01T12:00:00") };
         const nodeC = new ZoweDatasetNode("C", vscode.TreeItemCollapsibleState.Collapsed, pds, createISession());
-        nodeC.stats = { user: "someUser", m4date: new Date("2022-03-15T16:30:00") };
+        nodeC.stats = { user: "someUser", modifiedDate: new Date("2022-03-15T16:30:00") };
         pds.children = [nodeA, nodeB, nodeC];
         session.children = [pds];
 

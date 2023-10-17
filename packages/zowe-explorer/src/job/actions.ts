@@ -22,6 +22,7 @@ import { ZoweLogger } from "../utils/LoggerUtils";
 import { SORT_DIRS, getDefaultUri } from "../shared/utils";
 import { ZosJobsProvider } from "./ZosJobsProvider";
 import { JOB_SORT_OPTS } from "./utils";
+import * as globals from "../globals";
 
 // Set up localization
 nls.config({
@@ -559,4 +560,5 @@ export async function sortJobs(session: IZoweJobTreeNode, jobsProvider: ZosJobsP
 
     session.sort.method = JOB_SORT_OPTS.indexOf(selection.label.replace(" $(check)", ""));
     jobsProvider.sortBy(session);
+    Gui.setStatusBarMessage(localize("sort.updated", "$(check) Sorting updated for {0}", session.label as string), globals.MS_PER_SEC * 4);
 }
