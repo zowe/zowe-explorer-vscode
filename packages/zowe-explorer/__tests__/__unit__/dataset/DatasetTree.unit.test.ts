@@ -2826,7 +2826,8 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
             nodes.pds.filter = { method: DatasetFilterOpts.UserId, value: "invalidUserId" };
             nodes.pds.children = [];
             await tree.filterPdsMembersDialog(nodes.pds);
-            expect(mocks.nodeDataChanged).not.toHaveBeenCalled();
+            // nodeDataChanged called once to show new description
+            expect(mocks.nodeDataChanged).toHaveBeenCalledWith(nodes.pds);
             expect(mocks.refreshElement).toHaveBeenCalledWith(nodes.pds);
         });
 

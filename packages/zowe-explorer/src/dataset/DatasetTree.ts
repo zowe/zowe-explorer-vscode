@@ -1310,12 +1310,21 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 for (const c of node.children) {
                     if (contextually.isPds(c) && c.children) {
                         c.sort = node.sort;
+                        for (const ch of c.children) {
+                            // remove any descriptions from child nodes
+                            ch.description = "";
+                        }
+
                         c.children.sort(ZoweDatasetNode.sortBy(node.sort));
                         this.nodeDataChanged(c);
                     }
                 }
             }
         } else if (node.children?.length > 0) {
+            for (const c of node.children) {
+                // remove any descriptions from child nodes
+                c.description = "";
+            }
             // children nodes already exist, sort and repaint to avoid extra refresh
             node.children.sort(ZoweDatasetNode.sortBy(node.sort));
             this.nodeDataChanged(node);
@@ -1387,6 +1396,8 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
     public updateFilterForNode(node: IZoweDatasetTreeNode, newFilter: DatasetFilter | null, isSession: boolean): void {
         const oldFilter = node.filter;
         node.filter = newFilter;
+        node.description = newFilter ? localize("filter.description", "Filter: {0}", newFilter.value) : null;
+        this.nodeDataChanged(node);
 
         // if a session was selected, apply this sort to all PDS members
         if (isSession) {

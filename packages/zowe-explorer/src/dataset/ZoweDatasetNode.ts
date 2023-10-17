@@ -334,11 +334,14 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
 
             switch (sort.method) {
                 case DatasetSortOpts.LastModified:
+                    a.description = dayjs(a.stats?.modifiedDate).format("YYYY/MM/DD HH:mm:ss");
+                    b.description = dayjs(b.stats?.modifiedDate).format("YYYY/MM/DD HH:mm:ss");
                     return a.stats?.modifiedDate < b.stats?.modifiedDate ? sortLessThan : sortGreaterThan;
                 case DatasetSortOpts.UserId:
+                    a.description = a.stats?.user;
+                    a.description = a.stats?.user;
                     return a.stats?.user < b.stats?.user ? sortLessThan : sortGreaterThan;
                 case DatasetSortOpts.Name:
-                default:
                     return (a.label as string) < (b.label as string) ? sortLessThan : sortGreaterThan;
             }
         };
