@@ -1203,23 +1203,41 @@ export class Profiles extends ProfilesCache {
         }
     }
 
-    public clearFiltersFromTrees(node: IZoweNodeType): void {
-        const dsNode: IZoweDatasetTreeNode = TreeProviders.ds.mSessionNodes.find((n) => n.getProfile()?.name === node.getProfile()?.name);
-        const ussNode: IZoweUSSTreeNode = TreeProviders.uss.mSessionNodes.find((n) => n.getProfile()?.name === node.getProfile()?.name);
-        const jobNode: IZoweJobTreeNode = TreeProviders.job.mSessionNodes.find((n) => n.getProfile()?.name === node.getProfile()?.name);
-
+    public clearDSFilterFromTree(node: IZoweNodeType): void {
+        if (!TreeProviders.ds || !TreeProviders.ds.mSessionNodes) {
+            return;
+        }
+        const dsNode: IZoweDatasetTreeNode = TreeProviders.ds.mSessionNodes.find(
+            (sessionNode: IZoweDatasetTreeNode) => sessionNode.getProfile()?.name === node.getProfile()?.name
+        );
         dsNode.tooltip = node.getProfile()?.name;
         dsNode.description = "";
         dsNode.pattern = "";
         TreeProviders.ds.flipState(dsNode, false);
         TreeProviders.ds.refreshElement(dsNode);
+    }
 
+    public clearUSSFilterFromTree(node: IZoweNodeType): void {
+        if (!TreeProviders.uss || !TreeProviders.uss.mSessionNodes) {
+            return;
+        }
+        const ussNode: IZoweUSSTreeNode = TreeProviders.uss.mSessionNodes.find(
+            (sessionNode: IZoweUSSTreeNode) => sessionNode.getProfile()?.name === node.getProfile()?.name
+        );
         ussNode.tooltip = node.getProfile()?.name;
         ussNode.description = "";
         ussNode.fullPath = "";
         TreeProviders.uss.flipState(ussNode, false);
         TreeProviders.uss.refreshElement(ussNode);
+    }
 
+    public clearJobFilterFromTree(node: IZoweNodeType): void {
+        if (!TreeProviders.job || !TreeProviders.job.mSessionNodes) {
+            return;
+        }
+        const jobNode: IZoweJobTreeNode = TreeProviders.job.mSessionNodes.find(
+            (sessionNode: IZoweJobTreeNode) => sessionNode.getProfile()?.name === node.getProfile()?.name
+        );
         jobNode.tooltip = node.getProfile()?.name;
         jobNode.description = "";
         jobNode.owner = "";
@@ -1229,6 +1247,12 @@ export class Profiles extends ProfilesCache {
         jobNode.children = [];
         TreeProviders.job.flipState(jobNode, false);
         TreeProviders.job.refreshElement(jobNode);
+    }
+
+    public clearFilterFromAllTrees(node: IZoweNodeType): void {
+        this.clearDSFilterFromTree(node);
+        this.clearUSSFilterFromTree(node);
+        this.clearJobFilterFromTree(node);
     }
 
     public async ssoLogout(node: IZoweNodeType): Promise<void> {
@@ -1242,9 +1266,9 @@ export class Profiles extends ProfilesCache {
             return;
         }
 
-        this.clearFiltersFromTrees(node);
-
         try {
+            this.clearFilterFromAllTrees(node);
+
             // this will handle extenders
             if (serviceProfile.type !== "zosmf" && serviceProfile.profile?.tokenType !== zowe.imperative.SessConstants.TOKEN_TYPE_APIML) {
                 await ZoweExplorerApiRegister.getInstance()
