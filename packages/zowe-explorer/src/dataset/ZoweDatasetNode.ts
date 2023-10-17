@@ -266,13 +266,13 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                         const { m4date, mtime, msec }: { m4date: string; mtime: string; msec: string } = item;
                         temp.stats = {
                             user: item.user,
-                            m4date: dayjs(`${m4date} ${mtime}:${msec}`).toDate(),
+                            modifiedDate: dayjs(`${m4date} ${mtime}:${msec}`).toDate(),
                         };
                     } else if ("id" in item || "changed" in item) {
                         // missing keys from API response; check for FTP keys
                         temp.stats = {
                             user: item.id,
-                            m4date: item.changed ? dayjs(item.changed).toDate() : null,
+                            modifiedDate: item.changed ? dayjs(item.changed).toDate() : null,
                         };
                     }
                     elementChildren[temp.label.toString()] = temp;
@@ -334,7 +334,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
 
             switch (sort.method) {
                 case DatasetSortOpts.LastModified:
-                    return a.stats?.m4date < b.stats?.m4date ? sortLessThan : sortGreaterThan;
+                    return a.stats?.modifiedDate < b.stats?.modifiedDate ? sortLessThan : sortGreaterThan;
                 case DatasetSortOpts.UserId:
                     return a.stats?.user < b.stats?.user ? sortLessThan : sortGreaterThan;
                 case DatasetSortOpts.Name:
@@ -367,7 +367,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                         return true;
                     }
 
-                    return dayjs(node.stats?.m4date).isSame(filter.value, "day");
+                    return dayjs(node.stats?.modifiedDate).isSame(filter.value, "day");
                 case DatasetFilterOpts.UserId:
                     return node.stats?.user === filter.value;
             }

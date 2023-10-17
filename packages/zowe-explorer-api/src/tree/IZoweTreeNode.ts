@@ -127,7 +127,8 @@ export interface IZoweTreeNode {
 
 export type DatasetStats = {
     user: string;
-    m4date: Date;
+    // built from "m4date", "mtime" and "msec" variables from z/OSMF API response
+    modifiedDate: Date;
 };
 
 /**
