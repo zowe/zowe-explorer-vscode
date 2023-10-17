@@ -1809,3 +1809,38 @@ describe("Profiles Unit Tests - function getSecurePropsForProfile", () => {
         await expect(Profiles.getInstance().getSecurePropsForProfile(globalMocks.testProfile.name ?? "")).resolves.toEqual(["tokenValue"]);
     });
 });
+
+describe("Profiles Unit Tests - function clearFilterFromAllTrees", () => {
+    afterEach(() => {
+        jest.clearAllMocks();
+        jest.resetModules();
+        jest.restoreAllMocks();
+    });
+
+    it("should fail to clear filter if no session nodes are available", async () => {
+        const globalMocks = await createGlobalMocks();
+        const testNode = new (ZoweTreeNode as any)(
+            "fake",
+            vscode.TreeItemCollapsibleState.None,
+            undefined,
+            globalMocks.testSession,
+            globalMocks.testProfile
+        );
+
+        const flipStateSpy = jest.fn();
+        const refreshElementSpy = jest.fn();
+
+        const mockTreeProvider = {
+            mSessionNodes: [],
+            flipState: flipStateSpy,
+            refreshElement: refreshElementSpy,
+        } as any;
+        jest.spyOn(TreeProviders, "ds", "get").mockReturnValue(mockTreeProvider);
+        jest.spyOn(TreeProviders, "uss", "get").mockReturnValue(mockTreeProvider);
+        jest.spyOn(TreeProviders, "job", "get").mockReturnValue(mockTreeProvider);
+
+        expect(Profiles.getInstance().clearFilterFromAllTrees(testNode));
+        expect(flipStateSpy).toBeCalledTimes(0);
+        expect(refreshElementSpy).toBeCalledTimes(0);
+    });
+});

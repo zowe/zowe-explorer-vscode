@@ -1204,7 +1204,7 @@ export class Profiles extends ProfilesCache {
     }
 
     public clearDSFilterFromTree(node: IZoweNodeType): void {
-        if (!TreeProviders.ds || !TreeProviders.ds.mSessionNodes) {
+        if (!TreeProviders.ds?.mSessionNodes || !TreeProviders.ds?.mSessionNodes.length) {
             return;
         }
         const dsNode: IZoweDatasetTreeNode = TreeProviders.ds.mSessionNodes.find(
@@ -1218,7 +1218,7 @@ export class Profiles extends ProfilesCache {
     }
 
     public clearUSSFilterFromTree(node: IZoweNodeType): void {
-        if (!TreeProviders.uss || !TreeProviders.uss.mSessionNodes) {
+        if (!TreeProviders.uss?.mSessionNodes || !TreeProviders.uss?.mSessionNodes.length) {
             return;
         }
         const ussNode: IZoweUSSTreeNode = TreeProviders.uss.mSessionNodes.find(
@@ -1232,7 +1232,7 @@ export class Profiles extends ProfilesCache {
     }
 
     public clearJobFilterFromTree(node: IZoweNodeType): void {
-        if (!TreeProviders.job || !TreeProviders.job.mSessionNodes) {
+        if (!TreeProviders.job?.mSessionNodes || !TreeProviders.job?.mSessionNodes.length) {
             return;
         }
         const jobNode: IZoweJobTreeNode = TreeProviders.job.mSessionNodes.find(
