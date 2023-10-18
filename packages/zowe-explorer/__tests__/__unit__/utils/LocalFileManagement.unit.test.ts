@@ -20,9 +20,7 @@ import { LocalFileManagement } from "../../../src/utils/LocalFileManagement";
 import * as utils from "../../../src/shared/utils";
 import { ZoweLogger } from "../../../src/globals";
 
-jest.mock("fs");
 jest.mock("vscode");
-jest.mock("@zowe/cli");
 
 describe("LocalFileManagement unit tests", () => {
     afterEach(() => {
@@ -37,61 +35,68 @@ describe("LocalFileManagement unit tests", () => {
             mockFilesToCompare: null as any,
             mockDlUnixSpy: null as any,
             mockDlDsSpy: null as any,
-            mockIsDsNode: true,
-            mockIsUnixNode: false,
-            mockPath: "/u/fake/path/file.txt",
+            mockIsDsNode: jest.fn(),
+            mockIsUnixNode: jest.fn(),
+            mockFileInfo: { path: "/u/fake/path/file.txt" },
+            warnLogSpy: null as any,
         };
+        newMocks.mockFilesToCompare = [newMocks.mockDsFileNode, newMocks.mockDsFileNode];
+        Object.defineProperty(globals, "filesToCompare", { value: newMocks.mockFilesToCompare, configurable: true });
         newMocks.mockDsFileNode = dsMock.createDatasetSessionNode(newMocks.mockSession, newMocks.mockProfile) as any;
-        Object.defineProperty(dsActions, "downloadPs", { value: jest.fn().mockResolvedValue({ path: newMocks.mockPath }), configurable: true });
+        Object.defineProperty(dsActions, "downloadPs", { value: jest.fn().mockResolvedValue(newMocks.mockFileInfo), configurable: true });
         newMocks.mockDlDsSpy = jest.spyOn(dsActions, "downloadPs");
         Object.defineProperty(unixActions, "downloadUnixFile", {
-            value: jest.fn().mockResolvedValue({ path: newMocks.mockPath }),
+            value: jest.fn().mockResolvedValue(newMocks.mockFileInfo),
             configurable: true,
         });
         newMocks.mockDlUnixSpy = jest.spyOn(unixActions, "downloadUnixFile");
-        Object.defineProperty(utils, "isZoweDatasetTreeNode", { value: jest.fn().mockReturnValue(newMocks.mockIsDsNode), configurable: true });
-        Object.defineProperty(utils, "isZoweUSSTreeNode", { value: jest.fn(), configurable: true });
-        Object.defineProperty(vscode.Uri, "file", { value: jest.fn().mockReturnValue({ path: newMocks.mockPath }), configurable: true });
+        Object.defineProperty(utils, "isZoweDatasetTreeNode", { value: newMocks.mockIsDsNode, configurable: true });
+        Object.defineProperty(utils, "isZoweUSSTreeNode", { value: newMocks.mockIsUnixNode, configurable: true });
+        Object.defineProperty(vscode.Uri, "file", { value: jest.fn().mockReturnValue(newMocks.mockFileInfo), configurable: true });
         Object.defineProperty(vscode.commands, "executeCommand", { value: jest.fn(), configurable: true });
         Object.defineProperty(globals, "resetCompareChoices", { value: jest.fn(), configurable: true });
+        Object.defineProperty(ZoweLogger, "warn", { value: jest.fn(), configurable: true });
+        newMocks.warnLogSpy = jest.spyOn(ZoweLogger, "warn");
         return newMocks;
     }
 
     describe("CompareChosenFileContent method unit tests", () => {
-        it("should pass with mockDlDsSpy spy called", async () => {
+        it("should pass with 2 MVS files chosen", async () => {
             const mocks = createGlobalMocks();
-            mocks.mockFilesToCompare = [mocks.mockDsFileNode, mocks.mockDsFileNode];
-            Object.defineProperty(globals, "filesToCompare", { value: mocks.mockFilesToCompare, configurable: true });
+            mocks.mockIsDsNode.mockReturnValue(true);
+            mocks.mockIsUnixNode.mockReturnValue(false);
             await LocalFileManagement.compareChosenFileContent();
             expect(mocks.mockDlDsSpy).toBeCalledTimes(2);
             expect(mocks.mockDlUnixSpy).not.toBeCalled();
+            expect(mocks.warnLogSpy).not.toBeCalled();
         });
-        it("should pass with mockDlUnixSpy spy called", async () => {
+        it("should pass with 2 UNIX files chosen", async () => {
             const mocks = createGlobalMocks();
-            mocks.mockFilesToCompare = [mocks.mockDsFileNode, mocks.mockDsFileNode];
-            Object.defineProperty(globals, "filesToCompare", { value: mocks.mockFilesToCompare, configurable: true });
-            mocks.mockIsDsNode = false;
-            Object.defineProperty(utils, "isZoweDatasetTreeNode", { value: jest.fn().mockReturnValue(mocks.mockIsDsNode), configurable: true });
-            mocks.mockIsUnixNode = true;
-            Object.defineProperty(utils, "isZoweUSSTreeNode", { value: jest.fn().mockReturnValue(mocks.mockIsUnixNode), configurable: true });
+            mocks.mockIsDsNode.mockReturnValue(false);
+            mocks.mockIsUnixNode.mockReturnValue(true);
             await LocalFileManagement.compareChosenFileContent();
             expect(mocks.mockDlUnixSpy).toBeCalledTimes(2);
             expect(mocks.mockDlDsSpy).not.toBeCalled();
+            expect(mocks.warnLogSpy).not.toBeCalled();
         });
-        it("should log warning and return", async () => {
+        it("should pass with 1 MVS file & 1 UNIX file chosen", async () => {
             const mocks = createGlobalMocks();
-            mocks.mockFilesToCompare = [mocks.mockDsFileNode, mocks.mockDsFileNode];
-            Object.defineProperty(globals, "filesToCompare", { value: mocks.mockFilesToCompare, configurable: true });
-            mocks.mockIsDsNode = false;
-            Object.defineProperty(utils, "isZoweDatasetTreeNode", { value: jest.fn().mockReturnValue(mocks.mockIsDsNode), configurable: true });
-            mocks.mockIsUnixNode = false;
-            Object.defineProperty(utils, "isZoweUSSTreeNode", { value: jest.fn().mockReturnValue(mocks.mockIsUnixNode), configurable: true });
-            Object.defineProperty(ZoweLogger, "warn", { value: jest.fn(), configurable: true });
-            const logSpy = jest.spyOn(ZoweLogger, "warn");
+            mocks.mockIsDsNode.mockReturnValueOnce(true);
+            mocks.mockIsDsNode.mockReturnValueOnce(false);
+            mocks.mockIsUnixNode.mockReturnValueOnce(true);
+            await LocalFileManagement.compareChosenFileContent();
+            expect(mocks.mockDlUnixSpy).toBeCalledTimes(1);
+            expect(mocks.mockDlDsSpy).toBeCalledTimes(1);
+            expect(mocks.warnLogSpy).not.toBeCalled();
+        });
+        it("should log warning and return if MVS or UNIX file not chosen", async () => {
+            const mocks = createGlobalMocks();
+            mocks.mockIsDsNode.mockReturnValue(false);
+            mocks.mockIsUnixNode.mockReturnValue(false);
             await LocalFileManagement.compareChosenFileContent();
             expect(mocks.mockDlUnixSpy).not.toBeCalled();
             expect(mocks.mockDlDsSpy).not.toBeCalled();
-            expect(logSpy).toBeCalled();
+            expect(mocks.warnLogSpy).toBeCalled();
         });
     });
 });
