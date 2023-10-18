@@ -991,7 +991,6 @@ export async function submitJcl(datasetProvider: api.IZoweTree<api.IZoweDatasetT
     // run check for 'jcl' to be included in the vs code document languageId
     const jclCheckRegex = /^.*jcl.*/i;
     if (!jclCheckRegex.test(doc.languageId)) {
-        // if (doc.languageId !== "jcl") {
         const notJclMsg = localize("submitJcl.notJclMsg", "The document being submitted is not a JCL, submission cancelled.");
         api.Gui.errorMessage(notJclMsg);
         ZoweLogger.error(notJclMsg);

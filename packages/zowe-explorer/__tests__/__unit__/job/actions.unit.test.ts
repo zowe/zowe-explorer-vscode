@@ -488,11 +488,7 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
         const blockMocks: any = createBlockMocks();
         mocked(zowe.ZosmfSession.createSessCfgFromArgs).mockReturnValue(blockMocks.session);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
-        mocked(vscode.window.showQuickPick).mockReturnValueOnce(
-            new Promise((resolve) => {
-                resolve(blockMocks.datasetSessionNode.label);
-            })
-        );
+        mocked(vscode.window.showQuickPick).mockReturnValueOnce(Promise.resolve(blockMocks.datasetSessionNode.label));
         blockMocks.testDatasetTree.getChildren.mockResolvedValueOnce([
             new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null as any),
             blockMocks.datasetSessionNode,
@@ -543,11 +539,7 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
         const blockMocks: any = createBlockMocks();
         mocked(zowe.ZosmfSession.createSessCfgFromArgs).mockReturnValue(blockMocks.session);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
-        mocked(vscode.window.showQuickPick).mockReturnValueOnce(
-            new Promise((resolve) => {
-                resolve(blockMocks.datasetSessionNode.label);
-            })
-        );
+        mocked(vscode.window.showQuickPick).mockReturnValueOnce(Promise.resolve(blockMocks.datasetSessionNode.label));
         blockMocks.testDatasetTree.getChildren.mockResolvedValueOnce([
             new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null as any),
             blockMocks.datasetSessionNode,
