@@ -243,7 +243,6 @@ describe("Test src/shared/extension", () => {
             Object.defineProperty(globals, "SETTINGS_TEMP_FOLDER_LOCATION", { value: "/some/old/temp/location" });
             Object.defineProperty(vscode.workspace, "onDidSaveTextDocument", { value: onDidSaveTextDocument });
             Object.defineProperty(LocalFileManagement, "compareChosenFileContent", { value: jest.fn(), configurable: true });
-            Object.defineProperty(globals, "filesToCompare", { value: [], configurable: true });
             spyOnSubscriptions(commands);
             await sharedExtension.registerCommonCommands(test.context, test.value.providers);
         });
