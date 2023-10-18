@@ -1483,7 +1483,6 @@ describe("Job Actions Unit Tests - Filter Jobs", () => {
         null,
         null,
         setJobObjects(createIJobObject(), "ZOWEUSR1", "JOB04945", "CC 0000"),
-        setJobObjects(createIJobObject(), "ZOWEUSR1", "JOB04945", "CC 0000"),
         null
     );
     const node2 = new Job(
