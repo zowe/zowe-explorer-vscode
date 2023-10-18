@@ -13,7 +13,7 @@ import { VSCodeDropdown, VSCodeOption } from "@vscode/webview-ui-toolkit/react";
 import { JSXInternal } from "preact/src/jsx";
 import { useDataPanelContext } from "../PersistentUtils";
 
-export default function PersistentDropdownOptions({ handleChange }: { handleChange: Readonly<Function> }): JSXInternal.Element {
+export default function PersistentDropdownOptions({ handleChange }: Readonly<{ handleChange: Readonly<Function> }>): JSXInternal.Element {
   const dataPanelContext = useDataPanelContext();
 
   const options = [

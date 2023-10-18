@@ -11,7 +11,7 @@
 
 import { JSXInternal } from "preact/src/jsx";
 
-export default function PersistentManagerHeader({ timestamp }: { timestamp: Readonly<Date | undefined> }): JSXInternal.Element {
+export default function PersistentManagerHeader({ timestamp }: Readonly<{ timestamp: Readonly<Date | undefined> }>): JSXInternal.Element {
   const renderTimestamp = () => {
     return timestamp && <p style={{ fontStyle: "italic", marginRight: "1em" }}>Last refreshed: {timestamp.toLocaleString(navigator.language)}</p>;
   };
