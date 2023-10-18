@@ -925,3 +925,34 @@ describe("Jobs utils unit tests - Function jobStringValidator", () => {
         invalidOpts.forEach((invalidOpt) => expect(jobStringValidator(invalidOpt[0], invalidOpt[1])).toContain("Invalid"));
     });
 });
+
+describe("removeSearchHistory", () => {
+    it("removes the search item passed in from the current history", () => {
+        const tree = new ZosJobsProvider();
+        tree.addSearchHistory("test");
+        expect(tree["mHistory"]["mSearchHistory"].length).toEqual(1);
+        tree.removeSearchHistory("test");
+        expect(tree["mHistory"]["mSearchHistory"].length).toEqual(0);
+    });
+});
+
+describe("resetSearchHistory", () => {
+    it("clears the entire search history", () => {
+        const tree = new ZosJobsProvider();
+        tree.addSearchHistory("test1");
+        tree.addSearchHistory("test2");
+        tree.addSearchHistory("test3");
+        tree.addSearchHistory("test4");
+        expect(tree["mHistory"]["mSearchHistory"].length).toEqual(4);
+        tree.resetSearchHistory();
+        expect(tree["mHistory"]["mSearchHistory"].length).toEqual(0);
+    });
+});
+
+describe("getSessions", () => {
+    it("gets all the available sessions from persistent object", () => {
+        const tree = new ZosJobsProvider();
+        tree["mHistory"]["mSessions"] = ["sestest"];
+        expect(tree.getSessions()).toEqual(["sestest"]);
+    });
+});

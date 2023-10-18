@@ -1347,11 +1347,6 @@
         },
         {
           "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/  && !listMultiSelection",
-          "command": "zowe.jobs.sortbyreturncode",
-          "group": "000_zowe_jobsProfileModification@2"
-        },
-        {
-          "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/  && !listMultiSelection",
           "command": "zowe.editHistory",
           "group": "100_zowe_editHistory@100"
         },

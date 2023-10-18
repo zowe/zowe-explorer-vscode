@@ -2897,4 +2897,51 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
             expect(updateFilterForNode).toHaveBeenCalledWith(nodes.pds, null, false);
         });
     });
+
+    describe("removeSearchHistory", () => {
+        it("removes the search item passed in from the current history", () => {
+            tree.addSearchHistory("test");
+            expect(tree["mHistory"]["mSearchHistory"].length).toEqual(1);
+            tree.removeSearchHistory("test");
+            expect(tree["mHistory"]["mSearchHistory"].length).toEqual(0);
+        });
+    });
+
+    describe("resetSearchHistory", () => {
+        it("clears the entire search history", () => {
+            tree.addSearchHistory("test1");
+            tree.addSearchHistory("test2");
+            tree.addSearchHistory("test3");
+            tree.addSearchHistory("test4");
+            expect(tree["mHistory"]["mSearchHistory"].length).toEqual(4);
+            tree.resetSearchHistory();
+            expect(tree["mHistory"]["mSearchHistory"].length).toEqual(0);
+        });
+    });
+
+    describe("resetFileHistory", () => {
+        it("clears the entire file history", () => {
+            tree.addFileHistory("test1");
+            tree.addFileHistory("test2");
+            tree.addFileHistory("test3");
+            tree.addFileHistory("test4");
+            expect(tree["mHistory"]["mFileHistory"].length).toEqual(4);
+            tree.resetFileHistory();
+            expect(tree["mHistory"]["mFileHistory"].length).toEqual(0);
+        });
+    });
+
+    describe("addDsTemplate", () => {
+        it("adds a new DS template to the persistent object", () => {
+            tree.addDsTemplate({ test: "test" } as any);
+            expect(tree["mHistory"]["mDsTemplates"].length).toEqual(1);
+        });
+    });
+
+    describe("getSessions", () => {
+        it("gets all the available sessions from persistent object", () => {
+            tree["mHistory"]["mSessions"] = ["sestest"];
+            expect(tree.getSessions()).toEqual(["sestest"]);
+        });
+    });
 });
