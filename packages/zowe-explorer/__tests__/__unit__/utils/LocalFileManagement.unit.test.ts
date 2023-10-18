@@ -40,7 +40,7 @@ describe("LocalFileManagement unit tests", () => {
             mockFileInfo: { path: "/u/fake/path/file.txt" },
             warnLogSpy: null as any,
         };
-        newMocks.mockFilesToCompare = [newMocks.mockDsFileNode, newMocks.mockDsFileNode];
+        newMocks.mockFilesToCompare = [newMocks.mockDsFileNode];
         Object.defineProperty(globals, "filesToCompare", { value: newMocks.mockFilesToCompare, configurable: true });
         newMocks.mockDsFileNode = dsMock.createDatasetSessionNode(newMocks.mockSession, newMocks.mockProfile) as any;
         Object.defineProperty(dsActions, "downloadPs", { value: jest.fn().mockResolvedValue(newMocks.mockFileInfo), configurable: true });
@@ -65,7 +65,7 @@ describe("LocalFileManagement unit tests", () => {
             const mocks = createGlobalMocks();
             mocks.mockIsDsNode.mockReturnValue(true);
             mocks.mockIsUnixNode.mockReturnValue(false);
-            await LocalFileManagement.compareChosenFileContent();
+            await LocalFileManagement.compareChosenFileContent(mocks.mockDsFileNode as any);
             expect(mocks.mockDlDsSpy).toBeCalledTimes(2);
             expect(mocks.mockDlUnixSpy).not.toBeCalled();
             expect(mocks.warnLogSpy).not.toBeCalled();
@@ -74,7 +74,7 @@ describe("LocalFileManagement unit tests", () => {
             const mocks = createGlobalMocks();
             mocks.mockIsDsNode.mockReturnValue(false);
             mocks.mockIsUnixNode.mockReturnValue(true);
-            await LocalFileManagement.compareChosenFileContent();
+            await LocalFileManagement.compareChosenFileContent(mocks.mockDsFileNode as any);
             expect(mocks.mockDlUnixSpy).toBeCalledTimes(2);
             expect(mocks.mockDlDsSpy).not.toBeCalled();
             expect(mocks.warnLogSpy).not.toBeCalled();
@@ -84,7 +84,7 @@ describe("LocalFileManagement unit tests", () => {
             mocks.mockIsDsNode.mockReturnValueOnce(true);
             mocks.mockIsDsNode.mockReturnValueOnce(false);
             mocks.mockIsUnixNode.mockReturnValueOnce(true);
-            await LocalFileManagement.compareChosenFileContent();
+            await LocalFileManagement.compareChosenFileContent(mocks.mockDsFileNode as any);
             expect(mocks.mockDlUnixSpy).toBeCalledTimes(1);
             expect(mocks.mockDlDsSpy).toBeCalledTimes(1);
             expect(mocks.warnLogSpy).not.toBeCalled();
@@ -93,7 +93,7 @@ describe("LocalFileManagement unit tests", () => {
             const mocks = createGlobalMocks();
             mocks.mockIsDsNode.mockReturnValue(false);
             mocks.mockIsUnixNode.mockReturnValue(false);
-            await LocalFileManagement.compareChosenFileContent();
+            await LocalFileManagement.compareChosenFileContent(mocks.mockDsFileNode as any);
             expect(mocks.mockDlUnixSpy).not.toBeCalled();
             expect(mocks.mockDlDsSpy).not.toBeCalled();
             expect(mocks.warnLogSpy).toBeCalled();

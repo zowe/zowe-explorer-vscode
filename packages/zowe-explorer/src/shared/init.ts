@@ -208,16 +208,12 @@ export function registerCommonCommands(context: vscode.ExtensionContext, provide
         );
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.compareWithSelected", async (node: IZoweTreeNode) => {
-                globals.filesToCompare.push(node);
-                await LocalFileManagement.compareChosenFileContent();
-                globals.resetCompareChoices();
+                await LocalFileManagement.compareChosenFileContent(node);
             })
         );
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.compareWithSelectedReadOnly", async (node: IZoweTreeNode) => {
-                globals.filesToCompare.push(node);
-                await LocalFileManagement.compareChosenFileContent(true);
-                globals.resetCompareChoices();
+                await LocalFileManagement.compareChosenFileContent(node, true);
             })
         );
         context.subscriptions.push(

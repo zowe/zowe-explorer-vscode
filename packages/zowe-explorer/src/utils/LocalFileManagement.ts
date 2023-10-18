@@ -91,10 +91,11 @@ export class LocalFileManagement {
      * Function that triggers compare of the 2 files selected for compare in the active editor
      * @returns {Promise<void>}
      */
-    public static async compareChosenFileContent(readOnly = false): Promise<void> {
+    public static async compareChosenFileContent(node: IZoweTreeNode, readOnly = false): Promise<void> {
+        globals.filesToCompare.push(node);
         const docUriArray: vscode.Uri[] = [];
-        for (const node of globals.filesToCompare) {
-            const fileInfo = await this.getCompareFilePaths(node);
+        for (const file of globals.filesToCompare) {
+            const fileInfo = await this.getCompareFilePaths(file);
             if (fileInfo.path) {
                 docUriArray.push(vscode.Uri.file(fileInfo.path));
             } else {

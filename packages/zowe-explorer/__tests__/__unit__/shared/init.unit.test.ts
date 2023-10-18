@@ -212,11 +212,11 @@ describe("Test src/shared/extension", () => {
             },
             {
                 name: "zowe.compareWithSelected",
-                mock: [],
+                mock: [{ spy: jest.spyOn(LocalFileManagement, "compareChosenFileContent"), arg: [test.value] }],
             },
             {
                 name: "zowe.compareWithSelectedReadOnly",
-                mock: [],
+                mock: [{ spy: jest.spyOn(LocalFileManagement, "compareChosenFileContent"), arg: [test.value, true] }],
             },
             {
                 name: "zowe.compareFileStarted",
@@ -242,7 +242,6 @@ describe("Test src/shared/extension", () => {
             Object.defineProperty(globals, "USS_DIR", { value: testGlobals.USS_DIR });
             Object.defineProperty(globals, "SETTINGS_TEMP_FOLDER_LOCATION", { value: "/some/old/temp/location" });
             Object.defineProperty(vscode.workspace, "onDidSaveTextDocument", { value: onDidSaveTextDocument });
-            Object.defineProperty(LocalFileManagement, "compareChosenFileContent", { value: jest.fn(), configurable: true });
             spyOnSubscriptions(commands);
             await sharedExtension.registerCommonCommands(test.context, test.value.providers);
         });
