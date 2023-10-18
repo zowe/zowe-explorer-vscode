@@ -253,6 +253,7 @@ async function createGlobalMocks() {
             "zowe.issueMvsCmd",
             "zowe.selectForCompare",
             "zowe.compareWithSelected",
+            "zowe.compareWithSelectedReadOnly",
             "zowe.compareFileStarted",
         ],
     };
