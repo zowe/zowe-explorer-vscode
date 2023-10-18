@@ -78,6 +78,15 @@ export class LocalFileManagement {
         }
     }
 
+    public static selectFileForCompare(node: IZoweTreeNode): void {
+        if (globals.filesToCompare.length > 0) {
+            globals.resetCompareChoices();
+        }
+        globals.filesToCompare.push(node);
+        globals.setCompareSelectionTrue();
+        ZoweLogger.trace(`${String(globals.filesToCompare[0].label)} selected for compare.`);
+    }
+
     /**
      * Function that triggers compare of the 2 files selected for compare in the active editor
      * @returns {Promise<void>}

@@ -26,6 +26,7 @@ import { saveUSSFile } from "../../../src/uss/actions";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 import { ZoweSaveQueue } from "../../../src/abstract/ZoweSaveQueue";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
+import { LocalFileManagement } from "../../../src/utils/LocalFileManagement";
 
 jest.mock("../../../src/utils/LoggerUtils");
 
@@ -205,6 +206,22 @@ describe("Test src/shared/extension", () => {
                 parm: [],
                 mock: [{ spy: jest.spyOn(MvsCommandHandler, "getInstance"), arg: [], ret: { issueMvsCommand: jest.fn() } }],
             },
+            {
+                name: "zowe.selectForCompare",
+                mock: [{ spy: jest.spyOn(LocalFileManagement, "selectFileForCompare"), arg: [test.value] }],
+            },
+            {
+                name: "zowe.compareWithSelected",
+                mock: [],
+            },
+            {
+                name: "zowe.compareWithSelectedReadOnly",
+                mock: [],
+            },
+            {
+                name: "zowe.compareFileStarted",
+                mock: [],
+            },
         ];
 
         beforeAll(async () => {
@@ -225,7 +242,8 @@ describe("Test src/shared/extension", () => {
             Object.defineProperty(globals, "USS_DIR", { value: testGlobals.USS_DIR });
             Object.defineProperty(globals, "SETTINGS_TEMP_FOLDER_LOCATION", { value: "/some/old/temp/location" });
             Object.defineProperty(vscode.workspace, "onDidSaveTextDocument", { value: onDidSaveTextDocument });
-
+            Object.defineProperty(LocalFileManagement, "compareChosenFileContent", { value: jest.fn(), configurable: true });
+            Object.defineProperty(globals, "filesToCompare", { value: [], configurable: true });
             spyOnSubscriptions(commands);
             await sharedExtension.registerCommonCommands(test.context, test.value.providers);
         });

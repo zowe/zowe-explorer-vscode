@@ -203,18 +203,12 @@ export function registerCommonCommands(context: vscode.ExtensionContext, provide
         );
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.selectForCompare", (node: IZoweTreeNode) => {
-                if (globals.filesToCompare.length > 0) {
-                    globals.resetCompareChoices();
-                }
-                globals.filesToCompare.push(node);
-                globals.setCompareSelectionTrue();
-                ZoweLogger.trace(`${String(globals.filesToCompare[0].label)} selected for compare.`);
+                LocalFileManagement.selectFileForCompare(node);
             })
         );
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.compareWithSelected", async (node: IZoweTreeNode) => {
                 globals.filesToCompare.push(node);
-                ZoweLogger.trace(`${String(globals.filesToCompare[0].label)} will be compared with selected.`);
                 await LocalFileManagement.compareChosenFileContent();
                 globals.resetCompareChoices();
             })
@@ -222,14 +216,12 @@ export function registerCommonCommands(context: vscode.ExtensionContext, provide
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.compareWithSelectedReadOnly", async (node: IZoweTreeNode) => {
                 globals.filesToCompare.push(node);
-                ZoweLogger.trace(`${String(globals.filesToCompare[0].label)} will be compared with selected.`);
                 await LocalFileManagement.compareChosenFileContent(true);
                 globals.resetCompareChoices();
             })
         );
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.compareFileStarted", () => {
-                ZoweLogger.trace(`Checking if any files have been chosen for compare: ${String(globals.FILE_SELECTED_TO_COMPARE)}`);
                 return globals.FILE_SELECTED_TO_COMPARE;
             })
         );
