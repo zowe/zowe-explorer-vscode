@@ -9,12 +9,8 @@ import {
     createTreeView,
 } from "../../../__mocks__/mockCreators/shared";
 import { createIJobObject, createJobsTree } from "../../../__mocks__/mockCreators/jobs";
-import * as vscode from "vscode";
 import { Gui } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../../src/Profiles";
-import * as globals from "../../../src/globals";
-import * as zowe from "@zowe/cli";
-import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 
 async function initializeHistoryViewMock(blockMocks: any, globalMocks: any): Promise<HistoryView> {
     return new HistoryView(
@@ -29,6 +25,24 @@ async function initializeHistoryViewMock(blockMocks: any, globalMocks: any): Pro
     );
 }
 
+function createGlobalMocks(): any {
+    const globalMocks = {
+        session: createISessionWithoutCredentials(),
+        testSession: createISession(),
+        treeView: createTreeView(),
+        imperativeProfile: createIProfile(),
+    };
+    Object.defineProperty(Gui, "showMessage", { value: jest.fn(), configurable: true });
+    Object.defineProperty(Gui, "resolveQuickPick", { value: jest.fn(), configurable: true });
+    Object.defineProperty(Gui, "createQuickPick", { value: jest.fn(), configurable: true });
+    Object.defineProperty(Profiles, "getInstance", {
+        value: jest.fn().mockReturnValue(createInstanceOfProfile(globalMocks.imperativeProfile)),
+        configurable: true,
+    });
+
+    return globalMocks;
+}
+
 function createBlockMocks(globalMocks: any): any {
     return {
         datasetSessionNode: createDatasetSessionNode(globalMocks.session, globalMocks.imperativeProfile),
@@ -37,83 +51,6 @@ function createBlockMocks(globalMocks: any): any {
 }
 
 describe("HistoryView Unit Tests", () => {
-    function createGlobalMocks(): any {
-        const globalMocks = {
-            session: createISessionWithoutCredentials(),
-            testSession: createISession(),
-            treeView: createTreeView(),
-            imperativeProfile: createIProfile(),
-            withProgress: null,
-            mockCallback: null,
-            ProgressLocation: jest.fn().mockImplementation(() => {
-                return {
-                    Notification: 15,
-                };
-            }),
-            qpPlaceholder: 'Choose "Create new..." to define a new profile or select an existing profile to add to the Data Set Explorer',
-        };
-
-        Object.defineProperty(vscode.window, "withProgress", {
-            value: jest.fn().mockImplementation((progLocation, callback) => {
-                const progress = {
-                    report: (message) => {
-                        return;
-                    },
-                };
-                const token = {
-                    isCancellationRequested: false,
-                    onCancellationRequested: undefined,
-                };
-                return callback(progress, token);
-            }),
-            configurable: true,
-        });
-
-        Object.defineProperty(Gui, "setStatusBarMessage", {
-            value: jest.fn().mockReturnValue({
-                dispose: jest.fn(),
-            }),
-            configurable: true,
-        });
-        Object.defineProperty(vscode.window, "createTreeView", { value: jest.fn(), configurable: true });
-        Object.defineProperty(vscode.workspace, "getConfiguration", { value: jest.fn(), configurable: true });
-        Object.defineProperty(vscode.window, "showInformationMessage", { value: jest.fn(), configurable: true });
-        Object.defineProperty(vscode.window, "showInputBox", { value: jest.fn(), configurable: true });
-        Object.defineProperty(vscode.window, "showErrorMessage", { value: jest.fn(), configurable: true });
-        Object.defineProperty(Gui, "showMessage", { value: jest.fn(), configurable: true });
-        Object.defineProperty(Gui, "resolveQuickPick", { value: jest.fn(), configurable: true });
-        Object.defineProperty(Gui, "createQuickPick", { value: jest.fn(), configurable: true });
-        Object.defineProperty(vscode.commands, "executeCommand", { value: globalMocks.withProgress, configurable: true });
-        Object.defineProperty(vscode, "ProgressLocation", { value: globalMocks.ProgressLocation, configurable: true });
-        Object.defineProperty(Profiles, "getInstance", {
-            value: jest.fn().mockReturnValue(createInstanceOfProfile(globalMocks.imperativeProfile)),
-            configurable: true,
-        });
-        Object.defineProperty(zowe, "Download", {
-            value: {
-                ussFile: jest.fn().mockReturnValue({
-                    apiResponse: {
-                        etag: "ABC123",
-                    },
-                }),
-            },
-            configurable: true,
-        });
-        Object.defineProperty(zowe, "Utilities", { value: jest.fn(), configurable: true });
-        Object.defineProperty(zowe.Utilities, "isFileTagBinOrAscii", { value: jest.fn(), configurable: true });
-        Object.defineProperty(globals, "LOG", { value: jest.fn(), configurable: true });
-        Object.defineProperty(globals.LOG, "debug", { value: jest.fn(), configurable: true });
-        Object.defineProperty(globals.LOG, "error", { value: jest.fn(), configurable: true });
-        Object.defineProperty(globals.LOG, "warn", { value: jest.fn(), configurable: true });
-        Object.defineProperty(ZoweLogger, "error", { value: jest.fn(), configurable: true });
-        Object.defineProperty(ZoweLogger, "debug", { value: jest.fn(), configurable: true });
-        Object.defineProperty(ZoweLogger, "warn", { value: jest.fn(), configurable: true });
-        Object.defineProperty(ZoweLogger, "info", { value: jest.fn(), configurable: true });
-        Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
-
-        return globalMocks;
-    }
-
     describe("constructor", () => {
         it("should create the webview instance and initialize", () => {
             const historyView = new HistoryView(

@@ -89,7 +89,6 @@ export class HistoryView extends WebView {
 
     private getHistoryData(type: string): History {
         const treeProvider = this.treeProviders[type] as TreeProvider;
-        console.log(treeProvider.getSearchHistory);
         return {
             search: treeProvider.getSearchHistory(),
             sessions: treeProvider.getSessions(),
