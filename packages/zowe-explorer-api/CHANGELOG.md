@@ -11,6 +11,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 - Add `sort` and `filter` optional variables for storing sort/filter options alongside tree nodes. [#2420](https://github.com/zowe/vscode-extension-for-zowe/issues/2420)
 - Add `stats` optional variable for storing dataset stats (such as user, modified date, etc.)
 - Add option enums and types for sorting, filtering and sort direction in tree nodes. [#2420](https://github.com/zowe/vscode-extension-for-zowe/issues/2420)
+- Added option for retaining context when generating webviews in Webview API
 
 ### Bug fixes
 
