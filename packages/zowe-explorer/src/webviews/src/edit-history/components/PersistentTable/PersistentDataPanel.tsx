@@ -19,7 +19,7 @@ import PersistentTableData from "./PersistentTableData";
 import PersistentDataGridHeaders from "./PersistentDataGridHeaders";
 import PersistentVSCodeAPI from "../PersistentVSCodeAPI";
 
-export default function PersistentDataPanel({ type }: { type: Readonly<string> }): JSXInternal.Element {
+export default function PersistentDataPanel({ type }: Readonly<{ type: Readonly<string> }>): JSXInternal.Element {
   const [data, setData] = useState<{ [type: string]: { [property: string]: string[] } }>({ ds: {}, uss: {}, jobs: {} });
   const [selection, setSelection] = useState<{ [type: string]: string }>({ [type]: "search" });
   const [persistentProp, setPersistentProp] = useState<string[]>([]);
