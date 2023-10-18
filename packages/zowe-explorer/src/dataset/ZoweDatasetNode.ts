@@ -339,7 +339,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     return a.stats?.modifiedDate < b.stats?.modifiedDate ? sortLessThan : sortGreaterThan;
                 case DatasetSortOpts.UserId:
                     a.description = a.stats?.user;
-                    a.description = a.stats?.user;
+                    b.description = b.stats?.user;
                     return a.stats?.user < b.stats?.user ? sortLessThan : sortGreaterThan;
                 case DatasetSortOpts.Name:
                     return (a.label as string) < (b.label as string) ? sortLessThan : sortGreaterThan;
