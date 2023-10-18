@@ -13,15 +13,25 @@ import { VSCodeDropdown, VSCodeOption } from "@vscode/webview-ui-toolkit/react";
 import { JSXInternal } from "preact/src/jsx";
 import { useDataPanelContext } from "../PersistentUtils";
 
-export default function PersistentDropdownOptions({ handleChange }: { handleChange: Function }): JSXInternal.Element {
+export default function PersistentDropdownOptions({ handleChange }: { handleChange: Readonly<Function> }): JSXInternal.Element {
   const dataPanelContext = useDataPanelContext();
 
   const options = [
-    <VSCodeOption value="search">Search History</VSCodeOption>,
-    <VSCodeOption value="dsTemplates">DS Templates</VSCodeOption>,
-    <VSCodeOption value="favorites">Favorites</VSCodeOption>,
-    <VSCodeOption value="fileHistory">File History</VSCodeOption>,
-    <VSCodeOption value="sessions">Sessions</VSCodeOption>,
+    <VSCodeOption value="search" key="search">
+      Search History
+    </VSCodeOption>,
+    <VSCodeOption value="dsTemplates" key="dsTemplates">
+      DS Templates
+    </VSCodeOption>,
+    <VSCodeOption value="favorites" key="favorites">
+      Favorites
+    </VSCodeOption>,
+    <VSCodeOption value="fileHistory" key="fileHistory">
+      File History
+    </VSCodeOption>,
+    <VSCodeOption value="sessions" key="sessions">
+      Sessions
+    </VSCodeOption>,
   ].filter((option) => dataPanelContext.type === "ds" || option.props.value !== "dsTemplates");
 
   return (

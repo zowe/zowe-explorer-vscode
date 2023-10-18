@@ -16,7 +16,7 @@ import PersistentDropdownOptions from "./PersistentDropdownOptions";
 import PersistentAddNewHistoryItemButton from "./PersistentAddNewHistoryItemButton";
 import PersistentDeleteSelectedButton from "./PersistentDeleteSelectedButton";
 
-export default function PersistentToolBar({ handleChange }: { handleChange: Function }): JSXInternal.Element {
+export default function PersistentToolBar({ handleChange }: { handleChange: Readonly<Function> }): JSXInternal.Element {
   return (
     <div style={{ display: "flex", flexDirection: "row", alignItems: "center" }}>
       <PersistentDropdownOptions handleChange={handleChange} />

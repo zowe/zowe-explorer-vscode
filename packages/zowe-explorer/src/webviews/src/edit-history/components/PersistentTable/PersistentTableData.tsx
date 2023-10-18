@@ -15,9 +15,9 @@ import { useDataPanelContext } from "../PersistentUtils";
 import { useEffect, useState } from "preact/hooks";
 import isEqual from "lodash.isequal";
 
-export default function PersistentTableData({ persistentProp }: { persistentProp: string[] }): JSXInternal.Element {
+export default function PersistentTableData({ persistentProp }: { persistentProp: readonly string[] }): JSXInternal.Element {
   const { type, selection, selectedItems } = useDataPanelContext();
-  const [oldPersistentProp, setOldPersistentProp] = useState<string[]>([]);
+  const [oldPersistentProp, setOldPersistentProp] = useState<readonly string[]>([]);
 
   useEffect(() => {
     if (!isEqual(oldPersistentProp, persistentProp) && persistentProp) {
@@ -45,7 +45,7 @@ export default function PersistentTableData({ persistentProp }: { persistentProp
   const renderOptions = () => {
     return persistentProp.map((item, i) => {
       return (
-        <VSCodeDataGridRow>
+        <VSCodeDataGridRow key={`${item}${i}`}>
           <VSCodeDataGridCell grid-column="1">{item}</VSCodeDataGridCell>
           {renderSelectButton(item, i)}
         </VSCodeDataGridRow>
@@ -61,7 +61,7 @@ export default function PersistentTableData({ persistentProp }: { persistentProp
     );
   };
 
-  const data = persistentProp && persistentProp.length ? renderOptions() : renderNoRecordsFound();
+  const data = persistentProp?.length ? renderOptions() : renderNoRecordsFound();
 
   return <>{data}</>;
 }
