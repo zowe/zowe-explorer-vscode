@@ -1577,15 +1577,38 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
     const ending = doc.fileName.substring(start);
     const sesName = ending.substring(0, ending.indexOf(path.sep));
     const profile = Profiles.getInstance().loadNamedProfile(sesName);
+    const fileLabel = doc.fileName.split("/").slice(-1)[0];
+    const dataSetName = fileLabel.substring(0, fileLabel.indexOf("("));
+    const memberName = fileLabel.substring(fileLabel.indexOf("(") + 1, fileLabel.indexOf(")"));
     if (!profile) {
         const sessionError = localize("saveFile.session.error", "Could not locate session when saving data set.");
         ZoweLogger.error(sessionError);
         await api.Gui.errorMessage(sessionError);
         return;
     }
+    let etagProfiles = undefined;
+    let etagFavorites = undefined;
 
-    // get session from session name
-    const sesNode = (await datasetProvider.getChildren()).find((child) => child.label.toString().trim() === sesName);
+    const profileSesnode = datasetProvider.mSessionNodes.find((child) => child.label.toString().trim() === sesName);
+    if (profileSesnode !== undefined) {
+        const dataset: api.IZoweDatasetTreeNode = profileSesnode.children
+            .find((child) => child.label.toString().trim() === dataSetName)
+            ?.children.find((child) => child.label.toString().trim() === memberName);
+        etagProfiles = dataset?.getEtag();
+    }
+    const favoritesSesNode = datasetProvider.mFavorites.find((child) => child.label.toString().trim() === sesName);
+    if (favoritesSesNode !== undefined) {
+        const dataset: api.IZoweDatasetTreeNode = favoritesSesNode.children
+            .find((child) => child.label.toString().trim() === dataSetName)
+            ?.children.find((child) => child.label.toString().trim() === memberName);
+        etagFavorites = dataset?.getEtag();
+    }
+    let sesNode;
+    if ((etagProfiles && etagFavorites) || etagProfiles) {
+        sesNode = profileSesnode;
+    } else if (etagFavorites) {
+        sesNode = favoritesSesNode;
+    }
     if (!sesNode) {
         // if saving from favorites, a session might not exist for this node
         ZoweLogger.debug(localize("saveFile.missingSessionNode", "Could not find session node"));

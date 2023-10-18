@@ -445,6 +445,36 @@ describe("USS Action Unit Tests - Function saveUSSFile", () => {
         return newMocks;
     }
 
+    it("To check Compare Function is getting triggered from Favorites", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        // Create nodes for Session section
+        const node = new ZoweUSSNode("HLQ.TEST.AFILE", vscode.TreeItemCollapsibleState.Expanded, blockMocks.node, null, "/");
+        const childNode = new ZoweUSSNode("MEM", vscode.TreeItemCollapsibleState.None, node, null, "/");
+        node.children.push(childNode);
+        blockMocks.testUSSTree.mSessionNodes.find((child) => child.label.toString().trim() === "usstest").children.push(node);
+
+        // Create nodes for Favorites section
+        const favProfileNode = new ZoweUSSNode("usstest", vscode.TreeItemCollapsibleState.Expanded, blockMocks.node, null, "/");
+        const favoriteNode = new ZoweUSSNode("HLQ.TEST.AFILE", vscode.TreeItemCollapsibleState.Expanded, favProfileNode, null, "/");
+        const favoriteChildNode = new ZoweUSSNode("MEM", vscode.TreeItemCollapsibleState.None, favoriteNode, null, "/");
+        favoriteNode.children.push(favoriteChildNode);
+        blockMocks.testUSSTree.mFavorites.push(favProfileNode);
+        blockMocks.testUSSTree.mFavorites[0].children.push(favoriteNode);
+        mocked(sharedUtils.concatChildNodes).mockReturnValueOnce([favoriteNode, favoriteChildNode]);
+
+        const testDocument = createTextDocument("HLQ.TEST.AFILE(MEM)", blockMocks.ussNode);
+        const etagSpy = jest.spyOn(favoriteChildNode, "getEtag").mockImplementation(() => "123");
+        (testDocument as any).fileName = path.join(globals.USS_DIR, "usstest/user/usstest/HLQ.TEST.AFILE/MEM");
+
+        await ussNodeActions.saveUSSFile(testDocument, blockMocks.testUSSTree);
+
+        expect(mocked(sharedUtils.concatChildNodes)).toBeCalled();
+        expect(etagSpy).toBeCalledTimes(1);
+        expect(etagSpy).toReturnWith("123");
+    });
+
     it("Testing that saveUSSFile is executed successfully", async () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);

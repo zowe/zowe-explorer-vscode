@@ -991,6 +991,101 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
 
     afterAll(() => jest.restoreAllMocks());
 
+    it("To check Compare Function is getting triggered from Favorites", async () => {
+        globals.defineGlobals("");
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        // Create nodes for Session section
+        const node = new ZoweDatasetNode(
+            "HLQ.TEST.AFILE",
+            vscode.TreeItemCollapsibleState.None,
+            blockMocks.datasetSessionNode,
+            null,
+            undefined,
+            undefined,
+            blockMocks.imperativeProfile
+        );
+        node.contextValue = globals.DS_PDS_CONTEXT;
+        const childNode = new ZoweDatasetNode(
+            "MEM",
+            vscode.TreeItemCollapsibleState.None,
+            node,
+            null,
+            undefined,
+            undefined,
+            blockMocks.imperativeProfile
+        );
+
+        // Create nodes for Favorites section
+        const favProfileNode = new ZoweDatasetNode(
+            "sestest",
+            vscode.TreeItemCollapsibleState.Expanded,
+            blockMocks.datasetFavoritesNode,
+            null,
+            globals.FAV_PROFILE_CONTEXT
+        );
+        const favoriteNode = new ZoweDatasetNode(
+            "HLQ.TEST.AFILE",
+            vscode.TreeItemCollapsibleState.Expanded,
+            favProfileNode,
+            null,
+            undefined,
+            undefined,
+            blockMocks.imperativeProfile
+        );
+        favoriteNode.contextValue = globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX;
+        const favoriteChildNode = new ZoweDatasetNode(
+            "MEM",
+            vscode.TreeItemCollapsibleState.None,
+            favoriteNode,
+            null,
+            undefined,
+            undefined,
+            blockMocks.imperativeProfile
+        );
+
+        // Push nodes into respective Session or Favorites sections
+        node.children.push(childNode);
+        blockMocks.testDatasetTree.mSessionNodes.find((child) => child.label.toString().trim() === "sestest").children.push(node);
+        favoriteNode.children.push(favoriteChildNode);
+        blockMocks.testDatasetTree.mFavorites.push(favProfileNode);
+        blockMocks.testDatasetTree.mFavorites[0].children.push(favoriteNode);
+
+        mocked(sharedUtils.concatChildNodes).mockReturnValueOnce([favoriteNode, favoriteChildNode]);
+        blockMocks.testDatasetTree.getChildren.mockReturnValueOnce(blockMocks.testDatasetTree.mSessionNodes);
+        mocked(zowe.List.dataSet).mockResolvedValue({
+            success: true,
+            commandResponse: "",
+            apiResponse: {
+                items: [{ dsname: "HLQ.TEST.AFILE" }, { dsname: "HLQ.TEST.AFILE(MEM)" }],
+            },
+        });
+        mocked(zowe.Upload.pathToDataSet).mockResolvedValueOnce({
+            success: true,
+            commandResponse: "success",
+            apiResponse: [
+                {
+                    etag: "123",
+                },
+            ],
+        });
+        mocked(vscode.window.withProgress).mockImplementation((progLocation, callback) => {
+            return callback();
+        });
+        blockMocks.profileInstance.loadNamedProfile.mockReturnValueOnce(blockMocks.imperativeProfile);
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        const mockSetEtag = jest.spyOn(childNode, "setEtag").mockImplementation(() => null);
+        const testDocument = createTextDocument("HLQ.TEST.AFILE(MEM)", blockMocks.datasetSessionNode);
+        jest.spyOn(favoriteChildNode, "getEtag").mockImplementation(() => "123");
+        (testDocument as any).fileName = path.join(globals.DS_DIR, blockMocks.imperativeProfile.name, testDocument.fileName);
+        await dsActions.saveFile(testDocument, blockMocks.testDatasetTree);
+
+        expect(mocked(sharedUtils.concatChildNodes)).toBeCalled();
+        expect(mocked(globalMocks.statusBarMsgSpy)).toBeCalledWith("success", globals.STATUS_BAR_TIMEOUT_MS);
+        expect(blockMocks.profileInstance.loadNamedProfile).toBeCalledWith(blockMocks.imperativeProfile.name);
+    });
+
     it("Checking common dataset saving action when no session is defined", async () => {
         globals.defineGlobals("");
         createGlobalMocks();

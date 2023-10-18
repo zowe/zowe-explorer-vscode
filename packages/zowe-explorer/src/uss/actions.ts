@@ -246,6 +246,21 @@ export async function changeFileType(node: IZoweUSSTreeNode, binary: boolean, us
     ussFileProvider.refresh();
 }
 
+function findEtag(node: IZoweUSSTreeNode, directories: Array<string>, index: number): boolean {
+    if (node === undefined || directories.indexOf(node.label.toString().trim()) === -1) {
+        return false;
+    }
+    if (index === directories.length - 1) {
+        return node.label.toString().trim() === directories[index] && node.getEtag() !== "";
+    }
+
+    let flag: boolean = false;
+    for (const child of node.children) {
+        flag = flag || findEtag(child, directories, directories.indexOf(node.label.toString().trim()) + 1);
+    }
+    return flag;
+}
+
 /**
  * Uploads the file to the mainframe
  *
@@ -260,25 +275,27 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
     const ending = doc.fileName.substring(start);
     const sesName = ending.substring(0, ending.indexOf(path.sep));
     const remote = ending.substring(sesName.length).replace(/\\/g, "/");
+    const directories = doc.fileName.split("/").splice(doc.fileName.split("/").indexOf("_U_") + 1);
+    directories.splice(1, 2);
+    const profileSesnode: IZoweUSSTreeNode = ussFileProvider.mSessionNodes.find((child) => child.label.toString().trim() === sesName);
+    const etagProfiles = findEtag(profileSesnode, directories, 0);
+    const favoritesSesNode: IZoweUSSTreeNode = ussFileProvider.mFavorites.find((child) => child.label.toString().trim() === sesName);
+    const etagFavorites = findEtag(favoritesSesNode, directories, 0);
 
     // get session from session name
     let binary;
 
-    const sesNode: IZoweUSSTreeNode = ussFileProvider.mSessionNodes.find(
-        (child) => child.getProfileName() && child.getProfileName() === sesName.trim()
-    );
+    let sesNode: IZoweUSSTreeNode;
+    if ((etagProfiles && etagFavorites) || etagProfiles) {
+        sesNode = profileSesnode;
+    } else if (etagFavorites) {
+        sesNode = favoritesSesNode;
+    }
     if (sesNode) {
         binary = Object.keys(sesNode.binaryFiles).find((child) => child === remote) !== undefined;
     }
     // Get specific node based on label and parent tree (session / favorites)
-    let nodes: IZoweUSSTreeNode[];
-    if (!sesNode || sesNode.children.length === 0) {
-        // saving from favorites
-        nodes = concatChildNodes(ussFileProvider.mFavorites);
-    } else {
-        // saving from session
-        nodes = concatChildNodes([sesNode]);
-    }
+    const nodes: IZoweUSSTreeNode[] = concatChildNodes(sesNode ? [sesNode] : ussFileProvider.mSessionNodes);
     const node = nodes.find((zNode) => {
         if (contextually.isText(zNode)) {
             return zNode.fullPath.trim() === remote;
