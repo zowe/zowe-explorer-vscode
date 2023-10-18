@@ -779,6 +779,11 @@
         "category": "Zowe Explorer"
       },
       {
+        "command": "zowe.compareWithSelectedReadOnly",
+        "title": "%compareWithSelectedReadOnly%",
+        "category": "Zowe Explorer"
+      },
+      {
         "command": "zowe.compareFileStarted",
         "title": "%compareFileStarted%",
         "category": "Zowe Explorer"
@@ -1382,6 +1387,11 @@
           "when": "viewItem =~ /^(textFile|member.*|ds.*)/ && !listMultiSelection && zowe.compareFileStarted",
           "command": "zowe.compareWithSelected",
           "group": "010_zowe_fileOperations@2"
+        },
+        {
+          "when": "viewItem =~ /^(textFile|member.*|ds.*)/ && !listMultiSelection && zowe.compareFileStarted",
+          "command": "zowe.compareWithSelectedReadOnly",
+          "group": "010_zowe_fileOperations@3"
         }
       ],
       "commandPalette": [
@@ -1735,6 +1745,10 @@
         },
         {
           "command": "zowe.compareWithSelected",
+          "when": "never"
+        },
+        {
+          "command": "zowe.compareWithSelectedReadOnly",
           "when": "never"
         }
       ]

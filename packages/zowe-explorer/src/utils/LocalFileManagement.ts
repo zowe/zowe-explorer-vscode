@@ -82,7 +82,7 @@ export class LocalFileManagement {
      * Function that triggers compare of the 2 files selected for compare in the active editor
      * @returns {Promise<void>}
      */
-    public static async compareChosenFileContent(): Promise<void> {
+    public static async compareChosenFileContent(readOnly = false): Promise<void> {
         const docUriArray: vscode.Uri[] = [];
         for (const node of globals.filesToCompare) {
             const fileInfo = await this.getCompareFilePaths(node);
@@ -95,6 +95,9 @@ export class LocalFileManagement {
         globals.resetCompareChoices();
         if (docUriArray.length === 2) {
             vscode.commands.executeCommand("vscode.diff", docUriArray[0], docUriArray[1]);
+            if (readOnly) {
+                this.readOnlyFile();
+            }
         }
     }
 
@@ -115,5 +118,9 @@ export class LocalFileManagement {
             }
         }
         return fileInfo;
+    }
+
+    private static readOnlyFile(): void {
+        vscode.commands.executeCommand("workbench.action.files.setActiveEditorReadonlyInSession");
     }
 }
