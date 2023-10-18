@@ -46,7 +46,7 @@ export default function PersistentDeleteSelectedButton(): JSXInternal.Element {
         style={{ maxWidth: "20vw", marginRight: "15px" }}
         onClick={async () => await handleClick()}
       >
-        <img src="./webviews/src/edit-history/assets/trash.svg" />
+        Delete
       </VSCodeButton>
     ) : null;
   };

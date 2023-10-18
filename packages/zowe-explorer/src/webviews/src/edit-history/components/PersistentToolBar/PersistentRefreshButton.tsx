@@ -33,7 +33,7 @@ export default function PersistentRefreshButton(): JSXInternal.Element {
 
   return (
     <VSCodeButton title={refreshText} appearance="primary" style={{ maxWidth: "20vw", marginRight: "15px" }} onClick={handleClick}>
-      <img src="./webviews/src/edit-history/assets/refresh.svg" />
+      Refresh
     </VSCodeButton>
   );
 }

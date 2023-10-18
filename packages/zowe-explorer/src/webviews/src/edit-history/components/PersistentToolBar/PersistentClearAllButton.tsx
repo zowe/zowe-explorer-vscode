@@ -35,7 +35,7 @@ export default function PersistentClearAllButton(): JSXInternal.Element {
 
     return selection[type] === "search" || selection[type] === "fileHistory" ? (
       <VSCodeButton title={clearAllText} appearance="secondary" style={{ maxWidth: "20vw", marginRight: "15px" }} onClick={handleClick}>
-        <img src="./webviews/src/edit-history/assets/clear-all.svg" />
+        Clear All
       </VSCodeButton>
     ) : null;
   };

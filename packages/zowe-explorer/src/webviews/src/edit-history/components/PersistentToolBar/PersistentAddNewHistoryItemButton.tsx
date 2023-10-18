@@ -34,7 +34,7 @@ export default function PersistentAddNewHistoryItemButton(): JSXInternal.Element
   const renderAddItemButton = () => {
     return selection[type] === "search" && type !== "jobs" ? (
       <VSCodeButton title={newHistoryItemText} appearance="secondary" style={{ maxWidth: "20vw", marginRight: "15px" }} onClick={handleClick}>
-        <img src="./webviews/src/edit-history/assets/plus.svg" style={{ height: "16px", width: "16px" }} />
+        Add
       </VSCodeButton>
     ) : null;
   };

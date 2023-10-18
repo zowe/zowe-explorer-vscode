@@ -15,7 +15,6 @@ import PersistentRefreshButton from "./PersistentRefreshButton";
 import PersistentDropdownOptions from "./PersistentDropdownOptions";
 import PersistentAddNewHistoryItemButton from "./PersistentAddNewHistoryItemButton";
 import PersistentDeleteSelectedButton from "./PersistentDeleteSelectedButton";
-import PersistentSelectAllButton from "./PersistentSelectAllButton";
 
 export default function PersistentToolBar({ handleChange }: { handleChange: Function }): JSXInternal.Element {
   return (
@@ -25,7 +24,6 @@ export default function PersistentToolBar({ handleChange }: { handleChange: Func
       <PersistentClearAllButton />
       <PersistentAddNewHistoryItemButton />
       <PersistentDeleteSelectedButton />
-      <PersistentSelectAllButton />
     </div>
   );
 }
