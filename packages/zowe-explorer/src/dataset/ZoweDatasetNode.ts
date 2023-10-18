@@ -272,7 +272,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                         // missing keys from API response; check for FTP keys
                         temp.stats = {
                             user: item.id,
-                            modifiedDate: item.changed ? dayjs(item.changed).toDate() : null,
+                            modifiedDate: item.changed ? dayjs(item.changed).toDate() : undefined,
                         };
                     }
                     elementChildren[temp.label.toString()] = temp;
@@ -331,6 +331,10 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
 
             const sortLessThan = sort.direction == SortDirection.Ascending ? -1 : 1;
             const sortGreaterThan = sortLessThan * -1;
+
+            if (!a.stats && !b.stats) {
+                return (a.label as string) < (b.label as string) ? sortLessThan : sortGreaterThan;
+            }
 
             switch (sort.method) {
                 case DatasetSortOpts.LastModified:
