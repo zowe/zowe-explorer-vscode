@@ -1733,4 +1733,14 @@ describe("USSTree Unit Tests - Function USSTree.editSession()", () => {
             expect(globalMocks.testTree.getSessions()).toEqual(["sestest"]);
         });
     });
+
+    describe("getFavorites", () => {
+        it("gets all the favorites from persistent object", async () => {
+            const globalMocks = await createGlobalMocks();
+            jest.spyOn(vscode.workspace, "getConfiguration").mockReturnValue({
+                get: () => ["test1", "test2", "test3"],
+            } as any);
+            expect(globalMocks.testTree.getFavorites()).toEqual(["test1", "test2", "test3"]);
+        });
+    });
 });

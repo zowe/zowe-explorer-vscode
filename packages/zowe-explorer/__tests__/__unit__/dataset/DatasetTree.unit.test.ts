@@ -2944,4 +2944,22 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
             expect(tree.getSessions()).toEqual(["sestest"]);
         });
     });
+
+    describe("getDsTemplates", () => {
+        it("gets all the DS templates from persistent object", () => {
+            jest.spyOn(vscode.workspace, "getConfiguration").mockReturnValue({
+                get: () => ["test1", "test2", "test3"],
+            } as any);
+            expect(tree.getDsTemplates()).toEqual(["test1", "test2", "test3"]);
+        });
+    });
+
+    describe("getFavorites", () => {
+        it("gets all the favorites from persistent object", () => {
+            jest.spyOn(vscode.workspace, "getConfiguration").mockReturnValue({
+                get: () => ["test1", "test2", "test3"],
+            } as any);
+            expect(tree.getFavorites()).toEqual(["test1", "test2", "test3"]);
+        });
+    });
 });

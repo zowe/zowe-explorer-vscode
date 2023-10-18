@@ -956,3 +956,21 @@ describe("getSessions", () => {
         expect(tree.getSessions()).toEqual(["sestest"]);
     });
 });
+
+describe("getFileHistory", () => {
+    it("gets all the file history from persistent object", () => {
+        const tree = new ZosJobsProvider();
+        tree["mHistory"]["mFileHistory"] = ["test1", "test2", "test3"];
+        expect(tree.getFileHistory()).toEqual(["test1", "test2", "test3"]);
+    });
+});
+
+describe("getFavorites", () => {
+    it("gets all the favorites from persistent object", () => {
+        const tree = new ZosJobsProvider();
+        jest.spyOn(vscode.workspace, "getConfiguration").mockReturnValue({
+            get: () => ["test1", "test2", "test3"],
+        } as any);
+        expect(tree.getFavorites()).toEqual(["test1", "test2", "test3"]);
+    });
+});
