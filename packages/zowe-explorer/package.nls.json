@@ -147,5 +147,6 @@
   "createZoweSchema.reload.button": "Reload Window",
   "createZoweSchema.reload.infoMessage": "Team Configuration file created. Location: {0}. \n Please reload your window.",
   "copyFile": "Copy",
-  "pasteFile": "Paste"
+  "pasteFile": "Paste",
+  "issueUnixCmd": "Issue Unix Command"
 }

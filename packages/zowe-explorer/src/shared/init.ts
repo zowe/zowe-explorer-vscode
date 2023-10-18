@@ -20,6 +20,7 @@ import { Profiles } from "../Profiles";
 import { hideTempFolder, moveTempFolder } from "../utils/TempFolder";
 import { TsoCommandHandler } from "../command/TsoCommandHandler";
 import { MvsCommandHandler } from "../command/MvsCommandHandler";
+import { UnixCommandHandler } from "../command/UnixCommandHandler";
 import { saveFile } from "../dataset/actions";
 import { saveUSSFile } from "../uss/actions";
 import { ProfilesUtils } from "../utils/ProfilesUtils";
@@ -188,6 +189,15 @@ export function registerCommonCommands(context: vscode.ExtensionContext, provide
                     await TsoCommandHandler.getInstance().issueTsoCommand(node.session, command, node);
                 } else {
                     await TsoCommandHandler.getInstance().issueTsoCommand();
+                }
+            })
+        );
+        context.subscriptions.push(
+            vscode.commands.registerCommand("zowe.issueUnixCmd", async (node?, command?) => {
+                if (node) {
+                    await UnixCommandHandler.getInstance().issueUnixCommand(node.session, command, node);
+                } else {
+                    await UnixCommandHandler.getInstance().issueUnixCommand();
                 }
             })
         );

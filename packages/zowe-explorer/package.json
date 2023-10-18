@@ -725,6 +725,11 @@
         "category": "Zowe Explorer"
       },
       {
+        "command": "zowe.issueUnixCmd",
+        "title": "%issueUnixCmd%",
+        "category": "Zowe Explorer"
+      },
+      {
         "command": "zowe.jobs.cancelJob",
         "title": "%cancelJobs%",
         "category": "Zowe Explorer"
@@ -847,6 +852,16 @@
           "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)ussSession.*/ && !listMultiSelection",
           "command": "zowe.issueTsoCmd",
           "group": "000_zowe_ussMainframeInteraction@3"
+        },
+        {
+          "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)ussSession.*/ && !listMultiSelection",
+          "command": "zowe.issueUnixCmd",
+          "group": "000_zowe_ussMainframeInteraction@4"
+        },
+        {
+          "when": "view == zowe.uss.explorer && viewItem =~ /^directory.*/",
+          "command": "zowe.issueUnixCmd",
+          "group": "000_zowe_ussMainframeInteraction@4"
         },
         {
           "when": "view == zowe.uss.explorer && viewItem =~ /^(?!(directory|ussSession|favorite|profile_fav))/",
