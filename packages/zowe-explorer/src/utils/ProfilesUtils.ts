@@ -75,7 +75,7 @@ export async function errorHandling(errorDetails: Error | string, label?: string
 
             if (imperativeError.mDetails.additionalDetails) {
                 const tokenError: string = imperativeError.mDetails.additionalDetails;
-                const isTokenAuth = await isUsingTokenAuth(label);
+                const isTokenAuth = await ProfilesUtils.isUsingTokenAuth(label);
 
                 if (tokenError.includes("Token is not valid or expired.") || isTokenAuth) {
                     if (isTheia()) {
@@ -130,19 +130,6 @@ export function isTheia(): boolean {
         return true;
     }
     return false;
-}
-
-/**
- * Function that checks whether a profile is using token based authentication
- * @param profileName the name of the profile to check
- * @returns {Promise<boolean>} a boolean representing whether token based auth is being used or not
- */
-export async function isUsingTokenAuth(profileName: string): Promise<boolean> {
-    const baseProfile = Profiles.getInstance().getDefaultProfile("base");
-    const secureProfileProps = await Profiles.getInstance().getSecurePropsForProfile(profileName);
-    const secureBaseProfileProps = await Profiles.getInstance().getSecurePropsForProfile(baseProfile?.name);
-    const profileUsesBasicAuth = secureProfileProps.includes("user") && secureProfileProps.includes("password");
-    return (secureProfileProps.includes("tokenValue") || secureBaseProfileProps.includes("tokenValue")) && !profileUsesBasicAuth;
 }
 
 /**
@@ -318,6 +305,32 @@ export class ProfilesUtils {
             );
             ZoweLogger.debug(`Summary of team configuration files considered for Zowe Explorer: ${JSON.stringify(layerSummary)}`);
         }
+    }
+
+    /**
+     * Function that checks whether a profile is using basic authentication
+     * @param profile
+     * @returns {Promise<boolean>} a boolean representing whether basic auth is being used or not
+     */
+    public static isProfileUsingBasicAuth(profile: imperative.IProfileLoaded): boolean {
+        const prof = profile.profile;
+        return "user" in prof && "password" in prof;
+    }
+
+    /**
+     * Function that checks whether a profile is using token based authentication
+     * @param profileName the name of the profile to check
+     * @returns {Promise<boolean>} a boolean representing whether token based auth is being used or not
+     */
+    public static async isUsingTokenAuth(profileName: string): Promise<boolean> {
+        const secureProfileProps = await Profiles.getInstance().getSecurePropsForProfile(profileName);
+        const profileUsesBasicAuth = secureProfileProps.includes("user") && secureProfileProps.includes("password");
+        if (secureProfileProps.includes("tokenValue")) {
+            return secureProfileProps.includes("tokenValue") && !profileUsesBasicAuth;
+        }
+        const baseProfile = Profiles.getInstance().getDefaultProfile("base");
+        const secureBaseProfileProps = await Profiles.getInstance().getSecurePropsForProfile(baseProfile?.name);
+        return secureBaseProfileProps.includes("tokenValue") && !profileUsesBasicAuth;
     }
 
     public static async promptCredentials(node: IZoweTreeNode): Promise<void> {

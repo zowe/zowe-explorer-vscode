@@ -743,7 +743,7 @@ describe("ProfilesUtils unit tests", () => {
             jest.spyOn(Profiles.getInstance(), "getDefaultProfile").mockReturnValueOnce({} as any);
             jest.spyOn(Profiles.getInstance(), "getLoadedProfConfig").mockResolvedValue({ type: "test" } as any);
             jest.spyOn(Profiles.getInstance(), "getSecurePropsForProfile").mockResolvedValue([]);
-            await expect(profUtils.isUsingTokenAuth("test")).resolves.toEqual(false);
+            await expect(profUtils.ProfilesUtils.isUsingTokenAuth("test")).resolves.toEqual(false);
         });
     });
 });

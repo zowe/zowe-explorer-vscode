@@ -1376,7 +1376,7 @@ describe("Profiles Unit Tests - function checkCurrentProfile", () => {
     it("should throw an error if using token auth and is logged out or has expired token", async () => {
         const globalMocks = await createGlobalMocks();
         jest.spyOn(utils, "errorHandling").mockImplementation();
-        jest.spyOn(utils, "isUsingTokenAuth").mockResolvedValue(true);
+        jest.spyOn(utils.ProfilesUtils, "isUsingTokenAuth").mockResolvedValue(true);
         setupProfilesCheck(globalMocks);
         await expect(Profiles.getInstance().checkCurrentProfile(globalMocks.testProfile)).resolves.toEqual({ name: "sestest", status: "unverified" });
     });
@@ -1569,6 +1569,7 @@ describe("Profiles Unit Tests - function ssoLogin", () => {
             ],
             configurable: true,
         });
+        Object.defineProperty(utils.ProfilesUtils, "isProfileUsingBasicAuth", { value: jest.fn(), configurable: true });
         jest.spyOn(Gui, "showMessage").mockImplementation();
     });
     it("should perform an SSOLogin successfully while fetching the base profile", async () => {

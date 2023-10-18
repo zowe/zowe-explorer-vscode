@@ -35,7 +35,7 @@ export let DS_DIR: string;
 export let CONFIG_PATH; // set during activate
 export let ISTHEIA = false; // set during activate
 export let LOG: imperative.Logger;
-export const COMMAND_COUNT = 113;
+export const COMMAND_COUNT = 114;
 export const MAX_SEARCH_HISTORY = 5;
 export const MAX_FILE_HISTORY = 10;
 export const MS_PER_SEC = 1000;
@@ -279,6 +279,7 @@ export enum JobPickerTypes {
 export const SEPARATORS = {
     BLANK: { kind: vscode.QuickPickItemKind.Separator, label: "" },
     RECENT_FILTERS: { kind: vscode.QuickPickItemKind.Separator, label: localize("zowe.separator.recentFilters", "Recent Filters") },
+    OPTIONS: { kind: vscode.QuickPickItemKind.Separator, label: localize("zowe.separator.options", "Options") },
 };
 
 /**
