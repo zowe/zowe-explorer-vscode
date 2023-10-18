@@ -44,6 +44,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed issue where the "Delete Job" action showed a successful deletion message, even if the API returned an error.
 - USS directories, PDS nodes, job nodes and session nodes now update with their respective "collapsed icon" when collapsed.
 - Fixed bug where the list of datasets from a filter search was not re-sorted after a new data set was created in Zowe Explorer. [#2473](https://github.com/zowe/vscode-extension-for-zowe/issues/2473)
+- Fixed VSC Compare function, not working with Favorites from Zowe Explorer. [#2335](https://github.com/zowe/vscode-extension-for-zowe/issues/2335)
 
 ## `2.11.0`
 

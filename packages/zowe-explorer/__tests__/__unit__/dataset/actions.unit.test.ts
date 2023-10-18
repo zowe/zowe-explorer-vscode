@@ -1075,7 +1075,6 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
         });
         blockMocks.profileInstance.loadNamedProfile.mockReturnValueOnce(blockMocks.imperativeProfile);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
-        const mockSetEtag = jest.spyOn(childNode, "setEtag").mockImplementation(() => null);
         const testDocument = createTextDocument("HLQ.TEST.AFILE(MEM)", blockMocks.datasetSessionNode);
         jest.spyOn(favoriteChildNode, "getEtag").mockImplementation(() => "123");
         (testDocument as any).fileName = path.join(globals.DS_DIR, blockMocks.imperativeProfile.name, testDocument.fileName);
