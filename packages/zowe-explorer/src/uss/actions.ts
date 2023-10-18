@@ -352,7 +352,7 @@ export async function buildFileStructure(node: IZoweUSSTreeNode): Promise<UssFil
     ZoweLogger.trace("uss.actions.buildFileStructure called.");
     if (contextually.isUssDirectory(node)) {
         const directory: UssFileTree = {
-            localPath: node.getUSSDocumentFilePath(),
+            localUri: node.uri,
             ussPath: node.fullPath,
             baseName: node.getLabel() as string,
             sessionName: node.getSessionNode().getLabel() as string,
@@ -375,7 +375,7 @@ export async function buildFileStructure(node: IZoweUSSTreeNode): Promise<UssFil
     return {
         children: [],
         binary: node.binary,
-        localPath: node.getUSSDocumentFilePath(),
+        localUri: node.uri,
         ussPath: node.fullPath,
         baseName: node.getLabel() as string,
         sessionName: node.getSessionNode().getLabel() as string,
@@ -482,9 +482,8 @@ export async function pasteUss(ussFileProvider: IZoweTree<IZoweUSSTreeNode>, nod
             title: localize("ZoweUssNode.copyUpload.progress", "Pasting files..."),
         },
         async () => {
-            await (selectedNode.pasteUssTree ? selectedNode.pasteUssTree() : selectedNode.copyUssFile());
+            await selectedNode.pasteUssTree();
         }
     );
-    const nodeToRefresh = node?.contextValue != null && contextually.isUssSession(node) ? selectedNode : selectedNode.getParent();
-    ussFileProvider.refreshElement(nodeToRefresh);
+    ussFileProvider.refreshElement(selectedNode);
 }

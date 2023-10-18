@@ -25,7 +25,7 @@ import { closeOpenedTextFile } from "../utils/workspace";
 import * as nls from "vscode-nls";
 import { UssFileTree, UssFileType, UssFileUtils } from "./FileStructure";
 import { ZoweLogger } from "../utils/LoggerUtils";
-import { UssFile } from "./UssFSProvider";
+import { UssFile, UssFSProvider } from "./UssFSProvider";
 import { USSTree } from "./USSTree";
 
 // Set up localization
@@ -683,69 +683,21 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      * @param tree The structure of files and folders to paste
      * @param ussApi The USS API to use for this operation
      */
-    public async paste(sessionName: string, rootPath: string, uss: { tree: UssFileTree; api: IUss; options?: IUploadOptions }): Promise<void> {
+    public async paste(
+        sessionName: string,
+        destUri: vscode.Uri,
+        uss: { tree: UssFileTree; api: ZoweExplorerApi.IUss; options?: IUploadOptions }
+    ): Promise<void> {
         ZoweLogger.trace("ZoweUSSNode.paste called.");
         const hasCopyApi = uss.api.copy != null;
-        const hasPutContentApi = uss.api.putContent != null;
-        if (!uss.api.fileList || (!hasCopyApi && !hasPutContentApi)) {
-            throw new Error(localize("paste.missingApis", "Required API functions for pasting (fileList, copy and/or putContent) were not found."));
+        if (!uss.api.fileList || !hasCopyApi) {
+            throw new Error(localize("paste.missingApis", "Required API functions for pasting (fileList and copy) were not found."));
         }
 
-        const apiResponse = await uss.api.fileList(rootPath);
-        const fileList = apiResponse.apiResponse?.items;
-
-        // Check root path for conflicts before pasting nodes in this path
-        let fileName = uss.tree.baseName;
-        if (fileList?.find((file) => file.name === fileName) != null) {
-            // If file names match, build the copy suffix
-            let dupCount = 1;
-            const extension = path.extname(uss.tree.baseName);
-            const baseNameForFile = path.parse(uss.tree.baseName)?.name;
-            let dupName = `${baseNameForFile} (${dupCount})${extension}`;
-            while (fileList.find((file) => file.name === dupName) != null) {
-                dupCount++;
-                dupName = `${baseNameForFile} (${dupCount})${extension}`;
-            }
-            fileName = dupName;
-        }
-        const outputPath = `${rootPath}/${fileName}`;
-
-        if (hasCopyApi && UssFileUtils.toSameSession(uss.tree, sessionName)) {
-            await uss.api.copy(outputPath, {
-                from: uss.tree.ussPath,
-                recursive: uss.tree.type === UssFileType.Directory,
-            });
-        } else {
-            const existsLocally = fs.existsSync(uss.tree.localPath);
-            switch (uss.tree.type) {
-                case UssFileType.Directory:
-                    if (!existsLocally) {
-                        // We will need to build the file structure locally, to pull files down if needed
-                        fs.mkdirSync(uss.tree.localPath, { recursive: true });
-                    }
-                    // Not all APIs respect the recursive option, so it's best to
-                    // recurse within this operation to avoid missing files/folders
-                    await uss.api.create(outputPath, "directory");
-                    if (uss.tree.children) {
-                        for (const child of uss.tree.children) {
-                            await this.paste(sessionName, outputPath, { api: uss.api, tree: child, options: uss.options });
-                        }
-                    }
-                    break;
-                case UssFileType.File:
-                    if (!existsLocally) {
-                        await uss.api.getContents(uss.tree.ussPath, {
-                            file: uss.tree.localPath,
-                            binary: uss.tree.binary,
-                            returnEtag: true,
-                            encoding: this.profile.profile?.encoding,
-                            responseTimeout: this.profile.profile?.responseTimeout,
-                        });
-                    }
-                    await uss.api.putContent(uss.tree.localPath, outputPath, uss.options);
-                    break;
-            }
-        }
+        await UssFSProvider.instance.copyEx(uss.tree.localUri, destUri, {
+            overwrite: true,
+            tree: uss.tree,
+        });
     }
 
     /**
@@ -777,7 +729,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             };
 
             for (const subnode of fileTreeToPaste.children) {
-                await this.paste(sessionName, remotePath, { api, tree: subnode, options });
+                await this.paste(sessionName, vscode.Uri.parse(`uss:/${this.profile.name}${this.fullPath}`), { api, tree: subnode, options });
             }
         } catch (error) {
             await errorHandling(error, this.label.toString(), localize("copyUssFile.error", "Error uploading files"));

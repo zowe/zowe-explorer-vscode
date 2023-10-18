@@ -113,8 +113,13 @@ export interface IUss extends ICommon {
      * @param {string} ussFilePath
      * @param {zowe.IDownloadOptions} options
      */
-    getContents(ussFilePath: string, options: zowe.IDownloadOptions): Promise<zowe.IZosFilesResponse>;
+    getContents(ussFilePath: string, options: zowe.IDownloadSingleOptions): Promise<zowe.IZosFilesResponse>;
 
+    /**
+     * Uploads a given buffer as the contents of a file on USS.
+     */
+    uploadBufferAsFile?(buffer: Buffer, filePath: string, options?: zowe.IUploadOptions): Promise<string | zowe.IZosFilesResponse>;
+    
     /**
      * Uploads the file at the given path. Use for Save.
      *

@@ -113,12 +113,18 @@ export class ZosmfUssApi extends ZosmfApiCommon implements IUss {
         return zowe.Utilities.isFileTagBinOrAscii(this.getSession(), ussFilePath);
     }
 
-    public getContents(inputFilePath: string, options: zowe.IGetOptions | zowe.IDownloadOptions): Promise<Buffer> {
-        return zowe.Get.USSFile(this.getSession(), inputFilePath, options);
+    public async getContents(inputFilePath: string, options: zowe.IDownloadSingleOptions): Promise<zowe.IZosFilesResponse> {
+        return zowe.Download.ussFile(this.getSession(), inputFilePath, {
+            ...options,
+        });
     }
 
     public copy(outputPath: string, options?: Omit<object, "request">): Promise<Buffer> {
         return zowe.Utilities.putUSSPayload(this.getSession(), outputPath, { ...(options ?? {}), request: "copy" });
+    }
+
+    public uploadBufferAsFile(buffer: Buffer, filePath: string, options?: zowe.IUploadOptions): Promise<string> {
+        return zowe.Upload.bufferToUssFile(this.getSession(), filePath, buffer, options);
     }
 
     public putContent(inputFilePath: string, ussFilePath: string, options: zowe.IUploadOptions): Promise<zowe.IZosFilesResponse> {

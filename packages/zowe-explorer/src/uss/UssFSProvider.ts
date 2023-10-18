@@ -15,6 +15,8 @@ import * as path from "path";
 import * as vscode from "vscode";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
+import { UssFileTree, UssFileType } from "./FileStructure";
+import { Duplex } from "stream";
 
 export type FileEntryMetadata = {
     profile: imperative.IProfileLoaded;
@@ -25,18 +27,21 @@ export interface UssEntry {
     name: string;
     metadata: FileEntryMetadata;
     type: vscode.FileType;
+    wasAccessed: boolean;
 }
 
 export class UssFile implements UssEntry, vscode.FileStat {
     public name: string;
     public metadata: FileEntryMetadata;
     public type: vscode.FileType;
+    public wasAccessed: boolean;
 
     public ctime: number;
     public mtime: number;
     public size: number;
     public binary: boolean;
     public data?: Uint8Array;
+    public etag?: string;
     public attributes: FileAttributes;
 
     public constructor(name: string) {
@@ -46,6 +51,7 @@ export class UssFile implements UssEntry, vscode.FileStat {
         this.size = 0;
         this.name = name;
         this.binary = false;
+        this.wasAccessed = false;
     }
 }
 
@@ -53,12 +59,12 @@ export class UssDirectory implements UssEntry, vscode.FileStat {
     public name: string;
     public metadata: FileEntryMetadata;
     public type: vscode.FileType;
+    public wasAccessed: boolean;
 
     public ctime: number;
     public mtime: number;
     public size: number;
     public entries: Map<string, UssFile | UssDirectory>;
-    public wasAccessed: boolean;
 
     public constructor(name: string) {
         this.type = vscode.FileType.Directory;
@@ -196,24 +202,47 @@ export class UssFSProvider implements vscode.FileSystemProvider {
             throw vscode.FileSystemError.FileNotFound("Session does not exist for this file.");
         }
 
-        if (!file.data) {
+        if (!file.wasAccessed) {
+            // we need to fetch the contents from the mainframe since the file hasn't been accessed yet
+
+            class BufferBuilder extends Duplex {
+                private chunks: Uint8Array[];
+
+                public constructor() {
+                    super();
+                    this.chunks = [];
+                }
+
+                public _write(chunk: any, encoding: BufferEncoding, callback: (error?: Error) => void): void {
+                    this.chunks.push(chunk);
+                    callback();
+                }
+
+                public _read(size: number): void {
+                    const concatBuf = Buffer.concat(this.chunks);
+                    this.push(concatBuf);
+                    this.push(null);
+                }
+            }
+
+            const bufBuilder = new BufferBuilder();
             const filePath = uri.path.substring(startPathPos);
             const resp = await ZoweExplorerApiRegister.getUssApi(loadedProfile).getContents(filePath, {
                 returnEtag: true,
                 encoding: loadedProfile.profile?.encoding,
                 responseTimeout: loadedProfile.profile?.responseTimeout,
+                stream: bufBuilder,
             });
-            if (!(resp instanceof Buffer)) {
-                throw vscode.FileSystemError.FileNotFound();
-            }
 
-            file.data = resp;
+            file.data = bufBuilder.read();
+            file.etag = resp.apiResponse.etag;
+            file.wasAccessed = true;
         }
 
         return file.data;
     }
 
-    public writeFile(uri: vscode.Uri, content: Uint8Array, options: { create: boolean; overwrite: boolean }): void {
+    public async writeFile(uri: vscode.Uri, content: Uint8Array, options: { create: boolean; overwrite: boolean }): Promise<void> {
         /*
             1. Parse URI to get file path for API endpoint
             2. Make API call after assigning data to File object
@@ -239,11 +268,31 @@ export class UssFSProvider implements vscode.FileSystemProvider {
                 : this._getInfoFromUri(uri);
             entry = new UssFile(basename);
             entry.metadata = profInfo;
+            entry.data = content;
             parent.entries.set(basename, entry);
             this._fireSoon({ type: vscode.FileChangeType.Created, uri });
         } else {
-            // TODO: we might want to use a callback or promise that returns data rather than saving the full contents in memory
-            entry.data = content.length > 0 ? content : null;
+            if (entry.wasAccessed) {
+                // entry was already accessed, this is an update to the existing file
+                // eslint-disable-next-line no-useless-catch
+                try {
+                    await ZoweExplorerApiRegister.getUssApi(parent.metadata.profile).uploadBufferAsFile(
+                        Buffer.from(content),
+                        entry.metadata.ussPath,
+                        { etag: entry.etag }
+                    );
+                } catch (err) {
+                    // TODO: conflict management
+                    // if (err.message.includes("Rest API failure with HTTP(S) status 412")) {
+                    //     Gui.errorMessage("There is a newer version of this file on the mainframe. Compare with remote contents or overwrite?");
+                    // }
+                    throw err;
+                }
+                entry.data = content;
+            } else {
+                entry.data = content;
+            }
+            // if the entry hasn't been accessed yet, we don't need to call the API since we are just creating the file
         }
         entry.mtime = Date.now();
         entry.size = content.byteLength;
@@ -329,6 +378,65 @@ export class UssFSProvider implements vscode.FileSystemProvider {
         );
 
         this._fireSoon({ type: vscode.FileChangeType.Changed, uri: dirname }, { uri, type: vscode.FileChangeType.Deleted });
+    }
+
+    public async copyEx(
+        source: vscode.Uri,
+        destination: vscode.Uri,
+        options: { readonly overwrite: boolean; readonly tree: UssFileTree }
+    ): Promise<void> {
+        const destInfo = this._getInfoFromUri(destination);
+        const sourceInfo = this._getInfoFromUri(source);
+        const api = ZoweExplorerApiRegister.getUssApi(destInfo.profile);
+
+        const hasCopyApi = api.copy != null;
+
+        const apiResponse = await api.fileList(destInfo.ussPath);
+        const fileList = apiResponse.apiResponse?.items;
+
+        // Check root path for conflicts before pasting nodes in this path
+        let fileName = path.basename(sourceInfo.ussPath);
+        if (fileList?.find((file) => file.name === fileName) != null) {
+            // If file names match, build the copy suffix
+            let dupCount = 1;
+            const extension = path.extname(fileName);
+            const baseNameForFile = path.parse(fileName)?.name;
+            let dupName = `${baseNameForFile} (${dupCount})${extension}`;
+            while (fileList.find((file) => file.name === dupName) != null) {
+                dupCount++;
+                dupName = `${baseNameForFile} (${dupCount})${extension}`;
+            }
+            fileName = dupName;
+        }
+        const outputPath = `${destInfo.ussPath}/${fileName}`;
+
+        if (hasCopyApi && sourceInfo.profile.profile === destInfo.profile.profile) {
+            await api.copy(outputPath, {
+                from: sourceInfo.ussPath,
+                recursive: options.tree.type === UssFileType.Directory,
+                overwrite: options.overwrite ?? true,
+            });
+        } else if (options.tree.type === UssFileType.Directory) {
+            // Not all APIs respect the recursive option, so it's best to
+            // recurse within this operation to avoid missing files/folders
+            await api.create(outputPath, "directory");
+            if (options.tree.children) {
+                for (const child of options.tree.children) {
+                    await this.copyEx(child.localUri, vscode.Uri.parse(`uss:${outputPath}`), { ...options, tree: child });
+                }
+            }
+        } else {
+            const fileEntry = this._lookup(source, true);
+            if (fileEntry == null) {
+                return;
+            }
+
+            if (!fileEntry.wasAccessed) {
+                // must fetch contents of file first before pasting in new path
+                const fileContents = await vscode.workspace.fs.readFile(source);
+                await api.uploadBufferAsFile(Buffer.from(fileContents), outputPath);
+            }
+        }
     }
 
     public createDirectory(uri: vscode.Uri): void {
