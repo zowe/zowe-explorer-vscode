@@ -926,3 +926,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 ## 0.5.0
 
 - Initial release
+
+## TBD Release
+
+- Implemented right click action for Issue UNIX Command and have it available via the Zowe Explorer API [#1326](https://github.com/zowe/vscode-extension-for-zowe/issues/1326)

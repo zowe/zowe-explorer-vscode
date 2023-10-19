@@ -172,3 +172,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 ## `1.10.1`
 
 - Initial release
+
+## TBD Release
+
+- Implemented right click action for Issue UNIX Command and have it available via the Zowe Explorer API [#1326](https://github.com/zowe/vscode-extension-for-zowe/issues/1326)

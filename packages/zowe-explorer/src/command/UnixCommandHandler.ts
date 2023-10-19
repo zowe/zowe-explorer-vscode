@@ -230,8 +230,9 @@ export class UnixCommandHandler extends ZoweCommandProvider {
 
     private async issueCommand(profile: imperative.IProfileLoaded, command: string, cwd: string): Promise<void> {
         ZoweLogger.trace("UnixCommandHandler.issueCommand called.");
-        if (ZoweExplorerApiRegister.getCommandApi(profile).sshNeededforUnixCommand) this.sshSession = await this.setsshSession();
-        else {
+        if (ZoweExplorerApiRegister.getCommandApi(profile).sshNeededforUnixCommand) {
+            this.sshSession = await this.setsshSession();
+        } else {
             Gui.showMessage(localize("issueUnixCommand.notsupportedForProfile", "Action not being supported for the profile type ") + profile.type);
             return;
         }
