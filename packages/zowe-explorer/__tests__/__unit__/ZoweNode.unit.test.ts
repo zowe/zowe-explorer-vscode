@@ -18,6 +18,7 @@ import { List, imperative } from "@zowe/cli";
 import { Profiles } from "../../src/Profiles";
 import * as globals from "../../src/globals";
 import { ZoweLogger } from "../../src/utils/LoggerUtils";
+import { DatasetSortOpts, SortDirection } from "@zowe/zowe-explorer-api";
 
 describe("Unit Tests (Jest)", () => {
     // Globals
@@ -354,11 +355,16 @@ describe("Unit Tests (Jest)", () => {
                 };
             }),
         });
+        const sessionNode = {
+            getSessionNode: jest.fn(),
+            sort: { method: DatasetSortOpts.Name, direction: SortDirection.Ascending },
+        } as unknown as ZoweDatasetNode;
+        const getSessionNodeSpy = jest.spyOn(ZoweDatasetNode.prototype, "getSessionNode").mockReturnValue(sessionNode);
         // Creating a rootNode
         const pds = new ZoweDatasetNode(
             "[root]: something",
             vscode.TreeItemCollapsibleState.Collapsed,
-            { getSessionNode: jest.fn() } as unknown as ZoweDatasetNode,
+            sessionNode,
             session,
             undefined,
             undefined,
@@ -381,6 +387,7 @@ describe("Unit Tests (Jest)", () => {
         expect(pdsChildren[0].contextValue).toEqual(globals.DS_FILE_ERROR_CONTEXT);
         expect(pdsChildren[1].label).toEqual("GOODMEM1");
         expect(pdsChildren[1].contextValue).toEqual(globals.DS_MEMBER_CONTEXT);
+        getSessionNodeSpy.mockRestore();
     });
 
     /*************************************************************************************************************

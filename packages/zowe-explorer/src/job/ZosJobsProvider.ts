@@ -160,10 +160,9 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
      *
      * @param {IZoweJobTreeNode} node
      */
-    public saveSearch(node: IZoweJobTreeNode): IZoweJobTreeNode {
+    public saveSearch(node: IZoweJobTreeNode): void {
         ZoweLogger.trace("ZosJobsProvider.saveSearch called.");
         node.contextValue = contextually.asFavorite(node);
-        return node;
     }
     public saveFile(_document: vscode.TextDocument): void {
         throw new Error("Method not implemented.");
@@ -1122,6 +1121,13 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
 
         // Fire "tree changed event" to reflect added polling context value
         this.mOnDidChangeTreeData.fire();
+    }
+
+    public sortBy(session: IZoweJobTreeNode): void {
+        if (session.children != null) {
+            session.children.sort(Job.sortJobs(session.sort));
+            this.nodeDataChanged(session);
+        }
     }
 }
 
