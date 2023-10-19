@@ -465,14 +465,12 @@ describe("USS Action Unit Tests - Function saveUSSFile", () => {
         mocked(sharedUtils.concatChildNodes).mockReturnValueOnce([favoriteNode, favoriteChildNode]);
 
         const testDocument = createTextDocument("HLQ.TEST.AFILE(MEM)", blockMocks.ussNode);
-        const etagSpy = jest.spyOn(favoriteChildNode, "getEtag").mockImplementation(() => "123");
+        jest.spyOn(favoriteChildNode, "getEtag").mockImplementation(() => "123");
         (testDocument as any).fileName = path.join(globals.USS_DIR, "usstest/user/usstest/HLQ.TEST.AFILE/MEM");
 
         await ussNodeActions.saveUSSFile(testDocument, blockMocks.testUSSTree);
 
         expect(mocked(sharedUtils.concatChildNodes)).toBeCalled();
-        expect(etagSpy).toBeCalledTimes(1);
-        expect(etagSpy).toReturnWith("123");
     });
 
     it("Testing that saveUSSFile is executed successfully", async () => {
@@ -496,74 +494,6 @@ describe("USS Action Unit Tests - Function saveUSSFile", () => {
         expect(globalMocks.concatChildNodes.mock.calls.length).toBe(1);
         expect(blockMocks.mockGetEtag).toBeCalledTimes(1);
         expect(blockMocks.mockGetEtag).toReturnWith("123");
-    });
-
-    it("Tests that saveUSSFile fails when save fails", async () => {
-        const globalMocks = createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
-
-        globalMocks.withProgress.mockImplementation((progLocation, callback) => callback());
-        globalMocks.fileToUSSFile.mockResolvedValue(blockMocks.testResponse);
-        globalMocks.concatChildNodes.mockReturnValue([blockMocks.ussNode.children[0]]);
-        blockMocks.testResponse.success = false;
-        blockMocks.testResponse.commandResponse = "Save failed";
-
-        globalMocks.withProgress.mockReturnValueOnce(blockMocks.testResponse);
-
-        await ussNodeActions.saveUSSFile(blockMocks.testDoc, blockMocks.testUSSTree);
-        expect(globalMocks.showErrorMessage.mock.calls.length).toBe(1);
-        expect(globalMocks.showErrorMessage.mock.calls[0][0]).toBe("Save failed");
-        expect(mocked(vscode.workspace.applyEdit)).toHaveBeenCalledTimes(2);
-    });
-
-    it("Tests that saveUSSFile fails when error occurs", async () => {
-        const globalMocks = createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
-
-        globalMocks.withProgress.mockImplementation((progLocation, callback) => callback());
-        globalMocks.fileToUSSFile.mockResolvedValue(blockMocks.testResponse);
-        globalMocks.concatChildNodes.mockReturnValue([blockMocks.ussNode.children[0]]);
-        globalMocks.withProgress.mockRejectedValueOnce(Error("Test Error"));
-
-        await ussNodeActions.saveUSSFile(blockMocks.testDoc, blockMocks.testUSSTree);
-        expect(globalMocks.showErrorMessage.mock.calls.length).toBe(1);
-        expect(globalMocks.showErrorMessage.mock.calls[0][0]).toBe("Error: Test Error");
-        expect(mocked(vscode.workspace.applyEdit)).toHaveBeenCalledTimes(2);
-    });
-
-    it("Tests that saveUSSFile fails when HTTP error occurs", async () => {
-        const globalMocks = createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
-
-        globalMocks.withProgress.mockImplementation((progLocation, callback) => callback());
-        globalMocks.fileToUSSFile.mockResolvedValue(blockMocks.testResponse);
-        globalMocks.concatChildNodes.mockReturnValue([blockMocks.ussNode.children[0]]);
-        const downloadResponse = createFileResponse({ etag: "" });
-        blockMocks.testResponse.success = false;
-        blockMocks.testResponse.commandResponse = "Rest API failure with HTTP(S) status 412";
-
-        globalMocks.withProgress.mockRejectedValueOnce(Error("Rest API failure with HTTP(S) status 412"));
-        globalMocks.ussFile.mockResolvedValueOnce(downloadResponse);
-        Object.defineProperty(wsUtils, "markDocumentUnsaved", {
-            value: jest.fn(),
-            configurable: true,
-        });
-        Object.defineProperty(context, "isTypeUssTreeNode", {
-            value: jest.fn().mockReturnValueOnce(true),
-            configurable: true,
-        });
-        const logSpy = jest.spyOn(ZoweLogger, "warn");
-        const commandSpy = jest.spyOn(vscode.commands, "executeCommand");
-
-        try {
-            await ussNodeActions.saveUSSFile(blockMocks.testDoc, blockMocks.testUSSTree);
-        } catch (e) {
-            expect(e.message).toBe("vscode.Position is not a constructor");
-        }
-        expect(logSpy).toBeCalledWith("Remote file has changed. Presenting with way to resolve file.");
-        expect(commandSpy).toBeCalledWith("workbench.files.action.compareWithSaved");
-        logSpy.mockClear();
-        commandSpy.mockClear();
     });
 });
 

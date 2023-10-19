@@ -1586,29 +1586,24 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
         await api.Gui.errorMessage(sessionError);
         return;
     }
-    let etagProfiles = undefined;
-    let etagFavorites = undefined;
 
-    const profileSesnode = datasetProvider.mSessionNodes.find((child) => child.label.toString().trim() === sesName);
-    if (profileSesnode !== undefined) {
-        const dataset: api.IZoweDatasetTreeNode = profileSesnode.children
-            .find((child) => child.label.toString().trim() === dataSetName)
-            ?.children.find((child) => child.label.toString().trim() === memberName);
-        etagProfiles = dataset?.getEtag();
-    }
-    const favoritesSesNode = datasetProvider.mFavorites.find((child) => child.label.toString().trim() === sesName);
-    if (favoritesSesNode !== undefined) {
-        const dataset: api.IZoweDatasetTreeNode = favoritesSesNode.children
-            .find((child) => child.label.toString().trim() === dataSetName)
-            ?.children.find((child) => child.label.toString().trim() === memberName);
-        etagFavorites = dataset?.getEtag();
-    }
-    let sesNode;
-    if ((etagProfiles && etagFavorites) || etagProfiles) {
-        sesNode = profileSesnode;
-    } else if (etagFavorites) {
-        sesNode = favoritesSesNode;
-    }
+    const etagProfiles = (
+        datasetProvider.mSessionNodes
+            .find((child) => child.label.toString().trim() === sesName)
+            ?.children.find((child) => child.label.toString().trim() === dataSetName)
+            ?.children.find((child) => child.label.toString().trim() === memberName) as api.IZoweDatasetTreeNode
+    )?.getEtag();
+
+    const etagFavorites = (
+        datasetProvider.mFavorites
+            .find((child) => child.label.toString().trim() === sesName)
+            ?.children.find((child) => child.label.toString().trim() === dataSetName)
+            ?.children.find((child) => child.label.toString().trim() === memberName) as api.IZoweDatasetTreeNode
+    )?.getEtag();
+    const sesNode =
+        etagFavorites !== ""
+            ? datasetProvider.mFavorites.find((child) => child.label.toString().trim() === sesName)
+            : datasetProvider.mSessionNodes.find((child) => child.label.toString().trim() === sesName);
     if (!sesNode) {
         // if saving from favorites, a session might not exist for this node
         ZoweLogger.debug(localize("saveFile.missingSessionNode", "Could not find session node"));
