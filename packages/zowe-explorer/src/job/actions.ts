@@ -562,3 +562,23 @@ export async function sortJobs(session: IZoweJobTreeNode, jobsProvider: ZosJobsP
     jobsProvider.sortBy(session);
     Gui.setStatusBarMessage(localize("sort.updated", "$(check) Sorting updated for {0}", session.label as string), globals.MS_PER_SEC * 4);
 }
+
+export async function filterJobs(jobsProvider: IZoweTree<IZoweJobTreeNode>, job: IZoweJobTreeNode): Promise<vscode.InputBox> {
+    if (job.collapsibleState === vscode.TreeItemCollapsibleState.Collapsed) {
+        Gui.infoMessage(localize("filterJobs.message", "Use the search button to display jobs"));
+        return;
+    }
+    const acutal_jobs = job["children"];
+    const inputBox = await vscode.window.createInputBox();
+    inputBox.placeholder = localize("filterJobs.prompt.message", "Enter local filter...");
+    inputBox.onDidChangeValue((query) => {
+        query = query.toUpperCase();
+        job["children"] = acutal_jobs.filter((item) => `${item["job"].jobname}(${item["job"].jobid}) - ${item["job"].retcode}`.includes(query));
+        jobsProvider.refresh();
+    });
+    inputBox.onDidAccept(() => {
+        inputBox.hide();
+    });
+    inputBox.show();
+    return inputBox;
+}

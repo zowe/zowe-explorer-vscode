@@ -753,6 +753,15 @@
         "category": "Zowe Explorer"
       },
       {
+        "command": "zowe.jobs.filterJobs",
+        "title": "Filter Jobs",
+        "category": "Zowe Explorer",
+        "icon": {
+          "light": "./resources/light/filter-light.svg",
+          "dark": "./resources/dark/filter-dark.svg"
+        }
+      },
+      {
         "command": "zowe.jobs.search",
         "title": "%jobs.search%",
         "category": "Zowe Explorer",
@@ -1193,6 +1202,11 @@
         },
         {
           "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/ && !listMultiSelection",
+          "command": "zowe.jobs.filterJobs",
+          "group": "inline"
+        },
+        {
+          "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/ && !listMultiSelection",
           "command": "zowe.jobs.search",
           "group": "000_zowe_jobsMainframeInteraction@0"
         },
@@ -1245,6 +1259,11 @@
           "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)(server|job).*/",
           "command": "zowe.jobs.addFavorite",
           "group": "002_zowe_jobsWorkspace@0"
+        },
+        {
+          "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/  && !listMultiSelection",
+          "command": "zowe.jobs.filterJobs",
+          "group": "002_zowe_jobsProfileModification@99"
         },
         {
           "when": "view == zowe.jobs.explorer && viewItem =~ /^job.*_fav.*/",

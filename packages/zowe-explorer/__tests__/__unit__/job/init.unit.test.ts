@@ -219,6 +219,10 @@ describe("Test src/jobs/extension", () => {
                 mock: [{ spy: jest.spyOn(jobActions, "cancelJobs"), arg: [jobsProvider, [exampleData.job]] }],
                 parm: [exampleData.job],
             },
+            {
+                name: "zowe.jobs.filterJobs",
+                mock: [{ spy: jest.spyOn(jobActions, "filterJobs"), arg: [jobsProvider, test.value] }],
+            },
         ];
 
         beforeAll(async () => {

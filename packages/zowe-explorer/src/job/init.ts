@@ -172,6 +172,11 @@ export async function initJobsProvider(context: vscode.ExtensionContext): Promis
         })
     );
     context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.sortBy", async (job) => jobActions.sortJobs(job, jobsProvider)));
+    context.subscriptions.push(
+        vscode.commands.registerCommand("zowe.jobs.filterJobs", async (job) => {
+            await jobActions.filterJobs(jobsProvider, job);
+        })
+    );
     initSubscribers(context, jobsProvider);
     return jobsProvider;
 }
