@@ -76,7 +76,7 @@ export default function PersistentDataPanel({ type }: Readonly<{ type: Readonly<
 
   return (
     <DataPanelContext.Provider value={{ type, selection, selectedItems: selectedItemsMemo }}>
-      <VSCodePanelView id={panelId[type]} style={{ flexDirection: "column" }}>
+      <VSCodePanelView id={panelId[type]} style={{ flexDirection: "column", minHeight: "100vh" }}>
         <PersistentToolBar handleChange={handleChange} />
         <VSCodeDataGrid>
           <PersistentDataGridHeaders />
