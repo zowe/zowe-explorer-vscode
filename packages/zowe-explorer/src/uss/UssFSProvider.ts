@@ -17,6 +17,15 @@ import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { UssFileTree, UssFileType } from "./FileStructure";
 import { Duplex } from "stream";
+import { Gui } from "@zowe/zowe-explorer-api";
+
+// Set up localization
+import * as nls from "vscode-nls";
+nls.config({
+    messageFormat: nls.MessageFormat.bundle,
+    bundleFormat: nls.BundleFormat.standalone,
+})();
+const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 export type FileEntryMetadata = {
     profile: imperative.IProfileLoaded;
@@ -52,6 +61,26 @@ export class UssFile implements UssEntry, vscode.FileStat {
         this.name = name;
         this.binary = false;
         this.wasAccessed = false;
+    }
+}
+
+class BufferBuilder extends Duplex {
+    private chunks: Uint8Array[];
+
+    public constructor() {
+        super();
+        this.chunks = [];
+    }
+
+    public _write(chunk: any, encoding: BufferEncoding, callback: (error?: Error) => void): void {
+        this.chunks.push(chunk);
+        callback();
+    }
+
+    public _read(size: number): void {
+        const concatBuf = Buffer.concat(this.chunks);
+        this.push(concatBuf);
+        this.push(null);
     }
 }
 
@@ -204,27 +233,6 @@ export class UssFSProvider implements vscode.FileSystemProvider {
 
         if (!file.wasAccessed) {
             // we need to fetch the contents from the mainframe since the file hasn't been accessed yet
-
-            class BufferBuilder extends Duplex {
-                private chunks: Uint8Array[];
-
-                public constructor() {
-                    super();
-                    this.chunks = [];
-                }
-
-                public _write(chunk: any, encoding: BufferEncoding, callback: (error?: Error) => void): void {
-                    this.chunks.push(chunk);
-                    callback();
-                }
-
-                public _read(size: number): void {
-                    const concatBuf = Buffer.concat(this.chunks);
-                    this.push(concatBuf);
-                    this.push(null);
-                }
-            }
-
             const bufBuilder = new BufferBuilder();
             const filePath = uri.path.substring(startPathPos);
             const resp = await ZoweExplorerApiRegister.getUssApi(loadedProfile).getContents(filePath, {
@@ -272,21 +280,59 @@ export class UssFSProvider implements vscode.FileSystemProvider {
             parent.entries.set(basename, entry);
             this._fireSoon({ type: vscode.FileChangeType.Created, uri });
         } else {
+            const ussApi = ZoweExplorerApiRegister.getUssApi(parent.metadata.profile);
             if (entry.wasAccessed) {
                 // entry was already accessed, this is an update to the existing file
                 // eslint-disable-next-line no-useless-catch
                 try {
-                    await ZoweExplorerApiRegister.getUssApi(parent.metadata.profile).uploadBufferAsFile(
+                    await ussApi.uploadBufferAsFile(
                         Buffer.from(content),
                         entry.metadata.ussPath,
                         { etag: entry.etag }
                     );
                 } catch (err) {
-                    // TODO: conflict management
-                    // if (err.message.includes("Rest API failure with HTTP(S) status 412")) {
-                    //     Gui.errorMessage("There is a newer version of this file on the mainframe. Compare with remote contents or overwrite?");
-                    // }
-                    throw err;
+                    if (err.message.includes("Rest API failure with HTTP(S) status 412")) {
+                        const conflictOptions = [localize("compare.file", "Compare"), localize("compare.overwrite", "Overwrite")];
+                        const userSelection = await Gui.errorMessage(
+                            "There is a newer version of this file on the mainframe. Compare with remote contents or overwrite?",
+                            {
+                                items: conflictOptions,
+                            }
+                        );
+                        if (userSelection == null) {
+                            return;
+                        }
+
+                        if (userSelection === conflictOptions[0]) {
+                            const bufBuilder = new BufferBuilder();
+                            const resp = await ussApi.getContents(entry.metadata.ussPath, {
+                                returnEtag: true,
+                                encoding: entry.metadata.profile?.profile?.encoding,
+                                responseTimeout: entry.metadata.profile?.profile?.responseTimeout,
+                                stream: bufBuilder,
+                            });
+
+                            const mainframeDoc = await vscode.workspace.openTextDocument({
+                                content: bufBuilder.read().toString()
+                            });
+                            (mainframeDoc as any).fileName = `${entry.name} (Remote)`;
+
+                            // VSCode doesn't give us an easy way of showing a diff, so we need to hack something together here .-.
+                            vscode.commands.executeCommand("vscode.diff", vscode.window.activeTextEditor.document.uri, mainframeDoc.uri);
+                            return;
+                        } else {
+                            entry.data = content;
+                            await ussApi.uploadBufferAsFile(
+                                Buffer.from(content),
+                                entry.metadata.ussPath
+                            );
+                            const newData = await ussApi.getContents(entry.metadata.ussPath, {
+                                returnEtag: true
+                            });
+                            entry.etag = newData.apiResponse.etag;
+                            // todo: update etag
+                        }
+                    }
                 }
                 entry.data = content;
             } else {
@@ -442,7 +488,6 @@ export class UssFSProvider implements vscode.FileSystemProvider {
     public createDirectory(uri: vscode.Uri): void {
         /*
             1. Parse URI to get desired directory path
-            2. TODO: Call API endpoint to create directory on mainframe
         */
         const basename = path.posix.basename(uri.path);
         const dirname = uri.with({ path: path.posix.dirname(uri.path) });
