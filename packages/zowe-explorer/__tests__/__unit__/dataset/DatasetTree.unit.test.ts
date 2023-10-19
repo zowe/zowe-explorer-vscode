@@ -2700,6 +2700,8 @@ describe("Dataset Tree Unit Tests - Function initializeFavorites", () => {
     });
 });
 describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
+    createGlobalMocks();
+    mocked(vscode.window.createTreeView).mockReturnValueOnce(createTreeView());
     const tree = new DatasetTree();
     const nodesForSuite = (): Record<string, IZoweDatasetTreeNode> => {
         const session = new ZoweDatasetNode("testSession", vscode.TreeItemCollapsibleState.Collapsed, null, createISession());
