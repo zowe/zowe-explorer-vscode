@@ -487,21 +487,18 @@ export async function pasteUssFile(ussFileProvider: IZoweTree<IZoweUSSTreeNode>,
  */
 export async function pasteUss(ussFileProvider: IZoweTree<IZoweUSSTreeNode>, node: IZoweUSSTreeNode): Promise<void> {
     ZoweLogger.trace("uss.actions.pasteUss called.");
-    const a = ussFileProvider.getTreeView().selection as IZoweUSSTreeNode[];
-    let selectedNode = node;
-    if (!selectedNode) {
-        selectedNode = a.length > 0 ? a[0] : (a as unknown as IZoweUSSTreeNode);
+    if (node.pasteUssTree == null && node.copyUssFile == null) {
+        await Gui.infoMessage(localize("uss.paste.apiNotAvailable", "The paste operation is not supported for this node."));
+        return;
     }
-
     await Gui.withProgress(
         {
             location: vscode.ProgressLocation.Window,
             title: localize("ZoweUssNode.copyUpload.progress", "Pasting files..."),
         },
         async () => {
-            await (selectedNode.pasteUssTree ? selectedNode.pasteUssTree() : selectedNode.copyUssFile());
+            await (node.pasteUssTree ? node.pasteUssTree() : node.copyUssFile());
         }
     );
-    const nodeToRefresh = node?.contextValue != null && contextually.isUssSession(node) ? selectedNode : selectedNode.getParent();
-    ussFileProvider.refreshElement(nodeToRefresh);
+    ussFileProvider.refreshElement(node);
 }
