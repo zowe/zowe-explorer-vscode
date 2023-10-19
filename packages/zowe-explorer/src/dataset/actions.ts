@@ -1587,13 +1587,6 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
         return;
     }
 
-    const etagProfiles = (
-        datasetProvider.mSessionNodes
-            .find((child) => child.label.toString().trim() === sesName)
-            ?.children.find((child) => child.label.toString().trim() === dataSetName)
-            ?.children.find((child) => child.label.toString().trim() === memberName) as api.IZoweDatasetTreeNode
-    )?.getEtag();
-
     const etagFavorites = (
         datasetProvider.mFavorites
             .find((child) => child.label.toString().trim() === sesName)
