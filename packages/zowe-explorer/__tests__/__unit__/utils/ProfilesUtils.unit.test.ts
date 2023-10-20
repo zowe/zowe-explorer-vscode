@@ -694,7 +694,7 @@ describe("ProfilesUtils unit tests", () => {
                 credMgrZEName: "test",
             });
             jest.spyOn((profUtils as any).ProfilesUtils, "setupCustomCredentialManager").mockReturnValueOnce({});
-            await expect(profUtils.ProfilesUtils.getProfileInfo()).resolves.toEqual({});
+            await expect(profUtils.ProfilesUtils.getProfileInfo(false)).resolves.toEqual({});
             expect(isVSCodeCredentialPluginInstalledSpy).toBeCalledTimes(1);
         });
 
@@ -710,7 +710,7 @@ describe("ProfilesUtils unit tests", () => {
                 credMgrZEName: "test",
             });
             jest.spyOn((profUtils as any).ProfilesUtils, "setupCustomCredentialManager").mockReturnValueOnce({});
-            await expect(profUtils.ProfilesUtils.getProfileInfo()).resolves.toEqual({});
+            await expect(profUtils.ProfilesUtils.getProfileInfo(false)).resolves.toEqual({});
         });
 
         it("should retrieve the default credential manager if no custom credential manager is found", async () => {
@@ -720,7 +720,7 @@ describe("ProfilesUtils unit tests", () => {
             jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(true);
             jest.spyOn(profUtils.ProfilesUtils, "getCredentialManagerMap").mockReturnValueOnce(undefined);
             jest.spyOn((profUtils as any).ProfilesUtils, "setupDefaultCredentialManager").mockReturnValueOnce({});
-            await expect(profUtils.ProfilesUtils.getProfileInfo()).resolves.toEqual({});
+            await expect(profUtils.ProfilesUtils.getProfileInfo(false)).resolves.toEqual({});
         });
     });
 
