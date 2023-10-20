@@ -113,7 +113,10 @@ async function createGlobalMocks() {
         configurable: true,
     });
     Object.defineProperty(globals, "ISTHEIA", { get: () => false, configurable: true });
-    Object.defineProperty(vscode.window, "createTreeView", { value: jest.fn(), configurable: true });
+    Object.defineProperty(vscode.window, "createTreeView", {
+        value: jest.fn().mockReturnValue({ onDidCollapseElement: jest.fn() }),
+        configurable: true,
+    });
     Object.defineProperty(vscode.workspace, "getConfiguration", {
         value: newMocks.mockGetConfiguration,
         configurable: true,

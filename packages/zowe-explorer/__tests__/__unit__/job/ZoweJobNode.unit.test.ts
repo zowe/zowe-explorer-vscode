@@ -40,6 +40,7 @@ async function createGlobalMocks() {
         mockAffectsConfig: jest.fn(),
         createTreeView: jest.fn(() => ({
             reveal: jest.fn(),
+            onDidCollapseElement: jest.fn(),
         })),
         mockCreateSessCfgFromArgs: jest.fn(),
         mockGetSpoolFiles: jest.fn(),
