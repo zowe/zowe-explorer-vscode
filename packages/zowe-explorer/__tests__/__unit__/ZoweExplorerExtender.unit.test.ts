@@ -53,7 +53,10 @@ describe("ZoweExplorerExtender unit tests", () => {
                 })
                 .mockReturnValue(newMocks.profiles),
         });
-        Object.defineProperty(vscode.window, "createTreeView", { value: jest.fn(), configurable: true });
+        Object.defineProperty(vscode.window, "createTreeView", {
+            value: jest.fn().mockReturnValue({ onDidCollapseElement: jest.fn() }),
+            configurable: true,
+        });
         Object.defineProperty(vscode.window, "showErrorMessage", {
             value: newMocks.mockErrorMessage,
             configurable: true,

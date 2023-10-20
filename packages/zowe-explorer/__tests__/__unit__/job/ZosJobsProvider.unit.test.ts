@@ -45,7 +45,7 @@ async function createGlobalMocks() {
         mockGetJob: jest.fn(),
         mockRefresh: jest.fn(),
         mockAffectsConfig: jest.fn(),
-        createTreeView: jest.fn(),
+        createTreeView: jest.fn().mockReturnValue({ onDidCollapseElement: jest.fn() }),
         mockGetSpoolFiles: jest.fn(),
         mockDeleteJobs: jest.fn(),
         mockShowInputBox: jest.fn(),
@@ -85,7 +85,7 @@ async function createGlobalMocks() {
             };
         }),
     };
-
+    jest.spyOn(Gui, "createTreeView").mockImplementation(globalMocks.createTreeView);
     Object.defineProperty(ProfilesCache, "getConfigInstance", {
         value: jest.fn(() => {
             return {
@@ -173,7 +173,6 @@ async function createGlobalMocks() {
     Object.defineProperty(ZoweLogger, "warn", { value: jest.fn(), configurable: true });
     Object.defineProperty(ZoweLogger, "info", { value: jest.fn(), configurable: true });
     Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
-    globalMocks.createTreeView.mockReturnValue("testTreeView");
     globalMocks.testSessionNode = createJobSessionNode(globalMocks.testSession, globalMocks.testProfile);
     globalMocks.mockGetJob.mockReturnValue(globalMocks.testIJob);
     globalMocks.mockGetJobsByOwnerAndPrefix.mockReturnValue([globalMocks.testIJob, globalMocks.testIJobComplete]);

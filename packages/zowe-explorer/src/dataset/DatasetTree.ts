@@ -102,6 +102,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             treeDataProvider: this,
             canSelectMany: true,
         });
+        this.treeView.onDidCollapseElement(TreeViewUtils.refreshIconOnCollapse([contextually.isPds, contextually.isDsSession], this));
     }
 
     /**

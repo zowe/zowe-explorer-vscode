@@ -47,7 +47,7 @@ async function createGlobalMocks() {
         showInputBox: jest.fn(),
         filters: jest.fn(),
         getFilters: jest.fn(),
-        createTreeView: jest.fn(),
+        createTreeView: jest.fn().mockReturnValue({ onDidCollapseElement: jest.fn() }),
         createQuickPick: jest.fn(),
         getConfiguration: jest.fn(),
         ZosmfSession: jest.fn(),
