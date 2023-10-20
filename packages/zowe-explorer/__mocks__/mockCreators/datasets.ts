@@ -43,6 +43,11 @@ export function createDatasetTree(sessionNode: ZoweDatasetNode, treeView: any, f
         addFavorite: jest.fn(),
         getSearchHistory: jest.fn(),
         getFileHistory: jest.fn(),
+        getSessions: jest.fn(),
+        getFavorites: jest.fn(),
+        removeSearchHistory: jest.fn(),
+        resetSearchHistory: jest.fn(),
+        resetFileHistory: jest.fn(),
         refresh: jest.fn(),
         refreshElement: jest.fn(),
         checkCurrentProfile: jest.fn(),
@@ -78,6 +83,7 @@ export function createDatasetTree(sessionNode: ZoweDatasetNode, treeView: any, f
     testDatasetTree.removeFileHistory.mockImplementation((badFile) =>
         testDatasetTree.mFileHistory.splice(testDatasetTree.mFileHistory.indexOf(badFile), 1)
     );
+    testDatasetTree.getSearchHistory.mockImplementation();
     testDatasetTree.getFileHistory.mockImplementation(() => testDatasetTree.mFileHistory);
     testDatasetTree.deleteSession.mockImplementation((badSession) => removeNodeFromArray(badSession, testDatasetTree.mSessionNodes));
     testDatasetTree.removeFavorite.mockImplementation((badFavorite) => removeNodeFromArray(badFavorite, testDatasetTree.mFavorites));
