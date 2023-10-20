@@ -87,4 +87,12 @@ describe("PersistentFilters Unit Test", () => {
             expect(pf.getDsTemplates()).toEqual([mockTemplate]);
         });
     });
+    describe("removeSearchHistory", () => {
+        it("should remove the specified item from the persistent object", () => {
+            const pf: PersistentFilters = new PersistentFilters("test", 2, 2);
+            pf["mSearchHistory"] = ["test1", "test2"];
+            pf.removeSearchHistory("test1");
+            expect(pf.getSearchHistory().length).toEqual(1);
+        });
+    });
 });
