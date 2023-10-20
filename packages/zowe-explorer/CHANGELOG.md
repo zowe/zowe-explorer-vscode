@@ -13,6 +13,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Added ability to install extension from VS Code marketplace if custom credential manager extension is missing after defining it on `imperative.json` [#2381](https://github.com/zowe/vscode-extension-for-zowe/issues/2381)
 - Added "Sort PDS members" feature in Data Sets tree view: accessible via sort icon on session node, or by right-clicking a PDS or session. [#2420](https://github.com/zowe/vscode-extension-for-zowe/issues/2420)
 - Added "Filter PDS members" feature in Data Sets tree view: accessible via filter icon on session node, or by right-clicking a PDS or session. [#2420](https://github.com/zowe/vscode-extension-for-zowe/issues/2420)
+- Added webview for editing persistent items on Zowe Explorer [#2488](https://github.com/zowe/vscode-extension-for-zowe/issues/2488)
 
 ### Bug fixes
 

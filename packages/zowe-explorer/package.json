@@ -91,6 +91,11 @@
         "mac": "cmd+alt+z"
       },
       {
+        "command": "zowe.editHistory",
+        "key": "ctrl+y",
+        "mac": "cmd+y"
+      },
+      {
         "command": "zowe.uss.copyUssFile",
         "key": "ctrl+c",
         "mac": "cmd+c",
@@ -144,6 +149,15 @@
         "icon": {
           "light": "./resources/light/refresh.svg",
           "dark": "./resources/dark/refresh.svg"
+        }
+      },
+      {
+        "command": "zowe.editHistory",
+        "title": "%zowe.editHistory%",
+        "category": "Zowe Explorer",
+        "icon": {
+          "light": "./resources/light/history.svg",
+          "dark": "./resources/dark/history.svg"
         }
       },
       {
@@ -972,6 +986,31 @@
           "group": "inline@0"
         },
         {
+          "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)ussSession.*/ && !listMultiSelection",
+          "command": "zowe.uss.ssoLogout",
+          "group": "098_zowe_ussProfileAuthentication@5"
+        },
+        {
+          "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)ussSession.*/ && !listMultiSelection",
+          "command": "zowe.editHistory",
+          "group": "100_zowe_editHistory@100"
+        },
+        {
+          "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*/ && !listMultiSelection",
+          "command": "zowe.uss.editSession",
+          "group": "099_zowe_ussProfileModification@1"
+        },
+        {
+          "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*/",
+          "command": "zowe.uss.removeSession",
+          "group": "099_zowe_ussProfileModification@98"
+        },
+        {
+          "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*/  && !listMultiSelection",
+          "command": "zowe.uss.deleteProfile",
+          "group": "099_zowe_ussProfileModification@99"
+        },
+        {
           "when": "view == zowe.ds.explorer && viewItem =~ /^session.*/ && !listMultiSelection",
           "command": "zowe.ds.sortBy",
           "group": "inline@1"
@@ -1172,6 +1211,11 @@
           "group": "inline@0"
         },
         {
+          "when": "view == zowe.ds.explorer && viewItem =~ /^(?!.*_fav.*)session.*/ && !listMultiSelection",
+          "command": "zowe.editHistory",
+          "group": "100_zowe_editHistory@100"
+        },
+        {
           "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/ && !listMultiSelection",
           "command": "zowe.jobs.search",
           "group": "inline@1"
@@ -1300,6 +1344,11 @@
           "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/  && !listMultiSelection",
           "command": "zowe.jobs.sortBy",
           "group": "099_zowe_jobsSort"
+        },
+        {
+          "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/  && !listMultiSelection",
+          "command": "zowe.editHistory",
+          "group": "100_zowe_editHistory@100"
         },
         {
           "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/ && !listMultiSelection",
@@ -1891,7 +1940,7 @@
     "updateStrings": "node ../../scripts/stringUpdateScript.js && prettier --write --loglevel warn ./i18n package.nls*",
     "package": "vsce package --allow-star-activation --yarn && node ../../scripts/mv-pack.js vscode-extension-for-zowe vsix",
     "license": "node ../../scripts/updateLicenses.js",
-    "watch": "concurrently -n \"yarn run watch:webviews\" \"yarn run watch:zowe-explorer\"",
+    "watch": "concurrently \"yarn run watch:webviews\" \"yarn run watch:zowe-explorer\"",
     "watch:zowe-explorer": "gulp build && webpack --mode development --watch --info-verbosity verbose",
     "watch:webviews": "yarn workspace webviews dev",
     "compile": "tsc -b",
