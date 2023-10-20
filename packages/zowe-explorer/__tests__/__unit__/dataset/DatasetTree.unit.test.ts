@@ -59,7 +59,10 @@ function createGlobalMocks() {
 
     globalMocks.mockProfileInstance = createInstanceOfProfile(globalMocks.testProfileLoaded);
 
-    Object.defineProperty(vscode.window, "createTreeView", { value: jest.fn(), configurable: true });
+    Object.defineProperty(vscode.window, "createTreeView", {
+        value: jest.fn().mockReturnValue({ onDidCollapseElement: jest.fn() }),
+        configurable: true,
+    });
     Object.defineProperty(Gui, "showMessage", { value: jest.fn(), configurable: true });
     Object.defineProperty(Gui, "setStatusBarMessage", { value: jest.fn().mockReturnValue({ dispose: jest.fn() }), configurable: true });
     Object.defineProperty(vscode.window, "showTextDocument", { value: jest.fn(), configurable: true });
@@ -2697,6 +2700,8 @@ describe("Dataset Tree Unit Tests - Function initializeFavorites", () => {
     });
 });
 describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
+    createGlobalMocks();
+    mocked(vscode.window.createTreeView).mockReturnValueOnce(createTreeView());
     const tree = new DatasetTree();
     const nodesForSuite = (): Record<string, IZoweDatasetTreeNode> => {
         const session = new ZoweDatasetNode("testSession", vscode.TreeItemCollapsibleState.Collapsed, null, createISession());
