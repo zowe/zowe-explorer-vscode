@@ -28,11 +28,10 @@ interface Webviews {
  * @returns Object the object where the key is the webview and the value is the location of the webview
  */
 const getAvailableWebviews = (source: string): Webviews => {
-    const webviews = readdirSync(source, { withFileTypes: true })
+    return readdirSync(source, { withFileTypes: true })
         .filter((dirent) => dirent.isDirectory())
-        .map((dirent) => dirent.name);
-
-    return webviews.reduce((o, key) => Object.assign(o, { [key]: path.resolve("src", key, "index.html") }), {});
+        .map((dirent) => dirent.name)
+        .reduce((o, key) => Object.assign(o, { [key]: path.resolve("src", key, "index.html") }), {});
 };
 
 export default defineConfig({
@@ -51,7 +50,7 @@ export default defineConfig({
             output: {
                 entryFileNames: `[name]/[name].js`,
                 chunkFileNames: `[name]/[name].js`,
-                assetFileNames: `[name]/[name].[ext]`,
+                assetFileNames: `assets/[name].[ext]`,
             },
         },
     },

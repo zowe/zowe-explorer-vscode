@@ -764,6 +764,21 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         return this.mHistory.removeFileHistory(name);
     }
 
+    public removeSearchHistory(name: string): void {
+        ZoweLogger.trace("DatasetTree.removeSearchHistory called.");
+        this.mHistory.removeSearchHistory(name);
+    }
+
+    public resetSearchHistory(): void {
+        ZoweLogger.trace("DatasetTree.resetSearchHistory called.");
+        this.mHistory.resetSearchHistory();
+    }
+
+    public resetFileHistory(): void {
+        ZoweLogger.trace("DatasetTree.resetFileHistory called.");
+        this.mHistory.resetFileHistory();
+    }
+
     public addDsTemplate(criteria: DataSetAllocTemplate): void {
         this.mHistory.addDsTemplateHistory(criteria);
         this.refresh();
@@ -772,6 +787,16 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
     public getDsTemplates(): DataSetAllocTemplate[] {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-return
         return this.mHistory.getDsTemplates();
+    }
+
+    public getSessions(): string[] {
+        ZoweLogger.trace("DatasetTree.getSessions called.");
+        return this.mHistory.getSessions();
+    }
+
+    public getFavorites(): string[] {
+        ZoweLogger.trace("DatasetTree.getFavorites called.");
+        return this.mHistory.readFavorites();
     }
 
     public createFilterString(newFilter: string, node: IZoweDatasetTreeNode): string {
