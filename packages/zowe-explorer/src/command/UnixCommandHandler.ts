@@ -106,7 +106,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
                 profile = allProfiles.filter((temprofile) => temprofile.name === sesName)[0];
                 if (cwd == undefined) {
                     cwd = await vscode.window.showInputBox({
-                        prompt: "Enter the path of the directory inorder to execute the command",
+                        prompt: "Enter the path of the directory in order to execute the command",
                         value: "",
                     });
                 }
@@ -154,7 +154,8 @@ export class UnixCommandHandler extends ZoweCommandProvider {
         ZoweLogger.trace("UnixCommandHandler.setsshSession called.");
         const sshprofile: imperative.IProfileLoaded = Profiles.getInstance().getDefaultProfile("ssh");
         if (!sshprofile) {
-            Gui.errorMessage(localize("setsshProfile.couldnotfindprofile", "Could not find the zowe SSH Profile.Create One"));
+            Gui.errorMessage(localize("setsshProfile.couldnotfindprofile", "No SSH profile found. Please create an SSH profile before issuing Unix commands."));
+            return ;
         }
         const cmdArgs: imperative.ICommandArguments = this.getCmdArgs(sshprofile?.profile as imperative.IProfileLoaded);
         // create the ssh session
