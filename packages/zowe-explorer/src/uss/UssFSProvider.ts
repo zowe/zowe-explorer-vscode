@@ -231,7 +231,7 @@ export class UssFSProvider implements vscode.FileSystemProvider {
             stream: bufBuilder,
         });
 
-        file.data = bufBuilder.read();
+        file.data = bufBuilder.read() ?? new Uint8Array();
         file.etag = resp.apiResponse.etag;
         if (editor) {
             // This is a hacky method and does not work for editors that aren't the active one,
@@ -369,6 +369,12 @@ export class UssFSProvider implements vscode.FileSystemProvider {
                 // eslint-disable-next-line no-useless-catch
                 try {
                     await ussApi.uploadBufferAsFile(Buffer.from(content), entry.metadata.ussPath, { etag: entry.etag });
+                    // get new etag from mainframe
+                    // ideally, uploadBufferAsFile would return this data but its not configured to do so
+                    const newData = await ussApi.getContents(entry.metadata.ussPath, {
+                        returnEtag: true,
+                    });
+                    entry.etag = newData.apiResponse.etag;
                 } catch (err) {
                     if (err.message.includes("Rest API failure with HTTP(S) status 412")) {
                         const conflictOptions = [localize("compare.file", "Compare"), localize("compare.overwrite", "Overwrite")];

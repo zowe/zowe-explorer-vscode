@@ -686,7 +686,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     public async paste(
         sessionName: string,
         destUri: vscode.Uri,
-        uss: { tree: UssFileTree; api: ZoweExplorerApi.IUss; options?: IUploadOptions }
+        uss: { tree: UssFileTree; api: IUss; options?: IUploadOptions }
     ): Promise<void> {
         ZoweLogger.trace("ZoweUSSNode.paste called.");
         const hasCopy = uss.api.copy != null;

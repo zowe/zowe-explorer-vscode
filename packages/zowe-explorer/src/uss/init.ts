@@ -24,7 +24,7 @@ import { UssFSProvider } from "./UssFSProvider";
 
 export async function initUSSProvider(context: vscode.ExtensionContext): Promise<USSTree> {
     ZoweLogger.trace("init.initUSSProvider called.");
-    const ussFileProvider = await createUSSTree(globals.LOG);
+    const ussFileProvider = await createUSSTree();
     if (ussFileProvider == null) {
         return null;
     }
