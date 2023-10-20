@@ -767,9 +767,31 @@
         "command": "zowe.jobs.downloadSingleSpoolBinary",
         "title": "%downloadSingleSpoolBinary%",
         "category": "Zowe Explorer"
+      },
+      {
+        "command": "zowe.uss.useLocalContent",
+        "title": "%uss.overwrite%",
+        "icon": "$(check)"
+      },
+      {
+        "command": "zowe.uss.useRemoteContent",
+        "title": "%uss.useRemote%",
+        "icon": "$(discard)"
       }
     ],
     "menus": {
+      "editor/title": [
+        {
+          "command": "zowe.uss.useLocalContent",
+          "group": "navigation@0",
+          "when": "resourceScheme == uss && isInDiffEditor"
+        },
+        {
+          "command": "zowe.uss.useRemoteContent",
+          "group": "navigation@1",
+          "when": "resourceScheme == uss && isInDiffEditor"
+        }
+      ],
       "view/title": [
         {
           "when": "view == zowe.ds.explorer",

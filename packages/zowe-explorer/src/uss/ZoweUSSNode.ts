@@ -689,9 +689,12 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         uss: { tree: UssFileTree; api: ZoweExplorerApi.IUss; options?: IUploadOptions }
     ): Promise<void> {
         ZoweLogger.trace("ZoweUSSNode.paste called.");
-        const hasCopyApi = uss.api.copy != null;
-        if (!uss.api.fileList || !hasCopyApi) {
-            throw new Error(localize("paste.missingApis", "Required API functions for pasting (fileList and copy) were not found."));
+        const hasCopy = uss.api.copy != null;
+        const hasUploadBufAsFile = uss.api.uploadBufferAsFile != null;
+        if (!uss.api.fileList || !hasCopy || !hasUploadBufAsFile) {
+            throw new Error(
+                localize("paste.missingApis", "Required API functions for pasting (fileList and copy/uploadBufferAsFile) were not found.")
+            );
         }
 
         await UssFSProvider.instance.copyEx(uss.tree.localUri, destUri, {

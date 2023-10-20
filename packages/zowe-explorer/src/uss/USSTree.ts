@@ -109,6 +109,27 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             return;
         }
 
+        // determine if any overwrites may occur
+        const willOverwrite = Object.values(this.draggedNodes).reduce(
+            (all, n) => all || target.children?.find((tc) => tc.label === n.label) != null,
+            false
+        );
+        if (willOverwrite) {
+            const userOpts = [localize("option.confirm", "Confirm")];
+            const resp = await Gui.warningMessage(
+                localize("uss.drop.willOverwrite", "One or more items may be overwritten from this drop operation. Confirm or cancel?"),
+                {
+                    items: userOpts,
+                    vsCodeOpts: {
+                        modal: true,
+                    },
+                }
+            );
+            if (resp == null || resp !== userOpts[0]) {
+                return;
+            }
+        }
+
         for (const item of droppedItems.value) {
             const node = this.draggedNodes[item.uri.path];
             if (node.getParent() === target) {

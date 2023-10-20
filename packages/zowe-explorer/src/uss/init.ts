@@ -60,7 +60,16 @@ export async function initUSSProvider(context: vscode.ExtensionContext): Promise
             let selectedNodes = getSelectedNodeList(node, nodeList) as IZoweUSSTreeNode[];
             selectedNodes = selectedNodes.filter((x) => contextuals.isDocument(x));
             for (const item of selectedNodes) {
-                await item.refreshUSS();
+                if (contextuals.isUssDirectory(item)) {
+                    // just refresh item to grab latest files
+                    ussFileProvider.refreshElement(item);
+                } else {
+                    // need to pull content for file and apply to FS entry
+                    await UssFSProvider.instance.fetchFileAtUri(
+                        item.uri,
+                        vscode.window.visibleTextEditors.find((v) => v.document.uri.path === item.uri.path)
+                    );
+                }
             }
         })
     );
@@ -205,6 +214,16 @@ export async function initUSSProvider(context: vscode.ExtensionContext): Promise
     context.subscriptions.push(
         vscode.workspace.onDidChangeConfiguration(async (e) => {
             await ussFileProvider.onDidChangeConfiguration(e);
+        })
+    );
+    context.subscriptions.push(
+        vscode.commands.registerCommand("zowe.uss.useLocalContent", async (remoteDoc) => {
+            await UssFSProvider.instance.useLocalContents(remoteDoc);
+        })
+    );
+    context.subscriptions.push(
+        vscode.commands.registerCommand("zowe.uss.useRemoteContent", async (remoteDoc) => {
+            UssFSProvider.instance.useRemoteContents(remoteDoc);
         })
     );
 
