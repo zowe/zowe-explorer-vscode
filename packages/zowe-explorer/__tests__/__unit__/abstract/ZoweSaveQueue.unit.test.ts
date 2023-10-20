@@ -20,6 +20,7 @@ import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 
 describe("ZoweSaveQueue - unit tests", () => {
     const createGlobalMocks = () => {
+        jest.spyOn(Gui, "createTreeView").mockReturnValue({ onDidCollapseElement: jest.fn() } as any);
         const globalMocks = {
             errorMessageSpy: jest.spyOn(Gui, "errorMessage"),
             markDocumentUnsavedSpy: jest.spyOn(workspaceUtils, "markDocumentUnsaved"),
