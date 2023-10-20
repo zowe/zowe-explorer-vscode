@@ -1210,9 +1210,9 @@ export class Profiles extends ProfilesCache {
         const dsNode: IZoweDatasetTreeNode = TreeProviders.ds.mSessionNodes.find(
             (sessionNode: IZoweDatasetTreeNode) => sessionNode.getProfile()?.name === node.getProfile()?.name
         );
-        dsNode.tooltip = node.getProfile()?.name;
-        dsNode.description = "";
-        dsNode.pattern = "";
+        dsNode.tooltip &&= node.getProfile()?.name;
+        dsNode.description &&= "";
+        dsNode.pattern &&= "";
         TreeProviders.ds.flipState(dsNode, false);
         TreeProviders.ds.refreshElement(dsNode);
     }
@@ -1224,9 +1224,9 @@ export class Profiles extends ProfilesCache {
         const ussNode: IZoweUSSTreeNode = TreeProviders.uss.mSessionNodes.find(
             (sessionNode: IZoweUSSTreeNode) => sessionNode.getProfile()?.name === node.getProfile()?.name
         );
-        ussNode.tooltip = node.getProfile()?.name;
-        ussNode.description = "";
-        ussNode.fullPath = "";
+        ussNode.tooltip &&= node.getProfile()?.name;
+        ussNode.description &&= "";
+        ussNode.fullPath &&= "";
         TreeProviders.uss.flipState(ussNode, false);
         TreeProviders.uss.refreshElement(ussNode);
     }
@@ -1238,13 +1238,13 @@ export class Profiles extends ProfilesCache {
         const jobNode: IZoweJobTreeNode = TreeProviders.job.mSessionNodes.find(
             (sessionNode: IZoweJobTreeNode) => sessionNode.getProfile()?.name === node.getProfile()?.name
         );
-        jobNode.tooltip = node.getProfile()?.name;
-        jobNode.description = "";
-        jobNode.owner = "";
-        jobNode.prefix = "";
-        jobNode.status = "";
-        jobNode.filtered = false;
-        jobNode.children = [];
+        jobNode.tooltip &&= node.getProfile()?.name;
+        jobNode.description &&= "";
+        jobNode.owner &&= "";
+        jobNode.prefix &&= "";
+        jobNode.status &&= "";
+        jobNode.filtered &&= false;
+        jobNode.children &&= [];
         TreeProviders.job.flipState(jobNode, false);
         TreeProviders.job.refreshElement(jobNode);
     }
