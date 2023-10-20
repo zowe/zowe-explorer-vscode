@@ -60,7 +60,7 @@ function createGlobalMocks() {
         setStatusBarMessage: jest.fn().mockReturnValue({ dispose: jest.fn() }),
         showWarningMessage: jest.fn(),
         showErrorMessage: jest.fn(),
-        createTreeView: jest.fn(),
+        createTreeView: jest.fn().mockReturnValue({ onDidCollapseElement: jest.fn() }),
         fileToUSSFile: jest.fn(),
         Upload: jest.fn(),
         isBinaryFileSync: jest.fn(),
@@ -891,9 +891,7 @@ describe("USS Action Unit Tests - copy file / directory", () => {
     it("tests pasteUssFile executed successfully with selected nodes", async () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
-        const parent = blockMocks.treeNodes.testUSSTree.getTreeView();
-        parent.selection = blockMocks.nodes[0];
-        await ussNodeActions.pasteUssFile(blockMocks.treeNodes.testUSSTree, undefined);
+        await ussNodeActions.pasteUssFile(blockMocks.treeNodes.testUSSTree, blockMocks.nodes[0]);
         expect(sharedUtils.getSelectedNodeList(blockMocks.treeNodes.ussNode, blockMocks.treeNodes.ussNodes)).toEqual([blockMocks.treeNodes.ussNode]);
     });
     it("tests pasteUssFile executed successfully with one node", async () => {
@@ -904,6 +902,16 @@ describe("USS Action Unit Tests - copy file / directory", () => {
         jest.spyOn(ussNodeActions, "copyUssFilesToClipboard").mockResolvedValueOnce();
         await ussNodeActions.pasteUssFile(blockMocks.treeNodes.testUSSTree, blockMocks.nodes[0]);
         expect(sharedUtils.getSelectedNodeList(blockMocks.treeNodes.ussNode, blockMocks.treeNodes.ussNodes)).toEqual([blockMocks.treeNodes.ussNode]);
+    });
+    it("tests pasteUss returns early if APIs are not supported", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+        const testNode = blockMocks.nodes[0];
+        testNode.copyUssFile = testNode.pasteUssTree = null;
+        const infoMessageSpy = jest.spyOn(Gui, "infoMessage");
+        await ussNodeActions.pasteUss(blockMocks.treeNodes.testUSSTree, testNode);
+        expect(infoMessageSpy).toHaveBeenCalledWith("The paste operation is not supported for this node.");
+        infoMessageSpy.mockRestore();
     });
 });
 

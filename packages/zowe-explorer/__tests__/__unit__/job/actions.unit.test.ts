@@ -83,6 +83,7 @@ function createGlobalMocks() {
     newMocks.mockJobArray = [newMocks.JobNode1, newMocks.JobNode2, newMocks.JobNode3] as any;
     newMocks.jesApi = createJesApi(newMocks.imperativeProfile);
     bindJesApi(newMocks.jesApi);
+    jest.spyOn(Gui, "createTreeView").mockReturnValue({ onDidCollapseElement: jest.fn() } as any);
     Object.defineProperty(vscode.workspace, "getConfiguration", {
         value: jest.fn().mockImplementation(() => new Map([["zowe.jobs.confirmSubmission", false]])),
         configurable: true,

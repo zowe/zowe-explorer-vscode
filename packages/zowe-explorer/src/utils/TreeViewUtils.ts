@@ -11,6 +11,9 @@
 
 import { IZoweNodeType, IZoweTree, IZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { ZoweLogger } from "./LoggerUtils";
+import { TreeViewExpansionEvent } from "vscode";
+import { getIconByNode } from "../generators/icons";
+import { ZoweTreeProvider } from "../abstract/ZoweTreeProvider";
 
 export class TreeViewUtils {
     /**
@@ -32,5 +35,22 @@ export class TreeViewUtils {
     public static async expandNode(node: IZoweTreeNode, provider: IZoweTree<IZoweNodeType>): Promise<void> {
         ZoweLogger.trace("ZoweTreeProvider.expandNode called.");
         await provider.getTreeView().reveal(node, { expand: true });
+    }
+
+    /**
+     * Builds an onDidCollapseElement event listener that will refresh node icons depending on the qualifiers given.
+     * If at least one node qualifier passes, it will refresh the icon for that node.
+     * @param qualifiers an array of boolean functions that take a tree node as a parameter
+     * @param treeProvider The tree provider that should update once the icons are changed
+     * @returns An event listener built to update the node icons based on the given qualifiers
+     */
+    public static refreshIconOnCollapse<T extends IZoweTreeNode>(qualifiers: ((node: IZoweTreeNode) => boolean)[], treeProvider: ZoweTreeProvider) {
+        return (e: TreeViewExpansionEvent<T>): any => {
+            const newIcon = getIconByNode(e.element);
+            if (qualifiers.some((q) => q(e.element)) && newIcon) {
+                e.element.iconPath = newIcon;
+                treeProvider.mOnDidChangeTreeData.fire(e.element);
+            }
+        };
     }
 }
