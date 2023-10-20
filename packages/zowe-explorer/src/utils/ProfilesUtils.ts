@@ -270,7 +270,7 @@ export class ProfilesUtils {
      * @param credentialManagerExtension The credential manager VS Code extension name to activate
      * @returns Promise<imperative.ICredentialManagerConstructor> the constructor of the activated credential manager
      */
-    private static async activateCredentialManagerOverride(
+    public static async activateCredentialManagerOverride(
         credentialManagerExtension: vscode.Extension<any>
     ): Promise<imperative.ICredentialManagerConstructor | undefined> {
         try {
@@ -290,7 +290,7 @@ export class ProfilesUtils {
      * @param credentialManagerMap The map with associated names of the custom credential manager
      * @returns Promise<imperative.ProfileInfo> the object of profileInfo using the custom credential manager
      */
-    private static async setupCustomCredentialManager(credentialManagerMap: imperative.ICredentialManagerNameMap): Promise<imperative.ProfileInfo> {
+    public static async setupCustomCredentialManager(credentialManagerMap: imperative.ICredentialManagerNameMap): Promise<imperative.ProfileInfo> {
         ZoweLogger.trace("ProfilesUtils.setupCustomCredentialManager called.");
         ZoweLogger.info(
             localize(
@@ -318,7 +318,7 @@ export class ProfilesUtils {
      * Use the default credential manager in Zowe Explorer and setup before use
      * @returns Promise<imperative.ProfileInfo> the object of profileInfo using the default credential manager
      */
-    private static async setupDefaultCredentialManager(): Promise<imperative.ProfileInfo> {
+    public static async setupDefaultCredentialManager(): Promise<imperative.ProfileInfo> {
         ZoweLogger.trace("ProfilesUtils.setupDefaultCredentialManager called.");
         ZoweLogger.info(
             localize("ProfilesUtils.setupDefaultCredentialManager.usingDefault", "No custom credential managers found, using the default instead.")
@@ -337,7 +337,7 @@ export class ProfilesUtils {
      *
      * @returns Promise<void>
      */
-    private static async fetchRegisteredPlugins(): Promise<void> {
+    public static async fetchRegisteredPlugins(): Promise<void> {
         ZoweLogger.trace("ProfilesUtils.fetchRegisteredPlugins called.");
         const knownCredentialManagers = imperative.CredentialManagerOverride.getKnownCredMgrs();
         const credentialManager = knownCredentialManagers.find((knownCredentialManager) => {
@@ -386,7 +386,7 @@ export class ProfilesUtils {
      * @param credentialManager the credential manager to handle its missing VS Code extension
      * @returns Promise<void>
      */
-    private static async promptAndHandleMissingCredentialManager(credentialManager: imperative.ICredentialManagerNameMap): Promise<void> {
+    public static async promptAndHandleMissingCredentialManager(credentialManager: imperative.ICredentialManagerNameMap): Promise<void> {
         ZoweLogger.trace("ProfilesUtils.promptAndHandleMissingCredentialManager called.");
         const header = localize(
             "ProfilesUtils.promptAndHandleMissingCredentialManager.suggestInstallHeader",
@@ -422,7 +422,7 @@ export class ProfilesUtils {
         );
     }
 
-    public static async getProfileInfo(): Promise<imperative.ProfileInfo> {
+    public static async getProfileInfo(envTheia: boolean): Promise<imperative.ProfileInfo> {
         ZoweLogger.trace("ProfilesUtils.getProfileInfo called.");
 
         const shouldCheckForCustomCredentialManagers = SettingsConfig.getDirectValue(globals.SETTINGS_CHECK_FOR_CUSTOM_CREDENTIAL_MANAGERS);
@@ -449,7 +449,7 @@ export class ProfilesUtils {
     public static async readConfigFromDisk(): Promise<void> {
         ZoweLogger.trace("ProfilesUtils.readConfigFromDisk called.");
         let rootPath: string;
-        const mProfileInfo = await ProfilesUtils.getProfileInfo();
+        const mProfileInfo = await ProfilesUtils.getProfileInfo(globals.ISTHEIA);
         if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders[0]) {
             rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
             await mProfileInfo.readProfilesFromDisk({ homeDir: getZoweDir(), projectDir: getFullPath(rootPath) });
