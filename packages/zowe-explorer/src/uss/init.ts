@@ -223,7 +223,7 @@ export async function initUSSProvider(context: vscode.ExtensionContext): Promise
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.uss.useRemoteContent", async (remoteDoc) => {
-            UssFSProvider.instance.useRemoteContents(remoteDoc);
+            await UssFSProvider.instance.useRemoteContents(remoteDoc);
         })
     );
 

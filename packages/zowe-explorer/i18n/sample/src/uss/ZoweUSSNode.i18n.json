@@ -1,4 +1,5 @@
 {
+  "Favorites": "Favorites",
   "getChildren.error.invalidNode": "Invalid node",
   "getChildren.error.sessionMissing": "Profile auth error",
   "getChildren.error.additionalDetails": "Profile is not authenticated, please log in to continue",
@@ -10,7 +11,6 @@
   "deleteUssNode.itemDeleted": "The item {0} has been deleted.",
   "openUSS.error.invalidNode": "open() called from invalid node.",
   "openUSS.name.exists": "There is already a file with the same name. Please change your OS file system settings if you want to give case sensitive file names",
-  "ussFile.opening": "$(sync~spin) Opening USS file...",
   "refreshUSS.error.invalidNode": "refreshUSS() called from invalid node.",
   "refreshUSS.error.notFound": "not found",
   "refreshUSS.file1": "Unable to find file: ",
@@ -18,7 +18,7 @@
   "openUSS.log.info.failedToOpenAsText.yes": "Re-download",
   "openUSS.log.info.failedToOpenAsText.no": "Cancel",
   "openUSS.log.info.failedToOpenAsText": "Failed to open file as text. Re-download file as binary?",
-  "paste.missingApis": "Required API functions for pasting (fileList, copy and/or putContent) were not found.",
+  "paste.missingApis": "Required API functions for pasting (fileList and copy/uploadBufferAsFile) were not found.",
   "uploadFile.putContents": "Uploading USS files...",
   "copyUssFile.error": "Error uploading files"
 }

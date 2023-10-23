@@ -517,44 +517,44 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                         throw Error(localize("openUSS.error.invalidNode", "open() called from invalid node."));
                 }
 
-                const documentFilePath = this.getUSSDocumentFilePath();
-                // check if some other file is already created with the same name avoid opening file warn user
-                const fileExists = fs.existsSync(documentFilePath);
-                if (fileExists && !fileExistsCaseSensitveSync(documentFilePath)) {
-                    Gui.showMessage(
-                        localize(
-                            "openUSS.name.exists",
-                            // eslint-disable-next-line max-len
-                            "There is already a file with the same name. Please change your OS file system settings if you want to give case sensitive file names"
-                        )
-                    );
-                } else {
-                    // if local copy exists, open that instead of pulling from mainframe
-                    // if (download || !fileExists) {
-                    //     const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
-                    //     const fullPath = this.fullPath;
-                    //     const chooseBinary =
-                    //         this.binary || (await ZoweExplorerApiRegister.getUssApi(cachedProfile).isFileTagBinOrAscii(this.fullPath));
+                // const documentFilePath = this.getUSSDocumentFilePath();
+                // // check if some other file is already created with the same name avoid opening file warn user
+                // const fileExists = fs.existsSync(documentFilePath);
+                // if (fileExists && !fileExistsCaseSensitveSync(documentFilePath)) {
+                //     Gui.showMessage(
+                //         localize(
+                //             "openUSS.name.exists",
+                //             // eslint-disable-next-line max-len
+                //             "There is already a file with the same name. Please change your OS file system settings if you want to give case sensitive file names"
+                //         )
+                //     );
+                // } else {
+                // if local copy exists, open that instead of pulling from mainframe
+                // if (download || !fileExists) {
+                //     const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
+                //     const fullPath = this.fullPath;
+                //     const chooseBinary =
+                //         this.binary || (await ZoweExplorerApiRegister.getUssApi(cachedProfile).isFileTagBinOrAscii(this.fullPath));
 
-                    //     const statusMsg = Gui.setStatusBarMessage(localize("ussFile.opening", "$(sync~spin) Opening USS file..."));
-                    //     const response = await ZoweExplorerApiRegister.getUssApi(cachedProfile).getContents(fullPath, {
-                    //         file: documentFilePath,
-                    //         binary: chooseBinary,
-                    //         returnEtag: true,
-                    //         encoding: cachedProfile.profile?.encoding,
-                    //         responseTimeout: cachedProfile.profile?.responseTimeout,
-                    //     });
-                    //     statusMsg.dispose();
-                    //     this.downloaded = true;
-                    //     this.setEtag(response.apiResponse.etag);
-                    // }
+                //
+                //     const response = await ZoweExplorerApiRegister.getUssApi(cachedProfile).getContents(fullPath, {
+                //         file: documentFilePath,
+                //         binary: chooseBinary,
+                //         returnEtag: true,
+                //         encoding: cachedProfile.profile?.encoding,
+                //         responseTimeout: cachedProfile.profile?.responseTimeout,
+                //     });
+                //     statusMsg.dispose();
+                //     this.downloaded = true;
+                //     this.setEtag(response.apiResponse.etag);
+                // }
 
-                    // Add document name to recently-opened files
-                    ussFileProvider.addFileHistory(`[${this.getProfile().name}]: ${this.fullPath}`);
-                    ussFileProvider.getTreeView().reveal(this, { select: true, focus: true, expand: false });
+                // Add document name to recently-opened files
+                ussFileProvider.addFileHistory(`[${this.getProfile().name}]: ${this.fullPath}`);
+                ussFileProvider.getTreeView().reveal(this, { select: true, focus: true, expand: false });
 
-                    await this.initializeFileOpening(documentFilePath, shouldPreview);
-                }
+                await this.initializeFileOpening(this.uri, shouldPreview);
+                // }
             } catch (err) {
                 await errorHandling(err, this.mProfileName);
                 throw err;
@@ -611,11 +611,11 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 //this.setEtag(response.apiResponse.etag);
                 this.downloaded = true;
 
-                if (isDirty) {
-                    await this.initializeFileOpening(ussDocumentFilePath, true);
-                }
+                // if (isDirty) {
+                //     await this.initializeFileOpening(ussDocumentFilePath, true);
+                // }
             } else if (wasSaved) {
-                await this.initializeFileOpening(ussDocumentFilePath, true);
+                //await this.initializeFileOpening(ussDocumentFilePath, true);
             }
         } catch (err) {
             if (err instanceof Error && err.message.includes(localize("refreshUSS.error.notFound", "not found"))) {
@@ -629,41 +629,29 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         }
     }
 
-    public async initializeFileOpening(documentPath: string, previewFile?: boolean): Promise<void> {
+    public async initializeFileOpening(uri: vscode.Uri, previewFile?: boolean): Promise<void> {
         ZoweLogger.trace("ZoweUSSNode.initializeFileOpening called.");
-        let document;
         let openingTextFailed = false;
 
-        if (!this.binary) {
-            try {
-                document = await vscode.workspace.openTextDocument(documentPath);
-            } catch (err) {
-                ZoweLogger.warn(err);
-                openingTextFailed = true;
+        try {
+            await vscode.commands.executeCommand("vscode.open", uri);
+        } catch (err) {
+            ZoweLogger.warn(err);
+            openingTextFailed = true;
+        }
+
+        if (openingTextFailed) {
+            const yesResponse = localize("openUSS.log.info.failedToOpenAsText.yes", "Re-download");
+            const noResponse = localize("openUSS.log.info.failedToOpenAsText.no", "Cancel");
+
+            const response = await Gui.errorMessage(
+                localize("openUSS.log.info.failedToOpenAsText", "Failed to open file as text. Re-download file as binary?"),
+                { items: [yesResponse, noResponse] }
+            );
+
+            if (response === yesResponse) {
+                await vscode.commands.executeCommand("zowe.uss.binary", this);
             }
-
-            if (openingTextFailed) {
-                const yesResponse = localize("openUSS.log.info.failedToOpenAsText.yes", "Re-download");
-                const noResponse = localize("openUSS.log.info.failedToOpenAsText.no", "Cancel");
-
-                const response = await Gui.errorMessage(
-                    localize("openUSS.log.info.failedToOpenAsText", "Failed to open file as text. Re-download file as binary?"),
-                    { items: [yesResponse, noResponse] }
-                );
-
-                if (response === yesResponse) {
-                    await vscode.commands.executeCommand("zowe.uss.binary", this);
-                }
-            } else {
-                if (previewFile === true) {
-                    await Gui.showTextDocument(document);
-                } else {
-                    await Gui.showTextDocument(document, { preview: false });
-                }
-            }
-        } else {
-            const uriPath = vscode.Uri.file(documentPath);
-            await vscode.commands.executeCommand("vscode.open", uriPath);
         }
     }
 
@@ -683,11 +671,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      * @param tree The structure of files and folders to paste
      * @param ussApi The USS API to use for this operation
      */
-    public async paste(
-        sessionName: string,
-        destUri: vscode.Uri,
-        uss: { tree: UssFileTree; api: IUss; options?: IUploadOptions }
-    ): Promise<void> {
+    public async paste(sessionName: string, destUri: vscode.Uri, uss: { tree: UssFileTree; api: IUss; options?: IUploadOptions }): Promise<void> {
         ZoweLogger.trace("ZoweUSSNode.paste called.");
         const hasCopy = uss.api.copy != null;
         const hasUploadBufAsFile = uss.api.uploadBufferAsFile != null;

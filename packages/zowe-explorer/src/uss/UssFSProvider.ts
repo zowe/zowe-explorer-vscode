@@ -9,15 +9,14 @@
  *
  */
 
-import { Utilities, imperative } from "@zowe/cli";
-import { FileAttributes } from "@zowe/zowe-explorer-api";
+import { imperative } from "@zowe/cli";
+import { FileAttributes, Gui } from "@zowe/zowe-explorer-api";
 import * as path from "path";
 import * as vscode from "vscode";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { UssFileTree, UssFileType } from "./FileStructure";
 import { Duplex } from "stream";
-import { Gui } from "@zowe/zowe-explorer-api";
 import * as globals from "../globals";
 
 // Set up localization
@@ -170,16 +169,18 @@ export class UssFSProvider implements vscode.FileSystemProvider {
         newParent.entries.set(entry.name, entry);
     }
 
-    public async move(oldUri: vscode.Uri, newUri: vscode.Uri): Promise<void> {
+    public async move(oldUri: vscode.Uri, newUri: vscode.Uri): Promise<boolean> {
         const info = this._getInfoFromUri(newUri);
-        const session = ZoweExplorerApiRegister.getUssApi(info.profile).getSession();
+        const ussApi = ZoweExplorerApiRegister.getUssApi(info.profile);
         const oldInfo = this._getInfoFromUri(oldUri);
 
-        await Utilities.putUSSPayload(session, info.ussPath, {
-            request: "move",
-            from: oldInfo.ussPath,
-        });
+        if (!ussApi.move) {
+            Gui.errorMessage(localize("uss.unsupported.move", "The 'move' function is not implemented for this USS API."));
+            return false;
+        }
+        await ussApi.move(oldInfo.ussPath, info.ussPath);
         this.relocateEntry(oldUri, newUri, info.ussPath);
+        return true;
     }
 
     /**
@@ -236,7 +237,7 @@ export class UssFSProvider implements vscode.FileSystemProvider {
         if (editor) {
             // This is a hacky method and does not work for editors that aren't the active one,
             // so we can make VSCode switch the active document to that tab and then "revert the file" to show latest contents
-            await vscode.commands.executeCommand("editor.action.goToLocations", uri, new vscode.Position(0, 0));
+            await vscode.commands.executeCommand("vscode.open", uri);
             // Note that the command only affects files that are not dirty
             // TODO: find a better method to reload editor tab with new contents
             vscode.commands.executeCommand("workbench.action.files.revert");
@@ -254,11 +255,10 @@ export class UssFSProvider implements vscode.FileSystemProvider {
         const file = this._lookupAsFile(uri, false);
         const startPathPos = uri.path.indexOf("/", 1);
         const sessionName = uri.path.substring(1, startPathPos);
-        const isConflictFile = uri.path.includes("$conflicts/remote/");
-        const loadedProfile = isConflictFile ? null : Profiles.getInstance().loadNamedProfile(sessionName);
+        const loadedProfile = file.isConflictFile ? null : Profiles.getInstance().loadNamedProfile(sessionName);
         //const session = SessionMap.instance.getSession(sessionName);
 
-        if (loadedProfile == null && !isConflictFile) {
+        if (loadedProfile == null && !file.isConflictFile) {
             // TODO: We can check to see if the session exists from the config data, so we can still
             // open `uss:/` links without having the session present in the USS tree
             throw vscode.FileSystemError.FileNotFound("Session does not exist for this file.");
@@ -307,7 +307,7 @@ export class UssFSProvider implements vscode.FileSystemProvider {
 
         const localUri = this.conflictMap[remoteUri.path];
         const localEntry = this._lookupAsFile(localUri, false);
-        await vscode.workspace.fs.writeFile(localUri, localEntry.conflictData);
+        await this.writeFile(localUri, localEntry.conflictData, { create: false, overwrite: true, forceUpload: true });
         Gui.setStatusBarMessage(localize("uss.overwritten", "$(check) Overwrite applied for {0}", localEntry.name), globals.MS_PER_SEC * 4);
         localEntry.conflictData = null;
         this.removeConflictAndCloseDiff(remoteUri);
@@ -322,13 +322,21 @@ export class UssFSProvider implements vscode.FileSystemProvider {
         const localUri = this.conflictMap[remoteUri.path];
         const localEntry = this._lookupAsFile(localUri, false);
         const remoteEntry = this._lookupAsFile(remoteUri, false);
-        await vscode.workspace.fs.writeFile(localUri, remoteEntry.data);
+        // mark file as "unaccessed" so the data is set without any API calls, since we are using contents from the LPAR anyway
+        localEntry.wasAccessed = false;
+        await this.writeFile(localUri, remoteEntry.data, { create: false, overwrite: true });
         Gui.setStatusBarMessage(localize("uss.usedRemoteContent", "$(discard) Used remote content for {0}", localEntry.name), globals.MS_PER_SEC * 4);
         localEntry.conflictData = null;
         this.removeConflictAndCloseDiff(remoteUri);
+        // this will refresh the active editor with the remote content that was saved to the file
+        vscode.commands.executeCommand("workbench.action.files.revert");
     }
 
-    public async writeFile(uri: vscode.Uri, content: Uint8Array, options: { create: boolean; overwrite: boolean }): Promise<void> {
+    public async writeFile(
+        uri: vscode.Uri,
+        content: Uint8Array,
+        options: { create: boolean; overwrite: boolean } & { forceUpload?: boolean; isConflict?: boolean }
+    ): Promise<void> {
         /*
             1. Parse URI to get file path for API endpoint
             2. Make API call after assigning data to File object
@@ -346,10 +354,13 @@ export class UssFSProvider implements vscode.FileSystemProvider {
             throw vscode.FileSystemError.FileExists(uri);
         }
         if (!entry) {
-            const isConflictFile = uri.path.includes("$conflicts/remote/");
             entry = new UssFile(basename);
             entry.data = content;
-            if (!isConflictFile) {
+            if (options.isConflict) {
+                // we don't need to build metadata for the conflict file
+                // mark as accessed so readFile does not pull contents
+                entry.wasAccessed = true;
+            } else {
                 const profInfo = parent.metadata
                     ? {
                           profile: parent.metadata.profile,
@@ -357,20 +368,24 @@ export class UssFSProvider implements vscode.FileSystemProvider {
                       }
                     : this._getInfoFromUri(uri);
                 entry.metadata = profInfo;
-            } else {
-                entry.wasAccessed = true;
             }
             parent.entries.set(basename, entry);
             this._fireSoon({ type: vscode.FileChangeType.Created, uri });
         } else {
             const ussApi = ZoweExplorerApiRegister.getUssApi(parent.metadata.profile);
-            if (entry.wasAccessed) {
-                // entry was already accessed, this is an update to the existing file
-                // eslint-disable-next-line no-useless-catch
+            if (entry.wasAccessed && !entry.isConflictFile) {
+                // Entry was already accessed, this is an update to the existing file.
+                // Note that we don't want to call the API when making changes to the conflict file,
+                // because the conflict file serves as the "remote" point of reference at the time of conflict,
+                // and provides the data when comparing local/remote versions of a file.
+
                 try {
-                    await ussApi.uploadBufferAsFile(Buffer.from(content), entry.metadata.ussPath, { etag: entry.etag });
-                    // get new etag from mainframe
-                    // ideally, uploadBufferAsFile would return this data but its not configured to do so
+                    await ussApi.uploadBufferAsFile(Buffer.from(content), entry.metadata.ussPath, {
+                        etag: options.forceUpload ? undefined : entry.etag,
+                        returnEtag: true,
+                    });
+                    // TODO: This call below can be removed once zowe.Upload.bufferToUssFile returns response headers.
+                    // This is necessary at the moment on z/OSMF to fetch the new e-tag.
                     const newData = await ussApi.getContents(entry.metadata.ussPath, {
                         returnEtag: true,
                     });
@@ -389,6 +404,7 @@ export class UssFSProvider implements vscode.FileSystemProvider {
                         }
 
                         if (userSelection === conflictOptions[0]) {
+                            // Fetch the file contents on the LPAR and stream the data into an array
                             const bufBuilder = new BufferBuilder();
                             const resp = await ussApi.getContents(entry.metadata.ussPath, {
                                 returnEtag: true,
@@ -399,33 +415,41 @@ export class UssFSProvider implements vscode.FileSystemProvider {
 
                             const mainframeBuf = bufBuilder.read();
                             const conflictUri = this.buildConflictUri(entry);
+
+                            // Add this conflict file to the conflict map so we can leverage the data
+                            // when the "action buttons" are clicked in the diff view.
                             this.conflictMap[conflictUri.path] = uri;
+
+                            // Build a "fake file" that represents the content on the mainframe,
+                            // for use with vscode.diff
                             await this.writeFile(conflictUri, mainframeBuf, {
                                 create: true,
                                 overwrite: true,
+                                isConflict: true,
                             });
 
                             const conflictEntry = this._lookupAsFile(conflictUri, false);
                             conflictEntry.isConflictFile = true;
 
-                            // assign newer, local conflict for use later
+                            // assign newer data from local conflict for use during compare/overwrite
                             entry.conflictData = content;
 
-                            // Set etag to latest so that latest changes are applied, whether that is with the local or remote contents
+                            // Set etag to latest so that latest changes are applied, regardless of its contents
                             entry.etag = resp.apiResponse.etag;
-
                             // VSCode doesn't give us an easy way of showing a diff, so we need to hack something together here .-.
                             vscode.commands.executeCommand("vscode.diff", uri, conflictUri);
                             return;
                         } else {
+                            // User selected "Overwrite", overwrite LPAR contents w/ local contents
                             entry.data = content;
                             await ussApi.uploadBufferAsFile(Buffer.from(content), entry.metadata.ussPath);
                             const newData = await ussApi.getContents(entry.metadata.ussPath, {
                                 returnEtag: true,
                             });
                             entry.etag = newData.apiResponse.etag;
-                            // todo: update etag
                         }
+                    } else {
+                        return;
                     }
                 }
                 entry.data = content;
@@ -436,8 +460,6 @@ export class UssFSProvider implements vscode.FileSystemProvider {
         }
         entry.mtime = Date.now();
         entry.size = content.byteLength;
-
-        // call API here
 
         this._fireSoon({ type: vscode.FileChangeType.Changed, uri });
     }
@@ -473,7 +495,7 @@ export class UssFSProvider implements vscode.FileSystemProvider {
         oldParent.entries.delete(entry.name);
         entry.name = newName;
 
-        // rename entry at this level only
+        // Build the new path using the previous path and new file/folder name.
         const isDir = entry instanceof UssDirectory;
         const entryPath = isDir ? entry.metadata.ussPath.slice(0, -1) : entry.metadata.ussPath;
         const lastSlashInPath = entryPath.lastIndexOf("/");
@@ -482,11 +504,13 @@ export class UssFSProvider implements vscode.FileSystemProvider {
         try {
             await ZoweExplorerApiRegister.getUssApi(entry.metadata.profile).rename(entry.metadata.ussPath, newPath);
             entry.metadata.ussPath = newPath;
+            // We have to update the path for all child entries if they exist in the FileSystem
+            // This way any further API requests in readFile will use the latest paths on the LPAR
             if (entry instanceof UssDirectory) {
                 this.updateChildPaths(entry);
             }
         } catch (err) {
-            // todo: error handling
+            // TODO: error handling
         }
         newParent.entries.set(newName, entry);
 
@@ -673,7 +697,7 @@ export class UssFSProvider implements vscode.FileSystemProvider {
 
     private _emitter = new vscode.EventEmitter<vscode.FileChangeEvent[]>();
     private _bufferedEvents: vscode.FileChangeEvent[] = [];
-    private _fireSoonHandle?: NodeJS.Timer;
+    private _fireSoonHandle?: NodeJS.Timeout;
 
     public readonly onDidChangeFile: vscode.Event<vscode.FileChangeEvent[]> = this._emitter.event;
 

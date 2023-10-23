@@ -1980,7 +1980,7 @@
     "createDemoNodes": "ts-node ./scripts/createDemoNodes.ts"
   },
   "engines": {
-    "vscode": "^1.63.0"
+    "vscode": "^1.67.0"
   },
   "devDependencies": {
     "@napi-rs/cli": "^2.16.1",
@@ -2021,8 +2021,8 @@
     "webpack-cli": "^3.3.11"
   },
   "dependencies": {
-    "@zowe/zowe-explorer-api": "3.0.0-next.202309141150",
     "@zowe/secrets-for-zowe-sdk": "7.18.4",
+    "@zowe/zowe-explorer-api": "3.0.0-next.202309141150",
     "fs-extra": "8.0.1",
     "isbinaryfile": "4.0.4",
     "js-yaml": "3.13.1",

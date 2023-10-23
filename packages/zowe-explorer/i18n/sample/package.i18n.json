@@ -11,6 +11,8 @@
   "uss.createFolder": "Create Directory",
   "uss.deleteNode": "Delete",
   "uss.renameNode": "Rename",
+  "uss.overwrite": "Overwrite",
+  "uss.useRemote": "Use Remote",
   "addFavorite": "Add to Favorites",
   "removeFavProfile": "Remove profile from Favorites",
   "uss.addFavorite": "Add to Favorites",

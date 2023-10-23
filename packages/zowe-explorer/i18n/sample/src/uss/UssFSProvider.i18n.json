@@ -1,0 +1,7 @@
+{
+  "uss.unsupported.move": "The 'move' function is not implemented for this USS API.",
+  "uss.overwritten": "$(check) Overwrite applied for {0}",
+  "uss.usedRemoteContent": "$(discard) Used remote content for {0}",
+  "compare.file": "Compare",
+  "compare.overwrite": "Overwrite"
+}

@@ -119,7 +119,12 @@ export interface IUss extends ICommon {
      * Uploads a given buffer as the contents of a file on USS.
      */
     uploadBufferAsFile?(buffer: Buffer, filePath: string, options?: zowe.IUploadOptions): Promise<string | zowe.IZosFilesResponse>;
-    
+
+    /**
+     * Moves a file or folder to the new path provided.
+     */
+    move?(oldPath: string, newPath: string): Promise<void>;
+
     /**
      * Uploads the file at the given path. Use for Save.
      *

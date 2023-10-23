@@ -1,7 +1,10 @@
 {
   "Favorites": "Favorites",
+  "option.confirm": "Confirm",
+  "uss.drop.willOverwrite": "One or more items may be overwritten from this drop operation. Confirm or cancel?",
   "renameUSS.unsavedWork": "Unable to rename {0} because you have unsaved changes in this {1}. Please save your work before renaming the {1}.",
   "renameUSS.enterName": "Enter a new name for the {0}",
+  "getChildren.responses.open": "Open",
   "renameUSS.error": "Unable to rename node:",
   "renameUSS.duplicateName": "A {0} already exists with this name. Please choose a different name.",
   "removeFavProfile.confirm": "This will remove all favorited USS items for profile {0}. Continue?",

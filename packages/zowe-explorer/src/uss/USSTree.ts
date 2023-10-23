@@ -137,17 +137,17 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 continue;
             }
 
-            const newUriForNode = vscode.Uri.parse(`uss:/${target.getProfile().name}${target.fullPath}/${item.label}`);
-            await UssFSProvider.instance.move(item.uri, newUriForNode);
+            const newUriForNode = vscode.Uri.parse(`uss:/${target.getProfile().name}${target.fullPath}/${item.label as string}`);
+            if (await UssFSProvider.instance.move(item.uri, newUriForNode)) {
+                // remove node from old parent and relocate to new parent
+                const oldParent = node.getParent();
+                oldParent.children = oldParent.children.filter((c) => c !== node);
+                this.nodeDataChanged(oldParent);
+                node.uri = newUriForNode;
 
-            // remove node from old parent and relocate to new parent
-            const oldParent = node.getParent();
-            oldParent.children = oldParent.children.filter((c) => c !== node);
-            this.nodeDataChanged(oldParent);
-            node.uri = newUriForNode;
-
-            // refresh parent to create entry in FS for moved node
-            this.refreshElement(target);
+                // refresh parent to create entry in FS for moved node
+                this.refreshElement(target);
+            }
         }
         this.draggedNodes = {};
     }

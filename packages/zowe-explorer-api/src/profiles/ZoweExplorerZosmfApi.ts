@@ -124,7 +124,18 @@ export class ZosmfUssApi extends ZosmfApiCommon implements IUss {
     }
 
     public uploadBufferAsFile(buffer: Buffer, filePath: string, options?: zowe.IUploadOptions): Promise<string> {
+        // on z/OSMF this is always an empty string, this is because bufferToUssFile in zos-files SDK returns
+        // the data string - but, the API returns a 204 No Content when successful, so the response data will always be empty
+
+        // Once bufferToUssFile is updated to use putExpectJSON, we can also get the e-tag from the response headers.
         return zowe.Upload.bufferToUssFile(this.getSession(), filePath, buffer, options);
+    }
+
+    public async move(oldPath: string, newPath: string): Promise<void> {
+        await zowe.Utilities.putUSSPayload(this.getSession(), newPath, {
+            request: "move",
+            from: oldPath,
+        });
     }
 
     public putContent(inputFilePath: string, ussFilePath: string, options: zowe.IUploadOptions): Promise<zowe.IZosFilesResponse> {

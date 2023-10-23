@@ -2,7 +2,6 @@
   "createUSSNode.inputBox.placeholder": "{0} location",
   "createUSSNode.inputBox.prompt": "Choose a location to create the {0}",
   "createUSSNode.name": "Name of file or directory",
-  "createUSSNode.name.exists": "There is already a file with the same name. Please change your OS file system settings if you want to give case sensitive file names.",
   "createUSSNode.error.create": "Unable to create node:",
   "uploadFile.putContents": "Uploading USS file",
   "copyPath.infoMessage": "Copy Path is not yet supported in Theia.",

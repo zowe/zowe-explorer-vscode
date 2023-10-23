@@ -60,14 +60,30 @@ export class FtpUssApi extends AbstractFtpApi implements IUss {
         return false; // TODO: needs to be implemented checking file type
     }
 
-    public async getContents(ussFilePath: string, options: zowe.IDownloadOptions): Promise<zowe.IZosFilesResponse> {
+    public async uploadBufferAsFile(buffer: Buffer, filePath: string, options?: zowe.IUploadOptions): Promise<zowe.IZosFilesResponse> {
+        const tempFile = tmp.fileSync();
+        if (options.binary) {
+            fs.writeSync(tempFile.fd, buffer);
+        } else {
+            const text = zowe.imperative.IO.processNewlines(buffer.toString());
+            fs.writeSync(tempFile.fd, text);
+        }
+
+        const result = await this.putContent(tempFile.name, filePath, options);
+        return result;
+    }
+
+    public async getContents(ussFilePath: string, options: zowe.IDownloadSingleOptions): Promise<zowe.IZosFilesResponse> {
         const result = this.getDefaultResponse();
-        const targetFile = options.file;
+        // create empty temp file and close its handle since we don't use it in this fn
+        const tmpFile = options.stream ? tmp.fileSync({ discardDescriptor: true }) : null;
+        const targetFile = options.stream ? tmpFile.name : options.file;
         const transferOptions = {
             transferType: options.binary ? TRANSFER_TYPE_BINARY : TRANSFER_TYPE_ASCII,
             localFile: targetFile,
             size: 1,
         };
+
         let connection;
         try {
             connection = await this.ftpClient(this.checkedProfile());
@@ -80,10 +96,19 @@ export class FtpUssApi extends AbstractFtpApi implements IUss {
             } else {
                 throw new Error(result.commandResponse);
             }
+
+            if (options.stream) {
+                options.stream.write(fs.readFileSync(targetFile));
+                options.stream.end();
+            }
+
             return result;
         } catch (err) {
             throw new ZoweFtpExtensionError(err.message);
         } finally {
+            if (tmpFile != null) {
+                fs.rmSync(tmpFile.name);
+            }
             this.releaseConnection(connection);
         }
     }
@@ -125,6 +150,16 @@ export class FtpUssApi extends AbstractFtpApi implements IUss {
             transferType: binary ? TRANSFER_TYPE_BINARY : TRANSFER_TYPE_ASCII,
             localFile: inputFilePath,
         };
+
+        // If the API call requests an e-tag, use getContentsTag to get the current e-tag on the LPAR.
+        // If the entry has an invalid e-tag, there's no point in trying to upload it as we'll be overwriting data.
+        if (returnEtag && etag) {
+            const contentsTag = await this.getContentsTag(ussFilePath);
+            if (contentsTag && contentsTag !== etag) {
+                throw new Error("Rest API failure with HTTP(S) status 412 Save conflict.");
+            }
+        }
+
         const result = this.getDefaultResponse();
         let connection;
         try {
@@ -132,14 +167,12 @@ export class FtpUssApi extends AbstractFtpApi implements IUss {
             if (!connection) {
                 throw new Error(result.commandResponse);
             }
-            // Save-Save with FTP requires loading the file first
-            if (returnEtag && etag) {
-                const contentsTag = await this.getContentsTag(ussFilePath);
-                if (contentsTag && contentsTag !== etag) {
-                    throw new Error("Rest API failure with HTTP(S) status 412 Save conflict.");
-                }
-            }
             await UssUtils.uploadFile(connection, ussFilePath, transferOptions);
+
+            // release the connection after the file has been uploaded
+            // the e-tag check below might also create a new connection)
+            this.releaseConnection(connection);
+            connection = null;
 
             result.success = true;
             if (returnEtag) {
@@ -147,7 +180,6 @@ export class FtpUssApi extends AbstractFtpApi implements IUss {
                 result.apiResponse.etag = contentsTag;
             }
             result.commandResponse = "File uploaded successfully.";
-
             return result;
         } catch (err) {
             throw new ZoweFtpExtensionError(err.message);
@@ -267,13 +299,19 @@ export class FtpUssApi extends AbstractFtpApi implements IUss {
     }
 
     private async getContentsTag(ussFilePath: string): Promise<string> {
-        const tmpFileName = tmp.tmpNameSync();
+        const tmpFile = tmp.fileSync({
+            // We don't want an open file handle, just an empty temp file for writing
+            discardDescriptor: true,
+        });
+        const tmpFileName = tmpFile.name;
+
         const options: zowe.IDownloadOptions = {
             binary: false,
             file: tmpFileName,
         };
         const loadResult = await this.getContents(ussFilePath, options);
         const etag: string = loadResult.apiResponse.etag;
+        fs.rmSync(tmpFile.name);
         return etag;
     }
 
