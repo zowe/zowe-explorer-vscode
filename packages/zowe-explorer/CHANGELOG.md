@@ -13,6 +13,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Added new right-click action for `Submit JCL` to local JCL files in VS Code file explorer as well as JCL opened in the VS Code text editor. [#2475](https://github.com/zowe/vscode-extension-for-zowe/issues/2475)
 - Added "Sort PDS members" feature in Data Sets tree view: accessible via sort icon on session node, or by right-clicking a PDS or session. [#2420](https://github.com/zowe/vscode-extension-for-zowe/issues/2420)
 - Added "Filter PDS members" feature in Data Sets tree view: accessible via filter icon on session node, or by right-clicking a PDS or session. [#2420](https://github.com/zowe/vscode-extension-for-zowe/issues/2420)
+- Added descriptions to data set nodes if filtering and/or sorting is enabled (where applicable).
 - Added webview for editing persistent items on Zowe Explorer [#2488](https://github.com/zowe/vscode-extension-for-zowe/issues/2488)
 
 ### Bug fixes
