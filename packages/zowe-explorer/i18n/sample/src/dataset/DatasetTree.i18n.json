@@ -32,6 +32,7 @@
   "setSortDirection": "$(fold) Sort Direction",
   "sort.selectDirection": "Select a sorting direction",
   "sort.updated": "$(check) Sorting updated for {0}",
+  "filter.description": "Filter: {0}",
   "ds.clearProfileFilter": "$(clear-all) Clear filter for profile",
   "ds.clearPdsFilter": "$(clear-all) Clear filter for PDS",
   "ds.selectFilterOpt": "Set a filter for {0}",
