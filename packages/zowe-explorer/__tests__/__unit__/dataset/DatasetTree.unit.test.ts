@@ -2772,6 +2772,7 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
             expect(mocks.nodeDataChanged).toHaveBeenCalled();
             expect(mocks.refreshElement).not.toHaveBeenCalled();
             expect(nodes.pds.children?.map((c: IZoweDatasetTreeNode) => c.label)).toStrictEqual(["A", "B", "C"]);
+            expect(nodes.pds.children?.reduce((val, cur) => val + (cur.description as string), "")).toBe("");
         });
 
         it("sorts by last modified date", async () => {
@@ -2805,6 +2806,17 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
             expect(mocks.refreshElement).not.toHaveBeenCalled();
             expect(sortPdsMembersDialog).toHaveBeenCalledTimes(2);
         });
+
+        it("sorting by session: descriptions are reset when sorted by name", async () => {
+            const mocks = getBlockMocks();
+            const nodes = nodesForSuite();
+            mocks.showQuickPick.mockResolvedValueOnce({ label: "$(case-sensitive) Name (default)" });
+            await tree.sortPdsMembersDialog(nodes.session);
+            expect(mocks.nodeDataChanged).toHaveBeenCalled();
+            expect(mocks.refreshElement).not.toHaveBeenCalled();
+            expect(nodes.pds.children?.map((c: IZoweDatasetTreeNode) => c.label)).toStrictEqual(["A", "B", "C"]);
+            expect(nodes.pds.children?.reduce((val, cur) => val + (cur.description as string), "")).toBe("");
+        });
     });
 
     describe("filterBy & filterPdsMembersDialog", () => {
@@ -2831,7 +2843,8 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
             nodes.pds.filter = { method: DatasetFilterOpts.UserId, value: "invalidUserId" };
             nodes.pds.children = [];
             await tree.filterPdsMembersDialog(nodes.pds);
-            expect(mocks.nodeDataChanged).not.toHaveBeenCalled();
+            // nodeDataChanged called once to show new description
+            expect(mocks.nodeDataChanged).toHaveBeenCalledWith(nodes.pds);
             expect(mocks.refreshElement).toHaveBeenCalledWith(nodes.pds);
         });
 
