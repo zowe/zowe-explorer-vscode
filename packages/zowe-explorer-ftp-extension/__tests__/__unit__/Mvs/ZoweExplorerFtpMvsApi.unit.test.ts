@@ -100,7 +100,8 @@ describe("FtpMvsApi", () => {
 
     it("should upload content to dataset.", async () => {
         const localFile = tmp.tmpNameSync({ tmpdir: "/tmp" });
-        const fileSyncSpy = jest.spyOn(tmp, "fileSync");
+        const tmpNameSyncSpy = jest.spyOn(tmp, "tmpNameSync");
+        const rmSyncSpy = jest.spyOn(fs, "rmSync");
 
         fs.writeFileSync(localFile, "hello");
         const response = TestUtils.getSingleLineStream();
@@ -123,7 +124,8 @@ describe("FtpMvsApi", () => {
         expect(DataSetUtils.uploadDataSet).toBeCalledTimes(1);
         expect(MvsApi.releaseConnection).toBeCalled();
         // check that correct function is called from node-tmp
-        expect(fileSyncSpy).toHaveBeenCalledWith({ discardDescriptor: true });
+        expect(tmpNameSyncSpy).toHaveBeenCalled();
+        expect(rmSyncSpy).toHaveBeenCalled();
     });
 
     it("should upload single space to dataset when secureFtp is true and contents are empty", async () => {

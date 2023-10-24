@@ -365,14 +365,14 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
     }
 
     private async getContentsTag(dataSetName: string): Promise<string> {
-        const tmpFile = tmp.fileSync({ discardDescriptor: true });
+        const tmpFileName = tmp.tmpNameSync();
         const options: zowe.IDownloadOptions = {
             binary: false,
-            file: tmpFile.name,
+            file: tmpFileName,
         };
         const loadResult = await this.getContents(dataSetName, options);
         const etag: string = loadResult.apiResponse.etag;
-        fs.rmSync(tmpFile.name);
+        fs.rmSync(tmpFileName, { force: true });
         return etag;
     }
     private getDefaultResponse(): zowe.IZosFilesResponse {
