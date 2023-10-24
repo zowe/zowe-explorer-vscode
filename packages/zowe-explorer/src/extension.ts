@@ -19,13 +19,14 @@ import { ProfilesUtils } from "./utils/ProfilesUtils";
 import { initializeSpoolProvider } from "./SpoolProvider";
 import { cleanTempDir, hideTempFolder } from "./utils/TempFolder";
 import { SettingsConfig } from "./utils/SettingsConfig";
-import { initDatasetProvider } from "./dataset/init";
-import { initUSSProvider } from "./uss/init";
-import { initJobsProvider } from "./job/init";
-import { IZoweProviders, registerCommonCommands, registerRefreshCommand, watchConfigProfile } from "./shared/init";
+import { registerCommonCommands, registerRefreshCommand, watchConfigProfile } from "./shared/init";
 import { ZoweLogger } from "./utils/LoggerUtils";
 import { ZoweSaveQueue } from "./abstract/ZoweSaveQueue";
 import { PollDecorator } from "./utils/DecorationProviders";
+import { TreeProviders } from "./shared/TreeProviders";
+import { initDatasetProvider } from "./dataset/init";
+import { initUSSProvider } from "./uss/init";
+import { initJobsProvider } from "./job/init";
 
 /**
  * The function that runs when the extension is loaded
@@ -52,11 +53,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
 
     PollDecorator.register();
 
-    const providers: IZoweProviders = {
-        ds: await initDatasetProvider(context),
-        uss: await initUSSProvider(context),
-        job: await initJobsProvider(context),
-    };
+    const providers = await TreeProviders.initializeProviders(context, { ds: initDatasetProvider, uss: initUSSProvider, job: initJobsProvider });
 
     registerCommonCommands(context, providers);
     ZoweExplorerExtender.createInstance(providers.ds, providers.uss, providers.job);
