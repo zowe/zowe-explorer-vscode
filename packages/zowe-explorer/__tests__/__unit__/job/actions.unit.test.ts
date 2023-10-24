@@ -535,24 +535,6 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
             "Job submitted [JOB1234](command:zowe.jobs.setJobSpool?%5B%22sestest%22%2C%22JOB1234%22%5D)"
         );
     });
-    it("Checking failure of submitting of active text editor content not JCL", async () => {
-        createGlobalMocks();
-        const blockMocks: any = createBlockMocks();
-        mocked(zowe.ZosmfSession.createSessCfgFromArgs).mockReturnValue(blockMocks.session);
-        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
-        mocked(vscode.window.showQuickPick).mockReturnValueOnce(Promise.resolve(blockMocks.datasetSessionNode.label));
-        blockMocks.testDatasetTree.getChildren.mockResolvedValueOnce([
-            new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null as any),
-            blockMocks.datasetSessionNode,
-        ]);
-        activeTextEditorDocument.mockReturnValue(blockMocks.textDocument);
-        (blockMocks.textDocument.languageId as string) = "java";
-        await dsActions.submitJcl(blockMocks.testDatasetTree, undefined);
-
-        const errorMsg = "The document being submitted is not a JCL, submission cancelled.";
-        expect(blockMocks.errorLogSpy).toBeCalledWith(errorMsg);
-        expect(blockMocks.errorGuiMsgSpy).toBeCalledWith(errorMsg);
-    });
     it("Checking failure of submitting JCL via command palette if not active text editor", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();

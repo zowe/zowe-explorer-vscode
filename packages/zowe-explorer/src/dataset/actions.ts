@@ -988,15 +988,7 @@ export async function submitJcl(datasetProvider: api.IZoweTree<api.IZoweDatasetT
         await vscode.commands.executeCommand("filesExplorer.openFilePreserveFocus", file);
     }
     const doc = vscode.window.activeTextEditor.document;
-    // run check for 'jcl' to be included in the vs code document languageId
-    const jclCheckRegex = /^.*jcl.*/i;
-    if (!jclCheckRegex.test(doc.languageId)) {
-        const notJclMsg = localize("submitJcl.notJclMsg", "The document being submitted is not a JCL, submission cancelled.");
-        api.Gui.errorMessage(notJclMsg);
-        ZoweLogger.error(notJclMsg);
-        return;
-    }
-    ZoweLogger.debug(localize("submitJcl.submitting", "Submitting JCL in document {0}", doc.fileName));
+    ZoweLogger.debug(localize("submitJcl.submitting", "Submitting as JCL in document {0}", doc.fileName));
     // get session name
     const sessionregex = /\[(.*)(\])(?!.*\])/g;
     const regExp = sessionregex.exec(doc.fileName);
