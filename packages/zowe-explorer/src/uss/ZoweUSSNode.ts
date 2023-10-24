@@ -12,18 +12,15 @@
 import { imperative, IUploadOptions, IZosFilesResponse } from "@zowe/cli";
 import * as globals from "../globals";
 import * as vscode from "vscode";
-import * as fs from "fs";
 import * as path from "path";
 import { FileAttributes, Gui, IZoweUSSTreeNode, ZoweTreeNode, IZoweTree, ValidProfileEnum, IUss } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { errorHandling, syncSessionNode } from "../utils/ProfilesUtils";
 import { getIconByNode } from "../generators/icons/index";
-import { fileExistsCaseSensitveSync } from "../uss/utils";
 import * as contextually from "../shared/context";
-import { closeOpenedTextFile } from "../utils/workspace";
 import * as nls from "vscode-nls";
-import { UssFileTree, UssFileType, UssFileUtils } from "./FileStructure";
+import { UssFileTree } from "./FileStructure";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { UssFile, UssFSProvider } from "./UssFSProvider";
 import { USSTree } from "./USSTree";
@@ -70,6 +67,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     private prevPath: string;
     public fullPath: string;
     public uri: vscode.Uri;
+    public attributes: FileAttributes;
 
     public onUpdateEmitter: vscode.EventEmitter<IZoweUSSTreeNode>;
 
@@ -135,6 +133,9 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         if (!globals.ISTHEIA && contextually.isSession(this)) {
             this.id = `uss.${this.label.toString()}`;
         }
+        if (profile) {
+            this.profile = profile;
+        }
         this.onUpdateEmitter = new vscode.EventEmitter<IZoweUSSTreeNode>();
         if (label !== localize("Favorites", "Favorites")) {
             this.uri = vscode.Uri.parse(`uss:/${this.profile.name}${this.fullPath}`);
@@ -187,6 +188,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         // Get the directories from the fullPath and display any thrown errors
         let response: IZosFilesResponse;
         const sessNode = this.getSessionNode();
+        let nodeProfile;
         try {
             const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
             if (!ZoweExplorerApiRegister.getUssApi(cachedProfile).getSession(cachedProfile)) {
@@ -196,6 +198,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                     errorCode: `${imperative.RestConstants.HTTP_STATUS_401}`,
                 });
             }
+            nodeProfile = cachedProfile;
             response = await ZoweExplorerApiRegister.getUssApi(cachedProfile).fileList(this.fullPath);
 
             // Throws reject if the Zowe command does not throw an error but does not succeed
@@ -246,8 +249,18 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 this.fullPath,
                 // we cannot determine binary without making an extra z/OSMF call to list the tags
                 // TODO: discuss whether its worth the overhead to make API calls for the tag
-                false
+                false,
+                sessNode.mProfileName,
+                undefined,
+                nodeProfile
             );
+            temp.attributes = {
+                gid: item.gid,
+                uid: item.uid,
+                group: item.group,
+                perms: item.mode,
+                owner: item.user,
+            };
             if (isDir) {
                 vscode.workspace.fs.createDirectory(temp.uri);
             } else {
@@ -264,13 +277,6 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             if (!isDir) {
                 fsEntry.binary = false;
             }
-            fsEntry.attributes = {
-                gid: item.gid,
-                uid: item.uid,
-                group: item.group,
-                perms: item.mode,
-                owner: item.user,
-            };
         }
 
         this.dirty = false;

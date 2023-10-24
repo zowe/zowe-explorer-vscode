@@ -10,7 +10,7 @@
  */
 
 import { imperative } from "@zowe/cli";
-import { FileAttributes, Gui } from "@zowe/zowe-explorer-api";
+import { Gui } from "@zowe/zowe-explorer-api";
 import * as path from "path";
 import * as vscode from "vscode";
 import { Profiles } from "../Profiles";
@@ -21,6 +21,7 @@ import * as globals from "../globals";
 
 // Set up localization
 import * as nls from "vscode-nls";
+import { isEqual } from "lodash";
 nls.config({
     messageFormat: nls.MessageFormat.bundle,
     bundleFormat: nls.BundleFormat.standalone,
@@ -52,7 +53,6 @@ export class UssFile implements UssEntry, vscode.FileStat {
     public conflictData?: Uint8Array;
     public data?: Uint8Array;
     public etag?: string;
-    public attributes: FileAttributes;
     public isConflictFile: boolean;
     public inDiffView: boolean;
 
@@ -150,7 +150,7 @@ export class UssFSProvider implements vscode.FileSystemProvider {
         return { profile: loadedProfile, ussPath: isRoot ? "/" : uri.path.substring(slashAfterProfile) };
     }
 
-    private relocateEntry(oldUri: vscode.Uri, newUri: vscode.Uri, newUssPath: string): void {
+    private async relocateEntry(oldUri: vscode.Uri, newUri: vscode.Uri, newUssPath: string): Promise<void> {
         const entry = this._lookup(oldUri, false);
         if (!entry) {
             return;
@@ -165,10 +165,16 @@ export class UssFSProvider implements vscode.FileSystemProvider {
         if (!oldParent || !newParent) {
             return;
         }
-
-        oldParent.entries.delete(entry.name);
         entry.metadata.ussPath = newUssPath;
-        newParent.entries.set(entry.name, entry);
+        // write new entry in FS
+        if (entry instanceof UssFile) {
+            // put new contents in relocated file
+            await this.writeFile(newUri, entry.data, { create: true, overwrite: true });
+        } else {
+            // create directory in FS, when expanded it will fetch any files
+            this.createDirectory(newUri);
+        }
+        oldParent.entries.delete(entry.name);
     }
 
     public async move(oldUri: vscode.Uri, newUri: vscode.Uri): Promise<boolean> {
@@ -181,7 +187,7 @@ export class UssFSProvider implements vscode.FileSystemProvider {
             return false;
         }
         await ussApi.move(oldInfo.ussPath, info.ussPath);
-        this.relocateEntry(oldUri, newUri, info.ussPath);
+        await this.relocateEntry(oldUri, newUri, info.ussPath);
         return true;
     }
 
@@ -325,11 +331,12 @@ export class UssFSProvider implements vscode.FileSystemProvider {
         const localUri = this.conflictMap[remoteUri.path];
         const localEntry = this._lookupAsFile(localUri, false);
         const remoteEntry = this._lookupAsFile(remoteUri, false);
-        // mark file as "unaccessed" so the data is set without any API calls, since we are using contents from the LPAR anyway
-        // TODO: potentially delete this line if we want to make a call to the API with remote data (if modified)
-        localEntry.wasAccessed = false;
+
+        // If the data in the diff is different from the conflict data, we need to make another API request to push those changes.
+        // If the data is equal, we can just assign the data in the FileSystem and avoid making an API request.
+        localEntry.wasAccessed = remoteEntry.data.length === remoteEntry.conflictData.length && isEqual(remoteEntry.data, remoteEntry.conflictData);
         localEntry.inDiffView = false;
-        await this.writeFile(localUri, remoteEntry.data, { create: false, overwrite: true });
+        await this.writeFile(localUri, remoteEntry.conflictData, { create: false, overwrite: true });
         Gui.setStatusBarMessage(localize("uss.usedRemoteContent", "$(discard) Used remote content for {0}", localEntry.name), globals.MS_PER_SEC * 4);
         localEntry.conflictData = null;
         this.removeConflictAndCloseDiff(remoteUri);
@@ -381,20 +388,12 @@ export class UssFSProvider implements vscode.FileSystemProvider {
                 // Allow users to edit files in diff view.
                 // If in diff view, we don't want to make any API calls, just keep track of latest
                 // changes to data.
-
-                if (entry.isConflictFile) {
-                    // If the user edits the remote view, update that content and assume that if user
-                    // selects "Use Remote", they want to use the data they've modified in the remote side of the diff
-                    entry.data = content;
-                } else {
-                    // We only want to update the conflict data, because the data is not final until the user chooses to Overwrite
-                    entry.conflictData = content;
-                }
+                entry.conflictData = content;
                 return;
             }
             const ussApi = ZoweExplorerApiRegister.getUssApi(parent.metadata.profile);
 
-            if (entry.wasAccessed && !entry.isConflictFile) {
+            if (entry.wasAccessed) {
                 // Entry was already accessed, this is an update to the existing file.
                 // Note that we don't want to call the API when making changes to the conflict file,
                 // because the conflict file serves as the "remote" point of reference at the time of conflict,
@@ -452,6 +451,7 @@ export class UssFSProvider implements vscode.FileSystemProvider {
                             const conflictEntry = this._lookupAsFile(conflictUri, false);
                             conflictEntry.isConflictFile = true;
                             conflictEntry.inDiffView = true;
+                            conflictEntry.conflictData = conflictEntry.data;
 
                             // assign newer data from local conflict for use during compare/overwrite
                             entry.conflictData = content;

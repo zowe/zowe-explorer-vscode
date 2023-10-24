@@ -901,16 +901,6 @@
           "group": "001_zowe_ussCreate@5"
         },
         {
-          "when": "view == zowe.uss.explorer && viewItem =~ /^textFile.*/",
-          "command": "zowe.uss.binary",
-          "group": "002_zowe_ussSystemSpecific@1"
-        },
-        {
-          "when": "view == zowe.uss.explorer && viewItem =~ /^binaryFile.*/",
-          "command": "zowe.uss.text",
-          "group": "002_zowe_ussSystemSpecific@2"
-        },
-        {
           "when": "view == zowe.uss.explorer && viewItem =~ /^(?!(ussSession|favorite|profile_fav))/ && !listMultiSelection",
           "command": "zowe.uss.copyPath",
           "group": "002_zowe_ussSystemSpecific@4"
