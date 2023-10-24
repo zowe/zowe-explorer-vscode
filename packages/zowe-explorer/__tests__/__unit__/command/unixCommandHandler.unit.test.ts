@@ -519,4 +519,19 @@ describe("UnixCommand Actions Unit Testing", () => {
 
         expect(showInputBox.mock.calls.length).toBe(1);
     });
+
+    it("ssh profile not found", async () => {
+        mockdefaultProfile.mockReset();
+        mockdefaultProfile.mockReturnValueOnce(undefined);
+        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    getDefaultProfile: mockdefaultProfile,
+                };
+            }),
+        });
+        await unixActions.setsshSession();
+        expect(showErrorMessage.mock.calls.length).toBe(1);
+        expect(showErrorMessage.mock.calls[0][0]).toEqual("No SSH profile found. Please create an SSH profile before issuing Unix commands.");
+    });
 });

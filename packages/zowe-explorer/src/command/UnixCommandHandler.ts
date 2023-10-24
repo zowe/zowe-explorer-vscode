@@ -154,8 +154,10 @@ export class UnixCommandHandler extends ZoweCommandProvider {
         ZoweLogger.trace("UnixCommandHandler.setsshSession called.");
         const sshprofile: imperative.IProfileLoaded = Profiles.getInstance().getDefaultProfile("ssh");
         if (!sshprofile) {
-            Gui.errorMessage(localize("setsshProfile.couldnotfindprofile", "No SSH profile found. Please create an SSH profile before issuing Unix commands."));
-            return ;
+            Gui.errorMessage(
+                localize("setsshProfile.couldnotfindprofile", "No SSH profile found. Please create an SSH profile before issuing Unix commands.")
+            );
+            return;
         }
         const cmdArgs: imperative.ICommandArguments = this.getCmdArgs(sshprofile?.profile as imperative.IProfileLoaded);
         // create the ssh session
@@ -182,7 +184,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
                 // get user selection
                 const choice = await Gui.showQuickPick([createPick, ...items], options1);
                 if (!choice) {
-                    Gui.showMessage(localize("issueUnixCommand.options.noselection", "No selection made."));
+                    Gui.showMessage(localize("issueUnixCommand.options.noselection", "No selection made. Operation cancelled."));
                     return;
                 }
                 response = choice === createPick ? "" : choice.label;
