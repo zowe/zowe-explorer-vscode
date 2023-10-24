@@ -807,6 +807,20 @@
       }
     ],
     "menus": {
+      "editor/context": [
+        {
+          "when": "editorFocus",
+          "command": "zowe.ds.submitJcl",
+          "group": "000_zowe_dsMainframeInteraction@1"
+        }
+      ],
+      "explorer/context": [
+        {
+          "when": "!explorerResourceIsFolder",
+          "command": "zowe.ds.submitJcl",
+          "group": "000_zowe_dsMainframeInteraction@1"
+        }
+      ],
       "view/title": [
         {
           "when": "view == zowe.ds.explorer",
