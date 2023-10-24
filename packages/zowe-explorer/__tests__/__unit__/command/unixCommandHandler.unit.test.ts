@@ -351,7 +351,7 @@ describe("UnixCommand Actions Unit Testing", () => {
         expect(showInformationMessage.mock.calls[0][0]).toEqual("No selection made. Operation cancelled.");
     });
 
-    it("tests the issueTsoCommand function user escapes the commandbox", async () => {
+    it("tests the issueUnixCommand function user escapes the commandbox", async () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {

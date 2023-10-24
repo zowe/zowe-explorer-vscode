@@ -168,7 +168,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
     }
 
     private async getQuickPick(cwd: string): Promise<string> {
-        ZoweLogger.trace("TsoCommandHandler.getQuickPick called.");
+        ZoweLogger.trace("UnixCommandHandler.getQuickPick called.");
         let response = "";
         const alwaysEdit: boolean = SettingsConfig.getDirectValue(globals.SETTINGS_COMMANDS_ALWAYS_EDIT);
         if (this.history.getSearchHistory().length > 0) {
