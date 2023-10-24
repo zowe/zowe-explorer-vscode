@@ -1210,6 +1210,9 @@ export class Profiles extends ProfilesCache {
         const dsNode: IZoweDatasetTreeNode = TreeProviders.ds.mSessionNodes.find(
             (sessionNode: IZoweDatasetTreeNode) => sessionNode.getProfile()?.name === node.getProfile()?.name
         );
+        if (!dsNode) {
+            return;
+        }
         dsNode.tooltip &&= node.getProfile()?.name;
         dsNode.description &&= "";
         dsNode.pattern &&= "";
@@ -1224,6 +1227,9 @@ export class Profiles extends ProfilesCache {
         const ussNode: IZoweUSSTreeNode = TreeProviders.uss.mSessionNodes.find(
             (sessionNode: IZoweUSSTreeNode) => sessionNode.getProfile()?.name === node.getProfile()?.name
         );
+        if (!ussNode) {
+            return;
+        }
         ussNode.tooltip &&= node.getProfile()?.name;
         ussNode.description &&= "";
         ussNode.fullPath &&= "";
@@ -1238,6 +1244,9 @@ export class Profiles extends ProfilesCache {
         const jobNode: IZoweJobTreeNode = TreeProviders.job.mSessionNodes.find(
             (sessionNode: IZoweJobTreeNode) => sessionNode.getProfile()?.name === node.getProfile()?.name
         );
+        if (!jobNode) {
+            return;
+        }
         jobNode.tooltip &&= node.getProfile()?.name;
         jobNode.description &&= "";
         jobNode.owner &&= "";

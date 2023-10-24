@@ -1846,4 +1846,33 @@ describe("Profiles Unit Tests - function clearFilterFromAllTrees", () => {
         expect(flipStateSpy).toBeCalledTimes(0);
         expect(refreshElementSpy).toBeCalledTimes(0);
     });
+
+    it("should fail to clear filters if the session node is not listed in the tree", async () => {
+        const globalMocks = await createGlobalMocks();
+        const testNode = new (ZoweTreeNode as any)(
+            "fake",
+            vscode.TreeItemCollapsibleState.None,
+            undefined,
+            globalMocks.testSession,
+            globalMocks.testProfile
+        );
+
+        const flipStateSpy = jest.fn();
+        const refreshElementSpy = jest.fn();
+        const getProfileSpy = jest.fn(() => ({ name: "test" }));
+
+        const mockTreeProvider = {
+            mSessionNodes: [{ getProfile: getProfileSpy }],
+            flipState: flipStateSpy,
+            refreshElement: refreshElementSpy,
+        } as any;
+        jest.spyOn(TreeProviders, "ds", "get").mockReturnValue(mockTreeProvider);
+        jest.spyOn(TreeProviders, "uss", "get").mockReturnValue(mockTreeProvider);
+        jest.spyOn(TreeProviders, "job", "get").mockReturnValue(mockTreeProvider);
+
+        expect(Profiles.getInstance().clearFilterFromAllTrees(testNode));
+        expect(flipStateSpy).toBeCalledTimes(0);
+        expect(refreshElementSpy).toBeCalledTimes(0);
+        expect(getProfileSpy).toBeCalledTimes(3);
+    });
 });
