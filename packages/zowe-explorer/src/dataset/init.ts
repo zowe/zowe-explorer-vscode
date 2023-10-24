@@ -131,7 +131,7 @@ export async function initDatasetProvider(context: vscode.ExtensionContext): Pro
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.ds.removeFavProfile", (node) => datasetProvider.removeFavProfile(node.label, true))
     );
-    context.subscriptions.push(vscode.commands.registerCommand("zowe.ds.submitJcl", async () => dsActions.submitJcl(datasetProvider)));
+    context.subscriptions.push(vscode.commands.registerCommand("zowe.ds.submitJcl", async (file) => dsActions.submitJcl(datasetProvider, file)));
     context.subscriptions.push(vscode.commands.registerCommand("zowe.ds.submitMember", async (node) => dsActions.submitMember(node)));
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.ds.showAttributes", async (node, nodeList) => {
