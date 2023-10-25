@@ -47,7 +47,7 @@ async function createGlobalMocks() {
         showInputBox: jest.fn(),
         filters: jest.fn(),
         getFilters: jest.fn(),
-        createTreeView: jest.fn(),
+        createTreeView: jest.fn().mockReturnValue({ onDidCollapseElement: jest.fn() }),
         createQuickPick: jest.fn(),
         getConfiguration: jest.fn(),
         ZosmfSession: jest.fn(),
@@ -1697,5 +1697,50 @@ describe("USSTree Unit Tests - Function USSTree.editSession()", () => {
         });
         globalMocks.testTree.editSession(testSessionNode);
         expect(checkSession).toHaveBeenCalled();
+    });
+
+    describe("removeSearchHistory", () => {
+        it("removes the search item passed in from the current history", async () => {
+            const globalMocks = await createGlobalMocks();
+            expect(globalMocks.testTree["mHistory"]["mSearchHistory"].length).toEqual(3);
+            globalMocks.testTree.removeSearchHistory("/u/myuser");
+            expect(globalMocks.testTree["mHistory"]["mSearchHistory"].length).toEqual(2);
+        });
+    });
+
+    describe("resetSearchHistory", () => {
+        it("clears the entire search history", async () => {
+            const globalMocks = await createGlobalMocks();
+            expect(globalMocks.testTree["mHistory"]["mSearchHistory"].length).toEqual(3);
+            globalMocks.testTree.resetSearchHistory();
+            expect(globalMocks.testTree["mHistory"]["mSearchHistory"].length).toEqual(0);
+        });
+    });
+
+    describe("resetFileHistory", () => {
+        it("clears the entire file history", async () => {
+            const globalMocks = await createGlobalMocks();
+            expect(globalMocks.testTree["mHistory"]["mFileHistory"].length).toEqual(2);
+            globalMocks.testTree.resetFileHistory();
+            expect(globalMocks.testTree["mHistory"]["mFileHistory"].length).toEqual(0);
+        });
+    });
+
+    describe("getSessions", () => {
+        it("gets all the available sessions from persistent object", async () => {
+            const globalMocks = await createGlobalMocks();
+            globalMocks.testTree["mHistory"]["mSessions"] = ["sestest"];
+            expect(globalMocks.testTree.getSessions()).toEqual(["sestest"]);
+        });
+    });
+
+    describe("getFavorites", () => {
+        it("gets all the favorites from persistent object", async () => {
+            const globalMocks = await createGlobalMocks();
+            jest.spyOn(vscode.workspace, "getConfiguration").mockReturnValue({
+                get: () => ["test1", "test2", "test3"],
+            } as any);
+            expect(globalMocks.testTree.getFavorites()).toEqual(["test1", "test2", "test3"]);
+        });
     });
 });

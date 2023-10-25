@@ -1,0 +1,7 @@
+{
+  "HistoryView.addItem.prompt": "Type the new pattern to add to history",
+  "HistoryView.removeItem.notSupported": "action is not supported for this property type.",
+  "HistoryView.clearAll.confirmMessage": "Clear all history items for this persistent property?",
+  "HistoryView.clearAll.Yes": "Yes",
+  "HistoryView.clearAll.No": "No"
+}

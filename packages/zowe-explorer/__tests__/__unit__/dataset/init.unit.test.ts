@@ -158,7 +158,7 @@ describe("Test src/dataset/extension", () => {
             },
             {
                 name: "zowe.ds.submitJcl",
-                mock: [{ spy: jest.spyOn(dsActions, "submitJcl"), arg: [dsProvider] }],
+                mock: [{ spy: jest.spyOn(dsActions, "submitJcl"), arg: [dsProvider, test.value] }],
             },
             {
                 name: "zowe.ds.submitMember",

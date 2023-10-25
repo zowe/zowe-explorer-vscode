@@ -19,7 +19,7 @@ import * as vscode from "vscode";
 
 describe("Checking icon generator's basics", () => {
     const setGlobalMocks = () => {
-        const createTreeView = jest.fn();
+        const createTreeView = jest.fn().mockReturnValue({ onDidCollapseElement: jest.fn() });
         const getConfiguration = jest.fn();
 
         Object.defineProperty(vscode.window, "createTreeView", { value: createTreeView });

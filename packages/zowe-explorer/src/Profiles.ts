@@ -37,6 +37,7 @@ import * as globals from "./globals";
 import * as nls from "vscode-nls";
 import { SettingsConfig } from "./utils/SettingsConfig";
 import { ZoweLogger } from "./utils/LoggerUtils";
+import { TreeProviders } from "./shared/TreeProviders";
 
 // Set up localization
 nls.config({
@@ -1202,6 +1203,67 @@ export class Profiles extends ProfilesCache {
         }
     }
 
+    public clearDSFilterFromTree(node: IZoweNodeType): void {
+        if (!TreeProviders.ds?.mSessionNodes || !TreeProviders.ds?.mSessionNodes.length) {
+            return;
+        }
+        const dsNode: IZoweDatasetTreeNode = TreeProviders.ds.mSessionNodes.find(
+            (sessionNode: IZoweDatasetTreeNode) => sessionNode.getProfile()?.name === node.getProfile()?.name
+        );
+        if (!dsNode) {
+            return;
+        }
+        dsNode.tooltip &&= node.getProfile()?.name;
+        dsNode.description &&= "";
+        dsNode.pattern &&= "";
+        TreeProviders.ds.flipState(dsNode, false);
+        TreeProviders.ds.refreshElement(dsNode);
+    }
+
+    public clearUSSFilterFromTree(node: IZoweNodeType): void {
+        if (!TreeProviders.uss?.mSessionNodes || !TreeProviders.uss?.mSessionNodes.length) {
+            return;
+        }
+        const ussNode: IZoweUSSTreeNode = TreeProviders.uss.mSessionNodes.find(
+            (sessionNode: IZoweUSSTreeNode) => sessionNode.getProfile()?.name === node.getProfile()?.name
+        );
+        if (!ussNode) {
+            return;
+        }
+        ussNode.tooltip &&= node.getProfile()?.name;
+        ussNode.description &&= "";
+        ussNode.fullPath &&= "";
+        TreeProviders.uss.flipState(ussNode, false);
+        TreeProviders.uss.refreshElement(ussNode);
+    }
+
+    public clearJobFilterFromTree(node: IZoweNodeType): void {
+        if (!TreeProviders.job?.mSessionNodes || !TreeProviders.job?.mSessionNodes.length) {
+            return;
+        }
+        const jobNode: IZoweJobTreeNode = TreeProviders.job.mSessionNodes.find(
+            (sessionNode: IZoweJobTreeNode) => sessionNode.getProfile()?.name === node.getProfile()?.name
+        );
+        if (!jobNode) {
+            return;
+        }
+        jobNode.tooltip &&= node.getProfile()?.name;
+        jobNode.description &&= "";
+        jobNode.owner &&= "";
+        jobNode.prefix &&= "";
+        jobNode.status &&= "";
+        jobNode.filtered &&= false;
+        jobNode.children &&= [];
+        TreeProviders.job.flipState(jobNode, false);
+        TreeProviders.job.refreshElement(jobNode);
+    }
+
+    public clearFilterFromAllTrees(node: IZoweNodeType): void {
+        this.clearDSFilterFromTree(node);
+        this.clearUSSFilterFromTree(node);
+        this.clearJobFilterFromTree(node);
+    }
+
     public async ssoLogout(node: IZoweNodeType): Promise<void> {
         ZoweLogger.trace("Profiles.ssoLogout called.");
         const serviceProfile = node.getProfile();
@@ -1212,7 +1274,10 @@ export class Profiles extends ProfilesCache {
             );
             return;
         }
+
         try {
+            this.clearFilterFromAllTrees(node);
+
             // this will handle extenders
             if (serviceProfile.type !== "zosmf" && serviceProfile.profile?.tokenType !== zowe.imperative.SessConstants.TOKEN_TYPE_APIML) {
                 await ZoweExplorerApiRegister.getInstance()
@@ -1259,13 +1324,16 @@ export class Profiles extends ProfilesCache {
         if (!profileName) {
             return [];
         }
-        if ((await this.getProfileInfo()).usingTeamConfig) {
+        const usingSecureCreds = !SettingsConfig.getDirectValue(globals.SETTINGS_SECURE_CREDENTIALS_ENABLED);
+        if ((await this.getProfileInfo()).usingTeamConfig && !usingSecureCreds) {
             const config = (await this.getProfileInfo()).getTeamConfig();
             return config.api.secure.securePropsForProfile(profileName);
         }
         const profAttrs = await this.getProfileFromConfig(profileName);
         const mergedArgs = (await this.getProfileInfo()).mergeArgsForProfile(profAttrs);
-        return mergedArgs.knownArgs.filter((arg) => arg.secure).map((arg) => arg.argName);
+        return mergedArgs.knownArgs
+            .filter((arg) => arg.secure || arg.argName === "tokenType" || arg.argName === "tokenValue")
+            .map((arg) => arg.argName);
     }
 
     private async loginWithBaseProfile(serviceProfile: zowe.imperative.IProfileLoaded, loginTokenType: string, node?: IZoweNodeType): Promise<void> {

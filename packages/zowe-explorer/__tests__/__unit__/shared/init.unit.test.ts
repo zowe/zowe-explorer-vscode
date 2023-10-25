@@ -26,6 +26,7 @@ import { saveUSSFile } from "../../../src/uss/actions";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 import { ZoweSaveQueue } from "../../../src/abstract/ZoweSaveQueue";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
+import * as HistoryView from "../../../src/shared/HistoryView";
 
 describe("Test src/shared/extension", () => {
     describe("registerCommonCommands", () => {
@@ -57,6 +58,10 @@ describe("Test src/shared/extension", () => {
                     { spy: jest.spyOn(globals, "setGlobalSecurityValue"), arg: [test.value] },
                     { spy: jest.spyOn(profUtils.ProfilesUtils, "writeOverridesFile"), arg: [] },
                 ],
+            },
+            {
+                name: "zowe.editHistory",
+                mock: [{ spy: jest.spyOn(HistoryView, "HistoryView"), arg: [test.context, test.value.providers] }],
             },
             {
                 name: "zowe.promptCredentials",

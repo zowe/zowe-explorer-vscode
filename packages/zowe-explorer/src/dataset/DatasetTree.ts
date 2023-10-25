@@ -102,6 +102,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             treeDataProvider: this,
             canSelectMany: true,
         });
+        this.treeView.onDidCollapseElement(TreeViewUtils.refreshIconOnCollapse([contextually.isPds, contextually.isDsSession], this));
     }
 
     /**
@@ -763,6 +764,21 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         return this.mHistory.removeFileHistory(name);
     }
 
+    public removeSearchHistory(name: string): void {
+        ZoweLogger.trace("DatasetTree.removeSearchHistory called.");
+        this.mHistory.removeSearchHistory(name);
+    }
+
+    public resetSearchHistory(): void {
+        ZoweLogger.trace("DatasetTree.resetSearchHistory called.");
+        this.mHistory.resetSearchHistory();
+    }
+
+    public resetFileHistory(): void {
+        ZoweLogger.trace("DatasetTree.resetFileHistory called.");
+        this.mHistory.resetFileHistory();
+    }
+
     public addDsTemplate(criteria: DataSetAllocTemplate): void {
         this.mHistory.addDsTemplateHistory(criteria);
         this.refresh();
@@ -771,6 +787,16 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
     public getDsTemplates(): DataSetAllocTemplate[] {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-return
         return this.mHistory.getDsTemplates();
+    }
+
+    public getSessions(): string[] {
+        ZoweLogger.trace("DatasetTree.getSessions called.");
+        return this.mHistory.getSessions();
+    }
+
+    public getFavorites(): string[] {
+        ZoweLogger.trace("DatasetTree.getFavorites called.");
+        return this.mHistory.readFavorites();
     }
 
     public createFilterString(newFilter: string, node: IZoweDatasetTreeNode): string {
@@ -1310,12 +1336,21 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 for (const c of node.children) {
                     if (contextually.isPds(c) && c.children) {
                         c.sort = node.sort;
+                        for (const ch of c.children) {
+                            // remove any descriptions from child nodes
+                            ch.description = "";
+                        }
+
                         c.children.sort(ZoweDatasetNode.sortBy(node.sort));
                         this.nodeDataChanged(c);
                     }
                 }
             }
         } else if (node.children?.length > 0) {
+            for (const c of node.children) {
+                // remove any descriptions from child nodes
+                c.description = "";
+            }
             // children nodes already exist, sort and repaint to avoid extra refresh
             node.children.sort(ZoweDatasetNode.sortBy(node.sort));
             this.nodeDataChanged(node);
@@ -1387,6 +1422,8 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
     public updateFilterForNode(node: IZoweDatasetTreeNode, newFilter: DatasetFilter | null, isSession: boolean): void {
         const oldFilter = node.filter;
         node.filter = newFilter;
+        node.description = newFilter ? localize("filter.description", "Filter: {0}", newFilter.value) : null;
+        this.nodeDataChanged(node);
 
         // if a session was selected, apply this sort to all PDS members
         if (isSession) {

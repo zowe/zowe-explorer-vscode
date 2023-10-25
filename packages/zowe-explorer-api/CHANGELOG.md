@@ -11,8 +11,17 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 - Add `sort` and `filter` optional variables for storing sort/filter options alongside tree nodes. [#2420](https://github.com/zowe/vscode-extension-for-zowe/issues/2420)
 - Add `stats` optional variable for storing dataset stats (such as user, modified date, etc.)
 - Add option enums and types for sorting, filtering and sort direction in tree nodes. [#2420](https://github.com/zowe/vscode-extension-for-zowe/issues/2420)
+- Added option for retaining context when generating webviews in Webview API
 
 ### Bug fixes
+
+## `2.11.2`
+
+### Bug fixes
+
+- Bundle Zowe Secrets for issues seen by extenders that use the ProfilesCache for profile management. [#2512](https://github.com/zowe/vscode-extension-for-zowe/issues/2512)
+
+## `2.11.1`
 
 ## `2.11.0`
 
@@ -34,10 +43,6 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 - Added `WebView` class to allow Zowe Explorer and extenders to create enhanced webviews (choose any JavaScript bundler and JavaScript framework). [#2254](https://github.com/zowe/vscode-extension-for-zowe/issues/2254)
 
 ## `2.9.2`
-
-### New features and enhancements
-
-### Bug fixes
 
 ## `2.9.1`
 

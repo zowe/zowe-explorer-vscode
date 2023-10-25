@@ -47,7 +47,8 @@ export class WebView {
         title: string,
         webviewName: string,
         context: ExtensionContext,
-        onDidReceiveMessage?: (message: object) => void | Promise<void>
+        onDidReceiveMessage?: (message: object) => void | Promise<void>,
+        retainContext?: boolean
     ) {
         this.disposables = [];
 
@@ -64,6 +65,7 @@ export class WebView {
         this.panel = window.createWebviewPanel("ZEAPIWebview", this.title, ViewColumn.Beside, {
             enableScripts: true,
             localResourceRoots: [this.uris.disk.build],
+            retainContextWhenHidden: retainContext ?? false,
         });
 
         // Associate URI resources with webview

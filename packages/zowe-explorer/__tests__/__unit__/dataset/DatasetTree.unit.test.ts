@@ -59,7 +59,10 @@ function createGlobalMocks() {
 
     globalMocks.mockProfileInstance = createInstanceOfProfile(globalMocks.testProfileLoaded);
 
-    Object.defineProperty(vscode.window, "createTreeView", { value: jest.fn(), configurable: true });
+    Object.defineProperty(vscode.window, "createTreeView", {
+        value: jest.fn().mockReturnValue({ onDidCollapseElement: jest.fn() }),
+        configurable: true,
+    });
     Object.defineProperty(Gui, "showMessage", { value: jest.fn(), configurable: true });
     Object.defineProperty(Gui, "setStatusBarMessage", { value: jest.fn().mockReturnValue({ dispose: jest.fn() }), configurable: true });
     Object.defineProperty(vscode.window, "showTextDocument", { value: jest.fn(), configurable: true });
@@ -2697,6 +2700,8 @@ describe("Dataset Tree Unit Tests - Function initializeFavorites", () => {
     });
 });
 describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
+    createGlobalMocks();
+    mocked(vscode.window.createTreeView).mockReturnValueOnce(createTreeView());
     const tree = new DatasetTree();
     const nodesForSuite = (): Record<string, IZoweDatasetTreeNode> => {
         const session = new ZoweDatasetNode("testSession", vscode.TreeItemCollapsibleState.Collapsed, null, createISession());
@@ -2767,6 +2772,7 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
             expect(mocks.nodeDataChanged).toHaveBeenCalled();
             expect(mocks.refreshElement).not.toHaveBeenCalled();
             expect(nodes.pds.children?.map((c: IZoweDatasetTreeNode) => c.label)).toStrictEqual(["A", "B", "C"]);
+            expect(nodes.pds.children?.reduce((val, cur) => val + (cur.description as string), "")).toBe("");
         });
 
         it("sorts by last modified date", async () => {
@@ -2800,6 +2806,17 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
             expect(mocks.refreshElement).not.toHaveBeenCalled();
             expect(sortPdsMembersDialog).toHaveBeenCalledTimes(2);
         });
+
+        it("sorting by session: descriptions are reset when sorted by name", async () => {
+            const mocks = getBlockMocks();
+            const nodes = nodesForSuite();
+            mocks.showQuickPick.mockResolvedValueOnce({ label: "$(case-sensitive) Name (default)" });
+            await tree.sortPdsMembersDialog(nodes.session);
+            expect(mocks.nodeDataChanged).toHaveBeenCalled();
+            expect(mocks.refreshElement).not.toHaveBeenCalled();
+            expect(nodes.pds.children?.map((c: IZoweDatasetTreeNode) => c.label)).toStrictEqual(["A", "B", "C"]);
+            expect(nodes.pds.children?.reduce((val, cur) => val + (cur.description as string), "")).toBe("");
+        });
     });
 
     describe("filterBy & filterPdsMembersDialog", () => {
@@ -2826,7 +2843,8 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
             nodes.pds.filter = { method: DatasetFilterOpts.UserId, value: "invalidUserId" };
             nodes.pds.children = [];
             await tree.filterPdsMembersDialog(nodes.pds);
-            expect(mocks.nodeDataChanged).not.toHaveBeenCalled();
+            // nodeDataChanged called once to show new description
+            expect(mocks.nodeDataChanged).toHaveBeenCalledWith(nodes.pds);
             expect(mocks.refreshElement).toHaveBeenCalledWith(nodes.pds);
         });
 
@@ -2895,6 +2913,71 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
             await tree.filterPdsMembersDialog(nodes.pds);
             expect(mocks.refreshElement).not.toHaveBeenCalled();
             expect(updateFilterForNode).toHaveBeenCalledWith(nodes.pds, null, false);
+        });
+    });
+
+    describe("removeSearchHistory", () => {
+        it("removes the search item passed in from the current history", () => {
+            tree.addSearchHistory("test");
+            expect(tree["mHistory"]["mSearchHistory"].length).toEqual(1);
+            tree.removeSearchHistory("test");
+            expect(tree["mHistory"]["mSearchHistory"].length).toEqual(0);
+        });
+    });
+
+    describe("resetSearchHistory", () => {
+        it("clears the entire search history", () => {
+            tree.addSearchHistory("test1");
+            tree.addSearchHistory("test2");
+            tree.addSearchHistory("test3");
+            tree.addSearchHistory("test4");
+            expect(tree["mHistory"]["mSearchHistory"].length).toEqual(4);
+            tree.resetSearchHistory();
+            expect(tree["mHistory"]["mSearchHistory"].length).toEqual(0);
+        });
+    });
+
+    describe("resetFileHistory", () => {
+        it("clears the entire file history", () => {
+            tree.addFileHistory("test1");
+            tree.addFileHistory("test2");
+            tree.addFileHistory("test3");
+            tree.addFileHistory("test4");
+            expect(tree["mHistory"]["mFileHistory"].length).toEqual(4);
+            tree.resetFileHistory();
+            expect(tree["mHistory"]["mFileHistory"].length).toEqual(0);
+        });
+    });
+
+    describe("addDsTemplate", () => {
+        it("adds a new DS template to the persistent object", () => {
+            tree.addDsTemplate({ test: "test" } as any);
+            expect(tree["mHistory"]["mDsTemplates"].length).toEqual(1);
+        });
+    });
+
+    describe("getSessions", () => {
+        it("gets all the available sessions from persistent object", () => {
+            tree["mHistory"]["mSessions"] = ["sestest"];
+            expect(tree.getSessions()).toEqual(["sestest"]);
+        });
+    });
+
+    describe("getDsTemplates", () => {
+        it("gets all the DS templates from persistent object", () => {
+            jest.spyOn(vscode.workspace, "getConfiguration").mockReturnValue({
+                get: () => ["test1", "test2", "test3"],
+            } as any);
+            expect(tree.getDsTemplates()).toEqual(["test1", "test2", "test3"]);
+        });
+    });
+
+    describe("getFavorites", () => {
+        it("gets all the favorites from persistent object", () => {
+            jest.spyOn(vscode.workspace, "getConfiguration").mockReturnValue({
+                get: () => ["test1", "test2", "test3"],
+            } as any);
+            expect(tree.getFavorites()).toEqual(["test1", "test2", "test3"]);
         });
     });
 });
