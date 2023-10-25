@@ -555,6 +555,9 @@ export class ProfilesUtils {
         if (!fs.existsSync(settingsPath)) {
             fs.mkdirSync(settingsPath);
         }
+        // set global variable of security value to existing override
+        // this will later get reverted to default in getProfilesInfo.ts if user chooses to
+        await ProfilesUtils.updateCredentialManagerSetting(ProfilesUtils.getCredentialManagerOverride());
         ProfilesUtils.writeOverridesFile();
         // If not using team config, ensure that the ~/.zowe/profiles directory
         // exists with appropriate types within
