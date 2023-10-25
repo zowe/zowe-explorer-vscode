@@ -43,7 +43,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     globals.defineGlobals(tempPath);
 
     await hideTempFolder(getZoweDir());
-    await registerCredentialManager(context);
+    registerCredentialManager(context);
     await ProfilesUtils.initializeZoweProfiles();
     ProfilesUtils.initializeZoweTempFolder();
 
