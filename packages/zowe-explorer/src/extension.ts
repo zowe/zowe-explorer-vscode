@@ -19,7 +19,7 @@ import { ProfilesUtils } from "./utils/ProfilesUtils";
 import { initializeSpoolProvider } from "./SpoolProvider";
 import { cleanTempDir, hideTempFolder } from "./utils/TempFolder";
 import { SettingsConfig } from "./utils/SettingsConfig";
-import { registerCommonCommands, registerRefreshCommand, watchConfigProfile } from "./shared/init";
+import { registerCommonCommands, registerCredentialManager, registerRefreshCommand, watchConfigProfile } from "./shared/init";
 import { ZoweLogger } from "./utils/LoggerUtils";
 import { ZoweSaveQueue } from "./abstract/ZoweSaveQueue";
 import { PollDecorator } from "./utils/DecorationProviders";
@@ -43,6 +43,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     globals.defineGlobals(tempPath);
 
     await hideTempFolder(getZoweDir());
+    await registerCredentialManager(context);
     await ProfilesUtils.initializeZoweProfiles();
     ProfilesUtils.initializeZoweTempFolder();
 

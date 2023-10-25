@@ -473,12 +473,6 @@ describe("ProfilesUtils unit tests", () => {
     describe("initializeZoweFolder", () => {
         it("should create directories and files that do not exist", async () => {
             const blockMocks = createBlockMocks();
-            jest.spyOn(fs, "readFileSync").mockReturnValueOnce("");
-            jest.spyOn(JSON, "parse").mockReturnValueOnce({
-                overrides: {
-                    credentialManager: "@zowe/cli",
-                },
-            });
             blockMocks.mockGetDirectValue.mockReturnValue(true);
             blockMocks.mockExistsSync.mockReturnValue(false);
             const createFileSpy = jest.spyOn(profUtils.ProfilesUtils, "writeOverridesFile");
@@ -490,7 +484,6 @@ describe("ProfilesUtils unit tests", () => {
 
         it("should skip creating directories and files that already exist", async () => {
             const blockMocks = createBlockMocks();
-            jest.spyOn(profUtils.ProfilesUtils, "getCredentialManagerOverride").mockReturnValueOnce("@zowe/cli");
             blockMocks.mockGetDirectValue.mockReturnValue("@zowe/cli");
             blockMocks.mockExistsSync.mockReturnValue(true);
             const fileJson = blockMocks.mockFileRead;

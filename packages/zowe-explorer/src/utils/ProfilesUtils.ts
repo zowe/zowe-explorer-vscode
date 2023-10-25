@@ -543,10 +543,6 @@ export class ProfilesUtils {
 
     public static async initializeZoweFolder(): Promise<void> {
         ZoweLogger.trace("ProfilesUtils.initializeZoweFolder called.");
-        // ensure the Secure Credentials Enabled value is read
-        // set globals.PROFILE_SECURITY value accordingly
-        const credentialManagerOverride = ProfilesUtils.getCredentialManagerOverride();
-        await globals.setGlobalSecurityValue(credentialManagerOverride ?? globals.ZOWE_CLI_SCM);
         // Ensure that ~/.zowe folder exists
         // Ensure that the ~/.zowe/settings/imperative.json exists
         // TODO: update code below once this imperative issue is resolved.

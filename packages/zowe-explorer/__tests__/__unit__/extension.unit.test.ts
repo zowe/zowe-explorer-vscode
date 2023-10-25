@@ -140,6 +140,7 @@ async function createGlobalMocks() {
         appName: vscode.env.appName,
         uriScheme: vscode.env.uriScheme,
         expectedCommands: [
+            "zowe.updateSecureCredentials",
             "zowe.extRefresh",
             "zowe.all.config.init",
             "zowe.ds.addSession",
@@ -244,7 +245,6 @@ async function createGlobalMocks() {
             "zowe.jobs.sortBy",
             "zowe.manualPoll",
             "zowe.editHistory",
-            "zowe.updateSecureCredentials",
             "zowe.promptCredentials",
             "zowe.profileManagement",
             "zowe.openRecentMember",
