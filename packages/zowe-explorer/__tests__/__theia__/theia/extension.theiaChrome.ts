@@ -20,12 +20,12 @@ let driverChrome: any;
 
 export async function openBrowser() {
     const chromeOptions = new chrome.Options();
-    chromeOptions.addArguments("--headless");
-    chromeOptions.addArguments("--no-sandbox");
+    // chromeOptions.addArguments("--headless");
+    // chromeOptions.addArguments("--no-sandbox");
 
     // chromeOptions.addArguments("--disable-dev-shm-usage"); // Linux ONLY
 
-    chromeOptions.addArguments("--window-size=1200,1100");
+    // chromeOptions.addArguments("--window-size=1200,1100");
     driverChrome = new Builder().forBrowser("chrome").setChromeOptions(chromeOptions).build();
 }
 

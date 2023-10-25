@@ -424,23 +424,25 @@ export class ProfilesUtils {
 
     public static async getProfileInfo(envTheia: boolean): Promise<imperative.ProfileInfo> {
         ZoweLogger.trace("ProfilesUtils.getProfileInfo called.");
+        const hasSecureCredentialManagerEnabled: boolean = SettingsConfig.getDirectValue(globals.SETTINGS_SECURE_CREDENTIALS_ENABLED);
 
-        const shouldCheckForCustomCredentialManagers = SettingsConfig.getDirectValue(globals.SETTINGS_CHECK_FOR_CUSTOM_CREDENTIAL_MANAGERS);
-        if (shouldCheckForCustomCredentialManagers) {
-            await this.fetchRegisteredPlugins();
-        }
+        if (hasSecureCredentialManagerEnabled) {
+            const shouldCheckForCustomCredentialManagers = SettingsConfig.getDirectValue(globals.SETTINGS_CHECK_FOR_CUSTOM_CREDENTIAL_MANAGERS);
+            if (shouldCheckForCustomCredentialManagers) {
+                await this.fetchRegisteredPlugins();
+            }
 
-        const credentialManagerOverride = this.getCredentialManagerOverride();
-        const isVSCodeCredentialPluginInstalled = this.isVSCodeCredentialPluginInstalled(credentialManagerOverride);
-        const isCustomCredentialPluginDefined = credentialManagerOverride !== imperative.CredentialManagerOverride.DEFAULT_CRED_MGR_NAME;
-        const settingEnabled: boolean = SettingsConfig.getDirectValue(globals.SETTINGS_SECURE_CREDENTIALS_ENABLED);
-        const credentialManagerMap = ProfilesUtils.getCredentialManagerMap(credentialManagerOverride);
+            const credentialManagerOverride = this.getCredentialManagerOverride();
+            const isVSCodeCredentialPluginInstalled = this.isVSCodeCredentialPluginInstalled(credentialManagerOverride);
+            const isCustomCredentialPluginDefined = credentialManagerOverride !== imperative.CredentialManagerOverride.DEFAULT_CRED_MGR_NAME;
+            const credentialManagerMap = ProfilesUtils.getCredentialManagerMap(credentialManagerOverride);
 
-        if (isCustomCredentialPluginDefined && !isVSCodeCredentialPluginInstalled && credentialManagerMap && settingEnabled) {
-            await this.promptAndHandleMissingCredentialManager(credentialManagerMap);
-        }
-        if (credentialManagerMap && isVSCodeCredentialPluginInstalled && settingEnabled) {
-            return this.setupCustomCredentialManager(credentialManagerMap);
+            if (isCustomCredentialPluginDefined && !isVSCodeCredentialPluginInstalled && credentialManagerMap) {
+                await this.promptAndHandleMissingCredentialManager(credentialManagerMap);
+            }
+            if (credentialManagerMap && isVSCodeCredentialPluginInstalled) {
+                return this.setupCustomCredentialManager(credentialManagerMap);
+            }
         }
 
         return this.setupDefaultCredentialManager();
