@@ -75,6 +75,8 @@ export class UssFile implements UssEntry, vscode.FileStat {
     public isConflictFile: boolean;
     public inDiffView: boolean;
 
+    public permissions?: vscode.FilePermission;
+
     public constructor(name: string) {
         this.type = vscode.FileType.File;
         this.ctime = Date.now();

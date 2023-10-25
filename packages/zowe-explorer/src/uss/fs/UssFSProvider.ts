@@ -646,6 +646,7 @@ export class UssFSProvider implements vscode.FileSystemProvider {
             conflictEntry.isConflictFile = true;
             conflictEntry.inDiffView = true;
             conflictEntry.conflictData = conflictEntry.data;
+            conflictEntry.permissions = vscode.FilePermission.Readonly;
 
             // assign newer data from local conflict for use during compare/overwrite
             conflictData.localEntry.conflictData = conflictData.content;
