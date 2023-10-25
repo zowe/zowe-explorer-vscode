@@ -28,7 +28,7 @@ import { resetValidationSettings } from "../shared/actions";
 import { SettingsConfig } from "../utils/SettingsConfig";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { TreeViewUtils } from "../utils/TreeViewUtils";
-import { UssFSProvider } from "./UssFSProvider";
+import { UssFSProvider } from "./fs/UssFSProvider";
 
 // Set up localization
 nls.config({

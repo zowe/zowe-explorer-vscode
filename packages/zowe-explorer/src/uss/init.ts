@@ -20,7 +20,7 @@ import { USSTree, createUSSTree } from "./USSTree";
 import { initSubscribers } from "../shared/init";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { TreeViewUtils } from "../utils/TreeViewUtils";
-import { UssFSProvider } from "./UssFSProvider";
+import { UssFSProvider } from "./fs/UssFSProvider";
 
 export async function initUSSProvider(context: vscode.ExtensionContext): Promise<USSTree> {
     ZoweLogger.trace("init.initUSSProvider called.");
@@ -218,12 +218,12 @@ export async function initUSSProvider(context: vscode.ExtensionContext): Promise
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.uss.useLocalContent", async (remoteDoc) => {
-            await UssFSProvider.instance.useLocalContents(remoteDoc);
+            await UssFSProvider.instance.diffOverwrite(remoteDoc);
         })
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.uss.useRemoteContent", async (remoteDoc) => {
-            await UssFSProvider.instance.useRemoteContents(remoteDoc);
+            await UssFSProvider.instance.diffUseRemote(remoteDoc);
         })
     );
 

@@ -9,120 +9,44 @@
  *
  */
 
-import { imperative } from "@zowe/cli";
-import { Gui } from "@zowe/zowe-explorer-api";
+import { Gui, IUss } from "@zowe/zowe-explorer-api";
 import * as path from "path";
 import * as vscode from "vscode";
-import { Profiles } from "../Profiles";
-import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
-import { UssFileTree, UssFileType } from "./FileStructure";
-import { Duplex } from "stream";
-import * as globals from "../globals";
+import { Profiles } from "../../Profiles";
+import { ZoweExplorerApiRegister } from "../../ZoweExplorerApiRegister";
+import { UssFileTree, UssFileType } from "../FileStructure";
+import * as globals from "../../globals";
 
 // Set up localization
 import * as nls from "vscode-nls";
 import { isEqual } from "lodash";
+import { BufferBuilder, FS_PROVIDER_DELAY, FileEntryZMetadata, UssConflict, UssConflictSelection, UssDirectory, UssFile } from "./types";
 nls.config({
     messageFormat: nls.MessageFormat.bundle,
     bundleFormat: nls.BundleFormat.standalone,
 })();
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
-export type FileEntryMetadata = {
-    profile: imperative.IProfileLoaded;
-    ussPath: string;
-};
-
-export interface UssEntry {
-    name: string;
-    metadata: FileEntryMetadata;
-    type: vscode.FileType;
-    wasAccessed: boolean;
-}
-
-export class UssFile implements UssEntry, vscode.FileStat {
-    public name: string;
-    public metadata: FileEntryMetadata;
-    public type: vscode.FileType;
-    public wasAccessed: boolean;
-
-    public ctime: number;
-    public mtime: number;
-    public size: number;
-    public binary: boolean;
-    public conflictData?: Uint8Array;
-    public data?: Uint8Array;
-    public etag?: string;
-    public isConflictFile: boolean;
-    public inDiffView: boolean;
-
-    public constructor(name: string) {
-        this.type = vscode.FileType.File;
-        this.ctime = Date.now();
-        this.mtime = Date.now();
-        this.size = 0;
-        this.name = name;
-        this.binary = false;
-        this.wasAccessed = false;
-        this.isConflictFile = false;
-        this.inDiffView = false;
-    }
-}
-
-class BufferBuilder extends Duplex {
-    private chunks: Uint8Array[];
-
-    public constructor() {
-        super();
-        this.chunks = [];
-    }
-
-    public _write(chunk: any, encoding: BufferEncoding, callback: (error?: Error) => void): void {
-        this.chunks.push(chunk);
-        callback();
-    }
-
-    public _read(size: number): void {
-        const concatBuf = Buffer.concat(this.chunks);
-        this.push(concatBuf);
-        this.push(null);
-    }
-}
-
-export class UssDirectory implements UssEntry, vscode.FileStat {
-    public name: string;
-    public metadata: FileEntryMetadata;
-    public type: vscode.FileType;
-    public wasAccessed: boolean;
-
-    public ctime: number;
-    public mtime: number;
-    public size: number;
-    public entries: Map<string, UssFile | UssDirectory>;
-
-    public constructor(name: string) {
-        this.type = vscode.FileType.Directory;
-        this.ctime = Date.now();
-        this.mtime = Date.now();
-        this.size = 0;
-        this.name = name;
-        this.entries = new Map();
-        this.wasAccessed = false;
-    }
-}
-
 export type Entry = UssFile | UssDirectory;
 
 export class UssFSProvider implements vscode.FileSystemProvider {
+    // map remote conflict URIs to local URIs
+    private _conflictMap: Record<string, vscode.Uri> = {};
+
+    // Event objects for provider
+    private _emitter = new vscode.EventEmitter<vscode.FileChangeEvent[]>();
+    private _bufferedEvents: vscode.FileChangeEvent[] = [];
+    private _fireSoonHandle?: NodeJS.Timeout;
+
+    public readonly onDidChangeFile: vscode.Event<vscode.FileChangeEvent[]> = this._emitter.event;
     public root = new UssDirectory("");
-    public session: imperative.AbstractSession;
 
     private static inst: UssFSProvider;
-    // map remote conflict URIs to local URIs
-    private conflictMap: Record<string, vscode.Uri> = {};
-
     private constructor() {}
 
+    /**
+     * @returns the USS FileSystemProvider singleton instance
+     */
     public static get instance(): UssFSProvider {
         if (!UssFSProvider.inst) {
             UssFSProvider.inst = new UssFSProvider();
@@ -131,52 +55,23 @@ export class UssFSProvider implements vscode.FileSystemProvider {
         return UssFSProvider.inst;
     }
 
-    // --- manage file metadata
+    /* Public functions: File operations */
 
+    /**
+     * Returns file statistics about a given URI.
+     * @param uri A URI that must exist as an entry in the provider
+     * @returns A structure containing file type, time, size and other metrics
+     */
     public stat(uri: vscode.Uri): vscode.FileStat {
         return this._lookup(uri, false);
     }
 
-    private _getInfoFromUri(uri: vscode.Uri): {
-        profile: imperative.IProfileLoaded;
-        ussPath: string;
-    } {
-        const slashAfterProfile = uri.path.indexOf("/", 1);
-        const isRoot = slashAfterProfile === -1;
-        const startPathPos = isRoot ? uri.path.length : slashAfterProfile;
-        const sessionName = uri.path.substring(1, startPathPos);
-        const loadedProfile = Profiles.getInstance().loadNamedProfile(sessionName);
-
-        return { profile: loadedProfile, ussPath: isRoot ? "/" : uri.path.substring(slashAfterProfile) };
-    }
-
-    private async relocateEntry(oldUri: vscode.Uri, newUri: vscode.Uri, newUssPath: string): Promise<void> {
-        const entry = this._lookup(oldUri, false);
-        if (!entry) {
-            return;
-        }
-
-        const oldParentUri = vscode.Uri.parse(oldUri.path.substring(0, oldUri.path.lastIndexOf("/")));
-        const oldParent = this._lookupAsDirectory(oldParentUri, false);
-
-        const parentUri = vscode.Uri.parse(newUri.path.substring(0, newUri.path.lastIndexOf("/")));
-        const newParent = this._lookupAsDirectory(parentUri, false);
-
-        if (!oldParent || !newParent) {
-            return;
-        }
-        entry.metadata.ussPath = newUssPath;
-        // write new entry in FS
-        if (entry instanceof UssFile) {
-            // put new contents in relocated file
-            await this.writeFile(newUri, entry.data, { create: true, overwrite: true });
-        } else {
-            // create directory in FS, when expanded it will fetch any files
-            this.createDirectory(newUri);
-        }
-        oldParent.entries.delete(entry.name);
-    }
-
+    /**
+     * Moves an entry in the file system, both remotely and within the provider.
+     * @param oldUri The old, source URI pointing to an entry that needs moved
+     * @param newUri The new, destination URI for the file or folder
+     * @returns Whether the move operation was successful
+     */
     public async move(oldUri: vscode.Uri, newUri: vscode.Uri): Promise<boolean> {
         const info = this._getInfoFromUri(newUri);
         const ussApi = ZoweExplorerApiRegister.getUssApi(info.profile);
@@ -186,28 +81,28 @@ export class UssFSProvider implements vscode.FileSystemProvider {
             Gui.errorMessage(localize("uss.unsupported.move", "The 'move' function is not implemented for this USS API."));
             return false;
         }
+
         await ussApi.move(oldInfo.ussPath, info.ussPath);
-        await this.relocateEntry(oldUri, newUri, info.ussPath);
+        await this._relocateEntry(oldUri, newUri, info.ussPath);
         return true;
     }
 
     /**
-     * TODOs:
-     * - Look into pre-fetching a directory level below the one given
-     * - Should we support symlinks and can we use z/OSMF "report" option?
+     * Reads a directory located at the given URI.
+     * @param uri A valid URI within the provider
+     * @returns An array of tuples containing each entry name and type
      */
     public async readDirectory(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
-        /*
-            1. Parse URI to get directory path for API endpoint
-            2. Call API endpoint to get contents of directory from mainframe
-            3. Iterate over response to build entries for this level
-        */
+        /**
+         * TODOs:
+         * - Look into pre-fetching a directory level below the one given
+         * - Should we support symlinks and can we use z/OSMF "report" option?
+         */
         const entry = this._lookupAsDirectory(uri, false);
 
         const result: [string, vscode.FileType][] = [];
-        // if this entry has not been accessed before, grab its file list
-        // for use in the breadcrumbs
         if (!entry.wasAccessed) {
+            // if this entry has not been accessed before, grab its file list
             const response = await ZoweExplorerApiRegister.getUssApi(entry.metadata.profile).fileList(entry.metadata.ussPath);
             for (const item of response.apiResponse.items) {
                 if (item.name === "." || item.name === ".." || entry.entries.has(item.name)) {
@@ -227,6 +122,11 @@ export class UssFSProvider implements vscode.FileSystemProvider {
         return result;
     }
 
+    /**
+     * Fetches a file from the remote system at the given URI.
+     * @param uri The URI pointing to a valid file to fetch from the remote system
+     * @param editor (optional) An editor instance to reload if the URI is already open
+     */
     public async fetchFileAtUri(uri: vscode.Uri, editor?: vscode.TextEditor | null): Promise<void> {
         const file = this._lookupAsFile(uri, false);
         // we need to fetch the contents from the mainframe since the file hasn't been accessed yet
@@ -252,28 +152,25 @@ export class UssFSProvider implements vscode.FileSystemProvider {
         }
     }
 
-    // --- manage file contents
-
+    /**
+     * Reads a file at the given URI and fetches it from the remote system (if not yet accessed).
+     * @param uri The URI pointing to a valid file on the remote system
+     * @returns The file's contents as an array of bytes
+     */
     public async readFile(uri: vscode.Uri): Promise<Uint8Array> {
-        /*
-            1. Check if data exists on file entry
-            2. Call API endpoint to get contents of file path from mainframe if it does not exist
-            3. Process contents of file for binary/encoding etc
-        */
         const file = this._lookupAsFile(uri, false);
         const startPathPos = uri.path.indexOf("/", 1);
         const sessionName = uri.path.substring(1, startPathPos);
         const loadedProfile = file.isConflictFile ? null : Profiles.getInstance().loadNamedProfile(sessionName);
-        //const session = SessionMap.instance.getSession(sessionName);
 
-        if (loadedProfile == null && !file.isConflictFile) {
-            // TODO: We can check to see if the session exists from the config data, so we can still
-            // open `uss:/` links without having the session present in the USS tree
-            throw vscode.FileSystemError.FileNotFound("Session does not exist for this file.");
+        if (!file.isConflictFile && loadedProfile == null) {
+            // TODO: We might be able to support opening these links outside of Zowe Explorer,
+            // but at the moment, the session must be initialized first within the USS tree
+            throw vscode.FileSystemError.FileNotFound(localize("localize.uss.profileNotFound", "Profile does not exist for this file."));
         }
 
+        // we need to fetch the contents from the mainframe if the file hasn't been accessed yet
         if (!file.wasAccessed) {
-            // we need to fetch the contents from the mainframe since the file hasn't been accessed yet
             await this.fetchFileAtUri(uri);
             file.wasAccessed = true;
         }
@@ -281,54 +178,37 @@ export class UssFSProvider implements vscode.FileSystemProvider {
         return file.data;
     }
 
-    private buildConflictUri(entry: UssFile): vscode.Uri {
-        // create temporary directory pointing to conflicts, so we can easily replace contents and/or overwrite dependent on user choice
-        const conflictDirUri = vscode.Uri.parse(`uss:/${entry.metadata.profile.name}$conflicts`);
-        const conflictDir = this._lookup(conflictDirUri, true);
-        const remoteDirUri = conflictDirUri.with({ path: `${entry.metadata.profile.name}$conflicts/remote` });
-        const remoteDir = this._lookup(remoteDirUri, true);
-
-        if (conflictDir == null) {
-            this.createDirWithoutMetadata(conflictDirUri);
-        }
-
-        if (remoteDir == null) {
-            this.createDirWithoutMetadata(remoteDirUri);
-        }
-
-        const conflictUri = vscode.Uri.parse(`uss:/${entry.metadata.profile.name}$conflicts/remote/${entry.name} (Remote)`);
-        return conflictUri;
-    }
-
-    private removeConflictAndCloseDiff(remoteUri: vscode.Uri): void {
-        delete this.conflictMap[remoteUri.path];
-        vscode.workspace.fs.delete(remoteUri);
-        vscode.commands.executeCommand("workbench.action.closeActiveEditor");
-    }
-
-    public async useLocalContents(remoteUri: vscode.Uri): Promise<void> {
+    /**
+     * Action for overwriting the remote contents with local data from the provider.
+     * @param remoteUri The "remote conflict" URI shown in the diff view
+     */
+    public async diffOverwrite(remoteUri: vscode.Uri): Promise<void> {
         // check for local URI in conflictMap
 
-        if (!(remoteUri.path in this.conflictMap)) {
+        if (!(remoteUri.path in this._conflictMap)) {
             return;
         }
 
-        const localUri = this.conflictMap[remoteUri.path];
+        const localUri = this._conflictMap[remoteUri.path];
         const localEntry = this._lookupAsFile(localUri, false);
         localEntry.inDiffView = false;
         await this.writeFile(localUri, localEntry.conflictData, { create: false, overwrite: true, forceUpload: true });
         Gui.setStatusBarMessage(localize("uss.overwritten", "$(check) Overwrite applied for {0}", localEntry.name), globals.MS_PER_SEC * 4);
         localEntry.conflictData = null;
-        this.removeConflictAndCloseDiff(remoteUri);
+        this._removeConflictAndCloseDiff(remoteUri);
     }
 
-    public async useRemoteContents(remoteUri: vscode.Uri): Promise<void> {
+    /**
+     * Action for replacing the local data in the provider with remote contents.
+     * @param remoteUri The "remote conflict" URI shown in the diff view
+     */
+    public async diffUseRemote(remoteUri: vscode.Uri): Promise<void> {
         // check for local URI in conflictMap
 
-        if (!(remoteUri.path in this.conflictMap)) {
+        if (!(remoteUri.path in this._conflictMap)) {
             return;
         }
-        const localUri = this.conflictMap[remoteUri.path];
+        const localUri = this._conflictMap[remoteUri.path];
         const localEntry = this._lookupAsFile(localUri, false);
         const remoteEntry = this._lookupAsFile(remoteUri, false);
 
@@ -339,20 +219,27 @@ export class UssFSProvider implements vscode.FileSystemProvider {
         await this.writeFile(localUri, remoteEntry.conflictData, { create: false, overwrite: true });
         Gui.setStatusBarMessage(localize("uss.usedRemoteContent", "$(discard) Used remote content for {0}", localEntry.name), globals.MS_PER_SEC * 4);
         localEntry.conflictData = null;
-        this.removeConflictAndCloseDiff(remoteUri);
+        this._removeConflictAndCloseDiff(remoteUri);
         // this will refresh the active editor with the remote content that was saved to the file
         vscode.commands.executeCommand("workbench.action.files.revert");
     }
 
+    /**
+     * Attempts to write a file at the given URI.
+     * @param uri The URI pointing to a file entry that should be written
+     * @param content The content to write to the file, as an array of bytes
+     * @param options Options for writing the file
+     * - `create` - Creates the file if it does not exist
+     * - `overwrite` - Overwrites the content if the file exists
+     * - `forceUpload` - (optional) Forces an upload to the remote system even if the e-tag is out of date
+     * - `isConflict` - (optional) Whether the file to write is considered a "remote conflict" entry
+     * @returns
+     */
     public async writeFile(
         uri: vscode.Uri,
         content: Uint8Array,
         options: { create: boolean; overwrite: boolean } & { forceUpload?: boolean; isConflict?: boolean }
     ): Promise<void> {
-        /*
-            1. Parse URI to get file path for API endpoint
-            2. Make API call after assigning data to File object
-         */
         const basename = path.posix.basename(uri.path);
         const parent = this._lookupParentDirectory(uri);
         let entry = parent.entries.get(basename);
@@ -365,12 +252,13 @@ export class UssFSProvider implements vscode.FileSystemProvider {
         if (entry && options.create && !options.overwrite) {
             throw vscode.FileSystemError.FileExists(uri);
         }
+
         if (!entry) {
             entry = new UssFile(basename);
             entry.data = content;
             if (options.isConflict) {
-                // we don't need to build metadata for the conflict file
-                // mark as accessed so readFile does not pull contents
+                // we don't need to build metadata for the conflict file;
+                // mark as accessed so readFile does not pull contents from remote
                 entry.wasAccessed = true;
             } else {
                 const profInfo = parent.metadata
@@ -399,11 +287,14 @@ export class UssFSProvider implements vscode.FileSystemProvider {
                 // because the conflict file serves as the "remote" point of reference at the time of conflict,
                 // and provides the data when comparing local/remote versions of a file.
 
+                // Attempt to write data to remote system, and handle any conflicts from e-tag mismatch
                 try {
                     await ussApi.uploadBufferAsFile(Buffer.from(content), entry.metadata.ussPath, {
                         etag: options.forceUpload ? undefined : entry.etag,
                         returnEtag: true,
                     });
+
+                    // Update e-tag if write was successful
                     // TODO: This call below can be removed once zowe.Upload.bufferToUssFile returns response headers.
                     // This is necessary at the moment on z/OSMF to fetch the new e-tag.
                     const newData = await ussApi.getContents(entry.metadata.ussPath, {
@@ -412,94 +303,39 @@ export class UssFSProvider implements vscode.FileSystemProvider {
                     entry.etag = newData.apiResponse.etag;
                 } catch (err) {
                     if (err.message.includes("Rest API failure with HTTP(S) status 412")) {
-                        const conflictOptions = [localize("compare.file", "Compare"), localize("compare.overwrite", "Overwrite")];
-                        const userSelection = await Gui.errorMessage(
-                            "There is a newer version of this file on the mainframe. Compare with remote contents or overwrite?",
-                            {
-                                items: conflictOptions,
-                            }
-                        );
-                        if (userSelection == null) {
+                        if (
+                            (await this._handleConflict(ussApi, {
+                                content: content,
+                                localEntry: entry,
+                                uri: uri,
+                            })) != UssConflictSelection.Overwrite
+                        ) {
                             return;
-                        }
-
-                        if (userSelection === conflictOptions[0]) {
-                            // Fetch the file contents on the LPAR and stream the data into an array
-                            const bufBuilder = new BufferBuilder();
-                            const resp = await ussApi.getContents(entry.metadata.ussPath, {
-                                returnEtag: true,
-                                encoding: entry.metadata.profile?.profile?.encoding,
-                                responseTimeout: entry.metadata.profile?.profile?.responseTimeout,
-                                stream: bufBuilder,
-                            });
-
-                            const mainframeBuf = bufBuilder.read();
-                            const conflictUri = this.buildConflictUri(entry);
-
-                            // Add this conflict file to the conflict map so we can leverage the data
-                            // when the "action buttons" are clicked in the diff view.
-                            this.conflictMap[conflictUri.path] = uri;
-
-                            // Build a "fake file" that represents the content on the mainframe,
-                            // for use with vscode.diff
-                            await this.writeFile(conflictUri, mainframeBuf, {
-                                create: true,
-                                overwrite: true,
-                                isConflict: true,
-                            });
-
-                            const conflictEntry = this._lookupAsFile(conflictUri, false);
-                            conflictEntry.isConflictFile = true;
-                            conflictEntry.inDiffView = true;
-                            conflictEntry.conflictData = conflictEntry.data;
-
-                            // assign newer data from local conflict for use during compare/overwrite
-                            entry.conflictData = content;
-                            entry.inDiffView = true;
-
-                            // Set etag to latest so that latest changes are applied, regardless of its contents
-                            entry.etag = resp.apiResponse.etag;
-                            // VSCode doesn't give us an easy way of showing a diff, so we need to hack something together here .-.
-                            vscode.commands.executeCommand("vscode.diff", uri, conflictUri);
-                            return;
-                        } else {
-                            // User selected "Overwrite", overwrite LPAR contents w/ local contents
-                            entry.data = content;
-                            await ussApi.uploadBufferAsFile(Buffer.from(content), entry.metadata.ussPath);
-                            const newData = await ussApi.getContents(entry.metadata.ussPath, {
-                                returnEtag: true,
-                            });
-                            entry.etag = newData.apiResponse.etag;
                         }
                     } else {
                         return;
                     }
                 }
+
                 entry.data = content;
             } else {
                 entry.data = content;
             }
             // if the entry hasn't been accessed yet, we don't need to call the API since we are just creating the file
         }
+
         entry.mtime = Date.now();
         entry.size = content.byteLength;
-
         this._fireSoon({ type: vscode.FileChangeType.Changed, uri });
     }
 
-    // --- manage files/folders
-
-    private updateChildPaths(entry: UssDirectory): void {
-        // update child entries
-        for (const child of entry.entries.values()) {
-            const isDir = child instanceof UssDirectory;
-            child.metadata.ussPath = entry.metadata.ussPath.concat(`${child.name}${isDir ? "/" : ""}`);
-            if (isDir) {
-                this.updateChildPaths(child);
-            }
-        }
-    }
-
+    /**
+     * Attempts to rename an entry from the old, source URI to the new, destination URI.
+     * @param oldUri The source URI of the file/folder
+     * @param newUri The destination URI of the file/folder
+     * @param options Options for renaming the file/folder
+     * - `overwrite` - Overwrites the file if the new URI already exists
+     */
     public async rename(oldUri: vscode.Uri, newUri: vscode.Uri, options: { overwrite: boolean }): Promise<void> {
         if (!options.overwrite && this._lookup(newUri, true)) {
             throw vscode.FileSystemError.FileExists(newUri);
@@ -526,7 +362,7 @@ export class UssFSProvider implements vscode.FileSystemProvider {
             // We have to update the path for all child entries if they exist in the FileSystem
             // This way any further API requests in readFile will use the latest paths on the LPAR
             if (entry instanceof UssDirectory) {
-                this.updateChildPaths(entry);
+                this._updateChildPaths(entry);
             }
         } catch (err) {
             // TODO: error handling
@@ -536,15 +372,21 @@ export class UssFSProvider implements vscode.FileSystemProvider {
         this._fireSoon({ type: vscode.FileChangeType.Deleted, uri: oldUri }, { type: vscode.FileChangeType.Created, uri: newUri });
     }
 
+    /**
+     * Deletes a file or folder at the given URI.
+     * @param uri The URI that points to the file/folder to delete
+     */
     public async delete(uri: vscode.Uri): Promise<void> {
         const dirname = uri.with({ path: path.posix.dirname(uri.path) });
         const basename = path.posix.basename(uri.path);
         const parent = this._lookupAsDirectory(dirname, false);
+
+        // Throw an error if the entry does not exist
         if (!parent.entries.has(basename)) {
             throw vscode.FileSystemError.FileNotFound(uri);
         }
 
-        // get the entry before deleting the URI
+        // get the entry data before deleting the URI
         const entryToDelete = this._lookup(uri, false);
 
         parent.entries.delete(basename);
@@ -565,6 +407,15 @@ export class UssFSProvider implements vscode.FileSystemProvider {
         this._fireSoon({ type: vscode.FileChangeType.Changed, uri: dirname }, { uri, type: vscode.FileChangeType.Deleted });
     }
 
+    /**
+     * Copy a file/folder from a source URI to destination URI.
+     * @param source The source URI for the file/folder to copy
+     * @param destination The new, destination URI for the file/folder
+     * @param options Options for copying the file/folder
+     * - `overwrite` - Overwrites the entry at the destination URI if it exists
+     * - `tree` - A tree representation of the file structure to copy
+     * @returns
+     */
     public async copyEx(
         source: vscode.Uri,
         destination: vscode.Uri,
@@ -624,18 +475,10 @@ export class UssFSProvider implements vscode.FileSystemProvider {
         }
     }
 
-    private createDirWithoutMetadata(uri: vscode.Uri): void {
-        const basename = path.posix.basename(uri.path);
-        const dirname = uri.with({ path: path.posix.dirname(uri.path) });
-        const parent = this._lookupAsDirectory(dirname, false);
-        const entry = new UssDirectory(basename);
-
-        parent.entries.set(entry.name, entry);
-        parent.mtime = Date.now();
-        parent.size += 1;
-        this._fireSoon({ type: vscode.FileChangeType.Changed, uri: dirname }, { type: vscode.FileChangeType.Created, uri });
-    }
-
+    /**
+     * Creates a directory entry in the provider at the given URI.
+     * @param uri The URI that represents a new directory path
+     */
     public createDirectory(uri: vscode.Uri): void {
         const basename = path.posix.basename(uri.path);
         const dirname = uri.with({ path: path.posix.dirname(uri.path) });
@@ -656,7 +499,248 @@ export class UssFSProvider implements vscode.FileSystemProvider {
         this._fireSoon({ type: vscode.FileChangeType.Changed, uri: dirname }, { type: vscode.FileChangeType.Created, uri });
     }
 
-    // --- lookup
+    public watch(_resource: vscode.Uri): vscode.Disposable {
+        // ignore, fires for all changes...
+        return new vscode.Disposable(() => {});
+    }
+
+    /* Begin private functions */
+
+    /**
+     * Creates a directory in the provider without any metadata (profile/USS path).
+     * @param uri The URI to create a directory for
+     */
+    private _createDirNoMetadata(uri: vscode.Uri): void {
+        const basename = path.posix.basename(uri.path);
+        const dirname = uri.with({ path: path.posix.dirname(uri.path) });
+        const parent = this._lookupAsDirectory(dirname, false);
+        const entry = new UssDirectory(basename);
+
+        parent.entries.set(entry.name, entry);
+        parent.mtime = Date.now();
+        parent.size += 1;
+        this._fireSoon({ type: vscode.FileChangeType.Changed, uri: dirname }, { type: vscode.FileChangeType.Created, uri });
+    }
+
+    /**
+     * Internal VSCode function for the FileSystemProvider to fire events from the event queue
+     */
+    private _fireSoon(...events: vscode.FileChangeEvent[]): void {
+        this._bufferedEvents.push(...events);
+
+        if (this._fireSoonHandle) {
+            clearTimeout(this._fireSoonHandle);
+        }
+
+        this._fireSoonHandle = setTimeout(() => {
+            this._emitter.fire(this._bufferedEvents);
+            this._bufferedEvents.length = 0;
+        }, FS_PROVIDER_DELAY);
+    }
+
+    /**
+     * Returns metadata about the file entry from the context of z/OS.
+     * @param uri A URI with a path in the format `uss:/{lpar_name}/{full_path}?`
+     * @returns Metadata for the URI that contains the profile instance and USS path
+     */
+    private _getInfoFromUri(uri: vscode.Uri): FileEntryZMetadata {
+        // Paths pointing to the session root can have the format `uss:/{lpar_name}`
+        const slashAfterProfile = uri.path.indexOf("/", 1);
+        const isRoot = slashAfterProfile === -1;
+
+        // Determine where to parse profile name based on location of first slash
+        const startPathPos = isRoot ? uri.path.length : slashAfterProfile;
+
+        // Load profile that matches the parsed name
+        const sessionName = uri.path.substring(1, startPathPos);
+        const loadedProfile = Profiles.getInstance().loadNamedProfile(sessionName);
+
+        return { profile: loadedProfile, ussPath: isRoot ? "/" : uri.path.substring(slashAfterProfile) };
+    }
+
+    /**
+     * Relocates an entry in the provider from `oldUri` to `newUri`.
+     * @param oldUri The old, source URI in the provider that needs moved
+     * @param newUri The new, destination URI for the file or folder
+     * @param newUssPath The new path for this entry in USS
+     */
+    private async _relocateEntry(oldUri: vscode.Uri, newUri: vscode.Uri, newUssPath: string): Promise<void> {
+        const entry = this._lookup(oldUri, false);
+        if (!entry) {
+            return;
+        }
+
+        const oldParentUri = vscode.Uri.parse(oldUri.path.substring(0, oldUri.path.lastIndexOf("/")));
+        const oldParent = this._lookupAsDirectory(oldParentUri, false);
+
+        const parentUri = vscode.Uri.parse(newUri.path.substring(0, newUri.path.lastIndexOf("/")));
+        const newParent = this._lookupAsDirectory(parentUri, false);
+
+        // both parent paths must be valid in order to perform a relocation
+        if (!oldParent || !newParent) {
+            return;
+        }
+
+        entry.metadata.ussPath = newUssPath;
+        // write new entry in FS
+        if (entry instanceof UssFile) {
+            // put new contents in relocated file
+            await this.writeFile(newUri, entry.data, { create: true, overwrite: true });
+        } else {
+            // create directory in FS; when expanded in the tree, it will fetch any files
+            this.createDirectory(newUri);
+        }
+        // delete entry from old parent
+        oldParent.entries.delete(entry.name);
+    }
+
+    /**
+     * Utility functions for conflict management:
+     */
+
+    /**
+     * Handles the conflict that occurred while trying to write to a USS file.
+     * @param ussApi The USS API to use during compare/overwrite
+     * @param conflictData The required data for conflict handling
+     * @returns The user's action/selection as an enum value
+     */
+    private async _handleConflict(ussApi: IUss, conflictData: UssConflict): Promise<UssConflictSelection> {
+        const conflictOptions = [localize("compare.file", "Compare"), localize("compare.overwrite", "Overwrite")];
+        const userSelection = await Gui.errorMessage(
+            "There is a newer version of this file on the mainframe. Compare with remote contents or overwrite?",
+            {
+                items: conflictOptions,
+            }
+        );
+        if (userSelection == null) {
+            return UssConflictSelection.UserDismissed;
+        }
+
+        // User selected "Compare", show diff with local contents and LPAR contents
+        if (userSelection === conflictOptions[0]) {
+            // Fetch the file contents on the LPAR and stream the data into an array
+            const bufBuilder = new BufferBuilder();
+            const resp = await ussApi.getContents(conflictData.localEntry.metadata.ussPath, {
+                returnEtag: true,
+                encoding: conflictData.localEntry.metadata.profile?.profile?.encoding,
+                responseTimeout: conflictData.localEntry.metadata.profile?.profile?.responseTimeout,
+                stream: bufBuilder,
+            });
+
+            const mainframeBuf = bufBuilder.read();
+            const conflictUri = this._buildConflictUri(conflictData.localEntry);
+
+            // Add this conflict file to the conflict map so we can leverage the data
+            // when the "action buttons" are clicked in the diff view.
+            this._conflictMap[conflictUri.path] = conflictData.uri;
+
+            // Build a "fake file" that represents the content on the mainframe,
+            // for use with vscode.diff
+            await this.writeFile(conflictUri, mainframeBuf, {
+                create: true,
+                overwrite: true,
+                isConflict: true,
+            });
+
+            const conflictEntry = this._lookupAsFile(conflictUri, false);
+            conflictEntry.isConflictFile = true;
+            conflictEntry.inDiffView = true;
+            conflictEntry.conflictData = conflictEntry.data;
+
+            // assign newer data from local conflict for use during compare/overwrite
+            conflictData.localEntry.conflictData = conflictData.content;
+            conflictData.localEntry.inDiffView = true;
+            // Set etag to latest so that latest changes are applied, regardless of its contents
+            conflictData.localEntry.etag = resp.apiResponse.etag;
+
+            vscode.commands.executeCommand(
+                "vscode.diff",
+                conflictData.uri,
+                conflictUri,
+                `${conflictData.localEntry.name} ↔ ${conflictEntry.name} (Remote)`
+            );
+            return UssConflictSelection.Compare;
+        }
+
+        // User selected "Overwrite", overwrite LPAR contents w/ local contents
+        conflictData.localEntry.data = conflictData.content;
+        await ussApi.uploadBufferAsFile(Buffer.from(conflictData.content), conflictData.localEntry.metadata.ussPath);
+        const newData = await ussApi.getContents(conflictData.localEntry.metadata.ussPath, {
+            returnEtag: true,
+        });
+        conflictData.localEntry.etag = newData.apiResponse.etag;
+        return UssConflictSelection.Overwrite;
+    }
+
+    /**
+     * Builds a URI representing a remote conflict.
+     * @param entry A valid file entry in the provider to make a remote conflict for
+     * @returns A valid URI created in the provider for the remote conflict
+     */
+    private _buildConflictUri(entry: UssFile): vscode.Uri {
+        // create a temporary directory structure that points to conflicts
+        // this should help with replacing contents/overwriting quickly
+        const conflictRootUri = vscode.Uri.parse(`uss:/${entry.metadata.profile.name}$conflicts`);
+        const conflictUri = conflictRootUri.with({
+            path: path.posix.join(conflictRootUri.path, "remote", entry.metadata.ussPath),
+        });
+
+        // ignore root slash when building split path
+        const conflictDirs = conflictUri.path.substring(1).split("/");
+
+        // remove file name and "conflict root" folder name from split path
+        conflictDirs.shift();
+        conflictDirs.pop();
+
+        const rootDirEntry = this._lookup(conflictRootUri, true);
+        if (rootDirEntry == null) {
+            this._createDirNoMetadata(conflictRootUri);
+        }
+
+        // build dirs to match path in remote FS
+        conflictDirs.reduce((parentPath, dirPart) => {
+            const fullPath = path.posix.join(parentPath, dirPart);
+            const subUri = conflictRootUri.with({ path: fullPath });
+            const subDir = this._lookup(subUri, true);
+            if (subDir == null) {
+                this._createDirNoMetadata(subUri);
+            }
+            return fullPath;
+        }, conflictRootUri.path);
+
+        return conflictUri;
+    }
+
+    /**
+     * Deletes the conflict URI from the provider and closes the diff view.
+     * @param remoteUri The conflict URI to remove from the provider
+     */
+    private _removeConflictAndCloseDiff(remoteUri: vscode.Uri): void {
+        delete this._conflictMap[remoteUri.path];
+        vscode.workspace.fs.delete(remoteUri);
+        vscode.commands.executeCommand("workbench.action.closeActiveEditor");
+    }
+
+    /* end conflict management utils */
+
+    /**
+     * Update the child entries in the provider with the parent's updated entry.
+     * @param entry The parent directory whose children need updated
+     */
+    private _updateChildPaths(entry: UssDirectory): void {
+        // update child entries
+        for (const child of entry.entries.values()) {
+            const isDir = child instanceof UssDirectory;
+            child.metadata.ussPath = entry.metadata.ussPath.concat(`${child.name}${isDir ? "/" : ""}`);
+            if (isDir) {
+                this._updateChildPaths(child);
+            }
+        }
+    }
+
+    /**
+     * VScode utility functions for entries in the provider:
+     */
 
     private _lookup(uri: vscode.Uri, silent: false): Entry;
     private _lookup(uri: vscode.Uri, silent: boolean): Entry | undefined;
@@ -703,31 +787,5 @@ export class UssFSProvider implements vscode.FileSystemProvider {
     private _lookupParentDirectory(uri: vscode.Uri): UssDirectory {
         const dirname = uri.with({ path: path.posix.dirname(uri.path) });
         return this._lookupAsDirectory(dirname, false);
-    }
-
-    // --- manage file events
-
-    private _emitter = new vscode.EventEmitter<vscode.FileChangeEvent[]>();
-    private _bufferedEvents: vscode.FileChangeEvent[] = [];
-    private _fireSoonHandle?: NodeJS.Timeout;
-
-    public readonly onDidChangeFile: vscode.Event<vscode.FileChangeEvent[]> = this._emitter.event;
-
-    public watch(_resource: vscode.Uri): vscode.Disposable {
-        // ignore, fires for all changes...
-        return new vscode.Disposable(() => {});
-    }
-
-    private _fireSoon(...events: vscode.FileChangeEvent[]): void {
-        this._bufferedEvents.push(...events);
-
-        if (this._fireSoonHandle) {
-            clearTimeout(this._fireSoonHandle);
-        }
-
-        this._fireSoonHandle = setTimeout(() => {
-            this._emitter.fire(this._bufferedEvents);
-            this._bufferedEvents.length = 0;
-        }, 5);
     }
 }
