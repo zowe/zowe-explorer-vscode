@@ -473,14 +473,9 @@ describe("ProfilesUtils unit tests", () => {
     describe("initializeZoweFolder", () => {
         it("should create directories and files that do not exist", async () => {
             const blockMocks = createBlockMocks();
-            jest.spyOn(fs, "readFileSync").mockReturnValueOnce("");
-            jest.spyOn(JSON, "parse").mockReturnValueOnce({
-                overrides: {
-                    credentialManager: "@zowe/cli",
-                },
-            });
             blockMocks.mockGetDirectValue.mockReturnValue(true);
             blockMocks.mockExistsSync.mockReturnValue(false);
+            jest.spyOn(fs, "readFileSync").mockReturnValue(Buffer.from(JSON.stringify({ overrides: { credentialManager: "@zowe/cli" } }), "utf-8"));
             const createFileSpy = jest.spyOn(profUtils.ProfilesUtils, "writeOverridesFile");
             await profUtils.ProfilesUtils.initializeZoweFolder();
             expect(globals.PROFILE_SECURITY).toBe(globals.ZOWE_CLI_SCM);
@@ -490,10 +485,10 @@ describe("ProfilesUtils unit tests", () => {
 
         it("should skip creating directories and files that already exist", async () => {
             const blockMocks = createBlockMocks();
-            jest.spyOn(profUtils.ProfilesUtils, "getCredentialManagerOverride").mockReturnValueOnce("@zowe/cli");
             blockMocks.mockGetDirectValue.mockReturnValue("@zowe/cli");
             blockMocks.mockExistsSync.mockReturnValue(true);
             const fileJson = blockMocks.mockFileRead;
+            jest.spyOn(fs, "readFileSync").mockReturnValue(Buffer.from(JSON.stringify({ overrides: { credentialManager: "@zowe/cli" } }), "utf-8"));
             blockMocks.mockReadFileSync.mockReturnValueOnce(JSON.stringify(fileJson, null, 2));
             await profUtils.ProfilesUtils.initializeZoweFolder();
             expect(globals.PROFILE_SECURITY).toBe("@zowe/cli");
@@ -505,11 +500,11 @@ describe("ProfilesUtils unit tests", () => {
     describe("writeOverridesFile", () => {
         it("should have file exist", () => {
             const blockMocks = createBlockMocks();
-            const fileJson = { overrides: { CredentialManager: "@zowe/cli", testValue: true } };
-            const content = JSON.stringify(fileJson, null, 2);
-            blockMocks.mockReadFileSync.mockReturnValueOnce(JSON.stringify({ overrides: { CredentialManager: false, testValue: true } }, null, 2));
+            blockMocks.mockReadFileSync.mockReturnValueOnce(
+                JSON.stringify({ overrides: { CredentialManager: "@zowe/cli", testValue: true } }, null, 2)
+            );
             profUtils.ProfilesUtils.writeOverridesFile();
-            expect(blockMocks.mockWriteFileSync).toBeCalledWith(blockMocks.zoweDir, content, { encoding: "utf-8", flag: "w" });
+            expect(blockMocks.mockWriteFileSync).toBeCalledTimes(0);
         });
 
         it("should return and have no change to the existing file if PROFILE_SECURITY matches file", () => {

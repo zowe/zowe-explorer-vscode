@@ -87,14 +87,6 @@ export function registerCommonCommands(context: vscode.ExtensionContext, provide
         })
     );
 
-    // Update imperative.json to false only when VS Code setting is set to false
-    context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.updateSecureCredentials", async (customCredentialManager?: string) => {
-            await globals.setGlobalSecurityValue(customCredentialManager);
-            ProfilesUtils.writeOverridesFile();
-        })
-    );
-
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.promptCredentials", async (node: IZoweTreeNode) => {
             await ProfilesUtils.promptCredentials(node);
@@ -216,6 +208,16 @@ export function registerCommonCommands(context: vscode.ExtensionContext, provide
             })
         );
     }
+}
+
+export function registerCredentialManager(context: vscode.ExtensionContext): void {
+    // Update imperative.json to false only when VS Code setting is set to false
+    context.subscriptions.push(
+        vscode.commands.registerCommand("zowe.updateSecureCredentials", async (customCredentialManager?: string) => {
+            await globals.setGlobalSecurityValue(customCredentialManager);
+            ProfilesUtils.writeOverridesFile();
+        })
+    );
 }
 
 export function watchConfigProfile(context: vscode.ExtensionContext, providers: IZoweProviders): void {

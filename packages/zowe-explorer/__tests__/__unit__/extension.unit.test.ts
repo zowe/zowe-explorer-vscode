@@ -140,6 +140,7 @@ async function createGlobalMocks() {
         appName: vscode.env.appName,
         uriScheme: vscode.env.uriScheme,
         expectedCommands: [
+            "zowe.updateSecureCredentials",
             "zowe.extRefresh",
             "zowe.all.config.init",
             "zowe.ds.addSession",
@@ -244,7 +245,6 @@ async function createGlobalMocks() {
             "zowe.jobs.sortBy",
             "zowe.manualPoll",
             "zowe.editHistory",
-            "zowe.updateSecureCredentials",
             "zowe.promptCredentials",
             "zowe.profileManagement",
             "zowe.openRecentMember",
@@ -453,6 +453,7 @@ describe("Extension Unit Tests", () => {
     let globalMocks;
     beforeAll(async () => {
         globalMocks = await createGlobalMocks();
+        jest.spyOn(fs, "readFileSync").mockReturnValue(Buffer.from(JSON.stringify({ overrides: { credentialManager: "@zowe/cli" } }), "utf-8"));
         Object.defineProperty(zowe.imperative, "ProfileInfo", {
             value: globalMocks.mockImperativeProfileInfo,
             configurable: true,
