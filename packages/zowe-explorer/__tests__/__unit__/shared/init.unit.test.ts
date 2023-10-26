@@ -377,4 +377,22 @@ describe("Test src/shared/extension", () => {
             expect(spyExpand).not.toHaveBeenCalled();
         });
     });
+
+    describe("registerCredentialManager", () => {
+        let context: any;
+
+        beforeEach(() => {
+            context = { subscriptions: [] };
+            jest.clearAllMocks();
+        });
+        afterAll(() => {
+            jest.restoreAllMocks();
+        });
+
+        it("should register command for updating credentials", () => {
+            const registerCommandSpy = jest.spyOn(vscode.commands, "registerCommand");
+            sharedExtension.registerCredentialManager(context);
+            expect(registerCommandSpy).toBeCalledWith("zowe.updateSecureCredentials", expect.any(Function));
+        });
+    });
 });
