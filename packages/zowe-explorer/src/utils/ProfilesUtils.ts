@@ -411,8 +411,8 @@ export class ProfilesUtils {
                             `After installing the extension, please make sure to reload your VS Code window in order
                              to start using the installed credential manager`
                         );
-                        const refreshButton = localize("ProfilesUtils.promptAndHandleMissingCredentialManager.refreshButton", "Refresh");
-                        if ((await Gui.showMessage(refreshMessage, { items: [refreshButton] })) === refreshButton) {
+                        const reloadButton = localize("ProfilesUtils.promptAndHandleMissingCredentialManager.refreshButton", "Reload");
+                        if ((await Gui.showMessage(refreshMessage, { items: [reloadButton] })) === reloadButton) {
                             await vscode.commands.executeCommand("workbench.action.reloadWindow");
                         }
                     }
