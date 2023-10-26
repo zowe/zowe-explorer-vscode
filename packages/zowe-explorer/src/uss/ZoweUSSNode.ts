@@ -211,6 +211,11 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             return this.children;
         }
 
+        // If search path has changed, invalidate all children
+        if (this.fullPath?.length > 0 && this.prevPath !== this.fullPath) {
+            this.children = [];
+        }
+
         const responseNodes: IZoweUSSTreeNode[] = [];
         let newNodeCreated = false;
         for (const item of response.apiResponse.items) {
@@ -262,10 +267,15 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 owner: item.user,
             };
             if (isDir) {
-                vscode.workspace.fs.createDirectory(temp.uri);
+                // Create an entry for the USS folder if it doesn't exist.
+                if (!UssFSProvider.instance.exists(temp.uri)) {
+                    vscode.workspace.fs.createDirectory(temp.uri);
+                }
             } else {
-                // Create a node for the USS file.
-                vscode.workspace.fs.writeFile(temp.uri, new Uint8Array());
+                // Create an entry for the USS file if it doesn't exist.
+                if (!UssFSProvider.instance.exists(temp.uri)) {
+                    vscode.workspace.fs.writeFile(temp.uri, new Uint8Array());
+                }
                 temp.command = {
                     command: "vscode.open",
                     title: localize("getChildren.responses.open", "Open"),
@@ -273,22 +283,6 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 };
             }
             responseNodes.push(temp);
-            const fsEntry = (await vscode.workspace.fs.stat(temp.uri)) as UssFile;
-            if (!isDir) {
-                fsEntry.binary = false;
-            }
-        }
-
-        this.dirty = false;
-
-        // If no new nodes were created, return the cached list of children
-        if (!newNodeCreated) {
-            return this.children;
-        }
-
-        // If search path has changed, invalidate all children
-        if (this.fullPath?.length > 0 && this.prevPath !== this.fullPath) {
-            this.children = [];
         }
 
         const nodesToAdd = responseNodes.filter((c) => !this.children.includes(c));
@@ -299,6 +293,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             .filter((c) => !nodesToRemove.includes(c))
             .sort((a, b) => ((a.label as string) < (b.label as string) ? -1 : 1));
         this.prevPath = this.fullPath;
+        this.dirty = false;
         return this.children;
     }
 

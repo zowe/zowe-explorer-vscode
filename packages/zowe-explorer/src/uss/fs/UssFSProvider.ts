@@ -224,6 +224,11 @@ export class UssFSProvider implements vscode.FileSystemProvider {
         vscode.commands.executeCommand("workbench.action.files.revert");
     }
 
+    public exists(uri: vscode.Uri): boolean {
+        const entry = this._lookup(uri, true);
+        return entry != null;
+    }
+
     /**
      * Attempts to write a file at the given URI.
      * @param uri The URI pointing to a file entry that should be written
@@ -586,12 +591,25 @@ export class UssFSProvider implements vscode.FileSystemProvider {
         if (entry instanceof UssFile) {
             // put new contents in relocated file
             await this.writeFile(newUri, entry.data, { create: true, overwrite: true });
+            const newEntry = this._lookupAsFile(newUri, false);
+            newEntry.etag = entry.etag;
         } else {
             // create directory in FS; when expanded in the tree, it will fetch any files
             this.createDirectory(newUri);
         }
         // delete entry from old parent
         oldParent.entries.delete(entry.name);
+        const tabGroups = vscode.window.tabGroups.all;
+        const allTabs = tabGroups.reduce((acc: vscode.Tab[], group) => acc.concat(group.tabs), []);
+        const tabWithOldUri = allTabs.find((t) => (t.input as any).uri.path === oldUri.path); 
+        if (tabWithOldUri) {
+            const parent = tabGroups.find((g) => g.tabs.find((t) => t === tabWithOldUri));
+            const editorCol = parent.viewColumn;
+            // close old uri and reopen new uri
+            // TODO: not sure if we can get around this...
+            await vscode.window.tabGroups.close(tabWithOldUri);
+            vscode.commands.executeCommand("vscode.openWith", newUri, "default", editorCol);
+        }
     }
 
     /**

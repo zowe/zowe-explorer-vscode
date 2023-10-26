@@ -130,6 +130,8 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             }
         }
 
+        const multipleItems = Object.keys(this.draggedNodes).length > 1;
+
         for (const item of droppedItems.value) {
             const node = this.draggedNodes[item.uri.path];
             if (node.getParent() === target) {
@@ -145,9 +147,20 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 this.nodeDataChanged(oldParent);
                 node.uri = newUriForNode;
 
-                // refresh parent to create entry in FS for moved node
-                this.refreshElement(target);
+                if (!multipleItems) {
+                    // fetch children for target
+                    this.refreshElement(target);
+                    target.dirty = true;
+                    const newNode = (await target.getChildren()).find((n: IZoweUSSTreeNode) => n.uri === newUriForNode);
+                    if (newNode) {
+                        await this.treeView.reveal(newNode);
+                    }
+                }
             }
+        }
+        if (multipleItems) {
+            this.refreshElement(target);
+            await this.treeView.reveal(target, { expand: true });
         }
         this.draggedNodes = {};
     }
@@ -481,9 +494,10 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 false,
                 profileName
             );
+            temp.uri = node.uri;
             temp.contextValue = contextually.asFavorite(temp);
             if (contextually.isFavoriteTextOrBinary(temp)) {
-                temp.command = { command: "zowe.uss.ZoweUSSNode.open", title: "Open", arguments: [temp] };
+                temp.command = { command: "vscode.open", title: "Open", arguments: [temp.uri] };
             }
         }
         const icon = getIconByNode(temp);
