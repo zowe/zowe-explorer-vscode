@@ -1986,7 +1986,6 @@
     "gulp-fs": "^0.0.2",
     "gulp-sourcemaps": "^2.6.5",
     "gulp-typescript": "^5.0.1",
-    "jsdoc": "^3.6.3",
     "jsdom": "^16.0.0",
     "log4js": "^6.4.6",
     "markdownlint-cli": "^0.33.0",

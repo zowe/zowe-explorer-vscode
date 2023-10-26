@@ -39,19 +39,22 @@
     "mocha": "^10.2.0",
     "mocha-junit-reporter": "^2.2.0",
     "mocha-multi-reporters": "^1.5.1",
+    "ovsx": "^0.8.3",
     "prettier": "2.6.0",
     "rimraf": "^3.0.2",
     "ts-jest": "^29.0.3",
     "ts-loader": "^8.2.0",
     "typescript": "^4.5.3",
-    "vsce": "2.15.0",
+    "@vscode/vsce": "^2.21.0",
     "vscode-nls-dev": "^4.0.0",
-    "vscode-test": "^1.4.0"
+    "@vscode/test-electron": "^2.3.6"
   },
-  "overrides": {
-    "**/json5": "^2.2.2",
-    "**/optionator": "^0.9.3",
-    "**/semver": "^7.5.2"
+  "pnpm": {
+    "overrides": {
+      "json5": "^2.2.2",
+      "optionator": "^0.9.3",
+      "semver": "^7.5.2"
+    }
   },
   "scripts": {
     "clean": "pnpm -r run clean",

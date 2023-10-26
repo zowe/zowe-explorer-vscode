@@ -18,6 +18,7 @@ jobs:
         with:
           fetch-depth: 0
 
+      # Make pnpm available for Changelog Checks
       - name: Install pnpm
         run: npm install -g pnpm
 
