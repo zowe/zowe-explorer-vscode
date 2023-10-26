@@ -26,6 +26,7 @@ import {
     JOB_SUBMIT_DIALOG_OPTS,
     getDefaultUri,
     compareFileContent,
+    willForceUpload,
 } from "../shared/utils";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { Profiles } from "../Profiles";
@@ -1594,7 +1595,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
             ?.children.find((child) => child.label.toString().trim() === memberName) as api.IZoweDatasetTreeNode
     )?.getEtag();
     const sesNode =
-        etagFavorites !== ""
+        etagFavorites !== "" && etagFavorites !== undefined
             ? datasetProvider.mFavorites.find((child) => child.label.toString().trim() === sesName)
             : datasetProvider.mSessionNodes.find((child) => child.label.toString().trim() === sesName);
     if (!sesNode) {
@@ -1644,6 +1645,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
         returnEtag: true,
     };
 
+    const prof = node?.getProfile() ?? profile;
     try {
         const uploadResponse = await api.Gui.withProgress(
             {
@@ -1651,7 +1653,6 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
                 title: localize("saveFile.progress.title", "Saving data set..."),
             },
             () => {
-                const prof = node?.getProfile() ?? profile;
                 if (prof.profile?.encoding) {
                     uploadOptions.encoding = prof.profile.encoding;
                 }
@@ -1669,7 +1670,30 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
                 setFileSaved(true);
             }
         } else if (!uploadResponse.success && uploadResponse.commandResponse.includes("Rest API failure with HTTP(S) status 412")) {
-            await compareFileContent(doc, node, label, null, profile);
+            api.Gui.infoMessage(
+                localize(
+                    "saveFile.info.confirmCompare",
+                    "The content of the file is newer. Please compare your version with the file contents or overwrite the content of the file with your changes."
+                ),
+                {
+                    items: [localize("saveFile.info.compare", "Compare"), localize("saveFile.info.overwrite", "Overwrite")],
+                }
+            ).then(async (selection) => {
+                let etagToUpload: string;
+                let returnEtag: boolean;
+                if (node) {
+                    etagToUpload = node.getEtag();
+                    if (etagToUpload) {
+                        returnEtag = true;
+                    }
+                }
+
+                if (selection === localize("saveFile.info.compare", "Compare")) {
+                    await compareFileContent(doc, node, label, null, profile);
+                } else {
+                    willForceUpload(node, doc, fileLabel, prof, null, returnEtag);
+                }
+            });
         } else {
             await markDocumentUnsaved(doc);
             api.Gui.errorMessage(uploadResponse.commandResponse);
