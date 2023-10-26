@@ -897,7 +897,7 @@ describe("ProfilesUtils unit tests", () => {
                 value: () => true,
                 configurable: true,
             });
-            jest.spyOn(Gui, "showMessage").mockResolvedValue("Refresh");
+            jest.spyOn(Gui, "showMessage").mockResolvedValue("Reload");
 
             await expect(
                 profUtils.ProfilesUtils["promptAndHandleMissingCredentialManager"]({
