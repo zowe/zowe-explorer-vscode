@@ -10,7 +10,7 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "fresh-clone": "pnpm clean && rimraf node_modules",
-    "clean": "gulp clean",
+    "clean": "rimraf dist",
     "package": "echo \"edit-attributes: nothing to package.\"",
     "test": "echo \"edit-attributes: nothing to test\"",
     "lint": "echo \"edit-attributes: nothing to lint.\"",
