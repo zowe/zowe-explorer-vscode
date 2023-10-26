@@ -1888,6 +1888,12 @@
           "description": "%zowe.settings.version%",
           "scope": "window"
         },
+        "zowe.security.checkForCustomCredentialManagers": {
+          "type": "boolean",
+          "description": "%zowe.security.checkForCustomCredentialManagers%",
+          "scope": "window",
+          "default": "true"
+        },
         "zowe.security.secureCredentialsEnabled": {
           "default": true,
           "type": "boolean",

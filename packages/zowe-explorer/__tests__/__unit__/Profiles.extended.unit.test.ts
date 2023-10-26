@@ -344,6 +344,8 @@ describe("Profiles Unit Tests - Function createNewConnection for v1 Profiles", (
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
+        jest.spyOn(utils.ProfilesUtils, "getCredentialManagerOverride").mockReturnValueOnce("@zowe/cli");
+
         jest.spyOn(globalMocks.mockProfileInstance, "getSchema").mockReturnValue(blockMocks.testSchemas);
         jest.spyOn(globalMocks.mockProfileInstance, "urlInfo").mockReturnValue(globalMocks.mockUrlInfo);
         jest.spyOn(globalMocks.mockProfileInstance, "userInfo").mockReturnValue(globalMocks.testProfile.profile.user);
@@ -381,6 +383,7 @@ describe("Profiles Unit Tests - Function createNewConnection for v1 Profiles", (
     it("Tests that createNewConnection returns 'fake' if the port is undefined and portInfo() returns correct port", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
+        jest.spyOn(utils.ProfilesUtils, "getCredentialManagerOverride").mockReturnValueOnce("@zowe/cli");
         const customURLInfo = {
             valid: true,
             protocol: "https",
@@ -428,6 +431,7 @@ describe("Profiles Unit Tests - Function createNewConnection for v1 Profiles", (
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
+        jest.spyOn(utils.ProfilesUtils, "getCredentialManagerOverride").mockReturnValueOnce("@zowe/cli");
         jest.spyOn(globalMocks.mockProfileInstance, "getSchema").mockReturnValueOnce(blockMocks.testSchemas);
         jest.spyOn(globalMocks.mockProfileInstance, "urlInfo").mockReturnValueOnce(globalMocks.mockUrlInfo);
         jest.spyOn(globalMocks.mockProfileInstance, "userInfo").mockReturnValueOnce(globalMocks.testProfile.profile.user);
@@ -451,6 +455,7 @@ describe("Profiles Unit Tests - Function createNewConnection for v1 Profiles", (
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
+        jest.spyOn(utils.ProfilesUtils, "getCredentialManagerOverride").mockReturnValueOnce("@zowe/cli");
         jest.spyOn(globalMocks.mockProfileInstance, "getSchema").mockReturnValueOnce(blockMocks.testSchemas);
         jest.spyOn(globalMocks.mockProfileInstance, "urlInfo").mockReturnValueOnce(globalMocks.mockUrlInfo);
         jest.spyOn(globalMocks.mockProfileInstance, "userInfo").mockReturnValueOnce(globalMocks.testProfile.profile.user);
@@ -503,6 +508,7 @@ describe("Profiles Unit Tests - Function createNewConnection for v1 Profiles", (
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
+        jest.spyOn(utils.ProfilesUtils, "getCredentialManagerOverride").mockReturnValueOnce("@zowe/cli");
         jest.spyOn(globalMocks.mockProfileInstance, "getSchema").mockReturnValueOnce(blockMocks.testSchemas);
         jest.spyOn(globalMocks.mockProfileInstance, "urlInfo").mockReturnValueOnce(globalMocks.mockUrlInfo);
         jest.spyOn(globalMocks.mockProfileInstance, "userInfo").mockReturnValueOnce(globalMocks.testProfile.profile.user);
