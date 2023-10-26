@@ -56,8 +56,8 @@ jobs:
           GIT_CREDENTIALS: x-access-token:${{ secrets.ZOWE_ROBOT_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_PUBLISHER_TOKEN }}
-          OVSX_PAT: ${{ secrets.VSCODE_ZOWE_ROBOT_PUBLISH_TOKEN }}
-          VSCE_PAT: ${{ secrets.VSCODE_PUBLISHER_TOKEN }}
+          OVSX_PAT: ${{ secrets.VSCODE_OVSX_PUBLISHER_TOKEN }}
+          VSCE_PAT: ${{ secrets.VSCODE_VSCE_PUBLISHER_TOKEN }}
         with:
           config-dir: .github
           new-version: ${{ github.event.inputs.version }}
