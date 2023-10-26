@@ -453,6 +453,7 @@ describe("Extension Unit Tests", () => {
     let globalMocks;
     beforeAll(async () => {
         globalMocks = await createGlobalMocks();
+        jest.spyOn(fs, "readFileSync").mockReturnValue(Buffer.from(JSON.stringify({ overrides: { credentialManager: "@zowe/cli" } }), "utf-8"));
         Object.defineProperty(zowe.imperative, "ProfileInfo", {
             value: globalMocks.mockImperativeProfileInfo,
             configurable: true,
