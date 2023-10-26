@@ -390,13 +390,12 @@ export class ProfilesUtils {
         ZoweLogger.trace("ProfilesUtils.promptAndHandleMissingCredentialManager called.");
         const header = localize(
             "ProfilesUtils.promptAndHandleMissingCredentialManager.suggestInstallHeader",
-            `Plugin of name "{0}" was defined for custom credential management on imperative.json file.`,
+            "Plugin of name '{0}' was defined for custom credential management on imperative.json file.",
             credentialManager.credMgrDisplayName
         );
         const installMessage = localize(
             "ProfilesUtils.promptAndHandleMissingCredentialManager.suggestInstallMessage",
-            `Please install associated VS Code extension for
-        custom credential manager or revert to default.`
+            "Please install associated VS Code extension for custom credential manager or revert to default."
         );
         const revertToDefaultButton = localize("ProfilesUtils.promptAndHandleMissingCredentialManager.revertToDefault", "Use Default");
         const installButton = localize("ProfilesUtils.promptAndHandleMissingCredentialManager.install", "Install");
@@ -409,8 +408,8 @@ export class ProfilesUtils {
                     if (await vscode.env.openExternal(credentialManagerInstallURL)) {
                         const refreshMessage = localize(
                             "ProfilesUtils.promptAndHandleMissingCredentialManager.refreshMessage",
-                            `After installing the extension, please make sure to reload
-                             your VS Code window in order to start using the installed credential manager`
+                            `After installing the extension, please make sure to reload your VS Code window in order
+                             to start using the installed credential manager`
                         );
                         const refreshButton = localize("ProfilesUtils.promptAndHandleMissingCredentialManager.refreshButton", "Refresh");
                         if ((await Gui.showMessage(refreshMessage, { items: [refreshButton] })) === refreshButton) {
