@@ -41,5 +41,7 @@ jobs:
       # install pnpm
       - run: npm install -g pnpm
 
+      - run: pnpm config set network-timeout 60000 && pnpm i
       - run: for dir in samples/*; do pushd $dir && pnpm --ignore-workspace i && pnpm run compile && popd; done
+
         shell: bash

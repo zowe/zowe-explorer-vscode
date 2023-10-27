@@ -27,7 +27,7 @@
     "watch": "pnpm --package=typescript dlx tsc -watch -p ./"
   },
   "dependencies": {
-    "@zowe/zowe-explorer-api": "^2.10.0"
+    "@zowe/zowe-explorer-api": "file:../../packages/zowe-explorer-api"
   },
   "devDependencies": {
     "@types/node": "^16.18.41",

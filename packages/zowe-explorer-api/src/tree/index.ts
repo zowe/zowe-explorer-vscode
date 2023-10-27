@@ -15,10 +15,8 @@ import { IZoweJobTreeNode } from "./IZoweJobTreeNode";
 
 export type IZoweNodeType = IZoweDatasetTreeNode | IZoweUSSTreeNode | IZoweJobTreeNode;
 
+export * from "./sorting";
 export * from "./ZoweExplorerTreeApi";
 export * from "./ZoweTreeNode";
 export * from "./IZoweTree";
 export * from "./IZoweTreeNode";
-export * from "./IZoweDatasetTreeNode";
-export * from "./IZoweJobTreeNode";
-export * from "./IZoweUSSTreeNode";

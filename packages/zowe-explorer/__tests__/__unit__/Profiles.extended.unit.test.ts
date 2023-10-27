@@ -39,6 +39,7 @@ import { SettingsConfig } from "../../src/utils/SettingsConfig";
 import { ZoweLogger } from "../../src/utils/LoggerUtils";
 import { ZoweLocalStorage } from "../../src/utils/ZoweLocalStorage";
 jest.mock("../../src/utils/LoggerUtils");
+import { TreeProviders } from "../../src/shared/TreeProviders";
 
 jest.mock("child_process");
 jest.mock("fs");
@@ -112,7 +113,14 @@ async function createGlobalMocks() {
         configurable: true,
     });
     Object.defineProperty(globals, "ISTHEIA", { get: () => false, configurable: true });
-    Object.defineProperty(vscode.window, "createTreeView", { value: jest.fn(), configurable: true });
+    Object.defineProperty(vscode.window, "createTreeView", {
+        value: jest.fn().mockReturnValue({ onDidCollapseElement: jest.fn() }),
+        configurable: true,
+    });
+    Object.defineProperty(vscode.workspace, "getConfiguration", {
+        value: newMocks.mockGetConfiguration,
+        configurable: true,
+    });
     Object.defineProperty(vscode, "ConfigurationTarget", {
         value: newMocks.mockConfigurationTarget,
         configurable: true,
@@ -243,6 +251,297 @@ describe("Profiles Unit Test - Function createInstance", () => {
         const profilesInstance = await testProfiles.createInstance(undefined);
         expect(mockWorkspaceFolders).toHaveBeenCalledTimes(1);
         expect(profilesInstance.cwd).toBe("fakePath");
+    });
+});
+
+describe("Profiles Unit Tests - Function createNewConnection for v1 Profiles", () => {
+    async function createBlockMocks(globalMocks) {
+        const newMocks = {
+            testSchemas: newTestSchemas(),
+            inputBox: createInputBox("input"),
+        };
+        globalMocks.mockCreateInputBox.mockReturnValue(newMocks.inputBox);
+
+        return newMocks;
+    }
+
+    beforeEach(() => {
+        jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(false);
+    });
+
+    it("Tests that createNewConnection fails if profileName is missing", async () => {
+        const globalMocks = await createGlobalMocks();
+
+        await Profiles.getInstance().createNewConnection("");
+        expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
+    });
+
+    it("Tests that createNewConnection fails if profileType is missing", async () => {
+        const globalMocks = await createGlobalMocks();
+        jest.spyOn(globalMocks.mockProfileInstance, "getProfileType").mockImplementation(undefined);
+
+        await Profiles.getInstance().createNewConnection(globalMocks.testProfile.name, undefined);
+        expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
+    });
+
+    it("Tests that createNewConnection fails if zOSMF URL is missing", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        jest.spyOn(globalMocks.mockProfileInstance, "getSchema").mockReturnValue(blockMocks.testSchemas);
+        globalMocks.mockCreateInputBox.mockResolvedValue(undefined);
+
+        await Profiles.getInstance().createNewConnection(globalMocks.testProfile.name, "zosmf");
+        expect(globalMocks.mockShowInformationMessage.mock.calls.length).toBe(1);
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
+    });
+
+    it("Tests that createNewConnection fails if user escapes create at username", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        jest.spyOn(globalMocks.mockProfileInstance, "getSchema").mockReturnValue(blockMocks.testSchemas);
+        jest.spyOn(globalMocks.mockProfileInstance, "urlInfo").mockReturnValue(globalMocks.mockUrlInfo);
+        globalMocks.mockCreateInputBox.mockResolvedValueOnce(undefined);
+
+        await Profiles.getInstance().createNewConnection(globalMocks.testProfile.name, "zosmf");
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
+    });
+
+    it("Tests that createNewConnection fails if user escapes create at password", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        jest.spyOn(globalMocks.mockProfileInstance, "getSchema").mockReturnValue(blockMocks.testSchemas);
+        jest.spyOn(globalMocks.mockProfileInstance, "urlInfo").mockReturnValue(globalMocks.mockUrlInfo);
+        jest.spyOn(globalMocks.mockProfileInstance, "userInfo").mockReturnValue(globalMocks.testProfile.name);
+        globalMocks.mockCreateInputBox.mockResolvedValueOnce(undefined);
+
+        await Profiles.getInstance().createNewConnection(globalMocks.testProfile.name, "zosmf");
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
+    });
+
+    it("Tests that createNewConnection fails if user escapes create at rejectUnauthorized", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        jest.spyOn(globalMocks.mockProfileInstance, "getSchema").mockReturnValue(blockMocks.testSchemas);
+        jest.spyOn(globalMocks.mockProfileInstance, "urlInfo").mockReturnValue(globalMocks.mockUrlInfo);
+        jest.spyOn(globalMocks.mockProfileInstance, "userInfo").mockReturnValue(globalMocks.testProfile.profile.user);
+        jest.spyOn(globalMocks.mockProfileInstance, "passwordInfo").mockReturnValue(globalMocks.testProfile.profile.password);
+        globalMocks.mockCreateInputBox.mockResolvedValueOnce(undefined);
+
+        await Profiles.getInstance().createNewConnection(globalMocks.testProfile.name, "zosmf");
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
+    });
+
+    it("Tests that createNewConnection fails if profileName is a duplicate", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        jest.spyOn(globalMocks.mockProfileInstance, "getSchema").mockReturnValue(blockMocks.testSchemas);
+        jest.spyOn(globalMocks.mockProfileInstance, "urlInfo").mockReturnValue(globalMocks.mockUrlInfo);
+        jest.spyOn(globalMocks.mockProfileInstance, "userInfo").mockReturnValue(globalMocks.testProfile.profile.user);
+        jest.spyOn(globalMocks.mockProfileInstance, "passwordInfo").mockReturnValue(globalMocks.testProfile.profile.password);
+        jest.spyOn(globalMocks.mockProfileInstance, "ruInfo").mockReturnValue(false);
+
+        await Profiles.getInstance().createNewConnection(globalMocks.testProfile.name, "zosmf");
+        expect(globalMocks.mockShowErrorMessage.mock.calls[0][0]).toBe("Profile name already exists. Please create a profile using a different name");
+    });
+
+    it("Tests that createNewConnection creates a new profile", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        jest.spyOn(utils.ProfilesUtils, "getCredentialManagerOverride").mockReturnValueOnce("@zowe/cli");
+
+        jest.spyOn(globalMocks.mockProfileInstance, "getSchema").mockReturnValue(blockMocks.testSchemas);
+        jest.spyOn(globalMocks.mockProfileInstance, "urlInfo").mockReturnValue(globalMocks.mockUrlInfo);
+        jest.spyOn(globalMocks.mockProfileInstance, "userInfo").mockReturnValue(globalMocks.testProfile.profile.user);
+        jest.spyOn(globalMocks.mockProfileInstance, "passwordInfo").mockReturnValue(globalMocks.testProfile.profile.password);
+        jest.spyOn(globalMocks.mockProfileInstance, "ruInfo").mockReturnValue(false);
+
+        await Profiles.getInstance().createNewConnection("fake", "zosmf");
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Profile fake was created.");
+    });
+
+    it("Tests that createNewConnection throws an exception and shows a config error", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+        const testError = new Error("saveProfile error");
+
+        const mockSaveProfile = jest.spyOn(ProfilesCache.prototype as any, "saveProfile").mockImplementationOnce(async (_values, _name, _type) => {
+            throw testError;
+        });
+        const mockShowZoweConfigError = jest.spyOn(ZoweExplorerExtender, "showZoweConfigError").mockImplementation();
+
+        jest.spyOn(globalMocks.mockProfileInstance, "getSchema").mockReturnValue(blockMocks.testSchemas);
+        jest.spyOn(globalMocks.mockProfileInstance, "urlInfo").mockReturnValue(globalMocks.mockUrlInfo);
+        jest.spyOn(globalMocks.mockProfileInstance, "userInfo").mockReturnValue(globalMocks.testProfile.profile.user);
+        jest.spyOn(globalMocks.mockProfileInstance, "passwordInfo").mockReturnValue(globalMocks.testProfile.profile.password);
+        jest.spyOn(globalMocks.mockProfileInstance, "ruInfo").mockReturnValue(false);
+        const errorHandlingSpy = jest.spyOn(utils, "errorHandling");
+
+        await Profiles.getInstance().createNewConnection("fake", "zosmf");
+        expect(mockSaveProfile).toHaveBeenCalled();
+        expect(globalMocks.mockShowInformationMessage).not.toHaveBeenCalled();
+        expect(errorHandlingSpy).toHaveBeenCalledWith(testError, "fake");
+        expect(mockShowZoweConfigError).toHaveBeenCalledWith("saveProfile error");
+    });
+
+    it("Tests that createNewConnection returns 'fake' if the port is undefined and portInfo() returns correct port", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+        jest.spyOn(utils.ProfilesUtils, "getCredentialManagerOverride").mockReturnValueOnce("@zowe/cli");
+        const customURLInfo = {
+            valid: true,
+            protocol: "https",
+            host: "fake.com",
+            port: undefined,
+        };
+        const port = 443;
+
+        blockMocks.testSchemas.port.optionDefinition.defaultValue = undefined;
+
+        jest.spyOn(globalMocks.mockProfileInstance, "getSchema").mockReturnValueOnce(blockMocks.testSchemas);
+        jest.spyOn(globalMocks.mockProfileInstance, "urlInfo").mockReturnValueOnce(customURLInfo);
+        jest.spyOn(globalMocks.mockProfileInstance, "portInfo").mockReturnValueOnce(port);
+        jest.spyOn(globalMocks.mockProfileInstance, "userInfo").mockReturnValueOnce(globalMocks.testProfile.profile.user);
+        jest.spyOn(globalMocks.mockProfileInstance, "passwordInfo").mockReturnValueOnce(globalMocks.testProfile.profile.password);
+        jest.spyOn(globalMocks.mockProfileInstance, "ruInfo").mockReturnValueOnce(false);
+
+        await expect(Profiles.getInstance().createNewConnection("fake", "zosmf")).resolves.toBe("fake");
+    });
+
+    it("Tests that createNewConnection returns undefined if the port is undefined and portInfo() returns NaN", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+        const customURLInfo = {
+            valid: true,
+            protocol: "https",
+            host: "fake.com",
+            port: undefined,
+        };
+        const port = "InvalidPort";
+
+        blockMocks.testSchemas.port.optionDefinition.defaultValue = undefined;
+
+        jest.spyOn(globalMocks.mockProfileInstance, "getSchema").mockReturnValueOnce(blockMocks.testSchemas);
+        jest.spyOn(globalMocks.mockProfileInstance, "urlInfo").mockReturnValueOnce(customURLInfo);
+        jest.spyOn(globalMocks.mockProfileInstance, "portInfo").mockReturnValueOnce(port);
+        jest.spyOn(globalMocks.mockProfileInstance, "userInfo").mockReturnValueOnce(globalMocks.testProfile.profile.user);
+        jest.spyOn(globalMocks.mockProfileInstance, "passwordInfo").mockReturnValueOnce(globalMocks.testProfile.profile.password);
+        jest.spyOn(globalMocks.mockProfileInstance, "ruInfo").mockReturnValueOnce(false);
+
+        await expect(Profiles.getInstance().createNewConnection("fake", "zosmf")).resolves.toBe(undefined);
+    });
+
+    it("Tests that createNewConnection enters default case when encoding is present in schema and value is the number 0", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        jest.spyOn(utils.ProfilesUtils, "getCredentialManagerOverride").mockReturnValueOnce("@zowe/cli");
+        jest.spyOn(globalMocks.mockProfileInstance, "getSchema").mockReturnValueOnce(blockMocks.testSchemas);
+        jest.spyOn(globalMocks.mockProfileInstance, "urlInfo").mockReturnValueOnce(globalMocks.mockUrlInfo);
+        jest.spyOn(globalMocks.mockProfileInstance, "userInfo").mockReturnValueOnce(globalMocks.testProfile.profile.user);
+        jest.spyOn(globalMocks.mockProfileInstance, "passwordInfo").mockReturnValueOnce(globalMocks.testProfile.profile.password);
+        jest.spyOn(globalMocks.mockProfileInstance, "ruInfo").mockReturnValueOnce(false);
+
+        blockMocks.testSchemas["encoding"] = {
+            type: "number",
+            optionDefinition: {
+                name: "encoding",
+                aliases: ["ec"],
+                description: "The encoding for download and upload of z/OS data set and USS files.",
+                type: "string",
+            },
+        };
+
+        await expect(Profiles.getInstance().createNewConnection("fake", "zosmf")).resolves.toBe("fake");
+    });
+
+    it("Tests that createNewConnection enters default case when encoding is present in schema and value is NaN", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        jest.spyOn(utils.ProfilesUtils, "getCredentialManagerOverride").mockReturnValueOnce("@zowe/cli");
+        jest.spyOn(globalMocks.mockProfileInstance, "getSchema").mockReturnValueOnce(blockMocks.testSchemas);
+        jest.spyOn(globalMocks.mockProfileInstance, "urlInfo").mockReturnValueOnce(globalMocks.mockUrlInfo);
+        jest.spyOn(globalMocks.mockProfileInstance, "userInfo").mockReturnValueOnce(globalMocks.testProfile.profile.user);
+        jest.spyOn(globalMocks.mockProfileInstance, "passwordInfo").mockReturnValueOnce(globalMocks.testProfile.profile.password);
+        jest.spyOn(globalMocks.mockProfileInstance, "ruInfo").mockReturnValueOnce(false);
+
+        blockMocks.testSchemas["encoding"] = {
+            type: "number",
+            optionDefinition: {
+                name: "encoding",
+                aliases: ["ec"],
+                description: "The encoding for download and upload of z/OS data set and USS files.",
+                type: "string",
+                defaultValue: 3,
+            },
+        };
+
+        await expect(Profiles.getInstance().createNewConnection("fake", "zosmf")).resolves.toBe("fake");
+    });
+
+    it("Tests that createNewConnection enters default case when boolean is present in schema and returns undefined", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        jest.spyOn(globalMocks.mockProfileInstance, "getSchema").mockReturnValueOnce(blockMocks.testSchemas);
+        jest.spyOn(globalMocks.mockProfileInstance, "urlInfo").mockReturnValueOnce(globalMocks.mockUrlInfo);
+        jest.spyOn(globalMocks.mockProfileInstance, "userInfo").mockReturnValueOnce(globalMocks.testProfile.profile.user);
+        jest.spyOn(globalMocks.mockProfileInstance, "passwordInfo").mockReturnValueOnce(globalMocks.testProfile.profile.password);
+        jest.spyOn(globalMocks.mockProfileInstance, "ruInfo").mockReturnValueOnce(false);
+        jest.spyOn(globalMocks.mockProfileInstance, "boolInfo").mockReturnValueOnce(undefined);
+        jest.spyOn(Gui, "showMessage").mockImplementationOnce(async () => {
+            return "";
+        });
+
+        blockMocks.testSchemas["encoding"] = {
+            type: "boolean",
+            optionDefinition: {
+                name: "someBoolean",
+                aliases: ["sb"],
+                description: "test for some boolean value",
+                type: "boolean",
+                defaultValue: undefined,
+            },
+        };
+
+        await expect(Profiles.getInstance().createNewConnection("fake", "zosmf")).resolves.toBe(undefined);
+    });
+
+    it("Tests that createNewConnection enters default case when string is present in schema and returns 'fake'", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        jest.spyOn(utils.ProfilesUtils, "getCredentialManagerOverride").mockReturnValueOnce("@zowe/cli");
+        jest.spyOn(globalMocks.mockProfileInstance, "getSchema").mockReturnValueOnce(blockMocks.testSchemas);
+        jest.spyOn(globalMocks.mockProfileInstance, "urlInfo").mockReturnValueOnce(globalMocks.mockUrlInfo);
+        jest.spyOn(globalMocks.mockProfileInstance, "userInfo").mockReturnValueOnce(globalMocks.testProfile.profile.user);
+        jest.spyOn(globalMocks.mockProfileInstance, "passwordInfo").mockReturnValueOnce(globalMocks.testProfile.profile.password);
+        jest.spyOn(globalMocks.mockProfileInstance, "ruInfo").mockReturnValueOnce(false);
+        jest.spyOn(globalMocks.mockProfileInstance, "boolInfo").mockReturnValueOnce(undefined);
+        jest.spyOn(Gui, "showInputBox").mockImplementationOnce(async () => {
+            return "test";
+        });
+
+        blockMocks.testSchemas["encoding"] = {
+            type: "string",
+            optionDefinition: {
+                name: "someString",
+                aliases: ["ss"],
+                description: "test for some string value",
+                type: "string",
+                defaultValue: undefined,
+            },
+        };
+
+        await expect(Profiles.getInstance().createNewConnection("fake", "zosmf")).resolves.toBe("fake");
     });
 });
 
@@ -905,7 +1204,7 @@ describe("Profiles Unit Tests - function checkCurrentProfile", () => {
     it("should throw an error if using token auth and is logged out or has expired token", async () => {
         const globalMocks = await createGlobalMocks();
         jest.spyOn(utils, "errorHandling").mockImplementation();
-        jest.spyOn(utils, "isUsingTokenAuth").mockResolvedValue(true);
+        jest.spyOn(utils.ProfilesUtils, "isUsingTokenAuth").mockResolvedValue(true);
         setupProfilesCheck(globalMocks);
         await expect(Profiles.getInstance().checkCurrentProfile(globalMocks.testProfile)).resolves.toEqual({ name: "sestest", status: "unverified" });
     });
@@ -1021,6 +1320,7 @@ describe("Profiles Unit Tests - function ssoLogin", () => {
             ],
             configurable: true,
         });
+        Object.defineProperty(utils.ProfilesUtils, "isProfileUsingBasicAuth", { value: jest.fn(), configurable: true });
         jest.spyOn(Gui, "showMessage").mockImplementation();
     });
     it("should perform an SSOLogin successfully while fetching the base profile", async () => {
@@ -1089,6 +1389,14 @@ describe("Profiles Unit Tests - function ssoLogout", () => {
         jest.spyOn(Gui, "showMessage").mockImplementation();
     });
     it("should logout successfully and refresh zowe explorer", async () => {
+        const mockTreeProvider = {
+            mSessionNodes: [testNode],
+            flipState: jest.fn(),
+            refreshElement: jest.fn(),
+        } as any;
+        jest.spyOn(TreeProviders, "ds", "get").mockReturnValue(mockTreeProvider);
+        jest.spyOn(TreeProviders, "uss", "get").mockReturnValue(mockTreeProvider);
+        jest.spyOn(TreeProviders, "job", "get").mockReturnValue(mockTreeProvider);
         const getTokenTypeNameMock = jest.fn();
         const logoutMock = jest.fn();
         jest.spyOn(ZoweExplorerApiRegister.getInstance(), "getCommonApi").mockImplementation(() => ({
@@ -1225,5 +1533,69 @@ describe("Profiles Unit Tests - function getSecurePropsForProfile", () => {
             getAllProfiles: () => [],
         } as any);
         await expect(Profiles.getInstance().getSecurePropsForProfile(globalMocks.testProfile.name ?? "")).resolves.toEqual(["tokenValue"]);
+    });
+});
+
+describe("Profiles Unit Tests - function clearFilterFromAllTrees", () => {
+    afterEach(() => {
+        jest.clearAllMocks();
+        jest.resetModules();
+        jest.restoreAllMocks();
+    });
+
+    it("should fail to clear filter if no session nodes are available", async () => {
+        const globalMocks = await createGlobalMocks();
+        const testNode = new (ZoweTreeNode as any)(
+            "fake",
+            vscode.TreeItemCollapsibleState.None,
+            undefined,
+            globalMocks.testSession,
+            globalMocks.testProfile
+        );
+
+        const flipStateSpy = jest.fn();
+        const refreshElementSpy = jest.fn();
+
+        const mockTreeProvider = {
+            mSessionNodes: [],
+            flipState: flipStateSpy,
+            refreshElement: refreshElementSpy,
+        } as any;
+        jest.spyOn(TreeProviders, "ds", "get").mockReturnValue(mockTreeProvider);
+        jest.spyOn(TreeProviders, "uss", "get").mockReturnValue(mockTreeProvider);
+        jest.spyOn(TreeProviders, "job", "get").mockReturnValue(mockTreeProvider);
+
+        expect(Profiles.getInstance().clearFilterFromAllTrees(testNode));
+        expect(flipStateSpy).toBeCalledTimes(0);
+        expect(refreshElementSpy).toBeCalledTimes(0);
+    });
+
+    it("should fail to clear filters if the session node is not listed in the tree", async () => {
+        const globalMocks = await createGlobalMocks();
+        const testNode = new (ZoweTreeNode as any)(
+            "fake",
+            vscode.TreeItemCollapsibleState.None,
+            undefined,
+            globalMocks.testSession,
+            globalMocks.testProfile
+        );
+
+        const flipStateSpy = jest.fn();
+        const refreshElementSpy = jest.fn();
+        const getProfileSpy = jest.fn(() => ({ name: "test" }));
+
+        const mockTreeProvider = {
+            mSessionNodes: [{ getProfile: getProfileSpy }],
+            flipState: flipStateSpy,
+            refreshElement: refreshElementSpy,
+        } as any;
+        jest.spyOn(TreeProviders, "ds", "get").mockReturnValue(mockTreeProvider);
+        jest.spyOn(TreeProviders, "uss", "get").mockReturnValue(mockTreeProvider);
+        jest.spyOn(TreeProviders, "job", "get").mockReturnValue(mockTreeProvider);
+
+        expect(Profiles.getInstance().clearFilterFromAllTrees(testNode));
+        expect(flipStateSpy).toBeCalledTimes(0);
+        expect(refreshElementSpy).toBeCalledTimes(0);
+        expect(getProfileSpy).toBeCalledTimes(3);
     });
 });

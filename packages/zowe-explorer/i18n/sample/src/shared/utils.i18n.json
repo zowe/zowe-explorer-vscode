@@ -3,6 +3,8 @@
   "zowe.jobs.confirmSubmission.yourJobs": "Your jobs",
   "zowe.jobs.confirmSubmission.otherUserJobs": "Other user jobs",
   "zowe.jobs.confirmSubmission.allJobs": "All jobs",
+  "sort.asc": "Ascending",
+  "sort.desc": "Descending",
   "uploadContent.putContents": "Uploading USS file",
   "saveFile.response.save.title": "Saving data set...",
   "saveUSSFile.response.title": "Saving file...",

@@ -1,0 +1,23 @@
+{
+  "profiles.operation.cancelled": "Operation Cancelled",
+  "qpPlaceholders.qp.basic": "Profile {0} is using basic authentication. Choose a profile action.",
+  "qpPlaceholders.qp.token": "Profile {0} is using token authentication. Choose a profile action.",
+  "qpPlaceholders.qp.choose": "Profile {0} doesn't specify an authentication method. Choose a profile action.",
+  "addBasicAuthQpItem.addCredentials.qpLabel": "$(plus) Add Credentials",
+  "addBasicAuthQpItem.addCredentials.qpDetail": "Add username and password for basic authentication",
+  "updateBasicAuthQpItem.updateCredentials.qpLabel": "$(refresh) Update Credentials",
+  "updateBasicAuthQpItem.updateCredentials.qpDetail": "Update stored username and password",
+  "deleteProfileQpItem.delete.qpLabel": "$(trash) Delete Profile",
+  "disableProfileValildationQpItem.disableValidation.qpLabel": "$(workspace-untrusted) Disable Profile Validation",
+  "disableProfileValildationQpItem.disableValidation.qpDetail": "Disable validation of server check for profile",
+  "enableProfileValildationQpItem.enableValidation.qpLabel": "$(workspace-trusted) Enable Profile Validation",
+  "enableProfileValildationQpItem.enableValidation.qpDetail": "Enable validation of server check for profile",
+  "editProfileQpItem.editProfile.qpLabel": "$(pencil) Edit Profile",
+  "editProfileQpItem.editProfile.qpDetail": "Update profile connection information",
+  "hideProfileQpItems.hideProfile.qpLabel": "$(eye-closed) Hide Profile",
+  "hideProfileQpItems.hideProfile.qpDetail": "Hide profile name from tree view",
+  "loginQpItem.login.qpLabel": "$(arrow-right) Log in to authentication service",
+  "loginQpItem.login.qpDetail": "Log in to obtain a new token value",
+  "logoutQpItem.logout.qpLabel": "$(arrow-left) Log out of authentication service",
+  "logoutQpItem.logout.qpDetail": "Log out to invalidate and remove stored token value"
+}

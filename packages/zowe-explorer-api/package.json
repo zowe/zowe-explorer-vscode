@@ -13,7 +13,8 @@
     "lib"
   ],
   "devDependencies": {
-    "@types/semver": "^7.5.0"
+    "@types/semver": "^7.5.0",
+    "copyfiles": "^2.4.1"
   },
   "dependencies": {
     "@types/vscode": "^1.53.2",
@@ -23,7 +24,7 @@
     "semver": "^7.5.3"
   },
   "scripts": {
-    "build": "pnpm check-cli && pnpm clean && pnpm madge && tsc -p ./ && pnpm license",
+    "build": "pnpm check-cli && pnpm copy-secrets && pnpm clean && tsc -p ./ && pnpm license",
     "test:unit": "jest \".*__tests__.*\\.unit\\.test\\.ts\" --coverage",
     "test": "pnpm test:unit",
     "lint": "concurrently -n \"_eslint_,prettier\" \"eslint .\" \"prettier --write . && prettier --check .\"",
@@ -34,7 +35,8 @@
     "clean": "rimraf lib",
     "fresh-clone": "pnpm clean && (rimraf node_modules || true)",
     "license": "node ../../scripts/updateLicenses.js",
-    "package": "pnpm build && pnpm pack && node ../../scripts/mv-pack.js zowe-zowe-explorer-api tgz"
+    "package": "pnpm build && pnpm pack && node ../../scripts/mv-pack.js zowe-zowe-explorer-api tgz",
+    "copy-secrets": "copyfiles -f ../../node_modules/@zowe/secrets-for-zowe-sdk/prebuilds/*.node ./prebuilds"
   },
   "jest": {
     "moduleFileExtensions": [

@@ -11,6 +11,7 @@
 
 // Generic utility functions related to all node types. See ./src/utils.ts for other utility functions.
 
+import * as fs from "fs";
 import * as vscode from "vscode";
 import * as path from "path";
 import * as globals from "../globals";
@@ -43,6 +44,8 @@ export const JOB_SUBMIT_DIALOG_OPTS = [
     localize("zowe.jobs.confirmSubmission.otherUserJobs", "Other user jobs"),
     localize("zowe.jobs.confirmSubmission.allJobs", "All jobs"),
 ];
+
+export const SORT_DIRS: string[] = [localize("sort.asc", "Ascending"), localize("sort.desc", "Descending")];
 
 export function filterTreeByString(value: string, treeItems: vscode.QuickPickItem[]): vscode.QuickPickItem[] {
     ZoweLogger.trace("shared.utils.filterTreeByString called.");
@@ -138,7 +141,7 @@ function appendSuffix(label: string): string {
     const bracket = label.indexOf("(");
     const split = bracket > -1 ? label.substr(0, bracket).split(".", limit) : label.split(".", limit);
     for (let i = split.length - 1; i > 0; i--) {
-        if (["JCL", "CNTL"].includes(split[i])) {
+        if (["JCL", "JCLLIB", "CNTL"].includes(split[i])) {
             return label.concat(".jcl");
         }
         if (["COBOL", "CBL", "COB", "SCBL"].includes(split[i])) {
@@ -378,8 +381,27 @@ export async function compareFileContent(
             responseTimeout: prof.profile?.responseTimeout,
         });
     }
+
+    // If local and remote file size are the same, then VS Code won't detect
+    // there is a conflict and remote changes may get overwritten. To work
+    // around this limitation of VS Code, when the sizes are identical we
+    // temporarily add a trailing newline byte to the local copy which forces
+    // the file size to be different. This is a terrible hack but it works.
+    // See https://github.com/microsoft/vscode/issues/119002
+    const oldSize = doc.getText().length;
+    const newSize = fs.statSync(doc.fileName).size;
+    if (newSize === oldSize) {
+        const edits = new vscode.WorkspaceEdit();
+        edits.insert(doc.uri, doc.positionAt(oldSize), doc.eol.toString());
+        await vscode.workspace.applyEdit(edits);
+    }
     ZoweLogger.warn(localize("saveFile.etagMismatch.log.warning", "Remote file has changed. Presenting with way to resolve file."));
-    vscode.commands.executeCommand("workbench.files.action.compareWithSaved");
+    await vscode.commands.executeCommand("workbench.files.action.compareWithSaved");
+    if (newSize === oldSize) {
+        const edits2 = new vscode.WorkspaceEdit();
+        edits2.delete(doc.uri, new vscode.Range(doc.positionAt(oldSize), doc.positionAt(oldSize + doc.eol.toString().length)));
+        await vscode.workspace.applyEdit(edits2);
+    }
     // re-assign etag, so that it can be used with subsequent requests
     const downloadEtag = downloadResponse?.apiResponse?.etag;
     if (node && downloadEtag !== node.getEtag()) {

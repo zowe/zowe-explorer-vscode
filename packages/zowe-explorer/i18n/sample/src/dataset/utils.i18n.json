@@ -1,0 +1,6 @@
+{
+  "ds.sortByName": "$(case-sensitive) Name (default)",
+  "ds.sortByModified": "$(calendar) Date Modified",
+  "ds.sortByUserId": "$(account) User ID",
+  "setSortDirection": "$(fold) Sort Direction"
+}

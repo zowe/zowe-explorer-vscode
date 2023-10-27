@@ -36,7 +36,7 @@ const MvsApi = new FtpMvsApi();
 
 describe("FtpMvsApi", () => {
     beforeEach(() => {
-        MvsApi.checkedProfile = jest.fn().mockReturnValue({ message: "success", type: "zftp", failNotFound: false });
+        MvsApi.checkedProfile = jest.fn().mockReturnValue({ message: "success", type: "zftp", profile: { secureFtp: false }, failNotFound: false });
         MvsApi.ftpClient = jest.fn().mockReturnValue({ host: "", user: "", password: "", port: "" });
         MvsApi.releaseConnection = jest.fn();
         globals.SESSION_MAP.get = jest.fn().mockReturnValue({ mvsListConnection: { connected: true } });
@@ -120,6 +120,43 @@ describe("FtpMvsApi", () => {
         expect(result.commandResponse).toContain("Data set uploaded successfully.");
         expect(DataSetUtils.listDataSets).toBeCalledTimes(1);
         expect(DataSetUtils.uploadDataSet).toBeCalledTimes(1);
+        expect(MvsApi.releaseConnection).toBeCalled();
+    });
+
+    it("should upload single space to dataset when secureFtp is true and contents are empty", async () => {
+        const localFile = tmp.tmpNameSync({ tmpdir: "/tmp" });
+
+        fs.writeFileSync(localFile, "");
+        const response = TestUtils.getSingleLineStream();
+        DataSetUtils.listDataSets = jest.fn().mockReturnValue([{ dsname: "USER.EMPTYDS", dsorg: "PS", lrecl: 2 }]);
+        const uploadDataSetMock = jest.fn().mockReturnValue(response);
+        DataSetUtils.uploadDataSet = uploadDataSetMock;
+        jest.spyOn(MvsApi, "getContents").mockResolvedValue({ apiResponse: { etag: "123" } } as any);
+
+        const mockParams = {
+            inputFilePath: localFile,
+            dataSetName: "USER.EMPTYDS",
+            options: { encoding: "", returnEtag: true, etag: "utf8" },
+        };
+        jest.spyOn(MvsApi, "checkedProfile").mockReturnValueOnce({
+            type: "zftp",
+            message: "",
+            profile: {
+                secureFtp: true,
+            },
+            failNotFound: false,
+        });
+
+        jest.spyOn(MvsApi as any, "getContentsTag").mockReturnValue(undefined);
+        jest.spyOn(fs, "readFileSync").mockReturnValue("");
+        await MvsApi.putContents(mockParams.inputFilePath, mockParams.dataSetName, mockParams.options);
+        expect(DataSetUtils.uploadDataSet).toHaveBeenCalledWith({ host: "", password: "", port: "", user: "" }, "USER.EMPTYDS", {
+            content: " ",
+            encoding: "",
+            transferType: "ascii",
+        });
+        // ensure options object at runtime does not have localFile
+        expect(Object.keys(uploadDataSetMock.mock.calls[0][2]).find((k) => k === "localFile")).toBe(undefined);
         expect(MvsApi.releaseConnection).toBeCalled();
     });
 

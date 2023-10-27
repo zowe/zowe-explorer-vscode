@@ -8,7 +8,7 @@
 !resources/**/*.png
 !resources/**/*.svg
 !prebuilds/**
-!webviews/*/dist/
+!src/webviews/dist/**
 
 !CHANGELOG.md
 !LICENSE

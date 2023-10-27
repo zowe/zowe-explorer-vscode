@@ -31,7 +31,7 @@ import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
 function createGlobalMocks() {
     const globalMocks = {
         session: createISessionWithoutCredentials(),
-        createTreeView: jest.fn(),
+        createTreeView: jest.fn().mockReturnValue({ onDidCollapseElement: jest.fn() }),
         mockLog: jest.fn(),
         mockDebug: jest.fn(),
         mockError: jest.fn(),

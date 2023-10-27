@@ -112,11 +112,6 @@ export class FtpMvsApi extends AbstractFtpApi implements IMvs {
     }
 
     public async putContents(inputFilePath: string, dataSetName: string, options: IUploadOptions): Promise<zowe.IZosFilesResponse> {
-        const transferOptions = {
-            transferType: options.binary ? TRANSFER_TYPE_BINARY : TRANSFER_TYPE_ASCII,
-            localFile: inputFilePath,
-            encoding: options.encoding,
-        };
         const file = path.basename(inputFilePath).replace(/[^a-z0-9]+/gi, "");
         const member = file.substr(0, MAX_MEMBER_NAME_LEN);
         let targetDataset: string;
@@ -135,9 +130,10 @@ export class FtpMvsApi extends AbstractFtpApi implements IMvs {
             targetDataset = dataSetName + "(" + member + ")";
         }
         const result = this.getDefaultResponse();
+        const profile = this.checkedProfile();
         let connection;
         try {
-            connection = await this.ftpClient(this.checkedProfile());
+            connection = await this.ftpClient(profile);
             if (!connection) {
                 globals.LOGGER.logImperativeMessage(result.commandResponse, MessageSeverity.ERROR);
                 throw new Error(result.commandResponse);
@@ -153,6 +149,16 @@ export class FtpMvsApi extends AbstractFtpApi implements IMvs {
             }
             const lrecl: number = dsAtrribute.apiResponse.items[0].lrecl;
             const data = fs.readFileSync(inputFilePath, { encoding: "utf8" });
+            const transferOptions: Record<string, any> = {
+                transferType: options.binary ? TRANSFER_TYPE_BINARY : TRANSFER_TYPE_ASCII,
+                localFile: inputFilePath,
+                encoding: options.encoding,
+            };
+            if (profile.profile.secureFtp && data === "") {
+                // substitute single space for empty DS contents when saving (avoids FTPS error)
+                transferOptions.content = " ";
+                delete transferOptions.localFile;
+            }
             const lines = data.split(/\r?\n/);
             const foundIndex = lines.findIndex((line) => line.length > lrecl);
             if (foundIndex !== -1) {
@@ -242,15 +248,17 @@ export class FtpMvsApi extends AbstractFtpApi implements IMvs {
     }
 
     public async createDataSetMember(dataSetName: string, options?: IUploadOptions): Promise<zowe.IZosFilesResponse> {
+        const profile = this.checkedProfile();
         const transferOptions = {
-            transferType: options ? TRANSFER_TYPE_BINARY : TRANSFER_TYPE_ASCII,
-            content: "",
+            transferType: options.binary ? TRANSFER_TYPE_BINARY : TRANSFER_TYPE_ASCII,
+            // we have to provide a single space for content over FTPS, or it will fail to upload
+            content: profile.profile.secureFtp ? " " : "",
             encoding: options.encoding,
         };
         const result = this.getDefaultResponse();
         let connection;
         try {
-            connection = await this.ftpClient(this.checkedProfile());
+            connection = await this.ftpClient(profile);
             if (!connection) {
                 throw new Error(result.commandResponse);
             }

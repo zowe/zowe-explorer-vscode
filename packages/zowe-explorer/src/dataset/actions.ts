@@ -966,22 +966,28 @@ export async function showAttributes(node: api.IZoweDatasetTreeNode, datasetProv
 }
 
 /**
- * Submit the contents of the editor as JCL.
+ * Submit the contents of the editor or file as JCL.
  *
  * @export
  * @param datasetProvider DatasetTree object
  */
 // This function does not appear to currently be made available in the UI
-export async function submitJcl(datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>): Promise<void> {
+export async function submitJcl(datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>, file?: vscode.Uri): Promise<void> {
     ZoweLogger.trace("dataset.actions.submitJcl called.");
-    if (!vscode.window.activeTextEditor) {
-        const errorMsg = localize("submitJcl.noDocumentOpen", "No editor with a document that could be submitted as JCL is currently open.");
-        api.Gui.errorMessage(errorMsg);
-        ZoweLogger.error(errorMsg);
+    if (!vscode.window.activeTextEditor && !file) {
+        const notActiveEditorMsg = localize(
+            "submitJcl.notActiveEditorMsg",
+            "No editor with a document that could be submitted as JCL is currently open."
+        );
+        api.Gui.errorMessage(notActiveEditorMsg);
+        ZoweLogger.error(notActiveEditorMsg);
         return;
     }
+    if (file) {
+        await vscode.commands.executeCommand("filesExplorer.openFilePreserveFocus", file);
+    }
     const doc = vscode.window.activeTextEditor.document;
-    ZoweLogger.debug(localize("submitJcl.submitting", "Submitting JCL in document {0}", doc.fileName));
+    ZoweLogger.debug(localize("submitJcl.submitting", "Submitting as JCL in document {0}", doc.fileName));
     // get session name
     const sessionregex = /\[(.*)(\])(?!.*\])/g;
     const regExp = sessionregex.exec(doc.fileName);
@@ -999,6 +1005,10 @@ export async function submitJcl(datasetProvider: api.IZoweTree<api.IZoweDatasetT
                 canPickMany: false,
             };
             sessProfileName = await api.Gui.showQuickPick(profileNamesList, quickPickOptions);
+            if (!sessProfileName) {
+                api.Gui.infoMessage(localizedStrings.opCancelled);
+                return;
+            }
         } else {
             api.Gui.showMessage(localize("submitJcl.noProfile", "No profiles available"));
         }

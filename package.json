@@ -10,7 +10,7 @@
   "private": true,
   "workspaces": [
     "packages/*",
-    "packages/zowe-explorer/webviews/*"
+    "packages/zowe-explorer/src/webviews"
   ],
   "engines": {
     "vscode": "^1.63.0"
@@ -62,8 +62,8 @@
     "madge": "pnpm -r run madge",
     "pretty": "prettier --write .",
     "build": "pnpm -r run build",
-    "test": "pnpm -r --reporter append-only run test",
-    "test:parallel": "pnpm -r --parallel run test",
+    "test": "pnpm -r --sequential --color --reporter append-only run test",
+    "test:parallel": "pnpm -r --parallel --color run test",
     "package": "pnpm run -r package",
     "pretest:integration": "ts-node ./scripts/create-env.ts",
     "posttest:integration": "ts-node ./scripts/clean-env.ts",
