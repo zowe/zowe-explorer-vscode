@@ -257,14 +257,14 @@ export async function uploadContent(
 /**
  * Function that will forcefully upload a file and won't check for matching Etag
  */
-export function willForceUpload(
+export async function willForceUpload(
     node: IZoweDatasetTreeNode | IZoweUSSTreeNode,
     doc: vscode.TextDocument,
     remotePath: string,
     profile?: imperative.IProfileLoaded,
     binary?: boolean,
     returnEtag?: boolean
-): void {
+): Promise<void> {
     // setup to handle both cases (dataset & USS)
     let title: string;
     if (isZoweDatasetTreeNode(node)) {
@@ -280,11 +280,13 @@ export function willForceUpload(
             )
         );
     }
-    // Don't wait for prompt to return since this would block the save queue
-    Gui.infoMessage(localize("saveFile.info.confirmUpload", "Would you like to overwrite the remote file?"), {
-        items: [localize("saveFile.overwriteConfirmation.yes", "Yes"), localize("saveFile.overwriteConfirmation.no", "No")],
+    const yesBtn = localize("saveFile.overwriteConfirmation.yes", "Yes");
+    const noBtn = localize("saveFile.overwriteConfirmation.no", "No");
+    await Gui.infoMessage(localize("saveFile.info.confirmUpload", "Are you sure you would like to overwrite the remote file?"), {
+        items: [yesBtn, noBtn],
     }).then(async (selection) => {
-        if (selection === localize("saveFile.overwriteConfirmation.yes", "Yes")) {
+        if (selection === yesBtn) {
+            ZoweLogger.info("Overwrite file confirmed.");
             const uploadResponse = await Gui.withProgress(
                 {
                     location: vscode.ProgressLocation.Notification,

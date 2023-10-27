@@ -14,7 +14,7 @@ import { imperative, IZosFilesResponse } from "@zowe/cli";
 import * as fs from "fs";
 import * as globals from "../globals";
 import * as path from "path";
-import { concatChildNodes, uploadContent, getSelectedNodeList, getDefaultUri, compareFileContent, willForceUpload } from "../shared/utils";
+import { concatChildNodes, uploadContent, getSelectedNodeList, getDefaultUri } from "../shared/utils";
 import { errorHandling } from "../utils/ProfilesUtils";
 import { Gui, ValidProfileEnum, IZoweTree, IZoweUSSTreeNode } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
@@ -29,6 +29,7 @@ import { fileExistsCaseSensitveSync } from "./utils";
 import { UssFileTree, UssFileType } from "./FileStructure";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { AttributeView } from "./AttributeView";
+import { resolveFileConflict } from "../shared/actions";
 
 // Set up localization
 nls.config({
@@ -343,21 +344,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
         // TODO: error handling must not be zosmf specific
         const errorMessage = err ? err.message : err.toString();
         if (errorMessage.includes("Rest API failure with HTTP(S) status 412")) {
-            Gui.infoMessage(
-                localize(
-                    "saveFile.info.confirmCompare",
-                    "The content of the file is newer. Please compare your version with the file contents or overwrite the content of the file with your changes."
-                ),
-                {
-                    items: [localize("saveFile.info.compare", "Compare"), localize("saveFile.info.overwrite", "Overwrite")],
-                }
-            ).then(async (selection) => {
-                if (selection === localize("saveFile.info.compare", "Compare")) {
-                    await compareFileContent(doc, node, null, binary);
-                } else {
-                    willForceUpload(node, doc, remote, sesNode.getProfile(), binary, returnEtag);
-                }
-            });
+            resolveFileConflict(sesNode, sesNode.getProfile(), doc, remote, null, binary);
         } else {
             await markDocumentUnsaved(doc);
             await errorHandling(err, sesName);

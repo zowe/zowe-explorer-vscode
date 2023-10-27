@@ -25,8 +25,6 @@ import {
     JobSubmitDialogOpts,
     JOB_SUBMIT_DIALOG_OPTS,
     getDefaultUri,
-    compareFileContent,
-    willForceUpload,
 } from "../shared/utils";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { Profiles } from "../Profiles";
@@ -37,7 +35,7 @@ import * as contextually from "../shared/context";
 import { markDocumentUnsaved, setFileSaved } from "../utils/workspace";
 import { IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
 import { ZoweLogger } from "../utils/LoggerUtils";
-
+import { resolveFileConflict } from "../shared/actions";
 import { promiseStatus, PromiseStatuses } from "promise-status-async";
 
 // Set up localization
@@ -1670,30 +1668,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
                 setFileSaved(true);
             }
         } else if (!uploadResponse.success && uploadResponse.commandResponse.includes("Rest API failure with HTTP(S) status 412")) {
-            api.Gui.infoMessage(
-                localize(
-                    "saveFile.info.confirmCompare",
-                    "The content of the file is newer. Please compare your version with the file contents or overwrite the content of the file with your changes."
-                ),
-                {
-                    items: [localize("saveFile.info.compare", "Compare"), localize("saveFile.info.overwrite", "Overwrite")],
-                }
-            ).then(async (selection) => {
-                let etagToUpload: string;
-                let returnEtag: boolean;
-                if (node) {
-                    etagToUpload = node.getEtag();
-                    if (etagToUpload) {
-                        returnEtag = true;
-                    }
-                }
-
-                if (selection === localize("saveFile.info.compare", "Compare")) {
-                    await compareFileContent(doc, node, label, null, profile);
-                } else {
-                    willForceUpload(node, doc, fileLabel, prof, null, returnEtag);
-                }
-            });
+            resolveFileConflict(node, profile, doc, fileLabel, label);
         } else {
             await markDocumentUnsaved(doc);
             api.Gui.errorMessage(uploadResponse.commandResponse);
