@@ -20,6 +20,7 @@ import * as contextually from "../shared/context";
 import * as nls from "vscode-nls";
 import { getIconById, IconId } from "../generators/icons";
 import { ZoweLogger } from "../utils/LoggerUtils";
+import { markDocumentUnsaved } from "../utils/workspace";
 
 // Set up localization
 nls.config({
@@ -276,6 +277,7 @@ export function resolveFileConflict(
             }
             default: {
                 ZoweLogger.info("Operation cancelled, file unsaved.");
+                await markDocumentUnsaved(doc);
                 break;
             }
         }
