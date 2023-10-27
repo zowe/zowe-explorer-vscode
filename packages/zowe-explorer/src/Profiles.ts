@@ -25,7 +25,6 @@ import {
     IValidationSetting,
     ValidProfileEnum,
     ProfilesCache,
-    IUrlValidator,
     ZoweVsCodeExtension,
     getFullPath,
     getZoweDir,

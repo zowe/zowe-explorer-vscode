@@ -21,10 +21,9 @@ import {
     createConfigLoad,
     createTeamConfigMock,
     createUnsecureTeamConfigMock,
-    createInputBox,
 } from "../../__mocks__/mockCreators/shared";
 import { createDatasetSessionNode, createDatasetTree } from "../../__mocks__/mockCreators/datasets";
-import { createProfileManager, newTestSchemas } from "../../__mocks__/mockCreators/profiles";
+import { createProfileManager } from "../../__mocks__/mockCreators/profiles";
 import * as vscode from "vscode";
 import * as utils from "../../src/utils/ProfilesUtils";
 import * as globals from "../../src/globals";
