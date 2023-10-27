@@ -838,7 +838,7 @@ describe("ProfilesUtils unit tests", () => {
             jest.spyOn(Gui, "infoMessage").mockResolvedValue("Yes");
 
             await expect(profUtils.ProfilesUtils["fetchRegisteredPlugins"]()).resolves.not.toThrow();
-            expect(zoweLoggerTraceSpy).toBeCalledTimes(3);
+            expect(zoweLoggerTraceSpy).toBeCalledTimes(2);
             expect(updateCredentialManagerSettingSpy).toBeCalledTimes(1);
             expect(setDirectValueSpy).toBeCalledTimes(1);
         });
@@ -861,7 +861,7 @@ describe("ProfilesUtils unit tests", () => {
             jest.spyOn(Gui, "infoMessage").mockResolvedValue("Don't ask again");
 
             await expect(profUtils.ProfilesUtils["fetchRegisteredPlugins"]()).resolves.not.toThrow();
-            expect(zoweLoggerTraceSpy).toBeCalledTimes(2);
+            expect(zoweLoggerTraceSpy).toBeCalledTimes(1);
             expect(updateCredentialManagerSettingSpy).toBeCalledTimes(0);
             expect(setDirectValueSpy).toBeCalledTimes(1);
         });

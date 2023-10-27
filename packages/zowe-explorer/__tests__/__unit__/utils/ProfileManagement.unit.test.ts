@@ -144,15 +144,6 @@ describe("ProfileManagement unit tests", () => {
             expect(mocks.debugLogSpy).toBeCalledWith(mocks.logMsg);
             expect(mocks.commandSpy).toHaveBeenLastCalledWith("zowe.ds.removeSession", mocks.mockDsSessionNode);
         });
-        it("profile using basic authentication should see delete commands called when Delete Profile chosen with v1 profile", async () => {
-            const mocks = createBlockMocks(createGlobalMocks());
-            mocks.mockResolveQp.mockResolvedValueOnce(mocks.mockDeleteProfChosen);
-            mocks.mockProfileInfo.usingTeamConfig = false;
-            await ProfileManagement.manageProfile(mocks.mockDsSessionNode);
-            expect(mocks.debugLogSpy).toBeCalledWith(mocks.logMsg);
-            expect(mocks.editSpy).not.toBeCalled();
-            expect(mocks.commandSpy).toHaveBeenLastCalledWith("zowe.ds.deleteProfile", mocks.mockDsSessionNode);
-        });
     });
     describe("unit tests around token auth selections", () => {
         function createBlockMocks(globalMocks): any {

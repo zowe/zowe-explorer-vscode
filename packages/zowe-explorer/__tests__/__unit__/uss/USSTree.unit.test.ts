@@ -138,6 +138,10 @@ async function createGlobalMocks() {
         value: globalMocks.showErrorMessage,
         configurable: true,
     });
+    Object.defineProperty(vscode.workspace, "getConfiguration", {
+        value: globalMocks.getConfiguration,
+        configurable: true,
+    });
     Object.defineProperty(vscode.window, "showInputBox", { value: globalMocks.showInputBox, configurable: true });
     Object.defineProperty(vscode, "ProgressLocation", { value: globalMocks.ProgressLocation, configurable: true });
     Object.defineProperty(vscode.window, "withProgress", { value: globalMocks.withProgress, configurable: true });
@@ -169,7 +173,7 @@ async function createGlobalMocks() {
     globalMocks.withProgress.mockReturnValue(globalMocks.testResponse);
     globalMocks.getFilters.mockReturnValue(["/u/aDir{directory}", "/u/myFile.txt{textFile}"]);
     globalMocks.mockDefaultProfile.mockReturnValue(globalMocks.testProfile);
-    globalMocks.getConfiguration.mockReturnValueOnce({
+    globalMocks.getConfiguration.mockReturnValue({
         get: (setting: string) => ["[test]: /u/aDir{directory}", "[test]: /u/myFile.txt{textFile}"],
         update: jest.fn(() => {
             return {};
@@ -201,7 +205,7 @@ describe("USSTree Unit Tests - Function USSTree.initializeFavorites()", () => {
             "[test]: /u/aDir{directory}",
             "[test]: /u/myFile.txt{textFile}",
         ]);
-        const testTree1 = await createUSSTree();
+        const testTree1 = await createUSSTree(zowe.imperative.Logger.getAppLogger());
         const favProfileNode = testTree1.mFavorites[0];
         expect(testTree1.mSessionNodes).toBeDefined();
         expect(testTree1.mFavorites.length).toBe(1);
@@ -231,7 +235,7 @@ describe("USSTree Unit Tests - Function initializeFavChildNodeForProfile()", () 
             "[test]: /u/aDir{directory}",
             "[test]: /u/myFile.txt{textFile}",
         ]);
-        const testTree1 = await createUSSTree();
+        const testTree1 = await createUSSTree(zowe.imperative.Logger.getAppLogger());
         const favProfileNode = testTree1.mFavorites[0];
         const label = "/u/fakeuser";
         const line = "[test]: /u/fakeuser{ussSession}";
@@ -1441,7 +1445,7 @@ describe("USSTree Unit Tests - Function USSTree.getChildren()", () => {
 
         await globalMocks.testTree.getChildren(favProfileNode);
 
-        expect(loadProfilesForFavoritesSpy).toHaveBeenCalledWith(favProfileNode);
+        expect(loadProfilesForFavoritesSpy).toHaveBeenCalledWith(log, favProfileNode);
     });
 });
 // Idea is borrowed from: https://github.com/kulshekhar/ts-jest/blob/master/src/util/testing.ts
@@ -1507,7 +1511,7 @@ describe("USSTree Unit Tests - Function USSTree.loadProfilesForFavorites", () =>
             }),
         });
 
-        await globalMocks.testTree.loadProfilesForFavorites(favProfileNode);
+        await globalMocks.testTree.loadProfilesForFavorites(blockMocks.log, favProfileNode);
         const resultFavProfileNode = globalMocks.testTree.mFavorites[0];
 
         expect(resultFavProfileNode).toEqual(expectedFavProfileNode);
@@ -1540,7 +1544,7 @@ describe("USSTree Unit Tests - Function USSTree.loadProfilesForFavorites", () =>
             configurable: true,
         });
         mocked(vscode.window.showErrorMessage).mockResolvedValueOnce({ title: "Remove" });
-        await globalMocks.testTree.loadProfilesForFavorites(favProfileNode);
+        await globalMocks.testTree.loadProfilesForFavorites(blockMocks.log, favProfileNode);
         expect(showErrorMessageSpy).toBeCalledTimes(1);
         showErrorMessageSpy.mockClear();
     });
@@ -1583,7 +1587,7 @@ describe("USSTree Unit Tests - Function USSTree.loadProfilesForFavorites", () =>
             globalMocks.testProfile
         );
 
-        await globalMocks.testTree.loadProfilesForFavorites(favProfileNode);
+        await globalMocks.testTree.loadProfilesForFavorites(blockMocks.log, favProfileNode);
         const resultFavDirNode = globalMocks.testTree.mFavorites[0].children[0];
 
         expect(resultFavDirNode).toEqual(expectedFavDirNode);
@@ -1628,7 +1632,7 @@ describe("USSTree Unit Tests - Function USSTree.loadProfilesForFavorites", () =>
             globalMocks.testProfile
         );
 
-        await globalMocks.testTree.loadProfilesForFavorites(favProfileNode);
+        await globalMocks.testTree.loadProfilesForFavorites(blockMocks.log, favProfileNode);
         const resultFavDirNode = globalMocks.testTree.mFavorites[0].children[0];
 
         expect(resultFavDirNode).toEqual(expectedFavDirNode);
@@ -1721,16 +1725,16 @@ describe("USSTree Unit Tests - Function USSTree.editSession()", () => {
     describe("removeSearchHistory", () => {
         it("removes the search item passed in from the current history", async () => {
             const globalMocks = await createGlobalMocks();
-            expect(globalMocks.testTree["mHistory"]["mSearchHistory"].length).toEqual(3);
+            expect(globalMocks.testTree["mHistory"]["mSearchHistory"].length).toEqual(1);
             globalMocks.testTree.removeSearchHistory("/u/myuser");
-            expect(globalMocks.testTree["mHistory"]["mSearchHistory"].length).toEqual(2);
+            expect(globalMocks.testTree["mHistory"]["mSearchHistory"].length).toEqual(0);
         });
     });
 
     describe("resetSearchHistory", () => {
         it("clears the entire search history", async () => {
             const globalMocks = await createGlobalMocks();
-            expect(globalMocks.testTree["mHistory"]["mSearchHistory"].length).toEqual(3);
+            expect(globalMocks.testTree["mHistory"]["mSearchHistory"].length).toEqual(1);
             globalMocks.testTree.resetSearchHistory();
             expect(globalMocks.testTree["mHistory"]["mSearchHistory"].length).toEqual(0);
         });
@@ -1739,7 +1743,9 @@ describe("USSTree Unit Tests - Function USSTree.editSession()", () => {
     describe("resetFileHistory", () => {
         it("clears the entire file history", async () => {
             const globalMocks = await createGlobalMocks();
+            globalMocks.testTree["mHistory"]["mFileHistory"] = ["test1", "test2"];
             expect(globalMocks.testTree["mHistory"]["mFileHistory"].length).toEqual(2);
+
             globalMocks.testTree.resetFileHistory();
             expect(globalMocks.testTree["mHistory"]["mFileHistory"].length).toEqual(0);
         });
@@ -1756,9 +1762,9 @@ describe("USSTree Unit Tests - Function USSTree.editSession()", () => {
     describe("getFavorites", () => {
         it("gets all the favorites from persistent object", async () => {
             const globalMocks = await createGlobalMocks();
-            jest.spyOn(vscode.workspace, "getConfiguration").mockReturnValue({
-                get: () => ["test1", "test2", "test3"],
-            } as any);
+            jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue({
+                favorites: ["test1", "test2", "test3"],
+            });
             expect(globalMocks.testTree.getFavorites()).toEqual(["test1", "test2", "test3"]);
         });
     });

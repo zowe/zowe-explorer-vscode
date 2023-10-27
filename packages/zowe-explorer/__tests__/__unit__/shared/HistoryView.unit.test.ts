@@ -23,6 +23,7 @@ import {
 import { createIJobObject, createJobsTree } from "../../../__mocks__/mockCreators/jobs";
 import { Gui } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../../src/Profiles";
+import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
 
 async function initializeHistoryViewMock(blockMocks: any, globalMocks: any): Promise<HistoryView> {
     return new HistoryView(
@@ -52,6 +53,14 @@ function createGlobalMocks(): any {
         configurable: true,
     });
     Object.defineProperty(vscode.window, "createTreeView", { value: jest.fn().mockReturnValueOnce(globalMocks.treeView), configurable: true });
+    Object.defineProperty(ZoweLocalStorage, "storage", {
+        value: {
+            get: () => ({ persistence: true, favorites: [], history: [], sessions: ["zosmf"], searchHistory: [], fileHistory: [] }),
+            update: jest.fn(),
+            keys: () => [],
+        },
+        configurable: true,
+    });
 
     return globalMocks;
 }

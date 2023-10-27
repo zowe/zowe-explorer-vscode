@@ -42,8 +42,7 @@ import * as sharedUtils from "../../../src/shared/utils";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 import { SpoolFile } from "../../../src/SpoolProvider";
 import { ZosJobsProvider } from "../../../src/job/ZosJobsProvider";
-
-jest.mock("../../../src/utils/LoggerUtils");
+import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
 
 const activeTextEditorDocument = jest.fn();
 
@@ -127,6 +126,14 @@ function createGlobalMocks() {
     Object.defineProperty(ZoweLogger, "debug", { value: jest.fn(), configurable: true });
     Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showInformationMessage", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLocalStorage, "storage", {
+        value: {
+            get: () => ({ persistence: true, favorites: [], history: [], sessions: ["zosmf"], searchHistory: [], fileHistory: [] }),
+            update: jest.fn(),
+            keys: () => [],
+        },
+        configurable: true,
+    });
     function settingJobObjects(job: zowe.IJob, setjobname: string, setjobid: string, setjobreturncode: string): zowe.IJob {
         job.jobname = setjobname;
         job.jobid = setjobid;
@@ -768,13 +775,9 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
 
         for (let o = 0; o < sharedUtils.JOB_SUBMIT_DIALOG_OPTS.length; o++) {
             const option = sharedUtils.JOB_SUBMIT_DIALOG_OPTS[o];
-            jest.spyOn(vscode.workspace, "getConfiguration").mockReturnValueOnce({
-                has: jest.fn(),
-                get: (_setting) => {
-                    return option;
-                },
-                inspect: jest.fn(),
-                update: jest.fn(),
+            Object.defineProperty(vscode.workspace, "getConfiguration", {
+                value: jest.fn().mockImplementation(() => new Map([["zowe.jobs.confirmSubmission", option]])),
+                configurable: true,
             });
 
             if (option === sharedUtils.JOB_SUBMIT_DIALOG_OPTS[sharedUtils.JobSubmitDialogOpts.Disabled]) {
