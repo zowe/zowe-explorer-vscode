@@ -88,6 +88,26 @@ export class UssFSProvider implements vscode.FileSystemProvider {
     }
 
     /**
+     * Removes a local entry from the FS provider if it exists, without making any API requests.
+     * @param uri The URI pointing to a local entry in the FS provider
+     */
+    public removeEntryIfExists(uri: vscode.Uri): void {
+        const parentPath = path.posix.resolve(uri.path, "..");
+        const parentEntry = this._lookupAsDirectory(
+            uri.with({
+                path: parentPath,
+            }),
+            true
+        );
+        if (parentEntry == null) {
+            return;
+        }
+
+        parentEntry.entries.delete(path.posix.basename(uri.path));
+        this._fireSoon({ type: vscode.FileChangeType.Deleted, uri: uri });
+    }
+
+    /**
      * Reads a directory located at the given URI.
      * @param uri A valid URI within the provider
      * @returns An array of tuples containing each entry name and type
@@ -105,9 +125,19 @@ export class UssFSProvider implements vscode.FileSystemProvider {
             // if this entry has not been accessed before, grab its file list
             const response = await ZoweExplorerApiRegister.getUssApi(entry.metadata.profile).fileList(entry.metadata.ussPath);
             for (const item of response.apiResponse.items) {
-                if (item.name === "." || item.name === ".." || entry.entries.has(item.name)) {
+                if (item.name === "." || item.name === "..") {
                     continue;
                 }
+
+                const isDirectory = item.mode.startsWith("d");
+                const newEntryType = isDirectory ? vscode.FileType.Directory : vscode.FileType.File;
+                const entryExists = entry.entries.get(item.name);
+                // skip over entries that are of the same type
+                if (entryExists && entryExists.type === newEntryType) {
+                    continue;
+                }
+
+                // create new entries for any files/folders not in the provider
                 if (item.mode.startsWith("d")) {
                     entry.entries.set(item.name, new UssDirectory(item.name));
                 } else {
@@ -133,10 +163,11 @@ export class UssFSProvider implements vscode.FileSystemProvider {
         const bufBuilder = new BufferBuilder();
         const startPathPos = uri.path.indexOf("/", 1);
         const filePath = uri.path.substring(startPathPos);
-        const resp = await ZoweExplorerApiRegister.getUssApi(file.metadata.profile).getContents(filePath, {
+        const metadata = file.metadata ?? this._getInfoFromUri(uri);
+        const resp = await ZoweExplorerApiRegister.getUssApi(metadata.profile).getContents(filePath, {
             returnEtag: true,
-            encoding: file.metadata.profile.profile?.encoding,
-            responseTimeout: file.metadata.profile.profile?.responseTimeout,
+            encoding: metadata.profile.profile?.encoding,
+            responseTimeout: metadata.profile.profile?.responseTimeout,
             stream: bufBuilder,
         });
 
@@ -286,7 +317,7 @@ export class UssFSProvider implements vscode.FileSystemProvider {
             }
             const ussApi = ZoweExplorerApiRegister.getUssApi(parent.metadata.profile);
 
-            if (entry.wasAccessed) {
+            if (entry.wasAccessed || content.length > 0) {
                 // Entry was already accessed, this is an update to the existing file.
                 // Note that we don't want to call the API when making changes to the conflict file,
                 // because the conflict file serves as the "remote" point of reference at the time of conflict,
@@ -599,9 +630,10 @@ export class UssFSProvider implements vscode.FileSystemProvider {
         }
         // delete entry from old parent
         oldParent.entries.delete(entry.name);
+        this._fireSoon({ type: vscode.FileChangeType.Deleted, uri: oldUri });
         const tabGroups = vscode.window.tabGroups.all;
         const allTabs = tabGroups.reduce((acc: vscode.Tab[], group) => acc.concat(group.tabs), []);
-        const tabWithOldUri = allTabs.find((t) => (t.input as any).uri.path === oldUri.path); 
+        const tabWithOldUri = allTabs.find((t) => (t.input as any).uri.path === oldUri.path);
         if (tabWithOldUri) {
             const parent = tabGroups.find((g) => g.tabs.find((t) => t === tabWithOldUri));
             const editorCol = parent.viewColumn;

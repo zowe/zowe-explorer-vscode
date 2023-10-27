@@ -217,7 +217,6 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         }
 
         const responseNodes: IZoweUSSTreeNode[] = [];
-        let newNodeCreated = false;
         for (const item of response.apiResponse.items) {
             if (item.name === "." || item.name === "..") {
                 continue;
@@ -243,7 +242,6 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 continue;
             }
 
-            newNodeCreated = true;
             const isDir = item.mode.startsWith("d");
             const collapseState = isDir ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None;
             const temp = new ZoweUSSNode(
@@ -287,6 +285,13 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
 
         const nodesToAdd = responseNodes.filter((c) => !this.children.includes(c));
         const nodesToRemove = this.children.filter((c) => !responseNodes.includes(c));
+
+        // remove any entries from FS provider that were deleted from mainframe when tree view is refreshed
+        for (const node of nodesToRemove) {
+            if (node.uri) {
+                UssFSProvider.instance.removeEntryIfExists(node.uri);
+            }
+        }
 
         this.children = this.children
             .concat(nodesToAdd)
