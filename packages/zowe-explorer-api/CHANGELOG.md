@@ -7,7 +7,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 ### New features and enhancements
 
 - Added optional `getTag` function to `ZoweExplorerAPI.IUss` for getting the tag of a file on USS.
-- Added new API {ZE Extender MetaData} to allow extenders to have the metadata of registered extenders to aid in team configuration file creation from a view that isn't Zowe Explorer's. [#2394](https://github.com/zowe/vscode-extension-for-zowe/issues/2394)
+- Added new ProfilesCache API `getConfigArray` to allow extenders to get the registered profile type's metadata for team configuration file creation handled outside of Zowe Explorer views. [#2394](https://github.com/zowe/vscode-extension-for-zowe/issues/2394)
 - Add `sort` and `filter` optional variables for storing sort/filter options alongside tree nodes. [#2420](https://github.com/zowe/vscode-extension-for-zowe/issues/2420)
 - Add `stats` optional variable for storing dataset stats (such as user, modified date, etc.).
 - Add option enums and types for sorting, filtering and sort direction in tree nodes. [#2420](https://github.com/zowe/vscode-extension-for-zowe/issues/2420)
