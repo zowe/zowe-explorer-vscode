@@ -126,6 +126,12 @@ export class UnixCommandHandler extends ZoweCommandProvider {
         } else {
             profile = node.getProfile();
         }
+        if (ZoweExplorerApiRegister.getCommandApi(profile).sshNeededforUnixCommand) {
+            this.sshSession = await this.setsshSession();
+        } else {
+            Gui.showMessage(localize("issueUnixCommand.notsupportedForProfile", "Action not being supported for the profile type ") + profile.type);
+            return;
+        }
         try {
             if (Profiles.getInstance().validProfile !== ValidProfileEnum.INVALID) {
                 const commandApi = ZoweExplorerApiRegister.getInstance().getCommandApi(profile);
@@ -233,12 +239,6 @@ export class UnixCommandHandler extends ZoweCommandProvider {
 
     private async issueCommand(profile: imperative.IProfileLoaded, command: string, cwd: string): Promise<void> {
         ZoweLogger.trace("UnixCommandHandler.issueCommand called.");
-        if (ZoweExplorerApiRegister.getCommandApi(profile).sshNeededforUnixCommand) {
-            this.sshSession = await this.setsshSession();
-        } else {
-            Gui.showMessage(localize("issueUnixCommand.notsupportedForProfile", "Action not being supported for the profile type ") + profile.type);
-            return;
-        }
         try {
             if (command) {
                 // If the user has started their command with a / then remove it

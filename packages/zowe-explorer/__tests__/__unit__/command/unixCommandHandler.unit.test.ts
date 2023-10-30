@@ -407,6 +407,7 @@ describe("UnixCommand Actions Unit Testing", () => {
                     validateProfiles: jest.fn(),
                     getBaseProfile: jest.fn(),
                     validProfile: ValidProfileEnum.VALID,
+                    getDefaultProfile: mockdefaultProfile,
                 };
             }),
         });
@@ -500,6 +501,7 @@ describe("UnixCommand Actions Unit Testing", () => {
                     getBaseProfile: jest.fn(),
                     checkCurrentProfile: jest.fn(),
                     zosmfProfile: mockLoadNamedProfile,
+                    getDefaultProfile: mockdefaultProfile,
                 };
             }),
         });
@@ -512,7 +514,6 @@ describe("UnixCommand Actions Unit Testing", () => {
         apiRegisterInstance.getCommandApi = getCommandApiMock.bind(apiRegisterInstance);
 
         showInputBox.mockReturnValueOnce("/d iplinfo1");
-
         jest.spyOn(mockCommandApi, "issueUnixCommand").mockReturnValueOnce("iplinfo1" as any);
 
         await unixActions.issueUnixCommand(session, null, testNode);
