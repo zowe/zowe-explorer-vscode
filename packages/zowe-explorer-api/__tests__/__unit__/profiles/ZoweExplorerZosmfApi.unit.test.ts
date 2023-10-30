@@ -531,4 +531,8 @@ describe("ZosmfCommandApi", () => {
             await expectApiWithSession(commandApi, new ZosmfCommandApi());
         });
     });
+    it("check whether sshProfileNeeded", () => {
+        const obj = new ZosmfCommandApi();
+        expect(obj.sshNeededforUnixCommand()).toBe(true);
+    })
 });
