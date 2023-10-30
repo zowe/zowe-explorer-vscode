@@ -233,13 +233,19 @@ export class ProfilesUtils {
      */
     public static getCredentialManagerOverride(): string {
         ZoweLogger.trace("ProfilesUtils.getCredentialManagerOverride called.");
-        const settingsFile = path.join(getZoweDir(), "settings", "imperative.json");
-        const imperativeConfig = JSON.parse(fs.readFileSync(settingsFile).toString());
-        const credentialManagerOverride = imperativeConfig?.overrides[imperative.CredentialManagerOverride.CRED_MGR_SETTING_NAME];
-        if (typeof credentialManagerOverride === "string") {
-            return credentialManagerOverride;
+        try {
+            const settingsFilePath = path.join(getZoweDir(), "settings", "imperative.json");
+            const settingsFile = fs.readFileSync(settingsFilePath);
+            const imperativeConfig = JSON.parse(settingsFile.toString());
+            const credentialManagerOverride = imperativeConfig?.overrides[imperative.CredentialManagerOverride.CRED_MGR_SETTING_NAME];
+            if (typeof credentialManagerOverride === "string") {
+                return credentialManagerOverride;
+            }
+            return imperative.CredentialManagerOverride.DEFAULT_CRED_MGR_NAME;
+        } catch (err) {
+            ZoweLogger.info("imperative.json does not exist, returning the default override of @zowe/cli");
+            return imperative.CredentialManagerOverride.DEFAULT_CRED_MGR_NAME;
         }
-        return imperative.CredentialManagerOverride.DEFAULT_CRED_MGR_NAME;
     }
 
     /**
