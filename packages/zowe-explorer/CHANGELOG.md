@@ -2,6 +2,16 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
+## TBD Release
+
+### New features and enhancements
+
+- Migrate from Yarn to PNPM.
+
+### Bug fixes
+
+- Update dependencies for technicall currency purposes
+
 ## `3.0.0-next.202309121526`
 
 ### New features and enhancements
