@@ -542,6 +542,10 @@ export class ProfilesUtils {
 
     public static async initializeZoweFolder(): Promise<void> {
         ZoweLogger.trace("ProfilesUtils.initializeZoweFolder called.");
+        // ensure the Secure Credentials Enabled value is read
+        // set globals.PROFILE_SECURITY value accordingly
+        const credentialManagerMap = ProfilesUtils.getCredentialManagerOverride();
+        await globals.setGlobalSecurityValue(credentialManagerMap ?? globals.ZOWE_CLI_SCM);
         // Ensure that ~/.zowe folder exists
         // Ensure that the ~/.zowe/settings/imperative.json exists
         // TODO: update code below once this imperative issue is resolved.
@@ -555,9 +559,6 @@ export class ProfilesUtils {
             fs.mkdirSync(settingsPath);
         }
         ProfilesUtils.writeOverridesFile();
-        // set global variable of security value to existing override
-        // this will later get reverted to default in getProfilesInfo.ts if user chooses to
-        await ProfilesUtils.updateCredentialManagerSetting(ProfilesUtils.getCredentialManagerOverride());
         // If not using team config, ensure that the ~/.zowe/profiles directory
         // exists with appropriate types within
         if (!imperative.ImperativeConfig.instance.config?.exists) {
@@ -609,6 +610,7 @@ export class ProfilesUtils {
         } else {
             settings = { ...defaultImperativeJson };
         }
+        settings.overrides.CredentialManager = globals.PROFILE_SECURITY;
         const newData = JSON.stringify(settings, null, 2);
         ZoweLogger.debug(
             localize("writeOverridesFile.updateFile", "Updating imperative.json Credential Manager to {0}.\n{1}", globals.PROFILE_SECURITY, newData)
