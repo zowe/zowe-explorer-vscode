@@ -34,7 +34,7 @@ export class ProfilesTreeProvider implements vscode.TreeDataProvider<ProfilesNod
 
     public async getChildren(node?: ProfilesNode): Promise<ProfilesNode[]> {
         if (this._dirty) {
-            const profiles = new ProfilesCache(Logger.getAppLogger(), vscode.workspace.workspaceFolders?.[0]?.uri.fsPath);
+            const profiles = new ProfilesCache(Logger.getAppLogger() as any, vscode.workspace.workspaceFolders?.[0]?.uri.fsPath);
             this._profileData = (await profiles.getProfileInfo()).getAllProfiles();
             this._dirty = false;
         }
