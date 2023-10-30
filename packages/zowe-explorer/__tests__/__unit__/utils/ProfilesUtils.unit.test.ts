@@ -485,6 +485,7 @@ describe("ProfilesUtils unit tests", () => {
 
         it("should skip creating directories and files that already exist", async () => {
             const blockMocks = createBlockMocks();
+            jest.spyOn(profUtils.ProfilesUtils, "getCredentialManagerOverride").mockReturnValue("@zowe/cli");
             blockMocks.mockGetDirectValue.mockReturnValue("@zowe/cli");
             blockMocks.mockExistsSync.mockReturnValue(true);
             const fileJson = blockMocks.mockFileRead;
