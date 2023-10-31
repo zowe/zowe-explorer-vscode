@@ -53,13 +53,6 @@ describe("Test src/shared/extension", () => {
                 mock: [],
             },
             {
-                name: "zowe.updateSecureCredentials",
-                mock: [
-                    { spy: jest.spyOn(globals, "setGlobalSecurityValue"), arg: [test.value] },
-                    { spy: jest.spyOn(profUtils.ProfilesUtils, "writeOverridesFile"), arg: [] },
-                ],
-            },
-            {
                 name: "zowe.editHistory",
                 mock: [{ spy: jest.spyOn(HistoryView, "HistoryView"), arg: [test.context, test.value.providers] }],
             },
@@ -382,6 +375,24 @@ describe("Test src/shared/extension", () => {
             expect(context.subscriptions).toContain(treeView);
             expect(spyCollapse).not.toHaveBeenCalled();
             expect(spyExpand).not.toHaveBeenCalled();
+        });
+    });
+
+    describe("registerCredentialManager", () => {
+        let context: any;
+
+        beforeEach(() => {
+            context = { subscriptions: [] };
+            jest.clearAllMocks();
+        });
+        afterAll(() => {
+            jest.restoreAllMocks();
+        });
+
+        it("should register command for updating credentials", () => {
+            const registerCommandSpy = jest.spyOn(vscode.commands, "registerCommand");
+            sharedExtension.registerCredentialManager(context);
+            expect(registerCommandSpy).toBeCalledWith("zowe.updateSecureCredentials", expect.any(Function));
         });
     });
 });
