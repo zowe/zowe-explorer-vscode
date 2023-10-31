@@ -358,14 +358,17 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
 
                 return dateA.isBefore(dateB, "second") ? sortLessThan : sortGreaterThan;
             } else if (sort.method === DatasetSortOpts.UserId) {
-                a.description = a.stats?.user;
-                b.description = b.stats?.user;
+                const userA = a.stats?.user ?? "";
+                const userB = b.stats?.user ?? "";
 
-                if (a.stats?.user === b.stats?.user) {
+                a.description = userA;
+                b.description = userB;
+
+                if (userA === userB) {
                     return sortByName(a, b);
                 }
 
-                return a.stats?.user < b.stats?.user ? sortLessThan : sortGreaterThan;
+                return userA < userB ? sortLessThan : sortGreaterThan;
             }
 
             return sortByName(a, b);
