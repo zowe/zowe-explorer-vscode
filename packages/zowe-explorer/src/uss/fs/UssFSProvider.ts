@@ -710,9 +710,9 @@ export class UssFSProvider implements vscode.FileSystemProvider {
 
             vscode.commands.executeCommand(
                 "vscode.diff",
-                conflictData.uri,
                 conflictUri,
-                `${conflictData.localEntry.name} ↔ ${conflictEntry.name} (Remote)`
+                conflictData.uri,
+                `${conflictData.localEntry.name} (Remote) ↔ ${conflictEntry.name}`
             );
             return UssConflictSelection.Compare;
         }
