@@ -251,8 +251,8 @@ function findEtag(node: IZoweUSSTreeNode, directories: Array<string>, index: num
     if (node === undefined || directories.indexOf(node.label.toString().trim()) === -1) {
         return false;
     }
-    if (index === directories.length - 1) {
-        return node.label.toString().trim() === directories[index] && node.getEtag() !== "";
+    if (directories.indexOf(node.label.toString().trim()) === directories.length - 1) {
+        return node.getEtag() !== "";
     }
 
     let flag: boolean = false;
