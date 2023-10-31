@@ -343,8 +343,8 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 const dateA = dayjs(a.stats?.modifiedDate);
                 const dateB = dayjs(b.stats?.modifiedDate);
 
-                a.description = dateA.format("YYYY/MM/DD HH:mm:ss");
-                b.description = dateB.format("YYYY/MM/DD HH:mm:ss");
+                a.description = dateA.isValid() ? dateA.format("YYYY/MM/DD HH:mm:ss") : undefined;
+                b.description = dateB.isValid() ? dateB.format("YYYY/MM/DD HH:mm:ss") : undefined;
 
                 // for dates that are equal down to the second, fallback to sorting by name
                 if (dateA.isSame(dateB, "second")) {
