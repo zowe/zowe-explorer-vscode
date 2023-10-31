@@ -1769,6 +1769,43 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
 
         expect(await testTree.datasetFilterPrompt(testTree.mSessionNodes[1])).not.toBeDefined();
     });
+
+    it("updates stats with modified date and user ID if provided in API", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        const newNode = new ZoweDatasetNode("TEST.PDS", vscode.TreeItemCollapsibleState.Collapsed, testTree.mSessionNodes[1], blockMocks.session);
+        testTree.mSessionNodes[1].children = [newNode];
+        const updateStatsSpy = jest.spyOn(ZoweDatasetNode.prototype, "updateStats");
+        const getDatasetsSpy = jest.spyOn((ZoweDatasetNode as any).prototype, "getDatasets");
+        getDatasetsSpy.mockResolvedValueOnce([
+            {
+                success: true,
+                commandResponse: null,
+                apiResponse: {
+                    items: [
+                        {
+                            m4date: "2023-10-31",
+                            mtime: "12:00",
+                            msec: "30",
+                            member: "HI",
+                            user: "SOMEUSR",
+                        },
+                        {
+                            changed: "2023-10-31 03:00:00",
+                            member: "BYE",
+                            id: "SOMEUSR",
+                        },
+                    ],
+                },
+            },
+        ]);
+        await testTree.mSessionNodes[1].children[0].getChildren();
+
+        expect(updateStatsSpy).toHaveBeenCalled();
+    });
 });
 describe("Dataset Tree Unit Tests - Function editSession", () => {
     async function createBlockMocks() {

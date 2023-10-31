@@ -118,6 +118,22 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         return this.getProfile() ? this.getProfile().name : undefined;
     }
 
+    public updateStats(item: any): void {
+        if ("m4date" in item) {
+            const { m4date, mtime, msec }: { m4date: string; mtime: string; msec: string } = item;
+            this.stats = {
+                user: item.user,
+                modifiedDate: dayjs(`${m4date} ${mtime}:${msec}`).toDate(),
+            };
+        } else if ("id" in item || "changed" in item) {
+            // missing keys from API response; check for FTP keys
+            this.stats = {
+                user: item.id,
+                modifiedDate: item.changed ? dayjs(item.changed).toDate() : undefined,
+            };
+        }
+    }
+
     /**
      * Retrieves child nodes of this ZoweDatasetNode
      *
@@ -155,22 +171,6 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             return;
         }
 
-        const updateStats = (node: IZoweDatasetTreeNode, item: any): void => {
-            if ("m4date" in item) {
-                const { m4date, mtime, msec }: { m4date: string; mtime: string; msec: string } = item;
-                node.stats = {
-                    user: item.user,
-                    modifiedDate: dayjs(`${m4date} ${mtime}:${msec}`).toDate(),
-                };
-            } else if ("id" in item || "changed" in item) {
-                // missing keys from API response; check for FTP keys
-                node.stats = {
-                    user: item.id,
-                    modifiedDate: item.changed ? dayjs(item.changed).toDate() : undefined,
-                };
-            }
-        };
-
         // push nodes to an object with property names to avoid duplicates
         const elementChildren: { [k: string]: ZoweDatasetNode } = {};
         for (const response of responses) {
@@ -185,7 +185,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             for (const item of response.apiResponse.items ?? response.apiResponse) {
                 const existing = this.children.find((element) => element.label.toString() === item.dsname);
                 if (existing) {
-                    updateStats(existing, item);
+                    existing.updateStats(item);
                     elementChildren[existing.label.toString()] = existing;
                     // Creates a ZoweDatasetNode for a PDS
                 } else if (item.dsorg === "PO" || item.dsorg === "PO-E") {
@@ -279,7 +279,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     }
 
                     // get user and last modified date for sorting, if available
-                    updateStats(temp, item);
+                    temp.updateStats(item);
                     elementChildren[temp.label.toString()] = temp;
                 }
             }
