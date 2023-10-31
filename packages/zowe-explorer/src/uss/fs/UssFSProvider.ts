@@ -412,7 +412,7 @@ export class UssFSProvider implements vscode.FileSystemProvider {
      * Deletes a file or folder at the given URI.
      * @param uri The URI that points to the file/folder to delete
      */
-    public async delete(uri: vscode.Uri): Promise<void> {
+    public async delete(uri: vscode.Uri, _options: { recursive: boolean }): Promise<void> {
         const dirname = uri.with({ path: path.posix.dirname(uri.path) });
         const basename = path.posix.basename(uri.path);
         const parent = this._lookupAsDirectory(dirname, false);
@@ -442,6 +442,10 @@ export class UssFSProvider implements vscode.FileSystemProvider {
 
         this._fireSoon({ type: vscode.FileChangeType.Changed, uri: dirname }, { uri, type: vscode.FileChangeType.Deleted });
     }
+
+    // public copy(source: vscode.Uri, destination: vscode.Uri, options: { readonly overwrite: boolean; }): void | Thenable<void> {
+    //     return this.copyEx(source, destination, options);
+    // }
 
     /**
      * Copy a file/folder from a source URI to destination URI.
@@ -535,7 +539,7 @@ export class UssFSProvider implements vscode.FileSystemProvider {
         this._fireSoon({ type: vscode.FileChangeType.Changed, uri: dirname }, { type: vscode.FileChangeType.Created, uri });
     }
 
-    public watch(_resource: vscode.Uri): vscode.Disposable {
+    public watch(_resource: vscode.Uri, options: { readonly recursive: boolean; readonly excludes: readonly string[]; }): vscode.Disposable {
         // ignore, fires for all changes...
         return new vscode.Disposable(() => {});
     }
@@ -733,7 +737,7 @@ export class UssFSProvider implements vscode.FileSystemProvider {
         // this should help with replacing contents/overwriting quickly
         const conflictRootUri = vscode.Uri.parse(`uss:/${entry.metadata.profile.name}$conflicts`);
         const conflictUri = conflictRootUri.with({
-            path: path.posix.join(conflictRootUri.path, "remote", entry.metadata.ussPath),
+            path: path.posix.join(conflictRootUri.path, entry.metadata.ussPath),
         });
 
         // ignore root slash when building split path
