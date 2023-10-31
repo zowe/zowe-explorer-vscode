@@ -183,7 +183,8 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
 
             // Loops through all the returned dataset members and creates nodes for them
             for (const item of response.apiResponse.items ?? response.apiResponse) {
-                const existing = this.children.find((element) => element.label.toString() === item.dsname);
+                const dsEntry = item.dsname ?? item.member;
+                const existing = this.children.find((element) => element.label.toString() === dsEntry);
                 if (existing) {
                     existing.updateStats(item);
                     elementChildren[existing.label.toString()] = existing;
