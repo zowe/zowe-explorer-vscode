@@ -332,22 +332,38 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             const sortLessThan = sort.direction == SortDirection.Ascending ? -1 : 1;
             const sortGreaterThan = sortLessThan * -1;
 
+            const sortByName = (nodeA: IZoweDatasetTreeNode, nodeB: IZoweDatasetTreeNode): number =>
+                (nodeA.label as string) < (nodeB.label as string) ? sortLessThan : sortGreaterThan;
+
             if (!a.stats && !b.stats) {
-                return (a.label as string) < (b.label as string) ? sortLessThan : sortGreaterThan;
+                return sortByName(a, b);
             }
 
-            switch (sort.method) {
-                case DatasetSortOpts.LastModified:
-                    a.description = dayjs(a.stats?.modifiedDate).format("YYYY/MM/DD HH:mm:ss");
-                    b.description = dayjs(b.stats?.modifiedDate).format("YYYY/MM/DD HH:mm:ss");
-                    return a.stats?.modifiedDate < b.stats?.modifiedDate ? sortLessThan : sortGreaterThan;
-                case DatasetSortOpts.UserId:
-                    a.description = a.stats?.user;
-                    b.description = b.stats?.user;
-                    return a.stats?.user < b.stats?.user ? sortLessThan : sortGreaterThan;
-                case DatasetSortOpts.Name:
-                    return (a.label as string) < (b.label as string) ? sortLessThan : sortGreaterThan;
+            if (sort.method === DatasetSortOpts.LastModified) {
+                const dateA = dayjs(a.stats?.modifiedDate);
+                const dateB = dayjs(b.stats?.modifiedDate);
+
+                a.description = dateA.format("YYYY/MM/DD HH:mm:ss");
+                b.description = dateB.format("YYYY/MM/DD HH:mm:ss");
+
+                // for dates that are equal down to the second, fallback to sorting by name
+                if (dateA.isSame(dateB, "second")) {
+                    return sortByName(a, b);
+                }
+
+                return dateA.isBefore(dateB, "second") ? sortLessThan : sortGreaterThan;
+            } else if (sort.method === DatasetSortOpts.UserId) {
+                a.description = a.stats?.user;
+                b.description = b.stats?.user;
+
+                if (a.stats?.user === b.stats?.user) {
+                    return sortByName(a, b);
+                }
+
+                return a.stats?.user < b.stats?.user ? sortLessThan : sortGreaterThan;
             }
+
+            return sortByName(a, b);
         };
     }
 
