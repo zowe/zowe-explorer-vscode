@@ -42,7 +42,7 @@ export const JOB_SUBMIT_DIALOG_OPTS = [
     localize("zowe.jobs.confirmSubmission.allJobs", "All jobs"),
 ];
 
-export type localFileInfo = {
+export type LocalFileInfo = {
     name: string;
     path: string;
 };
