@@ -118,6 +118,22 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         return this.getProfile() ? this.getProfile().name : undefined;
     }
 
+    public updateStats(item: any): void {
+        if ("m4date" in item) {
+            const { m4date, mtime, msec }: { m4date: string; mtime: string; msec: string } = item;
+            this.stats = {
+                user: item.user,
+                modifiedDate: dayjs(`${m4date} ${mtime}:${msec}`).toDate(),
+            };
+        } else if ("id" in item || "changed" in item) {
+            // missing keys from API response; check for FTP keys
+            this.stats = {
+                user: item.id,
+                modifiedDate: item.changed ? dayjs(item.changed).toDate() : undefined,
+            };
+        }
+    }
+
     /**
      * Retrieves child nodes of this ZoweDatasetNode
      *
@@ -167,8 +183,10 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
 
             // Loops through all the returned dataset members and creates nodes for them
             for (const item of response.apiResponse.items ?? response.apiResponse) {
-                const existing = this.children.find((element) => element.label.toString() === item.dsname);
+                const dsEntry = item.dsname ?? item.member;
+                const existing = this.children.find((element) => element.label.toString() === dsEntry);
                 if (existing) {
+                    existing.updateStats(item);
                     elementChildren[existing.label.toString()] = existing;
                     // Creates a ZoweDatasetNode for a PDS
                 } else if (item.dsorg === "PO" || item.dsorg === "PO-E") {
@@ -262,19 +280,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     }
 
                     // get user and last modified date for sorting, if available
-                    if ("m4date" in item) {
-                        const { m4date, mtime, msec }: { m4date: string; mtime: string; msec: string } = item;
-                        temp.stats = {
-                            user: item.user,
-                            modifiedDate: dayjs(`${m4date} ${mtime}:${msec}`).toDate(),
-                        };
-                    } else if ("id" in item || "changed" in item) {
-                        // missing keys from API response; check for FTP keys
-                        temp.stats = {
-                            user: item.id,
-                            modifiedDate: item.changed ? dayjs(item.changed).toDate() : undefined,
-                        };
-                    }
+                    temp.updateStats(item);
                     elementChildren[temp.label.toString()] = temp;
                 }
             }
@@ -332,22 +338,41 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             const sortLessThan = sort.direction == SortDirection.Ascending ? -1 : 1;
             const sortGreaterThan = sortLessThan * -1;
 
+            const sortByName = (nodeA: IZoweDatasetTreeNode, nodeB: IZoweDatasetTreeNode): number =>
+                (nodeA.label as string) < (nodeB.label as string) ? sortLessThan : sortGreaterThan;
+
             if (!a.stats && !b.stats) {
-                return (a.label as string) < (b.label as string) ? sortLessThan : sortGreaterThan;
+                return sortByName(a, b);
             }
 
-            switch (sort.method) {
-                case DatasetSortOpts.LastModified:
-                    a.description = dayjs(a.stats?.modifiedDate).format("YYYY/MM/DD HH:mm:ss");
-                    b.description = dayjs(b.stats?.modifiedDate).format("YYYY/MM/DD HH:mm:ss");
-                    return a.stats?.modifiedDate < b.stats?.modifiedDate ? sortLessThan : sortGreaterThan;
-                case DatasetSortOpts.UserId:
-                    a.description = a.stats?.user;
-                    b.description = b.stats?.user;
-                    return a.stats?.user < b.stats?.user ? sortLessThan : sortGreaterThan;
-                case DatasetSortOpts.Name:
-                    return (a.label as string) < (b.label as string) ? sortLessThan : sortGreaterThan;
+            if (sort.method === DatasetSortOpts.LastModified) {
+                const dateA = dayjs(a.stats?.modifiedDate);
+                const dateB = dayjs(b.stats?.modifiedDate);
+
+                a.description = dateA.isValid() ? dateA.format("YYYY/MM/DD HH:mm:ss") : undefined;
+                b.description = dateB.isValid() ? dateB.format("YYYY/MM/DD HH:mm:ss") : undefined;
+
+                // for dates that are equal down to the second, fallback to sorting by name
+                if (dateA.isSame(dateB, "second")) {
+                    return sortByName(a, b);
+                }
+
+                return dateA.isBefore(dateB, "second") ? sortLessThan : sortGreaterThan;
+            } else if (sort.method === DatasetSortOpts.UserId) {
+                const userA = a.stats?.user ?? "";
+                const userB = b.stats?.user ?? "";
+
+                a.description = userA;
+                b.description = userB;
+
+                if (userA === userB) {
+                    return sortByName(a, b);
+                }
+
+                return userA < userB ? sortLessThan : sortGreaterThan;
             }
+
+            return sortByName(a, b);
         };
     }
 
