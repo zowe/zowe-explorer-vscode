@@ -22,7 +22,7 @@ import * as contextually from "../shared/context";
 import * as nls from "vscode-nls";
 import { UssFileTree } from "./FileStructure";
 import { ZoweLogger } from "../utils/LoggerUtils";
-import { UssFile, UssFSProvider } from "./fs";
+import { UssFSProvider } from "./fs";
 import { USSTree } from "./USSTree";
 
 // Set up localization
@@ -130,7 +130,8 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         if (icon) {
             this.iconPath = icon.path;
         }
-        if (!globals.ISTHEIA && contextually.isSession(this)) {
+        const isSession = mParent == null;
+        if (!globals.ISTHEIA && isSession) {
             this.id = `uss.${this.label.toString()}`;
         }
         if (profile) {
@@ -138,7 +139,10 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         }
         this.onUpdateEmitter = new vscode.EventEmitter<IZoweUSSTreeNode>();
         if (label !== localize("Favorites", "Favorites")) {
-            this.uri = vscode.Uri.parse(`uss:/${this.profile.name}${this.fullPath}`);
+            this.uri = vscode.Uri.parse(`zowe-uss:/${this.profile.name}${this.fullPath}`);
+            if (isSession) {
+                UssFSProvider.instance.createDirectory(this.uri);
+            }
         }
     }
 
@@ -364,8 +368,8 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     public async rename(newFullPath: string): Promise<boolean> {
         ZoweLogger.trace("ZoweUSSNode.rename called.");
 
-        const oldUri = vscode.Uri.parse(`uss:/${this.profile.name}${this.fullPath}`);
-        const newUri = vscode.Uri.parse(`uss:/${this.profile.name}${newFullPath}`);
+        const oldUri = vscode.Uri.parse(`zowe-uss:/${this.profile.name}${this.fullPath}`);
+        const newUri = vscode.Uri.parse(`zowe-uss:/${this.profile.name}${newFullPath}`);
 
         await vscode.workspace.fs.rename(oldUri, newUri);
 
@@ -722,7 +726,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             };
 
             for (const subnode of fileTreeToPaste.children) {
-                await this.paste(sessionName, vscode.Uri.parse(`uss:/${this.profile.name}${this.fullPath}`), { api, tree: subnode, options });
+                await this.paste(sessionName, vscode.Uri.parse(`zowe-uss:/${this.profile.name}${this.fullPath}`), { api, tree: subnode, options });
             }
         } catch (error) {
             await errorHandling(error, this.label.toString(), localize("copyUssFile.error", "Error uploading files"));

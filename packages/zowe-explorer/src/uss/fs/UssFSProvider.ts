@@ -12,10 +12,10 @@
 import { Gui, IUss } from "@zowe/zowe-explorer-api";
 import * as path from "path";
 import * as vscode from "vscode";
-import { Profiles } from "../../Profiles";
 import { ZoweExplorerApiRegister } from "../../ZoweExplorerApiRegister";
 import { UssFileTree, UssFileType } from "../FileStructure";
 import * as globals from "../../globals";
+import { getInfoForUri } from "../../abstract/fs/utils";
 
 // Set up localization
 import * as nls from "vscode-nls";
@@ -121,7 +121,7 @@ export class UssFSProvider implements vscode.FileSystemProvider {
         const entry = this._lookupAsDirectory(uri, false);
 
         const result: [string, vscode.FileType][] = [];
-        if (!entry.wasAccessed) {
+        if (!entry.wasAccessed && entry !== this.root) {
             // if this entry has not been accessed before, grab its file list
             const response = await ZoweExplorerApiRegister.getUssApi(entry.metadata.profile).fileList(entry.metadata.ussPath);
             for (const item of response.apiResponse.items) {
@@ -159,10 +159,10 @@ export class UssFSProvider implements vscode.FileSystemProvider {
      */
     public async fetchFileAtUri(uri: vscode.Uri, editor?: vscode.TextEditor | null): Promise<void> {
         const file = this._lookupAsFile(uri, false);
+        const uriInfo = getInfoForUri(uri);
         // we need to fetch the contents from the mainframe since the file hasn't been accessed yet
         const bufBuilder = new BufferBuilder();
-        const startPathPos = uri.path.indexOf("/", 1);
-        const filePath = uri.path.substring(startPathPos);
+        const filePath = uri.path.substring(uriInfo.slashAfterProfilePos + 1);
         const metadata = file.metadata ?? this._getInfoFromUri(uri);
         const resp = await ZoweExplorerApiRegister.getUssApi(metadata.profile).getContents(filePath, {
             returnEtag: true,
@@ -190,11 +190,9 @@ export class UssFSProvider implements vscode.FileSystemProvider {
      */
     public async readFile(uri: vscode.Uri): Promise<Uint8Array> {
         const file = this._lookupAsFile(uri, false);
-        const startPathPos = uri.path.indexOf("/", 1);
-        const sessionName = uri.path.substring(1, startPathPos);
-        const loadedProfile = file.isConflictFile ? null : Profiles.getInstance().loadNamedProfile(sessionName);
+        const profInfo = getInfoForUri(uri);
 
-        if (!file.isConflictFile && loadedProfile == null) {
+        if (!file.isConflictFile && profInfo.profile == null) {
             // TODO: We might be able to support opening these links outside of Zowe Explorer,
             // but at the moment, the session must be initialized first within the USS tree
             throw vscode.FileSystemError.FileNotFound(localize("localize.uss.profileNotFound", "Profile does not exist for this file."));
@@ -498,7 +496,7 @@ export class UssFSProvider implements vscode.FileSystemProvider {
             await api.create(outputPath, "directory");
             if (options.tree.children) {
                 for (const child of options.tree.children) {
-                    await this.copyEx(child.localUri, vscode.Uri.parse(`uss:${outputPath}`), { ...options, tree: child });
+                    await this.copyEx(child.localUri, vscode.Uri.parse(`zowe-uss:${outputPath}`), { ...options, tree: child });
                 }
             }
         } else {
@@ -539,7 +537,7 @@ export class UssFSProvider implements vscode.FileSystemProvider {
         this._fireSoon({ type: vscode.FileChangeType.Changed, uri: dirname }, { type: vscode.FileChangeType.Created, uri });
     }
 
-    public watch(_resource: vscode.Uri, options: { readonly recursive: boolean; readonly excludes: readonly string[]; }): vscode.Disposable {
+    public watch(_resource: vscode.Uri, options: { readonly recursive: boolean; readonly excludes: readonly string[] }): vscode.Disposable {
         // ignore, fires for all changes...
         return new vscode.Disposable(() => {});
     }
@@ -580,22 +578,12 @@ export class UssFSProvider implements vscode.FileSystemProvider {
 
     /**
      * Returns metadata about the file entry from the context of z/OS.
-     * @param uri A URI with a path in the format `uss:/{lpar_name}/{full_path}?`
+     * @param uri A URI with a path in the format `zowe-uss:/{lpar_name}/{full_path}?`
      * @returns Metadata for the URI that contains the profile instance and USS path
      */
     private _getInfoFromUri(uri: vscode.Uri): FileEntryZMetadata {
-        // Paths pointing to the session root can have the format `uss:/{lpar_name}`
-        const slashAfterProfile = uri.path.indexOf("/", 1);
-        const isRoot = slashAfterProfile === -1;
-
-        // Determine where to parse profile name based on location of first slash
-        const startPathPos = isRoot ? uri.path.length : slashAfterProfile;
-
-        // Load profile that matches the parsed name
-        const sessionName = uri.path.substring(1, startPathPos);
-        const loadedProfile = Profiles.getInstance().loadNamedProfile(sessionName);
-
-        return { profile: loadedProfile, ussPath: isRoot ? "/" : uri.path.substring(slashAfterProfile) };
+        const uriInfo = getInfoForUri(uri);
+        return { profile: uriInfo.profile, ussPath: uriInfo.isRoot ? "/" : uri.path.substring(uriInfo.slashAfterProfilePos) };
     }
 
     /**
@@ -735,7 +723,7 @@ export class UssFSProvider implements vscode.FileSystemProvider {
     private _buildConflictUri(entry: UssFile): vscode.Uri {
         // create a temporary directory structure that points to conflicts
         // this should help with replacing contents/overwriting quickly
-        const conflictRootUri = vscode.Uri.parse(`uss:/${entry.metadata.profile.name}$conflicts`);
+        const conflictRootUri = vscode.Uri.parse(`zowe-uss:/${entry.metadata.profile.name}$conflicts`);
         const conflictUri = conflictRootUri.with({
             path: path.posix.join(conflictRootUri.path, entry.metadata.ussPath),
         });

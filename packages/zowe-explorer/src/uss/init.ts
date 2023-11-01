@@ -24,12 +24,13 @@ import { UssFSProvider } from "./fs/UssFSProvider";
 
 export async function initUSSProvider(context: vscode.ExtensionContext): Promise<USSTree> {
     ZoweLogger.trace("init.initUSSProvider called.");
+
+    context.subscriptions.push(vscode.workspace.registerFileSystemProvider("zowe-uss", UssFSProvider.instance, { isCaseSensitive: true }));
+
     const ussFileProvider = await createUSSTree();
     if (ussFileProvider == null) {
         return null;
     }
-
-    context.subscriptions.push(vscode.workspace.registerFileSystemProvider("uss", UssFSProvider.instance, { isCaseSensitive: true }));
 
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.uss.addFavorite", async (node, nodeList) => {

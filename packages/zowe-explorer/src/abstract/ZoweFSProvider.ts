@@ -2,7 +2,7 @@ import { Disposable, Event, FileChangeEvent, FileStat, FileSystemProvider, FileT
 import { UssFSProvider } from "../uss/fs";
 
 // While a generic provider would be nice, it may make the implementation more complicated.
-// 
+//
 // FileSystemProvider requires a schema (protocol) during registration, and you cannot register a provider without a schema.
 // This means that only the generic Zowe provider would be registered as a FileSystemProvider,
 // and this provider would dispatch all calls based on the beginning of the URI.
@@ -21,8 +21,8 @@ export class ZoweFSProvider implements FileSystemProvider {
     }
 
     public onDidChangeFile: Event<FileChangeEvent[]>;
-    
-    public watch(uri: Uri, options: { readonly recursive: boolean; readonly excludes: readonly string[]; }): Disposable {
+
+    public watch(uri: Uri, options: { readonly recursive: boolean; readonly excludes: readonly string[] }): Disposable {
         if (uri.path.startsWith("/uss/")) {
             return UssFSProvider.instance.watch(uri, options);
         } else if (uri.path.startsWith("/ds/")) {
@@ -42,7 +42,7 @@ export class ZoweFSProvider implements FileSystemProvider {
         throw new Error("Method not implemented.");
     }
 
-    public readDirectory(uri: Uri): [string, FileType][] | Thenable<[string, FileType][]> {    
+    public readDirectory(uri: Uri): [string, FileType][] | Thenable<[string, FileType][]> {
         if (uri.path.startsWith("/uss/")) {
             return UssFSProvider.instance.readDirectory(uri);
         } else if (uri.path.startsWith("/ds/")) {
@@ -50,7 +50,7 @@ export class ZoweFSProvider implements FileSystemProvider {
         } else if (uri.path.startsWith("/jobs/")) {
             // return JobsFSProvider.instance.readDirectory(uri);
         }
-    
+
         throw new Error("Method not implemented for the given path.");
     }
 
@@ -62,7 +62,7 @@ export class ZoweFSProvider implements FileSystemProvider {
         } else if (uri.path.startsWith("/jobs/")) {
             // return JobsFSProvider.instance.createDirectory(uri);
         }
-    
+
         throw new Error("Method not implemented.");
     }
 
@@ -78,7 +78,7 @@ export class ZoweFSProvider implements FileSystemProvider {
         throw new Error("Method not implemented.");
     }
 
-    public writeFile(uri: Uri, content: Uint8Array, options: { readonly create: boolean; readonly overwrite: boolean; }): void | Thenable<void> {
+    public writeFile(uri: Uri, content: Uint8Array, options: { readonly create: boolean; readonly overwrite: boolean }): void | Thenable<void> {
         if (uri.path.startsWith("/uss/")) {
             return UssFSProvider.instance.writeFile(uri, content, options);
         } else if (uri.path.startsWith("/ds/")) {
@@ -90,17 +90,17 @@ export class ZoweFSProvider implements FileSystemProvider {
         throw new Error("Method not implemented.");
     }
 
-    public delete(uri: Uri, options: { readonly recursive: boolean; }): void | Thenable<void> {
+    public delete(uri: Uri, options: { readonly recursive: boolean }): void | Thenable<void> {
         if (uri.path.startsWith("/uss/")) {
             return UssFSProvider.instance.delete(uri, options);
         } else if (uri.path.startsWith("/ds/")) {
             // return DSFSProvider.instance.delete(uri, options);
         }
-        
+
         throw new Error("Method not implemented.");
     }
 
-    public rename(oldUri: Uri, newUri: Uri, options: { readonly overwrite: boolean; }): void | Thenable<void> {
+    public rename(oldUri: Uri, newUri: Uri, options: { readonly overwrite: boolean }): void | Thenable<void> {
         if (oldUri.path.startsWith("/uss/")) {
             return UssFSProvider.instance.rename(oldUri, newUri, options);
         } else if (oldUri.path.startsWith("/ds/")) {
@@ -109,7 +109,7 @@ export class ZoweFSProvider implements FileSystemProvider {
         throw new Error("Method not implemented.");
     }
 
-    public copy?(source: Uri, _destination: Uri, _options: { readonly overwrite: boolean; }): void | Thenable<void> {
+    public copy?(source: Uri, _destination: Uri, _options: { readonly overwrite: boolean }): void | Thenable<void> {
         if (source.path.startsWith("/uss/")) {
             //return UssFSProvider.instance.copyEx(source, destination, options);
         } else if (source.path.startsWith("/ds/")) {

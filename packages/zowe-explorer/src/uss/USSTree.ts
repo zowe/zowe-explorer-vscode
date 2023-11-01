@@ -139,7 +139,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 continue;
             }
 
-            const newUriForNode = vscode.Uri.parse(`uss:/${target.getProfile().name}${target.fullPath}/${item.label as string}`);
+            const newUriForNode = vscode.Uri.parse(`zowe-uss:/${target.getProfile().name}${target.fullPath}/${item.label as string}`);
             if (await UssFSProvider.instance.move(item.uri, newUriForNode)) {
                 // remove node from old parent and relocate to new parent
                 const oldParent = node.getParent();
