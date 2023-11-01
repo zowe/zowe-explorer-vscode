@@ -784,12 +784,12 @@
         {
           "command": "zowe.uss.useLocalContent",
           "group": "navigation@0",
-          "when": "resourceScheme == uss && isInDiffEditor"
+          "when": "resourceScheme =~ /zowe-.*/ && isInDiffEditor"
         },
         {
           "command": "zowe.uss.useRemoteContent",
           "group": "navigation@1",
-          "when": "resourceScheme == uss && isInDiffEditor"
+          "when": "resourceScheme =~ /zowe-.*/ && isInDiffEditor"
         }
       ],
       "view/title": [

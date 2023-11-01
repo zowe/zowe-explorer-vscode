@@ -40,8 +40,8 @@ export type FileEntryZMetadata = {
     ussPath: string;
 };
 
-export type UssConflict = {
-    localEntry: UssFile;
+export type LocalConflict = {
+    fsEntry: UssFile;
     uri: vscode.Uri;
     content: Uint8Array;
 };

@@ -20,7 +20,7 @@ import { getInfoForUri } from "../../abstract/fs/utils";
 // Set up localization
 import * as nls from "vscode-nls";
 import { isEqual } from "lodash";
-import { BufferBuilder, FS_PROVIDER_DELAY, FileEntryZMetadata, UssConflict, UssConflictSelection, UssDirectory, UssFile } from "./types";
+import { BufferBuilder, FS_PROVIDER_DELAY, FileEntryZMetadata, LocalConflict, UssConflictSelection, UssDirectory, UssFile } from "./types";
 nls.config({
     messageFormat: nls.MessageFormat.bundle,
     bundleFormat: nls.BundleFormat.standalone,
@@ -211,14 +211,14 @@ export class UssFSProvider implements vscode.FileSystemProvider {
      * Action for overwriting the remote contents with local data from the provider.
      * @param remoteUri The "remote conflict" URI shown in the diff view
      */
-    public async diffOverwrite(remoteUri: vscode.Uri): Promise<void> {
+    public async diffOverwrite(localUri: vscode.Uri): Promise<void> {
         // check for local URI in conflictMap
 
-        if (!(remoteUri.path in this._conflictMap)) {
+        if (!(localUri.path in this._conflictMap)) {
             return;
         }
 
-        const localUri = this._conflictMap[remoteUri.path];
+        const remoteUri = this._conflictMap[localUri.path];
         const localEntry = this._lookupAsFile(localUri, false);
         localEntry.inDiffView = false;
         await this.writeFile(localUri, localEntry.conflictData, { create: false, overwrite: true, forceUpload: true });
@@ -229,15 +229,15 @@ export class UssFSProvider implements vscode.FileSystemProvider {
 
     /**
      * Action for replacing the local data in the provider with remote contents.
-     * @param remoteUri The "remote conflict" URI shown in the diff view
+     * @param localUri The local URI shown in the diff view
      */
-    public async diffUseRemote(remoteUri: vscode.Uri): Promise<void> {
+    public async diffUseRemote(localUri: vscode.Uri): Promise<void> {
         // check for local URI in conflictMap
 
-        if (!(remoteUri.path in this._conflictMap)) {
+        if (!(localUri.path in this._conflictMap)) {
             return;
         }
-        const localUri = this._conflictMap[remoteUri.path];
+        const remoteUri = this._conflictMap[localUri.path];
         const localEntry = this._lookupAsFile(localUri, false);
         const remoteEntry = this._lookupAsFile(remoteUri, false);
 
@@ -340,7 +340,7 @@ export class UssFSProvider implements vscode.FileSystemProvider {
                         if (
                             (await this._handleConflict(ussApi, {
                                 content: content,
-                                localEntry: entry,
+                                fsEntry: entry,
                                 uri: uri,
                             })) != UssConflictSelection.Overwrite
                         ) {
@@ -646,7 +646,7 @@ export class UssFSProvider implements vscode.FileSystemProvider {
      * @param conflictData The required data for conflict handling
      * @returns The user's action/selection as an enum value
      */
-    private async _handleConflict(ussApi: IUss, conflictData: UssConflict): Promise<UssConflictSelection> {
+    private async _handleConflict(ussApi: IUss, conflictData: LocalConflict): Promise<UssConflictSelection> {
         const conflictOptions = [localize("compare.file", "Compare"), localize("compare.overwrite", "Overwrite")];
         const userSelection = await Gui.errorMessage(
             "There is a newer version of this file on the mainframe. Compare with remote contents or overwrite?",
@@ -662,19 +662,19 @@ export class UssFSProvider implements vscode.FileSystemProvider {
         if (userSelection === conflictOptions[0]) {
             // Fetch the file contents on the LPAR and stream the data into an array
             const bufBuilder = new BufferBuilder();
-            const resp = await ussApi.getContents(conflictData.localEntry.metadata.ussPath, {
+            const resp = await ussApi.getContents(conflictData.fsEntry.metadata.ussPath, {
                 returnEtag: true,
-                encoding: conflictData.localEntry.metadata.profile?.profile?.encoding,
-                responseTimeout: conflictData.localEntry.metadata.profile?.profile?.responseTimeout,
+                encoding: conflictData.fsEntry.metadata.profile?.profile?.encoding,
+                responseTimeout: conflictData.fsEntry.metadata.profile?.profile?.responseTimeout,
                 stream: bufBuilder,
             });
 
             const mainframeBuf = bufBuilder.read();
-            const conflictUri = this._buildConflictUri(conflictData.localEntry);
+            const conflictUri = this._buildConflictUri(conflictData.fsEntry);
 
             // Add this conflict file to the conflict map so we can leverage the data
             // when the "action buttons" are clicked in the diff view.
-            this._conflictMap[conflictUri.path] = conflictData.uri;
+            this._conflictMap[conflictData.uri.path] = conflictUri;
 
             // Build a "fake file" that represents the content on the mainframe,
             // for use with vscode.diff
@@ -691,27 +691,27 @@ export class UssFSProvider implements vscode.FileSystemProvider {
             conflictEntry.permissions = vscode.FilePermission.Readonly;
 
             // assign newer data from local conflict for use during compare/overwrite
-            conflictData.localEntry.conflictData = conflictData.content;
-            conflictData.localEntry.inDiffView = true;
+            conflictData.fsEntry.conflictData = conflictData.content;
+            conflictData.fsEntry.inDiffView = true;
             // Set etag to latest so that latest changes are applied, regardless of its contents
-            conflictData.localEntry.etag = resp.apiResponse.etag;
+            conflictData.fsEntry.etag = resp.apiResponse.etag;
 
             vscode.commands.executeCommand(
                 "vscode.diff",
                 conflictUri,
                 conflictData.uri,
-                `${conflictData.localEntry.name} (Remote) ↔ ${conflictEntry.name}`
+                `${conflictData.fsEntry.name} (Remote) ↔ ${conflictEntry.name}`
             );
             return UssConflictSelection.Compare;
         }
 
         // User selected "Overwrite", overwrite LPAR contents w/ local contents
-        conflictData.localEntry.data = conflictData.content;
-        await ussApi.uploadBufferAsFile(Buffer.from(conflictData.content), conflictData.localEntry.metadata.ussPath);
-        const newData = await ussApi.getContents(conflictData.localEntry.metadata.ussPath, {
+        conflictData.fsEntry.data = conflictData.content;
+        await ussApi.uploadBufferAsFile(Buffer.from(conflictData.content), conflictData.fsEntry.metadata.ussPath);
+        const newData = await ussApi.getContents(conflictData.fsEntry.metadata.ussPath, {
             returnEtag: true,
         });
-        conflictData.localEntry.etag = newData.apiResponse.etag;
+        conflictData.fsEntry.etag = newData.apiResponse.etag;
         return UssConflictSelection.Overwrite;
     }
 
