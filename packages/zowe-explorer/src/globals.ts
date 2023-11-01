@@ -355,6 +355,6 @@ export function setCompareSelection(val: boolean): void {
 }
 
 export function resetCompareChoices(): void {
-    setCompareSelectionFalse();
+    setCompareSelection(false);
     filesToCompare = [];
 }

@@ -18,7 +18,7 @@ import { isTypeUssTreeNode } from "../shared/context";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { ZoweLogger } from "./LoggerUtils";
 import * as nls from "vscode-nls";
-import { isZoweDatasetTreeNode, isZoweUSSTreeNode, localFileInfo } from "../shared/utils";
+import { LocalFileInfo, isZoweDatasetTreeNode, isZoweUSSTreeNode } from "../shared/utils";
 import { downloadPs } from "../dataset/actions";
 import { downloadUnixFile } from "../uss/actions";
 
@@ -83,7 +83,7 @@ export class LocalFileManagement {
             globals.resetCompareChoices();
         }
         globals.filesToCompare.push(node);
-        globals.setCompareSelectionTrue();
+        globals.setCompareSelection(true);
         ZoweLogger.trace(`${String(globals.filesToCompare[0].label)} selected for compare.`);
     }
 
@@ -111,9 +111,9 @@ export class LocalFileManagement {
         }
     }
 
-    private static async getCompareFilePaths(node: IZoweTreeNode): Promise<localFileInfo> {
+    private static async getCompareFilePaths(node: IZoweTreeNode): Promise<LocalFileInfo> {
         ZoweLogger.info(`Getting files ${String(globals.filesToCompare[0].label)} and ${String(globals.filesToCompare[1].label)} for comparison.`);
-        let fileInfo = {} as localFileInfo;
+        let fileInfo = {} as LocalFileInfo;
         switch (true) {
             case isZoweDatasetTreeNode(node): {
                 fileInfo = await downloadPs(node);

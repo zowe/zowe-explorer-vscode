@@ -24,7 +24,7 @@ import {
     getSelectedNodeList,
     JobSubmitDialogOpts,
     JOB_SUBMIT_DIALOG_OPTS,
-    localFileInfo,
+    LocalFileInfo,
 } from "../shared/utils";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { Profiles } from "../Profiles";
@@ -491,8 +491,8 @@ export async function openPS(
     }
 }
 
-export async function downloadPs(node: api.IZoweDatasetTreeNode): Promise<localFileInfo> {
-    const fileInfo = {} as localFileInfo;
+export async function downloadPs(node: api.IZoweDatasetTreeNode): Promise<LocalFileInfo> {
+    const fileInfo = {} as LocalFileInfo;
     const defaultMessage = localize("openPS.error", "Invalid data set or member.");
     switch (true) {
         // For favorited or non-favorited sequential DS:

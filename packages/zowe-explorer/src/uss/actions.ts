@@ -14,7 +14,7 @@ import { imperative, IZosFilesResponse } from "@zowe/cli";
 import * as fs from "fs";
 import * as globals from "../globals";
 import * as path from "path";
-import { concatChildNodes, uploadContent, getSelectedNodeList, localFileInfo } from "../shared/utils";
+import { concatChildNodes, uploadContent, getSelectedNodeList, LocalFileInfo } from "../shared/utils";
 import { errorHandling } from "../utils/ProfilesUtils";
 import { Gui, ValidProfileEnum, IZoweTree, IZoweUSSTreeNode } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
@@ -502,8 +502,8 @@ export async function pasteUss(ussFileProvider: IZoweTree<IZoweUSSTreeNode>, nod
     ussFileProvider.refreshElement(nodeToRefresh);
 }
 
-export async function downloadUnixFile(node: IZoweUSSTreeNode, download: boolean): Promise<localFileInfo> {
-    const fileInfo = {} as localFileInfo;
+export async function downloadUnixFile(node: IZoweUSSTreeNode, download: boolean): Promise<LocalFileInfo> {
+    const fileInfo = {} as LocalFileInfo;
     const errorMsg = localize("downloadUnixFile.invalidNode.error", "open() called from invalid node.");
     switch (true) {
         // For opening favorited and non-favorited files
