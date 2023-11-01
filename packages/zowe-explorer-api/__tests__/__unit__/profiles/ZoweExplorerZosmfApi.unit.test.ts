@@ -43,6 +43,22 @@ const fakeProfile: ITestProfile = {
 };
 const fakeSession = zowe.imperative.Session.createFromUrl(new URL("https://example.com"));
 
+const mISshSession: zowe.ISshSession = {
+    hostname: "example.com",
+    port: 22,
+}
+
+async function expectApiWithSshSession<T>({ name, spy, args, transform }: ITestApi<T>,apiInstance: ZoweExplorerApi.ICommon,sshobj:zowe.SshSession): Promise<void>{
+    let r = ""
+    spy.mockClear().mockResolvedValue(undefined);
+    spy.mockImplementation((sshobj:zowe.SshSession,command:string,cwd:string,callback:(data:string)=>void) =>{
+       callback("test");
+       r+="test";
+    })
+    await apiInstance[name as string](...args,()=>{});
+    // const params: unknown[] = transform ? transform(args) : args;
+    expect(spy).toHaveBeenCalledTimes(1);
+}
 async function expectApiWithSession<T>({ name, spy, args, transform }: ITestApi<T>, apiInstance: ZoweExplorerApi.ICommon): Promise<void> {
     spy.mockClear().mockResolvedValue(undefined);
     const getSessionSpy = jest.spyOn(apiInstance, "getSession").mockReturnValue(fakeSession);
@@ -513,6 +529,7 @@ describe("ZosmfJesApi", () => {
 });
 
 describe("ZosmfCommandApi", () => {
+    const SshSessionobj = new zowe.SshSession(mISshSession);
     const commandApis: ITestApi<ZosmfCommandApi>[] = [
         {
             name: "issueTsoCommandWithParms",
@@ -525,14 +542,24 @@ describe("ZosmfCommandApi", () => {
             spy: jest.spyOn(zowe.IssueCommand, "issueSimple"),
             args: ["command"],
         },
+        {
+            name: "issueUnixCommand",
+            spy: jest.spyOn(zowe.Shell, "executeSshCwd"),          
+            args: [SshSessionobj,"command","cwd"],
+            transform: (args) => [...args],
+        }
     ];
     commandApis.forEach((commandApi) => {
         it(`${commandApi?.name} should inject session into Zowe API`, async () => {
-            await expectApiWithSession(commandApi, new ZosmfCommandApi());
+            let k = commandApi;
+            if(k?.name == "issueUnixCommand")
+               await expectApiWithSshSession(k,new ZosmfCommandApi(),SshSessionobj);
+            else
+               await expectApiWithSession(commandApi, new ZosmfCommandApi());
         });
     });
     it("check whether sshProfileNeeded", () => {
         const obj = new ZosmfCommandApi();
-        expect(obj.sshNeededforUnixCommand()).toBe(true);
+        expect(obj.sshProfileRequired?.()).toBe(true);
     })
 });

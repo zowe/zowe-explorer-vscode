@@ -348,7 +348,7 @@ export class ZosmfCommandApi extends ZosmfApiCommon implements ICommand {
         });
         return stdout;
     }
-    public sshNeededforUnixCommand(): boolean {
+    public sshProfileRequired?(): boolean {
         return true;
     }
 }

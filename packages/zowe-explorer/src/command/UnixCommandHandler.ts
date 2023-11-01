@@ -126,7 +126,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
         } else {
             profile = node.getProfile();
         }
-        if (ZoweExplorerApiRegister.getCommandApi(profile).sshNeededforUnixCommand) {
+        if (ZoweExplorerApiRegister.getCommandApi(profile).sshProfileRequired) {
             this.sshSession = await this.setsshSession();
         } else {
             Gui.showMessage(localize("issueUnixCommand.notsupportedForProfile", "Action not being supported for the profile type ") + profile.type);
