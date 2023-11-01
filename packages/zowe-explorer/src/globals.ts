@@ -349,14 +349,9 @@ export async function setGlobalSecurityValue(credentialManager?: string): Promis
     }
 }
 
-export function setCompareSelectionTrue(): void {
-    FILE_SELECTED_TO_COMPARE = true;
-    vscode.commands.executeCommand("setContext", "zowe.compareFileStarted", true);
-}
-
-export function setCompareSelectionFalse(): void {
-    FILE_SELECTED_TO_COMPARE = false;
-    vscode.commands.executeCommand("setContext", "zowe.compareFileStarted", false);
+export function setCompareSelection(val: boolean): void {
+    FILE_SELECTED_TO_COMPARE = val;
+    vscode.commands.executeCommand("setContext", "zowe.compareFileStarted", val);
 }
 
 export function resetCompareChoices(): void {
