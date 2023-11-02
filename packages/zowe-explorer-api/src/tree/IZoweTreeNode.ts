@@ -11,9 +11,9 @@
 
 import * as vscode from "vscode";
 import { IJob, imperative } from "@zowe/cli";
-import { IZoweTree } from "./IZoweTree";
 import { FileAttributes } from "../utils/files";
 import { DatasetFilter, NodeSort } from "./sorting";
+import { IZoweUSSTreeType } from ".";
 
 export type IZoweNodeType = IZoweDatasetTreeNode | IZoweUSSTreeNode | IZoweJobTreeNode;
 
@@ -251,7 +251,7 @@ export interface IZoweUSSTreeNode extends IZoweTreeNode {
      * @param preview the file, true or false
      * @param ussFileProvider the tree provider
      */
-    openUSS?(download: boolean, previewFile: boolean, ussFileProvider: IZoweTree<IZoweUSSTreeNode>);
+    openUSS?(download: boolean, previewFile: boolean, ussFileProvider: IZoweUSSTreeType);
     /**
      * Returns the local file path for the ZoweUSSNode
      *
@@ -268,14 +268,14 @@ export interface IZoweUSSTreeNode extends IZoweTreeNode {
      * @param filePath
      * @param cancelled optional
      */
-    deleteUSSNode?(ussFileProvider: IZoweTree<IZoweUSSTreeNode>, filePath: string, cancelled?: boolean);
+    deleteUSSNode?(ussFileProvider: IZoweUSSTreeType, filePath: string, cancelled?: boolean);
     /**
      * Process for renaming a USS Node. This could be a Favorite Node
      *
      * @param {USSTree} ussFileProvider
      * @param {string} filePath
      */
-    renameUSSNode?(ussFileProvider: IZoweTree<IZoweUSSTreeNode>, filePath: string);
+    renameUSSNode?(ussFileProvider: IZoweUSSTreeType, filePath: string);
     /**
      * Refreshes node and reopens it.
      * @param hasClosedInstance
@@ -292,7 +292,7 @@ export interface IZoweUSSTreeNode extends IZoweTreeNode {
      *
      * @param {USSTree} ussFileProvider
      */
-    saveSearch?(ussFileProvider: IZoweTree<IZoweUSSTreeNode>);
+    saveSearch?(ussFileProvider: IZoweUSSTreeType);
     /**
      * uploads selected uss node(s) to from clipboard to mainframe
      * @deprecated in favor of `pasteUssTree`
