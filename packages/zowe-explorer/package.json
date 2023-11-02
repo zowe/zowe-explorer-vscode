@@ -769,25 +769,25 @@
         "category": "Zowe Explorer"
       },
       {
-        "command": "zowe.uss.useLocalContent",
-        "title": "%uss.overwrite%",
+        "command": "zowe.diff.useLocalContent",
+        "title": "%diff.overwrite%",
         "icon": "$(check)"
       },
       {
-        "command": "zowe.uss.useRemoteContent",
-        "title": "%uss.useRemote%",
+        "command": "zowe.diff.useRemoteContent",
+        "title": "%diff.useRemote%",
         "icon": "$(discard)"
       }
     ],
     "menus": {
       "editor/title": [
         {
-          "command": "zowe.uss.useLocalContent",
+          "command": "zowe.diff.useLocalContent",
           "group": "navigation@0",
           "when": "resourceScheme =~ /zowe-.*/ && isInDiffEditor"
         },
         {
-          "command": "zowe.uss.useRemoteContent",
+          "command": "zowe.diff.useRemoteContent",
           "group": "navigation@1",
           "when": "resourceScheme =~ /zowe-.*/ && isInDiffEditor"
         }

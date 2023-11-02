@@ -9,71 +9,25 @@
  *
  */
 
-import { imperative } from "@zowe/cli";
-import { Duplex } from "stream";
 import * as vscode from "vscode";
+import { DirEntry, EntryMetadata, FileEntry } from "../../abstract/fs/types";
 
-export const FS_PROVIDER_DELAY = 5;
-
-export class BufferBuilder extends Duplex {
-    private chunks: Uint8Array[];
-
-    public constructor() {
-        super();
-        this.chunks = [];
-    }
-
-    public _write(chunk: any, encoding: BufferEncoding, callback: (error?: Error) => void): void {
-        this.chunks.push(chunk);
-        callback();
-    }
-
-    public _read(_size: number): void {
-        const concatBuf = Buffer.concat(this.chunks);
-        this.push(concatBuf);
-        this.push(null);
-    }
-}
-
-export type FileEntryZMetadata = {
-    profile: imperative.IProfileLoaded;
-    ussPath: string;
-};
-
-export type LocalConflict = {
-    fsEntry: UssFile;
-    uri: vscode.Uri;
-    content: Uint8Array;
-};
-
-export enum UssConflictSelection {
-    UserDismissed = 0,
-    Compare = 1,
-    Overwrite = 2,
-}
-
-export interface UssEntry {
-    name: string;
-    metadata: FileEntryZMetadata;
-    type: vscode.FileType;
-    wasAccessed: boolean;
-}
-
-export class UssFile implements UssEntry, vscode.FileStat {
+export class UssFile implements FileEntry, vscode.FileStat {
     public name: string;
-    public metadata: FileEntryZMetadata;
+    public metadata: EntryMetadata;
     public type: vscode.FileType;
     public wasAccessed: boolean;
 
     public ctime: number;
     public mtime: number;
     public size: number;
-    public binary: boolean;
+    public binary?: boolean;
     public conflictData?: Uint8Array;
     public data?: Uint8Array;
     public etag?: string;
-    public isConflictFile: boolean;
-    public inDiffView: boolean;
+    public isConflictFile?: boolean;
+    public inDiffView?: boolean;
+    public forceUpload?: boolean;
 
     public permissions?: vscode.FilePermission;
 
@@ -87,21 +41,13 @@ export class UssFile implements UssEntry, vscode.FileStat {
         this.wasAccessed = false;
         this.isConflictFile = false;
         this.inDiffView = false;
+        this.forceUpload = false;
     }
 }
 
-export class UssDirectory implements UssEntry, vscode.FileStat {
-    public name: string;
-    public metadata: FileEntryZMetadata;
-    public type: vscode.FileType;
-    public wasAccessed: boolean;
-
-    public ctime: number;
-    public mtime: number;
-    public size: number;
-    public entries: Map<string, UssFile | UssDirectory>;
-
+export class UssDirectory extends DirEntry implements vscode.FileStat {
     public constructor(name: string) {
+        super(name);
         this.type = vscode.FileType.Directory;
         this.ctime = Date.now();
         this.mtime = Date.now();

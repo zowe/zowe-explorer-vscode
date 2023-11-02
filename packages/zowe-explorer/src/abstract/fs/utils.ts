@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 import { Profiles } from "../../Profiles";
 import { imperative } from "@zowe/cli";
+import { DirEntry, FileEntry } from "./types";
 
 export type UriFsInfo = {
     isRoot: boolean;
@@ -30,4 +31,12 @@ export function getInfoForUri(uri: vscode.Uri): UriFsInfo {
         slashAfterProfilePos,
         profile: Profiles.getInstance().loadNamedProfile(profileName),
     };
+}
+
+export function isDirectoryEntry(entry: any): entry is DirEntry {
+    return entry != null && "entries" in entry;
+}
+
+export function isFileEntry(entry: any): entry is FileEntry {
+    return entry != null && "data" in entry;
 }

@@ -1,14 +1,16 @@
 import * as vscode from "vscode";
-import { FsEntry, DirEntry, SpoolEntry } from "./types";
+import { DirEntry } from "./types";
 import { getInfoForUri } from "../../abstract/fs/utils";
 import { ZoweExplorerApiRegister } from "../../ZoweExplorerApiRegister";
+import { BaseProvider } from "../../abstract/fs/BaseProvider";
 
-class JobFSProvider implements vscode.FileSystemProvider {
-    private root = new DirEntry("");
+class JobFSProvider extends BaseProvider implements vscode.FileSystemProvider {
     public onDidChangeFile: vscode.Event<vscode.FileChangeEvent[]>;
 
     private static _instance: JobFSProvider;
-    private constructor() {}
+    private constructor() {
+        super();
+    }
 
     public static get instance(): JobFSProvider {
         if (!JobFSProvider._instance) {
@@ -62,31 +64,5 @@ class JobFSProvider implements vscode.FileSystemProvider {
     // unsupported
     public rename(_oldUri: vscode.Uri, _newUri: vscode.Uri, _options: { readonly overwrite: boolean }): void | Thenable<void> {
         throw new Error("Renaming is not supported for jobs.");
-    }
-
-    private _lookup(uri: vscode.Uri, silent: false): FsEntry;
-    private _lookup(uri: vscode.Uri, silent: boolean): FsEntry | undefined;
-    private _lookup(uri: vscode.Uri, silent: boolean): FsEntry | undefined {
-        const parts = uri.path.split("/");
-        let entry: FsEntry = this.root;
-
-        for (const part of parts) {
-            if (!part) {
-                continue;
-            }
-            let child: DirEntry | SpoolEntry | undefined;
-            if (entry instanceof DirEntry) {
-                child = entry.entries.get(part);
-            }
-            if (!child) {
-                if (!silent) {
-                    throw vscode.FileSystemError.FileNotFound(uri);
-                } else {
-                    return undefined;
-                }
-            }
-            entry = child;
-        }
-        return entry;
     }
 }

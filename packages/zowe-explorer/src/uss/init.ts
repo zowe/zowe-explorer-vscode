@@ -218,12 +218,12 @@ export async function initUSSProvider(context: vscode.ExtensionContext): Promise
         })
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.uss.useLocalContent", async (localUri) => {
+        vscode.commands.registerCommand("zowe.diff.useLocalContent", async (localUri) => {
             await UssFSProvider.instance.diffOverwrite(localUri);
         })
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.uss.useRemoteContent", async (localUri) => {
+        vscode.commands.registerCommand("zowe.diff.useRemoteContent", async (localUri) => {
             await UssFSProvider.instance.diffUseRemote(localUri);
         })
     );
