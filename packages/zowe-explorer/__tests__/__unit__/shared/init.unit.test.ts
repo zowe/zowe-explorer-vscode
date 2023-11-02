@@ -208,12 +208,12 @@ describe("Test src/shared/extension", () => {
             },
             {
                 name: "zowe.issueUnixCmd:1",
-                mock: [{ spy: jest.spyOn(UnixCommandHandler, "getInstance"), arg: [], ret: { issueUnixCommand: jest.fn() }}]
+                mock: [{ spy: jest.spyOn(UnixCommandHandler, "getInstance"), arg: [], ret: { issueUnixCommand: jest.fn() } }],
             },
             {
                 name: "zowe.issueUnixCmd:2",
                 parm: [],
-                mock: [{ spy: jest.spyOn(UnixCommandHandler, "getInstance"), arg: [], ret: { issueUnixCommand: jest.fn() }}]
+                mock: [{ spy: jest.spyOn(UnixCommandHandler, "getInstance"), arg: [], ret: { issueUnixCommand: jest.fn() } }],
             },
         ];
 
