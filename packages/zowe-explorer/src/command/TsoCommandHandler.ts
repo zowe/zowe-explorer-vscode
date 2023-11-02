@@ -78,9 +78,8 @@ export class TsoCommandHandler extends ZoweCommandProvider {
             }
         }
         if (!session) {
-            const allProfiles: imperative.IProfileLoaded[] = profiles.allProfiles;
             const profileNamesList = ProfileManagement.getRegisteredProfileNameList(globals.Trees.MVS);
-            if (profileNamesList.length) {
+            if (profileNamesList.length > 0) {
                 const quickPickOptions: vscode.QuickPickOptions = {
                     placeHolder: localize("issueTsoCommand.quickPickOption", "Select the Profile to use to submit the TSO command"),
                     ignoreFocusOut: true,
@@ -91,6 +90,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
                     Gui.showMessage(localize("issueTsoCommand.cancelled", "Operation Cancelled"));
                     return;
                 }
+                const allProfiles: imperative.IProfileLoaded[] = profiles.allProfiles;
                 profile = allProfiles.filter((temprofile) => temprofile.name === sesName)[0];
                 if (!node) {
                     await profiles.checkCurrentProfile(profile);
