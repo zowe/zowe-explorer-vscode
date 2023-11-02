@@ -9,5 +9,6 @@
  *
  */
 
-export * from "./JobFSProvider";
+export * from "./BaseProvider";
 export * from "./types";
+export * from "./utils";

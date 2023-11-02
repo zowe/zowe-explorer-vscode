@@ -1,10 +1,30 @@
+/**
+ * This program and the accompanying materials are made available under the terms of the
+ * Eclipse Public License v2.0 which accompanies this distribution, and is available at
+ * https://www.eclipse.org/legal/epl-v20.html
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Copyright Contributors to the Zowe Project.
+ *
+ */
+
 import * as vscode from "vscode";
-import { DirEntry, FileEntry, FsEntry, FS_PROVIDER_DELAY, ConflictViewSelection, BufferBuilder, LocalConflict, Conflictable } from "./types";
+import {
+    DirEntry,
+    FileEntry,
+    FsEntry,
+    FS_PROVIDER_DELAY,
+    ConflictViewSelection,
+    BufferBuilder,
+    LocalConflict,
+    Conflictable,
+    DeleteMetadata,
+} from "./types";
 import * as path from "path";
 import { isEqual } from "lodash";
 import { isDirectoryEntry, isFileEntry } from "./utils";
-import { Gui } from "@zowe/zowe-explorer-api";
-import * as globals from "../../globals";
+import { Gui } from "../../globals/Gui";
 import * as nls from "vscode-nls";
 
 nls.config({
@@ -14,6 +34,9 @@ nls.config({
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 export class BaseProvider {
+    // eslint-disable-next-line no-magic-numbers
+    private readonly FS_PROVIDER_UI_TIMEOUT = 4000;
+
     protected _emitter = new vscode.EventEmitter<vscode.FileChangeEvent[]>();
     protected _bufferedEvents: vscode.FileChangeEvent[] = [];
     protected _fireSoonHandle?: NodeJS.Timeout;
@@ -52,7 +75,7 @@ export class BaseProvider {
         localEntry.inDiffView = false;
         localEntry.forceUpload = true;
         await vscode.workspace.fs.writeFile(localUri, localEntry.conflictData);
-        Gui.setStatusBarMessage(localize("diff.overwritten", "$(check) Overwrite applied for {0}", localEntry.name), globals.MS_PER_SEC * 4);
+        Gui.setStatusBarMessage(localize("diff.overwritten", "$(check) Overwrite applied for {0}", localEntry.name), this.FS_PROVIDER_UI_TIMEOUT);
         localEntry.conflictData = null;
         this._removeConflictAndCloseDiff(remoteUri);
     }
@@ -78,12 +101,126 @@ export class BaseProvider {
         await vscode.workspace.fs.writeFile(localUri, localEntry.conflictData);
         Gui.setStatusBarMessage(
             localize("diff.usedRemoteContent", "$(discard) Used remote content for {0}", localEntry.name),
-            globals.MS_PER_SEC * 4
+            this.FS_PROVIDER_UI_TIMEOUT
         );
         localEntry.conflictData = null;
         this._removeConflictAndCloseDiff(remoteUri);
         // this will refresh the active editor with the remote content that was saved to the file
         vscode.commands.executeCommand("workbench.action.files.revert");
+    }
+
+    public exists(uri: vscode.Uri): boolean {
+        const entry = this._lookup(uri, true);
+        return entry != null;
+    }
+
+    /**
+     * Removes a local entry from the FS provider if it exists, without making any API requests.
+     * @param uri The URI pointing to a local entry in the FS provider
+     */
+    public removeEntryIfExists(uri: vscode.Uri): void {
+        const parentPath = path.posix.resolve(uri.path, "..");
+        const parentEntry = this._lookupAsDirectory(
+            uri.with({
+                path: parentPath,
+            }),
+            true
+        );
+        if (parentEntry == null) {
+            return;
+        }
+
+        parentEntry.entries.delete(path.posix.basename(uri.path));
+        this._fireSoon({ type: vscode.FileChangeType.Deleted, uri: uri });
+    }
+
+    /**
+     * Update the child entries in the provider with the parent's updated entry.
+     * @param entry The parent directory whose children need updated
+     */
+    protected _updateChildPaths(entry: DirEntry): void {
+        // update child entries
+        for (const child of entry.entries.values()) {
+            const isDir = isDirectoryEntry(child);
+            child.metadata.path = entry.metadata.path.concat(`${child.name}${isDir ? "/" : ""}`);
+            if (isDir) {
+                this._updateChildPaths(child);
+            }
+        }
+    }
+
+    /**
+     * Relocates an entry in the provider from `oldUri` to `newUri`.
+     * @param oldUri The old, source URI in the provider that needs moved
+     * @param newUri The new, destination URI for the file or folder
+     * @param newUssPath The new path for this entry in USS
+     */
+    protected async _relocateEntry(oldUri: vscode.Uri, newUri: vscode.Uri, newUssPath: string): Promise<void> {
+        const entry = this._lookup(oldUri, false);
+        if (!entry) {
+            return;
+        }
+
+        const oldParentUri = vscode.Uri.parse(oldUri.path.substring(0, oldUri.path.lastIndexOf("/")));
+        const oldParent = this._lookupAsDirectory(oldParentUri, false);
+
+        const parentUri = vscode.Uri.parse(newUri.path.substring(0, newUri.path.lastIndexOf("/")));
+        const newParent = this._lookupAsDirectory(parentUri, false);
+
+        // both parent paths must be valid in order to perform a relocation
+        if (!oldParent || !newParent) {
+            return;
+        }
+
+        entry.metadata.path = newUssPath;
+        // write new entry in FS
+        if (isFileEntry(entry)) {
+            // put new contents in relocated file
+            await vscode.workspace.fs.writeFile(newUri, entry.data);
+            const newEntry = this._lookupAsFile(newUri, false);
+            newEntry.etag = entry.etag;
+        } else {
+            // create directory in FS; when expanded in the tree, it will fetch any files
+            vscode.workspace.fs.createDirectory(newUri);
+        }
+        // delete entry from old parent
+        oldParent.entries.delete(entry.name);
+        this._fireSoon({ type: vscode.FileChangeType.Deleted, uri: oldUri });
+        const tabGroups = vscode.window.tabGroups.all;
+        const allTabs = tabGroups.reduce((acc: vscode.Tab[], group) => acc.concat(group.tabs), []);
+        const tabWithOldUri = allTabs.find((t) => (t.input as any).uri.path === oldUri.path);
+        if (tabWithOldUri) {
+            const parent = tabGroups.find((g) => g.tabs.find((t) => t === tabWithOldUri));
+            const editorCol = parent.viewColumn;
+            // close old uri and reopen new uri
+            // TODO: not sure if we can get around this...
+            await vscode.window.tabGroups.close(tabWithOldUri);
+            vscode.commands.executeCommand("vscode.openWith", newUri, "default", editorCol);
+        }
+    }
+
+    protected _deleteEntry(uri: vscode.Uri, _options: { recursive: boolean }): DeleteMetadata {
+        const parentUri = uri.with({ path: path.posix.dirname(uri.path) });
+        const basename = path.posix.basename(uri.path);
+        const parent = this._lookupAsDirectory(parentUri, false);
+
+        // Throw an error if the entry does not exist
+        if (!parent.entries.has(basename)) {
+            throw vscode.FileSystemError.FileNotFound(uri);
+        }
+
+        // get the entry data before deleting the URI
+        const entryToDelete = this._lookup(uri, false);
+
+        parent.entries.delete(basename);
+        parent.mtime = Date.now();
+        parent.size -= 1;
+
+        return {
+            entryToDelete,
+            parent,
+            parentUri,
+        };
     }
 
     /**

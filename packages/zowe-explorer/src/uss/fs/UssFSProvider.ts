@@ -9,18 +9,25 @@
  *
  */
 
-import { Gui } from "@zowe/zowe-explorer-api";
+import {
+    BaseProvider,
+    BufferBuilder,
+    ConflictViewSelection,
+    getInfoForUri,
+    isDirectoryEntry,
+    Gui,
+    EntryMetadata,
+    UriFsInfo,
+} from "@zowe/zowe-explorer-api";
 import * as path from "path";
 import * as vscode from "vscode";
 import { ZoweExplorerApiRegister } from "../../ZoweExplorerApiRegister";
 import { UssFileTree, UssFileType } from "../FileStructure";
-import { getInfoForUri, isDirectoryEntry } from "../../abstract/fs/utils";
 import * as nls from "vscode-nls";
 
 // Set up localization
 import { UssDirectory, UssFile } from "./types";
-import { BufferBuilder, ConflictViewSelection, EntryMetadata } from "../../abstract/fs/types";
-import { BaseProvider } from "../../abstract/fs/BaseProvider";
+import { Profiles } from "../../Profiles";
 
 nls.config({
     messageFormat: nls.MessageFormat.bundle,
@@ -83,26 +90,6 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
     }
 
     /**
-     * Removes a local entry from the FS provider if it exists, without making any API requests.
-     * @param uri The URI pointing to a local entry in the FS provider
-     */
-    public removeEntryIfExists(uri: vscode.Uri): void {
-        const parentPath = path.posix.resolve(uri.path, "..");
-        const parentEntry = this._lookupAsDirectory(
-            uri.with({
-                path: parentPath,
-            }),
-            true
-        );
-        if (parentEntry == null) {
-            return;
-        }
-
-        parentEntry.entries.delete(path.posix.basename(uri.path));
-        this._fireSoon({ type: vscode.FileChangeType.Deleted, uri: uri });
-    }
-
-    /**
      * Reads a directory located at the given URI.
      * @param uri A valid URI within the provider
      * @returns An array of tuples containing each entry name and type
@@ -120,13 +107,14 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             // if this entry has not been accessed before, grab its file list
             const response = await ZoweExplorerApiRegister.getUssApi(entry.metadata.profile).fileList(entry.metadata.path);
             for (const item of response.apiResponse.items) {
-                if (item.name === "." || item.name === "..") {
+                const itemName = item.name as string;
+                if (itemName.match(/^\.{1,3}$/)) {
                     continue;
                 }
 
                 const isDirectory = item.mode.startsWith("d");
                 const newEntryType = isDirectory ? vscode.FileType.Directory : vscode.FileType.File;
-                const entryExists = entry.entries.get(item.name);
+                const entryExists = entry.entries.get(itemName);
                 // skip over entries that are of the same type
                 if (entryExists && entryExists.type === newEntryType) {
                     continue;
@@ -134,9 +122,9 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
                 // create new entries for any files/folders not in the provider
                 if (item.mode.startsWith("d")) {
-                    entry.entries.set(item.name, new UssDirectory(item.name));
+                    entry.entries.set(itemName, new UssDirectory(itemName));
                 } else {
-                    entry.entries.set(item.name, new UssFile(item.name));
+                    entry.entries.set(itemName, new UssFile(itemName));
                 }
             }
         }
@@ -154,7 +142,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
      */
     public async fetchFileAtUri(uri: vscode.Uri, editor?: vscode.TextEditor | null): Promise<void> {
         const file = this._lookupAsFile(uri, false);
-        const uriInfo = getInfoForUri(uri);
+        const uriInfo = getInfoForUri(uri, Profiles.getInstance());
         // we need to fetch the contents from the mainframe since the file hasn't been accessed yet
         const bufBuilder = new BufferBuilder();
         const filePath = uri.path.substring(uriInfo.slashAfterProfilePos + 1);
@@ -185,7 +173,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
      */
     public async readFile(uri: vscode.Uri): Promise<Uint8Array> {
         const file = this._lookupAsFile(uri, false);
-        const profInfo = getInfoForUri(uri);
+        const profInfo = getInfoForUri(uri, Profiles.getInstance());
 
         if (!file.isConflictFile && profInfo.profile == null) {
             // TODO: We might be able to support opening these links outside of Zowe Explorer,
@@ -200,11 +188,6 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         }
 
         return file.data;
-    }
-
-    public exists(uri: vscode.Uri): boolean {
-        const entry = this._lookup(uri, true);
-        return entry != null;
     }
 
     /**
@@ -351,32 +334,18 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
      * Deletes a file or folder at the given URI.
      * @param uri The URI that points to the file/folder to delete
      */
-    public async delete(uri: vscode.Uri, _options: { recursive: boolean }): Promise<void> {
-        const dirname = uri.with({ path: path.posix.dirname(uri.path) });
-        const basename = path.posix.basename(uri.path);
-        const parent = this._lookupAsDirectory(dirname, false);
-
-        // Throw an error if the entry does not exist
-        if (!parent.entries.has(basename)) {
-            throw vscode.FileSystemError.FileNotFound(uri);
-        }
-
-        // get the entry data before deleting the URI
-        const entryToDelete = this._lookup(uri, false);
-
-        parent.entries.delete(basename);
-        parent.mtime = Date.now();
-        parent.size -= 1;
+    public async delete(uri: vscode.Uri, options: { recursive: boolean }): Promise<void> {
+        const { entryToDelete, parent, parentUri } = this._deleteEntry(uri, options);
 
         // don't send API request when the deleted entry is a conflict
         if (entryToDelete instanceof UssFile && entryToDelete.isConflictFile) {
-            this._fireSoon({ type: vscode.FileChangeType.Changed, uri: dirname }, { uri, type: vscode.FileChangeType.Deleted });
+            this._fireSoon({ type: vscode.FileChangeType.Changed, uri: parentUri }, { uri, type: vscode.FileChangeType.Deleted });
             return;
         }
 
         await ZoweExplorerApiRegister.getUssApi(parent.metadata.profile).delete(entryToDelete.metadata.path, entryToDelete instanceof UssDirectory);
 
-        this._fireSoon({ type: vscode.FileChangeType.Changed, uri: dirname }, { uri, type: vscode.FileChangeType.Deleted });
+        this._fireSoon({ type: vscode.FileChangeType.Changed, uri: parentUri }, { uri, type: vscode.FileChangeType.Deleted });
     }
 
     // public copy(source: vscode.Uri, destination: vscode.Uri, options: { readonly overwrite: boolean; }): void | Thenable<void> {
@@ -475,87 +444,18 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         this._fireSoon({ type: vscode.FileChangeType.Changed, uri: dirname }, { type: vscode.FileChangeType.Created, uri });
     }
 
-    public watch(_resource: vscode.Uri, options: { readonly recursive: boolean; readonly excludes: readonly string[] }): vscode.Disposable {
+    public watch(_resource: vscode.Uri, _options: { readonly recursive: boolean; readonly excludes: readonly string[] }): vscode.Disposable {
         // ignore, fires for all changes...
         return new vscode.Disposable(() => {});
     }
 
-    /* Begin private functions */
-
     /**
      * Returns metadata about the file entry from the context of z/OS.
-     * @param uri A URI with a path in the format `zowe-uss:/{lpar_name}/{full_path}?`
-     * @returns Metadata for the URI that contains the profile instance and USS path
+     * @param uri A URI with a path in the format `zowe-*:/{lpar_name}/{full_path}?`
+     * @returns Metadata for the URI that contains the profile instance and path
      */
     private _getInfoFromUri(uri: vscode.Uri): EntryMetadata {
-        const uriInfo = getInfoForUri(uri);
+        const uriInfo = getInfoForUri(uri, Profiles.getInstance());
         return { profile: uriInfo.profile, path: uriInfo.isRoot ? "/" : uri.path.substring(uriInfo.slashAfterProfilePos) };
-    }
-
-    /**
-     * Relocates an entry in the provider from `oldUri` to `newUri`.
-     * @param oldUri The old, source URI in the provider that needs moved
-     * @param newUri The new, destination URI for the file or folder
-     * @param newUssPath The new path for this entry in USS
-     */
-    private async _relocateEntry(oldUri: vscode.Uri, newUri: vscode.Uri, newUssPath: string): Promise<void> {
-        const entry = this._lookup(oldUri, false);
-        if (!entry) {
-            return;
-        }
-
-        const oldParentUri = vscode.Uri.parse(oldUri.path.substring(0, oldUri.path.lastIndexOf("/")));
-        const oldParent = this._lookupAsDirectory(oldParentUri, false);
-
-        const parentUri = vscode.Uri.parse(newUri.path.substring(0, newUri.path.lastIndexOf("/")));
-        const newParent = this._lookupAsDirectory(parentUri, false);
-
-        // both parent paths must be valid in order to perform a relocation
-        if (!oldParent || !newParent) {
-            return;
-        }
-
-        entry.metadata.path = newUssPath;
-        // write new entry in FS
-        if (entry instanceof UssFile) {
-            // put new contents in relocated file
-            await this.writeFile(newUri, entry.data, { create: true, overwrite: true });
-            const newEntry = this._lookupAsFile(newUri, false);
-            newEntry.etag = entry.etag;
-        } else {
-            // create directory in FS; when expanded in the tree, it will fetch any files
-            this.createDirectory(newUri);
-        }
-        // delete entry from old parent
-        oldParent.entries.delete(entry.name);
-        this._fireSoon({ type: vscode.FileChangeType.Deleted, uri: oldUri });
-        const tabGroups = vscode.window.tabGroups.all;
-        const allTabs = tabGroups.reduce((acc: vscode.Tab[], group) => acc.concat(group.tabs), []);
-        const tabWithOldUri = allTabs.find((t) => (t.input as any).uri.path === oldUri.path);
-        if (tabWithOldUri) {
-            const parent = tabGroups.find((g) => g.tabs.find((t) => t === tabWithOldUri));
-            const editorCol = parent.viewColumn;
-            // close old uri and reopen new uri
-            // TODO: not sure if we can get around this...
-            await vscode.window.tabGroups.close(tabWithOldUri);
-            vscode.commands.executeCommand("vscode.openWith", newUri, "default", editorCol);
-        }
-    }
-
-    /* end conflict management utils */
-
-    /**
-     * Update the child entries in the provider with the parent's updated entry.
-     * @param entry The parent directory whose children need updated
-     */
-    private _updateChildPaths(entry: UssDirectory): void {
-        // update child entries
-        for (const child of entry.entries.values()) {
-            const isDir = child instanceof UssDirectory;
-            child.metadata.path = entry.metadata.path.concat(`${child.name}${isDir ? "/" : ""}`);
-            if (isDir) {
-                this._updateChildPaths(child);
-            }
-        }
     }
 }

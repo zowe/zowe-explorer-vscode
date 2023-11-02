@@ -1,3 +1,14 @@
+/**
+ * This program and the accompanying materials are made available under the terms of the
+ * Eclipse Public License v2.0 which accompanies this distribution, and is available at
+ * https://www.eclipse.org/legal/epl-v20.html
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Copyright Contributors to the Zowe Project.
+ *
+ */
+
 import { Duplex } from "stream";
 import { IDownloadSingleOptions, IUploadOptions, IZosFilesResponse, imperative } from "@zowe/cli";
 import * as vscode from "vscode";
@@ -7,6 +18,12 @@ export enum ConflictViewSelection {
     Compare = 1,
     Overwrite = 2,
 }
+
+export type DeleteMetadata = {
+    entryToDelete: DirEntry | FileEntry;
+    parent: DirEntry;
+    parentUri: vscode.Uri;
+};
 
 export interface Conflictable {
     getContents: (filePath: string, options: IDownloadSingleOptions) => Promise<IZosFilesResponse>;

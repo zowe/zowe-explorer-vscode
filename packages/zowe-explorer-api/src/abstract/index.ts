@@ -9,5 +9,4 @@
  *
  */
 
-export * from "./JobFSProvider";
-export * from "./types";
+export * from "./fs";

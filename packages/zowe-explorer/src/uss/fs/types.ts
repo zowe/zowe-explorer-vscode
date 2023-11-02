@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { DirEntry, EntryMetadata, FileEntry } from "../../abstract/fs/types";
+import { DirEntry, EntryMetadata, FileEntry } from "@zowe/zowe-explorer-api";
 
 export class UssFile implements FileEntry, vscode.FileStat {
     public name: string;
