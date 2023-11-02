@@ -52,7 +52,7 @@ export class BaseProvider {
         localEntry.inDiffView = false;
         localEntry.forceUpload = true;
         await vscode.workspace.fs.writeFile(localUri, localEntry.conflictData);
-        Gui.setStatusBarMessage(localize("uss.overwritten", "$(check) Overwrite applied for {0}", localEntry.name), globals.MS_PER_SEC * 4);
+        Gui.setStatusBarMessage(localize("diff.overwritten", "$(check) Overwrite applied for {0}", localEntry.name), globals.MS_PER_SEC * 4);
         localEntry.conflictData = null;
         this._removeConflictAndCloseDiff(remoteUri);
     }
@@ -76,7 +76,10 @@ export class BaseProvider {
         localEntry.wasAccessed = remoteEntry.data.length === remoteEntry.conflictData.length && isEqual(remoteEntry.data, remoteEntry.conflictData);
         localEntry.inDiffView = false;
         await vscode.workspace.fs.writeFile(localUri, localEntry.conflictData);
-        Gui.setStatusBarMessage(localize("uss.usedRemoteContent", "$(discard) Used remote content for {0}", localEntry.name), globals.MS_PER_SEC * 4);
+        Gui.setStatusBarMessage(
+            localize("diff.usedRemoteContent", "$(discard) Used remote content for {0}", localEntry.name),
+            globals.MS_PER_SEC * 4
+        );
         localEntry.conflictData = null;
         this._removeConflictAndCloseDiff(remoteUri);
         // this will refresh the active editor with the remote content that was saved to the file
@@ -88,13 +91,13 @@ export class BaseProvider {
      */
 
     /**
-     * Handles the conflict that occurred while trying to write to a USS file.
-     * @param ussApi The USS API to use during compare/overwrite
+     * Handles the conflict that occurred while trying to write to a file.
+     * @param api The API to use during compare/overwrite - must support `getContents` and `uploadBufferAsFile` functions
      * @param conflictData The required data for conflict handling
      * @returns The user's action/selection as an enum value
      */
     protected async _handleConflict<T extends Conflictable>(api: T, conflictData: LocalConflict): Promise<ConflictViewSelection> {
-        const conflictOptions = [localize("compare.file", "Compare"), localize("compare.overwrite", "Overwrite")];
+        const conflictOptions = [localize("conflict.compareFiles", "Compare"), localize("conflict.overwrite", "Overwrite")];
         const userSelection = await Gui.errorMessage(
             "There is a newer version of this file on the mainframe. Compare with remote contents or overwrite?",
             {
@@ -117,7 +120,7 @@ export class BaseProvider {
             });
 
             const mainframeBuf = bufBuilder.read();
-            const conflictUri = await this._buildConflictUri(conflictData.fsEntry);
+            const conflictUri = await this._buildConflictUri(conflictData);
 
             // Add this conflict file to the conflict map so we can leverage the data
             // when the "action buttons" are clicked in the diff view.
@@ -163,12 +166,14 @@ export class BaseProvider {
      * @param entry A valid file entry in the provider to make a remote conflict for
      * @returns A valid URI created in the provider for the remote conflict
      */
-    private async _buildConflictUri(entry: FileEntry): Promise<vscode.Uri> {
+    private async _buildConflictUri(conflictData: LocalConflict): Promise<vscode.Uri> {
         // create a temporary directory structure that points to conflicts
         // this should help with replacing contents/overwriting quickly
-        const conflictRootUri = vscode.Uri.parse(`zowe-uss:/${entry.metadata.profile.name}$conflicts`);
+        const entryMetadata = conflictData.fsEntry.metadata;
+
+        const conflictRootUri = vscode.Uri.parse(`${conflictData.uri.scheme}:/${entryMetadata.profile.name}$conflicts`);
         const conflictUri = conflictRootUri.with({
-            path: path.posix.join(conflictRootUri.path, entry.metadata.path),
+            path: path.posix.join(conflictRootUri.path, entryMetadata.path),
         });
 
         // ignore root slash when building split path
@@ -222,7 +227,7 @@ export class BaseProvider {
      */
 
     /**
-     * Creates a directory in the provider without any metadata (profile/USS path).
+     * Creates a directory in the provider without any metadata (profile/path).
      * @param uri The URI to create a directory for
      */
     protected _createDirNoMetadata(uri: vscode.Uri): void {

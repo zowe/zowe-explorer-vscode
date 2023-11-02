@@ -1,8 +1,4 @@
 {
   "uss.unsupported.move": "The 'move' function is not implemented for this USS API.",
-  "localize.uss.profileNotFound": "Profile does not exist for this file.",
-  "uss.overwritten": "$(check) Overwrite applied for {0}",
-  "uss.usedRemoteContent": "$(discard) Used remote content for {0}",
-  "compare.file": "Compare",
-  "compare.overwrite": "Overwrite"
+  "localize.uss.profileNotFound": "Profile does not exist for this file."
 }

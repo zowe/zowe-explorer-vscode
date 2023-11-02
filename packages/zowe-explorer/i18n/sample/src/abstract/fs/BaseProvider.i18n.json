@@ -1,0 +1,6 @@
+{
+  "diff.overwritten": "$(check) Overwrite applied for {0}",
+  "diff.usedRemoteContent": "$(discard) Used remote content for {0}",
+  "conflict.compareFiles": "Compare",
+  "conflict.overwrite": "Overwrite"
+}
