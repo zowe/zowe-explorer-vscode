@@ -8,6 +8,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
+- Fix issue with certain actions displaying profiles that are not registered with the tree that is providing the action. [#2534](https://github.com/zowe/vscode-extension-for-zowe/issues/2534)
+
 ## `2.12.0`
 
 ### New features and enhancements
