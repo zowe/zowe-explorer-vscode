@@ -14,12 +14,14 @@ import * as zowe from "@zowe/cli";
 import { errorHandling } from "../utils/ProfilesUtils";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
-import { Gui, ValidProfileEnum, IZoweTree, IZoweJobTreeNode } from "@zowe/zowe-explorer-api";
-import { Job, Spool } from "./ZoweJobNode";
+import { Gui, IZoweTree, IZoweJobTreeNode } from "@zowe/zowe-explorer-api";
+import { Job } from "./ZoweJobNode";
 import * as nls from "vscode-nls";
-import SpoolProvider, { encodeJobFile, getSpoolFiles, matchSpool } from "../SpoolProvider";
+import { buildUniqueSpoolName, getSpoolFiles, matchSpool } from "../SpoolProvider";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { getDefaultUri } from "../shared/utils";
+import { STATUS_BAR_TIMEOUT_MS } from "../globals";
+import * as path from "path";
 
 // Set up localization
 nls.config({
@@ -116,15 +118,11 @@ export async function getSpoolContent(session: string, spool: zowe.IJobFile, ref
         return;
     }
 
-    const statusMsg = Gui.setStatusBarMessage(localize("jobActions.openSpoolFile", "$(sync~spin) Opening spool file...", this.label as string));
-    const uri = encodeJobFile(session, spool);
+    const statusMsg = Gui.setStatusBarMessage(localize("jobActions.openSpoolFile", "$(sync~spin) Opening spool file..."));
+    const uniqueSpoolName = buildUniqueSpoolName(spool);
+    const uri = vscode.Uri.parse(`zowe-jobs:/${session}/${spool.jobid}/${uniqueSpoolName}`);
     try {
-        const spoolFile = SpoolProvider.files[uri.path];
-        if (spoolFile) {
-            // Fetch any changes to the spool file if it exists in the SpoolProvider
-            await spoolFile.fetchContent();
-        }
-        await Gui.showTextDocument(uri, { preview: false });
+        await vscode.commands.executeCommand("vscode.open", uri);
     } catch (error) {
         const isTextDocActive =
             vscode.window.activeTextEditor && vscode.window.activeTextEditor.document.uri?.path === `${spool.jobname}.${spool.jobid}.${spool.ddname}`;
@@ -144,38 +142,11 @@ export async function getSpoolContent(session: string, spool: zowe.IJobFile, ref
  * @param doc The document to update, associated with the spool file
  */
 export async function spoolFilePollEvent(doc: vscode.TextDocument): Promise<void> {
-    const statusMsg = Gui.setStatusBarMessage(localize("zowe.polling.statusBar", `$(sync~spin) Polling: {0}...`, doc.fileName));
-    await SpoolProvider.files[doc.uri.path].fetchContent();
-    setTimeout(() => {
-        statusMsg.dispose();
-    }, 250);
-}
-
-export async function getSpoolContentFromMainframe(node: IZoweJobTreeNode): Promise<void> {
-    ZoweLogger.trace("job.actions.getSpoolContentFromMainframe called.");
-    const statusMsg = await Gui.setStatusBarMessage(localize("jobActions.fetchSpoolFile", "$(sync~spin) Fetching spool files..."));
-    const spools = await getSpoolFiles(node);
-    for (const spool of spools) {
-        if (matchSpool(spool, node)) {
-            let prefix = spool.stepname;
-            if (prefix === undefined) {
-                prefix = spool.procstep;
-            }
-
-            const newLabel = `${spool.stepname}:${spool.ddname} - ${spool.procstep ?? spool["record-count"]}`;
-
-            const spoolNode = new Spool(
-                newLabel,
-                vscode.TreeItemCollapsibleState.None,
-                node.getParent(),
-                node.getSession(),
-                spool,
-                node.job,
-                node.getParent()
-            );
-            node = spoolNode;
-        }
-    }
+    const statusMsg = Gui.setStatusBarMessage(
+        localize("zowe.polling.statusBar", `$(sync~spin) Polling: {0}...`, path.posix.basename(doc.fileName)),
+        STATUS_BAR_TIMEOUT_MS
+    );
+    await vscode.workspace.fs.readFile(doc.uri);
     statusMsg.dispose();
 }
 

@@ -21,7 +21,6 @@
   "jobsFilterPrompt.enterPrefix": "Job search cancelled.",
   "zowe.polling.minInterval": "The polling interval must be greater than or equal to 1000ms.",
   "zowe.polling.intervalOption": "Poll interval (in ms) for: {0}",
-  "zowe.polling.cancelled": "Polling dismissed for {0}; operation cancelled.",
   "zowe.polling.statusBar": "$(sync~spin) Polling: {0}...",
   "zosJobsProvider.specifyCriteria": "Create new...",
   "zosJobsProvider.option.submit": "$(check) Submit this query"

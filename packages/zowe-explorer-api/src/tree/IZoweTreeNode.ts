@@ -22,7 +22,7 @@ export enum NodeAction {
  * @export
  * @interface IZoweTreeNode
  */
-export interface IZoweTreeNode {
+export interface IZoweTreeNode extends vscode.TreeItem {
     /**
      * The icon path or [ThemeIcon](#ThemeIcon) for the tree item.
      */

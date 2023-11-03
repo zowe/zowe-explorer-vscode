@@ -16,7 +16,6 @@ import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
 import { ZoweExplorerExtender } from "./ZoweExplorerExtender";
 import { Profiles } from "./Profiles";
 import { ProfilesUtils } from "./utils/ProfilesUtils";
-import { initializeSpoolProvider } from "./SpoolProvider";
 import { cleanTempDir, hideTempFolder } from "./utils/TempFolder";
 import { SettingsConfig } from "./utils/SettingsConfig";
 import { initDatasetProvider } from "./dataset/init";
@@ -51,7 +50,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     // Initialize profile manager
     await Profiles.createInstance(ZoweLogger.imperativeLogger);
     registerRefreshCommand(context, activate, deactivate);
-    initializeSpoolProvider(context);
 
     PollDecorator.register();
 

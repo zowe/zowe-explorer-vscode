@@ -12,7 +12,7 @@
 import * as vscode from "vscode";
 import * as jobActions from "./actions";
 import * as refreshActions from "../shared/refresh";
-import { IZoweJobTreeNode, IZoweTreeNode, IZoweTree } from "@zowe/zowe-explorer-api";
+import { IZoweJobTreeNode, IZoweTreeNode, IZoweTree, Gui } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { createJobsTree } from "./ZosJobsProvider";
 import * as contextuals from "../shared/context";
@@ -21,6 +21,14 @@ import { getSelectedNodeList } from "../shared/utils";
 import { initSubscribers } from "../shared/init";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { JobFSProvider } from "./fs";
+import * as nls from "vscode-nls";
+
+// Set up localization
+nls.config({
+    messageFormat: nls.MessageFormat.bundle,
+    bundleFormat: nls.BundleFormat.standalone,
+})();
+const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 export async function initJobsProvider(context: vscode.ExtensionContext): Promise<IZoweTree<IZoweJobTreeNode>> {
     ZoweLogger.trace("job.init.initJobsProvider called.");
@@ -62,8 +70,8 @@ export async function initJobsProvider(context: vscode.ExtensionContext): Promis
     context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.refreshJob", (job) => jobActions.refreshJob(job.mParent, jobsProvider)));
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.jobs.refreshSpool", async (node) => {
-            await jobActions.getSpoolContentFromMainframe(node);
-            jobActions.refreshJob(node.mParent.mParent, jobsProvider);
+            Gui.setStatusBarMessage(localize("jobActions.fetchSpoolFile", "$(sync~spin) Fetching spool files..."));
+            await vscode.workspace.fs.readFile(node.resourceUri);
         })
     );
 

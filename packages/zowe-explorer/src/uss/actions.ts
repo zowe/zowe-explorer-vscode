@@ -352,7 +352,7 @@ export async function buildFileStructure(node: IZoweUSSTreeNode): Promise<UssFil
     ZoweLogger.trace("uss.actions.buildFileStructure called.");
     if (contextually.isUssDirectory(node)) {
         const directory: UssFileTree = {
-            localUri: node.uri,
+            localUri: node.resourceUri,
             ussPath: node.fullPath,
             baseName: node.getLabel() as string,
             sessionName: node.getSessionNode().getLabel() as string,
@@ -375,7 +375,7 @@ export async function buildFileStructure(node: IZoweUSSTreeNode): Promise<UssFil
     return {
         children: [],
         binary: node.binary,
-        localUri: node.uri,
+        localUri: node.resourceUri,
         ussPath: node.fullPath,
         baseName: node.getLabel() as string,
         sessionName: node.getSessionNode().getLabel() as string,

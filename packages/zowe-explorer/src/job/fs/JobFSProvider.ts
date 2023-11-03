@@ -47,19 +47,22 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
         return this._lookup(uri, false);
     }
     public async readDirectory(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
-        const jobEntry = this._lookupAsDirectory(uri, false) as JobEntry;
+        const jobEntry = this._lookupAsDirectory(uri, false) as DirEntry | JobEntry;
         const uriInfo = getInfoForUri(uri, Profiles.getInstance());
-
         const results: [string, vscode.FileType][] = [];
 
-        const spoolFiles = await ZoweExplorerApiRegister.getJesApi(uriInfo.profile).getSpoolFiles(jobEntry.job.jobname, jobEntry.job.jobid);
-        for (const spool of spoolFiles) {
-            const spoolName = buildUniqueSpoolName(spool);
-            if (!jobEntry.entries.has(spoolName)) {
-                const newSpool = new SpoolEntry(spoolName);
-                newSpool.spool = spool;
-                jobEntry.entries.set(spoolName, newSpool);
+        if (isJobEntry(jobEntry)) {
+            const spoolFiles = await ZoweExplorerApiRegister.getJesApi(uriInfo.profile).getSpoolFiles(jobEntry.job.jobname, jobEntry.job.jobid);
+            for (const spool of spoolFiles) {
+                const spoolName = buildUniqueSpoolName(spool);
+                if (!jobEntry.entries.has(spoolName)) {
+                    const newSpool = new SpoolEntry(spoolName);
+                    newSpool.spool = spool;
+                    jobEntry.entries.set(spoolName, newSpool);
+                }
             }
+        } else {
+            // TODO: make API call to filter by params
         }
 
         for (const entry of jobEntry.entries) {
@@ -122,12 +125,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
         // TODO: Fetch contents of spool file and return
         const file = this._lookupAsFile(uri, false);
 
-        // we need to fetch the contents from the mainframe if the file hasn't been accessed yet
-        if (!file.wasAccessed) {
-            await this.fetchSpoolAtUri(uri);
-            file.wasAccessed = true;
-        }
-
+        await this.fetchSpoolAtUri(uri);
         return file.data;
     }
 
@@ -178,16 +176,25 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
         };
     }
 
-    public async delete(uri: vscode.Uri, _options: { readonly recursive: boolean }): Promise<void> {
+    public async delete(uri: vscode.Uri, options: { readonly recursive: boolean; readonly deleteRemote: boolean }): Promise<void> {
         const entry = this._lookup(uri, false);
         if (!isJobEntry(entry)) {
             // only support deleting jobs, not spool files
             return;
         }
+        const parent = this._lookupAsDirectory(
+            uri.with({
+                path: uri.path.substring(0, uri.path.indexOf("/", 1)),
+            }),
+            false
+        );
 
         const profInfo = getInfoForUri(uri, Profiles.getInstance());
-        await ZoweExplorerApiRegister.getJesApi(profInfo.profile).deleteJob(entry.name, entry.job.jobid);
-        throw new Error("Method not implemented.");
+        if (options.deleteRemote) {
+            await ZoweExplorerApiRegister.getJesApi(profInfo.profile).deleteJob(entry.job.jobname, entry.job.jobid);
+        }
+        parent.entries.delete(entry.name);
+        this._fireSoon({ type: vscode.FileChangeType.Deleted, uri });
     }
 
     // unsupported

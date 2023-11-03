@@ -94,10 +94,10 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
     public handleDrag(source: IZoweUSSTreeNode[], dataTransfer: vscode.DataTransfer, token: vscode.CancellationToken): void {
         const items = [];
         for (const srcItem of source) {
-            this.draggedNodes[srcItem.uri.path] = srcItem;
+            this.draggedNodes[srcItem.resourceUri.path] = srcItem;
             items.push({
                 label: srcItem.label,
-                uri: srcItem.uri,
+                uri: srcItem.resourceUri,
             });
         }
         dataTransfer.set("application/vnd.code.tree.zowe.uss.explorer", new vscode.DataTransferItem(items));
@@ -145,13 +145,13 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 const oldParent = node.getParent();
                 oldParent.children = oldParent.children.filter((c) => c !== node);
                 this.nodeDataChanged(oldParent);
-                node.uri = newUriForNode;
+                node.resourceUri = newUriForNode;
 
                 if (!multipleItems) {
                     // fetch children for target
                     this.refreshElement(target);
                     target.dirty = true;
-                    const newNode = (await target.getChildren()).find((n: IZoweUSSTreeNode) => n.uri === newUriForNode);
+                    const newNode = (await target.getChildren()).find((n: IZoweUSSTreeNode) => n.resourceUri === newUriForNode);
                     if (newNode) {
                         await this.treeView.reveal(newNode);
                     }
@@ -237,13 +237,13 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                     await this.renameFavorite(originalNode, newNamePath);
                 }
                 // Rename originalNode in UI
-                const hasClosedTab = await originalNode.rename(newNamePath);
+                await originalNode.rename(newNamePath);
                 // only reassign URI for renamed files
                 if (!contextually.isUssDirectory(originalNode)) {
-                    (originalNode as ZoweUSSNode).command = {
+                    originalNode.command = {
                         command: "vscode.open",
                         title: localize("getChildren.responses.open", "Open"),
-                        arguments: [(originalNode as ZoweUSSNode).uri],
+                        arguments: [originalNode.resourceUri],
                     };
                 }
                 this.mOnDidChangeTreeData.fire(originalNode);
@@ -494,10 +494,10 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 false,
                 profileName
             );
-            temp.uri = node.uri;
+            temp.resourceUri = node.resourceUri;
             temp.contextValue = contextually.asFavorite(temp);
             if (contextually.isFavoriteTextOrBinary(temp)) {
-                temp.command = { command: "vscode.open", title: "Open", arguments: [temp.uri] };
+                temp.command = { command: "vscode.open", title: "Open", arguments: [temp.resourceUri] };
             }
         }
         const icon = getIconByNode(temp);

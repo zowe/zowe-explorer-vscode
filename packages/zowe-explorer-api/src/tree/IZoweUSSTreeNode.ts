@@ -46,10 +46,6 @@ export interface IZoweUSSTreeNode extends IZoweTreeNode {
      */
     onUpdateEmitter?: vscode.EventEmitter<IZoweUSSTreeNode>;
     /**
-     * FileSystem URI for this file/folder
-     */
-    uri?: vscode.Uri;
-    /**
      * Event that fires whenever an existing node is updated.
      */
     onUpdate?: vscode.Event<IZoweUSSTreeNode>;

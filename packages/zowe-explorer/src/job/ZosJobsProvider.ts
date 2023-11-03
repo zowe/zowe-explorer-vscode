@@ -16,7 +16,7 @@ import { Gui, ValidProfileEnum, IZoweTree, IZoweJobTreeNode, PersistenceSchemaEn
 import { FilterItem, errorHandling } from "../utils/ProfilesUtils";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
-import { Job, Spool } from "./ZoweJobNode";
+import { Job } from "./ZoweJobNode";
 import { getAppName, sortTreeItems, jobStringValidator } from "../shared/utils";
 import { ZoweTreeProvider } from "../abstract/ZoweTreeProvider";
 import { getIconByNode } from "../generators/icons";
@@ -25,10 +25,11 @@ import { resetValidationSettings } from "../shared/actions";
 import { SettingsConfig } from "../utils/SettingsConfig";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import * as nls from "vscode-nls";
-import SpoolProvider, { encodeJobFile } from "../SpoolProvider";
 import { Poller } from "@zowe/zowe-explorer-api/src/utils";
 import { PollDecorator } from "../utils/DecorationProviders";
 import { TreeViewUtils } from "../utils/TreeViewUtils";
+import * as path from "path";
+import { JobFSProvider } from "./fs";
 
 // Set up localization
 nls.config({
@@ -272,7 +273,9 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
 
     public async delete(node: IZoweJobTreeNode): Promise<void> {
         ZoweLogger.trace("ZosJobsProvider.delete called.");
-        await ZoweExplorerApiRegister.getJesApi(node.getProfile()).deleteJob(node.job.jobname, node.job.jobid);
+
+        //await ZoweExplorerApiRegister.getJesApi(node.getProfile()).deleteJob(node.job.jobname, node.job.jobid);
+        await JobFSProvider.instance.delete(node.resourceUri, { recursive: false, deleteRemote: true });
         await this.removeFavorite(this.createJobsFavorite(node));
         node.getSessionNode().children = node.getSessionNode().children.filter((n) => n !== node);
         this.refresh();
@@ -1057,7 +1060,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
     private async showPollOptions(uri: vscode.Uri): Promise<number> {
         const pollValue = SettingsConfig.getDirectValue<number>("zowe.jobs.pollInterval");
         const intervalInput = await Gui.showInputBox({
-            title: localize("zowe.polling.intervalOption", "Poll interval (in ms) for: {0}", uri.path),
+            title: localize("zowe.polling.intervalOption", "Poll interval (in ms) for: {0}", path.posix.basename(uri.path)),
             value: pollValue.toString(),
             validateInput: (value: string) => this.validatePollInterval(value),
         });
@@ -1074,12 +1077,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             return;
         }
 
-        const session = node.getSessionNode();
-
-        // Interpret node as spool to get spool data
-        const spoolData = (node as Spool).spool;
-        const encodedUri = encodeJobFile(session.label as string, spoolData);
-
+        const encodedUri = node.resourceUri;
         // If the uri is already being polled, mark it as ready for removal
         if (encodedUri.path in Poller.pollRequests && contextually.isPolling(node)) {
             Poller.pollRequests[encodedUri.path].dispose = true;
@@ -1087,21 +1085,14 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             node.contextValue = node.contextValue.replace(globals.POLL_CONTEXT, "");
 
             // Fire "tree changed event" to reflect removal of polling context value
-            this.mOnDidChangeTreeData.fire();
+            this.mOnDidChangeTreeData.fire(node);
             return;
-        }
-
-        // Add spool file to provider if it wasn't previously opened in the editor
-        const fileInEditor = SpoolProvider.files[encodedUri.path];
-        if (!fileInEditor) {
-            await Gui.showTextDocument(encodedUri);
         }
 
         // Always prompt the user for a poll interval
         const pollInterval = await this.showPollOptions(encodedUri);
 
         if (pollInterval === 0) {
-            Gui.showMessage(localize("zowe.polling.cancelled", "Polling dismissed for {0}; operation cancelled.", encodedUri.path));
             return;
         }
 
@@ -1110,10 +1101,10 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             msInterval: pollInterval,
             request: async () => {
                 const statusMsg = Gui.setStatusBarMessage(
-                    localize("zowe.polling.statusBar", `$(sync~spin) Polling: {0}...`, encodedUri.path),
+                    localize("zowe.polling.statusBar", `$(sync~spin) Polling: {0}...`, path.posix.basename(encodedUri.path)),
                     globals.STATUS_BAR_TIMEOUT_MS
                 );
-                await fileInEditor.fetchContent.bind(SpoolProvider.files[encodedUri.path])();
+                await vscode.workspace.fs.readFile(encodedUri);
                 statusMsg.dispose();
             },
         });
@@ -1121,7 +1112,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         node.contextValue += globals.POLL_CONTEXT;
 
         // Fire "tree changed event" to reflect added polling context value
-        this.mOnDidChangeTreeData.fire();
+        this.mOnDidChangeTreeData.fire(node);
     }
 }
 

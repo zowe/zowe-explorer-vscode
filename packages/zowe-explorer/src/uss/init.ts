@@ -67,8 +67,8 @@ export async function initUSSProvider(context: vscode.ExtensionContext): Promise
                 } else {
                     // need to pull content for file and apply to FS entry
                     await UssFSProvider.instance.fetchFileAtUri(
-                        item.uri,
-                        vscode.window.visibleTextEditors.find((v) => v.document.uri.path === item.uri.path)
+                        item.resourceUri,
+                        vscode.window.visibleTextEditors.find((v) => v.document.uri.path === item.resourceUri.path)
                     );
                 }
             }

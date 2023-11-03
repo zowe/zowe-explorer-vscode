@@ -66,7 +66,6 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     private downloadedInternal = false;
     private prevPath: string;
     public fullPath: string;
-    public uri: vscode.Uri;
     public attributes: FileAttributes;
 
     public onUpdateEmitter: vscode.EventEmitter<IZoweUSSTreeNode>;
@@ -139,9 +138,9 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         }
         this.onUpdateEmitter = new vscode.EventEmitter<IZoweUSSTreeNode>();
         if (label !== localize("Favorites", "Favorites")) {
-            this.uri = vscode.Uri.parse(`zowe-uss:/${this.profile.name}${this.fullPath}`);
+            this.resourceUri = vscode.Uri.parse(`zowe-uss:/${this.profile.name}${this.fullPath}`);
             if (isSession) {
-                UssFSProvider.instance.createDirectory(this.uri);
+                UssFSProvider.instance.createDirectory(this.resourceUri);
             }
         }
     }
@@ -270,18 +269,18 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             };
             if (isDir) {
                 // Create an entry for the USS folder if it doesn't exist.
-                if (!UssFSProvider.instance.exists(temp.uri)) {
-                    vscode.workspace.fs.createDirectory(temp.uri);
+                if (!UssFSProvider.instance.exists(temp.resourceUri)) {
+                    vscode.workspace.fs.createDirectory(temp.resourceUri);
                 }
             } else {
                 // Create an entry for the USS file if it doesn't exist.
-                if (!UssFSProvider.instance.exists(temp.uri)) {
-                    await vscode.workspace.fs.writeFile(temp.uri, new Uint8Array());
+                if (!UssFSProvider.instance.exists(temp.resourceUri)) {
+                    await vscode.workspace.fs.writeFile(temp.resourceUri, new Uint8Array());
                 }
                 temp.command = {
                     command: "vscode.open",
                     title: localize("getChildren.responses.open", "Open"),
-                    arguments: [temp.uri],
+                    arguments: [temp.resourceUri],
                 };
             }
             responseNodes.push(temp);
@@ -292,8 +291,8 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
 
         // remove any entries from FS provider that were deleted from mainframe when tree view is refreshed
         for (const node of nodesToRemove) {
-            if (node.uri) {
-                UssFSProvider.instance.removeEntryIfExists(node.uri);
+            if (node.resourceUri) {
+                UssFSProvider.instance.removeEntryIfExists(node.resourceUri);
             }
         }
 
@@ -374,7 +373,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         await vscode.workspace.fs.rename(oldUri, newUri);
 
         this.fullPath = newFullPath;
-        this.uri = newUri;
+        this.resourceUri = newUri;
         this.shortLabel = newFullPath.split("/").pop();
         this.label = this.shortLabel;
         this.tooltip = injectAdditionalDataToTooltip(this, newFullPath);
@@ -427,7 +426,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             return;
         }
         try {
-            await vscode.workspace.fs.delete(this.uri);
+            await vscode.workspace.fs.delete(this.resourceUri);
         } catch (err) {
             ZoweLogger.error(err);
             if (err instanceof Error) {
@@ -563,7 +562,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 ussFileProvider.addFileHistory(`[${this.getProfile().name}]: ${this.fullPath}`);
                 ussFileProvider.getTreeView().reveal(this, { select: true, focus: true, expand: false });
 
-                await this.initializeFileOpening(this.uri, shouldPreview);
+                await this.initializeFileOpening(this.resourceUri, shouldPreview);
                 // }
             } catch (err) {
                 await errorHandling(err, this.mProfileName);
