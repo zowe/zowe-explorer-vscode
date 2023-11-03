@@ -28,8 +28,8 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 export class ProfileManagement {
     public static getRegisteredProfileNameList(registeredTree: globals.Trees): string[] {
+        let profileNamesList: string[] = [];
         try {
-            let profileNamesList: string[] = [];
             profileNamesList = Profiles.getInstance()
                 .allProfiles.map((profile) => profile.name)
                 .filter((profileName) => {
@@ -42,6 +42,7 @@ export class ProfileManagement {
             return profileNamesList;
         } catch (err) {
             ZoweLogger.warn(err);
+            return profileNamesList;
         }
     }
     public static async manageProfile(node: IZoweTreeNode): Promise<void> {

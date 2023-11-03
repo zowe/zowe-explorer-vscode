@@ -319,7 +319,7 @@ describe("ProfileManagement unit tests", () => {
             createBlockMocks(createGlobalMocks());
             expect(ProfileManagement.getRegisteredProfileNameList("fake" as any)).toEqual([]);
         });
-        it("should catch error and log a warning", () => {
+        it("should catch error and log a warning then return empty array", () => {
             const globalMocks = createGlobalMocks();
             createBlockMocks(globalMocks);
             const thrownError = new Error("fake error");
@@ -330,7 +330,7 @@ describe("ProfileManagement unit tests", () => {
                 }),
                 configurable: true,
             });
-            ProfileManagement.getRegisteredProfileNameList(globals.Trees.JES);
+            expect(ProfileManagement.getRegisteredProfileNameList(globals.Trees.JES)).toEqual([]);
             expect(warnSpy).toBeCalledWith(thrownError);
         });
     });
