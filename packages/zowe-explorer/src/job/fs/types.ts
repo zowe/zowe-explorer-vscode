@@ -11,13 +11,7 @@
 
 import { IJob, IJobFile } from "@zowe/cli";
 import { DirEntry, EntryMetadata, FileEntry } from "@zowe/zowe-explorer-api";
-import { FilePermission, FileStat, FileType } from "vscode";
-
-export interface FsEntry extends FileStat {
-    name: string;
-    type: FileType;
-    wasAccessed?: boolean;
-}
+import { FilePermission, FileType } from "vscode";
 
 export class SpoolEntry implements FileEntry {
     public name: string;
@@ -49,6 +43,5 @@ export class JobEntry extends DirEntry {
         this.name = name;
         this.entries = new Map();
         this.wasAccessed = false;
-        this.job = null;
     }
 }

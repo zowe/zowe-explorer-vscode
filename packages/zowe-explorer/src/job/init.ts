@@ -25,9 +25,7 @@ import { JobFSProvider } from "./fs";
 export async function initJobsProvider(context: vscode.ExtensionContext): Promise<IZoweTree<IZoweJobTreeNode>> {
     ZoweLogger.trace("job.init.initJobsProvider called.");
 
-    context.subscriptions.push(
-        vscode.workspace.registerFileSystemProvider("zowe-jobs", JobFSProvider.instance, { isCaseSensitive: false, isReadonly: true })
-    );
+    context.subscriptions.push(vscode.workspace.registerFileSystemProvider("zowe-jobs", JobFSProvider.instance, { isCaseSensitive: false }));
 
     const jobsProvider: IZoweTree<IZoweJobTreeNode> = await createJobsTree();
     if (jobsProvider == null) {

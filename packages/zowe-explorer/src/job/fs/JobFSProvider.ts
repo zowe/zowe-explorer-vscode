@@ -10,13 +10,15 @@
  */
 
 import * as vscode from "vscode";
-import { BaseProvider, DirEntry, EntryMetadata, getInfoForUri } from "@zowe/zowe-explorer-api";
+import { BaseProvider, BufferBuilder, DirEntry, EntryMetadata, getInfoForUri } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../../ZoweExplorerApiRegister";
 import { Profiles } from "../../Profiles";
-import { isJobEntry, isSpoolEntry } from "./utils";
+import { isJobEntry } from "./utils";
 import * as path from "path";
 import { JobEntry, SpoolEntry } from "./types";
 import { TextEncoder } from "util";
+import { buildUniqueSpoolName } from "../../SpoolProvider";
+import { IJob, IJobFile } from "@zowe/cli";
 
 export class JobFSProvider extends BaseProvider implements vscode.FileSystemProvider {
     public onDidChangeFile: vscode.Event<vscode.FileChangeEvent[]>;
@@ -44,15 +46,30 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
     public stat(uri: vscode.Uri): vscode.FileStat | Thenable<vscode.FileStat> {
         return this._lookup(uri, false);
     }
-    public readDirectory(uri: vscode.Uri): [string, vscode.FileType][] | Thenable<[string, vscode.FileType][]> {
+    public async readDirectory(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
+        const jobEntry = this._lookupAsDirectory(uri, false) as JobEntry;
         const uriInfo = getInfoForUri(uri, Profiles.getInstance());
-        const restOfPath = uri.path.substring(uriInfo.slashAfterProfilePos + 1);
-        //
 
-        // TODO: list spool files for job at URI
-        throw new Error("Method not implemented.");
+        const results: [string, vscode.FileType][] = [];
+
+        const spoolFiles = await ZoweExplorerApiRegister.getJesApi(uriInfo.profile).getSpoolFiles(jobEntry.job.jobname, jobEntry.job.jobid);
+        for (const spool of spoolFiles) {
+            const spoolName = buildUniqueSpoolName(spool);
+            if (!jobEntry.entries.has(spoolName)) {
+                const newSpool = new SpoolEntry(spoolName);
+                newSpool.spool = spool;
+                jobEntry.entries.set(spoolName, newSpool);
+            }
+        }
+
+        for (const entry of jobEntry.entries) {
+            results.push([entry[0], vscode.FileType.File]);
+        }
+
+        return results;
     }
-    public createDirectory(uri: vscode.Uri): void | Thenable<void> {
+
+    public createDirectory(uri: vscode.Uri, job?: IJob): void {
         const basename = path.posix.basename(uri.path);
         const dirname = uri.with({ path: path.posix.dirname(uri.path) });
         const parent = this._lookupAsDirectory(dirname, false);
@@ -65,6 +82,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
             : this._getInfoFromUri(uri);
 
         const entry = new JobEntry(basename);
+        entry.job = job;
         entry.metadata = profInfo;
         parent.entries.set(entry.name, entry);
         parent.mtime = Date.now();
@@ -75,24 +93,21 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
     public async fetchSpoolAtUri(uri: vscode.Uri, editor?: vscode.TextEditor | null): Promise<void> {
         const spoolEntry = this._lookupAsFile(uri, false) as SpoolEntry;
 
-        // get job entry so we have info from the job document
-        const parentUri = uri.with({
-            path: path.dirname(uri.path),
-        });
-        const jobEntry = this._lookupAsDirectory(parentUri, false) as JobEntry;
-
-        const uriInfo = getInfoForUri(uri, Profiles.getInstance());
         // we need to fetch the contents from the mainframe since the file hasn't been accessed yet
         const bufBuilder = new BufferBuilder();
-        const filePath = uri.path.substring(uriInfo.slashAfterProfilePos + 1);
         const metadata = spoolEntry.metadata ?? this._getInfoFromUri(uri);
-        const resp = await ZoweExplorerApiRegister.getJesApi(metadata.profile).getSpoolContentById(
-            jobEntry.job.jobname,
-            jobEntry.job.jobid,
-            spoolEntry.spool.id
-        );
 
-        spoolEntry.data = this._textEncoder.encode(resp);
+        try {
+            await ZoweExplorerApiRegister.getJesApi(metadata.profile).downloadSingleSpool({
+                jobFile: spoolEntry.spool,
+                stream: bufBuilder,
+            });
+        } catch (err) {
+            // TODO: print error if failed to fetch spool
+            return;
+        }
+
+        spoolEntry.data = bufBuilder.read();
         if (editor) {
             // This is a hacky method and does not work for editors that aren't the active one,
             // so we can make VSCode switch the active document to that tab and then "revert the file" to show latest contents
@@ -106,7 +121,6 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
     public async readFile(uri: vscode.Uri): Promise<Uint8Array> {
         // TODO: Fetch contents of spool file and return
         const file = this._lookupAsFile(uri, false);
-        const profInfo = getInfoForUri(uri, Profiles.getInstance());
 
         // we need to fetch the contents from the mainframe if the file hasn't been accessed yet
         if (!file.wasAccessed) {
@@ -120,13 +134,13 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
     public writeFile(
         uri: vscode.Uri,
         content: Uint8Array,
-        options: { readonly create: boolean; readonly overwrite: boolean }
-    ): void | Thenable<void> {
-        // TODO: Do not make API calls, just update contents for spool entry
+        options: { readonly create: boolean; readonly overwrite: boolean; readonly name?: string; readonly spool?: IJobFile }
+    ): void {
         const basename = path.posix.basename(uri.path);
+        const spoolName = options.name ?? basename;
         const parent = this._lookupParentDirectory(uri);
-        let entry = parent.entries.get(basename);
-        if (!isSpoolEntry(entry)) {
+        let entry = parent.entries.get(spoolName) as JobEntry | SpoolEntry;
+        if (isJobEntry(entry)) {
             throw vscode.FileSystemError.FileIsADirectory(uri);
         }
         if (!entry && !options.create) {
@@ -137,7 +151,8 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
         }
 
         if (!entry) {
-            entry = new SpoolEntry(basename);
+            entry = new SpoolEntry(spoolName);
+            entry.spool = options.spool;
             entry.data = content;
             const profInfo = parent.metadata
                 ? {
@@ -146,15 +161,13 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
                   }
                 : this._getInfoFromUri(uri);
             entry.metadata = profInfo;
-            parent.entries.set(basename, entry);
+            parent.entries.set(spoolName, entry);
             this._fireSoon({ type: vscode.FileChangeType.Created, uri });
         } else {
             entry.data = content;
             entry.mtime = Date.now();
             entry.size = content.byteLength;
         }
-
-        throw new Error("Method not implemented.");
     }
 
     private _getInfoFromUri(uri: vscode.Uri): EntryMetadata {

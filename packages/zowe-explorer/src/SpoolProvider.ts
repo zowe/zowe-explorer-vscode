@@ -73,6 +73,11 @@ export class SpoolFile {
     }
 }
 
+export function buildUniqueSpoolName(spool: zowe.IJobFile): string {
+    const spoolSegments = [spool.jobname, spool.jobid, spool.stepname, spool.procstep, spool.ddname, spool.id?.toString()];
+    return spoolSegments.filter((v) => v && v.length).join(".");
+}
+
 /**
  * (use {@link toUniqueJobFileUri} instead to use VSCode's cache invalidation)
  *
@@ -85,13 +90,9 @@ export function encodeJobFile(session: string, spool: zowe.IJobFile): vscode.Uri
     ZoweLogger.trace("SpoolProvider.encodeJobFile called.");
     const query = JSON.stringify([session, spool]);
 
-    const spoolSegments = [spool.jobname, spool.jobid, spool.stepname, spool.procstep, spool.ddname, spool.id?.toString()];
-
-    const path = spoolSegments.filter((v) => v && v.length).join(".");
-
     return vscode.Uri.parse("").with({
         scheme: SpoolProvider.scheme,
-        path,
+        path: buildUniqueSpoolName(spool),
         query,
     });
 }
