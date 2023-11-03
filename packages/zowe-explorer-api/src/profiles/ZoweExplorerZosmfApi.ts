@@ -216,12 +216,20 @@ export class ZosmfMvsApi extends ZosmfApiCommon implements IMvs {
         return zowe.List.allMembers(this.getSession(), dataSetName, options);
     }
 
-    public getContents(dataSetName: string, options?: zowe.IDownloadOptions): Promise<zowe.IZosFilesResponse> {
+    public getContents(dataSetName: string, options?: zowe.IDownloadSingleOptions): Promise<zowe.IZosFilesResponse> {
         return zowe.Download.dataSet(this.getSession(), dataSetName, options);
     }
 
     public putContents(inputFilePath: string, dataSetName: string, options?: zowe.IUploadOptions): Promise<zowe.IZosFilesResponse> {
         return zowe.Upload.pathToDataSet(this.getSession(), inputFilePath, dataSetName, options);
+    }
+
+    public uploadBufferAsDs(buffer: Buffer, dataSetName: string, options?: zowe.IUploadOptions): Promise<zowe.IZosFilesResponse> {
+        // on z/OSMF this is always an empty string, this is because bufferToUssFile in zos-files SDK returns
+        // the data string - but, the API returns a 204 No Content when successful, so the response data will always be empty
+
+        // Once bufferToUssFile is updated to use putExpectJSON, we can also get the e-tag from the response headers.
+        return zowe.Upload.bufferToDataSet(this.getSession(), buffer, dataSetName, options);
     }
 
     public createDataSet(

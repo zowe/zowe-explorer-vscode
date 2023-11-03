@@ -214,7 +214,7 @@ export interface IMvs extends ICommon {
      * @param {zowe.IDownloadOptions} [options]
      * @returns {Promise<zowe.IZosFilesResponse>}
      */
-    getContents(dataSetName: string, options?: zowe.IDownloadOptions): Promise<zowe.IZosFilesResponse>;
+    getContents(dataSetName: string, options?: zowe.IDownloadSingleOptions): Promise<zowe.IZosFilesResponse>;
 
     /**
      * Upload the content of a file to a data set or member.
@@ -225,6 +225,16 @@ export interface IMvs extends ICommon {
      * @returns {Promise<zowe.IZosFilesResponse>}
      */
     putContents(inputFilePath: string, dataSetName: string, options?: zowe.IUploadOptions): Promise<zowe.IZosFilesResponse>;
+
+    /**
+     * Uploads a given buffer as the contents of a file to a data set or member.
+     *
+     * @param {Buffer} buffer
+     * @param {string} dataSetName
+     * @param {zowe.IUploadOptions} [options]
+     * @returns {Promise<zowe.IZosFilesResponse>}
+     */
+    uploadBufferAsDs?(buffer: Buffer, dataSetName: string, options?: zowe.IUploadOptions): Promise<zowe.IZosFilesResponse>;
 
     /**
      * Create a new data set with the specified options.

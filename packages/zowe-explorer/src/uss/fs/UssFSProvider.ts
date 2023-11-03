@@ -40,7 +40,7 @@ export type Entry = UssFile | UssDirectory;
 export class UssFSProvider extends BaseProvider implements vscode.FileSystemProvider {
     // Event objects for provider
 
-    private static inst: UssFSProvider;
+    private static _instance: UssFSProvider;
     private constructor() {
         super();
         this.root = new UssDirectory("");
@@ -50,11 +50,11 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
      * @returns the USS FileSystemProvider singleton instance
      */
     public static get instance(): UssFSProvider {
-        if (!UssFSProvider.inst) {
-            UssFSProvider.inst = new UssFSProvider();
+        if (!UssFSProvider._instance) {
+            UssFSProvider._instance = new UssFSProvider();
         }
 
-        return UssFSProvider.inst;
+        return UssFSProvider._instance;
     }
 
     /* Public functions: File operations */

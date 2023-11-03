@@ -97,6 +97,14 @@ export class DirEntry implements FsEntry {
     }
 }
 
+export class FilterEntry extends DirEntry {
+    public filter: string;
+
+    public constructor(n: string) {
+        super(n);
+    }
+}
+
 export type LocalConflict = {
     fsEntry: FileEntry;
     uri: vscode.Uri;

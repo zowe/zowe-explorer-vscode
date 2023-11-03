@@ -21,9 +21,13 @@ import { getSelectedNodeList } from "../shared/utils";
 import { initSubscribers } from "../shared/init";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { TreeViewUtils } from "../utils/TreeViewUtils";
+import { DatasetFSProvider } from "./fs";
 
 export async function initDatasetProvider(context: vscode.ExtensionContext): Promise<IZoweTree<IZoweDatasetTreeNode>> {
     ZoweLogger.trace("dataset.init.initDatasetProvider called.");
+
+    context.subscriptions.push(vscode.workspace.registerFileSystemProvider("zowe-ds", DatasetFSProvider.instance, { isCaseSensitive: true }));
+
     const datasetProvider: IZoweTree<IZoweDatasetTreeNode> = await createDatasetTree();
     if (datasetProvider == null) {
         return null;

@@ -20,6 +20,7 @@ import * as contextually from "../shared/context";
 import * as nls from "vscode-nls";
 import { Profiles } from "../Profiles";
 import { ZoweLogger } from "../utils/LoggerUtils";
+import { DatasetFSProvider } from "./fs";
 // Set up localization
 nls.config({
     messageFormat: nls.MessageFormat.bundle,
@@ -79,6 +80,16 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         }
         if (!globals.ISTHEIA && this.getParent() && contextually.isSession(this.getParent())) {
             this.id = `${mParent?.id ?? mParent?.label?.toString() ?? "<root>"}.${this.label as string}`;
+        }
+        if (label !== localize("Favorites", "Favorites")) {
+            if (mParent == null) {
+                this.resourceUri = vscode.Uri.parse(`zowe-ds:/${this.profile.name}/`);
+                DatasetFSProvider.instance.createDirectory(this.resourceUri, this.pattern);
+            } else if (this.contextValue === globals.DS_MEMBER_CONTEXT) {
+                this.resourceUri = vscode.Uri.parse(`zowe-ds:/${this.profile.name}/${mParent.label as string}/${this.label as string}`);
+            } else if (this.contextValue === globals.DS_DS_CONTEXT || this.contextValue === globals.DS_PDS_CONTEXT) {
+                this.resourceUri = vscode.Uri.parse(`zowe-ds:/${this.profile.name}/${this.label as string}`);
+            }
         }
     }
 
@@ -143,11 +154,12 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             // Loops through all the returned dataset members and creates nodes for them
             for (const item of response.apiResponse.items ?? response.apiResponse) {
                 const existing = this.children.find((element) => element.label.toString() === item.dsname);
+                let temp = existing;
                 if (existing) {
                     elementChildren[existing.label.toString()] = existing;
                     // Creates a ZoweDatasetNode for a PDS
                 } else if (item.dsorg === "PO" || item.dsorg === "PO-E") {
-                    const temp = new ZoweDatasetNode(
+                    temp = new ZoweDatasetNode(
                         item.dsname,
                         vscode.TreeItemCollapsibleState.Collapsed,
                         this,
@@ -159,7 +171,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     elementChildren[temp.label.toString()] = temp;
                     // Creates a ZoweDatasetNode for a dataset with imperative errors
                 } else if (item.error instanceof zowe.imperative.ImperativeError) {
-                    const temp = new ZoweDatasetNode(
+                    temp = new ZoweDatasetNode(
                         item.dsname,
                         vscode.TreeItemCollapsibleState.None,
                         this,
@@ -172,7 +184,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     elementChildren[temp.label.toString()] = temp;
                     // Creates a ZoweDatasetNode for a migrated dataset
                 } else if (item.migr && item.migr.toUpperCase() === "YES") {
-                    const temp = new ZoweDatasetNode(
+                    temp = new ZoweDatasetNode(
                         item.dsname,
                         vscode.TreeItemCollapsibleState.None,
                         this,
@@ -193,7 +205,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                         altLabel = altLabel.substring(0, endPoint);
                     }
                     if (!elementChildren[altLabel]) {
-                        elementChildren[altLabel] = new ZoweDatasetNode(
+                        temp = new ZoweDatasetNode(
                             altLabel,
                             vscode.TreeItemCollapsibleState.None,
                             this,
@@ -202,10 +214,11 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                             undefined,
                             this.getProfile()
                         );
+                        elementChildren[temp.label.toString()] = temp;
                     }
                 } else if (contextually.isSessionNotFav(this)) {
                     // Creates a ZoweDatasetNode for a PS
-                    const temp = new ZoweDatasetNode(
+                    temp = new ZoweDatasetNode(
                         item.dsname,
                         vscode.TreeItemCollapsibleState.None,
                         this,
@@ -219,7 +232,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 } else {
                     // Creates a ZoweDatasetNode for a PDS member
                     const memberInvalid = item.member?.includes("\ufffd");
-                    const temp = new ZoweDatasetNode(
+                    temp = new ZoweDatasetNode(
                         item.member,
                         vscode.TreeItemCollapsibleState.None,
                         this,
@@ -236,6 +249,22 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                         });
                     }
                     elementChildren[temp.label.toString()] = temp;
+                }
+                if (temp.collapsibleState !== vscode.TreeItemCollapsibleState.None) {
+                    // Create an entry for the PDS if it doesn't exist.
+                    if (!DatasetFSProvider.instance.exists(temp.resourceUri)) {
+                        vscode.workspace.fs.createDirectory(temp.resourceUri);
+                    }
+                } else {
+                    // Create an entry for the data set if it doesn't exist.
+                    if (!DatasetFSProvider.instance.exists(temp.resourceUri)) {
+                        await vscode.workspace.fs.writeFile(temp.resourceUri, new Uint8Array());
+                    }
+                    temp.command = {
+                        command: "vscode.open",
+                        title: localize("getChildren.responses.open", "Open"),
+                        arguments: [temp.resourceUri],
+                    };
                 }
             }
         }
