@@ -44,6 +44,8 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
     private _jobStatus: string;
     private _tooltip: string;
 
+    protected uri: vscode.Uri;
+
     public constructor(
         label: string,
         collapsibleState: vscode.TreeItemCollapsibleState,
@@ -91,6 +93,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
 
         if (!globals.ISTHEIA && !(this instanceof Spool)) {
             this.id = `${mParent?.id ?? mParent?.label?.toString() ?? "<root>"}.${this.label as string}`;
+            this.uri = vscode.Uri.parse(`zowe-jobs:/${this.profile.name}/${this.job.jobid}`);
         }
     }
 
@@ -162,14 +165,15 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
                     elementChildren[newLabel] = existing;
                 } else {
                     const spoolNode = new Spool(newLabel, vscode.TreeItemCollapsibleState.None, this, this.session, spool, this.job, this);
+                    await vscode.workspace.fs.writeFile(spoolNode.uri);
                     const icon = getIconByNode(spoolNode);
                     if (icon) {
                         spoolNode.iconPath = icon.path;
                     }
                     spoolNode.command = {
-                        command: "zowe.jobs.zosJobsOpenspool",
+                        command: "vscode.open",
                         title: "",
-                        arguments: [sessionName, spool, refreshTimestamp],
+                        arguments: [spoolNode.uri],
                     };
                     elementChildren[newLabel] = spoolNode;
                 }
@@ -207,6 +211,8 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
                     elementChildren[nodeTitle] = existing;
                 } else {
                     const jobNode = new Job(nodeTitle, vscode.TreeItemCollapsibleState.Collapsed, this, this.session, job, this.getProfile());
+                    vscode.workspace.fs.createDirectory(jobNode.uri);
+
                     jobNode.contextValue = globals.JOBS_JOB_CONTEXT;
                     if (job.retcode) {
                         jobNode.contextValue += globals.RC_SUFFIX + job.retcode;
@@ -397,6 +403,9 @@ export class Spool extends Job {
         parent: IZoweJobTreeNode
     ) {
         super(label, mCollapsibleState, mParent, session, job, parent.getProfile());
+        this.uri = this.uri.with({
+            path: `/${this.profile.name}/${mParent.job.jobid}/${spool.id}`
+        });
         this.tooltip = label;
         this.contextValue = globals.JOBS_SPOOL_CONTEXT;
         const icon = getIconByNode(this);

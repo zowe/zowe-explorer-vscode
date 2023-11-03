@@ -9,7 +9,6 @@
  *
  */
 
-import * as globals from "../globals";
 import * as vscode from "vscode";
 import * as jobActions from "./actions";
 import * as refreshActions from "../shared/refresh";
@@ -21,9 +20,15 @@ import { Job } from "./ZoweJobNode";
 import { getSelectedNodeList } from "../shared/utils";
 import { initSubscribers } from "../shared/init";
 import { ZoweLogger } from "../utils/LoggerUtils";
+import { JobFSProvider } from "./fs";
 
 export async function initJobsProvider(context: vscode.ExtensionContext): Promise<IZoweTree<IZoweJobTreeNode>> {
     ZoweLogger.trace("job.init.initJobsProvider called.");
+
+    context.subscriptions.push(
+        vscode.workspace.registerFileSystemProvider("zowe-jobs", JobFSProvider.instance, { isCaseSensitive: false, isReadonly: true })
+    );
+
     const jobsProvider: IZoweTree<IZoweJobTreeNode> = await createJobsTree();
     if (jobsProvider == null) {
         return null;

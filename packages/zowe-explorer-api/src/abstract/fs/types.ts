@@ -90,8 +90,8 @@ export class DirEntry implements FsEntry {
     public constructor(n: string) {
         this.name = n;
         this.type = vscode.FileType.Directory;
-        this.ctime = 0;
-        this.mtime = 0;
+        this.ctime = Date.now();
+        this.mtime = Date.now();
         this.size = 0;
         this.entries = new Map();
     }
