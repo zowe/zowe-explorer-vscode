@@ -8,6 +8,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
+- Solved issue with shortcut for `Edit History` view overlapping `Redo` shortcut [#2543](https://github.com/zowe/vscode-extension-for-zowe/issues/2543)
+
 ## `2.12.0`
 
 ### New features and enhancements
