@@ -809,14 +809,14 @@
     "menus": {
       "editor/context": [
         {
-          "when": "editorFocus",
+          "when": "editorFocus && focusedView != 'workbench.panel.output'",
           "command": "zowe.ds.submitJcl",
           "group": "000_zowe_dsMainframeInteraction@1"
         }
       ],
       "explorer/context": [
         {
-          "when": "!explorerResourceIsFolder",
+          "when": "!explorerResourceIsFolder && !listMultiSelection",
           "command": "zowe.ds.submitJcl",
           "group": "000_zowe_dsMainframeInteraction@1"
         }
