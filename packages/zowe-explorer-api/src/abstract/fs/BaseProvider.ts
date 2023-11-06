@@ -135,6 +135,19 @@ export class BaseProvider {
     }
 
     /**
+     * Triggers an update for the resource at the given URI to show its latest changes in the editor. 
+     * @param uri The URI that is open in an editor tab
+     */
+    protected async _updateResourceInEditor(uri: vscode.Uri): Promise<void> {
+        // This is a hacky method and does not work for editors that aren't the active one,
+        // so we can make VSCode switch the active document to that tab and then "revert the file" to show latest contents
+        await vscode.commands.executeCommand("vscode.open", uri);
+        // Note that the command only affects files that are not dirty
+        // TODO: find a better method to reload editor tab with new contents
+        vscode.commands.executeCommand("workbench.action.files.revert");
+    }
+
+    /**
      * Update the child entries in the provider with the parent's updated entry.
      * @param entry The parent directory whose children need updated
      */

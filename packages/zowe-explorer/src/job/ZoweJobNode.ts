@@ -79,7 +79,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
         if (mParent == null && !isFavorites) {
             this.contextValue = globals.JOBS_SESSION_CONTEXT;
             this.resourceUri = vscode.Uri.parse(`zowe-jobs:/${profile.name}`);
-            JobFSProvider.instance.createDirectory(this.resourceUri);
+            JobFSProvider.instance.createDirectory(this.resourceUri, { isFilter: true });
         }
 
         if (session) {
@@ -221,7 +221,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
                     elementChildren[nodeTitle] = existing;
                 } else {
                     const jobNode = new Job(nodeTitle, vscode.TreeItemCollapsibleState.Collapsed, this, this.session, job, this.getProfile());
-                    JobFSProvider.instance.createDirectory(jobNode.resourceUri, job);
+                    JobFSProvider.instance.createDirectory(jobNode.resourceUri, { job });
 
                     jobNode.contextValue = globals.JOBS_JOB_CONTEXT;
                     if (job.retcode) {

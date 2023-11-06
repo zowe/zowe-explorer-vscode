@@ -98,7 +98,7 @@ export class DirEntry implements FsEntry {
 }
 
 export class FilterEntry extends DirEntry {
-    public filter: string;
+    public filter: Record<string, string> = {};
 
     public constructor(n: string) {
         super(n);

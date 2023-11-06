@@ -157,12 +157,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         file.data = bufBuilder.read() ?? new Uint8Array();
         file.etag = resp.apiResponse.etag;
         if (editor) {
-            // This is a hacky method and does not work for editors that aren't the active one,
-            // so we can make VSCode switch the active document to that tab and then "revert the file" to show latest contents
-            await vscode.commands.executeCommand("vscode.open", uri);
-            // Note that the command only affects files that are not dirty
-            // TODO: find a better method to reload editor tab with new contents
-            vscode.commands.executeCommand("workbench.action.files.revert");
+            await this._updateResourceInEditor(uri);
         }
     }
 
@@ -197,9 +192,6 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
      * @param options Options for writing the file
      * - `create` - Creates the file if it does not exist
      * - `overwrite` - Overwrites the content if the file exists
-     * - `forceUpload` - (optional) Forces an upload to the remote system even if the e-tag is out of date
-     * - `isConflict` - (optional) Whether the file to write is considered a "remote conflict" entry
-     * @returns
      */
     public async writeFile(uri: vscode.Uri, content: Uint8Array, options: { create: boolean; overwrite: boolean }): Promise<void> {
         const basename = path.posix.basename(uri.path);

@@ -10,25 +10,23 @@
  */
 
 import * as vscode from "vscode";
-import { BaseProvider, BufferBuilder, DirEntry, EntryMetadata, getInfoForUri } from "@zowe/zowe-explorer-api";
+import { BaseProvider, BufferBuilder, DirEntry, EntryMetadata, FilterEntry, getInfoForUri } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../../ZoweExplorerApiRegister";
 import { Profiles } from "../../Profiles";
 import { isJobEntry } from "./utils";
 import * as path from "path";
-import { JobEntry, SpoolEntry } from "./types";
-import { TextEncoder } from "util";
+import { JobEntry, JobFilter, SpoolEntry } from "./types";
 import { buildUniqueSpoolName } from "../../SpoolProvider";
 import { IJob, IJobFile } from "@zowe/cli";
+import { isFilterEntry } from "../../dataset/fs/utils";
 
 export class JobFSProvider extends BaseProvider implements vscode.FileSystemProvider {
     public onDidChangeFile: vscode.Event<vscode.FileChangeEvent[]>;
-    private _textEncoder: TextEncoder;
 
     private static _instance: JobFSProvider;
     private constructor() {
         super();
         this.root = new DirEntry("");
-        this._textEncoder = new TextEncoder();
     }
 
     public static get instance(): JobFSProvider {
@@ -40,39 +38,90 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
     }
 
     public watch(uri: vscode.Uri, options: { readonly recursive: boolean; readonly excludes: readonly string[] }): vscode.Disposable {
-        throw new Error("Method not implemented.");
+        // ignore, fires for all changes...
+        return new vscode.Disposable(() => {});
     }
 
+    /**
+     * Returns file statistics about a given URI.
+     * @param uri A URI that must exist as an entry in the provider
+     * @returns A structure containing file type, time, size and other metrics
+     */
     public stat(uri: vscode.Uri): vscode.FileStat | Thenable<vscode.FileStat> {
         return this._lookup(uri, false);
     }
+
+    /**
+     * Reads a directory located at the given URI.
+     * @param uri A valid URI within the provider
+     * @returns An array of tuples containing each entry name and type
+     */
     public async readDirectory(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
-        const jobEntry = this._lookupAsDirectory(uri, false) as DirEntry | JobEntry;
+        const fsEntry = this._lookupAsDirectory(uri, false) as FilterEntry | JobEntry;
         const uriInfo = getInfoForUri(uri, Profiles.getInstance());
         const results: [string, vscode.FileType][] = [];
 
-        if (isJobEntry(jobEntry)) {
-            const spoolFiles = await ZoweExplorerApiRegister.getJesApi(uriInfo.profile).getSpoolFiles(jobEntry.job.jobname, jobEntry.job.jobid);
+        const jesApi = ZoweExplorerApiRegister.getJesApi(uriInfo.profile);
+        if (isFilterEntry(fsEntry)) {
+            if (jesApi.getJobsByParameters) {
+                const jobFiles = await jesApi.getJobsByParameters({
+                    owner: fsEntry.filter["owner"],
+                    status: fsEntry.filter["status"],
+                    prefix: fsEntry.filter["prefix"],
+                });
+                for (const job of jobFiles) {
+                    if (!fsEntry.entries.has(job.jobid)) {
+                        const newJob = new JobEntry(job.jobid);
+                        newJob.job = job;
+                        fsEntry.entries.set(job.jobid, newJob);
+                    }
+                }
+            } else {
+                // TODO: make API call to filter by params w/ old method
+            }
+        } else if (isJobEntry(fsEntry)) {
+            const spoolFiles = await jesApi.getSpoolFiles(fsEntry.job.jobname, fsEntry.job.jobid);
             for (const spool of spoolFiles) {
                 const spoolName = buildUniqueSpoolName(spool);
-                if (!jobEntry.entries.has(spoolName)) {
+                if (!fsEntry.entries.has(spoolName)) {
                     const newSpool = new SpoolEntry(spoolName);
                     newSpool.spool = spool;
-                    jobEntry.entries.set(spoolName, newSpool);
+                    fsEntry.entries.set(spoolName, newSpool);
                 }
             }
-        } else {
-            // TODO: make API call to filter by params
         }
 
-        for (const entry of jobEntry.entries) {
-            results.push([entry[0], vscode.FileType.File]);
+        for (const entry of fsEntry.entries) {
+            results.push([entry[0], entry[1].type]);
         }
 
         return results;
     }
 
-    public createDirectory(uri: vscode.Uri, job?: IJob): void {
+    /**
+     * Updates a filter entry in the FileSystem with the given job filter.
+     * @param uri The URI associated with the filter entry to update
+     * @param filter The filter info to assign to the filter entry (owner, status, prefix)
+     */
+    public updateFilterForUri(uri: vscode.Uri, filter: JobFilter): void {
+        const filterEntry = this._lookupAsDirectory(uri, false) as DirEntry | FilterEntry;
+        if (!isFilterEntry(filterEntry)) {
+            return;
+        }
+
+        filterEntry.filter = {
+            ...filter,
+        };
+    }
+
+    /**
+     * Creates a directory entry (for jobs/profiles) in the provider at the given URI.
+     * @param uri The URI that represents a new directory path
+     * @param options Options for creating the directory
+     * - `isFilter` - (optional) Whether the directory entry is considered a "filter entry" (profile level) in the FileSystem
+     * - `job` - (optional) The job document associated with the "job entry" in the FileSystem
+     */
+    public createDirectory(uri: vscode.Uri, options?: { isFilter?: boolean; job?: IJob }): void {
         const basename = path.posix.basename(uri.path);
         const dirname = uri.with({ path: path.posix.dirname(uri.path) });
         const parent = this._lookupAsDirectory(dirname, false);
@@ -84,8 +133,11 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
               }
             : this._getInfoFromUri(uri);
 
-        const entry = new JobEntry(basename);
-        entry.job = job;
+        const EntryType = options.isFilter ? FilterEntry : JobEntry;
+        const entry = new EntryType(basename);
+        if (isJobEntry(entry)) {
+            entry.job = options.job;
+        }
         entry.metadata = profInfo;
         parent.entries.set(entry.name, entry);
         parent.mtime = Date.now();
@@ -93,7 +145,12 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
         this._fireSoon({ type: vscode.FileChangeType.Changed, uri: dirname }, { type: vscode.FileChangeType.Created, uri });
     }
 
-    public async fetchSpoolAtUri(uri: vscode.Uri, editor?: vscode.TextEditor | null): Promise<void> {
+    /**
+     * Fetches a file from the remote system at the given URI.
+     * @param uri The URI pointing to a valid file to fetch from the remote system
+     * @param editor (optional) An editor instance to reload if the URI is already open
+     */
+    public async fetchSpoolAtUri(uri: vscode.Uri, editor?: vscode.TextEditor | null): Promise<SpoolEntry> {
         const spoolEntry = this._lookupAsFile(uri, false) as SpoolEntry;
 
         // we need to fetch the contents from the mainframe since the file hasn't been accessed yet
@@ -112,23 +169,31 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
 
         spoolEntry.data = bufBuilder.read();
         if (editor) {
-            // This is a hacky method and does not work for editors that aren't the active one,
-            // so we can make VSCode switch the active document to that tab and then "revert the file" to show latest contents
-            await vscode.commands.executeCommand("vscode.open", uri);
-            // Note that the command only affects files that are not dirty
-            // TODO: find a better method to reload editor tab with new contents
-            vscode.commands.executeCommand("workbench.action.files.revert");
+            await this._updateResourceInEditor(uri);
         }
+
+        return spoolEntry;
     }
 
+    /**
+     * Reads a spool file at the given URI and fetches it from the remote system (if not yet accessed).
+     * @param uri The URI pointing to a valid spool file to fetch from the remote system
+     * @returns The spool file's contents as an array of bytes
+     */
     public async readFile(uri: vscode.Uri): Promise<Uint8Array> {
-        // TODO: Fetch contents of spool file and return
-        const file = this._lookupAsFile(uri, false);
-
-        await this.fetchSpoolAtUri(uri);
-        return file.data;
+        return (await this.fetchSpoolAtUri(uri)).data;
     }
 
+    /**
+     * Attempts to write a file at the given URI.
+     * @param uri The URI pointing to a file entry that should be written
+     * @param content The content to write to the file, as an array of bytes
+     * @param options Options for writing the file
+     * - `create` - Creates the file if it does not exist
+     * - `overwrite` - Overwrites the content if the file exists
+     * - `name` - (optional) Provide a name for the file to write in the FileSystem
+     * - `spool` - (optional) The "spool document" containing data from the API
+     */
     public writeFile(
         uri: vscode.Uri,
         content: Uint8Array,
@@ -168,6 +233,11 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
         }
     }
 
+    /**
+     * Returns metadata about the spool file or job entry from the context of z/OS.
+     * @param uri A URI with a path in the format `zowe-*:/{lpar_name}/{full_path}?`
+     * @returns Metadata for the URI that contains the profile instance and resource path
+     */
     private _getInfoFromUri(uri: vscode.Uri): EntryMetadata {
         const uriInfo = getInfoForUri(uri, Profiles.getInstance());
         return {
@@ -176,12 +246,16 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
         };
     }
 
+    /**
+     * Deletes a spool file or job at the given URI.
+     * @param uri The URI that points to the file/folder to delete
+     * @param options Options for deleting the spool file or job
+     * - `deleteRemote` - Deletes the job from the remote system if set to true.
+     */
     public async delete(uri: vscode.Uri, options: { readonly recursive: boolean; readonly deleteRemote: boolean }): Promise<void> {
         const entry = this._lookup(uri, false);
-        if (!isJobEntry(entry)) {
-            // only support deleting jobs, not spool files
-            return;
-        }
+        const isJob = isJobEntry(entry);
+
         const parent = this._lookupAsDirectory(
             uri.with({
                 path: uri.path.substring(0, uri.path.indexOf("/", 1)),
@@ -190,7 +264,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
         );
 
         const profInfo = getInfoForUri(uri, Profiles.getInstance());
-        if (options.deleteRemote) {
+        if (options.deleteRemote && isJob) {
             await ZoweExplorerApiRegister.getJesApi(profInfo.profile).deleteJob(entry.job.jobname, entry.job.jobid);
         }
         parent.entries.delete(entry.name);

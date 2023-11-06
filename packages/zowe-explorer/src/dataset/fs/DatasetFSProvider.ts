@@ -61,7 +61,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         const results: [string, vscode.FileType][] = [];
 
         if (isFilterEntry(dsEntry)) {
-            const datasets = await ZoweExplorerApiRegister.getMvsApi(uriInfo.profile).dataSet(dsEntry.filter);
+            const datasets = await ZoweExplorerApiRegister.getMvsApi(uriInfo.profile).dataSet(dsEntry.filter["pattern"]);
 
             for (const ds of datasets.apiResponse?.items || []) {
                 let tempEntry = dsEntry.entries.get(ds.dsname);
@@ -109,7 +109,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             parent.entries.set(entry.name, entry);
         } else {
             const entry = new FilterEntry(basename);
-            entry.filter = filter;
+            entry.filter["pattern"] = filter;
             entry.metadata = profInfo;
             parent.entries.set(entry.name, entry);
         }

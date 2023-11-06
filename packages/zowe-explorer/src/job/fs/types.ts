@@ -13,6 +13,13 @@ import { IJob, IJobFile } from "@zowe/cli";
 import { DirEntry, EntryMetadata, FileEntry } from "@zowe/zowe-explorer-api";
 import { FilePermission, FileType } from "vscode";
 
+export type JobFilter = {
+    searchId: string;
+    owner: string;
+    prefix: string;
+    status: string;
+};
+
 export class SpoolEntry implements FileEntry {
     public name: string;
     public type: FileType;
