@@ -36,7 +36,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
     }
 
     /**
-     * @returns the USS FileSystemProvider singleton instance
+     * @returns the Data Set FileSystemProvider singleton instance
      */
     public static get instance(): DatasetFSProvider {
         if (!DatasetFSProvider._instance) {
@@ -50,10 +50,20 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         throw new Error("Method not implemented.");
     }
 
+    /**
+     * Returns file statistics about a given URI.
+     * @param uri A URI that must exist as an entry in the provider
+     * @returns A structure containing file type, time, size and other metrics
+     */
     public stat(uri: vscode.Uri): vscode.FileStat | Thenable<vscode.FileStat> {
         return this._lookup(uri, false);
     }
 
+    /**
+     * Reads a directory located at the given URI.
+     * @param uri A valid URI within the provider
+     * @returns An array of tuples containing each entry name and type
+     */
     public async readDirectory(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
         const dsEntry = this._lookupAsDirectory(uri, false);
         const uriInfo = getInfoForUri(uri, Profiles.getInstance());
@@ -67,9 +77,26 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 let tempEntry = dsEntry.entries.get(ds.dsname);
                 if (tempEntry == null) {
                     if (ds.dsorg === "PO" || ds.dsorg === "PO-E") {
+                        // Entry is a PDS
                         tempEntry = new PdsEntry(ds.dsname);
                     } else {
-                        tempEntry = new DsEntry(ds.dsname);
+                        // Entry is a data set (VSAM, migrated, PS)
+                        if (ds.dsorg === "VS") {
+                            // VSAM
+                            const dsName: string = ds.dsname;
+                            const endPoint = dsName.includes(".DATA") ? dsName.indexOf(".DATA") : dsName.indexOf(".INDEX");
+                            tempEntry = new DsEntry(endPoint > -1 ? dsName.substring(0, endPoint) : dsName);
+                        } else if (ds.migr?.toUpperCase() === "YES") {
+                            // migrated
+                            tempEntry = new DsEntry(ds.dsname);
+                        } else {
+                            // PS
+                            tempEntry = new DsEntry(ds.dsname);
+                        }
+                    }
+
+                    if (tempEntry == null) {
+                        continue;
                     }
                     dsEntry.entries.set(ds.dsname, tempEntry);
                 }
@@ -91,6 +118,10 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         return results;
     }
 
+    /**
+     * Creates a directory entry in the provider at the given URI.
+     * @param uri The URI that represents a new directory path
+     */
     public createDirectory(uri: vscode.Uri, filter?: string): void {
         const basename = path.posix.basename(uri.path);
         const dirname = uri.with({ path: path.posix.dirname(uri.path) });
@@ -119,6 +150,11 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         this._fireSoon({ type: vscode.FileChangeType.Changed, uri: dirname }, { type: vscode.FileChangeType.Created, uri });
     }
 
+    /**
+     * Fetches a data set from the remote system at the given URI.
+     * @param uri The URI pointing to a valid file to fetch from the remote system
+     * @param editor (optional) An editor instance to reload if the URI is already open
+     */
     public async fetchDatasetAtUri(uri: vscode.Uri, editor?: vscode.TextEditor | null): Promise<void> {
         const file = this._lookupAsFile(uri, false) as DsEntry;
         // we need to fetch the contents from the mainframe since the file hasn't been accessed yet
@@ -134,23 +170,20 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         file.data = bufBuilder.read() ?? new Uint8Array();
         file.etag = resp.apiResponse.etag;
         if (editor) {
-            // This is a hacky method and does not work for editors that aren't the active one,
-            // so we can make VSCode switch the active document to that tab and then "revert the file" to show latest contents
-            await vscode.commands.executeCommand("vscode.open", uri);
-            // Note that the command only affects files that are not dirty
-            // TODO: find a better method to reload editor tab with new contents
-            vscode.commands.executeCommand("workbench.action.files.revert");
+            await this._updateResourceInEditor(uri);
         }
     }
 
+    /**
+     * Reads a data set at the given URI and fetches it from the remote system (if not yet accessed).
+     * @param uri The URI pointing to a valid data set on the remote system
+     * @returns The data set's contents as an array of bytes
+     */
     public async readFile(uri: vscode.Uri): Promise<Uint8Array> {
-        // TODO: Fetch contents of spool file and return
         const file = this._lookupAsFile(uri, false);
         const profInfo = getInfoForUri(uri, Profiles.getInstance());
 
         if (!file.isConflictFile && profInfo.profile == null) {
-            // TODO: We might be able to support opening these links outside of Zowe Explorer,
-            // but at the moment, the session must be initialized first within the USS tree
             throw vscode.FileSystemError.FileNotFound(localize("localize.uss.profileNotFound", "Profile does not exist for this file."));
         }
 
@@ -163,6 +196,14 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         return file.data;
     }
 
+    /**
+     * Attempts to write a data set at the given URI.
+     * @param uri The URI pointing to a data set entry that should be written
+     * @param content The content to write to the data set, as an array of bytes
+     * @param options Options for writing the data set
+     * - `create` - Creates the data set if it does not exist
+     * - `overwrite` - Overwrites the content if the data set exists
+     */
     public async writeFile(uri: vscode.Uri, content: Uint8Array, options: { readonly create: boolean; readonly overwrite: boolean }): Promise<void> {
         const basename = path.posix.basename(uri.path);
         const parent = this._lookupParentDirectory(uri);
@@ -242,6 +283,11 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         this._fireSoon({ type: vscode.FileChangeType.Changed, uri });
     }
 
+    /**
+     * Returns metadata about the data set entry from the context of z/OS.
+     * @param uri A URI with a path in the format `zowe-*:/{lpar_name}/{full_path}?`
+     * @returns Metadata for the URI that contains the profile instance and path
+     */
     private _getInfoFromUri(uri: vscode.Uri): DsEntryMetadata {
         const uriInfo = getInfoForUri(uri, Profiles.getInstance());
         return new DsEntryMetadata({
@@ -254,7 +300,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         throw new Error("Method not implemented.");
     }
 
-    // unsupported
+    // TODO
     public rename(_oldUri: vscode.Uri, _newUri: vscode.Uri, _options: { readonly overwrite: boolean }): void | Thenable<void> {
         throw new Error("Method not implemented.");
     }

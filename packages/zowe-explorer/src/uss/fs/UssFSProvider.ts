@@ -108,6 +108,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             const response = await ZoweExplorerApiRegister.getUssApi(entry.metadata.profile).fileList(entry.metadata.path);
             for (const item of response.apiResponse.items) {
                 const itemName = item.name as string;
+                // exclude ".", "..", "..."
                 if (itemName.match(/^\.{1,3}$/)) {
                     continue;
                 }
@@ -115,7 +116,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                 const isDirectory = item.mode.startsWith("d");
                 const newEntryType = isDirectory ? vscode.FileType.Directory : vscode.FileType.File;
                 const entryExists = entry.entries.get(itemName);
-                // skip over entries that are of the same type
+                // skip over entries that are of the same type if they already exist
                 if (entryExists && entryExists.type === newEntryType) {
                     continue;
                 }
@@ -171,8 +172,6 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         const profInfo = getInfoForUri(uri, Profiles.getInstance());
 
         if (!file.isConflictFile && profInfo.profile == null) {
-            // TODO: We might be able to support opening these links outside of Zowe Explorer,
-            // but at the moment, the session must be initialized first within the USS tree
             throw vscode.FileSystemError.FileNotFound(localize("localize.uss.profileNotFound", "Profile does not exist for this file."));
         }
 
