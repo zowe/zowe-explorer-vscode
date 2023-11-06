@@ -46,6 +46,7 @@ export class BaseProvider {
     // map remote conflict URIs to local URIs
     protected _conflictMap: Record<string, vscode.Uri> = {};
     protected root: DirEntry;
+    public openedUris: vscode.Uri[] = [];
 
     protected constructor() {}
 
@@ -135,7 +136,31 @@ export class BaseProvider {
     }
 
     /**
-     * Triggers an update for the resource at the given URI to show its latest changes in the editor. 
+     * Adds an opened URI to the cache so we can see if it has been closed.
+     * @param uri the opened URI to keep track of
+     */
+    public cacheOpenedUri(uri: vscode.Uri): void {
+        this.openedUris.push(uri);
+    }
+
+    /**
+     * Invalidates the data for a file entry at a given URI.
+     * Also removes the URI from the opened URI cache.
+     * @param uri the URI whose data should be invalidated
+     */
+    public invalidateDataForUri(uri: vscode.Uri): void {
+        const entry = this._lookup(uri, true);
+        if (entry == null || !isFileEntry(entry)) {
+            return;
+        }
+
+        entry.data = null;
+        entry.wasAccessed = false;
+        this.openedUris = this.openedUris.filter((u) => u !== uri);
+    }
+
+    /**
+     * Triggers an update for the resource at the given URI to show its latest changes in the editor.
      * @param uri The URI that is open in an editor tab
      */
     protected async _updateResourceInEditor(uri: vscode.Uri): Promise<void> {

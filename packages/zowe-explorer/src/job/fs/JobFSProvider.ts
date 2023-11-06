@@ -181,7 +181,13 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
      * @returns The spool file's contents as an array of bytes
      */
     public async readFile(uri: vscode.Uri): Promise<Uint8Array> {
-        return (await this.fetchSpoolAtUri(uri)).data;
+        const spoolEntry = this._lookupAsFile(uri, false) as SpoolEntry;
+        if (!spoolEntry.wasAccessed) {
+            await this.fetchSpoolAtUri(uri);
+            spoolEntry.wasAccessed = true;
+        }
+
+        return spoolEntry.data;
     }
 
     /**

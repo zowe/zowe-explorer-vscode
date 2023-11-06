@@ -227,6 +227,24 @@ export async function initUSSProvider(context: vscode.ExtensionContext): Promise
             await UssFSProvider.instance.diffUseRemote(localUri);
         })
     );
+    context.subscriptions.push(
+        vscode.window.onDidChangeVisibleTextEditors((editors) => {
+            const ussUris = editors.map((e) => e.document.uri).filter((u) => u.scheme === "zowe-uss");
+            const closedOrMovedUris = UssFSProvider.instance.openedUris.filter((u) => ussUris.find((otherUri) => otherUri.path === u.path) == null);
+            for (const uri of closedOrMovedUris) {
+                UssFSProvider.instance.invalidateDataForUri(uri);
+            }
+        })
+    );
+    context.subscriptions.push(
+        vscode.workspace.onDidOpenTextDocument((doc) => {
+            if (doc.uri.scheme !== "zowe-uss") {
+                return;
+            }
+
+            UssFSProvider.instance.cacheOpenedUri(doc.uri);
+        })
+    );
 
     initSubscribers(context, ussFileProvider);
     return ussFileProvider;
