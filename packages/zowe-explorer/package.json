@@ -92,8 +92,8 @@
       },
       {
         "command": "zowe.editHistory",
-        "key": "ctrl+y",
-        "mac": "cmd+y"
+        "key": "ctrl+alt+y",
+        "mac": "cmd+alt+y"
       },
       {
         "command": "zowe.uss.copyUssFile",
