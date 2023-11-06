@@ -160,10 +160,9 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
      *
      * @param {IZoweJobTreeNode} node
      */
-    public saveSearch(node: IZoweJobTreeNode): IZoweJobTreeNode {
+    public saveSearch(node: IZoweJobTreeNode): void {
         ZoweLogger.trace("ZosJobsProvider.saveSearch called.");
         node.contextValue = contextually.asFavorite(node);
-        return node;
     }
     public saveFile(_document: vscode.TextDocument): void {
         throw new Error("Method not implemented.");
@@ -627,6 +626,31 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         // Update the favorites in settings file
         await this.updateFavorites();
         return;
+    }
+
+    public removeSearchHistory(name: string): void {
+        ZoweLogger.trace("ZosJobsProvider.removeSearchHistory called.");
+        this.mHistory.removeSearchHistory(name);
+    }
+
+    public resetSearchHistory(): void {
+        ZoweLogger.trace("ZosJobsProvider.resetSearchHistory called.");
+        this.mHistory.resetSearchHistory();
+    }
+
+    public getSessions(): string[] {
+        ZoweLogger.trace("DatasetTree.getSessions called.");
+        return this.mHistory.getSessions();
+    }
+
+    public getFileHistory(): string[] {
+        ZoweLogger.trace("DatasetTree.getFileHistory called.");
+        return this.mHistory.getFileHistory();
+    }
+
+    public getFavorites(): string[] {
+        ZoweLogger.trace("DatasetTree.getFavorites called.");
+        return this.mHistory.readFavorites();
     }
 
     public async getUserJobsMenuChoice(): Promise<FilterItem | undefined> {
@@ -1122,6 +1146,13 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
 
         // Fire "tree changed event" to reflect added polling context value
         this.mOnDidChangeTreeData.fire();
+    }
+
+    public sortBy(session: IZoweJobTreeNode): void {
+        if (session.children != null) {
+            session.children.sort(Job.sortJobs(session.sort));
+            this.nodeDataChanged(session);
+        }
     }
 }
 

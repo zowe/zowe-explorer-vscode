@@ -30,6 +30,7 @@ import { DatasetTree } from "../../src/dataset/DatasetTree";
 import { USSTree } from "../../src/uss/USSTree";
 import { ZoweLogger } from "../../src/utils/LoggerUtils";
 import { ZoweSaveQueue } from "../../src/abstract/ZoweSaveQueue";
+import { ProfilesUtils } from "../../src/utils/ProfilesUtils";
 
 jest.mock("vscode");
 jest.mock("fs");
@@ -139,6 +140,7 @@ async function createGlobalMocks() {
         appName: vscode.env.appName,
         uriScheme: vscode.env.uriScheme,
         expectedCommands: [
+            "zowe.updateSecureCredentials",
             "zowe.extRefresh",
             "zowe.all.config.init",
             "zowe.ds.addSession",
@@ -176,6 +178,8 @@ async function createGlobalMocks() {
             "zowe.ds.enableValidation",
             "zowe.ds.ssoLogin",
             "zowe.ds.ssoLogout",
+            "zowe.ds.sortBy",
+            "zowe.ds.filterBy",
             "zowe.uss.addFavorite",
             "zowe.uss.removeFavorite",
             "zowe.uss.addSession",
@@ -238,9 +242,11 @@ async function createGlobalMocks() {
             "zowe.jobs.startPolling",
             "zowe.jobs.stopPolling",
             "zowe.jobs.cancelJob",
+            "zowe.jobs.sortBy",
             "zowe.manualPoll",
-            "zowe.updateSecureCredentials",
+            "zowe.editHistory",
             "zowe.promptCredentials",
+            "zowe.profileManagement",
             "zowe.openRecentMember",
             "zowe.searchInAllLoadedItems",
             "zowe.ds.deleteProfile",
@@ -447,6 +453,7 @@ describe("Extension Unit Tests", () => {
     let globalMocks;
     beforeAll(async () => {
         globalMocks = await createGlobalMocks();
+        jest.spyOn(fs, "readFileSync").mockReturnValue(Buffer.from(JSON.stringify({ overrides: { credentialManager: "@zowe/cli" } }), "utf-8"));
         Object.defineProperty(zowe.imperative, "ProfileInfo", {
             value: globalMocks.mockImperativeProfileInfo,
             configurable: true,
@@ -558,6 +565,7 @@ describe("Extension Unit Tests", () => {
 describe("Extension Unit Tests - THEIA", () => {
     it("Tests that activate() works correctly for Theia", async () => {
         const globalMocks = await createGlobalMocks();
+        jest.spyOn(ProfilesUtils, "getCredentialManagerOverride").mockReturnValueOnce("@zowe/cli");
 
         Object.defineProperty(vscode.env, "appName", { value: "Eclipse Theia" });
         Object.defineProperty(vscode.env, "uriScheme", { value: "theia" });

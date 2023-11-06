@@ -23,6 +23,7 @@ export * from "./tree/ZoweExplorerTreeApi";
 export * from "./tree/ZoweTreeNode";
 export * from "./tree/IZoweTree";
 export * from "./tree/IZoweTreeNode";
+export * from "./tree/sorting";
 export * from "./utils";
 export * from "./vscode/ZoweVsCodeExtension";
 export * from "./vscode/ui";

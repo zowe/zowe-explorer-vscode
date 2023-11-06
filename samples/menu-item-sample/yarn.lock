@@ -356,10 +356,10 @@
   resolved "https://registry.npmjs.org/@zowe/secrets-for-zowe-sdk/-/secrets-for-zowe-sdk-7.18.0.tgz#d7974ac234e79ce220e15fc4f7f17d880754b739"
   integrity sha512-lWs7oVjXpotWw8bu4NxPszu+MiTJgzdiYgj/0q0OBYLJdoZtKBTGRSohtoLZWpu6mfObiEICI1k8UDE8v7xbPw==
 
-"@zowe/secrets-for-zowe-sdk@7.18.1":
-  version "7.18.1"
-  resolved "https://registry.npmjs.org/@zowe/secrets-for-zowe-sdk/-/secrets-for-zowe-sdk-7.18.1.tgz#546a63f5ed880418f0e0496d0218c284c815c3ee"
-  integrity sha512-bcAnauDpTQXCPT8rMx2wrZwhg6xih1lDujG20h1sUGJC5eqvsNCq6gvpOtcahEpUF25oBJ931dKlIu1T99LQ7w==
+"@zowe/secrets-for-zowe-sdk@7.18.4":
+  version "7.18.4"
+  resolved "https://registry.npmjs.org/@zowe/secrets-for-zowe-sdk/-/secrets-for-zowe-sdk-7.18.4.tgz#b755a063217a45bdffffb8d21c30afaad136b08c"
+  integrity sha512-eeVYZ+s9OlgqnHVVopJj3Bz4Ir6gDos5ZiT9Zf+gB6DQaeHFyvC4a2JZrLu9bEMAiVyiCTJydRaspcN4xoEi9Q==
 
 "@zowe/zos-console-for-zowe-sdk@7.18.0":
   version "7.18.0"
@@ -412,14 +412,12 @@
   resolved "https://registry.npmjs.org/@zowe/zosmf-for-zowe-sdk/-/zosmf-for-zowe-sdk-7.18.0.tgz#1d7be74dae8a7844386a50b3b581046dd8febe2c"
   integrity sha512-rrk/fQEOb7izgZnlsxFcniuY+NZaDZPDI90/ePzdWSQZPeA1lzq42Wzww9KXMpnZa3sliXXe9qfLBnrCnZYCbg==
 
-"@zowe/zowe-explorer-api@^2.10.0":
-  version "2.10.0"
-  resolved "https://registry.npmjs.org/@zowe/zowe-explorer-api/-/zowe-explorer-api-2.10.0.tgz#a015dfb5dfb47549b86fc13359e9116cd150f39a"
-  integrity sha512-wx/IikaoMYWD/MCkSlSAGcDVC9JopF7jh321cTNRn/sAWpvBxVywaQ9YQniKZ9ADy6FyDIOR8/gTWLb47TElrQ==
+"@zowe/zowe-explorer-api@file:../../packages/zowe-explorer-api":
+  version "2.12.0-SNAPSHOT"
   dependencies:
     "@types/vscode" "^1.53.2"
     "@zowe/cli" "^7.18.0"
-    "@zowe/secrets-for-zowe-sdk" "7.18.1"
+    "@zowe/secrets-for-zowe-sdk" "7.18.4"
     handlebars "^4.7.7"
     semver "^7.5.3"
 

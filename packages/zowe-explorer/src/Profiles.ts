@@ -30,13 +30,14 @@ import {
     getFullPath,
     getZoweDir,
 } from "@zowe/zowe-explorer-api";
-import { errorHandling, FilterDescriptor, FilterItem, ProfilesUtils, isUsingTokenAuth } from "./utils/ProfilesUtils";
+import { errorHandling, FilterDescriptor, FilterItem, ProfilesUtils } from "./utils/ProfilesUtils";
 import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
 import { ZoweExplorerExtender } from "./ZoweExplorerExtender";
 import * as globals from "./globals";
 import * as nls from "vscode-nls";
 import { SettingsConfig } from "./utils/SettingsConfig";
 import { ZoweLogger } from "./utils/LoggerUtils";
+import { TreeProviders } from "./shared/TreeProviders";
 
 // Set up localization
 nls.config({
@@ -68,6 +69,10 @@ export class Profiles extends ProfilesCache {
     private jobsSchema: string = globals.SETTINGS_JOBS_HISTORY;
     private mProfileInfo: zowe.imperative.ProfileInfo;
     private profilesOpCancelled = localize("profiles.operation.cancelled", "Operation Cancelled");
+    private manualEditMsg = localize(
+        "profiles.manualEditMsg",
+        "The Team configuration file has been opened in the editor. Editing or removal of profiles will need to be done manually."
+    );
     public constructor(log: zowe.imperative.Logger, cwd?: string) {
         super(log, cwd);
     }
@@ -88,7 +93,7 @@ export class Profiles extends ProfilesCache {
     public async checkCurrentProfile(theProfile: zowe.imperative.IProfileLoaded): Promise<IProfileValidation> {
         ZoweLogger.trace("Profiles.checkCurrentProfile called.");
         let profileStatus: IProfileValidation;
-        const usingTokenAuth = await isUsingTokenAuth(theProfile.name);
+        const usingTokenAuth = await ProfilesUtils.isUsingTokenAuth(theProfile.name);
 
         if (usingTokenAuth && !theProfile.profile.tokenType) {
             const error = new zowe.imperative.ImperativeError({
@@ -443,6 +448,7 @@ export class Profiles extends ProfilesCache {
             const currentProfile = await this.getProfileFromConfig(profileLoaded.name);
             const filePath = currentProfile.profLoc.osLoc[0];
             await this.openConfigFile(filePath);
+            Gui.showMessage(this.manualEditMsg);
             return;
         }
         const editSession = this.loadNamedProfile(profileLoaded.name, profileLoaded.type).profile;
@@ -643,10 +649,12 @@ export class Profiles extends ProfilesCache {
 
             const impConfig: zowe.imperative.IImperativeConfig = zowe.getImperativeConfig();
             const knownCliConfig: zowe.imperative.ICommandProfileTypeConfiguration[] = impConfig.profiles;
-            // add extenders config info from global variable
-            globals.EXTENDER_CONFIG.forEach((item) => {
+
+            const extenderinfo = this.getConfigArray();
+            extenderinfo.forEach((item) => {
                 knownCliConfig.push(item);
             });
+
             knownCliConfig.push(impConfig.baseProfile);
             config.setSchema(zowe.imperative.ConfigSchema.buildSchema(knownCliConfig));
 
@@ -687,6 +695,7 @@ export class Profiles extends ProfilesCache {
         const existingLayers = await this.getConfigLayers();
         if (existingLayers.length === 1) {
             await this.openConfigFile(existingLayers[0].path);
+            Gui.showMessage(this.manualEditMsg);
         }
         if (existingLayers && existingLayers.length > 1) {
             const choice = await this.getConfigLocationPrompt("edit");
@@ -697,6 +706,7 @@ export class Profiles extends ProfilesCache {
                             await this.openConfigFile(file.path);
                         }
                     }
+                    Gui.showMessage(this.manualEditMsg);
                     break;
                 case "global":
                     for (const file of existingLayers) {
@@ -704,12 +714,12 @@ export class Profiles extends ProfilesCache {
                             await this.openConfigFile(file.path);
                         }
                     }
+                    Gui.showMessage(this.manualEditMsg);
                     break;
                 default:
                     Gui.showMessage(this.profilesOpCancelled);
-                    return;
+                    break;
             }
-            return;
         }
     }
 
@@ -1165,8 +1175,10 @@ export class Profiles extends ProfilesCache {
             serviceProfile = this.loadNamedProfile(label.trim());
         }
         // This check will handle service profiles that have username and password
-        if (serviceProfile.profile.user && serviceProfile.profile.password) {
-            Gui.showMessage(localize("ssoAuth.noBase", "This profile does not support token authentication."));
+        if (ProfilesUtils.isProfileUsingBasicAuth(serviceProfile)) {
+            Gui.showMessage(
+                localize("ssoAuth.usingBasicAuth", "This profile is using basic authentication and does not support token authentication.")
+            );
             return;
         }
 
@@ -1174,7 +1186,7 @@ export class Profiles extends ProfilesCache {
             loginTokenType = await ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).getTokenTypeName();
         } catch (error) {
             ZoweLogger.warn(error);
-            Gui.showMessage(localize("ssoAuth.noBase", "This profile does not support token authentication."));
+            Gui.showMessage(localize("ssoLogin.tokenType.error", "Error getting supported tokenType value for profile {0}", serviceProfile.name));
             return;
         }
         try {
@@ -1183,7 +1195,6 @@ export class Profiles extends ProfilesCache {
             } else {
                 await this.loginWithBaseProfile(serviceProfile, loginTokenType, node);
             }
-            Gui.showMessage(localize("ssoLogin.successful", "Login to authentication service was successful."));
         } catch (err) {
             const message = localize("ssoLogin.error", "Unable to log in with {0}. {1}", serviceProfile.name, err?.message);
             ZoweLogger.error(message);
@@ -1192,15 +1203,81 @@ export class Profiles extends ProfilesCache {
         }
     }
 
+    public clearDSFilterFromTree(node: IZoweNodeType): void {
+        if (!TreeProviders.ds?.mSessionNodes || !TreeProviders.ds?.mSessionNodes.length) {
+            return;
+        }
+        const dsNode: IZoweDatasetTreeNode = TreeProviders.ds.mSessionNodes.find(
+            (sessionNode: IZoweDatasetTreeNode) => sessionNode.getProfile()?.name === node.getProfile()?.name
+        );
+        if (!dsNode) {
+            return;
+        }
+        dsNode.tooltip &&= node.getProfile()?.name;
+        dsNode.description &&= "";
+        dsNode.pattern &&= "";
+        TreeProviders.ds.flipState(dsNode, false);
+        TreeProviders.ds.refreshElement(dsNode);
+    }
+
+    public clearUSSFilterFromTree(node: IZoweNodeType): void {
+        if (!TreeProviders.uss?.mSessionNodes || !TreeProviders.uss?.mSessionNodes.length) {
+            return;
+        }
+        const ussNode: IZoweUSSTreeNode = TreeProviders.uss.mSessionNodes.find(
+            (sessionNode: IZoweUSSTreeNode) => sessionNode.getProfile()?.name === node.getProfile()?.name
+        );
+        if (!ussNode) {
+            return;
+        }
+        ussNode.tooltip &&= node.getProfile()?.name;
+        ussNode.description &&= "";
+        ussNode.fullPath &&= "";
+        TreeProviders.uss.flipState(ussNode, false);
+        TreeProviders.uss.refreshElement(ussNode);
+    }
+
+    public clearJobFilterFromTree(node: IZoweNodeType): void {
+        if (!TreeProviders.job?.mSessionNodes || !TreeProviders.job?.mSessionNodes.length) {
+            return;
+        }
+        const jobNode: IZoweJobTreeNode = TreeProviders.job.mSessionNodes.find(
+            (sessionNode: IZoweJobTreeNode) => sessionNode.getProfile()?.name === node.getProfile()?.name
+        );
+        if (!jobNode) {
+            return;
+        }
+        jobNode.tooltip &&= node.getProfile()?.name;
+        jobNode.description &&= "";
+        jobNode.owner &&= "";
+        jobNode.prefix &&= "";
+        jobNode.status &&= "";
+        jobNode.filtered &&= false;
+        jobNode.children &&= [];
+        TreeProviders.job.flipState(jobNode, false);
+        TreeProviders.job.refreshElement(jobNode);
+    }
+
+    public clearFilterFromAllTrees(node: IZoweNodeType): void {
+        this.clearDSFilterFromTree(node);
+        this.clearUSSFilterFromTree(node);
+        this.clearJobFilterFromTree(node);
+    }
+
     public async ssoLogout(node: IZoweNodeType): Promise<void> {
         ZoweLogger.trace("Profiles.ssoLogout called.");
         const serviceProfile = node.getProfile();
         // This check will handle service profiles that have username and password
-        if (serviceProfile.profile?.user && serviceProfile.profile?.password) {
-            Gui.showMessage(localize("ssoAuth.noBase", "This profile does not support token authentication."));
+        if (ProfilesUtils.isProfileUsingBasicAuth(serviceProfile)) {
+            Gui.showMessage(
+                localize("ssoAuth.usingBasicAuth", "This profile is using basic authentication and does not support token authentication.")
+            );
             return;
         }
+
         try {
+            this.clearFilterFromAllTrees(node);
+
             // this will handle extenders
             if (serviceProfile.type !== "zosmf" && serviceProfile.profile?.tokenType !== zowe.imperative.SessConstants.TOKEN_TYPE_APIML) {
                 await ZoweExplorerApiRegister.getInstance()
@@ -1247,13 +1324,16 @@ export class Profiles extends ProfilesCache {
         if (!profileName) {
             return [];
         }
-        if ((await this.getProfileInfo()).usingTeamConfig) {
+        const usingSecureCreds = !SettingsConfig.getDirectValue(globals.SETTINGS_SECURE_CREDENTIALS_ENABLED);
+        if ((await this.getProfileInfo()).usingTeamConfig && !usingSecureCreds) {
             const config = (await this.getProfileInfo()).getTeamConfig();
             return config.api.secure.securePropsForProfile(profileName);
         }
         const profAttrs = await this.getProfileFromConfig(profileName);
         const mergedArgs = (await this.getProfileInfo()).mergeArgsForProfile(profAttrs);
-        return mergedArgs.knownArgs.filter((arg) => arg.secure).map((arg) => arg.argName);
+        return mergedArgs.knownArgs
+            .filter((arg) => arg.secure || arg.argName === "tokenType" || arg.argName === "tokenValue")
+            .map((arg) => arg.argName);
     }
 
     private async loginWithBaseProfile(serviceProfile: zowe.imperative.IProfileLoaded, loginTokenType: string, node?: IZoweNodeType): Promise<void> {
@@ -1286,6 +1366,7 @@ export class Profiles extends ProfilesCache {
                     profile: { ...node.getProfile().profile, ...updBaseProfile },
                 });
             }
+            Gui.showMessage(localize("ssoLogin.successful", "Login to authentication service was successful."));
         }
     }
 
@@ -1311,6 +1392,7 @@ export class Profiles extends ProfilesCache {
                 profile: { ...node.getProfile().profile, ...session },
             });
         }
+        Gui.showMessage(localize("ssoLogin.successful", "Login to authentication service was successful."));
     }
 
     private async getConfigLocationPrompt(action: string): Promise<string> {

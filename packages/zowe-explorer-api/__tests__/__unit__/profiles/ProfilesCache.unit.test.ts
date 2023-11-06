@@ -85,6 +85,17 @@ const baseProfileWithToken = {
         tokenValue: "baseToken",
     },
 };
+const profilemetadata: zowe.imperative.ICommandProfileTypeConfiguration[] = [
+    {
+        type: "acme",
+        schema: {
+            type: "object",
+            title: "acme profile1",
+            description: "A profile to execute commands",
+            properties: {},
+        },
+    },
+];
 
 function createProfInfoMock(profiles: Partial<zowe.imperative.IProfileLoaded>[]): zowe.imperative.ProfileInfo {
     return {
@@ -151,6 +162,20 @@ describe("ProfilesCache", () => {
         const keyring = ProfilesCache.requireKeyring();
         expect(keyring).toBeDefined();
         expect(Object.keys(keyring).length).toBe(5);
+    });
+
+    it("addToConfigArray should set the profileTypeConfigurations array", () => {
+        const profCache = new ProfilesCache(fakeLogger as unknown as zowe.imperative.Logger);
+        profilemetadata.push(profilemetadata[0]);
+        profCache.addToConfigArray(profilemetadata);
+        expect(profCache.profileTypeConfigurations).toEqual(profilemetadata.filter((a, index) => index == 0));
+    });
+
+    it("getConfigArray should return the data of profileTypeConfigurations Array", () => {
+        const profCache = new ProfilesCache(fakeLogger as unknown as zowe.imperative.Logger);
+        profCache.profileTypeConfigurations = profilemetadata;
+        const res = profCache.getConfigArray();
+        expect(res).toEqual(profilemetadata);
     });
 
     it("loadNamedProfile should find profiles by name and type", () => {

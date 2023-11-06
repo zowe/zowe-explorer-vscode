@@ -112,11 +112,6 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
     }
 
     public async putContents(inputFilePath: string, dataSetName: string, options: IUploadOptions): Promise<zowe.IZosFilesResponse> {
-        const transferOptions = {
-            transferType: options.binary ? TRANSFER_TYPE_BINARY : TRANSFER_TYPE_ASCII,
-            localFile: inputFilePath,
-            encoding: options.encoding,
-        };
         const file = path.basename(inputFilePath).replace(/[^a-z0-9]+/gi, "");
         const member = file.substr(0, MAX_MEMBER_NAME_LEN);
         let targetDataset: string;
@@ -135,24 +130,37 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
             targetDataset = dataSetName + "(" + member + ")";
         }
         const result = this.getDefaultResponse();
+        const profile = this.checkedProfile();
+
+        // Save-Save with FTP requires loading the file first
+        // (moved this block above connection request so only one connection is active at a time)
+        if (options.returnEtag && options.etag) {
+            const contentsTag = await this.getContentsTag(dataSetName);
+            if (contentsTag && contentsTag !== options.etag) {
+                result.success = false;
+                result.commandResponse = "Rest API failure with HTTP(S) status 412 Save conflict.";
+                return result;
+            }
+        }
         let connection;
         try {
-            connection = await this.ftpClient(this.checkedProfile());
+            connection = await this.ftpClient(profile);
             if (!connection) {
                 ZoweLogger.logImperativeMessage(result.commandResponse, MessageSeverity.ERROR);
                 throw new Error(result.commandResponse);
             }
-            // Save-Save with FTP requires loading the file first
-            if (options.returnEtag && options.etag) {
-                const contentsTag = await this.getContentsTag(dataSetName);
-                if (contentsTag && contentsTag !== options.etag) {
-                    result.success = false;
-                    result.commandResponse = "Rest API failure with HTTP(S) status 412 Save conflict.";
-                    return result;
-                }
-            }
             const lrecl: number = dsAtrribute.apiResponse.items[0].lrecl;
             const data = fs.readFileSync(inputFilePath, { encoding: "utf8" });
+            const transferOptions: Record<string, any> = {
+                transferType: options.binary ? TRANSFER_TYPE_BINARY : TRANSFER_TYPE_ASCII,
+                localFile: inputFilePath,
+                encoding: options.encoding,
+            };
+            if (profile.profile.secureFtp && data === "") {
+                // substitute single space for empty DS contents when saving (avoids FTPS error)
+                transferOptions.content = " ";
+                delete transferOptions.localFile;
+            }
             const lines = data.split(/\r?\n/);
             const foundIndex = lines.findIndex((line) => line.length > lrecl);
             if (foundIndex !== -1) {
@@ -172,6 +180,9 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
             await DataSetUtils.uploadDataSet(connection, targetDataset, transferOptions);
             result.success = true;
             if (options.returnEtag) {
+                // release this connection instance because a new one will be made with getContentsTag
+                this.releaseConnection(connection);
+                connection = null;
                 const contentsTag = await this.getContentsTag(dataSetName);
                 result.apiResponse = [
                     {
@@ -242,15 +253,17 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
     }
 
     public async createDataSetMember(dataSetName: string, options?: IUploadOptions): Promise<zowe.IZosFilesResponse> {
+        const profile = this.checkedProfile();
         const transferOptions = {
-            transferType: options ? TRANSFER_TYPE_BINARY : TRANSFER_TYPE_ASCII,
-            content: "",
+            transferType: options.binary ? TRANSFER_TYPE_BINARY : TRANSFER_TYPE_ASCII,
+            // we have to provide a single space for content over FTPS, or it will fail to upload
+            content: profile.profile.secureFtp ? " " : "",
             encoding: options.encoding,
         };
         const result = this.getDefaultResponse();
         let connection;
         try {
-            connection = await this.ftpClient(this.checkedProfile());
+            connection = await this.ftpClient(profile);
             if (!connection) {
                 throw new Error(result.commandResponse);
             }
@@ -359,6 +372,7 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
         };
         const loadResult = await this.getContents(dataSetName, options);
         const etag: string = loadResult.apiResponse.etag;
+        fs.rmSync(tmpFileName, { force: true });
         return etag;
     }
     private getDefaultResponse(): zowe.IZosFilesResponse {

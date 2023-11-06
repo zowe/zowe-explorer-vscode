@@ -35,7 +35,7 @@ export let DS_DIR: string;
 export let CONFIG_PATH; // set during activate
 export let ISTHEIA = false; // set during activate
 export let LOG: imperative.Logger;
-export const COMMAND_COUNT = 110;
+export const COMMAND_COUNT = 115;
 export const MAX_SEARCH_HISTORY = 5;
 export const MAX_FILE_HISTORY = 10;
 export const MS_PER_SEC = 1000;
@@ -94,6 +94,7 @@ export const SETTINGS_DS_HISTORY = "zowe.ds.history";
 export const SETTINGS_USS_HISTORY = "zowe.uss.history";
 export const SETTINGS_JOBS_HISTORY = "zowe.jobs.history";
 export const SETTINGS_SECURE_CREDENTIALS_ENABLED = "zowe.security.secureCredentialsEnabled";
+export const SETTINGS_CHECK_FOR_CUSTOM_CREDENTIAL_MANAGERS = "zowe.security.checkForCustomCredentialManagers";
 export const LOGGER_SETTINGS = "zowe.logger";
 export const EXTENDER_CONFIG: imperative.ICommandProfileTypeConfiguration[] = [];
 export const ZOWE_CLI_SCM = "@zowe/cli";
@@ -279,6 +280,7 @@ export enum JobPickerTypes {
 export const SEPARATORS = {
     BLANK: { kind: vscode.QuickPickItemKind.Separator, label: "" },
     RECENT_FILTERS: { kind: vscode.QuickPickItemKind.Separator, label: localize("zowe.separator.recentFilters", "Recent Filters") },
+    OPTIONS: { kind: vscode.QuickPickItemKind.Separator, label: localize("zowe.separator.options", "Options") },
 };
 
 /**

@@ -15,6 +15,7 @@ import isEqual from "lodash.isequal";
 const vscodeApi = acquireVsCodeApi();
 
 export function App() {
+  const notSupported = "NOT SUPPORTED";
   const [readonly, setReadonly] = useState(false);
   const [allowUpdate, setAllowUpdate] = useState(false);
   const [attributes, setAttributes] = useState<Record<"current" | "initial", FileAttributes | null>>({
@@ -117,6 +118,7 @@ export function App() {
           };
           return all;
         }, {}),
+        tag: attributes.tag ?? notSupported,
       };
 
       setAttributes({
@@ -161,6 +163,17 @@ export function App() {
         <pre style={{ fontSize: "1.25em" }}>{attributes.current.name}</pre>
       </strong>
       <VSCodeDivider />
+      {attributes.initial?.directory ?? false ? null : (
+        <div style={{ marginTop: "1em", display: "flex", marginLeft: "1em" }}>
+          <VSCodeTextField
+            readonly={attributes.current.tag === notSupported}
+            value={attributes.current.tag}
+            onInput={(e: any) => updateFileAttributes("tag", e.target.value)}
+          >
+            Tag
+          </VSCodeTextField>
+        </div>
+      )}
       <div style={{ marginTop: "1em" }}>
         <div style={{ maxWidth: "fit-content" }}>
           <div style={{ display: "flex", marginLeft: "1em" }}>

@@ -147,6 +147,14 @@ export class ZosmfUssApi extends ZosmfApiCommon implements ZoweExplorerApi.IUss 
 
     public async updateAttributes(ussPath: string, attributes: Partial<FileAttributes>): Promise<zowe.IZosFilesResponse> {
         try {
+            if (attributes.tag) {
+                await zowe.Utilities.putUSSPayload(this.getSession(), ussPath, {
+                    request: "chtag",
+                    action: "set",
+                    type: "text",
+                    codeset: attributes.tag !== null ? attributes.tag.toString() : attributes.tag,
+                });
+            }
             if ((attributes.group || attributes.gid) && (attributes.owner || attributes.uid)) {
                 await zowe.Utilities.putUSSPayload(this.getSession(), ussPath, {
                     request: "chown",
@@ -161,7 +169,6 @@ export class ZosmfUssApi extends ZosmfApiCommon implements ZoweExplorerApi.IUss 
                     recursive: true,
                 });
             }
-
             if (attributes.perms) {
                 await zowe.Utilities.putUSSPayload(this.getSession(), ussPath, {
                     request: "chmod",
@@ -204,6 +211,14 @@ export class ZosmfUssApi extends ZosmfApiCommon implements ZoweExplorerApi.IUss 
             commandResponse: null,
             apiResponse: result,
         };
+    }
+
+    public async getTag(ussPath: string): Promise<string> {
+        const response = await zowe.Utilities.putUSSPayload(this.getSession(), ussPath, {
+            request: "chtag",
+            action: "list",
+        });
+        return JSON.parse(response.toString()).stdout[0].split(" ")[1] as string;
     }
 }
 

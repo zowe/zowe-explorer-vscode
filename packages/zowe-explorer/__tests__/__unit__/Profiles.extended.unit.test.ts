@@ -38,6 +38,7 @@ import { createIJobObject, createJobsTree } from "../../__mocks__/mockCreators/j
 import * as path from "path";
 import { SettingsConfig } from "../../src/utils/SettingsConfig";
 import { ZoweLogger } from "../../src/utils/LoggerUtils";
+import { TreeProviders } from "../../src/shared/TreeProviders";
 
 jest.mock("child_process");
 jest.mock("fs");
@@ -343,6 +344,8 @@ describe("Profiles Unit Tests - Function createNewConnection for v1 Profiles", (
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
+        jest.spyOn(utils.ProfilesUtils, "getCredentialManagerOverride").mockReturnValueOnce("@zowe/cli");
+
         jest.spyOn(globalMocks.mockProfileInstance, "getSchema").mockReturnValue(blockMocks.testSchemas);
         jest.spyOn(globalMocks.mockProfileInstance, "urlInfo").mockReturnValue(globalMocks.mockUrlInfo);
         jest.spyOn(globalMocks.mockProfileInstance, "userInfo").mockReturnValue(globalMocks.testProfile.profile.user);
@@ -380,6 +383,7 @@ describe("Profiles Unit Tests - Function createNewConnection for v1 Profiles", (
     it("Tests that createNewConnection returns 'fake' if the port is undefined and portInfo() returns correct port", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
+        jest.spyOn(utils.ProfilesUtils, "getCredentialManagerOverride").mockReturnValueOnce("@zowe/cli");
         const customURLInfo = {
             valid: true,
             protocol: "https",
@@ -427,6 +431,7 @@ describe("Profiles Unit Tests - Function createNewConnection for v1 Profiles", (
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
+        jest.spyOn(utils.ProfilesUtils, "getCredentialManagerOverride").mockReturnValueOnce("@zowe/cli");
         jest.spyOn(globalMocks.mockProfileInstance, "getSchema").mockReturnValueOnce(blockMocks.testSchemas);
         jest.spyOn(globalMocks.mockProfileInstance, "urlInfo").mockReturnValueOnce(globalMocks.mockUrlInfo);
         jest.spyOn(globalMocks.mockProfileInstance, "userInfo").mockReturnValueOnce(globalMocks.testProfile.profile.user);
@@ -450,6 +455,7 @@ describe("Profiles Unit Tests - Function createNewConnection for v1 Profiles", (
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
+        jest.spyOn(utils.ProfilesUtils, "getCredentialManagerOverride").mockReturnValueOnce("@zowe/cli");
         jest.spyOn(globalMocks.mockProfileInstance, "getSchema").mockReturnValueOnce(blockMocks.testSchemas);
         jest.spyOn(globalMocks.mockProfileInstance, "urlInfo").mockReturnValueOnce(globalMocks.mockUrlInfo);
         jest.spyOn(globalMocks.mockProfileInstance, "userInfo").mockReturnValueOnce(globalMocks.testProfile.profile.user);
@@ -502,6 +508,7 @@ describe("Profiles Unit Tests - Function createNewConnection for v1 Profiles", (
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
+        jest.spyOn(utils.ProfilesUtils, "getCredentialManagerOverride").mockReturnValueOnce("@zowe/cli");
         jest.spyOn(globalMocks.mockProfileInstance, "getSchema").mockReturnValueOnce(blockMocks.testSchemas);
         jest.spyOn(globalMocks.mockProfileInstance, "urlInfo").mockReturnValueOnce(globalMocks.mockUrlInfo);
         jest.spyOn(globalMocks.mockProfileInstance, "userInfo").mockReturnValueOnce(globalMocks.testProfile.profile.user);
@@ -1379,7 +1386,7 @@ describe("Profiles Unit Tests - function checkCurrentProfile", () => {
     it("should throw an error if using token auth and is logged out or has expired token", async () => {
         const globalMocks = await createGlobalMocks();
         jest.spyOn(utils, "errorHandling").mockImplementation();
-        jest.spyOn(utils, "isUsingTokenAuth").mockResolvedValue(true);
+        jest.spyOn(utils.ProfilesUtils, "isUsingTokenAuth").mockResolvedValue(true);
         setupProfilesCheck(globalMocks);
         await expect(Profiles.getInstance().checkCurrentProfile(globalMocks.testProfile)).resolves.toEqual({ name: "sestest", status: "unverified" });
     });
@@ -1572,6 +1579,7 @@ describe("Profiles Unit Tests - function ssoLogin", () => {
             ],
             configurable: true,
         });
+        Object.defineProperty(utils.ProfilesUtils, "isProfileUsingBasicAuth", { value: jest.fn(), configurable: true });
         jest.spyOn(Gui, "showMessage").mockImplementation();
     });
     it("should perform an SSOLogin successfully while fetching the base profile", async () => {
@@ -1644,6 +1652,14 @@ describe("Profiles Unit Tests - function ssoLogout", () => {
         jest.spyOn(Gui, "showMessage").mockImplementation();
     });
     it("should logout successfully and refresh zowe explorer", async () => {
+        const mockTreeProvider = {
+            mSessionNodes: [testNode],
+            flipState: jest.fn(),
+            refreshElement: jest.fn(),
+        } as any;
+        jest.spyOn(TreeProviders, "ds", "get").mockReturnValue(mockTreeProvider);
+        jest.spyOn(TreeProviders, "uss", "get").mockReturnValue(mockTreeProvider);
+        jest.spyOn(TreeProviders, "job", "get").mockReturnValue(mockTreeProvider);
         const getTokenTypeNameMock = jest.fn();
         const logoutMock = jest.fn();
         jest.spyOn(ZoweExplorerApiRegister.getInstance(), "getCommonApi").mockImplementation(() => ({
@@ -1800,5 +1816,69 @@ describe("Profiles Unit Tests - function getSecurePropsForProfile", () => {
             getAllProfiles: () => [],
         } as any);
         await expect(Profiles.getInstance().getSecurePropsForProfile(globalMocks.testProfile.name ?? "")).resolves.toEqual(["tokenValue"]);
+    });
+});
+
+describe("Profiles Unit Tests - function clearFilterFromAllTrees", () => {
+    afterEach(() => {
+        jest.clearAllMocks();
+        jest.resetModules();
+        jest.restoreAllMocks();
+    });
+
+    it("should fail to clear filter if no session nodes are available", async () => {
+        const globalMocks = await createGlobalMocks();
+        const testNode = new (ZoweTreeNode as any)(
+            "fake",
+            vscode.TreeItemCollapsibleState.None,
+            undefined,
+            globalMocks.testSession,
+            globalMocks.testProfile
+        );
+
+        const flipStateSpy = jest.fn();
+        const refreshElementSpy = jest.fn();
+
+        const mockTreeProvider = {
+            mSessionNodes: [],
+            flipState: flipStateSpy,
+            refreshElement: refreshElementSpy,
+        } as any;
+        jest.spyOn(TreeProviders, "ds", "get").mockReturnValue(mockTreeProvider);
+        jest.spyOn(TreeProviders, "uss", "get").mockReturnValue(mockTreeProvider);
+        jest.spyOn(TreeProviders, "job", "get").mockReturnValue(mockTreeProvider);
+
+        expect(Profiles.getInstance().clearFilterFromAllTrees(testNode));
+        expect(flipStateSpy).toBeCalledTimes(0);
+        expect(refreshElementSpy).toBeCalledTimes(0);
+    });
+
+    it("should fail to clear filters if the session node is not listed in the tree", async () => {
+        const globalMocks = await createGlobalMocks();
+        const testNode = new (ZoweTreeNode as any)(
+            "fake",
+            vscode.TreeItemCollapsibleState.None,
+            undefined,
+            globalMocks.testSession,
+            globalMocks.testProfile
+        );
+
+        const flipStateSpy = jest.fn();
+        const refreshElementSpy = jest.fn();
+        const getProfileSpy = jest.fn(() => ({ name: "test" }));
+
+        const mockTreeProvider = {
+            mSessionNodes: [{ getProfile: getProfileSpy }],
+            flipState: flipStateSpy,
+            refreshElement: refreshElementSpy,
+        } as any;
+        jest.spyOn(TreeProviders, "ds", "get").mockReturnValue(mockTreeProvider);
+        jest.spyOn(TreeProviders, "uss", "get").mockReturnValue(mockTreeProvider);
+        jest.spyOn(TreeProviders, "job", "get").mockReturnValue(mockTreeProvider);
+
+        expect(Profiles.getInstance().clearFilterFromAllTrees(testNode));
+        expect(flipStateSpy).toBeCalledTimes(0);
+        expect(refreshElementSpy).toBeCalledTimes(0);
+        expect(getProfileSpy).toBeCalledTimes(3);
     });
 });

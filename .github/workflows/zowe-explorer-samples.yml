@@ -41,5 +41,7 @@ jobs:
       # install yarn
       - run: npm install -g yarn
 
+      - run: yarn config set network-timeout 60000 && yarn install --frozen-lockfile
+
       - run: for dir in samples/*; do pushd $dir && yarn && yarn run compile && popd; done
         shell: bash
