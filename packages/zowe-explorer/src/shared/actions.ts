@@ -12,14 +12,16 @@
 import * as vscode from "vscode";
 import * as globals from "../globals";
 import { openPS } from "../dataset/actions";
-import { Gui, IZoweDatasetTreeNode, IZoweUSSTreeNode, IZoweNodeType, IZoweTree } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweDatasetTreeNode, IZoweUSSTreeNode, IZoweNodeType, IZoweTree, imperative } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
-import { filterTreeByString } from "../shared/utils";
+import { compareFileContent, filterTreeByString, willForceUpload } from "../shared/utils";
 import { FilterItem, FilterDescriptor } from "../utils/ProfilesUtils";
 import * as contextually from "../shared/context";
 import * as nls from "vscode-nls";
 import { getIconById, IconId } from "../generators/icons";
 import { ZoweLogger } from "../utils/LoggerUtils";
+
+import { markDocumentUnsaved } from "../utils/workspace";
 
 // Set up localization
 nls.config({
@@ -243,4 +245,42 @@ export function resetValidationSettings(node: IZoweNodeType, setting: boolean): 
         Profiles.getInstance().disableValidationContext(node);
     }
     return node;
+}
+
+export function resolveFileConflict(
+    node: IZoweDatasetTreeNode | IZoweUSSTreeNode,
+    profile: imperative.IProfileLoaded,
+    doc: vscode.TextDocument,
+    docName: string,
+    label?: string,
+    binary?: boolean
+): void {
+    const compareBtn = localize("saveFile.info.compare", "Compare");
+    const overwriteBtn = localize("saveFile.info.overwrite", "Overwrite");
+    const infoMsg = localize(
+        "saveFile.info.confirmCompare",
+        "The content of the file is newer. Compare your version with latest or overwrite the content of the file with your changes."
+    );
+    ZoweLogger.info(infoMsg);
+    Gui.infoMessage(infoMsg, {
+        items: [compareBtn, overwriteBtn],
+    }).then(async (selection) => {
+        switch (selection) {
+            case compareBtn: {
+                ZoweLogger.info(`${compareBtn} chosen.`);
+                await compareFileContent(doc, node, label, binary, profile);
+                break;
+            }
+            case overwriteBtn: {
+                ZoweLogger.info(`${overwriteBtn} chosen.`);
+                await willForceUpload(node, doc, docName, profile, binary, true);
+                break;
+            }
+            default: {
+                ZoweLogger.info("Operation cancelled, file unsaved.");
+                await markDocumentUnsaved(doc);
+                break;
+            }
+        }
+    });
 }

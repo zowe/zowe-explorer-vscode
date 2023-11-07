@@ -6,5 +6,8 @@
   "memberHistory.option.prompt.open": "Select a recent member to open",
   "memberHistory.options.prompt": "Select a recent member to open",
   "enterPattern.pattern": "No selection made. Operation cancelled.",
-  "getRecentMembers.empty": "No recent members found."
+  "getRecentMembers.empty": "No recent members found.",
+  "saveFile.info.compare": "Compare",
+  "saveFile.info.overwrite": "Overwrite",
+  "saveFile.info.confirmCompare": "The content of the file is newer. Compare your version with latest or overwrite the content of the file with your changes."
 }
