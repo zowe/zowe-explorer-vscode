@@ -299,6 +299,9 @@ export function willForceUpload(
                 if (node) {
                     node.setEtag(uploadResponse.apiResponse[0].etag);
                 }
+            } else {
+                await markDocumentUnsaved(doc);
+                Gui.errorMessage(uploadResponse.commandResponse);
             }
         } else {
             Gui.showMessage(localize("uploadContent.cancelled", "Upload cancelled."));
