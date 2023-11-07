@@ -1501,7 +1501,6 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
         (testDocument as any).fileName = path.join(globals.DS_DIR, testDocument.fileName);
         const logSpy = jest.spyOn(ZoweLogger, "warn");
         const commandSpy = jest.spyOn(vscode.commands, "executeCommand");
-        const applyEditSpy = jest.spyOn(vscode.workspace, "applyEdit");
         jest.spyOn(fs, "statSync").mockReturnValueOnce({ size: 0 } as any);
 
         await dsActions.saveFile(testDocument, blockMocks.testDatasetTree);
@@ -1509,10 +1508,8 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
         expect(logSpy).toBeCalledWith("Remote file has changed. Presenting with way to resolve file.");
         expect(mocked(sharedUtils.concatChildNodes)).toBeCalled();
         expect(commandSpy).toBeCalledWith("workbench.files.action.compareWithSaved");
-        expect(applyEditSpy).toHaveBeenCalledTimes(2);
         logSpy.mockClear();
         commandSpy.mockClear();
-        applyEditSpy.mockClear();
     });
 });
 

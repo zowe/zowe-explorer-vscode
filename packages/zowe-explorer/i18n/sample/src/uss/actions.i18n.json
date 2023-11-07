@@ -13,7 +13,6 @@
   "deleteUssPrompt.confirmation.cancel.log.debug": "Delete action was canceled.",
   "ZoweUssNode.copyDownload.progress": "Copying file structure...",
   "uss.paste.apiNotAvailable": "The paste operation is not supported for this node.",
-  "ZoweUssNode.copyUpload.progress": "Pasting files..."
   "ZoweUssNode.copyUpload.progress": "Pasting files...",
   "downloadUnixFile.invalidNode.error": "open() called from invalid node.",
   "downloadUnixFile.name.exists": "There is already a file with the same name. Please change your OS file system settings if you want to give case sensitive file names",

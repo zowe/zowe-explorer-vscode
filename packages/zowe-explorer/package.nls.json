@@ -159,7 +159,7 @@
   "ds.selectSortOpt": "Select a sorting option for {0}",
   "jobs.selectSortOpt": "Select a sorting option for jobs in {0}",
   "ds.filterBy": "Filter PDS members...",
-  "ds.sortBy": "Sort PDS members..."
+  "ds.sortBy": "Sort PDS members...",
   "selectForCompare": "Select for Compare",
   "compareWithSelected": "Compare with Selected",
   "compareWithSelectedReadOnly": "Compare with Selected (Read-Only)",
