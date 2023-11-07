@@ -4,13 +4,11 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ## TBD Release
 
-### New features and enhancements
-
 ### Bug fixes
 
 - Update when the option to submit local file as JCL will be displayed in context menus. [#2541](https://github.com/zowe/vscode-extension-for-zowe/issues/2541)
-- Solved issue with shortcut for `Edit History` view overlapping `Redo` shortcut [#2543](https://github.com/zowe/vscode-extension-for-zowe/issues/2543)
-- Removed duplicate buttons displayed on USS view that now exist on `Manage Profile` view [#2547](https://github.com/zowe/vscode-extension-for-zowe/issues/2547)
+- Solved issue with a conflicting keybinding for `Edit History`, changed keybinding to `Ctrl`+`Alt`+`y` for Windows and `⌘ Cmd`+`⌥ Opt`+`y` for macOS. [#2543](https://github.com/zowe/vscode-extension-for-zowe/issues/2543)
+- Removed duplicate context menu items displayed on USS view that now exist within the `Manage Profile` option.[#2547](https://github.com/zowe/vscode-extension-for-zowe/issues/2547)
 
 ## `2.12.0`
 
