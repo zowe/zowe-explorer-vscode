@@ -497,8 +497,8 @@ export async function openPS(
 
             const documentFilePath = getDocumentFilePath(label, node);
             let responsePromise = node.ongoingActions ? node.ongoingActions[api.NodeAction.Download] : null;
-            // If the local copy does not exist, fetch contents
-            if (!fs.existsSync(documentFilePath)) {
+            // If there is no ongoing action and the local copy does not exist, fetch contents
+            if (responsePromise == null && !fs.existsSync(documentFilePath)) {
                 const prof = node.getProfile();
                 ZoweLogger.info(localize("openPS.openDataSet", "Opening {0}", label));
                 if (node.ongoingActions) {
@@ -519,8 +519,10 @@ export async function openPS(
                 }
             }
 
-            const response = await responsePromise;
-            node.setEtag(response?.apiResponse?.etag);
+            if (responsePromise != null) {
+                const response = await responsePromise;
+                node.setEtag(response.apiResponse.etag);
+            }
             statusMsg.dispose();
             const document = await vscode.workspace.openTextDocument(getDocumentFilePath(label, node));
             await api.Gui.showTextDocument(document, { preview: node.wasDoubleClicked != null ? !node.wasDoubleClicked : shouldPreview });

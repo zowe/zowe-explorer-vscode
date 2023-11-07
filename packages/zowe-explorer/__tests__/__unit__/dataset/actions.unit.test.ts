@@ -3435,20 +3435,20 @@ describe("Dataset Actions Unit Tests - Function openPS", () => {
         expect(mocked(Gui.errorMessage)).toBeCalledWith("Error: testError");
     });
 
-    it("Check for invalid/null response without supporting ongoing actions", async () => {
+    it("Check for invalid/null response when contents are already fetched", async () => {
         globals.defineGlobals("");
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks();
-        globalMocks.getContentsSpy.mockResolvedValueOnce(null);
+        globalMocks.getContentsSpy.mockClear();
+        mocked(fs.existsSync).mockReturnValueOnce(true);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
-        const node = new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null);
+        const node = new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null, null, "abc");
         node.ongoingActions = undefined as any;
 
-        try {
-            await dsActions.openPS(node, true, blockMocks.testDatasetTree);
-        } catch (err) {
-            expect(err.message).toBe("Response was null or invalid.");
-        }
+        await dsActions.openPS(node, true, blockMocks.testDatasetTree);
+
+        expect(globalMocks.getContentsSpy).not.toHaveBeenCalled();
+        expect(node.getEtag()).toBe("abc");
     });
 
     it("Checking of opening for PDS Member", async () => {
