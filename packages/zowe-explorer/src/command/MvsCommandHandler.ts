@@ -78,7 +78,7 @@ export class MvsCommandHandler extends ZoweCommandProvider {
             }
         }
         if (!session) {
-            const allProfiles: imperative.IProfileLoaded[] = profiles.allProfiles;
+            const allProfiles = profiles.allProfiles;
             const profileNamesList = ProfileManagement.getRegisteredProfileNameList(globals.Trees.MVS);
             if (profileNamesList.length) {
                 const quickPickOptions: vscode.QuickPickOptions = {

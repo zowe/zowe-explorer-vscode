@@ -90,7 +90,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
                     Gui.showMessage(localize("issueTsoCommand.cancelled", "Operation Cancelled"));
                     return;
                 }
-                const allProfiles: imperative.IProfileLoaded[] = profiles.allProfiles;
+                const allProfiles = profiles.allProfiles;
                 profile = allProfiles.filter((temprofile) => temprofile.name === sesName)[0];
                 if (!node) {
                     await profiles.checkCurrentProfile(profile);
