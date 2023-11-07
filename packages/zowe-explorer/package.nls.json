@@ -147,5 +147,9 @@
   "createZoweSchema.reload.button": "Reload Window",
   "createZoweSchema.reload.infoMessage": "Team Configuration file created. Location: {0}. \n Please reload your window.",
   "copyFile": "Copy",
-  "pasteFile": "Paste"
+  "pasteFile": "Paste",
+  "selectForCompare": "Select for Compare",
+  "compareWithSelected": "Compare with Selected",
+  "compareWithSelectedReadOnly": "Compare with Selected (Read-Only)",
+  "compareFileStarted": "A file has been chosen for compare"
 }

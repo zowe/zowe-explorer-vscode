@@ -3,6 +3,7 @@
 ## No longer supported
 
 - Removed support for v1 Profiles
+- Updated supported VS Code engine to 1.79.0
 
 ## Removal of deprecated APIs from Extensibility API for Zowe Explorer
 

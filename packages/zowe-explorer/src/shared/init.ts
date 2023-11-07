@@ -27,6 +27,7 @@ import { ZoweLogger } from "../utils/LoggerUtils";
 import { ZoweSaveQueue } from "../abstract/ZoweSaveQueue";
 import { SettingsConfig } from "../utils/SettingsConfig";
 import { spoolFilePollEvent } from "../job/actions";
+import { LocalFileManagement } from "../utils/LocalFileManagement";
 
 // Set up localization
 nls.config({
@@ -200,6 +201,28 @@ export function registerCommonCommands(context: vscode.ExtensionContext, provide
                 }
             })
         );
+        context.subscriptions.push(
+            vscode.commands.registerCommand("zowe.selectForCompare", (node: IZoweTreeNode) => {
+                LocalFileManagement.selectFileForCompare(node);
+            })
+        );
+        context.subscriptions.push(
+            vscode.commands.registerCommand("zowe.compareWithSelected", async (node: IZoweTreeNode) => {
+                await LocalFileManagement.compareChosenFileContent(node);
+            })
+        );
+        context.subscriptions.push(
+            vscode.commands.registerCommand("zowe.compareWithSelectedReadOnly", async (node: IZoweTreeNode) => {
+                await LocalFileManagement.compareChosenFileContent(node, true);
+            })
+        );
+        context.subscriptions.push(
+            vscode.commands.registerCommand("zowe.compareFileStarted", () => {
+                return globals.FILE_SELECTED_TO_COMPARE;
+            })
+        );
+        // initialize the globals.filesToCompare array during initialization
+        globals.resetCompareChoices();
     }
 }
 
