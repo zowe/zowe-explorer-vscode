@@ -28,6 +28,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed submitting local JCL using command pallet option `Zowe Explorer: Submit as JCL` by adding a check for chosen profile returned to continue the action. [#1625](https://github.com/zowe/vscode-extension-for-zowe/issues/1625)
 - Fixed conflict resolution being skipped if local and remote file have different contents but are the same size. [#2496](https://github.com/zowe/vscode-extension-for-zowe/issues/2496)
 - Fixed issue with token based auth for unsecure profiles in Zowe Explorer. [#2518](https://github.com/zowe/vscode-extension-for-zowe/issues/2518)
+- Fixed VSC Compare function, not working with Favorites from Zowe Explorer. [#2549](https://github.com/zowe/vscode-extension-for-zowe/pull/2549)
 
 ## `2.11.2`
 
