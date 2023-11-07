@@ -21,20 +21,20 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 - Added "Sort Jobs" feature in Jobs tree view: accessible via sort icon or right-clicking on session node. [#2257](https://github.com/zowe/vscode-extension-for-zowe/issues/2257)
 - Introduce a new user interface for managing profiles via right-click action "Manage Profile".
-- Added new edit feature on `Edit Attributes` view for changing file tags on USS [#2113](https://github.com/zowe/vscode-extension-for-zowe/issues/2113)
+- Added new edit feature on `Edit Attributes` view for changing file tags on USS. [#2113](https://github.com/zowe/vscode-extension-for-zowe/issues/2113)
 - Added new API {ZE Extender MetaData} to allow extenders to have the metadata of registered extenders to aid in team configuration file creation from a view that isn't Zowe Explorer's. [#2394](https://github.com/zowe/vscode-extension-for-zowe/issues/2394)
-- Added ability to install extension from VS Code marketplace if custom credential manager extension is missing after defining it on `imperative.json` [#2381](https://github.com/zowe/vscode-extension-for-zowe/issues/2381)
+- Added ability to install extension from VS Code marketplace if custom credential manager extension is missing after defining it on `imperative.json`. [#2381](https://github.com/zowe/vscode-extension-for-zowe/issues/2381)
 - Added new right-click action for `Submit as JCL` for local files in the VS Code file explorer as well as files opened in the VS Code text editor. [#2475](https://github.com/zowe/vscode-extension-for-zowe/issues/2475)
 - Added "Sort PDS members" feature in Data Sets tree view: accessible via sort icon on session node, or by right-clicking a PDS or session. [#2420](https://github.com/zowe/vscode-extension-for-zowe/issues/2420)
 - Added "Filter PDS members" feature in Data Sets tree view: accessible via filter icon on session node, or by right-clicking a PDS or session. [#2420](https://github.com/zowe/vscode-extension-for-zowe/issues/2420)
 - Added descriptions to data set nodes if filtering and/or sorting is enabled (where applicable).
-- Added webview for editing persistent items on Zowe Explorer [#2488](https://github.com/zowe/vscode-extension-for-zowe/issues/2488)
+- Added webview for editing persistent items on Zowe Explorer. [#2488](https://github.com/zowe/vscode-extension-for-zowe/issues/2488)
 
 ### Bug fixes
 
 - Fixed submitting local JCL using command pallet option `Zowe Explorer: Submit as JCL` by adding a check for chosen profile returned to continue the action. [#1625](https://github.com/zowe/vscode-extension-for-zowe/issues/1625)
 - Fixed conflict resolution being skipped if local and remote file have different contents but are the same size. [#2496](https://github.com/zowe/vscode-extension-for-zowe/issues/2496)
-- Fixed issue with token based auth for unsecure profiles in Zowe Explorer [#2518](https://github.com/zowe/vscode-extension-for-zowe/issues/2518)
+- Fixed issue with token based auth for unsecure profiles in Zowe Explorer. [#2518](https://github.com/zowe/vscode-extension-for-zowe/issues/2518)
 
 ## `2.11.2`
 

@@ -28,7 +28,6 @@ import { SettingsConfig } from "../../src/utils/SettingsConfig";
 import { ZoweExplorerExtender } from "../../src/ZoweExplorerExtender";
 import { DatasetTree } from "../../src/dataset/DatasetTree";
 import { USSTree } from "../../src/uss/USSTree";
-import { ZoweLogger } from "../../src/utils/LoggerUtils";
 import { ZoweSaveQueue } from "../../src/abstract/ZoweSaveQueue";
 import { ZoweLocalStorage } from "../../src/utils/ZoweLocalStorage";
 jest.mock("../../src/utils/LoggerUtils");

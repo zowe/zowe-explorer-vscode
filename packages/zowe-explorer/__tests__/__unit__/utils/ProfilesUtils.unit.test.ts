@@ -471,6 +471,7 @@ describe("ProfilesUtils unit tests", () => {
 
         it("should skip creating directories and files that already exist", async () => {
             const blockMocks = createBlockMocks();
+            jest.spyOn(profUtils.ProfilesUtils, "getCredentialManagerOverride").mockReturnValue("@zowe/cli");
             blockMocks.mockGetDirectValue.mockReturnValue("@zowe/cli");
             blockMocks.mockExistsSync.mockReturnValue(true);
             const fileJson = blockMocks.mockFileRead;
@@ -762,6 +763,23 @@ describe("ProfilesUtils unit tests", () => {
 
             expect(profUtils.ProfilesUtils.getCredentialManagerOverride()).toBe("My Custom Credential Manager");
             expect(zoweLoggerTraceSpy).toBeCalledTimes(1);
+        });
+
+        it("should return default manager if the override file does not exist", () => {
+            const zoweLoggerTraceSpy = jest.spyOn(ZoweLogger, "trace");
+            const zoweLoggerInfoSpy = jest.spyOn(ZoweLogger, "info");
+
+            jest.spyOn(fs, "readFileSync").mockImplementation(() => {
+                throw new Error("test");
+            });
+            try {
+                profUtils.ProfilesUtils.getCredentialManagerOverride();
+            } catch (err) {
+                expect(err).toBe("test");
+            }
+
+            expect(zoweLoggerTraceSpy).toBeCalledTimes(1);
+            expect(zoweLoggerInfoSpy).toBeCalledTimes(1);
         });
     });
 

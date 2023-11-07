@@ -46,8 +46,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     globals.defineGlobals(tempPath);
 
     await hideTempFolder(getZoweDir());
-    await ProfilesUtils.initializeZoweProfiles((msg) => ZoweExplorerExtender.showZoweConfigError(msg));
     registerCredentialManager(context);
+    await ProfilesUtils.initializeZoweProfiles((msg) => ZoweExplorerExtender.showZoweConfigError(msg));
     ProfilesUtils.initializeZoweTempFolder();
 
     // Initialize profile manager

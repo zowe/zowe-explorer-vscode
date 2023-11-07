@@ -34,6 +34,12 @@ describe("SessionUtils removeSession Unit Tests", () => {
         });
         Object.defineProperty(vscode, "ConfigurationTarget", { value: jest.fn(), configurable: true });
         newMocks.mockGetConfiguration.mockReturnValue(createPersistentConfig());
+        Object.defineProperty(vscode.workspace, "getConfiguration", {
+            value: newMocks.mockGetConfiguration,
+            configurable: true,
+        });
+        Object.defineProperty(vscode, "ConfigurationTarget", { value: jest.fn(), configurable: true });
+        newMocks.mockGetConfiguration.mockReturnValue(createPersistentConfig());
 
         return newMocks;
     }

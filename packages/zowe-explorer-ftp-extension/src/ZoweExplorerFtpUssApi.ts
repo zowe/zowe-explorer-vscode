@@ -126,23 +126,27 @@ export class FtpUssApi extends AbstractFtpApi implements IUss {
             localFile: inputFilePath,
         };
         const result = this.getDefaultResponse();
+        // Save-Save with FTP requires loading the file first
+        // (moved this block above connection request so only one connection is active at a time)
+        if (returnEtag && etag) {
+            const contentsTag = await this.getContentsTag(ussFilePath);
+            if (contentsTag && contentsTag !== etag) {
+                throw new Error("Rest API failure with HTTP(S) status 412 Save conflict.");
+            }
+        }
         let connection;
         try {
             connection = await this.ftpClient(this.checkedProfile());
             if (!connection) {
                 throw new Error(result.commandResponse);
             }
-            // Save-Save with FTP requires loading the file first
-            if (returnEtag && etag) {
-                const contentsTag = await this.getContentsTag(ussFilePath);
-                if (contentsTag && contentsTag !== etag) {
-                    throw new Error("Rest API failure with HTTP(S) status 412 Save conflict.");
-                }
-            }
             await UssUtils.uploadFile(connection, ussFilePath, transferOptions);
 
             result.success = true;
             if (returnEtag) {
+                // release this connection instance because a new one will be made with getContentsTag
+                this.releaseConnection(connection);
+                connection = null;
                 const contentsTag = await this.getContentsTag(ussFilePath);
                 result.apiResponse.etag = contentsTag;
             }
@@ -274,6 +278,7 @@ export class FtpUssApi extends AbstractFtpApi implements IUss {
         };
         const loadResult = await this.getContents(ussFilePath, options);
         const etag: string = loadResult.apiResponse.etag;
+        fs.rmSync(tmpFileName, { force: true });
         return etag;
     }
 

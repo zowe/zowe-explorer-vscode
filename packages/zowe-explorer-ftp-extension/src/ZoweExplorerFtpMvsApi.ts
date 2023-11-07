@@ -131,21 +131,23 @@ export class FtpMvsApi extends AbstractFtpApi implements IMvs {
         }
         const result = this.getDefaultResponse();
         const profile = this.checkedProfile();
+
+        // Save-Save with FTP requires loading the file first
+        // (moved this block above connection request so only one connection is active at a time)
+        if (options.returnEtag && options.etag) {
+            const contentsTag = await this.getContentsTag(dataSetName);
+            if (contentsTag && contentsTag !== options.etag) {
+                result.success = false;
+                result.commandResponse = "Rest API failure with HTTP(S) status 412 Save conflict.";
+                return result;
+            }
+        }
         let connection;
         try {
             connection = await this.ftpClient(profile);
             if (!connection) {
                 globals.LOGGER.logImperativeMessage(result.commandResponse, MessageSeverity.ERROR);
                 throw new Error(result.commandResponse);
-            }
-            // Save-Save with FTP requires loading the file first
-            if (options.returnEtag && options.etag) {
-                const contentsTag = await this.getContentsTag(dataSetName);
-                if (contentsTag && contentsTag !== options.etag) {
-                    result.success = false;
-                    result.commandResponse = "Rest API failure with HTTP(S) status 412 Save conflict.";
-                    return result;
-                }
             }
             const lrecl: number = dsAtrribute.apiResponse.items[0].lrecl;
             const data = fs.readFileSync(inputFilePath, { encoding: "utf8" });
@@ -178,6 +180,9 @@ export class FtpMvsApi extends AbstractFtpApi implements IMvs {
             await DataSetUtils.uploadDataSet(connection, targetDataset, transferOptions);
             result.success = true;
             if (options.returnEtag) {
+                // release this connection instance because a new one will be made with getContentsTag
+                this.releaseConnection(connection);
+                connection = null;
                 const contentsTag = await this.getContentsTag(dataSetName);
                 result.apiResponse = [
                     {
@@ -367,6 +372,7 @@ export class FtpMvsApi extends AbstractFtpApi implements IMvs {
         };
         const loadResult = await this.getContents(dataSetName, options);
         const etag: string = loadResult.apiResponse.etag;
+        fs.rmSync(tmpFileName, { force: true });
         return etag;
     }
     private getDefaultResponse(): zowe.IZosFilesResponse {
