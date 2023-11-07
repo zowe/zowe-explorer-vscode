@@ -1001,28 +1001,8 @@
         },
         {
           "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)ussSession.*/ && !listMultiSelection",
-          "command": "zowe.uss.ssoLogout",
-          "group": "098_zowe_ussProfileAuthentication@5"
-        },
-        {
-          "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)ussSession.*/ && !listMultiSelection",
           "command": "zowe.editHistory",
           "group": "100_zowe_editHistory@100"
-        },
-        {
-          "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*/ && !listMultiSelection",
-          "command": "zowe.uss.editSession",
-          "group": "099_zowe_ussProfileModification@1"
-        },
-        {
-          "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*/",
-          "command": "zowe.uss.removeSession",
-          "group": "099_zowe_ussProfileModification@98"
-        },
-        {
-          "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*/  && !listMultiSelection",
-          "command": "zowe.uss.deleteProfile",
-          "group": "099_zowe_ussProfileModification@99"
         },
         {
           "when": "view == zowe.ds.explorer && viewItem =~ /^session.*/ && !listMultiSelection",
