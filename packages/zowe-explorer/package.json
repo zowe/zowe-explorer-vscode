@@ -804,6 +804,26 @@
         "command": "zowe.jobs.downloadSingleSpoolBinary",
         "title": "%downloadSingleSpoolBinary%",
         "category": "Zowe Explorer"
+      },
+      {
+        "command": "zowe.selectForCompare",
+        "title": "%selectForCompare%",
+        "category": "Zowe Explorer"
+      },
+      {
+        "command": "zowe.compareWithSelected",
+        "title": "%compareWithSelected%",
+        "category": "Zowe Explorer"
+      },
+      {
+        "command": "zowe.compareWithSelectedReadOnly",
+        "title": "%compareWithSelectedReadOnly%",
+        "category": "Zowe Explorer"
+      },
+      {
+        "command": "zowe.compareFileStarted",
+        "title": "%compareFileStarted%",
+        "category": "Zowe Explorer"
       }
     ],
     "menus": {
@@ -1368,6 +1388,36 @@
           "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/ && !listMultiSelection",
           "command": "zowe.profileManagement",
           "group": "100_zowe_jobsProfileAuthentication@99"
+        },
+        {
+          "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/ && !listMultiSelection",
+          "command": "zowe.jobs.editSession",
+          "group": "099_zowe_jobsProfileModification@0"
+        },
+        {
+          "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/",
+          "command": "zowe.jobs.removeJobsSession",
+          "group": "099_zowe_jobsProfileModification@98"
+        },
+        {
+          "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/  && !listMultiSelection",
+          "command": "zowe.jobs.deleteProfile",
+          "group": "099_zowe_jobsProfileModification@99"
+        },
+        {
+          "when": "viewItem =~ /^(textFile|member.*|ds.*)/ && !listMultiSelection",
+          "command": "zowe.selectForCompare",
+          "group": "010_zowe_fileOperations@1"
+        },
+        {
+          "when": "viewItem =~ /^(textFile|member.*|ds.*)/ && !listMultiSelection && zowe.compareFileStarted",
+          "command": "zowe.compareWithSelected",
+          "group": "010_zowe_fileOperations@2"
+        },
+        {
+          "when": "viewItem =~ /^(textFile|member.*|ds.*)/ && !listMultiSelection && zowe.compareFileStarted",
+          "command": "zowe.compareWithSelectedReadOnly",
+          "group": "010_zowe_fileOperations@3"
         }
       ],
       "commandPalette": [
@@ -1714,6 +1764,22 @@
         {
           "command": "zowe.profileManagement",
           "when": "never"
+        },
+        {
+          "command": "zowe.compareFileStarted",
+          "when": "never"
+        },
+        {
+          "command": "zowe.selectForCompare",
+          "when": "never"
+        },
+        {
+          "command": "zowe.compareWithSelected",
+          "when": "never"
+        },
+        {
+          "command": "zowe.compareWithSelectedReadOnly",
+          "when": "never"
         }
       ]
     },
@@ -1981,7 +2047,7 @@
     "createDemoNodes": "ts-node ./scripts/createDemoNodes.ts"
   },
   "engines": {
-    "vscode": "^1.63.0"
+    "vscode": "^1.79.0"
   },
   "devDependencies": {
     "@napi-rs/cli": "^2.16.1",

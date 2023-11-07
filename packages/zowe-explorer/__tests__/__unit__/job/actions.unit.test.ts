@@ -43,6 +43,9 @@ import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 import { SpoolFile } from "../../../src/SpoolProvider";
 import { ZosJobsProvider } from "../../../src/job/ZosJobsProvider";
 import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
+import { LocalFileManagement } from "../../../src/utils/LocalFileManagement";
+
+jest.mock("../../../src/utils/LoggerUtils");
 
 const activeTextEditorDocument = jest.fn();
 
@@ -93,7 +96,7 @@ function createGlobalMocks() {
     Object.defineProperty(Gui, "warningMessage", { value: jest.fn(), configurable: true });
     Object.defineProperty(Gui, "errorMessage", { value: jest.fn(), configurable: true });
     Object.defineProperty(Gui, "showOpenDialog", { value: jest.fn(), configurable: true });
-    Object.defineProperty(sharedUtils, "getDefaultUri", { value: jest.fn(), configurable: true });
+    Object.defineProperty(LocalFileManagement, "getDefaultUri", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showWarningMessage", { value: jest.fn(), configurable: true });
     Object.defineProperty(zowe, "IssueCommand", { value: jest.fn(), configurable: true });
     Object.defineProperty(zowe.IssueCommand, "issueSimple", { value: jest.fn(), configurable: true });

@@ -256,6 +256,10 @@ async function createGlobalMocks() {
             "zowe.jobs.deleteProfile",
             "zowe.issueTsoCmd",
             "zowe.issueMvsCmd",
+            "zowe.selectForCompare",
+            "zowe.compareWithSelected",
+            "zowe.compareWithSelectedReadOnly",
+            "zowe.compareFileStarted",
         ],
     };
 

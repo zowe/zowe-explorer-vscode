@@ -2,6 +2,15 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
+## TBD Release
+
+### New features and enhancements
+
+- Support VS Code engine 1.79.0 and higher.
+- Ability to compare 2 files from MVS and/or UNIX System Services views via right click actions, with option to compare in Read-Only mode too.
+
+### Bug fixes
+
 ## `3.0.0-next.202309121526`
 
 ### New features and enhancements

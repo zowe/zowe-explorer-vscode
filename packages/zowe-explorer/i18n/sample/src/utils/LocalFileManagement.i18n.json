@@ -1,0 +1,4 @@
+{
+  "saveFile.etagMismatch.log.warning": "Remote file has changed. Presenting with way to resolve file.",
+  "getCompareFilePaths.treeNodeCheck.fail": "Something went wrong with compare of files."
+}

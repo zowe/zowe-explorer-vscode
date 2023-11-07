@@ -23,6 +23,7 @@ import { SORT_DIRS, getDefaultUri } from "../shared/utils";
 import { ZosJobsProvider } from "./ZosJobsProvider";
 import { JOB_SORT_OPTS } from "./utils";
 import * as globals from "../globals";
+import { LocalFileManagement } from "../utils/LocalFileManagement";
 
 // Set up localization
 nls.config({
@@ -44,7 +45,7 @@ export async function downloadSpool(jobs: IZoweJobTreeNode[], binary?: boolean):
             canSelectFolders: true,
             canSelectFiles: false,
             canSelectMany: false,
-            defaultUri: getDefaultUri(),
+            defaultUri: LocalFileManagement.getDefaultUri(),
         });
         if (dirUri !== undefined) {
             for (const job of jobs) {
@@ -82,7 +83,7 @@ export async function downloadSingleSpool(nodes: IZoweJobTreeNode[], binary?: bo
             canSelectFolders: true,
             canSelectFiles: false,
             canSelectMany: false,
-            defaultUri: getDefaultUri(),
+            defaultUri: LocalFileManagement.getDefaultUri(),
         });
         if (dirUri !== undefined) {
             for (const node of nodes) {

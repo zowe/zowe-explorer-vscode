@@ -13,7 +13,7 @@
     "packages/zowe-explorer/src/webviews"
   ],
   "engines": {
-    "vscode": "^1.63.0"
+    "vscode": "^1.79.0"
   },
   "dependencies": {
     "@zowe/cli": "7.18.0",

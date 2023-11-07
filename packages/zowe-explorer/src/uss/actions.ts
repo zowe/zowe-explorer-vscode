@@ -14,7 +14,7 @@ import { imperative, IZosFilesResponse } from "@zowe/cli";
 import * as fs from "fs";
 import * as globals from "../globals";
 import * as path from "path";
-import { concatChildNodes, uploadContent, getSelectedNodeList, getDefaultUri, compareFileContent } from "../shared/utils";
+import { concatChildNodes, uploadContent, getSelectedNodeList, LocalFileInfo } from "../shared/utils";
 import { errorHandling } from "../utils/ProfilesUtils";
 import { Gui, ValidProfileEnum, IZoweTree, IZoweUSSTreeNode } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
@@ -29,6 +29,7 @@ import { fileExistsCaseSensitveSync } from "./utils";
 import { UssFileTree, UssFileType } from "./FileStructure";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { AttributeView } from "./AttributeView";
+import { LocalFileManagement } from "../utils/LocalFileManagement";
 
 // Set up localization
 nls.config({
@@ -152,7 +153,7 @@ export async function uploadDialog(node: IZoweUSSTreeNode, ussFileProvider: IZow
         canSelectFiles: true,
         openLabel: "Upload Files",
         canSelectMany: true,
-        defaultUri: getDefaultUri(),
+        defaultUri: LocalFileManagement.getDefaultUri(),
     };
 
     const value = await Gui.showOpenDialog(fileOpenOptions);
@@ -321,7 +322,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
         // TODO: error handling must not be zosmf specific
         const errorMessage = err ? err.message : err.toString();
         if (errorMessage.includes("Rest API failure with HTTP(S) status 412")) {
-            await compareFileContent(doc, node, null, binary);
+            await LocalFileManagement.compareSavedFileContent(doc, node, null, binary);
         } else {
             await markDocumentUnsaved(doc);
             await errorHandling(err, sesName);
@@ -496,4 +497,60 @@ export async function pasteUss(ussFileProvider: IZoweTree<IZoweUSSTreeNode>, nod
         }
     );
     ussFileProvider.refreshElement(node);
+}
+
+export async function downloadUnixFile(node: IZoweUSSTreeNode, download: boolean): Promise<LocalFileInfo> {
+    const fileInfo = {} as LocalFileInfo;
+    const errorMsg = localize("downloadUnixFile.invalidNode.error", "open() called from invalid node.");
+    switch (true) {
+        // For opening favorited and non-favorited files
+        case node.getParent().contextValue === globals.FAV_PROFILE_CONTEXT:
+            break;
+        case contextually.isUssSession(node.getParent()):
+            break;
+        // Handle file path for files in directories and favorited directories
+        case contextually.isUssDirectory(node.getParent()):
+            break;
+        default:
+            Gui.errorMessage(errorMsg);
+            throw Error(errorMsg);
+    }
+
+    fileInfo.path = node.getUSSDocumentFilePath();
+    fileInfo.name = String(node.label);
+    // check if some other file is already created with the same name avoid opening file warn user
+    const fileExists = fs.existsSync(fileInfo.path);
+    if (fileExists && !fileExistsCaseSensitveSync(fileInfo.path)) {
+        Gui.showMessage(
+            localize(
+                "downloadUnixFile.name.exists",
+                // eslint-disable-next-line max-len
+                "There is already a file with the same name. Please change your OS file system settings if you want to give case sensitive file names"
+            )
+        );
+        return;
+    }
+    // if local copy exists, open that instead of pulling from mainframe
+    if (download || !fileExists) {
+        try {
+            const cachedProfile = Profiles.getInstance().loadNamedProfile(node.getProfileName());
+            const fullPath = node.fullPath;
+            const chooseBinary = node.binary || (await ZoweExplorerApiRegister.getUssApi(cachedProfile).isFileTagBinOrAscii(fullPath));
+
+            const statusMsg = Gui.setStatusBarMessage(localize("downloadUnixFile.downloading", "$(sync~spin) Downloading USS file..."));
+            const response = await ZoweExplorerApiRegister.getUssApi(cachedProfile).getContents(fullPath, {
+                file: fileInfo.path,
+                binary: chooseBinary,
+                returnEtag: true,
+                encoding: cachedProfile.profile?.encoding,
+                responseTimeout: cachedProfile.profile?.responseTimeout,
+            });
+            statusMsg.dispose();
+            node.setEtag(response.apiResponse.etag);
+            return fileInfo;
+        } catch (err) {
+            await errorHandling(err, this.mProfileName);
+            throw err;
+        }
+    }
 }

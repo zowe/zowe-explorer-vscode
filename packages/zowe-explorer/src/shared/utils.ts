@@ -22,8 +22,6 @@ import * as nls from "vscode-nls";
 import { IZosFilesResponse, imperative } from "@zowe/cli";
 import { IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
 import { ZoweLogger } from "../utils/LoggerUtils";
-import { isTypeUssTreeNode } from "./context";
-import { markDocumentUnsaved } from "../utils/workspace";
 
 // Set up localization
 nls.config({
@@ -46,6 +44,11 @@ export const JOB_SUBMIT_DIALOG_OPTS = [
 ];
 
 export const SORT_DIRS: string[] = [localize("sort.asc", "Ascending"), localize("sort.desc", "Descending")];
+
+export type LocalFileInfo = {
+    name: string;
+    path: string;
+};
 
 export function filterTreeByString(value: string, treeItems: vscode.QuickPickItem[]): vscode.QuickPickItem[] {
     ZoweLogger.trace("shared.utils.filterTreeByString called.");

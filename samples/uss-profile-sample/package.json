@@ -6,7 +6,7 @@
   "publisher": "Zowe",
   "repository": "https://github.com/zowe/vscode-extension-for-zowe/samples/uss-profile-sample",
   "engines": {
-    "vscode": "^1.74.0"
+    "vscode": "^1.79.0"
   },
   "categories": [
     "Other"
