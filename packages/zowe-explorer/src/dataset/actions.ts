@@ -36,8 +36,8 @@ import * as contextually from "../shared/context";
 import { markDocumentUnsaved, setFileSaved } from "../utils/workspace";
 import { IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
 import { ZoweLogger } from "../utils/LoggerUtils";
-
 import { promiseStatus, PromiseStatuses } from "promise-status-async";
+import { ProfileManagement } from "../utils/ProfileManagement";
 
 // Set up localization
 import * as nls from "vscode-nls";
@@ -998,10 +998,7 @@ export async function submitJcl(datasetProvider: api.IZoweTree<api.IZoweDatasetT
     const profiles = Profiles.getInstance();
     let sessProfileName;
     if (regExp === null) {
-        const allProfiles: zowe.imperative.IProfileLoaded[] = profiles.allProfiles;
-        const profileNamesList = allProfiles.map((profile) => {
-            return profile.name;
-        });
+        const profileNamesList = ProfileManagement.getRegisteredProfileNameList(globals.Trees.JES);
         if (profileNamesList.length) {
             const quickPickOptions: vscode.QuickPickOptions = {
                 placeHolder: localize("submitJcl.qp.placeholder", "Select the Profile to use to submit the job"),
