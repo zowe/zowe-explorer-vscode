@@ -12,6 +12,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Removed duplicate context menu items displayed in USS view that now exist within the `Manage Profile` option.[#2547](https://github.com/zowe/vscode-extension-for-zowe/issues/2547)
 - Fixed issue where sort PDS feature applied the date description to members without a valid date [#2552](https://github.com/zowe/vscode-extension-for-zowe/issues/2552)
 - Fixed VSC Compare function, not working with Favorites from Zowe Explorer. [#2549](https://github.com/zowe/vscode-extension-for-zowe/pull/2549)
+- Fixed issue where setting `zowe.security.checkForCustomCredentialManagers` appeared in all scopes instead of just the user scope [#2555](https://github.com/zowe/vscode-extension-for-zowe/issues/2555)
 
 ## `2.12.0`
 
