@@ -1871,7 +1871,7 @@
         "zowe.security.checkForCustomCredentialManagers": {
           "type": "boolean",
           "description": "%zowe.security.checkForCustomCredentialManagers%",
-          "scope": "window",
+          "scope": "application",
           "default": "true"
         },
         "zowe.security.secureCredentialsEnabled": {
