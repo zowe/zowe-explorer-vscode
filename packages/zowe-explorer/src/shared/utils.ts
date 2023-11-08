@@ -264,7 +264,7 @@ export function willForceUpload(
     profile?: imperative.IProfileLoaded,
     binary?: boolean,
     returnEtag?: boolean
-): void {
+): Thenable<void> {
     // setup to handle both cases (dataset & USS)
     let title: string;
     if (isZoweDatasetTreeNode(node)) {
@@ -281,7 +281,7 @@ export function willForceUpload(
         );
     }
     // Don't wait for prompt to return since this would block the save queue
-    Gui.infoMessage(localize("saveFile.info.confirmUpload", "Would you like to overwrite the remote file?"), {
+    return Gui.infoMessage(localize("saveFile.info.confirmUpload", "Would you like to overwrite the remote file?"), {
         items: [localize("saveFile.overwriteConfirmation.yes", "Yes"), localize("saveFile.overwriteConfirmation.no", "No")],
     }).then(async (selection) => {
         if (selection === localize("saveFile.overwriteConfirmation.yes", "Yes")) {
