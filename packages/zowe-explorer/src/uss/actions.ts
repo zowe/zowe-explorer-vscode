@@ -344,7 +344,8 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
         // TODO: error handling must not be zosmf specific
         const errorMessage = err ? err.message : err.toString();
         if (errorMessage.includes("Rest API failure with HTTP(S) status 412")) {
-            resolveFileConflict(node, sesNode.getProfile(), doc, remote, null, binary);
+            const fileLabel = doc.fileName.split("/").slice(-1)[0];
+            resolveFileConflict(node, sesNode.getProfile(), doc, fileLabel, remote, binary);
         } else {
             await markDocumentUnsaved(doc);
             await errorHandling(err, sesName);

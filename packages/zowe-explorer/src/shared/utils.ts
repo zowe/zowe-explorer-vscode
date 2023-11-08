@@ -293,13 +293,13 @@ export function willForceUpload(
                         title,
                     },
                     () => {
-                        return uploadContent(node, doc, remotePath, profile, binary, null, returnEtag);
+                        return uploadContent(node, doc, remotePath, profile, binary, null, true);
                     }
                 );
                 if (uploadResponse.success) {
                     Gui.showMessage(uploadResponse.commandResponse);
                     if (node) {
-                        node.setEtag(uploadResponse.apiResponse[0].etag);
+                        node.setEtag(uploadResponse.apiResponse[0]?.etag);
                     }
                 } else {
                     await markDocumentUnsaved(doc);
