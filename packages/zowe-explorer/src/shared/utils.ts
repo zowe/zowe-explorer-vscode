@@ -298,7 +298,7 @@ export function willForceUpload(
                 if (uploadResponse.success) {
                     Gui.showMessage(uploadResponse.commandResponse);
                     if (node && uploadResponse.apiResponse[0].etag) {
-                        node.setEtag(uploadResponse.apiResponse[0].etag);
+                        node.setEtag(uploadResponse?.apiResponse[0]?.etag);
                     }
                 } else {
                     await markDocumentUnsaved(doc);
