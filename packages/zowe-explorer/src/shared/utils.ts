@@ -263,8 +263,7 @@ export function willForceUpload(
     doc: vscode.TextDocument,
     remotePath: string,
     profile?: imperative.IProfileLoaded,
-    binary?: boolean,
-    returnEtag?: boolean
+    binary?: boolean
 ): Thenable<void> {
     // setup to handle both cases (dataset & USS)
     let title: string;

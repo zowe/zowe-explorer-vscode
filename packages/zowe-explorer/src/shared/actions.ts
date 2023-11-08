@@ -273,7 +273,7 @@ export function resolveFileConflict(
             }
             case overwriteBtn: {
                 ZoweLogger.info(`${overwriteBtn} chosen.`);
-                await willForceUpload(node, doc, label, profile, binary, true);
+                await willForceUpload(node, doc, label, profile, binary);
                 break;
             }
             default: {
