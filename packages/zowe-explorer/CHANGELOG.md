@@ -9,7 +9,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fix issue with certain actions displaying profiles that are not registered with the tree that is providing the action. [#2534](https://github.com/zowe/vscode-extension-for-zowe/issues/2534)
 - Update when the option to submit local file as JCL will be displayed in context menus. [#2541](https://github.com/zowe/vscode-extension-for-zowe/issues/2541)
 - Solved issue with a conflicting keybinding for `Edit History`, changed keybinding to `Ctrl`+`Alt`+`y` for Windows and `⌘ Cmd`+`⌥ Opt`+`y` for macOS. [#2543](https://github.com/zowe/vscode-extension-for-zowe/issues/2543)
-- Removed duplicate context menu items displayed on USS view that now exist within the `Manage Profile` option.[#2547](https://github.com/zowe/vscode-extension-for-zowe/issues/2547)
+- Removed duplicate context menu items displayed in USS view that now exist within the `Manage Profile` option.[#2547](https://github.com/zowe/vscode-extension-for-zowe/issues/2547)
+- Fixed issue where sort PDS feature applied the date description to members without a valid date [#2552](https://github.com/zowe/vscode-extension-for-zowe/issues/2552)
 
 ## `2.12.0`
 

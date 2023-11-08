@@ -346,11 +346,22 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             }
 
             if (sort.method === DatasetSortOpts.LastModified) {
-                const dateA = dayjs(a.stats?.modifiedDate);
-                const dateB = dayjs(b.stats?.modifiedDate);
+                const dateA = dayjs(a.stats?.modifiedDate ?? null);
+                const dateB = dayjs(b.stats?.modifiedDate ?? null);
 
-                a.description = dateA.isValid() ? dateA.format("YYYY/MM/DD HH:mm:ss") : undefined;
-                b.description = dateB.isValid() ? dateB.format("YYYY/MM/DD HH:mm:ss") : undefined;
+                const aValid = dateA.isValid();
+                const bValid = dateB.isValid();
+
+                a.description = aValid ? dateA.format("YYYY/MM/DD HH:mm:ss") : undefined;
+                b.description = bValid ? dateB.format("YYYY/MM/DD HH:mm:ss") : undefined;
+
+                if (!aValid) {
+                    return sortGreaterThan;
+                }
+
+                if (!bValid) {
+                    return sortLessThan;
+                }
 
                 // for dates that are equal down to the second, fallback to sorting by name
                 if (dateA.isSame(dateB, "second")) {
