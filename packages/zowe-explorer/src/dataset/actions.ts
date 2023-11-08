@@ -984,11 +984,17 @@ export async function submitJcl(datasetProvider: api.IZoweTree<api.IZoweDatasetT
         ZoweLogger.error(notActiveEditorMsg);
         return;
     }
+
     if (file) {
         await vscode.commands.executeCommand("filesExplorer.openFilePreserveFocus", file);
     }
     const doc = vscode.window.activeTextEditor.document;
     ZoweLogger.debug(localize("submitJcl.submitting", "Submitting as JCL in document {0}", doc.fileName));
+
+    // prompts for job submit confirmation when submitting local JCL from editor/palette
+    // no node passed in, ownsJob is true because local file is always owned by userID, passes in local file name
+    confirmJobSubmission(null, true, doc.fileName);
+
     // get session name
     const sessionregex = /\[(.*)(\])(?!.*\])/g;
     const regExp = sessionregex.exec(doc.fileName);
@@ -1057,16 +1063,19 @@ export async function submitJcl(datasetProvider: api.IZoweTree<api.IZoweDatasetT
  *
  * @param node The node/member that is being submitted
  * @param ownsJob Whether the current user profile owns this job
+ * @param fileName When submitting local JCL, use the document file name to submit
  * @returns Whether the job submission should continue.
  */
-async function confirmJobSubmission(node: api.IZoweTreeNode, ownsJob: boolean): Promise<boolean> {
+async function confirmJobSubmission(node: api.IZoweTreeNode, ownsJob: boolean, fileName?: String): Promise<boolean> {
     ZoweLogger.trace("dataset.actions.confirmJobSubmission called.");
+
     const showConfirmationDialog = async (): Promise<boolean> => {
+        let jclName = node != null ? node.getLabel().toString() : fileName.toString().substring(fileName.lastIndexOf("\\") + 1);
+
         const selection = await api.Gui.warningMessage(
-            localize("confirmJobSubmission.confirm", "Are you sure you want to submit the following job?\n\n{0}", node.getLabel().toString()),
+            localize("confirmJobSubmission.confirm", "Are you sure you want to submit the following job?\n\n{0}", jclName),
             { items: [{ title: "Submit" }], vsCodeOpts: { modal: true } }
         );
-
         return selection != null && selection?.title === "Submit";
     };
 
