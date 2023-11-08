@@ -8,7 +8,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
-- Display confirmation dialog when submitting local JCL. [#2061] (https://github.com/zowe/vscode-extension-for-zowe/issues/2061)
+- Display confirmation dialog when submitting local JCL. [#2061](https://github.com/zowe/vscode-extension-for-zowe/issues/2061)
 
 ## `2.12.0`
 
