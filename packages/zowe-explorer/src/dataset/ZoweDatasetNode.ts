@@ -346,8 +346,8 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             }
 
             if (sort.method === DatasetSortOpts.LastModified) {
-                const dateA = dayjs(a.stats?.modifiedDate);
-                const dateB = dayjs(b.stats?.modifiedDate);
+                const dateA = dayjs(a.stats?.modifiedDate ?? null);
+                const dateB = dayjs(b.stats?.modifiedDate ?? null);
 
                 a.description = dateA.isValid() ? dateA.format("YYYY/MM/DD HH:mm:ss") : undefined;
                 b.description = dateB.isValid() ? dateB.format("YYYY/MM/DD HH:mm:ss") : undefined;
