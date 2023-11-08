@@ -376,7 +376,7 @@ describe("Test force upload", () => {
         );
     });
 
-    it("should show error message if file failed to upload", async () => {
+    it("should show error message if file fails to upload", async () => {
         const blockMocks = await createBlockMocks();
         blockMocks.showInformationMessage.mockResolvedValueOnce("Yes");
         blockMocks.withProgress.mockResolvedValueOnce({ ...blockMocks.fileResponse, success: false });
@@ -389,6 +389,22 @@ describe("Test force upload", () => {
             expect.any(Function)
         );
         expect(blockMocks.showErrorMessage.mock.calls[0][0]).toBe(blockMocks.fileResponse.commandResponse);
+    });
+
+    it("should show error message if upload throws an error", async () => {
+        const blockMocks = await createBlockMocks();
+        blockMocks.showInformationMessage.mockResolvedValueOnce("Yes");
+        const testError = new Error("Task failed successfully");
+        blockMocks.withProgress.mockRejectedValueOnce(testError);
+        await sharedUtils.willForceUpload(blockMocks.ussNode, blockMocks.mockDoc, null, { name: "fakeProfile" } as any);
+        expect(blockMocks.withProgress).toBeCalledWith(
+            {
+                location: vscode.ProgressLocation.Notification,
+                title: "Saving file...",
+            },
+            expect.any(Function)
+        );
+        expect(blockMocks.showErrorMessage.mock.calls[0][0]).toBe(`Error: ${testError.message}`);
     });
 });
 

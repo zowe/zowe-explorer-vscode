@@ -24,6 +24,7 @@ import { IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { isTypeUssTreeNode } from "./context";
 import { markDocumentUnsaved } from "../utils/workspace";
+import { errorHandling } from "../utils/ProfilesUtils";
 
 // Set up localization
 nls.config({
@@ -285,23 +286,28 @@ export function willForceUpload(
         items: [localize("saveFile.overwriteConfirmation.yes", "Yes"), localize("saveFile.overwriteConfirmation.no", "No")],
     }).then(async (selection) => {
         if (selection === localize("saveFile.overwriteConfirmation.yes", "Yes")) {
-            const uploadResponse = await Gui.withProgress(
-                {
-                    location: vscode.ProgressLocation.Notification,
-                    title,
-                },
-                () => {
-                    return uploadContent(node, doc, remotePath, profile, binary, null, returnEtag);
+            try {
+                const uploadResponse = await Gui.withProgress(
+                    {
+                        location: vscode.ProgressLocation.Notification,
+                        title,
+                    },
+                    () => {
+                        return uploadContent(node, doc, remotePath, profile, binary, null, returnEtag);
+                    }
+                );
+                if (uploadResponse.success) {
+                    Gui.showMessage(uploadResponse.commandResponse);
+                    if (node) {
+                        node.setEtag(uploadResponse.apiResponse[0].etag);
+                    }
+                } else {
+                    await markDocumentUnsaved(doc);
+                    Gui.errorMessage(uploadResponse.commandResponse);
                 }
-            );
-            if (uploadResponse.success) {
-                Gui.showMessage(uploadResponse.commandResponse);
-                if (node) {
-                    node.setEtag(uploadResponse.apiResponse[0].etag);
-                }
-            } else {
+            } catch (err) {
                 await markDocumentUnsaved(doc);
-                Gui.errorMessage(uploadResponse.commandResponse);
+                await errorHandling(err, profile.name);
             }
         } else {
             Gui.showMessage(localize("uploadContent.cancelled", "Upload cancelled."));

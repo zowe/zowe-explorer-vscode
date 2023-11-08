@@ -3418,6 +3418,28 @@ describe("Dataset Actions Unit Tests - Function openPS", () => {
         expect(mocked(vscode.workspace.openTextDocument)).toBeCalledWith(sharedUtils.getDocumentFilePath(node.label.toString(), node));
     });
 
+    it("Checking of opening for common dataset without supporting ongoing actions", async () => {
+        globals.defineGlobals("");
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        mocked(blockMocks.mvsApi.getContents).mockResolvedValueOnce({
+            success: true,
+            commandResponse: "",
+            apiResponse: {
+                etag: "123",
+            },
+        });
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        const node = new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null);
+        node.ongoingActions = undefined as any;
+
+        await dsActions.openPS(node, true, blockMocks.testDatasetTree);
+
+        expect(mocked(fs.existsSync)).toBeCalledWith(path.join(globals.DS_DIR, node.getSessionNode().label.toString(), node.label.toString()));
+        expect(mocked(vscode.workspace.openTextDocument)).toBeCalledWith(sharedUtils.getDocumentFilePath(node.label.toString(), node));
+    });
+
     it("Checking of failed attempt to open dataset", async () => {
         globals.defineGlobals("");
         const globalMocks = createGlobalMocks();
