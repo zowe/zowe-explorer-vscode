@@ -993,7 +993,9 @@ export async function submitJcl(datasetProvider: api.IZoweTree<api.IZoweDatasetT
 
     // prompts for job submit confirmation when submitting local JCL from editor/palette
     // no node passed in, ownsJob is true because local file is always owned by userID, passes in local file name
-    confirmJobSubmission(null, true, doc.fileName);
+    if (!(await confirmJobSubmission(null, true, doc.fileName))) {
+        return;
+    }
 
     // get session name
     const sessionregex = /\[(.*)(\])(?!.*\])/g;
