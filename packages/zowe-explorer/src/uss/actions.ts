@@ -276,7 +276,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
     const ending = doc.fileName.substring(start);
     const sesName = ending.substring(0, ending.indexOf(path.sep));
     const remote = ending.substring(sesName.length).replace(/\\/g, "/");
-    const directories = doc.fileName.split("/").splice(doc.fileName.split("/").indexOf("_U_") + 1);
+    const directories = doc.fileName.split(path.sep).splice(doc.fileName.split(path.sep).indexOf("_U_") + 1);
     directories.splice(1, 2);
     const profileSesnode: IZoweUSSTreeNode = ussFileProvider.mSessionNodes.find((child) => child.label.toString().trim() === sesName);
     const etagProfiles = findEtag(profileSesnode, directories, 0);
