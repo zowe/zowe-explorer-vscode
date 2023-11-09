@@ -5,7 +5,7 @@
   "author": "Zowe",
   "license": "EPL-2.0",
   "description": "Adds zFTP support to Zowe Explorer demonstrating how to extend the Zowe Explorer using its extensibility API.",
-  "version": "2.12.2-SNAPSHOT",
+  "version": "2.13.0-SNAPSHOT",
   "icon": "resources/zowe-ftp-color.png",
   "repository": {
     "url": "https://github.com/zowe/vscode-extension-for-zowe"
