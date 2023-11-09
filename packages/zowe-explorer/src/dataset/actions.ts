@@ -1068,7 +1068,7 @@ export async function submitJcl(datasetProvider: api.IZoweTree<api.IZoweDatasetT
  * @param fileName When submitting local JCL, use the document file name to submit
  * @returns Whether the job submission should continue.
  */
-async function confirmJobSubmission(node: api.IZoweTreeNode, ownsJob: boolean, fileName?: String): Promise<boolean> {
+export async function confirmJobSubmission(node: api.IZoweTreeNode, ownsJob: boolean, fileName?: String): Promise<boolean> {
     ZoweLogger.trace("dataset.actions.confirmJobSubmission called.");
 
     const showConfirmationDialog = async (): Promise<boolean> => {

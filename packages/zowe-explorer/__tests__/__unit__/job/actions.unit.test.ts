@@ -451,6 +451,12 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
         };
     }
 
+    beforeEach(() => {
+        jest.clearAllMocks();
+        jest.restoreAllMocks();
+        jest.resetAllMocks();
+    });
+
     it("Checking submit of active text editor content as JCL", async () => {
         createGlobalMocks();
         const blockMocks: any = createBlockMocks();
@@ -548,6 +554,22 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
         const errorMsg = "No editor with a document that could be submitted as JCL is currently open.";
         expect(blockMocks.errorLogSpy).toBeCalledWith(errorMsg);
         expect(blockMocks.errorGuiMsgSpy).toBeCalledWith(errorMsg);
+    });
+
+    it("Checking passing (submit) scenario of local JCL submission confirmation dialog JASON ", async () => {
+        const blockMocks: any = createBlockMocks();
+        jest.spyOn(ZoweLogger, "trace").mockImplementation();
+        Object.defineProperty(vscode.window, "activeTextEditor", {
+            value: { document: { fileName: "test" } } as any,
+            configurable: true,
+        });
+        jest.spyOn(vscode.commands, "executeCommand").mockImplementation();
+        jest.spyOn(ZoweLogger, "debug").mockImplementation();
+
+        // const confirmJobSubmissionSpy = jest.spyOn(dsActions as any, "confirmJobSubmission");
+        await expect(dsActions.submitJcl(blockMocks.testDatasetTree, {} as any)).resolves.toEqual(undefined);
+
+        //expect(confirmJobSubmissionSpy).toHaveBeenCalled();
     });
 
     it("Checking failed attempt to submit of active text editor content as JCL without profile chosen from quickpick", async () => {
