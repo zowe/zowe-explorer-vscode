@@ -451,12 +451,6 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
         };
     }
 
-    beforeEach(() => {
-        jest.clearAllMocks();
-        jest.restoreAllMocks();
-        jest.resetAllMocks();
-    });
-
     it("Checking submit of active text editor content as JCL", async () => {
         createGlobalMocks();
         const blockMocks: any = createBlockMocks();
@@ -556,7 +550,7 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
         expect(blockMocks.errorGuiMsgSpy).toBeCalledWith(errorMsg);
     });
 
-    it("Checking passing (submit) scenario of local JCL submission confirmation dialog JASON ", async () => {
+    it("Checking passing (submit) scenario of local JCL submission confirmation dialog", async () => {
         const blockMocks: any = createBlockMocks();
         jest.spyOn(ZoweLogger, "trace").mockImplementation();
         Object.defineProperty(vscode.window, "activeTextEditor", {
@@ -565,11 +559,10 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
         });
         jest.spyOn(vscode.commands, "executeCommand").mockImplementation();
         jest.spyOn(ZoweLogger, "debug").mockImplementation();
-
-        // const confirmJobSubmissionSpy = jest.spyOn(dsActions as any, "confirmJobSubmission");
+        const confirmJobSubmissionSpy = jest.spyOn(dsActions, "confirmJobSubmission");
+        confirmJobSubmissionSpy.mockResolvedValue(false);
         await expect(dsActions.submitJcl(blockMocks.testDatasetTree, {} as any)).resolves.toEqual(undefined);
-
-        //expect(confirmJobSubmissionSpy).toHaveBeenCalled();
+        confirmJobSubmissionSpy.mockRestore();
     });
 
     it("Checking failed attempt to submit of active text editor content as JCL without profile chosen from quickpick", async () => {

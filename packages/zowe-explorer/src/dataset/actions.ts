@@ -993,7 +993,7 @@ export async function submitJcl(datasetProvider: api.IZoweTree<api.IZoweDatasetT
 
     // prompts for job submit confirmation when submitting local JCL from editor/palette
     // no node passed in, ownsJob is true because local file is always owned by userID, passes in local file name
-    if (!(await confirmJobSubmission(null, true, doc.fileName))) {
+    if (!(await this.confirmJobSubmission(null, true, doc.fileName))) {
         return;
     }
 
@@ -1068,7 +1068,7 @@ export async function submitJcl(datasetProvider: api.IZoweTree<api.IZoweDatasetT
  * @param fileName When submitting local JCL, use the document file name to submit
  * @returns Whether the job submission should continue.
  */
-export async function confirmJobSubmission(node: api.IZoweTreeNode, ownsJob: boolean, fileName?: String): Promise<boolean> {
+export async function confirmJobSubmission(node: api.IZoweTreeNode, ownsJob: boolean, fileName?: string): Promise<boolean> {
     ZoweLogger.trace("dataset.actions.confirmJobSubmission called.");
 
     const showConfirmationDialog = async (): Promise<boolean> => {
