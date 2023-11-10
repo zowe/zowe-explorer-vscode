@@ -275,7 +275,7 @@ export class ProfileManagement {
             return;
         }
         const [all] = this.getPromptHideFromAllTreesQpItems();
-        const shouldHideFromAllTrees = selection.label === all.label ? true : false;
+        const shouldHideFromAllTrees = selection.label === all.label;
 
         if (isZoweDatasetTreeNode(node)) {
             return vscode.commands.executeCommand("zowe.ds.removeSession", node, null, shouldHideFromAllTrees);
