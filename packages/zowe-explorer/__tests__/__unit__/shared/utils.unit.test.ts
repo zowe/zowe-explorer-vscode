@@ -239,7 +239,12 @@ describe("Test uploadContents", () => {
             {
                 fileName: "whatever",
             } as any,
-            null
+            null,
+            {
+                profile: {
+                    encoding: 123,
+                },
+            } as any
         );
         expect(ZoweExplorerApiRegister.getUssApi(null).putContents).toBeCalled();
     });
@@ -264,7 +269,12 @@ describe("Test uploadContents", () => {
             {
                 fileName: "whatever",
             } as any,
-            null
+            null,
+            {
+                profile: {
+                    encoding: codepage,
+                },
+            } as any
         );
         expect(ZoweExplorerApiRegister.getMvsApi(null).putContents).toBeCalled();
     });

@@ -275,6 +275,14 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
     const start = path.join(globals.USS_DIR + path.sep).length;
     const ending = doc.fileName.substring(start);
     const sesName = ending.substring(0, ending.indexOf(path.sep));
+    const profile = Profiles.getInstance().loadNamedProfile(sesName);
+    if (!profile) {
+        const sessionError = localize("saveUSSFile.session.error", "Could not locate session when saving USS file.");
+        ZoweLogger.error(sessionError);
+        await Gui.errorMessage(sessionError);
+        return;
+    }
+
     const remote = ending.substring(sesName.length).replace(/\\/g, "/");
     const directories = doc.fileName.split(path.sep).splice(doc.fileName.split(path.sep).indexOf("_U_") + 1);
     directories.splice(1, 2);
@@ -315,17 +323,16 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
         }
     }
 
+    const prof = node?.getProfile() ?? profile;
     try {
-        if (sesNode) {
-            binary = binary || (await ZoweExplorerApiRegister.getUssApi(sesNode.getProfile()).isFileTagBinOrAscii(remote));
-        }
+        binary = binary || (await ZoweExplorerApiRegister.getUssApi(prof).isFileTagBinOrAscii(remote));
         const uploadResponse: IZosFilesResponse = await Gui.withProgress(
             {
                 location: vscode.ProgressLocation.Window,
                 title: localize("saveUSSFile.response.title", "Saving file..."),
             },
             () => {
-                return uploadContent(sesNode, doc, remote, sesNode.getProfile(), binary, etagToUpload, returnEtag);
+                return uploadContent(node, doc, remote, prof, binary, etagToUpload, returnEtag);
             }
         );
         if (uploadResponse.success) {
@@ -345,7 +352,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
         const errorMessage = err ? err.message : err.toString();
         if (errorMessage.includes("Rest API failure with HTTP(S) status 412")) {
             const fileLabel = doc.fileName.split("/").slice(-1)[0];
-            resolveFileConflict(node, sesNode.getProfile(), doc, fileLabel, remote, binary);
+            resolveFileConflict(node, prof, doc, fileLabel, remote, binary);
         } else {
             await markDocumentUnsaved(doc);
             await errorHandling(err, sesName);
