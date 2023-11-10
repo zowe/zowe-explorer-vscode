@@ -883,10 +883,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
 
     public deleteSession(node: IZoweJobTreeNode, hideFromAllTrees?: boolean): void {
         ZoweLogger.trace("ZosJobsProvider.deleteSession called.");
-        if (hideFromAllTrees) {
-            super.deleteSession(node);
-        }
-        super.deleteSessionForProvider(node, this);
+        super.deleteSession(node, hideFromAllTrees);
     }
 
     /**

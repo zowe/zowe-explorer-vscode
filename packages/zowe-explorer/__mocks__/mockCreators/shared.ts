@@ -17,6 +17,7 @@ import { ValidProfileEnum, IZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { FilterDescriptor } from "../../src/utils/ProfilesUtils";
 import { imperative, ZosmfSession } from "@zowe/cli";
 import { SettingsConfig } from "../../src/utils/SettingsConfig";
+import * as globals from "../../src/globals";
 
 export function createPersistentConfig() {
     return {
@@ -549,7 +550,7 @@ export function createOutputChannel() {
     } as vscode.OutputChannel;
 }
 
-export function createMockNode(name: string): IZoweTreeNode {
+export function createMockNode(name: string, context: string): IZoweTreeNode {
     return {
         dirty: false,
         getLabel: jest.fn(() => name),
@@ -562,25 +563,26 @@ export function createMockNode(name: string): IZoweTreeNode {
         setProfileToChoice: jest.fn(),
         setSessionToChoice: jest.fn(),
         label: name,
+        contextValue: context,
     };
 }
 
 export function createTreeProviders() {
     return {
         ds: {
-            mSessionNodes: [createMockNode("zosmf"), createMockNode("zosmf2")],
+            mSessionNodes: [createMockNode("zosmf", globals.DS_SESSION_CONTEXT), createMockNode("zosmf2", globals.DS_SESSION_CONTEXT)],
             deleteSession: jest.fn(),
             removeSession: jest.fn(),
             refresh: jest.fn(),
         } as any,
         uss: {
-            mSessionNodes: [createMockNode("zosmf"), createMockNode("zosmf2")],
+            mSessionNodes: [createMockNode("zosmf", globals.USS_SESSION_CONTEXT), createMockNode("zosmf2", globals.USS_SESSION_CONTEXT)],
             deleteSession: jest.fn(),
             removeSession: jest.fn(),
             refresh: jest.fn(),
         } as any,
         job: {
-            mSessionNodes: [createMockNode("zosmf"), createMockNode("zosmf2")],
+            mSessionNodes: [createMockNode("zosmf", globals.JOBS_SESSION_CONTEXT), createMockNode("zosmf2", globals.JOBS_SESSION_CONTEXT)],
             removeSession: jest.fn(),
             deleteSession: jest.fn(),
             refresh: jest.fn(),

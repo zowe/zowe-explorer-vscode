@@ -184,17 +184,15 @@ export class ZoweTreeProvider {
         return undefined;
     }
 
-    public deleteSessionForProvider(node: IZoweTreeNode, provider: IZoweTree<IZoweTreeNode>): void {
-        provider.mSessionNodes = provider.mSessionNodes.filter((mSessionNode: IZoweTreeNode) => mSessionNode.getLabel() !== node.getLabel());
-        provider.removeSession(node.getLabel() as string);
-        provider.refresh();
-    }
-
-    public deleteSession(node: IZoweTreeNode): void {
+    public deleteSession(node: IZoweTreeNode, hideFromAllTrees?: boolean): void {
         ZoweLogger.trace("ZoweTreeProvider.deleteSession called.");
-        for (const key of Object.keys(TreeProviders.providers) as Array<keyof IZoweProviders>) {
-            const provider = TreeProviders.providers[key];
-            this.deleteSessionForProvider(node, provider);
+        if (hideFromAllTrees) {
+            for (const key of Object.keys(TreeProviders.providers) as Array<keyof IZoweProviders>) {
+                const currentProvider = TreeProviders.providers[key];
+                this.deleteSessionForProvider(node, currentProvider);
+            }
+        } else {
+            this.deleteSessionForProvider(node, TreeProviders.providers[contextually.getSessionType(node)]);
         }
     }
 
@@ -304,5 +302,11 @@ export class ZoweTreeProvider {
     public async createZoweSession(zoweFileProvider: IZoweTree<IZoweNodeType>): Promise<void> {
         ZoweLogger.trace("ZoweTreeProvider.createZoweSession called.");
         await Profiles.getInstance().createZoweSession(zoweFileProvider);
+    }
+
+    private deleteSessionForProvider(node: IZoweTreeNode, provider: IZoweTree<IZoweTreeNode>): void {
+        provider.mSessionNodes = provider.mSessionNodes.filter((mSessionNode: IZoweTreeNode) => mSessionNode.getLabel() !== node.getLabel());
+        provider.removeSession(node.getLabel() as string);
+        provider.refresh();
     }
 }

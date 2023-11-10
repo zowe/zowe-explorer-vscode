@@ -484,10 +484,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      */
     public deleteSession(node: IZoweDatasetTreeNode, hideFromAllTrees?: boolean): void {
         ZoweLogger.trace("DatasetTree.deleteSession called.");
-        if (hideFromAllTrees) {
-            super.deleteSession(node);
-        }
-        super.deleteSessionForProvider(node, this);
+        super.deleteSession(node, hideFromAllTrees);
     }
 
     /**

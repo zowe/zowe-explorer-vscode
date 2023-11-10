@@ -523,10 +523,13 @@ describe("USSTree Unit Tests - Function USSTree.deleteSession()", () => {
         jest.spyOn(TreeProviders, "providers", "get").mockReturnValue(globalMocks.mockTreeProviders);
 
         blockMocks.testTree2.mSessionNodes = globalMocks.mockTreeProviders.ds.mSessionNodes;
-        blockMocks.testTree2.deleteSession(globalMocks.mockTreeProviders.ds.mSessionNodes[1]);
         expect(globalMocks.mockTreeProviders.ds.mSessionNodes.length).toEqual(2);
         expect(globalMocks.mockTreeProviders.uss.mSessionNodes.length).toEqual(2);
         expect(globalMocks.mockTreeProviders.job.mSessionNodes.length).toEqual(2);
+        blockMocks.testTree2.deleteSession(globalMocks.mockTreeProviders.ds.mSessionNodes[1], true);
+        expect(globalMocks.mockTreeProviders.ds.mSessionNodes.length).toEqual(1);
+        expect(globalMocks.mockTreeProviders.uss.mSessionNodes.length).toEqual(1);
+        expect(globalMocks.mockTreeProviders.job.mSessionNodes.length).toEqual(1);
     });
 });
 

@@ -41,6 +41,7 @@ import {
     createInstanceOfProfileInfo,
     createGetConfigMock,
     createTreeProviders,
+    createMockNode,
 } from "../../../__mocks__/mockCreators/shared";
 import { createDatasetSessionNode, createDatasetTree, createDatasetFavoritesNode } from "../../../__mocks__/mockCreators/datasets";
 import { bindMvsApi, createMvsApi } from "../../../__mocks__/mockCreators/api";
@@ -1331,30 +1332,36 @@ describe("Dataset Tree Unit Tests - Function deleteSession", () => {
     }
 
     it("Checking common run of function", () => {
-        createGlobalMocks();
-        const blockMocks = createBlockMocks();
-
-        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
-        const testTree = new DatasetTree();
-        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
-
-        testTree.deleteSession(testTree.mSessionNodes[1]);
-
-        expect(testTree.mSessionNodes.map((node) => node.label)).toEqual(["Favorites"]);
-    });
-
-    it("Checking case profile needs to be hidden for all trees", async () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks();
 
         jest.spyOn(TreeProviders, "providers", "get").mockReturnValue(globalMocks.mockTreeProviders);
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
         const testTree = new DatasetTree();
-        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        testTree.mSessionNodes = globalMocks.mockTreeProviders.ds.mSessionNodes;
+        testTree.mSessionNodes.push(createMockNode("Favorites", globals.DS_SESSION_CONTEXT));
 
+        testTree.deleteSession(testTree.mSessionNodes[0]);
+        testTree.deleteSession(testTree.mSessionNodes[1]);
+
+        expect(globalMocks.mockTreeProviders.ds.mSessionNodes.map((node) => node.label)).toEqual(["Favorites"]);
+    });
+
+    it("Checking case profile needs to be hidden for all trees", () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        jest.spyOn(TreeProviders, "providers", "get").mockReturnValue(globalMocks.mockTreeProviders);
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes = globalMocks.mockTreeProviders.ds.mSessionNodes;
+
+        testTree.deleteSession(testTree.mSessionNodes[0], true);
         testTree.deleteSession(testTree.mSessionNodes[1], true);
 
-        expect(testTree.mSessionNodes.map((node) => node.label)).toEqual(["Favorites"]);
+        expect(globalMocks.mockTreeProviders.ds.mSessionNodes.map((node) => node.label)).toEqual([]);
+        expect(globalMocks.mockTreeProviders.uss.mSessionNodes.map((node) => node.label)).toEqual([]);
+        expect(globalMocks.mockTreeProviders.job.mSessionNodes.map((node) => node.label)).toEqual([]);
     });
 });
 describe("Dataset Tree Unit Tests - Function flipState", () => {

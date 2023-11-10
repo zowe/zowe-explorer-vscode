@@ -365,10 +365,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
      */
     public deleteSession(node: IZoweUSSTreeNode, hideFromAllTrees?: boolean): void {
         ZoweLogger.trace("USSTree.deleteSession called.");
-        if (hideFromAllTrees) {
-            super.deleteSession(node);
-        }
-        super.deleteSessionForProvider(node, this);
+        super.deleteSession(node, hideFromAllTrees);
     }
 
     /**

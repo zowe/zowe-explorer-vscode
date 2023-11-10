@@ -242,10 +242,13 @@ describe("ZoweJobNode unit tests - Function deleteSession", () => {
         const globalMocks = await createGlobalMocks();
         jest.spyOn(TreeProviders, "providers", "get").mockReturnValue(globalMocks.mockTreeProviders);
         globalMocks.testJobsProvider.mSessionNodes = globalMocks.mockTreeProviders.ds.mSessionNodes;
-        await globalMocks.testJobsProvider.deleteSession(globalMocks.testJobsProvider.mSessionNodes[1]);
         expect(globalMocks.mockTreeProviders.ds.mSessionNodes.length).toEqual(2);
         expect(globalMocks.mockTreeProviders.uss.mSessionNodes.length).toEqual(2);
         expect(globalMocks.mockTreeProviders.job.mSessionNodes.length).toEqual(2);
+        await globalMocks.testJobsProvider.deleteSession(globalMocks.testJobsProvider.mSessionNodes[1], true);
+        expect(globalMocks.mockTreeProviders.ds.mSessionNodes.length).toEqual(1);
+        expect(globalMocks.mockTreeProviders.uss.mSessionNodes.length).toEqual(1);
+        expect(globalMocks.mockTreeProviders.job.mSessionNodes.length).toEqual(1);
     });
 });
 
