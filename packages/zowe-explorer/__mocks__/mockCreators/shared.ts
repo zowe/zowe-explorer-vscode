@@ -13,7 +13,7 @@ import { ZoweTreeProvider } from "../../src/abstract/ZoweTreeProvider";
 import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
 import { ZoweUSSNode } from "../../src/uss/ZoweUSSNode";
 import * as vscode from "vscode";
-import { ValidProfileEnum } from "@zowe/zowe-explorer-api";
+import { ValidProfileEnum, IZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { FilterDescriptor } from "../../src/utils/ProfilesUtils";
 import { imperative, ZosmfSession } from "@zowe/cli";
 import { SettingsConfig } from "../../src/utils/SettingsConfig";
@@ -547,4 +547,43 @@ export function createOutputChannel() {
         dispose: jest.fn(),
         replace: jest.fn(),
     } as vscode.OutputChannel;
+}
+
+export function createMockNode(name: string): IZoweTreeNode {
+    return {
+        dirty: false,
+        getLabel: jest.fn(() => name),
+        getChildren: jest.fn(),
+        getParent: jest.fn(),
+        getProfile: jest.fn(),
+        getProfileName: jest.fn(),
+        getSession: jest.fn(),
+        getSessionNode: jest.fn(),
+        setProfileToChoice: jest.fn(),
+        setSessionToChoice: jest.fn(),
+        label: name,
+    };
+}
+
+export function createTreeProviders() {
+    return {
+        ds: {
+            mSessionNodes: [createMockNode("zosmf"), createMockNode("zosmf2")],
+            deleteSession: jest.fn(),
+            removeSession: jest.fn(),
+            refresh: jest.fn(),
+        } as any,
+        uss: {
+            mSessionNodes: [createMockNode("zosmf"), createMockNode("zosmf2")],
+            deleteSession: jest.fn(),
+            removeSession: jest.fn(),
+            refresh: jest.fn(),
+        } as any,
+        job: {
+            mSessionNodes: [createMockNode("zosmf"), createMockNode("zosmf2")],
+            removeSession: jest.fn(),
+            deleteSession: jest.fn(),
+            refresh: jest.fn(),
+        } as any,
+    };
 }

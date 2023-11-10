@@ -245,14 +245,45 @@ export class ProfileManagement {
         await vscode.commands.executeCommand("zowe.ds.deleteProfile", node);
     }
 
+    private static getPromptHideFromAllTreesQpItems(): vscode.QuickPickItem[] {
+        const qpItemAll: vscode.QuickPickItem = {
+            label: localize("ProfileManagement.promptHideFromAllTrees.allLbl", "Yes"),
+            description: localize("ProfileManagement.promptHideFromAllTrees.allDesc", "Hide for all trees"),
+        };
+        const qpItemCurrent: vscode.QuickPickItem = {
+            label: localize("ProfileManagement.promptHideFromAllTrees.currentLbl", "No"),
+            description: localize("ProfileManagement.promptHideFromAllTrees.currentDesc", "Hide for current tree selected"),
+        };
+        return [qpItemAll, qpItemCurrent];
+    }
+
+    private static async promptHideFromAllTrees(): Promise<vscode.QuickPickItem> {
+        const qp = Gui.createQuickPick();
+        qp.placeholder = localize("ProfileManagement.promptHideFromAllTrees.howToHide", "Do you wish to hide this profile from all trees?");
+        qp.items = this.getPromptHideFromAllTreesQpItems();
+        qp.activeItems = [qp.items[0]];
+        qp.show();
+        const selection = await Gui.resolveQuickPick(qp);
+        qp.hide();
+        return selection;
+    }
+
     private static async handleHideProfiles(node: IZoweTreeNode): Promise<void> {
+        const selection = await this.promptHideFromAllTrees();
+        if (!selection) {
+            Gui.infoMessage(localize("ProfileManagement.handleHideProfiles.cancelled", "Operation Cancelled"));
+            return;
+        }
+        const [all] = this.getPromptHideFromAllTreesQpItems();
+        const shouldHideFromAllTrees = selection.label === all.label ? true : false;
+
         if (isZoweDatasetTreeNode(node)) {
-            return vscode.commands.executeCommand("zowe.ds.removeSession", node);
+            return vscode.commands.executeCommand("zowe.ds.removeSession", node, null, shouldHideFromAllTrees);
         }
         if (isZoweUSSTreeNode(node)) {
-            return vscode.commands.executeCommand("zowe.uss.removeSession", node);
+            return vscode.commands.executeCommand("zowe.uss.removeSession", node, null, shouldHideFromAllTrees);
         }
-        return vscode.commands.executeCommand("zowe.jobs.removeJobsSession", node);
+        return vscode.commands.executeCommand("zowe.jobs.removeJobsSession", node, null, shouldHideFromAllTrees);
     }
 
     private static async handleEnableProfileValidation(node: IZoweTreeNode): Promise<void> {

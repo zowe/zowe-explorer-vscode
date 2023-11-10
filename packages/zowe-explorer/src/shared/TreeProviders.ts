@@ -10,34 +10,38 @@
  */
 
 import * as vscode from "vscode";
-import { IZoweTree, IZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { IZoweProviders } from "./init";
+import { DatasetTree } from "../dataset/DatasetTree";
+import { USSTree } from "../uss/USSTree";
+import { ZosJobsProvider } from "../job/ZosJobsProvider";
 
-type ProviderFunction = (context: vscode.ExtensionContext) => Promise<IZoweTree<IZoweTreeNode>>;
+type ProviderFunctions = {
+    ds: (context: vscode.ExtensionContext) => Promise<DatasetTree>;
+    uss: (context: vscode.ExtensionContext) => Promise<USSTree>;
+    job: (context: vscode.ExtensionContext) => Promise<ZosJobsProvider>;
+};
+
 export class TreeProviders {
-    static #ds: IZoweTree<IZoweTreeNode>;
-    static #uss: IZoweTree<IZoweTreeNode>;
-    static #job: IZoweTree<IZoweTreeNode>;
+    static #ds: DatasetTree;
+    static #uss: USSTree;
+    static #job: ZosJobsProvider;
 
-    public static async initializeProviders(
-        context: vscode.ExtensionContext,
-        initializers: { ds: ProviderFunction; uss: ProviderFunction; job: ProviderFunction }
-    ): Promise<IZoweProviders> {
+    public static async initializeProviders(context: vscode.ExtensionContext, initializers: ProviderFunctions): Promise<IZoweProviders> {
         TreeProviders.#ds = await initializers.ds(context);
         TreeProviders.#uss = await initializers.uss(context);
         TreeProviders.#job = await initializers.job(context);
         return TreeProviders.providers;
     }
 
-    public static get ds(): IZoweTree<IZoweTreeNode> {
+    public static get ds(): DatasetTree {
         return TreeProviders.#ds;
     }
 
-    public static get uss(): IZoweTree<IZoweTreeNode> {
+    public static get uss(): USSTree {
         return TreeProviders.#uss;
     }
 
-    public static get job(): IZoweTree<IZoweTreeNode> {
+    public static get job(): ZosJobsProvider {
         return TreeProviders.#job;
     }
 

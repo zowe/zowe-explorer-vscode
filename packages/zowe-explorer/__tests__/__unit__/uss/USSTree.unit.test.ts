@@ -23,6 +23,7 @@ import {
     createInstanceOfProfile,
     createValidIProfile,
     createTreeView,
+    createTreeProviders,
 } from "../../../__mocks__/mockCreators/shared";
 import * as globals from "../../../src/globals";
 import * as vscode from "vscode";
@@ -32,6 +33,7 @@ import { getIconByNode } from "../../../src/generators/icons";
 import * as workspaceUtils from "../../../src/utils/workspace";
 import { createUssApi, bindUssApi } from "../../../__mocks__/mockCreators/api";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
+import { TreeProviders } from "../../../src/shared/TreeProviders";
 
 async function createGlobalMocks() {
     const globalMocks = {
@@ -76,6 +78,7 @@ async function createGlobalMocks() {
         testTree: null,
         profilesForValidation: { status: "active", name: "fake" },
         mockProfilesCache: new ProfilesCache(zowe.imperative.Logger.getAppLogger()),
+        mockTreeProviders: createTreeProviders(),
     };
 
     globalMocks.mockTextDocuments.push(globalMocks.mockTextDocumentDirty);
@@ -503,7 +506,7 @@ describe("USSTree Unit Tests - Function USSTree.deleteSession()", () => {
         const newMocks = {
             testTree2: new USSTree(),
             testSessionNode: new ZoweUSSNode("testSessionNode", vscode.TreeItemCollapsibleState.Collapsed, null, globalMocks.testSession, null),
-            startLength: null,
+            startLength: 0,
         };
         const ussSessionTestNode = createUSSSessionNode(globalMocks.testSession, globalMocks.testProfile);
         newMocks.testTree2.mSessionNodes.push(ussSessionTestNode);
@@ -517,8 +520,13 @@ describe("USSTree Unit Tests - Function USSTree.deleteSession()", () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
-        blockMocks.testTree2.deleteSession(blockMocks.testTree2.mSessionNodes[blockMocks.startLength - 1]);
-        expect(blockMocks.testTree2.mSessionNodes.length).toEqual(blockMocks.startLength - 1);
+        jest.spyOn(TreeProviders, "providers", "get").mockReturnValue(globalMocks.mockTreeProviders);
+
+        blockMocks.testTree2.mSessionNodes = globalMocks.mockTreeProviders.ds.mSessionNodes;
+        blockMocks.testTree2.deleteSession(globalMocks.mockTreeProviders.ds.mSessionNodes[1]);
+        expect(globalMocks.mockTreeProviders.ds.mSessionNodes.length).toEqual(2);
+        expect(globalMocks.mockTreeProviders.uss.mSessionNodes.length).toEqual(2);
+        expect(globalMocks.mockTreeProviders.job.mSessionNodes.length).toEqual(2);
     });
 });
 

@@ -40,6 +40,7 @@ import {
     createValidIProfile,
     createInstanceOfProfileInfo,
     createGetConfigMock,
+    createTreeProviders,
 } from "../../../__mocks__/mockCreators/shared";
 import { createDatasetSessionNode, createDatasetTree, createDatasetFavoritesNode } from "../../../__mocks__/mockCreators/datasets";
 import { bindMvsApi, createMvsApi } from "../../../__mocks__/mockCreators/api";
@@ -49,6 +50,7 @@ import * as dsUtils from "../../../src/dataset/utils";
 import { SettingsConfig } from "../../../src/utils/SettingsConfig";
 import * as sharedActions from "../../../src/shared/actions";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
+import { TreeProviders } from "../../../src/shared/TreeProviders";
 
 jest.mock("fs");
 jest.mock("util");
@@ -63,6 +65,7 @@ function createGlobalMocks() {
         mockShowWarningMessage: jest.fn(),
         mockProfileInfo: createInstanceOfProfileInfo(),
         mockProfilesCache: new ProfilesCache(zowe.imperative.Logger.getAppLogger()),
+        mockTreeProviders: createTreeProviders(),
     };
 
     globalMocks.mockProfileInstance = createInstanceOfProfile(globalMocks.testProfileLoaded);
@@ -1327,7 +1330,7 @@ describe("Dataset Tree Unit Tests - Function deleteSession", () => {
         };
     }
 
-    it("Checking common run of function", async () => {
+    it("Checking common run of function", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
 
@@ -1336,6 +1339,20 @@ describe("Dataset Tree Unit Tests - Function deleteSession", () => {
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
 
         testTree.deleteSession(testTree.mSessionNodes[1]);
+
+        expect(testTree.mSessionNodes.map((node) => node.label)).toEqual(["Favorites"]);
+    });
+
+    it("Checking case profile needs to be hidden for all trees", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        jest.spyOn(TreeProviders, "providers", "get").mockReturnValue(globalMocks.mockTreeProviders);
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+
+        testTree.deleteSession(testTree.mSessionNodes[1], true);
 
         expect(testTree.mSessionNodes.map((node) => node.label)).toEqual(["Favorites"]);
     });

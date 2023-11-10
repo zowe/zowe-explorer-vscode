@@ -17,12 +17,12 @@ import { IZoweUSSTreeNode, IZoweTreeNode, IZoweTree } from "@zowe/zowe-explorer-
 import { Profiles } from "../Profiles";
 import * as contextuals from "../shared/context";
 import { getSelectedNodeList } from "../shared/utils";
-import { createUSSTree } from "./USSTree";
+import { USSTree, createUSSTree } from "./USSTree";
 import { initSubscribers } from "../shared/init";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { TreeViewUtils } from "../utils/TreeViewUtils";
 
-export async function initUSSProvider(context: vscode.ExtensionContext): Promise<IZoweTree<IZoweUSSTreeNode>> {
+export async function initUSSProvider(context: vscode.ExtensionContext): Promise<USSTree> {
     ZoweLogger.trace("init.initUSSProvider called.");
     const ussFileProvider: IZoweTree<IZoweUSSTreeNode> = await createUSSTree(globals.LOG);
     if (ussFileProvider == null) {
@@ -84,11 +84,11 @@ export async function initUSSProvider(context: vscode.ExtensionContext): Promise
         vscode.commands.registerCommand("zowe.uss.ZoweUSSNode.open", (node: IZoweUSSTreeNode): void => node.openUSS(false, true, ussFileProvider))
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.uss.removeSession", async (node: IZoweUSSTreeNode, nodeList) => {
+        vscode.commands.registerCommand("zowe.uss.removeSession", async (node: IZoweUSSTreeNode, nodeList, hideFromAllTrees: boolean) => {
             let selectedNodes = getSelectedNodeList(node, nodeList);
             selectedNodes = selectedNodes.filter((element) => contextuals.isUssSession(element));
             for (const item of selectedNodes) {
-                ussFileProvider.deleteSession(item);
+                ussFileProvider.deleteSession(item, hideFromAllTrees);
             }
             await TreeViewUtils.fixVsCodeMultiSelect(ussFileProvider);
         })
@@ -191,5 +191,5 @@ export async function initUSSProvider(context: vscode.ExtensionContext): Promise
     );
 
     initSubscribers(context, ussFileProvider);
-    return ussFileProvider;
+    return ussFileProvider as USSTree;
 }

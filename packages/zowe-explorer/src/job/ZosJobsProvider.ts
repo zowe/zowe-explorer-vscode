@@ -633,6 +633,11 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         this.mHistory.removeSearchHistory(name);
     }
 
+    public removeSession(name: string): void {
+        ZoweLogger.trace("ZosJobsProvider.removeSession called.");
+        this.mHistory.removeSession(name);
+    }
+
     public resetSearchHistory(): void {
         ZoweLogger.trace("ZosJobsProvider.resetSearchHistory called.");
         this.mHistory.resetSearchHistory();
@@ -876,10 +881,14 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         }
     }
 
-    public deleteSession(node: IZoweJobTreeNode): void {
+    public deleteSession(node: IZoweJobTreeNode, hideFromAllTrees?: boolean): void {
         ZoweLogger.trace("ZosJobsProvider.deleteSession called.");
-        this.mSessionNodes = this.mSessionNodes.filter((tempNode) => tempNode.label !== node.label);
-        this.deleteSessionByLabel(node.getLabel() as string);
+        if (hideFromAllTrees) {
+            super.deleteSession(node);
+        }
+        this.mSessionNodes = this.mSessionNodes.filter((mSessionNode: IZoweJobTreeNode) => mSessionNode.getLabel() !== node.getLabel());
+        this.removeSession(node.getLabel() as string);
+        this.refresh();
     }
 
     /**

@@ -363,10 +363,13 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
      *
      * @param {IZoweUSSTreeNode} [node]
      */
-    public deleteSession(node: IZoweUSSTreeNode): void {
+    public deleteSession(node: IZoweUSSTreeNode, hideFromAllTrees?: boolean): void {
         ZoweLogger.trace("USSTree.deleteSession called.");
-        this.mSessionNodes = this.mSessionNodes.filter((tempNode) => tempNode.label.toString() !== node.label.toString());
-        this.mHistory.removeSession(node.label as string);
+        if (hideFromAllTrees) {
+            super.deleteSession(node);
+        }
+        this.mSessionNodes = this.mSessionNodes.filter((mSessionNode: IZoweUSSTreeNode) => mSessionNode.getLabel() !== node.getLabel());
+        this.removeSession(node.getLabel() as string);
         this.refresh();
     }
 
@@ -854,6 +857,11 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
     public removeSearchHistory(name: string): void {
         ZoweLogger.trace("USSTree.removeSearchHistory called.");
         this.mHistory.removeSearchHistory(name);
+    }
+
+    public removeSession(name: string): void {
+        ZoweLogger.trace("USSTree.removeSession called.");
+        this.mHistory.removeSession(name);
     }
 
     public resetSearchHistory(): void {

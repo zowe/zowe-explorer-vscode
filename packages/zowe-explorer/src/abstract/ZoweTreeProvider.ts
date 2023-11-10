@@ -22,6 +22,8 @@ import { setProfile, setSession, errorHandling } from "../utils/ProfilesUtils";
 import * as nls from "vscode-nls";
 import { SettingsConfig } from "../utils/SettingsConfig";
 import { ZoweLogger } from "../utils/LoggerUtils";
+import { TreeProviders } from "../shared/TreeProviders";
+import { IZoweProviders } from "../shared/init";
 
 // Set up localization
 nls.config({
@@ -182,6 +184,18 @@ export class ZoweTreeProvider {
         return undefined;
     }
 
+    public deleteSession(node: IZoweTreeNode): void {
+        ZoweLogger.trace("ZoweTreeProvider.deleteSession called.");
+        for (const key of Object.keys(TreeProviders.providers) as Array<keyof IZoweProviders>) {
+            const provider = TreeProviders.providers[key];
+            provider.mSessionNodes = (provider.mSessionNodes as IZoweTreeNode[]).filter(
+                (mSessionNode: IZoweTreeNode) => mSessionNode.getLabel() !== node.getLabel()
+            );
+            provider.removeSession(node.getLabel() as string);
+            provider.refresh();
+        }
+    }
+
     public async editSession(node: IZoweTreeNode, zoweFileProvider: IZoweTree<IZoweNodeType>): Promise<void> {
         ZoweLogger.trace("ZoweTreeProvider.editSession called.");
         const profile = node.getProfile();
@@ -288,11 +302,5 @@ export class ZoweTreeProvider {
     public async createZoweSession(zoweFileProvider: IZoweTree<IZoweNodeType>): Promise<void> {
         ZoweLogger.trace("ZoweTreeProvider.createZoweSession called.");
         await Profiles.getInstance().createZoweSession(zoweFileProvider);
-    }
-
-    protected deleteSessionByLabel(revisedLabel: string): void {
-        ZoweLogger.trace("ZoweTreeProvider.deleteSessionByLabel called.");
-        this.mHistory.removeSession(revisedLabel);
-        this.refresh();
     }
 }
