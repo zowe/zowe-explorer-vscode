@@ -487,9 +487,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         if (hideFromAllTrees) {
             super.deleteSession(node);
         }
-        this.mSessionNodes = this.mSessionNodes.filter((mSessionNode: IZoweDatasetTreeNode) => mSessionNode.getLabel() !== node.getLabel());
-        this.removeSession(node.getLabel() as string);
-        this.refresh();
+        super.deleteSessionForProvider(node, this);
     }
 
     /**

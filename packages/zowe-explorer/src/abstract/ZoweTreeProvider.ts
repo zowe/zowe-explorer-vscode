@@ -184,15 +184,17 @@ export class ZoweTreeProvider {
         return undefined;
     }
 
+    public deleteSessionForProvider(node: IZoweTreeNode, provider: IZoweTree<IZoweTreeNode>): void {
+        provider.mSessionNodes = provider.mSessionNodes.filter((mSessionNode: IZoweTreeNode) => mSessionNode.getLabel() !== node.getLabel());
+        provider.removeSession(node.getLabel() as string);
+        provider.refresh();
+    }
+
     public deleteSession(node: IZoweTreeNode): void {
         ZoweLogger.trace("ZoweTreeProvider.deleteSession called.");
         for (const key of Object.keys(TreeProviders.providers) as Array<keyof IZoweProviders>) {
             const provider = TreeProviders.providers[key];
-            provider.mSessionNodes = (provider.mSessionNodes as IZoweTreeNode[]).filter(
-                (mSessionNode: IZoweTreeNode) => mSessionNode.getLabel() !== node.getLabel()
-            );
-            provider.removeSession(node.getLabel() as string);
-            provider.refresh();
+            this.deleteSessionForProvider(node, provider);
         }
     }
 

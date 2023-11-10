@@ -368,9 +368,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         if (hideFromAllTrees) {
             super.deleteSession(node);
         }
-        this.mSessionNodes = this.mSessionNodes.filter((mSessionNode: IZoweUSSTreeNode) => mSessionNode.getLabel() !== node.getLabel());
-        this.removeSession(node.getLabel() as string);
-        this.refresh();
+        super.deleteSessionForProvider(node, this);
     }
 
     /**

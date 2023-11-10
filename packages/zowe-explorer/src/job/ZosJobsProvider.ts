@@ -886,9 +886,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         if (hideFromAllTrees) {
             super.deleteSession(node);
         }
-        this.mSessionNodes = this.mSessionNodes.filter((mSessionNode: IZoweJobTreeNode) => mSessionNode.getLabel() !== node.getLabel());
-        this.removeSession(node.getLabel() as string);
-        this.refresh();
+        super.deleteSessionForProvider(node, this);
     }
 
     /**
