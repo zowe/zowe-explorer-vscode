@@ -306,7 +306,7 @@ export class ProfilesUtils {
             )
         );
         const customCredentialManagerExtension =
-            credentialManagerMap?.credMgrZEName && vscode.extensions.getExtension(credentialManagerMap.credMgrZEName);
+            credentialManagerMap.credMgrZEName && vscode.extensions.getExtension(credentialManagerMap.credMgrZEName);
         const credentialManager = await ProfilesUtils.activateCredentialManagerOverride(customCredentialManagerExtension);
         if (credentialManager) {
             Object.setPrototypeOf(credentialManager.prototype, imperative.AbstractCredentialManager.prototype);
