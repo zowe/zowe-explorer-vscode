@@ -1577,7 +1577,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
     const ending = doc.fileName.substring(start);
     const sesName = ending.substring(0, ending.indexOf(path.sep));
     const profile = Profiles.getInstance().loadNamedProfile(sesName);
-    const fileLabel = doc.fileName.split("/").slice(-1)[0];
+    const fileLabel = path.basename(doc.fileName);
     const dataSetName = fileLabel.substring(0, fileLabel.indexOf("("));
     const memberName = fileLabel.substring(fileLabel.indexOf("(") + 1, fileLabel.indexOf(")"));
     if (!profile) {
