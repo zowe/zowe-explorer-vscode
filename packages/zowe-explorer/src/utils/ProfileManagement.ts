@@ -17,7 +17,7 @@ import { ProfilesUtils } from "./ProfilesUtils";
 import * as nls from "vscode-nls";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
-import { isZoweDatasetTreeNode, isZoweUSSTreeNode } from "../shared/utils";
+import { getSessionType } from "../shared/context";
 
 // Set up localization
 nls.config({
@@ -245,22 +245,22 @@ export class ProfileManagement {
         await vscode.commands.executeCommand("zowe.ds.deleteProfile", node);
     }
 
-    private static getPromptHideFromAllTreesQpItems(): vscode.QuickPickItem[] {
+    private static getPromptChangeForAllTreesOptions(): vscode.QuickPickItem[] {
         const qpItemAll: vscode.QuickPickItem = {
-            label: localize("ProfileManagement.promptHideFromAllTrees.allLbl", "Yes"),
-            description: localize("ProfileManagement.promptHideFromAllTrees.allDesc", "Hide for all trees"),
+            label: localize("ProfileManagement.getPromptChangeForAllTreesOptions.allLbl", "Yes"),
+            description: localize("ProfileManagement.getPromptChangeForAllTreesOptions.allDesc", "Apply to all trees"),
         };
         const qpItemCurrent: vscode.QuickPickItem = {
-            label: localize("ProfileManagement.promptHideFromAllTrees.currentLbl", "No"),
-            description: localize("ProfileManagement.promptHideFromAllTrees.currentDesc", "Hide for current tree selected"),
+            label: localize("ProfileManagement.getPromptChangeForAllTreesOptions.currentLbl", "No"),
+            description: localize("ProfileManagement.getPromptChangeForAllTreesOptions.currentDesc", "Apply to current tree selected"),
         };
         return [qpItemAll, qpItemCurrent];
     }
 
-    private static async promptHideFromAllTrees(): Promise<vscode.QuickPickItem> {
+    private static async promptChangeForAllTrees(): Promise<vscode.QuickPickItem> {
         const qp = Gui.createQuickPick();
-        qp.placeholder = localize("ProfileManagement.promptHideFromAllTrees.howToHide", "Do you wish to hide this profile from all trees?");
-        qp.items = this.getPromptHideFromAllTreesQpItems();
+        qp.placeholder = localize("ProfileManagement.promptChangeForAllTrees.howToChange", "Do you wish to apply this for all trees?");
+        qp.items = this.getPromptChangeForAllTreesOptions();
         qp.activeItems = [qp.items[0]];
         qp.show();
         const selection = await Gui.resolveQuickPick(qp);
@@ -268,41 +268,42 @@ export class ProfileManagement {
         return selection;
     }
 
-    private static async handleHideProfiles(node: IZoweTreeNode): Promise<void> {
-        const selection = await this.promptHideFromAllTrees();
+    private static async handleChangeForAllTrees(): Promise<boolean> {
+        const selection = await this.promptChangeForAllTrees();
         if (!selection) {
+            return;
+        }
+        const [all] = this.getPromptChangeForAllTreesOptions();
+        return selection.label === all.label;
+    }
+
+    private static async handleHideProfiles(node: IZoweTreeNode): Promise<void> {
+        const shouldHideFromAllTrees = await this.handleChangeForAllTrees();
+        if (shouldHideFromAllTrees === undefined) {
             Gui.infoMessage(localize("ProfileManagement.handleHideProfiles.cancelled", "Operation Cancelled"));
             return;
         }
-        const [all] = this.getPromptHideFromAllTreesQpItems();
-        const shouldHideFromAllTrees = selection.label === all.label;
-
-        if (isZoweDatasetTreeNode(node)) {
-            return vscode.commands.executeCommand("zowe.ds.removeSession", node, null, shouldHideFromAllTrees);
-        }
-        if (isZoweUSSTreeNode(node)) {
-            return vscode.commands.executeCommand("zowe.uss.removeSession", node, null, shouldHideFromAllTrees);
-        }
-        return vscode.commands.executeCommand("zowe.jobs.removeJobsSession", node, null, shouldHideFromAllTrees);
+        const type: string = getSessionType(node);
+        return vscode.commands.executeCommand(`zowe.${type}.removeSession`, node, null, shouldHideFromAllTrees);
     }
 
     private static async handleEnableProfileValidation(node: IZoweTreeNode): Promise<void> {
-        if (isZoweDatasetTreeNode(node)) {
-            return vscode.commands.executeCommand("zowe.ds.enableValidation", node);
+        const shouldHideFromAllTrees = await this.handleChangeForAllTrees();
+        if (shouldHideFromAllTrees === undefined) {
+            Gui.infoMessage(localize("ProfileManagement.handleEnableProfileValidation.cancelled", "Operation Cancelled"));
+            return;
         }
-        if (isZoweUSSTreeNode(node)) {
-            return vscode.commands.executeCommand("zowe.uss.enableValidation", node);
-        }
-        return vscode.commands.executeCommand("zowe.jobs.enableValidation", node);
+        const type: string = getSessionType(node);
+        return vscode.commands.executeCommand(`zowe.${type}.enableValidation`, node, shouldHideFromAllTrees);
     }
 
     private static async handleDisableProfileValidation(node: IZoweTreeNode): Promise<void> {
-        if (isZoweDatasetTreeNode(node)) {
-            return vscode.commands.executeCommand("zowe.ds.disableValidation", node);
+        const shouldHideFromAllTrees = await this.handleChangeForAllTrees();
+        if (shouldHideFromAllTrees === undefined) {
+            Gui.infoMessage(localize("ProfileManagement.handleDisableProfileValidation.cancelled", "Operation Cancelled"));
+            return;
         }
-        if (isZoweUSSTreeNode(node)) {
-            return vscode.commands.executeCommand("zowe.uss.disableValidation", node);
-        }
-        return vscode.commands.executeCommand("zowe.jobs.disableValidation", node);
+        const type: string = getSessionType(node);
+        return vscode.commands.executeCommand(`zowe.${type}.disableValidation`, node, shouldHideFromAllTrees);
     }
 }

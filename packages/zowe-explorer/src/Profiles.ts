@@ -182,10 +182,24 @@ export class Profiles extends ProfilesCache {
         return profileStatus;
     }
 
-    public disableValidation(node: IZoweNodeType): IZoweNodeType {
+    public disableValidation(node: IZoweNodeType, shouldHideFromAllTrees: boolean): IZoweNodeType {
         ZoweLogger.trace("Profiles.disableValidation called.");
-        this.disableValidationContext(node);
+        if (shouldHideFromAllTrees) {
+            this.disableValidtionContextForAllTrees(node.getLabel().toString());
+        } else {
+            this.disableValidationContext(node);
+        }
         return node;
+    }
+
+    public disableValidtionContextForAllTrees(label: string): IZoweNodeType[] {
+        const treeNodes = TreeProviders.getSessionForAllTrees(label);
+        treeNodes.forEach((treeNode) => {
+            if (treeNode) {
+                this.disableValidationContext(treeNode);
+            }
+        });
+        return treeNodes;
     }
 
     public disableValidationContext(node: IZoweNodeType): IZoweNodeType {
@@ -203,10 +217,24 @@ export class Profiles extends ProfilesCache {
         return node;
     }
 
-    public enableValidation(node: IZoweNodeType): IZoweNodeType {
+    public enableValidation(node: IZoweNodeType, shouldHideFromAllTrees: boolean): IZoweNodeType {
         ZoweLogger.trace("Profiles.enableValidation called.");
-        this.enableValidationContext(node);
+        if (shouldHideFromAllTrees) {
+            this.enableValidationContextForAllTrees(node.getLabel().toString());
+        } else {
+            this.enableValidationContext(node);
+        }
         return node;
+    }
+
+    public enableValidationContextForAllTrees(label: string): IZoweNodeType[] {
+        const treeNodes = TreeProviders.getSessionForAllTrees(label);
+        treeNodes.forEach((treeNode) => {
+            if (treeNode) {
+                this.enableValidationContext(treeNode);
+            }
+        });
+        return treeNodes;
     }
 
     public enableValidationContext(node: IZoweNodeType): IZoweNodeType {

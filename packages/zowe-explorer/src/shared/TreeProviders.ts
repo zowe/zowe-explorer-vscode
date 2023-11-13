@@ -14,6 +14,7 @@ import { IZoweProviders } from "./init";
 import { DatasetTree } from "../dataset/DatasetTree";
 import { USSTree } from "../uss/USSTree";
 import { ZosJobsProvider } from "../job/ZosJobsProvider";
+import { IZoweNodeType } from "@zowe/zowe-explorer-api";
 
 type ProviderFunctions = {
     ds: (context: vscode.ExtensionContext) => Promise<DatasetTree>;
@@ -51,5 +52,12 @@ export class TreeProviders {
             uss: TreeProviders.#uss,
             job: TreeProviders.#job,
         };
+    }
+
+    public static getSessionForAllTrees(name: string): IZoweNodeType[] {
+        const dsNode = TreeProviders.ds.mSessionNodes.find((mSessionNode) => mSessionNode.label === name);
+        const ussNode = TreeProviders.uss.mSessionNodes.find((mSessionNode) => mSessionNode.label === name);
+        const jobNode = TreeProviders.job.mSessionNodes.find((mSessionNode) => mSessionNode.label === name);
+        return [dsNode, ussNode, jobNode];
     }
 }

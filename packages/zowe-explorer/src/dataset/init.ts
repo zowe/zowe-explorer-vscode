@@ -188,14 +188,14 @@ export async function initDatasetProvider(context: vscode.ExtensionContext): Pro
         })
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.ds.disableValidation", (node) => {
-            Profiles.getInstance().disableValidation(node);
+        vscode.commands.registerCommand("zowe.ds.disableValidation", (node, shouldHideFromAllTrees) => {
+            Profiles.getInstance().disableValidation(node, shouldHideFromAllTrees);
             datasetProvider.refreshElement(node);
         })
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.ds.enableValidation", (node) => {
-            Profiles.getInstance().enableValidation(node);
+        vscode.commands.registerCommand("zowe.ds.enableValidation", (node, shouldHideFromAllTrees) => {
+            Profiles.getInstance().enableValidation(node, shouldHideFromAllTrees);
             datasetProvider.refreshElement(node);
         })
     );

@@ -75,7 +75,7 @@ export async function initJobsProvider(context: vscode.ExtensionContext): Promis
     context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.setOwner", (job) => jobActions.setOwner(job, jobsProvider)));
     context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.setPrefix", (job) => jobActions.setPrefix(job, jobsProvider)));
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.jobs.removeJobsSession", (job, jobList, hideFromAllTrees) => {
+        vscode.commands.registerCommand("zowe.jobs.removeSession", (job, jobList, hideFromAllTrees) => {
             let selectedNodes = getSelectedNodeList(job, jobList);
             selectedNodes = selectedNodes.filter((element) => contextuals.isJobsSession(element));
             for (const item of selectedNodes) {
@@ -131,14 +131,14 @@ export async function initJobsProvider(context: vscode.ExtensionContext): Promis
         vscode.commands.registerCommand("zowe.jobs.removeFavProfile", async (node): Promise<void> => jobsProvider.removeFavProfile(node.label, true))
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.jobs.disableValidation", (node) => {
-            Profiles.getInstance().disableValidation(node);
+        vscode.commands.registerCommand("zowe.jobs.disableValidation", (node, shouldHideFromAllTrees) => {
+            Profiles.getInstance().disableValidation(node, shouldHideFromAllTrees);
             jobsProvider.refreshElement(node);
         })
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.jobs.enableValidation", (node) => {
-            Profiles.getInstance().enableValidation(node);
+        vscode.commands.registerCommand("zowe.jobs.enableValidation", (node, shouldHideFromAllTrees) => {
+            Profiles.getInstance().enableValidation(node, shouldHideFromAllTrees);
             jobsProvider.refreshElement(node);
         })
     );
