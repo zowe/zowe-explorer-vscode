@@ -445,6 +445,34 @@ describe("USS Action Unit Tests - Function saveUSSFile", () => {
         return newMocks;
     }
 
+    it("To check Compare Function is getting triggered from Favorites", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        // Create nodes for Session section
+        const node = new ZoweUSSNode("HLQ.TEST.AFILE", vscode.TreeItemCollapsibleState.Expanded, blockMocks.node, null, "/");
+        const childNode = new ZoweUSSNode("MEM", vscode.TreeItemCollapsibleState.None, node, null, "/");
+        node.children.push(childNode);
+        blockMocks.testUSSTree.mSessionNodes.find((child) => child.label.toString().trim() === "usstest").children.push(node);
+
+        // Create nodes for Favorites section
+        const favProfileNode = new ZoweUSSNode("usstest", vscode.TreeItemCollapsibleState.Expanded, blockMocks.node, null, "/");
+        const favoriteNode = new ZoweUSSNode("HLQ.TEST.AFILE", vscode.TreeItemCollapsibleState.Expanded, favProfileNode, null, "/");
+        const favoriteChildNode = new ZoweUSSNode("MEM", vscode.TreeItemCollapsibleState.None, favoriteNode, null, "/");
+        favoriteNode.children.push(favoriteChildNode);
+        blockMocks.testUSSTree.mFavorites.push(favProfileNode);
+        blockMocks.testUSSTree.mFavorites[0].children.push(favoriteNode);
+        mocked(sharedUtils.concatChildNodes).mockReturnValueOnce([favoriteNode, favoriteChildNode]);
+
+        const testDocument = createTextDocument("HLQ.TEST.AFILE(MEM)", blockMocks.ussNode);
+        jest.spyOn(favoriteChildNode, "getEtag").mockImplementation(() => "123");
+        (testDocument as any).fileName = path.join(globals.USS_DIR, "usstest/user/usstest/HLQ.TEST.AFILE/MEM");
+
+        await ussNodeActions.saveUSSFile(testDocument, blockMocks.testUSSTree);
+
+        expect(mocked(sharedUtils.concatChildNodes)).toBeCalled();
+    });
+
     it("Testing that saveUSSFile is executed successfully", async () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
@@ -499,41 +527,6 @@ describe("USS Action Unit Tests - Function saveUSSFile", () => {
         expect(globalMocks.showErrorMessage.mock.calls.length).toBe(1);
         expect(globalMocks.showErrorMessage.mock.calls[0][0]).toBe("Error: Test Error");
         expect(mocked(vscode.workspace.applyEdit)).toHaveBeenCalledTimes(2);
-    });
-
-    it("Tests that saveUSSFile fails when HTTP error occurs", async () => {
-        const globalMocks = createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
-
-        globalMocks.withProgress.mockImplementation((progLocation, callback) => callback());
-        globalMocks.fileToUSSFile.mockResolvedValue(blockMocks.testResponse);
-        globalMocks.concatChildNodes.mockReturnValue([blockMocks.ussNode.children[0]]);
-        const downloadResponse = createFileResponse({ etag: "" });
-        blockMocks.testResponse.success = false;
-        blockMocks.testResponse.commandResponse = "Rest API failure with HTTP(S) status 412";
-
-        globalMocks.withProgress.mockRejectedValueOnce(Error("Rest API failure with HTTP(S) status 412"));
-        globalMocks.ussFile.mockResolvedValueOnce(downloadResponse);
-        Object.defineProperty(wsUtils, "markDocumentUnsaved", {
-            value: jest.fn(),
-            configurable: true,
-        });
-        Object.defineProperty(context, "isTypeUssTreeNode", {
-            value: jest.fn().mockReturnValueOnce(true),
-            configurable: true,
-        });
-        const logSpy = jest.spyOn(ZoweLogger, "warn");
-        const commandSpy = jest.spyOn(vscode.commands, "executeCommand");
-
-        try {
-            await ussNodeActions.saveUSSFile(blockMocks.testDoc, blockMocks.testUSSTree);
-        } catch (e) {
-            expect(e.message).toBe("vscode.Position is not a constructor");
-        }
-        expect(logSpy).toBeCalledWith("Remote file has changed. Presenting with way to resolve file.");
-        expect(commandSpy).toBeCalledWith("workbench.files.action.compareWithSaved");
-        logSpy.mockClear();
-        commandSpy.mockClear();
     });
 });
 

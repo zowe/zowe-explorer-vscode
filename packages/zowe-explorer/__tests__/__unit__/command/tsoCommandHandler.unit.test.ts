@@ -21,6 +21,7 @@ import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import * as globals from "../../../src/globals";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
+import { ProfileManagement } from "../../../src/utils/ProfileManagement";
 
 describe("TsoCommandHandler unit testing", () => {
     const showErrorMessage = jest.fn();
@@ -118,6 +119,10 @@ describe("TsoCommandHandler unit testing", () => {
     Object.defineProperty(vscode.window, "createOutputChannel", { value: createOutputChannel });
     Object.defineProperty(vscode, "ProgressLocation", { value: ProgressLocation });
     Object.defineProperty(vscode.window, "withProgress", { value: withProgress });
+    Object.defineProperty(ProfileManagement, "getRegisteredProfileNameList", {
+        value: jest.fn().mockReturnValue(["firstName", "secondName"]),
+        configurable: true,
+    });
 
     mockLoadNamedProfile.mockReturnValue({ profile: { name: "aProfile", type: "zosmf" } });
     getConfiguration.mockReturnValue({
@@ -406,25 +411,6 @@ describe("TsoCommandHandler unit testing", () => {
         expect(showInputBox.mock.calls.length).toBe(0);
     });
 
-    it("tests the issueTsoCommand function no profiles error", async () => {
-        Object.defineProperty(profileLoader.Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    allProfiles: [],
-                    defaultProfile: undefined,
-                    checkCurrentProfile: jest.fn(() => {
-                        return profilesForValidation;
-                    }),
-                    validateProfiles: jest.fn(),
-                    getBaseProfile: jest.fn(),
-                    validProfile: ValidProfileEnum.VALID,
-                };
-            }),
-        });
-        await tsoActions.issueTsoCommand();
-        expect(showInformationMessage.mock.calls[0][0]).toEqual("No profiles available");
-    });
-
     it("tests the issueTsoCommand prompt credentials", async () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
@@ -644,5 +630,28 @@ describe("TsoCommandHandler unit testing", () => {
         ).resolves.toEqual({
             name: "test1",
         });
+    });
+
+    it("tests the issueTsoCommand function no profiles error", async () => {
+        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [],
+                    defaultProfile: undefined,
+                    checkCurrentProfile: jest.fn(() => {
+                        return profilesForValidation;
+                    }),
+                    validateProfiles: jest.fn(),
+                    getBaseProfile: jest.fn(),
+                    validProfile: ValidProfileEnum.VALID,
+                };
+            }),
+        });
+        Object.defineProperty(ProfileManagement, "getRegisteredProfileNameList", {
+            value: jest.fn().mockReturnValue([]),
+            configurable: true,
+        });
+        await tsoActions.issueTsoCommand();
+        expect(showInformationMessage.mock.calls[0][0]).toEqual("No profiles available");
     });
 });

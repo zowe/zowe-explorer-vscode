@@ -27,6 +27,24 @@ nls.config({
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 export class ProfileManagement {
+    public static getRegisteredProfileNameList(registeredTree: globals.Trees): string[] {
+        let profileNamesList: string[] = [];
+        try {
+            profileNamesList = Profiles.getInstance()
+                .allProfiles.map((profile) => profile.name)
+                .filter((profileName) => {
+                    const profile = Profiles.getInstance().loadNamedProfile(profileName);
+                    if (profile) {
+                        return this.isProfileRegisteredWithTree(registeredTree, profile);
+                    }
+                    return false;
+                });
+            return profileNamesList;
+        } catch (err) {
+            ZoweLogger.warn(err);
+            return profileNamesList;
+        }
+    }
     public static async manageProfile(node: IZoweTreeNode): Promise<void> {
         const profile = node.getProfile();
         let selected: vscode.QuickPickItem;
@@ -305,5 +323,24 @@ export class ProfileManagement {
         }
         const type: string = getSessionType(node);
         return vscode.commands.executeCommand(`zowe.${type}.disableValidation`, node, shouldHideFromAllTrees);
+    }
+    private static isProfileRegisteredWithTree(tree: globals.Trees, profile: imperative.IProfileLoaded): boolean {
+        switch (tree) {
+            case globals.Trees.MVS: {
+                const mvsProfileTypes = ZoweExplorerApiRegister.getInstance().registeredMvsApiTypes();
+                return mvsProfileTypes.includes(profile.type);
+            }
+            case globals.Trees.USS: {
+                const ussProfileTypes = ZoweExplorerApiRegister.getInstance().registeredUssApiTypes();
+                return ussProfileTypes.includes(profile.type);
+            }
+            case globals.Trees.JES: {
+                const jesProfileTypes = ZoweExplorerApiRegister.getInstance().registeredJesApiTypes();
+                return jesProfileTypes.includes(profile.type);
+            }
+            default: {
+                return false;
+            }
+        }
     }
 }
