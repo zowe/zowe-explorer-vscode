@@ -10,6 +10,7 @@
  */
 
 import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
+import * as globals from "../../../src/globals";
 import * as sharedMock from "../../../__mocks__/mockCreators/shared";
 import * as dsMock from "../../../__mocks__/mockCreators/datasets";
 import * as unixMock from "../../../__mocks__/mockCreators/uss";
@@ -21,6 +22,7 @@ import { Profiles } from "../../../src/Profiles";
 import * as vscode from "vscode";
 import { imperative } from "@zowe/cli";
 import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
+import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 
 jest.mock("fs");
 jest.mock("vscode");
@@ -256,6 +258,82 @@ describe("ProfileManagement unit tests", () => {
             await ProfileManagement.manageProfile(mocks.mockDsSessionNode);
             expect(mocks.debugLogSpy).toBeCalledWith(mocks.logMsg);
             expect(mocks.commandSpy).toHaveBeenLastCalledWith("zowe.ds.disableValidation", mocks.mockDsSessionNode);
+        });
+    });
+    describe("getRegisteredProfileNameList unit tests", () => {
+        function createBlockMocks(globalMocks): any {
+            const theMocks = {
+                registry: {
+                    registeredMvsApiTypes: jest.fn(),
+                    registeredUssApiTypes: jest.fn(),
+                    registeredJesApiTypes: jest.fn(),
+                },
+            };
+            globalMocks.mockProfileInstance.allProfiles = [{ name: "sestest" }];
+            jest.spyOn(globalMocks.mockProfileInstance, "loadNamedProfile").mockReturnValue(sharedMock.createValidIProfile());
+            Object.defineProperty(ZoweExplorerApiRegister, "getInstance", {
+                value: jest.fn().mockReturnValue(theMocks.registry),
+                configurable: true,
+            });
+            return theMocks;
+        }
+        afterEach(() => {
+            jest.clearAllMocks();
+            jest.resetAllMocks();
+        });
+        it("should return zosmf profile registered with the MVS tree", () => {
+            const blockMocks = createBlockMocks(createGlobalMocks());
+            blockMocks.registry.registeredMvsApiTypes = jest.fn().mockReturnValueOnce("zosmf");
+            expect(ProfileManagement.getRegisteredProfileNameList(globals.Trees.MVS)).toEqual(["sestest"]);
+        });
+        it("should return zosmf profile registered with the USS tree", () => {
+            const blockMocks = createBlockMocks(createGlobalMocks());
+            blockMocks.registry.registeredUssApiTypes = jest.fn().mockReturnValueOnce("zosmf");
+            expect(ProfileManagement.getRegisteredProfileNameList(globals.Trees.USS)).toEqual(["sestest"]);
+        });
+        it("should return zosmf profile registered with the JES tree", () => {
+            const blockMocks = createBlockMocks(createGlobalMocks());
+            blockMocks.registry.registeredJesApiTypes = jest.fn().mockReturnValueOnce("zosmf");
+            expect(ProfileManagement.getRegisteredProfileNameList(globals.Trees.JES)).toEqual(["sestest"]);
+        });
+        it("should return empty array with no profiles in allProfiles", () => {
+            const globalMocks = createGlobalMocks();
+            const blockMocks = createBlockMocks(globalMocks);
+            globalMocks.mockProfileInstance.allProfiles = [];
+            const regSpy = jest.spyOn(blockMocks.registry, "registeredJesApiTypes");
+            expect(ProfileManagement.getRegisteredProfileNameList(globals.Trees.JES)).toEqual([]);
+            expect(regSpy).not.toBeCalled();
+        });
+        it("should return empty array when profile in allProfiles doesn't load", () => {
+            const globalMocks = createGlobalMocks();
+            const blockMocks = createBlockMocks(globalMocks);
+            jest.spyOn(globalMocks.mockProfileInstance, "loadNamedProfile").mockReturnValue(undefined);
+            const regSpy = jest.spyOn(blockMocks.registry, "registeredJesApiTypes");
+            expect(ProfileManagement.getRegisteredProfileNameList(globals.Trees.JES)).toEqual([]);
+            expect(regSpy).not.toBeCalled();
+        });
+        it("should return empty array when profile type isn't registered", () => {
+            const blockMocks = createBlockMocks(createGlobalMocks());
+            blockMocks.registry.registeredJesApiTypes = jest.fn().mockReturnValueOnce("zftp");
+            expect(ProfileManagement.getRegisteredProfileNameList(globals.Trees.JES)).toEqual([]);
+        });
+        it("should return empty array when unkown tree is forcefully passed", () => {
+            createBlockMocks(createGlobalMocks());
+            expect(ProfileManagement.getRegisteredProfileNameList("fake" as any)).toEqual([]);
+        });
+        it("should catch error and log a warning then return empty array", () => {
+            const globalMocks = createGlobalMocks();
+            createBlockMocks(globalMocks);
+            const thrownError = new Error("fake error");
+            const warnSpy = jest.spyOn(ZoweLogger, "warn");
+            Object.defineProperty(Profiles, "getInstance", {
+                value: jest.fn().mockImplementationOnce(() => {
+                    throw thrownError;
+                }),
+                configurable: true,
+            });
+            expect(ProfileManagement.getRegisteredProfileNameList(globals.Trees.JES)).toEqual([]);
+            expect(warnSpy).toBeCalledWith(thrownError);
         });
     });
 });

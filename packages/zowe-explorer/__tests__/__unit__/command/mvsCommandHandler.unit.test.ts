@@ -21,6 +21,7 @@ import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import * as globals from "../../../src/globals";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
+import { ProfileManagement } from "../../../src/utils/ProfileManagement";
 
 describe("mvsCommandActions unit testing", () => {
     const showErrorMessage = jest.fn();
@@ -59,6 +60,10 @@ describe("mvsCommandActions unit testing", () => {
     });
     Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
     Object.defineProperty(ZoweLogger, "error", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ProfileManagement, "getRegisteredProfileNameList", {
+        value: jest.fn().mockReturnValue(["firstName", "secondName"]),
+        configurable: true,
+    });
 
     createQuickPick.mockReturnValue({
         placeholder: 'Choose "Create new..." to define a new profile or select an existing profile to add to the Data Set Explorer',
@@ -404,25 +409,6 @@ describe("mvsCommandActions unit testing", () => {
         expect(showInputBox.mock.calls.length).toBe(0);
     });
 
-    it("tests the issueMvsCommand function no profiles error", async () => {
-        Object.defineProperty(profileLoader.Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    allProfiles: [],
-                    defaultProfile: undefined,
-                    checkCurrentProfile: jest.fn(() => {
-                        return profilesForValidation;
-                    }),
-                    validateProfiles: jest.fn(),
-                    getBaseProfile: jest.fn(),
-                    validProfile: ValidProfileEnum.VALID,
-                };
-            }),
-        });
-        await mvsActions.issueMvsCommand();
-        expect(showInformationMessage.mock.calls[0][0]).toEqual("No profiles available");
-    });
-
     it("tests the issueMvsCommand prompt credentials", async () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
@@ -625,5 +611,28 @@ describe("mvsCommandActions unit testing", () => {
         expect(showInputBox.mock.calls.length).toBe(0);
         expect(showErrorMessage.mock.calls.length).toBe(1);
         expect(showErrorMessage.mock.calls[0][0]).toContain(testError.message);
+    });
+
+    it("tests the issueMvsCommand function no profiles error", async () => {
+        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [],
+                    defaultProfile: undefined,
+                    checkCurrentProfile: jest.fn(() => {
+                        return profilesForValidation;
+                    }),
+                    validateProfiles: jest.fn(),
+                    getBaseProfile: jest.fn(),
+                    validProfile: ValidProfileEnum.VALID,
+                };
+            }),
+        });
+        Object.defineProperty(ProfileManagement, "getRegisteredProfileNameList", {
+            value: jest.fn().mockReturnValue([]),
+            configurable: true,
+        });
+        await mvsActions.issueMvsCommand();
+        expect(showInformationMessage.mock.calls[0][0]).toEqual("No profiles available");
     });
 });
