@@ -550,7 +550,7 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
         expect(blockMocks.errorGuiMsgSpy).toBeCalledWith(errorMsg);
     });
 
-    it("Checking passing (submit) scenario of local JCL submission confirmation dialog", async () => {
+    it("Checking cancel option scenario of local JCL submission confirmation dialog", async () => {
         const blockMocks: any = createBlockMocks();
         jest.spyOn(ZoweLogger, "trace").mockImplementation();
         Object.defineProperty(vscode.window, "activeTextEditor", {

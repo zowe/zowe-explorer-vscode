@@ -1072,12 +1072,8 @@ export async function confirmJobSubmission(node: api.IZoweTreeNode, ownsJob: boo
     ZoweLogger.trace("dataset.actions.confirmJobSubmission called.");
 
     const showConfirmationDialog = async (): Promise<boolean> => {
-        let jclName = "";
-        if (node == null && fileName !== null) {
-            jclName = fileName.toString().substring(fileName.lastIndexOf("\\") + 1);
-        } else {
-            jclName = node.getLabel().toString();
-        }
+        const jclName =
+            node == null && fileName !== null ? fileName.toString().substring(fileName.lastIndexOf("\\") + 1) : node.getLabel().toString();
 
         const selection = await api.Gui.warningMessage(
             localize("confirmJobSubmission.confirm", "Are you sure you want to submit the following job?\n\n{0}", jclName),
@@ -1087,6 +1083,7 @@ export async function confirmJobSubmission(node: api.IZoweTreeNode, ownsJob: boo
     };
 
     const confirmationOption: string = vscode.workspace.getConfiguration().get("zowe.jobs.confirmSubmission");
+
     switch (JOB_SUBMIT_DIALOG_OPTS.indexOf(confirmationOption)) {
         case JobSubmitDialogOpts.OtherUserJobs:
             if (!ownsJob && !(await showConfirmationDialog())) {
@@ -1107,7 +1104,6 @@ export async function confirmJobSubmission(node: api.IZoweTreeNode, ownsJob: boo
         default:
             break;
     }
-
     return true;
 }
 

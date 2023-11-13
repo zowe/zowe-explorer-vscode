@@ -3746,3 +3746,55 @@ describe("Dataset Actions Unit Tests - Function allocateLike", () => {
         expect(errorHandlingSpy).toHaveBeenCalledWith(errorMessage, "test", "Unable to create data set.");
     });
 });
+
+describe("Dataset Actions Unit Tests - Function confirmJobSubmission", () => {
+    function createBlockMocks() {
+        const session = createISession();
+        const imperativeProfile = createIProfile();
+        const treeView = createTreeView();
+        const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
+        const testDatasetTree = createDatasetTree(datasetSessionNode, treeView);
+        const testNode = new ZoweDatasetNode("nodePDS", vscode.TreeItemCollapsibleState.None, datasetSessionNode, null);
+        const testSDSNode = new ZoweDatasetNode("nodeSDS", vscode.TreeItemCollapsibleState.None, datasetSessionNode, null);
+        const profileInstance = createInstanceOfProfile(imperativeProfile);
+        const mvsApi = createMvsApi(imperativeProfile);
+
+        bindMvsApi(mvsApi);
+        testNode.contextValue = globals.DS_PDS_CONTEXT;
+        testSDSNode.contextValue = globals.DS_DS_CONTEXT;
+
+        mocked(Profiles.getInstance).mockReturnValue(profileInstance);
+        mocked(vscode.window.showInputBox).mockImplementation((options) => {
+            options.validateInput("test");
+            return Promise.resolve("test");
+        });
+        jest.spyOn(datasetSessionNode, "getChildren").mockResolvedValue([testNode, testSDSNode]);
+        testDatasetTree.createFilterString.mockReturnValue("test");
+
+        return {
+            session,
+            treeView,
+            testNode,
+            testSDSNode,
+            profileInstance,
+            imperativeProfile,
+            datasetSessionNode,
+            mvsApi,
+            testDatasetTree,
+        };
+    }
+    it("Should use use local JCL doc name for confirmJobSubmission", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        jest.spyOn(vscode.workspace, "getConfiguration").mockImplementation(
+            () =>
+                ({
+                    get: () => sharedUtils.JOB_SUBMIT_DIALOG_OPTS[1],
+                } as any)
+        );
+        jest.spyOn(Gui, "warningMessage").mockResolvedValue({
+            title: "Submit",
+        });
+        await expect(dsActions.confirmJobSubmission(null, true, "Profile\\test.jcl")).resolves.toEqual(true);
+    });
+});
