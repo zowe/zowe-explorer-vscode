@@ -15,7 +15,7 @@ import * as vscode from "vscode";
 
 // Set up localization
 import * as nls from "vscode-nls";
-import { getZoweDir } from "@zowe/zowe-explorer-api";
+import { getZoweDir, IZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { SettingsConfig } from "./utils/SettingsConfig";
 import { ZoweLogger } from "./utils/LoggerUtils";
 export { ZoweLogger } from "./utils/LoggerUtils";
@@ -35,7 +35,7 @@ export let DS_DIR: string;
 export let CONFIG_PATH; // set during activate
 export let ISTHEIA = false; // set during activate
 export let LOG: imperative.Logger;
-export const COMMAND_COUNT = 111;
+export const COMMAND_COUNT = 114;
 export const MAX_SEARCH_HISTORY = 5;
 export const MAX_FILE_HISTORY = 10;
 export const MS_PER_SEC = 1000;
@@ -107,6 +107,8 @@ export let ACTIVATED = false;
 export let PROFILE_SECURITY: string | boolean = ZOWE_CLI_SCM;
 export let SAVED_PROFILE_CONTENTS = new Uint8Array();
 export const JOBS_MAX_PREFIX = 8;
+export let FILE_SELECTED_TO_COMPARE: boolean;
+export let filesToCompare: IZoweTreeNode[];
 
 // Dictionary describing translation from old configuration names to new standardized names
 export const configurationDictionary: { [k: string]: string } = {
@@ -345,4 +347,14 @@ export async function setGlobalSecurityValue(credentialManager?: string): Promis
         PROFILE_SECURITY = ZOWE_CLI_SCM;
         ZoweLogger.info(localize("globals.setGlobalSecurityValue.secured", "Zowe explorer profiles are being set as secured."));
     }
+}
+
+export function setCompareSelection(val: boolean): void {
+    FILE_SELECTED_TO_COMPARE = val;
+    vscode.commands.executeCommand("setContext", "zowe.compareFileStarted", val);
+}
+
+export function resetCompareChoices(): void {
+    setCompareSelection(false);
+    filesToCompare = [];
 }

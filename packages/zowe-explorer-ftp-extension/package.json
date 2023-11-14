@@ -45,7 +45,7 @@
     "package": "vsce package --no-dependencies && node ../../scripts/mv-pack.js zowe-explorer-ftp-extension vsix"
   },
   "engines": {
-    "vscode": "^1.63.0"
+    "vscode": "^1.79.0"
   },
   "dependencies": {
     "@zowe/zos-ftp-for-zowe-cli": "2.1.2",
