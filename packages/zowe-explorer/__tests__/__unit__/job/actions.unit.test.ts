@@ -557,6 +557,21 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
         expect(blockMocks.errorGuiMsgSpy).toBeCalledWith(errorMsg);
     });
 
+    it("Checking cancel option scenario of local JCL submission confirmation dialog", async () => {
+        const blockMocks: any = createBlockMocks();
+        jest.spyOn(ZoweLogger, "trace").mockImplementation();
+        Object.defineProperty(vscode.window, "activeTextEditor", {
+            value: { document: { fileName: "test" } } as any,
+            configurable: true,
+        });
+        jest.spyOn(vscode.commands, "executeCommand").mockImplementation();
+        jest.spyOn(ZoweLogger, "debug").mockImplementation();
+        const confirmJobSubmissionSpy = jest.spyOn(dsActions, "confirmJobSubmission");
+        confirmJobSubmissionSpy.mockResolvedValue(false);
+        await expect(dsActions.submitJcl(blockMocks.testDatasetTree, {} as any)).resolves.toEqual(undefined);
+        confirmJobSubmissionSpy.mockRestore();
+    });
+
     it("Checking failed attempt to submit of active text editor content as JCL without profile chosen from quickpick", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
