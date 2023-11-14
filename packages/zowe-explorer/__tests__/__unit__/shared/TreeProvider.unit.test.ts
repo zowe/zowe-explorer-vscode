@@ -45,9 +45,9 @@ describe("TreeProvider Unit Tests - Function getters", () => {
 describe("TreeProvider Unit Tests - Function sessionIsPresentInOtherTrees", () => {
     it("should return true if session is present in another tree", async () => {
         await TreeProviders.initializeProviders({} as any, {
-            ds: () => ({ mSessionNodes: [{ label: "test1" }, { label: "test2" }] } as any),
-            uss: () => ({ mSessionNodes: [{ label: "test3" }, { label: "test4" }] } as any),
-            job: () => ({ mSessionNodes: [{ label: "test5" }, { label: "test1" }] } as any),
+            ds: () => ({ mSessionNodes: [{ getLabel: () => "test1" }, { getLabel: () => "test2" }] } as any),
+            uss: () => ({ mSessionNodes: [{ getLabel: () => "test3" }, { getLabel: () => "test4" }] } as any),
+            job: () => ({ mSessionNodes: [{ getLabel: () => "test5" }, { getLabel: () => "test1" }] } as any),
         });
         expect(TreeProviders.sessionIsPresentInOtherTrees("test1")).toEqual(true);
     });

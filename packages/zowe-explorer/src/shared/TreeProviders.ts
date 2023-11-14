@@ -14,6 +14,8 @@ import { IZoweProviders } from "./init";
 import { DatasetTree } from "../dataset/DatasetTree";
 import { USSTree } from "../uss/USSTree";
 import { ZosJobsProvider } from "../job/ZosJobsProvider";
+import { IZoweNodeType } from "@zowe/zowe-explorer-api";
+import { getSessionType } from "./context";
 
 type ProviderFunctions = {
     ds: (context: vscode.ExtensionContext) => Promise<DatasetTree>;
@@ -54,24 +56,27 @@ export class TreeProviders {
     }
 
     public static getSessionForAllTrees(name: string): IZoweNodeType[] {
-        const dsNode = TreeProviders.ds.mSessionNodes.find((mSessionNode) => mSessionNode.label === name);
-        const ussNode = TreeProviders.uss.mSessionNodes.find((mSessionNode) => mSessionNode.label === name);
-        const jobNode = TreeProviders.job.mSessionNodes.find((mSessionNode) => mSessionNode.label === name);
-        return [dsNode, ussNode, jobNode];
+        const sessions: IZoweNodeType[] = [];
+        for (const key of Object.keys(TreeProviders.providers)) {
+            const provider = TreeProviders.providers[key];
+            const session = provider.mSessionNodes.find((mSessionNode: IZoweNodeType) => mSessionNode.getLabel().toString() === name);
+            if (session) {
+                sessions.push(session);
+            }
+        }
+        return sessions;
     }
 
     public static sessionIsPresentInOtherTrees(sessionName: string): boolean {
-        const found = [];
-        for (const key of Object.keys(TreeProviders.providers)) {
-            const provider = TreeProviders.providers[key];
-            const session = provider.mSessionNodes.find((mSessionNode) => mSessionNode.label === sessionName);
-            if (session) {
-                found.push(session);
-            }
-            if (found.length > 1) {
-                return true;
-            }
-        }
-        return false;
+        const sessions = this.getSessionForAllTrees(sessionName);
+        return sessions.length > 1;
+    }
+
+    public static contextValueExistsAcrossTrees(node: IZoweNodeType, contextValue: string): boolean {
+        const sessions = this.getSessionForAllTrees(node.getLabel().toString());
+        const sessionContextInOtherTree = sessions.find(
+            (session) => session.contextValue.includes(contextValue) && getSessionType(session) !== getSessionType(node)
+        );
+        return sessionContextInOtherTree !== undefined;
     }
 }

@@ -556,7 +556,17 @@ export function createMockNode(name: string, context: string): IZoweTreeNode {
         getLabel: jest.fn(() => name),
         getChildren: jest.fn(),
         getParent: jest.fn(),
-        getProfile: jest.fn(() => ({ name } as imperative.IProfileLoaded)),
+        getProfile: jest.fn(() => ({
+            name,
+            profile: {
+                host: "fake",
+                port: 999,
+                rejectUnauthorize: false,
+            },
+            type: "zosmf",
+            message: "",
+            failNotFound: false,
+        })),
         getProfileName: jest.fn(),
         getSession: jest.fn(),
         getSessionNode: jest.fn(),
@@ -570,19 +580,28 @@ export function createMockNode(name: string, context: string): IZoweTreeNode {
 export function createTreeProviders() {
     return {
         ds: {
-            mSessionNodes: [createMockNode("zosmf", globals.DS_SESSION_CONTEXT), createMockNode("zosmf2", globals.DS_SESSION_CONTEXT)],
+            mSessionNodes: [
+                createMockNode("zosmf", globals.DS_SESSION_CONTEXT + globals.VALIDATE_SUFFIX),
+                createMockNode("zosmf2", globals.DS_SESSION_CONTEXT + globals.NO_VALIDATE_SUFFIX),
+            ],
             deleteSession: jest.fn(),
             removeSession: jest.fn(),
             refresh: jest.fn(),
         } as any,
         uss: {
-            mSessionNodes: [createMockNode("zosmf", globals.USS_SESSION_CONTEXT), createMockNode("zosmf2", globals.USS_SESSION_CONTEXT)],
+            mSessionNodes: [
+                createMockNode("zosmf", globals.USS_SESSION_CONTEXT + globals.VALIDATE_SUFFIX),
+                createMockNode("zosmf2", globals.USS_SESSION_CONTEXT + globals.NO_VALIDATE_SUFFIX),
+            ],
             deleteSession: jest.fn(),
             removeSession: jest.fn(),
             refresh: jest.fn(),
         } as any,
         job: {
-            mSessionNodes: [createMockNode("zosmf", globals.JOBS_SESSION_CONTEXT), createMockNode("zosmf2", globals.JOBS_SESSION_CONTEXT)],
+            mSessionNodes: [
+                createMockNode("zosmf", globals.JOBS_SESSION_CONTEXT + globals.VALIDATE_SUFFIX),
+                createMockNode("zosmf2", globals.JOBS_SESSION_CONTEXT + globals.NO_VALIDATE_SUFFIX),
+            ],
             removeSession: jest.fn(),
             deleteSession: jest.fn(),
             refresh: jest.fn(),
