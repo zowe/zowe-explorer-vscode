@@ -3731,3 +3731,28 @@ describe("Dataset Actions Unit Tests - Function allocateLike", () => {
         expect(errorHandlingSpy).toHaveBeenCalledWith(errorMessage, "test", "Unable to create data set.");
     });
 });
+
+describe("Dataset Actions Unit Tests - Function confirmJobSubmission", () => {
+    function createBlockMocks() {
+        mocked(vscode.window.showInputBox).mockImplementation((options) => {
+            options.validateInput("test");
+            return Promise.resolve("test");
+        });
+
+        return {};
+    }
+    it("Should use use local JCL doc name for confirmJobSubmission", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        jest.spyOn(vscode.workspace, "getConfiguration").mockImplementation(
+            () =>
+                ({
+                    get: () => sharedUtils.JOB_SUBMIT_DIALOG_OPTS[1],
+                } as any)
+        );
+        jest.spyOn(Gui, "warningMessage").mockResolvedValue({
+            title: "Submit",
+        });
+        await expect(dsActions.confirmJobSubmission(null, true, "Profile\\test.jcl")).resolves.toEqual(true);
+    });
+});
