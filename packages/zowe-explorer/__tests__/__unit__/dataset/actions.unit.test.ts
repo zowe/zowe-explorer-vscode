@@ -1446,6 +1446,71 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
         logSpy.mockClear();
         commandSpy.mockClear();
     });
+
+    it("Checking common dataset saving failed due to conflict with server version when file size has not changed", async () => {
+        globals.defineGlobals("");
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        const node = new ZoweDatasetNode(
+            "HLQ.TEST.AFILE",
+            vscode.TreeItemCollapsibleState.None,
+            blockMocks.datasetSessionNode,
+            null,
+            undefined,
+            undefined,
+            blockMocks.imperativeProfile
+        );
+        blockMocks.datasetSessionNode.children.push(node);
+
+        mocked(sharedUtils.concatChildNodes).mockReturnValueOnce([node]);
+        blockMocks.testDatasetTree.getChildren.mockReturnValueOnce([blockMocks.datasetSessionNode]);
+        mocked(zowe.List.dataSet).mockResolvedValue({
+            success: true,
+            commandResponse: "",
+            apiResponse: {
+                items: [{ dsname: "HLQ.TEST.AFILE" }],
+            },
+        });
+        mocked(zowe.Upload.pathToDataSet).mockResolvedValueOnce({
+            success: false,
+            commandResponse: "Rest API failure with HTTP(S) status 412",
+            apiResponse: [],
+        });
+
+        mocked(vscode.window.withProgress).mockImplementation((progLocation, callback) => {
+            return callback();
+        });
+        const profile = blockMocks.imperativeProfile;
+        profile.profile.encoding = 1047;
+        blockMocks.profileInstance.loadNamedProfile.mockReturnValueOnce(blockMocks.imperativeProfile);
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        Object.defineProperty(wsUtils, "markDocumentUnsaved", {
+            value: jest.fn(),
+            configurable: true,
+        });
+        Object.defineProperty(context, "isTypeUssTreeNode", {
+            value: jest.fn().mockReturnValueOnce(false),
+            configurable: true,
+        });
+        Object.defineProperty(ZoweExplorerApiRegister.getMvsApi, "getContents", {
+            value: jest.fn(),
+            configurable: true,
+        });
+
+        const testDocument = createTextDocument("HLQ.TEST.AFILE", blockMocks.datasetSessionNode);
+        (testDocument as any).fileName = path.join(globals.DS_DIR, testDocument.fileName);
+        const logSpy = jest.spyOn(ZoweLogger, "warn");
+        const commandSpy = jest.spyOn(vscode.commands, "executeCommand");
+        jest.spyOn(fs, "statSync").mockReturnValueOnce({ size: 0 } as any);
+
+        await dsActions.saveFile(testDocument, blockMocks.testDatasetTree);
+
+        expect(logSpy).toBeCalledWith("Remote file has changed. Presenting with way to resolve file.");
+        expect(mocked(sharedUtils.concatChildNodes)).toBeCalled();
+        expect(commandSpy).toBeCalledWith("workbench.files.action.compareWithSaved");
+        logSpy.mockClear();
+        commandSpy.mockClear();
+    });
 });
 
 describe("Dataset Actions Unit Tests - Function showAttributes", () => {

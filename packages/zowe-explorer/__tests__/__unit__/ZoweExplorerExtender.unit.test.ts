@@ -54,7 +54,10 @@ describe("ZoweExplorerExtender unit tests", () => {
                 })
                 .mockReturnValue(newMocks.profiles),
         });
-        Object.defineProperty(vscode.window, "createTreeView", { value: jest.fn(), configurable: true });
+        Object.defineProperty(vscode.window, "createTreeView", {
+            value: jest.fn().mockReturnValue({ onDidCollapseElement: jest.fn() }),
+            configurable: true,
+        });
         Object.defineProperty(vscode.window, "showErrorMessage", {
             value: newMocks.mockErrorMessage,
             configurable: true,
@@ -71,7 +74,22 @@ describe("ZoweExplorerExtender unit tests", () => {
             },
             configurable: true,
         });
-
+        Object.defineProperty(Profiles.getInstance(), "addToConfigArray", {
+            value: jest.fn(),
+            configurable: true,
+        });
+        Object.defineProperty(ZoweLogger, "error", {
+            value: jest.fn(),
+            configurable: true,
+        });
+        Object.defineProperty(ZoweLogger, "trace", {
+            value: jest.fn(),
+            configurable: true,
+        });
+        Object.defineProperty(Profiles.getInstance(), "addToConfigArray", {
+            value: jest.fn(),
+            configurable: true,
+        });
         return newMocks;
     }
 

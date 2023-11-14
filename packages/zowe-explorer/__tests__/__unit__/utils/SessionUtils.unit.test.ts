@@ -28,7 +28,16 @@ describe("SessionUtils removeSession Unit Tests", () => {
         newMocks.datasetSessionNode = createDatasetSessionNode(newMocks.session, newMocks.imperativeProfile);
         newMocks.testDatasetTree = createDatasetTree(newMocks.datasetSessionNode, newMocks.treeView);
         newMocks.testDatasetTree.addFileHistory("[profile1]: TEST.NODE");
-        Object.defineProperty(vscode.window, "createTreeView", { value: jest.fn(), configurable: true });
+        Object.defineProperty(vscode.window, "createTreeView", {
+            value: jest.fn().mockReturnValue({ onDidCollapseElement: jest.fn() }),
+            configurable: true,
+        });
+        Object.defineProperty(vscode, "ConfigurationTarget", { value: jest.fn(), configurable: true });
+        newMocks.mockGetConfiguration.mockReturnValue(createPersistentConfig());
+        Object.defineProperty(vscode.workspace, "getConfiguration", {
+            value: newMocks.mockGetConfiguration,
+            configurable: true,
+        });
         Object.defineProperty(vscode, "ConfigurationTarget", { value: jest.fn(), configurable: true });
         newMocks.mockGetConfiguration.mockReturnValue(createPersistentConfig());
 

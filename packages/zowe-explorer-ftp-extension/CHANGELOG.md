@@ -17,6 +17,24 @@ All notable changes to the "zowe-explorer-ftp-extension" extension will be docum
 - Added `madge` script in `package.json` to track circular dependencies. [#2148](https://github.com/zowe/vscode-extension-for-zowe/issues/2148)
 - Migrated to new package manager PNPM from Yarn.
 
+- Fixed ECONNRESET error when trying to upload or create an empty data set member. [#2350](https://github.com/zowe/vscode-extension-for-zowe/issues/2350)
+
+## `2.12.0`
+
+### Bug fixes
+
+- Fixed ECONNRESET error when trying to upload or create an empty data set member. [#2350](https://github.com/zowe/vscode-extension-for-zowe/issues/2350)
+- Fixed issue where temporary files for e-tag comparison were not deleted after use.
+- Fixed issue where another connection attempt was made inside `putContents` (in `getContentsTag`) even though a connection was already active.
+
+## `2.11.2`
+
+### Bug fixes
+
+- Update Zowe Explorer API dependency to pick up latest fixes for Zowe Secrets. [#2512](https://github.com/zowe/vscode-extension-for-zowe/issues/2512)
+
+## `2.11.1`
+
 ## `2.11.0`
 
 ### Bug fixes
@@ -35,10 +53,6 @@ All notable changes to the "zowe-explorer-ftp-extension" extension will be docum
 - Added missing `owner` and `group` attributes for the returned FTP response in `FtpUssApi.fileList`. [#2254](https://github.com/zowe/vscode-extension-for-zowe/issues/2254)
 
 ## `2.9.2`
-
-### New features and enhancements
-
-### Bug fixes
 
 ## `2.9.1`
 
