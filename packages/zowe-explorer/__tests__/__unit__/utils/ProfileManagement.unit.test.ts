@@ -22,6 +22,7 @@ import { Profiles } from "../../../src/Profiles";
 import * as vscode from "vscode";
 import { imperative } from "@zowe/cli";
 import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
+import { Job } from "../../../src/job/ZoweJobNode";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { TreeProviders } from "../../../src/shared/TreeProviders";
 
@@ -42,6 +43,7 @@ describe("ProfileManagement unit tests", () => {
             opCancelledSpy: jest.spyOn(Gui, "infoMessage"),
             mockDsSessionNode: ZoweDatasetNode,
             mockUnixSessionNode: ZoweUSSNode,
+            mockJobSessionNode: Job,
             mockResolveQp: jest.fn(),
             mockCreateQp: jest.fn(),
             mockUpdateChosen: ProfileManagement.basicAuthUpdateQpItems[ProfileManagement.AuthQpLabels.update],
@@ -143,12 +145,15 @@ describe("ProfileManagement unit tests", () => {
                 value: jest.fn().mockResolvedValue(mocks.mockProfileInfo as imperative.ProfileInfo),
                 configurable: true,
             });
+            mocks.mockTreeProviders.ds.mSessionNodes.push(mocks.mockDsSessionNode);
+            mocks.mockTreeProviders.uss.mSessionNodes.push(mocks.mockDsSessionNode);
+            mocks.mockTreeProviders.job.mSessionNodes.push(mocks.mockDsSessionNode);
             jest.spyOn(TreeProviders, "providers", "get").mockReturnValue(mocks.mockTreeProviders);
             mocks.mockResolveQp.mockResolvedValueOnce(mocks.mockHideProfChosen);
             mocks.mockResolveQp.mockResolvedValueOnce(ProfileManagement["getPromptChangeForAllTreesOptions"]()[0]);
             await ProfileManagement.manageProfile(mocks.mockDsSessionNode);
             expect(mocks.debugLogSpy).toBeCalledWith(mocks.logMsg);
-            expect(mocks.commandSpy).toHaveBeenLastCalledWith("zowe.ds.removeSession", mocks.mockDsSessionNode, null, false);
+            expect(mocks.commandSpy).toHaveBeenLastCalledWith("zowe.ds.removeSession", mocks.mockDsSessionNode, null, true);
         });
         it("profile using basic authentication should see delete commands called when Delete Profile chosen with v1 profile", async () => {
             const mocks = createBlockMocks(createGlobalMocks());
@@ -268,6 +273,26 @@ describe("ProfileManagement unit tests", () => {
             expect(mocks.commandSpy).toHaveBeenLastCalledWith("zowe.ds.disableValidation", mocks.mockDsSessionNode, true);
         });
     });
+
+    describe("handleHideProfiles unit tests", () => {
+        it("should display 'operation cancelled' if no option is selected for hiding a profile", async () => {
+            const mocks = createGlobalMocks();
+            const infoMessageSpy = jest.spyOn(Gui, "infoMessage");
+            jest.spyOn(ProfileManagement as any, "promptHideFromAllTrees").mockReturnValue(undefined);
+            await expect(ProfileManagement["handleHideProfiles"](mocks.mockDsSessionNode)).resolves.toEqual(undefined);
+            expect(infoMessageSpy).toBeCalledTimes(1);
+        });
+        it("should hide the job session", async () => {
+            const mocks = createGlobalMocks();
+            const commandSpy = jest.spyOn(vscode.commands, "executeCommand");
+            jest.spyOn(ProfileManagement as any, "promptHideFromAllTrees").mockReturnValue(
+                ProfileManagement["getPromptHideFromAllTreesQpItems"]()[1]
+            );
+            await expect(ProfileManagement["handleHideProfiles"](mocks.mockJobSessionNode)).resolves.toEqual(undefined);
+            expect(commandSpy).toHaveBeenCalledWith("zowe.jobs.removeJobsSession", mocks.mockJobSessionNode, null, false);
+        });
+    });
+
     describe("getRegisteredProfileNameList unit tests", () => {
         function createBlockMocks(globalMocks): any {
             const theMocks = {

@@ -14,7 +14,6 @@ import { IZoweProviders } from "./init";
 import { DatasetTree } from "../dataset/DatasetTree";
 import { USSTree } from "../uss/USSTree";
 import { ZosJobsProvider } from "../job/ZosJobsProvider";
-import { IZoweNodeType } from "@zowe/zowe-explorer-api";
 
 type ProviderFunctions = {
     ds: (context: vscode.ExtensionContext) => Promise<DatasetTree>;
