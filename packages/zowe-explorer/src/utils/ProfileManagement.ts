@@ -18,7 +18,6 @@ import * as nls from "vscode-nls";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { getSessionType } from "../shared/context";
-import { isZoweDatasetTreeNode, isZoweUSSTreeNode } from "../shared/utils";
 import { TreeProviders } from "../shared/TreeProviders";
 
 // Set up localization
@@ -278,7 +277,7 @@ export class ProfileManagement {
     }
 
     private static async promptChangeForAllTrees(node: IZoweTreeNode): Promise<vscode.QuickPickItem> {
-        const [qpItemAll, qpItemCurrent] = this.getPromptHideFromAllTreesQpItems();
+        const [qpItemAll, qpItemCurrent] = this.getPromptChangeForAllTreesOptions();
         if (!TreeProviders.sessionIsPresentInOtherTrees(node.getLabel().toString())) {
             return qpItemCurrent;
         }
@@ -292,8 +291,8 @@ export class ProfileManagement {
         return selection;
     }
 
-    private static async handleChangeForAllTrees(): Promise<boolean> {
-        const selection = await this.promptChangeForAllTrees();
+    private static async handleChangeForAllTrees(node: IZoweTreeNode): Promise<boolean> {
+        const selection = await this.promptChangeForAllTrees(node);
         if (!selection) {
             return;
         }
@@ -302,7 +301,7 @@ export class ProfileManagement {
     }
 
     private static async handleHideProfiles(node: IZoweTreeNode): Promise<void> {
-        const shouldHideFromAllTrees = await this.handleChangeForAllTrees();
+        const shouldHideFromAllTrees = await this.handleChangeForAllTrees(node);
         if (shouldHideFromAllTrees === undefined) {
             Gui.infoMessage(localize("ProfileManagement.handleHideProfiles.cancelled", "Operation Cancelled"));
             return;
@@ -312,7 +311,7 @@ export class ProfileManagement {
     }
 
     private static async handleEnableProfileValidation(node: IZoweTreeNode): Promise<void> {
-        const shouldHideFromAllTrees = await this.handleChangeForAllTrees();
+        const shouldHideFromAllTrees = await this.handleChangeForAllTrees(node);
         if (shouldHideFromAllTrees === undefined) {
             Gui.infoMessage(localize("ProfileManagement.handleEnableProfileValidation.cancelled", "Operation Cancelled"));
             return;
@@ -322,7 +321,7 @@ export class ProfileManagement {
     }
 
     private static async handleDisableProfileValidation(node: IZoweTreeNode): Promise<void> {
-        const shouldHideFromAllTrees = await this.handleChangeForAllTrees();
+        const shouldHideFromAllTrees = await this.handleChangeForAllTrees(node);
         if (shouldHideFromAllTrees === undefined) {
             Gui.infoMessage(localize("ProfileManagement.handleDisableProfileValidation.cancelled", "Operation Cancelled"));
             return;
