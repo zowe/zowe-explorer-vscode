@@ -18,6 +18,7 @@ import * as nls from "vscode-nls";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { isZoweDatasetTreeNode, isZoweUSSTreeNode } from "../shared/utils";
+import { TreeProviders } from "../shared/TreeProviders";
 
 // Set up localization
 nls.config({
@@ -275,10 +276,14 @@ export class ProfileManagement {
         return [qpItemAll, qpItemCurrent];
     }
 
-    private static async promptHideFromAllTrees(): Promise<vscode.QuickPickItem> {
+    private static async promptHideFromAllTrees(node: IZoweTreeNode): Promise<vscode.QuickPickItem> {
+        const [qpItemAll, qpItemCurrent] = this.getPromptHideFromAllTreesQpItems();
+        if (!TreeProviders.sessionIsPresentInOtherTrees(node.getLabel().toString())) {
+            return qpItemCurrent;
+        }
         const qp = Gui.createQuickPick();
         qp.placeholder = localize("ProfileManagement.promptHideFromAllTrees.howToHide", "Do you wish to hide this profile from all trees?");
-        qp.items = this.getPromptHideFromAllTreesQpItems();
+        qp.items = [qpItemAll, qpItemCurrent];
         qp.activeItems = [qp.items[0]];
         qp.show();
         const selection = await Gui.resolveQuickPick(qp);
@@ -287,7 +292,7 @@ export class ProfileManagement {
     }
 
     private static async handleHideProfiles(node: IZoweTreeNode): Promise<void> {
-        const selection = await this.promptHideFromAllTrees();
+        const selection = await this.promptHideFromAllTrees(node);
         if (!selection) {
             Gui.infoMessage(localize("ProfileManagement.handleHideProfiles.cancelled", "Operation Cancelled"));
             return;

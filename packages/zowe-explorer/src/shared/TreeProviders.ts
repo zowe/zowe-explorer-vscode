@@ -14,6 +14,7 @@ import { IZoweProviders } from "./init";
 import { DatasetTree } from "../dataset/DatasetTree";
 import { USSTree } from "../uss/USSTree";
 import { ZosJobsProvider } from "../job/ZosJobsProvider";
+import { IZoweNodeType } from "@zowe/zowe-explorer-api";
 
 type ProviderFunctions = {
     ds: (context: vscode.ExtensionContext) => Promise<DatasetTree>;
@@ -51,5 +52,20 @@ export class TreeProviders {
             uss: TreeProviders.#uss,
             job: TreeProviders.#job,
         };
+    }
+
+    public static sessionIsPresentInOtherTrees(sessionName: string): boolean {
+        const found = [];
+        for (const key of Object.keys(TreeProviders.providers)) {
+            const provider = TreeProviders.providers[key];
+            const session = provider.mSessionNodes.find((mSessionNode) => mSessionNode.label === sessionName);
+            if (session) {
+                found.push(session);
+            }
+            if (found.length > 1) {
+                return true;
+            }
+        }
+        return false;
     }
 }
