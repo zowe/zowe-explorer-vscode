@@ -18,6 +18,8 @@ import * as nls from "vscode-nls";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { getSessionType } from "../shared/context";
+import { isZoweDatasetTreeNode, isZoweUSSTreeNode } from "../shared/utils";
+import { TreeProviders } from "../shared/TreeProviders";
 
 // Set up localization
 nls.config({
@@ -275,10 +277,14 @@ export class ProfileManagement {
         return [qpItemAll, qpItemCurrent];
     }
 
-    private static async promptChangeForAllTrees(): Promise<vscode.QuickPickItem> {
+    private static async promptChangeForAllTrees(node: IZoweTreeNode): Promise<vscode.QuickPickItem> {
+        const [qpItemAll, qpItemCurrent] = this.getPromptHideFromAllTreesQpItems();
+        if (!TreeProviders.sessionIsPresentInOtherTrees(node.getLabel().toString())) {
+            return qpItemCurrent;
+        }
         const qp = Gui.createQuickPick();
         qp.placeholder = localize("ProfileManagement.promptChangeForAllTrees.howToChange", "Do you wish to apply this for all trees?");
-        qp.items = this.getPromptChangeForAllTreesOptions();
+        qp.items = [qpItemAll, qpItemCurrent];
         qp.activeItems = [qp.items[0]];
         qp.show();
         const selection = await Gui.resolveQuickPick(qp);

@@ -60,4 +60,19 @@ export class TreeProviders {
         const jobNode = TreeProviders.job.mSessionNodes.find((mSessionNode) => mSessionNode.label === name);
         return [dsNode, ussNode, jobNode];
     }
+
+    public static sessionIsPresentInOtherTrees(sessionName: string): boolean {
+        const found = [];
+        for (const key of Object.keys(TreeProviders.providers)) {
+            const provider = TreeProviders.providers[key];
+            const session = provider.mSessionNodes.find((mSessionNode) => mSessionNode.label === sessionName);
+            if (session) {
+                found.push(session);
+            }
+            if (found.length > 1) {
+                return true;
+            }
+        }
+        return false;
+    }
 }
