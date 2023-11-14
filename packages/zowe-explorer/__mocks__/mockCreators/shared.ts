@@ -556,7 +556,7 @@ export function createMockNode(name: string, context: string): IZoweTreeNode {
         getLabel: jest.fn(() => name),
         getChildren: jest.fn(),
         getParent: jest.fn(),
-        getProfile: jest.fn(),
+        getProfile: jest.fn(() => ({ name } as imperative.IProfileLoaded)),
         getProfileName: jest.fn(),
         getSession: jest.fn(),
         getSessionNode: jest.fn(),
