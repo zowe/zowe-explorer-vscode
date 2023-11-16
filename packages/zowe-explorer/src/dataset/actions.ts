@@ -36,11 +36,12 @@ import * as contextually from "../shared/context";
 import { markDocumentUnsaved, setFileSaved } from "../utils/workspace";
 import { IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
 import { ZoweLogger } from "../utils/LoggerUtils";
-
 import { promiseStatus, PromiseStatuses } from "promise-status-async";
+import { ProfileManagement } from "../utils/ProfileManagement";
 
 // Set up localization
 import * as nls from "vscode-nls";
+import { resolveFileConflict } from "../shared/actions";
 nls.config({
     messageFormat: nls.MessageFormat.bundle,
     bundleFormat: nls.BundleFormat.standalone,
@@ -496,8 +497,8 @@ export async function openPS(
 
             const documentFilePath = getDocumentFilePath(label, node);
             let responsePromise = node.ongoingActions ? node.ongoingActions[api.NodeAction.Download] : null;
-            // If the local copy does not exist, fetch contents
-            if (!fs.existsSync(documentFilePath)) {
+            // If there is no ongoing action and the local copy does not exist, fetch contents
+            if (responsePromise == null && !fs.existsSync(documentFilePath)) {
                 const prof = node.getProfile();
                 ZoweLogger.info(localize("openPS.openDataSet", "Opening {0}", label));
                 if (node.ongoingActions) {
@@ -518,8 +519,10 @@ export async function openPS(
                 }
             }
 
-            const response = await responsePromise;
-            node.setEtag(response?.apiResponse?.etag);
+            if (responsePromise != null) {
+                const response = await responsePromise;
+                node.setEtag(response.apiResponse.etag);
+            }
             statusMsg.dispose();
             const document = await vscode.workspace.openTextDocument(getDocumentFilePath(label, node));
             await api.Gui.showTextDocument(document, { preview: node.wasDoubleClicked != null ? !node.wasDoubleClicked : shouldPreview });
@@ -967,32 +970,43 @@ export async function showAttributes(node: api.IZoweDatasetTreeNode, datasetProv
 }
 
 /**
- * Submit the contents of the editor as JCL.
+ * Submit the contents of the editor or file as JCL.
  *
  * @export
  * @param {DatasetTree} datasetProvider - our DatasetTree object
  */
 // This function does not appear to currently be made available in the UI
-export async function submitJcl(datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>): Promise<void> {
+export async function submitJcl(datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>, file?: vscode.Uri): Promise<void> {
     ZoweLogger.trace("dataset.actions.submitJcl called.");
-    if (!vscode.window.activeTextEditor) {
-        const errorMsg = localize("submitJcl.noDocumentOpen", "No editor with a document that could be submitted as JCL is currently open.");
-        api.Gui.errorMessage(errorMsg);
-        ZoweLogger.error(errorMsg);
+    if (!vscode.window.activeTextEditor && !file) {
+        const notActiveEditorMsg = localize(
+            "submitJcl.notActiveEditorMsg",
+            "No editor with a document that could be submitted as JCL is currently open."
+        );
+        api.Gui.errorMessage(notActiveEditorMsg);
+        ZoweLogger.error(notActiveEditorMsg);
         return;
     }
+
+    if (file) {
+        await vscode.commands.executeCommand("filesExplorer.openFilePreserveFocus", file);
+    }
     const doc = vscode.window.activeTextEditor.document;
-    ZoweLogger.debug(localize("submitJcl.submitting", "Submitting JCL in document {0}", doc.fileName));
+    ZoweLogger.debug(localize("submitJcl.submitting", "Submitting as JCL in document {0}", doc.fileName));
+
+    // prompts for job submit confirmation when submitting local JCL from editor/palette
+    // no node passed in, ownsJob is true because local file is always owned by userID, passes in local file name
+    if (!(await this.confirmJobSubmission(null, true, doc.fileName))) {
+        return;
+    }
+
     // get session name
     const sessionregex = /\[(.*)(\])(?!.*\])/g;
     const regExp = sessionregex.exec(doc.fileName);
     const profiles = Profiles.getInstance();
     let sessProfileName;
     if (regExp === null) {
-        const allProfiles: zowe.imperative.IProfileLoaded[] = profiles.allProfiles;
-        const profileNamesList = allProfiles.map((profile) => {
-            return profile.name;
-        });
+        const profileNamesList = ProfileManagement.getRegisteredProfileNameList(globals.Trees.JES);
         if (profileNamesList.length) {
             const quickPickOptions: vscode.QuickPickOptions = {
                 placeHolder: localize("submitJcl.qp.placeholder", "Select the Profile to use to submit the job"),
@@ -1051,20 +1065,25 @@ export async function submitJcl(datasetProvider: api.IZoweTree<api.IZoweDatasetT
  *
  * @param node The node/member that is being submitted
  * @param ownsJob Whether the current user profile owns this job
+ * @param fileName When submitting local JCL, use the document file name to submit
  * @returns Whether the job submission should continue.
  */
-async function confirmJobSubmission(node: api.IZoweTreeNode, ownsJob: boolean): Promise<boolean> {
+export async function confirmJobSubmission(node: api.IZoweTreeNode, ownsJob: boolean, fileName?: string): Promise<boolean> {
     ZoweLogger.trace("dataset.actions.confirmJobSubmission called.");
+
     const showConfirmationDialog = async (): Promise<boolean> => {
+        const jclName =
+            node == null && fileName !== null ? fileName.toString().substring(fileName.lastIndexOf("\\") + 1) : node.getLabel().toString();
+
         const selection = await api.Gui.warningMessage(
-            localize("confirmJobSubmission.confirm", "Are you sure you want to submit the following job?\n\n{0}", node.getLabel().toString()),
+            localize("confirmJobSubmission.confirm", "Are you sure you want to submit the following job?\n\n{0}", jclName),
             { items: [{ title: "Submit" }], vsCodeOpts: { modal: true } }
         );
-
         return selection != null && selection?.title === "Submit";
     };
 
     const confirmationOption: string = vscode.workspace.getConfiguration().get("zowe.jobs.confirmSubmission");
+
     switch (JOB_SUBMIT_DIALOG_OPTS.indexOf(confirmationOption)) {
         case JobSubmitDialogOpts.OtherUserJobs:
             if (!ownsJob && !(await showConfirmationDialog())) {
@@ -1085,7 +1104,6 @@ async function confirmJobSubmission(node: api.IZoweTreeNode, ownsJob: boolean): 
         default:
             break;
     }
-
     return true;
 }
 
@@ -1571,6 +1589,9 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
     const ending = doc.fileName.substring(start);
     const sesName = ending.substring(0, ending.indexOf(path.sep));
     const profile = Profiles.getInstance().loadNamedProfile(sesName);
+    const fileLabel = doc.fileName.split("/").slice(-1)[0];
+    const dataSetName = fileLabel.substring(0, fileLabel.indexOf("("));
+    const memberName = fileLabel.substring(fileLabel.indexOf("(") + 1, fileLabel.indexOf(")"));
     if (!profile) {
         const sessionError = localize("saveFile.session.error", "Could not locate session when saving data set.");
         ZoweLogger.error(sessionError);
@@ -1578,8 +1599,16 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
         return;
     }
 
-    // get session from session name
-    const sesNode = (await datasetProvider.getChildren()).find((child) => child.label.toString().trim() === sesName);
+    const etagFavorites = (
+        datasetProvider.mFavorites
+            .find((child) => child.label.toString().trim() === sesName)
+            ?.children.find((child) => child.label.toString().trim() === dataSetName)
+            ?.children.find((child) => child.label.toString().trim() === memberName) as api.IZoweDatasetTreeNode
+    )?.getEtag();
+    const sesNode =
+        etagFavorites !== "" && etagFavorites !== undefined
+            ? datasetProvider.mFavorites.find((child) => child.label.toString().trim() === sesName)
+            : datasetProvider.mSessionNodes.find((child) => child.label.toString().trim() === sesName);
     if (!sesNode) {
         // if saving from favorites, a session might not exist for this node
         ZoweLogger.debug(localize("saveFile.missingSessionNode", "Could not find session node"));
@@ -1627,6 +1656,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
         returnEtag: true,
     };
 
+    const prof = node?.getProfile() ?? profile;
     try {
         const uploadResponse = await api.Gui.withProgress(
             {
@@ -1634,7 +1664,6 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
                 title: localize("saveFile.progress.title", "Saving data set..."),
             },
             () => {
-                const prof = node?.getProfile() ?? profile;
                 if (prof.profile?.encoding) {
                     uploadOptions.encoding = prof.profile.encoding;
                 }
@@ -1652,7 +1681,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
                 setFileSaved(true);
             }
         } else if (!uploadResponse.success && uploadResponse.commandResponse.includes("Rest API failure with HTTP(S) status 412")) {
-            await compareFileContent(doc, node, label, null, profile);
+            resolveFileConflict(node, profile, doc, fileLabel, label);
         } else {
             await markDocumentUnsaved(doc);
             api.Gui.errorMessage(uploadResponse.commandResponse);

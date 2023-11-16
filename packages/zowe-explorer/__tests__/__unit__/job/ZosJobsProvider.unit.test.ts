@@ -46,7 +46,7 @@ async function createGlobalMocks() {
         mockGetJob: jest.fn(),
         mockRefresh: jest.fn(),
         mockAffectsConfig: jest.fn(),
-        createTreeView: jest.fn(),
+        createTreeView: jest.fn().mockReturnValue({ onDidCollapseElement: jest.fn() }),
         mockGetSpoolFiles: jest.fn(),
         mockDeleteJobs: jest.fn(),
         mockShowInputBox: jest.fn(),
@@ -86,7 +86,7 @@ async function createGlobalMocks() {
             };
         }),
     };
-
+    jest.spyOn(Gui, "createTreeView").mockImplementation(globalMocks.createTreeView);
     Object.defineProperty(ProfilesCache, "getConfigInstance", {
         value: jest.fn(() => {
             return {
@@ -174,7 +174,6 @@ async function createGlobalMocks() {
     Object.defineProperty(ZoweLogger, "warn", { value: jest.fn(), configurable: true });
     Object.defineProperty(ZoweLogger, "info", { value: jest.fn(), configurable: true });
     Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
-    globalMocks.createTreeView.mockReturnValue("testTreeView");
     globalMocks.testSessionNode = createJobSessionNode(globalMocks.testSession, globalMocks.testProfile);
     globalMocks.mockGetJob.mockReturnValue(globalMocks.testIJob);
     globalMocks.mockGetJobsByOwnerAndPrefix.mockReturnValue([globalMocks.testIJob, globalMocks.testIJobComplete]);
@@ -921,5 +920,54 @@ describe("Jobs utils unit tests - Function jobStringValidator", () => {
             ["job1234567*", "prefix"],
         ];
         invalidOpts.forEach((invalidOpt) => expect(jobStringValidator(invalidOpt[0], invalidOpt[1])).toContain("Invalid"));
+    });
+});
+
+describe("removeSearchHistory", () => {
+    it("removes the search item passed in from the current history", () => {
+        const tree = new ZosJobsProvider();
+        tree.addSearchHistory("test");
+        expect(tree["mHistory"]["mSearchHistory"].length).toEqual(1);
+        tree.removeSearchHistory("test");
+        expect(tree["mHistory"]["mSearchHistory"].length).toEqual(0);
+    });
+});
+
+describe("resetSearchHistory", () => {
+    it("clears the entire search history", () => {
+        const tree = new ZosJobsProvider();
+        tree.addSearchHistory("test1");
+        tree.addSearchHistory("test2");
+        tree.addSearchHistory("test3");
+        tree.addSearchHistory("test4");
+        expect(tree["mHistory"]["mSearchHistory"].length).toEqual(4);
+        tree.resetSearchHistory();
+        expect(tree["mHistory"]["mSearchHistory"].length).toEqual(0);
+    });
+});
+
+describe("getSessions", () => {
+    it("gets all the available sessions from persistent object", () => {
+        const tree = new ZosJobsProvider();
+        tree["mHistory"]["mSessions"] = ["sestest"];
+        expect(tree.getSessions()).toEqual(["sestest"]);
+    });
+});
+
+describe("getFileHistory", () => {
+    it("gets all the file history from persistent object", () => {
+        const tree = new ZosJobsProvider();
+        tree["mHistory"]["mFileHistory"] = ["test1", "test2", "test3"];
+        expect(tree.getFileHistory()).toEqual(["test1", "test2", "test3"]);
+    });
+});
+
+describe("getFavorites", () => {
+    it("gets all the favorites from persistent object", () => {
+        const tree = new ZosJobsProvider();
+        jest.spyOn(vscode.workspace, "getConfiguration").mockReturnValue({
+            get: () => ["test1", "test2", "test3"],
+        } as any);
+        expect(tree.getFavorites()).toEqual(["test1", "test2", "test3"]);
     });
 });

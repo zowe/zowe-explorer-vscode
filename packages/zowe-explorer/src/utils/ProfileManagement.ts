@@ -18,6 +18,7 @@ import * as nls from "vscode-nls";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { isZoweDatasetTreeNode, isZoweUSSTreeNode } from "../shared/utils";
+import { TreeProviders } from "../shared/TreeProviders";
 
 // Set up localization
 nls.config({
@@ -27,6 +28,24 @@ nls.config({
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 export class ProfileManagement {
+    public static getRegisteredProfileNameList(registeredTree: globals.Trees): string[] {
+        let profileNamesList: string[] = [];
+        try {
+            profileNamesList = Profiles.getInstance()
+                .allProfiles.map((profile) => profile.name)
+                .filter((profileName) => {
+                    const profile = Profiles.getInstance().loadNamedProfile(profileName);
+                    if (profile) {
+                        return this.isProfileRegisteredWithTree(registeredTree, profile);
+                    }
+                    return false;
+                });
+            return profileNamesList;
+        } catch (err) {
+            ZoweLogger.warn(err);
+            return profileNamesList;
+        }
+    }
     public static async manageProfile(node: IZoweTreeNode): Promise<void> {
         const profile = node.getProfile();
         let selected: vscode.QuickPickItem;
@@ -245,14 +264,49 @@ export class ProfileManagement {
         await vscode.commands.executeCommand("zowe.ds.deleteProfile", node);
     }
 
+    private static getPromptHideFromAllTreesQpItems(): vscode.QuickPickItem[] {
+        const qpItemAll: vscode.QuickPickItem = {
+            label: localize("ProfileManagement.promptHideFromAllTrees.allLbl", "Yes"),
+            description: localize("ProfileManagement.promptHideFromAllTrees.allDesc", "Hide for all trees"),
+        };
+        const qpItemCurrent: vscode.QuickPickItem = {
+            label: localize("ProfileManagement.promptHideFromAllTrees.currentLbl", "No"),
+            description: localize("ProfileManagement.promptHideFromAllTrees.currentDesc", "Hide for current tree selected"),
+        };
+        return [qpItemAll, qpItemCurrent];
+    }
+
+    private static async promptHideFromAllTrees(node: IZoweTreeNode): Promise<vscode.QuickPickItem> {
+        const [qpItemAll, qpItemCurrent] = this.getPromptHideFromAllTreesQpItems();
+        if (!TreeProviders.sessionIsPresentInOtherTrees(node.getLabel().toString())) {
+            return qpItemCurrent;
+        }
+        const qp = Gui.createQuickPick();
+        qp.placeholder = localize("ProfileManagement.promptHideFromAllTrees.howToHide", "Do you wish to hide this profile from all trees?");
+        qp.items = [qpItemAll, qpItemCurrent];
+        qp.activeItems = [qp.items[0]];
+        qp.show();
+        const selection = await Gui.resolveQuickPick(qp);
+        qp.hide();
+        return selection;
+    }
+
     private static async handleHideProfiles(node: IZoweTreeNode): Promise<void> {
+        const selection = await this.promptHideFromAllTrees(node);
+        if (!selection) {
+            Gui.infoMessage(localize("ProfileManagement.handleHideProfiles.cancelled", "Operation Cancelled"));
+            return;
+        }
+        const [all] = this.getPromptHideFromAllTreesQpItems();
+        const shouldHideFromAllTrees = selection.label === all.label;
+
         if (isZoweDatasetTreeNode(node)) {
-            return vscode.commands.executeCommand("zowe.ds.removeSession", node);
+            return vscode.commands.executeCommand("zowe.ds.removeSession", node, null, shouldHideFromAllTrees);
         }
         if (isZoweUSSTreeNode(node)) {
-            return vscode.commands.executeCommand("zowe.uss.removeSession", node);
+            return vscode.commands.executeCommand("zowe.uss.removeSession", node, null, shouldHideFromAllTrees);
         }
-        return vscode.commands.executeCommand("zowe.jobs.removeJobsSession", node);
+        return vscode.commands.executeCommand("zowe.jobs.removeJobsSession", node, null, shouldHideFromAllTrees);
     }
 
     private static async handleEnableProfileValidation(node: IZoweTreeNode): Promise<void> {
@@ -273,5 +327,24 @@ export class ProfileManagement {
             return vscode.commands.executeCommand("zowe.uss.disableValidation", node);
         }
         return vscode.commands.executeCommand("zowe.jobs.disableValidation", node);
+    }
+    private static isProfileRegisteredWithTree(tree: globals.Trees, profile: imperative.IProfileLoaded): boolean {
+        switch (tree) {
+            case globals.Trees.MVS: {
+                const mvsProfileTypes = ZoweExplorerApiRegister.getInstance().registeredMvsApiTypes();
+                return mvsProfileTypes.includes(profile.type);
+            }
+            case globals.Trees.USS: {
+                const ussProfileTypes = ZoweExplorerApiRegister.getInstance().registeredUssApiTypes();
+                return ussProfileTypes.includes(profile.type);
+            }
+            case globals.Trees.JES: {
+                const jesProfileTypes = ZoweExplorerApiRegister.getInstance().registeredJesApiTypes();
+                return jesProfileTypes.includes(profile.type);
+            }
+            default: {
+                return false;
+            }
+        }
     }
 }

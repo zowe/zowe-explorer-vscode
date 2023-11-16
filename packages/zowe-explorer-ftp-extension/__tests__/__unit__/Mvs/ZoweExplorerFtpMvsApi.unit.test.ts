@@ -100,6 +100,8 @@ describe("FtpMvsApi", () => {
 
     it("should upload content to dataset.", async () => {
         const localFile = tmp.tmpNameSync({ tmpdir: "/tmp" });
+        const tmpNameSyncSpy = jest.spyOn(tmp, "tmpNameSync");
+        const rmSyncSpy = jest.spyOn(fs, "rmSync");
 
         fs.writeFileSync(localFile, "hello");
         const response = TestUtils.getSingleLineStream();
@@ -113,7 +115,7 @@ describe("FtpMvsApi", () => {
             dataSetName: "   (IBMUSER).DS2",
             options: { encoding: "", returnEtag: true, etag: "utf8" },
         };
-        jest.spyOn(MvsApi as any, "getContentsTag").mockReturnValue(undefined);
+        jest.spyOn(MvsApi as any, "getContents").mockResolvedValueOnce({ apiResponse: { etag: "utf8" } });
         jest.spyOn(fs, "readFileSync").mockReturnValue("test");
         jest.spyOn(Gui, "warningMessage").mockImplementation();
         const result = await MvsApi.putContents(mockParams.inputFilePath, mockParams.dataSetName, mockParams.options);
@@ -121,6 +123,9 @@ describe("FtpMvsApi", () => {
         expect(DataSetUtils.listDataSets).toBeCalledTimes(1);
         expect(DataSetUtils.uploadDataSet).toBeCalledTimes(1);
         expect(MvsApi.releaseConnection).toBeCalled();
+        // check that correct function is called from node-tmp
+        expect(tmpNameSyncSpy).toHaveBeenCalled();
+        expect(rmSyncSpy).toHaveBeenCalled();
     });
 
     it("should upload single space to dataset when secureFtp is true and contents are empty", async () => {

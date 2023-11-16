@@ -45,7 +45,10 @@ describe("ZoweExplorerExtender unit tests", () => {
         Object.defineProperty(fs, "existsSync", { value: newMocks.mockExistsSync, configurable: true });
         newMocks.profiles = createInstanceOfProfile(newMocks.imperativeProfile);
         jest.spyOn(Profiles, "getInstance").mockReturnValue(newMocks.profiles as any);
-        Object.defineProperty(vscode.window, "createTreeView", { value: jest.fn(), configurable: true });
+        Object.defineProperty(vscode.window, "createTreeView", {
+            value: jest.fn().mockReturnValue({ onDidCollapseElement: jest.fn() }),
+            configurable: true,
+        });
         Object.defineProperty(vscode.window, "showErrorMessage", {
             value: newMocks.mockErrorMessage,
             configurable: true,

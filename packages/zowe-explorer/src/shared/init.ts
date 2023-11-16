@@ -27,7 +27,11 @@ import { ZoweLogger } from "../utils/LoggerUtils";
 import { ZoweSaveQueue } from "../abstract/ZoweSaveQueue";
 import { SettingsConfig } from "../utils/SettingsConfig";
 import { spoolFilePollEvent } from "../job/actions";
+import { HistoryView } from "./HistoryView";
 import { ProfileManagement } from "../utils/ProfileManagement";
+import { DatasetTree } from "../dataset/DatasetTree";
+import { USSTree } from "../uss/USSTree";
+import { ZosJobsProvider } from "../job/ZosJobsProvider";
 
 // Set up localization
 nls.config({
@@ -37,10 +41,9 @@ nls.config({
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 export interface IZoweProviders {
-    ds: IZoweTree<IZoweTreeNode>;
-    uss: IZoweTree<IZoweTreeNode>;
-    job: IZoweTree<IZoweTreeNode>;
-    // [key: string]: IZoweTree<IZoweTreeNode>;
+    ds: DatasetTree;
+    uss: USSTree;
+    job: ZosJobsProvider;
 }
 
 export function registerRefreshCommand(
@@ -79,11 +82,10 @@ export function registerCommonCommands(context: vscode.ExtensionContext, provide
         })
     );
 
-    // Update imperative.json to false only when VS Code setting is set to false
+    // Webview for editing persistent items on Zowe Explorer
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.updateSecureCredentials", async (customCredentialManager?: string) => {
-            await globals.setGlobalSecurityValue(customCredentialManager);
-            ProfilesUtils.writeOverridesFile();
+        vscode.commands.registerCommand("zowe.editHistory", () => {
+            return new HistoryView(context, providers);
         })
     );
 
@@ -208,6 +210,16 @@ export function registerCommonCommands(context: vscode.ExtensionContext, provide
             })
         );
     }
+}
+
+export function registerCredentialManager(context: vscode.ExtensionContext): void {
+    // Update imperative.json to false only when VS Code setting is set to false
+    context.subscriptions.push(
+        vscode.commands.registerCommand("zowe.updateSecureCredentials", async (customCredentialManager?: string) => {
+            await globals.setGlobalSecurityValue(customCredentialManager);
+            ProfilesUtils.writeOverridesFile();
+        })
+    );
 }
 
 export function watchConfigProfile(context: vscode.ExtensionContext, providers: IZoweProviders): void {

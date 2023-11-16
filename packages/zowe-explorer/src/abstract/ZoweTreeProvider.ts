@@ -22,6 +22,8 @@ import { setProfile, setSession, errorHandling } from "../utils/ProfilesUtils";
 import * as nls from "vscode-nls";
 import { SettingsConfig } from "../utils/SettingsConfig";
 import { ZoweLogger } from "../utils/LoggerUtils";
+import { TreeProviders } from "../shared/TreeProviders";
+import { IZoweProviders } from "../shared/init";
 
 // Set up localization
 nls.config({
@@ -83,6 +85,16 @@ export class ZoweTreeProvider {
                 node.contextValue += globals.HOME_SUFFIX;
             }
         }
+    }
+
+    /**
+     * Fire the "onDidChangeTreeData" event to signal that a node in the tree has changed.
+     * Unlike `refreshElement`, this function does *not* signal a refresh for the given node -
+     * it simply tells VS Code to repaint the node in the tree.
+     * @param node The node that should be repainted
+     */
+    public nodeDataChanged(node: IZoweTreeNode): void {
+        this.mOnDidChangeTreeData.fire(node);
     }
 
     /**
@@ -170,6 +182,18 @@ export class ZoweTreeProvider {
     public renameNode(_profile: string, _beforeDataSetName: string, _afterDataSetName: string): any {
         ZoweLogger.trace("ZoweTreeProvider.renameNode called.");
         return undefined;
+    }
+
+    public deleteSession(node: IZoweTreeNode, hideFromAllTrees?: boolean): void {
+        ZoweLogger.trace("ZoweTreeProvider.deleteSession called.");
+        if (hideFromAllTrees) {
+            for (const key of Object.keys(TreeProviders.providers) as Array<keyof IZoweProviders>) {
+                const currentProvider = TreeProviders.providers[key];
+                this.deleteSessionForProvider(node, currentProvider);
+            }
+        } else {
+            this.deleteSessionForProvider(node, TreeProviders.providers[contextually.getSessionType(node)]);
+        }
     }
 
     public async editSession(node: IZoweTreeNode, zoweFileProvider: IZoweTree<IZoweNodeType>): Promise<void> {
@@ -280,9 +304,9 @@ export class ZoweTreeProvider {
         await Profiles.getInstance().createZoweSession(zoweFileProvider);
     }
 
-    protected deleteSessionByLabel(revisedLabel: string): void {
-        ZoweLogger.trace("ZoweTreeProvider.deleteSessionByLabel called.");
-        this.mHistory.removeSession(revisedLabel);
-        this.refresh();
+    private deleteSessionForProvider(node: IZoweTreeNode, provider: IZoweTree<IZoweTreeNode>): void {
+        provider.mSessionNodes = provider.mSessionNodes.filter((mSessionNode: IZoweTreeNode) => mSessionNode.getLabel() !== node.getLabel());
+        provider.removeSession(node.getLabel() as string);
+        provider.refresh();
     }
 }

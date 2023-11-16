@@ -6,15 +6,59 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
-- Added "Sort Jobs" feature for job nodes in Jobs tree view. [#2257](https://github.com/zowe/vscode-extension-for-zowe/issues/2251)
-- Introduce a new user interface for managing profiles via right-click action "Manage Profile".
-- Added new edit feature on `Edit Attributes` view for changing file tags on USS [#2113](https://github.com/zowe/vscode-extension-for-zowe/issues/2113)
-- Added new API {ZE Extender MetaData} to allow extenders to have the metadata of registered extenders to aid in team configuration file creation from a view that isn't Zowe Explorer's. [#2394](https://github.com/zowe/vscode-extension-for-zowe/issues/2394)
+- Added support for hiding a Zowe profile across all trees [#2567](https://github.com/zowe/vscode-extension-for-zowe/issues/2567)
+- Added Display confirmation dialog when submitting local JCL. [#2061](https://github.com/zowe/vscode-extension-for-zowe/issues/2061)
 
 ### Bug fixes
 
-- Fixed submitting local JCL using command pallet option `Zowe Explorer: Submit JCL` by adding a check for chosen profile returned to continue the action. [#1625](https://github.com/zowe/vscode-extension-for-zowe/issues/1625)
+## `2.12.1`
+
+### Bug fixes
+
+- Fix issue with certain actions displaying profiles that are not registered with the tree that is providing the action. [#2534](https://github.com/zowe/vscode-extension-for-zowe/issues/2534)
+- Update when the option to submit local file as JCL will be displayed in context menus. [#2541](https://github.com/zowe/vscode-extension-for-zowe/issues/2541)
+- Solved issue with a conflicting keybinding for `Edit History`, changed keybinding to `Ctrl`+`Alt`+`y` for Windows and `⌘ Cmd`+`⌥ Opt`+`y` for macOS. [#2543](https://github.com/zowe/vscode-extension-for-zowe/issues/2543)
+- Removed duplicate context menu items displayed in USS view that now exist within the `Manage Profile` option.[#2547](https://github.com/zowe/vscode-extension-for-zowe/issues/2547)
+- Fixed issue where sort PDS feature applied the date description to members without a valid date [#2552](https://github.com/zowe/vscode-extension-for-zowe/issues/2552)
+- Fixed VSC Compare function, not working with Favorites from Zowe Explorer. [#2549](https://github.com/zowe/vscode-extension-for-zowe/pull/2549)
+- Fixed issue where setting `zowe.security.checkForCustomCredentialManagers` appeared in all scopes instead of just the user scope [#2555](https://github.com/zowe/vscode-extension-for-zowe/issues/2555)
+
+## `2.12.0`
+
+### New features and enhancements
+
+- Added "Sort Jobs" feature in Jobs tree view: accessible via sort icon or right-clicking on session node. [#2257](https://github.com/zowe/vscode-extension-for-zowe/issues/2257)
+- Introduce a new user interface for managing profiles via right-click action "Manage Profile".
+- Added new edit feature on `Edit Attributes` view for changing file tags on USS. [#2113](https://github.com/zowe/vscode-extension-for-zowe/issues/2113)
+- Added new API {ZE Extender MetaData} to allow extenders to have the metadata of registered extenders to aid in team configuration file creation from a view that isn't Zowe Explorer's. [#2394](https://github.com/zowe/vscode-extension-for-zowe/issues/2394)
+- Added ability to install extension from VS Code marketplace if custom credential manager extension is missing after defining it on `imperative.json`. [#2381](https://github.com/zowe/vscode-extension-for-zowe/issues/2381)
+- Added new right-click action for `Submit as JCL` for local files in the VS Code file explorer as well as files opened in the VS Code text editor. [#2475](https://github.com/zowe/vscode-extension-for-zowe/issues/2475)
+- Added "Sort PDS members" feature in Data Sets tree view: accessible via sort icon on session node, or by right-clicking a PDS or session. [#2420](https://github.com/zowe/vscode-extension-for-zowe/issues/2420)
+- Added "Filter PDS members" feature in Data Sets tree view: accessible via filter icon on session node, or by right-clicking a PDS or session. [#2420](https://github.com/zowe/vscode-extension-for-zowe/issues/2420)
+- Added descriptions to data set nodes if filtering and/or sorting is enabled (where applicable).
+- Added webview for editing persistent items on Zowe Explorer. [#2488](https://github.com/zowe/vscode-extension-for-zowe/issues/2488)
+
+### Bug fixes
+
+- Fixed submitting local JCL using command pallet option `Zowe Explorer: Submit as JCL` by adding a check for chosen profile returned to continue the action. [#1625](https://github.com/zowe/vscode-extension-for-zowe/issues/1625)
 - Fixed conflict resolution being skipped if local and remote file have different contents but are the same size. [#2496](https://github.com/zowe/vscode-extension-for-zowe/issues/2496)
+- Fixed issue with token based auth for unsecure profiles in Zowe Explorer. [#2518](https://github.com/zowe/vscode-extension-for-zowe/issues/2518)
+
+## `2.11.2`
+
+### Bug fixes
+
+- Update Zowe Explorer API dependency to pick up latest fixes for Zowe Secrets. [#2512](https://github.com/zowe/vscode-extension-for-zowe/issues/2512)
+
+## `2.11.1`
+
+### Bug fixes
+
+- Fixed issue where USS nodes were not removed from tree during deletion. [#2479](https://github.com/zowe/vscode-extension-for-zowe/issues/2479)
+- Fixed issue where new USS nodes from a paste operation were not shown in tree until refreshed. [#2479](https://github.com/zowe/vscode-extension-for-zowe/issues/2479)
+- Fixed issue where the "Delete Job" action showed a successful deletion message, even if the API returned an error.
+- USS directories, PDS nodes, job nodes and session nodes now update with their respective "collapsed icon" when collapsed.
+- Fixed bug where the list of datasets from a filter search was not re-sorted after a new data set was created in Zowe Explorer. [#2473](https://github.com/zowe/vscode-extension-for-zowe/issues/2473)
 
 ## `2.11.0`
 

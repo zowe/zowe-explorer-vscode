@@ -6,39 +6,25 @@ All notable changes to the "eslint-plugin-zowe-explorer" package will be documen
 
 ### Bug fixes
 
+## `2.12.1`
+
+## `2.12.0`
+
+## `2.11.2`
+
+## `2.11.1`
+
 ## `2.11.0`
-
-### New features and enhancements
-
-### Bug fixes
 
 ## `2.10.0`
 
-### New features and enhancements
-
-### Bug fixes
-
 ## `2.9.2`
-
-### New features and enhancements
-
-### Bug fixes
 
 ## `2.9.1`
 
-### New features and enhancements
-
-### Bug fixes
-
 ## `2.9.0`
 
-### New features and enhancements
-
-### Bug fixes
-
 ## `2.8.1`
-
-### New features and enhancements
 
 ### Bug fixes
 
@@ -50,13 +36,7 @@ All notable changes to the "eslint-plugin-zowe-explorer" package will be documen
 
 - Updated linter rules and addressed linter errors throughout the codebase. [#2184](https://github.com/zowe/vscode-extension-for-zowe/issues/2184)
 
-### Bug fixes
-
 ## `2.7.0`
-
-### New features and enhancements
-
-### Bug fixes
 
 ## `2.6.0`
 

@@ -10,6 +10,7 @@
  */
 
 import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
+import * as globals from "../../../src/globals";
 import * as sharedMock from "../../../__mocks__/mockCreators/shared";
 import * as dsMock from "../../../__mocks__/mockCreators/datasets";
 import * as unixMock from "../../../__mocks__/mockCreators/uss";
@@ -21,6 +22,9 @@ import { Profiles } from "../../../src/Profiles";
 import * as vscode from "vscode";
 import { imperative } from "@zowe/cli";
 import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
+import { Job } from "../../../src/job/ZoweJobNode";
+import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
+import { TreeProviders } from "../../../src/shared/TreeProviders";
 
 jest.mock("fs");
 jest.mock("vscode");
@@ -39,6 +43,7 @@ describe("ProfileManagement unit tests", () => {
             opCancelledSpy: jest.spyOn(Gui, "infoMessage"),
             mockDsSessionNode: ZoweDatasetNode,
             mockUnixSessionNode: ZoweUSSNode,
+            mockJobSessionNode: Job,
             mockResolveQp: jest.fn(),
             mockCreateQp: jest.fn(),
             mockUpdateChosen: ProfileManagement.basicAuthUpdateQpItems[ProfileManagement.AuthQpLabels.update],
@@ -52,6 +57,7 @@ describe("ProfileManagement unit tests", () => {
             mockDisableValidationChosen: ProfileManagement.disableProfileValildationQpItem[ProfileManagement.AuthQpLabels.disable],
             mockProfileInfo: { usingTeamConfig: true },
             mockProfileInstance: null as any,
+            mockTreeProviders: sharedMock.createTreeProviders(),
             debugLogSpy: null as any,
             promptSpy: null as any,
             editSpy: null as any,
@@ -139,10 +145,15 @@ describe("ProfileManagement unit tests", () => {
                 value: jest.fn().mockResolvedValue(mocks.mockProfileInfo as imperative.ProfileInfo),
                 configurable: true,
             });
+            mocks.mockTreeProviders.ds.mSessionNodes.push(mocks.mockDsSessionNode);
+            mocks.mockTreeProviders.uss.mSessionNodes.push(mocks.mockDsSessionNode);
+            mocks.mockTreeProviders.job.mSessionNodes.push(mocks.mockDsSessionNode);
+            jest.spyOn(TreeProviders, "providers", "get").mockReturnValue(mocks.mockTreeProviders);
             mocks.mockResolveQp.mockResolvedValueOnce(mocks.mockHideProfChosen);
+            mocks.mockResolveQp.mockResolvedValueOnce(ProfileManagement["getPromptHideFromAllTreesQpItems"]()[0]);
             await ProfileManagement.manageProfile(mocks.mockDsSessionNode);
             expect(mocks.debugLogSpy).toBeCalledWith(mocks.logMsg);
-            expect(mocks.commandSpy).toHaveBeenLastCalledWith("zowe.ds.removeSession", mocks.mockDsSessionNode);
+            expect(mocks.commandSpy).toHaveBeenLastCalledWith("zowe.ds.removeSession", mocks.mockDsSessionNode, null, true);
         });
         it("profile using basic authentication should see delete commands called when Delete Profile chosen with v1 profile", async () => {
             const mocks = createBlockMocks(createGlobalMocks());
@@ -186,10 +197,12 @@ describe("ProfileManagement unit tests", () => {
         });
         it("profile using token authentication should see correct command called for hiding a unix tree session node", async () => {
             const mocks = createBlockMocks(createGlobalMocks());
+            jest.spyOn(TreeProviders, "providers", "get").mockReturnValue(mocks.mockTreeProviders);
             mocks.mockResolveQp.mockResolvedValueOnce(mocks.mockHideProfChosen);
+            mocks.mockResolveQp.mockResolvedValueOnce(ProfileManagement["getPromptHideFromAllTreesQpItems"]()[1]);
             await ProfileManagement.manageProfile(mocks.mockUnixSessionNode);
             expect(mocks.debugLogSpy).toBeCalledWith(mocks.logMsg);
-            expect(mocks.commandSpy).toHaveBeenLastCalledWith("zowe.uss.removeSession", mocks.mockUnixSessionNode);
+            expect(mocks.commandSpy).toHaveBeenLastCalledWith("zowe.uss.removeSession", mocks.mockUnixSessionNode, null, false);
         });
         it("profile using token authentication should see correct command called for enabling validation a unix tree session node", async () => {
             const mocks = createBlockMocks(createGlobalMocks());
@@ -254,6 +267,102 @@ describe("ProfileManagement unit tests", () => {
             await ProfileManagement.manageProfile(mocks.mockDsSessionNode);
             expect(mocks.debugLogSpy).toBeCalledWith(mocks.logMsg);
             expect(mocks.commandSpy).toHaveBeenLastCalledWith("zowe.ds.disableValidation", mocks.mockDsSessionNode);
+        });
+    });
+
+    describe("handleHideProfiles unit tests", () => {
+        it("should display 'operation cancelled' if no option is selected for hiding a profile", async () => {
+            const mocks = createGlobalMocks();
+            const infoMessageSpy = jest.spyOn(Gui, "infoMessage");
+            jest.spyOn(ProfileManagement as any, "promptHideFromAllTrees").mockReturnValue(undefined);
+            await expect(ProfileManagement["handleHideProfiles"](mocks.mockDsSessionNode)).resolves.toEqual(undefined);
+            expect(infoMessageSpy).toBeCalledTimes(1);
+        });
+        it("should hide the job session", async () => {
+            const mocks = createGlobalMocks();
+            const commandSpy = jest.spyOn(vscode.commands, "executeCommand");
+            jest.spyOn(ProfileManagement as any, "promptHideFromAllTrees").mockReturnValue(
+                ProfileManagement["getPromptHideFromAllTreesQpItems"]()[1]
+            );
+            await expect(ProfileManagement["handleHideProfiles"](mocks.mockJobSessionNode)).resolves.toEqual(undefined);
+            expect(commandSpy).toHaveBeenCalledWith("zowe.jobs.removeJobsSession", mocks.mockJobSessionNode, null, false);
+        });
+    });
+
+    describe("getRegisteredProfileNameList unit tests", () => {
+        function createBlockMocks(globalMocks): any {
+            const theMocks = {
+                registry: {
+                    registeredMvsApiTypes: jest.fn(),
+                    registeredUssApiTypes: jest.fn(),
+                    registeredJesApiTypes: jest.fn(),
+                },
+            };
+            globalMocks.mockProfileInstance.allProfiles = [{ name: "sestest" }];
+            jest.spyOn(globalMocks.mockProfileInstance, "loadNamedProfile").mockReturnValue(sharedMock.createValidIProfile());
+            Object.defineProperty(ZoweExplorerApiRegister, "getInstance", {
+                value: jest.fn().mockReturnValue(theMocks.registry),
+                configurable: true,
+            });
+            return theMocks;
+        }
+        afterEach(() => {
+            jest.clearAllMocks();
+            jest.resetAllMocks();
+        });
+        it("should return zosmf profile registered with the MVS tree", () => {
+            const blockMocks = createBlockMocks(createGlobalMocks());
+            blockMocks.registry.registeredMvsApiTypes = jest.fn().mockReturnValueOnce("zosmf");
+            expect(ProfileManagement.getRegisteredProfileNameList(globals.Trees.MVS)).toEqual(["sestest"]);
+        });
+        it("should return zosmf profile registered with the USS tree", () => {
+            const blockMocks = createBlockMocks(createGlobalMocks());
+            blockMocks.registry.registeredUssApiTypes = jest.fn().mockReturnValueOnce("zosmf");
+            expect(ProfileManagement.getRegisteredProfileNameList(globals.Trees.USS)).toEqual(["sestest"]);
+        });
+        it("should return zosmf profile registered with the JES tree", () => {
+            const blockMocks = createBlockMocks(createGlobalMocks());
+            blockMocks.registry.registeredJesApiTypes = jest.fn().mockReturnValueOnce("zosmf");
+            expect(ProfileManagement.getRegisteredProfileNameList(globals.Trees.JES)).toEqual(["sestest"]);
+        });
+        it("should return empty array with no profiles in allProfiles", () => {
+            const globalMocks = createGlobalMocks();
+            const blockMocks = createBlockMocks(globalMocks);
+            globalMocks.mockProfileInstance.allProfiles = [];
+            const regSpy = jest.spyOn(blockMocks.registry, "registeredJesApiTypes");
+            expect(ProfileManagement.getRegisteredProfileNameList(globals.Trees.JES)).toEqual([]);
+            expect(regSpy).not.toBeCalled();
+        });
+        it("should return empty array when profile in allProfiles doesn't load", () => {
+            const globalMocks = createGlobalMocks();
+            const blockMocks = createBlockMocks(globalMocks);
+            jest.spyOn(globalMocks.mockProfileInstance, "loadNamedProfile").mockReturnValue(undefined);
+            const regSpy = jest.spyOn(blockMocks.registry, "registeredJesApiTypes");
+            expect(ProfileManagement.getRegisteredProfileNameList(globals.Trees.JES)).toEqual([]);
+            expect(regSpy).not.toBeCalled();
+        });
+        it("should return empty array when profile type isn't registered", () => {
+            const blockMocks = createBlockMocks(createGlobalMocks());
+            blockMocks.registry.registeredJesApiTypes = jest.fn().mockReturnValueOnce("zftp");
+            expect(ProfileManagement.getRegisteredProfileNameList(globals.Trees.JES)).toEqual([]);
+        });
+        it("should return empty array when unkown tree is forcefully passed", () => {
+            createBlockMocks(createGlobalMocks());
+            expect(ProfileManagement.getRegisteredProfileNameList("fake" as any)).toEqual([]);
+        });
+        it("should catch error and log a warning then return empty array", () => {
+            const globalMocks = createGlobalMocks();
+            createBlockMocks(globalMocks);
+            const thrownError = new Error("fake error");
+            const warnSpy = jest.spyOn(ZoweLogger, "warn");
+            Object.defineProperty(Profiles, "getInstance", {
+                value: jest.fn().mockImplementationOnce(() => {
+                    throw thrownError;
+                }),
+                configurable: true,
+            });
+            expect(ProfileManagement.getRegisteredProfileNameList(globals.Trees.JES)).toEqual([]);
+            expect(warnSpy).toBeCalledWith(thrownError);
         });
     });
 });

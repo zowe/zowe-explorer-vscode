@@ -139,6 +139,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             treeDataProvider: this,
             canSelectMany: true,
         });
+        this.treeView.onDidCollapseElement(TreeViewUtils.refreshIconOnCollapse([contextually.isJob, contextually.isJobsSession], this));
     }
 
     public rename(_node: IZoweJobTreeNode): void {
@@ -159,10 +160,9 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
      *
      * @param {IZoweJobTreeNode} node
      */
-    public saveSearch(node: IZoweJobTreeNode): IZoweJobTreeNode {
+    public saveSearch(node: IZoweJobTreeNode): void {
         ZoweLogger.trace("ZosJobsProvider.saveSearch called.");
         node.contextValue = contextually.asFavorite(node);
-        return node;
     }
     public saveFile(_document: vscode.TextDocument): void {
         throw new Error("Method not implemented.");
@@ -628,6 +628,36 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         return;
     }
 
+    public removeSearchHistory(name: string): void {
+        ZoweLogger.trace("ZosJobsProvider.removeSearchHistory called.");
+        this.mHistory.removeSearchHistory(name);
+    }
+
+    public removeSession(name: string): void {
+        ZoweLogger.trace("ZosJobsProvider.removeSession called.");
+        this.mHistory.removeSession(name);
+    }
+
+    public resetSearchHistory(): void {
+        ZoweLogger.trace("ZosJobsProvider.resetSearchHistory called.");
+        this.mHistory.resetSearchHistory();
+    }
+
+    public getSessions(): string[] {
+        ZoweLogger.trace("DatasetTree.getSessions called.");
+        return this.mHistory.getSessions();
+    }
+
+    public getFileHistory(): string[] {
+        ZoweLogger.trace("DatasetTree.getFileHistory called.");
+        return this.mHistory.getFileHistory();
+    }
+
+    public getFavorites(): string[] {
+        ZoweLogger.trace("DatasetTree.getFavorites called.");
+        return this.mHistory.readFavorites();
+    }
+
     public async getUserJobsMenuChoice(): Promise<FilterItem | undefined> {
         ZoweLogger.trace("ZosJobsProvider.getUserJobsMenuChoice called.");
         const items: FilterItem[] = this.mHistory
@@ -851,10 +881,9 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         }
     }
 
-    public deleteSession(node: IZoweJobTreeNode): void {
+    public deleteSession(node: IZoweJobTreeNode, hideFromAllTrees?: boolean): void {
         ZoweLogger.trace("ZosJobsProvider.deleteSession called.");
-        this.mSessionNodes = this.mSessionNodes.filter((tempNode) => tempNode.label !== node.label);
-        this.deleteSessionByLabel(node.getLabel() as string);
+        super.deleteSession(node, hideFromAllTrees);
     }
 
     /**
@@ -1121,6 +1150,13 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
 
         // Fire "tree changed event" to reflect added polling context value
         this.mOnDidChangeTreeData.fire();
+    }
+
+    public sortBy(session: IZoweJobTreeNode): void {
+        if (session.children != null) {
+            session.children.sort(Job.sortJobs(session.sort));
+            this.nodeDataChanged(session);
+        }
     }
 }
 

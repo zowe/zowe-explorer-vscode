@@ -24,6 +24,7 @@ import { IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { isTypeUssTreeNode } from "./context";
 import { markDocumentUnsaved } from "../utils/workspace";
+import { errorHandling } from "../utils/ProfilesUtils";
 
 // Set up localization
 nls.config({
@@ -44,6 +45,8 @@ export const JOB_SUBMIT_DIALOG_OPTS = [
     localize("zowe.jobs.confirmSubmission.otherUserJobs", "Other user jobs"),
     localize("zowe.jobs.confirmSubmission.allJobs", "All jobs"),
 ];
+
+export const SORT_DIRS: string[] = [localize("sort.asc", "Ascending"), localize("sort.desc", "Descending")];
 
 export function filterTreeByString(value: string, treeItems: vscode.QuickPickItem[]): vscode.QuickPickItem[] {
     ZoweLogger.trace("shared.utils.filterTreeByString called.");
@@ -139,7 +142,7 @@ function appendSuffix(label: string): string {
     const bracket = label.indexOf("(");
     const split = bracket > -1 ? label.substr(0, bracket).split(".", limit) : label.split(".", limit);
     for (let i = split.length - 1; i > 0; i--) {
-        if (["JCL", "CNTL"].includes(split[i])) {
+        if (["JCL", "JCLLIB", "CNTL"].includes(split[i])) {
             return label.concat(".jcl");
         }
         if (["COBOL", "CBL", "COB", "SCBL"].includes(split[i])) {
@@ -260,9 +263,8 @@ export function willForceUpload(
     doc: vscode.TextDocument,
     remotePath: string,
     profile?: imperative.IProfileLoaded,
-    binary?: boolean,
-    returnEtag?: boolean
-): void {
+    binary?: boolean
+): Thenable<void> {
     // setup to handle both cases (dataset & USS)
     let title: string;
     if (isZoweDatasetTreeNode(node)) {
@@ -279,24 +281,32 @@ export function willForceUpload(
         );
     }
     // Don't wait for prompt to return since this would block the save queue
-    Gui.infoMessage(localize("saveFile.info.confirmUpload", "Would you like to overwrite the remote file?"), {
+    return Gui.infoMessage(localize("saveFile.info.confirmUpload", "Would you like to overwrite the remote file?"), {
         items: [localize("saveFile.overwriteConfirmation.yes", "Yes"), localize("saveFile.overwriteConfirmation.no", "No")],
     }).then(async (selection) => {
         if (selection === localize("saveFile.overwriteConfirmation.yes", "Yes")) {
-            const uploadResponse = await Gui.withProgress(
-                {
-                    location: vscode.ProgressLocation.Notification,
-                    title,
-                },
-                () => {
-                    return uploadContent(node, doc, remotePath, profile, binary, null, returnEtag);
+            try {
+                const uploadResponse = await Gui.withProgress(
+                    {
+                        location: vscode.ProgressLocation.Notification,
+                        title,
+                    },
+                    () => {
+                        return uploadContent(node, doc, remotePath, profile, binary, null, true);
+                    }
+                );
+                if (uploadResponse.success) {
+                    Gui.showMessage(uploadResponse.commandResponse);
+                    if (node && uploadResponse?.apiResponse[0]?.etag) {
+                        node.setEtag(uploadResponse.apiResponse[0].etag);
+                    }
+                } else {
+                    await markDocumentUnsaved(doc);
+                    Gui.errorMessage(uploadResponse.commandResponse);
                 }
-            );
-            if (uploadResponse.success) {
-                Gui.showMessage(uploadResponse.commandResponse);
-                if (node) {
-                    node.setEtag(uploadResponse.apiResponse[0].etag);
-                }
+            } catch (err) {
+                await markDocumentUnsaved(doc);
+                await errorHandling(err, profile.name);
             }
         } else {
             Gui.showMessage(localize("uploadContent.cancelled", "Upload cancelled."));

@@ -23,6 +23,7 @@ import {
     createInstanceOfProfile,
     createValidIProfile,
     createTreeView,
+    createTreeProviders,
 } from "../../../__mocks__/mockCreators/shared";
 import * as globals from "../../../src/globals";
 import * as vscode from "vscode";
@@ -32,6 +33,7 @@ import { getIconByNode } from "../../../src/generators/icons";
 import * as workspaceUtils from "../../../src/utils/workspace";
 import { createUssApi, bindUssApi } from "../../../__mocks__/mockCreators/api";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
+import { TreeProviders } from "../../../src/shared/TreeProviders";
 import { mocked } from "../../../__mocks__/mockUtils";
 
 async function createGlobalMocks() {
@@ -48,7 +50,7 @@ async function createGlobalMocks() {
         showInputBox: jest.fn(),
         filters: jest.fn(),
         getFilters: jest.fn(),
-        createTreeView: jest.fn(),
+        createTreeView: jest.fn().mockReturnValue({ onDidCollapseElement: jest.fn() }),
         createQuickPick: jest.fn(),
         getConfiguration: jest.fn(),
         ZosmfSession: jest.fn(),
@@ -77,6 +79,7 @@ async function createGlobalMocks() {
         testTree: null,
         profilesForValidation: { status: "active", name: "fake" },
         mockProfilesCache: new ProfilesCache(zowe.imperative.Logger.getAppLogger()),
+        mockTreeProviders: createTreeProviders(),
     };
 
     globalMocks.mockTextDocuments.push(globalMocks.mockTextDocumentDirty);
@@ -504,7 +507,7 @@ describe("USSTree Unit Tests - Function USSTree.deleteSession()", () => {
         const newMocks = {
             testTree2: new USSTree(),
             testSessionNode: new ZoweUSSNode("testSessionNode", vscode.TreeItemCollapsibleState.Collapsed, null, globalMocks.testSession, null),
-            startLength: null,
+            startLength: 0,
         };
         const ussSessionTestNode = createUSSSessionNode(globalMocks.testSession, globalMocks.testProfile);
         newMocks.testTree2.mSessionNodes.push(ussSessionTestNode);
@@ -518,8 +521,16 @@ describe("USSTree Unit Tests - Function USSTree.deleteSession()", () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
-        blockMocks.testTree2.deleteSession(blockMocks.testTree2.mSessionNodes[blockMocks.startLength - 1]);
-        expect(blockMocks.testTree2.mSessionNodes.length).toEqual(blockMocks.startLength - 1);
+        jest.spyOn(TreeProviders, "providers", "get").mockReturnValue(globalMocks.mockTreeProviders);
+
+        blockMocks.testTree2.mSessionNodes = globalMocks.mockTreeProviders.ds.mSessionNodes;
+        expect(globalMocks.mockTreeProviders.ds.mSessionNodes.length).toEqual(2);
+        expect(globalMocks.mockTreeProviders.uss.mSessionNodes.length).toEqual(2);
+        expect(globalMocks.mockTreeProviders.job.mSessionNodes.length).toEqual(2);
+        blockMocks.testTree2.deleteSession(globalMocks.mockTreeProviders.ds.mSessionNodes[1], true);
+        expect(globalMocks.mockTreeProviders.ds.mSessionNodes.length).toEqual(1);
+        expect(globalMocks.mockTreeProviders.uss.mSessionNodes.length).toEqual(1);
+        expect(globalMocks.mockTreeProviders.job.mSessionNodes.length).toEqual(1);
     });
 });
 
@@ -1696,5 +1707,50 @@ describe("USSTree Unit Tests - Function USSTree.editSession()", () => {
         });
         globalMocks.testTree.editSession(testSessionNode);
         expect(checkSession).toHaveBeenCalled();
+    });
+
+    describe("removeSearchHistory", () => {
+        it("removes the search item passed in from the current history", async () => {
+            const globalMocks = await createGlobalMocks();
+            expect(globalMocks.testTree["mHistory"]["mSearchHistory"].length).toEqual(3);
+            globalMocks.testTree.removeSearchHistory("/u/myuser");
+            expect(globalMocks.testTree["mHistory"]["mSearchHistory"].length).toEqual(2);
+        });
+    });
+
+    describe("resetSearchHistory", () => {
+        it("clears the entire search history", async () => {
+            const globalMocks = await createGlobalMocks();
+            expect(globalMocks.testTree["mHistory"]["mSearchHistory"].length).toEqual(3);
+            globalMocks.testTree.resetSearchHistory();
+            expect(globalMocks.testTree["mHistory"]["mSearchHistory"].length).toEqual(0);
+        });
+    });
+
+    describe("resetFileHistory", () => {
+        it("clears the entire file history", async () => {
+            const globalMocks = await createGlobalMocks();
+            expect(globalMocks.testTree["mHistory"]["mFileHistory"].length).toEqual(2);
+            globalMocks.testTree.resetFileHistory();
+            expect(globalMocks.testTree["mHistory"]["mFileHistory"].length).toEqual(0);
+        });
+    });
+
+    describe("getSessions", () => {
+        it("gets all the available sessions from persistent object", async () => {
+            const globalMocks = await createGlobalMocks();
+            globalMocks.testTree["mHistory"]["mSessions"] = ["sestest"];
+            expect(globalMocks.testTree.getSessions()).toEqual(["sestest"]);
+        });
+    });
+
+    describe("getFavorites", () => {
+        it("gets all the favorites from persistent object", async () => {
+            const globalMocks = await createGlobalMocks();
+            jest.spyOn(vscode.workspace, "getConfiguration").mockReturnValue({
+                get: () => ["test1", "test2", "test3"],
+            } as any);
+            expect(globalMocks.testTree.getFavorites()).toEqual(["test1", "test2", "test3"]);
+        });
     });
 });

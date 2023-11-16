@@ -45,6 +45,8 @@ describe("Test src/dataset/extension", () => {
             onDidChangeConfiguration: jest.fn(),
             getTreeView: jest.fn(),
             refreshElement: jest.fn(),
+            sortPdsMembersDialog: jest.fn(),
+            filterPdsMembersDialog: jest.fn(),
         };
         const commands: IJestIt[] = [
             {
@@ -135,7 +137,7 @@ describe("Test src/dataset/extension", () => {
                 name: "zowe.ds.removeSession",
                 mock: [
                     { spy: jest.spyOn(contextuals, "isDsSession"), arg: [test.value], ret: true },
-                    { spy: jest.spyOn(dsProvider, "deleteSession"), arg: [test.value] },
+                    { spy: jest.spyOn(dsProvider, "deleteSession"), arg: [test.value, undefined] },
                 ],
             },
             {
@@ -156,7 +158,7 @@ describe("Test src/dataset/extension", () => {
             },
             {
                 name: "zowe.ds.submitJcl",
-                mock: [{ spy: jest.spyOn(dsActions, "submitJcl"), arg: [dsProvider] }],
+                mock: [{ spy: jest.spyOn(dsActions, "submitJcl"), arg: [dsProvider, test.value] }],
             },
             {
                 name: "zowe.ds.submitMember",
@@ -249,6 +251,14 @@ describe("Test src/dataset/extension", () => {
             {
                 name: "zowe.ds.ssoLogout",
                 mock: [{ spy: jest.spyOn(dsProvider, "ssoLogout"), arg: [test.value] }],
+            },
+            {
+                name: "zowe.ds.sortBy",
+                mock: [{ spy: jest.spyOn(dsProvider, "sortPdsMembersDialog"), arg: [test.value] }],
+            },
+            {
+                name: "zowe.ds.filterBy",
+                mock: [{ spy: jest.spyOn(dsProvider, "filterPdsMembersDialog"), arg: [test.value] }],
             },
             {
                 name: "onDidChangeConfiguration",

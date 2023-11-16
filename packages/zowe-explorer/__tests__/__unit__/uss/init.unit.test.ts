@@ -99,7 +99,7 @@ describe("Test src/dataset/extension", () => {
                 name: "zowe.uss.removeSession",
                 mock: [
                     { spy: jest.spyOn(contextuals, "isUssSession"), arg: [test.value], ret: true },
-                    { spy: jest.spyOn(ussFileProvider, "deleteSession"), arg: [test.value] },
+                    { spy: jest.spyOn(ussFileProvider, "deleteSession"), arg: [test.value, undefined] },
                 ],
             },
             {
