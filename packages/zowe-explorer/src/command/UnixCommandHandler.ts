@@ -89,9 +89,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
         if (!session) {
             const profiles = Profiles.getInstance();
             const allProfiles: imperative.IProfileLoaded[] = profiles.allProfiles;
-            const profileNamesList = allProfiles.map((temprofile) => {
-                return temprofile.name;
-            });
+            const profileNamesList = allProfiles.map((temprofile) => temprofile.name);
             if (profileNamesList.length) {
                 const quickPickOptions: vscode.QuickPickOptions = {
                     placeHolder: localize("issueUnixCommand.quickPickOption", "Select the Profile to use to submit the Unix command"),
@@ -103,7 +101,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
                     Gui.showMessage(localize("issueUnixCommand.cancelled", "Operation Cancelled"));
                     return;
                 }
-                profile = allProfiles.filter((temprofile) => temprofile.name === sesName)[0];
+                profile = allProfiles.find((temprofile) => temprofile.name === sesName);
                 if (cwd == undefined) {
                     cwd = await vscode.window.showInputBox({
                         prompt: "Enter the path of the directory in order to execute the command",
@@ -129,7 +127,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
         if (ZoweExplorerApiRegister.getCommandApi(profile).sshProfileRequired) {
             this.sshSession = await this.setsshSession();
         } else {
-            Gui.showMessage(localize("issueUnixCommand.notsupportedForProfile", "Action not being supported for the profile type ") + profile.type);
+            Gui.showMessage(localize("issueUnixCommand.apiNonExisting", "Not implemented yet for profile of type: ") + profile.type);
             return;
         }
         try {
@@ -245,7 +243,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
                 if (command.startsWith("/")) {
                     command = command.substring(1);
                 }
-                this.outputChannel.appendLine(`> ${command}`);
+                this.outputChannel.appendLine(`> ${cwd} ${command}`);
                 const submitResponse = await Gui.withProgress(
                     {
                         location: vscode.ProgressLocation.Notification,

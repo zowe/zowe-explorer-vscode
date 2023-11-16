@@ -343,7 +343,7 @@ export class ZosmfCommandApi extends ZosmfApiCommon implements ICommand {
 
     public async issueUnixCommand(sshSession: zowe.SshSession, command: string, cwd: string): Promise<string> {
         let stdout = "";
-        await zowe.Shell.executeSshCwd(sshSession, command, cwd, (data: string) => {
+        await zowe.Shell.executeSshCwd(sshSession, command, '"'+cwd+'"', (data: string) => {
             stdout += data;
         });
         return stdout;
