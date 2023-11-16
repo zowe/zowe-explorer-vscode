@@ -40,6 +40,7 @@ import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 import * as wsUtils from "../../../src/utils/workspace";
 import * as context from "../../../src/shared/context";
 import { AttributeView } from "../../../src/uss/AttributeView";
+import { mocked } from "../../../__mocks__/mockUtils";
 
 function createGlobalMocks() {
     const globalMocks = {
@@ -167,8 +168,6 @@ function createGlobalMocks() {
 
     return globalMocks;
 }
-// Idea is borrowed from: https://github.com/kulshekhar/ts-jest/blob/master/src/util/testing.ts
-const mocked = <T extends (...args: any[]) => any>(fn: T): jest.Mock<ReturnType<T>> => fn as any;
 
 describe("USS Action Unit Tests - Function createUSSNodeDialog", () => {
     async function createBlockMocks(globalMocks) {

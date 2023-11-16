@@ -41,6 +41,7 @@ import * as dsUtils from "../../../src/dataset/utils";
 import { SettingsConfig } from "../../../src/utils/SettingsConfig";
 import * as sharedActions from "../../../src/shared/actions";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
+import { mocked } from "../../../__mocks__/mockUtils";
 
 jest.mock("fs");
 jest.mock("util");
@@ -153,9 +154,6 @@ function createGlobalMocks() {
 
     return globalMocks;
 }
-
-// Idea is borrowed from: https://github.com/kulshekhar/ts-jest/blob/eadf408f90ca2007b85f5a61c6c0b74b4e431943/src/utils/testing.ts
-const mocked = <T extends (...args: any[]) => any>(fn: T): jest.Mock<ReturnType<T>> => fn as any;
 
 describe("Dataset Tree Unit Tests - Initialisation", () => {
     function createBlockMocks() {

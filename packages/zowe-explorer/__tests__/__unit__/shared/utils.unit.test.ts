@@ -32,8 +32,6 @@ import * as utils from "../../../src/utils/ProfilesUtils";
 import { ProfilesCache } from "@zowe/zowe-explorer-api";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 
-jest.mock("path");
-
 async function createGlobalMocks() {
     const newMocks = {
         session: createISession(),

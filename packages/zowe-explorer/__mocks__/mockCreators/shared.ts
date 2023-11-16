@@ -17,6 +17,9 @@ import { ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import { FilterDescriptor } from "../../src/utils/ProfilesUtils";
 import { imperative, ZosmfSession } from "@zowe/cli";
 import { SettingsConfig } from "../../src/utils/SettingsConfig";
+import { Profiles } from "../../src/Profiles";
+
+const MOCK_PROFILES = [];
 
 export function createPersistentConfig() {
     return {
@@ -307,6 +310,8 @@ export function createTextDocument(name: string, sessionNode?: ZoweDatasetNode |
 
 export function createInstanceOfProfile(profile: imperative.IProfileLoaded) {
     return {
+        ...Profiles.prototype,
+        addToConfigArray: Profiles.prototype.addToConfigArray,
         allProfiles: [{ name: "sestest" }, { name: "profile1" }, { name: "profile2" }],
         defaultProfile: { name: "sestest" },
         getDefaultProfile: jest.fn(),
@@ -318,6 +323,8 @@ export function createInstanceOfProfile(profile: imperative.IProfileLoaded) {
             return { status: "active", name: "sestest" };
         }),
         profilesForValidation: [{ status: "active", name: "sestest" }],
+        profileTypeConfigurations: MOCK_PROFILES,
+        getConfigArray: () => MOCK_PROFILES,
         validateProfiles: jest.fn(),
         getBaseProfile: jest.fn(),
         enableValidationContext: jest.fn(),

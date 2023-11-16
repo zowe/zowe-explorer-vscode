@@ -17,6 +17,7 @@ import * as globals from "../../src/globals";
 import { createInstanceOfProfile, createInstanceOfProfileInfo, createIProfile, createValidIProfile } from "../../__mocks__/mockCreators/shared";
 import { Profiles } from "../../src/Profiles";
 import { ZoweLogger } from "../../src/utils/LoggerUtils";
+import { mocked } from "../../__mocks__/mockUtils";
 
 function createGlobalMocks() {
     const globalMocks = {
@@ -59,9 +60,6 @@ function createGlobalMocks() {
         isTheia,
     };
 }
-
-// Idea is borrowed from: https://github.com/kulshekhar/ts-jest/blob/master/src/util/testing.ts
-const mocked = <T extends (..._args: any[]) => any>(fn: T): jest.Mock<ReturnType<T>> => fn as any;
 
 describe("Utils Unit Tests - Function errorHandling", () => {
     function createBlockMocks() {

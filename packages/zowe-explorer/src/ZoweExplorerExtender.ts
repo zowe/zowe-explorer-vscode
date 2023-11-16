@@ -178,7 +178,9 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
             ZoweExplorerExtender.showZoweConfigError(error.message);
         }
 
-        if (profileTypeConfigurations && !usingTeamConfig) {
+        const hasProfileTypes = profileTypeConfigurations != null && profileTypeConfigurations.length > 0;
+
+        if (!usingTeamConfig && hasProfileTypes) {
             const configOptions = Array.from(profileTypeConfigurations);
             const exists = fs.existsSync(path.join(zoweDir, "profiles", profileType));
             if (configOptions && !exists) {
@@ -188,45 +190,65 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
                 });
             }
         }
-        if (profileTypeConfigurations !== undefined) {
+
+        if (hasProfileTypes) {
             Profiles.getInstance().addToConfigArray(profileTypeConfigurations);
         }
 
-        if (usingTeamConfig && profileTypeConfigurations != null) {
-            const projSchemaLoc = projectDir ? path.join(projectDir, "zowe.schema.json") : null;
-            const projSchemaExists = projSchemaLoc ? fs.existsSync(projSchemaLoc) : false;
-
-            // use the project-level schema if it exists; update the global schema otherwise
-            const schemaPath = projSchemaExists ? path.join(projectDir, "zowe.schema.json") : path.join(getZoweDir(), "zowe.schema.json");
-
-            try {
-                const schemaContents = fs.readFileSync(schemaPath).toString();
-                const parsedSchema = JSON.parse(schemaContents);
-
-                const schemaTypes = zowe.imperative.ConfigSchema.loadSchema(parsedSchema);
-                const newSchemaTypes = Profiles.getInstance().getConfigArray();
-
-                // Check if any types need added to the schema
-                const typesToAdd = newSchemaTypes.filter((s) => schemaTypes.find((newS) => s.type === newS.type) == null);
-                if (typesToAdd.length > 0) {
-                    // Get profile types from config on-disk and merge with new profile types
-                    const mergedProfTypes = [...schemaTypes, ...typesToAdd];
-
-                    // rebuild schema to contain all (merged) profile types and write to disk
-                    const newSchema = JSON.stringify(zowe.imperative.ConfigSchema.buildSchema(mergedProfTypes));
-                    fs.writeFileSync(schemaPath, newSchema);
-                }
-            } catch (err) {
-                // TODO: Inform user only if we couldn't write the new schema to disk
-                // If we can't read the schema or parse its contents, its nothing that should
-                // hold up the initialization
-            }
+        // Check if schema needs updated when the end user is using a team config
+        if (usingTeamConfig) {
+            this.updateSchema(projectDir);
         }
 
         // sequentially reload the internal profiles cache to satisfy all the newly added profile types
         await ZoweExplorerExtender.refreshProfilesQueue.add(async (): Promise<void> => {
             await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
         });
+    }
+
+    /**
+     * Checks to see if any profile types should be added and adds the new types to the schema, if found.
+     * @param projectDir (optional) The workspace directory (if the user has a workspace open)
+     */
+    private updateSchema(projectDir?: string): void {
+        // check for the existence of a project-level schema; if it doesn't exist, fall back to global
+        const projSchemaLoc = projectDir ? path.join(projectDir, "zowe.schema.json") : null;
+        const projSchemaExists = projSchemaLoc != null && fs.existsSync(projSchemaLoc);
+        const schemaPath = projSchemaExists ? projSchemaLoc : path.join(getZoweDir(), "zowe.schema.json");
+
+        // try parsing the existing schema to gather the list of types to merge
+        try {
+            const schemaContents = fs.readFileSync(schemaPath).toString();
+            const parsedSchema = JSON.parse(schemaContents);
+
+            // determine new types that are not present in the on-disk schema
+            const schemaTypes = zowe.imperative.ConfigSchema.loadSchema(parsedSchema);
+            const newSchemaTypes = Profiles.getInstance()
+                .getConfigArray()
+                .filter((o) => typeof o === "object");
+
+            // If there are any new types to add, merge the list of profile types and rebuild the schema
+            const typesToAdd = newSchemaTypes.filter((s) => schemaTypes.find((newS) => s.type === newS.type) == null);
+            if (typesToAdd.length > 0) {
+                // Get profile types from config on-disk and merge with new profile types
+                const mergedProfTypes = [...schemaTypes, ...typesToAdd];
+
+                // rebuild schema to contain all profile types (including merged) and write to disk
+                const newSchema = JSON.stringify(zowe.imperative.ConfigSchema.buildSchema(mergedProfTypes));
+                fs.writeFileSync(schemaPath, newSchema);
+            }
+        } catch (err) {
+            // Only show an error if we failed to update the on-disk schema.
+            if (err.code === "EACCES" || err.code === "EPERM") {
+                Gui.errorMessage(
+                    localize(
+                        "zowe.schema.cannotAccess",
+                        "Failed to update Zowe schema at {0}: insufficient permissions or read-only file",
+                        schemaPath
+                    )
+                );
+            }
+        }
     }
 
     /**

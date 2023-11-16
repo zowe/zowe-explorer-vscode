@@ -45,7 +45,7 @@ describe("ProfilesUtils unit tests", () => {
         };
         Object.defineProperty(fs, "existsSync", { value: newMocks.mockExistsSync, configurable: true });
         Object.defineProperty(fs, "readFileSync", { value: newMocks.mockReadFileSync, configurable: true });
-        Object.defineProperty(fs, "writeFileSync", { value: newMocks.mockWriteFileSync, configurable: true });
+        jest.spyOn(fs, "writeFileSync").mockImplementation(newMocks.mockWriteFileSync);
         Object.defineProperty(fs, "openSync", { value: newMocks.mockOpenSync, configurable: true });
         Object.defineProperty(fs, "mkdirSync", { value: newMocks.mockMkdirSync, configurable: true });
         Object.defineProperty(Gui, "errorMessage", { value: jest.fn(), configurable: true });

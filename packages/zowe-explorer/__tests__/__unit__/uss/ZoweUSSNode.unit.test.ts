@@ -148,7 +148,7 @@ async function createGlobalMocks() {
     Object.defineProperty(workspaceUtils, "closeOpenedTextFile", { value: jest.fn(), configurable: true });
     Object.defineProperty(globalMocks.Download, "ussFile", { value: globalMocks.ussFile, configurable: true });
     Object.defineProperty(zowe, "Delete", { value: globalMocks.Delete, configurable: true });
-    Object.defineProperty(fs, "existsSync", { value: globalMocks.existsSync, configurable: true });
+    jest.spyOn(fs, "existsSync").mockImplementation(globalMocks.existsSync);
     Object.defineProperty(globalMocks.Delete, "ussFile", { value: globalMocks.ussFile, configurable: true });
     Object.defineProperty(Profiles, "createInstance", {
         value: jest.fn(() => globalMocks.profileOps),
@@ -168,7 +168,7 @@ async function createGlobalMocks() {
         configurable: true,
     });
     Object.defineProperty(vscode.env.clipboard, "readText", { value: globalMocks.readText, configurable: true });
-    Object.defineProperty(path, "basename", { value: globalMocks.basePath, configurable: true });
+    jest.spyOn(path, "basename").mockImplementation(globalMocks.basePath);
     Object.defineProperty(ZoweLogger, "error", { value: jest.fn(), configurable: true });
     Object.defineProperty(ZoweLogger, "debug", { value: jest.fn(), configurable: true });
     Object.defineProperty(ZoweLogger, "warn", { value: jest.fn(), configurable: true });

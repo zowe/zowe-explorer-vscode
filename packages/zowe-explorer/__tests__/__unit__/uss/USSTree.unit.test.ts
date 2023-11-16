@@ -32,6 +32,7 @@ import { getIconByNode } from "../../../src/generators/icons";
 import * as workspaceUtils from "../../../src/utils/workspace";
 import { createUssApi, bindUssApi } from "../../../__mocks__/mockCreators/api";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
+import { mocked } from "../../../__mocks__/mockUtils";
 
 async function createGlobalMocks() {
     const globalMocks = {
@@ -1425,8 +1426,6 @@ describe("USSTree Unit Tests - Function USSTree.getChildren()", () => {
         expect(loadProfilesForFavoritesSpy).toHaveBeenCalledWith(log, favProfileNode);
     });
 });
-// Idea is borrowed from: https://github.com/kulshekhar/ts-jest/blob/master/src/util/testing.ts
-const mocked = <T extends (...args: any[]) => any>(fn: T): jest.Mock<ReturnType<T>> => fn as any;
 
 describe("USSTree Unit Tests - Function USSTree.loadProfilesForFavorites", () => {
     function createBlockMocks(globalMocks) {
