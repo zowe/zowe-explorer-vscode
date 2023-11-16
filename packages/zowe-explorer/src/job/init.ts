@@ -131,14 +131,14 @@ export async function initJobsProvider(context: vscode.ExtensionContext): Promis
         vscode.commands.registerCommand("zowe.jobs.removeFavProfile", async (node): Promise<void> => jobsProvider.removeFavProfile(node.label, true))
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.jobs.disableValidation", (node, shouldHideFromAllTrees) => {
-            Profiles.getInstance().disableValidation(node, shouldHideFromAllTrees);
+        vscode.commands.registerCommand("zowe.jobs.disableValidation", (node) => {
+            Profiles.getInstance().disableValidation(node);
             jobsProvider.refreshElement(node);
         })
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.jobs.enableValidation", (node, shouldHideFromAllTrees) => {
-            Profiles.getInstance().enableValidation(node, shouldHideFromAllTrees);
+        vscode.commands.registerCommand("zowe.jobs.enableValidation", (node) => {
+            Profiles.getInstance().enableValidation(node);
             jobsProvider.refreshElement(node);
         })
     );

@@ -182,24 +182,15 @@ export class Profiles extends ProfilesCache {
         return profileStatus;
     }
 
-    public disableValidation(node: IZoweNodeType, shouldHideFromAllTrees: boolean): IZoweNodeType {
+    public disableValidation(node: IZoweNodeType): IZoweNodeType {
         ZoweLogger.trace("Profiles.disableValidation called.");
-        if (shouldHideFromAllTrees) {
-            this.disableValidtionContextForAllTrees(node.getLabel().toString());
-        } else {
-            this.disableValidationContext(node);
-        }
-        return node;
-    }
-
-    public disableValidtionContextForAllTrees(label: string): IZoweNodeType[] {
-        const treeNodes = TreeProviders.getSessionForAllTrees(label);
+        const treeNodes = TreeProviders.getSessionForAllTrees(node.getLabel().toString());
         treeNodes.forEach((treeNode) => {
             if (treeNode) {
                 this.disableValidationContext(treeNode);
             }
         });
-        return treeNodes;
+        return node;
     }
 
     public disableValidationContext(node: IZoweNodeType): IZoweNodeType {
@@ -207,8 +198,7 @@ export class Profiles extends ProfilesCache {
         const theProfile: zowe.imperative.IProfileLoaded = node.getProfile();
         this.validationArraySetup(theProfile, false);
         if (node.contextValue.includes(globals.VALIDATE_SUFFIX)) {
-            node.contextValue = node.contextValue.replace(globals.VALIDATE_SUFFIX, "");
-            node.contextValue += globals.NO_VALIDATE_SUFFIX;
+            node.contextValue = node.contextValue.replace(globals.VALIDATE_SUFFIX, globals.NO_VALIDATE_SUFFIX);
         } else if (node.contextValue.includes(globals.NO_VALIDATE_SUFFIX)) {
             return node;
         } else {
@@ -217,24 +207,15 @@ export class Profiles extends ProfilesCache {
         return node;
     }
 
-    public enableValidation(node: IZoweNodeType, shouldHideFromAllTrees: boolean): IZoweNodeType {
+    public enableValidation(node: IZoweNodeType): IZoweNodeType {
         ZoweLogger.trace("Profiles.enableValidation called.");
-        if (shouldHideFromAllTrees) {
-            this.enableValidationContextForAllTrees(node.getLabel().toString());
-        } else {
-            this.enableValidationContext(node);
-        }
-        return node;
-    }
-
-    public enableValidationContextForAllTrees(label: string): IZoweNodeType[] {
-        const treeNodes = TreeProviders.getSessionForAllTrees(label);
+        const treeNodes = TreeProviders.getSessionForAllTrees(node.getLabel().toString());
         treeNodes.forEach((treeNode) => {
             if (treeNode) {
                 this.enableValidationContext(treeNode);
             }
         });
-        return treeNodes;
+        return node;
     }
 
     public enableValidationContext(node: IZoweNodeType): IZoweNodeType {
@@ -242,8 +223,7 @@ export class Profiles extends ProfilesCache {
         const theProfile: zowe.imperative.IProfileLoaded = node.getProfile();
         this.validationArraySetup(theProfile, true);
         if (node.contextValue.includes(globals.NO_VALIDATE_SUFFIX)) {
-            node.contextValue = node.contextValue.replace(globals.NO_VALIDATE_SUFFIX, "");
-            node.contextValue += globals.VALIDATE_SUFFIX;
+            node.contextValue = node.contextValue.replace(globals.NO_VALIDATE_SUFFIX, globals.VALIDATE_SUFFIX);
         } else if (node.contextValue.includes(globals.VALIDATE_SUFFIX)) {
             return node;
         } else {

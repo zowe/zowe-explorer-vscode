@@ -159,14 +159,14 @@ export async function initUSSProvider(context: vscode.ExtensionContext): Promise
         vscode.commands.registerCommand("zowe.uss.removeFavProfile", (node): Promise<void> => ussFileProvider.removeFavProfile(node.label, true))
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.uss.disableValidation", (node, shouldHideFromAllTrees) => {
-            Profiles.getInstance().disableValidation(node, shouldHideFromAllTrees);
+        vscode.commands.registerCommand("zowe.uss.disableValidation", (node) => {
+            Profiles.getInstance().disableValidation(node);
             ussFileProvider.refreshElement(node);
         })
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.uss.enableValidation", (node, shouldHideFromAllTrees) => {
-            Profiles.getInstance().enableValidation(node, shouldHideFromAllTrees);
+        vscode.commands.registerCommand("zowe.uss.enableValidation", (node) => {
+            Profiles.getInstance().enableValidation(node);
             ussFileProvider.refreshElement(node);
         })
     );
