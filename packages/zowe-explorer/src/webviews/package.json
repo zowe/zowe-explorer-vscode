@@ -2,7 +2,7 @@
   "name": "webviews",
   "private": true,
   "type": "module",
-  "version": "2.12.2-SNAPSHOT",
+  "version": "2.12.2",
   "main": "index.js",
   "license": "EPL-2.0",
   "scripts": {
