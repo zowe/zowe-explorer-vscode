@@ -207,7 +207,7 @@ describe("UnixCommand Actions Unit Testing", () => {
         });
         expect(showInputBox.mock.calls.length).toBe(2);
         expect(appendLine.mock.calls.length).toBe(2);
-        expect(appendLine.mock.calls[0][0]).toBe("> d iplinfo1");
+        expect(appendLine.mock.calls[0][0]).toBe("> /u/directorypath d iplinfo1");
         expect(appendLine.mock.calls[1][0]["commandResponse"]).toBe("iplinfo1");
         expect(showInformationMessage.mock.calls.length).toBe(0);
     });
@@ -259,7 +259,7 @@ describe("UnixCommand Actions Unit Testing", () => {
         });
         expect(showInputBox.mock.calls.length).toBe(1);
         expect(appendLine.mock.calls.length).toBe(2);
-        expect(appendLine.mock.calls[0][0]).toBe("> d iplinfo0");
+        expect(appendLine.mock.calls[0][0]).toBe("> /u/directorypath d iplinfo0");
         expect(appendLine.mock.calls[1][0]["commandResponse"]).toBe("iplinfo0");
         expect(showInformationMessage.mock.calls.length).toBe(0);
     });

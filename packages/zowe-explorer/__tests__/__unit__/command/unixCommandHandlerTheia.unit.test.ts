@@ -176,7 +176,7 @@ describe("unixCommandActions unit testing", () => {
         });
         expect(showInputBox.mock.calls.length).toBe(2);
         expect(appendLine.mock.calls.length).toBe(2);
-        expect(appendLine.mock.calls[0][0]).toBe("> d iplinfo1");
+        expect(appendLine.mock.calls[0][0]).toBe("> /u/directorypath d iplinfo1");
         expect(appendLine.mock.calls[1][0]["commandResponse"]).toBe(submitResponse.commandResponse);
         expect(showInformationMessage.mock.calls.length).toBe(0);
 
@@ -201,7 +201,7 @@ describe("unixCommandActions unit testing", () => {
             placeHolder: "Select the Profile to use to submit the Unix command",
         });
         expect(showInputBox.mock.calls.length).toBe(1);
-        expect(appendLine.mock.calls[0][0]).toBe("> d iplinfo2");
+        expect(appendLine.mock.calls[0][0]).toBe("> /u/directorypath d iplinfo2");
         expect(withProgress.mock.calls.length).toBe(1);
 
         showQuickPick.mockReset();
