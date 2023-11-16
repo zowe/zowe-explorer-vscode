@@ -25,7 +25,7 @@ import {
     JobSubmitDialogOpts,
     JOB_SUBMIT_DIALOG_OPTS,
     getDefaultUri,
-    compareFileContent,
+    uploadContent,
 } from "../shared/utils";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { Profiles } from "../Profiles";
@@ -1577,7 +1577,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
     const ending = doc.fileName.substring(start);
     const sesName = ending.substring(0, ending.indexOf(path.sep));
     const profile = Profiles.getInstance().loadNamedProfile(sesName);
-    const fileLabel = doc.fileName.split("/").slice(-1)[0];
+    const fileLabel = path.basename(doc.fileName);
     const dataSetName = fileLabel.substring(0, fileLabel.indexOf("("));
     const memberName = fileLabel.substring(fileLabel.indexOf("(") + 1, fileLabel.indexOf(")"));
     if (!profile) {
@@ -1652,13 +1652,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
                 title: localize("saveFile.progress.title", "Saving data set..."),
             },
             () => {
-                if (prof.profile?.encoding) {
-                    uploadOptions.encoding = prof.profile.encoding;
-                }
-                return ZoweExplorerApiRegister.getMvsApi(prof).putContents(doc.fileName, label, {
-                    ...uploadOptions,
-                    responseTimeout: prof.profile?.responseTimeout,
-                });
+                return uploadContent(node, doc, label, prof, null, uploadOptions.etag, uploadOptions.returnEtag);
             }
         );
         if (uploadResponse.success) {
@@ -1669,7 +1663,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
                 setFileSaved(true);
             }
         } else if (!uploadResponse.success && uploadResponse.commandResponse.includes("Rest API failure with HTTP(S) status 412")) {
-            resolveFileConflict(node, profile, doc, fileLabel, label);
+            resolveFileConflict(node, prof, doc, fileLabel, label);
         } else {
             await markDocumentUnsaved(doc);
             api.Gui.errorMessage(uploadResponse.commandResponse);

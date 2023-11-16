@@ -4,9 +4,9 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ## TBD Release
 
-### New features and enhancements
-
 ### Bug fixes
+
+- Fixed issue where etag was not updated for USS files after conflict is detected and user selects Overwrite option.
 
 ## `2.12.1`
 
