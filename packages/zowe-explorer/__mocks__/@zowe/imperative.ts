@@ -279,6 +279,10 @@ export class ConfigSchema {
     public static buildSchema() {
         return {};
     }
+
+    public static loadSchema() {
+        return [];
+    }
 }
 
 export class CredentialManagerOverride {
