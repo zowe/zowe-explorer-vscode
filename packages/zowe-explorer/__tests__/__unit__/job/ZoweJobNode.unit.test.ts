@@ -26,10 +26,12 @@ import {
     createInstanceOfProfile,
     createISessionWithoutCredentials,
     createInstanceOfProfileInfo,
+    createTreeProviders,
 } from "../../../__mocks__/mockCreators/shared";
 import * as contextually from "../../../src/shared/context";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 import { bindJesApi, createJesApi } from "../../../__mocks__/mockCreators/api";
+import { TreeProviders } from "../../../src/shared/TreeProviders";
 
 async function createGlobalMocks() {
     const globalMocks = {
@@ -86,6 +88,7 @@ async function createGlobalMocks() {
         }),
         mockProfileInfo: createInstanceOfProfileInfo(),
         mockProfilesCache: new ProfilesCache(zowe.imperative.Logger.getAppLogger()),
+        mockTreeProviders: createTreeProviders(),
     };
 
     Object.defineProperty(globals, "LOG", { value: jest.fn(), configurable: true });
@@ -237,10 +240,15 @@ describe("ZoweJobNode unit tests - Function addSession", () => {
 describe("ZoweJobNode unit tests - Function deleteSession", () => {
     it("Tests that deleteSession removes the session from the tree", async () => {
         const globalMocks = await createGlobalMocks();
-
-        await globalMocks.testJobsProvider.deleteSession(globalMocks.testJobsProvider.mSessionNodes[1]);
-
-        expect(globalMocks.testJobsProvider.mSessionNodes.length).toBe(1);
+        jest.spyOn(TreeProviders, "providers", "get").mockReturnValue(globalMocks.mockTreeProviders);
+        globalMocks.testJobsProvider.mSessionNodes = globalMocks.mockTreeProviders.ds.mSessionNodes;
+        expect(globalMocks.mockTreeProviders.ds.mSessionNodes.length).toEqual(2);
+        expect(globalMocks.mockTreeProviders.uss.mSessionNodes.length).toEqual(2);
+        expect(globalMocks.mockTreeProviders.job.mSessionNodes.length).toEqual(2);
+        await globalMocks.testJobsProvider.deleteSession(globalMocks.testJobsProvider.mSessionNodes[1], true);
+        expect(globalMocks.mockTreeProviders.ds.mSessionNodes.length).toEqual(1);
+        expect(globalMocks.mockTreeProviders.uss.mSessionNodes.length).toEqual(1);
+        expect(globalMocks.mockTreeProviders.job.mSessionNodes.length).toEqual(1);
     });
 });
 

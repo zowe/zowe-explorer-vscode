@@ -206,8 +206,9 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T> {
     /**
      * Deletes a root node from the tree.
      * @param node: A root node representing a session
+     * @param hideFromAllTrees: <optional> whether to hide from all trees or just the single tree
      */
-    deleteSession(node: IZoweTreeNode);
+    deleteSession(node: IZoweTreeNode, hideFromAllTrees?: boolean);
     /**
      * Lets the user open a dataset by filtering the currently-loaded list
      */
@@ -268,6 +269,11 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T> {
      * @param {string} name the member to remove
      */
     removeFileHistory?(name: string);
+    /**
+     * Removes session from the session array
+     * @param {string} name the sessions to remove
+     */
+    removeSession?(name: string): void;
     /**
      * Returns a new dataset filter string, from an old filter and a new string
      *

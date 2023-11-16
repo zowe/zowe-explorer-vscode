@@ -482,11 +482,9 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      *
      * @param node
      */
-    public deleteSession(node: IZoweDatasetTreeNode): void {
+    public deleteSession(node: IZoweDatasetTreeNode, hideFromAllTrees?: boolean): void {
         ZoweLogger.trace("DatasetTree.deleteSession called.");
-        this.mSessionNodes = this.mSessionNodes.filter((tempNode) => tempNode.label.toString() !== node.label.toString());
-        this.mHistory.removeSession(node.label as string);
-        this.refresh();
+        super.deleteSession(node, hideFromAllTrees);
     }
 
     /**
@@ -767,6 +765,11 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
     public removeSearchHistory(name: string): void {
         ZoweLogger.trace("DatasetTree.removeSearchHistory called.");
         this.mHistory.removeSearchHistory(name);
+    }
+
+    public removeSession(name: string): void {
+        ZoweLogger.trace("DatasetTree.removeSession called.");
+        this.mHistory.removeSession(name);
     }
 
     public resetSearchHistory(): void {
