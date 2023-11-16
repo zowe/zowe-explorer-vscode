@@ -31,8 +31,8 @@ import * as path from "path";
 import * as workspaceUtils from "../../../src/utils/workspace";
 import * as globals from "../../../src/globals";
 import * as ussUtils from "../../../src/uss/utils";
-import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
+import { LocalFileManagement } from "../../../src/utils/LocalFileManagement";
 jest.mock("fs");
 jest.mock("path");
 
@@ -134,7 +134,10 @@ async function createGlobalMocks() {
         configurable: true,
     });
     Object.defineProperty(vscode.window, "showInputBox", { value: globalMocks.showInputBox, configurable: true });
-    Object.defineProperty(vscode.window, "createTreeView", { value: jest.fn(), configurable: true });
+    Object.defineProperty(vscode.window, "createTreeView", {
+        value: jest.fn().mockReturnValue({ onDidCollapseElement: jest.fn() }),
+        configurable: true,
+    });
     Object.defineProperty(zowe, "ZosmfSession", { value: globalMocks.ZosmfSession, configurable: true });
     Object.defineProperty(globalMocks.ZosmfSession, "createSessCfgFromArgs", {
         value: globalMocks.createSessCfgFromArgs,
@@ -1070,15 +1073,13 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
             false,
             globalMocks.profileOne.name
         );
-
-        const isBinSpy = jest.spyOn(globalMocks.ussApi, "isFileTagBinOrAscii");
         globalMocks.existsSync.mockReturnValue(null);
 
         // Tests that correct file is downloaded
         await node.openUSS(false, true, blockMocks.testUSSTree);
         expect(globalMocks.existsSync.mock.calls.length).toBe(1);
         expect(globalMocks.existsSync.mock.calls[0][0]).toBe(path.join(globals.USS_DIR, node.mProfileName || "", node.fullPath));
-        expect(globalMocks.setStatusBarMessage).toBeCalledWith("$(sync~spin) Opening USS file...");
+        expect(globalMocks.setStatusBarMessage).toBeCalledWith("$(sync~spin) Downloading USS file...");
 
         // Tests that correct file is opened in editor
         globalMocks.withProgress(globalMocks.downloadUSSFile);
@@ -1115,15 +1116,13 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
             false,
             globalMocks.profileOne.name
         );
-
-        const isBinSpy = jest.spyOn(globalMocks.ussApi, "isFileTagBinOrAscii");
         globalMocks.existsSync.mockReturnValue(null);
 
         // Tests that correct file is downloaded
         await node.openUSS(false, true, blockMocks.testUSSTree);
         expect(globalMocks.existsSync.mock.calls.length).toBe(1);
         expect(globalMocks.existsSync.mock.calls[0][0]).toBe(path.join(globals.USS_DIR, node.mProfileName || "", node.fullPath));
-        expect(globalMocks.setStatusBarMessage).toBeCalledWith("$(sync~spin) Opening USS file...");
+        expect(globalMocks.setStatusBarMessage).toBeCalledWith("$(sync~spin) Downloading USS file...");
         // Tests that correct file is opened in editor
         globalMocks.withProgress(globalMocks.downloadUSSFile);
         expect(globalMocks.withProgress).toBeCalledWith(globalMocks.downloadUSSFile);
@@ -1141,16 +1140,19 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
             "parent",
             vscode.TreeItemCollapsibleState.Collapsed,
             blockMocks.ussNode,
-            null,
+            null as any,
             "/",
             false,
             globalMocks.profileOne.name
         );
         const child = new ZoweUSSNode("child", vscode.TreeItemCollapsibleState.None, parent, null, "/parent", false, globalMocks.profileOne.name);
-
-        globalMocks.existsSync.mockReturnValue("exists");
+        child.binary = false;
+        const mockFileInfo = {
+            name: child.label,
+            path: path.join(globals.USS_DIR, child.mProfileName || "", child.fullPath),
+        };
+        Object.defineProperty(LocalFileManagement, "downloadUnixFile", { value: jest.fn().mockResolvedValueOnce(mockFileInfo), configurable: true });
         globalMocks.mockShowTextDocument.mockRejectedValueOnce(Error("testError"));
-        globalMocks.fileExistsCaseSensitveSync.mockReturnValue(true);
 
         try {
             await child.openUSS(false, true, blockMocks.testUSSTree);
@@ -1158,9 +1160,8 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
             // Prevent exception from failing test
         }
 
-        expect(globalMocks.ussFile.mock.calls.length).toBe(0);
         expect(globalMocks.openTextDocument.mock.calls.length).toBe(1);
-        expect(globalMocks.openTextDocument.mock.calls[0][0]).toBe(child.getUSSDocumentFilePath());
+        expect(globalMocks.openTextDocument.mock.calls[0][0]).toBe(path.join(globals.USS_DIR, child.mProfileName || "", child.fullPath));
         expect(globalMocks.mockShowTextDocument.mock.calls.length).toBe(1);
         expect(globalMocks.showErrorMessage.mock.calls.length).toBe(1);
         expect(globalMocks.showErrorMessage.mock.calls[0][0]).toBe("Error: testError");
@@ -1275,7 +1276,7 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
         await node.openUSS(false, true, blockMocks.testUSSTree);
         expect(globalMocks.existsSync.mock.calls.length).toBe(1);
         expect(globalMocks.existsSync.mock.calls[0][0]).toBe(path.join(globals.USS_DIR, node.getProfileName() || "", node.fullPath));
-        expect(globalMocks.setStatusBarMessage).toBeCalledWith("$(sync~spin) Opening USS file...");
+        expect(globalMocks.setStatusBarMessage).toBeCalledWith("$(sync~spin) Downloading USS file...");
         // Make sure correct file is displayed in the editor
         globalMocks.withProgress(globalMocks.downloadUSSFile);
         expect(globalMocks.openTextDocument.mock.calls.length).toBe(1);

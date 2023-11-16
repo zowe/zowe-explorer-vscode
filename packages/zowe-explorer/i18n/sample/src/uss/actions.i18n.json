@@ -12,5 +12,9 @@
   "deleteUssPrompt.confirmation.message": "Are you sure you want to delete the following item?\nThis will permanently remove the following file or folder from your system.\n\n{0}",
   "deleteUssPrompt.confirmation.cancel.log.debug": "Delete action was canceled.",
   "ZoweUssNode.copyDownload.progress": "Copying file structure...",
-  "ZoweUssNode.copyUpload.progress": "Pasting files..."
+  "uss.paste.apiNotAvailable": "The paste operation is not supported for this node.",
+  "ZoweUssNode.copyUpload.progress": "Pasting files...",
+  "downloadUnixFile.invalidNode.error": "open() called from invalid node.",
+  "downloadUnixFile.name.exists": "There is already a file with the same name. Please change your OS file system settings if you want to give case sensitive file names",
+  "downloadUnixFile.downloading": "$(sync~spin) Downloading USS file..."
 }

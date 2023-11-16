@@ -12,6 +12,7 @@
 import * as vscode from "vscode";
 import * as ussActions from "./actions";
 import * as refreshActions from "../shared/refresh";
+import * as globals from "../globals";
 import { IZoweUSSTreeNode, IZoweTreeNode, IZoweTree } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import * as contextuals from "../shared/context";
@@ -23,7 +24,7 @@ import { TreeViewUtils } from "../utils/TreeViewUtils";
 
 export async function initUSSProvider(context: vscode.ExtensionContext): Promise<IZoweTree<IZoweUSSTreeNode>> {
     ZoweLogger.trace("init.initUSSProvider called.");
-    const ussFileProvider: IZoweTree<IZoweUSSTreeNode> = await createUSSTree();
+    const ussFileProvider: IZoweTree<IZoweUSSTreeNode> = await createUSSTree(globals.LOG);
     if (ussFileProvider == null) {
         return null;
     }

@@ -14,12 +14,16 @@ import * as zowe from "@zowe/cli";
 import { errorHandling } from "../utils/ProfilesUtils";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
-import { Gui, ValidProfileEnum, IZoweTree, IZoweJobTreeNode } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweTree, IZoweJobTreeNode, JobSortOpts } from "@zowe/zowe-explorer-api";
 import { Job, Spool } from "./ZoweJobNode";
 import * as nls from "vscode-nls";
 import SpoolProvider, { encodeJobFile, getSpoolFiles, matchSpool } from "../SpoolProvider";
 import { ZoweLogger } from "../utils/LoggerUtils";
-import { getDefaultUri } from "../shared/utils";
+import { SORT_DIRS } from "../shared/utils";
+import { ZosJobsProvider } from "./ZosJobsProvider";
+import { JOB_SORT_OPTS } from "./utils";
+import * as globals from "../globals";
+import { LocalFileManagement } from "../utils/LocalFileManagement";
 
 // Set up localization
 nls.config({
@@ -41,7 +45,7 @@ export async function downloadSpool(jobs: IZoweJobTreeNode[], binary?: boolean):
             canSelectFolders: true,
             canSelectFiles: false,
             canSelectMany: false,
-            defaultUri: getDefaultUri(),
+            defaultUri: LocalFileManagement.getDefaultUri(),
         });
         if (dirUri !== undefined) {
             for (const job of jobs) {
@@ -79,7 +83,7 @@ export async function downloadSingleSpool(nodes: IZoweJobTreeNode[], binary?: bo
             canSelectFolders: true,
             canSelectFiles: false,
             canSelectMany: false,
-            defaultUri: getDefaultUri(),
+            defaultUri: LocalFileManagement.getDefaultUri(),
         });
         if (dirUri !== undefined) {
             for (const node of nodes) {
@@ -387,8 +391,6 @@ async function deleteSingleJob(job: IZoweJobTreeNode, jobsProvider: IZoweTree<IZ
     } catch (error) {
         await errorHandling(error, job.getProfile().name);
     }
-
-    Gui.showMessage(localize("deleteCommand.job", "Job {0} was deleted.", jobName));
 }
 
 async function deleteMultipleJobs(jobs: ReadonlyArray<IZoweJobTreeNode>, jobsProvider: IZoweTree<IZoweJobTreeNode>): Promise<void> {
@@ -527,4 +529,35 @@ export async function cancelJobs(jobsProvider: IZoweTree<IZoweJobTreeNode>, node
     } else {
         await Gui.showMessage(localize("cancelJobs.succeeded", "Cancelled selected jobs successfully."));
     }
+}
+export async function sortJobs(session: IZoweJobTreeNode, jobsProvider: ZosJobsProvider): Promise<void> {
+    const selection = await Gui.showQuickPick(
+        JOB_SORT_OPTS.map((sortOpt, i) => ({
+            label: i === session.sort.method ? `${sortOpt} $(check)` : sortOpt,
+            description: i === JOB_SORT_OPTS.length - 1 ? SORT_DIRS[session.sort.direction] : null,
+        })),
+        {
+            placeHolder: localize("jobs.selectSortOpt", "Select a sorting option for jobs in {0}", session.label as string),
+        }
+    );
+    if (selection == null) {
+        return;
+    }
+    if (selection.label === localize("setSortDirection", "$(fold) Sort Direction")) {
+        const dir = await Gui.showQuickPick(SORT_DIRS, {
+            placeHolder: localize("sort.selectDirection", "Select a sorting direction"),
+        });
+        if (dir != null) {
+            session.sort = {
+                ...(session.sort ?? { method: JobSortOpts.Id }),
+                direction: SORT_DIRS.indexOf(dir),
+            };
+        }
+        await sortJobs(session, jobsProvider);
+        return;
+    }
+
+    session.sort.method = JOB_SORT_OPTS.indexOf(selection.label.replace(" $(check)", ""));
+    jobsProvider.sortBy(session);
+    Gui.setStatusBarMessage(localize("sort.updated", "$(check) Sorting updated for {0}", session.label as string), globals.MS_PER_SEC * 4);
 }

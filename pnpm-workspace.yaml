@@ -1,4 +1,4 @@
 packages:
   - "packages/*"
-  - "packages/zowe-explorer/webviews/*"
+  - "packages/zowe-explorer/src/webviews/"
   - "!**/test/**"

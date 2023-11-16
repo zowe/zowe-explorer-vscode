@@ -14,15 +14,12 @@
 import * as vscode from "vscode";
 import * as path from "path";
 import * as globals from "../globals";
-import * as os from "os";
 import { Gui, IZoweTreeNode, IZoweNodeType, IZoweDatasetTreeNode, IZoweUSSTreeNode, IZoweJobTreeNode } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import * as nls from "vscode-nls";
 import { IZosFilesResponse, imperative } from "@zowe/cli";
 import { IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
 import { ZoweLogger } from "../utils/LoggerUtils";
-import { isTypeUssTreeNode } from "./context";
-import { markDocumentUnsaved } from "../utils/workspace";
 
 // Set up localization
 nls.config({
@@ -43,6 +40,13 @@ export const JOB_SUBMIT_DIALOG_OPTS = [
     localize("zowe.jobs.confirmSubmission.otherUserJobs", "Other user jobs"),
     localize("zowe.jobs.confirmSubmission.allJobs", "All jobs"),
 ];
+
+export const SORT_DIRS: string[] = [localize("sort.asc", "Ascending"), localize("sort.desc", "Descending")];
+
+export type LocalFileInfo = {
+    name: string;
+    path: string;
+};
 
 export function filterTreeByString(value: string, treeItems: vscode.QuickPickItem[]): vscode.QuickPickItem[] {
     ZoweLogger.trace("shared.utils.filterTreeByString called.");
@@ -138,7 +142,7 @@ function appendSuffix(label: string): string {
     const bracket = label.indexOf("(");
     const split = bracket > -1 ? label.substr(0, bracket).split(".", limit) : label.split(".", limit);
     for (let i = split.length - 1; i > 0; i--) {
-        if (["JCL", "CNTL"].includes(split[i])) {
+        if (["JCL", "JCLLIB", "CNTL"].includes(split[i])) {
             return label.concat(".jcl");
         }
         if (["COBOL", "CBL", "COB", "SCBL"].includes(split[i])) {
@@ -335,54 +339,5 @@ export function jobStringValidator(text: string, localizedParam: "owner" | "pref
         case "prefix":
         default:
             return text.length > globals.JOBS_MAX_PREFIX ? localize("searchJobs.prefix.invalid", "Invalid job prefix") : null;
-    }
-}
-
-export function getDefaultUri(): vscode.Uri {
-    return vscode.workspace.workspaceFolders?.[0]?.uri ?? vscode.Uri.file(os.homedir());
-}
-
-/**
- * Function that triggers compare of the old and new document in the active editor
- * @param {vscode.TextDocument} doc - document to update and compare with previous content
- * @param {IZoweDatasetTreeNode | IZoweUSSTreeNode} node - IZoweTreeNode
- * @param {string} label - {optional} used by IZoweDatasetTreeNode to getContents of file
- * @param {boolean} binary - {optional} used by IZoweUSSTreeNode to getContents of file
- * @param {imperative.IProfileLoaded} profile - {optional}
- * @returns {Promise<void>}
- */
-export async function compareFileContent(
-    doc: vscode.TextDocument,
-    node: IZoweDatasetTreeNode | IZoweUSSTreeNode,
-    label?: string,
-    binary?: boolean,
-    profile?: imperative.IProfileLoaded
-): Promise<void> {
-    await markDocumentUnsaved(doc);
-    const prof = node ? node.getProfile() : profile;
-    let downloadResponse;
-
-    if (isTypeUssTreeNode(node)) {
-        downloadResponse = await ZoweExplorerApiRegister.getUssApi(prof).getContents(node.fullPath, {
-            file: node.getUSSDocumentFilePath(),
-            binary,
-            returnEtag: true,
-            encoding: prof.profile?.encoding,
-            responseTimeout: prof.profile?.responseTimeout,
-        });
-    } else {
-        downloadResponse = await ZoweExplorerApiRegister.getMvsApi(prof).getContents(label, {
-            file: doc.fileName,
-            returnEtag: true,
-            encoding: prof.profile?.encoding,
-            responseTimeout: prof.profile?.responseTimeout,
-        });
-    }
-    ZoweLogger.warn(localize("saveFile.etagMismatch.log.warning", "Remote file has changed. Presenting with way to resolve file."));
-    vscode.commands.executeCommand("workbench.files.action.compareWithSaved");
-    // re-assign etag, so that it can be used with subsequent requests
-    const downloadEtag = downloadResponse?.apiResponse?.etag;
-    if (node && downloadEtag !== node.getEtag()) {
-        node.setEtag(downloadEtag);
     }
 }

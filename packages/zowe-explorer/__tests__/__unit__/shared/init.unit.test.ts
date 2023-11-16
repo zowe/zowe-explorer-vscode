@@ -26,6 +26,8 @@ import { saveUSSFile } from "../../../src/uss/actions";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 import { ZoweSaveQueue } from "../../../src/abstract/ZoweSaveQueue";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
+import * as HistoryView from "../../../src/shared/HistoryView";
+import { LocalFileManagement } from "../../../src/utils/LocalFileManagement";
 
 jest.mock("../../../src/utils/LoggerUtils");
 
@@ -54,11 +56,8 @@ describe("Test src/shared/extension", () => {
                 mock: [],
             },
             {
-                name: "zowe.updateSecureCredentials",
-                mock: [
-                    { spy: jest.spyOn(globals, "setGlobalSecurityValue"), arg: [test.value] },
-                    { spy: jest.spyOn(profUtils.ProfilesUtils, "writeOverridesFile"), arg: [] },
-                ],
+                name: "zowe.editHistory",
+                mock: [{ spy: jest.spyOn(HistoryView, "HistoryView"), arg: [test.context, test.value.providers] }],
             },
             {
                 name: "zowe.promptCredentials",
@@ -205,6 +204,22 @@ describe("Test src/shared/extension", () => {
                 parm: [],
                 mock: [{ spy: jest.spyOn(MvsCommandHandler, "getInstance"), arg: [], ret: { issueMvsCommand: jest.fn() } }],
             },
+            {
+                name: "zowe.selectForCompare",
+                mock: [{ spy: jest.spyOn(LocalFileManagement, "selectFileForCompare"), arg: [test.value] }],
+            },
+            {
+                name: "zowe.compareWithSelected",
+                mock: [{ spy: jest.spyOn(LocalFileManagement, "compareChosenFileContent"), arg: [test.value] }],
+            },
+            {
+                name: "zowe.compareWithSelectedReadOnly",
+                mock: [{ spy: jest.spyOn(LocalFileManagement, "compareChosenFileContent"), arg: [test.value, true] }],
+            },
+            {
+                name: "zowe.compareFileStarted",
+                mock: [],
+            },
         ];
 
         beforeAll(async () => {
@@ -225,7 +240,6 @@ describe("Test src/shared/extension", () => {
             Object.defineProperty(globals, "USS_DIR", { value: testGlobals.USS_DIR });
             Object.defineProperty(globals, "SETTINGS_TEMP_FOLDER_LOCATION", { value: "/some/old/temp/location" });
             Object.defineProperty(vscode.workspace, "onDidSaveTextDocument", { value: onDidSaveTextDocument });
-
             spyOnSubscriptions(commands);
             await sharedExtension.registerCommonCommands(test.context, test.value.providers);
         });
@@ -371,6 +385,24 @@ describe("Test src/shared/extension", () => {
             expect(context.subscriptions).toContain(treeView);
             expect(spyCollapse).not.toHaveBeenCalled();
             expect(spyExpand).not.toHaveBeenCalled();
+        });
+    });
+
+    describe("registerCredentialManager", () => {
+        let context: any;
+
+        beforeEach(() => {
+            context = { subscriptions: [] };
+            jest.clearAllMocks();
+        });
+        afterAll(() => {
+            jest.restoreAllMocks();
+        });
+
+        it("should register command for updating credentials", () => {
+            const registerCommandSpy = jest.spyOn(vscode.commands, "registerCommand");
+            sharedExtension.registerCredentialManager(context);
+            expect(registerCommandSpy).toBeCalledWith("zowe.updateSecureCredentials", expect.any(Function));
         });
     });
 });

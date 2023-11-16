@@ -12,6 +12,7 @@
 import { FileAttributes, Gui, IUss, IZoweTree, IZoweUSSTreeNode, WebView } from "@zowe/zowe-explorer-api";
 import { Disposable, ExtensionContext } from "vscode";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
+import * as contextually from "../shared/context";
 
 export class AttributeView extends WebView {
     private treeProvider: IZoweTree<IZoweUSSTreeNode>;
@@ -30,11 +31,18 @@ export class AttributeView extends WebView {
         this.ussApi = ZoweExplorerApiRegister.getUssApi(this.ussNode.getProfile());
     }
 
+    private async attachTag(node: IZoweUSSTreeNode): Promise<void> {
+        if (this.ussApi.getTag && !contextually.isUssDirectory(node)) {
+            node.attributes.tag = await this.ussApi.getTag(node.fullPath);
+        }
+    }
+
     protected async onDidReceiveMessage(message: any): Promise<void> {
         switch (message.command) {
             case "refresh":
                 if (this.canUpdate) {
                     this.onUpdateDisposable = this.ussNode.onUpdate(async (node) => {
+                        await this.attachTag(node);
                         await this.panel.webview.postMessage({
                             attributes: node.attributes,
                             name: node.fullPath,
@@ -51,6 +59,7 @@ export class AttributeView extends WebView {
                 }
                 break;
             case "ready":
+                await this.attachTag(this.ussNode);
                 await this.panel.webview.postMessage({
                     attributes: this.ussNode.attributes,
                     name: this.ussNode.fullPath,
@@ -102,6 +111,10 @@ export class AttributeView extends WebView {
 
                 if (this.ussNode.attributes.perms !== attrs.perms) {
                     newAttrs.perms = attrs.perms;
+                }
+
+                if (this.ussNode.attributes.tag !== attrs.tag && this.ussApi.getTag) {
+                    newAttrs.tag = attrs.tag;
                 }
 
                 await this.ussApi.updateAttributes(this.ussNode.fullPath, newAttrs);

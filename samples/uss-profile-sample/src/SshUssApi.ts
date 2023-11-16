@@ -1,7 +1,7 @@
 import * as Client from "ssh2-sftp-client";
 import * as vscode from "vscode";
 import { IDownloadOptions, IUploadOptions, IZosFilesResponse, ZosUssProfile, imperative } from "@zowe/cli";
-import { ZoweExplorerApi } from "@zowe/zowe-explorer-api";
+import * as ZoweExplorerApi from "@zowe/zowe-explorer-api";
 
 export class SshUssApi implements ZoweExplorerApi.IUss {
     public constructor(public profile?: imperative.IProfileLoaded) {}
@@ -58,14 +58,7 @@ export class SshUssApi implements ZoweExplorerApi.IUss {
         });
     }
 
-    public async putContents(
-        inputFilePath: string,
-        ussFilePath: string,
-        binary?: boolean | undefined,
-        localEncoding?: string | undefined,
-        etag?: string | undefined,
-        returnEtag?: boolean | undefined
-    ): Promise<IZosFilesResponse> {
+    public async putContent(inputFilePath: string, ussFilePath: string): Promise<IZosFilesResponse> {
         return this.withClient(this.getSession(), async (client) => {
             const response = await client.fastPut(inputFilePath, ussFilePath);
             return this.buildZosFilesResponse(response);

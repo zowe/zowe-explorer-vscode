@@ -461,6 +461,7 @@ describe("ProfilesUtils unit tests", () => {
             const blockMocks = createBlockMocks();
             blockMocks.mockGetDirectValue.mockReturnValue(true);
             blockMocks.mockExistsSync.mockReturnValue(false);
+            jest.spyOn(fs, "readFileSync").mockReturnValue(Buffer.from(JSON.stringify({ overrides: { credentialManager: "@zowe/cli" } }), "utf-8"));
             const createFileSpy = jest.spyOn(profUtils.ProfilesUtils, "writeOverridesFile");
             await profUtils.ProfilesUtils.initializeZoweFolder();
             expect(globals.PROFILE_SECURITY).toBe(globals.ZOWE_CLI_SCM);
@@ -470,9 +471,11 @@ describe("ProfilesUtils unit tests", () => {
 
         it("should skip creating directories and files that already exist", async () => {
             const blockMocks = createBlockMocks();
+            jest.spyOn(profUtils.ProfilesUtils, "getCredentialManagerOverride").mockReturnValue("@zowe/cli");
             blockMocks.mockGetDirectValue.mockReturnValue("@zowe/cli");
             blockMocks.mockExistsSync.mockReturnValue(true);
             const fileJson = blockMocks.mockFileRead;
+            jest.spyOn(fs, "readFileSync").mockReturnValue(Buffer.from(JSON.stringify({ overrides: { credentialManager: "@zowe/cli" } }), "utf-8"));
             blockMocks.mockReadFileSync.mockReturnValueOnce(JSON.stringify(fileJson, null, 2));
             await profUtils.ProfilesUtils.initializeZoweFolder();
             expect(globals.PROFILE_SECURITY).toBe("@zowe/cli");
@@ -484,11 +487,11 @@ describe("ProfilesUtils unit tests", () => {
     describe("writeOverridesFile", () => {
         it("should have file exist", () => {
             const blockMocks = createBlockMocks();
-            const fileJson = { overrides: { CredentialManager: "@zowe/cli", testValue: true } };
-            const content = JSON.stringify(fileJson, null, 2);
-            blockMocks.mockReadFileSync.mockReturnValueOnce(JSON.stringify({ overrides: { CredentialManager: false, testValue: true } }, null, 2));
+            blockMocks.mockReadFileSync.mockReturnValueOnce(
+                JSON.stringify({ overrides: { CredentialManager: "@zowe/cli", testValue: true } }, null, 2)
+            );
             profUtils.ProfilesUtils.writeOverridesFile();
-            expect(blockMocks.mockWriteFileSync).toBeCalledWith(blockMocks.zoweDir, content, { encoding: "utf-8", flag: "w" });
+            expect(blockMocks.mockWriteFileSync).toBeCalledTimes(0);
         });
 
         it("should return and have no change to the existing file if PROFILE_SECURITY matches file", () => {
@@ -543,6 +546,7 @@ describe("ProfilesUtils unit tests", () => {
     describe("initializeZoweProfiles", () => {
         it("should successfully initialize Zowe folder and read config from disk", async () => {
             const initZoweFolderSpy = jest.spyOn(profUtils.ProfilesUtils, "initializeZoweFolder");
+            jest.spyOn(profUtils.ProfilesUtils, "getCredentialManagerOverride").mockReturnValueOnce("@zowe/cli");
             const readConfigFromDiskSpy = jest.spyOn(profUtils.ProfilesUtils, "readConfigFromDisk").mockResolvedValueOnce();
             await profUtils.ProfilesUtils.initializeZoweProfiles((msg) => ZoweExplorerExtender.showZoweConfigError(msg));
             expect(initZoweFolderSpy).toHaveBeenCalledTimes(1);
@@ -589,40 +593,6 @@ describe("ProfilesUtils unit tests", () => {
         expect(testFilterItem.label).toEqual("test undefined");
     });
 
-    describe("getCredentialManagerOverride", () => {
-        afterEach(() => {
-            jest.clearAllMocks();
-            jest.resetAllMocks();
-        });
-
-        it("should successfully retrieve the credential manager override map", () => {
-            const expectedValue = {
-                credMgrZEName: "test",
-                credMgrPluginName: "test",
-            } as zowe.imperative.ICredentialManagerNameMap;
-            const zoweLoggerTraceSpy = jest.spyOn(ZoweLogger, "trace");
-            jest.spyOn(zowe.imperative.CredentialManagerOverride, "getKnownCredMgrs").mockReturnValueOnce([expectedValue]);
-            jest.spyOn(vscode.extensions, "getExtension").mockReturnValueOnce({ test: "test" } as any);
-            jest.spyOn(zowe.imperative.CredentialManagerOverride, "getCredMgrInfoByDisplayName").mockReturnValueOnce(expectedValue);
-            expect(profUtils.ProfilesUtils.getCredentialManagerOverride()).toEqual(expectedValue);
-            expect(zoweLoggerTraceSpy).toBeCalledTimes(1);
-        });
-        it("should return undefined if no credential manager is found", () => {
-            const expectedValue = {
-                credMgrZEName: "test",
-                credMgrPluginName: "test",
-            } as zowe.imperative.ICredentialManagerNameMap;
-            const zoweLoggerTraceSpy = jest.spyOn(ZoweLogger, "trace");
-            jest.spyOn(zowe.imperative.CredentialManagerOverride, "getKnownCredMgrs").mockReturnValueOnce([expectedValue]);
-            jest.spyOn(vscode.extensions, "getExtension").mockImplementationOnce(() => {
-                throw new Error("failed to get extension");
-            });
-            jest.spyOn(zowe.imperative.CredentialManagerOverride, "getCredMgrInfoByDisplayName").mockReturnValueOnce(expectedValue);
-            expect(profUtils.ProfilesUtils.getCredentialManagerOverride()).toEqual(undefined);
-            expect(zoweLoggerTraceSpy).toBeCalledTimes(1);
-        });
-    });
-
     describe("activateCredentialManagerOverride", () => {
         afterEach(() => {
             jest.clearAllMocks();
@@ -637,7 +607,7 @@ describe("ProfilesUtils unit tests", () => {
                 isActive: true,
             } as any;
 
-            await expect(profUtils.ProfilesUtils.activateCredentialManagerOverride(credentialManagerExtension)).resolves.toEqual(
+            await expect((profUtils.ProfilesUtils as any).activateCredentialManagerOverride(credentialManagerExtension)).resolves.toEqual(
                 {} as zowe.imperative.ICredentialManagerConstructor
             );
             expect(activateSpy).toBeCalledTimes(1);
@@ -651,7 +621,7 @@ describe("ProfilesUtils unit tests", () => {
                 isActive: true,
             } as any;
 
-            await expect(profUtils.ProfilesUtils.activateCredentialManagerOverride(credentialManagerExtension)).resolves.toEqual(undefined);
+            await expect((profUtils.ProfilesUtils as any).activateCredentialManagerOverride(credentialManagerExtension)).resolves.toEqual(undefined);
             expect(activateSpy).toBeCalledTimes(1);
         });
 
@@ -664,7 +634,7 @@ describe("ProfilesUtils unit tests", () => {
                 isActive: true,
             } as any;
 
-            await expect(profUtils.ProfilesUtils.activateCredentialManagerOverride(credentialManagerExtension)).rejects.toThrow(
+            await expect((profUtils.ProfilesUtils as any).activateCredentialManagerOverride(credentialManagerExtension)).rejects.toThrow(
                 "Custom credential manager failed to activate"
             );
         });
@@ -692,35 +662,47 @@ describe("ProfilesUtils unit tests", () => {
             jest.resetAllMocks();
         });
 
-        it("should retrieve the custom credential manager", async () => {
-            jest.spyOn(profUtils.ProfilesUtils, "getCredentialManagerOverride").mockReturnValueOnce({
-                credMgrDisplayName: "test1",
-                credMgrPluginName: "test2",
-                credMgrZEName: "test3",
-            });
-            jest.spyOn(vscode.extensions, "getExtension").mockReturnValueOnce({} as any);
+        it("should prompt and install for missing extension of custom credential manager if override defined", async () => {
+            const isVSCodeCredentialPluginInstalledSpy = jest.spyOn(profUtils.ProfilesUtils, "isVSCodeCredentialPluginInstalled");
+
             jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(true);
-            const activateCredenitalManagerOverrideSpy = jest
-                .spyOn(profUtils.ProfilesUtils, "activateCredentialManagerOverride")
-                .mockResolvedValueOnce({
-                    prototype: {},
-                } as zowe.imperative.ICredentialManagerConstructor);
-            const updateCredentialManagerSettingSpy = jest.spyOn(profUtils.ProfilesUtils, "updateCredentialManagerSetting").mockImplementation();
-            jest.spyOn(zowe.imperative, "ProfileInfo").mockReturnValueOnce({} as any);
+            jest.spyOn(profUtils.ProfilesUtils as any, "fetchRegisteredPlugins").mockImplementation();
+            jest.spyOn(profUtils.ProfilesUtils, "getCredentialManagerOverride").mockReturnValue("test");
+            jest.spyOn(profUtils.ProfilesUtils, "isVSCodeCredentialPluginInstalled").mockReturnValueOnce(false);
+            jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(true);
+            jest.spyOn(profUtils.ProfilesUtils, "getCredentialManagerMap").mockReturnValueOnce({
+                credMgrDisplayName: "test",
+                credMgrPluginName: "test",
+                credMgrZEName: "test",
+            });
+            jest.spyOn((profUtils as any).ProfilesUtils, "setupCustomCredentialManager").mockReturnValueOnce({});
             await expect(profUtils.ProfilesUtils.getProfileInfo(false)).resolves.toEqual({});
-            expect(activateCredenitalManagerOverrideSpy).toBeCalledWith({});
-            expect(updateCredentialManagerSettingSpy).toBeCalledWith("test1");
+            expect(isVSCodeCredentialPluginInstalledSpy).toBeCalledTimes(1);
+        });
+
+        it("should retrieve the custom credential manager", async () => {
+            jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(true);
+            jest.spyOn(profUtils.ProfilesUtils as any, "fetchRegisteredPlugins").mockImplementation();
+            jest.spyOn(profUtils.ProfilesUtils, "getCredentialManagerOverride").mockReturnValue("test");
+            jest.spyOn(profUtils.ProfilesUtils, "isVSCodeCredentialPluginInstalled").mockReturnValueOnce(true);
+            jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(true);
+            jest.spyOn(profUtils.ProfilesUtils, "getCredentialManagerMap").mockReturnValueOnce({
+                credMgrDisplayName: "test",
+                credMgrPluginName: "test",
+                credMgrZEName: "test",
+            });
+            jest.spyOn((profUtils as any).ProfilesUtils, "setupCustomCredentialManager").mockReturnValueOnce({});
+            await expect(profUtils.ProfilesUtils.getProfileInfo(false)).resolves.toEqual({});
         });
 
         it("should retrieve the default credential manager if no custom credential manager is found", async () => {
-            jest.spyOn(profUtils.ProfilesUtils, "getCredentialManagerOverride").mockReturnValueOnce(undefined);
-            const defaultCredMgrSpy = jest.spyOn(zowe.imperative.ProfileCredentials, "defaultCredMgrWithKeytar");
-            jest.spyOn(vscode.extensions, "getExtension").mockReturnValueOnce(undefined);
+            jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(false);
+            jest.spyOn(profUtils.ProfilesUtils, "getCredentialManagerOverride").mockReturnValue("@zowe/cli");
+            jest.spyOn(profUtils.ProfilesUtils, "isVSCodeCredentialPluginInstalled").mockReturnValueOnce(false);
             jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(true);
-            const updateCredentialManagerSettingSpy = jest.spyOn(profUtils.ProfilesUtils, "updateCredentialManagerSetting").mockImplementation();
-            await expect(profUtils.ProfilesUtils.getProfileInfo(true)).resolves.toEqual({});
-            expect(updateCredentialManagerSettingSpy).toBeCalledWith(globals.ZOWE_CLI_SCM);
-            expect(defaultCredMgrSpy).toHaveBeenCalledWith(ProfilesCache.requireKeyring);
+            jest.spyOn(profUtils.ProfilesUtils, "getCredentialManagerMap").mockReturnValueOnce(undefined);
+            jest.spyOn((profUtils as any).ProfilesUtils, "setupDefaultCredentialManager").mockReturnValueOnce({});
+            await expect(profUtils.ProfilesUtils.getProfileInfo(false)).resolves.toEqual({});
         });
     });
 
@@ -729,7 +711,207 @@ describe("ProfilesUtils unit tests", () => {
             jest.spyOn(Profiles.getInstance(), "getDefaultProfile").mockReturnValueOnce({} as any);
             jest.spyOn(Profiles.getInstance(), "getLoadedProfConfig").mockResolvedValue({ type: "test" } as any);
             jest.spyOn(Profiles.getInstance(), "getSecurePropsForProfile").mockResolvedValue([]);
-            await expect(profUtils.isUsingTokenAuth("test")).resolves.toEqual(false);
+            await expect(profUtils.ProfilesUtils.isUsingTokenAuth("test")).resolves.toEqual(false);
+        });
+    });
+
+    describe("isVSCodeCredentialPluginInstalled", () => {
+        beforeEach(() => {
+            jest.clearAllMocks();
+            jest.resetAllMocks();
+            jest.restoreAllMocks();
+        });
+
+        it("should return false if an error is thrown when getting extension from available VS Code extensions", () => {
+            const zoweLoggerTraceSpy = jest.spyOn(ZoweLogger, "trace");
+            jest.spyOn(zowe.imperative.CredentialManagerOverride, "getCredMgrInfoByDisplayName").mockReturnValue({
+                credMgrDisplayName: "test",
+                credMgrPluginName: "test",
+                credMgrZEName: "test",
+            });
+            jest.spyOn(vscode.extensions, "getExtension").mockImplementation(() => {
+                throw new Error("test error");
+            });
+            expect(profUtils.ProfilesUtils.isVSCodeCredentialPluginInstalled("test")).toBe(false);
+            expect(zoweLoggerTraceSpy).toBeCalledTimes(1);
+        });
+    });
+
+    describe("getCredentialManagerOverride", () => {
+        afterEach(() => {
+            jest.clearAllMocks();
+            jest.resetAllMocks();
+            jest.restoreAllMocks();
+        });
+
+        it("should return the custom credential manager override if of type string", () => {
+            const zoweLoggerTraceSpy = jest.spyOn(ZoweLogger, "trace");
+
+            jest.spyOn(fs, "readFileSync").mockReturnValueOnce(
+                Buffer.from(
+                    JSON.stringify({
+                        overrides: {
+                            credentialManager: "My Custom Credential Manager",
+                        },
+                    })
+                )
+            );
+            Object.defineProperty(zowe.imperative.CredentialManagerOverride, "CRED_MGR_SETTING_NAME", {
+                value: "credentialManager",
+                configurable: true,
+            });
+
+            expect(profUtils.ProfilesUtils.getCredentialManagerOverride()).toBe("My Custom Credential Manager");
+            expect(zoweLoggerTraceSpy).toBeCalledTimes(1);
+        });
+
+        it("should return default manager if the override file does not exist", () => {
+            const zoweLoggerTraceSpy = jest.spyOn(ZoweLogger, "trace");
+            const zoweLoggerInfoSpy = jest.spyOn(ZoweLogger, "info");
+
+            jest.spyOn(fs, "readFileSync").mockImplementation(() => {
+                throw new Error("test");
+            });
+            try {
+                profUtils.ProfilesUtils.getCredentialManagerOverride();
+            } catch (err) {
+                expect(err).toBe("test");
+            }
+
+            expect(zoweLoggerTraceSpy).toBeCalledTimes(1);
+            expect(zoweLoggerInfoSpy).toBeCalledTimes(1);
+        });
+    });
+
+    describe("setupCustomCredentialManager", () => {
+        afterEach(() => {
+            jest.clearAllMocks();
+            jest.resetAllMocks();
+            jest.restoreAllMocks();
+        });
+
+        it("should return the profileInfo object with the custom credential manager constructor", async () => {
+            const zoweLoggerTraceSpy = jest.spyOn(ZoweLogger, "trace");
+            const zoweLoggerInfoSpy = jest.spyOn(ZoweLogger, "info");
+
+            jest.spyOn(vscode.extensions, "getExtension").mockImplementation();
+            jest.spyOn(profUtils.ProfilesUtils as any, "activateCredentialManagerOverride").mockResolvedValue(jest.fn());
+
+            await expect(
+                profUtils.ProfilesUtils["setupCustomCredentialManager"]({
+                    credMgrDisplayName: "test",
+                    credMgrPluginName: "test",
+                    credMgrZEName: "test",
+                })
+            ).resolves.toEqual({} as zowe.imperative.ProfileInfo);
+            expect(zoweLoggerTraceSpy).toBeCalledTimes(2);
+            expect(zoweLoggerInfoSpy).toBeCalledTimes(1);
+        });
+    });
+
+    describe("fetchRegisteredPlugins", () => {
+        afterEach(() => {
+            jest.clearAllMocks();
+            jest.resetAllMocks();
+            jest.restoreAllMocks();
+        });
+
+        it("should not find any registered plugins and simply return", async () => {
+            const zoweLoggerTraceSpy = jest.spyOn(ZoweLogger, "trace");
+            const updateCredentialManagerSettingSpy = jest.spyOn(profUtils.ProfilesUtils, "updateCredentialManagerSetting");
+            const setDirectValueSpy = jest.spyOn(SettingsConfig, "setDirectValue");
+
+            jest.spyOn(zowe.imperative.CredentialManagerOverride, "getKnownCredMgrs").mockReturnValue([
+                {
+                    credMgrDisplayName: "test",
+                    credMgrPluginName: "test",
+                    credMgrZEName: "test",
+                },
+            ]);
+            jest.spyOn(vscode.extensions, "getExtension").mockImplementation(() => {
+                throw new Error("test error");
+            });
+
+            await expect(profUtils.ProfilesUtils["fetchRegisteredPlugins"]()).resolves.not.toThrow();
+            expect(zoweLoggerTraceSpy).toBeCalledTimes(1);
+            expect(updateCredentialManagerSettingSpy).toBeCalledTimes(0);
+            expect(setDirectValueSpy).toBeCalledTimes(0);
+        });
+
+        it("suggest changing the override setting after finding a registered custom credential manager and selecting 'yes'", async () => {
+            const zoweLoggerTraceSpy = jest.spyOn(ZoweLogger, "trace");
+            const updateCredentialManagerSettingSpy = jest.spyOn(profUtils.ProfilesUtils, "updateCredentialManagerSetting");
+            const setDirectValueSpy = jest.spyOn(SettingsConfig, "setDirectValue");
+
+            jest.spyOn(zowe.imperative.CredentialManagerOverride, "getKnownCredMgrs").mockReturnValue([
+                {
+                    credMgrDisplayName: "test",
+                    credMgrPluginName: "test",
+                    credMgrZEName: "test",
+                },
+            ]);
+            jest.spyOn(vscode.extensions, "getExtension").mockReturnValue({
+                credMgrDisplayName: "test",
+            } as any);
+            jest.spyOn(Gui, "infoMessage").mockResolvedValue("Yes");
+
+            await expect(profUtils.ProfilesUtils["fetchRegisteredPlugins"]()).resolves.not.toThrow();
+            expect(zoweLoggerTraceSpy).toBeCalledTimes(2);
+            expect(updateCredentialManagerSettingSpy).toBeCalledTimes(1);
+            expect(setDirectValueSpy).toBeCalledTimes(1);
+        });
+
+        it("suggest changing the override setting and selecting 'no' and should keep the default manager", async () => {
+            const zoweLoggerTraceSpy = jest.spyOn(ZoweLogger, "trace");
+            const updateCredentialManagerSettingSpy = jest.spyOn(profUtils.ProfilesUtils, "updateCredentialManagerSetting");
+            const setDirectValueSpy = jest.spyOn(SettingsConfig, "setDirectValue");
+
+            jest.spyOn(zowe.imperative.CredentialManagerOverride, "getKnownCredMgrs").mockReturnValue([
+                {
+                    credMgrDisplayName: "test",
+                    credMgrPluginName: "test",
+                    credMgrZEName: "test",
+                },
+            ]);
+            jest.spyOn(vscode.extensions, "getExtension").mockReturnValue({
+                credMgrDisplayName: "test",
+            } as any);
+            jest.spyOn(Gui, "infoMessage").mockResolvedValue("Don't ask again");
+
+            await expect(profUtils.ProfilesUtils["fetchRegisteredPlugins"]()).resolves.not.toThrow();
+            expect(zoweLoggerTraceSpy).toBeCalledTimes(1);
+            expect(updateCredentialManagerSettingSpy).toBeCalledTimes(0);
+            expect(setDirectValueSpy).toBeCalledTimes(1);
+        });
+    });
+
+    describe("promptAndHandleMissingCredentialManager", () => {
+        afterEach(() => {
+            jest.clearAllMocks();
+            jest.resetAllMocks();
+            jest.restoreAllMocks();
+        });
+
+        it("should prompt to install missing custom credential manager defined in 'imperative.json'", async () => {
+            const zoweLoggerTraceSpy = jest.spyOn(ZoweLogger, "trace");
+            const reloadWindowSpy = jest.spyOn(vscode.commands, "executeCommand");
+
+            jest.spyOn(Gui, "infoMessage").mockResolvedValue("Install");
+            Object.defineProperty(vscode.env, "openExternal", {
+                value: () => true,
+                configurable: true,
+            });
+            jest.spyOn(Gui, "showMessage").mockResolvedValue("Reload");
+
+            await expect(
+                profUtils.ProfilesUtils["promptAndHandleMissingCredentialManager"]({
+                    credMgrDisplayName: "test",
+                    credMgrPluginName: "test",
+                    credMgrZEName: "test",
+                })
+            ).resolves.not.toThrow();
+            expect(zoweLoggerTraceSpy).toBeCalledTimes(1);
+            expect(reloadWindowSpy).toBeCalledWith("workbench.action.reloadWindow");
         });
     });
 });
