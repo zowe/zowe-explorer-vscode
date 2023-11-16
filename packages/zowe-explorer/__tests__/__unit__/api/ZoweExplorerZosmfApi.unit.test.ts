@@ -100,4 +100,31 @@ describe("Zosmf API tests", () => {
             Promise.resolve(zowe.Download.ussFile(api.getSession(), "/some/input/path", {}))
         );
     });
+
+    it("should update the tag attribute of a USS file if a new change is made", async () => {
+        const api = new ZosmfUssApi();
+        const changeTagSpy = jest.fn();
+        Object.defineProperty(zowe, "Utilities", {
+            value: {
+                putUSSPayload: changeTagSpy,
+            },
+            configurable: true,
+        });
+        await expect(api.updateAttributes("/test/path", { tag: "utf-8" })).resolves.not.toThrow();
+        expect(changeTagSpy).toBeCalledTimes(1);
+    });
+
+    it("should get the tag of a file successfully", async () => {
+        const api = new ZosmfUssApi();
+        jest.spyOn(JSON, "parse").mockReturnValue({
+            stdout: ["-t UTF-8 tesfile.txt"],
+        });
+        Object.defineProperty(zowe, "Utilities", {
+            value: {
+                putUSSPayload: () => Buffer.from(""),
+            },
+            configurable: true,
+        });
+        await expect(api.getTag("testfile.txt")).resolves.toEqual("UTF-8");
+    });
 });

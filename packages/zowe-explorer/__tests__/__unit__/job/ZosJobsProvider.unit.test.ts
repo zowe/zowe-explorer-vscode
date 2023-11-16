@@ -32,6 +32,7 @@ import { getIconByNode } from "../../../src/generators/icons";
 import { createJesApi } from "../../../__mocks__/mockCreators/api";
 import * as sessUtils from "../../../src/utils/SessionUtils";
 import { jobStringValidator } from "../../../src/shared/utils";
+import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 import { Poller } from "@zowe/zowe-explorer-api/src/utils";
 import { SettingsConfig } from "../../../src/utils/SettingsConfig";
 import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
@@ -45,7 +46,7 @@ async function createGlobalMocks() {
         mockGetJob: jest.fn(),
         mockRefresh: jest.fn(),
         mockAffectsConfig: jest.fn(),
-        createTreeView: jest.fn(),
+        createTreeView: jest.fn().mockReturnValue({ onDidCollapseElement: jest.fn() }),
         mockGetSpoolFiles: jest.fn(),
         mockDeleteJobs: jest.fn(),
         mockShowInputBox: jest.fn(),
@@ -85,7 +86,7 @@ async function createGlobalMocks() {
             };
         }),
     };
-
+    jest.spyOn(Gui, "createTreeView").mockImplementation(globalMocks.createTreeView);
     Object.defineProperty(ProfilesCache, "getConfigInstance", {
         value: jest.fn(() => {
             return {
@@ -130,6 +131,10 @@ async function createGlobalMocks() {
     Object.defineProperty(vscode.window, "showQuickPick", { value: globalMocks.mockShowQuickPick, configurable: true });
     Object.defineProperty(vscode, "ConfigurationTarget", { value: globalMocks.enums, configurable: true });
     Object.defineProperty(vscode.window, "showInputBox", { value: globalMocks.mockShowInputBox, configurable: true });
+    Object.defineProperty(vscode.workspace, "getConfiguration", {
+        value: globalMocks.mockGetConfiguration,
+        configurable: true,
+    });
     Object.defineProperty(zowe, "DeleteJobs", { value: globalMocks.mockDeleteJobs, configurable: true });
     Object.defineProperty(vscode.window, "createQuickPick", {
         value: globalMocks.mockCreateQuickPick,
@@ -170,7 +175,13 @@ async function createGlobalMocks() {
         },
         configurable: true,
     });
-    globalMocks.createTreeView.mockReturnValue("testTreeView");
+    Object.defineProperty(globals, "LOG", { value: jest.fn(), configurable: true });
+    Object.defineProperty(globals.LOG, "error", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "error", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "debug", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "warn", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "info", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
     globalMocks.testSessionNode = createJobSessionNode(globalMocks.testSession, globalMocks.testProfile);
     globalMocks.mockGetJob.mockReturnValue(globalMocks.testIJob);
     globalMocks.mockGetJobsByOwnerAndPrefix.mockReturnValue([globalMocks.testIJob, globalMocks.testIJobComplete]);
@@ -182,8 +193,7 @@ async function createGlobalMocks() {
             return {};
         }),
     });
-    jest.spyOn(vscode.workspace, "getConfiguration").mockImplementationOnce(globalMocks.mockGetConfiguration);
-    globalMocks.testJobsProvider = await createJobsTree();
+    globalMocks.testJobsProvider = await createJobsTree(zowe.imperative.Logger.getAppLogger());
     globalMocks.testJobsProvider.mSessionNodes.push(globalMocks.testSessionNode);
     Object.defineProperty(globalMocks.testJobsProvider, "refresh", {
         value: globalMocks.mockRefresh,
@@ -254,7 +264,7 @@ describe("ZosJobsProvider unit tests - Function getChildren", () => {
         const loadProfilesForFavoritesSpy = jest.spyOn(testTree, "loadProfilesForFavorites").mockImplementationOnce(() => Promise.resolve([]));
 
         await testTree.getChildren(favProfileNode);
-        expect(loadProfilesForFavoritesSpy).toHaveBeenCalledWith(favProfileNode);
+        expect(loadProfilesForFavoritesSpy).toHaveBeenCalledWith(log, favProfileNode);
     });
     it("Tests that getChildren gets children of a session element", async () => {
         const globalMocks = await createGlobalMocks();
@@ -404,7 +414,7 @@ describe("ZosJobsProvider unit tests - Function loadProfilesForFavorites", () =>
             }),
         });
 
-        await testTree.loadProfilesForFavorites(favProfileNode);
+        await testTree.loadProfilesForFavorites(blockMocks.log, favProfileNode);
         const resultFavProfileNode = testTree.mFavorites[0];
 
         expect(resultFavProfileNode).toEqual(expectedFavProfileNode);
@@ -440,7 +450,7 @@ describe("ZosJobsProvider unit tests - Function loadProfilesForFavorites", () =>
             configurable: true,
         });
         mocked(Gui.errorMessage).mockResolvedValueOnce({ title: "Remove" });
-        await testTree.loadProfilesForFavorites(favProfileNode);
+        await testTree.loadProfilesForFavorites(blockMocks.log, favProfileNode);
         expect(showErrorMessageSpy).toBeCalledTimes(1);
         showErrorMessageSpy.mockClear();
     });
@@ -479,7 +489,7 @@ describe("ZosJobsProvider unit tests - Function loadProfilesForFavorites", () =>
         );
         expectedFavJobNode.contextValue = globals.JOBS_JOB_CONTEXT + globals.FAV_SUFFIX;
 
-        await testTree.loadProfilesForFavorites(favProfileNode);
+        await testTree.loadProfilesForFavorites(blockMocks.log, favProfileNode);
         const resultFavJobNode = testTree.mFavorites[0].children[0];
 
         expect(resultFavJobNode).toEqual(expectedFavJobNode);
@@ -512,7 +522,7 @@ describe("ZosJobsProvider unit tests - Function loadProfilesForFavorites", () =>
         );
         expectedFavJobNode.contextValue = globals.JOBS_JOB_CONTEXT + globals.FAV_SUFFIX;
 
-        await testTree.loadProfilesForFavorites(favProfileNode);
+        await testTree.loadProfilesForFavorites(blockMocks.log, favProfileNode);
         const resultFavJobNode = testTree.mFavorites[0].children[0];
 
         expect(resultFavJobNode).toEqual(expectedFavJobNode);
@@ -921,5 +931,54 @@ describe("Jobs utils unit tests - Function jobStringValidator", () => {
             ["job1234567*", "prefix"],
         ];
         invalidOpts.forEach((invalidOpt) => expect(jobStringValidator(invalidOpt[0], invalidOpt[1])).toContain("Invalid"));
+    });
+});
+
+describe("removeSearchHistory", () => {
+    it("removes the search item passed in from the current history", () => {
+        const tree = new ZosJobsProvider();
+        tree.addSearchHistory("test");
+        expect(tree["mHistory"]["mSearchHistory"].length).toEqual(1);
+        tree.removeSearchHistory("test");
+        expect(tree["mHistory"]["mSearchHistory"].length).toEqual(0);
+    });
+});
+
+describe("resetSearchHistory", () => {
+    it("clears the entire search history", () => {
+        const tree = new ZosJobsProvider();
+        tree.addSearchHistory("test1");
+        tree.addSearchHistory("test2");
+        tree.addSearchHistory("test3");
+        tree.addSearchHistory("test4");
+        expect(tree["mHistory"]["mSearchHistory"].length).toEqual(4);
+        tree.resetSearchHistory();
+        expect(tree["mHistory"]["mSearchHistory"].length).toEqual(0);
+    });
+});
+
+describe("getSessions", () => {
+    it("gets all the available sessions from persistent object", () => {
+        const tree = new ZosJobsProvider();
+        tree["mHistory"]["mSessions"] = ["sestest"];
+        expect(tree.getSessions()).toEqual(["sestest"]);
+    });
+});
+
+describe("getFileHistory", () => {
+    it("gets all the file history from persistent object", () => {
+        const tree = new ZosJobsProvider();
+        tree["mHistory"]["mFileHistory"] = ["test1", "test2", "test3"];
+        expect(tree.getFileHistory()).toEqual(["test1", "test2", "test3"]);
+    });
+});
+
+describe("getFavorites", () => {
+    it("gets all the favorites from persistent object", () => {
+        const tree = new ZosJobsProvider();
+        jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue({
+            favorites: ["test1", "test2", "test3"],
+        });
+        expect(tree.getFavorites()).toEqual(["test1", "test2", "test3"]);
     });
 });

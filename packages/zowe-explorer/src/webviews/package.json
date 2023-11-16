@@ -1,22 +1,22 @@
 {
-  "name": "edit-attributes",
+  "name": "webviews",
   "private": true,
   "type": "module",
-  "version": "2.12.0-SNAPSHOT",
+  "version": "3.0.0-next.202309141150",
   "main": "index.js",
   "license": "EPL-2.0",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite build --watch --config ./vite.config.js",
     "build": "tsc && vite build",
     "preview": "vite preview",
     "fresh-clone": "pnpm clean && rimraf node_modules",
     "clean": "gulp clean",
-    "package": "echo \"edit-attributes: nothing to package.\"",
-    "test": "echo \"edit-attributes: nothing to test\"",
-    "lint": "echo \"edit-attributes: nothing to lint.\"",
-    "lint:html": "echo \"edit-attributes: nothing to lint.\"",
-    "pretty": "echo \"edit-attributes: nothing to pretty.\"",
-    "madge": "echo \"edit-attributes: nothing to madge.\""
+    "package": "echo \"webviews: nothing to package.\"",
+    "test": "echo \"webviews: nothing to test\"",
+    "lint": "echo \"webviews: nothing to lint.\"",
+    "lint:html": "echo \"webviews: nothing to lint.\"",
+    "pretty": "echo \"webviews: nothing to pretty.\"",
+    "madge": "echo \"webviews: nothing to madge.\""
   },
   "dependencies": {
     "@types/vscode-webview": "^1.57.1",
@@ -29,6 +29,7 @@
     "@types/lodash.isequal": "^4.5.6",
     "@vscode/codicons": "^0.0.33",
     "typescript": "^4.5.3",
-    "vite": "^4.4.8"
+    "vite": "^4.4.9",
+    "vite-plugin-checker": "^0.6.2"
   }
 }

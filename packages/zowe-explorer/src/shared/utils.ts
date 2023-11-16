@@ -14,7 +14,6 @@
 import * as vscode from "vscode";
 import * as path from "path";
 import * as globals from "../globals";
-import * as os from "os";
 import { Gui, IZoweTreeNode, IZoweNodeType, IZoweDatasetTreeNode, IZoweUSSTreeNode, IZoweJobTreeNode } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import * as nls from "vscode-nls";
@@ -41,6 +40,8 @@ export const JOB_SUBMIT_DIALOG_OPTS = [
     localize("zowe.jobs.confirmSubmission.otherUserJobs", "Other user jobs"),
     localize("zowe.jobs.confirmSubmission.allJobs", "All jobs"),
 ];
+
+export const SORT_DIRS: string[] = [localize("sort.asc", "Ascending"), localize("sort.desc", "Descending")];
 
 export type LocalFileInfo = {
     name: string;
@@ -141,7 +142,7 @@ function appendSuffix(label: string): string {
     const bracket = label.indexOf("(");
     const split = bracket > -1 ? label.substr(0, bracket).split(".", limit) : label.split(".", limit);
     for (let i = split.length - 1; i > 0; i--) {
-        if (["JCL", "CNTL"].includes(split[i])) {
+        if (["JCL", "JCLLIB", "CNTL"].includes(split[i])) {
             return label.concat(".jcl");
         }
         if (["COBOL", "CBL", "COB", "SCBL"].includes(split[i])) {

@@ -67,10 +67,10 @@ interface IJobPickerOption {
  * @class ZosJobsProvider
  * @implements {vscode.TreeDataProvider}
  */
-export async function createJobsTree(): Promise<ZosJobsProvider> {
+export async function createJobsTree(log: imperative.Logger): Promise<ZosJobsProvider> {
     ZoweLogger.trace("ZosJobsProvider.createJobsTree called.");
     const tree = new ZosJobsProvider();
-    await tree.initializeJobsTree();
+    await tree.initializeJobsTree(log);
     await tree.addSession();
     return tree;
 }
@@ -139,6 +139,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             treeDataProvider: this,
             canSelectMany: true,
         });
+        this.treeView.onDidCollapseElement(TreeViewUtils.refreshIconOnCollapse([contextually.isJob, contextually.isJobsSession], this));
     }
 
     public rename(_node: IZoweJobTreeNode): void {
@@ -159,10 +160,9 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
      *
      * @param {IZoweJobTreeNode} node
      */
-    public saveSearch(node: IZoweJobTreeNode): IZoweJobTreeNode {
+    public saveSearch(node: IZoweJobTreeNode): void {
         ZoweLogger.trace("ZosJobsProvider.saveSearch called.");
         node.contextValue = contextually.asFavorite(node);
-        return node;
     }
     public saveFile(_document: vscode.TextDocument): void {
         throw new Error("Method not implemented.");
@@ -194,7 +194,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                 return this.mFavorites;
             }
             if (element.contextValue && element.contextValue === globals.FAV_PROFILE_CONTEXT) {
-                const favsForProfile = this.loadProfilesForFavorites(element);
+                const favsForProfile = this.loadProfilesForFavorites(this.log, element);
                 return favsForProfile;
             }
             return element.getChildren();
@@ -343,8 +343,9 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
      * Initialize the favorites and history information
      * @param log - Logger
      */
-    public async initializeJobsTree(): Promise<void> {
+    public async initializeJobsTree(log: imperative.Logger): Promise<void> {
         ZoweLogger.trace("ZosJobsProvider.initializeJobsTree called.");
+        this.log = log;
         ZoweLogger.debug(localize("initializeJobsTree.log.debug", "Initializing profiles with jobs favorites."));
         const lines: string[] = this.mHistory.readFavorites();
         if (lines.length === 0) {
@@ -400,12 +401,13 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
      * @param log
      * @param parentNode
      */
-    public async loadProfilesForFavorites(parentNode: IZoweJobTreeNode): Promise<IZoweJobTreeNode[] | Job[]> {
+    public async loadProfilesForFavorites(log: imperative.Logger, parentNode: IZoweJobTreeNode): Promise<IZoweJobTreeNode[] | Job[]> {
         ZoweLogger.trace("ZosJobsProvider.loadProfilesForFavorites called.");
         const profileName = parentNode.label as string;
         const updatedFavsForProfile: IZoweJobTreeNode[] = [];
         let profile: imperative.IProfileLoaded;
         let session: imperative.Session;
+        this.log = log;
         ZoweLogger.debug(localize("loadProfilesForFavorites.log.debug", "Loading profile: {0} for jobs favorites", profileName));
         // Load profile for parent profile node in this.mFavorites array
         if (!parentNode.getProfile() || !parentNode.getSession()) {
@@ -624,6 +626,31 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         // Update the favorites in settings file
         await this.updateFavorites();
         return;
+    }
+
+    public removeSearchHistory(name: string): void {
+        ZoweLogger.trace("ZosJobsProvider.removeSearchHistory called.");
+        this.mHistory.removeSearchHistory(name);
+    }
+
+    public resetSearchHistory(): void {
+        ZoweLogger.trace("ZosJobsProvider.resetSearchHistory called.");
+        this.mHistory.resetSearchHistory();
+    }
+
+    public getSessions(): string[] {
+        ZoweLogger.trace("DatasetTree.getSessions called.");
+        return this.mHistory.getSessions();
+    }
+
+    public getFileHistory(): string[] {
+        ZoweLogger.trace("DatasetTree.getFileHistory called.");
+        return this.mHistory.getFileHistory();
+    }
+
+    public getFavorites(): string[] {
+        ZoweLogger.trace("DatasetTree.getFavorites called.");
+        return this.mHistory.readFavorites();
     }
 
     public async getUserJobsMenuChoice(): Promise<FilterItem | undefined> {
@@ -1119,6 +1146,13 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
 
         // Fire "tree changed event" to reflect added polling context value
         this.mOnDidChangeTreeData.fire();
+    }
+
+    public sortBy(session: IZoweJobTreeNode): void {
+        if (session.children != null) {
+            session.children.sort(Job.sortJobs(session.sort));
+            this.nodeDataChanged(session);
+        }
     }
 }
 

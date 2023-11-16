@@ -41,5 +41,8 @@ jobs:
       # install pnpm
       - run: npm install -g pnpm
 
+      - run: pnpm config set network-timeout 60000 && pnpm i
+      - run: pnpm --filter "zowe-explorer-api" build
       - run: for dir in samples/*; do pushd $dir && pnpm --ignore-workspace i && pnpm run compile && popd; done
+
         shell: bash

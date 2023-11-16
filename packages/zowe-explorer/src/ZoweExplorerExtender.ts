@@ -190,10 +190,8 @@ export class ZoweExplorerExtender implements IApiExplorerExtender, ZoweExplorerT
                 });
             }
         }
-        // add extender config info to global variable
-        profileTypeConfigurations?.forEach((item) => {
-            globals.EXTENDER_CONFIG.push(item);
-        });
+        if (profileTypeConfigurations !== undefined) Profiles.getInstance().addToConfigArray(profileTypeConfigurations);
+
         // sequentially reload the internal profiles cache to satisfy all the newly added profile types
         await ZoweExplorerExtender.refreshProfilesQueue.add(async (): Promise<void> => {
             await Profiles.getInstance().refresh();

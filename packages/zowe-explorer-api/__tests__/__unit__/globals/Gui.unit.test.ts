@@ -22,7 +22,7 @@ function createGlobalMocks() {
         showWarningMessage: jest.fn(),
         createOutputChannel: jest.fn(),
         createQuickPick: jest.fn(),
-        createTreeView: jest.fn(),
+        createTreeView: jest.fn().mockReturnValue({ onDidCollapseElement: jest.fn() }),
         createWebviewPanel: jest.fn(),
         withProgress: jest.fn(),
         showTextDocument: jest.fn(),

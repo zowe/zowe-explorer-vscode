@@ -48,7 +48,7 @@ async function createGlobalMocks() {
         mockLoadNamedProfile: jest.fn(),
         mockDefaultProfile: jest.fn(),
         withProgress: jest.fn(),
-        createTreeView: jest.fn(),
+        createTreeView: jest.fn().mockReturnValue({ onDidCollapseElement: jest.fn() }),
         mockAffects: jest.fn(),
         mockEditSession: jest.fn(),
         mockCheckCurrentProfile: jest.fn(),
