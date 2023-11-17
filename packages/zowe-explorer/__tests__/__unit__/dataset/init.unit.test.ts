@@ -137,7 +137,7 @@ describe("Test src/dataset/extension", () => {
                 name: "zowe.ds.removeSession",
                 mock: [
                     { spy: jest.spyOn(contextuals, "isDsSession"), arg: [test.value], ret: true },
-                    { spy: jest.spyOn(dsProvider, "deleteSession"), arg: [test.value] },
+                    { spy: jest.spyOn(dsProvider, "deleteSession"), arg: [test.value, undefined] },
                 ],
             },
             {

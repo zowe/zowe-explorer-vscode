@@ -122,7 +122,7 @@ describe("Test src/jobs/extension", () => {
                 name: "zowe.jobs.removeJobsSession",
                 mock: [
                     { spy: jest.spyOn(contextuals, "isJobsSession"), arg: [test.value], ret: true },
-                    { spy: jest.spyOn(jobsProvider, "deleteSession"), arg: [test.value] },
+                    { spy: jest.spyOn(jobsProvider, "deleteSession"), arg: [test.value, undefined] },
                 ],
             },
             {

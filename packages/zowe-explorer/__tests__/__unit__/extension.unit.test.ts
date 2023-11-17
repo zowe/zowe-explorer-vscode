@@ -546,10 +546,12 @@ describe("Extension Unit Tests", () => {
             getProfile: jest.fn(),
             getParent: jest.fn().mockReturnValue({ getLabel: jest.fn() }),
             label: "TestNode",
+            getLabel: jest.fn(() => "TestNode"),
         };
+
         const deleteSessionSpy = jest.spyOn(providerObject.prototype, "deleteSession");
         const commandFunction = allCommands.find((cmd) => command === cmd.cmd);
-        await (commandFunction as any).fun(testNode, [testNode]);
+        await (commandFunction as any).fun(testNode, [testNode], true);
         expect(deleteSessionSpy).toHaveBeenCalled();
     }
 
