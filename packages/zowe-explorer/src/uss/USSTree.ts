@@ -416,7 +416,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             profileNodeInFavorites.children.push(temp);
             sortTreeItems(profileNodeInFavorites.children, globals.USS_SESSION_CONTEXT + globals.FAV_SUFFIX);
             sortTreeItems(this.mFavorites, globals.FAV_PROFILE_CONTEXT);
-            await this.updateFavorites();
+            this.updateFavorites();
             this.refreshElement(this.mFavoriteSession);
         }
     }
@@ -454,9 +454,8 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 return this.removeFavProfile(profileName, false);
             }
         }
-        await this.updateFavorites();
+        this.updateFavorites();
         this.refreshElement(this.mFavoriteSession);
-        return;
     }
 
     public updateFavorites(): void {
@@ -511,8 +510,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         });
 
         // Update the favorites in settings file
-        await this.updateFavorites();
-        return;
+        this.updateFavorites();
     }
 
     /**
