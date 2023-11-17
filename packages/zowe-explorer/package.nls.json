@@ -63,7 +63,6 @@
   "refreshJobsServer": "Refresh",
   "refreshAllJobs": "Refresh Jobs View",
   "addJobsSession": "Add Profile to Jobs View",
-  "removeJobsSession": "Hide Profile",
   "downloadSpool": "Download All",
   "downloadSpoolBinary": "Download All (Binary)",
   "cancelJobs": "Cancel Job",

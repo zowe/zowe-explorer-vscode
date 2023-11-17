@@ -713,8 +713,8 @@
         }
       },
       {
-        "command": "zowe.jobs.removeJobsSession",
-        "title": "%removeJobsSession%",
+        "command": "zowe.jobs.removeSession",
+        "title": "%removeSession%",
         "category": "Zowe Explorer"
       },
       {
@@ -1664,7 +1664,7 @@
           "when": "never"
         },
         {
-          "command": "zowe.jobs.removeJobsSession",
+          "command": "zowe.jobs.removeSession",
           "when": "never"
         },
         {

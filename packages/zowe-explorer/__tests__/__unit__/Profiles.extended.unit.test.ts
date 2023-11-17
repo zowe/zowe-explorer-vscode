@@ -22,6 +22,7 @@ import {
     createConfigLoad,
     createTeamConfigMock,
     createUnsecureTeamConfigMock,
+    createMockNode,
 } from "../../__mocks__/mockCreators/shared";
 import { createDatasetSessionNode, createDatasetTree } from "../../__mocks__/mockCreators/datasets";
 import { createProfileManager, newTestSchemas } from "../../__mocks__/mockCreators/profiles";
@@ -63,6 +64,7 @@ async function createGlobalMocks() {
         testTeamConfigProfile: createTeamConfigMock(),
         testUnsecureTeamConfigProfile: createUnsecureTeamConfigMock(),
         testUSSTree: null,
+        testNode: createMockNode("test", globals.DS_SESSION_CONTEXT),
         testSession: createISession(),
         mockCliProfileManager: createProfileManager(),
         ProgressLocation: jest.fn().mockImplementation(() => {
@@ -1880,5 +1882,60 @@ describe("Profiles Unit Tests - function clearFilterFromAllTrees", () => {
         expect(flipStateSpy).toBeCalledTimes(0);
         expect(refreshElementSpy).toBeCalledTimes(0);
         expect(getProfileSpy).toBeCalledTimes(3);
+    });
+});
+
+describe("Profiles Unit Tests - function disableValidation", () => {
+    afterEach(() => {
+        jest.clearAllMocks();
+        jest.restoreAllMocks();
+        jest.resetAllMocks();
+    });
+
+    it("should disable validation for the profile on all trees", async () => {
+        const globalMocks = await createGlobalMocks();
+        jest.spyOn(TreeProviders, "getSessionForAllTrees").mockReturnValue([globalMocks.testNode]);
+        expect(globalMocks.testNode.contextValue).toEqual(globals.DS_SESSION_CONTEXT);
+        expect(Profiles.getInstance().disableValidation(globalMocks.testNode)).toEqual(globalMocks.testNode);
+        expect(globalMocks.testNode.contextValue).toEqual(globals.DS_SESSION_CONTEXT + globals.VALIDATE_SUFFIX);
+    });
+
+    it("should disable validation for the profile on the current tree", async () => {
+        const globalMocks = await createGlobalMocks();
+        jest.spyOn(TreeProviders, "getSessionForAllTrees").mockReturnValue([globalMocks.testNode]);
+        const disableValidationContextSpy = jest.spyOn(Profiles.getInstance(), "disableValidationContext");
+        expect(globalMocks.testNode.contextValue).toEqual(globals.DS_SESSION_CONTEXT);
+        expect(Profiles.getInstance().disableValidation(globalMocks.testNode)).toEqual(globalMocks.testNode);
+        expect(disableValidationContextSpy).toBeCalledTimes(1);
+        expect(globalMocks.testNode.contextValue).toEqual(globals.DS_SESSION_CONTEXT + globals.VALIDATE_SUFFIX);
+    });
+});
+
+describe("Profiles Unit Tests - function enableValidation", () => {
+    afterEach(() => {
+        jest.clearAllMocks();
+        jest.restoreAllMocks();
+        jest.resetAllMocks();
+    });
+
+    it("should enable validation for the profile on all trees", async () => {
+        const globalMocks = await createGlobalMocks();
+        jest.spyOn(TreeProviders, "getSessionForAllTrees").mockReturnValue([
+            createMockNode("test2", globals.DS_SESSION_CONTEXT),
+            globalMocks.testNode,
+        ]);
+        expect(globalMocks.testNode.contextValue).toEqual(globals.DS_SESSION_CONTEXT);
+        expect(Profiles.getInstance().enableValidation(globalMocks.testNode)).toEqual(globalMocks.testNode);
+        expect(globalMocks.testNode.contextValue).toEqual(globals.DS_SESSION_CONTEXT + globals.VALIDATE_SUFFIX);
+    });
+
+    it("should enable validation for the profile on the current tree", async () => {
+        const globalMocks = await createGlobalMocks();
+        const enableValidationContextSpy = jest.spyOn(Profiles.getInstance(), "enableValidationContext");
+        jest.spyOn(TreeProviders, "getSessionForAllTrees").mockReturnValue([globalMocks.testNode]);
+        expect(globalMocks.testNode.contextValue).toEqual(globals.DS_SESSION_CONTEXT);
+        expect(Profiles.getInstance().enableValidation(globalMocks.testNode)).toEqual(globalMocks.testNode);
+        expect(enableValidationContextSpy).toBeCalledTimes(1);
+        expect(globalMocks.testNode.contextValue).toEqual(globals.DS_SESSION_CONTEXT + globals.VALIDATE_SUFFIX);
     });
 });

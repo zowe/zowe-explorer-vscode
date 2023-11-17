@@ -75,7 +75,7 @@ export async function initJobsProvider(context: vscode.ExtensionContext): Promis
     context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.setOwner", (job) => jobActions.setOwner(job, jobsProvider)));
     context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.setPrefix", (job) => jobActions.setPrefix(job, jobsProvider)));
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.jobs.removeJobsSession", (job, jobList, hideFromAllTrees) => {
+        vscode.commands.registerCommand("zowe.jobs.removeSession", (job, jobList, hideFromAllTrees) => {
             let selectedNodes = getSelectedNodeList(job, jobList);
             selectedNodes = selectedNodes.filter((element) => contextuals.isJobsSession(element));
             for (const item of selectedNodes) {

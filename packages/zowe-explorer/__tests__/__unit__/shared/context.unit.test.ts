@@ -457,7 +457,7 @@ describe("Context helper tests", () => {
 
     it("Test getSessionType returning 'job'", () => {
         treeItem.contextValue = globals.JOBS_SESSION_CONTEXT;
-        expect(contextually.getSessionType(treeItem)).toEqual("job");
+        expect(contextually.getSessionType(treeItem)).toEqual("jobs");
     });
 
     it("Test getSessionType returning error if node has no type", () => {

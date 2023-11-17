@@ -23,6 +23,7 @@ import {
     createTextDocument,
     createFileResponse,
     createValidIProfile,
+    createInstanceOfProfile,
 } from "../../../__mocks__/mockCreators/shared";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { Profiles } from "../../../src/Profiles";
@@ -427,6 +428,7 @@ describe("USS Action Unit Tests - Function saveUSSFile", () => {
         const newMocks = {
             node: null,
             mockGetEtag: null,
+            profileInstance: createInstanceOfProfile(globalMocks.testProfile),
             testUSSTree: null,
             testResponse: createFileResponse({ items: [] }),
             testDoc: createTextDocument(path.join(globals.USS_DIR, "usstest", "u", "myuser", "testFile")),
@@ -527,6 +529,20 @@ describe("USS Action Unit Tests - Function saveUSSFile", () => {
         expect(globalMocks.showErrorMessage.mock.calls.length).toBe(1);
         expect(globalMocks.showErrorMessage.mock.calls[0][0]).toBe("Error: Test Error");
         expect(mocked(vscode.workspace.applyEdit)).toHaveBeenCalledTimes(2);
+    });
+
+    it("Tests that saveUSSFile fails when session cannot be located", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        blockMocks.profileInstance.loadNamedProfile.mockReturnValueOnce(undefined);
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        const testDocument = createTextDocument("u/myuser/testFile", blockMocks.node);
+        (testDocument as any).fileName = path.join(globals.USS_DIR, testDocument.fileName);
+
+        await ussNodeActions.saveUSSFile(testDocument, blockMocks.testUSSTree);
+        expect(globalMocks.showErrorMessage.mock.calls.length).toBe(1);
+        expect(globalMocks.showErrorMessage.mock.calls[0][0]).toBe("Could not locate session when saving USS file.");
     });
 });
 

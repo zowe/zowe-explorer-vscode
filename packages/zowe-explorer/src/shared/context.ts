@@ -35,7 +35,7 @@ export function getSessionType(node: TreeItem): string {
         return "uss";
     }
     if (isJobsSession(node)) {
-        return "job";
+        return "jobs";
     }
 
     throw new imperative.ImperativeError({ msg: "Session node passed in does not have a type" });
