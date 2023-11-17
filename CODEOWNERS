@@ -10,6 +10,3 @@
 
 # You can also use email addresses if you prefer.
 #docs/*  docs@example.com
-
-# This file itself is owned by members who are assigned the Project Admin role in this project.
-CODEOWNERS "Project Admin"
