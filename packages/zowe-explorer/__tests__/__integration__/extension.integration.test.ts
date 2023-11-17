@@ -826,7 +826,7 @@ describe("Extension Integration Tests", async () => {
             await vscode.workspace
                 .getConfiguration()
                 .update(globals.SETTINGS_DS_HISTORY, { persistence: true, favorites: [] }, vscode.ConfigurationTarget.Global);
-            const testTree3 = await createDatasetTree(log);
+            const testTree3 = await createDatasetTree();
             expect(testTree3.mFavorites).to.deep.equal([]);
         }).timeout(TIMEOUT);
 
@@ -842,7 +842,7 @@ describe("Extension Integration Tests", async () => {
             await vscode.workspace
                 .getConfiguration()
                 .update(globals.SETTINGS_DS_HISTORY, { persistence: true, favorites }, vscode.ConfigurationTarget.Global);
-            const testTree3 = await createDatasetTree(log);
+            const testTree3 = await createDatasetTree();
             const initializedFavLabels = [`${pattern}.EXT.PDS`, `${pattern}.EXT.PS`, `${pattern}.EXT.SAMPLE.PDS`, `${pattern}.EXT`];
             expect(testTree3.mFavorites[0].children.map((node) => node.label)).to.deep.equal(initializedFavLabels);
         }).timeout(TIMEOUT);
@@ -855,7 +855,7 @@ describe("Extension Integration Tests", async () => {
                 .getConfiguration()
                 .update(globals.SETTINGS_DS_HISTORY, { persistence: true, favorites }, vscode.ConfigurationTarget.Global);
             const logWarnStub = sandbox.spy(log, "warn");
-            await createDatasetTree(log);
+            await createDatasetTree();
             expect(logWarnStub.gotCalledOnce);
         }).timeout(TIMEOUT);
 
@@ -875,7 +875,7 @@ describe("Extension Integration Tests", async () => {
             await vscode.workspace
                 .getConfiguration()
                 .update(globals.SETTINGS_DS_HISTORY, { persistence: true, favorites }, vscode.ConfigurationTarget.Global);
-            await testTree.initializeFavorites(log);
+            await testTree.initializeFavorites();
             const initializedFavProfileLabels = [`${profileName}`, "badProfileName"];
             const goodProfileFavLabels = [`${pattern}.EXT.PDS`, `${pattern}.EXT.PS`, `${pattern}.EXT.SAMPLE.PDS`, `${pattern}.EXT`];
             const badProfileFavLabels = [`${pattern}.BAD.PROFILE.EXT.PS`];

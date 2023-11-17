@@ -2,14 +2,16 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
-## TBD Release
+## `3.0.0-next.202311171754`
+
+## `3.0.0-next.202311171523`
 
 ### New features and enhancements
 
+- Migrate from Yarn to PNPM.
+- Update dependencies for technical currency purposes
 - Support VS Code engine 1.79.0 and higher.
 - Ability to compare 2 files from MVS and/or UNIX System Services views via right click actions, with option to compare in Read-Only mode too.
-
-### Bug fixes
 
 ## `3.0.0-next.202309121526`
 

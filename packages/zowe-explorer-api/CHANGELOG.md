@@ -2,6 +2,12 @@
 
 All notable changes to the "zowe-explorer-api" extension will be documented in this file.
 
+## `3.0.0-next.202311171754`
+
+## Bug fixes
+
+- fixed export of api `onProfilesUpdate`.
+
 ## `3.0.0-next.202309121526`
 
 ### New features and enhancements
