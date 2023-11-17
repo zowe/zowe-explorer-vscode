@@ -11,6 +11,8 @@
 
 import { imperative } from "@zowe/cli";
 import { ICommand, IJes, IMvs, IUss } from "./interfaces";
+import * as vscode from "vscode";
+import { EventTypes } from "../profiles";
 
 /**
  * This interface can be used by other VS Code Extensions to register themselves
@@ -102,4 +104,9 @@ export interface IRegisterClient {
      * @returns {string[]}
      */
     registeredApiTypes(): string[];
+
+    /**
+     * Define events that fire whenever an existing team config profile is updated.
+     */
+    onProfilesUpdate?: vscode.Event<EventTypes>;
 }

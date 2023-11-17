@@ -10,6 +10,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 - Removal of deprecated APIs. Check the [list](https://github.com/zowe/vscode-extension-for-zowe/tree/next/docs/early-access/v3/Extenders.md) of APIs that were removed.
 - Added `madge` script in `package.json` to track circular dependencies. [#2148](https://github.com/zowe/vscode-extension-for-zowe/issues/2148)
 - Migrated to new package manager PNPM from Yarn.
+- fixed export of api `onProfilesUpdate`.
 
 ## `2.12.0`
 
