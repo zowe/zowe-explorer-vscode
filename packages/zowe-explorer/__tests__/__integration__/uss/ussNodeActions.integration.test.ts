@@ -95,7 +95,7 @@ describe("ussNodeActions integration test", async () => {
             await vscode.workspace
                 .getConfiguration()
                 .update(globals.SETTINGS_USS_HISTORY, { persistence: true, favorites }, vscode.ConfigurationTarget.Global);
-            await testTree.initializeFavorites(imperative.Logger.getAppLogger());
+            await testTree.initializeFavorites();
             const initializedFavProfileLabels = [`${profileName}`, "badProfileName"];
             const goodProfileFavLabels = ["tester1", "testfile1", "tester2", "testfile2"];
             const badProfileFavLabels = ["tester1"];
