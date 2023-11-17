@@ -192,7 +192,10 @@ export class ZoweTreeProvider {
                 this.deleteSessionForProvider(node, currentProvider);
             }
         } else {
-            this.deleteSessionForProvider(node, TreeProviders.providers[contextually.getSessionType(node)]);
+            this.deleteSessionForProvider(
+                node,
+                TreeProviders.providers[contextually.getSessionType(node) === "jobs" ? "job" : contextually.getSessionType(node)]
+            );
         }
     }
 
