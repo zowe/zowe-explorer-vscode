@@ -996,7 +996,7 @@ export async function submitJcl(datasetProvider: api.IZoweTree<api.IZoweDatasetT
 
     // prompts for job submit confirmation when submitting local JCL from editor/palette
     // no node passed in, ownsJob is true because local file is always owned by userID, passes in local file name
-    if (!(await this.confirmJobSubmission(null, true, doc.fileName))) {
+    if (!(await confirmJobSubmission(doc.fileName, true))) {
         return;
     }
 
@@ -1063,18 +1063,16 @@ export async function submitJcl(datasetProvider: api.IZoweTree<api.IZoweDatasetT
 /**
  * Shows a confirmation dialog (if needed) when submitting a job.
  *
- * @param node The node/member that is being submitted
+ * @param nodeOrFileName The node/member that is being submitted, or the filename to submit
  * @param ownsJob Whether the current user profile owns this job
- * @param fileName When submitting local JCL, use the document file name to submit
  * @returns Whether the job submission should continue.
  */
-export async function confirmJobSubmission(node: api.IZoweTreeNode, ownsJob: boolean, fileName?: string): Promise<boolean> {
+export async function confirmJobSubmission(nodeOrFileName: api.IZoweTreeNode | string, ownsJob: boolean): Promise<boolean> {
     ZoweLogger.trace("dataset.actions.confirmJobSubmission called.");
 
-    const showConfirmationDialog = async (): Promise<boolean> => {
-        const jclName =
-            node == null && fileName !== null ? fileName.toString().substring(fileName.lastIndexOf("\\") + 1) : node.getLabel().toString();
+    const jclName = typeof nodeOrFileName === "string" ? path.basename(nodeOrFileName) : nodeOrFileName.getLabel().toString();
 
+    const showConfirmationDialog = async (): Promise<boolean> => {
         const selection = await api.Gui.warningMessage(
             localize("confirmJobSubmission.confirm", "Are you sure you want to submit the following job?\n\n{0}", jclName),
             { items: [{ title: "Submit" }], vsCodeOpts: { modal: true } }
