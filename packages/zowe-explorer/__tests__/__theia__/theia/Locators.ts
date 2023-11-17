@@ -59,7 +59,7 @@ export const JobsLocators = {
     favoriteProfileInJobsXpath: "(//div[contains(@id,'Favorites') and contains(@id,'TestSeleniumProfile')])",
     addToFavoriteOptionXpath: "//li[@data-command='zowe.jobs.addFavorite']",
     removeFavoriteProfileFromJobsOptionXpath: "//li[@data-command='zowe.jobs.removeFavProfile']",
-    hideProfileFromJobsOptionXpath: "//li[@data-command='zowe.jobs.removeJobsSession']",
+    hideProfileFromJobsOptionXpath: "//li[@data-command='zowe.jobs.removeSession']",
     secondJobsProfileBeforeHidingXpath: "(//div[contains(@id,'TestSeleniumProfile')])[2]",
     manageProfileFromJobsXpath: "(//li[@data-command='zowe.profileManagement'])",
 };
