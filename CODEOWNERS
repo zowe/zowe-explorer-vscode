@@ -2,8 +2,7 @@
 # Each line is a file pattern followed by one or more owners.
 
 # These owners will be the default owners for everything in the repo.
-*       @heumi01 @deich01 @norjo14 @normi10 @honas02 @tucja02
-
+#*       @user  #add the default owner name here and remove '#' from the beginning and remove this comment. Owners can be multiple
 # Order is important. The last matching pattern has the most precedence.
 # So if a pull request only touches javascript files, only these owners
 # will be requested to review.
@@ -11,3 +10,6 @@
 
 # You can also use email addresses if you prefer.
 #docs/*  docs@example.com
+
+# This file itself is owned by members who are assigned the Project Admin role in this project.
+CODEOWNERS "Project Admin"
