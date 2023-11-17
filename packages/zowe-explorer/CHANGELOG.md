@@ -4,6 +4,10 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ## `3.0.0-next.202311171754`
 
+### New features and enhancements
+
+- Added back local storage for Zowe Explorer persistent items
+
 ## `3.0.0-next.202311171523`
 
 ### New features and enhancements
