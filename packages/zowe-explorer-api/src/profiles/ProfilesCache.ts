@@ -201,7 +201,7 @@ export class ProfilesCache {
                 return;
             }
             const allTypes = this.getAllProfileTypes(apiRegister.registeredApiTypes());
-            allTypes.push("base");
+            allTypes.push("ssh","base");
             for (const type of allTypes) {
                 const tmpAllProfiles: zowe.imperative.IProfileLoaded[] = [];
                 // Step 1: Get all profiles for each registered type

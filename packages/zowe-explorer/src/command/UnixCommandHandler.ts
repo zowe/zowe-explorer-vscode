@@ -126,6 +126,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
         }
         if (ZoweExplorerApiRegister.getCommandApi(profile).sshProfileRequired) {
             this.sshSession = await this.setsshSession();
+            if(!this.sshSession) return;
         } else {
             Gui.showMessage(localize("issueUnixCommand.apiNonExisting", "Not implemented yet for profile of type: ") + profile.type);
             return;
@@ -153,7 +154,6 @@ export class UnixCommandHandler extends ZoweCommandProvider {
             }
         }
     }
-
     public async setsshSession(): Promise<SshSession> {
         ZoweLogger.trace("UnixCommandHandler.setsshSession called.");
         const sshprofile: imperative.IProfileLoaded = Profiles.getInstance().getDefaultProfile("ssh");
