@@ -1,12 +1,12 @@
 All notable changes to the "zowe-explorer-ftp-extension" extension will be documented in this file.
 
+## TBD Release
+
 ## `3.0.0-next.202311171523`
 
 ### New features and enhancements
 
 - Support VS Code engine 1.79.0 and higher.
-
-### Bug fixes
 
 ## `3.0.0-next.202309121526`
 
