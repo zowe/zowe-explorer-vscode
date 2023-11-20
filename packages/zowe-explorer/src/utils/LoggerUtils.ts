@@ -18,6 +18,7 @@ import * as nls from "vscode-nls";
 import { join as joinPath } from "path";
 import { SettingsConfig } from "./SettingsConfig";
 import * as loggerConfig from "../../log4jsconfig.json";
+import { ZoweLocalStorage } from "./ZoweLocalStorage";
 
 // Set up localization
 nls.config({
@@ -157,8 +158,8 @@ export class ZoweLogger {
         });
     }
 
-    private static async setLogSetting(setting: string): Promise<void> {
-        await SettingsConfig.setDirectValue("zowe.logger", setting, vscode.ConfigurationTarget.Global);
+    private static setLogSetting(setting: string): void {
+        ZoweLocalStorage.setValue("zowe.logger", setting);
     }
 
     private static getZoweLogEnVar(): string {

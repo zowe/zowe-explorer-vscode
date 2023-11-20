@@ -18,7 +18,27 @@ describe("PersistentFilters Unit Test", () => {
     Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
     Object.defineProperty(ZoweLocalStorage, "storage", {
         value: {
-            get: () => ({ persistence: true, favorites: [], history: [], sessions: ["zosmf"], searchHistory: [], fileHistory: [] }),
+            get: () => ({
+                persistence: true,
+                favorites: [],
+                history: [],
+                sessions: ["zosmf"],
+                searchHistory: [],
+                fileHistory: [],
+                templates: [
+                    {
+                        MyMockTemplate: {
+                            alcunit: "CYL",
+                            blksize: 3130,
+                            dirblk: 35,
+                            dsorg: "PO",
+                            lrecl: 40,
+                            primary: 1,
+                            recfm: "FB",
+                        },
+                    },
+                ],
+            }),
             update: jest.fn(),
             keys: () => [],
         },
