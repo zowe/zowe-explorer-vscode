@@ -4,6 +4,7 @@
   "issueUnixCommand.cancelled": "Operation Cancelled",
   "issueUnixCommand.checkProfile": "Profile is invalid",
   "issueUnixCommand.noProfilesLoaded": "No profiles available",
+  "path.notselected": "First select the filter that displays the directories inorder to issue unix command",
   "issueUnixCommand.apiNonExisting": "Not implemented yet for profile of type: ",
   "setsshProfile.couldnotfindprofile": "No SSH profile found. Please create an SSH profile before issuing Unix commands.",
   "issueUnixCommand.command.hostname": "Select a Unix command to run against ",

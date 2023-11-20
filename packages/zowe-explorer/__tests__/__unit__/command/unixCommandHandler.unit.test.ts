@@ -518,7 +518,7 @@ describe("UnixCommand Actions Unit Testing", () => {
 
         await unixActions.issueUnixCommand(session, null, testNode);
 
-        expect(showInputBox.mock.calls.length).toBe(1);
+        expect(showInformationMessage.mock.calls.length).toBe(0);
     });
 
     it("ssh profile not found", async () => {

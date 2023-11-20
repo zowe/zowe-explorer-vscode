@@ -124,6 +124,10 @@ export class UnixCommandHandler extends ZoweCommandProvider {
         } else {
             profile = node.getProfile();
         }
+        if(cwd == ''){
+            Gui.errorMessage(localize("path.notselected", "First select the filter that displays the directories inorder to issue unix command"));
+            return;
+        }
         if (ZoweExplorerApiRegister.getCommandApi(profile).sshProfileRequired) {
             this.sshSession = await this.setsshSession();
             if(!this.sshSession) return;
