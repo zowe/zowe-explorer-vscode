@@ -92,8 +92,8 @@
       },
       {
         "command": "zowe.editHistory",
-        "key": "ctrl+y",
-        "mac": "cmd+y"
+        "key": "ctrl+alt+y",
+        "mac": "cmd+alt+y"
       },
       {
         "command": "zowe.uss.copyUssFile",
@@ -829,14 +829,14 @@
     "menus": {
       "editor/context": [
         {
-          "when": "editorFocus",
+          "when": "editorFocus && focusedView != 'workbench.panel.output'",
           "command": "zowe.ds.submitJcl",
           "group": "000_zowe_dsMainframeInteraction@1"
         }
       ],
       "explorer/context": [
         {
-          "when": "!explorerResourceIsFolder",
+          "when": "!explorerResourceIsFolder && !listMultiSelection",
           "command": "zowe.ds.submitJcl",
           "group": "000_zowe_dsMainframeInteraction@1"
         }
@@ -1021,28 +1021,8 @@
         },
         {
           "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)ussSession.*/ && !listMultiSelection",
-          "command": "zowe.uss.ssoLogout",
-          "group": "098_zowe_ussProfileAuthentication@5"
-        },
-        {
-          "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)ussSession.*/ && !listMultiSelection",
           "command": "zowe.editHistory",
           "group": "100_zowe_editHistory@100"
-        },
-        {
-          "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*/ && !listMultiSelection",
-          "command": "zowe.uss.editSession",
-          "group": "099_zowe_ussProfileModification@1"
-        },
-        {
-          "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*/",
-          "command": "zowe.uss.removeSession",
-          "group": "099_zowe_ussProfileModification@98"
-        },
-        {
-          "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*/  && !listMultiSelection",
-          "command": "zowe.uss.deleteProfile",
-          "group": "099_zowe_ussProfileModification@99"
         },
         {
           "when": "view == zowe.ds.explorer && viewItem =~ /^session.*/ && !listMultiSelection",
@@ -1964,7 +1944,7 @@
         "zowe.security.checkForCustomCredentialManagers": {
           "type": "boolean",
           "description": "%zowe.security.checkForCustomCredentialManagers%",
-          "scope": "window",
+          "scope": "application",
           "default": "true"
         },
         "zowe.security.secureCredentialsEnabled": {

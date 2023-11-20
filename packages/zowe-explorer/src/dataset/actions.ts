@@ -25,6 +25,7 @@ import {
     JobSubmitDialogOpts,
     JOB_SUBMIT_DIALOG_OPTS,
     LocalFileInfo,
+    uploadContent,
 } from "../shared/utils";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { Profiles } from "../Profiles";
@@ -34,12 +35,12 @@ import * as contextually from "../shared/context";
 import { markDocumentUnsaved, setFileSaved } from "../utils/workspace";
 import { IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
 import { ZoweLogger } from "../utils/LoggerUtils";
-
 import { promiseStatus, PromiseStatuses } from "promise-status-async";
-
+import { ProfileManagement } from "../utils/ProfileManagement";
+import { LocalFileManagement } from "../utils/LocalFileManagement";
 // Set up localization
 import * as nls from "vscode-nls";
-import { LocalFileManagement } from "../utils/LocalFileManagement";
+
 nls.config({
     messageFormat: nls.MessageFormat.bundle,
     bundleFormat: nls.BundleFormat.standalone,
@@ -994,10 +995,7 @@ export async function submitJcl(datasetProvider: api.IZoweTree<api.IZoweDatasetT
     const profiles = Profiles.getInstance();
     let sessProfileName;
     if (regExp === null) {
-        const allProfiles: zowe.imperative.IProfileLoaded[] = profiles.allProfiles;
-        const profileNamesList = allProfiles.map((profile) => {
-            return profile.name;
-        });
+        const profileNamesList = ProfileManagement.getRegisteredProfileNameList(globals.Trees.JES);
         if (profileNamesList.length) {
             const quickPickOptions: vscode.QuickPickOptions = {
                 placeHolder: localize("submitJcl.qp.placeholder", "Select the Profile to use to submit the job"),
@@ -1576,6 +1574,9 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
     const ending = doc.fileName.substring(start);
     const sesName = ending.substring(0, ending.indexOf(path.sep));
     const profile = Profiles.getInstance().loadNamedProfile(sesName);
+    const fileLabel = path.basename(doc.fileName);
+    const dataSetName = fileLabel.substring(0, fileLabel.indexOf("("));
+    const memberName = fileLabel.substring(fileLabel.indexOf("(") + 1, fileLabel.indexOf(")"));
     if (!profile) {
         const sessionError = localize("saveFile.session.error", "Could not locate session when saving data set.");
         ZoweLogger.error(sessionError);
@@ -1583,8 +1584,16 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
         return;
     }
 
-    // get session from session name
-    const sesNode = (await datasetProvider.getChildren()).find((child) => child.label.toString().trim() === sesName);
+    const etagFavorites = (
+        datasetProvider.mFavorites
+            .find((child) => child.label.toString().trim() === sesName)
+            ?.children.find((child) => child.label.toString().trim() === dataSetName)
+            ?.children.find((child) => child.label.toString().trim() === memberName) as api.IZoweDatasetTreeNode
+    )?.getEtag();
+    const sesNode =
+        etagFavorites !== "" && etagFavorites !== undefined
+            ? datasetProvider.mFavorites.find((child) => child.label.toString().trim() === sesName)
+            : datasetProvider.mSessionNodes.find((child) => child.label.toString().trim() === sesName);
     if (!sesNode) {
         // if saving from favorites, a session might not exist for this node
         ZoweLogger.debug(localize("saveFile.missingSessionNode", "Could not find session node"));
@@ -1632,6 +1641,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
         returnEtag: true,
     };
 
+    const prof = node?.getProfile() ?? profile;
     try {
         const uploadResponse = await api.Gui.withProgress(
             {
@@ -1639,14 +1649,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
                 title: localize("saveFile.progress.title", "Saving data set..."),
             },
             () => {
-                const prof = node?.getProfile() ?? profile;
-                if (prof.profile?.encoding) {
-                    uploadOptions.encoding = prof.profile.encoding;
-                }
-                return ZoweExplorerApiRegister.getMvsApi(prof).putContents(doc.fileName, label, {
-                    ...uploadOptions,
-                    responseTimeout: prof.profile?.responseTimeout,
-                });
+                return uploadContent(node, doc, label, prof, null, uploadOptions.etag, uploadOptions.returnEtag);
             }
         );
         if (uploadResponse.success) {

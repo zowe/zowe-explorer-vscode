@@ -20,6 +20,8 @@ import * as nls from "vscode-nls";
 import { IZosFilesResponse, imperative } from "@zowe/cli";
 import { IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
 import { ZoweLogger } from "../utils/LoggerUtils";
+import { markDocumentUnsaved } from "../utils/workspace";
+import { errorHandling } from "../utils/ProfilesUtils";
 
 // Set up localization
 nls.config({
@@ -217,19 +219,14 @@ export async function uploadContent(
     etagToUpload?: string,
     returnEtag?: boolean
 ): Promise<IZosFilesResponse> {
+    const uploadOptions: IUploadOptions = {
+        etag: etagToUpload,
+        returnEtag: true,
+        encoding: profile.profile?.encoding,
+        responseTimeout: profile.profile?.responseTimeout,
+    };
     if (isZoweDatasetTreeNode(node)) {
-        // Upload without passing the etag to force upload
-        const uploadOptions: IUploadOptions = {
-            returnEtag: true,
-        };
-        const prof = node.getProfile();
-        if (prof.profile.encoding) {
-            uploadOptions.encoding = prof.profile.encoding;
-        }
-        return ZoweExplorerApiRegister.getMvsApi(prof).putContents(doc.fileName, remotePath, {
-            responseTimeout: prof.profile?.responseTimeout,
-            ...uploadOptions,
-        });
+        return ZoweExplorerApiRegister.getMvsApi(profile).putContents(doc.fileName, remotePath, uploadOptions);
     } else {
         const task: imperative.ITaskWithStatus = {
             percentComplete: 0,
@@ -258,9 +255,8 @@ export function willForceUpload(
     doc: vscode.TextDocument,
     remotePath: string,
     profile?: imperative.IProfileLoaded,
-    binary?: boolean,
-    returnEtag?: boolean
-): void {
+    binary?: boolean
+): Thenable<void> {
     // setup to handle both cases (dataset & USS)
     let title: string;
     if (isZoweDatasetTreeNode(node)) {
@@ -277,24 +273,33 @@ export function willForceUpload(
         );
     }
     // Don't wait for prompt to return since this would block the save queue
-    Gui.infoMessage(localize("saveFile.info.confirmUpload", "Would you like to overwrite the remote file?"), {
+    return Gui.infoMessage(localize("saveFile.info.confirmUpload", "Would you like to overwrite the remote file?"), {
         items: [localize("saveFile.overwriteConfirmation.yes", "Yes"), localize("saveFile.overwriteConfirmation.no", "No")],
     }).then(async (selection) => {
         if (selection === localize("saveFile.overwriteConfirmation.yes", "Yes")) {
-            const uploadResponse = await Gui.withProgress(
-                {
-                    location: vscode.ProgressLocation.Notification,
-                    title,
-                },
-                () => {
-                    return uploadContent(node, doc, remotePath, profile, binary, null, returnEtag);
+            try {
+                const uploadResponse = await Gui.withProgress(
+                    {
+                        location: vscode.ProgressLocation.Notification,
+                        title,
+                    },
+                    () => {
+                        return uploadContent(node, doc, remotePath, profile, binary, null, true);
+                    }
+                );
+                if (uploadResponse.success) {
+                    Gui.showMessage(uploadResponse.commandResponse);
+                    if (node) {
+                        // Upload API returns a singleton array for data sets and an object for USS files
+                        node.setEtag(uploadResponse.apiResponse[0]?.etag ?? uploadResponse.apiResponse.etag);
+                    }
+                } else {
+                    await markDocumentUnsaved(doc);
+                    Gui.errorMessage(uploadResponse.commandResponse);
                 }
-            );
-            if (uploadResponse.success) {
-                Gui.showMessage(uploadResponse.commandResponse);
-                if (node) {
-                    node.setEtag(uploadResponse.apiResponse[0].etag);
-                }
+            } catch (err) {
+                await markDocumentUnsaved(doc);
+                await errorHandling(err, profile.name);
             }
         } else {
             Gui.showMessage(localize("uploadContent.cancelled", "Upload cancelled."));
