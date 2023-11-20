@@ -70,7 +70,7 @@ function createGlobalMocks() {
 
     Object.defineProperty(ZoweLocalStorage, "storage", {
         value: {
-            get: () => ({ persistence: true, favorites: [], history: [], sessions: ["zosmf"], searchHistory: [], fileHistory: [] }),
+            get: () => ({ persistence: true, favorites: [], history: [], sessions: ["zosmf"], searchHistory: [], fileHistory: [], templates: [] }),
             update: jest.fn(),
             keys: () => [],
         },
@@ -3039,9 +3039,22 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
 
     describe("getDsTemplates", () => {
         it("gets all the DS templates from persistent object", () => {
-            jest.spyOn(vscode.workspace, "getConfiguration").mockReturnValue({
-                get: () => ["test1", "test2", "test3"],
-            } as any);
+            Object.defineProperty(ZoweLocalStorage, "storage", {
+                value: {
+                    get: () => ({
+                        persistence: true,
+                        favorites: [],
+                        history: [],
+                        sessions: ["zosmf"],
+                        searchHistory: [],
+                        fileHistory: [],
+                        templates: ["test1", "test2", "test3"],
+                    }),
+                    update: jest.fn(),
+                    keys: () => [],
+                },
+                configurable: true,
+            });
             expect(tree.getDsTemplates()).toEqual(["test1", "test2", "test3"]);
         });
     });

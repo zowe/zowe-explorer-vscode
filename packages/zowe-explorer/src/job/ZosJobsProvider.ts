@@ -487,7 +487,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
      *
      * @param {IZoweJobTreeNode} node
      */
-    public async addFavorite(node: IZoweJobTreeNode): Promise<void> {
+    public addFavorite(node: IZoweJobTreeNode): void {
         ZoweLogger.trace("ZosJobsProvider.addFavorite called.");
         let favJob: Job;
         // Get node's profile node in favorites
@@ -533,7 +533,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             profileNodeInFavorites.children.push(favJob);
             sortTreeItems(profileNodeInFavorites.children, globals.JOBS_SESSION_CONTEXT + globals.FAV_SUFFIX);
             sortTreeItems(this.mFavorites, globals.FAV_PROFILE_CONTEXT);
-            await this.updateFavorites();
+            this.updateFavorites();
             this.refreshElement(this.mFavoriteSession);
         }
     }
@@ -558,11 +558,10 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                 return this.removeFavProfile(profileName, false);
             }
             if (startLength !== profileNodeInFavorites.children.length) {
-                await this.updateFavorites();
+                this.updateFavorites();
                 this.refreshElement(this.mFavoriteSession);
             }
         }
-        return;
     }
 
     public updateFavorites(): void {
@@ -624,8 +623,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         });
 
         // Update the favorites in settings file
-        await this.updateFavorites();
-        return;
+        this.updateFavorites();
     }
 
     public removeSearchHistory(name: string): void {
