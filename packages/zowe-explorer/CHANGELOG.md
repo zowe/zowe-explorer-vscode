@@ -2,11 +2,15 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
-## `3.0.0-next.202311171754`
+## TBD Release
 
 ### New features and enhancements
 
 - Added back local storage for Zowe Explorer persistent items
+
+### Bug fixes
+
+## `3.0.0-next.202311171754`
 
 ## `3.0.0-next.202311171523`
 
