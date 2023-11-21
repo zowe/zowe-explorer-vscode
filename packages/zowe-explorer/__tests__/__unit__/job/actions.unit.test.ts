@@ -44,6 +44,7 @@ import { SpoolFile } from "../../../src/SpoolProvider";
 import { ZosJobsProvider } from "../../../src/job/ZosJobsProvider";
 import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
 import { LocalFileManagement } from "../../../src/utils/LocalFileManagement";
+import { ProfileManagement } from "../../../src/utils/ProfileManagement";
 
 jest.mock("../../../src/utils/LoggerUtils");
 
@@ -82,7 +83,9 @@ function createGlobalMocks() {
         mockJobArray: [],
         testJobsTree: null as any,
         jesApi: null as any,
+        mockProfileInstance: null,
     };
+    newMocks.mockProfileInstance = createInstanceOfProfile(newMocks.imperativeProfile);
     newMocks.testJobsTree = createJobsTree(newMocks.session, newMocks.iJob, newMocks.imperativeProfile, newMocks.treeView);
     newMocks.mockJobArray = [newMocks.JobNode1, newMocks.JobNode2, newMocks.JobNode3] as any;
     newMocks.jesApi = createJesApi(newMocks.imperativeProfile);
@@ -120,7 +123,7 @@ function createGlobalMocks() {
         get: activeTextEditorDocument,
         configurable: true,
     });
-    Object.defineProperty(Profiles, "getInstance", { value: jest.fn(), configurable: true });
+    Object.defineProperty(Profiles, "getInstance", { value: jest.fn().mockResolvedValue(newMocks.mockProfileInstance), configurable: true });
     const executeCommand = jest.fn();
     Object.defineProperty(vscode.commands, "executeCommand", { value: executeCommand, configurable: true });
     Object.defineProperty(SpoolProvider, "encodeJobFile", { value: jest.fn(), configurable: true });
@@ -135,6 +138,10 @@ function createGlobalMocks() {
             update: jest.fn(),
             keys: () => [],
         },
+        configurable: true,
+    });
+    Object.defineProperty(ProfileManagement, "getRegisteredProfileNameList", {
+        value: jest.fn().mockReturnValue([newMocks.imperativeProfile.name]),
         configurable: true,
     });
     function settingJobObjects(job: zowe.IJob, setjobname: string, setjobid: string, setjobreturncode: string): zowe.IJob {

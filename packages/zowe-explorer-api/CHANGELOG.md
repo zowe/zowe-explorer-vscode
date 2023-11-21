@@ -23,6 +23,10 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 - Added `madge` script in `package.json` to track circular dependencies. [#2148](https://github.com/zowe/vscode-extension-for-zowe/issues/2148)
 - Migrated to new package manager PNPM from Yarn.
 
+## `2.12.2`
+
+## `2.12.1`
+
 ## `2.12.0`
 
 ### New features and enhancements
