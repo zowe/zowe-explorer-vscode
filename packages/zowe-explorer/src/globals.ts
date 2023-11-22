@@ -126,6 +126,11 @@ export const configurationDictionary: { [k: string]: string } = {
     "Zowe-USS-Persistent": SETTINGS_USS_HISTORY,
     "Zowe-Jobs-Persistent": SETTINGS_JOBS_HISTORY,
 };
+export enum Trees {
+    USS,
+    MVS,
+    JES,
+}
 
 export enum CreateDataSetTypeWithKeysEnum {
     DATA_SET_BINARY,

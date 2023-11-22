@@ -20,6 +20,7 @@ import * as nls from "vscode-nls";
 import { ZoweCommandProvider } from "../abstract/ZoweCommandProvider";
 import { SettingsConfig } from "../utils/SettingsConfig";
 import { ZoweLogger } from "../utils/LoggerUtils";
+import { ProfileManagement } from "../utils/ProfileManagement";
 
 // Set up localization
 nls.config({
@@ -65,6 +66,7 @@ export class MvsCommandHandler extends ZoweCommandProvider {
      */
     public async issueMvsCommand(session?: imperative.Session, command?: string, node?: IZoweTreeNode): Promise<void> {
         ZoweLogger.trace("MvsCommandHandler.issueMvsCommand called.");
+        const profiles = Profiles.getInstance();
         let profile: imperative.IProfileLoaded;
         if (node) {
             await this.checkCurrentProfile(node);
@@ -76,11 +78,8 @@ export class MvsCommandHandler extends ZoweCommandProvider {
             }
         }
         if (!session) {
-            const profiles = Profiles.getInstance();
-            const allProfiles: imperative.IProfileLoaded[] = profiles.allProfiles;
-            const profileNamesList = allProfiles.map((temprofile) => {
-                return temprofile.name;
-            });
+            const allProfiles = profiles.allProfiles;
+            const profileNamesList = ProfileManagement.getRegisteredProfileNameList(globals.Trees.MVS);
             if (profileNamesList.length) {
                 const quickPickOptions: vscode.QuickPickOptions = {
                     placeHolder: localize("issueMvsCommand.quickPickOption", "Select the Profile to use to submit the command"),
@@ -94,9 +93,9 @@ export class MvsCommandHandler extends ZoweCommandProvider {
                 }
                 profile = allProfiles.filter((temprofile) => temprofile.name === sesName)[0];
                 if (!node) {
-                    await Profiles.getInstance().checkCurrentProfile(profile);
+                    await profiles.checkCurrentProfile(profile);
                 }
-                if (Profiles.getInstance().validProfile !== ValidProfileEnum.INVALID) {
+                if (profiles.validProfile !== ValidProfileEnum.INVALID) {
                     session = ZoweExplorerApiRegister.getMvsApi(profile).getSession();
                 } else {
                     Gui.errorMessage(localize("issueMvsCommand.checkProfile", "Profile is invalid"));
@@ -110,7 +109,7 @@ export class MvsCommandHandler extends ZoweCommandProvider {
             profile = node.getProfile();
         }
         try {
-            if (Profiles.getInstance().validProfile !== ValidProfileEnum.INVALID) {
+            if (profiles.validProfile !== ValidProfileEnum.INVALID) {
                 const commandApi = ZoweExplorerApiRegister.getInstance().getCommandApi(profile);
                 if (commandApi) {
                     let command1: string = command;

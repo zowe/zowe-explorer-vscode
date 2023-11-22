@@ -20,6 +20,7 @@ import { ZoweCommandProvider } from "../abstract/ZoweCommandProvider";
 import { IStartTsoParms, imperative } from "@zowe/cli";
 import { SettingsConfig } from "../utils/SettingsConfig";
 import { ZoweLogger } from "../utils/LoggerUtils";
+import { ProfileManagement } from "../utils/ProfileManagement";
 
 // Set up localization
 nls.config({
@@ -65,6 +66,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
      */
     public async issueTsoCommand(session?: imperative.Session, command?: string, node?: IZoweTreeNode): Promise<void> {
         ZoweLogger.trace("TsoCommandHandler.issueTsoCommand called.");
+        const profiles = Profiles.getInstance();
         let profile: imperative.IProfileLoaded;
         if (node) {
             await this.checkCurrentProfile(node);
@@ -76,12 +78,8 @@ export class TsoCommandHandler extends ZoweCommandProvider {
             }
         }
         if (!session) {
-            const profiles = Profiles.getInstance();
-            const allProfiles: imperative.IProfileLoaded[] = profiles.allProfiles;
-            const profileNamesList = allProfiles.map((temprofile) => {
-                return temprofile.name;
-            });
-            if (profileNamesList.length) {
+            const profileNamesList = ProfileManagement.getRegisteredProfileNameList(globals.Trees.MVS);
+            if (profileNamesList.length > 0) {
                 const quickPickOptions: vscode.QuickPickOptions = {
                     placeHolder: localize("issueTsoCommand.quickPickOption", "Select the Profile to use to submit the TSO command"),
                     ignoreFocusOut: true,
@@ -92,11 +90,12 @@ export class TsoCommandHandler extends ZoweCommandProvider {
                     Gui.showMessage(localize("issueTsoCommand.cancelled", "Operation Cancelled"));
                     return;
                 }
+                const allProfiles = profiles.allProfiles;
                 profile = allProfiles.filter((temprofile) => temprofile.name === sesName)[0];
                 if (!node) {
-                    await Profiles.getInstance().checkCurrentProfile(profile);
+                    await profiles.checkCurrentProfile(profile);
                 }
-                if (Profiles.getInstance().validProfile !== ValidProfileEnum.INVALID) {
+                if (profiles.validProfile !== ValidProfileEnum.INVALID) {
                     session = ZoweExplorerApiRegister.getMvsApi(profile).getSession();
                 } else {
                     Gui.errorMessage(localize("issueTsoCommand.checkProfile", "Profile is invalid"));
@@ -110,7 +109,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
             profile = node.getProfile();
         }
         try {
-            if (Profiles.getInstance().validProfile !== ValidProfileEnum.INVALID) {
+            if (profiles.validProfile !== ValidProfileEnum.INVALID) {
                 const commandApi = ZoweExplorerApiRegister.getInstance().getCommandApi(profile);
                 if (commandApi) {
                     let tsoParams: IStartTsoParms;

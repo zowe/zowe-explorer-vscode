@@ -7,6 +7,7 @@
   "uploadFile.putContents": "Uploading USS file",
   "copyPath.infoMessage": "Copy Path is not yet supported in Theia.",
   "saveUSSFile.log.debug.saveRequest": "save requested for USS file ",
+  "saveUSSFile.session.error": "Could not locate session when saving USS file.",
   "saveUSSFile.response.title": "Saving file...",
   "deleteUssPrompt.confirmation.delete": "Delete",
   "deleteUssPrompt.confirmation.message": "Are you sure you want to delete the following item?\nThis will permanently remove the following file or folder from your system.\n\n{0}",
