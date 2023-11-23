@@ -356,13 +356,21 @@ export class ZosmfCommandApi extends ZosmfApiCommon implements ICommand {
         return zowe.IssueCommand.issueSimple(this.getSession(), command);
     }
 
-    public async issueUnixCommand(sshSession: zowe.SshSession, command: string, cwd: string): Promise<string> {
+    public async issueUnixCommand(sshSession: zowe.SshSession, command: string, cwd: string, flag:boolean): Promise<string> {
         let stdout = "";
+        if(flag){
         await zowe.Shell.executeSshCwd(sshSession, command, '"'+cwd+'"', (data: string) => {
             stdout += data;
         });
+       }
+        else{
+            await zowe.Shell.executeSsh(sshSession, command, (data: string) => {
+                stdout += data;
+            });
+        }
         return stdout;
     }
+
     public sshProfileRequired?(): boolean {
         return true;
     }

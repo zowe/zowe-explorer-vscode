@@ -23,6 +23,8 @@ import * as globals from "../../../src/globals";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 import { SshSession } from "@zowe/zos-uss-for-zowe-sdk";
 import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
+import { ProfileManagement } from "../../../src/utils/ProfileManagement";
+
 
 describe("UnixCommand Actions Unit Testing", () => {
     const showQuickPick = jest.fn();
@@ -92,6 +94,10 @@ describe("UnixCommand Actions Unit Testing", () => {
                 defaultProfile: { name: "firstName" },
             };
         }),
+    });
+    Object.defineProperty(ProfileManagement, "getRegisteredProfileNameList", {
+        value: jest.fn().mockReturnValue(["firstName", "secondName"]),
+        configurable: true,
     });
     Object.defineProperty(ZoweLogger, "error", { value: jest.fn(), configurable: true });
     Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
@@ -451,24 +457,6 @@ describe("UnixCommand Actions Unit Testing", () => {
         expect(showInputBox.mock.calls.length).toBe(1);
     });
 
-    it("tests the issueUnixCommand function no profiles error", async () => {
-        Object.defineProperty(profileLoader.Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    allProfiles: [],
-                    defaultProfile: undefined,
-                    checkCurrentProfile: jest.fn(() => {
-                        return profilesForValidation;
-                    }),
-                    validateProfiles: jest.fn(),
-                    getBaseProfile: jest.fn(),
-                    validProfile: ValidProfileEnum.VALID,
-                };
-            }),
-        });
-        await unixActions.issueUnixCommand();
-        expect(showInformationMessage.mock.calls[0][0]).toEqual("No profiles available");
-    });
     it("tests the issueUnixCommand function user does not select a profile", async () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
@@ -489,6 +477,29 @@ describe("UnixCommand Actions Unit Testing", () => {
 
         expect(showInformationMessage.mock.calls.length).toBe(1);
         expect(showInformationMessage.mock.calls[0][0]).toEqual("Operation Cancelled");
+    });
+
+    it("tests the issueUnixCommand function no profiles error", async () => {
+        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [],
+                    defaultProfile: undefined,
+                    checkCurrentProfile: jest.fn(() => {
+                        return profilesForValidation;
+                    }),
+                    validateProfiles: jest.fn(),
+                    getBaseProfile: jest.fn(),
+                    validProfile: ValidProfileEnum.VALID,
+                };
+            }),
+        });
+        Object.defineProperty(ProfileManagement, "getRegisteredProfileNameList", {
+            value: jest.fn().mockReturnValue([]),
+            configurable: true,
+        });
+        await unixActions.issueUnixCommand();
+        expect(showInformationMessage.mock.calls[0][0]).toEqual("No profiles available");
     });
 
     it("tests the issueUnixCommand function from a session", async () => {

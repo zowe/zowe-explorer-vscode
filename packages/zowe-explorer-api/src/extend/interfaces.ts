@@ -484,9 +484,10 @@ export interface ICommand extends ICommon {
      *
      * @param {string} command
      * @param {string} cwd
+     * @param {boolean} flag 
      * @returns {string>}
      * @memberof ICommand
      */
-    issueUnixCommand?(sshSession: zowe.SshSession, command: string, cwd: string): Promise<string>;
+    issueUnixCommand?(sshSession: zowe.SshSession, command: string, cwd: string, flag: boolean): Promise<string>;
     sshProfileRequired?(): boolean;
 }

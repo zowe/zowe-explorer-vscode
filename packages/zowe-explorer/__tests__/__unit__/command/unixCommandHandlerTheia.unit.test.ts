@@ -19,6 +19,7 @@ import { imperative } from "@zowe/cli";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
 import { SshSession } from "@zowe/zos-uss-for-zowe-sdk";
+import { ProfileManagement } from "../../../src/utils/ProfileManagement";
 
 describe("unixCommandActions unit testing", () => {
     const showErrorMessage = jest.fn();
@@ -104,6 +105,10 @@ describe("unixCommandActions unit testing", () => {
         value: jest.fn(() => {
             return { privateKey: undefined, keyPassphrase: undefined, handshakeTimeout: undefined, type: "basic", port: 22 };
         }),
+    });
+    Object.defineProperty(ProfileManagement, "getRegisteredProfileNameList", {
+        value: jest.fn().mockReturnValue(["firstName", "secondName"]),
+        configurable: true,
     });
 
     getConfiguration.mockReturnValue({
