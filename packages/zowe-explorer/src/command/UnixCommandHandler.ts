@@ -87,10 +87,6 @@ export class UnixCommandHandler extends ZoweCommandProvider {
                     return;
                 }
             }
-            if (cwd == "") {
-                Gui.errorMessage(localize("path.notselected", "Enter a UNIX file filter search to enable Issue Unix Command from the tree view."));
-                return;
-            }
         }
         if (!session) {
             const profileNamesList = ProfileManagement.getRegisteredProfileNameList(globals.Trees.USS);
@@ -132,6 +128,10 @@ export class UnixCommandHandler extends ZoweCommandProvider {
             }
         } else {
             profile = node.getProfile();
+        }
+        if (cwd == "" && this.flag) {
+            Gui.errorMessage(localize("path.notselected", "Enter a UNIX file filter search to enable Issue Unix Command from the tree view."));
+            return;
         }
         if (ZoweExplorerApiRegister.getCommandApi(profile).sshProfileRequired) {
             this.sshSession = await this.setsshSession();
