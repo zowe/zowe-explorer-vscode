@@ -484,7 +484,7 @@ export interface ICommand extends ICommon {
      *
      * @param {string} command
      * @param {string} cwd
-     * @param {boolean} flag 
+     * @param {boolean} flag
      * @returns {string>}
      * @memberof ICommand
      */

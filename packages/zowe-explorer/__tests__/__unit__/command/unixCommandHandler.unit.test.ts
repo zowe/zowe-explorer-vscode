@@ -25,7 +25,6 @@ import { SshSession } from "@zowe/zos-uss-for-zowe-sdk";
 import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
 import { ProfileManagement } from "../../../src/utils/ProfileManagement";
 
-
 describe("UnixCommand Actions Unit Testing", () => {
     const showQuickPick = jest.fn();
     const showInputBox = jest.fn();

@@ -55,7 +55,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
     private static instance: UnixCommandHandler;
     public outputChannel: vscode.OutputChannel;
     public sshSession: SshSession;
-    public flag: boolean = true; 
+    public flag: boolean = true;
 
     public constructor() {
         super();
@@ -109,7 +109,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
                         value: "",
                     });
                 }
-                if(cwd == ''){
+                if (cwd == "") {
                     vscode.window.showInformationMessage("Redirecting to Home Directory");
                     this.flag = false;
                 }
@@ -129,13 +129,13 @@ export class UnixCommandHandler extends ZoweCommandProvider {
         } else {
             profile = node.getProfile();
         }
-        if(cwd == '' && this.flag){
+        if (cwd == "" && this.flag) {
             Gui.errorMessage(localize("path.notselected", "Enter a UNIX file filter search to enable Issue Unix Command from the tree view."));
             return;
         }
         if (ZoweExplorerApiRegister.getCommandApi(profile).sshProfileRequired) {
             this.sshSession = await this.setsshSession();
-            if(!this.sshSession) return;
+            if (!this.sshSession) return;
         } else {
             Gui.showMessage(localize("issueUnixCommand.apiNonExisting", "Not implemented yet for profile of type: ") + profile.type);
             return;
@@ -191,7 +191,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
                 const options1: vscode.QuickPickOptions = {
                     placeHolder:
                         localize("issueUnixCommand.command.hostname", "Select a Unix command to run against ") +
-                        this.flag?cwd:"~" +
+                        cwd +
                         (alwaysEdit ? localize("issueUnixCommand.command.edit", " (An option to edit will follow)") : ""),
                 };
                 // get user selection
@@ -207,7 +207,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
                     ? localize("issueUnixCommand.command.path", "Select a Unix command to run against ") +
                       cwd +
                       localize("issueUnixCommand.command.edit", " (An option to edit will follow)")
-                    : localize("issueUnixCommand.command.path", "Select a Unix command to run immediately against ") + this.flag?cwd:"~";
+                    : localize("issueUnixCommand.command.path", "Select a Unix command to run immediately against ") + cwd;
 
                 quickpick.items = [createPick, ...items];
                 quickpick.ignoreFocusOut = true;
@@ -252,7 +252,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
                 if (command.startsWith("/")) {
                     command = command.substring(1);
                 }
-                this.outputChannel.appendLine(`> ${cwd?cwd:"~"} ${command}`);
+                this.outputChannel.appendLine(`> ${cwd ? cwd : "~"} ${command}`);
                 const submitResponse = await Gui.withProgress(
                     {
                         location: vscode.ProgressLocation.Notification,
@@ -261,7 +261,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
                     () => {
                         if (ZoweExplorerApiRegister.getCommandApi(profile).issueUnixCommand) {
                             // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-                            return ZoweExplorerApiRegister.getCommandApi(profile).issueUnixCommand(this.sshSession, command, cwd,this.flag);
+                            return ZoweExplorerApiRegister.getCommandApi(profile).issueUnixCommand(this.sshSession, command, cwd, this.flag);
                         }
                     }
                 );

@@ -55,11 +55,18 @@ async function expectUnixCommandApiWithSshSession<T>(
 ): Promise<void> {
     spy.mockClear().mockResolvedValue(undefined);
     spy.mockImplementation((sshobject: zowe.SshSession, command: string, cwd: string, callback: (data: string) => void) => {
-        let r=""
+        let r = "";
         callback("test");
         r += "test";
     });
-    await apiInstance[name as string](sshobj,...args,() => {});
+    const spywhenpathnotspecified = jest.spyOn(zowe.Shell, "executeSsh");
+    spywhenpathnotspecified.mockImplementation((sshobject: zowe.SshSession, command: string, callback: (data: string) => void) => {
+        let r = "";
+        callback("test");
+        r += "test";
+    });
+    await apiInstance[name as string](sshobj, ...args, true, () => {});
+    await apiInstance[name as string](sshobj, ...args, false, () => {});
     expect(spy).toHaveBeenCalled();
 }
 async function expectApiWithSession<T>({ name, spy, args, transform }: ITestApi<T>, apiInstance: ZoweExplorerApi.ICommon): Promise<void> {
@@ -582,11 +589,11 @@ describe("ZosmfCommandApi", () => {
             args: ["command", "cwd"],
         },
     ];
-    UnixcommandApiwithsshSession.forEach((cmdApi)=>{
+    UnixcommandApiwithsshSession.forEach((cmdApi) => {
         it(`${cmdApi?.name} should inject session into Zowe API`, async () => {
-            await expectUnixCommandApiWithSshSession(cmdApi, new ZosmfCommandApi(),SshSessionobj);
+            await expectUnixCommandApiWithSshSession(cmdApi, new ZosmfCommandApi(), SshSessionobj);
         });
-    })
+    });
     it("check whether sshProfileNeeded", () => {
         const obj = new ZosmfCommandApi();
         expect(obj.sshProfileRequired?.()).toBe(true);
