@@ -109,8 +109,8 @@ export class UnixCommandHandler extends ZoweCommandProvider {
                         value: "",
                     });
                 }
-                if (cwd == "") {
-                    vscode.window.showInformationMessage("Redirecting to Home Directory");
+                if (cwd == undefined) {
+                    Gui.showMessage(localize("unixCommand.HomeDirectory", "Redirecting to Home Directory"));
                     this.flag = false;
                 }
                 if (!node) {

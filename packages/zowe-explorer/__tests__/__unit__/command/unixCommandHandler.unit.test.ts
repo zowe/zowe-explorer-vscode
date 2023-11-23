@@ -375,7 +375,7 @@ describe("UnixCommand Actions Unit Testing", () => {
         });
 
         showQuickPick.mockReturnValueOnce("firstName");
-        showInputBox.mockReturnValueOnce("/u/directorypath");
+        showInputBox.mockReturnValueOnce("/directorypath");
         showInputBox.mockReturnValueOnce(undefined);
 
         const mockCommandApi = await apiRegisterInstance.getCommandApi(profileOne);
@@ -455,6 +455,38 @@ describe("UnixCommand Actions Unit Testing", () => {
         });
         expect(showInputBox.mock.calls.length).toBe(1);
     });
+    it("if path is not specified in the showInputBox", async () => {
+        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [{ name: "firstName", profile: { user: "firstName", password: "12345" } }, { name: "secondName" }],
+                    defaultProfile: { name: "firstName" },
+                    zosmfProfile: mockLoadNamedProfile,
+                    checkCurrentProfile: jest.fn(() => {
+                        return profilesForValidation;
+                    }),
+                    validateProfiles: jest.fn(),
+                    getBaseProfile: jest.fn(),
+                    getDefaultProfile: mockdefaultProfile,
+                    validProfile: ValidProfileEnum.VALID,
+                };
+            }),
+        });
+        const mockCommandApi = await apiRegisterInstance.getCommandApi(profileOne);
+        const getCommandApiMock = jest.fn();
+        getCommandApiMock.mockReturnValue(mockCommandApi);
+        apiRegisterInstance.getCommandApi = getCommandApiMock.bind(apiRegisterInstance);
+
+        showQuickPick.mockReturnValueOnce("firstName");
+        showInputBox.mockReturnValueOnce(undefined);
+        showInputBox.mockReturnValueOnce("/d iplinfo1");
+
+        jest.spyOn(Gui, "resolveQuickPick").mockImplementation(() => Promise.resolve(qpItem));
+        jest.spyOn(mockCommandApi, "issueUnixCommand").mockReturnValue("iplinfo1" as any);
+
+        await unixActions.issueUnixCommand();
+        expect(showInformationMessage.mock.calls[0][0]).toEqual("Redirecting to Home Directory");
+    });
 
     it("tests the issueUnixCommand function user does not select a profile", async () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
@@ -515,6 +547,7 @@ describe("UnixCommand Actions Unit Testing", () => {
                 };
             }),
         });
+
 
         jest.spyOn(unixActions, "checkCurrentProfile").mockReturnValue(undefined);
 

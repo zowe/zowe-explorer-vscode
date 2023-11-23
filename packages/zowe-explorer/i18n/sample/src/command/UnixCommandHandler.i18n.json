@@ -2,6 +2,7 @@
   "issueUnixCommand.outputchannel.title": "Zowe Unix Command",
   "issueUnixCommand.quickPickOption": "Select the Profile to use to submit the Unix command",
   "issueUnixCommand.cancelled": "Operation Cancelled",
+  "unixCommand.HomeDirectory": "Redirecting to Home Directory",
   "issueUnixCommand.checkProfile": "Profile is invalid",
   "issueUnixCommand.noProfilesLoaded": "No profiles available",
   "path.notselected": "Enter a UNIX file filter search to enable Issue Unix Command from the tree view.",
