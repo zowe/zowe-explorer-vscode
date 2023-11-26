@@ -75,9 +75,10 @@ export class UnixCommandHandler extends ZoweCommandProvider {
     }
 
     public async issueUnixCommand(session?: imperative.Session, command?: string, node?: IZoweTreeNode): Promise<void> {
-        let cwd: string;
+        let cwd: string = "";
         let profile: imperative.IProfileLoaded;
         const profiles = Profiles.getInstance();
+        let sshRequiredBoolean: boolean;
         if (node) {
             cwd = node.fullPath;
             await this.checkCurrentProfile(node);
@@ -103,13 +104,18 @@ export class UnixCommandHandler extends ZoweCommandProvider {
                 }
                 const allProfiles = profiles.allProfiles;
                 profile = allProfiles.find((temprofile) => temprofile.name === sesName);
-                if (cwd == undefined) {
+                if (ZoweExplorerApiRegister.getCommandApi(profile).sshProfileRequired) sshRequiredBoolean = true;
+                if (!sshRequiredBoolean) {
+                    Gui.showMessage(localize("issueUnixCommand.apiNonExisting", "Not implemented yet for profile of type: ") + profile.type);
+                    return;
+                }
+                if (cwd == "") {
                     cwd = await vscode.window.showInputBox({
                         prompt: "Enter the path of the directory in order to execute the command",
                         value: "",
                     });
                 }
-                if (cwd == undefined) {
+                if (cwd == "") {
                     Gui.showMessage(localize("unixCommand.HomeDirectory", "Redirecting to Home Directory"));
                     this.flag = false;
                 }
@@ -129,15 +135,20 @@ export class UnixCommandHandler extends ZoweCommandProvider {
         } else {
             profile = node.getProfile();
         }
-        if (cwd == "" && this.flag) {
-            Gui.errorMessage(localize("path.notselected", "Enter a UNIX file filter search to enable Issue Unix Command from the tree view."));
-            return;
-        }
-        if (ZoweExplorerApiRegister.getCommandApi(profile).sshProfileRequired) {
+        if (ZoweExplorerApiRegister.getCommandApi(profile).sshProfileRequired) sshRequiredBoolean = true;
+        if (sshRequiredBoolean) {
             this.sshSession = await this.setsshSession();
             if (!this.sshSession) return;
         } else {
             Gui.showMessage(localize("issueUnixCommand.apiNonExisting", "Not implemented yet for profile of type: ") + profile.type);
+            return;
+        }
+        if (cwd == "" && this.flag) {
+            Gui.errorMessage(localize("path.notselected", "Enter a UNIX file filter search to enable Issue Unix Command from the tree view."));
+            return;
+        }
+        if (cwd == undefined) {
+            Gui.showMessage(localize("issueUnixCommand.options.nopathentered", "Operation cancelled."));
             return;
         }
         try {
@@ -163,6 +174,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
             }
         }
     }
+
     public async setsshSession(): Promise<SshSession> {
         ZoweLogger.trace("UnixCommandHandler.setsshSession called.");
         const sshprofile: imperative.IProfileLoaded = Profiles.getInstance().getDefaultProfile("ssh");

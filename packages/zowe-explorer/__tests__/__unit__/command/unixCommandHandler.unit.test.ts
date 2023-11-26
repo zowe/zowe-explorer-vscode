@@ -24,6 +24,7 @@ import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 import { SshSession } from "@zowe/zos-uss-for-zowe-sdk";
 import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
 import { ProfileManagement } from "../../../src/utils/ProfileManagement";
+import { profile } from "console";
 
 describe("UnixCommand Actions Unit Testing", () => {
     const showQuickPick = jest.fn();
@@ -356,6 +357,57 @@ describe("UnixCommand Actions Unit Testing", () => {
         expect(showInformationMessage.mock.calls[0][0]).toEqual("No selection made. Operation cancelled.");
     });
 
+    it("If nothing is entered in the inputbox of path", async () => {
+        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [{ name: "firstName", profile: { user: "firstName", password: "12345" } }, { name: "secondName" }],
+                    defaultProfile: { name: "firstName" },
+                    zosmfProfile: mockLoadNamedProfile,
+                    checkCurrentProfile: jest.fn(() => {
+                        return profilesForValidation;
+                    }),
+                    validateProfiles: jest.fn(),
+                    getBaseProfile: jest.fn(),
+                    getDefaultProfile: mockdefaultProfile,
+                    validProfile: ValidProfileEnum.VALID,
+                };
+            }),
+        });
+        showQuickPick.mockReturnValueOnce("firstName");
+        showInputBox.mockReturnValueOnce("");
+        showInputBox.mockReturnValue("/d iplinfo0");
+
+        await unixActions.issueUnixCommand();
+
+        expect(showInformationMessage.mock.calls[0][0]).toEqual("Redirecting to Home Directory");
+    });
+
+    it("User escapes the inputBox of path being entered", async () => {
+        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [{ name: "firstName", profile: { user: "firstName", password: "12345" } }, { name: "secondName" }],
+                    defaultProfile: { name: "firstName" },
+                    zosmfProfile: mockLoadNamedProfile,
+                    checkCurrentProfile: jest.fn(() => {
+                        return profilesForValidation;
+                    }),
+                    validateProfiles: jest.fn(),
+                    getBaseProfile: jest.fn(),
+                    getDefaultProfile: mockdefaultProfile,
+                    validProfile: ValidProfileEnum.VALID,
+                };
+            }),
+        });
+        showQuickPick.mockReturnValueOnce("firstName");
+        showInputBox.mockReturnValueOnce(undefined);
+
+        await unixActions.issueUnixCommand();
+
+        expect(showInformationMessage.mock.calls[0][0]).toEqual("Operation cancelled.");
+    });
+
     it("tests the issueUnixCommand function user escapes the commandbox", async () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
@@ -468,6 +520,7 @@ describe("UnixCommand Actions Unit Testing", () => {
                         return ValidProfileEnum.INVALID;
                     }),
                     validProfile: ValidProfileEnum.INVALID,
+                    getDefaultProfile: mockdefaultProfile,
                 };
             }),
         });
@@ -477,7 +530,6 @@ describe("UnixCommand Actions Unit Testing", () => {
 
         await unixActions.issueUnixCommand();
 
-        console.log("msg",showErrorMessage.mock.calls);
         expect(showErrorMessage.mock.calls.length).toBe(1);
     });
 
@@ -540,7 +592,6 @@ describe("UnixCommand Actions Unit Testing", () => {
                 };
             }),
         });
-
 
         jest.spyOn(unixActions, "checkCurrentProfile").mockReturnValue(undefined);
 
