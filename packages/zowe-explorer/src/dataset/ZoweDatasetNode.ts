@@ -32,6 +32,7 @@ import * as nls from "vscode-nls";
 import { Profiles } from "../Profiles";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import * as dayjs from "dayjs";
+import { ZoweExplorerExtender } from "../ZoweExplorerExtender";
 
 // Set up localization
 nls.config({
@@ -53,12 +54,15 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     public memberPattern = "";
     public dirty = true;
     public children: ZoweDatasetNode[] = [];
+    public binaryFiles = {};
+    public binary = false;
     public errorDetails: zowe.imperative.ImperativeError;
     public ongoingActions: Record<NodeAction | string, Promise<any>> = {};
     public wasDoubleClicked: boolean = false;
     public stats: DatasetStats;
     public sort?: NodeSort;
     public filter?: DatasetFilter;
+    public encoding?: string;
 
     /**
      * Creates an instance of ZoweDatasetNode
@@ -483,5 +487,41 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             responses.push(await ZoweExplorerApiRegister.getMvsApi(cachedProfile).allMembers(this.label as string, options));
         }
         return responses;
+    }
+
+    public setBinary(binary: boolean): void {
+        ZoweLogger.trace("ZoweDatasetNode.setBinary called.");
+        if (!(this.contextValue.startsWith(globals.DS_DS_CONTEXT) || this.contextValue.startsWith(globals.DS_MEMBER_CONTEXT))) {
+            throw new Error(`Cannot set node with context ${this.contextValue} as binary`);
+        }
+        this.binary = binary;
+        const isMemberNode = this.contextValue.startsWith(globals.DS_MEMBER_CONTEXT);
+        if (this.binary) {
+            this.contextValue = isMemberNode ? globals.DS_MEMBER_BINARY_CONTEXT : globals.DS_DS_BINARY_CONTEXT;
+            this.getSessionNode().binaryFiles[this.fullPath] = true;
+        } else {
+            this.contextValue = isMemberNode ? globals.DS_MEMBER_CONTEXT : globals.DS_DS_CONTEXT;
+            delete this.getSessionNode().binaryFiles[this.fullPath];
+        }
+        if (this.getParent() && this.getParent().contextValue === globals.FAV_PROFILE_CONTEXT) {
+            this.contextValue += globals.FAV_SUFFIX;
+        }
+
+        const icon = getIconByNode(this);
+        if (icon) {
+            this.setIcon(icon.path);
+        }
+
+        this.dirty = true;
+    }
+
+    /**
+     * Helper method which sets an icon of node and initiates reloading of tree
+     * @param iconPath
+     */
+    public setIcon(iconPath: { light: string; dark: string }): void {
+        ZoweLogger.trace("ZoweDatasetNode.setIcon called.");
+        this.iconPath = iconPath;
+        ZoweExplorerExtender.getInstance().datasetProvider.refreshElement(this);
     }
 }

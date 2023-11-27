@@ -25,7 +25,7 @@ import { markDocumentUnsaved, setFileSaved } from "../utils/workspace";
 import * as nls from "vscode-nls";
 import { refreshAll } from "../shared/refresh";
 import { IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
-import { fileExistsCaseSensitveSync } from "./utils";
+import { autoDetectEncoding, fileExistsCaseSensitveSync } from "./utils";
 import { UssFileTree, UssFileType } from "./FileStructure";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { AttributeView } from "./AttributeView";
@@ -325,14 +325,15 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
 
     const prof = node?.getProfile() ?? profile;
     try {
-        binary = binary || (await ZoweExplorerApiRegister.getUssApi(prof).isFileTagBinOrAscii(remote));
+        await autoDetectEncoding(node, prof);
+
         const uploadResponse: IZosFilesResponse = await Gui.withProgress(
             {
                 location: vscode.ProgressLocation.Window,
                 title: localize("saveUSSFile.response.title", "Saving file..."),
             },
             () => {
-                return uploadContent(node, doc, remote, prof, binary, etagToUpload, returnEtag);
+                return uploadContent(node, doc, remote, prof, etagToUpload, returnEtag);
             }
         );
         if (uploadResponse.success) {
@@ -351,7 +352,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
         // TODO: error handling must not be zosmf specific
         const errorMessage = err ? err.message : err.toString();
         if (errorMessage.includes("Rest API failure with HTTP(S) status 412")) {
-            resolveFileConflict(node, prof, doc, path.basename(doc.fileName), remote, binary);
+            resolveFileConflict(node, prof, doc, remote);
         } else {
             await markDocumentUnsaved(doc);
             await errorHandling(err, sesName);

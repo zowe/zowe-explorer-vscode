@@ -32,7 +32,7 @@ import {
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { FilterDescriptor, FilterItem, errorHandling, syncSessionNode } from "../utils/ProfilesUtils";
-import { sortTreeItems, getAppName, getDocumentFilePath, SORT_DIRS } from "../shared/utils";
+import { sortTreeItems, getAppName, getDocumentFilePath, SORT_DIRS, promptForEncoding } from "../shared/utils";
 import { ZoweTreeProvider } from "../abstract/ZoweTreeProvider";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { getIconById, getIconByNode, IconId, IIconItem } from "../generators/icons";
@@ -1538,5 +1538,17 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             isSession
         );
         Gui.setStatusBarMessage(localize("filter.updated", "$(check) Filter updated for {0}", node.label as string), globals.MS_PER_SEC * 4);
+    }
+
+    public async openWithEncoding(node: IZoweDatasetTreeNode): Promise<void> {
+        const encoding = await promptForEncoding(node.getProfile());
+        if (encoding === "binary") {
+            node.setBinary(true);
+            node.encoding = null;
+        } else {
+            node.setBinary(false);
+            node.encoding = encoding;
+        }
+        await dsActions.openPS(node, false, this);
     }
 }

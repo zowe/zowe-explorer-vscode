@@ -505,7 +505,8 @@ export async function openPS(
                     node.ongoingActions[api.NodeAction.Download] = ZoweExplorerApiRegister.getMvsApi(prof).getContents(label, {
                         file: documentFilePath,
                         returnEtag: true,
-                        encoding: prof.profile?.encoding,
+                        binary: node.binary,
+                        encoding: node.encoding ?? prof.profile?.encoding,
                         responseTimeout: prof.profile?.responseTimeout,
                     });
                     responsePromise = node.ongoingActions[api.NodeAction.Download];
@@ -513,7 +514,8 @@ export async function openPS(
                     responsePromise = ZoweExplorerApiRegister.getMvsApi(prof).getContents(label, {
                         file: documentFilePath,
                         returnEtag: true,
-                        encoding: prof.profile?.encoding,
+                        binary: node.binary,
+                        encoding: node.encoding ?? prof.profile?.encoding,
                         responseTimeout: prof.profile?.responseTimeout,
                     });
                 }
@@ -1273,7 +1275,8 @@ export async function refreshPS(node: api.IZoweDatasetTreeNode): Promise<void> {
         const response = await ZoweExplorerApiRegister.getMvsApi(prof).getContents(label, {
             file: documentFilePath,
             returnEtag: true,
-            encoding: prof.profile?.encoding,
+            binary: node.binary,
+            encoding: node.encoding ?? prof.profile?.encoding,
             responseTimeout: prof.profile?.responseTimeout,
         });
         node.setEtag(response.apiResponse.etag);
@@ -1662,7 +1665,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
                 title: localize("saveFile.progress.title", "Saving data set..."),
             },
             () => {
-                return uploadContent(node, doc, label, prof, null, uploadOptions.etag, uploadOptions.returnEtag);
+                return uploadContent(node, doc, label, prof, uploadOptions.etag, uploadOptions.returnEtag);
             }
         );
         if (uploadResponse.success) {
@@ -1673,7 +1676,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
                 setFileSaved(true);
             }
         } else if (!uploadResponse.success && uploadResponse.commandResponse.includes("Rest API failure with HTTP(S) status 412")) {
-            resolveFileConflict(node, prof, doc, fileLabel, label);
+            resolveFileConflict(node, prof, doc, fileLabel);
         } else {
             await markDocumentUnsaved(doc);
             api.Gui.errorMessage(uploadResponse.commandResponse);

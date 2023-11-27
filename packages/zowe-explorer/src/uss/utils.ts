@@ -12,8 +12,11 @@
 import * as path from "path";
 import * as fs from "fs";
 import * as vscode from "vscode";
+import { imperative } from "@zowe/cli";
 import { ZoweUSSNode } from "../uss/ZoweUSSNode";
 import { ZoweLogger } from "../utils/LoggerUtils";
+import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
+import { IZoweUSSTreeNode } from "@zowe/zowe-explorer-api";
 
 /**
  * Injects extra data to tooltip based on node status and other conditions
@@ -58,4 +61,24 @@ export function fileExistsCaseSensitveSync(filepath: string): boolean {
 export function disposeClipboardContents(): void {
     ZoweLogger.trace("uss.utils.disposeClipboardContents called.");
     vscode.env.clipboard.writeText("");
+}
+
+export async function autoDetectEncoding(node: IZoweUSSTreeNode, profile?: imperative.IProfileLoaded): Promise<void> {
+    if (node.encoding !== undefined) {
+        return;
+    }
+    const ussApi = ZoweExplorerApiRegister.getUssApi(profile ?? node.getProfile());
+    if (ussApi.getTag != null) {
+        const taggedEncoding = await ussApi.getTag(node.fullPath);
+        if (taggedEncoding === "binary" || taggedEncoding === "mixed") {
+            node.setBinary(true);
+            node.encoding = undefined;
+        } else {
+            node.setBinary(false);
+            node.encoding = taggedEncoding !== "untagged" ? taggedEncoding : undefined;
+        }
+    } else {
+        node.binary = await ussApi.isFileTagBinOrAscii(node.fullPath);
+        node.encoding = undefined;
+    }
 }

@@ -19,7 +19,7 @@ import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { errorHandling, syncSessionNode } from "../utils/ProfilesUtils";
 import { getIconByNode } from "../generators/icons/index";
-import { fileExistsCaseSensitveSync, injectAdditionalDataToTooltip } from "../uss/utils";
+import { autoDetectEncoding, fileExistsCaseSensitveSync, injectAdditionalDataToTooltip } from "../uss/utils";
 import * as contextually from "../shared/context";
 import { closeOpenedTextFile } from "../utils/workspace";
 import * as nls from "vscode-nls";
@@ -56,6 +56,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
 
     public attributes?: FileAttributes;
     public onUpdateEmitter: vscode.EventEmitter<IZoweUSSTreeNode>;
+    public encoding?: string;
 
     /**
      * Creates an instance of ZoweUSSNode
@@ -84,9 +85,9 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         if (collapsibleState !== vscode.TreeItemCollapsibleState.None) {
             this.contextValue = globals.USS_DIR_CONTEXT;
         } else if (binary) {
-            this.contextValue = globals.DS_BINARY_FILE_CONTEXT;
+            this.contextValue = globals.USS_BINARY_FILE_CONTEXT;
         } else {
-            this.contextValue = globals.DS_TEXT_FILE_CONTEXT;
+            this.contextValue = globals.USS_TEXT_FILE_CONTEXT;
         }
         if (this.parentPath) {
             this.fullPath = this.tooltip = this.parentPath + "/" + label;
@@ -276,14 +277,16 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         ZoweLogger.trace("ZoweUSSNode.setBinary called.");
         this.binary = binary;
         if (this.binary) {
-            this.contextValue = globals.DS_BINARY_FILE_CONTEXT;
+            this.contextValue = globals.USS_BINARY_FILE_CONTEXT;
             this.getSessionNode().binaryFiles[this.fullPath] = true;
         } else {
-            this.contextValue = globals.DS_TEXT_FILE_CONTEXT;
+            this.contextValue = globals.USS_TEXT_FILE_CONTEXT;
             delete this.getSessionNode().binaryFiles[this.fullPath];
         }
         if (this.getParent() && this.getParent().contextValue === globals.FAV_PROFILE_CONTEXT) {
-            this.contextValue = this.binary ? globals.DS_BINARY_FILE_CONTEXT + globals.FAV_SUFFIX : globals.DS_TEXT_FILE_CONTEXT + globals.FAV_SUFFIX;
+            this.contextValue = this.binary
+                ? globals.USS_BINARY_FILE_CONTEXT + globals.FAV_SUFFIX
+                : globals.USS_TEXT_FILE_CONTEXT + globals.FAV_SUFFIX;
         }
 
         const icon = getIconByNode(this);
@@ -510,16 +513,14 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                     // if local copy exists, open that instead of pulling from mainframe
                     if (download || !fileExists) {
                         const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
-                        const fullPath = this.fullPath;
-                        const chooseBinary =
-                            this.binary || (await ZoweExplorerApiRegister.getUssApi(cachedProfile).isFileTagBinOrAscii(this.fullPath));
+                        await autoDetectEncoding(this, cachedProfile);
 
                         const statusMsg = Gui.setStatusBarMessage(localize("ussFile.opening", "$(sync~spin) Opening USS file..."));
-                        const response = await ZoweExplorerApiRegister.getUssApi(cachedProfile).getContents(fullPath, {
+                        const response = await ZoweExplorerApiRegister.getUssApi(cachedProfile).getContents(this.fullPath, {
                             file: documentFilePath,
-                            binary: chooseBinary,
+                            binary: this.binary,
                             returnEtag: true,
-                            encoding: cachedProfile.profile?.encoding,
+                            encoding: this.encoding ?? cachedProfile.profile?.encoding,
                             responseTimeout: cachedProfile.profile?.responseTimeout,
                         });
                         statusMsg.dispose();
@@ -579,11 +580,13 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
 
             if ((isDirty && !this.isDirtyInEditor && !wasSaved) || !isDirty) {
                 const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
+                await autoDetectEncoding(this, cachedProfile);
+
                 const response = await ZoweExplorerApiRegister.getUssApi(cachedProfile).getContents(this.fullPath, {
                     file: ussDocumentFilePath,
-                    binary: this.binary || (await ZoweExplorerApiRegister.getUssApi(cachedProfile).isFileTagBinOrAscii(this.fullPath)),
+                    binary: this.binary,
                     returnEtag: true,
-                    encoding: cachedProfile?.profile?.encoding,
+                    encoding: this.encoding ?? cachedProfile?.profile?.encoding,
                     responseTimeout: cachedProfile?.profile?.responseTimeout,
                 });
                 this.setEtag(response.apiResponse.etag);

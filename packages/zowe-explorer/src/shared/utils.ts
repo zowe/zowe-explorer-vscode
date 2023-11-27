@@ -25,6 +25,7 @@ import { ZoweLogger } from "../utils/LoggerUtils";
 import { isTypeUssTreeNode } from "./context";
 import { markDocumentUnsaved } from "../utils/workspace";
 import { errorHandling } from "../utils/ProfilesUtils";
+import { ZoweLocalStorage } from "../utils/ZoweLocalStorage";
 
 // Set up localization
 nls.config({
@@ -213,14 +214,14 @@ export async function uploadContent(
     doc: vscode.TextDocument,
     remotePath: string,
     profile?: imperative.IProfileLoaded,
-    binary?: boolean,
     etagToUpload?: string,
     returnEtag?: boolean
 ): Promise<IZosFilesResponse> {
     const uploadOptions: IUploadOptions = {
         etag: etagToUpload,
         returnEtag: true,
-        encoding: profile.profile?.encoding,
+        binary: node.binary,
+        encoding: node.encoding ?? profile.profile?.encoding,
         responseTimeout: profile.profile?.responseTimeout,
     };
     if (isZoweDatasetTreeNode(node)) {
@@ -234,14 +235,12 @@ export async function uploadContent(
                 stageName: 0, // TaskStage.IN_PROGRESS - https://github.com/kulshekhar/ts-jest/issues/281
             };
             const result = ZoweExplorerApiRegister.getUssApi(profile).putContent(doc.fileName, remotePath, {
-                binary,
-                localEncoding: null,
                 task,
                 ...uploadOptions,
             });
             return result;
         } else {
-            return ZoweExplorerApiRegister.getUssApi(profile).putContents(doc.fileName, remotePath, binary, null, etagToUpload, returnEtag);
+            return ZoweExplorerApiRegister.getUssApi(profile).putContents(doc.fileName, remotePath, node.binary, null, etagToUpload, returnEtag);
         }
     }
 }
@@ -253,8 +252,7 @@ export function willForceUpload(
     node: IZoweDatasetTreeNode | IZoweUSSTreeNode,
     doc: vscode.TextDocument,
     remotePath: string,
-    profile?: imperative.IProfileLoaded,
-    binary?: boolean
+    profile?: imperative.IProfileLoaded
 ): Thenable<void> {
     // setup to handle both cases (dataset & USS)
     let title: string;
@@ -283,7 +281,7 @@ export function willForceUpload(
                         title,
                     },
                     () => {
-                        return uploadContent(node, doc, remotePath, profile, binary, null, true);
+                        return uploadContent(node, doc, remotePath, profile, null, true);
                     }
                 );
                 if (uploadResponse.success) {
@@ -363,7 +361,6 @@ export async function compareFileContent(
     doc: vscode.TextDocument,
     node: IZoweDatasetTreeNode | IZoweUSSTreeNode,
     label?: string,
-    binary?: boolean,
     profile?: imperative.IProfileLoaded
 ): Promise<void> {
     await markDocumentUnsaved(doc);
@@ -373,16 +370,17 @@ export async function compareFileContent(
     if (isTypeUssTreeNode(node)) {
         downloadResponse = await ZoweExplorerApiRegister.getUssApi(prof).getContents(node.fullPath, {
             file: node.getUSSDocumentFilePath(),
-            binary,
+            binary: node.binary,
             returnEtag: true,
-            encoding: prof.profile?.encoding,
+            encoding: node.encoding ?? prof.profile?.encoding,
             responseTimeout: prof.profile?.responseTimeout,
         });
     } else {
         downloadResponse = await ZoweExplorerApiRegister.getMvsApi(prof).getContents(label, {
             file: doc.fileName,
+            binary: node.binary,
             returnEtag: true,
-            encoding: prof.profile?.encoding,
+            encoding: node.encoding ?? prof.profile?.encoding,
             responseTimeout: prof.profile?.responseTimeout,
         });
     }
@@ -412,4 +410,43 @@ export async function compareFileContent(
     if (node && downloadEtag !== node.getEtag()) {
         node.setEtag(downloadEtag);
     }
+}
+
+export async function promptForEncoding(profile: imperative.IProfileLoaded, taggedEncoding?: string): Promise<string | undefined> {
+    // TODO Localize me
+    const items: vscode.QuickPickItem[] = [
+        { label: "EBCDIC", description: "Default" },
+        { label: "ASCII", description: "Binary" },
+        { label: "Other" },
+    ];
+    const encodingHistory = ZoweLocalStorage.getValue<string[]>("encodingHistory") ?? [];
+    if (encodingHistory.length > 0) {
+        items.push(globals.SEPARATORS.RECENT);
+        for (const encoding of encodingHistory) {
+            items.push({ label: encoding });
+        }
+    }
+    if (profile.profile?.encoding != null) {
+        items.splice(0, 0, { label: profile.profile.encoding, description: "From profile" });
+    }
+    if (taggedEncoding != null) {
+        items.splice(0, 0, { label: taggedEncoding, description: "Tagged" });
+    }
+    let encoding = (await Gui.showQuickPick(items, { title: "Choose an encoding" }))?.label;
+    switch (encoding) {
+        case "EBCDIC":
+            encoding = null;
+            break;
+        case "ASCII":
+            encoding = "binary";
+            break;
+        case "Other":
+            encoding = await Gui.showInputBox({
+                placeHolder: "Enter an encoding in the format 1047 or IBM-1047",
+            });
+            encodingHistory.push(encoding);
+            ZoweLocalStorage.setValue("encodingHistory", encodingHistory.slice(0, 10));
+            break;
+    }
+    return encoding;
 }

@@ -14,7 +14,7 @@ import * as globals from "../globals";
 import * as path from "path";
 import { imperative } from "@zowe/cli";
 import { FilterItem, FilterDescriptor, errorHandling, syncSessionNode } from "../utils/ProfilesUtils";
-import { sortTreeItems, getAppName, checkIfChildPath } from "../shared/utils";
+import { sortTreeItems, getAppName, checkIfChildPath, promptForEncoding } from "../shared/utils";
 import { Gui, IZoweTree, IZoweUSSTreeNode, NodeInteraction, ValidProfileEnum, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
@@ -977,5 +977,22 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             this.mSessionNodes.push(node);
             this.mHistory.addSession(profile.name);
         }
+    }
+
+    public async openWithEncoding(node: IZoweUSSTreeNode): Promise<void> {
+        const ussApi = ZoweExplorerApiRegister.getUssApi(node.getProfile());
+        let taggedEncoding: string;
+        if (ussApi.getTag != null) {
+            taggedEncoding = await ussApi.getTag(node.fullPath);
+        }
+        const encoding = await promptForEncoding(node.getProfile(), taggedEncoding !== "untagged" ? taggedEncoding : undefined);
+        if (encoding === "binary") {
+            node.setBinary(true);
+            node.encoding = null;
+        } else {
+            node.setBinary(false);
+            node.encoding = encoding;
+        }
+        await node.openUSS(true, false, this);
     }
 }

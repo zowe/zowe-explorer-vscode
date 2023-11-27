@@ -155,6 +155,18 @@ export interface IZoweDatasetTreeNode extends IZoweTreeNode {
      */
     filter?: DatasetFilter;
     /**
+     * List of child nodes downloaded in binary format
+     */
+    binaryFiles?: Record<string, unknown>;
+    /**
+     * Binary indicator. Default false (text)
+     */
+    binary?: boolean;
+    /**
+     * Remote encoding of the data set
+     */
+    encoding?: string;
+    /**
      * Retrieves child nodes of this IZoweDatasetTreeNode
      *
      * @returns {Promise<IZoweDatasetTreeNode[]>}
@@ -172,6 +184,11 @@ export interface IZoweDatasetTreeNode extends IZoweTreeNode {
      * @param {string}
      */
     setEtag?(etag: string);
+    /**
+     * Specifies the field as binary
+     * @param binary true is a binary file otherwise false
+     */
+    setBinary?(binary: boolean);
 }
 
 /**
@@ -206,6 +223,10 @@ export interface IZoweUSSTreeNode extends IZoweTreeNode {
      * Event that fires whenever an existing node is updated.
      */
     onUpdateEmitter?: vscode.EventEmitter<IZoweUSSTreeNode>;
+    /**
+     * Remote encoding of the USS file
+     */
+    encoding?: string;
     /**
      * Event that fires whenever an existing node is updated.
      */
