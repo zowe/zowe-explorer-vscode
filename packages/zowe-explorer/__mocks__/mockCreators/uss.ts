@@ -87,7 +87,7 @@ export function createFavoriteUSSNode(session, profile) {
     const ussNodeF = new ZoweUSSNode("usstest", vscode.TreeItemCollapsibleState.Expanded, null, session, null, false, profile.name);
     const mParent = new ZoweUSSNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, session, null, false, profile.name);
     mParent.contextValue = globals.FAV_PROFILE_CONTEXT;
-    ussNodeF.contextValue = globals.DS_TEXT_FILE_CONTEXT + globals.FAV_SUFFIX;
+    ussNodeF.contextValue = globals.USS_TEXT_FILE_CONTEXT + globals.FAV_SUFFIX;
     ussNodeF.fullPath = "/u/myuser/usstest";
     ussNodeF.tooltip = "/u/myuser/usstest";
     return ussNodeF;

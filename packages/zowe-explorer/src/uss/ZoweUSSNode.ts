@@ -476,7 +476,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      *
      * @param {IZoweTreeNode} node
      */
-    public async openUSS(download: boolean, previewFile: boolean, ussFileProvider?: IZoweTree<IZoweUSSTreeNode>): Promise<void> {
+    public async openUSS(forceDownload: boolean, previewFile: boolean, ussFileProvider?: IZoweTree<IZoweUSSTreeNode>): Promise<void> {
         ZoweLogger.trace("ZoweUSSNode.openUSS called.");
         await ussFileProvider.checkCurrentProfile(this);
 
@@ -511,7 +511,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                     );
                 } else {
                     // if local copy exists, open that instead of pulling from mainframe
-                    if (download || !fileExists) {
+                    if (forceDownload || !fileExists) {
                         const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
                         await autoDetectEncoding(this, cachedProfile);
 

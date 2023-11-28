@@ -412,7 +412,7 @@ export async function compareFileContent(
     }
 }
 
-export async function promptForEncoding(profile: imperative.IProfileLoaded, taggedEncoding?: string): Promise<string | undefined> {
+export async function promptForEncoding(node: IZoweDatasetTreeNode | IZoweUSSTreeNode, taggedEncoding?: string): Promise<string | undefined> {
     // TODO Localize me
     const items: vscode.QuickPickItem[] = [
         { label: "EBCDIC", description: "Default" },
@@ -426,11 +426,19 @@ export async function promptForEncoding(profile: imperative.IProfileLoaded, tagg
             items.push({ label: encoding });
         }
     }
-    if (profile.profile?.encoding != null) {
-        items.splice(0, 0, { label: profile.profile.encoding, description: "From profile" });
+    const profileEncoding = node.getProfile().profile?.encoding;
+    if (profileEncoding != null) {
+        items.splice(0, 0, { label: profileEncoding, description: "From profile" });
     }
     if (taggedEncoding != null) {
         items.splice(0, 0, { label: taggedEncoding, description: "Tagged" });
+    }
+    if (
+        node.encoding != null &&
+        !(profileEncoding != null && node.encoding === profileEncoding) &&
+        !(taggedEncoding != null && node.encoding === taggedEncoding)
+    ) {
+        items.splice(0, 0, { label: node.encoding, description: "Current" });
     }
     let encoding = (await Gui.showQuickPick(items, { title: "Choose an encoding" }))?.label;
     switch (encoding) {

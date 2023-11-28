@@ -879,11 +879,11 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             } else {
                 memberNode.getParent().collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
                 this.addSearchHistory(`${parentName}(${memberName})`);
-                await dsActions.openPS(memberNode, true, this);
+                await dsActions.openPS(memberNode, false, true, this);
             }
         } else {
             this.addSearchHistory(parentName);
-            await dsActions.openPS(parentNode, true, this);
+            await dsActions.openPS(parentNode, false, true, this);
         }
     }
 
@@ -1541,7 +1541,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
     }
 
     public async openWithEncoding(node: IZoweDatasetTreeNode): Promise<void> {
-        const encoding = await promptForEncoding(node.getProfile());
+        const encoding = await promptForEncoding(node);
         if (encoding === "binary") {
             node.setBinary(true);
             node.encoding = null;
@@ -1549,6 +1549,6 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             node.setBinary(false);
             node.encoding = encoding;
         }
-        await dsActions.openPS(node, false, this);
+        await dsActions.openPS(node, true, false, this);
     }
 }

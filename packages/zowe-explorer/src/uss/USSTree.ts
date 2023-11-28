@@ -985,7 +985,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         if (ussApi.getTag != null) {
             taggedEncoding = await ussApi.getTag(node.fullPath);
         }
-        const encoding = await promptForEncoding(node.getProfile(), taggedEncoding !== "untagged" ? taggedEncoding : undefined);
+        const encoding = await promptForEncoding(node, taggedEncoding !== "untagged" ? taggedEncoding : undefined);
         if (encoding === "binary") {
             node.setBinary(true);
             node.encoding = null;

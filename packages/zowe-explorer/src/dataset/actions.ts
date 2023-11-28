@@ -425,6 +425,7 @@ export async function createMember(parent: api.IZoweDatasetTreeNode, datasetProv
 
         await openPS(
             new ZoweDatasetNode(name, vscode.TreeItemCollapsibleState.None, parent, null, undefined, undefined, parent.getProfile()),
+            false,
             true,
             datasetProvider
         );
@@ -446,6 +447,7 @@ export async function createMember(parent: api.IZoweDatasetTreeNode, datasetProv
  */
 export async function openPS(
     node: api.IZoweDatasetTreeNode,
+    forceDownload: boolean,
     previewMember: boolean,
     datasetProvider?: api.IZoweTree<api.IZoweDatasetTreeNode>
 ): Promise<void> {
@@ -498,7 +500,7 @@ export async function openPS(
             const documentFilePath = getDocumentFilePath(label, node);
             let responsePromise = node.ongoingActions ? node.ongoingActions[api.NodeAction.Download] : null;
             // If there is no ongoing action and the local copy does not exist, fetch contents
-            if (responsePromise == null && !fs.existsSync(documentFilePath)) {
+            if (forceDownload || (responsePromise == null && !fs.existsSync(documentFilePath))) {
                 const prof = node.getProfile();
                 ZoweLogger.info(localize("openPS.openDataSet", "Opening {0}", label));
                 if (node.ongoingActions) {

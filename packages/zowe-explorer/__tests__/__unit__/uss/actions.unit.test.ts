@@ -248,7 +248,7 @@ describe("USS Action Unit Tests - Function createUSSNodeDialog", () => {
         ZoweExplorerApiRegister.getUssApi = getUssApiMock.bind(ZoweExplorerApiRegister);
         const createSpy = jest.spyOn(ussApi, "create");
 
-        blockMocks.ussNode.contextValue = globals.DS_BINARY_FILE_CONTEXT;
+        blockMocks.ussNode.contextValue = globals.USS_BINARY_FILE_CONTEXT;
         blockMocks.ussNode.fullPath = "/test/path";
 
         globalMocks.mockShowInputBox.mockReturnValueOnce("testFile");
@@ -653,7 +653,7 @@ describe("USS Action Unit Tests - Function changeFileType", () => {
         const node = new ZoweUSSNode("node", vscode.TreeItemCollapsibleState.None, blockMocks.ussNode, null, null);
 
         node.binary = true;
-        node.contextValue = globals.DS_BINARY_FILE_CONTEXT;
+        node.contextValue = globals.USS_BINARY_FILE_CONTEXT;
         node.getSessionNode().binaryFiles[node.fullPath] = true;
         expect(node.binary).toBeTruthy();
 
@@ -734,7 +734,7 @@ describe("USS Action Unit Tests - copy file / directory", () => {
             new ZoweUSSNode("u/myuser/testDirectory", vscode.TreeItemCollapsibleState.None, null, globalMocks.testSession, "/"),
         ];
 
-        newMocks.nodes[0].contextValue = globals.DS_TEXT_FILE_CONTEXT;
+        newMocks.nodes[0].contextValue = globals.USS_TEXT_FILE_CONTEXT;
         newMocks.nodes[1].contextValue = globals.USS_DIR_CONTEXT;
         newMocks.nodes[0].refreshUSS = jest.fn().mockResolvedValueOnce(newMocks.nodes[0]);
         newMocks.nodes[1].refreshUSS = jest.fn().mockResolvedValueOnce(newMocks.nodes[1]);

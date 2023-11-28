@@ -320,7 +320,7 @@ describe("USSTree Unit Tests - Functions USSTree.addFavorite()", () => {
             parentDir: new ZoweUSSNode("parent", vscode.TreeItemCollapsibleState.Collapsed, globalMocks.testTree.mSessionNodes[1], null, "/"),
         };
         newMocks.childFile = new ZoweUSSNode("child", vscode.TreeItemCollapsibleState.None, newMocks.parentDir, null, "/parent");
-        newMocks.childFile.contextValue = globals.DS_TEXT_FILE_CONTEXT;
+        newMocks.childFile.contextValue = globals.USS_TEXT_FILE_CONTEXT;
         globalMocks.testTree.mFavorites = [];
 
         return newMocks;
@@ -778,7 +778,7 @@ const setupUssFavNode = (globalMocks): ZoweUSSNode => {
 describe("USSTree Unit Tests - Function USSTree.findFavoritedNode()", () => {
     it("Testing that findFavoritedNode() returns the favorite of a non-favorited node", async () => {
         const globalMocks = await createGlobalMocks();
-        globalMocks.testUSSNode.contextValue = globals.DS_TEXT_FILE_CONTEXT;
+        globalMocks.testUSSNode.contextValue = globals.USS_TEXT_FILE_CONTEXT;
 
         const ussFavNode = setupUssFavNode(globalMocks);
 
@@ -946,7 +946,7 @@ describe("USSTree Unit Tests - Function USSTree.saveSearch()", () => {
 
 describe("USSTree Unit Tests - Function USSTree.rename()", () => {
     function createBlockMocks(globalMocks) {
-        globalMocks.testUSSNode.contextValue = globals.DS_TEXT_FILE_CONTEXT;
+        globalMocks.testUSSNode.contextValue = globals.USS_TEXT_FILE_CONTEXT;
 
         const ussFavNode = createFavoriteUSSNode(globalMocks.testSession, globalMocks.testProfile);
         const ussFavNodeParent = new ZoweUSSNode(
@@ -1150,7 +1150,7 @@ describe("USSTree Unit Tests - Functions USSTree.addFavorite()", () => {
             childFile: null,
         };
         newMocks.childFile = new ZoweUSSNode("child", vscode.TreeItemCollapsibleState.None, newMocks.parentDir, null, "/parent");
-        newMocks.childFile.contextValue = globals.DS_TEXT_FILE_CONTEXT;
+        newMocks.childFile.contextValue = globals.USS_TEXT_FILE_CONTEXT;
         globalMocks.testTree.mFavorites = [];
 
         return newMocks;

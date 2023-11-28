@@ -219,7 +219,7 @@ describe("ZoweUSSNode Unit Tests - Initialization of class", () => {
             globalMocks.profileOne.name,
             undefined
         );
-        testFile.contextValue = globals.DS_TEXT_FILE_CONTEXT;
+        testFile.contextValue = globals.USS_TEXT_FILE_CONTEXT;
         expect(JSON.stringify(rootNode.iconPath)).toContain("folder-closed.svg");
         expect(JSON.stringify(testDir.iconPath)).toContain("folder-closed.svg");
         expect(JSON.stringify(testFile.iconPath)).toContain("document.svg");
@@ -353,7 +353,7 @@ describe("ZoweUSSNode Unit Tests - Function node.refreshUSS()", () => {
         newMocks.node.contextValue = globals.USS_SESSION_CONTEXT;
         newMocks.node.fullPath = "/u/myuser";
         newMocks.testUSSTree = createUSSTree([newMocks.ussNodeFav], [newMocks.ussNode], createTreeView());
-        newMocks.ussNodeFav.contextValue = globals.DS_TEXT_FILE_CONTEXT + globals.FAV_SUFFIX;
+        newMocks.ussNodeFav.contextValue = globals.USS_TEXT_FILE_CONTEXT + globals.FAV_SUFFIX;
         newMocks.ussNodeFav.fullPath = "/u/myuser/usstest";
         newMocks.ussNodeFav.tooltip = "/u/myuser/usstest";
         globalMocks.withProgress.mockImplementation((progLocation, callback) => {
@@ -574,7 +574,7 @@ describe("ZoweUSSNode Unit Tests - Function node.rename()", () => {
             globalMocks.profileOne.name,
             "123"
         );
-        ussSubDirChild.contextValue = globals.DS_TEXT_FILE_CONTEXT;
+        ussSubDirChild.contextValue = globals.USS_TEXT_FILE_CONTEXT;
         ussSubDir.children.push(ussSubDirChild);
 
         const newFullPath = "/u/user/newName";
@@ -604,7 +604,7 @@ describe("ZoweUSSNode Unit Tests - Function node.reopen()", () => {
             globalMocks.profileOne.name,
             "123"
         );
-        ussFile.contextValue = globals.DS_TEXT_FILE_CONTEXT;
+        ussFile.contextValue = globals.USS_TEXT_FILE_CONTEXT;
         const vscodeCommandSpy = jest.spyOn(vscode.commands, "executeCommand");
 
         await ussFile.reopen(hasClosedTab);
@@ -629,7 +629,7 @@ describe("ZoweUSSNode Unit Tests - Function node.reopen()", () => {
             globalMocks.profileOne.name,
             "123"
         );
-        rootNode.contextValue = globals.DS_TEXT_FILE_CONTEXT;
+        rootNode.contextValue = globals.USS_TEXT_FILE_CONTEXT;
 
         await rootNode.reopen(true);
 
@@ -675,14 +675,14 @@ describe("ZoweUSSNode Unit Tests - Function node.setBinary()", () => {
         );
 
         child.setBinary(true);
-        expect(child.contextValue).toEqual(globals.DS_BINARY_FILE_CONTEXT);
+        expect(child.contextValue).toEqual(globals.USS_BINARY_FILE_CONTEXT);
         expect(JSON.stringify(child.iconPath)).toContain("document-binary.svg");
         child.setBinary(false);
-        expect(child.contextValue).toEqual(globals.DS_TEXT_FILE_CONTEXT);
+        expect(child.contextValue).toEqual(globals.USS_TEXT_FILE_CONTEXT);
         subNode.setBinary(true);
-        expect(subNode.contextValue).toEqual(globals.DS_BINARY_FILE_CONTEXT + globals.FAV_SUFFIX);
+        expect(subNode.contextValue).toEqual(globals.USS_BINARY_FILE_CONTEXT + globals.FAV_SUFFIX);
         subNode.setBinary(false);
-        expect(subNode.contextValue).toEqual(globals.DS_TEXT_FILE_CONTEXT + globals.FAV_SUFFIX);
+        expect(subNode.contextValue).toEqual(globals.USS_TEXT_FILE_CONTEXT + globals.FAV_SUFFIX);
     });
 });
 
@@ -1210,7 +1210,7 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
             false,
             globalMocks.profileOne.name
         );
-        favoriteFile.contextValue = globals.DS_TEXT_FILE_CONTEXT + globals.FAV_SUFFIX;
+        favoriteFile.contextValue = globals.USS_TEXT_FILE_CONTEXT + globals.FAV_SUFFIX;
 
         // For each node, make sure that code below the log.debug statement is execute
         await favoriteFile.openUSS(false, true, blockMocks.testUSSTree);
@@ -1253,7 +1253,7 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
             false,
             globalMocks.profileOne.name
         );
-        child.contextValue = globals.DS_TEXT_FILE_CONTEXT;
+        child.contextValue = globals.USS_TEXT_FILE_CONTEXT;
 
         await child.openUSS(false, true, blockMocks.testUSSTree);
         expect(globalMocks.mockShowTextDocument.mock.calls.length).toBe(1);
