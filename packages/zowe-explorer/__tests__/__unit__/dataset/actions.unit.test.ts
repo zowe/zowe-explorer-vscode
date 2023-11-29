@@ -3731,17 +3731,15 @@ describe("Dataset Actions Unit Tests - Function allocateLike", () => {
 });
 
 describe("Dataset Actions Unit Tests - Function confirmJobSubmission", () => {
-    function createBlockMocks() {
+    function createBlockMocks(): void {
         mocked(vscode.window.showInputBox).mockImplementation((options) => {
             options.validateInput("test");
             return Promise.resolve("test");
         });
-
-        return {};
     }
     it("Should use use local JCL doc name for confirmJobSubmission", async () => {
         createGlobalMocks();
-        const blockMocks = createBlockMocks();
+        createBlockMocks();
         jest.spyOn(vscode.workspace, "getConfiguration").mockImplementation(
             () =>
                 ({
@@ -3751,6 +3749,6 @@ describe("Dataset Actions Unit Tests - Function confirmJobSubmission", () => {
         jest.spyOn(Gui, "warningMessage").mockResolvedValue({
             title: "Submit",
         });
-        await expect(dsActions.confirmJobSubmission(null, true, "Profile\\test.jcl")).resolves.toEqual(true);
+        await expect(dsActions.confirmJobSubmission("Profile\\test.jcl", true)).resolves.toEqual(true);
     });
 });
