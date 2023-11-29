@@ -81,7 +81,7 @@ export async function addProfileDetailsInJobs(profileName: string) {
     const jobsProfileName = await driverFirefox.findElement(By.xpath(JobsLocators.emptyInputBoxXpath));
     jobsProfileName.sendKeys(profileName);
     jobsProfileName.sendKeys(Key.ENTER);
-    const addToTrees = driverFirefox.wait(until.elementLocated(By.xpath(UssLocators.emptyInputBoxXpath)), WAITTIME);
+    const addToTrees = driverFirefox.wait(until.elementLocated(By.xpath(JobsLocators.emptyInputBoxXpath)), WAITTIME);
     addToTrees.sendKeys("No");
     addToTrees.sendKeys(Key.ENTER);
 }

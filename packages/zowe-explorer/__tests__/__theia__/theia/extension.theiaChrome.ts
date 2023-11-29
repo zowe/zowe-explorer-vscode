@@ -325,7 +325,7 @@ export async function addProfileDetails(profileName: string) {
     await driverChrome.sleep(SHORTSLEEPTIME);
     const responseTimeout = await driverChrome.findElement(By.xpath(DatasetsLocators.emptyInputBoxXpath));
     responseTimeout.sendKeys(Key.ENTER);
-    const addToTrees = driverChrome.wait(until.elementLocated(By.xpath(UssLocators.emptyInputBoxXpath)), WAITTIME);
+    const addToTrees = driverChrome.wait(until.elementLocated(By.xpath(DatasetsLocators.emptyInputBoxXpath)), WAITTIME);
     addToTrees.sendKeys("No");
     addToTrees.sendKeys(Key.ENTER);
 }
