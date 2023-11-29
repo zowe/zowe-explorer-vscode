@@ -1065,6 +1065,28 @@ describe("USSTree Unit Tests - Function USSTree.addSingleSession()", () => {
         expect(blockMocks.testTree.mSessionNodes.length).toEqual(2);
         expect(blockMocks.testTree.mSessionNodes[1].profile.name).toEqual(blockMocks.testProfile.name);
     });
+
+    it("should log the error if the error includes the hostname", () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        jest.spyOn(ZoweExplorerApiRegister.getMvsApi(blockMocks.testProfile), "getSession").mockImplementationOnce(() => {
+            throw new Error("test error hostname:sample.com");
+        });
+        const zoweLoggerErrorSpy = jest.spyOn(ZoweLogger, "error");
+        expect(blockMocks.testTree.addSingleSession({ name: "test1234" }));
+        expect(zoweLoggerErrorSpy).toBeCalledTimes(1);
+    });
+
+    it("should call 'errorHandling()' if the error does not include the hostname", () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        jest.spyOn(ZoweExplorerApiRegister.getMvsApi(blockMocks.testProfile), "getSession").mockImplementationOnce(() => {
+            throw new Error("test error");
+        });
+        const errorHandlingSpy = jest.spyOn(utils, "errorHandling");
+        expect(blockMocks.testTree.addSingleSession({ name: "test1234" }));
+        expect(errorHandlingSpy).toBeCalledTimes(1);
+    });
 });
 
 describe("Dataset Tree Unit Tests - Function addFavorite", () => {
