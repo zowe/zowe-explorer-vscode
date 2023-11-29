@@ -440,7 +440,7 @@ export class Profiles extends ProfilesCache {
                     }
                     ZoweLogger.info(localize("createZoweSession.createNewProfile", "New profile created, {0}.", chosenProfile));
 
-                    if (await this.shouldAddForAllTrees(newprofile)) {
+                    if (await ProfileManagement.handleChangeForAllTrees(newprofile, true)) {
                         await zoweFileProvider.addSession(newprofile);
                     } else {
                         await zoweFileProvider.addSession(newprofile, undefined, zoweFileProvider);
@@ -451,7 +451,7 @@ export class Profiles extends ProfilesCache {
             }
         } else if (chosenProfile) {
             ZoweLogger.info(localize("createZoweSession.addProfile", "The profile {0} has been added to the {1} tree.", chosenProfile, treeType));
-            if (await this.shouldAddForAllTrees(chosenProfile)) {
+            if (await ProfileManagement.handleChangeForAllTrees(chosenProfile, true)) {
                 await zoweFileProvider.addSession(chosenProfile);
             } else {
                 await zoweFileProvider.addSession(chosenProfile, undefined, zoweFileProvider);
@@ -1895,11 +1895,5 @@ export class Profiles extends ProfilesCache {
             }
             newConfig.autoStore = false;
         }
-    }
-
-    private async shouldAddForAllTrees(nodeName: string): Promise<boolean> {
-        const [qpAll] = ProfileManagement.getPromptChangeForAllTreesOptions();
-        const selection = await ProfileManagement.promptChangeForAllTrees(nodeName, true);
-        return selection?.label === qpAll.label;
     }
 }

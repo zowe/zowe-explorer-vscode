@@ -40,6 +40,7 @@ import * as path from "path";
 import { SettingsConfig } from "../../src/utils/SettingsConfig";
 import { ZoweLogger } from "../../src/utils/LoggerUtils";
 import { TreeProviders } from "../../src/shared/TreeProviders";
+import { ProfileManagement } from "../../src/utils/ProfileManagement";
 
 jest.mock("child_process");
 jest.mock("fs");
@@ -581,6 +582,7 @@ describe("Profiles Unit Tests - Function createZoweSession", () => {
         jest.spyOn(Gui, "showInputBox").mockResolvedValue("test");
         jest.spyOn(Profiles.getInstance(), "createNewConnection").mockResolvedValue("Test");
         const refreshSpy = jest.spyOn(Profiles.getInstance(), "refresh").mockImplementation();
+        jest.spyOn(ProfileManagement, "handleChangeForAllTrees").mockResolvedValue(true);
         jest.spyOn(TreeProviders, "providers", "get").mockReturnValue({
             ds: { addSingleSession: jest.fn(), mSessionNodes: [...globalMocks.testUSSTree.mSessionNodes], refresh: jest.fn() } as any,
             uss: { addSingleSession: jest.fn(), mSessionNodes: [...globalMocks.testUSSTree.mSessionNodes], refresh: jest.fn() } as any,
@@ -590,6 +592,22 @@ describe("Profiles Unit Tests - Function createZoweSession", () => {
         expect(refreshSpy).toBeCalledTimes(1);
         expect(spyInfo).toBeCalledWith("New profile created, test.");
         refreshSpy.mockClear();
+        spyInfo.mockClear();
+        jest.spyOn(Gui, "resolveQuickPick").mockReset();
+    });
+
+    it("Tests that createZoweSession runs successfully and uses the chosenProfile", async () => {
+        const globalMocks = await createGlobalMocks();
+        jest.spyOn(Gui, "createQuickPick").mockReturnValue({
+            show: jest.fn(),
+            hide: jest.fn(),
+            value: "test",
+        } as any);
+        jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce({ label: "test" });
+        const spyInfo = jest.spyOn(ZoweLogger, "info");
+        jest.spyOn(ProfileManagement, "handleChangeForAllTrees").mockResolvedValue(true);
+        await expect(Profiles.getInstance().createZoweSession(globalMocks.testUSSTree)).resolves.not.toThrow();
+        expect(spyInfo).toBeCalledWith("The profile test has been added to the zowe.uss.history tree.");
         spyInfo.mockClear();
     });
 

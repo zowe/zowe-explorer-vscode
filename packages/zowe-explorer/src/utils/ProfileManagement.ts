@@ -144,7 +144,15 @@ export class ProfileManagement {
         };
         return [qpItemAll, qpItemCurrent];
     }
-    public static async promptChangeForAllTrees(nodeName: string, checkPresence: boolean): Promise<vscode.QuickPickItem> {
+    public static async handleChangeForAllTrees(nodeName: string, checkPresence: boolean): Promise<boolean> {
+        const selection = await this.promptChangeForAllTrees(nodeName, checkPresence);
+        if (!selection) {
+            return;
+        }
+        const [all] = this.getPromptChangeForAllTreesOptions();
+        return selection.label === all.label;
+    }
+    private static async promptChangeForAllTrees(nodeName: string, checkPresence: boolean): Promise<vscode.QuickPickItem> {
         const [qpItemAll, qpItemCurrent] = this.getPromptChangeForAllTreesOptions();
         if (TreeProviders.sessionIsPresentInOtherTrees(nodeName) === checkPresence) {
             return qpItemCurrent;
@@ -289,17 +297,8 @@ export class ProfileManagement {
         await vscode.commands.executeCommand("zowe.ds.deleteProfile", node);
     }
 
-    private static async handleChangeForAllTrees(node: IZoweTreeNode): Promise<boolean> {
-        const selection = await this.promptChangeForAllTrees(node.getLabel().toString(), false);
-        if (!selection) {
-            return;
-        }
-        const [all] = this.getPromptChangeForAllTreesOptions();
-        return selection.label === all.label;
-    }
-
     private static async handleHideProfiles(node: IZoweTreeNode): Promise<void> {
-        const shouldHideFromAllTrees = await this.handleChangeForAllTrees(node);
+        const shouldHideFromAllTrees = await this.handleChangeForAllTrees(node.getLabel().toString(), false);
         if (shouldHideFromAllTrees === undefined) {
             Gui.infoMessage(localize("ProfileManagement.handleHideProfiles.cancelled", "Operation Cancelled"));
             return;
