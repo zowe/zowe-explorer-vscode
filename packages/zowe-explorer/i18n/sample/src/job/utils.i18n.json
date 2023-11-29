@@ -3,5 +3,7 @@
   "jobs.sortByDateSubmitted": "$(calendar) Date Submitted",
   "jobs.sortByName": "$(case-sensitive) Job Name",
   "jobs.sortByReturnCode": "$(symbol-numeric) Return Code",
-  "setSortDirection": "$(fold) Sort Direction"
+  "setSortDirection": "$(fold) Sort Direction",
+  "filterJobs.quickpick.message": "Go to Local Filtering",
+  "filterJobs.clearProfileFilter": "$(clear-all) Clear filter for profile"
 }

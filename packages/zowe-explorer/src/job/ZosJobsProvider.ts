@@ -29,6 +29,8 @@ import SpoolProvider, { encodeJobFile } from "../SpoolProvider";
 import { Poller } from "@zowe/zowe-explorer-api/src/utils";
 import { PollDecorator } from "../utils/DecorationProviders";
 import { TreeViewUtils } from "../utils/TreeViewUtils";
+import { TreeProviders } from "../shared/TreeProviders";
+import { JOB_FILTER_OPTS } from "./utils";
 
 // Set up localization
 nls.config({
@@ -1157,6 +1159,66 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             session.children.sort(Job.sortJobs(session.sort));
             this.nodeDataChanged(session);
         }
+    }
+
+    /**
+     * Updates or resets the filter for a given job.
+     * @param job The job whose filter should be updated/reset
+     * @param newFilter Either a valid `JobFilter` object, or `null` to reset the filter
+     * @param isSession Whether the node is a session
+     */
+    public updateFilterForJob(job: IZoweJobTreeNode, newFilter: string | null, isSession: boolean): void {
+        job.filter = newFilter;
+        job.description = newFilter ? localize("filter.description", "Filter: {0}", newFilter) : null;
+        this.nodeDataChanged(job);
+        if (newFilter === null) {
+            job["children"] = job["actualJobs"];
+            TreeProviders.job.refresh();
+        }
+    }
+
+    public async filterJobsDialog(job: IZoweJobTreeNode): Promise<vscode.InputBox> {
+        if (job.collapsibleState === vscode.TreeItemCollapsibleState.Collapsed) {
+            Gui.infoMessage(localize("filterJobs.message", "Use the search button to display jobs"));
+            return;
+        }
+        const selection = await Gui.showQuickPick(JOB_FILTER_OPTS, {
+            placeHolder: localize("filterJobs.placeholder", "Set a filter..."),
+        });
+        const filterMethod = JOB_FILTER_OPTS.indexOf(selection);
+
+        const isSession = contextually.isSession(job);
+        const userDismissed = filterMethod < 0;
+        if (userDismissed || selection === "$(clear-all) Clear filter for profile") {
+            if (selection === "$(clear-all) Clear filter for profile") {
+                this.updateFilterForJob(job, null, isSession);
+                Gui.setStatusBarMessage(localize("filter.cleared", "$(check) Filter cleared for {0}", job.label as string), globals.MS_PER_SEC * 4);
+            }
+            return;
+        }
+        if (!("filter" in job) && !("actualJobs" in job)) {
+            job.actualJobs = job["children"];
+        }
+        this.nodeDataChanged(job);
+
+        job.description = "";
+        const actual_jobs: IZoweJobTreeNode[] = job["actualJobs"];
+        const inputBox = await vscode.window.createInputBox();
+        inputBox.placeholder = localize("filterJobs.prompt.message", "Enter local filter...");
+        inputBox.onDidChangeValue((query) => {
+            query = query.toUpperCase();
+            job["children"] = actual_jobs.filter((item) => `${item["job"].jobname}(${item["job"].jobid}) - ${item["job"].retcode}`.includes(query));
+            TreeProviders.job.refresh();
+            this.updateFilterForJob(job, query, isSession);
+            Gui.setStatusBarMessage(localize("filter.updated", "$(check) Filter updated for {0}", job.label as string), globals.MS_PER_SEC * 4);
+        });
+        job.children = actual_jobs;
+        this.nodeDataChanged(job);
+        inputBox.onDidAccept(() => {
+            inputBox.hide();
+        });
+        inputBox.show();
+        return inputBox;
     }
 }
 
