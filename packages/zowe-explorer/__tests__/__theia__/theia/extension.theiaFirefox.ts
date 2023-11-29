@@ -72,7 +72,7 @@ export async function addProfileDetailsInUss(profileName: string) {
     const ussProfileName = await driverFirefox.findElement(By.xpath(UssLocators.emptyInputBoxXpath));
     ussProfileName.sendKeys(profileName);
     ussProfileName.sendKeys(Key.ENTER);
-    const addToTrees = await driverFirefox.findElement(By.xpath(DatasetsLocators.emptyInputBoxXpath));
+    const addToTrees = driverFirefox.wait(until.elementLocated(By.xpath(UssLocators.emptyInputBoxXpath)), WAITTIME);
     addToTrees.sendKeys("No");
     addToTrees.sendKeys(Key.ENTER);
 }
@@ -81,7 +81,7 @@ export async function addProfileDetailsInJobs(profileName: string) {
     const jobsProfileName = await driverFirefox.findElement(By.xpath(JobsLocators.emptyInputBoxXpath));
     jobsProfileName.sendKeys(profileName);
     jobsProfileName.sendKeys(Key.ENTER);
-    const addToTrees = await driverFirefox.findElement(By.xpath(DatasetsLocators.emptyInputBoxXpath));
+    const addToTrees = driverFirefox.wait(until.elementLocated(By.xpath(UssLocators.emptyInputBoxXpath)), WAITTIME);
     addToTrees.sendKeys("No");
     addToTrees.sendKeys(Key.ENTER);
 }
