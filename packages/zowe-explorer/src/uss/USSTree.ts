@@ -24,10 +24,9 @@ import { getIconByNode } from "../generators/icons";
 import * as contextually from "../shared/context";
 
 import * as nls from "vscode-nls";
-import { resetValidationSettings } from "../shared/actions";
-import { SettingsConfig } from "../utils/SettingsConfig";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { TreeViewUtils } from "../utils/TreeViewUtils";
+import { IZoweTreeNode } from "@zowe/zowe-explorer-api";
 
 // Set up localization
 nls.config({
@@ -45,7 +44,7 @@ export async function createUSSTree(log: imperative.Logger): Promise<USSTree> {
     ZoweLogger.trace("uss.USSTree.createUSSTree called.");
     const tree = new USSTree();
     await tree.initializeFavorites(log);
-    await tree.addSession();
+    await tree.addSession(undefined, undefined, tree);
     return tree;
 }
 
@@ -309,54 +308,55 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
      * @param {string} [sessionName] - optional; loads persisted profiles or default if not passed
      * @param {string} [profileType] - optional; loads profiles of a certain type if passed
      */
-    public async addSession(sessionName?: string, profileType?: string): Promise<void> {
+    public async addSession(sessionName?: string, profileType?: string, provider?: IZoweTree<IZoweTreeNode>): Promise<void> {
         ZoweLogger.trace("USSTree.addSession called.");
-        const setting: boolean = SettingsConfig.getDirectValue(globals.SETTINGS_AUTOMATIC_PROFILE_VALIDATION);
-        // Loads profile associated with passed sessionName, persisted profiles or default if none passed
-        if (sessionName) {
-            const profile: imperative.IProfileLoaded = Profiles.getInstance().loadNamedProfile(sessionName.trim());
+        await super.addSession(sessionName, profileType, provider);
+    }
 
-            if (profile) {
-                await this.addSingleSession(profile);
-                for (const node of this.mSessionNodes) {
-                    const name = node.getProfileName();
-                    if (name === profile.name) {
-                        await resetValidationSettings(node, setting);
-                    }
+    /**
+     * Adds a single session to the tree
+     * @param profile the profile to add to the tree
+     */
+    public async addSingleSession(profile: imperative.IProfileLoaded): Promise<void> {
+        ZoweLogger.trace("USSTree.addSingleSession called.");
+        if (profile) {
+            // If session is already added, do nothing
+            if (this.mSessionNodes.find((tNode) => tNode.label.toString() === profile.name)) {
+                return;
+            }
+            // Uses loaded profile to create a session with the USS API
+            let session: imperative.Session;
+            try {
+                session = ZoweExplorerApiRegister.getUssApi(profile).getSession();
+            } catch (err) {
+                if (err.toString().includes("hostname")) {
+                    ZoweLogger.error(err);
+                } else {
+                    await errorHandling(err, profile.name);
                 }
             }
-        } else {
-            const profiles: imperative.IProfileLoaded[] = await Profiles.getInstance().fetchAllProfiles();
-            if (profiles) {
-                for (const theProfile of profiles) {
-                    // If session is already added, do nothing
-                    if (this.mSessionNodes.find((tempNode) => tempNode.label.toString().trim() === theProfile.name.trim())) {
-                        continue;
-                    }
-                    for (const session of this.mHistory.getSessions()) {
-                        if (session && session.trim() === theProfile.name) {
-                            await this.addSingleSession(theProfile);
-                            for (const node of this.mSessionNodes) {
-                                const name = node.getProfileName();
-                                if (name === theProfile.name) {
-                                    await resetValidationSettings(node, setting);
-                                }
-                            }
-                        }
-                    }
-                }
+            // Creates ZoweNode to track new session and pushes it to mSessionNodes
+            const node = new ZoweUSSNode(
+                profile.name,
+                vscode.TreeItemCollapsibleState.Collapsed,
+                null,
+                session,
+                null,
+                false,
+                profile.name,
+                null,
+                profile
+            );
+            node.contextValue = globals.USS_SESSION_CONTEXT;
+            await this.refreshHomeProfileContext(node);
+            const icon = getIconByNode(node);
+            if (icon) {
+                node.iconPath = icon.path;
             }
-            if (this.mSessionNodes.length === 1) {
-                try {
-                    await this.addSingleSession(Profiles.getInstance().getDefaultProfile(profileType));
-                } catch (error) {
-                    // catch and log error of no default,
-                    // if not type passed getDefaultProfile assumes zosmf
-                    ZoweLogger.warn(error);
-                }
-            }
+            node.dirty = true;
+            this.mSessionNodes.push(node);
+            this.mHistory.addSession(profile.name);
         }
-        this.refresh();
     }
 
     /**
@@ -931,51 +931,5 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             }
         }
         return match;
-    }
-
-    /**
-     * Adds a single session to the USS tree
-     *
-     */
-    private async addSingleSession(profile: imperative.IProfileLoaded): Promise<void> {
-        ZoweLogger.trace("USSTree.addSingleSession called.");
-        if (profile) {
-            // If session is already added, do nothing
-            if (this.mSessionNodes.find((tNode) => tNode.label.toString() === profile.name)) {
-                return;
-            }
-            // Uses loaded profile to create a session with the USS API
-            let session: imperative.Session;
-            try {
-                session = await ZoweExplorerApiRegister.getUssApi(profile).getSession();
-            } catch (err) {
-                if (err.toString().includes("hostname")) {
-                    ZoweLogger.error(err);
-                } else {
-                    await errorHandling(err, profile.name);
-                }
-            }
-            // Creates ZoweNode to track new session and pushes it to mSessionNodes
-            const node = new ZoweUSSNode(
-                profile.name,
-                vscode.TreeItemCollapsibleState.Collapsed,
-                null,
-                session,
-                null,
-                false,
-                profile.name,
-                null,
-                profile
-            );
-            node.contextValue = globals.USS_SESSION_CONTEXT;
-            await this.refreshHomeProfileContext(node);
-            const icon = getIconByNode(node);
-            if (icon) {
-                node.iconPath = icon.path;
-            }
-            node.dirty = true;
-            this.mSessionNodes.push(node);
-            this.mHistory.addSession(profile.name);
-        }
     }
 }

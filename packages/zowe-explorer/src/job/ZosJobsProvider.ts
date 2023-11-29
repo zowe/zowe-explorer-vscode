@@ -21,7 +21,6 @@ import { getAppName, sortTreeItems, jobStringValidator } from "../shared/utils";
 import { ZoweTreeProvider } from "../abstract/ZoweTreeProvider";
 import { getIconByNode } from "../generators/icons";
 import * as contextually from "../shared/context";
-import { resetValidationSettings } from "../shared/actions";
 import { SettingsConfig } from "../utils/SettingsConfig";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import * as nls from "vscode-nls";
@@ -29,6 +28,7 @@ import SpoolProvider, { encodeJobFile } from "../SpoolProvider";
 import { Poller } from "@zowe/zowe-explorer-api/src/utils";
 import { PollDecorator } from "../utils/DecorationProviders";
 import { TreeViewUtils } from "../utils/TreeViewUtils";
+import { IZoweTreeNode } from "@zowe/zowe-explorer-api";
 
 // Set up localization
 nls.config({
@@ -71,7 +71,7 @@ export async function createJobsTree(log: imperative.Logger): Promise<ZosJobsPro
     ZoweLogger.trace("ZosJobsProvider.createJobsTree called.");
     const tree = new ZosJobsProvider();
     await tree.initializeJobsTree(log);
-    await tree.addSession();
+    await tree.addSession(undefined, undefined, tree);
     return tree;
 }
 
@@ -218,53 +218,45 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
      * @param {string} [sessionName] - optional; loads default profile if not passed
      * @param {string} [profileType] - optional; loads profiles of a certain type if passed
      */
-    public async addSession(sessionName?: string, profileType?: string): Promise<void> {
+    public async addSession(sessionName?: string, profileType?: string, provider?: IZoweTree<IZoweTreeNode>): Promise<void> {
         ZoweLogger.trace("ZosJobsProvider.addSession called.");
-        const setting: boolean = SettingsConfig.getDirectValue(globals.SETTINGS_AUTOMATIC_PROFILE_VALIDATION);
-        // Loads profile associated with passed sessionName, default if none passed
-        if (sessionName) {
-            const theProfile: imperative.IProfileLoaded = Profiles.getInstance().loadNamedProfile(sessionName);
-            if (theProfile) {
-                await this.addSingleSession(theProfile);
+        await super.addSession(sessionName, profileType, provider);
+    }
+
+    /**
+     * Adds a single session to the tree
+     * @param profile the profile to add to the tree
+     */
+    public async addSingleSession(profile: imperative.IProfileLoaded): Promise<void> {
+        ZoweLogger.trace("ZosJobsProvider.addSingleSession called.");
+        if (profile) {
+            // If session is already added, do nothing
+            if (this.mSessionNodes.find((tNode) => tNode.label.toString() === profile.name)) {
+                return;
             }
-            for (const node of this.mSessionNodes) {
-                const name = node.getProfileName();
-                if (name === theProfile.name) {
-                    await resetValidationSettings(node, setting);
+            // Uses loaded profile to create a zosmf session with Zowe
+            let session: imperative.Session;
+            try {
+                session = ZoweExplorerApiRegister.getJesApi(profile).getSession();
+            } catch (err) {
+                if (err.toString().includes("hostname")) {
+                    ZoweLogger.error(err);
+                } else {
+                    await errorHandling(err, profile.name);
                 }
             }
-        } else {
-            const allProfiles: imperative.IProfileLoaded[] = await Profiles.getInstance().fetchAllProfiles();
-            if (allProfiles) {
-                for (const sessionProfile of allProfiles) {
-                    // If session is already added, do nothing
-                    if (this.mSessionNodes.find((tempNode) => tempNode.label.toString() === sessionProfile.name)) {
-                        continue;
-                    }
-                    for (const session of this.mHistory.getSessions()) {
-                        if (session === sessionProfile.name) {
-                            await this.addSingleSession(sessionProfile);
-                            for (const node of this.mSessionNodes) {
-                                const name = node.getProfileName();
-                                if (name === sessionProfile.name) {
-                                    await resetValidationSettings(node, setting);
-                                }
-                            }
-                        }
-                    }
-                }
+            // Creates ZoweNode to track new session and pushes it to mSessionNodes
+            const node = new Job(profile.name, vscode.TreeItemCollapsibleState.Collapsed, null, session, null, profile);
+            node.contextValue = globals.JOBS_SESSION_CONTEXT;
+            await this.refreshHomeProfileContext(node);
+            const icon = getIconByNode(node);
+            if (icon) {
+                node.iconPath = icon.path;
             }
-            if (this.mSessionNodes.length === 1) {
-                try {
-                    await this.addSingleSession(Profiles.getInstance().getDefaultProfile(profileType));
-                } catch (error) {
-                    // catch and log error of no default,
-                    // if not type passed getDefaultProfile assumes zosmf
-                    ZoweLogger.warn(error);
-                }
-            }
+            node.dirty = true;
+            this.mSessionNodes.push(node);
+            this.mHistory.addSession(profile.name);
         }
-        this.refresh();
     }
 
     public async delete(node: IZoweJobTreeNode): Promise<void> {
@@ -1026,42 +1018,6 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         node.label = node.label.toString().substring(0, node.label.toString().lastIndexOf(")") + 1);
         node.contextValue = contextually.asFavorite(node);
         return node;
-    }
-
-    /**
-     * Adds a single session to the jobs tree
-     *
-     */
-    private async addSingleSession(profile: imperative.IProfileLoaded): Promise<void> {
-        ZoweLogger.trace("ZosJobsProvider.addSingleSession called.");
-        if (profile) {
-            // If session is already added, do nothing
-            if (this.mSessionNodes.find((tNode) => tNode.label.toString() === profile.name)) {
-                return;
-            }
-            // Uses loaded profile to create a zosmf session with Zowe
-            let session: imperative.Session;
-            try {
-                session = await ZoweExplorerApiRegister.getJesApi(profile).getSession();
-            } catch (err) {
-                if (err.toString().includes("hostname")) {
-                    ZoweLogger.error(err);
-                } else {
-                    await errorHandling(err, profile.name);
-                }
-            }
-            // Creates ZoweNode to track new session and pushes it to mSessionNodes
-            const node = new Job(profile.name, vscode.TreeItemCollapsibleState.Collapsed, null, session, null, profile);
-            node.contextValue = globals.JOBS_SESSION_CONTEXT;
-            await this.refreshHomeProfileContext(node);
-            const icon = getIconByNode(node);
-            if (icon) {
-                node.iconPath = icon.path;
-            }
-            node.dirty = true;
-            this.mSessionNodes.push(node);
-            this.mHistory.addSession(profile.name);
-        }
     }
 
     /**

@@ -573,13 +573,19 @@ describe("Profiles Unit Tests - Function createZoweSession", () => {
             hide: jest.fn(),
             value: "test",
         } as any);
-        jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(new utils.FilterDescriptor("Test"));
+        jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(new utils.FilterDescriptor("Test1"));
+        jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(new utils.FilterDescriptor("Test2"));
         jest.spyOn(Profiles.getInstance(), "getProfileInfo").mockResolvedValue({
             usingTeamConfig: false,
         } as any);
         jest.spyOn(Gui, "showInputBox").mockResolvedValue("test");
         jest.spyOn(Profiles.getInstance(), "createNewConnection").mockResolvedValue("Test");
         const refreshSpy = jest.spyOn(Profiles.getInstance(), "refresh").mockImplementation();
+        jest.spyOn(TreeProviders, "providers", "get").mockReturnValue({
+            ds: { addSingleSession: jest.fn(), mSessionNodes: [...globalMocks.testUSSTree.mSessionNodes], refresh: jest.fn() } as any,
+            uss: { addSingleSession: jest.fn(), mSessionNodes: [...globalMocks.testUSSTree.mSessionNodes], refresh: jest.fn() } as any,
+            jobs: { addSingleSession: jest.fn(), mSessionNodes: [...globalMocks.testUSSTree.mSessionNodes], refresh: jest.fn() } as any,
+        } as any);
         await expect(Profiles.getInstance().createZoweSession(globalMocks.testUSSTree)).resolves.not.toThrow();
         expect(refreshSpy).toBeCalledTimes(1);
         expect(spyInfo).toBeCalledWith("New profile created, test.");

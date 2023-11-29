@@ -290,6 +290,7 @@ describe("ProfileManagement unit tests", () => {
                 ProfileManagement["getPromptChangeForAllTreesOptions"]()[1]
             );
             mocks.mockJobSessionNode.contextValue = globals.JOBS_SESSION_CONTEXT;
+            mocks.mockJobSessionNode.getLabel = jest.fn(() => "test");
             await expect(ProfileManagement["handleHideProfiles"](mocks.mockJobSessionNode)).resolves.toEqual(undefined);
             expect(commandSpy).toHaveBeenCalledWith("zowe.jobs.removeSession", mocks.mockJobSessionNode, null, false);
         });

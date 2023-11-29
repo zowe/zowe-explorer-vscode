@@ -133,6 +133,31 @@ export class ProfileManagement {
             description: localize("logoutQpItem.logout.qpDetail", "Log out to invalidate and remove stored token value"),
         },
     };
+    public static getPromptChangeForAllTreesOptions(): vscode.QuickPickItem[] {
+        const qpItemAll: vscode.QuickPickItem = {
+            label: localize("ProfileManagement.getPromptChangeForAllTreesOptions.allLbl", "Yes"),
+            description: localize("ProfileManagement.getPromptChangeForAllTreesOptions.allDesc", "Apply to all trees"),
+        };
+        const qpItemCurrent: vscode.QuickPickItem = {
+            label: localize("ProfileManagement.getPromptChangeForAllTreesOptions.currentLbl", "No"),
+            description: localize("ProfileManagement.getPromptChangeForAllTreesOptions.currentDesc", "Apply to current tree selected"),
+        };
+        return [qpItemAll, qpItemCurrent];
+    }
+    public static async promptChangeForAllTrees(nodeName: string, checkPresence: boolean): Promise<vscode.QuickPickItem> {
+        const [qpItemAll, qpItemCurrent] = this.getPromptChangeForAllTreesOptions();
+        if (TreeProviders.sessionIsPresentInOtherTrees(nodeName) === checkPresence) {
+            return qpItemCurrent;
+        }
+        const qp = Gui.createQuickPick();
+        qp.placeholder = localize("ProfileManagement.promptChangeForAllTrees.howToChange", "Do you wish to apply this for all trees?");
+        qp.items = [qpItemAll, qpItemCurrent];
+        qp.activeItems = [qp.items[0]];
+        qp.show();
+        const selection = await Gui.resolveQuickPick(qp);
+        qp.hide();
+        return selection;
+    }
     private static async setupProfileManagementQp(managementType: string, node: IZoweTreeNode): Promise<vscode.QuickPickItem> {
         const profile = node.getProfile();
         const qp = Gui.createQuickPick();
@@ -264,35 +289,8 @@ export class ProfileManagement {
         await vscode.commands.executeCommand("zowe.ds.deleteProfile", node);
     }
 
-    private static getPromptChangeForAllTreesOptions(): vscode.QuickPickItem[] {
-        const qpItemAll: vscode.QuickPickItem = {
-            label: localize("ProfileManagement.getPromptChangeForAllTreesOptions.allLbl", "Yes"),
-            description: localize("ProfileManagement.getPromptChangeForAllTreesOptions.allDesc", "Apply to all trees"),
-        };
-        const qpItemCurrent: vscode.QuickPickItem = {
-            label: localize("ProfileManagement.getPromptChangeForAllTreesOptions.currentLbl", "No"),
-            description: localize("ProfileManagement.getPromptChangeForAllTreesOptions.currentDesc", "Apply to current tree selected"),
-        };
-        return [qpItemAll, qpItemCurrent];
-    }
-
-    private static async promptChangeForAllTrees(node: IZoweTreeNode): Promise<vscode.QuickPickItem> {
-        const [qpItemAll, qpItemCurrent] = this.getPromptChangeForAllTreesOptions();
-        if (!TreeProviders.sessionIsPresentInOtherTrees(node.getLabel().toString())) {
-            return qpItemCurrent;
-        }
-        const qp = Gui.createQuickPick();
-        qp.placeholder = localize("ProfileManagement.promptChangeForAllTrees.howToChange", "Do you wish to apply this for all trees?");
-        qp.items = [qpItemAll, qpItemCurrent];
-        qp.activeItems = [qp.items[0]];
-        qp.show();
-        const selection = await Gui.resolveQuickPick(qp);
-        qp.hide();
-        return selection;
-    }
-
     private static async handleChangeForAllTrees(node: IZoweTreeNode): Promise<boolean> {
-        const selection = await this.promptChangeForAllTrees(node);
+        const selection = await this.promptChangeForAllTrees(node.getLabel().toString(), false);
         if (!selection) {
             return;
         }
