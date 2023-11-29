@@ -10,6 +10,7 @@
  */
 
 import { createTreeView } from "../../../__mocks__/mockCreators/shared";
+import { DS_SESSION_CONTEXT, JOBS_SESSION_CONTEXT, USS_SESSION_CONTEXT, VALIDATE_SUFFIX } from "../../../src/globals";
 import { TreeProviders } from "../../../src/shared/TreeProviders";
 
 describe("TreeProvider Unit Tests - Function getters", () => {
@@ -45,10 +46,26 @@ describe("TreeProvider Unit Tests - Function getters", () => {
 describe("TreeProvider Unit Tests - Function sessionIsPresentInOtherTrees", () => {
     it("should return true if session is present in another tree", async () => {
         await TreeProviders.initializeProviders({} as any, {
-            ds: () => ({ mSessionNodes: [{ getLabel: () => "test1" }, { getLabel: () => "test2" }] } as any),
-            uss: () => ({ mSessionNodes: [{ getLabel: () => "test3" }, { getLabel: () => "test4" }] } as any),
-            job: () => ({ mSessionNodes: [{ getLabel: () => "test5" }, { getLabel: () => "test1" }] } as any),
+            ds: (): any => ({ mSessionNodes: [{ getLabel: () => "test1" }, { getLabel: () => "test2" }] } as any),
+            uss: (): any => ({ mSessionNodes: [{ getLabel: () => "test3" }, { getLabel: () => "test4" }] } as any),
+            job: (): any => ({ mSessionNodes: [{ getLabel: () => "test5" }, { getLabel: () => "test1" }] } as any),
         });
         expect(TreeProviders.sessionIsPresentInOtherTrees("test1")).toEqual(true);
+    });
+});
+
+describe("TreeProvider Unit Tests - Function contextValueExistsAcrossTrees", () => {
+    it("should return true if the context value passed in exists across other trees", () => {
+        jest.spyOn(TreeProviders, "getSessionForAllTrees").mockReturnValue([
+            { getLabel: () => "test1", contextValue: DS_SESSION_CONTEXT + VALIDATE_SUFFIX } as any,
+            { getLabel: () => "test1", contextValue: USS_SESSION_CONTEXT + VALIDATE_SUFFIX } as any,
+            { getLabel: () => "test1", contextValue: JOBS_SESSION_CONTEXT + VALIDATE_SUFFIX } as any,
+        ]);
+        expect(
+            TreeProviders.contextValueExistsAcrossTrees(
+                { getLabel: () => "test1", contextValue: DS_SESSION_CONTEXT + VALIDATE_SUFFIX } as any,
+                VALIDATE_SUFFIX
+            )
+        ).toEqual(true);
     });
 });

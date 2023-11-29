@@ -9,8 +9,6 @@
   "ProfileManagement.getPromptChangeForAllTreesOptions.currentDesc": "Apply to current tree selected",
   "ProfileManagement.promptChangeForAllTrees.howToChange": "Do you wish to apply this for all trees?",
   "ProfileManagement.handleHideProfiles.cancelled": "Operation Cancelled",
-  "ProfileManagement.handleEnableProfileValidation.cancelled": "Operation Cancelled",
-  "ProfileManagement.handleDisableProfileValidation.cancelled": "Operation Cancelled",
   "addBasicAuthQpItem.addCredentials.qpLabel": "$(plus) Add Credentials",
   "addBasicAuthQpItem.addCredentials.qpDetail": "Add username and password for basic authentication",
   "updateBasicAuthQpItem.updateCredentials.qpLabel": "$(refresh) Update Credentials",

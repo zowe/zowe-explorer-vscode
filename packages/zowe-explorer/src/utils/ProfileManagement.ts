@@ -309,33 +309,13 @@ export class ProfileManagement {
     }
 
     private static async handleEnableProfileValidation(node: IZoweTreeNode): Promise<void> {
-        let shouldHideFromAllTrees: boolean | undefined;
-        if (TreeProviders.contextValueExistsAcrossTrees(node, globals.NO_VALIDATE_SUFFIX)) {
-            shouldHideFromAllTrees = await this.handleChangeForAllTrees(node);
-        } else {
-            shouldHideFromAllTrees = false;
-        }
-        if (shouldHideFromAllTrees === undefined) {
-            Gui.infoMessage(localize("ProfileManagement.handleEnableProfileValidation.cancelled", "Operation Cancelled"));
-            return;
-        }
         const type: string = getSessionType(node);
-        return vscode.commands.executeCommand(`zowe.${type}.enableValidation`, node, shouldHideFromAllTrees);
+        return vscode.commands.executeCommand(`zowe.${type}.enableValidation`, node);
     }
 
     private static async handleDisableProfileValidation(node: IZoweTreeNode): Promise<void> {
-        let shouldHideFromAllTrees: boolean | undefined;
-        if (TreeProviders.contextValueExistsAcrossTrees(node, globals.VALIDATE_SUFFIX)) {
-            shouldHideFromAllTrees = await this.handleChangeForAllTrees(node);
-        } else {
-            shouldHideFromAllTrees = false;
-        }
-        if (shouldHideFromAllTrees === undefined) {
-            Gui.infoMessage(localize("ProfileManagement.handleDisableProfileValidation.cancelled", "Operation Cancelled"));
-            return;
-        }
         const type: string = getSessionType(node);
-        return vscode.commands.executeCommand(`zowe.${type}.disableValidation`, node, shouldHideFromAllTrees);
+        return vscode.commands.executeCommand(`zowe.${type}.disableValidation`, node);
     }
 
     private static isProfileRegisteredWithTree(tree: globals.Trees, profile: imperative.IProfileLoaded): boolean {

@@ -1900,24 +1900,18 @@ describe("Profiles Unit Tests - function disableValidation", () => {
 
     it("should disable validation for the profile on all trees", async () => {
         const globalMocks = await createGlobalMocks();
-        const disableValidationContextForAllTreesSpy = jest.spyOn(Profiles.getInstance(), "disableValidtionContextForAllTrees");
-        jest.spyOn(TreeProviders, "getSessionForAllTrees").mockReturnValue([
-            createMockNode("test2", globals.DS_SESSION_CONTEXT),
-            globalMocks.testNode,
-        ]);
+        jest.spyOn(TreeProviders, "getSessionForAllTrees").mockReturnValue([globalMocks.testNode]);
         expect(globalMocks.testNode.contextValue).toEqual(globals.DS_SESSION_CONTEXT);
-        expect(Profiles.getInstance().disableValidation(globalMocks.testNode, true)).toEqual(globalMocks.testNode);
-        expect(disableValidationContextForAllTreesSpy).toBeCalledTimes(1);
+        expect(Profiles.getInstance().disableValidation(globalMocks.testNode)).toEqual(globalMocks.testNode);
         expect(globalMocks.testNode.contextValue).toEqual(globals.DS_SESSION_CONTEXT + globals.VALIDATE_SUFFIX);
     });
 
     it("should disable validation for the profile on the current tree", async () => {
         const globalMocks = await createGlobalMocks();
-        const disableValidationContextForAllTreesSpy = jest.spyOn(Profiles.getInstance(), "disableValidtionContextForAllTrees");
+        jest.spyOn(TreeProviders, "getSessionForAllTrees").mockReturnValue([globalMocks.testNode]);
         const disableValidationContextSpy = jest.spyOn(Profiles.getInstance(), "disableValidationContext");
         expect(globalMocks.testNode.contextValue).toEqual(globals.DS_SESSION_CONTEXT);
-        expect(Profiles.getInstance().disableValidation(globalMocks.testNode, false)).toEqual(globalMocks.testNode);
-        expect(disableValidationContextForAllTreesSpy).toBeCalledTimes(0);
+        expect(Profiles.getInstance().disableValidation(globalMocks.testNode)).toEqual(globalMocks.testNode);
         expect(disableValidationContextSpy).toBeCalledTimes(1);
         expect(globalMocks.testNode.contextValue).toEqual(globals.DS_SESSION_CONTEXT + globals.VALIDATE_SUFFIX);
     });
@@ -1932,24 +1926,21 @@ describe("Profiles Unit Tests - function enableValidation", () => {
 
     it("should enable validation for the profile on all trees", async () => {
         const globalMocks = await createGlobalMocks();
-        const enableValidationContextForAllTreesSpy = jest.spyOn(Profiles.getInstance(), "enableValidationContextForAllTrees");
         jest.spyOn(TreeProviders, "getSessionForAllTrees").mockReturnValue([
             createMockNode("test2", globals.DS_SESSION_CONTEXT),
             globalMocks.testNode,
         ]);
         expect(globalMocks.testNode.contextValue).toEqual(globals.DS_SESSION_CONTEXT);
-        expect(Profiles.getInstance().enableValidation(globalMocks.testNode, true)).toEqual(globalMocks.testNode);
-        expect(enableValidationContextForAllTreesSpy).toBeCalledTimes(1);
+        expect(Profiles.getInstance().enableValidation(globalMocks.testNode)).toEqual(globalMocks.testNode);
         expect(globalMocks.testNode.contextValue).toEqual(globals.DS_SESSION_CONTEXT + globals.VALIDATE_SUFFIX);
     });
 
     it("should enable validation for the profile on the current tree", async () => {
         const globalMocks = await createGlobalMocks();
-        const enableValidationContextForAllTreesSpy = jest.spyOn(Profiles.getInstance(), "enableValidationContextForAllTrees");
         const enableValidationContextSpy = jest.spyOn(Profiles.getInstance(), "enableValidationContext");
+        jest.spyOn(TreeProviders, "getSessionForAllTrees").mockReturnValue([globalMocks.testNode]);
         expect(globalMocks.testNode.contextValue).toEqual(globals.DS_SESSION_CONTEXT);
-        expect(Profiles.getInstance().enableValidation(globalMocks.testNode, false)).toEqual(globalMocks.testNode);
-        expect(enableValidationContextForAllTreesSpy).toBeCalledTimes(0);
+        expect(Profiles.getInstance().enableValidation(globalMocks.testNode)).toEqual(globalMocks.testNode);
         expect(enableValidationContextSpy).toBeCalledTimes(1);
         expect(globalMocks.testNode.contextValue).toEqual(globals.DS_SESSION_CONTEXT + globals.VALIDATE_SUFFIX);
     });

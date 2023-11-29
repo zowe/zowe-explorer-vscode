@@ -217,19 +217,14 @@ export async function uploadContent(
     etagToUpload?: string,
     returnEtag?: boolean
 ): Promise<IZosFilesResponse> {
+    const uploadOptions: IUploadOptions = {
+        etag: etagToUpload,
+        returnEtag: true,
+        encoding: profile.profile?.encoding,
+        responseTimeout: profile.profile?.responseTimeout,
+    };
     if (isZoweDatasetTreeNode(node)) {
-        // Upload without passing the etag to force upload
-        const uploadOptions: IUploadOptions = {
-            returnEtag: true,
-        };
-        const prof = node.getProfile();
-        if (prof.profile.encoding) {
-            uploadOptions.encoding = prof.profile.encoding;
-        }
-        return ZoweExplorerApiRegister.getMvsApi(prof).putContents(doc.fileName, remotePath, {
-            responseTimeout: prof.profile?.responseTimeout,
-            ...uploadOptions,
-        });
+        return ZoweExplorerApiRegister.getMvsApi(profile).putContents(doc.fileName, remotePath, uploadOptions);
     } else {
         // if new api method exists, use it
         if (ZoweExplorerApiRegister.getUssApi(profile).putContent) {
@@ -238,16 +233,12 @@ export async function uploadContent(
                 statusMessage: localize("uploadContent.putContents", "Uploading USS file"),
                 stageName: 0, // TaskStage.IN_PROGRESS - https://github.com/kulshekhar/ts-jest/issues/281
             };
-            const options: IUploadOptions = {
+            const result = ZoweExplorerApiRegister.getUssApi(profile).putContent(doc.fileName, remotePath, {
                 binary,
                 localEncoding: null,
-                etag: etagToUpload,
-                returnEtag,
-                encoding: profile.profile?.encoding,
                 task,
-                responseTimeout: profile.profile?.responseTimeout,
-            };
-            const result = ZoweExplorerApiRegister.getUssApi(profile).putContent(doc.fileName, remotePath, options);
+                ...uploadOptions,
+            });
             return result;
         } else {
             return ZoweExplorerApiRegister.getUssApi(profile).putContents(doc.fileName, remotePath, binary, null, etagToUpload, returnEtag);
@@ -297,8 +288,9 @@ export function willForceUpload(
                 );
                 if (uploadResponse.success) {
                     Gui.showMessage(uploadResponse.commandResponse);
-                    if (node && uploadResponse?.apiResponse[0]?.etag) {
-                        node.setEtag(uploadResponse.apiResponse[0].etag);
+                    if (node) {
+                        // Upload API returns a singleton array for data sets and an object for USS files
+                        node.setEtag(uploadResponse.apiResponse[0]?.etag ?? uploadResponse.apiResponse.etag);
                     }
                 } else {
                     await markDocumentUnsaved(doc);

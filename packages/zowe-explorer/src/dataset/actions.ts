@@ -25,7 +25,7 @@ import {
     JobSubmitDialogOpts,
     JOB_SUBMIT_DIALOG_OPTS,
     getDefaultUri,
-    compareFileContent,
+    uploadContent,
 } from "../shared/utils";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { Profiles } from "../Profiles";
@@ -996,7 +996,7 @@ export async function submitJcl(datasetProvider: api.IZoweTree<api.IZoweDatasetT
 
     // prompts for job submit confirmation when submitting local JCL from editor/palette
     // no node passed in, ownsJob is true because local file is always owned by userID, passes in local file name
-    if (!(await this.confirmJobSubmission(null, true, doc.fileName))) {
+    if (!(await confirmJobSubmission(doc.fileName, true))) {
         return;
     }
 
@@ -1063,18 +1063,16 @@ export async function submitJcl(datasetProvider: api.IZoweTree<api.IZoweDatasetT
 /**
  * Shows a confirmation dialog (if needed) when submitting a job.
  *
- * @param node The node/member that is being submitted
+ * @param nodeOrFileName The node/member that is being submitted, or the filename to submit
  * @param ownsJob Whether the current user profile owns this job
- * @param fileName When submitting local JCL, use the document file name to submit
  * @returns Whether the job submission should continue.
  */
-export async function confirmJobSubmission(node: api.IZoweTreeNode, ownsJob: boolean, fileName?: string): Promise<boolean> {
+export async function confirmJobSubmission(nodeOrFileName: api.IZoweTreeNode | string, ownsJob: boolean): Promise<boolean> {
     ZoweLogger.trace("dataset.actions.confirmJobSubmission called.");
 
-    const showConfirmationDialog = async (): Promise<boolean> => {
-        const jclName =
-            node == null && fileName !== null ? fileName.toString().substring(fileName.lastIndexOf("\\") + 1) : node.getLabel().toString();
+    const jclName = typeof nodeOrFileName === "string" ? path.basename(nodeOrFileName) : nodeOrFileName.getLabel().toString();
 
+    const showConfirmationDialog = async (): Promise<boolean> => {
         const selection = await api.Gui.warningMessage(
             localize("confirmJobSubmission.confirm", "Are you sure you want to submit the following job?\n\n{0}", jclName),
             { items: [{ title: "Submit" }], vsCodeOpts: { modal: true } }
@@ -1589,7 +1587,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
     const ending = doc.fileName.substring(start);
     const sesName = ending.substring(0, ending.indexOf(path.sep));
     const profile = Profiles.getInstance().loadNamedProfile(sesName);
-    const fileLabel = doc.fileName.split("/").slice(-1)[0];
+    const fileLabel = path.basename(doc.fileName);
     const dataSetName = fileLabel.substring(0, fileLabel.indexOf("("));
     const memberName = fileLabel.substring(fileLabel.indexOf("(") + 1, fileLabel.indexOf(")"));
     if (!profile) {
@@ -1664,13 +1662,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
                 title: localize("saveFile.progress.title", "Saving data set..."),
             },
             () => {
-                if (prof.profile?.encoding) {
-                    uploadOptions.encoding = prof.profile.encoding;
-                }
-                return ZoweExplorerApiRegister.getMvsApi(prof).putContents(doc.fileName, label, {
-                    ...uploadOptions,
-                    responseTimeout: prof.profile?.responseTimeout,
-                });
+                return uploadContent(node, doc, label, prof, null, uploadOptions.etag, uploadOptions.returnEtag);
             }
         );
         if (uploadResponse.success) {
@@ -1681,7 +1673,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
                 setFileSaved(true);
             }
         } else if (!uploadResponse.success && uploadResponse.commandResponse.includes("Rest API failure with HTTP(S) status 412")) {
-            resolveFileConflict(node, profile, doc, fileLabel, label);
+            resolveFileConflict(node, prof, doc, fileLabel, label);
         } else {
             await markDocumentUnsaved(doc);
             api.Gui.errorMessage(uploadResponse.commandResponse);
