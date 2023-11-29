@@ -12,7 +12,7 @@
 import * as vscode from "vscode";
 import * as globals from "../globals";
 import { IJob, imperative } from "@zowe/cli";
-import { Gui, ValidProfileEnum, IZoweTree, IZoweJobTreeNode, PersistenceSchemaEnum, NodeInteraction } from "@zowe/zowe-explorer-api";
+import { Gui, ValidProfileEnum, IZoweTree, IZoweTreeNode, IZoweJobTreeNode, PersistenceSchemaEnum, NodeInteraction } from "@zowe/zowe-explorer-api";
 import { FilterItem, errorHandling } from "../utils/ProfilesUtils";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
@@ -28,7 +28,6 @@ import SpoolProvider, { encodeJobFile } from "../SpoolProvider";
 import { Poller } from "@zowe/zowe-explorer-api/src/utils";
 import { PollDecorator } from "../utils/DecorationProviders";
 import { TreeViewUtils } from "../utils/TreeViewUtils";
-import { IZoweTreeNode } from "@zowe/zowe-explorer-api";
 
 // Set up localization
 nls.config({

@@ -15,7 +15,7 @@ import * as path from "path";
 import { imperative } from "@zowe/cli";
 import { FilterItem, FilterDescriptor, errorHandling, syncSessionNode } from "../utils/ProfilesUtils";
 import { sortTreeItems, getAppName, checkIfChildPath } from "../shared/utils";
-import { Gui, IZoweTree, IZoweUSSTreeNode, NodeInteraction, ValidProfileEnum, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweTree, IZoweTreeNode, IZoweUSSTreeNode, NodeInteraction, ValidProfileEnum, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { ZoweUSSNode } from "./ZoweUSSNode";
@@ -26,7 +26,6 @@ import * as contextually from "../shared/context";
 import * as nls from "vscode-nls";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { TreeViewUtils } from "../utils/TreeViewUtils";
-import { IZoweTreeNode } from "@zowe/zowe-explorer-api";
 
 // Set up localization
 nls.config({
