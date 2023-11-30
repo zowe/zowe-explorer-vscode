@@ -25,7 +25,6 @@ import { closeOpenedTextFile } from "../utils/workspace";
 import * as nls from "vscode-nls";
 import { UssFileTree, UssFileType, UssFileUtils } from "./FileStructure";
 import { ZoweLogger } from "../utils/LoggerUtils";
-import { TreeProviders } from "../shared/TreeProviders";
 
 // Set up localization
 nls.config({

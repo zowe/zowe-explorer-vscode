@@ -18,7 +18,6 @@ import { getIconByNode } from "../../src/generators/icons";
 import { removeNodeFromArray } from "./shared";
 import { USSTree } from "../../src/uss/USSTree";
 import { PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
-import { TreeProviders } from "../../src/shared/TreeProviders";
 
 export function createUSSTree(favoriteNodes: ZoweUSSNode[], sessionNodes: ZoweUSSNode[], treeView?: vscode.TreeView<ZoweTreeProvider>): USSTree {
     const newTree = new USSTree();

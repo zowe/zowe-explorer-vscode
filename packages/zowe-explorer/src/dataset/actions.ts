@@ -42,7 +42,7 @@ import { ProfileManagement } from "../utils/ProfileManagement";
 // Set up localization
 import * as nls from "vscode-nls";
 import { resolveFileConflict } from "../shared/actions";
-import { TreeProviders } from "../shared/TreeProviders";
+
 nls.config({
     messageFormat: nls.MessageFormat.bundle,
     bundleFormat: nls.BundleFormat.standalone,
