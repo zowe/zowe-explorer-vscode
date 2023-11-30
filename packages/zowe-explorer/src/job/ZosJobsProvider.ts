@@ -1189,8 +1189,9 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
 
         const isSession = contextually.isSession(job);
         const userDismissed = filterMethod < 0;
-        if (userDismissed || selection === "$(clear-all) Clear filter for profile") {
-            if (selection === "$(clear-all) Clear filter for profile") {
+        const clearFilterOpt = localize("filter.clearForProfile", "$(clear-all) Clear filter for profile");
+        if (userDismissed || selection === clearFilterOpt) {
+            if (selection === clearFilterOpt) {
                 this.updateFilterForJob(job, null, isSession);
                 Gui.setStatusBarMessage(localize("filter.cleared", "$(check) Filter cleared for {0}", job.label as string), globals.MS_PER_SEC * 4);
             }
@@ -1202,7 +1203,8 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         this.nodeDataChanged(job);
 
         job.description = "";
-        const actual_jobs: IZoweJobTreeNode[] = job["actualJobs"];
+        // const actual_jobs: IZoweJobTreeNode[] = job["actualJobs"];
+        const actual_jobs: IZoweJobTreeNode[] = job["children"];
         const inputBox = await vscode.window.createInputBox();
         inputBox.placeholder = localize("filterJobs.prompt.message", "Enter local filter...");
         inputBox.onDidChangeValue((query) => {

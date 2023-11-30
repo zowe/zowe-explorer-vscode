@@ -39,7 +39,7 @@ export const JOB_SORT_KEYS: Record<JobSortOpts, keyof (IJob & { "exec-submitted"
 
 export const JOB_FILTER_OPTS = [
     localize("filterJobs.quickpick.message", "Go to Local Filtering"),
-    localize("filterJobs.clearProfileFilter", "$(clear-all) Clear filter for profile"),
+    localize("filter.clearForProfile", "$(clear-all) Clear filter for profile"),
 ];
 
 export async function resolveQuickPickHelper(quickpick): Promise<FilterItem | undefined> {

@@ -171,7 +171,6 @@ async function createGlobalMocks() {
         configurable: true,
     });
 
-    Object.defineProperty(Gui, "infoMessage", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "createTreeView", { value: globalMocks.createTreeView, configurable: true });
     Object.defineProperty(vscode.window, "showQuickPick", { value: globalMocks.mockShowQuickPick, configurable: true });
     Object.defineProperty(vscode, "ConfigurationTarget", { value: globalMocks.enums, configurable: true });
@@ -1064,8 +1063,9 @@ describe("ZosJobsProvider Unit Test - Filter Jobs", () => {
     it("To show showInformationMessage", async () => {
         const testTree = new ZosJobsProvider();
         node1.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
+        const infoMessageSpy = jest.spyOn(Gui, "infoMessage");
         await testTree.filterJobsDialog(node1);
-        expect(mocked(Gui.infoMessage)).toHaveBeenCalled();
+        expect(infoMessageSpy).toHaveBeenCalled();
     });
 
     it("To filter jobs based on a combination of JobName, JobId and Return code", async () => {

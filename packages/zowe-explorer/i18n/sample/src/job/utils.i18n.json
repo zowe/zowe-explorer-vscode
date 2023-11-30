@@ -5,5 +5,5 @@
   "jobs.sortByReturnCode": "$(symbol-numeric) Return Code",
   "setSortDirection": "$(fold) Sort Direction",
   "filterJobs.quickpick.message": "Go to Local Filtering",
-  "filterJobs.clearProfileFilter": "$(clear-all) Clear filter for profile"
+  "filter.clearForProfile": "$(clear-all) Clear filter for profile"
 }

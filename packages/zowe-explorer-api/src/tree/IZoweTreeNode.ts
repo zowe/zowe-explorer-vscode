@@ -346,6 +346,14 @@ export interface IZoweJobTreeNode extends IZoweTreeNode {
      */
     filtered?: boolean;
     /**
+     * Filter method for this job's children
+     */
+    filter: string;
+    /**
+     * Returns the actual jobs children over the filtered child nodes
+     */
+    actualJobs?: IZoweJobTreeNode[];
+    /**
      * Retrieves child nodes of this IZoweJobTreeNode
      *
      * @returns {Promise<IZoweJobTreeNode[]>}
