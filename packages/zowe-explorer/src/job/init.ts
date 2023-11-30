@@ -18,7 +18,7 @@ import { Profiles } from "../Profiles";
 import { ZosJobsProvider, createJobsTree } from "./ZosJobsProvider";
 import * as contextuals from "../shared/context";
 import { Job } from "./ZoweJobNode";
-import { getSelectedNodeList } from "../shared/utils";
+import { getSelectedNodeList, removeFromOpenFiles } from "../shared/utils";
 import { initSubscribers } from "../shared/init";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { TreeProviders } from "../shared/TreeProviders";
@@ -175,7 +175,7 @@ export async function initJobsProvider(context: vscode.ExtensionContext): Promis
     context.subscriptions.push(
         vscode.workspace.onDidCloseTextDocument((doc) => {
             if (doc.uri.scheme === "zosspool") {
-                TreeProviders.job.openFiles[doc.uri.path] = null;
+                removeFromOpenFiles(TreeProviders.job, doc.uri.path);
             }
         })
     );

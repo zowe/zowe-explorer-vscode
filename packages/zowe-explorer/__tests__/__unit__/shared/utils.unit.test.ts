@@ -610,3 +610,18 @@ describe("Shared utils unit tests - function sortTreeItems", () => {
         ]);
     });
 });
+
+describe("Shared utils unit tests - function removeFromOpenFiles", () => {
+    const someTree = { openFiles: {} };
+
+    it("sets a file entry to null in the openFiles record", () => {
+        sharedUtils.removeFromOpenFiles(someTree as any, "/a/doc/path");
+        expect(someTree.openFiles["/a/doc/path"]).toBeNull();
+    });
+
+    it("does nothing if openFiles is not defined", () => {
+        someTree.openFiles = undefined as any;
+        sharedUtils.removeFromOpenFiles(someTree as any, "/a/doc/path");
+        expect(someTree.openFiles).toBeUndefined();
+    });
+});
