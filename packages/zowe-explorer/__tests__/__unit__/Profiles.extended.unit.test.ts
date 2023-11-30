@@ -1641,7 +1641,12 @@ describe("Profiles Unit Tests - function ssoLogout", () => {
             globalMocks.testSession,
             globalMocks.testProfile
         );
-        testNode.profile.profile.password = undefined;
+        // testNode.profile.profile.password = undefined;
+        delete testNode.profile.profile.password;
+        // Note: The above needs to be deleted instead of set to undefined.
+        //      Otherwise the `ProfilesUtils.isProfileUsingBasicAuth` reports that we are using basic auth
+        //      because "password" in testNode.profile.profile is "true" even though it's undefined
+
         testNode.profile.profile.user = "fake";
         Object.defineProperty(Profiles.getInstance(), "allProfiles", {
             value: [
