@@ -146,12 +146,14 @@ export const DATA_SET_PROPERTIES = [
         key: `avgblk`,
         label: `Average Block Length`,
         value: null,
+        type: `number`,
         placeHolder: localize("createFile.attribute.avgblk", `Enter the average block length (if allocation unit = BLK)`),
     },
     {
         key: `blksize`,
         label: `Block Size`,
         value: null,
+        type: `number`,
         placeHolder: localize("createFile.attribute.blksize", `Enter a block size`),
     },
     {
@@ -170,6 +172,7 @@ export const DATA_SET_PROPERTIES = [
         key: `dirblk`,
         label: `Directory Blocks`,
         value: null,
+        type: `number`,
         placeHolder: localize("createFile.attribute.dirblk", `Enter the number of directory blocks`),
     },
     {
@@ -200,6 +203,7 @@ export const DATA_SET_PROPERTIES = [
         key: `primary`,
         label: `Primary Space`,
         value: null,
+        type: `number`,
         placeHolder: localize("createFile.attribute.primary", `Enter the primary space allocation`),
     },
     {
@@ -212,12 +216,14 @@ export const DATA_SET_PROPERTIES = [
         key: `lrecl`,
         label: `Record Length`,
         value: null,
+        type: `number`,
         placeHolder: localize("createFile.attribute.lrecl", `Enter the logical record length`),
     },
     {
         key: `secondary`,
         label: `Secondary Space`,
         value: null,
+        type: `number`,
         placeHolder: localize("createFile.attribute.secondary", `Enter the secondary space allocation`),
     },
     {
