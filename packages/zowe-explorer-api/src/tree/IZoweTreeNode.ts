@@ -345,7 +345,13 @@ export interface IZoweJobTreeNode extends IZoweTreeNode {
      * Returns whether the job node is a filtered search
      */
     filtered?: boolean;
+    /**
+     * Filter method for this job search
+     */
     filter?: string;
+    /**
+     * Array of original filter search results job's children
+     */
     actualJobs?: IZoweTreeNode[];
     /**
      * Retrieves child nodes of this IZoweJobTreeNode
