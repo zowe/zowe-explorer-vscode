@@ -12,6 +12,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
+- Fixed dataset allocation issue when secondary space (or other numeric values that did not exists in the dataset-template) where specified [#2591](https://github.com/zowe/vscode-extension-for-zowe/issues/2591)
+
 ## `2.12.2`
 
 ### Bug fixes
