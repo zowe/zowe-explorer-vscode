@@ -14,6 +14,7 @@ import { Builder, By, Key, until } from "selenium-webdriver";
 import * as firefox from "selenium-webdriver/firefox";
 import { TheiaLocator, DatasetsLocators, UssLocators, JobsLocators } from "./Locators";
 
+const SHORTSLEEPTIME = 2000;
 const WAITTIME = 30000;
 let driverFirefox: any;
 
@@ -72,16 +73,20 @@ export async function addProfileDetailsInUss(profileName: string) {
     const ussProfileName = await driverFirefox.findElement(By.xpath(UssLocators.emptyInputBoxXpath));
     ussProfileName.sendKeys(profileName);
     ussProfileName.sendKeys(Key.ENTER);
-    ussProfileName.sendKeys("No");
-    ussProfileName.sendKeys(Key.ENTER);
+    await driverFirefox.sleep(SHORTSLEEPTIME);
+    const addToAllTrees = await driverFirefox.findElement(By.xpath(JobsLocators.emptyInputBoxXpath));
+    addToAllTrees.sendKeys("No");
+    addToAllTrees.sendKeys(Key.ENTER);
 }
 
 export async function addProfileDetailsInJobs(profileName: string) {
     const jobsProfileName = await driverFirefox.findElement(By.xpath(JobsLocators.emptyInputBoxXpath));
     jobsProfileName.sendKeys(profileName);
     jobsProfileName.sendKeys(Key.ENTER);
-    jobsProfileName.sendKeys("No");
-    jobsProfileName.sendKeys(Key.ENTER);
+    await driverFirefox.sleep(SHORTSLEEPTIME);
+    const addToAllTrees = await driverFirefox.findElement(By.xpath(JobsLocators.emptyInputBoxXpath));
+    addToAllTrees.sendKeys("No");
+    addToAllTrees.sendKeys(Key.ENTER);
 }
 
 export async function getUssDefaultProfilename() {
