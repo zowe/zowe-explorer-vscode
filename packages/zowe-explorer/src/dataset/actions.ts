@@ -631,7 +631,7 @@ export async function createFile(node: api.IZoweDatasetTreeNode, datasetProvider
             if (property.key === `dsName`) {
                 dsName = property.value;
             } else {
-                if (typeof propertiesFromDsType[property.key] === "number") {
+                if (typeof propertiesFromDsType[property.key] === "number" || property.type === "number") {
                     dsPropsForAPI[property.key] = Number(property.value);
                 } else {
                     dsPropsForAPI[property.key] = property.value;
