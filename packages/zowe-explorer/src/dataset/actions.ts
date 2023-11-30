@@ -26,6 +26,7 @@ import {
     JOB_SUBMIT_DIALOG_OPTS,
     getDefaultUri,
     uploadContent,
+    updateOpenFiles,
 } from "../shared/utils";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { Profiles } from "../Profiles";
@@ -525,9 +526,7 @@ export async function openPS(
                 node.setEtag(response.apiResponse.etag);
             }
             statusMsg.dispose();
-            if (datasetProvider.openFiles) {
-                datasetProvider.openFiles[documentFilePath] = this;
-            }
+            updateOpenFiles(datasetProvider, documentFilePath, this);
             const document = await vscode.workspace.openTextDocument(getDocumentFilePath(label, node));
             await api.Gui.showTextDocument(document, { preview: node.wasDoubleClicked != null ? !node.wasDoubleClicked : shouldPreview });
             // discard ongoing action to allow new requests on this node

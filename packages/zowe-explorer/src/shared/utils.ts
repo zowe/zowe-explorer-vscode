@@ -414,8 +414,8 @@ export async function compareFileContent(
     }
 }
 
-export function removeFromOpenFiles<T>(treeProvider: IZoweTree<T>, docPath: string): void {
+export function updateOpenFiles<T extends IZoweTreeNode>(treeProvider: IZoweTree<T>, docPath: string, value: T | null): void {
     if (treeProvider.openFiles) {
-        treeProvider.openFiles[docPath] = null;
+        treeProvider.openFiles[docPath] = value;
     }
 }

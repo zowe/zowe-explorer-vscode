@@ -19,7 +19,7 @@ import { Job, Spool } from "./ZoweJobNode";
 import * as nls from "vscode-nls";
 import SpoolProvider, { encodeJobFile, getSpoolFiles, matchSpool } from "../SpoolProvider";
 import { ZoweLogger } from "../utils/LoggerUtils";
-import { SORT_DIRS, getDefaultUri } from "../shared/utils";
+import { SORT_DIRS, getDefaultUri, updateOpenFiles } from "../shared/utils";
 import { ZosJobsProvider } from "./ZosJobsProvider";
 import { JOB_SORT_OPTS } from "./utils";
 import * as globals from "../globals";
@@ -128,9 +128,7 @@ export async function getSpoolContent(session: string, spoolNode: Spool): Promis
             // Fetch any changes to the spool file if it exists in the SpoolProvider
             await spoolFile.fetchContent();
         }
-        if (TreeProviders.job.openFiles) {
-            TreeProviders.job.openFiles[uri.path] = spoolNode;
-        }
+        updateOpenFiles(TreeProviders.job, uri.path, spoolNode);
         await Gui.showTextDocument(uri, { preview: false });
     } catch (error) {
         const isTextDocActive =

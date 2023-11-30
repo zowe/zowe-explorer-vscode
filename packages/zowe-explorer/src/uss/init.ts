@@ -16,7 +16,7 @@ import * as refreshActions from "../shared/refresh";
 import { IZoweUSSTreeNode, IZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import * as contextuals from "../shared/context";
-import { getSelectedNodeList, removeFromOpenFiles } from "../shared/utils";
+import { getSelectedNodeList, updateOpenFiles } from "../shared/utils";
 import { USSTree, createUSSTree } from "./USSTree";
 import { initSubscribers } from "../shared/init";
 import { ZoweLogger } from "../utils/LoggerUtils";
@@ -200,7 +200,7 @@ export async function initUSSProvider(context: vscode.ExtensionContext): Promise
     context.subscriptions.push(
         vscode.workspace.onDidCloseTextDocument((doc) => {
             if (doc.uri.fsPath.includes(globals.USS_DIR)) {
-                removeFromOpenFiles(TreeProviders.uss, doc.uri.fsPath);
+                updateOpenFiles(TreeProviders.uss, doc.uri.fsPath, null);
             }
         })
     );
