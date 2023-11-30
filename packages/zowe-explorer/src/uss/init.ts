@@ -199,7 +199,7 @@ export async function initUSSProvider(context: vscode.ExtensionContext): Promise
     );
     context.subscriptions.push(
         vscode.workspace.onDidCloseTextDocument((doc) => {
-            if (doc.uri.fsPath.includes(globals.USS_DIR)) {
+            if (TreeProviders.uss.openFiles && doc.uri.fsPath.includes(globals.USS_DIR)) {
                 TreeProviders.uss.openFiles[doc.uri.fsPath] = null;
             }
         })

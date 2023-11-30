@@ -218,7 +218,7 @@ export async function initDatasetProvider(context: vscode.ExtensionContext): Pro
     );
     context.subscriptions.push(
         vscode.workspace.onDidCloseTextDocument((doc) => {
-            if (doc.uri.fsPath.includes(globals.DS_DIR)) {
+            if (TreeProviders.ds.openFiles && doc.uri.fsPath.includes(globals.DS_DIR)) {
                 TreeProviders.ds.openFiles[doc.uri.fsPath] = null;
             }
         })

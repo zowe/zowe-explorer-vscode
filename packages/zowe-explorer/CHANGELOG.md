@@ -13,6 +13,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 ### Bug fixes
 
 - Fixed dataset allocation issue when secondary space (or other numeric values that did not exists in the dataset-template) where specified [#2591](https://github.com/zowe/vscode-extension-for-zowe/issues/2591)
+- Fixed issue where an opened USS file or data set could not be saved once a user changes their search pattern in the Side Bar. [#2597](https://github.com/zowe/vscode-extension-for-zowe/issues/2597)
 
 ## `2.12.2`
 

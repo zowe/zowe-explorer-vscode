@@ -448,7 +448,7 @@ export async function createMember(parent: api.IZoweDatasetTreeNode, datasetProv
 export async function openPS(
     node: api.IZoweDatasetTreeNode,
     previewMember: boolean,
-    datasetProvider?: api.IZoweTree<api.IZoweDatasetTreeNode>
+    datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>
 ): Promise<void> {
     ZoweLogger.trace("dataset.actions.openPS called.");
     if (datasetProvider) {
@@ -525,7 +525,9 @@ export async function openPS(
                 node.setEtag(response.apiResponse.etag);
             }
             statusMsg.dispose();
-            TreeProviders.ds.openFiles[documentFilePath] = this;
+            if (datasetProvider.openFiles) {
+                datasetProvider.openFiles[documentFilePath] = this;
+            }
             const document = await vscode.workspace.openTextDocument(getDocumentFilePath(label, node));
             await api.Gui.showTextDocument(document, { preview: node.wasDoubleClicked != null ? !node.wasDoubleClicked : shouldPreview });
             // discard ongoing action to allow new requests on this node
@@ -1639,16 +1641,17 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
     }
     // Get specific node based on label and parent tree (session / favorites)
     const nodes: api.IZoweNodeType[] = concatChildNodes(sesNode ? [sesNode] : datasetProvider.mSessionNodes);
-    const node: api.IZoweDatasetTreeNode = nodes.find((zNode) => {
-        if (contextually.isDsMember(zNode)) {
-            const zNodeDetails = dsUtils.getProfileAndDataSetName(zNode);
-            return `${zNodeDetails.profileName}(${zNodeDetails.dataSetName})` === `${label}`;
-        } else if (contextually.isDs(zNode) || contextually.isDsSession(zNode)) {
-            return zNode.label.toString().trim() === label;
-        } else {
-            return false;
-        }
-    }) ?? TreeProviders.ds.openFiles[doc.uri.fsPath];
+    const node: api.IZoweDatasetTreeNode =
+        nodes.find((zNode) => {
+            if (contextually.isDsMember(zNode)) {
+                const zNodeDetails = dsUtils.getProfileAndDataSetName(zNode);
+                return `${zNodeDetails.profileName}(${zNodeDetails.dataSetName})` === `${label}`;
+            } else if (contextually.isDs(zNode) || contextually.isDsSession(zNode)) {
+                return zNode.label.toString().trim() === label;
+            } else {
+                return false;
+            }
+        }) ?? datasetProvider.openFiles?.[doc.uri.fsPath];
 
     // define upload options
     const uploadOptions: IUploadOptions = {

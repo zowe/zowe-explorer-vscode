@@ -306,13 +306,14 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
     }
     // Get specific node based on label and parent tree (session / favorites)
     const nodes: IZoweUSSTreeNode[] = concatChildNodes(sesNode ? [sesNode] : ussFileProvider.mSessionNodes);
-    const node: IZoweUSSTreeNode = nodes.find((zNode) => {
-        if (contextually.isText(zNode)) {
-            return zNode.fullPath.trim() === remote;
-        } else {
-            return false;
-        }
-    }) ?? TreeProviders.uss.openFiles[doc.uri.fsPath];
+    const node: IZoweUSSTreeNode =
+        nodes.find((zNode) => {
+            if (contextually.isText(zNode)) {
+                return zNode.fullPath.trim() === remote;
+            } else {
+                return false;
+            }
+        }) ?? ussFileProvider.openFiles?.[doc.uri.fsPath];
 
     // define upload options
     const etagToUpload = node?.getEtag();

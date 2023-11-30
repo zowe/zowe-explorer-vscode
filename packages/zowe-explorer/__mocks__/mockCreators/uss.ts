@@ -18,6 +18,7 @@ import { getIconByNode } from "../../src/generators/icons";
 import { removeNodeFromArray } from "./shared";
 import { USSTree } from "../../src/uss/USSTree";
 import { PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
+import { TreeProviders } from "../../src/shared/TreeProviders";
 
 export function createUSSTree(favoriteNodes: ZoweUSSNode[], sessionNodes: ZoweUSSNode[], treeView?: vscode.TreeView<ZoweTreeProvider>): USSTree {
     const newTree = new USSTree();
@@ -45,6 +46,12 @@ export function createUSSTree(favoriteNodes: ZoweUSSNode[], sessionNodes: ZoweUS
     newTree.setItem = jest.fn();
     newTree.addSearchHistory = jest.fn();
     newTree.getFileHistory = jest.fn();
+
+    TreeProviders.initializeProviders(null as any, {
+        ds: async (context) => null as any,
+        uss: async (context) => newTree,
+        job: async (context) => null as any,
+    });
 
     return newTree;
 }
