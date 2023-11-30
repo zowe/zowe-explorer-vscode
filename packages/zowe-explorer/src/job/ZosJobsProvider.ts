@@ -1203,7 +1203,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         this.nodeDataChanged(job);
 
         job.description = "";
-        const actual_jobs: IZoweJobTreeNode[] = job["children"];
+        const actual_jobs: IZoweJobTreeNode[] = job["actualJobs"];
         const inputBox = await vscode.window.createInputBox();
         inputBox.placeholder = localize("filterJobs.prompt.message", "Enter local filter...");
         inputBox.onDidChangeValue((query) => {
