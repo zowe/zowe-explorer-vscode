@@ -325,8 +325,10 @@ export async function addProfileDetails(profileName: string) {
     await driverChrome.sleep(SHORTSLEEPTIME);
     const responseTimeout = await driverChrome.findElement(By.xpath(DatasetsLocators.emptyInputBoxXpath));
     responseTimeout.sendKeys(Key.ENTER);
-    responseTimeout.sendKeys("No");
-    responseTimeout.sendKeys(Key.ENTER);
+    await driverChrome.sleep(SHORTSLEEPTIME);
+    const addToAllTrees = await driverChrome.findElement(By.xpath(DatasetsLocators.emptyInputBoxXpath));
+    addToAllTrees.sendKeys("No");
+    addToAllTrees.sendKeys(Key.ENTER);
 }
 export async function clickOnDatasetsPanel() {
     await driverChrome.findElement(By.id(DatasetsLocators.datasetsPanelId)).click();
