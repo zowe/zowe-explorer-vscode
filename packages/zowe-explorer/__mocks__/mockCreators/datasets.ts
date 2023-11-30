@@ -96,11 +96,6 @@ export function createDatasetTree(sessionNode: ZoweDatasetNode, treeView: any, f
         return testDatasetTree;
     }
     testDatasetTree.mSessionNodes.push(favoritesNode);
-    TreeProviders.initializeProviders(null as any, {
-        ds: async (context) => testDatasetTree as any,
-        uss: async (context) => null as any,
-        job: async (context) => null as any,
-    });
     return testDatasetTree;
 }
 

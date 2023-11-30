@@ -47,12 +47,6 @@ export function createUSSTree(favoriteNodes: ZoweUSSNode[], sessionNodes: ZoweUS
     newTree.addSearchHistory = jest.fn();
     newTree.getFileHistory = jest.fn();
 
-    TreeProviders.initializeProviders(null as any, {
-        ds: async (context) => null as any,
-        uss: async (context) => newTree,
-        job: async (context) => null as any,
-    });
-
     return newTree;
 }
 

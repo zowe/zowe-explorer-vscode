@@ -279,6 +279,10 @@ export namespace window {
         return Promise.resolve("");
     }
 
+    export function showTextDocument(document: TextDocument, column?: ViewColumn, preserveFocus?: boolean): any {
+        return undefined;
+    }
+
     export function showErrorMessage(message: string, ...items: string[]): undefined {
         return undefined;
     }

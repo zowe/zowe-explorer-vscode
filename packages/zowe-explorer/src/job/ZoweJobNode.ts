@@ -177,7 +177,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
                     spoolNode.command = {
                         command: "zowe.jobs.zosJobsOpenspool",
                         title: "",
-                        arguments: [sessionName, spool, refreshTimestamp],
+                        arguments: [sessionName, spoolNode],
                     };
                     elementChildren[newLabel] = spoolNode;
                 }

@@ -23,6 +23,7 @@ import { SORT_DIRS, getDefaultUri } from "../shared/utils";
 import { ZosJobsProvider } from "./ZosJobsProvider";
 import { JOB_SORT_OPTS } from "./utils";
 import * as globals from "../globals";
+import { TreeProviders } from "../shared/TreeProviders";
 
 // Set up localization
 nls.config({
@@ -108,7 +109,7 @@ export async function downloadSingleSpool(nodes: IZoweJobTreeNode[], binary?: bo
  * @param spool The IJobFile to get the spool content for
  * @param refreshTimestamp The timestamp of the last job node refresh
  */
-export async function getSpoolContent(session: string, spool: zowe.IJobFile, refreshTimestamp: number): Promise<void> {
+export async function getSpoolContent(session: string, spoolNode: Spool): Promise<void> {
     ZoweLogger.trace("job.actions.getSpoolContent called.");
     const profiles = Profiles.getInstance();
     let zosmfProfile: zowe.imperative.IProfileLoaded;
@@ -120,17 +121,21 @@ export async function getSpoolContent(session: string, spool: zowe.IJobFile, ref
     }
 
     const statusMsg = Gui.setStatusBarMessage(localize("jobActions.openSpoolFile", "$(sync~spin) Opening spool file...", this.label as string));
-    const uri = encodeJobFile(session, spool);
+    const uri = encodeJobFile(session, spoolNode.spool);
     try {
         const spoolFile = SpoolProvider.files[uri.path];
         if (spoolFile) {
             // Fetch any changes to the spool file if it exists in the SpoolProvider
             await spoolFile.fetchContent();
         }
+        if (TreeProviders.job.openFiles) {
+            TreeProviders.job.openFiles[uri.path] = spoolNode;
+        }
         await Gui.showTextDocument(uri, { preview: false });
     } catch (error) {
         const isTextDocActive =
-            vscode.window.activeTextEditor && vscode.window.activeTextEditor.document.uri?.path === `${spool.jobname}.${spool.jobid}.${spool.ddname}`;
+            vscode.window.activeTextEditor &&
+            vscode.window.activeTextEditor.document.uri?.path === `${spoolNode.spool.jobname}.${spoolNode.spool.jobid}.${spoolNode.spool.ddname}`;
 
         statusMsg.dispose();
         if (isTextDocActive && String(error.message).includes("Failed to show text document")) {

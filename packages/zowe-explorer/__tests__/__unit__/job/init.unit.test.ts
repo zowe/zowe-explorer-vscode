@@ -58,8 +58,8 @@ describe("Test src/jobs/extension", () => {
         const commands: IJestIt[] = [
             {
                 name: "zowe.jobs.zosJobsOpenspool",
-                parm: [test._, test.value, test._],
-                mock: [{ spy: jest.spyOn(jobActions, "getSpoolContent"), arg: [test._, test.value, test._] }],
+                parm: [test._, test.value],
+                mock: [{ spy: jest.spyOn(jobActions, "getSpoolContent"), arg: [test._, test.value] }],
             },
             {
                 name: "zowe.jobs.deleteJob",

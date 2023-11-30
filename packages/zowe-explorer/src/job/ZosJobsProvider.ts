@@ -84,6 +84,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
     private static readonly persistenceSchema: PersistenceSchemaEnum = PersistenceSchemaEnum.Job;
     private static readonly submitJobQueryLabel = localize("zosJobsProvider.option.submit", "$(check) Submit this query");
     private static readonly chooseJobStatusLabel = "Job Status";
+    public openFiles: Record<string, IZoweJobTreeNode> = {};
 
     public JOB_PROPERTIES = [
         {
