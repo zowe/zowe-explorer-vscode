@@ -83,10 +83,6 @@ export async function addProfileDetailsInJobs(profileName: string) {
     const jobsProfileName = await driverFirefox.findElement(By.xpath(JobsLocators.emptyInputBoxXpath));
     jobsProfileName.sendKeys(profileName);
     jobsProfileName.sendKeys(Key.ENTER);
-    await driverFirefox.sleep(SHORTSLEEPTIME);
-    const addToAllTrees = await driverFirefox.findElement(By.xpath(JobsLocators.emptyInputBoxXpath));
-    addToAllTrees.sendKeys("No");
-    addToAllTrees.sendKeys(Key.ENTER);
 }
 
 export async function getUssDefaultProfilename() {
