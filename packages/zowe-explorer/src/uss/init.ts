@@ -21,6 +21,7 @@ import { USSTree, createUSSTree } from "./USSTree";
 import { initSubscribers } from "../shared/init";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { TreeViewUtils } from "../utils/TreeViewUtils";
+import { TreeProviders } from "../shared/TreeProviders";
 
 export async function initUSSProvider(context: vscode.ExtensionContext): Promise<USSTree> {
     ZoweLogger.trace("init.initUSSProvider called.");
@@ -194,6 +195,13 @@ export async function initUSSProvider(context: vscode.ExtensionContext): Promise
     context.subscriptions.push(
         vscode.workspace.onDidChangeConfiguration(async (e) => {
             await ussFileProvider.onDidChangeConfiguration(e);
+        })
+    );
+    context.subscriptions.push(
+        vscode.workspace.onDidCloseTextDocument((doc) => {
+            if (doc.uri.fsPath.includes(globals.USS_DIR)) {
+                TreeProviders.uss.openFiles[doc.uri.fsPath] = null;
+            }
         })
     );
 

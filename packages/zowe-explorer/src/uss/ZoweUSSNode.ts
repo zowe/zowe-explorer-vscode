@@ -25,6 +25,7 @@ import { closeOpenedTextFile } from "../utils/workspace";
 import * as nls from "vscode-nls";
 import { UssFileTree, UssFileType, UssFileUtils } from "./FileStructure";
 import { ZoweLogger } from "../utils/LoggerUtils";
+import { TreeProviders } from "../shared/TreeProviders";
 
 // Set up localization
 nls.config({
@@ -531,6 +532,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                     ussFileProvider.addFileHistory(`[${this.getProfile().name}]: ${this.fullPath}`);
                     ussFileProvider.getTreeView().reveal(this, { select: true, focus: true, expand: false });
 
+                    TreeProviders.uss.openFiles[documentFilePath] = this;
                     await this.initializeFileOpening(documentFilePath, shouldPreview);
                 }
             } catch (err) {

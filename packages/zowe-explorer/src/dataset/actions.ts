@@ -42,6 +42,7 @@ import { ProfileManagement } from "../utils/ProfileManagement";
 // Set up localization
 import * as nls from "vscode-nls";
 import { resolveFileConflict } from "../shared/actions";
+import { TreeProviders } from "../shared/TreeProviders";
 nls.config({
     messageFormat: nls.MessageFormat.bundle,
     bundleFormat: nls.BundleFormat.standalone,
@@ -524,6 +525,7 @@ export async function openPS(
                 node.setEtag(response.apiResponse.etag);
             }
             statusMsg.dispose();
+            TreeProviders.ds.openFiles[documentFilePath] = this;
             const document = await vscode.workspace.openTextDocument(getDocumentFilePath(label, node));
             await api.Gui.showTextDocument(document, { preview: node.wasDoubleClicked != null ? !node.wasDoubleClicked : shouldPreview });
             // discard ongoing action to allow new requests on this node
@@ -1646,7 +1648,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
         } else {
             return false;
         }
-    });
+    }) ?? TreeProviders.ds.openFiles[doc.uri.fsPath];
 
     // define upload options
     const uploadOptions: IUploadOptions = {
@@ -1668,10 +1670,8 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
         if (uploadResponse.success) {
             api.Gui.setStatusBarMessage(uploadResponse.commandResponse, globals.STATUS_BAR_TIMEOUT_MS);
             // set local etag with the new etag from the updated file on mainframe
-            if (node) {
-                node.setEtag(uploadResponse.apiResponse[0].etag);
-                setFileSaved(true);
-            }
+            node?.setEtag(uploadResponse.apiResponse[0].etag);
+            setFileSaved(true);
         } else if (!uploadResponse.success && uploadResponse.commandResponse.includes("Rest API failure with HTTP(S) status 412")) {
             resolveFileConflict(node, prof, doc, fileLabel, label);
         } else {

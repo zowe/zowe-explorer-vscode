@@ -65,6 +65,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
     public lastOpened: NodeInteraction = {};
     private treeView: vscode.TreeView<IZoweUSSTreeNode>;
     public copying: Promise<unknown>;
+    public openFiles: Record<string, IZoweUSSTreeNode> = {};
 
     public constructor() {
         super(

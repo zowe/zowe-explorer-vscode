@@ -86,6 +86,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
     public lastOpened: NodeInteraction = {};
     // public memberPattern: IZoweDatasetTreeNode[] = [];
     private treeView: vscode.TreeView<IZoweDatasetTreeNode>;
+    public openFiles: Record<string, IZoweDatasetTreeNode> = {};
 
     public constructor() {
         super(
