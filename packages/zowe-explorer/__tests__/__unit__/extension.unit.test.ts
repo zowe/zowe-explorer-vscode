@@ -255,6 +255,7 @@ async function createGlobalMocks() {
             "zowe.uss.deleteProfile",
             "zowe.jobs.deleteProfile",
             "zowe.issueTsoCmd",
+            "zowe.issueUnixCmd",
             "zowe.issueMvsCmd",
             "zowe.selectForCompare",
             "zowe.compareWithSelected",

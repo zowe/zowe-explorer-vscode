@@ -4,6 +4,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ## TBD Release
 
+- Added the Issue UNIX Commands feature. [#1326](https://github.com/zowe/vscode-extension-for-zowe/issues/1326)
+
 ### New features and enhancements
 
 - Added back local storage for Zowe Explorer persistent items

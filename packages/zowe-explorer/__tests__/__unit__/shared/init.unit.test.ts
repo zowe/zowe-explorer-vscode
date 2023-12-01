@@ -21,6 +21,7 @@ import * as zowe from "@zowe/cli";
 import { IJestIt, ITestContext, processSubscriptions, spyOnSubscriptions } from "../../__common__/testUtils";
 import { TsoCommandHandler } from "../../../src/command/TsoCommandHandler";
 import { MvsCommandHandler } from "../../../src/command/MvsCommandHandler";
+import { UnixCommandHandler } from "../../../src/command/UnixCommandHandler";
 import { saveFile } from "../../../src/dataset/actions";
 import { saveUSSFile } from "../../../src/uss/actions";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
@@ -219,6 +220,15 @@ describe("Test src/shared/extension", () => {
             {
                 name: "zowe.compareFileStarted",
                 mock: [],
+            },
+            {
+                name: "zowe.issueUnixCmd:1",
+                mock: [{ spy: jest.spyOn(UnixCommandHandler, "getInstance"), arg: [], ret: { issueUnixCommand: jest.fn() } }],
+            },
+            {
+                name: "zowe.issueUnixCmd:2",
+                parm: [],
+                mock: [{ spy: jest.spyOn(UnixCommandHandler, "getInstance"), arg: [], ret: { issueUnixCommand: jest.fn() } }],
             },
         ];
 
