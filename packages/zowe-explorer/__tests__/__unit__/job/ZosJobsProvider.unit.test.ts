@@ -1081,4 +1081,18 @@ describe("ZosJobsProvider Unit Test - Filter Jobs", () => {
         expect(filterJobsSpy).toHaveBeenCalled();
         expect(filterJobsSpy).toBeCalledWith(node1);
     });
+
+    it("To check Clear filter for profile", async () => {
+        const testTree = new ZosJobsProvider();
+        node1.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+        node1.children = [node2, node3];
+        const createInputBoxSpy = jest.spyOn(vscode.window, "createInputBox");
+        mockInputBox.value = "ZOWEUSR2(JOB05037) - CC 0000";
+        createInputBoxSpy.mockReturnValue(mockInputBox);
+        globalMocks.mockShowQuickPick.mockReturnValueOnce("$(clear-all) Clear filter for profile");
+        const filterJobsSpy = jest.spyOn(testTree, "filterJobsDialog");
+        await testTree.filterJobsDialog(node1);
+        expect(filterJobsSpy).toHaveBeenCalled();
+        expect(filterJobsSpy).toBeCalledWith(node1);
+    });
 });
