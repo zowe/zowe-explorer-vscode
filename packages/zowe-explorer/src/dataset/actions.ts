@@ -424,7 +424,7 @@ export async function createMember(parent: api.IZoweDatasetTreeNode, datasetProv
         datasetProvider.refreshElement(parent);
 
         await openPS(
-            new ZoweDatasetNode(name, vscode.TreeItemCollapsibleState.None, parent, null, undefined, undefined, parent.getProfile()),
+            new ZoweDatasetNode(name, vscode.TreeItemCollapsibleState.None, parent, null, undefined, undefined, undefined, parent.getProfile()),
             false,
             true,
             datasetProvider

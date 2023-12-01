@@ -387,7 +387,15 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         }
         if (contextually.isUssSession(node)) {
             // Favorite a USS search
-            temp = new ZoweUSSNode(label, vscode.TreeItemCollapsibleState.None, profileNodeInFavorites, node.getSession(), null, false, profileName);
+            temp = new ZoweUSSNode(
+                label,
+                vscode.TreeItemCollapsibleState.None,
+                profileNodeInFavorites,
+                node.getSession(),
+                null,
+                undefined,
+                profileName
+            );
             temp.fullPath = node.fullPath;
             await this.saveSearch(temp);
             temp.command = { command: "zowe.uss.fullPath", title: "", arguments: [temp] };
@@ -399,7 +407,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 profileNodeInFavorites,
                 node.getSession(),
                 node.getParent().fullPath,
-                false,
+                null,
                 profileName
             );
             temp.contextValue = contextually.asFavorite(temp);
@@ -726,16 +734,16 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         const directorySearchPattern = /^\[.+\]:\s.*\{directory\}$/;
         let node: ZoweUSSNode;
         if (directorySearchPattern.test(line)) {
-            node = new ZoweUSSNode(label, vscode.TreeItemCollapsibleState.Collapsed, parentNode, null, "", false, null);
+            node = new ZoweUSSNode(label, vscode.TreeItemCollapsibleState.Collapsed, parentNode, null, "", undefined, null);
         } else if (favoriteSearchPattern.test(line)) {
-            node = new ZoweUSSNode(label, vscode.TreeItemCollapsibleState.None, parentNode, null, null, false, null);
+            node = new ZoweUSSNode(label, vscode.TreeItemCollapsibleState.None, parentNode, null, null, undefined, null);
             node.contextValue = globals.USS_SESSION_CONTEXT;
             node.fullPath = label;
             node.label = node.tooltip = label;
             // add a command to execute the search
             node.command = { command: "zowe.uss.fullPath", title: "", arguments: [node] };
         } else {
-            node = new ZoweUSSNode(label, vscode.TreeItemCollapsibleState.None, parentNode, null, "", false, null);
+            node = new ZoweUSSNode(label, vscode.TreeItemCollapsibleState.None, parentNode, null, "", undefined, null);
             node.command = {
                 command: "zowe.uss.ZoweUSSNode.open",
                 title: localize("initializeUSSFavorites.lines.title", "Open"),
@@ -962,7 +970,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 null,
                 session,
                 null,
-                false,
+                undefined,
                 profile.name,
                 null,
                 profile
@@ -986,15 +994,9 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             taggedEncoding = await ussApi.getTag(node.fullPath);
         }
         const encoding = await promptForEncoding(node, taggedEncoding !== "untagged" ? taggedEncoding : undefined);
-        if (encoding === undefined) {
-            return;
-        } else if (encoding === "binary") {
-            node.setBinary(true);
-            node.encoding = null;
-        } else {
-            node.setBinary(false);
-            node.encoding = encoding;
+        if (encoding !== undefined) {
+            node.setEncoding(encoding);
+            await node.openUSS(true, false, this);
         }
-        await node.openUSS(true, false, this);
     }
 }

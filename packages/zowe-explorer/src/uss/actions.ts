@@ -14,7 +14,7 @@ import { imperative, IZosFilesResponse } from "@zowe/cli";
 import * as fs from "fs";
 import * as globals from "../globals";
 import * as path from "path";
-import { concatChildNodes, uploadContent, getSelectedNodeList, getDefaultUri, compareFileContent } from "../shared/utils";
+import { concatChildNodes, uploadContent, getSelectedNodeList, getDefaultUri } from "../shared/utils";
 import { errorHandling } from "../utils/ProfilesUtils";
 import { Gui, ValidProfileEnum, IZoweTree, IZoweUSSTreeNode } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
@@ -292,16 +292,11 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
     const etagFavorites = findEtag(favoritesSesNode, directories, 0);
 
     // get session from session name
-    let binary;
-
     let sesNode: IZoweUSSTreeNode;
     if ((etagProfiles && etagFavorites) || etagProfiles) {
         sesNode = profileSesnode;
     } else if (etagFavorites) {
         sesNode = favoritesSesNode;
-    }
-    if (sesNode) {
-        binary = Object.keys(sesNode.binaryFiles).find((child) => child === remote) !== undefined;
     }
     // Get specific node based on label and parent tree (session / favorites)
     const nodes: IZoweUSSTreeNode[] = concatChildNodes(sesNode ? [sesNode] : ussFileProvider.mSessionNodes);

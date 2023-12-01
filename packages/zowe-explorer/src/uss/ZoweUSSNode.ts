@@ -46,7 +46,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     public fullPath = "";
     public dirty = true;
     public children: IZoweUSSTreeNode[] = [];
-    public binaryFiles = {};
+    public encodingMap = {};
     public binary = false;
     public profileName = "";
     public shortLabel = "";
@@ -75,16 +75,17 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         mParent: IZoweUSSTreeNode,
         session: imperative.Session,
         private parentPath: string,
-        binary = false,
+        encoding?: "text" | "binary" | string,
         public mProfileName?: string,
         private etag: string = "",
         profile?: imperative.IProfileLoaded
     ) {
         super(label, collapsibleState, mParent, session, profile);
-        this.binary = binary;
+        this.binary = encoding === "binary";
+        this.encoding = this.binary ? undefined : encoding === "text" ? null : encoding;
         if (collapsibleState !== vscode.TreeItemCollapsibleState.None) {
             this.contextValue = globals.USS_DIR_CONTEXT;
-        } else if (binary) {
+        } else if (this.binary) {
             this.contextValue = globals.USS_BINARY_FILE_CONTEXT;
         } else {
             this.contextValue = globals.USS_TEXT_FILE_CONTEXT;
@@ -230,7 +231,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                     this,
                     null,
                     this.fullPath,
-                    false,
+                    undefined,
                     item.mProfileName
                 );
                 temp.attributes = {
@@ -243,8 +244,16 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 responseNodes.push(temp);
             } else {
                 // Create a node for the USS file.
-                const isBinary = `${this.fullPath}/${item.name as string}` in this.getSessionNode().binaryFiles;
-                const temp = new ZoweUSSNode(item.name, vscode.TreeItemCollapsibleState.None, this, null, this.fullPath, isBinary, item.mProfileName);
+                const cachedEncoding = this.getSessionNode().encodingMap[`${this.fullPath}/${item.name as string}`];
+                const temp = new ZoweUSSNode(
+                    item.name,
+                    vscode.TreeItemCollapsibleState.None,
+                    this,
+                    null,
+                    this.fullPath,
+                    cachedEncoding,
+                    item.mProfileName
+                );
                 temp.attributes = {
                     gid: item.gid,
                     uid: item.uid,
@@ -273,15 +282,30 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         return this.children;
     }
 
+    /**
+     * Specifies the field as binary
+     * @deprecated Use `setEncoding` instead
+     */
     public setBinary(binary: boolean): void {
         ZoweLogger.trace("ZoweUSSNode.setBinary called.");
-        this.binary = binary;
-        if (this.binary) {
+        this.setEncoding(binary ? "binary" : null);
+    }
+
+    public setEncoding(encoding: "text" | "binary" | string): void {
+        ZoweLogger.trace("ZoweUSSNode.setEncoding called.");
+        if (encoding === "binary") {
             this.contextValue = globals.USS_BINARY_FILE_CONTEXT;
-            this.getSessionNode().binaryFiles[this.fullPath] = true;
+            this.binary = true;
+            this.encoding = undefined;
         } else {
             this.contextValue = globals.USS_TEXT_FILE_CONTEXT;
-            delete this.getSessionNode().binaryFiles[this.fullPath];
+            this.binary = false;
+            this.encoding = encoding === "text" ? null : encoding;
+        }
+        if (this.binary || this.encoding != null) {
+            this.getSessionNode().encodingMap[this.fullPath] = encoding;
+        } else {
+            delete this.getSessionNode().encodingMap[this.fullPath];
         }
         if (this.getParent() && this.getParent().contextValue === globals.FAV_PROFILE_CONTEXT) {
             this.contextValue = this.binary

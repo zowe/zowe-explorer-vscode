@@ -54,7 +54,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     public memberPattern = "";
     public dirty = true;
     public children: ZoweDatasetNode[] = [];
-    public binaryFiles = {};
+    public encodingMap = {};
     public binary = false;
     public errorDetails: zowe.imperative.ImperativeError;
     public ongoingActions: Record<NodeAction | string, Promise<any>> = {};
@@ -78,11 +78,13 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         mParent: IZoweDatasetTreeNode,
         session: zowe.imperative.Session,
         contextOverride?: string,
+        encoding?: "text" | "binary" | string,
         private etag?: string,
         profile?: zowe.imperative.IProfileLoaded
     ) {
         super(label, collapsibleState, mParent, session, profile);
-
+        this.binary = encoding === "binary";
+        this.encoding = this.binary ? undefined : encoding === "text" ? null : encoding;
         if (contextOverride) {
             this.contextValue = contextOverride;
         } else if (collapsibleState !== vscode.TreeItemCollapsibleState.None) {
@@ -201,6 +203,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                         null,
                         undefined,
                         undefined,
+                        undefined,
                         this.getProfile()
                     );
                     elementChildren[temp.label.toString()] = temp;
@@ -212,6 +215,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                         this,
                         null,
                         globals.DS_FILE_ERROR_CONTEXT,
+                        undefined,
                         undefined,
                         this.getProfile()
                     );
@@ -225,6 +229,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                         this,
                         null,
                         globals.DS_MIGRATED_FILE_CONTEXT,
+                        undefined,
                         undefined,
                         this.getProfile()
                     );
@@ -247,17 +252,20 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                             null,
                             globals.VSAM_CONTEXT,
                             undefined,
+                            undefined,
                             this.getProfile()
                         );
                     }
                 } else if (contextually.isSessionNotFav(this)) {
                     // Creates a ZoweDatasetNode for a PS
+                    const cachedEncoding = this.getSessionNode().encodingMap[item.dsname];
                     const temp = new ZoweDatasetNode(
                         item.dsname,
                         vscode.TreeItemCollapsibleState.None,
                         this,
                         null,
                         undefined,
+                        cachedEncoding,
                         undefined,
                         this.getProfile()
                     );
@@ -266,12 +274,14 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 } else {
                     // Creates a ZoweDatasetNode for a PDS member
                     const memberInvalid = item.member?.includes("\ufffd");
+                    const cachedEncoding = this.getSessionNode().encodingMap[`${item.dsname as string}(${item.member as string})`];
                     const temp = new ZoweDatasetNode(
                         item.member,
                         vscode.TreeItemCollapsibleState.None,
                         this,
                         null,
                         memberInvalid ? globals.DS_FILE_ERROR_CONTEXT : undefined,
+                        cachedEncoding,
                         undefined,
                         this.getProfile()
                     );
@@ -489,19 +499,26 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         return responses;
     }
 
-    public setBinary(binary: boolean): void {
-        ZoweLogger.trace("ZoweDatasetNode.setBinary called.");
+    public setEncoding(encoding: "text" | "binary" | string): void {
+        ZoweLogger.trace("ZoweDatasetNode.setEncoding called.");
         if (!(this.contextValue.startsWith(globals.DS_DS_CONTEXT) || this.contextValue.startsWith(globals.DS_MEMBER_CONTEXT))) {
-            throw new Error(`Cannot set node with context ${this.contextValue} as binary`);
+            throw new Error(`Cannot set encoding for node with context ${this.contextValue}`);
         }
-        this.binary = binary;
         const isMemberNode = this.contextValue.startsWith(globals.DS_MEMBER_CONTEXT);
-        if (this.binary) {
+        if (encoding === "binary") {
             this.contextValue = isMemberNode ? globals.DS_MEMBER_BINARY_CONTEXT : globals.DS_DS_BINARY_CONTEXT;
-            this.getSessionNode().binaryFiles[this.fullPath] = true;
+            this.binary = true;
+            this.encoding = undefined;
         } else {
             this.contextValue = isMemberNode ? globals.DS_MEMBER_CONTEXT : globals.DS_DS_CONTEXT;
-            delete this.getSessionNode().binaryFiles[this.fullPath];
+            this.binary = false;
+            this.encoding = encoding === "text" ? null : encoding;
+        }
+        const fullPath = isMemberNode ? `${this.getParent().label as string}(${this.label as string})` : (this.label as string);
+        if (this.binary || this.encoding != null) {
+            this.getSessionNode().encodingMap[fullPath] = encoding;
+        } else {
+            delete this.getSessionNode().encodingMap[fullPath];
         }
         if (this.getParent() && this.getParent().contextValue === globals.FAV_PROFILE_CONTEXT) {
             this.contextValue += globals.FAV_SUFFIX;

@@ -412,7 +412,20 @@ export async function compareFileContent(
     }
 }
 
-export async function promptForEncoding(node: IZoweDatasetTreeNode | IZoweUSSTreeNode, taggedEncoding?: string): Promise<string | undefined> {
+export function getCachedEncoding<T extends IZoweTreeNode>(node: T): string {
+    if (isZoweUSSTreeNode(node)) {
+        return (node.getSessionNode() as IZoweUSSTreeNode).encodingMap[node.fullPath] as string;
+    } else {
+        const isMemberNode = node.contextValue.startsWith(globals.DS_MEMBER_CONTEXT);
+        const fullPath = isMemberNode ? `${node.getParent().label as string}(${node.label as string})` : (node.label as string);
+        return (node.getSessionNode() as IZoweDatasetTreeNode).encodingMap[fullPath] as string;
+    }
+}
+
+export async function promptForEncoding(
+    node: IZoweDatasetTreeNode | IZoweUSSTreeNode,
+    taggedEncoding?: string
+): Promise<"text" | "binary" | string | undefined> {
     const ebcdicItem: vscode.QuickPickItem = {
         label: localize("zowe.shared.utils.promptForEncoding.ebcdic.label", "EBCDIC"),
         description: localize("zowe.shared.utils.promptForEncoding.ebcdic.description", "z/OS default codepage"),
@@ -425,74 +438,60 @@ export async function promptForEncoding(node: IZoweDatasetTreeNode | IZoweUSSTre
         label: localize("zowe.shared.utils.promptForEncoding.other.label", "Other"),
         description: localize("zowe.shared.utils.promptForEncoding.other.description", "Specify another codepage"),
     };
-
-    const fileItems: vscode.QuickPickItem[] = [];
-    let currentEncoding = node.encoding;
-    if (node.binary) {
-        currentEncoding = binaryItem.label;
-    } else if (node.encoding === null) {
-        currentEncoding = ebcdicItem.label;
-    }
-    if (currentEncoding != null) {
-        fileItems.push({
-            label: currentEncoding,
-            description: localize("zowe.shared.utils.promptForEncoding.current.description", "Current (local)"),
+    const items: vscode.QuickPickItem[] = [ebcdicItem, binaryItem, otherItem, globals.SEPARATORS.RECENT];
+    const profile = node.getProfile();
+    if (profile.profile?.encoding != null) {
+        items.splice(0, 0, {
+            label: profile.profile?.encoding,
+            description: localize("zowe.shared.utils.promptForEncoding.profile.description", "From profile {0}", profile.name),
         });
     }
     if (taggedEncoding != null) {
-        if (taggedEncoding === currentEncoding.toLowerCase()) {
-            fileItems[0].description += ", " + localize("zowe.shared.utils.promptForEncoding.tagged.description", "Tagged (remote)");
-        } else {
-            fileItems.push({
-                label: taggedEncoding,
-                description: localize("zowe.shared.utils.promptForEncoding.tagged.description", "Tagged (remote)"),
-            });
-        }
-    } else if (currentEncoding != null) {
-        fileItems[0].description += ", " + localize("zowe.shared.utils.promptForEncoding.untagged.description", "Untagged");
-    }
-    if (fileItems.length > 0) {
-        fileItems.push(globals.SEPARATORS.BLANK);
-    }
-
-    const globalItems: vscode.QuickPickItem[] = [ebcdicItem, binaryItem, otherItem, globals.SEPARATORS.RECENT];
-    const profileEncoding = node.getProfile().profile?.encoding;
-    if (profileEncoding != null) {
-        globalItems.splice(0, 0, {
-            label: profileEncoding,
-            description: localize("zowe.shared.utils.promptForEncoding.profile.description", "Inherit from profile"),
+        items.splice(0, 0, {
+            label: taggedEncoding,
+            description: localize("zowe.shared.utils.promptForEncoding.tagged.description", "USS file tag"),
         });
     }
 
-    const recentItems: vscode.QuickPickItem[] = [];
+    let currentEncoding = node.encoding ?? getCachedEncoding(node);
+    if (node.binary || currentEncoding === "binary") {
+        currentEncoding = binaryItem.label;
+    } else if (node.encoding === null || currentEncoding === "text") {
+        currentEncoding = ebcdicItem.label;
+    }
     const encodingHistory = ZoweLocalStorage.getValue<string[]>("encodingHistory") ?? [];
     if (encodingHistory.length > 0) {
         for (const encoding of encodingHistory) {
-            recentItems.push({ label: encoding });
+            items.push({ label: encoding });
         }
     } else {
         // Pre-populate recent list with some common encodings
-        recentItems.push({ label: "IBM-1047" }, { label: "ISO8859-1" });
+        items.push({ label: "IBM-1047" }, { label: "ISO8859-1" });
     }
 
     let encoding = (
-        await Gui.showQuickPick([...fileItems, ...globalItems, ...recentItems], {
-            placeHolder: localize("zowe.shared.utils.promptForEncoding.qp.placeHolder", "Choose an encoding"),
+        await Gui.showQuickPick(items, {
+            title: localize("zowe.shared.utils.promptForEncoding.qp.title", "Choose encoding for {0}", node.label as string),
+            placeHolder:
+                currentEncoding && localize("zowe.shared.utils.promptForEncoding.qp.placeHolder", "Current encoding is {0}", currentEncoding),
         })
     )?.label;
     switch (encoding) {
         case ebcdicItem.label:
-            encoding = null;
+            encoding = "text";
             break;
         case binaryItem.label:
             encoding = "binary";
             break;
         case otherItem.label:
             encoding = await Gui.showInputBox({
+                title: localize("zowe.shared.utils.promptForEncoding.qp.title", "Choose encoding for {0}", node.label as string),
                 placeHolder: localize("zowe.shared.utils.promptForEncoding.input.placeHolder", "Enter a codepage in the format 1047 or IBM-1047"),
             });
-            encodingHistory.push(encoding);
-            ZoweLocalStorage.setValue("encodingHistory", encodingHistory.slice(0, globals.MAX_FILE_HISTORY));
+            if (encoding != null) {
+                encodingHistory.push(encoding);
+                ZoweLocalStorage.setValue("encodingHistory", encodingHistory.slice(0, globals.MAX_FILE_HISTORY));
+            }
             break;
     }
     return encoding;

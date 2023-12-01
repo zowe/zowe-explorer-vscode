@@ -74,21 +74,19 @@ export function disposeClipboardContents(): void {
 }
 
 export async function autoDetectEncoding(node: IZoweUSSTreeNode, profile?: imperative.IProfileLoaded): Promise<void> {
-    if (node.encoding !== undefined) {
+    if (node.binary || node.encoding !== undefined) {
         return;
     }
     const ussApi = ZoweExplorerApiRegister.getUssApi(profile ?? node.getProfile());
     if (ussApi.getTag != null) {
         const taggedEncoding = await ussApi.getTag(node.fullPath);
         if (taggedEncoding === "binary" || taggedEncoding === "mixed") {
-            node.setBinary(true);
-            node.encoding = undefined;
+            node.setEncoding("binary");
         } else {
-            node.setBinary(false);
-            node.encoding = taggedEncoding !== "untagged" ? taggedEncoding : null;
+            node.setEncoding(taggedEncoding !== "untagged" ? taggedEncoding : "text");
         }
     } else {
-        node.binary = await ussApi.isFileTagBinOrAscii(node.fullPath);
-        node.encoding = undefined;
+        const isBinary = await ussApi.isFileTagBinOrAscii(node.fullPath);
+        node.setEncoding(isBinary ? "binary" : "text");
     }
 }

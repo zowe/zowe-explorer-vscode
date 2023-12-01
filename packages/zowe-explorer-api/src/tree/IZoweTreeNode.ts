@@ -155,9 +155,9 @@ export interface IZoweDatasetTreeNode extends IZoweTreeNode {
      */
     filter?: DatasetFilter;
     /**
-     * List of child nodes downloaded in binary format
+     * List of child nodes and user-selected encodings
      */
-    binaryFiles?: Record<string, unknown>;
+    encodingMap?: Record<string, string>;
     /**
      * Binary indicator. Default false (text)
      */
@@ -185,10 +185,11 @@ export interface IZoweDatasetTreeNode extends IZoweTreeNode {
      */
     setEtag?(etag: string);
     /**
-     * Specifies the field as binary
-     * @param binary true is a binary file otherwise false
+     * Sets the codepage value for the file
+     *
+     * @param {string}
      */
-    setBinary?(binary: boolean);
+    setEncoding?(encoding: string);
 }
 
 /**
@@ -204,8 +205,13 @@ export interface IZoweUSSTreeNode extends IZoweTreeNode {
     shortLabel?: string;
     /**
      * List of child nodes downloaded in binary format
+     * @deprecated Use `encodingMap` instead
      */
     binaryFiles?: Record<string, unknown>;
+    /**
+     * List of child nodes and user-selected encodings
+     */
+    encodingMap?: Record<string, string>;
     /**
      * Binary indicator. Default false (text)
      */
@@ -257,9 +263,16 @@ export interface IZoweUSSTreeNode extends IZoweTreeNode {
     rename?(newNamePath: string);
     /**
      * Specifies the field as binary
+     * @deprecated Use `setEncoding` instead
      * @param binary true is a binary file otherwise false
      */
     setBinary?(binary: boolean);
+    /**
+     * Sets the codepage value for the file
+     *
+     * @param {string}
+     */
+    setEncoding?(encoding: string);
     // /**
     //  * Opens the text document
     //  * @return vscode.TextDocument

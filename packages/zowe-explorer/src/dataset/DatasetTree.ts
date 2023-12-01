@@ -517,6 +517,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 profileNodeInFavorites,
                 node.getSession(),
                 node.contextValue,
+                undefined,
                 node.getEtag(),
                 node.getProfile()
             );
@@ -538,6 +539,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 profileNodeInFavorites,
                 node.getSession(),
                 node.contextValue,
+                undefined,
                 node.getEtag(),
                 node.getProfile()
             );
@@ -1311,7 +1313,16 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 }
             }
             // Creates ZoweDatasetNode to track new session and pushes it to mSessionNodes
-            const node = new ZoweDatasetNode(profile.name, vscode.TreeItemCollapsibleState.Collapsed, null, session, undefined, undefined, profile);
+            const node = new ZoweDatasetNode(
+                profile.name,
+                vscode.TreeItemCollapsibleState.Collapsed,
+                null,
+                session,
+                undefined,
+                undefined,
+                undefined,
+                profile
+            );
             node.contextValue = globals.DS_SESSION_CONTEXT + (profile.type !== "zosmf" ? `.profile=${profile.type}.` : "");
             await this.refreshHomeProfileContext(node);
             const icon = getIconByNode(node);
@@ -1542,15 +1553,9 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
 
     public async openWithEncoding(node: IZoweDatasetTreeNode): Promise<void> {
         const encoding = await promptForEncoding(node);
-        if (encoding === undefined) {
-            return;
-        } else if (encoding === "binary") {
-            node.setBinary(true);
-            node.encoding = null;
-        } else {
-            node.setBinary(false);
-            node.encoding = encoding;
+        if (encoding !== undefined) {
+            node.setEncoding(encoding);
+            await dsActions.openPS(node, true, false, this);
         }
-        await dsActions.openPS(node, true, false, this);
     }
 }
