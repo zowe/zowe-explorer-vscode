@@ -1636,8 +1636,8 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
         await errorHandling(err, sesName);
     }
     // Get specific node based on label and parent tree (session / favorites)
-    const nodes: api.IZoweNodeType[] = concatChildNodes(sesNode ? [sesNode] : datasetProvider.mSessionNodes);
-    const node: api.IZoweDatasetTreeNode = nodes.find((zNode) => {
+    const nodes = concatChildNodes(sesNode ? [sesNode] : datasetProvider.mSessionNodes);
+    const node = nodes.find((zNode) => {
         if (contextually.isDsMember(zNode)) {
             const zNodeDetails = dsUtils.getProfileAndDataSetName(zNode);
             return `${zNodeDetails.profileName}(${zNodeDetails.dataSetName})` === `${label}`;
@@ -1646,7 +1646,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
         } else {
             return false;
         }
-    });
+    }) as api.IZoweDatasetTreeNode;
 
     // define upload options
     const uploadOptions: IUploadOptions = {
