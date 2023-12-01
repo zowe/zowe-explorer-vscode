@@ -110,6 +110,9 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
     public async getChildren(): Promise<IZoweJobTreeNode[]> {
         const thisSessionNode = this.getSessionNode();
         ZoweLogger.trace(`ZoweJobNode.getChildren called for ${String(thisSessionNode.label)}.`);
+        if (this !== undefined && this.filter !== undefined) {
+            return this.children;
+        }
         if (contextually.isSession(this) && !this.filtered && !contextually.isFavorite(this)) {
             return [
                 new Job(
@@ -126,7 +129,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
         if (!this.dirty) {
             return this.children;
         }
-
+        console.log("after updating", this);
         const elementChildren: Record<string, ZoweJobNode> = {};
         if (contextually.isJob(this)) {
             // Fetch spool files under job node
@@ -185,7 +188,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
         } else {
             // Fetch jobs under session node
             const jobs = await this.getJobs(this._owner, this._prefix, this._searchId, this._jobStatus);
-
+            console.log("after updating", this);
             if (jobs.length === 0) {
                 const noJobsNode = new Job(
                     localize("getChildren.noJobs", "No jobs found"),
@@ -199,7 +202,6 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
                 noJobsNode.iconPath = null;
                 return [noJobsNode];
             }
-
             jobs.forEach((job) => {
                 let nodeTitle: string;
                 if (job.retcode) {
@@ -240,7 +242,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
             .filter((ch) => Object.values(elementChildren).find((recordCh) => recordCh.label === ch.label) != null)
             .sort(Job.sortJobs(sortMethod));
         this.dirty = false;
-
+        console.log("after updating", this);
         return this.children;
     }
 
@@ -270,6 +272,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
     }
 
     public getSessionNode(): IZoweJobTreeNode {
+        console.log("ZoweJobNode.getSessionNode called.");
         ZoweLogger.trace("ZoweJobNode.getSessionNode called.");
         return this.getParent() ? this.getParent().getSessionNode() : this;
     }
