@@ -526,7 +526,7 @@ export async function openPS(
                 node.setEtag(response.apiResponse.etag);
             }
             statusMsg.dispose();
-            updateOpenFiles(datasetProvider, documentFilePath, this);
+            updateOpenFiles(datasetProvider, documentFilePath, node);
             const document = await vscode.workspace.openTextDocument(getDocumentFilePath(label, node));
             await api.Gui.showTextDocument(document, { preview: node.wasDoubleClicked != null ? !node.wasDoubleClicked : shouldPreview });
             // discard ongoing action to allow new requests on this node
@@ -1639,7 +1639,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
         await errorHandling(err, sesName);
     }
     // Get specific node based on label and parent tree (session / favorites)
-    const nodes: api.IZoweNodeType[] = concatChildNodes(sesNode ? [sesNode] : datasetProvider.mSessionNodes);
+    const nodes: api.IZoweDatasetTreeNode[] = concatChildNodes(sesNode ? [sesNode] : datasetProvider.mSessionNodes);
     const node: api.IZoweDatasetTreeNode =
         nodes.find((zNode) => {
             if (contextually.isDsMember(zNode)) {

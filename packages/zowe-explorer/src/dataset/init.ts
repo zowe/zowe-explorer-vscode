@@ -18,11 +18,10 @@ import { Profiles } from "../Profiles";
 import { DatasetTree, createDatasetTree } from "./DatasetTree";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import * as contextuals from "../shared/context";
-import { getSelectedNodeList, updateOpenFiles } from "../shared/utils";
+import { getSelectedNodeList } from "../shared/utils";
 import { initSubscribers } from "../shared/init";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { TreeViewUtils } from "../utils/TreeViewUtils";
-import { TreeProviders } from "../shared/TreeProviders";
 
 export async function initDatasetProvider(context: vscode.ExtensionContext): Promise<DatasetTree> {
     ZoweLogger.trace("dataset.init.initDatasetProvider called.");
@@ -216,13 +215,7 @@ export async function initDatasetProvider(context: vscode.ExtensionContext): Pro
             await datasetProvider.onDidChangeConfiguration(e);
         })
     );
-    context.subscriptions.push(
-        vscode.workspace.onDidCloseTextDocument((doc) => {
-            if (doc.uri.fsPath.includes(globals.DS_DIR)) {
-                updateOpenFiles(TreeProviders.ds, doc.uri.fsPath, null);
-            }
-        })
-    );
+    context.subscriptions.push(vscode.workspace.onDidCloseTextDocument(DatasetTree.onDidCloseTextDocument));
 
     initSubscribers(context, datasetProvider);
     return datasetProvider;

@@ -18,10 +18,9 @@ import { Profiles } from "../Profiles";
 import { ZosJobsProvider, createJobsTree } from "./ZosJobsProvider";
 import * as contextuals from "../shared/context";
 import { Job } from "./ZoweJobNode";
-import { getSelectedNodeList, updateOpenFiles } from "../shared/utils";
+import { getSelectedNodeList } from "../shared/utils";
 import { initSubscribers } from "../shared/init";
 import { ZoweLogger } from "../utils/LoggerUtils";
-import { TreeProviders } from "../shared/TreeProviders";
 
 export async function initJobsProvider(context: vscode.ExtensionContext): Promise<ZosJobsProvider> {
     ZoweLogger.trace("job.init.initJobsProvider called.");
@@ -172,13 +171,7 @@ export async function initJobsProvider(context: vscode.ExtensionContext): Promis
     );
     context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.sortBy", async (job) => jobActions.sortJobs(job, jobsProvider)));
 
-    context.subscriptions.push(
-        vscode.workspace.onDidCloseTextDocument((doc) => {
-            if (doc.uri.scheme === "zosspool") {
-                updateOpenFiles(TreeProviders.job, doc.uri.path, null);
-            }
-        })
-    );
+    context.subscriptions.push(vscode.workspace.onDidCloseTextDocument(ZosJobsProvider.onDidCloseTextDocument));
 
     initSubscribers(context, jobsProvider);
     return jobsProvider;

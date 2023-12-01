@@ -32,7 +32,7 @@ import {
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { FilterDescriptor, FilterItem, errorHandling, syncSessionNode } from "../utils/ProfilesUtils";
-import { sortTreeItems, getAppName, getDocumentFilePath, SORT_DIRS } from "../shared/utils";
+import { sortTreeItems, getAppName, getDocumentFilePath, SORT_DIRS, updateOpenFiles } from "../shared/utils";
 import { ZoweTreeProvider } from "../abstract/ZoweTreeProvider";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { getIconById, getIconByNode, IconId, IIconItem } from "../generators/icons";
@@ -46,6 +46,7 @@ import { DATASET_FILTER_OPTS, DATASET_SORT_OPTS, validateDataSetName, validateMe
 import { SettingsConfig } from "../utils/SettingsConfig";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { TreeViewUtils } from "../utils/TreeViewUtils";
+import { TreeProviders } from "../shared/TreeProviders";
 
 // Set up localization
 nls.config({
@@ -1539,5 +1540,16 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             isSession
         );
         Gui.setStatusBarMessage(localize("filter.updated", "$(check) Filter updated for {0}", node.label as string), globals.MS_PER_SEC * 4);
+    }
+
+    /**
+     * Event listener to mark a Data Set doc URI as null in the openFiles record
+     * @param this (resolves ESlint warning about unbound methods)
+     * @param doc A doc URI that was closed
+     */
+    public static onDidCloseTextDocument(this: void, doc: vscode.TextDocument): void {
+        if (doc.uri.fsPath.includes(globals.DS_DIR)) {
+            updateOpenFiles(TreeProviders.ds, doc.uri.fsPath, null);
+        }
     }
 }

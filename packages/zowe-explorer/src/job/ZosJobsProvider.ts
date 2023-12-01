@@ -17,7 +17,7 @@ import { FilterItem, errorHandling } from "../utils/ProfilesUtils";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { Job, Spool } from "./ZoweJobNode";
-import { getAppName, sortTreeItems, jobStringValidator } from "../shared/utils";
+import { getAppName, sortTreeItems, jobStringValidator, updateOpenFiles } from "../shared/utils";
 import { ZoweTreeProvider } from "../abstract/ZoweTreeProvider";
 import { getIconByNode } from "../generators/icons";
 import * as contextually from "../shared/context";
@@ -29,6 +29,7 @@ import SpoolProvider, { encodeJobFile } from "../SpoolProvider";
 import { Poller } from "@zowe/zowe-explorer-api/src/utils";
 import { PollDecorator } from "../utils/DecorationProviders";
 import { TreeViewUtils } from "../utils/TreeViewUtils";
+import { TreeProviders } from "../shared/TreeProviders";
 
 // Set up localization
 nls.config({
@@ -1157,6 +1158,17 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         if (session.children != null) {
             session.children.sort(Job.sortJobs(session.sort));
             this.nodeDataChanged(session);
+        }
+    }
+
+    /**
+     * Event listener to mark a job doc URI as null in the openFiles record
+     * @param this (resolves ESlint warning about unbound methods)
+     * @param doc A doc URI that was closed
+     */
+    public static onDidCloseTextDocument(this: void, doc: vscode.TextDocument): void {
+        if (doc.uri.scheme === "zosspool") {
+            updateOpenFiles(TreeProviders.job, doc.uri.path, null);
         }
     }
 }

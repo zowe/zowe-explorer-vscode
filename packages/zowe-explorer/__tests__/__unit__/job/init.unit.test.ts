@@ -52,6 +52,7 @@ describe("Test src/jobs/extension", () => {
             ssoLogin: jest.fn(),
             ssoLogout: jest.fn(),
             onDidChangeConfiguration: jest.fn(),
+            onDidCloseTextDocument: jest.fn(),
             pollData: jest.fn(),
             refreshElement: jest.fn(),
         };
@@ -237,6 +238,7 @@ describe("Test src/jobs/extension", () => {
 
             spyCreateJobsTree.mockResolvedValue(jobsProvider as any);
             spyOnSubscriptions(commands);
+            jest.spyOn(vscode.workspace, "onDidCloseTextDocument").mockImplementation(jobsProvider.onDidCloseTextDocument);
             await initJobsProvider(test.context);
         });
         beforeEach(() => {
@@ -252,6 +254,10 @@ describe("Test src/jobs/extension", () => {
             spyCreateJobsTree.mockResolvedValue(null);
             const myProvider = await initJobsProvider({} as any);
             expect(myProvider).toBe(null);
+        });
+
+        it("should register onDidCloseTextDocument event listener from ZosJobsProvider", () => {
+            expect(jobsProvider.onDidCloseTextDocument).toHaveBeenCalledWith(jobTree.ZosJobsProvider.onDidCloseTextDocument);
         });
     });
 });
