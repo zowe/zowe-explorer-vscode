@@ -102,7 +102,7 @@ export class ZoweTreeProvider {
      * Called whenever the tree needs to be refreshed, and fires the data change event
      *
      */
-    public refreshElement(element: IZoweDatasetTreeNode): void {
+    public refreshElement(element: IZoweTreeNode): void {
         ZoweLogger.trace("ZoweTreeProvider.refreshElement called.");
         element.dirty = true;
         this.mOnDidChangeTreeData.fire(element);

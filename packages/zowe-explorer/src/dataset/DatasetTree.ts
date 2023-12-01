@@ -1438,7 +1438,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             ? localize("ds.allPdsSort", "all PDS members in {0}", node.label as string)
             : localize("ds.singlePdsSort", "the PDS members in {0}", node.label as string);
         const clearFilter = isSession
-            ? localize("ds.clearProfileFilter", "$(clear-all) Clear filter for profile")
+            ? localize("filter.clearForProfile", "$(clear-all) Clear filter for profile")
             : localize("ds.clearPdsFilter", "$(clear-all) Clear filter for PDS");
         const selection = (
             await Gui.showQuickPick(
