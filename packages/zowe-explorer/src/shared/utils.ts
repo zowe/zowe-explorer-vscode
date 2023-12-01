@@ -413,47 +413,86 @@ export async function compareFileContent(
 }
 
 export async function promptForEncoding(node: IZoweDatasetTreeNode | IZoweUSSTreeNode, taggedEncoding?: string): Promise<string | undefined> {
-    // TODO Localize me
-    const items: vscode.QuickPickItem[] = [
-        { label: "EBCDIC", description: "Default" },
-        { label: "ASCII", description: "Binary" },
-        { label: "Other" },
-    ];
-    const encodingHistory = ZoweLocalStorage.getValue<string[]>("encodingHistory") ?? [];
-    if (encodingHistory.length > 0) {
-        items.push(globals.SEPARATORS.RECENT);
-        for (const encoding of encodingHistory) {
-            items.push({ label: encoding });
-        }
+    const ebcdicItem: vscode.QuickPickItem = {
+        label: localize("zowe.shared.utils.promptForEncoding.ebcdic.label", "EBCDIC"),
+        description: localize("zowe.shared.utils.promptForEncoding.ebcdic.description", "z/OS default codepage"),
+    };
+    const binaryItem: vscode.QuickPickItem = {
+        label: localize("zowe.shared.utils.promptForEncoding.binary.label", "Binary"),
+        description: localize("zowe.shared.utils.promptForEncoding.binary.description", "Raw data representation"),
+    };
+    const otherItem: vscode.QuickPickItem = {
+        label: localize("zowe.shared.utils.promptForEncoding.other.label", "Other"),
+        description: localize("zowe.shared.utils.promptForEncoding.other.description", "Specify another codepage"),
+    };
+
+    const fileItems: vscode.QuickPickItem[] = [];
+    let currentEncoding = node.encoding;
+    if (node.binary) {
+        currentEncoding = binaryItem.label;
+    } else if (node.encoding === null) {
+        currentEncoding = ebcdicItem.label;
     }
-    const profileEncoding = node.getProfile().profile?.encoding;
-    if (profileEncoding != null) {
-        items.splice(0, 0, { label: profileEncoding, description: "From profile" });
+    if (currentEncoding != null) {
+        fileItems.push({
+            label: currentEncoding,
+            description: localize("zowe.shared.utils.promptForEncoding.current.description", "Current (local)"),
+        });
     }
     if (taggedEncoding != null) {
-        items.splice(0, 0, { label: taggedEncoding, description: "Tagged" });
+        if (taggedEncoding === currentEncoding.toLowerCase()) {
+            fileItems[0].description += ", " + localize("zowe.shared.utils.promptForEncoding.tagged.description", "Tagged (remote)");
+        } else {
+            fileItems.push({
+                label: taggedEncoding,
+                description: localize("zowe.shared.utils.promptForEncoding.tagged.description", "Tagged (remote)"),
+            });
+        }
+    } else if (currentEncoding != null) {
+        fileItems[0].description += ", " + localize("zowe.shared.utils.promptForEncoding.untagged.description", "Untagged");
     }
-    if (
-        node.encoding != null &&
-        !(profileEncoding != null && node.encoding === profileEncoding) &&
-        !(taggedEncoding != null && node.encoding === taggedEncoding)
-    ) {
-        items.splice(0, 0, { label: node.encoding, description: "Current" });
+    if (fileItems.length > 0) {
+        fileItems.push(globals.SEPARATORS.BLANK);
     }
-    let encoding = (await Gui.showQuickPick(items, { title: "Choose an encoding" }))?.label;
+
+    const globalItems: vscode.QuickPickItem[] = [ebcdicItem, binaryItem, otherItem, globals.SEPARATORS.RECENT];
+    const profileEncoding = node.getProfile().profile?.encoding;
+    if (profileEncoding != null) {
+        globalItems.splice(0, 0, {
+            label: profileEncoding,
+            description: localize("zowe.shared.utils.promptForEncoding.profile.description", "Inherit from profile"),
+        });
+    }
+
+    const recentItems: vscode.QuickPickItem[] = [];
+    const encodingHistory = ZoweLocalStorage.getValue<string[]>("encodingHistory") ?? [];
+    if (encodingHistory.length > 0) {
+        for (const encoding of encodingHistory) {
+            recentItems.push({ label: encoding });
+        }
+    } else {
+        // Pre-populate recent list with some common encodings
+        recentItems.push({ label: "IBM-1047" }, { label: "ISO8859-1" });
+    }
+
+    let encoding = (
+        await Gui.showQuickPick([...fileItems, ...globalItems, ...recentItems], {
+            placeHolder: localize("zowe.shared.utils.promptForEncoding.qp.placeHolder", "Choose an encoding"),
+        })
+    )?.label;
     switch (encoding) {
-        case "EBCDIC":
+        case ebcdicItem.label:
             encoding = null;
             break;
-        case "ASCII":
+        case binaryItem.label:
             encoding = "binary";
             break;
-        case "Other":
+        case otherItem.label:
             encoding = await Gui.showInputBox({
-                placeHolder: "Enter an encoding in the format 1047 or IBM-1047",
+                placeHolder: localize("zowe.shared.utils.promptForEncoding.input.placeHolder", "Enter a codepage in the format 1047 or IBM-1047"),
             });
             encodingHistory.push(encoding);
-            ZoweLocalStorage.setValue("encodingHistory", encodingHistory.slice(0, 10));
+            ZoweLocalStorage.setValue("encodingHistory", encodingHistory.slice(0, globals.MAX_FILE_HISTORY));
             break;
     }
     return encoding;

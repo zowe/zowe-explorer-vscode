@@ -15,5 +15,17 @@
   "uploadContent.cancelled": "Upload cancelled.",
   "searchJobs.owner.invalid": "Invalid job owner",
   "searchJobs.prefix.invalid": "Invalid job prefix",
-  "saveFile.etagMismatch.log.warning": "Remote file has changed. Presenting with way to resolve file."
+  "saveFile.etagMismatch.log.warning": "Remote file has changed. Presenting with way to resolve file.",
+  "zowe.shared.utils.promptForEncoding.ebcdic.label": "EBCDIC",
+  "zowe.shared.utils.promptForEncoding.ebcdic.description": "z/OS default codepage",
+  "zowe.shared.utils.promptForEncoding.binary.label": "Binary",
+  "zowe.shared.utils.promptForEncoding.binary.description": "Raw data representation",
+  "zowe.shared.utils.promptForEncoding.other.label": "Other",
+  "zowe.shared.utils.promptForEncoding.other.description": "Specify another codepage",
+  "zowe.shared.utils.promptForEncoding.current.description": "Current (local)",
+  "zowe.shared.utils.promptForEncoding.tagged.description": "Tagged (remote)",
+  "zowe.shared.utils.promptForEncoding.untagged.description": "Untagged",
+  "zowe.shared.utils.promptForEncoding.profile.description": "Inherit from profile",
+  "zowe.shared.utils.promptForEncoding.qp.placeHolder": "Choose an encoding",
+  "zowe.shared.utils.promptForEncoding.input.placeHolder": "Enter a codepage in the format 1047 or IBM-1047"
 }

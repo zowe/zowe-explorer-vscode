@@ -17,6 +17,14 @@ import { ZoweUSSNode } from "../uss/ZoweUSSNode";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { IZoweUSSTreeNode } from "@zowe/zowe-explorer-api";
+import * as nls from "vscode-nls";
+
+// Set up localization
+nls.config({
+    messageFormat: nls.MessageFormat.bundle,
+    bundleFormat: nls.BundleFormat.standalone,
+})();
+const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 /**
  * Injects extra data to tooltip based on node status and other conditions
@@ -27,10 +35,12 @@ import { IZoweUSSTreeNode } from "@zowe/zowe-explorer-api";
 export function injectAdditionalDataToTooltip(node: ZoweUSSNode, tooltip: string): string {
     ZoweLogger.trace("uss.utils.injectAdditionalDataToTooltip called.");
     if (node.downloaded && node.downloadedTime) {
-        // TODO: Add time formatter to localization so we will use not just US variant
-        return `${tooltip} (Downloaded: ${new Date(node.downloadedTime)
-            .toISOString()
-            .replace(/(\d{4})-(\d{2})-(\d{2})T((\d{2}):(\d{2}):([^Z]+))Z/, "$5:$6 $2/$3/$1")})`;
+        const downloadedTime = new Date(node.downloadedTime).toLocaleString(vscode.env.language);
+        tooltip += localize("zowe.uss.utils.tooltip.downloaded", "  \nDownloaded: {0}", downloadedTime);
+        const encodingString = node.binary ? localize("zowe.uss.utils.tooltip.binary", "Binary") : node.encoding;
+        if (encodingString != null) {
+            tooltip += localize("zowe.uss.utils.tooltip.encoding", "  \nEncoding: {0}", encodingString);
+        }
     }
 
     return tooltip;
@@ -75,7 +85,7 @@ export async function autoDetectEncoding(node: IZoweUSSTreeNode, profile?: imper
             node.encoding = undefined;
         } else {
             node.setBinary(false);
-            node.encoding = taggedEncoding !== "untagged" ? taggedEncoding : undefined;
+            node.encoding = taggedEncoding !== "untagged" ? taggedEncoding : null;
         }
     } else {
         node.binary = await ussApi.isFileTagBinOrAscii(node.fullPath);

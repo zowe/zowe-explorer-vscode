@@ -895,7 +895,7 @@
           "group": "inline"
         },
         {
-          "when": "view == zowe.uss.explorer && viewItem =~ /^(?!(directory|ussSession|favorite|profile_fav))/",
+          "when": "view == zowe.uss.explorer && viewItem =~ /^(textFile.*|binaryFile.*)/",
           "command": "zowe.uss.openWithEncoding",
           "group": "000_zowe_ussMainframeInteraction@3"
         },

@@ -1542,7 +1542,9 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
 
     public async openWithEncoding(node: IZoweDatasetTreeNode): Promise<void> {
         const encoding = await promptForEncoding(node);
-        if (encoding === "binary") {
+        if (encoding === undefined) {
+            return;
+        } else if (encoding === "binary") {
             node.setBinary(true);
             node.encoding = null;
         } else {
