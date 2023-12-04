@@ -1639,7 +1639,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
         await errorHandling(err, sesName);
     }
     // Get specific node based on label and parent tree (session / favorites)
-    const nodes: api.IZoweDatasetTreeNode[] = concatChildNodes(sesNode ? [sesNode] : datasetProvider.mSessionNodes);
+    const nodes = concatChildNodes(sesNode ? [sesNode] : datasetProvider.mSessionNodes);
     const node: api.IZoweDatasetTreeNode =
         nodes.find((zNode) => {
             if (contextually.isDsMember(zNode)) {
