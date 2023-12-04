@@ -170,6 +170,12 @@ export async function initJobsProvider(context: vscode.ExtensionContext): Promis
         })
     );
     context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.sortBy", async (job) => jobActions.sortJobs(job, jobsProvider)));
+    context.subscriptions.push(
+        vscode.commands.registerCommand(
+            "zowe.jobs.filterJobs",
+            async (job: IZoweJobTreeNode): Promise<vscode.InputBox> => jobsProvider.filterJobsDialog(job)
+        )
+    );
 
     context.subscriptions.push(vscode.workspace.onDidCloseTextDocument(ZosJobsProvider.onDidCloseTextDocument));
 

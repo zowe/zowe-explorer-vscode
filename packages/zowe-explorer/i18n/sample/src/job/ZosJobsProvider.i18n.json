@@ -23,6 +23,13 @@
   "zowe.polling.intervalOption": "Poll interval (in ms) for: {0}",
   "zowe.polling.cancelled": "Polling dismissed for {0}; operation cancelled.",
   "zowe.polling.statusBar": "$(sync~spin) Polling: {0}...",
+  "filter.description": "Filter: {0}",
+  "filterJobs.message": "Use the search button to display jobs",
+  "filterJobs.placeholder": "Set a filter...",
+  "filter.clearForProfile": "$(clear-all) Clear filter for profile",
+  "filter.cleared": "$(check) Filter cleared for {0}",
+  "filterJobs.prompt.message": "Enter local filter...",
+  "filter.updated": "$(check) Filter updated for {0}",
   "zosJobsProvider.specifyCriteria": "Create new...",
   "zosJobsProvider.option.submit": "$(check) Submit this query"
 }

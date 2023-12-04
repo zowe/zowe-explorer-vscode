@@ -55,6 +55,7 @@ describe("Test src/jobs/extension", () => {
             onDidCloseTextDocument: jest.fn(),
             pollData: jest.fn(),
             refreshElement: jest.fn(),
+            filterJobsDialog: jest.fn(),
         };
         const commands: IJestIt[] = [
             {
@@ -219,6 +220,10 @@ describe("Test src/jobs/extension", () => {
                 name: "zowe.jobs.cancelJob",
                 mock: [{ spy: jest.spyOn(jobActions, "cancelJobs"), arg: [jobsProvider, [exampleData.job]] }],
                 parm: [exampleData.job],
+            },
+            {
+                name: "zowe.jobs.filterJobs",
+                mock: [{ spy: jest.spyOn(jobsProvider, "filterJobsDialog"), arg: [test.value] }],
             },
         ];
 
