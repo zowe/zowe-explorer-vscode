@@ -929,6 +929,12 @@ describe("Dataset Tree Unit Tests - Function addSession", () => {
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
         const testTree = new DatasetTree();
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        jest.spyOn(testTree, "addSingleSession").mockImplementation();
+        jest.spyOn(TreeProviders, "providers", "get").mockReturnValue({
+            ds: { addSingleSession: jest.fn(), mSessionNodes: [blockMocks.datasetSessionNode], refresh: jest.fn() } as any,
+            uss: { addSingleSession: jest.fn(), mSessionNodes: [blockMocks.datasetSessionNode], refresh: jest.fn() } as any,
+            jobs: { addSingleSession: jest.fn(), mSessionNodes: [blockMocks.datasetSessionNode], refresh: jest.fn() } as any,
+        } as any);
 
         await testTree.addSession(blockMocks.imperativeProfile.name);
         expect(testTree.mSessionNodes[1].label).toBe(blockMocks.imperativeProfile.name);
@@ -1058,6 +1064,28 @@ describe("USSTree Unit Tests - Function USSTree.addSingleSession()", () => {
 
         expect(blockMocks.testTree.mSessionNodes.length).toEqual(2);
         expect(blockMocks.testTree.mSessionNodes[1].profile.name).toEqual(blockMocks.testProfile.name);
+    });
+
+    it("should log the error if the error includes the hostname", () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        jest.spyOn(ZoweExplorerApiRegister.getMvsApi(blockMocks.testProfile), "getSession").mockImplementationOnce(() => {
+            throw new Error("test error hostname:sample.com");
+        });
+        const zoweLoggerErrorSpy = jest.spyOn(ZoweLogger, "error");
+        expect(blockMocks.testTree.addSingleSession({ name: "test1234" }));
+        expect(zoweLoggerErrorSpy).toBeCalledTimes(1);
+    });
+
+    it("should call 'errorHandling()' if the error does not include the hostname", () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        jest.spyOn(ZoweExplorerApiRegister.getMvsApi(blockMocks.testProfile), "getSession").mockImplementationOnce(() => {
+            throw new Error("test error");
+        });
+        const errorHandlingSpy = jest.spyOn(utils, "errorHandling");
+        expect(blockMocks.testTree.addSingleSession({ name: "test1234" }));
+        expect(errorHandlingSpy).toBeCalledTimes(1);
     });
 });
 
@@ -1552,6 +1580,13 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
             blockMocks.imperativeProfile
         );
         favoriteSearch.contextValue = globals.DS_SESSION_CONTEXT + globals.FAV_SUFFIX;
+
+        jest.spyOn(testTree, "addSingleSession").mockImplementation();
+        jest.spyOn(TreeProviders, "providers", "get").mockReturnValue({
+            ds: { addSingleSession: jest.fn(), mSessionNodes: [blockMocks.datasetSessionNode], refresh: jest.fn() } as any,
+            uss: { addSingleSession: jest.fn(), mSessionNodes: [blockMocks.datasetSessionNode], refresh: jest.fn() } as any,
+            jobs: { addSingleSession: jest.fn(), mSessionNodes: [blockMocks.datasetSessionNode], refresh: jest.fn() } as any,
+        } as any);
 
         await testTree.datasetFilterPrompt(favoriteSearch);
 

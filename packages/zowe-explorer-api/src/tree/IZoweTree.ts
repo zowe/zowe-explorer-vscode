@@ -10,6 +10,7 @@
  */
 
 import * as vscode from "vscode";
+import { imperative } from "@zowe/cli";
 import { IZoweTreeNode } from "./IZoweTreeNode";
 import { DataSetAllocTemplate, PersistenceSchemaEnum } from "../profiles/UserSettings";
 
@@ -63,13 +64,26 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T> {
      * Adds a session to the container
      * @param sessionName
      * @param type e.g. zosmf
+     * @param provider tree provider to add to, undefined will add for all
      */
-    addSession(sessionName?: string, type?: string): Promise<void>;
+    addSession(sessionName?: string, type?: string, provider?: IZoweTree<IZoweTreeNode>): Promise<void>;
+
+    /**
+     * Adds a single session to the tree
+     * @param profile the profile to add to the tree
+     */
+    addSingleSession(profile: imperative.IProfileLoaded): Promise<void>;
+
     /**
      * Edit a session to the container
      * @param node This parameter identifies the node that needs to be called
      */
     editSession(node: IZoweTreeNode, zoweFileProvider: IZoweTree<IZoweTreeNode>): Promise<void>;
+
+    /**
+     * Get sessions from persistent object of provider
+     */
+    getSessions(): string[];
 
     /**
      * Add a new session to the container
