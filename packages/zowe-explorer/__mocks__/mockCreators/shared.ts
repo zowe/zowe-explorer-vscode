@@ -281,6 +281,7 @@ export function createTreeView(selection?): vscode.TreeView<ZoweTreeProvider> {
         visible: true,
         onDidChangeVisibility: jest.fn(),
         dispose: jest.fn(),
+        addSingleSession: jest.fn(),
     } as unknown as vscode.TreeView<ZoweTreeProvider>;
 }
 
@@ -588,6 +589,7 @@ export function createTreeProviders() {
             deleteSession: jest.fn(),
             removeSession: jest.fn(),
             refresh: jest.fn(),
+            addSingleSession: jest.fn(),
         } as any,
         uss: {
             mSessionNodes: [
@@ -597,6 +599,7 @@ export function createTreeProviders() {
             deleteSession: jest.fn(),
             removeSession: jest.fn(),
             refresh: jest.fn(),
+            addSingleSession: jest.fn(),
         } as any,
         job: {
             mSessionNodes: [
@@ -606,6 +609,7 @@ export function createTreeProviders() {
             removeSession: jest.fn(),
             deleteSession: jest.fn(),
             refresh: jest.fn(),
+            addSingleSession: jest.fn(),
         } as any,
     };
 }

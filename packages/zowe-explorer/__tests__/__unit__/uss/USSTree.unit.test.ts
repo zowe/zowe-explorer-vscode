@@ -185,6 +185,12 @@ async function createGlobalMocks() {
         value: jest.fn().mockReturnValue({ usingTeamConfig: false }),
     });
 
+    jest.spyOn(TreeProviders, "providers", "get").mockReturnValue({
+        ds: { addSingleSession: jest.fn(), mSessionNodes: [...globalMocks.testTree.mSessionNodes], refresh: jest.fn() } as any,
+        uss: { addSingleSession: jest.fn(), mSessionNodes: [...globalMocks.testTree.mSessionNodes], refresh: jest.fn() } as any,
+        jobs: { addSingleSession: jest.fn(), mSessionNodes: [...globalMocks.testTree.mSessionNodes], refresh: jest.fn() } as any,
+    } as any);
+
     return globalMocks;
 }
 
