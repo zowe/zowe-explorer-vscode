@@ -30,9 +30,7 @@ export async function initJobsProvider(context: vscode.ExtensionContext): Promis
     }
 
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.jobs.zosJobsOpenspool", (session, spool, refreshTimestamp) =>
-            jobActions.getSpoolContent(session, spool, refreshTimestamp)
-        )
+        vscode.commands.registerCommand("zowe.jobs.zosJobsOpenspool", (session, spoolNode) => jobActions.getSpoolContent(session, spoolNode))
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.jobs.deleteJob", async (job, jobs) => {
@@ -178,6 +176,9 @@ export async function initJobsProvider(context: vscode.ExtensionContext): Promis
             async (job: IZoweJobTreeNode): Promise<vscode.InputBox> => jobsProvider.filterJobsDialog(job)
         )
     );
+
+    context.subscriptions.push(vscode.workspace.onDidCloseTextDocument(ZosJobsProvider.onDidCloseTextDocument));
+
     initSubscribers(context, jobsProvider);
     return jobsProvider;
 }

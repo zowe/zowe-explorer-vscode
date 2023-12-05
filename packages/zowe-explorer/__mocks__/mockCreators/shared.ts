@@ -286,9 +286,10 @@ export function createTreeView(selection?): vscode.TreeView<ZoweTreeProvider> {
 }
 
 export function createTextDocument(name: string, sessionNode?: ZoweDatasetNode | ZoweUSSNode): vscode.TextDocument {
+    const fileName = sessionNode ? `/${sessionNode.label}/${name}` : name;
     return {
-        fileName: sessionNode ? `/${sessionNode.label}/${name}` : name,
-        uri: null,
+        fileName,
+        uri: vscode.Uri.parse(fileName),
         isUntitled: null,
         languageId: null,
         version: null,

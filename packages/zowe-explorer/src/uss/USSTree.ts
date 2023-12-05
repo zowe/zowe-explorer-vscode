@@ -14,7 +14,7 @@ import * as globals from "../globals";
 import * as path from "path";
 import { imperative } from "@zowe/cli";
 import { FilterItem, FilterDescriptor, errorHandling, syncSessionNode } from "../utils/ProfilesUtils";
-import { sortTreeItems, getAppName, checkIfChildPath } from "../shared/utils";
+import { sortTreeItems, getAppName, checkIfChildPath, updateOpenFiles } from "../shared/utils";
 import { Gui, IZoweTree, IZoweTreeNode, IZoweUSSTreeNode, NodeInteraction, ValidProfileEnum, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
@@ -26,6 +26,7 @@ import * as contextually from "../shared/context";
 import * as nls from "vscode-nls";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { TreeViewUtils } from "../utils/TreeViewUtils";
+import { TreeProviders } from "../shared/TreeProviders";
 
 // Set up localization
 nls.config({
@@ -63,6 +64,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
     public lastOpened: NodeInteraction = {};
     private treeView: vscode.TreeView<IZoweUSSTreeNode>;
     public copying: Promise<unknown>;
+    public openFiles: Record<string, IZoweUSSTreeNode> = {};
 
     public constructor() {
         super(
@@ -930,5 +932,16 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             }
         }
         return match;
+    }
+
+    /**
+     * Event listener to mark a USS doc URI as null in the openFiles record
+     * @param this (resolves ESlint warning about unbound methods)
+     * @param doc A doc URI that was closed
+     */
+    public static onDidCloseTextDocument(this: void, doc: vscode.TextDocument): void {
+        if (doc.uri.fsPath.includes(globals.USS_DIR)) {
+            updateOpenFiles(TreeProviders.uss, doc.uri.fsPath, null);
+        }
     }
 }

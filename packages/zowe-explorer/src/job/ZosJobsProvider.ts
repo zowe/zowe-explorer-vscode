@@ -17,7 +17,7 @@ import { FilterItem, errorHandling } from "../utils/ProfilesUtils";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { Job, Spool } from "./ZoweJobNode";
-import { getAppName, sortTreeItems, jobStringValidator } from "../shared/utils";
+import { getAppName, sortTreeItems, jobStringValidator, updateOpenFiles } from "../shared/utils";
 import { ZoweTreeProvider } from "../abstract/ZoweTreeProvider";
 import { getIconByNode } from "../generators/icons";
 import * as contextually from "../shared/context";
@@ -85,6 +85,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
     private static readonly persistenceSchema: PersistenceSchemaEnum = PersistenceSchemaEnum.Job;
     private static readonly submitJobQueryLabel = localize("zosJobsProvider.option.submit", "$(check) Submit this query");
     private static readonly chooseJobStatusLabel = "Job Status";
+    public openFiles: Record<string, IZoweJobTreeNode> = {};
 
     public JOB_PROPERTIES = [
         {
@@ -1175,6 +1176,17 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         });
         inputBox.show();
         return inputBox;
+    }
+
+    /**
+     * Event listener to mark a job doc URI as null in the openFiles record
+     * @param this (resolves ESlint warning about unbound methods)
+     * @param doc A doc URI that was closed
+     */
+    public static onDidCloseTextDocument(this: void, doc: vscode.TextDocument): void {
+        if (doc.uri.scheme === "zosspool") {
+            updateOpenFiles(TreeProviders.job, doc.uri.path, null);
+        }
     }
 }
 

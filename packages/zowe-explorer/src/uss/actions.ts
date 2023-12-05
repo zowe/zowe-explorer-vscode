@@ -14,7 +14,7 @@ import { imperative, IZosFilesResponse } from "@zowe/cli";
 import * as fs from "fs";
 import * as globals from "../globals";
 import * as path from "path";
-import { concatChildNodes, uploadContent, getSelectedNodeList, getDefaultUri, compareFileContent } from "../shared/utils";
+import { concatChildNodes, uploadContent, getSelectedNodeList, getDefaultUri } from "../shared/utils";
 import { errorHandling } from "../utils/ProfilesUtils";
 import { Gui, ValidProfileEnum, IZoweTree, IZoweUSSTreeNode } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
@@ -305,23 +305,18 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
     }
     // Get specific node based on label and parent tree (session / favorites)
     const nodes: IZoweUSSTreeNode[] = concatChildNodes(sesNode ? [sesNode] : ussFileProvider.mSessionNodes);
-    const node = nodes.find((zNode) => {
-        if (contextually.isText(zNode)) {
-            return zNode.fullPath.trim() === remote;
-        } else {
-            return false;
-        }
-    });
+    const node: IZoweUSSTreeNode =
+        nodes.find((zNode) => {
+            if (contextually.isText(zNode)) {
+                return zNode.fullPath.trim() === remote;
+            } else {
+                return false;
+            }
+        }) ?? ussFileProvider.openFiles?.[doc.uri.fsPath];
 
     // define upload options
-    let etagToUpload: string;
-    let returnEtag: boolean;
-    if (node) {
-        etagToUpload = node.getEtag();
-        if (etagToUpload) {
-            returnEtag = true;
-        }
-    }
+    const etagToUpload = node?.getEtag();
+    const returnEtag = etagToUpload != null;
 
     const prof = node?.getProfile() ?? profile;
     try {
@@ -338,9 +333,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
         if (uploadResponse.success) {
             Gui.setStatusBarMessage(uploadResponse.commandResponse, globals.STATUS_BAR_TIMEOUT_MS);
             // set local etag with the new etag from the updated file on mainframe
-            if (node) {
-                node.setEtag(uploadResponse.apiResponse.etag);
-            }
+            node?.setEtag(uploadResponse.apiResponse.etag);
             setFileSaved(true);
             // this part never runs! zowe.Upload.fileToUSSFile doesn't return success: false, it just throws the error which is caught below!!!!!
         } else {

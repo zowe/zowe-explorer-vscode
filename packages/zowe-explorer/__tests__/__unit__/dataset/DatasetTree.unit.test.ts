@@ -52,6 +52,7 @@ import { SettingsConfig } from "../../../src/utils/SettingsConfig";
 import * as sharedActions from "../../../src/shared/actions";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 import { TreeProviders } from "../../../src/shared/TreeProviders";
+import { join } from "path";
 
 jest.mock("fs");
 jest.mock("util");
@@ -3102,6 +3103,16 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
                 get: () => ["test1", "test2", "test3"],
             } as any);
             expect(tree.getFavorites()).toEqual(["test1", "test2", "test3"]);
+        });
+    });
+
+    describe("onDidCloseTextDocument", () => {
+        it("sets the entry in openFiles record to null if Data Set URI is valid", () => {
+            const doc = { uri: { fsPath: join(globals.DS_DIR, "lpar", "SOME.PS") } } as vscode.TextDocument;
+
+            jest.spyOn(TreeProviders, "ds", "get").mockReturnValue(tree);
+            DatasetTree.onDidCloseTextDocument(doc);
+            expect(tree.openFiles[doc.uri.fsPath]).toBeNull();
         });
     });
 });

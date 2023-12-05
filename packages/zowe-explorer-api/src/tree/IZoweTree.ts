@@ -61,6 +61,11 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T> {
     copying?: Promise<unknown>;
 
     /**
+     * A record of open files from this tree.
+     */
+    openFiles?: Record<string, IZoweTreeNode>;
+
+    /**
      * Adds a session to the container
      * @param sessionName
      * @param type e.g. zosmf

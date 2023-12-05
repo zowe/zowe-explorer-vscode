@@ -34,6 +34,7 @@ import * as workspaceUtils from "../../../src/utils/workspace";
 import { createUssApi, bindUssApi } from "../../../__mocks__/mockCreators/api";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 import { TreeProviders } from "../../../src/shared/TreeProviders";
+import { join } from "path";
 
 async function createGlobalMocks() {
     const globalMocks = {
@@ -1758,6 +1759,21 @@ describe("USSTree Unit Tests - Function USSTree.editSession()", () => {
                 get: () => ["test1", "test2", "test3"],
             } as any);
             expect(globalMocks.testTree.getFavorites()).toEqual(["test1", "test2", "test3"]);
+        });
+    });
+
+    describe("onDidCloseTextDocument", () => {
+        it("sets the entry in openFiles record to null if USS URI is valid", async () => {
+            const globalMocks = await createGlobalMocks();
+            const tree = globalMocks.testTree as unknown as any;
+            Object.defineProperty(globals, "USS_DIR", {
+                value: join("some", "fspath", "_U_"),
+            });
+            const doc = { uri: { fsPath: join(globals.USS_DIR, "lpar", "someFile.txt") } } as vscode.TextDocument;
+
+            jest.spyOn(TreeProviders, "uss", "get").mockReturnValue(tree);
+            USSTree.onDidCloseTextDocument(doc);
+            expect(tree.openFiles[doc.uri.fsPath]).toBeNull();
         });
     });
 });
