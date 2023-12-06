@@ -141,8 +141,6 @@ async function createGlobalMocks() {
         appName: vscode.env.appName,
         uriScheme: vscode.env.uriScheme,
         expectedCommands: [
-            "zowe.updateSecureCredentials",
-            "zowe.extRefresh",
             "zowe.all.config.init",
             "zowe.ds.addSession",
             "zowe.ds.addFavorite",
@@ -244,6 +242,7 @@ async function createGlobalMocks() {
             "zowe.jobs.stopPolling",
             "zowe.jobs.cancelJob",
             "zowe.jobs.sortBy",
+            "zowe.updateSecureCredentials",
             "zowe.manualPoll",
             "zowe.editHistory",
             "zowe.promptCredentials",
@@ -261,6 +260,7 @@ async function createGlobalMocks() {
             "zowe.compareWithSelected",
             "zowe.compareWithSelectedReadOnly",
             "zowe.compareFileStarted",
+            "zowe.extRefresh",
         ],
     };
 
@@ -502,7 +502,7 @@ describe("Extension Unit Tests", () => {
         });
     });
 
-    it("Testing that activate correctly executes", async () => {
+    it("Testing that activate correctly executes", () => {
         expect(allCommands.map((c) => c.cmd)).toEqual(globalMocks.expectedCommands);
     });
 
