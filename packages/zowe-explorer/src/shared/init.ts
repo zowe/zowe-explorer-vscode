@@ -351,5 +351,4 @@ async function initZoweExplorerUI(): Promise<void> {
     ProfilesUtils.initializeZoweTempFolder();
     await SettingsConfig.standardizeSettings();
     globals.setActivated(true);
-    vscode.window.showInformationMessage("Zowe Explorer UI initialized");
 }
