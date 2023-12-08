@@ -881,11 +881,11 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             } else {
                 memberNode.getParent().collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
                 this.addSearchHistory(`${parentName}(${memberName})`);
-                await dsActions.openPS(memberNode, false, true, this);
+                await memberNode.openDs(false, true, this);
             }
         } else {
             this.addSearchHistory(parentName);
-            await dsActions.openPS(parentNode, false, true, this);
+            await parentNode.openDs(false, true, this);
         }
     }
 
@@ -1555,7 +1555,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         const encoding = await promptForEncoding(node);
         if (encoding !== undefined) {
             node.setEncoding(encoding);
-            await dsActions.openPS(node, true, false, this);
+            await node.openDs(true, false, this);
         }
     }
 }

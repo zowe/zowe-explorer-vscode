@@ -16,7 +16,7 @@ import * as vscode from "vscode";
 import * as path from "path";
 import * as globals from "../globals";
 import * as os from "os";
-import { Gui, IZoweTreeNode, IZoweNodeType, IZoweDatasetTreeNode, IZoweUSSTreeNode, IZoweJobTreeNode } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweTreeNode, IZoweNodeType, IZoweDatasetTreeNode, IZoweUSSTreeNode, IZoweJobTreeNode, ZosEncoding } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import * as nls from "vscode-nls";
 import { IZosFilesResponse, imperative } from "@zowe/cli";
@@ -412,20 +412,17 @@ export async function compareFileContent(
     }
 }
 
-export function getCachedEncoding<T extends IZoweTreeNode>(node: T): string {
+export function getCachedEncoding<T extends IZoweTreeNode>(node: T): ZosEncoding {
     if (isZoweUSSTreeNode(node)) {
-        return (node.getSessionNode() as IZoweUSSTreeNode).encodingMap[node.fullPath] as string;
+        return (node.getSessionNode() as IZoweUSSTreeNode).encodingMap[node.fullPath];
     } else {
         const isMemberNode = node.contextValue.startsWith(globals.DS_MEMBER_CONTEXT);
         const fullPath = isMemberNode ? `${node.getParent().label as string}(${node.label as string})` : (node.label as string);
-        return (node.getSessionNode() as IZoweDatasetTreeNode).encodingMap[fullPath] as string;
+        return (node.getSessionNode() as IZoweDatasetTreeNode).encodingMap[fullPath];
     }
 }
 
-export async function promptForEncoding(
-    node: IZoweDatasetTreeNode | IZoweUSSTreeNode,
-    taggedEncoding?: string
-): Promise<"text" | "binary" | string | undefined> {
+export async function promptForEncoding(node: IZoweDatasetTreeNode | IZoweUSSTreeNode, taggedEncoding?: string): Promise<ZosEncoding | undefined> {
     const ebcdicItem: vscode.QuickPickItem = {
         label: localize("zowe.shared.utils.promptForEncoding.ebcdic.label", "EBCDIC"),
         description: localize("zowe.shared.utils.promptForEncoding.ebcdic.description", "z/OS default codepage"),

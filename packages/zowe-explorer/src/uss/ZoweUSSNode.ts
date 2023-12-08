@@ -14,7 +14,16 @@ import * as globals from "../globals";
 import * as vscode from "vscode";
 import * as fs from "fs";
 import * as path from "path";
-import { FileAttributes, Gui, IZoweUSSTreeNode, ZoweTreeNode, IZoweTree, ValidProfileEnum, ZoweExplorerApi } from "@zowe/zowe-explorer-api";
+import {
+    FileAttributes,
+    Gui,
+    IZoweUSSTreeNode,
+    ZoweTreeNode,
+    IZoweTree,
+    ValidProfileEnum,
+    ZoweExplorerApi,
+    ZosEncoding,
+} from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { errorHandling, syncSessionNode } from "../utils/ProfilesUtils";
@@ -75,7 +84,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         mParent: IZoweUSSTreeNode,
         session: imperative.Session,
         private parentPath: string,
-        encoding?: "text" | "binary" | string,
+        encoding?: ZosEncoding,
         public mProfileName?: string,
         private etag: string = "",
         profile?: imperative.IProfileLoaded
@@ -291,7 +300,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         this.setEncoding(binary ? "binary" : null);
     }
 
-    public setEncoding(encoding: "text" | "binary" | string): void {
+    public setEncoding(encoding: ZosEncoding): void {
         ZoweLogger.trace("ZoweUSSNode.setEncoding called.");
         if (encoding === "binary") {
             this.contextValue = globals.USS_BINARY_FILE_CONTEXT;

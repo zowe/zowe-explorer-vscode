@@ -11,7 +11,6 @@
 
 import * as vscode from "vscode";
 import * as globals from "../globals";
-import { openPS } from "../dataset/actions";
 import { Gui, IZoweDatasetTreeNode, IZoweUSSTreeNode, IZoweNodeType, IZoweTree, imperative } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { compareFileContent, filterTreeByString, willForceUpload } from "../shared/utils";
@@ -126,7 +125,7 @@ export async function searchInAllLoadedItems(
                 // If selected item is file, open it in workspace
                 ussFileProvider.addSearchHistory(node.fullPath);
                 const ussNode: IZoweUSSTreeNode = node;
-                ussNode.openUSS(false, true, ussFileProvider);
+                await ussNode.openUSS(false, true, ussFileProvider);
             }
         } else {
             // Data set nodes
@@ -144,7 +143,7 @@ export async function searchInAllLoadedItems(
 
                 // Open in workspace
                 datasetProvider.addSearchHistory(`${nodeName}(${memberName})`);
-                await openPS(member, false, true, datasetProvider);
+                await member.openDs(false, true, datasetProvider);
             } else {
                 // PDS & SDS
                 await datasetProvider.getTreeView().reveal(node, { select: true, focus: true, expand: false });
@@ -152,7 +151,7 @@ export async function searchInAllLoadedItems(
                 // If selected node was SDS, open it in workspace
                 if (contextually.isDs(node)) {
                     datasetProvider.addSearchHistory(nodeName);
-                    await openPS(node, false, true, datasetProvider);
+                    await node.openDs(false, true, datasetProvider);
                 }
             }
         }

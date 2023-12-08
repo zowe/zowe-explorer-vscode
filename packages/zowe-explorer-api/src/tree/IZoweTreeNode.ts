@@ -21,6 +21,8 @@ export enum NodeAction {
     Download = "download",
 }
 
+export type ZosEncoding = "text" | "binary" | string;
+
 /**
  * The base interface for Zowe tree nodes that are implemented by vscode.TreeItem.
  *
@@ -157,7 +159,7 @@ export interface IZoweDatasetTreeNode extends IZoweTreeNode {
     /**
      * List of child nodes and user-selected encodings
      */
-    encodingMap?: Record<string, string>;
+    encodingMap?: Record<string, ZosEncoding>;
     /**
      * Binary indicator. Default false (text)
      */
@@ -185,11 +187,19 @@ export interface IZoweDatasetTreeNode extends IZoweTreeNode {
      */
     setEtag?(etag: string);
     /**
+     * Downloads and displays a file in a text editor view
+     *
+     * @param download Download the file default false
+     * @param preview the file, true or false
+     * @param datasetFileProvider the tree provider
+     */
+    openDs?(download: boolean, previewFile: boolean, datasetFileProvider: IZoweTree<IZoweDatasetTreeNode>): Promise<void>;
+    /**
      * Sets the codepage value for the file
      *
      * @param {string}
      */
-    setEncoding?(encoding: string);
+    setEncoding?(encoding: ZosEncoding);
 }
 
 /**
@@ -211,7 +221,7 @@ export interface IZoweUSSTreeNode extends IZoweTreeNode {
     /**
      * List of child nodes and user-selected encodings
      */
-    encodingMap?: Record<string, string>;
+    encodingMap?: Record<string, ZosEncoding>;
     /**
      * Binary indicator. Default false (text)
      */
@@ -272,7 +282,7 @@ export interface IZoweUSSTreeNode extends IZoweTreeNode {
      *
      * @param {string}
      */
-    setEncoding?(encoding: string);
+    setEncoding?(encoding: ZosEncoding);
     // /**
     //  * Opens the text document
     //  * @return vscode.TextDocument
@@ -285,7 +295,7 @@ export interface IZoweUSSTreeNode extends IZoweTreeNode {
      * @param preview the file, true or false
      * @param ussFileProvider the tree provider
      */
-    openUSS?(download: boolean, previewFile: boolean, ussFileProvider: IZoweTree<IZoweUSSTreeNode>);
+    openUSS?(download: boolean, previewFile: boolean, ussFileProvider: IZoweTree<IZoweUSSTreeNode>): Promise<void>;
     /**
      * Returns the local file path for the ZoweUSSNode
      *

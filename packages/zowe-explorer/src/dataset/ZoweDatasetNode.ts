@@ -24,6 +24,9 @@ import {
     ZoweTreeNode,
     SortDirection,
     NodeSort,
+    ZosEncoding,
+    IZoweTree,
+    ValidProfileEnum,
 } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { getIconByNode } from "../generators/icons";
@@ -33,6 +36,9 @@ import { Profiles } from "../Profiles";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import * as dayjs from "dayjs";
 import { ZoweExplorerExtender } from "../ZoweExplorerExtender";
+import * as fs from "fs";
+import { promiseStatus, PromiseStatuses } from "promise-status-async";
+import { getDocumentFilePath } from "../shared/utils";
 
 // Set up localization
 nls.config({
@@ -78,7 +84,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         mParent: IZoweDatasetTreeNode,
         session: zowe.imperative.Session,
         contextOverride?: string,
-        encoding?: "text" | "binary" | string,
+        encoding?: ZosEncoding,
         private etag?: string,
         profile?: zowe.imperative.IProfileLoaded
     ) {
@@ -499,7 +505,102 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         return responses;
     }
 
-    public setEncoding(encoding: "text" | "binary" | string): void {
+    public async openDs(forceDownload: boolean, previewMember: boolean, datasetProvider?: IZoweTree<IZoweDatasetTreeNode>): Promise<void> {
+        ZoweLogger.trace("dataset.actions.openPS called.");
+        if (datasetProvider) {
+            await datasetProvider.checkCurrentProfile(this);
+        }
+
+        // Status of last "open action" promise
+        // If the node doesn't support pending actions, assume last action was resolved to pull new contents
+        const lastActionStatus =
+            this.ongoingActions?.[NodeAction.Download] != null
+                ? await promiseStatus(this.ongoingActions[NodeAction.Download])
+                : PromiseStatuses.PROMISE_RESOLVED;
+
+        // Cache status of double click if the node has the "wasDoubleClicked" property:
+        // allows subsequent clicks to register as double-click if node is not done fetching contents
+        const doubleClicked = Gui.utils.wasDoubleClicked(this, datasetProvider);
+        const shouldPreview = doubleClicked ? false : previewMember;
+        if (this.wasDoubleClicked != null) {
+            this.wasDoubleClicked = doubleClicked;
+        }
+
+        // Prevent future "open actions" until last action is completed
+        if (lastActionStatus == PromiseStatuses.PROMISE_PENDING) {
+            return;
+        }
+
+        if (Profiles.getInstance().validProfile !== ValidProfileEnum.INVALID) {
+            const statusMsg = Gui.setStatusBarMessage(localize("dataSet.opening", "$(sync~spin) Opening data set..."));
+            try {
+                let label: string;
+                const defaultMessage = localize("openDs.error", "Invalid data set or member.");
+                switch (true) {
+                    // For favorited or non-favorited sequential DS:
+                    case contextually.isFavorite(this):
+                    case contextually.isSessionNotFav(this.getParent()):
+                        label = this.label as string;
+                        break;
+                    // For favorited or non-favorited data set members:
+                    case contextually.isFavoritePds(this.getParent()):
+                    case contextually.isPdsNotFav(this.getParent()):
+                        label = this.getParent().getLabel().toString() + "(" + this.getLabel().toString() + ")";
+                        break;
+                    default:
+                        Gui.errorMessage(defaultMessage);
+                        throw Error(defaultMessage);
+                }
+
+                const documentFilePath = getDocumentFilePath(label, this);
+                let responsePromise = this.ongoingActions ? this.ongoingActions[NodeAction.Download] : null;
+                // If there is no ongoing action and the local copy does not exist, fetch contents
+                if (forceDownload || (responsePromise == null && !fs.existsSync(documentFilePath))) {
+                    const prof = this.getProfile();
+                    ZoweLogger.info(localize("openPS.openDataSet", "Opening {0}", label));
+                    if (this.ongoingActions) {
+                        this.ongoingActions[NodeAction.Download] = ZoweExplorerApiRegister.getMvsApi(prof).getContents(label, {
+                            file: documentFilePath,
+                            returnEtag: true,
+                            binary: this.binary,
+                            encoding: this.encoding ?? prof.profile?.encoding,
+                            responseTimeout: prof.profile?.responseTimeout,
+                        });
+                        responsePromise = this.ongoingActions[NodeAction.Download];
+                    } else {
+                        responsePromise = ZoweExplorerApiRegister.getMvsApi(prof).getContents(label, {
+                            file: documentFilePath,
+                            returnEtag: true,
+                            binary: this.binary,
+                            encoding: this.encoding ?? prof.profile?.encoding,
+                            responseTimeout: prof.profile?.responseTimeout,
+                        });
+                    }
+                }
+
+                if (responsePromise != null) {
+                    const response = await responsePromise;
+                    this.setEtag(response.apiResponse.etag);
+                }
+                statusMsg.dispose();
+                const document = await vscode.workspace.openTextDocument(getDocumentFilePath(label, this));
+                await Gui.showTextDocument(document, { preview: this.wasDoubleClicked != null ? !this.wasDoubleClicked : shouldPreview });
+                // discard ongoing action to allow new requests on this node
+                if (this.ongoingActions) {
+                    this.ongoingActions[NodeAction.Download] = null;
+                }
+                if (datasetProvider) {
+                    datasetProvider.addFileHistory(`[${this.getProfileName()}]: ${label}`);
+                }
+            } catch (err) {
+                statusMsg.dispose();
+                await errorHandling(err, this.getProfileName());
+                throw err;
+            }
+        }
+    }
+
+    public setEncoding(encoding: ZosEncoding): void {
         ZoweLogger.trace("ZoweDatasetNode.setEncoding called.");
         if (!(this.contextValue.startsWith(globals.DS_DS_CONTEXT) || this.contextValue.startsWith(globals.DS_MEMBER_CONTEXT))) {
             throw new Error(`Cannot set encoding for node with context ${this.contextValue}`);

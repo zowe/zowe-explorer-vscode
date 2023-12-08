@@ -36,7 +36,6 @@ import * as contextually from "../shared/context";
 import { markDocumentUnsaved, setFileSaved } from "../utils/workspace";
 import { IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
 import { ZoweLogger } from "../utils/LoggerUtils";
-import { promiseStatus, PromiseStatuses } from "promise-status-async";
 import { ProfileManagement } from "../utils/ProfileManagement";
 
 // Set up localization
@@ -423,12 +422,16 @@ export async function createMember(parent: api.IZoweDatasetTreeNode, datasetProv
         parent.dirty = true;
         datasetProvider.refreshElement(parent);
 
-        await openPS(
-            new ZoweDatasetNode(name, vscode.TreeItemCollapsibleState.None, parent, null, undefined, undefined, undefined, parent.getProfile()),
-            false,
-            true,
-            datasetProvider
-        );
+        await new ZoweDatasetNode(
+            name,
+            vscode.TreeItemCollapsibleState.None,
+            parent,
+            null,
+            undefined,
+            undefined,
+            undefined,
+            parent.getProfile()
+        ).openDs(false, true, datasetProvider);
 
         // Refresh corresponding tree parent to reflect addition
         const otherTreeParent = datasetProvider.findEquivalentNode(parent, contextually.isFavorite(parent));
@@ -437,111 +440,6 @@ export async function createMember(parent: api.IZoweDatasetTreeNode, datasetProv
         }
 
         datasetProvider.refresh();
-    }
-}
-
-/**
- * Downloads and displays a PS or data set member in a text editor view
- *
- * @param {IZoweDatasetTreeNode} node
- */
-export async function openPS(
-    node: api.IZoweDatasetTreeNode,
-    forceDownload: boolean,
-    previewMember: boolean,
-    datasetProvider?: api.IZoweTree<api.IZoweDatasetTreeNode>
-): Promise<void> {
-    ZoweLogger.trace("dataset.actions.openPS called.");
-    if (datasetProvider) {
-        await datasetProvider.checkCurrentProfile(node);
-    }
-
-    // Status of last "open action" promise
-    // If the node doesn't support pending actions, assume last action was resolved to pull new contents
-    const lastActionStatus =
-        node.ongoingActions?.[api.NodeAction.Download] != null
-            ? await promiseStatus(node.ongoingActions[api.NodeAction.Download])
-            : PromiseStatuses.PROMISE_RESOLVED;
-
-    // Cache status of double click if the node has the "wasDoubleClicked" property:
-    // allows subsequent clicks to register as double-click if node is not done fetching contents
-    const doubleClicked = api.Gui.utils.wasDoubleClicked(node, datasetProvider);
-    const shouldPreview = doubleClicked ? false : previewMember;
-    if (node.wasDoubleClicked != null) {
-        node.wasDoubleClicked = doubleClicked;
-    }
-
-    // Prevent future "open actions" until last action is completed
-    if (lastActionStatus == PromiseStatuses.PROMISE_PENDING) {
-        return;
-    }
-
-    if (Profiles.getInstance().validProfile !== api.ValidProfileEnum.INVALID) {
-        const statusMsg = api.Gui.setStatusBarMessage(localize("dataSet.opening", "$(sync~spin) Opening data set..."));
-        try {
-            let label: string;
-            const defaultMessage = localize("openPS.error", "Invalid data set or member.");
-            switch (true) {
-                // For favorited or non-favorited sequential DS:
-                case contextually.isFavorite(node):
-                case contextually.isSessionNotFav(node.getParent()):
-                    label = node.label as string;
-                    break;
-                // For favorited or non-favorited data set members:
-                case contextually.isFavoritePds(node.getParent()):
-                case contextually.isPdsNotFav(node.getParent()):
-                    label = node.getParent().getLabel().toString() + "(" + node.getLabel().toString() + ")";
-                    break;
-                default:
-                    api.Gui.errorMessage(defaultMessage);
-                    throw Error(defaultMessage);
-            }
-
-            const documentFilePath = getDocumentFilePath(label, node);
-            let responsePromise = node.ongoingActions ? node.ongoingActions[api.NodeAction.Download] : null;
-            // If there is no ongoing action and the local copy does not exist, fetch contents
-            if (forceDownload || (responsePromise == null && !fs.existsSync(documentFilePath))) {
-                const prof = node.getProfile();
-                ZoweLogger.info(localize("openPS.openDataSet", "Opening {0}", label));
-                if (node.ongoingActions) {
-                    node.ongoingActions[api.NodeAction.Download] = ZoweExplorerApiRegister.getMvsApi(prof).getContents(label, {
-                        file: documentFilePath,
-                        returnEtag: true,
-                        binary: node.binary,
-                        encoding: node.encoding ?? prof.profile?.encoding,
-                        responseTimeout: prof.profile?.responseTimeout,
-                    });
-                    responsePromise = node.ongoingActions[api.NodeAction.Download];
-                } else {
-                    responsePromise = ZoweExplorerApiRegister.getMvsApi(prof).getContents(label, {
-                        file: documentFilePath,
-                        returnEtag: true,
-                        binary: node.binary,
-                        encoding: node.encoding ?? prof.profile?.encoding,
-                        responseTimeout: prof.profile?.responseTimeout,
-                    });
-                }
-            }
-
-            if (responsePromise != null) {
-                const response = await responsePromise;
-                node.setEtag(response.apiResponse.etag);
-            }
-            statusMsg.dispose();
-            const document = await vscode.workspace.openTextDocument(getDocumentFilePath(label, node));
-            await api.Gui.showTextDocument(document, { preview: node.wasDoubleClicked != null ? !node.wasDoubleClicked : shouldPreview });
-            // discard ongoing action to allow new requests on this node
-            if (node.ongoingActions) {
-                node.ongoingActions[api.NodeAction.Download] = null;
-            }
-            if (datasetProvider) {
-                datasetProvider.addFileHistory(`[${node.getProfileName()}]: ${label}`);
-            }
-        } catch (err) {
-            statusMsg.dispose();
-            await errorHandling(err, node.getProfileName());
-            throw err;
-        }
     }
 }
 
