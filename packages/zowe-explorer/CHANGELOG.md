@@ -3,6 +3,7 @@
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
 ## TBD Release
+- PROC and PROCLIB datasets are recognized as JCL [#2612](https://github.com/zowe/vscode-extension-for-zowe/pull/2612)
 
 ### New features and enhancements
 
