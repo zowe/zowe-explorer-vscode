@@ -137,8 +137,8 @@ export class ZoweExplorerExtender implements IApiExplorerExtender, IZoweExplorer
         // will be created with the appropriate meta data. If not called the user will
         // see errors when creating a profile of any type.
         const zoweDir = FileManagement.getZoweDir();
-        const workspaceOpen = vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders[0];
-        const projectDir = workspaceOpen ? FileManagement.getFullPath(vscode.workspace.workspaceFolders[0].uri.fsPath) : undefined;
+        const workspaceDir = vscode.workspace.workspaceFolders?.[0];
+        const projectDir = workspaceDir ? FileManagement.getFullPath(workspaceDir.uri.fsPath) : undefined;
 
         /**
          * This should create initialize the loadedConfig if it is not already
