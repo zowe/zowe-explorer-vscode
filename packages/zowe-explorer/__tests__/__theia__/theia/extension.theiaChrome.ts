@@ -143,6 +143,8 @@ export async function hideProfileInUss() {
     const manageProfile = driverChrome.wait(until.elementLocated(By.xpath(UssLocators.emptyInputBoxXpath)), WAITTIME);
     manageProfile.sendKeys("Hide Profile");
     manageProfile.sendKeys(Key.ENTER);
+    manageProfile.sendKeys("No");
+    manageProfile.sendKeys(Key.ENTER);
 }
 
 export async function hideProfileInJobs() {
@@ -152,6 +154,8 @@ export async function hideProfileInJobs() {
     await driverChrome.sleep(SHORTSLEEPTIME);
     const manageProfile = driverChrome.wait(until.elementLocated(By.xpath(JobsLocators.emptyInputBoxXpath)), WAITTIME);
     manageProfile.sendKeys("Hide Profile");
+    manageProfile.sendKeys(Key.ENTER);
+    manageProfile.sendKeys("No");
     manageProfile.sendKeys(Key.ENTER);
 }
 
@@ -321,6 +325,10 @@ export async function addProfileDetails(profileName: string) {
     await driverChrome.sleep(SHORTSLEEPTIME);
     const responseTimeout = await driverChrome.findElement(By.xpath(DatasetsLocators.emptyInputBoxXpath));
     responseTimeout.sendKeys(Key.ENTER);
+    await driverChrome.sleep(SHORTSLEEPTIME);
+    const addToAllTrees = await driverChrome.findElement(By.xpath(DatasetsLocators.emptyInputBoxXpath));
+    addToAllTrees.sendKeys("No");
+    addToAllTrees.sendKeys(Key.ENTER);
 }
 export async function clickOnDatasetsPanel() {
     await driverChrome.findElement(By.id(DatasetsLocators.datasetsPanelId)).click();

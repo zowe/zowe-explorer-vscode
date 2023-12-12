@@ -26,6 +26,7 @@ import {
     JOB_SUBMIT_DIALOG_OPTS,
     getDefaultUri,
     uploadContent,
+    updateOpenFiles,
 } from "../shared/utils";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { Profiles } from "../Profiles";
@@ -42,6 +43,7 @@ import { ProfileManagement } from "../utils/ProfileManagement";
 // Set up localization
 import * as nls from "vscode-nls";
 import { resolveFileConflict } from "../shared/actions";
+
 nls.config({
     messageFormat: nls.MessageFormat.bundle,
     bundleFormat: nls.BundleFormat.standalone,
@@ -447,7 +449,7 @@ export async function createMember(parent: api.IZoweDatasetTreeNode, datasetProv
 export async function openPS(
     node: api.IZoweDatasetTreeNode,
     previewMember: boolean,
-    datasetProvider?: api.IZoweTree<api.IZoweDatasetTreeNode>
+    datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>
 ): Promise<void> {
     ZoweLogger.trace("dataset.actions.openPS called.");
     if (datasetProvider) {
@@ -524,6 +526,7 @@ export async function openPS(
                 node.setEtag(response.apiResponse.etag);
             }
             statusMsg.dispose();
+            updateOpenFiles(datasetProvider, documentFilePath, node);
             const document = await vscode.workspace.openTextDocument(getDocumentFilePath(label, node));
             await api.Gui.showTextDocument(document, { preview: node.wasDoubleClicked != null ? !node.wasDoubleClicked : shouldPreview });
             // discard ongoing action to allow new requests on this node
@@ -631,7 +634,7 @@ export async function createFile(node: api.IZoweDatasetTreeNode, datasetProvider
             if (property.key === `dsName`) {
                 dsName = property.value;
             } else {
-                if (typeof propertiesFromDsType[property.key] === "number") {
+                if (typeof propertiesFromDsType[property.key] === "number" || property.type === "number") {
                     dsPropsForAPI[property.key] = Number(property.value);
                 } else {
                     dsPropsForAPI[property.key] = property.value;
@@ -987,11 +990,19 @@ export async function submitJcl(datasetProvider: api.IZoweTree<api.IZoweDatasetT
         ZoweLogger.error(notActiveEditorMsg);
         return;
     }
+
     if (file) {
         await vscode.commands.executeCommand("filesExplorer.openFilePreserveFocus", file);
     }
     const doc = vscode.window.activeTextEditor.document;
     ZoweLogger.debug(localize("submitJcl.submitting", "Submitting as JCL in document {0}", doc.fileName));
+
+    // prompts for job submit confirmation when submitting local JCL from editor/palette
+    // no node passed in, ownsJob is true because local file is always owned by userID, passes in local file name
+    if (!(await confirmJobSubmission(doc.fileName, true))) {
+        return;
+    }
+
     // get session name
     const sessionregex = /\[(.*)(\])(?!.*\])/g;
     const regExp = sessionregex.exec(doc.fileName);
@@ -1055,22 +1066,25 @@ export async function submitJcl(datasetProvider: api.IZoweTree<api.IZoweDatasetT
 /**
  * Shows a confirmation dialog (if needed) when submitting a job.
  *
- * @param node The node/member that is being submitted
+ * @param nodeOrFileName The node/member that is being submitted, or the filename to submit
  * @param ownsJob Whether the current user profile owns this job
  * @returns Whether the job submission should continue.
  */
-async function confirmJobSubmission(node: api.IZoweTreeNode, ownsJob: boolean): Promise<boolean> {
+export async function confirmJobSubmission(nodeOrFileName: api.IZoweTreeNode | string, ownsJob: boolean): Promise<boolean> {
     ZoweLogger.trace("dataset.actions.confirmJobSubmission called.");
+
+    const jclName = typeof nodeOrFileName === "string" ? path.basename(nodeOrFileName) : nodeOrFileName.getLabel().toString();
+
     const showConfirmationDialog = async (): Promise<boolean> => {
         const selection = await api.Gui.warningMessage(
-            localize("confirmJobSubmission.confirm", "Are you sure you want to submit the following job?\n\n{0}", node.getLabel().toString()),
+            localize("confirmJobSubmission.confirm", "Are you sure you want to submit the following job?\n\n{0}", jclName),
             { items: [{ title: "Submit" }], vsCodeOpts: { modal: true } }
         );
-
         return selection != null && selection?.title === "Submit";
     };
 
     const confirmationOption: string = vscode.workspace.getConfiguration().get("zowe.jobs.confirmSubmission");
+
     switch (JOB_SUBMIT_DIALOG_OPTS.indexOf(confirmationOption)) {
         case JobSubmitDialogOpts.OtherUserJobs:
             if (!ownsJob && !(await showConfirmationDialog())) {
@@ -1091,7 +1105,6 @@ async function confirmJobSubmission(node: api.IZoweTreeNode, ownsJob: boolean): 
         default:
             break;
     }
-
     return true;
 }
 
@@ -1626,17 +1639,18 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
         await errorHandling(err, sesName);
     }
     // Get specific node based on label and parent tree (session / favorites)
-    const nodes: api.IZoweNodeType[] = concatChildNodes(sesNode ? [sesNode] : datasetProvider.mSessionNodes);
-    const node: api.IZoweDatasetTreeNode = nodes.find((zNode) => {
-        if (contextually.isDsMember(zNode)) {
-            const zNodeDetails = dsUtils.getProfileAndDataSetName(zNode);
-            return `${zNodeDetails.profileName}(${zNodeDetails.dataSetName})` === `${label}`;
-        } else if (contextually.isDs(zNode) || contextually.isDsSession(zNode)) {
-            return zNode.label.toString().trim() === label;
-        } else {
-            return false;
-        }
-    });
+    const nodes = concatChildNodes(sesNode ? [sesNode] : datasetProvider.mSessionNodes);
+    const node: api.IZoweDatasetTreeNode =
+        nodes.find((zNode) => {
+            if (contextually.isDsMember(zNode)) {
+                const zNodeDetails = dsUtils.getProfileAndDataSetName(zNode);
+                return `${zNodeDetails.profileName}(${zNodeDetails.dataSetName})` === `${label}`;
+            } else if (contextually.isDs(zNode) || contextually.isDsSession(zNode)) {
+                return zNode.label.toString().trim() === label;
+            } else {
+                return false;
+            }
+        }) ?? datasetProvider.openFiles?.[doc.uri.fsPath];
 
     // define upload options
     const uploadOptions: IUploadOptions = {
@@ -1658,10 +1672,8 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
         if (uploadResponse.success) {
             api.Gui.setStatusBarMessage(uploadResponse.commandResponse, globals.STATUS_BAR_TIMEOUT_MS);
             // set local etag with the new etag from the updated file on mainframe
-            if (node) {
-                node.setEtag(uploadResponse.apiResponse[0].etag);
-                setFileSaved(true);
-            }
+            node?.setEtag(uploadResponse.apiResponse[0].etag);
+            setFileSaved(true);
         } else if (!uploadResponse.success && uploadResponse.commandResponse.includes("Rest API failure with HTTP(S) status 412")) {
             resolveFileConflict(node, prof, doc, fileLabel, label);
         } else {
