@@ -34,6 +34,7 @@ import { closeOpenedTextFile } from "../utils/workspace";
 import * as nls from "vscode-nls";
 import { UssFileTree, UssFileType, UssFileUtils } from "./FileStructure";
 import { ZoweLogger } from "../utils/LoggerUtils";
+import { IZoweUssTreeOpts } from "../shared/IZoweTreeOpts";
 
 // Set up localization
 nls.config({
@@ -66,33 +67,20 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     public attributes?: FileAttributes;
     public onUpdateEmitter: vscode.EventEmitter<IZoweUSSTreeNode>;
     public encoding?: string;
+    private parentPath: string;
+    private etag?: string;
 
     /**
      * Creates an instance of ZoweUSSNode
      *
-     * @param {string} label - Displayed in the [TreeView]
-     * @param {vscode.TreeItemCollapsibleState} collapsibleState - file/directory
-     * @param {IZoweUSSTreeNode} mParent - The parent node
-     * @param {Session} session
-     * @param {String} parentPath - The file path of the parent on the server
-     * @param {boolean} binary - Indictaes if this is a text or binary file
-     * @param {String} mProfileName - Profile to which the node belongs to
+     * @param {IZoweUssTreeOpts} opts
      */
-    public constructor(
-        label: string,
-        collapsibleState: vscode.TreeItemCollapsibleState,
-        mParent: IZoweUSSTreeNode,
-        session: imperative.Session,
-        private parentPath: string,
-        encoding?: ZosEncoding,
-        public mProfileName?: string,
-        private etag: string = "",
-        profile?: imperative.IProfileLoaded
-    ) {
-        super(label, collapsibleState, mParent, session, profile);
-        this.binary = encoding === "binary";
-        this.encoding = this.binary ? undefined : encoding === "text" ? null : encoding;
-        if (collapsibleState !== vscode.TreeItemCollapsibleState.None) {
+    public constructor(opts: IZoweUssTreeOpts) {
+        super(opts.label, opts.collapsibleState, opts.parentNode, opts.session, opts.profile);
+        this.binary = opts.encoding === "binary";
+        this.encoding = this.binary ? undefined : opts.encoding === "text" ? null : opts.encoding;
+        this.parentPath = opts.parentPath;
+        if (opts.collapsibleState !== vscode.TreeItemCollapsibleState.None) {
             this.contextValue = globals.USS_DIR_CONTEXT;
         } else if (this.binary) {
             this.contextValue = globals.USS_BINARY_FILE_CONTEXT;
@@ -100,29 +88,22 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             this.contextValue = globals.USS_TEXT_FILE_CONTEXT;
         }
         if (this.parentPath) {
-            this.fullPath = this.tooltip = this.parentPath + "/" + label;
-            if (parentPath === "/") {
+            this.fullPath = this.tooltip = this.parentPath + "/" + opts.label;
+            if (opts.parentPath === "/") {
                 // Keep fullPath of root level nodes preceded by a single slash
-                this.fullPath = this.tooltip = "/" + label;
+                this.fullPath = this.tooltip = "/" + opts.label;
             }
         }
-        if (mParent && mParent.contextValue === globals.FAV_PROFILE_CONTEXT) {
-            this.profileName = this.mProfileName = mParent.label.toString();
-            this.fullPath = label.trim();
+        if (opts.parentNode && opts.parentNode.contextValue === globals.FAV_PROFILE_CONTEXT) {
+            this.profileName = opts.parentNode.label.toString();
+            this.fullPath = opts.label.trim();
             // File or directory name only (no parent path)
             this.shortLabel = this.fullPath.split("/", this.fullPath.length).pop();
             // Display name for favorited file or directory in tree view
             this.label = this.shortLabel;
             this.tooltip = this.fullPath;
         }
-        // TODO: this should not be necessary if each node gets initialized with the profile reference.
-        if (mProfileName) {
-            this.setProfileToChoice(Profiles.getInstance().loadNamedProfile(mProfileName));
-        } else if (mParent && mParent.mProfileName) {
-            this.mProfileName = mParent.mProfileName;
-            this.setProfileToChoice(Profiles.getInstance().loadNamedProfile(mParent.mProfileName));
-        }
-        this.etag = etag ? etag : "";
+        this.etag = opts.etag ? opts.etag : "";
         const icon = getIconByNode(this);
         if (icon) {
             this.iconPath = icon.path;
@@ -135,17 +116,6 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
 
     public get onUpdate(): vscode.Event<IZoweUSSTreeNode> {
         return this.onUpdateEmitter.event;
-    }
-
-    /**
-     * Implements access tto profile name
-     * for {IZoweUSSTreeNode}.
-     *
-     * @returns {string}
-     */
-    public getProfileName(): string {
-        ZoweLogger.trace("ZoweUSSNode.getProfileName called.");
-        return this.returnmProfileName();
     }
 
     public getSessionNode(): IZoweUSSTreeNode {
@@ -234,15 +204,12 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
 
             if (item.mode.startsWith("d")) {
                 // Create a node for the USS directory.
-                const temp = new ZoweUSSNode(
-                    item.name,
-                    vscode.TreeItemCollapsibleState.Collapsed,
-                    this,
-                    null,
-                    this.fullPath,
-                    undefined,
-                    item.mProfileName
-                );
+                const temp = new ZoweUSSNode({
+                    label: item.name,
+                    collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                    parentPath: this.fullPath,
+                    profile: this.profile,
+                });
                 temp.attributes = {
                     gid: item.gid,
                     uid: item.uid,
@@ -254,15 +221,14 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             } else {
                 // Create a node for the USS file.
                 const cachedEncoding = this.getSessionNode().encodingMap[`${this.fullPath}/${item.name as string}`];
-                const temp = new ZoweUSSNode(
-                    item.name,
-                    vscode.TreeItemCollapsibleState.None,
-                    this,
-                    null,
-                    this.fullPath,
-                    cachedEncoding,
-                    item.mProfileName
-                );
+                const temp = new ZoweUSSNode({
+                    label: item.name,
+                    collapsibleState: vscode.TreeItemCollapsibleState.None,
+                    parentNode: this,
+                    profile: this.profile,
+                    parentPath: this.fullPath,
+                    encoding: cachedEncoding,
+                });
                 temp.attributes = {
                     gid: item.gid,
                     uid: item.uid,
@@ -568,7 +534,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                     await this.initializeFileOpening(documentFilePath, shouldPreview);
                 }
             } catch (err) {
-                await errorHandling(err, this.mProfileName);
+                await errorHandling(err, this.getProfileName());
                 throw err;
             }
         }
@@ -638,7 +604,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                     localize("refreshUSS.file1", "Unable to find file: ") + label + localize("refreshUSS.file2", " was probably deleted.")
                 );
             } else {
-                await errorHandling(err, this.mProfileName);
+                await errorHandling(err, this.getProfileName());
             }
         }
     }
@@ -799,10 +765,6 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         } catch (error) {
             await errorHandling(error, this.label.toString(), localize("copyUssFile.error", "Error uploading files"));
         }
-    }
-
-    private returnmProfileName(): string {
-        return this.mProfileName;
     }
 }
 

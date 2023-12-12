@@ -15,7 +15,7 @@ import { errorHandling } from "../utils/ProfilesUtils";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { Gui, IZoweTree, IZoweJobTreeNode, JobSortOpts } from "@zowe/zowe-explorer-api";
-import { Job, Spool } from "./ZoweJobNode";
+import { ZoweJobNode, Spool } from "./ZoweJobNode";
 import * as nls from "vscode-nls";
 import SpoolProvider, { encodeJobFile, getSpoolFiles, matchSpool } from "../SpoolProvider";
 import { ZoweLogger } from "../utils/LoggerUtils";
@@ -199,7 +199,7 @@ export async function refreshJobsServer(node: IZoweJobTreeNode, jobsProvider: IZ
  * @param job The job node to refresh
  * @param jobsProvider The tree to which the refreshed node belongs
  */
-export function refreshJob(job: Job, jobsProvider: IZoweTree<IZoweJobTreeNode>): void {
+export function refreshJob(job: ZoweJobNode, jobsProvider: IZoweTree<IZoweJobTreeNode>): void {
     ZoweLogger.trace("job.actions.refreshJob called.");
     jobsProvider.refreshElement(job);
 }
@@ -209,7 +209,7 @@ export function refreshJob(job: Job, jobsProvider: IZoweTree<IZoweJobTreeNode>):
  *
  * @param job The job to download the JCL content from
  */
-export async function downloadJcl(job: Job): Promise<void> {
+export async function downloadJcl(job: ZoweJobNode): Promise<void> {
     ZoweLogger.trace("job.actions.downloadJcl called.");
     try {
         const jobJcl = await ZoweExplorerApiRegister.getJesApi(job.getProfile()).getJclForJob(job.job);
@@ -258,7 +258,7 @@ export const focusOnJob = async (jobsProvider: IZoweTree<IZoweJobTreeNode>, sess
  *
  * @param job The job on which to modify a command
  */
-export async function modifyCommand(job: Job): Promise<void> {
+export async function modifyCommand(job: ZoweJobNode): Promise<void> {
     ZoweLogger.trace("job.actions.modifyCommand called.");
     try {
         const options: vscode.InputBoxOptions = {
@@ -289,7 +289,7 @@ export async function modifyCommand(job: Job): Promise<void> {
  *
  * @param job The job on which to stop a command
  */
-export async function stopCommand(job: Job): Promise<void> {
+export async function stopCommand(job: ZoweJobNode): Promise<void> {
     ZoweLogger.trace("job.actions.stopCommand called.");
     try {
         const commandApi = ZoweExplorerApiRegister.getInstance().getCommandApi(job.getProfile());

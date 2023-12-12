@@ -9,11 +9,10 @@
  *
  */
 
-// @ts-nocheck
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
 import * as globals from "../globals";
-import { Gui, IZoweJobTreeNode, JobSortOpts, SortDirection, ZoweTreeNode } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweJobTreeNode, JobSortOpts, NodeSort, SortDirection, ZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { errorHandling, syncSessionNode } from "../utils/ProfilesUtils";
 import { getIconByNode } from "../generators/icons";
@@ -24,6 +23,7 @@ import * as nls from "vscode-nls";
 import { Profiles } from "../Profiles";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { encodeJobFile } from "../SpoolProvider";
+import { IZoweTreeOpts } from "../shared/IZoweTreeOpts";
 // Set up localization
 nls.config({
     messageFormat: nls.MessageFormat.bundle,
@@ -31,7 +31,7 @@ nls.config({
 })();
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
-export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
+export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
     public static readonly JobId = "Job ID: ";
     public static readonly Owner = "Owner: ";
     public static readonly Prefix = "Prefix: ";
@@ -46,43 +46,36 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
     private _jobStatus: string;
     private _tooltip: string;
 
-    public constructor(
-        label: string,
-        collapsibleState: vscode.TreeItemCollapsibleState,
-        mParent: IZoweJobTreeNode,
-        session: zowe.imperative.Session,
-        public job: zowe.IJob,
-        profile: zowe.imperative.IProfileLoaded
-    ) {
-        let finalLabel = label;
+    public constructor(opts: IZoweTreeOpts, public job?: zowe.IJob) {
+        let finalLabel = opts.label;
         // If the node has a parent and the parent is favorited, it is a saved query
-        if (mParent != null && contextually.isFavProfile(mParent) && !label.includes("|")) {
+        if (opts.parentNode != null && contextually.isFavProfile(opts.parentNode) && !opts.label.includes("|")) {
             finalLabel = "";
             // Convert old format to new format
-            const opts = label.split(" ");
-            for (let i = 0; i < opts.length; i++) {
-                const opt = opts[i];
+            const labelOpts = opts.label.split(" ");
+            for (let i = 0; i < labelOpts.length; i++) {
+                const opt = labelOpts[i];
                 const [key, val] = opt.split(":");
                 finalLabel += `${key}: ${val}`;
-                if (i != opts.length - 1) {
+                if (i != labelOpts.length - 1) {
                     finalLabel += " | ";
                 }
             }
         }
-        super(finalLabel, collapsibleState, mParent, session, profile);
+        super(finalLabel, opts.collapsibleState, opts.parentNode, opts.session, opts.profile);
         this._prefix = "*";
         this._searchId = "";
         this._jobStatus = "*";
         this.filtered = false;
 
-        if (mParent == null && label !== "Favorites") {
+        if (opts.parentNode == null && opts.label !== "Favorites") {
             this.contextValue = globals.JOBS_SESSION_CONTEXT;
         }
 
-        if (session) {
+        if (opts.session) {
             this._owner = "*";
-            if (session.ISession?.user) {
-                this._owner = session.ISession.user;
+            if (opts.session.ISession?.user) {
+                this._owner = opts.session.ISession.user;
             }
         }
 
@@ -112,14 +105,11 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
         ZoweLogger.trace(`ZoweJobNode.getChildren called for ${String(thisSessionNode.label)}.`);
         if (contextually.isSession(this) && !this.filtered && !contextually.isFavorite(this)) {
             return [
-                new Job(
-                    localize("getChildren.search", "Use the search button to display jobs"),
-                    vscode.TreeItemCollapsibleState.None,
-                    this,
-                    null,
-                    null,
-                    null
-                ),
+                new ZoweJobNode({
+                    label: localize("getChildren.search", "Use the search button to display jobs"),
+                    collapsibleState: vscode.TreeItemCollapsibleState.None,
+                    parentNode: this,
+                }),
             ];
         }
 
@@ -187,14 +177,11 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
             const jobs = await this.getJobs(this._owner, this._prefix, this._searchId, this._jobStatus);
 
             if (jobs.length === 0) {
-                const noJobsNode = new Job(
-                    localize("getChildren.noJobs", "No jobs found"),
-                    vscode.TreeItemCollapsibleState.None,
-                    this,
-                    null,
-                    null,
-                    null
-                );
+                const noJobsNode = new ZoweJobNode({
+                    label: localize("getChildren.noJobs", "No jobs found"),
+                    collapsibleState: vscode.TreeItemCollapsibleState.None,
+                    parentNode: this,
+                });
                 noJobsNode.contextValue = globals.INFORMATION_CONTEXT;
                 noJobsNode.iconPath = null;
                 return [noJobsNode];
@@ -214,7 +201,16 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
                     existing.label = nodeTitle;
                     elementChildren[nodeTitle] = existing;
                 } else {
-                    const jobNode = new Job(nodeTitle, vscode.TreeItemCollapsibleState.Collapsed, this, this.session, job, this.getProfile());
+                    const jobNode = new ZoweJobNode(
+                        {
+                            label: nodeTitle,
+                            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                            parentNode: this,
+                            session: this.session,
+                            profile: this.getProfile(),
+                        },
+                        job
+                    );
                     jobNode.contextValue = globals.JOBS_JOB_CONTEXT;
                     if (job.retcode) {
                         jobNode.contextValue += globals.RC_SUFFIX + job.retcode;
@@ -238,7 +234,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
         this.children = this.children
             .concat(newChildren)
             .filter((ch) => Object.values(elementChildren).find((recordCh) => recordCh.label === ch.label) != null)
-            .sort(Job.sortJobs(sortMethod));
+            .sort(ZoweJobNode.sortJobs(sortMethod));
         this.dirty = false;
 
         return this.children;
@@ -408,7 +404,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
     }
 }
 
-export class Spool extends Job {
+export class Spool extends ZoweJobNode {
     public constructor(
         label: string,
         mCollapsibleState: vscode.TreeItemCollapsibleState,

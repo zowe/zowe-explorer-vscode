@@ -422,16 +422,12 @@ export async function createMember(parent: api.IZoweDatasetTreeNode, datasetProv
         parent.dirty = true;
         datasetProvider.refreshElement(parent);
 
-        await new ZoweDatasetNode(
-            name,
-            vscode.TreeItemCollapsibleState.None,
-            parent,
-            null,
-            undefined,
-            undefined,
-            undefined,
-            parent.getProfile()
-        ).openDs(false, true, datasetProvider);
+        await new ZoweDatasetNode({
+            label: name,
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: parent,
+            profile: parent.getProfile(),
+        }).openDs(false, true, datasetProvider);
 
         // Refresh corresponding tree parent to reflect addition
         const otherTreeParent = datasetProvider.findEquivalentNode(parent, contextually.isFavorite(parent));

@@ -50,27 +50,34 @@ export function createUSSTree(favoriteNodes: ZoweUSSNode[], sessionNodes: ZoweUS
 }
 
 export function createUSSNode(session, profile) {
-    const mParent = new ZoweUSSNode("parentNode", vscode.TreeItemCollapsibleState.Expanded, null, session, null, false, profile.name);
-    const ussNode = new ZoweUSSNode("usstest", vscode.TreeItemCollapsibleState.Expanded, mParent, session, null, false, profile.name);
-    mParent.contextValue = globals.USS_SESSION_CONTEXT;
+    const parentNode = new ZoweUSSNode({
+        label: "parentNode",
+        collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
+        session,
+        profile,
+    });
+    const ussNode = new ZoweUSSNode({
+        label: "usstest",
+        collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
+        parentNode,
+        session,
+        profile,
+    });
+    parentNode.contextValue = globals.USS_SESSION_CONTEXT;
     ussNode.contextValue = globals.USS_DIR_CONTEXT;
-    mParent.fullPath = "/u/myuser";
+    parentNode.fullPath = "/u/myuser";
     ussNode.fullPath = "/u/myuser/usstest";
     return ussNode;
 }
 
 export function createUSSSessionNode(session: imperative.Session, profile: imperative.IProfileLoaded) {
-    const zoweUSSNode = new ZoweUSSNode(
-        "sestest",
-        vscode.TreeItemCollapsibleState.Collapsed,
-        null as any,
+    const zoweUSSNode = new ZoweUSSNode({
+        label: "sestest",
+        collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
         session,
-        "/",
-        false,
-        profile.name,
-        undefined,
-        profile
-    );
+        profile,
+        parentPath: "/",
+    });
     zoweUSSNode.fullPath = "test";
     zoweUSSNode.contextValue = globals.USS_SESSION_CONTEXT;
     const targetIcon = getIconByNode(zoweUSSNode);
@@ -84,9 +91,20 @@ export function createUSSSessionNode(session: imperative.Session, profile: imper
 // This is NOT a favorite equivalent of the node created by createdUSSNode.
 // This is a favorited textfile node. createUSSNode creates a USS session node.
 export function createFavoriteUSSNode(session, profile) {
-    const ussNodeF = new ZoweUSSNode("usstest", vscode.TreeItemCollapsibleState.Expanded, null, session, null, false, profile.name);
-    const mParent = new ZoweUSSNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, session, null, false, profile.name);
-    mParent.contextValue = globals.FAV_PROFILE_CONTEXT;
+    const parentNode = new ZoweUSSNode({
+        label: "parentNode",
+        collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
+        session,
+        profile,
+    });
+    const ussNodeF = new ZoweUSSNode({
+        label: "usstest",
+        collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
+        parentNode,
+        session,
+        profile,
+    });
+    parentNode.contextValue = globals.FAV_PROFILE_CONTEXT;
     ussNodeF.contextValue = globals.USS_TEXT_FILE_CONTEXT + globals.FAV_SUFFIX;
     ussNodeF.fullPath = "/u/myuser/usstest";
     ussNodeF.tooltip = "/u/myuser/usstest";

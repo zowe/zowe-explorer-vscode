@@ -228,6 +228,7 @@ export interface IZoweUSSTreeNode extends IZoweTreeNode {
     binary?: boolean;
     /**
      * Specific profile name in use with this node
+     * @deprecated Use `getProfileName` instead
      */
     mProfileName?: string;
 
