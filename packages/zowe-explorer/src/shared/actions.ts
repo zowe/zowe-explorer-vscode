@@ -20,7 +20,6 @@ import * as contextually from "../shared/context";
 import * as nls from "vscode-nls";
 import { getIconById, IconId } from "../generators/icons";
 import { ZoweLogger } from "../utils/LoggerUtils";
-
 import { markDocumentUnsaved } from "../utils/workspace";
 import { LocalFileManagement } from "../utils/LocalFileManagement";
 

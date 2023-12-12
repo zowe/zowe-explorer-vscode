@@ -49,7 +49,6 @@
     "watch": "tsc -watch -p ./"
   },
   "dependencies": {
-    "@zowe/imperative": "5.18.0",
     "@zowe/zowe-explorer-api": "file:../../packages/zowe-explorer-api"
   },
   "devDependencies": {

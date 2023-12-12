@@ -13,9 +13,9 @@ import * as vscode from "vscode";
 import * as globals from "../globals";
 import * as dsActions from "./actions";
 import * as refreshActions from "../shared/refresh";
-import { IZoweDatasetTreeNode, IZoweTreeNode, IZoweTree } from "@zowe/zowe-explorer-api";
+import { IZoweDatasetTreeNode, IZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
-import { createDatasetTree } from "./DatasetTree";
+import { DatasetTree, createDatasetTree } from "./DatasetTree";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import * as contextuals from "../shared/context";
 import { getSelectedNodeList } from "../shared/utils";
@@ -23,7 +23,7 @@ import { initSubscribers } from "../shared/init";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { TreeViewUtils } from "../utils/TreeViewUtils";
 
-export async function initDatasetProvider(context: vscode.ExtensionContext): Promise<IZoweTree<IZoweDatasetTreeNode>> {
+export async function initDatasetProvider(context: vscode.ExtensionContext): Promise<DatasetTree> {
     ZoweLogger.trace("dataset.init.initDatasetProvider called.");
     const datasetProvider = await createDatasetTree(globals.LOG);
     if (datasetProvider == null) {
@@ -109,14 +109,17 @@ export async function initDatasetProvider(context: vscode.ExtensionContext): Pro
         })
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.ds.removeSession", async (node: IZoweDatasetTreeNode, nodeList: IZoweDatasetTreeNode[]) => {
-            let selectedNodes = getSelectedNodeList(node, nodeList);
-            selectedNodes = selectedNodes.filter((sNode) => contextuals.isDsSession(sNode));
-            for (const select of selectedNodes) {
-                datasetProvider.deleteSession(select);
+        vscode.commands.registerCommand(
+            "zowe.ds.removeSession",
+            async (node: IZoweDatasetTreeNode, nodeList: IZoweDatasetTreeNode[], hideFromAllTrees: boolean) => {
+                let selectedNodes = getSelectedNodeList(node, nodeList);
+                selectedNodes = selectedNodes.filter((sNode) => contextuals.isDsSession(sNode));
+                for (const select of selectedNodes) {
+                    datasetProvider.deleteSession(select, hideFromAllTrees);
+                }
+                await TreeViewUtils.fixVsCodeMultiSelect(datasetProvider);
             }
-            await TreeViewUtils.fixVsCodeMultiSelect(datasetProvider);
-        })
+        )
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.ds.removeFavorite", async (node, nodeList) => {
@@ -212,6 +215,7 @@ export async function initDatasetProvider(context: vscode.ExtensionContext): Pro
             await datasetProvider.onDidChangeConfiguration(e);
         })
     );
+    context.subscriptions.push(vscode.workspace.onDidCloseTextDocument(DatasetTree.onDidCloseTextDocument));
 
     initSubscribers(context, datasetProvider);
     return datasetProvider;

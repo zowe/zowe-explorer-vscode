@@ -10,34 +10,40 @@
  */
 
 import * as vscode from "vscode";
-import { IZoweTree, IZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { IZoweProviders } from "./init";
+import { DatasetTree } from "../dataset/DatasetTree";
+import { USSTree } from "../uss/USSTree";
+import { ZosJobsProvider } from "../job/ZosJobsProvider";
+import { IZoweNodeType } from "@zowe/zowe-explorer-api";
+import { getSessionType } from "./context";
 
-type ProviderFunction = (context: vscode.ExtensionContext) => Promise<IZoweTree<IZoweTreeNode>>;
+type ProviderFunctions = {
+    ds: (context: vscode.ExtensionContext) => Promise<DatasetTree>;
+    uss: (context: vscode.ExtensionContext) => Promise<USSTree>;
+    job: (context: vscode.ExtensionContext) => Promise<ZosJobsProvider>;
+};
+
 export class TreeProviders {
-    static #ds: IZoweTree<IZoweTreeNode>;
-    static #uss: IZoweTree<IZoweTreeNode>;
-    static #job: IZoweTree<IZoweTreeNode>;
+    static #ds: DatasetTree;
+    static #uss: USSTree;
+    static #job: ZosJobsProvider;
 
-    public static async initializeProviders(
-        context: vscode.ExtensionContext,
-        initializers: { ds: ProviderFunction; uss: ProviderFunction; job: ProviderFunction }
-    ): Promise<IZoweProviders> {
+    public static async initializeProviders(context: vscode.ExtensionContext, initializers: ProviderFunctions): Promise<IZoweProviders> {
         TreeProviders.#ds = await initializers.ds(context);
         TreeProviders.#uss = await initializers.uss(context);
         TreeProviders.#job = await initializers.job(context);
         return TreeProviders.providers;
     }
 
-    public static get ds(): IZoweTree<IZoweTreeNode> {
+    public static get ds(): DatasetTree {
         return TreeProviders.#ds;
     }
 
-    public static get uss(): IZoweTree<IZoweTreeNode> {
+    public static get uss(): USSTree {
         return TreeProviders.#uss;
     }
 
-    public static get job(): IZoweTree<IZoweTreeNode> {
+    public static get job(): ZosJobsProvider {
         return TreeProviders.#job;
     }
 
@@ -47,5 +53,30 @@ export class TreeProviders {
             uss: TreeProviders.#uss,
             job: TreeProviders.#job,
         };
+    }
+
+    public static getSessionForAllTrees(name: string): IZoweNodeType[] {
+        const sessions: IZoweNodeType[] = [];
+        for (const key of Object.keys(TreeProviders.providers)) {
+            const provider = TreeProviders.providers[key];
+            const session = provider.mSessionNodes.find((mSessionNode: IZoweNodeType) => mSessionNode.getLabel().toString() === name);
+            if (session) {
+                sessions.push(session);
+            }
+        }
+        return sessions;
+    }
+
+    public static sessionIsPresentInOtherTrees(sessionName: string): boolean {
+        const sessions = this.getSessionForAllTrees(sessionName);
+        return sessions.length > 1;
+    }
+
+    public static contextValueExistsAcrossTrees(node: IZoweNodeType, contextValue: string): boolean {
+        const sessions = this.getSessionForAllTrees(node.getLabel().toString());
+        const sessionContextInOtherTree = sessions.find(
+            (session) => session.contextValue.includes(contextValue) && getSessionType(session) !== getSessionType(node)
+        );
+        return sessionContextInOtherTree !== undefined;
     }
 }

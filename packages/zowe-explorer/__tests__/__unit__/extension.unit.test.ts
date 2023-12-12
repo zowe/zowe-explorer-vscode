@@ -50,6 +50,7 @@ async function createGlobalMocks() {
         mockCreateTreeView: jest.fn().mockReturnValue({ onDidCollapseElement: jest.fn() }),
         mockExecuteCommand: jest.fn(),
         mockRegisterCommand: jest.fn(),
+        mockOnDidCloseTextDocument: jest.fn(),
         mockOnDidSaveTextDocument: jest.fn(),
         mockOnDidChangeSelection: jest.fn(),
         mockOnDidChangeConfiguration: jest.fn(),
@@ -222,7 +223,7 @@ async function createGlobalMocks() {
             "zowe.jobs.addJobsSession",
             "zowe.jobs.setOwner",
             "zowe.jobs.setPrefix",
-            "zowe.jobs.removeJobsSession",
+            "zowe.jobs.removeSession",
             "zowe.jobs.downloadSpool",
             "zowe.jobs.downloadSpoolBinary",
             "zowe.jobs.getJobJcl",
@@ -243,6 +244,7 @@ async function createGlobalMocks() {
             "zowe.jobs.cancelJob",
             "zowe.jobs.sortBy",
             "zowe.updateSecureCredentials",
+            "zowe.jobs.filterJobs",
             "zowe.manualPoll",
             "zowe.editHistory",
             "zowe.promptCredentials",
@@ -384,6 +386,8 @@ async function createGlobalMocks() {
         value: globalMocks.mockImperativeProfileInfo,
         configurable: true,
     });
+
+    jest.spyOn(vscode.workspace, "onDidCloseTextDocument").mockImplementation(globalMocks.onDidCloseTextDocument);
 
     // Create a mocked extension context
     const mockExtensionCreator = jest.fn(
@@ -548,10 +552,12 @@ describe("Extension Unit Tests", () => {
             getProfile: jest.fn(),
             getParent: jest.fn().mockReturnValue({ getLabel: jest.fn() }),
             label: "TestNode",
+            getLabel: jest.fn(() => "TestNode"),
         };
+
         const deleteSessionSpy = jest.spyOn(providerObject.prototype, "deleteSession");
         const commandFunction = allCommands.find((cmd) => command === cmd.cmd);
-        await (commandFunction as any).fun(testNode, [testNode]);
+        await (commandFunction as any).fun(testNode, [testNode], true);
         expect(deleteSessionSpy).toHaveBeenCalled();
     }
 

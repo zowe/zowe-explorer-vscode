@@ -17,7 +17,8 @@ import { ProfilesUtils } from "./ProfilesUtils";
 import * as nls from "vscode-nls";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
-import { isZoweDatasetTreeNode, isZoweUSSTreeNode } from "../shared/utils";
+import { getSessionType } from "../shared/context";
+import { TreeProviders } from "../shared/TreeProviders";
 
 // Set up localization
 nls.config({
@@ -132,6 +133,39 @@ export class ProfileManagement {
             description: localize("logoutQpItem.logout.qpDetail", "Log out to invalidate and remove stored token value"),
         },
     };
+    public static getPromptChangeForAllTreesOptions(): vscode.QuickPickItem[] {
+        const qpItemAll: vscode.QuickPickItem = {
+            label: localize("ProfileManagement.getPromptChangeForAllTreesOptions.allLbl", "Yes"),
+            description: localize("ProfileManagement.getPromptChangeForAllTreesOptions.allDesc", "Apply to all trees"),
+        };
+        const qpItemCurrent: vscode.QuickPickItem = {
+            label: localize("ProfileManagement.getPromptChangeForAllTreesOptions.currentLbl", "No"),
+            description: localize("ProfileManagement.getPromptChangeForAllTreesOptions.currentDesc", "Apply to current tree selected"),
+        };
+        return [qpItemAll, qpItemCurrent];
+    }
+    public static async handleChangeForAllTrees(nodeName: string, checkPresence: boolean): Promise<boolean> {
+        const selection = await this.promptChangeForAllTrees(nodeName, checkPresence);
+        if (!selection) {
+            return;
+        }
+        const [all] = this.getPromptChangeForAllTreesOptions();
+        return selection.label === all.label;
+    }
+    private static async promptChangeForAllTrees(nodeName: string, checkPresence: boolean): Promise<vscode.QuickPickItem> {
+        const [qpItemAll, qpItemCurrent] = this.getPromptChangeForAllTreesOptions();
+        if (TreeProviders.sessionIsPresentInOtherTrees(nodeName) === checkPresence) {
+            return qpItemCurrent;
+        }
+        const qp = Gui.createQuickPick();
+        qp.placeholder = localize("ProfileManagement.promptChangeForAllTrees.howToChange", "Do you wish to apply this for all trees?");
+        qp.items = [qpItemAll, qpItemCurrent];
+        qp.activeItems = [qp.items[0]];
+        qp.show();
+        const selection = await Gui.resolveQuickPick(qp);
+        qp.hide();
+        return selection;
+    }
     private static async setupProfileManagementQp(managementType: string, node: IZoweTreeNode): Promise<vscode.QuickPickItem> {
         const profile = node.getProfile();
         const qp = Gui.createQuickPick();
@@ -264,33 +298,43 @@ export class ProfileManagement {
     }
 
     private static async handleHideProfiles(node: IZoweTreeNode): Promise<void> {
-        if (isZoweDatasetTreeNode(node)) {
-            return vscode.commands.executeCommand("zowe.ds.removeSession", node);
+        const shouldHideFromAllTrees = await this.handleChangeForAllTrees(node.getLabel().toString(), false);
+        if (shouldHideFromAllTrees === undefined) {
+            Gui.infoMessage(localize("ProfileManagement.handleHideProfiles.cancelled", "Operation Cancelled"));
+            return;
         }
-        if (isZoweUSSTreeNode(node)) {
-            return vscode.commands.executeCommand("zowe.uss.removeSession", node);
-        }
-        return vscode.commands.executeCommand("zowe.jobs.removeJobsSession", node);
+        const type: string = getSessionType(node);
+        return vscode.commands.executeCommand(`zowe.${type}.removeSession`, node, null, shouldHideFromAllTrees);
     }
 
     private static async handleEnableProfileValidation(node: IZoweTreeNode): Promise<void> {
-        if (isZoweDatasetTreeNode(node)) {
-            return vscode.commands.executeCommand("zowe.ds.enableValidation", node);
-        }
-        if (isZoweUSSTreeNode(node)) {
-            return vscode.commands.executeCommand("zowe.uss.enableValidation", node);
-        }
-        return vscode.commands.executeCommand("zowe.jobs.enableValidation", node);
+        const type: string = getSessionType(node);
+        return vscode.commands.executeCommand(`zowe.${type}.enableValidation`, node);
     }
 
     private static async handleDisableProfileValidation(node: IZoweTreeNode): Promise<void> {
-        if (isZoweDatasetTreeNode(node)) {
-            return vscode.commands.executeCommand("zowe.ds.disableValidation", node);
+        const type: string = getSessionType(node);
+        return vscode.commands.executeCommand(`zowe.${type}.disableValidation`, node);
+    }
+
+    private static isProfileRegisteredWithTree(tree: globals.Trees, profile: imperative.IProfileLoaded): boolean {
+        switch (tree) {
+            case globals.Trees.MVS: {
+                const mvsProfileTypes = ZoweExplorerApiRegister.getInstance().registeredMvsApiTypes();
+                return mvsProfileTypes.includes(profile.type);
+            }
+            case globals.Trees.USS: {
+                const ussProfileTypes = ZoweExplorerApiRegister.getInstance().registeredUssApiTypes();
+                return ussProfileTypes.includes(profile.type);
+            }
+            case globals.Trees.JES: {
+                const jesProfileTypes = ZoweExplorerApiRegister.getInstance().registeredJesApiTypes();
+                return jesProfileTypes.includes(profile.type);
+            }
+            default: {
+                return false;
+            }
         }
-        if (isZoweUSSTreeNode(node)) {
-            return vscode.commands.executeCommand("zowe.uss.disableValidation", node);
-        }
-        return vscode.commands.executeCommand("zowe.jobs.disableValidation", node);
     }
     private static isProfileRegisteredWithTree(tree: globals.Trees, profile: imperative.IProfileLoaded): boolean {
         switch (tree) {
