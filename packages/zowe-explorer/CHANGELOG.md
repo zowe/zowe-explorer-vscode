@@ -6,6 +6,12 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
+### Bug fixes
+
+## `2.13.0`
+
+### New features and enhancements
+
 - Added support for hiding a Zowe profile across all trees [#2567](https://github.com/zowe/vscode-extension-for-zowe/issues/2567)
 - Added support for enabling/disabling validation for a Zowe profile across all trees [#2570](https://github.com/zowe/vscode-extension-for-zowe/issues/2570)
 - Added Display confirmation dialog when submitting local JCL. [#2061](https://github.com/zowe/vscode-extension-for-zowe/issues/2061)
