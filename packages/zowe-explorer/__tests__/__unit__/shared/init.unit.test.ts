@@ -53,6 +53,14 @@ describe("Test src/shared/extension", () => {
         };
         const commands: IJestIt[] = [
             {
+                name: "zowe.updateSecureCredentials",
+                parm: ["@zowe/cli"],
+                mock: [
+                    { spy: jest.spyOn(globals, "setGlobalSecurityValue"), arg: ["@zowe/cli"] },
+                    { spy: jest.spyOn(profUtils.ProfilesUtils, "writeOverridesFile"), arg: [] },
+                ],
+            },
+            {
                 name: "zowe.manualPoll",
                 mock: [],
             },
@@ -395,24 +403,6 @@ describe("Test src/shared/extension", () => {
             expect(context.subscriptions).toContain(treeView);
             expect(spyCollapse).not.toHaveBeenCalled();
             expect(spyExpand).not.toHaveBeenCalled();
-        });
-    });
-
-    describe("registerCredentialManager", () => {
-        let context: any;
-
-        beforeEach(() => {
-            context = { subscriptions: [] };
-            jest.clearAllMocks();
-        });
-        afterAll(() => {
-            jest.restoreAllMocks();
-        });
-
-        it("should register command for updating credentials", () => {
-            const registerCommandSpy = jest.spyOn(vscode.commands, "registerCommand");
-            sharedExtension.registerCredentialManager(context);
-            expect(registerCommandSpy).toBeCalledWith("zowe.updateSecureCredentials", expect.any(Function));
         });
     });
 });
