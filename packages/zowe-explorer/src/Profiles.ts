@@ -38,6 +38,7 @@ import * as nls from "vscode-nls";
 import { SettingsConfig } from "./utils/SettingsConfig";
 import { ZoweLogger } from "./utils/LoggerUtils";
 import { TreeProviders } from "./shared/TreeProviders";
+import { ProfileManagement } from "./utils/ProfileManagement";
 
 // Set up localization
 nls.config({
@@ -438,13 +439,23 @@ export class Profiles extends ProfilesCache {
                         await errorHandling(error, newprofile);
                     }
                     ZoweLogger.info(localize("createZoweSession.createNewProfile", "New profile created, {0}.", chosenProfile));
-                    await zoweFileProvider.addSession(newprofile);
-                    await zoweFileProvider.refresh();
+
+                    if (await ProfileManagement.handleChangeForAllTrees(newprofile, true)) {
+                        await zoweFileProvider.addSession(newprofile);
+                    } else {
+                        await zoweFileProvider.addSession(newprofile, undefined, zoweFileProvider);
+                    }
+
+                    zoweFileProvider.refresh();
                 }
             }
         } else if (chosenProfile) {
             ZoweLogger.info(localize("createZoweSession.addProfile", "The profile {0} has been added to the {1} tree.", chosenProfile, treeType));
-            await zoweFileProvider.addSession(chosenProfile);
+            if (await ProfileManagement.handleChangeForAllTrees(chosenProfile, true)) {
+                await zoweFileProvider.addSession(chosenProfile);
+            } else {
+                await zoweFileProvider.addSession(chosenProfile, undefined, zoweFileProvider);
+            }
         } else {
             ZoweLogger.debug(debugMsg);
         }

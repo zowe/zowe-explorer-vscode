@@ -37,6 +37,11 @@ export const JOB_SORT_KEYS: Record<JobSortOpts, keyof (IJob & { "exec-submitted"
     [JobSortOpts.ReturnCode]: "retcode",
 };
 
+export const JOB_FILTER_OPTS = [
+    localize("filterJobs.quickpick.message", "Go to Local Filtering"),
+    localize("filter.clearForProfile", "$(clear-all) Clear filter for profile"),
+];
+
 export async function resolveQuickPickHelper(quickpick): Promise<FilterItem | undefined> {
     ZoweLogger.trace("job.utils.resolveQuickPickHelper called.");
     return new Promise<FilterItem | undefined>((c) => {

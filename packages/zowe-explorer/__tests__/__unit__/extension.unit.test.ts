@@ -49,6 +49,7 @@ async function createGlobalMocks() {
         mockCreateTreeView: jest.fn().mockReturnValue({ onDidCollapseElement: jest.fn() }),
         mockExecuteCommand: jest.fn(),
         mockRegisterCommand: jest.fn(),
+        mockOnDidCloseTextDocument: jest.fn(),
         mockOnDidSaveTextDocument: jest.fn(),
         mockOnDidChangeSelection: jest.fn(),
         mockOnDidChangeConfiguration: jest.fn(),
@@ -243,6 +244,7 @@ async function createGlobalMocks() {
             "zowe.jobs.stopPolling",
             "zowe.jobs.cancelJob",
             "zowe.jobs.sortBy",
+            "zowe.jobs.filterJobs",
             "zowe.manualPoll",
             "zowe.editHistory",
             "zowe.promptCredentials",
@@ -383,6 +385,8 @@ async function createGlobalMocks() {
     Object.defineProperty(globals, "LOG", { value: jest.fn(), configurable: true });
     Object.defineProperty(globals.LOG, "error", { value: jest.fn(), configurable: true });
     Object.defineProperty(globals.LOG, "debug", { value: jest.fn(), configurable: true });
+
+    jest.spyOn(vscode.workspace, "onDidCloseTextDocument").mockImplementation(globalMocks.onDidCloseTextDocument);
 
     // Create a mocked extension context
     const mockExtensionCreator = jest.fn(

@@ -35,6 +35,46 @@ import { jobStringValidator } from "../../../src/shared/utils";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 import { Poller } from "@zowe/zowe-explorer-api/src/utils";
 import { SettingsConfig } from "../../../src/utils/SettingsConfig";
+import { TreeProviders } from "../../../src/shared/TreeProviders";
+
+jest.mock("vscode");
+const showMock = jest.fn();
+const onDidChangeValueMock = {
+    event: (callback: (value: string) => void): vscode.Disposable => {
+        const disposable = {
+            dispose: jest.fn(),
+        };
+        callback("");
+        return disposable;
+    },
+};
+const mockInputBox: vscode.InputBox = {
+    title: "",
+    value: "",
+    placeholder: "",
+    password: false,
+    onDidChangeValue: onDidChangeValueMock.event,
+    onDidAccept: jest.fn(),
+    show: showMock,
+    hide: jest.fn(),
+    dispose: jest.fn(),
+    buttons: [],
+    onDidTriggerButton: jest.fn(),
+    prompt: "",
+    validationMessage: "",
+    step: 1,
+    totalSteps: 100,
+    enabled: true,
+    busy: false,
+    ignoreFocusOut: false,
+    onDidHide: jest.fn(),
+};
+function setJobObjects(job: zowe.IJob, newJobName: string, newJobId: string, newRetCode: string) {
+    job.jobname = newJobName;
+    job.jobid = newJobId;
+    job.retcode = newRetCode;
+    return job;
+}
 
 async function createGlobalMocks() {
     const globalMocks = {
@@ -126,6 +166,11 @@ async function createGlobalMocks() {
         value: globalMocks.mockGetSpoolFiles,
         configurable: true,
     });
+    Object.defineProperty(vscode.window, "createInputBox", {
+        value: jest.fn(() => mockInputBox),
+        configurable: true,
+    });
+
     Object.defineProperty(vscode.window, "createTreeView", { value: globalMocks.createTreeView, configurable: true });
     Object.defineProperty(vscode.window, "showQuickPick", { value: globalMocks.mockShowQuickPick, configurable: true });
     Object.defineProperty(vscode, "ConfigurationTarget", { value: globalMocks.enums, configurable: true });
@@ -971,5 +1016,95 @@ describe("getFavorites", () => {
             get: () => ["test1", "test2", "test3"],
         } as any);
         expect(tree.getFavorites()).toEqual(["test1", "test2", "test3"]);
+    });
+});
+
+describe("ZosJobsProvider Unit Test - Filter Jobs", () => {
+    const node1: IZoweJobTreeNode = new Job(
+        "jobnew",
+        vscode.TreeItemCollapsibleState.None,
+        null,
+        null,
+        setJobObjects(createIJobObject(), "ZOWEUSR1", "JOB04945", "CC 0000"),
+        null
+    );
+    const node2: IZoweJobTreeNode = new Job(
+        "jobnew",
+        vscode.TreeItemCollapsibleState.None,
+        null,
+        null,
+        setJobObjects(createIJobObject(), "ZOWEUSR2", "JOB05037", "CC 0000"),
+        null
+    );
+    const node3: IZoweJobTreeNode = new Job(
+        "jobnew",
+        vscode.TreeItemCollapsibleState.None,
+        null,
+        null,
+        setJobObjects(createIJobObject(), "ZOWEUSR3", "TSU07707", "ABEND S222"),
+        null
+    );
+
+    let globalMocks;
+    beforeEach(async () => {
+        globalMocks = await createGlobalMocks();
+        const mockTreeProvider = {
+            refresh: jest.fn(),
+        } as any;
+        jest.spyOn(TreeProviders, "job", "get").mockReturnValue(mockTreeProvider);
+    });
+
+    afterEach(() => {
+        jest.restoreAllMocks();
+        jest.resetAllMocks();
+        jest.clearAllMocks();
+    });
+
+    it("To show showInformationMessage", async () => {
+        const testTree = new ZosJobsProvider();
+        node1.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
+        const infoMessageSpy = jest.spyOn(Gui, "infoMessage");
+        await testTree.filterJobsDialog(node1);
+        expect(infoMessageSpy).toHaveBeenCalled();
+    });
+
+    it("To filter jobs based on a combination of JobName, JobId and Return code", async () => {
+        const testTree = new ZosJobsProvider();
+        node1.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+        node1.children = [node2, node3];
+        const createInputBoxSpy = jest.spyOn(vscode.window, "createInputBox");
+        mockInputBox.value = "ZOWEUSR2(JOB05037) - CC 0000";
+        createInputBoxSpy.mockReturnValue(mockInputBox);
+        globalMocks.mockShowQuickPick.mockReturnValueOnce("Go to Local Filtering");
+        const filterJobsSpy = jest.spyOn(testTree, "filterJobsDialog");
+        await testTree.filterJobsDialog(node1);
+        expect(filterJobsSpy).toHaveBeenCalled();
+        expect(filterJobsSpy).toBeCalledWith(node1);
+    });
+
+    it("To check Clear filter for profile", async () => {
+        const testTree = new ZosJobsProvider();
+        node1.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+        node1.children = [node2, node3];
+        const createInputBoxSpy = jest.spyOn(vscode.window, "createInputBox");
+        mockInputBox.value = "ZOWEUSR2(JOB05037) - CC 0000";
+        createInputBoxSpy.mockReturnValue(mockInputBox);
+        globalMocks.mockShowQuickPick.mockReturnValueOnce("$(clear-all) Clear filter for profile");
+        const filterJobsSpy = jest.spyOn(testTree, "filterJobsDialog");
+        await testTree.filterJobsDialog(node1);
+        expect(filterJobsSpy).toHaveBeenCalled();
+        expect(filterJobsSpy).toBeCalledWith(node1);
+    });
+});
+
+describe("onDidCloseTextDocument", () => {
+    it("sets the entry in openFiles record to null if Spool URI is valid", async () => {
+        const doc = { uri: { scheme: "zosspool", path: "JOB12345.SPOOL1.SYSOUT" } } as vscode.TextDocument;
+        await createGlobalMocks();
+        const tree = new ZosJobsProvider();
+
+        jest.spyOn(TreeProviders, "job", "get").mockReturnValue(tree);
+        ZosJobsProvider.onDidCloseTextDocument(doc);
+        expect(tree.openFiles[doc.uri.path]).toBeNull();
     });
 });

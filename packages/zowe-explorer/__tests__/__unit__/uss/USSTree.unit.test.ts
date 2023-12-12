@@ -34,6 +34,7 @@ import * as workspaceUtils from "../../../src/utils/workspace";
 import { createUssApi, bindUssApi } from "../../../__mocks__/mockCreators/api";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 import { TreeProviders } from "../../../src/shared/TreeProviders";
+import { join } from "path";
 
 async function createGlobalMocks() {
     const globalMocks = {
@@ -183,6 +184,12 @@ async function createGlobalMocks() {
     Object.defineProperty(globalMocks.mockProfilesCache, "getProfileInfo", {
         value: jest.fn().mockReturnValue({ usingTeamConfig: false }),
     });
+
+    jest.spyOn(TreeProviders, "providers", "get").mockReturnValue({
+        ds: { addSingleSession: jest.fn(), mSessionNodes: [...globalMocks.testTree.mSessionNodes], refresh: jest.fn() } as any,
+        uss: { addSingleSession: jest.fn(), mSessionNodes: [...globalMocks.testTree.mSessionNodes], refresh: jest.fn() } as any,
+        jobs: { addSingleSession: jest.fn(), mSessionNodes: [...globalMocks.testTree.mSessionNodes], refresh: jest.fn() } as any,
+    } as any);
 
     return globalMocks;
 }
@@ -1752,6 +1759,21 @@ describe("USSTree Unit Tests - Function USSTree.editSession()", () => {
                 get: () => ["test1", "test2", "test3"],
             } as any);
             expect(globalMocks.testTree.getFavorites()).toEqual(["test1", "test2", "test3"]);
+        });
+    });
+
+    describe("onDidCloseTextDocument", () => {
+        it("sets the entry in openFiles record to null if USS URI is valid", async () => {
+            const globalMocks = await createGlobalMocks();
+            const tree = globalMocks.testTree as unknown as any;
+            Object.defineProperty(globals, "USS_DIR", {
+                value: join("some", "fspath", "_U_"),
+            });
+            const doc = { uri: { fsPath: join(globals.USS_DIR, "lpar", "someFile.txt") } } as vscode.TextDocument;
+
+            jest.spyOn(TreeProviders, "uss", "get").mockReturnValue(tree);
+            USSTree.onDidCloseTextDocument(doc);
+            expect(tree.openFiles[doc.uri.fsPath]).toBeNull();
         });
     });
 });
