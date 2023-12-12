@@ -336,23 +336,4 @@ export class ProfileManagement {
             }
         }
     }
-    private static isProfileRegisteredWithTree(tree: globals.Trees, profile: imperative.IProfileLoaded): boolean {
-        switch (tree) {
-            case globals.Trees.MVS: {
-                const mvsProfileTypes = ZoweExplorerApiRegister.getInstance().registeredMvsApiTypes();
-                return mvsProfileTypes.includes(profile.type);
-            }
-            case globals.Trees.USS: {
-                const ussProfileTypes = ZoweExplorerApiRegister.getInstance().registeredUssApiTypes();
-                return ussProfileTypes.includes(profile.type);
-            }
-            case globals.Trees.JES: {
-                const jesProfileTypes = ZoweExplorerApiRegister.getInstance().registeredJesApiTypes();
-                return jesProfileTypes.includes(profile.type);
-            }
-            default: {
-                return false;
-            }
-        }
-    }
 }
