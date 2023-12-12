@@ -15,7 +15,7 @@ import { errorHandling } from "../utils/ProfilesUtils";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { Gui, IZoweTree, IZoweJobTreeNode, JobSortOpts } from "@zowe/zowe-explorer-api";
-import { ZoweJobNode, Spool } from "./ZoweJobNode";
+import { ZoweJobNode, ZoweSpoolNode } from "./ZoweJobNode";
 import * as nls from "vscode-nls";
 import SpoolProvider, { encodeJobFile, getSpoolFiles, matchSpool } from "../SpoolProvider";
 import { ZoweLogger } from "../utils/LoggerUtils";
@@ -167,15 +167,15 @@ export async function getSpoolContentFromMainframe(node: IZoweJobTreeNode): Prom
 
             const newLabel = `${spool.stepname}:${spool.ddname} - ${spool.procstep ?? spool["record-count"]}`;
 
-            const spoolNode = new Spool(
-                newLabel,
-                vscode.TreeItemCollapsibleState.None,
-                node.getParent(),
-                node.getSession(),
+            const spoolNode = new ZoweSpoolNode({
+                label: newLabel,
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                parentNode: node.getParent(),
+                session: node.getSession(),
+                profile: node.getProfile(),
+                job: node.job,
                 spool,
-                node.job,
-                node.getParent()
-            );
+            });
             node = spoolNode;
         }
     }

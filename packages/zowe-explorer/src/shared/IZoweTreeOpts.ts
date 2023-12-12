@@ -9,7 +9,7 @@
  *
  */
 
-import { imperative } from "@zowe/cli";
+import { IJob, imperative } from "@zowe/cli";
 import { IZoweTreeNode, ZosEncoding } from "@zowe/zowe-explorer-api";
 import * as vscode from "vscode";
 
@@ -31,4 +31,8 @@ export interface IZoweUssTreeOpts extends IZoweTreeOpts {
     parentPath?: string;
     encoding?: ZosEncoding;
     etag?: string;
+}
+
+export interface IZoweJobTreeOpts extends IZoweTreeOpts {
+    job?: IJob;
 }

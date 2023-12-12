@@ -61,7 +61,6 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     public profileName = "";
     public shortLabel = "";
     public downloadedTime = null as string;
-    public profile: imperative.IProfileLoaded; // TODO: This reference should be stored instead of the name
     private downloadedInternal = false;
 
     public attributes?: FileAttributes;

@@ -16,7 +16,7 @@ import { Gui, ValidProfileEnum, IZoweTree, IZoweJobTreeNode, PersistenceSchemaEn
 import { FilterItem, errorHandling } from "../utils/ProfilesUtils";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
-import { ZoweJobNode, Spool } from "./ZoweJobNode";
+import { ZoweJobNode, ZoweSpoolNode } from "./ZoweJobNode";
 import { getAppName, sortTreeItems, jobStringValidator } from "../shared/utils";
 import { ZoweTreeProvider } from "../abstract/ZoweTreeProvider";
 import { getIconByNode } from "../generators/icons";
@@ -76,10 +76,10 @@ export async function createJobsTree(log: imperative.Logger): Promise<ZosJobsPro
 }
 
 export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZoweJobTreeNode> {
-    public static readonly JobId = "JobId:";
-    public static readonly Owner = "Owner:";
-    public static readonly Prefix = "Prefix:";
-    public static readonly Status = "Status";
+    public static readonly JobId = "Job ID: ";
+    public static readonly Owner = "Owner: ";
+    public static readonly Prefix = "Prefix: ";
+    public static readonly Status = "Status: ";
     public static readonly defaultDialogText: string = localize("zosJobsProvider.specifyCriteria", "Create new...");
     private static readonly persistenceSchema: PersistenceSchemaEnum = PersistenceSchemaEnum.Job;
     private static readonly submitJobQueryLabel = localize("zosJobsProvider.option.submit", "$(check) Submit this query");
@@ -387,14 +387,12 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         ZoweLogger.trace("ZosJobsProvider.initializeFavChildNodeForProfile called.");
         let favJob: ZoweJobNode;
         if (contextValue.startsWith(globals.JOBS_JOB_CONTEXT)) {
-            favJob = new ZoweJobNode(
-                {
-                    label,
-                    collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
-                    parentNode,
-                },
-                new JobDetail(label)
-            );
+            favJob = new ZoweJobNode({
+                label,
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                parentNode,
+                job: new JobDetail(label),
+            });
             favJob.contextValue = globals.JOBS_JOB_CONTEXT + globals.FAV_SUFFIX;
             favJob.command = { command: "zowe.zosJobsSelectjob", title: "", arguments: [favJob] };
         } else {
@@ -515,31 +513,27 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         }
         if (contextually.isSession(node)) {
             // Favorite a search/session
-            favJob = new ZoweJobNode(
-                {
-                    label: this.createSearchLabel(node.owner, node.prefix, node.searchId, node.status),
-                    collapsibleState: vscode.TreeItemCollapsibleState.None,
-                    parentNode: profileNodeInFavorites,
-                    session: node.getSession(),
-                    profile: node.getProfile(),
-                },
-                node.job
-            );
+            favJob = new ZoweJobNode({
+                label: this.createSearchLabel(node.owner, node.prefix, node.searchId, node.status),
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                parentNode: profileNodeInFavorites,
+                session: node.getSession(),
+                profile: node.getProfile(),
+                job: node.job,
+            });
             favJob.contextValue = globals.JOBS_SESSION_CONTEXT + globals.FAV_SUFFIX;
             favJob.command = { command: "zowe.jobs.search", title: "", arguments: [favJob] };
             this.saveSearch(favJob);
         } else {
             // Favorite a job
-            favJob = new ZoweJobNode(
-                {
-                    label: node.label as string,
-                    collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
-                    parentNode: profileNodeInFavorites,
-                    session: node.getSession(),
-                    profile: node.getProfile(),
-                },
-                node.job
-            );
+            favJob = new ZoweJobNode({
+                label: node.label as string,
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                parentNode: profileNodeInFavorites,
+                session: node.getSession(),
+                profile: node.getProfile(),
+                job: node.job,
+            });
             favJob.contextValue = node.contextValue;
             favJob.command = { command: "zowe.zosJobsSelectjob", title: "", arguments: [favJob] };
             this.createJobsFavorite(favJob);
@@ -866,7 +860,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                 if (searchCriteria != null) {
                     node.filtered = true;
                     node.label = node.getProfileName();
-                    node.description = searchCriteria;
+                    node.tooltip = node.description = searchCriteria;
                     node.dirty = true;
                     this.addSearchHistory(searchCriteria);
                     await TreeViewUtils.expandNode(node, this);
@@ -915,17 +909,17 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         ZoweLogger.trace("ZosJobsProvider.createSearchLabel called.");
         const alphaNumeric = new RegExp("^w+$");
         if (jobid && !alphaNumeric.exec(jobid.trim())) {
-            return ZoweJobNode.JobId + jobid.toUpperCase().trim();
+            return ZosJobsProvider.JobId + jobid.toUpperCase().trim();
         }
         let revisedCriteria = "";
         if (owner) {
-            revisedCriteria = ZoweJobNode.Owner + owner.trim() + " | ";
+            revisedCriteria = ZosJobsProvider.Owner + owner.trim() + " | ";
         }
         if (prefix) {
-            revisedCriteria += ZoweJobNode.Prefix + prefix.trim() + " | ";
+            revisedCriteria += ZosJobsProvider.Prefix + prefix.trim() + " | ";
         }
         if (status) {
-            revisedCriteria += ZoweJobNode.Status + status.trim();
+            revisedCriteria += ZosJobsProvider.Status + status.trim();
         }
 
         return revisedCriteria.trim();
@@ -1129,7 +1123,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         const session = node.getSessionNode();
 
         // Interpret node as spool to get spool data
-        const spoolData = (node as Spool).spool;
+        const spoolData = (node as ZoweSpoolNode).spool;
         const encodedUri = encodeJobFile(session.label as string, spoolData);
 
         // If the uri is already being polled, mark it as ready for removal
