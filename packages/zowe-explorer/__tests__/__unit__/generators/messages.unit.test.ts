@@ -42,27 +42,23 @@ describe("Checking message generator's basics", () => {
             message: "",
             failNotFound: false,
         };
-        return new ZoweDatasetNode("session", vscode.TreeItemCollapsibleState.Collapsed, null, session, undefined, undefined, profile);
+        return new ZoweDatasetNode({ label: "session", collapsibleState: vscode.TreeItemCollapsibleState.Collapsed, session, profile });
     };
     const generateTestDatasetMemberNode = (session: ZoweDatasetNode) => {
-        const parent = new ZoweDatasetNode(
-            "pds",
-            vscode.TreeItemCollapsibleState.Collapsed,
-            session,
-            session.getSession(),
-            undefined,
-            undefined,
-            session.getProfile()
-        );
-        return new ZoweDatasetNode(
-            "member",
-            vscode.TreeItemCollapsibleState.None,
-            parent,
-            parent.getSession(),
-            undefined,
-            undefined,
-            parent.getProfile()
-        );
+        const parent = new ZoweDatasetNode({
+            label: "pds",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: session,
+            session: session.getSession(),
+            profile: session.getProfile(),
+        });
+        return new ZoweDatasetNode({
+            label: "member",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: parent,
+            session: parent.getSession(),
+            profile: parent.getProfile(),
+        });
     };
 
     setGlobalMocks();

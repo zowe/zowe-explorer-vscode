@@ -216,7 +216,12 @@ describe("Dataset Tree Unit Tests - Function getTreeItem", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
 
-        const node = new ZoweDatasetNode("BRTVS99", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, blockMocks.session);
+        const node = new ZoweDatasetNode({
+            label: "BRTVS99",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.datasetSessionNode,
+            session: blockMocks.session,
+        });
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
         const testTree = new DatasetTree();
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);

@@ -9,7 +9,7 @@
  *
  */
 
-import { Job } from "../../src/job/ZoweJobNode";
+import { ZoweJobNode } from "../../src/job/ZoweJobNode";
 import * as vscode from "vscode";
 import * as globals from "../../src/globals";
 import { IJob, IJobFile, imperative } from "@zowe/cli";
@@ -65,7 +65,13 @@ export function createIJobFile(): IJobFile {
 }
 
 export function createJobsTree(session: imperative.Session, iJob: IJob, profile: imperative.IProfileLoaded, treeView: any): any {
-    const jobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, null, session, iJob, profile);
+    const jobNode = new ZoweJobNode({
+        label: "jobtest",
+        collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
+        session,
+        profile,
+        job: iJob,
+    });
     jobNode.contextValue = globals.JOBS_SESSION_CONTEXT;
 
     const testJobsTree = {
@@ -123,21 +129,36 @@ export function createJobsTree(session: imperative.Session, iJob: IJob, profile:
 }
 
 export function createJobSessionNode(session: imperative.Session, profile: imperative.IProfileLoaded) {
-    const jobSessionNode = new Job("sestest", vscode.TreeItemCollapsibleState.Collapsed, null, session, null, profile);
+    const jobSessionNode = new ZoweJobNode({
+        label: "sestest",
+        collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+        session,
+        profile,
+    });
     jobSessionNode.contextValue = globals.JOBS_SESSION_CONTEXT;
 
     return jobSessionNode;
 }
 
 export function createJobNode(session: any, profile: imperative.IProfileLoaded) {
-    const jobNode = new Job("sampleJob", vscode.TreeItemCollapsibleState.Collapsed, session.getSessionNode(), session, createIJobObject(), profile);
+    const jobNode = new ZoweJobNode({
+        label: "sampleJob",
+        collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+        parentNode: session.getSessionNode(),
+        session,
+        profile,
+        job: createIJobObject(),
+    });
     jobNode.contextValue = globals.JOBS_JOB_CONTEXT;
 
     return jobNode;
 }
 
 export function createJobFavoritesNode() {
-    const jobFavoritesNode = new Job("Favorites", vscode.TreeItemCollapsibleState.Collapsed, null, null, null, null);
+    const jobFavoritesNode = new ZoweJobNode({
+        label: "Favorites",
+        collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+    });
     jobFavoritesNode.contextValue = globals.FAVORITE_CONTEXT;
 
     return jobFavoritesNode;

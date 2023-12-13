@@ -12,7 +12,7 @@
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
 import { Gui, IZoweJobTreeNode, JobSortOpts, SortDirection, ValidProfileEnum } from "@zowe/zowe-explorer-api";
-import { Job, Spool } from "../../../src/job/ZoweJobNode";
+import { Job, Spool, ZoweJobNode } from "../../../src/job/ZoweJobNode";
 import {
     createISession,
     createIProfile,
@@ -52,30 +52,27 @@ function createGlobalMocks() {
         treeView: createTreeView(),
         iJob: createIJobObject(),
         imperativeProfile: createIProfile(),
-        JobNode1: new Job(
-            "testProfile",
-            vscode.TreeItemCollapsibleState.None,
-            null as any,
-            createISession(),
-            settingJobObjects(createIJobObject(), "ZOWEUSR1", "JOB045123", "ABEND S222"),
-            createIProfile()
-        ),
-        JobNode2: new Job(
-            "testProfile",
-            vscode.TreeItemCollapsibleState.None,
-            null as any,
-            createISession(),
-            settingJobObjects(createIJobObject(), "ZOWEUSR1", "JOB045120", "CC 0000"),
-            createIProfile()
-        ),
-        JobNode3: new Job(
-            "testProfile",
-            vscode.TreeItemCollapsibleState.None,
-            null as any,
-            createISession(),
-            settingJobObjects(createIJobObject(), "ZOWEUSR2", "JOB045125", "CC 0000"),
-            createIProfile()
-        ),
+        JobNode1: new ZoweJobNode({
+            label: "testProfile",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            session: createISession(),
+            profile: createIProfile(),
+            job: settingJobObjects(createIJobObject(), "ZOWEUSR1", "JOB045123", "ABEND S222"),
+        }),
+        JobNode2: new ZoweJobNode({
+            label: "testProfile",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            session: createISession(),
+            profile: createIProfile(),
+            job: settingJobObjects(createIJobObject(), "ZOWEUSR1", "JOB045120", "CC 0000"),
+        }),
+        JobNode3: new ZoweJobNode({
+            label: "testProfile",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            session: createISession(),
+            profile: createIProfile(),
+            job: settingJobObjects(createIJobObject(), "ZOWEUSR2", "JOB045125", "CC 0000"),
+        }),
         mockJobArray: [],
         testJobsTree: null as any,
         jesApi: null as any,
@@ -472,7 +469,7 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
             path: "/fake/path/file.txt",
         } as vscode.Uri;
         blockMocks.testDatasetTree.getChildren.mockResolvedValueOnce([
-            new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null as any),
+            new ZoweDatasetNode({ label: "node", collapsibleState: vscode.TreeItemCollapsibleState.None, parentNode: blockMocks.datasetSessionNode }),
             blockMocks.datasetSessionNode,
         ]);
         const commandSpy = jest.spyOn(vscode.commands, "executeCommand");
@@ -498,7 +495,7 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         mocked(vscode.window.showQuickPick).mockReturnValueOnce(Promise.resolve(blockMocks.datasetSessionNode.label));
         blockMocks.testDatasetTree.getChildren.mockResolvedValueOnce([
-            new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null as any),
+            new ZoweDatasetNode({ label: "node", collapsibleState: vscode.TreeItemCollapsibleState.None, parentNode: blockMocks.datasetSessionNode }),
             blockMocks.datasetSessionNode,
         ]);
         activeTextEditorDocument.mockReturnValue(blockMocks.textDocument);
@@ -526,7 +523,7 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
             })
         );
         blockMocks.testDatasetTree.getChildren.mockResolvedValueOnce([
-            new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null as any),
+            new ZoweDatasetNode({ label: "node", collapsibleState: vscode.TreeItemCollapsibleState.None, parentNode: blockMocks.datasetSessionNode }),
             blockMocks.datasetSessionNode,
         ]);
         activeTextEditorDocument.mockReturnValue(blockMocks.textDocument);
@@ -579,7 +576,7 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce(undefined); // Here we imitate the case when no profile was selected
         blockMocks.testDatasetTree.getChildren.mockResolvedValueOnce([
-            new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null as any),
+            new ZoweDatasetNode({ label: "node", collapsibleState: vscode.TreeItemCollapsibleState.None, parentNode: blockMocks.datasetSessionNode }),
             blockMocks.datasetSessionNode,
         ]);
         activeTextEditorDocument.mockReturnValue(blockMocks.textDocument);
@@ -604,7 +601,7 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
             })
         );
         blockMocks.testDatasetTree.getChildren.mockResolvedValueOnce([
-            new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null as any),
+            new ZoweDatasetNode({ label: "node", collapsibleState: vscode.TreeItemCollapsibleState.None, parentNode: blockMocks.datasetSessionNode }),
             blockMocks.datasetSessionNode,
         ]);
         activeTextEditorDocument.mockReturnValue(blockMocks.textDocument);
@@ -646,9 +643,13 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
-        const subNode = new ZoweDatasetNode("dataset", vscode.TreeItemCollapsibleState.Collapsed, blockMocks.datasetSessionNode, null as any);
+        const subNode = new ZoweDatasetNode({
+            label: "dataset",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: blockMocks.datasetSessionNode,
+        });
         subNode.contextValue = globals.DS_PDS_CONTEXT;
-        const member = new ZoweDatasetNode("member", vscode.TreeItemCollapsibleState.None, subNode, null as any);
+        const member = new ZoweDatasetNode({ label: "member", collapsibleState: vscode.TreeItemCollapsibleState.None, parentNode: subNode });
         member.contextValue = globals.DS_MEMBER_CONTEXT;
         const submitJobSpy = jest.spyOn(blockMocks.jesApi, "submitJob");
         submitJobSpy.mockResolvedValueOnce(blockMocks.iJob);
@@ -676,9 +677,13 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
                 };
             }),
         });
-        const subNode = new ZoweDatasetNode("dataset", vscode.TreeItemCollapsibleState.Collapsed, blockMocks.datasetSessionNode, null as any);
+        const subNode = new ZoweDatasetNode({
+            label: "dataset",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: blockMocks.datasetSessionNode,
+        });
         subNode.contextValue = globals.DS_PDS_CONTEXT;
-        const member = new ZoweDatasetNode("member", vscode.TreeItemCollapsibleState.None, subNode, null as any);
+        const member = new ZoweDatasetNode({ label: "member", collapsibleState: vscode.TreeItemCollapsibleState.None, parentNode: subNode });
         member.contextValue = globals.DS_MEMBER_CONTEXT;
         const submitJobSpy = jest.spyOn(blockMocks.jesApi, "submitJob");
         submitJobSpy.mockResolvedValueOnce(blockMocks.iJob);
@@ -695,7 +700,11 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
-        const dataset = new ZoweDatasetNode("dataset", vscode.TreeItemCollapsibleState.Collapsed, blockMocks.datasetSessionNode, null as any);
+        const dataset = new ZoweDatasetNode({
+            label: "dataset",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: blockMocks.datasetSessionNode,
+        });
         dataset.contextValue = globals.DS_DS_CONTEXT;
         const submitJobSpy = jest.spyOn(blockMocks.jesApi, "submitJob");
         submitJobSpy.mockClear();
@@ -713,11 +722,23 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
-        const favProfileNode = new ZoweDatasetNode("test", vscode.TreeItemCollapsibleState.Collapsed, blockMocks.datasetSessionNode, null as any);
+        const favProfileNode = new ZoweDatasetNode({
+            label: "test",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: blockMocks.datasetSessionNode,
+        });
         favProfileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
-        const favoriteSubNode = new ZoweDatasetNode("TEST.JCL", vscode.TreeItemCollapsibleState.Collapsed, favProfileNode, null as any);
+        const favoriteSubNode = new ZoweDatasetNode({
+            label: "TEST.JCL",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: favProfileNode,
+        });
         favoriteSubNode.contextValue = globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX;
-        const favoriteMember = new ZoweDatasetNode(globals.DS_PDS_CONTEXT, vscode.TreeItemCollapsibleState.Collapsed, favoriteSubNode, null as any);
+        const favoriteMember = new ZoweDatasetNode({
+            label: globals.DS_PDS_CONTEXT,
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: favoriteSubNode,
+        });
         favoriteMember.contextValue = globals.DS_MEMBER_CONTEXT;
         const submitJobSpy = jest.spyOn(blockMocks.jesApi, "submitJob");
         submitJobSpy.mockClear();
@@ -735,9 +756,17 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
-        const favProfileNode = new ZoweDatasetNode("test", vscode.TreeItemCollapsibleState.Collapsed, blockMocks.datasetSessionNode, null as any);
+        const favProfileNode = new ZoweDatasetNode({
+            label: "test",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: blockMocks.datasetSessionNode,
+        });
         favProfileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
-        const favoriteDataset = new ZoweDatasetNode("TEST.JCL", vscode.TreeItemCollapsibleState.Collapsed, favProfileNode, null as any);
+        const favoriteDataset = new ZoweDatasetNode({
+            label: "TEST.JCL",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: favProfileNode,
+        });
         favoriteDataset.contextValue = globals.DS_DS_CONTEXT + globals.FAV_SUFFIX;
         const submitJobSpy = jest.spyOn(blockMocks.jesApi, "submitJob");
         submitJobSpy.mockClear();
@@ -755,9 +784,17 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
-        const corruptedNode = new ZoweDatasetNode("gibberish", vscode.TreeItemCollapsibleState.Collapsed, blockMocks.datasetSessionNode, null as any);
+        const corruptedNode = new ZoweDatasetNode({
+            label: "gibberish",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: blockMocks.datasetSessionNode,
+        });
         corruptedNode.contextValue = "gibberish";
-        const corruptedSubNode = new ZoweDatasetNode("gibberishmember", vscode.TreeItemCollapsibleState.Collapsed, corruptedNode, null as any);
+        const corruptedSubNode = new ZoweDatasetNode({
+            label: "gibberishmember",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: corruptedNode,
+        });
         const submitJobSpy = jest.spyOn(blockMocks.jesApi, "submitJob");
         submitJobSpy.mockClear();
         submitJobSpy.mockResolvedValueOnce(blockMocks.iJob);
@@ -778,12 +815,11 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
 
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
-        const dataset = new ZoweDatasetNode(
-            "TESTUSER.DATASET",
-            vscode.TreeItemCollapsibleState.Collapsed,
-            blockMocks.datasetSessionNode,
-            null as any
-        );
+        const dataset = new ZoweDatasetNode({
+            label: "TESTUSER.DATASET",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: blockMocks.datasetSessionNode,
+        });
         dataset.contextValue = globals.DS_DS_CONTEXT;
 
         for (let o = 0; o < sharedUtils.JOB_SUBMIT_DIALOG_OPTS.length; o++) {

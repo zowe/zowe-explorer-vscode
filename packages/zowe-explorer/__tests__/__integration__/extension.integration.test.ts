@@ -61,15 +61,12 @@ describe("Extension Integration Tests", async () => {
     const sessCfg = zowe.ZosmfSession.createSessCfgFromArgs(cmdArgs);
     zowe.imperative.ConnectionPropsForSessCfg.resolveSessCfgProps(sessCfg, cmdArgs);
     const session = new zowe.imperative.Session(sessCfg);
-    const sessionNode = new ZoweDatasetNode(
-        testConst.profile.name,
-        vscode.TreeItemCollapsibleState.Expanded,
-        null,
+    const sessionNode = new ZoweDatasetNode({
+        label: testConst.profile.name,
+        collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
         session,
-        undefined,
-        undefined,
-        testProfile
-    );
+        profile: testProfile,
+    });
     sessionNode.contextValue = globals.DS_SESSION_CONTEXT;
     const pattern = testConst.normalPattern.toUpperCase();
     sessionNode.pattern = pattern;
@@ -179,7 +176,12 @@ describe("Extension Integration Tests", async () => {
             inputBoxStub.returns(testFileName);
 
             const testParentName = pattern + ".EXT.SAMPLE.PDS";
-            const testParentNode = new ZoweDatasetNode(testParentName, vscode.TreeItemCollapsibleState.Collapsed, sessionNode, session);
+            const testParentNode = new ZoweDatasetNode({
+                label: testParentName,
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                parentNode: sessionNode,
+                session,
+            });
             await dsActions.createMember(testParentNode, testTree);
 
             const allMembers = await zowe.List.allMembers(session, testParentName);
@@ -240,12 +242,11 @@ describe("Extension Integration Tests", async () => {
 
         it("should work when called from a saved search", async () => {
             const searchPattern = pattern + ".search";
-            const favoriteSearch = new ZoweDatasetNode(
-                "[" + testConst.profile.name + "]: " + searchPattern,
-                vscode.TreeItemCollapsibleState.None,
-                testTree.mFavoriteSession,
-                null
-            );
+            const favoriteSearch = new ZoweDatasetNode({
+                label: "[" + testConst.profile.name + "]: " + searchPattern,
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                parentNode: testTree.mFavoriteSession,
+            });
             favoriteSearch.contextValue = globals.DS_SESSION_CONTEXT + globals.FAV_SUFFIX;
             await dsActions.enterPattern(favoriteSearch, testTree);
 
@@ -267,7 +268,12 @@ describe("Extension Integration Tests", async () => {
     describe("Allocate Like", () => {
         it("should allocate a copy of the requested data set", async () => {
             const testOriginalName = pattern + ".EXT.SAMPLE.PDS";
-            const testOriginalNode = new ZoweDatasetNode(testOriginalName, vscode.TreeItemCollapsibleState.Collapsed, sessionNode, session);
+            const testOriginalNode = new ZoweDatasetNode({
+                label: testOriginalName,
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                parentNode: sessionNode,
+                session,
+            });
             const testCopyName = pattern + ".ALLOC.LIKE";
 
             const inputStub = sandbox.stub(vscode.window, "showInputBox");
@@ -290,7 +296,12 @@ describe("Extension Integration Tests", async () => {
     describe("Tests for Deleting Data Sets", () => {
         const dataSetName = pattern + ".DELETE.TEST";
         it("should delete a data set", async () => {
-            const testNode = new ZoweDatasetNode(dataSetName, vscode.TreeItemCollapsibleState.None, sessionNode, session);
+            const testNode = new ZoweDatasetNode({
+                label: dataSetName,
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                parentNode: sessionNode,
+                session,
+            });
 
             // Mock user selecting first option from list
             await dsActions.deleteDataset(testNode, testTree);
@@ -321,7 +332,11 @@ describe("Extension Integration Tests", async () => {
 
     describe("Opening a PS", () => {
         it("should open a PS", async () => {
-            const node = new ZoweDatasetNode(pattern + ".EXT.PS", vscode.TreeItemCollapsibleState.None, sessionNode, null);
+            const node = new ZoweDatasetNode({
+                label: pattern + ".EXT.PS",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                parentNode: sessionNode,
+            });
             await dsActions.openPS(node, false, true, testTree);
             expect(
                 path.relative(vscode.window.activeTextEditor.document.fileName, sharedUtils.getDocumentFilePath(pattern + ".EXT.PS", node))
@@ -330,7 +345,11 @@ describe("Extension Integration Tests", async () => {
         }).timeout(TIMEOUT);
 
         it("should display an error message when openPS is passed an invalid node", async () => {
-            const node = new ZoweDatasetNode(pattern + ".GARBAGE", vscode.TreeItemCollapsibleState.None, sessionNode, null);
+            const node = new ZoweDatasetNode({
+                label: pattern + ".GARBAGE",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                parentNode: sessionNode,
+            });
             const errorMessageStub = sandbox.spy(vscode.window, "showErrorMessage");
             await expect(dsActions.openPS(node, false, true)).to.eventually.be.rejectedWith(Error);
 
@@ -410,15 +429,13 @@ describe("Extension Integration Tests", async () => {
 
     describe("Copying data sets", () => {
         beforeEach(() => {
-            const favProfileNode = new ZoweDatasetNode(
-                testConst.profile.name,
-                vscode.TreeItemCollapsibleState.Expanded,
-                null,
+            const favProfileNode = new ZoweDatasetNode({
+                label: testConst.profile.name,
+                collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
                 session,
-                globals.FAV_PROFILE_CONTEXT,
-                undefined,
-                testProfile
-            );
+                profile: testProfile,
+                contextOverride: globals.FAV_PROFILE_CONTEXT,
+            });
             testTree.mFavorites.push(favProfileNode);
         });
         afterEach(() => {
@@ -453,8 +470,18 @@ describe("Extension Integration Tests", async () => {
                     let contents;
 
                     try {
-                        const fromNode = new ZoweDatasetNode(fromDataSetName, vscode.TreeItemCollapsibleState.None, sessionNode, session);
-                        const toNode = new ZoweDatasetNode(toDataSetName, vscode.TreeItemCollapsibleState.None, sessionNode, session);
+                        const fromNode = new ZoweDatasetNode({
+                            label: fromDataSetName,
+                            collapsibleState: vscode.TreeItemCollapsibleState.None,
+                            parentNode: sessionNode,
+                            session,
+                        });
+                        const toNode = new ZoweDatasetNode({
+                            label: toDataSetName,
+                            collapsibleState: vscode.TreeItemCollapsibleState.None,
+                            parentNode: sessionNode,
+                            session,
+                        });
                         const nodeList: ZoweDatasetNode[] = [fromNode];
                         await dsActions.copyDataSets(nodeList, null, null);
 
@@ -490,8 +517,18 @@ describe("Extension Integration Tests", async () => {
                     let contents;
 
                     try {
-                        const parentNode = new ZoweDatasetNode(dataSetName, vscode.TreeItemCollapsibleState.None, sessionNode, session);
-                        const fromNode = new ZoweDatasetNode(fromMemberName, vscode.TreeItemCollapsibleState.None, parentNode, session);
+                        const parentNode = new ZoweDatasetNode({
+                            label: dataSetName,
+                            collapsibleState: vscode.TreeItemCollapsibleState.None,
+                            parentNode: sessionNode,
+                            session,
+                        });
+                        const fromNode = new ZoweDatasetNode({
+                            label: fromMemberName,
+                            collapsibleState: vscode.TreeItemCollapsibleState.None,
+                            parentNode,
+                            session,
+                        });
                         parentNode.contextValue = globals.DS_PDS_CONTEXT;
                         fromNode.contextValue = globals.DS_MEMBER_CONTEXT;
 
@@ -539,8 +576,18 @@ describe("Extension Integration Tests", async () => {
                     let contents;
 
                     try {
-                        const fromNode = new ZoweDatasetNode(fromDataSetName, vscode.TreeItemCollapsibleState.None, sessionNode, session);
-                        const toNode = new ZoweDatasetNode(toDataSetName, vscode.TreeItemCollapsibleState.None, sessionNode, session);
+                        const fromNode = new ZoweDatasetNode({
+                            label: fromDataSetName,
+                            collapsibleState: vscode.TreeItemCollapsibleState.None,
+                            parentNode: sessionNode,
+                            session,
+                        });
+                        const toNode = new ZoweDatasetNode({
+                            label: toDataSetName,
+                            collapsibleState: vscode.TreeItemCollapsibleState.None,
+                            parentNode: sessionNode,
+                            session,
+                        });
                         fromNode.contextValue = globals.DS_DS_CONTEXT;
                         toNode.contextValue = globals.DS_PDS_CONTEXT;
 
@@ -591,9 +638,24 @@ describe("Extension Integration Tests", async () => {
                     let contents;
 
                     try {
-                        const fromParentNode = new ZoweDatasetNode(fromDataSetName, vscode.TreeItemCollapsibleState.None, sessionNode, session);
-                        const fromMemberNode = new ZoweDatasetNode(fromMemberName, vscode.TreeItemCollapsibleState.None, fromParentNode, session);
-                        const toNode = new ZoweDatasetNode(toDataSetName, vscode.TreeItemCollapsibleState.None, sessionNode, session);
+                        const fromParentNode = new ZoweDatasetNode({
+                            label: fromDataSetName,
+                            collapsibleState: vscode.TreeItemCollapsibleState.None,
+                            parentNode: sessionNode,
+                            session,
+                        });
+                        const fromMemberNode = new ZoweDatasetNode({
+                            label: fromMemberName,
+                            collapsibleState: vscode.TreeItemCollapsibleState.None,
+                            parentNode: fromParentNode,
+                            session,
+                        });
+                        const toNode = new ZoweDatasetNode({
+                            label: toDataSetName,
+                            collapsibleState: vscode.TreeItemCollapsibleState.None,
+                            parentNode: sessionNode,
+                            session,
+                        });
                         fromParentNode.contextValue = globals.DS_PDS_CONTEXT;
                         fromMemberNode.contextValue = globals.DS_MEMBER_CONTEXT;
                         toNode.contextValue = globals.DS_DS_CONTEXT;
@@ -632,7 +694,12 @@ describe("Extension Integration Tests", async () => {
                     let error;
 
                     try {
-                        const node = new ZoweDatasetNode(dataSetName, vscode.TreeItemCollapsibleState.None, sessionNode, session);
+                        const node = new ZoweDatasetNode({
+                            label: dataSetName,
+                            collapsibleState: vscode.TreeItemCollapsibleState.None,
+                            parentNode: sessionNode,
+                            session,
+                        });
                         node.contextValue = globals.DS_DS_CONTEXT;
 
                         await dsActions.hMigrateDataSet(node);
@@ -658,7 +725,12 @@ describe("Extension Integration Tests", async () => {
                     let error;
 
                     try {
-                        const node = new ZoweDatasetNode(dataSetName, vscode.TreeItemCollapsibleState.None, sessionNode, session);
+                        const node = new ZoweDatasetNode({
+                            label: dataSetName,
+                            collapsibleState: vscode.TreeItemCollapsibleState.None,
+                            parentNode: sessionNode,
+                            session,
+                        });
                         node.contextValue = globals.DS_DS_CONTEXT;
 
                         await dsActions.hMigrateDataSet(node);
@@ -677,7 +749,12 @@ describe("Extension Integration Tests", async () => {
                     let error;
 
                     try {
-                        const node = new ZoweDatasetNode(dataSetName, vscode.TreeItemCollapsibleState.None, sessionNode, session);
+                        const node = new ZoweDatasetNode({
+                            label: dataSetName,
+                            collapsibleState: vscode.TreeItemCollapsibleState.None,
+                            parentNode: sessionNode,
+                            session,
+                        });
                         node.contextValue = globals.DS_DS_CONTEXT;
 
                         await dsActions.hMigrateDataSet(node);
@@ -708,7 +785,12 @@ describe("Extension Integration Tests", async () => {
                     let error;
 
                     try {
-                        const node = new ZoweDatasetNode(dataSetName, vscode.TreeItemCollapsibleState.None, sessionNode, session);
+                        const node = new ZoweDatasetNode({
+                            label: dataSetName,
+                            collapsibleState: vscode.TreeItemCollapsibleState.None,
+                            parentNode: sessionNode,
+                            session,
+                        });
                         node.contextValue = globals.DS_DS_CONTEXT;
 
                         await dsActions.hRecallDataSet(node);
@@ -734,7 +816,12 @@ describe("Extension Integration Tests", async () => {
                     let error;
 
                     try {
-                        const node = new ZoweDatasetNode(dataSetName, vscode.TreeItemCollapsibleState.None, sessionNode, session);
+                        const node = new ZoweDatasetNode({
+                            label: dataSetName,
+                            collapsibleState: vscode.TreeItemCollapsibleState.None,
+                            parentNode: sessionNode,
+                            session,
+                        });
                         node.contextValue = globals.DS_DS_CONTEXT;
 
                         await dsActions.hRecallDataSet(node);
@@ -753,7 +840,12 @@ describe("Extension Integration Tests", async () => {
                     let error;
 
                     try {
-                        const node = new ZoweDatasetNode(dataSetName, vscode.TreeItemCollapsibleState.None, sessionNode, session);
+                        const node = new ZoweDatasetNode({
+                            label: dataSetName,
+                            collapsibleState: vscode.TreeItemCollapsibleState.None,
+                            parentNode: sessionNode,
+                            session,
+                        });
                         node.contextValue = globals.DS_DS_CONTEXT;
 
                         await dsActions.hRecallDataSet(node);
@@ -921,15 +1013,12 @@ describe("Extension Integration Tests - USS", () => {
     const sessCfg = zowe.ZosmfSession.createSessCfgFromArgs(cmdArgs);
     zowe.imperative.ConnectionPropsForSessCfg.resolveSessCfgProps(sessCfg, cmdArgs);
     const session = new zowe.imperative.Session(sessCfg);
-    const ussSessionNode = new ZoweUSSNode(
-        testConst.profile.name,
-        vscode.TreeItemCollapsibleState.Expanded,
-        null,
+    const ussSessionNode = new ZoweUSSNode({
+        label: testConst.profile.name,
+        collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
         session,
-        null,
-        false,
-        testConst.profile.name
-    );
+        profile: testConst.profile.profile,
+    });
     ussSessionNode.contextValue = globals.USS_SESSION_CONTEXT;
     const fullUSSPath = testConst.ussPattern;
     ussSessionNode.fullPath = fullUSSPath;

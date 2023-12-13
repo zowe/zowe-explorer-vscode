@@ -129,13 +129,13 @@ describe("Shared Actions Unit Tests - Function searchForLoadedItems", () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
 
-        const testNode = new ZoweDatasetNode(
-            "HLQ.PROD2.STUFF",
-            vscode.TreeItemCollapsibleState.Collapsed,
-            blockMocks.datasetSessionNode,
-            globalMocks.session,
-            globals.DS_PDS_CONTEXT
-        );
+        const testNode = new ZoweDatasetNode({
+            label: "HLQ.PROD2.STUFF",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: blockMocks.datasetSessionNode,
+            session: globalMocks.session,
+            contextOverride: globals.DS_PDS_CONTEXT,
+        });
         const testDatasetTree = createDatasetTree(blockMocks.datasetSessionNode, globalMocks.treeView);
         testDatasetTree.getAllLoadedItems.mockResolvedValueOnce([testNode]);
         const testUssTree = createUSSTree([], [blockMocks.ussSessionNode], globalMocks.treeView);
@@ -164,20 +164,20 @@ describe("Shared Actions Unit Tests - Function searchForLoadedItems", () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
 
-        const testNode = new ZoweDatasetNode(
-            "HLQ.PROD2.STUFF",
-            vscode.TreeItemCollapsibleState.Collapsed,
-            blockMocks.datasetSessionNode,
-            globalMocks.session,
-            globals.DS_DS_CONTEXT
-        );
-        const testMember = new ZoweDatasetNode(
-            "TESTMEMB",
-            vscode.TreeItemCollapsibleState.Collapsed,
-            testNode,
-            globalMocks.session,
-            globals.DS_MEMBER_CONTEXT
-        );
+        const testNode = new ZoweDatasetNode({
+            label: "HLQ.PROD2.STUFF",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: blockMocks.datasetSessionNode,
+            session: globalMocks.session,
+            contextOverride: globals.DS_DS_CONTEXT,
+        });
+        const testMember = new ZoweDatasetNode({
+            label: "TESTMEMB",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: testNode,
+            session: globalMocks.session,
+            contextOverride: globals.DS_MEMBER_CONTEXT,
+        });
         testNode.children.push(testMember);
         const testDatasetTree = createDatasetTree(blockMocks.datasetSessionNode, globalMocks.treeView);
         testDatasetTree.getChildren.mockReturnValue([blockMocks.datasetSessionNode]);
@@ -211,15 +211,13 @@ describe("Shared Actions Unit Tests - Function searchForLoadedItems", () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
 
-        const folder = new ZoweUSSNode(
-            "folder",
-            vscode.TreeItemCollapsibleState.Collapsed,
-            blockMocks.ussSessionNode,
-            null as any,
-            "/",
-            false,
-            globalMocks.imperativeProfile.name
-        );
+        const folder = new ZoweUSSNode({
+            label: "folder",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: blockMocks.ussSessionNode,
+            profile: globalMocks.imperativeProfile,
+            parentPath: "/",
+        });
         const testUssTree = createUSSTree([], [blockMocks.ussSessionNode], globalMocks.treeView);
         Object.defineProperty(testUssTree, "getAllLoadedItems", {
             value: jest.fn().mockResolvedValueOnce([folder]),
@@ -246,26 +244,20 @@ describe("Shared Actions Unit Tests - Function searchForLoadedItems", () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
 
-        const folder = new ZoweUSSNode(
-            "folder",
-            vscode.TreeItemCollapsibleState.Collapsed,
-            blockMocks.ussSessionNode,
-            null as any,
-            "/",
-            false,
-            globalMocks.imperativeProfile.name
-        );
-        const file = new ZoweUSSNode(
-            "file",
-            vscode.TreeItemCollapsibleState.None,
-            folder,
-            null as any,
-            "/folder",
-            false,
-            globalMocks.imperativeProfile.name,
-            "",
-            globalMocks.imperativeProfile
-        );
+        const folder = new ZoweUSSNode({
+            label: "folder",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: blockMocks.ussSessionNode,
+            profile: globalMocks.imperativeProfile,
+            parentPath: "/",
+        });
+        const file = new ZoweUSSNode({
+            label: "file",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: folder,
+            profile: globalMocks.imperativeProfile,
+            parentPath: "/folder",
+        });
         const testUssTree = createUSSTree([], [blockMocks.ussSessionNode], globalMocks.treeView);
         Object.defineProperty(testUssTree, "getAllLoadedItems", {
             value: jest.fn().mockResolvedValueOnce([file]),
@@ -326,8 +318,18 @@ describe("Shared Actions Unit Tests - Function openRecentMemberPrompt", () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
 
-        const dsNode = new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.Collapsed, blockMocks.datasetSessionNode, globalMocks.session);
-        const child = new ZoweDatasetNode("child", vscode.TreeItemCollapsibleState.None, dsNode, globalMocks.session);
+        const dsNode = new ZoweDatasetNode({
+            label: "node",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: blockMocks.datasetSessionNode,
+            session: globalMocks.session,
+        });
+        const child = new ZoweDatasetNode({
+            label: "child",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: dsNode,
+            session: globalMocks.session,
+        });
         child.contextValue = globals.DS_MEMBER_CONTEXT;
         child.pattern = child.label as string;
         const qpItem = new utils.FilterDescriptor(child.pattern);
@@ -348,7 +350,12 @@ describe("Shared Actions Unit Tests - Function openRecentMemberPrompt", () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
 
-        const dsNode = new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.Collapsed, blockMocks.datasetSessionNode, globalMocks.session);
+        const dsNode = new ZoweDatasetNode({
+            label: "node",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: blockMocks.datasetSessionNode,
+            session: globalMocks.session,
+        });
         dsNode.contextValue = globals.DS_DS_CONTEXT;
         const qpItem = new utils.FilterDescriptor(dsNode.label as string);
         const quickPickContent = createQuickPickContent("[sestest]: node", [qpItem], globalMocks.qpPlaceholder);
@@ -368,15 +375,13 @@ describe("Shared Actions Unit Tests - Function openRecentMemberPrompt", () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
 
-        const node = new ZoweUSSNode(
-            "node3.txt",
-            vscode.TreeItemCollapsibleState.None,
-            blockMocks.ussSessionNode,
-            null as any,
-            "/node1/node2",
-            false,
-            globalMocks.imperativeProfile.name
-        );
+        const node = new ZoweUSSNode({
+            label: "node3.txt",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.ussSessionNode,
+            profile: globalMocks.imperativeProfile,
+            parentPath: "/node1/node2",
+        });
         node.contextValue = globals.DS_DS_CONTEXT;
         const qpItem = new utils.FilterDescriptor(node.label as string);
         const quickPickContent = createQuickPickContent("[sestest]: /node1/node2/node3.txt", [qpItem], globalMocks.qpPlaceholder);
