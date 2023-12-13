@@ -274,7 +274,7 @@ describe("ZoweVsCodeExtension", () => {
         it("should login using the service profile given a simple profile name", async () => {
             testCache.fetchBaseProfile.mockResolvedValue(baseProfile);
             const testSpy = jest.spyOn(ZoweVsCodeExtension as any, "getServiceProfileForAuthPurposes");
-            const newServiceProfile = { ...serviceProfile, profile: { ...testProfile, ...updProfile, host: "service" } };
+            const newServiceProfile = { ...serviceProfile, profile: { ...testProfile, tokenValue: "tokenValue", host: "service" } };
             testSpy.mockResolvedValue(newServiceProfile);
             jest.spyOn(ZoweVsCodeExtension as any, "promptUserPass").mockResolvedValue(["user", "pass"]);
             const loginSpy = jest.spyOn(Login, "apimlLogin").mockResolvedValue("tokenValue");
