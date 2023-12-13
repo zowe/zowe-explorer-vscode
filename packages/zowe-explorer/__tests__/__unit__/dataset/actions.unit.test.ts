@@ -2839,7 +2839,15 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         await dsActions.createFile(blockMocks.datasetSessionNode, blockMocks.testDatasetTree);
         expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(globals.SETTINGS_DS_DEFAULT_PS);
 
-        expect(createDataSetSpy).toHaveBeenCalledTimes(5);
+        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Partitioned Data Set: COBOL" as any);
+        await dsActions.createFile(blockMocks.datasetSessionNode, blockMocks.testDatasetTree);
+        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(globals.SETTINGS_DS_DEFAULT_COBOL);
+
+        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Partitioned Data Set: Listing" as any);
+        await dsActions.createFile(blockMocks.datasetSessionNode, blockMocks.testDatasetTree);
+        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(globals.SETTINGS_DS_DEFAULT_LISTING);
+
+        expect(createDataSetSpy).toHaveBeenCalledTimes(7);
     });
     it("Checking of proper configuration being picked up for different DS types with credentials prompt", async () => {
         createGlobalMocks();
@@ -2882,7 +2890,15 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         await dsActions.createFile(node, blockMocks.testDatasetTree);
         expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(globals.SETTINGS_DS_DEFAULT_PS);
 
-        expect(createDataSetSpy).toHaveBeenCalledTimes(5);
+        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Partitioned Data Set: COBOL" as any);
+        await dsActions.createFile(node, blockMocks.testDatasetTree);
+        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(globals.SETTINGS_DS_DEFAULT_COBOL);
+
+        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Partitioned Data Set: Listing" as any);
+        await dsActions.createFile(node, blockMocks.testDatasetTree);
+        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(globals.SETTINGS_DS_DEFAULT_LISTING);
+
+        expect(createDataSetSpy).toHaveBeenCalledTimes(7);
     });
     it("Checking of proper configuration being picked up for different DS types with credentials prompt for favorite", async () => {
         createGlobalMocks();
@@ -2924,7 +2940,15 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         await dsActions.createFile(node, blockMocks.testDatasetTree);
         expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(globals.SETTINGS_DS_DEFAULT_PS);
 
-        expect(createDataSetSpy).toHaveBeenCalledTimes(5);
+        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Partitioned Data Set: COBOL" as any);
+        await dsActions.createFile(node, blockMocks.testDatasetTree);
+        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(globals.SETTINGS_DS_DEFAULT_COBOL);
+
+        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Partitioned Data Set: Listing" as any);
+        await dsActions.createFile(node, blockMocks.testDatasetTree);
+        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(globals.SETTINGS_DS_DEFAULT_LISTING);
+
+        expect(createDataSetSpy).toHaveBeenCalledTimes(7);
         createDataSetSpy.mockClear();
     });
     it("Checking PS dataset creation", async () => {

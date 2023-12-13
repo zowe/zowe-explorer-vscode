@@ -1757,6 +1757,21 @@
           "description": "%zowe.ds.default.c%",
           "scope": "resource"
         },
+        "zowe.ds.default.cobol": {
+          "default": {
+            "dsntype": "LIBRARY",
+            "dsorg": "PO",
+            "alcunit": "CYL",
+            "primary": 10,
+            "secondary": 3,
+            "dirblk": 25,
+            "recfm": "FB",
+            "blksize": 27920,
+            "lrecl": 80
+          },
+          "description": "%zowe.ds.default.cobol%",
+          "scope": "resource"
+        },
         "zowe.ds.default.classic": {
           "default": {
             "dsorg": "PO",
@@ -1769,6 +1784,21 @@
             "lrecl": 80
           },
           "description": "%zowe.ds.default.classic%",
+          "scope": "resource"
+        },
+        "zowe.ds.default.listing": {
+          "default": {
+            "dsntype": "LIBRARY",
+            "dsorg": "PO",
+            "alcunit": "CYL",
+            "primary": 10,
+            "secondary": 3,
+            "dirblk": 25,
+            "recfm": "FB",
+            "blksize": 27984,
+            "lrecl": 132
+          },
+          "description": "%zowe.ds.default.listing%",
           "scope": "resource"
         },
         "zowe.ds.default.pds": {

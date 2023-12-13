@@ -84,7 +84,9 @@ export const SETTINGS_TEMP_FOLDER_HIDE = "zowe.files.temporaryDownloadsFolder.hi
 export const SETTINGS_LOGS_FOLDER_PATH = "zowe.files.logsFolder.path";
 export const SETTINGS_DS_DEFAULT_BINARY = "zowe.ds.default.binary";
 export const SETTINGS_DS_DEFAULT_C = "zowe.ds.default.c";
+export const SETTINGS_DS_DEFAULT_COBOL = "zowe.ds.default.cobol";
 export const SETTINGS_DS_DEFAULT_CLASSIC = "zowe.ds.default.classic";
+export const SETTINGS_DS_DEFAULT_LISTING = "zowe.ds.default.listing";
 export const SETTINGS_DS_DEFAULT_PDS = "zowe.ds.default.pds";
 export const SETTINGS_DS_DEFAULT_PS = "zowe.ds.default.ps";
 export const SETTINGS_COMMANDS_HISTORY = "zowe.commands.history";
@@ -111,7 +113,9 @@ export const JOBS_MAX_PREFIX = 8;
 export const configurationDictionary: { [k: string]: string } = {
     "Zowe-Default-Datasets-Binary": SETTINGS_DS_DEFAULT_BINARY,
     "Zowe-Default-Datasets-C": SETTINGS_DS_DEFAULT_C,
+    "Zowe-Default-Datasets-Cobol": SETTINGS_DS_DEFAULT_COBOL,
     "Zowe-Default-Datasets-Classic": SETTINGS_DS_DEFAULT_CLASSIC,
+    "Zowe-Default-Datasets-Listing": SETTINGS_DS_DEFAULT_LISTING,
     "Zowe-Default-Datasets-PDS": SETTINGS_DS_DEFAULT_PDS,
     "Zowe-Default-Datasets-PS": SETTINGS_DS_DEFAULT_PS,
     "Zowe-Temp-Folder-Location": SETTINGS_TEMP_FOLDER_PATH,
@@ -134,6 +138,7 @@ export enum CreateDataSetTypeWithKeysEnum {
     DATA_SET_CLASSIC,
     DATA_SET_PARTITIONED,
     DATA_SET_SEQUENTIAL,
+    DATA_SET_BLANK,
 }
 export const DATA_SET_PROPERTIES = [
     {
