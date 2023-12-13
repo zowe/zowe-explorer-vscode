@@ -12,7 +12,7 @@
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
 import { Gui, IZoweJobTreeNode, JobSortOpts, SortDirection, ValidProfileEnum } from "@zowe/zowe-explorer-api";
-import { Job, Spool, ZoweJobNode } from "../../../src/job/ZoweJobNode";
+import { ZoweJobNode } from "../../../src/job/ZoweJobNode";
 import {
     createISession,
     createIProfile,
@@ -149,7 +149,7 @@ afterEach(() => {
 describe("Jobs Actions Unit Tests - Function setPrefix", () => {
     it("Checking that the prefix is set correctly on the job", async () => {
         const blockMocks = createGlobalMocks();
-        const node = new Job("job", vscode.TreeItemCollapsibleState.None, null as any, blockMocks.session, null as any, null as any);
+        const node = new ZoweJobNode({ label: "job", collapsibleState: vscode.TreeItemCollapsibleState.None, session: blockMocks.session });
 
         const mySpy = mocked(vscode.window.showInputBox).mockResolvedValue("*");
         await jobActions.setPrefix(node, blockMocks.testJobsTree);
@@ -168,14 +168,13 @@ describe("Jobs Actions Unit Tests - Function setPrefix", () => {
 describe("Jobs Actions Unit Tests - Function setOwner", () => {
     it("Checking that the owner is set correctly on the job", async () => {
         const blockMocks = createGlobalMocks();
-        const node = new Job(
-            "job",
-            vscode.TreeItemCollapsibleState.None,
-            null as any,
-            blockMocks.session,
-            blockMocks.iJob,
-            blockMocks.imperativeProfile
-        );
+        const node = new ZoweJobNode({
+            label: "job",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            session: blockMocks.session,
+            profile: blockMocks.imperativeProfile,
+            job: blockMocks.iJob,
+        });
 
         const mySpy = mocked(vscode.window.showInputBox).mockResolvedValue("OWNER");
         await jobActions.setOwner(node, blockMocks.testJobsTree);
@@ -194,14 +193,13 @@ describe("Jobs Actions Unit Tests - Function setOwner", () => {
 describe("Jobs Actions Unit Tests - Function stopCommand", () => {
     it("Checking that stop command of Job Node is executed properly", async () => {
         const blockMocks = createGlobalMocks();
-        const node = new Job(
-            "job",
-            vscode.TreeItemCollapsibleState.None,
-            null as any,
-            blockMocks.session,
-            blockMocks.iJob,
-            blockMocks.imperativeProfile
-        );
+        const node = new ZoweJobNode({
+            label: "job",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            session: blockMocks.session,
+            profile: blockMocks.imperativeProfile,
+            job: blockMocks.iJob,
+        });
 
         mocked(zowe.IssueCommand.issueSimple).mockResolvedValueOnce({
             success: false,
@@ -214,14 +212,12 @@ describe("Jobs Actions Unit Tests - Function stopCommand", () => {
     });
     it("Checking failed attempt to issue stop command for Job Node.", async () => {
         const blockMocks = createGlobalMocks();
-        const node = new Job(
-            "job",
-            vscode.TreeItemCollapsibleState.None,
-            null as any,
-            blockMocks.session,
-            undefined as any,
-            blockMocks.imperativeProfile
-        );
+        const node = new ZoweJobNode({
+            label: "job",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            session: blockMocks.session,
+            profile: blockMocks.imperativeProfile,
+        });
         mocked(zowe.IssueCommand.issueSimple).mockResolvedValueOnce({
             success: false,
             zosmfResponse: [],
@@ -235,14 +231,13 @@ describe("Jobs Actions Unit Tests - Function stopCommand", () => {
 describe("Jobs Actions Unit Tests - Function modifyCommand", () => {
     it("Checking modification of Job Node", async () => {
         const blockMocks = createGlobalMocks();
-        const node = new Job(
-            "job",
-            vscode.TreeItemCollapsibleState.None,
-            null as any,
-            blockMocks.session,
-            blockMocks.iJob,
-            blockMocks.imperativeProfile
-        );
+        const node = new ZoweJobNode({
+            label: "job",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            session: blockMocks.session,
+            profile: blockMocks.imperativeProfile,
+            job: blockMocks.iJob,
+        });
 
         mocked(vscode.window.showInputBox).mockResolvedValue("modify");
         mocked(zowe.IssueCommand.issueSimple).mockResolvedValueOnce({
@@ -256,14 +251,12 @@ describe("Jobs Actions Unit Tests - Function modifyCommand", () => {
     });
     it("Checking failed attempt to modify Job Node", async () => {
         const blockMocks = createGlobalMocks();
-        const node = new Job(
-            "job",
-            vscode.TreeItemCollapsibleState.None,
-            null as any,
-            blockMocks.session,
-            undefined as any,
-            blockMocks.imperativeProfile
-        );
+        const node = new ZoweJobNode({
+            label: "job",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            session: blockMocks.session,
+            profile: blockMocks.imperativeProfile,
+        });
         mocked(vscode.window.showInputBox).mockResolvedValue("modify");
         mocked(zowe.IssueCommand.issueSimple).mockResolvedValueOnce({
             success: false,
@@ -279,14 +272,13 @@ describe("Jobs Actions Unit Tests - Function downloadSpool", () => {
     it("Checking download of Job Spool", async () => {
         const blockMocks = createGlobalMocks();
         const jobs: Job[] = [];
-        const node = new Job(
-            "job",
-            vscode.TreeItemCollapsibleState.None,
-            null as any,
-            blockMocks.session,
-            blockMocks.iJob,
-            blockMocks.imperativeProfile
-        );
+        const node = new ZoweJobNode({
+            label: "job",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            session: blockMocks.session,
+            profile: blockMocks.imperativeProfile,
+            job: blockMocks.iJob,
+        });
         const fileUri = {
             fsPath: "/tmp/foo",
             scheme: "",
@@ -329,14 +321,13 @@ describe("Jobs Actions Unit Tests - Function downloadSingleSpool", () => {
         const blockMocks = createGlobalMocks();
         const iJobFile = createIJobFile();
         const jobs: Job[] = [];
-        const node = new Job(
-            "test:dd - 1",
-            vscode.TreeItemCollapsibleState.None,
-            null as any,
-            blockMocks.session,
-            blockMocks.iJob,
-            blockMocks.imperativeProfile
-        );
+        const node = new ZoweJobNode({
+            label: "test:dd - 1",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            session: blockMocks.session,
+            profile: blockMocks.imperativeProfile,
+            job: blockMocks.iJob,
+        });
         const fileUri = {
             fsPath: "/tmp/foo",
             scheme: "",
@@ -366,14 +357,13 @@ describe("Jobs Actions Unit Tests - Function downloadSingleSpool", () => {
         const blockMocks = createGlobalMocks();
         const iJobFile = createIJobFile();
         const jobs: Job[] = [];
-        const node = new Job(
-            "test:dd - 1",
-            vscode.TreeItemCollapsibleState.None,
-            null as any,
-            blockMocks.session,
-            blockMocks.iJob,
-            blockMocks.imperativeProfile
-        );
+        const node = new ZoweJobNode({
+            label: "test:dd - 1",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            session: blockMocks.session,
+            profile: blockMocks.imperativeProfile,
+            job: blockMocks.iJob,
+        });
         const fileUri = {
             fsPath: "/tmp/foo",
             scheme: "",
@@ -399,14 +389,13 @@ describe("Jobs Actions Unit Tests - Function downloadSingleSpool", () => {
 describe("Jobs Actions Unit Tests - Function downloadJcl", () => {
     it("Checking download of Job JCL", async () => {
         const blockMocks = createGlobalMocks();
-        const node = new Job(
-            "job",
-            vscode.TreeItemCollapsibleState.None,
-            null as any,
-            blockMocks.session,
-            blockMocks.iJob,
-            blockMocks.imperativeProfile
-        );
+        const node = new ZoweJobNode({
+            label: "job",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            session: blockMocks.session,
+            profile: blockMocks.imperativeProfile,
+            job: blockMocks.iJob,
+        });
         await jobActions.downloadJcl(node);
         expect(mocked(zowe.GetJobs.getJclForJob)).toBeCalled();
         expect(mocked(vscode.workspace.openTextDocument)).toBeCalled();
@@ -983,14 +972,13 @@ describe("Jobs Actions Unit Tests - Function getSpoolContent", () => {
     it("should fetch the spool content successfully", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
-        const testNode = new Job(
-            "undefined:test - testJob",
-            vscode.TreeItemCollapsibleState.None,
-            createJobFavoritesNode(),
-            createISessionWithoutCredentials(),
-            null as any,
-            createIProfile()
-        );
+        const testNode = new ZoweJobNode({
+            label: "undefined:test - testJob",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: createJobFavoritesNode(),
+            session: createISessionWithoutCredentials(),
+            profile: createIProfile(),
+        });
         jest.spyOn(Spool.prototype, "getProfile").mockReturnValue({
             name: "test",
         } as any);
@@ -1013,14 +1001,14 @@ describe("focusing on a job in the tree view", () => {
         const jobTree = createTreeView();
         const jobTreeProvider = createJobsTree(session, submittedJob, profile, jobTree);
         jobTreeProvider.mSessionNodes.push(existingJobSession);
-        const submittedJobNode = new Job(
-            submittedJob.jobid,
-            vscode.TreeItemCollapsibleState.Collapsed,
-            existingJobSession,
+        const submittedJobNode = new ZoweJobNode({
+            label: submittedJob.jobid,
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: existingJobSession,
             session,
-            submittedJob,
-            profile
-        );
+            profile,
+            job: submittedJob,
+        });
         const updatedJobs = [submittedJobNode];
         existingJobSession.getChildren = jest.fn();
         mocked(existingJobSession.getChildren).mockReturnValueOnce(Promise.resolve(updatedJobs));
@@ -1046,14 +1034,14 @@ describe("focusing on a job in the tree view", () => {
         mocked(jobTreeProvider.addSession).mockImplementationOnce(() => {
             jobTreeProvider.mSessionNodes.push(newJobSession);
         });
-        const submittedJobNode = new Job(
-            submittedJob.jobid,
-            vscode.TreeItemCollapsibleState.Collapsed,
-            newJobSession,
+        const submittedJobNode = new ZoweJobNode({
+            label: submittedJob.jobid,
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: newJobSession,
             session,
-            submittedJob,
-            profile
-        );
+            profile,
+            job: submittedJob,
+        });
         const updatedJobs = [submittedJobNode];
         newJobSession.getChildren = jest.fn().mockReturnValueOnce(Promise.resolve(updatedJobs));
         // act
@@ -1138,14 +1126,13 @@ describe("Jobs Actions Unit Tests - Function refreshJobsServer", () => {
     it("Checking common execution of function", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
-        const job = new Job(
-            "jobtest",
-            vscode.TreeItemCollapsibleState.Expanded,
-            null as any,
-            blockMocks.session,
-            blockMocks.iJob,
-            blockMocks.imperativeProfile
-        );
+        const job = new ZoweJobNode({
+            label: "jobtest",
+            collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
+            session: blockMocks.session,
+            profile: blockMocks.imperativeProfile,
+            job: blockMocks.iJob,
+        });
         job.contextValue = globals.JOBS_SESSION_CONTEXT;
         mocked(zowe.ZosmfSession.createSessCfgFromArgs).mockReturnValueOnce(blockMocks.session.ISession);
 
@@ -1155,14 +1142,13 @@ describe("Jobs Actions Unit Tests - Function refreshJobsServer", () => {
     it("Checking common execution of function with Unverified", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
-        const job = new Job(
-            "jobtest",
-            vscode.TreeItemCollapsibleState.Expanded,
-            null as any,
-            blockMocks.session,
-            blockMocks.iJob,
-            blockMocks.imperativeProfile
-        );
+        const job = new ZoweJobNode({
+            label: "jobtest",
+            collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
+            session: blockMocks.session,
+            profile: blockMocks.imperativeProfile,
+            job: blockMocks.iJob,
+        });
         job.contextValue = globals.JOBS_SESSION_CONTEXT;
         mocked(zowe.ZosmfSession.createSessCfgFromArgs).mockReturnValueOnce(blockMocks.session.ISession);
 
@@ -1294,7 +1280,7 @@ describe("job deletion command", () => {
 
         const jobsProvider = createJobsTree(session, job, profile, createTreeView());
         jobsProvider.delete.mockResolvedValueOnce(Promise.resolve());
-        const jobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, null as any, session, job, profile);
+        const jobNode = new ZoweJobNode({ label: "jobtest", collapsibleState: vscode.TreeItemCollapsibleState.Expanded, session, profile, job });
 
         await jobActions.deleteCommand(jobsProvider, jobNode);
 
@@ -1308,8 +1294,14 @@ describe("job deletion command", () => {
         const jobsProvider = createJobsTree(session, job, profile, createTreeView());
         jobsProvider.mSessionNodes.push(job2);
         jobsProvider.delete.mockResolvedValue(Promise.resolve());
-        const jobNode1 = new Job("jobtest1", vscode.TreeItemCollapsibleState.Expanded, null as any, session, job, profile);
-        const jobNode2 = new Job("jobtest2", vscode.TreeItemCollapsibleState.Expanded, null as any, session, job2, profile);
+        const jobNode1 = new ZoweJobNode({ label: "jobtest1", collapsibleState: vscode.TreeItemCollapsibleState.Expanded, session, profile, job });
+        const jobNode2 = new ZoweJobNode({
+            label: "jobtest2",
+            collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
+            session,
+            profile,
+            job: job2,
+        });
         const jobs = [jobNode1, jobNode2];
         // act
         await jobActions.deleteCommand(jobsProvider, undefined, jobs);
@@ -1323,7 +1315,7 @@ describe("job deletion command", () => {
 
         const jobsProvider = createJobsTree(session, job, profile, createTreeView());
         jobsProvider.delete.mockResolvedValueOnce(Promise.resolve());
-        const jobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, null as any, session, job, profile);
+        const jobNode = new ZoweJobNode({ label: "jobtest", collapsibleState: vscode.TreeItemCollapsibleState.Expanded, session, profile, job });
 
         await jobActions.deleteCommand(jobsProvider, jobNode);
         expect(mocked(jobsProvider.delete)).not.toBeCalled();
@@ -1334,7 +1326,7 @@ describe("job deletion command", () => {
 
         const jobsProvider = createJobsTree(session, job, profile, createTreeView());
         jobsProvider.delete.mockResolvedValueOnce(Promise.reject(new Error("something went wrong!")));
-        const jobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, null as any, session, job, profile);
+        const jobNode = new ZoweJobNode({ label: "jobtest", collapsibleState: vscode.TreeItemCollapsibleState.Expanded, session, profile, job });
         // act
         await jobActions.deleteCommand(jobsProvider, jobNode);
         // assert
@@ -1347,7 +1339,7 @@ describe("job deletion command", () => {
 
         const jobsProvider = createJobsTree(session, job, profile, createTreeView());
         jobsProvider.delete.mockResolvedValueOnce(Promise.resolve());
-        const jobNode = new Job("jobtest", vscode.TreeItemCollapsibleState.Expanded, null as any, session, job, profile);
+        const jobNode = new ZoweJobNode({ label: "jobtest", collapsibleState: vscode.TreeItemCollapsibleState.Expanded, session, profile, job });
         jobsProvider.getTreeView.mockReturnValueOnce({ ...jobsProvider.getTreeView(), selection: [jobNode] });
         // act
         await jobActions.deleteCommand(jobsProvider, undefined);
@@ -1362,7 +1354,7 @@ describe("Job Actions Unit Tests - Misc. functions", () => {
     const session = createISession();
     const profile = createIProfile();
     const job = createIJobObject();
-    const jobNode = new Job("job", vscode.TreeItemCollapsibleState.None, null as any, session, job, profile);
+    const jobNode = new ZoweJobNode({ label: "job", collapsibleState: vscode.TreeItemCollapsibleState.None, session, profile, job });
 
     it("refreshJob works as intended", () => {
         const jobsProvider = createJobsTree(session, job, profile, createTreeView());

@@ -17,7 +17,7 @@ import * as testConst from "../../../resources/testProfileData";
 import * as vscode from "vscode";
 import { ZosJobsProvider } from "../../../src/job/ZosJobsProvider";
 import * as refreshActions from "../../../src/shared/refresh";
-import { Job, ZoweJobNode } from "../../../src/job/ZoweJobNode";
+import { ZoweJobNode } from "../../../src/job/ZoweJobNode";
 import * as globals from "../../../src/globals";
 import { DatasetTree } from "../../../src/dataset/DatasetTree";
 import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";

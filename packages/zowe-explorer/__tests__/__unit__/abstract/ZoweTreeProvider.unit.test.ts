@@ -25,7 +25,7 @@ import { imperative } from "@zowe/cli";
 import * as globals from "../../../src/globals";
 import { createUSSTree } from "../../../src/uss/USSTree";
 import { createIJobObject, createJobSessionNode } from "../../../__mocks__/mockCreators/jobs";
-import { Job, ZoweJobNode } from "../../../src/job/ZoweJobNode";
+import { ZoweJobNode } from "../../../src/job/ZoweJobNode";
 import { createJobsTree } from "../../../src/job/ZosJobsProvider";
 import { SettingsConfig } from "../../../src/utils/SettingsConfig";
 import { ZoweTreeProvider } from "../../../src/abstract/ZoweTreeProvider";

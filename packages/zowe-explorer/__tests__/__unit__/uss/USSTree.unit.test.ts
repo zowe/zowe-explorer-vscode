@@ -197,8 +197,8 @@ describe("USSTree Unit Tests - Function USSTree.initializeFavorites()", () => {
         expect(favProfileNode.children.length).toBe(2);
 
         const expectedUSSFavorites: ZoweUSSNode[] = [
-            new ZoweUSSNode("/u/aDir", vscode.TreeItemCollapsibleState.Collapsed, undefined, globalMocks.testSession, "", false, "test"),
-            new ZoweUSSNode("/u/myFile.txt", vscode.TreeItemCollapsibleState.None, undefined, globalMocks.testSession, "", false, "test"),
+            new ZoweUSSNode({ label: "/u/aDir", collapsibleState: vscode.TreeItemCollapsibleState.Collapsed, session: globalMocks.testSession }),
+            new ZoweUSSNode({ label: "/u/myFile.txt", collapsibleState: vscode.TreeItemCollapsibleState.None, session: globalMocks.testSession }),
         ];
 
         expectedUSSFavorites.forEach((node) => (node.contextValue += globals.FAV_SUFFIX));
@@ -219,7 +219,11 @@ describe("USSTree Unit Tests - Function initializeFavChildNodeForProfile()", () 
         const favProfileNode = testTree1.mFavorites[0];
         const label = "/u/fakeuser";
         const line = "[test]: /u/fakeuser{ussSession}";
-        const expectedFavSearchNode = new ZoweUSSNode("/u/fakeuser", vscode.TreeItemCollapsibleState.None, favProfileNode, null, null, false, null);
+        const expectedFavSearchNode = new ZoweUSSNode({
+            label: "/u/fakeuser",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: favProfileNode,
+        });
         expectedFavSearchNode.contextValue = globals.USS_SESSION_CONTEXT + globals.FAV_SUFFIX;
         expectedFavSearchNode.fullPath = label;
         expectedFavSearchNode.label = expectedFavSearchNode.tooltip = label;
@@ -237,14 +241,11 @@ describe("USSTree Unit Tests - Function initializeFavChildNodeForProfile()", () 
 describe("USSTree Unit Tests - Function USSTree.createProfileNodeForFavs()", () => {
     it("Tests that profile grouping node is created correctly", async () => {
         const globalMocks = await createGlobalMocks();
-        const expectedFavProfileNode = new ZoweUSSNode(
-            "testProfile",
-            vscode.TreeItemCollapsibleState.Collapsed,
-            globalMocks.testTree.mFavoriteSession,
-            null,
-            undefined,
-            undefined
-        );
+        const expectedFavProfileNode = new ZoweUSSNode({
+            label: "testProfile",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            session: globalMocks.testTree.mFavoriteSession,
+        });
         expectedFavProfileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
 
         const createdFavProfileNode = await globalMocks.testTree.createProfileNodeForFavs("testProfile");
@@ -253,14 +254,11 @@ describe("USSTree Unit Tests - Function USSTree.createProfileNodeForFavs()", () 
     });
     it("Tests that profile grouping node is created correctly if icon is defined", async () => {
         const globalMocks = await createGlobalMocks();
-        const expectedFavProfileNode = new ZoweUSSNode(
-            "testProfile",
-            vscode.TreeItemCollapsibleState.Collapsed,
-            globalMocks.testTree.mFavoriteSession,
-            null,
-            undefined,
-            undefined
-        );
+        const expectedFavProfileNode = new ZoweUSSNode({
+            label: "testProfile",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            session: globalMocks.testTree.mFavoriteSession,
+        });
         expectedFavProfileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
         const icons = await import("../../../src/generators/icons");
         const folderIcon = (await import("../../../src/generators/icons/items/folder")).default;
@@ -317,9 +315,19 @@ describe("USSTree Unit Tests - Functions USSTree.addFavorite()", () => {
     async function createBlockMocks(globalMocks) {
         const newMocks = {
             childFile: null,
-            parentDir: new ZoweUSSNode("parent", vscode.TreeItemCollapsibleState.Collapsed, globalMocks.testTree.mSessionNodes[1], null, "/"),
+            parentDir: new ZoweUSSNode({
+                label: "parent",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                session: globalMocks.testTree.mSessionNodes[1],
+                parentPath: "/",
+            }),
         };
-        newMocks.childFile = new ZoweUSSNode("child", vscode.TreeItemCollapsibleState.None, newMocks.parentDir, null, "/parent");
+        newMocks.childFile = new ZoweUSSNode({
+            label: "child",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: newMocks.parentDir,
+            parentPath: "/parent",
+        });
         newMocks.childFile.contextValue = globals.USS_TEXT_FILE_CONTEXT;
         globalMocks.testTree.mFavorites = [];
 
@@ -358,7 +366,12 @@ describe("USSTree Unit Tests - Functions USSTree.addFavorite()", () => {
 describe("USSTree Unit Tests - Function USSTree.removeFavorite()", () => {
     async function createBlockMocks(globalMocks) {
         const newMocks = {
-            testDir: new ZoweUSSNode("testDir", vscode.TreeItemCollapsibleState.Collapsed, globalMocks.testTree.mSessionNodes[1], null, "/"),
+            testDir: new ZoweUSSNode({
+                label: "testDir",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                parentNode: globalMocks.testTree.mSessionNodes[1],
+                parentPath: "/",
+            }),
         };
         await globalMocks.testTree.addFavorite(newMocks.testDir);
         const favProfileNode = globalMocks.testTree.mFavorites[0];
@@ -375,7 +388,12 @@ describe("USSTree Unit Tests - Function USSTree.removeFavorite()", () => {
         const profileNodeInFavs = globalMocks.testTree.mFavorites[0];
 
         // Add second favorite
-        const testDir2 = new ZoweUSSNode("testDir2", vscode.TreeItemCollapsibleState.Collapsed, globalMocks.testTree.mSessionNodes[1], null, "/");
+        const testDir2 = new ZoweUSSNode({
+            label: "testDir2",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: globalMocks.testTree.mSessionNodes[1],
+            parentPath: "/",
+        });
         await globalMocks.testTree.addFavorite(testDir2);
 
         // Checking that favorites are set successfully before test
@@ -406,7 +424,12 @@ describe("USSTree Unit Tests - Function USSTree.removeFavorite()", () => {
 describe("USSTree Unit Tests - Function USSTree.removeFavProfile", () => {
     async function createBlockMocks(globalMocks) {
         globalMocks.testTree.mFavorites = [];
-        const testDir = new ZoweUSSNode("testDir", vscode.TreeItemCollapsibleState.Collapsed, globalMocks.testTree.mSessionNodes[1], null, "/");
+        const testDir = new ZoweUSSNode({
+            label: "testDir",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: globalMocks.testTree.mSessionNodes[1],
+            parentPath: "/",
+        });
         await globalMocks.testTree.addFavorite(testDir);
         const profileNodeInFavs: IZoweUSSTreeNode = globalMocks.testTree.mFavorites[0];
         profileNodeInFavs.mProfileName = globalMocks.testProfile.name;
@@ -463,7 +486,12 @@ describe("USSTree Unit Tests - Function USSTree.openItemFromPath()", () => {
         const globalMocks = await createGlobalMocks();
         globalMocks.withProgress.mockReturnValue(globalMocks.testResponse);
 
-        const file = new ZoweUSSNode("c.txt", vscode.TreeItemCollapsibleState.None, globalMocks.testTree.mSessionNodes[1], null, "/a/b");
+        const file = new ZoweUSSNode({
+            label: "c.txt",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: globalMocks.testTree.mSessionNodes[1],
+            parentPath: "/a/b",
+        });
         globalMocks.testTree.mSessionNodes[1].children.push(file);
         Object.defineProperty(globalMocks.testTree.mSessionNodes[1], "getChildren", {
             value: jest.fn(() => {
@@ -492,7 +520,11 @@ describe("USSTree Unit Tests - Function USSTree.addSession()", () => {
     it("Tests if addSession works properly", async () => {
         const globalMocks = await createGlobalMocks();
 
-        const testSessionNode = new ZoweUSSNode("testSessionNode", vscode.TreeItemCollapsibleState.Collapsed, null, globalMocks.testSession, null);
+        const testSessionNode = new ZoweUSSNode({
+            label: "testSessionNode",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            session: globalMocks.testSession,
+        });
         globalMocks.testTree.mSessionNodes.push(testSessionNode);
         globalMocks.testTree.addSession("testSessionNode");
 
@@ -505,7 +537,11 @@ describe("USSTree Unit Tests - Function USSTree.deleteSession()", () => {
     async function createBlockMocks(globalMocks) {
         const newMocks = {
             testTree2: new USSTree(),
-            testSessionNode: new ZoweUSSNode("testSessionNode", vscode.TreeItemCollapsibleState.Collapsed, null, globalMocks.testSession, null),
+            testSessionNode: new ZoweUSSNode({
+                label: "testSessionNode",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                session: globalMocks.testSession,
+            }),
             startLength: 0,
         };
         const ussSessionTestNode = createUSSSessionNode(globalMocks.testSession, globalMocks.testProfile);
@@ -701,8 +737,12 @@ describe("USSTree Unit Tests - Function USSTree.filterPrompt()", () => {
 
         const sessionWithCred = createISession();
         globalMocks.createSessCfgFromArgs.mockReturnValue(sessionWithCred);
-        const dsNode = new ZoweUSSNode("/u/myFile.txt", vscode.TreeItemCollapsibleState.Expanded, null, sessionWithCred, null, false, "ussTestSess2");
-        dsNode.mProfileName = "ussTestSess2";
+        const dsNode = new ZoweUSSNode({
+            label: "/u/myFile.txt",
+            collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
+            session: sessionWithCred,
+        });
+        dsNode.profileName = "ussTestSess2";
         dsNode.contextValue = globals.USS_SESSION_CONTEXT + globals.FAV_SUFFIX;
         globalMocks.testTree.mSessionNodes.push(dsNode);
 
@@ -720,8 +760,12 @@ describe("USSTree Unit Tests - Function USSTree.filterPrompt()", () => {
 
         const sessionNoCred = createISessionWithoutCredentials();
         globalMocks.createSessCfgFromArgs.mockReturnValue(sessionNoCred);
-        const dsNode = new ZoweUSSNode("/u/myFile.txt", vscode.TreeItemCollapsibleState.Expanded, null, sessionNoCred, null, false, "ussTestSess2");
-        dsNode.mProfileName = "ussTestSess2";
+        const dsNode = new ZoweUSSNode({
+            label: "/u/myFile.txt",
+            collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
+            session: sessionNoCred,
+        });
+        dsNode.profileName = "ussTestSess2";
         dsNode.getSession().ISession.user = "";
         dsNode.getSession().ISession.password = "";
         dsNode.getSession().ISession.base64EncodedAuth = "";
@@ -741,8 +785,18 @@ describe("USSTree Unit Tests - Function USSTree.getAllLoadedItems()", () => {
     it("Testing that getAllLoadedItems() returns the correct array", async () => {
         const globalMocks = await createGlobalMocks();
 
-        const folder = new ZoweUSSNode("folder", vscode.TreeItemCollapsibleState.Collapsed, globalMocks.testTree.mSessionNodes[1], null, "/");
-        const file = new ZoweUSSNode("file", vscode.TreeItemCollapsibleState.None, folder, null, "/folder");
+        const folder = new ZoweUSSNode({
+            label: "folder",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: globalMocks.testTree.mSessionNodes[1],
+            parentPath: "/",
+        });
+        const file = new ZoweUSSNode({
+            label: "file",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: folder,
+            parentPath: "/folder",
+        });
         globalMocks.testTree.mSessionNodes[1].children = [folder];
         folder.children.push(file);
 
@@ -760,15 +814,12 @@ describe("USSTree Unit Tests - Function USSTree.getAllLoadedItems()", () => {
 
 const setupUssFavNode = (globalMocks): ZoweUSSNode => {
     const ussFavNode = createFavoriteUSSNode(globalMocks.testSession, globalMocks.testProfile);
-    const ussFavNodeParent = new ZoweUSSNode(
-        "sestest",
-        vscode.TreeItemCollapsibleState.Expanded,
-        null,
-        globalMocks.testSession,
-        null,
-        false,
-        globalMocks.testProfile.name
-    );
+    const ussFavNodeParent = new ZoweUSSNode({
+        label: "sestest",
+        collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
+        session: globalMocks.testSession,
+        profile: globalMocks.testProfile,
+    });
     ussFavNodeParent.children.push(ussFavNode);
     globalMocks.testTree.mFavorites.push(ussFavNodeParent);
 
@@ -826,15 +877,14 @@ describe("USSTree Unit Tests - Function USSTree.findMatchInLoadedChildren()", ()
     it("Testing that findMatchInLoadedChildren() can find a nested child node by fullPath", async () => {
         const globalMocks = await createGlobalMocks();
         const sessionNode = globalMocks.testTree.mSessionNodes[1];
-        const ussChild = new ZoweUSSNode(
-            "ussChild",
-            vscode.TreeItemCollapsibleState.Expanded,
-            globalMocks.testUSSNode,
-            globalMocks.testSession,
-            globalMocks.testUSSNode.fullPath,
-            false,
-            globalMocks.testProfile.name
-        );
+        const ussChild = new ZoweUSSNode({
+            label: "ussChild",
+            collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
+            parentNode: globalMocks.testUSSNode,
+            session: globalMocks.testSession,
+            profile: globalMocks.testProfile,
+            parentPath: globalMocks.testUSSNode.fullPath,
+        });
         globalMocks.testUSSNode.children.push(ussChild);
         sessionNode.children.push(globalMocks.testUSSNode);
 
@@ -864,15 +914,12 @@ describe("USSTree Unit Tests - Function USSTree.renameFavorite()", () => {
     it("Checking common run of function", async () => {
         const globalMocks = await createGlobalMocks();
         const ussFavNode = createFavoriteUSSNode(globalMocks.testSession, globalMocks.testProfile);
-        const ussFavNodeParent = new ZoweUSSNode(
-            "sestest",
-            vscode.TreeItemCollapsibleState.Expanded,
-            null,
-            globalMocks.testSession,
-            null,
-            false,
-            globalMocks.testProfile.name
-        );
+        const ussFavNodeParent = new ZoweUSSNode({
+            label: "sestest",
+            collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
+            session: globalMocks.testSession,
+            profile: globalMocks.testProfile,
+        });
         ussFavNodeParent.children.push(ussFavNode);
         globalMocks.testTree.mFavorites.push(ussFavNodeParent);
         const renameSpy = jest.spyOn(ussFavNode, "rename");
@@ -887,12 +934,22 @@ describe("USSTree Unit Tests - Function USSTree.renameFavorite()", () => {
 describe("USSTree Unit Tests - Function USSTree.saveSearch()", () => {
     async function createBlockMocks(globalMocks) {
         const newMocks = {
-            folder: new ZoweUSSNode("parent", vscode.TreeItemCollapsibleState.Collapsed, globalMocks.testTree.mSessionNodes[1], null, "/"),
+            folder: new ZoweUSSNode({
+                label: "parent",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                parentNode: globalMocks.testTree.mSessionNodes[1],
+                parentPath: "/",
+            }),
             file: null,
             resolveQuickPickHelper: jest.spyOn(Gui, "resolveQuickPick"),
         };
         globalMocks.testTree.mFavorites = [];
-        newMocks.file = new ZoweUSSNode("abcd", vscode.TreeItemCollapsibleState.None, newMocks.folder, null, "/parent");
+        newMocks.file = new ZoweUSSNode({
+            label: "abcd",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: newMocks.folder,
+            parentPath: "/parent",
+        });
         newMocks.file.contextValue = globals.USS_SESSION_CONTEXT;
 
         return newMocks;
@@ -949,15 +1006,12 @@ describe("USSTree Unit Tests - Function USSTree.rename()", () => {
         globalMocks.testUSSNode.contextValue = globals.USS_TEXT_FILE_CONTEXT;
 
         const ussFavNode = createFavoriteUSSNode(globalMocks.testSession, globalMocks.testProfile);
-        const ussFavNodeParent = new ZoweUSSNode(
-            "sestest",
-            vscode.TreeItemCollapsibleState.Expanded,
-            null,
-            globalMocks.testSession,
-            null,
-            false,
-            globalMocks.testProfile.name
-        );
+        const ussFavNodeParent = new ZoweUSSNode({
+            label: "sestest",
+            collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
+            session: globalMocks.testSession,
+            profile: globalMocks.testProfile.name,
+        });
         ussFavNodeParent.shortLabel = "usstest";
         ussFavNodeParent.fullPath = globalMocks.testUSSNode.fullPath;
         ussFavNodeParent.children.push(ussFavNode);
@@ -975,15 +1029,14 @@ describe("USSTree Unit Tests - Function USSTree.rename()", () => {
         // Open dirty file defined by globalMocks.mockTextDocumentDirty, with filepath including "sestest/test/node"
         const globalMocks = await createGlobalMocks();
         createBlockMocks(globalMocks);
-        const testUSSDir = new ZoweUSSNode(
-            "test",
-            vscode.TreeItemCollapsibleState.Expanded,
-            globalMocks.testUSSNode,
-            globalMocks.testSession,
-            "/",
-            false,
-            globalMocks.testProfile.name
-        );
+        const testUSSDir = new ZoweUSSNode({
+            label: "test",
+            collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
+            parentNode: globalMocks.testUSSNode,
+            session: globalMocks.testSession,
+            profile: globalMocks.testProfile,
+            parentPath: "/",
+        });
         Object.defineProperty(testUSSDir, "getUSSDocumentFilePath", {
             value: jest.fn(() => {
                 return "/test/path/temp/_U_/sestest/test";
@@ -1003,15 +1056,14 @@ describe("USSTree Unit Tests - Function USSTree.rename()", () => {
         // Open clean file defined by globalMocks.mockTextDocumentClean, with filepath including "sestest/test2/node"
         const globalMocks = await createGlobalMocks();
         createBlockMocks(globalMocks);
-        const testUSSDir = new ZoweUSSNode(
-            "testClean", // This name intentionally contains the mock dirty document path as a substring to test for false positives
-            vscode.TreeItemCollapsibleState.Expanded,
-            globalMocks.testUSSNode,
-            globalMocks.testSession,
-            "/",
-            false,
-            globalMocks.testProfile.name
-        );
+        const testUSSDir = new ZoweUSSNode({
+            label: "testClean", // This name intentionally contains the mock dirty document path as a substring to test for false positives
+            collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
+            parentNode: globalMocks.testUSSNode,
+            session: globalMocks.testSession,
+            profile: globalMocks.testProfile,
+            parentPath: "/",
+        });
         Object.defineProperty(testUSSDir, "getUSSDocumentFilePath", {
             value: jest.fn(() => {
                 return "/test/path/temp/_U_/sestest/testClean";
@@ -1146,10 +1198,20 @@ describe("USSTree Unit Tests - Functions USSTree.removeFileHistory()", () => {
 describe("USSTree Unit Tests - Functions USSTree.addFavorite()", () => {
     async function createBlockMocks(globalMocks) {
         const newMocks = {
-            parentDir: new ZoweUSSNode("parent", vscode.TreeItemCollapsibleState.Collapsed, globalMocks.testTree.mSessionNodes[1], null, "/"),
+            parentDir: new ZoweUSSNode({
+                label: "parent",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                parentNode: globalMocks.testTree.mSessionNodes[1],
+                parentPath: "/",
+            }),
             childFile: null,
         };
-        newMocks.childFile = new ZoweUSSNode("child", vscode.TreeItemCollapsibleState.None, newMocks.parentDir, null, "/parent");
+        newMocks.childFile = new ZoweUSSNode({
+            label: "child",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: newMocks.parentDir,
+            parentPath: "/parent",
+        });
         newMocks.childFile.contextValue = globals.USS_TEXT_FILE_CONTEXT;
         globalMocks.testTree.mFavorites = [];
 
@@ -1189,7 +1251,12 @@ describe("USSTree Unit Tests - Functions USSTree.addFavorite()", () => {
 describe("USSTree Unit Tests - Function USSTree.removeFavorite()", () => {
     async function createBlockMocks(globalMocks) {
         const newMocks = {
-            testDir: new ZoweUSSNode("testDir", vscode.TreeItemCollapsibleState.Collapsed, globalMocks.testTree.mSessionNodes[1], null, "/"),
+            testDir: new ZoweUSSNode({
+                label: "testDir",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                parentNode: globalMocks.testTree.mSessionNodes[1],
+                parentPath: "/",
+            }),
         };
         globalMocks.testTree.mFavorites = [];
         await globalMocks.testTree.addFavorite(newMocks.testDir);
@@ -1218,7 +1285,12 @@ describe("USSTree Unit Tests - Function USSTree.openItemFromPath()", () => {
     it("Tests that openItemFromPath opens a USS file in the tree", async () => {
         const globalMocks = await createGlobalMocks();
 
-        const file = new ZoweUSSNode("c.txt", vscode.TreeItemCollapsibleState.Collapsed, globalMocks.testTree.mSessionNodes[0], null, "/a/b");
+        const file = new ZoweUSSNode({
+            label: "c.txt",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: globalMocks.testTree.mSessionNodes[0],
+            parentPath: "/a/b",
+        });
         jest.spyOn(globalMocks.testTree, "getChildren").mockReturnValue(Promise.resolve([file]));
 
         await globalMocks.testTree.openItemFromPath("/a/b/c.txt", globalMocks.testTree.mSessionNodes[1]);
@@ -1240,7 +1312,11 @@ describe("USSTree Unit Tests - Function USSTree.addSession()", () => {
     it("Tests if addSession works properly", async () => {
         const globalMocks = await createGlobalMocks();
 
-        const testSessionNode = new ZoweUSSNode("testSessionNode", vscode.TreeItemCollapsibleState.Collapsed, null, globalMocks.testSession, null);
+        const testSessionNode = new ZoweUSSNode({
+            label: "testSessionNode",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            session: globalMocks.testSession,
+        });
         globalMocks.testTree.mSessionNodes.push(testSessionNode);
         globalMocks.testTree.addSession("testSessionNode");
 
@@ -1305,16 +1381,14 @@ describe("USSTree Unit Tests - Function USSTree.getChildren()", () => {
         const rootChildren = await globalMocks.testTree.getChildren();
         // Creating rootNode
         const sessNode = [
-            new ZoweUSSNode("Favorites", vscode.TreeItemCollapsibleState.Collapsed, null, null, null, false),
-            new ZoweUSSNode(
-                "sestest",
-                vscode.TreeItemCollapsibleState.Collapsed,
-                null,
-                globalMocks.testSession,
-                "/",
-                false,
-                globalMocks.testProfile.name
-            ),
+            new ZoweUSSNode({ label: "Favorites", collapsibleState: vscode.TreeItemCollapsibleState.Collapsed }),
+            new ZoweUSSNode({
+                label: "sestest",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                session: globalMocks.testSession,
+                profile: globalMocks.testProfile,
+                parentPath: "/",
+            }),
         ];
         sessNode[0].contextValue = globals.FAVORITE_CONTEXT;
         sessNode[1].contextValue = globals.USS_SESSION_CONTEXT;
@@ -1337,7 +1411,11 @@ describe("USSTree Unit Tests - Function USSTree.getChildren()", () => {
     it("Testing that getChildren() returns correct ZoweUSSNodes when passed element of type ZoweUSSNode<session>", async () => {
         const globalMocks = await createGlobalMocks();
 
-        const testDir = new ZoweUSSNode("aDir", vscode.TreeItemCollapsibleState.Collapsed, globalMocks.testTree.mSessionNodes[1], null, "test");
+        const testDir = new ZoweUSSNode({
+            label: "aDir",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: globalMocks.testTree.mSessionNodes[1],
+        });
         globalMocks.testTree.mSessionNodes[1].children.push(testDir);
         const mockApiResponseItems = {
             items: [
@@ -1360,11 +1438,19 @@ describe("USSTree Unit Tests - Function USSTree.getChildren()", () => {
         const globalMocks = await createGlobalMocks();
 
         globalMocks.testTree.mFavorites.push(
-            new ZoweUSSNode("/u/myUser", vscode.TreeItemCollapsibleState.None, globalMocks.testTree.mSessionNodes[0], null, null)
+            new ZoweUSSNode({
+                label: "/u/myUser",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                parentNode: globalMocks.testTree.mSessionNodes[0],
+            })
         );
         const favChildren = await globalMocks.testTree.getChildren(globalMocks.testTree.mSessionNodes[0]);
         const sampleChildren: ZoweUSSNode[] = [
-            new ZoweUSSNode("/u/myUser", vscode.TreeItemCollapsibleState.None, globalMocks.testTree.mSessionNodes[0], null, null),
+            new ZoweUSSNode({
+                label: "/u/myUser",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                parentNode: globalMocks.testTree.mSessionNodes[0],
+            }),
         ];
 
         expect(favChildren).toEqual(sampleChildren);
@@ -1373,8 +1459,12 @@ describe("USSTree Unit Tests - Function USSTree.getChildren()", () => {
     it("Testing that getChildren() returns correct ZoweUSSNodes when passed element of type ZoweUSSNode<directory>", async () => {
         const globalMocks = await createGlobalMocks();
 
-        const directory = new ZoweUSSNode("/u", vscode.TreeItemCollapsibleState.Collapsed, globalMocks.testTree.mSessionNodes[1], null, null);
-        const file = new ZoweUSSNode("myFile.txt", vscode.TreeItemCollapsibleState.None, directory, null, null);
+        const directory = new ZoweUSSNode({
+            label: "/u",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: globalMocks.testTree.mSessionNodes[1],
+        });
+        const file = new ZoweUSSNode({ label: "myFile.txt", collapsibleState: vscode.TreeItemCollapsibleState.None, parentNode: directory });
         const sampleChildren: ZoweUSSNode[] = [file];
         sampleChildren[0].command = { command: "zowe.uss.ZoweUSSNode.open", title: "", arguments: [sampleChildren[0]] };
         directory.children.push(file);
@@ -1419,14 +1509,11 @@ describe("USSTree Unit Tests - Function USSTree.getChildren()", () => {
     it("Testing that getChildren() gets profile-loaded favorites for profile node in Favorites section", async () => {
         const globalMocks = await createGlobalMocks();
         const log = zowe.imperative.Logger.getAppLogger();
-        const favProfileNode = new ZoweUSSNode(
-            "sestest",
-            vscode.TreeItemCollapsibleState.Collapsed,
-            globalMocks.testTree.mFavoriteSession,
-            null,
-            undefined,
-            undefined
-        );
+        const favProfileNode = new ZoweUSSNode({
+            label: "sestest",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            session: globalMocks.testTree.mFavoriteSession,
+        });
         favProfileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
         globalMocks.testTree.mFavorites.push(favProfileNode);
         const loadProfilesForFavoritesSpy = jest.spyOn(globalMocks.testTree, "loadProfilesForFavorites");
@@ -1454,29 +1541,19 @@ describe("USSTree Unit Tests - Function USSTree.loadProfilesForFavorites", () =>
     it("Tests that loaded profile and session values are added to the profile grouping node in Favorites", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
-        const favProfileNode = new ZoweUSSNode(
-            "sestest",
-            vscode.TreeItemCollapsibleState.Collapsed,
-            globalMocks.testTree.mFavoriteSession,
-            null,
-            null,
-            false,
-            undefined,
-            undefined,
-            undefined
-        );
+        const favProfileNode = new ZoweUSSNode({
+            label: "sestest",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: globalMocks.testTree.mFavoriteSession,
+        });
         globalMocks.testTree.mFavorites.push(favProfileNode);
-        const expectedFavProfileNode = new ZoweUSSNode(
-            "sestest",
-            vscode.TreeItemCollapsibleState.Collapsed,
-            globalMocks.testTree.mFavoriteSession,
-            globalMocks.testSession,
-            null,
-            false,
-            "sestest",
-            undefined,
-            globalMocks.testProfile
-        );
+        const expectedFavProfileNode = new ZoweUSSNode({
+            label: "sestest",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: globalMocks.testTree.mFavoriteSession,
+            session: globalMocks.testSession,
+            profile: globalMocks.testProfile,
+        });
 
         // Mock successful loading of profile/session
         Object.defineProperty(Profiles, "getInstance", {
@@ -1507,17 +1584,11 @@ describe("USSTree Unit Tests - Function USSTree.loadProfilesForFavorites", () =>
     it("Tests that error is handled if profile not successfully loaded for profile grouping node in Favorites", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
-        const favProfileNode = new ZoweUSSNode(
-            "badTestProfile",
-            vscode.TreeItemCollapsibleState.Collapsed,
-            globalMocks.testTree.mFavoriteSession,
-            null,
-            null,
-            false,
-            undefined,
-            undefined,
-            undefined
-        );
+        const favProfileNode = new ZoweUSSNode({
+            label: "badTestProfile",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: globalMocks.testTree.mFavoriteSession,
+        });
         globalMocks.testTree.mFavorites.push(favProfileNode);
         const showErrorMessageSpy = jest.spyOn(vscode.window, "showErrorMessage");
 
@@ -1539,41 +1610,29 @@ describe("USSTree Unit Tests - Function USSTree.loadProfilesForFavorites", () =>
     it("Tests that favorite nodes with pre-existing profile/session values continue using those values", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
-        const favProfileNode = new ZoweUSSNode(
-            "sestest",
-            vscode.TreeItemCollapsibleState.Collapsed,
-            globalMocks.testTree.mFavoriteSession,
-            globalMocks.testSession,
-            null,
-            false,
-            "sestest",
-            undefined,
-            globalMocks.testProfile
-        );
-        const favDirNode = new ZoweUSSNode(
-            "favDir",
-            vscode.TreeItemCollapsibleState.Collapsed,
-            favProfileNode,
-            globalMocks.testSession,
-            "",
-            false,
-            "sestest",
-            null,
-            globalMocks.testProfile
-        );
+        const favProfileNode = new ZoweUSSNode({
+            label: "sestest",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: globalMocks.testTree.mFavoriteSession,
+            session: globalMocks.testSession,
+            profile: globalMocks.testProfile,
+        });
+        const favDirNode = new ZoweUSSNode({
+            label: "favDir",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: favProfileNode,
+            session: globalMocks.testSession,
+            profile: globalMocks.testProfile,
+        });
         favProfileNode.children.push(favDirNode);
         globalMocks.testTree.mFavorites.push(favProfileNode);
-        const expectedFavDirNode = new ZoweUSSNode(
-            "favDir",
-            vscode.TreeItemCollapsibleState.Collapsed,
-            favProfileNode,
-            globalMocks.testSession,
-            "",
-            false,
-            "sestest",
-            null,
-            globalMocks.testProfile
-        );
+        const expectedFavDirNode = new ZoweUSSNode({
+            label: "favDir",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: favProfileNode,
+            session: globalMocks.testSession,
+            profile: globalMocks.testProfile,
+        });
 
         await globalMocks.testTree.loadProfilesForFavorites(blockMocks.log, favProfileNode);
         const resultFavDirNode = globalMocks.testTree.mFavorites[0].children[0];
@@ -1583,42 +1642,27 @@ describe("USSTree Unit Tests - Function USSTree.loadProfilesForFavorites", () =>
     it("Tests that loaded profile/session from profile node in Favorites gets passed to child favorites without profile/session", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
-        const favProfileNode = new ZoweUSSNode(
-            "sestest",
-            vscode.TreeItemCollapsibleState.Collapsed,
-            globalMocks.testTree.mFavoriteSession,
-            globalMocks.testSession,
-            null,
-            false,
-            "sestest",
-            undefined,
-            globalMocks.testProfile
-        );
+        const favProfileNode = new ZoweUSSNode({
+            label: "sestest",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: globalMocks.testTree.mFavoriteSession,
+            session: globalMocks.testSession,
+            profile: globalMocks.testProfile,
+        });
         // Leave mParent parameter undefined for favDirNode and expectedFavDirNode to test undefined profile/session condition
-        const favDirNode = new ZoweUSSNode(
-            "favDir",
-            vscode.TreeItemCollapsibleState.Collapsed,
-            null,
-            null,
-            "",
-            false,
-            "sestest",
-            null,
-            globalMocks.testProfile
-        );
+        const favDirNode = new ZoweUSSNode({
+            label: "favDir",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            profile: globalMocks.testProfile,
+        });
         favProfileNode.children.push(favDirNode);
         globalMocks.testTree.mFavorites.push(favProfileNode);
-        const expectedFavDirNode = new ZoweUSSNode(
-            "favDir",
-            vscode.TreeItemCollapsibleState.Collapsed,
-            null,
-            globalMocks.testSession,
-            "",
-            false,
-            "sestest",
-            null,
-            globalMocks.testProfile
-        );
+        const expectedFavDirNode = new ZoweUSSNode({
+            label: "favDir",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            session: globalMocks.testSession,
+            profile: globalMocks.testProfile,
+        });
 
         await globalMocks.testTree.loadProfilesForFavorites(blockMocks.log, favProfileNode);
         const resultFavDirNode = globalMocks.testTree.mFavorites[0].children[0];
@@ -1647,15 +1691,12 @@ describe("USSTree Unit Tests - Function USSTree.editSession()", () => {
      *************************************************************************************************************/
     it("Test the editSession command ", async () => {
         const globalMocks = await createGlobalMocks();
-        const testSessionNode = new ZoweUSSNode(
-            "testSessionNode",
-            vscode.TreeItemCollapsibleState.Collapsed,
-            null,
-            globalMocks.testSession,
-            null,
-            false,
-            globalMocks.testProfile.name
-        );
+        const testSessionNode = new ZoweUSSNode({
+            label: "testSessionNode",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            session: globalMocks.testSession,
+            profile: globalMocks.testProfile,
+        });
         const checkSession = jest.spyOn(globalMocks.testTree, "editSession");
         Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
@@ -1681,15 +1722,12 @@ describe("USSTree Unit Tests - Function USSTree.editSession()", () => {
     it("Test the editSession command ", async () => {
         const globalMocks = await createGlobalMocks();
 
-        const testSessionNode = new ZoweUSSNode(
-            "testSessionNode",
-            vscode.TreeItemCollapsibleState.Collapsed,
-            null,
-            globalMocks.testSession,
-            null,
-            false,
-            globalMocks.testProfile.name
-        );
+        const testSessionNode = new ZoweUSSNode({
+            label: "testSessionNode",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            session: globalMocks.testSession,
+            profile: globalMocks.testProfile,
+        });
         const checkSession = jest.spyOn(globalMocks.testTree, "editSession");
         Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {

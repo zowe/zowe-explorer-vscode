@@ -15,7 +15,7 @@ import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
 import * as globals from "../../../src/globals";
 import { createIJobFile, createIJobObject, createJobSessionNode } from "../../../__mocks__/mockCreators/jobs";
-import { Job, ZoweJobNode } from "../../../src/job/ZoweJobNode";
+import { ZoweJobNode } from "../../../src/job/ZoweJobNode";
 import { IZoweJobTreeNode, ProfilesCache, Gui, JobSortOpts, SortDirection } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { Profiles } from "../../../src/Profiles";

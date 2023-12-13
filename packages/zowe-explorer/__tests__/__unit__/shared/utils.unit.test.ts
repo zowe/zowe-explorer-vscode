@@ -25,7 +25,7 @@ import {
 } from "../../../__mocks__/mockCreators/shared";
 import { createDatasetSessionNode } from "../../../__mocks__/mockCreators/datasets";
 import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
-import { Job } from "../../../src/job/ZoweJobNode";
+import { ZoweJobNode } from "../../../src/job/ZoweJobNode";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { Profiles } from "../../../src/Profiles";
 import * as utils from "../../../src/utils/ProfilesUtils";
@@ -68,27 +68,23 @@ async function createGlobalMocks() {
 describe("Shared Utils Unit Tests - Function node.concatChildNodes()", () => {
     it("Checks that concatChildNodes returns the proper array of children", async () => {
         const globalMocks = await createGlobalMocks();
-        const rootNode = new ZoweUSSNode("root", vscode.TreeItemCollapsibleState.Collapsed, null, globalMocks.session, null, false, null, undefined);
-        const childNode1 = new ZoweUSSNode(
-            "child1",
-            vscode.TreeItemCollapsibleState.Collapsed,
-            rootNode,
-            globalMocks.session,
-            null,
-            false,
-            null,
-            undefined
-        );
-        const childNode2 = new ZoweUSSNode(
-            "child2",
-            vscode.TreeItemCollapsibleState.Collapsed,
-            childNode1,
-            globalMocks.session,
-            null,
-            false,
-            null,
-            undefined
-        );
+        const rootNode = new ZoweUSSNode({
+            label: "root",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            session: globalMocks.session,
+        });
+        const childNode1 = new ZoweUSSNode({
+            label: "child1",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: rootNode,
+            session: globalMocks.session,
+        });
+        const childNode2 = new ZoweUSSNode({
+            label: "child2",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: childNode1,
+            session: globalMocks.session,
+        });
 
         childNode1.children.push(childNode2);
         rootNode.children.push(childNode1);
@@ -148,12 +144,12 @@ describe("Positive testing", () => {
         expect(value).toBeTruthy();
     });
     it("should pass for ZoweUSSTreeNode with ZoweUSSNode node type", async () => {
-        const ussNode = new ZoweUSSNode(null, null, null, null, null);
+        const ussNode = new ZoweUSSNode({ label: "", collapsibleState: vscode.TreeItemCollapsibleState.None });
         const value = sharedUtils.isZoweUSSTreeNode(ussNode);
         expect(value).toBeTruthy();
     });
-    it("should pass for  ZoweJobTreeNode with Job node type", async () => {
-        const jobNode = new Job(null, null, null, null, null, null);
+    it("should pass for  ZoweJobTreeNode with ZoweJobNode node type", async () => {
+        const jobNode = new ZoweJobNode({ label: "", collapsibleState: vscode.TreeItemCollapsibleState.None });
         const value = sharedUtils.isZoweJobTreeNode(jobNode);
         expect(value).toBeTruthy();
     });
@@ -161,12 +157,12 @@ describe("Positive testing", () => {
 
 describe("Negative testing for ZoweDatasetTreeNode", () => {
     it("should fail with ZoweUSSNode node type", async () => {
-        const ussNode = new ZoweUSSNode(null, null, null, null, null);
+        const ussNode = new ZoweUSSNode({ label: "", collapsibleState: vscode.TreeItemCollapsibleState.None });
         const value = sharedUtils.isZoweDatasetTreeNode(ussNode);
         expect(value).toBeFalsy();
     });
-    it("should fail with Job node type", async () => {
-        const jobNode = new Job(null, null, null, null, null, null);
+    it("should fail with ZoweJobNode node type", async () => {
+        const jobNode = new ZoweJobNode({ label: "", collapsibleState: vscode.TreeItemCollapsibleState.None });
         const value = sharedUtils.isZoweDatasetTreeNode(jobNode);
         expect(value).toBeFalsy();
     });
@@ -178,8 +174,8 @@ describe("Negative testing for ZoweUSSTreeNode", () => {
         const value = sharedUtils.isZoweUSSTreeNode(dsNode);
         expect(value).toBeFalsy();
     });
-    it("should fail with Job node type", async () => {
-        const jobNode = new Job(null, null, null, null, null, null);
+    it("should fail with ZoweJobNode node type", async () => {
+        const jobNode = new ZoweJobNode({ label: "", collapsibleState: vscode.TreeItemCollapsibleState.None });
         const value = sharedUtils.isZoweUSSTreeNode(jobNode);
         expect(value).toBeFalsy();
     });
@@ -192,7 +188,7 @@ describe("Negative testing for ZoweJobTreeNode", () => {
         expect(value).toBeFalsy();
     });
     it("should fail with ZoweUSSNode node type", async () => {
-        const ussNode = new ZoweUSSNode(null, null, null, null, null);
+        const ussNode = new ZoweUSSNode({ label: "", collapsibleState: vscode.TreeItemCollapsibleState.None });
         const value = sharedUtils.isZoweJobTreeNode(ussNode);
         expect(value).toBeFalsy();
     });
@@ -210,7 +206,7 @@ describe("Test uploadContents", () => {
         );
 
         await sharedUtils.uploadContent(
-            new ZoweUSSNode(null, null, null, null, null),
+            new ZoweUSSNode({ label: "", collapsibleState: vscode.TreeItemCollapsibleState.None }),
             {
                 fileName: "whatever",
             } as any,
@@ -235,7 +231,7 @@ describe("Test uploadContents", () => {
         );
 
         await sharedUtils.uploadContent(
-            new ZoweUSSNode(null, null, null, null, null),
+            new ZoweUSSNode({ label: "", collapsibleState: vscode.TreeItemCollapsibleState.None }),
             {
                 fileName: "whatever",
             } as any,
@@ -284,7 +280,7 @@ describe("Test force upload", () => {
     async function createBlockMocks() {
         const newVariables = {
             dsNode: new ZoweDatasetNode({ label: "", collapsibleState: vscode.TreeItemCollapsibleState.None }),
-            ussNode: new ZoweUSSNode(null, null, null, null, null),
+            ussNode: new ZoweUSSNode({ label: "", collapsibleState: vscode.TreeItemCollapsibleState.None }),
             showInformationMessage: jest.fn(),
             showWarningMessage: jest.fn(),
             showErrorMessage: jest.fn(),
