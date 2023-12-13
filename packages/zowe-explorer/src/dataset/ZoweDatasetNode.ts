@@ -38,7 +38,7 @@ import * as dayjs from "dayjs";
 import { ZoweExplorerExtender } from "../ZoweExplorerExtender";
 import * as fs from "fs";
 import { promiseStatus, PromiseStatuses } from "promise-status-async";
-import { getDocumentFilePath } from "../shared/utils";
+import { getDocumentFilePath, updateOpenFiles } from "../shared/utils";
 import { IZoweDatasetTreeOpts } from "../shared/IZoweTreeOpts";
 
 // Set up localization
@@ -465,11 +465,9 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         return responses;
     }
 
-    public async openDs(forceDownload: boolean, previewMember: boolean, datasetProvider?: IZoweTree<IZoweDatasetTreeNode>): Promise<void> {
+    public async openDs(forceDownload: boolean, previewMember: boolean, datasetProvider: IZoweTree<IZoweDatasetTreeNode>): Promise<void> {
         ZoweLogger.trace("dataset.actions.openPS called.");
-        if (datasetProvider) {
-            await datasetProvider.checkCurrentProfile(this);
-        }
+        await datasetProvider.checkCurrentProfile(this);
 
         // Status of last "open action" promise
         // If the node doesn't support pending actions, assume last action was resolved to pull new contents
@@ -543,15 +541,14 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     this.setEtag(response.apiResponse.etag);
                 }
                 statusMsg.dispose();
+                updateOpenFiles(datasetProvider, documentFilePath, this);
                 const document = await vscode.workspace.openTextDocument(getDocumentFilePath(label, this));
                 await Gui.showTextDocument(document, { preview: this.wasDoubleClicked != null ? !this.wasDoubleClicked : shouldPreview });
                 // discard ongoing action to allow new requests on this node
                 if (this.ongoingActions) {
                     this.ongoingActions[NodeAction.Download] = null;
                 }
-                if (datasetProvider) {
-                    datasetProvider.addFileHistory(`[${this.getProfileName()}]: ${label}`);
-                }
+                datasetProvider.addFileHistory(`[${this.getProfileName()}]: ${label}`);
             } catch (err) {
                 statusMsg.dispose();
                 await errorHandling(err, this.getProfileName());
