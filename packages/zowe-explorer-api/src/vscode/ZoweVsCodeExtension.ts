@@ -227,7 +227,7 @@ export class ZoweVsCodeExtension {
         serviceProfile: string | imperative.IProfileLoaded,
         zeRegister?: ZoweExplorerApi.IApiRegisterClient, // ZoweExplorerApiRegister
         zeProfiles?: ProfilesCache // Profiles extends ProfilesCache
-    ) {
+    ): Promise<void> {
         const cache: ProfilesCache = zeProfiles ?? ZoweVsCodeExtension.profilesCache;
         const baseProfile = await cache.fetchBaseProfile();
         if (baseProfile) {
@@ -269,7 +269,9 @@ export class ZoweVsCodeExtension {
     private static async getServiceProfileForAuthPurposes(cache: ProfilesCache, profile: string): Promise<imperative.IProfileLoaded> {
         const profInfo = await cache.getProfileInfo();
         const profAttrs = profInfo.getAllProfiles().find((prof) => prof.profName === profile);
-        if (profAttrs?.profType != null) cache.registerCustomProfilesType(profAttrs.profType);
+        if (profAttrs?.profType != null) {
+            cache.registerCustomProfilesType(profAttrs.profType);
+        }
         await cache.refresh(this.getZoweExplorerApi());
         const retP = cache.loadNamedProfile(profile);
         const _props = profInfo.mergeArgsForProfile(profAttrs, { getSecureVals: true }).knownArgs;
