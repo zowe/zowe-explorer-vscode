@@ -268,13 +268,13 @@ export class ZoweVsCodeExtension {
      */
     private static async getServiceProfileForAuthPurposes(cache: ProfilesCache, profile: string): Promise<imperative.IProfileLoaded> {
         const profInfo = await cache.getProfileInfo();
-        const profAttrs = profInfo.getAllProfiles().filter((prof) => prof.profName === profile)[0];
+        const profAttrs = profInfo.getAllProfiles().find((prof) => prof.profName === profile);
         if (profAttrs?.profType != null) cache.registerCustomProfilesType(profAttrs.profType);
         await cache.refresh(this.getZoweExplorerApi());
         const retP = cache.loadNamedProfile(profile);
         const _props = profInfo.mergeArgsForProfile(profAttrs, { getSecureVals: true }).knownArgs;
-        retP.profile.tokenType = retP.profile.tokenType ?? _props.filter((p) => p.argName === "tokenType")[0]?.argValue;
-        retP.profile.tokenValue = retP.profile.tokenValue ?? _props.filter((p) => p.argName === "tokenValue")[0]?.argValue;
+        retP.profile.tokenType = retP.profile.tokenType ?? _props.find((p) => p.argName === "tokenType")?.argValue;
+        retP.profile.tokenValue = retP.profile.tokenValue ?? _props.find((p) => p.argName === "tokenValue")?.argValue;
         return retP;
     }
 
