@@ -12,7 +12,7 @@
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
 import { Gui, IZoweJobTreeNode, JobSortOpts, SortDirection, ValidProfileEnum } from "@zowe/zowe-explorer-api";
-import { ZoweJobNode } from "../../../src/job/ZoweJobNode";
+import { ZoweJobNode, ZoweSpoolNode } from "../../../src/job/ZoweJobNode";
 import {
     createISession,
     createIProfile,
@@ -271,7 +271,7 @@ describe("Jobs Actions Unit Tests - Function modifyCommand", () => {
 describe("Jobs Actions Unit Tests - Function downloadSpool", () => {
     it("Checking download of Job Spool", async () => {
         const blockMocks = createGlobalMocks();
-        const jobs: Job[] = [];
+        const jobs: IZoweJobTreeNode[] = [];
         const node = new ZoweJobNode({
             label: "job",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
@@ -320,7 +320,7 @@ describe("Jobs Actions Unit Tests - Function downloadSingleSpool", () => {
     it("Checking download of Job Spool", async () => {
         const blockMocks = createGlobalMocks();
         const iJobFile = createIJobFile();
-        const jobs: Job[] = [];
+        const jobs: IZoweJobTreeNode[] = [];
         const node = new ZoweJobNode({
             label: "test:dd - 1",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
@@ -356,7 +356,7 @@ describe("Jobs Actions Unit Tests - Function downloadSingleSpool", () => {
     it("should fail to download single spool files if the extender has not implemented the operation", async () => {
         const blockMocks = createGlobalMocks();
         const iJobFile = createIJobFile();
-        const jobs: Job[] = [];
+        const jobs: IZoweJobTreeNode[] = [];
         const node = new ZoweJobNode({
             label: "test:dd - 1",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
@@ -979,7 +979,7 @@ describe("Jobs Actions Unit Tests - Function getSpoolContent", () => {
             session: createISessionWithoutCredentials(),
             profile: createIProfile(),
         });
-        jest.spyOn(Spool.prototype, "getProfile").mockReturnValue({
+        jest.spyOn(ZoweSpoolNode.prototype, "getProfile").mockReturnValue({
             name: "test",
         } as any);
         mocked(SpoolProvider.toUniqueJobFileUri).mockReturnValueOnce(() => blockMocks.mockUri);

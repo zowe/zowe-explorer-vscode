@@ -182,7 +182,7 @@ describe("Shared Actions Unit Tests - Function searchForLoadedItems", () => {
         const testDatasetTree = createDatasetTree(blockMocks.datasetSessionNode, globalMocks.treeView);
         testDatasetTree.getChildren.mockReturnValue([blockMocks.datasetSessionNode]);
 
-        jest.spyOn(dsActions, "openPS").mockResolvedValueOnce(null as any);
+        jest.spyOn(ZoweDatasetNode.prototype, "openDs").mockResolvedValueOnce(null as any);
         testDatasetTree.getAllLoadedItems.mockResolvedValueOnce([testMember]);
         const testUssTree = createUSSTree([], [blockMocks.ussSessionNode], globalMocks.treeView);
         Object.defineProperty(testUssTree, "getAllLoadedItems", {

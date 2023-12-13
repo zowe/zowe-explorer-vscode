@@ -234,7 +234,7 @@ describe("ZoweUSSNode Unit Tests - Initialization of class", () => {
         expect(testNode.label).toBeDefined();
         expect(testNode.collapsibleState).toBeDefined();
         expect(testNode.label).toBeDefined();
-        expect(testNode.getParent()).toBeDefined();
+        expect(testNode.getParent()).toBeUndefined();
         expect(testNode.getSession()).toBeDefined();
     });
 
@@ -255,7 +255,7 @@ describe("ZoweUSSNode Unit Tests - Initialization of class", () => {
         expect(testNode.label).toBeDefined();
         expect(testNode.collapsibleState).toBeDefined();
         expect(testNode.label).toBeDefined();
-        expect(testNode.getParent()).toBeDefined();
+        expect(testNode.getParent()).toBeUndefined();
         expect(testNode.getSession()).toBeDefined();
     });
 });
@@ -993,7 +993,7 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
         // Tests that correct file is downloaded
         await node.openUSS(false, true, blockMocks.testUSSTree);
         expect(globalMocks.existsSync.mock.calls.length).toBe(1);
-        expect(globalMocks.existsSync.mock.calls[0][0]).toBe(path.join(globals.USS_DIR, node.mProfileName || "", node.fullPath));
+        expect(globalMocks.existsSync.mock.calls[0][0]).toBe(path.join(globals.USS_DIR, node.getProfileName(), node.fullPath));
         expect(globalMocks.setStatusBarMessage).toBeCalledWith("$(sync~spin) Opening USS file...");
 
         // Tests that correct file is opened in editor
@@ -1037,7 +1037,7 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
         // Tests that correct file is downloaded
         await node.openUSS(false, true, blockMocks.testUSSTree);
         expect(globalMocks.existsSync.mock.calls.length).toBe(1);
-        expect(globalMocks.existsSync.mock.calls[0][0]).toBe(path.join(globals.USS_DIR, node.mProfileName || "", node.fullPath));
+        expect(globalMocks.existsSync.mock.calls[0][0]).toBe(path.join(globals.USS_DIR, node.getProfileName(), node.fullPath));
         expect(globalMocks.setStatusBarMessage).toBeCalledWith("$(sync~spin) Opening USS file...");
         // Tests that correct file is opened in editor
         globalMocks.withProgress(globalMocks.downloadUSSFile);

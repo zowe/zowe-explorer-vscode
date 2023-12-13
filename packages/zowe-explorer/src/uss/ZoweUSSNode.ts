@@ -58,7 +58,6 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     public children: IZoweUSSTreeNode[] = [];
     public encodingMap = {};
     public binary = false;
-    public profileName = "";
     public shortLabel = "";
     public downloadedTime = null as string;
     private downloadedInternal = false;
@@ -94,7 +93,6 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             }
         }
         if (opts.parentNode && opts.parentNode.contextValue === globals.FAV_PROFILE_CONTEXT) {
-            this.profileName = opts.parentNode.label.toString();
             this.fullPath = opts.label.trim();
             // File or directory name only (no parent path)
             this.shortLabel = this.fullPath.split("/", this.fullPath.length).pop();

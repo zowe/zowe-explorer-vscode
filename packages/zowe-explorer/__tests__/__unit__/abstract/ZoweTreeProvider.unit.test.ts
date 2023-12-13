@@ -210,14 +210,14 @@ describe("Tree Provider unit tests, function getTreeItem", () => {
 });
 
 describe("Tree Provider unit tests, function getParent", () => {
-    it("Tests that getParent returns null when called on a root node", async () => {
+    it("Tests that getParent returns undefined when called on a root node", async () => {
         const globalMocks = await createGlobalMocks();
         const spy = jest.spyOn(ZoweLogger, "trace");
         // Await return value from getChildren
         const rootChildren = await globalMocks.testUSSTree.getChildren();
         const parent = globalMocks.testUSSTree.getParent(rootChildren[1]);
 
-        expect(parent).toEqual(null);
+        expect(parent).toBeUndefined();
         expect(spy).toBeCalled();
         spy.mockClear();
     });

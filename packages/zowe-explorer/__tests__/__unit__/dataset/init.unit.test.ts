@@ -27,7 +27,7 @@ describe("Test src/dataset/extension", () => {
         let spyCreateDatasetTree;
         const test: ITestContext = {
             context: { subscriptions: [] },
-            value: { label: "test", getParent: () => "test" },
+            value: { label: "test", getParent: () => "test", openDs: jest.fn() },
             _: { _: "_" },
         };
         const dsProvider: { [key: string]: jest.Mock } = {
@@ -91,7 +91,7 @@ describe("Test src/dataset/extension", () => {
             },
             {
                 name: "zowe.ds.ZoweNode.openPS",
-                mock: [{ spy: jest.spyOn(dsActions, "openPS"), arg: [test.value, false, true, dsProvider] }],
+                mock: [{ spy: jest.spyOn(test.value, "openDs"), arg: [false, true, dsProvider] }],
             },
             {
                 name: "zowe.ds.createDataset",
@@ -122,7 +122,7 @@ describe("Test src/dataset/extension", () => {
                 mock: [
                     { spy: jest.spyOn(contextuals, "isDs"), arg: [test.value], ret: false },
                     { spy: jest.spyOn(contextuals, "isDsMember"), arg: [test.value], ret: true },
-                    { spy: jest.spyOn(dsActions, "openPS"), arg: [test.value, false, false, dsProvider] },
+                    { spy: jest.spyOn(test.value, "openDs"), arg: [false, false, dsProvider] },
                 ],
             },
             {
@@ -130,7 +130,7 @@ describe("Test src/dataset/extension", () => {
                 mock: [
                     { spy: jest.spyOn(contextuals, "isDs"), arg: [test.value], ret: false },
                     { spy: jest.spyOn(contextuals, "isDsMember"), arg: [test.value], ret: true },
-                    { spy: jest.spyOn(dsActions, "openPS"), arg: [test.value, false, false, dsProvider] },
+                    { spy: jest.spyOn(test.value, "openDs"), arg: [false, false, dsProvider] },
                 ],
             },
             {

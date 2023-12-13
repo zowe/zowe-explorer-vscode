@@ -244,7 +244,7 @@ describe("USSTree Unit Tests - Function USSTree.createProfileNodeForFavs()", () 
         const expectedFavProfileNode = new ZoweUSSNode({
             label: "testProfile",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
-            session: globalMocks.testTree.mFavoriteSession,
+            parentNode: globalMocks.testTree.mFavoriteSession,
         });
         expectedFavProfileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
 
@@ -257,7 +257,7 @@ describe("USSTree Unit Tests - Function USSTree.createProfileNodeForFavs()", () 
         const expectedFavProfileNode = new ZoweUSSNode({
             label: "testProfile",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
-            session: globalMocks.testTree.mFavoriteSession,
+            parentNode: globalMocks.testTree.mFavoriteSession,
         });
         expectedFavProfileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
         const icons = await import("../../../src/generators/icons");
@@ -311,58 +311,6 @@ describe("USSTree Unit Tests - Functions USSTree.removeFileHistory()", () => {
     });
 });
 
-describe("USSTree Unit Tests - Functions USSTree.addFavorite()", () => {
-    async function createBlockMocks(globalMocks) {
-        const newMocks = {
-            childFile: null,
-            parentDir: new ZoweUSSNode({
-                label: "parent",
-                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
-                session: globalMocks.testTree.mSessionNodes[1],
-                parentPath: "/",
-            }),
-        };
-        newMocks.childFile = new ZoweUSSNode({
-            label: "child",
-            collapsibleState: vscode.TreeItemCollapsibleState.None,
-            parentNode: newMocks.parentDir,
-            parentPath: "/parent",
-        });
-        newMocks.childFile.contextValue = globals.USS_TEXT_FILE_CONTEXT;
-        globalMocks.testTree.mFavorites = [];
-
-        return newMocks;
-    }
-
-    it("Tests that addFavorite() works for directories", async () => {
-        const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
-
-        await globalMocks.testTree.addFavorite(blockMocks.parentDir);
-        const favProfileNode = globalMocks.testTree.mFavorites[0];
-
-        expect(favProfileNode.children[0].fullPath).toEqual(blockMocks.parentDir.fullPath);
-    });
-
-    it("Tests that addFavorite() works for files", async () => {
-        const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
-
-        await globalMocks.testTree.addFavorite(blockMocks.childFile);
-        const favProfileNode = globalMocks.testTree.mFavorites[0];
-        expect(favProfileNode.children[0].fullPath).toEqual(blockMocks.childFile.fullPath);
-    });
-
-    it("Tests that addFavorite() doesn't add duplicates", async () => {
-        const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
-
-        await globalMocks.testTree.addFavorite(blockMocks.parentDir);
-        await globalMocks.testTree.addFavorite(blockMocks.parentDir);
-        expect(globalMocks.testTree.mFavorites.length).toEqual(1);
-    });
-});
-
 describe("USSTree Unit Tests - Function USSTree.removeFavorite()", () => {
     async function createBlockMocks(globalMocks) {
         const newMocks = {
@@ -376,7 +324,7 @@ describe("USSTree Unit Tests - Function USSTree.removeFavorite()", () => {
         await globalMocks.testTree.addFavorite(newMocks.testDir);
         const favProfileNode = globalMocks.testTree.mFavorites[0];
         favProfileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
-        favProfileNode.mProfileName = globalMocks.testProfile.name;
+        favProfileNode.profile = globalMocks.testProfile;
 
         return newMocks;
     }
@@ -432,7 +380,7 @@ describe("USSTree Unit Tests - Function USSTree.removeFavProfile", () => {
         });
         await globalMocks.testTree.addFavorite(testDir);
         const profileNodeInFavs: IZoweUSSTreeNode = globalMocks.testTree.mFavorites[0];
-        profileNodeInFavs.mProfileName = globalMocks.testProfile.name;
+        (profileNodeInFavs as any).profile = globalMocks.testProfile;
 
         const newMocks = {
             profileNodeInFavs,
@@ -478,41 +426,6 @@ describe("USSTree Unit Tests - Function USSTree.removeFavProfile", () => {
         await globalMocks.testTree.removeFavProfile(blockMocks.profileNodeInFavs.label, false);
 
         expect(globalMocks.testTree.mFavorites.length).toEqual(0);
-    });
-});
-
-describe("USSTree Unit Tests - Function USSTree.openItemFromPath()", () => {
-    it("Tests that openItemFromPath opens a USS file in the tree", async () => {
-        const globalMocks = await createGlobalMocks();
-        globalMocks.withProgress.mockReturnValue(globalMocks.testResponse);
-
-        const file = new ZoweUSSNode({
-            label: "c.txt",
-            collapsibleState: vscode.TreeItemCollapsibleState.None,
-            parentNode: globalMocks.testTree.mSessionNodes[1],
-            parentPath: "/a/b",
-        });
-        globalMocks.testTree.mSessionNodes[1].children.push(file);
-        Object.defineProperty(globalMocks.testTree.mSessionNodes[1], "getChildren", {
-            value: jest.fn(() => {
-                return Promise.resolve([file]);
-            }),
-        });
-
-        await globalMocks.testTree.openItemFromPath("/a/b/c.txt", globalMocks.testTree.mSessionNodes[1]);
-
-        expect(globalMocks.testTree.getSearchHistory().includes("[sestest]: /a/b/c.txt")).toBe(true);
-    });
-
-    it("Tests that openItemFromPath fails when the node no longer exists", async () => {
-        const globalMocks = await createGlobalMocks();
-        globalMocks.withProgress.mockReturnValue(globalMocks.testResponse);
-
-        jest.spyOn(globalMocks.testTree, "getChildren").mockReturnValue(Promise.resolve([]));
-        const fileHistorySpy = jest.spyOn(globalMocks.testTree, "removeFileHistory");
-
-        await globalMocks.testTree.openItemFromPath("/d.txt", globalMocks.testTree.mSessionNodes[1]);
-        expect(fileHistorySpy).toBeCalledWith("[sestest]: /d.txt");
     });
 });
 
@@ -741,8 +654,8 @@ describe("USSTree Unit Tests - Function USSTree.filterPrompt()", () => {
             label: "/u/myFile.txt",
             collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
             session: sessionWithCred,
+            profile: { name: "ussTestSess2" } as any,
         });
-        dsNode.profileName = "ussTestSess2";
         dsNode.contextValue = globals.USS_SESSION_CONTEXT + globals.FAV_SUFFIX;
         globalMocks.testTree.mSessionNodes.push(dsNode);
 
@@ -764,8 +677,8 @@ describe("USSTree Unit Tests - Function USSTree.filterPrompt()", () => {
             label: "/u/myFile.txt",
             collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
             session: sessionNoCred,
+            profile: { name: "ussTestSess2" } as any,
         });
-        dsNode.profileName = "ussTestSess2";
         dsNode.getSession().ISession.user = "";
         dsNode.getSession().ISession.password = "";
         dsNode.getSession().ISession.base64EncodedAuth = "";
@@ -1177,34 +1090,16 @@ describe("USSTree Unit Tests - Function USSTree.rename()", () => {
     });
 });
 
-describe("USSTree Unit Tests - Functions USSTree.addFileHistory() & USSTree.getFileHistory()", () => {
-    it("Tests that addFileHistory() & getFileHistory() are executed successfully", async () => {
-        const globalMocks = await createGlobalMocks();
-
-        globalMocks.testTree.addFileHistory("testHistory");
-        expect(globalMocks.testTree.getFileHistory()[0]).toEqual("TESTHISTORY");
-    });
-});
-
-describe("USSTree Unit Tests - Functions USSTree.removeFileHistory()", () => {
-    it("Tests that removeFileHistory() is executed successfully", async () => {
-        const globalMocks = await createGlobalMocks();
-
-        globalMocks.testTree.removeFileHistory("testHistory");
-        expect(globalMocks.testTree.getFileHistory().includes("TESTHISTORY")).toEqual(false);
-    });
-});
-
 describe("USSTree Unit Tests - Functions USSTree.addFavorite()", () => {
     async function createBlockMocks(globalMocks) {
         const newMocks = {
+            childFile: null,
             parentDir: new ZoweUSSNode({
                 label: "parent",
                 collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
                 parentNode: globalMocks.testTree.mSessionNodes[1],
                 parentPath: "/",
             }),
-            childFile: null,
         };
         newMocks.childFile = new ZoweUSSNode({
             label: "child",
@@ -1248,39 +1143,6 @@ describe("USSTree Unit Tests - Functions USSTree.addFavorite()", () => {
     });
 });
 
-describe("USSTree Unit Tests - Function USSTree.removeFavorite()", () => {
-    async function createBlockMocks(globalMocks) {
-        const newMocks = {
-            testDir: new ZoweUSSNode({
-                label: "testDir",
-                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
-                parentNode: globalMocks.testTree.mSessionNodes[1],
-                parentPath: "/",
-            }),
-        };
-        globalMocks.testTree.mFavorites = [];
-        await globalMocks.testTree.addFavorite(newMocks.testDir);
-        const favProfileNode = globalMocks.testTree.mFavorites[0];
-        favProfileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
-        favProfileNode.mProfileName = globalMocks.testProfile.name;
-
-        return newMocks;
-    }
-
-    it("Tests that removeFavorite() works properly", async () => {
-        const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
-        const favProfileNode = globalMocks.testTree.mFavorites[0];
-
-        // Checking that favorites are set successfully before test
-        expect(favProfileNode.children[0].fullPath).toEqual(blockMocks.testDir.fullPath);
-
-        await globalMocks.testTree.removeFavorite(blockMocks.testDir);
-
-        expect(favProfileNode.children).toEqual([]);
-    });
-});
-
 describe("USSTree Unit Tests - Function USSTree.openItemFromPath()", () => {
     it("Tests that openItemFromPath opens a USS file in the tree", async () => {
         const globalMocks = await createGlobalMocks();
@@ -1305,23 +1167,6 @@ describe("USSTree Unit Tests - Function USSTree.openItemFromPath()", () => {
 
         await globalMocks.testTree.openItemFromPath("/d.txt", globalMocks.testTree.mSessionNodes[1]);
         expect(fileHistorySpy).toBeCalledWith("[sestest]: /d.txt");
-    });
-});
-
-describe("USSTree Unit Tests - Function USSTree.addSession()", () => {
-    it("Tests if addSession works properly", async () => {
-        const globalMocks = await createGlobalMocks();
-
-        const testSessionNode = new ZoweUSSNode({
-            label: "testSessionNode",
-            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
-            session: globalMocks.testSession,
-        });
-        globalMocks.testTree.mSessionNodes.push(testSessionNode);
-        globalMocks.testTree.addSession("testSessionNode");
-
-        const foundNode = globalMocks.testTree.mSessionNodes.includes(testSessionNode);
-        expect(foundNode).toEqual(true);
     });
 });
 

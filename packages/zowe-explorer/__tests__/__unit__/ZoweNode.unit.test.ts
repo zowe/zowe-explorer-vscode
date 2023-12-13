@@ -76,7 +76,7 @@ describe("Unit Tests (Jest)", () => {
         expect(testNode.label).toBeDefined();
         expect(testNode.collapsibleState).toBeDefined();
         expect(testNode.label).toBeDefined();
-        expect(testNode.getParent()).toBeDefined();
+        expect(testNode.getParent()).toBeUndefined();
         expect(testNode.getSession()).toBeDefined();
     });
 

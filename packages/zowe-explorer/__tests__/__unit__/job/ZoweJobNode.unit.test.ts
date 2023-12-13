@@ -223,6 +223,7 @@ describe("ZoweJobNode unit tests - Function addSession", () => {
 
         expect(globalMocks.testJobsProvider.mSessionNodes[1]).toBeDefined();
         expect(globalMocks.testJobsProvider.mSessionNodes[1].label).toEqual("sestest");
+        expect(globalMocks.testJobsProvider.mSessionNodes[1].tooltip).toEqual("sestest");
     });
 
     it("Tests that addSession adds the session to the tree with disabled global setting", async () => {
@@ -334,7 +335,7 @@ describe("ZoweJobNode unit tests - Function getChildren", () => {
 
         expect(jobs.length).toBe(1);
         expect(jobs[0].job.jobid).toEqual(globalMocks.testIJob.jobid);
-        expect(jobs[0].tooltip).toEqual("TESTJOB(JOB1234)");
+        expect(jobs[0].tooltip).toEqual("TESTJOB(JOB1234) - ACTIVE");
     });
 
     it("Tests that getChildren returns the spool files if called on a job", async () => {
@@ -795,30 +796,6 @@ describe("ZosJobsProvider - Function handleEditingMultiJobParameters", () => {
     });
 });
 
-describe("ZosJobsProvider - tooltip", () => {
-    it("should return undefined tooltip", async () => {
-        const globalMocks = await createGlobalMocks();
-        globalMocks.testJobsProvider.mSessionNodes[1]._tooltip = undefined;
-        globalMocks.testJobsProvider.mSessionNodes[1].job = undefined;
-        globalMocks.testJobsProvider.mSessionNodes[1].label = undefined;
-        const actualTooltip = globalMocks.testJobsProvider.mSessionNodes[1].tooltip;
-        expect(undefined).toEqual(actualTooltip);
-    });
-    it("should return existing _tooltip", async () => {
-        const globalMocks = await createGlobalMocks();
-        globalMocks.testJobsProvider.mSessionNodes[1]._tooltip = "my_tooltip";
-        const actualTooltip = globalMocks.testJobsProvider.mSessionNodes[1].tooltip;
-        expect("my_tooltip").toEqual(actualTooltip);
-    });
-    it("should return job id tooltip", async () => {
-        const globalMocks = await createGlobalMocks();
-        const job = { jobname: "myJob", jobid: 123, retcode: 345 };
-        globalMocks.testJobsProvider.mSessionNodes[1].job = job;
-        const actualTooltip = globalMocks.testJobsProvider.mSessionNodes[1].tooltip;
-        expect("myJob(123) - 345").toEqual(actualTooltip);
-    });
-});
-
 describe("ZosJobsProvider - getJobs", () => {
     it("should filter duplicate jobs", async () => {
         const globalMocks = await createGlobalMocks();
@@ -858,7 +835,7 @@ describe("Job - sortJobs", () => {
                     jobid: "JOBID120",
                 },
             } as IZoweJobTreeNode,
-        ].sort(Job.sortJobs({ method: JobSortOpts.Id, direction: SortDirection.Ascending }));
+        ].sort(ZoweJobNode.sortJobs({ method: JobSortOpts.Id, direction: SortDirection.Ascending }));
         expect(sorted[0].job.jobid).toBe("JOBID120");
         expect(sorted[1].job.jobid).toBe("JOBID120");
         expect(sorted[2].job.jobid).toBe("JOBID123");

@@ -782,7 +782,7 @@ describe("Dataset Tree Unit Tests - Function getParent", () => {
 
         const parentNode = testTree.getParent(blockMocks.datasetSessionNode);
 
-        expect(parentNode).toBeNull();
+        expect(parentNode).toBeUndefined();
     });
     it("Checking function on the non-root node", async () => {
         createGlobalMocks();

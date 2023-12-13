@@ -3503,7 +3503,7 @@ describe("Dataset Actions Unit Tests - Function openPS", () => {
             parentNode: blockMocks.datasetSessionNode,
         });
 
-        await dsActions.openPS(node, false, true, blockMocks.testDatasetTree);
+        await node.openDs(false, true, blockMocks.testDatasetTree);
 
         expect(mocked(fs.existsSync)).toBeCalledWith(path.join(globals.DS_DIR, node.getSessionNode().label.toString(), node.label.toString()));
         expect(mocked(vscode.workspace.openTextDocument)).toBeCalledWith(sharedUtils.getDocumentFilePath(node.label.toString(), node));
@@ -3535,7 +3535,7 @@ describe("Dataset Actions Unit Tests - Function openPS", () => {
             parentNode: blockMocks.datasetSessionNode,
         });
 
-        await dsActions.openPS(node, false, true, blockMocks.testDatasetTree);
+        await node.openDs(false, true, blockMocks.testDatasetTree);
 
         expect(mocked(fs.existsSync)).toBeCalledWith(path.join(globals.DS_DIR, node.getSessionNode().label.toString(), node.label.toString()));
         expect(mocked(vscode.workspace.openTextDocument)).toBeCalledWith(sharedUtils.getDocumentFilePath(node.label.toString(), node));
@@ -3561,7 +3561,7 @@ describe("Dataset Actions Unit Tests - Function openPS", () => {
         });
         node.ongoingActions = undefined as any;
 
-        await dsActions.openPS(node, false, true, blockMocks.testDatasetTree);
+        await node.openDs(false, true, blockMocks.testDatasetTree);
 
         expect(mocked(fs.existsSync)).toBeCalledWith(path.join(globals.DS_DIR, node.getSessionNode().label.toString(), node.label.toString()));
         expect(mocked(vscode.workspace.openTextDocument)).toBeCalledWith(sharedUtils.getDocumentFilePath(node.label.toString(), node));
@@ -3580,7 +3580,7 @@ describe("Dataset Actions Unit Tests - Function openPS", () => {
         });
 
         try {
-            await dsActions.openPS(node, false, true, blockMocks.testDatasetTree);
+            await node.openDs(false, true, blockMocks.testDatasetTree);
         } catch (err) {
             // do nothing
         }
@@ -3603,7 +3603,7 @@ describe("Dataset Actions Unit Tests - Function openPS", () => {
         });
         node.ongoingActions = undefined as any;
 
-        await dsActions.openPS(node, false, true, blockMocks.testDatasetTree);
+        await node.openDs(false, true, blockMocks.testDatasetTree);
 
         expect(globalMocks.getContentsSpy).not.toHaveBeenCalled();
         expect(node.getEtag()).toBe("abc");
@@ -3631,7 +3631,7 @@ describe("Dataset Actions Unit Tests - Function openPS", () => {
         const child = new ZoweDatasetNode({ label: "child", collapsibleState: vscode.TreeItemCollapsibleState.None, parentNode: parent });
         child.contextValue = globals.DS_MEMBER_CONTEXT;
 
-        await dsActions.openPS(child, false, true, blockMocks.testDatasetTree);
+        await child.openDs(false, true, blockMocks.testDatasetTree);
 
         expect(mocked(fs.existsSync)).toBeCalledWith(
             path.join(globals.DS_DIR, child.getSessionNode().label.toString(), `${parent.label.toString()}(${child.label.toString()})`)
@@ -3662,7 +3662,7 @@ describe("Dataset Actions Unit Tests - Function openPS", () => {
         const child = new ZoweDatasetNode({ label: "child", collapsibleState: vscode.TreeItemCollapsibleState.None, parentNode: parent });
         child.contextValue = globals.DS_MEMBER_CONTEXT;
 
-        await dsActions.openPS(child, false, true, blockMocks.testDatasetTree);
+        await child.openDs(false, true, blockMocks.testDatasetTree);
 
         expect(mocked(fs.existsSync)).toBeCalledWith(
             path.join(globals.DS_DIR, child.getSessionNode().label.toString(), `${parent.label.toString()}(${child.label.toString()})`)
@@ -3693,7 +3693,7 @@ describe("Dataset Actions Unit Tests - Function openPS", () => {
         const child = new ZoweDatasetNode({ label: "child", collapsibleState: vscode.TreeItemCollapsibleState.None, parentNode: favProfileNode });
         child.contextValue = globals.DS_FAV_CONTEXT;
 
-        await dsActions.openPS(child, false, true, blockMocks.testDatasetTree);
+        await child.openDs(false, true, blockMocks.testDatasetTree);
 
         expect(mocked(fs.existsSync)).toBeCalledWith(path.join(globals.DS_DIR, blockMocks.imperativeProfile.name, child.label.toString()));
         expect(mocked(vscode.workspace.openTextDocument)).toBeCalledWith(sharedUtils.getDocumentFilePath(child.label.toString(), child));
@@ -3713,7 +3713,7 @@ describe("Dataset Actions Unit Tests - Function openPS", () => {
         blockMocks.datasetSessionNode.contextValue = "aieieiieeeeooooo";
 
         try {
-            await dsActions.openPS(node, false, true, blockMocks.testDatasetTree);
+            await node.openDs(false, true, blockMocks.testDatasetTree);
         } catch (err) {
             // Prevent exception from failing test
         }
@@ -3743,7 +3743,7 @@ describe("Dataset Actions Unit Tests - Function openPS", () => {
         const logErrorSpy = jest.spyOn(ZoweLogger, "error");
 
         try {
-            await dsActions.openPS(node, false, true, blockMocks.testDatasetTree);
+            await node.openDs(false, true, blockMocks.testDatasetTree);
         } catch (err) {
             // Do nothing
         }
@@ -3788,7 +3788,7 @@ describe("Dataset Actions Unit Tests - Function allocateLike", () => {
         jest.spyOn(datasetSessionNode, "getChildren").mockResolvedValue([testNode, testSDSNode]);
         testDatasetTree.createFilterString.mockReturnValue("test");
         jest.spyOn(Gui, "resolveQuickPick").mockResolvedValue(quickPickItem);
-        jest.spyOn(dsActions, "openPS").mockImplementation(() => null);
+        jest.spyOn(ZoweDatasetNode.prototype, "openDs").mockImplementation(() => null);
 
         return {
             session,

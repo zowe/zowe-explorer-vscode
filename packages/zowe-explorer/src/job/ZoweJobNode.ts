@@ -63,7 +63,7 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
         this._searchId = "";
         this._jobStatus = "*";
         this.tooltip = opts.label;
-        this.job = opts.job;
+        this.job = opts.job ?? null; // null instead of undefined to satisfy isZoweJobTreeNode
 
         if (opts.parentNode == null && opts.label !== "Favorites") {
             this.contextValue = globals.JOBS_SESSION_CONTEXT;

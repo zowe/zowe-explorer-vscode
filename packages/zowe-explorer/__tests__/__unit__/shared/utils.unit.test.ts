@@ -148,7 +148,7 @@ describe("Positive testing", () => {
         const value = sharedUtils.isZoweUSSTreeNode(ussNode);
         expect(value).toBeTruthy();
     });
-    it("should pass for  ZoweJobTreeNode with ZoweJobNode node type", async () => {
+    it("should pass for ZoweJobTreeNode with ZoweJobNode node type", async () => {
         const jobNode = new ZoweJobNode({ label: "", collapsibleState: vscode.TreeItemCollapsibleState.None });
         const value = sharedUtils.isZoweJobTreeNode(jobNode);
         expect(value).toBeTruthy();
