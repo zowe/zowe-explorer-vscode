@@ -477,21 +477,21 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
             new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null as any),
             blockMocks.datasetSessionNode,
         ]);
-        const commandSpy = jest.spyOn(vscode.commands, "executeCommand");
+        const showTextDocumentSpy = jest.spyOn(vscode.window, "showTextDocument");
         activeTextEditorDocument.mockReturnValue(blockMocks.textDocument);
         const submitJclSpy = jest.spyOn(blockMocks.jesApi, "submitJcl");
         submitJclSpy.mockClear();
         submitJclSpy.mockResolvedValueOnce(blockMocks.iJob);
         await dsActions.submitJcl(blockMocks.testDatasetTree, mockFile);
 
-        expect(commandSpy).toBeCalled();
+        expect(showTextDocumentSpy).toBeCalled();
         expect(submitJclSpy).toBeCalled();
         expect(mocked(Gui.showMessage)).toBeCalled();
         expect(mocked(Gui.showMessage).mock.calls.length).toBe(1);
         expect(mocked(Gui.showMessage).mock.calls[0][0]).toEqual(
             "Job submitted [JOB1234](command:zowe.jobs.setJobSpool?%5B%22sestest%22%2C%22JOB1234%22%5D)"
         );
-        commandSpy.mockClear();
+        showTextDocumentSpy.mockClear();
     });
     it("Checking submit of JCL file from VSC explorer tree", async () => {
         createGlobalMocks();
