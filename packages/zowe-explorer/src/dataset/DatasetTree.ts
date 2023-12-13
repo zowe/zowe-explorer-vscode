@@ -13,7 +13,6 @@ import * as vscode from "vscode";
 import * as nls from "vscode-nls";
 
 import * as globals from "../globals";
-import * as dsActions from "./actions";
 import {
     DataSetAllocTemplate,
     Gui,
@@ -464,7 +463,12 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 }
             }
             // Creates ZoweDatasetNode to track new session and pushes it to mSessionNodes
-            const node = new ZoweDatasetNode(profile.name, vscode.TreeItemCollapsibleState.Collapsed, null, session, undefined, undefined, profile);
+            const node = new ZoweDatasetNode({
+                label: profile.name,
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                session,
+                profile,
+            });
             node.contextValue = globals.DS_SESSION_CONTEXT + (profile.type !== "zosmf" ? `.profile=${profile.type}.` : "");
             await this.refreshHomeProfileContext(node);
             const icon = getIconByNode(node);

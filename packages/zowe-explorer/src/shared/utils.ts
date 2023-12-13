@@ -498,7 +498,7 @@ export async function promptForEncoding(node: IZoweDatasetTreeNode | IZoweUSSTre
         case otherItem.label:
             encoding = await Gui.showInputBox({
                 title: localize("zowe.shared.utils.promptForEncoding.qp.title", "Choose encoding for {0}", node.label as string),
-                placeHolder: localize("zowe.shared.utils.promptForEncoding.input.placeHolder", "Enter a codepage in the format 1047 or IBM-1047"),
+                placeHolder: localize("zowe.shared.utils.promptForEncoding.input.placeHolder", "Enter a codepage (e.g., 1047, IBM-1047)"),
             });
             if (encoding != null) {
                 encodingHistory.push(encoding);

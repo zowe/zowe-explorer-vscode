@@ -109,7 +109,7 @@ export async function downloadSingleSpool(nodes: IZoweJobTreeNode[], binary?: bo
  * @param spool The IJobFile to get the spool content for
  * @param refreshTimestamp The timestamp of the last job node refresh
  */
-export async function getSpoolContent(session: string, spoolNode: Spool): Promise<void> {
+export async function getSpoolContent(session: string, spoolNode: ZoweSpoolNode): Promise<void> {
     ZoweLogger.trace("job.actions.getSpoolContent called.");
     const profiles = Profiles.getInstance();
     let zosmfProfile: zowe.imperative.IProfileLoaded;

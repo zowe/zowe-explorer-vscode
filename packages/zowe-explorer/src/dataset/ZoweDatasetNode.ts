@@ -515,7 +515,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 // If there is no ongoing action and the local copy does not exist, fetch contents
                 if (forceDownload || (responsePromise == null && !fs.existsSync(documentFilePath))) {
                     const prof = this.getProfile();
-                    ZoweLogger.info(localize("openPS.openDataSet", "Opening {0}", label));
+                    ZoweLogger.info(localize("openDs.openDataSet", "Opening {0}", label));
                     if (this.ongoingActions) {
                         this.ongoingActions[NodeAction.Download] = ZoweExplorerApiRegister.getMvsApi(prof).getContents(label, {
                             file: documentFilePath,

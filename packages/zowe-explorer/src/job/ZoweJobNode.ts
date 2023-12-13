@@ -41,6 +41,7 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
     private _jobStatus: string;
     public job: zowe.IJob;
     public filtered = false;
+    public filter?: string;
 
     public constructor(opts: IZoweJobTreeOpts) {
         let finalLabel = opts.label;

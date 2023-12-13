@@ -26,5 +26,5 @@
   "zowe.shared.utils.promptForEncoding.tagged.description": "USS file tag",
   "zowe.shared.utils.promptForEncoding.qp.title": "Choose encoding for {0}",
   "zowe.shared.utils.promptForEncoding.qp.placeHolder": "Current encoding is {0}",
-  "zowe.shared.utils.promptForEncoding.input.placeHolder": "Enter a codepage in the format 1047 or IBM-1047"
+  "zowe.shared.utils.promptForEncoding.input.placeHolder": "Enter a codepage (e.g., 1047, IBM-1047)"
 }

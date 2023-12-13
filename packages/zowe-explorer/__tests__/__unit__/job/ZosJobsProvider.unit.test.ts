@@ -1035,30 +1035,21 @@ describe("getFavorites", () => {
 });
 
 describe("ZosJobsProvider Unit Test - Filter Jobs", () => {
-    const node1: IZoweJobTreeNode = new Job(
-        "jobnew",
-        vscode.TreeItemCollapsibleState.None,
-        null,
-        null,
-        setJobObjects(createIJobObject(), "ZOWEUSR1", "JOB04945", "CC 0000"),
-        null
-    );
-    const node2: IZoweJobTreeNode = new Job(
-        "jobnew",
-        vscode.TreeItemCollapsibleState.None,
-        null,
-        null,
-        setJobObjects(createIJobObject(), "ZOWEUSR2", "JOB05037", "CC 0000"),
-        null
-    );
-    const node3: IZoweJobTreeNode = new Job(
-        "jobnew",
-        vscode.TreeItemCollapsibleState.None,
-        null,
-        null,
-        setJobObjects(createIJobObject(), "ZOWEUSR3", "TSU07707", "ABEND S222"),
-        null
-    );
+    const node1: IZoweJobTreeNode = new ZoweJobNode({
+        label: "jobnew",
+        collapsibleState: vscode.TreeItemCollapsibleState.None,
+        job: setJobObjects(createIJobObject(), "ZOWEUSR1", "JOB04945", "CC 0000"),
+    });
+    const node2: IZoweJobTreeNode = new ZoweJobNode({
+        label: "jobnew",
+        collapsibleState: vscode.TreeItemCollapsibleState.None,
+        job: setJobObjects(createIJobObject(), "ZOWEUSR2", "JOB05037", "CC 0000"),
+    });
+    const node3: IZoweJobTreeNode = new ZoweJobNode({
+        label: "jobnew",
+        collapsibleState: vscode.TreeItemCollapsibleState.None,
+        job: setJobObjects(createIJobObject(), "ZOWEUSR3", "TSU07707", "ABEND S222"),
+    });
 
     let globalMocks;
     beforeEach(async () => {

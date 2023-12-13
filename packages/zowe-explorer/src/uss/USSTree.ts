@@ -340,17 +340,12 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 }
             }
             // Creates ZoweNode to track new session and pushes it to mSessionNodes
-            const node = new ZoweUSSNode(
-                profile.name,
-                vscode.TreeItemCollapsibleState.Collapsed,
-                null,
+            const node = new ZoweUSSNode({
+                label: profile.name,
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
                 session,
-                null,
-                false,
-                profile.name,
-                null,
-                profile
-            );
+                profile,
+            });
             node.contextValue = globals.USS_SESSION_CONTEXT;
             await this.refreshHomeProfileContext(node);
             const icon = getIconByNode(node);

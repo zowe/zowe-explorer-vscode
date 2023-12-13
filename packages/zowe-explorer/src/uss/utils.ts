@@ -36,10 +36,10 @@ export function injectAdditionalDataToTooltip(node: ZoweUSSNode, tooltip: string
     ZoweLogger.trace("uss.utils.injectAdditionalDataToTooltip called.");
     if (node.downloaded && node.downloadedTime) {
         const downloadedTime = new Date(node.downloadedTime).toLocaleString(vscode.env.language);
-        tooltip += localize("zowe.uss.utils.tooltip.downloaded", "  \nDownloaded: {0}", downloadedTime);
+        tooltip += "  \n" + localize("zowe.uss.utils.tooltip.downloaded", "Downloaded: {0}", downloadedTime);
         const encodingString = node.binary ? localize("zowe.uss.utils.tooltip.binary", "Binary") : node.encoding;
         if (encodingString != null) {
-            tooltip += localize("zowe.uss.utils.tooltip.encoding", "  \nEncoding: {0}", encodingString);
+            tooltip += "  \n" + localize("zowe.uss.utils.tooltip.encoding", "Encoding: {0}", encodingString);
         }
     }
 
