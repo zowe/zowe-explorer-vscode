@@ -8,6 +8,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
+- Fixed issue with `Submit JCL` losing focus on JCL being submitted, causing the wrong job submission. [#2616](https://github.com/zowe/vscode-extension-for-zowe/issues/2616)
+
 ## `2.13.0`
 
 ### New features and enhancements
