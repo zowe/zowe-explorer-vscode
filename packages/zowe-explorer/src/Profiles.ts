@@ -1212,7 +1212,7 @@ export class Profiles extends ProfilesCache {
             if (loginTokenType && loginTokenType !== zowe.imperative.SessConstants.TOKEN_TYPE_APIML) {
                 await this.loginWithRegularProfile(serviceProfile, node);
             } else {
-                await ZoweVsCodeExtension.loginWithBaseProfile(serviceProfile, loginTokenType, node, ZoweExplorerApiRegister.getInstance());
+                await ZoweVsCodeExtension.loginWithBaseProfile(serviceProfile, loginTokenType, node, ZoweExplorerApiRegister.getInstance(), this);
             }
             Gui.showMessage(localize("ssoLogin.successful", "Login to authentication service was successful."));
         } catch (err) {

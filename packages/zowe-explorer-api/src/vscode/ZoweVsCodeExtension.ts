@@ -161,14 +161,16 @@ export class ZoweVsCodeExtension {
      * @param loginTokenType The tokenType value for compatibility purposes
      * @param node The node for compatibility purposes
      * @param zeRegister The ZoweExplorerApiRegister instance for compatibility purposes
+     * @param zeProfiles The Zowe Explorer "Profiles.ts" instance for compatibility purposes
      */
     public static async loginWithBaseProfile(
         serviceProfile: string | imperative.IProfileLoaded,
         loginTokenType?: string,
         node?: IZoweNodeType,
-        zeRegister?: any // ZoweExplorerApiRegister
+        zeRegister?: ZoweExplorerApi.IApiRegisterClient, // ZoweExplorerApiRegister
+        zeProfiles?: ProfilesCache // Profiles extends ProfilesCache
     ): Promise<void> {
-        const cache = ZoweVsCodeExtension.profilesCache;
+        const cache: ProfilesCache = zeProfiles ?? ZoweVsCodeExtension.profilesCache;
         const baseProfile = await cache.fetchBaseProfile();
         if (baseProfile) {
             if (typeof serviceProfile === "string") {
@@ -223,10 +225,10 @@ export class ZoweVsCodeExtension {
      */
     public static async logoutWithBaseProfile(
         serviceProfile: string | imperative.IProfileLoaded,
-        zeRegister?: any, // ZoweExplorerApiRegister
-        zeProfiles?: any // Profiles extends ProfilesCache
+        zeRegister?: ZoweExplorerApi.IApiRegisterClient, // ZoweExplorerApiRegister
+        zeProfiles?: ProfilesCache // Profiles extends ProfilesCache
     ) {
-        const cache = zeProfiles ?? ZoweVsCodeExtension.profilesCache;
+        const cache: ProfilesCache = zeProfiles ?? ZoweVsCodeExtension.profilesCache;
         const baseProfile = await cache.fetchBaseProfile();
         if (baseProfile) {
             if (typeof serviceProfile === "string") {
