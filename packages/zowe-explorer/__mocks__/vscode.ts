@@ -279,6 +279,10 @@ export namespace window {
         return Promise.resolve("");
     }
 
+    export function showTextDocument(document: TextDocument, column?: ViewColumn, preserveFocus?: boolean): any {
+        return undefined;
+    }
+
     export function showErrorMessage(message: string, ...items: string[]): undefined {
         return undefined;
     }
@@ -584,6 +588,7 @@ export class EventEmitter<T> {
  */
 export namespace workspace {
     export function onDidSaveTextDocument<T>(listener: (e: T) => any, thisArgs?: any, disposables?: Disposable[]) {}
+    export function onDidCloseTextDocument<T>(listener: (e: T) => any, thisArgs?: any, disposables?: Disposable[]) {}
 
     export function getConfiguration(configuration: string) {
         return {

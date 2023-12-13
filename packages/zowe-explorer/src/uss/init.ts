@@ -202,6 +202,7 @@ export async function initUSSProvider(context: vscode.ExtensionContext): Promise
             await ussFileProvider.onDidChangeConfiguration(e);
         })
     );
+    context.subscriptions.push(vscode.workspace.onDidCloseTextDocument(USSTree.onDidCloseTextDocument));
 
     initSubscribers(context, ussFileProvider);
     return ussFileProvider;

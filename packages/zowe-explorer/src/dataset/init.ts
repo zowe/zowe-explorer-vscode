@@ -221,6 +221,7 @@ export async function initDatasetProvider(context: vscode.ExtensionContext): Pro
             await datasetProvider.onDidChangeConfiguration(e);
         })
     );
+    context.subscriptions.push(vscode.workspace.onDidCloseTextDocument(DatasetTree.onDidCloseTextDocument));
 
     initSubscribers(context, datasetProvider);
     return datasetProvider;

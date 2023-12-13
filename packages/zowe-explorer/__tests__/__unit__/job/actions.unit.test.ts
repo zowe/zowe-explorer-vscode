@@ -43,6 +43,7 @@ import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 import { SpoolFile } from "../../../src/SpoolProvider";
 import { ZosJobsProvider } from "../../../src/job/ZosJobsProvider";
 import { ProfileManagement } from "../../../src/utils/ProfileManagement";
+import { TreeProviders } from "../../../src/shared/TreeProviders";
 
 const activeTextEditorDocument = jest.fn();
 
@@ -104,7 +105,8 @@ function createGlobalMocks() {
     Object.defineProperty(zowe.GetJobs, "getStatusForJob", { value: jest.fn(), configurable: true });
     Object.defineProperty(zowe.GetJobs, "getSpoolContentById", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.workspace, "openTextDocument", { value: jest.fn(), configurable: true });
-    Object.defineProperty(vscode.window, "showTextDocument", { value: jest.fn(), configurable: true });
+    jest.spyOn(Gui, "showTextDocument");
+    jest.spyOn(vscode.window, "showTextDocument");
     Object.defineProperty(zowe, "ZosmfSession", { value: jest.fn(), configurable: true });
     Object.defineProperty(zowe.ZosmfSession, "createSessCfgFromArgs", { value: jest.fn(), configurable: true });
     Object.defineProperty(zowe, "DownloadJobs", { value: jest.fn(), configurable: true });
@@ -399,7 +401,7 @@ describe("Jobs Actions Unit Tests - Function downloadJcl", () => {
         await jobActions.downloadJcl(node);
         expect(mocked(zowe.GetJobs.getJclForJob)).toBeCalled();
         expect(mocked(vscode.workspace.openTextDocument)).toBeCalled();
-        expect(mocked(vscode.window.showTextDocument)).toBeCalled();
+        expect(mocked(Gui.showTextDocument)).toBeCalled();
     });
     it("Checking failed attempt to download Job JCL", async () => {
         createGlobalMocks();
@@ -855,7 +857,7 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
 });
 
 describe("Jobs Actions Unit Tests - Function getSpoolContent", () => {
-    function createBlockMocks() {
+    async function createBlockMocks() {
         const session = createISessionWithoutCredentials();
         const iJob = createIJobObject();
         const iJobFile = createIJobFile();
@@ -885,6 +887,11 @@ describe("Jobs Actions Unit Tests - Function getSpoolContent", () => {
             toJSON: jest.fn(),
         };
         bindJesApi(jesApi);
+        await TreeProviders.initializeProviders(null as any, {
+            ds: async (ctx) => null as any,
+            uss: async (ctx) => null as any,
+            job: async (ctx) => testJobTree,
+        });
 
         return {
             session,
@@ -902,23 +909,21 @@ describe("Jobs Actions Unit Tests - Function getSpoolContent", () => {
 
     it("should call showTextDocument with encoded uri", async () => {
         createGlobalMocks();
-        const blockMocks = createBlockMocks();
+        const blockMocks = await createBlockMocks();
         const session = "sessionName";
         const spoolFile = blockMocks.iJobFile;
-        const anyTimestamp = Date.now();
         mocked(SpoolProvider.encodeJobFile).mockReturnValueOnce(blockMocks.mockUri);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
 
-        await jobActions.getSpoolContent(session, spoolFile, anyTimestamp);
+        await jobActions.getSpoolContent(session, { spool: spoolFile } as any);
 
-        expect(mocked(vscode.window.showTextDocument)).toBeCalledWith(blockMocks.mockUri, { preview: false });
+        expect(mocked(Gui.showTextDocument)).toBeCalledWith(blockMocks.mockUri, { preview: false });
     });
     it("should call showTextDocument with encoded uri with unverified profile", async () => {
         createGlobalMocks();
-        const blockMocks = createBlockMocks();
+        const blockMocks = await createBlockMocks();
         const session = "sessionName";
         const spoolFile = blockMocks.iJobFile;
-        const anyTimestamp = Date.now();
         Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
@@ -933,13 +938,13 @@ describe("Jobs Actions Unit Tests - Function getSpoolContent", () => {
         mocked(SpoolProvider.encodeJobFile).mockReturnValueOnce(blockMocks.mockUri);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
 
-        await jobActions.getSpoolContent(session, spoolFile, anyTimestamp);
+        await jobActions.getSpoolContent(session, { spool: spoolFile } as any);
 
-        expect(mocked(vscode.window.showTextDocument)).toBeCalledWith(blockMocks.mockUri, { preview: false });
+        expect(mocked(Gui.showTextDocument)).toBeCalledWith(blockMocks.mockUri, { preview: false });
     });
     it("should show error message for non existing profile", async () => {
         createGlobalMocks();
-        const blockMocks = createBlockMocks();
+        const blockMocks = await createBlockMocks();
         const session = "sessionName";
         const spoolFile = blockMocks.iJobFile;
         const anyTimestamp = Date.now();
@@ -948,14 +953,14 @@ describe("Jobs Actions Unit Tests - Function getSpoolContent", () => {
             throw new Error("Test");
         });
 
-        await jobActions.getSpoolContent(session, spoolFile, anyTimestamp);
+        await jobActions.getSpoolContent(session, { spool: spoolFile } as any);
 
         expect(mocked(vscode.window.showTextDocument)).not.toBeCalled();
         expect(mocked(Gui.errorMessage)).toBeCalledWith("Error: Test");
     });
     it("should show an error message in case document cannot be shown for some reason", async () => {
         createGlobalMocks();
-        const blockMocks = createBlockMocks();
+        const blockMocks = await createBlockMocks();
         const session = "sessionName";
         const spoolFile = blockMocks.iJobFile;
         const anyTimestamp = Date.now();
@@ -965,13 +970,13 @@ describe("Jobs Actions Unit Tests - Function getSpoolContent", () => {
             throw new Error("Test");
         });
 
-        await jobActions.getSpoolContent(session, spoolFile, anyTimestamp);
+        await jobActions.getSpoolContent(session, { spool: spoolFile } as any);
 
         expect(mocked(Gui.errorMessage)).toBeCalledWith("Error: Test");
     });
     it("should fetch the spool content successfully", async () => {
         createGlobalMocks();
-        const blockMocks = createBlockMocks();
+        const blockMocks = await createBlockMocks();
         const testNode = new ZoweJobNode({
             label: "undefined:test - testJob",
             collapsibleState: vscode.TreeItemCollapsibleState.None,

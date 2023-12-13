@@ -218,9 +218,12 @@ describe("ZoweJobNode unit tests - Function createJobsTree", () => {
 describe("ZoweJobNode unit tests - Function addSession", () => {
     it("Tests that addSession adds the session to the tree", async () => {
         const globalMocks = await createGlobalMocks();
-
+        jest.spyOn(TreeProviders, "providers", "get").mockReturnValue({
+            ds: { addSingleSession: jest.fn(), mSessionNodes: [...globalMocks.testJobsProvider.mSessionNodes], refresh: jest.fn() } as any,
+            uss: { addSingleSession: jest.fn(), mSessionNodes: [...globalMocks.testJobsProvider.mSessionNodes], refresh: jest.fn() } as any,
+            jobs: { addSingleSession: jest.fn(), mSessionNodes: [...globalMocks.testJobsProvider.mSessionNodes], refresh: jest.fn() } as any,
+        } as any);
         await globalMocks.testJobsProvider.addSession("sestest");
-
         expect(globalMocks.testJobsProvider.mSessionNodes[1]).toBeDefined();
         expect(globalMocks.testJobsProvider.mSessionNodes[1].label).toEqual("sestest");
         expect(globalMocks.testJobsProvider.mSessionNodes[1].tooltip).toEqual("sestest");

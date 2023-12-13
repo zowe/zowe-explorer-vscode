@@ -351,7 +351,7 @@ describe("Extension Integration Tests", async () => {
                 parentNode: sessionNode,
             });
             const errorMessageStub = sandbox.spy(vscode.window, "showErrorMessage");
-            await expect(dsActions.openPS(node, false, true)).to.eventually.be.rejectedWith(Error);
+            await expect(node.openDs(false, true, testTree)).to.eventually.be.rejectedWith(Error);
 
             const called = errorMessageStub.called;
             expect(called).to.equal(true);
@@ -365,7 +365,7 @@ describe("Extension Integration Tests", async () => {
             profiles[1].dirty = true;
             const children = await profiles[1].getChildren();
             children[1].dirty = true;
-            await dsActions.openPS(children[1], false, true);
+            await children[1].openDs(false, true, testTree);
 
             const changedData = "PS Upload Test";
 
@@ -378,7 +378,7 @@ describe("Extension Integration Tests", async () => {
             await dsActions.saveFile(doc, testTree);
 
             // Download file
-            await dsActions.openPS(children[1], false, true);
+            await children[1].openDs(false, true, testTree);
 
             expect(doc.getText().trim()).to.deep.equal("PS Upload Test");
 
@@ -396,7 +396,7 @@ describe("Extension Integration Tests", async () => {
 
             // Test for member under PO
             const childrenMembers = await testTree.getChildren(children[0]);
-            await dsActions.openPS(childrenMembers[0], false, true);
+            await childrenMembers[0].openDs(false, true, testTree);
 
             const changedData2 = "PO Member Upload Test";
 
@@ -412,7 +412,7 @@ describe("Extension Integration Tests", async () => {
             await dsActions.saveFile(doc2, testTree);
 
             // Download file
-            await dsActions.openPS(childrenMembers[0], false, true);
+            await childrenMembers[0].openDs(false, true, testTree);
 
             expect(doc2.getText().trim()).to.deep.equal("PO Member Upload Test");
 

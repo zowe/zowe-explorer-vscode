@@ -111,6 +111,7 @@ export function createJobsTree(session: imperative.Session, iJob: IJob, profile:
         getSession: jest.fn(),
         delete: jest.fn(),
         setItem: jest.fn(),
+        openFiles: {},
     };
     testJobsTree.mSessionNodes = [];
     testJobsTree.mSessionNodes.push(jobNode);

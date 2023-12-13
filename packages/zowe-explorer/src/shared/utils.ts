@@ -16,7 +16,16 @@ import * as vscode from "vscode";
 import * as path from "path";
 import * as globals from "../globals";
 import * as os from "os";
-import { Gui, IZoweTreeNode, IZoweNodeType, IZoweDatasetTreeNode, IZoweUSSTreeNode, IZoweJobTreeNode, ZosEncoding } from "@zowe/zowe-explorer-api";
+import {
+    Gui,
+    IZoweTreeNode,
+    IZoweNodeType,
+    IZoweDatasetTreeNode,
+    IZoweUSSTreeNode,
+    IZoweJobTreeNode,
+    IZoweTree,
+    ZosEncoding,
+} from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import * as nls from "vscode-nls";
 import { IZosFilesResponse, imperative } from "@zowe/cli";
@@ -143,7 +152,7 @@ function appendSuffix(label: string): string {
     const bracket = label.indexOf("(");
     const split = bracket > -1 ? label.substr(0, bracket).split(".", limit) : label.split(".", limit);
     for (let i = split.length - 1; i > 0; i--) {
-        if (["JCL", "JCLLIB", "CNTL"].includes(split[i])) {
+        if (["JCL", "JCLLIB", "CNTL", "PROC", "PROCLIB"].includes(split[i])) {
             return label.concat(".jcl");
         }
         if (["COBOL", "CBL", "COB", "SCBL"].includes(split[i])) {
@@ -409,6 +418,12 @@ export async function compareFileContent(
     const downloadEtag = downloadResponse?.apiResponse?.etag;
     if (node && downloadEtag !== node.getEtag()) {
         node.setEtag(downloadEtag);
+    }
+}
+
+export function updateOpenFiles<T extends IZoweTreeNode>(treeProvider: IZoweTree<T>, docPath: string, value: T | null): void {
+    if (treeProvider.openFiles) {
+        treeProvider.openFiles[docPath] = value;
     }
 }
 

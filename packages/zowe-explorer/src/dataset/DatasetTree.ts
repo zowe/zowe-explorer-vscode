@@ -32,20 +32,20 @@ import {
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { FilterDescriptor, FilterItem, errorHandling, syncSessionNode } from "../utils/ProfilesUtils";
-import { sortTreeItems, getAppName, getDocumentFilePath, SORT_DIRS, promptForEncoding } from "../shared/utils";
+import { sortTreeItems, getAppName, getDocumentFilePath, SORT_DIRS, promptForEncoding, updateOpenFiles } from "../shared/utils";
 import { ZoweTreeProvider } from "../abstract/ZoweTreeProvider";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { getIconById, getIconByNode, IconId, IIconItem } from "../generators/icons";
 import * as dayjs from "dayjs";
 import * as fs from "fs";
 import * as contextually from "../shared/context";
-import { resetValidationSettings } from "../shared/actions";
 import { closeOpenedTextFile } from "../utils/workspace";
 import { IDataSet, IListOptions, imperative } from "@zowe/cli";
 import { DATASET_FILTER_OPTS, DATASET_SORT_OPTS, validateDataSetName, validateMemberName } from "./utils";
 import { SettingsConfig } from "../utils/SettingsConfig";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { TreeViewUtils } from "../utils/TreeViewUtils";
+import { TreeProviders } from "../shared/TreeProviders";
 
 // Set up localization
 nls.config({
@@ -62,7 +62,7 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 export async function createDatasetTree(log: imperative.Logger): Promise<DatasetTree> {
     const tree = new DatasetTree();
     tree.initializeFavorites(log);
-    await tree.addSession();
+    await tree.addSession(undefined, undefined, tree);
     return tree;
 }
 
@@ -86,6 +86,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
     public lastOpened: NodeInteraction = {};
     // public memberPattern: IZoweDatasetTreeNode[] = [];
     private treeView: vscode.TreeView<IZoweDatasetTreeNode>;
+    public openFiles: Record<string, IZoweDatasetTreeNode> = {};
 
     public constructor() {
         super(
@@ -435,57 +436,44 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      * @param {string} [sessionName] - optional; loads default profile if not passed
      * @param {string} [profileType] - optional; loads profiles of a certain type if passed
      */
-    public async addSession(sessionName?: string, profileType?: string): Promise<void> {
+    public async addSession(sessionName?: string, profileType?: string, provider?: IZoweTree<IZoweTreeNode>): Promise<void> {
         ZoweLogger.trace("DatasetTree.addSession called.");
-        const setting: boolean = SettingsConfig.getDirectValue(globals.SETTINGS_AUTOMATIC_PROFILE_VALIDATION);
-        // Loads profile associated with passed sessionName, default if none passed
-        if (sessionName) {
-            const profile: imperative.IProfileLoaded = Profiles.getInstance().loadNamedProfile(sessionName);
-            if (profile) {
-                await this.addSingleSession(profile);
-                for (const node of this.mSessionNodes) {
-                    if (node.label !== "Favorites") {
-                        const name = node.getProfileName();
-                        if (name === profile.name) {
-                            resetValidationSettings(node, setting);
-                        }
-                    }
+        await super.addSession(sessionName, profileType, provider);
+    }
+
+    /**
+     * Adds a single session to the tree
+     * @param profile the profile to add to the tree
+     */
+    public async addSingleSession(profile: imperative.IProfileLoaded): Promise<void> {
+        ZoweLogger.trace("DatasetTree.addSingleSession called.");
+        if (profile) {
+            // If session is already added, do nothing
+            if (this.mSessionNodes.find((tNode) => tNode.label.toString() === profile.name)) {
+                return;
+            }
+            // Uses loaded profile to create a session with the MVS API
+            let session: imperative.Session;
+            try {
+                session = ZoweExplorerApiRegister.getMvsApi(profile).getSession();
+            } catch (err) {
+                if (err.toString().includes("hostname")) {
+                    ZoweLogger.error(err);
+                } else {
+                    await errorHandling(err, profile.name);
                 }
             }
-        } else {
-            const profiles: imperative.IProfileLoaded[] = await Profiles.getInstance().fetchAllProfiles();
-            if (profiles) {
-                for (const theProfile of profiles) {
-                    // If session is already added, do nothing
-                    if (this.mSessionNodes.find((tempNode) => tempNode.label.toString() === theProfile.name)) {
-                        continue;
-                    }
-                    for (const session of this.mHistory.getSessions()) {
-                        if (session === theProfile.name) {
-                            await this.addSingleSession(theProfile);
-                            for (const node of this.mSessionNodes) {
-                                if (node.label !== "Favorites") {
-                                    const name = node.getProfileName();
-                                    if (name === theProfile.name) {
-                                        resetValidationSettings(node, setting);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
+            // Creates ZoweDatasetNode to track new session and pushes it to mSessionNodes
+            const node = new ZoweDatasetNode(profile.name, vscode.TreeItemCollapsibleState.Collapsed, null, session, undefined, undefined, profile);
+            node.contextValue = globals.DS_SESSION_CONTEXT + (profile.type !== "zosmf" ? `.profile=${profile.type}.` : "");
+            await this.refreshHomeProfileContext(node);
+            const icon = getIconByNode(node);
+            if (icon) {
+                node.iconPath = icon.path;
             }
-            if (this.mSessionNodes.length === 1) {
-                try {
-                    await this.addSingleSession(Profiles.getInstance().getDefaultProfile(profileType));
-                } catch (error) {
-                    // catch and log error of no default,
-                    // if not type passed getDefaultProfile assumes zosmf
-                    ZoweLogger.warn(error);
-                }
-            }
+            this.mSessionNodes.push(node);
+            this.mHistory.addSession(profile.name);
         }
-        this.refresh();
     }
 
     /**
@@ -1300,46 +1288,6 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
     }
 
     /**
-     * Adds a single session to the data set tree
-     *
-     */
-    private async addSingleSession(profile: imperative.IProfileLoaded): Promise<void> {
-        ZoweLogger.trace("DatasetTree.addSingleSession called.");
-        if (profile) {
-            // If session is already added, do nothing
-            if (this.mSessionNodes.find((tNode) => tNode.label.toString() === profile.name)) {
-                return;
-            }
-            // Uses loaded profile to create a session with the MVS API
-            let session: imperative.Session;
-            try {
-                session = await ZoweExplorerApiRegister.getMvsApi(profile).getSession();
-            } catch (err) {
-                if (err.toString().includes("hostname")) {
-                    ZoweLogger.error(err);
-                } else {
-                    await errorHandling(err, profile.name);
-                }
-            }
-            // Creates ZoweDatasetNode to track new session and pushes it to mSessionNodes
-            const node = new ZoweDatasetNode({
-                label: profile.name,
-                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
-                session,
-                profile,
-            });
-            node.contextValue = globals.DS_SESSION_CONTEXT + (profile.type !== "zosmf" ? `.profile=${profile.type}.` : "");
-            await this.refreshHomeProfileContext(node);
-            const icon = getIconByNode(node);
-            if (icon) {
-                node.iconPath = icon.path;
-            }
-            this.mSessionNodes.push(node);
-            this.mHistory.addSession(profile.name);
-        }
-    }
-
-    /**
      * Sorts some (or all) PDS children nodes using the given sorting method.
      * @param node The session whose PDS members should be sorted, or a PDS whose children should be sorted
      * @param sortOpts The sorting options to use
@@ -1503,7 +1451,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             ? localize("ds.allPdsSort", "all PDS members in {0}", node.label as string)
             : localize("ds.singlePdsSort", "the PDS members in {0}", node.label as string);
         const clearFilter = isSession
-            ? localize("ds.clearProfileFilter", "$(clear-all) Clear filter for profile")
+            ? localize("filter.clearForProfile", "$(clear-all) Clear filter for profile")
             : localize("ds.clearPdsFilter", "$(clear-all) Clear filter for PDS");
         const selection = (
             await Gui.showQuickPick(
@@ -1554,6 +1502,17 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             isSession
         );
         Gui.setStatusBarMessage(localize("filter.updated", "$(check) Filter updated for {0}", node.label as string), globals.MS_PER_SEC * 4);
+    }
+
+    /**
+     * Event listener to mark a Data Set doc URI as null in the openFiles record
+     * @param this (resolves ESlint warning about unbound methods)
+     * @param doc A doc URI that was closed
+     */
+    public static onDidCloseTextDocument(this: void, doc: vscode.TextDocument): void {
+        if (doc.uri.fsPath.includes(globals.DS_DIR)) {
+            updateOpenFiles(TreeProviders.ds, doc.uri.fsPath, null);
+        }
     }
 
     public async openWithEncoding(node: IZoweDatasetTreeNode): Promise<void> {

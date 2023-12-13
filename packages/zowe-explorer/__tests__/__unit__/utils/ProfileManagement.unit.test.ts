@@ -290,6 +290,7 @@ describe("ProfileManagement unit tests", () => {
                 ProfileManagement["getPromptChangeForAllTreesOptions"]()[1]
             );
             mocks.mockJobSessionNode.contextValue = globals.JOBS_SESSION_CONTEXT;
+            mocks.mockJobSessionNode.getLabel = jest.fn(() => "test");
             await expect(ProfileManagement["handleHideProfiles"](mocks.mockJobSessionNode)).resolves.toEqual(undefined);
             expect(commandSpy).toHaveBeenCalledWith("zowe.jobs.removeSession", mocks.mockJobSessionNode, null, false);
         });
@@ -369,6 +370,36 @@ describe("ProfileManagement unit tests", () => {
             });
             expect(ProfileManagement.getRegisteredProfileNameList(globals.Trees.JES)).toEqual([]);
             expect(warnSpy).toBeCalledWith(thrownError);
+        });
+    });
+
+    describe("promptChangeForAllTrees unit tests", () => {
+        beforeEach(() => {
+            jest.resetAllMocks();
+            jest.clearAllMocks();
+            jest.restoreAllMocks();
+        });
+
+        it("should prompt for applying change to all trees", async () => {
+            jest.spyOn(TreeProviders, "sessionIsPresentInOtherTrees").mockReturnValue(false);
+            const expectedResult = { label: "test", description: "test" } as vscode.QuickPickItem;
+            const createQuickPickSpy = jest.spyOn(Gui, "createQuickPick");
+            const resolveQuickPickSpy = jest.spyOn(Gui, "resolveQuickPick");
+            const showSpy = jest.fn();
+            const hideSpy = jest.fn();
+            createQuickPickSpy.mockReturnValue({
+                placeholder: "",
+                items: [],
+                activeItems: [],
+                show: showSpy,
+                hide: hideSpy,
+            } as any);
+            resolveQuickPickSpy.mockResolvedValue(expectedResult);
+            await expect(ProfileManagement["promptChangeForAllTrees"]("test", true)).resolves.toEqual(expectedResult);
+            expect(createQuickPickSpy).toBeCalledTimes(1);
+            expect(resolveQuickPickSpy).toBeCalledTimes(1);
+            expect(showSpy).toBeCalledTimes(1);
+            expect(hideSpy).toBeCalledTimes(1);
         });
     });
 });
