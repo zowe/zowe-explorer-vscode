@@ -65,7 +65,6 @@ export function isJob(node: TreeItem): boolean {
  * @return true if a favorite pds, ds, false otherwise
  */
 export function isFavoritePsDs(node: TreeItem): boolean {
-    // TODO Fix for binary ds favorites
     return new RegExp("^(" + globals.DS_PDS_CONTEXT + "|" + globals.DS_DS_CONTEXT + ")(.*" + globals.FAV_SUFFIX + ")").test(node.contextValue);
 }
 

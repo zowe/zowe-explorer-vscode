@@ -337,7 +337,7 @@ describe("Extension Integration Tests", async () => {
                 collapsibleState: vscode.TreeItemCollapsibleState.None,
                 parentNode: sessionNode,
             });
-            await dsActions.openPS(node, false, true, testTree);
+            await node.openDs(false, true, testTree);
             expect(
                 path.relative(vscode.window.activeTextEditor.document.fileName, sharedUtils.getDocumentFilePath(pattern + ".EXT.PS", node))
             ).to.equal("");

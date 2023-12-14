@@ -50,7 +50,7 @@ describe("dsNodeActions integration test", async () => {
     imperative.ConnectionPropsForSessCfg.resolveSessCfgProps(sessCfg, cmdArgs);
     const session = new imperative.Session(sessCfg);
     const sessionNode = new ZoweDatasetNode({
-        profile: testConst.profile.name,
+        label: testConst.profile.name,
         collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
         session,
         profile: testProfile,
