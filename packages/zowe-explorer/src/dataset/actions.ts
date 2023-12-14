@@ -60,10 +60,10 @@ let newDSProperties;
 const localizedStrings = {
     dsBinary: localize("createFile.dataSetBinary", "Partitioned Data Set: Binary"),
     dsC: localize("createFile.dataSetC", "Partitioned Data Set: C"),
-    dsCobol: localize("createFile.dataSetCobol", "Partitioned Data Set: COBOL"),
     dsClassic: localize("createFile.dataSetClassic", "Partitioned Data Set: Classic"),
-    dsListing: localize("createFile.dataSetListing", "Partitioned Data Set: Listing"),
     dsPartitioned: localize("createFile.dataSetPartitioned", "Partitioned Data Set: Default"),
+    dsCobol: localize("createFile.dataSetCobol", "Partitioned Data Set Extended: COBOL"),
+    dsListing: localize("createFile.dataSetListing", "Partitioned Data Set Extended: Listing"),
     dsSequential: localize("createFile.dataSetSequential", "Sequential Data Set"),
     opCancelled: localize("dsActions.cancelled", "Operation Cancelled"),
     copyingFiles: localize("dsActions.copy.inProgress", "Copying File(s)"),
@@ -735,10 +735,10 @@ async function getDsTypeForCreation(datasetProvider: api.IZoweTree<api.IZoweData
         ...dsTemplateNames,
         localizedStrings.dsBinary,
         localizedStrings.dsC,
-        localizedStrings.dsCobol,
         localizedStrings.dsClassic,
-        localizedStrings.dsListing,
         localizedStrings.dsPartitioned,
+        localizedStrings.dsCobol,
+        localizedStrings.dsListing,
         localizedStrings.dsSequential,
     ];
     return Promise.resolve(api.Gui.showQuickPick(stepTwoChoices, stepTwoOptions));

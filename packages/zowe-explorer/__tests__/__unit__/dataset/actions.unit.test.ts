@@ -2839,11 +2839,11 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         await dsActions.createFile(blockMocks.datasetSessionNode, blockMocks.testDatasetTree);
         expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(globals.SETTINGS_DS_DEFAULT_PS);
 
-        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Partitioned Data Set: COBOL" as any);
+        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Partitioned Data Set Extended: COBOL" as any);
         await dsActions.createFile(blockMocks.datasetSessionNode, blockMocks.testDatasetTree);
         expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(globals.SETTINGS_DS_DEFAULT_COBOL);
 
-        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Partitioned Data Set: Listing" as any);
+        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Partitioned Data Set Extended: Listing" as any);
         await dsActions.createFile(blockMocks.datasetSessionNode, blockMocks.testDatasetTree);
         expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(globals.SETTINGS_DS_DEFAULT_LISTING);
 
@@ -2890,11 +2890,11 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         await dsActions.createFile(node, blockMocks.testDatasetTree);
         expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(globals.SETTINGS_DS_DEFAULT_PS);
 
-        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Partitioned Data Set: COBOL" as any);
+        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Partitioned Data Set Extended: COBOL" as any);
         await dsActions.createFile(node, blockMocks.testDatasetTree);
         expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(globals.SETTINGS_DS_DEFAULT_COBOL);
 
-        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Partitioned Data Set: Listing" as any);
+        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Partitioned Data Set Extended: Listing" as any);
         await dsActions.createFile(node, blockMocks.testDatasetTree);
         expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(globals.SETTINGS_DS_DEFAULT_LISTING);
 
@@ -2940,11 +2940,11 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         await dsActions.createFile(node, blockMocks.testDatasetTree);
         expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(globals.SETTINGS_DS_DEFAULT_PS);
 
-        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Partitioned Data Set: COBOL" as any);
+        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Partitioned Data Set Extended: COBOL" as any);
         await dsActions.createFile(node, blockMocks.testDatasetTree);
         expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(globals.SETTINGS_DS_DEFAULT_COBOL);
 
-        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Partitioned Data Set: Listing" as any);
+        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Partitioned Data Set Extended: Listing" as any);
         await dsActions.createFile(node, blockMocks.testDatasetTree);
         expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(globals.SETTINGS_DS_DEFAULT_LISTING);
 

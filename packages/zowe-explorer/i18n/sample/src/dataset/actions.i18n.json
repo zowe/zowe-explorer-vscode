@@ -1,9 +1,9 @@
 {
   "createFile.dataSetBinary": "Partitioned Data Set: Binary",
   "createFile.dataSetC": "Partitioned Data Set: C",
-  "createFile.dataSetCobol": "Partitioned Data Set: COBOL",
+  "createFile.dataSetCobol": "Partitioned Data Set Extended: COBOL",
   "createFile.dataSetClassic": "Partitioned Data Set: Classic",
-  "createFile.dataSetListing": "Partitioned Data Set: Listing",
+  "createFile.dataSetListing": "Partitioned Data Set Extended: Listing",
   "createFile.dataSetPartitioned": "Partitioned Data Set: Default",
   "createFile.dataSetSequential": "Sequential Data Set",
   "dsActions.cancelled": "Operation Cancelled",
