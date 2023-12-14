@@ -24,8 +24,6 @@ import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 import { SshSession } from "@zowe/zos-uss-for-zowe-sdk";
 import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
 import { ProfileManagement } from "../../../src/utils/ProfileManagement";
-import { profile } from "console";
-import { unix } from "dayjs";
 
 describe("UnixCommand Actions Unit Testing", () => {
     const showQuickPick = jest.fn();
@@ -166,25 +164,6 @@ describe("UnixCommand Actions Unit Testing", () => {
     SshSession.createSshSessCfgFromArgs = jest.fn(() => {
         return { privateKey: undefined, keyPassphrase: undefined, handshakeTimeout: undefined };
     });
-
-    // Object.defineProperty(profileLoader.Profiles, "getInstance", {
-    //     value: jest.fn(() => ({
-    //         getCliProfileManager: () => null,
-    //         getProfileInfo: jest.fn().mockReturnValue({
-    //             usingTeamConfig: true,
-    //             getAllProfiles: jest.fn().mockReturnValue(["dummy"]),
-    //             mergeArgsForProfile: jest.fn().mockReturnValue({
-    //                 knownArgs: [
-    //                     { argName: "port", argValue: "TEST", secure: false },
-    //                     { argName: "host", argValue: "TEST", secure: false },
-    //                     { argName: "user", argValue: "TEST", secure: true },
-    //                     { argName: "password", argValue: "TEST", secure: true },
-    //                 ],
-    //             }),
-    //             loadSecureArg: jest.fn().mockReturnValue("fake"),
-    //         } as any),
-    //     })),
-    // });
 
     it("test the issueUnixCommand function", async () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
@@ -790,4 +769,20 @@ describe("UnixCommand Actions Unit Testing", () => {
             name: "test1",
         });
     });
+
+    it("tests the selectSshProfile function when user escapes", async () => {
+        showQuickPick.mockReturnValueOnce(undefined);
+        await expect(
+            (unixActions as any).selectSshProfile([
+                {
+                    name: "test1",
+                },
+                {
+                    name: "test2",
+                },
+            ])
+        ).resolves.toBe(undefined);
+        expect(showInformationMessage.mock.calls[0][0]).toEqual("Operation Cancelled");
+    });
+
 });
