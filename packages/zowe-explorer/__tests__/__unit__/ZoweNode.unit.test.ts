@@ -403,6 +403,7 @@ describe("Unit Tests (Jest)", () => {
             }),
         });
         const sessionNode = {
+            encodingMap: {},
             getSessionNode: jest.fn(),
             sort: { method: DatasetSortOpts.Name, direction: SortDirection.Ascending },
         } as unknown as ZoweDatasetNode;

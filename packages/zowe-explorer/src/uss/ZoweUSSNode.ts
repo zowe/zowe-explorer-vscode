@@ -57,15 +57,15 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     public fullPath = "";
     public dirty = true;
     public children: IZoweUSSTreeNode[] = [];
-    public encodingMap = {};
     public binary = false;
+    public encoding?: string;
+    public encodingMap = {};
     public shortLabel = "";
     public downloadedTime = null as string;
     private downloadedInternal = false;
 
     public attributes?: FileAttributes;
     public onUpdateEmitter: vscode.EventEmitter<IZoweUSSTreeNode>;
-    public encoding?: string;
     private parentPath: string;
     private etag?: string;
 
@@ -76,8 +76,10 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      */
     public constructor(opts: IZoweUssTreeOpts) {
         super(opts.label, opts.collapsibleState, opts.parentNode, opts.session, opts.profile);
-        this.binary = opts.encoding === "binary";
-        this.encoding = this.binary ? undefined : opts.encoding === "text" ? null : opts.encoding;
+        this.binary = opts.encoding?.kind === "binary";
+        if (!this.binary) {
+            this.encoding = opts.encoding?.kind === "other" ? opts.encoding.codepage : null;
+        }
         this.parentPath = opts.parentPath;
         if (opts.collapsibleState !== vscode.TreeItemCollapsibleState.None) {
             this.contextValue = globals.USS_DIR_CONTEXT;
@@ -261,19 +263,19 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      */
     public setBinary(binary: boolean): void {
         ZoweLogger.trace("ZoweUSSNode.setBinary called.");
-        this.setEncoding(binary ? "binary" : null);
+        this.setEncoding({ kind: binary ? "binary" : "text" });
     }
 
     public setEncoding(encoding: ZosEncoding): void {
         ZoweLogger.trace("ZoweUSSNode.setEncoding called.");
-        if (encoding === "binary") {
+        if (encoding.kind === "binary") {
             this.contextValue = globals.USS_BINARY_FILE_CONTEXT;
             this.binary = true;
             this.encoding = undefined;
         } else {
             this.contextValue = globals.USS_TEXT_FILE_CONTEXT;
             this.binary = false;
-            this.encoding = encoding === "text" ? null : encoding;
+            this.encoding = encoding.kind === "text" ? null : encoding.codepage;
         }
         if (this.binary || this.encoding != null) {
             this.getSessionNode().encodingMap[this.fullPath] = encoding;

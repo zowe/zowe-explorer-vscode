@@ -61,15 +61,15 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     public memberPattern = "";
     public dirty = true;
     public children: ZoweDatasetNode[] = [];
-    public encodingMap = {};
     public binary = false;
+    public encoding?: string;
+    public encodingMap = {};
     public errorDetails: zowe.imperative.ImperativeError;
     public ongoingActions: Record<NodeAction | string, Promise<any>> = {};
     public wasDoubleClicked: boolean = false;
     public stats: DatasetStats;
     public sort?: NodeSort;
     public filter?: DatasetFilter;
-    public encoding?: string;
     private etag?: string;
 
     /**
@@ -79,8 +79,10 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
      */
     public constructor(opts: IZoweDatasetTreeOpts) {
         super(opts.label, opts.collapsibleState, opts.parentNode, opts.session, opts.profile);
-        this.binary = opts.encoding === "binary";
-        this.encoding = this.binary ? undefined : opts.encoding === "text" ? null : opts.encoding;
+        this.binary = opts.encoding?.kind === "binary";
+        if (!this.binary) {
+            this.encoding = opts.encoding?.kind === "other" ? opts.encoding.codepage : null;
+        }
         this.etag = opts.etag;
         if (opts.contextOverride) {
             this.contextValue = opts.contextOverride;
@@ -563,14 +565,14 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             throw new Error(`Cannot set encoding for node with context ${this.contextValue}`);
         }
         const isMemberNode = this.contextValue.startsWith(globals.DS_MEMBER_CONTEXT);
-        if (encoding === "binary") {
+        if (encoding.kind === "binary") {
             this.contextValue = isMemberNode ? globals.DS_MEMBER_BINARY_CONTEXT : globals.DS_DS_BINARY_CONTEXT;
             this.binary = true;
             this.encoding = undefined;
         } else {
             this.contextValue = isMemberNode ? globals.DS_MEMBER_CONTEXT : globals.DS_DS_CONTEXT;
             this.binary = false;
-            this.encoding = encoding === "text" ? null : encoding;
+            this.encoding = encoding.kind === "text" ? null : encoding.codepage;
         }
         const fullPath = isMemberNode ? `${this.getParent().label as string}(${this.label as string})` : (this.label as string);
         if (this.binary || this.encoding != null) {

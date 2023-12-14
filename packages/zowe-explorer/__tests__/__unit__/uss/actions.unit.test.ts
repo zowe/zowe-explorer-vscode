@@ -699,7 +699,7 @@ describe("USS Action Unit Tests - Function changeFileType", () => {
 
         node.binary = true;
         node.contextValue = globals.USS_BINARY_FILE_CONTEXT;
-        node.getSessionNode().binaryFiles[node.fullPath] = true;
+        node.getSessionNode().encodingMap[node.fullPath] = { kind: "binary" };
         expect(node.binary).toBeTruthy();
 
         await ussNodeActions.changeFileType(node, false, blockMocks.testUSSTree);

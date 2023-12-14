@@ -21,7 +21,20 @@ export enum NodeAction {
     Download = "download",
 }
 
-export type ZosEncoding = "text" | "binary" | string;
+interface TextEncoding {
+    kind: "text";
+}
+
+interface BinaryEncoding {
+    kind: "binary";
+}
+
+interface OtherEncoding {
+    kind: "other";
+    codepage: string;
+}
+
+export type ZosEncoding = TextEncoding | BinaryEncoding | OtherEncoding;
 
 /**
  * The base interface for Zowe tree nodes that are implemented by vscode.TreeItem.

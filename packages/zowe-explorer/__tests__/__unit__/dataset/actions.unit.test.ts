@@ -288,10 +288,14 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
 
         await dsActions.refreshPS(node);
 
-        expect(mocked(zowe.Download.dataSet)).toBeCalledWith(blockMocks.zosmfSession, node.label, {
-            file: path.join(globals.DS_DIR, node.getSessionNode().label.toString(), node.label.toString()),
-            returnEtag: true,
-        });
+        expect(mocked(zowe.Download.dataSet)).toBeCalledWith(
+            blockMocks.zosmfSession,
+            node.label,
+            expect.objectContaining({
+                file: path.join(globals.DS_DIR, node.getSessionNode().label.toString(), node.label.toString()),
+                returnEtag: true,
+            })
+        );
         expect(mocked(vscode.workspace.openTextDocument)).toBeCalledWith(
             path.join(globals.DS_DIR, node.getSessionNode().label.toString(), node.label.toString())
         );
@@ -357,10 +361,14 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
 
         await dsActions.refreshPS(child);
 
-        expect(mocked(zowe.Download.dataSet)).toBeCalledWith(blockMocks.zosmfSession, child.getParent().getLabel() + "(" + child.label + ")", {
-            file: path.join(globals.DS_DIR, child.getSessionNode().label.toString(), `${child.getParent().label}(${child.label})`),
-            returnEtag: true,
-        });
+        expect(mocked(zowe.Download.dataSet)).toBeCalledWith(
+            blockMocks.zosmfSession,
+            child.getParent().getLabel() + "(" + child.label + ")",
+            expect.objectContaining({
+                file: path.join(globals.DS_DIR, child.getSessionNode().label.toString(), `${child.getParent().label}(${child.label})`),
+                returnEtag: true,
+            })
+        );
         expect(mocked(Gui.errorMessage)).toBeCalledWith("Error");
     });
     it("Checking favorite empty PDS refresh", async () => {

@@ -81,12 +81,12 @@ export async function autoDetectEncoding(node: IZoweUSSTreeNode, profile?: imper
     if (ussApi.getTag != null) {
         const taggedEncoding = await ussApi.getTag(node.fullPath);
         if (taggedEncoding === "binary" || taggedEncoding === "mixed") {
-            node.setEncoding("binary");
+            node.setEncoding({ kind: "binary" });
         } else {
-            node.setEncoding(taggedEncoding !== "untagged" ? taggedEncoding : "text");
+            node.setEncoding(taggedEncoding !== "untagged" ? { kind: "other", codepage: taggedEncoding } : { kind: "text" });
         }
     } else {
         const isBinary = await ussApi.isFileTagBinOrAscii(node.fullPath);
-        node.setEncoding(isBinary ? "binary" : "text");
+        node.setEncoding({ kind: isBinary ? "binary" : "text" });
     }
 }

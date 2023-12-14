@@ -609,7 +609,7 @@ describe("ZoweUSSNode Unit Tests - Function node.setBinary()", () => {
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             parentNode: rootNode,
             profile: globalMocks.profileOne,
-            encoding: "binary",
+            encoding: { kind: "binary" },
         });
         const child = new ZoweUSSNode({
             label: "child",

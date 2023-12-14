@@ -466,10 +466,12 @@ export async function promptForEncoding(node: IZoweDatasetTreeNode | IZoweUSSTre
     }
 
     let currentEncoding = node.encoding ?? getCachedEncoding(node);
-    if (node.binary || currentEncoding === "binary") {
+    if (node.binary || (typeof currentEncoding !== "string" && currentEncoding.kind === "binary")) {
         currentEncoding = binaryItem.label;
-    } else if (node.encoding === null || currentEncoding === "text") {
+    } else if (node.encoding === null || (typeof currentEncoding !== "string" && currentEncoding.kind === "text")) {
         currentEncoding = ebcdicItem.label;
+    } else if (typeof currentEncoding !== "string" && currentEncoding.kind === "other") {
+        currentEncoding = currentEncoding.codepage;
     }
     const encodingHistory = ZoweLocalStorage.getValue<string[]>("encodingHistory") ?? [];
     if (encodingHistory.length > 0) {
@@ -481,27 +483,29 @@ export async function promptForEncoding(node: IZoweDatasetTreeNode | IZoweUSSTre
         items.push({ label: "IBM-1047" }, { label: "ISO8859-1" });
     }
 
-    let encoding = (
+    let response = (
         await Gui.showQuickPick(items, {
             title: localize("zowe.shared.utils.promptForEncoding.qp.title", "Choose encoding for {0}", node.label as string),
             placeHolder:
                 currentEncoding && localize("zowe.shared.utils.promptForEncoding.qp.placeHolder", "Current encoding is {0}", currentEncoding),
         })
     )?.label;
-    switch (encoding) {
+    let encoding: ZosEncoding;
+    switch (response) {
         case ebcdicItem.label:
-            encoding = "text";
+            encoding = { kind: "text" };
             break;
         case binaryItem.label:
-            encoding = "binary";
+            encoding = { kind: "binary" };
             break;
         case otherItem.label:
-            encoding = await Gui.showInputBox({
+            response = await Gui.showInputBox({
                 title: localize("zowe.shared.utils.promptForEncoding.qp.title", "Choose encoding for {0}", node.label as string),
                 placeHolder: localize("zowe.shared.utils.promptForEncoding.input.placeHolder", "Enter a codepage (e.g., 1047, IBM-1047)"),
             });
-            if (encoding != null) {
-                encodingHistory.push(encoding);
+            if (response != null) {
+                encoding = { kind: "other", codepage: response };
+                encodingHistory.push(encoding.codepage);
                 ZoweLocalStorage.setValue("encodingHistory", encodingHistory.slice(0, globals.MAX_FILE_HISTORY));
             }
             break;
