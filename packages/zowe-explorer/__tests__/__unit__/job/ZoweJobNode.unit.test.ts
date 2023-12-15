@@ -436,7 +436,20 @@ describe("ZoweJobNode unit tests - Function getChildren", () => {
         expect(jobs[0].label).toEqual("TESTJOB(JOB1234) - sampleMember - ACTIVE");
     });
 
-    it("To check smfid field is not in Jobs Tree View", async () => {
+    it("smfid field is not in Jobs Tree View", async () => {
+        const globalMocks = await createGlobalMocks();
+
+        await globalMocks.testJobsProvider.addSession("fake");
+        globalMocks.testJobsProvider.mSessionNodes[1].searchId = "JOB1234";
+        globalMocks.testJobsProvider.mSessionNodes[1].dirty = true;
+        globalMocks.testJobsProvider.mSessionNodes[1].filtered = true;
+        globalMocks.testIJob.retcode = "ACTIVE";
+        globalMocks.testIJob["exec-member"] = "";
+        const jobs = await globalMocks.testJobsProvider.mSessionNodes[1].getChildren();
+        expect(jobs[0].label).toEqual("TESTJOB(JOB1234) - ACTIVE");
+    });
+
+    it("To check smfid field when return code is undefined", async () => {
         const globalMocks = await createGlobalMocks();
 
         await globalMocks.testJobsProvider.addSession("fake");
