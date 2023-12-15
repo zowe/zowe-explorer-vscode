@@ -8,6 +8,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
+- Fixed issue with `Submit JCL` losing focus on JCL being submitted, causing the wrong job submission. [#2616](https://github.com/zowe/vscode-extension-for-zowe/issues/2616)
+
 ## `2.13.0`
 
 ### New features and enhancements
@@ -18,6 +20,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Added support for adding a Zowe profile across all trees [#2603](https://github.com/zowe/vscode-extension-for-zowe/issues/2603)
 - Added "Filter Jobs" feature in Jobs tree view: accessible via filter icon or right-clicking on session node. [#2599](https://github.com/zowe/vscode-extension-for-zowe/issues/2599)
 - Added z/OS System Name (SMFID) to Zowe Explorer Jobs View. [#2629] (https://github.com/zowe/vscode-extension-for-zowe/pull/2629)
+- PROC and PROCLIB datasets are recognized as JCL files for syntax highlighting [#2614](https://github.com/zowe/vscode-extension-for-zowe/issues/2614)
 
 ### Bug fixes
 

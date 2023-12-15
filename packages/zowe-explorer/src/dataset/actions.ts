@@ -992,7 +992,7 @@ export async function submitJcl(datasetProvider: api.IZoweTree<api.IZoweDatasetT
     }
 
     if (file) {
-        await vscode.commands.executeCommand("filesExplorer.openFilePreserveFocus", file);
+        await vscode.window.showTextDocument(file, { preview: false });
     }
     const doc = vscode.window.activeTextEditor.document;
     ZoweLogger.debug(localize("submitJcl.submitting", "Submitting as JCL in document {0}", doc.fileName));
