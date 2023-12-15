@@ -110,8 +110,6 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
     public async getChildren(): Promise<IZoweJobTreeNode[]> {
         const thisSessionNode = this.getSessionNode();
         ZoweLogger.trace(`ZoweJobNode.getChildren called for ${String(thisSessionNode.label)}.`);
-        console.log("THIS", this);
-        console.log("filter", this.filter);
         if (this?.filter !== undefined) {
             return this.children;
         }
