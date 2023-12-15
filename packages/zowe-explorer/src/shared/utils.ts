@@ -427,13 +427,13 @@ export function updateOpenFiles<T extends IZoweTreeNode>(treeProvider: IZoweTree
     }
 }
 
-export function getCachedEncoding<T extends IZoweTreeNode>(node: T): ZosEncoding {
+export function getCachedEncoding(node: IZoweTreeNode): ZosEncoding {
     if (isZoweUSSTreeNode(node)) {
         return (node.getSessionNode() as IZoweUSSTreeNode).encodingMap[node.fullPath];
     } else {
         const isMemberNode = node.contextValue.startsWith(globals.DS_MEMBER_CONTEXT);
-        const fullPath = isMemberNode ? `${node.getParent().label as string}(${node.label as string})` : (node.label as string);
-        return (node.getSessionNode() as IZoweDatasetTreeNode).encodingMap[fullPath];
+        const dsKey = isMemberNode ? `${node.getParent().label as string}(${node.label as string})` : (node.label as string);
+        return (node.getSessionNode() as IZoweDatasetTreeNode).encodingMap[dsKey];
     }
 }
 
@@ -466,11 +466,11 @@ export async function promptForEncoding(node: IZoweDatasetTreeNode | IZoweUSSTre
     }
 
     let currentEncoding = node.encoding ?? getCachedEncoding(node);
-    if (node.binary || (typeof currentEncoding !== "string" && currentEncoding.kind === "binary")) {
+    if (node.binary || (typeof currentEncoding !== "string" && currentEncoding?.kind === "binary")) {
         currentEncoding = binaryItem.label;
-    } else if (node.encoding === null || (typeof currentEncoding !== "string" && currentEncoding.kind === "text")) {
+    } else if (node.encoding === null || (typeof currentEncoding !== "string" && currentEncoding?.kind === "text")) {
         currentEncoding = ebcdicItem.label;
-    } else if (typeof currentEncoding !== "string" && currentEncoding.kind === "other") {
+    } else if (typeof currentEncoding !== "string" && currentEncoding?.kind === "other") {
         currentEncoding = currentEncoding.codepage;
     }
     const encodingHistory = ZoweLocalStorage.getValue<string[]>("encodingHistory") ?? [];

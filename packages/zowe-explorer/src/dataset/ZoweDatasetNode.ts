@@ -35,7 +35,6 @@ import * as nls from "vscode-nls";
 import { Profiles } from "../Profiles";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import * as dayjs from "dayjs";
-import { ZoweExplorerExtender } from "../ZoweExplorerExtender";
 import * as fs from "fs";
 import { promiseStatus, PromiseStatuses } from "promise-status-async";
 import { getDocumentFilePath, updateOpenFiles } from "../shared/utils";
@@ -599,6 +598,6 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     public setIcon(iconPath: { light: string; dark: string }): void {
         ZoweLogger.trace("ZoweDatasetNode.setIcon called.");
         this.iconPath = iconPath;
-        ZoweExplorerExtender.getInstance().datasetProvider.refreshElement(this);
+        vscode.commands.executeCommand("zowe.ds.refreshDataset", this);
     }
 }

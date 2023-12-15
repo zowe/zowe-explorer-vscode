@@ -29,8 +29,9 @@ import { ZoweJobNode } from "../../../src/job/ZoweJobNode";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { Profiles } from "../../../src/Profiles";
 import * as utils from "../../../src/utils/ProfilesUtils";
-import { IZoweTreeNode, ProfilesCache } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweTreeNode, ProfilesCache, ZosEncoding } from "@zowe/zowe-explorer-api";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
+import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
 
 jest.mock("path");
 
@@ -699,5 +700,192 @@ describe("Shared utils unit tests - function updateOpenFiles", () => {
         someTree.openFiles = undefined as any;
         sharedUtils.updateOpenFiles(someTree as any, "/a/doc/path", null);
         expect(someTree.openFiles).toBeUndefined();
+    });
+});
+
+describe("Shared utils unit tests - function getCachedEncoding", () => {
+    const binaryEncoding: ZosEncoding = { kind: "binary" };
+    const textEncoding: ZosEncoding = { kind: "text" };
+    const otherEncoding: ZosEncoding = { kind: "other", codepage: "IBM-1047" };
+
+    it("gets cached binary encoding for USS node", () => {
+        const node = new ZoweUSSNode({
+            label: "testFile",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            session: createISession(),
+            parentPath: "/root",
+        });
+        node.setEncoding(binaryEncoding);
+        expect(sharedUtils.getCachedEncoding(node)).toEqual(binaryEncoding);
+    });
+
+    it("gets cached text encoding for ds PS node", () => {
+        const node = new ZoweDatasetNode({
+            label: "TEST.PS",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            session: createISession(),
+        });
+        node.setEncoding(textEncoding);
+        expect(sharedUtils.getCachedEncoding(node)).toBeUndefined();
+    });
+
+    it("gets cached other encoding for ds member node", () => {
+        const parentNode = new ZoweDatasetNode({
+            label: "TEST.PDS",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            session: createISession(),
+        });
+        const node = new ZoweDatasetNode({
+            label: "MEMBER",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode,
+            contextOverride: globals.DS_MEMBER_CONTEXT,
+        });
+        node.setEncoding(otherEncoding);
+        expect(sharedUtils.getCachedEncoding(node)).toEqual(otherEncoding);
+    });
+});
+
+describe("Shared utils unit tests - function promptForEncoding", () => {
+    const binaryEncoding: ZosEncoding = { kind: "binary" };
+    const textEncoding: ZosEncoding = { kind: "text" };
+    const otherEncoding: ZosEncoding = { kind: "other", codepage: "IBM-1047" };
+
+    function createBlockMocks() {
+        const showInputBox = jest.spyOn(Gui, "showInputBox").mockResolvedValue(undefined);
+        const showQuickPick = jest.spyOn(Gui, "showQuickPick").mockResolvedValue(undefined);
+        const localStorageGet = jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(undefined);
+        const localStorageSet = jest.spyOn(ZoweLocalStorage, "setValue").mockReturnValue(undefined);
+
+        return {
+            profile: createIProfile(),
+            session: createISession(),
+            showInputBox,
+            showQuickPick,
+            localStorageGet,
+            localStorageSet,
+        };
+    }
+
+    afterEach(() => {
+        jest.resetAllMocks();
+    });
+
+    it("prompts for text encoding for USS file", async () => {
+        const blockMocks = createBlockMocks();
+        const node = new ZoweUSSNode({
+            label: "testFile",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            session: blockMocks.session,
+            profile: blockMocks.profile,
+            parentPath: "/root",
+        });
+        blockMocks.showQuickPick.mockImplementationOnce(async (items) => items[0]);
+        const encoding = await sharedUtils.promptForEncoding(node);
+        expect(blockMocks.showQuickPick).toHaveBeenCalled();
+        expect(encoding).toEqual(textEncoding);
+    });
+
+    it("prompts for binary encoding for USS file", async () => {
+        const blockMocks = createBlockMocks();
+        const node = new ZoweUSSNode({
+            label: "testFile",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            session: blockMocks.session,
+            profile: blockMocks.profile,
+            parentPath: "/root",
+        });
+        blockMocks.showQuickPick.mockImplementationOnce(async (items) => items[1]);
+        const encoding = await sharedUtils.promptForEncoding(node);
+        expect(blockMocks.showQuickPick).toHaveBeenCalled();
+        expect(encoding).toEqual(binaryEncoding);
+    });
+
+    it("prompts for other encoding for USS file and returns codepage", async () => {
+        const blockMocks = createBlockMocks();
+        const node = new ZoweUSSNode({
+            label: "testFile",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            session: blockMocks.session,
+            profile: blockMocks.profile,
+            parentPath: "/root",
+        });
+        blockMocks.showQuickPick.mockImplementationOnce(async (items) => items[2]);
+        blockMocks.showInputBox.mockResolvedValueOnce("IBM-1047");
+        const encoding = await sharedUtils.promptForEncoding(node);
+        expect(blockMocks.showQuickPick).toHaveBeenCalled();
+        expect(blockMocks.showInputBox).toHaveBeenCalled();
+        expect(encoding).toEqual(otherEncoding);
+    });
+
+    it("prompts for other encoding for USS file and returns undefined", async () => {
+        const blockMocks = createBlockMocks();
+        const node = new ZoweUSSNode({
+            label: "testFile",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            session: blockMocks.session,
+            profile: blockMocks.profile,
+            parentPath: "/root",
+        });
+        blockMocks.showQuickPick.mockImplementationOnce(async (items) => items[2]);
+        blockMocks.showInputBox.mockResolvedValueOnce(undefined);
+        const encoding = await sharedUtils.promptForEncoding(node);
+        expect(blockMocks.showQuickPick).toHaveBeenCalled();
+        expect(blockMocks.showInputBox).toHaveBeenCalled();
+        expect(encoding).toBeUndefined();
+    });
+
+    it("prompts for encoding for tagged USS file", async () => {
+        const blockMocks = createBlockMocks();
+        const node = new ZoweUSSNode({
+            label: "testFile",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            session: blockMocks.session,
+            profile: blockMocks.profile,
+            parentPath: "/root",
+        });
+        node.setEncoding(binaryEncoding);
+        await sharedUtils.promptForEncoding(node, "IBM-1047");
+        expect(blockMocks.showQuickPick).toHaveBeenCalled();
+        expect(await blockMocks.showQuickPick.mock.calls[0][0][0]).toEqual({ label: "IBM-1047", description: "USS file tag" });
+        expect(blockMocks.showQuickPick.mock.calls[0][1]).toEqual(expect.objectContaining({ placeHolder: "Current encoding is Binary" }));
+    });
+
+    it("prompts for encoding for USS file when profile contains encoding", async () => {
+        const blockMocks = createBlockMocks();
+        (blockMocks.profile.profile as any).encoding = "IBM-1047";
+        const node = new ZoweUSSNode({
+            label: "testFile",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            session: blockMocks.session,
+            profile: blockMocks.profile,
+            parentPath: "/root",
+        });
+        node.setEncoding(textEncoding);
+        await sharedUtils.promptForEncoding(node);
+        expect(blockMocks.showQuickPick).toHaveBeenCalled();
+        expect(await blockMocks.showQuickPick.mock.calls[0][0][0]).toEqual({
+            label: "IBM-1047",
+            description: `From profile ${blockMocks.profile.name}`,
+        });
+        expect(blockMocks.showQuickPick.mock.calls[0][1]).toEqual(expect.objectContaining({ placeHolder: "Current encoding is EBCDIC" }));
+    });
+
+    it("prompts for encoding for USS file and shows recent values", async () => {
+        const blockMocks = createBlockMocks();
+        const node = new ZoweUSSNode({
+            label: "testFile",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            session: blockMocks.session,
+            profile: blockMocks.profile,
+            parentPath: "/root",
+        });
+        node.setEncoding(otherEncoding);
+        const encodingHistory = ["IBM-123", "IBM-456", "IBM-789"];
+        blockMocks.localStorageGet.mockReturnValueOnce(encodingHistory);
+        await sharedUtils.promptForEncoding(node);
+        expect(blockMocks.showQuickPick).toHaveBeenCalled();
+        expect((await blockMocks.showQuickPick.mock.calls[0][0]).slice(4)).toEqual(encodingHistory.map((x) => ({ label: x })));
+        expect(blockMocks.showQuickPick.mock.calls[0][1]).toEqual(expect.objectContaining({ placeHolder: "Current encoding is IBM-1047" }));
     });
 });
