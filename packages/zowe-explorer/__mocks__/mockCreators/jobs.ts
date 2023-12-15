@@ -37,7 +37,7 @@ export function createIJobObject() {
         class: "A",
         owner: "USER",
         phase: 0,
-        retcode: "ACTIVE",
+        retcode: "",
         status: "ACTIVE",
         subsystem: "SYS",
         type: "JOB",

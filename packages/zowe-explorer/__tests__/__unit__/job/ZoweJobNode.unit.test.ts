@@ -317,7 +317,7 @@ describe("ZoweJobNode unit tests - Function getChildren", () => {
         globalMocks.testJobsProvider.mSessionNodes[1].dirty = true;
         globalMocks.testJobsProvider.mSessionNodes[1].filtered = true;
         const jobs = await globalMocks.testJobsProvider.mSessionNodes[1].getChildren();
-        expect(jobs[0].label).toEqual("TESTJOB(JOB1234) - sampleSystem - ACTIVE");
+        expect(jobs[0].label).toEqual("TESTJOB(JOB1234) - ACTIVE");
 
         globalMocks.mockGetJob.mockReturnValueOnce({ ...globalMocks.testIJob, retcode: "CC 0000" });
         globalMocks.testJobsProvider.mSessionNodes[1].dirty = true;
@@ -338,7 +338,7 @@ describe("ZoweJobNode unit tests - Function getChildren", () => {
 
         expect(jobs.length).toBe(1);
         expect(jobs[0].job.jobid).toEqual(globalMocks.testIJob.jobid);
-        expect(jobs[0].tooltip).toEqual("TESTJOB(JOB1234) - ACTIVE");
+        expect(jobs[0].tooltip).toEqual("TESTJOB(JOB1234)");
     });
 
     it("Tests that getChildren returns the spool files if called on a job", async () => {
@@ -430,9 +430,22 @@ describe("ZoweJobNode unit tests - Function getChildren", () => {
         globalMocks.testJobsProvider.mSessionNodes[1].searchId = "JOB1234";
         globalMocks.testJobsProvider.mSessionNodes[1].dirty = true;
         globalMocks.testJobsProvider.mSessionNodes[1].filtered = true;
+        globalMocks.testIJob.retcode = "ACTIVE";
 
         const jobs = await globalMocks.testJobsProvider.mSessionNodes[1].getChildren();
         expect(jobs[0].label).toEqual("TESTJOB(JOB1234) - sampleSystem - ACTIVE");
+    });
+
+    it("To check smfid field is not in Jobs Tree View", async () => {
+        const globalMocks = await createGlobalMocks();
+
+        await globalMocks.testJobsProvider.addSession("fake");
+        globalMocks.testJobsProvider.mSessionNodes[1].searchId = "JOB1234";
+        globalMocks.testJobsProvider.mSessionNodes[1].dirty = true;
+        globalMocks.testJobsProvider.mSessionNodes[1].filtered = true;
+
+        const jobs = await globalMocks.testJobsProvider.mSessionNodes[1].getChildren();
+        expect(jobs[0].label).toEqual("TESTJOB(JOB1234) - ACTIVE");
     });
 });
 
