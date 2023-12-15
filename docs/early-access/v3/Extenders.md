@@ -14,3 +14,7 @@
 - `ZoweVsCodeExtension.showVsCodeMessage` removed in favor of `Gui.showMessage`.
 - `ZoweVsCodeExtension.inputBox` removed in favor of `Gui.showInputBox`.
 - `ZoweVsCodeExtension.promptCredentials` removed in favor of `ZoweVsCodeExtension.updateCredentials`.
+
+## New APIs Added
+
+- `ICommand.issueUnixCommand` added for issuing Unix Commands
