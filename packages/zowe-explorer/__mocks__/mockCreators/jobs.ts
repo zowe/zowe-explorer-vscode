@@ -42,7 +42,7 @@ export function createIJobObject() {
         subsystem: "SYS",
         type: "JOB",
         url: "fake/url",
-        "exec-system": "sampleSystem",
+        "exec-member": "sampleMember",
     };
 }
 

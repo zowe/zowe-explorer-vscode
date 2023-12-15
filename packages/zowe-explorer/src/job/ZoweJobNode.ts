@@ -203,8 +203,8 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
             jobs.forEach((job) => {
                 let nodeTitle: string;
                 if (job.retcode) {
-                    nodeTitle = job["exec-system"]
-                        ? `${job.jobname}(${job.jobid}) - ${job["exec-system"] as string} - ${job.retcode}`
+                    nodeTitle = job["exec-member"]
+                        ? `${job.jobname}(${job.jobid}) - ${job["exec-member"] as string} - ${job.retcode}`
                         : `${job.jobname}(${job.jobid}) - ${job.retcode}`;
                 } else {
                     nodeTitle = `${job.jobname}(${job.jobid}) - ${job.status}`;
