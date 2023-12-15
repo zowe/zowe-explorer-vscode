@@ -18,3 +18,4 @@
 ## New APIs Added
 
 - `ICommand.issueUnixCommand` added for issuing Unix Commands
+- Optional `ICommand.sshProfileRequired` API returning a boolean value for extenders that would like to use the ssh profile for issuing UNIX commands via Zowe Explorer.
