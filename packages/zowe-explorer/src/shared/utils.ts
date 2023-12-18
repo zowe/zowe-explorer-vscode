@@ -427,14 +427,16 @@ export function updateOpenFiles<T extends IZoweTreeNode>(treeProvider: IZoweTree
     }
 }
 
-export function getCachedEncoding(node: IZoweTreeNode): ZosEncoding {
+function getCachedEncoding(node: IZoweTreeNode): string | undefined {
+    let cachedEncoding: ZosEncoding;
     if (isZoweUSSTreeNode(node)) {
-        return (node.getSessionNode() as IZoweUSSTreeNode).encodingMap[node.fullPath];
+        cachedEncoding = (node.getSessionNode() as IZoweUSSTreeNode).encodingMap[node.fullPath];
     } else {
         const isMemberNode = node.contextValue.startsWith(globals.DS_MEMBER_CONTEXT);
         const dsKey = isMemberNode ? `${node.getParent().label as string}(${node.label as string})` : (node.label as string);
-        return (node.getSessionNode() as IZoweDatasetTreeNode).encodingMap[dsKey];
+        cachedEncoding = (node.getSessionNode() as IZoweDatasetTreeNode).encodingMap[dsKey];
     }
+    return cachedEncoding?.kind === "other" ? cachedEncoding.codepage : cachedEncoding?.kind;
 }
 
 export async function promptForEncoding(node: IZoweDatasetTreeNode | IZoweUSSTreeNode, taggedEncoding?: string): Promise<ZosEncoding | undefined> {
@@ -466,12 +468,10 @@ export async function promptForEncoding(node: IZoweDatasetTreeNode | IZoweUSSTre
     }
 
     let currentEncoding = node.encoding ?? getCachedEncoding(node);
-    if (node.binary || (typeof currentEncoding !== "string" && currentEncoding?.kind === "binary")) {
+    if (node.binary || currentEncoding === "binary") {
         currentEncoding = binaryItem.label;
-    } else if (node.encoding === null || (typeof currentEncoding !== "string" && currentEncoding?.kind === "text")) {
+    } else if (node.encoding === null || currentEncoding === "text") {
         currentEncoding = ebcdicItem.label;
-    } else if (typeof currentEncoding !== "string" && currentEncoding?.kind === "other") {
-        currentEncoding = currentEncoding.codepage;
     }
     const encodingHistory = ZoweLocalStorage.getValue<string[]>("encodingHistory") ?? [];
     if (encodingHistory.length > 0) {
@@ -507,6 +507,11 @@ export async function promptForEncoding(node: IZoweDatasetTreeNode | IZoweUSSTre
                 encoding = { kind: "other", codepage: response };
                 encodingHistory.push(encoding.codepage);
                 ZoweLocalStorage.setValue("encodingHistory", encodingHistory.slice(0, globals.MAX_FILE_HISTORY));
+            }
+            break;
+        default:
+            if (response != null) {
+                encoding = { kind: "other", codepage: response };
             }
             break;
     }

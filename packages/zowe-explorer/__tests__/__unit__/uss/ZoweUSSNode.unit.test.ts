@@ -24,6 +24,7 @@ import {
     createTreeView,
     createInstanceOfProfile,
     createValidIProfile,
+    createTreeProviders,
 } from "../../../__mocks__/mockCreators/shared";
 import { createUSSTree } from "../../../__mocks__/mockCreators/uss";
 import * as fs from "fs";
@@ -32,6 +33,7 @@ import * as workspaceUtils from "../../../src/utils/workspace";
 import * as globals from "../../../src/globals";
 import * as ussUtils from "../../../src/uss/utils";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
+import { TreeProviders } from "../../../src/shared/TreeProviders";
 jest.mock("fs");
 jest.mock("path");
 
@@ -56,6 +58,7 @@ async function createGlobalMocks() {
         mockLoadNamedProfile: jest.fn(),
         showQuickPick: jest.fn(),
         isFileTagBinOrAscii: jest.fn(),
+        putUSSPayload: jest.fn().mockReturnValue(`{"stdout":[""]}`),
         existsSync: jest.fn(),
         Delete: jest.fn(),
         Utilities: jest.fn(),
@@ -136,6 +139,11 @@ async function createGlobalMocks() {
         value: globalMocks.isFileTagBinOrAscii,
         configurable: true,
     });
+    Object.defineProperty(globalMocks.Utilities, "putUSSPayload", {
+        value: globalMocks.putUSSPayload,
+        configurable: true,
+    });
+    Object.defineProperty(TreeProviders, "uss", { value: createTreeProviders().uss, configurable: true });
     Object.defineProperty(vscode.window, "showInputBox", { value: globalMocks.showInputBox, configurable: true });
     Object.defineProperty(vscode.window, "createTreeView", {
         value: jest.fn().mockReturnValue({ onDidCollapseElement: jest.fn() }),
@@ -346,7 +354,7 @@ describe("ZoweUSSNode Unit Tests - Function node.refreshUSS()", () => {
 
         expect(globalMocks.ussFile.mock.calls.length).toBe(1);
         expect(globalMocks.mockShowTextDocument.mock.calls.length).toBe(2);
-        expect(globalMocks.mockExecuteCommand.mock.calls.length).toBe(2);
+        expect(globalMocks.mockExecuteCommand.mock.calls.length).toBe(1);
         expect(blockMocks.node.downloaded).toBe(true);
     });
 
@@ -378,7 +386,7 @@ describe("ZoweUSSNode Unit Tests - Function node.refreshUSS()", () => {
 
         expect(globalMocks.ussFile.mock.calls.length).toBe(1);
         expect(globalMocks.mockShowTextDocument.mock.calls.length).toBe(0);
-        expect(globalMocks.mockExecuteCommand.mock.calls.length).toBe(1);
+        expect(globalMocks.mockExecuteCommand.mock.calls.length).toBe(0);
         expect(blockMocks.node.downloaded).toBe(true);
     });
 
@@ -430,7 +438,7 @@ describe("ZoweUSSNode Unit Tests - Function node.refreshUSS()", () => {
 
         expect(globalMocks.ussFile.mock.calls.length).toBe(1);
         expect(globalMocks.mockShowTextDocument.mock.calls.length).toBe(0);
-        expect(globalMocks.mockExecuteCommand.mock.calls.length).toBe(1);
+        expect(globalMocks.mockExecuteCommand.mock.calls.length).toBe(0);
         expect(blockMocks.node.downloaded).toBe(true);
     });
     it("Tests that node.refreshUSS() works correctly for favorited files/directories", async () => {
@@ -445,7 +453,7 @@ describe("ZoweUSSNode Unit Tests - Function node.refreshUSS()", () => {
 
         expect(globalMocks.ussFile.mock.calls.length).toBe(1);
         expect(globalMocks.mockShowTextDocument.mock.calls.length).toBe(0);
-        expect(globalMocks.mockExecuteCommand.mock.calls.length).toBe(1);
+        expect(globalMocks.mockExecuteCommand.mock.calls.length).toBe(0);
         expect(blockMocks.node.downloaded).toBe(true);
     });
 });
@@ -1466,10 +1474,6 @@ describe("ZoweUSSNode Unit Tests - Function node.pasteUssTree()", () => {
             testNode: testNode,
             pasteSpy: jest.spyOn(testNode, "paste"),
         };
-
-        Object.defineProperty(vscode.env.clipboard, "readText", {
-            value: globalMocks.readText,
-        });
 
         newMocks.testNode.fullPath = "/users/temp/test";
         newMocks.getUssApiMock.mockReturnValue(newMocks.mockUssApi);

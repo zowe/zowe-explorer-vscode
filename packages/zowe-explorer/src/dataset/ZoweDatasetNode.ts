@@ -39,6 +39,7 @@ import * as fs from "fs";
 import { promiseStatus, PromiseStatuses } from "promise-status-async";
 import { getDocumentFilePath, updateOpenFiles } from "../shared/utils";
 import { IZoweDatasetTreeOpts } from "../shared/IZoweTreeOpts";
+import { TreeProviders } from "../shared/TreeProviders";
 
 // Set up localization
 nls.config({
@@ -79,8 +80,8 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     public constructor(opts: IZoweDatasetTreeOpts) {
         super(opts.label, opts.collapsibleState, opts.parentNode, opts.session, opts.profile);
         this.binary = opts.encoding?.kind === "binary";
-        if (!this.binary) {
-            this.encoding = opts.encoding?.kind === "other" ? opts.encoding.codepage : null;
+        if (!this.binary && opts.encoding != null) {
+            this.encoding = opts.encoding.kind === "other" ? opts.encoding.codepage : null;
         }
         this.etag = opts.etag;
         if (opts.contextOverride) {
@@ -564,17 +565,17 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             throw new Error(`Cannot set encoding for node with context ${this.contextValue}`);
         }
         const isMemberNode = this.contextValue.startsWith(globals.DS_MEMBER_CONTEXT);
-        if (encoding.kind === "binary") {
+        if (encoding?.kind === "binary") {
             this.contextValue = isMemberNode ? globals.DS_MEMBER_BINARY_CONTEXT : globals.DS_DS_BINARY_CONTEXT;
             this.binary = true;
             this.encoding = undefined;
         } else {
             this.contextValue = isMemberNode ? globals.DS_MEMBER_CONTEXT : globals.DS_DS_CONTEXT;
             this.binary = false;
-            this.encoding = encoding.kind === "text" ? null : encoding.codepage;
+            this.encoding = encoding?.kind === "text" ? null : encoding?.codepage;
         }
         const fullPath = isMemberNode ? `${this.getParent().label as string}(${this.label as string})` : (this.label as string);
-        if (this.binary || this.encoding != null) {
+        if (encoding != null) {
             this.getSessionNode().encodingMap[fullPath] = encoding;
         } else {
             delete this.getSessionNode().encodingMap[fullPath];
@@ -598,6 +599,6 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     public setIcon(iconPath: { light: string; dark: string }): void {
         ZoweLogger.trace("ZoweDatasetNode.setIcon called.");
         this.iconPath = iconPath;
-        vscode.commands.executeCommand("zowe.ds.refreshDataset", this);
+        TreeProviders.ds.refreshElement(this);
     }
 }

@@ -24,6 +24,7 @@ import {
     createFileResponse,
     createValidIProfile,
     createInstanceOfProfile,
+    createTreeProviders,
 } from "../../../__mocks__/mockCreators/shared";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { Profiles } from "../../../src/Profiles";
@@ -38,9 +39,8 @@ import * as fs from "fs";
 import { createUssApi, bindUssApi } from "../../../__mocks__/mockCreators/api";
 import * as refreshActions from "../../../src/shared/refresh";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
-import * as wsUtils from "../../../src/utils/workspace";
-import * as context from "../../../src/shared/context";
 import { AttributeView } from "../../../src/uss/AttributeView";
+import { TreeProviders } from "../../../src/shared/TreeProviders";
 
 function createGlobalMocks() {
     const globalMocks = {
@@ -70,6 +70,7 @@ function createGlobalMocks() {
         mockLoadNamedProfile: jest.fn(),
         Utilities: jest.fn(),
         isFileTagBinOrAscii: jest.fn(),
+        putUSSPayload: jest.fn().mockReturnValue(`{"stdout":[""]}`),
         theia: false,
         testSession: createISession(),
         testProfile: createValidIProfile(),
@@ -122,6 +123,11 @@ function createGlobalMocks() {
         value: globalMocks.isFileTagBinOrAscii,
         configurable: true,
     });
+    Object.defineProperty(globalMocks.Utilities, "putUSSPayload", {
+        value: globalMocks.putUSSPayload,
+        configurable: true,
+    });
+    Object.defineProperty(TreeProviders, "uss", { value: createTreeProviders().uss, configurable: true });
     Object.defineProperty(vscode.window, "showErrorMessage", {
         value: globalMocks.showErrorMessage,
         configurable: true,
