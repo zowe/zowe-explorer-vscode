@@ -70,7 +70,6 @@ function createGlobalMocks() {
         mockLoadNamedProfile: jest.fn(),
         Utilities: jest.fn(),
         isFileTagBinOrAscii: jest.fn(),
-        putUSSPayload: jest.fn().mockReturnValue(`{"stdout":[""]}`),
         theia: false,
         testSession: createISession(),
         testProfile: createValidIProfile(),
@@ -121,10 +120,6 @@ function createGlobalMocks() {
     Object.defineProperty(vscode.window, "createTreeView", { value: globalMocks.createTreeView, configurable: true });
     Object.defineProperty(globalMocks.Utilities, "isFileTagBinOrAscii", {
         value: globalMocks.isFileTagBinOrAscii,
-        configurable: true,
-    });
-    Object.defineProperty(globalMocks.Utilities, "putUSSPayload", {
-        value: globalMocks.putUSSPayload,
         configurable: true,
     });
     Object.defineProperty(TreeProviders, "uss", { value: createTreeProviders().uss, configurable: true });

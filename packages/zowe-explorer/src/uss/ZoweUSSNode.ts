@@ -28,7 +28,7 @@ import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { errorHandling, syncSessionNode } from "../utils/ProfilesUtils";
 import { getIconByNode } from "../generators/icons/index";
-import { autoDetectEncoding, fileExistsCaseSensitveSync, injectAdditionalDataToTooltip } from "../uss/utils";
+import { fileExistsCaseSensitveSync, injectAdditionalDataToTooltip } from "../uss/utils";
 import * as contextually from "../shared/context";
 import { closeOpenedTextFile } from "../utils/workspace";
 import * as nls from "vscode-nls";
@@ -513,7 +513,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                     // if local copy exists, open that instead of pulling from mainframe
                     if (forceDownload || !fileExists) {
                         const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
-                        await autoDetectEncoding(this, cachedProfile);
+                        await TreeProviders.uss.autoDetectEncoding(this, cachedProfile);
 
                         const statusMsg = Gui.setStatusBarMessage(localize("ussFile.opening", "$(sync~spin) Opening USS file..."));
                         const response = await ZoweExplorerApiRegister.getUssApi(cachedProfile).getContents(this.fullPath, {
@@ -581,7 +581,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
 
             if ((isDirty && !this.isDirtyInEditor && !wasSaved) || !isDirty) {
                 const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
-                await autoDetectEncoding(this, cachedProfile);
+                await TreeProviders.uss.autoDetectEncoding(this, cachedProfile);
 
                 const response = await ZoweExplorerApiRegister.getUssApi(cachedProfile).getContents(this.fullPath, {
                     file: ussDocumentFilePath,

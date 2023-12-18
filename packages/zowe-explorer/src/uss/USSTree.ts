@@ -965,4 +965,22 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             await node.openUSS(true, false, this);
         }
     }
+
+    public async autoDetectEncoding(node: IZoweUSSTreeNode, profile?: imperative.IProfileLoaded): Promise<void> {
+        if (node.binary || node.encoding !== undefined) {
+            return;
+        }
+        const ussApi = ZoweExplorerApiRegister.getUssApi(profile ?? node.getProfile());
+        if (ussApi.getTag != null) {
+            const taggedEncoding = await ussApi.getTag(node.fullPath);
+            if (taggedEncoding === "binary" || taggedEncoding === "mixed") {
+                node.setEncoding({ kind: "binary" });
+            } else {
+                node.setEncoding(taggedEncoding !== "untagged" ? { kind: "other", codepage: taggedEncoding } : undefined);
+            }
+        } else {
+            const isBinary = await ussApi.isFileTagBinOrAscii(node.fullPath);
+            node.setEncoding(isBinary ? { kind: "binary" } : undefined);
+        }
+    }
 }

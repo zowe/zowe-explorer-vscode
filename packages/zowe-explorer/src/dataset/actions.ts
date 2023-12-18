@@ -31,7 +31,6 @@ import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { Profiles } from "../Profiles";
 import { getIconByNode } from "../generators/icons";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
-import { DatasetTree } from "./DatasetTree";
 import * as contextually from "../shared/context";
 import { markDocumentUnsaved, setFileSaved } from "../utils/workspace";
 import { IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
@@ -1219,7 +1218,7 @@ export async function refreshDataset(node: api.IZoweDatasetTreeNode, datasetProv
  * @returns {Promise<void>}
  */
 // This function does not appear to be called by anything except unit and integration tests.
-export async function enterPattern(node: api.IZoweDatasetTreeNode, datasetProvider: DatasetTree): Promise<void> {
+export async function enterPattern(node: api.IZoweDatasetTreeNode, datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>): Promise<void> {
     ZoweLogger.trace("dataset.actions.enterPattern called.");
     let pattern: string;
     if (contextually.isSessionNotFav(node)) {

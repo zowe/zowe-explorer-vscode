@@ -468,7 +468,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     }
 
     public async openDs(forceDownload: boolean, previewMember: boolean, datasetProvider: IZoweTree<IZoweDatasetTreeNode>): Promise<void> {
-        ZoweLogger.trace("dataset.actions.openPS called.");
+        ZoweLogger.trace("ZoweDatasetNode.openDs called.");
         await datasetProvider.checkCurrentProfile(this);
 
         // Status of last "open action" promise

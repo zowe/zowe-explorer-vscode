@@ -58,7 +58,7 @@ async function createGlobalMocks() {
         mockLoadNamedProfile: jest.fn(),
         showQuickPick: jest.fn(),
         isFileTagBinOrAscii: jest.fn(),
-        putUSSPayload: jest.fn().mockReturnValue(`{"stdout":[""]}`),
+        putUSSPayload: jest.fn(),
         existsSync: jest.fn(),
         Delete: jest.fn(),
         Utilities: jest.fn(),
