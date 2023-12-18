@@ -1456,7 +1456,7 @@ describe("ZoweUSSNode Unit Tests - Function node.pasteUssTree()", () => {
         const newMocks = {
             profile: createIProfileFakeEncoding(),
             fileResponse: createFileResponse({
-                items: [{ name: "testFile" }, { name: "testFile2" }],
+                items: [{ name: "testFile" }, { name: "testFile2" }, { name: "testFile3" }],
             }),
             fileRespWithFolder: createFileResponse({
                 items: [{ name: "testFolder" }],
@@ -1482,15 +1482,15 @@ describe("ZoweUSSNode Unit Tests - Function node.pasteUssTree()", () => {
             JSON.stringify({
                 children: [
                     {
-                        ussPath: "/testpath/file1",
+                        ussPath: "/path/testFile",
                         type: UssFileType.File,
                     },
                     {
-                        ussPath: "/testpath/file2",
+                        ussPath: "/path/testFile2",
                         type: UssFileType.File,
                     },
                     {
-                        ussPath: "/testpath/file3",
+                        ussPath: "/path/testFile3",
                         type: UssFileType.File,
                     },
                 ],
@@ -1505,39 +1505,47 @@ describe("ZoweUSSNode Unit Tests - Function node.pasteUssTree()", () => {
         const blockMocks = createBlockMocks(globalMocks);
         blockMocks.pasteSpy.mockClear();
 
-        jest.spyOn(blockMocks.mockUssApi, "fileList").mockResolvedValueOnce(blockMocks.fileResponse);
-        jest.spyOn(blockMocks.mockUssApi, "putContent").mockResolvedValueOnce(blockMocks.fileResponse);
-        jest.spyOn(blockMocks.mockUssApi, "uploadDirectory").mockResolvedValueOnce(blockMocks.fileResponse);
+        jest.spyOn(blockMocks.mockUssApi, "fileList").mockResolvedValue(blockMocks.fileResponse);
+        jest.spyOn(blockMocks.mockUssApi, "putContent").mockResolvedValue(blockMocks.fileResponse);
+        jest.spyOn(blockMocks.mockUssApi, "uploadDirectory").mockResolvedValue(blockMocks.fileResponse);
+        const mockCopyApi = jest.spyOn(blockMocks.mockUssApi, "copy");
 
-        // Testing paste within same session (copy API)
-        const mockToSameSession = jest.spyOn(UssFileUtils, "toSameSession").mockReturnValueOnce(true);
-        await blockMocks.testNode.pasteUssTree();
-        // Only one paste operation is needed since copy API supports recursion out-of-the-box
-        expect(blockMocks.pasteSpy).toHaveBeenCalledTimes(1);
-
-        // Test case w/ copying between two sessions (should fallback to create/putContent APIs)
-        mockToSameSession.mockReturnValueOnce(false);
+        // Scenario 1: multiple files, pasting within same session (use new copy API)
+        const mockToSameSession = jest.spyOn(UssFileUtils, "toSameSession").mockReturnValue(true);
         await blockMocks.testNode.pasteUssTree();
         expect(blockMocks.pasteSpy).toHaveBeenCalledTimes(3);
+        expect(mockCopyApi).toHaveBeenCalledTimes(3);
 
+        blockMocks.pasteSpy.mockClear();
+        mockCopyApi.mockClear();
+
+        // Scenario 2: copying multiple files between two sessions (should fallback to create/putContent APIs)
+        mockToSameSession.mockReturnValue(false);
+        await blockMocks.testNode.pasteUssTree();
+        expect(blockMocks.pasteSpy).toHaveBeenCalledTimes(3);
+        expect(blockMocks.mockUssApi.putContent).toHaveBeenCalledTimes(3);
+
+        // Scenario 3: a directory, pasting within same session
         globalMocks.readText.mockResolvedValue(
             JSON.stringify({
                 children: [
                     {
-                        ussPath: "/testpath/folder1",
+                        ussPath: "/path/folder1",
                         type: UssFileType.Directory,
                     },
                 ],
             })
         );
 
-        // Test copying a directory
-        mockToSameSession.mockReturnValueOnce(false);
+        mockToSameSession.mockReturnValue(true);
         jest.spyOn(blockMocks.mockUssApi, "fileList").mockResolvedValueOnce(blockMocks.fileRespWithFolder);
         jest.spyOn(blockMocks.mockUssApi, "putContent").mockResolvedValueOnce(blockMocks.fileRespWithFolder);
+        blockMocks.pasteSpy.mockClear();
 
         await blockMocks.testNode.pasteUssTree();
-        expect(blockMocks.pasteSpy).toHaveBeenCalled();
+        // Only one paste operation is needed, copy API handles recursion out-of-the-box
+        expect(blockMocks.pasteSpy).toHaveBeenCalledTimes(1);
+        expect(mockCopyApi).toHaveBeenCalledTimes(1);
     });
 
     it("paste renames duplicate files before copying when needed", async () => {
