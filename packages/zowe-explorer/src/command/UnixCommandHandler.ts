@@ -92,7 +92,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
         let res: boolean = true;
         if (!session) {
             const allProfiles = profiles.allProfiles;
-            res = this.checkforsshrequired(allProfiles);
+            res = this.checkForSshRequired(allProfiles);
             const profileNamesList = ProfileManagement.getRegisteredProfileNameList(globals.Trees.USS);
             if (profileNamesList.length) {
                 if (!res) {
@@ -183,7 +183,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
         }
     }
 
-    public checkforsshrequired(allProfiles: imperative.IProfileLoaded[]): boolean {
+    public checkForSshRequired(allProfiles: imperative.IProfileLoaded[]): boolean {
         try {
             allProfiles.forEach((p) => {
                 // eslint-disable-next-line @typescript-eslint/unbound-method
@@ -198,7 +198,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
 
     public async setsshSession(): Promise<SshSession> {
         ZoweLogger.trace("UnixCommandHandler.setsshSession called.");
-        const sshprofile: imperative.IProfileLoaded = await this.getsshProfile();
+        const sshprofile: imperative.IProfileLoaded = await this.getSshProfile();
         if (sshprofile) {
             const cmdArgs: imperative.ICommandArguments = this.getCmdArgs(sshprofile?.profile as imperative.IProfileLoaded);
             // create the ssh session
@@ -236,7 +236,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
         return sshProfile;
     }
 
-    private async getsshProfile(): Promise<imperative.IProfileLoaded> {
+    private async getSshProfile(): Promise<imperative.IProfileLoaded> {
         ZoweLogger.trace("UnixCommandHandler.getsshParams called.");
         const profileInfo = await Profiles.getInstance().getProfileInfo();
         const params = ["port", "host", "user", "password"];

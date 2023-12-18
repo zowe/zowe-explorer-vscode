@@ -36,6 +36,7 @@ describe("UnixCommand Actions Unit Testing", () => {
     const mockLoadNamedProfile = jest.fn();
     const mockdefaultProfile = jest.fn();
     const getConfiguration = jest.fn();
+    const getProfileInfomock = jest.fn();
 
     const session = new imperative.Session({
         user: "fake",
@@ -165,6 +166,20 @@ describe("UnixCommand Actions Unit Testing", () => {
         return { privateKey: undefined, keyPassphrase: undefined, handshakeTimeout: undefined };
     });
 
+    getProfileInfomock.mockReturnValue({
+        usingTeamConfig: true,
+        getAllProfiles: jest.fn().mockReturnValue(["dummy"]),
+        mergeArgsForProfile: jest.fn().mockReturnValue({
+            knownArgs: [
+                { argName: "port", argValue: "TEST", secure: false },
+                { argName: "host", argValue: "TEST", secure: false },
+                { argName: "user", argValue: "TEST", secure: false },
+                { argName: "password", argValue: "TEST", secure: false },
+            ],
+        }),
+        loadSecureArg: jest.fn().mockReturnValue("fake"),
+    } as any);
+
     it("test the issueUnixCommand function", async () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
@@ -179,19 +194,7 @@ describe("UnixCommand Actions Unit Testing", () => {
                     getBaseProfile: jest.fn(),
                     getDefaultProfile: mockdefaultProfile,
                     validProfile: ValidProfileEnum.VALID,
-                    getProfileInfo: jest.fn().mockReturnValue({
-                        usingTeamConfig: true,
-                        getAllProfiles: jest.fn().mockReturnValue(["dummy"]),
-                        mergeArgsForProfile: jest.fn().mockReturnValue({
-                            knownArgs: [
-                                { argName: "port", argValue: "TEST", secure: false },
-                                { argName: "host", argValue: "TEST", secure: false },
-                                { argName: "user", argValue: "TEST", secure: false },
-                                { argName: "password", argValue: "TEST", secure: false },
-                            ],
-                        }),
-                        loadSecureArg: jest.fn().mockReturnValue("fake"),
-                    } as any),
+                    getProfileInfo: getProfileInfomock
                 };
             }),
         });
@@ -245,19 +248,7 @@ describe("UnixCommand Actions Unit Testing", () => {
                     getBaseProfile: jest.fn(),
                     getDefaultProfile: mockdefaultProfile,
                     validProfile: ValidProfileEnum.VALID,
-                    getProfileInfo: jest.fn().mockReturnValue({
-                        usingTeamConfig: true,
-                        getAllProfiles: jest.fn().mockReturnValue(["dummy"]),
-                        mergeArgsForProfile: jest.fn().mockReturnValue({
-                            knownArgs: [
-                                { argName: "port", argValue: "TEST", secure: false },
-                                { argName: "host", argValue: "TEST", secure: false },
-                                { argName: "user", argValue: "TEST", secure: false },
-                                { argName: "password", argValue: "TEST", secure: false },
-                            ],
-                        }),
-                        loadSecureArg: jest.fn().mockReturnValue("fake"),
-                    } as any),
+                    getProfileInfo: getProfileInfomock
                 };
             }),
         });
@@ -310,19 +301,7 @@ describe("UnixCommand Actions Unit Testing", () => {
                     getBaseProfile: jest.fn(),
                     getDefaultProfile: mockdefaultProfile,
                     validProfile: ValidProfileEnum.VALID,
-                    getProfileInfo: jest.fn().mockReturnValue({
-                        usingTeamConfig: true,
-                        getAllProfiles: jest.fn().mockReturnValue(["dummy"]),
-                        mergeArgsForProfile: jest.fn().mockReturnValue({
-                            knownArgs: [
-                                { argName: "port", argValue: "TEST", secure: false },
-                                { argName: "host", argValue: "TEST", secure: false },
-                                { argName: "user", argValue: "TEST", secure: false },
-                                { argName: "password", argValue: "TEST", secure: false },
-                            ],
-                        }),
-                        loadSecureArg: jest.fn().mockReturnValue("fake"),
-                    } as any),
+                    getProfileInfo: getProfileInfomock
                 };
             }),
         });
@@ -368,19 +347,7 @@ describe("UnixCommand Actions Unit Testing", () => {
                     getBaseProfile: jest.fn(),
                     getDefaultProfile: mockdefaultProfile,
                     validProfile: ValidProfileEnum.VALID,
-                    getProfileInfo: jest.fn().mockReturnValue({
-                        usingTeamConfig: true,
-                        getAllProfiles: jest.fn().mockReturnValue(["dummy"]),
-                        mergeArgsForProfile: jest.fn().mockReturnValue({
-                            knownArgs: [
-                                { argName: "port", argValue: "TEST", secure: false },
-                                { argName: "host", argValue: "TEST", secure: false },
-                                { argName: "user", argValue: "TEST", secure: false },
-                                { argName: "password", argValue: "TEST", secure: false },
-                            ],
-                        }),
-                        loadSecureArg: jest.fn().mockReturnValue("fake"),
-                    } as any),
+                    getProfileInfo: getProfileInfomock
                 };
             }),
         });
@@ -423,19 +390,7 @@ describe("UnixCommand Actions Unit Testing", () => {
                     getBaseProfile: jest.fn(),
                     getDefaultProfile: mockdefaultProfile,
                     validProfile: ValidProfileEnum.VALID,
-                    getProfileInfo: jest.fn().mockReturnValue({
-                        usingTeamConfig: true,
-                        getAllProfiles: jest.fn().mockReturnValue(["dummy"]),
-                        mergeArgsForProfile: jest.fn().mockReturnValue({
-                            knownArgs: [
-                                { argName: "port", argValue: "TEST", secure: false },
-                                { argName: "host", argValue: "TEST", secure: false },
-                                { argName: "user", argValue: "TEST", secure: false },
-                                { argName: "password", argValue: "TEST", secure: false },
-                            ],
-                        }),
-                        loadSecureArg: jest.fn().mockReturnValue("fake"),
-                    } as any),
+                    getProfileInfo: getProfileInfomock
                 };
             }),
         });
@@ -462,19 +417,7 @@ describe("UnixCommand Actions Unit Testing", () => {
                     getBaseProfile: jest.fn(),
                     getDefaultProfile: mockdefaultProfile,
                     validProfile: ValidProfileEnum.VALID,
-                    getProfileInfo: jest.fn().mockReturnValue({
-                        usingTeamConfig: true,
-                        getAllProfiles: jest.fn().mockReturnValue(["dummy"]),
-                        mergeArgsForProfile: jest.fn().mockReturnValue({
-                            knownArgs: [
-                                { argName: "port", argValue: "TEST", secure: false },
-                                { argName: "host", argValue: "TEST", secure: false },
-                                { argName: "user", argValue: "TEST", secure: false },
-                                { argName: "password", argValue: "TEST", secure: false },
-                            ],
-                        }),
-                        loadSecureArg: jest.fn().mockReturnValue("fake"),
-                    } as any),
+                    getProfileInfo: getProfileInfomock
                 };
             }),
         });
@@ -500,19 +443,7 @@ describe("UnixCommand Actions Unit Testing", () => {
                     getBaseProfile: jest.fn(),
                     getDefaultProfile: mockdefaultProfile,
                     validProfile: ValidProfileEnum.VALID,
-                    getProfileInfo: jest.fn().mockReturnValue({
-                        usingTeamConfig: true,
-                        getAllProfiles: jest.fn().mockReturnValue(["dummy"]),
-                        mergeArgsForProfile: jest.fn().mockReturnValue({
-                            knownArgs: [
-                                { argName: "port", argValue: "TEST", secure: false },
-                                { argName: "host", argValue: "TEST", secure: false },
-                                { argName: "user", argValue: "TEST", secure: false },
-                                { argName: "password", argValue: "TEST", secure: false },
-                            ],
-                        }),
-                        loadSecureArg: jest.fn().mockReturnValue("fake"),
-                    } as any),
+                    getProfileInfo: getProfileInfomock
                 };
             }),
         });
@@ -556,19 +487,7 @@ describe("UnixCommand Actions Unit Testing", () => {
                     getBaseProfile: jest.fn(),
                     validProfile: ValidProfileEnum.VALID,
                     getDefaultProfile: mockdefaultProfile,
-                    getProfileInfo: jest.fn().mockReturnValue({
-                        usingTeamConfig: true,
-                        getAllProfiles: jest.fn().mockReturnValue(["dummy"]),
-                        mergeArgsForProfile: jest.fn().mockReturnValue({
-                            knownArgs: [
-                                { argName: "port", argValue: "TEST", secure: false },
-                                { argName: "host", argValue: "TEST", secure: false },
-                                { argName: "user", argValue: "TEST", secure: false },
-                                { argName: "password", argValue: "TEST", secure: false },
-                            ],
-                        }),
-                        loadSecureArg: jest.fn().mockReturnValue("fake"),
-                    } as any),
+                    getProfileInfo: getProfileInfomock
                 };
             }),
         });
@@ -625,19 +544,7 @@ describe("UnixCommand Actions Unit Testing", () => {
                     }),
                     validProfile: ValidProfileEnum.INVALID,
                     getDefaultProfile: mockdefaultProfile,
-                    getProfileInfo: jest.fn().mockReturnValue({
-                        usingTeamConfig: true,
-                        getAllProfiles: jest.fn().mockReturnValue(["dummy"]),
-                        mergeArgsForProfile: jest.fn().mockReturnValue({
-                            knownArgs: [
-                                { argName: "port", argValue: "TEST", secure: false },
-                                { argName: "host", argValue: "TEST", secure: false },
-                                { argName: "user", argValue: "TEST", secure: false },
-                                { argName: "password", argValue: "TEST", secure: false },
-                            ],
-                        }),
-                        loadSecureArg: jest.fn().mockReturnValue("fake"),
-                    } as any),
+                    getProfileInfo: getProfileInfomock
                 };
             }),
         });
@@ -706,19 +613,7 @@ describe("UnixCommand Actions Unit Testing", () => {
                     checkCurrentProfile: jest.fn(),
                     zosmfProfile: mockLoadNamedProfile,
                     getDefaultProfile: mockdefaultProfile,
-                    getProfileInfo: jest.fn().mockReturnValue({
-                        usingTeamConfig: true,
-                        getAllProfiles: jest.fn().mockReturnValue(["dummy"]),
-                        mergeArgsForProfile: jest.fn().mockReturnValue({
-                            knownArgs: [
-                                { argName: "port", argValue: "TEST", secure: false },
-                                { argName: "host", argValue: "TEST", secure: false },
-                                { argName: "user", argValue: "TEST", secure: false },
-                                { argName: "password", argValue: "TEST", secure: false },
-                            ],
-                        }),
-                        loadSecureArg: jest.fn().mockReturnValue("fake"),
-                    } as any),
+                    getProfileInfo: getProfileInfomock
                 };
             }),
         });
