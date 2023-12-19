@@ -173,8 +173,8 @@ describe("UnixCommand Actions Unit Testing", () => {
             knownArgs: [
                 { argName: "port", argValue: "TEST", secure: false },
                 { argName: "host", argValue: "TEST", secure: false },
-                { argName: "user", argValue: "TEST", secure: false },
-                { argName: "password", argValue: "TEST", secure: false },
+                { argName: "user", secure: true },
+                { argName: "password", secure: true },
             ],
         }),
         loadSecureArg: jest.fn().mockReturnValue("fake"),
