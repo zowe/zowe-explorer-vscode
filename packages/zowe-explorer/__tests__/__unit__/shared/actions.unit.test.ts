@@ -113,7 +113,7 @@ async function createGlobalMocks() {
 // Idea is borrowed from: https://github.com/kulshekhar/ts-jest/blob/master/src/util/testing.ts
 const mocked = <T extends (...args: any[]) => any>(fn: T): jest.Mock<ReturnType<T>> => fn as any;
 
-describe("Shared Actions Unit Tests - Function searchForLoadedItems", () => {
+describe("Shared Actions Unit Tests - Function searchInAllLoadedItems", () => {
     function createBlockMocks(globalMocks) {
         const newMocks = {
             datasetSessionNode: createDatasetSessionNode(globalMocks.session, globalMocks.imperativeProfile),
@@ -124,7 +124,43 @@ describe("Shared Actions Unit Tests - Function searchForLoadedItems", () => {
 
     afterAll(() => jest.restoreAllMocks());
 
-    it("Checking that searchForLoadedItems works for a PDS", async () => {
+    it("Checking that searchInAllLoadedItems works for a PS", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+
+        const testNode = new ZoweDatasetNode({
+            label: "HLQ.PROD2.STUFF",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.datasetSessionNode,
+            session: globalMocks.session,
+        });
+        const testDatasetTree = createDatasetTree(blockMocks.datasetSessionNode, globalMocks.treeView);
+
+        jest.spyOn(ZoweDatasetNode.prototype, "openDs").mockResolvedValueOnce(undefined);
+        testDatasetTree.getAllLoadedItems.mockResolvedValueOnce([testNode]);
+        const testUssTree = createUSSTree([], [blockMocks.ussSessionNode], globalMocks.treeView);
+        Object.defineProperty(testUssTree, "getAllLoadedItems", {
+            value: jest.fn().mockResolvedValueOnce([]),
+            configurable: true,
+        });
+        testDatasetTree.getChildren.mockImplementation((arg) => {
+            if (arg) {
+                return Promise.resolve([testNode]);
+            } else {
+                return Promise.resolve([blockMocks.datasetSessionNode]);
+            }
+        });
+
+        const qpItem = new utils.FilterItem({ text: "[sestest]: HLQ.PROD2.STUFF" });
+        const quickPickContent = createQuickPickContent(qpItem, [qpItem], globalMocks.qpPlaceholder);
+        quickPickContent.placeholder = "Select a filter";
+        mocked(Gui.createQuickPick).mockReturnValue(quickPickContent);
+        jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(qpItem);
+
+        await sharedActions.searchInAllLoadedItems(testDatasetTree, testUssTree);
+        expect(testDatasetTree.addSearchHistory).toBeCalledWith("HLQ.PROD2.STUFF");
+    });
+    it("Checking that searchInAllLoadedItems works for a PDS", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
 
@@ -133,7 +169,6 @@ describe("Shared Actions Unit Tests - Function searchForLoadedItems", () => {
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             parentNode: blockMocks.datasetSessionNode,
             session: globalMocks.session,
-            contextOverride: globals.DS_PDS_CONTEXT,
         });
         const testDatasetTree = createDatasetTree(blockMocks.datasetSessionNode, globalMocks.treeView);
         testDatasetTree.getAllLoadedItems.mockResolvedValueOnce([testNode]);
@@ -159,7 +194,7 @@ describe("Shared Actions Unit Tests - Function searchForLoadedItems", () => {
         await sharedActions.searchInAllLoadedItems(testDatasetTree, testUssTree);
         expect(testDatasetTree.addSearchHistory).not.toBeCalled();
     });
-    it("Checking that searchForLoadedItems works for a member", async () => {
+    it("Checking that searchInAllLoadedItems works for a member", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
 
@@ -168,20 +203,18 @@ describe("Shared Actions Unit Tests - Function searchForLoadedItems", () => {
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             parentNode: blockMocks.datasetSessionNode,
             session: globalMocks.session,
-            contextOverride: globals.DS_DS_CONTEXT,
         });
         const testMember = new ZoweDatasetNode({
             label: "TESTMEMB",
-            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
             parentNode: testNode,
             session: globalMocks.session,
-            contextOverride: globals.DS_MEMBER_CONTEXT,
         });
         testNode.children.push(testMember);
         const testDatasetTree = createDatasetTree(blockMocks.datasetSessionNode, globalMocks.treeView);
         testDatasetTree.getChildren.mockReturnValue([blockMocks.datasetSessionNode]);
 
-        jest.spyOn(ZoweDatasetNode.prototype, "openDs").mockResolvedValueOnce(null as any);
+        jest.spyOn(ZoweDatasetNode.prototype, "openDs").mockResolvedValueOnce(undefined);
         testDatasetTree.getAllLoadedItems.mockResolvedValueOnce([testMember]);
         const testUssTree = createUSSTree([], [blockMocks.ussSessionNode], globalMocks.treeView);
         Object.defineProperty(testUssTree, "getAllLoadedItems", {
@@ -206,7 +239,7 @@ describe("Shared Actions Unit Tests - Function searchForLoadedItems", () => {
         await sharedActions.searchInAllLoadedItems(testDatasetTree, testUssTree);
         expect(testDatasetTree.addSearchHistory).toBeCalledWith("HLQ.PROD2.STUFF(TESTMEMB)");
     });
-    it("Checking that searchForLoadedItems works for a USS folder", async () => {
+    it("Checking that searchInAllLoadedItems works for a USS folder", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
 
@@ -239,7 +272,7 @@ describe("Shared Actions Unit Tests - Function searchForLoadedItems", () => {
         await sharedActions.searchInAllLoadedItems(undefined, testUssTree);
         expect(openNode).not.toBeCalled();
     });
-    it("Checking that searchForLoadedItems works for a USS file", async () => {
+    it("Checking that searchInAllLoadedItems works for a USS file", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
 
@@ -281,7 +314,7 @@ describe("Shared Actions Unit Tests - Function searchForLoadedItems", () => {
         expect(testUssTree.addSearchHistory).toBeCalledWith("/folder/file");
         expect(openNode).toHaveBeenCalledWith(false, true, testUssTree);
     });
-    it("Checking that searchForLoadedItems fails when no pattern is entered", async () => {
+    it("Checking that searchInAllLoadedItems fails when no pattern is entered", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
 

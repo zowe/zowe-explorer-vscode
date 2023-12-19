@@ -344,7 +344,7 @@ describe("Extension Integration Tests", async () => {
             expect(fs.existsSync(sharedUtils.getDocumentFilePath(pattern + ".EXT.PS", node))).to.equal(true);
         }).timeout(TIMEOUT);
 
-        it("should display an error message when openPS is passed an invalid node", async () => {
+        it("should display an error message when openDs is passed an invalid node", async () => {
             const node = new ZoweDatasetNode({
                 label: pattern + ".GARBAGE",
                 collapsibleState: vscode.TreeItemCollapsibleState.None,

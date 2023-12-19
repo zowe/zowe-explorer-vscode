@@ -602,7 +602,6 @@ export function createTreeProviders() {
             refresh: jest.fn(),
             addSingleSession: jest.fn(),
             refreshElement: jest.fn(),
-            autoDetectEncoding: jest.fn(),
         } as any,
         job: {
             mSessionNodes: [
