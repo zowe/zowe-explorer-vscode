@@ -473,7 +473,7 @@ export async function promptForEncoding(node: IZoweDatasetTreeNode | IZoweUSSTre
     } else if (node.encoding === null || currentEncoding === "text") {
         currentEncoding = ebcdicItem.label;
     }
-    const encodingHistory = ZoweLocalStorage.getValue<string[]>("encodingHistory") ?? [];
+    const encodingHistory = ZoweLocalStorage.getValue<string[]>("zowe.encodingHistory") ?? [];
     if (encodingHistory.length > 0) {
         for (const encoding of encodingHistory) {
             items.push({ label: encoding });
@@ -506,7 +506,7 @@ export async function promptForEncoding(node: IZoweDatasetTreeNode | IZoweUSSTre
             if (response != null) {
                 encoding = { kind: "other", codepage: response };
                 encodingHistory.push(encoding.codepage);
-                ZoweLocalStorage.setValue("encodingHistory", encodingHistory.slice(0, globals.MAX_FILE_HISTORY));
+                ZoweLocalStorage.setValue("zowe.encodingHistory", encodingHistory.slice(0, globals.MAX_FILE_HISTORY));
             }
             break;
         default:

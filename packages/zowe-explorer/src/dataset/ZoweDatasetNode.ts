@@ -39,7 +39,6 @@ import * as fs from "fs";
 import { promiseStatus, PromiseStatuses } from "promise-status-async";
 import { getDocumentFilePath, updateOpenFiles } from "../shared/utils";
 import { IZoweDatasetTreeOpts } from "../shared/IZoweTreeOpts";
-import { TreeProviders } from "../shared/TreeProviders";
 
 // Set up localization
 nls.config({
@@ -89,9 +88,9 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         } else if (opts.collapsibleState !== vscode.TreeItemCollapsibleState.None) {
             this.contextValue = globals.DS_PDS_CONTEXT;
         } else if (opts.parentNode && opts.parentNode.getParent()) {
-            this.contextValue = globals.DS_MEMBER_CONTEXT;
+            this.contextValue = this.binary ? globals.DS_MEMBER_BINARY_CONTEXT : globals.DS_MEMBER_CONTEXT;
         } else {
-            this.contextValue = globals.DS_DS_CONTEXT;
+            this.contextValue = this.binary ? globals.DS_DS_BINARY_CONTEXT : globals.DS_DS_CONTEXT;
         }
         this.tooltip = this.label as string;
         const icon = getIconByNode(this);
@@ -599,6 +598,6 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     public setIcon(iconPath: { light: string; dark: string }): void {
         ZoweLogger.trace("ZoweDatasetNode.setIcon called.");
         this.iconPath = iconPath;
-        TreeProviders.ds.refreshElement(this);
+        vscode.commands.executeCommand("zowe.ds.refreshDataset", this);
     }
 }

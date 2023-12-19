@@ -59,7 +59,6 @@ export async function initDatasetProvider(context: vscode.ExtensionContext): Pro
         })
     );
     context.subscriptions.push(
-        // TODO Remove this command in v3 in favor of TreeProviders.ds.refreshElement
         vscode.commands.registerCommand("zowe.ds.refreshDataset", async (node, nodeList) => {
             let selectedNodes = getSelectedNodeList(node, nodeList);
             selectedNodes = selectedNodes.filter((element) => contextuals.isDs(element) || contextuals.isPdsNotFav(element));

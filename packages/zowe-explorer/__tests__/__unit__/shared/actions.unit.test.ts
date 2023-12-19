@@ -26,7 +26,6 @@ import * as globals from "../../../src/globals";
 import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
 import * as sharedActions from "../../../src/shared/actions";
 import { createUSSSessionNode, createUSSTree } from "../../../__mocks__/mockCreators/uss";
-import * as dsActions from "../../../src/dataset/actions";
 import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
 import { getIconById, IconId, getIconByNode } from "../../../src/generators/icons";
 import * as zowe from "@zowe/cli";

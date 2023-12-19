@@ -22,7 +22,6 @@ import {
     createFileResponse,
     createInstanceOfProfile,
     createTextDocument,
-    createTreeProviders,
 } from "../../../__mocks__/mockCreators/shared";
 import { createDatasetSessionNode } from "../../../__mocks__/mockCreators/datasets";
 import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
@@ -33,7 +32,6 @@ import * as utils from "../../../src/utils/ProfilesUtils";
 import { Gui, IZoweTreeNode, ProfilesCache, ZosEncoding } from "@zowe/zowe-explorer-api";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
-import { TreeProviders } from "../../../src/shared/TreeProviders";
 
 jest.mock("path");
 
@@ -57,8 +55,6 @@ async function createGlobalMocks() {
         configurable: true,
     });
 
-    Object.defineProperty(TreeProviders, "ds", { value: createTreeProviders().ds, configurable: true });
-    Object.defineProperty(TreeProviders, "uss", { value: createTreeProviders().uss, configurable: true });
     Object.defineProperty(newMocks.mockProfilesCache, "getConfigInstance", {
         value: jest.fn(() => {
             return {

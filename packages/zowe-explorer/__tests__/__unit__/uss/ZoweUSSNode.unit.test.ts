@@ -24,7 +24,6 @@ import {
     createTreeView,
     createInstanceOfProfile,
     createValidIProfile,
-    createTreeProviders,
 } from "../../../__mocks__/mockCreators/shared";
 import { createUSSTree } from "../../../__mocks__/mockCreators/uss";
 import * as fs from "fs";
@@ -33,7 +32,6 @@ import * as workspaceUtils from "../../../src/utils/workspace";
 import * as globals from "../../../src/globals";
 import * as ussUtils from "../../../src/uss/utils";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
-import { TreeProviders } from "../../../src/shared/TreeProviders";
 jest.mock("fs");
 jest.mock("path");
 
@@ -58,7 +56,6 @@ async function createGlobalMocks() {
         mockLoadNamedProfile: jest.fn(),
         showQuickPick: jest.fn(),
         isFileTagBinOrAscii: jest.fn(),
-        putUSSPayload: jest.fn(),
         existsSync: jest.fn(),
         Delete: jest.fn(),
         Utilities: jest.fn(),
@@ -139,11 +136,6 @@ async function createGlobalMocks() {
         value: globalMocks.isFileTagBinOrAscii,
         configurable: true,
     });
-    Object.defineProperty(globalMocks.Utilities, "putUSSPayload", {
-        value: globalMocks.putUSSPayload,
-        configurable: true,
-    });
-    Object.defineProperty(TreeProviders, "uss", { value: createTreeProviders().uss, configurable: true });
     Object.defineProperty(vscode.window, "showInputBox", { value: globalMocks.showInputBox, configurable: true });
     Object.defineProperty(vscode.window, "createTreeView", {
         value: jest.fn().mockReturnValue({ onDidCollapseElement: jest.fn() }),
@@ -304,6 +296,7 @@ describe("ZoweUSSNode Unit Tests - Function node.refreshUSS()", () => {
         const newMocks = {
             node: null,
             testUSSTree: null,
+            putUSSPayload: jest.fn().mockResolvedValue(`{"stdout":[""]}`),
             ussNode: new ZoweUSSNode({
                 label: "usstest",
                 collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
@@ -326,7 +319,6 @@ describe("ZoweUSSNode Unit Tests - Function node.refreshUSS()", () => {
             parentNode: newMocks.ussNode,
             parentPath: "/",
         });
-        newMocks.node.contextValue = globals.USS_SESSION_CONTEXT;
         newMocks.node.fullPath = "/u/myuser";
         newMocks.testUSSTree = createUSSTree([newMocks.ussNodeFav], [newMocks.ussNode], createTreeView());
         newMocks.ussNodeFav.contextValue = globals.USS_TEXT_FILE_CONTEXT + globals.FAV_SUFFIX;
@@ -338,6 +330,10 @@ describe("ZoweUSSNode Unit Tests - Function node.refreshUSS()", () => {
 
         Object.defineProperty(newMocks.node, "isDirtyInEditor", { get: globalMocks.mockIsDirtyInEditor });
         Object.defineProperty(newMocks.node, "openedDocumentInstance", { get: globalMocks.openedDocumentInstance });
+        Object.defineProperty(globalMocks.Utilities, "putUSSPayload", {
+            value: newMocks.putUSSPayload,
+            configurable: true,
+        });
 
         return newMocks;
     }
@@ -354,7 +350,7 @@ describe("ZoweUSSNode Unit Tests - Function node.refreshUSS()", () => {
 
         expect(globalMocks.ussFile.mock.calls.length).toBe(1);
         expect(globalMocks.mockShowTextDocument.mock.calls.length).toBe(2);
-        expect(globalMocks.mockExecuteCommand.mock.calls.length).toBe(1);
+        expect(globalMocks.mockExecuteCommand.mock.calls.length).toBe(3);
         expect(blockMocks.node.downloaded).toBe(true);
     });
 
@@ -386,7 +382,7 @@ describe("ZoweUSSNode Unit Tests - Function node.refreshUSS()", () => {
 
         expect(globalMocks.ussFile.mock.calls.length).toBe(1);
         expect(globalMocks.mockShowTextDocument.mock.calls.length).toBe(0);
-        expect(globalMocks.mockExecuteCommand.mock.calls.length).toBe(0);
+        expect(globalMocks.mockExecuteCommand.mock.calls.length).toBe(2);
         expect(blockMocks.node.downloaded).toBe(true);
     });
 
@@ -402,7 +398,7 @@ describe("ZoweUSSNode Unit Tests - Function node.refreshUSS()", () => {
 
         expect(globalMocks.ussFile.mock.calls.length).toBe(1);
         expect(globalMocks.mockShowTextDocument.mock.calls.length).toBe(1);
-        expect(globalMocks.mockExecuteCommand.mock.calls.length).toBe(1);
+        expect(globalMocks.mockExecuteCommand.mock.calls.length).toBe(2);
         expect(blockMocks.node.downloaded).toBe(false);
     });
     it("Tests that node.refreshUSS() throws an error when context value is invalid", async () => {
@@ -438,7 +434,7 @@ describe("ZoweUSSNode Unit Tests - Function node.refreshUSS()", () => {
 
         expect(globalMocks.ussFile.mock.calls.length).toBe(1);
         expect(globalMocks.mockShowTextDocument.mock.calls.length).toBe(0);
-        expect(globalMocks.mockExecuteCommand.mock.calls.length).toBe(0);
+        expect(globalMocks.mockExecuteCommand.mock.calls.length).toBe(2);
         expect(blockMocks.node.downloaded).toBe(true);
     });
     it("Tests that node.refreshUSS() works correctly for favorited files/directories", async () => {
@@ -453,7 +449,7 @@ describe("ZoweUSSNode Unit Tests - Function node.refreshUSS()", () => {
 
         expect(globalMocks.ussFile.mock.calls.length).toBe(1);
         expect(globalMocks.mockShowTextDocument.mock.calls.length).toBe(0);
-        expect(globalMocks.mockExecuteCommand.mock.calls.length).toBe(0);
+        expect(globalMocks.mockExecuteCommand.mock.calls.length).toBe(2);
         expect(blockMocks.node.downloaded).toBe(true);
     });
 });
@@ -614,7 +610,7 @@ describe("ZoweUSSNode Unit Tests - Function node.setBinary()", () => {
         rootNode.contextValue = globals.FAV_PROFILE_CONTEXT;
         const subNode = new ZoweUSSNode({
             label: "binaryFile",
-            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
             parentNode: rootNode,
             profile: globalMocks.profileOne,
             encoding: { kind: "binary" },
@@ -635,6 +631,60 @@ describe("ZoweUSSNode Unit Tests - Function node.setBinary()", () => {
         expect(subNode.contextValue).toEqual(globals.USS_BINARY_FILE_CONTEXT + globals.FAV_SUFFIX);
         subNode.setBinary(false);
         expect(subNode.contextValue).toEqual(globals.USS_TEXT_FILE_CONTEXT + globals.FAV_SUFFIX);
+    });
+});
+
+describe("ZoweUSSNode Unit Tests - Function node.setEncoding()", () => {
+    it("sets encoding to binary", () => {
+        const node = new ZoweUSSNode({ label: "encodingTest", collapsibleState: vscode.TreeItemCollapsibleState.None });
+        node.setEncoding({ kind: "binary" });
+        expect(node.binary).toEqual(true);
+        expect(node.encoding).toBeUndefined();
+        expect(node.tooltip).toContain("Encoding: Binary");
+    });
+
+    it("sets encoding to text", () => {
+        const node = new ZoweUSSNode({ label: "encodingTest", collapsibleState: vscode.TreeItemCollapsibleState.None });
+        node.setEncoding({ kind: "text" });
+        expect(node.binary).toEqual(false);
+        expect(node.encoding).toBeNull();
+        expect(node.tooltip).not.toContain("Encoding:");
+    });
+
+    it("sets encoding to other codepage", () => {
+        const node = new ZoweUSSNode({ label: "encodingTest", collapsibleState: vscode.TreeItemCollapsibleState.None });
+        node.setEncoding({ kind: "other", codepage: "IBM-1047" });
+        expect(node.binary).toEqual(false);
+        expect(node.encoding).toEqual("IBM-1047");
+        expect(node.tooltip).toContain("Encoding: IBM-1047");
+    });
+
+    it("sets encoding for favorite node", () => {
+        const parentNode = new ZoweUSSNode({
+            label: "favoriteTest",
+            collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
+        });
+        parentNode.contextValue = globals.FAV_PROFILE_CONTEXT;
+        const node = new ZoweUSSNode({ label: "encodingTest", collapsibleState: vscode.TreeItemCollapsibleState.None, parentNode });
+        node.setEncoding({ kind: "text" });
+        expect(node.binary).toEqual(false);
+        expect(node.encoding).toBeNull();
+    });
+
+    it("resets encoding to undefined", () => {
+        const node = new ZoweUSSNode({ label: "encodingTest", collapsibleState: vscode.TreeItemCollapsibleState.None });
+        node.setEncoding(undefined as any);
+        expect(node.binary).toEqual(false);
+        expect(node.encoding).toBeUndefined();
+    });
+
+    it("fails to set encoding for session node", () => {
+        const node = new ZoweUSSNode({
+            label: "sessionTest",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+        });
+        node.contextValue = globals.USS_SESSION_CONTEXT;
+        expect(node.setEncoding.bind(node)).toThrowError("Cannot set encoding for node with context ussSession");
     });
 });
 
@@ -923,6 +973,7 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
             testUSSTree: null,
             dsNode: null,
             mockCheckCurrentProfile: jest.fn(),
+            putUSSPayload: jest.fn().mockResolvedValue(`{"stdout":[""]}`),
             ussNode: new ZoweUSSNode({
                 label: "usstest",
                 collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
@@ -972,8 +1023,12 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
                 };
             }),
         });
+        Object.defineProperty(globalMocks.Utilities, "putUSSPayload", {
+            value: newMocks.putUSSPayload,
+            configurable: true,
+        });
 
-        const mockUssApi = await ZoweExplorerApiRegister.getUssApi(globalMocks.testProfile);
+        const mockUssApi = ZoweExplorerApiRegister.getUssApi(globalMocks.testProfile);
         const getUssApiMock = jest.fn();
         getUssApiMock.mockReturnValue(mockUssApi);
         ZoweExplorerApiRegister.getUssApi = getUssApiMock.bind(ZoweExplorerApiRegister);
@@ -1172,7 +1227,7 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
-        globalMocks.isFileTagBinOrAscii.mockReturnValue(true);
+        globalMocks.isFileTagBinOrAscii.mockResolvedValue(true);
         globalMocks.existsSync.mockReturnValue(null);
 
         const node = new ZoweUSSNode({
@@ -1508,7 +1563,7 @@ describe("ZoweUSSNode Unit Tests - Function node.pasteUssTree()", () => {
         jest.spyOn(blockMocks.mockUssApi, "fileList").mockResolvedValue(blockMocks.fileResponse);
         jest.spyOn(blockMocks.mockUssApi, "putContent").mockResolvedValue(blockMocks.fileResponse);
         jest.spyOn(blockMocks.mockUssApi, "uploadDirectory").mockResolvedValue(blockMocks.fileResponse);
-        const mockCopyApi = jest.spyOn(blockMocks.mockUssApi, "copy");
+        const mockCopyApi = jest.spyOn(blockMocks.mockUssApi, "copy").mockResolvedValue(Buffer.from(""));
 
         // Scenario 1: multiple files, pasting within same session (use new copy API)
         const mockToSameSession = jest.spyOn(UssFileUtils, "toSameSession").mockReturnValue(true);

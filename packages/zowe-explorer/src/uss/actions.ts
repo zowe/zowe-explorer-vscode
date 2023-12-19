@@ -25,7 +25,7 @@ import { markDocumentUnsaved, setFileSaved } from "../utils/workspace";
 import * as nls from "vscode-nls";
 import { refreshAll } from "../shared/refresh";
 import { IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
-import { fileExistsCaseSensitveSync } from "./utils";
+import { autoDetectEncoding, fileExistsCaseSensitveSync } from "./utils";
 import { UssFileTree, UssFileType } from "./FileStructure";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { AttributeView } from "./AttributeView";
@@ -316,7 +316,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
 
     const prof = node?.getProfile() ?? profile;
     try {
-        await TreeProviders.uss.autoDetectEncoding(node, prof);
+        await autoDetectEncoding(node, prof);
 
         const uploadResponse: IZosFilesResponse = await Gui.withProgress(
             {

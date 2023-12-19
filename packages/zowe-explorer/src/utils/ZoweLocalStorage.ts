@@ -10,7 +10,6 @@
  */
 
 import * as vscode from "vscode";
-import * as meta from "../../package.json";
 import { ZoweLogger } from "./LoggerUtils";
 
 export class ZoweLocalStorage {
@@ -21,8 +20,7 @@ export class ZoweLocalStorage {
 
     public static getValue<T>(key: string): T {
         ZoweLogger.trace("ZoweLocalStorage.getValue called.");
-        const defaultValue = meta.contributes.configuration.properties[key]?.default;
-        return ZoweLocalStorage.storage.get<T>(key, defaultValue);
+        return ZoweLocalStorage.storage.get<T>(key);
     }
 
     public static setValue<T>(key: string, value: T): void {

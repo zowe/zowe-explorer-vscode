@@ -12,8 +12,11 @@
 import * as path from "path";
 import * as fs from "fs";
 import * as vscode from "vscode";
+import { imperative } from "@zowe/cli";
 import { ZoweUSSNode } from "../uss/ZoweUSSNode";
 import { ZoweLogger } from "../utils/LoggerUtils";
+import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
+import { IZoweUSSTreeNode } from "@zowe/zowe-explorer-api";
 import * as nls from "vscode-nls";
 
 // Set up localization
@@ -34,10 +37,11 @@ export function injectAdditionalDataToTooltip(node: ZoweUSSNode, tooltip: string
     if (node.downloaded && node.downloadedTime) {
         const downloadedTime = new Date(node.downloadedTime).toLocaleString(vscode.env.language);
         tooltip += "  \n" + localize("zowe.uss.utils.tooltip.downloaded", "Downloaded: {0}", downloadedTime);
-        const encodingString = node.binary ? localize("zowe.uss.utils.tooltip.binary", "Binary") : node.encoding;
-        if (encodingString != null) {
-            tooltip += "  \n" + localize("zowe.uss.utils.tooltip.encoding", "Encoding: {0}", encodingString);
-        }
+    }
+
+    const encodingString = node.binary ? localize("zowe.uss.utils.tooltip.binary", "Binary") : node.encoding;
+    if (encodingString != null) {
+        tooltip += "  \n" + localize("zowe.uss.utils.tooltip.encoding", "Encoding: {0}", encodingString);
     }
 
     return tooltip;
@@ -68,4 +72,28 @@ export function fileExistsCaseSensitveSync(filepath: string): boolean {
 export function disposeClipboardContents(): void {
     ZoweLogger.trace("uss.utils.disposeClipboardContents called.");
     vscode.env.clipboard.writeText("");
+}
+
+export async function autoDetectEncoding(node: IZoweUSSTreeNode, profile?: imperative.IProfileLoaded): Promise<void> {
+    if (node.binary || node.encoding !== undefined) {
+        return;
+    }
+    const ussApi = ZoweExplorerApiRegister.getUssApi(profile ?? node.getProfile());
+    if (ussApi.getTag != null) {
+        console.log("hi1");
+        const taggedEncoding = await ussApi.getTag(node.fullPath);
+        console.log("hi2");
+        if (taggedEncoding === "binary" || taggedEncoding === "mixed") {
+            console.log("hi3.1");
+            node.setEncoding({ kind: "binary" });
+            console.log("hi4.1");
+        } else {
+            console.log("hi3.2");
+            node.setEncoding(taggedEncoding !== "untagged" ? { kind: "other", codepage: taggedEncoding } : undefined);
+            console.log("hi4.2");
+        }
+    } else {
+        const isBinary = await ussApi.isFileTagBinOrAscii(node.fullPath);
+        node.setEncoding(isBinary ? { kind: "binary" } : undefined);
+    }
 }

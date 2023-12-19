@@ -28,7 +28,6 @@ import * as fs from "fs";
 import * as sharedUtils from "../../../src/shared/utils";
 import { Profiles } from "../../../src/Profiles";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
-import { TreeProviders } from "../../../src/shared/TreeProviders";
 
 // Missing the definition of path module, because I need the original logic for tests
 jest.mock("fs");
@@ -42,7 +41,6 @@ function createGlobalMocks() {
 
     const newMocks = {
         imperativeProfile: createIProfile(),
-        mockTreeProvider: { refreshElement: jest.fn() },
         profileInstance: null,
         getContentsSpy: null,
         mvsApi: null,
@@ -61,7 +59,6 @@ function createGlobalMocks() {
         configurable: true,
     });
     Object.defineProperty(vscode.workspace, "openTextDocument", { value: jest.fn(), configurable: true });
-    Object.defineProperty(TreeProviders, "ds", { value: newMocks.mockTreeProvider, configurable: true });
 
     return newMocks;
 }
@@ -382,6 +379,34 @@ describe("ZoweDatasetNode Unit Tests - Function node.setEncoding()", () => {
         expect(node.binary).toEqual(false);
         expect(node.encoding).toEqual("IBM-1047");
     });
+
+    it("sets encoding for favorite node", () => {
+        const parentNode = new ZoweDatasetNode({
+            label: "favoriteTest",
+            collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
+            contextOverride: globals.FAV_PROFILE_CONTEXT,
+        });
+        const node = new ZoweDatasetNode({ label: "encodingTest", collapsibleState: vscode.TreeItemCollapsibleState.None, parentNode });
+        node.setEncoding({ kind: "text" });
+        expect(node.binary).toEqual(false);
+        expect(node.encoding).toBeNull();
+    });
+
+    it("resets encoding to undefined", () => {
+        const node = new ZoweDatasetNode({ label: "encodingTest", collapsibleState: vscode.TreeItemCollapsibleState.None });
+        node.setEncoding(undefined as any);
+        expect(node.binary).toEqual(false);
+        expect(node.encoding).toBeUndefined();
+    });
+
+    it("fails to set encoding for session node", () => {
+        const node = new ZoweDatasetNode({
+            label: "sessionTest",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            contextOverride: globals.DS_SESSION_CONTEXT,
+        });
+        expect(node.setEncoding.bind(node)).toThrowError("Cannot set encoding for node with context session");
+    });
 });
 
 describe("ZoweDatasetNode Unit Tests - Function node.setIcon()", () => {
@@ -390,6 +415,6 @@ describe("ZoweDatasetNode Unit Tests - Function node.setIcon()", () => {
         const iconTest = { light: "icon0", dark: "icon1" };
         node.setIcon(iconTest);
         expect(node.iconPath).toEqual(iconTest);
-        expect(mocked(TreeProviders.ds.refreshElement)).toHaveBeenCalledWith(node);
+        expect(mocked(vscode.commands.executeCommand)).toHaveBeenCalledWith("zowe.ds.refreshDataset", node);
     });
 });

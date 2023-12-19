@@ -1098,7 +1098,7 @@ describe("USSTree Unit Tests - Function rename", () => {
     });
 });
 
-describe("USSTree Unit Tests - Functions addFavorite", () => {
+describe("USSTree Unit Tests - Function addFavorite", () => {
     async function createBlockMocks(globalMocks) {
         const newMocks = {
             childFile: null,
@@ -1187,7 +1187,7 @@ describe("USSTree Unit Tests - Function addSingleSession", () => {
         globalMocks.testSession.ISession.tokenValue = globalMocks.testBaseProfile.profile.tokenValue;
 
         // Mock the USS API so that getSession returns the correct value
-        const mockUssApi = await ZoweExplorerApiRegister.getUssApi(globalMocks.testProfile);
+        const mockUssApi = ZoweExplorerApiRegister.getUssApi(globalMocks.testProfile);
         const getUssApiMock = jest.fn();
         getUssApiMock.mockReturnValue(mockUssApi);
         ZoweExplorerApiRegister.getUssApi = getUssApiMock.bind(ZoweExplorerApiRegister);
@@ -1214,7 +1214,7 @@ describe("USSTree Unit Tests - Function addSingleSession", () => {
         globalMocks.testSession.ISession.tokenValue = globalMocks.testBaseProfile.profile.tokenValue;
 
         // Mock the USS API so that getSession returns the correct value
-        const mockUssApi = await ZoweExplorerApiRegister.getUssApi(globalMocks.testProfile);
+        const mockUssApi = ZoweExplorerApiRegister.getUssApi(globalMocks.testProfile);
         const getUssApiMock = jest.fn();
         getUssApiMock.mockReturnValue(mockUssApi);
         ZoweExplorerApiRegister.getUssApi = getUssApiMock.bind(ZoweExplorerApiRegister);
@@ -1692,72 +1692,5 @@ describe("USSTree Unit Tests - Function openWithEncoding", () => {
         expect(node.binary).toBe(false);
         expect(node.encoding).toBeUndefined();
         expect(node.openUSS).toHaveBeenCalledTimes(0);
-    });
-});
-
-describe("USSTree Unit Tests - Function autoDetectEncoding", () => {
-    const getTagMock = jest.fn();
-    let mockUssApi;
-
-    beforeEach(() => {
-        mockUssApi = jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValue({
-            getTag: getTagMock.mockClear(),
-        } as any);
-    });
-
-    afterAll(() => {
-        jest.restoreAllMocks();
-    });
-
-    it("sets encoding if file tagged as binary", async () => {
-        const node = new ZoweUSSNode({ label: "encodingTest", collapsibleState: vscode.TreeItemCollapsibleState.None });
-        getTagMock.mockResolvedValueOnce("binary");
-        await USSTree.prototype.autoDetectEncoding(node);
-        expect(node.binary).toBe(true);
-        expect(node.encoding).toBeUndefined();
-        expect(getTagMock).toHaveBeenCalledTimes(1);
-    });
-
-    it("sets encoding if file tagged as binary - old API", async () => {
-        const node = new ZoweUSSNode({ label: "encodingTest", collapsibleState: vscode.TreeItemCollapsibleState.None });
-        const isFileTagBinOrAsciiMock = jest.fn().mockResolvedValueOnce(true);
-        mockUssApi.mockReturnValueOnce({
-            isFileTagBinOrAscii: isFileTagBinOrAsciiMock,
-        } as any);
-        await USSTree.prototype.autoDetectEncoding(node);
-        expect(node.binary).toBe(true);
-        expect(node.encoding).toBeUndefined();
-        expect(isFileTagBinOrAsciiMock).toHaveBeenCalledTimes(1);
-    });
-
-    it("sets encoding if file tagged as EBCDIC", async () => {
-        const node = new ZoweUSSNode({ label: "encodingTest", collapsibleState: vscode.TreeItemCollapsibleState.None });
-        getTagMock.mockResolvedValueOnce("IBM-1047");
-        await USSTree.prototype.autoDetectEncoding(node);
-        expect(node.binary).toBe(false);
-        expect(node.encoding).toBe("IBM-1047");
-        expect(getTagMock).toHaveBeenCalledTimes(1);
-    });
-
-    it("does not set encoding if file is untagged", async () => {
-        const node = new ZoweUSSNode({ label: "encodingTest", collapsibleState: vscode.TreeItemCollapsibleState.None });
-        getTagMock.mockResolvedValueOnce("untagged");
-        await USSTree.prototype.autoDetectEncoding(node);
-        expect(node.binary).toBe(false);
-        expect(node.encoding).toBeUndefined();
-        expect(getTagMock).toHaveBeenCalledTimes(1);
-    });
-
-    it("does not set encoding if already defined on node", async () => {
-        const node = new ZoweUSSNode({
-            label: "encodingTest",
-            collapsibleState: vscode.TreeItemCollapsibleState.None,
-            profile: createIProfile(),
-            encoding: { kind: "text" },
-        });
-        await USSTree.prototype.autoDetectEncoding(node);
-        expect(node.binary).toBe(false);
-        expect(node.encoding).toBeNull();
-        expect(getTagMock).toHaveBeenCalledTimes(0);
     });
 });

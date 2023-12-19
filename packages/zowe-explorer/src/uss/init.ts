@@ -63,7 +63,6 @@ export async function initUSSProvider(context: vscode.ExtensionContext): Promise
         })
     );
     context.subscriptions.push(
-        // TODO Remove this command in v3 in favor of TreeProviders.uss.refreshElement
         vscode.commands.registerCommand("zowe.uss.refreshUSSInTree", (node: IZoweUSSTreeNode) => ussActions.refreshUSSInTree(node, ussFileProvider))
     );
     context.subscriptions.push(

@@ -28,7 +28,7 @@ import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { errorHandling, syncSessionNode } from "../utils/ProfilesUtils";
 import { getIconByNode } from "../generators/icons/index";
-import { fileExistsCaseSensitveSync, injectAdditionalDataToTooltip } from "../uss/utils";
+import { autoDetectEncoding, fileExistsCaseSensitveSync, injectAdditionalDataToTooltip } from "../uss/utils";
 import * as contextually from "../shared/context";
 import { closeOpenedTextFile } from "../utils/workspace";
 import * as nls from "vscode-nls";
@@ -36,7 +36,6 @@ import { UssFileTree, UssFileType, UssFileUtils } from "./FileStructure";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { updateOpenFiles } from "../shared/utils";
 import { IZoweUssTreeOpts } from "../shared/IZoweTreeOpts";
-import { TreeProviders } from "../shared/TreeProviders";
 
 // Set up localization
 nls.config({
@@ -269,6 +268,11 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
 
     public setEncoding(encoding: ZosEncoding): void {
         ZoweLogger.trace("ZoweUSSNode.setEncoding called.");
+        console.log("hi4.3");
+        if (!(this.contextValue.startsWith(globals.USS_BINARY_FILE_CONTEXT) || this.contextValue.startsWith(globals.USS_TEXT_FILE_CONTEXT))) {
+            throw new Error(`Cannot set encoding for node with context ${this.contextValue}`);
+        }
+        console.log("hi4.4");
         if (encoding?.kind === "binary") {
             this.contextValue = globals.USS_BINARY_FILE_CONTEXT;
             this.binary = true;
@@ -278,6 +282,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             this.binary = false;
             this.encoding = encoding?.kind === "text" ? null : encoding?.codepage;
         }
+        console.log("hi4.5");
         if (encoding != null) {
             this.getSessionNode().encodingMap[this.fullPath] = encoding;
         } else {
@@ -289,11 +294,14 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 : globals.USS_TEXT_FILE_CONTEXT + globals.FAV_SUFFIX;
         }
 
+        console.log("hi5");
         const icon = getIconByNode(this);
         if (icon) {
             this.setIcon(icon.path);
         }
+        console.log("hi6");
 
+        this.tooltip = injectAdditionalDataToTooltip(this, this.fullPath);
         this.dirty = true;
     }
 
@@ -381,7 +389,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     public setIcon(iconPath: { light: string; dark: string }): void {
         ZoweLogger.trace("ZoweUSSNode.setIcon called.");
         this.iconPath = iconPath;
-        TreeProviders.uss.refreshElement(this);
+        vscode.commands.executeCommand("zowe.uss.refreshUSSInTree", this);
     }
 
     public async deleteUSSNode(ussFileProvider: IZoweTree<IZoweUSSTreeNode>, filePath: string, cancelled: boolean = false): Promise<void> {
@@ -513,7 +521,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                     // if local copy exists, open that instead of pulling from mainframe
                     if (forceDownload || !fileExists) {
                         const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
-                        await TreeProviders.uss.autoDetectEncoding(this, cachedProfile);
+                        await autoDetectEncoding(this, cachedProfile);
 
                         const statusMsg = Gui.setStatusBarMessage(localize("ussFile.opening", "$(sync~spin) Opening USS file..."));
                         const response = await ZoweExplorerApiRegister.getUssApi(cachedProfile).getContents(this.fullPath, {
@@ -581,7 +589,9 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
 
             if ((isDirty && !this.isDirtyInEditor && !wasSaved) || !isDirty) {
                 const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
-                await TreeProviders.uss.autoDetectEncoding(this, cachedProfile);
+                console.log("hi");
+                await autoDetectEncoding(this, cachedProfile);
+                console.log("bye");
 
                 const response = await ZoweExplorerApiRegister.getUssApi(cachedProfile).getContents(this.fullPath, {
                     file: ussDocumentFilePath,
