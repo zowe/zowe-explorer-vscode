@@ -679,4 +679,27 @@ describe("UnixCommand Actions Unit Testing", () => {
         ).resolves.toBe(undefined);
         expect(showInformationMessage.mock.calls[0][0]).toEqual("Operation Cancelled");
     });
+    it("ssh profile doesn't contain credentials", async () => {
+        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    getProfileInfo: getProfileInfomock.mockReturnValue({
+                        usingTeamConfig: true,
+                        getAllProfiles: jest.fn().mockReturnValue(["dummy"]),
+                        mergeArgsForProfile: jest.fn().mockReturnValue({
+                            knownArgs: [
+                                { argName: "port", argValue: "TEST", secure: false },
+                                { argName: "host", argValue: "TEST", secure: false },
+                                { argName: "user", secure: true },
+                                { argName: "password", secure: true },
+                            ],
+                        }),
+                        loadSecureArg: jest.fn().mockReturnValue(undefined),
+                    } as any)
+                }
+            })
+        });
+        await (unixActions as any).getSshProfile();
+        expect(showErrorMessage.mock.calls[0][0]).toEqual("Credentials are missing for SSH profile");
+    })
 });

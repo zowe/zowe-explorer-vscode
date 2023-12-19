@@ -239,7 +239,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
     private async getSshProfile(): Promise<imperative.IProfileLoaded> {
         ZoweLogger.trace("UnixCommandHandler.getsshParams called.");
         const profileInfo = await Profiles.getInstance().getProfileInfo();
-        const params = ["port", "host", "user", "password","xyzh"];
+        const params = ["port", "host","user","password"];
         const profiles = profileInfo.getAllProfiles("ssh");
         if (!profiles) {
             Gui.errorMessage(
@@ -247,6 +247,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
             );
             return;
         }
+        let exitflag: boolean;
         let sshProfile: imperative.IProfileLoaded;
         if (profiles.length > 0) {
             sshProfile = await this.selectSshProfile(profiles.map((p) => imperative.ProfileInfo.profAttrsToProfLoaded(p)));
@@ -259,11 +260,16 @@ export class UnixCommandHandler extends ZoweCommandProvider {
                             sshProfile.profile[p] = obj.argValue;
                         } else {
                             sshProfile.profile[p] = profileInfo.loadSecureArg(obj);
+                            if(!sshProfile.profile[p]){
+                                exitflag = true;
+                                Gui.errorMessage(localize("sshcredentialsMissing", "Credentials are missing for SSH profile"));
+                            }
                         }
                     }
                 });
             }
         }
+        if(exitflag) return;
         return sshProfile;
     }
 
