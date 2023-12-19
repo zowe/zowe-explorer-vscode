@@ -147,10 +147,11 @@ export class ZoweExplorerExtender implements IApiExplorerExtender, IZoweExplorer
          * profile management.
          */
         let usingTeamConfig: boolean;
+        let profileInfo: zowe.imperative.ProfileInfo;
         try {
-            const mProfileInfo = await ProfilesUtils.getProfileInfo();
-            await mProfileInfo.readProfilesFromDisk({ homeDir: zoweDir, projectDir });
-            usingTeamConfig = mProfileInfo.usingTeamConfig;
+            profileInfo = await ProfilesUtils.getProfileInfo();
+            await profileInfo.readProfilesFromDisk({ homeDir: zoweDir, projectDir });
+            usingTeamConfig = profileInfo.usingTeamConfig;
         } catch (error) {
             ZoweLogger.warn(error);
             if (error.toString().includes("Error parsing JSON")) {
@@ -164,7 +165,7 @@ export class ZoweExplorerExtender implements IApiExplorerExtender, IZoweExplorer
 
         // Check if schema needs updated when the end user is using a team config
         if (usingTeamConfig) {
-            this.updateSchema(projectDir);
+            this.updateSchema(profileInfo, profileTypeConfigurations);
         }
 
         // sequentially reload the internal profiles cache to satisfy all the newly added profile types
@@ -174,46 +175,33 @@ export class ZoweExplorerExtender implements IApiExplorerExtender, IZoweExplorer
     }
 
     /**
-     * Checks to see if any profile types should be added and adds the new types to the schema, if found.
-     * @param projectDir (optional) The workspace directory (if the user has a workspace open)
+     * Adds new types to the Zowe schema.
+     * @param profileInfo the ProfileInfo object that has been prepared with `readProfilesFromDisk`, such as the one initialized in `initForZowe`.
+     * @param profileTypeConfigurations (optional) Profile type configurations to add to the schema
      */
-    private updateSchema(projectDir?: string): void {
-        // check for the existence of a project-level schema; if it doesn't exist, fall back to global
-        const projSchemaLoc = projectDir ? path.join(projectDir, "zowe.schema.json") : null;
-        const projSchemaExists = projSchemaLoc != null && fs.existsSync(projSchemaLoc);
-        const schemaPath = projSchemaExists ? projSchemaLoc : path.join(FileManagement.getZoweDir(), "zowe.schema.json");
-
-        // try parsing the existing schema to gather the list of types to merge
-        try {
-            const schemaContents = fs.readFileSync(schemaPath).toString();
-            const parsedSchema = JSON.parse(schemaContents);
-
-            // determine new types that are not present in the on-disk schema
-            const schemaTypes = zowe.imperative.ConfigSchema.loadSchema(parsedSchema);
-            const newSchemaTypes = Profiles.getInstance()
-                .getConfigArray()
-                .filter((o) => typeof o === "object");
-
-            // If there are any new types to add, merge the list of profile types and rebuild the schema
-            const typesToAdd = newSchemaTypes.filter((s) => schemaTypes.find((newS) => s.type === newS.type) == null);
-            if (typesToAdd.length > 0) {
-                // Get profile types from config on-disk and merge with new profile types
-                const mergedProfTypes = [...schemaTypes, ...typesToAdd];
-
-                // rebuild schema to contain all profile types (including merged) and write to disk
-                const newSchema = JSON.stringify(zowe.imperative.ConfigSchema.buildSchema(mergedProfTypes));
-                fs.writeFileSync(schemaPath, newSchema);
-            }
-        } catch (err) {
-            // Only show an error if we failed to update the on-disk schema.
-            if (err.code === "EACCES" || err.code === "EPERM") {
-                Gui.errorMessage(
-                    localize(
-                        "zowe.schema.cannotAccess",
-                        "Failed to update Zowe schema at {0}: insufficient permissions or read-only file",
-                        schemaPath
-                    )
-                );
+    private updateSchema(
+        profileInfo: zowe.imperative.ProfileInfo,
+        profileTypeConfigurations?: zowe.imperative.ICommandProfileTypeConfiguration[]
+    ): void {
+        if (profileTypeConfigurations) {
+            try {
+                for (const typeConfig of profileTypeConfigurations) {
+                    const addResult = profileInfo.addProfileTypeToSchema(typeConfig.type, {
+                        schema: typeConfig.schema,
+                        sourceApp: "Zowe Explorer (for VS Code)",
+                        version: typeConfig.schemaVersion,
+                    });
+                    if (addResult.info.length > 0) {
+                        Gui.warningMessage(addResult.info);
+                    }
+                }
+            } catch (err) {
+                // Only show an error if we failed to update the on-disk schema.
+                if (err.code === "EACCES" || err.code === "EPERM") {
+                    Gui.errorMessage(
+                        localize("zowe.schema.cannotAccess", "Failed to update Zowe schema: insufficient permissions or read-only file")
+                    );
+                }
             }
         }
     }
