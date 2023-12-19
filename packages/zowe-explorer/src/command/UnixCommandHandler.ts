@@ -239,7 +239,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
     private async getSshProfile(): Promise<imperative.IProfileLoaded> {
         ZoweLogger.trace("UnixCommandHandler.getsshParams called.");
         const profileInfo = await Profiles.getInstance().getProfileInfo();
-        const params = ["port", "host", "user", "password"];
+        const params = ["port", "host", "user", "password","xyzh"];
         const profiles = profileInfo.getAllProfiles("ssh");
         if (!profiles) {
             Gui.errorMessage(
@@ -254,10 +254,12 @@ export class UnixCommandHandler extends ZoweCommandProvider {
                 const prof = profileInfo.mergeArgsForProfile(sshProfile.profile as imperative.IProfAttrs);
                 params.forEach((p) => {
                     const obj = prof.knownArgs.find((a) => a.argName === p);
-                    if (obj.argValue) {
-                        sshProfile.profile[p] = obj.argValue;
-                    } else {
-                        sshProfile.profile[p] = profileInfo.loadSecureArg(obj);
+                    if (obj) {
+                        if (obj.argValue) {
+                            sshProfile.profile[p] = obj.argValue;
+                        } else {
+                            sshProfile.profile[p] = profileInfo.loadSecureArg(obj);
+                        }
                     }
                 });
             }

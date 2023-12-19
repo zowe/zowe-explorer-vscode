@@ -194,7 +194,7 @@ describe("UnixCommand Actions Unit Testing", () => {
                     getBaseProfile: jest.fn(),
                     getDefaultProfile: mockdefaultProfile,
                     validProfile: ValidProfileEnum.VALID,
-                    getProfileInfo: getProfileInfomock
+                    getProfileInfo: getProfileInfomock,
                 };
             }),
         });
@@ -248,7 +248,7 @@ describe("UnixCommand Actions Unit Testing", () => {
                     getBaseProfile: jest.fn(),
                     getDefaultProfile: mockdefaultProfile,
                     validProfile: ValidProfileEnum.VALID,
-                    getProfileInfo: getProfileInfomock
+                    getProfileInfo: getProfileInfomock,
                 };
             }),
         });
@@ -301,7 +301,7 @@ describe("UnixCommand Actions Unit Testing", () => {
                     getBaseProfile: jest.fn(),
                     getDefaultProfile: mockdefaultProfile,
                     validProfile: ValidProfileEnum.VALID,
-                    getProfileInfo: getProfileInfomock
+                    getProfileInfo: getProfileInfomock,
                 };
             }),
         });
@@ -347,7 +347,7 @@ describe("UnixCommand Actions Unit Testing", () => {
                     getBaseProfile: jest.fn(),
                     getDefaultProfile: mockdefaultProfile,
                     validProfile: ValidProfileEnum.VALID,
-                    getProfileInfo: getProfileInfomock
+                    getProfileInfo: getProfileInfomock,
                 };
             }),
         });
@@ -390,7 +390,7 @@ describe("UnixCommand Actions Unit Testing", () => {
                     getBaseProfile: jest.fn(),
                     getDefaultProfile: mockdefaultProfile,
                     validProfile: ValidProfileEnum.VALID,
-                    getProfileInfo: getProfileInfomock
+                    getProfileInfo: getProfileInfomock,
                 };
             }),
         });
@@ -417,7 +417,7 @@ describe("UnixCommand Actions Unit Testing", () => {
                     getBaseProfile: jest.fn(),
                     getDefaultProfile: mockdefaultProfile,
                     validProfile: ValidProfileEnum.VALID,
-                    getProfileInfo: getProfileInfomock
+                    getProfileInfo: getProfileInfomock,
                 };
             }),
         });
@@ -443,7 +443,7 @@ describe("UnixCommand Actions Unit Testing", () => {
                     getBaseProfile: jest.fn(),
                     getDefaultProfile: mockdefaultProfile,
                     validProfile: ValidProfileEnum.VALID,
-                    getProfileInfo: getProfileInfomock
+                    getProfileInfo: getProfileInfomock,
                 };
             }),
         });
@@ -487,7 +487,7 @@ describe("UnixCommand Actions Unit Testing", () => {
                     getBaseProfile: jest.fn(),
                     validProfile: ValidProfileEnum.VALID,
                     getDefaultProfile: mockdefaultProfile,
-                    getProfileInfo: getProfileInfomock
+                    getProfileInfo: getProfileInfomock,
                 };
             }),
         });
@@ -544,7 +544,7 @@ describe("UnixCommand Actions Unit Testing", () => {
                     }),
                     validProfile: ValidProfileEnum.INVALID,
                     getDefaultProfile: mockdefaultProfile,
-                    getProfileInfo: getProfileInfomock
+                    getProfileInfo: getProfileInfomock,
                 };
             }),
         });
@@ -613,7 +613,7 @@ describe("UnixCommand Actions Unit Testing", () => {
                     checkCurrentProfile: jest.fn(),
                     zosmfProfile: mockLoadNamedProfile,
                     getDefaultProfile: mockdefaultProfile,
-                    getProfileInfo: getProfileInfomock
+                    getProfileInfo: getProfileInfomock,
                 };
             }),
         });
@@ -679,5 +679,4 @@ describe("UnixCommand Actions Unit Testing", () => {
         ).resolves.toBe(undefined);
         expect(showInformationMessage.mock.calls[0][0]).toEqual("Operation Cancelled");
     });
-
 });
