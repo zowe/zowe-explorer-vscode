@@ -254,7 +254,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
                 const prof = profileInfo.mergeArgsForProfile(sshProfile.profile as imperative.IProfAttrs);
                 params.forEach((p) => {
                     const obj = prof.knownArgs.find((a) => a.argName === p);
-                    if (obj.secure === false) {
+                    if (obj.argValue) {
                         sshProfile.profile[p] = obj.argValue;
                     } else {
                         sshProfile.profile[p] = profileInfo.loadSecureArg(obj);
