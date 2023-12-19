@@ -24,7 +24,6 @@ import {
     createFileResponse,
     createValidIProfile,
     createInstanceOfProfile,
-    createTreeProviders,
 } from "../../../__mocks__/mockCreators/shared";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { Profiles } from "../../../src/Profiles";
@@ -40,7 +39,6 @@ import { createUssApi, bindUssApi } from "../../../__mocks__/mockCreators/api";
 import * as refreshActions from "../../../src/shared/refresh";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 import { AttributeView } from "../../../src/uss/AttributeView";
-import { TreeProviders } from "../../../src/shared/TreeProviders";
 
 function createGlobalMocks() {
     const globalMocks = {
@@ -122,7 +120,6 @@ function createGlobalMocks() {
         value: globalMocks.isFileTagBinOrAscii,
         configurable: true,
     });
-    Object.defineProperty(TreeProviders, "uss", { value: createTreeProviders().uss, configurable: true });
     Object.defineProperty(vscode.window, "showErrorMessage", {
         value: globalMocks.showErrorMessage,
         configurable: true,

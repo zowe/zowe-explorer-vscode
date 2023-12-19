@@ -1158,19 +1158,21 @@ describe("USSTree Unit Tests - Function openItemFromPath", () => {
         const file = new ZoweUSSNode({
             label: "c.txt",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
-            parentNode: globalMocks.testTree.mSessionNodes[0],
+            parentNode: globalMocks.testTree.mSessionNodes[1],
             parentPath: "/a/b",
         });
-        jest.spyOn(globalMocks.testTree, "getChildren").mockReturnValue(Promise.resolve([file]));
+        jest.spyOn(globalMocks.testTree.mSessionNodes[1], "getChildren").mockResolvedValue([file]);
+        const openNodeSpy = jest.spyOn(file, "openUSS").mockImplementation();
 
         await globalMocks.testTree.openItemFromPath("/a/b/c.txt", globalMocks.testTree.mSessionNodes[1]);
+        expect(openNodeSpy).toHaveBeenCalledWith(false, true, globalMocks.testTree);
         expect(globalMocks.testTree.getSearchHistory().includes("[sestest]: /a/b/c.txt")).toBe(true);
     });
 
     it("Tests that openItemFromPath fails when the node no longer exists", async () => {
         const globalMocks = await createGlobalMocks();
 
-        jest.spyOn(globalMocks.testTree, "getChildren").mockReturnValue(Promise.resolve([]));
+        jest.spyOn(globalMocks.testTree.mSessionNodes[1], "getChildren").mockResolvedValue([]);
         const fileHistorySpy = jest.spyOn(globalMocks.testTree, "removeFileHistory");
 
         await globalMocks.testTree.openItemFromPath("/d.txt", globalMocks.testTree.mSessionNodes[1]);

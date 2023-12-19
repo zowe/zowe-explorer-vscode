@@ -908,10 +908,10 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         sessionNode.label = `${sessionNode.getProfileName()} [/${nodePath.join("/")}]`;
         sessionNode.dirty = true;
         this.addSearchHistory(`[${sessionNode.getProfileName()}]: /${nodePath.join("/")}`);
-        await sessionNode.getChildren();
+        const children = await sessionNode.getChildren();
 
         // Reveal the searched item in the tree
-        const selectedNode: IZoweUSSTreeNode = sessionNode.children.find((elt) => elt.label === selectedNodeName);
+        const selectedNode: IZoweUSSTreeNode = children.find((elt) => elt.label === selectedNodeName);
         if (selectedNode) {
             await selectedNode.openUSS(false, true, this);
         } else {
