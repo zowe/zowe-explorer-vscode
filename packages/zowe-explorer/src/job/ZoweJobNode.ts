@@ -195,7 +195,10 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
             jobs.forEach((job) => {
                 let nodeTitle: string;
                 if (job.retcode) {
-                    nodeTitle = `${job.jobname}(${job.jobid}) - ${job.retcode}`;
+                    nodeTitle =
+                        job["exec-member"] !== undefined && job["exec-member"] !== ""
+                            ? `${job.jobname}(${job.jobid}) - ${job["exec-member"] as string} - ${job.retcode}`
+                            : `${job.jobname}(${job.jobid}) - ${job.retcode}`;
                 } else {
                     nodeTitle = `${job.jobname}(${job.jobid}) - ${job.status}`;
                 }
@@ -352,6 +355,7 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
                         owner,
                         prefix,
                         status,
+                        execData: "Y",
                     });
                 } else {
                     this.statusNotSupportedMsg(status);
