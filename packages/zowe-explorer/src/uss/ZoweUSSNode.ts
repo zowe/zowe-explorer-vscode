@@ -268,11 +268,9 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
 
     public setEncoding(encoding: ZosEncoding): void {
         ZoweLogger.trace("ZoweUSSNode.setEncoding called.");
-        console.log("hi4.3");
         if (!(this.contextValue.startsWith(globals.USS_BINARY_FILE_CONTEXT) || this.contextValue.startsWith(globals.USS_TEXT_FILE_CONTEXT))) {
             throw new Error(`Cannot set encoding for node with context ${this.contextValue}`);
         }
-        console.log("hi4.4");
         if (encoding?.kind === "binary") {
             this.contextValue = globals.USS_BINARY_FILE_CONTEXT;
             this.binary = true;
@@ -282,7 +280,6 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             this.binary = false;
             this.encoding = encoding?.kind === "text" ? null : encoding?.codepage;
         }
-        console.log("hi4.5");
         if (encoding != null) {
             this.getSessionNode().encodingMap[this.fullPath] = encoding;
         } else {
@@ -294,12 +291,10 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 : globals.USS_TEXT_FILE_CONTEXT + globals.FAV_SUFFIX;
         }
 
-        console.log("hi5");
         const icon = getIconByNode(this);
         if (icon) {
             this.setIcon(icon.path);
         }
-        console.log("hi6");
 
         this.tooltip = injectAdditionalDataToTooltip(this, this.fullPath);
         this.dirty = true;
@@ -589,9 +584,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
 
             if ((isDirty && !this.isDirtyInEditor && !wasSaved) || !isDirty) {
                 const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
-                console.log("hi");
                 await autoDetectEncoding(this, cachedProfile);
-                console.log("bye");
 
                 const response = await ZoweExplorerApiRegister.getUssApi(cachedProfile).getContents(this.fullPath, {
                     file: ussDocumentFilePath,

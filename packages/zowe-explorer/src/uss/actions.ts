@@ -30,7 +30,6 @@ import { UssFileTree, UssFileType } from "./FileStructure";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { AttributeView } from "./AttributeView";
 import { resolveFileConflict } from "../shared/actions";
-import { TreeProviders } from "../shared/TreeProviders";
 
 // Set up localization
 nls.config({

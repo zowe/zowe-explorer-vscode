@@ -80,17 +80,11 @@ export async function autoDetectEncoding(node: IZoweUSSTreeNode, profile?: imper
     }
     const ussApi = ZoweExplorerApiRegister.getUssApi(profile ?? node.getProfile());
     if (ussApi.getTag != null) {
-        console.log("hi1");
         const taggedEncoding = await ussApi.getTag(node.fullPath);
-        console.log("hi2");
         if (taggedEncoding === "binary" || taggedEncoding === "mixed") {
-            console.log("hi3.1");
             node.setEncoding({ kind: "binary" });
-            console.log("hi4.1");
         } else {
-            console.log("hi3.2");
             node.setEncoding(taggedEncoding !== "untagged" ? { kind: "other", codepage: taggedEncoding } : undefined);
-            console.log("hi4.2");
         }
     } else {
         const isBinary = await ussApi.isFileTagBinOrAscii(node.fullPath);

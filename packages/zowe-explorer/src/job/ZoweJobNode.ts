@@ -355,7 +355,7 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
                         owner,
                         prefix,
                         status,
-                        execData: "Y",
+                        execData: true,
                     });
                 } else {
                     this.statusNotSupportedMsg(status);
