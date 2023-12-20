@@ -2,7 +2,7 @@
   "name": "vscode-extension-for-zowe",
   "displayName": "%displayName%",
   "description": "%description%",
-  "version": "2.12.3-SNAPSHOT",
+  "version": "2.13.1-SNAPSHOT",
   "publisher": "Zowe",
   "author": "Zowe",
   "license": "EPL-2.0",
@@ -713,8 +713,8 @@
         }
       },
       {
-        "command": "zowe.jobs.removeJobsSession",
-        "title": "%removeJobsSession%",
+        "command": "zowe.jobs.removeSession",
+        "title": "%removeSession%",
         "category": "Zowe Explorer"
       },
       {
@@ -765,6 +765,12 @@
         "command": "zowe.jobs.cancelJob",
         "title": "%cancelJobs%",
         "category": "Zowe Explorer"
+      },
+      {
+        "command": "zowe.jobs.filterJobs",
+        "title": "Filter Jobs",
+        "category": "Zowe Explorer",
+        "icon": "$(list-filter)"
       },
       {
         "command": "zowe.jobs.search",
@@ -1231,6 +1237,11 @@
         },
         {
           "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/ && !listMultiSelection",
+          "command": "zowe.jobs.filterJobs",
+          "group": "inline"
+        },
+        {
+          "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/ && !listMultiSelection",
           "command": "zowe.jobs.search",
           "group": "000_zowe_jobsMainframeInteraction@0"
         },
@@ -1283,6 +1294,11 @@
           "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)(server|job).*/",
           "command": "zowe.jobs.addFavorite",
           "group": "002_zowe_jobsWorkspace@0"
+        },
+        {
+          "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/  && !listMultiSelection",
+          "command": "zowe.jobs.filterJobs",
+          "group": "002_zowe_jobsProfileModification@99"
         },
         {
           "when": "view == zowe.jobs.explorer && viewItem =~ /^job.*_fav.*/",
@@ -1664,7 +1680,7 @@
           "when": "never"
         },
         {
-          "command": "zowe.jobs.removeJobsSession",
+          "command": "zowe.jobs.removeSession",
           "when": "never"
         },
         {
@@ -1969,7 +1985,7 @@
     "copy-webpack-plugin": "^6.4.1",
     "cross-env": "^5.2.0",
     "del": "^4.1.1",
-    "eslint-plugin-zowe-explorer": "2.12.3-SNAPSHOT",
+    "eslint-plugin-zowe-explorer": "2.13.1-SNAPSHOT",
     "event-stream": "^4.0.1",
     "expect": "^24.8.0",
     "geckodriver": "^1.19.1",
@@ -1994,8 +2010,8 @@
     "webpack-cli": "^3.3.11"
   },
   "dependencies": {
-    "@zowe/secrets-for-zowe-sdk": "7.18.4",
-    "@zowe/zowe-explorer-api": "2.12.3-SNAPSHOT",
+    "@zowe/secrets-for-zowe-sdk": "7.18.6",
+    "@zowe/zowe-explorer-api": "2.13.1-SNAPSHOT",
     "dayjs": "^1.11.10",
     "fs-extra": "8.0.1",
     "isbinaryfile": "4.0.4",

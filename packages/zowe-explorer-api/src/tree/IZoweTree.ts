@@ -10,6 +10,7 @@
  */
 
 import * as vscode from "vscode";
+import { imperative } from "@zowe/cli";
 import { IZoweTreeNode } from "./IZoweTreeNode";
 import { DataSetAllocTemplate, PersistenceSchemaEnum } from "../profiles/UserSettings";
 
@@ -60,16 +61,34 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T> {
     copying?: Promise<unknown>;
 
     /**
+     * A record of open files from this tree.
+     */
+    openFiles?: Record<string, IZoweTreeNode>;
+
+    /**
      * Adds a session to the container
      * @param sessionName
      * @param type e.g. zosmf
+     * @param provider tree provider to add to, undefined will add for all
      */
-    addSession(sessionName?: string, type?: string): Promise<void>;
+    addSession(sessionName?: string, type?: string, provider?: IZoweTree<IZoweTreeNode>): Promise<void>;
+
+    /**
+     * Adds a single session to the tree
+     * @param profile the profile to add to the tree
+     */
+    addSingleSession(profile: imperative.IProfileLoaded): Promise<void>;
+
     /**
      * Edit a session to the container
      * @param node This parameter identifies the node that needs to be called
      */
     editSession(node: IZoweTreeNode, zoweFileProvider: IZoweTree<IZoweTreeNode>): Promise<void>;
+
+    /**
+     * Get sessions from persistent object of provider
+     */
+    getSessions(): string[];
 
     /**
      * Add a new session to the container
@@ -206,8 +225,9 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T> {
     /**
      * Deletes a root node from the tree.
      * @param node: A root node representing a session
+     * @param hideFromAllTrees: <optional> whether to hide from all trees or just the single tree
      */
-    deleteSession(node: IZoweTreeNode);
+    deleteSession(node: IZoweTreeNode, hideFromAllTrees?: boolean);
     /**
      * Lets the user open a dataset by filtering the currently-loaded list
      */
@@ -268,6 +288,11 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T> {
      * @param {string} name the member to remove
      */
     removeFileHistory?(name: string);
+    /**
+     * Removes session from the session array
+     * @param {string} name the sessions to remove
+     */
+    removeSession?(name: string): void;
     /**
      * Returns a new dataset filter string, from an old filter and a new string
      *

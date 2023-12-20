@@ -23,6 +23,7 @@ import {
     createInstanceOfProfile,
     createValidIProfile,
     createTreeView,
+    createTreeProviders,
 } from "../../../__mocks__/mockCreators/shared";
 import * as globals from "../../../src/globals";
 import * as vscode from "vscode";
@@ -32,6 +33,8 @@ import { getIconByNode } from "../../../src/generators/icons";
 import * as workspaceUtils from "../../../src/utils/workspace";
 import { createUssApi, bindUssApi } from "../../../__mocks__/mockCreators/api";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
+import { TreeProviders } from "../../../src/shared/TreeProviders";
+import { join } from "path";
 
 async function createGlobalMocks() {
     const globalMocks = {
@@ -76,6 +79,7 @@ async function createGlobalMocks() {
         testTree: null,
         profilesForValidation: { status: "active", name: "fake" },
         mockProfilesCache: new ProfilesCache(zowe.imperative.Logger.getAppLogger()),
+        mockTreeProviders: createTreeProviders(),
     };
 
     globalMocks.mockTextDocuments.push(globalMocks.mockTextDocumentDirty);
@@ -180,6 +184,12 @@ async function createGlobalMocks() {
     Object.defineProperty(globalMocks.mockProfilesCache, "getProfileInfo", {
         value: jest.fn().mockReturnValue({ usingTeamConfig: false }),
     });
+
+    jest.spyOn(TreeProviders, "providers", "get").mockReturnValue({
+        ds: { addSingleSession: jest.fn(), mSessionNodes: [...globalMocks.testTree.mSessionNodes], refresh: jest.fn() } as any,
+        uss: { addSingleSession: jest.fn(), mSessionNodes: [...globalMocks.testTree.mSessionNodes], refresh: jest.fn() } as any,
+        jobs: { addSingleSession: jest.fn(), mSessionNodes: [...globalMocks.testTree.mSessionNodes], refresh: jest.fn() } as any,
+    } as any);
 
     return globalMocks;
 }
@@ -503,7 +513,7 @@ describe("USSTree Unit Tests - Function USSTree.deleteSession()", () => {
         const newMocks = {
             testTree2: new USSTree(),
             testSessionNode: new ZoweUSSNode("testSessionNode", vscode.TreeItemCollapsibleState.Collapsed, null, globalMocks.testSession, null),
-            startLength: null,
+            startLength: 0,
         };
         const ussSessionTestNode = createUSSSessionNode(globalMocks.testSession, globalMocks.testProfile);
         newMocks.testTree2.mSessionNodes.push(ussSessionTestNode);
@@ -517,8 +527,16 @@ describe("USSTree Unit Tests - Function USSTree.deleteSession()", () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
-        blockMocks.testTree2.deleteSession(blockMocks.testTree2.mSessionNodes[blockMocks.startLength - 1]);
-        expect(blockMocks.testTree2.mSessionNodes.length).toEqual(blockMocks.startLength - 1);
+        jest.spyOn(TreeProviders, "providers", "get").mockReturnValue(globalMocks.mockTreeProviders);
+
+        blockMocks.testTree2.mSessionNodes = globalMocks.mockTreeProviders.ds.mSessionNodes;
+        expect(globalMocks.mockTreeProviders.ds.mSessionNodes.length).toEqual(2);
+        expect(globalMocks.mockTreeProviders.uss.mSessionNodes.length).toEqual(2);
+        expect(globalMocks.mockTreeProviders.job.mSessionNodes.length).toEqual(2);
+        blockMocks.testTree2.deleteSession(globalMocks.mockTreeProviders.ds.mSessionNodes[1], true);
+        expect(globalMocks.mockTreeProviders.ds.mSessionNodes.length).toEqual(1);
+        expect(globalMocks.mockTreeProviders.uss.mSessionNodes.length).toEqual(1);
+        expect(globalMocks.mockTreeProviders.job.mSessionNodes.length).toEqual(1);
     });
 });
 
@@ -1741,6 +1759,21 @@ describe("USSTree Unit Tests - Function USSTree.editSession()", () => {
                 get: () => ["test1", "test2", "test3"],
             } as any);
             expect(globalMocks.testTree.getFavorites()).toEqual(["test1", "test2", "test3"]);
+        });
+    });
+
+    describe("onDidCloseTextDocument", () => {
+        it("sets the entry in openFiles record to null if USS URI is valid", async () => {
+            const globalMocks = await createGlobalMocks();
+            const tree = globalMocks.testTree as unknown as any;
+            Object.defineProperty(globals, "USS_DIR", {
+                value: join("some", "fspath", "_U_"),
+            });
+            const doc = { uri: { fsPath: join(globals.USS_DIR, "lpar", "someFile.txt") } } as vscode.TextDocument;
+
+            jest.spyOn(TreeProviders, "uss", "get").mockReturnValue(tree);
+            USSTree.onDidCloseTextDocument(doc);
+            expect(tree.openFiles[doc.uri.fsPath]).toBeNull();
         });
     });
 });

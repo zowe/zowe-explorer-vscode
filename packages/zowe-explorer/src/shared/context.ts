@@ -12,6 +12,7 @@
 import * as globals from "../globals";
 import { TreeItem } from "vscode";
 import { IZoweTreeNode, IZoweUSSTreeNode } from "@zowe/zowe-explorer-api";
+import { imperative } from "@zowe/cli";
 
 /**
  *
@@ -25,6 +26,20 @@ import { IZoweTreeNode, IZoweUSSTreeNode } from "@zowe/zowe-explorer-api";
  * job_fav_rc=CC 0000
  *
  */
+
+export function getSessionType(node: TreeItem): string {
+    if (isDsSession(node)) {
+        return "ds";
+    }
+    if (isUssSession(node)) {
+        return "uss";
+    }
+    if (isJobsSession(node)) {
+        return "jobs";
+    }
+
+    throw new imperative.ImperativeError({ msg: "Session node passed in does not have a type" });
+}
 
 /**
  * Helper function which identifies if the node is a ds

@@ -101,3 +101,9 @@ For more information on how to contribute, see [Contributor Guidance](https://gi
 ## External Links
 
 Check out more about using Zowe Explorer and Zowe on [Medium](https://medium.com/zowe) and [Awesome Zowe](https://github.com/tucker01/awesome-zowe).
+
+## Project Structure and Governance
+
+Zowe Explorer is a component of the Zowe Open Mainframe Project, part of the Linux Foundation.
+
+To learn more about how Zowe is structured and governed, see the [Technical Steering Committee Structure and Governance documentation](https://github.com/zowe/community/blob/master/Technical-Steering-Committee/tsc-governance.md).

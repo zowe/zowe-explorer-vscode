@@ -40,6 +40,8 @@ import {
     createValidIProfile,
     createInstanceOfProfileInfo,
     createGetConfigMock,
+    createTreeProviders,
+    createMockNode,
 } from "../../../__mocks__/mockCreators/shared";
 import { createDatasetSessionNode, createDatasetTree, createDatasetFavoritesNode } from "../../../__mocks__/mockCreators/datasets";
 import { bindMvsApi, createMvsApi } from "../../../__mocks__/mockCreators/api";
@@ -49,6 +51,8 @@ import * as dsUtils from "../../../src/dataset/utils";
 import { SettingsConfig } from "../../../src/utils/SettingsConfig";
 import * as sharedActions from "../../../src/shared/actions";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
+import { TreeProviders } from "../../../src/shared/TreeProviders";
+import { join } from "path";
 
 jest.mock("fs");
 jest.mock("util");
@@ -63,6 +67,7 @@ function createGlobalMocks() {
         mockShowWarningMessage: jest.fn(),
         mockProfileInfo: createInstanceOfProfileInfo(),
         mockProfilesCache: new ProfilesCache(zowe.imperative.Logger.getAppLogger()),
+        mockTreeProviders: createTreeProviders(),
     };
 
     globalMocks.mockProfileInstance = createInstanceOfProfile(globalMocks.testProfileLoaded);
@@ -925,6 +930,12 @@ describe("Dataset Tree Unit Tests - Function addSession", () => {
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
         const testTree = new DatasetTree();
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        jest.spyOn(testTree, "addSingleSession").mockImplementation();
+        jest.spyOn(TreeProviders, "providers", "get").mockReturnValue({
+            ds: { addSingleSession: jest.fn(), mSessionNodes: [blockMocks.datasetSessionNode], refresh: jest.fn() } as any,
+            uss: { addSingleSession: jest.fn(), mSessionNodes: [blockMocks.datasetSessionNode], refresh: jest.fn() } as any,
+            jobs: { addSingleSession: jest.fn(), mSessionNodes: [blockMocks.datasetSessionNode], refresh: jest.fn() } as any,
+        } as any);
 
         await testTree.addSession(blockMocks.imperativeProfile.name);
         expect(testTree.mSessionNodes[1].label).toBe(blockMocks.imperativeProfile.name);
@@ -1054,6 +1065,28 @@ describe("USSTree Unit Tests - Function USSTree.addSingleSession()", () => {
 
         expect(blockMocks.testTree.mSessionNodes.length).toEqual(2);
         expect(blockMocks.testTree.mSessionNodes[1].profile.name).toEqual(blockMocks.testProfile.name);
+    });
+
+    it("should log the error if the error includes the hostname", () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        jest.spyOn(ZoweExplorerApiRegister.getMvsApi(blockMocks.testProfile), "getSession").mockImplementationOnce(() => {
+            throw new Error("test error hostname:sample.com");
+        });
+        const zoweLoggerErrorSpy = jest.spyOn(ZoweLogger, "error");
+        expect(blockMocks.testTree.addSingleSession({ name: "test1234" }));
+        expect(zoweLoggerErrorSpy).toBeCalledTimes(1);
+    });
+
+    it("should call 'errorHandling()' if the error does not include the hostname", () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        jest.spyOn(ZoweExplorerApiRegister.getMvsApi(blockMocks.testProfile), "getSession").mockImplementationOnce(() => {
+            throw new Error("test error");
+        });
+        const errorHandlingSpy = jest.spyOn(utils, "errorHandling");
+        expect(blockMocks.testTree.addSingleSession({ name: "test1234" }));
+        expect(errorHandlingSpy).toBeCalledTimes(1);
     });
 });
 
@@ -1327,17 +1360,37 @@ describe("Dataset Tree Unit Tests - Function deleteSession", () => {
         };
     }
 
-    it("Checking common run of function", async () => {
-        createGlobalMocks();
+    it("Checking common run of function", () => {
+        const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks();
 
+        jest.spyOn(TreeProviders, "providers", "get").mockReturnValue(globalMocks.mockTreeProviders);
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
         const testTree = new DatasetTree();
-        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        testTree.mSessionNodes = globalMocks.mockTreeProviders.ds.mSessionNodes;
+        testTree.mSessionNodes.push(createMockNode("Favorites", globals.DS_SESSION_CONTEXT));
 
+        testTree.deleteSession(testTree.mSessionNodes[0]);
         testTree.deleteSession(testTree.mSessionNodes[1]);
 
-        expect(testTree.mSessionNodes.map((node) => node.label)).toEqual(["Favorites"]);
+        expect(globalMocks.mockTreeProviders.ds.mSessionNodes.map((node) => node.label)).toEqual(["Favorites"]);
+    });
+
+    it("Checking case profile needs to be hidden for all trees", () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        jest.spyOn(TreeProviders, "providers", "get").mockReturnValue(globalMocks.mockTreeProviders);
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes = globalMocks.mockTreeProviders.ds.mSessionNodes;
+
+        testTree.deleteSession(testTree.mSessionNodes[0], true);
+        testTree.deleteSession(testTree.mSessionNodes[1], true);
+
+        expect(globalMocks.mockTreeProviders.ds.mSessionNodes.map((node) => node.label)).toEqual([]);
+        expect(globalMocks.mockTreeProviders.uss.mSessionNodes.map((node) => node.label)).toEqual([]);
+        expect(globalMocks.mockTreeProviders.job.mSessionNodes.map((node) => node.label)).toEqual([]);
     });
 });
 describe("Dataset Tree Unit Tests - Function flipState", () => {
@@ -1528,6 +1581,13 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
             blockMocks.imperativeProfile
         );
         favoriteSearch.contextValue = globals.DS_SESSION_CONTEXT + globals.FAV_SUFFIX;
+
+        jest.spyOn(testTree, "addSingleSession").mockImplementation();
+        jest.spyOn(TreeProviders, "providers", "get").mockReturnValue({
+            ds: { addSingleSession: jest.fn(), mSessionNodes: [blockMocks.datasetSessionNode], refresh: jest.fn() } as any,
+            uss: { addSingleSession: jest.fn(), mSessionNodes: [blockMocks.datasetSessionNode], refresh: jest.fn() } as any,
+            jobs: { addSingleSession: jest.fn(), mSessionNodes: [blockMocks.datasetSessionNode], refresh: jest.fn() } as any,
+        } as any);
 
         await testTree.datasetFilterPrompt(favoriteSearch);
 
@@ -3043,6 +3103,16 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
                 get: () => ["test1", "test2", "test3"],
             } as any);
             expect(tree.getFavorites()).toEqual(["test1", "test2", "test3"]);
+        });
+    });
+
+    describe("onDidCloseTextDocument", () => {
+        it("sets the entry in openFiles record to null if Data Set URI is valid", () => {
+            const doc = { uri: { fsPath: join(globals.DS_DIR, "lpar", "SOME.PS") } } as vscode.TextDocument;
+
+            jest.spyOn(TreeProviders, "ds", "get").mockReturnValue(tree);
+            DatasetTree.onDidCloseTextDocument(doc);
+            expect(tree.openFiles[doc.uri.fsPath]).toBeNull();
         });
     });
 });
