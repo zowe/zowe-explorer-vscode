@@ -43,6 +43,7 @@ describe("Test src/dataset/extension", () => {
             ssoLogin: jest.fn(),
             ssoLogout: jest.fn(),
             onDidChangeConfiguration: jest.fn(),
+            onDidCloseTextDocument: jest.fn(),
             getTreeView: jest.fn(),
             refreshElement: jest.fn(),
             sortPdsMembersDialog: jest.fn(),
@@ -137,7 +138,7 @@ describe("Test src/dataset/extension", () => {
                 name: "zowe.ds.removeSession",
                 mock: [
                     { spy: jest.spyOn(contextuals, "isDsSession"), arg: [test.value], ret: true },
-                    { spy: jest.spyOn(dsProvider, "deleteSession"), arg: [test.value] },
+                    { spy: jest.spyOn(dsProvider, "deleteSession"), arg: [test.value, undefined] },
                 ],
             },
             {
@@ -280,6 +281,7 @@ describe("Test src/dataset/extension", () => {
 
             spyCreateDatasetTree.mockResolvedValue(dsProvider as any);
             spyOnSubscriptions(commands);
+            jest.spyOn(vscode.workspace, "onDidCloseTextDocument").mockImplementation(dsProvider.onDidCloseTextDocument);
             await initDatasetProvider(test.context);
         });
         beforeEach(() => {
@@ -295,6 +297,10 @@ describe("Test src/dataset/extension", () => {
             spyCreateDatasetTree.mockResolvedValue(null);
             const myProvider = await initDatasetProvider({} as any);
             expect(myProvider).toBe(null);
+        });
+
+        it("should register onDidCloseTextDocument event listener from DatasetTree", () => {
+            expect(dsProvider.onDidCloseTextDocument).toHaveBeenCalledWith(dsTree.DatasetTree.onDidCloseTextDocument);
         });
     });
 });

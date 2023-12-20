@@ -38,6 +38,7 @@ import * as nls from "vscode-nls";
 import { SettingsConfig } from "./utils/SettingsConfig";
 import { ZoweLogger } from "./utils/LoggerUtils";
 import { TreeProviders } from "./shared/TreeProviders";
+import { ProfileManagement } from "./utils/ProfileManagement";
 
 // Set up localization
 nls.config({
@@ -184,7 +185,12 @@ export class Profiles extends ProfilesCache {
 
     public disableValidation(node: IZoweNodeType): IZoweNodeType {
         ZoweLogger.trace("Profiles.disableValidation called.");
-        this.disableValidationContext(node);
+        const treeNodes = TreeProviders.getSessionForAllTrees(node.getLabel().toString());
+        treeNodes.forEach((treeNode) => {
+            if (treeNode) {
+                this.disableValidationContext(treeNode);
+            }
+        });
         return node;
     }
 
@@ -193,8 +199,7 @@ export class Profiles extends ProfilesCache {
         const theProfile: zowe.imperative.IProfileLoaded = node.getProfile();
         this.validationArraySetup(theProfile, false);
         if (node.contextValue.includes(globals.VALIDATE_SUFFIX)) {
-            node.contextValue = node.contextValue.replace(globals.VALIDATE_SUFFIX, "");
-            node.contextValue += globals.NO_VALIDATE_SUFFIX;
+            node.contextValue = node.contextValue.replace(globals.VALIDATE_SUFFIX, globals.NO_VALIDATE_SUFFIX);
         } else if (node.contextValue.includes(globals.NO_VALIDATE_SUFFIX)) {
             return node;
         } else {
@@ -205,7 +210,12 @@ export class Profiles extends ProfilesCache {
 
     public enableValidation(node: IZoweNodeType): IZoweNodeType {
         ZoweLogger.trace("Profiles.enableValidation called.");
-        this.enableValidationContext(node);
+        const treeNodes = TreeProviders.getSessionForAllTrees(node.getLabel().toString());
+        treeNodes.forEach((treeNode) => {
+            if (treeNode) {
+                this.enableValidationContext(treeNode);
+            }
+        });
         return node;
     }
 
@@ -214,8 +224,7 @@ export class Profiles extends ProfilesCache {
         const theProfile: zowe.imperative.IProfileLoaded = node.getProfile();
         this.validationArraySetup(theProfile, true);
         if (node.contextValue.includes(globals.NO_VALIDATE_SUFFIX)) {
-            node.contextValue = node.contextValue.replace(globals.NO_VALIDATE_SUFFIX, "");
-            node.contextValue += globals.VALIDATE_SUFFIX;
+            node.contextValue = node.contextValue.replace(globals.NO_VALIDATE_SUFFIX, globals.VALIDATE_SUFFIX);
         } else if (node.contextValue.includes(globals.VALIDATE_SUFFIX)) {
             return node;
         } else {
@@ -398,7 +407,11 @@ export class Profiles extends ProfilesCache {
             await this.openConfigFile(filePath);
         } else if (chosenProfile) {
             ZoweLogger.info(localize("createZoweSession.addProfile", "The profile {0} has been added to the {1} tree.", chosenProfile, treeType));
-            await zoweFileProvider.addSession(chosenProfile);
+            if (await ProfileManagement.handleChangeForAllTrees(chosenProfile, true)) {
+                await zoweFileProvider.addSession(chosenProfile);
+            } else {
+                await zoweFileProvider.addSession(chosenProfile, undefined, zoweFileProvider);
+            }
         } else {
             ZoweLogger.debug(debugMsg);
         }

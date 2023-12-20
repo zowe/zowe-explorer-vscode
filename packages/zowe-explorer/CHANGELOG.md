@@ -35,7 +35,20 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Added `madge` script in `package.json` to track circular dependencies. [#2148](https://github.com/zowe/vscode-extension-for-zowe/issues/2148)
 - Migrated to new package manager PNPM from Yarn.
 
+## `2.13.0`
+
+### New features and enhancements
+
+- Added support for hiding a Zowe profile across all trees [#2567](https://github.com/zowe/vscode-extension-for-zowe/issues/2567)
+- Added support for enabling/disabling validation for a Zowe profile across all trees [#2570](https://github.com/zowe/vscode-extension-for-zowe/issues/2570)
+- Added Display confirmation dialog when submitting local JCL. [#2061](https://github.com/zowe/vscode-extension-for-zowe/issues/2061)
+- Added support for adding a Zowe profile across all trees [#2603](https://github.com/zowe/vscode-extension-for-zowe/issues/2603)
+- Added "Filter Jobs" feature in Jobs tree view: accessible via filter icon or right-clicking on session node. [#2599](https://github.com/zowe/vscode-extension-for-zowe/issues/2599)
+
 ### Bug fixes
+
+- Fixed dataset allocation issue when secondary space (or other numeric values that did not exists in the dataset-template) where specified [#2591](https://github.com/zowe/vscode-extension-for-zowe/issues/2591)
+- Fixed issue where an opened USS file or data set could not be saved once a user changes their search pattern in the Side Bar. [#2597](https://github.com/zowe/vscode-extension-for-zowe/issues/2597)
 
 ## `2.12.2`
 

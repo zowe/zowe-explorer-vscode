@@ -12,16 +12,15 @@
 import * as vscode from "vscode";
 import * as globals from "../globals";
 import { IJob, imperative } from "@zowe/cli";
-import { Gui, ValidProfileEnum, IZoweTree, IZoweJobTreeNode, PersistenceSchemaEnum, NodeInteraction } from "@zowe/zowe-explorer-api";
+import { Gui, ValidProfileEnum, IZoweTree, IZoweTreeNode, IZoweJobTreeNode, PersistenceSchemaEnum, NodeInteraction } from "@zowe/zowe-explorer-api";
 import { FilterItem, errorHandling } from "../utils/ProfilesUtils";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { Job, Spool } from "./ZoweJobNode";
-import { getAppName, sortTreeItems, jobStringValidator } from "../shared/utils";
+import { getAppName, sortTreeItems, jobStringValidator, updateOpenFiles } from "../shared/utils";
 import { ZoweTreeProvider } from "../abstract/ZoweTreeProvider";
 import { getIconByNode } from "../generators/icons";
 import * as contextually from "../shared/context";
-import { resetValidationSettings } from "../shared/actions";
 import { SettingsConfig } from "../utils/SettingsConfig";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import * as nls from "vscode-nls";
@@ -29,6 +28,8 @@ import SpoolProvider, { encodeJobFile } from "../SpoolProvider";
 import { Poller } from "@zowe/zowe-explorer-api/src/utils";
 import { PollDecorator } from "../utils/DecorationProviders";
 import { TreeViewUtils } from "../utils/TreeViewUtils";
+import { TreeProviders } from "../shared/TreeProviders";
+import { JOB_FILTER_OPTS } from "./utils";
 
 // Set up localization
 nls.config({
@@ -71,7 +72,7 @@ export async function createJobsTree(log: imperative.Logger): Promise<ZosJobsPro
     ZoweLogger.trace("ZosJobsProvider.createJobsTree called.");
     const tree = new ZosJobsProvider();
     await tree.initializeJobsTree(log);
-    await tree.addSession();
+    await tree.addSession(undefined, undefined, tree);
     return tree;
 }
 
@@ -84,6 +85,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
     private static readonly persistenceSchema: PersistenceSchemaEnum = PersistenceSchemaEnum.Job;
     private static readonly submitJobQueryLabel = localize("zosJobsProvider.option.submit", "$(check) Submit this query");
     private static readonly chooseJobStatusLabel = "Job Status";
+    public openFiles: Record<string, IZoweJobTreeNode> = {};
 
     public JOB_PROPERTIES = [
         {
@@ -218,53 +220,45 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
      * @param {string} [sessionName] - optional; loads default profile if not passed
      * @param {string} [profileType] - optional; loads profiles of a certain type if passed
      */
-    public async addSession(sessionName?: string, profileType?: string): Promise<void> {
+    public async addSession(sessionName?: string, profileType?: string, provider?: IZoweTree<IZoweTreeNode>): Promise<void> {
         ZoweLogger.trace("ZosJobsProvider.addSession called.");
-        const setting: boolean = SettingsConfig.getDirectValue(globals.SETTINGS_AUTOMATIC_PROFILE_VALIDATION);
-        // Loads profile associated with passed sessionName, default if none passed
-        if (sessionName) {
-            const theProfile: imperative.IProfileLoaded = Profiles.getInstance().loadNamedProfile(sessionName);
-            if (theProfile) {
-                await this.addSingleSession(theProfile);
+        await super.addSession(sessionName, profileType, provider);
+    }
+
+    /**
+     * Adds a single session to the tree
+     * @param profile the profile to add to the tree
+     */
+    public async addSingleSession(profile: imperative.IProfileLoaded): Promise<void> {
+        ZoweLogger.trace("ZosJobsProvider.addSingleSession called.");
+        if (profile) {
+            // If session is already added, do nothing
+            if (this.mSessionNodes.find((tNode) => tNode.label.toString() === profile.name)) {
+                return;
             }
-            for (const node of this.mSessionNodes) {
-                const name = node.getProfileName();
-                if (name === theProfile.name) {
-                    await resetValidationSettings(node, setting);
+            // Uses loaded profile to create a zosmf session with Zowe
+            let session: imperative.Session;
+            try {
+                session = ZoweExplorerApiRegister.getJesApi(profile).getSession();
+            } catch (err) {
+                if (err.toString().includes("hostname")) {
+                    ZoweLogger.error(err);
+                } else {
+                    await errorHandling(err, profile.name);
                 }
             }
-        } else {
-            const allProfiles: imperative.IProfileLoaded[] = await Profiles.getInstance().fetchAllProfiles();
-            if (allProfiles) {
-                for (const sessionProfile of allProfiles) {
-                    // If session is already added, do nothing
-                    if (this.mSessionNodes.find((tempNode) => tempNode.label.toString() === sessionProfile.name)) {
-                        continue;
-                    }
-                    for (const session of this.mHistory.getSessions()) {
-                        if (session === sessionProfile.name) {
-                            await this.addSingleSession(sessionProfile);
-                            for (const node of this.mSessionNodes) {
-                                const name = node.getProfileName();
-                                if (name === sessionProfile.name) {
-                                    await resetValidationSettings(node, setting);
-                                }
-                            }
-                        }
-                    }
-                }
+            // Creates ZoweNode to track new session and pushes it to mSessionNodes
+            const node = new Job(profile.name, vscode.TreeItemCollapsibleState.Collapsed, null, session, null, profile);
+            node.contextValue = globals.JOBS_SESSION_CONTEXT;
+            await this.refreshHomeProfileContext(node);
+            const icon = getIconByNode(node);
+            if (icon) {
+                node.iconPath = icon.path;
             }
-            if (this.mSessionNodes.length === 1) {
-                try {
-                    await this.addSingleSession(Profiles.getInstance().getDefaultProfile(profileType));
-                } catch (error) {
-                    // catch and log error of no default,
-                    // if not type passed getDefaultProfile assumes zosmf
-                    ZoweLogger.warn(error);
-                }
-            }
+            node.dirty = true;
+            this.mSessionNodes.push(node);
+            this.mHistory.addSession(profile.name);
         }
-        this.refresh();
     }
 
     public async delete(node: IZoweJobTreeNode): Promise<void> {
@@ -631,6 +625,11 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         this.mHistory.removeSearchHistory(name);
     }
 
+    public removeSession(name: string): void {
+        ZoweLogger.trace("ZosJobsProvider.removeSession called.");
+        this.mHistory.removeSession(name);
+    }
+
     public resetSearchHistory(): void {
         ZoweLogger.trace("ZosJobsProvider.resetSearchHistory called.");
         this.mHistory.resetSearchHistory();
@@ -874,10 +873,9 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         }
     }
 
-    public deleteSession(node: IZoweJobTreeNode): void {
+    public deleteSession(node: IZoweJobTreeNode, hideFromAllTrees?: boolean): void {
         ZoweLogger.trace("ZosJobsProvider.deleteSession called.");
-        this.mSessionNodes = this.mSessionNodes.filter((tempNode) => tempNode.label !== node.label);
-        this.deleteSessionByLabel(node.getLabel() as string);
+        super.deleteSession(node, hideFromAllTrees);
     }
 
     /**
@@ -1023,42 +1021,6 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
     }
 
     /**
-     * Adds a single session to the jobs tree
-     *
-     */
-    private async addSingleSession(profile: imperative.IProfileLoaded): Promise<void> {
-        ZoweLogger.trace("ZosJobsProvider.addSingleSession called.");
-        if (profile) {
-            // If session is already added, do nothing
-            if (this.mSessionNodes.find((tNode) => tNode.label.toString() === profile.name)) {
-                return;
-            }
-            // Uses loaded profile to create a zosmf session with Zowe
-            let session: imperative.Session;
-            try {
-                session = await ZoweExplorerApiRegister.getJesApi(profile).getSession();
-            } catch (err) {
-                if (err.toString().includes("hostname")) {
-                    ZoweLogger.error(err);
-                } else {
-                    await errorHandling(err, profile.name);
-                }
-            }
-            // Creates ZoweNode to track new session and pushes it to mSessionNodes
-            const node = new Job(profile.name, vscode.TreeItemCollapsibleState.Collapsed, null, session, null, profile);
-            node.contextValue = globals.JOBS_SESSION_CONTEXT;
-            await this.refreshHomeProfileContext(node);
-            const icon = getIconByNode(node);
-            if (icon) {
-                node.iconPath = icon.path;
-            }
-            node.dirty = true;
-            this.mSessionNodes.push(node);
-            this.mHistory.addSession(profile.name);
-        }
-    }
-
-    /**
      * Given user-provided input, determine whether the input is a valid polling interval.
      * @param value The polling interval provided by the user
      * @returns undefined if valid; otherwise, a description string that explains what a valid polling interval is.
@@ -1150,6 +1112,78 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         if (session.children != null) {
             session.children.sort(Job.sortJobs(session.sort));
             this.nodeDataChanged(session);
+        }
+    }
+
+    /**
+     * Updates or resets the filter for a given job.
+     * @param job The job whose filter should be updated/reset
+     * @param newFilter Either a valid `JobFilter` object, or `null` to reset the filter
+     * @param isSession Whether the node is a session
+     */
+    public updateFilterForJob(job: IZoweJobTreeNode, newFilter: string | null, isSession: boolean): void {
+        job.filter = newFilter;
+        job.description = newFilter ? localize("filter.description", "Filter: {0}", newFilter) : null;
+        this.nodeDataChanged(job);
+        if (newFilter === null) {
+            job["children"] = job["actualJobs"];
+            TreeProviders.job.refresh();
+        }
+    }
+
+    public async filterJobsDialog(job: IZoweJobTreeNode): Promise<vscode.InputBox> {
+        if (job.collapsibleState === vscode.TreeItemCollapsibleState.Collapsed) {
+            Gui.infoMessage(localize("filterJobs.message", "Use the search button to display jobs"));
+            return;
+        }
+        const selection = await Gui.showQuickPick(JOB_FILTER_OPTS, {
+            placeHolder: localize("filterJobs.placeholder", "Set a filter..."),
+        });
+        const filterMethod = JOB_FILTER_OPTS.indexOf(selection);
+
+        const isSession = contextually.isSession(job);
+        const userDismissed = filterMethod < 0;
+        const clearFilterOpt = localize("filter.clearForProfile", "$(clear-all) Clear filter for profile");
+        if (userDismissed || selection === clearFilterOpt) {
+            if (selection === clearFilterOpt) {
+                this.updateFilterForJob(job, null, isSession);
+                Gui.setStatusBarMessage(localize("filter.cleared", "$(check) Filter cleared for {0}", job.label as string), globals.MS_PER_SEC * 4);
+            }
+            return;
+        }
+        if (!("filter" in job) && !("actualJobs" in job)) {
+            job.actualJobs = job["children"];
+        }
+        this.nodeDataChanged(job);
+
+        job.description = "";
+        const actual_jobs: IZoweJobTreeNode[] = job["actualJobs"];
+        const inputBox = await vscode.window.createInputBox();
+        inputBox.placeholder = localize("filterJobs.prompt.message", "Enter local filter...");
+        inputBox.onDidChangeValue((query) => {
+            query = query.toUpperCase();
+            job["children"] = actual_jobs.filter((item) => `${item["job"].jobname}(${item["job"].jobid}) - ${item["job"].retcode}`.includes(query));
+            TreeProviders.job.refresh();
+            this.updateFilterForJob(job, query, isSession);
+            Gui.setStatusBarMessage(localize("filter.updated", "$(check) Filter updated for {0}", job.label as string), globals.MS_PER_SEC * 4);
+        });
+        job.children = actual_jobs;
+        this.nodeDataChanged(job);
+        inputBox.onDidAccept(() => {
+            inputBox.hide();
+        });
+        inputBox.show();
+        return inputBox;
+    }
+
+    /**
+     * Event listener to mark a job doc URI as null in the openFiles record
+     * @param this (resolves ESlint warning about unbound methods)
+     * @param doc A doc URI that was closed
+     */
+    public static onDidCloseTextDocument(this: void, doc: vscode.TextDocument): void {
+        if (doc.uri.scheme === "zosspool") {
+            updateOpenFiles(TreeProviders.job, doc.uri.path, null);
         }
     }
 }

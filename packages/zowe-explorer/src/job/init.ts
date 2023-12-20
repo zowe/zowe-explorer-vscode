@@ -13,16 +13,16 @@ import * as globals from "../globals";
 import * as vscode from "vscode";
 import * as jobActions from "./actions";
 import * as refreshActions from "../shared/refresh";
-import { IZoweJobTreeNode, IZoweTreeNode, IZoweTree } from "@zowe/zowe-explorer-api";
+import { IZoweJobTreeNode, IZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
-import { createJobsTree } from "./ZosJobsProvider";
+import { ZosJobsProvider, createJobsTree } from "./ZosJobsProvider";
 import * as contextuals from "../shared/context";
 import { Job } from "./ZoweJobNode";
 import { getSelectedNodeList } from "../shared/utils";
 import { initSubscribers } from "../shared/init";
 import { ZoweLogger } from "../utils/LoggerUtils";
 
-export async function initJobsProvider(context: vscode.ExtensionContext): Promise<IZoweTree<IZoweJobTreeNode>> {
+export async function initJobsProvider(context: vscode.ExtensionContext): Promise<ZosJobsProvider> {
     ZoweLogger.trace("job.init.initJobsProvider called.");
     const jobsProvider = await createJobsTree(globals.LOG);
     if (jobsProvider == null) {
@@ -30,9 +30,7 @@ export async function initJobsProvider(context: vscode.ExtensionContext): Promis
     }
 
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.jobs.zosJobsOpenspool", (session, spool, refreshTimestamp) =>
-            jobActions.getSpoolContent(session, spool, refreshTimestamp)
-        )
+        vscode.commands.registerCommand("zowe.jobs.zosJobsOpenspool", (session, spoolNode) => jobActions.getSpoolContent(session, spoolNode))
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.jobs.deleteJob", async (job, jobs) => {
@@ -75,11 +73,11 @@ export async function initJobsProvider(context: vscode.ExtensionContext): Promis
     context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.setOwner", (job) => jobActions.setOwner(job, jobsProvider)));
     context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.setPrefix", (job) => jobActions.setPrefix(job, jobsProvider)));
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.jobs.removeJobsSession", (job, jobList) => {
+        vscode.commands.registerCommand("zowe.jobs.removeSession", (job, jobList, hideFromAllTrees) => {
             let selectedNodes = getSelectedNodeList(job, jobList);
             selectedNodes = selectedNodes.filter((element) => contextuals.isJobsSession(element));
             for (const item of selectedNodes) {
-                jobsProvider.deleteSession(item);
+                jobsProvider.deleteSession(item, hideFromAllTrees);
             }
         })
     );
@@ -172,6 +170,15 @@ export async function initJobsProvider(context: vscode.ExtensionContext): Promis
         })
     );
     context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.sortBy", async (job) => jobActions.sortJobs(job, jobsProvider)));
+    context.subscriptions.push(
+        vscode.commands.registerCommand(
+            "zowe.jobs.filterJobs",
+            async (job: IZoweJobTreeNode): Promise<vscode.InputBox> => jobsProvider.filterJobsDialog(job)
+        )
+    );
+
+    context.subscriptions.push(vscode.workspace.onDidCloseTextDocument(ZosJobsProvider.onDidCloseTextDocument));
+
     initSubscribers(context, jobsProvider);
     return jobsProvider;
 }

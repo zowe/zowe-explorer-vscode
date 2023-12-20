@@ -53,14 +53,16 @@ describe("Test src/jobs/extension", () => {
             ssoLogin: jest.fn(),
             ssoLogout: jest.fn(),
             onDidChangeConfiguration: jest.fn(),
+            onDidCloseTextDocument: jest.fn(),
             pollData: jest.fn(),
             refreshElement: jest.fn(),
+            filterJobsDialog: jest.fn(),
         };
         const commands: IJestIt[] = [
             {
                 name: "zowe.jobs.zosJobsOpenspool",
-                parm: [test._, test.value, test._],
-                mock: [{ spy: jest.spyOn(jobActions, "getSpoolContent"), arg: [test._, test.value, test._] }],
+                parm: [test._, test.value],
+                mock: [{ spy: jest.spyOn(jobActions, "getSpoolContent"), arg: [test._, test.value] }],
             },
             {
                 name: "zowe.jobs.deleteJob",
@@ -120,10 +122,10 @@ describe("Test src/jobs/extension", () => {
                 mock: [{ spy: jest.spyOn(jobActions, "setPrefix"), arg: [test.value, jobsProvider] }],
             },
             {
-                name: "zowe.jobs.removeJobsSession",
+                name: "zowe.jobs.removeSession",
                 mock: [
                     { spy: jest.spyOn(contextuals, "isJobsSession"), arg: [test.value], ret: true },
-                    { spy: jest.spyOn(jobsProvider, "deleteSession"), arg: [test.value] },
+                    { spy: jest.spyOn(jobsProvider, "deleteSession"), arg: [test.value, undefined] },
                 ],
             },
             {
@@ -220,6 +222,10 @@ describe("Test src/jobs/extension", () => {
                 mock: [{ spy: jest.spyOn(jobActions, "cancelJobs"), arg: [jobsProvider, [exampleData.job]] }],
                 parm: [exampleData.job],
             },
+            {
+                name: "zowe.jobs.filterJobs",
+                mock: [{ spy: jest.spyOn(jobsProvider, "filterJobsDialog"), arg: [test.value] }],
+            },
         ];
 
         beforeAll(async () => {
@@ -246,6 +252,7 @@ describe("Test src/jobs/extension", () => {
 
             spyCreateJobsTree.mockResolvedValue(jobsProvider as any);
             spyOnSubscriptions(commands);
+            jest.spyOn(vscode.workspace, "onDidCloseTextDocument").mockImplementation(jobsProvider.onDidCloseTextDocument);
             await initJobsProvider(test.context);
         });
         beforeEach(() => {
@@ -261,6 +268,10 @@ describe("Test src/jobs/extension", () => {
             spyCreateJobsTree.mockResolvedValue(null);
             const myProvider = await initJobsProvider({} as any);
             expect(myProvider).toBe(null);
+        });
+
+        it("should register onDidCloseTextDocument event listener from ZosJobsProvider", () => {
+            expect(jobsProvider.onDidCloseTextDocument).toHaveBeenCalledWith(jobTree.ZosJobsProvider.onDidCloseTextDocument);
         });
     });
 });

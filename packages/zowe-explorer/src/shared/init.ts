@@ -32,6 +32,9 @@ import { HistoryView } from "./HistoryView";
 import { ProfileManagement } from "../utils/ProfileManagement";
 import { LocalFileManagement } from "../utils/LocalFileManagement";
 import { TreeProviders } from "./TreeProviders";
+import { DatasetTree } from "../dataset/DatasetTree";
+import { USSTree } from "../uss/USSTree";
+import { ZosJobsProvider } from "../job/ZosJobsProvider";
 
 // Set up localization
 nls.config({
@@ -41,10 +44,9 @@ nls.config({
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 export interface IZoweProviders {
-    ds: IZoweTree<IZoweTreeNode>;
-    uss: IZoweTree<IZoweTreeNode>;
-    job: IZoweTree<IZoweTreeNode>;
-    // [key: string]: IZoweTree<IZoweTreeNode>;
+    ds: DatasetTree;
+    uss: USSTree;
+    job: ZosJobsProvider;
 }
 
 export function registerRefreshCommand(

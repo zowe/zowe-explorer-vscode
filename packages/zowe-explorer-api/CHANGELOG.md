@@ -25,6 +25,15 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 - Added `madge` script in `package.json` to track circular dependencies. [#2148](https://github.com/zowe/vscode-extension-for-zowe/issues/2148)
 - Migrated to new package manager PNPM from Yarn.
 
+## `2.13.0`
+
+### New features and enhancements
+
+- Added new optional boolean parameter `hideFromAllTrees` to `IZoweTree.deleteSession` for specifying whether to hide from all trees or current tree. [#2567](https://github.com/zowe/vscode-extension-for-zowe/issues/2567)
+- Added new optional parameter `provider` of type `IZoweTree<IZoweTreeNode>` for `IZoweTree.addSession` to specify a tree to add the profile to.
+- Added optional `filter` and `actualJobs` variables to `IZoweJobTreeNode` to track local filter search.
+- Added new optional record `openFiles` to `IZoweTree` to track opened files under a specific tree view. [#2597](https://github.com/zowe/vscode-extension-for-zowe/issues/2597)
+
 ## `2.12.2`
 
 ## `2.12.1`
