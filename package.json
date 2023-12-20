@@ -16,11 +16,11 @@
     "vscode": "^1.53.2"
   },
   "dependencies": {
-    "@zowe/cli": "7.19.0",
+    "@zowe/cli": "7.21.0",
     "vscode-nls": "4.1.2"
   },
   "resolutions": {
-    "@zowe/imperative": "file:i5.19.tgz"
+    "@zowe/imperative": "file:imp-5.20.0-schema-mgmt.tgz"
   },
   "devDependencies": {
     "@types/jest": "^29.2.3",
