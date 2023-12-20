@@ -357,3 +357,64 @@ describe("ZoweDatasetNode Unit Tests - Function node.openDs()", () => {
         expect(logErrorSpy).toBeCalledTimes(1);
     });
 });
+
+describe("ZoweDatasetNode Unit Tests - Function node.setEncoding()", () => {
+    it("sets encoding to binary", () => {
+        const node = new ZoweDatasetNode({ label: "encodingTest", collapsibleState: vscode.TreeItemCollapsibleState.None });
+        node.setEncoding({ kind: "binary" });
+        expect(node.binary).toEqual(true);
+        expect(node.encoding).toBeUndefined();
+    });
+
+    it("sets encoding to text", () => {
+        const node = new ZoweDatasetNode({ label: "encodingTest", collapsibleState: vscode.TreeItemCollapsibleState.None });
+        node.setEncoding({ kind: "text" });
+        expect(node.binary).toEqual(false);
+        expect(node.encoding).toBeNull();
+    });
+
+    it("sets encoding to other codepage", () => {
+        const node = new ZoweDatasetNode({ label: "encodingTest", collapsibleState: vscode.TreeItemCollapsibleState.None });
+        node.setEncoding({ kind: "other", codepage: "IBM-1047" });
+        expect(node.binary).toEqual(false);
+        expect(node.encoding).toEqual("IBM-1047");
+    });
+
+    it("sets encoding for favorite node", () => {
+        const parentNode = new ZoweDatasetNode({
+            label: "favoriteTest",
+            collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
+            contextOverride: globals.FAV_PROFILE_CONTEXT,
+        });
+        const node = new ZoweDatasetNode({ label: "encodingTest", collapsibleState: vscode.TreeItemCollapsibleState.None, parentNode });
+        node.setEncoding({ kind: "text" });
+        expect(node.binary).toEqual(false);
+        expect(node.encoding).toBeNull();
+    });
+
+    it("resets encoding to undefined", () => {
+        const node = new ZoweDatasetNode({ label: "encodingTest", collapsibleState: vscode.TreeItemCollapsibleState.None });
+        node.setEncoding(undefined as any);
+        expect(node.binary).toEqual(false);
+        expect(node.encoding).toBeUndefined();
+    });
+
+    it("fails to set encoding for session node", () => {
+        const node = new ZoweDatasetNode({
+            label: "sessionTest",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            contextOverride: globals.DS_SESSION_CONTEXT,
+        });
+        expect(node.setEncoding.bind(node)).toThrowError("Cannot set encoding for node with context session");
+    });
+});
+
+describe("ZoweDatasetNode Unit Tests - Function node.setIcon()", () => {
+    it("sets icon path and refreshes node", () => {
+        const node = new ZoweDatasetNode({ label: "iconTest", collapsibleState: vscode.TreeItemCollapsibleState.None });
+        const iconTest = { light: "icon0", dark: "icon1" };
+        node.setIcon(iconTest);
+        expect(node.iconPath).toEqual(iconTest);
+        expect(mocked(vscode.commands.executeCommand)).toHaveBeenCalledWith("zowe.ds.refreshDataset", node);
+    });
+});
