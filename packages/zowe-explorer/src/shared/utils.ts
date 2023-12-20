@@ -14,7 +14,7 @@
 import * as vscode from "vscode";
 import * as path from "path";
 import * as globals from "../globals";
-import { Gui, IZoweTreeNode, IZoweNodeType, IZoweDatasetTreeNode, IZoweUSSTreeNode, IZoweJobTreeNode } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweTreeNode, IZoweNodeType, IZoweDatasetTreeNode, IZoweUSSTreeNode, IZoweJobTreeNode, IZoweTree } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import * as nls from "vscode-nls";
 import { IZosFilesResponse, imperative } from "@zowe/cli";
@@ -344,5 +344,11 @@ export function jobStringValidator(text: string, localizedParam: "owner" | "pref
         case "prefix":
         default:
             return text.length > globals.JOBS_MAX_PREFIX ? localize("searchJobs.prefix.invalid", "Invalid job prefix") : null;
+    }
+}
+
+export function updateOpenFiles<T extends IZoweTreeNode>(treeProvider: IZoweTree<T>, docPath: string, value: T | null): void {
+    if (treeProvider.openFiles) {
+        treeProvider.openFiles[docPath] = value;
     }
 }

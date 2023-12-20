@@ -43,6 +43,7 @@ describe("Test src/dataset/extension", () => {
             ssoLogin: jest.fn(),
             ssoLogout: jest.fn(),
             onDidChangeConfiguration: jest.fn(),
+            onDidCloseTextDocument: jest.fn(),
             getTreeView: jest.fn().mockReturnValue({
                 reveal: jest.fn(),
             }),
@@ -99,7 +100,7 @@ describe("Test src/dataset/extension", () => {
                 name: "zowe.uss.removeSession",
                 mock: [
                     { spy: jest.spyOn(contextuals, "isUssSession"), arg: [test.value], ret: true },
-                    { spy: jest.spyOn(ussFileProvider, "deleteSession"), arg: [test.value] },
+                    { spy: jest.spyOn(ussFileProvider, "deleteSession"), arg: [test.value, undefined] },
                 ],
             },
             {
@@ -223,6 +224,7 @@ describe("Test src/dataset/extension", () => {
 
             spyCreateUssTree.mockResolvedValue(ussFileProvider as any);
             spyOnSubscriptions(commands);
+            jest.spyOn(vscode.workspace, "onDidCloseTextDocument").mockImplementation(ussFileProvider.onDidCloseTextDocument);
             await initUSSProvider(test.context);
         });
         beforeEach(() => {
@@ -238,6 +240,10 @@ describe("Test src/dataset/extension", () => {
             spyCreateUssTree.mockResolvedValue(null);
             const myProvider = await initUSSProvider({} as any);
             expect(myProvider).toBe(null);
+        });
+
+        it("should register onDidCloseTextDocument event listener from USSTree", () => {
+            expect(ussFileProvider.onDidCloseTextDocument).toHaveBeenCalledWith(ussTree.USSTree.onDidCloseTextDocument);
         });
     });
 });
