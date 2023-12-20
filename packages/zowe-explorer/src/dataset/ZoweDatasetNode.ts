@@ -522,7 +522,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                             file: documentFilePath,
                             returnEtag: true,
                             binary: this.binary,
-                            encoding: this.encoding ?? prof.profile?.encoding,
+                            encoding: this.encoding !== undefined ? this.encoding : prof.profile?.encoding,
                             responseTimeout: prof.profile?.responseTimeout,
                         });
                         responsePromise = this.ongoingActions[NodeAction.Download];
@@ -531,7 +531,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                             file: documentFilePath,
                             returnEtag: true,
                             binary: this.binary,
-                            encoding: this.encoding ?? prof.profile?.encoding,
+                            encoding: this.encoding !== undefined ? this.encoding : prof.profile?.encoding,
                             responseTimeout: prof.profile?.responseTimeout,
                         });
                     }

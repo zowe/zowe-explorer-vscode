@@ -258,7 +258,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     }
 
     /**
-     * Specifies the field as binary
+     * Sets the file encoding to binary
      * @deprecated Use `setEncoding` instead
      */
     public setBinary(binary: boolean): void {
@@ -523,7 +523,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                             file: documentFilePath,
                             binary: this.binary,
                             returnEtag: true,
-                            encoding: this.encoding ?? cachedProfile.profile?.encoding,
+                            encoding: this.encoding !== undefined ? this.encoding : cachedProfile.profile?.encoding,
                             responseTimeout: cachedProfile.profile?.responseTimeout,
                         });
                         statusMsg.dispose();
@@ -590,7 +590,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                     file: ussDocumentFilePath,
                     binary: this.binary,
                     returnEtag: true,
-                    encoding: this.encoding ?? cachedProfile?.profile?.encoding,
+                    encoding: this.encoding !== undefined ? this.encoding : cachedProfile?.profile?.encoding,
                     responseTimeout: cachedProfile?.profile?.responseTimeout,
                 });
                 this.setEtag(response.apiResponse.etag);

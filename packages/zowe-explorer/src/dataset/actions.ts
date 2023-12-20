@@ -1171,7 +1171,7 @@ export async function refreshPS(node: api.IZoweDatasetTreeNode): Promise<void> {
             file: documentFilePath,
             returnEtag: true,
             binary: node.binary,
-            encoding: node.encoding ?? prof.profile?.encoding,
+            encoding: node.encoding !== undefined ? node.encoding : prof.profile?.encoding,
             responseTimeout: prof.profile?.responseTimeout,
         });
         node.setEtag(response.apiResponse.etag);

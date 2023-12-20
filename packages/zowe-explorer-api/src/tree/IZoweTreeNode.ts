@@ -179,6 +179,9 @@ export interface IZoweDatasetTreeNode extends IZoweTreeNode {
     binary?: boolean;
     /**
      * Remote encoding of the data set
+     *
+     * * `null` = user selected z/OS default codepage
+     * * `undefined` = user did not specify
      */
     encoding?: string;
     /**
@@ -254,7 +257,10 @@ export interface IZoweUSSTreeNode extends IZoweTreeNode {
      */
     onUpdateEmitter?: vscode.EventEmitter<IZoweUSSTreeNode>;
     /**
-     * Remote encoding of the USS file
+     * Remote encoding of the data set
+     *
+     * * `null` = user selected z/OS default codepage
+     * * `undefined` = user did not specify
      */
     encoding?: string;
     /**
@@ -286,7 +292,7 @@ export interface IZoweUSSTreeNode extends IZoweTreeNode {
      */
     rename?(newNamePath: string);
     /**
-     * Specifies the field as binary
+     * Sets the file encoding to binary
      * @deprecated Use `setEncoding` instead
      * @param binary true is a binary file otherwise false
      */

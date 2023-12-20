@@ -230,7 +230,7 @@ export async function uploadContent(
         etag: etagToUpload,
         returnEtag: true,
         binary: node.binary,
-        encoding: node.encoding ?? profile.profile?.encoding,
+        encoding: node.encoding !== undefined ? node.encoding : profile.profile?.encoding,
         responseTimeout: profile.profile?.responseTimeout,
     };
     if (isZoweDatasetTreeNode(node)) {
@@ -381,7 +381,7 @@ export async function compareFileContent(
             file: node.getUSSDocumentFilePath(),
             binary: node.binary,
             returnEtag: true,
-            encoding: node.encoding ?? prof.profile?.encoding,
+            encoding: node.encoding !== undefined ? node.encoding : prof.profile?.encoding,
             responseTimeout: prof.profile?.responseTimeout,
         });
     } else {
@@ -389,7 +389,7 @@ export async function compareFileContent(
             file: doc.fileName,
             binary: node.binary,
             returnEtag: true,
-            encoding: node.encoding ?? prof.profile?.encoding,
+            encoding: node.encoding !== undefined ? node.encoding : prof.profile?.encoding,
             responseTimeout: prof.profile?.responseTimeout,
         });
     }
