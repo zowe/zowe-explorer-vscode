@@ -211,12 +211,6 @@ export async function initDatasetProvider(context: vscode.ExtensionContext): Pro
         )
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand(
-            "zowe.ds.openWithEncoding",
-            (node: IZoweDatasetTreeNode): Promise<void> => datasetProvider.openWithEncoding(node)
-        )
-    );
-    context.subscriptions.push(
         vscode.workspace.onDidChangeConfiguration(async (e) => {
             await datasetProvider.onDidChangeConfiguration(e);
         })

@@ -431,7 +431,6 @@ describe("USS Action Unit Tests - Function saveUSSFile", () => {
             testResponse: createFileResponse({ items: [] }),
             testDoc: createTextDocument(path.join(globals.USS_DIR, "usstest", "u", "myuser", "testFile")),
             ussNode: createUSSNode(globalMocks.testSession, createIProfile()),
-            putUSSPayload: jest.fn().mockResolvedValue(`{"stdout":[""]}`),
         };
 
         newMocks.node = new ZoweUSSNode({
@@ -447,11 +446,6 @@ describe("USS Action Unit Tests - Function saveUSSFile", () => {
             createTreeView()
         );
         newMocks.mockGetEtag = jest.spyOn(newMocks.node, "getEtag").mockImplementation(() => "123");
-
-        Object.defineProperty(globalMocks.Utilities, "putUSSPayload", {
-            value: newMocks.putUSSPayload,
-            configurable: true,
-        });
 
         return newMocks;
     }
@@ -703,7 +697,7 @@ describe("USS Action Unit Tests - Function changeFileType", () => {
 
         node.binary = true;
         node.contextValue = globals.USS_BINARY_FILE_CONTEXT;
-        node.getSessionNode().encodingMap[node.fullPath] = { kind: "binary" };
+        node.getSessionNode().binaryFiles[node.fullPath] = true;
         expect(node.binary).toBeTruthy();
 
         await ussNodeActions.changeFileType(node, false, blockMocks.testUSSTree);

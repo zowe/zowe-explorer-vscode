@@ -192,12 +192,6 @@ export async function initUSSProvider(context: vscode.ExtensionContext): Promise
         })
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand(
-            "zowe.uss.openWithEncoding",
-            (node: IZoweUSSTreeNode): Promise<void> => ussFileProvider.openWithEncoding(node)
-        )
-    );
-    context.subscriptions.push(
         vscode.workspace.onDidChangeConfiguration(async (e) => {
             await ussFileProvider.onDidChangeConfiguration(e);
         })

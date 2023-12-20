@@ -53,7 +53,6 @@ import * as sharedActions from "../../../src/shared/actions";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 import { TreeProviders } from "../../../src/shared/TreeProviders";
 import { join } from "path";
-import * as sharedUtils from "../../../src/shared/utils";
 
 jest.mock("fs");
 jest.mock("util");
@@ -3279,37 +3278,5 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
             DatasetTree.onDidCloseTextDocument(doc);
             expect(tree.openFiles[doc.uri.fsPath]).toBeNull();
         });
-    });
-});
-
-describe("Dataset Tree Unit Tests - Function openWithEncoding", () => {
-    it("sets binary encoding if selection was made", async () => {
-        const node = new ZoweDatasetNode({ label: "encodingTest", collapsibleState: vscode.TreeItemCollapsibleState.None });
-        node.openDs = jest.fn();
-        jest.spyOn(sharedUtils, "promptForEncoding").mockResolvedValueOnce({ kind: "binary" });
-        await DatasetTree.prototype.openWithEncoding(node);
-        expect(node.binary).toBe(true);
-        expect(node.encoding).toBeUndefined();
-        expect(node.openDs).toHaveBeenCalledTimes(1);
-    });
-
-    it("sets text encoding if selection was made", async () => {
-        const node = new ZoweDatasetNode({ label: "encodingTest", collapsibleState: vscode.TreeItemCollapsibleState.None });
-        node.openDs = jest.fn();
-        jest.spyOn(sharedUtils, "promptForEncoding").mockResolvedValueOnce({ kind: "text" });
-        await DatasetTree.prototype.openWithEncoding(node);
-        expect(node.binary).toBe(false);
-        expect(node.encoding).toBeNull();
-        expect(node.openDs).toHaveBeenCalledTimes(1);
-    });
-
-    it("does not set encoding if prompt was cancelled", async () => {
-        const node = new ZoweDatasetNode({ label: "encodingTest", collapsibleState: vscode.TreeItemCollapsibleState.None });
-        node.openDs = jest.fn();
-        jest.spyOn(sharedUtils, "promptForEncoding").mockResolvedValueOnce(undefined);
-        await DatasetTree.prototype.openWithEncoding(node);
-        expect(node.binary).toBe(false);
-        expect(node.encoding).toBeUndefined();
-        expect(node.openDs).toHaveBeenCalledTimes(0);
     });
 });

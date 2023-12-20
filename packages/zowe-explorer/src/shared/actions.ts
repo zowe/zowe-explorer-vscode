@@ -250,7 +250,8 @@ export function resolveFileConflict(
     node: IZoweDatasetTreeNode | IZoweUSSTreeNode,
     profile: imperative.IProfileLoaded,
     doc: vscode.TextDocument,
-    label?: string
+    label?: string,
+    binary?: boolean
 ): void {
     const compareBtn = localize("saveFile.info.compare", "Compare");
     const overwriteBtn = localize("saveFile.info.overwrite", "Overwrite");
@@ -265,12 +266,12 @@ export function resolveFileConflict(
         switch (selection) {
             case compareBtn: {
                 ZoweLogger.info(`${compareBtn} chosen.`);
-                await compareFileContent(doc, node, label, profile);
+                await compareFileContent(doc, node, label, binary, profile);
                 break;
             }
             case overwriteBtn: {
                 ZoweLogger.info(`${overwriteBtn} chosen.`);
-                await willForceUpload(node, doc, label, profile);
+                await willForceUpload(node, doc, label, profile, binary);
                 break;
             }
             default: {

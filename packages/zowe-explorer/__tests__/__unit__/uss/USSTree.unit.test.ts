@@ -35,7 +35,6 @@ import { createUssApi, bindUssApi } from "../../../__mocks__/mockCreators/api";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 import { TreeProviders } from "../../../src/shared/TreeProviders";
 import { join } from "path";
-import * as sharedUtils from "../../../src/shared/utils";
 
 async function createGlobalMocks() {
     const globalMocks = {
@@ -1656,43 +1655,5 @@ describe("USSTree Unit Tests - Function editSession", () => {
             USSTree.onDidCloseTextDocument(doc);
             expect(tree.openFiles[doc.uri.fsPath]).toBeNull();
         });
-    });
-});
-
-describe("USSTree Unit Tests - Function openWithEncoding", () => {
-    beforeEach(() => {
-        jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce({
-            getTag: jest.fn(),
-        } as any);
-    });
-
-    it("sets binary encoding if selection was made", async () => {
-        const node = new ZoweUSSNode({ label: "encodingTest", collapsibleState: vscode.TreeItemCollapsibleState.None });
-        node.openUSS = jest.fn();
-        jest.spyOn(sharedUtils, "promptForEncoding").mockResolvedValueOnce({ kind: "binary" });
-        await USSTree.prototype.openWithEncoding(node);
-        expect(node.binary).toBe(true);
-        expect(node.encoding).toBeUndefined();
-        expect(node.openUSS).toHaveBeenCalledTimes(1);
-    });
-
-    it("sets text encoding if selection was made", async () => {
-        const node = new ZoweUSSNode({ label: "encodingTest", collapsibleState: vscode.TreeItemCollapsibleState.None });
-        node.openUSS = jest.fn();
-        jest.spyOn(sharedUtils, "promptForEncoding").mockResolvedValueOnce({ kind: "text" });
-        await USSTree.prototype.openWithEncoding(node);
-        expect(node.binary).toBe(false);
-        expect(node.encoding).toBeNull();
-        expect(node.openUSS).toHaveBeenCalledTimes(1);
-    });
-
-    it("does not set encoding if prompt was cancelled", async () => {
-        const node = new ZoweUSSNode({ label: "encodingTest", collapsibleState: vscode.TreeItemCollapsibleState.None });
-        node.openUSS = jest.fn();
-        jest.spyOn(sharedUtils, "promptForEncoding").mockResolvedValueOnce(undefined);
-        await USSTree.prototype.openWithEncoding(node);
-        expect(node.binary).toBe(false);
-        expect(node.encoding).toBeUndefined();
-        expect(node.openUSS).toHaveBeenCalledTimes(0);
     });
 });

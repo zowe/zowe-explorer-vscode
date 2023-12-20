@@ -27,7 +27,6 @@ import { TreeProviders } from "./shared/TreeProviders";
 import { initDatasetProvider } from "./dataset/init";
 import { initUSSProvider } from "./uss/init";
 import { initJobsProvider } from "./job/init";
-import { ZoweLocalStorage } from "./utils/ZoweLocalStorage";
 
 /**
  * The function that runs when the extension is loaded
@@ -37,8 +36,6 @@ import { ZoweLocalStorage } from "./utils/ZoweLocalStorage";
  * @returns {Promise<ZoweExplorerApiRegister>}
  */
 export async function activate(context: vscode.ExtensionContext): Promise<ZoweExplorerApiRegister> {
-    // Initialize LocalStorage for persistent Zowe Settings
-    ZoweLocalStorage.initializeZoweLocalStorage(context.globalState);
     await ZoweLogger.initializeZoweLogger(context);
     // Get temp folder location from settings
     const tempPath: string = SettingsConfig.getDirectValue(globals.SETTINGS_TEMP_FOLDER_PATH);

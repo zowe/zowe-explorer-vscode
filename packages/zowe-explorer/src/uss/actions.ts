@@ -25,7 +25,7 @@ import { markDocumentUnsaved, setFileSaved } from "../utils/workspace";
 import * as nls from "vscode-nls";
 import { refreshAll } from "../shared/refresh";
 import { IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
-import { autoDetectEncoding, fileExistsCaseSensitveSync } from "./utils";
+import { fileExistsCaseSensitveSync } from "./utils";
 import { UssFileTree, UssFileType } from "./FileStructure";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { AttributeView } from "./AttributeView";
@@ -292,11 +292,16 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
     const etagFavorites = findEtag(favoritesSesNode, directories, 0);
 
     // get session from session name
+    let binary;
+
     let sesNode: IZoweUSSTreeNode;
     if ((etagProfiles && etagFavorites) || etagProfiles) {
         sesNode = profileSesnode;
     } else if (etagFavorites) {
         sesNode = favoritesSesNode;
+    }
+    if (sesNode) {
+        binary = Object.keys(sesNode.binaryFiles).find((child) => child === remote) !== undefined;
     }
     // Get specific node based on label and parent tree (session / favorites)
     const nodes: IZoweUSSTreeNode[] = concatChildNodes(sesNode ? [sesNode] : ussFileProvider.mSessionNodes);
@@ -315,15 +320,14 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
 
     const prof = node?.getProfile() ?? profile;
     try {
-        await autoDetectEncoding(node, prof);
-
+        binary = binary || (await ZoweExplorerApiRegister.getUssApi(prof).isFileTagBinOrAscii(remote));
         const uploadResponse: IZosFilesResponse = await Gui.withProgress(
             {
                 location: vscode.ProgressLocation.Window,
                 title: localize("saveUSSFile.response.title", "Saving file..."),
             },
             () => {
-                return uploadContent(node, doc, remote, prof, etagToUpload, returnEtag);
+                return uploadContent(node, doc, remote, prof, binary, etagToUpload, returnEtag);
             }
         );
         if (uploadResponse.success) {
@@ -340,7 +344,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
         // TODO: error handling must not be zosmf specific
         const errorMessage = err ? err.message : err.toString();
         if (errorMessage.includes("Rest API failure with HTTP(S) status 412")) {
-            resolveFileConflict(node, prof, doc, remote);
+            resolveFileConflict(node, prof, doc, remote, binary);
         } else {
             await markDocumentUnsaved(doc);
             await errorHandling(err, sesName);

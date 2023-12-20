@@ -10,7 +10,7 @@
  */
 
 import { IJob, imperative } from "@zowe/cli";
-import { IZoweTreeNode, ZosEncoding } from "@zowe/zowe-explorer-api";
+import { IZoweTreeNode } from "@zowe/zowe-explorer-api";
 import * as vscode from "vscode";
 
 export interface IZoweTreeOpts {
@@ -23,13 +23,12 @@ export interface IZoweTreeOpts {
 
 export interface IZoweDatasetTreeOpts extends IZoweTreeOpts {
     contextOverride?: string;
-    encoding?: ZosEncoding;
     etag?: string;
 }
 
 export interface IZoweUssTreeOpts extends IZoweTreeOpts {
     parentPath?: string;
-    encoding?: ZosEncoding;
+    binary?: boolean;
     etag?: string;
 }
 
