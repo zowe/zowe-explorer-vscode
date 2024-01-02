@@ -163,7 +163,6 @@ export async function allocateLike(datasetProvider: api.IZoweTree<api.IZoweDatas
 
     const theFilter = datasetProvider.createFilterString(newDSName, currSession);
     currSession.tooltip = currSession.pattern = theFilter.toUpperCase();
-    datasetProvider.addSearchHistory(theFilter);
     datasetProvider.refresh();
     currSession.dirty = true;
     datasetProvider.refreshElement(currSession);
@@ -1026,7 +1025,7 @@ export async function submitJcl(datasetProvider: api.IZoweTree<api.IZoweDatasetT
     }
 
     if (file) {
-        await vscode.commands.executeCommand("filesExplorer.openFilePreserveFocus", file);
+        await vscode.window.showTextDocument(file, { preview: false });
     }
     const doc = vscode.window.activeTextEditor.document;
     ZoweLogger.debug(localize("submitJcl.submitting", "Submitting as JCL in document {0}", doc.fileName));

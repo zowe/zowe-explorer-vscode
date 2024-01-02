@@ -302,7 +302,6 @@ describe("ZoweJobNode unit tests - Function getChildren", () => {
         await globalMocks.testJobsProvider.addSession("fake");
 
         const jobs = await globalMocks.testJobsProvider.mSessionNodes[1].getChildren();
-
         expect(jobs.length).toBe(2);
         expect(jobs[0].job.jobid).toEqual(globalMocks.testIJob.jobid);
         expect(jobs[0].tooltip).toEqual("TESTJOB(JOB1234)");
@@ -324,7 +323,7 @@ describe("ZoweJobNode unit tests - Function getChildren", () => {
         globalMocks.testJobsProvider.mSessionNodes[1].dirty = true;
         const newJobs = await globalMocks.testJobsProvider.mSessionNodes[1].getChildren();
 
-        expect(newJobs[0].label).toEqual("TESTJOB(JOB1234) - CC 0000");
+        expect(newJobs[0].label).toEqual("TESTJOB(JOB1234) - sampleMember - CC 0000");
     });
 
     it("Tests that getChildren retrieves only child jobs which match a provided searchId", async () => {
@@ -422,6 +421,44 @@ describe("ZoweJobNode unit tests - Function getChildren", () => {
         jest.spyOn(globalMocks.testJobsProvider.mSessionNodes[1], "getJobs").mockResolvedValue([]);
         const jobs = await globalMocks.testJobsProvider.mSessionNodes[1].getChildren();
         expect(jobs).toEqual(expectedJob);
+    });
+
+    it("To check smfid field in Jobs Tree View", async () => {
+        const globalMocks = await createGlobalMocks();
+
+        await globalMocks.testJobsProvider.addSession("fake");
+        globalMocks.testJobsProvider.mSessionNodes[1].searchId = "JOB1234";
+        globalMocks.testJobsProvider.mSessionNodes[1].dirty = true;
+        globalMocks.testJobsProvider.mSessionNodes[1].filtered = true;
+        globalMocks.testIJob.retcode = "ACTIVE";
+
+        const jobs = await globalMocks.testJobsProvider.mSessionNodes[1].getChildren();
+        expect(jobs[0].label).toEqual("TESTJOB(JOB1234) - sampleMember - ACTIVE");
+    });
+
+    it("smfid field is not in Jobs Tree View", async () => {
+        const globalMocks = await createGlobalMocks();
+
+        await globalMocks.testJobsProvider.addSession("fake");
+        globalMocks.testJobsProvider.mSessionNodes[1].searchId = "JOB1234";
+        globalMocks.testJobsProvider.mSessionNodes[1].dirty = true;
+        globalMocks.testJobsProvider.mSessionNodes[1].filtered = true;
+        globalMocks.testIJob.retcode = "ACTIVE";
+        globalMocks.testIJob["exec-member"] = "";
+        const jobs = await globalMocks.testJobsProvider.mSessionNodes[1].getChildren();
+        expect(jobs[0].label).toEqual("TESTJOB(JOB1234) - ACTIVE");
+    });
+
+    it("To check smfid field when return code is undefined", async () => {
+        const globalMocks = await createGlobalMocks();
+
+        await globalMocks.testJobsProvider.addSession("fake");
+        globalMocks.testJobsProvider.mSessionNodes[1].searchId = "JOB1234";
+        globalMocks.testJobsProvider.mSessionNodes[1].dirty = true;
+        globalMocks.testJobsProvider.mSessionNodes[1].filtered = true;
+
+        const jobs = await globalMocks.testJobsProvider.mSessionNodes[1].getChildren();
+        expect(jobs[0].label).toEqual("TESTJOB(JOB1234) - ACTIVE");
     });
 });
 

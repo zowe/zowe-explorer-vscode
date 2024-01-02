@@ -16,7 +16,7 @@ import { IJob, IJobFile, imperative } from "@zowe/cli";
 import { removeNodeFromArray } from "./shared";
 import { PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
 
-export function createIJobObject(): IJob {
+export function createIJobObject() {
     return {
         jobid: "JOB1234",
         jobname: "TESTJOB",
@@ -42,6 +42,7 @@ export function createIJobObject(): IJob {
         subsystem: "SYS",
         type: "JOB",
         url: "fake/url",
+        "exec-member": "sampleMember",
     };
 }
 
