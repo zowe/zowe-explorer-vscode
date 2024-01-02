@@ -6,7 +6,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
-- Add data set creation template for COBOL source codes and compiler listings [#2600](https://github.com/zowe/vscode-extension-for-zowe/issues/2600)
+- Added new data set creation template for partitioned data set extended. [#2600](https://github.com/zowe/vscode-extension-for-zowe/issues/2600)
 
 ### Bug fixes
 

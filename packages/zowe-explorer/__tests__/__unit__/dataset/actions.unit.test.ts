@@ -2839,15 +2839,11 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         await dsActions.createFile(blockMocks.datasetSessionNode, blockMocks.testDatasetTree);
         expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(globals.SETTINGS_DS_DEFAULT_PS);
 
-        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Partitioned Data Set Extended: COBOL" as any);
+        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Partitioned Data Set: Extended" as any);
         await dsActions.createFile(blockMocks.datasetSessionNode, blockMocks.testDatasetTree);
-        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(globals.SETTINGS_DS_DEFAULT_COBOL);
+        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(globals.SETTINGS_DS_DEFAULT_EXTENDED);
 
-        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Partitioned Data Set Extended: Listing" as any);
-        await dsActions.createFile(blockMocks.datasetSessionNode, blockMocks.testDatasetTree);
-        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(globals.SETTINGS_DS_DEFAULT_LISTING);
-
-        expect(createDataSetSpy).toHaveBeenCalledTimes(7);
+        expect(createDataSetSpy).toHaveBeenCalledTimes(6);
     });
     it("Checking of proper configuration being picked up for different DS types with credentials prompt", async () => {
         createGlobalMocks();
@@ -2890,15 +2886,11 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         await dsActions.createFile(node, blockMocks.testDatasetTree);
         expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(globals.SETTINGS_DS_DEFAULT_PS);
 
-        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Partitioned Data Set Extended: COBOL" as any);
+        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Partitioned Data Set: Extended" as any);
         await dsActions.createFile(node, blockMocks.testDatasetTree);
-        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(globals.SETTINGS_DS_DEFAULT_COBOL);
+        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(globals.SETTINGS_DS_DEFAULT_EXTENDED);
 
-        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Partitioned Data Set Extended: Listing" as any);
-        await dsActions.createFile(node, blockMocks.testDatasetTree);
-        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(globals.SETTINGS_DS_DEFAULT_LISTING);
-
-        expect(createDataSetSpy).toHaveBeenCalledTimes(7);
+        expect(createDataSetSpy).toHaveBeenCalledTimes(6);
     });
     it("Checking of proper configuration being picked up for different DS types with credentials prompt for favorite", async () => {
         createGlobalMocks();
@@ -2940,15 +2932,11 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         await dsActions.createFile(node, blockMocks.testDatasetTree);
         expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(globals.SETTINGS_DS_DEFAULT_PS);
 
-        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Partitioned Data Set Extended: COBOL" as any);
+        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Partitioned Data Set: Extended" as any);
         await dsActions.createFile(node, blockMocks.testDatasetTree);
-        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(globals.SETTINGS_DS_DEFAULT_COBOL);
+        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(globals.SETTINGS_DS_DEFAULT_EXTENDED);
 
-        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Partitioned Data Set Extended: Listing" as any);
-        await dsActions.createFile(node, blockMocks.testDatasetTree);
-        expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(globals.SETTINGS_DS_DEFAULT_LISTING);
-
-        expect(createDataSetSpy).toHaveBeenCalledTimes(7);
+        expect(createDataSetSpy).toHaveBeenCalledTimes(6);
         createDataSetSpy.mockClear();
     });
     it("Checking PS dataset creation", async () => {

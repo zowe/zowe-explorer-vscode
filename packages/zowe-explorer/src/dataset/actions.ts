@@ -62,8 +62,7 @@ const localizedStrings = {
     dsC: localize("createFile.dataSetC", "Partitioned Data Set: C"),
     dsClassic: localize("createFile.dataSetClassic", "Partitioned Data Set: Classic"),
     dsPartitioned: localize("createFile.dataSetPartitioned", "Partitioned Data Set: Default"),
-    dsCobol: localize("createFile.dataSetCobol", "Partitioned Data Set Extended: COBOL"),
-    dsListing: localize("createFile.dataSetListing", "Partitioned Data Set Extended: Listing"),
+    dsExtended: localize("createFile.dataSetExtended", "Partitioned Data Set: Extended"),
     dsSequential: localize("createFile.dataSetSequential", "Sequential Data Set"),
     opCancelled: localize("dsActions.cancelled", "Operation Cancelled"),
     copyingFiles: localize("dsActions.copy.inProgress", "Copying File(s)"),
@@ -559,21 +558,17 @@ export function getDataSetTypeAndOptions(type: string): {
             typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_C;
             createOptions = vscode.workspace.getConfiguration(globals.SETTINGS_DS_DEFAULT_C);
             break;
-        case localizedStrings.dsCobol:
-            typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_BLANK;
-            createOptions = vscode.workspace.getConfiguration(globals.SETTINGS_DS_DEFAULT_COBOL);
-            break;
         case localizedStrings.dsClassic:
             typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_CLASSIC;
             createOptions = vscode.workspace.getConfiguration(globals.SETTINGS_DS_DEFAULT_CLASSIC);
             break;
-        case localizedStrings.dsListing:
-            typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_BLANK;
-            createOptions = vscode.workspace.getConfiguration(globals.SETTINGS_DS_DEFAULT_LISTING);
-            break;
         case localizedStrings.dsPartitioned:
             typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_PARTITIONED;
             createOptions = vscode.workspace.getConfiguration(globals.SETTINGS_DS_DEFAULT_PDS);
+            break;
+        case localizedStrings.dsExtended:
+            typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_BLANK;
+            createOptions = vscode.workspace.getConfiguration(globals.SETTINGS_DS_DEFAULT_EXTENDED);
             break;
         case localizedStrings.dsSequential:
             typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL;
@@ -736,8 +731,7 @@ async function getDsTypeForCreation(datasetProvider: api.IZoweTree<api.IZoweData
         localizedStrings.dsC,
         localizedStrings.dsClassic,
         localizedStrings.dsPartitioned,
-        localizedStrings.dsCobol,
-        localizedStrings.dsListing,
+        localizedStrings.dsExtended,
         localizedStrings.dsSequential,
     ];
     return Promise.resolve(api.Gui.showQuickPick(stepTwoChoices, stepTwoOptions));
