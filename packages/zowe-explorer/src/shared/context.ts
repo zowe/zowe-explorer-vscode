@@ -101,7 +101,7 @@ export function isFavoritePds(node: TreeItem): boolean {
  * @return true if a Favorite binary or text file, false otherwise
  */
 export function isFavoriteTextOrBinary(node: TreeItem): boolean {
-    return new RegExp("^(" + globals.DS_BINARY_FILE_CONTEXT + "|" + globals.DS_TEXT_FILE_CONTEXT + ")(.*" + globals.FAV_SUFFIX + ")").test(
+    return new RegExp("^(" + globals.USS_BINARY_FILE_CONTEXT + "|" + globals.USS_TEXT_FILE_CONTEXT + ")(.*" + globals.FAV_SUFFIX + ")").test(
         node.contextValue
     );
 }
@@ -112,7 +112,9 @@ export function isFavoriteTextOrBinary(node: TreeItem): boolean {
  * @return true if a binary file, false otherwise
  */
 export function isBinary(node: TreeItem): boolean {
-    return new RegExp("^" + globals.DS_BINARY_FILE_CONTEXT).test(node.contextValue);
+    return new RegExp(
+        "^(" + globals.USS_BINARY_FILE_CONTEXT + "|" + globals.DS_DS_BINARY_CONTEXT + "|" + globals.DS_MEMBER_BINARY_CONTEXT + ")"
+    ).test(node.contextValue);
 }
 
 /**
@@ -121,7 +123,7 @@ export function isBinary(node: TreeItem): boolean {
  * @return true if a text file, false otherwise
  */
 export function isText(node: TreeItem): boolean {
-    return new RegExp("^" + globals.DS_TEXT_FILE_CONTEXT).test(node.contextValue);
+    return new RegExp("^" + globals.USS_TEXT_FILE_CONTEXT).test(node.contextValue);
 }
 
 /**
@@ -136,7 +138,7 @@ export function isDocument(node: TreeItem): boolean {
             "|" +
             globals.DS_MEMBER_CONTEXT +
             "|" +
-            globals.DS_TEXT_FILE_CONTEXT +
+            globals.USS_TEXT_FILE_CONTEXT +
             "|" +
             globals.JOBS_SPOOL_CONTEXT +
             "|" +

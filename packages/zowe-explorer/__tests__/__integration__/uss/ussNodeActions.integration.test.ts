@@ -48,15 +48,12 @@ describe("ussNodeActions integration test", async () => {
     const sessCfg = ZosmfSession.createSessCfgFromArgs(cmdArgs);
     imperative.ConnectionPropsForSessCfg.resolveSessCfgProps(sessCfg, cmdArgs);
     const session = new imperative.Session(sessCfg);
-    const sessionNode = new ZoweUSSNode(
-        testConst.profile.name,
-        vscode.TreeItemCollapsibleState.Expanded,
-        null,
+    const sessionNode = new ZoweUSSNode({
+        label: testConst.profile.name,
+        collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
         session,
-        null,
-        false,
-        testProfile.name
-    );
+        profile: testConst.profile.profile,
+    });
     sessionNode.contextValue = globals.DS_SESSION_CONTEXT;
     const testTree = new USSTree();
     testTree.mSessionNodes.push(sessionNode);
@@ -129,24 +126,21 @@ describe("ussNodeActions integration test", async () => {
             const afterNameBase = afterFileName.split("/").pop();
 
             try {
-                const testFolder = new ZoweUSSNode(
-                    path,
-                    vscode.TreeItemCollapsibleState.Expanded,
-                    sessionNode,
+                const testFolder = new ZoweUSSNode({
+                    label: path,
+                    collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
+                    parentNode: sessionNode,
                     session,
-                    null,
-                    false,
-                    testProfile.name
-                );
-                const testNode = new ZoweUSSNode(
-                    beforeNameBase,
-                    vscode.TreeItemCollapsibleState.None,
-                    testFolder,
+                    profile: testConst.profile.profile,
+                });
+                const testNode = new ZoweUSSNode({
+                    label: beforeNameBase as string,
+                    collapsibleState: vscode.TreeItemCollapsibleState.None,
+                    parentNode: testFolder,
                     session,
-                    testFolder.label as string,
-                    false,
-                    testProfile.name
-                );
+                    profile: testConst.profile.profile,
+                    parentPath: testFolder.label as string,
+                });
                 const inputBoxStub = sandbox.stub(vscode.window, "showInputBox");
                 inputBoxStub.returns(afterNameBase);
 
