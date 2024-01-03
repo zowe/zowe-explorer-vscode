@@ -16,7 +16,7 @@
     "@types/semver": "^7.5.0"
   },
   "dependencies": {
-    "@zowe/cli": "6.40.18",
+    "@zowe/cli": "6.40.25",
     "@zowe/secrets-for-zowe-sdk": "7.18.4",
     "semver": "^7.5.3"
   },

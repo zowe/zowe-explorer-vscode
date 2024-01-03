@@ -4,6 +4,8 @@
 
 ### Bug fixes
 
+- Update dependencies to address vulnerabilities.
+
 ## `1.22.5`
 
 ### Bug fixes
