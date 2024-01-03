@@ -10,7 +10,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 - Fixed the allocate-like functionality by removing the inclusion of DS item in the filter history. [#2620](https://github.com/zowe/vscode-extension-for-zowe/issues/2620)
 - Fixed issue with `Submit JCL` losing focus on JCL being submitted, causing the wrong job submission. [#2616](https://github.com/zowe/vscode-extension-for-zowe/issues/2616)
-- Update dependencies to address vulnerabilities.
+- Update dependencies for technical currency purposes.
 
 ## `2.13.0`
 
