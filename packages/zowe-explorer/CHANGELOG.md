@@ -6,7 +6,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
-- Update dependencies to address vulnerabilities.
+- Update dependencies for technical currency purposes.
 
 ## `1.22.5`
 
