@@ -21,6 +21,7 @@ import {
     createTextDocument,
     createTreeView,
     createQuickPickContent,
+    createWorkspaceConfiguration,
 } from "../../../__mocks__/mockCreators/shared";
 import {
     createDatasetAttributes,
@@ -3616,5 +3617,36 @@ describe("Dataset Actions Unit Tests - Function confirmJobSubmission", () => {
             title: "Submit",
         });
         await expect(dsActions.confirmJobSubmission("Profile\\test.jcl", true)).resolves.toEqual(true);
+    });
+});
+
+describe("Dataset Actions Unit Tests - Function getDsTypePropertiesFromWorkspaceConfig", () => {
+    it("Should use use local JCL doc name for confirmJobSubmission", async () => {
+        createGlobalMocks();
+        const options = createWorkspaceConfiguration();
+        // const opt = dsActions.getDsTypePropertiesFromWorkspaceConfig(options);
+        jest.spyOn(options, "get").mockImplementation((attr: string) => {
+            const pdse = {
+                dsntype: "LIBRARY",
+                dsorg: "PO",
+                alcunit: "CYL",
+                primary: 10,
+                secondary: 3,
+                dirblk: 25,
+                recfm: "FB",
+                blksize: 27920,
+                lrecl: 80,
+            };
+            return pdse[attr];
+        });
+        expect(dsActions.getDsTypePropertiesFromWorkspaceConfig(options).dsntype).toBe("LIBRARY");
+        expect(dsActions.getDsTypePropertiesFromWorkspaceConfig(options).dsorg).toBe("PO");
+        expect(dsActions.getDsTypePropertiesFromWorkspaceConfig(options).alcunit).toBe("CYL");
+        expect(dsActions.getDsTypePropertiesFromWorkspaceConfig(options).primary).toBe(10);
+        expect(dsActions.getDsTypePropertiesFromWorkspaceConfig(options).secondary).toBe(3);
+        expect(dsActions.getDsTypePropertiesFromWorkspaceConfig(options).dirblk).toBe(25);
+        expect(dsActions.getDsTypePropertiesFromWorkspaceConfig(options).recfm).toBe("FB");
+        expect(dsActions.getDsTypePropertiesFromWorkspaceConfig(options).blksize).toBe(27920);
+        expect(dsActions.getDsTypePropertiesFromWorkspaceConfig(options).lrecl).toBe(80);
     });
 });

@@ -713,7 +713,7 @@ function getDefaultDsTypeProperties(dsType: string): zowe.ICreateDataSetOptions 
     }
 }
 
-function getDsTypePropertiesFromWorkspaceConfig(createOptions: vscode.WorkspaceConfiguration): zowe.ICreateDataSetOptions {
+export function getDsTypePropertiesFromWorkspaceConfig(createOptions: vscode.WorkspaceConfiguration): zowe.ICreateDataSetOptions {
     const dsTypeProperties = {} as zowe.ICreateDataSetOptions;
     if (createOptions) {
         dsTypeProperties.dsntype = createOptions.get("dsntype");
