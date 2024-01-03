@@ -810,6 +810,16 @@
         "command": "zowe.jobs.downloadSingleSpoolBinary",
         "title": "%downloadSingleSpoolBinary%",
         "category": "Zowe Explorer"
+      },
+      {
+        "command": "zowe.ds.openWithEncoding",
+        "title": "%openWithEncoding%",
+        "category": "Zowe Explorer"
+      },
+      {
+        "command": "zowe.uss.openWithEncoding",
+        "title": "%openWithEncoding%",
+        "category": "Zowe Explorer"
       }
     ],
     "menus": {
@@ -891,6 +901,11 @@
           "group": "inline"
         },
         {
+          "when": "view == zowe.uss.explorer && viewItem =~ /^(textFile.*|binaryFile.*)/",
+          "command": "zowe.uss.openWithEncoding",
+          "group": "000_zowe_ussMainframeInteraction@3"
+        },
+        {
           "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*/ && !listMultiSelection",
           "command": "zowe.uss.fullPath",
           "group": "000_zowe_ussMainframeInteraction@0"
@@ -934,16 +949,6 @@
           "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)(textFile.*|binaryFile.*|directory.*|ussSession.*_isFilterSearch)/",
           "command": "zowe.uss.pasteUssFile",
           "group": "001_zowe_ussCreate@5"
-        },
-        {
-          "when": "view == zowe.uss.explorer && viewItem =~ /^textFile.*/",
-          "command": "zowe.uss.binary",
-          "group": "002_zowe_ussSystemSpecific@1"
-        },
-        {
-          "when": "view == zowe.uss.explorer && viewItem =~ /^binaryFile.*/",
-          "command": "zowe.uss.text",
-          "group": "002_zowe_ussSystemSpecific@2"
         },
         {
           "when": "view == zowe.uss.explorer && viewItem =~ /^(?!(ussSession|favorite|profile_fav))/ && !listMultiSelection",
@@ -1034,6 +1039,11 @@
           "when": "view == zowe.ds.explorer && viewItem =~ /^session.*_fav.*/ && !listMultiSelection",
           "command": "zowe.ds.removeSavedSearch",
           "group": "inline"
+        },
+        {
+          "when": "view == zowe.ds.explorer && viewItem =~ /^(member.*|ds.*)/",
+          "command": "zowe.ds.openWithEncoding",
+          "group": "000_zowe_dsMainframeInteraction@0"
         },
         {
           "when": "view == zowe.ds.explorer && viewItem =~ /^(?!.*_fav.*)session.*/ && !listMultiSelection",
@@ -1709,6 +1719,14 @@
         },
         {
           "command": "zowe.profileManagement",
+          "when": "never"
+        },
+        {
+          "command": "zowe.ds.openWithEncoding",
+          "when": "never"
+        },
+        {
+          "command": "zowe.uss.openWithEncoding",
           "when": "never"
         }
       ]

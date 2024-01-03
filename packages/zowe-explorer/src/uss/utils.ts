@@ -12,8 +12,19 @@
 import * as path from "path";
 import * as fs from "fs";
 import * as vscode from "vscode";
+import { imperative } from "@zowe/cli";
 import { ZoweUSSNode } from "../uss/ZoweUSSNode";
 import { ZoweLogger } from "../utils/LoggerUtils";
+import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
+import { IZoweUSSTreeNode } from "@zowe/zowe-explorer-api";
+import * as nls from "vscode-nls";
+
+// Set up localization
+nls.config({
+    messageFormat: nls.MessageFormat.bundle,
+    bundleFormat: nls.BundleFormat.standalone,
+})();
+const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 /**
  * Injects extra data to tooltip based on node status and other conditions
@@ -24,10 +35,13 @@ import { ZoweLogger } from "../utils/LoggerUtils";
 export function injectAdditionalDataToTooltip(node: ZoweUSSNode, tooltip: string): string {
     ZoweLogger.trace("uss.utils.injectAdditionalDataToTooltip called.");
     if (node.downloaded && node.downloadedTime) {
-        // TODO: Add time formatter to localization so we will use not just US variant
-        return `${tooltip} (Downloaded: ${new Date(node.downloadedTime)
-            .toISOString()
-            .replace(/(\d{4})-(\d{2})-(\d{2})T((\d{2}):(\d{2}):([^Z]+))Z/, "$5:$6 $2/$3/$1")})`;
+        const downloadedTime = new Date(node.downloadedTime).toLocaleString(vscode.env.language);
+        tooltip += "  \n" + localize("zowe.uss.utils.tooltip.downloaded", "Downloaded: {0}", downloadedTime);
+    }
+
+    const encodingString = node.binary ? localize("zowe.uss.utils.tooltip.binary", "Binary") : node.encoding;
+    if (encodingString != null) {
+        tooltip += "  \n" + localize("zowe.uss.utils.tooltip.encoding", "Encoding: {0}", encodingString);
     }
 
     return tooltip;
@@ -58,4 +72,22 @@ export function fileExistsCaseSensitveSync(filepath: string): boolean {
 export function disposeClipboardContents(): void {
     ZoweLogger.trace("uss.utils.disposeClipboardContents called.");
     vscode.env.clipboard.writeText("");
+}
+
+export async function autoDetectEncoding(node: IZoweUSSTreeNode, profile?: imperative.IProfileLoaded): Promise<void> {
+    if (node.binary || node.encoding !== undefined) {
+        return;
+    }
+    const ussApi = ZoweExplorerApiRegister.getUssApi(profile ?? node.getProfile());
+    if (ussApi.getTag != null) {
+        const taggedEncoding = await ussApi.getTag(node.fullPath);
+        if (taggedEncoding === "binary" || taggedEncoding === "mixed") {
+            node.setEncoding({ kind: "binary" });
+        } else {
+            node.setEncoding(taggedEncoding !== "untagged" ? { kind: "other", codepage: taggedEncoding } : undefined);
+        }
+    } else {
+        const isBinary = await ussApi.isFileTagBinOrAscii(node.fullPath);
+        node.setEncoding(isBinary ? { kind: "binary" } : undefined);
+    }
 }

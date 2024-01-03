@@ -35,7 +35,7 @@ export let DS_DIR: string;
 export let CONFIG_PATH; // set during activate
 export let ISTHEIA = false; // set during activate
 export let LOG: imperative.Logger;
-export const COMMAND_COUNT = 116;
+export const COMMAND_COUNT = 118;
 export const MAX_SEARCH_HISTORY = 5;
 export const MAX_FILE_HISTORY = 10;
 export const MS_PER_SEC = 1000;
@@ -55,15 +55,17 @@ export const DS_SESSION_FAV_CONTEXT = "session_fav";
 export const DS_SESSION_CONTEXT = "session";
 export const DS_PDS_CONTEXT = "pds";
 export const DS_DS_CONTEXT = "ds";
+export const DS_DS_BINARY_CONTEXT = "dsBinary";
 export const DS_MEMBER_CONTEXT = "member";
-export const DS_TEXT_FILE_CONTEXT = "textFile";
-export const DS_FAV_TEXT_FILE_CONTEXT = "textFile_fav";
-export const DS_BINARY_FILE_CONTEXT = "binaryFile";
+export const DS_MEMBER_BINARY_CONTEXT = "memberBinary";
 export const DS_MIGRATED_FILE_CONTEXT = "migr";
 export const DS_FILE_ERROR_CONTEXT = "fileError";
 export const USS_SESSION_CONTEXT = "ussSession";
 export const USS_DIR_CONTEXT = "directory";
 export const USS_FAV_DIR_CONTEXT = "directory_fav";
+export const USS_TEXT_FILE_CONTEXT = "textFile";
+export const USS_FAV_TEXT_FILE_CONTEXT = "textFile_fav";
+export const USS_BINARY_FILE_CONTEXT = "binaryFile";
 export const JOBS_SESSION_CONTEXT = "server";
 export const JOBS_JOB_CONTEXT = "job";
 export const JOBS_SPOOL_CONTEXT = "spool";
@@ -293,6 +295,7 @@ export enum JobPickerTypes {
 
 export const SEPARATORS = {
     BLANK: { kind: vscode.QuickPickItemKind.Separator, label: "" },
+    RECENT: { kind: vscode.QuickPickItemKind.Separator, label: localize("zowe.separator.recent", "Recent") },
     RECENT_FILTERS: { kind: vscode.QuickPickItemKind.Separator, label: localize("zowe.separator.recentFilters", "Recent Filters") },
     OPTIONS: { kind: vscode.QuickPickItemKind.Separator, label: localize("zowe.separator.options", "Options") },
 };

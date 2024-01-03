@@ -157,5 +157,6 @@
   "ds.selectSortOpt": "Select a sorting option for {0}",
   "jobs.selectSortOpt": "Select a sorting option for jobs in {0}",
   "ds.filterBy": "Filter PDS members...",
-  "ds.sortBy": "Sort PDS members..."
+  "ds.sortBy": "Sort PDS members...",
+  "openWithEncoding": "Open with Encoding"
 }

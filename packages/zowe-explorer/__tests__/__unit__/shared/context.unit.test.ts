@@ -22,14 +22,14 @@ describe("Context helper tests", () => {
     const DS_PDS_CONTEXT = "pds";
     const DS_DS_CONTEXT = "ds";
     const DS_MEMBER_CONTEXT = "member";
-    const DS_TEXT_FILE_CONTEXT = "textFile";
-    const DS_FAV_TEXT_FILE_CONTEXT = "textFile_fav";
-    const DS_BINARY_FILE_CONTEXT = "binaryFile";
-    const DS_FAV_BINARY_FILE_CONTEXT = "binaryFile_fav";
     const DS_MIGRATED_FILE_CONTEXT = "migr";
     const USS_SESSION_CONTEXT = "ussSession";
     const USS_DIR_CONTEXT = "directory";
     const USS_FAV_DIR_CONTEXT = "directory_fav";
+    const USS_TEXT_FILE_CONTEXT = "textFile";
+    const USS_FAV_TEXT_FILE_CONTEXT = "textFile_fav";
+    const USS_BINARY_FILE_CONTEXT = "binaryFile";
+    const USS_FAV_BINARY_FILE_CONTEXT = "binaryFile_fav";
     const JOBS_SESSION_CONTEXT = "server";
     const JOBS_JOB_CONTEXT = "job";
     const JOBS_SPOOL_CONTEXT = "spool";
@@ -54,9 +54,9 @@ describe("Context helper tests", () => {
         DS_PDS_CONTEXT,
         DS_DS_CONTEXT,
         DS_MEMBER_CONTEXT,
-        DS_TEXT_FILE_CONTEXT,
-        DS_FAV_TEXT_FILE_CONTEXT,
-        DS_BINARY_FILE_CONTEXT,
+        USS_TEXT_FILE_CONTEXT,
+        USS_FAV_TEXT_FILE_CONTEXT,
+        USS_BINARY_FILE_CONTEXT,
         DS_MIGRATED_FILE_CONTEXT,
         USS_SESSION_CONTEXT,
         USS_DIR_CONTEXT,
@@ -73,14 +73,14 @@ describe("Context helper tests", () => {
         NO_VALIDATE_SUFFIX,
     ];
 
-    const testListA: string[] = [DS_FAV_CONTEXT, PDS_FAV_CONTEXT, DS_FAV_TEXT_FILE_CONTEXT, USS_FAV_DIR_CONTEXT, JOBS_JOB_FAVORITE3];
+    const testListA: string[] = [DS_FAV_CONTEXT, PDS_FAV_CONTEXT, USS_FAV_TEXT_FILE_CONTEXT, USS_FAV_DIR_CONTEXT, JOBS_JOB_FAVORITE3];
     const testListB: string[] = [
         DS_SESSION_CONTEXT,
         DS_PDS_CONTEXT,
         DS_DS_CONTEXT,
         DS_MEMBER_CONTEXT,
-        DS_TEXT_FILE_CONTEXT,
-        DS_BINARY_FILE_CONTEXT,
+        USS_TEXT_FILE_CONTEXT,
+        USS_BINARY_FILE_CONTEXT,
         DS_MIGRATED_FILE_CONTEXT,
         USS_SESSION_CONTEXT,
         USS_DIR_CONTEXT,
@@ -209,8 +209,8 @@ describe("Context helper tests", () => {
         for (const ctx of testList) {
             treeItem.contextValue = ctx;
             switch (ctx) {
-                case DS_FAV_TEXT_FILE_CONTEXT:
-                case DS_FAV_BINARY_FILE_CONTEXT:
+                case USS_FAV_TEXT_FILE_CONTEXT:
+                case USS_FAV_BINARY_FILE_CONTEXT:
                     expect(contextually.isFavoriteTextOrBinary(treeItem)).toBe(true);
                     break;
                 default:
@@ -222,8 +222,8 @@ describe("Context helper tests", () => {
         for (const ctx of testList) {
             treeItem.contextValue = ctx;
             switch (ctx) {
-                case DS_FAV_BINARY_FILE_CONTEXT:
-                case DS_BINARY_FILE_CONTEXT:
+                case USS_FAV_BINARY_FILE_CONTEXT:
+                case USS_BINARY_FILE_CONTEXT:
                     expect(contextually.isBinary(treeItem)).toBe(true);
                     break;
                 default:
@@ -237,8 +237,8 @@ describe("Context helper tests", () => {
             switch (ctx) {
                 case DS_DS_CONTEXT:
                 case DS_MEMBER_CONTEXT:
-                case DS_TEXT_FILE_CONTEXT:
-                case DS_FAV_TEXT_FILE_CONTEXT:
+                case USS_TEXT_FILE_CONTEXT:
+                case USS_FAV_TEXT_FILE_CONTEXT:
                 case JOBS_SPOOL_CONTEXT:
                 case DS_MIGRATED_FILE_CONTEXT:
                 case DS_FAV_CONTEXT:
@@ -282,8 +282,8 @@ describe("Context helper tests", () => {
             switch (ctx) {
                 case PDS_FAV_CONTEXT:
                 case DS_FAV_CONTEXT:
-                case DS_FAV_TEXT_FILE_CONTEXT:
-                case DS_FAV_BINARY_FILE_CONTEXT:
+                case USS_FAV_TEXT_FILE_CONTEXT:
+                case USS_FAV_BINARY_FILE_CONTEXT:
                 case USS_FAV_DIR_CONTEXT:
                 case JOBS_JOB_FAVORITE1:
                 case JOBS_JOB_FAVORITE2:
@@ -301,8 +301,8 @@ describe("Context helper tests", () => {
             switch (ctx) {
                 case PDS_FAV_CONTEXT:
                 case DS_FAV_CONTEXT:
-                case DS_FAV_TEXT_FILE_CONTEXT:
-                case DS_FAV_BINARY_FILE_CONTEXT:
+                case USS_FAV_TEXT_FILE_CONTEXT:
+                case USS_FAV_BINARY_FILE_CONTEXT:
                 case USS_FAV_DIR_CONTEXT:
                 case JOBS_JOB_FAVORITE1:
                 case JOBS_JOB_FAVORITE2:

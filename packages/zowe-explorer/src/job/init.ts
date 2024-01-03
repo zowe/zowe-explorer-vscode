@@ -17,7 +17,7 @@ import { IZoweJobTreeNode, IZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { ZosJobsProvider, createJobsTree } from "./ZosJobsProvider";
 import * as contextuals from "../shared/context";
-import { Job } from "./ZoweJobNode";
+import { ZoweJobNode } from "./ZoweJobNode";
 import { getSelectedNodeList } from "../shared/utils";
 import { initSubscribers } from "../shared/init";
 import { ZoweLogger } from "../utils/LoggerUtils";
@@ -42,7 +42,7 @@ export async function initJobsProvider(context: vscode.ExtensionContext): Promis
         vscode.commands.registerCommand("zowe.jobs.runStopCommand", async (node, nodeList) => {
             const selectedNodes = getSelectedNodeList(node, nodeList) as IZoweJobTreeNode[];
             for (const item of selectedNodes) {
-                await jobActions.stopCommand(item as Job);
+                await jobActions.stopCommand(item as ZoweJobNode);
             }
         })
     );
@@ -94,7 +94,7 @@ export async function initJobsProvider(context: vscode.ExtensionContext): Promis
             let selectedNodes = getSelectedNodeList(node, nodeList) as IZoweJobTreeNode[];
             selectedNodes = selectedNodes.filter((x) => contextuals.isJob(x));
             for (const job of selectedNodes) {
-                await jobActions.downloadJcl(job as Job);
+                await jobActions.downloadJcl(job as ZoweJobNode);
             }
         })
     );
