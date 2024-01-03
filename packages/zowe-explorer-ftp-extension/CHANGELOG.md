@@ -6,6 +6,8 @@ All notable changes to the "zowe-explorer-ftp-extension" extension will be docum
 
 ### Bug fixes
 
+- Update dependencies for technical currency purposes.
+
 ## `3.0.0-next.202311171754`
 
 ## `3.0.0-next.202311171523`

@@ -4,14 +4,15 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ## TBD Release
 
-- Added the Issue UNIX Commands feature. [#1326](https://github.com/zowe/vscode-extension-for-zowe/issues/1326)
-- Minimized activation function for Zowe Explorer to load only necessary items on activation. [#1985](https://github.com/zowe/vscode-extension-for-zowe/issues/1985)
-
 ### New features and enhancements
 
+- Added the Issue UNIX Commands feature. [#1326](https://github.com/zowe/vscode-extension-for-zowe/issues/1326)
+- Minimized activation function for Zowe Explorer to load only necessary items on activation. [#1985](https://github.com/zowe/vscode-extension-for-zowe/issues/1985)
 - Added back local storage for Zowe Explorer persistent items
 
 ### Bug fixes
+
+- Update dependencies for technical currency purposes.
 
 ## `3.0.0-next.202311171754`
 
