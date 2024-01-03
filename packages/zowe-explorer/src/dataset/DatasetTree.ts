@@ -31,7 +31,7 @@ import {
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { FilterDescriptor, FilterItem, errorHandling, syncSessionNode } from "../utils/ProfilesUtils";
-import { sortTreeItems, getAppName, getDocumentFilePath, SORT_DIRS, updateOpenFiles } from "../shared/utils";
+import { sortTreeItems, getAppName, getDocumentFilePath, SORT_DIRS, promptForEncoding, updateOpenFiles } from "../shared/utils";
 import { ZoweTreeProvider } from "../abstract/ZoweTreeProvider";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { getIconById, getIconByNode, IconId, IIconItem } from "../generators/icons";
@@ -1516,6 +1516,14 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
     public static onDidCloseTextDocument(this: void, doc: vscode.TextDocument): void {
         if (doc.uri.fsPath.includes(globals.DS_DIR)) {
             updateOpenFiles(TreeProviders.ds, doc.uri.fsPath, null);
+        }
+    }
+
+    public async openWithEncoding(node: IZoweDatasetTreeNode): Promise<void> {
+        const encoding = await promptForEncoding(node);
+        if (encoding !== undefined) {
+            node.setEncoding(encoding);
+            await node.openDs(true, false, this);
         }
     }
 }

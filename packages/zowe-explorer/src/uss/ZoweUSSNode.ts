@@ -14,12 +14,21 @@ import * as globals from "../globals";
 import * as vscode from "vscode";
 import * as fs from "fs";
 import * as path from "path";
-import { FileAttributes, Gui, IZoweUSSTreeNode, ZoweTreeNode, IZoweTree, ValidProfileEnum, ZoweExplorerApi } from "@zowe/zowe-explorer-api";
+import {
+    FileAttributes,
+    Gui,
+    IZoweUSSTreeNode,
+    ZoweTreeNode,
+    IZoweTree,
+    ValidProfileEnum,
+    ZoweExplorerApi,
+    ZosEncoding,
+} from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { errorHandling, syncSessionNode } from "../utils/ProfilesUtils";
 import { getIconByNode } from "../generators/icons/index";
-import { fileExistsCaseSensitveSync, injectAdditionalDataToTooltip } from "../uss/utils";
+import { autoDetectEncoding, fileExistsCaseSensitveSync, injectAdditionalDataToTooltip } from "../uss/utils";
 import * as contextually from "../shared/context";
 import { closeOpenedTextFile } from "../utils/workspace";
 import * as nls from "vscode-nls";
@@ -48,8 +57,9 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     public fullPath = "";
     public dirty = true;
     public children: IZoweUSSTreeNode[] = [];
-    public binaryFiles = {};
     public binary = false;
+    public encoding?: string;
+    public encodingMap = {};
     public shortLabel = "";
     public downloadedTime = null as string;
     private downloadedInternal = false;
@@ -66,7 +76,10 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      */
     public constructor(opts: IZoweUssTreeOpts) {
         super(opts.label, opts.collapsibleState, opts.parentNode, opts.session, opts.profile);
-        this.binary = opts.binary ?? false;
+        this.binary = opts.encoding?.kind === "binary";
+        if (!this.binary && opts.encoding != null) {
+            this.encoding = opts.encoding.kind === "other" ? opts.encoding.codepage : null;
+        }
         this.parentPath = opts.parentPath;
         if (opts.collapsibleState !== vscode.TreeItemCollapsibleState.None) {
             this.contextValue = globals.USS_DIR_CONTEXT;
@@ -207,14 +220,14 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 responseNodes.push(temp);
             } else {
                 // Create a node for the USS file.
-                const isBinary = `${this.fullPath}/${item.name as string}` in this.getSessionNode().binaryFiles;
+                const cachedEncoding = this.getSessionNode().encodingMap[`${this.fullPath}/${item.name as string}`];
                 const temp = new ZoweUSSNode({
                     label: item.name,
                     collapsibleState: vscode.TreeItemCollapsibleState.None,
                     parentNode: this,
                     profile: this.profile,
                     parentPath: this.fullPath,
-                    binary: isBinary,
+                    encoding: cachedEncoding,
                 });
                 temp.attributes = {
                     gid: item.gid,
@@ -244,15 +257,33 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         return this.children;
     }
 
+    /**
+     * Sets the file encoding to binary
+     * @deprecated Use `setEncoding` instead
+     */
     public setBinary(binary: boolean): void {
         ZoweLogger.trace("ZoweUSSNode.setBinary called.");
-        this.binary = binary;
-        if (this.binary) {
+        this.setEncoding(binary ? { kind: "binary" } : undefined);
+    }
+
+    public setEncoding(encoding: ZosEncoding): void {
+        ZoweLogger.trace("ZoweUSSNode.setEncoding called.");
+        if (!(this.contextValue.startsWith(globals.USS_BINARY_FILE_CONTEXT) || this.contextValue.startsWith(globals.USS_TEXT_FILE_CONTEXT))) {
+            throw new Error(`Cannot set encoding for node with context ${this.contextValue}`);
+        }
+        if (encoding?.kind === "binary") {
             this.contextValue = globals.USS_BINARY_FILE_CONTEXT;
-            this.getSessionNode().binaryFiles[this.fullPath] = true;
+            this.binary = true;
+            this.encoding = undefined;
         } else {
             this.contextValue = globals.USS_TEXT_FILE_CONTEXT;
-            delete this.getSessionNode().binaryFiles[this.fullPath];
+            this.binary = false;
+            this.encoding = encoding?.kind === "text" ? null : encoding?.codepage;
+        }
+        if (encoding != null) {
+            this.getSessionNode().encodingMap[this.fullPath] = encoding;
+        } else {
+            delete this.getSessionNode().encodingMap[this.fullPath];
         }
         if (this.getParent() && this.getParent().contextValue === globals.FAV_PROFILE_CONTEXT) {
             this.contextValue = this.binary
@@ -265,6 +296,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             this.setIcon(icon.path);
         }
 
+        this.tooltip = injectAdditionalDataToTooltip(this, this.fullPath);
         this.dirty = true;
     }
 
@@ -484,16 +516,14 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                     // if local copy exists, open that instead of pulling from mainframe
                     if (forceDownload || !fileExists) {
                         const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
-                        const fullPath = this.fullPath;
-                        const chooseBinary =
-                            this.binary || (await ZoweExplorerApiRegister.getUssApi(cachedProfile).isFileTagBinOrAscii(this.fullPath));
+                        await autoDetectEncoding(this, cachedProfile);
 
                         const statusMsg = Gui.setStatusBarMessage(localize("ussFile.opening", "$(sync~spin) Opening USS file..."));
                         const response = await ZoweExplorerApiRegister.getUssApi(cachedProfile).getContents(this.fullPath, {
                             file: documentFilePath,
-                            binary: chooseBinary,
+                            binary: this.binary,
                             returnEtag: true,
-                            encoding: cachedProfile.profile?.encoding,
+                            encoding: this.encoding !== undefined ? this.encoding : cachedProfile.profile?.encoding,
                             responseTimeout: cachedProfile.profile?.responseTimeout,
                         });
                         statusMsg.dispose();
@@ -554,11 +584,13 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
 
             if ((isDirty && !this.isDirtyInEditor && !wasSaved) || !isDirty) {
                 const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
+                await autoDetectEncoding(this, cachedProfile);
+
                 const response = await ZoweExplorerApiRegister.getUssApi(cachedProfile).getContents(this.fullPath, {
                     file: ussDocumentFilePath,
-                    binary: this.binary || (await ZoweExplorerApiRegister.getUssApi(cachedProfile).isFileTagBinOrAscii(this.fullPath)),
+                    binary: this.binary,
                     returnEtag: true,
-                    encoding: cachedProfile?.profile?.encoding,
+                    encoding: this.encoding !== undefined ? this.encoding : cachedProfile?.profile?.encoding,
                     responseTimeout: cachedProfile?.profile?.responseTimeout,
                 });
                 this.setEtag(response.apiResponse.etag);

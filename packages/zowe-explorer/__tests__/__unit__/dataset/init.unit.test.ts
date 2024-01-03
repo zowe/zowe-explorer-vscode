@@ -48,6 +48,7 @@ describe("Test src/dataset/extension", () => {
             refreshElement: jest.fn(),
             sortPdsMembersDialog: jest.fn(),
             filterPdsMembersDialog: jest.fn(),
+            openWithEncoding: jest.fn(),
         };
         const commands: IJestIt[] = [
             {
@@ -260,6 +261,10 @@ describe("Test src/dataset/extension", () => {
             {
                 name: "zowe.ds.filterBy",
                 mock: [{ spy: jest.spyOn(dsProvider, "filterPdsMembersDialog"), arg: [test.value] }],
+            },
+            {
+                name: "zowe.ds.openWithEncoding",
+                mock: [{ spy: jest.spyOn(dsProvider, "openWithEncoding"), arg: [test.value] }],
             },
             {
                 name: "onDidChangeConfiguration",

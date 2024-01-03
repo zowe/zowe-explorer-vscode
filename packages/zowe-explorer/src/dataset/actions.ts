@@ -1170,7 +1170,8 @@ export async function refreshPS(node: api.IZoweDatasetTreeNode): Promise<void> {
         const response = await ZoweExplorerApiRegister.getMvsApi(prof).getContents(label, {
             file: documentFilePath,
             returnEtag: true,
-            encoding: prof.profile?.encoding,
+            binary: node.binary,
+            encoding: node.encoding !== undefined ? node.encoding : prof.profile?.encoding,
             responseTimeout: prof.profile?.responseTimeout,
         });
         node.setEtag(response.apiResponse.etag);
@@ -1560,7 +1561,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
                 title: localize("saveFile.progress.title", "Saving data set..."),
             },
             () => {
-                return uploadContent(node, doc, label, prof, null, uploadOptions.etag, uploadOptions.returnEtag);
+                return uploadContent(node, doc, label, prof, uploadOptions.etag, uploadOptions.returnEtag);
             }
         );
         if (uploadResponse.success) {

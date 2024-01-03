@@ -24,6 +24,7 @@ import {
     ZoweTreeNode,
     SortDirection,
     NodeSort,
+    ZosEncoding,
     IZoweTree,
     ValidProfileEnum,
 } from "@zowe/zowe-explorer-api";
@@ -59,6 +60,9 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     public memberPattern = "";
     public dirty = true;
     public children: ZoweDatasetNode[] = [];
+    public binary = false;
+    public encoding?: string;
+    public encodingMap = {};
     public errorDetails: zowe.imperative.ImperativeError;
     public ongoingActions: Record<NodeAction | string, Promise<any>> = {};
     public wasDoubleClicked: boolean = false;
@@ -74,6 +78,10 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
      */
     public constructor(opts: IZoweDatasetTreeOpts) {
         super(opts.label, opts.collapsibleState, opts.parentNode, opts.session, opts.profile);
+        this.binary = opts.encoding?.kind === "binary";
+        if (!this.binary && opts.encoding != null) {
+            this.encoding = opts.encoding.kind === "other" ? opts.encoding.codepage : null;
+        }
         this.etag = opts.etag;
         if (opts.contextOverride) {
             this.contextValue = opts.contextOverride;
@@ -223,10 +231,12 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     }
                 } else if (contextually.isSessionNotFav(this)) {
                     // Creates a ZoweDatasetNode for a PS
+                    const cachedEncoding = this.getSessionNode().encodingMap[item.dsname];
                     const temp = new ZoweDatasetNode({
                         label: item.dsname,
                         collapsibleState: vscode.TreeItemCollapsibleState.None,
                         parentNode: this,
+                        encoding: cachedEncoding,
                         profile: this.getProfile(),
                     });
                     temp.command = { command: "zowe.ds.ZoweNode.openPS", title: "", arguments: [temp] };
@@ -234,11 +244,13 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 } else {
                     // Creates a ZoweDatasetNode for a PDS member
                     const memberInvalid = item.member?.includes("\ufffd");
+                    const cachedEncoding = this.getSessionNode().encodingMap[`${item.dsname as string}(${item.member as string})`];
                     const temp = new ZoweDatasetNode({
                         label: item.member,
                         collapsibleState: vscode.TreeItemCollapsibleState.None,
                         parentNode: this,
                         contextOverride: memberInvalid ? globals.DS_FILE_ERROR_CONTEXT : undefined,
+                        encoding: cachedEncoding,
                         profile: this.getProfile(),
                     });
                     if (!memberInvalid) {
@@ -509,7 +521,8 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                         this.ongoingActions[NodeAction.Download] = ZoweExplorerApiRegister.getMvsApi(prof).getContents(label, {
                             file: documentFilePath,
                             returnEtag: true,
-                            encoding: prof.profile?.encoding,
+                            binary: this.binary,
+                            encoding: this.encoding !== undefined ? this.encoding : prof.profile?.encoding,
                             responseTimeout: prof.profile?.responseTimeout,
                         });
                         responsePromise = this.ongoingActions[NodeAction.Download];
@@ -517,7 +530,8 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                         responsePromise = ZoweExplorerApiRegister.getMvsApi(prof).getContents(label, {
                             file: documentFilePath,
                             returnEtag: true,
-                            encoding: prof.profile?.encoding,
+                            binary: this.binary,
+                            encoding: this.encoding !== undefined ? this.encoding : prof.profile?.encoding,
                             responseTimeout: prof.profile?.responseTimeout,
                         });
                     }
@@ -542,5 +556,48 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 throw err;
             }
         }
+    }
+
+    public setEncoding(encoding: ZosEncoding): void {
+        ZoweLogger.trace("ZoweDatasetNode.setEncoding called.");
+        if (!(this.contextValue.startsWith(globals.DS_DS_CONTEXT) || this.contextValue.startsWith(globals.DS_MEMBER_CONTEXT))) {
+            throw new Error(`Cannot set encoding for node with context ${this.contextValue}`);
+        }
+        const isMemberNode = this.contextValue.startsWith(globals.DS_MEMBER_CONTEXT);
+        if (encoding?.kind === "binary") {
+            this.contextValue = isMemberNode ? globals.DS_MEMBER_BINARY_CONTEXT : globals.DS_DS_BINARY_CONTEXT;
+            this.binary = true;
+            this.encoding = undefined;
+        } else {
+            this.contextValue = isMemberNode ? globals.DS_MEMBER_CONTEXT : globals.DS_DS_CONTEXT;
+            this.binary = false;
+            this.encoding = encoding?.kind === "text" ? null : encoding?.codepage;
+        }
+        const fullPath = isMemberNode ? `${this.getParent().label as string}(${this.label as string})` : (this.label as string);
+        if (encoding != null) {
+            this.getSessionNode().encodingMap[fullPath] = encoding;
+        } else {
+            delete this.getSessionNode().encodingMap[fullPath];
+        }
+        if (this.getParent() && this.getParent().contextValue === globals.FAV_PROFILE_CONTEXT) {
+            this.contextValue += globals.FAV_SUFFIX;
+        }
+
+        const icon = getIconByNode(this);
+        if (icon) {
+            this.setIcon(icon.path);
+        }
+
+        this.dirty = true;
+    }
+
+    /**
+     * Helper method which sets an icon of node and initiates reloading of tree
+     * @param iconPath
+     */
+    public setIcon(iconPath: { light: string; dark: string }): void {
+        ZoweLogger.trace("ZoweDatasetNode.setIcon called.");
+        this.iconPath = iconPath;
+        vscode.commands.executeCommand("zowe.ds.refreshDataset", this);
     }
 }

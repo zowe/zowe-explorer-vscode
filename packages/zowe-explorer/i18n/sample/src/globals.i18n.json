@@ -16,6 +16,7 @@
   "createFile.attribute.size": "Enter the size of the data set",
   "createFile.attribute.storclass": "Enter the SMS storage class",
   "createFile.attribute.volser": "Enter the volume serial on which the data set should be placed",
+  "zowe.separator.recent": "Recent",
   "zowe.separator.recentFilters": "Recent Filters",
   "zowe.separator.options": "Options",
   "globals.defineGlobals.isTheia": "Zowe Explorer is running in Theia environment.",
