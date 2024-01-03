@@ -13,6 +13,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed the allocate-like functionality by removing the inclusion of DS item in the filter history. [#2620](https://github.com/zowe/vscode-extension-for-zowe/issues/2620)
 - Fixed issue with `Submit JCL` losing focus on JCL being submitted, causing the wrong job submission. [#2616](https://github.com/zowe/vscode-extension-for-zowe/issues/2616)
 - Fixed issue where USS file tag could get overwritten when changes to file are uploaded. [#2576](https://github.com/zowe/vscode-extension-for-zowe/issues/2576)
+- Fixed failure to refresh token value after user logs in to authentication. [#2638](https://github.com/zowe/vscode-extension-for-zowe/issues/2638)
 
 ## `2.13.0`
 
