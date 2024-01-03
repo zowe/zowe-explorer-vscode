@@ -106,6 +106,7 @@ describe("unixCommandActions unit testing", () => {
             return { privateKey: undefined, keyPassphrase: undefined, handshakeTimeout: undefined, type: "basic", port: 22 };
         }),
     });
+    Object.defineProperty(imperative.ProfileInfo, "profAttrsToProfLoaded", { value: () => ({ profile: {} }) });
     Object.defineProperty(ProfileManagement, "getRegisteredProfileNameList", {
         value: jest.fn().mockReturnValue(["firstName", "secondName"]),
         configurable: true,
@@ -147,6 +148,19 @@ describe("unixCommandActions unit testing", () => {
                     getBaseProfile: jest.fn(),
                     getDefaultProfile: mockdefaultProfile,
                     validProfile: ValidProfileEnum.VALID,
+                    getProfileInfo: jest.fn().mockReturnValue({
+                        usingTeamConfig: true,
+                        getAllProfiles: jest.fn().mockReturnValue(["dummy"]),
+                        mergeArgsForProfile: jest.fn().mockReturnValue({
+                            knownArgs: [
+                                { argName: "port", argValue: "TEST", secure: false },
+                                { argName: "host", argValue: "TEST", secure: false },
+                                { argName: "user", argValue: "TEST", secure: true },
+                                { argName: "password", argValue: "TEST", secure: true },
+                            ],
+                        }),
+                        loadSecureArg: jest.fn().mockReturnValue("user"),
+                    } as any),
                 };
             }),
         });

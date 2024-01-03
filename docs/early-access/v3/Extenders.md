@@ -14,3 +14,8 @@
 - `ZoweVsCodeExtension.showVsCodeMessage` removed in favor of `Gui.showMessage`.
 - `ZoweVsCodeExtension.inputBox` removed in favor of `Gui.showInputBox`.
 - `ZoweVsCodeExtension.promptCredentials` removed in favor of `ZoweVsCodeExtension.updateCredentials`.
+
+## New APIs Added
+
+- `ICommand.issueUnixCommand` added for issuing Unix Commands
+- Optional `ICommand.sshProfileRequired` API returning a boolean value for extenders that would like to use the ssh profile for issuing UNIX commands via Zowe Explorer.

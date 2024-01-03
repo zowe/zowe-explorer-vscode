@@ -89,25 +89,31 @@ export class UnixCommandHandler extends ZoweCommandProvider {
                 }
             }
         }
+        let res: boolean = true;
         if (!session) {
+            const allProfiles = profiles.allProfiles;
+            res = this.checkForSshRequired(allProfiles);
             const profileNamesList = ProfileManagement.getRegisteredProfileNameList(globals.Trees.USS);
             if (profileNamesList.length) {
-                const quickPickOptions: vscode.QuickPickOptions = {
-                    placeHolder: localize("issueUnixCommand.quickPickOption", "Select the Profile to use to submit the Unix command"),
-                    ignoreFocusOut: true,
-                    canPickMany: false,
-                };
-                const sesName = await Gui.showQuickPick(profileNamesList, quickPickOptions);
-                if (sesName === undefined) {
-                    Gui.showMessage(localize("issueUnixCommand.cancelled", "Operation Cancelled"));
-                    return;
+                if (!res) {
+                    const quickPickOptions: vscode.QuickPickOptions = {
+                        placeHolder: localize("issueUnixCommand.quickPickOption", "Select the Profile to use to submit the Unix command"),
+                        ignoreFocusOut: true,
+                        canPickMany: false,
+                    };
+                    const sesName = await Gui.showQuickPick(profileNamesList, quickPickOptions);
+                    if (sesName === undefined) {
+                        Gui.showMessage(localize("issueUnixCommand.cancelled", "Operation Cancelled"));
+                        return;
+                    }
+                    profile = allProfiles.find((temprofile) => temprofile.name === sesName);
                 }
-                const allProfiles = profiles.allProfiles;
-                profile = allProfiles.find((temprofile) => temprofile.name === sesName);
-                if (ZoweExplorerApiRegister.getCommandApi(profile).sshProfileRequired) sshRequiredBoolean = true;
-                if (!sshRequiredBoolean) {
-                    Gui.showMessage(localize("issueUnixCommand.apiNonExisting", "Not implemented yet for profile of type: ") + profile.type);
-                    return;
+                if (ZoweExplorerApiRegister.getCommandApi(profile).sshProfileRequired) {
+                    sshRequiredBoolean = true;
+                    this.sshSession = await this.setsshSession();
+                    if (!this.sshSession) {
+                        return;
+                    }
                 }
                 if (cwd == "") {
                     cwd = await vscode.window.showInputBox({
@@ -135,14 +141,6 @@ export class UnixCommandHandler extends ZoweCommandProvider {
         } else {
             profile = node.getProfile();
         }
-        if (ZoweExplorerApiRegister.getCommandApi(profile).sshProfileRequired) sshRequiredBoolean = true;
-        if (sshRequiredBoolean) {
-            this.sshSession = await this.setsshSession();
-            if (!this.sshSession) return;
-        } else {
-            Gui.showMessage(localize("issueUnixCommand.apiNonExisting", "Not implemented yet for profile of type: ") + profile.type);
-            return;
-        }
         if (cwd == "" && this.flag) {
             Gui.errorMessage(localize("path.notselected", "Enter a UNIX file filter search to enable Issue Unix Command from the tree view."));
             return;
@@ -151,9 +149,19 @@ export class UnixCommandHandler extends ZoweCommandProvider {
             Gui.showMessage(localize("issueUnixCommand.options.nopathentered", "Operation cancelled."));
             return;
         }
+        if (ZoweExplorerApiRegister.getCommandApi(profile).sshProfileRequired && sshRequiredBoolean == undefined) {
+            this.sshSession = await this.setsshSession();
+            if (!this.sshSession) {
+                return;
+            }
+        }
         try {
             if (Profiles.getInstance().validProfile !== ValidProfileEnum.INVALID) {
                 const commandApi = ZoweExplorerApiRegister.getInstance().getCommandApi(profile);
+                if (!ZoweExplorerApiRegister.getCommandApi(profile).issueUnixCommand) {
+                    Gui.errorMessage(localize("issueUnixCommand.apiNonExisting", "Not implemented yet for profile of type: ") + profile.type);
+                    return;
+                }
                 if (commandApi) {
                     let command1: string = command;
                     if (!command) {
@@ -175,21 +183,94 @@ export class UnixCommandHandler extends ZoweCommandProvider {
         }
     }
 
+    public checkForSshRequired(allProfiles: imperative.IProfileLoaded[]): boolean {
+        try {
+            allProfiles.forEach((p) => {
+                // eslint-disable-next-line @typescript-eslint/unbound-method
+                if (!ZoweExplorerApiRegister.getCommandApi(p).sshProfileRequired) {
+                    return false;
+                }
+            });
+        } catch (error) {
+            return false;
+        }
+    }
+
     public async setsshSession(): Promise<SshSession> {
         ZoweLogger.trace("UnixCommandHandler.setsshSession called.");
-        const sshprofile: imperative.IProfileLoaded = Profiles.getInstance().getDefaultProfile("ssh");
-        if (!sshprofile) {
+        const sshprofile: imperative.IProfileLoaded = await this.getSshProfile();
+        if (sshprofile) {
+            const cmdArgs: imperative.ICommandArguments = this.getCmdArgs(sshprofile?.profile as imperative.IProfileLoaded);
+            // create the ssh session
+            const sshSessCfg = SshSession.createSshSessCfgFromArgs(cmdArgs);
+            imperative.ConnectionPropsForSessCfg.resolveSessCfgProps<ISshSession>(sshSessCfg, cmdArgs);
+            this.sshSession = new SshSession(sshSessCfg);
+        }
+        return this.sshSession;
+    }
+
+    private async selectSshProfile(sshProfiles: imperative.IProfileLoaded[] = []): Promise<imperative.IProfileLoaded> {
+        ZoweLogger.trace("UnixCommandHandler.selectSshProfile called.");
+        let sshProfile: imperative.IProfileLoaded;
+        if (sshProfiles.length > 1) {
+            const sshProfileNamesList = sshProfiles.map((temprofile) => {
+                return temprofile.name;
+            });
+            if (sshProfileNamesList.length) {
+                const quickPickOptions: vscode.QuickPickOptions = {
+                    placeHolder: localize("issueUnixCommand.sshProfile.quickPickOption", "Select the ssh Profile."),
+                    ignoreFocusOut: true,
+                    canPickMany: false,
+                };
+                const sesName = await Gui.showQuickPick(sshProfileNamesList, quickPickOptions);
+                if (sesName === undefined) {
+                    Gui.showMessage(localize("issueUnixCommand.cancelled", "Operation Cancelled"));
+                    return;
+                }
+
+                sshProfile = sshProfiles.filter((temprofile) => temprofile.name === sesName)[0];
+            }
+        } else if (sshProfiles.length > 0) {
+            sshProfile = sshProfiles[0];
+        }
+        return sshProfile;
+    }
+
+    private async getSshProfile(): Promise<imperative.IProfileLoaded> {
+        ZoweLogger.trace("UnixCommandHandler.getsshParams called.");
+        const profileInfo = await Profiles.getInstance().getProfileInfo();
+        const params = ["port", "host","user","password"];
+        const profiles = profileInfo.getAllProfiles("ssh");
+        if (!profiles) {
             Gui.errorMessage(
                 localize("setsshProfile.couldnotfindprofile", "No SSH profile found. Please create an SSH profile before issuing Unix commands.")
             );
             return;
         }
-        const cmdArgs: imperative.ICommandArguments = this.getCmdArgs(sshprofile?.profile as imperative.IProfileLoaded);
-        // create the ssh session
-        const sshSessCfg = SshSession.createSshSessCfgFromArgs(cmdArgs);
-        const sshSessCfgWithCreds = await imperative.ConnectionPropsForSessCfg.addPropsOrPrompt<ISshSession>(sshSessCfg, cmdArgs);
-        this.sshSession = new SshSession(sshSessCfgWithCreds);
-        return this.sshSession;
+        let exitflag: boolean;
+        let sshProfile: imperative.IProfileLoaded;
+        if (profiles.length > 0) {
+            sshProfile = await this.selectSshProfile(profiles.map((p) => imperative.ProfileInfo.profAttrsToProfLoaded(p)));
+            if (sshProfile != null) {
+                const prof = profileInfo.mergeArgsForProfile(sshProfile.profile as imperative.IProfAttrs);
+                params.forEach((p) => {
+                    const obj = prof.knownArgs.find((a) => a.argName === p);
+                    if (obj) {
+                        if (obj.argValue) {
+                            sshProfile.profile[p] = obj.argValue;
+                        } else {
+                            sshProfile.profile[p] = profileInfo.loadSecureArg(obj);
+                            if(!sshProfile.profile[p]){
+                                exitflag = true;
+                                Gui.errorMessage(localize("sshcredentialsMissing", "Credentials are missing for SSH profile"));
+                            }
+                        }
+                    }
+                });
+            }
+        }
+        if(exitflag) return;
+        return sshProfile;
     }
 
     private async getQuickPick(cwd: string): Promise<string> {
