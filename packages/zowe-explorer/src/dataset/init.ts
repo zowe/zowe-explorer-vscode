@@ -72,7 +72,7 @@ export async function initDatasetProvider(context: vscode.ExtensionContext): Pro
         vscode.commands.registerCommand("zowe.ds.editSession", async (node) => datasetProvider.editSession(node, datasetProvider))
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.ds.ZoweNode.openPS", async (node) => dsActions.openPS(node, true, datasetProvider))
+        vscode.commands.registerCommand("zowe.ds.ZoweNode.openPS", async (node: IZoweDatasetTreeNode) => node.openDs(false, true, datasetProvider))
     );
     context.subscriptions.push(vscode.commands.registerCommand("zowe.ds.createDataset", async (node) => dsActions.createFile(node, datasetProvider)));
     context.subscriptions.push(
@@ -92,19 +92,19 @@ export async function initDatasetProvider(context: vscode.ExtensionContext): Pro
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.ds.editDataSet", async (node, nodeList) => {
-            let selectedNodes = getSelectedNodeList(node, nodeList);
+            let selectedNodes = getSelectedNodeList(node, nodeList) as IZoweDatasetTreeNode[];
             selectedNodes = selectedNodes.filter((element) => contextuals.isDs(element) || contextuals.isDsMember(element));
             for (const item of selectedNodes) {
-                await dsActions.openPS(item, false, datasetProvider);
+                await item.openDs(false, false, datasetProvider);
             }
         })
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.ds.editMember", async (node, nodeList) => {
-            let selectedNodes = getSelectedNodeList(node, nodeList);
+            let selectedNodes = getSelectedNodeList(node, nodeList) as IZoweDatasetTreeNode[];
             selectedNodes = selectedNodes.filter((element) => contextuals.isDs(element) || contextuals.isDsMember(element));
             for (const item of selectedNodes) {
-                await dsActions.openPS(item, false, datasetProvider);
+                await item.openDs(false, false, datasetProvider);
             }
         })
     );

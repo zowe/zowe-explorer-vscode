@@ -25,7 +25,7 @@ import {
 } from "../../../__mocks__/mockCreators/shared";
 import { createDatasetSessionNode } from "../../../__mocks__/mockCreators/datasets";
 import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
-import { Job } from "../../../src/job/ZoweJobNode";
+import { ZoweJobNode } from "../../../src/job/ZoweJobNode";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { Profiles } from "../../../src/Profiles";
 import * as utils from "../../../src/utils/ProfilesUtils";
@@ -68,27 +68,23 @@ async function createGlobalMocks() {
 describe("Shared Utils Unit Tests - Function node.concatChildNodes()", () => {
     it("Checks that concatChildNodes returns the proper array of children", async () => {
         const globalMocks = await createGlobalMocks();
-        const rootNode = new ZoweUSSNode("root", vscode.TreeItemCollapsibleState.Collapsed, null, globalMocks.session, null, false, null, undefined);
-        const childNode1 = new ZoweUSSNode(
-            "child1",
-            vscode.TreeItemCollapsibleState.Collapsed,
-            rootNode,
-            globalMocks.session,
-            null,
-            false,
-            null,
-            undefined
-        );
-        const childNode2 = new ZoweUSSNode(
-            "child2",
-            vscode.TreeItemCollapsibleState.Collapsed,
-            childNode1,
-            globalMocks.session,
-            null,
-            false,
-            null,
-            undefined
-        );
+        const rootNode = new ZoweUSSNode({
+            label: "root",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            session: globalMocks.session,
+        });
+        const childNode1 = new ZoweUSSNode({
+            label: "child1",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: rootNode,
+            session: globalMocks.session,
+        });
+        const childNode2 = new ZoweUSSNode({
+            label: "child2",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: childNode1,
+            session: globalMocks.session,
+        });
 
         childNode1.children.push(childNode2);
         rootNode.children.push(childNode1);
@@ -143,17 +139,17 @@ describe("syncSessionNode shared util function", () => {
 
 describe("Positive testing", () => {
     it("should pass for ZoweDatasetTreeNode with ZoweDatasetNode node type", async () => {
-        const dsNode = new ZoweDatasetNode(null, null, null, null);
+        const dsNode = new ZoweDatasetNode({ label: "", collapsibleState: vscode.TreeItemCollapsibleState.None });
         const value = sharedUtils.isZoweDatasetTreeNode(dsNode);
         expect(value).toBeTruthy();
     });
     it("should pass for ZoweUSSTreeNode with ZoweUSSNode node type", async () => {
-        const ussNode = new ZoweUSSNode(null, null, null, null, null);
+        const ussNode = new ZoweUSSNode({ label: "", collapsibleState: vscode.TreeItemCollapsibleState.None });
         const value = sharedUtils.isZoweUSSTreeNode(ussNode);
         expect(value).toBeTruthy();
     });
-    it("should pass for  ZoweJobTreeNode with Job node type", async () => {
-        const jobNode = new Job(null, null, null, null, null, null);
+    it("should pass for ZoweJobTreeNode with ZoweJobNode node type", async () => {
+        const jobNode = new ZoweJobNode({ label: "", collapsibleState: vscode.TreeItemCollapsibleState.None });
         const value = sharedUtils.isZoweJobTreeNode(jobNode);
         expect(value).toBeTruthy();
     });
@@ -161,12 +157,12 @@ describe("Positive testing", () => {
 
 describe("Negative testing for ZoweDatasetTreeNode", () => {
     it("should fail with ZoweUSSNode node type", async () => {
-        const ussNode = new ZoweUSSNode(null, null, null, null, null);
+        const ussNode = new ZoweUSSNode({ label: "", collapsibleState: vscode.TreeItemCollapsibleState.None });
         const value = sharedUtils.isZoweDatasetTreeNode(ussNode);
         expect(value).toBeFalsy();
     });
-    it("should fail with Job node type", async () => {
-        const jobNode = new Job(null, null, null, null, null, null);
+    it("should fail with ZoweJobNode node type", async () => {
+        const jobNode = new ZoweJobNode({ label: "", collapsibleState: vscode.TreeItemCollapsibleState.None });
         const value = sharedUtils.isZoweDatasetTreeNode(jobNode);
         expect(value).toBeFalsy();
     });
@@ -174,12 +170,12 @@ describe("Negative testing for ZoweDatasetTreeNode", () => {
 
 describe("Negative testing for ZoweUSSTreeNode", () => {
     it("should fail with ZoweDatasetNode node type", async () => {
-        const dsNode = new ZoweDatasetNode(null, null, null, null);
+        const dsNode = new ZoweDatasetNode({ label: "", collapsibleState: vscode.TreeItemCollapsibleState.None });
         const value = sharedUtils.isZoweUSSTreeNode(dsNode);
         expect(value).toBeFalsy();
     });
-    it("should fail with Job node type", async () => {
-        const jobNode = new Job(null, null, null, null, null, null);
+    it("should fail with ZoweJobNode node type", async () => {
+        const jobNode = new ZoweJobNode({ label: "", collapsibleState: vscode.TreeItemCollapsibleState.None });
         const value = sharedUtils.isZoweUSSTreeNode(jobNode);
         expect(value).toBeFalsy();
     });
@@ -187,12 +183,12 @@ describe("Negative testing for ZoweUSSTreeNode", () => {
 
 describe("Negative testing for ZoweJobTreeNode", () => {
     it("should fail with ZoweDatasetNode node type", async () => {
-        const dsNode = new ZoweDatasetNode(null, null, null, null);
+        const dsNode = new ZoweDatasetNode({ label: "", collapsibleState: vscode.TreeItemCollapsibleState.None });
         const value = sharedUtils.isZoweJobTreeNode(dsNode);
         expect(value).toBeFalsy();
     });
     it("should fail with ZoweUSSNode node type", async () => {
-        const ussNode = new ZoweUSSNode(null, null, null, null, null);
+        const ussNode = new ZoweUSSNode({ label: "", collapsibleState: vscode.TreeItemCollapsibleState.None });
         const value = sharedUtils.isZoweJobTreeNode(ussNode);
         expect(value).toBeFalsy();
     });
@@ -210,7 +206,7 @@ describe("Test uploadContents", () => {
         );
 
         await sharedUtils.uploadContent(
-            new ZoweUSSNode(null, null, null, null, null),
+            new ZoweUSSNode({ label: "", collapsibleState: vscode.TreeItemCollapsibleState.None }),
             {
                 fileName: "whatever",
             } as any,
@@ -235,7 +231,7 @@ describe("Test uploadContents", () => {
         );
 
         await sharedUtils.uploadContent(
-            new ZoweUSSNode(null, null, null, null, null),
+            new ZoweUSSNode({ label: "", collapsibleState: vscode.TreeItemCollapsibleState.None }),
             {
                 fileName: "whatever",
             } as any,
@@ -283,8 +279,8 @@ describe("Test uploadContents", () => {
 describe("Test force upload", () => {
     async function createBlockMocks() {
         const newVariables = {
-            dsNode: new ZoweDatasetNode(null, null, null, null),
-            ussNode: new ZoweUSSNode(null, null, null, null, null),
+            dsNode: new ZoweDatasetNode({ label: "", collapsibleState: vscode.TreeItemCollapsibleState.None }),
+            ussNode: new ZoweUSSNode({ label: "", collapsibleState: vscode.TreeItemCollapsibleState.None }),
             showInformationMessage: jest.fn(),
             showWarningMessage: jest.fn(),
             showErrorMessage: jest.fn(),
@@ -459,89 +455,164 @@ describe("Shared Utils Unit Tests - Function getDocumentFilePath", () => {
         blockMocks = createBlockMocks();
         globals.defineGlobals("/test/path/");
 
-        let node = new ZoweDatasetNode("AUSER.TEST.JCL(member)", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null);
+        let node = new ZoweDatasetNode({
+            label: "AUSER.TEST.JCL(member)",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.datasetSessionNode,
+        });
         expect(sharedUtils.getDocumentFilePath(node.label.toString(), node)).toBe(
             path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.TEST.JCL(member).jcl")
         );
-        node = new ZoweDatasetNode("AUSER.TEST.ASM(member)", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null);
+        node = new ZoweDatasetNode({
+            label: "AUSER.TEST.ASM(member)",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.datasetSessionNode,
+        });
         expect(sharedUtils.getDocumentFilePath(node.label.toString(), node)).toBe(
             path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.TEST.ASM(member).asm")
         );
-        node = new ZoweDatasetNode("AUSER.COBOL.TEST(member)", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null);
+        node = new ZoweDatasetNode({
+            label: "AUSER.COBOL.TEST(member)",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.datasetSessionNode,
+        });
         expect(sharedUtils.getDocumentFilePath(node.label.toString(), node)).toBe(
             path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.COBOL.TEST(member).cbl")
         );
-        node = new ZoweDatasetNode("AUSER.PROD.PLI(member)", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null);
+        node = new ZoweDatasetNode({
+            label: "AUSER.PROD.PLI(member)",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.datasetSessionNode,
+        });
         expect(sharedUtils.getDocumentFilePath(node.label.toString(), node)).toBe(
             path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.PROD.PLI(member).pli")
         );
-        node = new ZoweDatasetNode("AUSER.PROD.PLX(member)", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null);
+        node = new ZoweDatasetNode({
+            label: "AUSER.PROD.PLX(member)",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.datasetSessionNode,
+        });
         expect(sharedUtils.getDocumentFilePath(node.label.toString(), node)).toBe(
             path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.PROD.PLX(member).pli")
         );
-        node = new ZoweDatasetNode("AUSER.PROD.SH(member)", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null);
+        node = new ZoweDatasetNode({
+            label: "AUSER.PROD.SH(member)",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.datasetSessionNode,
+        });
         expect(sharedUtils.getDocumentFilePath(node.label.toString(), node)).toBe(
             path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.PROD.SH(member).sh")
         );
-        node = new ZoweDatasetNode("AUSER.REXX.EXEC(member)", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null);
+        node = new ZoweDatasetNode({
+            label: "AUSER.REXX.EXEC(member)",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.datasetSessionNode,
+        });
         expect(sharedUtils.getDocumentFilePath(node.label.toString(), node)).toBe(
             path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.REXX.EXEC(member).rexx")
         );
-        node = new ZoweDatasetNode("AUSER.TEST.XML(member)", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null);
+        node = new ZoweDatasetNode({
+            label: "AUSER.TEST.XML(member)",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.datasetSessionNode,
+        });
         expect(sharedUtils.getDocumentFilePath(node.label.toString(), node)).toBe(
             path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.TEST.XML(member).xml")
         );
 
-        node = new ZoweDatasetNode("AUSER.TEST.XML", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null);
+        node = new ZoweDatasetNode({
+            label: "AUSER.TEST.XML",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.datasetSessionNode,
+        });
         expect(sharedUtils.getDocumentFilePath(node.label.toString(), node)).toBe(
             path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.TEST.XML.xml")
         );
-        node = new ZoweDatasetNode("AUSER.TEST.TXML", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null);
+        node = new ZoweDatasetNode({
+            label: "AUSER.TEST.TXML",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.datasetSessionNode,
+        });
         expect(sharedUtils.getDocumentFilePath(node.label.toString(), node)).toBe(
             path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.TEST.TXML")
         );
-        node = new ZoweDatasetNode("AUSER.XML.TGML", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null);
+        node = new ZoweDatasetNode({
+            label: "AUSER.XML.TGML",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.datasetSessionNode,
+        });
         expect(sharedUtils.getDocumentFilePath(node.label.toString(), node)).toBe(
             path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.XML.TGML.xml")
         );
-        node = new ZoweDatasetNode("AUSER.XML.ASM", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null);
+        node = new ZoweDatasetNode({
+            label: "AUSER.XML.ASM",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.datasetSessionNode,
+        });
         expect(sharedUtils.getDocumentFilePath(node.label.toString(), node)).toBe(
             path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.XML.ASM.asm")
         );
-        node = new ZoweDatasetNode("AUSER", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null);
+        node = new ZoweDatasetNode({
+            label: "AUSER",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.datasetSessionNode,
+        });
         expect(sharedUtils.getDocumentFilePath(node.label.toString(), node)).toBe(
             path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER")
         );
-        node = new ZoweDatasetNode("AUSER.XML.TEST(member)", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null);
+        node = new ZoweDatasetNode({
+            label: "AUSER.XML.TEST(member)",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.datasetSessionNode,
+        });
         expect(sharedUtils.getDocumentFilePath(node.label.toString(), node)).toBe(
             path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.XML.TEST(member).xml")
         );
-        node = new ZoweDatasetNode("XML.AUSER.TEST(member)", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null);
+        node = new ZoweDatasetNode({
+            label: "XML.AUSER.TEST(member)",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.datasetSessionNode,
+        });
         expect(sharedUtils.getDocumentFilePath(node.label.toString(), node)).toBe(
             path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "XML.AUSER.TEST(member)")
         );
-        node = new ZoweDatasetNode("AUSER.COBOL.PL1.XML.TEST(member)", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null);
+        node = new ZoweDatasetNode({
+            label: "AUSER.COBOL.PL1.XML.TEST(member)",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.datasetSessionNode,
+        });
         expect(sharedUtils.getDocumentFilePath(node.label.toString(), node)).toBe(
             path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.COBOL.PL1.XML.TEST(member).xml")
         );
-        node = new ZoweDatasetNode(
-            "AUSER.COBOL.PL1.XML.ASSEMBLER.TEST(member)",
-            vscode.TreeItemCollapsibleState.None,
-            blockMocks.datasetSessionNode,
-            null
-        );
+        node = new ZoweDatasetNode({
+            label: "AUSER.COBOL.PL1.XML.ASSEMBLER.TEST(member)",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.datasetSessionNode,
+        });
         expect(sharedUtils.getDocumentFilePath(node.label.toString(), node)).toBe(
             path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.COBOL.PL1.XML.ASSEMBLER.TEST(member).asm")
         );
-        node = new ZoweDatasetNode("AUSER.TEST.COPYBOOK", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null);
+        node = new ZoweDatasetNode({
+            label: "AUSER.TEST.COPYBOOK",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.datasetSessionNode,
+        });
         expect(sharedUtils.getDocumentFilePath(node.label.toString(), node)).toBe(
             path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.TEST.COPYBOOK.cpy")
         );
-        node = new ZoweDatasetNode("AUSER.TEST.PLINC", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null);
+        node = new ZoweDatasetNode({
+            label: "AUSER.TEST.PLINC",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.datasetSessionNode,
+        });
         expect(sharedUtils.getDocumentFilePath(node.label.toString(), node)).toBe(
             path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.TEST.PLINC.inc")
         );
-        node = new ZoweDatasetNode("AUSER.TEST.SPFLOG1", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null);
+        node = new ZoweDatasetNode({
+            label: "AUSER.TEST.SPFLOG1",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.datasetSessionNode,
+        });
         expect(sharedUtils.getDocumentFilePath(node.label.toString(), node)).toEqual(
             path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.TEST.SPFLOG1.log")
         );
@@ -578,7 +649,7 @@ describe("Shared Utils Unit Tests - Function getSelectedNodeList", () => {
     });
 
     function createTestNode() {
-        const node = new ZoweDatasetNode("testLabel", vscode.TreeItemCollapsibleState.Collapsed, null, null, null);
+        const node = new ZoweDatasetNode({ label: "testLabel", collapsibleState: vscode.TreeItemCollapsibleState.Collapsed });
         return node;
     }
 });

@@ -434,19 +434,18 @@ async function createGlobalMocks() {
 
 function createBlockMocks(globalMocks: any) {
     const blockMocks = {
-        rootNode: new ZoweUSSNode("root", vscode.TreeItemCollapsibleState.Collapsed, null, globalMocks.session, null, false, "test", undefined),
+        rootNode: new ZoweUSSNode({
+            label: "root",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            session: globalMocks.session,
+        }),
         testNode: null,
     };
-    blockMocks.testNode = new ZoweUSSNode(
-        globals.DS_PDS_CONTEXT,
-        vscode.TreeItemCollapsibleState.Collapsed,
-        blockMocks.rootNode,
-        null,
-        null,
-        false,
-        "test",
-        undefined
-    );
+    blockMocks.testNode = new ZoweUSSNode({
+        label: globals.DS_PDS_CONTEXT,
+        collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+        parentNode: blockMocks.rootNode,
+    });
 
     blockMocks.rootNode.contextValue = globals.USS_SESSION_CONTEXT;
     return blockMocks;

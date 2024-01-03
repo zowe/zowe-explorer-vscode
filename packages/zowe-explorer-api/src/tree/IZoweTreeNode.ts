@@ -172,6 +172,14 @@ export interface IZoweDatasetTreeNode extends IZoweTreeNode {
      * @param {string}
      */
     setEtag?(etag: string);
+    /**
+     * Downloads and displays a file in a text editor view
+     *
+     * @param download Download the file default false
+     * @param preview the file, true or false
+     * @param datasetFileProvider the tree provider
+     */
+    openDs?(download: boolean, previewFile: boolean, datasetFileProvider: IZoweTree<IZoweDatasetTreeNode>): Promise<void>;
 }
 
 /**
@@ -251,7 +259,7 @@ export interface IZoweUSSTreeNode extends IZoweTreeNode {
      * @param preview the file, true or false
      * @param ussFileProvider the tree provider
      */
-    openUSS?(download: boolean, previewFile: boolean, ussFileProvider: IZoweTree<IZoweUSSTreeNode>);
+    openUSS?(download: boolean, previewFile: boolean, ussFileProvider: IZoweTree<IZoweUSSTreeNode>): Promise<void>;
     /**
      * Returns the local file path for the ZoweUSSNode
      *

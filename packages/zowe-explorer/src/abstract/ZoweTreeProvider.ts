@@ -15,7 +15,7 @@ import { imperative } from "@zowe/cli";
 import { PersistentFilters } from "../PersistentFilters";
 import { getIconByNode, getIconById, IconId } from "../generators/icons";
 import * as contextually from "../shared/context";
-import { IZoweTreeNode, IZoweDatasetTreeNode, IZoweNodeType, IZoweTree, PersistenceSchemaEnum, ValidProfileEnum } from "@zowe/zowe-explorer-api";
+import { IZoweTreeNode, IZoweNodeType, IZoweTree, PersistenceSchemaEnum, ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { setProfile, setSession, errorHandling } from "../utils/ProfilesUtils";
 
