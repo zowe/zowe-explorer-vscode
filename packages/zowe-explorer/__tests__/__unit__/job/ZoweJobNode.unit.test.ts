@@ -15,7 +15,7 @@ import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
 import * as globals from "../../../src/globals";
 import { createIJobFile, createIJobObject, createJobSessionNode } from "../../../__mocks__/mockCreators/jobs";
-import { Job } from "../../../src/job/ZoweJobNode";
+import { ZoweJobNode } from "../../../src/job/ZoweJobNode";
 import { IZoweJobTreeNode, ProfilesCache, Gui, JobSortOpts, SortDirection } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { Profiles } from "../../../src/Profiles";
@@ -173,14 +173,13 @@ async function createGlobalMocks() {
     globalMocks.mockGetJob.mockReturnValue(globalMocks.testIJob);
     globalMocks.mockGetJobsByOwnerAndPrefix.mockReturnValue([globalMocks.testIJob, globalMocks.testIJobComplete]);
     globalMocks.mockProfileInstance.editSession = jest.fn(() => globalMocks.testProfile);
-    globalMocks.testJobNode = new Job(
-        "jobtest",
-        vscode.TreeItemCollapsibleState.Expanded,
-        null,
-        globalMocks.testSession,
-        globalMocks.testIJob,
-        globalMocks.testProfile
-    );
+    globalMocks.testJobNode = new ZoweJobNode({
+        label: "jobtest",
+        collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
+        session: globalMocks.testSession,
+        profile: globalMocks.testProfile,
+        job: globalMocks.testIJob,
+    });
     globalMocks.testJobNode.contextValue = "job";
     globalMocks.testJobNode.dirty = true;
     globalMocks.testIJobComplete.jobid = "JOB1235";
@@ -227,6 +226,7 @@ describe("ZoweJobNode unit tests - Function addSession", () => {
         await globalMocks.testJobsProvider.addSession("sestest");
         expect(globalMocks.testJobsProvider.mSessionNodes[1]).toBeDefined();
         expect(globalMocks.testJobsProvider.mSessionNodes[1].label).toEqual("sestest");
+        expect(globalMocks.testJobsProvider.mSessionNodes[1].tooltip).toEqual("sestest");
     });
 
     it("Tests that addSession adds the session to the tree with disabled global setting", async () => {
@@ -258,14 +258,13 @@ describe("ZoweJobNode unit tests - Function deleteSession", () => {
 describe("ZoweJobNode unit tests - Function delete", () => {
     it("Tests that delete handles an error thrown during job deletion", async () => {
         const globalMocks = await createGlobalMocks();
-        const badJobNode = new Job(
-            "badJobNode",
-            vscode.TreeItemCollapsibleState.Collapsed,
-            null,
-            globalMocks.testSession,
-            globalMocks.testIJob,
-            globalMocks.testProfile
-        );
+        const badJobNode = new ZoweJobNode({
+            label: "badJobNode",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            session: globalMocks.testSession,
+            profile: globalMocks.testProfile,
+            job: globalMocks.testIJob,
+        });
 
         const apiRegisterInstance = ZoweExplorerApiRegister.getInstance();
         const mockJesApi = await apiRegisterInstance.getJesApi(globalMocks.testProfile);
@@ -302,7 +301,6 @@ describe("ZoweJobNode unit tests - Function getChildren", () => {
         await globalMocks.testJobsProvider.addSession("fake");
 
         const jobs = await globalMocks.testJobsProvider.mSessionNodes[1].getChildren();
-
         expect(jobs.length).toBe(2);
         expect(jobs[0].job.jobid).toEqual(globalMocks.testIJob.jobid);
         expect(jobs[0].tooltip).toEqual("TESTJOB(JOB1234)");
@@ -324,7 +322,7 @@ describe("ZoweJobNode unit tests - Function getChildren", () => {
         globalMocks.testJobsProvider.mSessionNodes[1].dirty = true;
         const newJobs = await globalMocks.testJobsProvider.mSessionNodes[1].getChildren();
 
-        expect(newJobs[0].label).toEqual("TESTJOB(JOB1234) - CC 0000");
+        expect(newJobs[0].label).toEqual("TESTJOB(JOB1234) - sampleMember - CC 0000");
     });
 
     it("Tests that getChildren retrieves only child jobs which match a provided searchId", async () => {
@@ -339,7 +337,7 @@ describe("ZoweJobNode unit tests - Function getChildren", () => {
 
         expect(jobs.length).toBe(1);
         expect(jobs[0].job.jobid).toEqual(globalMocks.testIJob.jobid);
-        expect(jobs[0].tooltip).toEqual("TESTJOB(JOB1234)");
+        expect(jobs[0].tooltip).toEqual("TESTJOB(JOB1234) - ACTIVE");
     });
 
     it("Tests that getChildren returns the spool files if called on a job", async () => {
@@ -396,14 +394,11 @@ describe("ZoweJobNode unit tests - Function getChildren", () => {
 
     it("should return a new job if not owner and is a session", async () => {
         const globalMocks = await createGlobalMocks();
-        const expectedJob = new Job(
-            "Use the search button to display jobs",
-            vscode.TreeItemCollapsibleState.None,
-            globalMocks.testJobNode,
-            null,
-            null,
-            null
-        );
+        const expectedJob = new ZoweJobNode({
+            label: "Use the search button to display jobs",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: globalMocks.testJobNode,
+        });
 
         globalMocks.testJobNode._owner = null;
         jest.spyOn(contextually, "isSession").mockReturnValueOnce(true);
@@ -413,7 +408,11 @@ describe("ZoweJobNode unit tests - Function getChildren", () => {
     it("should return 'No jobs found' if no children is found", async () => {
         const globalMocks = await createGlobalMocks();
         const expectedJob = [
-            new Job("No jobs found", vscode.TreeItemCollapsibleState.None, globalMocks.testJobsProvider.mSessionNodes[1], null, null, null),
+            new ZoweJobNode({
+                label: "No jobs found",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                parentNode: globalMocks.testJobsProvider.mSessionNodes[1],
+            }),
         ];
         expectedJob[0].iconPath = null;
         expectedJob[0].contextValue = "information";
@@ -422,6 +421,44 @@ describe("ZoweJobNode unit tests - Function getChildren", () => {
         jest.spyOn(globalMocks.testJobsProvider.mSessionNodes[1], "getJobs").mockResolvedValue([]);
         const jobs = await globalMocks.testJobsProvider.mSessionNodes[1].getChildren();
         expect(jobs).toEqual(expectedJob);
+    });
+
+    it("To check smfid field in Jobs Tree View", async () => {
+        const globalMocks = await createGlobalMocks();
+
+        await globalMocks.testJobsProvider.addSession("fake");
+        globalMocks.testJobsProvider.mSessionNodes[1].searchId = "JOB1234";
+        globalMocks.testJobsProvider.mSessionNodes[1].dirty = true;
+        globalMocks.testJobsProvider.mSessionNodes[1].filtered = true;
+        globalMocks.testIJob.retcode = "ACTIVE";
+
+        const jobs = await globalMocks.testJobsProvider.mSessionNodes[1].getChildren();
+        expect(jobs[0].label).toEqual("TESTJOB(JOB1234) - sampleMember - ACTIVE");
+    });
+
+    it("smfid field is not in Jobs Tree View", async () => {
+        const globalMocks = await createGlobalMocks();
+
+        await globalMocks.testJobsProvider.addSession("fake");
+        globalMocks.testJobsProvider.mSessionNodes[1].searchId = "JOB1234";
+        globalMocks.testJobsProvider.mSessionNodes[1].dirty = true;
+        globalMocks.testJobsProvider.mSessionNodes[1].filtered = true;
+        globalMocks.testIJob.retcode = "ACTIVE";
+        globalMocks.testIJob["exec-member"] = "";
+        const jobs = await globalMocks.testJobsProvider.mSessionNodes[1].getChildren();
+        expect(jobs[0].label).toEqual("TESTJOB(JOB1234) - ACTIVE");
+    });
+
+    it("To check smfid field when return code is undefined", async () => {
+        const globalMocks = await createGlobalMocks();
+
+        await globalMocks.testJobsProvider.addSession("fake");
+        globalMocks.testJobsProvider.mSessionNodes[1].searchId = "JOB1234";
+        globalMocks.testJobsProvider.mSessionNodes[1].dirty = true;
+        globalMocks.testJobsProvider.mSessionNodes[1].filtered = true;
+
+        const jobs = await globalMocks.testJobsProvider.mSessionNodes[1].getChildren();
+        expect(jobs[0].label).toEqual("TESTJOB(JOB1234) - ACTIVE");
     });
 });
 
@@ -451,14 +488,14 @@ describe("ZoweJobNode unit tests - Function flipState", () => {
 describe("ZoweJobNode unit tests - Function addFavorite", () => {
     async function createBlockMocks(globalMocks) {
         const newMocks = {
-            testJobNode: new Job(
-                "MYHLQ(JOB1283) - Input",
-                vscode.TreeItemCollapsibleState.Collapsed,
-                globalMocks.testJobsProvider.mSessionNodes[1],
-                globalMocks.testJobsProvider.mSessionNodes[1].getSession(),
-                globalMocks.testIJob,
-                globalMocks.testProfile
-            ),
+            testJobNode: new ZoweJobNode({
+                label: "MYHLQ(JOB1283) - Input",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                parentNode: globalMocks.testJobsProvider.mSessionNodes[1],
+                session: globalMocks.testJobsProvider.mSessionNodes[1].getSession(),
+                profile: globalMocks.testIProfile,
+                job: globalMocks.testIJob,
+            }),
         };
 
         return newMocks;
@@ -501,22 +538,22 @@ describe("ZoweJobNode unit tests - Function addFavorite", () => {
 describe("ZoweJobNode unit tests - Function removeFavorite", () => {
     async function createBlockMocks(globalMocks) {
         const newMocks = {
-            testJobNode1: new Job(
-                "MYHLQ(JOB1283) - Input",
-                vscode.TreeItemCollapsibleState.Collapsed,
-                globalMocks.testJobsProvider.mSessionNodes[1],
-                globalMocks.testJobsProvider.mSessionNodes[1].getSession(),
-                globalMocks.testIJob,
-                globalMocks.testProfile
-            ),
-            testJobNode2: new Job(
-                "MYHLQ(JOB1284) - Input",
-                vscode.TreeItemCollapsibleState.Collapsed,
-                globalMocks.testJobsProvider.mSessionNodes[1],
-                globalMocks.testJobsProvider.mSessionNodes[1].getSession(),
-                globalMocks.testIJob,
-                globalMocks.testProfile
-            ),
+            testJobNode1: new ZoweJobNode({
+                label: "MYHLQ(JOB1283) - Input",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                parentNode: globalMocks.testJobsProvider.mSessionNodes[1],
+                session: globalMocks.testJobsProvider.mSessionNodes[1].getSession(),
+                profile: globalMocks.testProfile,
+                job: globalMocks.testIJob,
+            }),
+            testJobNode2: new ZoweJobNode({
+                label: "MYHLQ(JOB1284) - Input",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                parentNode: globalMocks.testJobsProvider.mSessionNodes[1],
+                session: globalMocks.testJobsProvider.mSessionNodes[1].getSession(),
+                profile: globalMocks.testProfile,
+                job: globalMocks.testIJob,
+            }),
         };
 
         return newMocks;
@@ -568,14 +605,14 @@ describe("ZoweJobNode unit tests - Function saveSearch", () => {
         const testSession = globalMocks.testJobsProvider.mSessionNodes[1].getSession();
         const newMocks = {
             testSession,
-            testJobNode: new Job(
-                "MYHLQ(JOB1283) - Input",
-                vscode.TreeItemCollapsibleState.Collapsed,
-                globalMocks.testJobsProvider.mSessionNodes[1],
-                testSession,
-                globalMocks.testIJob,
-                globalMocks.testProfile
-            ),
+            testJobNode: new ZoweJobNode({
+                label: "MYHLQ(JOB1283) - Input",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                parentNode: globalMocks.testJobsProvider.mSessionNodes[1],
+                session: testSession,
+                profile: globalMocks.testProfile,
+                job: globalMocks.testIJob,
+            }),
         };
 
         globalMocks.testJobsProvider.mFavorites = [];
@@ -623,7 +660,7 @@ describe("ZosJobsProvider - Function searchPrompt", () => {
         const globalMocks = await createGlobalMocks();
         jest.spyOn(globalMocks.testJobsProvider, "applySavedFavoritesSearchLabel").mockReturnValue(undefined);
         const applySearchLabelToNode = jest.spyOn(globalMocks.testJobsProvider, "applySearchLabelToNode");
-        const jobSessionNode = new Job("sestest", vscode.TreeItemCollapsibleState.Collapsed, null, null, null, null);
+        const jobSessionNode = new ZoweJobNode({ label: "sestest", collapsibleState: vscode.TreeItemCollapsibleState.Collapsed });
         jobSessionNode.contextValue = globals.JOBS_SESSION_CONTEXT + globals.FAV_SUFFIX;
         await globalMocks.testJobsProvider.searchPrompt(jobSessionNode);
         expect(applySearchLabelToNode).toHaveBeenCalled();
@@ -799,30 +836,6 @@ describe("ZosJobsProvider - Function handleEditingMultiJobParameters", () => {
     });
 });
 
-describe("ZosJobsProvider - tooltip", () => {
-    it("should return undefined tooltip", async () => {
-        const globalMocks = await createGlobalMocks();
-        globalMocks.testJobsProvider.mSessionNodes[1]._tooltip = undefined;
-        globalMocks.testJobsProvider.mSessionNodes[1].job = undefined;
-        globalMocks.testJobsProvider.mSessionNodes[1].label = undefined;
-        const actualTooltip = globalMocks.testJobsProvider.mSessionNodes[1].tooltip;
-        expect(undefined).toEqual(actualTooltip);
-    });
-    it("should return existing _tooltip", async () => {
-        const globalMocks = await createGlobalMocks();
-        globalMocks.testJobsProvider.mSessionNodes[1]._tooltip = "my_tooltip";
-        const actualTooltip = globalMocks.testJobsProvider.mSessionNodes[1].tooltip;
-        expect("my_tooltip").toEqual(actualTooltip);
-    });
-    it("should return job id tooltip", async () => {
-        const globalMocks = await createGlobalMocks();
-        const job = { jobname: "myJob", jobid: 123, retcode: 345 };
-        globalMocks.testJobsProvider.mSessionNodes[1].job = job;
-        const actualTooltip = globalMocks.testJobsProvider.mSessionNodes[1].tooltip;
-        expect("myJob(123) - 345").toEqual(actualTooltip);
-    });
-});
-
 describe("ZosJobsProvider - getJobs", () => {
     it("should filter duplicate jobs", async () => {
         const globalMocks = await createGlobalMocks();
@@ -862,7 +875,7 @@ describe("Job - sortJobs", () => {
                     jobid: "JOBID120",
                 },
             } as IZoweJobTreeNode,
-        ].sort(Job.sortJobs({ method: JobSortOpts.Id, direction: SortDirection.Ascending }));
+        ].sort(ZoweJobNode.sortJobs({ method: JobSortOpts.Id, direction: SortDirection.Ascending }));
         expect(sorted[0].job.jobid).toBe("JOBID120");
         expect(sorted[1].job.jobid).toBe("JOBID120");
         expect(sorted[2].job.jobid).toBe("JOBID123");
