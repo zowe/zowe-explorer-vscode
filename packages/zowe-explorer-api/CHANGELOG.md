@@ -4,11 +4,13 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ## TBD Release
 
-- Added new APIs for Issue UNIX Command. [#1326](https://github.com/zowe/vscode-extension-for-zowe/issues/1326)
-
 ### New features and enhancements
 
+- Added new APIs for Issue UNIX Command. [#1326](https://github.com/zowe/vscode-extension-for-zowe/issues/1326)
+
 ### Bug fixes
+
+- Update dependencies for technical currency purposes.
 
 ## `3.0.0-next.202311171754`
 
