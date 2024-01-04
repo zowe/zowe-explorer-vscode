@@ -3,6 +3,7 @@
   "createFile.dataSetC": "Partitioned Data Set: C",
   "createFile.dataSetClassic": "Partitioned Data Set: Classic",
   "createFile.dataSetPartitioned": "Partitioned Data Set: Default",
+  "createFile.dataSetExtended": "Partitioned Data Set: Extended",
   "createFile.dataSetSequential": "Sequential Data Set",
   "dsActions.cancelled": "Operation Cancelled",
   "dsActions.copy.inProgress": "Copying File(s)",

@@ -1803,6 +1803,21 @@
           "description": "%zowe.ds.default.pds%",
           "scope": "resource"
         },
+        "zowe.ds.default.extended": {
+          "default": {
+            "dsntype": "LIBRARY",
+            "dsorg": "PO",
+            "alcunit": "CYL",
+            "primary": 10,
+            "secondary": 3,
+            "dirblk": 25,
+            "recfm": "FB",
+            "blksize": 27920,
+            "lrecl": 80
+          },
+          "description": "%zowe.ds.default.extended%",
+          "scope": "resource"
+        },
         "zowe.ds.default.ps": {
           "default": {
             "dsorg": "PS",
