@@ -433,6 +433,7 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
         const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
         const textDocument = createTextDocument("HLQ.TEST.AFILE(mem)", datasetSessionNode);
         (textDocument.languageId as any) = "jcl";
+        (textDocument.uri.fsPath as any) = "/user/temp/textdocument.txt";
         const profileInstance = createInstanceOfProfile(imperativeProfile);
         const jesApi = createJesApi(imperativeProfile);
         const mockCheckCurrentProfile = jest.fn();
@@ -440,6 +441,17 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
         Object.defineProperty(profileInstance, "loadNamedProfile", {
             value: jest.fn(),
             configurable: true,
+        });
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    checkCurrentProfile: mockCheckCurrentProfile.mockReturnValueOnce({
+                        name: imperativeProfile.name,
+                        status: "unverified",
+                    }),
+                    validProfile: ValidProfileEnum.UNVERIFIED,
+                };
+            }),
         });
         const errorGuiMsgSpy = jest.spyOn(Gui, "errorMessage");
         const errorLogSpy = jest.spyOn(ZoweLogger, "error");
@@ -563,9 +575,13 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
         const blockMocks: any = createBlockMocks();
         jest.spyOn(ZoweLogger, "trace").mockImplementation();
         Object.defineProperty(vscode.window, "activeTextEditor", {
-            value: { document: { fileName: "test" } } as any,
+            value: { document: { fileName: "test", uri: { fsPath: "fake/profilename/document.txt" } } } as any,
             configurable: true,
         });
+        blockMocks.testDatasetTree.getChildren.mockResolvedValueOnce([
+            new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null as any),
+            blockMocks.datasetSessionNode,
+        ]);
         jest.spyOn(vscode.commands, "executeCommand").mockImplementation();
         jest.spyOn(ZoweLogger, "debug").mockImplementation();
         const confirmJobSubmissionSpy = jest.spyOn(dsActions, "confirmJobSubmission");
@@ -577,6 +593,10 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
     it("Checking failed attempt to submit of active text editor content as JCL without profile chosen from quickpick", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
+        Object.defineProperty(ProfileManagement, "getRegisteredProfileNameList", {
+            value: jest.fn().mockReturnValue(["firstName", "secondName"]),
+            configurable: true,
+        });
         mocked(zowe.ZosmfSession.createSessCfgFromArgs).mockReturnValue(blockMocks.session.ISession);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce(undefined); // Here we imitate the case when no profile was selected
@@ -619,6 +639,31 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
         expect(submitJclSpy).toBeCalled();
         expect(mocked(Gui.errorMessage)).toBeCalled();
         expect(mocked(Gui.errorMessage).mock.calls[0][0]).toContain(testError.message);
+    });
+
+    it("Getting session name from the path itself", async () => {
+        globals.defineGlobals("/user/");
+        createGlobalMocks();
+        const blockMocks: any = createBlockMocks();
+        mocked(zowe.ZosmfSession.createSessCfgFromArgs).mockReturnValue(blockMocks.session);
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        blockMocks.testDatasetTree.getChildren.mockResolvedValueOnce([
+            new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null as any),
+            blockMocks.datasetSessionNode,
+        ]);
+        blockMocks.datasetSessionNode.label = "temp";
+        activeTextEditorDocument.mockReturnValue(blockMocks.textDocument);
+        const submitJclSpy = jest.spyOn(blockMocks.jesApi, "submitJcl");
+        submitJclSpy.mockClear();
+        submitJclSpy.mockResolvedValueOnce(blockMocks.iJob);
+        await dsActions.submitJcl(blockMocks.testDatasetTree, undefined);
+
+        expect(submitJclSpy).toBeCalled();
+        expect(mocked(Gui.showMessage)).toBeCalled();
+        expect(mocked(Gui.showMessage).mock.calls.length).toBe(1);
+        expect(mocked(Gui.showMessage).mock.calls[0][0]).toEqual(
+            "Job submitted [JOB1234](command:zowe.jobs.setJobSpool?%5B%22temp%22%2C%22JOB1234%22%5D)"
+        );
     });
 });
 

@@ -1009,20 +1009,31 @@ export async function submitJcl(datasetProvider: api.IZoweTree<api.IZoweDatasetT
     const profiles = Profiles.getInstance();
     let sessProfileName;
     if (regExp === null) {
-        const profileNamesList = ProfileManagement.getRegisteredProfileNameList(globals.Trees.JES);
-        if (profileNamesList.length) {
-            const quickPickOptions: vscode.QuickPickOptions = {
-                placeHolder: localize("submitJcl.qp.placeholder", "Select the Profile to use to submit the job"),
-                ignoreFocusOut: true,
-                canPickMany: false,
-            };
-            sessProfileName = await api.Gui.showQuickPick(profileNamesList, quickPickOptions);
-            if (!sessProfileName) {
-                api.Gui.infoMessage(localizedStrings.opCancelled);
-                return;
+        if (!doc.uri.fsPath.includes(globals.ZOWETEMPFOLDER)) {
+            const profileNamesList = ProfileManagement.getRegisteredProfileNameList(globals.Trees.JES);
+            if (profileNamesList.length > 1) {
+                const quickPickOptions: vscode.QuickPickOptions = {
+                    placeHolder: localize("submitJcl.qp.placeholder", "Select the Profile to use to submit the job"),
+                    ignoreFocusOut: true,
+                    canPickMany: false,
+                };
+                sessProfileName = await api.Gui.showQuickPick(profileNamesList, quickPickOptions);
+                if (!sessProfileName) {
+                    api.Gui.infoMessage(localizedStrings.opCancelled);
+                    return;
+                }
+            } else if (profileNamesList.length > 0) {
+                sessProfileName = profileNamesList[0];
+            } else {
+                api.Gui.showMessage(localize("submitJcl.noProfile", "No profiles available"));
             }
         } else {
-            api.Gui.showMessage(localize("submitJcl.noProfile", "No profiles available"));
+            // eslint-disable-next-line no-useless-escape
+            const reg = /\/([^\/]+)\/[^\/]*$/;
+            const match = reg.exec(doc.uri.fsPath);
+            if (match) {
+                sessProfileName = match[1];
+            }
         }
     } else {
         sessProfileName = regExp[1];
