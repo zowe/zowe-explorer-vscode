@@ -626,7 +626,29 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
         expect(mocked(Gui.errorMessage)).toBeCalled();
         expect(mocked(Gui.errorMessage).mock.calls[0][0]).toContain(testError.message);
     });
+    it("If there are no registered profiles", async () => {
+        createGlobalMocks();
+        const blockMocks: any = createBlockMocks();
+        Object.defineProperty(ProfileManagement, "getRegisteredProfileNameList", {
+            value: jest.fn().mockReturnValue([]),
+            configurable: true,
+        });
+        blockMocks.testDatasetTree.getChildren.mockResolvedValueOnce([
+            new ZoweDatasetNode({ label: "node", collapsibleState: vscode.TreeItemCollapsibleState.None, parentNode: blockMocks.datasetSessionNode }),
+            blockMocks.datasetSessionNode,
+        ]);
+        mocked(zowe.ZosmfSession.createSessCfgFromArgs).mockReturnValue(blockMocks.session);
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        activeTextEditorDocument.mockReturnValue(blockMocks.textDocument);
+        const showMessagespy = jest.spyOn(Gui, "showMessage");
+        const submitJclSpy = jest.spyOn(blockMocks.jesApi, "submitJcl");
+        submitJclSpy.mockClear();
 
+        await dsActions.submitJcl(blockMocks.testDatasetTree, undefined);
+
+        expect(submitJclSpy).not.toBeCalled();
+        expect(showMessagespy).toBeCalledWith("No profiles available");
+    });
     it("Getting session name from the path itself", async () => {
         globals.defineGlobals("/user/");
         createGlobalMocks();
