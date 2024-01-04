@@ -6,12 +6,14 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
+- Added new data set creation template for partitioned data set extended. [#2600](https://github.com/zowe/vscode-extension-for-zowe/issues/2600)
 - Added "Open with Encoding" feature to open data sets and USS files in a non-standard codepage. [#2435](https://github.com/zowe/vscode-extension-for-zowe/issues/2435)
 
 ### Bug fixes
 
 - Fixed the allocate-like functionality by removing the inclusion of DS item in the filter history. [#2620](https://github.com/zowe/vscode-extension-for-zowe/issues/2620)
 - Fixed issue with `Submit JCL` losing focus on JCL being submitted, causing the wrong job submission. [#2616](https://github.com/zowe/vscode-extension-for-zowe/issues/2616)
+- Update dependencies for technical currency purposes.
 - Fixed issue where USS file tag could get overwritten when changes to file are uploaded. [#2576](https://github.com/zowe/vscode-extension-for-zowe/issues/2576)
 - Fixed failure to refresh token value after user logs in to authentication. [#2638](https://github.com/zowe/vscode-extension-for-zowe/issues/2638)
 - Fixed order of spool files reverses when the Job is expanded and collapsed. [#2644](https://github.com/zowe/vscode-extension-for-zowe/pull/2644)

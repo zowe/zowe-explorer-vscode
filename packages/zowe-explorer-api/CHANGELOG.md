@@ -14,6 +14,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### Bug fixes
 
+- Update dependencies for technical currency purposes.
 - Added return type for `IZoweUSSTreeNode.openUSS`.
 
 ## `2.13.0`

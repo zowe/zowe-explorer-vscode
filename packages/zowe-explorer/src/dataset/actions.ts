@@ -59,6 +59,7 @@ const localizedStrings = {
     dsC: localize("createFile.dataSetC", "Partitioned Data Set: C"),
     dsClassic: localize("createFile.dataSetClassic", "Partitioned Data Set: Classic"),
     dsPartitioned: localize("createFile.dataSetPartitioned", "Partitioned Data Set: Default"),
+    dsExtended: localize("createFile.dataSetExtended", "Partitioned Data Set: Extended"),
     dsSequential: localize("createFile.dataSetSequential", "Sequential Data Set"),
     opCancelled: localize("dsActions.cancelled", "Operation Cancelled"),
     copyingFiles: localize("dsActions.copy.inProgress", "Copying File(s)"),
@@ -460,6 +461,10 @@ export function getDataSetTypeAndOptions(type: string): {
             typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_PARTITIONED;
             createOptions = vscode.workspace.getConfiguration(globals.SETTINGS_DS_DEFAULT_PDS);
             break;
+        case localizedStrings.dsExtended:
+            typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_BLANK;
+            createOptions = vscode.workspace.getConfiguration(globals.SETTINGS_DS_DEFAULT_EXTENDED);
+            break;
         case localizedStrings.dsSequential:
             typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL;
             createOptions = vscode.workspace.getConfiguration(globals.SETTINGS_DS_DEFAULT_PS);
@@ -621,6 +626,7 @@ async function getDsTypeForCreation(datasetProvider: api.IZoweTree<api.IZoweData
         localizedStrings.dsC,
         localizedStrings.dsClassic,
         localizedStrings.dsPartitioned,
+        localizedStrings.dsExtended,
         localizedStrings.dsSequential,
     ];
     return Promise.resolve(api.Gui.showQuickPick(stepTwoChoices, stepTwoOptions));
@@ -697,8 +703,30 @@ function getDsProperties(type: string, datasetProvider: api.IZoweTree<api.IZoweD
 
 function getDefaultDsTypeProperties(dsType: string): zowe.ICreateDataSetOptions {
     typeEnum = getDataSetTypeAndOptions(dsType)?.typeEnum;
-    const cliDefaultsKey = globals.CreateDataSetTypeWithKeysEnum[typeEnum]?.replace("DATA_SET_", "");
-    return zowe.CreateDefaults.DATA_SET[cliDefaultsKey] as zowe.ICreateDataSetOptions;
+
+    if (typeEnum === zowe.CreateDataSetTypeEnum.DATA_SET_BLANK) {
+        const options = getDataSetTypeAndOptions(dsType)?.createOptions;
+        return getDsTypePropertiesFromWorkspaceConfig(options);
+    } else {
+        const cliDefaultsKey = globals.CreateDataSetTypeWithKeysEnum[typeEnum]?.replace("DATA_SET_", "");
+        return zowe.CreateDefaults.DATA_SET[cliDefaultsKey] as zowe.ICreateDataSetOptions;
+    }
+}
+
+export function getDsTypePropertiesFromWorkspaceConfig(createOptions: vscode.WorkspaceConfiguration): zowe.ICreateDataSetOptions {
+    const dsTypeProperties = {} as zowe.ICreateDataSetOptions;
+    if (createOptions) {
+        dsTypeProperties.dsntype = createOptions.get("dsntype");
+        dsTypeProperties.dsorg = createOptions.get("dsorg");
+        dsTypeProperties.alcunit = createOptions.get("alcunit");
+        dsTypeProperties.primary = createOptions.get("primary");
+        dsTypeProperties.secondary = createOptions.get("secondary");
+        dsTypeProperties.dirblk = createOptions.get("dirblk");
+        dsTypeProperties.recfm = createOptions.get("recfm");
+        dsTypeProperties.blksize = createOptions.get("blksize");
+        dsTypeProperties.lrecl = createOptions.get("lrecl");
+    }
+    return dsTypeProperties;
 }
 
 async function allocateOrEditAttributes(): Promise<string> {
