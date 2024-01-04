@@ -239,8 +239,8 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
         // Remove any children that are no longer present in the built record
         this.children = this.children
             .concat(newChildren)
-            .filter((ch) => Object.values(elementChildren).find((recordCh) => recordCh.label === ch.label) != null)
-            .sort(ZoweJobNode.sortJobs(sortMethod));
+            .filter((ch) => Object.values(elementChildren).find((recordCh) => recordCh.label === ch.label) != null);
+        if (contextually.isSession(this)) this.children = this.children.sort(ZoweJobNode.sortJobs(sortMethod));
         this.dirty = false;
         return this.children;
     }
