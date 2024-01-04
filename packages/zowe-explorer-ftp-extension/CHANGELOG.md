@@ -4,6 +4,8 @@
 
 ### Bug fixes
 
+- Update dependencies for technical currency purposes.
+
 ## `1.22.5`
 
 ### Bug fixes
