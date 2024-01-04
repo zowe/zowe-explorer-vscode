@@ -565,7 +565,7 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
             configurable: true,
         });
         blockMocks.testDatasetTree.getChildren.mockResolvedValueOnce([
-            new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null as any),
+            new ZoweDatasetNode({ label: "node", collapsibleState: vscode.TreeItemCollapsibleState.None, parentNode: blockMocks.datasetSessionNode }),
             blockMocks.datasetSessionNode,
         ]);
         jest.spyOn(vscode.commands, "executeCommand").mockImplementation();
@@ -634,7 +634,7 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
         mocked(zowe.ZosmfSession.createSessCfgFromArgs).mockReturnValue(blockMocks.session);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         blockMocks.testDatasetTree.getChildren.mockResolvedValueOnce([
-            new ZoweDatasetNode("node", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null as any),
+            new ZoweDatasetNode({ label: "node", collapsibleState: vscode.TreeItemCollapsibleState.None, parentNode: blockMocks.datasetSessionNode }),
             blockMocks.datasetSessionNode,
         ]);
         blockMocks.datasetSessionNode.label = "temp";
