@@ -951,11 +951,8 @@ export async function submitJcl(datasetProvider: api.IZoweTree<api.IZoweDatasetT
             }
         } else {
             // eslint-disable-next-line no-useless-escape
-            const reg = /\/([^\/]+)\/[^\/]*$/;
-            const match = reg.exec(doc.uri.fsPath);
-            if (match) {
-                sessProfileName = match[1];
-            }
+            const filePathArray = doc.uri.fsPath.split("/");
+            sessProfileName = filePathArray[filePathArray.length - 2];
         }
     } else {
         sessProfileName = regExp[1];
