@@ -237,12 +237,14 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
 
         const sortMethod = contextually.isSession(this) ? this.sort : { method: JobSortOpts.Id, direction: SortDirection.Ascending };
         // Remove any children that are no longer present in the built record
-        this.children = this.children
-            .concat(newChildren)
-            .filter((ch) => Object.values(elementChildren).find((recordCh) => recordCh.label === ch.label) != null);
-        if (contextually.isSession(this)) {
-            this.children = this.children.sort(ZoweJobNode.sortJobs(sortMethod));
-        }
+        this.children = contextually.isSession(this)
+            ? this.children
+                  .concat(newChildren)
+                  .filter((ch) => Object.values(elementChildren).find((recordCh) => recordCh.label === ch.label) != null)
+                  .sort(ZoweJobNode.sortJobs(sortMethod))
+            : this.children
+                  .concat(newChildren)
+                  .filter((ch) => Object.values(elementChildren).find((recordCh) => recordCh.label === ch.label) != null);
         this.dirty = false;
         return this.children;
     }
