@@ -665,9 +665,6 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
         expect(submitJclSpy).toBeCalled();
         expect(mocked(Gui.showMessage)).toBeCalled();
         expect(mocked(Gui.showMessage).mock.calls.length).toBe(1);
-        // expect(mocked(Gui.showMessage).mock.calls[0][0]).toEqual(
-        //     "Job submitted [JOB1234](command:zowe.jobs.setJobSpool?%5B%22temp%22%2C%22JOB1234%22%5D)"
-        // );
     });
 });
 
