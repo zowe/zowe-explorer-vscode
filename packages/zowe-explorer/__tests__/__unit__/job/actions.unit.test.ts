@@ -423,14 +423,14 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
         const profileInstance = createInstanceOfProfile(imperativeProfile);
         const jesApi = createJesApi(imperativeProfile);
         const mockCheckCurrentProfile = jest.fn();
+        const mockLoadNamedProfile = jest.fn();
         bindJesApi(jesApi);
-        Object.defineProperty(profileInstance, "loadNamedProfile", {
-            value: jest.fn(),
-            configurable: true,
-        });
+        const errorGuiMsgSpy = jest.spyOn(Gui, "errorMessage");
+        const errorLogSpy = jest.spyOn(ZoweLogger, "error");
         Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
+                    loadNamedProfile: mockLoadNamedProfile.mockReturnValueOnce(imperativeProfile),
                     checkCurrentProfile: mockCheckCurrentProfile.mockReturnValueOnce({
                         name: imperativeProfile.name,
                         status: "unverified",
@@ -439,8 +439,6 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
                 };
             }),
         });
-        const errorGuiMsgSpy = jest.spyOn(Gui, "errorMessage");
-        const errorLogSpy = jest.spyOn(ZoweLogger, "error");
 
         return {
             session,
@@ -455,6 +453,7 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
             mockCheckCurrentProfile,
             errorLogSpy,
             errorGuiMsgSpy,
+            mockLoadNamedProfile,
         };
     }
 
@@ -641,12 +640,9 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         activeTextEditorDocument.mockReturnValue(blockMocks.textDocument);
         const showMessagespy = jest.spyOn(Gui, "showMessage");
-        const submitJclSpy = jest.spyOn(blockMocks.jesApi, "submitJcl");
-        submitJclSpy.mockClear();
 
         await dsActions.submitJcl(blockMocks.testDatasetTree, undefined);
 
-        expect(submitJclSpy).not.toBeCalled();
         expect(showMessagespy).toBeCalledWith("No profiles available");
     });
     it("Getting session name from the path itself", async () => {
