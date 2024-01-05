@@ -1183,7 +1183,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         inputBox.onDidChangeValue((query) => {
             query = query.toUpperCase();
             job["children"] = actual_jobs.filter((item) =>
-                item["job"]["exec-member"] !== undefined && item["job"]["exec-member"] !== ""
+                item["job"]["exec-member"]
                     ? `${item["job"].jobname}(${item["job"].jobid}) - ${item["job"]["exec-member"] as string} - ${item["job"].retcode}`.includes(
                           query
                       )
