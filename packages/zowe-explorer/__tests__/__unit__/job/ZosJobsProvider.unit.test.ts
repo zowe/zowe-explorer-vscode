@@ -69,10 +69,11 @@ const mockInputBox: vscode.InputBox = {
     ignoreFocusOut: false,
     onDidHide: jest.fn(),
 };
-function setJobObjects(job: zowe.IJob, newJobName: string, newJobId: string, newRetCode: string) {
+function setJobObjects(job: zowe.IJob, newJobName: string, newJobId: string, newRetCode: string, newExecMember: string | undefined) {
     job.jobname = newJobName;
     job.jobid = newJobId;
     job.retcode = newRetCode;
+    job["exec-member"] = newExecMember;
     return job;
 }
 
@@ -1036,19 +1037,19 @@ describe("getFavorites", () => {
 
 describe("ZosJobsProvider Unit Test - Filter Jobs", () => {
     const node1: IZoweJobTreeNode = new ZoweJobNode({
-        label: "jobnew",
+        label: "node1",
         collapsibleState: vscode.TreeItemCollapsibleState.None,
-        job: setJobObjects(createIJobObject(), "ZOWEUSR1", "JOB04945", "CC 0000"),
+        job: setJobObjects(createIJobObject(), "ZOWEUSR1", "JOB04945", "CC 0000", "IPO1"),
     });
     const node2: IZoweJobTreeNode = new ZoweJobNode({
-        label: "jobnew",
+        label: "node2",
         collapsibleState: vscode.TreeItemCollapsibleState.None,
-        job: setJobObjects(createIJobObject(), "ZOWEUSR2", "JOB05037", "CC 0000"),
+        job: setJobObjects(createIJobObject(), "ZOWEUSR2", "JOB05037", "CC 0000", undefined),
     });
     const node3: IZoweJobTreeNode = new ZoweJobNode({
-        label: "jobnew",
+        label: "node3",
         collapsibleState: vscode.TreeItemCollapsibleState.None,
-        job: setJobObjects(createIJobObject(), "ZOWEUSR3", "TSU07707", "ABEND S222"),
+        job: setJobObjects(createIJobObject(), "ZOWEUSR3", "TSU07707", "ABEND S222", "IPO3"),
     });
 
     let globalMocks;
@@ -1086,6 +1087,7 @@ describe("ZosJobsProvider Unit Test - Filter Jobs", () => {
         await testTree.filterJobsDialog(node1);
         expect(filterJobsSpy).toHaveBeenCalled();
         expect(filterJobsSpy).toBeCalledWith(node1);
+        expect(filterJobsSpy.mock.calls[0][0].children[0].job.jobname).toBe("ZOWEUSR2");
     });
 
     it("To check Clear filter for profile", async () => {
