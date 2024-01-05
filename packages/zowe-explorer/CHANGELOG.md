@@ -4,9 +4,9 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ## TBD Release
 
-### New features and enhancements
-
 ### Bug fixes
+
+- Update dependencies for technical currency purposes.
 
 ## `2.13.0`
 
