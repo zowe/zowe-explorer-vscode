@@ -1182,7 +1182,13 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         inputBox.placeholder = localize("filterJobs.prompt.message", "Enter local filter...");
         inputBox.onDidChangeValue((query) => {
             query = query.toUpperCase();
-            job["children"] = actual_jobs.filter((item) => `${item["job"].jobname}(${item["job"].jobid}) - ${item["job"].retcode}`.includes(query));
+            job["children"] = actual_jobs.filter((item) =>
+                item["job"]["exec-member"] !== undefined && item["job"]["exec-member"] !== ""
+                    ? `${item["job"].jobname}(${item["job"].jobid}) - ${item["job"]["exec-member"] as string} - ${item["job"].retcode}`.includes(
+                          query
+                      )
+                    : `${item["job"].jobname}(${item["job"].jobid}) - ${item["job"].retcode}`.includes(query)
+            );
             TreeProviders.job.refresh();
             this.updateFilterForJob(job, query, isSession);
             Gui.setStatusBarMessage(localize("filter.updated", "$(check) Filter updated for {0}", job.label as string), globals.MS_PER_SEC * 4);
