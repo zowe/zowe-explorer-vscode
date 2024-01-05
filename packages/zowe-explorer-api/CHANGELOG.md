@@ -6,12 +6,25 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### New features and enhancements
 
+- Added optional `openDs` function to `IZoweDatasetTreeNode` to open a data set or member in the editor.
+- Added optional `setEncoding` function to `IZoweDatasetTreeNode` and `IZoweUSSTreeNode` to set the encoding of a node to binary, text, or a custom codepage.
+- Added optional properties `binary`, `encoding`, and `encodingMap` to tree node interfaces for storing the codepage of a data set or USS file.
+- Deprecated `IZoweUSSTreeNode.binaryFiles` and `IZoweUSSTreeNode.setBinary` in favor of `IZoweUSSTreeNode.encodingMap` and `IZoweUSSTreeNode.setEncoding`.
+- Deprecated `ZoweTreeNode.binary`, `ZoweTreeNode.binaryFiles`, and `ZoweTreeNode.shortLabel`. These properties are not applicable for all tree nodes and should be defined in subclasses of `ZoweTreeNode` if necessary.
+
+### Bug fixes
+
+- Update dependencies for technical currency purposes.
+- Added return type for `IZoweUSSTreeNode.openUSS`.
+
+## `2.13.0`
+
+### New features and enhancements
+
 - Added new optional boolean parameter `hideFromAllTrees` to `IZoweTree.deleteSession` for specifying whether to hide from all trees or current tree. [#2567](https://github.com/zowe/vscode-extension-for-zowe/issues/2567)
 - Added new optional parameter `provider` of type `IZoweTree<IZoweTreeNode>` for `IZoweTree.addSession` to specify a tree to add the profile to.
 - Added optional `filter` and `actualJobs` variables to `IZoweJobTreeNode` to track local filter search.
 - Added new optional record `openFiles` to `IZoweTree` to track opened files under a specific tree view. [#2597](https://github.com/zowe/vscode-extension-for-zowe/issues/2597)
-
-### Bug fixes
 
 ## `2.12.2`
 

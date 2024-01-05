@@ -42,7 +42,11 @@ describe("ZoweCommandProvider Unit Tests", () => {
 });
 
 describe("ZoweCommandProvide Unit Tests - function checkCurrentProfile", () => {
-    const testNode = new ZoweDatasetNode("test", vscode.TreeItemCollapsibleState.None, undefined, globalMocks.testSession);
+    const testNode = new ZoweDatasetNode({
+        label: "test",
+        collapsibleState: vscode.TreeItemCollapsibleState.None,
+        session: globalMocks.testSession,
+    });
     testNode.setProfileToChoice(globalMocks.testProfile);
     testNode.contextValue = "session server";
 
