@@ -22,8 +22,9 @@ import { Profiles } from "../../src/Profiles";
 import * as path from "path";
 import * as fs from "fs";
 import { getZoweDir, Gui } from "@zowe/zowe-explorer-api";
-import * as profUtils from "../../src/utils/ProfilesUtils";
+import { ProfilesUtils } from "../../src/utils/ProfilesUtils";
 import { ZoweLogger } from "../../src/utils/LoggerUtils";
+import { SettingsConfig } from "../../src/utils/SettingsConfig";
 jest.mock("fs");
 
 describe("ZoweExplorerExtender unit tests", () => {
@@ -205,7 +206,7 @@ describe("ZoweExplorerExtender unit tests", () => {
 
         const readProfilesFromDiskSpy = jest.fn();
         const refreshProfilesQueueAddSpy = jest.spyOn((ZoweExplorerExtender as any).refreshProfilesQueue, "add");
-        jest.spyOn(profUtils.ProfilesUtils, "getProfileInfo").mockReturnValue({
+        jest.spyOn(ProfilesUtils, "getProfileInfo").mockReturnValueOnce({
             readProfilesFromDisk: readProfilesFromDiskSpy,
         } as any);
         await expect(blockMocks.instTest.initForZowe("USS", ["" as any])).resolves.not.toThrow();
@@ -214,80 +215,45 @@ describe("ZoweExplorerExtender unit tests", () => {
     });
 
     describe("Add to Schema functionality", () => {
+        // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
         const updateSchema = async (
-            level: string = "global",
-            writeFileSyncImpl: (
-                path: number | fs.PathLike,
-                data: string | ArrayBufferView,
-                options?: fs.WriteFileOptions | undefined
-            ) => void = jest.fn()
+            addProfileTypeToSchemaMock: (
+                profileType: string,
+                typeInfo: { sourceApp: string; schema: any; version?: string | undefined }
+            ) => any = jest.fn()
         ) => {
             const blockMocks = await createBlockMocks();
-            const readProfilesFromDisk = jest.fn();
-            const schemaFolder = path.resolve("__mocks__");
-            if (level === "project") {
-                Object.defineProperty(vscode.workspace, "workspaceFolders", {
-                    value: [
-                        {
-                            uri: {
-                                fsPath: schemaFolder,
-                            },
-                        },
-                    ],
-                    configurable: true,
-                });
-            }
-
-            jest.spyOn(profUtils.ProfilesUtils, "getProfileInfo").mockResolvedValueOnce({ usingTeamConfig: true, readProfilesFromDisk } as any);
-            const writeFileSyncSpy = jest.spyOn(fs, "writeFileSync").mockImplementation(writeFileSyncImpl);
-            jest.spyOn(imperative.ConfigSchema, "loadSchema").mockReturnValue([
+            // bypass "if (hasSecureCredentialManagerEnabled)" check for sake of testing
+            jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(false);
+            jest.spyOn(ZoweLogger, "trace").mockImplementation();
+            jest.spyOn(ZoweLogger, "info").mockImplementation();
+            const profInfo = await ProfilesUtils.getProfileInfo(false);
+            const addProfTypeToSchema = jest
+                .spyOn(imperative.ProfileInfo.prototype, "addProfileTypeToSchema")
+                .mockImplementation(addProfileTypeToSchemaMock as unknown as any);
+            await (blockMocks.instTest as any).updateSchema(profInfo, [
                 {
-                    type: "zosmf",
+                    type: "test-type",
                     schema: {} as any,
-                },
-                {
-                    type: "base",
-                    schema: {} as any,
-                },
+                } as any,
             ]);
-            await blockMocks.instTest.initForZowe("sample", [
-                {
-                    schema: {} as any,
-                    type: "sample",
-                },
-            ]);
-            expect(writeFileSyncSpy).toHaveBeenCalled();
-            writeFileSyncSpy.mockRestore();
+            expect(addProfTypeToSchema).toHaveBeenCalled();
         };
 
-        describe("global schema", () => {
-            it("should update when an extender calls initForZowe", async () => {
-                await updateSchema();
-            });
-
-            it("should throw an error if the schema is read-only", async () => {
-                const errorMessageSpy = jest.spyOn(Gui, "errorMessage");
-                await updateSchema("global", (_filepath, _contents) => {
-                    const err = new Error();
-                    Object.defineProperty(err, "code", {
-                        value: "EACCES",
-                    });
-                    throw err;
-                });
-                expect(errorMessageSpy).toHaveBeenCalledWith(
-                    `Failed to update Zowe schema at ${path.join(
-                        "__tests__",
-                        ".zowe",
-                        "zowe.schema.json"
-                    )}: insufficient permissions or read-only file`
-                );
-            });
+        it("should update the schema when an extender calls initForZowe", async () => {
+            await updateSchema();
         });
 
-        describe("project-level schema", () => {
-            it("should update when an extender calls initForZowe", async () => {
-                await updateSchema("project");
+        it("should throw an error if the schema is read-only", async () => {
+            const errorMessageSpy = jest.spyOn(Gui, "errorMessage");
+            await updateSchema((_filepath, _contents) => {
+                const err = new Error();
+                Object.defineProperty(err, "code", {
+                    value: "EACCES",
+                });
+                throw err;
             });
+            expect(errorMessageSpy).toHaveBeenCalledWith("Failed to update Zowe schema: insufficient permissions or read-only file");
         });
     });
 });
