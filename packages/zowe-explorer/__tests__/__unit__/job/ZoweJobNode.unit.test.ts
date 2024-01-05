@@ -460,6 +460,27 @@ describe("ZoweJobNode unit tests - Function getChildren", () => {
         const jobs = await globalMocks.testJobsProvider.mSessionNodes[1].getChildren();
         expect(jobs[0].label).toEqual("TESTJOB(JOB1234) - ACTIVE");
     });
+
+    it("To check Order of Spool files don't reverse when the job is Expanded and Collapsed", async () => {
+        const globalMocks = await createGlobalMocks();
+        globalMocks.testJobsProvider.mSessionNodes[1]._owner = null;
+        globalMocks.testJobsProvider.mSessionNodes[1]._prefix = "*";
+        globalMocks.testJobsProvider.mSessionNodes[1]._searchId = "";
+        globalMocks.testJobNode.session.ISession = globalMocks.testSessionNoCred;
+        jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValueOnce({
+            getSpoolFiles: jest.fn().mockReturnValueOnce([
+                { ...globalMocks.mockIJobFile, stepname: "JES2", ddname: "JESMSGLG", "record-count": 11 },
+                { ...globalMocks.mockIJobFile, stepname: "JES2", ddname: "JESJCL", "record-count": 21 },
+                { ...globalMocks.mockIJobFile, stepname: "JES2", ddname: "JESYSMSG", "record-count": 6 },
+            ]),
+        } as any);
+        jest.spyOn(contextually, "isSession").mockReturnValueOnce(false);
+        const spoolFiles = await globalMocks.testJobNode.getChildren();
+        expect(spoolFiles.length).toBe(3);
+        expect(spoolFiles[0].label).toBe("JES2:JESMSGLG - 11");
+        expect(spoolFiles[1].label).toBe("JES2:JESJCL - 21");
+        expect(spoolFiles[2].label).toBe("JES2:JESYSMSG - 6");
+    });
 });
 
 describe("ZoweJobNode unit tests - Function flipState", () => {
