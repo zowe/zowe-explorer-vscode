@@ -950,7 +950,6 @@ export async function submitJcl(datasetProvider: api.IZoweTree<api.IZoweDatasetT
                 api.Gui.showMessage(localize("submitJcl.noProfile", "No profiles available"));
             }
         } else {
-            // eslint-disable-next-line no-useless-escape
             const filePathArray = doc.uri.fsPath.split(path.sep);
             sessProfileName = filePathArray[filePathArray.length - 2];
         }
