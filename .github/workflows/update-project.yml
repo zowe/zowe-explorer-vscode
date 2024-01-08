@@ -14,7 +14,7 @@ jobs:
     name: Move project item
     runs-on: ubuntu-latest
     steps:
-    - uses: zowe-actions/shared-actions/project-move-item@actions/project-move-item
+    - uses: zowe-actions/shared-actions/project-move-item@main
       if: ${{ github.event.pull_request }}
       with:
         assign-author: true
@@ -22,28 +22,28 @@ jobs:
         project-number: ${{ env.PROJECT_NUMBER }}
         project-token: ${{ secrets.ZOWE_ROBOT_TOKEN }}
 
-    - uses: zowe-actions/shared-actions/project-move-item@actions/project-move-item
+    - uses: zowe-actions/shared-actions/project-move-item@main
       if: ${{ github.event.issue && github.event.label.name == 'priority-high' }}
       with:
         item-status: High Priority
         project-number: ${{ env.PROJECT_NUMBER }}
         project-token: ${{ secrets.ZOWE_ROBOT_TOKEN }}
 
-    - uses: zowe-actions/shared-actions/project-move-item@actions/project-move-item
+    - uses: zowe-actions/shared-actions/project-move-item@main
       if: ${{ github.event.issue && github.event.label.name == 'priority-medium' }}
       with:
         item-status: Medium Priority
         project-number: ${{ env.PROJECT_NUMBER }}
         project-token: ${{ secrets.ZOWE_ROBOT_TOKEN }}
 
-    - uses: zowe-actions/shared-actions/project-move-item@actions/project-move-item
+    - uses: zowe-actions/shared-actions/project-move-item@main
       if: ${{ github.event.issue && github.event.label.name == 'priority-low' }}
       with:
         item-status: Low Priority
         project-number: ${{ env.PROJECT_NUMBER }}
         project-token: ${{ secrets.ZOWE_ROBOT_TOKEN }}
 
-    - uses: zowe-actions/shared-actions/project-move-item@actions/project-move-item
+    - uses: zowe-actions/shared-actions/project-move-item@main
       if: ${{ github.event.issue && github.event.label.name == 'Epic' }}
       with:
         item-status: Epics
