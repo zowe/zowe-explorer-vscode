@@ -1215,6 +1215,7 @@ export class Profiles extends ProfilesCache {
                 await ZoweVsCodeExtension.loginWithBaseProfile(serviceProfile, loginTokenType, node, ZoweExplorerApiRegister.getInstance(), this);
             }
             Gui.showMessage(localize("ssoLogin.successful", "Login to authentication service was successful."));
+            await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
         } catch (err) {
             const message = localize("ssoLogin.error", "Unable to log in with {0}. {1}", serviceProfile.name, err?.message);
             ZoweLogger.error(message);

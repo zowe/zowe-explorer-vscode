@@ -6,11 +6,19 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
+
+- Added new data set creation template for partitioned data set extended. [#2600](https://github.com/zowe/vscode-extension-for-zowe/issues/2600)
+- Added "Open with Encoding" feature to open data sets and USS files in a non-standard codepage. [#2435](https://github.com/zowe/vscode-extension-for-zowe/issues/2435)
 - Adopted new common methods for `loginWithBaseProfile` and `logoutWithBaseProfile`. [#2493](https://github.com/zowe/vscode-extension-for-zowe/pull/2493)
 
 ### Bug fixes
 
+- Fixed the allocate-like functionality by removing the inclusion of DS item in the filter history. [#2620](https://github.com/zowe/vscode-extension-for-zowe/issues/2620)
 - Fixed issue with `Submit JCL` losing focus on JCL being submitted, causing the wrong job submission. [#2616](https://github.com/zowe/vscode-extension-for-zowe/issues/2616)
+- Update dependencies for technical currency purposes.
+- Fixed issue where USS file tag could get overwritten when changes to file are uploaded. [#2576](https://github.com/zowe/vscode-extension-for-zowe/issues/2576)
+- Fixed failure to refresh token value after user logs in to authentication. [#2638](https://github.com/zowe/vscode-extension-for-zowe/issues/2638)
+- Fixed order of spool files reverses when the Job is expanded and collapsed. [#2644](https://github.com/zowe/vscode-extension-for-zowe/pull/2644)
 
 ## `2.13.0`
 
@@ -21,6 +29,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Added Display confirmation dialog when submitting local JCL. [#2061](https://github.com/zowe/vscode-extension-for-zowe/issues/2061)
 - Added support for adding a Zowe profile across all trees [#2603](https://github.com/zowe/vscode-extension-for-zowe/issues/2603)
 - Added "Filter Jobs" feature in Jobs tree view: accessible via filter icon or right-clicking on session node. [#2599](https://github.com/zowe/vscode-extension-for-zowe/issues/2599)
+- Added z/OS System Name (SMFID) to Zowe Explorer Jobs View. [#2629](https://github.com/zowe/vscode-extension-for-zowe/issues/2629)
 - PROC and PROCLIB datasets are recognized as JCL files for syntax highlighting [#2614](https://github.com/zowe/vscode-extension-for-zowe/issues/2614)
 
 ### Bug fixes
