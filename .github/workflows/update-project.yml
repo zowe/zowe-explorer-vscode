@@ -8,6 +8,9 @@ on:
 
 env:
   PROJECT_NUMBER: 15
+  ISSUE_STATUSES: '{"priority-high": "High Priority", "priority-medium": "Medium Priority", "priority-low": "Low Priority", "Epic": "Epics"}'
+  PR_STATUS_DRAFT: 'In Progress'
+  PR_STATUS_READY: 'Review/QA'
 
 jobs:
   update-project:
@@ -15,37 +18,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: zowe-actions/shared-actions/project-move-item@main
+      if: ${{ github.event.issue && fromJSON(env.ISSUE_STATUSES)[github.event.label.name] }}
+      with:
+        item-status: ${{ fromJSON(env.ISSUE_STATUSES)[github.event.label.name] }}
+        project-number: ${{ env.PROJECT_NUMBER }}
+        project-token: ${{ secrets.ZOWE_ROBOT_TOKEN }}
+
+    - uses: zowe-actions/shared-actions/project-move-item@main
       if: ${{ github.event.pull_request }}
       with:
         assign-author: true
-        item-status: ${{ github.event.action == 'ready_for_review' && 'Review/QA' || 'In Progress' }}
-        project-number: ${{ env.PROJECT_NUMBER }}
-        project-token: ${{ secrets.ZOWE_ROBOT_TOKEN }}
-
-    - uses: zowe-actions/shared-actions/project-move-item@main
-      if: ${{ github.event.issue && github.event.label.name == 'priority-high' }}
-      with:
-        item-status: High Priority
-        project-number: ${{ env.PROJECT_NUMBER }}
-        project-token: ${{ secrets.ZOWE_ROBOT_TOKEN }}
-
-    - uses: zowe-actions/shared-actions/project-move-item@main
-      if: ${{ github.event.issue && github.event.label.name == 'priority-medium' }}
-      with:
-        item-status: Medium Priority
-        project-number: ${{ env.PROJECT_NUMBER }}
-        project-token: ${{ secrets.ZOWE_ROBOT_TOKEN }}
-
-    - uses: zowe-actions/shared-actions/project-move-item@main
-      if: ${{ github.event.issue && github.event.label.name == 'priority-low' }}
-      with:
-        item-status: Low Priority
-        project-number: ${{ env.PROJECT_NUMBER }}
-        project-token: ${{ secrets.ZOWE_ROBOT_TOKEN }}
-
-    - uses: zowe-actions/shared-actions/project-move-item@main
-      if: ${{ github.event.issue && github.event.label.name == 'Epic' }}
-      with:
-        item-status: Epics
+        item-status: ${{ github.event.action == 'ready_for_review' && env.PR_STATUS_READY || env.PR_STATUS_DRAFT }}
         project-number: ${{ env.PROJECT_NUMBER }}
         project-token: ${{ secrets.ZOWE_ROBOT_TOKEN }}
