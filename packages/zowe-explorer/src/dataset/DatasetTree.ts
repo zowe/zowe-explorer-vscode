@@ -1225,7 +1225,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                     this.refreshElement(otherMember);
                 }
             }
-            this.refreshElement(node);
+            this.refresh();
             if (fs.existsSync(beforeFullPath)) {
                 fs.unlinkSync(beforeFullPath);
             }
@@ -1272,7 +1272,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 // Rename the node that was clicked on
                 node.label = afterDataSetName;
                 node.tooltip = afterDataSetName;
-                this.refreshElement(node);
+                this.refresh();
                 this.updateFavorites();
 
                 if (fs.existsSync(beforeFullPath)) {
