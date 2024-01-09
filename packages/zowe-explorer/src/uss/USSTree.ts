@@ -158,8 +158,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                     await this.renameFavorite(originalNode, newNamePath);
                 }
                 // Rename originalNode in UI
-                const hasClosedTab = await originalNode.rename(newNamePath);
-                await originalNode.reopen(hasClosedTab);
+                await originalNode.rename(newNamePath);
                 this.updateFavorites();
             } catch (err) {
                 if (err instanceof Error) {
