@@ -26,8 +26,17 @@ export class ZoweTreeNode extends vscode.TreeItem {
     public fullPath = "";
     public dirty = false;
     public children: IZoweTreeNode[] = [];
+    /**
+     * @deprecated Define on subclass instead
+     */
     public binaryFiles = {};
+    /**
+     * @deprecated Define on subclass instead
+     */
     public binary = false;
+    /**
+     * @deprecated Define on subclass instead
+     */
     public shortLabel = "";
 
     /**

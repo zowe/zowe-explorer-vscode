@@ -1214,6 +1214,7 @@ export class Profiles extends ProfilesCache {
             } else {
                 await this.loginWithBaseProfile(serviceProfile, loginTokenType, node);
             }
+            await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
         } catch (err) {
             const message = localize("ssoLogin.error", "Unable to log in with {0}. {1}", serviceProfile.name, err?.message);
             ZoweLogger.error(message);
