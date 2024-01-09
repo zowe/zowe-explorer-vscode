@@ -350,7 +350,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         if (this.children.length > 0) {
             this.children.forEach((child) => {
                 const newChildFullPath = newFullPath + "/" + child.shortLabel;
-                void child.rename(newChildFullPath);
+                child.rename(newChildFullPath);
             });
         }
         const providers = TreeProviders.providers;
