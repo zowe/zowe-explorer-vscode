@@ -419,16 +419,26 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
         const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
         const textDocument = createTextDocument("HLQ.TEST.AFILE(mem)", datasetSessionNode);
         (textDocument.languageId as any) = "jcl";
+        (textDocument.uri.fsPath as any) = "/user/temp/textdocument.txt";
         const profileInstance = createInstanceOfProfile(imperativeProfile);
         const jesApi = createJesApi(imperativeProfile);
         const mockCheckCurrentProfile = jest.fn();
+        const mockLoadNamedProfile = jest.fn();
         bindJesApi(jesApi);
-        Object.defineProperty(profileInstance, "loadNamedProfile", {
-            value: jest.fn(),
-            configurable: true,
-        });
         const errorGuiMsgSpy = jest.spyOn(Gui, "errorMessage");
         const errorLogSpy = jest.spyOn(ZoweLogger, "error");
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    loadNamedProfile: mockLoadNamedProfile.mockReturnValueOnce(imperativeProfile),
+                    checkCurrentProfile: mockCheckCurrentProfile.mockReturnValueOnce({
+                        name: imperativeProfile.name,
+                        status: "unverified",
+                    }),
+                    validProfile: ValidProfileEnum.UNVERIFIED,
+                };
+            }),
+        });
 
         return {
             session,
@@ -443,6 +453,7 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
             mockCheckCurrentProfile,
             errorLogSpy,
             errorGuiMsgSpy,
+            mockLoadNamedProfile,
         };
     }
 
@@ -549,9 +560,13 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
         const blockMocks: any = createBlockMocks();
         jest.spyOn(ZoweLogger, "trace").mockImplementation();
         Object.defineProperty(vscode.window, "activeTextEditor", {
-            value: { document: { fileName: "test" } } as any,
+            value: { document: { fileName: "test", uri: { fsPath: "fake/profilename/document.txt" } } } as any,
             configurable: true,
         });
+        blockMocks.testDatasetTree.getChildren.mockResolvedValueOnce([
+            new ZoweDatasetNode({ label: "node", collapsibleState: vscode.TreeItemCollapsibleState.None, parentNode: blockMocks.datasetSessionNode }),
+            blockMocks.datasetSessionNode,
+        ]);
         jest.spyOn(vscode.commands, "executeCommand").mockImplementation();
         jest.spyOn(ZoweLogger, "debug").mockImplementation();
         const confirmJobSubmissionSpy = jest.spyOn(dsActions, "confirmJobSubmission");
@@ -563,6 +578,10 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
     it("Checking failed attempt to submit of active text editor content as JCL without profile chosen from quickpick", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
+        Object.defineProperty(ProfileManagement, "getRegisteredProfileNameList", {
+            value: jest.fn().mockReturnValue(["firstName", "secondName"]),
+            configurable: true,
+        });
         mocked(zowe.ZosmfSession.createSessCfgFromArgs).mockReturnValue(blockMocks.session.ISession);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce(undefined); // Here we imitate the case when no profile was selected
@@ -605,6 +624,47 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
         expect(submitJclSpy).toBeCalled();
         expect(mocked(Gui.errorMessage)).toBeCalled();
         expect(mocked(Gui.errorMessage).mock.calls[0][0]).toContain(testError.message);
+    });
+    it("If there are no registered profiles", async () => {
+        createGlobalMocks();
+        const blockMocks: any = createBlockMocks();
+        Object.defineProperty(ProfileManagement, "getRegisteredProfileNameList", {
+            value: jest.fn().mockReturnValue([]),
+            configurable: true,
+        });
+        blockMocks.testDatasetTree.getChildren.mockResolvedValueOnce([
+            new ZoweDatasetNode({ label: "node", collapsibleState: vscode.TreeItemCollapsibleState.None, parentNode: blockMocks.datasetSessionNode }),
+            blockMocks.datasetSessionNode,
+        ]);
+        mocked(zowe.ZosmfSession.createSessCfgFromArgs).mockReturnValue(blockMocks.session);
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        activeTextEditorDocument.mockReturnValue(blockMocks.textDocument);
+        const showMessagespy = jest.spyOn(Gui, "showMessage");
+
+        await dsActions.submitJcl(blockMocks.testDatasetTree, undefined);
+
+        expect(showMessagespy).toBeCalledWith("No profiles available");
+    });
+    it("Getting session name from the path itself", async () => {
+        globals.defineGlobals("/user/");
+        createGlobalMocks();
+        const blockMocks: any = createBlockMocks();
+        mocked(zowe.ZosmfSession.createSessCfgFromArgs).mockReturnValue(blockMocks.session);
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        blockMocks.testDatasetTree.getChildren.mockResolvedValueOnce([
+            new ZoweDatasetNode({ label: "node", collapsibleState: vscode.TreeItemCollapsibleState.None, parentNode: blockMocks.datasetSessionNode }),
+            blockMocks.datasetSessionNode,
+        ]);
+        blockMocks.datasetSessionNode.label = "temp";
+        activeTextEditorDocument.mockReturnValue(blockMocks.textDocument);
+        const submitJclSpy = jest.spyOn(blockMocks.jesApi, "submitJcl");
+        submitJclSpy.mockClear();
+        submitJclSpy.mockResolvedValueOnce(blockMocks.iJob);
+        await dsActions.submitJcl(blockMocks.testDatasetTree, undefined);
+
+        expect(submitJclSpy).toBeCalled();
+        expect(mocked(Gui.showMessage)).toBeCalled();
+        expect(mocked(Gui.showMessage).mock.calls.length).toBe(1);
     });
 });
 
