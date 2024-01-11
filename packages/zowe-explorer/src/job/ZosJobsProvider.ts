@@ -77,7 +77,7 @@ export async function createJobsTree(log: imperative.Logger): Promise<ZosJobsPro
 }
 
 export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZoweJobTreeNode> {
-    public static readonly JobId = "Job ID: ";
+    public static readonly JobId = "JobId: ";
     public static readonly Owner = "Owner: ";
     public static readonly Prefix = "Prefix: ";
     public static readonly Status = "Status: ";
