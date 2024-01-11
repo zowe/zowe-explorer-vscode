@@ -6,7 +6,6 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
-
 - Added new data set creation template for partitioned data set extended. [#2600](https://github.com/zowe/vscode-extension-for-zowe/issues/2600)
 - Added "Open with Encoding" feature to open data sets and USS files in a non-standard codepage. [#2435](https://github.com/zowe/vscode-extension-for-zowe/issues/2435)
 - Adopted new common methods for `loginWithBaseProfile` and `logoutWithBaseProfile`. [#2493](https://github.com/zowe/vscode-extension-for-zowe/pull/2493)
