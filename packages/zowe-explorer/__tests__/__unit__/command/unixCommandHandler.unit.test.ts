@@ -128,7 +128,7 @@ describe("UnixCommand Actions Unit Testing", () => {
     Object.defineProperty(vscode.window, "createQuickPick", { value: createQuickPick });
     Object.defineProperty(vscode.window, "createOutputChannel", { value: createOutputChannel });
     Object.defineProperty(vscode.workspace, "getConfiguration", { value: getConfiguration });
-    Object.defineProperty(imperative.ProfileInfo, "profAttrsToProfLoaded", { value: () => ({ profile: {} }) });
+    Object.defineProperty(imperative.ProfileInfo, "profAttrsToProfLoaded", { value: () => ({ name: "test1", profile: {} }) });
     Object.defineProperty(imperative.ConnectionPropsForSessCfg, "addPropsOrPrompt", {
         value: jest.fn(() => {
             return { privateKey: undefined, keyPassphrase: undefined, handshakeTimeout: undefined, type: "basic", port: 22 };
@@ -173,9 +173,9 @@ describe("UnixCommand Actions Unit Testing", () => {
             knownArgs: [
                 { argName: "port", argValue: "TEST", secure: false },
                 { argName: "host", argValue: "TEST", secure: false },
-                { argName: "user", secure: true },
                 { argName: "password", secure: true },
             ],
+            missingArgs: [{ argName: "user", secure: true }],
         }),
         loadSecureArg: jest.fn().mockReturnValue("fake"),
     } as any);
@@ -212,6 +212,8 @@ describe("UnixCommand Actions Unit Testing", () => {
         getCommandApiMock.mockReturnValue(mockCommandApi);
         apiRegisterInstance.getCommandApi = getCommandApiMock.bind(apiRegisterInstance);
 
+        showInputBox.mockReturnValueOnce("fake");
+        showInputBox.mockReturnValueOnce("fakepw");
         showInputBox.mockReturnValueOnce("/u/directorypath");
         showInputBox.mockReturnValueOnce("/d iplinfo1");
 
@@ -227,9 +229,9 @@ describe("UnixCommand Actions Unit Testing", () => {
             ignoreFocusOut: true,
             placeHolder: "Select the Profile to use to submit the Unix command",
         });
-        expect(showInputBox.mock.calls.length).toBe(2);
+        expect(showInputBox.mock.calls.length).toBe(4);
         expect(appendLine.mock.calls.length).toBe(2);
-        expect(appendLine.mock.calls[0][0]).toBe("> /u/directorypath d iplinfo1");
+        expect(appendLine.mock.calls[0][0]).toBe("> fake @ test1 : /u/directorypath d iplinfo1");
         expect(appendLine.mock.calls[1][0]["commandResponse"]).toBe("iplinfo1");
         expect(showInformationMessage.mock.calls.length).toBe(0);
     });
@@ -266,6 +268,8 @@ describe("UnixCommand Actions Unit Testing", () => {
         getCommandApiMock.mockReturnValue(mockCommandApi);
         apiRegisterInstance.getCommandApi = getCommandApiMock.bind(apiRegisterInstance);
 
+        showInputBox.mockReturnValueOnce("fake");
+        showInputBox.mockReturnValueOnce("fakepw");
         showInputBox.mockReturnValueOnce("/u/directorypath");
 
         jest.spyOn(Gui, "resolveQuickPick").mockImplementation(() => Promise.resolve(qpItem2));
@@ -280,9 +284,9 @@ describe("UnixCommand Actions Unit Testing", () => {
             ignoreFocusOut: true,
             placeHolder: "Select the Profile to use to submit the Unix command",
         });
-        expect(showInputBox.mock.calls.length).toBe(1);
+        expect(showInputBox.mock.calls.length).toBe(3);
         expect(appendLine.mock.calls.length).toBe(2);
-        expect(appendLine.mock.calls[0][0]).toBe("> /u/directorypath d iplinfo0");
+        expect(appendLine.mock.calls[0][0]).toBe("> fake @ test1 : /u/directorypath d iplinfo0");
         expect(appendLine.mock.calls[1][0]["commandResponse"]).toBe("iplinfo0");
         expect(showInformationMessage.mock.calls.length).toBe(0);
     });
@@ -307,6 +311,8 @@ describe("UnixCommand Actions Unit Testing", () => {
         });
 
         showQuickPick.mockReturnValueOnce("firstName");
+        showInputBox.mockReturnValueOnce("fake");
+        showInputBox.mockReturnValueOnce("fakepw");
         showInputBox.mockReturnValueOnce("/u/directorypath");
         showInputBox.mockReturnValueOnce("/d iplinfo3");
         withProgress.mockRejectedValueOnce(Error("fake testError"));
@@ -328,7 +334,7 @@ describe("UnixCommand Actions Unit Testing", () => {
             ignoreFocusOut: true,
             placeHolder: "Select the Profile to use to submit the Unix command",
         });
-        expect(showInputBox.mock.calls.length).toBe(2);
+        expect(showInputBox.mock.calls.length).toBe(4);
         expect(showErrorMessage.mock.calls.length).toBe(1);
         expect(showErrorMessage.mock.calls[0][0]).toEqual("Error: fake testError");
     });
@@ -353,6 +359,8 @@ describe("UnixCommand Actions Unit Testing", () => {
         });
 
         showQuickPick.mockReturnValueOnce("firstName");
+        showInputBox.mockReturnValueOnce("fake");
+        showInputBox.mockReturnValueOnce("fakepw");
         showInputBox.mockReturnValueOnce("/u/directorypath");
 
         const mockCommandApi = await apiRegisterInstance.getCommandApi(profileOne);
@@ -371,7 +379,7 @@ describe("UnixCommand Actions Unit Testing", () => {
             ignoreFocusOut: true,
             placeHolder: "Select the Profile to use to submit the Unix command",
         });
-        expect(showInputBox.mock.calls.length).toBe(1);
+        expect(showInputBox.mock.calls.length).toBe(3);
         expect(showInformationMessage.mock.calls.length).toBe(1);
         expect(showInformationMessage.mock.calls[0][0]).toEqual("No selection made. Operation cancelled.");
     });
@@ -395,6 +403,8 @@ describe("UnixCommand Actions Unit Testing", () => {
             }),
         });
         showQuickPick.mockReturnValueOnce("firstName");
+        showInputBox.mockReturnValueOnce("fake");
+        showInputBox.mockReturnValueOnce("fakepw");
         showInputBox.mockReturnValueOnce("");
         showInputBox.mockReturnValue("/d iplinfo0");
 
@@ -422,6 +432,8 @@ describe("UnixCommand Actions Unit Testing", () => {
             }),
         });
         showQuickPick.mockReturnValueOnce("firstName");
+        showInputBox.mockReturnValueOnce("fake");
+        showInputBox.mockReturnValueOnce("fakepw");
         showInputBox.mockReturnValueOnce(undefined);
 
         await unixActions.issueUnixCommand();
@@ -449,6 +461,8 @@ describe("UnixCommand Actions Unit Testing", () => {
         });
 
         showQuickPick.mockReturnValueOnce("firstName");
+        showInputBox.mockReturnValueOnce("fake");
+        showInputBox.mockReturnValueOnce("fakepw");
         showInputBox.mockReturnValueOnce("/directorypath");
         showInputBox.mockReturnValueOnce(undefined);
 
@@ -468,7 +482,7 @@ describe("UnixCommand Actions Unit Testing", () => {
             ignoreFocusOut: true,
             placeHolder: "Select the Profile to use to submit the Unix command",
         });
-        expect(showInputBox.mock.calls.length).toBe(2);
+        expect(showInputBox.mock.calls.length).toBe(4);
         expect(showInformationMessage.mock.calls.length).toBe(1);
         expect(showInformationMessage.mock.calls[0][0]).toEqual("No command entered.");
     });
@@ -509,6 +523,8 @@ describe("UnixCommand Actions Unit Testing", () => {
         });
 
         showQuickPick.mockReturnValueOnce("firstName");
+        showInputBox.mockReturnValueOnce("fake");
+        showInputBox.mockReturnValueOnce("fakepw");
         showInputBox.mockReturnValueOnce("/u/directorypath");
         showInputBox.mockReturnValueOnce(undefined);
 
@@ -528,7 +544,7 @@ describe("UnixCommand Actions Unit Testing", () => {
             ignoreFocusOut: true,
             placeHolder: "Select the Profile to use to submit the Unix command",
         });
-        expect(showInputBox.mock.calls.length).toBe(1);
+        expect(showInputBox.mock.calls.length).toBe(3);
     });
 
     it("tests the issueUnixCommand error in prompt credentials", async () => {
@@ -554,7 +570,7 @@ describe("UnixCommand Actions Unit Testing", () => {
 
         await unixActions.issueUnixCommand();
 
-        expect(showErrorMessage.mock.calls.length).toBe(1);
+        expect(showInformationMessage.mock.calls.length).toBe(2);
     });
 
     it("tests the issueUnixCommand function user does not select a profile", async () => {
@@ -679,27 +695,4 @@ describe("UnixCommand Actions Unit Testing", () => {
         ).resolves.toBe(undefined);
         expect(showInformationMessage.mock.calls[0][0]).toEqual("Operation Cancelled");
     });
-    it("ssh profile doesn't contain credentials", async () => {
-        Object.defineProperty(profileLoader.Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    getProfileInfo: getProfileInfomock.mockReturnValue({
-                        usingTeamConfig: true,
-                        getAllProfiles: jest.fn().mockReturnValue(["dummy"]),
-                        mergeArgsForProfile: jest.fn().mockReturnValue({
-                            knownArgs: [
-                                { argName: "port", argValue: "TEST", secure: false },
-                                { argName: "host", argValue: "TEST", secure: false },
-                                { argName: "user", secure: true },
-                                { argName: "password", secure: true },
-                            ],
-                        }),
-                        loadSecureArg: jest.fn().mockReturnValue(undefined),
-                    } as any)
-                }
-            })
-        });
-        await (unixActions as any).getSshProfile();
-        expect(showErrorMessage.mock.calls[0][0]).toEqual("Credentials are missing for SSH profile");
-    })
 });
