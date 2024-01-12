@@ -4,6 +4,7 @@
 
 - Removed support for v1 Profiles
 - Updated supported VS Code engine to 1.79.0
+- Drop support for Theia IDE
 
 ## Removal of deprecated APIs from Extensibility API for Zowe Explorer
 
