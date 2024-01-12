@@ -32,6 +32,8 @@ import * as workspaceUtils from "../../../src/utils/workspace";
 import * as globals from "../../../src/globals";
 import * as ussUtils from "../../../src/uss/utils";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
+import { TreeProviders } from "../../../src/shared/TreeProviders";
+
 jest.mock("fs");
 jest.mock("path");
 
@@ -494,6 +496,11 @@ describe("ZoweUSSNode Unit Tests - Function node.rename()", () => {
                 profile: globalMocks.profileOne,
                 parentPath: "/u/user",
             }),
+            providerSpy: jest.spyOn(TreeProviders, "providers", "get").mockReturnValue({
+                ds: { addSingleSession: jest.fn(), mSessionNodes: [], refresh: jest.fn() } as any,
+                uss: { addSingleSession: jest.fn(), mSessionNodes: [], refresh: jest.fn() } as any,
+                job: { addSingleSession: jest.fn(), mSessionNodes: [], refresh: jest.fn() } as any,
+            }),
         };
         newMocks.ussDir.contextValue = globals.USS_DIR_CONTEXT;
         return newMocks;
@@ -501,7 +508,6 @@ describe("ZoweUSSNode Unit Tests - Function node.rename()", () => {
     it("Tests that rename updates and refreshes the UI components of the node", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
-        const vscodeCommandSpy = jest.spyOn(vscode.commands, "executeCommand");
 
         const newFullPath = "/u/user/newName";
         await blockMocks.ussDir.rename(newFullPath);
@@ -513,10 +519,8 @@ describe("ZoweUSSNode Unit Tests - Function node.rename()", () => {
         expect(blockMocks.ussDir.tooltip).toEqual(newFullPath);
 
         // Expect node to be refreshed in UI after rename
-        expect(vscodeCommandSpy.mock.calls[0][0]).toEqual("zowe.uss.refreshUSSInTree");
-        expect(vscodeCommandSpy.mock.calls[0][1]).toEqual(blockMocks.ussDir);
-
-        vscodeCommandSpy.mockClear();
+        expect(blockMocks.providerSpy).toBeCalled();
+        blockMocks.providerSpy.mockClear();
     });
     it("Tests that rename updates and refreshes the UI components of any loaded children for a node", async () => {
         const globalMocks = await createGlobalMocks();
@@ -542,6 +546,7 @@ describe("ZoweUSSNode Unit Tests - Function node.rename()", () => {
             parentPath: "/u/user/ussDir/ussSubDir",
         });
         ussSubDirChild.contextValue = globals.USS_TEXT_FILE_CONTEXT;
+        ussSubDirChild.shortLabel = "ussSubDirChild/ussChildFile";
         ussSubDir.children.push(ussSubDirChild);
 
         const newFullPath = "/u/user/newName";
@@ -552,8 +557,9 @@ describe("ZoweUSSNode Unit Tests - Function node.rename()", () => {
         expect(ussSubDir.tooltip).toContain(newFullPath);
 
         // Expect ussDir's nested file's short labels to be updated with newName
-        expect(ussSubDirChild.fullPath).toContain(newFullPath);
-        expect(ussSubDirChild.tooltip).toContain(newFullPath);
+        const updatedChild = blockMocks.ussDir.children;
+        expect(updatedChild[0].fullPath).toContain(newFullPath);
+        expect(updatedChild[0].tooltip).toContain(newFullPath);
     });
 });
 

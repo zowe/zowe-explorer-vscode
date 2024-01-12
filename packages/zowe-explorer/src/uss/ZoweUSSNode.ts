@@ -36,6 +36,7 @@ import { UssFileTree, UssFileType, UssFileUtils } from "./FileStructure";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { updateOpenFiles } from "../shared/utils";
 import { IZoweUssTreeOpts } from "../shared/IZoweTreeOpts";
+import { TreeProviders } from "../shared/TreeProviders";
 
 // Set up localization
 nls.config({
@@ -352,7 +353,8 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 child.rename(newChildFullPath);
             });
         }
-        await vscode.commands.executeCommand("zowe.uss.refreshUSSInTree", this);
+        const providers = TreeProviders.providers;
+        providers.uss.refresh();
         return hasClosedInstance;
     }
 
