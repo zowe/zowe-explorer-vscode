@@ -1,5 +1,11 @@
 All notable changes to the "eslint-plugin-zowe-explorer" package will be documented in this file.
 
+## TBD Release
+
+### New features and enhancements
+
+### Bug fixes
+
 ## `3.0.0-next.202401121747`
 
 ## `3.0.0-next.202311171754`
