@@ -1209,7 +1209,7 @@ export class Profiles extends ProfilesCache {
             return;
         }
         try {
-            if (loginTokenType && loginTokenType !== zowe.imperative.SessConstants.TOKEN_TYPE_APIML) {
+            if (loginTokenType && loginTokenType.startsWith(zowe.imperative.SessConstants.TOKEN_TYPE_APIML)) {
                 await this.loginWithRegularProfile(serviceProfile, node);
             } else {
                 await ZoweVsCodeExtension.loginWithBaseProfile(serviceProfile, loginTokenType, node, ZoweExplorerApiRegister.getInstance(), this);
@@ -1300,7 +1300,11 @@ export class Profiles extends ProfilesCache {
             this.clearFilterFromAllTrees(node);
 
             // this will handle extenders
-            if (serviceProfile.type !== "zosmf" && serviceProfile.profile?.tokenType !== zowe.imperative.SessConstants.TOKEN_TYPE_APIML) {
+            if (
+                serviceProfile.type !== "zosmf" &&
+                serviceProfile.profile != null &&
+                !serviceProfile.profile.tokenType.startsWith(zowe.imperative.SessConstants.TOKEN_TYPE_APIML)
+            ) {
                 await ZoweExplorerApiRegister.getInstance()
                     .getCommonApi(serviceProfile)
                     .logout(await node.getSession());
