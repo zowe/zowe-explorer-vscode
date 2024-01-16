@@ -166,50 +166,66 @@ export class ZoweVsCodeExtension {
         node?: IZoweNodeType,
         zeRegister?: ZoweExplorerApi.IApiRegisterClient, // ZoweExplorerApiRegister
         zeProfiles?: ProfilesCache // Profiles extends ProfilesCache
-    ): Promise<void> {
+    ): Promise<boolean> {
         const cache: ProfilesCache = zeProfiles ?? ZoweVsCodeExtension.profilesCache;
         const baseProfile = await cache.fetchBaseProfile();
-        if (baseProfile) {
-            if (typeof serviceProfile === "string") {
-                serviceProfile = await ZoweVsCodeExtension.getServiceProfileForAuthPurposes(cache, serviceProfile);
-            }
-            const tokenType = loginTokenType ?? serviceProfile.profile.tokenType ?? imperative.SessConstants.TOKEN_TYPE_APIML;
-            const updSession = new imperative.Session({
-                hostname: serviceProfile.profile.host,
-                port: serviceProfile.profile.port,
-                user: "Username",
-                password: "Password",
-                rejectUnauthorized: serviceProfile.profile.rejectUnauthorized,
-                tokenType,
-                type: imperative.SessConstants.AUTH_TYPE_TOKEN,
-            });
-            const creds = await ZoweVsCodeExtension.promptUserPass({ session: updSession.ISession, rePrompt: true });
-            updSession.ISession.base64EncodedAuth = imperative.AbstractSession.getBase64Auth(creds[0], creds[1]);
-
-            const loginToken = await (zeRegister?.getCommonApi(serviceProfile).login ?? Login.apimlLogin)(updSession);
-            const updBaseProfile: imperative.IProfile = {
-                tokenType,
-                tokenValue: loginToken,
-            };
-            const connOk = serviceProfile.profile.host === baseProfile.profile.host && serviceProfile.profile.port === baseProfile.profile.port;
-            let profileToUpdate: imperative.IProfileLoaded;
-            if (connOk) {
-                profileToUpdate = baseProfile;
-            } else {
-                profileToUpdate = serviceProfile;
-            }
-
-            await cache.updateBaseProfileFileLogin(profileToUpdate, updBaseProfile, !connOk);
-            const baseIndex = cache.allProfiles.findIndex((profile) => profile.name === profileToUpdate.name);
-            cache.allProfiles[baseIndex] = { ...profileToUpdate, profile: { ...profileToUpdate.profile, ...updBaseProfile } };
-
-            if (node) {
-                node.setProfileToChoice({
-                    ...node.getProfile(),
-                    profile: { ...node.getProfile().profile, ...updBaseProfile },
-                });
-            }
+        if (baseProfile == null) {
+            return false;
         }
+        if (typeof serviceProfile === "string") {
+            serviceProfile = await ZoweVsCodeExtension.getServiceProfileForAuthPurposes(cache, serviceProfile);
+        }
+        const tokenType = loginTokenType ?? serviceProfile.profile.tokenType ?? imperative.SessConstants.TOKEN_TYPE_APIML;
+        const updSession = new imperative.Session({
+            hostname: serviceProfile.profile.host,
+            port: serviceProfile.profile.port,
+            user: "Username",
+            password: "Password",
+            rejectUnauthorized: serviceProfile.profile.rejectUnauthorized,
+            tokenType,
+            type: imperative.SessConstants.AUTH_TYPE_TOKEN,
+        });
+        delete updSession.ISession.user;
+        delete updSession.ISession.password;
+        const creds = await ZoweVsCodeExtension.promptUserPass({ session: updSession.ISession, rePrompt: true });
+        if (!creds) {
+            return false;
+        }
+        updSession.ISession.base64EncodedAuth = imperative.AbstractSession.getBase64Auth(creds[0], creds[1]);
+
+        const loginToken = await (zeRegister?.getCommonApi(serviceProfile).login ?? Login.apimlLogin)(updSession);
+        const updBaseProfile: imperative.IProfile = {
+            tokenType,
+            tokenValue: loginToken,
+        };
+
+        // A simplified version of the ProfilesCache.shouldRemoveTokenFromProfile `private` method
+        const connOk =
+            // First check whether or not the base profile already does not have a token
+            baseProfile.profile.tokenType == null || // If base profile does not have a token, we assume it's OK to store the token value there
+            // The above will ensure that Zowe Explorer behaves the same way as the Zowe CLI in regards to using the base profile for token auth.
+
+            // If base profile already has a token type stored, then we check whether or not the connection details are the same
+            (serviceProfile.profile.host === baseProfile.profile.host && serviceProfile.profile.port === baseProfile.profile.port);
+        // If the connection details do not match, then we MUST forcefully store the token in the service profile
+        let profileToUpdate: imperative.IProfileLoaded;
+        if (connOk) {
+            profileToUpdate = baseProfile;
+        } else {
+            profileToUpdate = serviceProfile;
+        }
+
+        await cache.updateBaseProfileFileLogin(profileToUpdate, updBaseProfile, !connOk);
+        const baseIndex = cache.allProfiles.findIndex((profile) => profile.name === profileToUpdate.name);
+        cache.allProfiles[baseIndex] = { ...profileToUpdate, profile: { ...profileToUpdate.profile, ...updBaseProfile } };
+
+        if (node) {
+            node.setProfileToChoice({
+                ...node.getProfile(),
+                profile: { ...node.getProfile().profile, ...updBaseProfile },
+            });
+        }
+        return true;
     }
 
     /**

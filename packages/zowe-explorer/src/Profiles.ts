@@ -1201,21 +1201,27 @@ export class Profiles extends ProfilesCache {
             return;
         }
 
+        const zeInstance = ZoweExplorerApiRegister.getInstance();
         try {
-            loginTokenType = await ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).getTokenTypeName();
+            loginTokenType = await zeInstance.getCommonApi(serviceProfile).getTokenTypeName();
         } catch (error) {
             ZoweLogger.warn(error);
             Gui.showMessage(localize("ssoLogin.tokenType.error", "Error getting supported tokenType value for profile {0}", serviceProfile.name));
             return;
         }
         try {
-            if (loginTokenType && loginTokenType.startsWith(zowe.imperative.SessConstants.TOKEN_TYPE_APIML)) {
-                await this.loginWithRegularProfile(serviceProfile, node);
+            let loginOk = false;
+            if (loginTokenType && !loginTokenType.startsWith(zowe.imperative.SessConstants.TOKEN_TYPE_APIML)) {
+                loginOk = await this.loginWithRegularProfile(serviceProfile, node);
             } else {
-                await ZoweVsCodeExtension.loginWithBaseProfile(serviceProfile, loginTokenType, node, ZoweExplorerApiRegister.getInstance(), this);
+                loginOk = await ZoweVsCodeExtension.loginWithBaseProfile(serviceProfile, loginTokenType, node, zeInstance, this);
             }
-            Gui.showMessage(localize("ssoLogin.successful", "Login to authentication service was successful."));
-            await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
+            if (loginOk) {
+                Gui.showMessage(localize("ssoLogin.successful", "Login to authentication service was successful."));
+                await Profiles.getInstance().refresh(zeInstance);
+            } else {
+                Gui.showMessage(this.profilesOpCancelled);
+            }
         } catch (err) {
             const message = localize("ssoLogin.error", "Unable to log in with {0}. {1}", serviceProfile.name, err?.message);
             ZoweLogger.error(message);
@@ -1348,16 +1354,17 @@ export class Profiles extends ProfilesCache {
             .map((arg) => arg.argName);
     }
 
-    private async loginWithRegularProfile(serviceProfile: zowe.imperative.IProfileLoaded, node?: IZoweNodeType): Promise<void> {
+    private async loginWithRegularProfile(serviceProfile: zowe.imperative.IProfileLoaded, node?: IZoweNodeType): Promise<boolean> {
         let session: zowe.imperative.Session;
         if (node) {
             session = node.getSession();
-        } else {
+        }
+        if (session == null) {
             session = await ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).getSession();
         }
         const creds = await this.loginCredentialPrompt();
         if (!creds) {
-            return;
+            return false;
         }
         session.ISession.user = creds[0];
         session.ISession.password = creds[1];
@@ -1370,6 +1377,7 @@ export class Profiles extends ProfilesCache {
                 profile: { ...node.getProfile().profile, ...session },
             });
         }
+        return true;
     }
 
     private async getConfigLocationPrompt(action: string): Promise<string> {
