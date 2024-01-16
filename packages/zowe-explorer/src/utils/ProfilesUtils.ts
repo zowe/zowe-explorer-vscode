@@ -78,7 +78,7 @@ export async function errorHandling(errorDetails: Error | string, label?: string
                 const isTokenAuth = await ProfilesUtils.isUsingTokenAuth(label);
 
                 if (tokenError.includes("Token is not valid or expired.") || isTokenAuth) {
-                    if (isTheia()) {
+                    if (globals.ISTHEIA) {
                         Gui.errorMessage(errToken);
                         await Profiles.getInstance().ssoLogin(null, label);
                         return;
@@ -93,7 +93,7 @@ export async function errorHandling(errorDetails: Error | string, label?: string
                 }
             }
 
-            if (isTheia()) {
+            if (globals.ISTHEIA) {
                 Gui.errorMessage(errMsg);
                 return;
             }
@@ -119,17 +119,6 @@ export async function errorHandling(errorDetails: Error | string, label?: string
     }
     // Try to keep message readable since VS Code doesn't support newlines in error messages
     Gui.errorMessage(moreInfo + errorDetails.toString().replace(/\n/g, " | "));
-}
-
-// TODO: remove this second occurence
-export function isTheia(): boolean {
-    ZoweLogger.trace("ProfileUtils.isTheia called.");
-    const VSCODE_APPNAME: string[] = ["Visual Studio Code", "VSCodium"];
-    const appName = vscode.env.appName;
-    if (appName && !VSCODE_APPNAME.includes(appName)) {
-        return true;
-    }
-    return false;
 }
 
 /**
