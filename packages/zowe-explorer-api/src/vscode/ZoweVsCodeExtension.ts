@@ -81,7 +81,8 @@ export class ZoweVsCodeExtension {
      * @deprecated
      */
     public static async promptCredentials(options: IPromptCredentialsOptions): Promise<imperative.IProfileLoaded> {
-        const loadProfile = options.sessionName ? await this.profilesCache.getLoadedProfConfig(options.sessionName.trim()) : options.profile;
+        const profilesCache = ZoweVsCodeExtension.profilesCache;
+        const loadProfile = options.sessionName ? await profilesCache.getLoadedProfConfig(options.sessionName.trim()) : options.profile;
         if (loadProfile == null) {
             return undefined;
         }
@@ -94,12 +95,8 @@ export class ZoweVsCodeExtension {
             loadProfile.profile.password = loadSession.password = creds[1];
 
             const upd = { profileName: loadProfile?.name, profileType: loadProfile.type };
-            await (
-                await this.profilesCache.getProfileInfo()
-            ).updateProperty({ ...upd, property: "user", value: creds[0], setSecure: options.secure });
-            await (
-                await this.profilesCache.getProfileInfo()
-            ).updateProperty({ ...upd, property: "password", value: creds[1], setSecure: options.secure });
+            await (await profilesCache.getProfileInfo()).updateProperty({ ...upd, property: "user", value: creds[0], setSecure: options.secure });
+            await (await profilesCache.getProfileInfo()).updateProperty({ ...upd, property: "password", value: creds[1], setSecure: options.secure });
 
             return loadProfile;
         }
@@ -115,7 +112,7 @@ export class ZoweVsCodeExtension {
         options: IPromptCredentialsOptions,
         apiRegister: ZoweExplorerApi.IApiRegisterClient
     ): Promise<imperative.IProfileLoaded> {
-        const cache = this.profilesCache;
+        const cache = ZoweVsCodeExtension.profilesCache;
         const profInfo = await cache.getProfileInfo();
         const setSecure = options.secure ?? profInfo.isSecured();
 
@@ -186,7 +183,7 @@ export class ZoweVsCodeExtension {
                 tokenType,
                 type: imperative.SessConstants.AUTH_TYPE_TOKEN,
             });
-            const creds = await this.promptUserPass({ session: updSession.ISession, rePrompt: true });
+            const creds = await ZoweVsCodeExtension.promptUserPass({ session: updSession.ISession, rePrompt: true });
             updSession.ISession.base64EncodedAuth = imperative.AbstractSession.getBase64Auth(creds[0], creds[1]);
 
             const loginToken = await (zeRegister?.getCommonApi(serviceProfile).login ?? Login.apimlLogin)(updSession);
@@ -272,7 +269,7 @@ export class ZoweVsCodeExtension {
         if (profAttrs?.profType != null) {
             cache.registerCustomProfilesType(profAttrs.profType);
         }
-        await cache.refresh(this.getZoweExplorerApi());
+        await cache.refresh(ZoweVsCodeExtension.getZoweExplorerApi());
         const retP = cache.loadNamedProfile(profile);
         const _props = profInfo.mergeArgsForProfile(profAttrs, { getSecureVals: true }).knownArgs;
         retP.profile.tokenType = retP.profile.tokenType ?? _props.find((p) => p.argName === "tokenType")?.argValue;
