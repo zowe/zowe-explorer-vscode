@@ -197,7 +197,7 @@ export class ProfilesCache {
         let mProfileInfo: zowe.imperative.ProfileInfo;
         try {
             mProfileInfo = await this.getProfileInfo();
-            const allTypes = this.getAllProfileTypes(apiRegister.registeredApiTypes());
+            const allTypes = this.getAllProfileTypes(apiRegister?.registeredApiTypes() ?? []);
             allTypes.push("base");
             for (const type of allTypes) {
                 const tmpAllProfiles: zowe.imperative.IProfileLoaded[] = [];
@@ -539,13 +539,32 @@ export class ProfilesCache {
     }
 
     private shouldRemoveTokenFromProfile(profile: zowe.imperative.IProfileLoaded, baseProfile: zowe.imperative.IProfileLoaded): boolean {
-        return (
-            baseProfile?.profile?.host &&
+        return (baseProfile?.profile?.host &&
             baseProfile?.profile?.port &&
             profile?.profile?.host &&
             profile?.profile?.port &&
             (baseProfile?.profile.host !== profile?.profile.host || baseProfile?.profile.port !== profile?.profile.port) &&
-            profile?.profile.tokenType === zowe.imperative.SessConstants.TOKEN_TYPE_APIML
-        );
+            profile?.profile.tokenType.startsWith(zowe.imperative.SessConstants.TOKEN_TYPE_APIML)) as boolean;
+    }
+
+    public async updateBaseProfileFileLogin(
+        profile: zowe.imperative.IProfileLoaded,
+        updProfile: zowe.imperative.IProfile,
+        forceUpdate?: boolean
+    ): Promise<void> {
+        const upd = { profileName: profile.name, profileType: profile.type };
+        const mProfileInfo = await this.getProfileInfo();
+        const setSecure = mProfileInfo.isSecured();
+        await mProfileInfo.updateProperty({ ...upd, property: "tokenType", value: updProfile.tokenType, forceUpdate });
+        await mProfileInfo.updateProperty({ ...upd, property: "tokenValue", value: updProfile.tokenValue, setSecure, forceUpdate });
+    }
+
+    public async updateBaseProfileFileLogout(profile: zowe.imperative.IProfileLoaded): Promise<void> {
+        const mProfileInfo = await this.getProfileInfo();
+        const setSecure = mProfileInfo.isSecured();
+        const prof = mProfileInfo.getAllProfiles(profile.type).find((p) => p.profName === profile.name);
+        const mergedArgs = mProfileInfo.mergeArgsForProfile(prof);
+        await mProfileInfo.updateKnownProperty({ mergedArgs, property: "tokenValue", value: undefined, setSecure });
+        await mProfileInfo.updateKnownProperty({ mergedArgs, property: "tokenType", value: undefined });
     }
 }
