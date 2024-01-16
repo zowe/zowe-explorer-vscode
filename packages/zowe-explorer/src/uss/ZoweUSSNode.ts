@@ -22,6 +22,7 @@ import * as contextually from "../shared/context";
 import * as nls from "vscode-nls";
 import { UssFileTree } from "./FileStructure";
 import { ZoweLogger } from "../utils/LoggerUtils";
+import { downloadUnixFile } from "./actions";
 import { UssFSProvider } from "./fs";
 import { USSTree } from "./USSTree";
 
@@ -504,13 +505,13 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      *
      * @param {IZoweTreeNode} node
      */
-    public async openUSS(download: boolean, previewFile: boolean, ussFileProvider?: IZoweTree<IZoweUSSTreeNode>): Promise<void> {
+    public async openUSS(download: boolean, previewFile: boolean, ussFileProvider: IZoweTree<IZoweUSSTreeNode>): Promise<void> {
         ZoweLogger.trace("ZoweUSSNode.openUSS called.");
         await ussFileProvider.checkCurrentProfile(this);
 
         const doubleClicked = Gui.utils.wasDoubleClicked(this, ussFileProvider);
         const shouldPreview = doubleClicked ? false : previewFile;
-        if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID || Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED) {
+        if (Profiles.getInstance().validProfile !== ValidProfileEnum.INVALID) {
             try {
                 switch (true) {
                     // For opening favorited and non-favorited files
@@ -707,10 +708,9 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         }
 
         const prof = this.getProfile();
-        const remotePath = this.fullPath;
         try {
+            const fileTreeToPaste: UssFileTree = JSON.parse(clipboardContents);
             const api = ZoweExplorerApiRegister.getUssApi(this.profile);
-            const fileTreeToPaste: UssFileTree = JSON.parse(await vscode.env.clipboard.readText());
             const sessionName = this.getSessionNode().getLabel() as string;
 
             const task: imperative.ITaskWithStatus = {

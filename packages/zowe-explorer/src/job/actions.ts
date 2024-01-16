@@ -14,12 +14,17 @@ import * as zowe from "@zowe/cli";
 import { errorHandling } from "../utils/ProfilesUtils";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
-import { Gui, IZoweTree, IZoweJobTreeNode } from "@zowe/zowe-explorer-api";
-import { Job } from "./ZoweJobNode";
+import { Gui, IZoweTree, IZoweJobTreeNode, JobSortOpts } from "@zowe/zowe-explorer-api";
+import { Job, Spool } from "./ZoweJobNode";
 import * as nls from "vscode-nls";
 import { buildUniqueSpoolName, getSpoolFiles, matchSpool } from "../SpoolProvider";
 import { ZoweLogger } from "../utils/LoggerUtils";
-import { getDefaultUri } from "../shared/utils";
+import { LocalFileManagement } from "../utils/LocalFileManagement";
+import { SORT_DIRS, updateOpenFiles } from "../shared/utils";
+import { ZosJobsProvider } from "./ZosJobsProvider";
+import { JOB_SORT_OPTS } from "./utils";
+import * as globals from "../globals";
+import { TreeProviders } from "../shared/TreeProviders";
 import { STATUS_BAR_TIMEOUT_MS } from "../globals";
 import * as path from "path";
 
@@ -43,7 +48,7 @@ export async function downloadSpool(jobs: IZoweJobTreeNode[], binary?: boolean):
             canSelectFolders: true,
             canSelectFiles: false,
             canSelectMany: false,
-            defaultUri: getDefaultUri(),
+            defaultUri: LocalFileManagement.getDefaultUri(),
         });
         if (dirUri !== undefined) {
             for (const job of jobs) {
@@ -81,7 +86,7 @@ export async function downloadSingleSpool(nodes: IZoweJobTreeNode[], binary?: bo
             canSelectFolders: true,
             canSelectFiles: false,
             canSelectMany: false,
-            defaultUri: getDefaultUri(),
+            defaultUri: LocalFileManagement.getDefaultUri(),
         });
         if (dirUri !== undefined) {
             for (const node of nodes) {
@@ -107,7 +112,7 @@ export async function downloadSingleSpool(nodes: IZoweJobTreeNode[], binary?: bo
  * @param spool The IJobFile to get the spool content for
  * @param refreshTimestamp The timestamp of the last job node refresh
  */
-export async function getSpoolContent(session: string, spool: zowe.IJobFile, refreshTimestamp: number): Promise<void> {
+export async function getSpoolContent(session: string, spoolNode: Spool): Promise<void> {
     ZoweLogger.trace("job.actions.getSpoolContent called.");
     const profiles = Profiles.getInstance();
     let zosmfProfile: zowe.imperative.IProfileLoaded;
@@ -122,10 +127,12 @@ export async function getSpoolContent(session: string, spool: zowe.IJobFile, ref
     const uniqueSpoolName = buildUniqueSpoolName(spool);
     const uri = vscode.Uri.parse(`zowe-jobs:/${session}/${spool.jobid}/${uniqueSpoolName}`);
     try {
+        updateOpenFiles(TreeProviders.job, uri.path, spoolNode);
         await vscode.commands.executeCommand("vscode.open", uri);
     } catch (error) {
         const isTextDocActive =
-            vscode.window.activeTextEditor && vscode.window.activeTextEditor.document.uri?.path === `${spool.jobname}.${spool.jobid}.${spool.ddname}`;
+            vscode.window.activeTextEditor &&
+            vscode.window.activeTextEditor.document.uri?.path === `${spoolNode.spool.jobname}.${spoolNode.spool.jobid}.${spoolNode.spool.ddname}`;
 
         statusMsg.dispose();
         if (isTextDocActive && String(error.message).includes("Failed to show text document")) {
@@ -358,8 +365,6 @@ async function deleteSingleJob(job: IZoweJobTreeNode, jobsProvider: IZoweTree<IZ
     } catch (error) {
         await errorHandling(error, job.getProfile().name);
     }
-
-    Gui.showMessage(localize("deleteCommand.job", "Job {0} was deleted.", jobName));
 }
 
 async function deleteMultipleJobs(jobs: ReadonlyArray<IZoweJobTreeNode>, jobsProvider: IZoweTree<IZoweJobTreeNode>): Promise<void> {
@@ -498,4 +503,35 @@ export async function cancelJobs(jobsProvider: IZoweTree<IZoweJobTreeNode>, node
     } else {
         await Gui.showMessage(localize("cancelJobs.succeeded", "Cancelled selected jobs successfully."));
     }
+}
+export async function sortJobs(session: IZoweJobTreeNode, jobsProvider: ZosJobsProvider): Promise<void> {
+    const selection = await Gui.showQuickPick(
+        JOB_SORT_OPTS.map((sortOpt, i) => ({
+            label: i === session.sort.method ? `${sortOpt} $(check)` : sortOpt,
+            description: i === JOB_SORT_OPTS.length - 1 ? SORT_DIRS[session.sort.direction] : null,
+        })),
+        {
+            placeHolder: localize("jobs.selectSortOpt", "Select a sorting option for jobs in {0}", session.label as string),
+        }
+    );
+    if (selection == null) {
+        return;
+    }
+    if (selection.label === localize("setSortDirection", "$(fold) Sort Direction")) {
+        const dir = await Gui.showQuickPick(SORT_DIRS, {
+            placeHolder: localize("sort.selectDirection", "Select a sorting direction"),
+        });
+        if (dir != null) {
+            session.sort = {
+                ...(session.sort ?? { method: JobSortOpts.Id }),
+                direction: SORT_DIRS.indexOf(dir),
+            };
+        }
+        await sortJobs(session, jobsProvider);
+        return;
+    }
+
+    session.sort.method = JOB_SORT_OPTS.indexOf(selection.label.replace(" $(check)", ""));
+    jobsProvider.sortBy(session);
+    Gui.setStatusBarMessage(localize("sort.updated", "$(check) Sorting updated for {0}", session.label as string), globals.MS_PER_SEC * 4);
 }

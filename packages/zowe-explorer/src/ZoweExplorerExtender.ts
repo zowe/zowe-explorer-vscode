@@ -149,7 +149,7 @@ export class ZoweExplorerExtender implements IApiExplorerExtender, ZoweExplorerT
      * @param {string} profileType
      * @param {imperative.ICommandProfileTypeConfiguration[]} profileTypeConfigurations
      */
-    public async initForZowe(profileType: string, profileTypeConfigurations?: zowe.imperative.ICommandProfileTypeConfiguration[]): Promise<void> {
+    public async initForZowe(profileType: string, profileTypeConfigurations: zowe.imperative.ICommandProfileTypeConfiguration[]): Promise<void> {
         // Ensure that when a user has not installed the profile type's CLI plugin
         // and/or created a profile that the profile directory in ~/.zowe/profiles
         // will be created with the appropriate meta data. If not called the user will
@@ -190,10 +190,8 @@ export class ZoweExplorerExtender implements IApiExplorerExtender, ZoweExplorerT
                 });
             }
         }
-        // add extender config info to global variable
-        profileTypeConfigurations?.forEach((item) => {
-            globals.EXTENDER_CONFIG.push(item);
-        });
+        if (profileTypeConfigurations !== undefined) Profiles.getInstance().addToConfigArray(profileTypeConfigurations);
+
         // sequentially reload the internal profiles cache to satisfy all the newly added profile types
         await ZoweExplorerExtender.refreshProfilesQueue.add(async (): Promise<void> => {
             await Profiles.getInstance().refresh();

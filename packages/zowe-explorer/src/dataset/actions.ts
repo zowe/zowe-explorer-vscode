@@ -24,8 +24,8 @@ import {
     getSelectedNodeList,
     JobSubmitDialogOpts,
     JOB_SUBMIT_DIALOG_OPTS,
-    getDefaultUri,
-    compareFileContent,
+    LocalFileInfo,
+    uploadContent,
 } from "../shared/utils";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { Profiles } from "../Profiles";
@@ -35,11 +35,12 @@ import * as contextually from "../shared/context";
 import { markDocumentUnsaved, setFileSaved } from "../utils/workspace";
 import { IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
 import { ZoweLogger } from "../utils/LoggerUtils";
-
 import { promiseStatus, PromiseStatuses } from "promise-status-async";
-
+import { ProfileManagement } from "../utils/ProfileManagement";
+import { LocalFileManagement } from "../utils/LocalFileManagement";
 // Set up localization
 import * as nls from "vscode-nls";
+
 nls.config({
     messageFormat: nls.MessageFormat.bundle,
     bundleFormat: nls.BundleFormat.standalone,
@@ -173,7 +174,7 @@ export async function uploadDialog(node: ZoweDatasetNode, datasetProvider: api.I
         canSelectFiles: true,
         openLabel: "Upload File",
         canSelectMany: true,
-        defaultUri: getDefaultUri(),
+        defaultUri: LocalFileManagement.getDefaultUri(),
     };
     const value = await api.Gui.showOpenDialog(fileOpenOptions);
     if (value?.length > 0) {
@@ -445,7 +446,7 @@ export async function createMember(parent: api.IZoweDatasetTreeNode, datasetProv
 export async function openPS(
     node: api.IZoweDatasetTreeNode,
     previewMember: boolean,
-    datasetProvider?: api.IZoweTree<api.IZoweDatasetTreeNode>
+    datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>
 ): Promise<void> {
     ZoweLogger.trace("dataset.actions.openPS called.");
     if (datasetProvider) {
@@ -473,67 +474,67 @@ export async function openPS(
     }
 
     if (Profiles.getInstance().validProfile !== api.ValidProfileEnum.INVALID) {
-        const statusMsg = api.Gui.setStatusBarMessage(localize("dataSet.opening", "$(sync~spin) Opening data set..."));
         try {
-            let label: string;
-            const defaultMessage = localize("openPS.error", "Invalid data set or member.");
-            switch (true) {
-                // For favorited or non-favorited sequential DS:
-                case contextually.isFavorite(node):
-                case contextually.isSessionNotFav(node.getParent()):
-                    label = node.label as string;
-                    break;
-                // For favorited or non-favorited data set members:
-                case contextually.isFavoritePds(node.getParent()):
-                case contextually.isPdsNotFav(node.getParent()):
-                    label = node.getParent().getLabel().toString() + "(" + node.getLabel().toString() + ")";
-                    break;
-                default:
-                    api.Gui.errorMessage(defaultMessage);
-                    throw Error(defaultMessage);
-            }
-
-            const documentFilePath = getDocumentFilePath(label, node);
-            let responsePromise = node.ongoingActions ? node.ongoingActions[api.NodeAction.Download] : null;
-            // If the local copy does not exist, fetch contents
-            if (!fs.existsSync(documentFilePath)) {
-                const prof = node.getProfile();
-                ZoweLogger.info(localize("openPS.openDataSet", "Opening {0}", label));
-                if (node.ongoingActions) {
-                    node.ongoingActions[api.NodeAction.Download] = ZoweExplorerApiRegister.getMvsApi(prof).getContents(label, {
-                        file: documentFilePath,
-                        returnEtag: true,
-                        encoding: prof.profile?.encoding,
-                        responseTimeout: prof.profile?.responseTimeout,
-                    });
-                    responsePromise = node.ongoingActions[api.NodeAction.Download];
-                } else {
-                    responsePromise = ZoweExplorerApiRegister.getMvsApi(prof).getContents(label, {
-                        file: documentFilePath,
-                        returnEtag: true,
-                        encoding: prof.profile?.encoding,
-                        responseTimeout: prof.profile?.responseTimeout,
-                    });
-                }
-            }
-
-            const response = await responsePromise;
-            node.setEtag(response?.apiResponse?.etag);
-            statusMsg.dispose();
-            const document = await vscode.workspace.openTextDocument(getDocumentFilePath(label, node));
+            const fileInfo = await downloadPs(node);
+            const document = await vscode.workspace.openTextDocument(getDocumentFilePath(fileInfo.name, node));
             await api.Gui.showTextDocument(document, { preview: node.wasDoubleClicked != null ? !node.wasDoubleClicked : shouldPreview });
             // discard ongoing action to allow new requests on this node
             if (node.ongoingActions) {
                 node.ongoingActions[api.NodeAction.Download] = null;
             }
             if (datasetProvider) {
-                datasetProvider.addFileHistory(`[${node.getProfileName()}]: ${label}`);
+                datasetProvider.addFileHistory(`[${node.getProfileName()}]: ${fileInfo.name}`);
             }
         } catch (err) {
-            statusMsg.dispose();
             await errorHandling(err, node.getProfileName());
             throw err;
         }
+    }
+}
+
+export async function downloadPs(node: api.IZoweDatasetTreeNode): Promise<LocalFileInfo> {
+    const fileInfo = {} as LocalFileInfo;
+    const defaultMessage = localize("openPS.error", "Invalid data set or member.");
+    switch (true) {
+        // For favorited or non-favorited sequential DS:
+        case contextually.isFavorite(node):
+        case contextually.isSessionNotFav(node.getParent()):
+            fileInfo.name = node.label as string;
+            break;
+        // For favorited or non-favorited data set members:
+        case contextually.isFavoritePds(node.getParent()):
+        case contextually.isPdsNotFav(node.getParent()):
+            fileInfo.name = node.getParent().getLabel().toString() + "(" + node.getLabel().toString() + ")";
+            break;
+        default:
+            api.Gui.errorMessage(defaultMessage);
+            throw Error(defaultMessage);
+    }
+    // if local copy exists, open that instead of pulling from mainframe
+    fileInfo.path = getDocumentFilePath(fileInfo.name, node);
+    if (!fs.existsSync(fileInfo.path)) {
+        const response = await downloadPsApiCall(node, fileInfo.path, fileInfo.name);
+        node.setEtag(response?.apiResponse?.etag);
+    }
+    return fileInfo;
+}
+
+async function downloadPsApiCall(node: api.IZoweDatasetTreeNode, documentFilePath: string, label: string): Promise<any> {
+    const prof = node.getProfile();
+    ZoweLogger.info(localize("dsActions.downloadPS.downloading.log", "Downloading {0}", label));
+    const statusMsg = api.Gui.setStatusBarMessage(localize("dsActions.downloadPS.downloading.message", "$(sync~spin) Downloading data set..."));
+    try {
+        const response = await ZoweExplorerApiRegister.getMvsApi(prof).getContents(label, {
+            file: documentFilePath,
+            returnEtag: true,
+            encoding: prof.profile?.encoding,
+            responseTimeout: prof.profile?.responseTimeout,
+        });
+        statusMsg.dispose();
+        return response;
+    } catch (error) {
+        statusMsg.dispose();
+        throw error;
     }
 }
 
@@ -627,7 +628,7 @@ export async function createFile(node: api.IZoweDatasetTreeNode, datasetProvider
             if (property.key === `dsName`) {
                 dsName = property.value;
             } else {
-                if (typeof propertiesFromDsType[property.key] === "number") {
+                if (typeof propertiesFromDsType[property.key] === "number" || property.type === "number") {
                     dsPropsForAPI[property.key] = Number(property.value);
                 } else {
                     dsPropsForAPI[property.key] = property.value;
@@ -966,32 +967,43 @@ export async function showAttributes(node: api.IZoweDatasetTreeNode, datasetProv
 }
 
 /**
- * Submit the contents of the editor as JCL.
+ * Submit the contents of the editor or file as JCL.
  *
  * @export
  * @param datasetProvider DatasetTree object
  */
 // This function does not appear to currently be made available in the UI
-export async function submitJcl(datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>): Promise<void> {
+export async function submitJcl(datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>, file?: vscode.Uri): Promise<void> {
     ZoweLogger.trace("dataset.actions.submitJcl called.");
-    if (!vscode.window.activeTextEditor) {
-        const errorMsg = localize("submitJcl.noDocumentOpen", "No editor with a document that could be submitted as JCL is currently open.");
-        api.Gui.errorMessage(errorMsg);
-        ZoweLogger.error(errorMsg);
+    if (!vscode.window.activeTextEditor && !file) {
+        const notActiveEditorMsg = localize(
+            "submitJcl.notActiveEditorMsg",
+            "No editor with a document that could be submitted as JCL is currently open."
+        );
+        api.Gui.errorMessage(notActiveEditorMsg);
+        ZoweLogger.error(notActiveEditorMsg);
         return;
     }
+
+    if (file) {
+        await vscode.commands.executeCommand("filesExplorer.openFilePreserveFocus", file);
+    }
     const doc = vscode.window.activeTextEditor.document;
-    ZoweLogger.debug(localize("submitJcl.submitting", "Submitting JCL in document {0}", doc.fileName));
+    ZoweLogger.debug(localize("submitJcl.submitting", "Submitting as JCL in document {0}", doc.fileName));
+
+    // prompts for job submit confirmation when submitting local JCL from editor/palette
+    // no node passed in, ownsJob is true because local file is always owned by userID, passes in local file name
+    if (!(await confirmJobSubmission(doc.fileName, true))) {
+        return;
+    }
+
     // get session name
     const sessionregex = /\[(.*)(\])(?!.*\])/g;
     const regExp = sessionregex.exec(doc.fileName);
     const profiles = Profiles.getInstance();
     let sessProfileName;
     if (regExp === null) {
-        const allProfiles: zowe.imperative.IProfileLoaded[] = profiles.allProfiles;
-        const profileNamesList = allProfiles.map((profile) => {
-            return profile.name;
-        });
+        const profileNamesList = ProfileManagement.getRegisteredProfileNameList(globals.Trees.JES);
         if (profileNamesList.length) {
             const quickPickOptions: vscode.QuickPickOptions = {
                 placeHolder: localize("submitJcl.qp.placeholder", "Select the Profile to use to submit the job"),
@@ -999,6 +1011,10 @@ export async function submitJcl(datasetProvider: api.IZoweTree<api.IZoweDatasetT
                 canPickMany: false,
             };
             sessProfileName = await api.Gui.showQuickPick(profileNamesList, quickPickOptions);
+            if (!sessProfileName) {
+                api.Gui.infoMessage(localizedStrings.opCancelled);
+                return;
+            }
         } else {
             api.Gui.showMessage(localize("submitJcl.noProfile", "No profiles available"));
         }
@@ -1044,22 +1060,25 @@ export async function submitJcl(datasetProvider: api.IZoweTree<api.IZoweDatasetT
 /**
  * Shows a confirmation dialog (if needed) when submitting a job.
  *
- * @param node The node/member that is being submitted
+ * @param nodeOrFileName The node/member that is being submitted, or the filename to submit
  * @param ownsJob Whether the current user profile owns this job
  * @returns Whether the job submission should continue.
  */
-async function confirmJobSubmission(node: api.IZoweTreeNode, ownsJob: boolean): Promise<boolean> {
+export async function confirmJobSubmission(nodeOrFileName: api.IZoweTreeNode | string, ownsJob: boolean): Promise<boolean> {
     ZoweLogger.trace("dataset.actions.confirmJobSubmission called.");
+
+    const jclName = typeof nodeOrFileName === "string" ? path.basename(nodeOrFileName) : nodeOrFileName.getLabel().toString();
+
     const showConfirmationDialog = async (): Promise<boolean> => {
         const selection = await api.Gui.warningMessage(
-            localize("confirmJobSubmission.confirm", "Are you sure you want to submit the following job?\n\n{0}", node.getLabel().toString()),
+            localize("confirmJobSubmission.confirm", "Are you sure you want to submit the following job?\n\n{0}", jclName),
             { items: [{ title: "Submit" }], vsCodeOpts: { modal: true } }
         );
-
         return selection != null && selection?.title === "Submit";
     };
 
     const confirmationOption: string = vscode.workspace.getConfiguration().get("zowe.jobs.confirmSubmission");
+
     switch (JOB_SUBMIT_DIALOG_OPTS.indexOf(confirmationOption)) {
         case JobSubmitDialogOpts.OtherUserJobs:
             if (!ownsJob && !(await showConfirmationDialog())) {
@@ -1080,7 +1099,6 @@ async function confirmJobSubmission(node: api.IZoweTreeNode, ownsJob: boolean): 
         default:
             break;
     }
-
     return true;
 }
 
@@ -1566,6 +1584,9 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
     const ending = doc.fileName.substring(start);
     const sesName = ending.substring(0, ending.indexOf(path.sep));
     const profile = Profiles.getInstance().loadNamedProfile(sesName);
+    const fileLabel = path.basename(doc.fileName);
+    const dataSetName = fileLabel.substring(0, fileLabel.indexOf("("));
+    const memberName = fileLabel.substring(fileLabel.indexOf("(") + 1, fileLabel.indexOf(")"));
     if (!profile) {
         const sessionError = localize("saveFile.session.error", "Could not locate session when saving data set.");
         ZoweLogger.error(sessionError);
@@ -1573,8 +1594,16 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
         return;
     }
 
-    // get session from session name
-    const sesNode = (await datasetProvider.getChildren()).find((child) => child.label.toString().trim() === sesName);
+    const etagFavorites = (
+        datasetProvider.mFavorites
+            .find((child) => child.label.toString().trim() === sesName)
+            ?.children.find((child) => child.label.toString().trim() === dataSetName)
+            ?.children.find((child) => child.label.toString().trim() === memberName) as api.IZoweDatasetTreeNode
+    )?.getEtag();
+    const sesNode =
+        etagFavorites !== "" && etagFavorites !== undefined
+            ? datasetProvider.mFavorites.find((child) => child.label.toString().trim() === sesName)
+            : datasetProvider.mSessionNodes.find((child) => child.label.toString().trim() === sesName);
     if (!sesNode) {
         // if saving from favorites, a session might not exist for this node
         ZoweLogger.debug(localize("saveFile.missingSessionNode", "Could not find session node"));
@@ -1604,17 +1633,18 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
         await errorHandling(err, sesName);
     }
     // Get specific node based on label and parent tree (session / favorites)
-    const nodes: api.IZoweNodeType[] = concatChildNodes(sesNode ? [sesNode] : datasetProvider.mSessionNodes);
-    const node: api.IZoweDatasetTreeNode = nodes.find((zNode) => {
-        if (contextually.isDsMember(zNode)) {
-            const zNodeDetails = dsUtils.getProfileAndDataSetName(zNode);
-            return `${zNodeDetails.profileName}(${zNodeDetails.dataSetName})` === `${label}`;
-        } else if (contextually.isDs(zNode) || contextually.isDsSession(zNode)) {
-            return zNode.label.toString().trim() === label;
-        } else {
-            return false;
-        }
-    });
+    const nodes = concatChildNodes(sesNode ? [sesNode] : datasetProvider.mSessionNodes);
+    const node: api.IZoweDatasetTreeNode =
+        nodes.find((zNode) => {
+            if (contextually.isDsMember(zNode)) {
+                const zNodeDetails = dsUtils.getProfileAndDataSetName(zNode);
+                return `${zNodeDetails.profileName}(${zNodeDetails.dataSetName})` === `${label}`;
+            } else if (contextually.isDs(zNode) || contextually.isDsSession(zNode)) {
+                return zNode.label.toString().trim() === label;
+            } else {
+                return false;
+            }
+        }) ?? datasetProvider.openFiles?.[doc.uri.fsPath];
 
     // define upload options
     const uploadOptions: IUploadOptions = {
@@ -1622,6 +1652,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
         returnEtag: true,
     };
 
+    const prof = node?.getProfile() ?? profile;
     try {
         const uploadResponse = await api.Gui.withProgress(
             {
@@ -1629,25 +1660,16 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
                 title: localize("saveFile.progress.title", "Saving data set..."),
             },
             () => {
-                const prof = node?.getProfile() ?? profile;
-                if (prof.profile?.encoding) {
-                    uploadOptions.encoding = prof.profile.encoding;
-                }
-                return ZoweExplorerApiRegister.getMvsApi(prof).putContents(doc.fileName, label, {
-                    ...uploadOptions,
-                    responseTimeout: prof.profile?.responseTimeout,
-                });
+                return uploadContent(node, doc, label, prof, null, uploadOptions.etag, uploadOptions.returnEtag);
             }
         );
         if (uploadResponse.success) {
             api.Gui.setStatusBarMessage(uploadResponse.commandResponse, globals.STATUS_BAR_TIMEOUT_MS);
             // set local etag with the new etag from the updated file on mainframe
-            if (node) {
-                node.setEtag(uploadResponse.apiResponse[0].etag);
-                setFileSaved(true);
-            }
+            node?.setEtag(uploadResponse.apiResponse[0].etag);
+            setFileSaved(true);
         } else if (!uploadResponse.success && uploadResponse.commandResponse.includes("Rest API failure with HTTP(S) status 412")) {
-            await compareFileContent(doc, node, label, null, profile);
+            await LocalFileManagement.compareSavedFileContent(doc, node, label, null, profile);
         } else {
             await markDocumentUnsaved(doc);
             api.Gui.errorMessage(uploadResponse.commandResponse);

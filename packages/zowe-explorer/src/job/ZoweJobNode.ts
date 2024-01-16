@@ -13,11 +13,12 @@
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
 import * as globals from "../globals";
-import { Gui, IZoweJobTreeNode, ZoweTreeNode } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweJobTreeNode, JobSortOpts, SortDirection, ZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { errorHandling, syncSessionNode } from "../utils/ProfilesUtils";
 import { getIconByNode } from "../generators/icons";
 import * as contextually from "../shared/context";
+import { JOB_SORT_KEYS } from "./utils";
 
 import * as nls from "vscode-nls";
 import { Profiles } from "../Profiles";
@@ -39,6 +40,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
 
     public children: IZoweJobTreeNode[] = [];
     public dirty = true;
+    public sort: NodeSort;
     private _owner: string;
     private _prefix: string;
     private _searchId: string;
@@ -94,11 +96,16 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
             this.iconPath = icon.path;
         }
 
-        if (!globals.ISTHEIA && !(this instanceof Spool)) {
-            this.id = `${mParent?.id ?? mParent?.label?.toString() ?? "<root>"}.${this.label as string}`;
-            if (!contextually.isSession(this) && !isFavorites && profile != null) {
-                this.resourceUri = vscode.Uri.parse(`zowe-jobs:/${profile.name}/${this.job.jobid}`);
+        if (contextually.isSession(this)) {
+            this.sort = {
+                method: JobSortOpts.Id,
+                direction: SortDirection.Ascending,
+            };
+            if (!globals.ISTHEIA) {
+                this.id = this.label as string;
             }
+        } else if (!isFavorites && profile != null) {
+            this.resourceUri = vscode.Uri.parse(`zowe-jobs:/${profile.name}/${this.job.jobid}`);
         }
     }
 
@@ -110,6 +117,9 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
     public async getChildren(): Promise<IZoweJobTreeNode[]> {
         const thisSessionNode = this.getSessionNode();
         ZoweLogger.trace(`ZoweJobNode.getChildren called for ${String(thisSessionNode.label)}.`);
+        if (this?.filter !== undefined) {
+            return this.children;
+        }
         if (contextually.isSession(this) && !this.filtered && !contextually.isFavorite(this)) {
             return [
                 new Job(
@@ -126,7 +136,6 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
         if (!this.dirty) {
             return this.children;
         }
-
         const elementChildren: Record<string, ZoweJobNode> = {};
         if (contextually.isJob(this)) {
             // Fetch spool files under job node
@@ -191,7 +200,6 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
         } else {
             // Fetch jobs under session node
             const jobs = await this.getJobs(this._owner, this._prefix, this._searchId, this._jobStatus);
-
             if (jobs.length === 0) {
                 const noJobsNode = new Job(
                     localize("getChildren.noJobs", "No jobs found"),
@@ -205,7 +213,6 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
                 noJobsNode.iconPath = null;
                 return [noJobsNode];
             }
-
             jobs.forEach((job) => {
                 let nodeTitle: string;
                 if (job.retcode) {
@@ -241,26 +248,39 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
         // Only add new children that are not in the list of existing child nodes
         const newChildren = Object.values(elementChildren).filter((c) => this.children.find((ch) => ch.label === c.label) == null);
 
+        const sortMethod = contextually.isSession(this) ? this.sort : { method: JobSortOpts.Id, direction: SortDirection.Ascending };
         // Remove any children that are no longer present in the built record
         this.children = this.children
             .concat(newChildren)
             .filter((ch) => Object.values(elementChildren).find((recordCh) => recordCh.label === ch.label) != null)
-            .sort((a, b) => Job.sortJobs(a, b));
+            .sort(Job.sortJobs(sortMethod));
         this.dirty = false;
-
         return this.children;
     }
 
-    public static sortJobs(a: IZoweJobTreeNode, b: IZoweJobTreeNode): number {
-        if (a.job.jobid > b.job.jobid) {
-            return 1;
-        }
+    public static sortJobs(sortOpts: NodeSort): (x: IZoweJobTreeNode, y: IZoweJobTreeNode) => number {
+        return (x, y) => {
+            const sortLessThan = sortOpts.direction == SortDirection.Ascending ? -1 : 1;
+            const sortGreaterThan = sortLessThan * -1;
 
-        if (a.job.jobid < b.job.jobid) {
-            return -1;
-        }
+            const keyToSortBy = JOB_SORT_KEYS[sortOpts.method];
+            let xCompare, yCompare;
+            if (keyToSortBy === "retcode") {
+                // some jobs (such as active ones) will have a null retcode
+                // in this case, use status as the key to compare for that node only
+                xCompare = x.job["retcode"] ?? x.job["status"];
+                yCompare = y.job["retcode"] ?? y.job["status"];
+            } else {
+                xCompare = x.job[keyToSortBy];
+                yCompare = y.job[keyToSortBy];
+            }
 
-        return 0;
+            if (xCompare === yCompare) {
+                return x.job["jobid"] > y.job["jobid"] ? sortGreaterThan : sortLessThan;
+            }
+
+            return xCompare > yCompare ? sortGreaterThan : sortLessThan;
+        };
     }
 
     public getSessionNode(): IZoweJobTreeNode {

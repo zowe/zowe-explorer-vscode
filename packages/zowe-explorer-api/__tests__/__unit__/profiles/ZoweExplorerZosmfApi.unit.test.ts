@@ -43,6 +43,32 @@ const fakeProfile: ITestProfile = {
 };
 const fakeSession = zowe.imperative.Session.createFromUrl(new URL("https://example.com"));
 
+const mISshSession: zowe.ISshSession = {
+    hostname: "example.com",
+    port: 22,
+};
+
+async function expectUnixCommandApiWithSshSession<T>(
+    { name, spy, args }: ITestApi<T>,
+    apiInstance: ZoweExplorerApi.ICommon,
+    sshobj: zowe.SshSession
+): Promise<void> {
+    spy.mockClear().mockResolvedValue(undefined);
+    spy.mockImplementation((sshobject: zowe.SshSession, command: string, cwd: string, callback: (data: string) => void) => {
+        let r = "";
+        callback("test");
+        r += "test";
+    });
+    const spywhenpathnotspecified = jest.spyOn(zowe.Shell, "executeSsh");
+    spywhenpathnotspecified.mockImplementation((sshobject: zowe.SshSession, command: string, callback: (data: string) => void) => {
+        let r = "";
+        callback("test");
+        r += "test";
+    });
+    await apiInstance[name as string](sshobj, ...args, true, () => {});
+    await apiInstance[name as string](sshobj, ...args, false, () => {});
+    expect(spy).toHaveBeenCalled();
+}
 async function expectApiWithSession<T>({ name, spy, args, transform }: ITestApi<T>, apiInstance: ZoweExplorerApi.ICommon): Promise<void> {
     spy.mockClear().mockResolvedValue(undefined);
     const getSessionSpy = jest.spyOn(apiInstance, "getSession").mockReturnValue(fakeSession);
@@ -258,6 +284,30 @@ describe("ZosmfUssApi", () => {
 
         await zosmfApi.logout(fakeSession);
         expect(logoutSpy).toHaveBeenCalledWith(fakeSession);
+    });
+
+    it("should retrieve the tag of a file", async () => {
+        const zosmfApi = new ZosmfUssApi();
+        jest.spyOn(JSON, "parse").mockReturnValue({
+            stdout: ["-t UTF-8 tesfile.txt"],
+        });
+
+        Object.defineProperty(zowe.Utilities, "putUSSPayload", {
+            value: () => Buffer.from(""),
+            configurable: true,
+        });
+        await expect(zosmfApi.getTag("testfile.txt")).resolves.toEqual("UTF-8");
+    });
+
+    it("should update the tag attribute when passed in", async () => {
+        const zosmfApi = new ZosmfUssApi();
+        const changeTagSpy = jest.fn();
+        Object.defineProperty(zowe.Utilities, "putUSSPayload", {
+            value: changeTagSpy,
+            configurable: true,
+        });
+        await expect(zosmfApi.updateAttributes("/test/path", { tag: "utf-8" })).resolves.not.toThrow();
+        expect(changeTagSpy).toBeCalledTimes(1);
     });
 
     const ussApis: ITestApi<ZosmfUssApi>[] = [
@@ -513,6 +563,7 @@ describe("ZosmfJesApi", () => {
 });
 
 describe("ZosmfCommandApi", () => {
+    const SshSessionobj = new zowe.SshSession(mISshSession);
     const commandApis: ITestApi<ZosmfCommandApi>[] = [
         {
             name: "issueTsoCommandWithParms",
@@ -530,5 +581,21 @@ describe("ZosmfCommandApi", () => {
         it(`${commandApi?.name} should inject session into Zowe API`, async () => {
             await expectApiWithSession(commandApi, new ZosmfCommandApi());
         });
+    });
+    const UnixcommandApiwithsshSession: ITestApi<ZosmfCommandApi>[] = [
+        {
+            name: "issueUnixCommand",
+            spy: jest.spyOn(zowe.Shell, "executeSshCwd"),
+            args: ["command", "cwd"],
+        },
+    ];
+    UnixcommandApiwithsshSession.forEach((cmdApi) => {
+        it(`${cmdApi?.name} should inject session into Zowe API`, async () => {
+            await expectUnixCommandApiWithSshSession(cmdApi, new ZosmfCommandApi(), SshSessionobj);
+        });
+    });
+    it("check whether sshProfileNeeded", () => {
+        const obj = new ZosmfCommandApi();
+        expect(obj.sshProfileRequired?.()).toBe(true);
     });
 });

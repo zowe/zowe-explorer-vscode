@@ -29,7 +29,7 @@ import { Job } from "../../../src/job/ZoweJobNode";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { Profiles } from "../../../src/Profiles";
 import * as utils from "../../../src/utils/ProfilesUtils";
-import { ProfilesCache } from "@zowe/zowe-explorer-api";
+import { IZoweTreeNode, ProfilesCache } from "@zowe/zowe-explorer-api";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 
 jest.mock("path");
@@ -239,6 +239,7 @@ describe("Test force upload", () => {
             ussNode: new ZoweUSSNode(null, null, null, null, null),
             showInformationMessage: jest.fn(),
             showWarningMessage: jest.fn(),
+            showErrorMessage: jest.fn(),
             getMvsApi: jest.fn(),
             getUssApi: jest.fn(),
             withProgress: jest.fn(),
@@ -257,6 +258,10 @@ describe("Test force upload", () => {
         });
         Object.defineProperty(vscode.window, "showWarningMessage", {
             value: newVariables.showWarningMessage,
+            configurable: true,
+        });
+        Object.defineProperty(vscode.window, "showErrorMessage", {
+            value: newVariables.showErrorMessage,
             configurable: true,
         });
         Object.defineProperty(ZoweExplorerApiRegister, "getMvsApi", {
@@ -298,6 +303,7 @@ describe("Test force upload", () => {
             },
             expect.any(Function)
         );
+        expect(blockMocks.showInformationMessage.mock.calls[1][0]).toBe(blockMocks.fileResponse.commandResponse);
     });
 
     it("should successfully call upload for a data set if user clicks 'Yes'", async () => {
@@ -312,6 +318,7 @@ describe("Test force upload", () => {
             },
             expect.any(Function)
         );
+        expect(blockMocks.showInformationMessage.mock.calls[1][0]).toBe(blockMocks.fileResponse.commandResponse);
     });
 
     it("should cancel upload if user clicks 'No'", async () => {
@@ -329,6 +336,37 @@ describe("Test force upload", () => {
         expect(blockMocks.showWarningMessage.mock.calls[0][0]).toBe(
             "A merge conflict has been detected. Since you are running inside Theia editor, a merge conflict resolution is not available yet."
         );
+    });
+
+    it("should show error message if file fails to upload", async () => {
+        const blockMocks = await createBlockMocks();
+        blockMocks.showInformationMessage.mockResolvedValueOnce("Yes");
+        blockMocks.withProgress.mockResolvedValueOnce({ ...blockMocks.fileResponse, success: false });
+        await sharedUtils.willForceUpload(blockMocks.ussNode, blockMocks.mockDoc, null);
+        expect(blockMocks.withProgress).toBeCalledWith(
+            {
+                location: vscode.ProgressLocation.Notification,
+                title: "Saving file...",
+            },
+            expect.any(Function)
+        );
+        expect(blockMocks.showErrorMessage.mock.calls[0][0]).toBe(blockMocks.fileResponse.commandResponse);
+    });
+
+    it("should show error message if upload throws an error", async () => {
+        const blockMocks = await createBlockMocks();
+        blockMocks.showInformationMessage.mockResolvedValueOnce("Yes");
+        const testError = new Error("Task failed successfully");
+        blockMocks.withProgress.mockRejectedValueOnce(testError);
+        await sharedUtils.willForceUpload(blockMocks.ussNode, blockMocks.mockDoc, null, { name: "fakeProfile" } as any);
+        expect(blockMocks.withProgress).toBeCalledWith(
+            {
+                location: vscode.ProgressLocation.Notification,
+                title: "Saving file...",
+            },
+            expect.any(Function)
+        );
+        expect(blockMocks.showErrorMessage.mock.calls[0][0]).toBe(`Error: ${testError.message}`);
     });
 });
 
@@ -522,5 +560,25 @@ describe("Shared utils unit tests - function sortTreeItems", () => {
             { label: "W", contextValue: "some_other_context" },
             { label: "Z", contextValue: "some_other_context" },
         ]);
+    });
+});
+
+describe("Shared utils unit tests - function updateOpenFiles", () => {
+    const someTree = { openFiles: {} };
+
+    it("sets a file entry to null in the openFiles record", () => {
+        sharedUtils.updateOpenFiles(someTree as any, "/a/doc/path", null);
+        expect(someTree.openFiles["/a/doc/path"]).toBeNull();
+    });
+
+    it("sets a file entry to a valid node in the openFiles record", () => {
+        sharedUtils.updateOpenFiles(someTree as any, "/a/doc/path", { label: "testLabel" } as IZoweTreeNode);
+        expect(someTree.openFiles["/a/doc/path"].label).toBe("testLabel");
+    });
+
+    it("does nothing if openFiles is not defined", () => {
+        someTree.openFiles = undefined as any;
+        sharedUtils.updateOpenFiles(someTree as any, "/a/doc/path", null);
+        expect(someTree.openFiles).toBeUndefined();
     });
 });

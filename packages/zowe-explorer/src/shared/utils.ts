@@ -14,15 +14,14 @@
 import * as vscode from "vscode";
 import * as path from "path";
 import * as globals from "../globals";
-import * as os from "os";
-import { Gui, IZoweTreeNode, IZoweNodeType, IZoweDatasetTreeNode, IZoweUSSTreeNode, IZoweJobTreeNode } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweTreeNode, IZoweNodeType, IZoweDatasetTreeNode, IZoweUSSTreeNode, IZoweJobTreeNode, IZoweTree } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import * as nls from "vscode-nls";
 import { IZosFilesResponse, imperative } from "@zowe/cli";
 import { IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
 import { ZoweLogger } from "../utils/LoggerUtils";
-import { isTypeUssTreeNode } from "./context";
 import { markDocumentUnsaved } from "../utils/workspace";
+import { errorHandling } from "../utils/ProfilesUtils";
 
 // Set up localization
 nls.config({
@@ -43,6 +42,13 @@ export const JOB_SUBMIT_DIALOG_OPTS = [
     localize("zowe.jobs.confirmSubmission.otherUserJobs", "Other user jobs"),
     localize("zowe.jobs.confirmSubmission.allJobs", "All jobs"),
 ];
+
+export const SORT_DIRS: string[] = [localize("sort.asc", "Ascending"), localize("sort.desc", "Descending")];
+
+export type LocalFileInfo = {
+    name: string;
+    path: string;
+};
 
 export function filterTreeByString(value: string, treeItems: vscode.QuickPickItem[]): vscode.QuickPickItem[] {
     ZoweLogger.trace("shared.utils.filterTreeByString called.");
@@ -138,7 +144,7 @@ function appendSuffix(label: string): string {
     const bracket = label.indexOf("(");
     const split = bracket > -1 ? label.substr(0, bracket).split(".", limit) : label.split(".", limit);
     for (let i = split.length - 1; i > 0; i--) {
-        if (["JCL", "CNTL"].includes(split[i])) {
+        if (["JCL", "JCLLIB", "CNTL"].includes(split[i])) {
             return label.concat(".jcl");
         }
         if (["COBOL", "CBL", "COB", "SCBL"].includes(split[i])) {
@@ -213,19 +219,14 @@ export async function uploadContent(
     etagToUpload?: string,
     returnEtag?: boolean
 ): Promise<IZosFilesResponse> {
+    const uploadOptions: IUploadOptions = {
+        etag: etagToUpload,
+        returnEtag: true,
+        encoding: profile.profile?.encoding,
+        responseTimeout: profile.profile?.responseTimeout,
+    };
     if (isZoweDatasetTreeNode(node)) {
-        // Upload without passing the etag to force upload
-        const uploadOptions: IUploadOptions = {
-            returnEtag: true,
-        };
-        const prof = node.getProfile();
-        if (prof.profile.encoding) {
-            uploadOptions.encoding = prof.profile.encoding;
-        }
-        return ZoweExplorerApiRegister.getMvsApi(prof).putContents(doc.fileName, remotePath, {
-            responseTimeout: prof.profile?.responseTimeout,
-            ...uploadOptions,
-        });
+        return ZoweExplorerApiRegister.getMvsApi(profile).putContents(doc.fileName, remotePath, uploadOptions);
     } else {
         const task: imperative.ITaskWithStatus = {
             percentComplete: 0,
@@ -254,9 +255,8 @@ export function willForceUpload(
     doc: vscode.TextDocument,
     remotePath: string,
     profile?: imperative.IProfileLoaded,
-    binary?: boolean,
-    returnEtag?: boolean
-): void {
+    binary?: boolean
+): Thenable<void> {
     // setup to handle both cases (dataset & USS)
     let title: string;
     if (isZoweDatasetTreeNode(node)) {
@@ -273,24 +273,33 @@ export function willForceUpload(
         );
     }
     // Don't wait for prompt to return since this would block the save queue
-    Gui.infoMessage(localize("saveFile.info.confirmUpload", "Would you like to overwrite the remote file?"), {
+    return Gui.infoMessage(localize("saveFile.info.confirmUpload", "Would you like to overwrite the remote file?"), {
         items: [localize("saveFile.overwriteConfirmation.yes", "Yes"), localize("saveFile.overwriteConfirmation.no", "No")],
     }).then(async (selection) => {
         if (selection === localize("saveFile.overwriteConfirmation.yes", "Yes")) {
-            const uploadResponse = await Gui.withProgress(
-                {
-                    location: vscode.ProgressLocation.Notification,
-                    title,
-                },
-                () => {
-                    return uploadContent(node, doc, remotePath, profile, binary, null, returnEtag);
+            try {
+                const uploadResponse = await Gui.withProgress(
+                    {
+                        location: vscode.ProgressLocation.Notification,
+                        title,
+                    },
+                    () => {
+                        return uploadContent(node, doc, remotePath, profile, binary, null, true);
+                    }
+                );
+                if (uploadResponse.success) {
+                    Gui.showMessage(uploadResponse.commandResponse);
+                    if (node) {
+                        // Upload API returns a singleton array for data sets and an object for USS files
+                        node.setEtag(uploadResponse.apiResponse[0]?.etag ?? uploadResponse.apiResponse.etag);
+                    }
+                } else {
+                    await markDocumentUnsaved(doc);
+                    Gui.errorMessage(uploadResponse.commandResponse);
                 }
-            );
-            if (uploadResponse.success) {
-                Gui.showMessage(uploadResponse.commandResponse);
-                if (node) {
-                    node.setEtag(uploadResponse.apiResponse[0].etag);
-                }
+            } catch (err) {
+                await markDocumentUnsaved(doc);
+                await errorHandling(err, profile.name);
             }
         } else {
             Gui.showMessage(localize("uploadContent.cancelled", "Upload cancelled."));
@@ -338,51 +347,8 @@ export function jobStringValidator(text: string, localizedParam: "owner" | "pref
     }
 }
 
-export function getDefaultUri(): vscode.Uri {
-    return vscode.workspace.workspaceFolders?.[0]?.uri ?? vscode.Uri.file(os.homedir());
-}
-
-/**
- * Function that triggers compare of the old and new document in the active editor
- * @param {vscode.TextDocument} doc - document to update and compare with previous content
- * @param {IZoweDatasetTreeNode | IZoweUSSTreeNode} node - IZoweTreeNode
- * @param {string} label - {optional} used by IZoweDatasetTreeNode to getContents of file
- * @param {boolean} binary - {optional} used by IZoweUSSTreeNode to getContents of file
- * @param {imperative.IProfileLoaded} profile - {optional}
- * @returns {Promise<void>}
- */
-export async function compareFileContent(
-    doc: vscode.TextDocument,
-    node: IZoweDatasetTreeNode | IZoweUSSTreeNode,
-    label?: string,
-    binary?: boolean,
-    profile?: imperative.IProfileLoaded
-): Promise<void> {
-    await markDocumentUnsaved(doc);
-    const prof = node ? node.getProfile() : profile;
-    let downloadResponse;
-
-    if (isTypeUssTreeNode(node)) {
-        downloadResponse = await ZoweExplorerApiRegister.getUssApi(prof).getContents(node.fullPath, {
-            file: node.getUSSDocumentFilePath(),
-            binary,
-            returnEtag: true,
-            encoding: prof.profile?.encoding,
-            responseTimeout: prof.profile?.responseTimeout,
-        });
-    } else {
-        downloadResponse = await ZoweExplorerApiRegister.getMvsApi(prof).getContents(label, {
-            file: doc.fileName,
-            returnEtag: true,
-            encoding: prof.profile?.encoding,
-            responseTimeout: prof.profile?.responseTimeout,
-        });
-    }
-    ZoweLogger.warn(localize("saveFile.etagMismatch.log.warning", "Remote file has changed. Presenting with way to resolve file."));
-    vscode.commands.executeCommand("workbench.files.action.compareWithSaved");
-    // re-assign etag, so that it can be used with subsequent requests
-    const downloadEtag = downloadResponse?.apiResponse?.etag;
-    if (node && downloadEtag !== node.getEtag()) {
-        node.setEtag(downloadEtag);
+export function updateOpenFiles<T extends IZoweTreeNode>(treeProvider: IZoweTree<T>, docPath: string, value: T | null): void {
+    if (treeProvider.openFiles) {
+        treeProvider.openFiles[docPath] = value;
     }
 }

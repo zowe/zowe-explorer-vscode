@@ -15,31 +15,37 @@ import * as nls from "vscode-nls";
 import * as globals from "../globals";
 import * as dsActions from "./actions";
 import {
-    Gui,
     DataSetAllocTemplate,
+    Gui,
     ValidProfileEnum,
     IZoweTree,
     IZoweDatasetTreeNode,
     PersistenceSchemaEnum,
     NodeInteraction,
     IZoweTreeNode,
+    DatasetFilter,
+    DatasetSortOpts,
+    SortDirection,
+    NodeSort,
+    DatasetFilterOpts,
 } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { FilterDescriptor, FilterItem, errorHandling, syncSessionNode } from "../utils/ProfilesUtils";
-import { sortTreeItems, getAppName, getDocumentFilePath } from "../shared/utils";
+import { sortTreeItems, getAppName, getDocumentFilePath, SORT_DIRS, updateOpenFiles } from "../shared/utils";
 import { ZoweTreeProvider } from "../abstract/ZoweTreeProvider";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { getIconById, getIconByNode, IconId, IIconItem } from "../generators/icons";
+import * as dayjs from "dayjs";
 import * as fs from "fs";
 import * as contextually from "../shared/context";
-import { resetValidationSettings } from "../shared/actions";
 import { closeOpenedTextFile } from "../utils/workspace";
 import { IDataSet, IListOptions, imperative } from "@zowe/cli";
-import { validateDataSetName, validateMemberName } from "./utils";
+import { DATASET_FILTER_OPTS, DATASET_SORT_OPTS, validateDataSetName, validateMemberName } from "./utils";
 import { SettingsConfig } from "../utils/SettingsConfig";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { TreeViewUtils } from "../utils/TreeViewUtils";
+import { TreeProviders } from "../shared/TreeProviders";
 
 // Set up localization
 nls.config({
@@ -53,10 +59,10 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
  *
  * @export
  */
-export async function createDatasetTree(): Promise<DatasetTree> {
+export async function createDatasetTree(log: imperative.Logger): Promise<DatasetTree> {
     const tree = new DatasetTree();
-    tree.initializeFavorites();
-    await tree.addSession();
+    tree.initializeFavorites(log);
+    await tree.addSession(undefined, undefined, tree);
     return tree;
 }
 
@@ -80,6 +86,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
     public lastOpened: NodeInteraction = {};
     // public memberPattern: IZoweDatasetTreeNode[] = [];
     private treeView: vscode.TreeView<IZoweDatasetTreeNode>;
+    public openFiles: Record<string, IZoweDatasetTreeNode> = {};
 
     public dragMimeTypes: string[] = ["application/vnd.code.tree.zowe.ds.explorer"];
     public dropMimeTypes: string[] = ["application/vnd.code.tree.zowe.ds.explorer"];
@@ -99,6 +106,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             treeDataProvider: this,
             canSelectMany: true,
         });
+        this.treeView.onDidCollapseElement(TreeViewUtils.refreshIconOnCollapse([contextually.isPds, contextually.isDsSession], this));
     }
 
     /**
@@ -157,7 +165,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 return this.mFavorites;
             }
             if (element.contextValue && element.contextValue === globals.FAV_PROFILE_CONTEXT) {
-                const favsForProfile = this.loadProfilesForFavorites(element);
+                const favsForProfile = this.loadProfilesForFavorites(this.log, element);
                 return favsForProfile;
             }
             const finalResponse: IZoweDatasetTreeNode[] = [];
@@ -239,8 +247,9 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      * Profile loading only occurs in loadProfilesForFavorites when the profile node in Favorites is clicked on.
      * @param log
      */
-    public initializeFavorites(): void {
+    public initializeFavorites(log: imperative.Logger): void {
         ZoweLogger.trace("DatasetTree.initializeFavorites called.");
+        this.log = log;
         ZoweLogger.debug(localize("initializeFavorites.log.debug", "Initializing profiles with data set favorites."));
         const lines: string[] = this.mHistory.readFavorites();
         if (lines.length === 0) {
@@ -327,12 +336,13 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      * Loads profile for the profile node in Favorites that was clicked on, as well as for its children favorites.
      * @param log
      */
-    public async loadProfilesForFavorites(parentNode: IZoweDatasetTreeNode): Promise<IZoweDatasetTreeNode[]> {
+    public async loadProfilesForFavorites(log: imperative.Logger, parentNode: IZoweDatasetTreeNode): Promise<IZoweDatasetTreeNode[]> {
         ZoweLogger.trace("DatasetTree.loadProfilesForFavorites called.");
         const profileName = parentNode.label as string;
         const updatedFavsForProfile: IZoweDatasetTreeNode[] = [];
         let profile: imperative.IProfileLoaded;
         let session: imperative.Session;
+        this.log = log;
         ZoweLogger.debug(localize("loadProfilesForFavorites.log.debug", "Loading profile: {0} for data set favorites", profileName));
         // Load profile for parent profile node in this.mFavorites array
         if (!parentNode.getProfile() || !parentNode.getSession()) {
@@ -418,57 +428,44 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      * @param {string} [sessionName] - optional; loads default profile if not passed
      * @param {string} [profileType] - optional; loads profiles of a certain type if passed
      */
-    public async addSession(sessionName?: string, profileType?: string): Promise<void> {
+    public async addSession(sessionName?: string, profileType?: string, provider?: IZoweTree<IZoweTreeNode>): Promise<void> {
         ZoweLogger.trace("DatasetTree.addSession called.");
-        const setting: boolean = SettingsConfig.getDirectValue(globals.SETTINGS_AUTOMATIC_PROFILE_VALIDATION);
-        // Loads profile associated with passed sessionName, default if none passed
-        if (sessionName) {
-            const profile: imperative.IProfileLoaded = Profiles.getInstance().loadNamedProfile(sessionName);
-            if (profile) {
-                await this.addSingleSession(profile);
-                for (const node of this.mSessionNodes) {
-                    if (node.label !== "Favorites") {
-                        const name = node.getProfileName();
-                        if (name === profile.name) {
-                            resetValidationSettings(node, setting);
-                        }
-                    }
+        await super.addSession(sessionName, profileType, provider);
+    }
+
+    /**
+     * Adds a single session to the tree
+     * @param profile the profile to add to the tree
+     */
+    public async addSingleSession(profile: imperative.IProfileLoaded): Promise<void> {
+        ZoweLogger.trace("DatasetTree.addSingleSession called.");
+        if (profile) {
+            // If session is already added, do nothing
+            if (this.mSessionNodes.find((tNode) => tNode.label.toString() === profile.name)) {
+                return;
+            }
+            // Uses loaded profile to create a session with the MVS API
+            let session: imperative.Session;
+            try {
+                session = ZoweExplorerApiRegister.getMvsApi(profile).getSession();
+            } catch (err) {
+                if (err.toString().includes("hostname")) {
+                    ZoweLogger.error(err);
+                } else {
+                    await errorHandling(err, profile.name);
                 }
             }
-        } else {
-            const profiles: imperative.IProfileLoaded[] = await Profiles.getInstance().fetchAllProfiles();
-            if (profiles) {
-                for (const theProfile of profiles) {
-                    // If session is already added, do nothing
-                    if (this.mSessionNodes.find((tempNode) => tempNode.label.toString() === theProfile.name)) {
-                        continue;
-                    }
-                    for (const session of this.mHistory.getSessions()) {
-                        if (session === theProfile.name) {
-                            await this.addSingleSession(theProfile);
-                            for (const node of this.mSessionNodes) {
-                                if (node.label !== "Favorites") {
-                                    const name = node.getProfileName();
-                                    if (name === theProfile.name) {
-                                        resetValidationSettings(node, setting);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
+            // Creates ZoweDatasetNode to track new session and pushes it to mSessionNodes
+            const node = new ZoweDatasetNode(profile.name, vscode.TreeItemCollapsibleState.Collapsed, null, session, undefined, undefined, profile);
+            node.contextValue = globals.DS_SESSION_CONTEXT + (profile.type !== "zosmf" ? `.profile=${profile.type}.` : "");
+            await this.refreshHomeProfileContext(node);
+            const icon = getIconByNode(node);
+            if (icon) {
+                node.iconPath = icon.path;
             }
-            if (this.mSessionNodes.length === 1) {
-                try {
-                    await this.addSingleSession(Profiles.getInstance().getDefaultProfile(profileType));
-                } catch (error) {
-                    // catch and log error of no default,
-                    // if not type passed getDefaultProfile assumes zosmf
-                    ZoweLogger.warn(error);
-                }
-            }
+            this.mSessionNodes.push(node);
+            this.mHistory.addSession(profile.name);
         }
-        this.refresh();
     }
 
     /**
@@ -476,11 +473,9 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      *
      * @param node
      */
-    public deleteSession(node: IZoweDatasetTreeNode): void {
+    public deleteSession(node: IZoweDatasetTreeNode, hideFromAllTrees?: boolean): void {
         ZoweLogger.trace("DatasetTree.deleteSession called.");
-        this.mSessionNodes = this.mSessionNodes.filter((tempNode) => tempNode.label.toString() !== node.label.toString());
-        this.mHistory.removeSession(node.label as string);
-        this.refresh();
+        super.deleteSession(node, hideFromAllTrees);
     }
 
     /**
@@ -753,9 +748,29 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         return this.mHistory.getFileHistory();
     }
 
-    public removeFileHistory(name: string): Thenable<void> {
+    public removeFileHistory(name: string): void {
         ZoweLogger.trace("DatasetTree.removeFileHistory called.");
         return this.mHistory.removeFileHistory(name);
+    }
+
+    public removeSearchHistory(name: string): void {
+        ZoweLogger.trace("DatasetTree.removeSearchHistory called.");
+        this.mHistory.removeSearchHistory(name);
+    }
+
+    public removeSession(name: string): void {
+        ZoweLogger.trace("DatasetTree.removeSession called.");
+        this.mHistory.removeSession(name);
+    }
+
+    public resetSearchHistory(): void {
+        ZoweLogger.trace("DatasetTree.resetSearchHistory called.");
+        this.mHistory.resetSearchHistory();
+    }
+
+    public resetFileHistory(): void {
+        ZoweLogger.trace("DatasetTree.resetFileHistory called.");
+        this.mHistory.resetFileHistory();
     }
 
     public addDsTemplate(criteria: DataSetAllocTemplate): void {
@@ -766,6 +781,16 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
     public getDsTemplates(): DataSetAllocTemplate[] {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-return
         return this.mHistory.getDsTemplates();
+    }
+
+    public getSessions(): string[] {
+        ZoweLogger.trace("DatasetTree.getSessions called.");
+        return this.mHistory.getSessions();
+    }
+
+    public getFavorites(): string[] {
+        ZoweLogger.trace("DatasetTree.getFavorites called.");
+        return this.mHistory.readFavorites();
     }
 
     public createFilterString(newFilter: string, node: IZoweDatasetTreeNode): string {
@@ -1255,37 +1280,230 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
     }
 
     /**
-     * Adds a single session to the data set tree
-     *
+     * Sorts some (or all) PDS children nodes using the given sorting method.
+     * @param node The session whose PDS members should be sorted, or a PDS whose children should be sorted
+     * @param sortOpts The sorting options to use
+     * @param isSession whether the node is a session
      */
-    private async addSingleSession(profile: imperative.IProfileLoaded): Promise<void> {
-        ZoweLogger.trace("DatasetTree.addSingleSession called.");
-        if (profile) {
-            // If session is already added, do nothing
-            if (this.mSessionNodes.find((tNode) => tNode.label.toString() === profile.name)) {
-                return;
-            }
-            // Uses loaded profile to create a session with the MVS API
-            let session: imperative.Session;
-            try {
-                session = await ZoweExplorerApiRegister.getMvsApi(profile).getSession();
-            } catch (err) {
-                if (err.toString().includes("hostname")) {
-                    ZoweLogger.error(err);
-                } else {
-                    await errorHandling(err, profile.name);
+    public updateSortForNode(node: IZoweDatasetTreeNode, sortOpts: NodeSort, isSession: boolean): void {
+        node.sort = sortOpts;
+
+        if (isSession) {
+            // if a session was selected, apply this sort to ALL PDS members
+            if (node.children?.length > 0) {
+                // children nodes already exist, sort and repaint to avoid extra refresh
+                for (const c of node.children) {
+                    if (contextually.isPds(c) && c.children) {
+                        c.sort = node.sort;
+                        for (const ch of c.children) {
+                            // remove any descriptions from child nodes
+                            ch.description = "";
+                        }
+
+                        c.children.sort(ZoweDatasetNode.sortBy(node.sort));
+                        this.nodeDataChanged(c);
+                    }
                 }
             }
-            // Creates ZoweDatasetNode to track new session and pushes it to mSessionNodes
-            const node = new ZoweDatasetNode(profile.name, vscode.TreeItemCollapsibleState.Collapsed, null, session, undefined, undefined, profile);
-            node.contextValue = globals.DS_SESSION_CONTEXT + (profile.type !== "zosmf" ? `.profile=${profile.type}.` : "");
-            await this.refreshHomeProfileContext(node);
-            const icon = getIconByNode(node);
-            if (icon) {
-                node.iconPath = icon.path;
+        } else if (node.children?.length > 0) {
+            for (const c of node.children) {
+                // remove any descriptions from child nodes
+                c.description = "";
             }
-            this.mSessionNodes.push(node);
-            this.mHistory.addSession(profile.name);
+            // children nodes already exist, sort and repaint to avoid extra refresh
+            node.children.sort(ZoweDatasetNode.sortBy(node.sort));
+            this.nodeDataChanged(node);
+        }
+    }
+
+    /**
+     * Presents a dialog to the user with options and methods for sorting PDS members.
+     * @param node The node that was interacted with (via icon or right-click -> "Sort PDS members...")
+     */
+    public async sortPdsMembersDialog(node: IZoweDatasetTreeNode): Promise<void> {
+        const isSession = contextually.isSession(node);
+
+        // Assume defaults if a user hasn't selected any sort options yet
+        const sortOpts = node.sort ?? {
+            method: DatasetSortOpts.Name,
+            direction: SortDirection.Ascending,
+        };
+
+        // Adapt menus to user based on the node that was interacted with
+        const specifier = isSession
+            ? localize("ds.allPdsSort", "all PDS members in {0}", node.label as string)
+            : localize("ds.singlePdsSort", "the PDS members in {0}", node.label as string);
+        const selection = await Gui.showQuickPick(
+            DATASET_SORT_OPTS.map((opt, i) => ({
+                label: sortOpts.method === i ? `${opt} $(check)` : opt,
+                description: i === DATASET_SORT_OPTS.length - 1 ? SORT_DIRS[sortOpts.direction] : null,
+            })),
+            {
+                placeHolder: localize("ds.selectSortOpt", "Select a sorting option for {0}", specifier),
+            }
+        );
+        if (selection == null) {
+            return;
+        }
+
+        if (selection.label === localize("setSortDirection", "$(fold) Sort Direction")) {
+            // Update sort direction (if a new one was provided)
+            const dir = await Gui.showQuickPick(SORT_DIRS, {
+                placeHolder: localize("sort.selectDirection", "Select a sorting direction"),
+            });
+            if (dir != null) {
+                node.sort = {
+                    ...sortOpts,
+                    direction: SORT_DIRS.indexOf(dir),
+                };
+            }
+            await this.sortPdsMembersDialog(node);
+            return;
+        }
+
+        const selectionText = selection.label.replace(" $(check)", "");
+        const sortMethod = DATASET_SORT_OPTS.indexOf(selectionText);
+        if (sortMethod === -1) {
+            return;
+        }
+
+        // Update sort for node based on selections
+        this.updateSortForNode(node, { ...sortOpts, method: sortMethod }, isSession);
+        Gui.setStatusBarMessage(localize("sort.updated", "$(check) Sorting updated for {0}", node.label as string), globals.MS_PER_SEC * 4);
+    }
+
+    /**
+     * Updates or resets the filter for a given data set node.
+     * @param node The node whose filter should be updated/reset
+     * @param newFilter Either a valid `DatasetFilter` object, or `null` to reset the filter
+     * @param isSession Whether the node is a session
+     */
+    public updateFilterForNode(node: IZoweDatasetTreeNode, newFilter: DatasetFilter | null, isSession: boolean): void {
+        const oldFilter = node.filter;
+        node.filter = newFilter;
+        node.description = newFilter ? localize("filter.description", "Filter: {0}", newFilter.value) : null;
+        this.nodeDataChanged(node);
+
+        // if a session was selected, apply this sort to all PDS members
+        if (isSession) {
+            if (node.children?.length > 0) {
+                // children nodes already exist, sort and repaint to avoid extra refresh
+                for (const c of node.children) {
+                    const asDs = c as IZoweDatasetTreeNode;
+
+                    // PDS-level filters should have precedence over a session-level filter
+                    if (asDs.filter != null) {
+                        continue;
+                    }
+
+                    if (contextually.isPds(c)) {
+                        // If there was an old session-wide filter set: refresh to get any
+                        // missing nodes - new filter will be applied
+                        if (oldFilter != null) {
+                            this.refreshElement(c);
+                            continue;
+                        }
+
+                        if (newFilter != null && c.children?.length > 0) {
+                            c.children = c.children.filter(ZoweDatasetNode.filterBy(newFilter));
+                            this.nodeDataChanged(c);
+                        } else {
+                            this.refreshElement(c);
+                        }
+                    }
+                }
+            }
+            return;
+        }
+
+        // Updating filter for PDS node
+        // if a filter was already set for either session or PDS, just refresh to grab any missing nodes
+        const sessionFilterPresent = (node.getSessionNode() as IZoweDatasetTreeNode).filter;
+        if (oldFilter != null || sessionFilterPresent != null) {
+            this.refreshElement(node);
+            return;
+        }
+
+        // since there wasn't a previous filter, sort and repaint existing nodes
+        if (newFilter != null && node.children?.length > 0) {
+            node.children = node.children.filter(ZoweDatasetNode.filterBy(newFilter));
+            this.nodeDataChanged(node);
+        }
+    }
+
+    /**
+     * Presents a dialog to the user with options and methods for sorting PDS members.
+     * @param node The data set node that was interacted with (via icon or right-click => "Filter PDS members...")
+     */
+    public async filterPdsMembersDialog(node: IZoweDatasetTreeNode): Promise<void> {
+        const isSession = contextually.isSession(node);
+
+        // Adapt menus to user based on the node that was interacted with
+        const specifier = isSession
+            ? localize("ds.allPdsSort", "all PDS members in {0}", node.label as string)
+            : localize("ds.singlePdsSort", "the PDS members in {0}", node.label as string);
+        const clearFilter = isSession
+            ? localize("filter.clearForProfile", "$(clear-all) Clear filter for profile")
+            : localize("ds.clearPdsFilter", "$(clear-all) Clear filter for PDS");
+        const selection = (
+            await Gui.showQuickPick(
+                [...DATASET_FILTER_OPTS.map((sortOpt, i) => (node.filter?.method === i ? `${sortOpt} $(check)` : sortOpt)), clearFilter],
+                {
+                    placeHolder: localize("ds.selectFilterOpt", "Set a filter for {0}", specifier),
+                }
+            )
+        )?.replace(" $(check)", "");
+
+        const filterMethod = DATASET_FILTER_OPTS.indexOf(selection);
+
+        const userDismissed = filterMethod < 0;
+        if (userDismissed || selection === clearFilter) {
+            if (selection === clearFilter) {
+                this.updateFilterForNode(node, null, isSession);
+                Gui.setStatusBarMessage(localize("filter.cleared", "$(check) Filter cleared for {0}", node.label as string), globals.MS_PER_SEC * 4);
+            }
+            return;
+        }
+
+        const dateValidation = (value): string => {
+            return dayjs(value).isValid() ? null : localize("ds.filterEntry.invalidDate", "Invalid date format specified");
+        };
+
+        const filter = await Gui.showInputBox({
+            title: localize("ds.filterEntry.title", "Enter a value to filter by"),
+            placeHolder: "",
+            validateInput:
+                filterMethod === DatasetFilterOpts.LastModified
+                    ? dateValidation
+                    : (val): string => (val.length > 0 ? null : localize("ds.filterEntry.invalid", "Invalid filter specified")),
+        });
+
+        // User dismissed filter entry, go back to filter selection
+        if (filter == null) {
+            await this.filterPdsMembersDialog(node);
+            return;
+        }
+
+        // Update filter for node based on selection & filter entry
+        this.updateFilterForNode(
+            node,
+            {
+                method: filterMethod,
+                value: filter,
+            },
+            isSession
+        );
+        Gui.setStatusBarMessage(localize("filter.updated", "$(check) Filter updated for {0}", node.label as string), globals.MS_PER_SEC * 4);
+    }
+
+    /**
+     * Event listener to mark a Data Set doc URI as null in the openFiles record
+     * @param this (resolves ESlint warning about unbound methods)
+     * @param doc A doc URI that was closed
+     */
+    public static onDidCloseTextDocument(this: void, doc: vscode.TextDocument): void {
+        if (doc.uri.fsPath.includes(globals.DS_DIR)) {
+            updateOpenFiles(TreeProviders.ds, doc.uri.fsPath, null);
         }
     }
 }

@@ -1,6 +1,5 @@
 import * as vscode from "vscode";
-import { IProfAttrs, Logger } from "@zowe/imperative";
-import { ProfilesCache } from "@zowe/zowe-explorer-api";
+import { ProfilesCache, imperative } from "@zowe/zowe-explorer-api";
 
 class ProfilesNode extends vscode.TreeItem {
     constructor(
@@ -17,7 +16,7 @@ export class ProfilesTreeProvider implements vscode.TreeDataProvider<ProfilesNod
     private _onDidChangeTreeData: vscode.EventEmitter<ProfilesNode | undefined | void> = new vscode.EventEmitter<ProfilesNode | undefined | void>();
     public readonly onDidChangeTreeData: vscode.Event<ProfilesNode | undefined | void> = this._onDidChangeTreeData.event;
     private _dirty = true;
-    private _profileData: IProfAttrs[] = [];
+    private _profileData: imperative.IProfAttrs[] = [];
 
     public constructor() {
         vscode.workspace.onDidChangeWorkspaceFolders(this.refresh.bind(this));
@@ -34,7 +33,7 @@ export class ProfilesTreeProvider implements vscode.TreeDataProvider<ProfilesNod
 
     public async getChildren(node?: ProfilesNode): Promise<ProfilesNode[]> {
         if (this._dirty) {
-            const profiles = new ProfilesCache(Logger.getAppLogger(), vscode.workspace.workspaceFolders?.[0]?.uri.fsPath);
+            const profiles = new ProfilesCache(imperative.Logger.getAppLogger(), vscode.workspace.workspaceFolders?.[0]?.uri.fsPath);
             this._profileData = (await profiles.getProfileInfo()).getAllProfiles();
             this._dirty = false;
         }

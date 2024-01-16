@@ -151,16 +151,15 @@ export class FtpUssApi extends AbstractFtpApi implements IUss {
             localFile: inputFilePath,
         };
 
-        // If the API call requests an e-tag, use getContentsTag to get the current e-tag on the LPAR.
-        // If the entry has an invalid e-tag, there's no point in trying to upload it as we'll be overwriting data.
+        const result = this.getDefaultResponse();
+        // Save-Save with FTP requires loading the file first
+        // (moved this block above connection request so only one connection is active at a time)
         if (returnEtag && etag) {
             const contentsTag = await this.getContentsTag(ussFilePath);
             if (contentsTag && contentsTag !== etag) {
                 throw new Error("Rest API failure with HTTP(S) status 412 Save conflict.");
             }
         }
-
-        const result = this.getDefaultResponse();
         let connection;
         try {
             connection = await this.ftpClient(this.checkedProfile());
@@ -176,6 +175,9 @@ export class FtpUssApi extends AbstractFtpApi implements IUss {
 
             result.success = true;
             if (returnEtag) {
+                // release this connection instance because a new one will be made with getContentsTag
+                this.releaseConnection(connection);
+                connection = null;
                 const contentsTag = await this.getContentsTag(ussFilePath);
                 result.apiResponse.etag = contentsTag;
             }

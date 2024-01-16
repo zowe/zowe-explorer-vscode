@@ -32,6 +32,9 @@ import { ZoweTreeProvider } from "../../../src/abstract/ZoweTreeProvider";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
 import { createDatasetSessionNode } from "../../../__mocks__/mockCreators/datasets";
+import { TreeProviders } from "../../../src/shared/TreeProviders";
+import { createDatasetTree } from "../../../src/dataset/DatasetTree";
+import * as sharedActions from "../../../src/shared/actions";
 
 jest.mock("../../../src/utils/LoggerUtils");
 
@@ -48,7 +51,7 @@ async function createGlobalMocks() {
         mockLoadNamedProfile: jest.fn(),
         mockDefaultProfile: jest.fn(),
         withProgress: jest.fn(),
-        createTreeView: jest.fn(),
+        createTreeView: jest.fn().mockReturnValue({ onDidCollapseElement: jest.fn() }),
         mockAffects: jest.fn(),
         mockEditSession: jest.fn(),
         mockCheckCurrentProfile: jest.fn(),
@@ -60,6 +63,7 @@ async function createGlobalMocks() {
         testSession: createISession(),
         testResponse: createFileResponse({ items: [] }),
         testUSSTree: null,
+        testDSTree: null,
         testUSSNode: null,
         testSessionNode: null,
         testTreeProvider: new ZoweTreeProvider(PersistenceSchemaEnum.USS, null),
@@ -190,12 +194,28 @@ describe("ZoweJobNode unit tests - Function editSession", () => {
     it("Tests that editSession is executed successfully ", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
-        const checkSession = jest.spyOn(blockMocks.testJobsProvider, "editSession");
         const spy = jest.spyOn(ZoweLogger, "trace");
         await blockMocks.testJobsProvider.editSession(blockMocks.jobNode, globalMocks.testUSSTree);
         expect(globalMocks.mockEditSession).toHaveBeenCalled();
         expect(spy).toBeCalled();
         spy.mockClear();
+    });
+    it("Tests that the session is edited and added to only the specific tree modified", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+        const deleteSessionForProviderSpy = jest.spyOn(ZoweTreeProvider.prototype as any, "deleteSessionForProvider");
+        const mockJobProvider = {
+            addSingleSession: jest.fn(),
+            mSessionNodes: [blockMocks.jobNode],
+            refresh: jest.fn(),
+            removeSession: jest.fn(),
+        } as any;
+        jest.spyOn(TreeProviders, "providers", "get").mockReturnValue({ job: mockJobProvider } as any);
+        jest.spyOn(blockMocks.jobNode, "getSession").mockReturnValue(null);
+        blockMocks.jobNode.contextValue = globals.JOBS_SESSION_CONTEXT;
+        await blockMocks.testJobsProvider.editSession(blockMocks.jobNode, globalMocks.testUSSTree);
+        expect(globalMocks.mockEditSession).toHaveBeenCalled();
+        expect(deleteSessionForProviderSpy).toBeCalledWith(blockMocks.jobNode, mockJobProvider);
     });
 });
 
@@ -509,5 +529,53 @@ describe("Tree Provider Unit Tests - function ssoLogout", () => {
         expect(blockMocks.executeCommandSpy).toHaveBeenCalledWith("zowe.jobs.refreshAllJobs");
         expect(blockMocks.executeCommandSpy).not.toHaveBeenCalledWith("zowe.uss.refreshAll");
         expect(blockMocks.executeCommandSpy).not.toHaveBeenCalledWith("zowe.ds.refreshAll");
+    });
+});
+
+describe("Tree Provider Unit Tests - function loadProfileByPersistedProfile", () => {
+    it("should reset validation settings and run successfully", async () => {
+        const globalMocks = await createGlobalMocks();
+        globalMocks.testDSTree = createDatasetTree(imperative.Logger.getAppLogger());
+        globalMocks.testDSTree.mSessionNodes = [
+            { label: "profile1", getProfileName: (): string => "sestest" },
+            { label: "profile2", getProfileName: (): string => "sestest" },
+        ];
+        globalMocks.testDSTree.getSessions = (): string[] => ["sestest"];
+        globalMocks.testDSTree.addSingleSession = jest.fn();
+
+        const resetValidationSettingsSpy = jest.spyOn(sharedActions, "resetValidationSettings");
+        resetValidationSettingsSpy.mockImplementation();
+
+        const zoweLoggerWarnSpy = jest.spyOn(ZoweLogger, "warn");
+
+        await expect(ZoweTreeProvider.prototype["loadProfileByPersistedProfile"](globalMocks.testDSTree, "zosmf", true)).resolves.not.toThrow();
+        expect(globalMocks.testDSTree.addSingleSession).toBeCalledTimes(1);
+        expect(resetValidationSettingsSpy).toBeCalledTimes(2);
+        expect(zoweLoggerWarnSpy).toBeCalledTimes(0);
+        resetValidationSettingsSpy.mockClear();
+        zoweLoggerWarnSpy.mockClear();
+    });
+
+    it("should reset validation settings and warn the user of an error when loading default", async () => {
+        const globalMocks = await createGlobalMocks();
+        globalMocks.testDSTree = createDatasetTree(imperative.Logger.getAppLogger());
+        globalMocks.testDSTree.mSessionNodes = [{ label: "profile1", getProfileName: (): string => "sestest" }];
+        globalMocks.testDSTree.getSessions = (): string[] => ["sestest"];
+        globalMocks.testDSTree.addSingleSession = jest.fn();
+
+        const resetValidationSettingsSpy = jest.spyOn(sharedActions, "resetValidationSettings");
+        resetValidationSettingsSpy.mockImplementation();
+        jest.spyOn(Profiles.getInstance(), "getDefaultProfile").mockImplementationOnce(() => {
+            throw new Error();
+        });
+
+        const zoweLoggerWarnSpy = jest.spyOn(ZoweLogger, "warn");
+
+        await expect(ZoweTreeProvider.prototype["loadProfileByPersistedProfile"](globalMocks.testDSTree, "zosmf", true)).resolves.not.toThrow();
+        expect(globalMocks.testDSTree.addSingleSession).toBeCalledTimes(2);
+        expect(resetValidationSettingsSpy).toBeCalled();
+        expect(zoweLoggerWarnSpy).toBeCalledTimes(1);
+        resetValidationSettingsSpy.mockClear();
+        zoweLoggerWarnSpy.mockClear();
     });
 });

@@ -3,6 +3,8 @@
 ## No longer supported
 
 - Removed support for v1 Profiles
+- Updated supported VS Code engine to 1.79.0
+- Drop support for Theia IDE
 
 ## Removal of deprecated APIs from Extensibility API for Zowe Explorer
 
@@ -13,3 +15,10 @@
 - `ZoweVsCodeExtension.showVsCodeMessage` removed in favor of `Gui.showMessage`.
 - `ZoweVsCodeExtension.inputBox` removed in favor of `Gui.showInputBox`.
 - `ZoweVsCodeExtension.promptCredentials` removed in favor of `ZoweVsCodeExtension.updateCredentials`.
+- Changed ZoweExplorerExtender.initForZowe `profileTypeConfigurations: imperative.ICommandProfileTypeConfiguration[]` to a required argument
+- Changed IApiExplorerExtenders.initForZowe `profileTypeConfigurations: imperative.ICommandProfileTypeConfiguration[]` to a required argument
+
+## New APIs Added
+
+- `ICommand.issueUnixCommand` added for issuing Unix Commands
+- Optional `ICommand.sshProfileRequired` API returning a boolean value for extenders that would like to use the ssh profile for issuing UNIX commands via Zowe Explorer.

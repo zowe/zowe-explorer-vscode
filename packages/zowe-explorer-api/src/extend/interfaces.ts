@@ -182,6 +182,14 @@ export interface IUss extends ICommon {
      * @returns {Promise<zowe.IZosFilesResponse>}
      */
     rename(currentUssPath: string, newUssPath: string): Promise<zowe.IZosFilesResponse>;
+
+    /**
+     * Get the tag of a USS file
+     *
+     * @param {string} ussPath
+     * @returns {Promise<zowe.IZosFilesResponse>}
+     */
+    getTag?(ussPath: string): Promise<string>;
 }
 
 /**
@@ -490,4 +498,16 @@ export interface ICommand extends ICommon {
      * @memberof ICommand
      */
     issueMvsCommand?(command: string): Promise<zowe.IConsoleResponse>;
+
+    /**
+     * Issues a Unix Command and returns a Console Command API response.
+     *
+     * @param {string} command
+     * @param {string} cwd
+     * @param {boolean} flag
+     * @returns {string>}
+     * @memberof ICommand
+     */
+    issueUnixCommand?(sshSession: zowe.SshSession, command: string, cwd: string, flag: boolean): Promise<string>;
+    sshProfileRequired?(): boolean;
 }

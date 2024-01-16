@@ -13,10 +13,11 @@ import { ZoweTreeProvider } from "../../src/abstract/ZoweTreeProvider";
 import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
 import { ZoweUSSNode } from "../../src/uss/ZoweUSSNode";
 import * as vscode from "vscode";
-import { ValidProfileEnum } from "@zowe/zowe-explorer-api";
+import { ValidProfileEnum, IZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { FilterDescriptor } from "../../src/utils/ProfilesUtils";
 import { imperative, ZosmfSession } from "@zowe/cli";
 import { SettingsConfig } from "../../src/utils/SettingsConfig";
+import * as globals from "../../src/globals";
 
 export function createPersistentConfig() {
     return {
@@ -218,6 +219,40 @@ export function createValidIProfile(): imperative.IProfileLoaded {
     };
 }
 
+export function createTokenAuthIProfile(): imperative.IProfileLoaded {
+    return {
+        name: "sestest",
+        profile: {
+            type: "zosmf",
+            host: "test",
+            port: 1443,
+            rejectUnauthorized: false,
+            tokenType: "apimlAuthenticationToken",
+            tokenValue: "stringofletters",
+            name: "testName",
+        },
+        type: "zosmf",
+        message: "",
+        failNotFound: false,
+    };
+}
+
+export function createNoAuthIProfile(): imperative.IProfileLoaded {
+    return {
+        name: "sestest",
+        profile: {
+            type: "zosmf",
+            host: null,
+            port: 1443,
+            rejectUnauthorized: false,
+            name: "testName",
+        },
+        type: "zosmf",
+        message: "",
+        failNotFound: false,
+    };
+}
+
 export function createAltTypeIProfile(): imperative.IProfileLoaded {
     return {
         name: "altTypeProfile",
@@ -246,25 +281,27 @@ export function createTreeView(selection?): vscode.TreeView<ZoweTreeProvider> {
         visible: true,
         onDidChangeVisibility: jest.fn(),
         dispose: jest.fn(),
+        addSingleSession: jest.fn(),
     } as unknown as vscode.TreeView<ZoweTreeProvider>;
 }
 
 export function createTextDocument(name: string, sessionNode?: ZoweDatasetNode | ZoweUSSNode): vscode.TextDocument {
+    const fileName = sessionNode ? `/${sessionNode.label}/${name}` : name;
     return {
-        fileName: sessionNode ? `/${sessionNode.label}/${name}` : name,
-        uri: null,
+        fileName,
+        uri: vscode.Uri.parse(fileName),
         isUntitled: null,
         languageId: null,
         version: null,
         isDirty: null,
         isClosed: null,
         save: null,
-        eol: null,
+        eol: 1,
         lineCount: null,
         lineAt: null,
         offsetAt: null,
-        positionAt: null,
-        getText: jest.fn(),
+        positionAt: jest.fn(),
+        getText: jest.fn().mockReturnValue(""),
         getWordRangeAtPosition: null,
         validateRange: null,
         validatePosition: null,
@@ -515,4 +552,66 @@ export function createOutputChannel() {
         dispose: jest.fn(),
         replace: jest.fn(),
     } as vscode.OutputChannel;
+}
+
+export function createMockNode(name: string, context: string): IZoweTreeNode {
+    return {
+        dirty: false,
+        getLabel: jest.fn(() => name),
+        getChildren: jest.fn(),
+        getParent: jest.fn(),
+        getProfile: jest.fn(() => ({
+            name,
+            profile: {
+                host: "fake",
+                port: 999,
+                rejectUnauthorize: false,
+            },
+            type: "zosmf",
+            message: "",
+            failNotFound: false,
+        })),
+        getProfileName: jest.fn(),
+        getSession: jest.fn(),
+        getSessionNode: jest.fn(),
+        setProfileToChoice: jest.fn(),
+        setSessionToChoice: jest.fn(),
+        label: name,
+        contextValue: context,
+    };
+}
+
+export function createTreeProviders() {
+    return {
+        ds: {
+            mSessionNodes: [
+                createMockNode("zosmf", globals.DS_SESSION_CONTEXT + globals.VALIDATE_SUFFIX),
+                createMockNode("zosmf2", globals.DS_SESSION_CONTEXT + globals.NO_VALIDATE_SUFFIX),
+            ],
+            deleteSession: jest.fn(),
+            removeSession: jest.fn(),
+            refresh: jest.fn(),
+            addSingleSession: jest.fn(),
+        } as any,
+        uss: {
+            mSessionNodes: [
+                createMockNode("zosmf", globals.USS_SESSION_CONTEXT + globals.VALIDATE_SUFFIX),
+                createMockNode("zosmf2", globals.USS_SESSION_CONTEXT + globals.NO_VALIDATE_SUFFIX),
+            ],
+            deleteSession: jest.fn(),
+            removeSession: jest.fn(),
+            refresh: jest.fn(),
+            addSingleSession: jest.fn(),
+        } as any,
+        job: {
+            mSessionNodes: [
+                createMockNode("zosmf", globals.JOBS_SESSION_CONTEXT + globals.VALIDATE_SUFFIX),
+                createMockNode("zosmf2", globals.JOBS_SESSION_CONTEXT + globals.NO_VALIDATE_SUFFIX),
+            ],
+            removeSession: jest.fn(),
+            deleteSession: jest.fn(),
+            refresh: jest.fn(),
+            addSingleSession: jest.fn(),
+        } as any,
+    };
 }

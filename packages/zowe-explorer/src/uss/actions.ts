@@ -14,7 +14,7 @@ import { imperative, IZosFilesResponse } from "@zowe/cli";
 import * as fs from "fs";
 import * as globals from "../globals";
 import * as path from "path";
-import { concatChildNodes, uploadContent, getSelectedNodeList, getDefaultUri, compareFileContent } from "../shared/utils";
+import { concatChildNodes, uploadContent, getSelectedNodeList, LocalFileInfo } from "../shared/utils";
 import { errorHandling } from "../utils/ProfilesUtils";
 import { Gui, ValidProfileEnum, IZoweTree, IZoweUSSTreeNode } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
@@ -29,6 +29,8 @@ import { fileExistsCaseSensitveSync } from "./utils";
 import { UssFileTree, UssFileType } from "./FileStructure";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { AttributeView } from "./AttributeView";
+import { LocalFileManagement } from "../utils/LocalFileManagement";
+import { resolveFileConflict } from "../shared/actions";
 
 // Set up localization
 nls.config({
@@ -140,7 +142,7 @@ export async function uploadDialog(node: IZoweUSSTreeNode, ussFileProvider: IZow
         canSelectFiles: true,
         openLabel: "Upload Files",
         canSelectMany: true,
-        defaultUri: getDefaultUri(),
+        defaultUri: LocalFileManagement.getDefaultUri(),
     };
 
     const value = await Gui.showOpenDialog(fileOpenOptions);
@@ -229,6 +231,21 @@ export async function changeFileType(node: IZoweUSSTreeNode, binary: boolean, us
     ussFileProvider.refresh();
 }
 
+function findEtag(node: IZoweUSSTreeNode, directories: Array<string>, index: number): boolean {
+    if (node === undefined || directories.indexOf(node.label.toString().trim()) === -1) {
+        return false;
+    }
+    if (directories.indexOf(node.label.toString().trim()) === directories.length - 1) {
+        return node.getEtag() !== "";
+    }
+
+    let flag: boolean = false;
+    for (const child of node.children) {
+        flag = flag || findEtag(child, directories, directories.indexOf(node.label.toString().trim()) + 1);
+    }
+    return flag;
+}
+
 /**
  * Uploads the file to the mainframe
  *
@@ -242,63 +259,65 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
     const start = path.join(globals.USS_DIR + path.sep).length;
     const ending = doc.fileName.substring(start);
     const sesName = ending.substring(0, ending.indexOf(path.sep));
+    const profile = Profiles.getInstance().loadNamedProfile(sesName);
+    if (!profile) {
+        const sessionError = localize("saveUSSFile.session.error", "Could not locate session when saving USS file.");
+        ZoweLogger.error(sessionError);
+        await Gui.errorMessage(sessionError);
+        return;
+    }
+
     const remote = ending.substring(sesName.length).replace(/\\/g, "/");
+    const directories = doc.fileName.split(path.sep).splice(doc.fileName.split(path.sep).indexOf("_U_") + 1);
+    directories.splice(1, 2);
+    const profileSesnode: IZoweUSSTreeNode = ussFileProvider.mSessionNodes.find((child) => child.label.toString().trim() === sesName);
+    const etagProfiles = findEtag(profileSesnode, directories, 0);
+    const favoritesSesNode: IZoweUSSTreeNode = ussFileProvider.mFavorites.find((child) => child.label.toString().trim() === sesName);
+    const etagFavorites = findEtag(favoritesSesNode, directories, 0);
 
     // get session from session name
     let binary;
 
-    const sesNode: IZoweUSSTreeNode = ussFileProvider.mSessionNodes.find(
-        (child) => child.getProfileName() && child.getProfileName() === sesName.trim()
-    );
+    let sesNode: IZoweUSSTreeNode;
+    if ((etagProfiles && etagFavorites) || etagProfiles) {
+        sesNode = profileSesnode;
+    } else if (etagFavorites) {
+        sesNode = favoritesSesNode;
+    }
     if (sesNode) {
         binary = Object.keys(sesNode.binaryFiles).find((child) => child === remote) !== undefined;
     }
     // Get specific node based on label and parent tree (session / favorites)
-    let nodes: IZoweUSSTreeNode[];
-    if (!sesNode || sesNode.children.length === 0) {
-        // saving from favorites
-        nodes = concatChildNodes(ussFileProvider.mFavorites);
-    } else {
-        // saving from session
-        nodes = concatChildNodes([sesNode]);
-    }
-    const node = nodes.find((zNode) => {
-        if (contextually.isText(zNode)) {
-            return zNode.fullPath.trim() === remote;
-        } else {
-            return false;
-        }
-    });
+    const nodes: IZoweUSSTreeNode[] = concatChildNodes(sesNode ? [sesNode] : ussFileProvider.mSessionNodes);
+    const node: IZoweUSSTreeNode =
+        nodes.find((zNode) => {
+            if (contextually.isText(zNode)) {
+                return zNode.fullPath.trim() === remote;
+            } else {
+                return false;
+            }
+        }) ?? ussFileProvider.openFiles?.[doc.uri.fsPath];
 
     // define upload options
-    let etagToUpload: string;
-    let returnEtag: boolean;
-    if (node) {
-        etagToUpload = node.getEtag();
-        if (etagToUpload) {
-            returnEtag = true;
-        }
-    }
+    const etagToUpload = node?.getEtag();
+    const returnEtag = etagToUpload != null;
 
+    const prof = node?.getProfile() ?? profile;
     try {
-        if (sesNode) {
-            binary = binary || (await ZoweExplorerApiRegister.getUssApi(sesNode.getProfile()).isFileTagBinOrAscii(remote));
-        }
+        binary = binary || (await ZoweExplorerApiRegister.getUssApi(prof).isFileTagBinOrAscii(remote));
         const uploadResponse: IZosFilesResponse = await Gui.withProgress(
             {
                 location: vscode.ProgressLocation.Window,
                 title: localize("saveUSSFile.response.title", "Saving file..."),
             },
             () => {
-                return uploadContent(sesNode, doc, remote, sesNode.getProfile(), binary, etagToUpload, returnEtag);
+                return uploadContent(node, doc, remote, prof, binary, etagToUpload, returnEtag);
             }
         );
         if (uploadResponse.success) {
             Gui.setStatusBarMessage(uploadResponse.commandResponse, globals.STATUS_BAR_TIMEOUT_MS);
             // set local etag with the new etag from the updated file on mainframe
-            if (node) {
-                node.setEtag(uploadResponse.apiResponse.etag);
-            }
+            node?.setEtag(uploadResponse.apiResponse.etag);
             setFileSaved(true);
             // this part never runs! zowe.Upload.fileToUSSFile doesn't return success: false, it just throws the error which is caught below!!!!!
         } else {
@@ -309,7 +328,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
         // TODO: error handling must not be zosmf specific
         const errorMessage = err ? err.message : err.toString();
         if (errorMessage.includes("Rest API failure with HTTP(S) status 412")) {
-            await compareFileContent(doc, node, null, binary);
+            await LocalFileManagement.compareSavedFileContent(doc, node, null, binary);
         } else {
             await markDocumentUnsaved(doc);
             await errorHandling(err, sesName);
@@ -470,20 +489,74 @@ export async function pasteUssFile(ussFileProvider: IZoweTree<IZoweUSSTreeNode>,
  */
 export async function pasteUss(ussFileProvider: IZoweTree<IZoweUSSTreeNode>, node: IZoweUSSTreeNode): Promise<void> {
     ZoweLogger.trace("uss.actions.pasteUss called.");
-    const a = ussFileProvider.getTreeView().selection as IZoweUSSTreeNode[];
-    let selectedNode = node;
-    if (!selectedNode) {
-        selectedNode = a.length > 0 ? a[0] : (a as unknown as IZoweUSSTreeNode);
+    if (node.pasteUssTree == null && node.copyUssFile == null) {
+        await Gui.infoMessage(localize("uss.paste.apiNotAvailable", "The paste operation is not supported for this node."));
+        return;
     }
-
     await Gui.withProgress(
         {
             location: vscode.ProgressLocation.Window,
             title: localize("ZoweUssNode.copyUpload.progress", "Pasting files..."),
         },
         async () => {
-            await selectedNode.pasteUssTree();
+            await (node.pasteUssTree ? node.pasteUssTree() : node.copyUssFile());
         }
     );
-    ussFileProvider.refreshElement(selectedNode);
+    ussFileProvider.refreshElement(node);
+}
+
+export async function downloadUnixFile(node: IZoweUSSTreeNode, download: boolean): Promise<LocalFileInfo> {
+    const fileInfo = {} as LocalFileInfo;
+    const errorMsg = localize("downloadUnixFile.invalidNode.error", "open() called from invalid node.");
+    switch (true) {
+        // For opening favorited and non-favorited files
+        case node.getParent().contextValue === globals.FAV_PROFILE_CONTEXT:
+            break;
+        case contextually.isUssSession(node.getParent()):
+            break;
+        // Handle file path for files in directories and favorited directories
+        case contextually.isUssDirectory(node.getParent()):
+            break;
+        default:
+            Gui.errorMessage(errorMsg);
+            throw Error(errorMsg);
+    }
+
+    fileInfo.path = node.getUSSDocumentFilePath();
+    fileInfo.name = String(node.label);
+    // check if some other file is already created with the same name avoid opening file warn user
+    const fileExists = fs.existsSync(fileInfo.path);
+    if (fileExists && !fileExistsCaseSensitveSync(fileInfo.path)) {
+        Gui.showMessage(
+            localize(
+                "downloadUnixFile.name.exists",
+                // eslint-disable-next-line max-len
+                "There is already a file with the same name. Please change your OS file system settings if you want to give case sensitive file names"
+            )
+        );
+        return;
+    }
+    // if local copy exists, open that instead of pulling from mainframe
+    if (download || !fileExists) {
+        try {
+            const cachedProfile = Profiles.getInstance().loadNamedProfile(node.getProfileName());
+            const fullPath = node.fullPath;
+            const chooseBinary = node.binary || (await ZoweExplorerApiRegister.getUssApi(cachedProfile).isFileTagBinOrAscii(fullPath));
+
+            const statusMsg = Gui.setStatusBarMessage(localize("downloadUnixFile.downloading", "$(sync~spin) Downloading USS file..."));
+            const response = await ZoweExplorerApiRegister.getUssApi(cachedProfile).getContents(fullPath, {
+                file: fileInfo.path,
+                binary: chooseBinary,
+                returnEtag: true,
+                encoding: cachedProfile.profile?.encoding,
+                responseTimeout: cachedProfile.profile?.responseTimeout,
+            });
+            statusMsg.dispose();
+            node.setEtag(response.apiResponse.etag);
+            return fileInfo;
+        } catch (err) {
+            await errorHandling(err, this.mProfileName);
+            throw err;
+        }
+    }
 }

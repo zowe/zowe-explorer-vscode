@@ -449,4 +449,23 @@ describe("Context helper tests", () => {
         treeItem.contextValue = "test";
         expect(contextually.getBaseContext(treeItem)).toEqual(treeItem.contextValue);
     });
+
+    it("Test getSessionType returning 'uss'", () => {
+        treeItem.contextValue = globals.USS_SESSION_CONTEXT;
+        expect(contextually.getSessionType(treeItem)).toEqual("uss");
+    });
+
+    it("Test getSessionType returning 'job'", () => {
+        treeItem.contextValue = globals.JOBS_SESSION_CONTEXT;
+        expect(contextually.getSessionType(treeItem)).toEqual("jobs");
+    });
+
+    it("Test getSessionType returning error if node has no type", () => {
+        treeItem.contextValue = undefined;
+        try {
+            contextually.getSessionType(treeItem);
+        } catch (err) {
+            expect(err.message).toEqual("Session node passed in does not have a type");
+        }
+    });
 });

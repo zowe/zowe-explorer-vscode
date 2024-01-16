@@ -28,7 +28,7 @@ export const DatasetsLocators = {
     favoriteProfileInDatasetXpath: "(//div[contains(@id,'Favorites') and contains(@id,'TestSeleniumProfile')])",
     addToFavoriteOptionXpath: "//li[@data-command='zowe.ds.saveSearch']",
     removeFavoriteProfileFromDatasetsOptionXpath: "//li[@data-command='zowe.ds.removeFavProfile']",
-    deleteProfileFromDatasetsXpath: "(//li[@data-command='zowe.ds.deleteProfile'])",
+    manageProfileFromDatasetsXpath: "(//li[@data-command='zowe.profileManagement'])",
 };
 
 export const UssLocators = {
@@ -44,6 +44,7 @@ export const UssLocators = {
     addToFavoriteOptionXpath: "//li[@data-command='zowe.uss.addFavorite']",
     removeFavoriteProfileFromUssOptionXpath: "//li[@data-command='zowe.uss.removeFavProfile']",
     hideProfileFromUssOptionXpath: "//li[@data-command='zowe.uss.removeSession']",
+    manageProfileFromUnixXpath: "(//li[@data-command='zowe.profileManagement'])",
 };
 
 export const JobsLocators = {
@@ -58,8 +59,9 @@ export const JobsLocators = {
     favoriteProfileInJobsXpath: "(//div[contains(@id,'Favorites') and contains(@id,'TestSeleniumProfile')])",
     addToFavoriteOptionXpath: "//li[@data-command='zowe.jobs.addFavorite']",
     removeFavoriteProfileFromJobsOptionXpath: "//li[@data-command='zowe.jobs.removeFavProfile']",
-    hideProfileFromJobsOptionXpath: "//li[@data-command='zowe.jobs.removeJobsSession']",
+    hideProfileFromJobsOptionXpath: "//li[@data-command='zowe.jobs.removeSession']",
     secondJobsProfileBeforeHidingXpath: "(//div[contains(@id,'TestSeleniumProfile')])[2]",
+    manageProfileFromJobsXpath: "(//li[@data-command='zowe.profileManagement'])",
 };
 
 export const TheiaNotificationMessages = {

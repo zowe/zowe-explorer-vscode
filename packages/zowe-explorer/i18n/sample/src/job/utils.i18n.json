@@ -1,0 +1,9 @@
+{
+  "jobs.sortById": "$(list-ordered) Job ID (default)",
+  "jobs.sortByDateSubmitted": "$(calendar) Date Submitted",
+  "jobs.sortByName": "$(case-sensitive) Job Name",
+  "jobs.sortByReturnCode": "$(symbol-numeric) Return Code",
+  "setSortDirection": "$(fold) Sort Direction",
+  "filterJobs.quickpick.message": "Go to Local Filtering",
+  "filter.clearForProfile": "$(clear-all) Clear filter for profile"
+}

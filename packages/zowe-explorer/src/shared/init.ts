@@ -20,6 +20,7 @@ import { Profiles } from "../Profiles";
 import { hideTempFolder, moveTempFolder } from "../utils/TempFolder";
 import { TsoCommandHandler } from "../command/TsoCommandHandler";
 import { MvsCommandHandler } from "../command/MvsCommandHandler";
+import { UnixCommandHandler } from "../command/UnixCommandHandler";
 import { saveFile } from "../dataset/actions";
 import { saveUSSFile } from "../uss/actions";
 import { ProfilesUtils } from "../utils/ProfilesUtils";
@@ -27,6 +28,13 @@ import { ZoweLogger } from "../utils/LoggerUtils";
 import { ZoweSaveQueue } from "../abstract/ZoweSaveQueue";
 import { SettingsConfig } from "../utils/SettingsConfig";
 import { spoolFilePollEvent } from "../job/actions";
+import { HistoryView } from "./HistoryView";
+import { ProfileManagement } from "../utils/ProfileManagement";
+import { LocalFileManagement } from "../utils/LocalFileManagement";
+import { TreeProviders } from "./TreeProviders";
+import { DatasetTree } from "../dataset/DatasetTree";
+import { USSTree } from "../uss/USSTree";
+import { ZosJobsProvider } from "../job/ZosJobsProvider";
 
 // Set up localization
 nls.config({
@@ -36,10 +44,9 @@ nls.config({
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 export interface IZoweProviders {
-    ds: IZoweTree<IZoweTreeNode>;
-    uss: IZoweTree<IZoweTreeNode>;
-    job: IZoweTree<IZoweTreeNode>;
-    // [key: string]: IZoweTree<IZoweTreeNode>;
+    ds: DatasetTree;
+    uss: USSTree;
+    job: ZosJobsProvider;
 }
 
 export function registerRefreshCommand(
@@ -66,6 +73,15 @@ export function registerRefreshCommand(
 
 export function registerCommonCommands(context: vscode.ExtensionContext, providers: IZoweProviders): void {
     ZoweLogger.trace("shared.init.registerCommonCommands called.");
+
+    // Update imperative.json to false only when VS Code setting is set to false
+    context.subscriptions.push(
+        vscode.commands.registerCommand("zowe.updateSecureCredentials", async (customCredentialManager?: string) => {
+            await globals.setGlobalSecurityValue(customCredentialManager);
+            ProfilesUtils.writeOverridesFile();
+        })
+    );
+
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.manualPoll", async (_args) => {
             if (vscode.window.activeTextEditor) {
@@ -78,17 +94,22 @@ export function registerCommonCommands(context: vscode.ExtensionContext, provide
         })
     );
 
-    // Update imperative.json to false only when VS Code setting is set to false
+    // Webview for editing persistent items on Zowe Explorer
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.updateSecureCredentials", async (customCredentialManager?: string) => {
-            await globals.setGlobalSecurityValue(customCredentialManager);
-            ProfilesUtils.writeOverridesFile();
+        vscode.commands.registerCommand("zowe.editHistory", () => {
+            return new HistoryView(context, providers);
         })
     );
 
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.promptCredentials", async (node: IZoweTreeNode) => {
             await ProfilesUtils.promptCredentials(node);
+        })
+    );
+
+    context.subscriptions.push(
+        vscode.commands.registerCommand("zowe.profileManagement", async (node: IZoweTreeNode) => {
+            await ProfileManagement.manageProfile(node);
         })
     );
 
@@ -192,6 +213,15 @@ export function registerCommonCommands(context: vscode.ExtensionContext, provide
             })
         );
         context.subscriptions.push(
+            vscode.commands.registerCommand("zowe.issueUnixCmd", async (node?, command?) => {
+                if (node) {
+                    await UnixCommandHandler.getInstance().issueUnixCommand(node.session, command, node);
+                } else {
+                    await UnixCommandHandler.getInstance().issueUnixCommand();
+                }
+            })
+        );
+        context.subscriptions.push(
             vscode.commands.registerCommand("zowe.issueMvsCmd", async (node?, command?) => {
                 if (node) {
                     await MvsCommandHandler.getInstance().issueMvsCommand(node.session, command, node);
@@ -200,6 +230,28 @@ export function registerCommonCommands(context: vscode.ExtensionContext, provide
                 }
             })
         );
+        context.subscriptions.push(
+            vscode.commands.registerCommand("zowe.selectForCompare", (node: IZoweTreeNode) => {
+                LocalFileManagement.selectFileForCompare(node);
+            })
+        );
+        context.subscriptions.push(
+            vscode.commands.registerCommand("zowe.compareWithSelected", async (node: IZoweTreeNode) => {
+                await LocalFileManagement.compareChosenFileContent(node);
+            })
+        );
+        context.subscriptions.push(
+            vscode.commands.registerCommand("zowe.compareWithSelectedReadOnly", async (node: IZoweTreeNode) => {
+                await LocalFileManagement.compareChosenFileContent(node, true);
+            })
+        );
+        context.subscriptions.push(
+            vscode.commands.registerCommand("zowe.compareFileStarted", () => {
+                return globals.FILE_SELECTED_TO_COMPARE;
+            })
+        );
+        // initialize the globals.filesToCompare array during initialization
+        globals.resetCompareChoices();
     }
 }
 
@@ -259,4 +311,46 @@ export function initSubscribers(context: vscode.ExtensionContext, theProvider: I
             await theProvider.flipState(e.element, true);
         });
     }
+}
+
+/**
+ * Listener for when Zowe button is clicked on activity bar,
+ * this event only fires one time upon clicking the Zowe button the first time.
+ * @returns Promise<void>
+ */
+export async function watchForZoweButtonClick(): Promise<void> {
+    const availableTreeProviders: string[] = Object.keys(TreeProviders.providers).filter(
+        (provider) => (TreeProviders.providers[provider] as IZoweTree<IZoweTreeNode>).getTreeView() !== undefined
+    );
+    if (!availableTreeProviders.length) {
+        return;
+    }
+    for (const availableTreeProvider of availableTreeProviders) {
+        const treeView: vscode.TreeView<IZoweTreeNode> = TreeProviders.providers[availableTreeProvider].getTreeView();
+        // handle case where Zowe Explorer is already visible when loading VS Code
+        if (treeView.visible) {
+            await initZoweExplorerUI();
+        }
+        // Wait for visible tree provider and activate UI
+        treeView.onDidChangeVisibility(async () => {
+            await initZoweExplorerUI();
+        });
+    }
+}
+
+/**
+ * Initialize Zowe Explorer UI functions
+ * Function can only run one time during runtime, otherwise it will immediately return
+ * @returns Promise<void>
+ */
+async function initZoweExplorerUI(): Promise<void> {
+    if (globals.ACTIVATED) {
+        return;
+    }
+    const tempPath: string = SettingsConfig.getDirectValue(globals.SETTINGS_TEMP_FOLDER_PATH);
+    globals.defineGlobals(tempPath);
+    await hideTempFolder(getZoweDir());
+    ProfilesUtils.initializeZoweTempFolder();
+    await SettingsConfig.standardizeSettings();
+    globals.setActivated(true);
 }

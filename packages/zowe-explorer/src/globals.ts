@@ -15,7 +15,7 @@ import * as vscode from "vscode";
 
 // Set up localization
 import * as nls from "vscode-nls";
-import { getZoweDir } from "@zowe/zowe-explorer-api";
+import { getZoweDir, IZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { SettingsConfig } from "./utils/SettingsConfig";
 import { ZoweLogger } from "./utils/LoggerUtils";
 export { ZoweLogger } from "./utils/LoggerUtils";
@@ -35,7 +35,7 @@ export let DS_DIR: string;
 export let CONFIG_PATH; // set during activate
 export let ISTHEIA = false; // set during activate
 export let LOG: imperative.Logger;
-export const COMMAND_COUNT = 112;
+export const COMMAND_COUNT = 121;
 export const MAX_SEARCH_HISTORY = 5;
 export const MAX_FILE_HISTORY = 10;
 export const MS_PER_SEC = 1000;
@@ -96,6 +96,7 @@ export const SETTINGS_DS_HISTORY = "zowe.ds.history";
 export const SETTINGS_USS_HISTORY = "zowe.uss.history";
 export const SETTINGS_JOBS_HISTORY = "zowe.jobs.history";
 export const SETTINGS_SECURE_CREDENTIALS_ENABLED = "zowe.security.secureCredentialsEnabled";
+export const SETTINGS_CHECK_FOR_CUSTOM_CREDENTIAL_MANAGERS = "zowe.security.checkForCustomCredentialManagers";
 export const LOGGER_SETTINGS = "zowe.logger";
 export const EXTENDER_CONFIG: imperative.ICommandProfileTypeConfiguration[] = [];
 export const ZOWE_CLI_SCM = "@zowe/cli";
@@ -107,6 +108,8 @@ export let ACTIVATED = false;
 export let PROFILE_SECURITY: string | boolean = ZOWE_CLI_SCM;
 export let SAVED_PROFILE_CONTENTS = new Uint8Array();
 export const JOBS_MAX_PREFIX = 8;
+export let FILE_SELECTED_TO_COMPARE: boolean;
+export let filesToCompare: IZoweTreeNode[];
 
 // Dictionary describing translation from old configuration names to new standardized names
 export const configurationDictionary: { [k: string]: string } = {
@@ -123,6 +126,11 @@ export const configurationDictionary: { [k: string]: string } = {
     "Zowe-USS-Persistent": SETTINGS_USS_HISTORY,
     "Zowe-Jobs-Persistent": SETTINGS_JOBS_HISTORY,
 };
+export enum Trees {
+    USS,
+    MVS,
+    JES,
+}
 
 export enum CreateDataSetTypeWithKeysEnum {
     DATA_SET_BINARY,
@@ -142,12 +150,14 @@ export const DATA_SET_PROPERTIES = [
         key: `avgblk`,
         label: `Average Block Length`,
         value: null,
+        type: `number`,
         placeHolder: localize("createFile.attribute.avgblk", `Enter the average block length (if allocation unit = BLK)`),
     },
     {
         key: `blksize`,
         label: `Block Size`,
         value: null,
+        type: `number`,
         placeHolder: localize("createFile.attribute.blksize", `Enter a block size`),
     },
     {
@@ -166,6 +176,7 @@ export const DATA_SET_PROPERTIES = [
         key: `dirblk`,
         label: `Directory Blocks`,
         value: null,
+        type: `number`,
         placeHolder: localize("createFile.attribute.dirblk", `Enter the number of directory blocks`),
     },
     {
@@ -196,6 +207,7 @@ export const DATA_SET_PROPERTIES = [
         key: `primary`,
         label: `Primary Space`,
         value: null,
+        type: `number`,
         placeHolder: localize("createFile.attribute.primary", `Enter the primary space allocation`),
     },
     {
@@ -208,12 +220,14 @@ export const DATA_SET_PROPERTIES = [
         key: `lrecl`,
         label: `Record Length`,
         value: null,
+        type: `number`,
         placeHolder: localize("createFile.attribute.lrecl", `Enter the logical record length`),
     },
     {
         key: `secondary`,
         label: `Secondary Space`,
         value: null,
+        type: `number`,
         placeHolder: localize("createFile.attribute.secondary", `Enter the secondary space allocation`),
     },
     {
@@ -281,6 +295,7 @@ export enum JobPickerTypes {
 export const SEPARATORS = {
     BLANK: { kind: vscode.QuickPickItemKind.Separator, label: "" },
     RECENT_FILTERS: { kind: vscode.QuickPickItemKind.Separator, label: localize("zowe.separator.recentFilters", "Recent Filters") },
+    OPTIONS: { kind: vscode.QuickPickItemKind.Separator, label: localize("zowe.separator.options", "Options") },
 };
 
 /**
@@ -345,4 +360,14 @@ export async function setGlobalSecurityValue(credentialManager?: string): Promis
         PROFILE_SECURITY = ZOWE_CLI_SCM;
         ZoweLogger.info(localize("globals.setGlobalSecurityValue.secured", "Zowe explorer profiles are being set as secured."));
     }
+}
+
+export function setCompareSelection(val: boolean): void {
+    FILE_SELECTED_TO_COMPARE = val;
+    vscode.commands.executeCommand("setContext", "zowe.compareFileStarted", val);
+}
+
+export function resetCompareChoices(): void {
+    setCompareSelection(false);
+    filesToCompare = [];
 }

@@ -6,7 +6,7 @@
   "publisher": "Zowe",
   "repository": "https://github.com/zowe/vscode-extension-for-zowe/samples/tree-view-sample",
   "engines": {
-    "vscode": "^1.74.0"
+    "vscode": "^1.79.0"
   },
   "categories": [
     "Other"
@@ -49,8 +49,7 @@
     "watch": "tsc -watch -p ./"
   },
   "dependencies": {
-    "@zowe/imperative": "^5.18.0",
-    "@zowe/zowe-explorer-api": "^2.10.0"
+    "@zowe/zowe-explorer-api": "file:../../packages/zowe-explorer-api"
   },
   "devDependencies": {
     "@types/node": "^16.18.34",

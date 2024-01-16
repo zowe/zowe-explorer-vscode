@@ -6,7 +6,7 @@
   "publisher": "Zowe",
   "repository": "https://github.com/zowe/vscode-extension-for-zowe/samples/uss-profile-sample",
   "engines": {
-    "vscode": "^1.74.0"
+    "vscode": "^1.79.0"
   },
   "categories": [
     "Other"
@@ -33,8 +33,8 @@
     "watch": "tsc -watch -p ./"
   },
   "dependencies": {
-    "@zowe/cli": "^7.18.0",
-    "@zowe/zowe-explorer-api": "^2.10.0",
+    "@zowe/cli": "8.0.0-next.202401022112",
+    "@zowe/zowe-explorer-api": "file:../../packages/zowe-explorer-api",
     "ssh2-sftp-client": "^9.1.0"
   },
   "devDependencies": {

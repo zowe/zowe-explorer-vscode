@@ -16,7 +16,7 @@ import * as zowe from "@zowe/cli";
 import * as globals from "../../../src/globals";
 import { createIJobFile, createIJobObject, createJobSessionNode } from "../../../__mocks__/mockCreators/jobs";
 import { Job } from "../../../src/job/ZoweJobNode";
-import { IZoweJobTreeNode, ProfilesCache, Gui } from "@zowe/zowe-explorer-api";
+import { IZoweJobTreeNode, ProfilesCache, Gui, JobSortOpts, SortDirection } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { Profiles } from "../../../src/Profiles";
 import * as sessUtils from "../../../src/utils/SessionUtils";
@@ -26,10 +26,12 @@ import {
     createInstanceOfProfile,
     createISessionWithoutCredentials,
     createInstanceOfProfileInfo,
+    createTreeProviders,
 } from "../../../__mocks__/mockCreators/shared";
 import * as contextually from "../../../src/shared/context";
 import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
 import { bindJesApi, createJesApi } from "../../../__mocks__/mockCreators/api";
+import { TreeProviders } from "../../../src/shared/TreeProviders";
 
 async function createGlobalMocks() {
     const globalMocks = {
@@ -40,6 +42,7 @@ async function createGlobalMocks() {
         mockAffectsConfig: jest.fn(),
         createTreeView: jest.fn(() => ({
             reveal: jest.fn(),
+            onDidCollapseElement: jest.fn(),
         })),
         mockCreateSessCfgFromArgs: jest.fn(),
         mockGetSpoolFiles: jest.fn(),
@@ -85,6 +88,7 @@ async function createGlobalMocks() {
         }),
         mockProfileInfo: createInstanceOfProfileInfo(),
         mockProfilesCache: new ProfilesCache(zowe.imperative.Logger.getAppLogger()),
+        mockTreeProviders: createTreeProviders(),
     };
 
     Object.defineProperty(globalMocks.mockProfilesCache, "getProfileInfo", {
@@ -213,9 +217,12 @@ describe("ZoweJobNode unit tests - Function createJobsTree", () => {
 describe("ZoweJobNode unit tests - Function addSession", () => {
     it("Tests that addSession adds the session to the tree", async () => {
         const globalMocks = await createGlobalMocks();
-
+        jest.spyOn(TreeProviders, "providers", "get").mockReturnValue({
+            ds: { addSingleSession: jest.fn(), mSessionNodes: [...globalMocks.testJobsProvider.mSessionNodes], refresh: jest.fn() } as any,
+            uss: { addSingleSession: jest.fn(), mSessionNodes: [...globalMocks.testJobsProvider.mSessionNodes], refresh: jest.fn() } as any,
+            jobs: { addSingleSession: jest.fn(), mSessionNodes: [...globalMocks.testJobsProvider.mSessionNodes], refresh: jest.fn() } as any,
+        } as any);
         await globalMocks.testJobsProvider.addSession("sestest");
-
         expect(globalMocks.testJobsProvider.mSessionNodes[1]).toBeDefined();
         expect(globalMocks.testJobsProvider.mSessionNodes[1].label).toEqual("sestest");
     });
@@ -234,10 +241,15 @@ describe("ZoweJobNode unit tests - Function addSession", () => {
 describe("ZoweJobNode unit tests - Function deleteSession", () => {
     it("Tests that deleteSession removes the session from the tree", async () => {
         const globalMocks = await createGlobalMocks();
-
-        await globalMocks.testJobsProvider.deleteSession(globalMocks.testJobsProvider.mSessionNodes[1]);
-
-        expect(globalMocks.testJobsProvider.mSessionNodes.length).toBe(1);
+        jest.spyOn(TreeProviders, "providers", "get").mockReturnValue(globalMocks.mockTreeProviders);
+        globalMocks.testJobsProvider.mSessionNodes = globalMocks.mockTreeProviders.ds.mSessionNodes;
+        expect(globalMocks.mockTreeProviders.ds.mSessionNodes.length).toEqual(2);
+        expect(globalMocks.mockTreeProviders.uss.mSessionNodes.length).toEqual(2);
+        expect(globalMocks.mockTreeProviders.job.mSessionNodes.length).toEqual(2);
+        await globalMocks.testJobsProvider.deleteSession(globalMocks.testJobsProvider.mSessionNodes[1], true);
+        expect(globalMocks.mockTreeProviders.ds.mSessionNodes.length).toEqual(1);
+        expect(globalMocks.mockTreeProviders.uss.mSessionNodes.length).toEqual(1);
+        expect(globalMocks.mockTreeProviders.job.mSessionNodes.length).toEqual(1);
     });
 });
 
@@ -581,9 +593,8 @@ describe("ZoweJobNode unit tests - Function saveSearch", () => {
         const expectedJob = favJob;
         expectedJob.contextValue = globals.JOBS_SESSION_CONTEXT + globals.FAV_SUFFIX;
 
-        const savedFavJob = await globalMocks.testJobsProvider.saveSearch(favJob);
-
-        expect(savedFavJob).toEqual(expectedJob);
+        globalMocks.testJobsProvider.saveSearch(favJob);
+        expect(expectedJob.contextValue).toEqual(favJob.contextValue);
     });
 });
 
@@ -849,7 +860,7 @@ describe("Job - sortJobs", () => {
                     jobid: "JOBID120",
                 },
             } as IZoweJobTreeNode,
-        ].sort((a, b) => Job.sortJobs(a, b));
+        ].sort(Job.sortJobs({ method: JobSortOpts.Id, direction: SortDirection.Ascending }));
         expect(sorted[0].job.jobid).toBe("JOBID120");
         expect(sorted[1].job.jobid).toBe("JOBID120");
         expect(sorted[2].job.jobid).toBe("JOBID123");

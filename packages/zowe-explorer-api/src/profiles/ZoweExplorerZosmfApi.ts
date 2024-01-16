@@ -144,6 +144,14 @@ export class ZosmfUssApi extends ZosmfApiCommon implements IUss {
 
     public async updateAttributes(ussPath: string, attributes: Partial<FileAttributes>): Promise<zowe.IZosFilesResponse> {
         try {
+            if (attributes.tag) {
+                await zowe.Utilities.putUSSPayload(this.getSession(), ussPath, {
+                    request: "chtag",
+                    action: "set",
+                    type: "text",
+                    codeset: attributes.tag !== null ? attributes.tag.toString() : attributes.tag,
+                });
+            }
             if ((attributes.group || attributes.gid) && (attributes.owner || attributes.uid)) {
                 await zowe.Utilities.putUSSPayload(this.getSession(), ussPath, {
                     request: "chown",
@@ -158,7 +166,6 @@ export class ZosmfUssApi extends ZosmfApiCommon implements IUss {
                     recursive: true,
                 });
             }
-
             if (attributes.perms) {
                 await zowe.Utilities.putUSSPayload(this.getSession(), ussPath, {
                     request: "chmod",
@@ -201,6 +208,14 @@ export class ZosmfUssApi extends ZosmfApiCommon implements IUss {
             commandResponse: null,
             apiResponse: result,
         };
+    }
+
+    public async getTag(ussPath: string): Promise<string> {
+        const response = await zowe.Utilities.putUSSPayload(this.getSession(), ussPath, {
+            request: "chtag",
+            action: "list",
+        });
+        return JSON.parse(response.toString()).stdout[0].split(" ")[1] as string;
     }
 }
 
@@ -364,5 +379,23 @@ export class ZosmfCommandApi extends ZosmfApiCommon implements ICommand {
 
     public issueMvsCommand(command: string): Promise<zowe.IConsoleResponse> {
         return zowe.IssueCommand.issueSimple(this.getSession(), command);
+    }
+
+    public async issueUnixCommand(sshSession: zowe.SshSession, command: string, cwd: string, flag: boolean): Promise<string> {
+        let stdout = "";
+        if (flag) {
+            await zowe.Shell.executeSshCwd(sshSession, command, '"' + cwd + '"', (data: string) => {
+                stdout += data;
+            });
+        } else {
+            await zowe.Shell.executeSsh(sshSession, command, (data: string) => {
+                stdout += data;
+            });
+        }
+        return stdout;
+    }
+
+    public sshProfileRequired?(): boolean {
+        return true;
     }
 }

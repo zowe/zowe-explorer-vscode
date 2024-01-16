@@ -21,11 +21,14 @@ import * as zowe from "@zowe/cli";
 import { IJestIt, ITestContext, processSubscriptions, spyOnSubscriptions } from "../../__common__/testUtils";
 import { TsoCommandHandler } from "../../../src/command/TsoCommandHandler";
 import { MvsCommandHandler } from "../../../src/command/MvsCommandHandler";
+import { UnixCommandHandler } from "../../../src/command/UnixCommandHandler";
 import { saveFile } from "../../../src/dataset/actions";
 import { saveUSSFile } from "../../../src/uss/actions";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 import { ZoweSaveQueue } from "../../../src/abstract/ZoweSaveQueue";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
+import * as HistoryView from "../../../src/shared/HistoryView";
+import { LocalFileManagement } from "../../../src/utils/LocalFileManagement";
 
 jest.mock("../../../src/utils/LoggerUtils");
 
@@ -50,15 +53,20 @@ describe("Test src/shared/extension", () => {
         };
         const commands: IJestIt[] = [
             {
+                name: "zowe.updateSecureCredentials",
+                parm: ["@zowe/cli"],
+                mock: [
+                    { spy: jest.spyOn(globals, "setGlobalSecurityValue"), arg: ["@zowe/cli"] },
+                    { spy: jest.spyOn(profUtils.ProfilesUtils, "writeOverridesFile"), arg: [] },
+                ],
+            },
+            {
                 name: "zowe.manualPoll",
                 mock: [],
             },
             {
-                name: "zowe.updateSecureCredentials",
-                mock: [
-                    { spy: jest.spyOn(globals, "setGlobalSecurityValue"), arg: [test.value] },
-                    { spy: jest.spyOn(profUtils.ProfilesUtils, "writeOverridesFile"), arg: [] },
-                ],
+                name: "zowe.editHistory",
+                mock: [{ spy: jest.spyOn(HistoryView, "HistoryView"), arg: [test.context, test.value.providers] }],
             },
             {
                 name: "zowe.promptCredentials",
@@ -205,6 +213,31 @@ describe("Test src/shared/extension", () => {
                 parm: [],
                 mock: [{ spy: jest.spyOn(MvsCommandHandler, "getInstance"), arg: [], ret: { issueMvsCommand: jest.fn() } }],
             },
+            {
+                name: "zowe.selectForCompare",
+                mock: [{ spy: jest.spyOn(LocalFileManagement, "selectFileForCompare"), arg: [test.value] }],
+            },
+            {
+                name: "zowe.compareWithSelected",
+                mock: [{ spy: jest.spyOn(LocalFileManagement, "compareChosenFileContent"), arg: [test.value] }],
+            },
+            {
+                name: "zowe.compareWithSelectedReadOnly",
+                mock: [{ spy: jest.spyOn(LocalFileManagement, "compareChosenFileContent"), arg: [test.value, true] }],
+            },
+            {
+                name: "zowe.compareFileStarted",
+                mock: [],
+            },
+            {
+                name: "zowe.issueUnixCmd:1",
+                mock: [{ spy: jest.spyOn(UnixCommandHandler, "getInstance"), arg: [], ret: { issueUnixCommand: jest.fn() } }],
+            },
+            {
+                name: "zowe.issueUnixCmd:2",
+                parm: [],
+                mock: [{ spy: jest.spyOn(UnixCommandHandler, "getInstance"), arg: [], ret: { issueUnixCommand: jest.fn() } }],
+            },
         ];
 
         beforeAll(async () => {
@@ -225,7 +258,6 @@ describe("Test src/shared/extension", () => {
             Object.defineProperty(globals, "USS_DIR", { value: testGlobals.USS_DIR });
             Object.defineProperty(globals, "SETTINGS_TEMP_FOLDER_LOCATION", { value: "/some/old/temp/location" });
             Object.defineProperty(vscode.workspace, "onDidSaveTextDocument", { value: onDidSaveTextDocument });
-
             spyOnSubscriptions(commands);
             await sharedExtension.registerCommonCommands(test.context, test.value.providers);
         });

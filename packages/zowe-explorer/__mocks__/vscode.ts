@@ -168,7 +168,12 @@ export namespace extensions {
         };
     }
 }
-
+export interface TreeViewExpansionEvent<T> {
+    /**
+     * Element that is expanded or collapsed.
+     */
+    readonly element: T;
+}
 export interface TreeView<T> {
     /**
      * An optional human-readable message that will be rendered in the view.
@@ -201,6 +206,8 @@ export interface TreeView<T> {
      * **NOTE:** The {@link TreeDataProvider} that the `TreeView` {@link window.createTreeView is registered with} with must implement {@link TreeDataProvider.getParent getParent} method to access this API.
      */
     reveal(element: T, options?: { select?: boolean; focus?: boolean; expand?: boolean | number }): Thenable<void>;
+
+    onDidCollapseElement: Event<TreeViewExpansionEvent<T>>;
 }
 
 export class FileDecoration {
@@ -294,6 +301,10 @@ export namespace window {
      */
     export function showInformationMessage(message: string, ...items: string[]): Thenable<string> {
         return Promise.resolve("");
+    }
+
+    export function showTextDocument(document: TextDocument, column?: ViewColumn, preserveFocus?: boolean): any {
+        return undefined;
     }
 
     export function showErrorMessage(message: string, ...items: string[]): undefined {
@@ -852,6 +863,7 @@ export namespace workspace {
     }
 
     export function onDidSaveTextDocument<T>(listener: (e: T) => any, thisArgs?: any, disposables?: Disposable[]) {}
+    export function onDidCloseTextDocument<T>(listener: (e: T) => any, thisArgs?: any, disposables?: Disposable[]) {}
 
     export function getConfiguration(configuration: string) {
         return {

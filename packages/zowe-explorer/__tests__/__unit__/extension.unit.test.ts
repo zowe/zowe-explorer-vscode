@@ -28,10 +28,10 @@ import { SettingsConfig } from "../../src/utils/SettingsConfig";
 import { ZoweExplorerExtender } from "../../src/ZoweExplorerExtender";
 import { DatasetTree } from "../../src/dataset/DatasetTree";
 import { USSTree } from "../../src/uss/USSTree";
-import { ZoweLogger } from "../../src/utils/LoggerUtils";
 import { ZoweSaveQueue } from "../../src/abstract/ZoweSaveQueue";
 import { ZoweLocalStorage } from "../../src/utils/ZoweLocalStorage";
 jest.mock("../../src/utils/LoggerUtils");
+import { ProfilesUtils } from "../../src/utils/ProfilesUtils";
 
 jest.mock("vscode");
 jest.mock("fs");
@@ -47,9 +47,10 @@ async function createGlobalMocks() {
         mockMoveSync: jest.fn(),
         mockGetAllProfileNames: jest.fn(),
         mockReveal: jest.fn(),
-        mockCreateTreeView: jest.fn(),
+        mockCreateTreeView: jest.fn().mockReturnValue({ onDidCollapseElement: jest.fn() }),
         mockExecuteCommand: jest.fn(),
         mockRegisterCommand: jest.fn(),
+        mockOnDidCloseTextDocument: jest.fn(),
         mockOnDidSaveTextDocument: jest.fn(),
         mockOnDidChangeSelection: jest.fn(),
         mockOnDidChangeConfiguration: jest.fn(),
@@ -141,7 +142,6 @@ async function createGlobalMocks() {
         appName: vscode.env.appName,
         uriScheme: vscode.env.uriScheme,
         expectedCommands: [
-            "zowe.extRefresh",
             "zowe.all.config.init",
             "zowe.ds.addSession",
             "zowe.ds.addFavorite",
@@ -178,6 +178,8 @@ async function createGlobalMocks() {
             "zowe.ds.enableValidation",
             "zowe.ds.ssoLogin",
             "zowe.ds.ssoLogout",
+            "zowe.ds.sortBy",
+            "zowe.ds.filterBy",
             "zowe.uss.addFavorite",
             "zowe.uss.removeFavorite",
             "zowe.uss.addSession",
@@ -221,7 +223,7 @@ async function createGlobalMocks() {
             "zowe.jobs.addJobsSession",
             "zowe.jobs.setOwner",
             "zowe.jobs.setPrefix",
-            "zowe.jobs.removeJobsSession",
+            "zowe.jobs.removeSession",
             "zowe.jobs.downloadSpool",
             "zowe.jobs.downloadSpoolBinary",
             "zowe.jobs.getJobJcl",
@@ -240,9 +242,13 @@ async function createGlobalMocks() {
             "zowe.jobs.startPolling",
             "zowe.jobs.stopPolling",
             "zowe.jobs.cancelJob",
-            "zowe.manualPoll",
+            "zowe.jobs.sortBy",
+            "zowe.jobs.filterJobs",
             "zowe.updateSecureCredentials",
+            "zowe.manualPoll",
+            "zowe.editHistory",
             "zowe.promptCredentials",
+            "zowe.profileManagement",
             "zowe.openRecentMember",
             "zowe.searchInAllLoadedItems",
             "zowe.ds.deleteProfile",
@@ -250,7 +256,13 @@ async function createGlobalMocks() {
             "zowe.uss.deleteProfile",
             "zowe.jobs.deleteProfile",
             "zowe.issueTsoCmd",
+            "zowe.issueUnixCmd",
             "zowe.issueMvsCmd",
+            "zowe.selectForCompare",
+            "zowe.compareWithSelected",
+            "zowe.compareWithSelectedReadOnly",
+            "zowe.compareFileStarted",
+            "zowe.extRefresh",
         ],
     };
 
@@ -375,6 +387,8 @@ async function createGlobalMocks() {
         configurable: true,
     });
 
+    jest.spyOn(vscode.workspace, "onDidCloseTextDocument").mockImplementation(globalMocks.onDidCloseTextDocument);
+
     // Create a mocked extension context
     const mockExtensionCreator = jest.fn(
         () =>
@@ -449,6 +463,7 @@ describe("Extension Unit Tests", () => {
     let globalMocks;
     beforeAll(async () => {
         globalMocks = await createGlobalMocks();
+        jest.spyOn(fs, "readFileSync").mockReturnValue(Buffer.from(JSON.stringify({ overrides: { credentialManager: "@zowe/cli" } }), "utf-8"));
         Object.defineProperty(zowe.imperative, "ProfileInfo", {
             value: globalMocks.mockImperativeProfileInfo,
             configurable: true,
@@ -491,7 +506,7 @@ describe("Extension Unit Tests", () => {
         });
     });
 
-    it("Testing that activate correctly executes", async () => {
+    it("Testing that activate correctly executes", () => {
         expect(allCommands.map((c) => c.cmd)).toEqual(globalMocks.expectedCommands);
     });
 
@@ -537,10 +552,12 @@ describe("Extension Unit Tests", () => {
             getProfile: jest.fn(),
             getParent: jest.fn().mockReturnValue({ getLabel: jest.fn() }),
             label: "TestNode",
+            getLabel: jest.fn(() => "TestNode"),
         };
+
         const deleteSessionSpy = jest.spyOn(providerObject.prototype, "deleteSession");
         const commandFunction = allCommands.find((cmd) => command === cmd.cmd);
-        await (commandFunction as any).fun(testNode, [testNode]);
+        await (commandFunction as any).fun(testNode, [testNode], true);
         expect(deleteSessionSpy).toHaveBeenCalled();
     }
 
@@ -569,6 +586,7 @@ describe("Extension Unit Tests", () => {
 describe("Extension Unit Tests - THEIA", () => {
     it("Tests that activate() works correctly for Theia", async () => {
         const globalMocks = await createGlobalMocks();
+        jest.spyOn(ProfilesUtils, "getCredentialManagerOverride").mockReturnValueOnce("@zowe/cli");
 
         Object.defineProperty(vscode.env, "appName", { value: "Eclipse Theia" });
         Object.defineProperty(vscode.env, "uriScheme", { value: "theia" });

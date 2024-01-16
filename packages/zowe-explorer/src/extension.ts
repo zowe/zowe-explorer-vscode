@@ -11,21 +11,20 @@
 
 import * as globals from "./globals";
 import * as vscode from "vscode";
-import { getZoweDir } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
 import { ZoweExplorerExtender } from "./ZoweExplorerExtender";
 import { Profiles } from "./Profiles";
 import { ProfilesUtils } from "./utils/ProfilesUtils";
-import { cleanTempDir, hideTempFolder } from "./utils/TempFolder";
-import { SettingsConfig } from "./utils/SettingsConfig";
+import { initializeSpoolProvider } from "./SpoolProvider";
+import { cleanTempDir } from "./utils/TempFolder";
+import { registerCommonCommands, registerRefreshCommand, watchConfigProfile, watchForZoweButtonClick } from "./shared/init";
+import { ZoweLogger } from "./utils/LoggerUtils";
+import { ZoweSaveQueue } from "./abstract/ZoweSaveQueue";
+import { ZoweLocalStorage } from "./utils/ZoweLocalStorage";
+import { TreeProviders } from "./shared/TreeProviders";
 import { initDatasetProvider } from "./dataset/init";
 import { initUSSProvider } from "./uss/init";
 import { initJobsProvider } from "./job/init";
-import { IZoweProviders, registerCommonCommands, registerRefreshCommand, watchConfigProfile } from "./shared/init";
-import { ZoweLogger } from "./utils/LoggerUtils";
-import { ZoweSaveQueue } from "./abstract/ZoweSaveQueue";
-import { PollDecorator } from "./utils/DecorationProviders";
-import { ZoweLocalStorage } from "./utils/ZoweLocalStorage";
 
 /**
  * The function that runs when the extension is loaded
@@ -35,35 +34,21 @@ import { ZoweLocalStorage } from "./utils/ZoweLocalStorage";
  * @returns {Promise<ZoweExplorerApiRegister>}
  */
 export async function activate(context: vscode.ExtensionContext): Promise<ZoweExplorerApiRegister> {
-    // Initialize LocalStorage for persistent Zowe Settings
     ZoweLocalStorage.initializeZoweLocalStorage(context.globalState);
     await ZoweLogger.initializeZoweLogger(context);
-    // Get temp folder location from settings
-    const tempPath: string = SettingsConfig.getDirectValue(globals.SETTINGS_TEMP_FOLDER_PATH);
-    // Determine the runtime framework to support special behavior for Theia
-    globals.defineGlobals(tempPath);
 
-    await hideTempFolder(getZoweDir());
     await ProfilesUtils.initializeZoweProfiles((msg) => ZoweExplorerExtender.showZoweConfigError(msg));
-    ProfilesUtils.initializeZoweTempFolder();
-
-    // Initialize profile manager
     await Profiles.createInstance(ZoweLogger.imperativeLogger);
-    registerRefreshCommand(context, activate, deactivate);
+    initializeSpoolProvider(context);
 
-    PollDecorator.register();
-
-    const providers: IZoweProviders = {
-        ds: await initDatasetProvider(context),
-        uss: await initUSSProvider(context),
-        job: await initJobsProvider(context),
-    };
-
+    const providers = await TreeProviders.initializeProviders(context, { ds: initDatasetProvider, uss: initUSSProvider, job: initJobsProvider });
     registerCommonCommands(context, providers);
+    registerRefreshCommand(context, activate, deactivate);
     ZoweExplorerExtender.createInstance(providers.ds, providers.uss, providers.job);
-    await SettingsConfig.standardizeSettings();
+
     await watchConfigProfile(context, providers);
-    globals.setActivated(true);
+    await watchForZoweButtonClick();
+
     return ZoweExplorerApiRegister.getInstance();
 }
 /**

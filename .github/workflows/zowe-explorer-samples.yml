@@ -25,7 +25,7 @@ jobs:
       # Continue to run tests on the other systems if one fails
       fail-fast: false
       matrix:
-        node-version: [16.x, 18.x]
+        node-version: [18.x, 20.x]
 
     if: (github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository) && !contains(github.event.head_commit.message, '[ci skip]')
 
@@ -41,5 +41,8 @@ jobs:
       # install pnpm
       - run: npm install -g pnpm
 
+      - run: pnpm config set network-timeout 60000 && pnpm i
+      - run: pnpm --filter "zowe-explorer-api" build
       - run: for dir in samples/*; do pushd $dir && pnpm --ignore-workspace i && pnpm run compile && popd; done
+
         shell: bash

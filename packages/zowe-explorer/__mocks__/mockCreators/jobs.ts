@@ -86,6 +86,12 @@ export function createJobsTree(session: imperative.Session, iJob: IJob, profile:
                 dispose: jest.fn(),
             };
         }),
+        getSessions: jest.fn(),
+        getFavorites: jest.fn(),
+        getSearchHistory: jest.fn(),
+        removeSearchHistory: jest.fn(),
+        resetSearchHistory: jest.fn(),
+        resetFileHistory: jest.fn(),
         deleteSession: jest.fn(),
         addFavorite: jest.fn(),
         removeFavorite: jest.fn(),
@@ -99,12 +105,14 @@ export function createJobsTree(session: imperative.Session, iJob: IJob, profile:
         getSession: jest.fn(),
         delete: jest.fn(),
         setItem: jest.fn(),
+        openFiles: {},
     };
     testJobsTree.mSessionNodes = [];
     testJobsTree.mSessionNodes.push(jobNode);
     testJobsTree.addFavorite.mockImplementation((newFavorite) => {
         testJobsTree.mFavorites.push(newFavorite);
     });
+    testJobsTree.getSearchHistory.mockImplementation();
     testJobsTree.deleteSession.mockImplementation((badSession) => removeNodeFromArray(badSession, testJobsTree.mSessionNodes));
     testJobsTree.removeFavorite.mockImplementation((badFavorite) => removeNodeFromArray(badFavorite, testJobsTree.mFavorites));
     testJobsTree.removeFavProfile.mockImplementation((badFavProfileName) => {

@@ -2,6 +2,30 @@
 
 All notable changes to the "zowe-explorer-api" extension will be documented in this file.
 
+## TBD Release
+
+### New features and enhancements
+
+### Bug fixes
+
+- Changed IApiExplorerExtenders.initForZowe `profileTypeConfigurations: imperative.ICommandProfileTypeConfiguration[]` to a required argument to address issues seen after registration of profile type when not passed. [#2575](https://github.com/zowe/vscode-extension-for-zowe/issues/2575)
+
+## `3.0.0-next.202401121747`
+
+### New features and enhancements
+
+- Added new APIs for Issue UNIX Command. [#1326](https://github.com/zowe/vscode-extension-for-zowe/issues/1326)
+
+### Bug fixes
+
+- Update dependencies for technical currency purposes.
+
+## `3.0.0-next.202311171754`
+
+## Bug fixes
+
+- fixed export of api `onProfilesUpdate`.
+
 ## `3.0.0-next.202309121526`
 
 ### New features and enhancements
@@ -10,6 +34,38 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 - Removal of deprecated APIs. Check the [list](https://github.com/zowe/vscode-extension-for-zowe/tree/next/docs/early-access/v3/Extenders.md) of APIs that were removed.
 - Added `madge` script in `package.json` to track circular dependencies. [#2148](https://github.com/zowe/vscode-extension-for-zowe/issues/2148)
 - Migrated to new package manager PNPM from Yarn.
+
+## `2.13.0`
+
+### New features and enhancements
+
+- Added new optional boolean parameter `hideFromAllTrees` to `IZoweTree.deleteSession` for specifying whether to hide from all trees or current tree. [#2567](https://github.com/zowe/vscode-extension-for-zowe/issues/2567)
+- Added new optional parameter `provider` of type `IZoweTree<IZoweTreeNode>` for `IZoweTree.addSession` to specify a tree to add the profile to.
+- Added optional `filter` and `actualJobs` variables to `IZoweJobTreeNode` to track local filter search.
+- Added new optional record `openFiles` to `IZoweTree` to track opened files under a specific tree view. [#2597](https://github.com/zowe/vscode-extension-for-zowe/issues/2597)
+
+## `2.12.2`
+
+## `2.12.1`
+
+## `2.12.0`
+
+### New features and enhancements
+
+- Added optional `getTag` function to `ZoweExplorerAPI.IUss` for getting the tag of a file on USS.
+- Added new API {ZE Extender MetaData} to allow extenders to have the metadata of registered extenders to aid in team configuration file creation from a view that isn't Zowe Explorer's. [#2394](https://github.com/zowe/vscode-extension-for-zowe/issues/2394)
+- Add `sort` and `filter` optional variables for storing sort/filter options alongside tree nodes. [#2420](https://github.com/zowe/vscode-extension-for-zowe/issues/2420)
+- Add `stats` optional variable for storing dataset stats (such as user, modified date, etc.)
+- Add option enums and types for sorting, filtering and sort direction in tree nodes. [#2420](https://github.com/zowe/vscode-extension-for-zowe/issues/2420)
+- Added option for retaining context when generating webviews in Webview API
+
+## `2.11.2`
+
+### Bug fixes
+
+- Bundle Zowe Secrets for issues seen by extenders that use the ProfilesCache for profile management. [#2512](https://github.com/zowe/vscode-extension-for-zowe/issues/2512)
+
+## `2.11.1`
 
 ## `2.11.0`
 
@@ -31,10 +87,6 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 - Added `WebView` class to allow Zowe Explorer and extenders to create enhanced webviews (choose any JavaScript bundler and JavaScript framework). [#2254](https://github.com/zowe/vscode-extension-for-zowe/issues/2254)
 
 ## `2.9.2`
-
-### New features and enhancements
-
-### Bug fixes
 
 ## `2.9.1`
 

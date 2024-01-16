@@ -18,7 +18,27 @@ describe("PersistentFilters Unit Test", () => {
     Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
     Object.defineProperty(ZoweLocalStorage, "storage", {
         value: {
-            get: () => ({ persistence: true, favorites: [], history: [], sessions: ["zosmf"], searchHistory: [], fileHistory: [] }),
+            get: () => ({
+                persistence: true,
+                favorites: [],
+                history: [],
+                sessions: ["zosmf"],
+                searchHistory: [],
+                fileHistory: [],
+                templates: [
+                    {
+                        MyMockTemplate: {
+                            alcunit: "CYL",
+                            blksize: 3130,
+                            dirblk: 35,
+                            dsorg: "PO",
+                            lrecl: 40,
+                            primary: 1,
+                            recfm: "FB",
+                        },
+                    },
+                ],
+            }),
             update: jest.fn(),
             keys: () => [],
         },
@@ -94,6 +114,14 @@ describe("PersistentFilters Unit Test", () => {
             } as any);
 
             expect(pf.getDsTemplates()).toEqual([mockTemplate]);
+        });
+    });
+    describe("removeSearchHistory", () => {
+        it("should remove the specified item from the persistent object", () => {
+            const pf: PersistentFilters = new PersistentFilters("test", 2, 2);
+            pf["mSearchHistory"] = ["test1", "test2"];
+            pf.removeSearchHistory("test1");
+            expect(pf.getSearchHistory().length).toEqual(1);
         });
     });
 });

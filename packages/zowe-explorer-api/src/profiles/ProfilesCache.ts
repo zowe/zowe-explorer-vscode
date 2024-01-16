@@ -69,6 +69,7 @@ export class ProfilesCache {
     public profilesForValidation: IProfileValidation[] = [];
     public profilesValidationSetting: IValidationSetting[] = [];
     public allProfiles: zowe.imperative.IProfileLoaded[] = [];
+    public profileTypeConfigurations: zowe.imperative.ICommandProfileTypeConfiguration[] = [];
     protected allTypes: string[];
     protected allExternalTypes = new Set<string>();
     protected profilesByType = new Map<string, zowe.imperative.IProfileLoaded[]>();
@@ -81,6 +82,21 @@ export class ProfilesCache {
     public static requireKeyring(this: void): NodeModule {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-var-requires
         return require("@zowe/secrets-for-zowe-sdk").keyring;
+    }
+
+    public addToConfigArray(extendermetadata: zowe.imperative.ICommandProfileTypeConfiguration[]): void {
+        extendermetadata?.forEach((item) => {
+            const index = this.profileTypeConfigurations.findIndex((ele) => ele.type == item.type);
+            if (index !== -1) {
+                this.profileTypeConfigurations[index] = item;
+            } else {
+                this.profileTypeConfigurations.push(item);
+            }
+        });
+    }
+
+    public getConfigArray(): zowe.imperative.ICommandProfileTypeConfiguration[] {
+        return this.profileTypeConfigurations;
     }
 
     public async getProfileInfo(_envTheia = false): Promise<zowe.imperative.ProfileInfo> {
@@ -185,7 +201,7 @@ export class ProfilesCache {
                 return;
             }
             const allTypes = this.getAllProfileTypes(apiRegister.registeredApiTypes());
-            allTypes.push("base");
+            allTypes.push("ssh", "base");
             for (const type of allTypes) {
                 const tmpAllProfiles: zowe.imperative.IProfileLoaded[] = [];
                 // Step 1: Get all profiles for each registered type
