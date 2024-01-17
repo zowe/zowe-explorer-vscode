@@ -1309,7 +1309,7 @@ export class Profiles extends ProfilesCache {
             if (
                 serviceProfile.type !== "zosmf" &&
                 serviceProfile.profile != null &&
-                !serviceProfile.profile.tokenType.startsWith(zowe.imperative.SessConstants.TOKEN_TYPE_APIML)
+                !serviceProfile.profile.tokenType?.startsWith(zowe.imperative.SessConstants.TOKEN_TYPE_APIML)
             ) {
                 await ZoweExplorerApiRegister.getInstance()
                     .getCommonApi(serviceProfile)
