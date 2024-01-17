@@ -29,7 +29,10 @@
     "resources"
   ],
   "activationEvents": [
-    "onStartupFinished"
+    "onStartupFinished",
+    "onFileSystem:zowe-ds",
+    "onFileSystem:zowe-uss",
+    "onFileSystem:zowe-jobs"
   ],
   "main": "./out/src/extension",
   "browser": "./out/src/web/extension",
