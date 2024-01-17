@@ -79,7 +79,7 @@ describe("FtpUssApi", () => {
         expect(UssUtils.downloadFile).toBeCalledTimes(1);
         expect(UssApi.releaseConnection).toBeCalled();
 
-        expect(response._readableState.buffer.head.data.toString()).toContain("Hello world");
+        expect((response._readableState.buffer.head?.data ?? response._readableState.buffer).toString()).toContain("Hello world");
     });
 
     const mockUssFileParams = {
