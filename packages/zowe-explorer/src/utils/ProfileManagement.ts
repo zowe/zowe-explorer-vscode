@@ -14,18 +14,10 @@ import * as globals from "../globals";
 import { Gui, IZoweTreeNode, imperative } from "@zowe/zowe-explorer-api";
 import { ZoweLogger } from "./LoggerUtils";
 import { ProfilesUtils } from "./ProfilesUtils";
-import * as nls from "vscode-nls";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { getSessionType } from "../shared/context";
 import { TreeProviders } from "../shared/TreeProviders";
-
-// Set up localization
-nls.config({
-    messageFormat: nls.MessageFormat.bundle,
-    bundleFormat: nls.BundleFormat.standalone,
-})();
-const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 export class ProfileManagement {
     public static getRegisteredProfileNameList(registeredTree: globals.Trees): string[] {
@@ -82,65 +74,65 @@ export class ProfileManagement {
     };
     public static basicAuthAddQpItems: Record<string, vscode.QuickPickItem> = {
         [this.AuthQpLabels.add]: {
-            label: localize("addBasicAuthQpItem.addCredentials.qpLabel", "$(plus) Add Credentials"),
-            description: localize("addBasicAuthQpItem.addCredentials.qpDetail", "Add username and password for basic authentication"),
+            label: vscode.l10n.t("$(plus) Add Credentials"),
+            description: vscode.l10n.t("Add username and password for basic authentication"),
         },
     };
     public static basicAuthUpdateQpItems: Record<string, vscode.QuickPickItem> = {
         [this.AuthQpLabels.update]: {
-            label: localize("updateBasicAuthQpItem.updateCredentials.qpLabel", "$(refresh) Update Credentials"),
-            description: localize("updateBasicAuthQpItem.updateCredentials.qpDetail", "Update stored username and password"),
+            label: vscode.l10n.t("$(refresh) Update Credentials"),
+            description: vscode.l10n.t("Update stored username and password"),
         },
     };
     public static deleteProfileQpItem: Record<string, vscode.QuickPickItem> = {
         [this.AuthQpLabels.delete]: {
-            label: localize("deleteProfileQpItem.delete.qpLabel", "$(trash) Delete Profile"),
+            label: vscode.l10n.t("$(trash) Delete Profile"),
         },
     };
     public static disableProfileValildationQpItem: Record<string, vscode.QuickPickItem> = {
         [this.AuthQpLabels.disable]: {
-            label: localize("disableProfileValildationQpItem.disableValidation.qpLabel", "$(workspace-untrusted) Disable Profile Validation"),
-            description: localize("disableProfileValildationQpItem.disableValidation.qpDetail", "Disable validation of server check for profile"),
+            label: vscode.l10n.t("$(workspace-untrusted) Disable Profile Validation"),
+            description: vscode.l10n.t("Disable validation of server check for profile"),
         },
     };
     public static enableProfileValildationQpItem: Record<string, vscode.QuickPickItem> = {
         [this.AuthQpLabels.enable]: {
-            label: localize("enableProfileValildationQpItem.enableValidation.qpLabel", "$(workspace-trusted) Enable Profile Validation"),
-            description: localize("enableProfileValildationQpItem.enableValidation.qpDetail", "Enable validation of server check for profile"),
+            label: vscode.l10n.t("$(workspace-trusted) Enable Profile Validation"),
+            description: vscode.l10n.t("Enable validation of server check for profile"),
         },
     };
     public static editProfileQpItems: Record<string, vscode.QuickPickItem> = {
         [this.AuthQpLabels.edit]: {
-            label: localize("editProfileQpItem.editProfile.qpLabel", "$(pencil) Edit Profile"),
-            description: localize("editProfileQpItem.editProfile.qpDetail", "Update profile connection information"),
+            label: vscode.l10n.t("$(pencil) Edit Profile"),
+            description: vscode.l10n.t("Update profile connection information"),
         },
     };
     public static hideProfileQpItems: Record<string, vscode.QuickPickItem> = {
         [this.AuthQpLabels.hide]: {
-            label: localize("hideProfileQpItems.hideProfile.qpLabel", "$(eye-closed) Hide Profile"),
-            description: localize("hideProfileQpItems.hideProfile.qpDetail", "Hide profile name from tree view"),
+            label: vscode.l10n.t("$(eye-closed) Hide Profile"),
+            description: vscode.l10n.t("Hide profile name from tree view"),
         },
     };
     public static tokenAuthLoginQpItem: Record<string, vscode.QuickPickItem> = {
         [this.AuthQpLabels.login]: {
-            label: localize("loginQpItem.login.qpLabel", "$(arrow-right) Log in to authentication service"),
-            description: localize("loginQpItem.login.qpDetail", "Log in to obtain a new token value"),
+            label: vscode.l10n.t("$(arrow-right) Log in to authentication service"),
+            description: vscode.l10n.t("Log in to obtain a new token value"),
         },
     };
     public static tokenAuthLogoutQpItem: Record<string, vscode.QuickPickItem> = {
         [this.AuthQpLabels.logout]: {
-            label: localize("logoutQpItem.logout.qpLabel", "$(arrow-left) Log out of authentication service"),
-            description: localize("logoutQpItem.logout.qpDetail", "Log out to invalidate and remove stored token value"),
+            label: vscode.l10n.t("$(arrow-left) Log out of authentication service"),
+            description: vscode.l10n.t("Log out to invalidate and remove stored token value"),
         },
     };
     public static getPromptChangeForAllTreesOptions(): vscode.QuickPickItem[] {
         const qpItemAll: vscode.QuickPickItem = {
-            label: localize("ProfileManagement.getPromptChangeForAllTreesOptions.allLbl", "Yes"),
-            description: localize("ProfileManagement.getPromptChangeForAllTreesOptions.allDesc", "Apply to all trees"),
+            label: vscode.l10n.t("Yes"),
+            description: vscode.l10n.t("Apply to all trees"),
         };
         const qpItemCurrent: vscode.QuickPickItem = {
-            label: localize("ProfileManagement.getPromptChangeForAllTreesOptions.currentLbl", "No"),
-            description: localize("ProfileManagement.getPromptChangeForAllTreesOptions.currentDesc", "Apply to current tree selected"),
+            label: vscode.l10n.t("No"),
+            description: vscode.l10n.t("Apply to current tree selected"),
         };
         return [qpItemAll, qpItemCurrent];
     }
@@ -158,7 +150,7 @@ export class ProfileManagement {
             return qpItemCurrent;
         }
         const qp = Gui.createQuickPick();
-        qp.placeholder = localize("ProfileManagement.promptChangeForAllTrees.howToChange", "Do you wish to apply this for all trees?");
+        qp.placeholder = vscode.l10n.t("Do you wish to apply this for all trees?");
         qp.items = [qpItemAll, qpItemCurrent];
         qp.activeItems = [qp.items[0]];
         qp.show();
@@ -235,7 +227,7 @@ export class ProfileManagement {
                 break;
             }
             default: {
-                Gui.infoMessage(localize("profiles.operation.cancelled", "Operation Cancelled"));
+                Gui.infoMessage(vscode.l10n.t("Operation Cancelled"));
                 break;
             }
         }
@@ -243,13 +235,21 @@ export class ProfileManagement {
 
     private static getQpPlaceholders(profile: imperative.IProfileLoaded): { basicAuth: string; tokenAuth: string; chooseAuth: string } {
         return {
-            basicAuth: localize("qpPlaceholders.qp.basic", "Profile {0} is using basic authentication. Choose a profile action.", profile.name),
-            tokenAuth: localize("qpPlaceholders.qp.token", "Profile {0} is using token authentication. Choose a profile action.", profile.name),
-            chooseAuth: localize(
-                "qpPlaceholders.qp.choose",
-                "Profile {0} doesn't specify an authentication method. Choose a profile action.",
-                profile.name
-            ),
+            basicAuth: vscode.l10n.t({
+                message: "Profile {0} is using basic authentication. Choose a profile action.",
+                args: [profile.name],
+                comment: ["Profile name"],
+            }),
+            tokenAuth: vscode.l10n.t({
+                message: "Profile {0} is using token authentication. Choose a profile action.",
+                args: [profile.name],
+                comment: ["Profile name"],
+            }),
+            chooseAuth: vscode.l10n.t({
+                message: "Profile {0} doesn't specify an authentication method. Choose a profile action.",
+                args: [profile.name],
+                comment: ["Profile name"],
+            }),
         };
     }
 
@@ -300,7 +300,7 @@ export class ProfileManagement {
     private static async handleHideProfiles(node: IZoweTreeNode): Promise<void> {
         const shouldHideFromAllTrees = await this.handleChangeForAllTrees(node.getLabel().toString(), false);
         if (shouldHideFromAllTrees === undefined) {
-            Gui.infoMessage(localize("ProfileManagement.handleHideProfiles.cancelled", "Operation Cancelled"));
+            Gui.infoMessage(vscode.l10n.t("Operation Cancelled"));
             return;
         }
         const type: string = getSessionType(node);

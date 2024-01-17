@@ -2,4 +2,3 @@ node_modules/**/*
 results/**/*
 out/**/*
 *.config.js
-gulpfile.js

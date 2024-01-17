@@ -17,15 +17,7 @@ import { IZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { errorHandling } from "../utils/ProfilesUtils";
 import { PersistentFilters } from "../PersistentFilters";
-import * as nls from "vscode-nls";
 import { ZoweLogger } from "../utils/LoggerUtils";
-
-// Set up localization
-nls.config({
-    messageFormat: nls.MessageFormat.bundle,
-    bundleFormat: nls.BundleFormat.standalone,
-})();
-const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 export class ZoweCommandProvider {
     // eslint-disable-next-line no-magic-numbers
@@ -78,11 +70,12 @@ export class ZoweCommandProvider {
             }
 
             await errorHandling(
-                localize(
-                    "validateProfiles.invalid",
-                    "Profile Name {0} is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct.",
-                    profile.name
-                )
+                vscode.l10n.t({
+                    message:
+                        "Profile Name {0} is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct.",
+                    args: [profile.name],
+                    comment: ["Profile name"],
+                })
             );
         } else if (profileStatus.status === "active") {
             if (

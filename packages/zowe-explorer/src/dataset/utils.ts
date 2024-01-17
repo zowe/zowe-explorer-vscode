@@ -10,25 +10,18 @@
  */
 
 import * as globals from "../globals";
-import * as nls from "vscode-nls";
+import * as vscode from "vscode";
 import { IZoweNodeType } from "@zowe/zowe-explorer-api";
 import { ZoweLogger } from "../utils/LoggerUtils";
 
-// Set up localization
-nls.config({
-    messageFormat: nls.MessageFormat.bundle,
-    bundleFormat: nls.BundleFormat.standalone,
-})();
-const localize: nls.LocalizeFunc = nls.loadMessageBundle();
-
 export const DATASET_SORT_OPTS = [
-    localize("ds.sortByName", "$(case-sensitive) Name (default)"),
-    localize("ds.sortByModified", "$(calendar) Date Modified"),
-    localize("ds.sortByUserId", "$(account) User ID"),
-    localize("setSortDirection", "$(fold) Sort Direction"),
+    vscode.l10n.t("$(case-sensitive) Name (default)"),
+    vscode.l10n.t("$(calendar) Date Modified"),
+    vscode.l10n.t("$(account) User ID"),
+    vscode.l10n.t("$(fold) Sort Direction"),
 ];
 
-export const DATASET_FILTER_OPTS = [localize("ds.sortByModified", "$(calendar) Date Modified"), localize("ds.sortByUserId", "$(account) User ID")];
+export const DATASET_FILTER_OPTS = [vscode.l10n.t("$(calendar) Date Modified"), vscode.l10n.t("$(account) User ID")];
 
 export function getProfileAndDataSetName(node: IZoweNodeType): {
     profileName: string;

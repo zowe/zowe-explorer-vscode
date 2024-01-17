@@ -12,22 +12,15 @@
 import { JobSortOpts } from "@zowe/zowe-explorer-api";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { FilterItem } from "../utils/ProfilesUtils";
-import * as nls from "vscode-nls";
 import { IJob } from "@zowe/cli";
-
-// Set up localization
-nls.config({
-    messageFormat: nls.MessageFormat.bundle,
-    bundleFormat: nls.BundleFormat.standalone,
-})();
-const localize: nls.LocalizeFunc = nls.loadMessageBundle();
+import * as vscode from "vscode";
 
 export const JOB_SORT_OPTS = [
-    localize("jobs.sortById", "$(list-ordered) Job ID (default)"),
-    localize("jobs.sortByDateSubmitted", "$(calendar) Date Submitted"),
-    localize("jobs.sortByName", "$(case-sensitive) Job Name"),
-    localize("jobs.sortByReturnCode", "$(symbol-numeric) Return Code"),
-    localize("setSortDirection", "$(fold) Sort Direction"),
+    vscode.l10n.t("$(list-ordered) Job ID (default)"),
+    vscode.l10n.t("$(calendar) Date Submitted"),
+    vscode.l10n.t("$(case-sensitive) Job Name"),
+    vscode.l10n.t("$(symbol-numeric) Return Code"),
+    vscode.l10n.t("$(fold) Sort Direction"),
 ];
 
 export const JOB_SORT_KEYS: Record<JobSortOpts, keyof (IJob & { "exec-submitted": string })> = {
@@ -37,10 +30,7 @@ export const JOB_SORT_KEYS: Record<JobSortOpts, keyof (IJob & { "exec-submitted"
     [JobSortOpts.ReturnCode]: "retcode",
 };
 
-export const JOB_FILTER_OPTS = [
-    localize("filterJobs.quickpick.message", "Go to Local Filtering"),
-    localize("filter.clearForProfile", "$(clear-all) Clear filter for profile"),
-];
+export const JOB_FILTER_OPTS = [vscode.l10n.t("Go to Local Filtering"), vscode.l10n.t("$(clear-all) Clear filter for profile")];
 
 export async function resolveQuickPickHelper(quickpick): Promise<FilterItem | undefined> {
     ZoweLogger.trace("job.utils.resolveQuickPickHelper called.");

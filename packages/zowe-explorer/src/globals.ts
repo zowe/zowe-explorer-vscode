@@ -13,18 +13,10 @@ import * as path from "path";
 import { imperative } from "@zowe/cli";
 import * as vscode from "vscode";
 
-// Set up localization
-import * as nls from "vscode-nls";
 import { getZoweDir, IZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { SettingsConfig } from "./utils/SettingsConfig";
 import { ZoweLogger } from "./utils/LoggerUtils";
 export { ZoweLogger } from "./utils/LoggerUtils";
-
-nls.config({
-    messageFormat: nls.MessageFormat.bundle,
-    bundleFormat: nls.BundleFormat.standalone,
-})();
-const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 // Globals
 export let SETTINGS_TEMP_FOLDER_LOCATION;
@@ -144,109 +136,109 @@ export const DATA_SET_PROPERTIES = [
         key: `alcunit`,
         label: `Allocation Unit`,
         value: null,
-        placeHolder: localize("createFile.attribute.alcunit", `Enter an allocation unit`),
+        placeHolder: vscode.l10n.t(`Enter an allocation unit`),
     },
     {
         key: `avgblk`,
         label: `Average Block Length`,
         value: null,
         type: `number`,
-        placeHolder: localize("createFile.attribute.avgblk", `Enter the average block length (if allocation unit = BLK)`),
+        placeHolder: vscode.l10n.t(`Enter the average block length (if allocation unit = BLK)`),
     },
     {
         key: `blksize`,
         label: `Block Size`,
         value: null,
         type: `number`,
-        placeHolder: localize("createFile.attribute.blksize", `Enter a block size`),
+        placeHolder: vscode.l10n.t(`Enter a block size`),
     },
     {
         key: `dataclass`,
         label: `Data Class`,
         value: null,
-        placeHolder: localize("createFile.attribute.dataclass", `Enter an SMS data class`),
+        placeHolder: vscode.l10n.t(`Enter an SMS data class`),
     },
     {
         key: `unit`,
         label: `Device Type`,
         value: null,
-        placeHolder: localize("createFile.attribute.unit", `Enter a device type (unit)`),
+        placeHolder: vscode.l10n.t(`Enter a device type (unit)`),
     },
     {
         key: `dirblk`,
         label: `Directory Blocks`,
         value: null,
         type: `number`,
-        placeHolder: localize("createFile.attribute.dirblk", `Enter the number of directory blocks`),
+        placeHolder: vscode.l10n.t(`Enter the number of directory blocks`),
     },
     {
         key: `dsntype`,
         label: `Data Set Type (DSNTYPE)`,
         value: null,
-        placeHolder: localize("createFile.attribute.dsntype", `Specify the data set type (DSNTYPE)`),
+        placeHolder: vscode.l10n.t(`Specify the data set type (DSNTYPE)`),
     },
     {
         key: `mgntclass`,
         label: `Management Class`,
         value: null,
-        placeHolder: localize("createFile.attribute.mgntclass", `Enter the SMS management class`),
+        placeHolder: vscode.l10n.t(`Enter the SMS management class`),
     },
     {
         key: `dsName`,
         label: `Data Set Name`,
         value: null,
-        placeHolder: localize("createFile.attribute.dsName", `Enter a data set name`),
+        placeHolder: vscode.l10n.t(`Enter a data set name`),
     },
     {
         key: `dsorg`,
         label: `Data Set Organization (DSORG)`,
         value: null,
-        placeHolder: localize("createFile.attribute.dsorg", `Select a data set organization (DSORG)`),
+        placeHolder: vscode.l10n.t(`Select a data set organization (DSORG)`),
     },
     {
         key: `primary`,
         label: `Primary Space`,
         value: null,
         type: `number`,
-        placeHolder: localize("createFile.attribute.primary", `Enter the primary space allocation`),
+        placeHolder: vscode.l10n.t(`Enter the primary space allocation`),
     },
     {
         key: `recfm`,
         label: `Record Format`,
         value: null,
-        placeHolder: localize("createFile.attribute.recfm", `Enter the data set's record format`),
+        placeHolder: vscode.l10n.t(`Enter the data set's record format`),
     },
     {
         key: `lrecl`,
         label: `Record Length`,
         value: null,
         type: `number`,
-        placeHolder: localize("createFile.attribute.lrecl", `Enter the logical record length`),
+        placeHolder: vscode.l10n.t(`Enter the logical record length`),
     },
     {
         key: `secondary`,
         label: `Secondary Space`,
         value: null,
         type: `number`,
-        placeHolder: localize("createFile.attribute.secondary", `Enter the secondary space allocation`),
+        placeHolder: vscode.l10n.t(`Enter the secondary space allocation`),
     },
     {
         key: `size`,
         label: `Size`,
         value: null,
-        placeHolder: localize("createFile.attribute.size", `Enter the size of the data set`),
+        placeHolder: vscode.l10n.t(`Enter the size of the data set`),
     },
     {
         key: `storclass`,
         label: `Storage Class`,
         value: null,
-        placeHolder: localize("createFile.attribute.storclass", `Enter the SMS storage class`),
+        placeHolder: vscode.l10n.t(`Enter the SMS storage class`),
     },
     {
         key: `volser`,
         label: `Volume Serial`,
         value: null,
-        placeHolder: localize("createFile.attribute.volser", `Enter the volume serial on which the data set should be placed`),
+        placeHolder: vscode.l10n.t(`Enter the volume serial on which the data set should be placed`),
     },
 ];
 
@@ -294,8 +286,8 @@ export enum JobPickerTypes {
 
 export const SEPARATORS = {
     BLANK: { kind: vscode.QuickPickItemKind.Separator, label: "" },
-    RECENT_FILTERS: { kind: vscode.QuickPickItemKind.Separator, label: localize("zowe.separator.recentFilters", "Recent Filters") },
-    OPTIONS: { kind: vscode.QuickPickItemKind.Separator, label: localize("zowe.separator.options", "Options") },
+    RECENT_FILTERS: { kind: vscode.QuickPickItemKind.Separator, label: vscode.l10n.t(`Recent Filters`) },
+    OPTIONS: { kind: vscode.QuickPickItemKind.Separator, label: vscode.l10n.t(`Options`) },
 };
 
 /**
@@ -311,13 +303,19 @@ export function defineGlobals(tempPath: string | undefined): void {
         vscode.env.uiKind === vscode.UIKind.Web
     ) {
         ISTHEIA = true;
-        ZoweLogger.info(localize("globals.defineGlobals.isTheia", "Zowe Explorer is running in Theia environment."));
+        ZoweLogger.info(vscode.l10n.t(`Zowe Explorer is running in Theia environment.`));
     }
 
     SETTINGS_TEMP_FOLDER_LOCATION = tempPath;
     // Set temp path & folder paths
     ZOWETEMPFOLDER = tempPath ? path.join(tempPath, "temp") : path.join(__dirname, "..", "..", "resources", "temp");
-    ZoweLogger.info(localize("globals.defineGlobals.tempFolder", "Zowe Explorer's temp folder is located at {0}", ZOWETEMPFOLDER));
+    ZoweLogger.info(
+        vscode.l10n.t({
+            message: `Zowe Explorer's temp folder is located at {0}`,
+            args: [ZOWETEMPFOLDER],
+            comment: ["Zowe temp folder"],
+        })
+    );
     ZOWE_TMP_FOLDER = path.join(ZOWETEMPFOLDER, "tmp");
     USS_DIR = path.join(ZOWETEMPFOLDER, "_U_");
     DS_DIR = path.join(ZOWETEMPFOLDER, "_D_");
@@ -333,7 +331,7 @@ export function setConfigPath(configPath: string | undefined): void {
 
 export function setActivated(value: boolean): void {
     if (value) {
-        ZoweLogger.info(localize("globals.setActivated.success", "Zowe Explorer has activated successfully."));
+        ZoweLogger.info(vscode.l10n.t(`Zowe Explorer has activated successfully.`));
     }
     ACTIVATED = value;
 }
@@ -355,10 +353,10 @@ export async function setGlobalSecurityValue(credentialManager?: string): Promis
     }
     if (!settingEnabled) {
         PROFILE_SECURITY = false;
-        ZoweLogger.info(localize("globals.setGlobalSecurityValue.unsecured", "Zowe explorer profiles are being set as unsecured."));
+        ZoweLogger.info(vscode.l10n.t(`Zowe explorer profiles are being set as unsecured.`));
     } else {
         PROFILE_SECURITY = ZOWE_CLI_SCM;
-        ZoweLogger.info(localize("globals.setGlobalSecurityValue.secured", "Zowe explorer profiles are being set as secured."));
+        ZoweLogger.info(vscode.l10n.t(`Zowe explorer profiles are being set as secured.`));
     }
 }
 

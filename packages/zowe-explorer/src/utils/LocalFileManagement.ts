@@ -17,17 +17,9 @@ import { markDocumentUnsaved } from "./workspace";
 import { isTypeUssTreeNode } from "../shared/context";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { ZoweLogger } from "./LoggerUtils";
-import * as nls from "vscode-nls";
 import { LocalFileInfo, isZoweDatasetTreeNode, isZoweUSSTreeNode } from "../shared/utils";
 import { downloadPs } from "../dataset/actions";
 import { downloadUnixFile } from "../uss/actions";
-
-// Set up localization
-nls.config({
-    messageFormat: nls.MessageFormat.bundle,
-    bundleFormat: nls.BundleFormat.standalone,
-})();
-const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 export class LocalFileManagement {
     public static getDefaultUri(): vscode.Uri {
@@ -69,7 +61,7 @@ export class LocalFileManagement {
                 responseTimeout: prof.profile?.responseTimeout,
             });
         }
-        ZoweLogger.warn(localize("saveFile.etagMismatch.log.warning", "Remote file has changed. Presenting with way to resolve file."));
+        ZoweLogger.warn(vscode.l10n.t("Remote file has changed. Presenting with way to resolve file."));
         vscode.commands.executeCommand("workbench.files.action.compareWithSaved");
         // re-assign etag, so that it can be used with subsequent requests
         const downloadEtag = downloadResponse?.apiResponse?.etag;
@@ -124,7 +116,7 @@ export class LocalFileManagement {
                 break;
             }
             default: {
-                ZoweLogger.warn(localize("getCompareFilePaths.treeNodeCheck.fail", "Something went wrong with compare of files."));
+                ZoweLogger.warn(vscode.l10n.t("Something went wrong with compare of files."));
             }
         }
         return fileInfo;

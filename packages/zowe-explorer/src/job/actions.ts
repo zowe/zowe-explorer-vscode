@@ -16,7 +16,6 @@ import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { Gui, IZoweTree, IZoweJobTreeNode, JobSortOpts } from "@zowe/zowe-explorer-api";
 import { Job, Spool } from "./ZoweJobNode";
-import * as nls from "vscode-nls";
 import SpoolProvider, { encodeJobFile, getSpoolFiles, matchSpool } from "../SpoolProvider";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { LocalFileManagement } from "../utils/LocalFileManagement";
@@ -25,13 +24,6 @@ import { ZosJobsProvider } from "./ZosJobsProvider";
 import { JOB_SORT_OPTS } from "./utils";
 import * as globals from "../globals";
 import { TreeProviders } from "../shared/TreeProviders";
-
-// Set up localization
-nls.config({
-    messageFormat: nls.MessageFormat.bundle,
-    bundleFormat: nls.BundleFormat.standalone,
-})();
-const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 /**
  * Download all the spool content for the specified job.
@@ -42,7 +34,7 @@ export async function downloadSpool(jobs: IZoweJobTreeNode[], binary?: boolean):
     ZoweLogger.trace("job.actions.downloadSpool called.");
     try {
         const dirUri = await Gui.showOpenDialog({
-            openLabel: localize("downloadSpool.select", "Select"),
+            openLabel: vscode.l10n.t("Select"),
             canSelectFolders: true,
             canSelectFiles: false,
             canSelectMany: false,
@@ -72,15 +64,10 @@ export async function downloadSingleSpool(nodes: IZoweJobTreeNode[], binary?: bo
     ZoweLogger.trace("job.actions.downloadSingleSpool called.");
     try {
         if (ZoweExplorerApiRegister.getJesApi(nodes[0].getProfile()).downloadSingleSpool == null) {
-            throw Error(
-                localize(
-                    "downloadSingleSpool.error",
-                    "Download Single Spool operation not implemented by extender. Please contact the extension developer(s)."
-                )
-            );
+            throw Error(vscode.l10n.t("Download Single Spool operation not implemented by extender. Please contact the extension developer(s)."));
         }
         const dirUri = await Gui.showOpenDialog({
-            openLabel: localize("downloadSpool.select", "Select"),
+            openLabel: vscode.l10n.t("Select"),
             canSelectFolders: true,
             canSelectFiles: false,
             canSelectMany: false,
@@ -121,7 +108,13 @@ export async function getSpoolContent(session: string, spoolNode: Spool): Promis
         return;
     }
 
-    const statusMsg = Gui.setStatusBarMessage(localize("jobActions.openSpoolFile", "$(sync~spin) Opening spool file...", this.label as string));
+    const statusMsg = Gui.setStatusBarMessage(
+        vscode.l10n.t({
+            message: "$(sync~spin) Opening spool file...",
+            args: [this.label as string],
+            comment: ["Label"],
+        })
+    );
     const uri = encodeJobFile(session, spoolNode.spool);
     try {
         const spoolFile = SpoolProvider.files[uri.path];
@@ -151,7 +144,13 @@ export async function getSpoolContent(session: string, spoolNode: Spool): Promis
  * @param doc The document to update, associated with the spool file
  */
 export async function spoolFilePollEvent(doc: vscode.TextDocument): Promise<void> {
-    const statusMsg = Gui.setStatusBarMessage(localize("zowe.polling.statusBar", `$(sync~spin) Polling: {0}...`, doc.fileName));
+    const statusMsg = Gui.setStatusBarMessage(
+        vscode.l10n.t({
+            message: `$(sync~spin) Polling: {0}...`,
+            args: [doc.fileName],
+            comment: ["Document file name"],
+        })
+    );
     await SpoolProvider.files[doc.uri.path].fetchContent();
     setTimeout(() => {
         statusMsg.dispose();
@@ -160,7 +159,7 @@ export async function spoolFilePollEvent(doc: vscode.TextDocument): Promise<void
 
 export async function getSpoolContentFromMainframe(node: IZoweJobTreeNode): Promise<void> {
     ZoweLogger.trace("job.actions.getSpoolContentFromMainframe called.");
-    const statusMsg = await Gui.setStatusBarMessage(localize("jobActions.fetchSpoolFile", "$(sync~spin) Fetching spool files..."));
+    const statusMsg = await Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Fetching spool files..."));
     const spools = await getSpoolFiles(node);
     for (const spool of spools) {
         if (matchSpool(spool, node)) {
@@ -266,21 +265,27 @@ export async function modifyCommand(job: Job): Promise<void> {
     ZoweLogger.trace("job.actions.modifyCommand called.");
     try {
         const options: vscode.InputBoxOptions = {
-            prompt: localize("modifyCommand.inputBox.prompt", "Modify Command"),
+            prompt: vscode.l10n.t("Modify Command"),
         };
         const command = await Gui.showInputBox(options);
         if (command !== undefined) {
             const commandApi = ZoweExplorerApiRegister.getInstance().getCommandApi(job.getProfile());
             if (commandApi) {
                 const response = await ZoweExplorerApiRegister.getCommandApi(job.getProfile()).issueMvsCommand(`f ${job.job.jobname},${command}`);
-                Gui.showMessage(localize("jobActions.modifyCommand.response", "Command response: ") + response.commandResponse);
+                Gui.showMessage(
+                    vscode.l10n.t({
+                        message: "Command response: {0}",
+                        args: [response.commandResponse],
+                        comment: ["Command response"],
+                    })
+                );
             }
         }
     } catch (error) {
         if (error.toString().includes("non-existing")) {
             ZoweLogger.error(error);
             Gui.errorMessage(
-                localize("jobActions.modifyCommand.apiNonExisting", "Not implemented yet for profile of type: ") + job.getProfile().type
+                vscode.l10n.t("jobActions.modifyCommand.apiNonExisting", "Not implemented yet for profile of type: ") + job.getProfile().type
             );
         } else {
             await errorHandling(error, job.getProfile().name);
@@ -299,12 +304,24 @@ export async function stopCommand(job: Job): Promise<void> {
         const commandApi = ZoweExplorerApiRegister.getInstance().getCommandApi(job.getProfile());
         if (commandApi) {
             const response = await ZoweExplorerApiRegister.getCommandApi(job.getProfile()).issueMvsCommand(`p ${job.job.jobname}`);
-            Gui.showMessage(localize("jobActions.stopCommand.response", "Command response: ") + response.commandResponse);
+            Gui.showMessage(
+                vscode.l10n.t({
+                    message: "Command response: {0}",
+                    args: [response.commandResponse],
+                    comment: ["Command response"],
+                })
+            );
         }
     } catch (error) {
         if (error.toString().includes("non-existing")) {
             ZoweLogger.error(error);
-            Gui.errorMessage(localize("jobActions.stopCommand.apiNonExisting", "Not implemented yet for profile of type: ") + job.getProfile().type);
+            Gui.errorMessage(
+                vscode.l10n.t({
+                    message: "Not implemented yet for profile of type: {0}",
+                    args: [job.getProfile().type],
+                    comment: ["Job profile type"],
+                })
+            );
         } else {
             await errorHandling(error, job.getProfile().name);
         }
@@ -321,7 +338,7 @@ export async function stopCommand(job: Job): Promise<void> {
 export async function setOwner(job: IZoweJobTreeNode, jobsProvider: IZoweTree<IZoweJobTreeNode>): Promise<void> {
     ZoweLogger.trace("job.actions.setOwner called.");
     const options: vscode.InputBoxOptions = {
-        prompt: localize("setOwner.inputBox.prompt", "Owner"),
+        prompt: vscode.l10n.t("Owner"),
     };
     const newOwner = await Gui.showInputBox(options);
     job.owner = newOwner;
@@ -337,7 +354,7 @@ export async function setOwner(job: IZoweJobTreeNode, jobsProvider: IZoweTree<IZ
 export async function setPrefix(job: IZoweJobTreeNode, jobsProvider: IZoweTree<IZoweJobTreeNode>): Promise<void> {
     ZoweLogger.trace("job.actions.setPrefix called.");
     const options: vscode.InputBoxOptions = {
-        prompt: localize("setPrefix.inputBox.prompt", "Prefix"),
+        prompt: vscode.l10n.t("Prefix"),
     };
     const newPrefix = await Gui.showInputBox(options);
     job.prefix = newPrefix;
@@ -372,25 +389,31 @@ export async function deleteCommand(jobsProvider: IZoweTree<IZoweJobTreeNode>, j
 async function deleteSingleJob(job: IZoweJobTreeNode, jobsProvider: IZoweTree<IZoweJobTreeNode>): Promise<void> {
     ZoweLogger.trace("job.actions.deleteSingleJob called.");
     const jobName = `${job.job.jobname}(${job.job.jobid})`;
-    const message = localize(
-        "deleteJobPrompt.confirmation.message",
-        "Are you sure you want to delete the following item?\nThis will permanently remove the following job from your system.\n\n{0}",
-        jobName.replace(/(,)/g, "\n")
-    );
-    const deleteButton = localize("deleteJobPrompt.confirmation.delete", "Delete");
+    const message = vscode.l10n.t({
+        message: "Are you sure you want to delete the following item?\nThis will permanently remove the following job from your system.\n\n{0}",
+        args: [jobName.replace(/(,)/g, "\n")],
+        comment: ["Job name"],
+    });
+    const deleteButton = vscode.l10n.t("Delete");
     const result = await Gui.warningMessage(message, {
         items: [deleteButton],
         vsCodeOpts: { modal: true },
     });
     if (!result || result === "Cancel") {
-        ZoweLogger.debug(localize("deleteJobPrompt.confirmation.cancel.log.debug", "Delete action was canceled."));
-        Gui.showMessage(localize("deleteJobPrompt.deleteCancelled", "Delete action was cancelled."));
+        ZoweLogger.debug(vscode.l10n.t("Delete action was canceled."));
+        Gui.showMessage(vscode.l10n.t("Delete action was cancelled."));
         return;
     }
 
     try {
         await jobsProvider.delete(job);
-        Gui.infoMessage(localize("deleteCommand.job", "Job {0} was deleted.", jobName));
+        Gui.infoMessage(
+            vscode.l10n.t({
+                message: "Job {0} was deleted.",
+                args: [jobName],
+                comment: ["Job name"],
+            })
+        );
     } catch (error) {
         await errorHandling(error, job.getProfile().name);
     }
@@ -398,21 +421,20 @@ async function deleteSingleJob(job: IZoweJobTreeNode, jobsProvider: IZoweTree<IZ
 
 async function deleteMultipleJobs(jobs: ReadonlyArray<IZoweJobTreeNode>, jobsProvider: IZoweTree<IZoweJobTreeNode>): Promise<void> {
     ZoweLogger.trace("job.actions.deleteMultipleJobs called.");
-    const deleteButton = localize("deleteJobPrompt.confirmation.delete", "Delete");
+    const deleteButton = vscode.l10n.t("Delete");
     const toJobname = (jobNode: IZoweJobTreeNode): string => `${jobNode.job.jobname}(${jobNode.job.jobid})`;
-    const message = localize(
-        "deleteJobPrompt.confirmation.message",
-        "Are you sure you want to delete the following {0} items?\nThis will permanently remove the following jobs from your system.\n\n{1}",
-        jobs.length,
-        jobs.map(toJobname).toString().replace(/(,)/g, "\n")
-    );
+    const message = vscode.l10n.t({
+        message: "Are you sure you want to delete the following {0} items?\nThis will permanently remove the following jobs from your system.\n\n{1}",
+        args: [jobs.length, jobs.map(toJobname).toString().replace(/(,)/g, "\n")],
+        comment: ["Jobs length", "Job names"],
+    });
     const deleteChoice = await Gui.warningMessage(message, {
         items: [deleteButton],
         vsCodeOpts: { modal: true },
     });
     if (!deleteChoice || deleteChoice === "Cancel") {
-        ZoweLogger.debug(localize("deleteJobPrompt.confirmation.cancel.log.debug", "Delete action was canceled."));
-        Gui.showMessage(localize("deleteJobPrompt.deleteCancelled", "Delete action was cancelled."));
+        ZoweLogger.debug(vscode.l10n.t("Delete action was canceled."));
+        Gui.showMessage(vscode.l10n.t("Delete action was cancelled."));
         return;
     }
     const deletionResult: ReadonlyArray<IZoweJobTreeNode | Error> = await Promise.all(
@@ -440,11 +462,11 @@ async function deleteMultipleJobs(jobs: ReadonlyArray<IZoweJobTreeNode>, jobsPro
         .filter((result) => result !== undefined);
     if (deletedJobs.length) {
         Gui.showMessage(
-            localize(
-                "deleteCommand.multipleJobs",
-                "The following jobs were deleted: {0}",
-                deletedJobs.map(toJobname).toString().replace(/(,)/g, ", ")
-            )
+            vscode.l10n.t({
+                message: "The following jobs were deleted: {0}",
+                args: [deletedJobs.map(toJobname).toString().replace(/(,)/g, ", ")],
+                comment: ["Deleted jobs"],
+            })
         );
     }
     const deletionErrors: ReadonlyArray<Error> = deletionResult
@@ -473,7 +495,7 @@ export async function cancelJobs(jobsProvider: IZoweTree<IZoweJobTreeNode>, node
         (n) => n.job == null || n.job.retcode == null || !(n.job.retcode.includes("CANCEL") || n.job.retcode?.includes("ABEND"))
     );
     if (!filteredNodes.length) {
-        await Gui.showMessage(localize("cancelJobs.alreadyCancelled", "The selected jobs were already cancelled."));
+        await Gui.showMessage(vscode.l10n.t("The selected jobs were already cancelled."));
         return;
     }
 
@@ -495,7 +517,7 @@ export async function cancelJobs(jobsProvider: IZoweTree<IZoweJobTreeNode>, node
         if (!jesApis[sesLabel].cancelJob) {
             failedJobs.push({
                 job: jobNode.job,
-                error: localize("cancelJobs.notImplemented", "The cancel function is not implemented in this API."),
+                error: vscode.l10n.t("The cancel function is not implemented in this API."),
             });
             continue;
         }
@@ -503,7 +525,7 @@ export async function cancelJobs(jobsProvider: IZoweTree<IZoweJobTreeNode>, node
         try {
             const cancelled = await jesApis[sesLabel].cancelJob(jobNode.job);
             if (!cancelled) {
-                failedJobs.push({ job: jobNode.job, error: localize("cancelJobs.notCancelled", "The job was not cancelled.") });
+                failedJobs.push({ job: jobNode.job, error: vscode.l10n.t("The job was not cancelled.") });
             } else if (!sessionNodes.includes(sesNode)) {
                 setImmediate(() => {
                     jobsProvider.refreshElement(sesNode);
@@ -520,17 +542,17 @@ export async function cancelJobs(jobsProvider: IZoweTree<IZoweJobTreeNode>, node
     if (failedJobs.length > 0) {
         // Display any errors from the API
         await Gui.warningMessage(
-            localize(
-                "cancelJobs.failed",
-                "One or more jobs failed to cancel: {0}",
-                failedJobs.reduce((prev, j) => prev.concat(`\n${j.job.jobname}(${j.job.jobid}): ${j.error}`), "\n")
-            ),
+            vscode.l10n.t({
+                message: "One or more jobs failed to cancel: {0}",
+                args: [failedJobs.reduce((prev, j) => prev.concat(`\n${j.job.jobname}(${j.job.jobid}): ${j.error}`), "\n")],
+                comment: ["Failed to cancel jobs"],
+            }),
             {
                 vsCodeOpts: { modal: true },
             }
         );
     } else {
-        await Gui.showMessage(localize("cancelJobs.succeeded", "Cancelled selected jobs successfully."));
+        await Gui.showMessage(vscode.l10n.t("Cancelled selected jobs successfully."));
     }
 }
 export async function sortJobs(session: IZoweJobTreeNode, jobsProvider: ZosJobsProvider): Promise<void> {
@@ -540,15 +562,19 @@ export async function sortJobs(session: IZoweJobTreeNode, jobsProvider: ZosJobsP
             description: i === JOB_SORT_OPTS.length - 1 ? SORT_DIRS[session.sort.direction] : null,
         })),
         {
-            placeHolder: localize("jobs.selectSortOpt", "Select a sorting option for jobs in {0}", session.label as string),
+            placeHolder: vscode.l10n.t({
+                message: "Select a sorting option for jobs in {0}",
+                args: [session.label as string],
+                comment: ["Session label"],
+            }),
         }
     );
     if (selection == null) {
         return;
     }
-    if (selection.label === localize("setSortDirection", "$(fold) Sort Direction")) {
+    if (selection.label === vscode.l10n.t("$(fold) Sort Direction")) {
         const dir = await Gui.showQuickPick(SORT_DIRS, {
-            placeHolder: localize("sort.selectDirection", "Select a sorting direction"),
+            placeHolder: vscode.l10n.t("Select a sorting direction"),
         });
         if (dir != null) {
             session.sort = {
@@ -562,5 +588,12 @@ export async function sortJobs(session: IZoweJobTreeNode, jobsProvider: ZosJobsP
 
     session.sort.method = JOB_SORT_OPTS.indexOf(selection.label.replace(" $(check)", ""));
     jobsProvider.sortBy(session);
-    Gui.setStatusBarMessage(localize("sort.updated", "$(check) Sorting updated for {0}", session.label as string), globals.MS_PER_SEC * 4);
+    Gui.setStatusBarMessage(
+        vscode.l10n.t({
+            message: "$(check) Sorting updated for {0}",
+            args: [session.label as string],
+            comment: ["Session label"],
+        }),
+        globals.MS_PER_SEC * 4
+    );
 }

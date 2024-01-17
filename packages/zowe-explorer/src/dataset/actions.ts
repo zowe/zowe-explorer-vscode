@@ -38,14 +38,6 @@ import { ZoweLogger } from "../utils/LoggerUtils";
 import { promiseStatus, PromiseStatuses } from "promise-status-async";
 import { ProfileManagement } from "../utils/ProfileManagement";
 import { LocalFileManagement } from "../utils/LocalFileManagement";
-// Set up localization
-import * as nls from "vscode-nls";
-
-nls.config({
-    messageFormat: nls.MessageFormat.bundle,
-    bundleFormat: nls.BundleFormat.standalone,
-})();
-const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 let typeEnum: zowe.CreateDataSetTypeEnum;
 // Make a nice new mutable array for the DS properties
@@ -55,16 +47,16 @@ let newDSProperties;
  * Localized strings that are used multiple times within the file
  */
 const localizedStrings = {
-    dsBinary: localize("createFile.dataSetBinary", "Partitioned Data Set: Binary"),
-    dsC: localize("createFile.dataSetC", "Partitioned Data Set: C"),
-    dsClassic: localize("createFile.dataSetClassic", "Partitioned Data Set: Classic"),
-    dsPartitioned: localize("createFile.dataSetPartitioned", "Partitioned Data Set: Default"),
-    dsSequential: localize("createFile.dataSetSequential", "Sequential Data Set"),
-    opCancelled: localize("dsActions.cancelled", "Operation Cancelled"),
-    copyingFiles: localize("dsActions.copy.inProgress", "Copying File(s)"),
-    profileInvalid: localize("dsActions.profileInvalid", "Profile is invalid, check connection details."),
-    allocString: localize("dsActions.allocate", "Allocate Data Set"),
-    editString: localize("dsActions.editAttributes", "Edit Attributes"),
+    dsBinary: vscode.l10n.t("Partitioned Data Set: Binary"),
+    dsC: vscode.l10n.t("Partitioned Data Set: C"),
+    dsClassic: vscode.l10n.t("Partitioned Data Set: Classic"),
+    dsPartitioned: vscode.l10n.t("Partitioned Data Set: Default"),
+    dsSequential: vscode.l10n.t("Sequential Data Set"),
+    opCancelled: vscode.l10n.t("Operation Cancelled"),
+    copyingFiles: vscode.l10n.t("Copying File(s)"),
+    profileInvalid: vscode.l10n.t("Profile is invalid, check connection details."),
+    allocString: vscode.l10n.t("Allocate Data Set"),
+    editString: vscode.l10n.t("Edit Attributes"),
 };
 
 /**
@@ -81,7 +73,7 @@ export async function allocateLike(datasetProvider: api.IZoweTree<api.IZoweDatas
         // The user must choose a session
         const qpItems = [];
         const quickpick = api.Gui.createQuickPick();
-        quickpick.placeholder = localize("allocateLike.options.prompt", "Select the profile to which the original data set belongs");
+        quickpick.placeholder = vscode.l10n.t("Select the profile to which the original data set belongs");
         quickpick.ignoreFocusOut = true;
 
         for (const thisSession of datasetProvider.mSessionNodes) {
@@ -94,7 +86,7 @@ export async function allocateLike(datasetProvider: api.IZoweTree<api.IZoweDatas
         quickpick.show();
         const selection = await api.Gui.resolveQuickPick(quickpick);
         if (!selection) {
-            api.Gui.showMessage(localize("allocateLike.noSelection", "You must select a profile."));
+            api.Gui.showMessage(vscode.l10n.t("You must select a profile."));
             return;
         } else {
             ZoweLogger.trace(`${selection?.toString()} was profile chosen to allocate a data set.`);
@@ -107,15 +99,15 @@ export async function allocateLike(datasetProvider: api.IZoweTree<api.IZoweDatas
         const currSelection = datasetProvider.getTreeView().selection.length > 0 ? datasetProvider.getTreeView().selection[0].label : null;
         const inputBoxOptions: vscode.InputBoxOptions = {
             ignoreFocusOut: true,
-            placeHolder: localize("allocateLike.inputBox.placeHolder", "Enter the name of the data set to copy attributes from"),
+            placeHolder: vscode.l10n.t("Enter the name of the data set to copy attributes from"),
             value: currSelection as string,
             validateInput: (text) => {
-                return dsUtils.validateDataSetName(text) === true ? null : localize("dataset.validation", "Enter a valid data set name.");
+                return dsUtils.validateDataSetName(text) === true ? null : vscode.l10n.t("Enter a valid data set name.");
             },
         };
         likeDSName = await api.Gui.showInputBox(inputBoxOptions);
         if (!likeDSName) {
-            api.Gui.showMessage(localize("allocateLike.noNewName", "You must enter a new data set name."));
+            api.Gui.showMessage(vscode.l10n.t("You must enter a new data set name."));
             return;
         }
         ZoweLogger.trace(`${likeDSName} was entered to use attributes for new data set.`);
@@ -124,19 +116,25 @@ export async function allocateLike(datasetProvider: api.IZoweTree<api.IZoweDatas
         profile = node.getProfile();
         likeDSName = node.label.toString().replace(/\[.*\]: /g, "");
     }
-    ZoweLogger.info(localize("allocateLike.logger.info1", "Allocating data set like {0}.", likeDSName));
+    ZoweLogger.info(
+        vscode.l10n.t({
+            message: "Allocating data set like {0}.",
+            args: [likeDSName],
+            comment: ["Like Data Set name"],
+        })
+    );
 
     // Get new data set name
     const options: vscode.InputBoxOptions = {
         ignoreFocusOut: true,
-        placeHolder: localize("allocateLike.inputBox.placeHolder", "Enter a name for the new data set"),
+        placeHolder: vscode.l10n.t("allocateLike.inputBox.placeHolder", "Enter a name for the new data set"),
         validateInput: (text) => {
-            return dsUtils.validateDataSetName(text) === true ? null : localize("dataset.validation", "Enter a valid data set name.");
+            return dsUtils.validateDataSetName(text) === true ? null : vscode.l10n.t("Enter a valid data set name.");
         },
     };
     const newDSName = await api.Gui.showInputBox(options);
     if (!newDSName) {
-        api.Gui.showMessage(localize("allocateLike.noNewName", "You must enter a new data set name."));
+        api.Gui.showMessage(vscode.l10n.t("You must enter a new data set name."));
         return;
     } else {
         ZoweLogger.trace(`${newDSName} was entered for the name of the new data set.`);
@@ -145,7 +143,7 @@ export async function allocateLike(datasetProvider: api.IZoweTree<api.IZoweDatas
             await ZoweExplorerApiRegister.getMvsApi(profile).allocateLikeDataSet(newDSName.toUpperCase(), likeDSName);
         } catch (err) {
             if (err instanceof Error) {
-                await errorHandling(err, newDSName, localize("createDataSet.error", "Unable to create data set."));
+                await errorHandling(err, newDSName, vscode.l10n.t("Unable to create data set."));
             }
             throw err;
         }
@@ -165,7 +163,13 @@ export async function allocateLike(datasetProvider: api.IZoweTree<api.IZoweDatas
     const newNode = (await currSession.getChildren()).find((child) => child.label.toString() === newDSName.toUpperCase());
     await datasetProvider.getTreeView().reveal(currSession, { select: true, focus: true });
     datasetProvider.getTreeView().reveal(newNode, { select: true, focus: true });
-    ZoweLogger.info(localize("allocateLike.logger.info2", "{0} was created like {0}.", newDSName, likeDSName));
+    ZoweLogger.info(
+        vscode.l10n.t({
+            message: "{0} was created like {1}.",
+            args: [newDSName, likeDSName],
+            comment: ["New Data Set name", "Like Data Set name"],
+        })
+    );
 }
 
 export async function uploadDialog(node: ZoweDatasetNode, datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>): Promise<void> {
@@ -181,14 +185,14 @@ export async function uploadDialog(node: ZoweDatasetNode, datasetProvider: api.I
         await api.Gui.withProgress(
             {
                 location: vscode.ProgressLocation.Notification,
-                title: localize("uploadFile.response.upload.title", "Uploading to data set"),
+                title: vscode.l10n.t("Uploading to data set"),
                 cancellable: true,
             },
             async (progress, token) => {
                 let index = 0;
                 for (const item of value) {
                     if (token.isCancellationRequested) {
-                        api.Gui.showMessage(localize("uploadFile.uploadCancelled", "Upload action was cancelled."));
+                        api.Gui.showMessage(vscode.l10n.t("Upload action was cancelled."));
                         break;
                     }
                     api.Gui.reportProgress(progress, value.length, index, "Uploading");
@@ -286,7 +290,7 @@ export async function deleteDatasetPrompt(datasetProvider: api.IZoweTree<api.IZo
 
     // Check that there are items to be deleted
     if (!nodes || nodes.length === 0) {
-        api.Gui.showMessage(localize("deleteDatasetPrompt.nodesToDelete.empty", "No data sets selected for deletion, cancelling..."));
+        api.Gui.showMessage(vscode.l10n.t("No data sets selected for deletion, cancelling..."));
         return;
     }
 
@@ -316,15 +320,19 @@ export async function deleteDatasetPrompt(datasetProvider: api.IZoweTree<api.IZo
     });
 
     // Confirm that the user really wants to delete
-    ZoweLogger.debug(localize("deleteDatasetPrompt.deleting", "Deleting data set(s): {0}", nodesToDelete.join(",")));
-    const deleteButton = localize("deleteDatasetPrompt.delete.button", "Delete");
-    const message = localize(
-        "deleteDatasetPrompt.delete.message",
-        // eslint-disable-next-line max-len
-        `Are you sure you want to delete the following {0} item(s)?\nThis will permanently remove these data sets and/or members from your system.\n\n{1}`,
-        nodesToDelete.length,
-        nodesToDelete.toString().replace(/(,)/g, "\n")
+    ZoweLogger.debug(
+        vscode.l10n.t({
+            message: "Deleting data set(s): {0}",
+            args: [nodesToDelete.join(",")],
+            comment: ["Data Sets to delete"],
+        })
     );
+    const deleteButton = vscode.l10n.t("Delete");
+    const message = vscode.l10n.t({
+        message: `Are you sure you want to delete the following {0} item(s)?\nThis will permanently remove these data sets and/or members from your system.\n\n{1}`,
+        args: [nodesToDelete.length, nodesToDelete.toString().replace(/(,)/g, "\n")],
+        comment: ["Data Sets to delete length", "Data Sets to delete"],
+    });
     await api.Gui.warningMessage(message, {
         items: [deleteButton],
         vsCodeOpts: { modal: true },
@@ -352,7 +360,7 @@ export async function deleteDatasetPrompt(datasetProvider: api.IZoweTree<api.IZo
         await api.Gui.withProgress(
             {
                 location: vscode.ProgressLocation.Notification,
-                title: localize("deleteDatasetPrompt.deleteCounter", "Deleting items"),
+                title: vscode.l10n.t("Deleting items"),
                 cancellable: true,
             },
             async (progress, token) => {
@@ -378,7 +386,11 @@ export async function deleteDatasetPrompt(datasetProvider: api.IZoweTree<api.IZo
     if (nodesDeleted.length > 0) {
         nodesDeleted.sort();
         api.Gui.showMessage(
-            localize("deleteDatasetPrompt.success", "The following {0} item(s) were deleted:{1}", nodesDeleted.length, nodesDeleted.toString())
+            vscode.l10n.t({
+                message: "The following {0} item(s) were deleted: {1}",
+                args: [nodesDeleted.length, nodesDeleted.toString()],
+                comment: ["Data Sets deleted length", "Data Sets deleted"],
+            })
         );
     }
 
@@ -399,13 +411,19 @@ export async function deleteDatasetPrompt(datasetProvider: api.IZoweTree<api.IZo
 export async function createMember(parent: api.IZoweDatasetTreeNode, datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>): Promise<void> {
     ZoweLogger.trace("dataset.actions.createMember called.");
     const options: vscode.InputBoxOptions = {
-        placeHolder: localize("createMember.inputBox.placeholder", "Name of Member"),
+        placeHolder: vscode.l10n.t("Name of Member"),
         validateInput: (text) => {
-            return dsUtils.validateMemberName(text) === true ? null : localize("createMember.member.validation", "Enter valid member name");
+            return dsUtils.validateMemberName(text) === true ? null : vscode.l10n.t("Enter valid member name");
         },
     };
     const name = await api.Gui.showInputBox(options);
-    ZoweLogger.debug(localize("createMember.creating", "Creating new data set member {0}", name));
+    ZoweLogger.debug(
+        vscode.l10n.t({
+            message: "Creating new data set member {0}",
+            args: [name],
+            comment: ["Data Set member name"],
+        })
+    );
     if (name) {
         const label = parent.label as string;
         const profile = parent.getProfile();
@@ -415,7 +433,7 @@ export async function createMember(parent: api.IZoweDatasetTreeNode, datasetProv
             });
         } catch (err) {
             if (err instanceof Error) {
-                await errorHandling(err, label, localize("createMember.error", "Unable to create member."));
+                await errorHandling(err, label, vscode.l10n.t("Unable to create member."));
             }
             throw err;
         }
@@ -494,7 +512,7 @@ export async function openPS(
 
 export async function downloadPs(node: api.IZoweDatasetTreeNode): Promise<LocalFileInfo> {
     const fileInfo = {} as LocalFileInfo;
-    const defaultMessage = localize("openPS.error", "Invalid data set or member.");
+    const defaultMessage = vscode.l10n.t("Invalid data set or member.");
     switch (true) {
         // For favorited or non-favorited sequential DS:
         case contextually.isFavorite(node):
@@ -521,8 +539,14 @@ export async function downloadPs(node: api.IZoweDatasetTreeNode): Promise<LocalF
 
 async function downloadPsApiCall(node: api.IZoweDatasetTreeNode, documentFilePath: string, label: string): Promise<any> {
     const prof = node.getProfile();
-    ZoweLogger.info(localize("dsActions.downloadPS.downloading.log", "Downloading {0}", label));
-    const statusMsg = api.Gui.setStatusBarMessage(localize("dsActions.downloadPS.downloading.message", "$(sync~spin) Downloading data set..."));
+    ZoweLogger.info(
+        vscode.l10n.t({
+            message: "Downloading {0}",
+            args: [label],
+            comment: ["Label"],
+        })
+    );
+    const statusMsg = api.Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Downloading data set..."));
     try {
         const response = await ZoweExplorerApiRegister.getMvsApi(prof).getContents(label, {
             file: documentFilePath,
@@ -607,7 +631,7 @@ export async function createFile(node: api.IZoweDatasetTreeNode, datasetProvider
     }
     if (choice.includes(localizedStrings.allocString)) {
         // User wants to allocate straightaway - skip Step 4
-        const allocMsg = localize("createFile.allocatingNewDataSet", "Allocating new data set");
+        const allocMsg = vscode.l10n.t("Allocating new data set");
         ZoweLogger.debug(allocMsg);
         api.Gui.showMessage(allocMsg);
     } else {
@@ -618,7 +642,7 @@ export async function createFile(node: api.IZoweDatasetTreeNode, datasetProvider
             api.Gui.showMessage(localizedStrings.opCancelled);
             return;
         }
-        ZoweLogger.debug(localize("createFile.allocatingNewDataSet", "Attempting to allocate new data set"));
+        ZoweLogger.debug(vscode.l10n.t("Attempting to allocate new data set"));
     }
     const isMatch = compareDsProperties(type, datasetProvider);
     // Format properties for use by API
@@ -653,7 +677,7 @@ async function handleUserSelection(): Promise<string> {
 
     // Provide the settings for the quickpick's appearance & behavior
     const quickpick = api.Gui.createQuickPick();
-    quickpick.placeholder = localize("handleUserSelection.qp.prompt", "Click on parameters to change them");
+    quickpick.placeholder = vscode.l10n.t("Click on parameters to change them");
     quickpick.ignoreFocusOut = true;
     quickpick.items = [...qpItems];
     quickpick.matchOnDescription = false;
@@ -693,10 +717,10 @@ async function handleUserSelection(): Promise<string> {
 
 async function getDataSetName(): Promise<string> {
     const options: vscode.InputBoxOptions = {
-        placeHolder: localize("createFile.inputBox.placeHolder", "Name of Data Set"),
+        placeHolder: vscode.l10n.t("Name of Data Set"),
         ignoreFocusOut: true,
         validateInput: (text) => {
-            return dsUtils.validateDataSetName(text) === true ? null : localize("dataset.validation", "Enter valid dataset name");
+            return dsUtils.validateDataSetName(text) === true ? null : vscode.l10n.t("Enter valid dataset name");
         },
     };
     let dsName = await api.Gui.showInputBox(options);
@@ -709,7 +733,7 @@ async function getDataSetName(): Promise<string> {
 
 async function getDsTypeForCreation(datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>): Promise<string> {
     const stepTwoOptions: vscode.QuickPickOptions = {
-        placeHolder: localize("createFile.quickPickOption.dataSetType", "Template of Data Set to be Created"),
+        placeHolder: vscode.l10n.t("Template of Data Set to be Created"),
         ignoreFocusOut: true,
         canPickMany: false,
     };
@@ -832,7 +856,7 @@ async function allocateNewDataSet(
         // Show newly-created data set in expanded tree view
         await focusOnNewDs(node, dsName, datasetProvider, theFilter);
     } catch (err) {
-        const errorMsg = localize("allocateNewDataSet.error", "Error encountered when creating data set.");
+        const errorMsg = vscode.l10n.t("Error encountered when creating data set.");
         ZoweLogger.error(errorMsg + JSON.stringify(err));
         if (err instanceof Error) {
             await errorHandling(err, node.getProfileName(), errorMsg);
@@ -870,7 +894,7 @@ async function saveDsTemplate(datasetProvider: api.IZoweTree<api.IZoweDatasetTre
     }).then(async (selection) => {
         if (selection) {
             const options: vscode.InputBoxOptions = {
-                placeHolder: localize("saveDsTemplate.inputBox.placeHolder", "Name of Data Set Template"),
+                placeHolder: vscode.l10n.t("Name of Data Set Template"),
                 ignoreFocusOut: true,
             };
             const templateName = await vscode.window.showInputBox(options);
@@ -899,7 +923,13 @@ export async function showAttributes(node: api.IZoweDatasetTreeNode, datasetProv
     await datasetProvider.checkCurrentProfile(node);
     if (Profiles.getInstance().validProfile !== api.ValidProfileEnum.INVALID) {
         const label = node.label as string;
-        ZoweLogger.debug(localize("showAttributes.show", "Showing attributes for {0}.", label));
+        ZoweLogger.debug(
+            vscode.l10n.t({
+                message: "Showing attributes for {0}.",
+                args: [label],
+                comment: ["Label"],
+            })
+        );
         let attributes: any;
         try {
             const nodeProfile = node.getProfile();
@@ -923,16 +953,22 @@ export async function showAttributes(node: api.IZoweDatasetTreeNode, datasetProv
                 });
             }
             if (attributes.length === 0) {
-                throw new Error(localize("showAttributes.lengthError", "No matching names found for query: {0}", label));
+                throw new Error(
+                    vscode.l10n.t({
+                        message: "No matching names found for query: {0}",
+                        args: [label],
+                        comment: ["Label"],
+                    })
+                );
             }
         } catch (err) {
             if (err instanceof Error) {
-                await errorHandling(err, node.getProfileName(), localize("showAttributes.error", "Unable to list attributes."));
+                await errorHandling(err, node.getProfileName(), vscode.l10n.t("Unable to list attributes."));
             }
             throw err;
         }
 
-        const attributesMessage = localize("attributes.title", "Attributes");
+        const attributesMessage = vscode.l10n.t("Attributes");
         const webviewHTML = `<!DOCTYPE html>
         <html lang="en">
         <head>
@@ -959,7 +995,7 @@ export async function showAttributes(node: api.IZoweDatasetTreeNode, datasetProv
         </html>`;
         const panel: vscode.WebviewPanel = api.Gui.createWebviewPanel({
             viewType: "zowe",
-            title: label + " " + localize("attributes.title", "Attributes"),
+            title: label + " " + vscode.l10n.t("Attributes"),
             showOptions: vscode.window.activeTextEditor ? vscode.window.activeTextEditor.viewColumn : 1,
         });
         panel.webview.html = webviewHTML;
@@ -976,10 +1012,7 @@ export async function showAttributes(node: api.IZoweDatasetTreeNode, datasetProv
 export async function submitJcl(datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>, file?: vscode.Uri): Promise<void> {
     ZoweLogger.trace("dataset.actions.submitJcl called.");
     if (!vscode.window.activeTextEditor && !file) {
-        const notActiveEditorMsg = localize(
-            "submitJcl.notActiveEditorMsg",
-            "No editor with a document that could be submitted as JCL is currently open."
-        );
+        const notActiveEditorMsg = vscode.l10n.t("No editor with a document that could be submitted as JCL is currently open.");
         api.Gui.errorMessage(notActiveEditorMsg);
         ZoweLogger.error(notActiveEditorMsg);
         return;
@@ -989,7 +1022,13 @@ export async function submitJcl(datasetProvider: api.IZoweTree<api.IZoweDatasetT
         await vscode.commands.executeCommand("filesExplorer.openFilePreserveFocus", file);
     }
     const doc = vscode.window.activeTextEditor.document;
-    ZoweLogger.debug(localize("submitJcl.submitting", "Submitting as JCL in document {0}", doc.fileName));
+    ZoweLogger.debug(
+        vscode.l10n.t({
+            message: "Submitting as JCL in document {0}",
+            args: [doc.fileName],
+            comment: ["Document file name"],
+        })
+    );
 
     // prompts for job submit confirmation when submitting local JCL from editor/palette
     // no node passed in, ownsJob is true because local file is always owned by userID, passes in local file name
@@ -1006,7 +1045,7 @@ export async function submitJcl(datasetProvider: api.IZoweTree<api.IZoweDatasetT
         const profileNamesList = ProfileManagement.getRegisteredProfileNameList(globals.Trees.JES);
         if (profileNamesList.length) {
             const quickPickOptions: vscode.QuickPickOptions = {
-                placeHolder: localize("submitJcl.qp.placeholder", "Select the Profile to use to submit the job"),
+                placeHolder: vscode.l10n.t("Select the Profile to use to submit the job"),
                 ignoreFocusOut: true,
                 canPickMany: false,
             };
@@ -1016,7 +1055,7 @@ export async function submitJcl(datasetProvider: api.IZoweTree<api.IZoweDatasetT
                 return;
             }
         } else {
-            api.Gui.showMessage(localize("submitJcl.noProfile", "No profiles available"));
+            api.Gui.showMessage(vscode.l10n.t("No profiles available"));
         }
     } else {
         sessProfileName = regExp[1];
@@ -1036,7 +1075,7 @@ export async function submitJcl(datasetProvider: api.IZoweTree<api.IZoweDatasetT
         sessProfile = profiles.loadNamedProfile(sessProfileName);
     }
     if (sessProfile == null) {
-        ZoweLogger.error(localize("submitJcl.nullSession.error", "Session for submitting JCL was null or undefined!"));
+        ZoweLogger.error(vscode.l10n.t("Session for submitting JCL was null or undefined!"));
         return;
     }
     await Profiles.getInstance().checkCurrentProfile(sessProfile);
@@ -1045,11 +1084,23 @@ export async function submitJcl(datasetProvider: api.IZoweTree<api.IZoweDatasetT
             const job = await ZoweExplorerApiRegister.getJesApi(sessProfile).submitJcl(doc.getText());
             const args = [sessProfileName, job.jobid];
             const setJobCmd = `command:zowe.jobs.setJobSpool?${encodeURIComponent(JSON.stringify(args))}`;
-            api.Gui.showMessage(localize("submitJcl.jobSubmitted", "Job submitted ") + `[${job.jobid}](${setJobCmd})`);
-            ZoweLogger.info(localize("submitJcl.jobSubmitted", "Job submitted {0} using profile {1}.", job.jobid, sessProfileName));
+            api.Gui.showMessage(
+                vscode.l10n.t({
+                    message: "Job submitted {0}",
+                    args: [`[${job.jobid}](${setJobCmd})`],
+                    comment: ["Job ID and set job command"],
+                })
+            );
+            ZoweLogger.info(
+                vscode.l10n.t({
+                    message: "Job submitted {0} using profile {1}.",
+                    args: [job.jobid, sessProfileName],
+                    comment: ["Job ID", "Profile name"],
+                })
+            );
         } catch (error) {
             if (error instanceof Error) {
-                await errorHandling(error, sessProfileName, localize("submitJcl.jobSubmissionFailed", "Job submission failed."));
+                await errorHandling(error, sessProfileName, vscode.l10n.t("Job submission failed."));
             }
         }
     } else {
@@ -1071,8 +1122,15 @@ export async function confirmJobSubmission(nodeOrFileName: api.IZoweTreeNode | s
 
     const showConfirmationDialog = async (): Promise<boolean> => {
         const selection = await api.Gui.warningMessage(
-            localize("confirmJobSubmission.confirm", "Are you sure you want to submit the following job?\n\n{0}", jclName),
-            { items: [{ title: "Submit" }], vsCodeOpts: { modal: true } }
+            vscode.l10n.t({
+                message: "Are you sure you want to submit the following job?\n\n{0}",
+                args: [jclName],
+                comment: ["JCL name"],
+            }),
+            {
+                items: [{ title: "Submit" }],
+                vsCodeOpts: { modal: true },
+            }
         );
         return selection != null && selection?.title === "Submit";
     };
@@ -1125,7 +1183,7 @@ export async function submitMember(node: api.IZoweTreeNode): Promise<void> {
     }
 
     if (Profiles.getInstance().validProfile !== api.ValidProfileEnum.INVALID) {
-        const defaultMessage = localize("submitMember.invalidNode.error", "Cannot submit, item invalid.");
+        const defaultMessage = vscode.l10n.t("Cannot submit, item invalid.");
         switch (true) {
             // For favorited or non-favorited sequential DS:
             case contextually.isFavorite(node):
@@ -1149,11 +1207,23 @@ export async function submitMember(node: api.IZoweTreeNode): Promise<void> {
             const job = await ZoweExplorerApiRegister.getJesApi(sessProfile).submitJob(label);
             const args = [sesName, job.jobid];
             const setJobCmd = `command:zowe.jobs.setJobSpool?${encodeURIComponent(JSON.stringify(args))}`;
-            api.Gui.showMessage(localize("submitMember.jobSubmitted", "Job submitted ") + `[${job.jobid}](${setJobCmd})`);
-            ZoweLogger.info(localize("submitMember.success", "Job submitted {0} using profile {1}.", job.jobid, sesName));
+            api.Gui.showMessage(
+                vscode.l10n.t({
+                    message: "Job submitted {0}",
+                    args: [`[${job.jobid}](${setJobCmd})`],
+                    comment: ["Job ID and set job command"],
+                })
+            );
+            ZoweLogger.info(
+                vscode.l10n.t({
+                    message: "Job submitted {0} using profile {1}.",
+                    args: [job.jobid, sesName],
+                    comment: ["Job ID", "Session name"],
+                })
+            );
         } catch (error) {
             if (error instanceof Error) {
-                await errorHandling(error, sesName, localize("submitMember.jobSubmissionFailed", "Job submission failed."));
+                await errorHandling(error, sesName, vscode.l10n.t("Job submission failed."));
             }
         }
     }
@@ -1185,7 +1255,7 @@ export async function deleteDataset(node: api.IZoweTreeNode, datasetProvider: ap
         } else if (parentContext.includes(globals.DS_PDS_CONTEXT)) {
             label = parent.getLabel().toString() + "(" + node.getLabel().toString() + ")";
         } else {
-            throw Error(localize("deleteDataSet.invalidNode.error", "Cannot delete, item invalid."));
+            throw Error(vscode.l10n.t("Cannot delete, item invalid."));
         }
         await datasetProvider.checkCurrentProfile(node);
         if (Profiles.getInstance().validProfile !== api.ValidProfileEnum.INVALID) {
@@ -1195,9 +1265,21 @@ export async function deleteDataset(node: api.IZoweTreeNode, datasetProvider: ap
             return;
         }
     } catch (err) {
-        if (err?.message.includes(localize("deleteDataSet.notFound.error", "not found"))) {
-            ZoweLogger.error(localize("deleteDataSet.error", "Error encountered when deleting data set. {0}", JSON.stringify(err)));
-            api.Gui.showMessage(localize("deleteDataSet.notFound.error", "Unable to find file {0}", label));
+        if (err?.message.includes(vscode.l10n.t("not found"))) {
+            ZoweLogger.error(
+                vscode.l10n.t({
+                    message: "Error encountered when deleting data set. {0}",
+                    args: [JSON.stringify(err)],
+                    comment: ["Stringified JSON error"],
+                })
+            );
+            api.Gui.showMessage(
+                vscode.l10n.t({
+                    message: "Unable to find file {0}",
+                    args: [label],
+                    comment: ["Label"],
+                })
+            );
         } else {
             await errorHandling(err, node.getProfileName());
         }
@@ -1263,7 +1345,7 @@ export async function refreshPS(node: api.IZoweDatasetTreeNode): Promise<void> {
                 label = node.getParent().getLabel().toString() + "(" + node.getLabel().toString() + ")";
                 break;
             default:
-                throw Error(localize("refreshPS.invalidNode.error", "Item invalid."));
+                throw Error(vscode.l10n.t("Item invalid."));
         }
         const documentFilePath = getDocumentFilePath(label, node);
         const prof = node.getProfile();
@@ -1283,9 +1365,21 @@ export async function refreshPS(node: api.IZoweDatasetTreeNode): Promise<void> {
             api.Gui.showTextDocument(document, { preview: false });
         }
     } catch (err) {
-        if (err.message.includes(localize("refreshPS.notFound.error", "not found"))) {
-            ZoweLogger.error(localize("refreshPS.error", "Error encountered when refreshing data set view. {0}", JSON.stringify(err)));
-            api.Gui.showMessage(localize("refreshPS.file", "Unable to find file {0}", label));
+        if (err.message.includes(vscode.l10n.t("not found"))) {
+            ZoweLogger.error(
+                vscode.l10n.t({
+                    message: "Error encountered when refreshing data set view. {0}",
+                    args: [JSON.stringify(err)],
+                    comment: ["Stringified JSON error"],
+                })
+            );
+            api.Gui.showMessage(
+                vscode.l10n.t({
+                    message: "Unable to find file {0}",
+                    args: [label],
+                    comment: ["Label"],
+                })
+            );
         } else {
             await errorHandling(err, node.getProfileName());
         }
@@ -1322,16 +1416,22 @@ export async function enterPattern(node: api.IZoweDatasetTreeNode, datasetProvid
     if (contextually.isSessionNotFav(node)) {
         // manually entering a search
         const options: vscode.InputBoxOptions = {
-            prompt: localize("enterPattern.inputBox.prompt", "Search Data Sets: use a comma to separate multiple patterns"),
+            prompt: vscode.l10n.t("Search Data Sets: use a comma to separate multiple patterns"),
             value: node.pattern,
         };
         // get user input
         pattern = await api.Gui.showInputBox(options);
         if (!pattern) {
-            api.Gui.showMessage(localize("enterPattern.pattern", "You must enter a pattern."));
+            api.Gui.showMessage(vscode.l10n.t("You must enter a pattern."));
             return;
         }
-        ZoweLogger.debug(localize("enterPattern.user.prompted", "Prompted for a data set pattern, recieved {0}.", pattern));
+        ZoweLogger.debug(
+            vscode.l10n.t({
+                message: "Prompted for a data set pattern, recieved {0}.",
+                args: [pattern],
+                comment: ["Data Set pattern"],
+            })
+        );
     } else {
         // executing search from saved search in favorites
         pattern = node.label.toString().substring(node.label.toString().indexOf(":") + 2);
@@ -1385,9 +1485,7 @@ export async function copyDataSets(node, nodeList: ZoweDatasetNode[], datasetPro
 
     const unique = [...new Set(selectedNodes.map((item) => item.contextValue))];
     if (unique.length > 1) {
-        api.Gui.showMessage(
-            localize("copyDataSet.multitype.error", "Cannot perform the copy operation as the data sets selected have different types")
-        );
+        api.Gui.showMessage(vscode.l10n.t("Cannot perform the copy operation as the data sets selected have different types"));
         return;
     }
     if (contextually.isDsMember(selectedNodes[0])) {
@@ -1420,7 +1518,13 @@ export async function hMigrateDataSet(node: ZoweDatasetNode): Promise<zowe.IZosF
         const { dataSetName } = dsUtils.getNodeLabels(node);
         try {
             const response = await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).hMigrateDataSet(dataSetName);
-            api.Gui.showMessage(localize("hMigrateDataSet.requestSent", "Migration of data set {0} requested.", dataSetName));
+            api.Gui.showMessage(
+                vscode.l10n.t({
+                    message: "Migration of data set {0} requested.",
+                    args: [dataSetName],
+                    comment: ["Data Set name"],
+                })
+            );
             return response;
         } catch (err) {
             ZoweLogger.error(err);
@@ -1445,7 +1549,13 @@ export async function hRecallDataSet(node: ZoweDatasetNode): Promise<zowe.IZosFi
         const { dataSetName } = dsUtils.getNodeLabels(node);
         try {
             const response = await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).hRecallDataSet(dataSetName);
-            api.Gui.showMessage(localize("hRecallDataSet.requestSent", "Recall of data set {0} requested.", dataSetName));
+            api.Gui.showMessage(
+                vscode.l10n.t({
+                    message: "Recall of data set {0} requested.",
+                    args: [dataSetName],
+                    comment: ["Data Set name"],
+                })
+            );
             return response;
         } catch (err) {
             ZoweLogger.error(err);
@@ -1476,7 +1586,7 @@ export async function showFileErrorDetails(node: ZoweDatasetNode): Promise<void>
         } else {
             try {
                 await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).hRecallDataSet(dataSetName);
-                api.Gui.errorMessage(localize("showFileErrorDetails.noErrorDetails", "Unable to gather more information"));
+                api.Gui.errorMessage(vscode.l10n.t("Unable to gather more information"));
             } catch (err) {
                 ZoweLogger.error(JSON.stringify(err, null, 2));
                 api.Gui.errorMessage(err.message);
@@ -1509,14 +1619,14 @@ export async function pasteMember(node: api.IZoweDatasetTreeNode, datasetProvide
                 profileName: beforeProfileName,
             } = JSON.parse(await vscode.env.clipboard.readText()));
         } catch (err) {
-            throw Error(localize("pasteMember.paste.error", "Invalid paste. Copy data set(s) first."));
+            throw Error(vscode.l10n.t("Invalid paste. Copy data set(s) first."));
         }
         if (node.contextValue.includes(globals.DS_PDS_CONTEXT)) {
             const inputBoxOptions: vscode.InputBoxOptions = {
                 value: beforeMemberName,
-                placeHolder: localize("pasteMember.inputBox.placeHolder", "Name of Data Set Member"),
+                placeHolder: vscode.l10n.t("Name of Data Set Member"),
                 validateInput: (text) => {
-                    return dsUtils.validateMemberName(text) === true ? null : localize("member.validation", "Enter valid member name");
+                    return dsUtils.validateMemberName(text) === true ? null : vscode.l10n.t("Enter valid member name");
                 },
             };
             memberName = await api.Gui.showInputBox(inputBoxOptions);
@@ -1571,12 +1681,20 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
     ZoweLogger.trace("dataset.actions.saveFile called.");
     // Check if file is a data set, instead of some other file
     const docPath = path.join(doc.fileName, "..");
-    ZoweLogger.debug(localize("saveFile.requestSave", "Requested to save data set {0}", doc.fileName));
+    ZoweLogger.debug(
+        vscode.l10n.t({
+            message: "Requested to save data set {0}",
+            args: [doc.fileName],
+            comment: ["Document file name"],
+        })
+    );
     if (docPath.toUpperCase().indexOf(globals.DS_DIR.toUpperCase()) === -1) {
         ZoweLogger.error(
-            localize("saveFile.log.debug.path", "path.relative returned a non-blank directory.") +
-                localize("saveFile.log.debug.directory", " Assuming we are not in the DS_DIR directory: ") +
-                path.relative(docPath, globals.DS_DIR)
+            vscode.l10n.t({
+                message: "path.relative returned a non-blank directory. Assuming we are not in the DS_DIR directory: {0}",
+                args: [path.relative(docPath, globals.DS_DIR)],
+                comment: ["Relative path to Data Set directory"],
+            })
         );
         return;
     }
@@ -1588,7 +1706,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
     const dataSetName = fileLabel.substring(0, fileLabel.indexOf("("));
     const memberName = fileLabel.substring(fileLabel.indexOf("(") + 1, fileLabel.indexOf(")"));
     if (!profile) {
-        const sessionError = localize("saveFile.session.error", "Could not locate session when saving data set.");
+        const sessionError = vscode.l10n.t("Could not locate session when saving data set.");
         ZoweLogger.error(sessionError);
         await api.Gui.errorMessage(sessionError);
         return;
@@ -1606,7 +1724,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
             : datasetProvider.mSessionNodes.find((child) => child.label.toString().trim() === sesName);
     if (!sesNode) {
         // if saving from favorites, a session might not exist for this node
-        ZoweLogger.debug(localize("saveFile.missingSessionNode", "Could not find session node"));
+        ZoweLogger.debug(vscode.l10n.t("Could not find session node"));
     }
 
     // If not a member
@@ -1615,16 +1733,19 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
         checkForAddedSuffix(doc.fileName) ? doc.fileName.lastIndexOf(".") : doc.fileName.length
     );
     label = label.toUpperCase().trim();
-    ZoweLogger.info(localize("saveFile.saving", "Saving file {0}", label));
+    ZoweLogger.info(
+        vscode.l10n.t({
+            message: "Saving file {0}",
+            args: [label],
+            comment: ["Label"],
+        })
+    );
     const dsname = label.includes("(") ? label.slice(0, label.indexOf("(")) : label;
     try {
         // Checks if file still exists on server
         const response = await ZoweExplorerApiRegister.getMvsApi(profile).dataSet(dsname, { responseTimeout: profile.profile?.responseTimeout });
         if (!response.apiResponse.items.length) {
-            const saveError = localize(
-                "saveFile.saveFailed.error",
-                "Data set failed to save. Data set may have been deleted or renamed on mainframe."
-            );
+            const saveError = vscode.l10n.t("Data set failed to save. Data set may have been deleted or renamed on mainframe.");
             ZoweLogger.error(saveError);
             await api.Gui.errorMessage(saveError);
             return;
@@ -1657,7 +1778,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
         const uploadResponse = await api.Gui.withProgress(
             {
                 location: vscode.ProgressLocation.Window,
-                title: localize("saveFile.progress.title", "Saving data set..."),
+                title: vscode.l10n.t("Saving data set..."),
             },
             () => {
                 return uploadContent(node, doc, label, prof, null, uploadOptions.etag, uploadOptions.returnEtag);
@@ -1692,7 +1813,7 @@ export async function pasteDataSetMembers(datasetProvider: api.IZoweTree<api.IZo
     try {
         clipboardContent = JSON.parse(await vscode.env.clipboard.readText());
     } catch (err) {
-        api.Gui.errorMessage(localize("pasteDataSetMembers.paste.error", "Invalid paste. Copy data set(s) first."));
+        api.Gui.errorMessage(vscode.l10n.t("Invalid paste. Copy data set(s) first."));
         return;
     }
     if (!Array.isArray(clipboardContent) && clipboardContent.memberName) {
@@ -1734,7 +1855,7 @@ export async function downloadDs(node: ZoweDatasetNode): Promise<zowe.IZosFilesR
     ZoweLogger.trace("dataset.actions.downloadDs called.");
     const profile = node.getProfile();
     let lbl: string;
-    const invalidMsg = localize("downloadDs.invalidNode.error", "Cannot download, item invalid.");
+    const invalidMsg = vscode.l10n.t("Cannot download, item invalid.");
     switch (true) {
         case contextually.isFavorite(node):
         case contextually.isSessionNotFav(node.getParent()):
@@ -1768,7 +1889,7 @@ export async function copySequentialDatasets(nodes: ZoweDatasetNode[]): Promise<
         const lbl = node.getLabel().toString();
         const mvsApi = ZoweExplorerApiRegister.getMvsApi(node.getProfile());
         if (mvsApi?.copyDataSet == null) {
-            await api.Gui.errorMessage(localize("copySequentialDatasets.notSupported.error", "Copying data sets is not supported."));
+            await api.Gui.errorMessage(vscode.l10n.t("Copying data sets is not supported."));
         } else {
             await api.Gui.withProgress(
                 {
@@ -1848,8 +1969,8 @@ export async function determineReplacement(nodeProfile: zowe.imperative.IProfile
     ZoweLogger.trace("dataset.actions.determineReplacement called.");
     const mvsApi = ZoweExplorerApiRegister.getMvsApi(nodeProfile);
     const options = { responseTimeout: nodeProfile.profile?.responseTimeout };
-    const stringReplace = localize("copyDataSet.replace.option1", "Replace");
-    const stringCancel = localize("copyDataSet.replace.option2", "Cancel");
+    const stringReplace = vscode.l10n.t("Replace");
+    const stringCancel = vscode.l10n.t("Cancel");
     let q: string = null;
     let replace = false;
     if (type === "mem") {
@@ -1857,19 +1978,16 @@ export async function determineReplacement(nodeProfile: zowe.imperative.IProfile
         const member = name.split("(")[1].slice(0, -1);
         const res = await mvsApi.allMembers(dsname, options);
         if (res?.success && res.apiResponse?.items.some((m) => m.member === member.toUpperCase())) {
-            q = localize("copyDataSet.replace.mem.question", "The data set member already exists.\nDo you want to replace it?");
+            q = vscode.l10n.t("The data set member already exists.\nDo you want to replace it?");
             replace = stringReplace === (await api.Gui.showMessage(q, { items: [stringReplace, stringCancel] }));
         }
     } else {
         const res = await mvsApi.dataSet(name, options);
         if (res?.success && res.apiResponse?.items.length > 0) {
             if (type === "ps") {
-                q = localize("copyDataSet.replace.ps.question", "The physical sequential (PS) data set already exists.\nDo you want to replace it?");
+                q = vscode.l10n.t("The physical sequential (PS) data set already exists.\nDo you want to replace it?");
             } else if (type === "po") {
-                q = localize(
-                    "copyDataSet.replace.po.question",
-                    "The partitioned (PO) data set already exists.\nDo you want to merge them while replacing any existing members?"
-                );
+                q = vscode.l10n.t("The partitioned (PO) data set already exists.\nDo you want to merge them while replacing any existing members?");
             }
             replace = stringReplace === (await api.Gui.showMessage(q, { items: [stringReplace, stringCancel] }));
         }
@@ -1897,13 +2015,11 @@ export async function _copyProcessor(
         try {
             const lbl = node.getLabel().toString();
             const inputBoxOptions: vscode.InputBoxOptions = {
-                prompt: localize("copyProcessor.inputBox.prompt", "Enter a name for the new data set"),
+                prompt: vscode.l10n.t("Enter a name for the new data set"),
                 value: lbl,
-                placeHolder: localize("copyProcessor.inputBox.placeHolder", "Name of Data Set"),
+                placeHolder: vscode.l10n.t("Name of Data Set"),
                 validateInput: (text) => {
-                    return dsUtils.validateDataSetName(text) && (lbl !== text) === true
-                        ? null
-                        : localize("dataset.validation", "Enter a valid data set name.");
+                    return dsUtils.validateDataSetName(text) && (lbl !== text) === true ? null : vscode.l10n.t("Enter a valid data set name.");
                 },
             };
 
@@ -1921,7 +2037,7 @@ export async function _copyProcessor(
             }
         } catch (error) {
             if (error instanceof Error) {
-                await errorHandling(error, dsUtils.getNodeLabels(node).dataSetName, localize("copyDataSet.error", "Unable to copy data set."));
+                await errorHandling(error, dsUtils.getNodeLabels(node).dataSetName, vscode.l10n.t("Unable to copy data set."));
             }
         }
     }

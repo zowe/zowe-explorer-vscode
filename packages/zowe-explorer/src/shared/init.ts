@@ -12,7 +12,6 @@
 import * as globals from "../globals";
 import * as vscode from "vscode";
 import * as refreshActions from "./refresh";
-import * as nls from "vscode-nls";
 import * as sharedActions from "./actions";
 import { getZoweDir, IZoweTree, IZoweTreeNode, EventTypes } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
@@ -35,13 +34,6 @@ import { TreeProviders } from "./TreeProviders";
 import { DatasetTree } from "../dataset/DatasetTree";
 import { USSTree } from "../uss/USSTree";
 import { ZosJobsProvider } from "../job/ZosJobsProvider";
-
-// Set up localization
-nls.config({
-    messageFormat: nls.MessageFormat.bundle,
-    bundleFormat: nls.BundleFormat.standalone,
-})();
-const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 export interface IZoweProviders {
     ds: DatasetTree;
@@ -156,27 +148,26 @@ export function registerCommonCommands(context: vscode.ExtensionContext, provide
         context.subscriptions.push(
             vscode.workspace.onDidSaveTextDocument((savedFile) => {
                 ZoweLogger.debug(
-                    localize(
-                        "onDidSaveTextDocument1",
-                        "File was saved -- determining whether the file is a USS file or Data set.\n Comparing (case insensitive) "
-                    ) +
-                        savedFile.fileName +
-                        localize("onDidSaveTextDocument2", " against directory ") +
-                        globals.DS_DIR +
-                        localize("onDidSaveTextDocument3", "and") +
-                        globals.USS_DIR
+                    vscode.l10n.t({
+                        message: `File was saved -- determining whether the file is a USS file or Data set.
+                        \n Comparing (case insensitive) {0} against directory {1} and {2}`,
+                        args: [savedFile.fileName, globals.DS_DIR, globals.USS_DIR],
+                        comment: ["Saved file name", "Data Set directory", "USS directory"],
+                    })
                 );
                 if (savedFile.fileName.toUpperCase().indexOf(globals.DS_DIR.toUpperCase()) >= 0) {
-                    ZoweLogger.debug(localize("activate.didSaveText.isDataSet", "File is a data set-- saving "));
+                    ZoweLogger.debug(vscode.l10n.t("File is a Data Set-- saving "));
                     ZoweSaveQueue.push({ uploadRequest: saveFile, savedFile, fileProvider: providers.ds });
                 } else if (savedFile.fileName.toUpperCase().indexOf(globals.USS_DIR.toUpperCase()) >= 0) {
-                    ZoweLogger.debug(localize("activate.didSaveText.isUSSFile", "File is a USS file -- saving"));
+                    ZoweLogger.debug(vscode.l10n.t("File is a USS file -- saving"));
                     ZoweSaveQueue.push({ uploadRequest: saveUSSFile, savedFile, fileProvider: providers.uss });
                 } else {
                     ZoweLogger.debug(
-                        localize("activate.didSaveText.file", "File ") +
-                            savedFile.fileName +
-                            localize("activate.didSaveText.notDataSet", " is not a data set or USS file ")
+                        vscode.l10n.t({
+                            message: "File {0} is not a Data Set or USS file",
+                            args: [savedFile.fileName],
+                            comment: ["Saved file name"],
+                        })
                     );
                 }
             })
@@ -272,17 +263,17 @@ export function watchConfigProfile(context: vscode.ExtensionContext, providers: 
 
     watchers.forEach((watcher) => {
         watcher.onDidCreate(async () => {
-            ZoweLogger.info(localize("watchConfigProfile.create", "Team config file created, refreshing Zowe Explorer."));
+            ZoweLogger.info(vscode.l10n.t("Team config file created, refreshing Zowe Explorer."));
             await vscode.commands.executeCommand("zowe.extRefresh");
             ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter.fire(EventTypes.CREATE);
         });
         watcher.onDidDelete(async () => {
-            ZoweLogger.info(localize("watchConfigProfile.delete", "Team config file deleted, refreshing Zowe Explorer."));
+            ZoweLogger.info(vscode.l10n.t("Team config file deleted, refreshing Zowe Explorer."));
             await vscode.commands.executeCommand("zowe.extRefresh");
             ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter.fire(EventTypes.DELETE);
         });
         watcher.onDidChange(async (uri: vscode.Uri) => {
-            ZoweLogger.info(localize("watchConfigProfile.update", "Team config file updated."));
+            ZoweLogger.info(vscode.l10n.t("Team config file updated."));
             const newProfileContents = await vscode.workspace.fs.readFile(uri);
             if (newProfileContents.toString() === globals.SAVED_PROFILE_CONTENTS.toString()) {
                 return;
