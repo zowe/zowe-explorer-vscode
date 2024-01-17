@@ -2642,22 +2642,22 @@
   resolved "https://registry.npmjs.org/@xtuc/long/-/long-4.2.2.tgz"
   integrity sha512-NuHqBY1PB/D8xU6s/thBgOAiAP7HOYDQ32+BFZILJ8ivkUkAHQnWfn6WhL79Owj1qmUnoN/YPhktdIoucipkAQ==
 
-"@zowe/cli@7.21.4":
-  version "7.21.4"
-  resolved "https://registry.npmjs.org/@zowe/cli/-/cli-7.21.4.tgz#83f54f3226369b31ea2a91c6299b94299d4e4151"
-  integrity sha512-Yo4XcPcXi3M/6vo1POQZuQSogWVCDm1XnOUxmduSJFRgWXogZY9OpH6svzpf2am63705jTXbnF3eSeWLPTwryw==
+"@zowe/cli@7.22.0":
+  version "7.22.0"
+  resolved "https://registry.npmjs.org/@zowe/cli/-/cli-7.22.0.tgz#63e648337a1d61aad017748acca7468dc3940a24"
+  integrity sha512-Z+9403u7pPpge+WHAuuMqwSBaWNC+3qw0eL5aIVPgnvGPpQWWN0sL5mOaDo117GN9I1p8ee7tWqwrcll55tP0w==
   dependencies:
-    "@zowe/core-for-zowe-sdk" "7.21.4"
-    "@zowe/imperative" "5.20.2"
-    "@zowe/provisioning-for-zowe-sdk" "7.21.4"
-    "@zowe/zos-console-for-zowe-sdk" "7.21.4"
-    "@zowe/zos-files-for-zowe-sdk" "7.21.4"
-    "@zowe/zos-jobs-for-zowe-sdk" "7.21.4"
-    "@zowe/zos-logs-for-zowe-sdk" "7.21.4"
-    "@zowe/zos-tso-for-zowe-sdk" "7.21.4"
-    "@zowe/zos-uss-for-zowe-sdk" "7.21.4"
-    "@zowe/zos-workflows-for-zowe-sdk" "7.21.4"
-    "@zowe/zosmf-for-zowe-sdk" "7.21.4"
+    "@zowe/core-for-zowe-sdk" "7.22.0"
+    "@zowe/imperative" "5.21.0"
+    "@zowe/provisioning-for-zowe-sdk" "7.22.0"
+    "@zowe/zos-console-for-zowe-sdk" "7.22.0"
+    "@zowe/zos-files-for-zowe-sdk" "7.22.0"
+    "@zowe/zos-jobs-for-zowe-sdk" "7.22.0"
+    "@zowe/zos-logs-for-zowe-sdk" "7.22.0"
+    "@zowe/zos-tso-for-zowe-sdk" "7.22.0"
+    "@zowe/zos-uss-for-zowe-sdk" "7.22.0"
+    "@zowe/zos-workflows-for-zowe-sdk" "7.22.0"
+    "@zowe/zosmf-for-zowe-sdk" "7.22.0"
     find-process "1.4.7"
     get-stream "6.0.1"
     lodash "4.17.21"
@@ -2666,18 +2666,18 @@
   optionalDependencies:
     "@zowe/secrets-for-zowe-sdk" "7.18.6"
 
-"@zowe/core-for-zowe-sdk@7.21.4":
-  version "7.21.4"
-  resolved "https://registry.npmjs.org/@zowe/core-for-zowe-sdk/-/core-for-zowe-sdk-7.21.4.tgz#31b8a282caf4bf3e693570f60205318c70448648"
-  integrity sha512-8pJNrd6RPnQN/ljlSxJzoRRTHUmqSUG1TbnPoII8hgGe/rJpGx11HgmPVS8GfONhsWFLeGm5fRz8SY2aJdxFnw==
+"@zowe/core-for-zowe-sdk@7.22.0":
+  version "7.22.0"
+  resolved "https://registry.npmjs.org/@zowe/core-for-zowe-sdk/-/core-for-zowe-sdk-7.22.0.tgz#ae271ee84e52f48b5508b74affb5f9aa5d4adbdf"
+  integrity sha512-uLkbxn0KvI6MiSZ8Y0SZRFJhvDarwhlvvW/oiSjIyNHeNtuTb31s5eYLTCdvX585om98wyVEKwYWK3ITzQ6w6g==
   dependencies:
     comment-json "4.1.1"
     string-width "4.2.3"
 
-"@zowe/imperative@5.20.2":
-  version "5.20.2"
-  resolved "https://registry.npmjs.org/@zowe/imperative/-/imperative-5.20.2.tgz#45b7d25735e270c016a7cc54f2a71ff1e51b67c5"
-  integrity sha512-kb+lWbogwOEOYpCFiexZfbBNVXNsv9RC+B/93nY4qoQhGddHRwZu/l22yeHPYNvTG25k0ubr/RgYuwOnv32UmQ==
+"@zowe/imperative@5.21.0":
+  version "5.21.0"
+  resolved "https://registry.npmjs.org/@zowe/imperative/-/imperative-5.21.0.tgz#52cd216bf04a15fe60fcc9fa4603dba0f8c59da2"
+  integrity sha512-yjt3Mmn1ItfZZK42SecH+2U5rSvKl6k4ZqPvFaQIvzfVwhOeXi3Srx6/ulxDhSPN0txPUgeyIxz+PHSPtN5Elw==
   dependencies:
     "@types/yargs" "13.0.4"
     chalk "2.4.2"
@@ -2716,10 +2716,10 @@
     yamljs "0.3.0"
     yargs "15.3.1"
 
-"@zowe/provisioning-for-zowe-sdk@7.21.4":
-  version "7.21.4"
-  resolved "https://registry.npmjs.org/@zowe/provisioning-for-zowe-sdk/-/provisioning-for-zowe-sdk-7.21.4.tgz#5df1b7a876d74c482597438a4d655b31f997ae13"
-  integrity sha512-P+anHTBK4Y6VQ7XNrgxQO2poIrLayOuuecelVOgApkc/pTs3KQ+gxsTaWamIekKdKSVWvDREPQYqrFznDZDg6A==
+"@zowe/provisioning-for-zowe-sdk@7.22.0":
+  version "7.22.0"
+  resolved "https://registry.npmjs.org/@zowe/provisioning-for-zowe-sdk/-/provisioning-for-zowe-sdk-7.22.0.tgz#01bcd2a182c219115779b3f3aeee65e2f846d349"
+  integrity sha512-5wX+qXxXL3WlmmS9rnDDZeUL4K4fuUAJ+8H+z8z0qv++ffZSJc36Jkmi/D5tX9FanmB0/kpCgeHqx1rWE/mYtA==
   dependencies:
     js-yaml "4.1.0"
 
@@ -2728,15 +2728,15 @@
   resolved "https://registry.npmjs.org/@zowe/secrets-for-zowe-sdk/-/secrets-for-zowe-sdk-7.18.6.tgz#6b854b344babb291c26d19d82633099a46e08452"
   integrity sha512-YyS1NoXddb147mBQpu5/dTfo1gdwGa/xdg85U8KCngA+RHCmNct3n2rbK3tHx9C9H6rlgjeS+Mrux5Q+PHJUgQ==
 
-"@zowe/zos-console-for-zowe-sdk@7.21.4":
-  version "7.21.4"
-  resolved "https://registry.npmjs.org/@zowe/zos-console-for-zowe-sdk/-/zos-console-for-zowe-sdk-7.21.4.tgz#6d899ddc55fcff58d575baf4a0c5386fca06779e"
-  integrity sha512-NCZG8ofj4cQr905iJ/PdaKSCK0B3SLbF+zPwlvA2/enC+3EGkBL/bedt8TViGuZbZwOFP2w0Ll95WKfPovXH5g==
+"@zowe/zos-console-for-zowe-sdk@7.22.0":
+  version "7.22.0"
+  resolved "https://registry.npmjs.org/@zowe/zos-console-for-zowe-sdk/-/zos-console-for-zowe-sdk-7.22.0.tgz#2088bee1963a9fa602df055a7078f63667a80f44"
+  integrity sha512-EI9rK76eq5kGXJqGkhobLMdNJstVUSswJ2JlNvGzwOQD/jV/7OJRHSHPllygMGaos8Rh14mzPDooeb9CBr5faA==
 
-"@zowe/zos-files-for-zowe-sdk@7.21.4":
-  version "7.21.4"
-  resolved "https://registry.npmjs.org/@zowe/zos-files-for-zowe-sdk/-/zos-files-for-zowe-sdk-7.21.4.tgz#293857954f78c71787cfebd4c9afac1426f72fb9"
-  integrity sha512-P0Ulh7JGWN2c+O5ZikNPQBD1TX1hBwxfWC/GMIVjIB8ncmGx6cwIh7DECmZAulR//TiLxw3TZJuC0yN6a0VOGQ==
+"@zowe/zos-files-for-zowe-sdk@7.22.0":
+  version "7.22.0"
+  resolved "https://registry.npmjs.org/@zowe/zos-files-for-zowe-sdk/-/zos-files-for-zowe-sdk-7.22.0.tgz#a692b09016c0350685cf085dc47cb9591fec11d3"
+  integrity sha512-jw1j9q77DTQgm5i0YuslN454zC4eS0qb5PnfZ1thCbUugLxI/LRR1CgV59rTfqMGHMjXyfmmqjtCot4NMLUV1A==
   dependencies:
     get-stream "6.0.1"
     minimatch "5.0.1"
@@ -2748,43 +2748,43 @@
   dependencies:
     zos-node-accessor "1.0.14"
 
-"@zowe/zos-jobs-for-zowe-sdk@7.21.4":
-  version "7.21.4"
-  resolved "https://registry.npmjs.org/@zowe/zos-jobs-for-zowe-sdk/-/zos-jobs-for-zowe-sdk-7.21.4.tgz#80976967a1b34a64a6c405f0975a20a6603e4619"
-  integrity sha512-7xLOO3g5gZP0Q4wTHS5SCfW9KpBLBhv/fqkMo/e9KmdmlJ6mLl5MlgUUGBStw8/qmSGvH6W3S1FuUu5TlAZipA==
+"@zowe/zos-jobs-for-zowe-sdk@7.22.0":
+  version "7.22.0"
+  resolved "https://registry.npmjs.org/@zowe/zos-jobs-for-zowe-sdk/-/zos-jobs-for-zowe-sdk-7.22.0.tgz#4447071d304bc8c6348c08bdd8f28e84213aa1ac"
+  integrity sha512-QdKjWgQV7uEvLhHED48TBmQ2EhKn8ZG9OVrZiAa82k0AIsps5U2Wv/W9M1PyWlCEWQP/Zok7PpRWi3Bbv010cQ==
   dependencies:
-    "@zowe/zos-files-for-zowe-sdk" "7.21.4"
+    "@zowe/zos-files-for-zowe-sdk" "7.22.0"
 
-"@zowe/zos-logs-for-zowe-sdk@7.21.4":
-  version "7.21.4"
-  resolved "https://registry.npmjs.org/@zowe/zos-logs-for-zowe-sdk/-/zos-logs-for-zowe-sdk-7.21.4.tgz#8495818da8946ac850a684b4ffca1c93a8955937"
-  integrity sha512-qd/YfU6daprFOcPeajqm1vAM7yOn4LKdhGJTcsfKP5aFdg4ZIAGFFwcEn5nZJpZsw/YDz5drjNdpWMH1hgSNAw==
+"@zowe/zos-logs-for-zowe-sdk@7.22.0":
+  version "7.22.0"
+  resolved "https://registry.npmjs.org/@zowe/zos-logs-for-zowe-sdk/-/zos-logs-for-zowe-sdk-7.22.0.tgz#61500c48b76c2458243508d83137f221393ffb44"
+  integrity sha512-XA/ZH1LsdqE9vTA6GOlI3t6RsgA7hf+efImVltE9brVlFrrIgXCD46A9CVDl6bmkp/tFQqCdMYHjHFbWiwN4WA==
 
-"@zowe/zos-tso-for-zowe-sdk@7.21.4":
-  version "7.21.4"
-  resolved "https://registry.npmjs.org/@zowe/zos-tso-for-zowe-sdk/-/zos-tso-for-zowe-sdk-7.21.4.tgz#12d69c9f57178c0b17fa0c3013242a1333de1954"
-  integrity sha512-fPhMzygVWYItNlNnS5W4d9Gv41c9RqUdG0pydgPFNs4KHpANx9e1tU3L+x4WHDdQHE4hOsy7xG3Sm6zg/a1XEQ==
+"@zowe/zos-tso-for-zowe-sdk@7.22.0":
+  version "7.22.0"
+  resolved "https://registry.npmjs.org/@zowe/zos-tso-for-zowe-sdk/-/zos-tso-for-zowe-sdk-7.22.0.tgz#38c0ba26bbcc6af0564911883e21bd9ad5c217e4"
+  integrity sha512-vzhKJUk6E/EHjH8BadCfpL45C40qmJxYlSHAIHitAtFcOkI4F7i13mlgulaxPCiTTV3jBw4g+JoJe8DwG1eiyA==
   dependencies:
-    "@zowe/zosmf-for-zowe-sdk" "7.21.4"
+    "@zowe/zosmf-for-zowe-sdk" "7.22.0"
 
-"@zowe/zos-uss-for-zowe-sdk@7.21.4":
-  version "7.21.4"
-  resolved "https://registry.npmjs.org/@zowe/zos-uss-for-zowe-sdk/-/zos-uss-for-zowe-sdk-7.21.4.tgz#fc75f7a67ef9262405697212c4cbf987643736b4"
-  integrity sha512-5Kc1DLPOfkW+h6u+1fogW33CzN6zPE5CHNmpeed/2GWB8O0ChupdEnwXqGANK+siVzEdX1U9AMkZ0/hZs61TMg==
+"@zowe/zos-uss-for-zowe-sdk@7.22.0":
+  version "7.22.0"
+  resolved "https://registry.npmjs.org/@zowe/zos-uss-for-zowe-sdk/-/zos-uss-for-zowe-sdk-7.22.0.tgz#3b6bb8dedae1a6c4f367189cf6b3bdbab0aca822"
+  integrity sha512-c3yXBdBWW2I1WbkMvgmx/EMNEpxJmCRZ0gygjYd1xM//wWhPaigOVY5XSRTpnXS0UY6KOX9T7ZymlCe6XzAhEQ==
   dependencies:
     ssh2 "1.15.0"
 
-"@zowe/zos-workflows-for-zowe-sdk@7.21.4":
-  version "7.21.4"
-  resolved "https://registry.npmjs.org/@zowe/zos-workflows-for-zowe-sdk/-/zos-workflows-for-zowe-sdk-7.21.4.tgz#1458f5945c0ac13e3785d6a95cfe578617b67cf3"
-  integrity sha512-AB51+U6Ew/QB9ATO7VkxeFWOeYQE/UJixaxliP5QV7Utfj0LlOGcIGltyKpdUa4QS0ehSe7csKvMRMc7rQdXLw==
+"@zowe/zos-workflows-for-zowe-sdk@7.22.0":
+  version "7.22.0"
+  resolved "https://registry.npmjs.org/@zowe/zos-workflows-for-zowe-sdk/-/zos-workflows-for-zowe-sdk-7.22.0.tgz#05537853832bcf2307a78907459fb43e59ca22ed"
+  integrity sha512-arM0gVpm0zM84JuIZSWTK+bCqu6gED0ubYJZAdI5ttsjSaiv+E4LM1OUkd05n0HCUGYeNrL30LEsswHUM7cqZA==
   dependencies:
-    "@zowe/zos-files-for-zowe-sdk" "7.21.4"
+    "@zowe/zos-files-for-zowe-sdk" "7.22.0"
 
-"@zowe/zosmf-for-zowe-sdk@7.21.4":
-  version "7.21.4"
-  resolved "https://registry.npmjs.org/@zowe/zosmf-for-zowe-sdk/-/zosmf-for-zowe-sdk-7.21.4.tgz#b7bd90f7e4b9320c56f4ae706fd0cc90811b9448"
-  integrity sha512-Q4VZtnUNHB4OWLFtlNnK/0lxp3y42AIAm6PwgvNIdH1Oy8nWA/VkXU3O8ur6zsbComYxyxyx/YNxzNJ7ENwxww==
+"@zowe/zosmf-for-zowe-sdk@7.22.0":
+  version "7.22.0"
+  resolved "https://registry.npmjs.org/@zowe/zosmf-for-zowe-sdk/-/zosmf-for-zowe-sdk-7.22.0.tgz#cc87f28acf60b600eca5111d35ac8668aaec192a"
+  integrity sha512-D4nbTDr5uJxJev9+zNwbq/3Z3DuQR6qfmbofzDGYYaU1peFO7+ioFN+uAInFBS1jqj4iHko2KINJfPZFALg3/A==
 
 abab@^2.0.3, abab@^2.0.5:
   version "2.0.6"
