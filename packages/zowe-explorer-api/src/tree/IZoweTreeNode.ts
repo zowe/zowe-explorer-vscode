@@ -41,6 +41,10 @@ export interface IZoweTreeNode extends vscode.TreeItem {
      */
     label?: string | vscode.TreeItemLabel;
     /**
+     * The URI of the resource representing this item.
+     */
+    resourceUri?: vscode.Uri;
+    /**
      * A description for this tree item.
      */
     description?: string | boolean;

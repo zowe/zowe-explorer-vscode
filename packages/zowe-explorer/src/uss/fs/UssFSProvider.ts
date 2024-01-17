@@ -17,7 +17,6 @@ import {
     isDirectoryEntry,
     Gui,
     EntryMetadata,
-    UriFsInfo,
 } from "@zowe/zowe-explorer-api";
 import * as path from "path";
 import * as vscode from "vscode";
@@ -142,7 +141,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
      * @param editor (optional) An editor instance to reload if the URI is already open
      */
     public async fetchFileAtUri(uri: vscode.Uri, editor?: vscode.TextEditor | null): Promise<void> {
-        const file = this._lookupAsFile(uri, false);
+        const file = this._lookupAsFile(uri);
         const uriInfo = getInfoForUri(uri, Profiles.getInstance());
         // we need to fetch the contents from the mainframe since the file hasn't been accessed yet
         const bufBuilder = new BufferBuilder();
@@ -168,7 +167,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
      * @returns The file's contents as an array of bytes
      */
     public async readFile(uri: vscode.Uri): Promise<Uint8Array> {
-        const file = this._lookupAsFile(uri, false);
+        const file = this._lookupAsFile(uri, { silent: false, buildFullPath: true });
         const profInfo = getInfoForUri(uri, Profiles.getInstance());
 
         if (!file.isConflictFile && profInfo.profile == null) {

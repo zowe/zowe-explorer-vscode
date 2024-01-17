@@ -68,6 +68,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     private prevPath: string;
     public fullPath: string;
     public attributes: FileAttributes;
+    public resourceUri?: vscode.Uri;
 
     public onUpdateEmitter: vscode.EventEmitter<IZoweUSSTreeNode>;
 

@@ -12,11 +12,12 @@
 import * as vscode from "vscode";
 import { ProfilesCache } from "../../profiles/ProfilesCache";
 import { imperative } from "@zowe/cli";
-import { DirEntry, FileEntry } from "./types";
+import { DirEntry, IFileEntry } from "./types";
 
 export type UriFsInfo = {
     isRoot: boolean;
     slashAfterProfilePos: number;
+    profileName: string;
     profile: imperative.IProfileLoaded;
 };
 
@@ -25,7 +26,7 @@ export type UriFsInfo = {
  * @param uri The "Zowe-compliant" URI to extract info from
  * @returns a metadata type with info about the URI
  */
-export function getInfoForUri(uri: vscode.Uri, profilesCache: ProfilesCache): UriFsInfo {
+export function getInfoForUri(uri: vscode.Uri, profilesCache?: ProfilesCache): UriFsInfo {
     // Paths pointing to the session root will have the format `<scheme>:/{lpar_name}`
     const slashAfterProfilePos = uri.path.indexOf("/", 1);
     const isRoot = slashAfterProfilePos === -1;
@@ -40,7 +41,8 @@ export function getInfoForUri(uri: vscode.Uri, profilesCache: ProfilesCache): Ur
     return {
         isRoot,
         slashAfterProfilePos,
-        profile: profilesCache.loadNamedProfile(profileName),
+        profileName,
+        profile: profilesCache?.loadNamedProfile(profileName),
     };
 }
 
@@ -48,6 +50,6 @@ export function isDirectoryEntry(entry: any): entry is DirEntry {
     return entry != null && entry["type"] === vscode.FileType.Directory;
 }
 
-export function isFileEntry(entry: any): entry is FileEntry {
+export function isFileEntry(entry: any): entry is IFileEntry {
     return entry != null && entry["type"] === vscode.FileType.File;
 }

@@ -12,8 +12,8 @@
 import * as vscode from "vscode";
 import {
     DirEntry,
-    FileEntry,
-    FsEntry,
+    IFileEntry,
+    IFileSystemEntry,
     FS_PROVIDER_DELAY,
     ConflictViewSelection,
     BufferBuilder,
@@ -72,7 +72,7 @@ export class BaseProvider {
         }
 
         const remoteUri = this._conflictMap[localUri.path];
-        const localEntry = this._lookupAsFile(localUri, false);
+        const localEntry = this._lookupAsFile(localUri);
         localEntry.inDiffView = false;
         localEntry.forceUpload = true;
         await vscode.workspace.fs.writeFile(localUri, localEntry.conflictData);
@@ -92,8 +92,8 @@ export class BaseProvider {
             return;
         }
         const remoteUri = this._conflictMap[localUri.path];
-        const localEntry = this._lookupAsFile(localUri, false);
-        const remoteEntry = this._lookupAsFile(remoteUri, false);
+        const localEntry = this._lookupAsFile(localUri);
+        const remoteEntry = this._lookupAsFile(remoteUri);
 
         // If the data in the diff is different from the conflict data, we need to make another API request to push those changes.
         // If the data is equal, we can just assign the data in the FileSystem and avoid making an API request.
@@ -215,7 +215,7 @@ export class BaseProvider {
         if (isFileEntry(entry)) {
             // put new contents in relocated file
             await vscode.workspace.fs.writeFile(newUri, entry.data);
-            const newEntry = this._lookupAsFile(newUri, false);
+            const newEntry = this._lookupAsFile(newUri);
             newEntry.etag = entry.etag;
         } else {
             // create directory in FS; when expanded in the tree, it will fetch any files
@@ -305,7 +305,7 @@ export class BaseProvider {
             // for use with vscode.diff
             await vscode.workspace.fs.writeFile(conflictUri, mainframeBuf);
 
-            const conflictEntry = this._lookupAsFile(conflictUri, false);
+            const conflictEntry = this._lookupAsFile(conflictUri);
             conflictEntry.isConflictFile = true;
             conflictEntry.inDiffView = true;
             conflictEntry.conflictData = conflictEntry.data;
@@ -375,7 +375,7 @@ export class BaseProvider {
         }, conflictRootUri.path);
 
         await vscode.workspace.fs.writeFile(conflictUri, new Uint8Array());
-        const fileEntry = this._lookupAsFile(conflictUri, false);
+        const fileEntry = this._lookupAsFile(conflictUri);
         fileEntry.isConflictFile = true;
 
         return conflictUri;
@@ -417,17 +417,17 @@ export class BaseProvider {
         this._fireSoon({ type: vscode.FileChangeType.Changed, uri: dirname }, { type: vscode.FileChangeType.Created, uri });
     }
 
-    protected _lookup(uri: vscode.Uri, silent: false): FsEntry;
-    protected _lookup(uri: vscode.Uri, silent: boolean): FsEntry | undefined;
-    protected _lookup(uri: vscode.Uri, silent: boolean): FsEntry | undefined {
+    protected _lookup(uri: vscode.Uri, silent: false): IFileSystemEntry;
+    protected _lookup(uri: vscode.Uri, silent: boolean): IFileSystemEntry | undefined;
+    protected _lookup(uri: vscode.Uri, silent: boolean): IFileSystemEntry | undefined {
         const parts = uri.path.split("/");
-        let entry: FsEntry = this.root;
+        let entry: IFileSystemEntry = this.root;
 
         for (const part of parts) {
             if (!part) {
                 continue;
             }
-            let child: FsEntry | undefined;
+            let child: IFileSystemEntry | undefined;
             if (isDirectoryEntry(entry)) {
                 child = entry.entries.get(part);
             }
@@ -451,16 +451,32 @@ export class BaseProvider {
         throw vscode.FileSystemError.FileNotADirectory(uri);
     }
 
-    protected _lookupAsFile(uri: vscode.Uri, silent: boolean): FileEntry {
-        const entry = this._lookup(uri, silent);
+    private createFullUriPath(uri: vscode.Uri): void {
+        const segments = uri.path.split("/");
+        console.log(segments);
+    }
+
+    protected _lookupAsFile(uri: vscode.Uri, opts?: { silent?: boolean; buildFullPath?: boolean; }): IFileEntry {
+        let entry: IFileEntry;
+        try {
+            entry = this._lookup(uri, opts?.silent ?? false);
+        } catch (err) {
+            if (opts?.buildFullPath) {
+                if (this._lookupParentDirectory(uri, true) == null) {
+                    this.createFullUriPath(uri);
+                    // At this point we need to create the whole path structure in the FSP.
+                    // After the entry has been created, then we can check for its existence on the remote system.
+                }
+            }
+        }
         if (isFileEntry(entry)) {
             return entry;
         }
         throw vscode.FileSystemError.FileIsADirectory(uri);
     }
 
-    protected _lookupParentDirectory(uri: vscode.Uri): DirEntry {
+    protected _lookupParentDirectory(uri: vscode.Uri, silent?: boolean): DirEntry {
         const dirname = uri.with({ path: path.posix.dirname(uri.path) });
-        return this._lookupAsDirectory(dirname, false);
+        return this._lookupAsDirectory(dirname, silent ?? false);
     }
 }

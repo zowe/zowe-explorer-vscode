@@ -3,7 +3,6 @@
   "downloadSingleSpool.error": "Download Single Spool operation not implemented by extender. Please contact the extension developer(s).",
   "jobActions.openSpoolFile": "$(sync~spin) Opening spool file...",
   "zowe.polling.statusBar": "$(sync~spin) Polling: {0}...",
-  "jobActions.fetchSpoolFile": "$(sync~spin) Fetching spool files...",
   "modifyCommand.inputBox.prompt": "Modify Command",
   "jobActions.modifyCommand.response": "Command response: ",
   "jobActions.modifyCommand.apiNonExisting": "Not implemented yet for profile of type: ",

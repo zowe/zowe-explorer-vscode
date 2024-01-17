@@ -38,6 +38,8 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
     public static readonly Prefix = "Prefix: ";
     public static readonly Status = "Status: ";
 
+    public resourceUri?: vscode.Uri;
+
     public children: IZoweJobTreeNode[] = [];
     public dirty = true;
     public sort: NodeSort;

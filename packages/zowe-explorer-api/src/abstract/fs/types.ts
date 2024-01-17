@@ -20,7 +20,7 @@ export enum ConflictViewSelection {
 }
 
 export type DeleteMetadata = {
-    entryToDelete: DirEntry | FileEntry;
+    entryToDelete: DirEntry | IFileEntry;
     parent: DirEntry;
     parentUri: vscode.Uri;
 };
@@ -57,14 +57,14 @@ export type EntryMetadata = {
     path: string;
 };
 
-export interface FsEntry extends vscode.FileStat {
+export interface IFileSystemEntry extends vscode.FileStat {
     name: string;
     metadata: EntryMetadata;
     type: vscode.FileType;
     wasAccessed: boolean;
 }
 
-export interface FileEntry extends FsEntry {
+export interface IFileEntry extends IFileSystemEntry {
     data?: Uint8Array;
 
     // optional types for conflict and file management that some FileSystems will not leverage
@@ -76,7 +76,7 @@ export interface FileEntry extends FsEntry {
     forceUpload?: boolean;
 }
 
-export class DirEntry implements FsEntry {
+export class DirEntry implements IFileSystemEntry {
     public name: string;
     public metadata: EntryMetadata;
     public type: vscode.FileType;
@@ -85,7 +85,7 @@ export class DirEntry implements FsEntry {
     public mtime: number;
     public size: number;
     public permissions?: vscode.FilePermission;
-    public entries: Map<string, DirEntry | FileEntry>;
+    public entries: Map<string, DirEntry | IFileEntry>;
 
     public constructor(n: string) {
         this.name = n;
@@ -106,7 +106,7 @@ export class FilterEntry extends DirEntry {
 }
 
 export type LocalConflict = {
-    fsEntry: FileEntry;
+    fsEntry: IFileEntry;
     uri: vscode.Uri;
     content: Uint8Array;
 };

@@ -59,6 +59,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     public stats: DatasetStats;
     public sort?: NodeSort;
     public filter?: DatasetFilter;
+    public resourceUri?: vscode.Uri;
 
     /**
      * Creates an instance of ZoweDatasetNode
@@ -111,7 +112,11 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 DatasetFSProvider.instance.createDirectory(this.resourceUri, this.pattern);
             } else if (this.contextValue === globals.DS_MEMBER_CONTEXT) {
                 this.resourceUri = vscode.Uri.parse(`zowe-ds:/${this.profile.name}/${mParent.label as string}/${this.label as string}`);
-            } else if (this.contextValue === globals.DS_DS_CONTEXT || this.contextValue === globals.DS_PDS_CONTEXT) {
+            } else if (
+                this.contextValue === globals.DS_DS_CONTEXT ||
+                this.contextValue === globals.DS_PDS_CONTEXT ||
+                this.contextValue === globals.DS_MIGRATED_FILE_CONTEXT
+            ) {
                 this.resourceUri = vscode.Uri.parse(`zowe-ds:/${this.profile.name}/${this.label as string}`);
             }
         }

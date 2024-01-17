@@ -9,22 +9,22 @@
  *
  */
 
-import { FilterEntry, FsEntry } from "@zowe/zowe-explorer-api";
+import { FilterEntry, IFileSystemEntry } from "@zowe/zowe-explorer-api";
 import { DsEntry, MemberEntry, PdsEntry } from "./types";
 import { FileType } from "vscode";
 
-export function isDsEntry(entry: FsEntry): entry is DsEntry {
+export function isDsEntry(entry: IFileSystemEntry): entry is DsEntry {
     return entry != null && entry.type == FileType.File;
 }
 
-export function isFilterEntry(entry: FsEntry): entry is FilterEntry {
+export function isFilterEntry(entry: IFileSystemEntry): entry is FilterEntry {
     return entry != null && entry instanceof FilterEntry;
 }
 
-export function isMemberEntry(entry: FsEntry): entry is MemberEntry {
+export function isMemberEntry(entry: IFileSystemEntry): entry is MemberEntry {
     return entry != null && entry instanceof MemberEntry;
 }
 
-export function isPdsEntry(entry: FsEntry): entry is PdsEntry {
+export function isPdsEntry(entry: IFileSystemEntry): entry is PdsEntry {
     return entry != null && entry instanceof PdsEntry;
 }

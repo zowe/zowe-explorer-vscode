@@ -1,0 +1,3 @@
+{
+  "jobActions.fetchSpoolFile": "$(sync~spin) Fetching spool files..."
+}

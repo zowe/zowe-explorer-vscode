@@ -156,7 +156,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
      * @param editor (optional) An editor instance to reload if the URI is already open
      */
     public async fetchDatasetAtUri(uri: vscode.Uri, editor?: vscode.TextEditor | null): Promise<void> {
-        const file = this._lookupAsFile(uri, false) as DsEntry;
+        const file = this._lookupAsFile(uri) as DsEntry;
         // we need to fetch the contents from the mainframe since the file hasn't been accessed yet
         const bufBuilder = new BufferBuilder();
         const metadata = file.metadata ?? this._getInfoFromUri(uri);
@@ -180,7 +180,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
      * @returns The data set's contents as an array of bytes
      */
     public async readFile(uri: vscode.Uri): Promise<Uint8Array> {
-        const file = this._lookupAsFile(uri, false);
+        const file = this._lookupAsFile(uri);
         const profInfo = getInfoForUri(uri, Profiles.getInstance());
 
         if (!file.isConflictFile && profInfo.profile == null) {

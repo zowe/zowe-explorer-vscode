@@ -151,7 +151,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
      * @param editor (optional) An editor instance to reload if the URI is already open
      */
     public async fetchSpoolAtUri(uri: vscode.Uri, editor?: vscode.TextEditor | null): Promise<SpoolEntry> {
-        const spoolEntry = this._lookupAsFile(uri, false) as SpoolEntry;
+        const spoolEntry = this._lookupAsFile(uri) as SpoolEntry;
 
         // we need to fetch the contents from the mainframe since the file hasn't been accessed yet
         const bufBuilder = new BufferBuilder();
@@ -181,7 +181,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
      * @returns The spool file's contents as an array of bytes
      */
     public async readFile(uri: vscode.Uri): Promise<Uint8Array> {
-        const spoolEntry = this._lookupAsFile(uri, false) as SpoolEntry;
+        const spoolEntry = this._lookupAsFile(uri) as SpoolEntry;
         if (!spoolEntry.wasAccessed) {
             await this.fetchSpoolAtUri(uri);
             spoolEntry.wasAccessed = true;

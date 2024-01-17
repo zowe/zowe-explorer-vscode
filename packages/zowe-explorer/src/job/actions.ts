@@ -124,8 +124,8 @@ export async function getSpoolContent(session: string, spoolNode: Spool): Promis
     }
 
     const statusMsg = Gui.setStatusBarMessage(localize("jobActions.openSpoolFile", "$(sync~spin) Opening spool file..."));
-    const uniqueSpoolName = buildUniqueSpoolName(spool);
-    const uri = vscode.Uri.parse(`zowe-jobs:/${session}/${spool.jobid}/${uniqueSpoolName}`);
+    const uniqueSpoolName = buildUniqueSpoolName(spoolNode.spool);
+    const uri = vscode.Uri.parse(`zowe-jobs:/${session}/${spoolNode.spool.jobid}/${uniqueSpoolName}`);
     try {
         updateOpenFiles(TreeProviders.job, uri.path, spoolNode);
         await vscode.commands.executeCommand("vscode.open", uri);

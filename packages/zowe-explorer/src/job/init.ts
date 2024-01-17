@@ -22,6 +22,7 @@ import { initSubscribers } from "../shared/init";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { JobFSProvider } from "./fs";
 import * as nls from "vscode-nls";
+import * as globals from "../globals";
 
 // Set up localization
 nls.config({

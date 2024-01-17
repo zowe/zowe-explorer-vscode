@@ -10,9 +10,9 @@
  */
 
 import * as vscode from "vscode";
-import { DirEntry, EntryMetadata, FileEntry } from "@zowe/zowe-explorer-api";
+import { DirEntry, EntryMetadata, IFileEntry } from "@zowe/zowe-explorer-api";
 
-export class UssFile implements FileEntry, vscode.FileStat {
+export class UssFile implements IFileEntry {
     public name: string;
     public metadata: EntryMetadata;
     public type: vscode.FileType;
@@ -45,7 +45,7 @@ export class UssFile implements FileEntry, vscode.FileStat {
     }
 }
 
-export class UssDirectory extends DirEntry implements vscode.FileStat {
+export class UssDirectory extends DirEntry {
     public constructor(name: string) {
         super(name);
         this.type = vscode.FileType.Directory;

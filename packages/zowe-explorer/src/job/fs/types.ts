@@ -10,7 +10,7 @@
  */
 
 import { IJob, IJobFile } from "@zowe/cli";
-import { DirEntry, EntryMetadata, FileEntry } from "@zowe/zowe-explorer-api";
+import { DirEntry, EntryMetadata, IFileEntry } from "@zowe/zowe-explorer-api";
 import { FilePermission, FileType } from "vscode";
 
 export type JobFilter = {
@@ -20,7 +20,7 @@ export type JobFilter = {
     status: string;
 };
 
-export class SpoolEntry implements FileEntry {
+export class SpoolEntry implements IFileEntry {
     public name: string;
     public type: FileType;
     public wasAccessed: boolean;

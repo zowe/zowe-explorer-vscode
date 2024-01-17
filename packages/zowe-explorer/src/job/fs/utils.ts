@@ -9,18 +9,18 @@
  *
  */
 
-import { FileEntry, FsEntry } from "@zowe/zowe-explorer-api";
+import { IFileEntry, IFileSystemEntry } from "@zowe/zowe-explorer-api";
 import { JobEntry, SpoolEntry } from "./types";
 import { FileType } from "vscode";
 
-export function isJobEntry(entry: FsEntry): entry is JobEntry {
+export function isJobEntry(entry: IFileSystemEntry): entry is JobEntry {
     return entry != null && entry.type == FileType.Directory;
 }
 
-export function isFileEntry(entry: FsEntry): entry is FileEntry {
+export function isFileEntry(entry: IFileSystemEntry): entry is IFileEntry {
     return entry != null && entry.type == FileType.File;
 }
 
-export function isSpoolEntry(entry: FsEntry): entry is SpoolEntry {
+export function isSpoolEntry(entry: IFileSystemEntry): entry is SpoolEntry {
     return entry != null && entry["wasAccessed"] !== undefined;
 }
