@@ -2026,7 +2026,7 @@
     ]
   },
   "scripts": {
-    "build": "pnpm clean && pnpm generateLocalization && pnpm license && webpack --mode development",
+    "build": "pnpm clean:bundle && pnpm license && webpack --mode development",
     "build:integration": "pnpm createTestProfileData && pnpm license && tsc --pretty --project tsconfig-tests.json",
     "test:unit": "jest \".*__tests__.*\\.unit\\.test\\.ts\" --coverage",
     "test:theia": "mocha ./out/__tests__/__theia__/*.theia.test.js --timeout 50000 --reporter mocha-multi-reporters --reporter-options configFile=.mocharc.json",
@@ -2045,7 +2045,9 @@
     "lint:html": "eslint . --format html > results/eslint.html",
     "lint:src": "eslint --format stylish src/**/*.ts",
     "lint:tests": "eslint --format stylish __tests__/**/*.ts",
-    "clean": "(rimraf out || true) && (rimraf l10n || true)",
+    "clean": "pnpm clean:bundle && pnpm clean:localization",
+    "clean:bundle": "rimraf out || true",
+    "clean:localization": "rimraf l10n || true",
     "fresh-clone": "pnpm clean && (rimraf node_modules || true)",
     "madge": "madge -c --no-color --no-spinner --exclude __mocks__ --extensions js,ts src/ || true",
     "pretty": "prettier --write .",
@@ -2065,7 +2067,6 @@
     "@types/promise-queue": "^2.2.0",
     "@types/selenium-webdriver": "^3.0.4",
     "@types/yargs": "^11.0.0",
-    "@vscode/l10n-dev": "^0.0.31",
     "chai": "^4.1.2",
     "chai-as-promised": "^7.1.1",
     "chalk": "^2.4.1",
