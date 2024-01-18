@@ -388,7 +388,7 @@ export async function deleteDatasetPrompt(datasetProvider: api.IZoweTree<api.IZo
         api.Gui.showMessage(
             vscode.l10n.t({
                 message: "The following {0} item(s) were deleted: {1}",
-                args: [nodesDeleted.length, nodesDeleted.toString()],
+                args: [nodesDeleted.length, nodesDeleted.toString().trim()],
                 comment: ["Data Sets deleted length", "Data Sets deleted"],
             })
         );
