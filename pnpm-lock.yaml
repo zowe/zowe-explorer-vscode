@@ -168,9 +168,6 @@ importers:
       '@types/yargs':
         specifier: ^11.0.0
         version: 11.1.8
-      '@vscode/l10n-dev':
-        specifier: ^0.0.31
-        version: 0.0.31
       chai:
         specifier: ^4.1.2
         version: 4.3.10
