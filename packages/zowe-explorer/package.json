@@ -2026,16 +2026,16 @@
     ]
   },
   "scripts": {
-    "build": "pnpm generateLocalization && pnpm license && webpack --mode development",
+    "build": "pnpm clean && pnpm generateLocalization && pnpm license && webpack --mode development",
     "build:integration": "pnpm createTestProfileData && pnpm license && tsc --pretty --project tsconfig-tests.json",
     "test:unit": "jest \".*__tests__.*\\.unit\\.test\\.ts\" --coverage",
     "test:theia": "mocha ./out/__tests__/__theia__/*.theia.test.js --timeout 50000 --reporter mocha-multi-reporters --reporter-options configFile=.mocharc.json",
     "test": "pnpm test:unit",
-    "vscode:prepublish": "pnpm generateLocalization && webpack --mode production && pnpm compile-web",
+    "vscode:prepublish": "pnpm clean && pnpm generateLocalization && webpack --mode production && pnpm compile-web",
     "package": "vsce package --no-dependencies && node ../../scripts/mv-pack.js vscode-extension-for-zowe vsix",
     "license": "node ../../scripts/updateLicenses.js",
-    "watch": "concurrently \"pnpm run watch:webviews\" \"pnpm run watch:zowe-explorer\"",
-    "watch:zowe-explorer": "webpack --mode development --watch --info-verbosity verbose",
+    "watch": "concurrently \"pnpm watch:webviews\" \"pnpm watch:zowe-explorer\"",
+    "watch:zowe-explorer": "pnpm clean && pnpm generateLocalization && webpack --mode development --watch --info-verbosity verbose",
     "watch:webviews": "pnpm --filter webviews dev",
     "compile": "tsc -b",
     "compile-web": "webpack --target webworker --entry ./src/web/extension.ts --output-path ./out/src/web",
@@ -2051,7 +2051,7 @@
     "pretty": "prettier --write .",
     "createTestProfileData": "ts-node ./scripts/createTestProfileData.ts",
     "createDemoNodes": "ts-node ./scripts/createDemoNodes.ts",
-    "generateLocalization": "pnpm clean && npx @vscode/l10n-dev export -o ./l10n ./src"
+    "generateLocalization": "npx @vscode/l10n-dev export -o ./l10n ./src"
   },
   "engines": {
     "vscode": "^1.79.0"

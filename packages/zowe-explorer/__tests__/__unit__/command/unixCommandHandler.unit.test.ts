@@ -695,11 +695,11 @@ describe("UnixCommand Actions Unit Testing", () => {
                             ],
                         }),
                         loadSecureArg: jest.fn().mockReturnValue(undefined),
-                    } as any)
-                }
-            })
+                    } as any),
+                };
+            }),
         });
         await (unixActions as any).getSshProfile();
         expect(showErrorMessage.mock.calls[0][0]).toEqual("Credentials are missing for SSH profile");
-    })
+    });
 });
