@@ -19,6 +19,7 @@ jobs:
 
       - run: |
           npm install -g pnpm
+          npm install -g @vscode/l10n-dev
           pnpm install
 
       - run: pnpm build

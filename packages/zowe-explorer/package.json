@@ -2051,7 +2051,7 @@
     "pretty": "prettier --write .",
     "createTestProfileData": "ts-node ./scripts/createTestProfileData.ts",
     "createDemoNodes": "ts-node ./scripts/createDemoNodes.ts",
-    "generateLocalization": "npx @vscode/l10n-dev export -o ./l10n ./src"
+    "generateLocalization": "vscode-l10n-dev export -o ./l10n ./src"
   },
   "engines": {
     "vscode": "^1.79.0"
@@ -2065,6 +2065,7 @@
     "@types/promise-queue": "^2.2.0",
     "@types/selenium-webdriver": "^3.0.4",
     "@types/yargs": "^11.0.0",
+    "@vscode/l10n-dev": "^0.0.31",
     "chai": "^4.1.2",
     "chai-as-promised": "^7.1.1",
     "chalk": "^2.4.1",
