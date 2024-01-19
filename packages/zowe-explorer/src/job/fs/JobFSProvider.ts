@@ -19,7 +19,6 @@ import { JobEntry, JobFilter, SpoolEntry } from "./types";
 import { buildUniqueSpoolName } from "../../SpoolProvider";
 import { IJob, IJobFile } from "@zowe/cli";
 import { isFilterEntry } from "../../dataset/fs/utils";
-import { Utils as uriUtils } from "vscode-uri"; 
 
 export class JobFSProvider extends BaseProvider implements vscode.FileSystemProvider {
     public onDidChangeFile: vscode.Event<vscode.FileChangeEvent[]>;
@@ -123,7 +122,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
      * - `job` - (optional) The job document associated with the "job entry" in the FileSystem
      */
     public createDirectory(uri: vscode.Uri, options?: { isFilter?: boolean; job?: IJob }): void {
-        const basename = uriUtils.basename(uri);
+        const basename = path.basename(uri.path);
         const parent = this._lookupParentDirectory(uri, false);
         const profInfo = parent.metadata
             ? {
@@ -142,7 +141,10 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
         parent.entries.set(entry.name, entry);
         parent.mtime = Date.now();
         parent.size += 1;
-        this._fireSoon({ type: vscode.FileChangeType.Changed, uri: uriUtils.resolvePath(uri, "..") }, { type: vscode.FileChangeType.Created, uri });
+        this._fireSoon(
+            { type: vscode.FileChangeType.Changed, uri: uri.with({ path: path.resolve(uri.path, "..") }) },
+            { type: vscode.FileChangeType.Created, uri }
+        );
     }
 
     /**

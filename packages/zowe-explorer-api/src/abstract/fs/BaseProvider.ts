@@ -25,7 +25,6 @@ import * as path from "path";
 import { isEqual } from "lodash";
 import { isDirectoryEntry, isFileEntry } from "./utils";
 import { Gui } from "../../globals/Gui";
-import { Utils as uriUtils } from "vscode-uri";
 import * as nls from "vscode-nls";
 
 nls.config({
@@ -126,7 +125,7 @@ export class BaseProvider {
             return;
         }
 
-        parentEntry.entries.delete(uriUtils.basename(uri));
+        parentEntry.entries.delete(path.basename(uri.path));
         this._fireSoon({ type: vscode.FileChangeType.Deleted, uri: uri });
     }
 
@@ -251,7 +250,7 @@ export class BaseProvider {
         return {
             entryToDelete,
             parent,
-            parentUri: uriUtils.resolvePath(uri, ".."),
+            parentUri: uri.with({ path: path.resolve(uri.path, "..") }),
         };
     }
 
@@ -401,13 +400,16 @@ export class BaseProvider {
      */
     protected _createDirNoMetadata(uri: vscode.Uri): void {
         const basename = path.posix.basename(uri.path);
-        const parent = this._lookupAsDirectory(uriUtils.resolvePath(uri, ".."), false);
+        const parent = this._lookupParentDirectory(uri, false);
         const entry = new DirEntry(basename);
 
         parent.entries.set(entry.name, entry);
         parent.mtime = Date.now();
         parent.size += 1;
-        this._fireSoon({ type: vscode.FileChangeType.Changed, uri: uriUtils.dirname(uri) }, { type: vscode.FileChangeType.Created, uri });
+        this._fireSoon(
+            { type: vscode.FileChangeType.Changed, uri: uri.with({ path: path.dirname(uri.path) }) },
+            { type: vscode.FileChangeType.Created, uri }
+        );
     }
 
     protected _lookup(uri: vscode.Uri, silent: false): IFileSystemEntry;
@@ -448,7 +450,7 @@ export class BaseProvider {
         const segments = uri.path.split("/");
     }
 
-    protected _lookupAsFile(uri: vscode.Uri, opts?: { silent?: boolean; buildFullPath?: boolean; }): IFileEntry {
+    protected _lookupAsFile(uri: vscode.Uri, opts?: { silent?: boolean; buildFullPath?: boolean }): IFileEntry {
         let entry: IFileEntry;
         try {
             entry = this._lookup(uri, opts?.silent ?? false);
@@ -468,6 +470,11 @@ export class BaseProvider {
     }
 
     protected _lookupParentDirectory(uri: vscode.Uri, silent?: boolean): DirEntry {
-        return this._lookupAsDirectory(uriUtils.resolvePath(uri, ".."), silent ?? false);
+        return this._lookupAsDirectory(
+            uri.with({
+                path: path.resolve(uri.path, ".."),
+            }),
+            silent ?? false
+        );
     }
 }

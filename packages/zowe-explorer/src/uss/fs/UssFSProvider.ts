@@ -9,21 +9,12 @@
  *
  */
 
-import {
-    BaseProvider,
-    BufferBuilder,
-    ConflictViewSelection,
-    getInfoForUri,
-    isDirectoryEntry,
-    Gui,
-    EntryMetadata,
-} from "@zowe/zowe-explorer-api";
+import { BaseProvider, BufferBuilder, ConflictViewSelection, getInfoForUri, isDirectoryEntry, Gui, EntryMetadata } from "@zowe/zowe-explorer-api";
 import * as path from "path";
 import * as vscode from "vscode";
 import { ZoweExplorerApiRegister } from "../../ZoweExplorerApiRegister";
 import { UssFileTree, UssFileType } from "../FileStructure";
 import * as nls from "vscode-nls";
-import { Utils as uriUtils } from "vscode-uri"; 
 
 // Set up localization
 import { UssDirectory, UssFile } from "./types";
@@ -431,7 +422,10 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         parent.entries.set(entry.name, entry);
         parent.mtime = Date.now();
         parent.size += 1;
-        this._fireSoon({ type: vscode.FileChangeType.Changed, uri: uriUtils.resolvePath(uri, "..") }, { type: vscode.FileChangeType.Created, uri });
+        this._fireSoon(
+            { type: vscode.FileChangeType.Changed, uri: uri.with({ path: path.resolve(uri.path, "..") }) },
+            { type: vscode.FileChangeType.Created, uri }
+        );
     }
 
     public watch(_resource: vscode.Uri, _options: { readonly recursive: boolean; readonly excludes: readonly string[] }): vscode.Disposable {

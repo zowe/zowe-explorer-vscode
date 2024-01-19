@@ -14,7 +14,6 @@ import * as path from "path";
 import * as vscode from "vscode";
 import { ZoweExplorerApiRegister } from "../../ZoweExplorerApiRegister";
 import * as nls from "vscode-nls";
-import { Utils as uriUtils } from "vscode-uri";
 
 // Set up localization
 import { DsEntry, DsEntryMetadata, MemberEntry, PdsEntry } from "./types";
@@ -124,7 +123,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
      * @param uri The URI that represents a new directory path
      */
     public createDirectory(uri: vscode.Uri, filter?: string): void {
-        const basename = uriUtils.basename(uri);
+        const basename = path.basename(uri.path);
         const parent = this._lookupParentDirectory(uri, false);
         const profInfo = parent.metadata
             ? {
@@ -147,7 +146,10 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
         parent.mtime = Date.now();
         parent.size += 1;
-        this._fireSoon({ type: vscode.FileChangeType.Changed, uri: uriUtils.resolvePath(uri, "..") }, { type: vscode.FileChangeType.Created, uri });
+        this._fireSoon(
+            { type: vscode.FileChangeType.Changed, uri: uri.with({ path: path.resolve(uri.path, "..") }) },
+            { type: vscode.FileChangeType.Created, uri }
+        );
     }
 
     /**
