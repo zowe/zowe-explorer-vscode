@@ -17,7 +17,8 @@
   },
   "dependencies": {
     "@zowe/cli": "8.0.0-next.202401022112",
-    "vscode-nls": "5.2.0"
+    "vscode-nls": "5.2.0",
+    "vscode-uri": "^3.0.8"
   },
   "devDependencies": {
     "@types/jest": "^29.2.3",
@@ -26,6 +27,8 @@
     "@types/vscode": "^1.73.0",
     "@typescript-eslint/eslint-plugin": "^5.53.0",
     "@typescript-eslint/parser": "^5.53.0",
+    "@vscode/test-electron": "^1.6.0",
+    "@vscode/vsce": "2.15.0",
     "eslint": "^8.34.0",
     "eslint-config-prettier": "^8.6.0",
     "eslint-plugin-prettier": "^4.2.1",
@@ -45,9 +48,7 @@
     "ts-jest": "^29.0.3",
     "ts-loader": "^8.2.0",
     "typescript": "^4.5.3",
-    "@vscode/vsce": "2.15.0",
-    "vscode-nls-dev": "^4.0.0",
-    "@vscode/test-electron": "^1.6.0"
+    "vscode-nls-dev": "^4.0.0"
   },
   "pnpm": {
     "overrides": {

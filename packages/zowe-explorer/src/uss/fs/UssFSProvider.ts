@@ -23,6 +23,7 @@ import * as vscode from "vscode";
 import { ZoweExplorerApiRegister } from "../../ZoweExplorerApiRegister";
 import { UssFileTree, UssFileType } from "../FileStructure";
 import * as nls from "vscode-nls";
+import { Utils as uriUtils } from "vscode-uri"; 
 
 // Set up localization
 import { UssDirectory, UssFile } from "./types";
@@ -416,8 +417,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
      */
     public createDirectory(uri: vscode.Uri): void {
         const basename = path.posix.basename(uri.path);
-        const dirname = uri.with({ path: path.posix.dirname(uri.path) });
-        const parent = this._lookupAsDirectory(dirname, false);
+        const parent = this._lookupParentDirectory(uri, false);
         const profInfo = parent.metadata
             ? {
                   profile: parent.metadata.profile,
@@ -431,7 +431,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         parent.entries.set(entry.name, entry);
         parent.mtime = Date.now();
         parent.size += 1;
-        this._fireSoon({ type: vscode.FileChangeType.Changed, uri: dirname }, { type: vscode.FileChangeType.Created, uri });
+        this._fireSoon({ type: vscode.FileChangeType.Changed, uri: uriUtils.resolvePath(uri, "..") }, { type: vscode.FileChangeType.Created, uri });
     }
 
     public watch(_resource: vscode.Uri, _options: { readonly recursive: boolean; readonly excludes: readonly string[] }): vscode.Disposable {

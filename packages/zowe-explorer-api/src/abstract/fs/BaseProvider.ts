@@ -25,6 +25,7 @@ import * as path from "path";
 import { isEqual } from "lodash";
 import { isDirectoryEntry, isFileEntry } from "./utils";
 import { Gui } from "../../globals/Gui";
+import { Utils as uriUtils } from "vscode-uri";
 import * as nls from "vscode-nls";
 
 nls.config({
@@ -120,18 +121,12 @@ export class BaseProvider {
      * @param uri The URI pointing to a local entry in the FS provider
      */
     public removeEntryIfExists(uri: vscode.Uri): void {
-        const parentPath = path.posix.resolve(uri.path, "..");
-        const parentEntry = this._lookupAsDirectory(
-            uri.with({
-                path: parentPath,
-            }),
-            true
-        );
+        const parentEntry = this._lookupParentDirectory(uri, true);
         if (parentEntry == null) {
             return;
         }
 
-        parentEntry.entries.delete(path.posix.basename(uri.path));
+        parentEntry.entries.delete(uriUtils.basename(uri));
         this._fireSoon({ type: vscode.FileChangeType.Deleted, uri: uri });
     }
 
@@ -238,9 +233,8 @@ export class BaseProvider {
     }
 
     protected _deleteEntry(uri: vscode.Uri, _options: { recursive: boolean }): DeleteMetadata {
-        const parentUri = uri.with({ path: path.posix.dirname(uri.path) });
         const basename = path.posix.basename(uri.path);
-        const parent = this._lookupAsDirectory(parentUri, false);
+        const parent = this._lookupParentDirectory(uri, false);
 
         // Throw an error if the entry does not exist
         if (!parent.entries.has(basename)) {
@@ -257,7 +251,7 @@ export class BaseProvider {
         return {
             entryToDelete,
             parent,
-            parentUri,
+            parentUri: uriUtils.resolvePath(uri, ".."),
         };
     }
 
@@ -407,14 +401,13 @@ export class BaseProvider {
      */
     protected _createDirNoMetadata(uri: vscode.Uri): void {
         const basename = path.posix.basename(uri.path);
-        const dirname = uri.with({ path: path.posix.dirname(uri.path) });
-        const parent = this._lookupAsDirectory(dirname, false);
+        const parent = this._lookupAsDirectory(uriUtils.resolvePath(uri, ".."), false);
         const entry = new DirEntry(basename);
 
         parent.entries.set(entry.name, entry);
         parent.mtime = Date.now();
         parent.size += 1;
-        this._fireSoon({ type: vscode.FileChangeType.Changed, uri: dirname }, { type: vscode.FileChangeType.Created, uri });
+        this._fireSoon({ type: vscode.FileChangeType.Changed, uri: uriUtils.dirname(uri) }, { type: vscode.FileChangeType.Created, uri });
     }
 
     protected _lookup(uri: vscode.Uri, silent: false): IFileSystemEntry;
@@ -453,7 +446,6 @@ export class BaseProvider {
 
     private createFullUriPath(uri: vscode.Uri): void {
         const segments = uri.path.split("/");
-        console.log(segments);
     }
 
     protected _lookupAsFile(uri: vscode.Uri, opts?: { silent?: boolean; buildFullPath?: boolean; }): IFileEntry {
@@ -476,7 +468,6 @@ export class BaseProvider {
     }
 
     protected _lookupParentDirectory(uri: vscode.Uri, silent?: boolean): DirEntry {
-        const dirname = uri.with({ path: path.posix.dirname(uri.path) });
-        return this._lookupAsDirectory(dirname, silent ?? false);
+        return this._lookupAsDirectory(uriUtils.resolvePath(uri, ".."), silent ?? false);
     }
 }
