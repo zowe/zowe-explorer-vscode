@@ -20,7 +20,7 @@ export enum ConflictViewSelection {
 }
 
 export type DeleteMetadata = {
-    entryToDelete: DirEntry | IFileEntry;
+    entryToDelete: IFileSystemEntry;
     parent: DirEntry;
     parentUri: vscode.Uri;
 };
@@ -62,18 +62,40 @@ export interface IFileSystemEntry extends vscode.FileStat {
     metadata: EntryMetadata;
     type: vscode.FileType;
     wasAccessed: boolean;
+    data?: Uint8Array;
 }
 
-export interface IFileEntry extends IFileSystemEntry {
-    data?: Uint8Array;
+export class FileEntry implements IFileSystemEntry {
+    public name: string;
+    public metadata: EntryMetadata;
+    public type: vscode.FileType;
+    public data: Uint8Array;
+    public wasAccessed: boolean;
+    public ctime: number;
+    public mtime: number;
+    public size: number;
+    public permissions?: vscode.FilePermission;
 
     // optional types for conflict and file management that some FileSystems will not leverage
-    conflictData?: Uint8Array;
-    isConflictFile?: boolean;
-    inDiffView?: boolean;
-    binary?: boolean;
-    etag?: string;
-    forceUpload?: boolean;
+    public conflictData?: Uint8Array;
+    public isConflictFile?: boolean;
+    public inDiffView?: boolean;
+    public binary?: boolean;
+    public etag?: string;
+    public forceUpload?: boolean;
+
+    public constructor(n: string, readOnly?: boolean) {
+        this.name = n;
+        this.type = vscode.FileType.File;
+        this.ctime = Date.now();
+        this.mtime = Date.now();
+        this.size = 0;
+        this.data = new Uint8Array();
+        this.wasAccessed = false;
+        if (readOnly) {
+            this.permissions = vscode.FilePermission.Readonly;
+        }
+    }
 }
 
 export class DirEntry implements IFileSystemEntry {
@@ -85,7 +107,7 @@ export class DirEntry implements IFileSystemEntry {
     public mtime: number;
     public size: number;
     public permissions?: vscode.FilePermission;
-    public entries: Map<string, DirEntry | IFileEntry>;
+    public entries: Map<string, DirEntry | FileEntry>;
 
     public constructor(n: string) {
         this.name = n;
@@ -106,7 +128,7 @@ export class FilterEntry extends DirEntry {
 }
 
 export type LocalConflict = {
-    fsEntry: IFileEntry;
+    fsEntry: FileEntry;
     uri: vscode.Uri;
     content: Uint8Array;
 };

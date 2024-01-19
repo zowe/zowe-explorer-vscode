@@ -9,7 +9,17 @@
  *
  */
 
-import { BaseProvider, BufferBuilder, ConflictViewSelection, getInfoForUri, isDirectoryEntry, Gui, EntryMetadata } from "@zowe/zowe-explorer-api";
+import {
+    BaseProvider,
+    BufferBuilder,
+    ConflictViewSelection,
+    getInfoForUri,
+    isDirectoryEntry,
+    Gui,
+    EntryMetadata,
+    FileEntry,
+    DirEntry,
+} from "@zowe/zowe-explorer-api";
 import * as path from "path";
 import * as vscode from "vscode";
 import { ZoweExplorerApiRegister } from "../../ZoweExplorerApiRegister";
@@ -33,7 +43,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
     private static _instance: UssFSProvider;
     private constructor() {
-        super();
+        super(Profiles.getInstance());
         this.root = new UssDirectory("");
     }
 
@@ -133,7 +143,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
      * @param editor (optional) An editor instance to reload if the URI is already open
      */
     public async fetchFileAtUri(uri: vscode.Uri, editor?: vscode.TextEditor | null): Promise<void> {
-        const file = this._lookupAsFile(uri);
+        const file = await this._lookupAsFile(uri);
         const uriInfo = getInfoForUri(uri, Profiles.getInstance());
         // we need to fetch the contents from the mainframe since the file hasn't been accessed yet
         const bufBuilder = new BufferBuilder();
@@ -159,7 +169,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
      * @returns The file's contents as an array of bytes
      */
     public async readFile(uri: vscode.Uri): Promise<Uint8Array> {
-        const file = this._lookupAsFile(uri, { silent: false, buildFullPath: true });
+        const file = await this._lookupAsFile(uri, { silent: false, buildFullPath: true });
         const profInfo = getInfoForUri(uri, Profiles.getInstance());
 
         if (!file.isConflictFile && profInfo.profile == null) {
@@ -281,7 +291,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             throw vscode.FileSystemError.FileExists(newUri);
         }
 
-        const entry = this._lookup(oldUri, false);
+        const entry = this._lookup(oldUri, false) as DirEntry | FileEntry;
         const oldParent = this._lookupParentDirectory(oldUri);
 
         const newParent = this._lookupParentDirectory(newUri);
@@ -423,7 +433,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         parent.mtime = Date.now();
         parent.size += 1;
         this._fireSoon(
-            { type: vscode.FileChangeType.Changed, uri: uri.with({ path: path.resolve(uri.path, "..") }) },
+            { type: vscode.FileChangeType.Changed, uri: uri.with({ path: path.posix.resolve(uri.path, "..") }) },
             { type: vscode.FileChangeType.Created, uri }
         );
     }

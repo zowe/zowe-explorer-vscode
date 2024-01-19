@@ -31,7 +31,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
     private static _instance: DatasetFSProvider;
     private constructor() {
-        super();
+        super(Profiles.getInstance());
         this.root = new DirEntry("");
     }
 
@@ -46,7 +46,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         return DatasetFSProvider._instance;
     }
 
-    public watch(uri: vscode.Uri, options: { readonly recursive: boolean; readonly excludes: readonly string[] }): vscode.Disposable {
+    public watch(_uri: vscode.Uri, _options: { readonly recursive: boolean; readonly excludes: readonly string[] }): vscode.Disposable {
         throw new Error("Method not implemented.");
     }
 
@@ -147,7 +147,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         parent.mtime = Date.now();
         parent.size += 1;
         this._fireSoon(
-            { type: vscode.FileChangeType.Changed, uri: uri.with({ path: path.resolve(uri.path, "..") }) },
+            { type: vscode.FileChangeType.Changed, uri: uri.with({ path: path.posix.resolve(uri.path, "..") }) },
             { type: vscode.FileChangeType.Created, uri }
         );
     }
@@ -158,7 +158,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
      * @param editor (optional) An editor instance to reload if the URI is already open
      */
     public async fetchDatasetAtUri(uri: vscode.Uri, editor?: vscode.TextEditor | null): Promise<void> {
-        const file = this._lookupAsFile(uri) as DsEntry;
+        const file = (await this._lookupAsFile(uri)) as DsEntry;
         // we need to fetch the contents from the mainframe since the file hasn't been accessed yet
         const bufBuilder = new BufferBuilder();
         const metadata = file.metadata ?? this._getInfoFromUri(uri);
@@ -182,7 +182,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
      * @returns The data set's contents as an array of bytes
      */
     public async readFile(uri: vscode.Uri): Promise<Uint8Array> {
-        const file = this._lookupAsFile(uri);
+        const file = await this._lookupAsFile(uri);
         const profInfo = getInfoForUri(uri, Profiles.getInstance());
 
         if (!file.isConflictFile && profInfo.profile == null) {

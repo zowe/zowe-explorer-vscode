@@ -9,10 +9,10 @@
  *
  */
 
-import { DirEntry, EntryMetadata, IFileEntry, imperative } from "@zowe/zowe-explorer-api";
+import { DirEntry, EntryMetadata, FileEntry, imperative } from "@zowe/zowe-explorer-api";
 import { FileType } from "vscode";
 
-export class DsEntry implements IFileEntry {
+export class DsEntry extends FileEntry {
     public name: string;
     public metadata: DsEntryMetadata;
     public type: FileType;
@@ -21,13 +21,11 @@ export class DsEntry implements IFileEntry {
     public ctime: number;
     public mtime: number;
     public size: number;
-    public data?: Uint8Array;
+    public data: Uint8Array;
     public etag?: string;
 
     public constructor(name: string) {
-        this.type = FileType.File;
-        this.name = name;
-        this.wasAccessed = false;
+        super(name);
     }
 }
 

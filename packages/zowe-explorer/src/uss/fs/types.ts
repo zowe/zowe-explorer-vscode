@@ -10,9 +10,9 @@
  */
 
 import * as vscode from "vscode";
-import { DirEntry, EntryMetadata, IFileEntry } from "@zowe/zowe-explorer-api";
+import { DirEntry, EntryMetadata, FileEntry } from "@zowe/zowe-explorer-api";
 
-export class UssFile implements IFileEntry {
+export class UssFile extends FileEntry {
     public name: string;
     public metadata: EntryMetadata;
     public type: vscode.FileType;
@@ -23,7 +23,7 @@ export class UssFile implements IFileEntry {
     public size: number;
     public binary?: boolean;
     public conflictData?: Uint8Array;
-    public data?: Uint8Array;
+    public data: Uint8Array;
     public etag?: string;
     public isConflictFile?: boolean;
     public inDiffView?: boolean;
@@ -32,13 +32,8 @@ export class UssFile implements IFileEntry {
     public permissions?: vscode.FilePermission;
 
     public constructor(name: string) {
-        this.type = vscode.FileType.File;
-        this.ctime = Date.now();
-        this.mtime = Date.now();
-        this.size = 0;
-        this.name = name;
+        super(name);
         this.binary = false;
-        this.wasAccessed = false;
         this.isConflictFile = false;
         this.inDiffView = false;
         this.forceUpload = false;
@@ -48,12 +43,5 @@ export class UssFile implements IFileEntry {
 export class UssDirectory extends DirEntry {
     public constructor(name: string) {
         super(name);
-        this.type = vscode.FileType.Directory;
-        this.ctime = Date.now();
-        this.mtime = Date.now();
-        this.size = 0;
-        this.name = name;
-        this.entries = new Map();
-        this.wasAccessed = false;
     }
 }

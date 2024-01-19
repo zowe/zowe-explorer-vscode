@@ -10,7 +10,7 @@
  */
 
 import { IJob, IJobFile } from "@zowe/cli";
-import { DirEntry, EntryMetadata, IFileEntry } from "@zowe/zowe-explorer-api";
+import { DirEntry, EntryMetadata, FileEntry } from "@zowe/zowe-explorer-api";
 import { FilePermission, FileType } from "vscode";
 
 export type JobFilter = {
@@ -20,12 +20,12 @@ export type JobFilter = {
     status: string;
 };
 
-export class SpoolEntry implements IFileEntry {
+export class SpoolEntry extends FileEntry {
     public name: string;
     public type: FileType;
     public wasAccessed: boolean;
 
-    public data?: Uint8Array;
+    public data: Uint8Array;
     public permissions?: FilePermission;
     public ctime: number;
     public mtime: number;
@@ -34,9 +34,7 @@ export class SpoolEntry implements IFileEntry {
     public spool?: IJobFile;
 
     public constructor(name: string) {
-        this.type = FileType.File;
-        this.name = name;
-        this.wasAccessed = false;
+        super(name);
     }
 }
 
@@ -46,9 +44,5 @@ export class JobEntry extends DirEntry {
 
     public constructor(name: string) {
         super(name);
-        this.type = FileType.Directory;
-        this.name = name;
-        this.entries = new Map();
-        this.wasAccessed = false;
     }
 }
