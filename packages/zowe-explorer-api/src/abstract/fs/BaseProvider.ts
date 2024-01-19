@@ -446,8 +446,32 @@ export class BaseProvider {
         throw vscode.FileSystemError.FileNotADirectory(uri);
     }
 
-    private createFullUriPath(uri: vscode.Uri): void {
+    private buildTreeForUri(uri: vscode.Uri): void {
         const segments = uri.path.split("/");
+        let currentNode: DirEntry | IFileEntry = this.root;
+        for (let i = 0; i < segments.length; i++) {
+            const segment = segments[i];
+            if (segment.length == 0) continue;
+
+            const isProfileSegment = i == 0;
+            const isFileSegment = !isProfileSegment && i == segments.length - 1;
+
+            const thisUri = vscode.Uri.parse(path.join(...segments.slice(0, i + 1)));
+            if (isFileEntry(currentNode)) {
+                // we've reached the file entry, can stop here
+                return;
+            }
+
+            if (!currentNode.entries.has(segment)) {
+                if (isFileSegment) {
+                    vscode.workspace.fs.writeFile(thisUri, new Uint8Array());
+                } else {
+                    vscode.workspace.fs.createDirectory(thisUri);
+                }
+            }
+
+            currentNode = currentNode.entries.get(segment);
+        }
     }
 
     protected _lookupAsFile(uri: vscode.Uri, opts?: { silent?: boolean; buildFullPath?: boolean }): IFileEntry {
@@ -457,7 +481,7 @@ export class BaseProvider {
         } catch (err) {
             if (opts?.buildFullPath) {
                 if (this._lookupParentDirectory(uri, true) == null) {
-                    this.createFullUriPath(uri);
+                    this.buildTreeForUri(uri);
                     // At this point we need to create the whole path structure in the FSP.
                     // After the entry has been created, then we can check for its existence on the remote system.
                 }
