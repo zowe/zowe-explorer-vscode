@@ -1309,7 +1309,7 @@ export class Profiles extends ProfilesCache {
             if (
                 serviceProfile.type !== "zosmf" &&
                 serviceProfile.profile != null &&
-                !serviceProfile.profile.tokenType.startsWith(zowe.imperative.SessConstants.TOKEN_TYPE_APIML)
+                !serviceProfile.profile.tokenType?.startsWith(zowe.imperative.SessConstants.TOKEN_TYPE_APIML)
             ) {
                 await ZoweExplorerApiRegister.getInstance()
                     .getCommonApi(serviceProfile)
@@ -1342,13 +1342,13 @@ export class Profiles extends ProfilesCache {
         if (!profileName) {
             return [];
         }
-        const usingSecureCreds = !SettingsConfig.getDirectValue(globals.SETTINGS_SECURE_CREDENTIALS_ENABLED);
-        if ((await this.getProfileInfo()).usingTeamConfig && !usingSecureCreds) {
-            const config = (await this.getProfileInfo()).getTeamConfig();
-            return config.api.secure.securePropsForProfile(profileName);
+        const usingSecureCreds = SettingsConfig.getDirectValue(globals.SETTINGS_SECURE_CREDENTIALS_ENABLED);
+        const profInfo = await this.getProfileInfo();
+        if (profInfo.usingTeamConfig && usingSecureCreds) {
+            return profInfo.getTeamConfig().api.secure.securePropsForProfile(profileName);
         }
         const profAttrs = await this.getProfileFromConfig(profileName);
-        const mergedArgs = (await this.getProfileInfo()).mergeArgsForProfile(profAttrs);
+        const mergedArgs = profInfo.mergeArgsForProfile(profAttrs);
         return mergedArgs.knownArgs
             .filter((arg) => arg.secure || arg.argName === "tokenType" || arg.argName === "tokenValue")
             .map((arg) => arg.argName);

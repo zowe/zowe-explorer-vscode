@@ -544,7 +544,7 @@ export class ProfilesCache {
             profile?.profile?.host &&
             profile?.profile?.port &&
             (baseProfile?.profile.host !== profile?.profile.host || baseProfile?.profile.port !== profile?.profile.port) &&
-            profile?.profile.tokenType.startsWith(zowe.imperative.SessConstants.TOKEN_TYPE_APIML)) as boolean;
+            profile?.profile.tokenType?.startsWith(zowe.imperative.SessConstants.TOKEN_TYPE_APIML)) as boolean;
     }
 
     public async updateBaseProfileFileLogin(
