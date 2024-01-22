@@ -23,8 +23,8 @@ import { JOB_SORT_KEYS } from "./utils";
 import * as nls from "vscode-nls";
 import { Profiles } from "../Profiles";
 import { ZoweLogger } from "../utils/LoggerUtils";
-import { buildUniqueSpoolName, encodeJobFile } from "../SpoolProvider";
-import { JobFSProvider } from "./fs";
+import { buildUniqueSpoolName } from "../SpoolProvider";
+import { JobFSProvider } from "./JobFSProvider";
 // Set up localization
 nls.config({
     messageFormat: nls.MessageFormat.bundle,

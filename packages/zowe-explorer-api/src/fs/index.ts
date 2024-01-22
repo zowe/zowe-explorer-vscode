@@ -10,4 +10,6 @@
  */
 
 export * from "./types";
-export * from "./UssFSProvider";
+export * from "./utils";
+
+export * from "./BaseProvider";

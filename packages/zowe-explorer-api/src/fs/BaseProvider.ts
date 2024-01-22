@@ -24,10 +24,10 @@ import {
 import * as path from "path";
 import { isEqual } from "lodash";
 import { getInfoForUri, isDirectoryEntry, isFileEntry } from "./utils";
-import { Gui } from "../../globals/Gui";
+import { Gui } from "../globals/Gui";
 import * as nls from "vscode-nls";
-import { ZoweVsCodeExtension } from "../../vscode";
-import { ProfilesCache } from "../../profiles";
+import { ZoweVsCodeExtension } from "../vscode";
+import { ProfilesCache } from "../profiles";
 
 nls.config({
     messageFormat: nls.MessageFormat.bundle,

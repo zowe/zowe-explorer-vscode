@@ -9,7 +9,8 @@
  *
  */
 
-import { DirEntry, EntryMetadata, FileEntry, imperative } from "@zowe/zowe-explorer-api";
+import { DirEntry, EntryMetadata, FileEntry } from "../types";
+import { imperative } from "@zowe/cli";
 import { FileType } from "vscode";
 
 export class DsEntry extends FileEntry {

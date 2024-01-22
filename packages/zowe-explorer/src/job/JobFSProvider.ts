@@ -10,15 +10,24 @@
  */
 
 import * as vscode from "vscode";
-import { BaseProvider, BufferBuilder, DirEntry, EntryMetadata, FilterEntry, getInfoForUri } from "@zowe/zowe-explorer-api";
-import { ZoweExplorerApiRegister } from "../../ZoweExplorerApiRegister";
-import { Profiles } from "../../Profiles";
-import { isJobEntry } from "./utils";
+import {
+    BaseProvider,
+    BufferBuilder,
+    DirEntry,
+    EntryMetadata,
+    FilterEntry,
+    getInfoForUri,
+    isFilterEntry,
+    isJobEntry,
+    JobEntry,
+    JobFilter,
+    SpoolEntry,
+} from "@zowe/zowe-explorer-api";
+import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
+import { Profiles } from "../Profiles";
 import * as path from "path";
-import { JobEntry, JobFilter, SpoolEntry } from "./types";
-import { buildUniqueSpoolName } from "../../SpoolProvider";
+import { buildUniqueSpoolName } from "../SpoolProvider";
 import { IJob, IJobFile } from "@zowe/cli";
-import { isFilterEntry } from "../../dataset/fs/utils";
 
 export class JobFSProvider extends BaseProvider implements vscode.FileSystemProvider {
     public onDidChangeFile: vscode.Event<vscode.FileChangeEvent[]>;

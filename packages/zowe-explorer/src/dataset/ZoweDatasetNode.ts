@@ -32,7 +32,7 @@ import * as nls from "vscode-nls";
 import { Profiles } from "../Profiles";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import * as dayjs from "dayjs";
-import { DatasetFSProvider } from "./fs";
+import { DatasetFSProvider } from "./DatasetFSProvider";
 // Set up localization
 nls.config({
     messageFormat: nls.MessageFormat.bundle,

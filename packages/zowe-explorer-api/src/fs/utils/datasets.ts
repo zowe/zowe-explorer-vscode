@@ -9,8 +9,7 @@
  *
  */
 
-import { FilterEntry, IFileSystemEntry } from "@zowe/zowe-explorer-api";
-import { DsEntry, MemberEntry, PdsEntry } from "./types";
+import { FilterEntry, IFileSystemEntry, DsEntry, MemberEntry, PdsEntry } from "../";
 import { FileType } from "vscode";
 
 export function isDsEntry(entry: IFileSystemEntry): entry is DsEntry {

@@ -22,8 +22,7 @@ import * as contextually from "../shared/context";
 import * as nls from "vscode-nls";
 import { UssFileTree } from "./FileStructure";
 import { ZoweLogger } from "../utils/LoggerUtils";
-import { downloadUnixFile } from "./actions";
-import { UssFSProvider } from "./fs";
+import { UssFSProvider } from "./UssFSProvider";
 import { USSTree } from "./USSTree";
 
 // Set up localization

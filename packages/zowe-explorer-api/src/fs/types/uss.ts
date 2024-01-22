@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { DirEntry, EntryMetadata, FileEntry } from "@zowe/zowe-explorer-api";
+import { DirEntry, EntryMetadata, FileEntry } from ".";
 
 export class UssFile extends FileEntry {
     public name: string;

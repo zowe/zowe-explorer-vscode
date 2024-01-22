@@ -27,5 +27,5 @@ export * from "./tree/sorting";
 export * from "./utils";
 export * from "./vscode/ZoweVsCodeExtension";
 export * from "./vscode/ui";
-export * from "./abstract";
+export * from "./fs";
 export { imperative } from "@zowe/cli";

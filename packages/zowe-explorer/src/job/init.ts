@@ -12,7 +12,7 @@
 import * as vscode from "vscode";
 import * as jobActions from "./actions";
 import * as refreshActions from "../shared/refresh";
-import { IZoweJobTreeNode, IZoweTreeNode, IZoweTree, Gui } from "@zowe/zowe-explorer-api";
+import { IZoweJobTreeNode, IZoweTreeNode, Gui } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { ZosJobsProvider, createJobsTree } from "./ZosJobsProvider";
 import * as contextuals from "../shared/context";
@@ -20,7 +20,7 @@ import { Job } from "./ZoweJobNode";
 import { getSelectedNodeList } from "../shared/utils";
 import { initSubscribers } from "../shared/init";
 import { ZoweLogger } from "../utils/LoggerUtils";
-import { JobFSProvider } from "./fs";
+import { JobFSProvider } from "./JobFSProvider";
 import * as nls from "vscode-nls";
 import * as globals from "../globals";
 

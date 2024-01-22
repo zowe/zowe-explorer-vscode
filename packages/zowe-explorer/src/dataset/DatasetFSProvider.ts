@@ -9,16 +9,27 @@
  *
  */
 
-import { BaseProvider, BufferBuilder, ConflictViewSelection, DirEntry, getInfoForUri, isDirectoryEntry, FilterEntry } from "@zowe/zowe-explorer-api";
+import {
+    BaseProvider,
+    BufferBuilder,
+    ConflictViewSelection,
+    DirEntry,
+    DsEntry,
+    DsEntryMetadata,
+    MemberEntry,
+    PdsEntry,
+    getInfoForUri,
+    isDirectoryEntry,
+    isFilterEntry,
+    FilterEntry,
+} from "@zowe/zowe-explorer-api";
 import * as path from "path";
 import * as vscode from "vscode";
-import { ZoweExplorerApiRegister } from "../../ZoweExplorerApiRegister";
+import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import * as nls from "vscode-nls";
 
 // Set up localization
-import { DsEntry, DsEntryMetadata, MemberEntry, PdsEntry } from "./types";
-import { Profiles } from "../../Profiles";
-import { isFilterEntry } from "./utils";
+import { Profiles } from "../Profiles";
 
 nls.config({
     messageFormat: nls.MessageFormat.bundle,

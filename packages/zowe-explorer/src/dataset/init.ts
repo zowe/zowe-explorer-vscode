@@ -22,7 +22,7 @@ import { getSelectedNodeList } from "../shared/utils";
 import { initSubscribers } from "../shared/init";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { TreeViewUtils } from "../utils/TreeViewUtils";
-import { DatasetFSProvider } from "./fs";
+import { DatasetFSProvider } from "./DatasetFSProvider";
 
 export async function initDatasetProvider(context: vscode.ExtensionContext): Promise<DatasetTree> {
     ZoweLogger.trace("dataset.init.initDatasetProvider called.");

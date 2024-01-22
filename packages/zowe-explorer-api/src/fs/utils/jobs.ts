@@ -9,16 +9,11 @@
  *
  */
 
-import { FileEntry, IFileSystemEntry } from "@zowe/zowe-explorer-api";
-import { JobEntry, SpoolEntry } from "./types";
+import { IFileSystemEntry, JobEntry, SpoolEntry } from "../types";
 import { FileType } from "vscode";
 
 export function isJobEntry(entry: IFileSystemEntry): entry is JobEntry {
     return entry != null && entry.type == FileType.Directory;
-}
-
-export function isFileEntry(entry: IFileSystemEntry): entry is FileEntry {
-    return entry != null && entry.type == FileType.File;
 }
 
 export function isSpoolEntry(entry: IFileSystemEntry): entry is SpoolEntry {

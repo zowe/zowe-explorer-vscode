@@ -19,16 +19,17 @@ import {
     EntryMetadata,
     FileEntry,
     DirEntry,
+    UssDirectory,
+    UssFile
 } from "@zowe/zowe-explorer-api";
 import * as path from "path";
 import * as vscode from "vscode";
-import { ZoweExplorerApiRegister } from "../../ZoweExplorerApiRegister";
-import { UssFileTree, UssFileType } from "../FileStructure";
+import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
+import { UssFileTree, UssFileType } from "./FileStructure";
 import * as nls from "vscode-nls";
 
 // Set up localization
-import { UssDirectory, UssFile } from "./types";
-import { Profiles } from "../../Profiles";
+import { Profiles } from "../Profiles";
 
 nls.config({
     messageFormat: nls.MessageFormat.bundle,

@@ -21,7 +21,7 @@ import { USSTree, createUSSTree } from "./USSTree";
 import { initSubscribers } from "../shared/init";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { TreeViewUtils } from "../utils/TreeViewUtils";
-import { UssFSProvider } from "./fs/UssFSProvider";
+import { UssFSProvider } from "./UssFSProvider";
 
 export async function initUSSProvider(context: vscode.ExtensionContext): Promise<USSTree> {
     ZoweLogger.trace("init.initUSSProvider called.");

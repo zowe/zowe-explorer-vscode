@@ -12,7 +12,7 @@
 import * as vscode from "vscode";
 import { ProfilesCache } from "../../profiles/ProfilesCache";
 import { imperative } from "@zowe/cli";
-import { DirEntry, FileEntry } from "./types";
+import { DirEntry, FileEntry } from "../types";
 
 export type UriFsInfo = {
     isRoot: boolean;

@@ -30,7 +30,7 @@ import { TreeViewUtils } from "../utils/TreeViewUtils";
 import { TreeProviders } from "../shared/TreeProviders";
 import { JOB_FILTER_OPTS } from "./utils";
 import * as path from "path";
-import { JobFSProvider } from "./fs";
+import { JobFSProvider } from "./JobFSProvider";
 
 // Set up localization
 nls.config({

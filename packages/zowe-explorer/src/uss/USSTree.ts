@@ -27,7 +27,7 @@ import * as nls from "vscode-nls";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { TreeViewUtils } from "../utils/TreeViewUtils";
 import { TreeProviders } from "../shared/TreeProviders";
-import { UssFSProvider } from "./fs/UssFSProvider";
+import { UssFSProvider } from "./UssFSProvider";
 
 // Set up localization
 nls.config({
