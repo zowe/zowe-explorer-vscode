@@ -15,6 +15,8 @@
 - `ZoweVsCodeExtension.showVsCodeMessage` removed in favor of `Gui.showMessage`.
 - `ZoweVsCodeExtension.inputBox` removed in favor of `Gui.showInputBox`.
 - `ZoweVsCodeExtension.promptCredentials` removed in favor of `ZoweVsCodeExtension.updateCredentials`.
+- Changed ZoweExplorerExtender.initForZowe `profileTypeConfigurations: imperative.ICommandProfileTypeConfiguration[]` to a required argument
+- Changed IApiExplorerExtenders.initForZowe `profileTypeConfigurations: imperative.ICommandProfileTypeConfiguration[]` to a required argument
 
 ## New APIs Added
 
