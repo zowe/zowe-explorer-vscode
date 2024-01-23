@@ -670,5 +670,12 @@ export namespace ZoweExplorerApi {
          * Define events that fire whenever an existing team config profile is updated.
          */
         onProfilesUpdate?: vscode.Event<EventTypes>;
+
+        /**
+         * Lookup of any registered API (Uss, Mvs, Jes, or Command).
+         * @param {string} profile
+         * @returns the registered API instance
+         */
+        getCommonApi?(profile: zowe.imperative.IProfileLoaded): ZoweExplorerApi.ICommon;
     }
 }

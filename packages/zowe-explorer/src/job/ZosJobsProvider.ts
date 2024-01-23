@@ -77,7 +77,7 @@ export async function createJobsTree(log: imperative.Logger): Promise<ZosJobsPro
 }
 
 export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZoweJobTreeNode> {
-    public static readonly JobId = "Job ID: ";
+    public static readonly JobId = "JobId: ";
     public static readonly Owner = "Owner: ";
     public static readonly Prefix = "Prefix: ";
     public static readonly Status = "Status: ";
@@ -1182,7 +1182,13 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         inputBox.placeholder = localize("filterJobs.prompt.message", "Enter local filter...");
         inputBox.onDidChangeValue((query) => {
             query = query.toUpperCase();
-            job["children"] = actual_jobs.filter((item) => `${item["job"].jobname}(${item["job"].jobid}) - ${item["job"].retcode}`.includes(query));
+            job["children"] = actual_jobs.filter((item) =>
+                item["job"]["exec-member"]
+                    ? `${item["job"].jobname}(${item["job"].jobid}) - ${item["job"]["exec-member"] as string} - ${item["job"].retcode}`.includes(
+                          query
+                      )
+                    : `${item["job"].jobname}(${item["job"].jobid}) - ${item["job"].retcode}`.includes(query)
+            );
             TreeProviders.job.refresh();
             this.updateFilterForJob(job, query, isSession);
             Gui.setStatusBarMessage(localize("filter.updated", "$(check) Filter updated for {0}", job.label as string), globals.MS_PER_SEC * 4);
