@@ -157,6 +157,8 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
         file.data = bufBuilder.read() ?? new Uint8Array();
         file.etag = resp.apiResponse.etag;
+        file.size = file.data.byteLength;
+
         if (editor) {
             await this._updateResourceInEditor(uri);
         }
@@ -168,7 +170,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
      * @returns The file's contents as an array of bytes
      */
     public async readFile(uri: vscode.Uri): Promise<Uint8Array> {
-        const file = await this._lookupAsFile(uri, { silent: false, buildFullPath: true });
+        const file = await this._lookupAsFile(uri, { silent: false });
         const profInfo = getInfoForUri(uri, Profiles.getInstance());
 
         if (!file.isConflictFile && profInfo.profile == null) {
@@ -234,14 +236,20 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                 // Entry was already accessed, this is an update to the existing file.
                 // Note that we don't want to call the API when making changes to the conflict file,
                 // because the conflict file serves as the "remote" point of reference at the time of conflict,
-                // and provides the data when comparing local/remote versions of a file.
+                // and provides the data when comparing against the local version of a file.
 
                 // Attempt to write data to remote system, and handle any conflicts from e-tag mismatch
                 try {
+                    // Attempt to write data to remote system, and handle any conflicts from e-tag mismatch
                     await ussApi.uploadBufferAsFile(Buffer.from(content), entry.metadata.path, {
-                        etag: entry.forceUpload ? undefined : entry.etag,
+                        etag: entry.forceUpload || entry.etag == null ? undefined : entry.etag,
                         returnEtag: true,
                     });
+
+                    if (entry.forceUpload) {
+                        // remove force upload flag after entry was uploaded successfully
+                        entry.forceUpload = false;
+                    }
 
                     // Update e-tag if write was successful
                     // TODO: This call below can be removed once zowe.Upload.bufferToUssFile returns response headers.
@@ -251,26 +259,20 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                     });
                     entry.etag = newData.apiResponse.etag;
                 } catch (err) {
-                    if (err.message.includes("Rest API failure with HTTP(S) status 412")) {
-                        if (
-                            (await this._handleConflict(ussApi, {
-                                content: content,
-                                fsEntry: entry,
-                                uri: uri,
-                            })) != ConflictViewSelection.Overwrite
-                        ) {
-                            return;
-                        }
-                    } else {
+                    if (!err.message.includes("Rest API failure with HTTP(S) status 412")) {
+                        return;
+                    }
+                    const conflictData = {
+                        content: content,
+                        fsEntry: entry,
+                        uri: uri,
+                    };
+                    if ((await this._handleConflict(ussApi, conflictData)) != ConflictViewSelection.Overwrite) {
                         return;
                     }
                 }
-
-                entry.data = content;
-            } else {
-                entry.data = content;
             }
-            // if the entry hasn't been accessed yet, we don't need to call the API since we are just creating the file
+            entry.data = content;
         }
 
         entry.mtime = Date.now();
@@ -307,17 +309,17 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
         try {
             await ZoweExplorerApiRegister.getUssApi(entry.metadata.profile).rename(entry.metadata.path, newPath);
-            entry.metadata.path = newPath;
-            // We have to update the path for all child entries if they exist in the FileSystem
-            // This way any further API requests in readFile will use the latest paths on the LPAR
-            if (entry instanceof UssDirectory) {
-                this._updateChildPaths(entry);
-            }
         } catch (err) {
-            // TODO: error handling
+            await Gui.errorMessage(localize("uss.fsp.renameFailed", "Could not rename {0} due to API error: {1}", entry.metadata.path, err.message));
+        }
+
+        entry.metadata.path = newPath;
+        // We have to update the path for all child entries if they exist in the FileSystem
+        // This way any further API requests in readFile will use the latest paths on the LPAR
+        if (entry instanceof UssDirectory) {
+            this._updateChildPaths(entry);
         }
         newParent.entries.set(newName, entry);
-
         this._fireSoon({ type: vscode.FileChangeType.Deleted, uri: oldUri }, { type: vscode.FileChangeType.Created, uri: newUri });
     }
 
@@ -328,13 +330,22 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
     public async delete(uri: vscode.Uri, options: { recursive: boolean }): Promise<void> {
         const { entryToDelete, parent, parentUri } = this._deleteEntry(uri, options);
 
-        // don't send API request when the deleted entry is a conflict
+        // don't send an API request when the deleted entry is a conflict
         if (entryToDelete instanceof UssFile && entryToDelete.isConflictFile) {
             this._fireSoon({ type: vscode.FileChangeType.Changed, uri: parentUri }, { uri, type: vscode.FileChangeType.Deleted });
             return;
         }
 
-        await ZoweExplorerApiRegister.getUssApi(parent.metadata.profile).delete(entryToDelete.metadata.path, entryToDelete instanceof UssDirectory);
+        try {
+            await ZoweExplorerApiRegister.getUssApi(parent.metadata.profile).delete(
+                entryToDelete.metadata.path,
+                entryToDelete instanceof UssDirectory
+            );
+        } catch (err) {
+            await Gui.errorMessage(
+                localize("fsp.deleteFailed", "Could not delete {0} due to API error: {1}", entryToDelete.metadata.path, err.message)
+            );
+        }
 
         this._fireSoon({ type: vscode.FileChangeType.Changed, uri: parentUri }, { uri, type: vscode.FileChangeType.Deleted });
     }

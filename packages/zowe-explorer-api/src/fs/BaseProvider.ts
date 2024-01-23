@@ -105,6 +105,7 @@ export class BaseProvider {
         // If the data is equal, we can just assign the data in the FileSystem and avoid making an API request.
         localEntry.wasAccessed = remoteEntry.data.length === remoteEntry.conflictData.length && isEqual(remoteEntry.data, remoteEntry.conflictData);
         localEntry.inDiffView = false;
+        localEntry.forceUpload = true;
         await vscode.workspace.fs.writeFile(localUri, localEntry.conflictData);
         Gui.setStatusBarMessage(
             localize("diff.usedRemoteContent", "$(discard) Used remote content for {0}", localEntry.name),
