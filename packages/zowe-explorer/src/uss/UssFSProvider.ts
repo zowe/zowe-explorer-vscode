@@ -144,7 +144,6 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
     public async fetchFileAtUri(uri: vscode.Uri, editor?: vscode.TextEditor | null): Promise<void> {
         const file = await this._lookupAsFile(uri);
         const uriInfo = getInfoForUri(uri, Profiles.getInstance());
-        // we need to fetch the contents from the mainframe since the file hasn't been accessed yet
         const bufBuilder = new BufferBuilder();
         const filePath = uri.path.substring(uriInfo.slashAfterProfilePos + 1);
         const metadata = file.metadata ?? this._getInfoFromUri(uri);
@@ -258,6 +257,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                         returnEtag: true,
                     });
                     entry.etag = newData.apiResponse.etag;
+                    entry.data = content;
                 } catch (err) {
                     if (!err.message.includes("Rest API failure with HTTP(S) status 412")) {
                         return;
@@ -271,8 +271,10 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                         return;
                     }
                 }
+            } else {
+                // if the entry hasn't been accessed yet, we don't need to call the API since we are just creating the file
+                entry.data = content;
             }
-            entry.data = content;
         }
 
         entry.mtime = Date.now();
@@ -354,6 +356,24 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
     //     return this.copyEx(source, destination, options);
     // }
 
+    private buildFileName(fileList: any[], fileName: string): string { 
+        // Check root path for conflicts
+        if (fileList?.find((file) => file.name === fileName) != null) {
+            // If file names match, build the copy suffix
+            let dupCount = 1;
+            const extension = path.extname(fileName);
+            const baseNameForFile = path.parse(fileName)?.name;
+            let dupName = `${baseNameForFile} (${dupCount})${extension}`;
+            while (fileList.find((file) => file.name === dupName) != null) {
+                dupCount++;
+                dupName = `${baseNameForFile} (${dupCount})${extension}`;
+            }
+            return dupName;
+        }
+
+        return fileName;
+    }
+
     /**
      * Copy a file/folder from a source URI to destination URI.
      * @param source The source URI for the file/folder to copy
@@ -377,20 +397,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         const apiResponse = await api.fileList(destInfo.path);
         const fileList = apiResponse.apiResponse?.items;
 
-        // Check root path for conflicts before pasting nodes in this path
-        let fileName = path.basename(sourceInfo.path);
-        if (fileList?.find((file) => file.name === fileName) != null) {
-            // If file names match, build the copy suffix
-            let dupCount = 1;
-            const extension = path.extname(fileName);
-            const baseNameForFile = path.parse(fileName)?.name;
-            let dupName = `${baseNameForFile} (${dupCount})${extension}`;
-            while (fileList.find((file) => file.name === dupName) != null) {
-                dupCount++;
-                dupName = `${baseNameForFile} (${dupCount})${extension}`;
-            }
-            fileName = dupName;
-        }
+        const fileName = this.buildFileName(fileList, path.basename(sourceInfo.path));
         const outputPath = `${destInfo.path}/${fileName}`;
 
         if (hasCopyApi && sourceInfo.profile.profile === destInfo.profile.profile) {

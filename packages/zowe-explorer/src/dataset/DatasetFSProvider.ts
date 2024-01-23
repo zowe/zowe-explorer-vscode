@@ -268,27 +268,24 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                         returnEtag: true,
                     });
                     entry.etag = resp.apiResponse.etag;
+                    entry.data = content;
                 } catch (err) {
-                    if (err.message.includes("Rest API failure with HTTP(S) status 412")) {
-                        if (
-                            (await this._handleConflict(mvsApi, {
-                                content: content,
-                                fsEntry: entry,
-                                uri: uri,
-                            })) != ConflictViewSelection.Overwrite
-                        ) {
-                            return;
-                        }
-                    } else {
+                    if (!err.message.includes("Rest API failure with HTTP(S) status 412")) {
+                        return;
+                    }
+                    const conflictData = {
+                        content: content,
+                        fsEntry: entry,
+                        uri: uri,
+                    };
+                    if ((await this._handleConflict(mvsApi, conflictData)) != ConflictViewSelection.Overwrite) {
                         return;
                     }
                 }
-
-                entry.data = content;
             } else {
+                // if the entry hasn't been accessed yet, we don't need to call the API since we are just creating the file
                 entry.data = content;
             }
-            // if the entry hasn't been accessed yet, we don't need to call the API since we are just creating the file
         }
 
         entry.mtime = Date.now();

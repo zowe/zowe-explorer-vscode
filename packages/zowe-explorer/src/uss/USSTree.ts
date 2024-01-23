@@ -247,7 +247,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                         arguments: [originalNode.resourceUri],
                     };
                 }
-                this.mOnDidChangeTreeData.fire(originalNode);
+                this.mOnDidChangeTreeData.fire();
                 this.updateFavorites();
             } catch (err) {
                 if (err instanceof Error) {
