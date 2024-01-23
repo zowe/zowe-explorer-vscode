@@ -7,7 +7,7 @@
 
 > ## v3 Pre-release is now available in our [Github Releases](https://github.com/zowe/vscode-extension-for-zowe/releases) with the removal of v1 profile support. Keep an eye on [changes affecting users and extenders](https://github.com/zowe/vscode-extension-for-zowe/wiki/v3-Changes-for-Users-and-Extenders) for the full list of changes
 >
-> ## With the removal of keytar shim from VS Code we will be replacing `node-keytar` with `@zowe/secrets-for-zowe-sdk` in the v2.10.0 release to avoid user interruptions. Extenders, please check out the usage [documentation](https://github.com/zowe/vscode-extension-for-zowe/wiki/Secure-Credentials-for-Extenders)
+> ## With the removal of keytar shim from VS Code we have replaced `node-keytar` with `@zowe/secrets-for-zowe-sdk` in the v2.10.0 release to avoid user interruptions. Extenders, please check out the usage [documentation](https://github.com/zowe/vscode-extension-for-zowe/wiki/Secure-Credentials-for-Extenders)
 
 ## Introduction
 
