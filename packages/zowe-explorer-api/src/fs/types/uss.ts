@@ -31,8 +31,8 @@ export class UssFile extends FileEntry {
 
     public permissions?: vscode.FilePermission;
 
-    public constructor(name: string) {
-        super(name);
+    public constructor(name?: string) {
+        super(name ?? "");
         this.binary = false;
         this.isConflictFile = false;
         this.inDiffView = false;

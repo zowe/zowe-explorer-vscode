@@ -20,17 +20,17 @@ import {
     FileEntry,
     DirEntry,
     UssDirectory,
-    UssFile
+    UssFile,
 } from "@zowe/zowe-explorer-api";
 import * as path from "path";
 import * as vscode from "vscode";
-import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
-import { UssFileTree, UssFileType } from "./FileStructure";
 import * as nls from "vscode-nls";
 
-// Set up localization
+import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
+import { UssFileTree, UssFileType } from "./FileStructure";
 import { Profiles } from "../Profiles";
 
+// Set up localization
 nls.config({
     messageFormat: nls.MessageFormat.bundle,
     bundleFormat: nls.BundleFormat.standalone,
@@ -45,7 +45,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
     private static _instance: UssFSProvider;
     private constructor() {
         super(Profiles.getInstance());
-        this.root = new UssDirectory("");
+        this.root = new UssDirectory();
     }
 
     /**
@@ -79,12 +79,13 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
     public async move(oldUri: vscode.Uri, newUri: vscode.Uri): Promise<boolean> {
         const info = this._getInfoFromUri(newUri);
         const ussApi = ZoweExplorerApiRegister.getUssApi(info.profile);
-        const oldInfo = this._getInfoFromUri(oldUri);
 
         if (!ussApi.move) {
             Gui.errorMessage(localize("uss.unsupported.move", "The 'move' function is not implemented for this USS API."));
             return false;
         }
+
+        const oldInfo = this._getInfoFromUri(oldUri);
 
         await ussApi.move(oldInfo.path, info.path);
         await this._relocateEntry(oldUri, newUri, info.path);
@@ -102,12 +103,12 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
          * - Look into pre-fetching a directory level below the one given
          * - Should we support symlinks and can we use z/OSMF "report" option?
          */
-        const entry = this._lookupAsDirectory(uri, false);
+        const dir = this._lookupAsDirectory(uri, false);
 
         const result: [string, vscode.FileType][] = [];
-        if (!entry.wasAccessed && entry !== this.root) {
+        if (!dir.wasAccessed && dir !== this.root) {
             // if this entry has not been accessed before, grab its file list
-            const response = await ZoweExplorerApiRegister.getUssApi(entry.metadata.profile).fileList(entry.metadata.path);
+            const response = await ZoweExplorerApiRegister.getUssApi(dir.metadata.profile).fileList(dir.metadata.path);
             for (const item of response.apiResponse.items) {
                 const itemName = item.name as string;
                 // exclude ".", "..", "..."
@@ -117,22 +118,19 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
                 const isDirectory = item.mode.startsWith("d");
                 const newEntryType = isDirectory ? vscode.FileType.Directory : vscode.FileType.File;
-                const entryExists = entry.entries.get(itemName);
+                const entryExists = dir.entries.get(itemName);
                 // skip over entries that are of the same type if they already exist
                 if (entryExists && entryExists.type === newEntryType) {
                     continue;
                 }
 
                 // create new entries for any files/folders not in the provider
-                if (item.mode.startsWith("d")) {
-                    entry.entries.set(itemName, new UssDirectory(itemName));
-                } else {
-                    entry.entries.set(itemName, new UssFile(itemName));
-                }
+                const UssType = item.mode.startsWith("d") ? UssDirectory : UssFile;
+                dir.entries.set(itemName, new UssType(itemName));
             }
         }
 
-        for (const [name, child] of entry.entries) {
+        for (const [name, child] of dir.entries) {
             result.push([name, child.type]);
         }
         return result;
