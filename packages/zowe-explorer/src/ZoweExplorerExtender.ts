@@ -221,8 +221,7 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
                 for (const typeConfig of profileTypeConfigurations) {
                     const addResult = profileInfo.addProfileTypeToSchema(typeConfig.type, {
                         schema: typeConfig.schema,
-                        sourceApp: "Zowe Explorer (for VS Code)",
-                        version: typeConfig.schema.version
+                        sourceApp: "Zowe Explorer (for VS Code)"
                     });
                     if (addResult.info.length > 0) {
                         Gui.warningMessage(addResult.info);
