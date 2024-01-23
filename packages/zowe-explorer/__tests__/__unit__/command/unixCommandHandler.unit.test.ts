@@ -172,10 +172,10 @@ describe("UnixCommand Actions Unit Testing", () => {
         mergeArgsForProfile: jest.fn().mockReturnValue({
             knownArgs: [
                 { argName: "port", argValue: "TEST", secure: false },
-                { argName: "host", argValue: "TEST", secure: false },
-                { argName: "password", secure: true },
+                { argName: "host",  secure: true },
             ],
-            missingArgs: [{ argName: "user", secure: true }],
+            missingArgs: [{ argName: "user", argValue: undefined },
+            { argName: "password", secure: true }],
         }),
         loadSecureArg: jest.fn().mockReturnValue("fake"),
     } as any);

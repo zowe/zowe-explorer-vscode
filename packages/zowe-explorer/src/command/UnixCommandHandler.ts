@@ -55,7 +55,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
     private static instance: UnixCommandHandler;
     public outputChannel: vscode.OutputChannel;
     public sshSession: SshSession;
-    public flag: boolean = true;
+    public pathInputConfirmationFlag: boolean = true;
     public sshprofile: imperative.IProfileLoaded;
     public user: string;
 
@@ -134,14 +134,14 @@ export class UnixCommandHandler extends ZoweCommandProvider {
             profile = node.getProfile();
         }
         if (cwd == "") {
-            cwd = await vscode.window.showInputBox({
-                prompt: "Enter the path of the directory in order to execute the command",
-                value: "",
-            });
+            const options: vscode.InputBoxOptions = {
+                prompt: localize("unixCommand.pathToEnter", "Enter the path of the directory in order to execute the command"),
+            };
+            cwd = await Gui.showInputBox(options);
         }
         if (cwd == "") {
             Gui.showMessage(localize("unixCommand.HomeDirectory", "Redirecting to Home Directory"));
-            this.flag = false;
+            this.pathInputConfirmationFlag = false;
         }
         if (cwd == undefined) {
             Gui.showMessage(localize("issueUnixCommand.options.nopathentered", "Operation cancelled."));
@@ -198,7 +198,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
         ZoweLogger.trace("UnixCommandHandler.setsshSession called.");
         this.sshprofile = await this.getSshProfile();
         if (this.sshprofile) {
-            const cmdArgs: imperative.ICommandArguments = this.getCmdArgs(this.sshprofile?.profile as imperative.IProfileLoaded);
+            const cmdArgs: imperative.ICommandArguments = this.getCmdArgs(this.sshprofile.profile as imperative.IProfileLoaded);
             // create the ssh session
             const sshSessCfg = SshSession.createSshSessCfgFromArgs(cmdArgs);
             imperative.ConnectionPropsForSessCfg.resolveSessCfgProps<ISshSession>(sshSessCfg, cmdArgs);
@@ -242,6 +242,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
         const profileInfo = await Profiles.getInstance().getProfileInfo();
         const params = ["port", "host", "user", "password"];
         const profiles = profileInfo.getAllProfiles("ssh");
+        let exitflag: boolean;
         if (!profiles) {
             Gui.errorMessage(
                 localize("setsshProfile.couldnotfindprofile", `No SSH profile found. Please create an SSH profile before issuing Unix commands.`)
@@ -255,24 +256,30 @@ export class UnixCommandHandler extends ZoweCommandProvider {
                 const prof = profileInfo.mergeArgsForProfile(sshProfile.profile as imperative.IProfAttrs);
                 for (const p of params) {
                     let obj = prof.knownArgs.find((a) => a.argName === p);
-                    if (!obj) {
-                        obj = prof.missingArgs.find((a) => a.argName === p);
-                    }
-                    if (obj.argValue) {
-                        sshProfile.profile[p] = obj.argValue;
-                    } else {
-                        const options: vscode.InputBoxOptions = {
-                            prompt: `Enter the ${p} of the ssh profile`,
-                            value: "",
-                            ignoreFocusOut: true,
-                            password: true,
-                        };
-                        const response = await Gui.showInputBox(options);
-                        if (!response) {
-                            Gui.showMessage(localize("issueUnixCommand.enter.command", `No command entered.`));
-                            return;
+                    if (obj) {
+                        if (obj.argValue) {
+                            sshProfile.profile[p] = obj.argValue;
+                        } else {
+                            sshProfile.profile[p] = profileInfo.loadSecureArg(obj);
                         }
-                        sshProfile.profile[p] = response;
+                    } else {
+                        obj = prof.missingArgs.find((a) => a.argName === p);
+                        if (obj.argValue) {
+                            sshProfile.profile[p] = obj.argValue;
+                        } else {
+                            const options: vscode.InputBoxOptions = {
+                                prompt: localize("issueUnixCommand.user.pw", `Enter the {0} of the profile.`,p),
+                                value: "",
+                                ignoreFocusOut: true,
+                                password: true,
+                            };
+                            const response = await Gui.showInputBox(options);
+                            if (!response) {
+                                Gui.showMessage(localize("issueUnixCommand.enter.command", `No command entered.`));
+                                return;
+                            }
+                            sshProfile.profile[p] = response;
+                        }
                     }
                 }
             }
@@ -362,7 +369,12 @@ export class UnixCommandHandler extends ZoweCommandProvider {
                     () => {
                         if (ZoweExplorerApiRegister.getCommandApi(profile).issueUnixCommand) {
                             // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-                            return ZoweExplorerApiRegister.getCommandApi(profile).issueUnixCommand(this.sshSession, command, cwd, this.flag);
+                            return ZoweExplorerApiRegister.getCommandApi(profile).issueUnixCommand(
+                                this.sshSession,
+                                command,
+                                cwd,
+                                this.pathInputConfirmationFlag
+                            );
                         }
                     }
                 );
