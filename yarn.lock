@@ -2674,9 +2674,9 @@
     comment-json "4.1.1"
     string-width "4.2.3"
 
-"@zowe/imperative@5.21.0", "@zowe/imperative@file:zowe-imperative-5.21.0.tgz":
+"@zowe/imperative@5.21.0", "@zowe/imperative@file:zowe-imperative-5.21.0-schema-mgmt.tgz":
   version "5.21.0"
-  resolved "file:zowe-imperative-5.21.0.tgz#47da40ba624d1a695df7cbf55e7e2b4faa43ef1d"
+  resolved "file:zowe-imperative-5.21.0-schema-mgmt.tgz#88b2f3222d56e46135577aee72b783540ab7338b"
   dependencies:
     "@types/yargs" "13.0.4"
     chalk "2.4.2"
