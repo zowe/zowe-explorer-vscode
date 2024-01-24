@@ -13,47 +13,41 @@
 
 "use strict";
 
-// OpenSSL 3 no longer supports the insecure md4 hash, but webpack < 6
-// hardcodes it. Work around by substituting a supported algorithm.
-// https://github.com/webpack/webpack/issues/13572
-// https://github.com/webpack/webpack/issues/14532
-const crypto = require("crypto");
-const crypto_orig_createHash = crypto.createHash;
-crypto.createHash = (algorithm) => crypto_orig_createHash(algorithm == "md4" ? "sha256" : algorithm);
-
 const path = require("path");
-var webpack = require("webpack");
-var fs = require("fs");
+const webpack = require("webpack");
+const fs = require("fs");
+const nodeExternals = require("webpack-node-externals");
 
-/**@type {import('webpack').Configuration}*/
+/**@type {webpack.Configuration}*/
 const config = {
-    target: "node", // vscode extensions run in a Node.js-context 📖 -> https://webpack.js.org/configuration/node/
-    entry: "./src/extension.ts", // the entry point of this extension, 📖 -> https://webpack.js.org/configuration/entry-context/
+    target: "webworker",
+    entry: "./src/extension.ts",
     output: {
-        // the bundle is stored in the 'out/src' folder (check package.json), 📖 -> https://webpack.js.org/configuration/output/
         path: path.resolve(__dirname, "out/src"),
         filename: "extension.js",
         libraryTarget: "commonjs2",
         devtoolModuleFilenameTemplate: "../../[resource-path]",
     },
     devtool: "source-map",
-    externals: {
-        // Add modules that cannot be webpack'ed, 📖 -> https://webpack.js.org/configuration/externals/
-        vscode: "commonjs vscode", // the vscode-module is created on-the-fly and must be excluded. Add other modules that cannot be webpack'ed, 📖 -> https://webpack.js.org/configuration/externals/
-        "spdx-exceptions": "commonjs spdx-exceptions",
-        "spdx-license-ids": "commonjs spdx-license-ids",
-        "spdx-license-ids/deprecated": "commonjs spdx-license-ids/deprecated",
-        "cpu-features": "commonjs cpu-features",
-    },
+    externals: [
+        nodeExternals({
+            modulesDir: path.resolve(__dirname, "../../node_modules"),
+        }),
+        nodeExternals(),
+        "vscode",
+    ],
     resolve: {
-        // support reading TypeScript and JavaScript files, 📖 -> https://github.com/TypeStrong/ts-loader
         extensions: [".ts", ".js"],
+        fallback: {
+            path: require.resolve("path-browserify"),
+            crypto: require.resolve("crypto-browserify"),
+            fs: false,
+        },
     },
     node: {
-        __dirname: false, // leave the __dirname behavior intact
+        __dirname: false,
     },
     stats: {
-        // Ignore warnings
         warnings: false,
     },
     module: {
