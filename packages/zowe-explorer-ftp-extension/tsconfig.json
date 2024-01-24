@@ -27,5 +27,6 @@
     "./node_modules/vscode/lib/*",
     "__tests__",
     "__mocks__"
-  ]
+  ],
+  "references": [{ "path": "../zowe-explorer-api" }]
 }

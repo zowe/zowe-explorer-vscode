@@ -26,5 +26,6 @@
     // Needed in production for vscode-nls localization to work:
     "./node_modules/vscode/vscode.d.ts",
     "./node_modules/vscode/lib/*"
-  ]
+  ],
+  "references": [{ "path": "../zowe-explorer-api" }]
 }

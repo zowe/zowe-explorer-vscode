@@ -74,6 +74,7 @@ const config = {
                             compilerOptions: {
                                 sourceMap: true,
                             },
+                            projectReferences: true,
                         },
                     },
                 ],
