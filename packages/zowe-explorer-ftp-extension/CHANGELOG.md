@@ -4,6 +4,8 @@ All notable changes to the "zowe-explorer-ftp-extension" extension will be docum
 
 ### New features and enhancements
 
+- Migrated to webpack v5 [#2214](https://github.com/zowe/vscode-extension-for-zowe/issues/2214)
+
 ### Bug fixes
 
 - Removed outdated vscode-nls webpack plugin [#2253](https://github.com/zowe/vscode-extension-for-zowe/issues/2253)
