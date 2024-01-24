@@ -2,7 +2,7 @@
   "name": "webviews",
   "private": true,
   "type": "module",
-  "version": "3.0.0-next.202401121747",
+  "version": "3.0.0-next.202401241448",
   "main": "index.js",
   "license": "EPL-2.0",
   "scripts": {
