@@ -32,7 +32,7 @@
     "pretty": "prettier --write .",
     "check-cli": "node scripts/check-cli.js",
     "clean": "rimraf lib",
-    "fresh-clone": "yarn clean && rimraf node_modules",
+    "fresh-clone": "yarn clean && rimraf node_modules tsconfig.tsbuildinfo",
     "license": "node ../../scripts/updateLicenses.js",
     "package": "yarn build && npm pack && node ../../scripts/mv-pack.js zowe-zowe-explorer-api tgz",
     "copy-secrets": "copyfiles -f ../../node_modules/@zowe/secrets-for-zowe-sdk/prebuilds/*.node ./prebuilds"

@@ -2036,11 +2036,7 @@
     "mem": "^6.0.1",
     "run-sequence": "^2.2.1",
     "selenium-webdriver": "^3.6.0",
-    "sinon": "^6.1.0",
-    "ts-loader": "^7.0.1",
-    "ts-node": "^8.10.1",
-    "webpack": "^4.42.1",
-    "webpack-cli": "^3.3.11"
+    "sinon": "^6.1.0"
   },
   "dependencies": {
     "@zowe/secrets-for-zowe-sdk": "7.18.6",
