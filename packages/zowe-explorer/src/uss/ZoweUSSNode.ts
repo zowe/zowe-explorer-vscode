@@ -21,17 +21,9 @@ import { errorHandling, syncSessionNode } from "../utils/ProfilesUtils";
 import { getIconByNode } from "../generators/icons/index";
 import * as contextually from "../shared/context";
 import { closeOpenedTextFile } from "../utils/workspace";
-import * as nls from "vscode-nls";
 import { UssFileTree, UssFileType, UssFileUtils } from "./FileStructure";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { downloadUnixFile } from "./actions";
-
-// Set up localization
-nls.config({
-    messageFormat: nls.MessageFormat.bundle,
-    bundleFormat: nls.BundleFormat.standalone,
-})();
-const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 /**
  * Injects extra data to tooltip based on node status and other conditions
@@ -176,7 +168,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         }
 
         if (!this.label) {
-            Gui.errorMessage(localize("getChildren.error.invalidNode", "Invalid node"));
+            Gui.errorMessage(vscode.l10n.t("Invalid node"));
             throw Error("Invalid node");
         }
 
@@ -187,8 +179,8 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
             if (!ZoweExplorerApiRegister.getUssApi(cachedProfile).getSession(cachedProfile)) {
                 throw new imperative.ImperativeError({
-                    msg: localize("getChildren.error.sessionMissing", "Profile auth error"),
-                    additionalDetails: localize("getChildren.error.additionalDetails", "Profile is not authenticated, please log in to continue"),
+                    msg: vscode.l10n.t("Profile auth error"),
+                    additionalDetails: vscode.l10n.t("Profile is not authenticated, please log in to continue"),
                     errorCode: `${imperative.RestConstants.HTTP_STATUS_401}`,
                 });
             }
@@ -196,10 +188,10 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
 
             // Throws reject if the Zowe command does not throw an error but does not succeed
             if (!response.success) {
-                throw Error(localize("getChildren.responses.error.response", "The response from Zowe CLI was not successful"));
+                throw Error(vscode.l10n.t("The response from Zowe CLI was not successful"));
             }
         } catch (err) {
-            await errorHandling(err, this.label.toString(), localize("getChildren.error.response", "Retrieving response from ") + `uss-file-list`);
+            await errorHandling(err, this.label.toString(), vscode.l10n.t("Retrieving response from uss-file-list"));
             syncSessionNode((profile) => ZoweExplorerApiRegister.getUssApi(profile), sessNode);
             return this.children;
         }
@@ -268,7 +260,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 };
                 temp.command = {
                     command: "zowe.uss.ZoweUSSNode.open",
-                    title: localize("getChildren.responses.open", "Open"),
+                    title: vscode.l10n.t("Open"),
                     arguments: [temp],
                 };
                 responseNodes.push(temp);
@@ -400,7 +392,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         ZoweLogger.trace("ZoweUSSNode.deleteUSSNode called.");
         const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
         if (cancelled) {
-            Gui.showMessage(localize("deleteUssPrompt.deleteCancelled", "Delete action was cancelled."));
+            Gui.showMessage(vscode.l10n.t("Delete action was cancelled."));
             return;
         }
         try {
@@ -416,12 +408,24 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         } catch (err) {
             ZoweLogger.error(err);
             if (err instanceof Error) {
-                Gui.errorMessage(localize("deleteUSSNode.error.node", "Unable to delete node: ") + err.message);
+                Gui.errorMessage(
+                    vscode.l10n.t({
+                        message: "Unable to delete node: {0}",
+                        args: [err.message],
+                        comment: ["Error message"],
+                    })
+                );
             }
             throw err;
         }
 
-        Gui.showMessage(localize("deleteUssNode.itemDeleted", "The item {0} has been deleted.", this.label.toString()));
+        Gui.showMessage(
+            vscode.l10n.t({
+                message: "The item {0} has been deleted.",
+                args: [this.label.toString()],
+                comment: ["Label"],
+            })
+        );
 
         // Remove node from the USS Favorites tree
         ussFileProvider.removeFavorite(this);
@@ -529,8 +533,8 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 label = this.label.toString();
                 break;
             default:
-                Gui.errorMessage(localize("refreshUSS.error.invalidNode", "refreshUSS() called from invalid node."));
-                throw Error(localize("refreshUSS.error.invalidNode", "refreshUSS() called from invalid node."));
+                Gui.errorMessage(vscode.l10n.t("refreshUSS() called from invalid node."));
+                throw Error(vscode.l10n.t("refreshUSS() called from invalid node."));
         }
         try {
             const ussDocumentFilePath = this.getUSSDocumentFilePath();
@@ -566,10 +570,14 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 await this.initializeFileOpening(ussDocumentFilePath, true);
             }
         } catch (err) {
-            if (err instanceof Error && err.message.includes(localize("refreshUSS.error.notFound", "not found"))) {
+            if (err instanceof Error && err.message.includes(vscode.l10n.t("not found"))) {
                 ZoweLogger.warn(err.toString());
                 Gui.showMessage(
-                    localize("refreshUSS.file1", "Unable to find file: ") + label + localize("refreshUSS.file2", " was probably deleted.")
+                    vscode.l10n.t({
+                        message: "Unable to find file: {0} was probably deleted.",
+                        args: [label],
+                        comment: ["Label"],
+                    })
                 );
             } else {
                 await errorHandling(err, this.mProfileName);
@@ -591,13 +599,12 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             }
 
             if (openingTextFailed) {
-                const yesResponse = localize("openUSS.log.info.failedToOpenAsText.yes", "Re-download");
-                const noResponse = localize("openUSS.log.info.failedToOpenAsText.no", "Cancel");
+                const yesResponse = vscode.l10n.t("Re-download");
+                const noResponse = vscode.l10n.t("Cancel");
 
-                const response = await Gui.errorMessage(
-                    localize("openUSS.log.info.failedToOpenAsText", "Failed to open file as text. Re-download file as binary?"),
-                    { items: [yesResponse, noResponse] }
-                );
+                const response = await Gui.errorMessage(vscode.l10n.t("Failed to open file as text. Re-download file as binary?"), {
+                    items: [yesResponse, noResponse],
+                });
 
                 if (response === yesResponse) {
                     await vscode.commands.executeCommand("zowe.uss.binary", this);
@@ -636,7 +643,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         const hasCopyApi = uss.api.copy != null;
         const hasPutContentApi = uss.api.putContent != null;
         if (!uss.api.fileList || (!hasCopyApi && !hasPutContentApi)) {
-            throw new Error(localize("paste.missingApis", "Required API functions for pasting (fileList, copy and/or putContent) were not found."));
+            throw new Error(vscode.l10n.t("Required API functions for pasting (fileList, copy and/or putContent) were not found."));
         }
 
         const apiResponse = await uss.api.fileList(rootPath);
@@ -714,7 +721,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
 
             const task: imperative.ITaskWithStatus = {
                 percentComplete: 0,
-                statusMessage: localize("uploadFile.putContents", "Uploading USS files..."),
+                statusMessage: vscode.l10n.t("Uploading USS files..."),
                 stageName: 0,
             };
             const options: IUploadOptions = {
@@ -727,7 +734,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 await this.paste(sessionName, this.fullPath, { api, tree: subnode, options });
             }
         } catch (error) {
-            await errorHandling(error, this.label.toString(), localize("copyUssFile.error", "Error uploading files"));
+            await errorHandling(error, this.label.toString(), vscode.l10n.t("Error uploading files"));
         }
     }
 

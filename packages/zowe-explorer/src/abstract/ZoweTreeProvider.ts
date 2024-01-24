@@ -15,23 +15,14 @@ import { imperative } from "@zowe/cli";
 import { PersistentFilters } from "../PersistentFilters";
 import { getIconByNode, getIconById, IconId } from "../generators/icons";
 import * as contextually from "../shared/context";
-import { IZoweTreeNode, IZoweDatasetTreeNode, IZoweNodeType, IZoweTree, PersistenceSchemaEnum, ValidProfileEnum } from "@zowe/zowe-explorer-api";
+import { IZoweTreeNode, IZoweNodeType, IZoweTree, PersistenceSchemaEnum, ValidProfileEnum } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { setProfile, setSession, errorHandling } from "../utils/ProfilesUtils";
-
-import * as nls from "vscode-nls";
 import { SettingsConfig } from "../utils/SettingsConfig";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { TreeProviders } from "../shared/TreeProviders";
 import { IZoweProviders } from "../shared/init";
 import { resetValidationSettings } from "../shared/actions";
-
-// Set up localization
-nls.config({
-    messageFormat: nls.MessageFormat.bundle,
-    bundleFormat: nls.BundleFormat.standalone,
-})();
-const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 export class ZoweTreeProvider {
     // Event Emitters used to notify subscribers that the refresh event has fired
@@ -253,12 +244,12 @@ export class ZoweTreeProvider {
             }
 
             await errorHandling(
-                localize("validateProfiles.invalid1", "Profile Name ") +
-                    profile.name +
-                    localize(
-                        "validateProfiles.invalid2",
-                        " is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct."
-                    )
+                vscode.l10n.t({
+                    message:
+                        "Profile Name {0} is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct.",
+                    args: [profile.name],
+                    comment: ["Profile name"],
+                })
             );
         } else if (profileStatus.status === "active") {
             if (

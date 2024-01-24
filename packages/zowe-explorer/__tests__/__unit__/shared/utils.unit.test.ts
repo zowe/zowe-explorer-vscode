@@ -314,7 +314,7 @@ describe("Test force upload", () => {
         expect(blockMocks.withProgress).toBeCalledWith(
             {
                 location: vscode.ProgressLocation.Notification,
-                title: "Saving data set...",
+                title: "Saving Data Set...",
             },
             expect.any(Function)
         );

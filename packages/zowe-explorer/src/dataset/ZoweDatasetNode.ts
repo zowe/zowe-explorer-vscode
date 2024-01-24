@@ -28,17 +28,9 @@ import {
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { getIconByNode } from "../generators/icons";
 import * as contextually from "../shared/context";
-import * as nls from "vscode-nls";
 import { Profiles } from "../Profiles";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import * as dayjs from "dayjs";
-
-// Set up localization
-nls.config({
-    messageFormat: nls.MessageFormat.bundle,
-    bundleFormat: nls.BundleFormat.standalone,
-})();
-const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 /**
  * A type of TreeItem used to represent sessions and data sets
@@ -144,7 +136,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         if (!this.pattern && contextually.isSessionNotFav(this)) {
             return [
                 new ZoweDatasetNode(
-                    localize("getChildren.search", "Use the search button to display data sets"),
+                    vscode.l10n.t("Use the search button to display data sets"),
                     vscode.TreeItemCollapsibleState.None,
                     this,
                     null,
@@ -161,8 +153,8 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         }
 
         if (!this.label) {
-            Gui.errorMessage(localize("getChildren.error.invalidNode", "Invalid node"));
-            throw Error(localize("getChildren.error.invalidNode", "Invalid node"));
+            Gui.errorMessage(vscode.l10n.t("Invalid node"));
+            throw Error(vscode.l10n.t("Invalid node"));
         }
 
         // Gets the datasets from the pattern or members of the dataset and displays any thrown errors
@@ -177,7 +169,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             // Throws reject if the Zowe command does not throw an error but does not succeed
             // The dataSetsMatchingPattern API may return success=false and apiResponse=[] when no data sets found
             if (!response.success && !(Array.isArray(response.apiResponse) && response.apiResponse.length === 0)) {
-                await errorHandling(localize("getChildren.responses.error", "The response from Zowe CLI was not successful"));
+                await errorHandling(vscode.l10n.t("The response from Zowe CLI was not successful"));
                 return;
             }
 
@@ -275,7 +267,11 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                         temp.command = { command: "zowe.ds.ZoweNode.openPS", title: "", arguments: [temp] };
                     } else {
                         temp.errorDetails = new zowe.imperative.ImperativeError({
-                            msg: localize("getChildren.invalidMember", "Cannot access member with control characters in the name: {0}", item.member),
+                            msg: vscode.l10n.t({
+                                message: "Cannot access member with control characters in the name: {0}",
+                                args: [item.member],
+                                comment: ["Data Set member"],
+                            }),
                         });
                     }
 
@@ -290,7 +286,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         if (Object.keys(elementChildren).length === 0) {
             this.children = [
                 new ZoweDatasetNode(
-                    localize("getChildren.noDataset", "No data sets found"),
+                    vscode.l10n.t("No data sets found"),
                     vscode.TreeItemCollapsibleState.None,
                     this,
                     null,
@@ -461,8 +457,8 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             const mvsApi = ZoweExplorerApiRegister.getMvsApi(cachedProfile);
             if (!mvsApi.getSession(cachedProfile)) {
                 throw new zowe.imperative.ImperativeError({
-                    msg: localize("getDataSets.error.sessionMissing", "Profile auth error"),
-                    additionalDetails: localize("getDataSets.error.additionalDetails", "Profile is not authenticated, please log in to continue"),
+                    msg: vscode.l10n.t("Profile auth error"),
+                    additionalDetails: vscode.l10n.t("Profile is not authenticated, please log in to continue"),
                     errorCode: `${zowe.imperative.RestConstants.HTTP_STATUS_401}`,
                 });
             }

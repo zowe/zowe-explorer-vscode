@@ -15,14 +15,6 @@ import { Gui, IZoweTree, IZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { markDocumentUnsaved } from "../utils/workspace";
 import { ZoweLogger } from "../utils/LoggerUtils";
 
-// Set up localization
-import * as nls from "vscode-nls";
-nls.config({
-    messageFormat: nls.MessageFormat.bundle,
-    bundleFormat: nls.BundleFormat.standalone,
-})();
-const localize: nls.LocalizeFunc = nls.loadMessageBundle();
-
 interface SaveRequest {
     uploadRequest: (document: SaveRequest["savedFile"], provider: SaveRequest["fileProvider"]) => Promise<void>;
     savedFile: vscode.TextDocument;
@@ -72,12 +64,11 @@ export class ZoweSaveQueue {
             ZoweLogger.error(err);
             await markDocumentUnsaved(nextRequest.savedFile);
             await Gui.errorMessage(
-                localize(
-                    "processNext.error.uploadFailed",
-                    "Failed to upload changes for {0}: {1}",
-                    this.buildFileHyperlink(nextRequest.savedFile),
-                    err.message
-                )
+                vscode.l10n.t({
+                    message: "Failed to upload changes for {0}: {1}",
+                    args: [this.buildFileHyperlink(nextRequest.savedFile), err.message],
+                    comment: ["Build file hyperlink", "Error message"],
+                })
             );
         }
     }

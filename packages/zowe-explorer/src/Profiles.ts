@@ -34,18 +34,11 @@ import { errorHandling, FilterDescriptor, FilterItem, ProfilesUtils } from "./ut
 import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
 import { ZoweExplorerExtender } from "./ZoweExplorerExtender";
 import * as globals from "./globals";
-import * as nls from "vscode-nls";
 import { SettingsConfig } from "./utils/SettingsConfig";
 import { ZoweLogger } from "./utils/LoggerUtils";
 import { TreeProviders } from "./shared/TreeProviders";
 import { ProfileManagement } from "./utils/ProfileManagement";
 
-// Set up localization
-nls.config({
-    messageFormat: nls.MessageFormat.bundle,
-    bundleFormat: nls.BundleFormat.standalone,
-})();
-const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 let InputBoxOptions: vscode.InputBoxOptions;
 
 export class Profiles extends ProfilesCache {
@@ -69,10 +62,9 @@ export class Profiles extends ProfilesCache {
     private ussSchema: string = globals.SETTINGS_USS_HISTORY;
     private jobsSchema: string = globals.SETTINGS_JOBS_HISTORY;
     private mProfileInfo: zowe.imperative.ProfileInfo;
-    private profilesOpCancelled = localize("profiles.operation.cancelled", "Operation Cancelled");
-    private manualEditMsg = localize(
-        "profiles.manualEditMsg",
-        "The Team configuration file has been opened in the editor. Editing or removal of profiles will need to be done manually."
+    private profilesOpCancelled = vscode.l10n.t(`Operation Cancelled`);
+    private manualEditMsg = vscode.l10n.t(
+        `The Team configuration file has been opened in the editor. Editing or removal of profiles will need to be done manually.`
     );
     public constructor(log: zowe.imperative.Logger, cwd?: string) {
         super(log, cwd);
@@ -98,11 +90,8 @@ export class Profiles extends ProfilesCache {
 
         if (usingTokenAuth && !theProfile.profile.tokenType) {
             const error = new zowe.imperative.ImperativeError({
-                msg: localize("checkCurrentProfile.tokenAuthError.msg", "Token auth error"),
-                additionalDetails: localize(
-                    "checkCurrentProfile.tokenAuthError.additionalDetails",
-                    "Profile was found using token auth, please log in to continue."
-                ),
+                msg: vscode.l10n.t(`Token auth error`),
+                additionalDetails: vscode.l10n.t(`Profile was found using token auth, please log in to continue.`),
                 errorCode: `${zowe.imperative.RestConstants.HTTP_STATUS_401}`,
             });
             await errorHandling(error, theProfile.name, error.message);
@@ -344,23 +333,14 @@ export class Profiles extends ProfilesCache {
         let addProfilePlaceholder = "";
         switch (zoweFileProvider.getTreeType()) {
             case PersistenceSchemaEnum.Dataset:
-                addProfilePlaceholder = localize(
-                    "createZoweSession.ds.quickPickOption",
-                    'Choose "Create new..." to define or select a profile to add to the DATA SETS Explorer'
-                );
+                addProfilePlaceholder = vscode.l10n.t(`Choose "Create new..." to define or select a profile to add to the DATA SETS Explorer`);
                 break;
             case PersistenceSchemaEnum.Job:
-                addProfilePlaceholder = localize(
-                    "createZoweSession.job.quickPickOption",
-                    'Choose "Create new..." to define or select a profile to add to the JOBS Explorer'
-                );
+                addProfilePlaceholder = vscode.l10n.t(`Choose "Create new..." to define or select a profile to add to the JOBS Explorer`);
                 break;
             default:
                 // Use USS View as default for placeholder text
-                addProfilePlaceholder = localize(
-                    "createZoweSession.uss.quickPickOption",
-                    'Choose "Create new..." to define or select a profile to add to the USS Explorer'
-                );
+                addProfilePlaceholder = vscode.l10n.t(`Choose "Create new..." to define or select a profile to add to the USS Explorer`);
         }
         if (allProfiles.length > 0) {
             quickpick.items = [configPick, configEdit, ...items];
@@ -372,7 +352,7 @@ export class Profiles extends ProfilesCache {
         quickpick.show();
         const choice = await Gui.resolveQuickPick(quickpick);
         quickpick.hide();
-        const debugMsg = localize("createZoweSession.cancelled", "Profile selection has been cancelled.");
+        const debugMsg = vscode.l10n.t(`Profile selection has been cancelled.`);
         if (!choice) {
             ZoweLogger.debug(debugMsg);
             Gui.showMessage(debugMsg);
@@ -406,7 +386,13 @@ export class Profiles extends ProfilesCache {
             const filePath = currentProfile.profLoc.osLoc[0];
             await this.openConfigFile(filePath);
         } else if (chosenProfile) {
-            ZoweLogger.info(localize("createZoweSession.addProfile", "The profile {0} has been added to the {1} tree.", chosenProfile, treeType));
+            ZoweLogger.info(
+                vscode.l10n.t({
+                    message: `The profile {0} has been added to the {1} tree.`,
+                    args: [chosenProfile, treeType],
+                    comment: ["chosen profile", "tree type"],
+                })
+            );
             if (await ProfileManagement.handleChangeForAllTrees(chosenProfile, true)) {
                 await zoweFileProvider.addSession(chosenProfile);
             } else {
@@ -432,7 +418,7 @@ export class Profiles extends ProfilesCache {
             profileType = typeOptions[0];
         } else {
             const quickPickTypeOptions: vscode.QuickPickOptions = {
-                placeHolder: localize("getProfileType.qp.placeholder", "Profile Type"),
+                placeHolder: vscode.l10n.t(`Profile Type`),
                 ignoreFocusOut: true,
                 canPickMany: false,
             };
@@ -560,12 +546,12 @@ export class Profiles extends ProfilesCache {
     public async promptCredentials(profile: string | zowe.imperative.IProfileLoaded, rePrompt?: boolean): Promise<string[]> {
         ZoweLogger.trace("Profiles.promptCredentials called.");
         const userInputBoxOptions: vscode.InputBoxOptions = {
-            placeHolder: localize("promptCredentials.userInputBoxOptions.placeholder", "User Name"),
-            prompt: localize("promptCredentials.userInputBoxOptions.prompt", "Enter the user name for the connection. Leave blank to not store."),
+            placeHolder: vscode.l10n.t(`User Name`),
+            prompt: vscode.l10n.t(`Enter the user name for the connection. Leave blank to not store.`),
         };
         const passwordInputBoxOptions: vscode.InputBoxOptions = {
-            placeHolder: localize("promptCredentials.passwordInputBoxOptions.placeholder", "Password"),
-            prompt: localize("promptCredentials.passwordInputBoxOptions.prompt", "Enter the password for the connection. Leave blank to not store."),
+            placeHolder: vscode.l10n.t(`Password`),
+            prompt: vscode.l10n.t(`Enter the password for the connection. Leave blank to not store.`),
         };
 
         const promptInfo = await ZoweVsCodeExtension.updateCredentials(
@@ -597,12 +583,12 @@ export class Profiles extends ProfilesCache {
         });
 
         if (!profileNamesList.length) {
-            Gui.showMessage(localize("getDeleteProfile.noProfiles", "No profiles available"));
+            Gui.showMessage(vscode.l10n.t(`No profiles available`));
             return;
         }
 
         const quickPickList: vscode.QuickPickOptions = {
-            placeHolder: localize("getDeleteProfile.qp.placeholder", "Select the profile you want to delete"),
+            placeHolder: vscode.l10n.t(`Select the profile you want to delete`),
             ignoreFocusOut: true,
             canPickMany: false,
         };
@@ -663,13 +649,23 @@ export class Profiles extends ProfilesCache {
                     profileStatus = await Gui.withProgress(
                         {
                             location: vscode.ProgressLocation.Notification,
-                            title: localize("validateProfiles.progress", "Validating {0} Profile.", theProfile.name),
+                            title: vscode.l10n.t({
+                                message: `Validating {0} Profile.`,
+                                args: [theProfile.name],
+                                comment: [`The profile name`],
+                            }),
                             cancellable: true,
                         },
                         async (progress, token) => {
                             token.onCancellationRequested(() => {
                                 // will be returned as undefined
-                                Gui.showMessage(localize("validateProfiles.cancelled", "Validating {0} was cancelled.", theProfile.name));
+                                Gui.showMessage(
+                                    vscode.l10n.t({
+                                        message: `Validating {0} was cancelled.`,
+                                        args: [theProfile.name],
+                                        comment: [`The profile name`],
+                                    })
+                                );
                             });
                             return getSessStatus.getStatus(theProfile, theProfile.type);
                         }
@@ -703,7 +699,13 @@ export class Profiles extends ProfilesCache {
                         break;
                 }
             } catch (error) {
-                ZoweLogger.info(localize("validateProfiles.error", "Profile validation failed for {0}.", theProfile.name));
+                ZoweLogger.info(
+                    vscode.l10n.t({
+                        message: `Profile validation failed for {0}.`,
+                        args: [theProfile.name],
+                        comment: [`The profile name`],
+                    })
+                );
                 await errorHandling(error, theProfile.name);
                 filteredProfile = {
                     status: "inactive",
@@ -727,9 +729,7 @@ export class Profiles extends ProfilesCache {
         }
         // This check will handle service profiles that have username and password
         if (ProfilesUtils.isProfileUsingBasicAuth(serviceProfile)) {
-            Gui.showMessage(
-                localize("ssoAuth.usingBasicAuth", "This profile is using basic authentication and does not support token authentication.")
-            );
+            Gui.showMessage(vscode.l10n.t(`This profile is using basic authentication and does not support token authentication.`));
             return;
         }
 
@@ -737,7 +737,13 @@ export class Profiles extends ProfilesCache {
             loginTokenType = await ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).getTokenTypeName();
         } catch (error) {
             ZoweLogger.warn(error);
-            Gui.showMessage(localize("ssoLogin.tokenType.error", "Error getting supported tokenType value for profile {0}", serviceProfile.name));
+            Gui.showMessage(
+                vscode.l10n.t({
+                    message: `Error getting supported tokenType value for profile {0}`,
+                    args: [serviceProfile.name],
+                    comment: [`Service profile name`],
+                })
+            );
             return;
         }
         try {
@@ -747,7 +753,11 @@ export class Profiles extends ProfilesCache {
                 await this.loginWithBaseProfile(serviceProfile, loginTokenType, node);
             }
         } catch (err) {
-            const message = localize("ssoLogin.error", "Unable to log in with {0}. {1}", serviceProfile.name, err?.message);
+            const message = vscode.l10n.t({
+                message: `Unable to log in with {0}. {1}`,
+                args: [serviceProfile.name, err?.message],
+                comment: [`Service profile name`, `Error message`],
+            });
             ZoweLogger.error(message);
             Gui.errorMessage(message);
             return;
@@ -820,9 +830,7 @@ export class Profiles extends ProfilesCache {
         const serviceProfile = node.getProfile();
         // This check will handle service profiles that have username and password
         if (ProfilesUtils.isProfileUsingBasicAuth(serviceProfile)) {
-            Gui.showMessage(
-                localize("ssoAuth.usingBasicAuth", "This profile is using basic authentication and does not support token authentication.")
-            );
+            Gui.showMessage(vscode.l10n.t(`This profile is using basic authentication and does not support token authentication.`));
             return;
         }
 
@@ -850,10 +858,20 @@ export class Profiles extends ProfilesCache {
 
                 await this.updateBaseProfileFileLogout(baseProfile);
             }
-            Gui.showMessage(localize("ssoLogout.successful", "Logout from authentication service was successful for {0}.", serviceProfile.name));
+            Gui.showMessage(
+                vscode.l10n.t({
+                    message: "Logout from authentication service was successful for {0}.",
+                    args: [serviceProfile.name],
+                    comment: ["Service profile name"],
+                })
+            );
             await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
         } catch (error) {
-            const message = localize("ssoLogout.error", "Unable to log out with {0}. {1}", serviceProfile.name, error?.message);
+            const message = vscode.l10n.t({
+                message: "Unable to log out with {0}. {1}",
+                args: [serviceProfile.name, error?.message],
+                comment: ["Service profile name", "Error message"],
+            });
             ZoweLogger.error(message);
             Gui.errorMessage(message);
             return;
@@ -917,7 +935,7 @@ export class Profiles extends ProfilesCache {
                     profile: { ...node.getProfile().profile, ...updBaseProfile },
                 });
             }
-            Gui.showMessage(localize("ssoLogin.successful", "Login to authentication service was successful."));
+            Gui.showMessage(vscode.l10n.t("Login to authentication service was successful."));
         }
     }
 
@@ -943,24 +961,24 @@ export class Profiles extends ProfilesCache {
                 profile: { ...node.getProfile().profile, ...session },
             });
         }
-        Gui.showMessage(localize("ssoLogin.successful", "Login to authentication service was successful."));
+        Gui.showMessage(vscode.l10n.t("Login to authentication service was successful."));
     }
 
     private async getConfigLocationPrompt(action: string): Promise<string> {
         ZoweLogger.trace("Profiles.getConfigLocationPrompt called.");
         let placeHolderText: string;
         if (action === "create") {
-            placeHolderText = localize("getConfigLocationPrompt.placeholder.create", "Select the location where the config file will be initialized");
+            placeHolderText = vscode.l10n.t("Select the location where the config file will be initialized");
         } else {
-            placeHolderText = localize("getConfigLocationPrompt.placeholder.edit", "Select the location of the config file to edit");
+            placeHolderText = vscode.l10n.t("Select the location of the config file to edit");
         }
         const quickPickOptions: vscode.QuickPickOptions = {
             placeHolder: placeHolderText,
             ignoreFocusOut: true,
             canPickMany: false,
         };
-        const globalText = localize("getConfigLocationPrompt.showQuickPick.global", "Global: in the Zowe home directory");
-        const projectText = localize("getConfigLocationPrompt.showQuickPick.project", "Project: in the current working directory");
+        const globalText = vscode.l10n.t("Global: in the Zowe home directory");
+        const projectText = vscode.l10n.t("Project: in the current working directory");
         const location = await Gui.showQuickPick([globalText, projectText], quickPickOptions);
         // call check for existing and prompt here
         switch (location) {
@@ -980,13 +998,12 @@ export class Profiles extends ProfilesCache {
         for (const file of existingLayers) {
             if (file.path.includes(filePath)) {
                 found = true;
-                const createButton = localize("checkExistingConfig.createNew.button", "Create New");
-                const message = localize(
-                    "checkExistingConfig.createNew.message",
-                    // eslint-disable-next-line max-len
-                    `A Team Configuration File already exists in this location\n{0}\nContinuing may alter the existing file, would you like to proceed?`,
-                    file.path
-                );
+                const createButton = vscode.l10n.t("Create New");
+                const message = vscode.l10n.t({
+                    message: `A Team Configuration File already exists in this location\n{0}\nContinuing may alter the existing file, would you like to proceed?`,
+                    args: [file.path],
+                    comment: ["File path"],
+                });
                 await Gui.infoMessage(message, { items: [createButton], vsCodeOpts: { modal: true } }).then(async (selection) => {
                     if (selection) {
                         location = path.basename(file.path);
@@ -1076,8 +1093,8 @@ export class Profiles extends ProfilesCache {
             userName = input;
         }
         InputBoxOptions = {
-            placeHolder: localize("userInfo.inputBoxOptions.placeholder", "User Name"),
-            prompt: localize("userInfo.inputBoxOptions.prompt", "Enter the user name for the connection. Leave blank to not store."),
+            placeHolder: vscode.l10n.t("User Name"),
+            prompt: vscode.l10n.t("Enter the user name for the connection. Leave blank to not store."),
             ignoreFocusOut: true,
             value: userName,
         };
@@ -1100,8 +1117,8 @@ export class Profiles extends ProfilesCache {
         }
 
         InputBoxOptions = {
-            placeHolder: localize("passwordInfo.inputBoxOptions.placeholder", "Password"),
-            prompt: localize("passwordInfo.inputBoxOptions.prompt", "Enter the password for the connection. Leave blank to not store."),
+            placeHolder: vscode.l10n.t("Password"),
+            prompt: vscode.l10n.t("Enter the password for the connection. Leave blank to not store."),
             password: true,
             ignoreFocusOut: true,
             value: passWord,
