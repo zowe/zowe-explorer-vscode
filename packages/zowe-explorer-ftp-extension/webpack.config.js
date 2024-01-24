@@ -29,7 +29,7 @@ const config = {
         devtoolModuleFilenameTemplate: "../../[resource-path]",
     },
     devtool: "source-map",
-    externals: ["vscode"],
+    externals: ["vscode", "cpu-features"],
     resolve: {
         modules: [path.resolve(__dirname, "../../node_modules"), path.resolve(__dirname, "node_modules")],
         extensions: [".ts", ".js"],
