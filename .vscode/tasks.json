@@ -52,7 +52,7 @@
               "regexp": "Compilation (.*?)starting…"
             },
             "endsPattern": {
-              "regexp": "(.*?)compiled successfully(.*?)"
+              "regexp": "(.*?)compiled successfully(.*?)|(.*?)compiled with(.*?)"
             }
           }
         }

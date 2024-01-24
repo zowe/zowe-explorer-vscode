@@ -16,42 +16,55 @@
 const path = require("path");
 const webpack = require("webpack");
 const fs = require("fs");
-const nodeExternals = require("webpack-node-externals");
+const TerserPlugin = require("terser-webpack-plugin");
 
 /**@type {webpack.Configuration}*/
 const config = {
-    target: "webworker",
+    target: "node",
     entry: "./src/extension.ts",
     output: {
         path: path.resolve(__dirname, "out/src"),
-        filename: "extension.js",
+        filename: "[name].extension.js",
         libraryTarget: "commonjs2",
         devtoolModuleFilenameTemplate: "../../[resource-path]",
     },
     devtool: "source-map",
-    externals: [
-        nodeExternals({
-            modulesDir: path.resolve(__dirname, "../../node_modules"),
-        }),
-        nodeExternals(),
-        "vscode",
-    ],
+    externals: ["vscode"],
     resolve: {
+        modules: [path.resolve(__dirname, "../../node_modules"), path.resolve(__dirname, "node_modules")],
         extensions: [".ts", ".js"],
-        fallback: {
-            path: require.resolve("path-browserify"),
-            crypto: require.resolve("crypto-browserify"),
-            fs: false,
-        },
     },
-    node: {
-        __dirname: false,
+    watchOptions: {
+        ignored: /node_modules/,
     },
     stats: {
         warnings: false,
     },
+    optimization: {
+        minimize: true,
+        minimizer: [
+            new TerserPlugin({
+                parallel: true,
+                minify: TerserPlugin.esbuildMinify,
+            }),
+        ],
+        runtimeChunk: "single",
+        splitChunks: {
+            cacheGroups: {
+                vendor: {
+                    test: /[\\/]node_modules[\\/]/,
+                    name: "vendors",
+                    chunks: "all",
+                },
+            },
+        },
+    },
     module: {
         rules: [
+            {
+                test: /\.node$/,
+                loader: "node-loader",
+            },
             {
                 test: /\.ts$/,
                 exclude: /node_modules/,

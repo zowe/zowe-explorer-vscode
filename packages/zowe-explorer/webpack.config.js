@@ -17,43 +17,55 @@ const path = require("path");
 const webpack = require("webpack");
 const fs = require("fs");
 const CopyPlugin = require("copy-webpack-plugin");
-// const nodeExternals = require("webpack-node-externals");
+const TerserPlugin = require("terser-webpack-plugin");
 
 /**@type {webpack.Configuration}*/
 const config = {
-    target: "webworker",
+    target: "node",
     entry: "./src/extension.ts",
     output: {
         path: path.resolve(__dirname, "out/src"),
-        filename: "extension.js",
+        filename: "[name].extension.js",
         libraryTarget: "commonjs2",
         devtoolModuleFilenameTemplate: "../../[resource-path]",
     },
     devtool: "source-map",
-    externals: ["vscode", "wontache", "ssh2", "@zowe/imperative", "cross-spawn", "log4js", "opener", "read", "fs"],
+    externals: ["vscode"],
     resolve: {
-        mainFields: ["browser", "module", "main"],
+        modules: [path.resolve(__dirname, "../../node_modules"), path.resolve(__dirname, "node_modules")],
         extensions: [".ts", ".js"],
-        fallback: {
-            path: require.resolve("path-browserify"),
-            crypto: require.resolve("crypto-browserify"),
-            os: require.resolve("os-browserify/browser"),
-            stream: require.resolve("stream-browserify"),
-            https: require.resolve("https-browserify"),
-            zlib: require.resolve("browserify-zlib"),
-            constants: require.resolve("constants-browserify"),
-            tty: require.resolve("tty-browserify"),
-            assert: require.resolve("assert"),
-            http: require.resolve("stream-http"),
-            util: require.resolve("util"),
-            url: require.resolve("url"),
-        },
     },
     watchOptions: {
         ignored: /node_modules/,
     },
+    stats: {
+        warnings: false,
+    },
+    optimization: {
+        minimize: true,
+        minimizer: [
+            new TerserPlugin({
+                parallel: true,
+                minify: TerserPlugin.esbuildMinify,
+            }),
+        ],
+        runtimeChunk: "single",
+        splitChunks: {
+            cacheGroups: {
+                vendor: {
+                    test: /[\\/]node_modules[\\/]/,
+                    name: "vendors",
+                    chunks: "all",
+                },
+            },
+        },
+    },
     module: {
         rules: [
+            {
+                test: /\.node$/,
+                loader: "node-loader",
+            },
             {
                 test: /\.ts$/,
                 exclude: /node_modules/,
