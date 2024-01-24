@@ -46,9 +46,6 @@ export class BaseProvider {
     protected _profilesCache: ProfilesCache;
 
     public readonly onDidChangeFile: vscode.Event<vscode.FileChangeEvent[]> = this._emitter.event;
-
-    // map remote conflict URIs to local URIs
-    protected _conflictMap: Record<string, vscode.Uri> = {};
     protected root: DirEntry;
     public openedUris: vscode.Uri[] = [];
 
@@ -57,64 +54,35 @@ export class BaseProvider {
     }
 
     /**
-     * Deletes the conflict URI from the provider and closes the diff view.
-     * @param remoteUri The conflict URI to remove from the provider
-     */
-    private _removeConflictAndCloseDiff(remoteUri: vscode.Uri): void {
-        delete this._conflictMap[remoteUri.path];
-        vscode.workspace.fs.delete(remoteUri);
-        vscode.commands.executeCommand("workbench.action.closeActiveEditor");
-    }
-
-    /**
      * Action for overwriting the remote contents with local data from the provider.
      * @param remoteUri The "remote conflict" URI shown in the diff view
      */
-    public async diffOverwrite(localUri: vscode.Uri): Promise<void> {
-        // check for local URI in conflictMap
-
-        if (!(localUri.path in this._conflictMap)) {
-            return;
-        }
-
-        const remoteUri = this._conflictMap[localUri.path];
-        const localEntry = await this._lookupAsFile(localUri);
-        localEntry.inDiffView = false;
-        localEntry.forceUpload = true;
-        await vscode.workspace.fs.writeFile(localUri, localEntry.conflictData);
-        Gui.setStatusBarMessage(localize("diff.overwritten", "$(check) Overwrite applied for {0}", localEntry.name), this.FS_PROVIDER_UI_TIMEOUT);
-        localEntry.conflictData = null;
-        this._removeConflictAndCloseDiff(remoteUri);
+    public async diffOverwrite(uri: vscode.Uri): Promise<void> {
+        const fsEntry = await this._lookupAsFile(uri);
+        await vscode.workspace.fs.writeFile(uri.with({ query: "forceUpload=true" }), fsEntry.localData ?? fsEntry.data);
+        Gui.setStatusBarMessage(localize("diff.overwritten", "$(check) Overwrite applied for {0}", fsEntry.name), this.FS_PROVIDER_UI_TIMEOUT);
+        fsEntry.conflictData = null;
     }
 
     /**
      * Action for replacing the local data in the provider with remote contents.
      * @param localUri The local URI shown in the diff view
      */
-    public async diffUseRemote(localUri: vscode.Uri): Promise<void> {
-        // check for local URI in conflictMap
-
-        if (!(localUri.path in this._conflictMap)) {
-            return;
-        }
-        const remoteUri = this._conflictMap[localUri.path];
-        const localEntry = await this._lookupAsFile(localUri);
-        const remoteEntry = await this._lookupAsFile(remoteUri);
+    public async diffUseRemote(uri: vscode.Uri): Promise<void> {
+        const fsEntry = await this._lookupAsFile(uri);
 
         // If the data in the diff is different from the conflict data, we need to make another API request to push those changes.
         // If the data is equal, we can just assign the data in the FileSystem and avoid making an API request.
-        localEntry.wasAccessed = remoteEntry.data.length === remoteEntry.conflictData.length && isEqual(remoteEntry.data, remoteEntry.conflictData);
-        localEntry.inDiffView = false;
-        localEntry.forceUpload = true;
-        await vscode.workspace.fs.writeFile(localUri, localEntry.conflictData);
+        const isDataEqual = isEqual(fsEntry.data, fsEntry.conflictData.contents);
+        if (!isDataEqual) {
+            await vscode.workspace.fs.writeFile(uri.with({ query: "forceUpload=true" }), fsEntry.conflictData.contents);
+        }
         Gui.setStatusBarMessage(
-            localize("diff.usedRemoteContent", "$(discard) Used remote content for {0}", localEntry.name),
+            localize("diff.usedRemoteContent", "$(discard) Used remote content for {0}", fsEntry.name),
             this.FS_PROVIDER_UI_TIMEOUT
         );
-        localEntry.conflictData = null;
-        this._removeConflictAndCloseDiff(remoteUri);
-        // this will refresh the active editor with the remote content that was saved to the file
-        vscode.commands.executeCommand("workbench.action.files.revert");
+        fsEntry.conflictData = null;
+        vscode.commands.executeCommand("workbench.action.closeActiveEditor");
     }
 
     public exists(uri: vscode.Uri): boolean {
@@ -271,7 +239,7 @@ export class BaseProvider {
      * @param conflictData The required data for conflict handling
      * @returns The user's action/selection as an enum value
      */
-    protected async _handleConflict<T extends Conflictable>(api: T, conflictData: LocalConflict): Promise<ConflictViewSelection> {
+    protected async _handleConflict(uri: vscode.Uri, entry: FileEntry): Promise<ConflictViewSelection> {
         const conflictOptions = [localize("conflict.compareFiles", "Compare"), localize("conflict.overwrite", "Overwrite")];
         const userSelection = await Gui.errorMessage(
             "There is a newer version of this file on the mainframe. Compare with remote contents or overwrite?",
@@ -285,100 +253,32 @@ export class BaseProvider {
 
         // User selected "Compare", show diff with local contents and LPAR contents
         if (userSelection === conflictOptions[0]) {
-            // Fetch the file contents on the LPAR and stream the data into an array
-            const bufBuilder = new BufferBuilder();
-            const resp = await api.getContents(conflictData.fsEntry.metadata.path, {
-                returnEtag: true,
-                encoding: conflictData.fsEntry.metadata.profile?.profile?.encoding,
-                responseTimeout: conflictData.fsEntry.metadata.profile?.profile?.responseTimeout,
-                stream: bufBuilder,
-            });
-
-            const mainframeBuf = bufBuilder.read();
-            const conflictUri = await this._buildConflictUri(conflictData);
-
-            // Add this conflict file to the conflict map so we can leverage the data
+            // Add this file to the conflict map so we can quickly leverage the data
             // when the "action buttons" are clicked in the diff view.
-            this._conflictMap[conflictData.uri.path] = conflictUri;
 
-            // Build a "fake file" that represents the content on the mainframe,
-            // for use with vscode.diff
-            await vscode.workspace.fs.writeFile(conflictUri, mainframeBuf);
-
-            const conflictEntry = await this._lookupAsFile(conflictUri);
-            conflictEntry.isConflictFile = true;
-            conflictEntry.inDiffView = true;
-            conflictEntry.conflictData = conflictEntry.data;
-            conflictEntry.permissions = vscode.FilePermission.Readonly;
-
-            // assign newer data from local conflict for use during compare/overwrite
-            conflictData.fsEntry.conflictData = conflictData.content;
-            conflictData.fsEntry.inDiffView = true;
-            // Set etag to latest so that latest changes are applied, regardless of its contents
-            conflictData.fsEntry.etag = resp.apiResponse.etag;
-
+            const onCloseEvent = async (provider: BaseProvider, e: vscode.TextDocument): Promise<void> => {
+                if (e.uri.query && e.uri.scheme.startsWith("zowe-")) {
+                    const queryParams = new URLSearchParams(e.uri.query);
+                    if (queryParams.has("conflict")) {
+                        const fsEntry = await provider._lookupAsFile(e.uri, { silent: true });
+                        if (fsEntry) {
+                            fsEntry.inDiffView = false;
+                        }
+                    }
+                }
+            };
+            vscode.workspace.onDidCloseTextDocument(onCloseEvent.bind(this));
             vscode.commands.executeCommand(
                 "vscode.diff",
-                conflictUri,
-                conflictData.uri,
-                `${conflictData.fsEntry.name} (Remote) ↔ ${conflictEntry.name}`
+                uri.with({ query: "conflict=true" }),
+                uri.with({ query: "inDiff=true" }),
+                `${entry.name} (Remote) ↔ ${entry.name}`
             );
             return ConflictViewSelection.Compare;
         }
 
-        // User selected "Overwrite", overwrite LPAR contents w/ local contents
-        conflictData.fsEntry.data = conflictData.content;
-        await api.uploadBufferAsFile(Buffer.from(conflictData.content), conflictData.fsEntry.metadata.path);
-        const newData = await api.getContents(conflictData.fsEntry.metadata.path, {
-            returnEtag: true,
-        });
-        conflictData.fsEntry.etag = newData.apiResponse.etag;
+        await this.diffOverwrite(uri);
         return ConflictViewSelection.Overwrite;
-    }
-
-    /**
-     * Builds a URI representing a remote conflict.
-     * @param entry A valid file entry in the provider to make a remote conflict for
-     * @returns A valid URI created in the provider for the remote conflict
-     */
-    private async _buildConflictUri(conflictData: LocalConflict): Promise<vscode.Uri> {
-        // create a temporary directory structure that points to conflicts
-        // this should help with replacing contents/overwriting quickly
-        const entryMetadata = conflictData.fsEntry.metadata;
-
-        const conflictRootUri = vscode.Uri.parse(`${conflictData.uri.scheme}:/${entryMetadata.profile.name}$conflicts`);
-        const conflictUri = conflictRootUri.with({
-            path: path.posix.join(conflictRootUri.path, entryMetadata.path),
-        });
-
-        // ignore root slash when building split path
-        const conflictDirs = conflictUri.path.substring(1).split("/");
-
-        // remove file name and "conflict root" folder name from split path
-        conflictDirs.shift();
-        conflictDirs.pop();
-
-        const rootDirEntry = this._lookup(conflictRootUri, true);
-        if (rootDirEntry == null) {
-            this._createDirNoMetadata(conflictRootUri);
-        }
-
-        // build dirs to match path in remote FS
-        conflictDirs.reduce((parentPath, dirPart) => {
-            const fullPath = path.posix.join(parentPath, dirPart);
-            const subUri = conflictRootUri.with({ path: fullPath });
-            const subDir = this._lookup(subUri, true);
-            if (subDir == null) {
-                this._createDirNoMetadata(subUri);
-            }
-            return fullPath;
-        }, conflictRootUri.path);
-
-        await vscode.workspace.fs.writeFile(conflictUri, new Uint8Array());
-        const fileEntry = await this._lookupAsFile(conflictUri);
-        fileEntry.isConflictFile = true;
-
-        return conflictUri;
     }
 
     /**

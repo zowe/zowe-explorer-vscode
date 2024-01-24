@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { DirEntry, EntryMetadata, FileEntry } from ".";
+import { ConflictData, DirEntry, EntryMetadata, FileEntry } from ".";
 
 export class UssFile extends FileEntry {
     public name: string;
@@ -22,21 +22,14 @@ export class UssFile extends FileEntry {
     public mtime: number;
     public size: number;
     public binary?: boolean;
-    public conflictData?: Uint8Array;
+    public conflictData?: ConflictData;
     public data: Uint8Array;
     public etag?: string;
-    public isConflictFile?: boolean;
-    public inDiffView?: boolean;
-    public forceUpload?: boolean;
-
     public permissions?: vscode.FilePermission;
 
     public constructor(name: string) {
         super(name);
         this.binary = false;
-        this.isConflictFile = false;
-        this.inDiffView = false;
-        this.forceUpload = false;
     }
 }
 

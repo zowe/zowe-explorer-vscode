@@ -67,6 +67,12 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
      * @returns A structure containing file type, time, size and other metrics
      */
     public stat(uri: vscode.Uri): vscode.FileStat {
+        if (uri.query) {
+            const queryParams = new URLSearchParams(uri.query);
+            if (queryParams.has("conflict")) {
+                return { ...this._lookup(uri, false), permissions: vscode.FilePermission.Readonly };
+            }
+        }
         return this._lookup(uri, false);
     }
 
@@ -141,7 +147,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
      * @param uri The URI pointing to a valid file to fetch from the remote system
      * @param editor (optional) An editor instance to reload if the URI is already open
      */
-    public async fetchFileAtUri(uri: vscode.Uri, editor?: vscode.TextEditor | null): Promise<void> {
+    public async fetchFileAtUri(uri: vscode.Uri, options?: { editor?: vscode.TextEditor | null, isConflict?: boolean }): Promise<void> {
         const file = await this._lookupAsFile(uri);
         const uriInfo = getInfoForUri(uri, Profiles.getInstance());
         const bufBuilder = new BufferBuilder();
@@ -154,11 +160,20 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             stream: bufBuilder,
         });
 
-        file.data = bufBuilder.read() ?? new Uint8Array();
-        file.etag = resp.apiResponse.etag;
-        file.size = file.data.byteLength;
+        const data: Uint8Array = bufBuilder.read() ?? new Uint8Array();
+        if (options?.isConflict) {
+            file.conflictData = {
+                contents: data,
+                etag: resp.apiResponse.etag,
+                size: data.byteLength
+            };
+        } else {
+            file.data = data;
+            file.etag = resp.apiResponse.etag;
+            file.size = file.data.byteLength;
+        }
 
-        if (editor) {
+        if (options?.editor) {
             await this._updateResourceInEditor(uri);
         }
     }
@@ -172,17 +187,22 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         const file = await this._lookupAsFile(uri, { silent: false });
         const profInfo = getInfoForUri(uri, Profiles.getInstance());
 
-        if (!file.isConflictFile && profInfo.profile == null) {
+        if (profInfo.profile == null) {
             throw vscode.FileSystemError.FileNotFound(localize("localize.uss.profileNotFound", "Profile does not exist for this file."));
         }
 
+        const urlQuery = new URLSearchParams(uri.query);
+        const isConflict = urlQuery.has("conflict");
+
         // we need to fetch the contents from the mainframe if the file hasn't been accessed yet
-        if (!file.wasAccessed) {
-            await this.fetchFileAtUri(uri);
-            file.wasAccessed = true;
+        if (!file.wasAccessed || isConflict) {
+            await this.fetchFileAtUri(uri, { isConflict });
+            if (!isConflict) {
+                file.wasAccessed = true;
+            }
         }
 
-        return file.data;
+        return isConflict ? file.conflictData.contents : file.data;
     }
 
     /**
@@ -219,16 +239,21 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             entry.metadata = profInfo;
             parent.entries.set(basename, entry);
             this._fireSoon({ type: vscode.FileChangeType.Created, uri });
-        } else if (entry.isConflictFile) {
-            entry.data = content;
         } else {
-            if (entry.inDiffView) {
+            const urlQuery = new URLSearchParams(uri.query);
+            const shouldForceUpload = urlQuery.has("forceUpload");
+
+            if (entry.inDiffView || urlQuery.has("inDiff")) {
                 // Allow users to edit files in diff view.
                 // If in diff view, we don't want to make any API calls, just keep track of latest
                 // changes to data.
-                entry.conflictData = content;
+                entry.inDiffView = true;
+                entry.data = content;
+                entry.mtime = Date.now();
+                entry.size = content.byteLength;
                 return;
             }
+
             const ussApi = ZoweExplorerApiRegister.getUssApi(parent.metadata.profile);
 
             if (entry.wasAccessed || content.length > 0) {
@@ -241,14 +266,9 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                 try {
                     // Attempt to write data to remote system, and handle any conflicts from e-tag mismatch
                     await ussApi.uploadBufferAsFile(Buffer.from(content), entry.metadata.path, {
-                        etag: entry.forceUpload || entry.etag == null ? undefined : entry.etag,
+                        etag: shouldForceUpload || entry.etag == null ? undefined : entry.etag,
                         returnEtag: true,
                     });
-
-                    if (entry.forceUpload) {
-                        // remove force upload flag after entry was uploaded successfully
-                        entry.forceUpload = false;
-                    }
 
                     // Update e-tag if write was successful
                     // TODO: This call below can be removed once zowe.Upload.bufferToUssFile returns response headers.
@@ -262,12 +282,10 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                     if (!err.message.includes("Rest API failure with HTTP(S) status 412")) {
                         return;
                     }
-                    const conflictData = {
-                        content: content,
-                        fsEntry: entry,
-                        uri: uri,
-                    };
-                    if ((await this._handleConflict(ussApi, conflictData)) != ConflictViewSelection.Overwrite) {
+                    // assign local data to file in case its needed during conflict resolution
+                    // (we'll either be using this data, or the data from the remote FS)
+                    entry.localData = content;
+                    if ((await this._handleConflict(uri, entry)) != ConflictViewSelection.Overwrite) {
                         return;
                     }
                 }
@@ -331,12 +349,6 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
      */
     public async delete(uri: vscode.Uri, options: { recursive: boolean }): Promise<void> {
         const { entryToDelete, parent, parentUri } = this._deleteEntry(uri, options);
-
-        // don't send an API request when the deleted entry is a conflict
-        if (entryToDelete instanceof UssFile && entryToDelete.isConflictFile) {
-            this._fireSoon({ type: vscode.FileChangeType.Changed, uri: parentUri }, { uri, type: vscode.FileChangeType.Deleted });
-            return;
-        }
 
         try {
             await ZoweExplorerApiRegister.getUssApi(parent.metadata.profile).delete(

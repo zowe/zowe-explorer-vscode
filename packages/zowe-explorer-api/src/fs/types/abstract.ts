@@ -57,12 +57,19 @@ export type EntryMetadata = {
     path: string;
 };
 
+export type ConflictData = {
+    contents: Uint8Array;
+    etag?: string;
+    size: number;
+}
+
 export interface IFileSystemEntry extends vscode.FileStat {
     name: string;
     metadata: EntryMetadata;
     type: vscode.FileType;
     wasAccessed: boolean;
     data?: Uint8Array;
+    localData?: Uint8Array;
 }
 
 export class FileEntry implements IFileSystemEntry {
@@ -70,6 +77,7 @@ export class FileEntry implements IFileSystemEntry {
     public metadata: EntryMetadata;
     public type: vscode.FileType;
     public data: Uint8Array;
+    public localData?: Uint8Array;
     public wasAccessed: boolean;
     public ctime: number;
     public mtime: number;
@@ -77,13 +85,10 @@ export class FileEntry implements IFileSystemEntry {
     public permissions?: vscode.FilePermission;
 
     // optional types for conflict and file management that some FileSystems will not leverage
-    public conflictData?: Uint8Array;
-    public isConflictFile?: boolean;
+    public conflictData?: ConflictData;
     public inDiffView?: boolean;
     public binary?: boolean;
     public etag?: string;
-    public forceUpload?: boolean;
-
     public constructor(n: string, readOnly?: boolean) {
         this.name = n;
         this.type = vscode.FileType.File;

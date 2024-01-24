@@ -196,7 +196,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         const file = await this._lookupAsFile(uri);
         const profInfo = getInfoForUri(uri, Profiles.getInstance());
 
-        if (!file.isConflictFile && profInfo.profile == null) {
+        if (profInfo.profile == null) {
             throw vscode.FileSystemError.FileNotFound(localize("localize.uss.profileNotFound", "Profile does not exist for this file."));
         }
 
@@ -243,16 +243,20 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             entry.metadata = profInfo;
             parent.entries.set(basename, entry);
             this._fireSoon({ type: vscode.FileChangeType.Created, uri });
-        } else if (entry.isConflictFile) {
-            entry.data = content;
         } else {
-            if (entry.inDiffView) {
+            const urlQuery = new URLSearchParams(uri.query);
+            const shouldForceUpload = urlQuery.has("forceUpload");
+
+            if (urlQuery.has("inDiff")) {
                 // Allow users to edit files in diff view.
                 // If in diff view, we don't want to make any API calls, just keep track of latest
                 // changes to data.
-                entry.conflictData = content;
+                entry.data = content;
+                entry.mtime = Date.now();
+                entry.size = content.byteLength;
                 return;
             }
+
             const mvsApi = ZoweExplorerApiRegister.getMvsApi(parent.metadata.profile);
 
             if (entry.wasAccessed || content.length > 0) {
@@ -260,11 +264,11 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 // Note that we don't want to call the API when making changes to the conflict file,
                 // because the conflict file serves as the "remote" point of reference at the time of conflict,
                 // and provides the data when comparing local/remote versions of a file.
-
+                
                 // Attempt to write data to remote system, and handle any conflicts from e-tag mismatch
                 try {
                     const resp = await mvsApi.uploadBufferAsDs(Buffer.from(content), entry.metadata.path, {
-                        etag: entry.forceUpload ? undefined : entry.etag,
+                        etag: shouldForceUpload ? undefined : entry.etag,
                         returnEtag: true,
                     });
                     entry.etag = resp.apiResponse.etag;
@@ -273,12 +277,8 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                     if (!err.message.includes("Rest API failure with HTTP(S) status 412")) {
                         return;
                     }
-                    const conflictData = {
-                        content: content,
-                        fsEntry: entry,
-                        uri: uri,
-                    };
-                    if ((await this._handleConflict(mvsApi, conflictData)) != ConflictViewSelection.Overwrite) {
+                    entry.data = content;
+                    if ((await this._handleConflict(uri, entry)) != ConflictViewSelection.Overwrite) {
                         return;
                     }
                 }

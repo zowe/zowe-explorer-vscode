@@ -68,7 +68,7 @@ export async function initUSSProvider(context: vscode.ExtensionContext): Promise
                     // need to pull content for file and apply to FS entry
                     await UssFSProvider.instance.fetchFileAtUri(
                         item.resourceUri,
-                        vscode.window.visibleTextEditors.find((v) => v.document.uri.path === item.resourceUri.path)
+                        { editor: vscode.window.visibleTextEditors.find((v) => v.document.uri.path === item.resourceUri.path) }
                     );
                 }
             }
@@ -225,15 +225,6 @@ export async function initUSSProvider(context: vscode.ExtensionContext): Promise
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.diff.useRemoteContent", async (localUri) => {
             await UssFSProvider.instance.diffUseRemote(localUri);
-        })
-    );
-    context.subscriptions.push(
-        vscode.window.onDidChangeVisibleTextEditors((editors) => {
-            const ussUris = editors.map((e) => e.document.uri).filter((u) => u.scheme === "zowe-uss");
-            const closedOrMovedUris = UssFSProvider.instance.openedUris.filter((u) => ussUris.find((otherUri) => otherUri.path === u.path) == null);
-            for (const uri of closedOrMovedUris) {
-                UssFSProvider.instance.invalidateDataForUri(uri);
-            }
         })
     );
     context.subscriptions.push(

@@ -73,6 +73,7 @@ export async function createUSSNode(
         try {
             filePath = `${filePath}/${name}`;
             await ZoweExplorerApiRegister.getUssApi(node.getProfile()).create(filePath, nodeType);
+            await vscode.workspace.fs.writeFile(node.resourceUri.with({ path: path.join(node.resourceUri.path, name) }), new Uint8Array());
             if (isTopLevel) {
                 await refreshAll(ussFileProvider);
             } else {
