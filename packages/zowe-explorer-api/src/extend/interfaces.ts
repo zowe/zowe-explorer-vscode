@@ -505,7 +505,7 @@ export interface ICommand extends ICommon {
      * @param {string} command
      * @param {string} cwd
      * @param {boolean} flag
-     * @returns {string>}
+     * @returns {Promise<string>}
      * @memberof ICommand
      */
     issueUnixCommand?(sshSession: zowe.SshSession, command: string, cwd: string, flag: boolean): Promise<string>;

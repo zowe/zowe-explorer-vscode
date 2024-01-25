@@ -131,22 +131,19 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
      * - `job` - (optional) The job document associated with the "job entry" in the FileSystem
      */
     public createDirectory(uri: vscode.Uri, options?: { isFilter?: boolean; job?: IJob }): void {
-        const basename = path.basename(uri.path);
+        const basename = path.posix.basename(uri.path);
         const parent = this._lookupParentDirectory(uri, false);
-        const profInfo = parent.metadata
-            ? {
-                  profile: parent.metadata.profile,
-                  // we can strip profile name from path because its not involved in API calls
-                  path: parent.metadata.path.concat(`${basename}/`),
-              }
-            : this._getInfoFromUri(uri);
 
         const EntryType = options.isFilter ? FilterEntry : JobEntry;
         const entry = new EntryType(basename);
         if (isJobEntry(entry)) {
             entry.job = options.job;
         }
-        entry.metadata = profInfo;
+        entry.metadata = {
+            ...parent.metadata,
+            // we can strip profile name from path because its not involved in API calls
+            path: parent.metadata.path.concat(`${basename}/`),
+        };
         parent.entries.set(entry.name, entry);
         parent.mtime = Date.now();
         parent.size += 1;
@@ -166,10 +163,9 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
 
         // we need to fetch the contents from the mainframe since the file hasn't been accessed yet
         const bufBuilder = new BufferBuilder();
-        const metadata = spoolEntry.metadata ?? this._getInfoFromUri(uri);
 
         try {
-            await ZoweExplorerApiRegister.getJesApi(metadata.profile).downloadSingleSpool({
+            await ZoweExplorerApiRegister.getJesApi(spoolEntry.metadata.profile).downloadSingleSpool({
                 jobFile: spoolEntry.spool,
                 stream: bufBuilder,
             });
@@ -234,13 +230,10 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
             entry = new SpoolEntry(spoolName);
             entry.spool = options.spool;
             entry.data = content;
-            const profInfo = parent.metadata
-                ? {
-                      profile: parent.metadata.profile,
-                      path: parent.metadata.path.concat(`${basename}`),
-                  }
-                : this._getInfoFromUri(uri);
-            entry.metadata = profInfo;
+            entry.metadata = {
+                ...parent.metadata,
+                path: parent.metadata.path.concat(`${basename}`),
+            };
             parent.entries.set(spoolName, entry);
             this._fireSoon({ type: vscode.FileChangeType.Created, uri });
         } else {

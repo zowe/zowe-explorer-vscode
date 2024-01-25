@@ -61,7 +61,7 @@ export type ConflictData = {
     contents: Uint8Array;
     etag?: string;
     size: number;
-}
+};
 
 export interface IFileSystemEntry extends vscode.FileStat {
     name: string;
@@ -69,7 +69,6 @@ export interface IFileSystemEntry extends vscode.FileStat {
     type: vscode.FileType;
     wasAccessed: boolean;
     data?: Uint8Array;
-    localData?: Uint8Array;
 }
 
 export class FileEntry implements IFileSystemEntry {
@@ -77,7 +76,6 @@ export class FileEntry implements IFileSystemEntry {
     public metadata: EntryMetadata;
     public type: vscode.FileType;
     public data: Uint8Array;
-    public localData?: Uint8Array;
     public wasAccessed: boolean;
     public ctime: number;
     public mtime: number;

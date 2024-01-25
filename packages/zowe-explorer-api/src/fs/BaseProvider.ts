@@ -10,20 +10,10 @@
  */
 
 import * as vscode from "vscode";
-import {
-    DirEntry,
-    FileEntry,
-    IFileSystemEntry,
-    FS_PROVIDER_DELAY,
-    ConflictViewSelection,
-    BufferBuilder,
-    LocalConflict,
-    Conflictable,
-    DeleteMetadata,
-} from "./types";
+import { DirEntry, FileEntry, IFileSystemEntry, FS_PROVIDER_DELAY, ConflictViewSelection, DeleteMetadata } from "./types";
 import * as path from "path";
 import { isEqual } from "lodash";
-import { getInfoForUri, isDirectoryEntry, isFileEntry } from "./utils";
+import { isDirectoryEntry, isFileEntry } from "./utils";
 import { Gui } from "../globals/Gui";
 import * as nls from "vscode-nls";
 import { ZoweVsCodeExtension } from "../vscode";
@@ -59,7 +49,7 @@ export class BaseProvider {
      */
     public async diffOverwrite(uri: vscode.Uri): Promise<void> {
         const fsEntry = await this._lookupAsFile(uri);
-        await vscode.workspace.fs.writeFile(uri.with({ query: "forceUpload=true" }), fsEntry.localData ?? fsEntry.data);
+        await vscode.workspace.fs.writeFile(uri.with({ query: "forceUpload=true" }), fsEntry.data);
         Gui.setStatusBarMessage(localize("diff.overwritten", "$(check) Overwrite applied for {0}", fsEntry.name), this.FS_PROVIDER_UI_TIMEOUT);
         fsEntry.conflictData = null;
     }
@@ -100,7 +90,7 @@ export class BaseProvider {
             return;
         }
 
-        parentEntry.entries.delete(path.basename(uri.path));
+        parentEntry.entries.delete(path.posix.basename(uri.path));
         this._fireSoon({ type: vscode.FileChangeType.Deleted, uri: uri });
     }
 
@@ -133,24 +123,23 @@ export class BaseProvider {
      * @param uri The URI that is open in an editor tab
      */
     protected async _updateResourceInEditor(uri: vscode.Uri): Promise<void> {
-        // This is a hacky method and does not work for editors that aren't the active one,
-        // so we can make VSCode switch the active document to that tab and then "revert the file" to show latest contents
+        // HACK: does not work for editors that aren't the active one, so...
+        // make VS Code switch to this editor and then "revert the file" to show latest contents
         await vscode.commands.executeCommand("vscode.open", uri);
-        // Note that the command only affects files that are not dirty
         // TODO: find a better method to reload editor tab with new contents
         vscode.commands.executeCommand("workbench.action.files.revert");
     }
 
     /**
-     * Update the child entries in the provider with the parent's updated entry.
+     * Update the child path metadata in the provider with the parent's updated entry (recursively).
      * @param entry The parent directory whose children need updated
      */
     protected _updateChildPaths(entry: DirEntry): void {
         // update child entries
         for (const child of entry.entries.values()) {
-            const isDir = isDirectoryEntry(child);
-            child.metadata.path = entry.metadata.path.concat(`${child.name}${isDir ? "/" : ""}`);
-            if (isDir) {
+            child.metadata.path = entry.metadata.path.concat(child.name);
+            if (isDirectoryEntry(child)) {
+                child.metadata.path += "/";
                 this._updateChildPaths(child);
             }
         }
@@ -253,9 +242,8 @@ export class BaseProvider {
 
         // User selected "Compare", show diff with local contents and LPAR contents
         if (userSelection === conflictOptions[0]) {
-            // Add this file to the conflict map so we can quickly leverage the data
-            // when the "action buttons" are clicked in the diff view.
-
+            // This event removes the "diff view" flag from the local file,
+            // so that API calls can continue after the conflict dialog is closed.
             const onCloseEvent = async (provider: BaseProvider, e: vscode.TextDocument): Promise<void> => {
                 if (e.uri.query && e.uri.scheme.startsWith("zowe-")) {
                     const queryParams = new URLSearchParams(e.uri.query);
@@ -268,6 +256,7 @@ export class BaseProvider {
                 }
             };
             vscode.workspace.onDidCloseTextDocument(onCloseEvent.bind(this));
+
             vscode.commands.executeCommand(
                 "vscode.diff",
                 uri.with({ query: "conflict=true" }),
@@ -277,6 +266,7 @@ export class BaseProvider {
             return ConflictViewSelection.Compare;
         }
 
+        // User selected "Overwrite"
         await this.diffOverwrite(uri);
         return ConflictViewSelection.Overwrite;
     }
@@ -300,24 +290,6 @@ export class BaseProvider {
     /**
      * VScode utility functions for entries in the provider:
      */
-
-    /**
-     * Creates a directory in the provider without any metadata (profile/path).
-     * @param uri The URI to create a directory for
-     */
-    protected _createDirNoMetadata(uri: vscode.Uri): void {
-        const basename = path.posix.basename(uri.path);
-        const parent = this._lookupParentDirectory(uri, false);
-        const entry = new DirEntry(basename);
-
-        parent.entries.set(entry.name, entry);
-        parent.mtime = Date.now();
-        parent.size += 1;
-        this._fireSoon(
-            { type: vscode.FileChangeType.Changed, uri: uri.with({ path: path.dirname(uri.path) }) },
-            { type: vscode.FileChangeType.Created, uri }
-        );
-    }
 
     protected _lookup(uri: vscode.Uri, silent: false): IFileSystemEntry;
     protected _lookup(uri: vscode.Uri, silent: boolean): IFileSystemEntry | undefined;
@@ -371,19 +343,29 @@ export class BaseProvider {
         entry = new FileEntry(basename);
         entry.data = new Uint8Array();
         const filePath = parent.metadata.path.concat(basename);
-        const profInfo = parent.metadata
-            ? { ...parent.metadata, path: filePath }
-            : { profile: getInfoForUri(uri, this._profilesCache).profile, path: filePath };
+        const profInfo = { ...parent.metadata, path: filePath };
         entry.metadata = profInfo;
         parent.entries.set(basename, entry);
         this._fireSoon({ type: vscode.FileChangeType.Created, uri });
         return entry;
     }
 
-    private async buildTreeForUri(uri: vscode.Uri): Promise<void> {
+    /**
+     * Builds the full URI in the tree. Helpful for creating entries when opening external links.
+     * @param uri The full URI to create within the provider
+     * @returns The entry to the newly-created file
+     */
+    protected async buildTreeForUri(uri: vscode.Uri): Promise<FileEntry> {
         const segments = uri.path.split("/");
         let currentNode: DirEntry | FileEntry = this.root;
 
+        // Start building a new URI from the root
+        let currentUri = vscode.Uri.from({
+            scheme: uri.scheme,
+            path: `/${this.root.metadata.profile}/`,
+        });
+
+        // "Walk" down each segment of the given path to build the full file tree
         for (let i = 0; i < segments.length; i++) {
             const segment = segments[i];
             if (segment.length == 0) {
@@ -391,18 +373,18 @@ export class BaseProvider {
             }
 
             if (isFileEntry(currentNode)) {
-                // we've reached the file entry and its valid, can stop here
-                return;
+                // reached the file entry and its valid, stop here
+                return currentNode;
             }
 
-            const currentPath = path.posix.join("/", ...segments.slice(0, i + 1));
-            const currentUri = uri.with({ path: currentPath });
+            currentUri = currentUri.with({
+                path: path.posix.join(currentUri.path, segment),
+            });
 
             if (!currentNode.entries.has(segment)) {
                 if (i == segments.length - 1) {
                     // File segment
-                    this._createFile(currentUri);
-                    return;
+                    return this._createFile(currentUri);
                 } else {
                     // Folder
                     await vscode.workspace.fs.createDirectory(currentUri);
@@ -419,10 +401,8 @@ export class BaseProvider {
             entry = this._lookup(uri, opts?.silent ?? false);
         } catch (err) {
             if (opts?.buildFullPath) {
-                // At this point we need to create the whole path structure in the FSP.
-                await this.buildTreeForUri(uri);
-                // After the entry has been created, then we can check for its existence on the remote system.
-                entry = this._lookup(uri, opts?.silent ?? false);
+                // Create the whole path structure in the FSP (for opening a link from an external app).
+                entry = await this.buildTreeForUri(uri);
             }
         }
         if (isFileEntry(entry)) {

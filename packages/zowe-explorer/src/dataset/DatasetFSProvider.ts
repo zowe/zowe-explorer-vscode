@@ -134,7 +134,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
      * @param uri The URI that represents a new directory path
      */
     public createDirectory(uri: vscode.Uri, filter?: string): void {
-        const basename = path.basename(uri.path);
+        const basename = path.posix.basename(uri.path);
         const parent = this._lookupParentDirectory(uri, false);
         const profInfo = parent.metadata
             ? {
@@ -264,7 +264,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 // Note that we don't want to call the API when making changes to the conflict file,
                 // because the conflict file serves as the "remote" point of reference at the time of conflict,
                 // and provides the data when comparing local/remote versions of a file.
-                
+
                 // Attempt to write data to remote system, and handle any conflicts from e-tag mismatch
                 try {
                     const resp = await mvsApi.uploadBufferAsDs(Buffer.from(content), entry.metadata.path, {
