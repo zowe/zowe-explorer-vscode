@@ -34,7 +34,7 @@ const config = {
         path: path.resolve(__dirname, "out/src"),
         filename: "extension.js",
         libraryTarget: "commonjs2",
-        devtoolModuleFilenameTemplate: "../../[resource-path]",
+        devtoolModuleFilenameTemplate: "webpack:///[absolute-resource-path]",
     },
     devtool: "source-map",
     externals: {
@@ -48,6 +48,9 @@ const config = {
     resolve: {
         // support reading TypeScript and JavaScript files, 📖 -> https://github.com/TypeStrong/ts-loader
         extensions: [".ts", ".js"],
+        alias: {
+            "@zowe/zowe-explorer-api$": path.resolve(__dirname, "..", "zowe-explorer-api/src"),
+        },
     },
     node: {
         __dirname: false, // leave the __dirname behavior intact
