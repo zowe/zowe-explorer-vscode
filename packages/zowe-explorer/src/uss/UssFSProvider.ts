@@ -228,14 +228,30 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
         if (!entry) {
             entry = new UssFile(fileName);
-            entry.data = content;
-
             // Build the metadata for the file using the parent's metadata (if available),
             // or build it using the helper function
             entry.metadata = {
                 ...parentDir.metadata,
                 path: parentDir.metadata.path.concat(`${fileName}`),
             };
+
+            if (content.byteLength > 0) {
+                // user is trying to edit a file that was just deleted: make the API call
+                const ussApi = ZoweExplorerApiRegister.getUssApi(parentDir.metadata.profile);
+                await ussApi.uploadBufferAsFile(Buffer.from(content), entry.metadata.path, {
+                    etag: undefined,
+                    returnEtag: true,
+                });
+                
+                // Update e-tag if write was successful.
+                // TODO: This call below can be removed once zowe.Upload.bufferToUssFile returns response headers.
+                // This is necessary at the moment on z/OSMF to fetch the new e-tag.
+                const newData = await ussApi.getContents(entry.metadata.path, {
+                    returnEtag: true,
+                });
+                entry.etag = newData.apiResponse.etag;
+            }
+            entry.data = content;
             parentDir.entries.set(fileName, entry);
             this._fireSoon({ type: vscode.FileChangeType.Created, uri });
         } else {
