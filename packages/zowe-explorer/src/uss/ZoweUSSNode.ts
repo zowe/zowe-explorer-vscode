@@ -208,6 +208,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 const temp = new ZoweUSSNode({
                     label: item.name,
                     collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                    parentNode: this,
                     parentPath: this.fullPath,
                     profile: this.profile,
                 });

@@ -6,6 +6,12 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
+### Bug fixes
+
+## `2.14.0`
+
+### New features and enhancements
+
 - Added new data set creation template for partitioned data set extended. [#2600](https://github.com/zowe/vscode-extension-for-zowe/issues/2600)
 - Added "Open with Encoding" feature to open data sets and USS files in a non-standard codepage. [#2435](https://github.com/zowe/vscode-extension-for-zowe/issues/2435)
 - Adopted new common methods for `loginWithBaseProfile` and `logoutWithBaseProfile`. [#2493](https://github.com/zowe/vscode-extension-for-zowe/pull/2493)
@@ -21,9 +27,9 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed failure to refresh token value after user logs in to authentication. [#2638](https://github.com/zowe/vscode-extension-for-zowe/issues/2638)
 - Fixed order of spool files reverses when the Job is expanded and collapsed. [#2644](https://github.com/zowe/vscode-extension-for-zowe/pull/2644)
 - Fixed local filtering of jobs to work with SMFID (exec-member field). [#2651](https://github.com/zowe/vscode-extension-for-zowe/pull/2651)
+- Fixed tree item labels failing to update after renaming an MVS or USS file or folder. [#2656](https://github.com/zowe/vscode-extension-for-zowe/issues/2656)
 - Updated the `@zowe/cli` dependency to address the "blksz to 0 after an Allocate Like" issue. [#2610](https://github.com/zowe/vscode-extension-for-zowe/pull/2610). Thanks @KevinLoesch1
 - Fixed unintended behavior in `ProfileUtils.isProfileUsingBasicAuth`. [#2664](https://github.com/zowe/vscode-extension-for-zowe/issues/2664)
-- Fixed issue seen after renaming an MVS or USS file or folder. [#2656](https://github.com/zowe/vscode-extension-for-zowe/issues/2656)
 - Fixed the recent search job id filter. [#2562](https://github.com/zowe/vscode-extension-for-zowe/issues/2562)
 
 ## `2.13.1`
