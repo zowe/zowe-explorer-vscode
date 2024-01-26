@@ -9,19 +9,7 @@
  *
  */
 
-import {
-    BaseProvider,
-    BufferBuilder,
-    ConflictViewSelection,
-    getInfoForUri,
-    isDirectoryEntry,
-    Gui,
-    EntryMetadata,
-    FileEntry,
-    DirEntry,
-    UssDirectory,
-    UssFile,
-} from "@zowe/zowe-explorer-api";
+import { BaseProvider, BufferBuilder, getInfoForUri, isDirectoryEntry, Gui, EntryMetadata, UssDirectory, UssFile } from "@zowe/zowe-explorer-api";
 import * as path from "path";
 import * as vscode from "vscode";
 import * as nls from "vscode-nls";
@@ -311,8 +299,14 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
      * - `overwrite` - Overwrites the file if the new URI already exists
      */
     public async rename(oldUri: vscode.Uri, newUri: vscode.Uri, options: { overwrite: boolean }): Promise<void> {
-        if (!options.overwrite && this._lookup(newUri, true)) {
-            throw vscode.FileSystemError.FileExists(newUri);
+        const newUriEntry = this._lookup(newUri, true);
+        if (!options.overwrite && newUriEntry) {
+            throw vscode.FileSystemError.FileExists(
+                `Rename failed: ${path.posix.basename(newUri.path)} already exists in ${path.posix.resolve(
+                    newUriEntry.metadata.path,
+                    ".."
+                )}`
+            );
         }
 
         const entry = this._lookup(oldUri, false) as UssDirectory | UssFile;
@@ -333,7 +327,8 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         try {
             await ZoweExplorerApiRegister.getUssApi(entry.metadata.profile).rename(entry.metadata.path, newPath);
         } catch (err) {
-            await Gui.errorMessage(localize("uss.fsp.renameFailed", "Could not rename {0} due to API error: {1}", entry.metadata.path, err.message));
+            await Gui.errorMessage(localize("uss.fsp.renameFailed", "Renaming {0} failed due to API error: {1}", entry.metadata.path, err.message));
+            return;
         }
 
         entry.metadata.path = newPath;
@@ -360,8 +355,9 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             );
         } catch (err) {
             await Gui.errorMessage(
-                localize("fsp.deleteFailed", "Could not delete {0} due to API error: {1}", entryToDelete.metadata.path, err.message)
+                localize("fsp.deleteFailed", "Deleting {0} failed due to API error: {1}", entryToDelete.metadata.path, err.message)
             );
+            return;
         }
 
         parent.entries.delete(entryToDelete.name);
@@ -461,14 +457,18 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
     public createDirectory(uri: vscode.Uri): void {
         const basename = path.posix.basename(uri.path);
         const parent = this._lookupParentDirectory(uri, false);
-        const profInfo = {
-            profile: parent.metadata.profile,
-            // we can strip profile name from path because its not involved in API calls
-            path: parent.metadata.path.concat(`${basename}/`),
-        };
 
         const entry = new UssDirectory(basename);
+        const profInfo =
+            parent !== this.root
+                ? {
+                      profile: parent.metadata.profile,
+                      // we can strip profile name from path because its not involved in API calls
+                      path: parent.metadata.path.concat(`${basename}/`),
+                  }
+                : this._getInfoFromUri(uri);
         entry.metadata = profInfo;
+
         parent.entries.set(entry.name, entry);
         parent.mtime = Date.now();
         parent.size += 1;

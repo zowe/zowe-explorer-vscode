@@ -363,6 +363,23 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         return null;
     }
 
+    private renameChild(parentUri: vscode.Uri): void {
+        const childPath = path.posix.join(parentUri.path, this.label as string);
+        this.fullPath = childPath;
+        this.resourceUri = parentUri.with({
+            path: childPath
+        });
+        this.shortLabel = childPath.split("/").pop();
+        this.label = this.shortLabel;
+        this.tooltip = injectAdditionalDataToTooltip(this, childPath);
+
+        if (this.children.length > 0) {
+            this.children.forEach((c) => {
+                (c as ZoweUSSNode).renameChild(this.resourceUri);
+            });
+        }
+    }
+
     /**
      * Helper method to change the UI node names in one go
      * @param newFullPath string
@@ -373,7 +390,12 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         const oldUri = vscode.Uri.parse(`zowe-uss:/${this.profile.name}${this.fullPath}`);
         const newUri = vscode.Uri.parse(`zowe-uss:/${this.profile.name}${newFullPath}`);
 
-        await vscode.workspace.fs.rename(oldUri, newUri);
+        try {
+            await UssFSProvider.instance.rename(oldUri, newUri, { overwrite: false });
+        } catch (err) {
+            Gui.errorMessage(err.message);
+            return;
+        }
 
         this.fullPath = newFullPath;
         this.resourceUri = newUri;
@@ -383,9 +405,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         // Update the full path of any children already loaded locally
         if (this.children.length > 0) {
             this.children.forEach((child) => {
-                // we don't have to call rename on child nodes anymore with FSP
-                const newChildFullPath = newFullPath + "/" + child.shortLabel;
-                child.fullPath = newChildFullPath;
+                (child as ZoweUSSNode).renameChild(newUri);
             });
         }
         return true;
@@ -438,7 +458,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             throw err;
         }
 
-        Gui.showMessage(localize("deleteUssNode.itemDeleted", "The item {0} has been deleted.", this.label.toString()));
+        Gui.showMessage(localize("deleteUssNode.itemDeleted", "{0} has been deleted.", this.label.toString()));
 
         // Remove node from the USS Favorites tree
         await ussFileProvider.removeFavorite(this);

@@ -72,8 +72,13 @@ export async function createUSSNode(
     if (name && filePath) {
         try {
             filePath = `${filePath}/${name}`;
+            const uri = node.resourceUri.with({ path: path.posix.join(node.resourceUri.path, name) });
             await ZoweExplorerApiRegister.getUssApi(node.getProfile()).create(filePath, nodeType);
-            await vscode.workspace.fs.writeFile(node.resourceUri.with({ path: path.join(node.resourceUri.path, name) }), new Uint8Array());
+            if (nodeType === "file") {
+                await vscode.workspace.fs.writeFile(uri, new Uint8Array());
+            } else {
+                await vscode.workspace.fs.createDirectory(uri);
+            }
             if (isTopLevel) {
                 await refreshAll(ussFileProvider);
             } else {
@@ -160,7 +165,7 @@ export async function uploadDialog(node: IZoweUSSTreeNode, ussFileProvider: IZow
             }
         })
     );
-    ussFileProvider.refresh();
+    ussFileProvider.refreshElement(node);
 }
 
 export async function uploadBinaryFile(node: IZoweUSSTreeNode, filePath: string): Promise<void> {
