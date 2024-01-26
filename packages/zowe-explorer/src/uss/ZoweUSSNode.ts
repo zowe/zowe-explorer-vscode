@@ -174,7 +174,19 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     public async getChildren(): Promise<IZoweUSSTreeNode[]> {
         ZoweLogger.trace("ZoweUSSNode.getChildren called.");
         if ((!this.fullPath && contextually.isSession(this)) || contextually.isDocument(this)) {
-            return [];
+            const placeholder = new ZoweUSSNode(
+                localize("uss.search.placeholder", "Use the search button to list USS files"),
+                vscode.TreeItemCollapsibleState.None,
+                this,
+                null,
+                ""
+            );
+            placeholder.iconPath = null;
+            placeholder.command = {
+                command: "zowe.placeholderCommand",
+                title: "Placeholder"
+            };
+            return [placeholder];
         }
 
         if (!this.dirty) {

@@ -848,6 +848,11 @@
         "command": "zowe.diff.useRemoteContent",
         "title": "%diff.useRemote%",
         "icon": "$(discard)"
+      },
+      {
+        "command": "zowe.placeholderCommand",
+        "title": "Placeholder",
+        "enablement": "false"
       }
     ],
     "menus": {

@@ -157,15 +157,18 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     public async getChildren(): Promise<ZoweDatasetNode[]> {
         ZoweLogger.trace("ZoweDatasetNode.getChildren called.");
         if (!this.pattern && contextually.isSessionNotFav(this)) {
-            return [
-                new ZoweDatasetNode(
-                    localize("getChildren.search", "Use the search button to display data sets"),
-                    vscode.TreeItemCollapsibleState.None,
-                    this,
-                    null,
-                    globals.INFORMATION_CONTEXT
-                ),
-            ];
+            const placeholder = new ZoweDatasetNode(
+                localize("getChildren.search", "Use the search button to display data sets"),
+                vscode.TreeItemCollapsibleState.None,
+                this,
+                null,
+                globals.INFORMATION_CONTEXT
+            );
+            placeholder.command = {
+                command: "zowe.placeholderCommand",
+                title: "Placeholder"
+            };
+            return [placeholder];
         }
         if (contextually.isDocument(this) || contextually.isInformation(this)) {
             return [];

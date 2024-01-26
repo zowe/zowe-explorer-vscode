@@ -123,16 +123,19 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
             return this.children;
         }
         if (contextually.isSession(this) && !this.filtered && !contextually.isFavorite(this)) {
-            return [
-                new Job(
-                    localize("getChildren.search", "Use the search button to display jobs"),
-                    vscode.TreeItemCollapsibleState.None,
-                    this,
-                    null,
-                    null,
-                    null
-                ),
-            ];
+            const placeholder = new Job(
+                localize("getChildren.search", "Use the search button to display jobs"),
+                vscode.TreeItemCollapsibleState.None,
+                this,
+                null,
+                null,
+                null
+            );
+            placeholder.command = {
+                command: "zowe.placeholderCommand",
+                title: "Placeholder"
+            };
+            return [placeholder];
         }
 
         if (!this.dirty) {

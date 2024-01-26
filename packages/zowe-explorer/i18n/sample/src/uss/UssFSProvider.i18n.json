@@ -1,0 +1,6 @@
+{
+  "uss.unsupported.move": "The 'move' function is not implemented for this USS API.",
+  "localize.uss.profileNotFound": "Profile does not exist for this file.",
+  "uss.fsp.renameFailed": "Renaming {0} failed due to API error: {1}",
+  "fsp.deleteFailed": "Deleting {0} failed due to API error: {1}"
+}
