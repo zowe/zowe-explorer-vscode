@@ -107,7 +107,7 @@ export class BaseProvider {
      * Also removes the URI from the opened URI cache.
      * @param uri the URI whose data should be invalidated
      */
-    public invalidateDataForUri(uri: vscode.Uri): void {
+    public invalidateFileAtUri(uri: vscode.Uri): void {
         const entry = this._lookup(uri, true);
         if (!isFileEntry(entry)) {
             return;
@@ -116,6 +116,21 @@ export class BaseProvider {
         entry.data = null;
         entry.wasAccessed = false;
         this.openedUris = this.openedUris.filter((u) => u !== uri);
+    }
+
+    /**
+     * Invalidates the data for a directory entry at a given URI.
+     * Also removes the URI from the opened URI cache.
+     * @param uri the URI whose data should be invalidated
+     */
+    public invalidateDirAtUri(uri: vscode.Uri): void {
+        const entry = this._lookup(uri, true);
+        if (!isDirectoryEntry(entry)) {
+            return;
+        }
+
+        entry.entries.clear();
+        this._lookupParentDirectory(uri).entries.delete(entry.name);
     }
 
     /**

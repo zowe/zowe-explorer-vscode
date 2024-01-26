@@ -189,7 +189,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             throw Error("Invalid node");
         }
 
-        // Get the directories from the fullPath and display any thrown errors
+        // Get the list of files/folders at the given USS path and handle any errors
         let response: IZosFilesResponse;
         const sessNode = this.getSessionNode();
         let nodeProfile;
@@ -203,11 +203,15 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 });
             }
             nodeProfile = cachedProfile;
-            response = await ZoweExplorerApiRegister.getUssApi(cachedProfile).fileList(this.fullPath);
-
-            // Throws reject if the Zowe command does not throw an error but does not succeed
-            if (!response.success) {
-                throw Error(localize("getChildren.responses.error.response", "The response from Zowe CLI was not successful"));
+            if (contextually.isSession(this)) {
+                response = await UssFSProvider.instance.listFiles(
+                    nodeProfile,
+                    this.resourceUri.with({
+                        path: path.posix.join(this.resourceUri.path, this.fullPath),
+                    })
+                );
+            } else {
+                response = await UssFSProvider.instance.listFiles(nodeProfile, this.resourceUri);
             }
         } catch (err) {
             await errorHandling(err, this.label.toString(), localize("getChildren.error.response", "Retrieving response from ") + `uss-file-list`);
@@ -216,15 +220,13 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         }
 
         // If search path has changed, invalidate all children
-        if (this.fullPath?.length > 0 && this.prevPath !== this.fullPath) {
+        if (this.resourceUri.path !== this.fullPath) {
             this.children = [];
         }
 
         const responseNodes: IZoweUSSTreeNode[] = [];
         for (const item of response.apiResponse.items) {
-            if (item.name === "." || item.name === "..") {
-                continue;
-            }
+            // ".", "..", and "..." have already been filtered out
 
             const existing = this.children.find(
                 // Ensure both parent path and short label match.
@@ -300,7 +302,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         this.children = this.children
             .concat(nodesToAdd)
             .filter((c) => !nodesToRemove.includes(c))
-            .sort((a, b) => ((a.label as string) < (b.label as string) ? -1 : 1));
+            .sort((a, b) => (a.label as string).localeCompare(b.label as string));
         this.prevPath = this.fullPath;
         this.dirty = false;
         return this.children;

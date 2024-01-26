@@ -29,6 +29,7 @@ import * as nls from "vscode-nls";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { UssFileTree, UssFileType } from "./FileStructure";
 import { Profiles } from "../Profiles";
+import * as zowe from "@zowe/cli";
 
 // Set up localization
 nls.config({
@@ -98,6 +99,18 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         return true;
     }
 
+    public async listFiles(profile: zowe.imperative.IProfileLoaded, uri: vscode.Uri): Promise<zowe.IZosFilesResponse> {
+        const ussPath = uri.path.substring(uri.path.indexOf("/", 1));
+        const response = await ZoweExplorerApiRegister.getUssApi(profile).fileList(ussPath);
+        return {
+            ...response,
+            apiResponse: {
+                ...response.apiResponse,
+                items: (response.apiResponse.items ?? []).filter((it) => !(it.name as string).match(/^\.{1,3}$/)),
+            },
+        };
+    }
+
     /**
      * Reads a directory located at the given URI.
      * @param uri A valid URI within the provider
@@ -113,14 +126,9 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
         const result: [string, vscode.FileType][] = [];
         if (!dir.wasAccessed && dir !== this.root) {
-            // if this entry has not been accessed before, grab its file list
-            const response = await ZoweExplorerApiRegister.getUssApi(dir.metadata.profile).fileList(dir.metadata.path);
-            for (const item of response.apiResponse.items) {
+            const fileList = await this.listFiles(dir.metadata.profile, uri);
+            for (const item of fileList.apiResponse.items) {
                 const itemName = item.name as string;
-                // exclude ".", "..", "..."
-                if (itemName.match(/^\.{1,3}$/)) {
-                    continue;
-                }
 
                 const isDirectory = item.mode.startsWith("d");
                 const newEntryType = isDirectory ? vscode.FileType.Directory : vscode.FileType.File;
