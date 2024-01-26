@@ -367,7 +367,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         const childPath = path.posix.join(parentUri.path, this.label as string);
         this.fullPath = childPath;
         this.resourceUri = parentUri.with({
-            path: childPath
+            path: childPath,
         });
         this.shortLabel = childPath.split("/").pop();
         this.label = this.shortLabel;

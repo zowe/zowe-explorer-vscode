@@ -139,11 +139,17 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
         if (isJobEntry(entry)) {
             entry.job = options.job;
         }
-        entry.metadata = {
-            ...parent.metadata,
-            // we can strip profile name from path because its not involved in API calls
-            path: parent.metadata.path.concat(`${basename}/`),
-        };
+
+        const profInfo =
+            parent !== this.root
+                ? {
+                      profile: parent.metadata.profile,
+                      // we can strip profile name from path because its not involved in API calls
+                      path: parent.metadata.path.concat(`${basename}/`),
+                  }
+                : this._getInfoFromUri(uri);
+        entry.metadata = profInfo;
+
         parent.entries.set(entry.name, entry);
         parent.mtime = Date.now();
         parent.size += 1;

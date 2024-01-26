@@ -136,13 +136,14 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
     public createDirectory(uri: vscode.Uri, filter?: string): void {
         const basename = path.posix.basename(uri.path);
         const parent = this._lookupParentDirectory(uri, false);
-        const profInfo = parent.metadata
-            ? {
-                  profile: parent.metadata.profile,
-                  // we can strip profile name from path because its not involved in API calls
-                  path: parent.metadata.path.concat(`${basename}/`),
-              }
-            : this._getInfoFromUri(uri);
+        const profInfo =
+            parent !== this.root
+                ? {
+                      profile: parent.metadata.profile,
+                      // we can strip profile name from path because its not involved in API calls
+                      path: parent.metadata.path.concat(`${basename}/`),
+                  }
+                : this._getInfoFromUri(uri);
 
         if (isFilterEntry(parent)) {
             const entry = new PdsEntry(basename);

@@ -302,10 +302,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         const newUriEntry = this._lookup(newUri, true);
         if (!options.overwrite && newUriEntry) {
             throw vscode.FileSystemError.FileExists(
-                `Rename failed: ${path.posix.basename(newUri.path)} already exists in ${path.posix.resolve(
-                    newUriEntry.metadata.path,
-                    ".."
-                )}`
+                `Rename failed: ${path.posix.basename(newUri.path)} already exists in ${path.posix.resolve(newUriEntry.metadata.path, "..")}`
             );
         }
 
