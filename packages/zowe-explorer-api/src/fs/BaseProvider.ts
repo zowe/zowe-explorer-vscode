@@ -210,7 +210,7 @@ export class BaseProvider {
         }
     }
 
-    protected _deleteEntry(uri: vscode.Uri, _options: { recursive: boolean }): DeleteMetadata {
+    protected _getDeleteInfo(uri: vscode.Uri, _options: { recursive: boolean }): DeleteMetadata {
         const basename = path.posix.basename(uri.path);
         const parent = this._lookupParentDirectory(uri, false);
 
@@ -221,10 +221,6 @@ export class BaseProvider {
 
         // get the entry data before deleting the URI
         const entryToDelete = this._lookup(uri, false);
-
-        parent.entries.delete(basename);
-        parent.mtime = Date.now();
-        parent.size -= 1;
 
         return {
             entryToDelete,

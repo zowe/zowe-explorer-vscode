@@ -316,6 +316,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         }
 
         const entry = this._lookup(oldUri, false) as UssDirectory | UssFile;
+        const isDir = entry instanceof UssDirectory;
         const parentDir = this._lookupParentDirectory(oldUri);
 
         const newName = path.posix.basename(newUri.path);
@@ -324,7 +325,10 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         entry.name = newName;
 
         // Build the new path using the previous path and new file/folder name.
-        const newPath = path.posix.resolve(entry.metadata.path, "..", newName);
+        let newPath = path.posix.resolve(entry.metadata.path, "..", newName);
+        if (isDir) {
+            newPath += "/";
+        }
 
         try {
             await ZoweExplorerApiRegister.getUssApi(entry.metadata.profile).rename(entry.metadata.path, newPath);
@@ -347,7 +351,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
      * @param uri The URI that points to the file/folder to delete
      */
     public async delete(uri: vscode.Uri, options: { recursive: boolean }): Promise<void> {
-        const { entryToDelete, parent, parentUri } = this._deleteEntry(uri, options);
+        const { entryToDelete, parent, parentUri } = this._getDeleteInfo(uri, options);
 
         try {
             await ZoweExplorerApiRegister.getUssApi(parent.metadata.profile).delete(
@@ -360,12 +364,22 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             );
         }
 
+        parent.entries.delete(entryToDelete.name);
+        parent.mtime = Date.now();
+        parent.size -= 1;
+
         this._fireSoon({ type: vscode.FileChangeType.Changed, uri: parentUri }, { uri, type: vscode.FileChangeType.Deleted });
     }
 
-    // public copy(source: vscode.Uri, destination: vscode.Uri, options: { readonly overwrite: boolean; }): void | Thenable<void> {
-    //     return this.copyEx(source, destination, options);
-    // }
+    public copy(source: vscode.Uri, destination: vscode.Uri, options: { readonly overwrite: boolean }): void | Thenable<void> {
+        const uriQuery = new URLSearchParams(source.query);
+        if (!uriQuery.has("tree")) {
+            return;
+        }
+
+        const sourceTree = JSON.parse(decodeURIComponent(uriQuery.get("tree")));
+        return this.copyTree(source, destination, { ...options, tree: sourceTree });
+    }
 
     private buildFileName(fileList: any[], fileName: string): string {
         // Check root path for conflicts
@@ -394,7 +408,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
      * - `tree` - A tree representation of the file structure to copy
      * @returns
      */
-    public async copyEx(
+    private async copyTree(
         source: vscode.Uri,
         destination: vscode.Uri,
         options: { readonly overwrite: boolean; readonly tree: UssFileTree }
@@ -419,11 +433,11 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             });
         } else if (options.tree.type === UssFileType.Directory) {
             // Not all APIs respect the recursive option, so it's best to
-            // recurse within this operation to avoid missing files/folders
+            // create a directory and copy recursively to avoid missing any files/folders
             await api.create(outputPath, "directory");
             if (options.tree.children) {
                 for (const child of options.tree.children) {
-                    await this.copyEx(child.localUri, vscode.Uri.parse(`zowe-uss:${outputPath}`), { ...options, tree: child });
+                    await this.copyTree(child.localUri, vscode.Uri.parse(`zowe-uss:${outputPath}`), { ...options, tree: child });
                 }
             }
         } else {

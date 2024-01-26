@@ -683,7 +683,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      * @param tree The structure of files and folders to paste
      * @param ussApi The USS API to use for this operation
      */
-    public async paste(sessionName: string, destUri: vscode.Uri, uss: { tree: UssFileTree; api: IUss; options?: IUploadOptions }): Promise<void> {
+    public async paste(destUri: vscode.Uri, uss: { tree: UssFileTree; api: IUss; options?: IUploadOptions }): Promise<void> {
         ZoweLogger.trace("ZoweUSSNode.paste called.");
         const hasCopy = uss.api.copy != null;
         const hasUploadBufAsFile = uss.api.uploadBufferAsFile != null;
@@ -693,9 +693,8 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             );
         }
 
-        await UssFSProvider.instance.copyEx(uss.tree.localUri, destUri, {
+        await UssFSProvider.instance.copy(uss.tree.localUri.with({ query: `tree=${encodeURIComponent(JSON.stringify(uss.tree))}` }), destUri, {
             overwrite: true,
-            tree: uss.tree,
         });
     }
 
@@ -727,7 +726,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             };
 
             for (const subnode of fileTreeToPaste.children) {
-                await this.paste(sessionName, vscode.Uri.parse(`zowe-uss:/${this.profile.name}${this.fullPath}`), { api, tree: subnode, options });
+                await this.paste(vscode.Uri.parse(`zowe-uss:/${this.profile.name}${this.fullPath}`), { api, tree: subnode, options });
             }
         } catch (error) {
             await errorHandling(error, this.label.toString(), localize("copyUssFile.error", "Error uploading files"));
