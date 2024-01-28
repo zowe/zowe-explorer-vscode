@@ -768,7 +768,7 @@
       },
       {
         "command": "zowe.jobs.filterJobs",
-        "title": "Filter Jobs",
+        "title": "%jobs.filterBy%",
         "category": "Zowe Explorer",
         "icon": "$(list-filter)"
       },
@@ -1306,11 +1306,6 @@
           "group": "002_zowe_jobsWorkspace@0"
         },
         {
-          "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/  && !listMultiSelection",
-          "command": "zowe.jobs.filterJobs",
-          "group": "002_zowe_jobsProfileModification@99"
-        },
-        {
           "when": "view == zowe.jobs.explorer && viewItem =~ /^job.*_fav.*/",
           "command": "zowe.jobs.removeFavorite",
           "group": "002_zowe_jobsWorkspace@2"
@@ -1353,27 +1348,32 @@
         {
           "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)job.*/",
           "command": "zowe.jobs.deleteJob",
-          "group": "099_zowe_jobsModification"
+          "group": "097_zowe_jobsModification"
         },
         {
           "when": "view == zowe.jobs.explorer && viewItem =~ /^job.*/",
           "command": "zowe.jobs.cancelJob",
-          "group": "099_zowe_jobsModification"
+          "group": "097_zowe_jobsModification"
+        },
+        {
+          "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/  && !listMultiSelection",
+          "command": "zowe.jobs.filterJobs",
+          "group": "098_zowe_jobsSort@0"
         },
         {
           "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/  && !listMultiSelection",
           "command": "zowe.jobs.sortBy",
-          "group": "099_zowe_jobsSort"
+          "group": "098_zowe_jobsSort@1"
         },
         {
           "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/  && !listMultiSelection",
           "command": "zowe.editHistory",
-          "group": "100_zowe_editHistory@100"
+          "group": "100_zowe_editHistory"
         },
         {
           "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/ && !listMultiSelection",
           "command": "zowe.profileManagement",
-          "group": "100_zowe_jobsProfileAuthentication@99"
+          "group": "099_zowe_jobsProfileAuthentication"
         }
       ],
       "commandPalette": [
