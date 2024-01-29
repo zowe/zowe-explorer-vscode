@@ -6,6 +6,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
+- Added the capability for extenders to contribute new profile types to the Zowe schema during extender activation. [#2508](https://github.com/zowe/vscode-extension-for-zowe/issues/2508)
+
 ### Bug fixes
 
 ## `2.14.0`
@@ -17,7 +19,6 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Adopted new common methods for `loginWithBaseProfile` and `logoutWithBaseProfile`. [#2493](https://github.com/zowe/vscode-extension-for-zowe/pull/2493)
 - Added APIML dynamic token support. [#2665](https://github.com/zowe/vscode-extension-for-zowe/issues/2665)
 - Implemented profile determination without triggering quick pick for `Submit JCL` if the file is part of Zowe Explorer's temp files. [#2628](https://github.com/zowe/vscode-extension-for-zowe/issues/2628)
-- Added the capability for extenders to contribute new profile types to the Zowe schema during extender activation. [#2508](https://github.com/zowe/vscode-extension-for-zowe/issues/2508)
 
 ### Bug fixes
 
