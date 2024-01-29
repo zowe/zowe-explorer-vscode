@@ -49,15 +49,12 @@ describe("dsNodeActions integration test", async () => {
     const sessCfg = ZosmfSession.createSessCfgFromArgs(cmdArgs);
     imperative.ConnectionPropsForSessCfg.resolveSessCfgProps(sessCfg, cmdArgs);
     const session = new imperative.Session(sessCfg);
-    const sessionNode = new ZoweDatasetNode(
-        testConst.profile.name,
-        vscode.TreeItemCollapsibleState.Collapsed,
-        null,
+    const sessionNode = new ZoweDatasetNode({
+        label: testConst.profile.name,
+        collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
         session,
-        undefined,
-        undefined,
-        testProfile
-    );
+        profile: testProfile,
+    });
     sessionNode.contextValue = globals.DS_SESSION_CONTEXT;
     const pattern = testConst.normalPattern.toUpperCase();
     sessionNode.pattern = pattern;

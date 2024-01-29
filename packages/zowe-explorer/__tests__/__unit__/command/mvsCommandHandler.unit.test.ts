@@ -119,7 +119,12 @@ describe("mvsCommandActions unit testing", () => {
         failNotFound: false,
     };
 
-    const testNode = new ZoweDatasetNode("BRTVS99.DDIR", vscode.TreeItemCollapsibleState.Collapsed, null, session, undefined, undefined, profileOne);
+    const testNode = new ZoweDatasetNode({
+        label: "BRTVS99.DDIR",
+        collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+        session,
+        profile: profileOne,
+    });
 
     Object.defineProperty(vscode.window, "showErrorMessage", { value: showErrorMessage });
     Object.defineProperty(vscode.window, "showInputBox", { value: showInputBox });

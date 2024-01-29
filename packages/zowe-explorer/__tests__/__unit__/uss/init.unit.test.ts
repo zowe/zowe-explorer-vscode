@@ -48,6 +48,7 @@ describe("Test src/dataset/extension", () => {
                 reveal: jest.fn(),
             }),
             refreshElement: jest.fn(),
+            openWithEncoding: jest.fn(),
         };
         const commands: IJestIt[] = [
             {
@@ -203,6 +204,10 @@ describe("Test src/dataset/extension", () => {
             {
                 name: "zowe.uss.editAttributes",
                 mock: [{ spy: jest.spyOn(ussActions, "editAttributes"), arg: [test.context, ussFileProvider, test.value] }],
+            },
+            {
+                name: "zowe.uss.openWithEncoding",
+                mock: [{ spy: jest.spyOn(ussFileProvider, "openWithEncoding"), arg: [test.value] }],
             },
             {
                 name: "onDidChangeConfiguration",

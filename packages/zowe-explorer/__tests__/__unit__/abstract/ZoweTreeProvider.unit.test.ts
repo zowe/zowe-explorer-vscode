@@ -25,7 +25,7 @@ import { imperative } from "@zowe/cli";
 import * as globals from "../../../src/globals";
 import { createUSSTree } from "../../../src/uss/USSTree";
 import { createIJobObject, createJobSessionNode } from "../../../__mocks__/mockCreators/jobs";
-import { Job } from "../../../src/job/ZoweJobNode";
+import { ZoweJobNode } from "../../../src/job/ZoweJobNode";
 import { createJobsTree } from "../../../src/job/ZosJobsProvider";
 import { SettingsConfig } from "../../../src/utils/SettingsConfig";
 import { ZoweTreeProvider } from "../../../src/abstract/ZoweTreeProvider";
@@ -150,13 +150,12 @@ async function createGlobalMocks() {
     globalMocks.testUSSTree = await createUSSTree();
     Object.defineProperty(globalMocks.testUSSTree, "refresh", { value: globalMocks.refresh, configurable: true });
     globalMocks.testUSSTree.mSessionNodes.push(globalMocks.testSessionNode);
-    globalMocks.testUSSNode = new ZoweUSSNode(
-        "/u/test",
-        vscode.TreeItemCollapsibleState.Collapsed,
-        globalMocks.testUSSTree.mSessionNodes[0],
-        globalMocks.testSession,
-        null
-    );
+    globalMocks.testUSSNode = new ZoweUSSNode({
+        label: "/u/test",
+        collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+        parentNode: globalMocks.testUSSTree.mSessionNodes[0],
+        session: globalMocks.testSession,
+    });
     globalMocks.mockLoadNamedProfile.mockReturnValue(globalMocks.testProfile);
     globalMocks.mockDefaultProfile.mockReturnValue(globalMocks.testProfile);
     globalMocks.mockEditSession.mockReturnValue(globalMocks.testProfile);
@@ -177,14 +176,13 @@ describe("ZoweJobNode unit tests - Function editSession", () => {
             jobNode: null,
         };
 
-        newMocks.jobNode = new Job(
-            "jobtest",
-            vscode.TreeItemCollapsibleState.Expanded,
-            null,
-            globalMocks.testSession,
-            newMocks.testIJob,
-            globalMocks.testProfile
-        );
+        newMocks.jobNode = new ZoweJobNode({
+            label: "jobtest",
+            collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
+            session: globalMocks.testSession,
+            profile: globalMocks.testProfile,
+            job: newMocks.testIJob,
+        });
         newMocks.jobNode.contextValue = "job";
         newMocks.jobNode.dirty = true;
 
@@ -223,7 +221,7 @@ describe("Tree Provider unit tests, function getTreeItem", () => {
     it("Tests that getTreeItem returns an object of type vscode.TreeItem", async () => {
         const globalMocks = await createGlobalMocks();
         const spy = jest.spyOn(ZoweLogger, "trace");
-        const sampleElement = new ZoweUSSNode("/u/myUser", vscode.TreeItemCollapsibleState.None, null, null, null);
+        const sampleElement = new ZoweUSSNode({ label: "/u/myUser", collapsibleState: vscode.TreeItemCollapsibleState.None });
         expect(globalMocks.testUSSTree.getTreeItem(sampleElement)).toBeInstanceOf(vscode.TreeItem);
         expect(spy).toBeCalled();
         spy.mockClear();
@@ -231,14 +229,14 @@ describe("Tree Provider unit tests, function getTreeItem", () => {
 });
 
 describe("Tree Provider unit tests, function getParent", () => {
-    it("Tests that getParent returns null when called on a root node", async () => {
+    it("Tests that getParent returns undefined when called on a root node", async () => {
         const globalMocks = await createGlobalMocks();
         const spy = jest.spyOn(ZoweLogger, "trace");
         // Await return value from getChildren
         const rootChildren = await globalMocks.testUSSTree.getChildren();
         const parent = globalMocks.testUSSTree.getParent(rootChildren[1]);
 
-        expect(parent).toEqual(null);
+        expect(parent).toBeUndefined();
         expect(spy).toBeCalled();
         spy.mockClear();
     });
@@ -247,13 +245,12 @@ describe("Tree Provider unit tests, function getParent", () => {
         const globalMocks = await createGlobalMocks();
 
         // Creating child of session node
-        const sampleChild: ZoweUSSNode = new ZoweUSSNode(
-            "/u/myUser/zowe1",
-            vscode.TreeItemCollapsibleState.None,
-            globalMocks.testUSSTree.mSessionNodes[1],
-            globalMocks.testSession,
-            null
-        );
+        const sampleChild: ZoweUSSNode = new ZoweUSSNode({
+            label: "/u/myUser/zowe1",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: globalMocks.testUSSTree.mSessionNodes[1],
+            session: globalMocks.testSession,
+        });
 
         expect(globalMocks.testUSSTree.getParent(sampleChild)).toBe(globalMocks.testUSSTree.mSessionNodes[1]);
     });
@@ -282,13 +279,12 @@ describe("Tree Provider unit tests, function getTreeItem", () => {
     it("Testing that expand tree is executed successfully", async () => {
         const globalMocks = await createGlobalMocks();
         const spy = jest.spyOn(ZoweLogger, "trace");
-        const folder = new ZoweUSSNode(
-            "/u/myuser",
-            vscode.TreeItemCollapsibleState.Collapsed,
-            globalMocks.testUSSTree.mSessionNodes[0],
-            globalMocks.testSession,
-            null
-        );
+        const folder = new ZoweUSSNode({
+            label: "/u/myuser",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: globalMocks.testUSSTree.mSessionNodes[0],
+            session: globalMocks.testSession,
+        });
         folder.contextValue = globals.USS_DIR_CONTEXT;
 
         // Testing flipState to open
@@ -311,14 +307,13 @@ describe("ZoweJobNode unit tests - Function checkCurrentProfile", () => {
             jobNode: null,
         };
 
-        newMocks.jobNode = new Job(
-            "jobtest",
-            vscode.TreeItemCollapsibleState.Expanded,
-            null,
-            globalMocks.testSession,
-            newMocks.testIJob,
-            globalMocks.testProfile
-        );
+        newMocks.jobNode = new ZoweJobNode({
+            label: "jobtest",
+            collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
+            session: globalMocks.testSession,
+            profile: globalMocks.testProfile,
+            job: newMocks.testIJob,
+        });
         newMocks.jobNode.contextValue = "job";
         newMocks.jobNode.dirty = true;
 

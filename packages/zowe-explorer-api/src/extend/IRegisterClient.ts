@@ -10,7 +10,7 @@
  */
 
 import { imperative } from "@zowe/cli";
-import { ICommand, IJes, IMvs, IUss } from "./interfaces";
+import { ICommand, ICommon, IJes, IMvs, IUss } from "./interfaces";
 import * as vscode from "vscode";
 import { EventTypes } from "../profiles";
 
@@ -109,4 +109,11 @@ export interface IRegisterClient {
      * Define events that fire whenever an existing team config profile is updated.
      */
     onProfilesUpdate?: vscode.Event<EventTypes>;
+
+    /**
+     * Lookup of any registered API (Uss, Mvs, Jes, or Command).
+     * @param {string} profile
+     * @returns the registered API instance
+     */
+    getCommonApi?(profile: imperative.IProfileLoaded): ICommon;
 }

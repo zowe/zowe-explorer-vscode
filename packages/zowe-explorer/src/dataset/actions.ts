@@ -35,7 +35,6 @@ import * as contextually from "../shared/context";
 import { markDocumentUnsaved, setFileSaved } from "../utils/workspace";
 import { IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
 import { ZoweLogger } from "../utils/LoggerUtils";
-import { promiseStatus, PromiseStatuses } from "promise-status-async";
 import { ProfileManagement } from "../utils/ProfileManagement";
 import { LocalFileManagement } from "../utils/LocalFileManagement";
 
@@ -51,6 +50,7 @@ const localizedStrings = {
     dsC: vscode.l10n.t("Partitioned Data Set: C"),
     dsClassic: vscode.l10n.t("Partitioned Data Set: Classic"),
     dsPartitioned: vscode.l10n.t("Partitioned Data Set: Default"),
+    dsExtended: vscode.l10n.t("Partitioned Data Set: Extended"),
     dsSequential: vscode.l10n.t("Sequential Data Set"),
     opCancelled: vscode.l10n.t("Operation Cancelled"),
     copyingFiles: vscode.l10n.t("Copying File(s)"),
@@ -156,7 +156,6 @@ export async function allocateLike(datasetProvider: api.IZoweTree<api.IZoweDatas
 
     const theFilter = datasetProvider.createFilterString(newDSName, currSession);
     currSession.tooltip = currSession.pattern = theFilter.toUpperCase();
-    datasetProvider.addSearchHistory(theFilter);
     datasetProvider.refresh();
     currSession.dirty = true;
     datasetProvider.refreshElement(currSession);
@@ -440,11 +439,12 @@ export async function createMember(parent: api.IZoweDatasetTreeNode, datasetProv
         parent.dirty = true;
         datasetProvider.refreshElement(parent);
 
-        await openPS(
-            new ZoweDatasetNode(name, vscode.TreeItemCollapsibleState.None, parent, null, undefined, undefined, parent.getProfile()),
-            true,
-            datasetProvider
-        );
+        await new ZoweDatasetNode({
+            label: name,
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: parent,
+            profile: parent.getProfile(),
+        }).openDs(false, true, datasetProvider);
 
         // Refresh corresponding tree parent to reflect addition
         const otherTreeParent = datasetProvider.findEquivalentNode(parent, contextually.isFavorite(parent));
@@ -456,61 +456,7 @@ export async function createMember(parent: api.IZoweDatasetTreeNode, datasetProv
     }
 }
 
-/**
- * Downloads and displays a PS or data set member in a text editor view
- *
- * @param {IZoweDatasetTreeNode} node
- */
-export async function openPS(
-    node: api.IZoweDatasetTreeNode,
-    previewMember: boolean,
-    datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>
-): Promise<void> {
-    ZoweLogger.trace("dataset.actions.openPS called.");
-    if (datasetProvider) {
-        await datasetProvider.checkCurrentProfile(node);
-    }
-
-    // Status of last "open action" promise
-    // If the node doesn't support pending actions, assume last action was resolved to pull new contents
-    const lastActionStatus =
-        node.ongoingActions?.[api.NodeAction.Download] != null
-            ? await promiseStatus(node.ongoingActions[api.NodeAction.Download])
-            : PromiseStatuses.PROMISE_RESOLVED;
-
-    // Cache status of double click if the node has the "wasDoubleClicked" property:
-    // allows subsequent clicks to register as double-click if node is not done fetching contents
-    const doubleClicked = api.Gui.utils.wasDoubleClicked(node, datasetProvider);
-    const shouldPreview = doubleClicked ? false : previewMember;
-    if (node.wasDoubleClicked != null) {
-        node.wasDoubleClicked = doubleClicked;
-    }
-
-    // Prevent future "open actions" until last action is completed
-    if (lastActionStatus == PromiseStatuses.PROMISE_PENDING) {
-        return;
-    }
-
-    if (Profiles.getInstance().validProfile !== api.ValidProfileEnum.INVALID) {
-        try {
-            const fileInfo = await downloadPs(node);
-            const document = await vscode.workspace.openTextDocument(getDocumentFilePath(fileInfo.name, node));
-            await api.Gui.showTextDocument(document, { preview: node.wasDoubleClicked != null ? !node.wasDoubleClicked : shouldPreview });
-            // discard ongoing action to allow new requests on this node
-            if (node.ongoingActions) {
-                node.ongoingActions[api.NodeAction.Download] = null;
-            }
-            if (datasetProvider) {
-                datasetProvider.addFileHistory(`[${node.getProfileName()}]: ${fileInfo.name}`);
-            }
-        } catch (err) {
-            await errorHandling(err, node.getProfileName());
-            throw err;
-        }
-    }
-}
-
-export async function downloadPs(node: api.IZoweDatasetTreeNode): Promise<LocalFileInfo> {
+export async function downloadPs(node: api.IZoweDatasetTreeNode, forceDownload: boolean): Promise<LocalFileInfo> {
     const fileInfo = {} as LocalFileInfo;
     const defaultMessage = vscode.l10n.t("Invalid data set or member.");
     switch (true) {
@@ -530,9 +476,19 @@ export async function downloadPs(node: api.IZoweDatasetTreeNode): Promise<LocalF
     }
     // if local copy exists, open that instead of pulling from mainframe
     fileInfo.path = getDocumentFilePath(fileInfo.name, node);
-    if (!fs.existsSync(fileInfo.path)) {
-        const response = await downloadPsApiCall(node, fileInfo.path, fileInfo.name);
-        node.setEtag(response?.apiResponse?.etag);
+    let responsePromise = this.ongoingActions ? this.ongoingActions[api.NodeAction.Download] : null;
+    // If there is no ongoing action and the local copy does not exist, fetch contents
+    if (forceDownload || (responsePromise == null && !fs.existsSync(fileInfo.path))) {
+        if (node.ongoingActions) {
+            node.ongoingActions[api.NodeAction.Download] = downloadPsApiCall(node, fileInfo.path, fileInfo.name);
+            responsePromise = node.ongoingActions[api.NodeAction.Download];
+        } else {
+            responsePromise = downloadPsApiCall(node, fileInfo.path, fileInfo.name);
+        }
+    }
+    if (responsePromise != null) {
+        const response = await responsePromise;
+        node.setEtag(response.apiResponse?.etag);
     }
     return fileInfo;
 }
@@ -551,7 +507,8 @@ async function downloadPsApiCall(node: api.IZoweDatasetTreeNode, documentFilePat
         const response = await ZoweExplorerApiRegister.getMvsApi(prof).getContents(label, {
             file: documentFilePath,
             returnEtag: true,
-            encoding: prof.profile?.encoding,
+            binary: node.binary,
+            encoding: node.encoding !== undefined ? node.encoding : prof.profile?.encoding,
             responseTimeout: prof.profile?.responseTimeout,
         });
         statusMsg.dispose();
@@ -583,6 +540,10 @@ export function getDataSetTypeAndOptions(type: string): {
         case localizedStrings.dsPartitioned:
             typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_PARTITIONED;
             createOptions = vscode.workspace.getConfiguration(globals.SETTINGS_DS_DEFAULT_PDS);
+            break;
+        case localizedStrings.dsExtended:
+            typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_BLANK;
+            createOptions = vscode.workspace.getConfiguration(globals.SETTINGS_DS_DEFAULT_EXTENDED);
             break;
         case localizedStrings.dsSequential:
             typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL;
@@ -745,6 +706,7 @@ async function getDsTypeForCreation(datasetProvider: api.IZoweTree<api.IZoweData
         localizedStrings.dsC,
         localizedStrings.dsClassic,
         localizedStrings.dsPartitioned,
+        localizedStrings.dsExtended,
         localizedStrings.dsSequential,
     ];
     return Promise.resolve(api.Gui.showQuickPick(stepTwoChoices, stepTwoOptions));
@@ -821,8 +783,30 @@ function getDsProperties(type: string, datasetProvider: api.IZoweTree<api.IZoweD
 
 function getDefaultDsTypeProperties(dsType: string): zowe.ICreateDataSetOptions {
     typeEnum = getDataSetTypeAndOptions(dsType)?.typeEnum;
-    const cliDefaultsKey = globals.CreateDataSetTypeWithKeysEnum[typeEnum]?.replace("DATA_SET_", "");
-    return zowe.CreateDefaults.DATA_SET[cliDefaultsKey] as zowe.ICreateDataSetOptions;
+
+    if (typeEnum === zowe.CreateDataSetTypeEnum.DATA_SET_BLANK) {
+        const options = getDataSetTypeAndOptions(dsType)?.createOptions;
+        return getDsTypePropertiesFromWorkspaceConfig(options);
+    } else {
+        const cliDefaultsKey = globals.CreateDataSetTypeWithKeysEnum[typeEnum]?.replace("DATA_SET_", "");
+        return zowe.CreateDefaults.DATA_SET[cliDefaultsKey] as zowe.ICreateDataSetOptions;
+    }
+}
+
+export function getDsTypePropertiesFromWorkspaceConfig(createOptions: vscode.WorkspaceConfiguration): zowe.ICreateDataSetOptions {
+    const dsTypeProperties = {} as zowe.ICreateDataSetOptions;
+    if (createOptions) {
+        dsTypeProperties.dsntype = createOptions.get("dsntype");
+        dsTypeProperties.dsorg = createOptions.get("dsorg");
+        dsTypeProperties.alcunit = createOptions.get("alcunit");
+        dsTypeProperties.primary = createOptions.get("primary");
+        dsTypeProperties.secondary = createOptions.get("secondary");
+        dsTypeProperties.dirblk = createOptions.get("dirblk");
+        dsTypeProperties.recfm = createOptions.get("recfm");
+        dsTypeProperties.blksize = createOptions.get("blksize");
+        dsTypeProperties.lrecl = createOptions.get("lrecl");
+    }
+    return dsTypeProperties;
 }
 
 async function allocateOrEditAttributes(): Promise<string> {
@@ -1019,7 +1003,7 @@ export async function submitJcl(datasetProvider: api.IZoweTree<api.IZoweDatasetT
     }
 
     if (file) {
-        await vscode.commands.executeCommand("filesExplorer.openFilePreserveFocus", file);
+        await vscode.window.showTextDocument(file, { preview: false });
     }
     const doc = vscode.window.activeTextEditor.document;
     ZoweLogger.debug(
@@ -1042,20 +1026,27 @@ export async function submitJcl(datasetProvider: api.IZoweTree<api.IZoweDatasetT
     const profiles = Profiles.getInstance();
     let sessProfileName;
     if (regExp === null) {
-        const profileNamesList = ProfileManagement.getRegisteredProfileNameList(globals.Trees.JES);
-        if (profileNamesList.length) {
-            const quickPickOptions: vscode.QuickPickOptions = {
-                placeHolder: vscode.l10n.t("Select the Profile to use to submit the job"),
-                ignoreFocusOut: true,
-                canPickMany: false,
-            };
-            sessProfileName = await api.Gui.showQuickPick(profileNamesList, quickPickOptions);
-            if (!sessProfileName) {
-                api.Gui.infoMessage(localizedStrings.opCancelled);
-                return;
+        if (!doc.uri.fsPath.includes(globals.ZOWETEMPFOLDER)) {
+            const profileNamesList = ProfileManagement.getRegisteredProfileNameList(globals.Trees.JES);
+            if (profileNamesList.length > 1) {
+                const quickPickOptions: vscode.QuickPickOptions = {
+                    placeHolder: vscode.l10n.t("Select the Profile to use to submit the job"),
+                    ignoreFocusOut: true,
+                    canPickMany: false,
+                };
+                sessProfileName = await api.Gui.showQuickPick(profileNamesList, quickPickOptions);
+                if (!sessProfileName) {
+                    api.Gui.infoMessage(localizedStrings.opCancelled);
+                    return;
+                }
+            } else if (profileNamesList.length > 0) {
+                sessProfileName = profileNamesList[0];
+            } else {
+                api.Gui.showMessage(vscode.l10n.t("No profiles available"));
             }
         } else {
-            api.Gui.showMessage(vscode.l10n.t("No profiles available"));
+            const filePathArray = doc.uri.fsPath.split(path.sep);
+            sessProfileName = filePathArray[filePathArray.length - 2];
         }
     } else {
         sessProfileName = regExp[1];
@@ -1352,7 +1343,8 @@ export async function refreshPS(node: api.IZoweDatasetTreeNode): Promise<void> {
         const response = await ZoweExplorerApiRegister.getMvsApi(prof).getContents(label, {
             file: documentFilePath,
             returnEtag: true,
-            encoding: prof.profile?.encoding,
+            binary: node.binary,
+            encoding: node.encoding !== undefined ? node.encoding : prof.profile?.encoding,
             responseTimeout: prof.profile?.responseTimeout,
         });
         node.setEtag(response.apiResponse.etag);
@@ -1781,7 +1773,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
                 title: vscode.l10n.t("Saving data set..."),
             },
             () => {
-                return uploadContent(node, doc, label, prof, null, uploadOptions.etag, uploadOptions.returnEtag);
+                return uploadContent(node, doc, label, prof, uploadOptions.etag, uploadOptions.returnEtag);
             }
         );
         if (uploadResponse.success) {
@@ -1790,7 +1782,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
             node?.setEtag(uploadResponse.apiResponse[0].etag);
             setFileSaved(true);
         } else if (!uploadResponse.success && uploadResponse.commandResponse.includes("Rest API failure with HTTP(S) status 412")) {
-            await LocalFileManagement.compareSavedFileContent(doc, node, label, null, profile);
+            await LocalFileManagement.compareSavedFileContent(doc, node, label, profile);
         } else {
             await markDocumentUnsaved(doc);
             api.Gui.errorMessage(uploadResponse.commandResponse);

@@ -66,25 +66,39 @@ getConfiguration.mockReturnValueOnce({
 });
 
 function getDSNode() {
-    const mParent = new ZoweDatasetNode("parentNode", vscode.TreeItemCollapsibleState.Expanded, null, session, undefined, undefined, profileOne);
-    const dsNode = new ZoweDatasetNode("sestest", vscode.TreeItemCollapsibleState.Expanded, mParent, session, undefined, undefined, profileOne);
+    const parentNode = new ZoweDatasetNode({
+        label: "parentNode",
+        collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
+        session,
+        profile: profileOne,
+    });
+    const dsNode = new ZoweDatasetNode({
+        label: "sestest",
+        collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
+        parentNode,
+        session,
+        profile: profileOne,
+    });
     dsNode.contextValue = DS_SESSION_CONTEXT;
     dsNode.pattern = "test hlq";
     return dsNode;
 }
 
 function getFavoriteDSNode() {
-    const mParent = new ZoweDatasetNode("Favorites", vscode.TreeItemCollapsibleState.Expanded, null, session, undefined, undefined, profileOne);
-    const dsNodeF = new ZoweDatasetNode(
-        "[sestest]: sestest",
-        vscode.TreeItemCollapsibleState.Expanded,
-        mParent,
+    const parentNode = new ZoweDatasetNode({
+        label: "Favorites",
+        collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
         session,
-        undefined,
-        undefined,
-        profileOne
-    );
-    mParent.contextValue = FAVORITE_CONTEXT;
+        profile: profileOne,
+    });
+    const dsNodeF = new ZoweDatasetNode({
+        label: "[sestest]: sestest",
+        collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
+        parentNode,
+        session,
+        profile: profileOne,
+    });
+    parentNode.contextValue = FAVORITE_CONTEXT;
     dsNodeF.contextValue = DS_SESSION_CONTEXT + FAV_SUFFIX;
     return dsNodeF;
 }

@@ -592,6 +592,7 @@ export function createTreeProviders() {
             removeSession: jest.fn(),
             refresh: jest.fn(),
             addSingleSession: jest.fn(),
+            refreshElement: jest.fn(),
         } as any,
         uss: {
             mSessionNodes: [
@@ -602,6 +603,7 @@ export function createTreeProviders() {
             removeSession: jest.fn(),
             refresh: jest.fn(),
             addSingleSession: jest.fn(),
+            refreshElement: jest.fn(),
         } as any,
         job: {
             mSessionNodes: [

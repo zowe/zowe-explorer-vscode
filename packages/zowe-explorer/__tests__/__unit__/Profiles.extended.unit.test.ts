@@ -1088,7 +1088,7 @@ describe("Profiles Unit Tests - function ssoLogout", () => {
             globalMocks.testSession,
             globalMocks.testProfile
         );
-        testNode.profile.profile.password = undefined;
+
         testNode.profile.profile.user = "fake";
         Object.defineProperty(Profiles.getInstance(), "allProfiles", {
             value: [

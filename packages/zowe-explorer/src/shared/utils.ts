@@ -14,13 +14,24 @@
 import * as vscode from "vscode";
 import * as path from "path";
 import * as globals from "../globals";
-import { Gui, IZoweTreeNode, IZoweNodeType, IZoweDatasetTreeNode, IZoweUSSTreeNode, IZoweJobTreeNode, IZoweTree } from "@zowe/zowe-explorer-api";
+import * as os from "os";
+import {
+    Gui,
+    IZoweTreeNode,
+    IZoweNodeType,
+    IZoweDatasetTreeNode,
+    IZoweUSSTreeNode,
+    IZoweJobTreeNode,
+    IZoweTree,
+    ZosEncoding,
+} from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { IZosFilesResponse, imperative } from "@zowe/cli";
 import { IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { markDocumentUnsaved } from "../utils/workspace";
 import { errorHandling } from "../utils/ProfilesUtils";
+import { ZoweLocalStorage } from "../utils/ZoweLocalStorage";
 
 export enum JobSubmitDialogOpts {
     Disabled,
@@ -136,7 +147,7 @@ function appendSuffix(label: string): string {
     const bracket = label.indexOf("(");
     const split = bracket > -1 ? label.substr(0, bracket).split(".", limit) : label.split(".", limit);
     for (let i = split.length - 1; i > 0; i--) {
-        if (["JCL", "JCLLIB", "CNTL"].includes(split[i])) {
+        if (["JCL", "JCLLIB", "CNTL", "PROC", "PROCLIB"].includes(split[i])) {
             return label.concat(".jcl");
         }
         if (["COBOL", "CBL", "COB", "SCBL"].includes(split[i])) {
@@ -207,14 +218,14 @@ export async function uploadContent(
     doc: vscode.TextDocument,
     remotePath: string,
     profile?: imperative.IProfileLoaded,
-    binary?: boolean,
     etagToUpload?: string,
     returnEtag?: boolean
 ): Promise<IZosFilesResponse> {
     const uploadOptions: IUploadOptions = {
         etag: etagToUpload,
         returnEtag: true,
-        encoding: profile.profile?.encoding,
+        binary: node.binary,
+        encoding: node.encoding !== undefined ? node.encoding : profile.profile?.encoding,
         responseTimeout: profile.profile?.responseTimeout,
     };
     if (isZoweDatasetTreeNode(node)) {
@@ -225,16 +236,10 @@ export async function uploadContent(
             statusMessage: vscode.l10n.t("Uploading USS file"),
             stageName: 0, // TaskStage.IN_PROGRESS - https://github.com/kulshekhar/ts-jest/issues/281
         };
-        const options: IUploadOptions = {
-            binary,
-            localEncoding: null,
-            etag: etagToUpload,
-            returnEtag,
-            encoding: profile.profile?.encoding,
+        const result = ZoweExplorerApiRegister.getUssApi(profile).putContent(doc.fileName, remotePath, {
             task,
-            responseTimeout: profile.profile?.responseTimeout,
-        };
-        const result = ZoweExplorerApiRegister.getUssApi(profile).putContent(doc.fileName, remotePath, options);
+            ...uploadOptions,
+        });
         return result;
     }
 }
@@ -246,8 +251,7 @@ export function willForceUpload(
     node: IZoweDatasetTreeNode | IZoweUSSTreeNode,
     doc: vscode.TextDocument,
     remotePath: string,
-    profile?: imperative.IProfileLoaded,
-    binary?: boolean
+    profile?: imperative.IProfileLoaded
 ): Thenable<void> {
     // setup to handle both cases (dataset & USS)
     let title: string;
@@ -275,7 +279,7 @@ export function willForceUpload(
                         title,
                     },
                     () => {
-                        return uploadContent(node, doc, remotePath, profile, binary, null, true);
+                        return uploadContent(node, doc, remotePath, profile, null, true);
                     }
                 );
                 if (uploadResponse.success) {
@@ -342,4 +346,95 @@ export function updateOpenFiles<T extends IZoweTreeNode>(treeProvider: IZoweTree
     if (treeProvider.openFiles) {
         treeProvider.openFiles[docPath] = value;
     }
+}
+
+function getCachedEncoding(node: IZoweTreeNode): string | undefined {
+    let cachedEncoding: ZosEncoding;
+    if (isZoweUSSTreeNode(node)) {
+        cachedEncoding = (node.getSessionNode() as IZoweUSSTreeNode).encodingMap[node.fullPath];
+    } else {
+        const isMemberNode = node.contextValue.startsWith(globals.DS_MEMBER_CONTEXT);
+        const dsKey = isMemberNode ? `${node.getParent().label as string}(${node.label as string})` : (node.label as string);
+        cachedEncoding = (node.getSessionNode() as IZoweDatasetTreeNode).encodingMap[dsKey];
+    }
+    return cachedEncoding?.kind === "other" ? cachedEncoding.codepage : cachedEncoding?.kind;
+}
+
+export async function promptForEncoding(node: IZoweDatasetTreeNode | IZoweUSSTreeNode, taggedEncoding?: string): Promise<ZosEncoding | undefined> {
+    const ebcdicItem: vscode.QuickPickItem = {
+        label: localize("zowe.shared.utils.promptForEncoding.ebcdic.label", "EBCDIC"),
+        description: localize("zowe.shared.utils.promptForEncoding.ebcdic.description", "z/OS default codepage"),
+    };
+    const binaryItem: vscode.QuickPickItem = {
+        label: localize("zowe.shared.utils.promptForEncoding.binary.label", "Binary"),
+        description: localize("zowe.shared.utils.promptForEncoding.binary.description", "Raw data representation"),
+    };
+    const otherItem: vscode.QuickPickItem = {
+        label: localize("zowe.shared.utils.promptForEncoding.other.label", "Other"),
+        description: localize("zowe.shared.utils.promptForEncoding.other.description", "Specify another codepage"),
+    };
+    const items: vscode.QuickPickItem[] = [ebcdicItem, binaryItem, otherItem, globals.SEPARATORS.RECENT];
+    const profile = node.getProfile();
+    if (profile.profile?.encoding != null) {
+        items.splice(0, 0, {
+            label: profile.profile?.encoding,
+            description: localize("zowe.shared.utils.promptForEncoding.profile.description", "From profile {0}", profile.name),
+        });
+    }
+    if (taggedEncoding != null) {
+        items.splice(0, 0, {
+            label: taggedEncoding,
+            description: localize("zowe.shared.utils.promptForEncoding.tagged.description", "USS file tag"),
+        });
+    }
+
+    let currentEncoding = node.encoding ?? getCachedEncoding(node);
+    if (node.binary || currentEncoding === "binary") {
+        currentEncoding = binaryItem.label;
+    } else if (node.encoding === null || currentEncoding === "text") {
+        currentEncoding = ebcdicItem.label;
+    }
+    const encodingHistory = ZoweLocalStorage.getValue<string[]>("zowe.encodingHistory") ?? [];
+    if (encodingHistory.length > 0) {
+        for (const encoding of encodingHistory) {
+            items.push({ label: encoding });
+        }
+    } else {
+        // Pre-populate recent list with some common encodings
+        items.push({ label: "IBM-1047" }, { label: "ISO8859-1" });
+    }
+
+    let response = (
+        await Gui.showQuickPick(items, {
+            title: localize("zowe.shared.utils.promptForEncoding.qp.title", "Choose encoding for {0}", node.label as string),
+            placeHolder:
+                currentEncoding && localize("zowe.shared.utils.promptForEncoding.qp.placeHolder", "Current encoding is {0}", currentEncoding),
+        })
+    )?.label;
+    let encoding: ZosEncoding;
+    switch (response) {
+        case ebcdicItem.label:
+            encoding = { kind: "text" };
+            break;
+        case binaryItem.label:
+            encoding = { kind: "binary" };
+            break;
+        case otherItem.label:
+            response = await Gui.showInputBox({
+                title: localize("zowe.shared.utils.promptForEncoding.qp.title", "Choose encoding for {0}", node.label as string),
+                placeHolder: localize("zowe.shared.utils.promptForEncoding.input.placeHolder", "Enter a codepage (e.g., 1047, IBM-1047)"),
+            });
+            if (response != null) {
+                encoding = { kind: "other", codepage: response };
+                encodingHistory.push(encoding.codepage);
+                ZoweLocalStorage.setValue("zowe.encodingHistory", encodingHistory.slice(0, globals.MAX_FILE_HISTORY));
+            }
+            break;
+        default:
+            if (response != null) {
+                encoding = { kind: "other", codepage: response };
+            }
+            break;
+    }
+    return encoding;
 }

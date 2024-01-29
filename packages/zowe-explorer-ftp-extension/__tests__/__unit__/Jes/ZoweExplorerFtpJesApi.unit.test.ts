@@ -114,7 +114,7 @@ describe("FtpJesApi", () => {
         };
         await JesApi.getSpoolContentById(mockParams.jobname, mockParams.jobid, mockParams.spoolID);
 
-        expect(response._readableState.buffer.head.data.toString()).toContain("Hello world");
+        expect((response._readableState.buffer.head?.data ?? response._readableState.buffer).toString()).toContain("Hello world");
         expect(JobUtils.getSpoolFileContent).toBeCalledTimes(1);
         expect(JesApi.releaseConnection).toBeCalled();
     });

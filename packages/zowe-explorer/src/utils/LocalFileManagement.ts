@@ -38,7 +38,6 @@ export class LocalFileManagement {
         doc: vscode.TextDocument,
         node: IZoweDatasetTreeNode | IZoweUSSTreeNode,
         label?: string,
-        binary?: boolean,
         profile?: imperative.IProfileLoaded
     ): Promise<void> {
         await markDocumentUnsaved(doc);
@@ -48,16 +47,17 @@ export class LocalFileManagement {
         if (isTypeUssTreeNode(node)) {
             downloadResponse = await ZoweExplorerApiRegister.getUssApi(prof).getContents(node.fullPath, {
                 file: node.getUSSDocumentFilePath(),
-                binary,
+                binary: node.binary,
                 returnEtag: true,
-                encoding: prof.profile?.encoding,
+                encoding: node.encoding !== undefined ? node.encoding : prof.profile?.encoding,
                 responseTimeout: prof.profile?.responseTimeout,
             });
         } else {
             downloadResponse = await ZoweExplorerApiRegister.getMvsApi(prof).getContents(label, {
                 file: doc.fileName,
+                binary: node.binary,
                 returnEtag: true,
-                encoding: prof.profile?.encoding,
+                encoding: node.encoding !== undefined ? node.encoding : prof.profile?.encoding,
                 responseTimeout: prof.profile?.responseTimeout,
             });
         }
