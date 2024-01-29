@@ -21,15 +21,7 @@ import { getSelectedNodeList } from "../shared/utils";
 import { initSubscribers } from "../shared/init";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { JobFSProvider } from "./JobFSProvider";
-import * as nls from "vscode-nls";
 import * as globals from "../globals";
-
-// Set up localization
-nls.config({
-    messageFormat: nls.MessageFormat.bundle,
-    bundleFormat: nls.BundleFormat.standalone,
-})();
-const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 export async function initJobsProvider(context: vscode.ExtensionContext): Promise<ZosJobsProvider> {
     ZoweLogger.trace("job.init.initJobsProvider called.");
@@ -69,7 +61,7 @@ export async function initJobsProvider(context: vscode.ExtensionContext): Promis
     context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.refreshJob", (job) => jobActions.refreshJob(job.mParent, jobsProvider)));
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.jobs.refreshSpool", async (node) => {
-            Gui.setStatusBarMessage(localize("jobActions.fetchSpoolFile", "$(sync~spin) Fetching spool files..."));
+            Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Fetching spool files..."));
             await vscode.workspace.fs.readFile(node.resourceUri);
         })
     );

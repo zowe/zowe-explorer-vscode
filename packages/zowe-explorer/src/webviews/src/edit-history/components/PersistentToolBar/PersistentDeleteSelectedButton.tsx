@@ -1,13 +1,11 @@
 import { VSCodeButton } from "@vscode/webview-ui-toolkit/react";
 import { JSXInternal } from "preact/src/jsx";
-import * as nls from "vscode-nls";
-import PersistentVSCodeAPI from "../PersistentVSCodeAPI";
 import { useDataPanelContext } from "../PersistentUtils";
-
-const localize: nls.LocalizeFunc = nls.loadMessageBundle();
+import PersistentVSCodeAPI from "../PersistentVSCodeAPI";
+import * as nls from "@vscode/l10n";
 
 export default function PersistentDeleteSelectedButton(): JSXInternal.Element {
-  const deleteSelectedText = localize("PersistentDeleteSelectedButton.deleteSelected", "Delete Selected");
+  const deleteSelectedText = nls.t("Delete Selected");
   const { selection, type, selectedItems } = useDataPanelContext();
 
   const handleClick = async () => {
@@ -16,7 +14,7 @@ export default function PersistentDeleteSelectedButton(): JSXInternal.Element {
       PersistentVSCodeAPI.getVSCodeAPI().postMessage({
         command: "show-error",
         attrs: {
-          errorMsg: localize("PersistentDeleteSelectedButton.handleClick.error", "Select an item before deleting"),
+          errorMsg: nls.t("Select an item before deleting"),
         },
       });
       return;

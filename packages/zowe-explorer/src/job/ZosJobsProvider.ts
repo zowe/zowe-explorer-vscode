@@ -23,7 +23,6 @@ import { getIconByNode } from "../generators/icons";
 import * as contextually from "../shared/context";
 import { SettingsConfig } from "../utils/SettingsConfig";
 import { ZoweLogger } from "../utils/LoggerUtils";
-import * as nls from "vscode-nls";
 import { Poller } from "@zowe/zowe-explorer-api/src/utils";
 import { PollDecorator } from "../utils/DecorationProviders";
 import { TreeViewUtils } from "../utils/TreeViewUtils";
@@ -31,13 +30,6 @@ import { TreeProviders } from "../shared/TreeProviders";
 import { JOB_FILTER_OPTS } from "./utils";
 import * as path from "path";
 import { JobFSProvider } from "./JobFSProvider";
-
-// Set up localization
-nls.config({
-    messageFormat: nls.MessageFormat.bundle,
-    bundleFormat: nls.BundleFormat.standalone,
-})();
-const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 interface IJobSearchCriteria {
     Owner: string | undefined;
@@ -82,9 +74,9 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
     public static readonly Owner = "Owner:";
     public static readonly Prefix = "Prefix:";
     public static readonly Status = "Status";
-    public static readonly defaultDialogText: string = localize("zosJobsProvider.specifyCriteria", "Create new...");
+    public static readonly defaultDialogText: string = vscode.l10n.t("Create new...");
     private static readonly persistenceSchema: PersistenceSchemaEnum = PersistenceSchemaEnum.Job;
-    private static readonly submitJobQueryLabel = localize("zosJobsProvider.option.submit", "$(check) Submit this query");
+    private static readonly submitJobQueryLabel = vscode.l10n.t("$(check) Submit this query");
     private static readonly chooseJobStatusLabel = "Job Status";
     public openFiles: Record<string, IZoweJobTreeNode> = {};
     public dragMimeTypes: string[] = ["application/vnd.code.tree.zowe.jobs.explorer"];
@@ -96,7 +88,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             label: `Job Owner`,
             value: "",
             show: true,
-            placeHolder: localize("searchJobs.owner.id", `Enter job owner ID`),
+            placeHolder: vscode.l10n.t("Enter job owner ID"),
             validateInput: (text: string): string | null => jobStringValidator(text, "owner"),
         },
         {
@@ -104,7 +96,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             label: `Job Prefix`,
             value: "*",
             show: true,
-            placeHolder: localize("searchJobs.prefix", `Enter job prefix`),
+            placeHolder: vscode.l10n.t("Enter job prefix"),
             validateInput: (text: string): string | null => jobStringValidator(text, "prefix"),
         },
         {
@@ -112,7 +104,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             label: ZosJobsProvider.chooseJobStatusLabel,
             value: "*",
             show: true,
-            placeHolder: localize("searchJobs.status", `Enter job status`),
+            placeHolder: vscode.l10n.t("Enter job status"),
         },
     ];
 
@@ -120,11 +112,11 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
     public mFavorites: IZoweJobTreeNode[] = [];
     public lastOpened: NodeInteraction = {};
     public searchByQuery = new FilterItem({
-        text: localize("zosJobsProvider.option.prompt.createId", "$(plus) Create job search filter"),
+        text: vscode.l10n.t("$(plus) Create job search filter"),
         menuType: globals.JobPickerTypes.QuerySearch,
     });
     public searchById = new FilterItem({
-        text: localize("zosJobsProvider.option.prompt.createOwner", "$(search) Search by job ID"),
+        text: vscode.l10n.t("$(search) Search by job ID"),
         menuType: globals.JobPickerTypes.IdSearch,
     });
     private treeView: vscode.TreeView<IZoweJobTreeNode>;
@@ -132,7 +124,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
     public constructor() {
         super(
             ZosJobsProvider.persistenceSchema,
-            new Job(localize("Favorites", "Favorites"), vscode.TreeItemCollapsibleState.Collapsed, null, null, null, null)
+            new Job(vscode.l10n.t("Favorites"), vscode.TreeItemCollapsibleState.Collapsed, null, null, null, null)
         );
         this.mFavoriteSession.contextValue = globals.FAVORITE_CONTEXT;
         const icon = getIconByNode(this.mFavoriteSession);
@@ -345,10 +337,10 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
     public async initializeJobsTree(log: imperative.Logger): Promise<void> {
         ZoweLogger.trace("ZosJobsProvider.initializeJobsTree called.");
         this.log = log;
-        ZoweLogger.debug(localize("initializeJobsTree.log.debug", "Initializing profiles with jobs favorites."));
+        ZoweLogger.debug(vscode.l10n.t("Initializing profiles with jobs favorites."));
         const lines: string[] = this.mHistory.readFavorites();
         if (lines.length === 0) {
-            ZoweLogger.debug(localize("initializeJobsTree.no.favorites", "No jobs favorites found."));
+            ZoweLogger.debug(vscode.l10n.t("No jobs favorites found."));
             return;
         }
         for (const line of lines) {
@@ -407,7 +399,13 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         let profile: imperative.IProfileLoaded;
         let session: imperative.Session;
         this.log = log;
-        ZoweLogger.debug(localize("loadProfilesForFavorites.log.debug", "Loading profile: {0} for jobs favorites", profileName));
+        ZoweLogger.debug(
+            vscode.l10n.t({
+                message: "Loading profile: {0} for jobs favorites",
+                args: [profileName],
+                comment: ["Profile name"],
+            })
+        );
         // Load profile for parent profile node in this.mFavorites array
         if (!parentNode.getProfile() || !parentNode.getSession()) {
             try {
@@ -421,7 +419,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                 } else {
                     return [
                         new Job(
-                            localize("loadProfilesForFavorites.authFailed", "You must authenticate to view favorites."),
+                            vscode.l10n.t("You must authenticate to view favorites."),
                             vscode.TreeItemCollapsibleState.None,
                             parentNode,
                             null,
@@ -431,21 +429,16 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                     ];
                 }
             } catch (error) {
-                const errMessage: string =
-                    localize(
-                        "initializeJobsFavorites.error.profile1",
-                        "Error: You have Zowe Job favorites that refer to a non-existent CLI profile named: {0}",
-                        profileName
-                    ) +
-                    localize("initializeJobsFavorites.error.profile2", ". To resolve this, you can remove {0}", profileName) +
-                    localize(
-                        "initializeJobsFavorites.error.profile3",
-                        " from the Favorites section of Zowe Explorer's Jobs view. Would you like to do this now? ",
-                        getAppName(globals.ISTHEIA)
-                    );
+                const errMessage: string = vscode.l10n.t({
+                    message: `Error: You have Zowe Job favorites that refer to a non-existent CLI profile named: {0}.
+                         To resolve this, you can remove {0} from the Favorites section of Zowe Explorer's Jobs view.
+                          Would you like to do this now? {1}`,
+                    args: [profileName, getAppName(globals.ISTHEIA)],
+                    comment: ["Profile name", "Application name"],
+                });
                 // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
                 ZoweLogger.error(errMessage + error.toString());
-                const btnLabelRemove = localize("initializeJobsFavorites.error.buttonRemove", "Remove");
+                const btnLabelRemove = vscode.l10n.t("Remove");
                 Gui.errorMessage(errMessage, {
                     items: [btnLabelRemove],
                     vsCodeOpts: { modal: true },
@@ -592,12 +585,12 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         // If user selected the "Remove profile from Favorites option", confirm they are okay with deleting all favorited items for that profile.
         let cancelled = false;
         if (userSelected) {
-            const checkConfirmation = localize(
-                "removeFavProfile.confirm",
-                "This will remove all favorited Jobs items for profile {0}. Continue?",
-                profileName
-            );
-            const continueRemove = localize("removeFavProfile.continue", "Continue");
+            const checkConfirmation = vscode.l10n.t({
+                message: "This will remove all favorited Jobs items for profile {0}. Continue?",
+                args: [profileName],
+                comment: ["Profile name"],
+            });
+            const continueRemove = vscode.l10n.t("Continue");
             await Gui.warningMessage(checkConfirmation, {
                 items: [continueRemove],
                 vsCodeOpts: { modal: true },
@@ -663,12 +656,12 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         if (globals.ISTHEIA) {
             // Theia doesn't work properly when directly creating a QuickPick
             const selectFilter: vscode.QuickPickOptions = {
-                placeHolder: localize("searchHistory.options.prompt", "Select a filter"),
+                placeHolder: vscode.l10n.t("Select a filter"),
             };
             // get user selection
             const choice = await Gui.showQuickPick([this.searchByQuery, this.searchById, globals.SEPARATORS.RECENT_FILTERS, ...items], selectFilter);
             if (!choice) {
-                Gui.showMessage(localize("enterPattern.pattern", "No selection made. Operation cancelled."));
+                Gui.showMessage(vscode.l10n.t("No selection made. Operation cancelled."));
                 return undefined;
             }
             return choice as FilterItem;
@@ -677,13 +670,13 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         // VSCode route to create a QuickPick
         const quickpick = Gui.createQuickPick();
         quickpick.items = [this.searchByQuery, this.searchById, globals.SEPARATORS.RECENT_FILTERS, ...items];
-        quickpick.placeholder = localize("searchHistory.options.prompt", "Select a filter");
+        quickpick.placeholder = vscode.l10n.t("Select a filter");
         quickpick.ignoreFocusOut = true;
         quickpick.show();
         const choice = await Gui.resolveQuickPick(quickpick);
         quickpick.hide();
         if (!choice) {
-            Gui.showMessage(localize("enterPattern.pattern", "No selection made. Operation cancelled."));
+            Gui.showMessage(vscode.l10n.t("No selection made. Operation cancelled."));
             return undefined;
         }
         return choice as FilterItem;
@@ -741,12 +734,12 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
     public async handleSearchByJobId(jobId?: string): Promise<IJobSearchCriteria> {
         ZoweLogger.trace("ZosJobsProvider.handleSearchByJobId called.");
         const options = {
-            prompt: localize("jobsFilterPrompt.inputBox.prompt.jobid", "Enter a job ID"),
+            prompt: vscode.l10n.t("Enter a job ID"),
             value: jobId,
         };
         const newUserJobId = await Gui.showInputBox(options);
         if (!newUserJobId) {
-            Gui.showMessage(localize("jobsFilterPrompt.enterPrefix", "Job search cancelled."));
+            Gui.showMessage(vscode.l10n.t("Job search cancelled."));
             return;
         }
         return {
@@ -947,7 +940,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             matchOnDescription: false,
         });
         if (!choice) {
-            Gui.showMessage(localize("enterPattern.pattern", "No selection made. Operation cancelled."));
+            Gui.showMessage(vscode.l10n.t("No selection made. Operation cancelled."));
             return undefined;
         }
         const pattern = choice.label;
@@ -1036,7 +1029,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             return undefined;
         }
 
-        return localize("zowe.polling.minInterval", "The polling interval must be greater than or equal to 1000ms.");
+        return vscode.l10n.t("The polling interval must be greater than or equal to 1000ms.");
     }
 
     /**
@@ -1046,7 +1039,11 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
     private async showPollOptions(uri: vscode.Uri): Promise<number> {
         const pollValue = SettingsConfig.getDirectValue<number>("zowe.jobs.pollInterval");
         const intervalInput = await Gui.showInputBox({
-            title: localize("zowe.polling.intervalOption", "Poll interval (in ms) for: {0}", path.posix.basename(uri.path)),
+            title: vscode.l10n.t({
+                message: "Poll interval (in ms) for: {0}",
+                args: [path.posix.basename(uri.path)],
+                comment: ["URI path"],
+            }),
             value: pollValue.toString(),
             validateInput: (value: string) => this.validatePollInterval(value),
         });
@@ -1079,6 +1076,13 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         const pollInterval = await this.showPollOptions(encodedUri);
 
         if (pollInterval === 0) {
+            Gui.showMessage(
+                vscode.l10n.t({
+                    message: "Polling dismissed for {0}; operation cancelled.",
+                    args: [encodedUri.path],
+                    comment: ["Encoded URI path"],
+                })
+            );
             return;
         }
 
@@ -1087,7 +1091,11 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             msInterval: pollInterval,
             request: async () => {
                 const statusMsg = Gui.setStatusBarMessage(
-                    localize("zowe.polling.statusBar", `$(sync~spin) Polling: {0}...`, path.posix.basename(encodedUri.path)),
+                    vscode.l10n.t({
+                        message: `$(sync~spin) Polling: {0}...`,
+                        args: [path.posix.basename(encodedUri.path)],
+                        comment: ["Encoded URI path"],
+                    }),
                     globals.STATUS_BAR_TIMEOUT_MS
                 );
                 await vscode.workspace.fs.readFile(encodedUri);
@@ -1116,7 +1124,13 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
      */
     public updateFilterForJob(job: IZoweJobTreeNode, newFilter: string | null, isSession: boolean): void {
         job.filter = newFilter;
-        job.description = newFilter ? localize("filter.description", "Filter: {0}", newFilter) : null;
+        job.description = newFilter
+            ? vscode.l10n.t({
+                  message: "Filter: {0}",
+                  args: [newFilter],
+                  comment: ["The new filter"],
+              })
+            : null;
         this.nodeDataChanged(job);
         if (newFilter === null) {
             job["children"] = job["actualJobs"];
@@ -1126,21 +1140,28 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
 
     public async filterJobsDialog(job: IZoweJobTreeNode): Promise<vscode.InputBox> {
         if (job.collapsibleState === vscode.TreeItemCollapsibleState.Collapsed) {
-            Gui.infoMessage(localize("filterJobs.message", "Use the search button to display jobs"));
+            Gui.infoMessage(vscode.l10n.t("Use the search button to display jobs"));
             return;
         }
         const selection = await Gui.showQuickPick(JOB_FILTER_OPTS, {
-            placeHolder: localize("filterJobs.placeholder", "Set a filter..."),
+            placeHolder: vscode.l10n.t("Set a filter..."),
         });
         const filterMethod = JOB_FILTER_OPTS.indexOf(selection);
 
         const isSession = contextually.isSession(job);
         const userDismissed = filterMethod < 0;
-        const clearFilterOpt = localize("filter.clearForProfile", "$(clear-all) Clear filter for profile");
+        const clearFilterOpt = vscode.l10n.t("$(clear-all) Clear filter for profile");
         if (userDismissed || selection === clearFilterOpt) {
             if (selection === clearFilterOpt) {
                 this.updateFilterForJob(job, null, isSession);
-                Gui.setStatusBarMessage(localize("filter.cleared", "$(check) Filter cleared for {0}", job.label as string), globals.MS_PER_SEC * 4);
+                Gui.setStatusBarMessage(
+                    vscode.l10n.t({
+                        message: "$(check) Filter cleared for {0}",
+                        args: [job.label as string],
+                        comment: ["Job label"],
+                    }),
+                    globals.MS_PER_SEC * 4
+                );
             }
             return;
         }
@@ -1152,13 +1173,20 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         job.description = "";
         const actual_jobs: IZoweJobTreeNode[] = job["actualJobs"];
         const inputBox = await vscode.window.createInputBox();
-        inputBox.placeholder = localize("filterJobs.prompt.message", "Enter local filter...");
+        inputBox.placeholder = vscode.l10n.t("Enter local filter...");
         inputBox.onDidChangeValue((query) => {
             query = query.toUpperCase();
             job["children"] = actual_jobs.filter((item) => `${item["job"].jobname}(${item["job"].jobid}) - ${item["job"].retcode}`.includes(query));
             TreeProviders.job.refresh();
             this.updateFilterForJob(job, query, isSession);
-            Gui.setStatusBarMessage(localize("filter.updated", "$(check) Filter updated for {0}", job.label as string), globals.MS_PER_SEC * 4);
+            Gui.setStatusBarMessage(
+                vscode.l10n.t({
+                    message: "$(check) Filter updated for {0}",
+                    args: [job.label as string],
+                    comment: ["Job label"],
+                }),
+                globals.MS_PER_SEC * 4
+            );
         });
         job.children = actual_jobs;
         this.nodeDataChanged(job);

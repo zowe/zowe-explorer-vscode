@@ -465,6 +465,26 @@ export interface Memento {
     keys: readonly string[];
 }
 
+export namespace l10n {
+    export function t(
+        options:
+            | {
+                  message: string;
+                  args?: Array<string | number | boolean> | Record<string, any>;
+                  comment?: string | string[];
+              }
+            | string
+    ): string {
+        if (typeof options === "string") {
+            return options;
+        }
+        options.args?.forEach((arg: string, i: number) => {
+            options.message = options.message.replace(`{${i}}`, arg);
+        });
+        return options.message;
+    }
+}
+
 export class TreeItem {
     /**
      * A human-readable string describing this item. When `falsy`, it is derived from [resourceUri](#TreeItem.resourceUri).

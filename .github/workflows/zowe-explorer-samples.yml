@@ -25,7 +25,7 @@ jobs:
       # Continue to run tests on the other systems if one fails
       fail-fast: false
       matrix:
-        node-version: [18.x, 20.x]
+        node-version: [18.x] # Add 20.x when vscode-l10n supports it
 
     if: (github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository) && !contains(github.event.head_commit.message, '[ci skip]')
 

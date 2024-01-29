@@ -26,16 +26,9 @@ import {
 import * as path from "path";
 import * as vscode from "vscode";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
-import * as nls from "vscode-nls";
 
 // Set up localization
 import { Profiles } from "../Profiles";
-
-nls.config({
-    messageFormat: nls.MessageFormat.bundle,
-    bundleFormat: nls.BundleFormat.standalone,
-})();
-const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 export class DatasetFSProvider extends BaseProvider implements vscode.FileSystemProvider {
     public onDidChangeFile: vscode.Event<vscode.FileChangeEvent[]>;
@@ -198,7 +191,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         const profInfo = getInfoForUri(uri, Profiles.getInstance());
 
         if (profInfo.profile == null) {
-            throw vscode.FileSystemError.FileNotFound(localize("localize.uss.profileNotFound", "Profile does not exist for this file."));
+            throw vscode.FileSystemError.FileNotFound(vscode.l10n.t("Profile does not exist for this file."));
         }
 
         // we need to fetch the contents from the mainframe if the file hasn't been accessed yet

@@ -12,20 +12,11 @@
 import { BaseProvider, BufferBuilder, getInfoForUri, isDirectoryEntry, Gui, EntryMetadata, UssDirectory, UssFile } from "@zowe/zowe-explorer-api";
 import * as path from "path";
 import * as vscode from "vscode";
-import * as nls from "vscode-nls";
 
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { UssFileTree, UssFileType } from "./FileStructure";
 import { Profiles } from "../Profiles";
 import * as zowe from "@zowe/cli";
-
-// Set up localization
-nls.config({
-    messageFormat: nls.MessageFormat.bundle,
-    bundleFormat: nls.BundleFormat.standalone,
-})();
-const localize: nls.LocalizeFunc = nls.loadMessageBundle();
-
 export type Entry = UssFile | UssDirectory;
 
 export class UssFSProvider extends BaseProvider implements vscode.FileSystemProvider {
@@ -76,7 +67,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         const ussApi = ZoweExplorerApiRegister.getUssApi(info.profile);
 
         if (!ussApi.move) {
-            Gui.errorMessage(localize("uss.unsupported.move", "The 'move' function is not implemented for this USS API."));
+            Gui.errorMessage(vscode.l10n.t("The 'move' function is not implemented for this USS API."));
             return false;
         }
 
@@ -184,7 +175,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         const profInfo = getInfoForUri(uri, Profiles.getInstance());
 
         if (profInfo.profile == null) {
-            throw vscode.FileSystemError.FileNotFound(localize("localize.uss.profileNotFound", "Profile does not exist for this file."));
+            throw vscode.FileSystemError.FileNotFound(vscode.l10n.t("Profile does not exist for this file."));
         }
 
         const urlQuery = new URLSearchParams(uri.query);
@@ -340,7 +331,10 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         try {
             await ZoweExplorerApiRegister.getUssApi(entry.metadata.profile).rename(entry.metadata.path, newPath);
         } catch (err) {
-            await Gui.errorMessage(localize("uss.fsp.renameFailed", "Renaming {0} failed due to API error: {1}", entry.metadata.path, err.message));
+            await Gui.errorMessage(vscode.l10n.t({
+                message: "Renaming {0} failed due to API error: {1}", 
+                args: [entry.metadata.path, err.message],
+                comment: ["File path", "Error message"] }));
             return;
         }
 
@@ -368,7 +362,10 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             );
         } catch (err) {
             await Gui.errorMessage(
-                localize("fsp.deleteFailed", "Deleting {0} failed due to API error: {1}", entryToDelete.metadata.path, err.message)
+                vscode.l10n.t({
+                    message: "Deleting {0} failed due to API error: {1}", 
+                    args: [entryToDelete.metadata.path, err.message],
+                    comment: ["File name", "Error message"] })
             );
             return;
         }

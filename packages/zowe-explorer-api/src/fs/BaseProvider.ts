@@ -15,15 +15,8 @@ import * as path from "path";
 import { isEqual } from "lodash";
 import { isDirectoryEntry, isFileEntry } from "./utils";
 import { Gui } from "../globals/Gui";
-import * as nls from "vscode-nls";
 import { ZoweVsCodeExtension } from "../vscode";
 import { ProfilesCache } from "../profiles";
-
-nls.config({
-    messageFormat: nls.MessageFormat.bundle,
-    bundleFormat: nls.BundleFormat.standalone,
-})();
-const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 export class BaseProvider {
     // eslint-disable-next-line no-magic-numbers
@@ -50,7 +43,11 @@ export class BaseProvider {
     public async diffOverwrite(uri: vscode.Uri): Promise<void> {
         const fsEntry = await this._lookupAsFile(uri);
         await vscode.workspace.fs.writeFile(uri.with({ query: "forceUpload=true" }), fsEntry.data);
-        Gui.setStatusBarMessage(localize("diff.overwritten", "$(check) Overwrite applied for {0}", fsEntry.name), this.FS_PROVIDER_UI_TIMEOUT);
+        Gui.setStatusBarMessage(vscode.l10n.t({
+            message: "$(check) Overwrite applied for {0}", 
+            args: [fsEntry.name],
+            comment: "File name"
+        }), this.FS_PROVIDER_UI_TIMEOUT);
         fsEntry.conflictData = null;
     }
 
@@ -68,7 +65,11 @@ export class BaseProvider {
             await vscode.workspace.fs.writeFile(uri.with({ query: "forceUpload=true" }), fsEntry.conflictData.contents);
         }
         Gui.setStatusBarMessage(
-            localize("diff.usedRemoteContent", "$(discard) Used remote content for {0}", fsEntry.name),
+            vscode.l10n.t({
+                message: "$(discard) Used remote content for {0}", 
+                args: [fsEntry.name], 
+                comment: "File name"
+            }),
             this.FS_PROVIDER_UI_TIMEOUT
         );
         fsEntry.conflictData = null;
@@ -240,7 +241,7 @@ export class BaseProvider {
      * @returns The user's action/selection as an enum value
      */
     protected async _handleConflict(uri: vscode.Uri, entry: FileEntry): Promise<ConflictViewSelection> {
-        const conflictOptions = [localize("conflict.compareFiles", "Compare"), localize("conflict.overwrite", "Overwrite")];
+        const conflictOptions = [vscode.l10n.t("Compare"), vscode.l10n.t("Overwrite")];
         const userSelection = await Gui.errorMessage(
             "There is a newer version of this file on the mainframe. Compare with remote contents or overwrite?",
             {
@@ -373,7 +374,7 @@ export class BaseProvider {
         // Start building a new URI from the root
         let currentUri = vscode.Uri.from({
             scheme: uri.scheme,
-            path: `/${this.root.metadata.profile}/`,
+            path: `/${this.root.metadata.profile.name}/`,
         });
 
         // "Walk" down each segment of the given path to build the full file tree

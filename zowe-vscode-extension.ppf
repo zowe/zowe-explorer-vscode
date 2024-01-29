@@ -9,8 +9,7 @@
 <Project default_configuration_name="Configuration 1" fallback_default_config_name="Configuration 1" file_encoding="ISO-8859-1" ltd_name="javascript" name="vscode-extension" version="9.0.3.14">
 	<Configuration name="Configuration 1"/>
 	<Source exclude="false" path="./__mocks__" web="false"/>
-	<Source exclude="false" path="./gulpfile.js" web="false"/>
-	<Source exclude="false" path="./i18n" web="false"/>
+	<Source exclude="false" path="./l10n" web="false"/>
 	<Source exclude="false" path="./resources" web="false"/>
 	<Source exclude="false" path="./scripts" web="false"/>
 	<Source exclude="false" path="./src" web="false"/>

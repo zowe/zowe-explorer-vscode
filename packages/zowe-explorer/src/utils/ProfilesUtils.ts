@@ -18,17 +18,9 @@ import * as fs from "fs";
 import * as util from "util";
 import { IZoweTreeNode, ZoweTreeNode, getZoweDir, getFullPath, Gui, ProfilesCache, ICommon } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
-import * as nls from "vscode-nls";
 import { imperative, getImperativeConfig } from "@zowe/cli";
 import { ZoweLogger } from "./LoggerUtils";
 import { SettingsConfig } from "./SettingsConfig";
-
-// Set up localization
-nls.config({
-    messageFormat: nls.MessageFormat.bundle,
-    bundleFormat: nls.BundleFormat.standalone,
-})();
-const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 /*************************************************************************************************************
  * Error Handling
@@ -46,7 +38,7 @@ export async function errorHandling(errorDetails: Error | string, label?: string
         // open config file for missing hostname error
         if (imperativeError.toString().includes("hostname")) {
             const mProfileInfo = await Profiles.getInstance().getProfileInfo();
-            Gui.errorMessage(localize("errorHandling.invalid.host", "Required parameter 'host' must not be blank."));
+            Gui.errorMessage(vscode.l10n.t("Required parameter 'host' must not be blank."));
             const profAllAttrs = mProfileInfo.getAllProfiles();
             for (const prof of profAllAttrs) {
                 if (prof.profName === label.trim()) {
@@ -56,16 +48,17 @@ export async function errorHandling(errorDetails: Error | string, label?: string
                 }
             }
         } else if (httpErrorCode === imperative.RestConstants.HTTP_STATUS_401) {
-            const errMsg = localize(
-                "errorHandling.invalid.credentials",
-                "Invalid Credentials for profile '{0}'. Please ensure the username and password are valid or this may lead to a lock-out.",
-                label
-            );
-            const errToken = localize(
-                "errorHandling.invalid.token",
-                "Your connection is no longer active for profile '{0}'. Please log in to an authentication service to restore the connection.",
-                label
-            );
+            const errMsg = vscode.l10n.t({
+                message: "Invalid Credentials for profile '{0}'. Please ensure the username and password are valid or this may lead to a lock-out.",
+                args: [label],
+                comment: ["Label"],
+            });
+            const errToken = vscode.l10n.t({
+                message:
+                    "Your connection is no longer active for profile '{0}'. Please log in to an authentication service to restore the connection.",
+                args: [label],
+                comment: ["Label"],
+            });
             if (label.includes("[")) {
                 label = label.substring(0, label.indexOf(" [")).trim();
             }
@@ -80,7 +73,7 @@ export async function errorHandling(errorDetails: Error | string, label?: string
                         await Profiles.getInstance().ssoLogin(null, label);
                         return;
                     }
-                    const message = localize("errorHandling.authentication.login", "Log in to Authentication Service");
+                    const message = vscode.l10n.t("Log in to Authentication Service");
                     Gui.showMessage(errToken, { items: [message] }).then(async (selection) => {
                         if (selection) {
                             await Profiles.getInstance().ssoLogin(null, label);
@@ -94,13 +87,13 @@ export async function errorHandling(errorDetails: Error | string, label?: string
                 Gui.errorMessage(errMsg);
                 return;
             }
-            const checkCredsButton = localize("errorHandling.checkCredentials.button", "Update Credentials");
+            const checkCredsButton = vscode.l10n.t("Update Credentials");
             await Gui.errorMessage(errMsg, {
                 items: [checkCredsButton],
                 vsCodeOpts: { modal: true },
             }).then(async (selection) => {
                 if (selection !== checkCredsButton) {
-                    Gui.showMessage(localize("errorHandling.checkCredentials.cancelled", "Operation Cancelled"));
+                    Gui.showMessage(vscode.l10n.t("Operation Cancelled"));
                     return;
                 }
                 await Profiles.getInstance().promptCredentials(label.trim(), true);
@@ -268,7 +261,7 @@ export class ProfilesUtils {
             }
             return undefined;
         } catch (err) {
-            throw new Error(localize("activateCredentialManagerOverride.failedToActivate", "Custom credential manager failed to activate"));
+            throw new Error(vscode.l10n.t("Custom credential manager failed to activate"));
         }
     }
 
@@ -280,11 +273,11 @@ export class ProfilesUtils {
     public static async setupCustomCredentialManager(credentialManagerMap: imperative.ICredentialManagerNameMap): Promise<imperative.ProfileInfo> {
         ZoweLogger.trace("ProfilesUtils.setupCustomCredentialManager called.");
         ZoweLogger.info(
-            localize(
-                "ProfilesUtils.setupCustomCredentialManager.usingCustom",
-                "Custom credential manager {0} found, attempting to activate.",
-                credentialManagerMap.credMgrDisplayName
-            )
+            vscode.l10n.t({
+                message: "Custom credential manager {0} found, attempting to activate.",
+                args: [credentialManagerMap.credMgrDisplayName],
+                comment: ["Credential manager display name"],
+            })
         );
         const customCredentialManagerExtension =
             credentialManagerMap.credMgrZEName && vscode.extensions.getExtension(credentialManagerMap.credMgrZEName);
@@ -307,9 +300,7 @@ export class ProfilesUtils {
      */
     public static async setupDefaultCredentialManager(): Promise<imperative.ProfileInfo> {
         ZoweLogger.trace("ProfilesUtils.setupDefaultCredentialManager called.");
-        ZoweLogger.info(
-            localize("ProfilesUtils.setupDefaultCredentialManager.usingDefault", "No custom credential managers found, using the default instead.")
-        );
+        ZoweLogger.info(vscode.l10n.t("No custom credential managers found, using the default instead."));
         await ProfilesUtils.updateCredentialManagerSetting(globals.ZOWE_CLI_SCM);
         return new imperative.ProfileInfo("zowe", {
             // eslint-disable-next-line @typescript-eslint/no-unsafe-return
@@ -335,15 +326,15 @@ export class ProfilesUtils {
             }
         });
         if (credentialManager) {
-            const header = localize(
-                "ProfilesUtils.fetchRegisteredPlugins.customCredentialManagerFound",
-                `Custom credential manager {0} found`,
-                credentialManager.credMgrDisplayName
-            );
+            const header = vscode.l10n.t({
+                message: `Custom credential manager {0} found`,
+                args: [credentialManager.credMgrDisplayName],
+                comment: ["Credential manager display name"],
+            });
 
-            const message = localize("ProfilesUtils.fetchRegisteredPlugins.message", "Do you wish to use this credential manager instead?");
-            const optionYes = localize("ProfilesUtils.fetchRegisteredPlugins.yes", "Yes");
-            const optionDontAskAgain = localize("ProfilesUtils.fetchRegisteredPlugins.dontAskAgain", "Don't ask again");
+            const message = vscode.l10n.t("Do you wish to use this credential manager instead?");
+            const optionYes = vscode.l10n.t("Yes");
+            const optionDontAskAgain = vscode.l10n.t("Don't ask again");
 
             await Gui.infoMessage(header, { items: [optionYes, optionDontAskAgain], vsCodeOpts: { modal: true, detail: message } }).then(
                 async (selection) => {
@@ -375,17 +366,14 @@ export class ProfilesUtils {
      */
     public static async promptAndHandleMissingCredentialManager(credentialManager: imperative.ICredentialManagerNameMap): Promise<void> {
         ZoweLogger.trace("ProfilesUtils.promptAndHandleMissingCredentialManager called.");
-        const header = localize(
-            "ProfilesUtils.promptAndHandleMissingCredentialManager.suggestInstallHeader",
-            "Plugin of name '{0}' was defined for custom credential management on imperative.json file.",
-            credentialManager.credMgrDisplayName
-        );
-        const installMessage = localize(
-            "ProfilesUtils.promptAndHandleMissingCredentialManager.suggestInstallMessage",
-            "Please install associated VS Code extension for custom credential manager or revert to default."
-        );
-        const revertToDefaultButton = localize("ProfilesUtils.promptAndHandleMissingCredentialManager.revertToDefault", "Use Default");
-        const installButton = localize("ProfilesUtils.promptAndHandleMissingCredentialManager.install", "Install");
+        const header = vscode.l10n.t({
+            message: "Plugin of name '{0}' was defined for custom credential management on imperative.json file.",
+            args: [credentialManager.credMgrDisplayName],
+            comment: ["Credential manager display name"],
+        });
+        const installMessage = vscode.l10n.t("Please install associated VS Code extension for custom credential manager or revert to default.");
+        const revertToDefaultButton = vscode.l10n.t("Use Default");
+        const installButton = vscode.l10n.t("Install");
         await Gui.infoMessage(header, { items: [installButton, revertToDefaultButton], vsCodeOpts: { modal: true, detail: installMessage } }).then(
             async (selection) => {
                 if (selection === installButton) {
@@ -393,12 +381,10 @@ export class ProfilesUtils {
                         `https://marketplace.visualstudio.com/items?itemName=${credentialManager.credMgrZEName}`
                     );
                     if (await vscode.env.openExternal(credentialManagerInstallURL)) {
-                        const refreshMessage = localize(
-                            "ProfilesUtils.promptAndHandleMissingCredentialManager.refreshMessage",
-                            `After installing the extension, please make sure to reload your VS Code window in order
-                             to start using the installed credential manager`
+                        const refreshMessage = vscode.l10n.t(
+                            "After installing the extension, please make sure to reload your VS Code window in order to start using the installed credential manager"
                         );
-                        const reloadButton = localize("ProfilesUtils.promptAndHandleMissingCredentialManager.refreshButton", "Reload");
+                        const reloadButton = vscode.l10n.t("Reload");
                         if ((await Gui.showMessage(refreshMessage, { items: [reloadButton] })) === reloadButton) {
                             await vscode.commands.executeCommand("workbench.action.reloadWindow");
                         }
@@ -459,10 +445,7 @@ export class ProfilesUtils {
             ZoweLogger.debug(`Summary of team configuration files considered for Zowe Explorer: ${JSON.stringify(layerSummary)}`);
         } else {
             if (mProfileInfo.getAllProfiles()?.length > 0) {
-                const v1ProfileErrorMsg = localize(
-                    "readConfigFromDisk.v1profile.error",
-                    "Zowe v1 profiles in use.  Zowe Explorer no longer supports v1 profiles."
-                );
+                const v1ProfileErrorMsg = vscode.l10n.t("Zowe v1 profiles in use.  Zowe Explorer no longer supports v1 profiles.");
                 ZoweLogger.error(v1ProfileErrorMsg);
                 await errorHandling(v1ProfileErrorMsg);
             }
@@ -499,7 +482,7 @@ export class ProfilesUtils {
         ZoweLogger.trace("ProfilesUtils.promptCredentials called.");
         const mProfileInfo = await Profiles.getInstance().getProfileInfo();
         if (mProfileInfo.usingTeamConfig && !mProfileInfo.getTeamConfig().properties.autoStore) {
-            const msg = localize("zowe.promptCredentials.notSupported", '"Update Credentials" operation not supported when "autoStore" is false');
+            const msg = vscode.l10n.t('"Update Credentials" operation not supported when "autoStore" is false');
             ZoweLogger.warn(msg);
             Gui.showMessage(msg);
             return;
@@ -509,14 +492,14 @@ export class ProfilesUtils {
             // prompt for profile
             profile = (
                 await Gui.showInputBox({
-                    placeHolder: localize("createNewConnection.option.prompt.profileName.placeholder", "Connection Name"),
-                    prompt: localize("createNewConnection.option.prompt.profileName", "Enter a name for the connection."),
+                    placeHolder: vscode.l10n.t("Connection Name"),
+                    prompt: vscode.l10n.t("Enter a name for the connection."),
                     ignoreFocusOut: true,
                 })
             ).trim();
 
             if (!profile) {
-                Gui.showMessage(localize("createNewConnection.undefined.passWord", "Operation Cancelled"));
+                Gui.showMessage(vscode.l10n.t("Operation Cancelled"));
                 return;
             }
         }
@@ -524,11 +507,11 @@ export class ProfilesUtils {
         const creds = await Profiles.getInstance().promptCredentials(profile, true);
 
         if (creds != null) {
-            const successMsg = localize(
-                "promptCredentials.updatedCredentials",
-                "Credentials for {0} were successfully updated",
-                typeof profile === "string" ? profile : profile.name
-            );
+            const successMsg = vscode.l10n.t({
+                message: "Credentials for {0} were successfully updated",
+                args: [typeof profile === "string" ? profile : profile.name],
+                comment: ["Profile name"],
+            });
             ZoweLogger.info(successMsg);
             Gui.showMessage(successMsg);
             // config file watcher isn't noticing changes for secure fields
@@ -566,7 +549,13 @@ export class ProfilesUtils {
                 profileRootDirectory: path.join(zoweDir, "profiles"),
             });
         }
-        ZoweLogger.info(localize("initializeZoweFolder.location", "Zowe home directory is located at {0}", zoweDir));
+        ZoweLogger.info(
+            vscode.l10n.t({
+                message: "Zowe home directory is located at {0}",
+                args: [zoweDir],
+                comment: ["Zowe directory path"],
+            })
+        );
     }
 
     public static writeOverridesFile(): void {
@@ -577,20 +566,26 @@ export class ProfilesUtils {
         try {
             fileContent = fs.readFileSync(settingsFile, { encoding: "utf-8" });
         } catch (error) {
-            ZoweLogger.debug(localize("writeOverridesFile.readFile.error", "Reading imperative.json failed. Will try to create file."));
+            ZoweLogger.debug(vscode.l10n.t("Reading imperative.json failed. Will try to create file."));
         }
         let settings: any;
         if (fileContent) {
             try {
                 settings = JSON.parse(fileContent);
-                ZoweLogger.debug(localize("writeOverridesFile.readFile", "Reading imperative.json Credential Manager.\n {0}", fileContent));
+                ZoweLogger.debug(
+                    vscode.l10n.t({
+                        message: "Reading imperative.json Credential Manager.\n {0}",
+                        args: [fileContent],
+                        comment: ["File content"],
+                    })
+                );
             } catch (err) {
                 if (err instanceof Error) {
-                    const errorMsg = localize(
-                        "writeOverridesFile.jsonParse.error",
-                        "Failed to parse JSON file {0}. Will try to re-create the file.",
-                        settingsFile
-                    );
+                    const errorMsg = vscode.l10n.t({
+                        message: "Failed to parse JSON file {0}. Will try to re-create the file.",
+                        args: [settingsFile],
+                        comment: ["Settings file"],
+                    });
                     ZoweLogger.error(errorMsg);
                     ZoweLogger.debug(fileContent.toString());
                     settings = { ...defaultImperativeJson };
@@ -611,7 +606,11 @@ export class ProfilesUtils {
         }
         const newData = JSON.stringify(settings, null, 2);
         ZoweLogger.debug(
-            localize("writeOverridesFile.updateFile", "Updating imperative.json Credential Manager to {0}.\n{1}", globals.PROFILE_SECURITY, newData)
+            vscode.l10n.t({
+                message: "Updating imperative.json Credential Manager to {0}.\n{1}",
+                args: [globals.PROFILE_SECURITY, newData],
+                comment: ["Default credential override setting", "New credential override setting"],
+            })
         );
         return fs.writeFileSync(settingsFile, newData, {
             encoding: "utf-8",
@@ -625,12 +624,18 @@ export class ProfilesUtils {
             await ProfilesUtils.initializeZoweFolder();
         } catch (err) {
             ZoweLogger.error(err);
-            Gui.errorMessage(localize("initializeZoweFolder.error", "Failed to initialize Zowe folder: {0}", err.message));
+            Gui.errorMessage(
+                vscode.l10n.t({
+                    message: "Failed to initialize Zowe folder: {0}",
+                    args: [err.message],
+                    comment: ["Error message"],
+                })
+            );
         }
 
         try {
             await ProfilesUtils.readConfigFromDisk();
-            ZoweLogger.info(localize("initializeZoweProfiles.success", "Zowe Profiles initialized successfully."));
+            ZoweLogger.info(vscode.l10n.t("Zowe Profiles initialized successfully."));
         } catch (err) {
             if (err instanceof imperative.ImperativeError) {
                 await errorHandling(err, undefined, err.mDetails.causeErrors);
@@ -649,7 +654,7 @@ export class ProfilesUtils {
                 fs.mkdirSync(globals.ZOWE_TMP_FOLDER);
                 fs.mkdirSync(globals.USS_DIR);
                 fs.mkdirSync(globals.DS_DIR);
-                ZoweLogger.info(localize("initializeZoweTempFolder.success", "Zowe Temp folder initialized successfully."));
+                ZoweLogger.info(vscode.l10n.t("Zowe Temp folder initialized successfully."));
             }
         } catch (err) {
             ZoweLogger.error(err);
@@ -686,5 +691,5 @@ export function getProfile(node: vscode.TreeItem | ZoweTreeNode): imperative.IPr
     if (node instanceof ZoweTreeNode) {
         return node.getProfile();
     }
-    throw new Error(localize("getProfile.notTreeItem", "Tree Item is not a Zowe Explorer item."));
+    throw new Error(vscode.l10n.t("Tree Item is not a Zowe Explorer item."));
 }

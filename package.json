@@ -16,8 +16,8 @@
     "vscode": "^1.79.0"
   },
   "dependencies": {
-    "@zowe/cli": "8.0.0-next.202401022112",
-    "vscode-nls": "5.2.0"
+    "@vscode/l10n": "^0.0.18",
+    "@zowe/cli": "8.0.0-next.202401022112"
   },
   "devDependencies": {
     "@types/jest": "^29.2.3",
@@ -26,6 +26,7 @@
     "@types/vscode": "^1.73.0",
     "@typescript-eslint/eslint-plugin": "^5.53.0",
     "@typescript-eslint/parser": "^5.53.0",
+    "@vscode/l10n-dev": "^0.0.31",
     "@vscode/test-electron": "^1.6.0",
     "@vscode/vsce": "2.15.0",
     "eslint": "^8.34.0",
@@ -64,7 +65,8 @@
     "lint:html": "pnpm -r run lint:html",
     "madge": "pnpm -r run madge",
     "pretty": "prettier --write .",
-    "build": "pnpm -r run build",
+    "build": "pnpm -r --sequential --color --reporter append-only run build",
+    "build:parallel": "pnpm run -r build",
     "test": "pnpm -r --sequential --color --reporter append-only run test",
     "test:parallel": "pnpm -r --parallel --color run test",
     "package": "pnpm run -r package",

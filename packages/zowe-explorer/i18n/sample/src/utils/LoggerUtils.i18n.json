@@ -1,9 +1,0 @@
-{
-  "initialize.log.error": "Error encountered while activating and initializing logger",
-  "zoweExplorer.outputchannel.title": "Zowe Explorer",
-  "initialize.log.info": "Initialized logger for Zowe Explorer",
-  "initialize.log.location": "This log file can be found at {0}",
-  "initialize.log.level": "Zowe Explorer log level: {0}",
-  "ZoweLogger.updateLoggerSetting.update": "Update",
-  "ZoweLogger.updateLoggerSetting.message": "Zowe Explorer now has a VS Code logger with a default log level of INFO.\nIt looks like the Zowe CLI's ZOWE_APP_LOG_LEVEL={0}.\nWould you like Zowe Explorer to update to the the same log level?"
-}

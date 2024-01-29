@@ -65,12 +65,6 @@ const config = {
                 exclude: /node_modules/,
                 use: [
                     {
-                        loader: "vscode-nls-dev/lib/webpack-loader",
-                        options: {
-                            base: __dirname,
-                        },
-                    },
-                    {
                         loader: "ts-loader",
                         options: {
                             compilerOptions: {
