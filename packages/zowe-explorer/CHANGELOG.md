@@ -2,6 +2,12 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
+## Recent Changes
+
+### New features and enhancements
+
+- **Breaking:** Removed `zowe.uss.binary` and `zowe.uss.text` commands. Use `zowe.uss.openWithEncoding` instead.
+
 ## `3.0.0-next.202401241448`
 
 ### New features and enhancements

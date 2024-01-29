@@ -18,7 +18,6 @@ import * as sharedExtension from "../../../src/shared/init";
 import { initDatasetProvider } from "../../../src/dataset/init";
 import { Profiles } from "../../../src/Profiles";
 import { IJestIt, ITestContext, processSubscriptions, spyOnSubscriptions } from "../../__common__/testUtils";
-import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 
 describe("Test src/dataset/extension", () => {
     describe("initDatasetProvider", () => {
@@ -264,7 +263,7 @@ describe("Test src/dataset/extension", () => {
             },
             {
                 name: "zowe.ds.openWithEncoding",
-                mock: [{ spy: jest.spyOn(dsProvider, "openWithEncoding"), arg: [test.value] }],
+                mock: [{ spy: jest.spyOn(dsProvider, "openWithEncoding"), arg: [test.value, undefined] }],
             },
             {
                 name: "onDidChangeConfiguration",
