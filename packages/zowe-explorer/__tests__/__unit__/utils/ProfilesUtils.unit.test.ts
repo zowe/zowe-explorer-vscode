@@ -366,6 +366,36 @@ describe("ProfilesUtils unit tests", () => {
             expect(mockReadProfilesFromDisk).toHaveBeenCalledTimes(1);
             profInfoSpy.mockRestore();
         });
+
+        it("should warn the user when using team config with a missing schema", async () => {
+            const profInfoSpy = jest.spyOn(profUtils.ProfilesUtils, "getProfileInfo").mockReturnValueOnce({
+                readProfilesFromDisk: jest.fn(),
+                usingTeamConfig: true,
+                hasValidSchema: false,
+                getTeamConfig: () => ({
+                    layers: [
+                        {
+                            path: "test",
+                            exists: true,
+                            properties: {
+                                defaults: "test",
+                            },
+                        },
+                        {
+                            path: "test",
+                            exists: true,
+                            properties: {},
+                        },
+                    ],
+                }),
+            } as never);
+            const warnMsgSpy = jest.spyOn(Gui, "warningMessage");
+            await profUtils.ProfilesUtils.readConfigFromDisk(true);
+            expect(warnMsgSpy).toHaveBeenCalledWith(
+                "No valid schema was found for the active team configuration. This may introduce issues with profiles in Zowe Explorer."
+            );
+            profInfoSpy.mockRestore();
+        });
     });
 
     describe("promptCredentials", () => {
