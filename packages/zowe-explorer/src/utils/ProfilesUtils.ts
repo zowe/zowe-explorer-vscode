@@ -531,14 +531,6 @@ export class ProfilesUtils {
         // set global variable of security value to existing override
         // this will later get reverted to default in getProfilesInfo.ts if user chooses to
         await ProfilesUtils.updateCredentialManagerSetting(ProfilesUtils.getCredentialManagerOverride());
-        // If not using team config, ensure that the ~/.zowe/profiles directory
-        // exists with appropriate types within
-        if (!imperative.ImperativeConfig.instance.config?.exists) {
-            await imperative.CliProfileManager.initialize({
-                configuration: getImperativeConfig().profiles,
-                profileRootDirectory: path.join(zoweDir, "profiles"),
-            });
-        }
         ZoweLogger.info(
             vscode.l10n.t({
                 message: "Zowe home directory is located at {0}",

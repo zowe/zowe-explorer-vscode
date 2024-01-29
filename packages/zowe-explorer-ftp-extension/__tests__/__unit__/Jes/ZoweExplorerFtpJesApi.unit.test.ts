@@ -45,7 +45,7 @@ describe("FtpJesApi", () => {
             owner: "IBMUSER",
             prefix: "*",
         };
-        const result = await JesApi.getJobsByOwnerAndPrefix(mockParams.owner, mockParams.prefix);
+        const result = await JesApi.getJobsByParameters(mockParams);
 
         expect(result[0].jobname).toContain("JOB1");
         expect(JobUtils.listJobs).toBeCalledTimes(1);
@@ -152,7 +152,7 @@ describe("FtpJesApi", () => {
             })
         );
         await expect(async () => {
-            await JesApi.getJobsByOwnerAndPrefix("*", "*");
+            await JesApi.getJobsByParameters({});
         }).rejects.toThrow(ZoweFtpExtensionError);
     });
 

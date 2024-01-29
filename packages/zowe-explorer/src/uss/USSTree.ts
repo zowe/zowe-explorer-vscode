@@ -25,7 +25,6 @@ import { getIconByNode } from "../generators/icons";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { TreeViewUtils } from "../utils/TreeViewUtils";
 import { TreeProviders } from "../shared/TreeProviders";
-import message from "../generators/messages/items/dataset";
 
 /**
  * Creates the USS tree that contains nodes of sessions and data sets

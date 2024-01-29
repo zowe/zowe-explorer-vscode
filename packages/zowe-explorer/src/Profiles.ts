@@ -755,7 +755,7 @@ export class Profiles extends ProfilesCache {
                 loginOk = await ZoweVsCodeExtension.loginWithBaseProfile(serviceProfile, loginTokenType, node, zeInstance, this);
             }
             if (loginOk) {
-                Gui.showMessage(localize("ssoLogin.successful", "Login to authentication service was successful."));
+                Gui.showMessage(vscode.l10n.t("Login to authentication service was successful."));
                 await Profiles.getInstance().refresh(zeInstance);
             } else {
                 Gui.showMessage(this.profilesOpCancelled);

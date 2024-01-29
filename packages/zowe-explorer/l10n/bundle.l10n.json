@@ -16,6 +16,7 @@
   "Enter the size of the data set": "Enter the size of the data set",
   "Enter the SMS storage class": "Enter the SMS storage class",
   "Enter the volume serial on which the data set should be placed": "Enter the volume serial on which the data set should be placed",
+  "zowe.separator.recent": "zowe.separator.recent",
   "Recent Filters": "Recent Filters",
   "Options": "Options",
   "Zowe Explorer is running in Theia environment.": "Zowe Explorer is running in Theia environment.",
@@ -110,6 +111,7 @@
       "Service profile name"
     ]
   },
+  "Login to authentication service was successful.": "Login to authentication service was successful.",
   "Unable to log in with {0}. {1}/Service profile nameError message": {
     "message": "Unable to log in with {0}. {1}",
     "comment": [
@@ -130,7 +132,6 @@
       "Error message"
     ]
   },
-  "Login to authentication service was successful.": "Login to authentication service was successful.",
   "Select the location where the config file will be initialized": "Select the location where the config file will be initialized",
   "Select the location of the config file to edit": "Select the location of the config file to edit",
   "Global: in the Zowe home directory": "Global: in the Zowe home directory",
@@ -309,6 +310,9 @@
   },
   "Remote file has changed. Presenting with way to resolve file.": "Remote file has changed. Presenting with way to resolve file.",
   "Something went wrong with compare of files.": "Something went wrong with compare of files.",
+  "Downloaded: {0}": "Downloaded: {0}",
+  "Binary": "Binary",
+  "Encoding: {0}": "Encoding: {0}",
   "{0} location/Node type": {
     "message": "{0} location",
     "comment": [
@@ -446,6 +450,16 @@
   "Upload cancelled.": "Upload cancelled.",
   "Invalid job owner": "Invalid job owner",
   "Invalid job prefix": "Invalid job prefix",
+  "EBCDIC": "EBCDIC",
+  "z/OS default codepage": "z/OS default codepage",
+  "Raw data representation": "Raw data representation",
+  "Other": "Other",
+  "Specify another codepage": "Specify another codepage",
+  "From profile {0}": "From profile {0}",
+  "USS file tag": "USS file tag",
+  "Choose encoding for {0}": "Choose encoding for {0}",
+  "Current encoding is {0}": "Current encoding is {0}",
+  "Enter a codepage (e.g., 1047, IBM-1047)": "Enter a codepage (e.g., 1047, IBM-1047)",
   "File was saved -- determining whether the file is a USS file or Data set.\n                        \n Comparing (case insensitive) {0} against directory {1} and {2}/Saved file nameData Set directoryUSS directory": {
     "message": "File was saved -- determining whether the file is a USS file or Data set.\n                        \n Comparing (case insensitive) {0} against directory {1} and {2}",
     "comment": [
@@ -637,10 +651,6 @@
       "Job label"
     ]
   },
-  "Opening data set member...": "Opening data set member...",
-  "Saving data set member...": "Saving data set member...",
-  "Opening data set...": "Opening data set...",
-  "Saving data set...": "Saving data set...",
   "$(case-sensitive) Name (default)": "$(case-sensitive) Name (default)",
   "$(calendar) Date Modified": "$(calendar) Date Modified",
   "$(account) User ID": "$(account) User ID",
@@ -648,6 +658,7 @@
   "Partitioned Data Set: C": "Partitioned Data Set: C",
   "Partitioned Data Set: Classic": "Partitioned Data Set: Classic",
   "Partitioned Data Set: Default": "Partitioned Data Set: Default",
+  "Partitioned Data Set: Extended": "Partitioned Data Set: Extended",
   "Sequential Data Set": "Sequential Data Set",
   "Copying File(s)": "Copying File(s)",
   "Profile is invalid, check connection details.": "Profile is invalid, check connection details.",
@@ -837,7 +848,7 @@
     ]
   },
   "Data set failed to save. Data set may have been deleted or renamed on mainframe.": "Data set failed to save. Data set may have been deleted or renamed on mainframe.",
-  "Cannot download, item invalid.": "Cannot download, item invalid.",
+  "Saving data set...": "Saving data set...",
   "Copying data sets is not supported.": "Copying data sets is not supported.",
   "Replace": "Replace",
   "The data set member already exists.\nDo you want to replace it?": "The data set member already exists.\nDo you want to replace it?",

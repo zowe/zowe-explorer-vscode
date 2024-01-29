@@ -343,17 +343,12 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
                         errorCode: `${zowe.imperative.RestConstants.HTTP_STATUS_401}`,
                     });
                 }
-                if (ZoweExplorerApiRegister.getJesApi(cachedProfile).getJobsByParameters) {
-                    jobsInternal = await ZoweExplorerApiRegister.getJesApi(cachedProfile).getJobsByParameters({
-                        owner,
-                        prefix,
-                        status,
-                        execData: true,
-                    });
-                } else {
-                    this.statusNotSupportedMsg(status);
-                    jobsInternal = await ZoweExplorerApiRegister.getJesApi(cachedProfile).getJobsByOwnerAndPrefix(owner, prefix);
-                }
+                jobsInternal = await ZoweExplorerApiRegister.getJesApi(cachedProfile).getJobsByParameters({
+                    owner,
+                    prefix,
+                    status,
+                    execData: true,
+                });
 
                 /**
                  *    Note: Temporary fix
@@ -374,9 +369,7 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
         } catch (error) {
             ZoweLogger.trace("Error getting jobs from Rest API.");
             await errorHandling(error, cachedProfile.name, vscode.l10n.t("Retrieving response from zowe.GetJobs"));
-            syncSessionNode(Profiles.getInstance())((profileValue) => ZoweExplorerApiRegister.getJesApi(profileValue).getSession())(
-                this.getSessionNode()
-            );
+            syncSessionNode((profile) => ZoweExplorerApiRegister.getJesApi(profile), this.getSessionNode());
         }
         return jobsInternal;
     }

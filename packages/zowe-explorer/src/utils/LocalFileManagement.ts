@@ -18,7 +18,7 @@ import { isTypeUssTreeNode } from "../shared/context";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { ZoweLogger } from "./LoggerUtils";
 import { LocalFileInfo, isZoweDatasetTreeNode, isZoweUSSTreeNode } from "../shared/utils";
-import { downloadPs } from "../dataset/actions";
+import { downloadDs } from "../dataset/actions";
 import { downloadUnixFile } from "../uss/actions";
 
 export class LocalFileManagement {
@@ -108,7 +108,7 @@ export class LocalFileManagement {
         let fileInfo = {} as LocalFileInfo;
         switch (true) {
             case isZoweDatasetTreeNode(node): {
-                fileInfo = await downloadPs(node);
+                fileInfo = await downloadDs(node, true);
                 break;
             }
             case isZoweUSSTreeNode(node): {

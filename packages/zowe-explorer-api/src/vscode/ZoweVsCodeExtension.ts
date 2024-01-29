@@ -17,6 +17,7 @@ import { IPromptCredentialsOptions, IPromptUserPassOptions } from "./doc/IPrompt
 import { Gui } from "../globals/Gui";
 import { MessageSeverity, IZoweLogger } from "../logger";
 import { IApiRegisterClient } from "../extend";
+import { IZoweNodeType } from "../tree/IZoweTreeNode";
 
 /**
  * Collection of utility functions for writing Zowe Explorer VS Code extensions.
@@ -161,7 +162,7 @@ export class ZoweVsCodeExtension {
         serviceProfile: string | imperative.IProfileLoaded,
         loginTokenType?: string,
         node?: IZoweNodeType,
-        zeRegister?: ZoweExplorerApi.IApiRegisterClient, // ZoweExplorerApiRegister
+        zeRegister?: IApiRegisterClient, // ZoweExplorerApiRegister
         zeProfiles?: ProfilesCache // Profiles extends ProfilesCache
     ): Promise<boolean> {
         const cache: ProfilesCache = zeProfiles ?? ZoweVsCodeExtension.profilesCache;
@@ -235,7 +236,7 @@ export class ZoweVsCodeExtension {
      */
     public static async logoutWithBaseProfile(
         serviceProfile: string | imperative.IProfileLoaded,
-        zeRegister?: ZoweExplorerApi.IApiRegisterClient, // ZoweExplorerApiRegister
+        zeRegister?: IApiRegisterClient, // ZoweExplorerApiRegister
         zeProfiles?: ProfilesCache // Profiles extends ProfilesCache
     ): Promise<void> {
         const cache: ProfilesCache = zeProfiles ?? ZoweVsCodeExtension.profilesCache;

@@ -38,6 +38,7 @@ import * as fs from "fs";
 import { promiseStatus, PromiseStatuses } from "promise-status-async";
 import { getDocumentFilePath, updateOpenFiles } from "../shared/utils";
 import { IZoweDatasetTreeOpts } from "../shared/IZoweTreeOpts";
+import { downloadDs } from "./actions";
 
 /**
  * A type of TreeItem used to represent sessions and data sets
@@ -488,7 +489,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
 
         if (Profiles.getInstance().validProfile !== ValidProfileEnum.INVALID) {
             try {
-                const fileInfo = await downloadPs(this);
+                const fileInfo = await downloadDs(this, forceDownload);
                 const document = await vscode.workspace.openTextDocument(getDocumentFilePath(fileInfo.name, this));
                 await Gui.showTextDocument(document, { preview: this.wasDoubleClicked != null ? !this.wasDoubleClicked : shouldPreview });
                 // discard ongoing action to allow new requests on this node
@@ -499,71 +500,6 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     datasetProvider.addFileHistory(`[${this.getProfileName()}]: ${fileInfo.name}`);
                 }
             } catch (err) {
-                await errorHandling(err, this.getProfileName());
-                throw err;
-            }
-        }
-            const statusMsg = Gui.setStatusBarMessage(localize("dataSet.opening", "$(sync~spin) Opening data set..."));
-            try {
-                let label: string;
-                const defaultMessage = localize("openDs.error", "Invalid data set or member.");
-                switch (true) {
-                    // For favorited or non-favorited sequential DS:
-                    case contextually.isFavorite(this):
-                    case contextually.isSessionNotFav(this.getParent()):
-                        label = this.label as string;
-                        break;
-                    // For favorited or non-favorited data set members:
-                    case contextually.isFavoritePds(this.getParent()):
-                    case contextually.isPdsNotFav(this.getParent()):
-                        label = this.getParent().getLabel().toString() + "(" + this.getLabel().toString() + ")";
-                        break;
-                    default:
-                        Gui.errorMessage(defaultMessage);
-                        throw Error(defaultMessage);
-                }
-
-                const documentFilePath = getDocumentFilePath(label, this);
-                let responsePromise = this.ongoingActions ? this.ongoingActions[NodeAction.Download] : null;
-                // If there is no ongoing action and the local copy does not exist, fetch contents
-                if (forceDownload || (responsePromise == null && !fs.existsSync(documentFilePath))) {
-                    const prof = this.getProfile();
-                    ZoweLogger.info(localize("openDs.openDataSet", "Opening {0}", label));
-                    if (this.ongoingActions) {
-                        this.ongoingActions[NodeAction.Download] = ZoweExplorerApiRegister.getMvsApi(prof).getContents(label, {
-                            file: documentFilePath,
-                            returnEtag: true,
-                            binary: this.binary,
-                            encoding: this.encoding !== undefined ? this.encoding : prof.profile?.encoding,
-                            responseTimeout: prof.profile?.responseTimeout,
-                        });
-                        responsePromise = this.ongoingActions[NodeAction.Download];
-                    } else {
-                        responsePromise = ZoweExplorerApiRegister.getMvsApi(prof).getContents(label, {
-                            file: documentFilePath,
-                            returnEtag: true,
-                            binary: this.binary,
-                            encoding: this.encoding !== undefined ? this.encoding : prof.profile?.encoding,
-                            responseTimeout: prof.profile?.responseTimeout,
-                        });
-                    }
-                }
-
-                if (responsePromise != null) {
-                    const response = await responsePromise;
-                    this.setEtag(response.apiResponse.etag);
-                }
-                statusMsg.dispose();
-                updateOpenFiles(datasetProvider, documentFilePath, this);
-                const document = await vscode.workspace.openTextDocument(getDocumentFilePath(label, this));
-                await Gui.showTextDocument(document, { preview: this.wasDoubleClicked != null ? !this.wasDoubleClicked : shouldPreview });
-                // discard ongoing action to allow new requests on this node
-                if (this.ongoingActions) {
-                    this.ongoingActions[NodeAction.Download] = null;
-                }
-                datasetProvider.addFileHistory(`[${this.getProfileName()}]: ${label}`);
-            } catch (err) {
-                statusMsg.dispose();
                 await errorHandling(err, this.getProfileName());
                 throw err;
             }

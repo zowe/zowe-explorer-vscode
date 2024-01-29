@@ -18,7 +18,7 @@
   },
   "dependencies": {
     "@types/vscode": "^1.53.2",
-    "@zowe/cli": "8.0.0-next.202401022112",
+    "@zowe/cli": "8.0.0-next.202401262128",
     "@zowe/secrets-for-zowe-sdk": "7.18.6",
     "handlebars": "^4.7.7",
     "semver": "^7.5.3"

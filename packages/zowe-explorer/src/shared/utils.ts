@@ -362,29 +362,29 @@ function getCachedEncoding(node: IZoweTreeNode): string | undefined {
 
 export async function promptForEncoding(node: IZoweDatasetTreeNode | IZoweUSSTreeNode, taggedEncoding?: string): Promise<ZosEncoding | undefined> {
     const ebcdicItem: vscode.QuickPickItem = {
-        label: localize("zowe.shared.utils.promptForEncoding.ebcdic.label", "EBCDIC"),
-        description: localize("zowe.shared.utils.promptForEncoding.ebcdic.description", "z/OS default codepage"),
+        label: vscode.l10n.t("EBCDIC"),
+        description: vscode.l10n.t("z/OS default codepage"),
     };
     const binaryItem: vscode.QuickPickItem = {
-        label: localize("zowe.shared.utils.promptForEncoding.binary.label", "Binary"),
-        description: localize("zowe.shared.utils.promptForEncoding.binary.description", "Raw data representation"),
+        label: vscode.l10n.t("Binary"),
+        description: vscode.l10n.t("Raw data representation"),
     };
     const otherItem: vscode.QuickPickItem = {
-        label: localize("zowe.shared.utils.promptForEncoding.other.label", "Other"),
-        description: localize("zowe.shared.utils.promptForEncoding.other.description", "Specify another codepage"),
+        label: vscode.l10n.t("Other"),
+        description: vscode.l10n.t("Specify another codepage"),
     };
     const items: vscode.QuickPickItem[] = [ebcdicItem, binaryItem, otherItem, globals.SEPARATORS.RECENT];
     const profile = node.getProfile();
     if (profile.profile?.encoding != null) {
         items.splice(0, 0, {
             label: profile.profile?.encoding,
-            description: localize("zowe.shared.utils.promptForEncoding.profile.description", "From profile {0}", profile.name),
+            description: vscode.l10n.t("From profile {0}", profile.name),
         });
     }
     if (taggedEncoding != null) {
         items.splice(0, 0, {
             label: taggedEncoding,
-            description: localize("zowe.shared.utils.promptForEncoding.tagged.description", "USS file tag"),
+            description: vscode.l10n.t("USS file tag"),
         });
     }
 
@@ -406,9 +406,8 @@ export async function promptForEncoding(node: IZoweDatasetTreeNode | IZoweUSSTre
 
     let response = (
         await Gui.showQuickPick(items, {
-            title: localize("zowe.shared.utils.promptForEncoding.qp.title", "Choose encoding for {0}", node.label as string),
-            placeHolder:
-                currentEncoding && localize("zowe.shared.utils.promptForEncoding.qp.placeHolder", "Current encoding is {0}", currentEncoding),
+            title: vscode.l10n.t("Choose encoding for {0}", node.label as string),
+            placeHolder: currentEncoding && vscode.l10n.t("Current encoding is {0}", currentEncoding),
         })
     )?.label;
     let encoding: ZosEncoding;
@@ -421,8 +420,8 @@ export async function promptForEncoding(node: IZoweDatasetTreeNode | IZoweUSSTre
             break;
         case otherItem.label:
             response = await Gui.showInputBox({
-                title: localize("zowe.shared.utils.promptForEncoding.qp.title", "Choose encoding for {0}", node.label as string),
-                placeHolder: localize("zowe.shared.utils.promptForEncoding.input.placeHolder", "Enter a codepage (e.g., 1047, IBM-1047)"),
+                title: vscode.l10n.t("Choose encoding for {0}", node.label as string),
+                placeHolder: vscode.l10n.t("Enter a codepage (e.g., 1047, IBM-1047)"),
             });
             if (response != null) {
                 encoding = { kind: "other", codepage: response };

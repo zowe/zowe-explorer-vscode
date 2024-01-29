@@ -456,7 +456,8 @@ export async function createMember(parent: api.IZoweDatasetTreeNode, datasetProv
     }
 }
 
-export async function downloadPs(node: api.IZoweDatasetTreeNode, forceDownload: boolean): Promise<LocalFileInfo> {
+export async function downloadDs(node: api.IZoweDatasetTreeNode, forceDownload: boolean): Promise<LocalFileInfo> {
+    ZoweLogger.trace("dataset.actions.downloadDs called.");
     const fileInfo = {} as LocalFileInfo;
     const defaultMessage = vscode.l10n.t("Invalid data set or member.");
     switch (true) {
@@ -480,10 +481,10 @@ export async function downloadPs(node: api.IZoweDatasetTreeNode, forceDownload: 
     // If there is no ongoing action and the local copy does not exist, fetch contents
     if (forceDownload || (responsePromise == null && !fs.existsSync(fileInfo.path))) {
         if (node.ongoingActions) {
-            node.ongoingActions[api.NodeAction.Download] = downloadPsApiCall(node, fileInfo.path, fileInfo.name);
+            node.ongoingActions[api.NodeAction.Download] = downloadDsApiCall(node, fileInfo.path, fileInfo.name);
             responsePromise = node.ongoingActions[api.NodeAction.Download];
         } else {
-            responsePromise = downloadPsApiCall(node, fileInfo.path, fileInfo.name);
+            responsePromise = downloadDsApiCall(node, fileInfo.path, fileInfo.name);
         }
     }
     if (responsePromise != null) {
@@ -493,7 +494,7 @@ export async function downloadPs(node: api.IZoweDatasetTreeNode, forceDownload: 
     return fileInfo;
 }
 
-async function downloadPsApiCall(node: api.IZoweDatasetTreeNode, documentFilePath: string, label: string): Promise<any> {
+async function downloadDsApiCall(node: api.IZoweDatasetTreeNode, documentFilePath: string, label: string): Promise<any> {
     const prof = node.getProfile();
     ZoweLogger.info(
         vscode.l10n.t({
@@ -1835,38 +1836,6 @@ export async function pasteDataSetMembers(datasetProvider: api.IZoweTree<api.IZo
             vscode.env.clipboard.writeText("");
         }
     );
-}
-
-/**
- * download given dataset node
- *
- * @export
- * @param {ZoweDatasetNode} node - node to be downloaded
- */
-export async function downloadDs(node: ZoweDatasetNode): Promise<zowe.IZosFilesResponse> {
-    ZoweLogger.trace("dataset.actions.downloadDs called.");
-    const profile = node.getProfile();
-    let lbl: string;
-    const invalidMsg = vscode.l10n.t("Cannot download, item invalid.");
-    switch (true) {
-        case contextually.isFavorite(node):
-        case contextually.isSessionNotFav(node.getParent()):
-            lbl = node.label as string;
-            break;
-        case contextually.isFavoritePds(node.getParent()):
-        case contextually.isPdsNotFav(node.getParent()):
-            lbl = node.getParent().getLabel().toString() + "(" + node.getLabel().toString() + ")";
-            break;
-        default:
-            api.Gui.errorMessage(invalidMsg);
-            throw Error(invalidMsg);
-    }
-    const filePath = getDocumentFilePath(lbl, node);
-    return ZoweExplorerApiRegister.getMvsApi(profile).getContents(lbl, {
-        file: filePath,
-        returnEtag: true,
-        encoding: profile.profile.encoding,
-    });
 }
 
 /**

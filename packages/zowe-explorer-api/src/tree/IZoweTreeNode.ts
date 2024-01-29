@@ -13,7 +13,7 @@ import * as vscode from "vscode";
 import { IJob, imperative } from "@zowe/cli";
 import { FileAttributes } from "../utils/files";
 import { DatasetFilter, NodeSort } from "./sorting";
-import { IZoweUSSTreeType } from ".";
+import { IZoweDatasetTreeType, IZoweUSSTreeType } from ".";
 
 export type IZoweNodeType = IZoweDatasetTreeNode | IZoweUSSTreeNode | IZoweJobTreeNode;
 
@@ -209,7 +209,7 @@ export interface IZoweDatasetTreeNode extends IZoweTreeNode {
      * @param preview the file, true or false
      * @param datasetFileProvider the tree provider
      */
-    openDs?(download: boolean, previewFile: boolean, datasetFileProvider: IZoweTree<IZoweDatasetTreeNode>): Promise<void>;
+    openDs?(download: boolean, previewFile: boolean, datasetFileProvider: IZoweDatasetTreeType): Promise<void>;
     /**
      * Sets the codepage value for the file
      *
