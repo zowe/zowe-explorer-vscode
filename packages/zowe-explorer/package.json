@@ -2035,7 +2035,7 @@
     "package": "vsce package --no-dependencies && node ../../scripts/mv-pack.js vscode-extension-for-zowe vsix",
     "license": "node ../../scripts/updateLicenses.js",
     "watch": "concurrently --group \"pnpm watch:webviews\" \"pnpm watch:zowe-explorer\"",
-    "watch:zowe-explorer": "pnpm clean:bundle && pnpm generateLocalization && webpack --mode development --watch",
+    "watch:zowe-explorer": "pnpm clean:bundle && webpack --mode development --watch",
     "watch:webviews": "pnpm --filter webviews dev",
     "compile": "tsc -b",
     "markdown": "markdownlint CHANGELOG.md README.md",
