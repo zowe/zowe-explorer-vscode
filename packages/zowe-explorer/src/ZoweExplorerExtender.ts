@@ -209,7 +209,7 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
 
     /**
      * Adds new types to the Zowe schema.
-     * @param profileInfo the ProfileInfo object that has been prepared with `readProfilesFromDisk`, such as the one initialized in `initForZowe`.
+     * @param profileInfo a ProfileInfo object that has been prepared with `readProfilesFromDisk` (such as the one initialized in `initForZowe`).
      * @param profileTypeConfigurations (optional) Profile type configurations to add to the schema
      */
     private updateSchema(
@@ -232,7 +232,7 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
                 if (err.code === "EACCES" || err.code === "EPERM") {
                     Gui.errorMessage(
                         localize(
-                            "zowe.schema.cannotAccess",
+                            "schema.cannotAccess",
                             "Failed to update Zowe schema: insufficient permissions or read-only file",
                         )
                     );
