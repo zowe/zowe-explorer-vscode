@@ -32,7 +32,7 @@
     "madge": "madge -c --no-color --no-spinner --exclude __mocks__ --extensions js,ts src/",
     "pretty": "prettier --write .",
     "check-cli": "node scripts/check-cli.js",
-    "clean": "rimraf lib",
+    "clean": "rimraf lib tsconfig.tsbuildinfo",
     "fresh-clone": "pnpm clean && (rimraf node_modules || true)",
     "license": "node ../../scripts/updateLicenses.js",
     "package": "pnpm build && pnpm pack && node ../../scripts/mv-pack.js zowe-zowe-explorer-api tgz",
