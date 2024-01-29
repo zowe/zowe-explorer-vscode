@@ -21,7 +21,7 @@ import { ZoweExplorerExtender } from "../../src/ZoweExplorerExtender";
 import { Profiles } from "../../src/Profiles";
 import * as path from "path";
 import * as fs from "fs";
-import { FileManagement, Gui } from "@zowe/zowe-explorer-api";
+import { FileManagement, Gui, ProfilesCache } from "@zowe/zowe-explorer-api";
 import { ProfilesUtils } from "../../src/utils/ProfilesUtils";
 import { ZoweLogger } from "../../src/utils/LoggerUtils";
 import { ZoweLocalStorage } from "../../src/utils/ZoweLocalStorage";
@@ -232,7 +232,10 @@ describe("ZoweExplorerExtender unit tests", () => {
             jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(false);
             jest.spyOn(ZoweLogger, "trace").mockImplementation();
             jest.spyOn(ZoweLogger, "info").mockImplementation();
-            const profInfo = await ProfilesUtils.getProfileInfo(false);
+            const profInfo = new imperative.ProfileInfo("zowe", {
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+                credMgrOverride: imperative.ProfileCredentials.defaultCredMgrWithKeytar(ProfilesCache.requireKeyring),
+            });
             const addProfTypeToSchema = jest
                 .spyOn(imperative.ProfileInfo.prototype, "addProfileTypeToSchema")
                 .mockImplementation(addProfileTypeToSchemaMock as unknown as any);
