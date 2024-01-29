@@ -566,7 +566,7 @@ export async function downloadUnixFile(node: IZoweUSSTreeNode, forceDownload: bo
             node.setEtag(response.apiResponse.etag);
             return fileInfo;
         } catch (err) {
-            await errorHandling(err, this.mProfileName);
+            await errorHandling(err, node.getProfileName());
             throw err;
         }
     }

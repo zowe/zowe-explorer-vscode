@@ -39,8 +39,11 @@ import * as fs from "fs";
 import * as sharedUtils from "../../../src/shared/utils";
 import { Profiles } from "../../../src/Profiles";
 import * as utils from "../../../src/utils/ProfilesUtils";
+import * as wsUtils from "../../../src/utils/workspace";
 import { getNodeLabels } from "../../../src/dataset/utils";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
+import * as context from "../../../src/shared/context";
+import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 
 // Missing the definition of path module, because I need the original logic for tests
 jest.mock("fs");
@@ -96,6 +99,7 @@ function createGlobalMocks() {
     });
     Object.defineProperty(vscode.window, "showInputBox", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.workspace, "openTextDocument", { value: jest.fn(), configurable: true });
+    Object.defineProperty(vscode.workspace, "getConfiguration", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showTextDocument", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showQuickPick", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "createQuickPick", { value: jest.fn(), configurable: true });
@@ -1482,15 +1486,12 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
         globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
-        const node = new ZoweDatasetNode(
-            "HLQ.TEST.AFILE",
-            vscode.TreeItemCollapsibleState.None,
-            blockMocks.datasetSessionNode,
-            null,
-            undefined,
-            undefined,
-            blockMocks.imperativeProfile
-        );
+        const node = new ZoweDatasetNode({
+            label: "HLQ.TEST.AFILE",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.datasetSessionNode,
+            profile: blockMocks.imperativeProfile,
+        });
         blockMocks.datasetSessionNode.children.push(node);
 
         mocked(sharedUtils.concatChildNodes).mockReturnValueOnce([node]);
@@ -1546,15 +1547,12 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
         globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
-        const node = new ZoweDatasetNode(
-            "HLQ.TEST.AFILE",
-            vscode.TreeItemCollapsibleState.None,
-            blockMocks.datasetSessionNode,
-            null,
-            undefined,
-            undefined,
-            blockMocks.imperativeProfile
-        );
+        const node = new ZoweDatasetNode({
+            label: "HLQ.TEST.AFILE",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.datasetSessionNode,
+            profile: blockMocks.imperativeProfile,
+        });
         blockMocks.datasetSessionNode.children.push(node);
 
         mocked(sharedUtils.concatChildNodes).mockReturnValueOnce([node]);
@@ -2304,17 +2302,17 @@ describe("Dataset Actions Unit Tests - Function copyDataSets", () => {
         blockMocks.pdsSessionNode.contextValue = "fakeContext";
 
         try {
-            await dsActions.downloadDs(node);
+            await dsActions.downloadDs(node, true);
         } catch (err) {
             /* Do nothing */
         }
 
-        expect(mocked(Gui.errorMessage)).toBeCalledWith("Cannot download, item invalid.");
+        expect(mocked(Gui.errorMessage)).toBeCalledWith("Invalid data set or member.");
     });
 
     it("Testing downloadDs() called with a member", async () => {
         globals.defineGlobals("");
-        createGlobalMocks();
+        const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks();
         const node = new ZoweDatasetNode({
             label: "HLQ.TEST.TO.NODE",
@@ -2322,10 +2320,17 @@ describe("Dataset Actions Unit Tests - Function copyDataSets", () => {
             parentNode: blockMocks.pdsSessionNode,
             profile: blockMocks.imperativeProfile,
         });
+        globalMocks.getContentsSpy.mockResolvedValueOnce({
+            success: true,
+            commandResponse: null,
+            apiResponse: {
+                etag: "123",
+            },
+        });
 
         const label = node.getParent().getLabel().toString() + "(" + node.getLabel().toString() + ")";
         const filePathSpy = jest.spyOn(sharedUtils, "getDocumentFilePath");
-        await dsActions.downloadDs(node);
+        await dsActions.downloadDs(node, true);
         expect(filePathSpy).toBeCalledWith(label, node);
     });
 
@@ -2973,13 +2978,6 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         const mockCheckCurrentProfile = jest.fn();
         bindMvsApi(mvsApi);
         mocked(treeView.reveal).mockReturnValue(new Promise((resolve) => resolve(null)));
-
-        jest.spyOn(vscode.workspace, "getConfiguration").mockReturnValueOnce({
-            update: jest.fn(),
-            has: jest.fn(),
-            get: jest.fn(),
-            inspect: jest.fn(),
-        });
 
         return {
             session,

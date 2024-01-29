@@ -14,7 +14,6 @@
 import * as vscode from "vscode";
 import * as path from "path";
 import * as globals from "../globals";
-import * as os from "os";
 import {
     Gui,
     IZoweTreeNode,
@@ -223,7 +222,7 @@ export async function uploadContent(
 ): Promise<IZosFilesResponse> {
     const uploadOptions: IUploadOptions = {
         etag: etagToUpload,
-        returnEtag: true,
+        returnEtag: returnEtag ?? true,
         binary: node.binary,
         encoding: node.encoding !== undefined ? node.encoding : profile.profile?.encoding,
         responseTimeout: profile.profile?.responseTimeout,
@@ -378,7 +377,11 @@ export async function promptForEncoding(node: IZoweDatasetTreeNode | IZoweUSSTre
     if (profile.profile?.encoding != null) {
         items.splice(0, 0, {
             label: profile.profile?.encoding,
-            description: vscode.l10n.t("From profile {0}", profile.name),
+            description: vscode.l10n.t({
+                message: "From profile {0}",
+                args: [profile.name],
+                comment: ["Profile name"],
+            }),
         });
     }
     if (taggedEncoding != null) {
@@ -406,8 +409,18 @@ export async function promptForEncoding(node: IZoweDatasetTreeNode | IZoweUSSTre
 
     let response = (
         await Gui.showQuickPick(items, {
-            title: vscode.l10n.t("Choose encoding for {0}", node.label as string),
-            placeHolder: currentEncoding && vscode.l10n.t("Current encoding is {0}", currentEncoding),
+            title: vscode.l10n.t({
+                message: "Choose encoding for {0}",
+                args: [node.label as string],
+                comment: ["Node label"],
+            }),
+            placeHolder:
+                currentEncoding &&
+                vscode.l10n.t({
+                    message: "Current encoding is {0}",
+                    args: [currentEncoding],
+                    comment: ["Encoding name"],
+                }),
         })
     )?.label;
     let encoding: ZosEncoding;
@@ -420,7 +433,11 @@ export async function promptForEncoding(node: IZoweDatasetTreeNode | IZoweUSSTre
             break;
         case otherItem.label:
             response = await Gui.showInputBox({
-                title: vscode.l10n.t("Choose encoding for {0}", node.label as string),
+                title: vscode.l10n.t({
+                    message: "Choose encoding for {0}",
+                    args: [node.label as string],
+                    comment: ["Node label"],
+                }),
                 placeHolder: vscode.l10n.t("Enter a codepage (e.g., 1047, IBM-1047)"),
             });
             if (response != null) {

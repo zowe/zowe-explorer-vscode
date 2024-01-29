@@ -671,6 +671,7 @@ describe("USS Action Unit Tests - Function changeFileType", () => {
             testDoc: createTextDocument(path.normalize("/sestest/tmp/foo.txt")),
             ussNode: createUSSNode(globalMocks.testSession, createIProfile()),
             mvsApi: ZoweExplorerApiRegister.getMvsApi(globalMocks.testProfile),
+            putUSSPayload: jest.fn().mockResolvedValue(`{"stdout":[""]}`),
         };
 
         newMocks.node = new ZoweUSSNode({
@@ -689,6 +690,11 @@ describe("USS Action Unit Tests - Function changeFileType", () => {
         globalMocks.withProgress.mockImplementation((progLocation, callback) => callback());
         newMocks.getMvsApiMock.mockReturnValue(newMocks.mvsApi);
         ZoweExplorerApiRegister.getMvsApi = newMocks.getMvsApiMock.bind(ZoweExplorerApiRegister);
+
+        Object.defineProperty(globalMocks.Utilities, "putUSSPayload", {
+            value: newMocks.putUSSPayload,
+            configurable: true,
+        });
 
         return newMocks;
     }

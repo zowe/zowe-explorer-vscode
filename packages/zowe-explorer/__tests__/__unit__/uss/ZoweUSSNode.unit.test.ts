@@ -1130,7 +1130,7 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
         });
         const mockFileInfo = {
             name: child.label,
-            path: path.join(globals.USS_DIR, child.mProfileName || "", child.fullPath),
+            path: path.join(globals.USS_DIR, child.getProfileName(), child.fullPath),
         };
         Object.defineProperty(LocalFileManagement, "downloadUnixFile", { value: jest.fn().mockResolvedValueOnce(mockFileInfo), configurable: true });
         globalMocks.mockShowTextDocument.mockRejectedValueOnce(Error("testError"));
@@ -1142,7 +1142,7 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
         }
 
         expect(globalMocks.openTextDocument.mock.calls.length).toBe(1);
-        expect(globalMocks.openTextDocument.mock.calls[0][0]).toBe(path.join(globals.USS_DIR, child.mProfileName || "", child.fullPath));
+        expect(globalMocks.openTextDocument.mock.calls[0][0]).toBe(path.join(globals.USS_DIR, child.getProfileName(), child.fullPath));
         expect(globalMocks.mockShowTextDocument.mock.calls.length).toBe(1);
         expect(globalMocks.showErrorMessage.mock.calls.length).toBe(1);
         expect(globalMocks.showErrorMessage.mock.calls[0][0]).toBe("Error: testError");

@@ -477,7 +477,7 @@ export async function downloadDs(node: api.IZoweDatasetTreeNode, forceDownload: 
     }
     // if local copy exists, open that instead of pulling from mainframe
     fileInfo.path = getDocumentFilePath(fileInfo.name, node);
-    let responsePromise = this.ongoingActions ? this.ongoingActions[api.NodeAction.Download] : null;
+    let responsePromise = node.ongoingActions ? node.ongoingActions[api.NodeAction.Download] : null;
     // If there is no ongoing action and the local copy does not exist, fetch contents
     if (forceDownload || (responsePromise == null && !fs.existsSync(fileInfo.path))) {
         if (node.ongoingActions) {
@@ -771,9 +771,13 @@ function getDsProperties(type: string, datasetProvider: api.IZoweTree<api.IZoweD
     if (!propertiesFromDsType) {
         propertiesFromDsType = getDefaultDsTypeProperties(type);
     }
+    console.log("hello", type, propertiesFromDsType);
     newDSProperties?.forEach((property) => {
         Object.keys(propertiesFromDsType).forEach((typeProperty) => {
             if (typeProperty === property.key) {
+                if (type.includes("Extended")) {
+                    console.log(type, property.key, propertiesFromDsType);
+                }
                 property.value = propertiesFromDsType[typeProperty].toString();
                 property.placeHolder = propertiesFromDsType[typeProperty];
             }
@@ -807,6 +811,7 @@ export function getDsTypePropertiesFromWorkspaceConfig(createOptions: vscode.Wor
         dsTypeProperties.blksize = createOptions.get("blksize");
         dsTypeProperties.lrecl = createOptions.get("lrecl");
     }
+    console.log("bye", dsTypeProperties);
     return dsTypeProperties;
 }
 

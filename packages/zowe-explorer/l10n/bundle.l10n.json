@@ -310,9 +310,19 @@
   },
   "Remote file has changed. Presenting with way to resolve file.": "Remote file has changed. Presenting with way to resolve file.",
   "Something went wrong with compare of files.": "Something went wrong with compare of files.",
-  "Downloaded: {0}": "Downloaded: {0}",
+  "Downloaded: {0}/Download time": {
+    "message": "Downloaded: {0}",
+    "comment": [
+      "Download time"
+    ]
+  },
   "Binary": "Binary",
-  "Encoding: {0}": "Encoding: {0}",
+  "Encoding: {0}/Encoding name": {
+    "message": "Encoding: {0}",
+    "comment": [
+      "Encoding name"
+    ]
+  },
   "{0} location/Node type": {
     "message": "{0} location",
     "comment": [
@@ -455,10 +465,25 @@
   "Raw data representation": "Raw data representation",
   "Other": "Other",
   "Specify another codepage": "Specify another codepage",
-  "From profile {0}": "From profile {0}",
+  "From profile {0}/Profile name": {
+    "message": "From profile {0}",
+    "comment": [
+      "Profile name"
+    ]
+  },
   "USS file tag": "USS file tag",
-  "Choose encoding for {0}": "Choose encoding for {0}",
-  "Current encoding is {0}": "Current encoding is {0}",
+  "Choose encoding for {0}/Node label": {
+    "message": "Choose encoding for {0}",
+    "comment": [
+      "Node label"
+    ]
+  },
+  "Current encoding is {0}/Encoding name": {
+    "message": "Current encoding is {0}",
+    "comment": [
+      "Encoding name"
+    ]
+  },
   "Enter a codepage (e.g., 1047, IBM-1047)": "Enter a codepage (e.g., 1047, IBM-1047)",
   "File was saved -- determining whether the file is a USS file or Data set.\n                        \n Comparing (case insensitive) {0} against directory {1} and {2}/Saved file nameData Set directoryUSS directory": {
     "message": "File was saved -- determining whether the file is a USS file or Data set.\n                        \n Comparing (case insensitive) {0} against directory {1} and {2}",

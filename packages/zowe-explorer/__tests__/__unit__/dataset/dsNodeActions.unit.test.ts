@@ -42,7 +42,6 @@ const mockRefreshElement = jest.fn();
 const mockGetChildren = jest.fn();
 const mockGetTreeView = jest.fn();
 const mockPattern = jest.fn();
-const mockInitialize = jest.fn();
 const mockRenameFavorite = jest.fn();
 const mockUpdateFavorites = jest.fn();
 const mockRenameNode = jest.fn();
@@ -121,7 +120,6 @@ function getDSTree() {
             getTreeView: mockGetTreeView,
             removeFavorite: mockRemoveFavorite,
             enterPattern: mockPattern,
-            initializeFavorites: mockInitialize,
             renameFavorite: mockRenameFavorite,
             updateFavorites: mockUpdateFavorites,
             renameNode: mockRenameNode,

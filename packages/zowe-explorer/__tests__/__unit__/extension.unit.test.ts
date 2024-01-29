@@ -80,7 +80,6 @@ async function createGlobalMocks() {
         mockCliHome: jest.fn().mockReturnValue(path.join(os.homedir(), ".zowe")),
         mockIcInstance: jest.fn(),
         mockImperativeConfig: jest.fn(),
-        mockInitialize: jest.fn(),
         mockGetImperativeConfig: jest.fn().mockReturnValue({ profiles: [] }),
         mockCliProfileManager: jest.fn().mockImplementation(() => {
             return { GetAllProfileNames: globalMocks.mockGetAllProfileNames, Load: globalMocks.mockLoad };
@@ -347,10 +346,6 @@ async function createGlobalMocks() {
         value: globalMocks.mockGetProfileName,
         configurable: true,
     });
-    Object.defineProperty(globalMocks.mockCliProfileManager, "initialize", {
-        value: globalMocks.mockInitialize,
-        configurable: true,
-    });
     Object.defineProperty(zowe, "getImperativeConfig", {
         value: globalMocks.mockGetImperativeConfig,
         configurable: true,
@@ -489,13 +484,6 @@ describe("Extension Unit Tests", () => {
         expect(globalMocks.mockCreateTreeView.mock.calls.length).toBe(3);
         expect(globalMocks.mockCreateTreeView.mock.calls[0][0]).toBe("zowe.ds.explorer");
         expect(globalMocks.mockCreateTreeView.mock.calls[1][0]).toBe("zowe.uss.explorer");
-
-        // Check that CLI Profile Manager is initialized successfully
-        expect(globalMocks.mockInitialize.mock.calls.length).toBe(1);
-        expect(globalMocks.mockInitialize.mock.calls[0][0]).toStrictEqual({
-            configuration: [],
-            profileRootDirectory: path.join(globalMocks.mockCliHome(), "profiles"),
-        });
 
         // Checking if commands are registered properly
         expect(globalMocks.mockRegisterCommand.mock.calls.length).toBe(globals.COMMAND_COUNT);

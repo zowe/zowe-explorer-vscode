@@ -28,12 +28,24 @@ export function injectAdditionalDataToTooltip(node: ZoweUSSNode, tooltip: string
     ZoweLogger.trace("uss.utils.injectAdditionalDataToTooltip called.");
     if (node.downloaded && node.downloadedTime) {
         const downloadedTime = new Date(node.downloadedTime).toLocaleString(vscode.env.language);
-        tooltip += "  \n" + vscode.l10n.t("Downloaded: {0}", downloadedTime);
+        tooltip +=
+            "  \n" +
+            vscode.l10n.t({
+                message: "Downloaded: {0}",
+                args: [downloadedTime],
+                comment: ["Download time"],
+            });
     }
 
     const encodingString = node.binary ? vscode.l10n.t("Binary") : node.encoding;
     if (encodingString != null) {
-        tooltip += "  \n" + vscode.l10n.t("Encoding: {0}", encodingString);
+        tooltip +=
+            "  \n" +
+            vscode.l10n.t({
+                message: "Encoding: {0}",
+                args: [encodingString],
+                comment: ["Encoding name"],
+            });
     }
 
     return tooltip;
