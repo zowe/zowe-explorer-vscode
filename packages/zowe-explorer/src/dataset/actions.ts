@@ -771,13 +771,9 @@ function getDsProperties(type: string, datasetProvider: api.IZoweTree<api.IZoweD
     if (!propertiesFromDsType) {
         propertiesFromDsType = getDefaultDsTypeProperties(type);
     }
-    console.log("hello", type, propertiesFromDsType);
     newDSProperties?.forEach((property) => {
         Object.keys(propertiesFromDsType).forEach((typeProperty) => {
             if (typeProperty === property.key) {
-                if (type.includes("Extended")) {
-                    console.log(type, property.key, propertiesFromDsType);
-                }
                 property.value = propertiesFromDsType[typeProperty].toString();
                 property.placeHolder = propertiesFromDsType[typeProperty];
             }
@@ -811,7 +807,6 @@ export function getDsTypePropertiesFromWorkspaceConfig(createOptions: vscode.Wor
         dsTypeProperties.blksize = createOptions.get("blksize");
         dsTypeProperties.lrecl = createOptions.get("lrecl");
     }
-    console.log("bye", dsTypeProperties);
     return dsTypeProperties;
 }
 
