@@ -271,7 +271,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
                                 prompt: localize("issueUnixCommand.user.pw", `Enter the {0} of the profile.`,p),
                                 value: "",
                                 ignoreFocusOut: true,
-                                password: true,
+                                password: p.toLowerCase().includes("password"), 
                             };
                             const response = await Gui.showInputBox(options);
                             if (!response) {
