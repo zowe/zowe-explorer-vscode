@@ -21,7 +21,7 @@
       "label": "build dev watch",
       "group": "build",
       "isBackground": true,
-      "type": "process",
+      "type": "shell",
       "options": {
         "cwd": "${workspaceFolder}/packages/zowe-explorer"
       },
