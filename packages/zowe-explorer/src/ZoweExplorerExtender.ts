@@ -214,14 +214,14 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
      */
     private updateSchema(
         profileInfo: zowe.imperative.ProfileInfo,
-        profileTypeConfigurations?: zowe.imperative.ICommandProfileTypeConfiguration[],
+        profileTypeConfigurations?: zowe.imperative.ICommandProfileTypeConfiguration[]
     ): void {
         if (profileTypeConfigurations) {
             try {
                 for (const typeConfig of profileTypeConfigurations) {
                     const addResult = profileInfo.addProfileTypeToSchema(typeConfig.type, {
                         schema: typeConfig.schema,
-                        sourceApp: "Zowe Explorer (for VS Code)"
+                        sourceApp: "Zowe Explorer (for VS Code)",
                     });
                     if (addResult.info.length > 0) {
                         Gui.warningMessage(addResult.info);
@@ -230,12 +230,7 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
             } catch (err) {
                 // Only show an error if we failed to update the on-disk schema.
                 if (err.code === "EACCES" || err.code === "EPERM") {
-                    Gui.errorMessage(
-                        localize(
-                            "schema.cannotAccess",
-                            "Failed to update Zowe schema: insufficient permissions or read-only file",
-                        )
-                    );
+                    Gui.errorMessage(localize("schema.cannotAccess", "Failed to update Zowe schema: insufficient permissions or read-only file"));
                 }
             }
         }
