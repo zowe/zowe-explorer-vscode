@@ -12,6 +12,10 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
   - `IZoweUSSTreeNode.setBinary()` -> `IZoweUSSTreeNode.setEncoding()`
 - **Breaking:** Removed `ZoweTreeNode.binary`, `ZoweTreeNode.binaryFiles`, and `ZoweTreeNode.shortLabel`. These properties are not applicable for all tree nodes and should be defined in subclasses of `ZoweTreeNode` if necessary.
 
+### Bug fixes
+
+- Fix login and logout operations when APIML dynamic tokens are enabled. [#2692](https://github.com/zowe/vscode-extension-for-zowe/pull/2692)
+
 ## `3.0.0-next.202402071248`
 
 ### New features and enhancements
