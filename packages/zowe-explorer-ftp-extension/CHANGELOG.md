@@ -1,10 +1,12 @@
 All notable changes to the "zowe-explorer-ftp-extension" extension will be documented in this file.
 
-## TBD Release
+## `3.0.0-next.202401241448`
 
 ### New features and enhancements
 
 ### Bug fixes
+
+- Removed outdated vscode-nls webpack plugin [#2253](https://github.com/zowe/vscode-extension-for-zowe/issues/2253)
 
 ## `3.0.0-next.202401121747`
 

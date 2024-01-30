@@ -2,7 +2,7 @@
   "name": "webviews",
   "private": true,
   "type": "module",
-  "version": "3.0.0-next.202401121747",
+  "version": "3.0.0-next.202401241448",
   "main": "index.js",
   "license": "EPL-2.0",
   "scripts": {
@@ -10,7 +10,7 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "fresh-clone": "pnpm clean && rimraf node_modules",
-    "clean": "gulp clean",
+    "clean": "rimraf dist || true",
     "package": "echo \"webviews: nothing to package.\"",
     "test": "echo \"webviews: nothing to test\"",
     "lint": "echo \"webviews: nothing to lint.\"",

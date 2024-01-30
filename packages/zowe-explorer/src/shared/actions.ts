@@ -17,18 +17,10 @@ import { Profiles } from "../Profiles";
 import { filterTreeByString, willForceUpload } from "../shared/utils";
 import { FilterItem, FilterDescriptor } from "../utils/ProfilesUtils";
 import * as contextually from "../shared/context";
-import * as nls from "vscode-nls";
 import { getIconById, IconId } from "../generators/icons";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { markDocumentUnsaved } from "../utils/workspace";
 import { LocalFileManagement } from "../utils/LocalFileManagement";
-
-// Set up localization
-nls.config({
-    messageFormat: nls.MessageFormat.bundle,
-    bundleFormat: nls.BundleFormat.standalone,
-})();
-const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 /**
  * Search for matching items loaded in data set or USS tree
@@ -43,7 +35,7 @@ export async function searchInAllLoadedItems(
     const items: IZoweNodeType[] = [];
     const qpItems = [];
     const quickpick = Gui.createQuickPick();
-    quickpick.placeholder = localize("searchHistory.options.prompt", "Enter a filter");
+    quickpick.placeholder = vscode.l10n.t("Enter a filter");
     quickpick.ignoreFocusOut = true;
     quickpick.onDidChangeValue((value) => {
         if (value) {
@@ -64,7 +56,7 @@ export async function searchInAllLoadedItems(
     }
 
     if (items.length === 0) {
-        Gui.showMessage(localize("searchInAllLoadedItems.noneLoaded", "No items are loaded in the tree."));
+        Gui.showMessage(vscode.l10n.t("No items are loaded in the tree."));
         return;
     }
 
@@ -94,7 +86,7 @@ export async function searchInAllLoadedItems(
     quickpick.show();
     const choice = await Gui.resolveQuickPick(quickpick);
     if (!choice) {
-        Gui.showMessage(localize("searchInAllLoadedItems.enterPattern", "You must enter a pattern."));
+        Gui.showMessage(vscode.l10n.t("You must enter a pattern."));
         return;
     } else {
         pattern = choice.label;
@@ -161,36 +153,36 @@ export async function searchInAllLoadedItems(
 
 export async function openRecentMemberPrompt(datasetTree: IZoweTree<IZoweDatasetTreeNode>, ussTree: IZoweTree<IZoweUSSTreeNode>): Promise<void> {
     ZoweLogger.trace("shared.actions.openRecentMemberPrompt called.");
-    ZoweLogger.debug(localize("enterPattern.log.debug.prompt", "Prompting the user to choose a recent member for editing"));
+    ZoweLogger.debug(vscode.l10n.t("Prompting the user to choose a recent member for editing"));
     let pattern: string;
 
     const fileHistory = [...datasetTree.getFileHistory(), ...ussTree.getFileHistory()];
 
     // Get user selection
     if (fileHistory.length > 0) {
-        const createPick = new FilterDescriptor(localize("memberHistory.option.prompt.open", "Select a recent member to open"));
+        const createPick = new FilterDescriptor(vscode.l10n.t("Select a recent member to open"));
         const items: vscode.QuickPickItem[] = fileHistory.map((element) => new FilterItem({ text: element }));
         if (globals.ISTHEIA) {
             const options1: vscode.QuickPickOptions = {
-                placeHolder: localize("memberHistory.options.prompt", "Select a recent member to open"),
+                placeHolder: vscode.l10n.t("Select a recent member to open"),
             };
 
             const choice = await Gui.showQuickPick([createPick, ...items], options1);
             if (!choice) {
-                Gui.showMessage(localize("enterPattern.pattern", "No selection made. Operation cancelled."));
+                Gui.showMessage(vscode.l10n.t("No selection made. Operation cancelled."));
                 return;
             }
             pattern = choice === createPick ? "" : choice.label;
         } else {
             const quickpick = Gui.createQuickPick();
             quickpick.items = [createPick, ...items];
-            quickpick.placeholder = localize("memberHistory.options.prompt", "Select a recent member to open");
+            quickpick.placeholder = vscode.l10n.t("Select a recent member to open");
             quickpick.ignoreFocusOut = true;
             quickpick.show();
             const choice = await Gui.resolveQuickPick(quickpick);
             quickpick.hide();
             if (!choice || choice === createPick) {
-                Gui.showMessage(localize("enterPattern.pattern", "No selection made. Operation cancelled."));
+                Gui.showMessage(vscode.l10n.t("No selection made. Operation cancelled."));
                 return;
             } else if (choice instanceof FilterDescriptor) {
                 pattern = quickpick.value;
@@ -214,7 +206,7 @@ export async function openRecentMemberPrompt(datasetTree: IZoweTree<IZoweDataset
             await datasetTree.openItemFromPath(pattern, sessionNode);
         }
     } else {
-        Gui.showMessage(localize("getRecentMembers.empty", "No recent members found."));
+        Gui.showMessage(vscode.l10n.t("No recent members found."));
         return;
     }
 }
@@ -253,10 +245,9 @@ export function resolveFileConflict(
     label?: string,
     binary?: boolean
 ): void {
-    const compareBtn = localize("saveFile.info.compare", "Compare");
-    const overwriteBtn = localize("saveFile.info.overwrite", "Overwrite");
-    const infoMsg = localize(
-        "saveFile.info.confirmCompare",
+    const compareBtn = vscode.l10n.t("Compare");
+    const overwriteBtn = vscode.l10n.t("Overwrite");
+    const infoMsg = vscode.l10n.t(
         "The content of the file is newer. Compare your version with latest or overwrite the content of the file with your changes."
     );
     ZoweLogger.info(infoMsg);

@@ -22,7 +22,6 @@ import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { isBinaryFileSync } from "isbinaryfile";
 import * as contextually from "../shared/context";
 import { markDocumentUnsaved, setFileSaved } from "../utils/workspace";
-import * as nls from "vscode-nls";
 import { refreshAll } from "../shared/refresh";
 import { IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
 import { fileExistsCaseSensitveSync } from "./utils";
@@ -30,14 +29,6 @@ import { UssFileTree, UssFileType } from "./FileStructure";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { AttributeView } from "./AttributeView";
 import { LocalFileManagement } from "../utils/LocalFileManagement";
-import { resolveFileConflict } from "../shared/actions";
-
-// Set up localization
-nls.config({
-    messageFormat: nls.MessageFormat.bundle,
-    bundleFormat: nls.BundleFormat.standalone,
-})();
-const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 /**
  * Prompts the user for a path, and populates the [TreeView]{@link vscode.TreeView} based on the path
@@ -57,8 +48,16 @@ export async function createUSSNode(
     let filePath = "";
     if (contextually.isSession(node)) {
         const filePathOptions: vscode.InputBoxOptions = {
-            placeHolder: localize("createUSSNode.inputBox.placeholder", "{0} location", nodeType),
-            prompt: localize("createUSSNode.inputBox.prompt", "Choose a location to create the {0}", nodeType),
+            placeHolder: vscode.l10n.t({
+                message: "{0} location",
+                args: [nodeType],
+                comment: ["Node type"],
+            }),
+            prompt: vscode.l10n.t({
+                message: "Choose a location to create the {0}",
+                args: [nodeType],
+                comment: ["Node type"],
+            }),
             value: node.tooltip as string,
         };
         filePath = await Gui.showInputBox(filePathOptions);
@@ -66,7 +65,7 @@ export async function createUSSNode(
         filePath = node.fullPath;
     }
     const nameOptions: vscode.InputBoxOptions = {
-        placeHolder: localize("createUSSNode.name", "Name of file or directory"),
+        placeHolder: vscode.l10n.t("Name of file or directory"),
     };
     const name = await Gui.showInputBox(nameOptions);
     if (name && filePath) {
@@ -85,17 +84,16 @@ export async function createUSSNode(
             const fileExists = fs.existsSync(localPath);
             if (fileExists && !fileExistsCaseSensitveSync(localPath)) {
                 Gui.showMessage(
-                    localize(
-                        "createUSSNode.name.exists",
-                        // eslint-disable-next-line max-len
-                        "There is already a file with the same name. Please change your OS file system settings if you want to give case sensitive file names."
+                    vscode.l10n.t(
+                        `There is already a file with the same name. 
+                        Please change your OS file system settings if you want to give case sensitive file names.`
                     )
                 );
                 ussFileProvider.refreshElement(node);
             }
         } catch (err) {
             if (err instanceof Error) {
-                await errorHandling(err, node.mProfileName, localize("createUSSNode.error.create", "Unable to create node:"));
+                await errorHandling(err, node.mProfileName, vscode.l10n.t("Unable to create node:"));
             }
             throw err;
         }
@@ -194,7 +192,7 @@ export async function uploadFile(node: IZoweUSSTreeNode, doc: vscode.TextDocumen
 
         const task: imperative.ITaskWithStatus = {
             percentComplete: 0,
-            statusMessage: localize("uploadFile.putContents", "Uploading USS file"),
+            statusMessage: vscode.l10n.t("Uploading USS file"),
             stageName: 0, // TaskStage.IN_PROGRESS - https://github.com/kulshekhar/ts-jest/issues/281
         };
         const options: IUploadOptions = {
@@ -223,7 +221,7 @@ export function copyPath(node: IZoweUSSTreeNode): void {
     ZoweLogger.trace("uss.actions.copyPath called.");
     if (globals.ISTHEIA) {
         // Remove when Theia supports VS Code API for accessing system clipboard
-        Gui.showMessage(localize("copyPath.infoMessage", "Copy Path is not yet supported in Theia."));
+        Gui.showMessage(vscode.l10n.t("Copy Path is not yet supported in Theia."));
         return;
     }
     vscode.env.clipboard.writeText(node.fullPath);
@@ -267,13 +265,19 @@ function findEtag(node: IZoweUSSTreeNode, directories: Array<string>, index: num
  */
 export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZoweTree<IZoweUSSTreeNode>): Promise<void> {
     ZoweLogger.trace("uss.actions.saveUSSFile called.");
-    ZoweLogger.debug(localize("saveUSSFile.log.debug.saveRequest", "save requested for USS file ") + doc.fileName);
+    ZoweLogger.debug(
+        vscode.l10n.t({
+            message: "save requested for USS file {0}",
+            args: [doc.fileName],
+            comment: ["Document file name"],
+        })
+    );
     const start = path.join(globals.USS_DIR + path.sep).length;
     const ending = doc.fileName.substring(start);
     const sesName = ending.substring(0, ending.indexOf(path.sep));
     const profile = Profiles.getInstance().loadNamedProfile(sesName);
     if (!profile) {
-        const sessionError = localize("saveUSSFile.session.error", "Could not locate session when saving USS file.");
+        const sessionError = vscode.l10n.t("Could not locate session when saving USS file.");
         ZoweLogger.error(sessionError);
         await Gui.errorMessage(sessionError);
         return;
@@ -320,7 +324,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
         const uploadResponse: IZosFilesResponse = await Gui.withProgress(
             {
                 location: vscode.ProgressLocation.Window,
-                title: localize("saveUSSFile.response.title", "Saving file..."),
+                title: vscode.l10n.t("Saving file..."),
             },
             () => {
                 return uploadContent(node, doc, remote, prof, binary, etagToUpload, returnEtag);
@@ -354,19 +358,20 @@ export async function deleteUSSFilesPrompt(nodes: IZoweUSSTreeNode[]): Promise<b
         return label + currentVal.label.toString() + "\n";
     }, "");
 
-    const deleteButton = localize("deleteUssPrompt.confirmation.delete", "Delete");
-    const message = localize(
-        "deleteUssPrompt.confirmation.message",
-        "Are you sure you want to delete the following item?\nThis will permanently remove the following file or folder from your system.\n\n{0}",
-        fileNames.toString()
-    );
+    const deleteButton = vscode.l10n.t("Delete");
+    const message = vscode.l10n.t({
+        message:
+            "Are you sure you want to delete the following item?\nThis will permanently remove the following file or folder from your system.\n\n{0}",
+        args: [fileNames.toString()],
+        comment: ["File names"],
+    });
     let cancelled = false;
     await Gui.warningMessage(message, {
         items: [deleteButton],
         vsCodeOpts: { modal: true },
     }).then((selection) => {
         if (!selection || selection === "Cancel") {
-            ZoweLogger.debug(localize("deleteUssPrompt.confirmation.cancel.log.debug", "Delete action was canceled."));
+            ZoweLogger.debug(vscode.l10n.t("Delete action was canceled."));
             cancelled = true;
         }
     });
@@ -462,7 +467,7 @@ export async function copyUssFiles(
     await Gui.withProgress(
         {
             location: vscode.ProgressLocation.Window,
-            title: localize("ZoweUssNode.copyDownload.progress", "Copying file structure..."),
+            title: vscode.l10n.t("Copying file structure..."),
         },
         () => {
             return copyUssFilesToClipboard(selectedNodes);
@@ -502,13 +507,13 @@ export async function pasteUssFile(ussFileProvider: IZoweTree<IZoweUSSTreeNode>,
 export async function pasteUss(ussFileProvider: IZoweTree<IZoweUSSTreeNode>, node: IZoweUSSTreeNode): Promise<void> {
     ZoweLogger.trace("uss.actions.pasteUss called.");
     if (node.pasteUssTree == null && node.copyUssFile == null) {
-        await Gui.infoMessage(localize("uss.paste.apiNotAvailable", "The paste operation is not supported for this node."));
+        await Gui.infoMessage(vscode.l10n.t("The paste operation is not supported for this node."));
         return;
     }
     await Gui.withProgress(
         {
             location: vscode.ProgressLocation.Window,
-            title: localize("ZoweUssNode.copyUpload.progress", "Pasting files..."),
+            title: vscode.l10n.t("Pasting files..."),
         },
         async () => {
             await (node.pasteUssTree ? node.pasteUssTree() : node.copyUssFile());
@@ -519,7 +524,7 @@ export async function pasteUss(ussFileProvider: IZoweTree<IZoweUSSTreeNode>, nod
 
 export async function downloadUnixFile(node: IZoweUSSTreeNode, download: boolean): Promise<LocalFileInfo> {
     const fileInfo = {} as LocalFileInfo;
-    const errorMsg = localize("downloadUnixFile.invalidNode.error", "open() called from invalid node.");
+    const errorMsg = vscode.l10n.t("open() called from invalid node.");
     switch (true) {
         // For opening favorited and non-favorited files
         case node.getParent().contextValue === globals.FAV_PROFILE_CONTEXT:
@@ -540,10 +545,9 @@ export async function downloadUnixFile(node: IZoweUSSTreeNode, download: boolean
     const fileExists = fs.existsSync(fileInfo.path);
     if (fileExists && !fileExistsCaseSensitveSync(fileInfo.path)) {
         Gui.showMessage(
-            localize(
-                "downloadUnixFile.name.exists",
-                // eslint-disable-next-line max-len
-                "There is already a file with the same name. Please change your OS file system settings if you want to give case sensitive file names"
+            vscode.l10n.t(
+                `There is already a file with the same name. 
+                Please change your OS file system settings if you want to give case sensitive file names`
             )
         );
         return;
@@ -555,7 +559,7 @@ export async function downloadUnixFile(node: IZoweUSSTreeNode, download: boolean
             const fullPath = node.fullPath;
             const chooseBinary = node.binary || (await ZoweExplorerApiRegister.getUssApi(cachedProfile).isFileTagBinOrAscii(fullPath));
 
-            const statusMsg = Gui.setStatusBarMessage(localize("downloadUnixFile.downloading", "$(sync~spin) Downloading USS file..."));
+            const statusMsg = Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Downloading USS file..."));
             const response = await ZoweExplorerApiRegister.getUssApi(cachedProfile).getContents(fullPath, {
                 file: fileInfo.path,
                 binary: chooseBinary,

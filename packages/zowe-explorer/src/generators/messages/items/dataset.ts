@@ -11,18 +11,14 @@
 
 import { IMessageItem, MessageCategoryId, MessageContentType, MessageHierarchyType } from "../index";
 import * as globals from "../../../globals";
-import * as nls from "vscode-nls";
-
-// Set up localization
-nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
-const localize: nls.LocalizeFunc = nls.loadMessageBundle();
+import * as vscode from "vscode";
 
 const message: IMessageItem = {
     id: MessageCategoryId.dataset,
     type: MessageHierarchyType.generic,
     messages: {
-        [MessageContentType.open]: localize("openPS.response.title", "Opening data set..."),
-        [MessageContentType.upload]: localize("saveFile.response.save.title", "Saving data set..."),
+        [MessageContentType.open]: vscode.l10n.t("Opening data set..."),
+        [MessageContentType.upload]: vscode.l10n.t("Saving data set..."),
     },
     check: (node) => {
         const contexts = [

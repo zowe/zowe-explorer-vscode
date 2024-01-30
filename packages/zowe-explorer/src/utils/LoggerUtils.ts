@@ -14,18 +14,10 @@
 import { Gui, MessageSeverity, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import * as zowe from "@zowe/cli";
 import * as vscode from "vscode";
-import * as nls from "vscode-nls";
 import { join as joinPath } from "path";
 import { SettingsConfig } from "./SettingsConfig";
 import * as loggerConfig from "../../log4jsconfig.json";
 import { ZoweLocalStorage } from "./ZoweLocalStorage";
-
-// Set up localization
-nls.config({
-    messageFormat: nls.MessageFormat.bundle,
-    bundleFormat: nls.BundleFormat.standalone,
-})();
-const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 export class ZoweLogger {
     public static zeOutputChannel: vscode.OutputChannel;
@@ -42,7 +34,7 @@ export class ZoweLogger {
         } catch (err) {
             // Don't log error if logger failed to initialize
             if (err instanceof Error) {
-                const errorMessage = localize("initialize.log.error", "Error encountered while activating and initializing logger");
+                const errorMessage = vscode.l10n.t("Error encountered while activating and initializing logger");
                 await Gui.errorMessage(`${errorMessage}: ${err.message}`);
             }
         }
@@ -104,16 +96,28 @@ export class ZoweLogger {
     }
 
     private static async initVscLogger(context: vscode.ExtensionContext, logFileLocation: string): Promise<void> {
-        this.zeOutputChannel = Gui.createOutputChannel(localize("zoweExplorer.outputchannel.title", "Zowe Explorer"));
+        this.zeOutputChannel = Gui.createOutputChannel(vscode.l10n.t("Zowe Explorer"));
         this.writeVscLoggerInfo(logFileLocation, context);
-        this.info(localize("initialize.log.info", "Initialized logger for Zowe Explorer"));
+        this.info(vscode.l10n.t("Initialized logger for Zowe Explorer"));
         await this.compareCliLogSetting();
     }
 
     private static writeVscLoggerInfo(logFileLocation: string, context: vscode.ExtensionContext): void {
         this.zeOutputChannel?.appendLine(`${context.extension.packageJSON.displayName as string} ${context.extension.packageJSON.version as string}`);
-        this.zeOutputChannel?.appendLine(localize("initialize.log.location", "This log file can be found at {0}", logFileLocation));
-        this.zeOutputChannel?.appendLine(localize("initialize.log.level", "Zowe Explorer log level: {0}", this.getLogSetting()));
+        this.zeOutputChannel?.appendLine(
+            vscode.l10n.t({
+                message: "This log file can be found at {0}",
+                args: [logFileLocation],
+                comment: ["Log file location"],
+            })
+        );
+        this.zeOutputChannel?.appendLine(
+            vscode.l10n.t({
+                message: "Zowe Explorer log level: {0}",
+                args: [this.getLogSetting()],
+                comment: ["Log setting"],
+            })
+        );
     }
 
     private static writeLogMessage(message: string, severity: MessageSeverity): void {
@@ -140,13 +144,14 @@ export class ZoweLogger {
     }
 
     private static async updateVscLoggerSetting(cliSetting: string): Promise<void> {
-        const updateLoggerButton = localize("ZoweLogger.updateLoggerSetting.update", "Update");
-        const message = localize(
-            "ZoweLogger.updateLoggerSetting.message",
-            // eslint-disable-next-line max-len
-            "Zowe Explorer now has a VS Code logger with a default log level of INFO.\nIt looks like the Zowe CLI's ZOWE_APP_LOG_LEVEL={0}.\nWould you like Zowe Explorer to update to the the same log level?",
-            cliSetting
-        );
+        const updateLoggerButton = vscode.l10n.t("Update");
+        const message = vscode.l10n.t({
+            message: `Zowe Explorer now has a VS Code logger with a default log level of INFO.
+                \nIt looks like the Zowe CLI's ZOWE_APP_LOG_LEVEL={0}.
+                \nWould you like Zowe Explorer to update to the the same log level?`,
+            args: [cliSetting],
+            comment: ["CLI setting"],
+        });
         await Gui.infoMessage(message, {
             items: [updateLoggerButton],
             vsCodeOpts: { modal: true },

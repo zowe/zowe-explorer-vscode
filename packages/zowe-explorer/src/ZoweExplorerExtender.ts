@@ -32,11 +32,6 @@ import { Profiles } from "./Profiles";
 import { getProfile, ProfilesUtils } from "./utils/ProfilesUtils";
 import { ZoweLogger } from "./utils/LoggerUtils";
 
-// Set up localization
-import * as nls from "vscode-nls";
-nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone })();
-const localize: nls.LocalizeFunc = nls.loadMessageBundle();
-
 /**
  * The Zowe Explorer API Register singleton that gets exposed to other VS Code
  * extensions to contribute their implementations.
@@ -52,10 +47,9 @@ export class ZoweExplorerExtender implements IApiExplorerExtender, ZoweExplorerT
      * @param errorDetails Details of the error (to be parsed for config name and path)
      */
     public static showZoweConfigError(errorDetails: string): void {
-        Gui.errorMessage(
-            localize("initialize.profiles.error", 'Error encountered when loading your Zowe config. Click "Show Config" for more details.'),
-            { items: ["Show Config"] }
-        ).then((selection) => {
+        Gui.errorMessage(vscode.l10n.t('Error encountered when loading your Zowe config. Click "Show Config" for more details.'), {
+            items: ["Show Config"],
+        }).then((selection) => {
             if (selection !== "Show Config") {
                 return;
             }

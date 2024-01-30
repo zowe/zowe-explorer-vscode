@@ -13,23 +13,15 @@
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
 import * as globals from "../globals";
+import * as contextually from "../shared/context";
 import { Gui, IZoweJobTreeNode, JobSortOpts, SortDirection, ZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { errorHandling, syncSessionNode } from "../utils/ProfilesUtils";
 import { getIconByNode } from "../generators/icons";
-import * as contextually from "../shared/context";
 import { JOB_SORT_KEYS } from "./utils";
-
-import * as nls from "vscode-nls";
 import { Profiles } from "../Profiles";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { encodeJobFile } from "../SpoolProvider";
-// Set up localization
-nls.config({
-    messageFormat: nls.MessageFormat.bundle,
-    bundleFormat: nls.BundleFormat.standalone,
-})();
-const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
     public static readonly JobId = "Job ID: ";
@@ -114,16 +106,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
             return this.children;
         }
         if (contextually.isSession(this) && !this.filtered && !contextually.isFavorite(this)) {
-            return [
-                new Job(
-                    localize("getChildren.search", "Use the search button to display jobs"),
-                    vscode.TreeItemCollapsibleState.None,
-                    this,
-                    null,
-                    null,
-                    null
-                ),
-            ];
+            return [new Job(vscode.l10n.t("Use the search button to display jobs"), vscode.TreeItemCollapsibleState.None, this, null, null, null)];
         }
 
         if (!this.dirty) {
@@ -141,7 +124,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
                 .filter((item) => !(item.id === undefined && item.ddname === undefined && item.stepname === undefined));
             if (!spools.length) {
                 const noSpoolNode = new Spool(
-                    localize("getChildren.noSpoolFiles", "There are no JES spool messages to display"),
+                    vscode.l10n.t("There are no JES spool messages to display"),
                     vscode.TreeItemCollapsibleState.None,
                     this,
                     null,
@@ -188,14 +171,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
             // Fetch jobs under session node
             const jobs = await this.getJobs(this._owner, this._prefix, this._searchId, this._jobStatus);
             if (jobs.length === 0) {
-                const noJobsNode = new Job(
-                    localize("getChildren.noJobs", "No jobs found"),
-                    vscode.TreeItemCollapsibleState.None,
-                    this,
-                    null,
-                    null,
-                    null
-                );
+                const noJobsNode = new Job(vscode.l10n.t("No jobs found"), vscode.TreeItemCollapsibleState.None, this, null, null, null);
                 noJobsNode.contextValue = globals.INFORMATION_CONTEXT;
                 noJobsNode.iconPath = null;
                 return [noJobsNode];
@@ -346,10 +322,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
         ZoweLogger.trace("ZoweJobNode.statusNotSupportedMsg called.");
         if (status !== "*") {
             Gui.warningMessage(
-                localize(
-                    "getJobs.status.not.supported",
-                    "Filtering by job status is not yet supported with this profile type. Will show jobs with all statuses."
-                )
+                vscode.l10n.t("Filtering by job status is not yet supported with this profile type. Will show jobs with all statuses.")
             );
         }
     }
@@ -364,8 +337,8 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
             } else {
                 if (!ZoweExplorerApiRegister.getJesApi(cachedProfile).getSession(cachedProfile)) {
                     throw new zowe.imperative.ImperativeError({
-                        msg: localize("getJobs.error.sessionMissing", "Profile auth error"),
-                        additionalDetails: localize("getJobs.error.additionalDetails", "Profile is not authenticated, please log in to continue"),
+                        msg: vscode.l10n.t("Profile auth error"),
+                        additionalDetails: vscode.l10n.t("Profile is not authenticated, please log in to continue"),
                         errorCode: `${zowe.imperative.RestConstants.HTTP_STATUS_401}`,
                     });
                 }
@@ -398,7 +371,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
             }
         } catch (error) {
             ZoweLogger.trace("Error getting jobs from Rest API.");
-            await errorHandling(error, cachedProfile.name, localize("getChildren.error.response", "Retrieving response from ") + `zowe.GetJobs`);
+            await errorHandling(error, cachedProfile.name, vscode.l10n.t("Retrieving response from zowe.GetJobs"));
             syncSessionNode(Profiles.getInstance())((profileValue) => ZoweExplorerApiRegister.getJesApi(profileValue).getSession())(
                 this.getSessionNode()
             );

@@ -12,19 +12,12 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as globals from "../globals";
+import * as vscode from "vscode";
 import { moveSync } from "fs-extra";
-import * as nls from "vscode-nls";
 import { errorHandling } from "../utils/ProfilesUtils";
 import { SettingsConfig } from "./SettingsConfig";
 import { Gui } from "@zowe/zowe-explorer-api";
 import { ZoweLogger } from "./LoggerUtils";
-
-// Set up localization
-nls.config({
-    messageFormat: nls.MessageFormat.bundle,
-    bundleFormat: nls.BundleFormat.standalone,
-})();
-const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 // /**
 //  * Moves temp folder to user defined location in preferences
@@ -50,7 +43,7 @@ export async function moveTempFolder(previousTempPath: string, currentTempPath: 
         fs.mkdirSync(globals.DS_DIR);
     } catch (err) {
         if (err instanceof Error) {
-            await errorHandling(err, null, localize("moveTempFolder.error", "Error encountered when creating temporary folder!"));
+            await errorHandling(err, null, vscode.l10n.t("Error encountered when creating temporary folder!"));
         }
     }
     const previousTemp = path.join(previousTempPath, "temp");
@@ -117,7 +110,13 @@ export function cleanTempDir(): Promise<void> {
     } catch (err) {
         ZoweLogger.error(err);
         if (err instanceof Error) {
-            Gui.errorMessage(`${localize("deactivate.error", "Unable to delete temporary folder. ")}${err.message}`);
+            Gui.errorMessage(
+                vscode.l10n.t({
+                    message: "Unable to delete temporary folder. {0}",
+                    args: [err.message],
+                    comment: ["Error message"],
+                })
+            );
         }
     }
 }

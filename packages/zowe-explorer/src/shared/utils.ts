@@ -16,19 +16,11 @@ import * as path from "path";
 import * as globals from "../globals";
 import { Gui, IZoweTreeNode, IZoweNodeType, IZoweDatasetTreeNode, IZoweUSSTreeNode, IZoweJobTreeNode, IZoweTree } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
-import * as nls from "vscode-nls";
 import { IZosFilesResponse, imperative } from "@zowe/cli";
 import { IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { markDocumentUnsaved } from "../utils/workspace";
 import { errorHandling } from "../utils/ProfilesUtils";
-
-// Set up localization
-nls.config({
-    messageFormat: nls.MessageFormat.bundle,
-    bundleFormat: nls.BundleFormat.standalone,
-})();
-const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 export enum JobSubmitDialogOpts {
     Disabled,
@@ -37,13 +29,13 @@ export enum JobSubmitDialogOpts {
     AllJobs,
 }
 export const JOB_SUBMIT_DIALOG_OPTS = [
-    localize("zowe.jobs.confirmSubmission.disabled", "Disabled"),
-    localize("zowe.jobs.confirmSubmission.yourJobs", "Your jobs"),
-    localize("zowe.jobs.confirmSubmission.otherUserJobs", "Other user jobs"),
-    localize("zowe.jobs.confirmSubmission.allJobs", "All jobs"),
+    vscode.l10n.t("Disabled"),
+    vscode.l10n.t("Your jobs"),
+    vscode.l10n.t("Other user jobs"),
+    vscode.l10n.t("All jobs"),
 ];
 
-export const SORT_DIRS: string[] = [localize("sort.asc", "Ascending"), localize("sort.desc", "Descending")];
+export const SORT_DIRS: string[] = [vscode.l10n.t("Ascending"), vscode.l10n.t("Descending")];
 
 export type LocalFileInfo = {
     name: string;
@@ -230,7 +222,7 @@ export async function uploadContent(
     } else {
         const task: imperative.ITaskWithStatus = {
             percentComplete: 0,
-            statusMessage: localize("uploadContent.putContents", "Uploading USS file"),
+            statusMessage: vscode.l10n.t("Uploading USS file"),
             stageName: 0, // TaskStage.IN_PROGRESS - https://github.com/kulshekhar/ts-jest/issues/281
         };
         const options: IUploadOptions = {
@@ -260,23 +252,22 @@ export function willForceUpload(
     // setup to handle both cases (dataset & USS)
     let title: string;
     if (isZoweDatasetTreeNode(node)) {
-        title = localize("saveFile.response.save.title", "Saving data set...");
+        title = vscode.l10n.t("Saving Data Set...");
     } else {
-        title = localize("saveUSSFile.response.title", "Saving file...");
+        title = vscode.l10n.t("Saving file...");
     }
     if (globals.ISTHEIA) {
         Gui.warningMessage(
-            localize(
-                "saveFile.error.theiaDetected",
+            vscode.l10n.t(
                 "A merge conflict has been detected. Since you are running inside Theia editor, a merge conflict resolution is not available yet."
             )
         );
     }
     // Don't wait for prompt to return since this would block the save queue
-    return Gui.infoMessage(localize("saveFile.info.confirmUpload", "Would you like to overwrite the remote file?"), {
-        items: [localize("saveFile.overwriteConfirmation.yes", "Yes"), localize("saveFile.overwriteConfirmation.no", "No")],
+    return Gui.infoMessage(vscode.l10n.t("Would you like to overwrite the remote file?"), {
+        items: [vscode.l10n.t("Yes"), vscode.l10n.t("No")],
     }).then(async (selection) => {
-        if (selection === localize("saveFile.overwriteConfirmation.yes", "Yes")) {
+        if (selection === vscode.l10n.t("Yes")) {
             try {
                 const uploadResponse = await Gui.withProgress(
                     {
@@ -302,7 +293,7 @@ export function willForceUpload(
                 await errorHandling(err, profile.name);
             }
         } else {
-            Gui.showMessage(localize("uploadContent.cancelled", "Upload cancelled."));
+            Gui.showMessage(vscode.l10n.t("Upload cancelled."));
             markFileAsDirty(doc);
         }
     });
@@ -340,10 +331,10 @@ export function getSelectedNodeList(node: IZoweTreeNode, nodeList: IZoweTreeNode
 export function jobStringValidator(text: string, localizedParam: "owner" | "prefix"): string | null {
     switch (localizedParam) {
         case "owner":
-            return text.length > globals.JOBS_MAX_PREFIX ? localize("searchJobs.owner.invalid", "Invalid job owner") : null;
+            return text.length > globals.JOBS_MAX_PREFIX ? vscode.l10n.t("Invalid job owner") : null;
         case "prefix":
         default:
-            return text.length > globals.JOBS_MAX_PREFIX ? localize("searchJobs.prefix.invalid", "Invalid job prefix") : null;
+            return text.length > globals.JOBS_MAX_PREFIX ? vscode.l10n.t("Invalid job prefix") : null;
     }
 }
 

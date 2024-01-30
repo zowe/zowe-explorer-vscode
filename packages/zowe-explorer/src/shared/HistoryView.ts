@@ -10,7 +10,6 @@
  */
 
 import * as vscode from "vscode";
-import * as nls from "vscode-nls";
 import { WebView, Gui, DataSetAllocTemplate } from "@zowe/zowe-explorer-api";
 import { ExtensionContext } from "vscode";
 import { IZoweProviders } from "./init";
@@ -18,8 +17,6 @@ import { USSTree } from "../uss/USSTree";
 import { DatasetTree } from "../dataset/DatasetTree";
 import { ZosJobsProvider } from "../job/ZosJobsProvider";
 import { ZoweLogger } from "../utils/LoggerUtils";
-
-const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 type TreeProvider = USSTree | DatasetTree | ZosJobsProvider;
 
@@ -114,7 +111,7 @@ export class HistoryView extends WebView {
         const example = message.attrs.type === "ds" ? "e.g: USER.PDS.*" : "e.g: /u/user/mydir";
 
         const options: vscode.InputBoxOptions = {
-            prompt: localize("HistoryView.addItem.prompt", "Type the new pattern to add to history"),
+            prompt: vscode.l10n.t("Type the new pattern to add to history"),
             value: "",
             placeHolder: example,
         };
@@ -145,7 +142,7 @@ export class HistoryView extends WebView {
                 }
                 break;
             default:
-                Gui.showMessage(localize("HistoryView.removeItem.notSupported", "action is not supported for this property type."));
+                Gui.showMessage(vscode.l10n.t("action is not supported for this property type."));
                 break;
         }
         await this.refreshView(message);
@@ -154,9 +151,9 @@ export class HistoryView extends WebView {
     private async clearAll(message): Promise<void> {
         ZoweLogger.trace("HistoryView.clearAll called.");
         const treeProvider = this.getTreeProvider(message.attrs.type);
-        const infoMessage = localize("HistoryView.clearAll.confirmMessage", "Clear all history items for this persistent property?");
-        const yesButton = localize("HistoryView.clearAll.Yes", "Yes");
-        const noButton = localize("HistoryView.clearAll.No", "No");
+        const infoMessage = vscode.l10n.t("Clear all history items for this persistent property?");
+        const yesButton = vscode.l10n.t("Yes");
+        const noButton = vscode.l10n.t("No");
         const choice = await Gui.showMessage(infoMessage, { items: [yesButton, noButton], vsCodeOpts: { modal: true } });
         if (choice === yesButton) {
             switch (message.attrs.selection) {
@@ -169,7 +166,7 @@ export class HistoryView extends WebView {
                     }
                     break;
                 default:
-                    Gui.showMessage(localize("HistoryView.removeItem.notSupported", "action is not supported for this property type."));
+                    Gui.showMessage(vscode.l10n.t("action is not supported for this property type."));
                     break;
             }
             await this.refreshView(message);

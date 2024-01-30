@@ -10,16 +10,9 @@
  */
 
 import * as vscode from "vscode";
-import * as nls from "vscode-nls";
 import * as globals from "../globals";
 import { Gui } from "@zowe/zowe-explorer-api";
 import { ZoweLocalStorage } from "./ZoweLocalStorage";
-
-nls.config({
-    messageFormat: nls.MessageFormat.bundle,
-    bundleFormat: nls.BundleFormat.standalone,
-})();
-const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 export class SettingsConfig {
     /**
@@ -128,10 +121,8 @@ export class SettingsConfig {
 
     private static async promptReload(): Promise<void> {
         // Prompt user to reload VS Code window
-        const reloadButton = localize("standardization.reload.button", "Reload Window");
-        const infoMsg = localize(
-            "standardization.reload.infoMessage",
-            // eslint-disable-next-line max-len
+        const reloadButton = vscode.l10n.t("Reload Window");
+        const infoMsg = vscode.l10n.t(
             "Settings have been successfully migrated for Zowe Explorer version 2 and above. To apply these settings, please reload your VS Code window."
         );
         await Gui.showMessage(infoMsg, { items: [reloadButton] })?.then(async (selection) => {
