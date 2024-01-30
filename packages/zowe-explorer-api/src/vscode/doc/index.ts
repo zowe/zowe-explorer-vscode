@@ -9,4 +9,4 @@
  *
  */
 
-export * from "./IPromptCredentials";
+export * from "./PromptCredentials";

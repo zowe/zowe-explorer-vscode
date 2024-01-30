@@ -11,7 +11,7 @@
 
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
-import { Gui, ValidProfileEnum } from "@zowe/zowe-explorer-api";
+import { Gui, Validation } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { Profiles } from "../../../src/Profiles";
 import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
@@ -1035,7 +1035,7 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
                     }),
                     loadNamedProfile: globalMocks.mockLoadNamedProfile,
                     usesSecurity: true,
-                    validProfile: ValidProfileEnum.VALID,
+                    validProfile: Validation.ValidationType.VALID,
                     checkCurrentProfile: jest.fn(() => {
                         return globalMocks.profilesForValidation;
                     }),
@@ -1102,7 +1102,7 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
                         name: globalMocks.profileOne.name,
                         status: "unverified",
                     }),
-                    validProfile: ValidProfileEnum.UNVERIFIED,
+                    validProfile: Validation.ValidationType.UNVERIFIED,
                 };
             }),
         });
@@ -1570,7 +1570,7 @@ describe("ZoweUSSNode Unit Tests - Function node.pasteUssTree()", () => {
                     }),
                     loadNamedProfile: globalMocks.mockLoadNamedProfile,
                     usesSecurity: true,
-                    validProfile: ValidProfileEnum.VALID,
+                    validProfile: Validation.ValidationType.VALID,
                     checkCurrentProfile: jest.fn(() => {
                         return newMocks.profile;
                     }),

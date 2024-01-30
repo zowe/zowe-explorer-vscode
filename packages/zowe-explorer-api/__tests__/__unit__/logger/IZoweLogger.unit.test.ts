@@ -10,7 +10,7 @@
  */
 
 import { imperative } from "@zowe/cli";
-import { IZoweLogger, MessageSeverity } from "../../../src/logger/IZoweLogger";
+import { MessageSeverity, IZoweLogger } from "../../../src/logger";
 import * as loggerConfig from "../../../src/log4jsconfig.json";
 
 jest.mock("fs");

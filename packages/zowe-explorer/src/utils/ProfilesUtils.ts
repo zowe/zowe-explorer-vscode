@@ -16,7 +16,7 @@ import * as globals from "../globals";
 import * as path from "path";
 import * as fs from "fs";
 import * as util from "util";
-import { IZoweTreeNode, ZoweTreeNode, getZoweDir, getFullPath, Gui, ProfilesCache, ICommon } from "@zowe/zowe-explorer-api";
+import { IZoweTreeNode, ZoweTreeNode, FileManagement, Gui, ProfilesCache, MainframeInteraction } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { imperative, getImperativeConfig } from "@zowe/cli";
 import { ZoweLogger } from "./LoggerUtils";
@@ -128,7 +128,10 @@ export function isTheia(): boolean {
  * @param getSessionForProfile is a function to build a valid specific session based on provided profile
  * @param sessionNode is a tree node, containing session information
  */
-export const syncSessionNode = (getCommonApi: (profile: imperative.IProfileLoaded) => ICommon, sessionNode: IZoweTreeNode): void => {
+export const syncSessionNode = (
+    getCommonApi: (profile: imperative.IProfileLoaded) => MainframeInteraction.ICommon,
+    sessionNode: IZoweTreeNode
+): void => {
     ZoweLogger.trace("ProfilesUtils.syncSessionNode called.");
 
     const profileType = sessionNode.getProfile()?.type;
@@ -208,7 +211,7 @@ export class ProfilesUtils {
     public static getCredentialManagerOverride(): string {
         ZoweLogger.trace("ProfilesUtils.getCredentialManagerOverride called.");
         try {
-            const settingsFilePath = path.join(getZoweDir(), "settings", "imperative.json");
+            const settingsFilePath = path.join(FileManagement.getZoweDir(), "settings", "imperative.json");
             const settingsFile = fs.readFileSync(settingsFilePath);
             const imperativeConfig = JSON.parse(settingsFile.toString());
             const credentialManagerOverride = imperativeConfig?.overrides[imperative.CredentialManagerOverride.CRED_MGR_SETTING_NAME];
@@ -426,9 +429,9 @@ export class ProfilesUtils {
         const mProfileInfo = await ProfilesUtils.getProfileInfo(globals.ISTHEIA);
         if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders[0]) {
             rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
-            await mProfileInfo.readProfilesFromDisk({ homeDir: getZoweDir(), projectDir: getFullPath(rootPath) });
+            await mProfileInfo.readProfilesFromDisk({ homeDir: FileManagement.getZoweDir(), projectDir: FileManagement.getFullPath(rootPath) });
         } else {
-            await mProfileInfo.readProfilesFromDisk({ homeDir: getZoweDir(), projectDir: undefined });
+            await mProfileInfo.readProfilesFromDisk({ homeDir: FileManagement.getZoweDir(), projectDir: undefined });
         }
         if (mProfileInfo.usingTeamConfig) {
             globals.setConfigPath(rootPath);
@@ -529,7 +532,7 @@ export class ProfilesUtils {
         // Ensure that the ~/.zowe/settings/imperative.json exists
         // TODO: update code below once this imperative issue is resolved.
         // https://github.com/zowe/imperative/issues/840
-        const zoweDir = getZoweDir();
+        const zoweDir = FileManagement.getZoweDir();
         if (!fs.existsSync(zoweDir)) {
             fs.mkdirSync(zoweDir);
         }
@@ -561,7 +564,7 @@ export class ProfilesUtils {
     public static writeOverridesFile(): void {
         ZoweLogger.trace("ProfilesUtils.writeOverridesFile called.");
         const defaultImperativeJson = { overrides: { CredentialManager: globals.ZOWE_CLI_SCM } };
-        const settingsFile = path.join(getZoweDir(), "settings", "imperative.json");
+        const settingsFile = path.join(FileManagement.getZoweDir(), "settings", "imperative.json");
         let fileContent: string;
         try {
             fileContent = fs.readFileSync(settingsFile, { encoding: "utf-8" });

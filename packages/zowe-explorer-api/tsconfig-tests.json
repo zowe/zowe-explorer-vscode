@@ -13,7 +13,9 @@
     "pretty": true,
     "sourceMap": true,
     "newLine": "lf",
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "strictNullChecks": false,
+    "strictPropertyInitialization": false
   },
   "include": ["__tests__/**/*.ts", "__mocks__"],
   "exclude": ["lib", "node_modules"]

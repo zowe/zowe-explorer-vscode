@@ -17,6 +17,7 @@
 - `ZoweVsCodeExtension.promptCredentials` removed in favor of `ZoweVsCodeExtension.updateCredentials`.
 - Changed ZoweExplorerExtender.initForZowe `profileTypeConfigurations: imperative.ICommandProfileTypeConfiguration[]` to a required argument
 - Changed IApiExplorerExtenders.initForZowe `profileTypeConfigurations: imperative.ICommandProfileTypeConfiguration[]` to a required argument
+- Changed `ICommon`, `IMvs`, `IUss`, `IJes` to be grouped in `MainframeInteraction` namespace.
 
 ## New APIs Added
 

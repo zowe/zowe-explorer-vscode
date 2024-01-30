@@ -12,32 +12,8 @@
 import * as loggerConfig from "../log4jsconfig.json";
 import * as path from "path";
 import { imperative } from "@zowe/cli";
-
-type Appender = {
-    type: string;
-    layout: {
-        type: string;
-        pattern: string;
-    };
-    filename: string;
-};
-
-type Log4JsCfg = {
-    log4jsConfig: {
-        appenders: { [key: string]: Appender };
-    };
-};
-
-const LOGGER_CONFIG: Log4JsCfg = loggerConfig;
-
-export enum MessageSeverity {
-    TRACE,
-    DEBUG,
-    INFO,
-    WARN,
-    ERROR,
-    FATAL,
-}
+import { MessageSeverity } from "./MessageSeverity";
+import { Types } from "../Types";
 
 /**
  * Creates an instance of the Imperative logger for extenders to use
@@ -46,6 +22,7 @@ export enum MessageSeverity {
  * @class IZoweLogger
  */
 export class IZoweLogger {
+    public LOGGER_CONFIG: Types.Log4JsCfg = loggerConfig;
     private log: imperative.Logger;
 
     /**
@@ -53,9 +30,9 @@ export class IZoweLogger {
      */
     public constructor(private extensionName: string, loggingPath: string) {
         for (const appenderName of Object.keys(loggerConfig.log4jsConfig.appenders)) {
-            LOGGER_CONFIG.log4jsConfig.appenders[appenderName].filename = path.join(
+            this.LOGGER_CONFIG.log4jsConfig.appenders[appenderName].filename = path.join(
                 loggingPath,
-                LOGGER_CONFIG.log4jsConfig.appenders[appenderName].filename
+                this.LOGGER_CONFIG.log4jsConfig.appenders[appenderName].filename
             );
         }
         imperative.Logger.initLogger(loggerConfig);
