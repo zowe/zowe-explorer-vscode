@@ -38,6 +38,7 @@ import { ZoweLogger } from "../utils/LoggerUtils";
 import { promiseStatus, PromiseStatuses } from "promise-status-async";
 import { ProfileManagement } from "../utils/ProfileManagement";
 import { LocalFileManagement } from "../utils/LocalFileManagement";
+import { DatasetFSProvider } from "./DatasetFSProvider";
 
 let typeEnum: zowe.CreateDataSetTypeEnum;
 // Make a nice new mutable array for the DS properties
@@ -440,18 +441,15 @@ export async function createMember(parent: api.IZoweDatasetTreeNode, datasetProv
         parent.dirty = true;
         datasetProvider.refreshElement(parent);
 
-        await openPS(
-            new ZoweDatasetNode(name, vscode.TreeItemCollapsibleState.None, parent, null, undefined, undefined, parent.getProfile()),
-            true,
-            datasetProvider
-        );
+        const newNode = new ZoweDatasetNode(name, vscode.TreeItemCollapsibleState.None, parent, null, undefined, undefined, parent.getProfile());
+        await vscode.workspace.fs.writeFile(newNode.resourceUri, new Uint8Array());
 
         // Refresh corresponding tree parent to reflect addition
         const otherTreeParent = datasetProvider.findEquivalentNode(parent, contextually.isFavorite(parent));
         if (otherTreeParent != null) {
             datasetProvider.refreshElement(otherTreeParent);
         }
-
+        await vscode.commands.executeCommand("vscode.open", newNode.resourceUri);
         datasetProvider.refresh();
     }
 }
@@ -1347,23 +1345,11 @@ export async function refreshPS(node: api.IZoweDatasetTreeNode): Promise<void> {
             default:
                 throw Error(vscode.l10n.t("Item invalid."));
         }
-        const documentFilePath = getDocumentFilePath(label, node);
-        const prof = node.getProfile();
-        const response = await ZoweExplorerApiRegister.getMvsApi(prof).getContents(label, {
-            file: documentFilePath,
-            returnEtag: true,
-            encoding: prof.profile?.encoding,
-            responseTimeout: prof.profile?.responseTimeout,
-        });
-        node.setEtag(response.apiResponse.etag);
 
-        const document = await vscode.workspace.openTextDocument(documentFilePath);
-        api.Gui.showTextDocument(document, { preview: false });
-        // if there are unsaved changes, vscode won't automatically display the updates, so close and reopen
-        if (document.isDirty) {
-            await vscode.commands.executeCommand("workbench.action.closeActiveEditor");
-            api.Gui.showTextDocument(document, { preview: false });
-        }
+        await DatasetFSProvider.instance.fetchDatasetAtUri(
+            node.resourceUri,
+            vscode.window.visibleTextEditors.find((v) => v.document.uri.path === node.resourceUri.path)
+        );
     } catch (err) {
         if (err.message.includes(vscode.l10n.t("not found"))) {
             ZoweLogger.error(

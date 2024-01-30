@@ -718,7 +718,6 @@
       "Old Data Set name"
     ]
   },
-  "Unable to rename data set:": "Unable to rename data set:",
   "Enter a valid data set name.": "Enter a valid data set name.",
   "all PDS members in {0}/Node label": {
     "message": "all PDS members in {0}",

@@ -95,7 +95,7 @@ export async function checkTextFileIsOpened(path: string): Promise<boolean> {
  * This kind of method is caused by incompleteness of VSCode API, which allows to close only currently selected editor
  * For us it means we need to select editor first, which is again not possible via existing VSCode APIs
  */
-export async function closeOpenedTextFile(path: string): Promise<boolean> {
+export async function closeOpenedTextFile(uriPath: string): Promise<boolean> {
     const openedWindows = [] as IExtTextEditor[];
 
     let emptySelectedCountInTheRow = 0;
@@ -117,7 +117,7 @@ export async function closeOpenedTextFile(path: string): Promise<boolean> {
         await openNextTab(workspaceUtilTabSwitchDelay);
         selectedEditor = vscode.window.activeTextEditor as IExtTextEditor;
 
-        if (selectedEditor && selectedEditor.document.fileName === path) {
+        if (selectedEditor && selectedEditor.document.uri.path === uriPath) {
             const isDirty = selectedEditor.document.isDirty;
             await vscode.commands.executeCommand("workbench.action.closeActiveEditor");
             if (isDirty) {

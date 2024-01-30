@@ -9,6 +9,7 @@
  *
  */
 
+import * as path from "path";
 import * as vscode from "vscode";
 import * as globals from "../globals";
 import * as dsActions from "./actions";
@@ -44,6 +45,7 @@ import { SettingsConfig } from "../utils/SettingsConfig";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { TreeViewUtils } from "../utils/TreeViewUtils";
 import { TreeProviders } from "../shared/TreeProviders";
+import { DatasetFSProvider } from "./DatasetFSProvider";
 
 /**
  * Creates the Dataset tree that contains nodes of sessions and data sets
@@ -1171,7 +1173,6 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
     private async renameDataSetMember(node: IZoweDatasetTreeNode): Promise<void> {
         ZoweLogger.trace("DatasetTree.renameDataSetMember called.");
         const beforeMemberName = node.label as string;
-        const dataSetName = node.getParent().getLabel() as string;
         const options: vscode.InputBoxOptions = {
             value: beforeMemberName,
             validateInput: (text) => {
@@ -1184,8 +1185,6 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             return;
         }
         afterMemberName = afterMemberName.toUpperCase();
-        const beforeFullPath = getDocumentFilePath(`${dataSetName}(${node.getLabel().toString()})`, node);
-        const closedOpenedInstance = await closeOpenedTextFile(beforeFullPath);
 
         ZoweLogger.debug(
             vscode.l10n.t({
@@ -1195,16 +1194,13 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             })
         );
         if (afterMemberName && afterMemberName !== beforeMemberName) {
-            try {
-                await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).renameDataSetMember(dataSetName, beforeMemberName, afterMemberName);
-                node.label = afterMemberName;
-                node.tooltip = afterMemberName;
-            } catch (err) {
-                if (err instanceof Error) {
-                    await errorHandling(err, dataSetName, vscode.l10n.t("Unable to rename data set:"));
-                }
-                throw err;
-            }
+            const newUri = node.resourceUri.with({
+                path: path.posix.join(path.posix.dirname(node.resourceUri.path), afterMemberName),
+            });
+            await DatasetFSProvider.instance.rename(node.resourceUri, newUri, { overwrite: false });
+            node.resourceUri = newUri;
+            node.label = afterMemberName;
+            node.tooltip = afterMemberName;
             const otherParent = this.findEquivalentNode(node.getParent(), contextually.isFavorite(node.getParent()));
             if (otherParent) {
                 const otherMember = otherParent.children.find((child) => child.label === beforeMemberName);
@@ -1214,13 +1210,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                     this.refreshElement(otherMember);
                 }
             }
-            this.refreshElement(node);
-            if (fs.existsSync(beforeFullPath)) {
-                fs.unlinkSync(beforeFullPath);
-            }
-            if (closedOpenedInstance) {
-                vscode.commands.executeCommand("zowe.ds.ZoweNode.openPS", node);
-            }
+            this.refreshElement(node.getParent());
         }
     }
 
@@ -1244,8 +1234,6 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             return;
         }
         afterDataSetName = afterDataSetName.toUpperCase();
-        const beforeFullPath = getDocumentFilePath(node.getLabel() as string, node);
-        const closedOpenedInstance = await closeOpenedTextFile(beforeFullPath);
 
         ZoweLogger.debug(
             vscode.l10n.t({
@@ -1255,34 +1243,24 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             })
         );
         if (afterDataSetName && afterDataSetName !== beforeDataSetName) {
-            try {
-                await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).renameDataSet(beforeDataSetName, afterDataSetName);
-                // Rename corresponding node in Sessions or Favorites section (whichever one Rename wasn't called from)
-                if (contextually.isFavorite(node)) {
-                    const profileName = node.getProfileName();
-                    this.renameNode(profileName, beforeDataSetName, afterDataSetName);
-                } else {
-                    this.renameFavorite(node, afterDataSetName);
-                }
-                // Rename the node that was clicked on
-                node.label = afterDataSetName;
-                node.tooltip = afterDataSetName;
-                this.refreshElement(node);
-                this.updateFavorites();
+            const newUri = node.resourceUri.with({
+                path: path.posix.join(path.posix.dirname(node.resourceUri.path), afterDataSetName),
+            });
+            await DatasetFSProvider.instance.rename(node.resourceUri, newUri, { overwrite: false });
 
-                if (fs.existsSync(beforeFullPath)) {
-                    fs.unlinkSync(beforeFullPath);
-                }
-
-                if (closedOpenedInstance) {
-                    vscode.commands.executeCommand("zowe.ds.ZoweNode.openPS", node);
-                }
-            } catch (err) {
-                if (err instanceof Error) {
-                    await errorHandling(err, node.label.toString(), vscode.l10n.t("Unable to rename data set:"));
-                }
-                throw err;
+            // Rename corresponding node in Sessions or Favorites section (whichever one Rename wasn't called from)
+            if (contextually.isFavorite(node)) {
+                const profileName = node.getProfileName();
+                this.renameNode(profileName, beforeDataSetName, afterDataSetName);
+            } else {
+                this.renameFavorite(node, afterDataSetName);
             }
+            // Rename the node that was clicked on
+            node.resourceUri = newUri;
+            node.label = afterDataSetName;
+            node.tooltip = afterDataSetName;
+            this.refreshElement(node.getParent());
+            this.updateFavorites();
         }
     }
 

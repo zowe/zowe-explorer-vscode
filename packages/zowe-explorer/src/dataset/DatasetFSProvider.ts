@@ -22,6 +22,7 @@ import {
     isDirectoryEntry,
     isFilterEntry,
     FilterEntry,
+    Gui,
 } from "@zowe/zowe-explorer-api";
 import * as path from "path";
 import * as vscode from "vscode";
@@ -304,8 +305,47 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         throw new Error("Method not implemented.");
     }
 
-    // TODO
-    public rename(_oldUri: vscode.Uri, _newUri: vscode.Uri, _options: { readonly overwrite: boolean }): void | Thenable<void> {
-        throw new Error("Method not implemented.");
+    public async rename(oldUri: vscode.Uri, newUri: vscode.Uri, options: { readonly overwrite: boolean }): Promise<void> {
+        const newUriEntry = this._lookup(newUri, true);
+        if (!options.overwrite && newUriEntry) {
+            throw vscode.FileSystemError.FileExists(`Rename failed: ${path.posix.basename(newUri.path)} already exists`);
+        }
+
+        const entry = this._lookup(oldUri, false) as PdsEntry | DsEntry;
+        const isDir = entry instanceof PdsEntry;
+        const parentDir = this._lookupParentDirectory(oldUri);
+
+        const oldName = entry.name;
+        const newName = path.posix.basename(newUri.path);
+
+        parentDir.entries.delete(entry.name);
+        entry.name = newName;
+
+        // Build the new path using the previous path and new file/folder name.
+        let newPath = path.posix.resolve(entry.metadata.path, "..", newName);
+        if (isDir) {
+            newPath += "/";
+        }
+
+        try {
+            if (isDir) {
+                await ZoweExplorerApiRegister.getMvsApi(entry.metadata.profile).renameDataSet(oldName, newName);
+            } else {
+                const pdsName = path.basename(path.posix.resolve(entry.metadata.path, ".."));
+                await ZoweExplorerApiRegister.getMvsApi(entry.metadata.profile).renameDataSetMember(pdsName, oldName, newName);
+            }
+        } catch (err) {
+            await Gui.errorMessage(
+                vscode.l10n.t({
+                    message: "Renaming {0} failed due to API error: {1}",
+                    args: [entry.metadata.path, err.message],
+                    comment: ["File path", "Error message"],
+                })
+            );
+            return;
+        }
+
+        entry.metadata.path = newPath;
+        parentDir.entries.set(newName, entry);
     }
 }
