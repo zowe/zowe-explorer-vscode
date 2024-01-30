@@ -236,6 +236,23 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                   })
                 : this._getInfoFromUri(uri);
             entry.metadata = profInfo;
+
+            if (content.byteLength > 0) {
+                const mvsApi = ZoweExplorerApiRegister.getMvsApi(parent.metadata.profile);
+                // create the data set member as it did not exist previously
+                const dsName = `${parent.name}(${entry.name})`;
+                await mvsApi.createDataSetMember(dsName);
+                await mvsApi.uploadBufferAsDs(Buffer.from(content), dsName, {
+                    etag: undefined,
+                    returnEtag: true,
+                });
+                // Update e-tag if write was successful.
+                const newData = await mvsApi.getContents(dsName, {
+                    returnEtag: true,
+                });
+                entry.etag = newData.apiResponse.etag;
+                entry.data = content;
+            }
             parent.entries.set(basename, entry);
             this._fireSoon({ type: vscode.FileChangeType.Created, uri });
         } else {
@@ -301,8 +318,25 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         });
     }
 
-    public delete(_uri: vscode.Uri, _options: { readonly recursive: boolean }): void | Thenable<void> {
-        throw new Error("Method not implemented.");
+    public async delete(uri: vscode.Uri, _options: { readonly recursive: boolean }): Promise<void> {
+        const entry = this._lookup(uri, false);
+        const parent = this._lookupParentDirectory(uri);
+        const isMember = entry instanceof DsEntry;
+        let fullName: string = "";
+        if (isMember) {
+            fullName = `${parent.name}(${entry.name})`;
+        } else {
+            fullName = entry.name;
+        }
+
+        await ZoweExplorerApiRegister.getMvsApi(entry.metadata.profile).deleteDataSet(fullName, {
+            responseTimeout: entry.metadata.profile.profile?.responseTimeout,
+        });
+
+        parent.entries.delete(entry.name);
+        parent.size -= 1;
+
+        this._fireSoon({ type: vscode.FileChangeType.Deleted, uri });
     }
 
     public async rename(oldUri: vscode.Uri, newUri: vscode.Uri, options: { readonly overwrite: boolean }): Promise<void> {
@@ -347,5 +381,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
         entry.metadata.path = newPath;
         parentDir.entries.set(newName, entry);
+
+        this._fireSoon({ type: vscode.FileChangeType.Deleted, uri: oldUri }, { type: vscode.FileChangeType.Created, uri: newUri });
     }
 }

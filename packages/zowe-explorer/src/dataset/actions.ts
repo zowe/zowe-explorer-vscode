@@ -330,7 +330,8 @@ export async function deleteDatasetPrompt(datasetProvider: api.IZoweTree<api.IZo
     );
     const deleteButton = vscode.l10n.t("Delete");
     const message = vscode.l10n.t({
-        message: `Are you sure you want to delete the following {0} item(s)?\nThis will permanently remove these data sets and/or members from your system.\n\n{1}`,
+        message: `Are you sure you want to delete the following {0} item(s)?
+This will permanently remove these data sets and/or members from your system.\n\n{1}`,
         args: [nodesToDelete.length, nodesToDelete.toString().replace(/(,)/g, "\n")],
         comment: ["Data Sets to delete length", "Data Sets to delete"],
     });
@@ -1257,8 +1258,7 @@ export async function deleteDataset(node: api.IZoweTreeNode, datasetProvider: ap
         }
         await datasetProvider.checkCurrentProfile(node);
         if (Profiles.getInstance().validProfile !== api.ValidProfileEnum.INVALID) {
-            const profile = node.getProfile();
-            await ZoweExplorerApiRegister.getMvsApi(profile).deleteDataSet(label, { responseTimeout: profile.profile?.responseTimeout });
+            await vscode.workspace.fs.delete(node.resourceUri);
         } else {
             return;
         }
@@ -1309,16 +1309,6 @@ export async function deleteDataset(node: api.IZoweTreeNode, datasetProvider: ap
     }
 
     datasetProvider.refreshElement(node.getSessionNode());
-
-    // remove local copy of file
-    const fileName = getDocumentFilePath(label, node);
-    try {
-        if (fs.existsSync(fileName)) {
-            fs.unlinkSync(fileName);
-        }
-    } catch (err) {
-        ZoweLogger.warn(err);
-    }
 }
 
 /**
