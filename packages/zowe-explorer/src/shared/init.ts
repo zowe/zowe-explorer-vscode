@@ -20,11 +20,8 @@ import { hideTempFolder, moveTempFolder } from "../utils/TempFolder";
 import { TsoCommandHandler } from "../command/TsoCommandHandler";
 import { MvsCommandHandler } from "../command/MvsCommandHandler";
 import { UnixCommandHandler } from "../command/UnixCommandHandler";
-import { saveFile } from "../dataset/actions";
-import { saveUSSFile } from "../uss/actions";
 import { ProfilesUtils } from "../utils/ProfilesUtils";
 import { ZoweLogger } from "../utils/LoggerUtils";
-import { ZoweSaveQueue } from "../abstract/ZoweSaveQueue";
 import { SettingsConfig } from "../utils/SettingsConfig";
 import { spoolFilePollEvent } from "../job/actions";
 import { HistoryView } from "./HistoryView";
@@ -144,33 +141,6 @@ export function registerCommonCommands(context: vscode.ExtensionContext, provide
             vscode.commands.registerCommand("zowe.searchInAllLoadedItems", async () =>
                 sharedActions.searchInAllLoadedItems(providers.ds, providers.uss)
             )
-        );
-        context.subscriptions.push(
-            vscode.workspace.onDidSaveTextDocument((savedFile) => {
-                ZoweLogger.debug(
-                    vscode.l10n.t({
-                        message: `File was saved -- determining whether the file is a USS file or Data set.
-                        \n Comparing (case insensitive) {0} against directory {1} and {2}`,
-                        args: [savedFile.fileName, globals.DS_DIR, globals.USS_DIR],
-                        comment: ["Saved file name", "Data Set directory", "USS directory"],
-                    })
-                );
-                if (savedFile.fileName.toUpperCase().indexOf(globals.DS_DIR.toUpperCase()) >= 0) {
-                    ZoweLogger.debug(vscode.l10n.t("File is a Data Set-- saving "));
-                    ZoweSaveQueue.push({ uploadRequest: saveFile, savedFile, fileProvider: providers.ds });
-                } else if (savedFile.fileName.toUpperCase().indexOf(globals.USS_DIR.toUpperCase()) >= 0) {
-                    ZoweLogger.debug(vscode.l10n.t("File is a USS file -- saving"));
-                    ZoweSaveQueue.push({ uploadRequest: saveUSSFile, savedFile, fileProvider: providers.uss });
-                } else {
-                    ZoweLogger.debug(
-                        vscode.l10n.t({
-                            message: "File {0} is not a Data Set or USS file",
-                            args: [savedFile.fileName],
-                            comment: ["Saved file name"],
-                        })
-                    );
-                }
-            })
         );
     }
     if (providers.ds || providers.uss || providers.job) {
