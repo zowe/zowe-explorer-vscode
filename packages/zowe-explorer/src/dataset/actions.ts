@@ -1336,10 +1336,12 @@ export async function refreshPS(node: api.IZoweDatasetTreeNode): Promise<void> {
                 throw Error(vscode.l10n.t("Item invalid."));
         }
 
+        const statusMsg = api.Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Fetching data set..."));
         await DatasetFSProvider.instance.fetchDatasetAtUri(
             node.resourceUri,
             vscode.window.visibleTextEditors.find((v) => v.document.uri.path === node.resourceUri.path)
         );
+        statusMsg.dispose();
     } catch (err) {
         if (err.message.includes(vscode.l10n.t("not found"))) {
             ZoweLogger.error(

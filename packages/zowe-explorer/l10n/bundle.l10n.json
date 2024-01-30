@@ -464,22 +464,6 @@
   "Upload cancelled.": "Upload cancelled.",
   "Invalid job owner": "Invalid job owner",
   "Invalid job prefix": "Invalid job prefix",
-  "File was saved -- determining whether the file is a USS file or Data set.\n                        \n Comparing (case insensitive) {0} against directory {1} and {2}/Saved file nameData Set directoryUSS directory": {
-    "message": "File was saved -- determining whether the file is a USS file or Data set.\n                        \n Comparing (case insensitive) {0} against directory {1} and {2}",
-    "comment": [
-      "Saved file name",
-      "Data Set directory",
-      "USS directory"
-    ]
-  },
-  "File is a Data Set-- saving ": "File is a Data Set-- saving ",
-  "File is a USS file -- saving": "File is a USS file -- saving",
-  "File {0} is not a Data Set or USS file/Saved file name": {
-    "message": "File {0} is not a Data Set or USS file",
-    "comment": [
-      "Saved file name"
-    ]
-  },
   "Team config file created, refreshing Zowe Explorer.": "Team config file created, refreshing Zowe Explorer.",
   "Team config file deleted, refreshing Zowe Explorer.": "Team config file deleted, refreshing Zowe Explorer.",
   "Team config file updated.": "Team config file updated.",
@@ -914,6 +898,7 @@
     ]
   },
   "Item invalid.": "Item invalid.",
+  "$(sync~spin) Fetching data set...": "$(sync~spin) Fetching data set...",
   "Error encountered when refreshing data set view. {0}/Stringified JSON error": {
     "message": "Error encountered when refreshing data set view. {0}",
     "comment": [
@@ -942,27 +927,6 @@
   "Unable to gather more information": "Unable to gather more information",
   "Invalid paste. Copy data set(s) first.": "Invalid paste. Copy data set(s) first.",
   "Name of Data Set Member": "Name of Data Set Member",
-  "Requested to save data set {0}/Document file name": {
-    "message": "Requested to save data set {0}",
-    "comment": [
-      "Document file name"
-    ]
-  },
-  "path.relative returned a non-blank directory. Assuming we are not in the DS_DIR directory: {0}/Relative path to Data Set directory": {
-    "message": "path.relative returned a non-blank directory. Assuming we are not in the DS_DIR directory: {0}",
-    "comment": [
-      "Relative path to Data Set directory"
-    ]
-  },
-  "Could not locate session when saving data set.": "Could not locate session when saving data set.",
-  "Could not find session node": "Could not find session node",
-  "Saving file {0}/Label": {
-    "message": "Saving file {0}",
-    "comment": [
-      "Label"
-    ]
-  },
-  "Data set failed to save. Data set may have been deleted or renamed on mainframe.": "Data set failed to save. Data set may have been deleted or renamed on mainframe.",
   "Cannot download, item invalid.": "Cannot download, item invalid.",
   "Copying data sets is not supported.": "Copying data sets is not supported.",
   "Replace": "Replace",
