@@ -455,60 +455,6 @@ export async function createMember(parent: api.IZoweDatasetTreeNode, datasetProv
     }
 }
 
-/**
- * Downloads and displays a PS or data set member in a text editor view
- *
- * @param {IZoweDatasetTreeNode} node
- */
-export async function openPS(
-    node: api.IZoweDatasetTreeNode,
-    previewMember: boolean,
-    datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>
-): Promise<void> {
-    ZoweLogger.trace("dataset.actions.openPS called.");
-    if (datasetProvider) {
-        await datasetProvider.checkCurrentProfile(node);
-    }
-
-    // Status of last "open action" promise
-    // If the node doesn't support pending actions, assume last action was resolved to pull new contents
-    const lastActionStatus =
-        node.ongoingActions?.[api.NodeAction.Download] != null
-            ? await promiseStatus(node.ongoingActions[api.NodeAction.Download])
-            : PromiseStatuses.PROMISE_RESOLVED;
-
-    // Cache status of double click if the node has the "wasDoubleClicked" property:
-    // allows subsequent clicks to register as double-click if node is not done fetching contents
-    const doubleClicked = api.Gui.utils.wasDoubleClicked(node, datasetProvider);
-    const shouldPreview = doubleClicked ? false : previewMember;
-    if (node.wasDoubleClicked != null) {
-        node.wasDoubleClicked = doubleClicked;
-    }
-
-    // Prevent future "open actions" until last action is completed
-    if (lastActionStatus == PromiseStatuses.PROMISE_PENDING) {
-        return;
-    }
-
-    if (Profiles.getInstance().validProfile !== api.ValidProfileEnum.INVALID) {
-        try {
-            const fileInfo = await downloadPs(node);
-            const document = await vscode.workspace.openTextDocument(getDocumentFilePath(fileInfo.name, node));
-            await api.Gui.showTextDocument(document, { preview: node.wasDoubleClicked != null ? !node.wasDoubleClicked : shouldPreview });
-            // discard ongoing action to allow new requests on this node
-            if (node.ongoingActions) {
-                node.ongoingActions[api.NodeAction.Download] = null;
-            }
-            if (datasetProvider) {
-                datasetProvider.addFileHistory(`[${node.getProfileName()}]: ${fileInfo.name}`);
-            }
-        } catch (err) {
-            await errorHandling(err, node.getProfileName());
-            throw err;
-        }
-    }
-}
-
 export async function downloadPs(node: api.IZoweDatasetTreeNode): Promise<LocalFileInfo> {
     const fileInfo = {} as LocalFileInfo;
     const defaultMessage = vscode.l10n.t("Invalid data set or member.");

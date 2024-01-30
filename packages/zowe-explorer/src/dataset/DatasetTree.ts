@@ -297,7 +297,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 node = new ZoweDatasetNode(label, vscode.TreeItemCollapsibleState.Collapsed, parentNode, undefined, undefined, undefined);
             } else {
                 node = new ZoweDatasetNode(label, vscode.TreeItemCollapsibleState.None, parentNode, undefined, contextValue, undefined);
-                node.command = { command: "zowe.ds.ZoweNode.openPS", title: "", arguments: [node] };
+                node.command = { command: "vscode.open", title: "", arguments: [node.resourceUri] };
             }
             node.contextValue = contextually.asFavorite(node);
             const icon = getIconByNode(node);
@@ -488,7 +488,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         let profileNodeInFavorites = this.findMatchingProfileInArray(this.mFavorites, profileName);
         if (profileNodeInFavorites === undefined) {
             // If favorite node for profile doesn't exist yet, create a new one for it
-            profileNodeInFavorites = this.createProfileNodeForFavs(profileName);
+            profileNodeInFavorites = this.createProfileNodeForFavs(node);
         }
         if (contextually.isDsMember(node)) {
             if (contextually.isFavoritePds(node.getParent())) {
@@ -531,7 +531,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             );
             temp.contextValue = contextually.asFavorite(temp);
             if (contextually.isFavoriteDs(temp)) {
-                temp.command = { command: "zowe.ds.ZoweNode.openPS", title: "", arguments: [temp] };
+                temp.command = { command: "vscode.open", title: "", arguments: [temp.resourceUri] };
             }
 
             const icon = getIconByNode(temp);
@@ -867,11 +867,11 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             } else {
                 memberNode.getParent().collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
                 this.addSearchHistory(`${parentName}(${memberName})`);
-                await dsActions.openPS(memberNode, true, this);
+                await vscode.commands.executeCommand(memberNode.command.command, memberNode.resourceUri);
             }
         } else {
             this.addSearchHistory(parentName);
-            await dsActions.openPS(parentNode, true, this);
+            await vscode.commands.executeCommand(parentNode.command.command, parentNode.resourceUri);
         }
     }
 
