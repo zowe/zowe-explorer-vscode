@@ -43,11 +43,14 @@ export class BaseProvider {
     public async diffOverwrite(uri: vscode.Uri): Promise<void> {
         const fsEntry = await this._lookupAsFile(uri);
         await vscode.workspace.fs.writeFile(uri.with({ query: "forceUpload=true" }), fsEntry.data);
-        Gui.setStatusBarMessage(vscode.l10n.t({
-            message: "$(check) Overwrite applied for {0}", 
-            args: [fsEntry.name],
-            comment: "File name"
-        }), this.FS_PROVIDER_UI_TIMEOUT);
+        Gui.setStatusBarMessage(
+            vscode.l10n.t({
+                message: "$(check) Overwrite applied for {0}",
+                args: [fsEntry.name],
+                comment: "File name",
+            }),
+            this.FS_PROVIDER_UI_TIMEOUT
+        );
         fsEntry.conflictData = null;
     }
 
@@ -66,9 +69,9 @@ export class BaseProvider {
         }
         Gui.setStatusBarMessage(
             vscode.l10n.t({
-                message: "$(discard) Used remote content for {0}", 
-                args: [fsEntry.name], 
-                comment: "File name"
+                message: "$(discard) Used remote content for {0}",
+                args: [fsEntry.name],
+                comment: "File name",
             }),
             this.FS_PROVIDER_UI_TIMEOUT
         );

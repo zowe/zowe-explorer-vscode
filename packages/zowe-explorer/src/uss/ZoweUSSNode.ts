@@ -176,7 +176,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             placeholder.iconPath = null;
             placeholder.command = {
                 command: "zowe.placeholderCommand",
-                title: "Placeholder"
+                title: "Placeholder",
             };
             return [placeholder];
         }
@@ -692,13 +692,13 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             openingTextFailed = true;
         }
 
-            if (openingTextFailed) {
-                const yesResponse = vscode.l10n.t("Re-download");
-                const noResponse = vscode.l10n.t("Cancel");
+        if (openingTextFailed) {
+            const yesResponse = vscode.l10n.t("Re-download");
+            const noResponse = vscode.l10n.t("Cancel");
 
-                const response = await Gui.errorMessage(vscode.l10n.t("Failed to open file as text. Re-download file as binary?"), {
-                    items: [yesResponse, noResponse],
-                });
+            const response = await Gui.errorMessage(vscode.l10n.t("Failed to open file as text. Re-download file as binary?"), {
+                items: [yesResponse, noResponse],
+            });
 
             if (response === yesResponse) {
                 await vscode.commands.executeCommand("zowe.uss.binary", this);

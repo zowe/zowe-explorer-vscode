@@ -53,8 +53,8 @@ describe("PollDecorationProvider - unit tests", () => {
         // Update the icon for a URI that has already been decorated
         PollDecorator.provideFileDecoration(mockUri, undefined as any);
 
-        const decoration = Poller.pollRequests[mockUri.path]["decoration"] as vscode.FileDecoration;
-        expect(decoration.tooltip).toBe("Polling (500ms)");
+        const decoration = Poller.pollRequests[mockUri.path]["decoration"];
+        expect(decoration?.tooltip).toBe("Polling (500ms)");
     });
 
     it("provides an accurate decoration depending on file poll status", () => {

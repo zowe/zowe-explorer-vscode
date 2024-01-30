@@ -159,7 +159,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             );
             placeholder.command = {
                 command: "zowe.placeholderCommand",
-                title: "Placeholder"
+                title: "Placeholder",
             };
             return [placeholder];
         }
@@ -330,7 +330,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             );
             placeholder.command = {
                 command: "zowe.placeholderCommand",
-                title: "Placeholder"
+                title: "Placeholder",
             };
             this.children = [placeholder];
         } else {
