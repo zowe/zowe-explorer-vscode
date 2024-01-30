@@ -214,7 +214,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      * @param profileName Name of profile
      * @returns {ZoweDatasetNode}
      */
-    public createProfileNodeForFavs(profileName: string): ZoweDatasetNode {
+    public createProfileNodeForFavs(profileName: string, profile?: imperative.IProfileLoaded): ZoweDatasetNode {
         ZoweLogger.trace("DatasetTree.createProfileNodeForFavs called.");
         const favProfileNode = new ZoweDatasetNode(
             profileName,
@@ -222,7 +222,8 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             this.mFavoriteSession,
             null,
             undefined,
-            undefined
+            undefined,
+            profile
         );
         favProfileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
         const icon = getIconByNode(favProfileNode);
@@ -488,7 +489,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         let profileNodeInFavorites = this.findMatchingProfileInArray(this.mFavorites, profileName);
         if (profileNodeInFavorites === undefined) {
             // If favorite node for profile doesn't exist yet, create a new one for it
-            profileNodeInFavorites = this.createProfileNodeForFavs(node);
+            profileNodeInFavorites = this.createProfileNodeForFavs(profileName, node.getProfile());
         }
         if (contextually.isDsMember(node)) {
             if (contextually.isFavoritePds(node.getParent())) {
