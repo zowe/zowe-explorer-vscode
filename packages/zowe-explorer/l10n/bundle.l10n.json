@@ -543,10 +543,10 @@
       "Encoded URI path"
     ]
   },
-  "$(sync~spin) Polling: {0}.../Encoded URI path": {
+  "$(sync~spin) Polling: {0}.../Unique Spool name": {
     "message": "$(sync~spin) Polling: {0}...",
     "comment": [
-      "Encoded URI path"
+      "Unique Spool name"
     ]
   },
   "Filter: {0}/The new filter": {

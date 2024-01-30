@@ -1060,11 +1060,10 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             return;
         }
 
-        const encodedUri = node.resourceUri;
         // If the uri is already being polled, mark it as ready for removal
-        if (encodedUri.path in Poller.pollRequests && contextually.isPolling(node)) {
-            Poller.pollRequests[encodedUri.path].dispose = true;
-            PollDecorator.updateIcon(encodedUri);
+        if (node.resourceUri.path in Poller.pollRequests && contextually.isPolling(node)) {
+            Poller.pollRequests[node.resourceUri.path].dispose = true;
+            PollDecorator.updateIcon(node.resourceUri);
             node.contextValue = node.contextValue.replace(globals.POLL_CONTEXT, "");
 
             // Fire "tree changed event" to reflect removal of polling context value
@@ -1073,13 +1072,13 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         }
 
         // Always prompt the user for a poll interval
-        const pollInterval = await this.showPollOptions(encodedUri);
+        const pollInterval = await this.showPollOptions(node.resourceUri);
 
         if (pollInterval === 0) {
             Gui.showMessage(
                 vscode.l10n.t({
                     message: "Polling dismissed for {0}; operation cancelled.",
-                    args: [encodedUri.path],
+                    args: [node.resourceUri.path],
                     comment: ["Encoded URI path"],
                 })
             );
@@ -1087,26 +1086,26 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         }
 
         // Pass request function to the poller for continuous updates
-        Poller.addRequest(encodedUri.path, {
+        Poller.addRequest(node.resourceUri.path, {
             msInterval: pollInterval,
             request: async () => {
                 const statusMsg = Gui.setStatusBarMessage(
                     vscode.l10n.t({
                         message: `$(sync~spin) Polling: {0}...`,
-                        args: [path.posix.basename(encodedUri.path)],
-                        comment: ["Encoded URI path"],
+                        args: [path.posix.basename(node.resourceUri.path)],
+                        comment: ["Unique Spool name"],
                     }),
                     globals.STATUS_BAR_TIMEOUT_MS
                 );
-                await vscode.workspace.fs.readFile(encodedUri);
+                await JobFSProvider.instance.fetchSpoolAtUri(node.resourceUri);
                 statusMsg.dispose();
             },
         });
-        PollDecorator.updateIcon(encodedUri);
+        PollDecorator.updateIcon(node.resourceUri);
         node.contextValue += globals.POLL_CONTEXT;
 
         // Fire "tree changed event" to reflect added polling context value
-        this.mOnDidChangeTreeData.fire(node);
+        this.refreshElement(node);
     }
 
     public sortBy(session: IZoweJobTreeNode): void {

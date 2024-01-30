@@ -9,9 +9,13 @@
  *
  */
 
+import { FileDecoration } from "vscode";
+
 export type PollRequest = {
     msInterval: number;
     dispose?: boolean;
+
+    decoration?: FileDecoration;
 
     reject?<T = never>(reason?: any): Promise<T>;
     resolve?: (uniqueId: string, data: any) => any;

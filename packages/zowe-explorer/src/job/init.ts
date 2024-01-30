@@ -22,6 +22,7 @@ import { initSubscribers } from "../shared/init";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { JobFSProvider } from "./JobFSProvider";
 import * as globals from "../globals";
+import { PollDecorator } from "../utils/DecorationProviders";
 
 export async function initJobsProvider(context: vscode.ExtensionContext): Promise<ZosJobsProvider> {
     ZoweLogger.trace("job.init.initJobsProvider called.");
@@ -32,6 +33,8 @@ export async function initJobsProvider(context: vscode.ExtensionContext): Promis
     if (jobsProvider == null) {
         return null;
     }
+
+    PollDecorator.register();
 
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.jobs.zosJobsOpenspool", (session, spoolNode) => jobActions.getSpoolContent(session, spoolNode))
@@ -61,8 +64,9 @@ export async function initJobsProvider(context: vscode.ExtensionContext): Promis
     context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.refreshJob", (job) => jobActions.refreshJob(job.mParent, jobsProvider)));
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.jobs.refreshSpool", async (node) => {
-            Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Fetching spool files..."));
-            await vscode.workspace.fs.readFile(node.resourceUri);
+            const statusBarMsg = Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Fetching spool files..."));
+            await JobFSProvider.instance.fetchSpoolAtUri(node.resourceUri);
+            statusBarMsg.dispose();
         })
     );
 
