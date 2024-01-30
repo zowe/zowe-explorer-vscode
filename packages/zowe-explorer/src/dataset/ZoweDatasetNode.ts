@@ -321,15 +321,18 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
 
         this.dirty = false;
         if (Object.keys(elementChildren).length === 0) {
-            this.children = [
-                new ZoweDatasetNode(
-                    vscode.l10n.t("No data sets found"),
-                    vscode.TreeItemCollapsibleState.None,
-                    this,
-                    null,
-                    globals.INFORMATION_CONTEXT
-                ),
-            ];
+            const placeholder = new ZoweDatasetNode(
+                vscode.l10n.t("No data sets found"),
+                vscode.TreeItemCollapsibleState.None,
+                this,
+                null,
+                globals.INFORMATION_CONTEXT
+            );
+            placeholder.command = {
+                command: "zowe.placeholderCommand",
+                title: "Placeholder"
+            };
+            this.children = [placeholder];
         } else {
             const newChildren = Object.keys(elementChildren)
                 .filter((label) => this.children.find((c) => (c.label as string) === label) == null)

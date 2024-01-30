@@ -238,6 +238,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             entry.metadata = profInfo;
 
             if (content.byteLength > 0) {
+                const statusMsg = Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Saving data set..."));
                 const mvsApi = ZoweExplorerApiRegister.getMvsApi(parent.metadata.profile);
                 // create the data set member as it did not exist previously
                 const dsName = `${parent.name}(${entry.name})`;
@@ -252,6 +253,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 });
                 entry.etag = newData.apiResponse.etag;
                 entry.data = content;
+                statusMsg.dispose();
             }
             parent.entries.set(basename, entry);
             this._fireSoon({ type: vscode.FileChangeType.Created, uri });
@@ -276,18 +278,24 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 // Note that we don't want to call the API when making changes to the conflict file,
                 // because the conflict file serves as the "remote" point of reference at the time of conflict,
                 // and provides the data when comparing local/remote versions of a file.
+                const statusMsg = Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Saving data set..."));
+
+                const isPdsMember = parent instanceof PdsEntry && !isFilterEntry(parent);
+                const fullName = isPdsMember ? `${parent.name}(${entry.name})` : entry.name;
 
                 // Attempt to write data to remote system, and handle any conflicts from e-tag mismatch
                 try {
-                    const resp = await mvsApi.uploadBufferAsDs(Buffer.from(content), entry.metadata.path, {
+                    const resp = await mvsApi.uploadBufferAsDs(Buffer.from(content), fullName, {
                         etag: shouldForceUpload ? undefined : entry.etag,
                         returnEtag: true,
                     });
                     entry.etag = resp.apiResponse.etag;
                     entry.data = content;
+                    statusMsg.dispose();
                 } catch (err) {
+                    statusMsg.dispose();
                     if (!err.message.includes("Rest API failure with HTTP(S) status 412")) {
-                        return;
+                        throw err;
                     }
                     entry.data = content;
                     if ((await this._handleConflict(uri, entry)) != ConflictViewSelection.Overwrite) {

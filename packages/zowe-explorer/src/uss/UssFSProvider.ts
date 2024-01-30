@@ -227,13 +227,14 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             };
 
             if (content.byteLength > 0) {
+                const statusMsg = Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Saving USS file..."));
                 // user is trying to edit a file that was just deleted: make the API call
                 const ussApi = ZoweExplorerApiRegister.getUssApi(parentDir.metadata.profile);
                 await ussApi.uploadBufferAsFile(Buffer.from(content), entry.metadata.path, {
                     etag: undefined,
                     returnEtag: true,
                 });
-                
+
                 // Update e-tag if write was successful.
                 // TODO: This call below can be removed once zowe.Upload.bufferToUssFile returns response headers.
                 // This is necessary at the moment on z/OSMF to fetch the new e-tag.
@@ -241,6 +242,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                     returnEtag: true,
                 });
                 entry.etag = newData.apiResponse.etag;
+                statusMsg.dispose();
             }
             entry.data = content;
             parentDir.entries.set(fileName, entry);
@@ -262,6 +264,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
             if (entry.wasAccessed || content.length > 0) {
                 // Entry was already accessed previously, this is an update to the existing file.
+                const statusMsg = Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Saving USS file..."));
                 try {
                     // Attempt to write data to remote system, and handle any conflicts from e-tag mismatch
                     await ussApi.uploadBufferAsFile(Buffer.from(content), entry.metadata.path, {
@@ -277,7 +280,9 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                     });
                     entry.etag = newData.apiResponse.etag;
                     entry.data = content;
+                    statusMsg.dispose();
                 } catch (err) {
+                    statusMsg.dispose();
                     if (!err.message.includes("Rest API failure with HTTP(S) status 412")) {
                         // Some unknown error happened, don't update the entry
                         throw err;
@@ -331,10 +336,13 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         try {
             await ZoweExplorerApiRegister.getUssApi(entry.metadata.profile).rename(entry.metadata.path, newPath);
         } catch (err) {
-            await Gui.errorMessage(vscode.l10n.t({
-                message: "Renaming {0} failed due to API error: {1}", 
-                args: [entry.metadata.path, err.message],
-                comment: ["File path", "Error message"] }));
+            await Gui.errorMessage(
+                vscode.l10n.t({
+                    message: "Renaming {0} failed due to API error: {1}",
+                    args: [entry.metadata.path, err.message],
+                    comment: ["File path", "Error message"],
+                })
+            );
             return;
         }
 
@@ -363,9 +371,10 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         } catch (err) {
             await Gui.errorMessage(
                 vscode.l10n.t({
-                    message: "Deleting {0} failed due to API error: {1}", 
+                    message: "Deleting {0} failed due to API error: {1}",
                     args: [entryToDelete.metadata.path, err.message],
-                    comment: ["File name", "Error message"] })
+                    comment: ["File name", "Error message"],
+                })
             );
             return;
         }

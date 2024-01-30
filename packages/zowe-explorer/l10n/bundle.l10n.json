@@ -400,6 +400,7 @@
   "File does not exist. It may have been deleted.": "File does not exist. It may have been deleted.",
   "The 'move' function is not implemented for this USS API.": "The 'move' function is not implemented for this USS API.",
   "Profile does not exist for this file.": "Profile does not exist for this file.",
+  "$(sync~spin) Saving USS file...": "$(sync~spin) Saving USS file...",
   "Renaming {0} failed due to API error: {1}/File pathError message": {
     "message": "Renaming {0} failed due to API error: {1}",
     "comment": [
@@ -771,6 +772,7 @@
       "Node label"
     ]
   },
+  "$(sync~spin) Saving data set...": "$(sync~spin) Saving data set...",
   "Partitioned Data Set: Binary": "Partitioned Data Set: Binary",
   "Partitioned Data Set: C": "Partitioned Data Set: C",
   "Partitioned Data Set: Classic": "Partitioned Data Set: Classic",

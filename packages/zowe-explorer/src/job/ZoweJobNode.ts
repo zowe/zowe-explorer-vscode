@@ -125,7 +125,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
             );
             placeholder.command = {
                 command: "zowe.placeholderCommand",
-                title: "Placeholder"
+                title: "Placeholder",
             };
             return [placeholder];
         }
@@ -156,9 +156,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
                 noSpoolNode.iconPath = null;
                 return [noSpoolNode];
             }
-            const refreshTimestamp = Date.now();
             spools.forEach((spool) => {
-                const sessionName = this.getProfileName();
                 const procstep = spool.procstep ? spool.procstep : undefined;
                 let newLabel: string;
                 if (procstep) {
@@ -201,6 +199,10 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
                 const noJobsNode = new Job(vscode.l10n.t("No jobs found"), vscode.TreeItemCollapsibleState.None, this, null, null, null);
                 noJobsNode.contextValue = globals.INFORMATION_CONTEXT;
                 noJobsNode.iconPath = null;
+                noJobsNode.command = {
+                    command: "zowe.placeholderCommand",
+                    title: "Placeholder",
+                };
                 return [noJobsNode];
             }
             jobs.forEach((job) => {
