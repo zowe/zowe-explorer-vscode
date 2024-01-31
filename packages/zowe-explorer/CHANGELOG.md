@@ -2,6 +2,14 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
+## Recent Changes
+
+### New features and enhancements
+
+- Migrated to webpack v5 [#2214](https://github.com/zowe/vscode-extension-for-zowe/issues/2214)
+
+### Bug fixes
+
 ## `3.0.0-next.202401241448`
 
 ### New features and enhancements
