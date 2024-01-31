@@ -1,5 +1,13 @@
 All notable changes to the "zowe-explorer-ftp-extension" extension will be documented in this file.
 
+## Recent Changes
+
+## New features and enhancements
+
+- Adapted to new API changes from grouping of common methods into singleton classes [#2109](https://github.com/zowe/vscode-extension-for-zowe/issues/2109)
+
+## Bug fixes
+
 ## `3.0.0-next.202401241448`
 
 ### New features and enhancements
