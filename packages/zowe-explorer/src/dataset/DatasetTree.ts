@@ -54,7 +54,7 @@ import { DatasetFSProvider } from "./DatasetFSProvider";
  */
 export async function createDatasetTree(log: imperative.Logger): Promise<DatasetTree> {
     const tree = new DatasetTree();
-    tree.initializeFavorites(log);
+    await tree.initializeFavorites(log);
     await tree.addSession(undefined, undefined, tree);
     return tree;
 }
@@ -240,7 +240,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      * Profile loading only occurs in loadProfilesForFavorites when the profile node in Favorites is clicked on.
      * @param log
      */
-    public initializeFavorites(log: imperative.Logger): void {
+    public async initializeFavorites(log: imperative.Logger): Promise<void> {
         ZoweLogger.trace("DatasetTree.initializeFavorites called.");
         this.log = log;
         ZoweLogger.debug(vscode.l10n.t("Initializing profiles with data set favorites."));
@@ -273,7 +273,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             let profileNodeInFavorites = this.findMatchingProfileInArray(this.mFavorites, profileName);
             if (profileNodeInFavorites === undefined) {
                 // If favorite node for profile doesn't exist yet, create a new one for it
-                profileNodeInFavorites = this.createProfileNodeForFavs(profileName);
+                profileNodeInFavorites = this.createProfileNodeForFavs(profileName, await Profiles.getInstance().getLoadedProfConfig(profileName));
             }
             // Initialize and attach favorited item nodes under their respective profile node in Favorrites
             const favChildNodeForProfile = this.initializeFavChildNodeForProfile(favLabel, favContextValue, profileNodeInFavorites);
