@@ -440,6 +440,52 @@ export class ProfilesCache {
         };
     }
 
+    public async convertV1ProfToConfig(): Promise<string[]> {
+        const response: string[] = [];
+        try {
+            const zoweDir = getZoweDir();
+            const profilesPath = path.join(zoweDir, "profiles");
+            const oldProfilesPath = `${profilesPath.replace(/[\\/]$/, "")}-old`;
+            const convertResult = await zowe.imperative.ConfigBuilder.convert(profilesPath);
+            for (const [k, v] of Object.entries(convertResult.profilesConverted)) {
+                response.push(`Converted ${k} profiles: ${v.join(", ")}`);
+            }
+            if (convertResult.profilesFailed.length > 0) {
+                response.push(`Failed to convert ${convertResult.profilesFailed.length} profile(s). See details below`);
+                for (const { name, type, error } of convertResult.profilesFailed) {
+                    if (name != null) {
+                        response.push(`Failed to load ${type} profile "${name}":\n    ${String(error)}`);
+                    } else {
+                        response.push(`Failed to find default ${type} profile:\n    ${String(error)}`);
+                    }
+                }
+            }
+            const teamConfig = await zowe.imperative.Config.load("zowe", {
+                homeDir: getZoweDir(),
+                projectDir: undefined,
+            });
+            teamConfig.api.layers.activate(false, true);
+            teamConfig.api.layers.merge(convertResult.config);
+            const knownCliConfig: zowe.imperative.ICommandProfileTypeConfiguration[] = [];
+
+            const extenderinfo = this.getConfigArray();
+            extenderinfo.forEach((item) => {
+                knownCliConfig.push(item);
+            });
+            teamConfig.setSchema(zowe.imperative.ConfigSchema.buildSchema(knownCliConfig));
+            await teamConfig.save();
+            try {
+                fs.renameSync(profilesPath, oldProfilesPath);
+            } catch (error) {
+                response.push(`Failed to rename profiles directory to ${oldProfilesPath}:\n    ${String(error)}`);
+            }
+            response.push(`Your new profiles have been saved to ${teamConfig.layerActive().path}.`);
+        } catch (e) {
+            response.push(String(e));
+        }
+        return response;
+    }
+
     // used by Zowe Explorer for v1 profiles
     protected async deleteProfileOnDisk(profileInfo: zowe.imperative.IProfileLoaded): Promise<void> {
         await this.getCliProfileManager(profileInfo.type).delete({ name: profileInfo.name });

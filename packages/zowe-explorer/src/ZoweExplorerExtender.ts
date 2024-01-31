@@ -174,17 +174,19 @@ export class ZoweExplorerExtender implements IApiExplorerExtender, ZoweExplorerT
             ZoweExplorerExtender.showZoweConfigError(error.message);
         }
 
-        if (profileTypeConfigurations && !usingTeamConfig) {
-            const configOptions = Array.from(profileTypeConfigurations);
-            const exists = fs.existsSync(path.join(zoweDir, "profiles", profileType));
-            if (configOptions && !exists) {
-                await zowe.imperative.CliProfileManager.initialize({
-                    configuration: configOptions,
-                    profileRootDirectory: path.join(zoweDir, "profiles"),
-                });
-            }
+        // if (profileTypeConfigurations && !usingTeamConfig) {
+        //     const configOptions = Array.from(profileTypeConfigurations);
+        //     const exists = fs.existsSync(path.join(zoweDir, "profiles", profileType));
+        //     if (configOptions && !exists) {
+        //         await zowe.imperative.CliProfileManager.initialize({
+        //             configuration: configOptions,
+        //             profileRootDirectory: path.join(zoweDir, "profiles"),
+        //         });
+        //     }
+        // }
+        if (profileTypeConfigurations !== undefined) {
+            Profiles.getInstance().addToConfigArray(profileTypeConfigurations);
         }
-        if (profileTypeConfigurations !== undefined) Profiles.getInstance().addToConfigArray(profileTypeConfigurations);
 
         // sequentially reload the internal profiles cache to satisfy all the newly added profile types
         await ZoweExplorerExtender.refreshProfilesQueue.add(async (): Promise<void> => {
