@@ -16,7 +16,16 @@ import * as contextually from "../shared/context";
 import { imperative } from "@zowe/cli";
 import { FilterItem, FilterDescriptor, errorHandling, syncSessionNode } from "../utils/ProfilesUtils";
 import { sortTreeItems, getAppName, checkIfChildPath, updateOpenFiles, promptForEncoding } from "../shared/utils";
-import { Gui, IZoweTree, IZoweTreeNode, IZoweUSSTreeNode, NodeInteraction, ValidProfileEnum, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
+import {
+    Gui,
+    IZoweTree,
+    IZoweTreeNode,
+    IZoweUSSTreeNode,
+    NodeInteraction,
+    ValidProfileEnum,
+    PersistenceSchemaEnum,
+    ZosEncoding,
+} from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { ZoweUSSNode } from "./ZoweUSSNode";
@@ -951,13 +960,15 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         }
     }
 
-    public async openWithEncoding(node: IZoweUSSTreeNode): Promise<void> {
-        const ussApi = ZoweExplorerApiRegister.getUssApi(node.getProfile());
-        let taggedEncoding: string;
-        if (ussApi.getTag != null) {
-            taggedEncoding = await ussApi.getTag(node.fullPath);
+    public async openWithEncoding(node: IZoweUSSTreeNode, encoding?: ZosEncoding): Promise<void> {
+        if (encoding == null) {
+            const ussApi = ZoweExplorerApiRegister.getUssApi(node.getProfile());
+            let taggedEncoding: string;
+            if (ussApi.getTag != null) {
+                taggedEncoding = await ussApi.getTag(node.fullPath);
+            }
+            encoding = await promptForEncoding(node, taggedEncoding !== "untagged" ? taggedEncoding : undefined);
         }
-        const encoding = await promptForEncoding(node, taggedEncoding !== "untagged" ? taggedEncoding : undefined);
         if (encoding !== undefined) {
             node.setEncoding(encoding);
             await node.openUSS(true, false, this);

@@ -582,18 +582,8 @@
         }
       },
       {
-        "command": "zowe.uss.binary",
-        "title": "%uss.binary%",
-        "category": "Zowe Explorer"
-      },
-      {
         "command": "zowe.uss.uploadDialog",
         "title": "%uss.uploadDialog%",
-        "category": "Zowe Explorer"
-      },
-      {
-        "command": "zowe.uss.text",
-        "title": "%uss.text%",
         "category": "Zowe Explorer"
       },
       {
@@ -1636,14 +1626,6 @@
         },
         {
           "command": "zowe.uss.editAttributes",
-          "when": "never"
-        },
-        {
-          "command": "zowe.uss.binary",
-          "when": "never"
-        },
-        {
-          "command": "zowe.uss.text",
           "when": "never"
         },
         {

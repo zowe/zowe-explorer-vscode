@@ -3,7 +3,6 @@
 exports[`ZoweUSSNode Unit Tests - Initialization of class Checks that the ZoweUSSNode structure matches the snapshot 1`] = `
 ZoweUSSNode {
   "binary": false,
-  "binaryFiles": {},
   "children": [],
   "collapsibleState": 0,
   "contextValue": "textFile",
@@ -17,7 +16,6 @@ ZoweUSSNode {
   "label": "testFile",
   "mParent": ZoweUSSNode {
     "binary": false,
-    "binaryFiles": {},
     "children": [],
     "collapsibleState": 1,
     "contextValue": "directory",
@@ -31,7 +29,6 @@ ZoweUSSNode {
     "label": "testDir",
     "mParent": ZoweUSSNode {
       "binary": false,
-      "binaryFiles": {},
       "children": [],
       "collapsibleState": 1,
       "contextValue": "ussSession",

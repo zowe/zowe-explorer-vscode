@@ -13,7 +13,7 @@ import * as vscode from "vscode";
 import * as ussActions from "./actions";
 import * as refreshActions from "../shared/refresh";
 import * as globals from "../globals";
-import { IZoweUSSTreeNode, IZoweTreeNode } from "@zowe/zowe-explorer-api";
+import { IZoweUSSTreeNode, IZoweTreeNode, ZosEncoding } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import * as contextuals from "../shared/context";
 import { getSelectedNodeList } from "../shared/utils";
@@ -114,24 +114,6 @@ export async function initUSSProvider(context: vscode.ExtensionContext): Promise
         })
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.uss.binary", async (node, nodeList) => {
-            let selectedNodes = getSelectedNodeList(node, nodeList) as IZoweUSSTreeNode[];
-            selectedNodes = selectedNodes.filter((x) => contextuals.isText(x));
-            for (const item of selectedNodes) {
-                await ussActions.changeFileType(item, true, ussFileProvider);
-            }
-        })
-    );
-    context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.uss.text", async (node, nodeList) => {
-            let selectedNodes = getSelectedNodeList(node, nodeList) as IZoweUSSTreeNode[];
-            selectedNodes = selectedNodes.filter((x) => contextuals.isBinary(x));
-            for (const item of selectedNodes) {
-                await ussActions.changeFileType(item, false, ussFileProvider);
-            }
-        })
-    );
-    context.subscriptions.push(
         vscode.commands.registerCommand("zowe.uss.renameNode", (node: IZoweUSSTreeNode): Promise<void> => ussFileProvider.rename(node))
     );
     context.subscriptions.push(
@@ -194,7 +176,7 @@ export async function initUSSProvider(context: vscode.ExtensionContext): Promise
     context.subscriptions.push(
         vscode.commands.registerCommand(
             "zowe.uss.openWithEncoding",
-            (node: IZoweUSSTreeNode): Promise<void> => ussFileProvider.openWithEncoding(node)
+            (node: IZoweUSSTreeNode, encoding?: ZosEncoding): Promise<void> => ussFileProvider.openWithEncoding(node, encoding)
         )
     );
     context.subscriptions.push(

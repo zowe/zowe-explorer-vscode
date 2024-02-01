@@ -242,15 +242,6 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         return this.children;
     }
 
-    /**
-     * Sets the file encoding to binary
-     * @deprecated Use `setEncoding` instead
-     */
-    public setBinary(binary: boolean): void {
-        ZoweLogger.trace("ZoweUSSNode.setBinary called.");
-        this.setEncoding(binary ? { kind: "binary" } : undefined);
-    }
-
     public setEncoding(encoding: ZosEncoding): void {
         ZoweLogger.trace("ZoweUSSNode.setEncoding called.");
         if (!(this.contextValue.startsWith(globals.USS_BINARY_FILE_CONTEXT) || this.contextValue.startsWith(globals.USS_TEXT_FILE_CONTEXT))) {

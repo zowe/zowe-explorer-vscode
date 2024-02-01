@@ -230,11 +230,6 @@ export interface IZoweUSSTreeNode extends IZoweTreeNode {
      */
     shortLabel?: string;
     /**
-     * List of child nodes downloaded in binary format
-     * @deprecated Use `encodingMap` instead
-     */
-    binaryFiles?: Record<string, unknown>;
-    /**
      * List of child nodes and user-selected encodings
      */
     encodingMap?: Record<string, ZosEncoding>;
@@ -242,11 +237,6 @@ export interface IZoweUSSTreeNode extends IZoweTreeNode {
      * Binary indicator. Default false (text)
      */
     binary?: boolean;
-    /**
-     * Specific profile name in use with this node
-     * @deprecated Use `getProfileName` instead
-     */
-    mProfileName?: string;
 
     /**
      * File attributes
@@ -291,12 +281,6 @@ export interface IZoweUSSTreeNode extends IZoweTreeNode {
      * @param {string} newNamePath
      */
     rename?(newNamePath: string);
-    /**
-     * Sets the file encoding to binary
-     * @deprecated Use `setEncoding` instead
-     * @param binary true is a binary file otherwise false
-     */
-    setBinary?(binary: boolean);
     /**
      * Sets the codepage value for the file
      *

@@ -600,43 +600,6 @@ describe("ZoweUSSNode Unit Tests - Function node.reopen()", () => {
     });
 });
 
-describe("ZoweUSSNode Unit Tests - Function node.setBinary()", () => {
-    it("Tests that node.setBinary() works", async () => {
-        const globalMocks = await createGlobalMocks();
-
-        const rootNode = new ZoweUSSNode({
-            label: "favProfileNode",
-            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
-            session: globalMocks.session,
-            profile: globalMocks.profileOne,
-        });
-        rootNode.contextValue = globals.FAV_PROFILE_CONTEXT;
-        const subNode = new ZoweUSSNode({
-            label: "binaryFile",
-            collapsibleState: vscode.TreeItemCollapsibleState.None,
-            parentNode: rootNode,
-            profile: globalMocks.profileOne,
-            encoding: { kind: "binary" },
-        });
-        const child = new ZoweUSSNode({
-            label: "child",
-            collapsibleState: vscode.TreeItemCollapsibleState.None,
-            parentNode: subNode,
-            profile: globalMocks.profileOne,
-        });
-
-        child.setBinary(true);
-        expect(child.contextValue).toEqual(globals.USS_BINARY_FILE_CONTEXT);
-        expect(JSON.stringify(child.iconPath)).toContain("document-binary.svg");
-        child.setBinary(false);
-        expect(child.contextValue).toEqual(globals.USS_TEXT_FILE_CONTEXT);
-        subNode.setBinary(true);
-        expect(subNode.contextValue).toEqual(globals.USS_BINARY_FILE_CONTEXT + globals.FAV_SUFFIX);
-        subNode.setBinary(false);
-        expect(subNode.contextValue).toEqual(globals.USS_TEXT_FILE_CONTEXT + globals.FAV_SUFFIX);
-    });
-});
-
 describe("ZoweUSSNode Unit Tests - Function node.setEncoding()", () => {
     it("sets encoding to binary", () => {
         const node = new ZoweUSSNode({ label: "encodingTest", collapsibleState: vscode.TreeItemCollapsibleState.None });
@@ -644,6 +607,8 @@ describe("ZoweUSSNode Unit Tests - Function node.setEncoding()", () => {
         expect(node.binary).toEqual(true);
         expect(node.encoding).toBeUndefined();
         expect(node.tooltip).toContain("Encoding: Binary");
+        expect(node.contextValue).toEqual(globals.USS_BINARY_FILE_CONTEXT);
+        expect(JSON.stringify(node.iconPath)).toContain("document-binary.svg");
     });
 
     it("sets encoding to text", () => {
@@ -652,6 +617,7 @@ describe("ZoweUSSNode Unit Tests - Function node.setEncoding()", () => {
         expect(node.binary).toEqual(false);
         expect(node.encoding).toBeNull();
         expect(node.tooltip).not.toContain("Encoding:");
+        expect(node.contextValue).toEqual(globals.USS_TEXT_FILE_CONTEXT);
     });
 
     it("sets encoding to other codepage", () => {
@@ -672,6 +638,7 @@ describe("ZoweUSSNode Unit Tests - Function node.setEncoding()", () => {
         node.setEncoding({ kind: "text" });
         expect(node.binary).toEqual(false);
         expect(node.encoding).toBeNull();
+        expect(node.contextValue).toEqual(globals.USS_TEXT_FILE_CONTEXT + globals.FAV_SUFFIX);
     });
 
     it("resets encoding to undefined", () => {
