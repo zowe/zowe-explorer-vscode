@@ -45,6 +45,8 @@ export class UnixCommandHandler extends ZoweCommandProvider {
 
     private static readonly defaultDialogText: string = vscode.l10n.t("$(plus) Create a new Unix command");
     private static instance: UnixCommandHandler;
+    private opCancelledMsg = vscode.l10n.t("Operation Cancelled");
+    public profileInstance = Profiles.getInstance();
     public outputChannel: vscode.OutputChannel;
     public sshSession: SshSession;
     public pathInputConfirmationFlag: boolean = true;
@@ -70,105 +72,67 @@ export class UnixCommandHandler extends ZoweCommandProvider {
 
     public async issueUnixCommand(session?: imperative.Session, command?: string, node?: IZoweTreeNode): Promise<void> {
         let cwd: string = "";
-        let profile: imperative.IProfileLoaded;
-        const profiles = Profiles.getInstance();
         let sshRequiredBoolean: boolean;
-        if (node) {
-            cwd = node.fullPath;
-            await this.checkCurrentProfile(node);
-            if (!session) {
-                session = ZoweExplorerApiRegister.getUssApi(node.getProfile()).getSession();
-                if (!session) {
-                    return;
-                }
-            }
+
+        const profile = await this.getProfile(session, node);
+        if (!profile) {
+            return;
         }
-        let res: boolean = true;
-        if (!session) {
-            const allProfiles = profiles.allProfiles;
-            res = this.checkForSshRequired(allProfiles);
-            const profileNamesList = ProfileManagement.getRegisteredProfileNameList(globals.Trees.USS);
-            if (profileNamesList.length) {
-                if (!res) {
-                    const quickPickOptions: vscode.QuickPickOptions = {
-                        placeHolder: vscode.l10n.t("Select the Profile to use to submit the Unix command"),
-                        ignoreFocusOut: true,
-                        canPickMany: false,
-                    };
-                    const sesName = await Gui.showQuickPick(profileNamesList, quickPickOptions);
-                    if (sesName === undefined) {
-                        Gui.showMessage(vscode.l10n.t("Operation Cancelled"));
-                        return;
-                    }
-                    profile = allProfiles.find((temprofile) => temprofile.name === sesName);
-                }
-                if (ZoweExplorerApiRegister.getCommandApi(profile).sshProfileRequired) {
-                    sshRequiredBoolean = true;
-                    this.sshSession = await this.setsshSession();
-                    if (!this.sshSession) {
-                        return;
-                    }
-                }
-                if (!node) {
-                    await Profiles.getInstance().checkCurrentProfile(profile);
-                }
-                if (Profiles.getInstance().validProfile !== ValidProfileEnum.INVALID) {
-                    session = ZoweExplorerApiRegister.getUssApi(profile).getSession();
-                } else {
-                    Gui.errorMessage(vscode.l10n.t("Profile is invalid"));
-                    return;
-                }
-            } else {
-                Gui.showMessage(vscode.l10n.t("No profiles available"));
+        // check that issueing commands is possible
+        const commandApi = ZoweExplorerApiRegister.getInstance().getCommandApi(profile);
+        if (!commandApi) {
+            {
+                Gui.errorMessage(vscode.l10n.t("Issuing Commands is not supported for this profile."));
                 return;
             }
+        }
+        if (ZoweExplorerApiRegister.getCommandApi(profile).sshProfileRequired) {
+            sshRequiredBoolean = true;
+            this.sshSession = await this.setsshSession();
+            if (!this.sshSession) {
+                return;
+            }
+        }
+        if (!node) {
+            await this.profileInstance.checkCurrentProfile(profile);
         } else {
-            profile = node.getProfile();
+            cwd = node.fullPath;
         }
         if (cwd == "") {
             const options: vscode.InputBoxOptions = {
                 prompt: vscode.l10n.t("Enter the path of the directory in order to execute the command"),
             };
             cwd = await Gui.showInputBox(options);
+            if (cwd == "") {
+                Gui.showMessage(vscode.l10n.t("Redirecting to Home Directory"));
+                this.pathInputConfirmationFlag = false;
+            }
+            if (cwd == undefined) {
+                Gui.showMessage(this.opCancelledMsg);
+                return;
+            }
         }
-        if (cwd == "") {
-            Gui.showMessage(vscode.l10n.t("Redirecting to Home Directory"));
-            this.pathInputConfirmationFlag = false;
-        }
-        if (cwd == undefined) {
-            Gui.showMessage(vscode.l10n.t("Operation cancelled."));
-            return;
-        }
-        if (ZoweExplorerApiRegister.getCommandApi(profile).sshProfileRequired && sshRequiredBoolean == undefined) {
+        if (sshRequiredBoolean) {
             this.sshSession = await this.setsshSession();
             if (!this.sshSession) {
                 return;
             }
         }
         try {
-            if (Profiles.getInstance().validProfile !== ValidProfileEnum.INVALID) {
-                const commandApi = ZoweExplorerApiRegister.getInstance().getCommandApi(profile);
-                if (!ZoweExplorerApiRegister.getCommandApi(profile).issueUnixCommand) {
-                    Gui.errorMessage(
-                        vscode.l10n.t({
-                            message: "Not implemented yet for profile of type: {0}",
-                            args: [profile.type],
-                            comment: ["Profile type"],
-                        })
-                    );
-                    return;
-                }
-                if (commandApi) {
-                    let command1: string = command;
-                    if (!command) {
-                        command1 = await this.getQuickPick(cwd);
-                    }
-                    await this.issueCommand(profile, command1, cwd);
-                } else {
-                    Gui.errorMessage(vscode.l10n.t("Profile is invalid"));
-                    return;
-                }
+            if (!ZoweExplorerApiRegister.getCommandApi(profile).issueUnixCommand) {
+                Gui.errorMessage(
+                    vscode.l10n.t({
+                        message: "Not implemented yet for profile of type: {0}",
+                        args: [profile.type],
+                        comment: ["Profile type"],
+                    })
+                );
+                return;
             }
+            if (!command) {
+                command = await this.getQuickPick(cwd);
+            }
+            await this.issueCommand(profile, command, cwd);
         } catch (error) {
             if (error.toString().includes("non-existing")) {
                 ZoweLogger.error(error);
@@ -208,7 +172,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
             imperative.ConnectionPropsForSessCfg.resolveSessCfgProps<ISshSession>(sshSessCfg, cmdArgs);
             this.sshSession = new SshSession(sshSessCfg);
         } else {
-            Gui.showMessage(vscode.l10n.t("Operation Cancelled"));
+            Gui.showMessage(this.opCancelledMsg);
             return;
         }
         return this.sshSession;
@@ -229,7 +193,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
                 };
                 const sesName = await Gui.showQuickPick(sshProfileNamesList, quickPickOptions);
                 if (sesName === undefined) {
-                    Gui.showMessage(vscode.l10n.t("Operation Cancelled"));
+                    Gui.showMessage(this.opCancelledMsg);
                     return;
                 }
 
@@ -243,50 +207,75 @@ export class UnixCommandHandler extends ZoweCommandProvider {
 
     private async getSshProfile(): Promise<imperative.IProfileLoaded> {
         ZoweLogger.trace("UnixCommandHandler.getsshParams called.");
-        const profileInfo = await Profiles.getInstance().getProfileInfo();
-        const params = ["port", "host", "user", "password"];
-        const profiles = profileInfo.getAllProfiles("ssh");
-        let exitflag: boolean;
-        if (!profiles) {
-            Gui.errorMessage(vscode.l10n.t("No SSH profile found. Please create an SSH profile before issuing Unix commands."));
+        const profiles = await this.profileInstance.fetchAllProfilesByType("ssh");
+        if (!profiles.length) {
+            Gui.errorMessage(vscode.l10n.t("No SSH profile found. Please create an SSH profile."));
             return;
         }
         let sshProfile: imperative.IProfileLoaded;
         if (profiles.length > 0) {
-            sshProfile = await this.selectSshProfile(profiles.map((p) => imperative.ProfileInfo.profAttrsToProfLoaded(p)));
-            if (sshProfile != null) {
-                const prof = profileInfo.mergeArgsForProfile(sshProfile.profile as imperative.IProfAttrs);
-                for (const p of params) {
-                    let obj = prof.knownArgs.find((a) => a.argName === p);
-                    if (obj) {
-                        if (obj.argValue) {
-                            sshProfile.profile[p] = obj.argValue;
-                        } else {
-                            sshProfile.profile[p] = profileInfo.loadSecureArg(obj);
-                        }
-                    } else {
-                        obj = prof.missingArgs.find((a) => a.argName === p);
-                        if (obj.argValue) {
-                            sshProfile.profile[p] = obj.argValue;
-                        } else {
-                            const options: vscode.InputBoxOptions = {
-                                prompt: vscode.l10n.t(`Enter the {0} of the profile.`,p),
-                                value: "",
-                                ignoreFocusOut: true,
-                                password: p.toLowerCase().includes("password"), 
-                            };
-                            const response = await Gui.showInputBox(options);
-                            if (!response) {
-                                Gui.showMessage(vscode.l10n.t(`No command entered.`));
-                                return;
-                            }
-                            sshProfile.profile[p] = response;
-                        }
-                    }
+            sshProfile = await this.selectSshProfile(profiles);
+            if (!(sshProfile.profile.host && sshProfile.profile.port)) {
+                const currentProfile = await this.profileInstance.getProfileFromConfig(sshProfile.name);
+                const filePath = currentProfile.profLoc.osLoc[0];
+                await this.profileInstance.openConfigFile(filePath);
+                Gui.errorMessage(vscode.l10n.t("SSH profile missing connection details. Please update."));
+                return;
+            }
+            if (!(sshProfile.profile.user | sshProfile.profile.password) && !sshProfile.profile.privateKey) {
+                const prompted = await this.profileInstance.promptCredentials(sshProfile);
+                if (!prompted) {
+                    return;
                 }
             }
         }
         return sshProfile;
+    }
+
+    public async getProfile(session?: imperative.Session, node?: IZoweTreeNode): Promise<imperative.IProfileLoaded> {
+        let profile: imperative.IProfileLoaded;
+        if (node) {
+            if (!session) {
+                session = ZoweExplorerApiRegister.getUssApi(node.getProfile()).getSession();
+                if (!session) {
+                    return;
+                }
+            }
+        }
+        let res: boolean = true;
+        if (!session) {
+            const allProfiles = this.profileInstance.allProfiles;
+            res = this.checkForSshRequired(allProfiles);
+            const profileNamesList = ProfileManagement.getRegisteredProfileNameList(globals.Trees.USS);
+            if (profileNamesList.length) {
+                if (!res) {
+                    const quickPickOptions: vscode.QuickPickOptions = {
+                        placeHolder: vscode.l10n.t("Select the Profile to use to submit the Unix command"),
+                        ignoreFocusOut: true,
+                        canPickMany: false,
+                    };
+                    const sesName = await Gui.showQuickPick(profileNamesList, quickPickOptions);
+                    if (sesName === undefined) {
+                        Gui.showMessage(this.opCancelledMsg);
+                        return;
+                    }
+                    profile = allProfiles.find((temprofile) => temprofile.name === sesName);
+                }
+
+                if (this.profileInstance.validProfile !== ValidProfileEnum.INVALID) {
+                    session = ZoweExplorerApiRegister.getUssApi(profile).getSession();
+                } else {
+                    Gui.errorMessage(vscode.l10n.t("Profile is invalid"));
+                    return;
+                }
+            } else {
+                Gui.showMessage(vscode.l10n.t("No profiles available"));
+                return;
+            }
+        } else {
+            profile = node.getProfile();
+        }
+        return profile;
     }
 
     private async getQuickPick(cwd: string): Promise<string> {
@@ -296,59 +285,37 @@ export class UnixCommandHandler extends ZoweCommandProvider {
         if (this.history.getSearchHistory().length > 0) {
             const createPick = new FilterDescriptor(UnixCommandHandler.defaultDialogText);
             const items: vscode.QuickPickItem[] = this.history.getSearchHistory().map((element) => new FilterItem({ text: element }));
-            if (globals.ISTHEIA) {
-                const commandEditMsg = alwaysEdit ? vscode.l10n.t("(An option to edit will follow)") : "";
-                const options1: vscode.QuickPickOptions = {
-                    placeHolder:
-                        vscode.l10n.t({
-                            message: "Select a Unix command to run against {0}",
-                            args: [cwd],
-                            comment: ["Current work directory"],
-                        }) +
-                        " " +
-                        commandEditMsg,
-                };
-                // get user selection
-                const choice = await Gui.showQuickPick([createPick, ...items], options1);
-                if (!choice) {
-                    Gui.showMessage(vscode.l10n.t("No selection made. Operation cancelled."));
-                    return;
-                }
-                response = choice === createPick ? "" : choice.label;
-            } else {
-                const quickpick = Gui.createQuickPick();
-                quickpick.placeholder = alwaysEdit
-                    ? vscode.l10n.t({
-                          message: "Select a Unix command to run against {0} (An option to edit will follow)",
-                          args: [cwd],
-                          comment: ["Current work directory"],
-                      })
-                    : vscode.l10n.t({
-                          message: "Select a Unix command to run immediately against {0}",
-                          args: [cwd],
-                          comment: ["Current work directory"],
-                      });
+            const quickpick = Gui.createQuickPick();
+            quickpick.placeholder = alwaysEdit
+                ? vscode.l10n.t({
+                      message: "Select a Unix command to run against {0} (An option to edit will follow)",
+                      args: [cwd],
+                      comment: ["Current work directory"],
+                  })
+                : vscode.l10n.t({
+                      message: "Select a Unix command to run immediately against {0}",
+                      args: [cwd],
+                      comment: ["Current work directory"],
+                  });
 
-                quickpick.items = [createPick, ...items];
-                quickpick.ignoreFocusOut = true;
-                quickpick.show();
-                const choice = await Gui.resolveQuickPick(quickpick);
-                quickpick.hide();
-                if (!choice) {
-                    Gui.showMessage(vscode.l10n.t("No selection made. Operation cancelled."));
-                    return;
+            quickpick.items = [createPick, ...items];
+            quickpick.ignoreFocusOut = true;
+            quickpick.show();
+            const choice = await Gui.resolveQuickPick(quickpick);
+            quickpick.hide();
+            if (!choice) {
+                Gui.showMessage(this.opCancelledMsg);
+                return;
+            }
+            if (choice instanceof FilterDescriptor) {
+                if (quickpick.value) {
+                    response = quickpick.value;
                 }
-                if (choice instanceof FilterDescriptor) {
-                    if (quickpick.value) {
-                        response = quickpick.value;
-                    }
-                } else {
-                    response = choice.label;
-                }
+            } else {
+                response = choice.label;
             }
         }
         if (!response || alwaysEdit) {
-            // manually entering a search
             const options2: vscode.InputBoxOptions = {
                 prompt: vscode.l10n.t("Enter or update the Unix command"),
                 value: response,

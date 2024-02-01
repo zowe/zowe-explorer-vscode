@@ -37,6 +37,7 @@ describe("UnixCommand Actions Unit Testing", () => {
     const mockdefaultProfile = jest.fn();
     const getConfiguration = jest.fn();
     const getProfileInfomock = jest.fn();
+    const fetchSshProfiles = jest.fn();
 
     const session = new imperative.Session({
         user: "fake",
@@ -172,13 +173,28 @@ describe("UnixCommand Actions Unit Testing", () => {
         mergeArgsForProfile: jest.fn().mockReturnValue({
             knownArgs: [
                 { argName: "port", argValue: "TEST", secure: false },
-                { argName: "host",  secure: true },
+                { argName: "host", secure: true },
             ],
-            missingArgs: [{ argName: "user", argValue: undefined },
-            { argName: "password", secure: true }],
+            missingArgs: [
+                { argName: "user", argValue: undefined },
+                { argName: "password", secure: true },
+            ],
         }),
         loadSecureArg: jest.fn().mockReturnValue("fake"),
     } as any);
+
+    fetchSshProfiles.mockReturnValue([
+        {
+            name: "ssh",
+            type: "ssh",
+            profile: {
+                host: "host.com",
+                port: 123,
+            },
+            message: "",
+            failNotFound: false,
+        } as imperative.IProfileLoaded,
+    ]);
 
     it("test the issueUnixCommand function", async () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
@@ -195,6 +211,8 @@ describe("UnixCommand Actions Unit Testing", () => {
                     getDefaultProfile: mockdefaultProfile,
                     validProfile: ValidProfileEnum.VALID,
                     getProfileInfo: getProfileInfomock,
+                    fetchAllProfilesByType: fetchSshProfiles,
+                    promptCredentials: ["entered"],
                 };
             }),
         });
@@ -251,6 +269,8 @@ describe("UnixCommand Actions Unit Testing", () => {
                     getDefaultProfile: mockdefaultProfile,
                     validProfile: ValidProfileEnum.VALID,
                     getProfileInfo: getProfileInfomock,
+                    fetchAllProfilesByType: fetchSshProfiles,
+                    promptCredentials: jest.fn(),
                 };
             }),
         });
@@ -306,6 +326,8 @@ describe("UnixCommand Actions Unit Testing", () => {
                     getDefaultProfile: mockdefaultProfile,
                     validProfile: ValidProfileEnum.VALID,
                     getProfileInfo: getProfileInfomock,
+                    fetchAllProfilesByType: fetchSshProfiles,
+                    promptCredentials: jest.fn(),
                 };
             }),
         });
@@ -354,6 +376,8 @@ describe("UnixCommand Actions Unit Testing", () => {
                     getDefaultProfile: mockdefaultProfile,
                     validProfile: ValidProfileEnum.VALID,
                     getProfileInfo: getProfileInfomock,
+                    fetchAllProfilesByType: fetchSshProfiles,
+                    promptCredentials: jest.fn(),
                 };
             }),
         });
@@ -399,6 +423,8 @@ describe("UnixCommand Actions Unit Testing", () => {
                     getDefaultProfile: mockdefaultProfile,
                     validProfile: ValidProfileEnum.VALID,
                     getProfileInfo: getProfileInfomock,
+                    fetchAllProfilesByType: fetchSshProfiles,
+                    promptCredentials: jest.fn(),
                 };
             }),
         });
@@ -428,6 +454,8 @@ describe("UnixCommand Actions Unit Testing", () => {
                     getDefaultProfile: mockdefaultProfile,
                     validProfile: ValidProfileEnum.VALID,
                     getProfileInfo: getProfileInfomock,
+                    fetchAllProfilesByType: fetchSshProfiles,
+                    promptCredentials: jest.fn(),
                 };
             }),
         });
@@ -456,6 +484,8 @@ describe("UnixCommand Actions Unit Testing", () => {
                     getDefaultProfile: mockdefaultProfile,
                     validProfile: ValidProfileEnum.VALID,
                     getProfileInfo: getProfileInfomock,
+                    fetchAllProfilesByType: fetchSshProfiles,
+                    promptCredentials: jest.fn(),
                 };
             }),
         });
@@ -502,6 +532,8 @@ describe("UnixCommand Actions Unit Testing", () => {
                     validProfile: ValidProfileEnum.VALID,
                     getDefaultProfile: mockdefaultProfile,
                     getProfileInfo: getProfileInfomock,
+                    fetchAllProfilesByType: fetchSshProfiles,
+                    promptCredentials: jest.fn(),
                 };
             }),
         });
@@ -561,6 +593,8 @@ describe("UnixCommand Actions Unit Testing", () => {
                     validProfile: ValidProfileEnum.INVALID,
                     getDefaultProfile: mockdefaultProfile,
                     getProfileInfo: getProfileInfomock,
+                    fetchAllProfilesByType: fetchSshProfiles,
+                    promptCredentials: jest.fn(),
                 };
             }),
         });
@@ -583,6 +617,8 @@ describe("UnixCommand Actions Unit Testing", () => {
                     getBaseProfile: jest.fn(),
                     checkCurrentProfile: jest.fn(),
                     zosmfProfile: mockLoadNamedProfile,
+                    fetchAllProfilesByType: fetchSshProfiles,
+                    promptCredentials: jest.fn(),
                 };
             }),
         });
@@ -607,6 +643,8 @@ describe("UnixCommand Actions Unit Testing", () => {
                     validateProfiles: jest.fn(),
                     getBaseProfile: jest.fn(),
                     validProfile: ValidProfileEnum.VALID,
+                    fetchAllProfilesByType: jest.fn(),
+                    promptCredentials: jest.fn(),
                 };
             }),
         });
@@ -630,6 +668,8 @@ describe("UnixCommand Actions Unit Testing", () => {
                     zosmfProfile: mockLoadNamedProfile,
                     getDefaultProfile: mockdefaultProfile,
                     getProfileInfo: getProfileInfomock,
+                    fetchAllProfilesByType: jest.fn(),
+                    promptCredentials: jest.fn(),
                 };
             }),
         });
@@ -653,16 +693,13 @@ describe("UnixCommand Actions Unit Testing", () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
-                    getProfileInfo: jest.fn().mockReturnValue({
-                        usingTeamConfig: true,
-                        getAllProfiles: jest.fn().mockReturnValue(undefined),
-                    } as any),
+                    fetchAllProfilesByType: jest.fn().mockReturnValue([]),
                 };
             }),
         });
         await unixActions.setsshSession();
         expect(showErrorMessage.mock.calls.length).toBe(1);
-        expect(showErrorMessage.mock.calls[0][0]).toEqual("No SSH profile found. Please create an SSH profile before issuing Unix commands.");
+        expect(showErrorMessage.mock.calls[0][0]).toEqual("No SSH profile found. Please create an SSH profile.");
     });
 
     it("tests the selectSshProfile function", async () => {
