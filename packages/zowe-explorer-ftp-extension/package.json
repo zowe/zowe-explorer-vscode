@@ -24,7 +24,7 @@
   "activationEvents": [
     "onStartupFinished"
   ],
-  "main": "./out/src/extension.js",
+  "main": "./out/src/main.extension",
   "contributes": {},
   "extensionDependencies": [
     "Zowe.vscode-extension-for-zowe"
@@ -54,9 +54,7 @@
   },
   "devDependencies": {
     "@types/tmp": "0.2.0",
-    "concurrently": "^5.2.0",
-    "webpack": "^4.42.1",
-    "webpack-cli": "^3.3.11"
+    "concurrently": "^5.2.0"
   },
   "jest": {
     "moduleFileExtensions": [

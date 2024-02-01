@@ -3,7 +3,7 @@
 */**
 
 # Allowlist what we need
-!out/src/extension.js
+!out/src/**.js
 !resources/**/*.png
 
 !CHANGELOG.md
