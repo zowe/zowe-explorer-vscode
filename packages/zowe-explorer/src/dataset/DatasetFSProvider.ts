@@ -123,6 +123,15 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         return results;
     }
 
+    public updateFilterEntry(uri: vscode.Uri, pattern: string): void {
+        const filterEntry = this._lookup(uri, false);
+        if (!isFilterEntry(filterEntry)) {
+            return;
+        }
+
+        filterEntry.filter["pattern"] = pattern;
+    }
+
     /**
      * Creates a directory entry in the provider at the given URI.
      * @param uri The URI that represents a new directory path

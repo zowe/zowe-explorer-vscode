@@ -1104,6 +1104,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             }
             this.addSearchHistory(pattern);
         }
+        DatasetFSProvider.instance.updateFilterEntry(nonFaveNode.resourceUri, pattern);
         await TreeViewUtils.expandNode(nonFaveNode, this);
     }
 
