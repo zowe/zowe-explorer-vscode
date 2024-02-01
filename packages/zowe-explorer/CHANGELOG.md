@@ -2,11 +2,14 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
-## New features and enhancements
+## TBD Release
+
+### New features and enhancements
 
 - Adapted to new API changes from grouping of common methods into singleton classes [#2109](https://github.com/zowe/vscode-extension-for-zowe/issues/2109)
+- Migrated to webpack v5 [#2214](https://github.com/zowe/vscode-extension-for-zowe/issues/2214)
 
-## Bug fixes
+### Bug fixes
 
 ## `3.0.0-next.202401241448`
 
