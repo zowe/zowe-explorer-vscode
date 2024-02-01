@@ -138,7 +138,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         const file = await this._lookupAsFile(uri);
         const uriInfo = getInfoForUri(uri, Profiles.getInstance());
         const bufBuilder = new BufferBuilder();
-        const filePath = uri.path.substring(uriInfo.slashAfterProfilePos + 1);
+        const filePath = uri.path.substring(uriInfo.slashAfterProfilePos);
         const metadata = file.metadata;
         const resp = await ZoweExplorerApiRegister.getUssApi(metadata.profile).getContents(filePath, {
             returnEtag: true,
