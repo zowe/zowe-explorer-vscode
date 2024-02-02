@@ -67,6 +67,7 @@ jobs:
         uses: codecov/codecov-action@v4
         with:
           env_vars: OS,NODE
+          token: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Package VSIX
         if: matrix.os == 'ubuntu-latest' && matrix.node-version == '16.x'
