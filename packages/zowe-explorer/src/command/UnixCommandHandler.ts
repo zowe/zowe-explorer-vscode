@@ -215,6 +215,9 @@ export class UnixCommandHandler extends ZoweCommandProvider {
         let sshProfile: imperative.IProfileLoaded;
         if (profiles.length > 0) {
             sshProfile = await this.selectSshProfile(profiles);
+            if (!sshProfile) {
+                return;
+            }
             if (!(sshProfile.profile.host && sshProfile.profile.port)) {
                 const currentProfile = await this.profileInstance.getProfileFromConfig(sshProfile.name);
                 const filePath = currentProfile.profLoc.osLoc[0];
