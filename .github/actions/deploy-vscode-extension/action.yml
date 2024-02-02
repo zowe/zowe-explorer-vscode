@@ -17,5 +17,5 @@ outputs:
   changelog:
     description: The body of the changelog to be added to GH Releases
 runs:
-  using: node12
+  using: node20
   main: index.js
