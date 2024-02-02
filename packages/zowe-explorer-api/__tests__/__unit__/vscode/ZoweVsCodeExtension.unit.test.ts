@@ -11,9 +11,9 @@
 
 import * as vscode from "vscode";
 import { Gui } from "../../../src/globals/Gui";
-import { MessageSeverity, IZoweLogger } from "../../../src/logger/IZoweLogger";
+import { MessageSeverity, ZoweLogger } from "../../../src/logger";
 import { IProfileLoaded } from "@zowe/imperative";
-import { IPromptCredentialsOptions, ZoweVsCodeExtension } from "../../../src/vscode";
+import { PromptCredentialsOptions, ZoweVsCodeExtension } from "../../../src/vscode";
 import { ProfilesCache, IApiRegisterClient } from "../../../src";
 import { imperative } from "@zowe/cli";
 
@@ -91,7 +91,7 @@ describe("ZoweVsCodeExtension", () => {
     describe("deprecated methods", () => {
         it("showVsCodeMessage should pass on params to Gui module", () => {
             const showMessageSpy = jest.spyOn(Gui, "showMessage").mockImplementation();
-            ZoweVsCodeExtension.showVsCodeMessage("test", MessageSeverity.INFO, undefined as unknown as IZoweLogger);
+            ZoweVsCodeExtension.showVsCodeMessage("test", MessageSeverity.INFO, undefined as unknown as ZoweLogger);
             expect(showMessageSpy).toHaveBeenCalledWith("test", {
                 severity: MessageSeverity.INFO,
                 logger: undefined,
@@ -109,7 +109,7 @@ describe("ZoweVsCodeExtension", () => {
         });
 
         describe("promptCredentials", () => {
-            const promptCredsOptions: IPromptCredentialsOptions = {
+            const promptCredsOptions: PromptCredentialsOptions.ComplexOptions = {
                 sessionName: "test",
             };
 
@@ -179,7 +179,7 @@ describe("ZoweVsCodeExtension", () => {
     });
 
     describe("updateCredentials", () => {
-        const promptCredsOptions: IPromptCredentialsOptions = {
+        const promptCredsOptions: PromptCredentialsOptions.ComplexOptions = {
             sessionName: "test",
         };
 

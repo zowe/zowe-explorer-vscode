@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { ValidProfileEnum } from "@zowe/zowe-explorer-api";
+import { Validation } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../../src/Profiles";
 import {
     createGetConfigMock,
@@ -25,7 +25,6 @@ import * as refreshActions from "../../../src/shared/refresh";
 import { createDatasetSessionNode, createDatasetTree } from "../../../__mocks__/mockCreators/datasets";
 import * as sessUtils from "../../../src/utils/SessionUtils";
 import { SettingsConfig } from "../../../src/utils/SettingsConfig";
-import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
 
 function createGlobalMocks() {
@@ -50,7 +49,7 @@ function createGlobalMocks() {
                 allProfiles: [{ name: "firstName" }, { name: "secondName" }],
                 defaultProfile: { name: "firstName" },
                 type: "zosmf",
-                validProfile: ValidProfileEnum.VALID,
+                validProfile: Validation.ValidationType.VALID,
                 checkCurrentProfile: jest.fn(() => {
                     return profilesForValidation;
                 }),

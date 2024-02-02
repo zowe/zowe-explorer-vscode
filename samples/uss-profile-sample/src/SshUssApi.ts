@@ -1,9 +1,9 @@
 import * as Client from "ssh2-sftp-client";
 import * as vscode from "vscode";
 import { IDownloadOptions, IUploadOptions, IZosFilesResponse, ZosUssProfile, imperative } from "@zowe/cli";
-import * as ZoweExplorerApi from "@zowe/zowe-explorer-api";
+import { MainframeInteraction } from "@zowe/zowe-explorer-api";
 
-export class SshUssApi implements ZoweExplorerApi.IUss {
+export class SshUssApi implements MainframeInteraction.IUss {
     public constructor(public profile?: imperative.IProfileLoaded) {}
 
     public getProfileTypeName(): string {

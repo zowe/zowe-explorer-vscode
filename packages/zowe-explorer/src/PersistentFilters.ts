@@ -10,7 +10,7 @@
  */
 
 import * as globals from "./globals";
-import * as api from "@zowe/zowe-explorer-api";
+import { Types } from "@zowe/zowe-explorer-api";
 import { ZoweLogger } from "./utils/LoggerUtils";
 import { ZoweLocalStorage } from "./utils/ZoweLocalStorage";
 
@@ -21,7 +21,7 @@ export type PersistentFilter = {
     sessions: string[];
     searchHistory: string[];
     fileHistory: string[];
-    templates: api.DataSetAllocTemplate[];
+    templates: Types.DataSetAllocTemplate[];
 };
 
 /**
@@ -41,7 +41,7 @@ export class PersistentFilters {
     private mSearchHistory: string[] = [];
     private mFileHistory: string[] = [];
     private mSessions: string[] = [];
-    private mDsTemplates: api.DataSetAllocTemplate[] = [];
+    private mDsTemplates: Types.DataSetAllocTemplate[] = [];
 
     public constructor(schema: string, private maxSearchHistory = globals.MAX_SEARCH_HISTORY, private maxFileHistory = globals.MAX_FILE_HISTORY) {
         ZoweLogger.trace("PersistentFilters.constructor called.");
@@ -116,7 +116,7 @@ export class PersistentFilters {
         }
     }
 
-    public addDsTemplateHistory(criteria: api.DataSetAllocTemplate): void {
+    public addDsTemplateHistory(criteria: Types.DataSetAllocTemplate): void {
         if (criteria) {
             let newTemplateName: string;
             Object.entries(criteria).forEach(([key]) => {
@@ -177,8 +177,8 @@ export class PersistentFilters {
         return this.mFileHistory;
     }
 
-    public getDsTemplates(): api.DataSetAllocTemplate[] {
-        const dsTemplateLines: api.DataSetAllocTemplate[] = ZoweLocalStorage.getValue<PersistentFilter>(this.schema).templates;
+    public getDsTemplates(): Types.DataSetAllocTemplate[] {
+        const dsTemplateLines: Types.DataSetAllocTemplate[] = ZoweLocalStorage.getValue<PersistentFilter>(this.schema).templates;
         if (dsTemplateLines.length !== this.mDsTemplates.length) {
             this.mDsTemplates = dsTemplateLines;
         }

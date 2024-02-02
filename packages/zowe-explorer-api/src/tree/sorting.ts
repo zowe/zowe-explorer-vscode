@@ -9,35 +9,37 @@
  *
  */
 
-export enum DatasetSortOpts {
-    Name,
-    LastModified,
-    UserId,
-}
+export namespace Sorting {
+    export enum DatasetSortOpts {
+        Name,
+        LastModified,
+        UserId,
+    }
 
-export enum SortDirection {
-    Ascending,
-    Descending,
-}
+    export enum SortDirection {
+        Ascending,
+        Descending,
+    }
 
-export enum DatasetFilterOpts {
-    LastModified,
-    UserId,
-}
+    export enum DatasetFilterOpts {
+        LastModified,
+        UserId,
+    }
 
-export type DatasetFilter = {
-    method: DatasetFilterOpts;
-    value: string;
-};
+    export type DatasetFilter = {
+        method: DatasetFilterOpts;
+        value: string;
+    };
 
-export type NodeSort = {
-    method: DatasetSortOpts | JobSortOpts;
-    direction: SortDirection;
-};
+    export type NodeSort = {
+        method: DatasetSortOpts | JobSortOpts;
+        direction: SortDirection;
+    };
 
-export enum JobSortOpts {
-    Id,
-    DateSubmitted,
-    Name,
-    ReturnCode,
+    export enum JobSortOpts {
+        Id,
+        DateSubmitted,
+        Name,
+        ReturnCode,
+    }
 }

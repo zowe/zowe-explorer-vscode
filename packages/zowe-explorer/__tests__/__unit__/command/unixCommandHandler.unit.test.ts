@@ -12,7 +12,7 @@
 jest.mock("Session");
 
 import * as vscode from "vscode";
-import { Gui, ValidProfileEnum } from "@zowe/zowe-explorer-api";
+import { Gui, Validation } from "@zowe/zowe-explorer-api";
 import * as profileLoader from "../../../src/Profiles";
 import { UnixCommandHandler } from "../../../src/command/UnixCommandHandler";
 import * as utils from "../../../src/utils/ProfilesUtils";
@@ -193,7 +193,7 @@ describe("UnixCommand Actions Unit Testing", () => {
                     validateProfiles: jest.fn(),
                     getBaseProfile: jest.fn(),
                     getDefaultProfile: mockdefaultProfile,
-                    validProfile: ValidProfileEnum.VALID,
+                    validProfile: Validation.ValidationType.VALID,
                     getProfileInfo: getProfileInfomock,
                 };
             }),
@@ -247,7 +247,7 @@ describe("UnixCommand Actions Unit Testing", () => {
                     validateProfiles: jest.fn(),
                     getBaseProfile: jest.fn(),
                     getDefaultProfile: mockdefaultProfile,
-                    validProfile: ValidProfileEnum.VALID,
+                    validProfile: Validation.ValidationType.VALID,
                     getProfileInfo: getProfileInfomock,
                 };
             }),
@@ -300,7 +300,7 @@ describe("UnixCommand Actions Unit Testing", () => {
                     validateProfiles: jest.fn(),
                     getBaseProfile: jest.fn(),
                     getDefaultProfile: mockdefaultProfile,
-                    validProfile: ValidProfileEnum.VALID,
+                    validProfile: Validation.ValidationType.VALID,
                     getProfileInfo: getProfileInfomock,
                 };
             }),
@@ -346,7 +346,7 @@ describe("UnixCommand Actions Unit Testing", () => {
                     validateProfiles: jest.fn(),
                     getBaseProfile: jest.fn(),
                     getDefaultProfile: mockdefaultProfile,
-                    validProfile: ValidProfileEnum.VALID,
+                    validProfile: Validation.ValidationType.VALID,
                     getProfileInfo: getProfileInfomock,
                 };
             }),
@@ -389,7 +389,7 @@ describe("UnixCommand Actions Unit Testing", () => {
                     validateProfiles: jest.fn(),
                     getBaseProfile: jest.fn(),
                     getDefaultProfile: mockdefaultProfile,
-                    validProfile: ValidProfileEnum.VALID,
+                    validProfile: Validation.ValidationType.VALID,
                     getProfileInfo: getProfileInfomock,
                 };
             }),
@@ -416,7 +416,7 @@ describe("UnixCommand Actions Unit Testing", () => {
                     validateProfiles: jest.fn(),
                     getBaseProfile: jest.fn(),
                     getDefaultProfile: mockdefaultProfile,
-                    validProfile: ValidProfileEnum.VALID,
+                    validProfile: Validation.ValidationType.VALID,
                     getProfileInfo: getProfileInfomock,
                 };
             }),
@@ -442,7 +442,7 @@ describe("UnixCommand Actions Unit Testing", () => {
                     validateProfiles: jest.fn(),
                     getBaseProfile: jest.fn(),
                     getDefaultProfile: mockdefaultProfile,
-                    validProfile: ValidProfileEnum.VALID,
+                    validProfile: Validation.ValidationType.VALID,
                     getProfileInfo: getProfileInfomock,
                 };
             }),
@@ -485,7 +485,7 @@ describe("UnixCommand Actions Unit Testing", () => {
                     }),
                     validateProfiles: jest.fn(),
                     getBaseProfile: jest.fn(),
-                    validProfile: ValidProfileEnum.VALID,
+                    validProfile: Validation.ValidationType.VALID,
                     getDefaultProfile: mockdefaultProfile,
                     getProfileInfo: getProfileInfomock,
                 };
@@ -540,9 +540,9 @@ describe("UnixCommand Actions Unit Testing", () => {
                     validateProfiles: jest.fn(),
                     getBaseProfile: jest.fn(),
                     checkCurrentProfile: jest.fn(() => {
-                        return ValidProfileEnum.INVALID;
+                        return Validation.ValidationType.INVALID;
                     }),
-                    validProfile: ValidProfileEnum.INVALID,
+                    validProfile: Validation.ValidationType.INVALID,
                     getDefaultProfile: mockdefaultProfile,
                     getProfileInfo: getProfileInfomock,
                 };
@@ -563,7 +563,7 @@ describe("UnixCommand Actions Unit Testing", () => {
                 return {
                     allProfiles: [{ name: "firstName", profile: { user: "firstName", password: "12345" } }, { name: "secondName" }],
                     defaultProfile: { name: "firstName" },
-                    validProfile: ValidProfileEnum.VALID,
+                    validProfile: Validation.ValidationType.VALID,
                     getBaseProfile: jest.fn(),
                     checkCurrentProfile: jest.fn(),
                     zosmfProfile: mockLoadNamedProfile,
@@ -590,7 +590,7 @@ describe("UnixCommand Actions Unit Testing", () => {
                     }),
                     validateProfiles: jest.fn(),
                     getBaseProfile: jest.fn(),
-                    validProfile: ValidProfileEnum.VALID,
+                    validProfile: Validation.ValidationType.VALID,
                 };
             }),
         });
@@ -608,7 +608,7 @@ describe("UnixCommand Actions Unit Testing", () => {
                 return {
                     allProfiles: [{ name: "firstName", profile: { user: "firstName", password: "12345" } }, { name: "secondName" }],
                     defaultProfile: { name: "firstName" },
-                    validProfile: ValidProfileEnum.VALID,
+                    validProfile: Validation.ValidationType.VALID,
                     getBaseProfile: jest.fn(),
                     checkCurrentProfile: jest.fn(),
                     zosmfProfile: mockLoadNamedProfile,

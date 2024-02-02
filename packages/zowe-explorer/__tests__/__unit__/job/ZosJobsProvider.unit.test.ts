@@ -15,7 +15,7 @@ import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
 import * as globals from "../../../src/globals";
 import * as utils from "../../../src/utils/ProfilesUtils";
-import { Gui, IZoweJobTreeNode, ProfilesCache, ValidProfileEnum } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweJobTreeNode, ProfilesCache, Validation } from "@zowe/zowe-explorer-api";
 import { createIJobFile, createIJobObject, createJobFavoritesNode, createJobSessionNode, MockJobDetail } from "../../../__mocks__/mockCreators/jobs";
 import { Job, Spool } from "../../../src/job/ZoweJobNode";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
@@ -445,7 +445,7 @@ describe("ZosJobsProvider unit tests - Function loadProfilesForFavorites", () =>
                     getBaseProfile: jest.fn(() => {
                         return blockMocks.imperativeProfile;
                     }),
-                    validProfile: ValidProfileEnum.VALID,
+                    validProfile: Validation.ValidationType.VALID,
                     getProfileInfo: jest.fn(() => createInstanceOfProfileInfo()),
                     fetchAllProfiles: jest.fn(() => {
                         return [{ name: "sestest" }, { name: "profile1" }, { name: "profile2" }];

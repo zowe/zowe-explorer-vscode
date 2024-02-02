@@ -14,7 +14,7 @@ import { IZoweProviders } from "./init";
 import { DatasetTree } from "../dataset/DatasetTree";
 import { USSTree } from "../uss/USSTree";
 import { ZosJobsProvider } from "../job/ZosJobsProvider";
-import { IZoweNodeType } from "@zowe/zowe-explorer-api";
+import { Types } from "@zowe/zowe-explorer-api";
 import { getSessionType } from "./context";
 
 type ProviderFunctions = {
@@ -55,11 +55,11 @@ export class TreeProviders {
         };
     }
 
-    public static getSessionForAllTrees(name: string): IZoweNodeType[] {
-        const sessions: IZoweNodeType[] = [];
+    public static getSessionForAllTrees(name: string): Types.IZoweNodeType[] {
+        const sessions: Types.IZoweNodeType[] = [];
         for (const key of Object.keys(TreeProviders.providers)) {
             const provider = TreeProviders.providers[key];
-            const session = provider.mSessionNodes.find((mSessionNode: IZoweNodeType) => mSessionNode.getLabel().toString() === name);
+            const session = provider.mSessionNodes.find((mSessionNode: Types.IZoweNodeType) => mSessionNode.getLabel().toString() === name);
             if (session) {
                 sessions.push(session);
             }
@@ -72,7 +72,7 @@ export class TreeProviders {
         return sessions.length > 1;
     }
 
-    public static contextValueExistsAcrossTrees(node: IZoweNodeType, contextValue: string): boolean {
+    public static contextValueExistsAcrossTrees(node: Types.IZoweNodeType, contextValue: string): boolean {
         const sessions = this.getSessionForAllTrees(node.getLabel().toString());
         const sessionContextInOtherTree = sessions.find(
             (session) => session.contextValue.includes(contextValue) && getSessionType(session) !== getSessionType(node)
