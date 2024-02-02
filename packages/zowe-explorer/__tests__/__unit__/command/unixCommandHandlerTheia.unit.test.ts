@@ -11,7 +11,7 @@
 
 import * as vscode from "vscode";
 import * as profileLoader from "../../../src/Profiles";
-import { Gui, ValidProfileEnum } from "@zowe/zowe-explorer-api";
+import { Gui, Validation } from "@zowe/zowe-explorer-api";
 import { UnixCommandHandler } from "../../../src/command/UnixCommandHandler";
 import * as globals from "../../../src/globals";
 import * as utils from "../../../src/utils/ProfilesUtils";
@@ -147,7 +147,7 @@ describe("unixCommandActions unit testing", () => {
                     validateProfiles: jest.fn(),
                     getBaseProfile: jest.fn(),
                     getDefaultProfile: mockdefaultProfile,
-                    validProfile: ValidProfileEnum.VALID,
+                    validProfile: Validation.ValidationType.VALID,
                     getProfileInfo: jest.fn().mockReturnValue({
                         usingTeamConfig: true,
                         getAllProfiles: jest.fn().mockReturnValue(["dummy"]),

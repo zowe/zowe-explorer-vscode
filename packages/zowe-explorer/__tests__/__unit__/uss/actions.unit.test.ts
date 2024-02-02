@@ -12,7 +12,7 @@
 jest.mock("fs");
 
 import * as zowe from "@zowe/cli";
-import { Gui, IZoweTree, IZoweUSSTreeNode, ValidProfileEnum } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweTree, IZoweUSSTreeNode, Validation } from "@zowe/zowe-explorer-api";
 import * as ussNodeActions from "../../../src/uss/actions";
 import { UssFileTree, UssFileType, UssFileUtils } from "../../../src/uss/FileStructure";
 import { createUSSTree, createUSSNode, createFavoriteUSSNode } from "../../../__mocks__/mockCreators/uss";
@@ -148,7 +148,7 @@ function createGlobalMocks() {
                 allProfiles: [{ name: "firstName" }, { name: "secondName" }],
                 defaultProfile: { name: "firstName" },
                 type: "zosmf",
-                validProfile: ValidProfileEnum.VALID,
+                validProfile: Validation.ValidationType.VALID,
                 checkCurrentProfile: jest.fn(() => {
                     return profilesForValidation;
                 }),
@@ -216,7 +216,7 @@ describe("USS Action Unit Tests - Function createUSSNodeDialog", () => {
                         name: globalMocks.testProfile.name,
                         status: "unverified",
                     }),
-                    validProfile: ValidProfileEnum.UNVERIFIED,
+                    validProfile: Validation.ValidationType.UNVERIFIED,
                 };
             }),
         });

@@ -12,7 +12,7 @@
 jest.mock("Session");
 
 import * as vscode from "vscode";
-import { Gui, ValidProfileEnum } from "@zowe/zowe-explorer-api";
+import { Gui, Validation } from "@zowe/zowe-explorer-api";
 import * as profileLoader from "../../../src/Profiles";
 import { TsoCommandHandler } from "../../../src/command/TsoCommandHandler";
 import * as utils from "../../../src/utils/ProfilesUtils";
@@ -168,7 +168,7 @@ describe("TsoCommandHandler unit testing", () => {
                     }),
                     validateProfiles: jest.fn(),
                     getBaseProfile: jest.fn(),
-                    validProfile: ValidProfileEnum.VALID,
+                    validProfile: Validation.ValidationType.VALID,
                 };
             }),
         });
@@ -214,7 +214,7 @@ describe("TsoCommandHandler unit testing", () => {
                     }),
                     validateProfiles: jest.fn(),
                     getBaseProfile: jest.fn(),
-                    validProfile: ValidProfileEnum.VALID,
+                    validProfile: Validation.ValidationType.VALID,
                 };
             }),
         });
@@ -256,7 +256,7 @@ describe("TsoCommandHandler unit testing", () => {
                     }),
                     validateProfiles: jest.fn(),
                     getBaseProfile: jest.fn(),
-                    validProfile: ValidProfileEnum.VALID,
+                    validProfile: Validation.ValidationType.VALID,
                 };
             }),
         });
@@ -298,7 +298,7 @@ describe("TsoCommandHandler unit testing", () => {
                     }),
                     validateProfiles: jest.fn(),
                     getBaseProfile: jest.fn(),
-                    validProfile: ValidProfileEnum.VALID,
+                    validProfile: Validation.ValidationType.VALID,
                 };
             }),
         });
@@ -338,7 +338,7 @@ describe("TsoCommandHandler unit testing", () => {
                     }),
                     validateProfiles: jest.fn(),
                     getBaseProfile: jest.fn(),
-                    validProfile: ValidProfileEnum.VALID,
+                    validProfile: Validation.ValidationType.VALID,
                 };
             }),
         });
@@ -378,7 +378,7 @@ describe("TsoCommandHandler unit testing", () => {
                     }),
                     validateProfiles: jest.fn(),
                     getBaseProfile: jest.fn(),
-                    validProfile: ValidProfileEnum.VALID,
+                    validProfile: Validation.ValidationType.VALID,
                 };
             }),
         });
@@ -427,7 +427,7 @@ describe("TsoCommandHandler unit testing", () => {
                 return {
                     allProfiles: [{ name: "firstName", profile: { user: undefined, password: undefined } }, { name: "secondName" }],
                     defaultProfile: { name: "firstName" },
-                    validProfile: ValidProfileEnum.VALID,
+                    validProfile: Validation.ValidationType.VALID,
                     promptCredentials: jest.fn(() => {
                         return ["fake", "fake", "fake"];
                     }),
@@ -471,7 +471,7 @@ describe("TsoCommandHandler unit testing", () => {
                 return {
                     allProfiles: [{ name: "firstName", profile: { user: undefined, password: undefined } }, { name: "secondName" }],
                     defaultProfile: { name: "firstName" },
-                    validProfile: ValidProfileEnum.VALID,
+                    validProfile: Validation.ValidationType.VALID,
                     promptCredentials: jest.fn(() => {
                         return ["fake", "fake", "fake"];
                     }),
@@ -516,9 +516,9 @@ describe("TsoCommandHandler unit testing", () => {
                     validateProfiles: jest.fn(),
                     getBaseProfile: jest.fn(),
                     checkCurrentProfile: jest.fn(() => {
-                        return ValidProfileEnum.INVALID;
+                        return Validation.ValidationType.INVALID;
                     }),
-                    validProfile: ValidProfileEnum.INVALID,
+                    validProfile: Validation.ValidationType.INVALID,
                 };
             }),
         });
@@ -537,7 +537,7 @@ describe("TsoCommandHandler unit testing", () => {
                 return {
                     allProfiles: [{ name: "firstName", profile: { user: "firstName", password: "12345" } }, { name: "secondName" }],
                     defaultProfile: { name: "firstName" },
-                    validProfile: ValidProfileEnum.VALID,
+                    validProfile: Validation.ValidationType.VALID,
                     getBaseProfile: jest.fn(),
                     checkCurrentProfile: jest.fn(),
                     zosmfProfile: mockLoadNamedProfile,
@@ -559,7 +559,7 @@ describe("TsoCommandHandler unit testing", () => {
                 return {
                     allProfiles: [{ name: "firstName", profile: { user: "firstName", password: "12345" } }, { name: "secondName" }],
                     defaultProfile: { name: "firstName" },
-                    validProfile: ValidProfileEnum.VALID,
+                    validProfile: Validation.ValidationType.VALID,
                     getBaseProfile: jest.fn(),
                     checkCurrentProfile: jest.fn(),
                     zosmfProfile: mockLoadNamedProfile,
@@ -595,7 +595,7 @@ describe("TsoCommandHandler unit testing", () => {
                     }),
                     validateProfiles: jest.fn(),
                     getBaseProfile: jest.fn(),
-                    validProfile: ValidProfileEnum.VALID,
+                    validProfile: Validation.ValidationType.VALID,
                 };
             }),
         });
@@ -653,7 +653,7 @@ describe("TsoCommandHandler unit testing", () => {
                     }),
                     validateProfiles: jest.fn(),
                     getBaseProfile: jest.fn(),
-                    validProfile: ValidProfileEnum.VALID,
+                    validProfile: Validation.ValidationType.VALID,
                 };
             }),
         });

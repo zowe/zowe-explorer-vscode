@@ -14,7 +14,7 @@ import * as zowe from "@zowe/cli";
 import { errorHandling } from "../utils/ProfilesUtils";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
-import { Gui, IZoweTree, IZoweJobTreeNode, JobSortOpts } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweTree, IZoweJobTreeNode, Sorting } from "@zowe/zowe-explorer-api";
 import { Job, Spool } from "./ZoweJobNode";
 import SpoolProvider, { encodeJobFile, getSpoolFiles, matchSpool } from "../SpoolProvider";
 import { ZoweLogger } from "../utils/LoggerUtils";
@@ -578,7 +578,7 @@ export async function sortJobs(session: IZoweJobTreeNode, jobsProvider: ZosJobsP
         });
         if (dir != null) {
             session.sort = {
-                ...(session.sort ?? { method: JobSortOpts.Id }),
+                ...(session.sort ?? { method: Sorting.JobSortOpts.Id }),
                 direction: SORT_DIRS.indexOf(dir),
             };
         }

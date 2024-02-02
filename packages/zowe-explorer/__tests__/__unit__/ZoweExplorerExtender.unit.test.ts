@@ -21,7 +21,7 @@ import { ZoweExplorerExtender } from "../../src/ZoweExplorerExtender";
 import { Profiles } from "../../src/Profiles";
 import * as path from "path";
 import * as fs from "fs";
-import { getZoweDir, Gui } from "@zowe/zowe-explorer-api";
+import { FileManagement, Gui } from "@zowe/zowe-explorer-api";
 import * as profUtils from "../../src/utils/ProfilesUtils";
 import { ZoweLogger } from "../../src/utils/LoggerUtils";
 import { ZoweLocalStorage } from "../../src/utils/ZoweLocalStorage";
@@ -136,7 +136,7 @@ describe("ZoweExplorerExtender unit tests", () => {
         Object.defineProperty(vscode.Uri, "file", { value: jest.fn(), configurable: true });
         Object.defineProperty(Gui, "showTextDocument", { value: jest.fn(), configurable: true });
 
-        const zoweDir = getZoweDir();
+        const zoweDir = FileManagement.getZoweDir();
         const userInputs = [
             {
                 choice: undefined,

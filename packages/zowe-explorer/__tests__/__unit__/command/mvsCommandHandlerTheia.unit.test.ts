@@ -11,7 +11,7 @@
 
 import * as vscode from "vscode";
 import * as profileLoader from "../../../src/Profiles";
-import { Gui, ValidProfileEnum } from "@zowe/zowe-explorer-api";
+import { Gui, Validation } from "@zowe/zowe-explorer-api";
 import { MvsCommandHandler } from "../../../src/command/MvsCommandHandler";
 import * as globals from "../../../src/globals";
 import * as utils from "../../../src/utils/ProfilesUtils";
@@ -136,7 +136,7 @@ describe("mvsCommandActions unit testing", () => {
                     }),
                     validateProfiles: jest.fn(),
                     getBaseProfile: jest.fn(),
-                    validProfile: ValidProfileEnum.VALID,
+                    validProfile: Validation.ValidationType.VALID,
                 };
             }),
         });

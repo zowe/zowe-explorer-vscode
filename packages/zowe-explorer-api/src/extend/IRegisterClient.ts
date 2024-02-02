@@ -10,9 +10,9 @@
  */
 
 import { imperative } from "@zowe/cli";
-import { ICommand, IJes, IMvs, IUss } from "./interfaces";
+import { MainframeInteraction } from "./MainframeInteraction";
+import { Validation } from "../profiles";
 import * as vscode from "vscode";
-import { EventTypes } from "../profiles";
 
 /**
  * This interface can be used by other VS Code Extensions to register themselves
@@ -44,14 +44,14 @@ export interface IRegisterClient {
      *
      * @param {IUss} ussApi
      */
-    registerUssApi(ussApi: IUss): void;
+    registerUssApi(ussApi: MainframeInteraction.IUss): void;
 
     /**
      * Lookup of an API for USS for a given profile.
      * @param {zowe.imperative.IProfileLoaded} profile
      * @returns the registered API instance for the given profile
      */
-    getUssApi(profile: imperative.IProfileLoaded): IUss;
+    getUssApi(profile: imperative.IProfileLoaded): MainframeInteraction.IUss;
 
     /**
      * Register a new implementation of the MVS Api.
@@ -59,14 +59,14 @@ export interface IRegisterClient {
      *
      * @param {IMvs} mvsApi
      */
-    registerMvsApi(mvsApi: IMvs): void;
+    registerMvsApi(mvsApi: MainframeInteraction.IMvs): void;
 
     /**
      * Lookup of an API for MVS for a given profile.
      * @param {string} profile
      * @returns the registered API instance
      */
-    getMvsApi(profile: imperative.IProfileLoaded): IMvs;
+    getMvsApi(profile: imperative.IProfileLoaded): MainframeInteraction.IMvs;
 
     /**
      * Register a new implementation of the JES Api.
@@ -74,14 +74,14 @@ export interface IRegisterClient {
      *
      * @param {IJes} jesApi
      */
-    registerJesApi(jesApi: IJes): void;
+    registerJesApi(jesApi: MainframeInteraction.IJes): void;
 
     /**
      * Lookup of an API for JES for a given profile.
      * @param {string} profile
      * @returns the registered API instance
      */
-    getJesApi(profile: imperative.IProfileLoaded): IJes;
+    getJesApi(profile: imperative.IProfileLoaded): MainframeInteraction.IJes;
 
     /**
      * Register a new implementation of the Command Api.
@@ -89,14 +89,14 @@ export interface IRegisterClient {
      *
      * @param {ICommand} commandApi
      */
-    registerCommandApi(CommandApi: ICommand): void;
+    registerCommandApi(CommandApi: MainframeInteraction.ICommand): void;
 
     /**
      * Lookup of an API for Issuing a Command for a given profile.
      * @param {string} profile
      * @returns the registered API instance
      */
-    getCommandApi(profile: imperative.IProfileLoaded): ICommand;
+    getCommandApi(profile: imperative.IProfileLoaded): MainframeInteraction.ICommand;
 
     /**
      * Get an array of all the registered APIs identified by the CLI profile type names,
@@ -108,5 +108,5 @@ export interface IRegisterClient {
     /**
      * Define events that fire whenever an existing team config profile is updated.
      */
-    onProfilesUpdate?: vscode.Event<EventTypes>;
+    onProfilesUpdate?: vscode.Event<Validation.EventType>;
 }

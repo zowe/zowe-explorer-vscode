@@ -10,3 +10,4 @@
  */
 
 export * from "./IZoweLogger";
+export * from "./MessageSeverity";

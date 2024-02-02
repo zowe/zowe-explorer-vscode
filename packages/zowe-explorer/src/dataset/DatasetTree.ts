@@ -12,21 +12,7 @@
 import * as vscode from "vscode";
 import * as globals from "../globals";
 import * as dsActions from "./actions";
-import {
-    DataSetAllocTemplate,
-    Gui,
-    ValidProfileEnum,
-    IZoweTree,
-    IZoweDatasetTreeNode,
-    PersistenceSchemaEnum,
-    NodeInteraction,
-    IZoweTreeNode,
-    DatasetFilter,
-    DatasetSortOpts,
-    SortDirection,
-    NodeSort,
-    DatasetFilterOpts,
-} from "@zowe/zowe-explorer-api";
+import { Gui, Validation, IZoweTree, IZoweDatasetTreeNode, PersistenceSchemaEnum, Types, IZoweTreeNode, Sorting } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { FilterDescriptor, FilterItem, errorHandling, syncSessionNode } from "../utils/ProfilesUtils";
@@ -73,7 +59,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
 
     public mSessionNodes: IZoweDatasetTreeNode[] = [];
     public mFavorites: IZoweDatasetTreeNode[] = [];
-    public lastOpened: NodeInteraction = {};
+    public lastOpened: Types.ZoweNodeInteraction = {};
     // public memberPattern: IZoweDatasetTreeNode[] = [];
     private treeView: vscode.TreeView<IZoweDatasetTreeNode>;
     public openFiles: Record<string, IZoweDatasetTreeNode> = {};
@@ -105,7 +91,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
     public async rename(node: IZoweDatasetTreeNode): Promise<void> {
         ZoweLogger.trace("DatasetTree.rename called.");
         await Profiles.getInstance().checkCurrentProfile(node.getProfile());
-        if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID || !contextually.isValidationEnabled(node)) {
+        if (Profiles.getInstance().validProfile === Validation.ValidationType.VALID || !contextually.isValidationEnabled(node)) {
             return contextually.isDsMember(node) ? this.renameDataSetMember(node) : this.renameDataSet(node);
         }
     }
@@ -347,7 +333,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             try {
                 profile = Profiles.getInstance().loadNamedProfile(profileName);
                 await Profiles.getInstance().checkCurrentProfile(profile);
-                if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID || !contextually.isValidationEnabled(parentNode)) {
+                if (Profiles.getInstance().validProfile === Validation.ValidationType.VALID || !contextually.isValidationEnabled(parentNode)) {
                     session = await ZoweExplorerApiRegister.getMvsApi(profile).getSession();
                     parentNode.setProfileToChoice(profile);
                     parentNode.setSessionToChoice(session);
@@ -765,12 +751,12 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         this.mHistory.resetFileHistory();
     }
 
-    public addDsTemplate(criteria: DataSetAllocTemplate): void {
+    public addDsTemplate(criteria: Types.DataSetAllocTemplate): void {
         this.mHistory.addDsTemplateHistory(criteria);
         this.refresh();
     }
 
-    public getDsTemplates(): DataSetAllocTemplate[] {
+    public getDsTemplates(): Types.DataSetAllocTemplate[] {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-return
         return this.mHistory.getDsTemplates();
     }
@@ -903,7 +889,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         await this.checkCurrentProfile(node);
         let nonFaveNode;
 
-        if (Profiles.getInstance().validProfile !== ValidProfileEnum.INVALID) {
+        if (Profiles.getInstance().validProfile !== Validation.ValidationType.INVALID) {
             if (contextually.isSessionNotFav(node)) {
                 nonFaveNode = node;
                 if (this.mHistory.getSearchHistory().length > 0) {
@@ -1289,7 +1275,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      * @param sortOpts The sorting options to use
      * @param isSession whether the node is a session
      */
-    public updateSortForNode(node: IZoweDatasetTreeNode, sortOpts: NodeSort, isSession: boolean): void {
+    public updateSortForNode(node: IZoweDatasetTreeNode, sortOpts: Sorting.NodeSort, isSession: boolean): void {
         node.sort = sortOpts;
 
         if (isSession) {
@@ -1329,8 +1315,8 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
 
         // Assume defaults if a user hasn't selected any sort options yet
         const sortOpts = node.sort ?? {
-            method: DatasetSortOpts.Name,
-            direction: SortDirection.Ascending,
+            method: Sorting.DatasetSortOpts.Name,
+            direction: Sorting.SortDirection.Ascending,
         };
 
         // Adapt menus to user based on the node that was interacted with
@@ -1401,7 +1387,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      * @param newFilter Either a valid `DatasetFilter` object, or `null` to reset the filter
      * @param isSession Whether the node is a session
      */
-    public updateFilterForNode(node: IZoweDatasetTreeNode, newFilter: DatasetFilter | null, isSession: boolean): void {
+    public updateFilterForNode(node: IZoweDatasetTreeNode, newFilter: Sorting.DatasetFilter | null, isSession: boolean): void {
         const oldFilter = node.filter;
         node.filter = newFilter;
         node.description = newFilter
@@ -1519,7 +1505,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             title: vscode.l10n.t("Enter a value to filter by"),
             placeHolder: "",
             validateInput:
-                filterMethod === DatasetFilterOpts.LastModified
+                filterMethod === Sorting.DatasetFilterOpts.LastModified
                     ? dateValidation
                     : (val): string => (val.length > 0 ? null : vscode.l10n.t("Invalid filter specified")),
         });

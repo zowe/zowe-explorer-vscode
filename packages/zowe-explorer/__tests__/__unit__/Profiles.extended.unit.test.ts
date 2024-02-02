@@ -41,7 +41,6 @@ import { ZoweLogger } from "../../src/utils/LoggerUtils";
 import { ZoweLocalStorage } from "../../src/utils/ZoweLocalStorage";
 jest.mock("../../src/utils/LoggerUtils");
 import { TreeProviders } from "../../src/shared/TreeProviders";
-import { ProfileManagement } from "../../src/utils/ProfileManagement";
 
 jest.mock("child_process");
 jest.mock("fs");

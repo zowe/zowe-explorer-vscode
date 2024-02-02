@@ -34,7 +34,7 @@ import { imperative } from "@zowe/cli";
  * }
  *
  */
-export interface ZoweExplorerTreeApi {
+export interface IZoweExplorerTreeApi {
     /**
      * Used by other VS Code Extensions to access the primary profile.
      *
