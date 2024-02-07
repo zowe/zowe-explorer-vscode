@@ -32,10 +32,10 @@ jobs:
 
     steps:
       - name: Check out code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
 
@@ -50,23 +50,24 @@ jobs:
           NODE_OPTIONS: --max_old_space_size=4096
 
       - name: Upload test results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: matrix.os == 'ubuntu-latest' && matrix.node-version == '16.x'
         with:
           name: zowe-explorer-results
           path: packages/zowe-explorer/results/
 
       - name: Upload API test results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: matrix.os == 'ubuntu-latest' && matrix.node-version == '16.x'
         with:
           name: zowe-explorer-api-results
           path: packages/zowe-explorer-api/results/
 
       - name: Upload Results to Codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
           env_vars: OS,NODE
+          token: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Package VSIX
         if: matrix.os == 'ubuntu-latest' && matrix.node-version == '16.x'
@@ -75,7 +76,7 @@ jobs:
 
       - name: Archive VSIX artifact
         if: matrix.os == 'ubuntu-latest' && matrix.node-version == '16.x'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: zowe-explorer-vsix
           path: dist/*.vsix
