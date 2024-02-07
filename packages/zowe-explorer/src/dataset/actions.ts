@@ -455,58 +455,6 @@ export async function createMember(parent: api.IZoweDatasetTreeNode, datasetProv
     }
 }
 
-export async function downloadPs(node: api.IZoweDatasetTreeNode): Promise<LocalFileInfo> {
-    const fileInfo = {} as LocalFileInfo;
-    const defaultMessage = vscode.l10n.t("Invalid data set or member.");
-    switch (true) {
-        // For favorited or non-favorited sequential DS:
-        case contextually.isFavorite(node):
-        case contextually.isSessionNotFav(node.getParent()):
-            fileInfo.name = node.label as string;
-            break;
-        // For favorited or non-favorited data set members:
-        case contextually.isFavoritePds(node.getParent()):
-        case contextually.isPdsNotFav(node.getParent()):
-            fileInfo.name = node.getParent().getLabel().toString() + "(" + node.getLabel().toString() + ")";
-            break;
-        default:
-            api.Gui.errorMessage(defaultMessage);
-            throw Error(defaultMessage);
-    }
-    // if local copy exists, open that instead of pulling from mainframe
-    fileInfo.path = getDocumentFilePath(fileInfo.name, node);
-    if (!fs.existsSync(fileInfo.path)) {
-        const response = await downloadPsApiCall(node, fileInfo.path, fileInfo.name);
-        node.setEtag(response?.apiResponse?.etag);
-    }
-    return fileInfo;
-}
-
-async function downloadPsApiCall(node: api.IZoweDatasetTreeNode, documentFilePath: string, label: string): Promise<any> {
-    const prof = node.getProfile();
-    ZoweLogger.info(
-        vscode.l10n.t({
-            message: "Downloading {0}",
-            args: [label],
-            comment: ["Label"],
-        })
-    );
-    const statusMsg = api.Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Downloading data set..."));
-    try {
-        const response = await ZoweExplorerApiRegister.getMvsApi(prof).getContents(label, {
-            file: documentFilePath,
-            returnEtag: true,
-            encoding: prof.profile?.encoding,
-            responseTimeout: prof.profile?.responseTimeout,
-        });
-        statusMsg.dispose();
-        return response;
-    } catch (error) {
-        statusMsg.dispose();
-        throw error;
-    }
-}
-
 export function getDataSetTypeAndOptions(type: string): {
     typeEnum: zowe.CreateDataSetTypeEnum;
     createOptions: vscode.WorkspaceConfiguration;
@@ -1283,10 +1231,12 @@ export async function refreshPS(node: api.IZoweDatasetTreeNode): Promise<void> {
         }
 
         const statusMsg = api.Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Fetching data set..."));
-        await DatasetFSProvider.instance.fetchDatasetAtUri(
-            node.resourceUri,
-            vscode.window.visibleTextEditors.find((v) => v.document.uri.path === node.resourceUri.path)
-        );
+        if (!node.isDirtyInEditor) {
+            await DatasetFSProvider.instance.fetchDatasetAtUri(
+                node.resourceUri,
+                vscode.window.visibleTextEditors.find((v) => v.document.uri.path === node.resourceUri.path)
+            );
+        }
         statusMsg.dispose();
     } catch (err) {
         if (err.message.includes(vscode.l10n.t("not found"))) {

@@ -307,8 +307,6 @@
       "CLI setting"
     ]
   },
-  "Remote file has changed. Presenting with way to resolve file.": "Remote file has changed. Presenting with way to resolve file.",
-  "Something went wrong with compare of files.": "Something went wrong with compare of files.",
   "Favorites": "Favorites",
   "Use the search button to list USS files": "Use the search button to list USS files",
   "Invalid node": "Invalid node",
@@ -341,7 +339,7 @@
   "Re-download": "Re-download",
   "Cancel": "Cancel",
   "Failed to open file as text. Re-download file as binary?": "Failed to open file as text. Re-download file as binary?",
-  "Required API functions for pasting (fileList and copy/uploadBufferAsFile) were not found.": "Required API functions for pasting (fileList and copy/uploadBufferAsFile) were not found.",
+  "Required API functions for pasting (fileList and copy/uploadFromBuffer) were not found.": "Required API functions for pasting (fileList and copy/uploadFromBuffer) were not found.",
   "Uploading USS files...": "Uploading USS files...",
   "Error uploading files": "Error uploading files",
   "$(plus) Create a new filter": "$(plus) Create a new filter",
@@ -431,14 +429,6 @@
   "Unable to create node:": "Unable to create node:",
   "Uploading USS file": "Uploading USS file",
   "Copy Path is not yet supported in Theia.": "Copy Path is not yet supported in Theia.",
-  "save requested for USS file {0}/Document file name": {
-    "message": "save requested for USS file {0}",
-    "comment": [
-      "Document file name"
-    ]
-  },
-  "Could not locate session when saving USS file.": "Could not locate session when saving USS file.",
-  "Saving file...": "Saving file...",
   "Delete": "Delete",
   "Are you sure you want to delete the following item?\nThis will permanently remove the following file or folder from your system.\n\n{0}/File names": {
     "message": "Are you sure you want to delete the following item?\nThis will permanently remove the following file or folder from your system.\n\n{0}",
@@ -459,6 +449,7 @@
   "Ascending": "Ascending",
   "Descending": "Descending",
   "Saving Data Set...": "Saving Data Set...",
+  "Saving file...": "Saving file...",
   "A merge conflict has been detected. Since you are running inside Theia editor, a merge conflict resolution is not available yet.": "A merge conflict has been detected. Since you are running inside Theia editor, a merge conflict resolution is not available yet.",
   "Would you like to overwrite the remote file?": "Would you like to overwrite the remote file?",
   "Upload cancelled.": "Upload cancelled.",
@@ -476,9 +467,6 @@
   "Prompting the user to choose a recent member for editing": "Prompting the user to choose a recent member for editing",
   "Select a recent member to open": "Select a recent member to open",
   "No recent members found.": "No recent members found.",
-  "Compare": "Compare",
-  "Overwrite": "Overwrite",
-  "The content of the file is newer. Compare your version with latest or overwrite the content of the file with your changes.": "The content of the file is newer. Compare your version with latest or overwrite the content of the file with your changes.",
   "Use the search button to display jobs": "Use the search button to display jobs",
   "There are no JES spool messages to display": "There are no JES spool messages to display",
   "No jobs found": "No jobs found",
@@ -561,7 +549,7 @@
   "$(symbol-numeric) Return Code": "$(symbol-numeric) Return Code",
   "$(fold) Sort Direction": "$(fold) Sort Direction",
   "Go to Local Filtering": "Go to Local Filtering",
-  "$(sync~spin) Fetching spool files...": "$(sync~spin) Fetching spool files...",
+  "$(sync~spin) Fetching spool file...": "$(sync~spin) Fetching spool file...",
   "Download Single Spool operation not implemented by extender. Please contact the extension developer(s).": "Download Single Spool operation not implemented by extender. Please contact the extension developer(s).",
   "$(sync~spin) Opening spool file.../Label": {
     "message": "$(sync~spin) Opening spool file...",
@@ -817,14 +805,6 @@
     ]
   },
   "Unable to create member.": "Unable to create member.",
-  "Invalid data set or member.": "Invalid data set or member.",
-  "Downloading {0}/Label": {
-    "message": "Downloading {0}",
-    "comment": [
-      "Label"
-    ]
-  },
-  "$(sync~spin) Downloading data set...": "$(sync~spin) Downloading data set...",
   "Allocating new data set": "Allocating new data set",
   "Attempting to allocate new data set": "Attempting to allocate new data set",
   "Click on parameters to change them": "Click on parameters to change them",

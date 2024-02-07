@@ -12,7 +12,6 @@
 import * as path from "path";
 import * as vscode from "vscode";
 import * as globals from "../globals";
-import * as dsActions from "./actions";
 import {
     DataSetAllocTemplate,
     Gui,
@@ -31,14 +30,12 @@ import {
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { FilterDescriptor, FilterItem, errorHandling, syncSessionNode } from "../utils/ProfilesUtils";
-import { sortTreeItems, getAppName, getDocumentFilePath, SORT_DIRS, updateOpenFiles } from "../shared/utils";
+import { sortTreeItems, getAppName, SORT_DIRS, updateOpenFiles } from "../shared/utils";
 import { ZoweTreeProvider } from "../abstract/ZoweTreeProvider";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { getIconById, getIconByNode, IconId, IIconItem } from "../generators/icons";
 import * as dayjs from "dayjs";
-import * as fs from "fs";
 import * as contextually from "../shared/context";
-import { closeOpenedTextFile } from "../utils/workspace";
 import { IDataSet, IListOptions, imperative } from "@zowe/cli";
 import { DATASET_FILTER_OPTS, DATASET_SORT_OPTS, validateDataSetName, validateMemberName } from "./utils";
 import { SettingsConfig } from "../utils/SettingsConfig";

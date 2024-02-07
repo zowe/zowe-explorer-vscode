@@ -64,7 +64,7 @@ export async function initJobsProvider(context: vscode.ExtensionContext): Promis
     context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.refreshJob", (job) => jobActions.refreshJob(job.mParent, jobsProvider)));
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.jobs.refreshSpool", async (node) => {
-            const statusBarMsg = Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Fetching spool files..."));
+            const statusBarMsg = Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Fetching spool file..."));
             await JobFSProvider.instance.fetchSpoolAtUri(node.resourceUri);
             statusBarMsg.dispose();
         })
@@ -186,16 +186,6 @@ export async function initJobsProvider(context: vscode.ExtensionContext): Promis
     );
 
     context.subscriptions.push(vscode.workspace.onDidCloseTextDocument(ZosJobsProvider.onDidCloseTextDocument));
-    // TODO: clean-up - most likely unneeded
-    // context.subscriptions.push(
-    //     vscode.window.onDidChangeVisibleTextEditors((editors) => {
-    //         const ussUris = editors.map((e) => e.document.uri).filter((u) => u.scheme === "zowe-jobs");
-    //         const closedOrMovedUris = JobFSProvider.instance.openedUris.filter((u) => ussUris.find((otherUri) => otherUri.path === u.path) == null);
-    //         for (const uri of closedOrMovedUris) {
-    //             JobFSProvider.instance.invalidateDataForUri(uri);
-    //         }
-    //     })
-    // );
     context.subscriptions.push(
         vscode.workspace.onDidOpenTextDocument((doc) => {
             if (doc.uri.scheme !== "zowe-jobs") {

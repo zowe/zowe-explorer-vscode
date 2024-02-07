@@ -197,13 +197,13 @@ export function registerCommonCommands(context: vscode.ExtensionContext, provide
             })
         );
         context.subscriptions.push(
-            vscode.commands.registerCommand("zowe.compareWithSelected", async (node: IZoweTreeNode) => {
-                await LocalFileManagement.compareChosenFileContent(node);
+            vscode.commands.registerCommand("zowe.compareWithSelected", (node: IZoweTreeNode) => {
+                LocalFileManagement.compareChosenFileContent(node);
             })
         );
         context.subscriptions.push(
-            vscode.commands.registerCommand("zowe.compareWithSelectedReadOnly", async (node: IZoweTreeNode) => {
-                await LocalFileManagement.compareChosenFileContent(node, true);
+            vscode.commands.registerCommand("zowe.compareWithSelectedReadOnly", (node: IZoweTreeNode) => {
+                LocalFileManagement.compareChosenFileContent(node, true);
             })
         );
         context.subscriptions.push(

@@ -205,18 +205,12 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             }),
             value: originalNode.label.toString().replace(/^\[.+\]:\s/, ""),
             ignoreFocusOut: true,
-            // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
             validateInput: (value) => this.checkDuplicateLabel(parentPath + value, loadedNodes),
         };
         const newName = await Gui.showInputBox(options);
         if (newName && parentPath + newName !== originalNode.fullPath) {
             try {
                 const newNamePath = path.posix.join(parentPath, newName);
-                const oldNamePath = originalNode.fullPath;
-
-                // // Handle rename in back-end:
-                // we can do this in FSP now ^^
-                //await ZoweExplorerApiRegister.getUssApi(originalNode.getProfile()).rename(oldNamePath, newNamePath);
 
                 // Handle rename in UI:
                 if (oldFavorite) {

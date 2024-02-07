@@ -91,46 +91,6 @@ export async function checkTextFileIsOpened(path: string): Promise<boolean> {
 }
 
 /**
- * Closes opened file tab using iteration through the tabs
- * This kind of method is caused by incompleteness of VSCode API, which allows to close only currently selected editor
- * For us it means we need to select editor first, which is again not possible via existing VSCode APIs
- */
-export async function closeOpenedTextFile(uriPath: string): Promise<boolean> {
-    const openedWindows = [] as IExtTextEditor[];
-
-    let emptySelectedCountInTheRow = 0;
-    let selectedEditor = vscode.window.activeTextEditor as IExtTextEditor;
-
-    // The idea of the condition is we can meet binary files opened, which have no text editor
-    // So we should set some maximum occurrences point and get out of the loop
-    while (
-        emptySelectedCountInTheRow < workspaceUtilMaxEmptyWindowsInTheRow &&
-        !openedWindows.some((window) => selectedEditor && window.id === selectedEditor.id)
-    ) {
-        if (selectedEditor) {
-            emptySelectedCountInTheRow = 0;
-            openedWindows.push(selectedEditor);
-        } else {
-            emptySelectedCountInTheRow++;
-        }
-
-        await openNextTab(workspaceUtilTabSwitchDelay);
-        selectedEditor = vscode.window.activeTextEditor as IExtTextEditor;
-
-        if (selectedEditor && selectedEditor.document.uri.path === uriPath) {
-            const isDirty = selectedEditor.document.isDirty;
-            await vscode.commands.executeCommand("workbench.action.closeActiveEditor");
-            if (isDirty) {
-                await awaitForDocumentBeingSaved();
-            }
-            return true;
-        }
-    }
-
-    return false;
-}
-
-/**
  * Mark a text document as dirty (unsaved) if contents failed to upload.
  * Based on https://stackoverflow.com/questions/74224108
  */

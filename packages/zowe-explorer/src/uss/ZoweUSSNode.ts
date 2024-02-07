@@ -150,7 +150,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      */
     public getProfileName(): string {
         ZoweLogger.trace("ZoweUSSNode.getProfileName called.");
-        return this.returnmProfileName();
+        return this.mProfileName;
     }
 
     public getSessionNode(): IZoweUSSTreeNode {
@@ -332,25 +332,6 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         }
 
         this.dirty = true;
-    }
-
-    /**
-     * Helper getter to check dirtiness of node inside opened editor tabs, can be more accurate than saved value
-     *
-     * @returns {boolean}
-     */
-    public get isDirtyInEditor(): boolean {
-        ZoweLogger.trace("ZoweUSSNode.isDirtyInEditor called.");
-        const openedTextDocuments = vscode.workspace.textDocuments;
-        const currentFilePath = this.getUSSDocumentFilePath();
-
-        for (const document of openedTextDocuments) {
-            if (document.fileName === currentFilePath) {
-                return document.isDirty;
-            }
-        }
-
-        return false;
     }
 
     public get openedDocumentInstance(): vscode.TextDocument {
@@ -633,37 +614,10 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 throw Error(vscode.l10n.t("refreshUSS() called from invalid node."));
         }
         try {
-            const ussDocumentFilePath = this.getUSSDocumentFilePath();
             const isDirty = this.isDirtyInEditor;
-            let wasSaved = false;
 
-            if (isDirty) {
-                attachRecentSaveListener();
-
-                Gui.showTextDocument(this.openedDocumentInstance);
-                await vscode.commands.executeCommand("workbench.action.closeActiveEditor");
-                wasSaved = getRecentSaveStatus();
-
-                disposeRecentSaveListener();
-            }
-
-            if ((isDirty && !this.isDirtyInEditor && !wasSaved) || !isDirty) {
-                const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
-                const response = await ZoweExplorerApiRegister.getUssApi(cachedProfile).getContents(this.fullPath, {
-                    file: ussDocumentFilePath,
-                    binary: this.binary || (await ZoweExplorerApiRegister.getUssApi(cachedProfile).isFileTagBinOrAscii(this.fullPath)),
-                    returnEtag: true,
-                    encoding: cachedProfile?.profile?.encoding,
-                    responseTimeout: cachedProfile?.profile?.responseTimeout,
-                });
-                //this.setEtag(response.apiResponse.etag);
-                this.downloaded = true;
-
-                // if (isDirty) {
-                //     await this.initializeFileOpening(ussDocumentFilePath, true);
-                // }
-            } else if (wasSaved) {
-                //await this.initializeFileOpening(ussDocumentFilePath, true);
+            if (!isDirty) {
+                await UssFSProvider.instance.fetchFileAtUri(this.resourceUri);
             }
         } catch (err) {
             if (err instanceof Error && err.message.includes(vscode.l10n.t("not found"))) {
@@ -749,7 +703,6 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         try {
             const fileTreeToPaste: UssFileTree = JSON.parse(clipboardContents);
             const api = ZoweExplorerApiRegister.getUssApi(this.profile);
-            const sessionName = this.getSessionNode().getLabel() as string;
 
             const task: imperative.ITaskWithStatus = {
                 percentComplete: 0,
@@ -768,51 +721,5 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         } catch (error) {
             await errorHandling(error, this.label.toString(), vscode.l10n.t("Error uploading files"));
         }
-    }
-
-    private returnmProfileName(): string {
-        return this.mProfileName;
-    }
-}
-
-let wasSavedRecently = false;
-let saveListener = null;
-
-/**
- * Helper function which sets up listener for save wiping out the data after certain delay to prevent the fact of second save
- * @param wipeOutTime {number}
- */
-export function attachRecentSaveListener(wipeOutTime: number = 500): void {
-    ZoweLogger.trace("ZoweUSSNode.attachRecentSaveListener called.");
-    if (saveListener) {
-        saveListener.dispose();
-    }
-
-    saveListener = vscode.workspace.onDidSaveTextDocument(() => {
-        wasSavedRecently = true;
-
-        setTimeout(() => {
-            wasSavedRecently = false;
-        }, wipeOutTime);
-    });
-}
-
-/**
- * Helper function which returns saved save flag
- *
- * @returns {boolean}
- */
-export function getRecentSaveStatus(): boolean {
-    ZoweLogger.trace("ZoweUSSNode.getRecentSaveStatus called.");
-    return wasSavedRecently;
-}
-
-/**
- * Helper function which disposes recent save listener
- */
-export function disposeRecentSaveListener(): void {
-    ZoweLogger.trace("ZoweUSSNode.disposeRecentSaveListener called.");
-    if (saveListener) {
-        saveListener.dispose();
     }
 }
