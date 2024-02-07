@@ -114,9 +114,7 @@ export class ZosmfUssApi extends ZosmfApiCommon implements IUss {
     }
 
     public async getContents(inputFilePath: string, options: zowe.IDownloadSingleOptions): Promise<zowe.IZosFilesResponse> {
-        return zowe.Download.ussFile(this.getSession(), inputFilePath, {
-            ...options,
-        });
+        return zowe.Download.ussFile(this.getSession(), inputFilePath, options);
     }
 
     public copy(outputPath: string, options?: Omit<object, "request">): Promise<Buffer> {
@@ -124,7 +122,7 @@ export class ZosmfUssApi extends ZosmfApiCommon implements IUss {
     }
 
     public uploadFromBuffer(buffer: Buffer, filePath: string, options?: zowe.IUploadOptions): Promise<string> {
-        // on z/OSMF this is always an empty string, this is because bufferToUssFile in zos-files SDK returns
+        // for z/OSMF this is always an empty string, this is because bufferToUssFile in zos-files SDK returns
         // the data string - but, the API returns a 204 No Content when successful, so the response data will always be empty
 
         // Once bufferToUssFile is updated to use putExpectJSON, we can also get the e-tag from the response headers.
@@ -240,10 +238,10 @@ export class ZosmfMvsApi extends ZosmfApiCommon implements IMvs {
     }
 
     public uploadFromBuffer(buffer: Buffer, dataSetName: string, options?: zowe.IUploadOptions): Promise<zowe.IZosFilesResponse> {
-        // on z/OSMF this is always an empty string, this is because bufferToUssFile in zos-files SDK returns
+        // for z/OSMF this is always an empty string, this is because bufferToDataSet in zos-files SDK returns
         // the data string - but, the API returns a 204 No Content when successful, so the response data will always be empty
 
-        // Once bufferToUssFile is updated to use putExpectJSON, we can also get the e-tag from the response headers.
+        // Once bufferToDataSet is updated to use putExpectJSON, we can also get the e-tag from the response headers.
         return zowe.Upload.bufferToDataSet(this.getSession(), buffer, dataSetName, options);
     }
 
