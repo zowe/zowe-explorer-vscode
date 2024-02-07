@@ -11,15 +11,13 @@
 
 import * as vscode from "vscode";
 import * as globals from "../globals";
-import { Gui, IZoweDatasetTreeNode, IZoweUSSTreeNode, IZoweNodeType, IZoweTree, imperative } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweDatasetTreeNode, IZoweUSSTreeNode, IZoweNodeType, IZoweTree } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
-import { filterTreeByString, willForceUpload } from "../shared/utils";
+import { filterTreeByString } from "../shared/utils";
 import { FilterItem, FilterDescriptor } from "../utils/ProfilesUtils";
 import * as contextually from "../shared/context";
 import { getIconById, IconId } from "../generators/icons";
 import { ZoweLogger } from "../utils/LoggerUtils";
-import { markDocumentUnsaved } from "../utils/workspace";
-import { LocalFileManagement } from "../utils/LocalFileManagement";
 
 /**
  * Search for matching items loaded in data set or USS tree

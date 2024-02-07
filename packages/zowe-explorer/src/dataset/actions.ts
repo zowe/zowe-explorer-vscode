@@ -635,7 +635,7 @@ function getTemplateNames(datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNod
     const templates = datasetProvider.getDsTemplates();
     const templateNames: string[] = [];
     templates?.forEach((template) => {
-        Object.entries(template).forEach(([key, value]) => {
+        Object.entries(template).forEach(([key, _value]) => {
             templateNames.push(key);
         });
     });

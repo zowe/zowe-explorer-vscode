@@ -29,34 +29,9 @@ export enum NodeAction {
  */
 export interface IZoweTreeNode extends vscode.TreeItem {
     /**
-     * The icon path or [ThemeIcon](#ThemeIcon) for the tree item.
-     */
-    iconPath?: string | vscode.Uri | { light: string | vscode.Uri; dark: string | vscode.Uri } | vscode.ThemeIcon;
-    /**
      * Indicator that the child data may have become stale and requires refreshing.
      */
     dirty: boolean;
-    /**
-     *  A human-readable string describing this item.
-     */
-    label?: string | vscode.TreeItemLabel;
-    /**
-     * The URI of the resource representing this item.
-     */
-    resourceUri?: vscode.Uri;
-    /**
-     * A description for this tree item.
-     */
-    description?: string | boolean;
-    /**
-     * A unique identifier for this tree item.
-     * Used to prevent VScode from losing track of TreeItems in a TreeProvider.
-     */
-    id?: string;
-    /**
-     * The tooltip text when you hover over this item.
-     */
-    tooltip?: string | vscode.MarkdownString | undefined;
     /**
      * Describes the full path of a file
      */
@@ -65,16 +40,6 @@ export interface IZoweTreeNode extends vscode.TreeItem {
      * Children nodes of this node
      */
     children?: IZoweTreeNode[];
-    /**
-     * [TreeItemCollapsibleState](#TreeItemCollapsibleState) of the tree item.
-     */
-    collapsibleState?: vscode.TreeItemCollapsibleState;
-    /**
-     * Context value of the tree item. This can be used to contribute item specific actions in the tree.
-     *
-     * This will show action `extension.deleteFolder` only for items with `contextValue` is `folder`.
-     */
-    contextValue?: string;
     /**
      * Any ongoing actions that must be awaited before continuing
      */

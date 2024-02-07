@@ -37,9 +37,6 @@ export async function initJobsProvider(context: vscode.ExtensionContext): Promis
     PollDecorator.register();
 
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.jobs.zosJobsOpenspool", (session, spoolNode) => jobActions.getSpoolContent(session, spoolNode))
-    );
-    context.subscriptions.push(
         vscode.commands.registerCommand("zowe.jobs.deleteJob", async (job, jobs) => {
             await jobActions.deleteCommand(jobsProvider, job, jobs);
         })

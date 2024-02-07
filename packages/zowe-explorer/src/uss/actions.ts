@@ -10,18 +10,17 @@
  */
 
 import * as vscode from "vscode";
-import { imperative, IZosFilesResponse } from "@zowe/cli";
+import { imperative } from "@zowe/cli";
 import * as fs from "fs";
 import * as globals from "../globals";
 import * as path from "path";
-import { concatChildNodes, uploadContent, getSelectedNodeList, LocalFileInfo } from "../shared/utils";
+import { getSelectedNodeList, LocalFileInfo } from "../shared/utils";
 import { errorHandling } from "../utils/ProfilesUtils";
 import { Gui, ValidProfileEnum, IZoweTree, IZoweUSSTreeNode } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { isBinaryFileSync } from "isbinaryfile";
 import * as contextually from "../shared/context";
-import { markDocumentUnsaved, setFileSaved } from "../utils/workspace";
 import { refreshAll } from "../shared/refresh";
 import { IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
 import { fileExistsCaseSensitveSync } from "./utils";

@@ -12,20 +12,16 @@
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
 import { errorHandling } from "../utils/ProfilesUtils";
-import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { Gui, IZoweTree, IZoweJobTreeNode, JobSortOpts } from "@zowe/zowe-explorer-api";
-import { Job, Spool } from "./ZoweJobNode";
-import { buildUniqueSpoolName, getSpoolFiles, matchSpool } from "../SpoolProvider";
+import { Job } from "./ZoweJobNode";
+import { getSpoolFiles, matchSpool } from "../SpoolProvider";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { LocalFileManagement } from "../utils/LocalFileManagement";
-import { SORT_DIRS, updateOpenFiles } from "../shared/utils";
+import { SORT_DIRS } from "../shared/utils";
 import { ZosJobsProvider } from "./ZosJobsProvider";
 import { JOB_SORT_OPTS } from "./utils";
 import * as globals from "../globals";
-import { TreeProviders } from "../shared/TreeProviders";
-import { STATUS_BAR_TIMEOUT_MS } from "../globals";
-import * as path from "path";
 
 /**
  * Download all the spool content for the specified job.
@@ -90,51 +86,6 @@ export async function downloadSingleSpool(nodes: IZoweJobTreeNode[], binary?: bo
     } catch (error) {
         await errorHandling(error);
     }
-}
-
-/**
- * Download the spool content for the specified job
- *
- * @param session The session to which the job belongs
- * @param spool The IJobFile to get the spool content for
- * @param refreshTimestamp The timestamp of the last job node refresh
- */
-export async function getSpoolContent(session: string, spoolNode: Spool): Promise<void> {
-    ZoweLogger.trace("job.actions.getSpoolContent called.");
-    const profiles = Profiles.getInstance();
-    let zosmfProfile: zowe.imperative.IProfileLoaded;
-    try {
-        zosmfProfile = profiles.loadNamedProfile(session);
-    } catch (error) {
-        await errorHandling(error, session);
-        return;
-    }
-
-    const uniqueSpoolName = buildUniqueSpoolName(spoolNode.spool);
-    const statusMsg = Gui.setStatusBarMessage(
-        vscode.l10n.t({
-            message: "$(sync~spin) Opening spool file...",
-            args: [this.label as string],
-            comment: ["Label"],
-        })
-    );
-    const uri = vscode.Uri.parse(`zowe-jobs:/${session}/${spoolNode.spool.jobid}/${uniqueSpoolName}`);
-    try {
-        updateOpenFiles(TreeProviders.job, uri.path, spoolNode);
-        await vscode.commands.executeCommand("vscode.open", uri);
-    } catch (error) {
-        const isTextDocActive =
-            vscode.window.activeTextEditor &&
-            vscode.window.activeTextEditor.document.uri?.path === `${spoolNode.spool.jobname}.${spoolNode.spool.jobid}.${spoolNode.spool.ddname}`;
-
-        statusMsg.dispose();
-        if (isTextDocActive && String(error.message).includes("Failed to show text document")) {
-            return;
-        }
-        await errorHandling(error, session);
-        return;
-    }
-    statusMsg.dispose();
 }
 
 /**
