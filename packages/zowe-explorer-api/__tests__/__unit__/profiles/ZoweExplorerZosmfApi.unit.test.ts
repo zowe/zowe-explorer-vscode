@@ -57,6 +57,26 @@ describe("ZosmfUssApi", () => {
         jest.clearAllMocks();
     });
 
+    describe("_getSession", () => {
+        const exampleProfile = {
+            message: "",
+            type: "zosmf",
+            failNotFound: false,
+            name: "test.zosmf",
+            profile: {
+                host: "localhost",
+                password: "password",
+                protocol: "http",
+                user: "aZosmfUser",
+            },
+        } as zowe.imperative.IProfileLoaded;
+
+        it("should include protocol in the built session object", () => {
+            const api = new ZosmfUssApi();
+            expect((api as any)._getSession(exampleProfile).mISession.protocol).toBe("http");
+        });
+    });
+
     describe("updateAttributes", () => {
         const ussApi = new ZosmfUssApi();
         const getSessionMock = jest.spyOn(ussApi, "getSession").mockReturnValue(fakeSession);
