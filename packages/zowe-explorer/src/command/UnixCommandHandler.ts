@@ -88,30 +88,8 @@ export class UnixCommandHandler extends ZoweCommandProvider {
         }
         if (ZoweExplorerApiRegister.getCommandApi(profile).sshProfileRequired) {
             sshRequiredBoolean = true;
-            this.sshSession = await this.setsshSession();
-            if (!this.sshSession) {
-                return;
-            }
         }
-        if (!node) {
-            await this.profileInstance.checkCurrentProfile(profile);
-        } else {
-            cwd = node.fullPath;
-        }
-        if (cwd == "") {
-            const options: vscode.InputBoxOptions = {
-                prompt: vscode.l10n.t("Enter the path of the directory in order to execute the command"),
-            };
-            cwd = await Gui.showInputBox(options);
-            if (cwd == "") {
-                Gui.showMessage(vscode.l10n.t("Redirecting to Home Directory"));
-                this.pathInputConfirmationFlag = false;
-            }
-            if (cwd == undefined) {
-                Gui.showMessage(this.opCancelledMsg);
-                return;
-            }
-        }
+
         if (sshRequiredBoolean) {
             this.sshSession = await this.setsshSession();
             if (!this.sshSession) {
@@ -128,6 +106,25 @@ export class UnixCommandHandler extends ZoweCommandProvider {
                     })
                 );
                 return;
+            }
+            if (!node) {
+                await this.profileInstance.checkCurrentProfile(profile);
+            } else {
+                cwd = node.fullPath;
+            }
+            if (cwd == "") {
+                const options: vscode.InputBoxOptions = {
+                    prompt: vscode.l10n.t("Enter the path of the directory in order to execute the command"),
+                };
+                cwd = await Gui.showInputBox(options);
+                if (cwd == "") {
+                    Gui.showMessage(vscode.l10n.t("Redirecting to Home Directory"));
+                    this.pathInputConfirmationFlag = false;
+                }
+                if (cwd == undefined) {
+                    Gui.showMessage(this.opCancelledMsg);
+                    return;
+                }
             }
             if (!command) {
                 command = await this.getQuickPick(cwd);
@@ -264,13 +261,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
                     }
                     profile = allProfiles.find((temprofile) => temprofile.name === sesName);
                 }
-
-                if (this.profileInstance.validProfile !== ValidProfileEnum.INVALID) {
-                    session = ZoweExplorerApiRegister.getUssApi(profile).getSession();
-                } else {
-                    Gui.errorMessage(vscode.l10n.t("Profile is invalid"));
-                    return;
-                }
+                session = ZoweExplorerApiRegister.getUssApi(profile).getSession();
             } else {
                 Gui.showMessage(vscode.l10n.t("No profiles available"));
                 return;
