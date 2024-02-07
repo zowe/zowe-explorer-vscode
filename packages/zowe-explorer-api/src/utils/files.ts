@@ -27,8 +27,9 @@ export type FileAttributes = {
 export function permStringToOctal(perms: string): number {
     const permsWithoutDirFlag = perms.substring(1);
     let octalValue = "";
-    for (let i = 0; i + 3 <= permsWithoutDirFlag.length; i += 3) {
-        const group = permsWithoutDirFlag.slice(i, i + 3);
+    const offset = 3;
+    for (let i = 0; i + offset <= permsWithoutDirFlag.length; i += offset) {
+        const group = permsWithoutDirFlag.slice(i, i + offset);
         let groupValue = 0;
         for (const char of group) {
             if (char in PERM_VALUES) {

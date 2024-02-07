@@ -22,7 +22,7 @@ import { Profiles } from "../../../src/Profiles";
 import * as vscode from "vscode";
 import { imperative } from "@zowe/cli";
 import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
-import { Job } from "../../../src/job/ZoweJobNode";
+import { ZoweJobNode } from "../../../src/job/ZoweJobNode";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { TreeProviders } from "../../../src/shared/TreeProviders";
 
@@ -43,7 +43,7 @@ describe("ProfileManagement unit tests", () => {
             opCancelledSpy: jest.spyOn(Gui, "infoMessage"),
             mockDsSessionNode: ZoweDatasetNode,
             mockUnixSessionNode: ZoweUSSNode,
-            mockJobSessionNode: Job,
+            mockJobSessionNode: ZoweJobNode,
             mockResolveQp: jest.fn(),
             mockCreateQp: jest.fn(),
             mockUpdateChosen: ProfileManagement.basicAuthUpdateQpItems[ProfileManagement.AuthQpLabels.update],

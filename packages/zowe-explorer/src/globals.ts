@@ -35,7 +35,7 @@ export let DS_DIR: string;
 export let CONFIG_PATH; // set during activate
 export let ISTHEIA = false; // set during activate
 export let LOG: imperative.Logger;
-export const COMMAND_COUNT = 116;
+export const COMMAND_COUNT = 118;
 export const MAX_SEARCH_HISTORY = 5;
 export const MAX_FILE_HISTORY = 10;
 export const MS_PER_SEC = 1000;
@@ -55,15 +55,17 @@ export const DS_SESSION_FAV_CONTEXT = "session_fav";
 export const DS_SESSION_CONTEXT = "session";
 export const DS_PDS_CONTEXT = "pds";
 export const DS_DS_CONTEXT = "ds";
+export const DS_DS_BINARY_CONTEXT = "dsBinary";
 export const DS_MEMBER_CONTEXT = "member";
-export const DS_TEXT_FILE_CONTEXT = "textFile";
-export const DS_FAV_TEXT_FILE_CONTEXT = "textFile_fav";
-export const DS_BINARY_FILE_CONTEXT = "binaryFile";
+export const DS_MEMBER_BINARY_CONTEXT = "memberBinary";
 export const DS_MIGRATED_FILE_CONTEXT = "migr";
 export const DS_FILE_ERROR_CONTEXT = "fileError";
 export const USS_SESSION_CONTEXT = "ussSession";
 export const USS_DIR_CONTEXT = "directory";
 export const USS_FAV_DIR_CONTEXT = "directory_fav";
+export const USS_TEXT_FILE_CONTEXT = "textFile";
+export const USS_FAV_TEXT_FILE_CONTEXT = "textFile_fav";
+export const USS_BINARY_FILE_CONTEXT = "binaryFile";
 export const JOBS_SESSION_CONTEXT = "server";
 export const JOBS_JOB_CONTEXT = "job";
 export const JOBS_SPOOL_CONTEXT = "spool";
@@ -86,6 +88,7 @@ export const SETTINGS_DS_DEFAULT_BINARY = "zowe.ds.default.binary";
 export const SETTINGS_DS_DEFAULT_C = "zowe.ds.default.c";
 export const SETTINGS_DS_DEFAULT_CLASSIC = "zowe.ds.default.classic";
 export const SETTINGS_DS_DEFAULT_PDS = "zowe.ds.default.pds";
+export const SETTINGS_DS_DEFAULT_EXTENDED = "zowe.ds.default.extended";
 export const SETTINGS_DS_DEFAULT_PS = "zowe.ds.default.ps";
 export const SETTINGS_COMMANDS_HISTORY = "zowe.commands.history";
 export const SETTINGS_COMMANDS_ALWAYS_EDIT = "zowe.commands.alwaysEdit";
@@ -113,6 +116,7 @@ export const configurationDictionary: { [k: string]: string } = {
     "Zowe-Default-Datasets-C": SETTINGS_DS_DEFAULT_C,
     "Zowe-Default-Datasets-Classic": SETTINGS_DS_DEFAULT_CLASSIC,
     "Zowe-Default-Datasets-PDS": SETTINGS_DS_DEFAULT_PDS,
+    "Zowe-Default-Datasets-Extended": SETTINGS_DS_DEFAULT_EXTENDED,
     "Zowe-Default-Datasets-PS": SETTINGS_DS_DEFAULT_PS,
     "Zowe-Temp-Folder-Location": SETTINGS_TEMP_FOLDER_PATH,
     "Zowe Commands: History": SETTINGS_COMMANDS_HISTORY,
@@ -134,6 +138,7 @@ export enum CreateDataSetTypeWithKeysEnum {
     DATA_SET_CLASSIC,
     DATA_SET_PARTITIONED,
     DATA_SET_SEQUENTIAL,
+    DATA_SET_BLANK,
 }
 export const DATA_SET_PROPERTIES = [
     {
@@ -290,6 +295,7 @@ export enum JobPickerTypes {
 
 export const SEPARATORS = {
     BLANK: { kind: vscode.QuickPickItemKind.Separator, label: "" },
+    RECENT: { kind: vscode.QuickPickItemKind.Separator, label: localize("zowe.separator.recent", "Recent") },
     RECENT_FILTERS: { kind: vscode.QuickPickItemKind.Separator, label: localize("zowe.separator.recentFilters", "Recent Filters") },
     OPTIONS: { kind: vscode.QuickPickItemKind.Separator, label: localize("zowe.separator.options", "Options") },
 };

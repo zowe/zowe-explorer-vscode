@@ -25,7 +25,7 @@ import { markDocumentUnsaved, setFileSaved } from "../utils/workspace";
 import * as nls from "vscode-nls";
 import { refreshAll } from "../shared/refresh";
 import { IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
-import { fileExistsCaseSensitveSync } from "./utils";
+import { autoDetectEncoding, fileExistsCaseSensitveSync } from "./utils";
 import { UssFileTree, UssFileType } from "./FileStructure";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { AttributeView } from "./AttributeView";
@@ -94,7 +94,7 @@ export async function createUSSNode(
             }
         } catch (err) {
             if (err instanceof Error) {
-                await errorHandling(err, node.mProfileName, localize("createUSSNode.error.create", "Unable to create node:"));
+                await errorHandling(err, node.getProfileName(), localize("createUSSNode.error.create", "Unable to create node:"));
             }
             throw err;
         }
@@ -180,7 +180,7 @@ export async function uploadBinaryFile(node: IZoweUSSTreeNode, filePath: string)
         const ussName = `${node.fullPath}/${localFileName}`;
         await ZoweExplorerApiRegister.getUssApi(node.getProfile()).putContents(filePath, ussName, true);
     } catch (e) {
-        await errorHandling(e, node.mProfileName);
+        await errorHandling(e, node.getProfileName());
     }
 }
 
@@ -210,7 +210,7 @@ export async function uploadFile(node: IZoweUSSTreeNode, doc: vscode.TextDocumen
             await ZoweExplorerApiRegister.getUssApi(prof).putContents(doc.fileName, ussName);
         }
     } catch (e) {
-        await errorHandling(e, node.mProfileName);
+        await errorHandling(e, node.getProfileName());
     }
 }
 
@@ -292,16 +292,11 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
     const etagFavorites = findEtag(favoritesSesNode, directories, 0);
 
     // get session from session name
-    let binary;
-
     let sesNode: IZoweUSSTreeNode;
     if ((etagProfiles && etagFavorites) || etagProfiles) {
         sesNode = profileSesnode;
     } else if (etagFavorites) {
         sesNode = favoritesSesNode;
-    }
-    if (sesNode) {
-        binary = Object.keys(sesNode.binaryFiles).find((child) => child === remote) !== undefined;
     }
     // Get specific node based on label and parent tree (session / favorites)
     const nodes: IZoweUSSTreeNode[] = concatChildNodes(sesNode ? [sesNode] : ussFileProvider.mSessionNodes);
@@ -320,14 +315,15 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
 
     const prof = node?.getProfile() ?? profile;
     try {
-        binary = binary || (await ZoweExplorerApiRegister.getUssApi(prof).isFileTagBinOrAscii(remote));
+        await autoDetectEncoding(node, prof);
+
         const uploadResponse: IZosFilesResponse = await Gui.withProgress(
             {
                 location: vscode.ProgressLocation.Window,
                 title: localize("saveUSSFile.response.title", "Saving file..."),
             },
             () => {
-                return uploadContent(node, doc, remote, prof, binary, etagToUpload, returnEtag);
+                return uploadContent(node, doc, remote, prof, etagToUpload, returnEtag);
             }
         );
         if (uploadResponse.success) {
@@ -344,7 +340,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
         // TODO: error handling must not be zosmf specific
         const errorMessage = err ? err.message : err.toString();
         if (errorMessage.includes("Rest API failure with HTTP(S) status 412")) {
-            resolveFileConflict(node, prof, doc, path.basename(doc.fileName), remote, binary);
+            resolveFileConflict(node, prof, doc, remote);
         } else {
             await markDocumentUnsaved(doc);
             await errorHandling(err, sesName);
