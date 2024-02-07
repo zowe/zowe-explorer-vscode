@@ -8,6 +8,8 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### Bug fixes
 
+- Fixed issue where `zosmf` profiles did not respect the `protocol` property [#2703](https://github.com/zowe/vscode-extension-for-zowe/issues/2703).
+
 ## `2.14.0`
 
 ### New features and enhancements
