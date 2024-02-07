@@ -9,6 +9,9 @@
  *
  */
 
+import { IZoweTreeNode } from "../tree";
+import { workspace } from "vscode";
+
 export const PERM_VALUES = {
     r: 4,
     w: 2,
@@ -39,4 +42,14 @@ export function permStringToOctal(perms: string): number {
     }
 
     return parseInt(octalValue);
+}
+
+/**
+ * Getter to check dirty flag for nodes opened in the editor.
+ *
+ * NOTE: Only works for nodes that use resource URIs (see the `resourceUri` variable in IZoweTreeNode)
+ * @returns {boolean} whether the URI is open in the editor and unsaved
+ */
+export function isNodeInEditor(node: IZoweTreeNode): boolean {
+    return workspace.textDocuments.some(({ uri, isDirty }) => uri.path === node.resourceUri?.path && isDirty);
 }

@@ -13,7 +13,7 @@ import { imperative, IUploadOptions, IZosFilesResponse } from "@zowe/cli";
 import * as globals from "../globals";
 import * as vscode from "vscode";
 import * as path from "path";
-import { FileAttributes, Gui, IZoweUSSTreeNode, ZoweTreeNode, IZoweTree, ValidProfileEnum, IUss } from "@zowe/zowe-explorer-api";
+import { FileAttributes, Gui, IZoweUSSTreeNode, ZoweTreeNode, IZoweTree, ValidProfileEnum, IUss, isNodeInEditor } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { errorHandling, syncSessionNode } from "../utils/ProfilesUtils";
@@ -614,9 +614,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 throw Error(vscode.l10n.t("refreshUSS() called from invalid node."));
         }
         try {
-            const isDirty = this.isDirtyInEditor;
-
-            if (!isDirty) {
+            if (!isNodeInEditor(this)) {
                 await UssFSProvider.instance.fetchFileAtUri(this.resourceUri);
             }
         } catch (err) {

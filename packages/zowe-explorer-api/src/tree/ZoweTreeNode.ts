@@ -113,12 +113,4 @@ export class ZoweTreeNode extends vscode.TreeItem {
     public setSessionToChoice(aSession: imperative.Session): void {
         this.session = aSession;
     }
-
-    /**
-     * Getter to check dirty flag for nodes opened in the editor
-     * @returns {boolean} whether the URI is open in the editor and unsaved
-     */
-    public get isDirtyInEditor(): boolean {
-        return vscode.workspace.textDocuments.some(({ uri, isDirty }) => uri.path === this.resourceUri?.path && isDirty);
-    }
 }

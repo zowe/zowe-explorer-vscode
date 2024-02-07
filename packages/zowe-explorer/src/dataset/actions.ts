@@ -11,31 +11,19 @@
 
 import * as dsUtils from "../dataset/utils";
 import * as vscode from "vscode";
-import * as fs from "fs";
 import * as zowe from "@zowe/cli";
 import * as globals from "../globals";
 import * as path from "path";
 import * as api from "@zowe/zowe-explorer-api";
 import { FilterItem, errorHandling } from "../utils/ProfilesUtils";
-import {
-    getDocumentFilePath,
-    concatChildNodes,
-    checkForAddedSuffix,
-    getSelectedNodeList,
-    JobSubmitDialogOpts,
-    JOB_SUBMIT_DIALOG_OPTS,
-    LocalFileInfo,
-    uploadContent,
-} from "../shared/utils";
+import { getDocumentFilePath, getSelectedNodeList, JobSubmitDialogOpts, JOB_SUBMIT_DIALOG_OPTS } from "../shared/utils";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { Profiles } from "../Profiles";
 import { getIconByNode } from "../generators/icons";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import * as contextually from "../shared/context";
-import { markDocumentUnsaved, setFileSaved } from "../utils/workspace";
 import { IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
 import { ZoweLogger } from "../utils/LoggerUtils";
-import { promiseStatus, PromiseStatuses } from "promise-status-async";
 import { ProfileManagement } from "../utils/ProfileManagement";
 import { LocalFileManagement } from "../utils/LocalFileManagement";
 import { DatasetFSProvider } from "./DatasetFSProvider";
@@ -1231,7 +1219,7 @@ export async function refreshPS(node: api.IZoweDatasetTreeNode): Promise<void> {
         }
 
         const statusMsg = api.Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Fetching data set..."));
-        if (!node.isDirtyInEditor) {
+        if (api.isNodeInEditor(node)) {
             await DatasetFSProvider.instance.fetchDatasetAtUri(
                 node.resourceUri,
                 vscode.window.visibleTextEditors.find((v) => v.document.uri.path === node.resourceUri.path)
