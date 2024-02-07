@@ -27,7 +27,7 @@ export type DeleteMetadata = {
 
 export interface Conflictable {
     getContents: (filePath: string, options: IDownloadSingleOptions) => Promise<IZosFilesResponse>;
-    uploadBufferAsFile?(buffer: Buffer, filePath: string, options?: IUploadOptions): Promise<string | IZosFilesResponse>;
+    uploadFromBuffer?(buffer: Buffer, filePath: string, options?: IUploadOptions): Promise<string | IZosFilesResponse>;
 }
 
 export class BufferBuilder extends Duplex {

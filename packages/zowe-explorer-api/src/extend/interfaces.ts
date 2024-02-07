@@ -118,7 +118,7 @@ export interface IUss extends ICommon {
     /**
      * Uploads a given buffer as the contents of a file on USS.
      */
-    uploadBufferAsFile?(buffer: Buffer, filePath: string, options?: zowe.IUploadOptions): Promise<string | zowe.IZosFilesResponse>;
+    uploadFromBuffer(buffer: Buffer, filePath: string, options?: zowe.IUploadOptions): Promise<string | zowe.IZosFilesResponse>;
 
     /**
      * Moves a file or folder to the new path provided.
@@ -242,7 +242,7 @@ export interface IMvs extends ICommon {
      * @param {zowe.IUploadOptions} [options]
      * @returns {Promise<zowe.IZosFilesResponse>}
      */
-    uploadBufferAsDs?(buffer: Buffer, dataSetName: string, options?: zowe.IUploadOptions): Promise<zowe.IZosFilesResponse>;
+    uploadFromBuffer(buffer: Buffer, dataSetName: string, options?: zowe.IUploadOptions): Promise<zowe.IZosFilesResponse>;
 
     /**
      * Create a new data set with the specified options.

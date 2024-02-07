@@ -252,7 +252,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 // create the data set member as it did not exist previously
                 const dsName = `${parent.name}(${entry.name})`;
                 await mvsApi.createDataSetMember(dsName);
-                await mvsApi.uploadBufferAsDs(Buffer.from(content), dsName, {
+                await mvsApi.uploadFromBuffer(Buffer.from(content), dsName, {
                     etag: undefined,
                     returnEtag: true,
                 });
@@ -294,7 +294,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
                 // Attempt to write data to remote system, and handle any conflicts from e-tag mismatch
                 try {
-                    const resp = await mvsApi.uploadBufferAsDs(Buffer.from(content), fullName, {
+                    const resp = await mvsApi.uploadFromBuffer(Buffer.from(content), fullName, {
                         etag: shouldForceUpload ? undefined : entry.etag,
                         returnEtag: true,
                     });

@@ -239,7 +239,7 @@ export class BaseProvider {
 
     /**
      * Handles the conflict that occurred while trying to write to a file.
-     * @param api The API to use during compare/overwrite - must support `getContents` and `uploadBufferAsFile` functions
+     * @param api The API to use during compare/overwrite - must support `getContents` and `uploadFromBuffer` functions
      * @param conflictData The required data for conflict handling
      * @returns The user's action/selection as an enum value
      */

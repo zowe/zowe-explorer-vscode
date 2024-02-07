@@ -230,7 +230,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                 const statusMsg = Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Saving USS file..."));
                 // user is trying to edit a file that was just deleted: make the API call
                 const ussApi = ZoweExplorerApiRegister.getUssApi(parentDir.metadata.profile);
-                await ussApi.uploadBufferAsFile(Buffer.from(content), entry.metadata.path, {
+                await ussApi.uploadFromBuffer(Buffer.from(content), entry.metadata.path, {
                     etag: undefined,
                     returnEtag: true,
                 });
@@ -267,7 +267,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                 const statusMsg = Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Saving USS file..."));
                 try {
                     // Attempt to write data to remote system, and handle any conflicts from e-tag mismatch
-                    await ussApi.uploadBufferAsFile(Buffer.from(content), entry.metadata.path, {
+                    await ussApi.uploadFromBuffer(Buffer.from(content), entry.metadata.path, {
                         etag: shouldForceUpload || entry.etag == null ? undefined : entry.etag,
                         returnEtag: true,
                     });
@@ -464,7 +464,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             if (!fileEntry.wasAccessed) {
                 // must fetch contents of file first before pasting in new path
                 const fileContents = await vscode.workspace.fs.readFile(source);
-                await api.uploadBufferAsFile(Buffer.from(fileContents), outputPath);
+                await api.uploadFromBuffer(Buffer.from(fileContents), outputPath);
             }
         }
     }

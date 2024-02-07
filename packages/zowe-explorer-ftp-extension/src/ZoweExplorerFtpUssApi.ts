@@ -60,7 +60,7 @@ export class FtpUssApi extends AbstractFtpApi implements IUss {
         return false; // TODO: needs to be implemented checking file type
     }
 
-    public async uploadBufferAsFile(buffer: Buffer, filePath: string, options?: zowe.IUploadOptions): Promise<zowe.IZosFilesResponse> {
+    public async uploadFromBuffer(buffer: Buffer, filePath: string, options?: zowe.IUploadOptions): Promise<zowe.IZosFilesResponse> {
         const tempFile = tmp.fileSync();
         if (options.binary) {
             fs.writeSync(tempFile.fd, buffer);
