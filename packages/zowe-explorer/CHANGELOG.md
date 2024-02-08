@@ -19,6 +19,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Adopted new common methods for `loginWithBaseProfile` and `logoutWithBaseProfile`. [#2493](https://github.com/zowe/vscode-extension-for-zowe/pull/2493)
 - Added APIML dynamic token support. [#2665](https://github.com/zowe/vscode-extension-for-zowe/issues/2665)
 - Implemented profile determination without triggering quick pick for `Submit JCL` if the file is part of Zowe Explorer's temp files. [#2628](https://github.com/zowe/vscode-extension-for-zowe/issues/2628)
+- Implemented sorting of PDS members by date created [#2707](https://github.com/zowe/vscode-extension-for-zowe/pull/2707)
 
 ### Bug fixes
 

@@ -3065,7 +3065,6 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
                 method: DatasetSortOpts.Name,
                 direction: SortDirection.Descending,
             };
-            mocks.showQuickPick.mockResolvedValueOnce({ label: "$(calendar) Date Created" });
             // insert node with same date modified
             const nodeD = new ZoweDatasetNode({
                 label: "D",
@@ -3075,10 +3074,29 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
             });
             nodeD.stats = { user: "someUser", createdDate: new Date("2021-01-01T12:00:00"), modifiedDate: new Date("2022-03-15T16:30:00") };
             nodes.pds.children = [...(nodes.pds.children ?? []), nodeD];
+            mocks.showQuickPick.mockResolvedValueOnce({ label: "$(calendar) Date Created" });
             await tree.sortPdsMembersDialog(nodes.pds);
             expect(mocks.nodeDataChanged).toHaveBeenCalled();
             expect(mocks.refreshElement).not.toHaveBeenCalled();
             expect(nodes.pds.children?.map((c: IZoweDatasetTreeNode) => c.label)).toStrictEqual(["A", "C", "D", "B"]);
+        });
+
+        it("sorts by created date: handling a invalid date", async () => {
+            const mocks = getBlockMocks();
+            const nodes = nodesForSuite();
+            // insert node with same date modified
+            const nodeD = new ZoweDatasetNode({
+                label: "D",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                parentNode: nodes.pds,
+                session: createISession(),
+            });
+            nodeD.stats = { user: "someUser", createdDate: new Date("not a valid date"), modifiedDate: new Date("2022-03-15T16:30:00") };
+            nodes.pds.children = [...(nodes.pds.children ?? []), nodeD];
+            mocks.showQuickPick.mockResolvedValueOnce({ label: "$(calendar) Date Created" });
+            await tree.sortPdsMembersDialog(nodes.pds);
+            expect(mocks.nodeDataChanged).toHaveBeenCalled();
+            expect(mocks.refreshElement).not.toHaveBeenCalled();
         });
 
         it("sorts by last modified date", async () => {
