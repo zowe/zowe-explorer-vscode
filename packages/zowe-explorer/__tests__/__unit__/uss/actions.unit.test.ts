@@ -407,17 +407,6 @@ describe("USS Action Unit Tests - Function copyPath", () => {
         await ussNodeActions.copyPath(blockMocks.ussNode);
         expect(globalMocks.writeText).toBeCalledWith(blockMocks.ussNode.fullPath);
     });
-
-    it("should not copy the node's full path to the system clipboard if theia", async () => {
-        const globalMocks = createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
-
-        globalMocks.theia = false;
-        globalMocks.theia = true;
-
-        await ussNodeActions.copyPath(blockMocks.ussNode);
-        expect(globalMocks.writeText).not.toBeCalled();
-    });
 });
 
 describe("USS Action Unit Tests - Function saveUSSFile", () => {

@@ -566,35 +566,23 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                 if (this.mHistory.getSearchHistory().length > 0) {
                     const createPick = new FilterDescriptor(USSTree.defaultDialogText);
                     const items: vscode.QuickPickItem[] = this.mHistory.getSearchHistory().map((element) => new FilterItem({ text: element }));
-                    if (globals.ISTHEIA) {
-                        // get user selection
-                        const choice = await Gui.showQuickPick([createPick, globals.SEPARATORS.RECENT_FILTERS, ...items], {
-                            placeHolder: vscode.l10n.t("Select a filter"),
-                        });
-                        if (!choice) {
-                            Gui.showMessage(vscode.l10n.t("No selection made. Operation cancelled."));
-                            return;
+                    const quickpick = Gui.createQuickPick();
+                    quickpick.placeholder = vscode.l10n.t("Select a filter");
+                    quickpick.items = [createPick, globals.SEPARATORS.RECENT_FILTERS, ...items];
+                    quickpick.ignoreFocusOut = true;
+                    quickpick.show();
+                    const choice = await Gui.resolveQuickPick(quickpick);
+                    quickpick.hide();
+                    if (!choice) {
+                        Gui.showMessage(vscode.l10n.t("No selection made. Operation cancelled."));
+                        return;
+                    }
+                    if (choice instanceof FilterDescriptor) {
+                        if (quickpick.value) {
+                            remotepath = quickpick.value;
                         }
-                        remotepath = choice === createPick ? "" : choice.label;
                     } else {
-                        const quickpick = Gui.createQuickPick();
-                        quickpick.placeholder = vscode.l10n.t("Select a filter");
-                        quickpick.items = [createPick, globals.SEPARATORS.RECENT_FILTERS, ...items];
-                        quickpick.ignoreFocusOut = true;
-                        quickpick.show();
-                        const choice = await Gui.resolveQuickPick(quickpick);
-                        quickpick.hide();
-                        if (!choice) {
-                            Gui.showMessage(vscode.l10n.t("No selection made. Operation cancelled."));
-                            return;
-                        }
-                        if (choice instanceof FilterDescriptor) {
-                            if (quickpick.value) {
-                                remotepath = quickpick.value;
-                            }
-                        } else {
-                            remotepath = choice.label;
-                        }
+                        remotepath = choice.label;
                     }
                 }
                 // manually entering a search - switch to an input box

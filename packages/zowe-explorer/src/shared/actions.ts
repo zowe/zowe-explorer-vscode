@@ -162,33 +162,20 @@ export async function openRecentMemberPrompt(datasetTree: IZoweTree<IZoweDataset
     if (fileHistory.length > 0) {
         const createPick = new FilterDescriptor(vscode.l10n.t("Select a recent member to open"));
         const items: vscode.QuickPickItem[] = fileHistory.map((element) => new FilterItem({ text: element }));
-        if (globals.ISTHEIA) {
-            const options1: vscode.QuickPickOptions = {
-                placeHolder: vscode.l10n.t("Select a recent member to open"),
-            };
-
-            const choice = await Gui.showQuickPick([createPick, ...items], options1);
-            if (!choice) {
-                Gui.showMessage(vscode.l10n.t("No selection made. Operation cancelled."));
-                return;
-            }
-            pattern = choice === createPick ? "" : choice.label;
+        const quickpick = Gui.createQuickPick();
+        quickpick.items = [createPick, ...items];
+        quickpick.placeholder = vscode.l10n.t("Select a recent member to open");
+        quickpick.ignoreFocusOut = true;
+        quickpick.show();
+        const choice = await Gui.resolveQuickPick(quickpick);
+        quickpick.hide();
+        if (!choice || choice === createPick) {
+            Gui.showMessage(vscode.l10n.t("No selection made. Operation cancelled."));
+            return;
+        } else if (choice instanceof FilterDescriptor) {
+            pattern = quickpick.value;
         } else {
-            const quickpick = Gui.createQuickPick();
-            quickpick.items = [createPick, ...items];
-            quickpick.placeholder = vscode.l10n.t("Select a recent member to open");
-            quickpick.ignoreFocusOut = true;
-            quickpick.show();
-            const choice = await Gui.resolveQuickPick(quickpick);
-            quickpick.hide();
-            if (!choice || choice === createPick) {
-                Gui.showMessage(vscode.l10n.t("No selection made. Operation cancelled."));
-                return;
-            } else if (choice instanceof FilterDescriptor) {
-                pattern = quickpick.value;
-            } else {
-                pattern = choice.label;
-            }
+            pattern = choice.label;
         }
 
         const sessionName = pattern.substring(1, pattern.indexOf("]")).trim();

@@ -355,21 +355,6 @@ describe("Test src/shared/extension", () => {
             await sharedExtension.watchConfigProfile(context, { ds: "ds", uss: "uss", job: "job" } as any);
             expect(spyRefreshAll).toHaveBeenCalled();
         });
-
-        it("should be able to refresh zowe explorer on theia after updating config file", async () => {
-            Object.defineProperty(globals, "ISTHEIA", { value: true, configurable: true });
-            jest.spyOn(ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter, "fire").mockImplementation();
-            const spyRefreshAll = jest.spyOn(refreshActions, "refreshAll").mockImplementation(jest.fn());
-            await sharedExtension.watchConfigProfile(context, { ds: "ds", uss: "uss", job: "job" } as any);
-            expect(context.subscriptions).toContain(watcher);
-            expect(spyReadFile).toHaveBeenCalledWith("uri");
-            expect(spyRefreshAll).toHaveBeenCalled();
-
-            spyReadFile.mockReturnValue("other");
-            await sharedExtension.watchConfigProfile(context, { ds: "ds", uss: "uss", job: "job" } as any);
-            expect(spyRefreshAll).toHaveBeenCalled();
-            expect(spyExecuteCommand).toHaveBeenCalledWith("zowe.extRefresh");
-        });
     });
 
     describe("initSubscribers", () => {
@@ -396,13 +381,6 @@ describe("Test src/shared/extension", () => {
             expect(spyExpand).toHaveBeenCalled();
             expect(spyFlipState).toHaveBeenCalledWith("collapse", false);
             expect(spyFlipState).toHaveBeenCalledWith("expand", true);
-        });
-        it("should not setup listeners if we are in THEIA", () => {
-            Object.defineProperty(globals, "ISTHEIA", { value: true });
-            sharedExtension.initSubscribers(context, provider);
-            expect(context.subscriptions).toContain(treeView);
-            expect(spyCollapse).not.toHaveBeenCalled();
-            expect(spyExpand).not.toHaveBeenCalled();
         });
     });
 });

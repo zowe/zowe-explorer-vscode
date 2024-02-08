@@ -285,9 +285,6 @@ export function watchConfigProfile(context: vscode.ExtensionContext, providers: 
             await refreshActions.refreshAll(providers.uss);
             await refreshActions.refreshAll(providers.job);
             ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter.fire(Validation.EventType.UPDATE);
-            if (globals.ISTHEIA) {
-                await vscode.commands.executeCommand("zowe.extRefresh");
-            }
         });
     });
 }

@@ -895,36 +895,23 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 if (this.mHistory.getSearchHistory().length > 0) {
                     const createPick = new FilterDescriptor(DatasetTree.defaultDialogText);
                     const items: vscode.QuickPickItem[] = this.mHistory.getSearchHistory().map((element) => new FilterItem({ text: element }));
-                    if (globals.ISTHEIA) {
-                        const options1: vscode.QuickPickOptions = {
-                            placeHolder: vscode.l10n.t("Select a filter"),
-                        };
-                        // get user selection
-                        const choice = await Gui.showQuickPick([createPick, globals.SEPARATORS.RECENT_FILTERS, ...items], options1);
-                        if (!choice) {
-                            Gui.showMessage(vscode.l10n.t("No selection made. Operation cancelled."));
-                            return;
+                    const quickpick = Gui.createQuickPick();
+                    quickpick.items = [createPick, globals.SEPARATORS.RECENT_FILTERS, ...items];
+                    quickpick.placeholder = vscode.l10n.t("Select a filter");
+                    quickpick.ignoreFocusOut = true;
+                    quickpick.show();
+                    const choice = await Gui.resolveQuickPick(quickpick);
+                    quickpick.hide();
+                    if (!choice) {
+                        Gui.showMessage(vscode.l10n.t("No selection made. Operation cancelled."));
+                        return;
+                    }
+                    if (choice instanceof FilterDescriptor) {
+                        if (quickpick.value) {
+                            pattern = quickpick.value;
                         }
-                        pattern = choice === createPick ? "" : choice.label;
                     } else {
-                        const quickpick = Gui.createQuickPick();
-                        quickpick.items = [createPick, globals.SEPARATORS.RECENT_FILTERS, ...items];
-                        quickpick.placeholder = vscode.l10n.t("Select a filter");
-                        quickpick.ignoreFocusOut = true;
-                        quickpick.show();
-                        const choice = await Gui.resolveQuickPick(quickpick);
-                        quickpick.hide();
-                        if (!choice) {
-                            Gui.showMessage(vscode.l10n.t("No selection made. Operation cancelled."));
-                            return;
-                        }
-                        if (choice instanceof FilterDescriptor) {
-                            if (quickpick.value) {
-                                pattern = quickpick.value;
-                            }
-                        } else {
-                            pattern = choice.label;
-                        }
+                        pattern = choice.label;
                     }
                 }
                 const options2: vscode.InputBoxOptions = {

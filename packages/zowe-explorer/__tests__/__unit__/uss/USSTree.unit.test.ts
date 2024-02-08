@@ -570,7 +570,6 @@ describe("USSTree Unit Tests - Function USSTree.filterPrompt()", () => {
             qpItem: new utils.FilterDescriptor("\uFF0B " + "Create a new filter"),
             resolveQuickPickHelper: jest.spyOn(Gui, "resolveQuickPick"),
         };
-        Object.defineProperty(globals, "ISTHEIA", { get: () => newMocks.theia });
         newMocks.resolveQuickPickHelper.mockImplementation(() => Promise.resolve(newMocks.qpItem));
         globalMocks.createQuickPick.mockReturnValue({
             placeholder: "Select a filter",
@@ -667,57 +666,6 @@ describe("USSTree Unit Tests - Function USSTree.filterPrompt()", () => {
         const blockMocks = await createBlockMocks(globalMocks);
 
         blockMocks.qpItem = undefined;
-
-        await globalMocks.testTree.filterPrompt(globalMocks.testTree.mSessionNodes[1]);
-        expect(globalMocks.showInformationMessage.mock.calls.length).toBe(1);
-        expect(globalMocks.showInformationMessage.mock.calls[0][0]).toBe("No selection made. Operation cancelled.");
-    });
-
-    it("Tests that filter() works when new path is specified (Theia)", async () => {
-        const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
-
-        blockMocks.theia = true;
-        blockMocks.qpValue = "/u/myFiles";
-        globalMocks.showQuickPick.mockReturnValueOnce(" -- Specify Filter -- ");
-        globalMocks.showInputBox.mockReturnValueOnce("/u/myFiles");
-
-        await globalMocks.testTree.filterPrompt(globalMocks.testTree.mSessionNodes[1]);
-        expect(globalMocks.testTree.mSessionNodes[1].fullPath).toEqual("/u/myFiles");
-    });
-
-    it("Tests that filter() exits when user cancels the input path box (Theia)", async () => {
-        const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
-
-        blockMocks.theia = true;
-        globalMocks.showQuickPick.mockReturnValueOnce("\uFF0B " + "Create a new filter");
-        globalMocks.showInputBox.mockReturnValueOnce(undefined);
-
-        await globalMocks.testTree.filterPrompt(globalMocks.testTree.mSessionNodes[1]);
-        expect(globalMocks.showInformationMessage.mock.calls.length).toBe(1);
-        expect(globalMocks.showInformationMessage.mock.calls[0][0]).toBe("You must enter a path.");
-    });
-
-    it("Tests that filter() works with a file (Theia)", async () => {
-        const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
-
-        blockMocks.theia = true;
-        blockMocks.qpValue = "/u/thisFile";
-        globalMocks.showQuickPick.mockReturnValueOnce(new utils.FilterDescriptor("/u/thisFile"));
-        globalMocks.showInputBox.mockReturnValueOnce("/u/thisFile");
-
-        await globalMocks.testTree.filterPrompt(globalMocks.testTree.mSessionNodes[1]);
-        expect(globalMocks.testTree.mSessionNodes[1].fullPath).toEqual("/u/thisFile");
-    });
-
-    it("Tests that filter() exits when no selection made (Theia)", async () => {
-        const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
-
-        blockMocks.theia = true;
-        globalMocks.showQuickPick.mockReturnValueOnce(undefined);
 
         await globalMocks.testTree.filterPrompt(globalMocks.testTree.mSessionNodes[1]);
         expect(globalMocks.showInformationMessage.mock.calls.length).toBe(1);

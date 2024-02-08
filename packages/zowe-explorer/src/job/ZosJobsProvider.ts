@@ -648,19 +648,6 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         const items: FilterItem[] = this.mHistory
             .getSearchHistory()
             .map((element) => new FilterItem({ text: element, menuType: globals.JobPickerTypes.History }));
-        if (globals.ISTHEIA) {
-            // Theia doesn't work properly when directly creating a QuickPick
-            const selectFilter: vscode.QuickPickOptions = {
-                placeHolder: vscode.l10n.t("Select a filter"),
-            };
-            // get user selection
-            const choice = await Gui.showQuickPick([this.searchByQuery, this.searchById, globals.SEPARATORS.RECENT_FILTERS, ...items], selectFilter);
-            if (!choice) {
-                Gui.showMessage(vscode.l10n.t("No selection made. Operation cancelled."));
-                return undefined;
-            }
-            return choice as FilterItem;
-        }
 
         // VSCode route to create a QuickPick
         const quickpick = Gui.createQuickPick();
@@ -705,23 +692,18 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
 
     public async applyRegularSessionSearchLabel(node: IZoweJobTreeNode): Promise<string | undefined> {
         ZoweLogger.trace("ZosJobsProvider.applyRegularSessionsSearchLabel called.");
-        let searchCriteria: string;
         const choice = await this.getUserJobsMenuChoice();
         const searchCriteriaObj = await this.getUserSearchQueryInput(choice, node);
 
         if (!searchCriteriaObj) {
             return undefined;
         }
-        if (globals.ISTHEIA) {
-            searchCriteria = choice === this.searchByQuery || choice === this.searchById ? "" : choice.label;
-        } else {
-            searchCriteria = this.createSearchLabel(
-                searchCriteriaObj.Owner,
-                searchCriteriaObj.Prefix,
-                searchCriteriaObj.JobId,
-                searchCriteriaObj.Status
-            );
-        }
+        const searchCriteria = this.createSearchLabel(
+            searchCriteriaObj.Owner,
+            searchCriteriaObj.Prefix,
+            searchCriteriaObj.JobId,
+            searchCriteriaObj.Status
+        );
         this.applySearchLabelToNode(node, searchCriteriaObj);
         return searchCriteria;
     }

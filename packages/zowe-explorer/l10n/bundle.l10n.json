@@ -325,7 +325,6 @@
   "There is already a file with the same name. \n                        Please change your OS file system settings if you want to give case sensitive file names.": "There is already a file with the same name. \n                        Please change your OS file system settings if you want to give case sensitive file names.",
   "Unable to create node:": "Unable to create node:",
   "Uploading USS file": "Uploading USS file",
-  "Copy Path is not yet supported in Theia.": "Copy Path is not yet supported in Theia.",
   "save requested for USS file {0}/Document file name": {
     "message": "save requested for USS file {0}",
     "comment": [
@@ -441,7 +440,6 @@
   "Ascending": "Ascending",
   "Descending": "Descending",
   "Saving Data Set...": "Saving Data Set...",
-  "A merge conflict has been detected. Since you are running inside Theia editor, a merge conflict resolution is not available yet.": "A merge conflict has been detected. Since you are running inside Theia editor, a merge conflict resolution is not available yet.",
   "Would you like to overwrite the remote file?": "Would you like to overwrite the remote file?",
   "Upload cancelled.": "Upload cancelled.",
   "Invalid job owner": "Invalid job owner",
@@ -968,13 +966,6 @@
   "Select the ssh Profile.": "Select the ssh Profile.",
   "No SSH profile found. Please create an SSH profile before issuing Unix commands.": "No SSH profile found. Please create an SSH profile before issuing Unix commands.",
   "Credentials are missing for SSH profile": "Credentials are missing for SSH profile",
-  "(An option to edit will follow)": "(An option to edit will follow)",
-  "Select a Unix command to run against {0}/Current work directory": {
-    "message": "Select a Unix command to run against {0}",
-    "comment": [
-      "Current work directory"
-    ]
-  },
   "Select a Unix command to run against {0} (An option to edit will follow)/Current work directory": {
     "message": "Select a Unix command to run against {0} (An option to edit will follow)",
     "comment": [
@@ -993,13 +984,6 @@
   "$(plus) Create a new TSO command": "$(plus) Create a new TSO command",
   "Zowe TSO Command": "Zowe TSO Command",
   "Select the Profile to use to submit the TSO command": "Select the Profile to use to submit the TSO command",
-  "Select a TSO command to run against {0}/Host name": {
-    "message": "Select a TSO command to run against {0}",
-    "comment": [
-      "Host name"
-    ]
-  },
-  "No selection made.": "No selection made.",
   "Select a TSO command to run against {0} (An option to edit will follow)/Host name": {
     "message": "Select a TSO command to run against {0} (An option to edit will follow)",
     "comment": [
@@ -1022,12 +1006,6 @@
   "$(plus) Create a new MVS command": "$(plus) Create a new MVS command",
   "Zowe MVS Command": "Zowe MVS Command",
   "Select the Profile to use to submit the command": "Select the Profile to use to submit the command",
-  "Select an MVS command to run against {0}/Host name": {
-    "message": "Select an MVS command to run against {0}",
-    "comment": [
-      "Host name"
-    ]
-  },
   "Select an MVS command to run against {0} (An option to edit will follow)/Host name": {
     "message": "Select an MVS command to run against {0} (An option to edit will follow)",
     "comment": [
