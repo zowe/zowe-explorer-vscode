@@ -16,7 +16,7 @@ import * as globals from "../globals";
 import * as contextually from "../shared/context";
 import { Gui, IZoweJobTreeNode, Sorting, ZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
-import { errorHandling, syncSessionNode } from "../utils/ProfilesUtils";
+import { errorHandling, fallbackProfileName, syncSessionNode } from "../utils/ProfilesUtils";
 import { getIconByNode } from "../generators/icons";
 import { JOB_SORT_KEYS } from "./utils";
 import { Profiles } from "../Profiles";
@@ -71,10 +71,14 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
         this.filtered = false;
 
         const isFavorites = label === "Favorites";
+        const profileName = profile?.name ?? fallbackProfileName();
 
         if (mParent == null && !isFavorites) {
             this.contextValue = globals.JOBS_SESSION_CONTEXT;
-            this.resourceUri = vscode.Uri.parse(`zowe-jobs:/${profile.name}`);
+            this.resourceUri = vscode.Uri.from({
+                scheme: "zowe-jobs",
+                path: `/${profileName}/`,
+            });
             JobFSProvider.instance.createDirectory(this.resourceUri, { isFilter: true });
         }
 
@@ -99,7 +103,10 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
                 this.id = this.label as string;
             }
         } else if (!isFavorites && profile != null) {
-            this.resourceUri = vscode.Uri.parse(`zowe-jobs:/${profile.name}/${this.job.jobid}`);
+            this.resourceUri = vscode.Uri.from({
+                scheme: "zowe-jobs",
+                path: `/${profileName}/${this.job.jobid}`,
+            });
         }
     }
 

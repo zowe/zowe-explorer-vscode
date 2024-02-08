@@ -122,6 +122,11 @@ export function isTheia(): boolean {
     return false;
 }
 
+export function fallbackProfileName(): string {
+    // eslint-disable-next-line no-magic-numbers
+    return `unknown-profile-${(Math.random() + 1).toString(36).substring(globals.MAX_MEMBER_LENGTH)}`;
+}
+
 /**
  * Function to update session and profile information in provided node
  * @param profiles is data source to find profiles

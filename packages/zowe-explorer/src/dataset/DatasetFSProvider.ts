@@ -162,7 +162,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         parent.mtime = Date.now();
         parent.size += 1;
         this._fireSoon(
-            { type: vscode.FileChangeType.Changed, uri: uri.with({ path: path.posix.resolve(uri.path, "..") }) },
+            { type: vscode.FileChangeType.Changed, uri: uri.with({ path: path.posix.join(uri.path, "..") }) },
             { type: vscode.FileChangeType.Created, uri }
         );
     }
@@ -373,7 +373,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         entry.name = newName;
 
         // Build the new path using the previous path and new file/folder name.
-        let newPath = path.posix.resolve(entry.metadata.path, "..", newName);
+        let newPath = path.posix.join(entry.metadata.path, "..", newName);
         if (isDir) {
             newPath += "/";
         }
@@ -382,7 +382,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             if (isDir) {
                 await ZoweExplorerApiRegister.getMvsApi(entry.metadata.profile).renameDataSet(oldName, newName);
             } else {
-                const pdsName = path.basename(path.posix.resolve(entry.metadata.path, ".."));
+                const pdsName = path.basename(path.posix.join(entry.metadata.path, ".."));
                 await ZoweExplorerApiRegister.getMvsApi(entry.metadata.profile).renameDataSetMember(pdsName, oldName, newName);
             }
         } catch (err) {

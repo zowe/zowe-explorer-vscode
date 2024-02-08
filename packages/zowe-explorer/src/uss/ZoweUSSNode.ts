@@ -16,7 +16,7 @@ import * as path from "path";
 import { Types, Gui, IZoweUSSTreeNode, ZoweTreeNode, IZoweTree, Validation, MainframeInteraction, isNodeInEditor } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
-import { errorHandling, syncSessionNode } from "../utils/ProfilesUtils";
+import { errorHandling, fallbackProfileName, syncSessionNode } from "../utils/ProfilesUtils";
 import { getIconByNode } from "../generators/icons/index";
 import * as contextually from "../shared/context";
 import { UssFileTree } from "./FileStructure";
@@ -130,7 +130,10 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         }
         this.onUpdateEmitter = new vscode.EventEmitter<IZoweUSSTreeNode>();
         if (label !== vscode.l10n.t("Favorites")) {
-            this.resourceUri = vscode.Uri.parse(`zowe-uss:/${this.profile.name}${this.fullPath}`);
+            this.resourceUri = vscode.Uri.from({
+                scheme: "zowe-uss",
+                path: `/${this.profile?.name ?? fallbackProfileName()}${this.fullPath}`,
+            });
             if (isSession) {
                 UssFSProvider.instance.createDirectory(this.resourceUri);
             }
@@ -370,8 +373,14 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     public async rename(newFullPath: string): Promise<boolean> {
         ZoweLogger.trace("ZoweUSSNode.rename called.");
 
-        const oldUri = vscode.Uri.parse(`zowe-uss:/${this.profile.name}${this.fullPath}`);
-        const newUri = vscode.Uri.parse(`zowe-uss:/${this.profile.name}${newFullPath}`);
+        const oldUri = vscode.Uri.from({
+            scheme: "zowe-uss",
+            path: `/${this.profile.name}${this.fullPath}`,
+        });
+        const newUri = vscode.Uri.from({
+            scheme: "zowe-uss",
+            path: `/${this.profile.name}${newFullPath}`,
+        });
 
         try {
             await UssFSProvider.instance.rename(oldUri, newUri, { overwrite: false });
@@ -712,7 +721,13 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             };
 
             for (const subnode of fileTreeToPaste.children) {
-                await this.paste(vscode.Uri.parse(`zowe-uss:/${this.profile.name}${this.fullPath}`), { api, tree: subnode, options });
+                await this.paste(
+                    vscode.Uri.from({
+                        scheme: "zowe-uss",
+                        path: `/${this.profile.name}${this.fullPath}`,
+                    }),
+                    { api, tree: subnode, options }
+                );
             }
         } catch (error) {
             await errorHandling(error, this.label.toString(), vscode.l10n.t("Error uploading files"));

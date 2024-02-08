@@ -12,7 +12,7 @@
 import * as zowe from "@zowe/cli";
 import * as vscode from "vscode";
 import * as globals from "../globals";
-import { errorHandling } from "../utils/ProfilesUtils";
+import { errorHandling, fallbackProfileName } from "../utils/ProfilesUtils";
 import { Sorting, Types, Gui, ZoweTreeNodeActions, IZoweDatasetTreeNode, ZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { getIconByNode } from "../generators/icons";
@@ -90,16 +90,25 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         }
         if (label !== vscode.l10n.t("Favorites")) {
             if (mParent == null) {
-                this.resourceUri = vscode.Uri.parse(`zowe-ds:/${this.profile.name}/`);
+                this.resourceUri = vscode.Uri.from({
+                    scheme: "zowe-ds",
+                    path: `/${this.profile?.name ?? fallbackProfileName()}/`,
+                });
                 DatasetFSProvider.instance.createDirectory(this.resourceUri, this.pattern);
             } else if (this.contextValue === globals.DS_MEMBER_CONTEXT) {
-                this.resourceUri = vscode.Uri.parse(`zowe-ds:/${this.profile.name}/${mParent.label as string}/${this.label as string}`);
+                this.resourceUri = vscode.Uri.from({
+                    scheme: "zowe-ds",
+                    path: `/${this.profile?.name ?? fallbackProfileName()}/${mParent.label as string}/${this.label as string}`,
+                });
             } else if (
                 this.contextValue === globals.DS_DS_CONTEXT ||
                 this.contextValue === globals.DS_PDS_CONTEXT ||
                 this.contextValue === globals.DS_MIGRATED_FILE_CONTEXT
             ) {
-                this.resourceUri = vscode.Uri.parse(`zowe-ds:/${this.profile.name}/${this.label as string}`);
+                this.resourceUri = vscode.Uri.from({
+                    scheme: "zowe-ds",
+                    path: `/${this.profile?.name ?? fallbackProfileName()}/${this.label as string}`,
+                });
             }
         }
     }

@@ -229,7 +229,7 @@ export class BaseProvider {
         return {
             entryToDelete,
             parent,
-            parentUri: uri.with({ path: path.posix.resolve(uri.path, "..") }),
+            parentUri: uri.with({ path: path.posix.join(uri.path, "..") }),
         };
     }
 
@@ -309,7 +309,11 @@ export class BaseProvider {
     protected _lookup(uri: vscode.Uri, silent: false): IFileSystemEntry;
     protected _lookup(uri: vscode.Uri, silent: boolean): IFileSystemEntry | undefined;
     protected _lookup(uri: vscode.Uri, silent: boolean): IFileSystemEntry | undefined {
-        const parts = uri.path.split("/");
+        if (uri.path === "/") {
+            return this.root;
+        }
+
+        const parts = uri.path.split("/").filter(Boolean);
         let entry: IFileSystemEntry = this.root;
 
         for (const part of parts) {
@@ -429,7 +433,7 @@ export class BaseProvider {
     protected _lookupParentDirectory(uri: vscode.Uri, silent?: boolean): DirEntry {
         return this._lookupAsDirectory(
             uri.with({
-                path: path.posix.resolve(uri.path, ".."),
+                path: path.posix.join(uri.path, ".."),
             }),
             silent ?? false
         );

@@ -154,7 +154,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
         parent.mtime = Date.now();
         parent.size += 1;
         this._fireSoon(
-            { type: vscode.FileChangeType.Changed, uri: uri.with({ path: path.posix.resolve(uri.path, "..") }) },
+            { type: vscode.FileChangeType.Changed, uri: uri.with({ path: path.posix.join(uri.path, "..") }) },
             { type: vscode.FileChangeType.Created, uri }
         );
     }

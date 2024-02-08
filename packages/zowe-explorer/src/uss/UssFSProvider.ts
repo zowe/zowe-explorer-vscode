@@ -314,7 +314,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         const newUriEntry = this._lookup(newUri, true);
         if (!options.overwrite && newUriEntry) {
             throw vscode.FileSystemError.FileExists(
-                `Rename failed: ${path.posix.basename(newUri.path)} already exists in ${path.posix.resolve(newUriEntry.metadata.path, "..")}`
+                `Rename failed: ${path.posix.basename(newUri.path)} already exists in ${path.posix.join(newUriEntry.metadata.path, "..")}`
             );
         }
 
@@ -328,7 +328,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         entry.name = newName;
 
         // Build the new path using the previous path and new file/folder name.
-        let newPath = path.posix.resolve(entry.metadata.path, "..", newName);
+        let newPath = path.posix.join(entry.metadata.path, "..", newName);
         if (isDir) {
             newPath += "/";
         }
@@ -452,7 +452,14 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             await api.create(outputPath, "directory");
             if (options.tree.children) {
                 for (const child of options.tree.children) {
-                    await this.copyTree(child.localUri, vscode.Uri.parse(`zowe-uss:${outputPath}`), { ...options, tree: child });
+                    await this.copyTree(
+                        child.localUri,
+                        vscode.Uri.from({
+                            scheme: "zowe-uss",
+                            path: outputPath,
+                        }),
+                        { ...options, tree: child }
+                    );
                 }
             }
         } else {
@@ -492,7 +499,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         parent.mtime = Date.now();
         parent.size += 1;
         this._fireSoon(
-            { type: vscode.FileChangeType.Changed, uri: uri.with({ path: path.posix.resolve(uri.path, "..") }) },
+            { type: vscode.FileChangeType.Changed, uri: uri.with({ path: path.posix.join(uri.path, "..") }) },
             { type: vscode.FileChangeType.Created, uri }
         );
     }
