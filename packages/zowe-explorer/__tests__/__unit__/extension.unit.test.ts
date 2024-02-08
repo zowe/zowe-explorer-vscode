@@ -150,7 +150,6 @@ async function createGlobalMocks() {
             "zowe.ds.refreshDataset",
             "zowe.ds.pattern",
             "zowe.ds.editSession",
-            "zowe.ds.ZoweNode.openPS",
             "zowe.ds.createDataset",
             "zowe.ds.createMember",
             "zowe.ds.deleteDataset",
@@ -210,6 +209,8 @@ async function createGlobalMocks() {
             "zowe.uss.ssoLogout",
             "zowe.uss.pasteUssFile",
             "zowe.uss.copyUssFile",
+            "zowe.diff.useLocalContent",
+            "zowe.diff.useRemoteContent",
             "zowe.jobs.zosJobsOpenspool",
             "zowe.jobs.deleteJob",
             "zowe.jobs.runModifyCommand",
@@ -262,6 +263,7 @@ async function createGlobalMocks() {
             "zowe.compareWithSelected",
             "zowe.compareWithSelectedReadOnly",
             "zowe.compareFileStarted",
+            "zowe.placeholderCommand",
             "zowe.extRefresh",
         ],
     };
@@ -275,7 +277,6 @@ async function createGlobalMocks() {
         value: globalMocks.mockCreateTreeView,
         configurable: true,
     });
-    Object.defineProperty(vscode, "Uri", { value: globalMocks.mockUri, configurable: true });
     Object.defineProperty(vscode.commands, "registerCommand", {
         value: globalMocks.mockRegisterCommand,
         configurable: true,
@@ -580,77 +581,5 @@ describe("Extension Unit Tests", () => {
 
     it("zowe.uss.removeSession", async () => {
         await removeSessionTest("zowe.uss.removeSession", globals.USS_SESSION_CONTEXT, USSTree);
-    });
-});
-
-describe("Extension Unit Tests - THEIA", () => {
-    it("Tests that activate() works correctly for Theia", async () => {
-        const globalMocks = await createGlobalMocks();
-        jest.spyOn(ProfilesUtils, "getCredentialManagerOverride").mockReturnValueOnce("@zowe/cli");
-
-        Object.defineProperty(vscode.env, "appName", { value: "Eclipse Theia" });
-        Object.defineProperty(vscode.env, "uriScheme", { value: "theia" });
-        Object.defineProperty(vscode.env, "uiKind", { value: vscode.UIKind.Web });
-        globalMocks.mockExistsSync.mockReset();
-        globalMocks.mockReaddirSync.mockReset();
-        globalMocks.mockExistsSync.mockReturnValueOnce(false);
-        globalMocks.mockGetConfiguration.mockReturnValue({
-            persistence: true,
-            get: (_setting: string) => "",
-            update: jest.fn(),
-            inspect: (_configuration: string) => {
-                return {
-                    workspaceValue: undefined,
-                    globalValue: undefined,
-                };
-            },
-        });
-
-        await extension.activate(globalMocks.mockExtension);
-
-        expect(globals.ISTHEIA).toEqual(true);
-        expect(globalMocks.mockMkdirSync.mock.calls.length).toBe(6);
-        expect(globalMocks.mockRegisterCommand.mock.calls.length).toBe(globals.COMMAND_COUNT);
-        globalMocks.mockRegisterCommand.mock.calls.forEach((call, i) => {
-            expect(call[0]).toStrictEqual(globalMocks.expectedCommands[i]);
-            expect(call[1]).toBeInstanceOf(Function);
-        });
-        const actualCommands = [];
-        globalMocks.mockRegisterCommand.mock.calls.forEach((call) => {
-            actualCommands.push(call[0]);
-        });
-        expect(actualCommands).toEqual(globalMocks.expectedCommands);
-    });
-
-    // it("Tests that onChangeProfileAction executes the proper profile commands", async () => {
-    //     const globalMocks = await createGlobalMocks();
-    //     Object.defineProperty(vscode.workspace, "fs", {
-    //         value: {
-    //             readFile: jest.fn().mockResolvedValue("somenewdata"),
-    //         },
-    //         configurable: true,
-    //     });
-    //     await extension.onChangeProfileAction(null);
-    //     expect(globalMocks.mockReadProfilesFromDisk).toHaveBeenCalledTimes(1);
-
-    //     // call again w/ same data to signal no change; verify nothing with profiles was changed
-    //     // (number of calls to readProfilesFromDisk should stay the same)
-    //     await extension.onChangeProfileAction(null);
-    //     expect(globalMocks.mockReadProfilesFromDisk).toHaveBeenCalledTimes(1);
-    // });
-
-    it("Tests getSelectedNodeList executes successfully with multiple selection", async () => {
-        const globalMocks = await createGlobalMocks();
-        const blockMocks = createBlockMocks(globalMocks);
-        const nodeList = [blockMocks.rootNode, blockMocks.testNode];
-        const res = getSelectedNodeList(blockMocks.testNode, nodeList);
-        expect(res).toEqual(nodeList);
-    });
-
-    it("Tests getSelectedNodeList executes successfully when no multiple selection", async () => {
-        const globalMocks = await createGlobalMocks();
-        const blockMocks = createBlockMocks(globalMocks);
-        const res = getSelectedNodeList(blockMocks.testNode, undefined);
-        expect(res[0]).toEqual(blockMocks.testNode);
     });
 });

@@ -12,7 +12,6 @@
 import * as path from "path";
 import * as vscode from "vscode";
 import { Gui, IZoweTree, IZoweTreeNode } from "@zowe/zowe-explorer-api";
-import { markDocumentUnsaved } from "../utils/workspace";
 import { ZoweLogger } from "../utils/LoggerUtils";
 
 interface SaveRequest {
@@ -62,7 +61,6 @@ export class ZoweSaveQueue {
             await nextRequest.uploadRequest(nextRequest.savedFile, nextRequest.fileProvider);
         } catch (err) {
             ZoweLogger.error(err);
-            await markDocumentUnsaved(nextRequest.savedFile);
             await Gui.errorMessage(
                 vscode.l10n.t({
                     message: "Failed to upload changes for {0}: {1}",

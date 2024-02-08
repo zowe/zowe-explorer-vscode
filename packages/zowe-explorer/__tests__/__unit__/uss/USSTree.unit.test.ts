@@ -30,7 +30,6 @@ import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
 import { createUSSNode, createFavoriteUSSNode, createUSSSessionNode } from "../../../__mocks__/mockCreators/uss";
 import { getIconByNode } from "../../../src/generators/icons";
-import * as workspaceUtils from "../../../src/utils/workspace";
 import { createUssApi, bindUssApi } from "../../../__mocks__/mockCreators/api";
 import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
 import { PersistentFilters } from "../../../src/PersistentFilters";
@@ -101,10 +100,6 @@ async function createGlobalMocks() {
     });
     Object.defineProperty(vscode.window, "showWarningMessage", {
         value: globalMocks.mockShowWarningMessage,
-        configurable: true,
-    });
-    Object.defineProperty(workspaceUtils, "closeOpenedTextFile", {
-        value: globalMocks.closeOpenedTextFile,
         configurable: true,
     });
     Object.defineProperty(vscode.window, "createTreeView", { value: globalMocks.createTreeView, configurable: true });

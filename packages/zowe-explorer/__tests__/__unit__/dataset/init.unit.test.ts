@@ -91,10 +91,6 @@ describe("Test src/dataset/extension", () => {
                 mock: [{ spy: jest.spyOn(dsProvider, "editSession"), arg: [test.value, dsProvider] }],
             },
             {
-                name: "zowe.ds.ZoweNode.openPS",
-                mock: [{ spy: jest.spyOn(dsActions, "openPS"), arg: [test.value, true, dsProvider] }],
-            },
-            {
                 name: "zowe.ds.createDataset",
                 mock: [{ spy: jest.spyOn(dsActions, "createFile"), arg: [test.value, dsProvider] }],
             },
@@ -123,7 +119,6 @@ describe("Test src/dataset/extension", () => {
                 mock: [
                     { spy: jest.spyOn(contextuals, "isDs"), arg: [test.value], ret: false },
                     { spy: jest.spyOn(contextuals, "isDsMember"), arg: [test.value], ret: true },
-                    { spy: jest.spyOn(dsActions, "openPS"), arg: [test.value, false, dsProvider] },
                 ],
             },
             {
@@ -131,7 +126,6 @@ describe("Test src/dataset/extension", () => {
                 mock: [
                     { spy: jest.spyOn(contextuals, "isDs"), arg: [test.value], ret: false },
                     { spy: jest.spyOn(contextuals, "isDsMember"), arg: [test.value], ret: true },
-                    { spy: jest.spyOn(dsActions, "openPS"), arg: [test.value, false, dsProvider] },
                 ],
             },
             {

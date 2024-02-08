@@ -65,7 +65,7 @@ describe("Unit Tests (Jest)", () => {
      * Creates an ZoweDatasetNode and checks that its members are all initialized by the constructor
      *************************************************************************************************************/
     it("Testing that the ZoweDatasetNode is defined", async () => {
-        const testNode = new ZoweDatasetNode("BRTVS99", vscode.TreeItemCollapsibleState.None, null, session);
+        const testNode = new ZoweDatasetNode("BRTVS99", vscode.TreeItemCollapsibleState.None, null, session, undefined, undefined, profileOne);
         testNode.contextValue = globals.DS_SESSION_CONTEXT;
 
         expect(testNode.label).toBeDefined();
@@ -117,7 +117,6 @@ describe("Unit Tests (Jest)", () => {
             new ZoweDatasetNode("BRTVS99.DDIR", vscode.TreeItemCollapsibleState.Collapsed, rootNode, null, undefined, undefined, profileOne),
             new ZoweDatasetNode("BRTVS99.VS1", vscode.TreeItemCollapsibleState.None, rootNode, null, globals.VSAM_CONTEXT, undefined, profileOne),
         ];
-        sampleChildren[0].command = { command: "zowe.ds.ZoweNode.openPS", title: "", arguments: [sampleChildren[0]] };
 
         // Checking that the rootChildren are what they are expected to be
         expect(rootChildren).toEqual(sampleChildren);
@@ -173,8 +172,6 @@ describe("Unit Tests (Jest)", () => {
             new ZoweDatasetNode("BRTVS99.DDIR", vscode.TreeItemCollapsibleState.None, subNode, null, undefined, undefined, profileOne),
         ];
 
-        sampleChildren[0].command = { command: "zowe.ds.ZoweNode.openPS", title: "", arguments: [sampleChildren[0]] };
-        sampleChildren[1].command = { command: "zowe.ds.ZoweNode.openPS", title: "", arguments: [sampleChildren[1]] };
         // Checking that the rootChildren are what they are expected to be
         expect(subChildren).toEqual(sampleChildren);
     });

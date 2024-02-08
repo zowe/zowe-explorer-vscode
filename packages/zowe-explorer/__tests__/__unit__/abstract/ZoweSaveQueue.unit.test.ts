@@ -11,8 +11,6 @@
 
 import { ZoweSaveQueue } from "../../../src/abstract/ZoweSaveQueue";
 import { createUSSTree } from "../../../__mocks__/mockCreators/uss";
-import { saveUSSFile } from "../../../src/uss/actions";
-import * as workspaceUtils from "../../../src/utils/workspace";
 import { Gui } from "@zowe/zowe-explorer-api";
 import * as vscode from "vscode";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
@@ -33,7 +31,6 @@ describe("ZoweSaveQueue - unit tests", () => {
         jest.spyOn(Gui, "createTreeView").mockReturnValue({ onDidCollapseElement: jest.fn() } as any);
         const globalMocks = {
             errorMessageSpy: jest.spyOn(Gui, "errorMessage"),
-            markDocumentUnsavedSpy: jest.spyOn(workspaceUtils, "markDocumentUnsaved"),
             processNextSpy: jest.spyOn(ZoweSaveQueue as any, "processNext"),
             allSpy: jest.spyOn(ZoweSaveQueue, "all"),
             trees: {
@@ -48,7 +45,7 @@ describe("ZoweSaveQueue - unit tests", () => {
     it("does promise chaining when pushing to queue", () => {
         ZoweSaveQueue.push({
             fileProvider: globalMocks.trees.uss,
-            uploadRequest: saveUSSFile,
+            uploadRequest: async () => {},
             savedFile: {
                 isDirty: true,
                 uri: vscode.Uri.parse(""),

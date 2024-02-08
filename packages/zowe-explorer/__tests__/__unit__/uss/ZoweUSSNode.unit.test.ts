@@ -28,13 +28,11 @@ import {
 import { createUSSTree } from "../../../__mocks__/mockCreators/uss";
 import * as fs from "fs";
 import * as path from "path";
-import * as workspaceUtils from "../../../src/utils/workspace";
 import * as globals from "../../../src/globals";
 import * as ussUtils from "../../../src/uss/utils";
 import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
 import { LocalFileManagement } from "../../../src/utils/LocalFileManagement";
 jest.mock("fs");
-jest.mock("path");
 
 async function createGlobalMocks() {
     const globalMocks = {
@@ -145,7 +143,6 @@ async function createGlobalMocks() {
     });
     Object.defineProperty(zowe, "Download", { value: globalMocks.Download, configurable: true });
     Object.defineProperty(zowe, "Utilities", { value: globalMocks.Utilities, configurable: true });
-    Object.defineProperty(workspaceUtils, "closeOpenedTextFile", { value: jest.fn(), configurable: true });
     Object.defineProperty(globalMocks.Download, "ussFile", { value: globalMocks.ussFile, configurable: true });
     Object.defineProperty(zowe, "Delete", { value: globalMocks.Delete, configurable: true });
     Object.defineProperty(fs, "existsSync", { value: globalMocks.existsSync, configurable: true });
@@ -165,7 +162,6 @@ async function createGlobalMocks() {
         configurable: true,
     });
     Object.defineProperty(vscode.env.clipboard, "readText", { value: globalMocks.readText, configurable: true });
-    Object.defineProperty(path, "basename", { value: globalMocks.basePath, configurable: true });
     Object.defineProperty(ZoweLocalStorage, "storage", {
         value: {
             get: () => ({ persistence: true, favorites: [], history: [], sessions: ["zosmf"], searchHistory: [], fileHistory: [] }),

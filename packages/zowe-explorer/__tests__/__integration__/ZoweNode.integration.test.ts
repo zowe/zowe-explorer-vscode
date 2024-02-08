@@ -105,9 +105,6 @@ describe("ZoweNode Integration Tests", async () => {
             new ZoweDatasetNode(pattern + ".PUBLIC.TPS", vscode.TreeItemCollapsibleState.None, sessNode, null),
         ];
 
-        sampleChildren[0].command = { command: "zowe.ds.ZoweNode.openPS", title: "", arguments: [sampleChildren[0]] };
-        sampleChildren[3].command = { command: "zowe.ds.ZoweNode.openPS", title: "", arguments: [sampleChildren[3]] };
-
         // Checking that the rootChildren are what they are expected to be
         expect(sessChildren).toEqual(sampleChildren);
     }).timeout(TIMEOUT);

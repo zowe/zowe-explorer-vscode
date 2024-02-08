@@ -109,16 +109,10 @@ describe("DatasetTree Integration Tests", async () => {
         ];
         sampleRChildren[2].dirty = false; // Because getChildren was subsequently called.
 
-        sampleRChildren[0].command = { command: "zowe.ds.ZoweNode.openPS", title: "", arguments: [sampleRChildren[0]] };
-        sampleRChildren[3].command = { command: "zowe.ds.ZoweNode.openPS", title: "", arguments: [sampleRChildren[3]] };
-
         const samplePChildren: ZoweDatasetNode[] = [
             new ZoweDatasetNode("TCHILD1", vscode.TreeItemCollapsibleState.None, sampleRChildren[2], null),
             new ZoweDatasetNode("TCHILD2", vscode.TreeItemCollapsibleState.None, sampleRChildren[2], null),
         ];
-
-        samplePChildren[0].command = { command: "zowe.ds.ZoweNode.openPS", title: "", arguments: [samplePChildren[0]] };
-        samplePChildren[1].command = { command: "zowe.ds.ZoweNode.openPS", title: "", arguments: [samplePChildren[1]] };
         sampleRChildren[2].children = samplePChildren;
 
         // Checking that the rootChildren are what they are expected to be

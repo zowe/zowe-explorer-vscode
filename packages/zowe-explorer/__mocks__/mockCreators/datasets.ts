@@ -17,9 +17,15 @@ import { removeNodeFromArray } from "./shared";
 import { PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
 
 export function createDatasetSessionNode(session: imperative.Session, profile: imperative.IProfileLoaded) {
-    const datasetNode = new ZoweDatasetNode("sestest", vscode.TreeItemCollapsibleState.Expanded, null, session, undefined, undefined, profile);
-    datasetNode.contextValue = globals.DS_SESSION_CONTEXT;
-
+    const datasetNode = new ZoweDatasetNode(
+        "sestest",
+        vscode.TreeItemCollapsibleState.Expanded,
+        null,
+        session,
+        globals.DS_SESSION_CONTEXT,
+        undefined,
+        profile
+    );
     return datasetNode;
 }
 

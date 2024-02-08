@@ -60,11 +60,6 @@ describe("Test src/jobs/extension", () => {
         };
         const commands: IJestIt[] = [
             {
-                name: "zowe.jobs.zosJobsOpenspool",
-                parm: [test._, test.value],
-                mock: [{ spy: jest.spyOn(jobActions, "getSpoolContent"), arg: [test._, test.value] }],
-            },
-            {
                 name: "zowe.jobs.deleteJob",
                 parm: [test.value, test._],
                 mock: [{ spy: jest.spyOn(jobActions, "deleteCommand"), arg: [jobsProvider, test.value, test._] }],
@@ -89,17 +84,6 @@ describe("Test src/jobs/extension", () => {
                 name: "zowe.jobs.refreshJob",
                 parm: [{ mParent: test.value }],
                 mock: [{ spy: jest.spyOn(jobActions, "refreshJob"), arg: [test.value, jobsProvider] }],
-            },
-            {
-                name: "zowe.jobs.refreshSpool",
-                parm: [{ mParent: { mParent: test.value } }],
-                mock: [
-                    {
-                        spy: jest.spyOn(jobActions, "getSpoolContentFromMainframe"),
-                        arg: [{ mParent: { mParent: test.value } }],
-                    },
-                    { spy: jest.spyOn(jobActions, "refreshJob"), arg: [test.value, jobsProvider] },
-                ],
             },
             {
                 name: "zowe.jobs.downloadSingleSpool",

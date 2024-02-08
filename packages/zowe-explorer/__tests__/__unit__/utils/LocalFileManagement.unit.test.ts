@@ -44,7 +44,7 @@ describe("LocalFileManagement unit tests", () => {
         Object.defineProperty(globals, "filesToCompare", { value: newMocks.mockFilesToCompare, configurable: true });
         newMocks.mockDsFileNode = dsMock.createDatasetSessionNode(newMocks.mockSession, newMocks.mockProfile) as any;
         Object.defineProperty(dsActions, "downloadPs", { value: jest.fn().mockResolvedValue(newMocks.mockFileInfo), configurable: true });
-        newMocks.mockDlDsSpy = jest.spyOn(dsActions, "downloadPs");
+        newMocks.mockDlDsSpy = jest.spyOn(vscode.workspace.fs, "readFile").mockImplementation();
         Object.defineProperty(unixActions, "downloadUnixFile", {
             value: jest.fn().mockResolvedValue(newMocks.mockFileInfo),
             configurable: true,
@@ -52,7 +52,6 @@ describe("LocalFileManagement unit tests", () => {
         newMocks.mockDlUnixSpy = jest.spyOn(unixActions, "downloadUnixFile");
         Object.defineProperty(utils, "isZoweDatasetTreeNode", { value: newMocks.mockIsDsNode, configurable: true });
         Object.defineProperty(utils, "isZoweUSSTreeNode", { value: newMocks.mockIsUnixNode, configurable: true });
-        Object.defineProperty(vscode.Uri, "file", { value: jest.fn().mockReturnValue(newMocks.mockFileInfo), configurable: true });
         Object.defineProperty(vscode.commands, "executeCommand", { value: jest.fn(), configurable: true });
         Object.defineProperty(globals, "resetCompareChoices", { value: jest.fn(), configurable: true });
         Object.defineProperty(ZoweLogger, "warn", { value: jest.fn(), configurable: true });

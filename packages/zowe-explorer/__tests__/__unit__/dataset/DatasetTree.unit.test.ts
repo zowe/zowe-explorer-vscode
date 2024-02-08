@@ -37,7 +37,6 @@ import {
 } from "../../../__mocks__/mockCreators/shared";
 import { createDatasetSessionNode, createDatasetTree, createDatasetFavoritesNode } from "../../../__mocks__/mockCreators/datasets";
 import { bindMvsApi, createMvsApi } from "../../../__mocks__/mockCreators/api";
-import * as workspaceUtils from "../../../src/utils/workspace";
 import { PersistentFilters } from "../../../src/PersistentFilters";
 import * as dsUtils from "../../../src/dataset/utils";
 import { SettingsConfig } from "../../../src/utils/SettingsConfig";
@@ -100,7 +99,6 @@ function createGlobalMocks() {
     Object.defineProperty(fs, "unlinkSync", { value: jest.fn(), configurable: true });
     Object.defineProperty(fs, "existsSync", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.commands, "executeCommand", { value: jest.fn(), configurable: true });
-    Object.defineProperty(workspaceUtils, "closeOpenedTextFile", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode, "ProgressLocation", {
         value: jest.fn().mockImplementation(() => {
             return {
@@ -264,7 +262,6 @@ describe("Dataset Tree Unit tests - Function initializeFavChildNodeForProfile", 
         const favProfileNode = new ZoweDatasetNode("testProfile", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null);
         favProfileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
         const node = new ZoweDatasetNode("BRTVS99.PS", vscode.TreeItemCollapsibleState.None, favProfileNode, undefined, globals.DS_FAV_CONTEXT);
-        node.command = { command: "zowe.ds.ZoweNode.openPS", title: "", arguments: [node] };
 
         const favChildNodeForProfile = await testTree.initializeFavChildNodeForProfile("BRTVS99.PS", globals.DS_DS_CONTEXT, favProfileNode);
 
@@ -379,7 +376,6 @@ describe("Dataset Tree Unit Tests - Function getChildren", () => {
                 blockMocks.imperativeProfile
             ),
         ];
-        sampleChildren[0].command = { command: "zowe.ds.ZoweNode.openPS", title: "", arguments: [sampleChildren[0]] };
 
         const children = await testTree.getChildren(testTree.mSessionNodes[1]);
         expect(children.map((c) => c.label)).toEqual(sampleChildren.map((c) => c.label));
@@ -435,7 +431,6 @@ describe("Dataset Tree Unit Tests - Function getChildren", () => {
             blockMocks.imperativeProfile
         );
         const sampleChildren: ZoweDatasetNode[] = [nodeOk, nodeImpError, nodeMigrated];
-        sampleChildren[0].command = { command: "zowe.ds.ZoweNode.openPS", title: "", arguments: [sampleChildren[0]] };
 
         const children = await testTree.getChildren(testTree.mSessionNodes[1]);
         expect(children.map((c) => c.label)).toEqual(sampleChildren.map((c) => c.label));
@@ -478,7 +473,6 @@ describe("Dataset Tree Unit Tests - Function getChildren", () => {
                 blockMocks.imperativeProfile
             ),
         ];
-        sampleChildren[0].command = { command: "zowe.ds.ZoweNode.openPS", title: "", arguments: [sampleChildren[0]] };
 
         const children = await testTree.getChildren(testTree.mSessionNodes[1]);
         expect(children.map((c) => c.label)).toEqual(sampleChildren.map((c) => c.label));
@@ -556,9 +550,6 @@ describe("Dataset Tree Unit Tests - Function getChildren", () => {
             new ZoweDatasetNode("BRTVS99", vscode.TreeItemCollapsibleState.None, parent, null),
             new ZoweDatasetNode("BRTVS99.DDIR", vscode.TreeItemCollapsibleState.None, parent, null),
         ];
-        sampleChildren[0].command = { command: "zowe.ds.ZoweNode.openPS", title: "", arguments: [sampleChildren[0]] };
-        sampleChildren[1].command = { command: "zowe.ds.ZoweNode.openPS", title: "", arguments: [sampleChildren[1]] };
-
         const children = await testTree.getChildren(parent);
 
         expect(children).toEqual(sampleChildren);
@@ -2361,7 +2352,6 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
-        mocked(workspaceUtils.closeOpenedTextFile).mockResolvedValueOnce(false);
         mocked(vscode.window.showInputBox).mockResolvedValueOnce("HLQ.TEST.RENAME.NODE.NEW");
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
         const testTree = new DatasetTree();
@@ -2391,7 +2381,6 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
                 };
             }),
         });
-        mocked(workspaceUtils.closeOpenedTextFile).mockResolvedValueOnce(false);
         mocked(vscode.window.showInputBox).mockResolvedValueOnce("HLQ.TEST.RENAME.NODE.NEW");
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
         const testTree = new DatasetTree();
@@ -2409,7 +2398,6 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
-        mocked(workspaceUtils.closeOpenedTextFile).mockResolvedValueOnce(false);
         mocked(vscode.window.showInputBox).mockResolvedValueOnce("HLQ.TEST.RENAME.NODE.new");
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
         const testTree = new DatasetTree();
@@ -2428,7 +2416,6 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         const blockMocks = createBlockMocks();
 
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
-        mocked(workspaceUtils.closeOpenedTextFile).mockResolvedValueOnce(false);
         mocked(vscode.window.showInputBox).mockResolvedValueOnce("HLQ.TEST.RENAME.NODE.NEW");
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
         const testTree = new DatasetTree();
@@ -2448,7 +2435,6 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         const blockMocks = createBlockMocks();
         const defaultError = new Error("Default error message");
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
-        mocked(workspaceUtils.closeOpenedTextFile).mockResolvedValueOnce(false);
         mocked(zowe.Rename.dataSet).mockImplementation(() => {
             throw defaultError;
         });
@@ -2474,7 +2460,6 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
-        mocked(workspaceUtils.closeOpenedTextFile).mockResolvedValueOnce(false);
         mocked(vscode.window.showInputBox).mockResolvedValueOnce("MEM2");
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
         const testTree = new DatasetTree();
@@ -2527,7 +2512,6 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
-        mocked(workspaceUtils.closeOpenedTextFile).mockResolvedValueOnce(false);
         mocked(vscode.window.showInputBox).mockResolvedValueOnce("mem2");
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
         const testTree = new DatasetTree();
@@ -2570,7 +2554,6 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
-        mocked(workspaceUtils.closeOpenedTextFile).mockResolvedValueOnce(false);
         mocked(vscode.window.showInputBox).mockResolvedValueOnce("MEM2");
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
         const testTree = new DatasetTree();
@@ -2631,7 +2614,6 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         const blockMocks = createBlockMocks();
         const defaultError = new Error("Default error message");
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
-        mocked(workspaceUtils.closeOpenedTextFile).mockResolvedValueOnce(false);
         mocked(zowe.Rename.dataSetMember).mockImplementation(() => {
             throw defaultError;
         });
@@ -2677,7 +2659,6 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
-        mocked(workspaceUtils.closeOpenedTextFile).mockResolvedValueOnce(false);
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
         const testTree = new DatasetTree();
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
