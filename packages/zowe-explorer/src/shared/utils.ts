@@ -200,43 +200,6 @@ export function markFileAsDirty(doc: vscode.TextDocument): void {
     });
 }
 
-export async function uploadContent(
-    node: IZoweDatasetTreeNode | IZoweUSSTreeNode,
-    doc: vscode.TextDocument,
-    remotePath: string,
-    profile?: imperative.IProfileLoaded,
-    binary?: boolean,
-    etagToUpload?: string,
-    returnEtag?: boolean
-): Promise<IZosFilesResponse> {
-    const uploadOptions: IUploadOptions = {
-        etag: etagToUpload,
-        returnEtag: true,
-        encoding: profile.profile?.encoding,
-        responseTimeout: profile.profile?.responseTimeout,
-    };
-    if (isZoweDatasetTreeNode(node)) {
-        return ZoweExplorerApiRegister.getMvsApi(profile).putContents(doc.fileName, remotePath, uploadOptions);
-    } else {
-        const task: imperative.ITaskWithStatus = {
-            percentComplete: 0,
-            statusMessage: vscode.l10n.t("Uploading USS file"),
-            stageName: 0, // TaskStage.IN_PROGRESS - https://github.com/kulshekhar/ts-jest/issues/281
-        };
-        const options: IUploadOptions = {
-            binary,
-            localEncoding: null,
-            etag: etagToUpload,
-            returnEtag,
-            encoding: profile.profile?.encoding,
-            task,
-            responseTimeout: profile.profile?.responseTimeout,
-        };
-        const result = ZoweExplorerApiRegister.getUssApi(profile).putContent(doc.fileName, remotePath, options);
-        return result;
-    }
-}
-
 // Type guarding for current IZoweNodeType.
 // Makes it possible to have multiple types in a function signature, but still be able to use type specific code inside the function definition
 export function isZoweDatasetTreeNode(node: Types.IZoweNodeType): node is IZoweDatasetTreeNode {

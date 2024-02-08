@@ -115,7 +115,6 @@ describe("ZoweSaveQueue - unit tests", () => {
             fail("ZoweSaveQueue.all should fail here");
         } catch (err) {
             expect(ZoweLogger.error).toHaveBeenCalledWith(EXAMPLE_ERROR);
-            expect(globalMocks.markDocumentUnsavedSpy).toHaveBeenCalledWith(FAILING_FILE);
             expect(globalMocks.errorMessageSpy).toHaveBeenCalledWith(
                 'Failed to upload changes for [failingFile](command:vscode.open?["/some/failing/path"]): Example error'
             );

@@ -146,33 +146,6 @@ describe("syncSessionNode shared util function", () => {
     });
 });
 
-describe("Test uploadContents", () => {
-    it("should test with uss node that new API method is called if it exists", async () => {
-        const putContent = jest.fn();
-        ZoweExplorerApiRegister.getUssApi = jest.fn<any, Parameters<typeof ZoweExplorerApiRegister.getUssApi>>(
-            (profile: imperative.IProfileLoaded) => {
-                return {
-                    putContent,
-                };
-            }
-        );
-
-        await sharedUtils.uploadContent(
-            new ZoweUSSNode(null, null, null, null, null),
-            {
-                fileName: "whatever",
-            } as any,
-            null,
-            {
-                profile: {
-                    encoding: 123,
-                },
-            } as any
-        );
-        expect(ZoweExplorerApiRegister.getUssApi(null).putContent).toBeCalled();
-    });
-});
-
 describe("Shared Utils Unit Tests - Function filterTreeByString", () => {
     it("Testing that filterTreeByString returns the correct array", async () => {
         const qpItems = [
