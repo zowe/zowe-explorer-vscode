@@ -114,7 +114,17 @@ export namespace MainframeInteraction {
          * @param {string} ussFilePath
          * @param {zowe.IDownloadOptions} options
          */
-        getContents(ussFilePath: string, options: zowe.IDownloadOptions): Promise<zowe.IZosFilesResponse>;
+        getContents(ussFilePath: string, options: zowe.IDownloadSingleOptions): Promise<zowe.IZosFilesResponse>;
+
+        /**
+         * Uploads a given buffer as the contents of a file on USS.
+         */
+        uploadFromBuffer(buffer: Buffer, filePath: string, options?: zowe.IUploadOptions): Promise<string | zowe.IZosFilesResponse>;
+
+        /**
+         * Moves a file or folder to the new path provided.
+         */
+        move?(oldPath: string, newPath: string): Promise<void>;
 
         /**
          * Uploads the file at the given path. Use for Save.
@@ -213,7 +223,7 @@ export namespace MainframeInteraction {
          * @param {zowe.IDownloadOptions} [options]
          * @returns {Promise<zowe.IZosFilesResponse>}
          */
-        getContents(dataSetName: string, options?: zowe.IDownloadOptions): Promise<zowe.IZosFilesResponse>;
+        getContents(dataSetName: string, options?: zowe.IDownloadSingleOptions): Promise<zowe.IZosFilesResponse>;
 
         /**
          * Upload the content of a file to a data set or member.
@@ -224,6 +234,16 @@ export namespace MainframeInteraction {
          * @returns {Promise<zowe.IZosFilesResponse>}
          */
         putContents(inputFilePath: string, dataSetName: string, options?: zowe.IUploadOptions): Promise<zowe.IZosFilesResponse>;
+
+        /**
+         * Uploads a given buffer as the contents of a file to a data set or member.
+         *
+         * @param {Buffer} buffer
+         * @param {string} dataSetName
+         * @param {zowe.IUploadOptions} [options]
+         * @returns {Promise<zowe.IZosFilesResponse>}
+         */
+        uploadFromBuffer(buffer: Buffer, dataSetName: string, options?: zowe.IUploadOptions): Promise<zowe.IZosFilesResponse>;
 
         /**
          * Create a new data set with the specified options.
@@ -486,7 +506,7 @@ export namespace MainframeInteraction {
          * @param {string} command
          * @param {string} cwd
          * @param {boolean} flag
-         * @returns {string>}
+         * @returns {Promise<string>}
          * @memberof ICommand
          */
         issueUnixCommand?(sshSession: zowe.SshSession, command: string, cwd: string, flag: boolean): Promise<string>;
