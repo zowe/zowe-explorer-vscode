@@ -71,9 +71,12 @@ describe("ZosmfUssApi", () => {
             },
         } as zowe.imperative.IProfileLoaded;
 
-        it("should include protocol in the built session object", () => {
+        it("should include profile properties in the built session object", () => {
             const api = new ZosmfUssApi();
-            expect((api as any)._getSession(exampleProfile).mISession.protocol).toBe("http");
+
+            const transformedProps = { ...exampleProfile.profile, hostname: exampleProfile.profile?.host };
+            delete transformedProps["host"];
+            expect((api as any)._getSession(exampleProfile).mISession).toMatchObject(transformedProps);
         });
     });
 
