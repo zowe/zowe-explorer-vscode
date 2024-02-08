@@ -16,7 +16,7 @@ import * as globals from "../globals";
 import * as path from "path";
 import { getSelectedNodeList, LocalFileInfo } from "../shared/utils";
 import { errorHandling } from "../utils/ProfilesUtils";
-import { Gui, ValidProfileEnum, IZoweTree, IZoweUSSTreeNode } from "@zowe/zowe-explorer-api";
+import { Gui, Validation, IZoweTree, IZoweUSSTreeNode } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { isBinaryFileSync } from "isbinaryfile";
@@ -112,7 +112,10 @@ export async function refreshDirectory(node: IZoweUSSTreeNode, ussFileProvider: 
 export async function createUSSNodeDialog(node: IZoweUSSTreeNode, ussFileProvider: IZoweTree<IZoweUSSTreeNode>): Promise<void> {
     ZoweLogger.trace("uss.actions.createUSSNodeDialog called.");
     await ussFileProvider.checkCurrentProfile(node);
-    if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID || Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED) {
+    if (
+        Profiles.getInstance().validProfile === Validation.ValidationType.VALID ||
+        Profiles.getInstance().validProfile === Validation.ValidationType.UNVERIFIED
+    ) {
         const quickPickOptions: vscode.QuickPickOptions = {
             placeHolder: `What would you like to create at ${node.fullPath}?`,
             ignoreFocusOut: true,

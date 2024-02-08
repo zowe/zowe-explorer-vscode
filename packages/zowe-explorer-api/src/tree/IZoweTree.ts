@@ -12,7 +12,8 @@
 import * as vscode from "vscode";
 import { imperative } from "@zowe/cli";
 import { IZoweTreeNode } from "./IZoweTreeNode";
-import { DataSetAllocTemplate, PersistenceSchemaEnum } from "../profiles/UserSettings";
+import { PersistenceSchemaEnum } from "../profiles/UserSettings";
+import { Types } from "../Types";
 
 /**
  * The base interface for Zowe tree browsers that implement the
@@ -23,16 +24,6 @@ import { DataSetAllocTemplate, PersistenceSchemaEnum } from "../profiles/UserSet
  * @extends {vscode.TreeDataProvider<T>}
  * @template T provide a subtype of vscode.TreeItem
  */
-
-/**
- *  Contains a node that was recently interacted with,
- *  as well as a timestamp for when that interaction occurred.
- */
-export class NodeInteraction {
-    public node?: IZoweTreeNode;
-    public date?: Date;
-}
-
 export interface IZoweTree<T> extends vscode.TreeDataProvider<T>, vscode.TreeDragAndDropController<T> {
     /**
      * Root session nodes
@@ -50,7 +41,7 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T>, vscode.TreeDra
     /**
      * Defines the last node that was opened in the editor
      */
-    lastOpened?: NodeInteraction;
+    lastOpened?: Types.ZoweNodeInteraction;
 
     /**
      * Whether the tree is copying files.
@@ -316,13 +307,13 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T>, vscode.TreeDra
      *
      * @param {any} criteria the member name to add
      */
-    addDsTemplate?(criteria: DataSetAllocTemplate): void;
+    addDsTemplate?(criteria: Types.DataSetAllocTemplate): void;
     /**
      * Returns the array of saved templates for data set creation attributes
      *
      * @returns {DataSetAllocTemplate[]} the array of recently-opened member names
      */
-    getDsTemplates?(): DataSetAllocTemplate[];
+    getDsTemplates?(): Types.DataSetAllocTemplate[];
     /* Initializes polling (refresh w/ configurable interval) for the provided node.
      *
      * @param {IZoweTreeNode} node the node to poll data for

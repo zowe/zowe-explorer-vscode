@@ -13,7 +13,7 @@ import { imperative, IUploadOptions, IZosFilesResponse } from "@zowe/cli";
 import * as globals from "../globals";
 import * as vscode from "vscode";
 import * as path from "path";
-import { FileAttributes, Gui, IZoweUSSTreeNode, ZoweTreeNode, IZoweTree, ValidProfileEnum, IUss, isNodeInEditor } from "@zowe/zowe-explorer-api";
+import { Types, Gui, IZoweUSSTreeNode, ZoweTreeNode, IZoweTree, Validation, MainframeInteraction, isNodeInEditor } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { errorHandling, syncSessionNode } from "../utils/ProfilesUtils";
@@ -57,9 +57,9 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     public profile: imperative.IProfileLoaded; // TODO: This reference should be stored instead of the name
     private downloadedInternal = false;
     public fullPath: string;
-    public attributes: FileAttributes;
     public resourceUri?: vscode.Uri;
 
+    public attributes?: Types.FileAttributes;
     public onUpdateEmitter: vscode.EventEmitter<IZoweUSSTreeNode>;
 
     /**
@@ -529,7 +529,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
 
         const doubleClicked = Gui.utils.wasDoubleClicked(this, ussFileProvider);
         const shouldPreview = doubleClicked ? false : previewFile;
-        if (Profiles.getInstance().validProfile !== ValidProfileEnum.INVALID) {
+        if (Profiles.getInstance().validProfile !== Validation.ValidationType.INVALID) {
             try {
                 switch (true) {
                     // For opening favorited and non-favorited files
@@ -673,7 +673,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      * @param tree The structure of files and folders to paste
      * @param ussApi The USS API to use for this operation
      */
-    public async paste(destUri: vscode.Uri, uss: { tree: UssFileTree; api: IUss; options?: IUploadOptions }): Promise<void> {
+    public async paste(destUri: vscode.Uri, uss: { tree: UssFileTree; api: MainframeInteraction.IUss; options?: IUploadOptions }): Promise<void> {
         ZoweLogger.trace("ZoweUSSNode.paste called.");
         const hasCopy = uss.api.copy != null;
         const hasUploadFromBuffer = uss.api.uploadFromBuffer != null;

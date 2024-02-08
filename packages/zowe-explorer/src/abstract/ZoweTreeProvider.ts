@@ -15,7 +15,7 @@ import { imperative } from "@zowe/cli";
 import { PersistentFilters } from "../PersistentFilters";
 import { getIconByNode, getIconById, IconId } from "../generators/icons";
 import * as contextually from "../shared/context";
-import { IZoweTreeNode, IZoweNodeType, IZoweTree, PersistenceSchemaEnum, ValidProfileEnum } from "@zowe/zowe-explorer-api";
+import { IZoweTreeNode, Types, IZoweTree, PersistenceSchemaEnum, Validation } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { setProfile, setSession, errorHandling } from "../utils/ProfilesUtils";
 import { SettingsConfig } from "../utils/SettingsConfig";
@@ -204,7 +204,7 @@ export class ZoweTreeProvider {
         }
     }
 
-    public async editSession(node: IZoweTreeNode, zoweFileProvider: IZoweTree<IZoweNodeType>): Promise<void> {
+    public async editSession(node: IZoweTreeNode, zoweFileProvider: IZoweTree<Types.IZoweNodeType>): Promise<void> {
         ZoweLogger.trace("ZoweTreeProvider.editSession called.");
         const profile = node.getProfile();
         const profileName = node.getProfileName();
@@ -241,7 +241,7 @@ export class ZoweTreeProvider {
                 if (inactiveIcon) {
                     node.iconPath = inactiveIcon.path;
                 }
-                Profiles.getInstance().validProfile = ValidProfileEnum.INVALID;
+                Profiles.getInstance().validProfile = Validation.ValidationType.INVALID;
             }
 
             await errorHandling(
@@ -263,7 +263,7 @@ export class ZoweTreeProvider {
                 if (activeIcon) {
                     node.iconPath = activeIcon.path;
                 }
-                Profiles.getInstance().validProfile = ValidProfileEnum.VALID;
+                Profiles.getInstance().validProfile = Validation.ValidationType.VALID;
             }
         } else if (profileStatus.status === "unverified") {
             if (
@@ -272,7 +272,7 @@ export class ZoweTreeProvider {
             ) {
                 node.contextValue = node.contextValue.replace(/(?<=.*)(_Active|_Inactive|_Unverified)$/, "");
                 node.contextValue = node.contextValue + globals.UNVERIFIED_CONTEXT;
-                Profiles.getInstance().validProfile = ValidProfileEnum.UNVERIFIED;
+                Profiles.getInstance().validProfile = Validation.ValidationType.UNVERIFIED;
             }
         }
         await this.refresh();
@@ -302,12 +302,12 @@ export class ZoweTreeProvider {
         }
     }
 
-    public async createZoweSchema(zoweFileProvider: IZoweTree<IZoweNodeType>): Promise<void> {
+    public async createZoweSchema(zoweFileProvider: IZoweTree<Types.IZoweNodeType>): Promise<void> {
         ZoweLogger.trace("ZoweTreeProvider.createZoweSchema called.");
         await Profiles.getInstance().createZoweSchema(zoweFileProvider);
     }
 
-    public async createZoweSession(zoweFileProvider: IZoweTree<IZoweNodeType>): Promise<void> {
+    public async createZoweSession(zoweFileProvider: IZoweTree<Types.IZoweNodeType>): Promise<void> {
         ZoweLogger.trace("ZoweTreeProvider.createZoweSession called.");
         await Profiles.getInstance().createZoweSession(zoweFileProvider);
     }

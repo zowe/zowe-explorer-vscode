@@ -19,7 +19,7 @@ import {
     createGetConfigMock,
 } from "../../../__mocks__/mockCreators/shared";
 import { createUSSSessionNode } from "../../../__mocks__/mockCreators/uss";
-import { ProfilesCache, ValidProfileEnum, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
+import { ProfilesCache, Validation, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../../src/Profiles";
 import { imperative } from "@zowe/cli";
 import * as globals from "../../../src/globals";
@@ -102,7 +102,7 @@ async function createGlobalMocks() {
             return {
                 allProfiles: [globalMocks.testProfile, { name: "firstName" }, { name: "secondName" }],
                 getDefaultProfile: globalMocks.mockDefaultProfile,
-                validProfile: ValidProfileEnum.VALID,
+                validProfile: Validation.ValidationType.VALID,
                 validateProfiles: jest.fn(),
                 loadNamedProfile: globalMocks.mockLoadNamedProfile,
                 getBaseProfile: jest.fn(() => {
@@ -345,7 +345,7 @@ describe("ZoweJobNode unit tests - Function checkCurrentProfile", () => {
                         name: globalMocks.testProfile.name,
                         status: "unverified",
                     }),
-                    validProfile: ValidProfileEnum.UNVERIFIED,
+                    validProfile: Validation.ValidationType.UNVERIFIED,
                 };
             }),
         });

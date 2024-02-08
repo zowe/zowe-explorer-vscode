@@ -9,17 +9,6 @@
  *
  */
 
-import { IRegisterClient } from "./IRegisterClient";
-import { IApiExplorerExtender } from "./IApiExplorerExtender";
-
-export type IApiRegisterClient = IRegisterClient & {
-    /**
-     * Lookup of an API for the generic extender API.
-     * @returns the registered API instance
-     */
-    getExplorerExtenderApi(): IApiExplorerExtender;
-};
-
 export * from "./IApiExplorerExtender";
 export * from "./IRegisterClient";
-export * from "./interfaces";
+export * from "./MainframeInteraction";

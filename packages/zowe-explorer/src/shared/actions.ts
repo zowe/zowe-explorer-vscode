@@ -11,7 +11,7 @@
 
 import * as vscode from "vscode";
 import * as globals from "../globals";
-import { Gui, IZoweDatasetTreeNode, IZoweUSSTreeNode, IZoweNodeType, IZoweTree } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweDatasetTreeNode, IZoweUSSTreeNode, Types, IZoweTree } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { filterTreeByString } from "../shared/utils";
 import { FilterItem, FilterDescriptor } from "../utils/ProfilesUtils";
@@ -29,7 +29,7 @@ export async function searchInAllLoadedItems(
 ): Promise<void> {
     ZoweLogger.trace("shared.actions.searchInAllLoadedItems called.");
     let pattern: string;
-    const items: IZoweNodeType[] = [];
+    const items: Types.IZoweNodeType[] = [];
     const qpItems = [];
     const quickpick = Gui.createQuickPick();
     quickpick.placeholder = vscode.l10n.t("Enter a filter");
@@ -208,7 +208,7 @@ export async function openRecentMemberPrompt(datasetTree: IZoweTree<IZoweDataset
     }
 }
 
-export function returnIconState(node: IZoweNodeType): IZoweNodeType {
+export function returnIconState(node: Types.IZoweNodeType): Types.IZoweNodeType {
     ZoweLogger.trace("shared.actions.returnIconState called.");
     const activePathClosed = getIconById(IconId.sessionActive);
     const activePathOpen = getIconById(IconId.sessionActiveOpen);
@@ -222,7 +222,7 @@ export function returnIconState(node: IZoweNodeType): IZoweNodeType {
     return node;
 }
 
-export function resetValidationSettings(node: IZoweNodeType, setting: boolean): IZoweNodeType {
+export function resetValidationSettings(node: Types.IZoweNodeType, setting: boolean): Types.IZoweNodeType {
     ZoweLogger.trace("shared.actions.resetValidationSettings called.");
     if (setting) {
         Profiles.getInstance().enableValidationContext(node);

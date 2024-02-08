@@ -11,7 +11,7 @@
 
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
-import { Gui, ValidProfileEnum } from "@zowe/zowe-explorer-api";
+import { Gui, Validation } from "@zowe/zowe-explorer-api";
 import {
     createSessCfgFromArgs,
     createInstanceOfProfile,
@@ -708,7 +708,7 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
                         name: blockMocks.imperativeProfile.name,
                         status: "unverified",
                     }),
-                    validProfile: ValidProfileEnum.UNVERIFIED,
+                    validProfile: Validation.ValidationType.UNVERIFIED,
                 };
             }),
         });
@@ -1704,7 +1704,7 @@ describe("Dataset Actions Unit Tests - Function showAttributes", () => {
         Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
-                    validProfile: ValidProfileEnum.UNVERIFIED,
+                    validProfile: Validation.ValidationType.UNVERIFIED,
                 };
             }),
         });
@@ -2402,7 +2402,7 @@ describe("Dataset Actions Unit Tests - Function pasteMember", () => {
                         name: blockMocks.imperativeProfile.name,
                         status: "unverified",
                     }),
-                    validProfile: ValidProfileEnum.UNVERIFIED,
+                    validProfile: Validation.ValidationType.UNVERIFIED,
                 };
             }),
         });
@@ -2674,7 +2674,7 @@ describe("Dataset Actions Unit Tests - Function hMigrateDataSet", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
 
-        blockMocks.profileInstance.validProfile = ValidProfileEnum.INVALID;
+        blockMocks.profileInstance.validProfile = Validation.ValidationType.INVALID;
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         const node = new ZoweDatasetNode("HLQ.TEST.TO.NODE", vscode.TreeItemCollapsibleState.None, blockMocks.datasetSessionNode, null);
         node.contextValue = globals.DS_DS_CONTEXT;
@@ -2695,7 +2695,7 @@ describe("Dataset Actions Unit Tests - Function hMigrateDataSet", () => {
                         name: blockMocks.imperativeProfile.name,
                         status: "unverified",
                     }),
-                    validProfile: ValidProfileEnum.UNVERIFIED,
+                    validProfile: Validation.ValidationType.UNVERIFIED,
                 };
             }),
         });
@@ -2783,7 +2783,7 @@ describe("Dataset Actions Unit Tests - Function hRecallDataSet", () => {
                         name: blockMocks.imperativeProfile.name,
                         status: "unverified",
                     }),
-                    validProfile: ValidProfileEnum.UNVERIFIED,
+                    validProfile: Validation.ValidationType.UNVERIFIED,
                 };
             }),
         });
@@ -2883,7 +2883,7 @@ describe("Dataset Actions Unit Tests - Function showFileErrorDetails", () => {
             value: jest.fn(() => {
                 return {
                     checkCurrentProfile: jest.fn(),
-                    validProfile: ValidProfileEnum.INVALID,
+                    validProfile: Validation.ValidationType.INVALID,
                 };
             }),
         });
@@ -3098,7 +3098,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
                         name: blockMocks.imperativeProfile.name,
                         status: "unverified",
                     }),
-                    validProfile: ValidProfileEnum.UNVERIFIED,
+                    validProfile: Validation.ValidationType.UNVERIFIED,
                 };
             }),
         });
@@ -3532,7 +3532,7 @@ describe("Dataset Actions Unit Tests - Function openPS", () => {
         Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
-                    validProfile: ValidProfileEnum.UNVERIFIED,
+                    validProfile: Validation.ValidationType.UNVERIFIED,
                 };
             }),
         });

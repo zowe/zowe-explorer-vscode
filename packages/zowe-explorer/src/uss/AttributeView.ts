@@ -9,7 +9,7 @@
  *
  */
 
-import { FileAttributes, Gui, IUss, IZoweTree, IZoweUSSTreeNode, WebView } from "@zowe/zowe-explorer-api";
+import { Types, Gui, MainframeInteraction, IZoweTree, IZoweUSSTreeNode, WebView } from "@zowe/zowe-explorer-api";
 import { Disposable, ExtensionContext } from "vscode";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import * as contextually from "../shared/context";
@@ -17,7 +17,7 @@ import * as contextually from "../shared/context";
 export class AttributeView extends WebView {
     private treeProvider: IZoweTree<IZoweUSSTreeNode>;
     private readonly ussNode: IZoweUSSTreeNode;
-    private readonly ussApi: IUss;
+    private readonly ussApi: MainframeInteraction.IUss;
     private readonly canUpdate: boolean;
 
     private onUpdateDisposable: Disposable;
@@ -84,7 +84,7 @@ export class AttributeView extends WebView {
         try {
             if (Object.keys(message.attrs).length > 0) {
                 const attrs = message.attrs;
-                const newAttrs: Partial<FileAttributes> = {};
+                const newAttrs: Partial<Types.FileAttributes> = {};
                 if (!isNaN(parseInt(attrs.owner))) {
                     const uid = parseInt(attrs.owner);
                     newAttrs.uid = uid;
@@ -118,7 +118,7 @@ export class AttributeView extends WebView {
                 }
 
                 await this.ussApi.updateAttributes(this.ussNode.fullPath, newAttrs);
-                this.ussNode.attributes = { ...(this.ussNode.attributes ?? {}), ...newAttrs } as FileAttributes;
+                this.ussNode.attributes = { ...(this.ussNode.attributes ?? {}), ...newAttrs } as Types.FileAttributes;
 
                 await this.panel.webview.postMessage({
                     updated: true,

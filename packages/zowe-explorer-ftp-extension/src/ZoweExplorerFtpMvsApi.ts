@@ -17,7 +17,7 @@ import * as path from "path";
 
 import { CreateDataSetTypeEnum, IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
 
-import { Gui, IMvs, MessageSeverity } from "@zowe/zowe-explorer-api";
+import { Gui, MainframeInteraction, MessageSeverity } from "@zowe/zowe-explorer-api";
 import { DataSetUtils, TRANSFER_TYPE_ASCII, TRANSFER_TYPE_BINARY } from "@zowe/zos-ftp-for-zowe-cli";
 import { AbstractFtpApi } from "./ZoweExplorerAbstractFtpApi";
 import * as globals from "./globals";
@@ -28,7 +28,7 @@ import { ZoweFtpExtensionError } from "./ZoweFtpExtensionError";
 
 const MAX_MEMBER_NAME_LEN = 8;
 
-export class FtpMvsApi extends AbstractFtpApi implements IMvs {
+export class FtpMvsApi extends AbstractFtpApi implements MainframeInteraction.IMvs {
     public async dataSet(filter: string, _options?: zowe.IListOptions): Promise<zowe.IZosFilesResponse> {
         const result = this.getDefaultResponse();
         const session = this.getSession(this.profile);

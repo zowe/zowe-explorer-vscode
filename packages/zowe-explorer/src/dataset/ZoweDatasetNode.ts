@@ -13,18 +13,7 @@ import * as zowe from "@zowe/cli";
 import * as vscode from "vscode";
 import * as globals from "../globals";
 import { errorHandling } from "../utils/ProfilesUtils";
-import {
-    DatasetFilter,
-    DatasetFilterOpts,
-    DatasetSortOpts,
-    DatasetStats,
-    Gui,
-    NodeAction,
-    IZoweDatasetTreeNode,
-    ZoweTreeNode,
-    SortDirection,
-    NodeSort,
-} from "@zowe/zowe-explorer-api";
+import { Sorting, Types, Gui, ZoweTreeNodeActions, IZoweDatasetTreeNode, ZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { getIconByNode } from "../generators/icons";
 import * as contextually from "../shared/context";
@@ -47,11 +36,11 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     public dirty = true;
     public children: ZoweDatasetNode[] = [];
     public errorDetails: zowe.imperative.ImperativeError;
-    public ongoingActions: Record<NodeAction | string, Promise<any>> = {};
+    public ongoingActions: Record<ZoweTreeNodeActions.Interactions | string, Promise<any>> = {};
     public wasDoubleClicked: boolean = false;
-    public stats: DatasetStats;
-    public sort?: NodeSort;
-    public filter?: DatasetFilter;
+    public stats: Types.DatasetStats;
+    public sort?: Sorting.NodeSort;
+    public filter?: Sorting.DatasetFilter;
     public resourceUri?: vscode.Uri;
 
     /**
@@ -91,8 +80,8 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         if (this.getParent() == null) {
             // set default sort options for session nodes
             this.sort = {
-                method: DatasetSortOpts.Name,
-                direction: SortDirection.Ascending,
+                method: Sorting.DatasetSortOpts.Name,
+                direction: Sorting.SortDirection.Ascending,
             };
         }
 
@@ -364,14 +353,14 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
      * @param method The sorting method to use
      * @returns A function that sorts 2 nodes based on the given sorting method
      */
-    public static sortBy(sort: NodeSort): (a: IZoweDatasetTreeNode, b: IZoweDatasetTreeNode) => number {
+    public static sortBy(sort: Sorting.NodeSort): (a: IZoweDatasetTreeNode, b: IZoweDatasetTreeNode) => number {
         return (a, b): number => {
             const aParent = a.getParent();
             if (aParent == null || !contextually.isPds(aParent)) {
                 return (a.label as string) < (b.label as string) ? -1 : 1;
             }
 
-            const sortLessThan = sort.direction == SortDirection.Ascending ? -1 : 1;
+            const sortLessThan = sort.direction == Sorting.SortDirection.Ascending ? -1 : 1;
             const sortGreaterThan = sortLessThan * -1;
 
             const sortByName = (nodeA: IZoweDatasetTreeNode, nodeB: IZoweDatasetTreeNode): number =>
@@ -381,7 +370,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 return sortByName(a, b);
             }
 
-            if (sort.method === DatasetSortOpts.LastModified) {
+            if (sort.method === Sorting.DatasetSortOpts.LastModified) {
                 const dateA = dayjs(a.stats?.modifiedDate ?? null);
                 const dateB = dayjs(b.stats?.modifiedDate ?? null);
 
@@ -405,7 +394,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 }
 
                 return dateA.isBefore(dateB, "second") ? sortLessThan : sortGreaterThan;
-            } else if (sort.method === DatasetSortOpts.UserId) {
+            } else if (sort.method === Sorting.DatasetSortOpts.UserId) {
                 const userA = a.stats?.user ?? "";
                 const userB = b.stats?.user ?? "";
 
@@ -429,7 +418,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
      * @param method The sorting method to use
      * @returns A function that sorts 2 nodes based on the given sorting method
      */
-    public static filterBy(filter: DatasetFilter): (node: IZoweDatasetTreeNode) => boolean {
+    public static filterBy(filter: Sorting.DatasetFilter): (node: IZoweDatasetTreeNode) => boolean {
         const isDateFilter = (f: string): boolean => {
             return dayjs(f).isValid();
         };
@@ -441,13 +430,13 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             }
 
             switch (filter.method) {
-                case DatasetFilterOpts.LastModified:
+                case Sorting.DatasetFilterOpts.LastModified:
                     if (!isDateFilter(filter.value)) {
                         return true;
                     }
 
                     return dayjs(node.stats?.modifiedDate).isSame(filter.value, "day");
-                case DatasetFilterOpts.UserId:
+                case Sorting.DatasetFilterOpts.UserId:
                     return node.stats?.user === filter.value;
             }
         };

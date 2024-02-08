@@ -9,7 +9,7 @@
  *
  */
 
-import { Gui, IZoweUSSTreeNode, ProfilesCache, ValidProfileEnum } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweUSSTreeNode, ProfilesCache, Validation } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { Profiles } from "../../../src/Profiles";
 import * as utils from "../../../src/utils/ProfilesUtils";
@@ -626,7 +626,7 @@ describe("USSTree Unit Tests - Function USSTree.filterPrompt()", () => {
                         name: globalMocks.testProfile.name,
                         status: "unverified",
                     }),
-                    validProfile: ValidProfileEnum.UNVERIFIED,
+                    validProfile: Validation.ValidationType.UNVERIFIED,
                 };
             }),
             configurable: true,
@@ -1517,7 +1517,7 @@ describe("USSTree Unit Tests - Function USSTree.loadProfilesForFavorites", () =>
                     checkCurrentProfile: jest.fn(() => {
                         return globalMocks.profilesForValidation;
                     }),
-                    validProfile: ValidProfileEnum.VALID,
+                    validProfile: Validation.ValidationType.VALID,
                 };
             }),
             configurable: true,
