@@ -13,7 +13,7 @@ import * as globals from "../globals";
 import * as vscode from "vscode";
 import * as refreshActions from "./refresh";
 import * as sharedActions from "./actions";
-import { getZoweDir, IZoweTree, IZoweTreeNode, EventTypes } from "@zowe/zowe-explorer-api";
+import { FileManagement, IZoweTree, IZoweTreeNode, Validation } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { Profiles } from "../Profiles";
 import { hideTempFolder, moveTempFolder } from "../utils/TempFolder";
@@ -124,7 +124,7 @@ export function registerCommonCommands(context: vscode.ExtensionContext, provide
                 await refreshActions.refreshAll(providers.job);
             }
             if (e.affectsConfiguration(globals.SETTINGS_TEMP_FOLDER_HIDE)) {
-                await hideTempFolder(getZoweDir());
+                await hideTempFolder(FileManagement.getZoweDir());
             }
 
             if (e.affectsConfiguration(globals.SETTINGS_SECURE_CREDENTIALS_ENABLED)) {
@@ -249,7 +249,9 @@ export function registerCommonCommands(context: vscode.ExtensionContext, provide
 export function watchConfigProfile(context: vscode.ExtensionContext, providers: IZoweProviders): void {
     ZoweLogger.trace("shared.init.watchConfigProfile called.");
     const watchers: vscode.FileSystemWatcher[] = [];
-    watchers.push(vscode.workspace.createFileSystemWatcher(new vscode.RelativePattern(getZoweDir(), "{zowe.config,zowe.config.user}.json")));
+    watchers.push(
+        vscode.workspace.createFileSystemWatcher(new vscode.RelativePattern(FileManagement.getZoweDir(), "{zowe.config,zowe.config.user}.json"))
+    );
 
     if (vscode.workspace.workspaceFolders?.[0] != null) {
         watchers.push(
@@ -265,12 +267,12 @@ export function watchConfigProfile(context: vscode.ExtensionContext, providers: 
         watcher.onDidCreate(async () => {
             ZoweLogger.info(vscode.l10n.t("Team config file created, refreshing Zowe Explorer."));
             await vscode.commands.executeCommand("zowe.extRefresh");
-            ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter.fire(EventTypes.CREATE);
+            ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter.fire(Validation.EventType.CREATE);
         });
         watcher.onDidDelete(async () => {
             ZoweLogger.info(vscode.l10n.t("Team config file deleted, refreshing Zowe Explorer."));
             await vscode.commands.executeCommand("zowe.extRefresh");
-            ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter.fire(EventTypes.DELETE);
+            ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter.fire(Validation.EventType.DELETE);
         });
         watcher.onDidChange(async (uri: vscode.Uri) => {
             ZoweLogger.info(vscode.l10n.t("Team config file updated."));
@@ -282,7 +284,7 @@ export function watchConfigProfile(context: vscode.ExtensionContext, providers: 
             await refreshActions.refreshAll(providers.ds);
             await refreshActions.refreshAll(providers.uss);
             await refreshActions.refreshAll(providers.job);
-            ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter.fire(EventTypes.UPDATE);
+            ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter.fire(Validation.EventType.UPDATE);
             if (globals.ISTHEIA) {
                 await vscode.commands.executeCommand("zowe.extRefresh");
             }
@@ -340,7 +342,7 @@ async function initZoweExplorerUI(): Promise<void> {
     }
     const tempPath: string = SettingsConfig.getDirectValue(globals.SETTINGS_TEMP_FOLDER_PATH);
     globals.defineGlobals(tempPath);
-    await hideTempFolder(getZoweDir());
+    await hideTempFolder(FileManagement.getZoweDir());
     ProfilesUtils.initializeZoweTempFolder();
     await SettingsConfig.standardizeSettings();
     globals.setActivated(true);

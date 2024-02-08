@@ -13,7 +13,7 @@ import { ZoweTreeProvider } from "../../src/abstract/ZoweTreeProvider";
 import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
 import { ZoweUSSNode } from "../../src/uss/ZoweUSSNode";
 import * as vscode from "vscode";
-import { ValidProfileEnum, IZoweTreeNode } from "@zowe/zowe-explorer-api";
+import { Validation, IZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { FilterDescriptor } from "../../src/utils/ProfilesUtils";
 import { imperative, ZosmfSession } from "@zowe/cli";
 import { SettingsConfig } from "../../src/utils/SettingsConfig";
@@ -316,7 +316,7 @@ export function createInstanceOfProfile(profile: imperative.IProfileLoaded) {
         promptCredentials: jest.fn(),
         loadNamedProfile: jest.fn().mockReturnValue(profile),
         usesSecurity: true,
-        validProfile: ValidProfileEnum.VALID,
+        validProfile: Validation.ValidationType.VALID,
         checkCurrentProfile: jest.fn(() => {
             return { status: "active", name: "sestest" };
         }),

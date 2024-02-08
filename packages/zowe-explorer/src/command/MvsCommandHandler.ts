@@ -12,7 +12,7 @@
 import * as vscode from "vscode";
 import { imperative } from "@zowe/cli";
 import * as globals from "../globals";
-import { ValidProfileEnum, IZoweTreeNode, Gui } from "@zowe/zowe-explorer-api";
+import { Validation, IZoweTreeNode, Gui } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { FilterDescriptor, FilterItem, errorHandling } from "../utils/ProfilesUtils";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
@@ -87,7 +87,7 @@ export class MvsCommandHandler extends ZoweCommandProvider {
                 if (!node) {
                     await profiles.checkCurrentProfile(profile);
                 }
-                if (profiles.validProfile !== ValidProfileEnum.INVALID) {
+                if (profiles.validProfile !== Validation.ValidationType.INVALID) {
                     session = ZoweExplorerApiRegister.getMvsApi(profile).getSession();
                 } else {
                     Gui.errorMessage(vscode.l10n.t("Profile is invalid"));
@@ -101,7 +101,7 @@ export class MvsCommandHandler extends ZoweCommandProvider {
             profile = node.getProfile();
         }
         try {
-            if (profiles.validProfile !== ValidProfileEnum.INVALID) {
+            if (profiles.validProfile !== Validation.ValidationType.INVALID) {
                 const commandApi = ZoweExplorerApiRegister.getInstance().getCommandApi(profile);
                 if (commandApi) {
                     let command1: string = command;

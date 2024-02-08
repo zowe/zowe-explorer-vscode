@@ -11,7 +11,7 @@
 
 import * as vscode from "vscode";
 import * as globals from "../globals";
-import { Gui, ValidProfileEnum, IZoweTreeNode } from "@zowe/zowe-explorer-api";
+import { Gui, Validation, IZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { errorHandling, FilterDescriptor, FilterItem } from "../utils/ProfilesUtils";
@@ -87,7 +87,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
                 if (!node) {
                     await profiles.checkCurrentProfile(profile);
                 }
-                if (profiles.validProfile !== ValidProfileEnum.INVALID) {
+                if (profiles.validProfile !== Validation.ValidationType.INVALID) {
                     session = ZoweExplorerApiRegister.getMvsApi(profile).getSession();
                 } else {
                     Gui.errorMessage(vscode.l10n.t("Profile is invalid"));
@@ -101,7 +101,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
             profile = node.getProfile();
         }
         try {
-            if (profiles.validProfile !== ValidProfileEnum.INVALID) {
+            if (profiles.validProfile !== Validation.ValidationType.INVALID) {
                 const commandApi = ZoweExplorerApiRegister.getInstance().getCommandApi(profile);
                 if (commandApi) {
                     let tsoParams: IStartTsoParms;

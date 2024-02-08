@@ -9,10 +9,10 @@ jobs:
     name: Process Label Action
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Process Label Action
-        uses: hramos/respond-to-issue-based-on-label@v2
+        uses: dessant/label-actions@v4
         with:
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-          configuration-path: '.github/label-actions.yml'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          config-path: '.github/label-actions.yml'
