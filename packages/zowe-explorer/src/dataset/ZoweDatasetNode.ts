@@ -112,16 +112,18 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     }
 
     public updateStats(item: any): void {
-        if ("m4date" in item) {
+        if ("c4date" in item || "m4date" in item) {
             const { m4date, mtime, msec }: { m4date: string; mtime: string; msec: string } = item;
             this.stats = {
                 user: item.user,
+                createdDate: dayjs(item.c4date).toDate(),
                 modifiedDate: dayjs(`${m4date} ${mtime}:${msec}`).toDate(),
             };
         } else if ("id" in item || "changed" in item) {
             // missing keys from API response; check for FTP keys
             this.stats = {
                 user: item.id,
+                createdDate: item.created ? dayjs(item.created).toDate() : undefined,
                 modifiedDate: item.changed ? dayjs(item.changed).toDate() : undefined,
             };
         }
@@ -326,7 +328,30 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 return sortByName(a, b);
             }
 
-            if (sort.method === DatasetSortOpts.LastModified) {
+            if (sort.method === DatasetSortOpts.DateCreated) {
+                const dateA = dayjs(a.stats?.createdDate ?? null);
+                const dateB = dayjs(b.stats?.createdDate ?? null);
+
+                const aVaild = dateA.isValid();
+                const bValid = dateB.isValid();
+
+                a.description = aVaild ? dateA.format("YYYY/MM/DD") : undefined;
+                b.description = bValid ? dateB.format("YYYY/MM/DD") : undefined;
+
+                if (!aVaild) {
+                    return sortGreaterThan;
+                }
+
+                if (!bValid) {
+                    return sortLessThan;
+                }
+
+                if (dateA.isSame(dateB, "second")) {
+                    return sortByName(a, b);
+                }
+
+                return dateA.isBefore(dateB, "second") ? sortLessThan : sortGreaterThan;
+            } else if (sort.method === DatasetSortOpts.LastModified) {
                 const dateA = dayjs(a.stats?.modifiedDate ?? null);
                 const dateB = dayjs(b.stats?.modifiedDate ?? null);
 
