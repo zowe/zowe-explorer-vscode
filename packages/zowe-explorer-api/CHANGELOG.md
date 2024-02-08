@@ -2,17 +2,19 @@
 
 All notable changes to the "zowe-explorer-api" extension will be documented in this file.
 
+## TBD Release
+
+### New features and enhancements
+
+### Bug fixes
+
 ## `3.0.0-next.202402071248`
 
 ### New features and enhancements
 
 - Grouped common methods into singleton classes [#2109](https://github.com/zowe/vscode-extension-for-zowe/issues/2109)
 
-### Bug fixes
-
 ## `3.0.0-next.202401241448`
-
-### New features and enhancements
 
 ### Bug fixes
 
