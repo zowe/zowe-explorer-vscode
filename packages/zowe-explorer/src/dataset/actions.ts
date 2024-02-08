@@ -25,7 +25,7 @@ import { IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { ProfileManagement } from "../utils/ProfileManagement";
 import { LocalFileManagement } from "../utils/LocalFileManagement";
-import { Gui, IZoweDatasetTreeNode, IZoweTree, ZoweTreeNodeActions, Validation, Types } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweDatasetTreeNode, IZoweTree, Validation, Types, isNodeInEditor } from "@zowe/zowe-explorer-api";
 import { DatasetFSProvider } from "./DatasetFSProvider";
 
 let typeEnum: zowe.CreateDataSetTypeEnum;
@@ -1218,8 +1218,8 @@ export async function refreshPS(node: IZoweDatasetTreeNode): Promise<void> {
                 throw Error(vscode.l10n.t("Item invalid."));
         }
 
-        const statusMsg = api.Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Fetching data set..."));
-        if (api.isNodeInEditor(node)) {
+        const statusMsg = Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Fetching data set..."));
+        if (isNodeInEditor(node)) {
             await DatasetFSProvider.instance.fetchDatasetAtUri(
                 node.resourceUri,
                 vscode.window.visibleTextEditors.find((v) => v.document.uri.path === node.resourceUri.path)

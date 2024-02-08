@@ -306,7 +306,6 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             .concat(nodesToAdd)
             .filter((c) => !nodesToRemove.includes(c))
             .sort((a, b) => (a.label as string).localeCompare(b.label as string));
-        this.prevPath = this.fullPath;
         this.dirty = false;
         return this.children;
     }
