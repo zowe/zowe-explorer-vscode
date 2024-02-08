@@ -14,13 +14,11 @@
 import * as vscode from "vscode";
 import * as path from "path";
 import * as globals from "../globals";
-import { Gui, IZoweTreeNode, Types, IZoweDatasetTreeNode, IZoweUSSTreeNode, IZoweJobTreeNode, IZoweTree } from "@zowe/zowe-explorer-api";
+import { IZoweTreeNode, Types, IZoweDatasetTreeNode, IZoweUSSTreeNode, IZoweJobTreeNode, IZoweTree } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { IZosFilesResponse, imperative } from "@zowe/cli";
 import { IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
 import { ZoweLogger } from "../utils/LoggerUtils";
-import { markDocumentUnsaved } from "../utils/workspace";
-import { errorHandling } from "../utils/ProfilesUtils";
 
 export enum JobSubmitDialogOpts {
     Disabled,
@@ -237,66 +235,6 @@ export async function uploadContent(
         const result = ZoweExplorerApiRegister.getUssApi(profile).putContent(doc.fileName, remotePath, options);
         return result;
     }
-}
-
-/**
- * Function that will forcefully upload a file and won't check for matching Etag
- */
-export function willForceUpload(
-    node: IZoweDatasetTreeNode | IZoweUSSTreeNode,
-    doc: vscode.TextDocument,
-    remotePath: string,
-    profile?: imperative.IProfileLoaded,
-    binary?: boolean
-): Thenable<void> {
-    // setup to handle both cases (dataset & USS)
-    let title: string;
-    if (isZoweDatasetTreeNode(node)) {
-        title = vscode.l10n.t("Saving Data Set...");
-    } else {
-        title = vscode.l10n.t("Saving file...");
-    }
-    if (globals.ISTHEIA) {
-        Gui.warningMessage(
-            vscode.l10n.t(
-                "A merge conflict has been detected. Since you are running inside Theia editor, a merge conflict resolution is not available yet."
-            )
-        );
-    }
-    // Don't wait for prompt to return since this would block the save queue
-    return Gui.infoMessage(vscode.l10n.t("Would you like to overwrite the remote file?"), {
-        items: [vscode.l10n.t("Yes"), vscode.l10n.t("No")],
-    }).then(async (selection) => {
-        if (selection === vscode.l10n.t("Yes")) {
-            try {
-                const uploadResponse = await Gui.withProgress(
-                    {
-                        location: vscode.ProgressLocation.Notification,
-                        title,
-                    },
-                    () => {
-                        return uploadContent(node, doc, remotePath, profile, binary, null, true);
-                    }
-                );
-                if (uploadResponse.success) {
-                    Gui.showMessage(uploadResponse.commandResponse);
-                    if (node) {
-                        // Upload API returns a singleton array for data sets and an object for USS files
-                        node.setEtag(uploadResponse.apiResponse[0]?.etag ?? uploadResponse.apiResponse.etag);
-                    }
-                } else {
-                    await markDocumentUnsaved(doc);
-                    Gui.errorMessage(uploadResponse.commandResponse);
-                }
-            } catch (err) {
-                await markDocumentUnsaved(doc);
-                await errorHandling(err, profile.name);
-            }
-        } else {
-            Gui.showMessage(vscode.l10n.t("Upload cancelled."));
-            markFileAsDirty(doc);
-        }
-    });
 }
 
 // Type guarding for current IZoweNodeType.
