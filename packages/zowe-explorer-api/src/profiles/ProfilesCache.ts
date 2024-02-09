@@ -348,8 +348,8 @@ export class ProfilesCache {
     }
 
     public async convertV1ProfToConfig(): Promise<ZeApiConvertResponse> {
-        const successMsg: String[] = [];
-        const warningMsg: String[] = [];
+        const successMsg: string[] = [];
+        const warningMsg: string[] = [];
         const zoweDir = FileManagement.getZoweDir();
         const profilesPath = path.join(zoweDir, "profiles");
         const oldProfilesPath = `${profilesPath.replace(/[\\/]$/, "")}-old`;
