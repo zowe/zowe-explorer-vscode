@@ -22,10 +22,7 @@ import { IJestIt, ITestContext, processSubscriptions, spyOnSubscriptions } from 
 import { TsoCommandHandler } from "../../../src/command/TsoCommandHandler";
 import { MvsCommandHandler } from "../../../src/command/MvsCommandHandler";
 import { UnixCommandHandler } from "../../../src/command/UnixCommandHandler";
-import { saveFile } from "../../../src/dataset/actions";
-import { saveUSSFile } from "../../../src/uss/actions";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
-import { ZoweSaveQueue } from "../../../src/abstract/ZoweSaveQueue";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import * as HistoryView from "../../../src/shared/HistoryView";
 import { LocalFileManagement } from "../../../src/utils/LocalFileManagement";
@@ -141,38 +138,6 @@ describe("Test src/shared/extension", () => {
                 name: "onDidSaveTextDocument:1",
                 parm: [{ isDirty: false, fileName: "_", uri: vscode.Uri.parse("") }],
                 mock: [],
-            },
-            {
-                name: "onDidSaveTextDocument:2",
-                parm: [{ fileName: "DS_DIR", isDirty: true, uri: vscode.Uri.parse("") }],
-                mock: [
-                    {
-                        spy: jest.spyOn(ZoweSaveQueue, "push"),
-                        arg: [
-                            {
-                                fileProvider: "ds",
-                                savedFile: { fileName: "DS_DIR", uri: vscode.Uri.parse(""), isDirty: true },
-                                uploadRequest: saveFile,
-                            },
-                        ],
-                    },
-                ],
-            },
-            {
-                name: "onDidSaveTextDocument:3",
-                parm: [{ fileName: "USS_DIR", isDirty: true, uri: vscode.Uri.parse("") }],
-                mock: [
-                    {
-                        spy: jest.spyOn(ZoweSaveQueue, "push"),
-                        arg: [
-                            {
-                                fileProvider: "uss",
-                                savedFile: { fileName: "USS_DIR", isDirty: true, uri: vscode.Uri.parse("") },
-                                uploadRequest: saveUSSFile,
-                            },
-                        ],
-                    },
-                ],
             },
             {
                 name: "onDidSaveTextDocument:4",

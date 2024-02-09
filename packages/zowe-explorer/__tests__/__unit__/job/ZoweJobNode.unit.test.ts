@@ -410,16 +410,18 @@ describe("ZoweJobNode unit tests - Function getChildren", () => {
 
     it("should return 'No jobs found' if no children is found", async () => {
         const globalMocks = await createGlobalMocks();
-        const expectedJob = [
-            new Job("No jobs found", vscode.TreeItemCollapsibleState.None, globalMocks.testJobsProvider.mSessionNodes[1], null, null, null),
-        ];
-        expectedJob[0].iconPath = null;
-        expectedJob[0].contextValue = "information";
+        const job = new Job("No jobs found", vscode.TreeItemCollapsibleState.None, globalMocks.testJobsProvider.mSessionNodes[1], null, null, null);
+        job.iconPath = undefined;
+        job.contextValue = "information";
+        job.command = {
+            title: "Placeholder",
+            command: "zowe.placeholderCommand",
+        };
         await globalMocks.testJobsProvider.addSession("fake");
         globalMocks.testJobsProvider.mSessionNodes[1].filtered = true;
         jest.spyOn(globalMocks.testJobsProvider.mSessionNodes[1], "getJobs").mockResolvedValue([]);
         const jobs = await globalMocks.testJobsProvider.mSessionNodes[1].getChildren();
-        expect(jobs).toEqual(expectedJob);
+        expect(jobs[0]).toEqual(job);
     });
 });
 

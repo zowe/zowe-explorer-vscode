@@ -23,7 +23,6 @@ import {
     createTextDocument,
     createFileResponse,
     createValidIProfile,
-    createInstanceOfProfile,
 } from "../../../__mocks__/mockCreators/shared";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { Profiles } from "../../../src/Profiles";
@@ -415,129 +414,6 @@ describe("USS Action Unit Tests - Function copyPath", () => {
 
         await ussNodeActions.copyPath(blockMocks.ussNode);
         expect(globalMocks.writeText).not.toBeCalled();
-    });
-});
-
-describe("USS Action Unit Tests - Function saveUSSFile", () => {
-    async function createBlockMocks(globalMocks) {
-        const newMocks = {
-            node: null,
-            mockGetEtag: null,
-            profileInstance: createInstanceOfProfile(globalMocks.testProfile),
-            testUSSTree: null,
-            testResponse: createFileResponse({ items: [] }),
-            testDoc: createTextDocument(path.join(globals.USS_DIR, "usstest", "u", "myuser", "testFile")),
-            ussNode: createUSSNode(globalMocks.testSession, createIProfile()),
-        };
-
-        newMocks.node = new ZoweUSSNode("u/myuser/testFile", vscode.TreeItemCollapsibleState.None, newMocks.ussNode, null, "/");
-        newMocks.ussNode.children.push(newMocks.node);
-        newMocks.testUSSTree = createUSSTree(
-            [createFavoriteUSSNode(globalMocks.testSession, globalMocks.testProfile)],
-            [newMocks.ussNode],
-            createTreeView()
-        );
-        newMocks.mockGetEtag = jest.spyOn(newMocks.node, "getEtag").mockImplementation(() => "123");
-
-        return newMocks;
-    }
-
-    it("To check Compare Function is getting triggered from Favorites", async () => {
-        const globalMocks = createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
-
-        // Create nodes for Session section
-        const node = new ZoweUSSNode("HLQ.TEST.AFILE", vscode.TreeItemCollapsibleState.Expanded, blockMocks.node, null, "/");
-        const childNode = new ZoweUSSNode("MEM", vscode.TreeItemCollapsibleState.None, node, null, "/");
-        node.children.push(childNode);
-        blockMocks.testUSSTree.mSessionNodes.find((child) => child.label.toString().trim() === "usstest").children.push(node);
-
-        // Create nodes for Favorites section
-        const favProfileNode = new ZoweUSSNode("usstest", vscode.TreeItemCollapsibleState.Expanded, blockMocks.node, null, "/");
-        const favoriteNode = new ZoweUSSNode("HLQ.TEST.AFILE", vscode.TreeItemCollapsibleState.Expanded, favProfileNode, null, "/");
-        const favoriteChildNode = new ZoweUSSNode("MEM", vscode.TreeItemCollapsibleState.None, favoriteNode, null, "/");
-        favoriteNode.children.push(favoriteChildNode);
-        blockMocks.testUSSTree.mFavorites.push(favProfileNode);
-        blockMocks.testUSSTree.mFavorites[0].children.push(favoriteNode);
-        mocked(sharedUtils.concatChildNodes).mockReturnValueOnce([favoriteNode, favoriteChildNode]);
-
-        const testDocument = createTextDocument("HLQ.TEST.AFILE(MEM)", blockMocks.ussNode);
-        jest.spyOn(favoriteChildNode, "getEtag").mockImplementation(() => "123");
-        (testDocument as any).fileName = path.join(globals.USS_DIR, "usstest/user/usstest/HLQ.TEST.AFILE/MEM");
-
-        await ussNodeActions.saveUSSFile(testDocument, blockMocks.testUSSTree);
-
-        expect(mocked(sharedUtils.concatChildNodes)).toBeCalled();
-    });
-
-    it("Testing that saveUSSFile is executed successfully", async () => {
-        const globalMocks = createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
-
-        globalMocks.withProgress.mockImplementation((progLocation, callback) => callback());
-        globalMocks.fileToUSSFile.mockResolvedValue(blockMocks.testResponse);
-        globalMocks.concatChildNodes.mockReturnValue([blockMocks.ussNode.children[0]]);
-        blockMocks.testResponse.apiResponse.items = [{ name: "testFile", mode: "-rwxrwx" }];
-        blockMocks.testResponse.success = true;
-
-        globalMocks.fileList.mockResolvedValueOnce(blockMocks.testResponse);
-        globalMocks.withProgress.mockReturnValueOnce(blockMocks.testResponse);
-        blockMocks.testUSSTree.getChildren.mockReturnValueOnce([
-            new ZoweUSSNode("testFile", vscode.TreeItemCollapsibleState.None, blockMocks.ussNode, null, "/"),
-            globalMocks.testSession,
-        ]);
-
-        await ussNodeActions.saveUSSFile(blockMocks.testDoc, blockMocks.testUSSTree);
-        expect(globalMocks.concatChildNodes.mock.calls.length).toBe(1);
-        expect(blockMocks.mockGetEtag).toBeCalledTimes(1);
-        expect(blockMocks.mockGetEtag).toReturnWith("123");
-    });
-
-    it("Tests that saveUSSFile fails when save fails", async () => {
-        const globalMocks = createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
-
-        globalMocks.withProgress.mockImplementation((progLocation, callback) => callback());
-        globalMocks.fileToUSSFile.mockResolvedValue(blockMocks.testResponse);
-        globalMocks.concatChildNodes.mockReturnValue([blockMocks.ussNode.children[0]]);
-        blockMocks.testResponse.success = false;
-        blockMocks.testResponse.commandResponse = "Save failed";
-
-        globalMocks.withProgress.mockReturnValueOnce(blockMocks.testResponse);
-
-        await ussNodeActions.saveUSSFile(blockMocks.testDoc, blockMocks.testUSSTree);
-        expect(globalMocks.showErrorMessage.mock.calls.length).toBe(1);
-        expect(globalMocks.showErrorMessage.mock.calls[0][0]).toBe("Save failed");
-        expect(mocked(vscode.workspace.applyEdit)).toHaveBeenCalledTimes(2);
-    });
-
-    it("Tests that saveUSSFile fails when error occurs", async () => {
-        const globalMocks = createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
-
-        globalMocks.withProgress.mockImplementation((progLocation, callback) => callback());
-        globalMocks.fileToUSSFile.mockResolvedValue(blockMocks.testResponse);
-        globalMocks.concatChildNodes.mockReturnValue([blockMocks.ussNode.children[0]]);
-        globalMocks.withProgress.mockRejectedValueOnce(Error("Test Error"));
-
-        await ussNodeActions.saveUSSFile(blockMocks.testDoc, blockMocks.testUSSTree);
-        expect(globalMocks.showErrorMessage.mock.calls.length).toBe(1);
-        expect(globalMocks.showErrorMessage.mock.calls[0][0]).toBe("Error: Test Error");
-        expect(mocked(vscode.workspace.applyEdit)).toHaveBeenCalledTimes(2);
-    });
-
-    it("Tests that saveUSSFile fails when session cannot be located", async () => {
-        const globalMocks = createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
-
-        blockMocks.profileInstance.loadNamedProfile.mockReturnValueOnce(undefined);
-        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
-        const testDocument = createTextDocument("u/myuser/testFile", blockMocks.node);
-        (testDocument as any).fileName = path.join(globals.USS_DIR, testDocument.fileName);
-
-        await ussNodeActions.saveUSSFile(testDocument, blockMocks.testUSSTree);
-        expect(globalMocks.showErrorMessage.mock.calls.length).toBe(1);
-        expect(globalMocks.showErrorMessage.mock.calls[0][0]).toBe("Could not locate session when saving USS file.");
     });
 });
 

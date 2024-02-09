@@ -286,6 +286,121 @@ export interface TreeDataProvider<T> {
     getParent?(element: T): ProviderResult<T>;
 }
 
+export class Uri {
+    public static file(path: string): Uri {
+        return Uri.parse(path);
+    }
+    public static parse(value: string, strict?: boolean): Uri {
+        const newUri = new Uri();
+        newUri.path = value;
+
+        return newUri;
+    }
+
+    public with(change: { scheme?: string; authority?: string; path?: string; query?: string; fragment?: string }): Uri {
+        if (change.scheme) {
+            this.scheme = change.scheme;
+        }
+
+        if (change.authority) {
+            this.authority = change.authority;
+        }
+
+        if (change.path) {
+            this.path = change.path;
+        }
+
+        if (change.query) {
+            this.query = change.query;
+        }
+
+        if (change.fragment) {
+            this.fragment = change.fragment;
+        }
+
+        return this;
+    }
+
+    public static from(components: {
+        readonly scheme: string;
+        readonly authority?: string;
+        readonly path?: string;
+        readonly query?: string;
+        readonly fragment?: string;
+    }): Uri {
+        let uri = new Uri();
+        if (components.path) {
+            uri.path = components.path;
+        }
+        if (components.scheme) {
+            uri.scheme = components.scheme;
+        }
+        if (components.authority) {
+            uri.authority = components.authority;
+        }
+        if (components.query) {
+            uri.query = components.query;
+        }
+        if (components.fragment) {
+            uri.fragment = components.fragment;
+        }
+        return uri;
+    }
+
+    /**
+     * Scheme is the `http` part of `http://www.example.com/some/path?query#fragment`.
+     * The part before the first colon.
+     */
+    scheme: string;
+
+    /**
+     * Authority is the `www.example.com` part of `http://www.example.com/some/path?query#fragment`.
+     * The part between the first double slashes and the next slash.
+     */
+    authority: string;
+
+    /**
+     * Path is the `/some/path` part of `http://www.example.com/some/path?query#fragment`.
+     */
+    path: string;
+
+    /**
+     * Query is the `query` part of `http://www.example.com/some/path?query#fragment`.
+     */
+    query: string;
+
+    /**
+     * Fragment is the `fragment` part of `http://www.example.com/some/path?query#fragment`.
+     */
+    fragment: string;
+
+    /**
+     * The string representing the corresponding file system path of this Uri.
+     *
+     * Will handle UNC paths and normalize windows drive letters to lower-case. Also
+     * uses the platform specific path separator.
+     *
+     * * Will *not* validate the path for invalid characters and semantics.
+     * * Will *not* look at the scheme of this Uri.
+     * * The resulting string shall *not* be used for display purposes but
+     * for disk operations, like `readFile` et al.
+     *
+     * The *difference* to the {@linkcode Uri.path path}-property is the use of the platform specific
+     * path separator and the handling of UNC paths. The sample below outlines the difference:
+     * ```ts
+     * const u = URI.parse('file://server/c$/folder/file.txt')
+     * u.authority === 'server'
+     * u.path === '/shares/c$/file.txt'
+     * u.fsPath === '\\server\c$\folder\file.txt'
+     * ```
+     */
+    fsPath: string;
+
+    public toString(): string {
+        return this.path;
+    }
+}
+
 export class TreeItem {
     /**
      * A human-readable string describing this item. When `falsy`, it is derived from [resourceUri](#TreeItem.resourceUri).

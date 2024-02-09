@@ -15,9 +15,6 @@ import * as vscode from "vscode";
 import * as path from "path";
 import * as globals from "../globals";
 import { IZoweTreeNode, Types, IZoweDatasetTreeNode, IZoweUSSTreeNode, IZoweJobTreeNode, IZoweTree } from "@zowe/zowe-explorer-api";
-import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
-import { IZosFilesResponse, imperative } from "@zowe/cli";
-import { IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
 import { ZoweLogger } from "../utils/LoggerUtils";
 
 export enum JobSubmitDialogOpts {

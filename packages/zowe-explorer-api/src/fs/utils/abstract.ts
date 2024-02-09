@@ -18,7 +18,7 @@ export type UriFsInfo = {
     isRoot: boolean;
     slashAfterProfilePos: number;
     profileName: string;
-    profile: imperative.IProfileLoaded;
+    profile?: imperative.IProfileLoaded;
 };
 
 /**
@@ -37,12 +37,13 @@ export function getInfoForUri(uri: vscode.Uri, profilesCache?: ProfilesCache): U
     // Load profile that matches the parsed name
     // Remove "$conflicts" (if present) to get the profile based on the conflict URI
     const profileName = uri.path.substring(1, startPathPos).replace("$conflicts", "");
+    const profile = profilesCache && profilesCache.loadNamedProfile ? profilesCache.loadNamedProfile(profileName) : null;
 
     return {
         isRoot,
         slashAfterProfilePos,
         profileName,
-        profile: profilesCache?.loadNamedProfile(profileName),
+        profile,
     };
 }
 

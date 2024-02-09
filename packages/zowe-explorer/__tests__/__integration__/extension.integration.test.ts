@@ -955,41 +955,6 @@ describe("Extension Integration Tests - USS", () => {
             expect(gotCalled).to.equal(true);
         }).timeout(TIMEOUT);
     });
-
-    describe("Saving a USS File", () => {
-        // TODO Move to appropriate class
-        it("should download, change, and re-upload a file", async () => {
-            const changedData = "File Upload Test " + Math.random().toString(36).slice(2);
-
-            const rootChildren = await ussTestTree.getChildren();
-            rootChildren[0].dirty = true;
-            const sessChildren1 = await ussTestTree.getChildren(rootChildren[0]);
-            sessChildren1[3].dirty = true;
-            const sessChildren2 = await ussTestTree.getChildren(sessChildren1[3]);
-            sessChildren2[2].dirty = true;
-            const dirChildren = await ussTestTree.getChildren(sessChildren2[2]);
-            const localPath = path.join(globals.USS_DIR, testConst.profile.name, dirChildren[0].fullPath || "");
-
-            await dirChildren[0].openUSS(false, true, ussTestTree);
-            const doc = await vscode.workspace.openTextDocument(localPath);
-
-            const originalData = doc.getText().trim();
-
-            // write new data
-            fs.writeFileSync(localPath, changedData);
-
-            // Upload file
-            await ussActions.saveUSSFile(doc, ussTestTree);
-            await fs.unlinkSync(localPath);
-
-            // Download file
-            await dirChildren[0].openUSS(false, true, ussTestTree);
-
-            // Change contents back
-            fs.writeFileSync(localPath, originalData);
-            await ussActions.saveUSSFile(doc, ussTestTree);
-        }).timeout(TIMEOUT);
-    });
 });
 
 describe("TreeView", () => {
