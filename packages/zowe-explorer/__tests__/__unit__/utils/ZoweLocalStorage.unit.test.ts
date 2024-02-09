@@ -18,4 +18,16 @@ describe("ZoweLocalStorage Unit Tests", () => {
         ZoweLocalStorage.initializeZoweLocalStorage(mockGlobalState);
         expect((ZoweLocalStorage as any).storage).toEqual(mockGlobalState);
     });
+
+    it("should get and set values successfully", () => {
+        const localStorage = {};
+        const mockGlobalState = {
+            get: jest.fn().mockImplementation((key, defaultValue) => localStorage[key] ?? defaultValue),
+            update: jest.fn().mockImplementation((key, value) => (localStorage[key] = value)),
+            keys: () => [],
+        };
+        ZoweLocalStorage.initializeZoweLocalStorage(mockGlobalState);
+        ZoweLocalStorage.setValue("fruit", "banana");
+        expect(ZoweLocalStorage.getValue("fruit")).toEqual("banana");
+    });
 });

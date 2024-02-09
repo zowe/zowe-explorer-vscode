@@ -17,7 +17,10 @@
     "experimentalDecorators": true,
     "removeComments": true,
     "resolveJsonModule": true,
-    "rootDir": "."
+    "rootDir": ".",
+    "paths": {
+      "@zowe/zowe-explorer-api": ["../zowe-explorer-api"]
+    }
   },
   "exclude": ["node_modules", ".vscode-test"],
   "include": [
@@ -27,5 +30,6 @@
     "./node_modules/vscode/lib/*",
     "__tests__",
     "__mocks__"
-  ]
+  ],
+  "references": [{ "path": "../zowe-explorer-api" }]
 }

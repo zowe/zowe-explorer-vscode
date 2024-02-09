@@ -141,7 +141,6 @@ describe("ProfilesUtils unit tests", () => {
             });
             const label = "test";
             const moreInfo = "Task failed successfully";
-            jest.spyOn(profUtils, "isTheia").mockReturnValue(false);
             const showMessageSpy = jest.spyOn(Gui, "errorMessage").mockImplementation(() => Promise.resolve("Update Credentials"));
             const promptCredsSpy = jest.fn();
             jest.spyOn(Profiles, "getInstance").mockReturnValue({
@@ -157,7 +156,7 @@ describe("ProfilesUtils unit tests", () => {
             showMessageSpy.mockClear();
             promptCredsSpy.mockClear();
         });
-        it("should handle token error and procede to login", async () => {
+        it("should handle token error and proceed to login", async () => {
             const errorDetails = new zowe.imperative.ImperativeError({
                 msg: "Invalid credentials",
                 errorCode: 401 as unknown as string,
@@ -165,7 +164,6 @@ describe("ProfilesUtils unit tests", () => {
             });
             const label = "test";
             const moreInfo = "Task failed successfully";
-            jest.spyOn(profUtils, "isTheia").mockReturnValue(false);
             const showErrorSpy = jest.spyOn(Gui, "errorMessage");
             const showMessageSpy = jest.spyOn(Gui, "showMessage").mockImplementation(() => Promise.resolve("selection"));
             const ssoLoginSpy = jest.fn();
@@ -184,7 +182,7 @@ describe("ProfilesUtils unit tests", () => {
             showMessageSpy.mockClear();
             ssoLoginSpy.mockClear();
         });
-        it("should handle token error and procede to login - Theia", async () => {
+        it("should handle token error and proceed to login - Theia", async () => {
             const errorDetails = new zowe.imperative.ImperativeError({
                 msg: "Invalid credentials",
                 errorCode: String(401),
@@ -192,11 +190,8 @@ describe("ProfilesUtils unit tests", () => {
             });
             const label = "test";
             const moreInfo = "Task failed successfully";
-            Object.defineProperty(vscode, "env", {
-                value: {
-                    appName: "Theia",
-                },
-                configurable: true,
+            Object.defineProperty(globals, "ISTHEIA", {
+                value: true,
             });
             const showErrorSpy = jest.spyOn(Gui, "errorMessage").mockImplementation(() => Promise.resolve(undefined));
             const showMessageSpy = jest.spyOn(Gui, "showMessage");
@@ -215,6 +210,9 @@ describe("ProfilesUtils unit tests", () => {
             showErrorSpy.mockClear();
             showMessageSpy.mockClear();
             ssoLoginSpy.mockClear();
+            Object.defineProperty(globals, "ISTHEIA", {
+                value: false,
+            });
         });
         it("should handle credential error and no selection made for update", async () => {
             const errorDetails = new zowe.imperative.ImperativeError({
@@ -256,7 +254,6 @@ describe("ProfilesUtils unit tests", () => {
             });
             const label = "test";
             const moreInfo = "Task failed successfully";
-            jest.spyOn(profUtils, "isTheia").mockReturnValue(true);
             const showErrorSpy = jest.spyOn(Gui, "errorMessage");
             const promptCredentialsSpy = jest.fn();
             jest.spyOn(Profiles, "getInstance").mockReturnValue({

@@ -129,6 +129,9 @@ function createProfInfoMock(profiles: Partial<zowe.imperative.IProfileLoaded>[])
             };
         },
         usingTeamConfig: true,
+        updateProperty: jest.fn(),
+        updateKnownProperty: jest.fn(),
+        isSecured: jest.fn(),
     } as any;
 }
 
@@ -338,6 +341,27 @@ describe("ProfilesCache", () => {
         jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([lpar1Profile, lpar2Profile]));
         const profileNames = await profCache.getNamesForType("zosmf");
         expect(profileNames).toEqual(["lpar1", "lpar2"]);
+    });
+
+    describe("updateBaseProfileFile Login/Logout", () => {
+        const updProfile = { tokenType: "apimlAuthenticationToken", tokenValue: "tokenValue" };
+
+        it("should update the base profile on login", async () => {
+            const profCache = new ProfilesCache(fakeLogger as unknown as zowe.imperative.Logger);
+            const mockProfInfo = createProfInfoMock([lpar1Profile, lpar2Profile]);
+            jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(mockProfInfo);
+            await profCache.updateBaseProfileFileLogin(lpar1Profile as any, updProfile);
+
+            expect(mockProfInfo.updateProperty).toBeCalledTimes(2);
+        });
+        it("should update the base profile on login", async () => {
+            const profCache = new ProfilesCache(fakeLogger as unknown as zowe.imperative.Logger);
+            const mockProfInfo = createProfInfoMock([lpar1Profile, lpar2Profile]);
+            jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(mockProfInfo);
+            await profCache.updateBaseProfileFileLogout(lpar1Profile as any);
+
+            expect(mockProfInfo.updateKnownProperty).toBeCalledTimes(2);
+        });
     });
 
     describe("fetchAllProfilesByType", () => {

@@ -26,9 +26,6 @@ export class ZoweTreeNode extends vscode.TreeItem {
     public fullPath = "";
     public dirty = false;
     public children: IZoweTreeNode[] = [];
-    public binaryFiles = {};
-    public binary = false;
-    public shortLabel = "";
 
     /**
      * Creates an instance of ZoweDatasetNode
