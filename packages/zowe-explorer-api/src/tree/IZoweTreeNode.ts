@@ -15,6 +15,21 @@ import { Sorting } from "./sorting";
 import { ZoweTreeNodeActions } from "./ZoweNodeActions";
 import type { Types } from "../Types";
 
+interface TextEncoding {
+    kind: "text";
+}
+
+interface BinaryEncoding {
+    kind: "binary";
+}
+
+interface OtherEncoding {
+    kind: "other";
+    codepage: string;
+}
+
+export type ZosEncoding = TextEncoding | BinaryEncoding | OtherEncoding;
+
 /**
  * The base interface for Zowe tree nodes that are implemented by vscode.TreeItem.
  *
@@ -143,6 +158,21 @@ export interface IZoweDatasetTreeNode extends IZoweTreeNode {
      */
     filter?: Sorting.DatasetFilter;
     /**
+     * List of child nodes and user-selected encodings
+     */
+    encodingMap?: Record<string, ZosEncoding>;
+    /**
+     * Binary indicator. Default false (text)
+     */
+    binary?: boolean;
+    /**
+     * Remote encoding of the data set
+     *
+     * * `null` = user selected z/OS default codepage
+     * * `undefined` = user did not specify
+     */
+    encoding?: string;
+    /**
      * Retrieves child nodes of this IZoweDatasetTreeNode
      *
      * @returns {Promise<IZoweDatasetTreeNode[]>}
@@ -160,6 +190,20 @@ export interface IZoweDatasetTreeNode extends IZoweTreeNode {
      * @param {string}
      */
     setEtag?(etag: string);
+    /**
+     * Downloads and displays a file in a text editor view
+     *
+     * @param download Download the file default false
+     * @param preview the file, true or false
+     * @param datasetFileProvider the tree provider
+     */
+    openDs?(download: boolean, previewFile: boolean, datasetFileProvider: Types.IZoweDatasetTreeType): Promise<void>;
+    /**
+     * Sets the codepage value for the file
+     *
+     * @param {string}
+     */
+    setEncoding?(encoding: ZosEncoding);
 }
 
 /**
@@ -174,17 +218,13 @@ export interface IZoweUSSTreeNode extends IZoweTreeNode {
      */
     shortLabel?: string;
     /**
-     * List of child nodes downloaded in binary format
+     * List of child nodes and user-selected encodings
      */
-    binaryFiles?: Record<string, unknown>;
+    encodingMap?: Record<string, ZosEncoding>;
     /**
      * Binary indicator. Default false (text)
      */
     binary?: boolean;
-    /**
-     * Specific profile name in use with this node
-     */
-    mProfileName?: string;
 
     /**
      * File attributes
@@ -194,6 +234,13 @@ export interface IZoweUSSTreeNode extends IZoweTreeNode {
      * Event that fires whenever an existing node is updated.
      */
     onUpdateEmitter?: vscode.EventEmitter<IZoweUSSTreeNode>;
+    /**
+     * Remote encoding of the data set
+     *
+     * * `null` = user selected z/OS default codepage
+     * * `undefined` = user did not specify
+     */
+    encoding?: string;
     /**
      * Event that fires whenever an existing node is updated.
      */
@@ -223,10 +270,11 @@ export interface IZoweUSSTreeNode extends IZoweTreeNode {
      */
     rename?(newNamePath: string);
     /**
-     * Specifies the field as binary
-     * @param binary true is a binary file otherwise false
+     * Sets the codepage value for the file
+     *
+     * @param {string}
      */
-    setBinary?(binary: boolean);
+    setEncoding?(encoding: ZosEncoding);
     // /**
     //  * Opens the text document
     //  * @return vscode.TextDocument
@@ -239,7 +287,7 @@ export interface IZoweUSSTreeNode extends IZoweTreeNode {
      * @param preview the file, true or false
      * @param ussFileProvider the tree provider
      */
-    openUSS?(download: boolean, previewFile: boolean, ussFileProvider: Types.IZoweUSSTreeType);
+    openUSS?(download: boolean, previewFile: boolean, ussFileProvider: Types.IZoweUSSTreeType): Promise<void>;
     /**
      * Returns the local file path for the ZoweUSSNode
      *

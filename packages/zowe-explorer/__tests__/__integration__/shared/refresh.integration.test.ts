@@ -17,7 +17,7 @@ import * as testConst from "../../../resources/testProfileData";
 import * as vscode from "vscode";
 import { ZosJobsProvider } from "../../../src/job/ZosJobsProvider";
 import * as refreshActions from "../../../src/shared/refresh";
-import { Job } from "../../../src/job/ZoweJobNode";
+import { ZoweJobNode } from "../../../src/job/ZoweJobNode";
 import * as globals from "../../../src/globals";
 import { DatasetTree } from "../../../src/dataset/DatasetTree";
 import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
@@ -51,21 +51,18 @@ describe("jobNodeActions integration test", async () => {
     };
 
     // Test Jobs session node & tree
-    const jobSessionNode = new Job(testConst.profile.name, vscode.TreeItemCollapsibleState.Collapsed, null, session, null, null);
+    const jobSessionNode = new ZoweJobNode({ label: testConst.profile.name, collapsibleState: vscode.TreeItemCollapsibleState.Collapsed, session });
     jobSessionNode.contextValue = globals.JOBS_SESSION_CONTEXT;
     const testJobsTree = new ZosJobsProvider();
     testJobsTree.mSessionNodes.push(jobSessionNode);
 
     // Test Dataset session node & tree
-    const datasetSessionNode = new ZoweDatasetNode(
-        testConst.profile.name,
-        vscode.TreeItemCollapsibleState.Collapsed,
-        null,
+    const datasetSessionNode = new ZoweDatasetNode({
+        label: testConst.profile.name,
+        collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
         session,
-        undefined,
-        undefined,
-        testProfileLoaded
-    );
+        profile: testProfileLoaded,
+    });
     datasetSessionNode.contextValue = globals.DS_SESSION_CONTEXT;
     const pattern = testConst.normalPattern.toUpperCase();
     datasetSessionNode.pattern = pattern;

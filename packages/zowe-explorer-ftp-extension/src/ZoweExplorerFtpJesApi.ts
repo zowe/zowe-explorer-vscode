@@ -33,7 +33,7 @@ interface ISpoolFileRefactor extends ISpoolFile {
 }
 
 export class FtpJesApi extends AbstractFtpApi implements MainframeInteraction.IJes {
-    public async getJobsByOwnerAndPrefix(owner: string, prefix: string): Promise<zowe.IJob[]> {
+    public async getJobsByParameters(params: zowe.IGetJobsParms): Promise<zowe.IJob[]> {
         const result = this.getIJobResponse();
         const session = this.getSession(this.profile);
         try {
@@ -43,9 +43,10 @@ export class FtpJesApi extends AbstractFtpApi implements MainframeInteraction.IJ
 
             if (session.jesListConnection.connected === true) {
                 const options = {
-                    owner: owner,
+                    owner: params.owner,
+                    status: params.status,
                 };
-                const response = await JobUtils.listJobs(session.jesListConnection, prefix, options);
+                const response = await JobUtils.listJobs(session.jesListConnection, params.prefix, options);
                 if (response) {
                     const results = response.map((job: IJob) => {
                         return {

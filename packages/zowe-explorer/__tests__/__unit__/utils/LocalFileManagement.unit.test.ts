@@ -43,8 +43,8 @@ describe("LocalFileManagement unit tests", () => {
         newMocks.mockFilesToCompare = [newMocks.mockDsFileNode];
         Object.defineProperty(globals, "filesToCompare", { value: newMocks.mockFilesToCompare, configurable: true });
         newMocks.mockDsFileNode = dsMock.createDatasetSessionNode(newMocks.mockSession, newMocks.mockProfile) as any;
-        Object.defineProperty(dsActions, "downloadPs", { value: jest.fn().mockResolvedValue(newMocks.mockFileInfo), configurable: true });
-        newMocks.mockDlDsSpy = jest.spyOn(dsActions, "downloadPs");
+        Object.defineProperty(dsActions, "downloadDs", { value: jest.fn().mockResolvedValue(newMocks.mockFileInfo), configurable: true });
+        newMocks.mockDlDsSpy = jest.spyOn(dsActions, "downloadDs");
         Object.defineProperty(unixActions, "downloadUnixFile", {
             value: jest.fn().mockResolvedValue(newMocks.mockFileInfo),
             configurable: true,

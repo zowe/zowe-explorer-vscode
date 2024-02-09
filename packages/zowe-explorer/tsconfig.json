@@ -17,7 +17,10 @@
     "experimentalDecorators": true,
     "removeComments": true,
     "resolveJsonModule": true,
-    "rootDir": "."
+    "rootDir": ".",
+    "paths": {
+      "@zowe/zowe-explorer-api": ["../zowe-explorer-api"]
+    }
     // "types": ["node", "jest", "mocha"]
   },
   "exclude": ["node_modules", ".vscode-test"],
@@ -26,5 +29,6 @@
     // Needed in production for vscode-nls localization to work:
     "./node_modules/vscode/vscode.d.ts",
     "./node_modules/vscode/lib/*"
-  ]
+  ],
+  "references": [{ "path": "../zowe-explorer-api" }]
 }

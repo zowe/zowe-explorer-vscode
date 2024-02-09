@@ -49,7 +49,7 @@ export class ProfileManagement {
             }
             case await ProfilesUtils.isUsingTokenAuth(profile.name): {
                 ZoweLogger.debug(`Profile ${profile.name} is using token authentication.`);
-                selected = await this.setupProfileManagementQp("token", node);
+                selected = await this.setupProfileManagementQp(imperative.SessConstants.AUTH_TYPE_TOKEN, node);
                 break;
             }
             // will need a case for isUsingCertAuth
@@ -169,7 +169,7 @@ export class ProfileManagement {
                 qp.placeholder = placeholders.basicAuth;
                 break;
             }
-            case "token": {
+            case imperative.SessConstants.AUTH_TYPE_TOKEN: {
                 quickPickOptions = this.tokenAuthQp(node);
                 qp.placeholder = placeholders.tokenAuth;
                 break;

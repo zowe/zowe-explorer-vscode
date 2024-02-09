@@ -75,6 +75,7 @@
   "zowe.ds.default.c": "Default values of C data set creation",
   "zowe.ds.default.classic": "Default values of Classic data set creation",
   "zowe.ds.default.pds": "Default values of Partitioned data set creation",
+  "zowe.ds.default.extended": "Default values of Partitioned data set extended creation",
   "zowe.ds.default.ps": "Default values of Sequential data set creation",
   "zowe.ds.history": "Toggle if favorite files persist locally",
   "zowe.files.logsFolder.path": "Path to Zowe Explorer logs folder",
@@ -163,5 +164,6 @@
   "selectForCompare": "Select for Compare",
   "compareWithSelected": "Compare with Selected",
   "compareWithSelectedReadOnly": "Compare with Selected (Read-Only)",
-  "compareFileStarted": "A file has been chosen for compare"
+  "compareFileStarted": "A file has been chosen for compare",
+  "openWithEncoding": "Open with Encoding"
 }

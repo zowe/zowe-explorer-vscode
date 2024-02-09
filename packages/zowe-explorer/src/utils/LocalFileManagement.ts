@@ -18,7 +18,7 @@ import { isTypeUssTreeNode } from "../shared/context";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { ZoweLogger } from "./LoggerUtils";
 import { LocalFileInfo, isZoweDatasetTreeNode, isZoweUSSTreeNode } from "../shared/utils";
-import { downloadPs } from "../dataset/actions";
+import { downloadDs } from "../dataset/actions";
 import { downloadUnixFile } from "../uss/actions";
 
 export class LocalFileManagement {
@@ -38,7 +38,6 @@ export class LocalFileManagement {
         doc: vscode.TextDocument,
         node: IZoweDatasetTreeNode | IZoweUSSTreeNode,
         label?: string,
-        binary?: boolean,
         profile?: imperative.IProfileLoaded
     ): Promise<void> {
         await markDocumentUnsaved(doc);
@@ -48,16 +47,17 @@ export class LocalFileManagement {
         if (isTypeUssTreeNode(node)) {
             downloadResponse = await ZoweExplorerApiRegister.getUssApi(prof).getContents(node.fullPath, {
                 file: node.getUSSDocumentFilePath(),
-                binary,
+                binary: node.binary,
                 returnEtag: true,
-                encoding: prof.profile?.encoding,
+                encoding: node.encoding !== undefined ? node.encoding : prof.profile?.encoding,
                 responseTimeout: prof.profile?.responseTimeout,
             });
         } else {
             downloadResponse = await ZoweExplorerApiRegister.getMvsApi(prof).getContents(label, {
                 file: doc.fileName,
+                binary: node.binary,
                 returnEtag: true,
-                encoding: prof.profile?.encoding,
+                encoding: node.encoding !== undefined ? node.encoding : prof.profile?.encoding,
                 responseTimeout: prof.profile?.responseTimeout,
             });
         }
@@ -108,7 +108,7 @@ export class LocalFileManagement {
         let fileInfo = {} as LocalFileInfo;
         switch (true) {
             case isZoweDatasetTreeNode(node): {
-                fileInfo = await downloadPs(node);
+                fileInfo = await downloadDs(node, true);
                 break;
             }
             case isZoweUSSTreeNode(node): {

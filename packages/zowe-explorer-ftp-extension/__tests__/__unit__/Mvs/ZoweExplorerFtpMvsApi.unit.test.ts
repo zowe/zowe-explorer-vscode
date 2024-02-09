@@ -95,7 +95,7 @@ describe("FtpMvsApi", () => {
         expect(DataSetUtils.downloadDataSet).toBeCalledTimes(1);
         expect(MvsApi.releaseConnection).toBeCalled();
 
-        expect(response._readableState.buffer.head.data.toString()).toContain("Hello world");
+        expect((response._readableState.buffer.head?.data ?? response._readableState.buffer).toString()).toContain("Hello world");
     });
 
     it("should upload content to dataset.", async () => {

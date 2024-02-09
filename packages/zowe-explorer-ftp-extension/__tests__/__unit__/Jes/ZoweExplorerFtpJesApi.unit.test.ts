@@ -45,7 +45,7 @@ describe("FtpJesApi", () => {
             owner: "IBMUSER",
             prefix: "*",
         };
-        const result = await JesApi.getJobsByOwnerAndPrefix(mockParams.owner, mockParams.prefix);
+        const result = await JesApi.getJobsByParameters(mockParams);
 
         expect(result[0].jobname).toContain("JOB1");
         expect(JobUtils.listJobs).toBeCalledTimes(1);
@@ -114,7 +114,7 @@ describe("FtpJesApi", () => {
         };
         await JesApi.getSpoolContentById(mockParams.jobname, mockParams.jobid, mockParams.spoolID);
 
-        expect(response._readableState.buffer.head.data.toString()).toContain("Hello world");
+        expect((response._readableState.buffer.head?.data ?? response._readableState.buffer).toString()).toContain("Hello world");
         expect(JobUtils.getSpoolFileContent).toBeCalledTimes(1);
         expect(JesApi.releaseConnection).toBeCalled();
     });
@@ -152,7 +152,7 @@ describe("FtpJesApi", () => {
             })
         );
         await expect(async () => {
-            await JesApi.getJobsByOwnerAndPrefix("*", "*");
+            await JesApi.getJobsByParameters({});
         }).rejects.toThrow(ZoweFtpExtensionError);
     });
 
