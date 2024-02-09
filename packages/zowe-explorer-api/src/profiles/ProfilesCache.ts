@@ -215,26 +215,6 @@ export class ProfilesCache {
     }
 
     /**
-     * V1 Profile specific
-     * gets schema from /.zowe/profiles/profileType directory
-     * used by Zowe Explorer for creation & update of v1 profiles
-     * TO DO: put in request for public readonly api for this on Imperative.
-     * @param profileType
-     * @returns
-     */
-    public getSchema(profileType: string): Record<string, unknown> {
-        const profileManager = this.getCliProfileManager(profileType);
-        const configOptions = Array.from(profileManager.configurations);
-        let schema = {};
-        for (const val of configOptions) {
-            if (val.type === profileType) {
-                schema = val.schema.properties;
-            }
-        }
-        return schema;
-    }
-
-    /**
      * get array of profile types
      * @returns string[]
      */
@@ -318,32 +298,6 @@ export class ProfilesCache {
         }
         const profile = this.getMergedAttrs(mProfileInfo, currentProfile);
         return this.getProfileLoaded(currentProfile.profName, currentProfile.profType, profile);
-    }
-
-    /**
-     * V1 Profile specific
-     * Used by Zowe Explorer to handle v1 profiles
-     * @param type string, profile type
-     * @returns zowe.imperative.CliProfileManager
-     */
-    public getCliProfileManager(type: string): zowe.imperative.CliProfileManager | undefined {
-        let profileManager = this.profileManagerByType.get(type);
-        if (!profileManager) {
-            try {
-                profileManager = new zowe.imperative.CliProfileManager({
-                    profileRootDirectory: path.join(FileManagement.getZoweDir(), "profiles"),
-                    type,
-                });
-            } catch (error) {
-                this.log.debug(error as string);
-            }
-            if (profileManager) {
-                this.profileManagerByType.set(type, profileManager);
-            } else {
-                return undefined;
-            }
-        }
-        return profileManager;
     }
 
     // This will retrieve the saved base profile in the allProfiles array
@@ -438,22 +392,6 @@ export class ProfilesCache {
             response.push(String(e));
         }
         return response;
-    }
-
-    // used by Zowe Explorer for v1 profiles
-    protected async deleteProfileOnDisk(profileInfo: zowe.imperative.IProfileLoaded): Promise<void> {
-        await this.getCliProfileManager(profileInfo.type).delete({ name: profileInfo.name });
-    }
-
-    // used by Zowe Explorer for v1 profiles
-    protected async saveProfile(profileInfo: Record<string, unknown>, profileName: string, profileType: string): Promise<zowe.imperative.IProfile> {
-        const newProfile = await this.getCliProfileManager(profileType).save({
-            profile: profileInfo,
-            name: profileName,
-            type: profileType,
-            overwrite: true,
-        });
-        return newProfile.profile;
     }
 
     // used by refresh to check correct merging of allProfiles

@@ -489,13 +489,6 @@ describe("Extension Unit Tests", () => {
         expect(globalMocks.mockCreateTreeView.mock.calls[0][0]).toBe("zowe.ds.explorer");
         expect(globalMocks.mockCreateTreeView.mock.calls[1][0]).toBe("zowe.uss.explorer");
 
-        // Check that CLI Profile Manager is initialized successfully
-        expect(globalMocks.mockInitialize.mock.calls.length).toBe(1);
-        expect(globalMocks.mockInitialize.mock.calls[0][0]).toStrictEqual({
-            configuration: [],
-            profileRootDirectory: path.join(globalMocks.mockCliHome(), "profiles"),
-        });
-
         // Checking if commands are registered properly
         expect(globalMocks.mockRegisterCommand.mock.calls.length).toBe(globals.COMMAND_COUNT);
 
@@ -621,23 +614,6 @@ describe("Extension Unit Tests - THEIA", () => {
         });
         expect(actualCommands).toEqual(globalMocks.expectedCommands);
     });
-
-    // it("Tests that onChangeProfileAction executes the proper profile commands", async () => {
-    //     const globalMocks = await createGlobalMocks();
-    //     Object.defineProperty(vscode.workspace, "fs", {
-    //         value: {
-    //             readFile: jest.fn().mockResolvedValue("somenewdata"),
-    //         },
-    //         configurable: true,
-    //     });
-    //     await extension.onChangeProfileAction(null);
-    //     expect(globalMocks.mockReadProfilesFromDisk).toHaveBeenCalledTimes(1);
-
-    //     // call again w/ same data to signal no change; verify nothing with profiles was changed
-    //     // (number of calls to readProfilesFromDisk should stay the same)
-    //     await extension.onChangeProfileAction(null);
-    //     expect(globalMocks.mockReadProfilesFromDisk).toHaveBeenCalledTimes(1);
-    // });
 
     it("Tests getSelectedNodeList executes successfully with multiple selection", async () => {
         const globalMocks = await createGlobalMocks();
