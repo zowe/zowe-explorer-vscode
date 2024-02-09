@@ -9,7 +9,7 @@
  *
  */
 
-import { JobSortOpts } from "@zowe/zowe-explorer-api";
+import { Sorting } from "@zowe/zowe-explorer-api";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { FilterItem } from "../utils/ProfilesUtils";
 import { IJob } from "@zowe/cli";
@@ -23,11 +23,11 @@ export const JOB_SORT_OPTS = [
     vscode.l10n.t("$(fold) Sort Direction"),
 ];
 
-export const JOB_SORT_KEYS: Record<JobSortOpts, keyof (IJob & { "exec-submitted": string })> = {
-    [JobSortOpts.Id]: "jobid",
-    [JobSortOpts.DateSubmitted]: "exec-submitted",
-    [JobSortOpts.Name]: "jobname",
-    [JobSortOpts.ReturnCode]: "retcode",
+export const JOB_SORT_KEYS: Record<Sorting.JobSortOpts, keyof (IJob & { "exec-submitted": string })> = {
+    [Sorting.JobSortOpts.Id]: "jobid",
+    [Sorting.JobSortOpts.DateSubmitted]: "exec-submitted",
+    [Sorting.JobSortOpts.Name]: "jobname",
+    [Sorting.JobSortOpts.ReturnCode]: "retcode",
 };
 
 export const JOB_FILTER_OPTS = [vscode.l10n.t("Go to Local Filtering"), vscode.l10n.t("$(clear-all) Clear filter for profile")];

@@ -11,15 +11,9 @@
 
 import * as vscode from "vscode";
 import { IJob, imperative } from "@zowe/cli";
-import { FileAttributes } from "../utils/files";
-import { DatasetFilter, NodeSort } from "./sorting";
-import { IZoweDatasetTreeType, IZoweUSSTreeType } from ".";
-
-export type IZoweNodeType = IZoweDatasetTreeNode | IZoweUSSTreeNode | IZoweJobTreeNode;
-
-export enum NodeAction {
-    Download = "download",
-}
+import { Sorting } from "./sorting";
+import { ZoweTreeNodeActions } from "./ZoweNodeActions";
+import type { Types } from "../Types";
 
 interface TextEncoding {
     kind: "text";
@@ -89,7 +83,7 @@ export interface IZoweTreeNode {
     /**
      * Any ongoing actions that must be awaited before continuing
      */
-    ongoingActions?: Record<NodeAction | string, Promise<any>>;
+    ongoingActions?: Record<ZoweTreeNodeActions.Interactions | string, Promise<any>>;
     /**
      * whether the node was double-clicked
      */
@@ -97,7 +91,7 @@ export interface IZoweTreeNode {
     /**
      * Sorting method for this node's children
      */
-    sort?: NodeSort;
+    sort?: Sorting.NodeSort;
     /**
      * Retrieves the node label
      */
@@ -140,12 +134,6 @@ export interface IZoweTreeNode {
     setSessionToChoice(sessionObj: imperative.Session): void;
 }
 
-export type DatasetStats = {
-    user: string;
-    // built from "m4date", "mtime" and "msec" variables from z/OSMF API response
-    modifiedDate: Date;
-};
-
 /**
  * Extended interface for Zowe Dataset tree nodes.
  *
@@ -164,11 +152,11 @@ export interface IZoweDatasetTreeNode extends IZoweTreeNode {
     /**
      * Additional statistics about this data set
      */
-    stats?: Partial<DatasetStats>;
+    stats?: Partial<Types.DatasetStats>;
     /**
      * Filter method for this data set's children
      */
-    filter?: DatasetFilter;
+    filter?: Sorting.DatasetFilter;
     /**
      * List of child nodes and user-selected encodings
      */
@@ -209,7 +197,7 @@ export interface IZoweDatasetTreeNode extends IZoweTreeNode {
      * @param preview the file, true or false
      * @param datasetFileProvider the tree provider
      */
-    openDs?(download: boolean, previewFile: boolean, datasetFileProvider: IZoweDatasetTreeType): Promise<void>;
+    openDs?(download: boolean, previewFile: boolean, datasetFileProvider: Types.IZoweDatasetTreeType): Promise<void>;
     /**
      * Sets the codepage value for the file
      *
@@ -241,7 +229,7 @@ export interface IZoweUSSTreeNode extends IZoweTreeNode {
     /**
      * File attributes
      */
-    attributes?: FileAttributes;
+    attributes?: Types.FileAttributes;
     /**
      * Event that fires whenever an existing node is updated.
      */
@@ -299,7 +287,7 @@ export interface IZoweUSSTreeNode extends IZoweTreeNode {
      * @param preview the file, true or false
      * @param ussFileProvider the tree provider
      */
-    openUSS?(download: boolean, previewFile: boolean, ussFileProvider: IZoweUSSTreeType): Promise<void>;
+    openUSS?(download: boolean, previewFile: boolean, ussFileProvider: Types.IZoweUSSTreeType): Promise<void>;
     /**
      * Returns the local file path for the ZoweUSSNode
      *
@@ -316,14 +304,14 @@ export interface IZoweUSSTreeNode extends IZoweTreeNode {
      * @param filePath
      * @param cancelled optional
      */
-    deleteUSSNode?(ussFileProvider: IZoweUSSTreeType, filePath: string, cancelled?: boolean);
+    deleteUSSNode?(ussFileProvider: Types.IZoweUSSTreeType, filePath: string, cancelled?: boolean);
     /**
      * Process for renaming a USS Node. This could be a Favorite Node
      *
      * @param {USSTree} ussFileProvider
      * @param {string} filePath
      */
-    renameUSSNode?(ussFileProvider: IZoweUSSTreeType, filePath: string);
+    renameUSSNode?(ussFileProvider: Types.IZoweUSSTreeType, filePath: string);
     /**
      * Refreshes node and reopens it.
      * @param hasClosedInstance
@@ -340,7 +328,7 @@ export interface IZoweUSSTreeNode extends IZoweTreeNode {
      *
      * @param {USSTree} ussFileProvider
      */
-    saveSearch?(ussFileProvider: IZoweUSSTreeType);
+    saveSearch?(ussFileProvider: Types.IZoweUSSTreeType);
     /**
      * uploads selected uss node(s) to from clipboard to mainframe
      * @deprecated in favor of `pasteUssTree`

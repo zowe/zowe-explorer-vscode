@@ -73,54 +73,54 @@ export class ProfileManagement {
         update: "update-credentials",
     };
     public static basicAuthAddQpItems: Record<string, vscode.QuickPickItem> = {
-        [this.AuthQpLabels.add]: {
+        [ProfileManagement.AuthQpLabels.add]: {
             label: vscode.l10n.t("$(plus) Add Credentials"),
             description: vscode.l10n.t("Add username and password for basic authentication"),
         },
     };
     public static basicAuthUpdateQpItems: Record<string, vscode.QuickPickItem> = {
-        [this.AuthQpLabels.update]: {
+        [ProfileManagement.AuthQpLabels.update]: {
             label: vscode.l10n.t("$(refresh) Update Credentials"),
             description: vscode.l10n.t("Update stored username and password"),
         },
     };
     public static deleteProfileQpItem: Record<string, vscode.QuickPickItem> = {
-        [this.AuthQpLabels.delete]: {
+        [ProfileManagement.AuthQpLabels.delete]: {
             label: vscode.l10n.t("$(trash) Delete Profile"),
         },
     };
     public static disableProfileValildationQpItem: Record<string, vscode.QuickPickItem> = {
-        [this.AuthQpLabels.disable]: {
+        [ProfileManagement.AuthQpLabels.disable]: {
             label: vscode.l10n.t("$(workspace-untrusted) Disable Profile Validation"),
             description: vscode.l10n.t("Disable validation of server check for profile"),
         },
     };
     public static enableProfileValildationQpItem: Record<string, vscode.QuickPickItem> = {
-        [this.AuthQpLabels.enable]: {
+        [ProfileManagement.AuthQpLabels.enable]: {
             label: vscode.l10n.t("$(workspace-trusted) Enable Profile Validation"),
             description: vscode.l10n.t("Enable validation of server check for profile"),
         },
     };
     public static editProfileQpItems: Record<string, vscode.QuickPickItem> = {
-        [this.AuthQpLabels.edit]: {
+        [ProfileManagement.AuthQpLabels.edit]: {
             label: vscode.l10n.t("$(pencil) Edit Profile"),
             description: vscode.l10n.t("Update profile connection information"),
         },
     };
     public static hideProfileQpItems: Record<string, vscode.QuickPickItem> = {
-        [this.AuthQpLabels.hide]: {
+        [ProfileManagement.AuthQpLabels.hide]: {
             label: vscode.l10n.t("$(eye-closed) Hide Profile"),
             description: vscode.l10n.t("Hide profile name from tree view"),
         },
     };
     public static tokenAuthLoginQpItem: Record<string, vscode.QuickPickItem> = {
-        [this.AuthQpLabels.login]: {
+        [ProfileManagement.AuthQpLabels.login]: {
             label: vscode.l10n.t("$(arrow-right) Log in to authentication service"),
             description: vscode.l10n.t("Log in to obtain a new token value"),
         },
     };
     public static tokenAuthLogoutQpItem: Record<string, vscode.QuickPickItem> = {
-        [this.AuthQpLabels.logout]: {
+        [ProfileManagement.AuthQpLabels.logout]: {
             label: vscode.l10n.t("$(arrow-left) Log out of authentication service"),
             description: vscode.l10n.t("Log out to invalidate and remove stored token value"),
         },

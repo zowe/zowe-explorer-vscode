@@ -9,16 +9,14 @@
  *
  */
 
-import * as globals from "../../../src/globals";
 import * as zowe from "@zowe/cli";
-import { IUss, ZosmfUssApi, ZosmfJesApi, ZosmfMvsApi } from "@zowe/zowe-explorer-api";
+import { MainframeInteraction, ZoweExplorerZosmf } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { Profiles } from "../../../src/Profiles";
 import { IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
 import { createInstanceOfProfile, createValidIProfile } from "../../../__mocks__/mockCreators/shared";
-import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 
-class MockUssApi1 implements IUss {
+class MockUssApi1 implements MainframeInteraction.IUss {
     public profile?: zowe.imperative.IProfileLoaded;
     public getProfileTypeName(): string {
         return "api1typename";
@@ -77,7 +75,7 @@ class MockUssApi1 implements IUss {
     }
 }
 
-class MockUssApi2 implements IUss {
+class MockUssApi2 implements MainframeInteraction.IUss {
     public profile?: zowe.imperative.IProfileLoaded;
     public getProfileTypeName(): string {
         return "api2typename";
@@ -170,17 +168,17 @@ describe("ZoweExplorerApiRegister unit testing", () => {
         const defaultProfile = globalMocks.profiles.getDefaultProfile();
 
         const defaultUssApi = globalMocks.registry.getUssApi(defaultProfile);
-        globalMocks.registry.registerUssApi(new ZosmfUssApi());
+        globalMocks.registry.registerUssApi(new ZoweExplorerZosmf.UssApi());
         const anotherUssApiInstance = globalMocks.registry.getUssApi(defaultProfile);
         expect(anotherUssApiInstance).toEqual(defaultUssApi);
 
         const defaultMvsApi = globalMocks.registry.getMvsApi(defaultProfile);
-        globalMocks.registry.registerMvsApi(new ZosmfMvsApi());
+        globalMocks.registry.registerMvsApi(new ZoweExplorerZosmf.MvsApi());
         const anotherMvsApiInstance = globalMocks.registry.getMvsApi(defaultProfile);
         expect(anotherMvsApiInstance).toEqual(defaultMvsApi);
 
         const defaultJesApi = globalMocks.registry.getJesApi(defaultProfile);
-        globalMocks.registry.registerJesApi(new ZosmfJesApi());
+        globalMocks.registry.registerJesApi(new ZoweExplorerZosmf.JesApi());
         const anotherJesApiInstance = globalMocks.registry.getJesApi(defaultProfile);
         expect(anotherJesApiInstance).toEqual(defaultJesApi);
     });
@@ -226,7 +224,7 @@ describe("ZoweExplorerApiRegister unit testing", () => {
             globalMocks.registry.registerUssApi(undefined);
         }).toThrow();
 
-        const mvsApi = new ZosmfMvsApi();
+        const mvsApi = new ZoweExplorerZosmf.MvsApi();
         mvsApi.getProfileTypeName = mockGetProfileTypeName;
         expect(() => {
             globalMocks.registry.registerMvsApi(mvsApi);
@@ -235,7 +233,7 @@ describe("ZoweExplorerApiRegister unit testing", () => {
             globalMocks.registry.registerMvsApi(undefined);
         }).toThrow();
 
-        const jesApi = new ZosmfJesApi();
+        const jesApi = new ZoweExplorerZosmf.JesApi();
         jesApi.getProfileTypeName = mockGetProfileTypeName;
         expect(() => {
             globalMocks.registry.registerJesApi(jesApi);

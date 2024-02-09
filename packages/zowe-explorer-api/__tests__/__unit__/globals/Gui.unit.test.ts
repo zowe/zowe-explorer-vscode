@@ -12,7 +12,7 @@
 import { Gui, IZoweTree, IZoweTreeNode } from "../../../src/";
 
 import * as vscode from "vscode";
-import { DOUBLE_CLICK_SPEED_MS } from "../../../src/globals";
+import { Constants } from "../../../src/globals";
 jest.mock("vscode");
 
 function createGlobalMocks() {
@@ -198,10 +198,10 @@ describe("Gui.utils - unit tests", () => {
     };
 
     it("returns false when the second click event is after the DOUBLE_CLICK_SPEED_MS window", () => {
-        testDoubleClickEvent(DOUBLE_CLICK_SPEED_MS * 4, false);
+        testDoubleClickEvent(Constants.DOUBLE_CLICK_SPEED_MS * 4, false);
     });
 
     it("returns true when the second click event is within the DOUBLE_CLICK_SPEED_MS window", () => {
-        testDoubleClickEvent(DOUBLE_CLICK_SPEED_MS / 8, true);
+        testDoubleClickEvent(Constants.DOUBLE_CLICK_SPEED_MS / 8, true);
     });
 });

@@ -12,9 +12,9 @@
 import * as vscode from "vscode";
 import { imperative } from "@zowe/cli";
 import { ProfilesCache } from "../profiles";
-import { KeytarCredentialManager, KeytarModule } from "./KeytarCredentialManager";
-import * as globals from "../globals";
-
+import { KeytarCredentialManager } from "./KeytarCredentialManager";
+import { Types } from "../Types";
+import { Constants } from "../globals";
 export class KeytarApi {
     public constructor(protected log: imperative.Logger) {}
 
@@ -31,11 +31,11 @@ export class KeytarApi {
                 log.warn(err.toString());
             }
             if (!initialized && keytar) {
-                KeytarCredentialManager.keytar = keytar as KeytarModule;
+                KeytarCredentialManager.keytar = keytar as Types.KeytarModule;
                 await imperative.CredentialManagerFactory.initialize({
-                    service: globals.SETTINGS_SCS_DEFAULT,
+                    service: Constants.SETTINGS_SCS_DEFAULT,
                     Manager: KeytarCredentialManager,
-                    displayName: globals.ZOWE_EXPLORER,
+                    displayName: Constants.ZOWE_EXPLORER,
                 });
             }
         }

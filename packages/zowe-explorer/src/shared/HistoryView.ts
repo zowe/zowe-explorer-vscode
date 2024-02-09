@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { WebView, Gui, DataSetAllocTemplate } from "@zowe/zowe-explorer-api";
+import { WebView, Gui, Types } from "@zowe/zowe-explorer-api";
 import { ExtensionContext } from "vscode";
 import { IZoweProviders } from "./init";
 import { USSTree } from "../uss/USSTree";
@@ -24,7 +24,7 @@ type History = {
     search: string[];
     sessions: string[];
     fileHistory: string[];
-    dsTemplates?: DataSetAllocTemplate[];
+    dsTemplates?: Types.DataSetAllocTemplate[];
     favorites: string[];
 };
 

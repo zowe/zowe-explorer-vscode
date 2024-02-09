@@ -9,7 +9,7 @@
  *
  */
 
-import { IZoweNodeType, IZoweTree, IZoweTreeNode } from "@zowe/zowe-explorer-api";
+import { Types, IZoweTree, IZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { ZoweLogger } from "./LoggerUtils";
 import { TreeViewExpansionEvent } from "vscode";
 import { getIconByNode } from "../generators/icons";
@@ -32,7 +32,7 @@ export class TreeViewUtils {
      * @param node the node to expand
      * @param provider the tree view provider that this node belongs to
      */
-    public static async expandNode(node: IZoweTreeNode, provider: IZoweTree<IZoweNodeType>): Promise<void> {
+    public static async expandNode(node: IZoweTreeNode, provider: IZoweTree<Types.IZoweNodeType>): Promise<void> {
         ZoweLogger.trace("ZoweTreeProvider.expandNode called.");
         await provider.getTreeView().reveal(node, { expand: true });
     }

@@ -11,7 +11,7 @@
 
 import * as globals from "../globals";
 import * as vscode from "vscode";
-import { IZoweNodeType } from "@zowe/zowe-explorer-api";
+import { Types } from "@zowe/zowe-explorer-api";
 import { ZoweLogger } from "../utils/LoggerUtils";
 
 export const DATASET_SORT_OPTS = [
@@ -23,7 +23,7 @@ export const DATASET_SORT_OPTS = [
 
 export const DATASET_FILTER_OPTS = [vscode.l10n.t("$(calendar) Date Modified"), vscode.l10n.t("$(account) User ID")];
 
-export function getProfileAndDataSetName(node: IZoweNodeType): {
+export function getProfileAndDataSetName(node: Types.IZoweNodeType): {
     profileName: string;
     dataSetName: string;
 } {
@@ -31,7 +31,7 @@ export function getProfileAndDataSetName(node: IZoweNodeType): {
     return { profileName: node.getParent().getLabel() as string, dataSetName: node.label as string };
 }
 
-export function getNodeLabels(node: IZoweNodeType): {
+export function getNodeLabels(node: Types.IZoweNodeType): {
     memberName: string;
     contextValue: string;
     profileName: string;

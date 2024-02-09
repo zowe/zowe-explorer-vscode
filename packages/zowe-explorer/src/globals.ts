@@ -13,7 +13,7 @@ import * as path from "path";
 import { imperative } from "@zowe/cli";
 import * as vscode from "vscode";
 
-import { getZoweDir, IZoweTreeNode } from "@zowe/zowe-explorer-api";
+import { FileManagement, IZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { SettingsConfig } from "./utils/SettingsConfig";
 import { ZoweLogger } from "./utils/LoggerUtils";
 export { ZoweLogger } from "./utils/LoggerUtils";
@@ -331,7 +331,7 @@ export function setConfigPath(configPath: string | undefined): void {
     if (configPath) {
         CONFIG_PATH = configPath;
     } else {
-        CONFIG_PATH = getZoweDir();
+        CONFIG_PATH = FileManagement.getZoweDir();
     }
 }
 

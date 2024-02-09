@@ -10,64 +10,14 @@
  */
 
 import * as path from "path";
-import * as os from "os";
-import * as fs from "fs";
-import { URL } from "url";
-
 import * as zowe from "@zowe/cli";
-import { IRegisterClient } from "../extend/IRegisterClient";
-
-// TODO: find a home for constants
-export const CONTEXT_PREFIX = "_";
-export const DEFAULT_PORT = 443;
-
-export interface IUrlValidator {
-    valid: boolean;
-    protocol: string;
-    host: string;
-    port: number;
-}
-
-export interface IProfileValidation {
-    status: string;
-    name: string;
-}
-
-export interface IValidationSetting {
-    name: string;
-    setting: boolean;
-}
-
-export enum ValidProfileEnum {
-    UNVERIFIED = 1,
-    VALID = 0,
-    INVALID = -1,
-}
-
-export enum EventTypes {
-    CREATE,
-    UPDATE,
-    DELETE,
-}
-
-export function getZoweDir(): string {
-    return zowe.getZoweDir();
-}
-
-export function getFullPath(anyPath: string): string {
-    if (os.platform() === "win32") {
-        try {
-            return fs.realpathSync.native(anyPath);
-        } catch (err) {
-            // Fallback to realpathSync below
-        }
-    }
-    return fs.realpathSync(anyPath);
-}
+import * as extend from "../extend";
+import { FileManagement } from "../utils";
+import { Validation } from "./Validation";
 
 export class ProfilesCache {
-    public profilesForValidation: IProfileValidation[] = [];
-    public profilesValidationSetting: IValidationSetting[] = [];
+    public profilesForValidation: Validation.IValidationProfile[] = [];
+    public profilesValidationSetting: Validation.IValidationSetting[] = [];
     public allProfiles: zowe.imperative.IProfileLoaded[] = [];
     public profileTypeConfigurations: zowe.imperative.ICommandProfileTypeConfiguration[] = [];
     protected allTypes: string[];
@@ -75,8 +25,9 @@ export class ProfilesCache {
     protected profilesByType = new Map<string, zowe.imperative.IProfileLoaded[]>();
     protected defaultProfileByType = new Map<string, zowe.imperative.IProfileLoaded>();
     protected profileManagerByType = new Map<string, zowe.imperative.CliProfileManager>();
+
     public constructor(protected log: zowe.imperative.Logger, protected cwd?: string) {
-        this.cwd = cwd != null ? getFullPath(cwd) : undefined;
+        this.cwd = cwd != null ? FileManagement.getFullPath(cwd) : undefined;
     }
 
     public static requireKeyring(this: void): NodeModule {
@@ -104,7 +55,7 @@ export class ProfilesCache {
             // eslint-disable-next-line @typescript-eslint/no-unsafe-return
             credMgrOverride: zowe.imperative.ProfileCredentials.defaultCredMgrWithKeytar(ProfilesCache.requireKeyring),
         });
-        await mProfileInfo.readProfilesFromDisk({ homeDir: getZoweDir(), projectDir: this.cwd ?? undefined });
+        await mProfileInfo.readProfilesFromDisk({ homeDir: FileManagement.getZoweDir(), projectDir: this.cwd ?? undefined });
         return mProfileInfo;
     }
 
@@ -191,7 +142,7 @@ export class ProfilesCache {
         this.allExternalTypes.add(profileTypeName);
     }
 
-    public async refresh(apiRegister?: IRegisterClient): Promise<void> {
+    public async refresh(apiRegister?: extend.IRegisterClient): Promise<void> {
         this.allProfiles = [];
         this.allTypes = [];
         let mProfileInfo: zowe.imperative.ProfileInfo;
@@ -233,10 +184,10 @@ export class ProfilesCache {
         }
     }
 
-    public validateAndParseUrl(newUrl: string): IUrlValidator {
+    public validateAndParseUrl(newUrl: string): Validation.IValidationUrl {
         let url: URL;
 
-        const validationResult: IUrlValidator = {
+        const validationResult: Validation.IValidationUrl = {
             valid: false,
             protocol: null,
             host: null,
@@ -379,7 +330,7 @@ export class ProfilesCache {
         if (!profileManager) {
             try {
                 profileManager = new zowe.imperative.CliProfileManager({
-                    profileRootDirectory: path.join(getZoweDir(), "profiles"),
+                    profileRootDirectory: path.join(FileManagement.getZoweDir(), "profiles"),
                     type,
                 });
             } catch (error) {

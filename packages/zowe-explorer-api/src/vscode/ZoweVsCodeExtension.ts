@@ -13,11 +13,10 @@ import * as semver from "semver";
 import * as vscode from "vscode";
 import { ProfilesCache } from "../profiles";
 import { Login, Logout, imperative } from "@zowe/cli";
-import { IPromptCredentialsOptions, IPromptUserPassOptions } from "./doc/IPromptCredentials";
 import { Gui } from "../globals/Gui";
 import { MessageSeverity, IZoweLogger } from "../logger";
-import { IApiRegisterClient } from "../extend";
-import { IZoweNodeType } from "../tree/IZoweTreeNode";
+import { PromptCredentialsOptions } from "./doc/PromptCredentials";
+import { Types } from "../Types";
 
 /**
  * Collection of utility functions for writing Zowe Explorer VS Code extensions.
@@ -41,14 +40,14 @@ export class ZoweVsCodeExtension {
      *          to access the Zowe Explorer APIs or `undefined`. Also `undefined` if requiredVersion
      *          is larger than the version of Zowe Explorer found.
      */
-    public static getZoweExplorerApi(requiredVersion?: string): IApiRegisterClient {
+    public static getZoweExplorerApi(requiredVersion?: string): Types.IApiRegisterClient {
         const zoweExplorerApi = vscode.extensions.getExtension("Zowe.vscode-extension-for-zowe");
         if (zoweExplorerApi?.exports) {
             const zoweExplorerVersion = (zoweExplorerApi.packageJSON as Record<string, unknown>).version as string;
             if (requiredVersion && semver.valid(requiredVersion) && zoweExplorerVersion && !semver.gte(zoweExplorerVersion, requiredVersion)) {
                 return undefined;
             }
-            return zoweExplorerApi.exports as IApiRegisterClient;
+            return zoweExplorerApi.exports as Types.IApiRegisterClient;
         }
         return undefined;
     }
@@ -81,7 +80,7 @@ export class ZoweVsCodeExtension {
      * @returns Instance of imperative.IProfileLoaded containing information about the updated profile
      * @deprecated
      */
-    public static async promptCredentials(options: IPromptCredentialsOptions): Promise<imperative.IProfileLoaded> {
+    public static async promptCredentials(options: PromptCredentialsOptions.ComplexOptions): Promise<imperative.IProfileLoaded> {
         const profilesCache = ZoweVsCodeExtension.profilesCache;
         const loadProfile = options.sessionName ? await profilesCache.getLoadedProfConfig(options.sessionName.trim()) : options.profile;
         if (loadProfile == null) {
@@ -109,7 +108,10 @@ export class ZoweVsCodeExtension {
      * @param options Set of options to use when prompting for credentials
      * @returns Instance of imperative.IProfileLoaded containing information about the updated profile
      */
-    public static async updateCredentials(options: IPromptCredentialsOptions, apiRegister: IApiRegisterClient): Promise<imperative.IProfileLoaded> {
+    public static async updateCredentials(
+        options: PromptCredentialsOptions.ComplexOptions,
+        apiRegister: Types.IApiRegisterClient
+    ): Promise<imperative.IProfileLoaded> {
         const cache = this.profilesCache;
         const profInfo = await cache.getProfileInfo();
         const setSecure = options.secure ?? profInfo.isSecured();
@@ -161,8 +163,8 @@ export class ZoweVsCodeExtension {
     public static async loginWithBaseProfile(
         serviceProfile: string | imperative.IProfileLoaded,
         loginTokenType?: string,
-        node?: IZoweNodeType,
-        zeRegister?: IApiRegisterClient, // ZoweExplorerApiRegister
+        node?: Types.IZoweNodeType,
+        zeRegister?: Types.IApiRegisterClient, // ZoweExplorerApiRegister
         zeProfiles?: ProfilesCache // Profiles extends ProfilesCache
     ): Promise<boolean> {
         const cache: ProfilesCache = zeProfiles ?? ZoweVsCodeExtension.profilesCache;
@@ -236,7 +238,7 @@ export class ZoweVsCodeExtension {
      */
     public static async logoutWithBaseProfile(
         serviceProfile: string | imperative.IProfileLoaded,
-        zeRegister?: IApiRegisterClient, // ZoweExplorerApiRegister
+        zeRegister?: Types.IApiRegisterClient, // ZoweExplorerApiRegister
         zeProfiles?: ProfilesCache // Profiles extends ProfilesCache
     ): Promise<void> {
         const cache: ProfilesCache = zeProfiles ?? ZoweVsCodeExtension.profilesCache;
@@ -306,7 +308,7 @@ export class ZoweVsCodeExtension {
         return save;
     }
 
-    private static async promptUserPass(options: IPromptUserPassOptions): Promise<string[] | undefined> {
+    private static async promptUserPass(options: PromptCredentialsOptions.UserPassOptions): Promise<string[] | undefined> {
         let newUser = options.session.user;
         if (!newUser || options.rePrompt) {
             newUser = await Gui.showInputBox({

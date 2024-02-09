@@ -13,7 +13,7 @@ import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
 import * as globals from "../globals";
 import * as contextually from "../shared/context";
-import { Gui, IZoweJobTreeNode, JobSortOpts, NodeSort, SortDirection, ZoweTreeNode } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweJobTreeNode, Sorting, ZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { errorHandling, syncSessionNode } from "../utils/ProfilesUtils";
 import { getIconByNode } from "../generators/icons";
@@ -26,7 +26,7 @@ import { IZoweJobTreeOpts } from "../shared/IZoweTreeOpts";
 export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
     public children: IZoweJobTreeNode[] = [];
     public dirty = true;
-    public sort: NodeSort;
+    public sort: Sorting.NodeSort;
     private _owner: string;
     private _prefix: string;
     private _searchId: string;
@@ -76,8 +76,8 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
 
         if (contextually.isSession(this)) {
             this.sort = {
-                method: JobSortOpts.Id,
-                direction: SortDirection.Ascending,
+                method: Sorting.JobSortOpts.Id,
+                direction: Sorting.SortDirection.Ascending,
             };
             if (!globals.ISTHEIA) {
                 this.id = this.label as string;
@@ -227,7 +227,7 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
         // Only add new children that are not in the list of existing child nodes
         const newChildren = Object.values(elementChildren).filter((c) => this.children.find((ch) => ch.label === c.label) == null);
 
-        const sortMethod = contextually.isSession(this) ? this.sort : { method: JobSortOpts.Id, direction: SortDirection.Ascending };
+        const sortMethod = contextually.isSession(this) ? this.sort : { method: Sorting.JobSortOpts.Id, direction: Sorting.SortDirection.Ascending };
         // Remove any children that are no longer present in the built record
         this.children = contextually.isSession(this)
             ? this.children
@@ -241,9 +241,9 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
         return this.children;
     }
 
-    public static sortJobs(sortOpts: NodeSort): (x: IZoweJobTreeNode, y: IZoweJobTreeNode) => number {
+    public static sortJobs(sortOpts: Sorting.NodeSort): (x: IZoweJobTreeNode, y: IZoweJobTreeNode) => number {
         return (x, y) => {
-            const sortLessThan = sortOpts.direction == SortDirection.Ascending ? -1 : 1;
+            const sortLessThan = sortOpts.direction == Sorting.SortDirection.Ascending ? -1 : 1;
             const sortGreaterThan = sortLessThan * -1;
 
             const keyToSortBy = JOB_SORT_KEYS[sortOpts.method];

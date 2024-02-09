@@ -18,7 +18,7 @@ import * as fsextra from "fs-extra";
 import * as extension from "../../src/extension";
 import * as globals from "../../src/globals";
 import * as tempFolderUtils from "../../src/utils/TempFolder";
-import { Gui, ValidProfileEnum, ProfilesCache } from "@zowe/zowe-explorer-api";
+import { Gui, Validation, ProfilesCache } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../src/Profiles";
 import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
 import { createGetConfigMock, createInstanceOfProfileInfo, createIProfile, createTreeView } from "../../__mocks__/mockCreators/shared";
@@ -125,7 +125,7 @@ async function createGlobalMocks() {
             getDefaultProfile: null,
             getBaseProfile: jest.fn(),
             loadNamedProfile: null,
-            validProfile: ValidProfileEnum.VALID,
+            validProfile: Validation.ValidationType.VALID,
             checkCurrentProfile: jest.fn(),
             usesSecurity: jest.fn().mockReturnValue(true),
             getProfileSetting: jest.fn(),
