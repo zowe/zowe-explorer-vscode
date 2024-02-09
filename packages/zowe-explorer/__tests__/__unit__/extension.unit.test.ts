@@ -582,37 +582,3 @@ describe("Extension Unit Tests", () => {
         await removeSessionTest("zowe.uss.removeSession", globals.USS_SESSION_CONTEXT, USSTree);
     });
 });
-
-describe("Extension Unit Tests - THEIA", () => {
-    // it("Tests that onChangeProfileAction executes the proper profile commands", async () => {
-    //     const globalMocks = await createGlobalMocks();
-    //     Object.defineProperty(vscode.workspace, "fs", {
-    //         value: {
-    //             readFile: jest.fn().mockResolvedValue("somenewdata"),
-    //         },
-    //         configurable: true,
-    //     });
-    //     await extension.onChangeProfileAction(null);
-    //     expect(globalMocks.mockReadProfilesFromDisk).toHaveBeenCalledTimes(1);
-
-    //     // call again w/ same data to signal no change; verify nothing with profiles was changed
-    //     // (number of calls to readProfilesFromDisk should stay the same)
-    //     await extension.onChangeProfileAction(null);
-    //     expect(globalMocks.mockReadProfilesFromDisk).toHaveBeenCalledTimes(1);
-    // });
-
-    it("Tests getSelectedNodeList executes successfully with multiple selection", async () => {
-        const globalMocks = await createGlobalMocks();
-        const blockMocks = createBlockMocks(globalMocks);
-        const nodeList = [blockMocks.rootNode, blockMocks.testNode];
-        const res = getSelectedNodeList(blockMocks.testNode, nodeList);
-        expect(res).toEqual(nodeList);
-    });
-
-    it("Tests getSelectedNodeList executes successfully when no multiple selection", async () => {
-        const globalMocks = await createGlobalMocks();
-        const blockMocks = createBlockMocks(globalMocks);
-        const res = getSelectedNodeList(blockMocks.testNode, undefined);
-        expect(res[0]).toEqual(blockMocks.testNode);
-    });
-});

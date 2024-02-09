@@ -348,7 +348,6 @@ export async function deleteDatasetPrompt(datasetProvider: IZoweTree<IZoweDatase
         return;
     }
     if (nodes.length === 1) {
-        // no multi-select available in Theia
         await deleteDataset(nodes[0], datasetProvider);
         const deleteItemName = contextually.isDsMember(nodes[0])
             ? ` ${nodes[0].getParent().getLabel().toString()}(${nodes[0].getLabel().toString()})`
