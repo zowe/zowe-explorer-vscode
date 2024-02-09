@@ -12,7 +12,7 @@
 import * as vscode from "vscode";
 import * as globals from "../globals";
 import { IJob, imperative } from "@zowe/cli";
-import { Gui, ValidProfileEnum, IZoweTree, IZoweTreeNode, IZoweJobTreeNode, PersistenceSchemaEnum, NodeInteraction } from "@zowe/zowe-explorer-api";
+import { Gui, Validation, IZoweTree, IZoweTreeNode, IZoweJobTreeNode, PersistenceSchemaEnum, Types } from "@zowe/zowe-explorer-api";
 import { FilterItem, errorHandling } from "../utils/ProfilesUtils";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
@@ -68,7 +68,7 @@ export async function createJobsTree(log: imperative.Logger): Promise<ZosJobsPro
     return tree;
 }
 
-export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZoweJobTreeNode> {
+export class ZosJobsProvider extends ZoweTreeProvider implements Types.IZoweJobTreeType {
     public static readonly JobId = "JobId: ";
     public static readonly Owner = "Owner: ";
     public static readonly Prefix = "Prefix: ";
@@ -107,7 +107,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
 
     public mSessionNodes: IZoweJobTreeNode[] = [];
     public mFavorites: IZoweJobTreeNode[] = [];
-    public lastOpened: NodeInteraction = {};
+    public lastOpened: Types.ZoweNodeInteraction = {};
     public searchByQuery = new FilterItem({
         text: vscode.l10n.t("$(plus) Create job search filter"),
         menuType: globals.JobPickerTypes.QuerySearch,
@@ -427,7 +427,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             try {
                 profile = Profiles.getInstance().loadNamedProfile(profileName);
                 await Profiles.getInstance().checkCurrentProfile(profile);
-                if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID || !contextually.isValidationEnabled(parentNode)) {
+                if (Profiles.getInstance().validProfile === Validation.ValidationType.VALID || !contextually.isValidationEnabled(parentNode)) {
                     session = ZoweExplorerApiRegister.getJesApi(profile).getSession();
                     parentNode.setProfileToChoice(profile);
                     parentNode.setSessionToChoice(session);
@@ -835,7 +835,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         ZoweLogger.trace("ZosJobsProvider.searchPrompt called.");
         await this.checkCurrentProfile(node);
         let searchCriteria: string = "";
-        if (Profiles.getInstance().validProfile !== ValidProfileEnum.INVALID) {
+        if (Profiles.getInstance().validProfile !== Validation.ValidationType.INVALID) {
             const isSessionNotFav = contextually.isSessionNotFav(node);
             const isExpanded = node.collapsibleState === vscode.TreeItemCollapsibleState.Expanded;
 

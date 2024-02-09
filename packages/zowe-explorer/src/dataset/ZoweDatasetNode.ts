@@ -13,21 +13,7 @@ import * as zowe from "@zowe/cli";
 import * as vscode from "vscode";
 import * as globals from "../globals";
 import { errorHandling } from "../utils/ProfilesUtils";
-import {
-    DatasetFilter,
-    DatasetFilterOpts,
-    DatasetSortOpts,
-    DatasetStats,
-    Gui,
-    NodeAction,
-    IZoweDatasetTreeNode,
-    ZoweTreeNode,
-    SortDirection,
-    NodeSort,
-    ZosEncoding,
-    IZoweTree,
-    ValidProfileEnum,
-} from "@zowe/zowe-explorer-api";
+import { Sorting, Types, Gui, ZoweTreeNodeActions, IZoweDatasetTreeNode, ZoweTreeNode, ZosEncoding, Validation } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { getIconByNode } from "../generators/icons";
 import * as contextually from "../shared/context";
@@ -57,11 +43,11 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     public encoding?: string;
     public encodingMap = {};
     public errorDetails: zowe.imperative.ImperativeError;
-    public ongoingActions: Record<NodeAction | string, Promise<any>> = {};
+    public ongoingActions: Record<ZoweTreeNodeActions.Interactions | string, Promise<any>> = {};
     public wasDoubleClicked: boolean = false;
-    public stats: DatasetStats;
-    public sort?: NodeSort;
-    public filter?: DatasetFilter;
+    public stats: Types.DatasetStats;
+    public sort?: Sorting.NodeSort;
+    public filter?: Sorting.DatasetFilter;
     private etag?: string;
 
     /**
@@ -94,8 +80,8 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         if (this.getParent() == null) {
             // set default sort options for session nodes
             this.sort = {
-                method: DatasetSortOpts.Name,
-                direction: SortDirection.Ascending,
+                method: Sorting.DatasetSortOpts.Name,
+                direction: Sorting.SortDirection.Ascending,
             };
         }
 
@@ -306,14 +292,14 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
      * @param method The sorting method to use
      * @returns A function that sorts 2 nodes based on the given sorting method
      */
-    public static sortBy(sort: NodeSort): (a: IZoweDatasetTreeNode, b: IZoweDatasetTreeNode) => number {
+    public static sortBy(sort: Sorting.NodeSort): (a: IZoweDatasetTreeNode, b: IZoweDatasetTreeNode) => number {
         return (a, b): number => {
             const aParent = a.getParent();
             if (aParent == null || !contextually.isPds(aParent)) {
                 return (a.label as string) < (b.label as string) ? -1 : 1;
             }
 
-            const sortLessThan = sort.direction == SortDirection.Ascending ? -1 : 1;
+            const sortLessThan = sort.direction == Sorting.SortDirection.Ascending ? -1 : 1;
             const sortGreaterThan = sortLessThan * -1;
 
             const sortByName = (nodeA: IZoweDatasetTreeNode, nodeB: IZoweDatasetTreeNode): number =>
@@ -323,7 +309,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 return sortByName(a, b);
             }
 
-            if (sort.method === DatasetSortOpts.LastModified) {
+            if (sort.method === Sorting.DatasetSortOpts.LastModified) {
                 const dateA = dayjs(a.stats?.modifiedDate ?? null);
                 const dateB = dayjs(b.stats?.modifiedDate ?? null);
 
@@ -347,7 +333,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 }
 
                 return dateA.isBefore(dateB, "second") ? sortLessThan : sortGreaterThan;
-            } else if (sort.method === DatasetSortOpts.UserId) {
+            } else if (sort.method === Sorting.DatasetSortOpts.UserId) {
                 const userA = a.stats?.user ?? "";
                 const userB = b.stats?.user ?? "";
 
@@ -371,7 +357,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
      * @param method The sorting method to use
      * @returns A function that sorts 2 nodes based on the given sorting method
      */
-    public static filterBy(filter: DatasetFilter): (node: IZoweDatasetTreeNode) => boolean {
+    public static filterBy(filter: Sorting.DatasetFilter): (node: IZoweDatasetTreeNode) => boolean {
         const isDateFilter = (f: string): boolean => {
             return dayjs(f).isValid();
         };
@@ -383,13 +369,13 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             }
 
             switch (filter.method) {
-                case DatasetFilterOpts.LastModified:
+                case Sorting.DatasetFilterOpts.LastModified:
                     if (!isDateFilter(filter.value)) {
                         return true;
                     }
 
                     return dayjs(node.stats?.modifiedDate).isSame(filter.value, "day");
-                case DatasetFilterOpts.UserId:
+                case Sorting.DatasetFilterOpts.UserId:
                     return node.stats?.user === filter.value;
             }
         };
@@ -463,15 +449,15 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         return responses;
     }
 
-    public async openDs(forceDownload: boolean, previewMember: boolean, datasetProvider: IZoweTree<IZoweDatasetTreeNode>): Promise<void> {
+    public async openDs(forceDownload: boolean, previewMember: boolean, datasetProvider: Types.IZoweDatasetTreeType): Promise<void> {
         ZoweLogger.trace("ZoweDatasetNode.openDs called.");
         await datasetProvider.checkCurrentProfile(this);
 
         // Status of last "open action" promise
         // If the node doesn't support pending actions, assume last action was resolved to pull new contents
         const lastActionStatus =
-            this.ongoingActions?.[NodeAction.Download] != null
-                ? await promiseStatus(this.ongoingActions[NodeAction.Download])
+            this.ongoingActions?.[ZoweTreeNodeActions.Interactions.Download] != null
+                ? await promiseStatus(this.ongoingActions[ZoweTreeNodeActions.Interactions.Download])
                 : PromiseStatuses.PROMISE_RESOLVED;
 
         // Cache status of double click if the node has the "wasDoubleClicked" property:
@@ -487,14 +473,14 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             return;
         }
 
-        if (Profiles.getInstance().validProfile !== ValidProfileEnum.INVALID) {
+        if (Profiles.getInstance().validProfile !== Validation.ValidationType.INVALID) {
             try {
                 const fileInfo = await downloadDs(this, forceDownload);
                 const document = await vscode.workspace.openTextDocument(getDocumentFilePath(fileInfo.name, this));
                 await Gui.showTextDocument(document, { preview: this.wasDoubleClicked != null ? !this.wasDoubleClicked : shouldPreview });
                 // discard ongoing action to allow new requests on this node
                 if (this.ongoingActions) {
-                    this.ongoingActions[NodeAction.Download] = null;
+                    this.ongoingActions[ZoweTreeNodeActions.Interactions.Download] = null;
                 }
                 if (datasetProvider) {
                     datasetProvider.addFileHistory(`[${this.getProfileName()}]: ${fileInfo.name}`);

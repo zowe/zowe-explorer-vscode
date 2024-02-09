@@ -9,15 +9,23 @@
  *
  */
 
-// globals
-export const ZOWE_EXPLORER = "Zowe Explorer";
-export const SCS_ZOWE_PLUGIN = "Zowe-Plugin";
-export const SCS_ZOWE_CLI_V2 = "Zowe";
-export const SCS_BRIGHTSIDE = "@brightside/core";
-export const SCS_ZOWE_CLI = "@zowe/cli";
-export const SCS_BROADCOM_PLUGIN = "Broadcom-Plugin";
-export const SETTINGS_SCS_DEFAULT = SCS_ZOWE_CLI_V2;
-
-// default double-click speed for Windows
-// (since VScode does not have a double-click event for nodes, we need our own check)
-export const DOUBLE_CLICK_SPEED_MS = 500;
+/**
+ * Global variables accessed across the API
+ */
+export namespace Constants {
+    export const ZOWE_EXPLORER = "Zowe Explorer";
+    export const SCS_ZOWE_PLUGIN = "Zowe-Plugin";
+    export const SCS_ZOWE_CLI_V2 = "Zowe";
+    export const SCS_BRIGHTSIDE = "@brightside/core";
+    export const SCS_ZOWE_CLI = "@zowe/cli";
+    export const SCS_BROADCOM_PLUGIN = "Broadcom-Plugin";
+    export const SETTINGS_SCS_DEFAULT = SCS_ZOWE_CLI_V2;
+    export const CONTEXT_PREFIX = "_";
+    export const DEFAULT_PORT = 443;
+    export const DOUBLE_CLICK_SPEED_MS = 500;
+    export const PERM_VALUES = {
+        r: 4,
+        w: 2,
+        x: 1,
+    };
+}

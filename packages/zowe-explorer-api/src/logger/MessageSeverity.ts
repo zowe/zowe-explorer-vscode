@@ -9,9 +9,11 @@
  *
  */
 
-import { Uri } from "vscode";
-
-export type WebviewUris = {
-    build: Uri;
-    script: Uri;
-};
+export enum MessageSeverity {
+    TRACE,
+    DEBUG,
+    INFO,
+    WARN,
+    ERROR,
+    FATAL,
+}

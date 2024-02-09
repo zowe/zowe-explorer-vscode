@@ -14,16 +14,7 @@
 import * as vscode from "vscode";
 import * as path from "path";
 import * as globals from "../globals";
-import {
-    Gui,
-    IZoweTreeNode,
-    IZoweNodeType,
-    IZoweDatasetTreeNode,
-    IZoweUSSTreeNode,
-    IZoweJobTreeNode,
-    IZoweTree,
-    ZosEncoding,
-} from "@zowe/zowe-explorer-api";
+import { Gui, IZoweTreeNode, IZoweDatasetTreeNode, IZoweUSSTreeNode, IZoweJobTreeNode, IZoweTree, Types, ZosEncoding } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { IZosFilesResponse, imperative } from "@zowe/cli";
 import { IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
@@ -83,9 +74,9 @@ export function getIconPathInResources(iconFileName: string): {
 /*************************************************************************************************************
  * Returns array of all subnodes of given node
  *************************************************************************************************************/
-export function concatChildNodes(nodes: IZoweNodeType[]): IZoweNodeType[] {
+export function concatChildNodes(nodes: Types.IZoweNodeType[]): Types.IZoweNodeType[] {
     ZoweLogger.trace("shared.utils.concatChildNodes called.");
-    let allNodes = new Array<IZoweNodeType>();
+    let allNodes = new Array<Types.IZoweNodeType>();
 
     for (const node of nodes) {
         allNodes = allNodes.concat(concatChildNodes(node.children));
@@ -304,7 +295,7 @@ export function willForceUpload(
 
 // Type guarding for current IZoweNodeType.
 // Makes it possible to have multiple types in a function signature, but still be able to use type specific code inside the function definition
-export function isZoweDatasetTreeNode(node: IZoweNodeType): node is IZoweDatasetTreeNode {
+export function isZoweDatasetTreeNode(node: Types.IZoweNodeType): node is IZoweDatasetTreeNode {
     return (node as IZoweDatasetTreeNode).pattern !== undefined;
 }
 

@@ -9,22 +9,12 @@
  *
  */
 
-export type PollRequest = {
-    msInterval: number;
-    dispose?: boolean;
-
-    reject?<T = never>(reason?: any): Promise<T>;
-    resolve?: (uniqueId: string, data: any) => any;
-    request: () => Promise<unknown>;
-
-    // Indexable for storing custom items
-    [key: string]: any;
-};
+import { Types } from "../Types";
 
 export class Poller {
-    public static pollRequests: { [key: string]: PollRequest } = {};
+    public static pollRequests: { [key: string]: Types.PollRequest } = {};
 
-    private static poll(uniqueId: string, requestData: PollRequest): Promise<unknown> {
+    private static poll(uniqueId: string, requestData: Types.PollRequest): Promise<unknown> {
         const pollHandler = async (resolve, reject): Promise<unknown> => {
             if (!Poller.pollRequests[uniqueId]) {
                 // Poll request was discarded, return
@@ -62,7 +52,7 @@ export class Poller {
         return new Promise(pollHandler);
     }
 
-    public static addRequest(uniqueId: string, request: PollRequest): void {
+    public static addRequest(uniqueId: string, request: Types.PollRequest): void {
         Poller.pollRequests[uniqueId] = request;
 
         // Initialize the poll request

@@ -15,19 +15,7 @@ import * as path from "path";
 import * as fs from "fs";
 import * as globals from "./globals";
 import * as vscode from "vscode";
-import {
-    IApiExplorerExtender,
-    getFullPath,
-    getZoweDir,
-    Gui,
-    IZoweTree,
-    IZoweTreeNode,
-    IZoweDatasetTreeNode,
-    IZoweUSSTreeNode,
-    IZoweJobTreeNode,
-    ProfilesCache,
-    ZoweExplorerTreeApi,
-} from "@zowe/zowe-explorer-api";
+import { IApiExplorerExtender, FileManagement, Gui, Types, IZoweTreeNode, ProfilesCache, IZoweExplorerTreeApi } from "@zowe/zowe-explorer-api";
 import { Profiles } from "./Profiles";
 import { getProfile, ProfilesUtils } from "./utils/ProfilesUtils";
 import { ZoweLogger } from "./utils/LoggerUtils";
@@ -37,7 +25,7 @@ import { ZoweLogger } from "./utils/LoggerUtils";
  * extensions to contribute their implementations.
  * @export
  */
-export class ZoweExplorerExtender implements IApiExplorerExtender, ZoweExplorerTreeApi {
+export class ZoweExplorerExtender implements IApiExplorerExtender, IZoweExplorerTreeApi {
     public static ZoweExplorerExtenderInst: ZoweExplorerExtender;
 
     /**
@@ -67,7 +55,7 @@ export class ZoweExplorerExtender implements IApiExplorerExtender, ZoweExplorerT
                 if (vscode.workspace.workspaceFolders != null && !isRootConfigError) {
                     configPath = this.getConfigLocation(vscode.workspace.workspaceFolders[0].uri.fsPath);
                 } else {
-                    configPath = this.getConfigLocation(getZoweDir());
+                    configPath = this.getConfigLocation(FileManagement.getZoweDir());
                 }
 
                 // If the config w/ culprits cannot be found, all v2 config locations have been exhausted - exit.
@@ -106,9 +94,9 @@ export class ZoweExplorerExtender implements IApiExplorerExtender, ZoweExplorerT
      * @returns {ZoweExplorerExtender} the ZoweExplorerExtender singleton instance
      */
     public static createInstance(
-        datasetProvider?: IZoweTree<IZoweDatasetTreeNode>,
-        ussFileProvider?: IZoweTree<IZoweUSSTreeNode>,
-        jobsProvider?: IZoweTree<IZoweJobTreeNode>
+        datasetProvider?: Types.IZoweDatasetTreeType,
+        ussFileProvider?: Types.IZoweUSSTreeType,
+        jobsProvider?: Types.IZoweJobTreeType
     ): ZoweExplorerExtender {
         ZoweExplorerExtender.instance.datasetProvider = datasetProvider;
         ZoweExplorerExtender.instance.ussFileProvider = ussFileProvider;
@@ -132,9 +120,9 @@ export class ZoweExplorerExtender implements IApiExplorerExtender, ZoweExplorerT
     // Instances will be created via createInstance()
     private constructor(
         // Not all extenders will need to refresh trees
-        public datasetProvider?: IZoweTree<IZoweDatasetTreeNode>,
-        public ussFileProvider?: IZoweTree<IZoweUSSTreeNode>,
-        public jobsProvider?: IZoweTree<IZoweJobTreeNode>
+        public datasetProvider?: Types.IZoweDatasetTreeType,
+        public ussFileProvider?: Types.IZoweUSSTreeType,
+        public jobsProvider?: Types.IZoweJobTreeType
     ) {}
 
     /**
@@ -148,7 +136,7 @@ export class ZoweExplorerExtender implements IApiExplorerExtender, ZoweExplorerT
         // and/or created a profile that the profile directory in ~/.zowe/profiles
         // will be created with the appropriate meta data. If not called the user will
         // see errors when creating a profile of any type.
-        const zoweDir = getZoweDir();
+        const zoweDir = FileManagement.getZoweDir();
 
         /**
          * This should create initialize the loadedConfig if it is not already
@@ -161,7 +149,7 @@ export class ZoweExplorerExtender implements IApiExplorerExtender, ZoweExplorerT
             const mProfileInfo = await ProfilesUtils.getProfileInfo(globals.ISTHEIA);
             if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders[0]) {
                 const rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
-                await mProfileInfo.readProfilesFromDisk({ homeDir: zoweDir, projectDir: getFullPath(rootPath) });
+                await mProfileInfo.readProfilesFromDisk({ homeDir: zoweDir, projectDir: FileManagement.getFullPath(rootPath) });
             } else {
                 await mProfileInfo.readProfilesFromDisk({ homeDir: zoweDir, projectDir: undefined });
             }

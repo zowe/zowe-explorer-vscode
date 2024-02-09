@@ -11,7 +11,7 @@
 
 import * as vscode from "vscode";
 import * as globals from "../globals";
-import { Gui, IZoweDatasetTreeNode, IZoweUSSTreeNode, IZoweNodeType, IZoweTree, imperative } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweDatasetTreeNode, IZoweUSSTreeNode, Types, imperative } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { filterTreeByString, willForceUpload } from "../shared/utils";
 import { FilterItem, FilterDescriptor } from "../utils/ProfilesUtils";
@@ -25,13 +25,10 @@ import { LocalFileManagement } from "../utils/LocalFileManagement";
  * Search for matching items loaded in data set or USS tree
  *
  */
-export async function searchInAllLoadedItems(
-    datasetProvider?: IZoweTree<IZoweDatasetTreeNode>,
-    ussFileProvider?: IZoweTree<IZoweUSSTreeNode>
-): Promise<void> {
+export async function searchInAllLoadedItems(datasetProvider?: Types.IZoweDatasetTreeType, ussFileProvider?: Types.IZoweUSSTreeType): Promise<void> {
     ZoweLogger.trace("shared.actions.searchInAllLoadedItems called.");
     let pattern: string;
-    const items: IZoweNodeType[] = [];
+    const items: Types.IZoweNodeType[] = [];
     const qpItems = [];
     const quickpick = Gui.createQuickPick();
     quickpick.placeholder = vscode.l10n.t("Enter a filter");
@@ -150,7 +147,7 @@ export async function searchInAllLoadedItems(
     }
 }
 
-export async function openRecentMemberPrompt(datasetTree: IZoweTree<IZoweDatasetTreeNode>, ussTree: IZoweTree<IZoweUSSTreeNode>): Promise<void> {
+export async function openRecentMemberPrompt(datasetTree: Types.IZoweDatasetTreeType, ussTree: Types.IZoweUSSTreeType): Promise<void> {
     ZoweLogger.trace("shared.actions.openRecentMemberPrompt called.");
     ZoweLogger.debug(vscode.l10n.t("Prompting the user to choose a recent member for editing"));
     let pattern: string;
@@ -210,7 +207,7 @@ export async function openRecentMemberPrompt(datasetTree: IZoweTree<IZoweDataset
     }
 }
 
-export function returnIconState(node: IZoweNodeType): IZoweNodeType {
+export function returnIconState(node: Types.IZoweNodeType): Types.IZoweNodeType {
     ZoweLogger.trace("shared.actions.returnIconState called.");
     const activePathClosed = getIconById(IconId.sessionActive);
     const activePathOpen = getIconById(IconId.sessionActiveOpen);
@@ -224,7 +221,7 @@ export function returnIconState(node: IZoweNodeType): IZoweNodeType {
     return node;
 }
 
-export function resetValidationSettings(node: IZoweNodeType, setting: boolean): IZoweNodeType {
+export function resetValidationSettings(node: Types.IZoweNodeType, setting: boolean): Types.IZoweNodeType {
     ZoweLogger.trace("shared.actions.resetValidationSettings called.");
     if (setting) {
         Profiles.getInstance().enableValidationContext(node);

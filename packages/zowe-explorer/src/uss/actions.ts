@@ -16,7 +16,7 @@ import * as globals from "../globals";
 import * as path from "path";
 import { concatChildNodes, uploadContent, getSelectedNodeList, LocalFileInfo } from "../shared/utils";
 import { errorHandling } from "../utils/ProfilesUtils";
-import { Gui, ValidProfileEnum, IZoweTree, IZoweUSSTreeNode } from "@zowe/zowe-explorer-api";
+import { Gui, Validation, IZoweUSSTreeNode, Types } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { isBinaryFileSync } from "isbinaryfile";
@@ -39,7 +39,7 @@ import { LocalFileManagement } from "../utils/LocalFileManagement";
  */
 export async function createUSSNode(
     node: IZoweUSSTreeNode,
-    ussFileProvider: IZoweTree<IZoweUSSTreeNode>,
+    ussFileProvider: Types.IZoweUSSTreeType,
     nodeType: string,
     isTopLevel?: boolean
 ): Promise<void> {
@@ -85,7 +85,7 @@ export async function createUSSNode(
             if (fileExists && !fileExistsCaseSensitiveSync(localPath)) {
                 Gui.showMessage(
                     vscode.l10n.t(
-                        `There is already a file with the same name. 
+                        `There is already a file with the same name.
                         Please change your OS file system settings if you want to give case sensitive file names.`
                     )
                 );
@@ -100,12 +100,12 @@ export async function createUSSNode(
     }
 }
 
-export async function refreshUSSInTree(node: IZoweUSSTreeNode, ussFileProvider: IZoweTree<IZoweUSSTreeNode>): Promise<void> {
+export async function refreshUSSInTree(node: IZoweUSSTreeNode, ussFileProvider: Types.IZoweUSSTreeType): Promise<void> {
     ZoweLogger.trace("uss.actions.refreshUSSInTree called.");
     await ussFileProvider.refreshElement(node);
 }
 
-export async function refreshDirectory(node: IZoweUSSTreeNode, ussFileProvider: IZoweTree<IZoweUSSTreeNode>): Promise<void> {
+export async function refreshDirectory(node: IZoweUSSTreeNode, ussFileProvider: Types.IZoweUSSTreeType): Promise<void> {
     ZoweLogger.trace("uss.actions.refreshDirectory called.");
     try {
         await node.getChildren();
@@ -115,10 +115,13 @@ export async function refreshDirectory(node: IZoweUSSTreeNode, ussFileProvider: 
     }
 }
 
-export async function createUSSNodeDialog(node: IZoweUSSTreeNode, ussFileProvider: IZoweTree<IZoweUSSTreeNode>): Promise<void> {
+export async function createUSSNodeDialog(node: IZoweUSSTreeNode, ussFileProvider: Types.IZoweUSSTreeType): Promise<void> {
     ZoweLogger.trace("uss.actions.createUSSNodeDialog called.");
     await ussFileProvider.checkCurrentProfile(node);
-    if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID || Profiles.getInstance().validProfile === ValidProfileEnum.UNVERIFIED) {
+    if (
+        Profiles.getInstance().validProfile === Validation.ValidationType.VALID ||
+        Profiles.getInstance().validProfile === Validation.ValidationType.UNVERIFIED
+    ) {
         const quickPickOptions: vscode.QuickPickOptions = {
             placeHolder: `What would you like to create at ${node.fullPath}?`,
             ignoreFocusOut: true,
@@ -146,7 +149,7 @@ export function deleteFromDisk(node: IZoweUSSTreeNode, filePath: string): void {
     }
 }
 
-export async function uploadDialog(node: IZoweUSSTreeNode, ussFileProvider: IZoweTree<IZoweUSSTreeNode>): Promise<void> {
+export async function uploadDialog(node: IZoweUSSTreeNode, ussFileProvider: Types.IZoweUSSTreeType): Promise<void> {
     ZoweLogger.trace("uss.actions.uploadDialog called.");
     const fileOpenOptions = {
         canSelectFiles: true,
@@ -208,7 +211,7 @@ export async function uploadFile(node: IZoweUSSTreeNode, doc: vscode.TextDocumen
     }
 }
 
-export function editAttributes(context: vscode.ExtensionContext, fileProvider: IZoweTree<IZoweUSSTreeNode>, node: IZoweUSSTreeNode): AttributeView {
+export function editAttributes(context: vscode.ExtensionContext, fileProvider: Types.IZoweUSSTreeType, node: IZoweUSSTreeNode): AttributeView {
     return new AttributeView(context, fileProvider, node);
 }
 
@@ -249,7 +252,7 @@ function findEtag(node: IZoweUSSTreeNode, directories: Array<string>, index: num
  * @param {Session} session - Desired session
  * @param {vscode.TextDocument} doc - TextDocument that is being saved
  */
-export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZoweTree<IZoweUSSTreeNode>): Promise<void> {
+export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: Types.IZoweUSSTreeType): Promise<void> {
     ZoweLogger.trace("uss.actions.saveUSSFile called.");
     ZoweLogger.debug(
         vscode.l10n.t({
@@ -434,11 +437,7 @@ export async function copyUssFilesToClipboard(selectedNodes: IZoweUSSTreeNode[])
     vscode.env.clipboard.writeText(JSON.stringify(filePaths));
 }
 
-export async function copyUssFiles(
-    node: IZoweUSSTreeNode,
-    nodeList: IZoweUSSTreeNode[],
-    ussFileProvider: IZoweTree<IZoweUSSTreeNode>
-): Promise<void> {
+export async function copyUssFiles(node: IZoweUSSTreeNode, nodeList: IZoweUSSTreeNode[], ussFileProvider: Types.IZoweUSSTreeType): Promise<void> {
     ZoweLogger.trace("uss.actions.copyUssFiles called.");
     let selectedNodes;
     if (node || nodeList) {
@@ -476,7 +475,7 @@ export async function refreshChildNodesDirectory(node: IZoweUSSTreeNode): Promis
  * @param ussFileProvider File provider for USS tree
  * @param node The node to paste within
  */
-export async function pasteUssFile(ussFileProvider: IZoweTree<IZoweUSSTreeNode>, node: IZoweUSSTreeNode): Promise<void> {
+export async function pasteUssFile(ussFileProvider: Types.IZoweUSSTreeType, node: IZoweUSSTreeNode): Promise<void> {
     ZoweLogger.trace("uss.actions.pasteUssFile called.");
     return pasteUss(ussFileProvider, node);
 }
@@ -486,7 +485,7 @@ export async function pasteUssFile(ussFileProvider: IZoweTree<IZoweUSSTreeNode>,
  * @param ussFileProvider File provider for USS tree
  * @param node The node to paste within
  */
-export async function pasteUss(ussFileProvider: IZoweTree<IZoweUSSTreeNode>, node: IZoweUSSTreeNode): Promise<void> {
+export async function pasteUss(ussFileProvider: Types.IZoweUSSTreeType, node: IZoweUSSTreeNode): Promise<void> {
     ZoweLogger.trace("uss.actions.pasteUss called.");
     if (node.pasteUssTree == null && node.copyUssFile == null) {
         await Gui.infoMessage(vscode.l10n.t("The paste operation is not supported for this node."));
@@ -528,7 +527,7 @@ export async function downloadUnixFile(node: IZoweUSSTreeNode, forceDownload: bo
     if (fileExists && !fileExistsCaseSensitiveSync(fileInfo.path)) {
         Gui.showMessage(
             vscode.l10n.t(
-                `There is already a file with the same name. 
+                `There is already a file with the same name.
                 Please change your OS file system settings if you want to give case sensitive file names`
             )
         );

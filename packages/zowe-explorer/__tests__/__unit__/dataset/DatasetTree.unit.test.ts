@@ -15,15 +15,7 @@ import * as fs from "fs";
 import * as zowe from "@zowe/cli";
 import { DatasetTree } from "../../../src/dataset/DatasetTree";
 import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
-import {
-    DatasetFilterOpts,
-    DatasetSortOpts,
-    Gui,
-    IZoweDatasetTreeNode,
-    ProfilesCache,
-    SortDirection,
-    ValidProfileEnum,
-} from "@zowe/zowe-explorer-api";
+import { Gui, IZoweDatasetTreeNode, ProfilesCache, Validation, Sorting } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { Profiles } from "../../../src/Profiles";
 import * as utils from "../../../src/utils/ProfilesUtils";
@@ -655,7 +647,7 @@ describe("Dataset Tree Unit Tests - Function loadProfilesForFavorites", () => {
                             status: "unverified",
                         };
                     }),
-                    validProfile: ValidProfileEnum.VALID,
+                    validProfile: Validation.ValidationType.VALID,
                 };
             }),
         });
@@ -926,7 +918,7 @@ describe("Dataset Tree Unit Tests - Function addSession", () => {
         newMocks.mockProfileInstance.getDefaultProfile = newMocks.mockLoadDefaultProfile;
         newMocks.mockProfileInstance.enableValidationContext = newMocks.mockEnableValidationContext;
         newMocks.mockProfileInstance.disableValidationContext = newMocks.mockDisableValidationContext;
-        newMocks.mockProfileInstance.validProfile = ValidProfileEnum.VALID;
+        newMocks.mockProfileInstance.validProfile = Validation.ValidationType.VALID;
         newMocks.mockProfileInstance.allProfiles = jest.fn().mockReturnValue([newMocks.imperativeProfile]);
 
         return newMocks;
@@ -1725,7 +1717,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
                         name: blockMocks.imperativeProfile.name,
                         status: "unverified",
                     }),
-                    validProfile: ValidProfileEnum.UNVERIFIED,
+                    validProfile: Validation.ValidationType.UNVERIFIED,
                 };
             }),
         });
@@ -1950,7 +1942,7 @@ describe("Dataset Tree Unit Tests - Function editSession", () => {
                     allProfiles: [newMocks.imperativeProfile, { name: "firstName" }, { name: "secondName" }],
                     getDefaultProfile: newMocks.mockDefaultProfile,
                     getBaseProfile: jest.fn(),
-                    validProfile: ValidProfileEnum.VALID,
+                    validProfile: Validation.ValidationType.VALID,
                     getProfileSetting: newMocks.mockGetProfileSetting.mockReturnValue({
                         name: newMocks.imperativeProfile.name,
                         status: "active",
@@ -2469,7 +2461,7 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
                         name: blockMocks.imperativeProfile.name,
                         status: "unverified",
                     }),
-                    validProfile: ValidProfileEnum.UNVERIFIED,
+                    validProfile: Validation.ValidationType.UNVERIFIED,
                     getBaseProfile: jest.fn(),
                 };
             }),
@@ -2991,8 +2983,8 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
         nodeC.stats = { user: "someUser", modifiedDate: new Date("2022-03-15T16:30:00") };
         pds.children = [nodeA, nodeB, nodeC];
         pds.sort = {
-            method: DatasetSortOpts.Name,
-            direction: SortDirection.Ascending,
+            method: Sorting.DatasetSortOpts.Name,
+            direction: Sorting.SortDirection.Ascending,
         };
         session.children = [pds];
 
@@ -3139,7 +3131,7 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
             mocks.showQuickPick.mockResolvedValueOnce("$(calendar) Date Modified" as any);
             mocks.showInputBox.mockResolvedValueOnce("2022-01-01");
 
-            nodes.pds.filter = { method: DatasetFilterOpts.UserId, value: "invalidUserId" };
+            nodes.pds.filter = { method: Sorting.DatasetFilterOpts.UserId, value: "invalidUserId" };
             nodes.pds.children = [];
             await tree.filterPdsMembersDialog(nodes.pds);
             // nodeDataChanged called once to show new description
@@ -3191,7 +3183,7 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
 
             // case 1: old filter was set on session, just refresh PDS to use new filter
             nodes.session.filter = {
-                method: DatasetFilterOpts.LastModified,
+                method: Sorting.DatasetFilterOpts.LastModified,
                 value: "2020-01-01",
             };
             await tree.filterPdsMembersDialog(nodes.session);

@@ -14,7 +14,7 @@ import * as globals from "../globals";
 import * as vscode from "vscode";
 import * as fs from "fs";
 import * as path from "path";
-import { FileAttributes, Gui, IZoweUSSTreeNode, ZoweTreeNode, IZoweTree, ValidProfileEnum, IUss, ZosEncoding } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweUSSTreeNode, ZoweTreeNode, Types, Validation, MainframeInteraction, ZosEncoding } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { errorHandling, syncSessionNode } from "../utils/ProfilesUtils";
@@ -48,7 +48,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     public downloadedTime = null as string;
     private downloadedInternal = false;
 
-    public attributes?: FileAttributes;
+    public attributes?: Types.FileAttributes;
     public onUpdateEmitter: vscode.EventEmitter<IZoweUSSTreeNode>;
     private parentPath: string;
     private etag?: string;
@@ -364,7 +364,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         vscode.commands.executeCommand("zowe.uss.refreshUSSInTree", this);
     }
 
-    public async deleteUSSNode(ussFileProvider: IZoweTree<IZoweUSSTreeNode>, filePath: string, cancelled: boolean = false): Promise<void> {
+    public async deleteUSSNode(ussFileProvider: Types.IZoweUSSTreeType, filePath: string, cancelled: boolean = false): Promise<void> {
         ZoweLogger.trace("ZoweUSSNode.deleteUSSNode called.");
         const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
         if (cancelled) {
@@ -468,13 +468,13 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      *
      * @param {IZoweTreeNode} node
      */
-    public async openUSS(forceDownload: boolean, previewFile: boolean, ussFileProvider: IZoweTree<IZoweUSSTreeNode>): Promise<void> {
+    public async openUSS(forceDownload: boolean, previewFile: boolean, ussFileProvider: Types.IZoweUSSTreeType): Promise<void> {
         ZoweLogger.trace("ZoweUSSNode.openUSS called.");
         await ussFileProvider.checkCurrentProfile(this);
 
         const doubleClicked = Gui.utils.wasDoubleClicked(this, ussFileProvider);
         const shouldPreview = doubleClicked ? false : previewFile;
-        if (Profiles.getInstance().validProfile !== ValidProfileEnum.INVALID) {
+        if (Profiles.getInstance().validProfile !== Validation.ValidationType.INVALID) {
             try {
                 const fileInfo = await downloadUnixFile(this, forceDownload);
                 this.downloaded = true;
@@ -616,7 +616,11 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      * @param tree The structure of files and folders to paste
      * @param ussApi The USS API to use for this operation
      */
-    public async paste(sessionName: string, rootPath: string, uss: { tree: UssFileTree; api: IUss; options?: IUploadOptions }): Promise<void> {
+    public async paste(
+        sessionName: string,
+        rootPath: string,
+        uss: { tree: UssFileTree; api: MainframeInteraction.IUss; options?: IUploadOptions }
+    ): Promise<void> {
         ZoweLogger.trace("ZoweUSSNode.paste called.");
         const hasCopyApi = uss.api.copy != null;
         const hasPutContentApi = uss.api.putContent != null;

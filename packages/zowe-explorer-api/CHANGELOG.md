@@ -12,6 +12,14 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
   - `IZoweUSSTreeNode.setBinary()` -> `IZoweUSSTreeNode.setEncoding()`
 - **Breaking:** Removed `ZoweTreeNode.binary`, `ZoweTreeNode.binaryFiles`, and `ZoweTreeNode.shortLabel`. These properties are not applicable for all tree nodes and should be defined in subclasses of `ZoweTreeNode` if necessary.
 
+## `3.0.0-next.202402071248`
+
+### New features and enhancements
+
+- Grouped common methods into singleton classes [#2109](https://github.com/zowe/vscode-extension-for-zowe/issues/2109)
+
+### Bug fixes
+
 ## `3.0.0-next.202401241448`
 
 ### New features and enhancements

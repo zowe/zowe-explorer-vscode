@@ -16,16 +16,7 @@ import * as contextually from "../shared/context";
 import { imperative } from "@zowe/cli";
 import { FilterItem, FilterDescriptor, errorHandling, syncSessionNode } from "../utils/ProfilesUtils";
 import { sortTreeItems, getAppName, checkIfChildPath, updateOpenFiles, promptForEncoding } from "../shared/utils";
-import {
-    Gui,
-    IZoweTree,
-    IZoweTreeNode,
-    IZoweUSSTreeNode,
-    NodeInteraction,
-    ValidProfileEnum,
-    PersistenceSchemaEnum,
-    ZosEncoding,
-} from "@zowe/zowe-explorer-api";
+import { Gui, IZoweTree, IZoweTreeNode, IZoweUSSTreeNode, PersistenceSchemaEnum, Types, Validation, ZosEncoding } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { ZoweUSSNode } from "./ZoweUSSNode";
@@ -55,13 +46,13 @@ export async function createUSSTree(log: imperative.Logger): Promise<USSTree> {
  * @class USSTree
  * @implements {vscode.TreeDataProvider}
  */
-export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeNode> {
+export class USSTree extends ZoweTreeProvider implements Types.IZoweUSSTreeType {
     public static readonly defaultDialogText: string = vscode.l10n.t("$(plus) Create a new filter");
     private static readonly persistenceSchema: PersistenceSchemaEnum = PersistenceSchemaEnum.USS;
     public mFavoriteSession: ZoweUSSNode;
     public mSessionNodes: IZoweUSSTreeNode[] = [];
     public mFavorites: IZoweUSSTreeNode[] = [];
-    public lastOpened: NodeInteraction = {};
+    public lastOpened: Types.ZoweNodeInteraction = {};
     private treeView: vscode.TreeView<IZoweUSSTreeNode>;
     public copying: Promise<unknown>;
     public openFiles: Record<string, IZoweUSSTreeNode> = {};
@@ -573,7 +564,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             ZoweLogger.debug(vscode.l10n.t("Prompting the user for a USS path"));
         }
         await this.checkCurrentProfile(node);
-        if (Profiles.getInstance().validProfile !== ValidProfileEnum.INVALID) {
+        if (Profiles.getInstance().validProfile !== Validation.ValidationType.INVALID) {
             let sessionNode;
             let remotepath: string;
             if (contextually.isSessionNotFav(node)) {
@@ -794,7 +785,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
             try {
                 profile = Profiles.getInstance().loadNamedProfile(profileName);
                 await Profiles.getInstance().checkCurrentProfile(profile);
-                if (Profiles.getInstance().validProfile === ValidProfileEnum.VALID || !contextually.isValidationEnabled(parentNode)) {
+                if (Profiles.getInstance().validProfile === Validation.ValidationType.VALID || !contextually.isValidationEnabled(parentNode)) {
                     session = await ZoweExplorerApiRegister.getUssApi(profile).getSession();
                     parentNode.setProfileToChoice(profile);
                     parentNode.setSessionToChoice(session);

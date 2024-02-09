@@ -11,7 +11,7 @@
 
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
-import { Gui, IZoweJobTreeNode, JobSortOpts, SortDirection, ValidProfileEnum } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweJobTreeNode, Sorting, Validation } from "@zowe/zowe-explorer-api";
 import { ZoweJobNode, ZoweSpoolNode } from "../../../src/job/ZoweJobNode";
 import {
     createISession,
@@ -447,7 +447,7 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
                         name: imperativeProfile.name,
                         status: "unverified",
                     }),
-                    validProfile: ValidProfileEnum.UNVERIFIED,
+                    validProfile: Validation.ValidationType.UNVERIFIED,
                 };
             }),
         });
@@ -736,7 +736,7 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
                         name: blockMocks.imperativeProfile.name,
                         status: "unverified",
                     }),
-                    validProfile: ValidProfileEnum.UNVERIFIED,
+                    validProfile: Validation.ValidationType.UNVERIFIED,
                 };
             }),
         });
@@ -1003,7 +1003,7 @@ describe("Jobs Actions Unit Tests - Function getSpoolContent", () => {
                         name: blockMocks.imperativeProfile.name,
                         status: "unverified",
                     }),
-                    validProfile: ValidProfileEnum.UNVERIFIED,
+                    validProfile: Validation.ValidationType.UNVERIFIED,
                 };
             }),
         });
@@ -1478,8 +1478,8 @@ describe("sortJobs function", () => {
         const testtree = new ZosJobsProvider();
         const expected = new ZosJobsProvider();
         testtree.mSessionNodes[0].sort = {
-            method: JobSortOpts.Id,
-            direction: SortDirection.Ascending,
+            method: Sorting.JobSortOpts.Id,
+            direction: Sorting.SortDirection.Ascending,
         };
         testtree.mSessionNodes[0].children = [...[globalMocks.mockJobArray[2], globalMocks.mockJobArray[1], globalMocks.mockJobArray[0]]];
         expected.mSessionNodes[0].children = [...[globalMocks.mockJobArray[1], globalMocks.mockJobArray[0], globalMocks.mockJobArray[2]]];
@@ -1497,8 +1497,8 @@ describe("sortJobs function", () => {
         const testtree = new ZosJobsProvider();
         const expected = new ZosJobsProvider();
         testtree.mSessionNodes[0].sort = {
-            method: JobSortOpts.Id,
-            direction: SortDirection.Ascending,
+            method: Sorting.JobSortOpts.Id,
+            direction: Sorting.SortDirection.Ascending,
         };
         testtree.mSessionNodes[0].children = [...[globalMocks.mockJobArray[2], globalMocks.mockJobArray[1], globalMocks.mockJobArray[0]]];
         expected.mSessionNodes[0].children = [...[globalMocks.mockJobArray[1], globalMocks.mockJobArray[0], globalMocks.mockJobArray[2]]];
@@ -1516,8 +1516,8 @@ describe("sortJobs function", () => {
         const testtree = new ZosJobsProvider();
         const expected = new ZosJobsProvider();
         testtree.mSessionNodes[0].sort = {
-            method: JobSortOpts.Id,
-            direction: SortDirection.Ascending,
+            method: Sorting.JobSortOpts.Id,
+            direction: Sorting.SortDirection.Ascending,
         };
         testtree.mSessionNodes[0].children = [...[globalMocks.mockJobArray[2], globalMocks.mockJobArray[1], globalMocks.mockJobArray[0]]];
         expected.mSessionNodes[0].children = [...[globalMocks.mockJobArray[0], globalMocks.mockJobArray[1], globalMocks.mockJobArray[2]]];
@@ -1536,15 +1536,15 @@ describe("sortJobs function", () => {
         const globalMocks = createGlobalMocks();
         const testtree = new ZosJobsProvider();
         testtree.mSessionNodes[0].sort = {
-            method: JobSortOpts.Id,
-            direction: SortDirection.Ascending,
+            method: Sorting.JobSortOpts.Id,
+            direction: Sorting.SortDirection.Ascending,
         };
         testtree.mSessionNodes[0].children = [globalMocks.mockJobArray[0]];
         const jobsSortBy = jest.spyOn(ZosJobsProvider.prototype, "sortBy");
         const quickPickSpy = jest.spyOn(Gui, "showQuickPick").mockResolvedValueOnce({ label: "$(fold) Sort Direction" });
         quickPickSpy.mockResolvedValueOnce("Descending" as any);
         await jobActions.sortJobs(testtree.mSessionNodes[0], testtree);
-        expect(testtree.mSessionNodes[0].sort.direction).toBe(SortDirection.Descending);
+        expect(testtree.mSessionNodes[0].sort.direction).toBe(Sorting.SortDirection.Descending);
         expect(quickPickSpy).toHaveBeenCalledTimes(3);
         expect(jobsSortBy).not.toHaveBeenCalled();
     });

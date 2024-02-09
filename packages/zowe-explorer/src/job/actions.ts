@@ -14,7 +14,7 @@ import * as zowe from "@zowe/cli";
 import { errorHandling } from "../utils/ProfilesUtils";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
-import { Gui, IZoweTree, IZoweJobTreeNode, JobSortOpts } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweJobTreeNode, Sorting, Types } from "@zowe/zowe-explorer-api";
 import { ZoweJobNode, ZoweSpoolNode } from "./ZoweJobNode";
 import SpoolProvider, { encodeJobFile, getSpoolFiles, matchSpool } from "../SpoolProvider";
 import { ZoweLogger } from "../utils/LoggerUtils";
@@ -191,7 +191,7 @@ export async function getSpoolContentFromMainframe(node: IZoweJobTreeNode): Prom
  * @param node The node to refresh
  * @param jobsProvider The tree to which the refreshed node belongs
  */
-export async function refreshJobsServer(node: IZoweJobTreeNode, jobsProvider: IZoweTree<IZoweJobTreeNode>): Promise<void> {
+export async function refreshJobsServer(node: IZoweJobTreeNode, jobsProvider: Types.IZoweJobTreeType): Promise<void> {
     ZoweLogger.trace("job.actions.refreshJobsServer called.");
     await jobsProvider.refreshElement(node);
 }
@@ -202,7 +202,7 @@ export async function refreshJobsServer(node: IZoweJobTreeNode, jobsProvider: IZ
  * @param job The job node to refresh
  * @param jobsProvider The tree to which the refreshed node belongs
  */
-export function refreshJob(job: ZoweJobNode, jobsProvider: IZoweTree<IZoweJobTreeNode>): void {
+export function refreshJob(job: ZoweJobNode, jobsProvider: Types.IZoweJobTreeType): void {
     ZoweLogger.trace("job.actions.refreshJob called.");
     jobsProvider.refreshElement(job);
 }
@@ -229,7 +229,7 @@ export async function downloadJcl(job: ZoweJobNode): Promise<void> {
  * @param sessionName is a profile name to use in the jobs tree
  * @param jobId is a job to focus on
  */
-export const focusOnJob = async (jobsProvider: IZoweTree<IZoweJobTreeNode>, sessionName: string, jobId: string): Promise<void> => {
+export const focusOnJob = async (jobsProvider: Types.IZoweJobTreeType, sessionName: string, jobId: string): Promise<void> => {
     ZoweLogger.trace("job.actions.focusOnJob called.");
     let sessionNode: IZoweJobTreeNode | undefined = jobsProvider.mSessionNodes.find((jobNode) => jobNode.label.toString() === sessionName.trim());
     if (!sessionNode) {
@@ -335,7 +335,7 @@ export async function stopCommand(job: ZoweJobNode): Promise<void> {
  * @param jobsProvider The tree to which the updated node belongs
  */
 // Is this redundant with the setter in the Job class (ZoweJobNode.ts)?
-export async function setOwner(job: IZoweJobTreeNode, jobsProvider: IZoweTree<IZoweJobTreeNode>): Promise<void> {
+export async function setOwner(job: IZoweJobTreeNode, jobsProvider: Types.IZoweJobTreeType): Promise<void> {
     ZoweLogger.trace("job.actions.setOwner called.");
     const options: vscode.InputBoxOptions = {
         prompt: vscode.l10n.t("Owner"),
@@ -351,7 +351,7 @@ export async function setOwner(job: IZoweJobTreeNode, jobsProvider: IZoweTree<IZ
  * @param job The job to set the prefix of
  * @param jobsProvider The tree to which the updated node belongs
  */
-export async function setPrefix(job: IZoweJobTreeNode, jobsProvider: IZoweTree<IZoweJobTreeNode>): Promise<void> {
+export async function setPrefix(job: IZoweJobTreeNode, jobsProvider: Types.IZoweJobTreeType): Promise<void> {
     ZoweLogger.trace("job.actions.setPrefix called.");
     const options: vscode.InputBoxOptions = {
         prompt: vscode.l10n.t("Prefix"),
@@ -366,7 +366,7 @@ export async function setPrefix(job: IZoweJobTreeNode, jobsProvider: IZoweTree<I
  *
  * @param jobsProvider The tree to which the node belongs
  */
-export async function deleteCommand(jobsProvider: IZoweTree<IZoweJobTreeNode>, job?: IZoweJobTreeNode, jobs?: IZoweJobTreeNode[]): Promise<void> {
+export async function deleteCommand(jobsProvider: Types.IZoweJobTreeType, job?: IZoweJobTreeNode, jobs?: IZoweJobTreeNode[]): Promise<void> {
     ZoweLogger.trace("job.actions.deleteCommand called.");
     if (jobs && jobs.length) {
         await deleteMultipleJobs(
@@ -386,7 +386,7 @@ export async function deleteCommand(jobsProvider: IZoweTree<IZoweJobTreeNode>, j
     }
 }
 
-async function deleteSingleJob(job: IZoweJobTreeNode, jobsProvider: IZoweTree<IZoweJobTreeNode>): Promise<void> {
+async function deleteSingleJob(job: IZoweJobTreeNode, jobsProvider: Types.IZoweJobTreeType): Promise<void> {
     ZoweLogger.trace("job.actions.deleteSingleJob called.");
     const jobName = `${job.job.jobname}(${job.job.jobid})`;
     const message = vscode.l10n.t({
@@ -419,7 +419,7 @@ async function deleteSingleJob(job: IZoweJobTreeNode, jobsProvider: IZoweTree<IZ
     }
 }
 
-async function deleteMultipleJobs(jobs: ReadonlyArray<IZoweJobTreeNode>, jobsProvider: IZoweTree<IZoweJobTreeNode>): Promise<void> {
+async function deleteMultipleJobs(jobs: ReadonlyArray<IZoweJobTreeNode>, jobsProvider: Types.IZoweJobTreeType): Promise<void> {
     ZoweLogger.trace("job.actions.deleteMultipleJobs called.");
     const deleteButton = vscode.l10n.t("Delete");
     const toJobname = (jobNode: IZoweJobTreeNode): string => `${jobNode.job.jobname}(${jobNode.job.jobid})`;
@@ -485,7 +485,7 @@ async function deleteMultipleJobs(jobs: ReadonlyArray<IZoweJobTreeNode>, jobsPro
     }
 }
 
-export async function cancelJobs(jobsProvider: IZoweTree<IZoweJobTreeNode>, nodes: IZoweJobTreeNode[]): Promise<void> {
+export async function cancelJobs(jobsProvider: Types.IZoweJobTreeType, nodes: IZoweJobTreeNode[]): Promise<void> {
     if (!nodes.length) {
         return;
     }
@@ -578,7 +578,7 @@ export async function sortJobs(session: IZoweJobTreeNode, jobsProvider: ZosJobsP
         });
         if (dir != null) {
             session.sort = {
-                ...(session.sort ?? { method: JobSortOpts.Id }),
+                ...(session.sort ?? { method: Sorting.JobSortOpts.Id }),
                 direction: SORT_DIRS.indexOf(dir),
             };
         }
