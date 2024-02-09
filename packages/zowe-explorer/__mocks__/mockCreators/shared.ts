@@ -352,6 +352,9 @@ export function createInstanceOfProfile(profile: imperative.IProfileLoaded) {
         fetchAllProfiles: jest.fn(() => {
             return [{ name: "sestest" }, { name: "profile1" }, { name: "profile2" }];
         }),
+        convertV1ProfToConfig: jest.fn(),
+        getLoadedProfConfig: jest.fn(),
+        getSecurePropsForProfile: jest.fn(),
     } as any;
 }
 
