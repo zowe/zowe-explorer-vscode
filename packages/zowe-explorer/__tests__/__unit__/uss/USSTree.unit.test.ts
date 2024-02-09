@@ -565,7 +565,6 @@ describe("USSTree Unit Tests - Function USSTree.deleteSession()", () => {
 describe("USSTree Unit Tests - Function USSTree.filterPrompt()", () => {
     async function createBlockMocks(globalMocks) {
         const newMocks = {
-            theia: false,
             qpValue: "",
             qpItem: new utils.FilterDescriptor("\uFF0B " + "Create a new filter"),
             resolveQuickPickHelper: jest.spyOn(Gui, "resolveQuickPick"),

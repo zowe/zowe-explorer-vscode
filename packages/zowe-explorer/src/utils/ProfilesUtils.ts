@@ -68,11 +68,6 @@ export async function errorHandling(errorDetails: Error | string, label?: string
                 const isTokenAuth = await ProfilesUtils.isUsingTokenAuth(label);
 
                 if (tokenError.includes("Token is not valid or expired.") || isTokenAuth) {
-                    if (isTheia()) {
-                        Gui.errorMessage(errToken);
-                        await Profiles.getInstance().ssoLogin(null, label);
-                        return;
-                    }
                     const message = vscode.l10n.t("Log in to Authentication Service");
                     Gui.showMessage(errToken, { items: [message] }).then(async (selection) => {
                         if (selection) {
@@ -81,11 +76,6 @@ export async function errorHandling(errorDetails: Error | string, label?: string
                     });
                     return;
                 }
-            }
-
-            if (isTheia()) {
-                Gui.errorMessage(errMsg);
-                return;
             }
             const checkCredsButton = vscode.l10n.t("Update Credentials");
             await Gui.errorMessage(errMsg, {
@@ -109,17 +99,6 @@ export async function errorHandling(errorDetails: Error | string, label?: string
     }
     // Try to keep message readable since VS Code doesn't support newlines in error messages
     Gui.errorMessage(moreInfo + errorDetails.toString().replace(/\n/g, " | "));
-}
-
-// TODO: remove this second occurence
-export function isTheia(): boolean {
-    ZoweLogger.trace("ProfileUtils.isTheia called.");
-    const VSCODE_APPNAME: string[] = ["Visual Studio Code", "VSCodium"];
-    const appName = vscode.env.appName;
-    if (appName && !VSCODE_APPNAME.includes(appName)) {
-        return true;
-    }
-    return false;
 }
 
 /**
@@ -397,7 +376,7 @@ export class ProfilesUtils {
         );
     }
 
-    public static async getProfileInfo(envTheia: boolean): Promise<imperative.ProfileInfo> {
+    public static async getProfileInfo(): Promise<imperative.ProfileInfo> {
         ZoweLogger.trace("ProfilesUtils.getProfileInfo called.");
         const hasSecureCredentialManagerEnabled: boolean = SettingsConfig.getDirectValue(globals.SETTINGS_SECURE_CREDENTIALS_ENABLED);
 
@@ -426,7 +405,7 @@ export class ProfilesUtils {
     public static async readConfigFromDisk(): Promise<void> {
         ZoweLogger.trace("ProfilesUtils.readConfigFromDisk called.");
         let rootPath: string;
-        const mProfileInfo = await ProfilesUtils.getProfileInfo(globals.ISTHEIA);
+        const mProfileInfo = await ProfilesUtils.getProfileInfo();
         if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders[0]) {
             rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
             await mProfileInfo.readProfilesFromDisk({ homeDir: FileManagement.getZoweDir(), projectDir: FileManagement.getFullPath(rootPath) });

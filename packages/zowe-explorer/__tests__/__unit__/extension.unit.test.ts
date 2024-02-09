@@ -584,44 +584,6 @@ describe("Extension Unit Tests", () => {
 });
 
 describe("Extension Unit Tests - THEIA", () => {
-    it("Tests that activate() works correctly for Theia", async () => {
-        const globalMocks = await createGlobalMocks();
-        jest.spyOn(ProfilesUtils, "getCredentialManagerOverride").mockReturnValueOnce("@zowe/cli");
-
-        Object.defineProperty(vscode.env, "appName", { value: "Eclipse Theia" });
-        Object.defineProperty(vscode.env, "uriScheme", { value: "theia" });
-        Object.defineProperty(vscode.env, "uiKind", { value: vscode.UIKind.Web });
-        globalMocks.mockExistsSync.mockReset();
-        globalMocks.mockReaddirSync.mockReset();
-        globalMocks.mockExistsSync.mockReturnValueOnce(false);
-        globalMocks.mockGetConfiguration.mockReturnValue({
-            persistence: true,
-            get: (_setting: string) => "",
-            update: jest.fn(),
-            inspect: (_configuration: string) => {
-                return {
-                    workspaceValue: undefined,
-                    globalValue: undefined,
-                };
-            },
-        });
-
-        await extension.activate(globalMocks.mockExtension);
-
-        expect(globals.ISTHEIA).toEqual(true);
-        expect(globalMocks.mockMkdirSync.mock.calls.length).toBe(6);
-        expect(globalMocks.mockRegisterCommand.mock.calls.length).toBe(globals.COMMAND_COUNT);
-        globalMocks.mockRegisterCommand.mock.calls.forEach((call, i) => {
-            expect(call[0]).toStrictEqual(globalMocks.expectedCommands[i]);
-            expect(call[1]).toBeInstanceOf(Function);
-        });
-        const actualCommands = [];
-        globalMocks.mockRegisterCommand.mock.calls.forEach((call) => {
-            actualCommands.push(call[0]);
-        });
-        expect(actualCommands).toEqual(globalMocks.expectedCommands);
-    });
-
     // it("Tests that onChangeProfileAction executes the proper profile commands", async () => {
     //     const globalMocks = await createGlobalMocks();
     //     Object.defineProperty(vscode.workspace, "fs", {

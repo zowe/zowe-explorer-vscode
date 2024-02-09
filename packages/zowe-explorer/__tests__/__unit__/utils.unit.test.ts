@@ -20,7 +20,6 @@ jest.mock("../../src/utils/LoggerUtils");
 
 function createGlobalMocks() {
     const globalMocks = {
-        isTheia: jest.fn(),
         testProfileLoaded: createValidIProfile(),
         mockProfileInstance: null,
         mockProfileInfo: createInstanceOfProfileInfo(),
@@ -28,7 +27,6 @@ function createGlobalMocks() {
     };
 
     globalMocks.mockProfileInstance = createInstanceOfProfile(globalMocks.testProfileLoaded);
-    const isTheia = jest.fn();
 
     Object.defineProperty(vscode.window, "showQuickPick", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "createQuickPick", { value: jest.fn(), configurable: true });
@@ -42,18 +40,12 @@ function createGlobalMocks() {
             .mockReturnValue(globalMocks.mockProfileInstance),
         configurable: true,
     });
-    Object.defineProperty(globals, "ISTHEIA", { get: isTheia, configurable: true });
-    Object.defineProperty(utils, "isTheia", { value: jest.fn(), configurable: true });
 
     Object.defineProperty(globalMocks.mockProfilesCache, "getProfileInfo", {
         value: jest.fn(() => {
             return { value: globalMocks.mockProfileInfo, configurable: true };
         }),
     });
-
-    return {
-        isTheia,
-    };
 }
 
 // Idea is borrowed from: https://github.com/kulshekhar/ts-jest/blob/master/src/util/testing.ts
@@ -100,27 +92,6 @@ describe("Utils Unit Tests - Function errorHandling", () => {
 
         await utils.errorHandling(errorDetails, label);
 
-        expect(vscode.window.showErrorMessage).toHaveBeenCalledWith(
-            `Invalid Credentials for profile '${label}'. Please ensure the username and password are valid or this may lead to a lock-out.`,
-            { modal: true },
-            "Update Credentials"
-        );
-    });
-    it("Checking common error handling - Theia", async () => {
-        const blockMocks = createBlockMocks();
-
-        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profile);
-        mocked(vscode.window.showErrorMessage).mockResolvedValueOnce({ title: "Update Credentials" });
-        jest.spyOn(utils, "isTheia").mockReturnValue(true);
-        const errorDetails = new imperative.ImperativeError({
-            msg: "Invalid credentials",
-            errorCode: 401 as unknown as string,
-        });
-        const label = "invalidCred";
-
-        await utils.errorHandling(errorDetails, label);
-
-        // TODO: check why this return two messages?
         expect(vscode.window.showErrorMessage).toHaveBeenCalledWith(
             `Invalid Credentials for profile '${label}'. Please ensure the username and password are valid or this may lead to a lock-out.`,
             { modal: true },

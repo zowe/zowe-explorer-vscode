@@ -83,7 +83,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             };
         }
 
-        if (!globals.ISTHEIA && contextually.isSession(this)) {
+        if (contextually.isSession(this)) {
             this.id = this.label as string;
         }
     }

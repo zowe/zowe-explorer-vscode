@@ -105,8 +105,8 @@ export function sortTreeItems(favorites: vscode.TreeItem[], specificContext): vo
 /*************************************************************************************************************
  * Determine IDE name to display based on app environment
  *************************************************************************************************************/
-export function getAppName(isTheia: boolean): "Theia" | "VS Code" {
-    return isTheia ? "Theia" : "VS Code";
+export function getAppName(): "VS Code" {
+    return "VS Code";
 }
 
 /**

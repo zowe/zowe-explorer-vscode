@@ -140,7 +140,6 @@ describe("ProfilesUtils unit tests", () => {
             });
             const label = "test";
             const moreInfo = "Task failed successfully";
-            jest.spyOn(profUtils, "isTheia").mockReturnValue(false);
             const showMessageSpy = jest.spyOn(Gui, "errorMessage").mockImplementation(() => Promise.resolve("Update Credentials"));
             const promptCredsSpy = jest.fn();
             jest.spyOn(Profiles, "getInstance").mockReturnValue({
@@ -164,7 +163,6 @@ describe("ProfilesUtils unit tests", () => {
             });
             const label = "test";
             const moreInfo = "Task failed successfully";
-            jest.spyOn(profUtils, "isTheia").mockReturnValue(false);
             const showErrorSpy = jest.spyOn(Gui, "errorMessage");
             const showMessageSpy = jest.spyOn(Gui, "showMessage").mockImplementation(() => Promise.resolve("selection"));
             const ssoLoginSpy = jest.fn();
@@ -179,38 +177,6 @@ describe("ProfilesUtils unit tests", () => {
             expect(showMessageSpy).toBeCalledTimes(1);
             expect(ssoLoginSpy).toBeCalledTimes(1);
             expect(showErrorSpy).not.toBeCalled();
-            showErrorSpy.mockClear();
-            showMessageSpy.mockClear();
-            ssoLoginSpy.mockClear();
-        });
-        it("should handle token error and procede to login - Theia", async () => {
-            const errorDetails = new zowe.imperative.ImperativeError({
-                msg: "Invalid credentials",
-                errorCode: String(401),
-                additionalDetails: "Token is not valid or expired.",
-            });
-            const label = "test";
-            const moreInfo = "Task failed successfully";
-            Object.defineProperty(vscode, "env", {
-                value: {
-                    appName: "Theia",
-                },
-                configurable: true,
-            });
-            const showErrorSpy = jest.spyOn(Gui, "errorMessage").mockImplementation(() => Promise.resolve(undefined));
-            const showMessageSpy = jest.spyOn(Gui, "showMessage");
-            const ssoLoginSpy = jest.fn();
-            jest.spyOn(Profiles, "getInstance").mockReturnValue({
-                getProfileInfo: profileInfoMock,
-                getLoadedProfConfig: () => ({ type: "zosmf" }),
-                getDefaultProfile: () => ({}),
-                getSecurePropsForProfile: () => ["tokenValue"],
-                ssoLogin: ssoLoginSpy,
-            } as any);
-            await profUtils.errorHandling(errorDetails, label, moreInfo);
-            expect(showErrorSpy).toBeCalledTimes(1);
-            expect(ssoLoginSpy).toBeCalledTimes(1);
-            expect(showMessageSpy).not.toBeCalled();
             showErrorSpy.mockClear();
             showMessageSpy.mockClear();
             ssoLoginSpy.mockClear();
@@ -245,30 +211,6 @@ describe("ProfilesUtils unit tests", () => {
             expect(showMsgSpy).toBeCalledWith("Operation Cancelled");
             showErrorSpy.mockClear();
             showMsgSpy.mockClear();
-            promptCredentialsSpy.mockClear();
-        });
-        it("should handle credential error with error message - Theia", async () => {
-            const errorDetails = new zowe.imperative.ImperativeError({
-                msg: "Invalid credentials",
-                errorCode: 401 as unknown as string,
-                additionalDetails: "Authentication failed.",
-            });
-            const label = "test";
-            const moreInfo = "Task failed successfully";
-            jest.spyOn(profUtils, "isTheia").mockReturnValue(true);
-            const showErrorSpy = jest.spyOn(Gui, "errorMessage");
-            const promptCredentialsSpy = jest.fn();
-            jest.spyOn(Profiles, "getInstance").mockReturnValue({
-                promptCredentials: promptCredentialsSpy,
-                getProfileInfo: profileInfoMock,
-                getLoadedProfConfig: () => ({ type: "zosmf" }),
-                getDefaultProfile: () => ({}),
-                getSecurePropsForProfile: () => [],
-            } as any);
-            await profUtils.errorHandling(errorDetails, label, moreInfo);
-            expect(showErrorSpy).toBeCalledTimes(1);
-            expect(promptCredentialsSpy).not.toBeCalled();
-            showErrorSpy.mockClear();
             promptCredentialsSpy.mockClear();
         });
     });

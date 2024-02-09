@@ -88,9 +88,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
                 method: Sorting.JobSortOpts.Id,
                 direction: Sorting.SortDirection.Ascending,
             };
-            if (!globals.ISTHEIA) {
-                this.id = this.label as string;
-            }
+            this.id = this.label as string;
         }
     }
 

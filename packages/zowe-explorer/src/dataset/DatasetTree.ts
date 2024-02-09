@@ -239,7 +239,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                     vscode.l10n.t({
                         message:
                             "Invalid Data Sets favorite: {0}. Please check formatting of the zowe.ds.history 'favorites' settings in the {1} user settings.",
-                        args: [line, getAppName(globals.ISTHEIA)],
+                        args: [line, getAppName()],
                         comment: ["Data Sets Favorite line", "Application name"],
                     })
                 );
@@ -353,7 +353,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                     message: `Error: You have Zowe Data Set favorites that refer to a non-existent CLI profile named: {0}. 
                     To resolve this, you can remove {0} from the Favorites section of Zowe Explorer's Data Sets view. 
                     Would you like to do this now? {1}`,
-                    args: [profileName, getAppName(globals.ISTHEIA)],
+                    args: [profileName, getAppName()],
                     comment: ["Profile name", "Application name"],
                 });
                 // eslint-disable-next-line @typescript-eslint/restrict-plus-operands

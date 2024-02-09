@@ -296,7 +296,6 @@ describe("Test src/shared/extension", () => {
         });
 
         it("Test assuming we are NOT in a Theia environment", async () => {
-            Object.defineProperty(globals, "ISTHEIA", { value: false });
             await extRefreshCallback();
             expect(spyExecuteCommand).not.toHaveBeenCalled();
             expect(deactivate).toHaveBeenCalled();
@@ -306,7 +305,6 @@ describe("Test src/shared/extension", () => {
         });
 
         it("Test assuming we are NOT in a Theia environment and unable to dispose of the subscription", async () => {
-            Object.defineProperty(globals, "ISTHEIA", { value: false });
             const testError = new Error("test");
             dispose.mockRejectedValue(testError);
             await extRefreshCallback();
@@ -330,7 +328,6 @@ describe("Test src/shared/extension", () => {
         beforeEach(() => {
             context = { subscriptions: [] };
             jest.clearAllMocks();
-            Object.defineProperty(globals, "ISTHEIA", { value: false, configurable: true });
             Object.defineProperty(vscode.workspace, "createFileSystemWatcher", { value: () => watcher, configurable: true });
             Object.defineProperty(vscode.workspace, "workspaceFolders", { value: [{ uri: { fsPath: "fsPath" } }], configurable: true });
             Object.defineProperty(vscode.commands, "executeCommand", { value: spyExecuteCommand, configurable: true });
@@ -374,7 +371,6 @@ describe("Test src/shared/extension", () => {
         });
 
         it("should setup listeners if we are NOT in THEIA", () => {
-            Object.defineProperty(globals, "ISTHEIA", { value: false });
             sharedExtension.initSubscribers(context, provider);
             expect(context.subscriptions).toContain(treeView);
             expect(spyCollapse).toHaveBeenCalled();

@@ -428,7 +428,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                     message: `Error: You have Zowe Job favorites that refer to a non-existent CLI profile named: {0}.
                          To resolve this, you can remove {0} from the Favorites section of Zowe Explorer's Jobs view.
                           Would you like to do this now? {1}`,
-                    args: [profileName, getAppName(globals.ISTHEIA)],
+                    args: [profileName, getAppName()],
                     comment: ["Profile name", "Application name"],
                 });
                 // eslint-disable-next-line @typescript-eslint/restrict-plus-operands

@@ -783,7 +783,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                     message: `Error: You have Zowe USS favorites that refer to a non-existent CLI profile named: {0}.
                      To resolve this, you can remove {0} from the Favorites section of Zowe Explorer's USS view.
                       Would you like to do this now? {1}`,
-                    args: [profileName, getAppName(globals.ISTHEIA)],
+                    args: [profileName, getAppName()],
                     comment: ["Profile name", "Application name"],
                 });
                 const btnLabelRemove = vscode.l10n.t("initializeUSSFavorites.error.buttonRemove", "Remove");
