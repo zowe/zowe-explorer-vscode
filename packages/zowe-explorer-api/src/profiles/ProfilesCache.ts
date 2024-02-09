@@ -10,6 +10,7 @@
  */
 
 import * as path from "path";
+import * as fs from "fs";
 import * as zowe from "@zowe/cli";
 import * as extend from "../extend";
 import { FileManagement } from "../utils";
@@ -394,7 +395,7 @@ export class ProfilesCache {
     public async convertV1ProfToConfig(): Promise<string[]> {
         const response: string[] = [];
         try {
-            const zoweDir = getZoweDir();
+            const zoweDir = FileManagement.getZoweDir();
             const profilesPath = path.join(zoweDir, "profiles");
             const oldProfilesPath = `${profilesPath.replace(/[\\/]$/, "")}-old`;
             const convertResult = await zowe.imperative.ConfigBuilder.convert(profilesPath);
@@ -412,12 +413,14 @@ export class ProfilesCache {
                 }
             }
             const teamConfig = await zowe.imperative.Config.load("zowe", {
-                homeDir: getZoweDir(),
-                projectDir: undefined,
+                homeDir: zoweDir,
+                projectDir: false,
             });
             teamConfig.api.layers.activate(false, true);
             teamConfig.api.layers.merge(convertResult.config);
-            const knownCliConfig: zowe.imperative.ICommandProfileTypeConfiguration[] = [];
+            // const knownCliConfig: zowe.imperative.ICommandProfileTypeConfiguration[] = [];
+            const impConfig: zowe.imperative.IImperativeConfig = zowe.getImperativeConfig();
+            const knownCliConfig: zowe.imperative.ICommandProfileTypeConfiguration[] = impConfig.profiles;
 
             const extenderinfo = this.getConfigArray();
             extenderinfo.forEach((item) => {

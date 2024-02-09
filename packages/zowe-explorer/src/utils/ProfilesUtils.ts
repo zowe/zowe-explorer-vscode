@@ -466,6 +466,10 @@ export class ProfilesUtils {
                         }
                         case convertButton: {
                             ZoweLogger.info("Convert v1 profiles to team configuration chosen.");
+                            const impConfig: imperative.IImperativeConfig = getImperativeConfig();
+                            const knownCliConfig: imperative.ICommandProfileTypeConfiguration[] = impConfig.profiles;
+                            knownCliConfig.push(impConfig.baseProfile);
+                            Profiles.getInstance().addToConfigArray(impConfig.profiles);
                             const convertResults = await Profiles.getInstance().convertV1ProfToConfig();
                             Gui.infoMessage(String(convertResults));
                             break;
