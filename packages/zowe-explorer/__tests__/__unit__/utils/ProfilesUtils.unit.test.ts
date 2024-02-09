@@ -21,7 +21,7 @@ import { Profiles } from "../../../src/Profiles";
 import { SettingsConfig } from "../../../src/utils/SettingsConfig";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 import { ZoweExplorerExtender } from "../../../src/ZoweExplorerExtender";
-import { createValidIProfile } from "../../../__mocks__/mockCreators/shared";
+import { createAltTypeIProfile, createValidIProfile } from "../../../__mocks__/mockCreators/shared";
 
 jest.mock("../../../src/utils/LoggerUtils");
 jest.mock("fs");
@@ -50,6 +50,7 @@ describe("ProfilesUtils unit tests", () => {
         Object.defineProperty(fs, "openSync", { value: newMocks.mockOpenSync, configurable: true });
         Object.defineProperty(fs, "mkdirSync", { value: newMocks.mockMkdirSync, configurable: true });
         Object.defineProperty(Gui, "errorMessage", { value: jest.fn(), configurable: true });
+        Object.defineProperty(Gui, "infoMessage", { value: jest.fn(), configurable: true });
         Object.defineProperty(SettingsConfig, "getDirectValue", { value: newMocks.mockGetDirectValue, configurable: true });
         Object.defineProperty(globals, "PROFILE_SECURITY", { value: globals.ZOWE_CLI_SCM, configurable: true });
         return newMocks;
@@ -274,17 +275,17 @@ describe("ProfilesUtils unit tests", () => {
     });
 
     describe("readConfigFromDisk", () => {
-        it("should readConfigFromDisk and log 'Not Available'", async () => {
-            Object.defineProperty(vscode.workspace, "workspaceFolders", {
-                value: [
-                    {
-                        uri: {
-                            fsPath: "./test",
-                        },
+        Object.defineProperty(vscode.workspace, "workspaceFolders", {
+            value: [
+                {
+                    uri: {
+                        fsPath: "./test",
                     },
-                ],
-                configurable: true,
-            });
+                },
+            ],
+            configurable: true,
+        });
+        it("should readConfigFromDisk and log 'Not Available'", async () => {
             const mockReadProfilesFromDisk = jest.fn();
             const profInfoSpy = jest.spyOn(profUtils.ProfilesUtils, "getProfileInfo").mockReturnValue({
                 readProfilesFromDisk: mockReadProfilesFromDisk,
@@ -312,16 +313,6 @@ describe("ProfilesUtils unit tests", () => {
         });
 
         it("should readConfigFromDisk and find with defaults", async () => {
-            Object.defineProperty(vscode.workspace, "workspaceFolders", {
-                value: [
-                    {
-                        uri: {
-                            fsPath: "./test",
-                        },
-                    },
-                ],
-                configurable: true,
-            });
             const mockReadProfilesFromDisk = jest.fn();
             const profInfoSpy = jest.spyOn(profUtils.ProfilesUtils, "getProfileInfo").mockReturnValue({
                 readProfilesFromDisk: mockReadProfilesFromDisk,
@@ -334,16 +325,6 @@ describe("ProfilesUtils unit tests", () => {
         });
 
         it("should keep Imperative error details if readConfigFromDisk fails", async () => {
-            Object.defineProperty(vscode.workspace, "workspaceFolders", {
-                value: [
-                    {
-                        uri: {
-                            fsPath: "./test",
-                        },
-                    },
-                ],
-                configurable: true,
-            });
             const impErr = new zowe.imperative.ImperativeError({ msg: "Unexpected Imperative error" });
             const mockReadProfilesFromDisk = jest.fn().mockRejectedValue(impErr);
             const profInfoSpy = jest.spyOn(profUtils.ProfilesUtils, "getProfileInfo").mockReturnValue({
@@ -353,6 +334,26 @@ describe("ProfilesUtils unit tests", () => {
             } as never);
             await expect(profUtils.ProfilesUtils.readConfigFromDisk()).rejects.toBe(impErr);
             expect(mockReadProfilesFromDisk).toHaveBeenCalledTimes(1);
+            profInfoSpy.mockRestore();
+        });
+        it("should keep prompt user if v1 profiles detected", async () => {
+            const mockReadProfilesFromDisk = jest.fn();
+            const profInfoSpy = jest.spyOn(profUtils.ProfilesUtils, "getProfileInfo").mockReturnValueOnce({
+                readProfilesFromDisk: mockReadProfilesFromDisk,
+                usingTeamConfig: false,
+                getTeamConfig: jest.fn().mockReturnValue([]),
+                getAllProfiles: jest.fn().mockReturnValue([createValidIProfile(), createAltTypeIProfile()]),
+            } as never);
+            const msgSpy = jest.spyOn(Gui, "infoMessage").mockResolvedValueOnce("Create New" as any);
+            const commandSpy = jest.spyOn(vscode.commands, "executeCommand");
+            await expect(profUtils.ProfilesUtils.readConfigFromDisk()).resolves.not.toThrow();
+            expect(msgSpy).toHaveBeenCalledWith(
+                "Zowe v1 profiles in use.\n  Zowe Explorer no longer supports v1 profiles, choose to convert existing profiles to a team configuration or create new.",
+                { items: ["Create New", "Convert Existing Profiles"], vsCodeOpts: { modal: true } }
+            );
+            expect(commandSpy).toHaveBeenCalledWith("zowe.ds.addSession", undefined);
+            msgSpy.mockRestore();
+            commandSpy.mockRestore();
             profInfoSpy.mockRestore();
         });
     });
@@ -666,18 +667,20 @@ describe("ProfilesUtils unit tests", () => {
             const isVSCodeCredentialPluginInstalledSpy = jest.spyOn(profUtils.ProfilesUtils, "isVSCodeCredentialPluginInstalled");
 
             jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(true);
+            jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(true);
             jest.spyOn(profUtils.ProfilesUtils as any, "fetchRegisteredPlugins").mockImplementation();
             jest.spyOn(profUtils.ProfilesUtils, "getCredentialManagerOverride").mockReturnValue("test");
             jest.spyOn(profUtils.ProfilesUtils, "isVSCodeCredentialPluginInstalled").mockReturnValueOnce(false);
-            jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(true);
             jest.spyOn(profUtils.ProfilesUtils, "getCredentialManagerMap").mockReturnValueOnce({
                 credMgrDisplayName: "test",
                 credMgrPluginName: "test",
                 credMgrZEName: "test",
             });
-            jest.spyOn((profUtils as any).ProfilesUtils, "setupCustomCredentialManager").mockReturnValueOnce({});
+            const promptSpy = jest.spyOn(profUtils.ProfilesUtils, "promptAndHandleMissingCredentialManager").mockImplementation();
+            jest.spyOn(profUtils.ProfilesUtils, "setupCustomCredentialManager").mockReturnValueOnce({} as any);
             await expect(profUtils.ProfilesUtils.getProfileInfo(false)).resolves.toEqual({});
-            expect(isVSCodeCredentialPluginInstalledSpy).toBeCalledTimes(1);
+            expect(isVSCodeCredentialPluginInstalledSpy).toHaveBeenCalledTimes(1);
+            expect(promptSpy).toHaveBeenCalled();
         });
 
         it("should retrieve the custom credential manager", async () => {

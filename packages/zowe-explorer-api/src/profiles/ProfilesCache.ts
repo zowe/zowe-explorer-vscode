@@ -15,6 +15,7 @@ import * as zowe from "@zowe/cli";
 import * as extend from "../extend";
 import { FileManagement } from "../utils";
 import { Validation } from "./Validation";
+import { ZeApiConvertResponse } from "../globals";
 
 export class ProfilesCache {
     public profilesForValidation: Validation.IValidationProfile[] = [];
@@ -346,52 +347,49 @@ export class ProfilesCache {
         };
     }
 
-    public async convertV1ProfToConfig(): Promise<string[]> {
-        const response: string[] = [];
-        try {
-            const zoweDir = FileManagement.getZoweDir();
-            const profilesPath = path.join(zoweDir, "profiles");
-            const oldProfilesPath = `${profilesPath.replace(/[\\/]$/, "")}-old`;
-            const convertResult = await zowe.imperative.ConfigBuilder.convert(profilesPath);
-            for (const [k, v] of Object.entries(convertResult.profilesConverted)) {
-                response.push(`Converted ${k} profiles: ${v.join(", ")}`);
-            }
-            if (convertResult.profilesFailed.length > 0) {
-                response.push(`Failed to convert ${convertResult.profilesFailed.length} profile(s). See details below`);
-                for (const { name, type, error } of convertResult.profilesFailed) {
-                    if (name != null) {
-                        response.push(`Failed to load ${type} profile "${name}":\n    ${String(error)}`);
-                    } else {
-                        response.push(`Failed to find default ${type} profile:\n    ${String(error)}`);
-                    }
+    public async convertV1ProfToConfig(): Promise<ZeApiConvertResponse> {
+        const successMsg: String[] = [];
+        const warningMsg: String[] = [];
+        const zoweDir = FileManagement.getZoweDir();
+        const profilesPath = path.join(zoweDir, "profiles");
+        const oldProfilesPath = `${profilesPath.replace(/[\\/]$/, "")}-old`;
+        const convertResult = await zowe.imperative.ConfigBuilder.convert(profilesPath);
+        for (const [k, v] of Object.entries(convertResult.profilesConverted)) {
+            successMsg.push(`Converted ${k} profiles: ${v.join(", ")}\n`);
+        }
+        if (convertResult.profilesFailed.length > 0) {
+            warningMsg.push(`Failed to convert ${convertResult.profilesFailed.length} profile(s). See details below\n`);
+            for (const { name, type, error } of convertResult.profilesFailed) {
+                if (name != null) {
+                    warningMsg.push(`Failed to load ${type} profile "${name}":\n    ${String(error)}\n`);
+                } else {
+                    warningMsg.push(`Failed to find default ${type} profile:\n    ${String(error)}\n`);
                 }
             }
-            const teamConfig = await zowe.imperative.Config.load("zowe", {
-                homeDir: zoweDir,
-                projectDir: false,
-            });
-            teamConfig.api.layers.activate(false, true);
-            teamConfig.api.layers.merge(convertResult.config);
-            // const knownCliConfig: zowe.imperative.ICommandProfileTypeConfiguration[] = [];
-            const impConfig: zowe.imperative.IImperativeConfig = zowe.getImperativeConfig();
-            const knownCliConfig: zowe.imperative.ICommandProfileTypeConfiguration[] = impConfig.profiles;
-
-            const extenderinfo = this.getConfigArray();
-            extenderinfo.forEach((item) => {
-                knownCliConfig.push(item);
-            });
-            teamConfig.setSchema(zowe.imperative.ConfigSchema.buildSchema(knownCliConfig));
-            await teamConfig.save();
-            try {
-                fs.renameSync(profilesPath, oldProfilesPath);
-            } catch (error) {
-                response.push(`Failed to rename profiles directory to ${oldProfilesPath}:\n    ${String(error)}`);
-            }
-            response.push(`Your new profiles have been saved to ${teamConfig.layerActive().path}.`);
-        } catch (e) {
-            response.push(String(e));
         }
-        return response;
+        const teamConfig = await zowe.imperative.Config.load("zowe", {
+            homeDir: zoweDir,
+            projectDir: false,
+        });
+        teamConfig.api.layers.activate(false, true);
+        teamConfig.api.layers.merge(convertResult.config);
+        const impConfig: zowe.imperative.IImperativeConfig = zowe.getImperativeConfig();
+        const knownCliConfig: zowe.imperative.ICommandProfileTypeConfiguration[] = impConfig.profiles;
+        knownCliConfig.push(impConfig.baseProfile);
+        this.addToConfigArray(knownCliConfig);
+        teamConfig.setSchema(zowe.imperative.ConfigSchema.buildSchema(this.getConfigArray()));
+        await teamConfig.save();
+        try {
+            fs.renameSync(profilesPath, oldProfilesPath);
+        } catch (error) {
+            warningMsg.push(`Failed to rename profiles directory to ${oldProfilesPath}:\n    ${String(error)}`);
+        }
+        successMsg.push(`Your new profiles have been saved to ${teamConfig.layerActive().path}.\n`);
+        return {
+            success: String(successMsg),
+            warnings: String(warningMsg),
+            convertResult,
+        };
     }
 
     // used by refresh to check correct merging of allProfiles

@@ -465,12 +465,16 @@ export class ProfilesUtils {
                         }
                         case convertButton: {
                             ZoweLogger.info("Convert v1 profiles to team configuration chosen.");
-                            const impConfig: imperative.IImperativeConfig = getImperativeConfig();
-                            const knownCliConfig: imperative.ICommandProfileTypeConfiguration[] = impConfig.profiles;
-                            knownCliConfig.push(impConfig.baseProfile);
-                            Profiles.getInstance().addToConfigArray(impConfig.profiles);
                             const convertResults = await Profiles.getInstance().convertV1ProfToConfig();
-                            Gui.infoMessage(String(convertResults));
+                            let responseMsg = "";
+                            if (convertResults.success) {
+                                responseMsg += `Success: ${convertResults.success}\n`;
+                            }
+                            if (convertResults.warnings) {
+                                responseMsg += `Warning: ${convertResults.warnings}\n`;
+                            }
+                            ZoweLogger.info(responseMsg);
+                            Gui.infoMessage(vscode.l10n.t(responseMsg), { vsCodeOpts: { modal: true } });
                             break;
                         }
                         default: {
