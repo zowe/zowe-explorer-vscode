@@ -355,7 +355,7 @@ export class ProfilesCache {
         const oldProfilesPath = `${profilesPath.replace(/[\\/]$/, "")}-old`;
         const convertResult = await zowe.imperative.ConfigBuilder.convert(profilesPath);
         for (const [k, v] of Object.entries(convertResult.profilesConverted)) {
-            successMsg.push(`Converted ${k} profile: ${String(v)}\n`);
+            successMsg.push(`Converted ${k} profile: ${v.join(", ")}\n`);
         }
         if (convertResult.profilesFailed.length > 0) {
             warningMsg.push(`Failed to convert ${convertResult.profilesFailed.length} profile(s). See details below\n`);
@@ -386,8 +386,8 @@ export class ProfilesCache {
         }
         successMsg.push(`Your new profiles have been saved to ${teamConfig.layerActive().path}.\n`);
         return {
-            success: String(successMsg),
-            warnings: String(warningMsg),
+            success: String(successMsg.join("")),
+            warnings: String(warningMsg.join("")),
             convertResult,
         };
     }

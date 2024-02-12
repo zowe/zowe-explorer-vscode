@@ -1,34 +1,4 @@
 {
-  "Enter an allocation unit": "Enter an allocation unit",
-  "Enter the average block length (if allocation unit = BLK)": "Enter the average block length (if allocation unit = BLK)",
-  "Enter a block size": "Enter a block size",
-  "Enter an SMS data class": "Enter an SMS data class",
-  "Enter a device type (unit)": "Enter a device type (unit)",
-  "Enter the number of directory blocks": "Enter the number of directory blocks",
-  "Specify the data set type (DSNTYPE)": "Specify the data set type (DSNTYPE)",
-  "Enter the SMS management class": "Enter the SMS management class",
-  "Enter a data set name": "Enter a data set name",
-  "Select a data set organization (DSORG)": "Select a data set organization (DSORG)",
-  "Enter the primary space allocation": "Enter the primary space allocation",
-  "Enter the data set's record format": "Enter the data set's record format",
-  "Enter the logical record length": "Enter the logical record length",
-  "Enter the secondary space allocation": "Enter the secondary space allocation",
-  "Enter the size of the data set": "Enter the size of the data set",
-  "Enter the SMS storage class": "Enter the SMS storage class",
-  "Enter the volume serial on which the data set should be placed": "Enter the volume serial on which the data set should be placed",
-  "zowe.separator.recent": "zowe.separator.recent",
-  "Recent Filters": "Recent Filters",
-  "Options": "Options",
-  "Zowe Explorer is running in Theia environment.": "Zowe Explorer is running in Theia environment.",
-  "Zowe Explorer's temp folder is located at {0}/Zowe temp folder": {
-    "message": "Zowe Explorer's temp folder is located at {0}",
-    "comment": [
-      "Zowe temp folder"
-    ]
-  },
-  "Zowe Explorer has activated successfully.": "Zowe Explorer has activated successfully.",
-  "Zowe explorer profiles are being set as unsecured.": "Zowe explorer profiles are being set as unsecured.",
-  "Zowe explorer profiles are being set as secured.": "Zowe explorer profiles are being set as secured.",
   "Error encountered when loading your Zowe config. Click \"Show Config\" for more details.": "Error encountered when loading your Zowe config. Click \"Show Config\" for more details.",
   "Internal error: A Zowe Explorer extension client tried to register an invalid USS API.": "Internal error: A Zowe Explorer extension client tried to register an invalid USS API.",
   "Internal error: A Zowe Explorer extension client tried to register an invalid MVS API.": "Internal error: A Zowe Explorer extension client tried to register an invalid MVS API.",
@@ -143,6 +113,36 @@
       "File path"
     ]
   },
+  "Enter an allocation unit": "Enter an allocation unit",
+  "Enter the average block length (if allocation unit = BLK)": "Enter the average block length (if allocation unit = BLK)",
+  "Enter a block size": "Enter a block size",
+  "Enter an SMS data class": "Enter an SMS data class",
+  "Enter a device type (unit)": "Enter a device type (unit)",
+  "Enter the number of directory blocks": "Enter the number of directory blocks",
+  "Specify the data set type (DSNTYPE)": "Specify the data set type (DSNTYPE)",
+  "Enter the SMS management class": "Enter the SMS management class",
+  "Enter a data set name": "Enter a data set name",
+  "Select a data set organization (DSORG)": "Select a data set organization (DSORG)",
+  "Enter the primary space allocation": "Enter the primary space allocation",
+  "Enter the data set's record format": "Enter the data set's record format",
+  "Enter the logical record length": "Enter the logical record length",
+  "Enter the secondary space allocation": "Enter the secondary space allocation",
+  "Enter the size of the data set": "Enter the size of the data set",
+  "Enter the SMS storage class": "Enter the SMS storage class",
+  "Enter the volume serial on which the data set should be placed": "Enter the volume serial on which the data set should be placed",
+  "zowe.separator.recent": "zowe.separator.recent",
+  "Recent Filters": "Recent Filters",
+  "Options": "Options",
+  "Zowe Explorer is running in Theia environment.": "Zowe Explorer is running in Theia environment.",
+  "Zowe Explorer's temp folder is located at {0}/Zowe temp folder": {
+    "message": "Zowe Explorer's temp folder is located at {0}",
+    "comment": [
+      "Zowe temp folder"
+    ]
+  },
+  "Zowe Explorer has activated successfully.": "Zowe Explorer has activated successfully.",
+  "Zowe explorer profiles are being set as unsecured.": "Zowe explorer profiles are being set as unsecured.",
+  "Zowe explorer profiles are being set as secured.": "Zowe explorer profiles are being set as secured.",
   "Refresh": "Refresh",
   "Delete Selected": "Delete Selected",
   "Select an item before deleting": "Select an item before deleting",
@@ -311,58 +311,6 @@
   },
   "Remote file has changed. Presenting with way to resolve file.": "Remote file has changed. Presenting with way to resolve file.",
   "Something went wrong with compare of files.": "Something went wrong with compare of files.",
-  "Downloaded: {0}/Download time": {
-    "message": "Downloaded: {0}",
-    "comment": [
-      "Download time"
-    ]
-  },
-  "Binary": "Binary",
-  "Encoding: {0}/Encoding name": {
-    "message": "Encoding: {0}",
-    "comment": [
-      "Encoding name"
-    ]
-  },
-  "{0} location/Node type": {
-    "message": "{0} location",
-    "comment": [
-      "Node type"
-    ]
-  },
-  "Choose a location to create the {0}/Node type": {
-    "message": "Choose a location to create the {0}",
-    "comment": [
-      "Node type"
-    ]
-  },
-  "Name of file or directory": "Name of file or directory",
-  "There is already a file with the same name.\n                        Please change your OS file system settings if you want to give case sensitive file names.": "There is already a file with the same name.\n                        Please change your OS file system settings if you want to give case sensitive file names.",
-  "Unable to create node:": "Unable to create node:",
-  "Uploading USS file": "Uploading USS file",
-  "Copy Path is not yet supported in Theia.": "Copy Path is not yet supported in Theia.",
-  "save requested for USS file {0}/Document file name": {
-    "message": "save requested for USS file {0}",
-    "comment": [
-      "Document file name"
-    ]
-  },
-  "Could not locate session when saving USS file.": "Could not locate session when saving USS file.",
-  "Saving file...": "Saving file...",
-  "Delete": "Delete",
-  "Are you sure you want to delete the following item?\nThis will permanently remove the following file or folder from your system.\n\n{0}/File names": {
-    "message": "Are you sure you want to delete the following item?\nThis will permanently remove the following file or folder from your system.\n\n{0}",
-    "comment": [
-      "File names"
-    ]
-  },
-  "Delete action was canceled.": "Delete action was canceled.",
-  "Copying file structure...": "Copying file structure...",
-  "The paste operation is not supported for this node.": "The paste operation is not supported for this node.",
-  "Pasting files...": "Pasting files...",
-  "open() called from invalid node.": "open() called from invalid node.",
-  "There is already a file with the same name.\n                Please change your OS file system settings if you want to give case sensitive file names": "There is already a file with the same name.\n                Please change your OS file system settings if you want to give case sensitive file names",
-  "$(sync~spin) Downloading USS file...": "$(sync~spin) Downloading USS file...",
   "Invalid node": "Invalid node",
   "Profile auth error": "Profile auth error",
   "Profile is not authenticated, please log in to continue": "Profile is not authenticated, please log in to continue",
@@ -396,6 +344,19 @@
   "Required API functions for pasting (fileList, copy and/or putContent) were not found.": "Required API functions for pasting (fileList, copy and/or putContent) were not found.",
   "Uploading USS files...": "Uploading USS files...",
   "Error uploading files": "Error uploading files",
+  "Downloaded: {0}/Download time": {
+    "message": "Downloaded: {0}",
+    "comment": [
+      "Download time"
+    ]
+  },
+  "Binary": "Binary",
+  "Encoding: {0}/Encoding name": {
+    "message": "Encoding: {0}",
+    "comment": [
+      "Encoding name"
+    ]
+  },
   "$(plus) Create a new filter": "$(plus) Create a new filter",
   "Favorites": "Favorites",
   "Unable to rename {0} because you have unsaved changes in this {1}. Please save your work before renaming the {1}./Node pathNode type": {
@@ -449,6 +410,45 @@
   },
   "initializeUSSFavorites.error.buttonRemove": "initializeUSSFavorites.error.buttonRemove",
   "File does not exist. It may have been deleted.": "File does not exist. It may have been deleted.",
+  "{0} location/Node type": {
+    "message": "{0} location",
+    "comment": [
+      "Node type"
+    ]
+  },
+  "Choose a location to create the {0}/Node type": {
+    "message": "Choose a location to create the {0}",
+    "comment": [
+      "Node type"
+    ]
+  },
+  "Name of file or directory": "Name of file or directory",
+  "There is already a file with the same name.\n                        Please change your OS file system settings if you want to give case sensitive file names.": "There is already a file with the same name.\n                        Please change your OS file system settings if you want to give case sensitive file names.",
+  "Unable to create node:": "Unable to create node:",
+  "Uploading USS file": "Uploading USS file",
+  "Copy Path is not yet supported in Theia.": "Copy Path is not yet supported in Theia.",
+  "save requested for USS file {0}/Document file name": {
+    "message": "save requested for USS file {0}",
+    "comment": [
+      "Document file name"
+    ]
+  },
+  "Could not locate session when saving USS file.": "Could not locate session when saving USS file.",
+  "Saving file...": "Saving file...",
+  "Delete": "Delete",
+  "Are you sure you want to delete the following item?\nThis will permanently remove the following file or folder from your system.\n\n{0}/File names": {
+    "message": "Are you sure you want to delete the following item?\nThis will permanently remove the following file or folder from your system.\n\n{0}",
+    "comment": [
+      "File names"
+    ]
+  },
+  "Delete action was canceled.": "Delete action was canceled.",
+  "Copying file structure...": "Copying file structure...",
+  "The paste operation is not supported for this node.": "The paste operation is not supported for this node.",
+  "Pasting files...": "Pasting files...",
+  "open() called from invalid node.": "open() called from invalid node.",
+  "There is already a file with the same name.\n                Please change your OS file system settings if you want to give case sensitive file names": "There is already a file with the same name.\n                Please change your OS file system settings if you want to give case sensitive file names",
+  "$(sync~spin) Downloading USS file...": "$(sync~spin) Downloading USS file...",
   "Disabled": "Disabled",
   "Your jobs": "Your jobs",
   "Other user jobs": "Other user jobs",
@@ -505,6 +505,9 @@
   "Team config file created, refreshing Zowe Explorer.": "Team config file created, refreshing Zowe Explorer.",
   "Team config file deleted, refreshing Zowe Explorer.": "Team config file deleted, refreshing Zowe Explorer.",
   "Team config file updated.": "Team config file updated.",
+  "Type the new pattern to add to history": "Type the new pattern to add to history",
+  "action is not supported for this property type.": "action is not supported for this property type.",
+  "Clear all history items for this persistent property?": "Clear all history items for this persistent property?",
   "Enter a filter": "Enter a filter",
   "No items are loaded in the tree.": "No items are loaded in the tree.",
   "You must enter a pattern.": "You must enter a pattern.",
@@ -514,16 +517,88 @@
   "Compare": "Compare",
   "Overwrite": "Overwrite",
   "The content of the file is newer. Compare your version with latest or overwrite the content of the file with your changes.": "The content of the file is newer. Compare your version with latest or overwrite the content of the file with your changes.",
-  "Type the new pattern to add to history": "Type the new pattern to add to history",
-  "action is not supported for this property type.": "action is not supported for this property type.",
-  "Clear all history items for this persistent property?": "Clear all history items for this persistent property?",
+  "Use the search button to display jobs": "Use the search button to display jobs",
+  "There are no JES spool messages to display": "There are no JES spool messages to display",
+  "No jobs found": "No jobs found",
+  "Filtering by job status is not yet supported with this profile type. Will show jobs with all statuses.": "Filtering by job status is not yet supported with this profile type. Will show jobs with all statuses.",
+  "Retrieving response from zowe.GetJobs": "Retrieving response from zowe.GetJobs",
+  "Create new...": "Create new...",
+  "$(check) Submit this query": "$(check) Submit this query",
+  "Enter job owner ID": "Enter job owner ID",
+  "Enter job prefix": "Enter job prefix",
+  "Enter job status": "Enter job status",
+  "$(plus) Create job search filter": "$(plus) Create job search filter",
+  "$(search) Search by job ID": "$(search) Search by job ID",
+  "Initializing profiles with jobs favorites.": "Initializing profiles with jobs favorites.",
+  "No jobs favorites found.": "No jobs favorites found.",
+  "Loading profile: {0} for jobs favorites/Profile name": {
+    "message": "Loading profile: {0} for jobs favorites",
+    "comment": [
+      "Profile name"
+    ]
+  },
+  "Error: You have Zowe Job favorites that refer to a non-existent CLI profile named: {0}.\n                         To resolve this, you can remove {0} from the Favorites section of Zowe Explorer's Jobs view.\n                          Would you like to do this now? {1}/Profile nameApplication name": {
+    "message": "Error: You have Zowe Job favorites that refer to a non-existent CLI profile named: {0}.\n                         To resolve this, you can remove {0} from the Favorites section of Zowe Explorer's Jobs view.\n                          Would you like to do this now? {1}",
+    "comment": [
+      "Profile name",
+      "Application name"
+    ]
+  },
+  "Remove": "Remove",
+  "This will remove all favorited Jobs items for profile {0}. Continue?/Profile name": {
+    "message": "This will remove all favorited Jobs items for profile {0}. Continue?",
+    "comment": [
+      "Profile name"
+    ]
+  },
+  "Enter a job ID": "Enter a job ID",
+  "Job search cancelled.": "Job search cancelled.",
+  "The polling interval must be greater than or equal to 1000ms.": "The polling interval must be greater than or equal to 1000ms.",
+  "Poll interval (in ms) for: {0}/URI path": {
+    "message": "Poll interval (in ms) for: {0}",
+    "comment": [
+      "URI path"
+    ]
+  },
+  "Polling dismissed for {0}; operation cancelled./Encoded URI path": {
+    "message": "Polling dismissed for {0}; operation cancelled.",
+    "comment": [
+      "Encoded URI path"
+    ]
+  },
+  "$(sync~spin) Polling: {0}.../Encoded URI path": {
+    "message": "$(sync~spin) Polling: {0}...",
+    "comment": [
+      "Encoded URI path"
+    ]
+  },
+  "Filter: {0}/The new filter": {
+    "message": "Filter: {0}",
+    "comment": [
+      "The new filter"
+    ]
+  },
+  "Set a filter...": "Set a filter...",
+  "$(clear-all) Clear filter for profile": "$(clear-all) Clear filter for profile",
+  "$(check) Filter cleared for {0}/Job label": {
+    "message": "$(check) Filter cleared for {0}",
+    "comment": [
+      "Job label"
+    ]
+  },
+  "Enter local filter...": "Enter local filter...",
+  "$(check) Filter updated for {0}/Job label": {
+    "message": "$(check) Filter updated for {0}",
+    "comment": [
+      "Job label"
+    ]
+  },
   "$(list-ordered) Job ID (default)": "$(list-ordered) Job ID (default)",
   "$(calendar) Date Submitted": "$(calendar) Date Submitted",
   "$(case-sensitive) Job Name": "$(case-sensitive) Job Name",
   "$(symbol-numeric) Return Code": "$(symbol-numeric) Return Code",
   "$(fold) Sort Direction": "$(fold) Sort Direction",
   "Go to Local Filtering": "Go to Local Filtering",
-  "$(clear-all) Clear filter for profile": "$(clear-all) Clear filter for profile",
   "Download Single Spool operation not implemented by extender. Please contact the extension developer(s).": "Download Single Spool operation not implemented by extender. Please contact the extension developer(s).",
   "$(sync~spin) Opening spool file.../Label": {
     "message": "$(sync~spin) Opening spool file...",
@@ -602,84 +677,119 @@
       "Session label"
     ]
   },
-  "Use the search button to display jobs": "Use the search button to display jobs",
-  "There are no JES spool messages to display": "There are no JES spool messages to display",
-  "No jobs found": "No jobs found",
-  "Filtering by job status is not yet supported with this profile type. Will show jobs with all statuses.": "Filtering by job status is not yet supported with this profile type. Will show jobs with all statuses.",
-  "Retrieving response from zowe.GetJobs": "Retrieving response from zowe.GetJobs",
-  "Create new...": "Create new...",
-  "$(check) Submit this query": "$(check) Submit this query",
-  "Enter job owner ID": "Enter job owner ID",
-  "Enter job prefix": "Enter job prefix",
-  "Enter job status": "Enter job status",
-  "$(plus) Create job search filter": "$(plus) Create job search filter",
-  "$(search) Search by job ID": "$(search) Search by job ID",
-  "Initializing profiles with jobs favorites.": "Initializing profiles with jobs favorites.",
-  "No jobs favorites found.": "No jobs favorites found.",
-  "Loading profile: {0} for jobs favorites/Profile name": {
-    "message": "Loading profile: {0} for jobs favorites",
+  "Use the search button to display data sets": "Use the search button to display data sets",
+  "Cannot access member with control characters in the name: {0}/Data Set member": {
+    "message": "Cannot access member with control characters in the name: {0}",
+    "comment": [
+      "Data Set member"
+    ]
+  },
+  "No data sets found": "No data sets found",
+  "$(case-sensitive) Name (default)": "$(case-sensitive) Name (default)",
+  "$(calendar) Date Modified": "$(calendar) Date Modified",
+  "$(account) User ID": "$(account) User ID",
+  "$(plus) Create a new filter. For example: HLQ.*, HLQ.aaa.bbb, HLQ.ccc.ddd(member)": "$(plus) Create a new filter. For example: HLQ.*, HLQ.aaa.bbb, HLQ.ccc.ddd(member)",
+  "Initializing profiles with data set favorites.": "Initializing profiles with data set favorites.",
+  "No data set favorites found.": "No data set favorites found.",
+  "Invalid Data Sets favorite: {0}. Please check formatting of the zowe.ds.history 'favorites' settings in the {1} user settings./Data Sets Favorite lineApplication name": {
+    "message": "Invalid Data Sets favorite: {0}. Please check formatting of the zowe.ds.history 'favorites' settings in the {1} user settings.",
+    "comment": [
+      "Data Sets Favorite line",
+      "Application name"
+    ]
+  },
+  "Error creating data set favorite node: {0} for profile {1}./LabelProfile name": {
+    "message": "Error creating data set favorite node: {0} for profile {1}.",
+    "comment": [
+      "Label",
+      "Profile name"
+    ]
+  },
+  "Loading profile: {0} for data set favorites/Profile name": {
+    "message": "Loading profile: {0} for data set favorites",
     "comment": [
       "Profile name"
     ]
   },
-  "Error: You have Zowe Job favorites that refer to a non-existent CLI profile named: {0}.\n                         To resolve this, you can remove {0} from the Favorites section of Zowe Explorer's Jobs view.\n                          Would you like to do this now? {1}/Profile nameApplication name": {
-    "message": "Error: You have Zowe Job favorites that refer to a non-existent CLI profile named: {0}.\n                         To resolve this, you can remove {0} from the Favorites section of Zowe Explorer's Jobs view.\n                          Would you like to do this now? {1}",
+  "Error: You have Zowe Data Set favorites that refer to a non-existent CLI profile named: {0}.\n                    To resolve this, you can remove {0} from the Favorites section of Zowe Explorer's Data Sets view.\n                    Would you like to do this now? {1}/Profile nameApplication name": {
+    "message": "Error: You have Zowe Data Set favorites that refer to a non-existent CLI profile named: {0}.\n                    To resolve this, you can remove {0} from the Favorites section of Zowe Explorer's Data Sets view.\n                    Would you like to do this now? {1}",
     "comment": [
       "Profile name",
       "Application name"
     ]
   },
-  "Remove": "Remove",
-  "This will remove all favorited Jobs items for profile {0}. Continue?/Profile name": {
-    "message": "This will remove all favorited Jobs items for profile {0}. Continue?",
+  "PDS already in favorites": "PDS already in favorites",
+  "This will remove all favorited Data Sets items for profile {0}. Continue?/Profile name": {
+    "message": "This will remove all favorited Data Sets items for profile {0}. Continue?",
     "comment": [
       "Profile name"
     ]
   },
-  "Enter a job ID": "Enter a job ID",
-  "Job search cancelled.": "Job search cancelled.",
-  "The polling interval must be greater than or equal to 1000ms.": "The polling interval must be greater than or equal to 1000ms.",
-  "Poll interval (in ms) for: {0}/URI path": {
-    "message": "Poll interval (in ms) for: {0}",
+  "Node does not exist. It may have been deleted.": "Node does not exist. It may have been deleted.",
+  "Prompting the user for a data set pattern": "Prompting the user for a data set pattern",
+  "Search Data Sets: use a comma to separate multiple patterns": "Search Data Sets: use a comma to separate multiple patterns",
+  "Enter valid member name": "Enter valid member name",
+  "Rename operation cancelled.": "Rename operation cancelled.",
+  "Renaming data set {0}/Old Data Set name": {
+    "message": "Renaming data set {0}",
     "comment": [
-      "URI path"
+      "Old Data Set name"
     ]
   },
-  "Polling dismissed for {0}; operation cancelled./Encoded URI path": {
-    "message": "Polling dismissed for {0}; operation cancelled.",
+  "Unable to rename data set:": "Unable to rename data set:",
+  "Enter a valid data set name.": "Enter a valid data set name.",
+  "all PDS members in {0}/Node label": {
+    "message": "all PDS members in {0}",
     "comment": [
-      "Encoded URI path"
+      "Node label"
     ]
   },
-  "$(sync~spin) Polling: {0}.../Encoded URI path": {
-    "message": "$(sync~spin) Polling: {0}...",
+  "the PDS members in {0}/Node label": {
+    "message": "the PDS members in {0}",
     "comment": [
-      "Encoded URI path"
+      "Node label"
     ]
   },
-  "Filter: {0}/The new filter": {
+  "Select a sorting option for {0}/Specifier": {
+    "message": "Select a sorting option for {0}",
+    "comment": [
+      "Specifier"
+    ]
+  },
+  "$(check) Sorting updated for {0}/Node label": {
+    "message": "$(check) Sorting updated for {0}",
+    "comment": [
+      "Node label"
+    ]
+  },
+  "Filter: {0}/Filter value": {
     "message": "Filter: {0}",
     "comment": [
-      "The new filter"
+      "Filter value"
     ]
   },
-  "Set a filter...": "Set a filter...",
-  "$(check) Filter cleared for {0}/Job label": {
+  "$(clear-all) Clear filter for PDS": "$(clear-all) Clear filter for PDS",
+  "Set a filter for {0}/Specifier": {
+    "message": "Set a filter for {0}",
+    "comment": [
+      "Specifier"
+    ]
+  },
+  "$(check) Filter cleared for {0}/Node label": {
     "message": "$(check) Filter cleared for {0}",
     "comment": [
-      "Job label"
+      "Node label"
     ]
   },
-  "Enter local filter...": "Enter local filter...",
-  "$(check) Filter updated for {0}/Job label": {
+  "Invalid date format specified": "Invalid date format specified",
+  "Enter a value to filter by": "Enter a value to filter by",
+  "Invalid filter specified": "Invalid filter specified",
+  "$(check) Filter updated for {0}/Node label": {
     "message": "$(check) Filter updated for {0}",
     "comment": [
-      "Job label"
+      "Node label"
     ]
   },
-  "$(case-sensitive) Name (default)": "$(case-sensitive) Name (default)",
-  "$(calendar) Date Modified": "$(calendar) Date Modified",
-  "$(account) User ID": "$(account) User ID",
   "Partitioned Data Set: Binary": "Partitioned Data Set: Binary",
   "Partitioned Data Set: C": "Partitioned Data Set: C",
   "Partitioned Data Set: Classic": "Partitioned Data Set: Classic",
@@ -693,7 +803,6 @@
   "Select the profile to which the original data set belongs": "Select the profile to which the original data set belongs",
   "You must select a profile.": "You must select a profile.",
   "Enter the name of the data set to copy attributes from": "Enter the name of the data set to copy attributes from",
-  "Enter a valid data set name.": "Enter a valid data set name.",
   "You must enter a new data set name.": "You must enter a new data set name.",
   "Allocating data set like {0}./Like Data Set name": {
     "message": "Allocating data set like {0}.",
@@ -735,7 +844,6 @@
     ]
   },
   "Name of Member": "Name of Member",
-  "Enter valid member name": "Enter valid member name",
   "Creating new data set member {0}/Data Set member name": {
     "message": "Creating new data set member {0}",
     "comment": [
@@ -830,7 +938,6 @@
       "Stringified JSON error"
     ]
   },
-  "Search Data Sets: use a comma to separate multiple patterns": "Search Data Sets: use a comma to separate multiple patterns",
   "Prompted for a data set pattern, recieved {0}./Data Set pattern": {
     "message": "Prompted for a data set pattern, recieved {0}.",
     "comment": [
@@ -882,113 +989,6 @@
   "The partitioned (PO) data set already exists.\nDo you want to merge them while replacing any existing members?": "The partitioned (PO) data set already exists.\nDo you want to merge them while replacing any existing members?",
   "Enter a name for the new data set": "Enter a name for the new data set",
   "Unable to copy data set.": "Unable to copy data set.",
-  "Use the search button to display data sets": "Use the search button to display data sets",
-  "Cannot access member with control characters in the name: {0}/Data Set member": {
-    "message": "Cannot access member with control characters in the name: {0}",
-    "comment": [
-      "Data Set member"
-    ]
-  },
-  "No data sets found": "No data sets found",
-  "$(plus) Create a new filter. For example: HLQ.*, HLQ.aaa.bbb, HLQ.ccc.ddd(member)": "$(plus) Create a new filter. For example: HLQ.*, HLQ.aaa.bbb, HLQ.ccc.ddd(member)",
-  "Initializing profiles with data set favorites.": "Initializing profiles with data set favorites.",
-  "No data set favorites found.": "No data set favorites found.",
-  "Invalid Data Sets favorite: {0}. Please check formatting of the zowe.ds.history 'favorites' settings in the {1} user settings./Data Sets Favorite lineApplication name": {
-    "message": "Invalid Data Sets favorite: {0}. Please check formatting of the zowe.ds.history 'favorites' settings in the {1} user settings.",
-    "comment": [
-      "Data Sets Favorite line",
-      "Application name"
-    ]
-  },
-  "Error creating data set favorite node: {0} for profile {1}./LabelProfile name": {
-    "message": "Error creating data set favorite node: {0} for profile {1}.",
-    "comment": [
-      "Label",
-      "Profile name"
-    ]
-  },
-  "Loading profile: {0} for data set favorites/Profile name": {
-    "message": "Loading profile: {0} for data set favorites",
-    "comment": [
-      "Profile name"
-    ]
-  },
-  "Error: You have Zowe Data Set favorites that refer to a non-existent CLI profile named: {0}.\n                    To resolve this, you can remove {0} from the Favorites section of Zowe Explorer's Data Sets view.\n                    Would you like to do this now? {1}/Profile nameApplication name": {
-    "message": "Error: You have Zowe Data Set favorites that refer to a non-existent CLI profile named: {0}.\n                    To resolve this, you can remove {0} from the Favorites section of Zowe Explorer's Data Sets view.\n                    Would you like to do this now? {1}",
-    "comment": [
-      "Profile name",
-      "Application name"
-    ]
-  },
-  "PDS already in favorites": "PDS already in favorites",
-  "This will remove all favorited Data Sets items for profile {0}. Continue?/Profile name": {
-    "message": "This will remove all favorited Data Sets items for profile {0}. Continue?",
-    "comment": [
-      "Profile name"
-    ]
-  },
-  "Node does not exist. It may have been deleted.": "Node does not exist. It may have been deleted.",
-  "Prompting the user for a data set pattern": "Prompting the user for a data set pattern",
-  "Rename operation cancelled.": "Rename operation cancelled.",
-  "Renaming data set {0}/Old Data Set name": {
-    "message": "Renaming data set {0}",
-    "comment": [
-      "Old Data Set name"
-    ]
-  },
-  "Unable to rename data set:": "Unable to rename data set:",
-  "all PDS members in {0}/Node label": {
-    "message": "all PDS members in {0}",
-    "comment": [
-      "Node label"
-    ]
-  },
-  "the PDS members in {0}/Node label": {
-    "message": "the PDS members in {0}",
-    "comment": [
-      "Node label"
-    ]
-  },
-  "Select a sorting option for {0}/Specifier": {
-    "message": "Select a sorting option for {0}",
-    "comment": [
-      "Specifier"
-    ]
-  },
-  "$(check) Sorting updated for {0}/Node label": {
-    "message": "$(check) Sorting updated for {0}",
-    "comment": [
-      "Node label"
-    ]
-  },
-  "Filter: {0}/Filter value": {
-    "message": "Filter: {0}",
-    "comment": [
-      "Filter value"
-    ]
-  },
-  "$(clear-all) Clear filter for PDS": "$(clear-all) Clear filter for PDS",
-  "Set a filter for {0}/Specifier": {
-    "message": "Set a filter for {0}",
-    "comment": [
-      "Specifier"
-    ]
-  },
-  "$(check) Filter cleared for {0}/Node label": {
-    "message": "$(check) Filter cleared for {0}",
-    "comment": [
-      "Node label"
-    ]
-  },
-  "Invalid date format specified": "Invalid date format specified",
-  "Enter a value to filter by": "Enter a value to filter by",
-  "Invalid filter specified": "Invalid filter specified",
-  "$(check) Filter updated for {0}/Node label": {
-    "message": "$(check) Filter updated for {0}",
-    "comment": [
-      "Node label"
-    ]
-  },
   "$(plus) Create a new Unix command": "$(plus) Create a new Unix command",
   "Zowe Unix Command": "Zowe Unix Command",
   "Select the Profile to use to submit the Unix command": "Select the Profile to use to submit the Unix command",
