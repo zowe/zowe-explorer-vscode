@@ -649,7 +649,7 @@ export class ProfilesUtils {
     private static v1ProfileOptions(): void {
         const v1ProfileErrorMsg = vscode.l10n.t(
             // eslint-disable-next-line max-len
-            "Zowe v1 profiles in use.\n  Zowe Explorer no longer supports v1 profiles, choose to convert existing profiles to a team configuration or create new."
+            "Zowe v1 profiles in use.\nZowe Explorer no longer supports v1 profiles, choose to convert existing profiles to a team configuration or create new."
         );
         ZoweLogger.warn(v1ProfileErrorMsg);
         const createButton = vscode.l10n.t("Create New");

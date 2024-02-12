@@ -358,7 +358,7 @@ describe("ProfilesUtils unit tests", () => {
             const commandSpy = jest.spyOn(vscode.commands, "executeCommand");
             await expect(profUtils.ProfilesUtils.readConfigFromDisk()).resolves.not.toThrow();
             expect(msgSpy).toHaveBeenCalledWith(
-                "Zowe v1 profiles in use.\n  Zowe Explorer no longer supports v1 profiles, choose to convert existing profiles to a team configuration or create new.",
+                "Zowe v1 profiles in use.\nZowe Explorer no longer supports v1 profiles, choose to convert existing profiles to a team configuration or create new.",
                 { items: ["Create New", "Convert Existing Profiles"], vsCodeOpts: { modal: true } }
             );
             expect(commandSpy).toHaveBeenCalledWith("zowe.ds.addSession", undefined);

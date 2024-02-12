@@ -355,15 +355,15 @@ export class ProfilesCache {
         const oldProfilesPath = `${profilesPath.replace(/[\\/]$/, "")}-old`;
         const convertResult = await zowe.imperative.ConfigBuilder.convert(profilesPath);
         for (const [k, v] of Object.entries(convertResult.profilesConverted)) {
-            successMsg.push(`Converted ${k} profiles: ${v.join(", ")}\n`);
+            successMsg.push(`Converted ${k} profile: ${String(v)}\n`);
         }
         if (convertResult.profilesFailed.length > 0) {
             warningMsg.push(`Failed to convert ${convertResult.profilesFailed.length} profile(s). See details below\n`);
             for (const { name, type, error } of convertResult.profilesFailed) {
                 if (name != null) {
-                    warningMsg.push(`Failed to load ${type} profile "${name}":\n    ${String(error)}\n`);
+                    warningMsg.push(`Failed to load ${type} profile "${name}":\n${String(error)}\n`);
                 } else {
-                    warningMsg.push(`Failed to find default ${type} profile:\n    ${String(error)}\n`);
+                    warningMsg.push(`Failed to find default ${type} profile:\n${String(error)}\n`);
                 }
             }
         }
