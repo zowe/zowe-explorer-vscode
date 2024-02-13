@@ -15,7 +15,7 @@ import * as zowe from "@zowe/cli";
 import * as globals from "../globals";
 import * as path from "path";
 import { FilterItem, errorHandling } from "../utils/ProfilesUtils";
-import { getDocumentFilePath, getSelectedNodeList, JobSubmitDialogOpts, JOB_SUBMIT_DIALOG_OPTS } from "../shared/utils";
+import { getSelectedNodeList, JobSubmitDialogOpts, JOB_SUBMIT_DIALOG_OPTS } from "../shared/utils";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { Profiles } from "../Profiles";
 import { getIconByNode } from "../generators/icons";
@@ -25,7 +25,7 @@ import { IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { ProfileManagement } from "../utils/ProfileManagement";
 import { LocalFileManagement } from "../utils/LocalFileManagement";
-import { Gui, IZoweDatasetTreeNode, Validation, ZoweTreeNodeActions, Types, isNodeInEditor } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweDatasetTreeNode, Validation, Types, isNodeInEditor } from "@zowe/zowe-explorer-api";
 import { DatasetFSProvider } from "./DatasetFSProvider";
 
 let typeEnum: zowe.CreateDataSetTypeEnum;

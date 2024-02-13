@@ -11,7 +11,7 @@
 
 import * as vscode from "vscode";
 import * as globals from "../globals";
-import { Gui, IZoweDatasetTreeNode, IZoweUSSTreeNode, Types, imperative } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweDatasetTreeNode, IZoweUSSTreeNode, Types } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { filterTreeByString } from "../shared/utils";
 import { FilterItem, FilterDescriptor } from "../utils/ProfilesUtils";

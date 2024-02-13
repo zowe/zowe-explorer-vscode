@@ -18,7 +18,7 @@ import * as fs from "fs";
 import * as util from "util";
 import { IZoweTreeNode, ZoweTreeNode, FileManagement, Gui, ProfilesCache, MainframeInteraction } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
-import { imperative, getImperativeConfig } from "@zowe/cli";
+import { imperative } from "@zowe/cli";
 import * as contextually from "../shared/context";
 import { ZoweLogger } from "./LoggerUtils";
 import { SettingsConfig } from "./SettingsConfig";

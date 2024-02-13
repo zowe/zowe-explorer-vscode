@@ -13,7 +13,6 @@ import * as PromiseQueue from "promise-queue";
 import * as zowe from "@zowe/cli";
 import * as path from "path";
 import * as fs from "fs";
-import * as globals from "./globals";
 import * as vscode from "vscode";
 import { IApiExplorerExtender, FileManagement, Gui, Types, IZoweTreeNode, ProfilesCache, IZoweExplorerTreeApi } from "@zowe/zowe-explorer-api";
 import { Profiles } from "./Profiles";
@@ -144,7 +143,6 @@ export class ZoweExplorerExtender implements IApiExplorerExtender, IZoweExplorer
          * If it doesn't exist create instance and read from disk to see if using v1 or v2
          * profile management.
          */
-        let usingTeamConfig: boolean;
         try {
             const mProfileInfo = await ProfilesUtils.getProfileInfo();
             if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders[0]) {
@@ -153,12 +151,8 @@ export class ZoweExplorerExtender implements IApiExplorerExtender, IZoweExplorer
             } else {
                 await mProfileInfo.readProfilesFromDisk({ homeDir: zoweDir, projectDir: undefined });
             }
-            usingTeamConfig = mProfileInfo.usingTeamConfig;
         } catch (error) {
             ZoweLogger.warn(error);
-            if (error.toString().includes("Error parsing JSON")) {
-                usingTeamConfig = true;
-            }
             ZoweExplorerExtender.showZoweConfigError(error.message);
         }
         if (profileTypeConfigurations !== undefined) {

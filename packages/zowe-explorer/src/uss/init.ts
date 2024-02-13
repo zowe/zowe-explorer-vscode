@@ -130,16 +130,6 @@ export async function initUSSProvider(context: vscode.ExtensionContext): Promise
             }
         })
     );
-
-    context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.uss.text", async (node, nodeList) => {
-            let selectedNodes = getSelectedNodeList(node, nodeList) as IZoweUSSTreeNode[];
-            selectedNodes = selectedNodes.filter((x) => contextuals.isBinary(x));
-            for (const item of selectedNodes) {
-                await ussActions.changeFileType(item, false, ussFileProvider);
-            }
-        })
-    );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.uss.renameNode", async (node: IZoweUSSTreeNode): Promise<void> => ussFileProvider.rename(node))
     );

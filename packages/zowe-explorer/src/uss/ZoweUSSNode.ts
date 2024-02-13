@@ -18,12 +18,11 @@ import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { errorHandling, fallbackProfileName, syncSessionNode } from "../utils/ProfilesUtils";
 import { getIconByNode } from "../generators/icons/index";
-import { autoDetectEncoding, fileExistsCaseSensitiveSync, injectAdditionalDataToTooltip } from "../uss/utils";
+import { injectAdditionalDataToTooltip } from "../uss/utils";
 import * as contextually from "../shared/context";
 import { UssFileTree } from "./FileStructure";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { UssFSProvider } from "./UssFSProvider";
-import { USSTree } from "./USSTree";
 import { IZoweUssTreeOpts } from "../shared/IZoweTreeOpts";
 import { TreeProviders } from "../shared/TreeProviders";
 
@@ -92,15 +91,15 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         if (icon) {
             this.iconPath = icon.path;
         }
-        const isSession = mParent == null;
+        const isSession = opts.parentNode == null;
         if (!globals.ISTHEIA && isSession) {
             this.id = `uss.${this.label.toString()}`;
         }
-        if (profile) {
-            this.profile = profile;
+        if (opts.profile) {
+            this.profile = opts.profile;
         }
         this.onUpdateEmitter = new vscode.EventEmitter<IZoweUSSTreeNode>();
-        if (label !== vscode.l10n.t("Favorites")) {
+        if (opts.label !== vscode.l10n.t("Favorites")) {
             this.resourceUri = vscode.Uri.from({
                 scheme: "zowe-uss",
                 path: `/${this.profile?.name ?? fallbackProfileName(this)}${this.fullPath}`,
@@ -128,13 +127,11 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     public async getChildren(): Promise<IZoweUSSTreeNode[]> {
         ZoweLogger.trace("ZoweUSSNode.getChildren called.");
         if ((!this.fullPath && contextually.isSession(this)) || contextually.isDocument(this)) {
-            const placeholder = new ZoweUSSNode(
-                vscode.l10n.t("Use the search button to list USS files"),
-                vscode.TreeItemCollapsibleState.None,
-                this,
-                null,
-                ""
-            );
+            const placeholder = new ZoweUSSNode({
+                label: vscode.l10n.t("Use the search button to list USS files"),
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                parentNode: this,
+            });
             placeholder.iconPath = null;
             placeholder.command = {
                 command: "zowe.placeholderCommand",
@@ -219,9 +216,9 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             const temp = new ZoweUSSNode({
                 label: item.name,
                 collapsibleState: collapseState,
-                parentNode; this,
+                parentNode: this,
                 parentPath: this.fullPath,
-                profile: nodeProfile
+                profile: nodeProfile,
             });
             temp.attributes = {
                 gid: item.gid,
@@ -500,7 +497,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      *
      * @param {IZoweTreeNode} node
      */
-    public async openUSS(_download: boolean, _previewFile: boolean, ussFileProvider: IZoweTree<IZoweUSSTreeNode>): Promise<void> {
+    public async openUSS(_download: boolean, _previewFile: boolean, ussFileProvider: Types.IZoweUSSTreeType): Promise<void> {
         ZoweLogger.trace("ZoweUSSNode.openUSS called.");
         await ussFileProvider.checkCurrentProfile(this);
 

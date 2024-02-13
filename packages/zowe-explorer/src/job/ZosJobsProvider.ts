@@ -16,7 +16,7 @@ import { Gui, Validation, IZoweTree, IZoweTreeNode, IZoweJobTreeNode, Persistenc
 import { FilterItem, errorHandling } from "../utils/ProfilesUtils";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
-import { ZoweJobNode, ZoweSpoolNode } from "./ZoweJobNode";
+import { ZoweJobNode } from "./ZoweJobNode";
 import { getAppName, sortTreeItems, jobStringValidator, updateOpenFiles } from "../shared/utils";
 import { ZoweTreeProvider } from "../abstract/ZoweTreeProvider";
 import { getIconByNode } from "../generators/icons";

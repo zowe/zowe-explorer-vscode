@@ -12,7 +12,7 @@
 import * as zowe from "@zowe/cli";
 import * as vscode from "vscode";
 import * as globals from "../globals";
-import { errorHandling, fallbackProfileName } from "../utils/ProfilesUtils";
+import { errorHandling } from "../utils/ProfilesUtils";
 import { Sorting, Types, Gui, ZoweTreeNodeActions, IZoweDatasetTreeNode, ZoweTreeNode, ZosEncoding, Validation } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { getIconByNode } from "../generators/icons";
@@ -20,10 +20,7 @@ import * as contextually from "../shared/context";
 import { Profiles } from "../Profiles";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import * as dayjs from "dayjs";
-import { promiseStatus, PromiseStatuses } from "promise-status-async";
-import { getDocumentFilePath } from "../shared/utils";
 import { IZoweDatasetTreeOpts } from "../shared/IZoweTreeOpts";
-import { downloadDs } from "./actions";
 import { DatasetFSProvider } from "./DatasetFSProvider";
 
 /**
@@ -415,6 +412,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
      */
     public getEtag(): string {
         ZoweLogger.trace("ZoweDatasetNode.getEtag called.");
+        // TODO: FIXME
         return this.etag;
     }
 
@@ -425,6 +423,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
      */
     public setEtag(etagValue): void {
         ZoweLogger.trace("ZoweDatasetNode.setEtag called.");
+        // TODO: FIXME
         this.etag = etagValue;
     }
 
@@ -476,13 +475,6 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         ZoweLogger.trace("ZoweDatasetNode.openDs called.");
         await datasetProvider.checkCurrentProfile(this);
 
-        // Status of last "open action" promise
-        // If the node doesn't support pending actions, assume last action was resolved to pull new contents
-        const lastActionStatus =
-            this.ongoingActions?.[ZoweTreeNodeActions.Interactions.Download] != null
-                ? await promiseStatus(this.ongoingActions[ZoweTreeNodeActions.Interactions.Download])
-                : PromiseStatuses.PROMISE_RESOLVED;
-
         // Cache status of double click if the node has the "wasDoubleClicked" property:
         // allows subsequent clicks to register as double-click if node is not done fetching contents
         const doubleClicked = Gui.utils.wasDoubleClicked(this, datasetProvider);
@@ -491,22 +483,16 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             this.wasDoubleClicked = doubleClicked;
         }
 
-        // Prevent future "open actions" until last action is completed
-        if (lastActionStatus == PromiseStatuses.PROMISE_PENDING) {
-            return;
-        }
-
         if (Profiles.getInstance().validProfile !== Validation.ValidationType.INVALID) {
             try {
-                const fileInfo = await downloadDs(this, forceDownload);
-                const document = await vscode.workspace.openTextDocument(getDocumentFilePath(fileInfo.name, this));
+                const document = await vscode.workspace.openTextDocument(this.resourceUri);
                 await Gui.showTextDocument(document, { preview: this.wasDoubleClicked != null ? !this.wasDoubleClicked : shouldPreview });
                 // discard ongoing action to allow new requests on this node
                 if (this.ongoingActions) {
                     this.ongoingActions[ZoweTreeNodeActions.Interactions.Download] = null;
                 }
                 if (datasetProvider) {
-                    datasetProvider.addFileHistory(`[${this.getProfileName()}]: ${fileInfo.name}`);
+                    datasetProvider.addFileHistory(`[${this.getProfileName()}]: ${this.label as string}`);
                 }
             } catch (err) {
                 await errorHandling(err, this.getProfileName());

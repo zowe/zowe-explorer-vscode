@@ -14,10 +14,8 @@
 import * as vscode from "vscode";
 import * as path from "path";
 import * as globals from "../globals";
-import { IZoweTreeNode, IZoweDatasetTreeNode, IZoweUSSTreeNode, IZoweJobTreeNode, IZoweTree, Types, ZosEncoding } from "@zowe/zowe-explorer-api";
+import { IZoweTreeNode, IZoweDatasetTreeNode, IZoweUSSTreeNode, IZoweJobTreeNode, IZoweTree, Types, ZosEncoding, Gui } from "@zowe/zowe-explorer-api";
 import { ZoweLogger } from "../utils/LoggerUtils";
-import { markDocumentUnsaved } from "../utils/workspace";
-import { errorHandling } from "../utils/ProfilesUtils";
 import { ZoweLocalStorage } from "../utils/ZoweLocalStorage";
 
 export enum JobSubmitDialogOpts {

@@ -13,7 +13,7 @@ import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
 import * as globals from "../globals";
 import * as contextually from "../shared/context";
-import { Gui, IZoweJobTreeNode, Sorting, ZoweTreeNode } from "@zowe/zowe-explorer-api";
+import { IZoweJobTreeNode, Sorting, ZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { errorHandling, fallbackProfileName, syncSessionNode } from "../utils/ProfilesUtils";
 import { getIconByNode } from "../generators/icons";
@@ -22,6 +22,7 @@ import { Profiles } from "../Profiles";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { IZoweJobTreeOpts } from "../shared/IZoweTreeOpts";
 import { JobFSProvider } from "./JobFSProvider";
+import { buildUniqueSpoolName } from "../SpoolProvider";
 
 export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
     public children: IZoweJobTreeNode[] = [];
@@ -91,7 +92,7 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
             if (!globals.ISTHEIA) {
                 this.id = this.label as string;
             }
-        } else if (!isFavorites && profile != null) {
+        } else if (!isFavorites && opts.profile != null) {
             this.resourceUri = vscode.Uri.from({
                 scheme: "zowe-jobs",
                 path: `/${profileName}/${this.job.jobid}`,
@@ -346,15 +347,6 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
         return this._searchId;
     }
 
-    private statusNotSupportedMsg(status: string): void {
-        ZoweLogger.trace("ZoweJobNode.statusNotSupportedMsg called.");
-        if (status !== "*") {
-            Gui.warningMessage(
-                vscode.l10n.t("Filtering by job status is not yet supported with this profile type. Will show jobs with all statuses.")
-            );
-        }
-    }
-
     private async getJobs(owner: string, prefix: string, searchId: string, status: string): Promise<zowe.IJob[]> {
         ZoweLogger.trace("ZoweJobNode.getJobs called.");
         let jobsInternal: zowe.IJob[] = [];
@@ -408,9 +400,9 @@ export class ZoweSpoolNode extends ZoweJobNode {
 
     public constructor(opts: IZoweJobTreeOpts & { spool?: zowe.IJobFile }) {
         super(opts);
-        this.uniqueName = buildUniqueSpoolName(spool);
-        this.resourceUri = mParent.resourceUri.with({
-            path: `/${opts.profile?.name || fallbackProfileName(this)}/${mParent.job.jobid}/${this.uniqueName}`,
+        this.uniqueName = buildUniqueSpoolName(opts.spool);
+        this.resourceUri = opts.parentNode?.resourceUri.with({
+            path: `/${opts.profile?.name || fallbackProfileName(this)}/${(opts.parentNode as ZoweJobNode)?.job.jobid}/${this.uniqueName}`,
         });
         this.contextValue = globals.JOBS_SPOOL_CONTEXT;
         this.spool = opts.spool;

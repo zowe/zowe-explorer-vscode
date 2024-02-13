@@ -224,20 +224,6 @@ export function copyPath(node: IZoweUSSTreeNode): void {
     vscode.env.clipboard.writeText(node.fullPath);
 }
 
-/**
- * Switch the download type and redownload the file.
- *
- * @param node The file that is going to be downloaded
- * @param binary Whether the file should be downloaded as binary or not
- * @param ussFileProvider Our USSTree object
- */
-export async function changeFileType(node: IZoweUSSTreeNode, binary: boolean, ussFileProvider: IZoweTree<IZoweUSSTreeNode>): Promise<void> {
-    ZoweLogger.trace("uss.actions.changeFileType called.");
-    node.setBinary(binary);
-    await node.openUSS(true, true, ussFileProvider);
-    ussFileProvider.refresh();
-}
-
 export async function deleteUSSFilesPrompt(nodes: IZoweUSSTreeNode[]): Promise<boolean> {
     ZoweLogger.trace("uss.actions.deleteUSSFilesPrompt called.");
     const fileNames = nodes.reduce((label, currentVal) => {
