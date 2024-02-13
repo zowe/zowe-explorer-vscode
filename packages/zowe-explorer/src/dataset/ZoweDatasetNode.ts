@@ -92,13 +92,13 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             if (mParent == null) {
                 this.resourceUri = vscode.Uri.from({
                     scheme: "zowe-ds",
-                    path: `/${this.profile?.name ?? fallbackProfileName()}/`,
+                    path: `/${this.profile?.name ?? fallbackProfileName(this)}/`,
                 });
                 DatasetFSProvider.instance.createDirectory(this.resourceUri, this.pattern);
             } else if (this.contextValue === globals.DS_MEMBER_CONTEXT) {
                 this.resourceUri = vscode.Uri.from({
                     scheme: "zowe-ds",
-                    path: `/${this.profile?.name ?? fallbackProfileName()}/${mParent.label as string}/${this.label as string}`,
+                    path: `/${this.profile?.name ?? fallbackProfileName(this)}/${mParent.label as string}/${this.label as string}`,
                 });
             } else if (
                 this.contextValue === globals.DS_DS_CONTEXT ||
@@ -107,7 +107,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             ) {
                 this.resourceUri = vscode.Uri.from({
                     scheme: "zowe-ds",
-                    path: `/${this.profile?.name ?? fallbackProfileName()}/${this.label as string}`,
+                    path: `/${this.profile?.name ?? fallbackProfileName(this)}/${this.label as string}`,
                 });
             }
         }

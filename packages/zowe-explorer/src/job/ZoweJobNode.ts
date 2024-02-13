@@ -71,7 +71,7 @@ export class Job extends ZoweTreeNode implements IZoweJobTreeNode {
         this.filtered = false;
 
         const isFavorites = label === "Favorites";
-        const profileName = profile?.name ?? fallbackProfileName();
+        const profileName = profile?.name ?? fallbackProfileName(this);
 
         if (mParent == null && !isFavorites) {
             this.contextValue = globals.JOBS_SESSION_CONTEXT;

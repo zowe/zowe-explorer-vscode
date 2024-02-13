@@ -19,6 +19,7 @@ import * as util from "util";
 import { IZoweTreeNode, ZoweTreeNode, FileManagement, Gui, ProfilesCache, MainframeInteraction } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { imperative, getImperativeConfig } from "@zowe/cli";
+import * as contextually from "../shared/context";
 import { ZoweLogger } from "./LoggerUtils";
 import { SettingsConfig } from "./SettingsConfig";
 
@@ -122,9 +123,8 @@ export function isTheia(): boolean {
     return false;
 }
 
-export function fallbackProfileName(): string {
-    // eslint-disable-next-line no-magic-numbers
-    return `unknown-profile-${(Math.random() + 1).toString(36).substring(globals.MAX_MEMBER_LENGTH)}`;
+export function fallbackProfileName(node: IZoweTreeNode): string {
+    return (contextually.isSession(node) ? node : node.getSessionNode()).label as string;
 }
 
 /**

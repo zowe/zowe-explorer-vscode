@@ -132,7 +132,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         if (label !== vscode.l10n.t("Favorites")) {
             this.resourceUri = vscode.Uri.from({
                 scheme: "zowe-uss",
-                path: `/${this.profile?.name ?? fallbackProfileName()}${this.fullPath}`,
+                path: `/${this.profile?.name ?? fallbackProfileName(this)}${this.fullPath}`,
             });
             if (isSession) {
                 UssFSProvider.instance.createDirectory(this.resourceUri);
