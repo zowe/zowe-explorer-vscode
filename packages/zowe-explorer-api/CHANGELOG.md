@@ -8,6 +8,8 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### Bug fixes
 
+- Update transitive dependencies for technical currency.
+
 ## `2.14.0`
 
 ### New features and enhancements
