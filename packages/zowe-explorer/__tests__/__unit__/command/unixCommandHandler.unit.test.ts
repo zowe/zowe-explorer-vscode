@@ -19,13 +19,10 @@ import * as utils from "../../../src/utils/ProfilesUtils";
 import { imperative } from "@zowe/cli";
 import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
-import * as globals from "../../../src/globals";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 import { SshSession } from "@zowe/zos-uss-for-zowe-sdk";
 import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
 import { ProfileManagement } from "../../../src/utils/ProfileManagement";
-import * as shared from "../../../__mocks__/mockCreators/shared";
-import { Profile } from "selenium-webdriver/firefox";
 
 describe("UnixCommand Actions Unit Testing", () => {
     const showQuickPick = jest.fn();
