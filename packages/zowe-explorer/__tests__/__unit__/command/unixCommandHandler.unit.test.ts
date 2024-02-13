@@ -489,6 +489,7 @@ describe("UnixCommand Actions Unit Testing", () => {
         });
     });
 
+    
     it("tests the selectSshProfile function when user escapes", async () => {
         showQuickPick.mockReturnValueOnce(undefined);
         await expect(
