@@ -11,6 +11,7 @@
 
 import * as vscode from "vscode";
 import * as meta from "../../package.json";
+import { ZoweLogger } from "./LoggerUtils";
 
 export class ZoweLocalStorage {
     private static storage: vscode.Memento;
@@ -19,11 +20,13 @@ export class ZoweLocalStorage {
     }
 
     public static getValue<T>(key: string): T {
+        ZoweLogger.trace("ZoweLocalStorage.getValue called.");
         const defaultValue = meta.contributes.configuration.properties[key]?.default;
         return ZoweLocalStorage.storage.get<T>(key, defaultValue);
     }
 
     public static setValue<T>(key: string, value: T): void {
+        ZoweLogger.trace("ZoweLocalStorage.setValue called.");
         ZoweLocalStorage.storage.update(key, value);
     }
 }

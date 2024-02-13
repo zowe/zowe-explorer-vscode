@@ -585,18 +585,8 @@
         }
       },
       {
-        "command": "zowe.uss.binary",
-        "title": "%uss.binary%",
-        "category": "Zowe Explorer"
-      },
-      {
         "command": "zowe.uss.uploadDialog",
         "title": "%uss.uploadDialog%",
-        "category": "Zowe Explorer"
-      },
-      {
-        "command": "zowe.uss.text",
-        "title": "%uss.text%",
         "category": "Zowe Explorer"
       },
       {
@@ -841,6 +831,16 @@
         "category": "Zowe Explorer"
       },
       {
+        "command": "zowe.ds.openWithEncoding",
+        "title": "%openWithEncoding%",
+        "category": "Zowe Explorer"
+      },
+      {
+        "command": "zowe.uss.openWithEncoding",
+        "title": "%openWithEncoding%",
+        "category": "Zowe Explorer"
+      },
+      {
         "command": "zowe.diff.useLocalContent",
         "title": "%diff.overwrite%",
         "icon": "$(check)"
@@ -945,6 +945,11 @@
           "when": "view == zowe.uss.explorer && viewItem =~ /^ussSession.*/ && !listMultiSelection",
           "command": "zowe.uss.refreshDirectory",
           "group": "inline"
+        },
+        {
+          "when": "view == zowe.uss.explorer && viewItem =~ /^(textFile.*|binaryFile.*)/",
+          "command": "zowe.uss.openWithEncoding",
+          "group": "000_zowe_ussMainframeInteraction@3"
         },
         {
           "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*/ && !listMultiSelection",
@@ -1090,6 +1095,11 @@
           "when": "view == zowe.ds.explorer && viewItem =~ /^session.*_fav.*/ && !listMultiSelection",
           "command": "zowe.ds.removeSavedSearch",
           "group": "inline"
+        },
+        {
+          "when": "view == zowe.ds.explorer && viewItem =~ /^(member.*|ds.*)/",
+          "command": "zowe.ds.openWithEncoding",
+          "group": "000_zowe_dsMainframeInteraction@0"
         },
         {
           "when": "view == zowe.ds.explorer && viewItem =~ /^(?!.*_fav.*)session.*/ && !listMultiSelection",
@@ -1649,14 +1659,6 @@
           "when": "never"
         },
         {
-          "command": "zowe.uss.binary",
-          "when": "never"
-        },
-        {
-          "command": "zowe.uss.text",
-          "when": "never"
-        },
-        {
           "command": "zowe.uss.renameNode",
           "when": "never"
         },
@@ -1807,6 +1809,14 @@
         {
           "command": "zowe.compareWithSelectedReadOnly",
           "when": "never"
+        },
+        {
+          "command": "zowe.ds.openWithEncoding",
+          "when": "never"
+        },
+        {
+          "command": "zowe.uss.openWithEncoding",
+          "when": "never"
         }
       ]
     },
@@ -1880,6 +1890,21 @@
             "lrecl": 80
           },
           "description": "%zowe.ds.default.pds%",
+          "scope": "resource"
+        },
+        "zowe.ds.default.extended": {
+          "default": {
+            "dsntype": "LIBRARY",
+            "dsorg": "PO",
+            "alcunit": "CYL",
+            "primary": 10,
+            "secondary": 3,
+            "dirblk": 25,
+            "recfm": "FB",
+            "blksize": 27920,
+            "lrecl": 80
+          },
+          "description": "%zowe.ds.default.extended%",
           "scope": "resource"
         },
         "zowe.ds.default.ps": {
@@ -2094,14 +2119,9 @@
     "jest-silent-reporter": "^0.5.0",
     "log4js": "^6.4.6",
     "markdownlint-cli": "^0.33.0",
-    "node-loader": "^2.0.0",
     "run-sequence": "^2.2.1",
     "selenium-webdriver": "^3.6.0",
-    "sinon": "^6.1.0",
-    "terser-webpack-plugin": "^5.3.10",
-    "ts-node": "^8.10.1",
-    "webpack": "^5.89.0",
-    "webpack-cli": "^5.1.4"
+    "sinon": "^6.1.0"
   },
   "dependencies": {
     "@zowe/secrets-for-zowe-sdk": "7.18.6",

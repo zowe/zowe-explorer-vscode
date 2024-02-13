@@ -13,7 +13,7 @@ import * as vscode from "vscode";
 import * as ussActions from "./actions";
 import * as refreshActions from "../shared/refresh";
 import * as globals from "../globals";
-import { IZoweUSSTreeNode, IZoweTreeNode, Gui } from "@zowe/zowe-explorer-api";
+import { IZoweUSSTreeNode, IZoweTreeNode, ZosEncoding, Gui } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import * as contextuals from "../shared/context";
 import { getSelectedNodeList } from "../shared/utils";
@@ -94,7 +94,7 @@ export async function initUSSProvider(context: vscode.ExtensionContext): Promise
         vscode.commands.registerCommand("zowe.uss.editSession", async (node) => ussFileProvider.editSession(node, ussFileProvider))
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.uss.ZoweUSSNode.open", (node: IZoweUSSTreeNode): void => node.openUSS(false, true, ussFileProvider))
+        vscode.commands.registerCommand("zowe.uss.ZoweUSSNode.open", async (node: IZoweUSSTreeNode) => node.openUSS(false, true, ussFileProvider))
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.uss.removeSession", async (node: IZoweUSSTreeNode, nodeList, hideFromAllTrees: boolean) => {
@@ -130,15 +130,7 @@ export async function initUSSProvider(context: vscode.ExtensionContext): Promise
             }
         })
     );
-    context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.uss.binary", async (node, nodeList) => {
-            let selectedNodes = getSelectedNodeList(node, nodeList) as IZoweUSSTreeNode[];
-            selectedNodes = selectedNodes.filter((x) => contextuals.isText(x));
-            for (const item of selectedNodes) {
-                await ussActions.changeFileType(item, true, ussFileProvider);
-            }
-        })
-    );
+
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.uss.text", async (node, nodeList) => {
             let selectedNodes = getSelectedNodeList(node, nodeList) as IZoweUSSTreeNode[];
@@ -156,7 +148,7 @@ export async function initUSSProvider(context: vscode.ExtensionContext): Promise
     );
     context.subscriptions.push(vscode.commands.registerCommand("zowe.uss.copyPath", (node: IZoweUSSTreeNode): void => ussActions.copyPath(node)));
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.uss.editFile", (node: IZoweUSSTreeNode): void => node.openUSS(false, false, ussFileProvider))
+        vscode.commands.registerCommand("zowe.uss.editFile", async (node: IZoweUSSTreeNode) => node.openUSS(false, false, ussFileProvider))
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.uss.editAttributes", (node: IZoweUSSTreeNode) =>
@@ -212,6 +204,12 @@ export async function initUSSProvider(context: vscode.ExtensionContext): Promise
             ussFileProvider.copying = ussActions.copyUssFiles(node, nodeList, ussFileProvider);
             await ussFileProvider.copying;
         })
+    );
+    context.subscriptions.push(
+        vscode.commands.registerCommand(
+            "zowe.uss.openWithEncoding",
+            (node: IZoweUSSTreeNode, encoding?: ZosEncoding): Promise<void> => ussFileProvider.openWithEncoding(node, encoding)
+        )
     );
     context.subscriptions.push(
         vscode.workspace.onDidChangeConfiguration(async (e) => {

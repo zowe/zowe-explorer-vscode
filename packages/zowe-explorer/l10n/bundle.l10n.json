@@ -81,6 +81,7 @@
       "Service profile name"
     ]
   },
+  "Login to authentication service was successful.": "Login to authentication service was successful.",
   "Unable to log in with {0}. {1}/Service profile nameError message": {
     "message": "Unable to log in with {0}. {1}",
     "comment": [
@@ -101,7 +102,6 @@
       "Error message"
     ]
   },
-  "Login to authentication service was successful.": "Login to authentication service was successful.",
   "Select the location where the config file will be initialized": "Select the location where the config file will be initialized",
   "Select the location of the config file to edit": "Select the location of the config file to edit",
   "Global: in the Zowe home directory": "Global: in the Zowe home directory",
@@ -130,6 +130,7 @@
   "Enter the size of the data set": "Enter the size of the data set",
   "Enter the SMS storage class": "Enter the SMS storage class",
   "Enter the volume serial on which the data set should be placed": "Enter the volume serial on which the data set should be placed",
+  "zowe.separator.recent": "zowe.separator.recent",
   "Recent Filters": "Recent Filters",
   "Options": "Options",
   "Zowe Explorer is running in Theia environment.": "Zowe Explorer is running in Theia environment.",
@@ -201,7 +202,6 @@
   "Install": "Install",
   "After installing the extension, please make sure to reload your VS Code window in order to start using the installed credential manager": "After installing the extension, please make sure to reload your VS Code window in order to start using the installed credential manager",
   "Reload": "Reload",
-  "Zowe v1 profiles in use.  Zowe Explorer no longer supports v1 profiles.": "Zowe v1 profiles in use.  Zowe Explorer no longer supports v1 profiles.",
   "\"Update Credentials\" operation not supported when \"autoStore\" is false": "\"Update Credentials\" operation not supported when \"autoStore\" is false",
   "Connection Name": "Connection Name",
   "Enter a name for the connection.": "Enter a name for the connection.",
@@ -245,6 +245,8 @@
   },
   "Zowe Profiles initialized successfully.": "Zowe Profiles initialized successfully.",
   "Zowe Temp folder initialized successfully.": "Zowe Temp folder initialized successfully.",
+  "Convert Existing Profiles": "Convert Existing Profiles",
+  "Operation cancelled": "Operation cancelled",
   "Tree Item is not a Zowe Explorer item.": "Tree Item is not a Zowe Explorer item.",
   "$(plus) Add Credentials": "$(plus) Add Credentials",
   "Add username and password for basic authentication": "Add username and password for basic authentication",
@@ -307,11 +309,12 @@
       "CLI setting"
     ]
   },
-  "Favorites": "Favorites",
-  "Use the search button to list USS files": "Use the search button to list USS files",
+  "Remote file has changed. Presenting with way to resolve file.": "Remote file has changed. Presenting with way to resolve file.",
+  "Something went wrong with compare of files.": "Something went wrong with compare of files.",
   "Invalid node": "Invalid node",
   "Profile auth error": "Profile auth error",
   "Profile is not authenticated, please log in to continue": "Profile is not authenticated, please log in to continue",
+  "The response from Zowe CLI was not successful": "The response from Zowe CLI was not successful",
   "Retrieving response from uss-file-list": "Retrieving response from uss-file-list",
   "Open": "Open",
   "Delete action was cancelled.": "Delete action was cancelled.",
@@ -327,7 +330,6 @@
       "Label"
     ]
   },
-  "open() called from invalid node.": "open() called from invalid node.",
   "refreshUSS() called from invalid node.": "refreshUSS() called from invalid node.",
   "not found": "not found",
   "Unable to find file: {0} was probably deleted./Label": {
@@ -339,12 +341,24 @@
   "Re-download": "Re-download",
   "Cancel": "Cancel",
   "Failed to open file as text. Re-download file as binary?": "Failed to open file as text. Re-download file as binary?",
-  "Required API functions for pasting (fileList and copy/uploadFromBuffer) were not found.": "Required API functions for pasting (fileList and copy/uploadFromBuffer) were not found.",
+  "Required API functions for pasting (fileList, copy and/or putContent) were not found.": "Required API functions for pasting (fileList, copy and/or putContent) were not found.",
   "Uploading USS files...": "Uploading USS files...",
   "Error uploading files": "Error uploading files",
+  "Downloaded: {0}/Download time": {
+    "message": "Downloaded: {0}",
+    "comment": [
+      "Download time"
+    ]
+  },
+  "Binary": "Binary",
+  "Encoding: {0}/Encoding name": {
+    "message": "Encoding: {0}",
+    "comment": [
+      "Encoding name"
+    ]
+  },
   "$(plus) Create a new filter": "$(plus) Create a new filter",
-  "Confirm": "Confirm",
-  "One or more items may be overwritten from this drop operation. Confirm or cancel?": "One or more items may be overwritten from this drop operation. Confirm or cancel?",
+  "Favorites": "Favorites",
   "Unable to rename {0} because you have unsaved changes in this {1}. Please save your work before renaming the {1}./Node pathNode type": {
     "message": "Unable to rename {0} because you have unsaved changes in this {1}. Please save your work before renaming the {1}.",
     "comment": [
@@ -396,23 +410,6 @@
   },
   "initializeUSSFavorites.error.buttonRemove": "initializeUSSFavorites.error.buttonRemove",
   "File does not exist. It may have been deleted.": "File does not exist. It may have been deleted.",
-  "The 'move' function is not implemented for this USS API.": "The 'move' function is not implemented for this USS API.",
-  "Profile does not exist for this file.": "Profile does not exist for this file.",
-  "$(sync~spin) Saving USS file...": "$(sync~spin) Saving USS file...",
-  "Renaming {0} failed due to API error: {1}/File pathError message": {
-    "message": "Renaming {0} failed due to API error: {1}",
-    "comment": [
-      "File path",
-      "Error message"
-    ]
-  },
-  "Deleting {0} failed due to API error: {1}/File nameError message": {
-    "message": "Deleting {0} failed due to API error: {1}",
-    "comment": [
-      "File name",
-      "Error message"
-    ]
-  },
   "{0} location/Node type": {
     "message": "{0} location",
     "comment": [
@@ -426,9 +423,18 @@
     ]
   },
   "Name of file or directory": "Name of file or directory",
+  "There is already a file with the same name.\n                        Please change your OS file system settings if you want to give case sensitive file names.": "There is already a file with the same name.\n                        Please change your OS file system settings if you want to give case sensitive file names.",
   "Unable to create node:": "Unable to create node:",
   "Uploading USS file": "Uploading USS file",
   "Copy Path is not yet supported in Theia.": "Copy Path is not yet supported in Theia.",
+  "save requested for USS file {0}/Document file name": {
+    "message": "save requested for USS file {0}",
+    "comment": [
+      "Document file name"
+    ]
+  },
+  "Could not locate session when saving USS file.": "Could not locate session when saving USS file.",
+  "Saving file...": "Saving file...",
   "Delete": "Delete",
   "Are you sure you want to delete the following item?\nThis will permanently remove the following file or folder from your system.\n\n{0}/File names": {
     "message": "Are you sure you want to delete the following item?\nThis will permanently remove the following file or folder from your system.\n\n{0}",
@@ -440,7 +446,8 @@
   "Copying file structure...": "Copying file structure...",
   "The paste operation is not supported for this node.": "The paste operation is not supported for this node.",
   "Pasting files...": "Pasting files...",
-  "There is already a file with the same name. \n                Please change your OS file system settings if you want to give case sensitive file names": "There is already a file with the same name. \n                Please change your OS file system settings if you want to give case sensitive file names",
+  "open() called from invalid node.": "open() called from invalid node.",
+  "There is already a file with the same name.\n                Please change your OS file system settings if you want to give case sensitive file names": "There is already a file with the same name.\n                Please change your OS file system settings if you want to give case sensitive file names",
   "$(sync~spin) Downloading USS file...": "$(sync~spin) Downloading USS file...",
   "Disabled": "Disabled",
   "Your jobs": "Your jobs",
@@ -449,12 +456,52 @@
   "Ascending": "Ascending",
   "Descending": "Descending",
   "Saving Data Set...": "Saving Data Set...",
-  "Saving file...": "Saving file...",
   "A merge conflict has been detected. Since you are running inside Theia editor, a merge conflict resolution is not available yet.": "A merge conflict has been detected. Since you are running inside Theia editor, a merge conflict resolution is not available yet.",
   "Would you like to overwrite the remote file?": "Would you like to overwrite the remote file?",
   "Upload cancelled.": "Upload cancelled.",
   "Invalid job owner": "Invalid job owner",
   "Invalid job prefix": "Invalid job prefix",
+  "EBCDIC": "EBCDIC",
+  "z/OS default codepage": "z/OS default codepage",
+  "Raw data representation": "Raw data representation",
+  "Other": "Other",
+  "Specify another codepage": "Specify another codepage",
+  "From profile {0}/Profile name": {
+    "message": "From profile {0}",
+    "comment": [
+      "Profile name"
+    ]
+  },
+  "USS file tag": "USS file tag",
+  "Choose encoding for {0}/Node label": {
+    "message": "Choose encoding for {0}",
+    "comment": [
+      "Node label"
+    ]
+  },
+  "Current encoding is {0}/Encoding name": {
+    "message": "Current encoding is {0}",
+    "comment": [
+      "Encoding name"
+    ]
+  },
+  "Enter a codepage (e.g., 1047, IBM-1047)": "Enter a codepage (e.g., 1047, IBM-1047)",
+  "File was saved -- determining whether the file is a USS file or Data set.\n                        \n Comparing (case insensitive) {0} against directory {1} and {2}/Saved file nameData Set directoryUSS directory": {
+    "message": "File was saved -- determining whether the file is a USS file or Data set.\n                        \n Comparing (case insensitive) {0} against directory {1} and {2}",
+    "comment": [
+      "Saved file name",
+      "Data Set directory",
+      "USS directory"
+    ]
+  },
+  "File is a Data Set-- saving ": "File is a Data Set-- saving ",
+  "File is a USS file -- saving": "File is a USS file -- saving",
+  "File {0} is not a Data Set or USS file/Saved file name": {
+    "message": "File {0} is not a Data Set or USS file",
+    "comment": [
+      "Saved file name"
+    ]
+  },
   "Team config file created, refreshing Zowe Explorer.": "Team config file created, refreshing Zowe Explorer.",
   "Team config file deleted, refreshing Zowe Explorer.": "Team config file deleted, refreshing Zowe Explorer.",
   "Team config file updated.": "Team config file updated.",
@@ -467,6 +514,9 @@
   "Prompting the user to choose a recent member for editing": "Prompting the user to choose a recent member for editing",
   "Select a recent member to open": "Select a recent member to open",
   "No recent members found.": "No recent members found.",
+  "Compare": "Compare",
+  "Overwrite": "Overwrite",
+  "The content of the file is newer. Compare your version with latest or overwrite the content of the file with your changes.": "The content of the file is newer. Compare your version with latest or overwrite the content of the file with your changes.",
   "Use the search button to display jobs": "Use the search button to display jobs",
   "There are no JES spool messages to display": "There are no JES spool messages to display",
   "No jobs found": "No jobs found",
@@ -516,10 +566,10 @@
       "Encoded URI path"
     ]
   },
-  "$(sync~spin) Polling: {0}.../Unique Spool name": {
+  "$(sync~spin) Polling: {0}.../Encoded URI path": {
     "message": "$(sync~spin) Polling: {0}...",
     "comment": [
-      "Unique Spool name"
+      "Encoded URI path"
     ]
   },
   "Filter: {0}/The new filter": {
@@ -549,7 +599,6 @@
   "$(symbol-numeric) Return Code": "$(symbol-numeric) Return Code",
   "$(fold) Sort Direction": "$(fold) Sort Direction",
   "Go to Local Filtering": "Go to Local Filtering",
-  "$(sync~spin) Fetching spool file...": "$(sync~spin) Fetching spool file...",
   "Download Single Spool operation not implemented by extender. Please contact the extension developer(s).": "Download Single Spool operation not implemented by extender. Please contact the extension developer(s).",
   "$(sync~spin) Opening spool file.../Label": {
     "message": "$(sync~spin) Opening spool file...",
@@ -563,6 +612,7 @@
       "Document file name"
     ]
   },
+  "$(sync~spin) Fetching spool files...": "$(sync~spin) Fetching spool files...",
   "Modify Command": "Modify Command",
   "Command response: {0}/Command response": {
     "message": "Command response: {0}",
@@ -627,12 +677,7 @@
       "Session label"
     ]
   },
-  "Opening data set member...": "Opening data set member...",
-  "Saving data set member...": "Saving data set member...",
-  "Opening data set...": "Opening data set...",
-  "Saving data set...": "Saving data set...",
   "Use the search button to display data sets": "Use the search button to display data sets",
-  "The response from Zowe CLI was not successful": "The response from Zowe CLI was not successful",
   "Cannot access member with control characters in the name: {0}/Data Set member": {
     "message": "Cannot access member with control characters in the name: {0}",
     "comment": [
@@ -666,8 +711,8 @@
       "Profile name"
     ]
   },
-  "Error: You have Zowe Data Set favorites that refer to a non-existent CLI profile named: {0}. \n                    To resolve this, you can remove {0} from the Favorites section of Zowe Explorer's Data Sets view. \n                    Would you like to do this now? {1}/Profile nameApplication name": {
-    "message": "Error: You have Zowe Data Set favorites that refer to a non-existent CLI profile named: {0}. \n                    To resolve this, you can remove {0} from the Favorites section of Zowe Explorer's Data Sets view. \n                    Would you like to do this now? {1}",
+  "Error: You have Zowe Data Set favorites that refer to a non-existent CLI profile named: {0}.\n                    To resolve this, you can remove {0} from the Favorites section of Zowe Explorer's Data Sets view.\n                    Would you like to do this now? {1}/Profile nameApplication name": {
+    "message": "Error: You have Zowe Data Set favorites that refer to a non-existent CLI profile named: {0}.\n                    To resolve this, you can remove {0} from the Favorites section of Zowe Explorer's Data Sets view.\n                    Would you like to do this now? {1}",
     "comment": [
       "Profile name",
       "Application name"
@@ -691,6 +736,7 @@
       "Old Data Set name"
     ]
   },
+  "Unable to rename data set:": "Unable to rename data set:",
   "Enter a valid data set name.": "Enter a valid data set name.",
   "all PDS members in {0}/Node label": {
     "message": "all PDS members in {0}",
@@ -744,11 +790,11 @@
       "Node label"
     ]
   },
-  "$(sync~spin) Saving data set...": "$(sync~spin) Saving data set...",
   "Partitioned Data Set: Binary": "Partitioned Data Set: Binary",
   "Partitioned Data Set: C": "Partitioned Data Set: C",
   "Partitioned Data Set: Classic": "Partitioned Data Set: Classic",
   "Partitioned Data Set: Default": "Partitioned Data Set: Default",
+  "Partitioned Data Set: Extended": "Partitioned Data Set: Extended",
   "Sequential Data Set": "Sequential Data Set",
   "Copying File(s)": "Copying File(s)",
   "Profile is invalid, check connection details.": "Profile is invalid, check connection details.",
@@ -805,6 +851,14 @@
     ]
   },
   "Unable to create member.": "Unable to create member.",
+  "Invalid data set or member.": "Invalid data set or member.",
+  "Downloading {0}/Label": {
+    "message": "Downloading {0}",
+    "comment": [
+      "Label"
+    ]
+  },
+  "$(sync~spin) Downloading data set...": "$(sync~spin) Downloading data set...",
   "Allocating new data set": "Allocating new data set",
   "Attempting to allocate new data set": "Attempting to allocate new data set",
   "Click on parameters to change them": "Click on parameters to change them",
@@ -878,7 +932,6 @@
     ]
   },
   "Item invalid.": "Item invalid.",
-  "$(sync~spin) Fetching data set...": "$(sync~spin) Fetching data set...",
   "Error encountered when refreshing data set view. {0}/Stringified JSON error": {
     "message": "Error encountered when refreshing data set view. {0}",
     "comment": [
@@ -907,7 +960,28 @@
   "Unable to gather more information": "Unable to gather more information",
   "Invalid paste. Copy data set(s) first.": "Invalid paste. Copy data set(s) first.",
   "Name of Data Set Member": "Name of Data Set Member",
-  "Cannot download, item invalid.": "Cannot download, item invalid.",
+  "Requested to save data set {0}/Document file name": {
+    "message": "Requested to save data set {0}",
+    "comment": [
+      "Document file name"
+    ]
+  },
+  "path.relative returned a non-blank directory. Assuming we are not in the DS_DIR directory: {0}/Relative path to Data Set directory": {
+    "message": "path.relative returned a non-blank directory. Assuming we are not in the DS_DIR directory: {0}",
+    "comment": [
+      "Relative path to Data Set directory"
+    ]
+  },
+  "Could not locate session when saving data set.": "Could not locate session when saving data set.",
+  "Could not find session node": "Could not find session node",
+  "Saving file {0}/Label": {
+    "message": "Saving file {0}",
+    "comment": [
+      "Label"
+    ]
+  },
+  "Data set failed to save. Data set may have been deleted or renamed on mainframe.": "Data set failed to save. Data set may have been deleted or renamed on mainframe.",
+  "Saving data set...": "Saving data set...",
   "Copying data sets is not supported.": "Copying data sets is not supported.",
   "Replace": "Replace",
   "The data set member already exists.\nDo you want to replace it?": "The data set member already exists.\nDo you want to replace it?",

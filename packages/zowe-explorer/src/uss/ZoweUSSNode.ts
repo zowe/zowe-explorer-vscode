@@ -13,31 +13,19 @@ import { imperative, IUploadOptions, IZosFilesResponse } from "@zowe/cli";
 import * as globals from "../globals";
 import * as vscode from "vscode";
 import * as path from "path";
-import { Types, Gui, IZoweUSSTreeNode, ZoweTreeNode, IZoweTree, Validation, MainframeInteraction, isNodeInEditor } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweUSSTreeNode, ZoweTreeNode, Types, Validation, MainframeInteraction, ZosEncoding, isNodeInEditor } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { errorHandling, fallbackProfileName, syncSessionNode } from "../utils/ProfilesUtils";
 import { getIconByNode } from "../generators/icons/index";
+import { autoDetectEncoding, fileExistsCaseSensitiveSync, injectAdditionalDataToTooltip } from "../uss/utils";
 import * as contextually from "../shared/context";
 import { UssFileTree } from "./FileStructure";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { UssFSProvider } from "./UssFSProvider";
 import { USSTree } from "./USSTree";
-
-/**
- * Injects extra data to tooltip based on node status and other conditions
- * @param node
- * @param tooltip
- * @returns {string}
- */
-function injectAdditionalDataToTooltip(node: ZoweUSSNode, tooltip: string): string {
-    ZoweLogger.trace("uss.utils.injectAdditionalDataToTooltip called.");
-    if (node.downloaded && node.downloadedTime) {
-        return `${tooltip}\n(Downloaded: ${new Date(node.downloadedTime).toLocaleString(vscode.env.language)})`;
-    }
-
-    return tooltip;
-}
+import { IZoweUssTreeOpts } from "../shared/IZoweTreeOpts";
+import { TreeProviders } from "../shared/TreeProviders";
 
 /**
  * A type of TreeItem used to represent sessions and USS directories and files
@@ -51,72 +39,55 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     public dirty = true;
     public children: IZoweUSSTreeNode[] = [];
     public collapsibleState: vscode.TreeItemCollapsibleState;
-    public profileName = "";
+    public binary = false;
+    public encoding?: string;
+    public encodingMap = {};
     public shortLabel = "";
     public downloadedTime = null;
-    public profile: imperative.IProfileLoaded; // TODO: This reference should be stored instead of the name
     private downloadedInternal = false;
     public fullPath: string;
     public resourceUri?: vscode.Uri;
 
     public attributes?: Types.FileAttributes;
     public onUpdateEmitter: vscode.EventEmitter<IZoweUSSTreeNode>;
+    private parentPath: string;
+    private etag?: string;
 
     /**
      * Creates an instance of ZoweUSSNode
      *
-     * @param {string} label - Displayed in the [TreeView]
-     * @param {vscode.TreeItemCollapsibleState} collapsibleState - file/directory
-     * @param {IZoweUSSTreeNode} mParent - The parent node
-     * @param {Session} session
-     * @param {String} parentPath - The file path of the parent on the server
-     * @param {boolean} binary - Indictaes if this is a text or binary file
-     * @param {String} mProfileName - Profile to which the node belongs to
+     * @param {IZoweUssTreeOpts} opts
      */
-    public constructor(
-        label: string,
-        collapsibleState: vscode.TreeItemCollapsibleState,
-        mParent: IZoweUSSTreeNode,
-        session: imperative.Session,
-        private parentPath: string,
-        binary = false,
-        public mProfileName?: string,
-        private etag: string = "",
-        profile?: imperative.IProfileLoaded
-    ) {
-        super(label, collapsibleState, mParent, session, profile);
-        this.binary = binary;
-        if (collapsibleState !== vscode.TreeItemCollapsibleState.None) {
+    public constructor(opts: IZoweUssTreeOpts) {
+        super(opts.label, opts.collapsibleState, opts.parentNode, opts.session, opts.profile);
+        this.binary = opts.encoding?.kind === "binary";
+        if (!this.binary && opts.encoding != null) {
+            this.encoding = opts.encoding.kind === "other" ? opts.encoding.codepage : null;
+        }
+        this.parentPath = opts.parentPath;
+        if (opts.collapsibleState !== vscode.TreeItemCollapsibleState.None) {
             this.contextValue = globals.USS_DIR_CONTEXT;
-        } else if (binary) {
-            this.contextValue = globals.DS_BINARY_FILE_CONTEXT;
+        } else if (this.binary) {
+            this.contextValue = globals.USS_BINARY_FILE_CONTEXT;
         } else {
-            this.contextValue = globals.DS_TEXT_FILE_CONTEXT;
+            this.contextValue = globals.USS_TEXT_FILE_CONTEXT;
         }
         if (this.parentPath) {
-            this.fullPath = this.tooltip = this.parentPath + "/" + label;
-            if (parentPath === "/") {
+            this.fullPath = this.tooltip = this.parentPath + "/" + opts.label;
+            if (opts.parentPath === "/") {
                 // Keep fullPath of root level nodes preceded by a single slash
-                this.fullPath = this.tooltip = "/" + label;
+                this.fullPath = this.tooltip = "/" + opts.label;
             }
         }
-        if (mParent && mParent.contextValue === globals.FAV_PROFILE_CONTEXT) {
-            this.profileName = this.mProfileName = mParent.label.toString();
-            this.fullPath = label.trim();
+        if (opts.parentNode && opts.parentNode.contextValue === globals.FAV_PROFILE_CONTEXT) {
+            this.fullPath = opts.label.trim();
             // File or directory name only (no parent path)
             this.shortLabel = this.fullPath.split("/", this.fullPath.length).pop();
             // Display name for favorited file or directory in tree view
             this.label = this.shortLabel;
             this.tooltip = this.fullPath;
         }
-        // TODO: this should not be necessary if each node gets initialized with the profile reference.
-        if (mProfileName) {
-            this.setProfileToChoice(Profiles.getInstance().loadNamedProfile(mProfileName));
-        } else if (mParent && mParent.mProfileName) {
-            this.mProfileName = mParent.mProfileName;
-            this.setProfileToChoice(Profiles.getInstance().loadNamedProfile(mParent.mProfileName));
-        }
-        this.etag = etag ? etag : "";
+        this.etag = opts.etag ? opts.etag : "";
         const icon = getIconByNode(this);
         if (icon) {
             this.iconPath = icon.path;
@@ -142,17 +113,6 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
 
     public get onUpdate(): vscode.Event<IZoweUSSTreeNode> {
         return this.onUpdateEmitter.event;
-    }
-
-    /**
-     * Implements access tto profile name
-     * for {IZoweUSSTreeNode}.
-     *
-     * @returns {string}
-     */
-    public getProfileName(): string {
-        ZoweLogger.trace("ZoweUSSNode.getProfileName called.");
-        return this.mProfileName;
     }
 
     public getSessionNode(): IZoweUSSTreeNode {
@@ -256,19 +216,13 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
 
             const isDir = item.mode.startsWith("d");
             const collapseState = isDir ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None;
-            const temp = new ZoweUSSNode(
-                item.name,
-                collapseState,
-                this,
-                null,
-                this.fullPath,
-                // we cannot determine binary without making an extra z/OSMF call to list the tags
-                // TODO: discuss whether its worth the overhead to make API calls for the tag
-                false,
-                sessNode.mProfileName,
-                undefined,
-                nodeProfile
-            );
+            const temp = new ZoweUSSNode({
+                label: item.name,
+                collapsibleState: collapseState,
+                parentNode; this,
+                parentPath: this.fullPath,
+                profile: nodeProfile
+            });
             temp.attributes = {
                 gid: item.gid,
                 uid: item.uid,
@@ -282,6 +236,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                     vscode.workspace.fs.createDirectory(temp.resourceUri);
                 }
             } else {
+                temp.encoding = this.getSessionNode().encodingMap[`${this.fullPath}/${item.name as string}`];
                 // Create an entry for the USS file if it doesn't exist.
                 if (!UssFSProvider.instance.exists(temp.resourceUri)) {
                     await vscode.workspace.fs.writeFile(temp.resourceUri, new Uint8Array());
@@ -313,18 +268,29 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         return this.children;
     }
 
-    public setBinary(binary: boolean): void {
-        ZoweLogger.trace("ZoweUSSNode.setBinary called.");
-        this.binary = binary;
-        if (this.binary) {
-            this.contextValue = globals.DS_BINARY_FILE_CONTEXT;
-            this.getSessionNode().binaryFiles[this.fullPath] = true;
+    public setEncoding(encoding: ZosEncoding): void {
+        ZoweLogger.trace("ZoweUSSNode.setEncoding called.");
+        if (!(this.contextValue.startsWith(globals.USS_BINARY_FILE_CONTEXT) || this.contextValue.startsWith(globals.USS_TEXT_FILE_CONTEXT))) {
+            throw new Error(`Cannot set encoding for node with context ${this.contextValue}`);
+        }
+        if (encoding?.kind === "binary") {
+            this.contextValue = globals.USS_BINARY_FILE_CONTEXT;
+            this.binary = true;
+            this.encoding = undefined;
         } else {
-            this.contextValue = globals.DS_TEXT_FILE_CONTEXT;
-            delete this.getSessionNode().binaryFiles[this.fullPath];
+            this.contextValue = globals.USS_TEXT_FILE_CONTEXT;
+            this.binary = false;
+            this.encoding = encoding?.kind === "text" ? null : encoding?.codepage;
+        }
+        if (encoding != null) {
+            this.getSessionNode().encodingMap[this.fullPath] = encoding;
+        } else {
+            delete this.getSessionNode().encodingMap[this.fullPath];
         }
         if (this.getParent() && this.getParent().contextValue === globals.FAV_PROFILE_CONTEXT) {
-            this.contextValue = this.binary ? globals.DS_BINARY_FILE_CONTEXT + globals.FAV_SUFFIX : globals.DS_TEXT_FILE_CONTEXT + globals.FAV_SUFFIX;
+            this.contextValue = this.binary
+                ? globals.USS_BINARY_FILE_CONTEXT + globals.FAV_SUFFIX
+                : globals.USS_TEXT_FILE_CONTEXT + globals.FAV_SUFFIX;
         }
 
         const icon = getIconByNode(this);
@@ -332,6 +298,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             this.setIcon(icon.path);
         }
 
+        this.tooltip = injectAdditionalDataToTooltip(this, this.fullPath);
         this.dirty = true;
     }
 
@@ -400,6 +367,8 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 (child as ZoweUSSNode).renameChild(newUri);
             });
         }
+        const providers = TreeProviders.providers;
+        providers.uss.refresh();
         return true;
     }
 
@@ -434,7 +403,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         vscode.commands.executeCommand("zowe.uss.refreshUSSInTree", this);
     }
 
-    public async deleteUSSNode(ussFileProvider: USSTree, _filePath: string = "", cancelled: boolean = false): Promise<void> {
+    public async deleteUSSNode(ussFileProvider: Types.IZoweUSSTreeType, _filePath: string, cancelled: boolean = false): Promise<void> {
         ZoweLogger.trace("ZoweUSSNode.deleteUSSNode called.");
         if (cancelled) {
             Gui.showMessage(vscode.l10n.t("Delete action was cancelled."));
@@ -537,46 +506,13 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
 
         if (Profiles.getInstance().validProfile !== Validation.ValidationType.INVALID) {
             try {
-                switch (true) {
-                    // For opening favorited and non-favorited files
-                    case this.getParent().contextValue === globals.FAV_PROFILE_CONTEXT:
-                        break;
-                    case contextually.isUssSession(this.getParent()):
-                        break;
-                    // Handle file path for files in directories and favorited directories
-                    case contextually.isUssDirectory(this.getParent()):
-                        break;
-                    default:
-                        Gui.errorMessage(vscode.l10n.t("open() called from invalid node."));
-                        throw Error(vscode.l10n.t("open() called from invalid node."));
-                }
-
-                // if (download || !fileExists) {
-                //     const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
-                //     const fullPath = this.fullPath;
-                //     const chooseBinary =
-                //         this.binary || (await ZoweExplorerApiRegister.getUssApi(cachedProfile).isFileTagBinOrAscii(this.fullPath));
-                //
-                //     const response = await ZoweExplorerApiRegister.getUssApi(cachedProfile).getContents(fullPath, {
-                //         file: documentFilePath,
-                //         binary: chooseBinary,
-                //         returnEtag: true,
-                //         encoding: cachedProfile.profile?.encoding,
-                //         responseTimeout: cachedProfile.profile?.responseTimeout,
-                //     });
-                //     statusMsg.dispose();
-                //     this.downloaded = true;
-                //     this.setEtag(response.apiResponse.etag);
-                // }
-
                 // Add document name to recently-opened files
                 ussFileProvider.addFileHistory(`[${this.getProfile().name}]: ${this.fullPath}`);
                 ussFileProvider.getTreeView().reveal(this, { select: true, focus: true, expand: false });
 
                 await this.initializeFileOpening(this.resourceUri);
-                // }
             } catch (err) {
-                await errorHandling(err, this.mProfileName);
+                await errorHandling(err, this.getProfileName());
                 throw err;
             }
         }
@@ -619,7 +555,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                     })
                 );
             } else {
-                await errorHandling(err, this.mProfileName);
+                await errorHandling(err, this.getProfileName());
             }
         }
     }
@@ -628,6 +564,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         ZoweLogger.trace("ZoweUSSNode.initializeFileOpening called.");
         try {
             await vscode.commands.executeCommand("vscode.open", uri);
+            this.downloaded = true;
         } catch (err) {
             ZoweLogger.warn(err);
         }

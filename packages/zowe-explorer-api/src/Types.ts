@@ -16,7 +16,9 @@ import { IZoweDatasetTreeNode, IZoweJobTreeNode, IZoweTreeNode, IZoweUSSTreeNode
 
 export namespace Types {
     export type IZoweNodeType = IZoweDatasetTreeNode | IZoweUSSTreeNode | IZoweJobTreeNode;
+    export type IZoweDatasetTreeType = IZoweTree<IZoweDatasetTreeNode>;
     export type IZoweUSSTreeType = IZoweTree<IZoweUSSTreeNode>;
+    export type IZoweJobTreeType = IZoweTree<IZoweJobTreeNode>;
 
     export type ZoweNodeInteraction = {
         node?: IZoweTreeNode;

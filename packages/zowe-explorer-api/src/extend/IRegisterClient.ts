@@ -109,4 +109,11 @@ export interface IRegisterClient {
      * Define events that fire whenever an existing team config profile is updated.
      */
     onProfilesUpdate?: vscode.Event<Validation.EventType>;
+
+    /**
+     * Lookup of any registered API (Uss, Mvs, Jes, or Command).
+     * @param {string} profile
+     * @returns the registered API instance
+     */
+    getCommonApi?(profile: imperative.IProfileLoaded): MainframeInteraction.ICommon;
 }

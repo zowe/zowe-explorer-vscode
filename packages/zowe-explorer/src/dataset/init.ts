@@ -13,7 +13,7 @@ import * as vscode from "vscode";
 import * as globals from "../globals";
 import * as dsActions from "./actions";
 import * as refreshActions from "../shared/refresh";
-import { IZoweDatasetTreeNode, IZoweTreeNode } from "@zowe/zowe-explorer-api";
+import { IZoweDatasetTreeNode, IZoweTreeNode, ZosEncoding } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { DatasetTree, createDatasetTree } from "./DatasetTree";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
@@ -93,7 +93,7 @@ export async function initDatasetProvider(context: vscode.ExtensionContext): Pro
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.ds.editDataSet", async (node, nodeList) => {
-            let selectedNodes = getSelectedNodeList(node, nodeList);
+            let selectedNodes = getSelectedNodeList(node, nodeList) as IZoweDatasetTreeNode[];
             selectedNodes = selectedNodes.filter((element) => contextuals.isDs(element) || contextuals.isDsMember(element));
             for (const item of selectedNodes) {
                 await vscode.commands.executeCommand(item.command.command, item.resourceUri);
@@ -102,7 +102,7 @@ export async function initDatasetProvider(context: vscode.ExtensionContext): Pro
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.ds.editMember", async (node, nodeList) => {
-            let selectedNodes = getSelectedNodeList(node, nodeList);
+            let selectedNodes = getSelectedNodeList(node, nodeList) as IZoweDatasetTreeNode[];
             selectedNodes = selectedNodes.filter((element) => contextuals.isDs(element) || contextuals.isDsMember(element));
             for (const item of selectedNodes) {
                 await vscode.commands.executeCommand(item.command.command, item.resourceUri);
@@ -209,6 +209,12 @@ export async function initDatasetProvider(context: vscode.ExtensionContext): Pro
         vscode.commands.registerCommand(
             "zowe.ds.filterBy",
             async (node: IZoweDatasetTreeNode): Promise<void> => datasetProvider.filterPdsMembersDialog(node)
+        )
+    );
+    context.subscriptions.push(
+        vscode.commands.registerCommand(
+            "zowe.ds.openWithEncoding",
+            (node: IZoweDatasetTreeNode, encoding?: ZosEncoding): Promise<void> => datasetProvider.openWithEncoding(node, encoding)
         )
     );
     context.subscriptions.push(

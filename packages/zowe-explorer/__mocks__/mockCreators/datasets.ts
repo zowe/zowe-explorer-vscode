@@ -17,20 +17,22 @@ import { removeNodeFromArray } from "./shared";
 import { PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
 
 export function createDatasetSessionNode(session: imperative.Session, profile: imperative.IProfileLoaded) {
-    const datasetNode = new ZoweDatasetNode(
-        "sestest",
-        vscode.TreeItemCollapsibleState.Expanded,
-        null,
+    const datasetNode = new ZoweDatasetNode({
+        label: "sestest",
+        collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
         session,
-        globals.DS_SESSION_CONTEXT,
-        undefined,
-        profile
-    );
+        profile,
+    });
+    datasetNode.contextValue = globals.DS_SESSION_CONTEXT;
+
     return datasetNode;
 }
 
 export function createDatasetFavoritesNode() {
-    const datasetNode = new ZoweDatasetNode("Favorites", vscode.TreeItemCollapsibleState.Collapsed, null, null, null);
+    const datasetNode = new ZoweDatasetNode({
+        label: "Favorites",
+        collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+    });
     datasetNode.contextValue = globals.FAVORITE_CONTEXT;
 
     return datasetNode;

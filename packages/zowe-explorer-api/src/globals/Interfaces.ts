@@ -9,7 +9,10 @@
  *
  */
 
-export * from "./Constants";
-export * from "./Gui";
-export * from "./GuiOptions";
-export * from "./Interfaces";
+import { imperative } from "@zowe/cli";
+
+export interface ZeApiConvertResponse {
+    success: string;
+    warnings: string;
+    convertResult: imperative.IConfigConvertResult;
+}

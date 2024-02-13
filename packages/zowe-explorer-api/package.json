@@ -18,7 +18,7 @@
   },
   "dependencies": {
     "@types/vscode": "^1.53.2",
-    "@zowe/cli": "8.0.0-next.202401022112",
+    "@zowe/cli": "8.0.0-next.202401262128",
     "@zowe/secrets-for-zowe-sdk": "7.18.6",
     "lodash.isequal": "^4.5.0",
     "handlebars": "^4.7.7",
@@ -33,7 +33,7 @@
     "madge": "madge -c --no-color --no-spinner --exclude __mocks__ --extensions js,ts src/",
     "pretty": "prettier --write .",
     "check-cli": "node scripts/check-cli.js",
-    "clean": "rimraf lib",
+    "clean": "rimraf lib tsconfig.tsbuildinfo",
     "fresh-clone": "pnpm clean && (rimraf node_modules || true)",
     "license": "node ../../scripts/updateLicenses.js",
     "package": "pnpm build && pnpm pack && node ../../scripts/mv-pack.js zowe-zowe-explorer-api tgz",

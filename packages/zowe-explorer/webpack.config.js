@@ -27,13 +27,16 @@ const config = {
         path: path.resolve(__dirname, "out/src"),
         filename: "[name].extension.js",
         libraryTarget: "commonjs2",
-        devtoolModuleFilenameTemplate: "../../[resource-path]",
+        devtoolModuleFilenameTemplate: "webpack:///[absolute-resource-path]",
     },
     devtool: "source-map",
     externals: ["vscode", "cpu-features"],
     resolve: {
         modules: [path.resolve(__dirname, "../../node_modules"), path.resolve(__dirname, "node_modules")],
         extensions: [".ts", ".js"],
+        alias: {
+            "@zowe/zowe-explorer-api$": path.resolve(__dirname, "..", "zowe-explorer-api/src"),
+        },
     },
     watchOptions: {
         ignored: /node_modules/,
@@ -76,6 +79,7 @@ const config = {
                             compilerOptions: {
                                 sourceMap: true,
                             },
+                            projectReferences: true,
                         },
                     },
                 ],

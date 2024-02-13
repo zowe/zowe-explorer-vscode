@@ -80,7 +80,6 @@ async function createGlobalMocks() {
         mockCliHome: jest.fn().mockReturnValue(path.join(os.homedir(), ".zowe")),
         mockIcInstance: jest.fn(),
         mockImperativeConfig: jest.fn(),
-        mockInitialize: jest.fn(),
         mockGetImperativeConfig: jest.fn().mockReturnValue({ profiles: [] }),
         mockCliProfileManager: jest.fn().mockImplementation(() => {
             return { GetAllProfileNames: globalMocks.mockGetAllProfileNames, Load: globalMocks.mockLoad };
@@ -179,6 +178,7 @@ async function createGlobalMocks() {
             "zowe.ds.ssoLogout",
             "zowe.ds.sortBy",
             "zowe.ds.filterBy",
+            "zowe.ds.openWithEncoding",
             "zowe.uss.addFavorite",
             "zowe.uss.removeFavorite",
             "zowe.uss.addSession",
@@ -193,8 +193,6 @@ async function createGlobalMocks() {
             "zowe.uss.createFile",
             "zowe.uss.createFolder",
             "zowe.uss.deleteNode",
-            "zowe.uss.binary",
-            "zowe.uss.text",
             "zowe.uss.renameNode",
             "zowe.uss.uploadDialog",
             "zowe.uss.copyPath",
@@ -209,6 +207,7 @@ async function createGlobalMocks() {
             "zowe.uss.ssoLogout",
             "zowe.uss.pasteUssFile",
             "zowe.uss.copyUssFile",
+            "zowe.uss.openWithEncoding",
             "zowe.diff.useLocalContent",
             "zowe.diff.useRemoteContent",
             "zowe.jobs.deleteJob",
@@ -345,10 +344,6 @@ async function createGlobalMocks() {
         value: globalMocks.mockGetProfileName,
         configurable: true,
     });
-    Object.defineProperty(globalMocks.mockCliProfileManager, "initialize", {
-        value: globalMocks.mockInitialize,
-        configurable: true,
-    });
     Object.defineProperty(zowe, "getImperativeConfig", {
         value: globalMocks.mockGetImperativeConfig,
         configurable: true,
@@ -440,19 +435,18 @@ async function createGlobalMocks() {
 
 function createBlockMocks(globalMocks: any) {
     const blockMocks = {
-        rootNode: new ZoweUSSNode("root", vscode.TreeItemCollapsibleState.Collapsed, null, globalMocks.session, null, false, "test", undefined),
+        rootNode: new ZoweUSSNode({
+            label: "root",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            session: globalMocks.session,
+        }),
         testNode: null,
     };
-    blockMocks.testNode = new ZoweUSSNode(
-        globals.DS_PDS_CONTEXT,
-        vscode.TreeItemCollapsibleState.Collapsed,
-        blockMocks.rootNode,
-        null,
-        null,
-        false,
-        "test",
-        undefined
-    );
+    blockMocks.testNode = new ZoweUSSNode({
+        label: globals.DS_PDS_CONTEXT,
+        collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+        parentNode: blockMocks.rootNode,
+    });
 
     blockMocks.rootNode.contextValue = globals.USS_SESSION_CONTEXT;
     return blockMocks;
@@ -488,13 +482,6 @@ describe("Extension Unit Tests", () => {
         expect(globalMocks.mockCreateTreeView.mock.calls.length).toBe(3);
         expect(globalMocks.mockCreateTreeView.mock.calls[0][0]).toBe("zowe.ds.explorer");
         expect(globalMocks.mockCreateTreeView.mock.calls[1][0]).toBe("zowe.uss.explorer");
-
-        // Check that CLI Profile Manager is initialized successfully
-        expect(globalMocks.mockInitialize.mock.calls.length).toBe(1);
-        expect(globalMocks.mockInitialize.mock.calls[0][0]).toStrictEqual({
-            configuration: [],
-            profileRootDirectory: path.join(globalMocks.mockCliHome(), "profiles"),
-        });
 
         // Checking if commands are registered properly
         expect(globalMocks.mockRegisterCommand.mock.calls.length).toBe(globals.COMMAND_COUNT);

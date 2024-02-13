@@ -18,7 +18,6 @@ import * as sharedExtension from "../../../src/shared/init";
 import { initDatasetProvider } from "../../../src/dataset/init";
 import { Profiles } from "../../../src/Profiles";
 import { IJestIt, ITestContext, processSubscriptions, spyOnSubscriptions } from "../../__common__/testUtils";
-import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 
 describe("Test src/dataset/extension", () => {
     describe("initDatasetProvider", () => {
@@ -27,7 +26,7 @@ describe("Test src/dataset/extension", () => {
         let spyCreateDatasetTree;
         const test: ITestContext = {
             context: { subscriptions: [] },
-            value: { label: "test", getParent: () => "test" },
+            value: { label: "test", getParent: () => "test", openDs: jest.fn() },
             _: { _: "_" },
         };
         const dsProvider: { [key: string]: jest.Mock } = {
@@ -48,6 +47,7 @@ describe("Test src/dataset/extension", () => {
             refreshElement: jest.fn(),
             sortPdsMembersDialog: jest.fn(),
             filterPdsMembersDialog: jest.fn(),
+            openWithEncoding: jest.fn(),
         };
         const commands: IJestIt[] = [
             {
@@ -254,6 +254,10 @@ describe("Test src/dataset/extension", () => {
             {
                 name: "zowe.ds.filterBy",
                 mock: [{ spy: jest.spyOn(dsProvider, "filterPdsMembersDialog"), arg: [test.value] }],
+            },
+            {
+                name: "zowe.ds.openWithEncoding",
+                mock: [{ spy: jest.spyOn(dsProvider, "openWithEncoding"), arg: [test.value, undefined] }],
             },
             {
                 name: "onDidChangeConfiguration",

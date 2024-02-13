@@ -14,8 +14,11 @@
 import * as vscode from "vscode";
 import * as path from "path";
 import * as globals from "../globals";
-import { IZoweTreeNode, Types, IZoweDatasetTreeNode, IZoweUSSTreeNode, IZoweJobTreeNode, IZoweTree } from "@zowe/zowe-explorer-api";
+import { IZoweTreeNode, IZoweDatasetTreeNode, IZoweUSSTreeNode, IZoweJobTreeNode, IZoweTree, Types, ZosEncoding } from "@zowe/zowe-explorer-api";
 import { ZoweLogger } from "../utils/LoggerUtils";
+import { markDocumentUnsaved } from "../utils/workspace";
+import { errorHandling } from "../utils/ProfilesUtils";
+import { ZoweLocalStorage } from "../utils/ZoweLocalStorage";
 
 export enum JobSubmitDialogOpts {
     Disabled,
@@ -131,7 +134,7 @@ function appendSuffix(label: string): string {
     const bracket = label.indexOf("(");
     const split = bracket > -1 ? label.substr(0, bracket).split(".", limit) : label.split(".", limit);
     for (let i = split.length - 1; i > 0; i--) {
-        if (["JCL", "JCLLIB", "CNTL"].includes(split[i])) {
+        if (["JCL", "JCLLIB", "CNTL", "PROC", "PROCLIB"].includes(split[i])) {
             return label.concat(".jcl");
         }
         if (["COBOL", "CBL", "COB", "SCBL"].includes(split[i])) {
@@ -240,4 +243,112 @@ export function updateOpenFiles<T extends IZoweTreeNode>(treeProvider: IZoweTree
     if (treeProvider.openFiles) {
         treeProvider.openFiles[docPath] = value;
     }
+}
+
+function getCachedEncoding(node: IZoweTreeNode): string | undefined {
+    let cachedEncoding: ZosEncoding;
+    if (isZoweUSSTreeNode(node)) {
+        cachedEncoding = (node.getSessionNode() as IZoweUSSTreeNode).encodingMap[node.fullPath];
+    } else {
+        const isMemberNode = node.contextValue.startsWith(globals.DS_MEMBER_CONTEXT);
+        const dsKey = isMemberNode ? `${node.getParent().label as string}(${node.label as string})` : (node.label as string);
+        cachedEncoding = (node.getSessionNode() as IZoweDatasetTreeNode).encodingMap[dsKey];
+    }
+    return cachedEncoding?.kind === "other" ? cachedEncoding.codepage : cachedEncoding?.kind;
+}
+
+export async function promptForEncoding(node: IZoweDatasetTreeNode | IZoweUSSTreeNode, taggedEncoding?: string): Promise<ZosEncoding | undefined> {
+    const ebcdicItem: vscode.QuickPickItem = {
+        label: vscode.l10n.t("EBCDIC"),
+        description: vscode.l10n.t("z/OS default codepage"),
+    };
+    const binaryItem: vscode.QuickPickItem = {
+        label: vscode.l10n.t("Binary"),
+        description: vscode.l10n.t("Raw data representation"),
+    };
+    const otherItem: vscode.QuickPickItem = {
+        label: vscode.l10n.t("Other"),
+        description: vscode.l10n.t("Specify another codepage"),
+    };
+    const items: vscode.QuickPickItem[] = [ebcdicItem, binaryItem, otherItem, globals.SEPARATORS.RECENT];
+    const profile = node.getProfile();
+    if (profile.profile?.encoding != null) {
+        items.splice(0, 0, {
+            label: profile.profile?.encoding,
+            description: vscode.l10n.t({
+                message: "From profile {0}",
+                args: [profile.name],
+                comment: ["Profile name"],
+            }),
+        });
+    }
+    if (taggedEncoding != null) {
+        items.splice(0, 0, {
+            label: taggedEncoding,
+            description: vscode.l10n.t("USS file tag"),
+        });
+    }
+
+    let currentEncoding = node.encoding ?? getCachedEncoding(node);
+    if (node.binary || currentEncoding === "binary") {
+        currentEncoding = binaryItem.label;
+    } else if (node.encoding === null || currentEncoding === "text") {
+        currentEncoding = ebcdicItem.label;
+    }
+    const encodingHistory = ZoweLocalStorage.getValue<string[]>("zowe.encodingHistory") ?? [];
+    if (encodingHistory.length > 0) {
+        for (const encoding of encodingHistory) {
+            items.push({ label: encoding });
+        }
+    } else {
+        // Pre-populate recent list with some common encodings
+        items.push({ label: "IBM-1047" }, { label: "ISO8859-1" });
+    }
+
+    let response = (
+        await Gui.showQuickPick(items, {
+            title: vscode.l10n.t({
+                message: "Choose encoding for {0}",
+                args: [node.label as string],
+                comment: ["Node label"],
+            }),
+            placeHolder:
+                currentEncoding &&
+                vscode.l10n.t({
+                    message: "Current encoding is {0}",
+                    args: [currentEncoding],
+                    comment: ["Encoding name"],
+                }),
+        })
+    )?.label;
+    let encoding: ZosEncoding;
+    switch (response) {
+        case ebcdicItem.label:
+            encoding = { kind: "text" };
+            break;
+        case binaryItem.label:
+            encoding = { kind: "binary" };
+            break;
+        case otherItem.label:
+            response = await Gui.showInputBox({
+                title: vscode.l10n.t({
+                    message: "Choose encoding for {0}",
+                    args: [node.label as string],
+                    comment: ["Node label"],
+                }),
+                placeHolder: vscode.l10n.t("Enter a codepage (e.g., 1047, IBM-1047)"),
+            });
+            if (response != null) {
+                encoding = { kind: "other", codepage: response };
+                encodingHistory.push(encoding.codepage);
+                ZoweLocalStorage.setValue("zowe.encodingHistory", encodingHistory.slice(0, globals.MAX_FILE_HISTORY));
+            }
+            break;
+        default:
+            if (response != null) {
+                encoding = { kind: "other", codepage: response };
+            }
+            break;
+    }
+    return encoding;
 }

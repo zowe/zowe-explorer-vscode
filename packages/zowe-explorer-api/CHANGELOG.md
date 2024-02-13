@@ -2,6 +2,20 @@
 
 All notable changes to the "zowe-explorer-api" extension will be documented in this file.
 
+## TBD Release
+
+### New features and enhancements
+
+- **Breaking:** Removed the following properties/methods:
+  - `IZoweUSSTreeNode.binaryFiles` -> `IZoweUSSTreeNode.encodingMap`
+  - `IZoweUSSTreeNode.mProfileName` -> `IZoweUSSTreeNode.getProfileName()`
+  - `IZoweUSSTreeNode.setBinary()` -> `IZoweUSSTreeNode.setEncoding()`
+- **Breaking:** Removed `ZoweTreeNode.binary`, `ZoweTreeNode.binaryFiles`, and `ZoweTreeNode.shortLabel`. These properties are not applicable for all tree nodes and should be defined in subclasses of `ZoweTreeNode` if necessary.
+- **Breaking:** Removed `ProfilesCache.getSchema()`, `ProfilesCache.getCliProfileManager()`, `ProfilesCache.saveProfile()` & `ProfilesCache.deleteProfileOnDisk()` v1 Profiles manipulation endpoints.
+- Added new ProfilesCache.convertV1ProfToConfig() API endpoint for extenders migrating from v1 profiles to team configuration files. [#2284](https://github.com/zowe/vscode-extension-for-zowe/issues/2284)
+
+### Bug fixes
+
 ## `3.0.0-next.202402071248`
 
 ### New features and enhancements
@@ -24,10 +38,6 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 - Added new APIs for Issue UNIX Command. [#1326](https://github.com/zowe/vscode-extension-for-zowe/issues/1326)
 
-### Bug fixes
-
-- Update dependencies for technical currency purposes.
-
 ## `3.0.0-next.202311171754`
 
 ## Bug fixes
@@ -42,6 +52,31 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 - Removal of deprecated APIs. Check the [list](https://github.com/zowe/vscode-extension-for-zowe/tree/next/docs/early-access/v3/Extenders.md) of APIs that were removed.
 - Added `madge` script in `package.json` to track circular dependencies. [#2148](https://github.com/zowe/vscode-extension-for-zowe/issues/2148)
 - Migrated to new package manager PNPM from Yarn.
+
+## `2.14.0`
+
+### New features and enhancements
+
+- Added optional `openDs` function to `IZoweDatasetTreeNode` to open a data set or member in the editor.
+- Added optional `setEncoding` function to `IZoweDatasetTreeNode` and `IZoweUSSTreeNode` to set the encoding of a node to binary, text, or a custom codepage.
+- Added optional properties `binary`, `encoding`, and `encodingMap` to tree node interfaces for storing the codepage of a data set or USS file.
+- Deprecated `IZoweUSSTreeNode.binaryFiles` and `IZoweUSSTreeNode.setBinary` in favor of `IZoweUSSTreeNode.encodingMap` and `IZoweUSSTreeNode.setEncoding`.
+- Deprecated `ZoweTreeNode.binary`, `ZoweTreeNode.binaryFiles`, and `ZoweTreeNode.shortLabel`. These properties are not applicable for all tree nodes and should be defined in subclasses of `ZoweTreeNode` if necessary.
+- Added new functions `loginWithBaseProfile` and `logoutWithBaseProfile` to provide extenders with the ability to automatically login to their respective services. [#2493](https://github.com/zowe/vscode-extension-for-zowe/pull/2493)
+- Added APIML dynamic token support. [#2665](https://github.com/zowe/vscode-extension-for-zowe/issues/2665)
+- Added new optional method `getCommonApi` to `ZoweExplorerApi.IApiRegisterClient` for enhanced typings in other Zowe Explorer APIs. [#2493](https://github.com/zowe/vscode-extension-for-zowe/pull/2493)
+
+### Bug fixes
+
+- Added a return type of void for `IZoweUSSTreeNode.openUSS`.
+- Fixed use of `this` in static methods in `ZoweVsCodeExtension`. [#2606](https://github.com/zowe/vscode-extension-for-zowe/pull/2606)
+- Fixed `ZoweVsCodeExtension.promptUserPass` to not use hardcoded values for user and password. [#2666](https://github.com/zowe/vscode-extension-for-zowe/issues/2666)
+
+## `2.13.1`
+
+### Bug fixes
+
+- Update dependencies for technical currency purposes.
 
 ## `2.13.0`
 

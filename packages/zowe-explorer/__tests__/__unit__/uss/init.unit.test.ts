@@ -48,6 +48,7 @@ describe("Test src/dataset/extension", () => {
                 reveal: jest.fn(),
             }),
             refreshElement: jest.fn(),
+            openWithEncoding: jest.fn(),
         };
         const commands: IJestIt[] = [
             {
@@ -122,20 +123,6 @@ describe("Test src/dataset/extension", () => {
                 ],
             },
             {
-                name: "zowe.uss.binary",
-                mock: [
-                    { spy: jest.spyOn(contextuals, "isText"), arg: [test.value], ret: true },
-                    { spy: jest.spyOn(ussActions, "changeFileType"), arg: [test.value, true, ussFileProvider] },
-                ],
-            },
-            {
-                name: "zowe.uss.text",
-                mock: [
-                    { spy: jest.spyOn(contextuals, "isBinary"), arg: [test.value], ret: true },
-                    { spy: jest.spyOn(ussActions, "changeFileType"), arg: [test.value, false, ussFileProvider] },
-                ],
-            },
-            {
                 name: "zowe.uss.renameNode",
                 mock: [{ spy: jest.spyOn(ussFileProvider, "rename"), arg: [test.value] }],
             },
@@ -203,6 +190,10 @@ describe("Test src/dataset/extension", () => {
             {
                 name: "zowe.uss.editAttributes",
                 mock: [{ spy: jest.spyOn(ussActions, "editAttributes"), arg: [test.context, ussFileProvider, test.value] }],
+            },
+            {
+                name: "zowe.uss.openWithEncoding",
+                mock: [{ spy: jest.spyOn(ussFileProvider, "openWithEncoding"), arg: [test.value, undefined] }],
             },
             {
                 name: "onDidChangeConfiguration",

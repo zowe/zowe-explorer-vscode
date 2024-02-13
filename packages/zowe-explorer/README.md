@@ -5,9 +5,9 @@
 [![codecov](https://codecov.io/gh/zowe/vscode-extension-for-zowe/branch/main/graph/badge.svg)](https://codecov.io/gh/zowe/vscode-extension-for-zowe)
 [![slack](https://img.shields.io/badge/chat-on%20Slack-blue)](https://slack.openmainframeproject.org/)
 
-> ## With the removal of keytar shim from VS Code we will be replacing `node-keytar` with `@zowe/secrets-for-zowe-sdk` in the v2.10.0 release to avoid user interruptions. Extenders, please check out the usage [documentation](https://github.com/zowe/vscode-extension-for-zowe/wiki/Secure-Credentials-for-Extenders)
+> ## v3 Pre-release is now available in our [Github Releases](https://github.com/zowe/vscode-extension-for-zowe/releases) with the removal of v1 profile support. Keep an eye on [changes affecting users and extenders](https://github.com/zowe/vscode-extension-for-zowe/wiki/v3-Changes-for-Users-and-Extenders) for the full list of changes
 >
-> ## v3 Pre-release coming soon with the removal of v1 profile support. Extenders, keep an eye on [changes affecting extenders](https://github.com/zowe/vscode-extension-for-zowe/wiki/Changes-Affecting-Extenders) for the full list of changes
+> ## With the removal of the keytar shim from VS Code, we have replaced `node-keytar` with `@zowe/secrets-for-zowe-sdk` in the v2.10.0 release to avoid user interruptions. Extenders, please check out the usage [documentation](https://github.com/zowe/vscode-extension-for-zowe/wiki/Secure-Credentials-for-Extenders)
 
 ## Introduction
 
@@ -93,7 +93,7 @@ The first time profiles are used you will be prompted for user name and password
 
 ### Updating securely stored credentials
 
-Secure fields in the team configuration file are handled by the Zowe Imperative dependency. To update securely stored user names and passwords in Zowe Explorer, the user can right click the profile and select **Update Credentials**. This prompts the user for the new credentials and the secure credentials vault is updated.
+Secure fields in the team configuration file are handled by the Zowe Imperative dependency. To update securely stored user names and passwords in Zowe Explorer, the user can right click the profile and select **Manage Profile**, then **Update Credentials** from the drop down list. This prompts the user for the new credentials and the secure credentials vault is updated.
 
 ### Editing team configuration file
 
@@ -128,7 +128,8 @@ Zowe Explorer has a right click action for profiles to log in and log out of the
 1. Hover over **DATA SETS**, **USS**, or **JOBS**.
 1. Click the **+** icon.
 1. Select the profile you use with your base profile for token authentication. The profile will appear in the tree.
-1. Right-click the profile and select 'Login to Authentication Service', then enter basic credentials to request the token. If the request is successful, the token will be used for authentication until the logout action is taken or the token expires.
+1. Right-click the profile and select **Manage Profile**.
+1. Select the **Log in to Authentication Service** option from the drop down list, then enter basic credentials to request the token. If the request is successful, the token will be used for authentication until the logout action is taken or the token expires.
 
 For more information, see [Integrating with API Mediation Layer](https://docs.zowe.org/stable/user-guide/cli-using-integrating-apiml).
 
@@ -137,7 +138,7 @@ If you do not want to store your token, you can request the server to end your s
 1. Open Zowe Explorer.
 1. Hover over **DATA SETS**, **USS**, or **JOBS**.
 1. Click the **+** icon.
-1. Right-click your profile.
+1. Right-click your profile and select **Manage Profile**.
 1. Select the **Log out from Authentication Service** option.
 
 Your token has been successfully invalidated.
@@ -148,13 +149,13 @@ Your token has been successfully invalidated.
 
 - **Syntax Highlighting:** Zowe Explorer supports syntax highlighting for data sets. You can search for and install such extensions in VS Code Marketplace.
 
-- **Update a profile**: Right-click a profile, select the **Edit Team Config File** option, and modify the information inside the profile.
+- **Update a profile**: Right-click a profile, select the **Manage Profile** option then select **Edit Profile** option from drop down list, and modify the information inside the profile.
 
-- **Delete a profile**: Right-click a profile, select the **Delete Profile** which opens the `zowe.config.json` file for the user to delete the profile manually:
+- **Delete a profile**: Right-click a profile, select the **Manage Profile** option then select **Delete Profile** option from drop down list, which opens the `zowe.config.json` file for the user to delete the profile manually:
 
   ![Delete a V2 profile](/docs/images/ZE-v2-delete-profile.gif)
 
-- **Hide a profile**: You can hide a profile from the profile tree by right-clicking the profile and selecting the **Hide Profile** option. To unhide the profile, click the **+** button and select the profile from the quick pick list.
+- **Hide a profile**: You can hide a profile from the profile tree by right-clicking the profile and selecting the **Manage Profile** and then select **Hide Profile** option from the drop down menu. Finally, if the profile is in multiple trees, choose whether the to hide from all trees or just the tree the action was started in. To unhide the profile, click the **+** button and select the profile from the quick pick list.
 
 - **Open recent members**: Zowe Explorer lets you open a list of members you worked on earlier. You can access the list by pressing `Ctrl`+`Alt`+`R` (Windows) or `Command`+`Option`+`R` (Mac).
 

@@ -11,7 +11,7 @@
 
 import * as vscode from "vscode";
 import * as globals from "../globals";
-import { Gui, IZoweDatasetTreeNode, IZoweUSSTreeNode, Types, IZoweTree } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweDatasetTreeNode, IZoweUSSTreeNode, Types, imperative } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { filterTreeByString } from "../shared/utils";
 import { FilterItem, FilterDescriptor } from "../utils/ProfilesUtils";
@@ -23,10 +23,7 @@ import { ZoweLogger } from "../utils/LoggerUtils";
  * Search for matching items loaded in data set or USS tree
  *
  */
-export async function searchInAllLoadedItems(
-    datasetProvider?: IZoweTree<IZoweDatasetTreeNode>,
-    ussFileProvider?: IZoweTree<IZoweUSSTreeNode>
-): Promise<void> {
+export async function searchInAllLoadedItems(datasetProvider?: Types.IZoweDatasetTreeType, ussFileProvider?: Types.IZoweUSSTreeType): Promise<void> {
     ZoweLogger.trace("shared.actions.searchInAllLoadedItems called.");
     let pattern: string;
     const items: Types.IZoweNodeType[] = [];
@@ -115,7 +112,7 @@ export async function searchInAllLoadedItems(
                 // If selected item is file, open it in workspace
                 ussFileProvider.addSearchHistory(node.fullPath);
                 const ussNode: IZoweUSSTreeNode = node;
-                ussNode.openUSS(false, true, ussFileProvider);
+                await ussNode.openUSS(false, true, ussFileProvider);
             }
         } else {
             // Data set nodes
@@ -148,7 +145,7 @@ export async function searchInAllLoadedItems(
     }
 }
 
-export async function openRecentMemberPrompt(datasetTree: IZoweTree<IZoweDatasetTreeNode>, ussTree: IZoweTree<IZoweUSSTreeNode>): Promise<void> {
+export async function openRecentMemberPrompt(datasetTree: Types.IZoweDatasetTreeType, ussTree: Types.IZoweUSSTreeType): Promise<void> {
     ZoweLogger.trace("shared.actions.openRecentMemberPrompt called.");
     ZoweLogger.debug(vscode.l10n.t("Prompting the user to choose a recent member for editing"));
     let pattern: string;

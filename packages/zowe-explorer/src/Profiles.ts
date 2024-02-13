@@ -597,9 +597,9 @@ export class Profiles extends ProfilesCache {
     }
 
     public async deleteProfile(
-        datasetTree: IZoweTree<IZoweDatasetTreeNode>,
-        ussTree: IZoweTree<IZoweUSSTreeNode>,
-        jobsProvider: IZoweTree<IZoweJobTreeNode>,
+        datasetTree: Types.IZoweDatasetTreeType,
+        ussTree: Types.IZoweUSSTreeType,
+        jobsProvider: Types.IZoweJobTreeType,
         node?: Types.IZoweNodeType
     ): Promise<void> {
         ZoweLogger.trace("Profiles.deleteProfile called.");
@@ -727,8 +727,9 @@ export class Profiles extends ProfilesCache {
             return;
         }
 
+        const zeInstance = ZoweExplorerApiRegister.getInstance();
         try {
-            loginTokenType = await ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).getTokenTypeName();
+            loginTokenType = await zeInstance.getCommonApi(serviceProfile).getTokenTypeName();
         } catch (error) {
             ZoweLogger.warn(error);
             Gui.showMessage(
@@ -741,10 +742,17 @@ export class Profiles extends ProfilesCache {
             return;
         }
         try {
-            if (loginTokenType && loginTokenType !== zowe.imperative.SessConstants.TOKEN_TYPE_APIML) {
-                await this.loginWithRegularProfile(serviceProfile, node);
+            let loginOk = false;
+            if (loginTokenType && !loginTokenType.startsWith(zowe.imperative.SessConstants.TOKEN_TYPE_APIML)) {
+                loginOk = await this.loginWithRegularProfile(serviceProfile, node);
             } else {
-                await this.loginWithBaseProfile(serviceProfile, loginTokenType, node);
+                loginOk = await ZoweVsCodeExtension.loginWithBaseProfile(serviceProfile, loginTokenType, node, zeInstance, this);
+            }
+            if (loginOk) {
+                Gui.showMessage(vscode.l10n.t("Login to authentication service was successful."));
+                await Profiles.getInstance().refresh(zeInstance);
+            } else {
+                Gui.showMessage(this.profilesOpCancelled);
             }
         } catch (err) {
             const message = vscode.l10n.t({
@@ -832,25 +840,16 @@ export class Profiles extends ProfilesCache {
             this.clearFilterFromAllTrees(node);
 
             // this will handle extenders
-            if (serviceProfile.type !== "zosmf" && serviceProfile.profile?.tokenType !== zowe.imperative.SessConstants.TOKEN_TYPE_APIML) {
+            if (
+                serviceProfile.type !== "zosmf" &&
+                serviceProfile.profile != null &&
+                !serviceProfile.profile.tokenType?.startsWith(zowe.imperative.SessConstants.TOKEN_TYPE_APIML)
+            ) {
                 await ZoweExplorerApiRegister.getInstance()
                     .getCommonApi(serviceProfile)
                     .logout(await node.getSession());
             } else {
-                // this will handle base profile apiml tokens
-                const baseProfile = await this.fetchBaseProfile();
-                const loginTokenType = ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).getTokenTypeName();
-                const updSession = new zowe.imperative.Session({
-                    hostname: serviceProfile.profile.host,
-                    port: serviceProfile.profile.port,
-                    rejectUnauthorized: serviceProfile.profile.rejectUnauthorized,
-                    tokenType: loginTokenType,
-                    tokenValue: serviceProfile.profile.tokenValue,
-                    type: zowe.imperative.SessConstants.AUTH_TYPE_TOKEN,
-                });
-                await ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).logout(updSession);
-
-                await this.updateBaseProfileFileLogout(baseProfile);
+                await ZoweVsCodeExtension.logoutWithBaseProfile(serviceProfile, ZoweExplorerApiRegister.getInstance(), this);
             }
             Gui.showMessage(
                 vscode.l10n.t({
@@ -887,13 +886,13 @@ export class Profiles extends ProfilesCache {
         if (!profileName) {
             return [];
         }
-        const usingSecureCreds = !SettingsConfig.getDirectValue(globals.SETTINGS_SECURE_CREDENTIALS_ENABLED);
-        if ((await this.getProfileInfo()).usingTeamConfig && !usingSecureCreds) {
-            const config = (await this.getProfileInfo()).getTeamConfig();
-            return config.api.secure.securePropsForProfile(profileName);
+        const usingSecureCreds = SettingsConfig.getDirectValue(globals.SETTINGS_SECURE_CREDENTIALS_ENABLED);
+        const profInfo = await this.getProfileInfo();
+        if (profInfo.usingTeamConfig && usingSecureCreds) {
+            return profInfo.getTeamConfig().api.secure.securePropsForProfile(profileName);
         }
         const profAttrs = await this.getProfileFromConfig(profileName);
-        const mergedArgs = (await this.getProfileInfo()).mergeArgsForProfile(profAttrs);
+        const mergedArgs = profInfo.mergeArgsForProfile(profAttrs);
         return mergedArgs.knownArgs
             .filter((arg) => arg.secure || arg.argName === "tokenType" || arg.argName === "tokenValue")
             .map((arg) => arg.argName);
@@ -937,16 +936,17 @@ export class Profiles extends ProfilesCache {
         }
     }
 
-    private async loginWithRegularProfile(serviceProfile: zowe.imperative.IProfileLoaded, node?: Types.IZoweNodeType): Promise<void> {
+    private async loginWithRegularProfile(serviceProfile: zowe.imperative.IProfileLoaded, node?: Types.IZoweNodeType): Promise<boolean> {
         let session: zowe.imperative.Session;
         if (node) {
             session = node.getSession();
-        } else {
+        }
+        if (session == null) {
             session = await ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).getSession();
         }
         const creds = await this.loginCredentialPrompt();
         if (!creds) {
-            return;
+            return false;
         }
         session.ISession.user = creds[0];
         session.ISession.password = creds[1];
@@ -960,6 +960,7 @@ export class Profiles extends ProfilesCache {
             });
         }
         Gui.showMessage(vscode.l10n.t("Login to authentication service was successful."));
+        return true;
     }
 
     private async getConfigLocationPrompt(action: string): Promise<string> {
@@ -1045,25 +1046,6 @@ export class Profiles extends ProfilesCache {
             }
         }
         return ret;
-    }
-
-    private async updateBaseProfileFileLogin(profile: zowe.imperative.IProfileLoaded, updProfile: zowe.imperative.IProfile): Promise<void> {
-        ZoweLogger.trace("Profiles.updateBaseProfileFileLogin called.");
-        const upd = { profileName: profile.name, profileType: profile.type };
-        const mProfileInfo = await this.getProfileInfo();
-        const setSecure = mProfileInfo.isSecured();
-        await mProfileInfo.updateProperty({ ...upd, property: "tokenType", value: updProfile.tokenType });
-        await mProfileInfo.updateProperty({ ...upd, property: "tokenValue", value: updProfile.tokenValue, setSecure });
-    }
-
-    private async updateBaseProfileFileLogout(profile: zowe.imperative.IProfileLoaded): Promise<void> {
-        ZoweLogger.trace("Profiles.updateBaseProfileFileLogout called.");
-        const mProfileInfo = await this.getProfileInfo();
-        const setSecure = mProfileInfo.isSecured();
-        const prof = mProfileInfo.getAllProfiles(profile.type).find((p) => p.profName === profile.name);
-        const mergedArgs = mProfileInfo.mergeArgsForProfile(prof);
-        await mProfileInfo.updateKnownProperty({ mergedArgs, property: "tokenValue", value: undefined, setSecure });
-        await mProfileInfo.updateKnownProperty({ mergedArgs, property: "tokenType", value: undefined });
     }
 
     private async loginCredentialPrompt(): Promise<string[]> {
