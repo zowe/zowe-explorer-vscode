@@ -531,12 +531,10 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      *
      * @param {IZoweTreeNode} node
      */
-    public async openUSS(download: boolean, previewFile: boolean, ussFileProvider: IZoweTree<IZoweUSSTreeNode>): Promise<void> {
+    public async openUSS(_download: boolean, _previewFile: boolean, ussFileProvider: IZoweTree<IZoweUSSTreeNode>): Promise<void> {
         ZoweLogger.trace("ZoweUSSNode.openUSS called.");
         await ussFileProvider.checkCurrentProfile(this);
 
-        const doubleClicked = Gui.utils.wasDoubleClicked(this, ussFileProvider);
-        const shouldPreview = doubleClicked ? false : previewFile;
         if (Profiles.getInstance().validProfile !== Validation.ValidationType.INVALID) {
             try {
                 switch (true) {
@@ -553,25 +551,11 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                         throw Error(vscode.l10n.t("open() called from invalid node."));
                 }
 
-                // const documentFilePath = this.getUSSDocumentFilePath();
-                // // check if some other file is already created with the same name avoid opening file warn user
-                // const fileExists = fs.existsSync(documentFilePath);
-                // if (fileExists && !fileExistsCaseSensitveSync(documentFilePath)) {
-                //     Gui.showMessage(
-                //         localize(
-                //             "openUSS.name.exists",
-                //             // eslint-disable-next-line max-len
-                //             "There is already a file with the same name. Please change your OS file system settings if you want to give case sensitive file names"
-                //         )
-                //     );
-                // } else {
-                // if local copy exists, open that instead of pulling from mainframe
                 // if (download || !fileExists) {
                 //     const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
                 //     const fullPath = this.fullPath;
                 //     const chooseBinary =
                 //         this.binary || (await ZoweExplorerApiRegister.getUssApi(cachedProfile).isFileTagBinOrAscii(this.fullPath));
-
                 //
                 //     const response = await ZoweExplorerApiRegister.getUssApi(cachedProfile).getContents(fullPath, {
                 //         file: documentFilePath,
@@ -589,7 +573,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 ussFileProvider.addFileHistory(`[${this.getProfile().name}]: ${this.fullPath}`);
                 ussFileProvider.getTreeView().reveal(this, { select: true, focus: true, expand: false });
 
-                await this.initializeFileOpening(this.resourceUri, shouldPreview);
+                await this.initializeFileOpening(this.resourceUri);
                 // }
             } catch (err) {
                 await errorHandling(err, this.mProfileName);
@@ -640,28 +624,12 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         }
     }
 
-    public async initializeFileOpening(uri: vscode.Uri, previewFile?: boolean): Promise<void> {
+    public async initializeFileOpening(uri: vscode.Uri): Promise<void> {
         ZoweLogger.trace("ZoweUSSNode.initializeFileOpening called.");
-        let openingTextFailed = false;
-
         try {
             await vscode.commands.executeCommand("vscode.open", uri);
         } catch (err) {
             ZoweLogger.warn(err);
-            openingTextFailed = true;
-        }
-
-        if (openingTextFailed) {
-            const yesResponse = vscode.l10n.t("Re-download");
-            const noResponse = vscode.l10n.t("Cancel");
-
-            const response = await Gui.errorMessage(vscode.l10n.t("Failed to open file as text. Re-download file as binary?"), {
-                items: [yesResponse, noResponse],
-            });
-
-            if (response === yesResponse) {
-                await vscode.commands.executeCommand("zowe.uss.binary", this);
-            }
         }
     }
 

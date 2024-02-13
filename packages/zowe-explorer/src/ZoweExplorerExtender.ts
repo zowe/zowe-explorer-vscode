@@ -157,7 +157,7 @@ export class ZoweExplorerExtender implements IApiExplorerExtender, IZoweExplorer
          */
         let usingTeamConfig: boolean;
         try {
-            const mProfileInfo = await ProfilesUtils.getProfileInfo(globals.ISTHEIA);
+            const mProfileInfo = await ProfilesUtils.getProfileInfo();
             if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders[0]) {
                 const rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
                 await mProfileInfo.readProfilesFromDisk({ homeDir: zoweDir, projectDir: FileManagement.getFullPath(rootPath) });
