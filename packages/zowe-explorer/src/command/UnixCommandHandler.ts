@@ -222,7 +222,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
                 Gui.errorMessage(vscode.l10n.t("SSH profile missing connection details. Please update."));
                 return;
             }
-            if (!(sshProfile.profile.user | sshProfile.profile.password) && !sshProfile.profile.privateKey) {
+            if (!(sshProfile.profile.user || sshProfile.profile.password) && !sshProfile.profile.privateKey) {
                 const prompted = await this.profileInstance.promptCredentials(sshProfile);
                 if (!prompted) {
                     return;
