@@ -1121,7 +1121,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
      * @param newFilter Either a valid `JobFilter` object, or `null` to reset the filter
      * @param isSession Whether the node is a session
      */
-    public updateFilterForJob(job: IZoweJobTreeNode, newFilter: string | null, isSession: boolean): void {
+    public updateFilterForJob(job: IZoweJobTreeNode, newFilter: string | null): void {
         job.filter = newFilter;
         job.description = newFilter
             ? vscode.l10n.t({
@@ -1147,12 +1147,11 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         });
         const filterMethod = JOB_FILTER_OPTS.indexOf(selection);
 
-        const isSession = contextually.isSession(job);
         const userDismissed = filterMethod < 0;
         const clearFilterOpt = vscode.l10n.t("$(clear-all) Clear filter for profile");
         if (userDismissed || selection === clearFilterOpt) {
             if (selection === clearFilterOpt) {
-                this.updateFilterForJob(job, null, isSession);
+                this.updateFilterForJob(job, null);
                 Gui.setStatusBarMessage(
                     vscode.l10n.t({
                         message: "$(check) Filter cleared for {0}",
@@ -1177,7 +1176,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
             query = query.toUpperCase();
             job["children"] = actual_jobs.filter((item) => `${item["job"].jobname}(${item["job"].jobid}) - ${item["job"].retcode}`.includes(query));
             TreeProviders.job.refresh();
-            this.updateFilterForJob(job, query, isSession);
+            this.updateFilterForJob(job, query);
             Gui.setStatusBarMessage(
                 vscode.l10n.t({
                     message: "$(check) Filter updated for {0}",

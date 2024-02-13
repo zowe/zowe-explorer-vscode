@@ -434,7 +434,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         vscode.commands.executeCommand("zowe.uss.refreshUSSInTree", this);
     }
 
-    public async deleteUSSNode(ussFileProvider: USSTree, filePath: string = "", cancelled: boolean = false): Promise<void> {
+    public async deleteUSSNode(ussFileProvider: USSTree, _filePath: string = "", cancelled: boolean = false): Promise<void> {
         ZoweLogger.trace("ZoweUSSNode.deleteUSSNode called.");
         if (cancelled) {
             Gui.showMessage(vscode.l10n.t("Delete action was cancelled."));
