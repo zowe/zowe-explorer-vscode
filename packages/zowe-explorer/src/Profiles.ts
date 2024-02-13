@@ -551,11 +551,11 @@ export class Profiles extends ProfilesCache {
         }
         const userInputBoxOptions: vscode.InputBoxOptions = {
             placeHolder: vscode.l10n.t(`User Name`),
-            prompt: vscode.l10n.t(`Enter the user name for the ${profType} connection.`),
+            prompt: vscode.l10n.t(`Enter the user name for the {0} connection.`, profType),
         };
         const passwordInputBoxOptions: vscode.InputBoxOptions = {
             placeHolder: vscode.l10n.t(`Password`),
-            prompt: vscode.l10n.t(`Enter the password for the ${profType} connection.`),
+            prompt: vscode.l10n.t(`Enter the password for the {0} connection.`, profType),
         };
 
         const promptInfo = await ZoweVsCodeExtension.updateCredentials(
