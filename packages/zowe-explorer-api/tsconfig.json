@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "esModuleInterop": true,
     "types": ["node"],
     "target": "es2015",
     "module": "commonjs",

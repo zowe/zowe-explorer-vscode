@@ -12,7 +12,7 @@
 import * as vscode from "vscode";
 import { DirEntry, FileEntry, IFileSystemEntry, FS_PROVIDER_DELAY, ConflictViewSelection, DeleteMetadata } from "./types";
 import * as path from "path";
-import { isEqual } from "lodash";
+import isEqual from "lodash.isequal";
 import { isDirectoryEntry, isFileEntry } from "./utils";
 import { Gui } from "../globals/Gui";
 import { ZoweVsCodeExtension } from "../vscode";
