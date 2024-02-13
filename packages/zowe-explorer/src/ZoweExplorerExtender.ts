@@ -161,8 +161,9 @@ export class ZoweExplorerExtender implements IApiExplorerExtender, IZoweExplorer
             }
             ZoweExplorerExtender.showZoweConfigError(error.message);
         }
-
-        if (profileTypeConfigurations !== undefined) Profiles.getInstance().addToConfigArray(profileTypeConfigurations);
+        if (profileTypeConfigurations !== undefined) {
+            Profiles.getInstance().addToConfigArray(profileTypeConfigurations);
+        }
 
         // sequentially reload the internal profiles cache to satisfy all the newly added profile types
         await ZoweExplorerExtender.refreshProfilesQueue.add(async (): Promise<void> => {

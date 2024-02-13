@@ -10,10 +10,12 @@
  */
 
 import * as path from "path";
+import * as fs from "fs";
 import * as zowe from "@zowe/cli";
 import * as extend from "../extend";
 import { FileManagement } from "../utils";
 import { Validation } from "./Validation";
+import { ZeApiConvertResponse } from "../globals";
 
 export class ProfilesCache {
     public profilesForValidation: Validation.IValidationProfile[] = [];
@@ -214,26 +216,6 @@ export class ProfilesCache {
     }
 
     /**
-     * V1 Profile specific
-     * gets schema from /.zowe/profiles/profileType directory
-     * used by Zowe Explorer for creation & update of v1 profiles
-     * TO DO: put in request for public readonly api for this on Imperative.
-     * @param profileType
-     * @returns
-     */
-    public getSchema(profileType: string): Record<string, unknown> {
-        const profileManager = this.getCliProfileManager(profileType);
-        const configOptions = Array.from(profileManager.configurations);
-        let schema = {};
-        for (const val of configOptions) {
-            if (val.type === profileType) {
-                schema = val.schema.properties;
-            }
-        }
-        return schema;
-    }
-
-    /**
      * get array of profile types
      * @returns string[]
      */
@@ -319,32 +301,6 @@ export class ProfilesCache {
         return this.getProfileLoaded(currentProfile.profName, currentProfile.profType, profile);
     }
 
-    /**
-     * V1 Profile specific
-     * Used by Zowe Explorer to handle v1 profiles
-     * @param type string, profile type
-     * @returns zowe.imperative.CliProfileManager
-     */
-    public getCliProfileManager(type: string): zowe.imperative.CliProfileManager | undefined {
-        let profileManager = this.profileManagerByType.get(type);
-        if (!profileManager) {
-            try {
-                profileManager = new zowe.imperative.CliProfileManager({
-                    profileRootDirectory: path.join(FileManagement.getZoweDir(), "profiles"),
-                    type,
-                });
-            } catch (error) {
-                this.log.debug(error as string);
-            }
-            if (profileManager) {
-                this.profileManagerByType.set(type, profileManager);
-            } else {
-                return undefined;
-            }
-        }
-        return profileManager;
-    }
-
     // This will retrieve the saved base profile in the allProfiles array
     public getBaseProfile(): zowe.imperative.IProfileLoaded | undefined {
         let baseProfile: zowe.imperative.IProfileLoaded;
@@ -391,20 +347,49 @@ export class ProfilesCache {
         };
     }
 
-    // used by Zowe Explorer for v1 profiles
-    protected async deleteProfileOnDisk(profileInfo: zowe.imperative.IProfileLoaded): Promise<void> {
-        await this.getCliProfileManager(profileInfo.type).delete({ name: profileInfo.name });
-    }
-
-    // used by Zowe Explorer for v1 profiles
-    protected async saveProfile(profileInfo: Record<string, unknown>, profileName: string, profileType: string): Promise<zowe.imperative.IProfile> {
-        const newProfile = await this.getCliProfileManager(profileType).save({
-            profile: profileInfo,
-            name: profileName,
-            type: profileType,
-            overwrite: true,
+    public async convertV1ProfToConfig(): Promise<ZeApiConvertResponse> {
+        const successMsg: string[] = [];
+        const warningMsg: string[] = [];
+        const zoweDir = FileManagement.getZoweDir();
+        const profilesPath = path.join(zoweDir, "profiles");
+        const oldProfilesPath = `${profilesPath.replace(/[\\/]$/, "")}-old`;
+        const convertResult = await zowe.imperative.ConfigBuilder.convert(profilesPath);
+        for (const [k, v] of Object.entries(convertResult.profilesConverted)) {
+            successMsg.push(`Converted ${k} profile: ${v.join(", ")}\n`);
+        }
+        if (convertResult.profilesFailed.length > 0) {
+            warningMsg.push(`Failed to convert ${convertResult.profilesFailed.length} profile(s). See details below\n`);
+            for (const { name, type, error } of convertResult.profilesFailed) {
+                if (name != null) {
+                    warningMsg.push(`Failed to load ${type} profile "${name}":\n${String(error)}\n`);
+                } else {
+                    warningMsg.push(`Failed to find default ${type} profile:\n${String(error)}\n`);
+                }
+            }
+        }
+        const teamConfig = await zowe.imperative.Config.load("zowe", {
+            homeDir: zoweDir,
+            projectDir: false,
         });
-        return newProfile.profile;
+        teamConfig.api.layers.activate(false, true);
+        teamConfig.api.layers.merge(convertResult.config);
+        const impConfig: zowe.imperative.IImperativeConfig = zowe.getImperativeConfig();
+        const knownCliConfig: zowe.imperative.ICommandProfileTypeConfiguration[] = impConfig.profiles;
+        knownCliConfig.push(impConfig.baseProfile);
+        this.addToConfigArray(knownCliConfig);
+        teamConfig.setSchema(zowe.imperative.ConfigSchema.buildSchema(this.getConfigArray()));
+        await teamConfig.save();
+        try {
+            fs.renameSync(profilesPath, oldProfilesPath);
+        } catch (error) {
+            warningMsg.push(`Failed to rename profiles directory to ${oldProfilesPath}:\n    ${String(error)}`);
+        }
+        successMsg.push(`Your new profiles have been saved to ${teamConfig.layerActive().path}.\n`);
+        return {
+            success: String(successMsg.join("")),
+            warnings: String(warningMsg.join("")),
+            convertResult,
+        };
     }
 
     // used by refresh to check correct merging of allProfiles
