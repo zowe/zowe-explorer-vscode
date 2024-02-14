@@ -2,7 +2,7 @@
 
 All notable changes to the "zowe-explorer-api" extension will be documented in this file.
 
-## TBD Release
+## `3.0.0-next.202402142205`
 
 ### New features and enhancements
 
