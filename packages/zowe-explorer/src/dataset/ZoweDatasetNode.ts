@@ -13,7 +13,17 @@ import * as zowe from "@zowe/cli";
 import * as vscode from "vscode";
 import * as globals from "../globals";
 import { errorHandling } from "../utils/ProfilesUtils";
-import { Sorting, Types, Gui, ZoweTreeNodeActions, IZoweDatasetTreeNode, ZoweTreeNode, ZosEncoding, Validation } from "@zowe/zowe-explorer-api";
+import {
+    Sorting,
+    Types,
+    Gui,
+    ZoweTreeNodeActions,
+    IZoweDatasetTreeNode,
+    ZoweTreeNode,
+    ZosEncoding,
+    Validation,
+    DsEntry,
+} from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { getIconByNode } from "../generators/icons";
 import * as contextually from "../shared/context";
@@ -58,7 +68,6 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         if (!this.binary && opts.encoding != null) {
             this.encoding = opts.encoding.kind === "other" ? opts.encoding.codepage : null;
         }
-        this.etag = opts.etag;
         if (opts.contextOverride) {
             this.contextValue = opts.contextOverride;
         } else if (opts.collapsibleState !== vscode.TreeItemCollapsibleState.None) {
@@ -412,8 +421,8 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
      */
     public getEtag(): string {
         ZoweLogger.trace("ZoweDatasetNode.getEtag called.");
-        // TODO: FIXME
-        return this.etag;
+        const fileEntry = DatasetFSProvider.instance.stat(this.resourceUri) as DsEntry;
+        return fileEntry.etag;
     }
 
     /**
@@ -423,8 +432,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
      */
     public setEtag(etagValue): void {
         ZoweLogger.trace("ZoweDatasetNode.setEtag called.");
-        // TODO: FIXME
-        this.etag = etagValue;
+        // TODO: We don't use this function anymore because of the FSP. Remove?
     }
 
     private async getDatasets(): Promise<zowe.IZosFilesResponse[]> {

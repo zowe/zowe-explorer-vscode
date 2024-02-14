@@ -898,44 +898,6 @@ export class Profiles extends ProfilesCache {
             .map((arg) => arg.argName);
     }
 
-    private async loginWithBaseProfile(
-        serviceProfile: zowe.imperative.IProfileLoaded,
-        loginTokenType: string,
-        node?: Types.IZoweNodeType
-    ): Promise<void> {
-        const baseProfile = await this.fetchBaseProfile();
-        if (baseProfile) {
-            const creds = await this.loginCredentialPrompt();
-            if (!creds) {
-                return;
-            }
-            const updSession = new zowe.imperative.Session({
-                hostname: serviceProfile.profile.host,
-                port: serviceProfile.profile.port,
-                user: creds[0],
-                password: creds[1],
-                rejectUnauthorized: serviceProfile.profile.rejectUnauthorized,
-                tokenType: loginTokenType,
-                type: zowe.imperative.SessConstants.AUTH_TYPE_TOKEN,
-            });
-            const loginToken = await ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).login(updSession);
-            const updBaseProfile: zowe.imperative.IProfile = {
-                tokenType: loginTokenType,
-                tokenValue: loginToken,
-            };
-            await this.updateBaseProfileFileLogin(baseProfile, updBaseProfile);
-            const baseIndex = this.allProfiles.findIndex((profile) => profile.name === baseProfile.name);
-            this.allProfiles[baseIndex] = { ...baseProfile, profile: { ...baseProfile.profile, ...updBaseProfile } };
-            if (node) {
-                node.setProfileToChoice({
-                    ...node.getProfile(),
-                    profile: { ...node.getProfile().profile, ...updBaseProfile },
-                });
-            }
-            Gui.showMessage(vscode.l10n.t("Login to authentication service was successful."));
-        }
-    }
-
     private async loginWithRegularProfile(serviceProfile: zowe.imperative.IProfileLoaded, node?: Types.IZoweNodeType): Promise<boolean> {
         let session: zowe.imperative.Session;
         if (node) {

@@ -219,6 +219,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 parentNode: this,
                 parentPath: this.fullPath,
                 profile: nodeProfile,
+                encoding: isDir ? undefined : this.getSessionNode().encodingMap[`${this.fullPath}/${item.name as string}`],
             });
             temp.attributes = {
                 gid: item.gid,
@@ -233,7 +234,6 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                     vscode.workspace.fs.createDirectory(temp.resourceUri);
                 }
             } else {
-                temp.encoding = this.getSessionNode().encodingMap[`${this.fullPath}/${item.name as string}`];
                 // Create an entry for the USS file if it doesn't exist.
                 if (!UssFSProvider.instance.exists(temp.resourceUri)) {
                     await vscode.workspace.fs.writeFile(temp.resourceUri, new Uint8Array());
