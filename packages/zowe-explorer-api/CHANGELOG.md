@@ -16,9 +16,8 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### Bug fixes
 
-### Bug fixes
-
 - Fix login and logout operations when APIML dynamic tokens are enabled. [#2692](https://github.com/zowe/vscode-extension-for-zowe/pull/2692)
+- Updated dependencies for technical currency purposes.
 
 ## `3.0.0-next.202402071248`
 
