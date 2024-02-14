@@ -25,6 +25,7 @@ import { FileManagement, Gui } from "@zowe/zowe-explorer-api";
 import * as profUtils from "../../src/utils/ProfilesUtils";
 import { ZoweLogger } from "../../src/utils/LoggerUtils";
 import { ZoweLocalStorage } from "../../src/utils/ZoweLocalStorage";
+import { UssFSProvider } from "../../src/uss/UssFSProvider";
 jest.mock("fs");
 
 describe("ZoweExplorerExtender unit tests", () => {
@@ -41,7 +42,12 @@ describe("ZoweExplorerExtender unit tests", () => {
             mockErrorMessage: jest.fn(),
             mockExistsSync: jest.fn(),
             mockTextDocument: jest.fn(),
+            FileSystemProvider: {
+                createDirectory: jest.fn(),
+            },
         };
+
+        jest.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation(newMocks.FileSystemProvider.createDirectory);
 
         Object.defineProperty(fs, "existsSync", { value: newMocks.mockExistsSync, configurable: true });
         newMocks.profiles = createInstanceOfProfile(newMocks.imperativeProfile);

@@ -11,7 +11,7 @@
 
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
-import { Gui, Validation } from "@zowe/zowe-explorer-api";
+import { BaseProvider, Gui, Validation } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { Profiles } from "../../../src/Profiles";
 import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
@@ -33,6 +33,7 @@ import * as ussUtils from "../../../src/uss/utils";
 import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
 import { LocalFileManagement } from "../../../src/utils/LocalFileManagement";
 import { TreeProviders } from "../../../src/shared/TreeProviders";
+import { UssFSProvider } from "../../../src/uss/UssFSProvider";
 
 jest.mock("fs");
 
@@ -79,7 +80,12 @@ async function createGlobalMocks() {
         readText: jest.fn(),
         fileToUSSFile: jest.fn(),
         basePath: jest.fn(),
+        FileSystemProvider: {
+            createDirectory: jest.fn(),
+        },
     };
+
+    jest.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation(globalMocks.FileSystemProvider.createDirectory);
 
     globalMocks.openTextDocument.mockResolvedValue(globalMocks.mockTextDocument);
     globalMocks.mockTextDocuments.push(globalMocks.mockTextDocument);
@@ -304,7 +310,10 @@ describe("ZoweUSSNode Unit Tests - Function node.refreshUSS()", () => {
                 session: globalMocks.session,
                 profile: globalMocks.profileOne,
             }),
+            fetchFileAtUri: jest.fn(),
         };
+
+        jest.spyOn(UssFSProvider.instance, "fetchFileAtUri").mockImplementation(newMocks.fetchFileAtUri);
 
         newMocks.ussNode.contextValue = globals.USS_SESSION_CONTEXT;
         newMocks.ussNode.fullPath = "/u/myuser";
@@ -343,7 +352,7 @@ describe("ZoweUSSNode Unit Tests - Function node.refreshUSS()", () => {
 
         await blockMocks.node.refreshUSS();
 
-        expect(globalMocks.ussFile.mock.calls.length).toBe(1);
+        expect(blockMocks.fetchFileAtUri.mock.calls.length).toBe(1);
         expect(globalMocks.mockShowTextDocument.mock.calls.length).toBe(2);
         expect(globalMocks.mockExecuteCommand.mock.calls.length).toBe(3);
         expect(blockMocks.node.downloaded).toBe(true);
@@ -359,7 +368,7 @@ describe("ZoweUSSNode Unit Tests - Function node.refreshUSS()", () => {
 
         await blockMocks.node.refreshUSS();
 
-        expect(globalMocks.ussFile.mock.calls.length).toBe(0);
+        expect(blockMocks.fetchFileAtUri.mock.calls.length).toBe(0);
         expect(globalMocks.mockShowTextDocument.mock.calls.length).toBe(1);
         expect(globalMocks.mockExecuteCommand.mock.calls.length).toBe(1);
         expect(blockMocks.node.downloaded).toBe(false);
@@ -375,7 +384,7 @@ describe("ZoweUSSNode Unit Tests - Function node.refreshUSS()", () => {
 
         await blockMocks.node.refreshUSS();
 
-        expect(globalMocks.ussFile.mock.calls.length).toBe(1);
+        expect(blockMocks.fetchFileAtUri.mock.calls.length).toBe(1);
         expect(globalMocks.mockShowTextDocument.mock.calls.length).toBe(0);
         expect(globalMocks.mockExecuteCommand.mock.calls.length).toBe(2);
         expect(blockMocks.node.downloaded).toBe(true);
@@ -391,7 +400,7 @@ describe("ZoweUSSNode Unit Tests - Function node.refreshUSS()", () => {
 
         await blockMocks.node.refreshUSS();
 
-        expect(globalMocks.ussFile.mock.calls.length).toBe(1);
+        expect(blockMocks.fetchFileAtUri.mock.calls.length).toBe(1);
         expect(globalMocks.mockShowTextDocument.mock.calls.length).toBe(1);
         expect(globalMocks.mockExecuteCommand.mock.calls.length).toBe(2);
         expect(blockMocks.node.downloaded).toBe(false);
@@ -427,7 +436,7 @@ describe("ZoweUSSNode Unit Tests - Function node.refreshUSS()", () => {
 
         await blockMocks.node.refreshUSS();
 
-        expect(globalMocks.ussFile.mock.calls.length).toBe(1);
+        expect(blockMocks.fetchFileAtUri.mock.calls.length).toBe(1);
         expect(globalMocks.mockShowTextDocument.mock.calls.length).toBe(0);
         expect(globalMocks.mockExecuteCommand.mock.calls.length).toBe(2);
         expect(blockMocks.node.downloaded).toBe(true);
@@ -442,7 +451,7 @@ describe("ZoweUSSNode Unit Tests - Function node.refreshUSS()", () => {
 
         await blockMocks.node.refreshUSS();
 
-        expect(globalMocks.ussFile.mock.calls.length).toBe(1);
+        expect(blockMocks.fetchFileAtUri.mock.calls.length).toBe(1);
         expect(globalMocks.mockShowTextDocument.mock.calls.length).toBe(0);
         expect(globalMocks.mockExecuteCommand.mock.calls.length).toBe(2);
         expect(blockMocks.node.downloaded).toBe(true);
@@ -878,34 +887,11 @@ describe("ZoweUSSNode Unit Tests - Function node.getChildren()", () => {
             blockMocks.childNode.fullPath = "Throw Error";
             blockMocks.childNode.dirty = true;
             blockMocks.childNode.profile = globalMocks.profileOne;
+            jest.spyOn(UssFSProvider.instance, "listFiles").mockImplementation(() => {
+                throw new Error("Throwing an error to check error handling for unit tests!");
+            });
 
             await blockMocks.childNode.getChildren();
-            expect(globalMocks.showErrorMessage.mock.calls.length).toEqual(1);
-            expect(globalMocks.showErrorMessage.mock.calls[0][0]).toEqual(
-                "Retrieving response from uss-file-list Error: Throwing an error to check error handling for unit tests!"
-            );
-        }
-    );
-
-    it(
-        "Tests that when bright.List returns an unsuccessful response, " + "node.getChildren() throws an error and the catch block is reached",
-        async () => {
-            const globalMocks = await createGlobalMocks();
-            const blockMocks = await createBlockMocks(globalMocks);
-
-            blockMocks.childNode.contextValue = globals.USS_SESSION_CONTEXT;
-            blockMocks.childNode.dirty = true;
-            blockMocks.childNode.profile = globalMocks.profileOne;
-            const subNode = new ZoweUSSNode({
-                label: "Response Fail",
-                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
-                parentNode: blockMocks.childNode,
-                profile: globalMocks.profileOne,
-            });
-            subNode.fullPath = "THROW ERROR";
-            subNode.dirty = true;
-
-            await subNode.getChildren();
             expect(globalMocks.showErrorMessage.mock.calls.length).toEqual(1);
             expect(globalMocks.showErrorMessage.mock.calls[0][0]).toEqual(
                 "Retrieving response from uss-file-list Error: Throwing an error to check error handling for unit tests!"
@@ -946,6 +932,7 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
                 session: globalMocks.session,
                 profile: globalMocks.profileOne,
             }),
+            fetchFileAtUri: jest.spyOn(UssFSProvider.instance, "fetchFileAtUri").mockImplementation(),
         };
         newMocks.testUSSTree = createUSSTree([], [newMocks.ussNode], createTreeView());
         newMocks.dsNode = new ZoweUSSNode({
@@ -1233,7 +1220,7 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
             // Prevent exception from failing test
         }
 
-        expect(globalMocks.ussFile.mock.calls.length).toBe(0);
+        expect(blockMocks.fetchFileAtUri.mock.calls.length).toBe(0);
         expect(globalMocks.showErrorMessage.mock.calls.length).toBe(2);
         expect(globalMocks.showErrorMessage.mock.calls[0][0]).toBe("open() called from invalid node.");
         expect(globalMocks.showErrorMessage.mock.calls[1][0]).toBe("Error: open() called from invalid node.");

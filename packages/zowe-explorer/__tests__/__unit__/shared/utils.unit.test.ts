@@ -32,6 +32,7 @@ import * as utils from "../../../src/utils/ProfilesUtils";
 import { Gui, IZoweTreeNode, ProfilesCache, ZosEncoding } from "@zowe/zowe-explorer-api";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
+import { UssFSProvider } from "../../../src/uss/UssFSProvider";
 
 async function createGlobalMocks() {
     const newMocks = {
@@ -40,7 +41,9 @@ async function createGlobalMocks() {
         mockGetInstance: jest.fn(),
         mockProfileInstance: null,
         mockProfilesCache: null,
+        createDirectory: jest.fn(),
     };
+    jest.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation(newMocks.createDirectory);
     newMocks.mockProfilesCache = new ProfilesCache(imperative.Logger.getAppLogger());
     newMocks.mockProfileInstance = createInstanceOfProfile(createIProfile());
     Object.defineProperty(Profiles, "CreateInstance", {

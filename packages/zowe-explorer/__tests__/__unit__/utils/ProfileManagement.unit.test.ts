@@ -25,6 +25,7 @@ import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
 import { ZoweJobNode } from "../../../src/job/ZoweJobNode";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { TreeProviders } from "../../../src/shared/TreeProviders";
+import { UssFSProvider } from "../../../src/uss/UssFSProvider";
 
 jest.mock("fs");
 jest.mock("vscode");
@@ -70,7 +71,12 @@ describe("ProfileManagement unit tests", () => {
                 newMocks.mockTreeProviders.uss.mSessionNodes.push(newMocks.mockUnixSessionNode);
                 newMocks.mockTreeProviders.job.mSessionNodes.push(newMocks.mockJobSessionNode);
             },
+            FileSystemProvider: {
+                createDirectory: jest.fn()
+            }
         };
+
+        jest.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation(newMocks.FileSystemProvider.createDirectory);
         Object.defineProperty(profUtils.ProfilesUtils, "promptCredentials", { value: jest.fn(), configurable: true });
         newMocks.promptSpy = jest.spyOn(profUtils.ProfilesUtils, "promptCredentials");
         Object.defineProperty(ZoweLogger, "debug", { value: jest.fn(), configurable: true });

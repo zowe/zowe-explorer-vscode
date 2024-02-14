@@ -32,6 +32,7 @@ import * as contextually from "../../../src/shared/context";
 import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
 import { bindJesApi, createJesApi } from "../../../__mocks__/mockCreators/api";
 import { TreeProviders } from "../../../src/shared/TreeProviders";
+import { JobFSProvider } from "../../../src/job/JobFSProvider";
 
 async function createGlobalMocks() {
     const globalMocks = {
@@ -89,7 +90,14 @@ async function createGlobalMocks() {
         mockProfileInfo: createInstanceOfProfileInfo(),
         mockProfilesCache: new ProfilesCache(zowe.imperative.Logger.getAppLogger()),
         mockTreeProviders: createTreeProviders(),
+        FileSystemProvider: {
+            createDirectory: jest.fn(),
+            writeFile: jest.fn()
+        },
     };
+
+    jest.spyOn(JobFSProvider.instance, "createDirectory").mockImplementation(globalMocks.FileSystemProvider.createDirectory);
+    jest.spyOn(JobFSProvider.instance, "writeFile").mockImplementation(globalMocks.FileSystemProvider.writeFile);
 
     Object.defineProperty(globalMocks.mockProfilesCache, "getProfileInfo", {
         value: jest.fn(() => {

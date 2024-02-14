@@ -41,6 +41,7 @@ import { ZoweLogger } from "../../src/utils/LoggerUtils";
 import { ZoweLocalStorage } from "../../src/utils/ZoweLocalStorage";
 jest.mock("../../src/utils/LoggerUtils");
 import { TreeProviders } from "../../src/shared/TreeProviders";
+import { UssFSProvider } from "../../src/uss/UssFSProvider";
 
 jest.mock("child_process");
 jest.mock("fs");
@@ -85,7 +86,12 @@ async function createGlobalMocks() {
         mockProfilesCache: null,
         mockConfigInstance: createConfigInstance(),
         mockConfigLoad: null,
+        FileSystemProvider: {
+            createDirectory: jest.fn()
+        }
     };
+
+    jest.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation(newMocks.FileSystemProvider.createDirectory);
 
     newMocks.mockProfilesCache = new ProfilesCache(zowe.imperative.Logger.getAppLogger());
     newMocks.withProgress = jest.fn().mockImplementation((_progLocation, _callback) => {

@@ -39,17 +39,18 @@ describe("LocalFileManagement unit tests", () => {
             mockIsUnixNode: jest.fn(),
             mockFileInfo: { path: "/u/fake/path/file.txt" },
             warnLogSpy: null as any,
+            readFile: jest.fn(),
         };
         newMocks.mockFilesToCompare = [newMocks.mockDsFileNode];
         Object.defineProperty(globals, "filesToCompare", { value: newMocks.mockFilesToCompare, configurable: true });
         newMocks.mockDsFileNode = dsMock.createDatasetSessionNode(newMocks.mockSession, newMocks.mockProfile) as any;
         Object.defineProperty(dsActions, "downloadPs", { value: jest.fn().mockResolvedValue(newMocks.mockFileInfo), configurable: true });
-        newMocks.mockDlDsSpy = jest.spyOn(vscode.workspace.fs, "readFile").mockImplementation();
+        newMocks.mockDlDsSpy = jest.spyOn(vscode.workspace.fs, "readFile").mockImplementation(newMocks.readFile);
         Object.defineProperty(unixActions, "downloadUnixFile", {
             value: jest.fn().mockResolvedValue(newMocks.mockFileInfo),
             configurable: true,
         });
-        newMocks.mockDlUnixSpy = jest.spyOn(unixActions, "downloadUnixFile");
+        newMocks.mockDlUnixSpy = jest.spyOn(vscode.workspace.fs, "readFile").mockImplementation(newMocks.readFile);
         Object.defineProperty(utils, "isZoweDatasetTreeNode", { value: newMocks.mockIsDsNode, configurable: true });
         Object.defineProperty(utils, "isZoweUSSTreeNode", { value: newMocks.mockIsUnixNode, configurable: true });
         Object.defineProperty(vscode.commands, "executeCommand", { value: jest.fn(), configurable: true });

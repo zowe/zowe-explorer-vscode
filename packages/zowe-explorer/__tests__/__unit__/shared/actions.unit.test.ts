@@ -31,6 +31,7 @@ import { getIconById, IconId, getIconByNode } from "../../../src/generators/icon
 import * as zowe from "@zowe/cli";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
+import { UssFSProvider } from "../../../src/uss/UssFSProvider";
 
 async function createGlobalMocks() {
     const globalMocks = {
@@ -45,7 +46,12 @@ async function createGlobalMocks() {
             };
         }),
         qpPlaceholder: 'Choose "Create new..." to define a new profile or select an existing profile to add to the Data Set Explorer',
+        FileSystemProvider: {
+            createDirectory: jest.fn(),
+        },
     };
+
+    jest.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation(globalMocks.FileSystemProvider.createDirectory);
 
     Object.defineProperty(vscode.window, "withProgress", {
         value: jest.fn().mockImplementation((progLocation, callback) => {

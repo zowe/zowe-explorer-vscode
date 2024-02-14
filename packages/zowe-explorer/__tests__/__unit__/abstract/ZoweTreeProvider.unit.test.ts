@@ -35,6 +35,7 @@ import { createDatasetSessionNode } from "../../../__mocks__/mockCreators/datase
 import { TreeProviders } from "../../../src/shared/TreeProviders";
 import { createDatasetTree } from "../../../src/dataset/DatasetTree";
 import * as sharedActions from "../../../src/shared/actions";
+import { UssFSProvider } from "../../../src/uss/UssFSProvider";
 
 jest.mock("../../../src/utils/LoggerUtils");
 
@@ -86,7 +87,12 @@ async function createGlobalMocks() {
         }),
         mockProfileInfo: createInstanceOfProfileInfo(),
         mockProfilesCache: new ProfilesCache(imperative.Logger.getAppLogger()),
+        FileSystemProvider: {
+            createDirectory: jest.fn()
+        }
     };
+
+    jest.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation(globalMocks.FileSystemProvider.createDirectory);
 
     Object.defineProperty(globalMocks.mockProfilesCache, "getProfileInfo", {
         value: jest.fn(() => {

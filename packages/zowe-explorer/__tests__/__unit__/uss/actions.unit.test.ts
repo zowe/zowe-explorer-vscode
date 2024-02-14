@@ -39,6 +39,7 @@ import * as refreshActions from "../../../src/shared/refresh";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
 import { AttributeView } from "../../../src/uss/AttributeView";
+import { UssFSProvider } from "../../../src/uss/UssFSProvider";
 
 jest.mock("../../../src/utils/LoggerUtils");
 
@@ -78,12 +79,16 @@ function createGlobalMocks() {
                 Notification: 15,
             };
         }),
+        FileSystemProvider: {
+            createDirectory: jest.fn(),
+        },
     };
 
     globalMocks.mockLoadNamedProfile.mockReturnValue(globalMocks.testProfile);
     globals.defineGlobals("");
     const profilesForValidation = { status: "active", name: "fake" };
 
+    jest.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation(globalMocks.FileSystemProvider.createDirectory);
     Object.defineProperty(Gui, "setStatusBarMessage", { value: globalMocks.setStatusBarMessage, configurable: true });
     Object.defineProperty(vscode.window, "showInputBox", { value: globalMocks.mockShowInputBox, configurable: true });
     Object.defineProperty(vscode.window, "showQuickPick", { value: globalMocks.showQuickPick, configurable: true });

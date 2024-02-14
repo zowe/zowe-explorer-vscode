@@ -36,6 +36,7 @@ import { PersistentFilters } from "../../../src/PersistentFilters";
 import { TreeProviders } from "../../../src/shared/TreeProviders";
 import { join } from "path";
 import * as sharedUtils from "../../../src/shared/utils";
+import { UssFSProvider } from "../../../src/uss/UssFSProvider";
 
 async function createGlobalMocks() {
     const globalMocks = {
@@ -81,7 +82,14 @@ async function createGlobalMocks() {
         profilesForValidation: { status: "active", name: "fake" },
         mockProfilesCache: new ProfilesCache(zowe.imperative.Logger.getAppLogger()),
         mockTreeProviders: createTreeProviders(),
+        FileSystemProvider: {
+            createDirectory: jest.fn(),
+            rename: jest.fn()
+        }
     };
+
+    jest.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation(globalMocks.FileSystemProvider.createDirectory);
+    jest.spyOn(UssFSProvider.instance, "rename").mockImplementation(globalMocks.FileSystemProvider.rename);
 
     globalMocks.mockTextDocuments.push(globalMocks.mockTextDocumentDirty);
     globalMocks.mockTextDocuments.push(globalMocks.mockTextDocumentClean);
