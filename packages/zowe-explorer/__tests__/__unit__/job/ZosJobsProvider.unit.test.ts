@@ -522,7 +522,7 @@ describe("ZosJobsProvider unit tests - Function loadProfilesForFavorites", () =>
         });
         mocked(Gui.errorMessage).mockResolvedValueOnce({ title: "Remove" });
         await testTree.loadProfilesForFavorites(blockMocks.log, favProfileNode);
-        expect(showErrorMessageSpy).toBeCalledTimes(1);
+        expect(showErrorMessageSpy).toHaveBeenCalledTimes(1);
         showErrorMessageSpy.mockClear();
     });
     it("Checks that favorite nodes with pre-existing profile/session values continue using those values", async () => {
@@ -626,7 +626,7 @@ describe("ZosJobsProvider unit tests - Function removeFavProfile", () => {
         // Check that favorite is removed from UI
         expect(globalMocks.testJobsProvider.mFavorites.length).toEqual(0);
         // Check that favorite is removed from settings file
-        expect(updateFavoritesSpy).toBeCalledTimes(1);
+        expect(updateFavoritesSpy).toHaveBeenCalledTimes(1);
     });
     it("Tests that removeFavProfile leaves profile node in Favorites when user cancels", async () => {
         const globalMocks = await createGlobalMocks();
@@ -1095,7 +1095,7 @@ describe("ZosJobsProvider Unit Test - Filter Jobs", () => {
         const filterJobsSpy = jest.spyOn(testTree, "filterJobsDialog");
         await testTree.filterJobsDialog(node1);
         expect(filterJobsSpy).toHaveBeenCalled();
-        expect(filterJobsSpy).toBeCalledWith(node1);
+        expect(filterJobsSpy).toHaveBeenCalledWith(node1);
         expect(filterJobsSpy.mock.calls[0][0].children[0].job.jobname).toBe("ZOWEUSR2");
     });
 
@@ -1110,7 +1110,7 @@ describe("ZosJobsProvider Unit Test - Filter Jobs", () => {
         const filterJobsSpy = jest.spyOn(testTree, "filterJobsDialog");
         await testTree.filterJobsDialog(node1);
         expect(filterJobsSpy).toHaveBeenCalled();
-        expect(filterJobsSpy).toBeCalledWith(node1);
+        expect(filterJobsSpy).toHaveBeenCalledWith(node1);
     });
 });
 

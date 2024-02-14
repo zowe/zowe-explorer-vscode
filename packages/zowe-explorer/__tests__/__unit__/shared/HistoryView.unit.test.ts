@@ -94,7 +94,7 @@ describe("HistoryView Unit Tests", () => {
             const postMessageSpy = jest.spyOn(historyView.panel.webview, "postMessage");
             jest.spyOn(historyView as any, "getHistoryData").mockReturnValue([]);
             await historyView["onDidReceiveMessage"]({ command: "refresh", attrs: { type: "uss" } });
-            expect(postMessageSpy).toBeCalledTimes(1);
+            expect(postMessageSpy).toHaveBeenCalledTimes(1);
             expect(historyView["currentTab"]).toEqual("uss-panel-tab");
         });
 
@@ -105,7 +105,7 @@ describe("HistoryView Unit Tests", () => {
             const postMessageSpy = jest.spyOn(historyView.panel.webview, "postMessage");
             jest.spyOn(historyView as any, "getHistoryData").mockReturnValue([]);
             await historyView["onDidReceiveMessage"]({ command: "ready" });
-            expect(postMessageSpy).toBeCalledWith({
+            expect(postMessageSpy).toHaveBeenCalledWith({
                 ds: [],
                 uss: [],
                 jobs: [],
@@ -124,7 +124,7 @@ describe("HistoryView Unit Tests", () => {
             const historyView = await initializeHistoryViewMock(blockMocks, globalMocks);
             const errorMessageSpy = jest.spyOn(Gui, "errorMessage");
             await historyView["onDidReceiveMessage"]({ command: "show-error", attrs: { errorMsg: "test error" } });
-            expect(errorMessageSpy).toBeCalledWith("test error");
+            expect(errorMessageSpy).toHaveBeenCalledWith("test error");
         });
 
         it("should handle the case where 'update-selection' is the command sent", async () => {
@@ -144,7 +144,7 @@ describe("HistoryView Unit Tests", () => {
             jest.spyOn(historyView as any, "refreshView").mockImplementation();
             await historyView["onDidReceiveMessage"]({ command: "add-item", attrs: { type: "uss" } });
             expect(historyView["currentSelection"]).toEqual({ ds: "search", jobs: "search", uss: "search" });
-            expect(addSearchHistorySpy).toBeCalledWith("test");
+            expect(addSearchHistorySpy).toHaveBeenCalledWith("test");
         });
 
         it("should handle the case where 'remove-item' is the command sent and the selection is 'search'", async () => {
@@ -158,7 +158,7 @@ describe("HistoryView Unit Tests", () => {
                 attrs: { type: "ds", selection: "search", selectedItems: { test: "test1" } },
             });
             expect(historyView["currentSelection"]).toEqual({ ds: "search", jobs: "search", uss: "search" });
-            expect(removeSearchHistorySpy).toBeCalledWith("test");
+            expect(removeSearchHistorySpy).toHaveBeenCalledWith("test");
         });
 
         it("should handle the case where 'remove-item' is the command sent and the selection is 'fileHistory'", async () => {
@@ -172,7 +172,7 @@ describe("HistoryView Unit Tests", () => {
                 attrs: { type: "ds", selection: "fileHistory", selectedItems: { test: "test1" } },
             });
             expect(historyView["currentSelection"]).toEqual({ ds: "search", jobs: "search", uss: "search" });
-            expect(removeFileHistorySpy).toBeCalledWith("test");
+            expect(removeFileHistorySpy).toHaveBeenCalledWith("test");
         });
 
         it("should handle the case where 'remove-item' is the command sent and the selection is not supported", async () => {
@@ -186,7 +186,7 @@ describe("HistoryView Unit Tests", () => {
                 attrs: { type: "ds", selection: "favorites", selectedItems: { test: "test1" } },
             });
             expect(historyView["currentSelection"]).toEqual({ ds: "search", jobs: "search", uss: "search" });
-            expect(showMessageSpy).toBeCalledTimes(1);
+            expect(showMessageSpy).toHaveBeenCalledTimes(1);
         });
 
         it("should handle the case where 'clear-all' is the command sent and the selection is 'search'", async () => {
@@ -202,7 +202,7 @@ describe("HistoryView Unit Tests", () => {
                 attrs: { type: "ds", selection: "search" },
             });
             expect(historyView["currentSelection"]).toEqual({ ds: "search", jobs: "search", uss: "search" });
-            expect(resetSearchHistorySpy).toBeCalledTimes(1);
+            expect(resetSearchHistorySpy).toHaveBeenCalledTimes(1);
         });
 
         it("should handle the case where 'clear-all' is the command sent and the selection is 'fileHistory'", async () => {
@@ -218,7 +218,7 @@ describe("HistoryView Unit Tests", () => {
                 attrs: { type: "ds", selection: "fileHistory" },
             });
             expect(historyView["currentSelection"]).toEqual({ ds: "search", jobs: "search", uss: "search" });
-            expect(resetFileHistorySpy).toBeCalledTimes(1);
+            expect(resetFileHistorySpy).toHaveBeenCalledTimes(1);
         });
 
         it("should handle the case where 'clear-all' is the command sent and the selection is 'fileHistory'", async () => {
@@ -233,7 +233,7 @@ describe("HistoryView Unit Tests", () => {
                 attrs: { type: "ds", selection: "favorites" },
             });
             expect(historyView["currentSelection"]).toEqual({ ds: "search", jobs: "search", uss: "search" });
-            expect(showMessageSpy).toBeCalledTimes(2);
+            expect(showMessageSpy).toHaveBeenCalledTimes(2);
         });
     });
 

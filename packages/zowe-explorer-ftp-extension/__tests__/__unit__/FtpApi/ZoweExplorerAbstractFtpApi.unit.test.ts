@@ -47,7 +47,7 @@ describe("AbstractFtpApi", () => {
 
         await instance.logout(session);
 
-        expect(session.releaseConnections).toBeCalledTimes(1);
+        expect(session.releaseConnections).toHaveBeenCalledTimes(1);
         expect(globals.SESSION_MAP.size).toBe(0);
     });
 
@@ -125,10 +125,13 @@ describe("AbstractFtpApi", () => {
             failNotFound: true,
         };
         try {
-            expect(Gui.showMessage).toBeCalledWith("Internal error: ZoweVscFtpRestApi instance was not initialized with a valid Zowe profile.", {
-                severity: MessageSeverity.FATAL,
-                logger: globals.LOGGER,
-            });
+            expect(Gui.showMessage).toHaveBeenCalledWith(
+                "Internal error: ZoweVscFtpRestApi instance was not initialized with a valid Zowe profile.",
+                {
+                    severity: MessageSeverity.FATAL,
+                    logger: globals.LOGGER,
+                }
+            );
             instance.checkedProfile();
         } catch (err) {
             expect(err).not.toBeUndefined();
@@ -186,7 +189,7 @@ describe("AbstractFtpApi", () => {
         instance.releaseConnection({
             close: connectionMock,
         });
-        expect(connectionMock).toBeCalledTimes(1);
+        expect(connectionMock).toHaveBeenCalledTimes(1);
     });
 
     it("should return the profile type of 'zftp'", () => {

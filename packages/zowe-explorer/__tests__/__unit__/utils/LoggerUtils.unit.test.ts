@@ -152,7 +152,7 @@ describe("Logger Utils Unit Tests - function initializeZoweLogger", () => {
         });
         const errorMessageSpy = jest.spyOn(Gui, "errorMessage").mockImplementation();
         expect(await logger.ZoweLogger.initializeZoweLogger(globalMocks.testContext)).toBeUndefined();
-        expect(errorMessageSpy).toBeCalledTimes(1);
+        expect(errorMessageSpy).toHaveBeenCalledTimes(1);
         errorMessageSpy.mockClear();
     });
     it("should throw an error if output channel was not able to initialize", async () => {
@@ -166,7 +166,7 @@ describe("Logger Utils Unit Tests - function initializeZoweLogger", () => {
         const errorMessageSpy = jest.spyOn(Gui, "errorMessage").mockImplementation();
 
         expect(await logger.ZoweLogger.initializeZoweLogger(globalMocks.testContext)).toBeUndefined();
-        expect(errorMessageSpy).toBeCalledTimes(1);
+        expect(errorMessageSpy).toHaveBeenCalledTimes(1);
         errorMessageSpy.mockClear();
     });
 });
@@ -236,7 +236,7 @@ describe("ZoweLogger.dispose()", () => {
     it("Output channel disposed", async () => {
         const spy = jest.spyOn(logger.ZoweLogger.zeOutputChannel, "dispose");
         expect(await logger.ZoweLogger.disposeZoweLogger()).toBeUndefined();
-        expect(spy).toBeCalled();
+        expect(spy).toHaveBeenCalled();
     });
 });
 
@@ -250,6 +250,6 @@ describe("ZoweLogger.updateVscLoggerSetting", () => {
             get: jest.fn(),
         } as any);
         await (logger.ZoweLogger as any).updateVscLoggerSetting(testCLISetting);
-        expect(setCliLoggerSettingSpy).toBeCalledWith(true);
+        expect(setCliLoggerSettingSpy).toHaveBeenCalledWith(true);
     });
 });
