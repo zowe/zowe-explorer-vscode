@@ -226,7 +226,7 @@ describe("ZoweExplorerExtender unit tests", () => {
             readProfilesFromDisk: readProfilesFromDiskSpy,
         } as any);
         await expect(blockMocks.instTest.initForZowe("USS", ["" as any])).resolves.not.toThrow();
-        expect(readProfilesFromDiskSpy).toBeCalledTimes(1);
+        expect(readProfilesFromDiskSpy).toHaveBeenCalledTimes(1);
         expect(refreshProfilesQueueAddSpy).toHaveBeenCalledTimes(1);
     });
 });

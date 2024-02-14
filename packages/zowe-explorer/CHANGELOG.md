@@ -11,6 +11,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
+- Updated dependencies for technical currency purposes.
+
 ## `3.0.0-next.202402071248`
 
 ### New features and enhancements

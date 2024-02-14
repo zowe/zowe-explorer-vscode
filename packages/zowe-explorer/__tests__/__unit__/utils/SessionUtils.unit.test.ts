@@ -59,13 +59,13 @@ describe("SessionUtils removeSession Unit Tests", () => {
         const blockMocks = createBlockMocks();
         jest.spyOn(blockMocks.testDatasetTree, "getTreeType").mockReturnValue(PersistenceSchemaEnum.Job);
         await removeSession(blockMocks.testDatasetTree, "SESTEST");
-        expect(blockMocks.testDatasetTree.removeFileHistory).toBeCalledTimes(0);
+        expect(blockMocks.testDatasetTree.removeFileHistory).toHaveBeenCalledTimes(0);
     });
     it("should run treeProvider.removeFileHistory", async () => {
         const blockMocks = createBlockMocks();
         jest.spyOn(blockMocks.testDatasetTree, "getTreeType").mockReturnValue(PersistenceSchemaEnum.USS);
         jest.spyOn(blockMocks.testDatasetTree, "getFileHistory").mockReturnValue(["[SESTEST]: /u/test/test.txt"]);
         await removeSession(blockMocks.testDatasetTree, "SESTEST");
-        expect(blockMocks.testDatasetTree.removeFileHistory).toBeCalledTimes(1);
+        expect(blockMocks.testDatasetTree.removeFileHistory).toHaveBeenCalledTimes(1);
     });
 });

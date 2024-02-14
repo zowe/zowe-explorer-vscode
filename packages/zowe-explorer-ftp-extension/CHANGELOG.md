@@ -6,6 +6,9 @@ All notable changes to the "zowe-explorer-ftp-extension" extension will be docum
 
 ## Bug fixes
 
+- Fix Windows-specific hangs when saving members that contain JCL via the FTP extension. Thanks @tiantn & @std4lqi. [#2533](https://github.com/zowe/vscode-extension-for-zowe/issues/2533)
+- Updated dependencies for technical currency purposes.
+
 ## `3.0.0-next.202402071248`
 
 ## New features and enhancements

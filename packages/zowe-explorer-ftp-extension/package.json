@@ -48,7 +48,7 @@
     "vscode": "^1.79.0"
   },
   "dependencies": {
-    "@zowe/zos-ftp-for-zowe-cli": "2.1.2",
+    "@zowe/zos-ftp-for-zowe-cli": "2.1.8",
     "@zowe/zowe-explorer-api": "3.0.0-next.202402071248",
     "tmp": "0.2.1"
   },

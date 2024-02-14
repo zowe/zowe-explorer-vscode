@@ -27,7 +27,7 @@ describe("Globals Unit Tests", () => {
         jest.spyOn(SettingsConfig.SettingsConfig, "getDirectValue").mockReturnValue(false);
         const setDirectValueSpy = jest.spyOn(SettingsConfig.SettingsConfig, "setDirectValue").mockImplementation();
         await expect(globals.setGlobalSecurityValue()).resolves.not.toThrow();
-        expect(setDirectValueSpy).toBeCalledTimes(1);
+        expect(setDirectValueSpy).toHaveBeenCalledTimes(1);
         expect(globals.PROFILE_SECURITY).toBe(false);
     });
 
@@ -41,6 +41,6 @@ describe("Globals Unit Tests", () => {
         const loggerInfoSpy = jest.spyOn(ZoweLogger, "info");
         await expect(globals.setGlobalSecurityValue()).resolves.not.toThrow();
         expect(globals.PROFILE_SECURITY).toBe(globals.ZOWE_CLI_SCM);
-        expect(loggerInfoSpy).toBeCalledTimes(1);
+        expect(loggerInfoSpy).toHaveBeenCalledTimes(1);
     });
 });
