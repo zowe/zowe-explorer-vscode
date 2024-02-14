@@ -112,7 +112,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     }
 
     public updateStats(item: any): void {
-        if ("c4date" in item || "m4date" in item) {
+        if ("c4date" in item && "m4date" in item) {
             const { m4date, mtime, msec }: { m4date: string; mtime: string; msec: string } = item;
             this.stats = {
                 user: item.user,
