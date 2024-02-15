@@ -1,5 +1,5 @@
 {
-  "version": "3.0.0-next.202402142205",
+  "version": "3.0.0-next-SNAPSHOT",
   "command": {
     "version": {
       "forcePublish": true,

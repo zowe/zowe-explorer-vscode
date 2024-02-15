@@ -6,3 +6,4 @@ lib
 results
 scripts
 node_modules
+pnpm-lock.yaml
