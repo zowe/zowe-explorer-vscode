@@ -13,7 +13,6 @@ jest.mock("Session");
 
 import * as vscode from "vscode";
 import { Gui, ValidProfileEnum } from "@zowe/zowe-explorer-api";
-import * as profileLoader from "../../../src/Profiles";
 import { UnixCommandHandler } from "../../../src/command/UnixCommandHandler";
 import * as utils from "../../../src/utils/ProfilesUtils";
 import { imperative } from "@zowe/cli";
@@ -23,19 +22,80 @@ import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 import { SshSession } from "@zowe/zos-uss-for-zowe-sdk";
 import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
 import { ProfileManagement } from "../../../src/utils/ProfileManagement";
+import * as profileLoader from "../../../src/Profiles";
 
 describe("UnixCommand Actions Unit Testing", () => {
-    const showQuickPick = jest.fn();
+    const showErrorMessage = jest.fn();
     const showInputBox = jest.fn();
     const showInformationMessage = jest.fn();
-    const appendLine = jest.fn();
+    const showQuickPick = jest.fn();
     const createQuickPick = jest.fn();
-    const showErrorMessage = jest.fn();
-    const createOutputChannel = jest.fn();
-    const mockLoadNamedProfile = jest.fn();
-    const mockdefaultProfile = jest.fn();
     const getConfiguration = jest.fn();
-    const profilesForValidation = { status: "active", name: "fake" };
+    const createOutputChannel = jest.fn();
+
+    const appendLine = jest.fn();
+    const outputChannel: vscode.OutputChannel = {
+        append: jest.fn(),
+        name: "fakeChannel",
+        appendLine,
+        clear: jest.fn(),
+        show: jest.fn(),
+        hide: jest.fn(),
+        dispose: jest.fn(),
+        replace: jest.fn(),
+    };
+    createOutputChannel.mockReturnValue(outputChannel);
+    const qpItem = new utils.FilterDescriptor("Create a new filter");
+    const qpItem2 = new utils.FilterItem({ text: "/d iplinfo0" });
+
+    const mockLoadNamedProfile = jest.fn();
+    Object.defineProperty(profileLoader.Profiles, "createInstance", {
+        value: jest.fn(() => {
+            return {
+                allProfiles: [{ name: "firstName" }, { name: "secondName" }],
+                defaultProfile: { name: "firstName" },
+            };
+        }),
+    });
+
+    Object.defineProperty(ZoweLocalStorage, "storage", {
+        value: {
+            get: () => ({ persistence: true, favorites: [], history: [], sessions: ["zosmf"], searchHistory: [], fileHistory: [] }),
+            update: jest.fn(),
+            keys: () => [],
+        },
+        configurable: true,
+    });
+
+    createQuickPick.mockReturnValue({
+        placeholder: 'Choose "Create new..." to define a new profile or select an existing profile to add to the Data Set Explorer',
+        activeItems: [qpItem2],
+        ignoreFocusOut: true,
+        items: [qpItem, qpItem2],
+        value: undefined,
+        show: jest.fn(() => {
+            return {};
+        }),
+        hide: jest.fn(() => {
+            return {};
+        }),
+        onDidAccept: jest.fn(() => {
+            return {};
+        }),
+    });
+
+    const ProgressLocation = jest.fn().mockImplementation(() => {
+        return {
+            Notification: 15,
+        };
+    });
+
+    const withProgress = jest.fn().mockImplementation((progLocation, callback) => {
+        return {
+            success: true,
+            commandResponse: callback(),
+        };
+    });
 
     const session = new imperative.Session({
         user: "fake",
@@ -64,19 +124,7 @@ describe("UnixCommand Actions Unit Testing", () => {
         profileOne
     );
 
-    const outputChannel: vscode.OutputChannel = {
-        append: jest.fn(),
-        name: "fakeChannel",
-        appendLine,
-        clear: jest.fn(),
-        show: jest.fn(),
-        hide: jest.fn(),
-        dispose: jest.fn(),
-        replace: jest.fn(),
-    };
-    createOutputChannel.mockReturnValue(outputChannel);
-
-    const fetchSshProfiles = jest.fn().mockReturnValue([
+    let fetchSshProfiles = [
         {
             name: "ssh",
             type: "ssh",
@@ -88,23 +136,47 @@ describe("UnixCommand Actions Unit Testing", () => {
             message: "",
             failNotFound: false,
         } as imperative.IProfileLoaded,
-    ]);
+    ];
 
-    mockLoadNamedProfile.mockReturnValue({ profile: { name: "aProfile", type: "zosmf" } });
-    mockdefaultProfile.mockReturnValue({ profile: { name: "bprofile", type: "ssh" } });
+    let profilefromConfig = {
+        isDefaultProfile: false,
+        profLoc: { osLoc: ["/user/configpath"] },
+    };
 
-    Object.defineProperty(profileLoader.Profiles, "createInstance", {
-        value: jest.fn(() => {
-            return {
-                allProfiles: [{ name: "firstName" }, { name: "secondName" }],
-                defaultProfile: { name: "firstName" },
-            };
-        }),
-    });
-
+    Object.defineProperty(vscode.window, "showErrorMessage", { value: showErrorMessage });
+    Object.defineProperty(vscode.window, "showInputBox", { value: showInputBox });
+    Object.defineProperty(vscode.window, "showInformationMessage", { value: showInformationMessage });
+    Object.defineProperty(vscode.window, "showQuickPick", { value: showQuickPick });
+    Object.defineProperty(vscode.window, "createQuickPick", { value: createQuickPick });
+    Object.defineProperty(vscode.window, "createOutputChannel", { value: createOutputChannel });
+    Object.defineProperty(vscode, "ProgressLocation", { value: ProgressLocation });
+    Object.defineProperty(vscode.window, "withProgress", { value: withProgress });
     Object.defineProperty(ProfileManagement, "getRegisteredProfileNameList", {
         value: jest.fn().mockReturnValue(["firstName", "secondName"]),
         configurable: true,
+    });
+
+    mockLoadNamedProfile.mockReturnValue({ profile: { name: "aProfile", type: "zosmf" } });
+    getConfiguration.mockReturnValue({
+        get: (setting: string) => undefined,
+        update: jest.fn(() => {
+            return {};
+        }),
+    });
+
+    const mockdefaultProfile = jest.fn();
+    mockdefaultProfile.mockReturnValue({ profile: { name: "bprofile", type: "ssh" } });
+
+    SshSession.createSshSessCfgFromArgs = jest.fn(() => {
+        return { privateKey: undefined, keyPassphrase: undefined, handshakeTimeout: undefined };
+    });
+
+    Object.defineProperty(ZoweLogger, "error", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
+    Object.defineProperty(imperative.ConnectionPropsForSessCfg, "addPropsOrPrompt", {
+        value: jest.fn(() => {
+            return { privateKey: undefined, keyPassphrase: undefined, handshakeTimeout: undefined, type: "basic", port: 22 };
+        }),
     });
 
     Object.defineProperty(profileLoader.Profiles, "getInstance", {
@@ -120,81 +192,18 @@ describe("UnixCommand Actions Unit Testing", () => {
                 getBaseProfile: jest.fn(),
                 getDefaultProfile: mockdefaultProfile,
                 validProfile: ValidProfileEnum.VALID,
-                fetchAllProfilesByType: fetchSshProfiles,
+                fetchAllProfilesByType: jest.fn(() => {
+                    return fetchSshProfiles;
+                }),
                 promptCredentials: jest.fn(() => {
                     return ["entered"];
                 }),
+                getProfileFromConfig: jest.fn(() => {
+                    return profilefromConfig;
+                }),
+                openConfigFile: jest.fn(),
             };
         }),
-    });
-
-    const qpItem = new utils.FilterDescriptor("Create a new filter");
-    const qpItem2 = new utils.FilterItem({ text: "/d iplinfo0" });
-
-    const ProgressLocation = jest.fn().mockImplementation(() => {
-        return {
-            Notification: 15,
-        };
-    });
-
-    const withProgress = jest.fn().mockImplementation((progLocation, callback) => {
-        return {
-            success: true,
-            commandResponse: callback(),
-        };
-    });
-
-    createQuickPick.mockReturnValue({
-        placeholder: 'Choose "Create new..." to define a new profile or select an existing profile to add to the Data Set Explorer',
-        activeItems: [qpItem2],
-        ignoreFocusOut: true,
-        items: [qpItem, qpItem2],
-        value: undefined,
-        show: jest.fn(() => {
-            return {};
-        }),
-        hide: jest.fn(() => {
-            return {};
-        }),
-        onDidAccept: jest.fn(() => {
-            return {};
-        }),
-    });
-
-    getConfiguration.mockReturnValue({
-        get: (setting: string) => undefined,
-        update: jest.fn(() => {
-            return {};
-        }),
-    });
-    SshSession.createSshSessCfgFromArgs = jest.fn(() => {
-        return { privateKey: undefined, keyPassphrase: undefined, handshakeTimeout: undefined };
-    });
-
-    Object.defineProperty(ZoweLogger, "error", { value: jest.fn(), configurable: true });
-    Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
-    Object.defineProperty(vscode.window, "withProgress", { value: withProgress });
-    Object.defineProperty(vscode, "ProgressLocation", { value: ProgressLocation });
-    Object.defineProperty(vscode.window, "showErrorMessage", { value: showErrorMessage });
-    Object.defineProperty(vscode.window, "showQuickPick", { value: showQuickPick });
-    Object.defineProperty(vscode.window, "showInputBox", { value: showInputBox });
-    Object.defineProperty(vscode.window, "showInformationMessage", { value: showInformationMessage });
-    Object.defineProperty(vscode.window, "createQuickPick", { value: createQuickPick });
-    Object.defineProperty(vscode.window, "createOutputChannel", { value: createOutputChannel });
-    Object.defineProperty(vscode.workspace, "getConfiguration", { value: getConfiguration });
-    Object.defineProperty(imperative.ConnectionPropsForSessCfg, "addPropsOrPrompt", {
-        value: jest.fn(() => {
-            return { privateKey: undefined, keyPassphrase: undefined, handshakeTimeout: undefined, type: "basic", port: 22 };
-        }),
-    });
-
-    Object.defineProperty(ZoweLocalStorage, "storage", {
-        value: {
-            get: () => ({ persistence: true, favorites: [], history: [], sessions: ["zosmf"], searchHistory: [], fileHistory: [] }),
-            update: jest.fn(),
-            keys: () => [],
-        },
-        configurable: true,
     });
 
     afterEach(() => {
@@ -203,6 +212,7 @@ describe("UnixCommand Actions Unit Testing", () => {
 
     const apiRegisterInstance = ZoweExplorerApiRegister.getInstance();
     const unixActions = UnixCommandHandler.getInstance();
+    const profilesForValidation = { status: "active", name: "fake" };
 
     it("test the issueUnixCommand function", async () => {
         const mockUssApi = await apiRegisterInstance.getUssApi(profileOne);
@@ -434,22 +444,6 @@ describe("UnixCommand Actions Unit Testing", () => {
     });
 
     it("tests the issueUnixCommand function no profiles error", async () => {
-        Object.defineProperty(profileLoader.Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    allProfiles: [],
-                    defaultProfile: undefined,
-                    checkCurrentProfile: jest.fn(() => {
-                        return profilesForValidation;
-                    }),
-                    validateProfiles: jest.fn(),
-                    getBaseProfile: jest.fn(),
-                    validProfile: ValidProfileEnum.VALID,
-                    fetchAllProfilesByType: jest.fn(),
-                    promptCredentials: jest.fn(),
-                };
-            }),
-        });
         Object.defineProperty(ProfileManagement, "getRegisteredProfileNameList", {
             value: jest.fn().mockReturnValue([]),
             configurable: true,
@@ -473,6 +467,49 @@ describe("UnixCommand Actions Unit Testing", () => {
         expect(showInformationMessage.mock.calls.length).toBe(0);
     });
 
+    it("ssh profile not found", async () => {
+        fetchSshProfiles = [];
+        await (unixActions as any).getSshProfile();
+        expect(showErrorMessage.mock.calls.length).toBe(1);
+        expect(showErrorMessage.mock.calls[0][0]).toEqual("No SSH profile found. Please create an SSH profile.");
+    });
+
+    it("the ssh profile doesnot have user and pw", async () => {
+        fetchSshProfiles = [
+            {
+                name: "ssh",
+                type: "ssh",
+                profile: {
+                    host: "host.com",
+                    port: 123,
+                    user: "",
+                    password: "",
+                    privateKey: "",
+                },
+                message: "",
+                failNotFound: false,
+            } as imperative.IProfileLoaded,
+        ];
+        await (unixActions as any).getSshProfile();
+    });
+
+    it("the shh profile doesnot have port or host or both", async () => {
+        fetchSshProfiles = [
+            {
+                name: "ssh",
+                type: "ssh",
+                profile: {
+                    host: "host.com",
+                    user: "testuser",
+                },
+                message: "",
+                failNotFound: false,
+            } as imperative.IProfileLoaded,
+        ];
+        await (unixActions as any).getSshProfile();
+        expect(showErrorMessage.mock.calls[0][0]).toEqual("SSH profile missing connection details. Please update.");
+    });
+
     it("tests the selectSshProfile function", async () => {
         showQuickPick.mockReturnValueOnce("test1" as any);
         await expect(
@@ -489,7 +526,6 @@ describe("UnixCommand Actions Unit Testing", () => {
         });
     });
 
-    
     it("tests the selectSshProfile function when user escapes", async () => {
         showQuickPick.mockReturnValueOnce(undefined);
         await expect(
