@@ -23,6 +23,7 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 export const DATASET_SORT_OPTS = [
     localize("ds.sortByName", "$(case-sensitive) Name (default)"),
+    localize("ds.sortByDateCreated", "$(calendar) Date Created"),
     localize("ds.sortByModified", "$(calendar) Date Modified"),
     localize("ds.sortByUserId", "$(account) User ID"),
     localize("setSortDirection", "$(fold) Sort Direction"),
