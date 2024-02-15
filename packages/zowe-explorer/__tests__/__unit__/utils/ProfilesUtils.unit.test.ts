@@ -91,8 +91,8 @@ describe("ProfilesUtils unit tests", () => {
             const label = "test";
             const moreInfo = "Task failed successfully";
             await profUtils.errorHandling(errorDetails, label, moreInfo);
-            expect(Gui.errorMessage).toBeCalledWith(moreInfo + ` Error: ${errorDetails.message}`);
-            expect(ZoweLogger.error).toBeCalledWith(
+            expect(Gui.errorMessage).toHaveBeenCalledWith(moreInfo + ` Error: ${errorDetails.message}`);
+            expect(ZoweLogger.error).toHaveBeenCalledWith(
                 `${errorDetails.toString()}\n` + util.inspect({ errorDetails, label, moreInfo }, { depth: null })
             );
         });
@@ -108,8 +108,8 @@ describe("ProfilesUtils unit tests", () => {
             const label = "test";
             const moreInfo = "Task failed successfully";
             await profUtils.errorHandling(errorDetails, label, moreInfo as unknown as string);
-            expect(Gui.errorMessage).toBeCalledWith(`${moreInfo} ` + errorDetails);
-            expect(ZoweLogger.error).toBeCalledWith(
+            expect(Gui.errorMessage).toHaveBeenCalledWith(`${moreInfo} ` + errorDetails);
+            expect(ZoweLogger.error).toHaveBeenCalledWith(
                 `Error: ${errorDetails.message}\n` + util.inspect({ errorDetails, label, moreInfo }, { depth: null })
             );
         });
@@ -139,7 +139,7 @@ describe("ProfilesUtils unit tests", () => {
                 }),
             });
             await profUtils.errorHandling(errorDetails, label, moreInfo);
-            expect(spyOpenConfigFile).toBeCalledTimes(1);
+            expect(spyOpenConfigFile).toHaveBeenCalledTimes(1);
         });
 
         it("should handle error for invalid credentials and prompt for authentication", async () => {
@@ -160,8 +160,8 @@ describe("ProfilesUtils unit tests", () => {
                 getSecurePropsForProfile: () => [],
             } as any);
             await profUtils.errorHandling(errorDetails, label, moreInfo);
-            expect(showMessageSpy).toBeCalledTimes(1);
-            expect(promptCredsSpy).toBeCalledTimes(1);
+            expect(showMessageSpy).toHaveBeenCalledTimes(1);
+            expect(promptCredsSpy).toHaveBeenCalledTimes(1);
             showMessageSpy.mockClear();
             promptCredsSpy.mockClear();
         });
@@ -184,9 +184,9 @@ describe("ProfilesUtils unit tests", () => {
                 ssoLogin: ssoLoginSpy,
             } as any);
             await profUtils.errorHandling(errorDetails, label, moreInfo);
-            expect(showMessageSpy).toBeCalledTimes(1);
-            expect(ssoLoginSpy).toBeCalledTimes(1);
-            expect(showErrorSpy).not.toBeCalled();
+            expect(showMessageSpy).toHaveBeenCalledTimes(1);
+            expect(ssoLoginSpy).toHaveBeenCalledTimes(1);
+            expect(showErrorSpy).not.toHaveBeenCalled();
             showErrorSpy.mockClear();
             showMessageSpy.mockClear();
             ssoLoginSpy.mockClear();
@@ -216,9 +216,9 @@ describe("ProfilesUtils unit tests", () => {
                 getSecurePropsForProfile: () => [],
             } as any);
             await profUtils.errorHandling(errorDetails, label, moreInfo);
-            expect(showErrorSpy).toBeCalledTimes(1);
-            expect(promptCredentialsSpy).not.toBeCalled();
-            expect(showMsgSpy).toBeCalledWith("Operation Cancelled");
+            expect(showErrorSpy).toHaveBeenCalledTimes(1);
+            expect(promptCredentialsSpy).not.toHaveBeenCalled();
+            expect(showMsgSpy).toHaveBeenCalledWith("Operation Cancelled");
             showErrorSpy.mockClear();
             showMsgSpy.mockClear();
             promptCredentialsSpy.mockClear();
@@ -484,7 +484,7 @@ describe("ProfilesUtils unit tests", () => {
                 JSON.stringify({ overrides: { CredentialManager: "@zowe/cli", testValue: true } }, null, 2)
             );
             profUtils.ProfilesUtils.writeOverridesFile();
-            expect(blockMocks.mockWriteFileSync).toBeCalledTimes(0);
+            expect(blockMocks.mockWriteFileSync).toHaveBeenCalledTimes(0);
         });
 
         it("should return and have no change to the existing file if PROFILE_SECURITY matches file", () => {
@@ -492,7 +492,7 @@ describe("ProfilesUtils unit tests", () => {
             const fileJson = blockMocks.mockFileRead;
             blockMocks.mockReadFileSync.mockReturnValueOnce(JSON.stringify(fileJson, null, 2));
             profUtils.ProfilesUtils.writeOverridesFile();
-            expect(blockMocks.mockWriteFileSync).toBeCalledTimes(0);
+            expect(blockMocks.mockWriteFileSync).toHaveBeenCalledTimes(0);
         });
 
         it("should add credential manager overrides object to existing object", () => {
@@ -504,8 +504,8 @@ describe("ProfilesUtils unit tests", () => {
             const mergedJson = { ...blockMocks.mockFileRead, ...fileJson };
             const mergedString = JSON.stringify(mergedJson, null, 2);
             profUtils.ProfilesUtils.writeOverridesFile();
-            expect(blockMocks.mockWriteFileSync).toBeCalledTimes(1);
-            expect(blockMocks.mockWriteFileSync).toBeCalledWith(blockMocks.zoweDir, mergedString, { encoding: "utf-8", flag: "w" });
+            expect(blockMocks.mockWriteFileSync).toHaveBeenCalledTimes(1);
+            expect(blockMocks.mockWriteFileSync).toHaveBeenCalledWith(blockMocks.zoweDir, mergedString, { encoding: "utf-8", flag: "w" });
         });
 
         it("should have not exist and create default file", () => {
@@ -519,8 +519,8 @@ describe("ProfilesUtils unit tests", () => {
             const loggerSpy = jest.spyOn(ZoweLogger, "debug");
             const content = JSON.stringify(blockMocks.mockFileRead, null, 2);
             profUtils.ProfilesUtils.writeOverridesFile();
-            expect(loggerSpy).toBeCalledWith("Reading imperative.json failed. Will try to create file.");
-            expect(blockMocks.mockWriteFileSync).toBeCalledWith(blockMocks.zoweDir, content, { encoding: "utf-8", flag: "w" });
+            expect(loggerSpy).toHaveBeenCalledWith("Reading imperative.json failed. Will try to create file.");
+            expect(blockMocks.mockWriteFileSync).toHaveBeenCalledWith(blockMocks.zoweDir, content, { encoding: "utf-8", flag: "w" });
             expect(blockMocks.mockWriteFileSync).not.toThrowError();
         });
 
@@ -532,7 +532,7 @@ describe("ProfilesUtils unit tests", () => {
             blockMocks.mockReadFileSync.mockReturnValueOnce(JSON.stringify(fileJson, null, 2).slice(1));
             const writeFileSpy = jest.spyOn(fs, "writeFileSync");
             expect(profUtils.ProfilesUtils.writeOverridesFile).not.toThrow();
-            expect(writeFileSpy).toBeCalled();
+            expect(writeFileSpy).toHaveBeenCalled();
         });
     });
 
@@ -603,7 +603,7 @@ describe("ProfilesUtils unit tests", () => {
             await expect((profUtils.ProfilesUtils as any).activateCredentialManagerOverride(credentialManagerExtension)).resolves.toEqual(
                 {} as zowe.imperative.ICredentialManagerConstructor
             );
-            expect(activateSpy).toBeCalledTimes(1);
+            expect(activateSpy).toHaveBeenCalledTimes(1);
         });
 
         it("should successfully activate the extension passed in but return undefined if no exports are found", async () => {
@@ -615,7 +615,7 @@ describe("ProfilesUtils unit tests", () => {
             } as any;
 
             await expect((profUtils.ProfilesUtils as any).activateCredentialManagerOverride(credentialManagerExtension)).resolves.toEqual(undefined);
-            expect(activateSpy).toBeCalledTimes(1);
+            expect(activateSpy).toHaveBeenCalledTimes(1);
         });
 
         it("should throw an error if the extension fails to activate", async () => {
@@ -644,8 +644,8 @@ describe("ProfilesUtils unit tests", () => {
             const setGlobalSecurityValueSpy = jest.spyOn(globals, "setGlobalSecurityValue");
             const recordCredMgrInConfigSpy = jest.spyOn(zowe.imperative.CredentialManagerOverride, "recordCredMgrInConfig");
             await profUtils.ProfilesUtils.updateCredentialManagerSetting("@zowe/cli");
-            expect(setGlobalSecurityValueSpy).toBeCalledWith("@zowe/cli");
-            expect(recordCredMgrInConfigSpy).toBeCalledWith("@zowe/cli");
+            expect(setGlobalSecurityValueSpy).toHaveBeenCalledWith("@zowe/cli");
+            expect(recordCredMgrInConfigSpy).toHaveBeenCalledWith("@zowe/cli");
         });
     });
 
@@ -736,7 +736,7 @@ describe("ProfilesUtils unit tests", () => {
                 throw new Error("test error");
             });
             expect(profUtils.ProfilesUtils.isVSCodeCredentialPluginInstalled("test")).toBe(false);
-            expect(zoweLoggerTraceSpy).toBeCalledTimes(1);
+            expect(zoweLoggerTraceSpy).toHaveBeenCalledTimes(1);
         });
     });
 
@@ -765,7 +765,7 @@ describe("ProfilesUtils unit tests", () => {
             });
 
             expect(profUtils.ProfilesUtils.getCredentialManagerOverride()).toBe("My Custom Credential Manager");
-            expect(zoweLoggerTraceSpy).toBeCalledTimes(1);
+            expect(zoweLoggerTraceSpy).toHaveBeenCalledTimes(1);
         });
 
         it("should return default manager if the override file does not exist", () => {
@@ -781,8 +781,8 @@ describe("ProfilesUtils unit tests", () => {
                 expect(err).toBe("test");
             }
 
-            expect(zoweLoggerTraceSpy).toBeCalledTimes(1);
-            expect(zoweLoggerInfoSpy).toBeCalledTimes(1);
+            expect(zoweLoggerTraceSpy).toHaveBeenCalledTimes(1);
+            expect(zoweLoggerInfoSpy).toHaveBeenCalledTimes(1);
         });
     });
 
@@ -807,8 +807,8 @@ describe("ProfilesUtils unit tests", () => {
                     credMgrZEName: "test",
                 })
             ).resolves.toEqual({} as zowe.imperative.ProfileInfo);
-            expect(zoweLoggerTraceSpy).toBeCalledTimes(2);
-            expect(zoweLoggerInfoSpy).toBeCalledTimes(1);
+            expect(zoweLoggerTraceSpy).toHaveBeenCalledTimes(2);
+            expect(zoweLoggerInfoSpy).toHaveBeenCalledTimes(1);
         });
     });
 
@@ -836,9 +836,9 @@ describe("ProfilesUtils unit tests", () => {
             });
 
             await expect(profUtils.ProfilesUtils["fetchRegisteredPlugins"]()).resolves.not.toThrow();
-            expect(zoweLoggerTraceSpy).toBeCalledTimes(1);
-            expect(updateCredentialManagerSettingSpy).toBeCalledTimes(0);
-            expect(setDirectValueSpy).toBeCalledTimes(0);
+            expect(zoweLoggerTraceSpy).toHaveBeenCalledTimes(1);
+            expect(updateCredentialManagerSettingSpy).toHaveBeenCalledTimes(0);
+            expect(setDirectValueSpy).toHaveBeenCalledTimes(0);
         });
 
         it("suggest changing the override setting after finding a registered custom credential manager and selecting 'yes'", async () => {
@@ -859,9 +859,9 @@ describe("ProfilesUtils unit tests", () => {
             jest.spyOn(Gui, "infoMessage").mockResolvedValue("Yes");
 
             await expect(profUtils.ProfilesUtils["fetchRegisteredPlugins"]()).resolves.not.toThrow();
-            expect(zoweLoggerTraceSpy).toBeCalledTimes(2);
-            expect(updateCredentialManagerSettingSpy).toBeCalledTimes(1);
-            expect(setDirectValueSpy).toBeCalledTimes(1);
+            expect(zoweLoggerTraceSpy).toHaveBeenCalledTimes(2);
+            expect(updateCredentialManagerSettingSpy).toHaveBeenCalledTimes(1);
+            expect(setDirectValueSpy).toHaveBeenCalledTimes(1);
         });
 
         it("suggest changing the override setting and selecting 'no' and should keep the default manager", async () => {
@@ -882,9 +882,9 @@ describe("ProfilesUtils unit tests", () => {
             jest.spyOn(Gui, "infoMessage").mockResolvedValue("Don't ask again");
 
             await expect(profUtils.ProfilesUtils["fetchRegisteredPlugins"]()).resolves.not.toThrow();
-            expect(zoweLoggerTraceSpy).toBeCalledTimes(1);
-            expect(updateCredentialManagerSettingSpy).toBeCalledTimes(0);
-            expect(setDirectValueSpy).toBeCalledTimes(1);
+            expect(zoweLoggerTraceSpy).toHaveBeenCalledTimes(1);
+            expect(updateCredentialManagerSettingSpy).toHaveBeenCalledTimes(0);
+            expect(setDirectValueSpy).toHaveBeenCalledTimes(1);
         });
     });
 
@@ -913,8 +913,8 @@ describe("ProfilesUtils unit tests", () => {
                     credMgrZEName: "test",
                 })
             ).resolves.not.toThrow();
-            expect(zoweLoggerTraceSpy).toBeCalledTimes(1);
-            expect(reloadWindowSpy).toBeCalledWith("workbench.action.reloadWindow");
+            expect(zoweLoggerTraceSpy).toHaveBeenCalledTimes(1);
+            expect(reloadWindowSpy).toHaveBeenCalledWith("workbench.action.reloadWindow");
         });
     });
 });

@@ -111,7 +111,7 @@ describe("Zosmf API tests", () => {
             configurable: true,
         });
         await expect(api.updateAttributes("/test/path", { tag: "utf-8" })).resolves.not.toThrow();
-        expect(changeTagSpy).toBeCalledTimes(1);
+        expect(changeTagSpy).toHaveBeenCalledTimes(1);
     });
 
     it("should get the tag of a file successfully", async () => {

@@ -419,7 +419,7 @@ describe("ZoweUSSNode Unit Tests - Function node.refreshUSS()", () => {
         const showErrorMessageSpy = jest.spyOn(vscode.window, "showErrorMessage");
 
         await expect(childNode.refreshUSS()).rejects.toThrow();
-        expect(showErrorMessageSpy).toBeCalledTimes(1);
+        expect(showErrorMessageSpy).toHaveBeenCalledTimes(1);
     });
     it("Tests that node.refreshUSS() works correctly for files under directories", async () => {
         const globalMocks = await createGlobalMocks();
@@ -516,7 +516,7 @@ describe("ZoweUSSNode Unit Tests - Function node.rename()", () => {
         expect(blockMocks.ussDir.tooltip).toEqual(newFullPath);
 
         // Expect node to be refreshed in UI after rename
-        expect(blockMocks.providerSpy).toBeCalled();
+        expect(blockMocks.providerSpy).toHaveBeenCalled();
         blockMocks.providerSpy.mockClear();
     });
     it("Tests that rename updates and refreshes the UI components of any loaded children for a node", async () => {
@@ -1025,11 +1025,11 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
         await node.openUSS(false, true, blockMocks.testUSSTree);
         expect(globalMocks.existsSync.mock.calls.length).toBe(1);
         expect(globalMocks.existsSync.mock.calls[0][0]).toBe(path.join(globals.USS_DIR, node.getProfileName(), node.fullPath));
-        expect(globalMocks.setStatusBarMessage).toBeCalledWith("$(sync~spin) Downloading USS file...");
+        expect(globalMocks.setStatusBarMessage).toHaveBeenCalledWith("$(sync~spin) Downloading USS file...");
 
         // Tests that correct file is opened in editor
         globalMocks.withProgress(globalMocks.downloadUSSFile);
-        expect(globalMocks.withProgress).toBeCalledWith(globalMocks.downloadUSSFile);
+        expect(globalMocks.withProgress).toHaveBeenCalledWith(globalMocks.downloadUSSFile);
         expect(globalMocks.openTextDocument.mock.calls.length).toBe(1);
         expect(globalMocks.openTextDocument.mock.calls[0][0]).toBe(node.getUSSDocumentFilePath());
         expect(globalMocks.mockShowTextDocument.mock.calls.length).toBe(1);
@@ -1067,10 +1067,10 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
         await node.openUSS(false, true, blockMocks.testUSSTree);
         expect(globalMocks.existsSync.mock.calls.length).toBe(1);
         expect(globalMocks.existsSync.mock.calls[0][0]).toBe(path.join(globals.USS_DIR, node.getProfileName(), node.fullPath));
-        expect(globalMocks.setStatusBarMessage).toBeCalledWith("$(sync~spin) Downloading USS file...");
+        expect(globalMocks.setStatusBarMessage).toHaveBeenCalledWith("$(sync~spin) Downloading USS file...");
         // Tests that correct file is opened in editor
         globalMocks.withProgress(globalMocks.downloadUSSFile);
-        expect(globalMocks.withProgress).toBeCalledWith(globalMocks.downloadUSSFile);
+        expect(globalMocks.withProgress).toHaveBeenCalledWith(globalMocks.downloadUSSFile);
         expect(globalMocks.openTextDocument.mock.calls.length).toBe(1);
         expect(globalMocks.openTextDocument.mock.calls[0][0]).toBe(node.getUSSDocumentFilePath());
         expect(globalMocks.mockShowTextDocument.mock.calls.length).toBe(1);
@@ -1210,7 +1210,7 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
         await node.openUSS(false, true, blockMocks.testUSSTree);
         expect(globalMocks.existsSync.mock.calls.length).toBe(1);
         expect(globalMocks.existsSync.mock.calls[0][0]).toBe(path.join(globals.USS_DIR, node.getProfileName() || "", node.fullPath));
-        expect(globalMocks.setStatusBarMessage).toBeCalledWith("$(sync~spin) Downloading USS file...");
+        expect(globalMocks.setStatusBarMessage).toHaveBeenCalledWith("$(sync~spin) Downloading USS file...");
         // Make sure correct file is displayed in the editor
         globalMocks.withProgress(globalMocks.downloadUSSFile);
         expect(globalMocks.openTextDocument.mock.calls.length).toBe(1);
@@ -1393,7 +1393,7 @@ describe("ZoweUSSNode Unit Tests - Function node.initializeFileOpening()", () =>
         testNode.fullPath = "test/node";
 
         await testNode.initializeFileOpening(testNode.fullPath, true);
-        expect(globalMocks.mockShowTextDocument).toBeCalledWith(globalMocks.mockTextDocument);
+        expect(globalMocks.mockShowTextDocument).toHaveBeenCalledWith(globalMocks.mockTextDocument);
     });
 
     it("Tests that node.initializeFileOpening() successfully handles text files that shouldn't be previewed", async () => {
@@ -1418,7 +1418,7 @@ describe("ZoweUSSNode Unit Tests - Function node.initializeFileOpening()", () =>
         testNode.fullPath = "test/node";
 
         await testNode.initializeFileOpening(testNode.fullPath, false);
-        expect(globalMocks.mockShowTextDocument).toBeCalledWith(globalMocks.mockTextDocument, { preview: false });
+        expect(globalMocks.mockShowTextDocument).toHaveBeenCalledWith(globalMocks.mockTextDocument, { preview: false });
     });
 });
 

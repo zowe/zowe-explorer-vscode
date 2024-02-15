@@ -181,11 +181,11 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
 
         await dsActions.createMember(parent, blockMocks.testDatasetTree);
 
-        expect(mySpy).toBeCalledWith({
+        expect(mySpy).toHaveBeenCalledWith({
             placeHolder: "Name of Member",
             validateInput: expect.any(Function),
         });
-        expect(mocked(zowe.Upload.bufferToDataSet)).toBeCalledWith(blockMocks.zosmfSession, Buffer.from(""), parent.label + "(testMember)", {
+        expect(mocked(zowe.Upload.bufferToDataSet)).toHaveBeenCalledWith(blockMocks.zosmfSession, Buffer.from(""), parent.label + "(testMember)", {
             responseTimeout: blockMocks.imperativeProfile.profile?.responseTimeout,
         });
     });
@@ -208,7 +208,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
             // Prevent exception from failing test
         }
 
-        expect(mocked(Gui.errorMessage)).toBeCalledWith("Unable to create member. Error: test");
+        expect(mocked(Gui.errorMessage)).toHaveBeenCalledWith("Unable to create member. Error: test");
         mocked(zowe.Upload.bufferToDataSet).mockReset();
     });
     it("Checking of attempt to create member without name", async () => {
@@ -223,7 +223,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
         mocked(vscode.window.showInputBox).mockResolvedValue("");
         await dsActions.createMember(parent, blockMocks.testDatasetTree);
 
-        expect(mocked(zowe.Upload.bufferToDataSet)).not.toBeCalled();
+        expect(mocked(zowe.Upload.bufferToDataSet)).not.toHaveBeenCalled();
     });
     it("Checking of member creation for favorite dataset", async () => {
         const blockMocks = createBlockMocksShared();
@@ -251,10 +251,15 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
 
         await dsActions.createMember(parent, blockMocks.testDatasetTree);
 
-        expect(mySpy).toBeCalledWith({ placeHolder: "Name of Member", validateInput: expect.any(Function) });
-        expect(mocked(zowe.Upload.bufferToDataSet)).toBeCalledWith(blockMocks.zosmfSession, Buffer.from(""), nonFavoriteLabel + "(testMember)", {
-            responseTimeout: blockMocks.imperativeProfile.profile?.responseTimeout,
-        });
+        expect(mySpy).toHaveBeenCalledWith({ placeHolder: "Name of Member", validateInput: expect.any(Function) });
+        expect(mocked(zowe.Upload.bufferToDataSet)).toHaveBeenCalledWith(
+            blockMocks.zosmfSession,
+            Buffer.from(""),
+            nonFavoriteLabel + "(testMember)",
+            {
+                responseTimeout: blockMocks.imperativeProfile.profile?.responseTimeout,
+            }
+        );
     });
 });
 
@@ -282,7 +287,7 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
 
         await dsActions.refreshPS(node);
 
-        expect(mocked(zowe.Download.dataSet)).toBeCalledWith(
+        expect(mocked(zowe.Download.dataSet)).toHaveBeenCalledWith(
             blockMocks.zosmfSession,
             node.label,
             expect.objectContaining({
@@ -290,11 +295,11 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
                 returnEtag: true,
             })
         );
-        expect(mocked(vscode.workspace.openTextDocument)).toBeCalledWith(
+        expect(mocked(vscode.workspace.openTextDocument)).toHaveBeenCalledWith(
             path.join(globals.DS_DIR, node.getSessionNode().label.toString(), node.label.toString())
         );
-        expect(mocked(vscode.window.showTextDocument)).toBeCalledTimes(2);
-        expect(mocked(vscode.commands.executeCommand)).toBeCalledWith("workbench.action.closeActiveEditor");
+        expect(mocked(vscode.window.showTextDocument)).toHaveBeenCalledTimes(2);
+        expect(mocked(vscode.commands.executeCommand)).toHaveBeenCalledWith("workbench.action.closeActiveEditor");
     });
     it("Checking duplicate PS dataset refresh attempt", async () => {
         globals.defineGlobals("");
@@ -317,7 +322,7 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
 
         await dsActions.refreshPS(node);
 
-        expect(mocked(vscode.commands.executeCommand)).not.toBeCalled();
+        expect(mocked(vscode.commands.executeCommand)).not.toHaveBeenCalled();
     });
     it("Checking failed attempt to refresh PS dataset (not found exception)", async () => {
         globals.defineGlobals("");
@@ -336,8 +341,8 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
 
         await dsActions.refreshPS(node);
 
-        expect(mocked(Gui.showMessage)).toBeCalledWith("Unable to find file " + node.label);
-        expect(mocked(vscode.commands.executeCommand)).not.toBeCalled();
+        expect(mocked(Gui.showMessage)).toHaveBeenCalledWith("Unable to find file " + node.label);
+        expect(mocked(vscode.commands.executeCommand)).not.toHaveBeenCalled();
     });
     it("Checking failed attempt to refresh PDS Member", async () => {
         globals.defineGlobals("");
@@ -355,7 +360,7 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
 
         await dsActions.refreshPS(child);
 
-        expect(mocked(zowe.Download.dataSet)).toBeCalledWith(
+        expect(mocked(zowe.Download.dataSet)).toHaveBeenCalledWith(
             blockMocks.zosmfSession,
             child.getParent().getLabel() + "(" + child.label + ")",
             expect.objectContaining({
@@ -363,7 +368,7 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
                 returnEtag: true,
             })
         );
-        expect(mocked(Gui.errorMessage)).toBeCalledWith("Error");
+        expect(mocked(Gui.errorMessage)).toHaveBeenCalledWith("Error");
     });
     it("Checking favorite empty PDS refresh", async () => {
         globals.defineGlobals("");
@@ -386,9 +391,9 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
         });
 
         await dsActions.refreshPS(node);
-        expect(mocked(vscode.workspace.openTextDocument)).toBeCalled();
-        expect(mocked(vscode.window.showTextDocument)).toBeCalledTimes(2);
-        expect(mocked(vscode.commands.executeCommand)).toBeCalledWith("workbench.action.closeActiveEditor");
+        expect(mocked(vscode.workspace.openTextDocument)).toHaveBeenCalled();
+        expect(mocked(vscode.window.showTextDocument)).toHaveBeenCalledTimes(2);
+        expect(mocked(vscode.commands.executeCommand)).toHaveBeenCalledWith("workbench.action.closeActiveEditor");
     });
     it("Checking favorite PDS Member refresh", async () => {
         globals.defineGlobals("");
@@ -412,9 +417,9 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
         });
 
         await dsActions.refreshPS(child);
-        expect(mocked(vscode.workspace.openTextDocument)).toBeCalled();
-        expect(mocked(vscode.window.showTextDocument)).toBeCalledTimes(2);
-        expect(mocked(vscode.commands.executeCommand)).toBeCalledWith("workbench.action.closeActiveEditor");
+        expect(mocked(vscode.workspace.openTextDocument)).toHaveBeenCalled();
+        expect(mocked(vscode.window.showTextDocument)).toHaveBeenCalledTimes(2);
+        expect(mocked(vscode.commands.executeCommand)).toHaveBeenCalledWith("workbench.action.closeActiveEditor");
     });
     it("Checking favorite PS refresh", async () => {
         globals.defineGlobals("");
@@ -438,9 +443,9 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
         });
 
         await dsActions.refreshPS(child);
-        expect(mocked(vscode.workspace.openTextDocument)).toBeCalled();
-        expect(mocked(vscode.window.showTextDocument)).toBeCalledTimes(2);
-        expect(mocked(vscode.commands.executeCommand)).toBeCalledWith("workbench.action.closeActiveEditor");
+        expect(mocked(vscode.workspace.openTextDocument)).toHaveBeenCalled();
+        expect(mocked(vscode.window.showTextDocument)).toHaveBeenCalledTimes(2);
+        expect(mocked(vscode.commands.executeCommand)).toHaveBeenCalledWith("workbench.action.closeActiveEditor");
     });
 });
 
@@ -540,7 +545,7 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
 
         await dsActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
 
-        expect(mocked(Gui.showMessage)).toBeCalledWith(`The following 1 item(s) were deleted: ${blockMocks.testDatasetNode.getLabel()}`);
+        expect(mocked(Gui.showMessage)).toHaveBeenCalledWith(`The following 1 item(s) were deleted: ${blockMocks.testDatasetNode.getLabel()}`);
     });
 
     it("Should delete one member", async () => {
@@ -554,7 +559,7 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
 
         await dsActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
 
-        expect(mocked(Gui.showMessage)).toBeCalledWith(
+        expect(mocked(Gui.showMessage)).toHaveBeenCalledWith(
             `The following 1 item(s) were deleted: ${blockMocks.testMemberNode.getParent().getLabel()}(${blockMocks.testMemberNode.getLabel()})`
         );
     });
@@ -570,7 +575,7 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
 
         await dsActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
 
-        expect(mocked(Gui.showMessage)).toBeCalledWith(`The following 1 item(s) were deleted: ${blockMocks.testVsamNode.getLabel()}`);
+        expect(mocked(Gui.showMessage)).toHaveBeenCalledWith(`The following 1 item(s) were deleted: ${blockMocks.testVsamNode.getLabel()}`);
     });
 
     it("Should delete one migrated dataset", async () => {
@@ -584,7 +589,7 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
 
         await dsActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
 
-        expect(mocked(Gui.showMessage)).toBeCalledWith(`The following 1 item(s) were deleted: ${blockMocks.testMigrNode.getLabel()}`);
+        expect(mocked(Gui.showMessage)).toHaveBeenCalledWith(`The following 1 item(s) were deleted: ${blockMocks.testMigrNode.getLabel()}`);
     });
 
     it("Should delete two datasets", async () => {
@@ -614,7 +619,7 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
 
         await dsActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
 
-        expect(mocked(Gui.showMessage)).toBeCalledWith(`The following 1 item(s) were deleted: ${blockMocks.testDatasetNode.getLabel()}`);
+        expect(mocked(Gui.showMessage)).toHaveBeenCalledWith(`The following 1 item(s) were deleted: ${blockMocks.testDatasetNode.getLabel()}`);
     });
 
     it("Should delete a favorited data set", async () => {
@@ -628,7 +633,7 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
 
         await dsActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
 
-        expect(mocked(Gui.warningMessage)).toBeCalledWith(
+        expect(mocked(Gui.warningMessage)).toHaveBeenCalledWith(
             `Are you sure you want to delete the following 1 item(s)?\nThis will permanently remove these data sets and/or members from your ` +
                 `system.\n\n ${blockMocks.testFavoritedNode.getLabel()}`,
             { items: ["Delete"], vsCodeOpts: { modal: true } }
@@ -646,7 +651,7 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
 
         await dsActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
 
-        expect(mocked(Gui.warningMessage)).toBeCalledWith(
+        expect(mocked(Gui.warningMessage)).toHaveBeenCalledWith(
             `Are you sure you want to delete the following 1 item(s)?\nThis will permanently remove these data sets and/or members from your ` +
                 `system.\n\n ${blockMocks.testFavoritedNode.getLabel()}(${blockMocks.testFavMemberNode.getLabel()})`,
             { items: ["Delete"], vsCodeOpts: { modal: true } }
@@ -664,7 +669,7 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
 
         await dsActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
 
-        expect(mocked(Gui.showMessage)).toBeCalledWith("No data sets selected for deletion, cancelling...");
+        expect(mocked(Gui.showMessage)).toHaveBeenCalledWith("No data sets selected for deletion, cancelling...");
     });
 
     it("Should account for favorited data sets during deletion", async () => {
@@ -678,7 +683,7 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
 
         await dsActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
 
-        expect(mocked(Gui.showMessage)).toBeCalledWith(
+        expect(mocked(Gui.showMessage)).toHaveBeenCalledWith(
             `The following 2 item(s) were deleted: ${blockMocks.testDatasetNode.getLabel()}, ${blockMocks.testFavoritedNode.getLabel()}`
         );
     });
@@ -741,9 +746,9 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
 
         await dsActions.deleteDataset(node, blockMocks.testDatasetTree);
 
-        expect(deleteSpy).toBeCalledWith(node.label, { responseTimeout: blockMocks.imperativeProfile.profile?.responseTimeout });
-        expect(mocked(fs.existsSync)).toBeCalledWith(path.join(globals.DS_DIR, node.getSessionNode().label.toString(), node.label.toString()));
-        expect(mocked(fs.unlinkSync)).toBeCalledWith(path.join(globals.DS_DIR, node.getSessionNode().label.toString(), node.label.toString()));
+        expect(deleteSpy).toHaveBeenCalledWith(node.label, { responseTimeout: blockMocks.imperativeProfile.profile?.responseTimeout });
+        expect(mocked(fs.existsSync)).toHaveBeenCalledWith(path.join(globals.DS_DIR, node.getSessionNode().label.toString(), node.label.toString()));
+        expect(mocked(fs.unlinkSync)).toHaveBeenCalledWith(path.join(globals.DS_DIR, node.getSessionNode().label.toString(), node.label.toString()));
     });
     it("Checking common PS dataset deletion with Unverified profile", async () => {
         globals.defineGlobals("");
@@ -774,9 +779,9 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
 
         await dsActions.deleteDataset(node, blockMocks.testDatasetTree);
 
-        expect(deleteSpy).toBeCalledWith(node.label, { responseTimeout: blockMocks.imperativeProfile.profile?.responseTimeout });
-        expect(mocked(fs.existsSync)).toBeCalledWith(path.join(globals.DS_DIR, node.getSessionNode().label.toString(), node.label.toString()));
-        expect(mocked(fs.unlinkSync)).toBeCalledWith(path.join(globals.DS_DIR, node.getSessionNode().label.toString(), node.label.toString()));
+        expect(deleteSpy).toHaveBeenCalledWith(node.label, { responseTimeout: blockMocks.imperativeProfile.profile?.responseTimeout });
+        expect(mocked(fs.existsSync)).toHaveBeenCalledWith(path.join(globals.DS_DIR, node.getSessionNode().label.toString(), node.label.toString()));
+        expect(mocked(fs.unlinkSync)).toHaveBeenCalledWith(path.join(globals.DS_DIR, node.getSessionNode().label.toString(), node.label.toString()));
     });
     it("Checking common PS dataset deletion with not existing local file", async () => {
         globals.defineGlobals("");
@@ -796,8 +801,8 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
 
         await dsActions.deleteDataset(node, blockMocks.testDatasetTree);
 
-        expect(mocked(fs.unlinkSync)).not.toBeCalled();
-        expect(deleteSpy).toBeCalledWith(node.label, { responseTimeout: blockMocks.imperativeProfile.profile?.responseTimeout });
+        expect(mocked(fs.unlinkSync)).not.toHaveBeenCalled();
+        expect(deleteSpy).toHaveBeenCalledWith(node.label, { responseTimeout: blockMocks.imperativeProfile.profile?.responseTimeout });
     });
     it("Checking common PS dataset failed deletion attempt due to absence on remote", async () => {
         globals.defineGlobals("");
@@ -818,7 +823,7 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
 
         await expect(dsActions.deleteDataset(node, blockMocks.testDatasetTree)).rejects.toEqual(Error("not found"));
 
-        expect(mocked(Gui.showMessage)).toBeCalledWith("Unable to find file " + node.label);
+        expect(mocked(Gui.showMessage)).toHaveBeenCalledWith("Unable to find file " + node.label);
     });
     it("Checking common PS dataset failed deletion attempt", async () => {
         globals.defineGlobals("");
@@ -838,7 +843,7 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
         deleteSpy.mockRejectedValueOnce(Error(""));
 
         await expect(dsActions.deleteDataset(node, blockMocks.testDatasetTree)).rejects.toEqual(Error(""));
-        expect(mocked(Gui.errorMessage)).toBeCalledWith("Error");
+        expect(mocked(Gui.errorMessage)).toHaveBeenCalledWith("Error");
     });
     it("Checking Favorite PDS dataset deletion", async () => {
         globals.defineGlobals("");
@@ -865,10 +870,10 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
 
         await dsActions.deleteDataset(node, blockMocks.testDatasetTree);
 
-        expect(deleteSpy).toBeCalledWith(node.label, { responseTimeout: blockMocks.imperativeProfile.profile?.responseTimeout });
-        expect(blockMocks.testDatasetTree.removeFavorite).toBeCalledWith(node);
-        expect(mocked(fs.existsSync)).toBeCalledWith(path.join(globals.DS_DIR, parent.getSessionNode().label.toString(), "HLQ.TEST.NODE"));
-        expect(mocked(fs.unlinkSync)).toBeCalledWith(path.join(globals.DS_DIR, parent.getSessionNode().label.toString(), "HLQ.TEST.NODE"));
+        expect(deleteSpy).toHaveBeenCalledWith(node.label, { responseTimeout: blockMocks.imperativeProfile.profile?.responseTimeout });
+        expect(blockMocks.testDatasetTree.removeFavorite).toHaveBeenCalledWith(node);
+        expect(mocked(fs.existsSync)).toHaveBeenCalledWith(path.join(globals.DS_DIR, parent.getSessionNode().label.toString(), "HLQ.TEST.NODE"));
+        expect(mocked(fs.unlinkSync)).toHaveBeenCalledWith(path.join(globals.DS_DIR, parent.getSessionNode().label.toString(), "HLQ.TEST.NODE"));
     });
     it("Checking Favorite PDS Member deletion", async () => {
         globals.defineGlobals("");
@@ -889,14 +894,14 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
 
         await dsActions.deleteDataset(child, blockMocks.testDatasetTree);
 
-        expect(deleteSpy).toBeCalledWith(`${child.getParent().label.toString()}(${child.label.toString()})`, {
+        expect(deleteSpy).toHaveBeenCalledWith(`${child.getParent().label.toString()}(${child.label.toString()})`, {
             responseTimeout: blockMocks.imperativeProfile.profile?.responseTimeout,
         });
-        expect(blockMocks.testDatasetTree.removeFavorite).toBeCalledWith(child);
-        expect(mocked(fs.existsSync)).toBeCalledWith(
+        expect(blockMocks.testDatasetTree.removeFavorite).toHaveBeenCalledWith(child);
+        expect(mocked(fs.existsSync)).toHaveBeenCalledWith(
             path.join(globals.DS_DIR, parent.getSessionNode().label.toString(), `${child.getParent().label.toString()}(${child.label.toString()})`)
         );
-        expect(mocked(fs.unlinkSync)).toBeCalledWith(
+        expect(mocked(fs.unlinkSync)).toHaveBeenCalledWith(
             path.join(globals.DS_DIR, parent.getSessionNode().label.toString(), `${child.getParent().label.toString()}(${child.label.toString()})`)
         );
     });
@@ -929,10 +934,14 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
 
         await dsActions.deleteDataset(child, blockMocks.testDatasetTree);
 
-        expect(deleteSpy).toBeCalledWith("HLQ.TEST.DELETE.NODE", { responseTimeout: blockMocks.imperativeProfile.profile?.responseTimeout });
-        expect(blockMocks.testDatasetTree.removeFavorite).toBeCalledWith(child);
-        expect(mocked(fs.existsSync)).toBeCalledWith(path.join(globals.DS_DIR, parent.getSessionNode().label.toString(), "HLQ.TEST.DELETE.NODE"));
-        expect(mocked(fs.unlinkSync)).toBeCalledWith(path.join(globals.DS_DIR, parent.getSessionNode().label.toString(), "HLQ.TEST.DELETE.NODE"));
+        expect(deleteSpy).toHaveBeenCalledWith("HLQ.TEST.DELETE.NODE", { responseTimeout: blockMocks.imperativeProfile.profile?.responseTimeout });
+        expect(blockMocks.testDatasetTree.removeFavorite).toHaveBeenCalledWith(child);
+        expect(mocked(fs.existsSync)).toHaveBeenCalledWith(
+            path.join(globals.DS_DIR, parent.getSessionNode().label.toString(), "HLQ.TEST.DELETE.NODE")
+        );
+        expect(mocked(fs.unlinkSync)).toHaveBeenCalledWith(
+            path.join(globals.DS_DIR, parent.getSessionNode().label.toString(), "HLQ.TEST.DELETE.NODE")
+        );
     });
     it("Checking incorrect dataset failed deletion attempt", async () => {
         globals.defineGlobals("");
@@ -958,7 +967,7 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
         deleteSpy.mockClear();
 
         await expect(dsActions.deleteDataset(child, blockMocks.testDatasetTree)).rejects.toEqual(Error("Cannot delete, item invalid."));
-        expect(deleteSpy).not.toBeCalled();
+        expect(deleteSpy).not.toHaveBeenCalled();
     });
 });
 
@@ -979,13 +988,13 @@ describe("Dataset Actions Unit Tests - Function enterPattern", () => {
         const mySpy = mocked(vscode.window.showInputBox).mockResolvedValue("test");
         await dsActions.enterPattern(node, blockMocks.testDatasetTree);
 
-        expect(mySpy).toBeCalledWith(
+        expect(mySpy).toHaveBeenCalledWith(
             expect.objectContaining({
                 prompt: "Search Data Sets: use a comma to separate multiple patterns",
                 value: node.pattern,
             })
         );
-        expect(mocked(Gui.showMessage)).not.toBeCalled();
+        expect(mocked(Gui.showMessage)).not.toHaveBeenCalled();
     });
     it("Checking common dataset filter failed attempt", async () => {
         createGlobalMocks();
@@ -1001,7 +1010,7 @@ describe("Dataset Actions Unit Tests - Function enterPattern", () => {
         mocked(vscode.window.showInputBox).mockResolvedValueOnce("");
         await dsActions.enterPattern(node, blockMocks.testDatasetTree);
 
-        expect(mocked(Gui.showMessage)).toBeCalledWith("You must enter a pattern.");
+        expect(mocked(Gui.showMessage)).toHaveBeenCalledWith("You must enter a pattern.");
     });
     it("Checking favorite dataset filter action", async () => {
         createGlobalMocks();
@@ -1009,7 +1018,7 @@ describe("Dataset Actions Unit Tests - Function enterPattern", () => {
         const favoriteSample = new ZoweDatasetNode({ label: "[sestest]: HLQ.TEST", collapsibleState: vscode.TreeItemCollapsibleState.None });
 
         await dsActions.enterPattern(favoriteSample, blockMocks.testDatasetTree);
-        expect(blockMocks.testDatasetTree.addSession).toBeCalledWith("sestest");
+        expect(blockMocks.testDatasetTree.addSession).toHaveBeenCalledWith("sestest");
     });
 });
 
@@ -1119,9 +1128,9 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
         (testDocument as any).fileName = path.join(globals.DS_DIR, blockMocks.imperativeProfile.name, testDocument.fileName);
         await dsActions.saveFile(testDocument, blockMocks.testDatasetTree);
 
-        expect(mocked(sharedUtils.concatChildNodes)).toBeCalled();
-        expect(mocked(globalMocks.statusBarMsgSpy)).toBeCalledWith("success", globals.STATUS_BAR_TIMEOUT_MS);
-        expect(blockMocks.profileInstance.loadNamedProfile).toBeCalledWith(blockMocks.imperativeProfile.name);
+        expect(mocked(sharedUtils.concatChildNodes)).toHaveBeenCalled();
+        expect(mocked(globalMocks.statusBarMsgSpy)).toHaveBeenCalledWith("success", globals.STATUS_BAR_TIMEOUT_MS);
+        expect(blockMocks.profileInstance.loadNamedProfile).toHaveBeenCalledWith(blockMocks.imperativeProfile.name);
     });
 
     it("Checking common dataset saving action when no session is defined", async () => {
@@ -1165,7 +1174,7 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
 
         await dsActions.saveFile(testDocument, blockMocks.testDatasetTree);
 
-        expect(mocked(Gui.errorMessage)).toBeCalledWith("Could not locate session when saving data set.");
+        expect(mocked(Gui.errorMessage)).toHaveBeenCalledWith("Could not locate session when saving data set.");
     });
     it("Checking common dataset saving failed attempt due to its absence on the side of the server", async () => {
         globals.defineGlobals("");
@@ -1193,8 +1202,8 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
 
         await dsActions.saveFile(testDocument, blockMocks.testDatasetTree);
 
-        expect(dataSetSpy).toBeCalledWith("HLQ.TEST.AFILE", { responseTimeout: blockMocks.imperativeProfile.profile?.responseTimeout });
-        expect(mocked(Gui.errorMessage)).toBeCalledWith("Data set failed to save. Data set may have been deleted or renamed on mainframe.");
+        expect(dataSetSpy).toHaveBeenCalledWith("HLQ.TEST.AFILE", { responseTimeout: blockMocks.imperativeProfile.profile?.responseTimeout });
+        expect(mocked(Gui.errorMessage)).toHaveBeenCalledWith("Data set failed to save. Data set may have been deleted or renamed on mainframe.");
     });
     it("Checking common dataset saving", async () => {
         globals.defineGlobals("");
@@ -1237,9 +1246,9 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
 
         await dsActions.saveFile(testDocument, blockMocks.testDatasetTree);
 
-        expect(mocked(sharedUtils.concatChildNodes)).toBeCalled();
+        expect(mocked(sharedUtils.concatChildNodes)).toHaveBeenCalled();
         expect(mockSetEtag).toHaveBeenCalledWith("123");
-        expect(mocked(globalMocks.statusBarMsgSpy)).toBeCalledWith("success", globals.STATUS_BAR_TIMEOUT_MS);
+        expect(mocked(globalMocks.statusBarMsgSpy)).toHaveBeenCalledWith("success", globals.STATUS_BAR_TIMEOUT_MS);
     });
     it("Checking common dataset failed saving attempt", async () => {
         globals.defineGlobals("");
@@ -1281,8 +1290,8 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
 
         await dsActions.saveFile(testDocument, blockMocks.testDatasetTree);
 
-        expect(mocked(sharedUtils.concatChildNodes)).toBeCalled();
-        expect(mocked(Gui.errorMessage)).toBeCalledWith("failed");
+        expect(mocked(sharedUtils.concatChildNodes)).toHaveBeenCalled();
+        expect(mocked(Gui.errorMessage)).toHaveBeenCalledWith("failed");
         expect(mocked(vscode.workspace.applyEdit)).toHaveBeenCalledTimes(2);
     });
     it("Checking favorite dataset saving", async () => {
@@ -1335,8 +1344,8 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
 
         await dsActions.saveFile(testDocument, blockMocks.testDatasetTree);
 
-        expect(mocked(sharedUtils.concatChildNodes)).toBeCalled();
-        expect(mocked(globalMocks.statusBarMsgSpy)).toBeCalledWith("success", globals.STATUS_BAR_TIMEOUT_MS);
+        expect(mocked(sharedUtils.concatChildNodes)).toHaveBeenCalled();
+        expect(mocked(globalMocks.statusBarMsgSpy)).toHaveBeenCalledWith("success", globals.STATUS_BAR_TIMEOUT_MS);
     });
     it("Checking favorite PDS Member saving", async () => {
         globals.defineGlobals("");
@@ -1411,10 +1420,10 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
 
         await dsActions.saveFile(testDocument, blockMocks.testDatasetTree);
 
-        expect(mocked(sharedUtils.concatChildNodes)).toBeCalled();
+        expect(mocked(sharedUtils.concatChildNodes)).toHaveBeenCalled();
         expect(mockSetEtag).toHaveBeenCalledWith("123");
-        expect(mocked(globalMocks.statusBarMsgSpy)).toBeCalledWith("success", globals.STATUS_BAR_TIMEOUT_MS);
-        expect(blockMocks.profileInstance.loadNamedProfile).toBeCalledWith(blockMocks.imperativeProfile.name);
+        expect(mocked(globalMocks.statusBarMsgSpy)).toHaveBeenCalledWith("success", globals.STATUS_BAR_TIMEOUT_MS);
+        expect(blockMocks.profileInstance.loadNamedProfile).toHaveBeenCalledWith(blockMocks.imperativeProfile.name);
     });
     it("Checking common dataset failed saving attempt due to incorrect document path", async () => {
         globals.defineGlobals("");
@@ -1436,8 +1445,8 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
 
         await dsActions.saveFile(testDocument, blockMocks.testDatasetTree);
 
-        expect(mocked(zowe.List.dataSet)).not.toBeCalled();
-        expect(mocked(zowe.Upload.pathToDataSet)).not.toBeCalled();
+        expect(mocked(zowe.List.dataSet)).not.toHaveBeenCalled();
+        expect(mocked(zowe.Upload.pathToDataSet)).not.toHaveBeenCalled();
     });
     it("Checking PDS member saving attempt", async () => {
         globals.defineGlobals("");
@@ -1479,8 +1488,8 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
 
         await dsActions.saveFile(testDocument, blockMocks.testDatasetTree);
 
-        expect(mocked(sharedUtils.concatChildNodes)).toBeCalled();
-        expect(mocked(Gui.setStatusBarMessage)).toBeCalledWith("success", globals.STATUS_BAR_TIMEOUT_MS);
+        expect(mocked(sharedUtils.concatChildNodes)).toHaveBeenCalled();
+        expect(mocked(Gui.setStatusBarMessage)).toHaveBeenCalledWith("success", globals.STATUS_BAR_TIMEOUT_MS);
     });
     it("Checking common dataset saving failed due to conflict with server version", async () => {
         globals.defineGlobals("");
@@ -1536,9 +1545,9 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
 
         await dsActions.saveFile(testDocument, blockMocks.testDatasetTree);
 
-        expect(logSpy).toBeCalledWith("Remote file has changed. Presenting with way to resolve file.");
-        expect(mocked(sharedUtils.concatChildNodes)).toBeCalled();
-        expect(commandSpy).toBeCalledWith("workbench.files.action.compareWithSaved");
+        expect(logSpy).toHaveBeenCalledWith("Remote file has changed. Presenting with way to resolve file.");
+        expect(mocked(sharedUtils.concatChildNodes)).toHaveBeenCalled();
+        expect(commandSpy).toHaveBeenCalledWith("workbench.files.action.compareWithSaved");
         logSpy.mockClear();
         commandSpy.mockClear();
     });
@@ -1598,9 +1607,9 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
 
         await dsActions.saveFile(testDocument, blockMocks.testDatasetTree);
 
-        expect(logSpy).toBeCalledWith("Remote file has changed. Presenting with way to resolve file.");
-        expect(mocked(sharedUtils.concatChildNodes)).toBeCalled();
-        expect(commandSpy).toBeCalledWith("workbench.files.action.compareWithSaved");
+        expect(logSpy).toHaveBeenCalledWith("Remote file has changed. Presenting with way to resolve file.");
+        expect(mocked(sharedUtils.concatChildNodes)).toHaveBeenCalled();
+        expect(commandSpy).toHaveBeenCalledWith("workbench.files.action.compareWithSaved");
         logSpy.mockClear();
         commandSpy.mockClear();
     });
@@ -1662,8 +1671,8 @@ describe("Dataset Actions Unit Tests - Function showAttributes", () => {
 
         await dsActions.showAttributes(node, blockMocks.testDatasetTree);
 
-        expect(datasetListSpy).toBeCalledWith(node.label.toString(), { attributes: true });
-        expect(mocked(vscode.window.createWebviewPanel)).toBeCalled();
+        expect(datasetListSpy).toHaveBeenCalledWith(node.label.toString(), { attributes: true });
+        expect(mocked(vscode.window.createWebviewPanel)).toHaveBeenCalled();
     });
 
     it("Checking PS dataset member attributes showing", async () => {
@@ -1696,11 +1705,11 @@ describe("Dataset Actions Unit Tests - Function showAttributes", () => {
 
         await dsActions.showAttributes(nodeMember, blockMocks.testDatasetTree);
 
-        expect(allMembersSpy).toBeCalledWith(node.label.toString().toUpperCase(), {
+        expect(allMembersSpy).toHaveBeenCalledWith(node.label.toString().toUpperCase(), {
             attributes: true,
             pattern: nodeMember.label.toString().toUpperCase(),
         });
-        expect(mocked(vscode.window.createWebviewPanel)).toBeCalled();
+        expect(mocked(vscode.window.createWebviewPanel)).toHaveBeenCalled();
     });
 
     it("Checking PS dataset attributes showing with Unverified Profile", async () => {
@@ -1738,8 +1747,8 @@ describe("Dataset Actions Unit Tests - Function showAttributes", () => {
 
         await dsActions.showAttributes(node, blockMocks.testDatasetTree);
 
-        expect(datasetListSpy).toBeCalledWith(node.label.toString(), { attributes: true });
-        expect(mocked(vscode.window.createWebviewPanel)).toBeCalled();
+        expect(datasetListSpy).toHaveBeenCalledWith(node.label.toString(), { attributes: true });
+        expect(mocked(vscode.window.createWebviewPanel)).toHaveBeenCalled();
     });
     it("Checking PDS dataset attributes showing", async () => {
         globals.defineGlobals("");
@@ -1769,8 +1778,8 @@ describe("Dataset Actions Unit Tests - Function showAttributes", () => {
 
         await dsActions.showAttributes(node, blockMocks.testDatasetTree);
 
-        expect(datasetListSpy).toBeCalledWith(node.label.toString(), { attributes: true });
-        expect(mocked(vscode.window.createWebviewPanel)).toBeCalled();
+        expect(datasetListSpy).toHaveBeenCalledWith(node.label.toString(), { attributes: true });
+        expect(mocked(vscode.window.createWebviewPanel)).toHaveBeenCalled();
     });
     it("Checking Favorite PS dataset attributes showing", async () => {
         globals.defineGlobals("");
@@ -1801,8 +1810,8 @@ describe("Dataset Actions Unit Tests - Function showAttributes", () => {
 
         await dsActions.showAttributes(node, blockMocks.testDatasetTree);
 
-        expect(datasetListSpy).toBeCalledWith(normalisedLabel, { attributes: true });
-        expect(mocked(vscode.window.createWebviewPanel)).toBeCalled();
+        expect(datasetListSpy).toHaveBeenCalledWith(normalisedLabel, { attributes: true });
+        expect(mocked(vscode.window.createWebviewPanel)).toHaveBeenCalled();
     });
     it("Checking Favorite PDS dataset attributes showing", async () => {
         globals.defineGlobals("");
@@ -1833,8 +1842,8 @@ describe("Dataset Actions Unit Tests - Function showAttributes", () => {
 
         await dsActions.showAttributes(node, blockMocks.testDatasetTree);
 
-        expect(datasetListSpy).toBeCalledWith(normalisedLabel, { attributes: true });
-        expect(mocked(vscode.window.createWebviewPanel)).toBeCalled();
+        expect(datasetListSpy).toHaveBeenCalledWith(normalisedLabel, { attributes: true });
+        expect(mocked(vscode.window.createWebviewPanel)).toHaveBeenCalled();
     });
     it("Checking failed attempt of dataset attributes showing (empty response)", async () => {
         globals.defineGlobals("");
@@ -1865,10 +1874,10 @@ describe("Dataset Actions Unit Tests - Function showAttributes", () => {
         await expect(dsActions.showAttributes(node, blockMocks.testDatasetTree)).rejects.toEqual(
             Error("No matching names found for query: AUSER.A1557332.A996850.TEST1")
         );
-        expect(mocked(Gui.errorMessage)).toBeCalledWith(
+        expect(mocked(Gui.errorMessage)).toHaveBeenCalledWith(
             "Unable to list attributes. Error: No matching names found for query: AUSER.A1557332.A996850.TEST1"
         );
-        expect(mocked(vscode.window.createWebviewPanel)).not.toBeCalled();
+        expect(mocked(vscode.window.createWebviewPanel)).not.toHaveBeenCalled();
     });
 });
 
@@ -1969,7 +1978,7 @@ describe("Dataset Actions Unit Tests - Function copyDataSets", () => {
         const copySpy = jest.spyOn(dsActions, "copyPartitionedDatasets");
         copySpy.mockResolvedValue(undefined);
         await dsActions.copyDataSets(blockMocks.pdsSessionNode, null, blockMocks.testDatasetTree);
-        expect(selectedNodeSpy).toBeCalledWith(blockMocks.pdsSessionNode, null);
+        expect(selectedNodeSpy).toHaveBeenCalledWith(blockMocks.pdsSessionNode, null);
     });
     it("Checking copy the label of a favorite dataset member to the clipboard", async () => {
         globals.defineGlobals("");
@@ -2209,7 +2218,7 @@ describe("Dataset Actions Unit Tests - Function copyDataSets", () => {
         vscode.env.clipboard.writeText("");
         const errSpy = jest.spyOn(Gui, "errorMessage");
         await expect(dsActions.pasteDataSetMembers(blockMocks.testDatasetTree, blockMocks.datasetSessionNode)).toEqual(Promise.resolve());
-        expect(errSpy).toBeCalled();
+        expect(errSpy).toHaveBeenCalled();
     });
     it("Testing pasteDataSetMembers() fails and gives error message with empty clipboard", async () => {
         globals.defineGlobals("");
@@ -2224,7 +2233,7 @@ describe("Dataset Actions Unit Tests - Function copyDataSets", () => {
         });
         const errSpy = jest.spyOn(Gui, "errorMessage");
         await expect(dsActions.pasteDataSetMembers(blockMocks.testDatasetTree, node)).toEqual(Promise.resolve());
-        expect(errSpy).toBeCalled();
+        expect(errSpy).toHaveBeenCalled();
     });
     it("Testing pasteDataSetMembers() succesfully runs pasteMember()", async () => {
         globals.defineGlobals("");
@@ -2307,7 +2316,7 @@ describe("Dataset Actions Unit Tests - Function copyDataSets", () => {
             /* Do nothing */
         }
 
-        expect(mocked(Gui.errorMessage)).toBeCalledWith("Invalid data set or member.");
+        expect(mocked(Gui.errorMessage)).toHaveBeenCalledWith("Invalid data set or member.");
     });
 
     it("Testing downloadDs() called with a member", async () => {
@@ -2331,7 +2340,7 @@ describe("Dataset Actions Unit Tests - Function copyDataSets", () => {
         const label = node.getParent().getLabel().toString() + "(" + node.getLabel().toString() + ")";
         const filePathSpy = jest.spyOn(sharedUtils, "getDocumentFilePath");
         await dsActions.downloadDs(node, true);
-        expect(filePathSpy).toBeCalledWith(label, node);
+        expect(filePathSpy).toHaveBeenCalledWith(label, node);
     });
 
     it("Testing refreshDataset() error handling", async () => {
@@ -2519,7 +2528,7 @@ describe("Dataset Actions Unit Tests - Function pasteMember", () => {
         clipboard.writeText("INVALID");
 
         await expect(dsActions.pasteMember(node, blockMocks.testDatasetTree)).rejects.toEqual(Error("Invalid paste. Copy data set(s) first."));
-        expect(copySpy).not.toBeCalled();
+        expect(copySpy).not.toHaveBeenCalled();
     });
     it("Should not call zowe.Copy.dataSet when pasting to partitioned data set with no member name", async () => {
         globals.defineGlobals("");
@@ -2545,7 +2554,7 @@ describe("Dataset Actions Unit Tests - Function pasteMember", () => {
         clipboard.writeText(JSON.stringify({ dataSetName: "HLQ.TEST.BEFORE.NODE", profileName: "sestest" }));
 
         await dsActions.pasteMember(node, blockMocks.testDatasetTree);
-        expect(copySpy).not.toBeCalled();
+        expect(copySpy).not.toHaveBeenCalled();
     });
     it("Should call zowe.Copy.dataSet when pasting to partitioned data set", async () => {
         globals.defineGlobals("");
@@ -2617,7 +2626,7 @@ describe("Dataset Actions Unit Tests - Function pasteMember", () => {
         await dsActions.pasteMember(node, blockMocks.testDatasetTree);
 
         expect(mocked(Gui.showMessage)).toHaveBeenCalled();
-        expect(copySpy).not.toBeCalled();
+        expect(copySpy).not.toHaveBeenCalled();
     });
     it("Should call zowe.Copy.dataSet when pasting to a favorited partitioned data set", async () => {
         globals.defineGlobals("");
@@ -3347,8 +3356,8 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
             primary: 1,
             recfm: "FB",
         });
-        expect(templateSpy).toBeCalled();
-        expect(addTempSpy).toBeCalled();
+        expect(templateSpy).toHaveBeenCalled();
+        expect(addTempSpy).toHaveBeenCalled();
         templateSpy.mockClear();
         addTempSpy.mockClear();
     });
@@ -3401,8 +3410,8 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
             primary: 1,
             recfm: "FB",
         });
-        expect(templateSpy).toBeCalled();
-        expect(addTempSpy).toBeCalledTimes(0);
+        expect(templateSpy).toHaveBeenCalled();
+        expect(addTempSpy).toHaveBeenCalledTimes(0);
         templateSpy.mockClear();
         addTempSpy.mockClear();
     });
@@ -3469,7 +3478,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         node.contextValue = globals.DS_DS_CONTEXT;
         await dsActions.createFile(node, blockMocks.testDatasetTree);
 
-        expect(createDataSetSpy).toBeCalledWith("Operation Cancelled");
+        expect(createDataSetSpy).toHaveBeenCalledWith("Operation Cancelled");
     });
     it("Checking opCancelled message shown when no ds type chosen", async () => {
         createGlobalMocks();
@@ -3493,7 +3502,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         const createDataSetSpy = jest.spyOn(Gui, "showMessage");
         await dsActions.createFile(node, blockMocks.testDatasetTree);
 
-        expect(createDataSetSpy).toBeCalledWith("Operation Cancelled");
+        expect(createDataSetSpy).toHaveBeenCalledWith("Operation Cancelled");
     });
     it("Checking opCancelled message shown when user escapes allocate or edit attributes options", async () => {
         createGlobalMocks();
@@ -3518,7 +3527,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         const createDataSetSpy = jest.spyOn(Gui, "showMessage");
         await dsActions.createFile(node, blockMocks.testDatasetTree);
 
-        expect(createDataSetSpy).toBeCalledWith("Operation Cancelled");
+        expect(createDataSetSpy).toHaveBeenCalledWith("Operation Cancelled");
     });
     it("Checking opCancelled message shown when user escapes during edit attributes", async () => {
         createGlobalMocks();
@@ -3547,7 +3556,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         const createDataSetSpy = jest.spyOn(Gui, "showMessage");
         await dsActions.createFile(node, blockMocks.testDatasetTree);
 
-        expect(createDataSetSpy).toBeCalledWith("Operation Cancelled");
+        expect(createDataSetSpy).toHaveBeenCalledWith("Operation Cancelled");
     });
     it("Checking opCancelled message shown when no template name supplied", async () => {
         createGlobalMocks();
@@ -3592,9 +3601,9 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         const addTempSpy = jest.spyOn(blockMocks.testDatasetTree, "addDsTemplate");
         await dsActions.createFile(node, blockMocks.testDatasetTree);
 
-        expect(templateSpy).toBeCalled();
-        expect(addTempSpy).toBeCalledTimes(0);
-        expect(opCancelledSpy).toBeCalledWith("Operation Cancelled");
+        expect(templateSpy).toHaveBeenCalled();
+        expect(addTempSpy).toHaveBeenCalledTimes(0);
+        expect(opCancelledSpy).toHaveBeenCalledWith("Operation Cancelled");
         templateSpy.mockClear();
         addTempSpy.mockClear();
     });

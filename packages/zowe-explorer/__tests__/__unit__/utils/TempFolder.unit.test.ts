@@ -65,10 +65,10 @@ describe("TempFolder Unit Tests", () => {
         jest.spyOn(fs, "existsSync").mockReturnValue(true);
         const moveSyncSpy = jest.spyOn(fsExtra, "moveSync");
         await expect(TempFolder.moveTempFolder("testpath12", "testpath123")).resolves.toEqual(undefined);
-        expect(moveSyncSpy).toBeCalledTimes(1);
+        expect(moveSyncSpy).toHaveBeenCalledTimes(1);
         const expectedPath1 = process.platform === "win32" ? blockMocks.winPath : blockMocks.unixPath.split(path.sep).join(path.posix.sep);
         const expectedPath2 = process.platform === "win32" ? blockMocks.winPath2 : blockMocks.unixPath2.split(path.sep).join(path.posix.sep);
-        expect(moveSyncSpy).toBeCalledWith(expectedPath1, expectedPath2, { overwrite: true });
+        expect(moveSyncSpy).toHaveBeenCalledWith(expectedPath1, expectedPath2, { overwrite: true });
     });
 
     it("moveTempFolder should catch the error upon running moveSync", async () => {
@@ -80,8 +80,8 @@ describe("TempFolder Unit Tests", () => {
         });
         const errorMessageSpy = jest.spyOn(Gui, "errorMessage").mockImplementation();
         await expect(TempFolder.moveTempFolder("testpath32", "testpath123")).resolves.toEqual(undefined);
-        expect(errorMessageSpy).toBeCalledTimes(1);
-        expect(ZoweLogger.error).toBeCalledTimes(1);
+        expect(errorMessageSpy).toHaveBeenCalledTimes(1);
+        expect(ZoweLogger.error).toHaveBeenCalledTimes(1);
     });
 
     it("moveTempFolder should throw errors when a filesystem exception occurs", async () => {
@@ -126,13 +126,13 @@ describe("TempFolder Unit Tests", () => {
         } as any);
 
         TempFolder.cleanDir("./sampleDir");
-        expect(readdirSyncSpy).toBeCalledTimes(1);
+        expect(readdirSyncSpy).toHaveBeenCalledTimes(1);
     });
 
     it("hideTempFolder should hide local directory from workspace", async () => {
         jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(true);
         const setDirectValueSpy = jest.spyOn(SettingsConfig, "setDirectValue").mockImplementation();
         await expect(TempFolder.hideTempFolder("test")).resolves.not.toThrow();
-        expect(setDirectValueSpy).toBeCalledTimes(1);
+        expect(setDirectValueSpy).toHaveBeenCalledTimes(1);
     });
 });

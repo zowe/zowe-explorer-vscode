@@ -195,7 +195,7 @@ describe("ZoweJobNode unit tests - Function editSession", () => {
         const spy = jest.spyOn(ZoweLogger, "trace");
         await blockMocks.testJobsProvider.editSession(blockMocks.jobNode, globalMocks.testUSSTree);
         expect(globalMocks.mockEditSession).toHaveBeenCalled();
-        expect(spy).toBeCalled();
+        expect(spy).toHaveBeenCalled();
         spy.mockClear();
     });
     it("Tests that the session is edited and added to only the specific tree modified", async () => {
@@ -213,7 +213,7 @@ describe("ZoweJobNode unit tests - Function editSession", () => {
         blockMocks.jobNode.contextValue = globals.JOBS_SESSION_CONTEXT;
         await blockMocks.testJobsProvider.editSession(blockMocks.jobNode, globalMocks.testUSSTree);
         expect(globalMocks.mockEditSession).toHaveBeenCalled();
-        expect(deleteSessionForProviderSpy).toBeCalledWith(blockMocks.jobNode, mockJobProvider);
+        expect(deleteSessionForProviderSpy).toHaveBeenCalledWith(blockMocks.jobNode, mockJobProvider);
     });
 });
 
@@ -223,7 +223,7 @@ describe("Tree Provider unit tests, function getTreeItem", () => {
         const spy = jest.spyOn(ZoweLogger, "trace");
         const sampleElement = new ZoweUSSNode({ label: "/u/myUser", collapsibleState: vscode.TreeItemCollapsibleState.None });
         expect(globalMocks.testUSSTree.getTreeItem(sampleElement)).toBeInstanceOf(vscode.TreeItem);
-        expect(spy).toBeCalled();
+        expect(spy).toHaveBeenCalled();
         spy.mockClear();
     });
 });
@@ -237,7 +237,7 @@ describe("Tree Provider unit tests, function getParent", () => {
         const parent = globalMocks.testUSSTree.getParent(rootChildren[1]);
 
         expect(parent).toBeUndefined();
-        expect(spy).toBeCalled();
+        expect(spy).toHaveBeenCalled();
         spy.mockClear();
     });
 
@@ -294,7 +294,7 @@ describe("Tree Provider unit tests, function getTreeItem", () => {
         // Testing flipState to closed
         await globalMocks.testUSSTree.flipState(folder, false);
         expect(JSON.stringify(folder.iconPath)).toContain("folder-closed.svg");
-        expect(spy).toBeCalled();
+        expect(spy).toHaveBeenCalled();
         spy.mockClear();
     });
 });
@@ -372,7 +372,7 @@ describe("Tree Provider Unit Tests - refreshHomeProfileContext", () => {
         const spy = jest.spyOn(ZoweLogger, "trace");
         await expect(globalMocks.testUSSTree.refreshHomeProfileContext(globalMocks.testUSSNode)).resolves.not.toThrow();
         expect(globalMocks.testUSSNode.contextValue).toEqual("directory_home");
-        expect(spy).toBeCalled();
+        expect(spy).toHaveBeenCalled();
         spy.mockClear();
     });
 });
@@ -382,7 +382,7 @@ describe("Tree Provider Unit Tests - function getTreeType", () => {
         const globalMocks = await createGlobalMocks();
         const spy = jest.spyOn(ZoweLogger, "trace");
         expect(globalMocks.testUSSTree.getTreeType()).toEqual(globalMocks.testUSSTree.persistenceSchema);
-        expect(spy).toBeCalled();
+        expect(spy).toHaveBeenCalled();
         spy.mockClear();
     });
 });
@@ -392,7 +392,7 @@ describe("Tree Provider Unit Tests - function findNonFavoritedNode", () => {
         const globalMocks = await createGlobalMocks();
         const spy = jest.spyOn(ZoweLogger, "trace");
         expect(globalMocks.testTreeProvider.findNonFavoritedNode(globalMocks.testUSSNode)).toEqual(undefined);
-        expect(spy).toBeCalled();
+        expect(spy).toHaveBeenCalled();
         spy.mockClear();
     });
 });
@@ -402,7 +402,7 @@ describe("Tree Provider Unit Tests - function findFavoritedNode", () => {
         const globalMocks = await createGlobalMocks();
         const spy = jest.spyOn(ZoweLogger, "trace");
         expect(globalMocks.testTreeProvider.findFavoritedNode(globalMocks.testUSSNode)).toEqual(undefined);
-        expect(spy).toBeCalled();
+        expect(spy).toHaveBeenCalled();
         spy.mockClear();
     });
 });
@@ -412,7 +412,7 @@ describe("Tree Provider Unit Tests - function renameFavorite", () => {
         const globalMocks = await createGlobalMocks();
         const spy = jest.spyOn(ZoweLogger, "trace");
         expect(globalMocks.testTreeProvider.renameFavorite(globalMocks.testUSSNode, "test")).toEqual(undefined);
-        expect(spy).toBeCalled();
+        expect(spy).toHaveBeenCalled();
         spy.mockClear();
     });
 });
@@ -422,7 +422,7 @@ describe("Tree Provider Unit Tests - function renameNode", () => {
         const globalMocks = await createGlobalMocks();
         const spy = jest.spyOn(ZoweLogger, "trace");
         expect(globalMocks.testTreeProvider.renameNode("test", "test1", "test2")).toEqual(undefined);
-        expect(spy).toBeCalled();
+        expect(spy).toHaveBeenCalled();
         spy.mockClear();
     });
 });
@@ -544,9 +544,9 @@ describe("Tree Provider Unit Tests - function loadProfileByPersistedProfile", ()
         const zoweLoggerWarnSpy = jest.spyOn(ZoweLogger, "warn");
 
         await expect(ZoweTreeProvider.prototype["loadProfileByPersistedProfile"](globalMocks.testDSTree, "zosmf", true)).resolves.not.toThrow();
-        expect(globalMocks.testDSTree.addSingleSession).toBeCalledTimes(1);
-        expect(resetValidationSettingsSpy).toBeCalledTimes(2);
-        expect(zoweLoggerWarnSpy).toBeCalledTimes(0);
+        expect(globalMocks.testDSTree.addSingleSession).toHaveBeenCalledTimes(1);
+        expect(resetValidationSettingsSpy).toHaveBeenCalledTimes(2);
+        expect(zoweLoggerWarnSpy).toHaveBeenCalledTimes(0);
         resetValidationSettingsSpy.mockClear();
         zoweLoggerWarnSpy.mockClear();
     });
@@ -567,9 +567,9 @@ describe("Tree Provider Unit Tests - function loadProfileByPersistedProfile", ()
         const zoweLoggerWarnSpy = jest.spyOn(ZoweLogger, "warn");
 
         await expect(ZoweTreeProvider.prototype["loadProfileByPersistedProfile"](globalMocks.testDSTree, "zosmf", true)).resolves.not.toThrow();
-        expect(globalMocks.testDSTree.addSingleSession).toBeCalledTimes(2);
-        expect(resetValidationSettingsSpy).toBeCalled();
-        expect(zoweLoggerWarnSpy).toBeCalledTimes(1);
+        expect(globalMocks.testDSTree.addSingleSession).toHaveBeenCalledTimes(2);
+        expect(resetValidationSettingsSpy).toHaveBeenCalled();
+        expect(zoweLoggerWarnSpy).toHaveBeenCalledTimes(1);
         resetValidationSettingsSpy.mockClear();
         zoweLoggerWarnSpy.mockClear();
     });

@@ -2,7 +2,7 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
-## TBD Release
+## `3.0.0-next.202402142205`
 
 ### New features and enhancements
 
@@ -11,6 +11,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Removal of Theia support. [#2647](https://github.com/zowe/vscode-extension-for-zowe/issues/2647)
 
 ### Bug fixes
+
+- Updated dependencies for technical currency purposes.
 
 ## `3.0.0-next.202402071248`
 

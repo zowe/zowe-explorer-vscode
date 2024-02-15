@@ -25,6 +25,6 @@ describe("Globals Unit Tests", () => {
         const loggerInfoSpy = jest.spyOn(ZoweLogger, "info");
         await expect(globals.setGlobalSecurityValue()).resolves.not.toThrow();
         expect(globals.PROFILE_SECURITY).toBe(globals.ZOWE_CLI_SCM);
-        expect(loggerInfoSpy).toBeCalledTimes(1);
+        expect(loggerInfoSpy).toHaveBeenCalledTimes(1);
     });
 });

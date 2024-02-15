@@ -381,7 +381,7 @@ describe("USSTree Unit Tests - Function removeFavorite", () => {
 
         // Actual test
         await globalMocks.testTree.removeFavorite(blockMocks.testDir);
-        expect(removeFavProfileSpy).not.toBeCalled();
+        expect(removeFavProfileSpy).not.toHaveBeenCalled();
         expect(profileNodeInFavs.children[0].fullPath).toEqual(testDir2.fullPath);
     });
     it("Tests that removeFavorite() works properly when starting with only one favorite for the profile", async () => {
@@ -432,7 +432,7 @@ describe("USSTree Unit Tests - Function removeFavProfile", () => {
         // Check that favorite is removed from UI
         expect(globalMocks.testTree.mFavorites.length).toEqual(0);
         // Check that favorite is removed from settings file
-        expect(updateFavoritesSpy).toBeCalledTimes(1);
+        expect(updateFavoritesSpy).toHaveBeenCalledTimes(1);
     });
     it("Tests that removeFavProfile leaves profile node in Favorites when user cancels", async () => {
         const globalMocks = await createGlobalMocks();
@@ -560,7 +560,7 @@ describe("USSTree Unit Tests - Function filterPrompt", () => {
 
         await globalMocks.testTree.filterPrompt(globalMocks.testTree.mSessionNodes[1]);
 
-        expect(syncSessionNodeSpy).toBeCalledTimes(1);
+        expect(syncSessionNodeSpy).toHaveBeenCalledTimes(1);
     });
 
     it("Tests that filter() works properly when user enters path with Unverified profile", async () => {
@@ -795,8 +795,8 @@ describe("USSTree Unit Tests - Function renameUSSNode", () => {
 
         await globalMocks.testTree.renameUSSNode(ussNode, "/u/myuser/renamed");
 
-        expect(renameSpy).toBeCalledTimes(1);
-        expect(renameSpy).toBeCalledWith("/u/myuser/renamed");
+        expect(renameSpy).toHaveBeenCalledTimes(1);
+        expect(renameSpy).toHaveBeenCalledWith("/u/myuser/renamed");
     });
 });
 
@@ -816,8 +816,8 @@ describe("USSTree Unit Tests - Function renameFavorite", () => {
 
         await globalMocks.testTree.renameFavorite(ussFavNode, "/u/myuser/renamed");
 
-        expect(renameSpy).toBeCalledTimes(1);
-        expect(renameSpy).toBeCalledWith("/u/myuser/renamed");
+        expect(renameSpy).toHaveBeenCalledTimes(1);
+        expect(renameSpy).toHaveBeenCalledWith("/u/myuser/renamed");
     });
 });
 
@@ -1145,7 +1145,7 @@ describe("USSTree Unit Tests - Function openItemFromPath", () => {
         const fileHistorySpy = jest.spyOn(globalMocks.testTree, "removeFileHistory");
 
         await globalMocks.testTree.openItemFromPath("/d.txt", globalMocks.testTree.mSessionNodes[1]);
-        expect(fileHistorySpy).toBeCalledWith("[sestest]: /d.txt");
+        expect(fileHistorySpy).toHaveBeenCalledWith("[sestest]: /d.txt");
     });
 });
 
@@ -1428,7 +1428,7 @@ describe("USSTree Unit Tests - Function loadProfilesForFavorites", () => {
         });
         mocked(vscode.window.showErrorMessage).mockResolvedValueOnce({ title: "Remove" });
         await globalMocks.testTree.loadProfilesForFavorites(blockMocks.log, favProfileNode);
-        expect(showErrorMessageSpy).toBeCalledTimes(1);
+        expect(showErrorMessageSpy).toHaveBeenCalledTimes(1);
         showErrorMessageSpy.mockClear();
     });
     it("Tests that favorite nodes with pre-existing profile/session values continue using those values", async () => {

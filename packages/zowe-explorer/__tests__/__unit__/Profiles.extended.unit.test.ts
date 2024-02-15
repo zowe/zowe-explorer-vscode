@@ -276,9 +276,9 @@ describe("Profiles Unit Tests - Function createZoweSession", () => {
         const spy = jest.spyOn(Gui, "createQuickPick");
         jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(undefined);
         await Profiles.getInstance().createZoweSession(blockMocks.testDatasetTree);
-        expect(spy).toBeCalled();
+        expect(spy).toHaveBeenCalled();
         expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Profile selection has been cancelled.");
-        expect(ZoweLogger.debug).toBeCalledWith("Profile selection has been cancelled.");
+        expect(ZoweLogger.debug).toHaveBeenCalledWith("Profile selection has been cancelled.");
         spy.mockClear();
     });
 
@@ -295,7 +295,7 @@ describe("Profiles Unit Tests - Function createZoweSession", () => {
         jest.spyOn(Gui, "showInputBox").mockResolvedValue("test");
 
         await expect(Profiles.getInstance().createZoweSession(globalMocks.testUSSTree)).resolves.not.toThrow();
-        expect(spyConfig).toBeCalled();
+        expect(spyConfig).toHaveBeenCalled();
         spyConfig.mockClear();
     });
 
@@ -309,8 +309,8 @@ describe("Profiles Unit Tests - Function createZoweSession", () => {
         jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(new utils.FilterDescriptor("Test"));
         jest.spyOn(Profiles.getInstance(), "getProfileInfo").mockRejectedValueOnce(new Error("test error"));
         await expect(Profiles.getInstance().createZoweSession(globalMocks.testUSSTree)).resolves.not.toThrow();
-        expect(ZoweLogger.warn).toBeCalledTimes(1);
-        expect(ZoweLogger.warn).toBeCalledWith(Error("test error"));
+        expect(ZoweLogger.warn).toHaveBeenCalledTimes(1);
+        expect(ZoweLogger.warn).toHaveBeenCalledWith(Error("test error"));
     });
 });
 
@@ -321,7 +321,7 @@ describe("Profiles Unit Tests - Function editZoweConfigFile", () => {
         const spy = jest.spyOn(Gui, "showQuickPick");
         spy.mockResolvedValueOnce(undefined);
         await Profiles.getInstance().editZoweConfigFile();
-        expect(spy).toBeCalled();
+        expect(spy).toHaveBeenCalled();
         expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
         spy.mockClear();
     });
@@ -332,8 +332,8 @@ describe("Profiles Unit Tests - Function editZoweConfigFile", () => {
         spyQuickPick.mockResolvedValueOnce("Global: in the Zowe home directory" as any);
         const spyOpenFile = jest.spyOn(globalMocks.mockProfileInstance, "openConfigFile");
         await Profiles.getInstance().editZoweConfigFile();
-        expect(spyQuickPick).toBeCalled();
-        expect(spyOpenFile).toBeCalledWith("file://globalPath/.zowe/zowe.config.json");
+        expect(spyQuickPick).toHaveBeenCalled();
+        expect(spyOpenFile).toHaveBeenCalledWith("file://globalPath/.zowe/zowe.config.json");
         spyQuickPick.mockClear();
         spyOpenFile.mockClear();
     });
@@ -352,7 +352,7 @@ describe("Profiles Unit Tests - Function editZoweConfigFile", () => {
         } as any);
         const spyOpenFile = jest.spyOn(globalMocks.mockProfileInstance, "openConfigFile");
         await Profiles.getInstance().editZoweConfigFile();
-        expect(spyOpenFile).toBeCalledWith("globalPath");
+        expect(spyOpenFile).toHaveBeenCalledWith("globalPath");
         spyOpenFile.mockClear();
     });
     it("Tests that editZoweConfigFile opens correct file when Project is selected", async () => {
@@ -362,8 +362,8 @@ describe("Profiles Unit Tests - Function editZoweConfigFile", () => {
         spyQuickPick.mockResolvedValueOnce("Project: in the current working directory" as any);
         const spyOpenFile = jest.spyOn(globalMocks.mockProfileInstance, "openConfigFile");
         await Profiles.getInstance().editZoweConfigFile();
-        expect(spyQuickPick).toBeCalled();
-        expect(spyOpenFile).toBeCalledWith("file://projectPath/zowe.user.config.json");
+        expect(spyQuickPick).toHaveBeenCalled();
+        expect(spyOpenFile).toHaveBeenCalledWith("file://projectPath/zowe.user.config.json");
         spyQuickPick.mockClear();
         spyOpenFile.mockClear();
     });
@@ -382,7 +382,7 @@ describe("Profiles Unit Tests - Function editZoweConfigFile", () => {
         } as any);
         const spyOpenFile = jest.spyOn(globalMocks.mockProfileInstance, "openConfigFile");
         await Profiles.getInstance().editZoweConfigFile();
-        expect(spyOpenFile).toBeCalledWith("projectPath");
+        expect(spyOpenFile).toHaveBeenCalledWith("projectPath");
         spyOpenFile.mockClear();
     });
 });
@@ -418,7 +418,7 @@ describe("Profiles Unit Tests - Function createZoweSchema", () => {
         const spy = jest.spyOn(Gui, "showQuickPick");
         spy.mockResolvedValueOnce(undefined);
         await Profiles.getInstance().createZoweSchema(blockMocks.testDatasetTree);
-        expect(spy).toBeCalled();
+        expect(spy).toHaveBeenCalled();
         expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Operation Cancelled");
         spy.mockClear();
     });
@@ -435,9 +435,9 @@ describe("Profiles Unit Tests - Function createZoweSchema", () => {
         const spyOpenFile = jest.spyOn(globalMocks.mockProfileInstance, "openConfigFile");
         await Profiles.getInstance().createZoweSchema(blockMocks.testDatasetTree);
 
-        expect(spyQuickPick).toBeCalled();
-        expect(spyInfoMessage).toBeCalled();
-        expect(spyOpenFile).toBeCalled();
+        expect(spyQuickPick).toHaveBeenCalled();
+        expect(spyInfoMessage).toHaveBeenCalled();
+        expect(spyOpenFile).toHaveBeenCalled();
 
         spyQuickPick.mockClear();
         spyLayers.mockClear();
@@ -455,8 +455,8 @@ describe("Profiles Unit Tests - Function createZoweSchema", () => {
         jest.spyOn(Gui, "errorMessage").mockResolvedValueOnce("Show config");
         await Profiles.getInstance().createZoweSchema(blockMocks.testDatasetTree);
 
-        expect(spyQuickPick).toBeCalled();
-        expect(spyZoweConfigError).toBeCalled();
+        expect(spyQuickPick).toHaveBeenCalled();
+        expect(spyZoweConfigError).toHaveBeenCalled();
 
         spyQuickPick.mockClear();
         spyLayers.mockClear();
@@ -508,8 +508,8 @@ describe("Profiles Unit Tests - Function createZoweSchema", () => {
 
         await Profiles.getInstance().createZoweSchema(blockMocks.testDatasetTree);
 
-        expect(spyQuickPick).not.toBeCalled();
-        expect(spyConfig).toBeCalled();
+        expect(spyQuickPick).not.toHaveBeenCalled();
+        expect(spyConfig).toHaveBeenCalled();
 
         spyQuickPick.mockClear();
         spyLayers.mockClear();
@@ -638,7 +638,7 @@ describe("Profiles Unit Tests - function getDeleteProfile", () => {
         });
         const showMessageSpy = jest.spyOn(Gui, "showMessage");
         await expect(privateProfile.getDeleteProfile()).resolves.toEqual(undefined);
-        expect(showMessageSpy).toBeCalledWith("No profiles available");
+        expect(showMessageSpy).toHaveBeenCalledWith("No profiles available");
     });
     it("should show a message saying 'Operation Cancelled'", async () => {
         const privateProfile = Profiles.getInstance() as any;
@@ -666,7 +666,7 @@ describe("Profiles Unit Tests - function getDeleteProfile", () => {
         const showMessageSpy = jest.spyOn(Gui, "showMessage");
         jest.spyOn(Gui, "showQuickPick").mockResolvedValue(undefined);
         await expect(privateProfile.getDeleteProfile()).resolves.toEqual(undefined);
-        expect(showMessageSpy).toBeCalledWith("Operation Cancelled");
+        expect(showMessageSpy).toHaveBeenCalledWith("Operation Cancelled");
     });
 });
 
@@ -761,7 +761,7 @@ describe("Profiles Unit Tests - function validateProfile", () => {
             type: "",
             failNotFound: false,
         });
-        expect(errorHandlingSpy).toBeCalledWith(testError, "test1");
+        expect(errorHandlingSpy).toHaveBeenCalledWith(testError, "test1");
     });
     it("should return an object with profile validation status of 'unverified' from session status if validated profiles doesn't exist", async () => {
         Object.defineProperty(Profiles.getInstance(), "profilesForValidation", {
@@ -1058,7 +1058,7 @@ describe("Profiles Unit Tests - function ssoLogin", () => {
             login: () => "ajshdlfkjshdalfjhas",
         } as never);
         await expect(Profiles.getInstance().ssoLogin(testNode, "fake")).resolves.not.toThrow();
-        expect(ZoweLogger.warn).toBeCalledWith(Error("test error."));
+        expect(ZoweLogger.warn).toHaveBeenCalledWith(Error("test error."));
     });
     it("should catch error during login and log error", async () => {
         jest.spyOn(ZoweExplorerApiRegister.getInstance(), "getCommonApi").mockReturnValueOnce({
@@ -1069,7 +1069,7 @@ describe("Profiles Unit Tests - function ssoLogin", () => {
         } as never);
         jest.spyOn(Profiles.getInstance() as any, "loginCredentialPrompt").mockReturnValue(["fake", "12345"]);
         await expect(Profiles.getInstance().ssoLogin(testNode, "fake")).resolves.not.toThrow();
-        expect(ZoweLogger.error).toBeCalled();
+        expect(ZoweLogger.error).toHaveBeenCalled();
     });
 });
 
@@ -1116,9 +1116,9 @@ describe("Profiles Unit Tests - function ssoLogout", () => {
         }));
         const updateBaseProfileFileLogoutSpy = jest.spyOn(Profiles.getInstance() as any, "updateBaseProfileFileLogout").mockImplementation();
         await expect(Profiles.getInstance().ssoLogout(testNode)).resolves.not.toThrow();
-        expect(getTokenTypeNameMock).toBeCalledTimes(1);
-        expect(logoutMock).toBeCalledTimes(1);
-        expect(updateBaseProfileFileLogoutSpy).toBeCalledTimes(1);
+        expect(getTokenTypeNameMock).toHaveBeenCalledTimes(1);
+        expect(logoutMock).toHaveBeenCalledTimes(1);
+        expect(updateBaseProfileFileLogoutSpy).toHaveBeenCalledTimes(1);
     });
 });
 
@@ -1132,7 +1132,7 @@ describe("Profiles Unit Tests - function updateBaseProfileFileLogin", () => {
             updateProperty: updatePropertyMock,
         });
         await expect(privateProfile.updateBaseProfileFileLogin(globalMocks.testProfile, globalMocks.testProfile.profile)).resolves.not.toThrow();
-        expect(updatePropertyMock).toBeCalledTimes(2);
+        expect(updatePropertyMock).toHaveBeenCalledTimes(2);
     });
 });
 
@@ -1152,7 +1152,7 @@ describe("Profiles Unit Tests - function updateBaseProfileFileLogout", () => {
             updateKnownProperty: updateKnownPropertyMock,
         });
         await expect(privateProfile.updateBaseProfileFileLogout(globalMocks.testProfile, globalMocks.testProfile.profile)).resolves.not.toThrow();
-        expect(updateKnownPropertyMock).toBeCalledTimes(2);
+        expect(updateKnownPropertyMock).toHaveBeenCalledTimes(2);
     });
 });
 
@@ -1205,7 +1205,7 @@ describe("Profiles Unit Tests - function loginCredentialPrompt", () => {
         });
         const showMessageSpy = jest.spyOn(Gui, "showMessage").mockImplementation();
         await expect(privateProfile.loginCredentialPrompt()).resolves.toEqual(undefined);
-        expect(showMessageSpy).toBeCalledTimes(1);
+        expect(showMessageSpy).toHaveBeenCalledTimes(1);
     });
 
     it("should show a gui message if there is not a newUser", async () => {
@@ -1218,7 +1218,7 @@ describe("Profiles Unit Tests - function loginCredentialPrompt", () => {
         });
         const showMessageSpy = jest.spyOn(Gui, "showMessage").mockImplementation();
         await expect(privateProfile.loginCredentialPrompt()).resolves.toEqual(undefined);
-        expect(showMessageSpy).toBeCalledTimes(1);
+        expect(showMessageSpy).toHaveBeenCalledTimes(1);
     });
 });
 
@@ -1275,8 +1275,8 @@ describe("Profiles Unit Tests - function clearFilterFromAllTrees", () => {
         jest.spyOn(TreeProviders, "job", "get").mockReturnValue(mockTreeProvider);
 
         expect(Profiles.getInstance().clearFilterFromAllTrees(testNode));
-        expect(flipStateSpy).toBeCalledTimes(0);
-        expect(refreshElementSpy).toBeCalledTimes(0);
+        expect(flipStateSpy).toHaveBeenCalledTimes(0);
+        expect(refreshElementSpy).toHaveBeenCalledTimes(0);
     });
 
     it("should fail to clear filters if the session node is not listed in the tree", async () => {
@@ -1303,9 +1303,9 @@ describe("Profiles Unit Tests - function clearFilterFromAllTrees", () => {
         jest.spyOn(TreeProviders, "job", "get").mockReturnValue(mockTreeProvider);
 
         expect(Profiles.getInstance().clearFilterFromAllTrees(testNode));
-        expect(flipStateSpy).toBeCalledTimes(0);
-        expect(refreshElementSpy).toBeCalledTimes(0);
-        expect(getProfileSpy).toBeCalledTimes(3);
+        expect(flipStateSpy).toHaveBeenCalledTimes(0);
+        expect(refreshElementSpy).toHaveBeenCalledTimes(0);
+        expect(getProfileSpy).toHaveBeenCalledTimes(3);
     });
 });
 
@@ -1330,7 +1330,7 @@ describe("Profiles Unit Tests - function disableValidation", () => {
         const disableValidationContextSpy = jest.spyOn(Profiles.getInstance(), "disableValidationContext");
         expect(globalMocks.testNode.contextValue).toEqual(globals.DS_SESSION_CONTEXT);
         expect(Profiles.getInstance().disableValidation(globalMocks.testNode)).toEqual(globalMocks.testNode);
-        expect(disableValidationContextSpy).toBeCalledTimes(1);
+        expect(disableValidationContextSpy).toHaveBeenCalledTimes(1);
         expect(globalMocks.testNode.contextValue).toEqual(globals.DS_SESSION_CONTEXT + globals.VALIDATE_SUFFIX);
     });
 });
@@ -1359,7 +1359,7 @@ describe("Profiles Unit Tests - function enableValidation", () => {
         jest.spyOn(TreeProviders, "getSessionForAllTrees").mockReturnValue([globalMocks.testNode]);
         expect(globalMocks.testNode.contextValue).toEqual(globals.DS_SESSION_CONTEXT);
         expect(Profiles.getInstance().enableValidation(globalMocks.testNode)).toEqual(globalMocks.testNode);
-        expect(enableValidationContextSpy).toBeCalledTimes(1);
+        expect(enableValidationContextSpy).toHaveBeenCalledTimes(1);
         expect(globalMocks.testNode.contextValue).toEqual(globals.DS_SESSION_CONTEXT + globals.VALIDATE_SUFFIX);
     });
 });

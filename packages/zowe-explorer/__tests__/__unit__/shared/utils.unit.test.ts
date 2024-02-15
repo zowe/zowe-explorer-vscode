@@ -225,7 +225,7 @@ describe("Test uploadContents", () => {
                 },
             } as any
         );
-        expect(ZoweExplorerApiRegister.getUssApi(null).putContent).toBeCalled();
+        expect(ZoweExplorerApiRegister.getUssApi(null).putContent).toHaveBeenCalled();
     });
 });
 
@@ -293,7 +293,7 @@ describe("Test force upload", () => {
         blockMocks.showInformationMessage.mockResolvedValueOnce("Yes");
         blockMocks.withProgress.mockResolvedValueOnce(blockMocks.fileResponse);
         await sharedUtils.willForceUpload(blockMocks.ussNode, blockMocks.mockDoc, null);
-        expect(blockMocks.withProgress).toBeCalledWith(
+        expect(blockMocks.withProgress).toHaveBeenCalledWith(
             {
                 location: vscode.ProgressLocation.Notification,
                 title: "Saving file...",
@@ -308,7 +308,7 @@ describe("Test force upload", () => {
         blockMocks.showInformationMessage.mockResolvedValueOnce("Yes");
         blockMocks.withProgress.mockResolvedValueOnce(blockMocks.fileResponse);
         await sharedUtils.willForceUpload(blockMocks.dsNode, blockMocks.mockDoc, null);
-        expect(blockMocks.withProgress).toBeCalledWith(
+        expect(blockMocks.withProgress).toHaveBeenCalledWith(
             {
                 location: vscode.ProgressLocation.Notification,
                 title: "Saving Data Set...",
@@ -330,7 +330,7 @@ describe("Test force upload", () => {
         blockMocks.showInformationMessage.mockResolvedValueOnce("Yes");
         blockMocks.withProgress.mockResolvedValueOnce({ ...blockMocks.fileResponse, success: false });
         await sharedUtils.willForceUpload(blockMocks.ussNode, blockMocks.mockDoc, null);
-        expect(blockMocks.withProgress).toBeCalledWith(
+        expect(blockMocks.withProgress).toHaveBeenCalledWith(
             {
                 location: vscode.ProgressLocation.Notification,
                 title: "Saving file...",
@@ -346,7 +346,7 @@ describe("Test force upload", () => {
         const testError = new Error("Task failed successfully");
         blockMocks.withProgress.mockRejectedValueOnce(testError);
         await sharedUtils.willForceUpload(blockMocks.ussNode, blockMocks.mockDoc, null, { name: "fakeProfile" } as any);
-        expect(blockMocks.withProgress).toBeCalledWith(
+        expect(blockMocks.withProgress).toHaveBeenCalledWith(
             {
                 location: vscode.ProgressLocation.Notification,
                 title: "Saving file...",
