@@ -345,7 +345,7 @@ describe("ZoweJobNode unit tests - Function getChildren", () => {
 
         const spoolFiles = await globalMocks.testJobNode.getChildren();
         expect(spoolFiles.length).toBe(1);
-        expect(spoolFiles[0].label).toEqual("STEP:STDOUT - 1");
+        expect(spoolFiles[0].label).toEqual("101 - STEP:STDOUT");
         expect(spoolFiles[0].owner).toEqual("fake");
     });
 
@@ -354,7 +354,7 @@ describe("ZoweJobNode unit tests - Function getChildren", () => {
 
         const spoolFiles = await globalMocks.testJobNode.getChildren();
         expect(spoolFiles.length).toBe(1);
-        expect(spoolFiles[0].label).toEqual("STEP:STDOUT - 1");
+        expect(spoolFiles[0].label).toEqual("101 - STEP:STDOUT");
         expect(spoolFiles[0].owner).toEqual("fake");
 
         jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValueOnce({
@@ -363,7 +363,7 @@ describe("ZoweJobNode unit tests - Function getChildren", () => {
         globalMocks.testJobNode.dirty = true;
         const spoolFilesAfter = await globalMocks.testJobNode.getChildren();
         expect(spoolFilesAfter.length).toBe(1);
-        expect(spoolFilesAfter[0].label).toEqual("STEP:STDOUT - 2");
+        expect(spoolFilesAfter[0].label).toEqual("101 - STEP:STDOUT");
         expect(spoolFilesAfter[0].owner).toEqual("fake");
     });
 
@@ -388,7 +388,7 @@ describe("ZoweJobNode unit tests - Function getChildren", () => {
         globalMocks.testJobNode.session.ISession = globalMocks.testSessionNoCred;
         const spoolFiles = await globalMocks.testJobNode.getChildren();
         expect(spoolFiles.length).toBe(1);
-        expect(spoolFiles[0].label).toEqual("STEP:STDOUT - 1");
+        expect(spoolFiles[0].label).toEqual("101 - STEP:STDOUT");
         expect(spoolFiles[0].owner).toEqual("*");
     });
 
@@ -477,9 +477,40 @@ describe("ZoweJobNode unit tests - Function getChildren", () => {
         jest.spyOn(contextually, "isSession").mockReturnValueOnce(false);
         const spoolFiles = await globalMocks.testJobNode.getChildren();
         expect(spoolFiles.length).toBe(3);
-        expect(spoolFiles[0].label).toBe("JES2:JESMSGLG - 11");
-        expect(spoolFiles[1].label).toBe("JES2:JESJCL - 21");
-        expect(spoolFiles[2].label).toBe("JES2:JESYSMSG - 6");
+        expect(spoolFiles[0].label).toBe("101 - JES2:JESMSGLG");
+        expect(spoolFiles[1].label).toBe("101 - JES2:JESJCL");
+        expect(spoolFiles[2].label).toBe("101 - JES2:JESYSMSG");
+    });
+
+    it("Check that jobs with duplicate DD names do not overwrite each other", async () => {
+        const globalMocks = await createGlobalMocks();
+        const mockSpoolOne = { ...globalMocks.mockIJobFile, stepname: "SOMEJOB", ddname: "TEST", "record-count": 13 };
+        const mockSpoolTwo = { ...globalMocks.mockIJobFile, stepname: "SOMEJOB", ddname: "TEST", "record-count": 5 };
+
+        mockSpoolOne.id = 12;
+        mockSpoolTwo.id = 13;
+
+        globalMocks.testJobsProvider.mSessionNodes[1]._owner = null;
+        globalMocks.testJobsProvider.mSessionNodes[1]._prefix = "*";
+        globalMocks.testJobsProvider.mSessionNodes[1]._searchId = "";
+        globalMocks.testJobNode.session.ISession = globalMocks.testSessionNoCred;
+        jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValueOnce({
+            getSpoolFiles: jest.fn().mockReturnValueOnce([
+                { ...globalMocks.mockIJobFile, stepname: "JES2", ddname: "JESMSGLG", "record-count": 11 },
+                { ...globalMocks.mockIJobFile, stepname: "JES2", ddname: "JESJCL", "record-count": 21 },
+                { ...globalMocks.mockIJobFile, stepname: "JES2", ddname: "JESYSMSG", "record-count": 6 },
+                mockSpoolOne,
+                mockSpoolTwo
+            ]),
+        } as any);
+        jest.spyOn(contextually, "isSession").mockReturnValueOnce(false);
+        const spoolFiles = await globalMocks.testJobNode.getChildren();
+        expect(spoolFiles.length).toBe(5);
+        expect(spoolFiles[0].label).toBe("101 - JES2:JESMSGLG");
+        expect(spoolFiles[1].label).toBe("101 - JES2:JESJCL");
+        expect(spoolFiles[2].label).toBe("101 - JES2:JESYSMSG");
+        expect(spoolFiles[3].label).toBe("12 - SOMEJOB:TEST");
+        expect(spoolFiles[4].label).toBe("13 - SOMEJOB:TEST");
     });
 });
 
