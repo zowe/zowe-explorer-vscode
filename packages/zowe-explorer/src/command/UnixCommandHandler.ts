@@ -271,7 +271,9 @@ export class UnixCommandHandler extends ZoweCommandProvider {
                 });
             }
         }
-        if (exitflag) return;
+        if (exitflag) {
+            return;
+        }
         return sshProfile;
     }
 
