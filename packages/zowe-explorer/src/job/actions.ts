@@ -22,6 +22,7 @@ import { SORT_DIRS } from "../shared/utils";
 import { ZosJobsProvider } from "./ZosJobsProvider";
 import { JOB_SORT_OPTS } from "./utils";
 import * as globals from "../globals";
+import { JobFSProvider } from "./JobFSProvider";
 
 /**
  * Download all the spool content for the specified job.
@@ -100,7 +101,7 @@ export async function spoolFilePollEvent(doc: vscode.TextDocument): Promise<void
             comment: ["Document file name"],
         })
     );
-    await vscode.workspace.fs.readFile(doc.uri);
+    await JobFSProvider.instance.fetchSpoolAtUri(doc.uri);
     statusMsg.dispose();
 }
 

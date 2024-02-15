@@ -560,8 +560,10 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     public async initializeFileOpening(uri: vscode.Uri): Promise<void> {
         ZoweLogger.trace("ZoweUSSNode.initializeFileOpening called.");
         try {
+            const statusMsg = Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Downloading USS file..."));
             await vscode.commands.executeCommand("vscode.open", uri);
             this.downloaded = true;
+            statusMsg.dispose();
         } catch (err) {
             ZoweLogger.warn(err);
         }
@@ -583,10 +585,10 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      * @param tree The structure of files and folders to paste
      * @param ussApi The USS API to use for this operation
      */
-    public async paste(destUri: vscode.Uri, uss: { tree: UssFileTree; api: MainframeInteraction.IUss; options?: IUploadOptions }): Promise<void> {
+    public async paste(destUri: vscode.Uri, uss: { tree: UssFileTree; api?: MainframeInteraction.IUss; options?: IUploadOptions }): Promise<void> {
         ZoweLogger.trace("ZoweUSSNode.paste called.");
-        const hasCopy = uss.api.copy != null;
-        const hasUploadFromBuffer = uss.api.uploadFromBuffer != null;
+        const hasCopy = uss.api?.copy != null;
+        const hasUploadFromBuffer = uss.api?.uploadFromBuffer != null;
         if (!uss.api.fileList || !hasCopy || !hasUploadFromBuffer) {
             throw new Error(vscode.l10n.t("Required API functions for pasting (fileList and copy/uploadFromBuffer) were not found."));
         }

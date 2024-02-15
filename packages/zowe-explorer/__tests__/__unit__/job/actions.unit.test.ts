@@ -40,12 +40,12 @@ import * as SpoolProvider from "../../../src/SpoolProvider";
 import * as refreshActions from "../../../src/shared/refresh";
 import * as sharedUtils from "../../../src/shared/utils";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
-import { SpoolFile } from "../../../src/SpoolProvider";
 import { ZosJobsProvider } from "../../../src/job/ZosJobsProvider";
 import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
 import { LocalFileManagement } from "../../../src/utils/LocalFileManagement";
 import { ProfileManagement } from "../../../src/utils/ProfileManagement";
 import { TreeProviders } from "../../../src/shared/TreeProviders";
+import { JobFSProvider } from "../../../src/job/JobFSProvider";
 
 jest.mock("../../../src/utils/LoggerUtils");
 
@@ -1317,16 +1317,10 @@ describe("Job Actions Unit Tests - Misc. functions", () => {
                 query: '["some.profile",{"recfm":"UA","records-url":"https://some.url/","stepname":"STEP1","subsystem":"SUB1","job-correlator":"someid","byte-count":1298,"lrecl":133,"jobid":"JOB12345","ddname":"JESMSGLG","id":2,"record-count":19,"class":"A","jobname":"IEFBR14T","procstep":null}]',
             },
         } as unknown as vscode.TextDocument;
-        const eventEmitter = {
-            fire: jest.fn(),
-        };
-        // add a fake spool file to SpoolProvider
-        SpoolProvider.default.files[testDoc.uri.path] = new SpoolFile(testDoc.uri, eventEmitter as unknown as vscode.EventEmitter<vscode.Uri>);
-
-        const fetchContentSpy = jest.spyOn(SpoolFile.prototype, "fetchContent").mockImplementation();
+        const fetchSpoolAtUriSpy = jest.spyOn(JobFSProvider.instance, "fetchSpoolAtUri").mockImplementation();
         const statusMsgSpy = jest.spyOn(Gui, "setStatusBarMessage");
         await jobActions.spoolFilePollEvent(testDoc);
-        expect(fetchContentSpy).toHaveBeenCalled();
+        expect(fetchSpoolAtUriSpy).toHaveBeenCalled();
         expect(statusMsgSpy).toHaveBeenCalledWith(`$(sync~spin) Polling: ${testDoc.fileName}...`);
     });
 });

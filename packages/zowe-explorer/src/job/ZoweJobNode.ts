@@ -116,6 +116,7 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
                 label: vscode.l10n.t("Use the search button to display jobs"),
                 collapsibleState: vscode.TreeItemCollapsibleState.None,
                 parentNode: this,
+                profile: thisSessionNode.getProfile(),
             });
             placeholder.command = {
                 command: "zowe.placeholderCommand",
@@ -143,6 +144,7 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
                     label: vscode.l10n.t("There are no JES spool messages to display"),
                     collapsibleState: vscode.TreeItemCollapsibleState.None,
                     parentNode: this,
+                    profile: this.getProfile(),
                 });
                 noSpoolNode.iconPath = null;
                 return [noSpoolNode];
@@ -201,6 +203,7 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
                     label: vscode.l10n.t("No jobs found"),
                     collapsibleState: vscode.TreeItemCollapsibleState.None,
                     parentNode: this,
+                    profile: this.getProfile(),
                 });
                 noJobsNode.contextValue = globals.INFORMATION_CONTEXT;
                 noJobsNode.iconPath = null;

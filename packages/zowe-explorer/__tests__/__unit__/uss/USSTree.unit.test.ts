@@ -84,8 +84,8 @@ async function createGlobalMocks() {
         mockTreeProviders: createTreeProviders(),
         FileSystemProvider: {
             createDirectory: jest.fn(),
-            rename: jest.fn()
-        }
+            rename: jest.fn(),
+        },
     };
 
     jest.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation(globalMocks.FileSystemProvider.createDirectory);
@@ -971,7 +971,7 @@ describe("USSTree Unit Tests - Function rename", () => {
         return newMocks;
     }
 
-    it("Tests that USSTree.rename() shows error if an open dirty file's fullpath includes that of the node being renamed", async () => {
+    it("Tests that USSTree.rename() shows no error if an open dirty file's fullpath includes that of the node being renamed", async () => {
         // Open dirty file defined by globalMocks.mockTextDocumentDirty, with filepath including "sestest/test/node"
         const globalMocks = await createGlobalMocks();
         createBlockMocks(globalMocks);
@@ -983,19 +983,10 @@ describe("USSTree Unit Tests - Function rename", () => {
             profile: globalMocks.testProfile,
             parentPath: "/",
         });
-        Object.defineProperty(testUSSDir, "getUSSDocumentFilePath", {
-            value: jest.fn(() => {
-                return "/test/path/temp/_U_/sestest/test";
-            }),
-        });
         const vscodeErrorMsgSpy = jest.spyOn(vscode.window, "showErrorMessage");
-        const getAllLoadedItemsSpy = jest.spyOn(globalMocks.testTree, "getAllLoadedItems");
-
         await globalMocks.testTree.rename(testUSSDir);
 
-        expect(vscodeErrorMsgSpy.mock.calls.length).toBe(1);
-        expect(vscodeErrorMsgSpy.mock.calls[0][0]).toContain("because you have unsaved changes in this");
-        expect(getAllLoadedItemsSpy.mock.calls.length).toBe(0);
+        expect(vscodeErrorMsgSpy.mock.calls.length).toBe(0);
     });
 
     it("Tests that USSTree.rename() shows no error if an open clean file's fullpath includes that of the node being renamed", async () => {
@@ -1009,11 +1000,6 @@ describe("USSTree Unit Tests - Function rename", () => {
             session: globalMocks.testSession,
             profile: globalMocks.testProfile,
             parentPath: "/",
-        });
-        Object.defineProperty(testUSSDir, "getUSSDocumentFilePath", {
-            value: jest.fn(() => {
-                return "/test/path/temp/_U_/sestest/testClean";
-            }),
         });
         const vscodeErrorMsgSpy = jest.spyOn(vscode.window, "showErrorMessage");
 

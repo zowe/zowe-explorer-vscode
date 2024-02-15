@@ -47,7 +47,6 @@ async function createGlobalMocks() {
         openedDocumentInstance: jest.fn(),
         onDidSaveTextDocument: jest.fn(),
         showErrorMessage: jest.fn(),
-        openTextDocument: jest.fn(),
         mockShowTextDocument: jest.fn(),
         showInformationMessage: jest.fn(),
         getConfiguration: jest.fn(),
@@ -58,7 +57,6 @@ async function createGlobalMocks() {
         mockLoadNamedProfile: jest.fn(),
         showQuickPick: jest.fn(),
         isFileTagBinOrAscii: jest.fn(),
-        existsSync: jest.fn(),
         Delete: jest.fn(),
         Utilities: jest.fn(),
         withProgress: jest.fn(),
@@ -87,7 +85,6 @@ async function createGlobalMocks() {
 
     jest.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation(globalMocks.FileSystemProvider.createDirectory);
 
-    globalMocks.openTextDocument.mockResolvedValue(globalMocks.mockTextDocument);
     globalMocks.mockTextDocuments.push(globalMocks.mockTextDocument);
     globalMocks.profileOps = createInstanceOfProfile(globalMocks.profileOne);
     Object.defineProperty(globalMocks.profileOps, "loadNamedProfile", {
@@ -115,10 +112,7 @@ async function createGlobalMocks() {
         configurable: true,
     });
     Object.defineProperty(vscode.window, "showQuickPick", { value: globalMocks.showQuickPick, configurable: true });
-    Object.defineProperty(vscode.workspace, "openTextDocument", {
-        value: globalMocks.openTextDocument,
-        configurable: true,
-    });
+
     Object.defineProperty(vscode.window, "showInformationMessage", {
         value: globalMocks.showInformationMessage,
         configurable: true,
@@ -153,7 +147,6 @@ async function createGlobalMocks() {
     Object.defineProperty(zowe, "Utilities", { value: globalMocks.Utilities, configurable: true });
     Object.defineProperty(globalMocks.Download, "ussFile", { value: globalMocks.ussFile, configurable: true });
     Object.defineProperty(zowe, "Delete", { value: globalMocks.Delete, configurable: true });
-    Object.defineProperty(fs, "existsSync", { value: globalMocks.existsSync, configurable: true });
     Object.defineProperty(globalMocks.Delete, "ussFile", { value: globalMocks.ussFile, configurable: true });
     Object.defineProperty(Profiles, "createInstance", {
         value: jest.fn(() => globalMocks.profileOps),
@@ -353,7 +346,6 @@ describe("ZoweUSSNode Unit Tests - Function node.refreshUSS()", () => {
         await blockMocks.node.refreshUSS();
 
         expect(blockMocks.fetchFileAtUri.mock.calls.length).toBe(1);
-        expect(globalMocks.mockShowTextDocument.mock.calls.length).toBe(2);
         expect(globalMocks.mockExecuteCommand.mock.calls.length).toBe(3);
         expect(blockMocks.node.downloaded).toBe(true);
     });
@@ -369,7 +361,6 @@ describe("ZoweUSSNode Unit Tests - Function node.refreshUSS()", () => {
         await blockMocks.node.refreshUSS();
 
         expect(blockMocks.fetchFileAtUri.mock.calls.length).toBe(0);
-        expect(globalMocks.mockShowTextDocument.mock.calls.length).toBe(1);
         expect(globalMocks.mockExecuteCommand.mock.calls.length).toBe(1);
         expect(blockMocks.node.downloaded).toBe(false);
     });
@@ -503,6 +494,7 @@ describe("ZoweUSSNode Unit Tests - Function node.rename()", () => {
                 uss: { addSingleSession: jest.fn(), mSessionNodes: [], refresh: jest.fn() } as any,
                 job: { addSingleSession: jest.fn(), mSessionNodes: [], refresh: jest.fn() } as any,
             }),
+            renameSpy: jest.spyOn(UssFSProvider.instance, "rename").mockImplementation(),
         };
         newMocks.ussDir.contextValue = globals.USS_DIR_CONTEXT;
         return newMocks;
@@ -946,7 +938,6 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
         globalMocks.createSessCfgFromArgs.mockReturnValue(globalMocks.session);
         globalMocks.ussFile.mockReturnValue(globalMocks.response);
         globalMocks.withProgress.mockReturnValue(globalMocks.response);
-        globalMocks.openTextDocument.mockResolvedValue("test.doc");
         globalMocks.showInputBox.mockReturnValue("fake");
         globals.defineGlobals("/test/path/");
 
@@ -1002,19 +993,16 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
             profile: globalMocks.profileOne,
             parentPath: "/",
         });
-        globalMocks.existsSync.mockReturnValue(null);
 
         // Tests that correct file is downloaded
         await node.openUSS(false, true, blockMocks.testUSSTree);
-        expect(globalMocks.existsSync.mock.calls.length).toBe(1);
-        expect(globalMocks.existsSync.mock.calls[0][0]).toBe(path.join(globals.USS_DIR, node.getProfileName(), node.fullPath));
         expect(globalMocks.setStatusBarMessage).toBeCalledWith("$(sync~spin) Downloading USS file...");
 
         // Tests that correct file is opened in editor
         globalMocks.withProgress(globalMocks.downloadUSSFile);
         expect(globalMocks.withProgress).toBeCalledWith(globalMocks.downloadUSSFile);
-        expect(globalMocks.openTextDocument.mock.calls.length).toBe(1);
-        expect(globalMocks.openTextDocument.mock.calls[0][0]).toBe(node.getUSSDocumentFilePath());
+        expect(globalMocks.mockExecuteCommand.mock.calls.length).toBe(1);
+        expect(globalMocks.mockExecuteCommand.mock.calls[0]).toBe(["vscode.open", node.resourceUri]);
         expect(globalMocks.mockShowTextDocument.mock.calls.length).toBe(1);
         expect(globalMocks.mockShowTextDocument.mock.calls[0][0]).toStrictEqual("test.doc");
     });
@@ -1044,18 +1032,15 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
             profile: globalMocks.profileOne,
             parentPath: "/",
         });
-        globalMocks.existsSync.mockReturnValue(null);
 
         // Tests that correct file is downloaded
         await node.openUSS(false, true, blockMocks.testUSSTree);
-        expect(globalMocks.existsSync.mock.calls.length).toBe(1);
-        expect(globalMocks.existsSync.mock.calls[0][0]).toBe(path.join(globals.USS_DIR, node.getProfileName(), node.fullPath));
         expect(globalMocks.setStatusBarMessage).toBeCalledWith("$(sync~spin) Downloading USS file...");
         // Tests that correct file is opened in editor
         globalMocks.withProgress(globalMocks.downloadUSSFile);
         expect(globalMocks.withProgress).toBeCalledWith(globalMocks.downloadUSSFile);
-        expect(globalMocks.openTextDocument.mock.calls.length).toBe(1);
-        expect(globalMocks.openTextDocument.mock.calls[0][0]).toBe(node.getUSSDocumentFilePath());
+        expect(globalMocks.mockExecuteCommand.mock.calls.length).toBe(1);
+        expect(globalMocks.mockExecuteCommand.mock.calls[0]).toBe(["vscode.open", node.resourceUri]);
         expect(globalMocks.mockShowTextDocument.mock.calls.length).toBe(1);
         expect(globalMocks.mockShowTextDocument.mock.calls[0][0]).toStrictEqual("test.doc");
     });
@@ -1091,8 +1076,8 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
             // Prevent exception from failing test
         }
 
-        expect(globalMocks.openTextDocument.mock.calls.length).toBe(1);
-        expect(globalMocks.openTextDocument.mock.calls[0][0]).toBe(path.join(globals.USS_DIR, child.getProfileName(), child.fullPath));
+        expect(globalMocks.mockExecuteCommand.mock.calls.length).toBe(1);
+        expect(globalMocks.mockExecuteCommand.mock.calls[0]).toBe(["vscode.open", child.resourceUri]);
         expect(globalMocks.mockShowTextDocument.mock.calls.length).toBe(1);
         expect(globalMocks.showErrorMessage.mock.calls.length).toBe(1);
         expect(globalMocks.showErrorMessage.mock.calls[0][0]).toBe("Error: testError");
@@ -1178,7 +1163,6 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
         const blockMocks = await createBlockMocks(globalMocks);
 
         globalMocks.isFileTagBinOrAscii.mockResolvedValue(true);
-        globalMocks.existsSync.mockReturnValue(null);
 
         const node = new ZoweUSSNode({
             label: "node",
@@ -1191,13 +1175,11 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
 
         // Make sure correct file is downloaded
         await node.openUSS(false, true, blockMocks.testUSSTree);
-        expect(globalMocks.existsSync.mock.calls.length).toBe(1);
-        expect(globalMocks.existsSync.mock.calls[0][0]).toBe(path.join(globals.USS_DIR, node.getProfileName() || "", node.fullPath));
         expect(globalMocks.setStatusBarMessage).toBeCalledWith("$(sync~spin) Downloading USS file...");
         // Make sure correct file is displayed in the editor
         globalMocks.withProgress(globalMocks.downloadUSSFile);
-        expect(globalMocks.openTextDocument.mock.calls.length).toBe(1);
-        expect(globalMocks.openTextDocument.mock.calls[0][0]).toBe(node.getUSSDocumentFilePath());
+        expect(globalMocks.mockExecuteCommand.mock.calls.length).toBe(1);
+        expect(globalMocks.mockExecuteCommand.mock.calls[0]).toBe(["vscode.open", node.resourceUri]);
         expect(globalMocks.mockShowTextDocument.mock.calls.length).toBe(1);
         expect(globalMocks.mockShowTextDocument.mock.calls[0][0]).toStrictEqual("test.doc");
     });

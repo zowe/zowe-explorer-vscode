@@ -12,7 +12,7 @@
 import * as zowe from "@zowe/cli";
 import * as vscode from "vscode";
 import * as globals from "../globals";
-import { errorHandling } from "../utils/ProfilesUtils";
+import { errorHandling, fallbackProfileName } from "../utils/ProfilesUtils";
 import {
     Sorting,
     Types,
@@ -94,6 +94,29 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         if (!globals.ISTHEIA && contextually.isSession(this)) {
             this.id = this.label as string;
         }
+        if (this.label !== vscode.l10n.t("Favorites")) {
+            if (this.getParent() == null) {
+                this.resourceUri = vscode.Uri.from({
+                    scheme: "zowe-ds",
+                    path: `/${this.profile?.name ?? fallbackProfileName(this)}/`,
+                });
+                DatasetFSProvider.instance.createDirectory(this.resourceUri, this.pattern);
+            } else if (this.contextValue === globals.DS_MEMBER_CONTEXT) {
+                this.resourceUri = vscode.Uri.from({
+                    scheme: "zowe-ds",
+                    path: `/${this.profile?.name ?? fallbackProfileName(this)}/${this.getParent().label as string}/${this.label as string}`,
+                });
+            } else if (
+                this.contextValue === globals.DS_DS_CONTEXT ||
+                this.contextValue === globals.DS_PDS_CONTEXT ||
+                this.contextValue === globals.DS_MIGRATED_FILE_CONTEXT
+            ) {
+                this.resourceUri = vscode.Uri.from({
+                    scheme: "zowe-ds",
+                    path: `/${this.profile?.name ?? fallbackProfileName(this)}/${this.label as string}`,
+                });
+            }
+        }
     }
 
     public updateStats(item: any): void {
@@ -125,6 +148,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 collapsibleState: vscode.TreeItemCollapsibleState.None,
                 parentNode: this,
                 contextOverride: globals.INFORMATION_CONTEXT,
+                profile: null,
             });
             placeholder.command = {
                 command: "zowe.placeholderCommand",
