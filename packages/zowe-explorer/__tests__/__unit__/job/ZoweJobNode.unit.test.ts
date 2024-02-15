@@ -497,13 +497,15 @@ describe("ZoweJobNode unit tests - Function getChildren", () => {
         globalMocks.testJobsProvider.mSessionNodes[1]._searchId = "";
         globalMocks.testJobNode.session.ISession = globalMocks.testSessionNoCred;
         jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValueOnce({
-            getSpoolFiles: jest.fn().mockReturnValueOnce([
-                mockSpoolOne,
-                { ...globalMocks.mockIJobFile, stepname: "JES2", ddname: "JESJCL", "record-count": 21 },
-                { ...globalMocks.mockIJobFile, stepname: "JES2", ddname: "JESYSMSG", "record-count": 6 },
-                mockSpoolTwo,
-                mockSpoolThree
-            ]),
+            getSpoolFiles: jest
+                .fn()
+                .mockReturnValueOnce([
+                    mockSpoolOne,
+                    { ...globalMocks.mockIJobFile, stepname: "JES2", ddname: "JESJCL", "record-count": 21 },
+                    { ...globalMocks.mockIJobFile, stepname: "JES2", ddname: "JESYSMSG", "record-count": 6 },
+                    mockSpoolTwo,
+                    mockSpoolThree,
+                ]),
         } as any);
         jest.spyOn(contextually, "isSession").mockReturnValueOnce(false);
         const spoolFiles = await globalMocks.testJobNode.getChildren();
