@@ -498,7 +498,7 @@ describe("ZoweJobNode unit tests - Function getChildren", () => {
         globalMocks.testJobNode.session.ISession = globalMocks.testSessionNoCred;
         jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValueOnce({
             getSpoolFiles: jest.fn().mockReturnValueOnce([
-                mockSpoolOne
+                mockSpoolOne,
                 { ...globalMocks.mockIJobFile, stepname: "JES2", ddname: "JESJCL", "record-count": 21 },
                 { ...globalMocks.mockIJobFile, stepname: "JES2", ddname: "JESYSMSG", "record-count": 6 },
                 mockSpoolTwo,
