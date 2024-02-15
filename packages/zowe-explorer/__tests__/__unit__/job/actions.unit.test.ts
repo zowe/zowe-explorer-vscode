@@ -877,6 +877,7 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
         createGlobalMocks();
 
         const blockMocks = createBlockMocks();
+        mocked(Profiles.getInstance).mockClear();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         const dataset = new ZoweDatasetNode({
             label: "TESTUSER.DATASET",

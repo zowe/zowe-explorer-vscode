@@ -250,7 +250,7 @@ describe("Test src/jobs/extension", () => {
 
         it("should not initialize if it is unable to create the jobs tree", async () => {
             spyCreateJobsTree.mockResolvedValue(null);
-            const myProvider = await initJobsProvider({} as any);
+            const myProvider = await initJobsProvider(test.context);
             expect(myProvider).toBe(null);
         });
 

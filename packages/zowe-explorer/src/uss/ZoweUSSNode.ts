@@ -525,7 +525,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         ZoweLogger.trace("ZoweUSSNode.refreshUSS called.");
         let label: string;
         switch (true) {
-            case contextually.isUssDirectory(this.getParent()):
+            case contextually.isUssDirectory(this.getParent()) && (contextually.isText(this) || contextually.isBinary(this)):
                 label = this.fullPath;
                 break;
             // For favorited and non-favorited files
@@ -538,9 +538,8 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 throw Error(vscode.l10n.t("refreshUSS() called from invalid node."));
         }
         try {
-            if (!isNodeInEditor(this)) {
-                await UssFSProvider.instance.fetchFileAtUri(this.resourceUri);
-            }
+            await UssFSProvider.instance.fetchFileAtUri(this.resourceUri);
+            this.downloaded = true;
         } catch (err) {
             if (err instanceof Error && err.message.includes(vscode.l10n.t("not found"))) {
                 ZoweLogger.warn(err.toString());
@@ -557,8 +556,13 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         }
     }
 
-    public async initializeFileOpening(uri: vscode.Uri): Promise<void> {
+    public async initializeFileOpening(uri?: vscode.Uri): Promise<void> {
         ZoweLogger.trace("ZoweUSSNode.initializeFileOpening called.");
+        if (uri == null) {
+            ZoweLogger.trace("ZoweUSSNode.initializeFileOpening called with invalid URI, exiting...");
+            return;
+        }
+
         try {
             const statusMsg = Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Downloading USS file..."));
             await vscode.commands.executeCommand("vscode.open", uri);
@@ -587,8 +591,12 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      */
     public async paste(destUri: vscode.Uri, uss: { tree: UssFileTree; api?: MainframeInteraction.IUss; options?: IUploadOptions }): Promise<void> {
         ZoweLogger.trace("ZoweUSSNode.paste called.");
-        const hasCopy = uss.api?.copy != null;
-        const hasUploadFromBuffer = uss.api?.uploadFromBuffer != null;
+        if (!uss.api) {
+            ZoweLogger.trace("\terror: paste called with invalid API");
+            return;
+        }
+        const hasCopy = uss.api.copy != null;
+        const hasUploadFromBuffer = uss.api.uploadFromBuffer != null;
         if (!uss.api.fileList || !hasCopy || !hasUploadFromBuffer) {
             throw new Error(vscode.l10n.t("Required API functions for pasting (fileList and copy/uploadFromBuffer) were not found."));
         }

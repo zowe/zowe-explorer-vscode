@@ -26,7 +26,12 @@ describe("Test src/dataset/extension", () => {
         let spyCreateDatasetTree;
         const test: ITestContext = {
             context: { subscriptions: [] },
-            value: { label: "test", getParent: () => "test", openDs: jest.fn() },
+            value: {
+                label: "test",
+                getParent: () => "test",
+                openDs: jest.fn(),
+                command: { command: "vscode.open", title: "", arguments: [vscode.Uri.from({ scheme: "zowe-ds", path: "TEST.DS" })] },
+            },
             _: { _: "_" },
         };
         const dsProvider: { [key: string]: jest.Mock } = {
@@ -293,7 +298,7 @@ describe("Test src/dataset/extension", () => {
 
         it("should not initialize if it is unable to create the dataset tree", async () => {
             spyCreateDatasetTree.mockResolvedValue(null);
-            const myProvider = await initDatasetProvider({} as any);
+            const myProvider = await initDatasetProvider(test.context);
             expect(myProvider).toBe(null);
         });
 

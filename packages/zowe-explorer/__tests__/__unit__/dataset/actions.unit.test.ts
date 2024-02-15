@@ -43,6 +43,7 @@ import { getNodeLabels } from "../../../src/dataset/utils";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 import * as context from "../../../src/shared/context";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
+import { DatasetFSProvider } from "../../../src/dataset/DatasetFSProvider";
 
 // Missing the definition of path module, because I need the original logic for tests
 jest.mock("fs");
@@ -135,6 +136,7 @@ const createBlockMocksShared = () => {
     const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
     const testDatasetTree = createDatasetTree(datasetSessionNode, treeView);
     const mvsApi = createMvsApi(imperativeProfile);
+    const fetchDsAtUri = jest.spyOn(DatasetFSProvider.instance, "fetchDatasetAtUri").mockImplementation();
     bindMvsApi(mvsApi);
 
     return {
@@ -145,6 +147,7 @@ const createBlockMocksShared = () => {
         datasetSessionNode,
         mvsApi,
         testDatasetTree,
+        fetchDsAtUri,
     };
 };
 
@@ -269,30 +272,8 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
             parentNode: blockMocks.datasetSessionNode,
         });
 
-        mocked(vscode.workspace.openTextDocument).mockResolvedValueOnce({ isDirty: true } as any);
-        mocked(zowe.Download.dataSet).mockResolvedValueOnce({
-            success: true,
-            commandResponse: null,
-            apiResponse: {
-                etag: "123",
-            },
-        });
-
         await dsActions.refreshPS(node);
-
-        expect(mocked(zowe.Download.dataSet)).toBeCalledWith(
-            blockMocks.zosmfSession,
-            node.label,
-            expect.objectContaining({
-                file: path.join(globals.DS_DIR, node.getSessionNode().label.toString(), node.label.toString()),
-                returnEtag: true,
-            })
-        );
-        expect(mocked(vscode.workspace.openTextDocument)).toBeCalledWith(
-            path.join(globals.DS_DIR, node.getSessionNode().label.toString(), node.label.toString())
-        );
-        expect(mocked(vscode.window.showTextDocument)).toBeCalledTimes(2);
-        expect(mocked(vscode.commands.executeCommand)).toBeCalledWith("workbench.action.closeActiveEditor");
+        expect(blockMocks.fetchDsAtUri).toHaveBeenCalledWith(node.resourceUri, undefined);
     });
     it("Checking duplicate PS dataset refresh attempt", async () => {
         globals.defineGlobals("");
@@ -327,15 +308,11 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
             parentNode: blockMocks.datasetSessionNode,
         });
 
-        mocked(vscode.workspace.openTextDocument).mockResolvedValueOnce({ isDirty: true } as any);
-        mocked(zowe.Download.dataSet).mockRejectedValueOnce(Error("not found"));
-
-        globalMocks.getContentsSpy.mockRejectedValueOnce(new Error("not found"));
+        blockMocks.fetchDsAtUri.mockRejectedValueOnce(Error("not found"));
 
         await dsActions.refreshPS(node);
 
-        expect(mocked(Gui.showMessage)).toBeCalledWith("Unable to find file " + node.label);
-        expect(mocked(vscode.commands.executeCommand)).not.toBeCalled();
+        expect(mocked(Gui.showMessage)).toHaveBeenCalledWith("Unable to find file " + (node.label as string));
     });
     it("Checking failed attempt to refresh PDS Member", async () => {
         globals.defineGlobals("");
@@ -348,20 +325,10 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
         });
         const child = new ZoweDatasetNode({ label: "child", collapsibleState: vscode.TreeItemCollapsibleState.None, parentNode: parent });
 
-        mocked(vscode.workspace.openTextDocument).mockResolvedValueOnce({ isDirty: true } as any);
-        mocked(zowe.Download.dataSet).mockRejectedValueOnce(Error(""));
+        blockMocks.fetchDsAtUri.mockRejectedValueOnce(Error("not found"));
 
         await dsActions.refreshPS(child);
-
-        expect(mocked(zowe.Download.dataSet)).toBeCalledWith(
-            blockMocks.zosmfSession,
-            child.getParent().getLabel() + "(" + child.label + ")",
-            expect.objectContaining({
-                file: path.join(globals.DS_DIR, child.getSessionNode().label.toString(), `${child.getParent().label}(${child.label})`),
-                returnEtag: true,
-            })
-        );
-        expect(mocked(Gui.errorMessage)).toBeCalledWith("Error");
+        expect(mocked(Gui.showMessage)).toHaveBeenCalledWith(`Unable to find file ${parent.label}(${child.label})`);
     });
     it("Checking favorite empty PDS refresh", async () => {
         globals.defineGlobals("");
@@ -374,19 +341,8 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
         });
         node.contextValue = globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX;
 
-        mocked(vscode.workspace.openTextDocument).mockResolvedValueOnce({ isDirty: true } as any);
-        mocked(zowe.Download.dataSet).mockResolvedValueOnce({
-            success: true,
-            commandResponse: null,
-            apiResponse: {
-                etag: "123",
-            },
-        });
-
         await dsActions.refreshPS(node);
-        expect(mocked(vscode.workspace.openTextDocument)).toBeCalled();
-        expect(mocked(vscode.window.showTextDocument)).toBeCalledTimes(2);
-        expect(mocked(vscode.commands.executeCommand)).toBeCalledWith("workbench.action.closeActiveEditor");
+        expect(blockMocks.fetchDsAtUri).toHaveBeenCalledWith(node.resourceUri, undefined);
     });
     it("Checking favorite PDS Member refresh", async () => {
         globals.defineGlobals("");
@@ -400,19 +356,8 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
         const child = new ZoweDatasetNode({ label: "child", collapsibleState: vscode.TreeItemCollapsibleState.None, parentNode: parent });
         parent.contextValue = globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX;
 
-        mocked(vscode.workspace.openTextDocument).mockResolvedValueOnce({ isDirty: true } as any);
-        mocked(zowe.Download.dataSet).mockResolvedValueOnce({
-            success: true,
-            commandResponse: null,
-            apiResponse: {
-                etag: "123",
-            },
-        });
-
         await dsActions.refreshPS(child);
-        expect(mocked(vscode.workspace.openTextDocument)).toBeCalled();
-        expect(mocked(vscode.window.showTextDocument)).toBeCalledTimes(2);
-        expect(mocked(vscode.commands.executeCommand)).toBeCalledWith("workbench.action.closeActiveEditor");
+        expect(blockMocks.fetchDsAtUri).toHaveBeenCalledWith(child.resourceUri, undefined);
     });
     it("Checking favorite PS refresh", async () => {
         globals.defineGlobals("");
@@ -426,19 +371,8 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
         const child = new ZoweDatasetNode({ label: "child", collapsibleState: vscode.TreeItemCollapsibleState.None, parentNode: parent });
         child.contextValue = globals.DS_FAV_CONTEXT;
 
-        mocked(vscode.workspace.openTextDocument).mockResolvedValueOnce({ isDirty: true } as any);
-        mocked(zowe.Download.dataSet).mockResolvedValueOnce({
-            success: true,
-            commandResponse: null,
-            apiResponse: {
-                etag: "123",
-            },
-        });
-
         await dsActions.refreshPS(child);
-        expect(mocked(vscode.workspace.openTextDocument)).toBeCalled();
-        expect(mocked(vscode.window.showTextDocument)).toBeCalledTimes(2);
-        expect(mocked(vscode.commands.executeCommand)).toBeCalledWith("workbench.action.closeActiveEditor");
+        expect(blockMocks.fetchDsAtUri).toHaveBeenCalledWith(child.resourceUri, undefined);
     });
 });
 
@@ -764,11 +698,9 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
         });
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Delete" as any);
-        const deleteSpy = jest.spyOn(blockMocks.mvsApi, "deleteDataSet");
-
+        const deleteSpy = jest.spyOn(DatasetFSProvider.instance, "delete").mockImplementation();
         await dsActions.deleteDataset(node, blockMocks.testDatasetTree);
-
-        expect(deleteSpy).toBeCalledWith(node.label, { responseTimeout: blockMocks.imperativeProfile.profile?.responseTimeout });
+        expect(deleteSpy).toHaveBeenCalledWith(node.resourceUri);
     });
     it("Checking common PS dataset deletion with not existing local file", async () => {
         globals.defineGlobals("");
@@ -783,11 +715,9 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
         });
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Delete" as any);
-        const deleteSpy = jest.spyOn(blockMocks.mvsApi, "deleteDataSet");
-
+        const deleteSpy = jest.spyOn(DatasetFSProvider.instance, "delete").mockImplementation();
         await dsActions.deleteDataset(node, blockMocks.testDatasetTree);
-
-        expect(deleteSpy).toBeCalledWith(node.label, { responseTimeout: blockMocks.imperativeProfile.profile?.responseTimeout });
+        expect(deleteSpy).toHaveBeenCalledWith(node.resourceUri);
     });
     it("Checking common PS dataset failed deletion attempt due to absence on remote", async () => {
         globals.defineGlobals("");
@@ -802,12 +732,9 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
         });
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Delete" as any);
-        const deleteSpy = jest.spyOn(blockMocks.mvsApi, "deleteDataSet");
-        deleteSpy.mockRejectedValueOnce(Error("not found"));
-
+        jest.spyOn(DatasetFSProvider.instance, "delete").mockRejectedValueOnce(Error("not found"));
         await expect(dsActions.deleteDataset(node, blockMocks.testDatasetTree)).rejects.toEqual(Error("not found"));
-
-        expect(mocked(Gui.showMessage)).toBeCalledWith("Unable to find file " + node.label);
+        expect(mocked(Gui.showMessage)).toHaveBeenCalledWith("Unable to find file " + node.label);
     });
     it("Checking common PS dataset failed deletion attempt", async () => {
         globals.defineGlobals("");
@@ -848,12 +775,12 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
         node.contextValue = globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX;
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Delete" as any);
-        const deleteSpy = jest.spyOn(blockMocks.mvsApi, "deleteDataSet");
+        const deleteSpy = jest.spyOn(DatasetFSProvider.instance, "delete");
 
         await dsActions.deleteDataset(node, blockMocks.testDatasetTree);
 
-        expect(deleteSpy).toBeCalledWith(node.label, { responseTimeout: blockMocks.imperativeProfile.profile?.responseTimeout });
-        expect(blockMocks.testDatasetTree.removeFavorite).toBeCalledWith(node);
+        expect(deleteSpy).toHaveBeenCalledWith(node.resourceUri);
+        expect(blockMocks.testDatasetTree.removeFavorite).toHaveBeenCalledWith(node);
     });
     it("Checking Favorite PDS Member deletion", async () => {
         globals.defineGlobals("");

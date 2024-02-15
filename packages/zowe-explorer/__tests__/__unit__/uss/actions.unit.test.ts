@@ -462,7 +462,7 @@ describe("USS Action Unit Tests - Functions uploadDialog & uploadFile", () => {
         await ussNodeActions.uploadDialog(blockMocks.ussNode, blockMocks.testUSSTree);
         expect(globalMocks.showOpenDialog).toBeCalled();
         expect(globalMocks.openTextDocument).toBeCalled();
-        expect(blockMocks.testUSSTree.refresh).toBeCalled();
+        expect(blockMocks.testUSSTree.refreshElement).toBeCalled();
     });
 
     it("Tests that uploadDialog() works for binary file", async () => {
@@ -476,7 +476,7 @@ describe("USS Action Unit Tests - Functions uploadDialog & uploadFile", () => {
 
         await ussNodeActions.uploadDialog(blockMocks.ussNode, blockMocks.testUSSTree);
         expect(globalMocks.showOpenDialog).toBeCalled();
-        expect(blockMocks.testUSSTree.refresh).toBeCalled();
+        expect(blockMocks.testUSSTree.refreshElement).toBeCalled();
     });
 
     it("Tests that uploadDialog() throws an error successfully", async () => {
@@ -640,28 +640,21 @@ describe("USS Action Unit Tests - copy file / directory", () => {
         expect(isSameSession).toBe(true);
     });
 
-    it("paste calls relevant USS API functions", async () => {
+    it("paste calls relevant function in FileSystemProvider", async () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
         const rootTree: UssFileTree = {
             children: [],
             baseName: blockMocks.nodes[1].getLabel() as string,
-            ussPath: "",
+            ussPath: "/",
             sessionName: blockMocks.treeNodes.ussNode.getLabel() as string,
             type: UssFileType.Directory,
         };
-        blockMocks.treeNodes.ussApi.fileList = jest.fn().mockResolvedValue({
-            apiResponse: {
-                items: [blockMocks.nodes[0].getLabel() as string, blockMocks.nodes[1].getLabel() as string],
-            },
-        });
-        blockMocks.treeNodes.ussApi.copy = jest.fn();
-        await blockMocks.nodes[1].paste(rootTree.sessionName, rootTree.ussPath, { tree: rootTree, api: blockMocks.treeNodes.ussApi });
-        expect(blockMocks.treeNodes.ussApi.fileList).toHaveBeenCalled();
-        expect(blockMocks.treeNodes.ussApi.copy).toHaveBeenCalledWith(`/${blockMocks.nodes[1].getLabel()}`, {
-            from: "",
-            recursive: true,
-        });
+        blockMocks.treeNodes.ussApi.copy = blockMocks.treeNodes.ussApi.fileList = jest.fn();
+
+        const copySpy = jest.spyOn(UssFSProvider.instance, "copy").mockImplementation();
+        await blockMocks.nodes[1].paste(blockMocks.nodes[1].resourceUri, { tree: rootTree, api: blockMocks.treeNodes.ussApi });
+        expect(copySpy).toHaveBeenCalled();
     });
 
     it("paste throws an error if required APIs are not available", async () => {
@@ -670,7 +663,7 @@ describe("USS Action Unit Tests - copy file / directory", () => {
         const rootTree: UssFileTree = {
             children: [],
             baseName: blockMocks.nodes[1].getLabel() as string,
-            ussPath: "",
+            ussPath: "/",
             sessionName: blockMocks.treeNodes.ussNode.getLabel() as string,
             type: UssFileType.Directory,
         };
@@ -678,20 +671,21 @@ describe("USS Action Unit Tests - copy file / directory", () => {
         const originalFileList = blockMocks.treeNodes.ussApi.fileList;
         blockMocks.treeNodes.ussApi.copy = blockMocks.treeNodes.ussApi.fileList = undefined;
         try {
-            await blockMocks.nodes[1].paste(rootTree.sessionName, rootTree.ussPath, { tree: rootTree, api: blockMocks.treeNodes.ussApi });
+            await blockMocks.nodes[1].paste(blockMocks.nodes[1].resourceUri, { tree: rootTree, api: blockMocks.treeNodes.ussApi });
         } catch (err) {
             expect(err).toBeDefined();
-            expect(err.message).toBe("Required API functions for pasting (fileList, copy and/or putContent) were not found.");
+            expect(err.message).toBe("Required API functions for pasting (fileList and copy/uploadFromBuffer) were not found.");
         }
 
-        // Test for putContent also being undefined
+        // Test for uploadFromBuffer also being undefined
         blockMocks.treeNodes.ussApi.fileList = originalFileList;
-        blockMocks.treeNodes.ussApi.putContent = undefined;
+        blockMocks.treeNodes.ussApi.copy = jest.fn();
+        blockMocks.treeNodes.ussApi.uploadFromBuffer = undefined;
         try {
-            await blockMocks.nodes[1].paste(rootTree.sessionName, rootTree.ussPath, { tree: rootTree, api: blockMocks.treeNodes.ussApi });
+            await blockMocks.nodes[1].paste(blockMocks.nodes[1].resourceUri, { tree: rootTree, api: blockMocks.treeNodes.ussApi });
         } catch (err) {
             expect(err).toBeDefined();
-            expect(err.message).toBe("Required API functions for pasting (fileList, copy and/or putContent) were not found.");
+            expect(err.message).toBe("Required API functions for pasting (fileList and copy/uploadFromBuffer) were not found.");
         }
     });
 

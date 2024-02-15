@@ -111,7 +111,7 @@ describe("ZoweDatasetNode Unit Tests - Function node.openDs()", () => {
 
         await node.openDs(false, true, blockMocks.testDatasetTree);
 
-        expect(mocked(vscode.workspace.openTextDocument)).toHaveBeenCalledWith(node.resourceUri);
+        expect(mocked(vscode.commands.executeCommand)).toHaveBeenCalledWith("vscode.open", node.resourceUri);
     });
 
     it("Checking of opening for common dataset with unverified profile", async () => {
@@ -142,39 +142,14 @@ describe("ZoweDatasetNode Unit Tests - Function node.openDs()", () => {
 
         await node.openDs(false, true, blockMocks.testDatasetTree);
 
-        expect(mocked(vscode.workspace.openTextDocument)).toHaveBeenCalledWith(node.resourceUri);
-    });
-
-    it("Checking of opening for common dataset without supporting ongoing actions", async () => {
-        globals.defineGlobals("");
-        createGlobalMocks();
-        const blockMocks = createBlockMocks();
-
-        mocked(blockMocks.mvsApi.getContents).mockResolvedValueOnce({
-            success: true,
-            commandResponse: "",
-            apiResponse: {
-                etag: "123",
-            },
-        });
-        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
-        const node = new ZoweDatasetNode({
-            label: "node",
-            collapsibleState: vscode.TreeItemCollapsibleState.None,
-            parentNode: blockMocks.datasetSessionNode,
-        });
-        node.ongoingActions = undefined as any;
-
-        await node.openDs(false, true, blockMocks.testDatasetTree);
-
-        expect(mocked(vscode.workspace.openTextDocument)).toHaveBeenCalledWith(node.resourceUri);
+        expect(mocked(vscode.commands.executeCommand)).toHaveBeenCalledWith("vscode.open", node.resourceUri);
     });
 
     it("Checking of failed attempt to open dataset", async () => {
         globals.defineGlobals("");
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks();
-        globalMocks.getContentsSpy.mockRejectedValueOnce(new Error("testError"));
+        mocked(vscode.commands.executeCommand).mockRejectedValueOnce(new Error("testError"));
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         const node = new ZoweDatasetNode({
             label: "node",
@@ -189,27 +164,6 @@ describe("ZoweDatasetNode Unit Tests - Function node.openDs()", () => {
         }
 
         expect(mocked(Gui.errorMessage)).toBeCalledWith("Error: testError");
-    });
-
-    it("Check for invalid/null response when contents are already fetched", async () => {
-        globals.defineGlobals("");
-        const globalMocks = createGlobalMocks();
-        const blockMocks = createBlockMocks();
-        globalMocks.getContentsSpy.mockClear();
-        mocked(fs.existsSync).mockReturnValueOnce(true);
-        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
-        const node = new ZoweDatasetNode({
-            label: "node",
-            collapsibleState: vscode.TreeItemCollapsibleState.None,
-            parentNode: blockMocks.datasetSessionNode,
-            etag: "abc",
-        });
-        node.ongoingActions = undefined as any;
-
-        await node.openDs(false, true, blockMocks.testDatasetTree);
-
-        expect(globalMocks.getContentsSpy).not.toHaveBeenCalled();
-        expect(node.getEtag()).toBe("abc");
     });
 
     it("Checking of opening for PDS Member", async () => {
@@ -236,7 +190,7 @@ describe("ZoweDatasetNode Unit Tests - Function node.openDs()", () => {
 
         await child.openDs(false, true, blockMocks.testDatasetTree);
 
-        expect(mocked(vscode.workspace.openTextDocument)).toHaveBeenCalledWith(child.resourceUri);
+        expect(mocked(vscode.commands.executeCommand)).toHaveBeenCalledWith("vscode.open", child.resourceUri);
     });
     it("Checking of opening for PDS Member of favorite dataset", async () => {
         globals.defineGlobals("");
@@ -262,7 +216,7 @@ describe("ZoweDatasetNode Unit Tests - Function node.openDs()", () => {
 
         await child.openDs(false, true, blockMocks.testDatasetTree);
 
-        expect(mocked(vscode.workspace.openTextDocument)).toHaveBeenCalledWith(child.resourceUri);
+        expect(mocked(vscode.commands.executeCommand)).toHaveBeenCalledWith("vscode.open", child.resourceUri);
     });
     it("Checking of opening for sequential DS of favorite session", async () => {
         globals.defineGlobals("");
@@ -288,7 +242,7 @@ describe("ZoweDatasetNode Unit Tests - Function node.openDs()", () => {
 
         await child.openDs(false, true, blockMocks.testDatasetTree);
 
-        expect(mocked(vscode.workspace.openTextDocument)).toHaveBeenCalledWith(child.resourceUri);
+        expect(mocked(vscode.commands.executeCommand)).toHaveBeenCalledWith("vscode.open", child.resourceUri);
     });
     it("Checks that openDs fails if called from an invalid node", async () => {
         globals.defineGlobals("");
@@ -310,7 +264,7 @@ describe("ZoweDatasetNode Unit Tests - Function node.openDs()", () => {
             // Prevent exception from failing test
         }
 
-        expect(mocked(Gui.errorMessage)).toBeCalledWith("Invalid data set or member.");
+        expect(mocked(Gui.errorMessage)).toHaveBeenCalledWith("Invalid data set or member.");
     });
     it("Checking that error is displayed and logged for opening of node with invalid context value", async () => {
         createGlobalMocks();

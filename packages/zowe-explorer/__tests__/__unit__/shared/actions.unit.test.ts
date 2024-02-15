@@ -86,7 +86,6 @@ async function createGlobalMocks() {
     Object.defineProperty(Gui, "showMessage", { value: jest.fn(), configurable: true });
     Object.defineProperty(Gui, "resolveQuickPick", { value: jest.fn(), configurable: true });
     Object.defineProperty(Gui, "createQuickPick", { value: jest.fn(), configurable: true });
-    Object.defineProperty(vscode.commands, "executeCommand", { value: globalMocks.withProgress, configurable: true });
     Object.defineProperty(vscode, "ProgressLocation", { value: globalMocks.ProgressLocation, configurable: true });
     Object.defineProperty(Profiles, "getInstance", {
         value: jest.fn().mockReturnValue(createInstanceOfProfile(globalMocks.imperativeProfile)),
@@ -149,6 +148,11 @@ describe("Shared Actions Unit Tests - Function searchInAllLoadedItems", () => {
             parentNode: blockMocks.datasetSessionNode,
             session: globalMocks.session,
         });
+        testNode.command = {
+            command: "vscode.open",
+            title: "",
+            arguments: [testNode.resourceUri],
+        };
         const testDatasetTree = createDatasetTree(blockMocks.datasetSessionNode, globalMocks.treeView);
 
         jest.spyOn(ZoweDatasetNode.prototype, "openDs").mockResolvedValueOnce(undefined);
@@ -225,6 +229,11 @@ describe("Shared Actions Unit Tests - Function searchInAllLoadedItems", () => {
             parentNode: testNode,
             session: globalMocks.session,
         });
+        testMember.command = {
+            command: "vscode.open",
+            title: "",
+            arguments: [testMember.resourceUri],
+        };
         testNode.children.push(testMember);
         const testDatasetTree = createDatasetTree(blockMocks.datasetSessionNode, globalMocks.treeView);
         testDatasetTree.getChildren.mockReturnValue([blockMocks.datasetSessionNode]);

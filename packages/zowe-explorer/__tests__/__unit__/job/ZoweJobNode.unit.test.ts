@@ -405,6 +405,10 @@ describe("ZoweJobNode unit tests - Function getChildren", () => {
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             parentNode: globalMocks.testJobNode,
         });
+        expectedJob.command = {
+            command: "zowe.placeholderCommand",
+            title: "Placeholder",
+        };
 
         globalMocks.testJobNode._owner = null;
         jest.spyOn(contextually, "isSession").mockReturnValueOnce(true);

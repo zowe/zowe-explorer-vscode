@@ -1241,6 +1241,7 @@ export async function refreshPS(node: IZoweDatasetTreeNode): Promise<void> {
             // For favorited or non-favorited sequential DS:
             case contextually.isFavorite(node):
             case contextually.isSessionNotFav(node.getParent()):
+            case contextually.isDs(node):
                 label = node.label as string;
                 break;
             // For favorited or non-favorited data set members:
@@ -1253,12 +1254,10 @@ export async function refreshPS(node: IZoweDatasetTreeNode): Promise<void> {
         }
 
         const statusMsg = Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Fetching data set..."));
-        if (isNodeInEditor(node)) {
-            await DatasetFSProvider.instance.fetchDatasetAtUri(
-                node.resourceUri,
-                vscode.window.visibleTextEditors.find((v) => v.document.uri.path === node.resourceUri.path)
-            );
-        }
+        await DatasetFSProvider.instance.fetchDatasetAtUri(
+            node.resourceUri,
+            vscode.window.visibleTextEditors.find((v) => v.document.uri.path === node.resourceUri.path)
+        );
         statusMsg.dispose();
     } catch (err) {
         if (err.message.includes(vscode.l10n.t("not found"))) {

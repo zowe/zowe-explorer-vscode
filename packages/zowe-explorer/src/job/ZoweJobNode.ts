@@ -63,7 +63,7 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
         const isFavorites = opts.label === "Favorites";
         const profileName = opts.profile?.name ?? fallbackProfileName(this);
 
-        if (opts.parentNode == null && !isFavorites) {
+        if ((opts.parentNode == null || opts.parentNode.getLabel() === "Favorites") && !isFavorites) {
             this.contextValue = globals.JOBS_SESSION_CONTEXT;
             this.resourceUri = vscode.Uri.from({
                 scheme: "zowe-jobs",
@@ -92,7 +92,7 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
             if (!globals.ISTHEIA) {
                 this.id = this.label as string;
             }
-        } else if (!isFavorites && opts.profile != null) {
+        } else if (!isFavorites && opts.profile != null && this.job != null) {
             this.resourceUri = vscode.Uri.from({
                 scheme: "zowe-jobs",
                 path: `/${profileName}/${this.job.jobid}`,
@@ -146,7 +146,7 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
                     parentNode: this,
                     profile: this.getProfile(),
                 });
-                noSpoolNode.iconPath = null;
+                noSpoolNode.iconPath = undefined;
                 return [noSpoolNode];
             }
             spools.forEach((spool) => {
@@ -206,7 +206,7 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
                     profile: this.getProfile(),
                 });
                 noJobsNode.contextValue = globals.INFORMATION_CONTEXT;
-                noJobsNode.iconPath = null;
+                noJobsNode.iconPath = undefined;
                 noJobsNode.command = {
                     command: "zowe.placeholderCommand",
                     title: "Placeholder",
@@ -403,7 +403,7 @@ export class ZoweSpoolNode extends ZoweJobNode {
 
     public constructor(opts: IZoweJobTreeOpts & { spool?: zowe.IJobFile }) {
         super(opts);
-        this.uniqueName = buildUniqueSpoolName(opts.spool);
+        this.uniqueName = opts.spool ? buildUniqueSpoolName(opts.spool) : "<unknown-spool-id>";
         this.resourceUri = opts.parentNode?.resourceUri.with({
             path: `/${opts.profile?.name || fallbackProfileName(this)}/${(opts.parentNode as ZoweJobNode)?.job.jobid}/${this.uniqueName}`,
         });

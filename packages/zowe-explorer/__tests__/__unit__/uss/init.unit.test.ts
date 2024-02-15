@@ -18,15 +18,14 @@ import * as sharedExtension from "../../../src/shared/init";
 import { initUSSProvider } from "../../../src/uss/init";
 import { Profiles } from "../../../src/Profiles";
 import { IJestIt, ITestContext, processSubscriptions, spyOnSubscriptions } from "../../__common__/testUtils";
-import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 
-describe("Test src/dataset/extension", () => {
-    describe("initDatasetProvider", () => {
+describe("Test src/uss/extension", () => {
+    describe("initUSSProvider", () => {
         let registerCommand;
         let onDidChangeConfiguration;
         let spyCreateUssTree;
         const test: ITestContext = {
-            context: { subscriptions: [] },
+            context: { subscriptions: new Array() },
             value: { test: "uss", refreshUSS: jest.fn(), openUSS: jest.fn(), deleteUSSNode: jest.fn(), getUSSDocumentFilePath: jest.fn() },
             _: { _: "_" },
         };
@@ -227,9 +226,9 @@ describe("Test src/dataset/extension", () => {
 
         processSubscriptions(commands, test);
 
-        it("should not initialize if it is unable to create the dataset tree", async () => {
+        it("should not initialize if it is unable to create the USS tree", async () => {
             spyCreateUssTree.mockResolvedValue(null);
-            const myProvider = await initUSSProvider({} as any);
+            const myProvider = await initUSSProvider(test.context);
             expect(myProvider).toBe(null);
         });
 

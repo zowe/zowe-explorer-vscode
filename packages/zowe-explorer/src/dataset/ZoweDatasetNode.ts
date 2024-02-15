@@ -282,7 +282,12 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     temp.updateStats(item);
                     elementChildren[temp.label.toString()] = temp;
                 }
-                if (temp.collapsibleState !== vscode.TreeItemCollapsibleState.None) {
+
+                if (temp == null) {
+                    continue;
+                }
+
+                if (temp?.collapsibleState !== vscode.TreeItemCollapsibleState.None) {
                     // Create an entry for the PDS if it doesn't exist.
                     if (!DatasetFSProvider.instance.exists(temp.resourceUri)) {
                         vscode.workspace.fs.createDirectory(temp.resourceUri);
@@ -503,26 +508,13 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         return responses;
     }
 
-    public async openDs(forceDownload: boolean, previewMember: boolean, datasetProvider: Types.IZoweDatasetTreeType): Promise<void> {
+    public async openDs(_forceDownload: boolean, _previewMember: boolean, datasetProvider: Types.IZoweDatasetTreeType): Promise<void> {
         ZoweLogger.trace("ZoweDatasetNode.openDs called.");
         await datasetProvider.checkCurrentProfile(this);
 
-        // Cache status of double click if the node has the "wasDoubleClicked" property:
-        // allows subsequent clicks to register as double-click if node is not done fetching contents
-        const doubleClicked = Gui.utils.wasDoubleClicked(this, datasetProvider);
-        const shouldPreview = doubleClicked ? false : previewMember;
-        if (this.wasDoubleClicked != null) {
-            this.wasDoubleClicked = doubleClicked;
-        }
-
         if (Profiles.getInstance().validProfile !== Validation.ValidationType.INVALID) {
             try {
-                const document = await vscode.workspace.openTextDocument(this.resourceUri);
-                await Gui.showTextDocument(document, { preview: this.wasDoubleClicked != null ? !this.wasDoubleClicked : shouldPreview });
-                // discard ongoing action to allow new requests on this node
-                if (this.ongoingActions) {
-                    this.ongoingActions[ZoweTreeNodeActions.Interactions.Download] = null;
-                }
+                await vscode.commands.executeCommand("vscode.open", this.resourceUri);
                 if (datasetProvider) {
                     datasetProvider.addFileHistory(`[${this.getProfileName()}]: ${this.label as string}`);
                 }

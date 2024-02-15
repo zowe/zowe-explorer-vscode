@@ -264,6 +264,7 @@ export interface FileDecorationProvider {
 }
 
 export namespace window {
+    export let visibleTextEditors = [];
     /**
      * Options for creating a {@link TreeView}
      */
@@ -392,8 +393,8 @@ export namespace commands {
         return undefined as any;
     }
 
-    export function executeCommand(command: string): undefined {
-        return undefined;
+    export function executeCommand<T = unknown>(command: string, ...rest: any[]): Thenable<T> {
+        return undefined as any;
     }
 }
 export class Disposable {
