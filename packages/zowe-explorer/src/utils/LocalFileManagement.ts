@@ -10,35 +10,47 @@
  */
 
 import * as vscode from "vscode";
-import * as globals from "../globals";
 import * as os from "os";
 import { IZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { ZoweLogger } from "./LoggerUtils";
 
 export class LocalFileManagement {
+    public static filesToCompare: IZoweTreeNode[] = [];
+    public static fileSelectedToCompare: boolean = false;
+
     public static getDefaultUri(): vscode.Uri {
         return vscode.workspace.workspaceFolders?.[0]?.uri ?? vscode.Uri.file(os.homedir());
     }
 
+    public static setCompareSelection(val: boolean): void {
+        LocalFileManagement.fileSelectedToCompare = val;
+        vscode.commands.executeCommand("setContext", "zowe.compareFileStarted", val);
+    }
+
+    public static reset() {
+        LocalFileManagement.filesToCompare = [];
+        LocalFileManagement.setCompareSelection(false);
+    }
+
     public static selectFileForCompare(node: IZoweTreeNode): void {
-        if (globals.filesToCompare.length > 0) {
-            globals.resetCompareChoices();
+        if (LocalFileManagement.filesToCompare.length > 0) {
+            LocalFileManagement.reset();
         }
-        globals.filesToCompare.push(node);
-        globals.setCompareSelection(true);
-        ZoweLogger.trace(`${String(globals.filesToCompare[0].label)} selected for compare.`);
+        LocalFileManagement.filesToCompare.push(node);
+        LocalFileManagement.setCompareSelection(true);
+        ZoweLogger.trace(`${String(LocalFileManagement.filesToCompare[0].label)} selected for compare.`);
     }
 
     /**
      * Function that triggers compare of the 2 files selected for compare in the active editor
      * @returns {Promise<void>}
      */
-    public static compareChosenFileContent(node: IZoweTreeNode, readOnly = false): void {
-        globals.filesToCompare.push(node);
-        const docUriArray: vscode.Uri[] = globals.filesToCompare.map((n) => n.resourceUri);
-        globals.resetCompareChoices();
+    public static async compareChosenFileContent(node: IZoweTreeNode, readOnly = false): Promise<void> {
+        LocalFileManagement.filesToCompare.push(node);
+        const docUriArray: vscode.Uri[] = LocalFileManagement.filesToCompare.map((n) => n.resourceUri);
+        LocalFileManagement.reset();
         if (docUriArray.length === 2) {
-            vscode.commands.executeCommand("vscode.diff", docUriArray[0], docUriArray[1]);
+            await vscode.commands.executeCommand("vscode.diff", docUriArray[0], docUriArray[1]);
             if (readOnly) {
                 this.readOnlyFile();
             }

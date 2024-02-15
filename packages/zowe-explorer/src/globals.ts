@@ -13,7 +13,7 @@ import * as path from "path";
 import { imperative } from "@zowe/cli";
 import * as vscode from "vscode";
 
-import { FileManagement, IZoweTreeNode } from "@zowe/zowe-explorer-api";
+import { FileManagement } from "@zowe/zowe-explorer-api";
 import { SettingsConfig } from "./utils/SettingsConfig";
 import { ZoweLogger } from "./utils/LoggerUtils";
 export { ZoweLogger } from "./utils/LoggerUtils";
@@ -103,8 +103,6 @@ export let ACTIVATED = false;
 export let PROFILE_SECURITY: string | boolean = ZOWE_CLI_SCM;
 export let SAVED_PROFILE_CONTENTS = new Uint8Array();
 export const JOBS_MAX_PREFIX = 8;
-export let FILE_SELECTED_TO_COMPARE: boolean;
-export let filesToCompare: IZoweTreeNode[];
 
 // Dictionary describing translation from old configuration names to new standardized names
 export const configurationDictionary: { [k: string]: string } = {
@@ -364,14 +362,4 @@ export async function setGlobalSecurityValue(credentialManager?: string): Promis
         PROFILE_SECURITY = ZOWE_CLI_SCM;
         ZoweLogger.info(vscode.l10n.t(`Zowe explorer profiles are being set as secured.`));
     }
-}
-
-export function setCompareSelection(val: boolean): void {
-    FILE_SELECTED_TO_COMPARE = val;
-    vscode.commands.executeCommand("setContext", "zowe.compareFileStarted", val);
-}
-
-export function resetCompareChoices(): void {
-    setCompareSelection(false);
-    filesToCompare = [];
 }
