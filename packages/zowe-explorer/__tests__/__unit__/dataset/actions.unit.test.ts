@@ -112,8 +112,6 @@ function createGlobalMocks() {
     Object.defineProperty(zowe, "Create", { value: jest.fn(), configurable: true });
     Object.defineProperty(zowe.Create, "dataSet", { value: jest.fn(), configurable: true });
     Object.defineProperty(zowe.Create, "dataSetLike", { value: jest.fn(), configurable: true });
-    Object.defineProperty(fs, "unlinkSync", { value: jest.fn(), configurable: true });
-    Object.defineProperty(fs, "existsSync", { value: jest.fn(), configurable: true });
     Object.defineProperty(sharedUtils, "concatChildNodes", { value: jest.fn(), configurable: true });
     Object.defineProperty(Profiles, "getInstance", { value: jest.fn(), configurable: true });
     Object.defineProperty(zowe, "List", { value: jest.fn(), configurable: true });
@@ -735,15 +733,12 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
             profile: blockMocks.imperativeProfile,
         });
 
-        mocked(fs.existsSync).mockReturnValueOnce(true);
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Delete" as any);
         const deleteSpy = jest.spyOn(blockMocks.mvsApi, "deleteDataSet");
 
         await dsActions.deleteDataset(node, blockMocks.testDatasetTree);
 
         expect(deleteSpy).toBeCalledWith(node.label, { responseTimeout: blockMocks.imperativeProfile.profile?.responseTimeout });
-        expect(mocked(fs.existsSync)).toBeCalledWith(path.join(globals.DS_DIR, node.getSessionNode().label.toString(), node.label.toString()));
-        expect(mocked(fs.unlinkSync)).toBeCalledWith(path.join(globals.DS_DIR, node.getSessionNode().label.toString(), node.label.toString()));
     });
     it("Checking common PS dataset deletion with Unverified profile", async () => {
         globals.defineGlobals("");
@@ -768,15 +763,12 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
             profile: blockMocks.imperativeProfile,
         });
 
-        mocked(fs.existsSync).mockReturnValueOnce(true);
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Delete" as any);
         const deleteSpy = jest.spyOn(blockMocks.mvsApi, "deleteDataSet");
 
         await dsActions.deleteDataset(node, blockMocks.testDatasetTree);
 
         expect(deleteSpy).toBeCalledWith(node.label, { responseTimeout: blockMocks.imperativeProfile.profile?.responseTimeout });
-        expect(mocked(fs.existsSync)).toBeCalledWith(path.join(globals.DS_DIR, node.getSessionNode().label.toString(), node.label.toString()));
-        expect(mocked(fs.unlinkSync)).toBeCalledWith(path.join(globals.DS_DIR, node.getSessionNode().label.toString(), node.label.toString()));
     });
     it("Checking common PS dataset deletion with not existing local file", async () => {
         globals.defineGlobals("");
@@ -790,13 +782,11 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
             profile: blockMocks.imperativeProfile,
         });
 
-        mocked(fs.existsSync).mockReturnValueOnce(false);
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Delete" as any);
         const deleteSpy = jest.spyOn(blockMocks.mvsApi, "deleteDataSet");
 
         await dsActions.deleteDataset(node, blockMocks.testDatasetTree);
 
-        expect(mocked(fs.unlinkSync)).not.toBeCalled();
         expect(deleteSpy).toBeCalledWith(node.label, { responseTimeout: blockMocks.imperativeProfile.profile?.responseTimeout });
     });
     it("Checking common PS dataset failed deletion attempt due to absence on remote", async () => {
@@ -811,7 +801,6 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
             profile: blockMocks.imperativeProfile,
         });
 
-        mocked(fs.existsSync).mockReturnValueOnce(true);
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Delete" as any);
         const deleteSpy = jest.spyOn(blockMocks.mvsApi, "deleteDataSet");
         deleteSpy.mockRejectedValueOnce(Error("not found"));
@@ -832,7 +821,6 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
             profile: blockMocks.imperativeProfile,
         });
 
-        mocked(fs.existsSync).mockReturnValueOnce(true);
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Delete" as any);
         const deleteSpy = jest.spyOn(blockMocks.mvsApi, "deleteDataSet");
         deleteSpy.mockRejectedValueOnce(Error(""));
@@ -859,7 +847,6 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
         });
         node.contextValue = globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX;
 
-        mocked(fs.existsSync).mockReturnValueOnce(true);
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Delete" as any);
         const deleteSpy = jest.spyOn(blockMocks.mvsApi, "deleteDataSet");
 
@@ -867,8 +854,6 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
 
         expect(deleteSpy).toBeCalledWith(node.label, { responseTimeout: blockMocks.imperativeProfile.profile?.responseTimeout });
         expect(blockMocks.testDatasetTree.removeFavorite).toBeCalledWith(node);
-        expect(mocked(fs.existsSync)).toBeCalledWith(path.join(globals.DS_DIR, parent.getSessionNode().label.toString(), "HLQ.TEST.NODE"));
-        expect(mocked(fs.unlinkSync)).toBeCalledWith(path.join(globals.DS_DIR, parent.getSessionNode().label.toString(), "HLQ.TEST.NODE"));
     });
     it("Checking Favorite PDS Member deletion", async () => {
         globals.defineGlobals("");
@@ -883,7 +868,6 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
         parent.contextValue = globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX;
         const child = new ZoweDatasetNode({ label: "child", collapsibleState: vscode.TreeItemCollapsibleState.None, parentNode: parent });
 
-        mocked(fs.existsSync).mockReturnValueOnce(true);
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Delete" as any);
         const deleteSpy = jest.spyOn(blockMocks.mvsApi, "deleteDataSet");
 
@@ -893,12 +877,6 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
             responseTimeout: blockMocks.imperativeProfile.profile?.responseTimeout,
         });
         expect(blockMocks.testDatasetTree.removeFavorite).toBeCalledWith(child);
-        expect(mocked(fs.existsSync)).toBeCalledWith(
-            path.join(globals.DS_DIR, parent.getSessionNode().label.toString(), `${child.getParent().label.toString()}(${child.label.toString()})`)
-        );
-        expect(mocked(fs.unlinkSync)).toBeCalledWith(
-            path.join(globals.DS_DIR, parent.getSessionNode().label.toString(), `${child.getParent().label.toString()}(${child.label.toString()})`)
-        );
     });
     it("Checking Favorite PS dataset deletion", async () => {
         globals.defineGlobals("");
@@ -923,7 +901,6 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
         child.contextValue = globals.DS_FAV_CONTEXT;
         blockMocks.testDatasetTree.mFavorites[0].children.push(child);
 
-        mocked(fs.existsSync).mockReturnValueOnce(true);
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Delete" as any);
         const deleteSpy = jest.spyOn(blockMocks.mvsApi, "deleteDataSet");
 
@@ -931,8 +908,6 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
 
         expect(deleteSpy).toBeCalledWith("HLQ.TEST.DELETE.NODE", { responseTimeout: blockMocks.imperativeProfile.profile?.responseTimeout });
         expect(blockMocks.testDatasetTree.removeFavorite).toBeCalledWith(child);
-        expect(mocked(fs.existsSync)).toBeCalledWith(path.join(globals.DS_DIR, parent.getSessionNode().label.toString(), "HLQ.TEST.DELETE.NODE"));
-        expect(mocked(fs.unlinkSync)).toBeCalledWith(path.join(globals.DS_DIR, parent.getSessionNode().label.toString(), "HLQ.TEST.DELETE.NODE"));
     });
     it("Checking incorrect dataset failed deletion attempt", async () => {
         globals.defineGlobals("");
@@ -952,7 +927,6 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
             profile: blockMocks.imperativeProfile,
         });
 
-        mocked(fs.existsSync).mockReturnValueOnce(true);
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Delete" as any);
         const deleteSpy = jest.spyOn(blockMocks.mvsApi, "deleteDataSet");
         deleteSpy.mockClear();
@@ -1694,51 +1668,6 @@ describe("Dataset Actions Unit Tests - Function copyDataSets", () => {
         const copySpy = jest.spyOn(blockMocks.mvsApi, "copyDataSetMember");
         copySpy.mockRejectedValueOnce("");
         await expect(dsActions.pasteDataSetMembers(blockMocks.testDatasetTree, blockMocks.memberChild)).toBeFalsy;
-    });
-
-    it("Testing downloadDs() called with invalid node", async () => {
-        globals.defineGlobals("");
-        createGlobalMocks();
-        const blockMocks = createBlockMocks();
-        const node = new ZoweDatasetNode({
-            label: "HLQ.TEST.TO.NODE",
-            collapsibleState: vscode.TreeItemCollapsibleState.None,
-            parentNode: blockMocks.pdsSessionNode,
-            profile: blockMocks.imperativeProfile,
-        });
-        blockMocks.pdsSessionNode.contextValue = "fakeContext";
-
-        try {
-            await dsActions.downloadDs(node, true);
-        } catch (err) {
-            /* Do nothing */
-        }
-
-        expect(mocked(Gui.errorMessage)).toBeCalledWith("Invalid data set or member.");
-    });
-
-    it("Testing downloadDs() called with a member", async () => {
-        globals.defineGlobals("");
-        const globalMocks = createGlobalMocks();
-        const blockMocks = createBlockMocks();
-        const node = new ZoweDatasetNode({
-            label: "HLQ.TEST.TO.NODE",
-            collapsibleState: vscode.TreeItemCollapsibleState.None,
-            parentNode: blockMocks.pdsSessionNode,
-            profile: blockMocks.imperativeProfile,
-        });
-        globalMocks.getContentsSpy.mockResolvedValueOnce({
-            success: true,
-            commandResponse: null,
-            apiResponse: {
-                etag: "123",
-            },
-        });
-
-        const label = node.getParent().getLabel().toString() + "(" + node.getLabel().toString() + ")";
-        const filePathSpy = jest.spyOn(sharedUtils, "getDocumentFilePath");
-        await dsActions.downloadDs(node, true);
-        expect(filePathSpy).toBeCalledWith(label, node);
     });
 
     it("Testing refreshDataset() error handling", async () => {

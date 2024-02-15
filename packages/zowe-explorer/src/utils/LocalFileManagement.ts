@@ -27,7 +27,7 @@ export class LocalFileManagement {
         vscode.commands.executeCommand("setContext", "zowe.compareFileStarted", val);
     }
 
-    public static reset() {
+    public static reset(): void {
         LocalFileManagement.filesToCompare = [];
         LocalFileManagement.setCompareSelection(false);
     }

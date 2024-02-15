@@ -72,8 +72,8 @@ describe("ProfileManagement unit tests", () => {
                 newMocks.mockTreeProviders.job.mSessionNodes.push(newMocks.mockJobSessionNode);
             },
             FileSystemProvider: {
-                createDirectory: jest.fn()
-            }
+                createDirectory: jest.fn(),
+            },
         };
 
         jest.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation(newMocks.FileSystemProvider.createDirectory);

@@ -88,8 +88,8 @@ async function createGlobalMocks() {
         mockProfileInfo: createInstanceOfProfileInfo(),
         mockProfilesCache: new ProfilesCache(imperative.Logger.getAppLogger()),
         FileSystemProvider: {
-            createDirectory: jest.fn()
-        }
+            createDirectory: jest.fn(),
+        },
     };
 
     jest.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation(globalMocks.FileSystemProvider.createDirectory);

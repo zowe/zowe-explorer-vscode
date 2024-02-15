@@ -92,7 +92,7 @@ async function createGlobalMocks() {
         mockTreeProviders: createTreeProviders(),
         FileSystemProvider: {
             createDirectory: jest.fn(),
-            writeFile: jest.fn()
+            writeFile: jest.fn(),
         },
     };
 
