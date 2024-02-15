@@ -484,11 +484,13 @@ describe("ZoweJobNode unit tests - Function getChildren", () => {
 
     it("Check that jobs with duplicate DD names do not overwrite each other", async () => {
         const globalMocks = await createGlobalMocks();
-        const mockSpoolOne = { ...globalMocks.mockIJobFile, stepname: "SOMEJOB", ddname: "TEST", "record-count": 13 };
-        const mockSpoolTwo = { ...globalMocks.mockIJobFile, stepname: "SOMEJOB", ddname: "TEST", "record-count": 5 };
+        const mockSpoolOne = { ...globalMocks.mockIJobFile, stepname: "JES2", ddname: "JESMSGLG", "record-count": 11 };
+        const mockSpoolTwo = { ...globalMocks.mockIJobFile, stepname: "SOMEJOB", ddname: "TEST", "record-count": 13 };
+        const mockSpoolThree = { ...globalMocks.mockIJobFile, stepname: "SOMEJOB", ddname: "TEST", "record-count": 5 };
 
-        mockSpoolOne.id = 12;
-        mockSpoolTwo.id = 13;
+        mockSpoolOne.procstep = "TEST";
+        mockSpoolTwo.id = 12;
+        mockSpoolThree.id = 13;
 
         globalMocks.testJobsProvider.mSessionNodes[1]._owner = null;
         globalMocks.testJobsProvider.mSessionNodes[1]._prefix = "*";
@@ -496,17 +498,17 @@ describe("ZoweJobNode unit tests - Function getChildren", () => {
         globalMocks.testJobNode.session.ISession = globalMocks.testSessionNoCred;
         jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValueOnce({
             getSpoolFiles: jest.fn().mockReturnValueOnce([
-                { ...globalMocks.mockIJobFile, stepname: "JES2", ddname: "JESMSGLG", "record-count": 11 },
+                mockSpoolOne
                 { ...globalMocks.mockIJobFile, stepname: "JES2", ddname: "JESJCL", "record-count": 21 },
                 { ...globalMocks.mockIJobFile, stepname: "JES2", ddname: "JESYSMSG", "record-count": 6 },
-                mockSpoolOne,
-                mockSpoolTwo
+                mockSpoolTwo,
+                mockSpoolThree
             ]),
         } as any);
         jest.spyOn(contextually, "isSession").mockReturnValueOnce(false);
         const spoolFiles = await globalMocks.testJobNode.getChildren();
         expect(spoolFiles.length).toBe(5);
-        expect(spoolFiles[0].label).toBe("101 - JES2:JESMSGLG");
+        expect(spoolFiles[0].label).toBe("101 - JES2:JESMSGLG - TEST");
         expect(spoolFiles[1].label).toBe("101 - JES2:JESJCL");
         expect(spoolFiles[2].label).toBe("101 - JES2:JESYSMSG");
         expect(spoolFiles[3].label).toBe("12 - SOMEJOB:TEST");
