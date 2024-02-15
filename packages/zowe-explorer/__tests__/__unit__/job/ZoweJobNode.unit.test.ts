@@ -595,7 +595,7 @@ describe("ZoweJobNode unit tests - Function removeFavorite", () => {
 
         // Actual test
         await globalMocks.testJobsProvider.removeFavorite(profileNodeInFavs.children[0]);
-        expect(removeFavProfileSpy).not.toBeCalled();
+        expect(removeFavProfileSpy).not.toHaveBeenCalled();
         expect(profileNodeInFavs.children.length).toEqual(1);
         expect(profileNodeInFavs.children[0].label).toBe("MYHLQ(JOB1284)");
     });

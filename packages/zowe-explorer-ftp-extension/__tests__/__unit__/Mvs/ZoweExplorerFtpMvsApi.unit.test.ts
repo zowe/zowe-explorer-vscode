@@ -60,7 +60,7 @@ describe("FtpMvsApi", () => {
         const result = await MvsApi.dataSet(mockParams.filter);
 
         expect(result.apiResponse.items[0].dsname).toContain("IBMUSER.DS1");
-        expect(DataSetUtils.listDataSets).toBeCalledTimes(1);
+        expect(DataSetUtils.listDataSets).toHaveBeenCalledTimes(1);
         expect(MvsApi.releaseConnection).toHaveBeenCalledTimes(0);
     });
 
@@ -73,8 +73,8 @@ describe("FtpMvsApi", () => {
         const result = await MvsApi.allMembers(mockParams.dataSetName);
 
         expect(result.apiResponse.items[0].member).toContain("M1");
-        expect(DataSetUtils.listMembers).toBeCalledTimes(1);
-        expect(MvsApi.releaseConnection).toBeCalled();
+        expect(DataSetUtils.listMembers).toHaveBeenCalledTimes(1);
+        expect(MvsApi.releaseConnection).toHaveBeenCalled();
     });
 
     it("should view dataset content.", async () => {
@@ -92,8 +92,8 @@ describe("FtpMvsApi", () => {
         const result = await MvsApi.getContents(mockParams.dataSetName, mockParams.options);
 
         expect(result.apiResponse.etag).toHaveLength(40);
-        expect(DataSetUtils.downloadDataSet).toBeCalledTimes(1);
-        expect(MvsApi.releaseConnection).toBeCalled();
+        expect(DataSetUtils.downloadDataSet).toHaveBeenCalledTimes(1);
+        expect(MvsApi.releaseConnection).toHaveBeenCalled();
 
         expect((response._readableState.buffer.head?.data ?? response._readableState.buffer).toString()).toContain("Hello world");
     });
@@ -120,9 +120,9 @@ describe("FtpMvsApi", () => {
         jest.spyOn(Gui, "warningMessage").mockImplementation();
         const result = await MvsApi.putContents(mockParams.inputFilePath, mockParams.dataSetName, mockParams.options);
         expect(result.commandResponse).toContain("Data set uploaded successfully.");
-        expect(DataSetUtils.listDataSets).toBeCalledTimes(1);
-        expect(DataSetUtils.uploadDataSet).toBeCalledTimes(1);
-        expect(MvsApi.releaseConnection).toBeCalled();
+        expect(DataSetUtils.listDataSets).toHaveBeenCalledTimes(1);
+        expect(DataSetUtils.uploadDataSet).toHaveBeenCalledTimes(1);
+        expect(MvsApi.releaseConnection).toHaveBeenCalled();
         // check that correct function is called from node-tmp
         expect(tmpNameSyncSpy).toHaveBeenCalled();
         expect(rmSyncSpy).toHaveBeenCalled();
@@ -162,7 +162,7 @@ describe("FtpMvsApi", () => {
         });
         // ensure options object at runtime does not have localFile
         expect(Object.keys(uploadDataSetMock.mock.calls[0][2]).find((k) => k === "localFile")).toBe(undefined);
-        expect(MvsApi.releaseConnection).toBeCalled();
+        expect(MvsApi.releaseConnection).toHaveBeenCalled();
     });
 
     it("should upload single space to dataset when secureFtp is true and contents are empty", async () => {
@@ -199,7 +199,7 @@ describe("FtpMvsApi", () => {
         });
         // ensure options object at runtime does not have localFile
         expect(Object.keys(uploadDataSetMock.mock.calls[0][2]).find((k) => k === "localFile")).toBe(undefined);
-        expect(MvsApi.releaseConnection).toBeCalled();
+        expect(MvsApi.releaseConnection).toHaveBeenCalled();
     });
 
     it("should create dataset.", async () => {
@@ -220,8 +220,8 @@ describe("FtpMvsApi", () => {
             secondary: 2,
         });
         expect(result.commandResponse).toContain("Data set created successfully.");
-        expect(DataSetUtils.allocateDataSet).toBeCalledTimes(1);
-        expect(MvsApi.releaseConnection).toBeCalled();
+        expect(DataSetUtils.allocateDataSet).toHaveBeenCalledTimes(1);
+        expect(MvsApi.releaseConnection).toHaveBeenCalled();
     });
 
     it("should create dataset if no options are passed in", async () => {
@@ -233,8 +233,8 @@ describe("FtpMvsApi", () => {
         };
         const result = await MvsApi.createDataSet(mockParams.dataSetType, mockParams.dataSetName);
         expect(result.commandResponse).toContain("Data set created successfully.");
-        expect(DataSetUtils.allocateDataSet).toBeCalledTimes(1);
-        expect(MvsApi.releaseConnection).toBeCalled();
+        expect(DataSetUtils.allocateDataSet).toHaveBeenCalledTimes(1);
+        expect(MvsApi.releaseConnection).toHaveBeenCalled();
     });
 
     it("should create dataset member.", async () => {
@@ -246,8 +246,8 @@ describe("FtpMvsApi", () => {
         };
         const result = await MvsApi.createDataSetMember(mockParams.dataSetName, mockParams.options);
         expect(result.commandResponse).toContain("Member created successfully.");
-        expect(DataSetUtils.uploadDataSet).toBeCalledTimes(1);
-        expect(MvsApi.releaseConnection).toBeCalled();
+        expect(DataSetUtils.uploadDataSet).toHaveBeenCalledTimes(1);
+        expect(MvsApi.releaseConnection).toHaveBeenCalled();
     });
 
     it("should fail to call getContents if an exception occurs in FtpClient.", async () => {
@@ -275,8 +275,8 @@ describe("FtpMvsApi", () => {
         const result = await MvsApi.renameDataSet(mockParams.currentDataSetName, mockParams.newDataSetName);
         await MvsApi.renameDataSetMember(mockParams.dataSetName, mockParams.currentMemberName, mockParams.newMemberName);
         expect(result.commandResponse).toContain("Rename completed successfully.");
-        expect(DataSetUtils.renameDataSet).toBeCalledTimes(2);
-        expect(MvsApi.releaseConnection).toBeCalled();
+        expect(DataSetUtils.renameDataSet).toHaveBeenCalledTimes(2);
+        expect(MvsApi.releaseConnection).toHaveBeenCalled();
     });
 
     it("should delete dataset.", async () => {
@@ -286,8 +286,8 @@ describe("FtpMvsApi", () => {
         };
         const result = await MvsApi.deleteDataSet(mockParams.dataSetName);
         expect(result.commandResponse).toContain("Delete completed successfully.");
-        expect(DataSetUtils.deleteDataSet).toBeCalledTimes(1);
-        expect(MvsApi.releaseConnection).toBeCalled();
+        expect(DataSetUtils.deleteDataSet).toHaveBeenCalledTimes(1);
+        expect(MvsApi.releaseConnection).toHaveBeenCalled();
     });
 
     it("should throw an error when copyDataSet is called", async () => {

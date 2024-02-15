@@ -2066,7 +2066,7 @@
     "pretty": "prettier --write .",
     "createTestProfileData": "ts-node ./scripts/createTestProfileData.ts",
     "createDemoNodes": "ts-node ./scripts/createDemoNodes.ts",
-    "generateLocalization": "npx @vscode/l10n-dev export --o ./l10n ./src"
+    "generateLocalization": "pnpm dlx @vscode/l10n-dev export --o ./l10n ./src"
   },
   "engines": {
     "vscode": "^1.79.0"

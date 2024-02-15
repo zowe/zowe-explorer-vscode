@@ -256,7 +256,7 @@ describe("USS Action Unit Tests - Function createUSSNodeDialog", () => {
         jest.spyOn(blockMocks.ussNode, "getChildren").mockResolvedValueOnce([]);
 
         await ussNodeActions.createUSSNode(blockMocks.ussNode, blockMocks.testUSSTree, "file");
-        expect(createSpy).toBeCalledWith("/test/path/testFile", "file");
+        expect(createSpy).toHaveBeenCalledWith("/test/path/testFile", "file");
     });
 
     it("Tests that createUSSNode fails if an error is thrown", async () => {
@@ -360,8 +360,8 @@ describe("USS Action Unit Tests - Function deleteFromDisk", () => {
 
         ussNodeActions.deleteFromDisk(null, "some/where/that/exists");
 
-        expect(fs.existsSync).toBeCalledTimes(1);
-        expect(fs.unlinkSync).toBeCalledTimes(1);
+        expect(fs.existsSync).toHaveBeenCalledTimes(1);
+        expect(fs.unlinkSync).toHaveBeenCalledTimes(1);
     });
 
     it("should call not unlink if file doesn't exist", () => {
@@ -374,8 +374,8 @@ describe("USS Action Unit Tests - Function deleteFromDisk", () => {
 
         ussNodeActions.deleteFromDisk(null, "some/where/that/does/not/exist");
 
-        expect(fs.existsSync).toBeCalledTimes(1);
-        expect(fs.unlinkSync).toBeCalledTimes(0);
+        expect(fs.existsSync).toHaveBeenCalledTimes(1);
+        expect(fs.unlinkSync).toHaveBeenCalledTimes(0);
     });
 
     it("should catch the error when thrown", () => {
@@ -384,7 +384,7 @@ describe("USS Action Unit Tests - Function deleteFromDisk", () => {
             throw new Error();
         });
         ussNodeActions.deleteFromDisk(null, "some/where/that/does/not/exist");
-        expect(ZoweLogger.warn).toBeCalledTimes(1);
+        expect(ZoweLogger.warn).toHaveBeenCalledTimes(1);
     });
 });
 
@@ -403,7 +403,7 @@ describe("USS Action Unit Tests - Function copyPath", () => {
 
         globalMocks.theia = false;
         await ussNodeActions.copyPath(blockMocks.ussNode);
-        expect(globalMocks.writeText).toBeCalledWith(blockMocks.ussNode.fullPath);
+        expect(globalMocks.writeText).toHaveBeenCalledWith(blockMocks.ussNode.fullPath);
     });
 
     it("should not copy the node's full path to the system clipboard if theia", async () => {
@@ -414,7 +414,7 @@ describe("USS Action Unit Tests - Function copyPath", () => {
         globalMocks.theia = true;
 
         await ussNodeActions.copyPath(blockMocks.ussNode);
-        expect(globalMocks.writeText).not.toBeCalled();
+        expect(globalMocks.writeText).not.toHaveBeenCalled();
     });
 });
 
@@ -503,7 +503,7 @@ describe("USS Action Unit Tests - Function saveUSSFile", () => {
 
         await ussNodeActions.saveUSSFile(testDocument, blockMocks.testUSSTree);
 
-        expect(mocked(sharedUtils.concatChildNodes)).toBeCalled();
+        expect(mocked(sharedUtils.concatChildNodes)).toHaveBeenCalled();
     });
 
     it("Testing that saveUSSFile is executed successfully", async () => {
@@ -530,7 +530,7 @@ describe("USS Action Unit Tests - Function saveUSSFile", () => {
 
         await ussNodeActions.saveUSSFile(blockMocks.testDoc, blockMocks.testUSSTree);
         expect(globalMocks.concatChildNodes.mock.calls.length).toBe(1);
-        expect(blockMocks.mockGetEtag).toBeCalledTimes(1);
+        expect(blockMocks.mockGetEtag).toHaveBeenCalledTimes(1);
         expect(blockMocks.mockGetEtag).toReturnWith("123");
     });
 
@@ -620,9 +620,9 @@ describe("USS Action Unit Tests - Functions uploadDialog & uploadFile", () => {
         globalMocks.isBinaryFileSync.mockReturnValueOnce(false);
 
         await ussNodeActions.uploadDialog(blockMocks.ussNode, blockMocks.testUSSTree);
-        expect(globalMocks.showOpenDialog).toBeCalled();
-        expect(globalMocks.openTextDocument).toBeCalled();
-        expect(blockMocks.testUSSTree.refresh).toBeCalled();
+        expect(globalMocks.showOpenDialog).toHaveBeenCalled();
+        expect(globalMocks.openTextDocument).toHaveBeenCalled();
+        expect(blockMocks.testUSSTree.refresh).toHaveBeenCalled();
     });
 
     it("Tests that uploadDialog() works for binary file", async () => {
@@ -635,8 +635,8 @@ describe("USS Action Unit Tests - Functions uploadDialog & uploadFile", () => {
         globalMocks.isBinaryFileSync.mockReturnValueOnce(true);
 
         await ussNodeActions.uploadDialog(blockMocks.ussNode, blockMocks.testUSSTree);
-        expect(globalMocks.showOpenDialog).toBeCalled();
-        expect(blockMocks.testUSSTree.refresh).toBeCalled();
+        expect(globalMocks.showOpenDialog).toHaveBeenCalled();
+        expect(blockMocks.testUSSTree.refresh).toHaveBeenCalled();
     });
 
     it("Tests that uploadDialog() throws an error successfully", async () => {
@@ -706,7 +706,7 @@ describe("USS Action Unit Tests - function uploadFile", () => {
         );
 
         await ussNodeActions.uploadFile(blockMocks.ussNode, { fileName: "madeup" } as any);
-        expect(ZoweExplorerApiRegister.getUssApi(null).putContent).toBeCalled();
+        expect(ZoweExplorerApiRegister.getUssApi(null).putContent).toHaveBeenCalled();
     });
 });
 
@@ -767,7 +767,7 @@ describe("USS Action Unit Tests - copy file / directory", () => {
         const fileStructure = JSON.stringify(await ussNodeActions.ussFileStructure(blockMocks.nodes));
         await ussNodeActions.copyUssFilesToClipboard(blockMocks.nodes);
 
-        expect(globalMocks.writeText).toBeCalledWith(fileStructure);
+        expect(globalMocks.writeText).toHaveBeenCalledWith(fileStructure);
     });
 
     it("Has the proper responses for toSameSession in UssFileUtils", async () => {
@@ -861,7 +861,7 @@ describe("USS Action Unit Tests - copy file / directory", () => {
         const blockMocks = await createBlockMocks(globalMocks);
         await ussNodeActions.refreshChildNodesDirectory(blockMocks.nodes[0]);
         blockMocks.nodes[0].refreshUSS = jest.fn().mockResolvedValueOnce(blockMocks.nodes[0]);
-        expect(blockMocks.nodes[0].refreshUSS).toBeCalledTimes(0);
+        expect(blockMocks.nodes[0].refreshUSS).toHaveBeenCalledTimes(0);
     });
 
     it("tests refreshChildNodesDirectory executed successfully with file", async () => {
@@ -870,7 +870,7 @@ describe("USS Action Unit Tests - copy file / directory", () => {
         const blockMocks = await createBlockMocks(globalMocks);
         await ussNodeActions.refreshChildNodesDirectory(blockMocks.nodes[0]);
         blockMocks.nodes[1].refreshUSS = jest.fn().mockResolvedValueOnce(blockMocks.nodes[1]);
-        expect(blockMocks.nodes[1].refreshUSS).toBeCalledTimes(0);
+        expect(blockMocks.nodes[1].refreshUSS).toHaveBeenCalledTimes(0);
     });
     it("tests refreshChildNodesDirectory executed successfully on a node with a child", async () => {
         const globalMocks = createGlobalMocks();
@@ -879,7 +879,7 @@ describe("USS Action Unit Tests - copy file / directory", () => {
         node.getChildren = jest.fn().mockResolvedValueOnce([blockMocks.nodes[0]]);
         await ussNodeActions.refreshChildNodesDirectory(node);
 
-        expect(blockMocks.nodes[0].refreshUSS).toBeCalledTimes(1);
+        expect(blockMocks.nodes[0].refreshUSS).toHaveBeenCalledTimes(1);
     });
 
     it("tests copyUssFiles executed successfully via context menu with selected nodes", async () => {
@@ -943,8 +943,8 @@ describe("USS Action Unit Tests - function refreshDirectory", () => {
         jest.spyOn(testNode, "getChildren").mockImplementation();
         const refreshElementSpy = jest.spyOn(testUSSTree, "refreshElement");
         await expect(ussNodeActions.refreshDirectory(testNode, testUSSTree)).resolves.not.toThrow();
-        expect(refreshElementSpy).toBeCalledTimes(1);
-        expect(refreshElementSpy).toBeCalledWith(testNode);
+        expect(refreshElementSpy).toHaveBeenCalledTimes(1);
+        expect(refreshElementSpy).toHaveBeenCalledWith(testNode);
     });
 
     it("should call errorHandling when error is thrown", async () => {
@@ -953,7 +953,7 @@ describe("USS Action Unit Tests - function refreshDirectory", () => {
         });
         const errorHandlingSpy = jest.spyOn(utils, "errorHandling").mockImplementation();
         await expect(ussNodeActions.refreshDirectory(testNode, testUSSTree)).resolves.not.toThrow();
-        expect(errorHandlingSpy).toBeCalledTimes(1);
+        expect(errorHandlingSpy).toHaveBeenCalledTimes(1);
     });
 });
 

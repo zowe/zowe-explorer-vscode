@@ -110,8 +110,8 @@ describe("ZoweDatasetNode Unit Tests - Function node.openDs()", () => {
 
         await node.openDs(false, true, blockMocks.testDatasetTree);
 
-        expect(mocked(fs.existsSync)).toBeCalledWith(path.join(globals.DS_DIR, node.getSessionNode().label.toString(), node.label.toString()));
-        expect(mocked(vscode.workspace.openTextDocument)).toBeCalledWith(sharedUtils.getDocumentFilePath(node.label.toString(), node));
+        expect(mocked(fs.existsSync)).toHaveBeenCalledWith(path.join(globals.DS_DIR, node.getSessionNode().label.toString(), node.label.toString()));
+        expect(mocked(vscode.workspace.openTextDocument)).toHaveBeenCalledWith(sharedUtils.getDocumentFilePath(node.label.toString(), node));
     });
 
     it("Checking of opening for common dataset with unverified profile", async () => {
@@ -142,8 +142,8 @@ describe("ZoweDatasetNode Unit Tests - Function node.openDs()", () => {
 
         await node.openDs(false, true, blockMocks.testDatasetTree);
 
-        expect(mocked(fs.existsSync)).toBeCalledWith(path.join(globals.DS_DIR, node.getSessionNode().label.toString(), node.label.toString()));
-        expect(mocked(vscode.workspace.openTextDocument)).toBeCalledWith(sharedUtils.getDocumentFilePath(node.label.toString(), node));
+        expect(mocked(fs.existsSync)).toHaveBeenCalledWith(path.join(globals.DS_DIR, node.getSessionNode().label.toString(), node.label.toString()));
+        expect(mocked(vscode.workspace.openTextDocument)).toHaveBeenCalledWith(sharedUtils.getDocumentFilePath(node.label.toString(), node));
     });
 
     it("Checking of opening for common dataset without supporting ongoing actions", async () => {
@@ -168,8 +168,8 @@ describe("ZoweDatasetNode Unit Tests - Function node.openDs()", () => {
 
         await node.openDs(false, true, blockMocks.testDatasetTree);
 
-        expect(mocked(fs.existsSync)).toBeCalledWith(path.join(globals.DS_DIR, node.getSessionNode().label.toString(), node.label.toString()));
-        expect(mocked(vscode.workspace.openTextDocument)).toBeCalledWith(sharedUtils.getDocumentFilePath(node.label.toString(), node));
+        expect(mocked(fs.existsSync)).toHaveBeenCalledWith(path.join(globals.DS_DIR, node.getSessionNode().label.toString(), node.label.toString()));
+        expect(mocked(vscode.workspace.openTextDocument)).toHaveBeenCalledWith(sharedUtils.getDocumentFilePath(node.label.toString(), node));
     });
 
     it("Checking of failed attempt to open dataset", async () => {
@@ -190,7 +190,7 @@ describe("ZoweDatasetNode Unit Tests - Function node.openDs()", () => {
             // do nothing
         }
 
-        expect(mocked(Gui.errorMessage)).toBeCalledWith("Error: testError");
+        expect(mocked(Gui.errorMessage)).toHaveBeenCalledWith("Error: testError");
     });
 
     it("Check for invalid/null response when contents are already fetched", async () => {
@@ -238,10 +238,10 @@ describe("ZoweDatasetNode Unit Tests - Function node.openDs()", () => {
 
         await child.openDs(false, true, blockMocks.testDatasetTree);
 
-        expect(mocked(fs.existsSync)).toBeCalledWith(
+        expect(mocked(fs.existsSync)).toHaveBeenCalledWith(
             path.join(globals.DS_DIR, child.getSessionNode().label.toString(), `${parent.label.toString()}(${child.label.toString()})`)
         );
-        expect(mocked(vscode.workspace.openTextDocument)).toBeCalledWith(
+        expect(mocked(vscode.workspace.openTextDocument)).toHaveBeenCalledWith(
             sharedUtils.getDocumentFilePath(`${parent.label.toString()}(${child.label.toString()})`, child)
         );
     });
@@ -269,10 +269,10 @@ describe("ZoweDatasetNode Unit Tests - Function node.openDs()", () => {
 
         await child.openDs(false, true, blockMocks.testDatasetTree);
 
-        expect(mocked(fs.existsSync)).toBeCalledWith(
+        expect(mocked(fs.existsSync)).toHaveBeenCalledWith(
             path.join(globals.DS_DIR, child.getSessionNode().label.toString(), `${parent.label.toString()}(${child.label.toString()})`)
         );
-        expect(mocked(vscode.workspace.openTextDocument)).toBeCalledWith(
+        expect(mocked(vscode.workspace.openTextDocument)).toHaveBeenCalledWith(
             sharedUtils.getDocumentFilePath(`${parent.label.toString()}(${child.label.toString()})`, child)
         );
     });
@@ -300,8 +300,8 @@ describe("ZoweDatasetNode Unit Tests - Function node.openDs()", () => {
 
         await child.openDs(false, true, blockMocks.testDatasetTree);
 
-        expect(mocked(fs.existsSync)).toBeCalledWith(path.join(globals.DS_DIR, blockMocks.imperativeProfile.name, child.label.toString()));
-        expect(mocked(vscode.workspace.openTextDocument)).toBeCalledWith(sharedUtils.getDocumentFilePath(child.label.toString(), child));
+        expect(mocked(fs.existsSync)).toHaveBeenCalledWith(path.join(globals.DS_DIR, blockMocks.imperativeProfile.name, child.label.toString()));
+        expect(mocked(vscode.workspace.openTextDocument)).toHaveBeenCalledWith(sharedUtils.getDocumentFilePath(child.label.toString(), child));
     });
     it("Checks that openDs fails if called from an invalid node", async () => {
         globals.defineGlobals("");
@@ -323,7 +323,7 @@ describe("ZoweDatasetNode Unit Tests - Function node.openDs()", () => {
             // Prevent exception from failing test
         }
 
-        expect(mocked(Gui.errorMessage)).toBeCalledWith("Invalid data set or member.");
+        expect(mocked(Gui.errorMessage)).toHaveBeenCalledWith("Invalid data set or member.");
     });
     it("Checking that error is displayed and logged for opening of node with invalid context value", async () => {
         createGlobalMocks();
@@ -353,8 +353,8 @@ describe("ZoweDatasetNode Unit Tests - Function node.openDs()", () => {
             // Do nothing
         }
 
-        expect(showErrorMessageSpy).toBeCalledWith("Invalid data set or member.");
-        expect(logErrorSpy).toBeCalledTimes(1);
+        expect(showErrorMessageSpy).toHaveBeenCalledWith("Invalid data set or member.");
+        expect(logErrorSpy).toHaveBeenCalledTimes(1);
     });
 });
 
