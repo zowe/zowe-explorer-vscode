@@ -61,8 +61,10 @@
 - Renamed `IPromptCredentialsCommonOptions` to `CommonOptions`.
 - Renamed `IPromptcredentialsOptions` to `ComplexOptions`.
 - Renamed `IPromptUserPassOptions` to `UserPassOptions`.
+- Removed `ProfilesCache.getSchema()`, `ProfilesCache.getCliProfileManager()`, `ProfilesCache.saveProfile()` & `ProfilesCache.deleteProfileOnDisk()` v1 Profiles manipulation endpoints.
 
 ## New APIs Added
 
 - `ICommand.issueUnixCommand` added for issuing Unix Commands
 - Optional `ICommand.sshProfileRequired` API returning a boolean value for extenders that would like to use the ssh profile for issuing UNIX commands via Zowe Explorer.
+- `ProfilesCache.convertV1ProfToConfig()` added for migrating v1 profiles to a global team configuration file.

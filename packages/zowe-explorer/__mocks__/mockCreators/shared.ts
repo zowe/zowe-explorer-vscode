@@ -352,6 +352,9 @@ export function createInstanceOfProfile(profile: imperative.IProfileLoaded) {
         fetchAllProfiles: jest.fn(() => {
             return [{ name: "sestest" }, { name: "profile1" }, { name: "profile2" }];
         }),
+        convertV1ProfToConfig: jest.fn(),
+        getLoadedProfConfig: jest.fn(),
+        getSecurePropsForProfile: jest.fn(),
     } as any;
 }
 
@@ -592,6 +595,7 @@ export function createTreeProviders() {
             removeSession: jest.fn(),
             refresh: jest.fn(),
             addSingleSession: jest.fn(),
+            refreshElement: jest.fn(),
         } as any,
         uss: {
             mSessionNodes: [
@@ -602,6 +606,7 @@ export function createTreeProviders() {
             removeSession: jest.fn(),
             refresh: jest.fn(),
             addSingleSession: jest.fn(),
+            refreshElement: jest.fn(),
         } as any,
         job: {
             mSessionNodes: [

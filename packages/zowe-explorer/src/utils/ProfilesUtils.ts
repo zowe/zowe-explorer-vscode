@@ -21,6 +21,7 @@ import { Profiles } from "../Profiles";
 import { imperative, getImperativeConfig } from "@zowe/cli";
 import { ZoweLogger } from "./LoggerUtils";
 import { SettingsConfig } from "./SettingsConfig";
+import { TreeProviders } from "../shared/TreeProviders";
 
 /*************************************************************************************************************
  * Error Handling
@@ -427,9 +428,7 @@ export class ProfilesUtils {
             ZoweLogger.debug(`Summary of team configuration files considered for Zowe Explorer: ${JSON.stringify(layerSummary)}`);
         } else {
             if (mProfileInfo.getAllProfiles()?.length > 0) {
-                const v1ProfileErrorMsg = vscode.l10n.t("Zowe v1 profiles in use.  Zowe Explorer no longer supports v1 profiles.");
-                ZoweLogger.error(v1ProfileErrorMsg);
-                await errorHandling(v1ProfileErrorMsg);
+                this.v1ProfileOptions();
             }
         }
     }
@@ -441,7 +440,8 @@ export class ProfilesUtils {
      */
     public static isProfileUsingBasicAuth(profile: imperative.IProfileLoaded): boolean {
         const prof = profile.profile;
-        return "user" in prof && "password" in prof;
+        // See https://github.com/zowe/vscode-extension-for-zowe/issues/2664
+        return prof.user != null && prof.password != null;
     }
 
     /**
@@ -523,14 +523,6 @@ export class ProfilesUtils {
         // set global variable of security value to existing override
         // this will later get reverted to default in getProfilesInfo.ts if user chooses to
         await ProfilesUtils.updateCredentialManagerSetting(ProfilesUtils.getCredentialManagerOverride());
-        // If not using team config, ensure that the ~/.zowe/profiles directory
-        // exists with appropriate types within
-        if (!imperative.ImperativeConfig.instance.config?.exists) {
-            await imperative.CliProfileManager.initialize({
-                configuration: getImperativeConfig().profiles,
-                profileRootDirectory: path.join(zoweDir, "profiles"),
-            });
-        }
         ZoweLogger.info(
             vscode.l10n.t({
                 message: "Zowe home directory is located at {0}",
@@ -642,6 +634,43 @@ export class ProfilesUtils {
             ZoweLogger.error(err);
             Gui.errorMessage(err.message);
         }
+    }
+
+    private static v1ProfileOptions(): void {
+        const v1ProfileErrorMsg = vscode.l10n.t(
+            // eslint-disable-next-line max-len
+            "Zowe v1 profiles in use.\nZowe Explorer no longer supports v1 profiles, choose to convert existing profiles to a team configuration or create new."
+        );
+        ZoweLogger.warn(v1ProfileErrorMsg);
+        const createButton = vscode.l10n.t("Create New");
+        const convertButton = vscode.l10n.t("Convert Existing Profiles");
+        Gui.infoMessage(v1ProfileErrorMsg, { items: [createButton, convertButton], vsCodeOpts: { modal: true } }).then(async (selection) => {
+            switch (selection) {
+                case createButton: {
+                    ZoweLogger.info("Create new team configuration chosen.");
+                    vscode.commands.executeCommand("zowe.ds.addSession", TreeProviders.ds);
+                    break;
+                }
+                case convertButton: {
+                    ZoweLogger.info("Convert v1 profiles to team configuration chosen.");
+                    const convertResults = await Profiles.getInstance().convertV1ProfToConfig();
+                    let responseMsg = "";
+                    if (convertResults.success) {
+                        responseMsg += `Success: ${convertResults.success}\n`;
+                    }
+                    if (convertResults.warnings) {
+                        responseMsg += `Warning: ${convertResults.warnings}\n`;
+                    }
+                    ZoweLogger.info(responseMsg);
+                    Gui.infoMessage(vscode.l10n.t(responseMsg), { vsCodeOpts: { modal: true } });
+                    break;
+                }
+                default: {
+                    Gui.infoMessage(vscode.l10n.t("Operation cancelled"));
+                    break;
+                }
+            }
+        });
     }
 }
 

@@ -15,18 +15,7 @@ import * as path from "path";
 import * as fs from "fs";
 import * as globals from "./globals";
 import * as vscode from "vscode";
-import {
-    IApiExplorerExtender,
-    FileManagement,
-    Gui,
-    IZoweTree,
-    IZoweTreeNode,
-    IZoweDatasetTreeNode,
-    IZoweUSSTreeNode,
-    IZoweJobTreeNode,
-    ProfilesCache,
-    IZoweExplorerTreeApi,
-} from "@zowe/zowe-explorer-api";
+import { IApiExplorerExtender, FileManagement, Gui, Types, IZoweTreeNode, ProfilesCache, IZoweExplorerTreeApi } from "@zowe/zowe-explorer-api";
 import { Profiles } from "./Profiles";
 import { getProfile, ProfilesUtils } from "./utils/ProfilesUtils";
 import { ZoweLogger } from "./utils/LoggerUtils";
@@ -105,9 +94,9 @@ export class ZoweExplorerExtender implements IApiExplorerExtender, IZoweExplorer
      * @returns {ZoweExplorerExtender} the ZoweExplorerExtender singleton instance
      */
     public static createInstance(
-        datasetProvider?: IZoweTree<IZoweDatasetTreeNode>,
-        ussFileProvider?: IZoweTree<IZoweUSSTreeNode>,
-        jobsProvider?: IZoweTree<IZoweJobTreeNode>
+        datasetProvider?: Types.IZoweDatasetTreeType,
+        ussFileProvider?: Types.IZoweUSSTreeType,
+        jobsProvider?: Types.IZoweJobTreeType
     ): ZoweExplorerExtender {
         ZoweExplorerExtender.instance.datasetProvider = datasetProvider;
         ZoweExplorerExtender.instance.ussFileProvider = ussFileProvider;
@@ -131,9 +120,9 @@ export class ZoweExplorerExtender implements IApiExplorerExtender, IZoweExplorer
     // Instances will be created via createInstance()
     private constructor(
         // Not all extenders will need to refresh trees
-        public datasetProvider?: IZoweTree<IZoweDatasetTreeNode>,
-        public ussFileProvider?: IZoweTree<IZoweUSSTreeNode>,
-        public jobsProvider?: IZoweTree<IZoweJobTreeNode>
+        public datasetProvider?: Types.IZoweDatasetTreeType,
+        public ussFileProvider?: Types.IZoweUSSTreeType,
+        public jobsProvider?: Types.IZoweJobTreeType
     ) {}
 
     /**
@@ -172,18 +161,9 @@ export class ZoweExplorerExtender implements IApiExplorerExtender, IZoweExplorer
             }
             ZoweExplorerExtender.showZoweConfigError(error.message);
         }
-
-        if (profileTypeConfigurations && !usingTeamConfig) {
-            const configOptions = Array.from(profileTypeConfigurations);
-            const exists = fs.existsSync(path.join(zoweDir, "profiles", profileType));
-            if (configOptions && !exists) {
-                await zowe.imperative.CliProfileManager.initialize({
-                    configuration: configOptions,
-                    profileRootDirectory: path.join(zoweDir, "profiles"),
-                });
-            }
+        if (profileTypeConfigurations !== undefined) {
+            Profiles.getInstance().addToConfigArray(profileTypeConfigurations);
         }
-        if (profileTypeConfigurations !== undefined) Profiles.getInstance().addToConfigArray(profileTypeConfigurations);
 
         // sequentially reload the internal profiles cache to satisfy all the newly added profile types
         await ZoweExplorerExtender.refreshProfilesQueue.add(async (): Promise<void> => {
