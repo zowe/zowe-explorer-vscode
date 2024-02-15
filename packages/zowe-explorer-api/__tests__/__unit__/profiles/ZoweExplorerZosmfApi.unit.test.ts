@@ -307,7 +307,7 @@ describe("ZosmfUssApi", () => {
             configurable: true,
         });
         await expect(zosmfApi.updateAttributes("/test/path", { tag: "utf-8" })).resolves.not.toThrow();
-        expect(changeTagSpy).toBeCalledTimes(1);
+        expect(changeTagSpy).toHaveBeenCalledTimes(1);
     });
 
     const ussApis: ITestApi<ZoweExplorerZosmf.UssApi>[] = [

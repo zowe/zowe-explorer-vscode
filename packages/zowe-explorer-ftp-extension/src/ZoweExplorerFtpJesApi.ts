@@ -161,7 +161,11 @@ export class FtpJesApi extends AbstractFtpApi implements MainframeInteraction.IJ
                             spoolFileToDownload.procstep === "N/A" || spoolFileToDownload.procstep == null ? undefined : spoolFileToDownload.procstep
                         ),
                     };
-                    const destinationFile = DownloadJobs.getSpoolDownloadFile(mockJobFile, parms.omitJobidDirectory, parms.outDir);
+                    const destinationFile = DownloadJobs.getSpoolDownloadFilePath({
+                        jobFile: mockJobFile,
+                        omitJobidDirectory: parms.omitJobidDirectory,
+                        outDir: parms.outDir,
+                    });
                     zowe.imperative.IO.createDirsSyncFromFilePath(destinationFile);
                     zowe.imperative.IO.writeFile(destinationFile, spoolFileToDownload.contents);
                 }

@@ -92,7 +92,7 @@ describe("PersistentFilters Unit Test", () => {
                 configurable: true,
             });
             pf.addDsTemplateHistory(mockCriteria as any);
-            expect(updateDsTemplateHistorySpy).toBeCalledTimes(1);
+            expect(updateDsTemplateHistorySpy).toHaveBeenCalledTimes(1);
         });
     });
     describe("getDsTemplates()", () => {

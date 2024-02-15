@@ -301,7 +301,7 @@ describe("Dataset Tree Unit tests - Function initializeFavChildNodeForProfile", 
         const showErrorMessageSpy = jest.spyOn(Gui, "errorMessage");
         await testTree.initializeFavChildNodeForProfile("BRTVS99.BAD", "badContextValue", favProfileNode);
 
-        expect(showErrorMessageSpy).toBeCalledTimes(1);
+        expect(showErrorMessageSpy).toHaveBeenCalledTimes(1);
         showErrorMessageSpy.mockClear();
     });
 });
@@ -688,7 +688,7 @@ describe("Dataset Tree Unit Tests - Function loadProfilesForFavorites", () => {
         });
         mocked(Gui.errorMessage).mockResolvedValueOnce("Remove");
         await testTree.loadProfilesForFavorites(blockMocks.log, favProfileNode);
-        expect(showErrorMessageSpy).toBeCalledTimes(1);
+        expect(showErrorMessageSpy).toHaveBeenCalledTimes(1);
         showErrorMessageSpy.mockClear();
     });
     it("Checking that favorite nodes with pre-existing profile/session values continue using those values", async () => {
@@ -1075,7 +1075,7 @@ describe("USSTree Unit Tests - Function addSingleSession", () => {
         });
         const zoweLoggerErrorSpy = jest.spyOn(ZoweLogger, "error");
         expect(blockMocks.testTree.addSingleSession({ name: "test1234" }));
-        expect(zoweLoggerErrorSpy).toBeCalledTimes(1);
+        expect(zoweLoggerErrorSpy).toHaveBeenCalledTimes(1);
     });
 
     it("should call 'errorHandling()' if the error does not include the hostname", () => {
@@ -1086,7 +1086,7 @@ describe("USSTree Unit Tests - Function addSingleSession", () => {
         });
         const errorHandlingSpy = jest.spyOn(utils, "errorHandling");
         expect(blockMocks.testTree.addSingleSession({ name: "test1234" }));
-        expect(errorHandlingSpy).toBeCalledTimes(1);
+        expect(errorHandlingSpy).toHaveBeenCalledTimes(1);
     });
 });
 
@@ -1224,7 +1224,7 @@ describe("Dataset Tree Unit Tests - Function addFavorite", () => {
 
         await testTree.addFavorite(child);
 
-        expect(mocked(Gui.showMessage)).toBeCalledWith("PDS already in favorites");
+        expect(mocked(Gui.showMessage)).toHaveBeenCalledWith("PDS already in favorites");
     });
 });
 describe("Dataset Tree Unit Tests - Function removeFavorite", () => {
@@ -1270,7 +1270,7 @@ describe("Dataset Tree Unit Tests - Function removeFavorite", () => {
 
         // Actual test
         await testTree.removeFavorite(profileNodeInFavs.children[0]);
-        expect(removeFavProfileSpy).not.toBeCalled();
+        expect(removeFavProfileSpy).not.toHaveBeenCalled();
         expect(profileNodeInFavs.children.length).toBe(1);
         expect(profileNodeInFavs.children[0].label).toBe(`${node2.label}`);
     });
@@ -1357,7 +1357,7 @@ describe("Dataset Tree Unit Tests - Function removeFavProfile", () => {
         // Check that favorite is removed from UI
         expect(blockMocks.testTree.mFavorites.length).toEqual(0);
         // Check that favorite is removed from settings file
-        expect(updateFavoritesSpy).toBeCalledTimes(1);
+        expect(updateFavoritesSpy).toHaveBeenCalledTimes(1);
     });
     it("Tests that removeFavProfile leaves profile node in Favorites when user cancels", async () => {
         const globalMocks = createGlobalMocks();
@@ -1578,7 +1578,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
 
         await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
 
-        expect(mocked(Gui.showMessage)).toBeCalledWith("You must enter a pattern.");
+        expect(mocked(Gui.showMessage)).toHaveBeenCalledWith("You must enter a pattern.");
     });
     it("Checking usage of existing filter - Theia", async () => {
         const globalMocks = createGlobalMocks();
@@ -1609,7 +1609,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
 
         await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
 
-        expect(mocked(Gui.showMessage)).toBeCalledWith("No selection made. Operation cancelled.");
+        expect(mocked(Gui.showMessage)).toHaveBeenCalledWith("No selection made. Operation cancelled.");
     });
     it("Checking function on favorites", async () => {
         const globalMocks = createGlobalMocks();
@@ -1745,7 +1745,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
 
         await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
 
-        expect(mocked(Gui.showMessage)).toBeCalledWith("You must enter a pattern.");
+        expect(mocked(Gui.showMessage)).toHaveBeenCalledWith("You must enter a pattern.");
     });
     it("Checking usage of existing filter", async () => {
         const globalMocks = createGlobalMocks();
@@ -1784,7 +1784,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
 
         await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
 
-        expect(mocked(Gui.showMessage)).toBeCalledWith("No selection made. Operation cancelled.");
+        expect(mocked(Gui.showMessage)).toHaveBeenCalledWith("No selection made. Operation cancelled.");
     });
     it("Checking adding of new filter error is caught on getChildren", async () => {
         const globalMocks = createGlobalMocks();
@@ -1805,7 +1805,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
 
         await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
 
-        expect(errorSpy).toBeCalled();
+        expect(errorSpy).toHaveBeenCalled();
         errorSpy.mockClear();
     });
     it("Checking function for return if getChildren is undefined", async () => {
@@ -1827,7 +1827,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
 
         expect(await testTree.datasetFilterPrompt(testTree.mSessionNodes[1])).not.toBeDefined();
 
-        expect(errorSpy).not.toBeCalled();
+        expect(errorSpy).not.toHaveBeenCalled();
         errorSpy.mockClear();
     });
     it("Checking function for return if element.getChildren calls error handling for success: false", async () => {
@@ -1854,8 +1854,8 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         });
 
         expect(await testTree.datasetFilterPrompt(testTree.mSessionNodes[1])).not.toBeDefined();
-        expect(debugSpy).toBeCalled();
-        expect(errorSpy).toBeCalled();
+        expect(debugSpy).toHaveBeenCalled();
+        expect(errorSpy).toHaveBeenCalled();
         debugSpy.mockClear();
         errorSpy.mockClear();
     });
@@ -2043,7 +2043,7 @@ describe("Dataset Tree Unit Tests - Function onDidConfiguration", () => {
 
         await testTree.onDidChangeConfiguration(event);
 
-        expect(mocked(vscode.workspace.getConfiguration)).toBeCalledTimes(2);
+        expect(mocked(vscode.workspace.getConfiguration)).toHaveBeenCalledTimes(2);
     });
 });
 describe("Dataset Tree Unit Tests - Function renameNode", () => {
