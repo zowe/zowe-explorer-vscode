@@ -230,7 +230,13 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
             } catch (err) {
                 // Only show an error if we failed to update the on-disk schema.
                 if (err.code === "EACCES" || err.code === "EPERM") {
-                    Gui.errorMessage(localize("schema.cannotAccess", "Failed to update Zowe schema: insufficient permissions or read-only file"));
+                    Gui.errorMessage(
+                        localize(
+                            "schema.cannotAccess",
+                            "Failed to update Zowe schema: insufficient permissions or read-only file. {0}",
+                            err.message ?? ""
+                        )
+                    );
                 }
             }
         }

@@ -1,4 +1,4 @@
 {
   "initialize.profiles.error": "Error encountered when loading your Zowe config. Click \"Show Config\" for more details.",
-  "schema.cannotAccess": "Failed to update Zowe schema: insufficient permissions or read-only file"
+  "schema.cannotAccess": "Failed to update Zowe schema: insufficient permissions or read-only file. {0}"
 }
