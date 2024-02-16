@@ -313,7 +313,6 @@ export function createTextDocument(name: string, sessionNode?: ZoweDatasetNode |
 
 export function createInstanceOfProfile(profile: imperative.IProfileLoaded) {
     return {
-        ...Profiles.prototype,
         addToConfigArray: Profiles.prototype.addToConfigArray,
         allProfiles: [{ name: "sestest" }, { name: "profile1" }, { name: "profile2" }],
         defaultProfile: { name: "sestest" },

@@ -255,13 +255,13 @@ describe("ZoweExplorerExtender unit tests", () => {
         it("should throw an error if the schema is read-only", async () => {
             const errorMessageSpy = jest.spyOn(Gui, "errorMessage");
             await updateSchema((_filepath, _contents) => {
-                const err = new Error();
+                const err = new Error("test error");
                 Object.defineProperty(err, "code", {
                     value: "EACCES",
                 });
                 throw err;
             });
-            expect(errorMessageSpy).toHaveBeenCalledWith("Failed to update Zowe schema: insufficient permissions or read-only file");
+            expect(errorMessageSpy).toHaveBeenCalledWith("Failed to update Zowe schema: insufficient permissions or read-only file. test error");
         });
     });
 });
