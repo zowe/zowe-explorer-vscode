@@ -133,9 +133,9 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
                 const procstep = spool.procstep ? spool.procstep : undefined;
                 let newLabel: string;
                 if (procstep) {
-                    newLabel = `${spool["id"]} - ${spool.stepname}:${spool.ddname} - ${procstep}`;
+                    newLabel = `${spool.id} - ${spool.stepname}:${spool.ddname} - ${procstep}`;
                 } else {
-                    newLabel = `${spool["id"]} - ${spool.stepname}:${spool.ddname}`;
+                    newLabel = `${spool.id} - ${spool.stepname}:${spool.ddname}`;
                 }
 
                 // Only look for existing node w/ procstep if spool file has a procstep,
