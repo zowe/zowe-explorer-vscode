@@ -343,7 +343,7 @@ describe("ZoweJobNode unit tests - Function getChildren", () => {
 
         const spoolFiles = await globalMocks.testJobNode.getChildren();
         expect(spoolFiles.length).toBe(1);
-        expect(spoolFiles[0].label).toEqual("101 - STEP:STDOUT");
+        expect(spoolFiles[0].label).toEqual("STEP:STDOUT(101)");
         expect(spoolFiles[0].owner).toEqual("fake");
     });
 
@@ -352,7 +352,7 @@ describe("ZoweJobNode unit tests - Function getChildren", () => {
 
         const spoolFiles = await globalMocks.testJobNode.getChildren();
         expect(spoolFiles.length).toBe(1);
-        expect(spoolFiles[0].label).toEqual("101 - STEP:STDOUT");
+        expect(spoolFiles[0].label).toEqual("STEP:STDOUT(101)");
         expect(spoolFiles[0].owner).toEqual("fake");
 
         jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValueOnce({
@@ -361,7 +361,7 @@ describe("ZoweJobNode unit tests - Function getChildren", () => {
         globalMocks.testJobNode.dirty = true;
         const spoolFilesAfter = await globalMocks.testJobNode.getChildren();
         expect(spoolFilesAfter.length).toBe(1);
-        expect(spoolFilesAfter[0].label).toEqual("101 - STEP:STDOUT");
+        expect(spoolFilesAfter[0].label).toEqual("STEP:STDOUT(101)");
         expect(spoolFilesAfter[0].owner).toEqual("fake");
     });
 
@@ -386,7 +386,7 @@ describe("ZoweJobNode unit tests - Function getChildren", () => {
         globalMocks.testJobNode.session.ISession = globalMocks.testSessionNoCred;
         const spoolFiles = await globalMocks.testJobNode.getChildren();
         expect(spoolFiles.length).toBe(1);
-        expect(spoolFiles[0].label).toEqual("101 - STEP:STDOUT");
+        expect(spoolFiles[0].label).toEqual("STEP:STDOUT(101)");
         expect(spoolFiles[0].owner).toEqual("*");
     });
 
@@ -475,9 +475,9 @@ describe("ZoweJobNode unit tests - Function getChildren", () => {
         jest.spyOn(contextually, "isSession").mockReturnValueOnce(false);
         const spoolFiles = await globalMocks.testJobNode.getChildren();
         expect(spoolFiles.length).toBe(3);
-        expect(spoolFiles[0].label).toBe("101 - JES2:JESMSGLG");
-        expect(spoolFiles[1].label).toBe("101 - JES2:JESJCL");
-        expect(spoolFiles[2].label).toBe("101 - JES2:JESYSMSG");
+        expect(spoolFiles[0].label).toBe("JES2:JESMSGLG(101)");
+        expect(spoolFiles[1].label).toBe("JES2:JESJCL(101)");
+        expect(spoolFiles[2].label).toBe("JES2:JESYSMSG(101)");
     });
 
     it("Check that jobs with duplicate DD names do not overwrite each other", async () => {
@@ -508,11 +508,11 @@ describe("ZoweJobNode unit tests - Function getChildren", () => {
         jest.spyOn(contextually, "isSession").mockReturnValueOnce(false);
         const spoolFiles = await globalMocks.testJobNode.getChildren();
         expect(spoolFiles.length).toBe(5);
-        expect(spoolFiles[0].label).toBe("101 - JES2:JESMSGLG - TEST");
-        expect(spoolFiles[1].label).toBe("101 - JES2:JESJCL");
-        expect(spoolFiles[2].label).toBe("101 - JES2:JESYSMSG");
-        expect(spoolFiles[3].label).toBe("12 - SOMEJOB:TEST");
-        expect(spoolFiles[4].label).toBe("13 - SOMEJOB:TEST");
+        expect(spoolFiles[0].label).toBe("JES2:JESMSGLG(101) - TEST");
+        expect(spoolFiles[1].label).toBe("JES2:JESJCL(101)");
+        expect(spoolFiles[2].label).toBe("JES2:JESYSMSG(101)");
+        expect(spoolFiles[3].label).toBe("SOMEJOB:TEST(12)");
+        expect(spoolFiles[4].label).toBe("SOMEJOB:TEST(13)");
     });
 });
 
