@@ -261,7 +261,7 @@ describe("Dataset Tree Unit tests - Function initializeFavChildNodeForProfile", 
             contextOverride: globals.PDS_FAV_CONTEXT,
         });
 
-        const favChildNodeForProfile = await testTree.initializeFavChildNodeForProfile("BRTVS99.PUBLIC", globals.DS_PDS_CONTEXT, favProfileNode);
+        const favChildNodeForProfile = testTree.initializeFavChildNodeForProfile("BRTVS99.PUBLIC", globals.DS_PDS_CONTEXT, favProfileNode);
 
         expect(favChildNodeForProfile).toEqual(node);
     });
@@ -269,21 +269,16 @@ describe("Dataset Tree Unit tests - Function initializeFavChildNodeForProfile", 
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         const testTree = new DatasetTree();
-        const favProfileNode = new ZoweDatasetNode({
-            label: "testProfile",
-            collapsibleState: vscode.TreeItemCollapsibleState.None,
-            parentNode: blockMocks.datasetSessionNode,
-        });
-        favProfileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
+        blockMocks.datasetSessionNode.contextValue = globals.FAV_PROFILE_CONTEXT;
         const node = new ZoweDatasetNode({
             label: "BRTVS99.PS",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
-            parentNode: favProfileNode,
+            parentNode: blockMocks.datasetSessionNode,
             contextOverride: globals.DS_FAV_CONTEXT,
         });
         node.command = { command: "vscode.open", title: "", arguments: [node.resourceUri] };
 
-        const favChildNodeForProfile = await testTree.initializeFavChildNodeForProfile("BRTVS99.PS", globals.DS_DS_CONTEXT, favProfileNode);
+        const favChildNodeForProfile = await testTree.initializeFavChildNodeForProfile("BRTVS99.PS", globals.DS_DS_CONTEXT, blockMocks.datasetSessionNode);
 
         expect(favChildNodeForProfile).toEqual(node);
     });
@@ -1094,6 +1089,9 @@ describe("Dataset Tree Unit Tests - Function addFavorite", () => {
         const treeView = createTreeView();
         const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
         const profile = createInstanceOfProfile(imperativeProfile);
+        const fspStat = jest.spyOn(DatasetFSProvider.instance, "stat").mockReturnValue({
+            etag: "123ABC",
+        } as any);
 
         return {
             session,
@@ -1101,6 +1099,7 @@ describe("Dataset Tree Unit Tests - Function addFavorite", () => {
             treeView,
             profile,
             imperativeProfile,
+            fspStat,
         };
     }
 
@@ -2430,7 +2429,7 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
-        mocked(vscode.window.showInputBox).mockResolvedValueOnce("HLQ.TEST.RENAME.NODE.NEW");
+        mocked(Gui.showInputBox).mockResolvedValueOnce("HLQ.TEST.RENAME.NODE.NEW");
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
         const testTree = new DatasetTree();
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);

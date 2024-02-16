@@ -224,6 +224,10 @@ describe("Test src/uss/extension", () => {
             jest.restoreAllMocks();
         });
 
+        jest.spyOn(Profiles, "getInstance").mockReturnValue({
+            enableValidation: jest.fn(),
+            disableValidation: jest.fn(),
+        } as any);
         processSubscriptions(commands, test);
 
         it("should not initialize if it is unable to create the USS tree", async () => {

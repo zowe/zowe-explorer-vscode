@@ -1027,7 +1027,7 @@ describe("USSTree Unit Tests - Function rename", () => {
         await globalMocks.testTree.rename(globalMocks.testUSSNode);
 
         expect(globalMocks.showErrorMessage.mock.calls.length).toBe(0);
-        expect(globalMocks.renameUSSFile.mock.calls.length).toBe(1);
+        expect(globalMocks.FileSystemProvider.rename.mock.calls.length).toBe(1);
         expect(renameFavoriteSpy).toHaveBeenCalledTimes(1);
     });
 
@@ -1046,7 +1046,7 @@ describe("USSTree Unit Tests - Function rename", () => {
 
         await globalMocks.testTree.rename(globalMocks.testUSSNode);
         expect(globalMocks.showErrorMessage.mock.calls.length).toBe(0);
-        expect(globalMocks.renameUSSFile.mock.calls.length).toBe(1);
+        expect(globalMocks.FileSystemProvider.rename.mock.calls.length).toBe(1);
         expect(renameUSSNodeSpy).toHaveBeenCalledTimes(0);
         expect(renameFavoriteSpy).toHaveBeenCalledTimes(0);
     });
@@ -1059,11 +1059,12 @@ describe("USSTree Unit Tests - Function rename", () => {
         const renameFavoriteSpy = jest.spyOn(globalMocks.testTree, "renameFavorite");
 
         globalMocks.showInputBox.mockReturnValueOnce("new name");
+        globalMocks.FileSystemProvider.rename.mockClear();
 
         await globalMocks.testTree.rename(blockMocks.ussFavNode);
 
         expect(globalMocks.showErrorMessage.mock.calls.length).toBe(0);
-        expect(globalMocks.renameUSSFile.mock.calls.length).toBe(1);
+        expect(globalMocks.FileSystemProvider.rename.mock.calls.length).toBe(1);
         expect(renameUSSNodeSpy.mock.calls.length).toBe(1);
         expect(renameFavoriteSpy.mock.calls.length).toBe(1);
     });
@@ -1077,7 +1078,7 @@ describe("USSTree Unit Tests - Function rename", () => {
         await globalMocks.testTree.rename(blockMocks.ussFavNode);
 
         expect(globalMocks.showErrorMessage.mock.calls.length).toBe(0);
-        expect(globalMocks.renameUSSFile.mock.calls.length).toBe(1);
+        expect(globalMocks.FileSystemProvider.rename.mock.calls.length).toBe(1);
         expect(renameUSSNode.mock.calls.length).toBe(1);
     });
 

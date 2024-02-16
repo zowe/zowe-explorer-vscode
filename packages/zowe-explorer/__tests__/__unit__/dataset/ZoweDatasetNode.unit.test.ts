@@ -244,28 +244,7 @@ describe("ZoweDatasetNode Unit Tests - Function node.openDs()", () => {
 
         expect(mocked(vscode.commands.executeCommand)).toHaveBeenCalledWith("vscode.open", child.resourceUri);
     });
-    it("Checks that openDs fails if called from an invalid node", async () => {
-        globals.defineGlobals("");
-        createGlobalMocks();
-        const blockMocks = createBlockMocks();
 
-        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
-        const node = new ZoweDatasetNode({
-            label: "parent",
-            collapsibleState: vscode.TreeItemCollapsibleState.None,
-            parentNode: blockMocks.datasetSessionNode,
-            profile: blockMocks.imperativeProfile,
-        });
-        blockMocks.datasetSessionNode.contextValue = "aieieiieeeeooooo";
-
-        try {
-            await node.openDs(false, true, blockMocks.testDatasetTree);
-        } catch (err) {
-            // Prevent exception from failing test
-        }
-
-        expect(mocked(Gui.errorMessage)).toHaveBeenCalledWith("Invalid data set or member.");
-    });
     it("Checking that error is displayed and logged for opening of node with invalid context value", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
@@ -294,7 +273,7 @@ describe("ZoweDatasetNode Unit Tests - Function node.openDs()", () => {
             // Do nothing
         }
 
-        expect(showErrorMessageSpy).toBeCalledWith("Invalid data set or member.");
+        expect(showErrorMessageSpy).toHaveBeenCalledWith("Cannot download, item invalid.");
         expect(logErrorSpy).toBeCalledTimes(1);
     });
 });

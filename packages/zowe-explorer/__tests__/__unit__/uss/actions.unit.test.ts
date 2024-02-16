@@ -649,11 +649,11 @@ describe("USS Action Unit Tests - copy file / directory", () => {
             ussPath: "/",
             sessionName: blockMocks.treeNodes.ussNode.getLabel() as string,
             type: UssFileType.Directory,
+            localUri: blockMocks.nodes[1].resourceUri,
         };
-        blockMocks.treeNodes.ussApi.copy = blockMocks.treeNodes.ussApi.fileList = jest.fn();
 
         const copySpy = jest.spyOn(UssFSProvider.instance, "copy").mockImplementation();
-        await blockMocks.nodes[1].paste(blockMocks.nodes[1].resourceUri, { tree: rootTree, api: blockMocks.treeNodes.ussApi });
+        await blockMocks.nodes[1].paste(blockMocks.nodes[1].resourceUri, { tree: rootTree, api: { copy: jest.fn(), fileList: jest.fn() } });
         expect(copySpy).toHaveBeenCalled();
     });
 

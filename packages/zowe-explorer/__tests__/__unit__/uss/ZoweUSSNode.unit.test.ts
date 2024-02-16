@@ -336,41 +336,11 @@ describe("ZoweUSSNode Unit Tests - Function node.refreshUSS()", () => {
         return newMocks;
     }
 
-    it("Tests that node.refreshUSS() works correctly for dirty file state, when user didn't cancel file save", async () => {
+    it("Tests that node.refreshUSS() works correctly", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
         globalMocks.ussFile.mockResolvedValue(globalMocks.response);
-        globalMocks.mockIsDirtyInEditor.mockReturnValueOnce(true);
-        globalMocks.mockIsDirtyInEditor.mockReturnValueOnce(false);
-
-        await blockMocks.node.refreshUSS();
-
-        expect(blockMocks.fetchFileAtUri.mock.calls.length).toBe(1);
-        expect(blockMocks.node.downloaded).toBe(true);
-    });
-
-    it("Tests that node.refreshUSS() works correctly for dirty file state, when user cancelled file save", async () => {
-        const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
-
-        globalMocks.ussFile.mockResolvedValueOnce(globalMocks.response);
-        globalMocks.mockIsDirtyInEditor.mockReturnValueOnce(true);
-        globalMocks.mockIsDirtyInEditor.mockReturnValueOnce(true);
-
-        await blockMocks.node.refreshUSS();
-
-        expect(blockMocks.fetchFileAtUri.mock.calls.length).toBe(0);
-        expect(blockMocks.node.downloaded).toBe(false);
-    });
-
-    it("Tests that node.refreshUSS() works correctly for not dirty file state", async () => {
-        const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
-
-        globalMocks.ussFile.mockResolvedValueOnce(globalMocks.response);
-        globalMocks.mockIsDirtyInEditor.mockReturnValueOnce(false);
-        globalMocks.mockIsDirtyInEditor.mockReturnValueOnce(false);
 
         await blockMocks.node.refreshUSS();
 
@@ -382,15 +352,13 @@ describe("ZoweUSSNode Unit Tests - Function node.refreshUSS()", () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
-        globalMocks.ussFile.mockRejectedValueOnce(Error(""));
-        globalMocks.mockIsDirtyInEditor.mockReturnValueOnce(true);
-        globalMocks.mockIsDirtyInEditor.mockReturnValueOnce(false);
-
+        blockMocks.fetchFileAtUri.mockRejectedValueOnce(Error(""));
         await blockMocks.node.refreshUSS();
 
         expect(blockMocks.fetchFileAtUri.mock.calls.length).toBe(1);
         expect(blockMocks.node.downloaded).toBe(false);
     });
+
     it("Tests that node.refreshUSS() throws an error when context value is invalid", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
@@ -657,6 +625,7 @@ describe("ZoweUSSNode Unit Tests - Function node.deleteUSSNode()", () => {
                 session: globalMocks.session,
                 profile: globalMocks.profileOne,
             }),
+            fspDelete: jest.spyOn(UssFSProvider.instance, "delete").mockImplementation(),
         };
 
         newMocks.ussNode = new ZoweUSSNode({
@@ -1446,33 +1415,6 @@ describe("ZoweUSSNode Unit Tests - Function node.pasteUssTree()", () => {
         // Only one paste operation is needed, copy API handles recursion out-of-the-box
         expect(blockMocks.pasteSpy).toHaveBeenCalledTimes(1);
         expect(mockCopyApi).toHaveBeenCalledTimes(1);
-    });
-
-    it("paste renames duplicate files before copying when needed", async () => {
-        const globalMocks = await createGlobalMocks();
-        const blockMocks = createBlockMocks(globalMocks);
-        blockMocks.pasteSpy.mockClear();
-
-        const example_tree = {
-            baseName: "testFile",
-            ussPath: "/path/testFile",
-            type: UssFileType.File,
-            children: [],
-        };
-
-        blockMocks.testNode.fullPath = "/path/testFile";
-
-        jest.spyOn(blockMocks.mockUssApi, "fileList").mockResolvedValueOnce(blockMocks.fileResponse);
-        const copyMock = jest.spyOn(blockMocks.mockUssApi, "copy").mockResolvedValueOnce(blockMocks.fileResponse);
-
-        // Testing paste within same session (copy API)
-        jest.spyOn(UssFileUtils, "toSameSession").mockReturnValueOnce(true);
-        await blockMocks.testNode.paste("example_session", "/path", { tree: example_tree, api: blockMocks.mockUssApi });
-
-        expect(copyMock).toHaveBeenCalledWith("/path/testFile (1)", {
-            from: "/path/testFile",
-            recursive: false,
-        });
     });
 
     it("Tests node.pasteUssTree() reads clipboard contents finds same file name on destination directory", async () => {

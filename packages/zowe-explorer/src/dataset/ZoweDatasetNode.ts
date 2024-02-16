@@ -511,6 +511,19 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     public async openDs(_forceDownload: boolean, _previewMember: boolean, datasetProvider: Types.IZoweDatasetTreeType): Promise<void> {
         ZoweLogger.trace("ZoweDatasetNode.openDs called.");
         await datasetProvider.checkCurrentProfile(this);
+        const invalidItem = vscode.l10n.t("Cannot download, item invalid.");
+        switch (true) {
+            case contextually.isFavorite(this):
+            case contextually.isSessionNotFav(this.getParent()):
+                break;
+            case contextually.isFavoritePds(this.getParent()):
+            case contextually.isPdsNotFav(this.getParent()):
+                break;
+            default:
+                ZoweLogger.error("ZoweDatasetNode.openDs: " + invalidItem);
+                Gui.errorMessage(invalidItem);
+                throw Error(invalidItem);
+        }
 
         if (Profiles.getInstance().validProfile !== Validation.ValidationType.INVALID) {
             try {

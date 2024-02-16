@@ -13,7 +13,7 @@ import { imperative, IUploadOptions, IZosFilesResponse } from "@zowe/cli";
 import * as globals from "../globals";
 import * as vscode from "vscode";
 import * as path from "path";
-import { Gui, IZoweUSSTreeNode, ZoweTreeNode, Types, Validation, MainframeInteraction, ZosEncoding, isNodeInEditor } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweUSSTreeNode, ZoweTreeNode, Types, Validation, MainframeInteraction, ZosEncoding } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { errorHandling, fallbackProfileName, syncSessionNode } from "../utils/ProfilesUtils";
@@ -407,7 +407,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             return;
         }
         try {
-            await vscode.workspace.fs.delete(this.resourceUri);
+            await UssFSProvider.instance.delete(this.resourceUri, { recursive: this.isFolder });
         } catch (err) {
             ZoweLogger.error(err);
             if (err instanceof Error) {
@@ -523,20 +523,18 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     // This is not a UI refresh.
     public async refreshUSS(): Promise<void> {
         ZoweLogger.trace("ZoweUSSNode.refreshUSS called.");
-        let label: string;
         switch (true) {
-            case contextually.isUssDirectory(this.getParent()) && (contextually.isText(this) || contextually.isBinary(this)):
-                label = this.fullPath;
+            case contextually.isUssDirectory(this.getParent()):
                 break;
             // For favorited and non-favorited files
             case this.getParent().contextValue === globals.FAV_PROFILE_CONTEXT:
             case contextually.isUssSession(this.getParent()):
-                label = this.label.toString();
                 break;
             default:
                 Gui.errorMessage(vscode.l10n.t("refreshUSS() called from invalid node."));
                 throw Error(vscode.l10n.t("refreshUSS() called from invalid node."));
         }
+
         try {
             await UssFSProvider.instance.fetchFileAtUri(this.resourceUri);
             this.downloaded = true;
@@ -545,9 +543,9 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 ZoweLogger.warn(err.toString());
                 Gui.showMessage(
                     vscode.l10n.t({
-                        message: "Unable to find file: {0} was probably deleted.",
-                        args: [label],
-                        comment: ["Label"],
+                        message: "Unable to find file: {0}",
+                        args: [err.message],
+                        comment: ["Error message"],
                     })
                 );
             } else {
@@ -597,7 +595,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         }
         const hasCopy = uss.api.copy != null;
         const hasUploadFromBuffer = uss.api.uploadFromBuffer != null;
-        if (!uss.api.fileList || !hasCopy || !hasUploadFromBuffer) {
+        if (!uss.api.fileList || (!hasCopy && !hasUploadFromBuffer)) {
             throw new Error(vscode.l10n.t("Required API functions for pasting (fileList and copy/uploadFromBuffer) were not found."));
         }
 

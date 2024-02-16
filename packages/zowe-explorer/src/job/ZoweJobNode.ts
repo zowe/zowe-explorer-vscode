@@ -13,6 +13,7 @@ import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
 import * as globals from "../globals";
 import * as contextually from "../shared/context";
+import * as path from "path";
 import { IZoweJobTreeNode, Sorting, ZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { errorHandling, fallbackProfileName, syncSessionNode } from "../utils/ProfilesUtils";
@@ -405,7 +406,7 @@ export class ZoweSpoolNode extends ZoweJobNode {
         super(opts);
         this.uniqueName = opts.spool ? buildUniqueSpoolName(opts.spool) : "<unknown-spool-id>";
         this.resourceUri = opts.parentNode?.resourceUri.with({
-            path: `/${opts.profile?.name || fallbackProfileName(this)}/${(opts.parentNode as ZoweJobNode)?.job.jobid}/${this.uniqueName}`,
+            path: path.posix.join(opts.parentNode.resourceUri.path, this.uniqueName),
         });
         this.contextValue = globals.JOBS_SPOOL_CONTEXT;
         this.spool = opts.spool;

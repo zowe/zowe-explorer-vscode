@@ -25,7 +25,7 @@ import { IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { ProfileManagement } from "../utils/ProfileManagement";
 import { LocalFileManagement } from "../utils/LocalFileManagement";
-import { Gui, IZoweDatasetTreeNode, Validation, Types, isNodeInEditor } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweDatasetTreeNode, Validation, Types } from "@zowe/zowe-explorer-api";
 import { DatasetFSProvider } from "./DatasetFSProvider";
 
 let typeEnum: zowe.CreateDataSetTypeEnum;
@@ -1174,7 +1174,7 @@ export async function deleteDataset(node: IZoweDatasetTreeNode, datasetProvider:
         }
         await datasetProvider.checkCurrentProfile(node);
         if (Profiles.getInstance().validProfile !== Validation.ValidationType.INVALID) {
-            await vscode.workspace.fs.delete(node.resourceUri);
+            await DatasetFSProvider.instance.delete(node.resourceUri, { recursive: false });
         } else {
             return;
         }
