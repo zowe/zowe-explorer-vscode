@@ -2,6 +2,14 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
+## TBD Release
+
+### New features and enhancements
+
+### Bug fixes
+
+- Fixed default behavior of "Create a new Team Configuration File" to create a Project Config instead of Project User Config. [#2684](https://github.com/zowe/vscode-extension-for-zowe/issues/2684)
+
 ## `3.0.0-next.202402142205`
 
 ### New features and enhancements
