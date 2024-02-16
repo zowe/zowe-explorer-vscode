@@ -6,9 +6,17 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
+- Implemented sorting of PDS members by date created [#2707](https://github.com/zowe/vscode-extension-for-zowe/pull/2707)
+
 ### Bug fixes
 
 - Adjusted order of 'Manage Profile' and 'Edit History' in the jobs tree's context menu to match the other trees. [#2670](https://github.com/zowe/vscode-extension-for-zowe/issues/2670)
+
+## `2.14.1`
+
+### Bug fixes
+
+- Update transitive dependencies for technical currency.
 
 ## `2.14.0`
 

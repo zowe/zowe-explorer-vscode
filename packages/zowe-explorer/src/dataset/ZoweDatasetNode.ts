@@ -112,16 +112,18 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     }
 
     public updateStats(item: any): void {
-        if ("m4date" in item) {
+        if ("c4date" in item && "m4date" in item) {
             const { m4date, mtime, msec }: { m4date: string; mtime: string; msec: string } = item;
             this.stats = {
                 user: item.user,
+                createdDate: dayjs(item.c4date).toDate(),
                 modifiedDate: dayjs(`${m4date} ${mtime}:${msec}`).toDate(),
             };
         } else if ("id" in item || "changed" in item) {
             // missing keys from API response; check for FTP keys
             this.stats = {
                 user: item.id,
+                createdDate: item.created ? dayjs(item.created).toDate() : undefined,
                 modifiedDate: item.changed ? dayjs(item.changed).toDate() : undefined,
             };
         }
@@ -326,45 +328,73 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 return sortByName(a, b);
             }
 
-            if (sort.method === DatasetSortOpts.LastModified) {
-                const dateA = dayjs(a.stats?.modifiedDate ?? null);
-                const dateB = dayjs(b.stats?.modifiedDate ?? null);
+            switch (sort.method) {
+                case DatasetSortOpts.DateCreated: {
+                    const dateA = dayjs(a.stats?.createdDate ?? null);
+                    const dateB = dayjs(b.stats?.createdDate ?? null);
 
-                const aValid = dateA.isValid();
-                const bValid = dateB.isValid();
+                    const aVaild = dateA.isValid();
+                    const bValid = dateB.isValid();
 
-                a.description = aValid ? dateA.format("YYYY/MM/DD HH:mm:ss") : undefined;
-                b.description = bValid ? dateB.format("YYYY/MM/DD HH:mm:ss") : undefined;
+                    a.description = aVaild ? dateA.format("YYYY/MM/DD") : undefined;
+                    b.description = bValid ? dateB.format("YYYY/MM/DD") : undefined;
 
-                if (!aValid) {
-                    return sortGreaterThan;
+                    if (!aVaild) {
+                        return sortGreaterThan;
+                    }
+
+                    if (!bValid) {
+                        return sortLessThan;
+                    }
+
+                    if (dateA.isSame(dateB, "second")) {
+                        return sortByName(a, b);
+                    }
+
+                    return dateA.isBefore(dateB, "second") ? sortLessThan : sortGreaterThan;
                 }
+                case DatasetSortOpts.LastModified: {
+                    const dateA = dayjs(a.stats?.modifiedDate ?? null);
+                    const dateB = dayjs(b.stats?.modifiedDate ?? null);
 
-                if (!bValid) {
-                    return sortLessThan;
+                    const aValid = dateA.isValid();
+                    const bValid = dateB.isValid();
+
+                    a.description = aValid ? dateA.format("YYYY/MM/DD HH:mm:ss") : undefined;
+                    b.description = bValid ? dateB.format("YYYY/MM/DD HH:mm:ss") : undefined;
+
+                    if (!aValid) {
+                        return sortGreaterThan;
+                    }
+
+                    if (!bValid) {
+                        return sortLessThan;
+                    }
+
+                    // for dates that are equal down to the second, fallback to sorting by name
+                    if (dateA.isSame(dateB, "second")) {
+                        return sortByName(a, b);
+                    }
+
+                    return dateA.isBefore(dateB, "second") ? sortLessThan : sortGreaterThan;
                 }
+                case DatasetSortOpts.UserId: {
+                    const userA = a.stats?.user ?? "";
+                    const userB = b.stats?.user ?? "";
 
-                // for dates that are equal down to the second, fallback to sorting by name
-                if (dateA.isSame(dateB, "second")) {
+                    a.description = userA;
+                    b.description = userB;
+
+                    if (userA === userB) {
+                        return sortByName(a, b);
+                    }
+
+                    return userA < userB ? sortLessThan : sortGreaterThan;
+                }
+                default: {
                     return sortByName(a, b);
                 }
-
-                return dateA.isBefore(dateB, "second") ? sortLessThan : sortGreaterThan;
-            } else if (sort.method === DatasetSortOpts.UserId) {
-                const userA = a.stats?.user ?? "";
-                const userB = b.stats?.user ?? "";
-
-                a.description = userA;
-                b.description = userB;
-
-                if (userA === userB) {
-                    return sortByName(a, b);
-                }
-
-                return userA < userB ? sortLessThan : sortGreaterThan;
             }
-
-            return sortByName(a, b);
         };
     }
 

@@ -9,8 +9,13 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 ### Bug fixes
 
 - Fix login and logout operations when APIML dynamic tokens are enabled. [#2692](https://github.com/zowe/vscode-extension-for-zowe/pull/2692)
-- Update transitive dependencies for technical currency.
 - Fixed issue where `zosmf` profiles did not respect the `protocol` property. [#2703](https://github.com/zowe/vscode-extension-for-zowe/issues/2703)
+
+## `2.14.1`
+
+### Bug fixes
+
+- Update transitive dependencies for technical currency.
 
 ## `2.14.0`
 
@@ -24,6 +29,8 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 - Added new functions `loginWithBaseProfile` and `logoutWithBaseProfile` to provide extenders with the ability to automatically login to their respective services. [#2493](https://github.com/zowe/vscode-extension-for-zowe/pull/2493)
 - Added APIML dynamic token support. [#2665](https://github.com/zowe/vscode-extension-for-zowe/issues/2665)
 - Added new optional method `getCommonApi` to `ZoweExplorerApi.IApiRegisterClient` for enhanced typings in other Zowe Explorer APIs. [#2493](https://github.com/zowe/vscode-extension-for-zowe/pull/2493)
+- Add Created Date to `stats` optional variable for storing dataset stats
+- Add Date created to DatasetSortOpts enum [#2707](https://github.com/zowe/vscode-extension-for-zowe/pull/2707)
 
 ### Bug fixes
 
