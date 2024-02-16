@@ -1923,7 +1923,7 @@ describe("Dataset Actions Unit Tests - Function copyDataSets", () => {
             parentNode: blockMocks.datasetSessionNode,
         });
         child.contextValue = globals.DS_DS_CONTEXT;
-        await expect(dsActions.copyDataSets(child, null, blockMocks.testDatasetTree)).toStrictEqual(Promise.resolve());
+        await expect(dsActions.copyDataSets(child, null as any, blockMocks.testDatasetTree)).resolves.not.toThrow();
     });
     it("Checking copy of sequential datasets", async () => {
         globals.defineGlobals("");
@@ -1960,7 +1960,7 @@ describe("Dataset Actions Unit Tests - Function copyDataSets", () => {
             return Promise.resolve(prm);
         });
         expect(mocked(Gui.errorMessage)).not.toHaveBeenCalled();
-        await expect(dsActions.copyDataSets(nodeCopy, null, blockMocks.testDatasetTree)).toStrictEqual(Promise.resolve());
+        await expect(dsActions.copyDataSets(nodeCopy, null as any, blockMocks.testDatasetTree)).resolves.not.toThrow();
     });
 
     it("Checking failed copy of sequential datasets", async () => {
@@ -2090,7 +2090,7 @@ describe("Dataset Actions Unit Tests - Function copyDataSets", () => {
         const blockMocks = createBlockMocks();
         vscode.env.clipboard.writeText("");
         const errSpy = jest.spyOn(Gui, "errorMessage");
-        await expect(dsActions.pasteDataSetMembers(blockMocks.testDatasetTree, blockMocks.datasetSessionNode)).toEqual(Promise.resolve());
+        await expect(dsActions.pasteDataSetMembers(blockMocks.testDatasetTree, blockMocks.datasetSessionNode)).resolves.not.toThrow();
         expect(errSpy).toBeCalled();
     });
     it("Testing pasteDataSetMembers() fails and gives error message with empty clipboard", async () => {
@@ -2105,7 +2105,7 @@ describe("Dataset Actions Unit Tests - Function copyDataSets", () => {
             profile: blockMocks.imperativeProfile,
         });
         const errSpy = jest.spyOn(Gui, "errorMessage");
-        await expect(dsActions.pasteDataSetMembers(blockMocks.testDatasetTree, node)).toEqual(Promise.resolve());
+        await expect(dsActions.pasteDataSetMembers(blockMocks.testDatasetTree, node)).resolves.not.toThrow();
         expect(errSpy).toBeCalled();
     });
     it("Testing pasteDataSetMembers() succesfully runs pasteMember()", async () => {
@@ -2115,7 +2115,7 @@ describe("Dataset Actions Unit Tests - Function copyDataSets", () => {
         vscode.env.clipboard.writeText(JSON.stringify(getNodeLabels(blockMocks.pdsMemberNode)));
         const errSpy = jest.spyOn(dsActions, "pasteMember");
         errSpy.mockResolvedValueOnce(null);
-        await expect(dsActions.pasteDataSetMembers(blockMocks.testDatasetTree, blockMocks.pdsMemberNode)).toEqual(Promise.resolve());
+        await expect(dsActions.pasteDataSetMembers(blockMocks.testDatasetTree, blockMocks.pdsMemberNode)).resolves.not.toThrow();
     });
 
     it("Testing pasteDataSetMembers() successfully runs with multiple members", async () => {
