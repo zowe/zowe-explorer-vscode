@@ -299,7 +299,7 @@ export async function deleteDatasetPrompt(datasetProvider: Types.IZoweDatasetTre
             ? ` ${deletedNode.getParent().getLabel().toString()}(${deletedNode.getLabel().toString()})`
             : ` ${deletedNode.getLabel().toString()}`;
     });
-    nodesToDelete.sort();
+    nodesToDelete.sort((a, b) => a.localeCompare(b));
 
     const nodesDeleted: string[] = [];
 
@@ -382,7 +382,7 @@ export async function deleteDatasetPrompt(datasetProvider: Types.IZoweDatasetTre
         );
     }
     if (nodesDeleted.length > 0) {
-        nodesDeleted.sort();
+        nodesDeleted.sort((a, b) => a.localeCompare(b));
         Gui.showMessage(
             vscode.l10n.t({
                 message: "The following {0} item(s) were deleted: {1}",
@@ -1016,7 +1016,7 @@ export async function submitJcl(datasetProvider: Types.IZoweDatasetTreeType, fil
     }
 
     // get session name
-    const sessionregex = /\[(.*)(\])(?!.*\])/g;
+    const sessionregex = /\[(.*)(\])(?!.*\])/;
     const regExp = sessionregex.exec(doc.fileName);
     const profiles = Profiles.getInstance();
     let sessProfileName;

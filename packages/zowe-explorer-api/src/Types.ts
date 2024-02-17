@@ -9,7 +9,7 @@
  *
  */
 
-import { Uri } from "vscode";
+import { FileDecoration, Uri } from "vscode";
 import { ICreateDataSetOptions } from "@zowe/cli";
 import { IApiExplorerExtender, IRegisterClient } from "./extend";
 import { IZoweDatasetTreeNode, IZoweJobTreeNode, IZoweTreeNode, IZoweUSSTreeNode, IZoweTree } from "./tree";
@@ -50,6 +50,7 @@ export namespace Types {
     export type PollRequest = {
         msInterval: number;
         dispose?: boolean;
+        decoration?: FileDecoration;
 
         reject?<T = never>(reason?: any): Promise<T>;
         resolve?: (uniqueId: string, data: any) => any;

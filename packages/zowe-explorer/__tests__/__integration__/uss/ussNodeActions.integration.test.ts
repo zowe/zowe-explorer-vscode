@@ -122,7 +122,7 @@ describe("ussNodeActions integration test", async () => {
         it("should rename a uss file", async () => {
             let error;
             let list;
-            const beforeNameBase = beforeFileName.split("/").pop();
+            const beforeNameBase = beforeFileName.split("/").pop()!;
             const afterNameBase = afterFileName.split("/").pop();
 
             try {
@@ -134,7 +134,7 @@ describe("ussNodeActions integration test", async () => {
                     profile: testConst.profile.profile,
                 });
                 const testNode = new ZoweUSSNode({
-                    label: beforeNameBase as string,
+                    label: beforeNameBase,
                     collapsibleState: vscode.TreeItemCollapsibleState.None,
                     parentNode: testFolder,
                     session,
