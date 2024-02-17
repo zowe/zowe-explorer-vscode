@@ -9,20 +9,20 @@
  *
  */
 
-import { FileAttributes, Gui, IUss, IZoweTree, IZoweUSSTreeNode, WebView } from "@zowe/zowe-explorer-api";
+import { Types, Gui, MainframeInteraction, IZoweUSSTreeNode, WebView } from "@zowe/zowe-explorer-api";
 import { Disposable, ExtensionContext } from "vscode";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import * as contextually from "../shared/context";
 
 export class AttributeView extends WebView {
-    private treeProvider: IZoweTree<IZoweUSSTreeNode>;
+    private treeProvider: Types.IZoweUSSTreeType;
     private readonly ussNode: IZoweUSSTreeNode;
-    private readonly ussApi: IUss;
+    private readonly ussApi: MainframeInteraction.IUss;
     private readonly canUpdate: boolean;
 
     private onUpdateDisposable: Disposable;
 
-    public constructor(context: ExtensionContext, treeProvider: IZoweTree<IZoweUSSTreeNode>, node: IZoweUSSTreeNode) {
+    public constructor(context: ExtensionContext, treeProvider: Types.IZoweUSSTreeType, node: IZoweUSSTreeNode) {
         const label = node.label ? `Edit Attributes: ${node.label as string}` : "Edit Attributes";
         super(label, "edit-attributes", context, (message: object) => this.onDidReceiveMessage(message));
         this.treeProvider = treeProvider;
@@ -84,7 +84,7 @@ export class AttributeView extends WebView {
         try {
             if (Object.keys(message.attrs).length > 0) {
                 const attrs = message.attrs;
-                const newAttrs: Partial<FileAttributes> = {};
+                const newAttrs: Partial<Types.FileAttributes> = {};
                 if (!isNaN(parseInt(attrs.owner))) {
                     const uid = parseInt(attrs.owner);
                     newAttrs.uid = uid;
@@ -118,7 +118,7 @@ export class AttributeView extends WebView {
                 }
 
                 await this.ussApi.updateAttributes(this.ussNode.fullPath, newAttrs);
-                this.ussNode.attributes = { ...(this.ussNode.attributes ?? {}), ...newAttrs } as FileAttributes;
+                this.ussNode.attributes = { ...(this.ussNode.attributes ?? {}), ...newAttrs } as Types.FileAttributes;
 
                 await this.panel.webview.postMessage({
                     updated: true,

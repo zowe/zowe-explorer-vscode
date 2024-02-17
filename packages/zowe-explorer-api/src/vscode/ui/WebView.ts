@@ -11,7 +11,7 @@
 
 import * as Handlebars from "handlebars";
 import HTMLTemplate from "./utils/HTMLTemplate";
-import { WebviewUris } from "./utils/types";
+import { Types } from "../../Types";
 import { Disposable, ExtensionContext, Uri, ViewColumn, WebviewPanel, window } from "vscode";
 import { join as joinPath } from "path";
 import { randomUUID } from "crypto";
@@ -25,8 +25,8 @@ export class WebView {
 
     // Resource identifiers for the on-disk content and vscode-webview resource.
     private uris: {
-        disk?: WebviewUris;
-        resource?: WebviewUris;
+        disk?: Types.WebviewUris;
+        resource?: Types.WebviewUris;
     } = {};
 
     // Unique identifier

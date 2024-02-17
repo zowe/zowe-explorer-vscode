@@ -24,16 +24,16 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
           persist-credentials: false
           ref: ${{ github.ref }}
 
       - name: Use Node.js LTS
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: '18.x'
 
       - name: Install pnpm and Lerna
         run: npm install -g pnpm lerna@6
@@ -69,10 +69,10 @@ jobs:
           git add packages/*/CHANGELOG.md
 
       - name: Create Snapshot Version
-        if: ${{ github.ref_name != 'next' && steps.octorelease.outcome == 'success' }}
+        if: ${{ steps.octorelease.outcome == 'success' }}
         uses: zowe-actions/octorelease/script@v1
         env:
-          VERSION_STRING: "%s-SNAPSHOT"
+          VERSION_STRING: "${{ github.ref_name != 'next' && '%s-SNAPSHOT' || '%s-next-SNAPSHOT' }}"
         with:
           config-dir: .github
           script: prepareRelease

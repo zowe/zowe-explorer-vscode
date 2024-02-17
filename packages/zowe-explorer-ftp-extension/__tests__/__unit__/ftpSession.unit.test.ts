@@ -42,8 +42,8 @@ describe("FtpSession Unit Tests - function releaseConnections", () => {
             writable: true,
         });
         expect(testFtpSession.releaseConnections()).toEqual(undefined);
-        expect(ussListConnectionMock).toBeCalledTimes(1);
-        expect(mvsListConnectionMock).toBeCalledTimes(1);
-        expect(jesListConnectionMock).toBeCalledTimes(1);
+        expect(ussListConnectionMock).toHaveBeenCalledTimes(1);
+        expect(mvsListConnectionMock).toHaveBeenCalledTimes(1);
+        expect(jesListConnectionMock).toHaveBeenCalledTimes(1);
     });
 });

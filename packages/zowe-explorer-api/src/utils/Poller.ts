@@ -9,65 +9,46 @@
  *
  */
 
-export type PollRequest = {
-    msInterval: number;
-    dispose?: boolean;
-
-    reject?<T = never>(reason?: any): Promise<T>;
-    resolve?: (uniqueId: string, data: any) => any;
-    request: () => Promise<unknown>;
-
-    // Indexable for storing custom items
-    [key: string]: any;
-};
+import { Types } from "../Types";
 
 export class Poller {
-    public static pollRequests: { [key: string]: PollRequest } = {};
+    public static pollRequests: { [key: string]: Types.PollRequest } = {};
 
-    private static poll(uniqueId: string, requestData: PollRequest): Promise<unknown> {
-        const pollHandler = async (resolve, reject): Promise<unknown> => {
+    private static poll(uniqueId: string, requestData: Types.PollRequest): Promise<unknown> {
+        const pollHandler = async (resolve?: (uniqueId: string, data: any) => unknown, reject?: typeof Promise["reject"]): Promise<unknown> => {
             if (!Poller.pollRequests[uniqueId]) {
                 // Poll request was discarded, return
-                return resolve() as unknown;
+                return resolve(uniqueId, null);
             }
 
             // Dispose the poll request if it was marked for disposal before next fetch attempt
             const shouldDispose = Poller.pollRequests[uniqueId].dispose;
             if (shouldDispose) {
                 Poller.removeRequest(uniqueId);
-                return resolve() as unknown;
+                return resolve(uniqueId, null);
             }
 
             let data = null;
             try {
                 data = await requestData.request();
             } catch (err) {
-                if (requestData.reject) {
-                    // eslint-disable-next-line zowe-explorer/no-floating-promises
-                    requestData.reject(err);
-                } else {
-                    reject(err);
-                }
+                return requestData.reject ? requestData.reject(err) : reject(err);
             }
 
             if (data && requestData.resolve) {
                 requestData.resolve(uniqueId, data);
             }
 
-            // eslint-disable-next-line @typescript-eslint/no-misused-promises
-            setTimeout(pollHandler, requestData.msInterval, resolve, reject);
+            setTimeout(() => void pollHandler(resolve, reject), requestData.msInterval);
         };
 
-        // eslint-disable-next-line @typescript-eslint/no-misused-promises
-        return new Promise(pollHandler);
+        return pollHandler(requestData.resolve, requestData.reject?.bind(pollHandler));
     }
 
-    public static addRequest(uniqueId: string, request: PollRequest): void {
+    public static addRequest(uniqueId: string, request: Types.PollRequest): void {
         Poller.pollRequests[uniqueId] = request;
-
         // Initialize the poll request
-        // eslint-disable-next-line zowe-explorer/no-floating-promises
-        this.poll(uniqueId, request);
+        void this.poll(uniqueId, request);
     }
 
     public static removeRequest(uniqueId: string): void {

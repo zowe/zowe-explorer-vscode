@@ -9,9 +9,10 @@
  *
  */
 
-import { Uri } from "vscode";
+import { imperative } from "@zowe/cli";
 
-export type WebviewUris = {
-    build: Uri;
-    script: Uri;
-};
+export interface ZeApiConvertResponse {
+    success: string;
+    warnings: string;
+    convertResult: imperative.IConfigConvertResult;
+}

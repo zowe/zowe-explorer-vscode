@@ -9,7 +9,7 @@
  *
  */
 
-import { ZosmfUssApi, ZosmfMvsApi } from "@zowe/zowe-explorer-api";
+import { ZoweExplorerZosmf } from "@zowe/zowe-explorer-api";
 import * as zowe from "@zowe/cli";
 
 export declare enum TaskStage {
@@ -28,7 +28,7 @@ describe("Zosmf API tests", () => {
 
         (zowe as any).Copy = { dataSet };
 
-        const api = new ZosmfMvsApi();
+        const api = new ZoweExplorerZosmf.MvsApi();
         api.getSession = jest.fn();
         await api.copyDataSetMember({ dsn: "IBM.FROM", member: "IEFBR14" }, { dsn: "IBM.TO", member: "IEFBR15" });
     });
@@ -41,7 +41,7 @@ describe("Zosmf API tests", () => {
 
         (zowe as any).Copy = { dataSet };
 
-        const api = new ZosmfMvsApi();
+        const api = new ZoweExplorerZosmf.MvsApi();
         api.getSession = jest.fn();
         await api.copyDataSetMember(
             { dsn: "IBM.FROM", member: "IEFBR14" },
@@ -58,7 +58,7 @@ describe("Zosmf API tests", () => {
 
         (zowe as any).Copy = { dataSet };
 
-        const api = new ZosmfMvsApi();
+        const api = new ZoweExplorerZosmf.MvsApi();
         api.getSession = jest.fn();
         await api.copyDataSetMember({ dsn: "IBM.FROM", member: "IEFBR14" }, { dsn: "IBM.TO", member: "IEFBR15" }, {
             enq: "SHR",
@@ -75,7 +75,7 @@ describe("Zosmf API tests", () => {
 
         (zowe as any).Upload = { fileToUssFile };
 
-        const api = new ZosmfUssApi();
+        const api = new ZoweExplorerZosmf.UssApi();
         api.getSession = jest.fn();
 
         await api.putContent("someLocalFile.txt", "/some/remote", {
@@ -84,7 +84,7 @@ describe("Zosmf API tests", () => {
     });
 
     it("should test that getContents calls zowe.Download.ussFile", async () => {
-        const api = new ZosmfUssApi();
+        const api = new ZoweExplorerZosmf.UssApi();
         api.getSession = jest.fn();
 
         Object.defineProperty(zowe, "Download", {
@@ -102,7 +102,7 @@ describe("Zosmf API tests", () => {
     });
 
     it("should update the tag attribute of a USS file if a new change is made", async () => {
-        const api = new ZosmfUssApi();
+        const api = new ZoweExplorerZosmf.UssApi();
         const changeTagSpy = jest.fn();
         Object.defineProperty(zowe, "Utilities", {
             value: {
@@ -111,11 +111,11 @@ describe("Zosmf API tests", () => {
             configurable: true,
         });
         await expect(api.updateAttributes("/test/path", { tag: "utf-8" })).resolves.not.toThrow();
-        expect(changeTagSpy).toBeCalledTimes(1);
+        expect(changeTagSpy).toHaveBeenCalledTimes(1);
     });
 
     it("should get the tag of a file successfully", async () => {
-        const api = new ZosmfUssApi();
+        const api = new ZoweExplorerZosmf.UssApi();
         jest.spyOn(JSON, "parse").mockReturnValue({
             stdout: ["-t UTF-8 tesfile.txt"],
         });

@@ -11,8 +11,7 @@
 
 import * as vscode from "vscode";
 import * as globals from "../globals";
-import { openPS } from "../dataset/actions";
-import { Gui, IZoweDatasetTreeNode, IZoweUSSTreeNode, IZoweNodeType, IZoweTree, imperative } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweDatasetTreeNode, IZoweUSSTreeNode, Types, imperative } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { filterTreeByString, willForceUpload } from "../shared/utils";
 import { FilterItem, FilterDescriptor } from "../utils/ProfilesUtils";
@@ -26,13 +25,10 @@ import { LocalFileManagement } from "../utils/LocalFileManagement";
  * Search for matching items loaded in data set or USS tree
  *
  */
-export async function searchInAllLoadedItems(
-    datasetProvider?: IZoweTree<IZoweDatasetTreeNode>,
-    ussFileProvider?: IZoweTree<IZoweUSSTreeNode>
-): Promise<void> {
+export async function searchInAllLoadedItems(datasetProvider?: Types.IZoweDatasetTreeType, ussFileProvider?: Types.IZoweUSSTreeType): Promise<void> {
     ZoweLogger.trace("shared.actions.searchInAllLoadedItems called.");
     let pattern: string;
-    const items: IZoweNodeType[] = [];
+    const items: Types.IZoweNodeType[] = [];
     const qpItems = [];
     const quickpick = Gui.createQuickPick();
     quickpick.placeholder = vscode.l10n.t("Enter a filter");
@@ -118,7 +114,7 @@ export async function searchInAllLoadedItems(
                 // If selected item is file, open it in workspace
                 ussFileProvider.addSearchHistory(node.fullPath);
                 const ussNode: IZoweUSSTreeNode = node;
-                ussNode.openUSS(false, true, ussFileProvider);
+                await ussNode.openUSS(false, true, ussFileProvider);
             }
         } else {
             // Data set nodes
@@ -136,7 +132,7 @@ export async function searchInAllLoadedItems(
 
                 // Open in workspace
                 datasetProvider.addSearchHistory(`${nodeName}(${memberName})`);
-                await openPS(member, true, datasetProvider);
+                await member.openDs(false, true, datasetProvider);
             } else {
                 // PDS & SDS
                 await datasetProvider.getTreeView().reveal(node, { select: true, focus: true, expand: false });
@@ -144,14 +140,14 @@ export async function searchInAllLoadedItems(
                 // If selected node was SDS, open it in workspace
                 if (contextually.isDs(node)) {
                     datasetProvider.addSearchHistory(nodeName);
-                    await openPS(node, true, datasetProvider);
+                    await node.openDs(false, true, datasetProvider);
                 }
             }
         }
     }
 }
 
-export async function openRecentMemberPrompt(datasetTree: IZoweTree<IZoweDatasetTreeNode>, ussTree: IZoweTree<IZoweUSSTreeNode>): Promise<void> {
+export async function openRecentMemberPrompt(datasetTree: Types.IZoweDatasetTreeType, ussTree: Types.IZoweUSSTreeType): Promise<void> {
     ZoweLogger.trace("shared.actions.openRecentMemberPrompt called.");
     ZoweLogger.debug(vscode.l10n.t("Prompting the user to choose a recent member for editing"));
     let pattern: string;
@@ -211,7 +207,7 @@ export async function openRecentMemberPrompt(datasetTree: IZoweTree<IZoweDataset
     }
 }
 
-export function returnIconState(node: IZoweNodeType): IZoweNodeType {
+export function returnIconState(node: Types.IZoweNodeType): Types.IZoweNodeType {
     ZoweLogger.trace("shared.actions.returnIconState called.");
     const activePathClosed = getIconById(IconId.sessionActive);
     const activePathOpen = getIconById(IconId.sessionActiveOpen);
@@ -225,7 +221,7 @@ export function returnIconState(node: IZoweNodeType): IZoweNodeType {
     return node;
 }
 
-export function resetValidationSettings(node: IZoweNodeType, setting: boolean): IZoweNodeType {
+export function resetValidationSettings(node: Types.IZoweNodeType, setting: boolean): Types.IZoweNodeType {
     ZoweLogger.trace("shared.actions.resetValidationSettings called.");
     if (setting) {
         Profiles.getInstance().enableValidationContext(node);
@@ -241,9 +237,7 @@ export function resolveFileConflict(
     node: IZoweDatasetTreeNode | IZoweUSSTreeNode,
     profile: imperative.IProfileLoaded,
     doc: vscode.TextDocument,
-    docName: string,
-    label?: string,
-    binary?: boolean
+    label?: string
 ): void {
     const compareBtn = vscode.l10n.t("Compare");
     const overwriteBtn = vscode.l10n.t("Overwrite");
@@ -257,12 +251,12 @@ export function resolveFileConflict(
         switch (selection) {
             case compareBtn: {
                 ZoweLogger.info(`${compareBtn} chosen.`);
-                await LocalFileManagement.compareSavedFileContent(doc, node, label, binary, profile);
+                await LocalFileManagement.compareSavedFileContent(doc, node, label, profile);
                 break;
             }
             case overwriteBtn: {
                 ZoweLogger.info(`${overwriteBtn} chosen.`);
-                await willForceUpload(node, doc, label, profile, binary);
+                await willForceUpload(node, doc, label, profile);
                 break;
             }
             default: {

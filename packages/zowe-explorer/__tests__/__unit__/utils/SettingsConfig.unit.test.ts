@@ -41,8 +41,8 @@ describe("SettingsConfig Unit Tests", () => {
             const setValueSpy = jest.spyOn(ZoweLocalStorage, "setValue");
             const promptReloadSpy = jest.spyOn(SettingsConfig as any, "promptReload");
             await (SettingsConfig as any).migrateToLocalStorage();
-            expect(setValueSpy).toBeCalledTimes(6);
-            expect(promptReloadSpy).toBeCalledTimes(1);
+            expect(setValueSpy).toHaveBeenCalledTimes(6);
+            expect(promptReloadSpy).toHaveBeenCalledTimes(1);
         });
     });
 
@@ -167,7 +167,7 @@ describe("SettingsConfig Unit Tests", () => {
             jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValueOnce(false);
             const migrateToLocalStorageSpy = jest.spyOn(SettingsConfig as any, "migrateToLocalStorage");
             await expect(SettingsConfig.standardizeSettings()).resolves.not.toThrow();
-            expect(migrateToLocalStorageSpy).toBeCalledTimes(1);
+            expect(migrateToLocalStorageSpy).toHaveBeenCalledTimes(1);
         });
     });
 });

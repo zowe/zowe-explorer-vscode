@@ -41,9 +41,9 @@ describe("Extension Unit Tests - function registerFtpApis", () => {
                 extensionPath: "./test",
             } as unknown as vscode.ExtensionContext)
         ).toEqual(undefined);
-        expect(registerUssApiMock).toBeCalledTimes(1);
-        expect(registerMvsApiMock).toBeCalledTimes(1);
-        expect(registerJesApiMock).toBeCalledTimes(1);
+        expect(registerUssApiMock).toHaveBeenCalledTimes(1);
+        expect(registerMvsApiMock).toHaveBeenCalledTimes(1);
+        expect(registerJesApiMock).toHaveBeenCalledTimes(1);
     });
 
     it("should display error if zoweExplorerApi was not found", async () => {
@@ -55,6 +55,6 @@ describe("Extension Unit Tests - function registerFtpApis", () => {
                 extensionPath: "./test",
             } as unknown as vscode.ExtensionContext)
         ).toEqual(undefined);
-        expect(showMessageSpy).toBeCalledTimes(1);
+        expect(showMessageSpy).toHaveBeenCalledTimes(1);
     });
 });

@@ -9,17 +9,6 @@
  *
  */
 
-import { ICreateDataSetOptions } from "@zowe/cli";
-
-/**
- * @type DataSetAllocTemplate
- * Used during creation of data sets in Zowe Explorer to access and manipulate a list of saved templates
- * presented to or saved by the user
- */
-export type DataSetAllocTemplate = {
-    [key: string]: ICreateDataSetOptions;
-};
-
 /**
  * The types of persistence schemas wich are available in settings.json
  */

@@ -9,16 +9,9 @@
  *
  */
 
-import { IZoweUSSTreeNode } from "./IZoweUSSTreeNode";
-import { IZoweDatasetTreeNode } from "./IZoweDatasetTreeNode";
-import { IZoweJobTreeNode } from "./IZoweJobTreeNode";
-import { IZoweTree } from "./IZoweTree";
-
-export type IZoweNodeType = IZoweDatasetTreeNode | IZoweUSSTreeNode | IZoweJobTreeNode;
-export type IZoweUSSTreeType = IZoweTree<IZoweUSSTreeNode>;
-
 export * from "./sorting";
-export * from "./ZoweExplorerTreeApi";
+export * from "./IZoweExplorerTreeApi";
 export * from "./ZoweTreeNode";
-export * from "./IZoweTree";
 export * from "./IZoweTreeNode";
+export * from "./IZoweTree";
+export * from "./ZoweNodeActions";

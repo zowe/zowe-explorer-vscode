@@ -41,7 +41,11 @@ describe("ZoweCommandProvider Unit Tests", () => {
 });
 
 describe("ZoweCommandProvide Unit Tests - function checkCurrentProfile", () => {
-    const testNode = new ZoweDatasetNode("test", vscode.TreeItemCollapsibleState.None, undefined, globalMocks.testSession);
+    const testNode = new ZoweDatasetNode({
+        label: "test",
+        collapsibleState: vscode.TreeItemCollapsibleState.None,
+        session: globalMocks.testSession,
+    });
     testNode.setProfileToChoice(globalMocks.testProfile);
     testNode.contextValue = "session server";
 
@@ -82,7 +86,7 @@ describe("ZoweCommandProvide Unit Tests - function checkCurrentProfile", () => {
         });
         const errorHandlingSpy = jest.spyOn(utils, "errorHandling").mockImplementation();
         await expect(ZoweCommandProvider.prototype.checkCurrentProfile(testNode)).resolves.toEqual(undefined);
-        expect(errorHandlingSpy).toBeCalledWith(
+        expect(errorHandlingSpy).toHaveBeenCalledWith(
             "Profile Name " +
                 globalMocks.testProfile.name +
                 " is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct."

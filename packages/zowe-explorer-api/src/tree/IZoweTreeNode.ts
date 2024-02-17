@@ -11,15 +11,24 @@
 
 import * as vscode from "vscode";
 import { IJob, imperative } from "@zowe/cli";
-import { FileAttributes } from "../utils/files";
-import { DatasetFilter, NodeSort } from "./sorting";
-import { IZoweUSSTreeType } from ".";
+import { Sorting } from "./sorting";
+import { ZoweTreeNodeActions } from "./ZoweNodeActions";
+import type { Types } from "../Types";
 
-export type IZoweNodeType = IZoweDatasetTreeNode | IZoweUSSTreeNode | IZoweJobTreeNode;
-
-export enum NodeAction {
-    Download = "download",
+interface TextEncoding {
+    kind: "text";
 }
+
+interface BinaryEncoding {
+    kind: "binary";
+}
+
+interface OtherEncoding {
+    kind: "other";
+    codepage: string;
+}
+
+export type ZosEncoding = TextEncoding | BinaryEncoding | OtherEncoding;
 
 /**
  * The base interface for Zowe tree nodes that are implemented by vscode.TreeItem.
@@ -74,7 +83,7 @@ export interface IZoweTreeNode {
     /**
      * Any ongoing actions that must be awaited before continuing
      */
-    ongoingActions?: Record<NodeAction | string, Promise<any>>;
+    ongoingActions?: Record<ZoweTreeNodeActions.Interactions | string, Promise<any>>;
     /**
      * whether the node was double-clicked
      */
@@ -82,7 +91,7 @@ export interface IZoweTreeNode {
     /**
      * Sorting method for this node's children
      */
-    sort?: NodeSort;
+    sort?: Sorting.NodeSort;
     /**
      * Retrieves the node label
      */
@@ -125,12 +134,6 @@ export interface IZoweTreeNode {
     setSessionToChoice(sessionObj: imperative.Session): void;
 }
 
-export type DatasetStats = {
-    user: string;
-    // built from "m4date", "mtime" and "msec" variables from z/OSMF API response
-    modifiedDate: Date;
-};
-
 /**
  * Extended interface for Zowe Dataset tree nodes.
  *
@@ -149,11 +152,26 @@ export interface IZoweDatasetTreeNode extends IZoweTreeNode {
     /**
      * Additional statistics about this data set
      */
-    stats?: Partial<DatasetStats>;
+    stats?: Partial<Types.DatasetStats>;
     /**
      * Filter method for this data set's children
      */
-    filter?: DatasetFilter;
+    filter?: Sorting.DatasetFilter;
+    /**
+     * List of child nodes and user-selected encodings
+     */
+    encodingMap?: Record<string, ZosEncoding>;
+    /**
+     * Binary indicator. Default false (text)
+     */
+    binary?: boolean;
+    /**
+     * Remote encoding of the data set
+     *
+     * * `null` = user selected z/OS default codepage
+     * * `undefined` = user did not specify
+     */
+    encoding?: string;
     /**
      * Retrieves child nodes of this IZoweDatasetTreeNode
      *
@@ -172,6 +190,20 @@ export interface IZoweDatasetTreeNode extends IZoweTreeNode {
      * @param {string}
      */
     setEtag?(etag: string);
+    /**
+     * Downloads and displays a file in a text editor view
+     *
+     * @param download Download the file default false
+     * @param preview the file, true or false
+     * @param datasetFileProvider the tree provider
+     */
+    openDs?(download: boolean, previewFile: boolean, datasetFileProvider: Types.IZoweDatasetTreeType): Promise<void>;
+    /**
+     * Sets the codepage value for the file
+     *
+     * @param {string}
+     */
+    setEncoding?(encoding: ZosEncoding);
 }
 
 /**
@@ -186,26 +218,29 @@ export interface IZoweUSSTreeNode extends IZoweTreeNode {
      */
     shortLabel?: string;
     /**
-     * List of child nodes downloaded in binary format
+     * List of child nodes and user-selected encodings
      */
-    binaryFiles?: Record<string, unknown>;
+    encodingMap?: Record<string, ZosEncoding>;
     /**
      * Binary indicator. Default false (text)
      */
     binary?: boolean;
-    /**
-     * Specific profile name in use with this node
-     */
-    mProfileName?: string;
 
     /**
      * File attributes
      */
-    attributes?: FileAttributes;
+    attributes?: Types.FileAttributes;
     /**
      * Event that fires whenever an existing node is updated.
      */
     onUpdateEmitter?: vscode.EventEmitter<IZoweUSSTreeNode>;
+    /**
+     * Remote encoding of the data set
+     *
+     * * `null` = user selected z/OS default codepage
+     * * `undefined` = user did not specify
+     */
+    encoding?: string;
     /**
      * Event that fires whenever an existing node is updated.
      */
@@ -235,10 +270,11 @@ export interface IZoweUSSTreeNode extends IZoweTreeNode {
      */
     rename?(newNamePath: string);
     /**
-     * Specifies the field as binary
-     * @param binary true is a binary file otherwise false
+     * Sets the codepage value for the file
+     *
+     * @param {string}
      */
-    setBinary?(binary: boolean);
+    setEncoding?(encoding: ZosEncoding);
     // /**
     //  * Opens the text document
     //  * @return vscode.TextDocument
@@ -251,7 +287,7 @@ export interface IZoweUSSTreeNode extends IZoweTreeNode {
      * @param preview the file, true or false
      * @param ussFileProvider the tree provider
      */
-    openUSS?(download: boolean, previewFile: boolean, ussFileProvider: IZoweUSSTreeType);
+    openUSS?(download: boolean, previewFile: boolean, ussFileProvider: Types.IZoweUSSTreeType): Promise<void>;
     /**
      * Returns the local file path for the ZoweUSSNode
      *
@@ -268,14 +304,14 @@ export interface IZoweUSSTreeNode extends IZoweTreeNode {
      * @param filePath
      * @param cancelled optional
      */
-    deleteUSSNode?(ussFileProvider: IZoweUSSTreeType, filePath: string, cancelled?: boolean);
+    deleteUSSNode?(ussFileProvider: Types.IZoweUSSTreeType, filePath: string, cancelled?: boolean);
     /**
      * Process for renaming a USS Node. This could be a Favorite Node
      *
      * @param {USSTree} ussFileProvider
      * @param {string} filePath
      */
-    renameUSSNode?(ussFileProvider: IZoweUSSTreeType, filePath: string);
+    renameUSSNode?(ussFileProvider: Types.IZoweUSSTreeType, filePath: string);
     /**
      * Refreshes node and reopens it.
      * @param hasClosedInstance
@@ -292,7 +328,7 @@ export interface IZoweUSSTreeNode extends IZoweTreeNode {
      *
      * @param {USSTree} ussFileProvider
      */
-    saveSearch?(ussFileProvider: IZoweUSSTreeType);
+    saveSearch?(ussFileProvider: Types.IZoweUSSTreeType);
     /**
      * uploads selected uss node(s) to from clipboard to mainframe
      * @deprecated in favor of `pasteUssTree`

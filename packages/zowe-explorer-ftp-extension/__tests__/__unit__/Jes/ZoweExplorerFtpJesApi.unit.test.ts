@@ -45,10 +45,10 @@ describe("FtpJesApi", () => {
             owner: "IBMUSER",
             prefix: "*",
         };
-        const result = await JesApi.getJobsByOwnerAndPrefix(mockParams.owner, mockParams.prefix);
+        const result = await JesApi.getJobsByParameters(mockParams);
 
         expect(result[0].jobname).toContain("JOB1");
-        expect(JobUtils.listJobs).toBeCalledTimes(1);
+        expect(JobUtils.listJobs).toHaveBeenCalledTimes(1);
         expect(JesApi.releaseConnection).toHaveBeenCalledTimes(0);
     });
 
@@ -61,8 +61,8 @@ describe("FtpJesApi", () => {
         const result = await JesApi.getJob(mockParams.jobid);
 
         expect(result.jobname).toContain("JOB1");
-        expect(JobUtils.findJobByID).toBeCalledTimes(1);
-        expect(JesApi.releaseConnection).toBeCalled();
+        expect(JobUtils.findJobByID).toHaveBeenCalledTimes(1);
+        expect(JesApi.releaseConnection).toHaveBeenCalled();
     });
 
     it("should get spoolfiles.", async () => {
@@ -75,26 +75,26 @@ describe("FtpJesApi", () => {
         const result = await JesApi.getSpoolFiles(mockParams.jobname, mockParams.jobid);
 
         expect(result[0].id).toContain("1");
-        expect(JobUtils.findJobByID).toBeCalledTimes(1);
-        expect(JesApi.releaseConnection).toBeCalled();
+        expect(JobUtils.findJobByID).toHaveBeenCalledTimes(1);
+        expect(JesApi.releaseConnection).toHaveBeenCalled();
     });
 
     it("should download spool content.", async () => {
         const jobDetails = { jobid: "123", jobname: "JOB1", spoolFiles: [{ id: "1" }, { id: "2" }] };
         JobUtils.findJobByID = jest.fn().mockReturnValue(jobDetails);
         JobUtils.getSpoolFiles = jest.fn().mockReturnValue(jobDetails.spoolFiles);
-        DownloadJobs.getSpoolDownloadFile = jest.fn().mockReturnValue("/tmp/file1");
+        DownloadJobs.getSpoolDownloadFilePath = jest.fn().mockReturnValue("/tmp/file1");
         imperative.IO.writeFile = jest.fn();
         const mockParams = {
             parms: { jobname: "JOB1", jobid: "123", outDir: "/a/b/c" },
         };
 
         await JesApi.downloadSpoolContent(mockParams.parms);
-        expect(JobUtils.findJobByID).toBeCalledTimes(1);
-        expect(JobUtils.getSpoolFiles).toBeCalledTimes(1);
-        expect(DownloadJobs.getSpoolDownloadFile).toBeCalledTimes(2);
-        expect(imperative.IO.writeFile).toBeCalledTimes(2);
-        expect(JesApi.releaseConnection).toBeCalled();
+        expect(JobUtils.findJobByID).toHaveBeenCalledTimes(1);
+        expect(JobUtils.getSpoolFiles).toHaveBeenCalledTimes(1);
+        expect(DownloadJobs.getSpoolDownloadFilePath).toHaveBeenCalledTimes(2);
+        expect(imperative.IO.writeFile).toHaveBeenCalledTimes(2);
+        expect(JesApi.releaseConnection).toHaveBeenCalled();
     });
 
     it("should throw an error when downloading spool content if no spool files are available.", async () => {
@@ -114,9 +114,9 @@ describe("FtpJesApi", () => {
         };
         await JesApi.getSpoolContentById(mockParams.jobname, mockParams.jobid, mockParams.spoolID);
 
-        expect(response._readableState.buffer.head.data.toString()).toContain("Hello world");
-        expect(JobUtils.getSpoolFileContent).toBeCalledTimes(1);
-        expect(JesApi.releaseConnection).toBeCalled();
+        expect((response._readableState.buffer.head?.data ?? response._readableState.buffer).toString()).toContain("Hello world");
+        expect(JobUtils.getSpoolFileContent).toHaveBeenCalledTimes(1);
+        expect(JesApi.releaseConnection).toHaveBeenCalled();
     });
 
     it("should submit job.", async () => {
@@ -129,9 +129,9 @@ describe("FtpJesApi", () => {
         };
         const result = await JesApi.submitJob(mockParams.jobDataSet);
         expect(result.jobid).toContain("123");
-        expect(JobUtils.submitJob).toBeCalledTimes(1);
-        expect(DataSetUtils.downloadDataSet).toBeCalledTimes(1);
-        expect(JesApi.releaseConnection).toBeCalled();
+        expect(JobUtils.submitJob).toHaveBeenCalledTimes(1);
+        expect(DataSetUtils.downloadDataSet).toHaveBeenCalledTimes(1);
+        expect(JesApi.releaseConnection).toHaveBeenCalled();
     });
 
     it("should delete job.", async () => {
@@ -141,8 +141,8 @@ describe("FtpJesApi", () => {
             jobid: "123",
         };
         await JesApi.deleteJob(mockParams.jobname, mockParams.jobid);
-        expect(JobUtils.deleteJob).toBeCalledTimes(1);
-        expect(JesApi.releaseConnection).toBeCalled();
+        expect(JobUtils.deleteJob).toHaveBeenCalledTimes(1);
+        expect(JesApi.releaseConnection).toHaveBeenCalled();
     });
 
     it("should throw error when list jobs by owner and prefix failed.", async () => {
@@ -152,7 +152,7 @@ describe("FtpJesApi", () => {
             })
         );
         await expect(async () => {
-            await JesApi.getJobsByOwnerAndPrefix("*", "*");
+            await JesApi.getJobsByParameters({});
         }).rejects.toThrow(ZoweFtpExtensionError);
     });
 

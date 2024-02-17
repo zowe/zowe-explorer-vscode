@@ -12,7 +12,8 @@
 jest.mock("Session");
 
 import * as vscode from "vscode";
-import { Gui, ValidProfileEnum } from "@zowe/zowe-explorer-api";
+import { Gui, Validation } from "@zowe/zowe-explorer-api";
+import * as profileLoader from "../../../src/Profiles";
 import { UnixCommandHandler } from "../../../src/command/UnixCommandHandler";
 import * as utils from "../../../src/utils/ProfilesUtils";
 import { imperative } from "@zowe/cli";
@@ -22,7 +23,6 @@ import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 import { SshSession } from "@zowe/zos-uss-for-zowe-sdk";
 import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
 import { ProfileManagement } from "../../../src/utils/ProfileManagement";
-import * as profileLoader from "../../../src/Profiles";
 
 describe("UnixCommand Actions Unit Testing", () => {
     const showErrorMessage = jest.fn();

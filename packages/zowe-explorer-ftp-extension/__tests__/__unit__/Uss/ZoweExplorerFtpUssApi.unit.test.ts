@@ -58,7 +58,7 @@ describe("FtpUssApi", () => {
         const result = await UssApi.fileList(mockParams.ussFilePath);
 
         expect(result.apiResponse.items[0].name).toContain("file1");
-        expect(UssUtils.listFiles).toBeCalledTimes(1);
+        expect(UssUtils.listFiles).toHaveBeenCalledTimes(1);
         expect(UssApi.releaseConnection).toHaveBeenCalledTimes(0);
     });
 
@@ -76,10 +76,10 @@ describe("FtpUssApi", () => {
         const result = await UssApi.getContents(mockParams.ussFilePath, mockParams.options);
 
         expect(result.apiResponse.etag).toHaveLength(40);
-        expect(UssUtils.downloadFile).toBeCalledTimes(1);
-        expect(UssApi.releaseConnection).toBeCalled();
+        expect(UssUtils.downloadFile).toHaveBeenCalledTimes(1);
+        expect(UssApi.releaseConnection).toHaveBeenCalled();
 
-        expect(response._readableState.buffer.head.data.toString()).toContain("Hello world");
+        expect((response._readableState.buffer.head?.data ?? response._readableState.buffer).toString()).toContain("Hello world");
     });
 
     it("should throw error for getContents if connection to FTP client fails.", async () => {
@@ -114,9 +114,9 @@ describe("FtpUssApi", () => {
         });
         jest.spyOn(UssApi as any, "getContentsTag").mockReturnValue("test");
         expect(result.commandResponse).toContain("File uploaded successfully.");
-        expect(UssUtils.downloadFile).toBeCalledTimes(1);
-        expect(UssUtils.uploadFile).toBeCalledTimes(1);
-        expect(UssApi.releaseConnection).toBeCalled();
+        expect(UssUtils.downloadFile).toHaveBeenCalledTimes(1);
+        expect(UssUtils.uploadFile).toHaveBeenCalledTimes(1);
+        expect(UssApi.releaseConnection).toHaveBeenCalled();
         // check that correct function is called from node-tmp
         expect(tmpNameSyncSpy).toHaveBeenCalled();
         expect(rmSyncSpy).toHaveBeenCalled();
@@ -134,7 +134,7 @@ describe("FtpUssApi", () => {
         const response = {};
         jest.spyOn(UssApi, "putContent").mockResolvedValue(response as any);
         await UssApi.uploadDirectory(mockParams.inputDirectoryPath, mockParams.ussDirectoryPath, mockParams.options);
-        expect(UssApi.putContent).toBeCalledTimes(3);
+        expect(UssApi.putContent).toHaveBeenCalledTimes(3);
     });
 
     it("should create uss directory.", async () => {
@@ -146,9 +146,9 @@ describe("FtpUssApi", () => {
         };
         const result = await UssApi.create(mockParams.ussPath, mockParams.type);
         expect(result.commandResponse).toContain("Directory or file created.");
-        expect(UssUtils.makeDirectory).toBeCalledTimes(1);
-        expect(UssUtils.uploadFile).not.toBeCalled();
-        expect(UssApi.releaseConnection).toBeCalled();
+        expect(UssUtils.makeDirectory).toHaveBeenCalledTimes(1);
+        expect(UssUtils.uploadFile).not.toHaveBeenCalled();
+        expect(UssApi.releaseConnection).toHaveBeenCalled();
     });
 
     it("should create uss file.", async () => {
@@ -160,9 +160,9 @@ describe("FtpUssApi", () => {
         };
         const result = await UssApi.create(mockParams.ussPath, mockParams.type);
         expect(result.commandResponse).toContain("Directory or file created.");
-        expect(UssUtils.uploadFile).toBeCalledTimes(1);
-        expect(UssUtils.makeDirectory).not.toBeCalled();
-        expect(UssApi.releaseConnection).toBeCalled();
+        expect(UssUtils.uploadFile).toHaveBeenCalledTimes(1);
+        expect(UssUtils.makeDirectory).not.toHaveBeenCalled();
+        expect(UssApi.releaseConnection).toHaveBeenCalled();
     });
 
     it("should delete uss directory with recursive.", async () => {
@@ -174,9 +174,9 @@ describe("FtpUssApi", () => {
         };
         const result = await UssApi.delete(mockParams.ussPath, mockParams.recursive);
         expect(result.commandResponse).toContain("Delete completed.");
-        expect(UssUtils.deleteDirectory).toBeCalledTimes(1);
-        expect(UssUtils.deleteFile).not.toBeCalled();
-        expect(UssApi.releaseConnection).toBeCalled();
+        expect(UssUtils.deleteDirectory).toHaveBeenCalledTimes(1);
+        expect(UssUtils.deleteFile).not.toHaveBeenCalled();
+        expect(UssApi.releaseConnection).toHaveBeenCalled();
     });
 
     it("should delete uss file.", async () => {
@@ -188,9 +188,9 @@ describe("FtpUssApi", () => {
         };
         const result = await UssApi.delete(mockParams.ussPath, mockParams.recursive);
         expect(result.commandResponse).toContain("Delete completed.");
-        expect(UssUtils.deleteFile).toBeCalledTimes(1);
-        expect(UssUtils.deleteDirectory).not.toBeCalled();
-        expect(UssApi.releaseConnection).toBeCalled();
+        expect(UssUtils.deleteFile).toHaveBeenCalledTimes(1);
+        expect(UssUtils.deleteDirectory).not.toHaveBeenCalled();
+        expect(UssApi.releaseConnection).toHaveBeenCalled();
     });
 
     it("should rename uss file or directory.", async () => {
@@ -201,8 +201,8 @@ describe("FtpUssApi", () => {
         };
         const result = await UssApi.rename(mockParams.currentUssPath, mockParams.newUssPath);
         expect(result.commandResponse).toContain("Rename completed.");
-        expect(UssUtils.renameFile).toBeCalledTimes(1);
-        expect(UssApi.releaseConnection).toBeCalled();
+        expect(UssUtils.renameFile).toHaveBeenCalledTimes(1);
+        expect(UssApi.releaseConnection).toHaveBeenCalled();
     });
 
     it("should receive false from isFileTagBinOrAscii as it is not implemented in the FTP extension.", async () => {

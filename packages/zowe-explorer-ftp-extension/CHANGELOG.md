@@ -1,12 +1,22 @@
 All notable changes to the "zowe-explorer-ftp-extension" extension will be documented in this file.
 
-## Recent Changes
+## `3.0.0-next.202402142205`
 
-### New features and enhancements
+## New features and enhancements
 
+## Bug fixes
+
+- Fix Windows-specific hangs when saving members that contain JCL via the FTP extension. Thanks @tiantn & @std4lqi. [#2533](https://github.com/zowe/vscode-extension-for-zowe/issues/2533)
+- Updated dependencies for technical currency purposes.
+
+## `3.0.0-next.202402071248`
+
+## New features and enhancements
+
+- Adapted to new API changes from grouping of common methods into singleton classes [#2109](https://github.com/zowe/vscode-extension-for-zowe/issues/2109)
 - Migrated to webpack v5 [#2214](https://github.com/zowe/vscode-extension-for-zowe/issues/2214)
 
-### Bug fixes
+## Bug fixes
 
 ## `3.0.0-next.202401241448`
 
@@ -37,7 +47,17 @@ All notable changes to the "zowe-explorer-ftp-extension" extension will be docum
 - Added `madge` script in `package.json` to track circular dependencies. [#2148](https://github.com/zowe/vscode-extension-for-zowe/issues/2148)
 - Migrated to new package manager PNPM from Yarn.
 
+### Bug fixes
+
 - Fixed ECONNRESET error when trying to upload or create an empty data set member. [#2350](https://github.com/zowe/vscode-extension-for-zowe/issues/2350)
+
+## `2.14.0`
+
+## `2.13.1`
+
+### Bug fixes
+
+- Update dependencies for technical currency purposes.
 
 ## `2.13.0`
 

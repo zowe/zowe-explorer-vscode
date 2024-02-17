@@ -43,8 +43,8 @@ describe("LocalFileManagement unit tests", () => {
         newMocks.mockFilesToCompare = [newMocks.mockDsFileNode];
         Object.defineProperty(globals, "filesToCompare", { value: newMocks.mockFilesToCompare, configurable: true });
         newMocks.mockDsFileNode = dsMock.createDatasetSessionNode(newMocks.mockSession, newMocks.mockProfile) as any;
-        Object.defineProperty(dsActions, "downloadPs", { value: jest.fn().mockResolvedValue(newMocks.mockFileInfo), configurable: true });
-        newMocks.mockDlDsSpy = jest.spyOn(dsActions, "downloadPs");
+        Object.defineProperty(dsActions, "downloadDs", { value: jest.fn().mockResolvedValue(newMocks.mockFileInfo), configurable: true });
+        newMocks.mockDlDsSpy = jest.spyOn(dsActions, "downloadDs");
         Object.defineProperty(unixActions, "downloadUnixFile", {
             value: jest.fn().mockResolvedValue(newMocks.mockFileInfo),
             configurable: true,
@@ -66,18 +66,18 @@ describe("LocalFileManagement unit tests", () => {
             mocks.mockIsDsNode.mockReturnValue(true);
             mocks.mockIsUnixNode.mockReturnValue(false);
             await LocalFileManagement.compareChosenFileContent(mocks.mockDsFileNode as any);
-            expect(mocks.mockDlDsSpy).toBeCalledTimes(2);
-            expect(mocks.mockDlUnixSpy).not.toBeCalled();
-            expect(mocks.warnLogSpy).not.toBeCalled();
+            expect(mocks.mockDlDsSpy).toHaveBeenCalledTimes(2);
+            expect(mocks.mockDlUnixSpy).not.toHaveBeenCalled();
+            expect(mocks.warnLogSpy).not.toHaveBeenCalled();
         });
         it("should pass with 2 UNIX files chosen", async () => {
             const mocks = createGlobalMocks();
             mocks.mockIsDsNode.mockReturnValue(false);
             mocks.mockIsUnixNode.mockReturnValue(true);
             await LocalFileManagement.compareChosenFileContent(mocks.mockDsFileNode as any);
-            expect(mocks.mockDlUnixSpy).toBeCalledTimes(2);
-            expect(mocks.mockDlDsSpy).not.toBeCalled();
-            expect(mocks.warnLogSpy).not.toBeCalled();
+            expect(mocks.mockDlUnixSpy).toHaveBeenCalledTimes(2);
+            expect(mocks.mockDlDsSpy).not.toHaveBeenCalled();
+            expect(mocks.warnLogSpy).not.toHaveBeenCalled();
         });
         it("should pass with 1 MVS file & 1 UNIX file chosen", async () => {
             const mocks = createGlobalMocks();
@@ -85,18 +85,18 @@ describe("LocalFileManagement unit tests", () => {
             mocks.mockIsDsNode.mockReturnValueOnce(false);
             mocks.mockIsUnixNode.mockReturnValueOnce(true);
             await LocalFileManagement.compareChosenFileContent(mocks.mockDsFileNode as any);
-            expect(mocks.mockDlUnixSpy).toBeCalledTimes(1);
-            expect(mocks.mockDlDsSpy).toBeCalledTimes(1);
-            expect(mocks.warnLogSpy).not.toBeCalled();
+            expect(mocks.mockDlUnixSpy).toHaveBeenCalledTimes(1);
+            expect(mocks.mockDlDsSpy).toHaveBeenCalledTimes(1);
+            expect(mocks.warnLogSpy).not.toHaveBeenCalled();
         });
         it("should log warning and return if MVS or UNIX file not chosen", async () => {
             const mocks = createGlobalMocks();
             mocks.mockIsDsNode.mockReturnValue(false);
             mocks.mockIsUnixNode.mockReturnValue(false);
             await LocalFileManagement.compareChosenFileContent(mocks.mockDsFileNode as any);
-            expect(mocks.mockDlUnixSpy).not.toBeCalled();
-            expect(mocks.mockDlDsSpy).not.toBeCalled();
-            expect(mocks.warnLogSpy).toBeCalled();
+            expect(mocks.mockDlUnixSpy).not.toHaveBeenCalled();
+            expect(mocks.mockDlDsSpy).not.toHaveBeenCalled();
+            expect(mocks.warnLogSpy).toHaveBeenCalled();
         });
     });
 });

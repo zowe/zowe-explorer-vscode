@@ -10,7 +10,7 @@
  */
 
 import * as zowe from "@zowe/cli";
-import { IJes } from "@zowe/zowe-explorer-api";
+import { MainframeInteraction } from "@zowe/zowe-explorer-api";
 import { JobUtils, DataSetUtils, TRANSFER_TYPE_ASCII } from "@zowe/zos-ftp-for-zowe-cli";
 import { DownloadJobs, IJobFile } from "@zowe/cli";
 import { IJob, IJobStatus, ISpoolFile } from "@zowe/zos-ftp-for-zowe-cli/lib/api/JobInterface";
@@ -32,8 +32,8 @@ interface ISpoolFileRefactor extends ISpoolFile {
     ddName: string;
 }
 
-export class FtpJesApi extends AbstractFtpApi implements IJes {
-    public async getJobsByOwnerAndPrefix(owner: string, prefix: string): Promise<zowe.IJob[]> {
+export class FtpJesApi extends AbstractFtpApi implements MainframeInteraction.IJes {
+    public async getJobsByParameters(params: zowe.IGetJobsParms): Promise<zowe.IJob[]> {
         const result = this.getIJobResponse();
         const session = this.getSession(this.profile);
         try {
@@ -43,9 +43,10 @@ export class FtpJesApi extends AbstractFtpApi implements IJes {
 
             if (session.jesListConnection.connected === true) {
                 const options = {
-                    owner: owner,
+                    owner: params.owner,
+                    status: params.status,
                 };
-                const response = await JobUtils.listJobs(session.jesListConnection, prefix, options);
+                const response = await JobUtils.listJobs(session.jesListConnection, params.prefix, options);
                 if (response) {
                     const results = response.map((job: IJob) => {
                         return {
@@ -160,7 +161,11 @@ export class FtpJesApi extends AbstractFtpApi implements IJes {
                             spoolFileToDownload.procstep === "N/A" || spoolFileToDownload.procstep == null ? undefined : spoolFileToDownload.procstep
                         ),
                     };
-                    const destinationFile = DownloadJobs.getSpoolDownloadFile(mockJobFile, parms.omitJobidDirectory, parms.outDir);
+                    const destinationFile = DownloadJobs.getSpoolDownloadFilePath({
+                        jobFile: mockJobFile,
+                        omitJobidDirectory: parms.omitJobidDirectory,
+                        outDir: parms.outDir,
+                    });
                     zowe.imperative.IO.createDirsSyncFromFilePath(destinationFile);
                     zowe.imperative.IO.writeFile(destinationFile, spoolFileToDownload.contents);
                 }
