@@ -114,15 +114,12 @@ describe("UnixCommand Actions Unit Testing", () => {
         failNotFound: false,
     };
 
-    const testNode = new ZoweDatasetNode(
-        "BRTVS99.DDIR",
-        vscode.TreeItemCollapsibleState.Collapsed,
-        null as any,
+    const testNode = new ZoweDatasetNode({
+        label: "BRTVS99.DDIR",
+        collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
         session,
-        undefined,
-        undefined,
-        profileOne
-    );
+        profile: profileOne,
+    });
 
     let fetchSshProfiles = [
         {
@@ -191,7 +188,7 @@ describe("UnixCommand Actions Unit Testing", () => {
                 validateProfiles: jest.fn(),
                 getBaseProfile: jest.fn(),
                 getDefaultProfile: mockdefaultProfile,
-                validProfile: ValidProfileEnum.VALID,
+                validProfile: Validation.ValidationType.VALID,
                 fetchAllProfilesByType: jest.fn(() => {
                     return fetchSshProfiles;
                 }),
@@ -245,7 +242,7 @@ describe("UnixCommand Actions Unit Testing", () => {
         });
         expect(showInputBox.mock.calls.length).toBe(2);
         expect(appendLine.mock.calls.length).toBe(2);
-        expect(appendLine.mock.calls[0][0]).toBe("> testuser @ ssh : /u/directorypath d iplinfo1");
+        expect(appendLine.mock.calls[0][0]).toBe("> testuser@ssh:/u/directorypath$ d iplinfo1");
         expect(appendLine.mock.calls[1][0]["commandResponse"]).toBe("iplinfo1");
         expect(showInformationMessage.mock.calls.length).toBe(0);
     });
@@ -280,7 +277,7 @@ describe("UnixCommand Actions Unit Testing", () => {
         });
         expect(showInputBox.mock.calls.length).toBe(1);
         expect(appendLine.mock.calls.length).toBe(2);
-        expect(appendLine.mock.calls[0][0]).toBe("> testuser @ ssh : /u/directorypath d iplinfo0");
+        expect(appendLine.mock.calls[0][0]).toBe("> testuser@ssh:/u/directorypath$ d iplinfo0");
         expect(appendLine.mock.calls[1][0]["commandResponse"]).toBe("iplinfo0");
         expect(showInformationMessage.mock.calls.length).toBe(0);
     });

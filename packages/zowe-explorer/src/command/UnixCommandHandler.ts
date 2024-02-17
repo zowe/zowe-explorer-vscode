@@ -334,7 +334,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
                     command = command.substring(1);
                 }
                 const user: string = this.sshprofile.profile.user;
-                this.outputChannel.appendLine(`> ${user} @ ${this.sshprofile.name} : ${cwd ? cwd : "~"} ${command}`);
+                this.outputChannel.appendLine(`> ${user}@${this.sshprofile.name}:${cwd ? cwd : "~"}$ ${command}`);
                 const submitResponse = await Gui.withProgress(
                     {
                         location: vscode.ProgressLocation.Notification,
