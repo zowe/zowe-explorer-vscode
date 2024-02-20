@@ -21,9 +21,10 @@ import { ZoweExplorerExtender } from "../../src/ZoweExplorerExtender";
 import { Profiles } from "../../src/Profiles";
 import * as path from "path";
 import * as fs from "fs";
-import { getZoweDir, Gui } from "@zowe/zowe-explorer-api";
-import * as profUtils from "../../src/utils/ProfilesUtils";
+import { getZoweDir, Gui, ProfilesCache } from "@zowe/zowe-explorer-api";
+import { ProfilesUtils } from "../../src/utils/ProfilesUtils";
 import { ZoweLogger } from "../../src/utils/LoggerUtils";
+import { SettingsConfig } from "../../src/utils/SettingsConfig";
 jest.mock("fs");
 
 describe("ZoweExplorerExtender unit tests", () => {
@@ -35,7 +36,7 @@ describe("ZoweExplorerExtender unit tests", () => {
             altTypeProfile: createAltTypeIProfile(),
             treeView: createTreeView(),
             instTest: ZoweExplorerExtender.getInstance(),
-            profiles: null,
+            profiles: {},
             mockGetConfiguration: jest.fn(),
             mockErrorMessage: jest.fn(),
             mockExistsSync: jest.fn(),
@@ -44,15 +45,7 @@ describe("ZoweExplorerExtender unit tests", () => {
 
         Object.defineProperty(fs, "existsSync", { value: newMocks.mockExistsSync, configurable: true });
         newMocks.profiles = createInstanceOfProfile(newMocks.imperativeProfile);
-        Object.defineProperty(Profiles, "getInstance", {
-            value: jest
-                .fn(() => {
-                    return {
-                        refresh: jest.fn(),
-                    };
-                })
-                .mockReturnValue(newMocks.profiles),
-        });
+        jest.spyOn(Profiles, "getInstance").mockReturnValue(newMocks.profiles as any);
         Object.defineProperty(vscode.window, "createTreeView", {
             value: jest.fn().mockReturnValue({ onDidCollapseElement: jest.fn() }),
             configurable: true,
@@ -78,10 +71,6 @@ describe("ZoweExplorerExtender unit tests", () => {
             configurable: true,
         });
         Object.defineProperty(ZoweLogger, "trace", {
-            value: jest.fn(),
-            configurable: true,
-        });
-        Object.defineProperty(Profiles.getInstance(), "addToConfigArray", {
             value: jest.fn(),
             configurable: true,
         });
@@ -217,11 +206,57 @@ describe("ZoweExplorerExtender unit tests", () => {
 
         const readProfilesFromDiskSpy = jest.fn();
         const refreshProfilesQueueAddSpy = jest.spyOn((ZoweExplorerExtender as any).refreshProfilesQueue, "add");
-        jest.spyOn(profUtils.ProfilesUtils, "getProfileInfo").mockReturnValue({
+        jest.spyOn(ProfilesUtils, "getProfileInfo").mockReturnValueOnce({
             readProfilesFromDisk: readProfilesFromDiskSpy,
         } as any);
         await expect(blockMocks.instTest.initForZowe("USS", ["" as any])).resolves.not.toThrow();
         expect(readProfilesFromDiskSpy).toBeCalledTimes(1);
         expect(refreshProfilesQueueAddSpy).toHaveBeenCalledTimes(1);
+    });
+
+    describe("Add to Schema functionality", () => {
+        // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+        const updateSchema = async (
+            addProfileTypeToSchemaMock: (
+                profileType: string,
+                typeInfo: { sourceApp: string; schema: any; version?: string | undefined }
+            ) => any = jest.fn()
+        ) => {
+            const blockMocks = await createBlockMocks();
+            // bypass "if (hasSecureCredentialManagerEnabled)" check for sake of testing
+            jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(false);
+            jest.spyOn(ZoweLogger, "trace").mockImplementation();
+            jest.spyOn(ZoweLogger, "info").mockImplementation();
+            const profInfo = new imperative.ProfileInfo("zowe", {
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+                credMgrOverride: imperative.ProfileCredentials.defaultCredMgrWithKeytar(ProfilesCache.requireKeyring),
+            });
+            const addProfTypeToSchema = jest
+                .spyOn(imperative.ProfileInfo.prototype, "addProfileTypeToSchema")
+                .mockImplementation(addProfileTypeToSchemaMock as unknown as any);
+            await (blockMocks.instTest as any).updateSchema(profInfo, [
+                {
+                    type: "test-type",
+                    schema: {} as any,
+                } as any,
+            ]);
+            expect(addProfTypeToSchema).toHaveBeenCalled();
+        };
+
+        it("should update the schema when an extender calls initForZowe", async () => {
+            await updateSchema();
+        });
+
+        it("should throw an error if the schema is read-only", async () => {
+            const errorMessageSpy = jest.spyOn(Gui, "errorMessage");
+            await updateSchema((_filepath, _contents) => {
+                const err = new Error("test error");
+                Object.defineProperty(err, "code", {
+                    value: "EACCES",
+                });
+                throw err;
+            });
+            expect(errorMessageSpy).toHaveBeenCalledWith("Failed to update Zowe schema: insufficient permissions or read-only file. test error");
+        });
     });
 });
