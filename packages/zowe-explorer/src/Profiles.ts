@@ -533,6 +533,10 @@ export class Profiles extends ProfilesCache {
 
     public async promptCredentials(profile: string | zowe.imperative.IProfileLoaded, rePrompt?: boolean): Promise<string[]> {
         ZoweLogger.trace("Profiles.promptCredentials called.");
+        let profType = "";
+        if (typeof profile !== "string") {
+            profType = profile.type;
+        }
         const userInputBoxOptions: vscode.InputBoxOptions = {
             placeHolder: vscode.l10n.t(`User Name`),
             prompt: vscode.l10n.t(`Enter the user name for the connection. Leave blank to not store.`),
