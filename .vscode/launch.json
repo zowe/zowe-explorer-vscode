@@ -18,21 +18,6 @@
       "envFile": "${workspaceFolder}/.vscode/.env"
     },
     {
-      // TODO: This launch-configuration should be updated to run the Theia container locally
-      //       and run through a single suite of tests (Firefox or Chrome)
-      "name": "Run Zowe Explorer VS Code Extension (Theia)",
-      "type": "extensionHost",
-      "request": "launch",
-      "runtimeExecutable": "${execPath}",
-      "args": [
-        "--verbose",
-        "--extensionDevelopmentPath=${workspaceFolder}/packages/zowe-explorer",
-        "--extensionTestsPath=${workspaceFolder}/packages/zowe-explorer/out/__tests__/__theia__/index"
-      ],
-      "outFiles": ["${workspaceFolder}/packages/zowe-explorer/out/**/*.js"],
-      "smartStep": true
-    },
-    {
       "name": "Run Zowe Explorer FTP VS Code Extension",
       "type": "extensionHost",
       "request": "launch",
@@ -56,7 +41,7 @@
       "type": "node",
       "name": "Zowe Explorer API Unit Tests (Jest)",
       "request": "launch",
-      "runtimeArgs": ["--inspect", "${workspaceFolder}/node_modules/jest/bin/jest", "-i"],
+      "runtimeArgs": ["--inspect-brk", "${workspaceFolder}/node_modules/jest/bin/jest", "-i"],
       "cwd": "${workspaceFolder}/packages/zowe-explorer-api",
       "console": "integratedTerminal",
       "sourceMaps": true
