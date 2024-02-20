@@ -91,7 +91,9 @@ export async function errorHandling(errorDetails: Error | string, label?: string
             return;
         }
     }
-
+    if (errorDetails.toString().includes("Could not find profile")) {
+        return;
+    }
     if (moreInfo === undefined) {
         moreInfo = errorDetails.toString().includes("Error") ? "" : "Error: ";
     } else {

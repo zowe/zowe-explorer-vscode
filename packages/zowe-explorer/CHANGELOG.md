@@ -2,13 +2,15 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
-## Recent Changes
+## TBD Release
 
 ### New features and enhancements
 
 - Migrated from `@zowe/cli` package to individual Zowe SDK packages. [#2719](https://github.com/zowe/vscode-extension-for-zowe/issues/2719)
 
 ### Bug fixes
+
+- Fixed default behavior of "Create a new Team Configuration File" to create a Project Config instead of Project User Config. [#2684](https://github.com/zowe/vscode-extension-for-zowe/issues/2684)
 
 ## `3.0.0-next.202402142205`
 
