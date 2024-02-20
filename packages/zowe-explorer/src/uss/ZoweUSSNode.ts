@@ -92,7 +92,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         if (icon) {
             this.iconPath = icon.path;
         }
-        if (!globals.ISTHEIA && contextually.isSession(this)) {
+        if (contextually.isSession(this)) {
             this.id = `uss.${this.label.toString()}`;
         }
         this.onUpdateEmitter = new vscode.EventEmitter<IZoweUSSTreeNode>();

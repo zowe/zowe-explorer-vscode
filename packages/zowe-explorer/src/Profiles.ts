@@ -484,9 +484,6 @@ export class Profiles extends ProfilesCache {
 
             config.api.layers.merge(newConfig);
             await config.save(false);
-            if (globals.ISTHEIA) {
-                vscode.commands.executeCommand("zowe.extRefresh");
-            }
             let configName;
             if (user) {
                 configName = config.userConfigName;

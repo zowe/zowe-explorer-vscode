@@ -222,11 +222,6 @@ export function editAttributes(context: vscode.ExtensionContext, fileProvider: T
  */
 export function copyPath(node: IZoweUSSTreeNode): void {
     ZoweLogger.trace("uss.actions.copyPath called.");
-    if (globals.ISTHEIA) {
-        // Remove when Theia supports VS Code API for accessing system clipboard
-        Gui.showMessage(vscode.l10n.t("Copy Path is not yet supported in Theia."));
-        return;
-    }
     vscode.env.clipboard.writeText(node.fullPath);
 }
 
