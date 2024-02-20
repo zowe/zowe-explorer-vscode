@@ -47,37 +47,28 @@
       "type": "node",
       "name": "Zowe Explorer Unit Tests (Jest)",
       "request": "launch",
-      "program": "${workspaceFolder}/node_modules/jest/bin/jest.js",
-      "args": ["-i"],
+      "runtimeArgs": ["--inspect-brk", "${workspaceFolder}/node_modules/jest/bin/jest", "-i"],
       "cwd": "${workspaceFolder}/packages/zowe-explorer",
       "console": "integratedTerminal",
-      "internalConsoleOptions": "neverOpen",
-      "smartStep": true,
-      "skipFiles": ["<node_internals>/**"]
+      "sourceMaps": true
     },
     {
       "type": "node",
       "name": "Zowe Explorer API Unit Tests (Jest)",
       "request": "launch",
-      "program": "${workspaceFolder}/node_modules/jest/bin/jest.js",
-      "args": ["-i"],
+      "runtimeArgs": ["--inspect", "${workspaceFolder}/node_modules/jest/bin/jest", "-i"],
       "cwd": "${workspaceFolder}/packages/zowe-explorer-api",
       "console": "integratedTerminal",
-      "internalConsoleOptions": "neverOpen",
-      "smartStep": true,
-      "skipFiles": ["<node_internals>/**"]
+      "sourceMaps": true
     },
     {
       "type": "node",
       "name": "Zowe Explorer FTP Unit Tests (Jest)",
       "request": "launch",
-      "program": "${workspaceFolder}/node_modules/jest/bin/jest.js",
-      "args": ["-i"],
+      "runtimeArgs": ["--inspect-brk", "${workspaceFolder}/node_modules/jest/bin/jest", "-i"],
       "cwd": "${workspaceFolder}/packages/zowe-explorer-ftp-extension",
       "console": "integratedTerminal",
-      "internalConsoleOptions": "neverOpen",
-      "smartStep": true,
-      "skipFiles": ["<node_internals>/**"]
+      "sourceMaps": true
     },
     {
       "name": "Zowe Explorer Integration Tests (Mocha)",
