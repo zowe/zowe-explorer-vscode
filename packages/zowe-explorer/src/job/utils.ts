@@ -12,7 +12,7 @@
 import { Sorting } from "@zowe/zowe-explorer-api";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { FilterItem } from "../utils/ProfilesUtils";
-import { IJob } from "@zowe/cli";
+import { IJob } from "@zowe/zos-jobs-for-zowe-sdk";
 import * as vscode from "vscode";
 
 export const JOB_SORT_OPTS = [

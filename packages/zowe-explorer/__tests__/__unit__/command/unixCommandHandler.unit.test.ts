@@ -12,11 +12,10 @@
 jest.mock("Session");
 
 import * as vscode from "vscode";
-import { Gui, Validation } from "@zowe/zowe-explorer-api";
+import { Gui, imperative, Validation } from "@zowe/zowe-explorer-api";
 import * as profileLoader from "../../../src/Profiles";
 import { UnixCommandHandler } from "../../../src/command/UnixCommandHandler";
 import * as utils from "../../../src/utils/ProfilesUtils";
-import { imperative } from "@zowe/cli";
 import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import * as globals from "../../../src/globals";

@@ -12,8 +12,8 @@
 import * as path from "path";
 import * as logger from "../../../src/utils/LoggerUtils";
 import * as vscode from "vscode";
-import * as zowe from "@zowe/cli";
-import { Gui, MessageSeverity } from "@zowe/zowe-explorer-api";
+import * as core from "@zowe/core-for-zowe-sdk";
+import { Gui, imperative, MessageSeverity } from "@zowe/zowe-explorer-api";
 import * as shared from "../../../__mocks__/mockCreators/shared";
 import { SettingsConfig } from "../../../src/utils/SettingsConfig";
 import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
@@ -53,7 +53,7 @@ function createGlobalMocks() {
     });
     Object.defineProperty(logger, "getDate", { value: "2023/1/1", configurable: true });
     Object.defineProperty(logger, "getTime", { value: "08:00:00", configurable: true });
-    Object.defineProperty(zowe, "padLeft", { value: jest.fn(), configurable: true });
+    Object.defineProperty(core, "padLeft", { value: jest.fn(), configurable: true });
     Object.defineProperty(SettingsConfig, "setDirectValue", { value: jest.fn(), configurable: true });
 
     return newMocks;
@@ -85,7 +85,7 @@ describe("Logger Utils Unit Tests - function initializeZoweLogger", () => {
 
     it("should initialize loggers successfully with no cli logger setting", async () => {
         const globalMocks = createGlobalMocks();
-        jest.spyOn(zowe.imperative.Logger, "initLogger").mockImplementation(globalMocks.mockLogger);
+        jest.spyOn(imperative.Logger, "initLogger").mockImplementation(globalMocks.mockLogger);
         const infoMock = jest.spyOn(logger.ZoweLogger, "info").mockImplementationOnce((_msg) => {});
         globalMocks.mockGetConfiguration.mockReturnValue({
             get: getSettingMock,
@@ -122,7 +122,7 @@ describe("Logger Utils Unit Tests - function initializeZoweLogger", () => {
         globalMocks.mockGetConfiguration.mockReturnValue({
             get: getSettingMock,
         });
-        const initLoggerSpy = jest.spyOn(zowe.imperative.Logger, "initLogger").mockImplementation();
+        const initLoggerSpy = jest.spyOn(imperative.Logger, "initLogger").mockImplementation();
         initLoggerSpy.mockClear();
         jest.spyOn(logger.ZoweLogger as any, "initVscLogger").mockImplementation();
 
@@ -144,7 +144,7 @@ describe("Logger Utils Unit Tests - function initializeZoweLogger", () => {
     });
     it("should throw an error if global logger was not able to initialize", async () => {
         const globalMocks = createGlobalMocks();
-        jest.spyOn(zowe.imperative.Logger, "initLogger").mockImplementationOnce(() => {
+        jest.spyOn(imperative.Logger, "initLogger").mockImplementationOnce(() => {
             throw new Error("failed to initialize logger");
         });
         globalMocks.mockLogger.mockImplementationOnce(() => {
@@ -157,8 +157,8 @@ describe("Logger Utils Unit Tests - function initializeZoweLogger", () => {
     });
     it("should throw an error if output channel was not able to initialize", async () => {
         const globalMocks = createGlobalMocks();
-        jest.spyOn(zowe.imperative.Logger, "initLogger").mockImplementationOnce(() => {
-            return zowe.imperative.Logger.getAppLogger();
+        jest.spyOn(imperative.Logger, "initLogger").mockImplementationOnce(() => {
+            return imperative.Logger.getAppLogger();
         });
         jest.spyOn(Gui, "createOutputChannel").mockImplementationOnce(() => {
             throw new Error("failed to initialize output channel");

@@ -9,68 +9,8 @@
  *
  */
 
-import * as path from "path";
-import * as os from "os";
-import { Session } from "../Session";
-import { IListOptions } from "@zowe/cli";
 import * as imperative from "@zowe/imperative";
-
-jest.mock("@zowe/imperative");
-export * as imperative from "@zowe/imperative";
-
-export function getZoweDir(): string {
-    const defaultHome = path.join(os.homedir(), ".zowe");
-    if (imperative.ImperativeConfig.instance.loadedConfig?.defaultHome !== defaultHome) {
-        imperative.ImperativeConfig.instance.loadedConfig = {
-            name: "zowe",
-            defaultHome,
-            envVariablePrefix: "ZOWE",
-        };
-    }
-    return imperative.ImperativeConfig.instance.cliHome;
-}
-
-export function getImperativeConfig() {
-    return {};
-}
-
-export namespace ZosmfSession {
-    export function createSessCfgFromArgs(cmdArgs: imperative.ICommandArguments) {
-        return {
-            user: "fake",
-            password: "fake",
-            hostname: "fake",
-            port: 2,
-        };
-    }
-}
-
-export namespace CheckStatus {
-    export function getZosmfInfo(session: Session) {
-        return {
-            zos_version: "fake",
-            zosmf_port: "fake",
-            zosmf_version: "fake",
-            zosmf_hostname: "fake",
-            zosmf_saf_realm: "fake",
-            zosmf_full_version: "fake",
-            api_version: "fake",
-            plugins: "fake",
-        };
-    }
-}
-
-export namespace Login {
-    export function apimlLogin(session: Session) {
-        return "APIMLToken";
-    }
-}
-
-export namespace Logout {
-    export function apimlLogout(session: Session) {
-        return;
-    }
-}
+const { IListOptions } = jest.requireActual("@zowe/zos-files-for-zowe-sdk");
 
 export const CreateDefaults = {
     DATA_SET: {
@@ -136,11 +76,11 @@ export declare const enum CreateDataSetTypeEnum {
 }
 
 export namespace List {
-    export function dataSetsMatchingPattern(session: Session, hlq: string[], options: IListOptions): Promise<IZosFilesResponse> {
+    export function dataSetsMatchingPattern(session: imperative.Session, hlq: string[], options: IListOptions): Promise<IZosFilesResponse> {
         return dataSet(session, hlq[0], options);
     }
 
-    export function dataSet(session: Session, hlq: string, options: IListOptions): Promise<IZosFilesResponse> {
+    export function dataSet(session: imperative.Session, hlq: string, options: IListOptions): Promise<IZosFilesResponse> {
         if (hlq.toUpperCase() === "THROW ERROR") {
             throw Error("Throwing an error to check error handling for unit tests!");
         }
@@ -164,7 +104,7 @@ export namespace List {
         });
     }
 
-    export function allMembers(session: Session, hlq: string, options: IListOptions): Promise<IZosFilesResponse> {
+    export function allMembers(session: imperative.Session, hlq: string, options: IListOptions): Promise<IZosFilesResponse> {
         if (hlq === "Throw Error") {
             throw Error("Throwing an error to check error handling for unit tests!");
         }
@@ -188,7 +128,7 @@ export namespace List {
         constructor(public dsname: string, public dsorg: string, public member: string, public migr?: string) {}
     }
 
-    export function fileList(session: Session, hlq: string, options: IListOptions): Promise<IZosFilesResponse> {
+    export function fileList(session: imperative.Session, hlq: string, options: IListOptions): Promise<IZosFilesResponse> {
         if (hlq.toUpperCase() === "THROW ERROR") {
             throw Error("Throwing an error to check error handling for unit tests!");
         }
@@ -246,7 +186,3 @@ export class IZosFilesResponse {
      */
     public apiResponse?: any;
 }
-
-export const ZosmfProfile = {
-    type: "zosmf",
-};

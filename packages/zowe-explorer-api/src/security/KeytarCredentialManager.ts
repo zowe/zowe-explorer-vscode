@@ -13,7 +13,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 
-import { imperative } from "@zowe/cli";
+import * as imperative from "@zowe/imperative";
 import { Constants } from "../globals";
 import { FileManagement } from "../utils";
 import { Types } from "../Types";

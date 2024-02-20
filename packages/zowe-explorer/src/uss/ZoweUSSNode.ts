@@ -9,12 +9,12 @@
  *
  */
 
-import { imperative, IUploadOptions, IZosFilesResponse } from "@zowe/cli";
+import { IUploadOptions, IZosFilesResponse } from "@zowe/zos-files-for-zowe-sdk";
 import * as globals from "../globals";
 import * as vscode from "vscode";
 import * as fs from "fs";
 import * as path from "path";
-import { Gui, IZoweUSSTreeNode, ZoweTreeNode, Types, Validation, MainframeInteraction, ZosEncoding } from "@zowe/zowe-explorer-api";
+import { Gui, imperative, IZoweUSSTreeNode, ZoweTreeNode, Types, Validation, MainframeInteraction, ZosEncoding } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { errorHandling, syncSessionNode } from "../utils/ProfilesUtils";

@@ -10,8 +10,8 @@
  */
 
 import * as vscode from "vscode";
-import * as zowe from "@zowe/cli";
-import { Gui, Validation } from "@zowe/zowe-explorer-api";
+import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
+import { Gui, imperative, Validation } from "@zowe/zowe-explorer-api";
 import {
     createSessCfgFromArgs,
     createInstanceOfProfile,
@@ -85,9 +85,9 @@ function createGlobalMocks() {
     bindMvsApi(newMocks.mvsApi);
 
     Object.defineProperty(vscode.window, "withProgress", { value: jest.fn(), configurable: true });
-    Object.defineProperty(zowe, "Upload", { value: jest.fn(), configurable: true });
-    Object.defineProperty(zowe.Upload, "bufferToDataSet", { value: jest.fn(), configurable: true });
-    Object.defineProperty(zowe.Upload, "pathToDataSet", { value: jest.fn(), configurable: true });
+    Object.defineProperty(zosfiles, "Upload", { value: jest.fn(), configurable: true });
+    Object.defineProperty(zosfiles.Upload, "bufferToDataSet", { value: jest.fn(), configurable: true });
+    Object.defineProperty(zosfiles.Upload, "pathToDataSet", { value: jest.fn(), configurable: true });
     Object.defineProperty(Gui, "errorMessage", { value: jest.fn(), configurable: true });
     Object.defineProperty(Gui, "showMessage", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "setStatusBarMessage", { value: jest.fn().mockReturnValue({ dispose: jest.fn() }), configurable: true });
@@ -105,19 +105,19 @@ function createGlobalMocks() {
     Object.defineProperty(vscode.window, "createQuickPick", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.commands, "executeCommand", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.workspace, "applyEdit", { value: jest.fn(), configurable: true });
-    Object.defineProperty(zowe, "Download", { value: jest.fn(), configurable: true });
-    Object.defineProperty(zowe.Download, "dataSet", { value: jest.fn(), configurable: true });
-    Object.defineProperty(zowe, "Delete", { value: jest.fn(), configurable: true });
-    Object.defineProperty(zowe.Delete, "dataSet", { value: jest.fn(), configurable: true });
-    Object.defineProperty(zowe, "Create", { value: jest.fn(), configurable: true });
-    Object.defineProperty(zowe.Create, "dataSet", { value: jest.fn(), configurable: true });
-    Object.defineProperty(zowe.Create, "dataSetLike", { value: jest.fn(), configurable: true });
+    Object.defineProperty(zosfiles, "Download", { value: jest.fn(), configurable: true });
+    Object.defineProperty(zosfiles.Download, "dataSet", { value: jest.fn(), configurable: true });
+    Object.defineProperty(zosfiles, "Delete", { value: jest.fn(), configurable: true });
+    Object.defineProperty(zosfiles.Delete, "dataSet", { value: jest.fn(), configurable: true });
+    Object.defineProperty(zosfiles, "Create", { value: jest.fn(), configurable: true });
+    Object.defineProperty(zosfiles.Create, "dataSet", { value: jest.fn(), configurable: true });
+    Object.defineProperty(zosfiles.Create, "dataSetLike", { value: jest.fn(), configurable: true });
     Object.defineProperty(fs, "unlinkSync", { value: jest.fn(), configurable: true });
     Object.defineProperty(fs, "existsSync", { value: jest.fn(), configurable: true });
     Object.defineProperty(sharedUtils, "concatChildNodes", { value: jest.fn(), configurable: true });
     Object.defineProperty(Profiles, "getInstance", { value: jest.fn(), configurable: true });
-    Object.defineProperty(zowe, "List", { value: jest.fn(), configurable: true });
-    Object.defineProperty(zowe.List, "dataSet", { value: jest.fn(), configurable: true });
+    Object.defineProperty(zosfiles, "List", { value: jest.fn(), configurable: true });
+    Object.defineProperty(zosfiles.List, "dataSet", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode, "ProgressLocation", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "createWebviewPanel", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.env, "clipboard", { value: clipboard, configurable: true });
@@ -185,9 +185,14 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
             placeHolder: "Name of Member",
             validateInput: expect.any(Function),
         });
-        expect(mocked(zowe.Upload.bufferToDataSet)).toHaveBeenCalledWith(blockMocks.zosmfSession, Buffer.from(""), parent.label + "(testMember)", {
-            responseTimeout: blockMocks.imperativeProfile.profile?.responseTimeout,
-        });
+        expect(mocked(zosfiles.Upload.bufferToDataSet)).toHaveBeenCalledWith(
+            blockMocks.zosmfSession,
+            Buffer.from(""),
+            parent.label + "(testMember)",
+            {
+                responseTimeout: blockMocks.imperativeProfile.profile?.responseTimeout,
+            }
+        );
     });
     it("Checking failed attempt to create dataset member", async () => {
         const blockMocks = createBlockMocksShared();
@@ -200,7 +205,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
         });
 
         mocked(vscode.window.showInputBox).mockResolvedValue("testMember");
-        mocked(zowe.Upload.bufferToDataSet).mockRejectedValueOnce(Error("test"));
+        mocked(zosfiles.Upload.bufferToDataSet).mockRejectedValueOnce(Error("test"));
 
         try {
             await dsActions.createMember(parent, blockMocks.testDatasetTree);
@@ -209,7 +214,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
         }
 
         expect(mocked(Gui.errorMessage)).toHaveBeenCalledWith("Unable to create member. Error: test");
-        mocked(zowe.Upload.bufferToDataSet).mockReset();
+        mocked(zosfiles.Upload.bufferToDataSet).mockReset();
     });
     it("Checking of attempt to create member without name", async () => {
         const blockMocks = createBlockMocksShared();
@@ -223,7 +228,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
         mocked(vscode.window.showInputBox).mockResolvedValue("");
         await dsActions.createMember(parent, blockMocks.testDatasetTree);
 
-        expect(mocked(zowe.Upload.bufferToDataSet)).not.toHaveBeenCalled();
+        expect(mocked(zosfiles.Upload.bufferToDataSet)).not.toHaveBeenCalled();
     });
     it("Checking of member creation for favorite dataset", async () => {
         const blockMocks = createBlockMocksShared();
@@ -252,7 +257,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
         await dsActions.createMember(parent, blockMocks.testDatasetTree);
 
         expect(mySpy).toHaveBeenCalledWith({ placeHolder: "Name of Member", validateInput: expect.any(Function) });
-        expect(mocked(zowe.Upload.bufferToDataSet)).toHaveBeenCalledWith(
+        expect(mocked(zosfiles.Upload.bufferToDataSet)).toHaveBeenCalledWith(
             blockMocks.zosmfSession,
             Buffer.from(""),
             nonFavoriteLabel + "(testMember)",
@@ -277,7 +282,7 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
         });
 
         mocked(vscode.workspace.openTextDocument).mockResolvedValueOnce({ isDirty: true } as any);
-        mocked(zowe.Download.dataSet).mockResolvedValueOnce({
+        mocked(zosfiles.Download.dataSet).mockResolvedValueOnce({
             success: true,
             commandResponse: null,
             apiResponse: {
@@ -287,7 +292,7 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
 
         await dsActions.refreshPS(node);
 
-        expect(mocked(zowe.Download.dataSet)).toHaveBeenCalledWith(
+        expect(mocked(zosfiles.Download.dataSet)).toHaveBeenCalledWith(
             blockMocks.zosmfSession,
             node.label,
             expect.objectContaining({
@@ -312,7 +317,7 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
         });
 
         mocked(vscode.workspace.openTextDocument).mockResolvedValueOnce({ isDirty: false } as any);
-        mocked(zowe.Download.dataSet).mockResolvedValueOnce({
+        mocked(zosfiles.Download.dataSet).mockResolvedValueOnce({
             success: true,
             commandResponse: null,
             apiResponse: {
@@ -335,7 +340,7 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
         });
 
         mocked(vscode.workspace.openTextDocument).mockResolvedValueOnce({ isDirty: true } as any);
-        mocked(zowe.Download.dataSet).mockRejectedValueOnce(Error("not found"));
+        mocked(zosfiles.Download.dataSet).mockRejectedValueOnce(Error("not found"));
 
         globalMocks.getContentsSpy.mockRejectedValueOnce(new Error("not found"));
 
@@ -356,11 +361,11 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
         const child = new ZoweDatasetNode({ label: "child", collapsibleState: vscode.TreeItemCollapsibleState.None, parentNode: parent });
 
         mocked(vscode.workspace.openTextDocument).mockResolvedValueOnce({ isDirty: true } as any);
-        mocked(zowe.Download.dataSet).mockRejectedValueOnce(Error(""));
+        mocked(zosfiles.Download.dataSet).mockRejectedValueOnce(Error(""));
 
         await dsActions.refreshPS(child);
 
-        expect(mocked(zowe.Download.dataSet)).toHaveBeenCalledWith(
+        expect(mocked(zosfiles.Download.dataSet)).toHaveBeenCalledWith(
             blockMocks.zosmfSession,
             child.getParent().getLabel() + "(" + child.label + ")",
             expect.objectContaining({
@@ -382,7 +387,7 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
         node.contextValue = globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX;
 
         mocked(vscode.workspace.openTextDocument).mockResolvedValueOnce({ isDirty: true } as any);
-        mocked(zowe.Download.dataSet).mockResolvedValueOnce({
+        mocked(zosfiles.Download.dataSet).mockResolvedValueOnce({
             success: true,
             commandResponse: null,
             apiResponse: {
@@ -408,7 +413,7 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
         parent.contextValue = globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX;
 
         mocked(vscode.workspace.openTextDocument).mockResolvedValueOnce({ isDirty: true } as any);
-        mocked(zowe.Download.dataSet).mockResolvedValueOnce({
+        mocked(zosfiles.Download.dataSet).mockResolvedValueOnce({
             success: true,
             commandResponse: null,
             apiResponse: {
@@ -434,7 +439,7 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
         child.contextValue = globals.DS_FAV_CONTEXT;
 
         mocked(vscode.workspace.openTextDocument).mockResolvedValueOnce({ isDirty: true } as any);
-        mocked(zowe.Download.dataSet).mockResolvedValueOnce({
+        mocked(zosfiles.Download.dataSet).mockResolvedValueOnce({
             success: true,
             commandResponse: null,
             apiResponse: {
@@ -1102,14 +1107,14 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
 
         mocked(sharedUtils.concatChildNodes).mockReturnValueOnce([favoriteNode, favoriteChildNode]);
         blockMocks.testDatasetTree.getChildren.mockReturnValueOnce(blockMocks.testDatasetTree.mSessionNodes);
-        mocked(zowe.List.dataSet).mockResolvedValue({
+        mocked(zosfiles.List.dataSet).mockResolvedValue({
             success: true,
             commandResponse: "",
             apiResponse: {
                 items: [{ dsname: "HLQ.TEST.AFILE" }, { dsname: "HLQ.TEST.AFILE(MEM)" }],
             },
         });
-        mocked(zowe.Upload.pathToDataSet).mockResolvedValueOnce({
+        mocked(zosfiles.Upload.pathToDataSet).mockResolvedValueOnce({
             success: true,
             commandResponse: "success",
             apiResponse: [
@@ -1219,14 +1224,14 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
 
         mocked(sharedUtils.concatChildNodes).mockReturnValueOnce([node]);
         blockMocks.testDatasetTree.getChildren.mockReturnValueOnce([blockMocks.datasetSessionNode]);
-        mocked(zowe.List.dataSet).mockResolvedValue({
+        mocked(zosfiles.List.dataSet).mockResolvedValue({
             success: true,
             commandResponse: "",
             apiResponse: {
                 items: [{ dsname: "HLQ.TEST.AFILE" }, { dsname: "HLQ.TEST.AFILE(mem)" }],
             },
         });
-        mocked(zowe.Upload.pathToDataSet).mockResolvedValueOnce({
+        mocked(zosfiles.Upload.pathToDataSet).mockResolvedValueOnce({
             success: true,
             commandResponse: "success",
             apiResponse: [
@@ -1264,14 +1269,14 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
 
         mocked(sharedUtils.concatChildNodes).mockReturnValueOnce([node]);
         blockMocks.testDatasetTree.getChildren.mockReturnValueOnce([blockMocks.datasetSessionNode]);
-        mocked(zowe.List.dataSet).mockResolvedValue({
+        mocked(zosfiles.List.dataSet).mockResolvedValue({
             success: true,
             commandResponse: "",
             apiResponse: {
                 items: [{ dsname: "HLQ.TEST.AFILE" }, { dsname: "HLQ.TEST.AFILE(mem)" }],
             },
         });
-        mocked(zowe.Upload.pathToDataSet).mockResolvedValueOnce({
+        mocked(zosfiles.Upload.pathToDataSet).mockResolvedValueOnce({
             success: false,
             commandResponse: "failed",
             apiResponse: [
@@ -1317,14 +1322,14 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
 
         mocked(sharedUtils.concatChildNodes).mockReturnValueOnce([node]);
         blockMocks.testDatasetTree.getChildren.mockReturnValueOnce([blockMocks.datasetSessionNode]);
-        mocked(zowe.List.dataSet).mockResolvedValue({
+        mocked(zosfiles.List.dataSet).mockResolvedValue({
             success: true,
             commandResponse: "",
             apiResponse: {
                 items: [{ dsname: "HLQ.TEST.AFILE" }, { dsname: "HLQ.TEST.AFILE(mem)" }],
             },
         });
-        mocked(zowe.Upload.pathToDataSet).mockResolvedValueOnce({
+        mocked(zosfiles.Upload.pathToDataSet).mockResolvedValueOnce({
             success: true,
             commandResponse: "success",
             apiResponse: [
@@ -1393,14 +1398,14 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
 
         mocked(sharedUtils.concatChildNodes).mockReturnValueOnce([node, childNode]);
         blockMocks.testDatasetTree.getChildren.mockReturnValueOnce([]);
-        mocked(zowe.List.dataSet).mockResolvedValue({
+        mocked(zosfiles.List.dataSet).mockResolvedValue({
             success: true,
             commandResponse: "",
             apiResponse: {
                 items: [{ dsname: "HLQ.TEST.AFILE" }, { dsname: "HLQ.TEST.AFILE(MEM)" }],
             },
         });
-        mocked(zowe.Upload.pathToDataSet).mockResolvedValueOnce({
+        mocked(zosfiles.Upload.pathToDataSet).mockResolvedValueOnce({
             success: true,
             commandResponse: "success",
             apiResponse: [
@@ -1445,8 +1450,8 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
 
         await dsActions.saveFile(testDocument, blockMocks.testDatasetTree);
 
-        expect(mocked(zowe.List.dataSet)).not.toHaveBeenCalled();
-        expect(mocked(zowe.Upload.pathToDataSet)).not.toHaveBeenCalled();
+        expect(mocked(zosfiles.List.dataSet)).not.toHaveBeenCalled();
+        expect(mocked(zosfiles.Upload.pathToDataSet)).not.toHaveBeenCalled();
     });
     it("Checking PDS member saving attempt", async () => {
         globals.defineGlobals("");
@@ -1462,14 +1467,14 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
 
         mocked(sharedUtils.concatChildNodes).mockReturnValueOnce([node]);
         blockMocks.testDatasetTree.getChildren.mockReturnValueOnce([blockMocks.datasetSessionNode]);
-        mocked(zowe.List.dataSet).mockResolvedValue({
+        mocked(zosfiles.List.dataSet).mockResolvedValue({
             success: true,
             commandResponse: "",
             apiResponse: {
                 items: [{ dsname: "HLQ.TEST.AFILE" }, { dsname: "HLQ.TEST.AFILE(mem)" }],
             },
         });
-        mocked(zowe.Upload.pathToDataSet).mockResolvedValueOnce({
+        mocked(zosfiles.Upload.pathToDataSet).mockResolvedValueOnce({
             success: true,
             commandResponse: "success",
             apiResponse: [
@@ -1505,14 +1510,14 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
 
         mocked(sharedUtils.concatChildNodes).mockReturnValueOnce([node]);
         blockMocks.testDatasetTree.getChildren.mockReturnValueOnce([blockMocks.datasetSessionNode]);
-        mocked(zowe.List.dataSet).mockResolvedValue({
+        mocked(zosfiles.List.dataSet).mockResolvedValue({
             success: true,
             commandResponse: "",
             apiResponse: {
                 items: [{ dsname: "HLQ.TEST.AFILE" }],
             },
         });
-        mocked(zowe.Upload.pathToDataSet).mockResolvedValueOnce({
+        mocked(zosfiles.Upload.pathToDataSet).mockResolvedValueOnce({
             success: false,
             commandResponse: "Rest API failure with HTTP(S) status 412",
             apiResponse: [],
@@ -1566,14 +1571,14 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
 
         mocked(sharedUtils.concatChildNodes).mockReturnValueOnce([node]);
         blockMocks.testDatasetTree.getChildren.mockReturnValueOnce([blockMocks.datasetSessionNode]);
-        mocked(zowe.List.dataSet).mockResolvedValue({
+        mocked(zosfiles.List.dataSet).mockResolvedValue({
             success: true,
             commandResponse: "",
             apiResponse: {
                 items: [{ dsname: "HLQ.TEST.AFILE" }],
             },
         });
-        mocked(zowe.Upload.pathToDataSet).mockResolvedValueOnce({
+        mocked(zosfiles.Upload.pathToDataSet).mockResolvedValueOnce({
             success: false,
             commandResponse: "Rest API failure with HTTP(S) status 412",
             apiResponse: [],
@@ -2920,7 +2925,7 @@ describe("Dataset Actions Unit Tests - Function showFileErrorDetails", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
-        const testError = new zowe.imperative.ImperativeError({ msg: "test" });
+        const testError = new imperative.ImperativeError({ msg: "test" });
         const testErrorString = JSON.stringify(testError, null, 2);
         const node = new ZoweDatasetNode({
             label: "HLQ.TEST.TO.NODE",
@@ -3173,7 +3178,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         await dsActions.createFile(node, blockMocks.testDatasetTree);
 
         expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(globals.SETTINGS_DS_DEFAULT_PS);
-        expect(createDataSetSpy).toHaveBeenCalledWith(zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, "TEST", {
+        expect(createDataSetSpy).toHaveBeenCalledWith(zosfiles.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, "TEST", {
             alcunit: "CYL",
             blksize: 6160,
             dsorg: "PS",
@@ -3225,7 +3230,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
 
         expect(mocked(Gui.errorMessage)).toHaveBeenCalledWith("Error encountered when creating data set. Error: Generic Error");
         expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(globals.SETTINGS_DS_DEFAULT_PS);
-        expect(createDataSetSpy).toHaveBeenCalledWith(zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, "TEST", {
+        expect(createDataSetSpy).toHaveBeenCalledWith(zosfiles.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, "TEST", {
             alcunit: "CYL",
             blksize: 6160,
             dsorg: "PS",
@@ -3296,7 +3301,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
 
         await dsActions.createFile(node, blockMocks.testDatasetTree);
 
-        expect(createDataSetSpy).toHaveBeenCalledWith(zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, "TEST.EDIT", {
+        expect(createDataSetSpy).toHaveBeenCalledWith(zosfiles.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, "TEST.EDIT", {
             alcunit: "CYL",
             blksize: 6160,
             dsorg: "PS",
@@ -3348,7 +3353,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         const addTempSpy = jest.spyOn(blockMocks.testDatasetTree, "addDsTemplate");
         await dsActions.createFile(node, blockMocks.testDatasetTree);
 
-        expect(createDataSetSpy).toHaveBeenCalledWith(zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, "TEST", {
+        expect(createDataSetSpy).toHaveBeenCalledWith(zosfiles.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, "TEST", {
             alcunit: "TRK",
             blksize: 6160,
             dsorg: "PS",
@@ -3402,7 +3407,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         const addTempSpy = jest.spyOn(blockMocks.testDatasetTree, "addDsTemplate");
         await dsActions.createFile(node, blockMocks.testDatasetTree);
 
-        expect(createDataSetSpy).toHaveBeenCalledWith(zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, "TEST", {
+        expect(createDataSetSpy).toHaveBeenCalledWith(zosfiles.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, "TEST", {
             alcunit: "TRK",
             blksize: 6160,
             dsorg: "PS",
@@ -3453,7 +3458,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("TEMPTST" as any);
         await dsActions.createFile(node, blockMocks.testDatasetTree);
 
-        expect(createDataSetSpy).toHaveBeenCalledWith(zowe.CreateDataSetTypeEnum.DATA_SET_PARTITIONED, "TEST", {
+        expect(createDataSetSpy).toHaveBeenCalledWith(zosfiles.CreateDataSetTypeEnum.DATA_SET_PARTITIONED, "TEST", {
             alcunit: "CYL",
             blksize: 6160,
             dsorg: "PO",

@@ -9,7 +9,9 @@
  *
  */
 
-import { Create, Delete, imperative, List, ZosmfSession } from "@zowe/cli";
+import { Create, Delete, List } from "@zowe/zos-files-for-zowe-sdk";
+import { ZosmfSession } from "@zowe/zosmf-for-zowe-sdk";
+import { imperative } from "@zowe/zowe-explorer-api";
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
 import * as sinon from "sinon";

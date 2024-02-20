@@ -9,7 +9,9 @@
  *
  */
 
-import { Create, CreateDataSetTypeEnum, Delete, imperative, List, Upload, ZosmfSession } from "@zowe/cli";
+import { Create, CreateDataSetTypeEnum, Delete, List, Upload } from "@zowe/zos-files-for-zowe-sdk";
+import { ZosmfSession } from "@zowe/zosmf-for-zowe-sdk";
+import { imperative } from "@zowe/zowe-explorer-api";
 import * as expect from "expect";
 import * as vscode from "vscode";
 import { DatasetTree } from "../../src/dataset/DatasetTree";

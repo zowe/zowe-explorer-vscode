@@ -9,14 +9,15 @@
  *
  */
 
-jest.mock("@zowe/cli");
+jest.mock("@zowe/zos-jobs-for-zowe-sdk");
 import { createJobsTree } from "../../../src/job/ZosJobsProvider";
 import * as vscode from "vscode";
-import * as zowe from "@zowe/cli";
+import * as zosjobs from "@zowe/zos-jobs-for-zowe-sdk";
+import * as zosmf from "@zowe/zosmf-for-zowe-sdk";
 import * as globals from "../../../src/globals";
 import { createIJobFile, createIJobObject, createJobSessionNode } from "../../../__mocks__/mockCreators/jobs";
 import { ZoweJobNode } from "../../../src/job/ZoweJobNode";
-import { IZoweJobTreeNode, ProfilesCache, Gui, Sorting } from "@zowe/zowe-explorer-api";
+import { imperative, IZoweJobTreeNode, ProfilesCache, Gui, Sorting } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { Profiles } from "../../../src/Profiles";
 import * as sessUtils from "../../../src/utils/SessionUtils";
@@ -87,7 +88,7 @@ async function createGlobalMocks() {
             };
         }),
         mockProfileInfo: createInstanceOfProfileInfo(),
-        mockProfilesCache: new ProfilesCache(zowe.imperative.Logger.getAppLogger()),
+        mockProfilesCache: new ProfilesCache(imperative.Logger.getAppLogger()),
         mockTreeProviders: createTreeProviders(),
     };
 
@@ -99,7 +100,7 @@ async function createGlobalMocks() {
     globalMocks.mockProfileInstance = createInstanceOfProfile(globalMocks.testProfile);
     Object.defineProperty(vscode, "ProgressLocation", { value: globalMocks.ProgressLocation, configurable: true });
     Object.defineProperty(vscode.window, "withProgress", { value: globalMocks.withProgress, configurable: true });
-    Object.defineProperty(zowe, "GetJobs", { value: globalMocks.mockGetJobs, configurable: true });
+    Object.defineProperty(zosjobs, "GetJobs", { value: globalMocks.mockGetJobs, configurable: true });
     Object.defineProperty(vscode.window, "showInformationMessage", {
         value: globalMocks.mockShowInformationMessage,
         configurable: true,
@@ -109,7 +110,7 @@ async function createGlobalMocks() {
         value: globalMocks.mockGetJobsByOwnerAndPrefix,
         configurable: true,
     });
-    Object.defineProperty(zowe.ZosmfSession, "createSessCfgFromArgs", {
+    Object.defineProperty(zosmf.ZosmfSession, "createSessCfgFromArgs", {
         value: globalMocks.mockCreateSessCfgFromArgs,
         configurable: true,
     });
@@ -126,7 +127,7 @@ async function createGlobalMocks() {
         value: jest.fn(() => globalMocks.mockProfileInstance),
         configurable: true,
     });
-    Object.defineProperty(zowe, "DeleteJobs", { value: globalMocks.mockDeleteJobs, configurable: true });
+    Object.defineProperty(zosjobs, "DeleteJobs", { value: globalMocks.mockDeleteJobs, configurable: true });
     Object.defineProperty(vscode.window, "createQuickPick", {
         value: globalMocks.mockCreateQuickPick,
         configurable: true,

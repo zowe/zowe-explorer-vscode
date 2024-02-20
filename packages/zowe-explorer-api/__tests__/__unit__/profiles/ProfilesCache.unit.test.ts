@@ -11,15 +11,16 @@
 
 import * as path from "path";
 import * as fs from "fs";
-import { getZoweDir, imperative } from "@zowe/cli";
+import { getZoweDir } from "@zowe/core-for-zowe-sdk";
+import * as imperative from "@zowe/imperative";
 import { ProfilesCache } from "../../../src/profiles/ProfilesCache";
 import { FileManagement, ZoweExplorerApi } from "../../../src";
 
 jest.mock("fs");
-jest.mock("@zowe/cli", () => {
+jest.mock("@zowe/core-for-zowe-sdk", () => {
     /* eslint-disable @typescript-eslint/no-unsafe-return */
     return {
-        ...jest.requireActual("@zowe/cli"),
+        ...jest.requireActual("@zowe/core-for-zowe-sdk"),
         getZoweDir: jest.fn().mockReturnValue("~/.zowe"),
     };
 });

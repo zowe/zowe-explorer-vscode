@@ -12,9 +12,9 @@
 import { ZoweJobNode } from "../../src/job/ZoweJobNode";
 import * as vscode from "vscode";
 import * as globals from "../../src/globals";
-import { IJob, IJobFile, imperative } from "@zowe/cli";
+import { IJob, IJobFile } from "@zowe/zos-jobs-for-zowe-sdk";
 import { removeNodeFromArray } from "./shared";
-import { PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
+import { imperative, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
 
 export function createIJobObject() {
     return {

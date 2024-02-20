@@ -14,6 +14,7 @@ import * as globals from "../globals";
 import {
     Gui,
     Validation,
+    imperative,
     IZoweTree,
     IZoweDatasetTreeNode,
     PersistenceSchemaEnum,
@@ -33,7 +34,7 @@ import * as dayjs from "dayjs";
 import * as fs from "fs";
 import * as contextually from "../shared/context";
 import { closeOpenedTextFile } from "../utils/workspace";
-import { IDataSet, IListOptions, imperative } from "@zowe/cli";
+import { IDataSet, IListOptions } from "@zowe/zos-files-for-zowe-sdk";
 import { DATASET_FILTER_OPTS, DATASET_SORT_OPTS, validateDataSetName, validateMemberName } from "./utils";
 import { SettingsConfig } from "../utils/SettingsConfig";
 import { ZoweLogger } from "../utils/LoggerUtils";

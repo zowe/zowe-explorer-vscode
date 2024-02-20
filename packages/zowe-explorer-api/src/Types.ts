@@ -10,7 +10,7 @@
  */
 
 import { FileDecoration, Uri } from "vscode";
-import { ICreateDataSetOptions } from "@zowe/cli";
+import { ICreateDataSetOptions } from "@zowe/zos-files-for-zowe-sdk";
 import { IApiExplorerExtender, IRegisterClient } from "./extend";
 import { IZoweDatasetTreeNode, IZoweJobTreeNode, IZoweTreeNode, IZoweUSSTreeNode, IZoweTree } from "./tree";
 

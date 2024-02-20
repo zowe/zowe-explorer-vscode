@@ -10,14 +10,14 @@
  */
 
 jest.mock("vscode");
-jest.mock("@zowe/cli");
+jest.mock("@zowe/zos-files-for-zowe-sdk");
 jest.mock("Session");
 import * as vscode from "vscode";
 import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
-import { List, imperative } from "@zowe/cli";
+import { List } from "@zowe/zos-files-for-zowe-sdk";
 import { Profiles } from "../../src/Profiles";
 import * as globals from "../../src/globals";
-import { Sorting } from "@zowe/zowe-explorer-api";
+import { imperative, Sorting } from "@zowe/zowe-explorer-api";
 
 describe("Unit Tests (Jest)", () => {
     // Globals

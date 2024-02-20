@@ -9,19 +9,18 @@
  *
  */
 
-import * as zowe from "@zowe/cli";
-import { MainframeInteraction, ZoweExplorerZosmf } from "@zowe/zowe-explorer-api";
+import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
+import { imperative, MainframeInteraction, ZoweExplorerZosmf } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { Profiles } from "../../../src/Profiles";
-import { IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
 import { createInstanceOfProfile, createValidIProfile } from "../../../__mocks__/mockCreators/shared";
 
 class MockUssApi1 implements MainframeInteraction.IUss {
-    public profile?: zowe.imperative.IProfileLoaded;
+    public profile?: imperative.IProfileLoaded;
     public getProfileTypeName(): string {
         return "api1typename";
     }
-    public fileList(ussFilePath: string): Promise<zowe.IZosFilesResponse> {
+    public fileList(ussFilePath: string): Promise<zosfiles.IZosFilesResponse> {
         throw new Error("Method not implemented.");
     }
     public copy(outputPath: string, options?: Omit<object, "request">): Promise<Buffer> {
@@ -30,7 +29,7 @@ class MockUssApi1 implements MainframeInteraction.IUss {
     public isFileTagBinOrAscii(ussFilePath: string): Promise<boolean> {
         throw new Error("Method not implemented.");
     }
-    public getContents(ussFilePath: string, options: zowe.IDownloadOptions): Promise<zowe.IZosFilesResponse> {
+    public getContents(ussFilePath: string, options: zosfiles.IDownloadOptions): Promise<zosfiles.IZosFilesResponse> {
         throw new Error("Method not implemented.");
     }
     public putContents(
@@ -40,47 +39,51 @@ class MockUssApi1 implements MainframeInteraction.IUss {
         localEncoding?: string,
         etag?: string,
         returnEtag?: boolean
-    ): Promise<zowe.IZosFilesResponse> {
+    ): Promise<zosfiles.IZosFilesResponse> {
         throw new Error("Method not implemented.");
     }
-    public putContent(inputFilePath: string, ussFilePath: string, options: IUploadOptions): Promise<zowe.IZosFilesResponse> {
+    public putContent(inputFilePath: string, ussFilePath: string, options: zosfiles.IUploadOptions): Promise<zosfiles.IZosFilesResponse> {
         throw new Error("Method not implemented.");
     }
-    public uploadDirectory(inputDirectoryPath: string, ussDirectoryPath: string, options: IUploadOptions): Promise<zowe.IZosFilesResponse> {
+    public uploadDirectory(
+        inputDirectoryPath: string,
+        ussDirectoryPath: string,
+        options: zosfiles.IUploadOptions
+    ): Promise<zosfiles.IZosFilesResponse> {
         throw new Error("Method not implemented.");
     }
-    public create(ussPath: string, type: string, mode?: string): Promise<zowe.IZosFilesResponse> {
+    public create(ussPath: string, type: string, mode?: string): Promise<zosfiles.IZosFilesResponse> {
         throw new Error("Method not implemented.");
     }
-    public delete(ussPath: string, recursive?: boolean): Promise<zowe.IZosFilesResponse> {
+    public delete(ussPath: string, recursive?: boolean): Promise<zosfiles.IZosFilesResponse> {
         throw new Error("Method not implemented.");
     }
-    public rename(currentUssPath: string, newUssPath: string): Promise<zowe.IZosFilesResponse> {
+    public rename(currentUssPath: string, newUssPath: string): Promise<zosfiles.IZosFilesResponse> {
         throw new Error("Method not implemented.");
     }
-    public getSession(profile?: zowe.imperative.IProfileLoaded): zowe.imperative.Session {
+    public getSession(profile?: imperative.IProfileLoaded): imperative.Session {
         throw new Error("Method not implemented.");
     }
-    public getStatus?(profile?: zowe.imperative.IProfileLoaded): Promise<string> {
+    public getStatus?(profile?: imperative.IProfileLoaded): Promise<string> {
         throw new Error("Method not implemented.");
     }
     public getTokenTypeName?(): string {
         throw new Error("Method not implemented.");
     }
-    public login?(session: zowe.imperative.Session): Promise<string> {
+    public login?(session: imperative.Session): Promise<string> {
         throw new Error("Method not implemented.");
     }
-    public logout?(session: zowe.imperative.Session): Promise<string> {
+    public logout?(session: imperative.Session): Promise<string> {
         throw new Error("Method not implemented.");
     }
 }
 
 class MockUssApi2 implements MainframeInteraction.IUss {
-    public profile?: zowe.imperative.IProfileLoaded;
+    public profile?: imperative.IProfileLoaded;
     public getProfileTypeName(): string {
         return "api2typename";
     }
-    public fileList(ussFilePath: string): Promise<zowe.IZosFilesResponse> {
+    public fileList(ussFilePath: string): Promise<zosfiles.IZosFilesResponse> {
         throw new Error("Method not implemented.");
     }
     public copy(outputPath: string, options?: Omit<object, "request">): Promise<Buffer> {
@@ -89,7 +92,7 @@ class MockUssApi2 implements MainframeInteraction.IUss {
     public isFileTagBinOrAscii(ussFilePath: string): Promise<boolean> {
         throw new Error("Method not implemented.");
     }
-    public getContents(ussFilePath: string, options: zowe.IDownloadOptions): Promise<zowe.IZosFilesResponse> {
+    public getContents(ussFilePath: string, options: zosfiles.IDownloadOptions): Promise<zosfiles.IZosFilesResponse> {
         throw new Error("Method not implemented.");
     }
     public putContents(
@@ -99,37 +102,41 @@ class MockUssApi2 implements MainframeInteraction.IUss {
         localEncoding?: string,
         etag?: string,
         returnEtag?: boolean
-    ): Promise<zowe.IZosFilesResponse> {
+    ): Promise<zosfiles.IZosFilesResponse> {
         throw new Error("Method not implemented.");
     }
-    public putContent(inputFilePath: string, ussFilePath: string, options: IUploadOptions): Promise<zowe.IZosFilesResponse> {
+    public putContent(inputFilePath: string, ussFilePath: string, options: zosfiles.IUploadOptions): Promise<zosfiles.IZosFilesResponse> {
         throw new Error("Method not implemented.");
     }
-    public uploadDirectory(inputDirectoryPath: string, ussDirectoryPath: string, options: IUploadOptions): Promise<zowe.IZosFilesResponse> {
+    public uploadDirectory(
+        inputDirectoryPath: string,
+        ussDirectoryPath: string,
+        options: zosfiles.IUploadOptions
+    ): Promise<zosfiles.IZosFilesResponse> {
         throw new Error("Method not implemented.");
     }
-    public create(ussPath: string, type: string, mode?: string): Promise<zowe.IZosFilesResponse> {
+    public create(ussPath: string, type: string, mode?: string): Promise<zosfiles.IZosFilesResponse> {
         throw new Error("Method not implemented.");
     }
-    public delete(ussPath: string, recursive?: boolean): Promise<zowe.IZosFilesResponse> {
+    public delete(ussPath: string, recursive?: boolean): Promise<zosfiles.IZosFilesResponse> {
         throw new Error("Method not implemented.");
     }
-    public rename(currentUssPath: string, newUssPath: string): Promise<zowe.IZosFilesResponse> {
+    public rename(currentUssPath: string, newUssPath: string): Promise<zosfiles.IZosFilesResponse> {
         throw new Error("Method not implemented.");
     }
-    public getSession(profile?: zowe.imperative.IProfileLoaded): zowe.imperative.Session {
+    public getSession(profile?: imperative.IProfileLoaded): imperative.Session {
         throw new Error("Method not implemented.");
     }
-    public getStatus?(profile?: zowe.imperative.IProfileLoaded): Promise<string> {
+    public getStatus?(profile?: imperative.IProfileLoaded): Promise<string> {
         throw new Error("Method not implemented.");
     }
     public getTokenTypeName?(): string {
         throw new Error("Method not implemented.");
     }
-    public login?(session: zowe.imperative.Session): Promise<string> {
+    public login?(session: imperative.Session): Promise<string> {
         throw new Error("Method not implemented.");
     }
-    public logout?(session: zowe.imperative.Session): Promise<string> {
+    public logout?(session: imperative.Session): Promise<string> {
         throw new Error("Method not implemented.");
     }
 }
@@ -247,7 +254,7 @@ describe("ZoweExplorerApiRegister unit testing", () => {
         const globalMocks = await createGlobalMocks();
         const invalidProfile = {
             type: "invalid_profile_type",
-        } as zowe.imperative.IProfileLoaded;
+        } as imperative.IProfileLoaded;
         expect(() => {
             globalMocks.registry.getUssApi(undefined);
         }).toThrow();
@@ -275,7 +282,7 @@ describe("ZoweExplorerApiRegister unit testing", () => {
         const globalMocks = await createGlobalMocks();
         const defaultProfile = globalMocks.profiles.getDefaultProfile();
         const ussApi = ZoweExplorerApiRegister.getUssApi(defaultProfile);
-        const profileUnused: zowe.imperative.IProfileLoaded = {
+        const profileUnused: imperative.IProfileLoaded = {
             name: "profileUnused",
             profile: {
                 user: undefined,

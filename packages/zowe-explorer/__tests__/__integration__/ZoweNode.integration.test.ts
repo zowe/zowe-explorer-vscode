@@ -9,7 +9,8 @@
  *
  */
 
-import { imperative, ZosmfSession } from "@zowe/cli";
+import { ZosmfSession } from "@zowe/zosmf-for-zowe-sdk";
+import { imperative } from "@zowe/zowe-explorer-api";
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
 import * as expect from "expect";

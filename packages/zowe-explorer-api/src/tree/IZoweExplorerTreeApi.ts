@@ -10,7 +10,7 @@
  */
 
 import { TreeItem } from "vscode";
-import { imperative } from "@zowe/cli";
+import * as imperative from "@zowe/imperative";
 
 /**
  * APIs that allow accessing the Zowe Explorer tree.

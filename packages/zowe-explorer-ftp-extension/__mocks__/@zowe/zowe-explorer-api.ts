@@ -9,6 +9,8 @@
  *
  */
 
+export * as imperative from "@zowe/imperative";
+
 // This shouldn't be considered redeclared, as its contained within a mock.
 export class MessageSeverity {
     public static TRACE = 0;

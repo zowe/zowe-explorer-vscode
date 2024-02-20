@@ -11,14 +11,15 @@
 
 import * as vscode from "vscode";
 import * as path from "path";
-import * as zowe from "@zowe/cli";
 import * as os from "os";
 import * as fs from "fs";
 import * as fsextra from "fs-extra";
 import * as extension from "../../src/extension";
 import * as globals from "../../src/globals";
 import * as tempFolderUtils from "../../src/utils/TempFolder";
-import { Gui, Validation, ProfilesCache } from "@zowe/zowe-explorer-api";
+import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
+import * as zosmf from "@zowe/zosmf-for-zowe-sdk";
+import { imperative, Gui, Validation, ProfilesCache } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../src/Profiles";
 import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
 import { createGetConfigMock, createInstanceOfProfileInfo, createIProfile, createTreeView } from "../../__mocks__/mockCreators/shared";
@@ -80,7 +81,6 @@ async function createGlobalMocks() {
         mockCliHome: jest.fn().mockReturnValue(path.join(os.homedir(), ".zowe")),
         mockIcInstance: jest.fn(),
         mockImperativeConfig: jest.fn(),
-        mockGetImperativeConfig: jest.fn().mockReturnValue({ profiles: [] }),
         mockCliProfileManager: jest.fn().mockImplementation(() => {
             return { GetAllProfileNames: globalMocks.mockGetAllProfileNames, Load: globalMocks.mockLoad };
         }),
@@ -96,7 +96,7 @@ async function createGlobalMocks() {
         mockSetGlobalSecurityValue: jest.fn(),
         mockWriteOverridesFile: jest.fn(),
         mockProfCacheProfileInfo: createInstanceOfProfileInfo(),
-        mockProfilesCache: new ProfilesCache(zowe.imperative.Logger.getAppLogger()),
+        mockProfilesCache: new ProfilesCache(imperative.Logger.getAppLogger()),
         testTreeView: null,
         enums: jest.fn().mockImplementation(() => {
             return {
@@ -111,7 +111,7 @@ async function createGlobalMocks() {
                 Web: 2,
             };
         }),
-        testSession: new zowe.imperative.Session({
+        testSession: new imperative.Session({
             user: "fake",
             password: "fake",
             hostname: "fake",
@@ -266,7 +266,7 @@ async function createGlobalMocks() {
     };
 
     Object.defineProperty(fs, "mkdirSync", { value: globalMocks.mockMkdirSync, configurable: true });
-    Object.defineProperty(zowe.imperative, "CliProfileManager", {
+    Object.defineProperty(imperative, "CliProfileManager", {
         value: globalMocks.mockCliProfileManager,
         configurable: true,
     });
@@ -321,7 +321,7 @@ async function createGlobalMocks() {
         value: globalMocks.mockShowWarningMessage,
         configurable: true,
     });
-    Object.defineProperty(zowe, "ZosmfSession", { value: globalMocks.mockZosmfSession, configurable: true });
+    Object.defineProperty(zosmf, "ZosmfSession", { value: globalMocks.mockZosmfSession, configurable: true });
     Object.defineProperty(globalMocks.mockZosmfSession, "createSessCfgFromArgs", {
         value: globalMocks.mockCreateSessCfgFromArgs,
         configurable: true,
@@ -334,7 +334,7 @@ async function createGlobalMocks() {
         value: globalMocks.mockSetStatusBarMessage,
         configurable: true,
     });
-    Object.defineProperty(zowe, "Utilities", { value: globalMocks.mockUtilities, configurable: true });
+    Object.defineProperty(zosfiles, "Utilities", { value: globalMocks.mockUtilities, configurable: true });
     Object.defineProperty(vscode.workspace, "registerTextDocumentContentProvider", {
         value: globalMocks.mockRegisterTextDocumentContentProvider,
         configurable: true,
@@ -344,11 +344,7 @@ async function createGlobalMocks() {
         value: globalMocks.mockGetProfileName,
         configurable: true,
     });
-    Object.defineProperty(zowe, "getImperativeConfig", {
-        value: globalMocks.mockGetImperativeConfig,
-        configurable: true,
-    });
-    Object.defineProperty(zowe.imperative, "ImperativeConfig", {
+    Object.defineProperty(imperative, "ImperativeConfig", {
         value: globalMocks.mockImperativeConfig,
         configurable: true,
     });
@@ -377,7 +373,7 @@ async function createGlobalMocks() {
         }),
     });
     Object.defineProperty(ZoweExplorerExtender, "showZoweConfigError", { value: jest.fn(), configurable: true });
-    Object.defineProperty(zowe.imperative, "ProfileInfo", {
+    Object.defineProperty(imperative, "ProfileInfo", {
         value: globalMocks.mockImperativeProfileInfo,
         configurable: true,
     });
@@ -458,7 +454,7 @@ describe("Extension Unit Tests", () => {
     beforeAll(async () => {
         globalMocks = await createGlobalMocks();
         jest.spyOn(fs, "readFileSync").mockReturnValue(Buffer.from(JSON.stringify({ overrides: { credentialManager: "@zowe/cli" } }), "utf-8"));
-        Object.defineProperty(zowe.imperative, "ProfileInfo", {
+        Object.defineProperty(imperative, "ProfileInfo", {
             value: globalMocks.mockImperativeProfileInfo,
             configurable: true,
         });
@@ -498,7 +494,7 @@ describe("Extension Unit Tests", () => {
     });
 
     it("Tests that activate() fails when trying to load with an invalid config", async () => {
-        Object.defineProperty(zowe.imperative, "ProfileInfo", {
+        Object.defineProperty(imperative, "ProfileInfo", {
             value: jest.fn().mockImplementation(() => {
                 throw new Error("Error in ProfileInfo to break activate function");
             }),

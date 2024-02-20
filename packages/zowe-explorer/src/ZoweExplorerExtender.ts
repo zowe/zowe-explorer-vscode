@@ -10,12 +10,20 @@
  */
 
 import * as PromiseQueue from "promise-queue";
-import * as zowe from "@zowe/cli";
 import * as path from "path";
 import * as fs from "fs";
 import * as globals from "./globals";
 import * as vscode from "vscode";
-import { IApiExplorerExtender, FileManagement, Gui, Types, IZoweTreeNode, ProfilesCache, IZoweExplorerTreeApi } from "@zowe/zowe-explorer-api";
+import {
+    IApiExplorerExtender,
+    imperative,
+    FileManagement,
+    Gui,
+    Types,
+    IZoweTreeNode,
+    ProfilesCache,
+    IZoweExplorerTreeApi,
+} from "@zowe/zowe-explorer-api";
 import { Profiles } from "./Profiles";
 import { getProfile, ProfilesUtils } from "./utils/ProfilesUtils";
 import { ZoweLogger } from "./utils/LoggerUtils";
@@ -131,7 +139,7 @@ export class ZoweExplorerExtender implements IApiExplorerExtender, IZoweExplorer
      * @param {string} profileType
      * @param {imperative.ICommandProfileTypeConfiguration[]} profileTypeConfigurations
      */
-    public async initForZowe(profileType: string, profileTypeConfigurations: zowe.imperative.ICommandProfileTypeConfiguration[]): Promise<void> {
+    public async initForZowe(profileType: string, profileTypeConfigurations: imperative.ICommandProfileTypeConfiguration[]): Promise<void> {
         // Ensure that when a user has not installed the profile type's CLI plugin
         // and/or created a profile that the profile directory in ~/.zowe/profiles
         // will be created with the appropriate meta data. If not called the user will
@@ -178,7 +186,7 @@ export class ZoweExplorerExtender implements IApiExplorerExtender, IZoweExplorer
      * @return The requested profile
      *
      */
-    public getProfile(primaryNode: IZoweTreeNode): zowe.imperative.IProfileLoaded {
+    public getProfile(primaryNode: IZoweTreeNode): imperative.IProfileLoaded {
         return getProfile(primaryNode);
     }
 

@@ -10,9 +10,10 @@
  */
 
 import * as imperative from "@zowe/imperative";
+const { ISshSession } = jest.requireActual("@zowe/zos-uss-for-zowe-sdk");
 
-export interface ZeApiConvertResponse {
-    success: string;
-    warnings: string;
-    convertResult: imperative.IConfigConvertResult;
+export class SshSession {
+    public static createSshSessCfgFromArgs(args: imperative.ICommandArguments): ISshSession {
+        return {};
+    }
 }

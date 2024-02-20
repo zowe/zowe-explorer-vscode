@@ -12,7 +12,7 @@
 import * as dsUtils from "../dataset/utils";
 import * as vscode from "vscode";
 import * as fs from "fs";
-import * as zowe from "@zowe/cli";
+import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
 import * as globals from "../globals";
 import * as path from "path";
 import { FilterItem, errorHandling } from "../utils/ProfilesUtils";
@@ -32,13 +32,12 @@ import { getIconByNode } from "../generators/icons";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import * as contextually from "../shared/context";
 import { markDocumentUnsaved, setFileSaved } from "../utils/workspace";
-import { IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { ProfileManagement } from "../utils/ProfileManagement";
 import { LocalFileManagement } from "../utils/LocalFileManagement";
-import { Gui, IZoweDatasetTreeNode, ZoweTreeNodeActions, Validation, Types } from "@zowe/zowe-explorer-api";
+import { Gui, imperative, IZoweDatasetTreeNode, ZoweTreeNodeActions, Validation, Types } from "@zowe/zowe-explorer-api";
 
-let typeEnum: zowe.CreateDataSetTypeEnum;
+let typeEnum: zosfiles.CreateDataSetTypeEnum;
 // Make a nice new mutable array for the DS properties
 let newDSProperties;
 
@@ -64,7 +63,7 @@ const localizedStrings = {
  *
  */
 export async function allocateLike(datasetProvider: Types.IZoweDatasetTreeType, node?: IZoweDatasetTreeNode): Promise<void> {
-    let profile: zowe.imperative.IProfileLoaded;
+    let profile: imperative.IProfileLoaded;
     let likeDSName: string;
     let currSession: IZoweDatasetTreeNode;
 
@@ -224,7 +223,7 @@ export async function uploadDialog(node: ZoweDatasetNode, datasetProvider: Types
     }
 }
 
-export async function uploadFile(node: ZoweDatasetNode, docPath: string): Promise<zowe.IZosFilesResponse> {
+export async function uploadFile(node: ZoweDatasetNode, docPath: string): Promise<zosfiles.IZosFilesResponse> {
     ZoweLogger.trace("dataset.actions.uploadFile called.");
     try {
         const datasetName = node.label as string;
@@ -520,33 +519,33 @@ async function downloadDsApiCall(node: IZoweDatasetTreeNode, documentFilePath: s
 }
 
 export function getDataSetTypeAndOptions(type: string): {
-    typeEnum: zowe.CreateDataSetTypeEnum;
+    typeEnum: zosfiles.CreateDataSetTypeEnum;
     createOptions: vscode.WorkspaceConfiguration;
 } {
     let createOptions: vscode.WorkspaceConfiguration;
     switch (type) {
         case localizedStrings.dsBinary:
-            typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_BINARY;
+            typeEnum = zosfiles.CreateDataSetTypeEnum.DATA_SET_BINARY;
             createOptions = vscode.workspace.getConfiguration(globals.SETTINGS_DS_DEFAULT_BINARY);
             break;
         case localizedStrings.dsC:
-            typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_C;
+            typeEnum = zosfiles.CreateDataSetTypeEnum.DATA_SET_C;
             createOptions = vscode.workspace.getConfiguration(globals.SETTINGS_DS_DEFAULT_C);
             break;
         case localizedStrings.dsClassic:
-            typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_CLASSIC;
+            typeEnum = zosfiles.CreateDataSetTypeEnum.DATA_SET_CLASSIC;
             createOptions = vscode.workspace.getConfiguration(globals.SETTINGS_DS_DEFAULT_CLASSIC);
             break;
         case localizedStrings.dsPartitioned:
-            typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_PARTITIONED;
+            typeEnum = zosfiles.CreateDataSetTypeEnum.DATA_SET_PARTITIONED;
             createOptions = vscode.workspace.getConfiguration(globals.SETTINGS_DS_DEFAULT_PDS);
             break;
         case localizedStrings.dsExtended:
-            typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_BLANK;
+            typeEnum = zosfiles.CreateDataSetTypeEnum.DATA_SET_BLANK;
             createOptions = vscode.workspace.getConfiguration(globals.SETTINGS_DS_DEFAULT_EXTENDED);
             break;
         case localizedStrings.dsSequential:
-            typeEnum = zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL;
+            typeEnum = zosfiles.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL;
             createOptions = vscode.workspace.getConfiguration(globals.SETTINGS_DS_DEFAULT_PS);
             break;
     }
@@ -726,7 +725,7 @@ function getTemplateNames(datasetProvider: Types.IZoweDatasetTreeType): string[]
 function compareDsProperties(type: string, datasetProvider: Types.IZoweDatasetTreeType): boolean {
     let isMatch = true;
     const templates: Types.DataSetAllocTemplate[] = datasetProvider.getDsTemplates();
-    let propertiesFromDsType: Partial<zowe.ICreateDataSetOptions>;
+    let propertiesFromDsType: Partial<zosfiles.ICreateDataSetOptions>;
     // Look for template
     templates?.forEach((template) => {
         for (const [key, value] of Object.entries(template)) {
@@ -751,9 +750,9 @@ function compareDsProperties(type: string, datasetProvider: Types.IZoweDatasetTr
     return isMatch;
 }
 
-function getDsProperties(type: string, datasetProvider: Types.IZoweDatasetTreeType): Partial<zowe.ICreateDataSetOptions> {
+function getDsProperties(type: string, datasetProvider: Types.IZoweDatasetTreeType): Partial<zosfiles.ICreateDataSetOptions> {
     const templates: Types.DataSetAllocTemplate[] = datasetProvider.getDsTemplates();
-    let propertiesFromDsType: Partial<zowe.ICreateDataSetOptions>;
+    let propertiesFromDsType: Partial<zosfiles.ICreateDataSetOptions>;
     // Look for template
     templates?.forEach((template) => {
         Object.entries(template).forEach(([key, value]) => {
@@ -781,20 +780,20 @@ function getDsProperties(type: string, datasetProvider: Types.IZoweDatasetTreeTy
     return propertiesFromDsType;
 }
 
-function getDefaultDsTypeProperties(dsType: string): zowe.ICreateDataSetOptions {
+function getDefaultDsTypeProperties(dsType: string): zosfiles.ICreateDataSetOptions {
     typeEnum = getDataSetTypeAndOptions(dsType)?.typeEnum;
 
-    if (typeEnum === zowe.CreateDataSetTypeEnum.DATA_SET_BLANK) {
+    if (typeEnum === zosfiles.CreateDataSetTypeEnum.DATA_SET_BLANK) {
         const options = getDataSetTypeAndOptions(dsType)?.createOptions;
         return getDsTypePropertiesFromWorkspaceConfig(options);
     } else {
         const cliDefaultsKey = globals.CreateDataSetTypeWithKeysEnum[typeEnum]?.replace("DATA_SET_", "");
-        return zowe.CreateDefaults.DATA_SET[cliDefaultsKey] as zowe.ICreateDataSetOptions;
+        return zosfiles.CreateDefaults.DATA_SET[cliDefaultsKey] as zosfiles.ICreateDataSetOptions;
     }
 }
 
-export function getDsTypePropertiesFromWorkspaceConfig(createOptions: vscode.WorkspaceConfiguration): zowe.ICreateDataSetOptions {
-    const dsTypeProperties = {} as zowe.ICreateDataSetOptions;
+export function getDsTypePropertiesFromWorkspaceConfig(createOptions: vscode.WorkspaceConfiguration): zosfiles.ICreateDataSetOptions {
+    const dsTypeProperties = {} as zosfiles.ICreateDataSetOptions;
     if (createOptions) {
         dsTypeProperties.dsntype = createOptions.get("dsntype");
         dsTypeProperties.dsorg = createOptions.get("dsorg");
@@ -1052,7 +1051,7 @@ export async function submitJcl(datasetProvider: Types.IZoweDatasetTreeType, fil
     }
 
     // get profile from session name
-    let sessProfile: zowe.imperative.IProfileLoaded;
+    let sessProfile: imperative.IProfileLoaded;
     const sesNode = (await datasetProvider.getChildren()).find((child) => child.label.toString() === sessProfileName);
     if (sesNode) {
         sessProfile = sesNode.getProfile();
@@ -1156,7 +1155,7 @@ export async function submitMember(node: IZoweDatasetTreeNode): Promise<void> {
     ZoweLogger.trace("dataset.actions.submitMember called.");
     let label: string;
     let sesName: string;
-    let sessProfile: zowe.imperative.IProfileLoaded;
+    let sessProfile: imperative.IProfileLoaded;
     const profiles = Profiles.getInstance();
     const nodeProfile = node.getProfile();
     await profiles.checkCurrentProfile(nodeProfile);
@@ -1498,7 +1497,7 @@ export async function copyDataSets(node, nodeList: ZoweDatasetNode[], datasetPro
  * @export
  * @param {IZoweDatasetTreeNode} node - The node to migrate
  */
-export async function hMigrateDataSet(node: ZoweDatasetNode): Promise<zowe.IZosFilesResponse> {
+export async function hMigrateDataSet(node: ZoweDatasetNode): Promise<zosfiles.IZosFilesResponse> {
     ZoweLogger.trace("dataset.actions.hMigrateDataSet called.");
     await Profiles.getInstance().checkCurrentProfile(node.getProfile());
     if (Profiles.getInstance().validProfile !== Validation.ValidationType.INVALID) {
@@ -1529,7 +1528,7 @@ export async function hMigrateDataSet(node: ZoweDatasetNode): Promise<zowe.IZosF
  * @export
  * @param {IZoweDatasetTreeNode} node - The node to recall
  */
-export async function hRecallDataSet(node: ZoweDatasetNode): Promise<zowe.IZosFilesResponse> {
+export async function hRecallDataSet(node: ZoweDatasetNode): Promise<zosfiles.IZosFilesResponse> {
     ZoweLogger.trace("dataset.actions.hRecallDataSet called.");
     await Profiles.getInstance().checkCurrentProfile(node.getProfile());
     if (Profiles.getInstance().validProfile !== Validation.ValidationType.INVALID) {
@@ -1755,7 +1754,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: Types.
         }) ?? datasetProvider.openFiles?.[doc.uri.fsPath];
 
     // define upload options
-    const uploadOptions: IUploadOptions = {
+    const uploadOptions: zosfiles.IUploadOptions = {
         etag: node?.getEtag(),
         returnEtag: true,
     };
@@ -1869,7 +1868,7 @@ export async function copyPartitionedDatasets(nodes: ZoweDatasetNode[]): Promise
     ZoweLogger.trace("dataset.actions.copyPartitionedDatasets called.");
     await _copyProcessor(nodes, "po", async (node: ZoweDatasetNode, dsname: string, replace: shouldReplace) => {
         const lbl = node.getLabel().toString();
-        const uploadOptions: IUploadOptions = {
+        const uploadOptions: zosfiles.IUploadOptions = {
             etag: node.getEtag(),
             returnEtag: true,
         };
@@ -1920,7 +1919,7 @@ export type shouldReplace = "replace" | "cancel" | "notFound";
  * @param type The type of z/os dataset (or member) that we should determine whether or not to replace
  * @returns string that explain whether or not to replace the z/os content
  */
-export async function determineReplacement(nodeProfile: zowe.imperative.IProfileLoaded, name: string, type: replaceDstype): Promise<shouldReplace> {
+export async function determineReplacement(nodeProfile: imperative.IProfileLoaded, name: string, type: replaceDstype): Promise<shouldReplace> {
     ZoweLogger.trace("dataset.actions.determineReplacement called.");
     const mvsApi = ZoweExplorerApiRegister.getMvsApi(nodeProfile);
     const options = { responseTimeout: nodeProfile.profile?.responseTimeout };
@@ -1983,7 +1982,7 @@ export async function _copyProcessor(
                 return;
             }
             const replace = await determineReplacement(nodes[0].getProfile(), dsname, type);
-            let res: zowe.IZosFilesResponse;
+            let res: zosfiles.IZosFilesResponse;
             if (replace === "notFound") {
                 res = await ZoweExplorerApiRegister.getMvsApi(nodes[0].getProfile()).allocateLikeDataSet(dsname, lbl);
             }

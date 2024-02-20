@@ -9,7 +9,8 @@
  *
  */
 
-import { imperative, ZosmfSession } from "@zowe/cli";
+import { ZosmfSession } from "@zowe/zosmf-for-zowe-sdk";
+import { imperative } from "@zowe/zowe-explorer-api";
 import * as sinon from "sinon";
 import * as vscode from "vscode";
 import * as chai from "chai";

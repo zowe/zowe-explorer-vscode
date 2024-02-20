@@ -16,7 +16,7 @@
 import { FtpUssApi } from "../../../src/ZoweExplorerFtpUssApi";
 import { UssUtils } from "@zowe/zos-ftp-for-zowe-cli";
 import TestUtils from "../utils/TestUtils";
-import * as zowe from "@zowe/cli";
+import { ZosFilesUtils } from "@zowe/zos-files-for-zowe-sdk";
 import * as globals from "../../../src/globals";
 import { ZoweFtpExtensionError } from "../../../src/ZoweFtpExtensionError";
 import * as tmp from "tmp";
@@ -125,7 +125,7 @@ describe("FtpUssApi", () => {
     it("should upload uss directory.", async () => {
         const localpath = "/tmp";
         const files = ["file1", "file2"];
-        zowe.ZosFilesUtils.getFileListFromPath = jest.fn().mockReturnValue(files);
+        ZosFilesUtils.getFileListFromPath = jest.fn().mockReturnValue(files);
         const mockParams = {
             inputDirectoryPath: localpath,
             ussDirectoryPath: "/a/b/c",
