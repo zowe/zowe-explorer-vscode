@@ -12,7 +12,7 @@
 import { Sorting } from "@zowe/zowe-explorer-api";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { FilterItem } from "../utils/ProfilesUtils";
-import { IJob } from "@zowe/zos-jobs-for-zowe-sdk";
+import * as zosjobs from "@zowe/zos-jobs-for-zowe-sdk";
 import * as vscode from "vscode";
 
 export const JOB_SORT_OPTS = [
@@ -23,7 +23,7 @@ export const JOB_SORT_OPTS = [
     vscode.l10n.t("$(fold) Sort Direction"),
 ];
 
-export const JOB_SORT_KEYS: Record<Sorting.JobSortOpts, keyof (IJob & { "exec-submitted": string })> = {
+export const JOB_SORT_KEYS: Record<Sorting.JobSortOpts, keyof (zosjobs.IJob & { "exec-submitted": string })> = {
     [Sorting.JobSortOpts.Id]: "jobid",
     [Sorting.JobSortOpts.DateSubmitted]: "exec-submitted",
     [Sorting.JobSortOpts.Name]: "jobname",

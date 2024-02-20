@@ -9,7 +9,7 @@
  *
  */
 
-import { IUploadOptions, IZosFilesResponse } from "@zowe/zos-files-for-zowe-sdk";
+import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
 import * as globals from "../globals";
 import * as vscode from "vscode";
 import * as fs from "fs";
@@ -131,7 +131,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         }
 
         // Get the directories from the fullPath and display any thrown errors
-        let response: IZosFilesResponse;
+        let response: zosfiles.IZosFilesResponse;
         const sessNode = this.getSessionNode();
         try {
             const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
@@ -619,7 +619,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     public async paste(
         sessionName: string,
         rootPath: string,
-        uss: { tree: UssFileTree; api: MainframeInteraction.IUss; options?: IUploadOptions }
+        uss: { tree: UssFileTree; api: MainframeInteraction.IUss; options?: zosfiles.IUploadOptions }
     ): Promise<void> {
         ZoweLogger.trace("ZoweUSSNode.paste called.");
         const hasCopyApi = uss.api.copy != null;
@@ -706,7 +706,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 statusMessage: vscode.l10n.t("Uploading USS files..."),
                 stageName: 0,
             };
-            const options: IUploadOptions = {
+            const options: zosfiles.IUploadOptions = {
                 task,
                 encoding: prof.profile?.encoding,
                 responseTimeout: prof.profile?.responseTimeout,

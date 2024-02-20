@@ -14,7 +14,7 @@ jest.mock("@zowe/zos-files-for-zowe-sdk");
 jest.mock("Session");
 import * as vscode from "vscode";
 import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
-import { List } from "@zowe/zos-files-for-zowe-sdk";
+import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
 import { Profiles } from "../../src/Profiles";
 import * as globals from "../../src/globals";
 import { imperative, Sorting } from "@zowe/zowe-explorer-api";
@@ -422,7 +422,7 @@ describe("Unit Tests (Jest)", () => {
                 },
             };
         });
-        Object.defineProperty(List, "allMembers", { value: allMembers });
+        Object.defineProperty(zosfiles.List, "allMembers", { value: allMembers });
         const pdsChildren = await pds.getChildren();
         expect(pdsChildren[0].label).toEqual("BADMEM\ufffd");
         expect(pdsChildren[0].contextValue).toEqual(globals.DS_FILE_ERROR_CONTEXT);
@@ -460,7 +460,7 @@ describe("Unit Tests (Jest)", () => {
                 },
             };
         });
-        Object.defineProperty(List, "allMembers", { value: allMembers });
+        Object.defineProperty(zosfiles.List, "allMembers", { value: allMembers });
         expect((await pds.getChildren())[0].label).toEqual("No data sets found");
     });
 });

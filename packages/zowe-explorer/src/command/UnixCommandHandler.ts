@@ -18,7 +18,7 @@ import { errorHandling, FilterDescriptor, FilterItem } from "../utils/ProfilesUt
 import { ZoweCommandProvider } from "../abstract/ZoweCommandProvider";
 import { SettingsConfig } from "../utils/SettingsConfig";
 import { ZoweLogger } from "../utils/LoggerUtils";
-import { SshSession, ISshSession } from "@zowe/zos-uss-for-zowe-sdk";
+import * as zosuss from "@zowe/zos-uss-for-zowe-sdk";
 import { ProfileManagement } from "../utils/ProfileManagement";
 
 /**
@@ -44,7 +44,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
     private static readonly defaultDialogText: string = vscode.l10n.t("$(plus) Create a new Unix command");
     private static instance: UnixCommandHandler;
     public outputChannel: vscode.OutputChannel;
-    public sshSession: SshSession;
+    public sshSession: zosuss.SshSession;
     public flag: boolean = true;
 
     public constructor() {
@@ -198,15 +198,15 @@ export class UnixCommandHandler extends ZoweCommandProvider {
         }
     }
 
-    public async setsshSession(): Promise<SshSession> {
+    public async setsshSession(): Promise<zosuss.SshSession> {
         ZoweLogger.trace("UnixCommandHandler.setsshSession called.");
         const sshprofile: imperative.IProfileLoaded = await this.getSshProfile();
         if (sshprofile) {
             const cmdArgs: imperative.ICommandArguments = this.getCmdArgs(sshprofile?.profile as imperative.IProfileLoaded);
             // create the ssh session
-            const sshSessCfg = SshSession.createSshSessCfgFromArgs(cmdArgs);
-            imperative.ConnectionPropsForSessCfg.resolveSessCfgProps<ISshSession>(sshSessCfg, cmdArgs);
-            this.sshSession = new SshSession(sshSessCfg);
+            const sshSessCfg = zosuss.SshSession.createSshSessCfgFromArgs(cmdArgs);
+            imperative.ConnectionPropsForSessCfg.resolveSessCfgProps<zosuss.ISshSession>(sshSessCfg, cmdArgs);
+            this.sshSession = new zosuss.SshSession(sshSessCfg);
         }
         return this.sshSession;
     }

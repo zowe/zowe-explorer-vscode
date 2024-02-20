@@ -16,7 +16,7 @@ import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { errorHandling, FilterDescriptor, FilterItem } from "../utils/ProfilesUtils";
 import { ZoweCommandProvider } from "../abstract/ZoweCommandProvider";
-import { IStartTsoParms } from "@zowe/zos-tso-for-zowe-sdk";
+import * as zostso from "@zowe/zos-tso-for-zowe-sdk";
 import { SettingsConfig } from "../utils/SettingsConfig";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { ProfileManagement } from "../utils/ProfileManagement";
@@ -104,7 +104,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
             if (profiles.validProfile !== Validation.ValidationType.INVALID) {
                 const commandApi = ZoweExplorerApiRegister.getInstance().getCommandApi(profile);
                 if (commandApi) {
-                    let tsoParams: IStartTsoParms;
+                    let tsoParams: zostso.IStartTsoParms;
                     if (profile.type === "zosmf") {
                         tsoParams = await this.getTsoParams();
                         if (!tsoParams) {
@@ -197,7 +197,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
      * @param profile profile to be used
      * @param tsoParams parameters (from TSO profile, when used)
      */
-    private async issueCommand(command: string, profile: imperative.IProfileLoaded, tsoParams?: IStartTsoParms): Promise<void> {
+    private async issueCommand(command: string, profile: imperative.IProfileLoaded, tsoParams?: zostso.IStartTsoParms): Promise<void> {
         ZoweLogger.trace("TsoCommandHandler.issueCommand called.");
         try {
             if (command) {
@@ -263,10 +263,10 @@ export class TsoCommandHandler extends ZoweCommandProvider {
      * if non exist prompts user for account number.
      * @returns Promise<IStartTsoParms>
      */
-    private async getTsoParams(): Promise<IStartTsoParms> {
+    private async getTsoParams(): Promise<zostso.IStartTsoParms> {
         ZoweLogger.trace("TsoCommandHandler.getTsoParams called.");
         const profileInfo = await Profiles.getInstance().getProfileInfo();
-        let tsoParms: IStartTsoParms = {};
+        let tsoParms: zostso.IStartTsoParms = {};
 
         // Keys in the IStartTsoParms interface
         // TODO(zFernand0): Request the CLI squad that all interfaces are also exported as values that we can iterate

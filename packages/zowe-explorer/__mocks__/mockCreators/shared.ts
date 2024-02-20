@@ -15,7 +15,7 @@ import { ZoweUSSNode } from "../../src/uss/ZoweUSSNode";
 import * as vscode from "vscode";
 import { imperative, Validation, IZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { FilterDescriptor } from "../../src/utils/ProfilesUtils";
-import { ZosmfSession } from "@zowe/zosmf-for-zowe-sdk";
+import * as zosmf from "@zowe/zosmf-for-zowe-sdk";
 import { SettingsConfig } from "../../src/utils/SettingsConfig";
 import * as globals from "../../src/globals";
 
@@ -155,7 +155,7 @@ export function createSessCfgFromArgs(testProfile: imperative.IProfileLoaded) {
         user: testProfile.profile.user,
         password: testProfile.profile.password,
     };
-    const sessCfg = ZosmfSession.createSessCfgFromArgs(cmdArgs);
+    const sessCfg = zosmf.ZosmfSession.createSessCfgFromArgs(cmdArgs);
     const session = new imperative.Session(sessCfg);
     return session;
 }

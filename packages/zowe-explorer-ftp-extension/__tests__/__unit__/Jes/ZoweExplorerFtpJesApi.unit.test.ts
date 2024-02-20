@@ -16,7 +16,7 @@
 import { FtpJesApi } from "../../../src/ZoweExplorerFtpJesApi";
 import { DataSetUtils, JobUtils } from "@zowe/zos-ftp-for-zowe-cli";
 import TestUtils from "../utils/TestUtils";
-import { DownloadJobs } from "@zowe/zos-jobs-for-zowe-sdk";
+import * as zosjobs from "@zowe/zos-jobs-for-zowe-sdk";
 import { imperative } from "@zowe/zowe-explorer-api";
 import * as globals from "../../../src/globals";
 import { ZoweFtpExtensionError } from "../../../src/ZoweFtpExtensionError";
@@ -84,7 +84,7 @@ describe("FtpJesApi", () => {
         const jobDetails = { jobid: "123", jobname: "JOB1", spoolFiles: [{ id: "1" }, { id: "2" }] };
         JobUtils.findJobByID = jest.fn().mockReturnValue(jobDetails);
         JobUtils.getSpoolFiles = jest.fn().mockReturnValue(jobDetails.spoolFiles);
-        DownloadJobs.getSpoolDownloadFilePath = jest.fn().mockReturnValue("/tmp/file1");
+        zosjobs.DownloadJobs.getSpoolDownloadFilePath = jest.fn().mockReturnValue("/tmp/file1");
         imperative.IO.writeFile = jest.fn();
         const mockParams = {
             parms: { jobname: "JOB1", jobid: "123", outDir: "/a/b/c" },
@@ -93,7 +93,7 @@ describe("FtpJesApi", () => {
         await JesApi.downloadSpoolContent(mockParams.parms);
         expect(JobUtils.findJobByID).toHaveBeenCalledTimes(1);
         expect(JobUtils.getSpoolFiles).toHaveBeenCalledTimes(1);
-        expect(DownloadJobs.getSpoolDownloadFilePath).toHaveBeenCalledTimes(2);
+        expect(zosjobs.DownloadJobs.getSpoolDownloadFilePath).toHaveBeenCalledTimes(2);
         expect(imperative.IO.writeFile).toHaveBeenCalledTimes(2);
         expect(JesApi.releaseConnection).toHaveBeenCalled();
     });

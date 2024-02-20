@@ -11,7 +11,7 @@
 
 import * as vscode from "vscode";
 import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
-import { ZosmfSession } from "@zowe/zosmf-for-zowe-sdk";
+import * as zosmf from "@zowe/zosmf-for-zowe-sdk";
 import { imperative } from "@zowe/zowe-explorer-api";
 import * as dsNodeActions from "../../../src/dataset/actions";
 import * as refreshActions from "../../../src/shared/refresh";
@@ -177,7 +177,7 @@ describe("dsNodeActions", () => {
     Object.defineProperty(vscode.window, "showErrorMessage", { value: showErrorMessage });
     Object.defineProperty(vscode.window, "showQuickPick", { value: showQuickPick });
     Object.defineProperty(vscode.window, "showInformationMessage", { value: showInformationMessage });
-    Object.defineProperty(ZosmfSession, "createSessCfgFromArgs", { value: createSessCfgFromArgs });
+    Object.defineProperty(zosmf.ZosmfSession, "createSessCfgFromArgs", { value: createSessCfgFromArgs });
     Object.defineProperty(refreshActions, "refreshAll", { value: jest.fn() });
 
     beforeEach(() => {

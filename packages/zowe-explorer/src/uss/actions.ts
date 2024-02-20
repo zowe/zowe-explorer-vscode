@@ -22,7 +22,7 @@ import { isBinaryFileSync } from "isbinaryfile";
 import * as contextually from "../shared/context";
 import { markDocumentUnsaved, setFileSaved } from "../utils/workspace";
 import { refreshAll } from "../shared/refresh";
-import { IUploadOptions, IZosFilesResponse } from "@zowe/zos-files-for-zowe-sdk";
+import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
 import { autoDetectEncoding, fileExistsCaseSensitiveSync } from "./utils";
 import { UssFileTree, UssFileType } from "./FileStructure";
 import { ZoweLogger } from "../utils/LoggerUtils";
@@ -197,7 +197,7 @@ export async function uploadFile(node: IZoweUSSTreeNode, doc: vscode.TextDocumen
             statusMessage: vscode.l10n.t("Uploading USS file"),
             stageName: 0, // TaskStage.IN_PROGRESS - https://github.com/kulshekhar/ts-jest/issues/281
         };
-        const options: IUploadOptions = {
+        const options: zosfiles.IUploadOptions = {
             task,
             responseTimeout: prof.profile?.responseTimeout,
         };
@@ -300,7 +300,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: Typ
     try {
         await autoDetectEncoding(node, prof);
 
-        const uploadResponse: IZosFilesResponse = await Gui.withProgress(
+        const uploadResponse: zosfiles.IZosFilesResponse = await Gui.withProgress(
             {
                 location: vscode.ProgressLocation.Window,
                 title: vscode.l10n.t("Saving file..."),

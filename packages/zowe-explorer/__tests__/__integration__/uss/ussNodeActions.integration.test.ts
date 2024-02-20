@@ -9,8 +9,8 @@
  *
  */
 
-import { Create, Delete, List } from "@zowe/zos-files-for-zowe-sdk";
-import { ZosmfSession } from "@zowe/zosmf-for-zowe-sdk";
+import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
+import * as zosmf from "@zowe/zosmf-for-zowe-sdk";
 import { imperative } from "@zowe/zowe-explorer-api";
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
@@ -47,7 +47,7 @@ describe("ussNodeActions integration test", async () => {
         user: testProfile.profile.user,
         password: testProfile.profile.password,
     };
-    const sessCfg = ZosmfSession.createSessCfgFromArgs(cmdArgs);
+    const sessCfg = zosmf.ZosmfSession.createSessCfgFromArgs(cmdArgs);
     imperative.ConnectionPropsForSessCfg.resolveSessCfgProps(sessCfg, cmdArgs);
     const session = new imperative.Session(sessCfg);
     const sessionNode = new ZoweUSSNode({
@@ -112,13 +112,14 @@ describe("ussNodeActions integration test", async () => {
 
         afterEach(async () => {
             await Promise.all(
-                [Delete.ussFile(sessionNode.getSession(), beforeFileName), Delete.ussFile(sessionNode.getSession(), afterFileName)].map((p) =>
-                    p.catch((err) => err)
-                )
+                [
+                    zosfiles.Delete.ussFile(sessionNode.getSession(), beforeFileName),
+                    zosfiles.Delete.ussFile(sessionNode.getSession(), afterFileName),
+                ].map((p) => p.catch((err) => err))
             );
         });
         beforeEach(async () => {
-            await Create.uss(sessionNode.getSession(), beforeFileName, "file").catch((err) => err);
+            await zosfiles.Create.uss(sessionNode.getSession(), beforeFileName, "file").catch((err) => err);
         });
 
         it("should rename a uss file", async () => {
@@ -147,7 +148,7 @@ describe("ussNodeActions integration test", async () => {
                 inputBoxStub.returns(afterNameBase);
 
                 await testTree.rename(testNode);
-                list = await List.fileList(sessionNode.getSession(), path);
+                list = await zosfiles.List.fileList(sessionNode.getSession(), path);
                 list = list.apiResponse.items ? list.apiResponse.items.map((entry) => entry.name) : [];
             } catch (err) {
                 error = err;

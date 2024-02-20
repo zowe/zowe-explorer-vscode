@@ -26,7 +26,7 @@ import {
     ZosEncoding,
 } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
-import { IUploadOptions, IZosFilesResponse } from "@zowe/zos-files-for-zowe-sdk";
+import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { markDocumentUnsaved } from "../utils/workspace";
 import { errorHandling } from "../utils/ProfilesUtils";
@@ -219,8 +219,8 @@ export async function uploadContent(
     profile?: imperative.IProfileLoaded,
     etagToUpload?: string,
     returnEtag?: boolean
-): Promise<IZosFilesResponse> {
-    const uploadOptions: IUploadOptions = {
+): Promise<zosfiles.IZosFilesResponse> {
+    const uploadOptions: zosfiles.IUploadOptions = {
         etag: etagToUpload,
         returnEtag: returnEtag ?? true,
         binary: node.binary,

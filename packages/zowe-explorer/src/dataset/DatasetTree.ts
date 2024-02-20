@@ -34,7 +34,7 @@ import * as dayjs from "dayjs";
 import * as fs from "fs";
 import * as contextually from "../shared/context";
 import { closeOpenedTextFile } from "../utils/workspace";
-import { IDataSet, IListOptions } from "@zowe/zos-files-for-zowe-sdk";
+import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
 import { DATASET_FILTER_OPTS, DATASET_SORT_OPTS, validateDataSetName, validateMemberName } from "./utils";
 import { SettingsConfig } from "../utils/SettingsConfig";
 import { ZoweLogger } from "../utils/LoggerUtils";
@@ -966,8 +966,8 @@ export class DatasetTree extends ZoweTreeProvider implements Types.IZoweDatasetT
             node.children = [];
             node.dirty = true;
             syncSessionNode((profile) => ZoweExplorerApiRegister.getMvsApi(profile), nonFaveNode);
-            let dataSet: IDataSet;
-            const dsSets: (IDataSet & { memberPattern?: string })[] = [];
+            let dataSet: zosfiles.IDataSet;
+            const dsSets: (zosfiles.IDataSet & { memberPattern?: string })[] = [];
             const dsNames = pattern.split(",");
 
             for (const ds of dsNames) {
@@ -1059,7 +1059,7 @@ export class DatasetTree extends ZoweTreeProvider implements Types.IZoweDatasetT
                         }
                         if (includes && child.contextValue.includes("pds")) {
                             const childProfile = child.getProfile();
-                            const options: IListOptions = {};
+                            const options: zosfiles.IListOptions = {};
                             options.pattern = item.memberPattern;
                             options.attributes = true;
                             options.responseTimeout = childProfile.profile?.responseTimeout;
