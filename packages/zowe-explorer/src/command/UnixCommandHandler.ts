@@ -284,55 +284,34 @@ export class UnixCommandHandler extends ZoweCommandProvider {
         if (this.history.getSearchHistory().length > 0) {
             const createPick = new FilterDescriptor(UnixCommandHandler.defaultDialogText);
             const items: vscode.QuickPickItem[] = this.history.getSearchHistory().map((element) => new FilterItem({ text: element }));
-            if (globals.ISTHEIA) {
-                const commandEditMsg = alwaysEdit ? vscode.l10n.t("(An option to edit will follow)") : "";
-                const options1: vscode.QuickPickOptions = {
-                    placeHolder:
-                        vscode.l10n.t({
-                            message: "Select a Unix command to run against {0}",
-                            args: [cwd],
-                            comment: ["Current work directory"],
-                        }) +
-                        " " +
-                        commandEditMsg,
-                };
-                // get user selection
-                const choice = await Gui.showQuickPick([createPick, ...items], options1);
-                if (!choice) {
-                    Gui.showMessage(vscode.l10n.t("No selection made. Operation cancelled."));
-                    return;
-                }
-                response = choice === createPick ? "" : choice.label;
-            } else {
-                const quickpick = Gui.createQuickPick();
-                quickpick.placeholder = alwaysEdit
-                    ? vscode.l10n.t({
-                          message: "Select a Unix command to run against {0} (An option to edit will follow)",
-                          args: [cwd],
-                          comment: ["Current work directory"],
-                      })
-                    : vscode.l10n.t({
-                          message: "Select a Unix command to run immediately against {0}",
-                          args: [cwd],
-                          comment: ["Current work directory"],
-                      });
+            const quickpick = Gui.createQuickPick();
+            quickpick.placeholder = alwaysEdit
+                ? vscode.l10n.t({
+                      message: "Select a Unix command to run against {0} (An option to edit will follow)",
+                      args: [cwd],
+                      comment: ["Current work directory"],
+                  })
+                : vscode.l10n.t({
+                      message: "Select a Unix command to run immediately against {0}",
+                      args: [cwd],
+                      comment: ["Current work directory"],
+                  });
 
-                quickpick.items = [createPick, ...items];
-                quickpick.ignoreFocusOut = true;
-                quickpick.show();
-                const choice = await Gui.resolveQuickPick(quickpick);
-                quickpick.hide();
-                if (!choice) {
-                    Gui.showMessage(vscode.l10n.t("No selection made. Operation cancelled."));
-                    return;
+            quickpick.items = [createPick, ...items];
+            quickpick.ignoreFocusOut = true;
+            quickpick.show();
+            const choice = await Gui.resolveQuickPick(quickpick);
+            quickpick.hide();
+            if (!choice) {
+                Gui.showMessage(vscode.l10n.t("No selection made. Operation cancelled."));
+                return;
+            }
+            if (choice instanceof FilterDescriptor) {
+                if (quickpick.value) {
+                    response = quickpick.value;
                 }
-                if (choice instanceof FilterDescriptor) {
-                    if (quickpick.value) {
-                        response = quickpick.value;
-                    }
-                } else {
-                    response = choice.label;
-                }
+            } else {
+                response = choice.label;
             }
         }
         if (!response || alwaysEdit) {

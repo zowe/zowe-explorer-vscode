@@ -247,7 +247,7 @@ export class DatasetTree extends ZoweTreeProvider implements Types.IZoweDatasetT
                     vscode.l10n.t({
                         message:
                             "Invalid Data Sets favorite: {0}. Please check formatting of the zowe.ds.history 'favorites' settings in the {1} user settings.",
-                        args: [line, getAppName(globals.ISTHEIA)],
+                        args: [line, getAppName()],
                         comment: ["Data Sets Favorite line", "Application name"],
                     })
                 );
@@ -373,7 +373,7 @@ export class DatasetTree extends ZoweTreeProvider implements Types.IZoweDatasetT
                     message: `Error: You have Zowe Data Set favorites that refer to a non-existent CLI profile named: {0}.
                     To resolve this, you can remove {0} from the Favorites section of Zowe Explorer's Data Sets view.
                     Would you like to do this now? {1}`,
-                    args: [profileName, getAppName(globals.ISTHEIA)],
+                    args: [profileName, getAppName()],
                     comment: ["Profile name", "Application name"],
                 });
                 // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
@@ -920,36 +920,23 @@ export class DatasetTree extends ZoweTreeProvider implements Types.IZoweDatasetT
                 if (this.mHistory.getSearchHistory().length > 0) {
                     const createPick = new FilterDescriptor(DatasetTree.defaultDialogText);
                     const items: vscode.QuickPickItem[] = this.mHistory.getSearchHistory().map((element) => new FilterItem({ text: element }));
-                    if (globals.ISTHEIA) {
-                        const options1: vscode.QuickPickOptions = {
-                            placeHolder: vscode.l10n.t("Select a filter"),
-                        };
-                        // get user selection
-                        const choice = await Gui.showQuickPick([createPick, globals.SEPARATORS.RECENT_FILTERS, ...items], options1);
-                        if (!choice) {
-                            Gui.showMessage(vscode.l10n.t("No selection made. Operation cancelled."));
-                            return;
+                    const quickpick = Gui.createQuickPick();
+                    quickpick.items = [createPick, globals.SEPARATORS.RECENT_FILTERS, ...items];
+                    quickpick.placeholder = vscode.l10n.t("Select a filter");
+                    quickpick.ignoreFocusOut = true;
+                    quickpick.show();
+                    const choice = await Gui.resolveQuickPick(quickpick);
+                    quickpick.hide();
+                    if (!choice) {
+                        Gui.showMessage(vscode.l10n.t("No selection made. Operation cancelled."));
+                        return;
+                    }
+                    if (choice instanceof FilterDescriptor) {
+                        if (quickpick.value) {
+                            pattern = quickpick.value;
                         }
-                        pattern = choice === createPick ? "" : choice.label;
                     } else {
-                        const quickpick = Gui.createQuickPick();
-                        quickpick.items = [createPick, globals.SEPARATORS.RECENT_FILTERS, ...items];
-                        quickpick.placeholder = vscode.l10n.t("Select a filter");
-                        quickpick.ignoreFocusOut = true;
-                        quickpick.show();
-                        const choice = await Gui.resolveQuickPick(quickpick);
-                        quickpick.hide();
-                        if (!choice) {
-                            Gui.showMessage(vscode.l10n.t("No selection made. Operation cancelled."));
-                            return;
-                        }
-                        if (choice instanceof FilterDescriptor) {
-                            if (quickpick.value) {
-                                pattern = quickpick.value;
-                            }
-                        } else {
-                            pattern = choice.label;
-                        }
+                        pattern = choice.label;
                     }
                 }
                 const options2: vscode.InputBoxOptions = {

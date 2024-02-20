@@ -87,23 +87,6 @@ describe("KeytarCredentialManager", () => {
             expect(Object.keys((keytar as object)["keyring"]).length).toBe(5);
         });
 
-        it("should handle CredentialManager in Imperative settings - Theia", () => {
-            jest.spyOn(fs, "existsSync").mockReturnValueOnce(true);
-            const readFileSyncSpy = jest.spyOn(fs, "readFileSync").mockReturnValue(
-                JSON.stringify({
-                    overrides: {
-                        CredentialManager: scsPluginName,
-                    },
-                })
-            );
-            jest.spyOn(process, "cwd").mockReturnValueOnce(__dirname + "/../../../../..");
-            const keytar = KeytarCredentialManager.getSecurityModules("@zowe/secrets-for-zowe-sdk", true);
-            expect(keytar).toBeDefined();
-            expect(loggerWarnSpy).not.toHaveBeenCalled();
-            expect(readFileSyncSpy).toHaveBeenCalledTimes(1);
-            expect(Object.keys((keytar as object)["keyring"]).length).toBe(5);
-        });
-
         it("should handle empty Imperative settings", () => {
             jest.spyOn(fs, "existsSync").mockReturnValueOnce(true);
             const readFileSyncSpy = jest.spyOn(fs, "readFileSync").mockReturnValue(JSON.stringify({}));

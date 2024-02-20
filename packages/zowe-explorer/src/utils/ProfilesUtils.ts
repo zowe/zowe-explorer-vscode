@@ -69,11 +69,6 @@ export async function errorHandling(errorDetails: Error | string, label?: string
                 const isTokenAuth = await ProfilesUtils.isUsingTokenAuth(label);
 
                 if (tokenError.includes("Token is not valid or expired.") || isTokenAuth) {
-                    if (globals.ISTHEIA) {
-                        Gui.errorMessage(errToken);
-                        await Profiles.getInstance().ssoLogin(null, label);
-                        return;
-                    }
                     const message = vscode.l10n.t("Log in to Authentication Service");
                     Gui.showMessage(errToken, { items: [message] }).then(async (selection) => {
                         if (selection) {
@@ -82,11 +77,6 @@ export async function errorHandling(errorDetails: Error | string, label?: string
                     });
                     return;
                 }
-            }
-
-            if (globals.ISTHEIA) {
-                Gui.errorMessage(errMsg);
-                return;
             }
             const checkCredsButton = vscode.l10n.t("Update Credentials");
             await Gui.errorMessage(errMsg, {
@@ -387,7 +377,7 @@ export class ProfilesUtils {
         );
     }
 
-    public static async getProfileInfo(envTheia: boolean): Promise<imperative.ProfileInfo> {
+    public static async getProfileInfo(): Promise<imperative.ProfileInfo> {
         ZoweLogger.trace("ProfilesUtils.getProfileInfo called.");
         const hasSecureCredentialManagerEnabled: boolean = SettingsConfig.getDirectValue(globals.SETTINGS_SECURE_CREDENTIALS_ENABLED);
 
@@ -416,7 +406,7 @@ export class ProfilesUtils {
     public static async readConfigFromDisk(): Promise<void> {
         ZoweLogger.trace("ProfilesUtils.readConfigFromDisk called.");
         let rootPath: string;
-        const mProfileInfo = await ProfilesUtils.getProfileInfo(globals.ISTHEIA);
+        const mProfileInfo = await ProfilesUtils.getProfileInfo();
         if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders[0]) {
             rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
             await mProfileInfo.readProfilesFromDisk({ homeDir: FileManagement.getZoweDir(), projectDir: FileManagement.getFullPath(rootPath) });

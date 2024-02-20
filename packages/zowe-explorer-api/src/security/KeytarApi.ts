@@ -19,7 +19,7 @@ export class KeytarApi {
     public constructor(protected log: imperative.Logger) {}
 
     // v1 specific
-    public async activateKeytar(initialized: boolean, _isTheia: boolean): Promise<void> {
+    public async activateKeytar(initialized: boolean): Promise<void> {
         const log = imperative.Logger.getAppLogger();
         const profiles = new ProfilesCache(log, vscode.workspace.workspaceFolders?.[0]?.uri.fsPath);
         const isSecure = await profiles.isCredentialsSecured();

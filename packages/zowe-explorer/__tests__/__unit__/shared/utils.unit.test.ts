@@ -325,16 +325,6 @@ describe("Test force upload", () => {
         expect(blockMocks.showInformationMessage.mock.calls[1][0]).toBe("Upload cancelled.");
     });
 
-    it("should display specific message if Theia is detected", async () => {
-        const blockMocks = await createBlockMocks();
-        Object.defineProperty(globals, "ISTHEIA", { value: true });
-        blockMocks.showInformationMessage.mockResolvedValueOnce("No");
-        await sharedUtils.willForceUpload(blockMocks.dsNode, blockMocks.mockDoc, null);
-        expect(blockMocks.showWarningMessage.mock.calls[0][0]).toBe(
-            "A merge conflict has been detected. Since you are running inside Theia editor, a merge conflict resolution is not available yet."
-        );
-    });
-
     it("should show error message if file fails to upload", async () => {
         const blockMocks = await createBlockMocks();
         blockMocks.showInformationMessage.mockResolvedValueOnce("Yes");
