@@ -71,7 +71,6 @@ function createGlobalMocks() {
         mockLoadNamedProfile: jest.fn(),
         Utilities: jest.fn(),
         isFileTagBinOrAscii: jest.fn(),
-        theia: false,
         testSession: createISession(),
         testProfile: createValidIProfile(),
         ProgressLocation: jest.fn().mockImplementation(() => {
@@ -137,7 +136,6 @@ function createGlobalMocks() {
         configurable: true,
     });
     Object.defineProperty(vscode.env.clipboard, "writeText", { value: globalMocks.writeText, configurable: true });
-    Object.defineProperty(globals, "ISTHEIA", { get: () => globalMocks.theia, configurable: true });
     Object.defineProperty(vscode, "ProgressLocation", { value: globalMocks.ProgressLocation, configurable: true });
     Object.defineProperty(vscode.workspace, "applyEdit", { value: jest.fn(), configurable: true });
     Object.defineProperty(Profiles, "getInstance", {
@@ -401,20 +399,8 @@ describe("USS Action Unit Tests - Function copyPath", () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
-        globalMocks.theia = false;
         await ussNodeActions.copyPath(blockMocks.ussNode);
         expect(globalMocks.writeText).toHaveBeenCalledWith(blockMocks.ussNode.fullPath);
-    });
-
-    it("should not copy the node's full path to the system clipboard if theia", async () => {
-        const globalMocks = createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
-
-        globalMocks.theia = false;
-        globalMocks.theia = true;
-
-        await ussNodeActions.copyPath(blockMocks.ussNode);
-        expect(globalMocks.writeText).not.toHaveBeenCalled();
     });
 });
 

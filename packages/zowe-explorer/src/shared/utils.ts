@@ -106,8 +106,8 @@ export function sortTreeItems(favorites: vscode.TreeItem[], specificContext): vo
 /*************************************************************************************************************
  * Determine IDE name to display based on app environment
  *************************************************************************************************************/
-export function getAppName(isTheia: boolean): "Theia" | "VS Code" {
-    return isTheia ? "Theia" : "VS Code";
+export function getAppName(): "VS Code" {
+    return "VS Code";
 }
 
 /**
@@ -249,13 +249,6 @@ export function willForceUpload(
         title = vscode.l10n.t("Saving Data Set...");
     } else {
         title = vscode.l10n.t("Saving file...");
-    }
-    if (globals.ISTHEIA) {
-        Gui.warningMessage(
-            vscode.l10n.t(
-                "A merge conflict has been detected. Since you are running inside Theia editor, a merge conflict resolution is not available yet."
-            )
-        );
     }
     // Don't wait for prompt to return since this would block the save queue
     return Gui.infoMessage(vscode.l10n.t("Would you like to overwrite the remote file?"), {

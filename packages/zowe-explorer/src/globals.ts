@@ -25,7 +25,6 @@ export let ZOWE_TMP_FOLDER: string;
 export let USS_DIR: string;
 export let DS_DIR: string;
 export let CONFIG_PATH; // set during activate
-export let ISTHEIA = false; // set during activate
 export let LOG: imperative.Logger;
 export const COMMAND_COUNT = 121;
 export const MAX_SEARCH_HISTORY = 5;
@@ -301,17 +300,6 @@ export const SEPARATORS = {
  * @param tempPath File path for temporary folder defined in preferences
  */
 export function defineGlobals(tempPath: string | undefined): void {
-    // check if Theia environment
-    const appName = vscode.env.appName;
-    const uriScheme = vscode.env.uriScheme;
-    if (
-        ((appName && appName.toLowerCase().includes("theia")) || (uriScheme && uriScheme.toLowerCase().includes("theia"))) &&
-        vscode.env.uiKind === vscode.UIKind.Web
-    ) {
-        ISTHEIA = true;
-        ZoweLogger.info(vscode.l10n.t(`Zowe Explorer is running in Theia environment.`));
-    }
-
     SETTINGS_TEMP_FOLDER_LOCATION = tempPath;
     // Set temp path & folder paths
     ZOWETEMPFOLDER = tempPath ? path.join(tempPath, "temp") : path.join(__dirname, "..", "..", "resources", "temp");
@@ -350,11 +338,6 @@ export async function setGlobalSecurityValue(credentialManager?: string): Promis
     const settingEnabled: boolean = SettingsConfig.getDirectValue(this.SETTINGS_SECURE_CREDENTIALS_ENABLED);
     if (settingEnabled && credentialManager) {
         PROFILE_SECURITY = credentialManager;
-        return;
-    }
-    if (ISTHEIA && !SettingsConfig.isConfigSettingSetByUser(this.SETTINGS_SECURE_CREDENTIALS_ENABLED)) {
-        PROFILE_SECURITY = false;
-        await SettingsConfig.setDirectValue(SETTINGS_SECURE_CREDENTIALS_ENABLED, false, vscode.ConfigurationTarget.Global);
         return;
     }
     if (!settingEnabled) {

@@ -285,9 +285,6 @@ export function watchConfigProfile(context: vscode.ExtensionContext, providers: 
             await refreshActions.refreshAll(providers.uss);
             await refreshActions.refreshAll(providers.job);
             ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter.fire(Validation.EventType.UPDATE);
-            if (globals.ISTHEIA) {
-                await vscode.commands.executeCommand("zowe.extRefresh");
-            }
         });
     });
 }
@@ -296,14 +293,12 @@ export function initSubscribers(context: vscode.ExtensionContext, theProvider: I
     ZoweLogger.trace("shared.init.initSubscribers called.");
     const theTreeView = theProvider.getTreeView();
     context.subscriptions.push(theTreeView);
-    if (!globals.ISTHEIA) {
-        theTreeView.onDidCollapseElement(async (e) => {
-            await theProvider.flipState(e.element, false);
-        });
-        theTreeView.onDidExpandElement(async (e) => {
-            await theProvider.flipState(e.element, true);
-        });
-    }
+    theTreeView.onDidCollapseElement(async (e) => {
+        await theProvider.flipState(e.element, false);
+    });
+    theTreeView.onDidExpandElement(async (e) => {
+        await theProvider.flipState(e.element, true);
+    });
 }
 
 /**
