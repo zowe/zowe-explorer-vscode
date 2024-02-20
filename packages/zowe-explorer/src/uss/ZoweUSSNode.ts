@@ -16,7 +16,7 @@ import * as path from "path";
 import { Gui, IZoweUSSTreeNode, ZoweTreeNode, Types, Validation, MainframeInteraction, ZosEncoding } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
-import { errorHandling, fallbackProfileName, syncSessionNode } from "../utils/ProfilesUtils";
+import { errorHandling, getSessionLabel, syncSessionNode } from "../utils/ProfilesUtils";
 import { getIconByNode } from "../generators/icons/index";
 import { injectAdditionalDataToTooltip } from "../uss/utils";
 import * as contextually from "../shared/context";
@@ -102,7 +102,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         if (opts.label !== vscode.l10n.t("Favorites")) {
             this.resourceUri = vscode.Uri.from({
                 scheme: "zowe-uss",
-                path: `/${this.profile?.name ?? fallbackProfileName(this)}${this.fullPath}`,
+                path: `/${getSessionLabel(this)}${this.fullPath}`,
             });
             if (isSession) {
                 UssFSProvider.instance.createDirectory(this.resourceUri);
@@ -301,16 +301,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
 
     public get openedDocumentInstance(): vscode.TextDocument {
         ZoweLogger.trace("ZoweUSSNode.openedDocumentInstance called.");
-        const openedTextDocuments = vscode.workspace.textDocuments;
-        const currentFilePath = this.getUSSDocumentFilePath();
-
-        for (const document of openedTextDocuments) {
-            if (document.fileName === currentFilePath) {
-                return document;
-            }
-        }
-
-        return null;
+        return vscode.workspace.textDocuments.find((doc) => doc.uri === this.resourceUri);
     }
 
     private renameChild(parentUri: vscode.Uri): void {
@@ -499,6 +490,21 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      */
     public async openUSS(_download: boolean, _previewFile: boolean, ussFileProvider: Types.IZoweUSSTreeType): Promise<void> {
         ZoweLogger.trace("ZoweUSSNode.openUSS called.");
+        const errorMsg = vscode.l10n.t("open() called from invalid node.");
+        switch (true) {
+            // For opening favorited and non-favorited files
+            case this.getParent().contextValue === globals.FAV_PROFILE_CONTEXT:
+                break;
+            case contextually.isUssSession(this.getParent()):
+                break;
+            // Handle file path for files in directories and favorited directories
+            case contextually.isUssDirectory(this.getParent()):
+                break;
+            default:
+                Gui.errorMessage(errorMsg);
+                throw Error(errorMsg);
+        }
+
         await ussFileProvider.checkCurrentProfile(this);
 
         if (Profiles.getInstance().validProfile !== Validation.ValidationType.INVALID) {
@@ -506,8 +512,9 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 // Add document name to recently-opened files
                 ussFileProvider.addFileHistory(`[${this.getProfile().name}]: ${this.fullPath}`);
                 ussFileProvider.getTreeView().reveal(this, { select: true, focus: true, expand: false });
-
+                const statusMsg = Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Downloading USS file..."));
                 await this.initializeFileOpening(this.resourceUri);
+                statusMsg.dispose();
             } catch (err) {
                 await errorHandling(err, this.getProfileName());
                 throw err;
@@ -562,10 +569,8 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         }
 
         try {
-            const statusMsg = Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Downloading USS file..."));
             await vscode.commands.executeCommand("vscode.open", uri);
             this.downloaded = true;
-            statusMsg.dispose();
         } catch (err) {
             ZoweLogger.warn(err);
         }

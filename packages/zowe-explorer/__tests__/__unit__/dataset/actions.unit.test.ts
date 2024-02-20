@@ -70,10 +70,12 @@ function createGlobalMocks() {
         testFavoritesNode: createDatasetFavoritesNode(),
         testDatasetTree: null,
         getContentsSpy: null,
+        fspDelete: jest.spyOn(DatasetFSProvider.prototype, "delete").mockImplementation(),
         statusBarMsgSpy: null,
         mvsApi: null,
         mockShowWarningMessage: jest.fn(),
     };
+    newMocks.fspDelete.mockClear();
 
     newMocks.profileInstance = createInstanceOfProfile(newMocks.imperativeProfile);
     newMocks.datasetSessionNode = createDatasetSessionNode(newMocks.session, newMocks.imperativeProfile);
@@ -658,7 +660,7 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
 
     it("Checking common PS dataset deletion", async () => {
         globals.defineGlobals("");
-        createGlobalMocks();
+        const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         const node = new ZoweDatasetNode({
@@ -668,9 +670,8 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
             profile: blockMocks.imperativeProfile,
         });
 
-        const deleteSpy = jest.spyOn(DatasetFSProvider.instance, "delete").mockImplementation();
         await dsActions.deleteDataset(node, blockMocks.testDatasetTree);
-        expect(deleteSpy).toHaveBeenCalledWith(node.resourceUri);
+        expect(globalMocks.fspDelete).toHaveBeenCalledWith(node.resourceUri, { recursive: false });
     });
     it("Checking common PS dataset deletion with Unverified profile", async () => {
         globals.defineGlobals("");
@@ -698,7 +699,7 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Delete" as any);
         const deleteSpy = jest.spyOn(DatasetFSProvider.instance, "delete").mockImplementation();
         await dsActions.deleteDataset(node, blockMocks.testDatasetTree);
-        expect(deleteSpy).toHaveBeenCalledWith(node.resourceUri);
+        expect(deleteSpy).toHaveBeenCalledWith(node.resourceUri, { recursive: false });
     });
     it("Checking common PS dataset deletion with not existing local file", async () => {
         globals.defineGlobals("");
@@ -715,7 +716,7 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Delete" as any);
         const deleteSpy = jest.spyOn(DatasetFSProvider.instance, "delete").mockImplementation();
         await dsActions.deleteDataset(node, blockMocks.testDatasetTree);
-        expect(deleteSpy).toHaveBeenCalledWith(node.resourceUri);
+        expect(deleteSpy).toHaveBeenCalledWith(node.resourceUri, { recursive: false });
     });
     it("Checking common PS dataset failed deletion attempt due to absence on remote", async () => {
         globals.defineGlobals("");
@@ -731,7 +732,7 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Delete" as any);
         jest.spyOn(DatasetFSProvider.instance, "delete").mockRejectedValueOnce(Error("not found"));
-        await expect(dsActions.deleteDataset(node, blockMocks.testDatasetTree)).rejects.toEqual(Error("not found"));
+        await expect(dsActions.deleteDataset(node, blockMocks.testDatasetTree)).rejects.toThrow("not found");
         expect(mocked(Gui.showMessage)).toHaveBeenCalledWith("Unable to find file " + node.label);
     });
     it("Checking common PS dataset failed deletion attempt", async () => {
@@ -748,7 +749,7 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Delete" as any);
         jest.spyOn(DatasetFSProvider.instance, "delete").mockRejectedValueOnce(Error(""));
-        await expect(dsActions.deleteDataset(node, blockMocks.testDatasetTree)).rejects.toEqual(Error(""));
+        await expect(dsActions.deleteDataset(node, blockMocks.testDatasetTree)).rejects.toThrow("");
         expect(mocked(Gui.errorMessage)).toBeCalledWith("Error");
     });
     it("Checking Favorite PDS dataset deletion", async () => {
@@ -775,7 +776,7 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
 
         await dsActions.deleteDataset(node, blockMocks.testDatasetTree);
 
-        expect(deleteSpy).toHaveBeenCalledWith(node.resourceUri);
+        expect(deleteSpy).toHaveBeenCalledWith(node.resourceUri, { recursive: false });
         expect(blockMocks.testDatasetTree.removeFavorite).toHaveBeenCalledWith(node);
     });
     it("Checking Favorite PDS Member deletion", async () => {
@@ -795,7 +796,7 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
         const deleteSpy = jest.spyOn(DatasetFSProvider.instance, "delete").mockImplementation();
 
         await dsActions.deleteDataset(child, blockMocks.testDatasetTree);
-        expect(deleteSpy).toHaveBeenCalledWith(child.resourceUri);
+        expect(deleteSpy).toHaveBeenCalledWith(child.resourceUri, { recursive: false });
         expect(blockMocks.testDatasetTree.removeFavorite).toBeCalledWith(child);
     });
     it("Checking Favorite PS dataset deletion", async () => {
@@ -824,7 +825,7 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Delete" as any);
         const deleteSpy = jest.spyOn(DatasetFSProvider.instance, "delete").mockImplementation();
         await dsActions.deleteDataset(child, blockMocks.testDatasetTree);
-        expect(deleteSpy).toHaveBeenCalledWith(child.resourceUri);
+        expect(deleteSpy).toHaveBeenCalledWith(child.resourceUri, { recursive: false });
         expect(blockMocks.testDatasetTree.removeFavorite).toHaveBeenCalledWith(child);
     });
     it("Checking incorrect dataset failed deletion attempt", async () => {
@@ -848,7 +849,7 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Delete" as any);
         const deleteSpy = jest.spyOn(DatasetFSProvider.instance, "delete").mockImplementation();
         deleteSpy.mockClear();
-        await expect(dsActions.deleteDataset(child, blockMocks.testDatasetTree)).rejects.toEqual(Error("Cannot delete, item invalid."));
+        await expect(dsActions.deleteDataset(child, blockMocks.testDatasetTree)).rejects.toThrow("Cannot delete, item invalid.");
         expect(deleteSpy).not.toHaveBeenCalled();
     });
 });
@@ -1447,6 +1448,7 @@ describe("Dataset Actions Unit Tests - Function copyDataSets", () => {
             fn();
             return Promise.resolve(params);
         });
+        jest.spyOn(DatasetFSProvider.instance, "stat").mockReturnValue({ etag: "123ABC" } as any);
 
         await dsActions.copyDataSets(dsNode, null, blockMocks.testDatasetTree);
         await expect(mocked(Gui.errorMessage)).not.toHaveBeenCalled();

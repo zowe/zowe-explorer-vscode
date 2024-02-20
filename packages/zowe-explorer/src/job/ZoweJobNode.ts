@@ -16,7 +16,7 @@ import * as contextually from "../shared/context";
 import * as path from "path";
 import { IZoweJobTreeNode, Sorting, ZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
-import { errorHandling, fallbackProfileName, syncSessionNode } from "../utils/ProfilesUtils";
+import { errorHandling, getSessionLabel, syncSessionNode } from "../utils/ProfilesUtils";
 import { getIconByNode } from "../generators/icons";
 import { JOB_SORT_KEYS } from "./utils";
 import { Profiles } from "../Profiles";
@@ -61,14 +61,15 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
         this.tooltip = opts.label;
         this.job = opts.job ?? null; // null instead of undefined to satisfy isZoweJobTreeNode
 
-        const isFavorites = opts.label === "Favorites";
-        const profileName = opts.profile?.name ?? fallbackProfileName(this);
+        const isFavoritesNode = opts.label === "Favorites";
+        const sessionName = getSessionLabel(this);
 
-        if ((opts.parentNode == null || opts.parentNode.getLabel() === "Favorites") && !isFavorites) {
+        if (!isFavoritesNode && this.job == null) {
+            // non-favorited, session node
             this.contextValue = globals.JOBS_SESSION_CONTEXT;
             this.resourceUri = vscode.Uri.from({
                 scheme: "zowe-jobs",
-                path: `/${profileName}/`,
+                path: `/${sessionName}/`,
             });
             JobFSProvider.instance.createDirectory(this.resourceUri, { isFilter: true });
         }
@@ -93,10 +94,10 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
             if (!globals.ISTHEIA) {
                 this.id = this.label as string;
             }
-        } else if (!isFavorites && opts.profile != null && this.job != null) {
+        } else if (this.job != null) {
             this.resourceUri = vscode.Uri.from({
                 scheme: "zowe-jobs",
-                path: `/${profileName}/${this.job.jobid}`,
+                path: `/${sessionName}/${this.job.jobid}`,
             });
         }
     }

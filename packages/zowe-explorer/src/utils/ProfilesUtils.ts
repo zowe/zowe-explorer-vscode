@@ -113,7 +113,7 @@ export async function errorHandling(errorDetails: Error | string, label?: string
     Gui.errorMessage(moreInfo + errorDetails.toString().replace(/\n/g, " | "));
 }
 
-export function fallbackProfileName(node: IZoweTreeNode): string {
+export function getSessionLabel(node: IZoweTreeNode): string {
     return (contextually.isSession(node) ? node : node.getSessionNode()).label as string;
 }
 

@@ -17,7 +17,8 @@ import * as ussActions from "../../../src/uss/actions";
 import * as sharedExtension from "../../../src/shared/init";
 import { initUSSProvider } from "../../../src/uss/init";
 import { Profiles } from "../../../src/Profiles";
-import { IJestIt, ITestContext, processSubscriptions, spyOnSubscriptions } from "../../__common__/testUtils";
+import { IJestIt, ITestContext, processSubscriptions } from "../../__common__/testUtils";
+import { UssFSProvider } from "../../../src/uss/UssFSProvider";
 
 describe("Test src/uss/extension", () => {
     describe("initUSSProvider", () => {
@@ -70,7 +71,7 @@ describe("Test src/uss/extension", () => {
                 name: "zowe.uss.refreshUSS",
                 mock: [
                     { spy: jest.spyOn(contextuals, "isDocument"), arg: [test.value], ret: true },
-                    { spy: jest.spyOn(test.value, "refreshUSS"), arg: [] },
+                    { spy: jest.spyOn(contextuals, "isUssDirectory"), arg: [test.value], ret: false },
                 ],
             },
             {
@@ -114,11 +115,10 @@ describe("Test src/uss/extension", () => {
             {
                 name: "zowe.uss.deleteNode",
                 mock: [
-                    { spy: jest.spyOn(contextuals, "isDocument"), arg: [test.value], ret: false },
+                    { spy: jest.spyOn(contextuals, "isDocument"), arg: [test.value], ret: true },
                     { spy: jest.spyOn(contextuals, "isUssDirectory"), arg: [test.value], ret: true },
-                    { spy: jest.spyOn(ussActions, "deleteUSSFilesPrompt"), arg: [[test.value]], ret: true },
-                    { spy: jest.spyOn(test.value, "getUSSDocumentFilePath"), arg: [], ret: "dummy" },
-                    { spy: jest.spyOn(test.value, "deleteUSSNode"), arg: [ussFileProvider, "dummy", true] },
+                    { spy: jest.spyOn(ussActions, "deleteUSSFilesPrompt"), arg: [[test.value]], ret: false },
+                    { spy: jest.spyOn(test.value, "deleteUSSNode"), arg: [ussFileProvider, ""], ret: true },
                 ],
             },
             {
@@ -166,7 +166,7 @@ describe("Test src/uss/extension", () => {
                     {
                         spy: jest.spyOn(Profiles, "getInstance"),
                         arg: [],
-                        ret: { enableValidation: jest.fn() },
+                        ret: { enableValidation: jest.fn(), disableValidation: jest.fn() },
                     },
                 ],
             },
@@ -213,7 +213,6 @@ describe("Test src/uss/extension", () => {
             Object.defineProperty(vscode.workspace, "onDidChangeConfiguration", { value: onDidChangeConfiguration });
 
             spyCreateUssTree.mockResolvedValue(ussFileProvider as any);
-            spyOnSubscriptions(commands);
             jest.spyOn(vscode.workspace, "onDidCloseTextDocument").mockImplementation(ussFileProvider.onDidCloseTextDocument);
             await initUSSProvider(test.context);
         });
@@ -224,10 +223,6 @@ describe("Test src/uss/extension", () => {
             jest.restoreAllMocks();
         });
 
-        jest.spyOn(Profiles, "getInstance").mockReturnValue({
-            enableValidation: jest.fn(),
-            disableValidation: jest.fn(),
-        } as any);
         processSubscriptions(commands, test);
 
         it("should not initialize if it is unable to create the USS tree", async () => {

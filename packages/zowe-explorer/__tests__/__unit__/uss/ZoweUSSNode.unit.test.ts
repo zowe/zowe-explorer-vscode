@@ -42,8 +42,8 @@ async function createGlobalMocks() {
         ussFile: jest.fn(),
         Download: jest.fn(),
         mockIsDirtyInEditor: jest.fn(),
-        mockTextDocument: { fileName: `/test/path/temp/_U_/sestest/test/node`, isDirty: true },
-        mockTextDocuments: [],
+        mockTextDocument: { fileName: `/test/path/temp/_U_/sestest/test/node`, isDirty: true } as vscode.TextDocument,
+        mockTextDocuments: new Array<vscode.TextDocument>(),
         openedDocumentInstance: jest.fn(),
         onDidSaveTextDocument: jest.fn(),
         showErrorMessage: jest.fn(),
@@ -51,7 +51,7 @@ async function createGlobalMocks() {
         showInformationMessage: jest.fn(),
         getConfiguration: jest.fn(),
         downloadUSSFile: jest.fn(),
-        setStatusBarMessage: jest.fn().mockReturnValue({ dispose: jest.fn() }),
+        setStatusBarMessage: jest.spyOn(Gui, "setStatusBarMessage").mockReturnValue({ dispose: jest.fn() }),
         showInputBox: jest.fn(),
         mockExecuteCommand: jest.fn(),
         mockLoadNamedProfile: jest.fn(),
@@ -96,10 +96,6 @@ async function createGlobalMocks() {
     globalMocks.getUssApiMock.mockReturnValue(globalMocks.ussApi);
     ZoweExplorerApiRegister.getUssApi = globalMocks.getUssApiMock.bind(ZoweExplorerApiRegister);
 
-    Object.defineProperty(Gui, "setStatusBarMessage", {
-        value: globalMocks.setStatusBarMessage,
-        configurable: true,
-    });
     Object.defineProperty(vscode.workspace, "onDidSaveTextDocument", {
         value: globalMocks.onDidSaveTextDocument,
         configurable: true,
@@ -886,6 +882,7 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
             }),
             initializeFileOpening: jest.spyOn(ZoweUSSNode.prototype, "initializeFileOpening").mockImplementation(),
         };
+        newMocks.initializeFileOpening.mockClear();
         newMocks.testUSSTree = createUSSTree([], [newMocks.ussNode], createTreeView());
         newMocks.dsNode = new ZoweUSSNode({
             label: "testSess",
@@ -990,9 +987,9 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
 
         // Tests that correct file is downloaded
         await node.openUSS(false, true, blockMocks.testUSSTree);
-        expect(globalMocks.setStatusBarMessage).toBeCalledWith("$(sync~spin) Downloading USS file...");
         // Tests that correct URI is passed to initializeFileOpening
         expect(blockMocks.initializeFileOpening).toHaveBeenCalledWith(node.resourceUri);
+        expect(globalMocks.setStatusBarMessage).toHaveBeenCalledWith("$(sync~spin) Downloading USS file...");
     });
 
     it("Tests that node.openUSS() fails when an error is thrown", async () => {
@@ -1123,6 +1120,7 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
+        const fetchFileMock = jest.spyOn(UssFSProvider.instance, "fetchFileAtUri");
         const badParent = new ZoweUSSNode({
             label: "parent",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
@@ -1137,7 +1135,7 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
             // Prevent exception from failing test
         }
 
-        expect(blockMocks.fetchFileAtUri.mock.calls.length).toBe(0);
+        expect(blockMocks.initializeFileOpening.mock.calls.length).toBe(0);
         expect(globalMocks.showErrorMessage.mock.calls.length).toBe(2);
         expect(globalMocks.showErrorMessage.mock.calls[0][0]).toBe("open() called from invalid node.");
         expect(globalMocks.showErrorMessage.mock.calls[1][0]).toBe("Error: open() called from invalid node.");
@@ -1213,12 +1211,13 @@ describe("ZoweUSSNode Unit Tests - Function node.openedDocumentInstance()", () =
             profile: globalMocks.profileOne,
         });
         testNode.fullPath = "test/node";
+        globalMocks.mockTextDocuments.push({ uri: testNode.resourceUri ?? vscode.Uri.parse("zowe-ds:/test/node") } as vscode.TextDocument);
 
         const returnedDoc = testNode.openedDocumentInstance;
         expect(returnedDoc).toEqual(globalMocks.mockTextDocument);
     });
 
-    it("Tests that node.openedDocumentInstance() returns null if the file is not open", async () => {
+    it("Tests that node.openedDocumentInstance() returns undefined if the file is not open", async () => {
         const globalMocks = await createGlobalMocks();
 
         globalMocks.mockTextDocuments.pop();
@@ -1240,7 +1239,7 @@ describe("ZoweUSSNode Unit Tests - Function node.openedDocumentInstance()", () =
         testNode.fullPath = "test/node";
 
         const returnedDoc = testNode.openedDocumentInstance;
-        expect(returnedDoc).toBeNull();
+        expect(returnedDoc).toBeUndefined();
     });
 });
 

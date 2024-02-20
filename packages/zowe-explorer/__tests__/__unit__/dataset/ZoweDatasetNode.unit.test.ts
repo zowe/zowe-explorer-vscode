@@ -141,7 +141,6 @@ describe("ZoweDatasetNode Unit Tests - Function node.openDs()", () => {
         });
 
         await node.openDs(false, true, blockMocks.testDatasetTree);
-
         expect(mocked(vscode.commands.executeCommand)).toHaveBeenCalledWith("vscode.open", node.resourceUri);
     });
 

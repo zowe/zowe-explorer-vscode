@@ -17,7 +17,7 @@ import * as jobActions from "../../../src/job/actions";
 import * as sharedExtension from "../../../src/shared/init";
 import { initJobsProvider } from "../../../src/job/init";
 import { Profiles } from "../../../src/Profiles";
-import { IJestIt, ITestContext, processSubscriptions, spyOnSubscriptions } from "../../__common__/testUtils";
+import { IJestIt, ITestContext, processSubscriptions } from "../../__common__/testUtils";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
 import { createISession, createIProfile } from "../../../__mocks__/mockCreators/shared";
@@ -177,7 +177,7 @@ describe("Test src/jobs/extension", () => {
                     {
                         spy: jest.spyOn(Profiles, "getInstance"),
                         arg: [],
-                        ret: { enableValidation: jest.fn() },
+                        ret: { enableValidation: jest.fn(), disableValidation: jest.fn() },
                     },
                 ],
             },
@@ -235,7 +235,6 @@ describe("Test src/jobs/extension", () => {
             });
 
             spyCreateJobsTree.mockResolvedValue(jobsProvider as any);
-            spyOnSubscriptions(commands);
             jest.spyOn(vscode.workspace, "onDidCloseTextDocument").mockImplementation(jobsProvider.onDidCloseTextDocument);
             await initJobsProvider(test.context);
         });

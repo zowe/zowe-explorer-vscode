@@ -23,7 +23,6 @@ import { Profiles } from "../../src/Profiles";
 import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
 import { createGetConfigMock, createInstanceOfProfileInfo, createIProfile, createTreeView } from "../../__mocks__/mockCreators/shared";
 import { ZoweUSSNode } from "../../src/uss/ZoweUSSNode";
-import { getSelectedNodeList } from "../../src/shared/utils";
 import { SettingsConfig } from "../../src/utils/SettingsConfig";
 import { ZoweExplorerExtender } from "../../src/ZoweExplorerExtender";
 import { DatasetTree } from "../../src/dataset/DatasetTree";
@@ -31,7 +30,6 @@ import { USSTree } from "../../src/uss/USSTree";
 import { ZoweSaveQueue } from "../../src/abstract/ZoweSaveQueue";
 import { ZoweLocalStorage } from "../../src/utils/ZoweLocalStorage";
 jest.mock("../../src/utils/LoggerUtils");
-import { ProfilesUtils } from "../../src/utils/ProfilesUtils";
 
 jest.mock("vscode");
 jest.mock("fs");

@@ -17,7 +17,7 @@ import * as dsActions from "../../../src/dataset/actions";
 import * as sharedExtension from "../../../src/shared/init";
 import { initDatasetProvider } from "../../../src/dataset/init";
 import { Profiles } from "../../../src/Profiles";
-import { IJestIt, ITestContext, processSubscriptions, spyOnSubscriptions } from "../../__common__/testUtils";
+import { IJestIt, ITestContext, processSubscriptions } from "../../__common__/testUtils";
 
 describe("Test src/dataset/extension", () => {
     describe("initDatasetProvider", () => {
@@ -240,7 +240,7 @@ describe("Test src/dataset/extension", () => {
                     {
                         spy: jest.spyOn(Profiles, "getInstance"),
                         arg: [],
-                        ret: { enableValidation: jest.fn() },
+                        ret: { enableValidation: jest.fn(), disableValidation: jest.fn() },
                     },
                 ],
             },
@@ -283,7 +283,6 @@ describe("Test src/dataset/extension", () => {
             Object.defineProperty(vscode.workspace, "onDidChangeConfiguration", { value: onDidChangeConfiguration });
 
             spyCreateDatasetTree.mockResolvedValue(dsProvider as any);
-            spyOnSubscriptions(commands);
             jest.spyOn(vscode.workspace, "onDidCloseTextDocument").mockImplementation(dsProvider.onDidCloseTextDocument);
             await initDatasetProvider(test.context);
         });
@@ -294,10 +293,6 @@ describe("Test src/dataset/extension", () => {
             jest.restoreAllMocks();
         });
 
-        jest.spyOn(Profiles, "getInstance").mockReturnValue({
-            enableValidation: jest.fn(),
-            disableValidation: jest.fn(),
-        } as any);
         processSubscriptions(commands, test);
 
         it("should not initialize if it is unable to create the dataset tree", async () => {

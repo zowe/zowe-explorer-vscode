@@ -90,6 +90,7 @@ function createGlobalMocks() {
     Object.defineProperty(vscode.window, "showQuickPick", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "createQuickPick", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showInputBox", { value: jest.fn(), configurable: true });
+    jest.spyOn(Gui, "showInputBox").mockImplementation();
     Object.defineProperty(zowe, "Rename", { value: jest.fn(), configurable: true });
     Object.defineProperty(zowe.Rename, "dataSet", { value: jest.fn(), configurable: true });
     Object.defineProperty(zowe.Rename, "dataSetMember", { value: jest.fn(), configurable: true });
@@ -278,7 +279,11 @@ describe("Dataset Tree Unit tests - Function initializeFavChildNodeForProfile", 
         });
         node.command = { command: "vscode.open", title: "", arguments: [node.resourceUri] };
 
-        const favChildNodeForProfile = await testTree.initializeFavChildNodeForProfile("BRTVS99.PS", globals.DS_DS_CONTEXT, blockMocks.datasetSessionNode);
+        const favChildNodeForProfile = await testTree.initializeFavChildNodeForProfile(
+            "BRTVS99.PS",
+            globals.DS_DS_CONTEXT,
+            blockMocks.datasetSessionNode
+        );
 
         expect(favChildNodeForProfile).toEqual(node);
     });
@@ -1551,7 +1556,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
 
         globalMocks.isTheia.mockReturnValue(true);
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce(new utils.FilterDescriptor("\uFF0B " + "Create a new filter"));
-        mocked(vscode.window.showInputBox).mockResolvedValueOnce("HLQ.PROD1.STUFF");
+        mocked(Gui.showInputBox).mockResolvedValueOnce("HLQ.PROD1.STUFF");
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
         const testTree = new DatasetTree();
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
@@ -1567,7 +1572,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
 
         globalMocks.isTheia.mockReturnValue(true);
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce(new utils.FilterDescriptor("\uFF0B " + "Create a new filter"));
-        mocked(vscode.window.showInputBox).mockResolvedValueOnce(undefined);
+        mocked(Gui.showInputBox).mockResolvedValueOnce(undefined);
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
         const testTree = new DatasetTree();
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
@@ -1583,7 +1588,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         globalMocks.isTheia.mockReturnValue(true);
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce(new utils.FilterDescriptor("HLQ.PROD1.STUFF"));
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
-        mocked(vscode.window.showInputBox).mockResolvedValueOnce("HLQ.PROD1.STUFF");
+        mocked(Gui.showInputBox).mockResolvedValueOnce("HLQ.PROD1.STUFF");
         const testTree = new DatasetTree();
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
         testTree.addSearchHistory("test");
@@ -1640,7 +1645,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         const blockMocks = await createBlockMocks(globalMocks);
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce(new utils.FilterDescriptor("\uFF0B " + "Create a new filter"));
-        mocked(vscode.window.showInputBox).mockResolvedValueOnce("HLQ.PROD1.STUFF");
+        mocked(Gui.showInputBox).mockResolvedValueOnce("HLQ.PROD1.STUFF");
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
         const testTree = new DatasetTree();
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
@@ -1665,7 +1670,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         const blockMocks = await createBlockMocks(globalMocks);
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce(new utils.FilterDescriptor("\uFF0B " + "Create a new filter"));
-        mocked(vscode.window.showInputBox).mockResolvedValueOnce("HLQ.PROD(STUF*),HLQ.PROD1*");
+        mocked(Gui.showInputBox).mockResolvedValueOnce("HLQ.PROD(STUF*),HLQ.PROD1*");
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
         const testTree = new DatasetTree();
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
@@ -1693,7 +1698,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         const blockMocks = await createBlockMocks(globalMocks);
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce(new utils.FilterDescriptor("\uFF0B " + "Create a new filter"));
-        mocked(vscode.window.showInputBox).mockResolvedValueOnce("HLQ.PROD1(MEMBER)");
+        mocked(Gui.showInputBox).mockResolvedValueOnce("HLQ.PROD1(MEMBER)");
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
         const testTree = new DatasetTree();
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
@@ -1719,7 +1724,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         });
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce(new utils.FilterDescriptor("\uFF0B " + "Create a new filter"));
-        mocked(vscode.window.showInputBox).mockResolvedValueOnce("HLQ.PROD1.STUFF");
+        mocked(Gui.showInputBox).mockResolvedValueOnce("HLQ.PROD1.STUFF");
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
         const testTree = new DatasetTree();
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
@@ -1752,7 +1757,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
             createQuickPickContent("HLQ.PROD1.STUFF", [quickPickItem], blockMocks.qpPlaceholder)
         );
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce(quickPickItem);
-        mocked(vscode.window.showInputBox).mockResolvedValueOnce("HLQ.PROD1.STUFF");
+        mocked(Gui.showInputBox).mockResolvedValueOnce("HLQ.PROD1.STUFF");
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
         const resolveQuickPickSpy = jest.spyOn(Gui, "resolveQuickPick");
         resolveQuickPickSpy.mockResolvedValueOnce(quickPickItem);
@@ -2273,13 +2278,13 @@ describe("Dataset Tree Unit Tests - Function openItemFromPath", () => {
             label: "TEST.DS",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             parentNode: blockMocks.datasetSessionNode,
+            contextOverride: globals.DS_DS_CONTEXT
         });
         testTree.mSessionNodes[1].children.push(node);
         testTree.mSessionNodes[1].pattern = "test";
         jest.spyOn(testTree.mSessionNodes[1], "getChildren").mockReturnValue(Promise.resolve([node]));
 
         await testTree.openItemFromPath(`[${blockMocks.datasetSessionNode.label}]: ${node.label}`, blockMocks.datasetSessionNode);
-
         expect(testTree.getSearchHistory()).toEqual([node.label]);
     });
 
@@ -2302,7 +2307,6 @@ describe("Dataset Tree Unit Tests - Function openItemFromPath", () => {
         jest.spyOn(parent, "getChildren").mockReturnValue(Promise.resolve([child]));
 
         await testTree.openItemFromPath(`[${blockMocks.datasetSessionNode.label}]: ${parent.label}(${child.label})`, blockMocks.datasetSessionNode);
-
         expect(testTree.getSearchHistory()).toEqual([`${parent.label}(${child.label})`]);
     });
 });
@@ -2475,11 +2479,10 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
             parentNode: testTree.mSessionNodes[1],
             session: blockMocks.session,
         });
-        const renameDataSetSpy = jest.spyOn(blockMocks.mvsApi, "renameDataSet");
+        const renameDataSetSpy = jest.spyOn((DatasetTree as any).prototype, "renameDataSet");
 
         await testTree.rename(node);
-
-        expect(renameDataSetSpy).toHaveBeenLastCalledWith("HLQ.TEST.RENAME.NODE", "HLQ.TEST.RENAME.NODE.NEW");
+        expect(renameDataSetSpy).toHaveBeenLastCalledWith(node);
     });
 
     it("Checking function with PS Dataset given lowercase name", async () => {
@@ -2497,11 +2500,10 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
             parentNode: testTree.mSessionNodes[1],
             session: blockMocks.session,
         });
-        const renameDataSetSpy = jest.spyOn(blockMocks.mvsApi, "renameDataSet");
+        const renameDataSetSpy = jest.spyOn((DatasetTree as any).prototype, "renameDataSet");
 
         await testTree.rename(node);
-
-        expect(renameDataSetSpy).toHaveBeenLastCalledWith("HLQ.TEST.RENAME.NODE", "HLQ.TEST.RENAME.NODE.NEW");
+        expect(renameDataSetSpy).toHaveBeenLastCalledWith(node);
     });
 
     it("Checking function with Favorite PS Dataset", async () => {
@@ -2522,21 +2524,18 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         });
         node.contextValue = "ds_fav";
         testTree.mSessionNodes[1].children.push(node);
-        const renameDataSetSpy = jest.spyOn(blockMocks.mvsApi, "renameDataSet");
+        const renameDataSetSpy = jest.spyOn((DatasetTree as any).prototype, "renameDataSet");
 
         await testTree.rename(node);
-
-        expect(renameDataSetSpy).toHaveBeenLastCalledWith("HLQ.TEST.RENAME.NODE", "HLQ.TEST.RENAME.NODE.NEW");
+        expect(renameDataSetSpy).toHaveBeenLastCalledWith(node);
     });
     it("Checking failed attempt to rename PS Dataset", async () => {
         globals.defineGlobals("");
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         const defaultError = new Error("Default error message");
+        const renameDataSetSpy = jest.spyOn((DatasetTree as any).prototype, "renameDataSet").mockRejectedValueOnce(defaultError);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
-        mocked(zowe.Rename.dataSet).mockImplementation(() => {
-            throw defaultError;
-        });
         mocked(vscode.window.showInputBox).mockResolvedValueOnce("HLQ.TEST.RENAME.NODE.NEW");
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
         const testTree = new DatasetTree();
@@ -2547,7 +2546,6 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
             parentNode: testTree.mSessionNodes[1],
             session: blockMocks.session,
         });
-        const renameDataSetSpy = jest.spyOn(blockMocks.mvsApi, "renameDataSet");
 
         let error;
         try {
@@ -2556,7 +2554,7 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
             error = err;
         }
 
-        expect(renameDataSetSpy).toHaveBeenLastCalledWith("HLQ.TEST.RENAME.NODE", "HLQ.TEST.RENAME.NODE.NEW");
+        expect(renameDataSetSpy).toHaveBeenLastCalledWith(node);
         expect(error).toBe(defaultError);
     });
     it("Checking function with PDS Member", async () => {
@@ -2611,21 +2609,16 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         favProfileNode.children.push(favParent);
         testTree.mFavorites.push(favProfileNode);
 
-        const renameDataSetMemberSpy = jest.spyOn(blockMocks.mvsApi, "renameDataSetMember");
+        const renameDataSetMemberSpy = jest.spyOn((DatasetTree as any).prototype, "renameDataSetMember");
 
-        const testValidDsName = async (text: string) => {
-            mocked(vscode.window.showInputBox).mockImplementation((options) => {
-                options.validateInput(text);
-                return Promise.resolve(text);
-            });
-            await testTree.rename(child);
-            expect(renameDataSetMemberSpy).toHaveBeenLastCalledWith("HLQ.TEST.RENAME.NODE", "mem1", "MEM2");
-        };
-
-        await testValidDsName("HLQ.TEST.RENAME.NODE");
-
+        mocked(vscode.window.showInputBox).mockImplementation((options) => {
+            options.validateInput("HLQ.TEST.RENAME.NODE");
+            return Promise.resolve("HLQ.TEST.RENAME.NODE");
+        });
         await testTree.rename(child);
+        expect(renameDataSetMemberSpy).toHaveBeenLastCalledWith(child);
     });
+
     it("Checking function with PDS Member given in lowercase", async () => {
         globals.defineGlobals("");
         createGlobalMocks();
@@ -2677,11 +2670,11 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         favParent.children.push(favChild);
         favProfileNode.children.push(favParent);
         testTree.mFavorites.push(favProfileNode);
-        const renameDataSetMemberSpy = jest.spyOn(blockMocks.mvsApi, "renameDataSetMember");
+        const renameDataSetMemberSpy = jest.spyOn((DatasetTree as any).prototype, "renameDataSetMember");
 
         await testTree.rename(child);
 
-        expect(renameDataSetMemberSpy).toHaveBeenLastCalledWith("HLQ.TEST.RENAME.NODE", "mem1", "MEM2");
+        expect(renameDataSetMemberSpy).toHaveBeenLastCalledWith(child);
     });
     it("Checking function with favorite PDS Member", async () => {
         globals.defineGlobals("");
@@ -2737,11 +2730,11 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         favParent.children.push(favChild);
         favProfileNode.children.push(favParent);
         testTree.mFavorites.push(favProfileNode);
-        const renameDataSetMemberSpy = jest.spyOn(blockMocks.mvsApi, "renameDataSetMember");
+        const renameDataSetMemberSpy = jest.spyOn((DatasetTree as any).prototype, "renameDataSetMember");
 
         await testTree.rename(favChild);
 
-        expect(renameDataSetMemberSpy).toHaveBeenLastCalledWith("HLQ.TEST.RENAME.NODE", "mem1", "MEM2");
+        expect(renameDataSetMemberSpy).toHaveBeenLastCalledWith(favChild);
     });
     it("Checking failed attempt to rename PDS Member", async () => {
         globals.defineGlobals("");
@@ -2749,7 +2742,8 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         const blockMocks = createBlockMocks();
         const defaultError = new Error("Default error message");
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
-        mocked(zowe.Rename.dataSetMember).mockImplementation(() => {
+        const renameDataSetMemberSpy = jest.spyOn((DatasetTree as any).prototype, "renameDataSetMember");
+        renameDataSetMemberSpy.mockImplementation(() => {
             throw defaultError;
         });
         mocked(vscode.window.showInputBox).mockResolvedValueOnce("MEM2");
@@ -2769,7 +2763,6 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
             session: blockMocks.session,
         });
         child.contextValue = globals.DS_MEMBER_CONTEXT;
-        const renameDataSetMemberSpy = jest.spyOn(blockMocks.mvsApi, "renameDataSetMember");
 
         let error;
         try {
@@ -2778,7 +2771,7 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
             error = err;
         }
 
-        expect(renameDataSetMemberSpy).toHaveBeenLastCalledWith("HLQ.TEST.RENAME.NODE", "mem1", "MEM2");
+        expect(renameDataSetMemberSpy).toHaveBeenLastCalledWith(child);
         expect(error).toBe(defaultError);
     });
     it("Checking validate validateDataSetName util function successfully execution", async () => {
@@ -2808,7 +2801,7 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
             parentNode: testTree.mSessionNodes[1],
             session: blockMocks.session,
         });
-        const renameDataSetSpy = jest.spyOn(blockMocks.mvsApi, "renameDataSet");
+        const renameDataSetSpy = jest.spyOn((DatasetTree as any).prototype, "renameDataSet");
         const testValidDsName = async (text: string) => {
             mocked(vscode.window.showInputBox).mockImplementation((options) => {
                 options.validateInput(text);
@@ -2816,7 +2809,7 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
             });
             const oldName = node.label;
             await testTree.rename(node);
-            expect(renameDataSetSpy).toHaveBeenLastCalledWith(oldName, text);
+            expect(renameDataSetSpy).toHaveBeenLastCalledWith(node);
         };
 
         await testValidDsName("HLQ.TEST.RENAME.NODE.NEW.TEST");

@@ -12,7 +12,7 @@
 import * as zowe from "@zowe/cli";
 import * as vscode from "vscode";
 import * as globals from "../globals";
-import { errorHandling, fallbackProfileName } from "../utils/ProfilesUtils";
+import { errorHandling, getSessionLabel } from "../utils/ProfilesUtils";
 import {
     Sorting,
     Types,
@@ -94,18 +94,25 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         if (!globals.ISTHEIA && contextually.isSession(this)) {
             this.id = this.label as string;
         }
+
         if (this.label !== vscode.l10n.t("Favorites")) {
+            const sessionLabel = getSessionLabel(this);
             if (this.getParent() == null) {
                 this.resourceUri = vscode.Uri.from({
                     scheme: "zowe-ds",
-                    path: `/${this.profile?.name ?? fallbackProfileName(this)}/`,
+                    path: `/${sessionLabel}/`,
                 });
                 DatasetFSProvider.instance.createDirectory(this.resourceUri, this.pattern);
             } else if (this.contextValue === globals.DS_MEMBER_CONTEXT) {
                 this.resourceUri = vscode.Uri.from({
                     scheme: "zowe-ds",
-                    path: `/${this.profile?.name ?? fallbackProfileName(this)}/${this.getParent().label as string}/${this.label as string}`,
+                    path: `/${sessionLabel}/${this.getParent().label as string}/${this.label as string}`,
                 });
+                this.command = {
+                    command: "vscode.open",
+                    title: "",
+                    arguments: [this.resourceUri],
+                };
             } else if (
                 this.contextValue === globals.DS_DS_CONTEXT ||
                 this.contextValue === globals.DS_PDS_CONTEXT ||
@@ -113,8 +120,15 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             ) {
                 this.resourceUri = vscode.Uri.from({
                     scheme: "zowe-ds",
-                    path: `/${this.profile?.name ?? fallbackProfileName(this)}/${this.label as string}`,
+                    path: `/${sessionLabel}/${this.label as string}`,
                 });
+                if (this.contextValue === globals.DS_DS_CONTEXT) {
+                    this.command = {
+                        command: "vscode.open",
+                        title: "",
+                        arguments: [this.resourceUri],
+                    };
+                }
             }
         }
     }
