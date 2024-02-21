@@ -27,7 +27,7 @@ enum MockedValueType {
  * A safer approach to "mocking" the value for a property that cannot be easily mocked using Jest.\
  * Uses TypeScript 5.2's Explicit Resource Management to restore the original value for the given object and property key.
  */
-export class MockedProperty implements Disposable {
+export class MockedProperty {
     #key: PropertyKey;
     #val: any;
     #valType: MockedValueType;
@@ -48,7 +48,7 @@ export class MockedProperty implements Disposable {
         if (object == null) {
             throw new Error("Null or undefined object passed to MockedProperty");
         }
-
+        this.#objRef = object;
         this.#originalDescriptor = descriptor ?? Object.getOwnPropertyDescriptor(object, key);
 
         if (!value) {
@@ -101,5 +101,38 @@ export class MockedProperty implements Disposable {
         }
 
         return this.#val;
+    }
+
+    public get value() {
+        return this.#val;
+    }
+
+    public valueAs<T>() {
+        return this.#val as T;
+    }
+}
+
+export function isMockedProperty(val: any): val is MockedProperty {
+    return "Symbol.dispose" in val;
+}
+
+export class MockCollection {
+    #obj: Record<string, MockedProperty | unknown>;
+
+    constructor(obj: Record<string, unknown>) {
+        this.#obj = obj;
+    }
+
+    [Symbol.dispose](): void {
+        for (const k of Object.keys(this.#obj)) {
+            const property = this.#obj[k];
+            if (isMockedProperty(property)) {
+                property[Symbol.dispose]();
+            }
+        }
+    }
+
+    public dispose() {
+        this[Symbol.dispose]();
     }
 }
