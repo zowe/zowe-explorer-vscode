@@ -98,7 +98,7 @@ describe("ZosmfUssApi", () => {
         } as zowe.imperative.IProfileLoaded;
 
         it("should include profile properties in the built session object", () => {
-            const api = new ZosmfUssApi();
+            const api = new ZoweExplorerZosmf.UssApi();
 
             const transformedProps = { ...exampleProfile.profile, hostname: exampleProfile.profile?.host };
             delete transformedProps["host"];
