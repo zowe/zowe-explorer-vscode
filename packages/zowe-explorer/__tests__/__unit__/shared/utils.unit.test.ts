@@ -844,6 +844,8 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
         expect((await blockMocks.showQuickPick.mock.calls[0][0]).slice(4)).toEqual(encodingHistory.map((x) => ({ label: x })));
         expect(blockMocks.showQuickPick.mock.calls[0][1]).toEqual(expect.objectContaining({ placeHolder: "Current encoding is IBM-1047" }));
         expect(encoding).toEqual({ ...otherEncoding, codepage: encodingHistory[0] });
+
+        con;
     });
 
     it("remembers cached encoding for USS node", async () => {
