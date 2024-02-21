@@ -2,6 +2,14 @@
 
 All notable changes to the "zowe-explorer-api" extension will be documented in this file.
 
+## TBD Release
+
+### New features and enhancements
+
+### Bug fixes
+
+- Fix to restore accessibility to all profiles when default profile has APIML token authentication. [#2111](https://github.com/zowe/vscode-extension-for-zowe/issues/2111)
+
 ## `3.0.0-next.202402142205`
 
 ### New features and enhancements
