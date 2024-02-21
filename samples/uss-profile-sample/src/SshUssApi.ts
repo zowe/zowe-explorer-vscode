@@ -58,6 +58,10 @@ export class SshUssApi implements MainframeInteraction.IUss {
         });
     }
 
+    public uploadFromBuffer(buffer: Buffer, filePath: string, options?: IUploadOptions): Promise<IZosFilesResponse> {
+        throw new Error("uploadFromBuffer is not implemented for the SSH sample API.");
+    }
+
     public async putContent(inputFilePath: string, ussFilePath: string): Promise<IZosFilesResponse> {
         return this.withClient(this.getSession(), async (client) => {
             const response = await client.fastPut(inputFilePath, ussFilePath);
