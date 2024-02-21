@@ -87,6 +87,11 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             this.tooltip = this.fullPath;
         }
         this.etag = opts.etag ? opts.etag : "";
+
+        if (opts.contextOverride) {
+            this.contextValue = opts.contextOverride;
+        }
+
         const icon = getIconByNode(this);
         if (icon) {
             this.iconPath = icon.path;
@@ -131,8 +136,8 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 label: vscode.l10n.t("Use the search button to list USS files"),
                 collapsibleState: vscode.TreeItemCollapsibleState.None,
                 parentNode: this,
+                contextOverride: globals.INFORMATION_CONTEXT,
             });
-            placeholder.iconPath = null;
             placeholder.command = {
                 command: "zowe.placeholderCommand",
                 title: "Placeholder",

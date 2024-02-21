@@ -404,6 +404,7 @@ describe("ZoweJobNode unit tests - Function getChildren", () => {
             label: "Use the search button to display jobs",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             parentNode: globalMocks.testJobNode,
+            contextOverride: globals.INFORMATION_CONTEXT,
         });
         expectedJob.command = {
             command: "zowe.placeholderCommand",

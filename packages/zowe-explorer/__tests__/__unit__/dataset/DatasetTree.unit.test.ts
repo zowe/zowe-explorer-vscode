@@ -47,6 +47,7 @@ import { TreeProviders } from "../../../src/shared/TreeProviders";
 import { join } from "path";
 import * as sharedUtils from "../../../src/shared/utils";
 import { DatasetFSProvider } from "../../../src/dataset/DatasetFSProvider";
+import { MockedProperty } from "../../../__mocks__/mockUtils";
 
 jest.mock("fs");
 jest.mock("util");
@@ -244,7 +245,6 @@ describe("Dataset Tree Unit tests - Function initializeFavChildNodeForProfile", 
             datasetSessionNode,
         };
     }
-
     it("Checking function for PDS favorite", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
@@ -261,6 +261,9 @@ describe("Dataset Tree Unit tests - Function initializeFavChildNodeForProfile", 
             parentNode: favProfileNode,
             contextOverride: globals.PDS_FAV_CONTEXT,
         });
+        node.resourceUri = blockMocks.datasetSessionNode.resourceUri?.with({
+            path: `/${blockMocks.datasetSessionNode.label as string}/${node.label as string}`
+        });
 
         const favChildNodeForProfile = testTree.initializeFavChildNodeForProfile("BRTVS99.PUBLIC", globals.DS_PDS_CONTEXT, favProfileNode);
 
@@ -276,6 +279,9 @@ describe("Dataset Tree Unit tests - Function initializeFavChildNodeForProfile", 
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             parentNode: blockMocks.datasetSessionNode,
             contextOverride: globals.DS_FAV_CONTEXT,
+        });
+        node.resourceUri = blockMocks.datasetSessionNode.resourceUri?.with({
+            path: `/${blockMocks.datasetSessionNode.label as string}/${node.label as string}`
         });
         node.command = { command: "vscode.open", title: "", arguments: [node.resourceUri] };
 
@@ -567,7 +573,7 @@ describe("Dataset Tree Unit Tests - Function getChildren", () => {
 
     //     expect(children).toEqual(sampleChildren);
     // });
-    it("Checking function for return if element.getChildren is undefined", async () => {
+    it("returns 'No data sets found' if there are no children", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
 
@@ -581,11 +587,14 @@ describe("Dataset Tree Unit Tests - Function getChildren", () => {
             parentNode: testTree.mSessionNodes[1],
         });
         parent.dirty = true;
-        jest.spyOn(parent, "getChildren").mockResolvedValueOnce(undefined as any);
+        jest.spyOn(parent, "getChildren").mockResolvedValueOnce([]);
 
         const children = await testTree.getChildren(parent);
 
-        expect(children).not.toBeDefined();
+        // This function should never return undefined.
+        expect(children).toBeDefined();
+        expect(children).toHaveLength(1);
+        expect(children[0].label).toBe("No data sets found");
     });
 });
 describe("Dataset Tree Unit Tests - Function loadProfilesForFavorites", () => {
@@ -1835,11 +1844,10 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
-        const errorSpy = jest.spyOn(utils, "errorHandling");
-        const debugSpy = jest.spyOn(ZoweLogger, "debug");
+        using errorHandlingMock = new MockedProperty(utils, "errorHandling");
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce(new utils.FilterDescriptor("\uFF0B " + "Create a new filter"));
-        mocked(vscode.window.showInputBox).mockResolvedValueOnce("HLQ.PROD1.STUFF");
+        mocked(Gui.showInputBox).mockResolvedValueOnce("HLQ.PROD1.STUFF");
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
         const testTree = new DatasetTree();
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
@@ -1855,10 +1863,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         });
 
         expect(await testTree.datasetFilterPrompt(testTree.mSessionNodes[1])).not.toBeDefined();
-        expect(debugSpy).toBeCalled();
-        expect(errorSpy).toBeCalled();
-        debugSpy.mockClear();
-        errorSpy.mockClear();
+        expect(errorHandlingMock.mock).toHaveBeenCalled();
     });
     it("Checking function for return if element.getChildren returns undefined", async () => {
         const globalMocks = createGlobalMocks();

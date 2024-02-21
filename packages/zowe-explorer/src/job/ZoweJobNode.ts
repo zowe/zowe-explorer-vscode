@@ -81,6 +81,10 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
             }
         }
 
+        if (opts.contextOverride) {
+            this.contextValue = opts.contextOverride;
+        }
+
         const icon = getIconByNode(this);
         if (icon) {
             this.iconPath = icon.path;
@@ -119,6 +123,7 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
                 collapsibleState: vscode.TreeItemCollapsibleState.None,
                 parentNode: this,
                 profile: thisSessionNode.getProfile(),
+                contextOverride: globals.INFORMATION_CONTEXT,
             });
             placeholder.command = {
                 command: "zowe.placeholderCommand",

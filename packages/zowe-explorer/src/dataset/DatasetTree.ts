@@ -156,16 +156,15 @@ export class DatasetTree extends ZoweTreeProvider implements Types.IZoweDatasetT
                 const favsForProfile = this.loadProfilesForFavorites(this.log, element);
                 return favsForProfile;
             }
-            const finalResponse: IZoweDatasetTreeNode[] = [];
-            let response;
+            let response: IZoweDatasetTreeNode[] = [];
             try {
                 response = await element.getChildren();
             } catch (error) {
                 await errorHandling(error, String(element.label));
+                return [];
             }
-            if (!response) {
-                return;
-            }
+
+            const finalResponse: IZoweDatasetTreeNode[] = [];
             for (const item of response) {
                 if (item.pattern && item.memberPattern) {
                     finalResponse.push(item);
@@ -178,6 +177,7 @@ export class DatasetTree extends ZoweTreeProvider implements Types.IZoweDatasetT
                 }
                 item.contextValue = contextually.withProfile(item);
             }
+
             if (finalResponse.length === 0) {
                 return (element.children = [
                     new ZoweDatasetNode({
@@ -1017,13 +1017,13 @@ export class DatasetTree extends ZoweTreeProvider implements Types.IZoweDatasetT
             } else {
                 nonFaveNode.tooltip = nonFaveNode.pattern = pattern.toUpperCase();
             }
-            let response;
+            let response: IZoweDatasetTreeNode[] = [];
             try {
                 response = await this.getChildren(nonFaveNode);
             } catch (err) {
                 await errorHandling(err, String(node.label));
             }
-            if (!response) {
+            if (response.length === 0) {
                 nonFaveNode.tooltip = nonFaveNode.pattern = undefined;
                 return;
             }
