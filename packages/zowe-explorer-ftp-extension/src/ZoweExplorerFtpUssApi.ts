@@ -88,6 +88,19 @@ export class FtpUssApi extends AbstractFtpApi implements MainframeInteraction.IU
         }
     }
 
+    public async uploadFromBuffer(buffer: Buffer, filePath: string, options?: zowe.IUploadOptions): Promise<zowe.IZosFilesResponse> {
+        const tempFile = tmp.fileSync();
+        if (options?.binary) {
+            fs.writeSync(tempFile.fd, buffer);
+        } else {
+            const text = zowe.imperative.IO.processNewlines(buffer.toString());
+            fs.writeSync(tempFile.fd, text);
+        }
+
+        const result = await this.putContent(tempFile.name, filePath, options);
+        return result;
+    }
+
     /**
      * Upload a file (located at the input path) to the destination path.
      * @param inputFilePath The input file path

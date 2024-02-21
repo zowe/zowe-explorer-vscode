@@ -176,6 +176,14 @@ describe("ZosmfUssApi", () => {
         });
     });
 
+    it("uploads a file from buffer", async () => {
+        const uploadFileSpy = jest.spyOn(zowe.Upload, "bufferToUssFile").mockImplementation();
+        const zosmfApi = new ZoweExplorerZosmf.UssApi();
+        const buf = Buffer.from("123abc");
+        await zosmfApi.uploadFromBuffer(buf, "/some/uss/path");
+        expect(uploadFileSpy).toHaveBeenCalledWith(zosmfApi.getSession(), "/some/uss/path", buf, undefined);
+    });
+
     it("constants should be unchanged", () => {
         const zosmfApi = new ZoweExplorerZosmf.UssApi();
         expect(zosmfApi.getProfileTypeName()).toMatchSnapshot();
@@ -464,6 +472,14 @@ describe("ZosmfMvsApi", () => {
         it(`${mvsApi?.name} should inject session into Zowe API`, async () => {
             await expectApiWithSession(mvsApi, new ZoweExplorerZosmf.MvsApi());
         });
+    });
+
+    it("uploads a data set from buffer", async () => {
+        const uploadFileSpy = jest.spyOn(zowe.Upload, "bufferToDataSet").mockImplementation();
+        const zosmfApi = new ZoweExplorerZosmf.MvsApi();
+        const buf = Buffer.from("123abc");
+        await zosmfApi.uploadFromBuffer(buf, "SOME.DS(MEMB)");
+        expect(uploadFileSpy).toHaveBeenCalledWith(zosmfApi.getSession(), buf, "SOME.DS(MEMB)", undefined);
     });
 });
 

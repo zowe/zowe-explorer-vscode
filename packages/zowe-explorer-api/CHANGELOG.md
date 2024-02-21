@@ -2,6 +2,15 @@
 
 All notable changes to the "zowe-explorer-api" extension will be documented in this file.
 
+## TBD Release
+
+### New features and enhancements
+
+- **Breaking:** Added the following **required** API: `uploadFromBuffer`
+  - This API will be used for uploading contents in v3 instead of `putContent(s)`. Extenders must implement this API to continue supporting Zowe Explorer upload operations.
+
+### Bug fixes
+
 ## `3.0.0-next.202402142205`
 
 ### New features and enhancements

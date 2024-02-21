@@ -126,6 +126,14 @@ export namespace ZoweExplorerZosmf {
             return zowe.Utilities.putUSSPayload(this.getSession(), outputPath, { ...(options ?? {}), request: "copy" });
         }
 
+        public uploadFromBuffer(buffer: Buffer, filePath: string, options?: zowe.IUploadOptions): Promise<string> {
+            // for z/OSMF this is always an empty string, this is because bufferToUssFile in zos-files SDK returns
+            // the data string - but, the API returns a 204 No Content when successful, so the response data will always be empty
+
+            // Once bufferToUssFile is updated to use putExpectJSON, we can also get the e-tag from the response headers.
+            return zowe.Upload.bufferToUssFile(this.getSession(), filePath, buffer, options);
+        }
+
         public putContent(inputFilePath: string, ussFilePath: string, options: zowe.IUploadOptions): Promise<zowe.IZosFilesResponse> {
             return zowe.Upload.fileToUssFile(this.getSession(), inputFilePath, ussFilePath, options);
         }
@@ -221,6 +229,14 @@ export namespace ZoweExplorerZosmf {
 
         public getContents(dataSetName: string, options?: zowe.IDownloadOptions): Promise<zowe.IZosFilesResponse> {
             return zowe.Download.dataSet(this.getSession(), dataSetName, options);
+        }
+
+        public uploadFromBuffer(buffer: Buffer, dataSetName: string, options?: zowe.IUploadOptions): Promise<zowe.IZosFilesResponse> {
+            // for z/OSMF this is always an empty string, this is because bufferToDataSet in zos-files SDK returns
+            // the data string - but, the API returns a 204 No Content when successful, so the response data will always be empty
+
+            // Once bufferToDataSet is updated to use putExpectJSON, we can also get the e-tag from the response headers.
+            return zowe.Upload.bufferToDataSet(this.getSession(), buffer, dataSetName, options);
         }
 
         public putContents(inputFilePath: string, dataSetName: string, options?: zowe.IUploadOptions): Promise<zowe.IZosFilesResponse> {
