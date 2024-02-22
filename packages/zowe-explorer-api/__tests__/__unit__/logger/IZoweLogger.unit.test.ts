@@ -23,14 +23,14 @@ describe("IZoweLogger", () => {
         const loggerSpy = jest.spyOn(logger.getImperativeLogger() as any, methodName);
         const logMessage = methodName.split("").reverse().join("");
         logger.logImperativeMessage(logMessage, severity);
-        expect(loggerSpy).toBeCalledWith(`[${extensionName}] ${logMessage}`);
+        expect(loggerSpy).toHaveBeenCalledWith(`[${extensionName}] ${logMessage}`);
     };
 
     it("should use extension name and logging path", () => {
         const initLoggerSpy = jest.spyOn(imperative.Logger, "initLogger");
         const testLogger = new IZoweLogger(extensionName, loggingPath);
         expect(testLogger.getExtensionName()).toBe(extensionName);
-        expect(initLoggerSpy).toBeCalledWith(loggerConfig);
+        expect(initLoggerSpy).toHaveBeenCalledWith(loggerConfig);
         expect(Object.values(loggerConfig.log4jsConfig.appenders).every((appender) => appender.filename.startsWith(loggingPath))).toBe(true);
     });
 
@@ -69,7 +69,7 @@ describe("IZoweLogger", () => {
         const loggerSpy = jest.spyOn(testLogger.getImperativeLogger(), "debug");
         const logMessage = "i haz error";
         testLogger.logImperativeMessage(logMessage);
-        expect(loggerSpy).toBeCalledWith(`[${extensionName}] ${logMessage}`);
+        expect(loggerSpy).toHaveBeenCalledWith(`[${extensionName}] ${logMessage}`);
     });
 
     it("should fail to log Imperative message with invalid severity", () => {

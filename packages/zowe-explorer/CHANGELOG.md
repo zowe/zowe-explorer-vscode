@@ -6,10 +6,21 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
+### Bug fixes
+
+- Fixed default behavior of "Create a new Team Configuration File" to create a Project Config instead of Project User Config. [#2684](https://github.com/zowe/vscode-extension-for-zowe/issues/2684)
+
+## `3.0.0-next.202402142205`
+
+### New features and enhancements
+
 - **Breaking:** Removed `zowe.uss.binary` and `zowe.uss.text` commands. Use `zowe.uss.openWithEncoding` instead.
 - Added UI migration steps on startup for users with v1 profiles to either convert existing v1 profiles to team configuration file or create a new team configuration file. [#2284](https://github.com/zowe/vscode-extension-for-zowe/issues/2284)
+- Removal of Theia support. [#2647](https://github.com/zowe/vscode-extension-for-zowe/issues/2647)
 
 ### Bug fixes
+
+- Updated dependencies for technical currency purposes.
 
 ## `3.0.0-next.202402071248`
 

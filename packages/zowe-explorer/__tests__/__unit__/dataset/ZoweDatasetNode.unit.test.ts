@@ -273,7 +273,7 @@ describe("ZoweDatasetNode Unit Tests - Function node.openDs()", () => {
         }
 
         expect(showErrorMessageSpy).toHaveBeenCalledWith("Cannot download, item invalid.");
-        expect(logErrorSpy).toBeCalledTimes(1);
+        expect(logErrorSpy).toHaveBeenCalledTimes(1);
     });
 });
 

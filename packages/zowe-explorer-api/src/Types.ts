@@ -50,6 +50,7 @@ export namespace Types {
     export type PollRequest = {
         msInterval: number;
         dispose?: boolean;
+        decoration?: FileDecoration;
 
         decoration?: FileDecoration;
 

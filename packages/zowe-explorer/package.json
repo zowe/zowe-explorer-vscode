@@ -2,7 +2,7 @@
   "name": "vscode-extension-for-zowe",
   "displayName": "%displayName%",
   "description": "%description%",
-  "version": "3.0.0-next.202402071248",
+  "version": "3.0.0-next-SNAPSHOT",
   "publisher": "Zowe",
   "author": "Zowe",
   "license": "EPL-2.0",
@@ -2096,7 +2096,7 @@
     "pretty": "prettier --write .",
     "createTestProfileData": "ts-node ./scripts/createTestProfileData.ts",
     "createDemoNodes": "ts-node ./scripts/createDemoNodes.ts",
-    "generateLocalization": "npx @vscode/l10n-dev export --o ./l10n ./src"
+    "generateLocalization": "pnpm dlx @vscode/l10n-dev export --o ./l10n ./src"
   },
   "engines": {
     "vscode": "^1.79.0"
@@ -2113,7 +2113,10 @@
     "chai-as-promised": "^7.1.1",
     "chalk": "^2.4.1",
     "copy-webpack-plugin": "^12.0.2",
-    "eslint-plugin-zowe-explorer": "3.0.0-next.202402071248",
+    "cross-env": "^5.2.0",
+    "del": "^4.1.1",
+    "eslint-plugin-zowe-explorer": "3.0.0-next-SNAPSHOT",
+    "event-stream": "^4.0.1",
     "expect": "^24.8.0",
     "glob": "^7.1.6",
     "jest-silent-reporter": "^0.5.0",
@@ -2125,7 +2128,7 @@
   },
   "dependencies": {
     "@zowe/secrets-for-zowe-sdk": "7.18.6",
-    "@zowe/zowe-explorer-api": "3.0.0-next.202402071248",
+    "@zowe/zowe-explorer-api": "3.0.0-next-SNAPSHOT",
     "dayjs": "^1.11.10",
     "disposablestack": "^1.1.3",
     "fs-extra": "8.0.1",

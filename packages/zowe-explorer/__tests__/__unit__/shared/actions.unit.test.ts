@@ -177,7 +177,7 @@ describe("Shared Actions Unit Tests - Function searchInAllLoadedItems", () => {
         jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(qpItem);
 
         await sharedActions.searchInAllLoadedItems(testDatasetTree, testUssTree);
-        expect(testDatasetTree.addSearchHistory).toBeCalledWith("HLQ.PROD2.STUFF");
+        expect(testDatasetTree.addSearchHistory).toHaveBeenCalledWith("HLQ.PROD2.STUFF");
     });
     it("Checking that searchInAllLoadedItems works for a PDS", async () => {
         const globalMocks = await createGlobalMocks();
@@ -211,7 +211,7 @@ describe("Shared Actions Unit Tests - Function searchInAllLoadedItems", () => {
         jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(qpItem);
 
         await sharedActions.searchInAllLoadedItems(testDatasetTree, testUssTree);
-        expect(testDatasetTree.addSearchHistory).not.toBeCalled();
+        expect(testDatasetTree.addSearchHistory).not.toHaveBeenCalled();
     });
     it("Checking that searchInAllLoadedItems works for a member", async () => {
         const globalMocks = await createGlobalMocks();
@@ -260,7 +260,7 @@ describe("Shared Actions Unit Tests - Function searchInAllLoadedItems", () => {
         jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(qpItem);
 
         await sharedActions.searchInAllLoadedItems(testDatasetTree, testUssTree);
-        expect(testDatasetTree.addSearchHistory).toBeCalledWith("HLQ.PROD2.STUFF(TESTMEMB)");
+        expect(testDatasetTree.addSearchHistory).toHaveBeenCalledWith("HLQ.PROD2.STUFF(TESTMEMB)");
     });
     it("Checking that searchInAllLoadedItems works for a USS folder", async () => {
         const globalMocks = await createGlobalMocks();
@@ -293,7 +293,7 @@ describe("Shared Actions Unit Tests - Function searchInAllLoadedItems", () => {
 
         const openNode = jest.spyOn(folder, "openUSS").mockImplementation();
         await sharedActions.searchInAllLoadedItems(undefined, testUssTree);
-        expect(openNode).not.toBeCalled();
+        expect(openNode).not.toHaveBeenCalled();
     });
     it("Checking that searchInAllLoadedItems works for a USS file", async () => {
         const globalMocks = await createGlobalMocks();
@@ -334,7 +334,7 @@ describe("Shared Actions Unit Tests - Function searchInAllLoadedItems", () => {
         const openNode = jest.spyOn(file, "openUSS").mockImplementation();
         await sharedActions.searchInAllLoadedItems(undefined, testUssTree);
 
-        expect(testUssTree.addSearchHistory).toBeCalledWith("/folder/file");
+        expect(testUssTree.addSearchHistory).toHaveBeenCalledWith("/folder/file");
         expect(openNode).toHaveBeenCalledWith(false, true, testUssTree);
     });
     it("Checking that searchInAllLoadedItems fails when no pattern is entered", async () => {
@@ -355,7 +355,7 @@ describe("Shared Actions Unit Tests - Function searchInAllLoadedItems", () => {
         jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(qpItem as any);
 
         await sharedActions.searchInAllLoadedItems(testDatasetTree, testUssTree);
-        expect(testUssTree.addSearchHistory).not.toBeCalled();
+        expect(testUssTree.addSearchHistory).not.toHaveBeenCalled();
     });
 });
 
@@ -398,7 +398,7 @@ describe("Shared Actions Unit Tests - Function openRecentMemberPrompt", () => {
         jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(qpItem);
 
         await sharedActions.openRecentMemberPrompt(testDatasetTree, testUSSTree);
-        expect(testDatasetTree.openItemFromPath).toBeCalledWith(`[sestest]: node(child)`, blockMocks.datasetSessionNode);
+        expect(testDatasetTree.openItemFromPath).toHaveBeenCalledWith(`[sestest]: node(child)`, blockMocks.datasetSessionNode);
     });
 
     it("Tests that openRecentMemberPrompt (opening a recent member) is executed successfully on a DS", async () => {
@@ -423,7 +423,7 @@ describe("Shared Actions Unit Tests - Function openRecentMemberPrompt", () => {
         jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(qpItem);
 
         await sharedActions.openRecentMemberPrompt(testDatasetTree, testUSSTree);
-        expect(testDatasetTree.openItemFromPath).toBeCalledWith(`[sestest]: node`, blockMocks.datasetSessionNode);
+        expect(testDatasetTree.openItemFromPath).toHaveBeenCalledWith(`[sestest]: node`, blockMocks.datasetSessionNode);
     });
 
     it("Tests that openRecentMemberPrompt (opening a recent member) is executed successfully on a USS file", async () => {
@@ -449,7 +449,7 @@ describe("Shared Actions Unit Tests - Function openRecentMemberPrompt", () => {
         jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(qpItem);
 
         await sharedActions.openRecentMemberPrompt(testDatasetTree, testUSSTree);
-        expect(testUSSTree.openItemFromPath).toBeCalledWith(`/node1/node2/node3.txt`, blockMocks.ussSessionNode);
+        expect(testUSSTree.openItemFromPath).toHaveBeenCalledWith(`/node1/node2/node3.txt`, blockMocks.ussSessionNode);
     });
 });
 

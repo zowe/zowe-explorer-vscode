@@ -314,10 +314,18 @@ describe("ZoweVsCodeExtension", () => {
             delete testSession.ISession.password;
             testSession.ISession.hostname = "service";
             testSession.ISession.base64EncodedAuth = "dXNlcjpwYXNz";
+            testSession.ISession.tokenType = tempBaseProfile.profile.tokenType;
 
             expect(loginSpy).toHaveBeenCalledWith(testSession);
             expect(testSpy).toHaveBeenCalledWith(testCache, "service");
-            expect(testCache.updateBaseProfileFileLogin).toHaveBeenCalledWith(newServiceProfile, updProfile, true);
+            expect(testCache.updateBaseProfileFileLogin).toHaveBeenCalledWith(
+                newServiceProfile,
+                {
+                    tokenType: tempBaseProfile.profile.tokenType,
+                    tokenValue: "tokenValue",
+                },
+                true
+            );
         });
         it("should logout using the service profile given a simple profile name", async () => {
             testCache.fetchBaseProfile.mockResolvedValue(baseProfile);

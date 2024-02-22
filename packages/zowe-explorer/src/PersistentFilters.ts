@@ -153,7 +153,7 @@ export class PersistentFilters {
         this.mSessions.push(criteria);
 
         // Use standard sorting
-        this.mSessions.sort();
+        this.mSessions.sort((a, b) => a.localeCompare(b));
         this.updateSessions();
     }
 

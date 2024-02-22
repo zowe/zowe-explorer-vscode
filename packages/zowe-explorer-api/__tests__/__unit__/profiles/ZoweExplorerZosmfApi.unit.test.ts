@@ -83,6 +83,29 @@ describe("ZosmfUssApi", () => {
         jest.clearAllMocks();
     });
 
+    describe("_getSession", () => {
+        const exampleProfile = {
+            message: "",
+            type: "zosmf",
+            failNotFound: false,
+            name: "test.zosmf",
+            profile: {
+                host: "localhost",
+                password: "password",
+                protocol: "http",
+                user: "aZosmfUser",
+            },
+        } as zowe.imperative.IProfileLoaded;
+
+        it("should include profile properties in the built session object", () => {
+            const api = new ZoweExplorerZosmf.UssApi();
+
+            const transformedProps = { ...exampleProfile.profile, hostname: exampleProfile.profile?.host };
+            delete transformedProps["host"];
+            expect((api as any)._getSession(exampleProfile).mISession).toMatchObject(transformedProps);
+        });
+    });
+
     describe("updateAttributes", () => {
         const ussApi = new ZoweExplorerZosmf.UssApi();
         const getSessionMock = jest.spyOn(ussApi, "getSession").mockReturnValue(fakeSession);
@@ -256,16 +279,17 @@ describe("ZosmfUssApi", () => {
         expect(checkStatusSpy).toHaveBeenCalledTimes(1);
     });
 
-    it("should test that copy calls zowe.Utilities.putUSSPayload", () => {
+    it("should test that copy calls zowe.Utilities.putUSSPayload", async () => {
         const api = new ZoweExplorerZosmf.UssApi();
         api.getSession = jest.fn();
+        const response = Buffer.from("hello world!");
 
         Object.defineProperty(zowe.Utilities, "putUSSPayload", {
-            value: jest.fn().mockResolvedValue(Buffer.from("hello world!")),
+            value: jest.fn().mockResolvedValue(response),
             configurable: true,
         });
 
-        expect(api.copy("/")).toStrictEqual(zowe.Utilities.putUSSPayload(api.getSession(), "/", { request: "copy" }));
+        await expect(api.copy("/")).resolves.toEqual(response);
     });
 
     it("getStatus should validate unverified profile", async () => {
@@ -307,7 +331,7 @@ describe("ZosmfUssApi", () => {
             configurable: true,
         });
         await expect(zosmfApi.updateAttributes("/test/path", { tag: "utf-8" })).resolves.not.toThrow();
-        expect(changeTagSpy).toBeCalledTimes(1);
+        expect(changeTagSpy).toHaveBeenCalledTimes(1);
     });
 
     const ussApis: ITestApi<ZoweExplorerZosmf.UssApi>[] = [

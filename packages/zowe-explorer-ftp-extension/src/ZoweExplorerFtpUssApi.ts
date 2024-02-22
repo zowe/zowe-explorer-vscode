@@ -291,7 +291,6 @@ export class FtpUssApi extends AbstractFtpApi implements MainframeInteraction.IU
     private async deleteDirectory(ussPath: string, connection): Promise<void> {
         const result = this.getDefaultResponse();
         try {
-            connection = await this.ftpClient(this.checkedProfile());
             await UssUtils.deleteDirectory(connection, ussPath);
             result.success = true;
             result.commandResponse = "Delete Completed";

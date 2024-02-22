@@ -384,7 +384,7 @@ describe("USSTree Unit Tests - Function removeFavorite", () => {
 
         // Actual test
         await globalMocks.testTree.removeFavorite(blockMocks.testDir);
-        expect(removeFavProfileSpy).not.toBeCalled();
+        expect(removeFavProfileSpy).not.toHaveBeenCalled();
         expect(profileNodeInFavs.children[0].fullPath).toEqual(testDir2.fullPath);
     });
     it("Tests that removeFavorite() works properly when starting with only one favorite for the profile", async () => {
@@ -435,7 +435,7 @@ describe("USSTree Unit Tests - Function removeFavProfile", () => {
         // Check that favorite is removed from UI
         expect(globalMocks.testTree.mFavorites.length).toEqual(0);
         // Check that favorite is removed from settings file
-        expect(updateFavoritesSpy).toBeCalledTimes(1);
+        expect(updateFavoritesSpy).toHaveBeenCalledTimes(1);
     });
     it("Tests that removeFavProfile leaves profile node in Favorites when user cancels", async () => {
         const globalMocks = await createGlobalMocks();
@@ -518,12 +518,10 @@ describe("USSTree Unit Tests - Function deleteSession", () => {
 describe("USSTree Unit Tests - Function filterPrompt", () => {
     async function createBlockMocks(globalMocks) {
         const newMocks = {
-            theia: false,
             qpValue: "",
             qpItem: new utils.FilterDescriptor("\uFF0B " + "Create a new filter"),
             resolveQuickPickHelper: jest.spyOn(Gui, "resolveQuickPick"),
         };
-        Object.defineProperty(globals, "ISTHEIA", { get: () => newMocks.theia });
         newMocks.resolveQuickPickHelper.mockImplementation(() => Promise.resolve(newMocks.qpItem));
         globalMocks.createQuickPick.mockReturnValue({
             placeholder: "Select a filter",
@@ -565,7 +563,7 @@ describe("USSTree Unit Tests - Function filterPrompt", () => {
 
         await globalMocks.testTree.filterPrompt(globalMocks.testTree.mSessionNodes[1]);
 
-        expect(syncSessionNodeSpy).toBeCalledTimes(1);
+        expect(syncSessionNodeSpy).toHaveBeenCalledTimes(1);
     });
 
     it("Tests that filter() works properly when user enters path with Unverified profile", async () => {
@@ -620,57 +618,6 @@ describe("USSTree Unit Tests - Function filterPrompt", () => {
         const blockMocks = await createBlockMocks(globalMocks);
 
         blockMocks.qpItem = undefined;
-
-        await globalMocks.testTree.filterPrompt(globalMocks.testTree.mSessionNodes[1]);
-        expect(globalMocks.showInformationMessage.mock.calls.length).toBe(1);
-        expect(globalMocks.showInformationMessage.mock.calls[0][0]).toBe("No selection made. Operation cancelled.");
-    });
-
-    it("Tests that filter() works when new path is specified (Theia)", async () => {
-        const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
-
-        blockMocks.theia = true;
-        blockMocks.qpValue = "/u/myFiles";
-        globalMocks.showQuickPick.mockReturnValueOnce(" -- Specify Filter -- ");
-        globalMocks.showInputBox.mockReturnValueOnce("/u/myFiles");
-
-        await globalMocks.testTree.filterPrompt(globalMocks.testTree.mSessionNodes[1]);
-        expect(globalMocks.testTree.mSessionNodes[1].fullPath).toEqual("/u/myFiles");
-    });
-
-    it("Tests that filter() exits when user cancels the input path box (Theia)", async () => {
-        const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
-
-        blockMocks.theia = true;
-        globalMocks.showQuickPick.mockReturnValueOnce("\uFF0B " + "Create a new filter");
-        globalMocks.showInputBox.mockReturnValueOnce(undefined);
-
-        await globalMocks.testTree.filterPrompt(globalMocks.testTree.mSessionNodes[1]);
-        expect(globalMocks.showInformationMessage.mock.calls.length).toBe(1);
-        expect(globalMocks.showInformationMessage.mock.calls[0][0]).toBe("You must enter a path.");
-    });
-
-    it("Tests that filter() works with a file (Theia)", async () => {
-        const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
-
-        blockMocks.theia = true;
-        blockMocks.qpValue = "/u/thisFile";
-        globalMocks.showQuickPick.mockReturnValueOnce(new utils.FilterDescriptor("/u/thisFile"));
-        globalMocks.showInputBox.mockReturnValueOnce("/u/thisFile");
-
-        await globalMocks.testTree.filterPrompt(globalMocks.testTree.mSessionNodes[1]);
-        expect(globalMocks.testTree.mSessionNodes[1].fullPath).toEqual("/u/thisFile");
-    });
-
-    it("Tests that filter() exits when no selection made (Theia)", async () => {
-        const globalMocks = await createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
-
-        blockMocks.theia = true;
-        globalMocks.showQuickPick.mockReturnValueOnce(undefined);
 
         await globalMocks.testTree.filterPrompt(globalMocks.testTree.mSessionNodes[1]);
         expect(globalMocks.showInformationMessage.mock.calls.length).toBe(1);
@@ -851,8 +798,8 @@ describe("USSTree Unit Tests - Function renameUSSNode", () => {
 
         await globalMocks.testTree.renameUSSNode(ussNode, "/u/myuser/renamed");
 
-        expect(renameSpy).toBeCalledTimes(1);
-        expect(renameSpy).toBeCalledWith("/u/myuser/renamed");
+        expect(renameSpy).toHaveBeenCalledTimes(1);
+        expect(renameSpy).toHaveBeenCalledWith("/u/myuser/renamed");
     });
 });
 
@@ -872,8 +819,8 @@ describe("USSTree Unit Tests - Function renameFavorite", () => {
 
         await globalMocks.testTree.renameFavorite(ussFavNode, "/u/myuser/renamed");
 
-        expect(renameSpy).toBeCalledTimes(1);
-        expect(renameSpy).toBeCalledWith("/u/myuser/renamed");
+        expect(renameSpy).toHaveBeenCalledTimes(1);
+        expect(renameSpy).toHaveBeenCalledWith("/u/myuser/renamed");
     });
 });
 
@@ -1188,7 +1135,7 @@ describe("USSTree Unit Tests - Function openItemFromPath", () => {
         const fileHistorySpy = jest.spyOn(globalMocks.testTree, "removeFileHistory");
 
         await globalMocks.testTree.openItemFromPath("/d.txt", globalMocks.testTree.mSessionNodes[1]);
-        expect(fileHistorySpy).toBeCalledWith("[sestest]: /d.txt");
+        expect(fileHistorySpy).toHaveBeenCalledWith("[sestest]: /d.txt");
     });
 });
 
@@ -1472,7 +1419,7 @@ describe("USSTree Unit Tests - Function loadProfilesForFavorites", () => {
         });
         mocked(vscode.window.showErrorMessage).mockResolvedValueOnce({ title: "Remove" });
         await globalMocks.testTree.loadProfilesForFavorites(blockMocks.log, favProfileNode);
-        expect(showErrorMessageSpy).toBeCalledTimes(1);
+        expect(showErrorMessageSpy).toHaveBeenCalledTimes(1);
         showErrorMessageSpy.mockClear();
     });
     it("Tests that favorite nodes with pre-existing profile/session values continue using those values", async () => {

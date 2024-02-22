@@ -435,23 +435,17 @@ export class Profiles extends ProfilesCache {
                 }
                 if (choice === "project") {
                     rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
-                    user = true;
                     global = false;
                 }
             }
             // call check for existing and prompt here
             const existingFile = await this.checkExistingConfig(rootPath);
-            if (!existingFile) {
+            if (existingFile === false) {
+                // handle prompt cancellation
                 return;
             }
-            if (existingFile.includes("zowe")) {
-                if (existingFile.includes("user")) {
-                    user = true;
-                    global = false;
-                } else {
-                    user = false;
-                    global = true;
-                }
+            if (existingFile != null) {
+                user = existingFile.includes("user");
             }
             const config = await zowe.imperative.Config.load("zowe", {
                 homeDir: FileManagement.getZoweDir(),
@@ -487,9 +481,6 @@ export class Profiles extends ProfilesCache {
 
             config.api.layers.merge(newConfig);
             await config.save(false);
-            if (globals.ISTHEIA) {
-                vscode.commands.executeCommand("zowe.extRefresh");
-            }
             let configName;
             if (user) {
                 configName = config.userConfigName;
@@ -539,6 +530,10 @@ export class Profiles extends ProfilesCache {
 
     public async promptCredentials(profile: string | zowe.imperative.IProfileLoaded, rePrompt?: boolean): Promise<string[]> {
         ZoweLogger.trace("Profiles.promptCredentials called.");
+        let profType = "";
+        if (typeof profile !== "string") {
+            profType = profile.type;
+        }
         const userInputBoxOptions: vscode.InputBoxOptions = {
             placeHolder: vscode.l10n.t(`User Name`),
             prompt: vscode.l10n.t(`Enter the user name for the connection. Leave blank to not store.`),
@@ -951,34 +946,28 @@ export class Profiles extends ProfilesCache {
         return;
     }
 
-    private async checkExistingConfig(filePath: string): Promise<string> {
+    private async checkExistingConfig(filePath: string): Promise<string | false> {
         ZoweLogger.trace("Profiles.checkExistingConfig called.");
-        let found = false;
-        let location: string;
         const existingLayers = await this.getConfigLayers();
-        for (const file of existingLayers) {
-            if (file.path.includes(filePath)) {
-                found = true;
-                const createButton = vscode.l10n.t("Create New");
-                const message = vscode.l10n.t({
-                    message: `A Team Configuration File already exists in this location\n{0}\nContinuing may alter the existing file, would you like to proceed?`,
-                    args: [file.path],
-                    comment: ["File path"],
-                });
-                await Gui.infoMessage(message, { items: [createButton], vsCodeOpts: { modal: true } }).then(async (selection) => {
-                    if (selection) {
-                        location = path.basename(file.path);
-                    } else {
-                        await this.openConfigFile(file.path);
-                        location = undefined;
-                    }
-                });
-            }
+        const foundLayer = existingLayers.find((layer) => layer.path.includes(filePath));
+        if (foundLayer == null) {
+            return null;
         }
-        if (found) {
-            return location;
+        const createButton = vscode.l10n.t("Create New");
+        const message = vscode.l10n.t({
+            message:
+                `A Team Configuration File already exists in this location\n{0}\n` +
+                `Continuing may alter the existing file, would you like to proceed?`,
+            args: [foundLayer.path],
+            comment: ["File path"],
+        });
+        const response = await Gui.infoMessage(message, { items: [createButton], vsCodeOpts: { modal: true } });
+        if (response) {
+            return path.basename(foundLayer.path);
+        } else {
+            await this.openConfigFile(foundLayer.path);
         }
-        return "none";
+        return false;
     }
 
     private async getConfigLayers(): Promise<zowe.imperative.IConfigLayer[]> {

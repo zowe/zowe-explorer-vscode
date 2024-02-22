@@ -372,7 +372,7 @@ describe("ZoweUSSNode Unit Tests - Function node.refreshUSS()", () => {
         const showErrorMessageSpy = jest.spyOn(vscode.window, "showErrorMessage");
 
         await expect(childNode.refreshUSS()).rejects.toThrow();
-        expect(showErrorMessageSpy).toBeCalledTimes(1);
+        expect(showErrorMessageSpy).toHaveBeenCalledTimes(1);
     });
     it("Tests that node.refreshUSS() works correctly for files under directories", async () => {
         const globalMocks = await createGlobalMocks();
@@ -462,7 +462,7 @@ describe("ZoweUSSNode Unit Tests - Function node.rename()", () => {
         expect(blockMocks.ussDir.tooltip).toEqual(newFullPath);
 
         // Expect node to be refreshed in UI after rename
-        expect(blockMocks.providerSpy).toBeCalled();
+        expect(blockMocks.providerSpy).toHaveBeenCalled();
         blockMocks.providerSpy.mockClear();
     });
     it("Tests that rename updates and refreshes the UI components of any loaded children for a node", async () => {
@@ -1376,7 +1376,7 @@ describe("ZoweUSSNode Unit Tests - Function node.pasteUssTree()", () => {
     it("Tests util disposeClipboardContents function correctly free clipboardContents", async () => {
         vscode.env.clipboard.writeText("test");
         ussUtils.disposeClipboardContents();
-        expect(vscode.env.clipboard.readText()).toEqual(Promise.resolve({}));
+        await expect(vscode.env.clipboard.readText()).resolves.not.toThrow();
     });
     it("Tests node.pasteUssTree() reads clipboard contents and returns early if nothing is in the clipboard", async () => {
         const globalMocks = await createGlobalMocks();

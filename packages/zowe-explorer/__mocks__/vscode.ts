@@ -152,8 +152,8 @@ export interface CancellationToken {
 }
 
 export class CancellationTokenSource {
-    token: CancellationToken;
-    fire(): void {
+    token: CancellationToken = { isCancellationRequested: false } as any;
+    cancel(): void {
         this.token.isCancellationRequested = true;
     }
     dispose(): void {}

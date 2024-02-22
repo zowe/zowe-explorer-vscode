@@ -306,8 +306,8 @@ describe("Jobs Actions Unit Tests - Function downloadSpool", () => {
         const downloadFileSpy = jest.spyOn(blockMocks.jesApi, "downloadSpoolContent");
 
         await jobActions.downloadSpool(jobs);
-        expect(mocked(Gui.showOpenDialog)).toBeCalled();
-        expect(downloadFileSpy).toBeCalled();
+        expect(mocked(Gui.showOpenDialog)).toHaveBeenCalled();
+        expect(downloadFileSpy).toHaveBeenCalled();
         expect(downloadFileSpy.mock.calls[0][0]).toEqual({
             jobid: node.job.jobid,
             jobname: node.job.jobname,
@@ -357,9 +357,9 @@ describe("Jobs Actions Unit Tests - Function downloadSingleSpool", () => {
         const getSpoolFilesSpy = jest.spyOn(SpoolProvider, "getSpoolFiles").mockResolvedValue([spool]);
 
         await jobActions.downloadSingleSpool(jobs, true);
-        expect(mocked(Gui.showOpenDialog)).toBeCalled();
+        expect(mocked(Gui.showOpenDialog)).toHaveBeenCalled();
         expect(getSpoolFilesSpy).toHaveBeenCalledWith(node);
-        expect(downloadFileSpy).toBeCalled();
+        expect(downloadFileSpy).toHaveBeenCalled();
         expect(downloadFileSpy.mock.calls[0][0]).toEqual({
             jobFile: spool,
             binary: true,
@@ -411,14 +411,14 @@ describe("Jobs Actions Unit Tests - Function downloadJcl", () => {
             job: blockMocks.iJob,
         });
         await jobActions.downloadJcl(node);
-        expect(mocked(zowe.GetJobs.getJclForJob)).toBeCalled();
-        expect(mocked(vscode.workspace.openTextDocument)).toBeCalled();
-        expect(mocked(Gui.showTextDocument)).toBeCalled();
+        expect(mocked(zowe.GetJobs.getJclForJob)).toHaveBeenCalled();
+        expect(mocked(vscode.workspace.openTextDocument)).toHaveBeenCalled();
+        expect(mocked(Gui.showTextDocument)).toHaveBeenCalled();
     });
     it("Checking failed attempt to download Job JCL", async () => {
         createGlobalMocks();
         await jobActions.downloadJcl(undefined as any);
-        expect(mocked(Gui.errorMessage)).toBeCalled();
+        expect(mocked(Gui.errorMessage)).toHaveBeenCalled();
     });
 });
 
@@ -493,9 +493,9 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
         submitJclSpy.mockResolvedValueOnce(blockMocks.iJob);
         await dsActions.submitJcl(blockMocks.testDatasetTree, mockFile);
 
-        expect(showTextDocumentSpy).toBeCalled();
-        expect(submitJclSpy).toBeCalled();
-        expect(mocked(Gui.showMessage)).toBeCalled();
+        expect(showTextDocumentSpy).toHaveBeenCalled();
+        expect(submitJclSpy).toHaveBeenCalled();
+        expect(mocked(Gui.showMessage)).toHaveBeenCalled();
         expect(mocked(Gui.showMessage).mock.calls.length).toBe(1);
         expect(mocked(Gui.showMessage).mock.calls[0][0]).toEqual(
             "Job submitted [JOB1234](command:zowe.jobs.setJobSpool?%5B%22sestest%22%2C%22JOB1234%22%5D)"
@@ -518,8 +518,8 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
         submitJclSpy.mockResolvedValueOnce(blockMocks.iJob);
         await dsActions.submitJcl(blockMocks.testDatasetTree, undefined);
 
-        expect(submitJclSpy).toBeCalled();
-        expect(mocked(Gui.showMessage)).toBeCalled();
+        expect(submitJclSpy).toHaveBeenCalled();
+        expect(mocked(Gui.showMessage)).toHaveBeenCalled();
         expect(mocked(Gui.showMessage).mock.calls.length).toBe(1);
         expect(mocked(Gui.showMessage).mock.calls[0][0]).toEqual(
             "Job submitted [JOB1234](command:zowe.jobs.setJobSpool?%5B%22sestest%22%2C%22JOB1234%22%5D)"
@@ -546,8 +546,8 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
         submitJclSpy.mockResolvedValueOnce(blockMocks.iJob);
         await dsActions.submitJcl(blockMocks.testDatasetTree, undefined);
 
-        expect(submitJclSpy).toBeCalled();
-        expect(mocked(Gui.showMessage)).toBeCalled();
+        expect(submitJclSpy).toHaveBeenCalled();
+        expect(mocked(Gui.showMessage)).toHaveBeenCalled();
         expect(mocked(Gui.showMessage).mock.calls.length).toBe(1);
         expect(mocked(Gui.showMessage).mock.calls[0][0]).toEqual(
             "Job submitted [JOB1234](command:zowe.jobs.setJobSpool?%5B%22sestest%22%2C%22JOB1234%22%5D)"
@@ -564,8 +564,8 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
         await dsActions.submitJcl(blockMocks.testDatasetTree, undefined);
 
         const errorMsg = "No editor with a document that could be submitted as JCL is currently open.";
-        expect(blockMocks.errorLogSpy).toBeCalledWith(errorMsg);
-        expect(blockMocks.errorGuiMsgSpy).toBeCalledWith(errorMsg);
+        expect(blockMocks.errorLogSpy).toHaveBeenCalledWith(errorMsg);
+        expect(blockMocks.errorGuiMsgSpy).toHaveBeenCalledWith(errorMsg);
     });
 
     it("Checking cancel option scenario of local JCL submission confirmation dialog", async () => {
@@ -608,8 +608,8 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
 
         await dsActions.submitJcl(blockMocks.testDatasetTree, undefined);
 
-        expect(submitJclSpy).not.toBeCalled();
-        expect(messageSpy).toBeCalledWith("Operation Cancelled");
+        expect(submitJclSpy).not.toHaveBeenCalled();
+        expect(messageSpy).toHaveBeenCalledWith("Operation Cancelled");
     });
 
     it("Checking API error on submit of active text editor content as JCL", async () => {
@@ -633,8 +633,8 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
         submitJclSpy.mockRejectedValueOnce(testError);
         await dsActions.submitJcl(blockMocks.testDatasetTree, undefined);
 
-        expect(submitJclSpy).toBeCalled();
-        expect(mocked(Gui.errorMessage)).toBeCalled();
+        expect(submitJclSpy).toHaveBeenCalled();
+        expect(mocked(Gui.errorMessage)).toHaveBeenCalled();
         expect(mocked(Gui.errorMessage).mock.calls[0][0]).toContain(testError.message);
     });
     it("If there are no registered profiles", async () => {
@@ -655,7 +655,7 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
 
         await dsActions.submitJcl(blockMocks.testDatasetTree, undefined);
 
-        expect(showMessagespy).toBeCalledWith("No profiles available");
+        expect(showMessagespy).toHaveBeenCalledWith("No profiles available");
     });
     it("Getting session name from the path itself", async () => {
         globals.defineGlobals("/user/");
@@ -674,8 +674,8 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
         submitJclSpy.mockResolvedValueOnce(blockMocks.iJob);
         await dsActions.submitJcl(blockMocks.testDatasetTree, undefined);
 
-        expect(submitJclSpy).toBeCalled();
-        expect(mocked(Gui.showMessage)).toBeCalled();
+        expect(submitJclSpy).toHaveBeenCalled();
+        expect(mocked(Gui.showMessage)).toHaveBeenCalled();
         expect(mocked(Gui.showMessage).mock.calls.length).toBe(1);
     });
 });
@@ -718,9 +718,9 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
         submitJobSpy.mockResolvedValueOnce(blockMocks.iJob);
 
         await dsActions.submitMember(member);
-        expect(submitJobSpy).toBeCalled();
+        expect(submitJobSpy).toHaveBeenCalled();
         expect(submitJobSpy.mock.calls[0][0]).toEqual("dataset(member)");
-        expect(mocked(Gui.showMessage)).toBeCalled();
+        expect(mocked(Gui.showMessage)).toHaveBeenCalled();
         expect(mocked(Gui.showMessage).mock.calls[0][0]).toEqual(
             "Job submitted [JOB1234](command:zowe.jobs.setJobSpool?%5B%22sestest%22%2C%22JOB1234%22%5D)"
         );
@@ -752,9 +752,9 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
         submitJobSpy.mockResolvedValueOnce(blockMocks.iJob);
 
         await dsActions.submitMember(member);
-        expect(submitJobSpy).toBeCalled();
+        expect(submitJobSpy).toHaveBeenCalled();
         expect(submitJobSpy.mock.calls[0][0]).toEqual("dataset(member)");
-        expect(mocked(Gui.showMessage)).toBeCalled();
+        expect(mocked(Gui.showMessage)).toHaveBeenCalled();
         expect(mocked(Gui.showMessage).mock.calls[0][0]).toEqual(
             "Job submitted [JOB1234](command:zowe.jobs.setJobSpool?%5B%22sestest%22%2C%22JOB1234%22%5D)"
         );
@@ -774,9 +774,9 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
         submitJobSpy.mockResolvedValueOnce(blockMocks.iJob);
 
         await dsActions.submitMember(dataset);
-        expect(submitJobSpy).toBeCalled();
+        expect(submitJobSpy).toHaveBeenCalled();
         expect(submitJobSpy.mock.calls[0][0]).toEqual("dataset");
-        expect(mocked(Gui.showMessage)).toBeCalled();
+        expect(mocked(Gui.showMessage)).toHaveBeenCalled();
         expect(mocked(Gui.showMessage).mock.calls[0][0]).toEqual(
             "Job submitted [JOB1234](command:zowe.jobs.setJobSpool?%5B%22sestest%22%2C%22JOB1234%22%5D)"
         );
@@ -808,9 +808,9 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
         submitJobSpy.mockResolvedValueOnce(blockMocks.iJob);
 
         await dsActions.submitMember(favoriteMember);
-        expect(submitJobSpy).toBeCalled();
+        expect(submitJobSpy).toHaveBeenCalled();
         expect(submitJobSpy.mock.calls[0][0]).toEqual("TEST.JCL(pds)");
-        expect(mocked(Gui.showMessage)).toBeCalled();
+        expect(mocked(Gui.showMessage)).toHaveBeenCalled();
         expect(mocked(Gui.showMessage).mock.calls[0][0]).toEqual(
             "Job submitted [JOB1234](command:zowe.jobs.setJobSpool?%5B%22test%22%2C%22JOB1234%22%5D)"
         );
@@ -836,9 +836,9 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
         submitJobSpy.mockResolvedValueOnce(blockMocks.iJob);
 
         await dsActions.submitMember(favoriteDataset);
-        expect(submitJobSpy).toBeCalled();
+        expect(submitJobSpy).toHaveBeenCalled();
         expect(submitJobSpy.mock.calls[0][0]).toEqual("TEST.JCL");
-        expect(mocked(Gui.showMessage)).toBeCalled();
+        expect(mocked(Gui.showMessage)).toHaveBeenCalled();
         expect(mocked(Gui.showMessage).mock.calls[0][0]).toEqual(
             "Job submitted [JOB1234](command:zowe.jobs.setJobSpool?%5B%22test%22%2C%22JOB1234%22%5D)"
         );
@@ -867,9 +867,9 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
         } catch (e) {
             expect(e.message).toEqual("Cannot submit, item invalid.");
         }
-        expect(submitJobSpy).not.toBeCalled();
-        expect(mocked(Gui.showMessage)).not.toBeCalled();
-        expect(mocked(Gui.errorMessage)).toBeCalled();
+        expect(submitJobSpy).not.toHaveBeenCalled();
+        expect(mocked(Gui.showMessage)).not.toHaveBeenCalled();
+        expect(mocked(Gui.errorMessage)).toHaveBeenCalled();
         expect(mocked(Gui.errorMessage).mock.calls[0][0]).toEqual("Cannot submit, item invalid.");
     });
 
@@ -900,10 +900,13 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
                 dataset.label = "OTHERUSER.DATASET";
                 mocked(Gui.warningMessage).mockResolvedValueOnce({ title: "Submit" });
                 await dsActions.submitMember(dataset);
-                expect(mocked(Gui.warningMessage)).toBeCalledWith("Are you sure you want to submit the following job?\n\n" + dataset.getLabel(), {
-                    items: [{ title: "Submit" }],
-                    vsCodeOpts: { modal: true },
-                });
+                expect(mocked(Gui.warningMessage)).toHaveBeenCalledWith(
+                    "Are you sure you want to submit the following job?\n\n" + dataset.getLabel(),
+                    {
+                        items: [{ title: "Submit" }],
+                        vsCodeOpts: { modal: true },
+                    }
+                );
             } else if (
                 option === sharedUtils.JOB_SUBMIT_DIALOG_OPTS[sharedUtils.JobSubmitDialogOpts.AllJobs] ||
                 option === sharedUtils.JOB_SUBMIT_DIALOG_OPTS[sharedUtils.JobSubmitDialogOpts.YourJobs]
@@ -911,10 +914,13 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
                 dataset.label = "TESTUSER.DATASET";
                 mocked(Gui.warningMessage).mockResolvedValueOnce({ title: "Submit" });
                 await dsActions.submitMember(dataset);
-                expect(mocked(Gui.warningMessage)).toBeCalledWith("Are you sure you want to submit the following job?\n\n" + dataset.getLabel(), {
-                    items: [{ title: "Submit" }],
-                    vsCodeOpts: { modal: true },
-                });
+                expect(mocked(Gui.warningMessage)).toHaveBeenCalledWith(
+                    "Are you sure you want to submit the following job?\n\n" + dataset.getLabel(),
+                    {
+                        items: [{ title: "Submit" }],
+                        vsCodeOpts: { modal: true },
+                    }
+                );
             }
             expect(mocked(Profiles.getInstance)).toHaveBeenCalledTimes(2 * (o + 1));
         }
@@ -922,7 +928,7 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
         // Test for "Cancel" or closing the dialog
         mocked(Gui.warningMessage).mockReturnValueOnce(undefined as any);
         await dsActions.submitMember(dataset);
-        expect(mocked(Gui.warningMessage)).toBeCalledWith("Are you sure you want to submit the following job?\n\n" + dataset.getLabel(), {
+        expect(mocked(Gui.warningMessage)).toHaveBeenCalledWith("Are you sure you want to submit the following job?\n\n" + dataset.getLabel(), {
             items: [{ title: "Submit" }],
             vsCodeOpts: { modal: true },
         });
@@ -1223,7 +1229,7 @@ describe("job deletion command", () => {
 
         await jobActions.deleteCommand(jobsProvider, jobNode);
 
-        expect(mocked(jobsProvider.delete)).toBeCalledWith(jobNode);
+        expect(mocked(jobsProvider.delete)).toHaveBeenCalledWith(jobNode);
     });
 
     it("should delete multiple jobs from the jobs provider", async () => {
@@ -1245,8 +1251,8 @@ describe("job deletion command", () => {
         // act
         await jobActions.deleteCommand(jobsProvider, undefined, jobs);
         // assert
-        expect(mocked(jobsProvider.delete)).toBeCalledWith(jobNode1);
-        expect(mocked(jobsProvider.delete)).toBeCalledWith(jobNode2);
+        expect(mocked(jobsProvider.delete)).toHaveBeenCalledWith(jobNode1);
+        expect(mocked(jobsProvider.delete)).toHaveBeenCalledWith(jobNode2);
     });
 
     it("should not delete a job in case user cancelled deletion", async () => {
@@ -1257,7 +1263,7 @@ describe("job deletion command", () => {
         const jobNode = new ZoweJobNode({ label: "jobtest", collapsibleState: vscode.TreeItemCollapsibleState.Expanded, session, profile, job });
 
         await jobActions.deleteCommand(jobsProvider, jobNode);
-        expect(mocked(jobsProvider.delete)).not.toBeCalled();
+        expect(mocked(jobsProvider.delete)).not.toHaveBeenCalled();
     });
 
     it("should not refresh the current job session after an error during job deletion", async () => {
@@ -1269,7 +1275,7 @@ describe("job deletion command", () => {
         // act
         await jobActions.deleteCommand(jobsProvider, jobNode);
         // assert
-        expect(mocked(jobsProvider.delete)).toBeCalledWith(jobNode);
+        expect(mocked(jobsProvider.delete)).toHaveBeenCalledWith(jobNode);
     });
 
     it("should delete a job via quick key from the jobs provider", async () => {
@@ -1284,7 +1290,7 @@ describe("job deletion command", () => {
         await jobActions.deleteCommand(jobsProvider, undefined);
 
         // assert
-        expect(mocked(jobsProvider.delete)).toBeCalledWith(jobNode);
+        expect(mocked(jobsProvider.delete)).toHaveBeenCalledWith(jobNode);
     });
 });
 
@@ -1344,7 +1350,7 @@ describe("sortJobs function", () => {
         //act
         await jobActions.sortJobs(testtree.mSessionNodes[0], testtree);
         //asert
-        expect(sortbynamespy).toBeCalledWith(testtree.mSessionNodes[0]);
+        expect(sortbynamespy).toHaveBeenCalledWith(testtree.mSessionNodes[0]);
         expect(sortbynamespy).toHaveBeenCalled();
         expect(sortbynamespy.mock.calls[0][0].children).toStrictEqual(expected.mSessionNodes[0].children);
     });
@@ -1363,7 +1369,7 @@ describe("sortJobs function", () => {
         //act
         await jobActions.sortJobs(testtree.mSessionNodes[0], testtree);
         //asert
-        expect(sortbyidspy).toBeCalledWith(testtree.mSessionNodes[0]);
+        expect(sortbyidspy).toHaveBeenCalledWith(testtree.mSessionNodes[0]);
         expect(sortbyidspy).toHaveBeenCalled();
         expect(sortbyidspy.mock.calls[0][0].children).toStrictEqual(expected.mSessionNodes[0].children);
     });
@@ -1383,7 +1389,7 @@ describe("sortJobs function", () => {
         //act
         await jobActions.sortJobs(testtree.mSessionNodes[0], testtree);
         //asert
-        expect(sortbyretcodespy).toBeCalledWith(testtree.mSessionNodes[0]);
+        expect(sortbyretcodespy).toHaveBeenCalledWith(testtree.mSessionNodes[0]);
         expect(sortbyretcodespy).toHaveBeenCalled();
         expect(sortbyretcodespy.mock.calls[0][0].children).toStrictEqual(expected.mSessionNodes[0].children);
     });

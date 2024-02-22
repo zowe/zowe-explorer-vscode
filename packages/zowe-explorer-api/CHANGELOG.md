@@ -6,6 +6,14 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### New features and enhancements
 
+### Bug fixes
+
+- Fixed issue where `zosmf` profiles did not respect the `protocol` property [#2703](https://github.com/zowe/vscode-extension-for-zowe/issues/2703).
+
+## `3.0.0-next.202402142205`
+
+### New features and enhancements
+
 - **Breaking:** Removed the following properties/methods:
   - `IZoweUSSTreeNode.binaryFiles` -> `IZoweUSSTreeNode.encodingMap`
   - `IZoweUSSTreeNode.mProfileName` -> `IZoweUSSTreeNode.getProfileName()`
@@ -16,17 +24,16 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### Bug fixes
 
+- Fix login and logout operations when APIML dynamic tokens are enabled. [#2692](https://github.com/zowe/vscode-extension-for-zowe/pull/2692)
+- Updated dependencies for technical currency purposes.
+
 ## `3.0.0-next.202402071248`
 
 ### New features and enhancements
 
 - Grouped common methods into singleton classes [#2109](https://github.com/zowe/vscode-extension-for-zowe/issues/2109)
 
-### Bug fixes
-
 ## `3.0.0-next.202401241448`
-
-### New features and enhancements
 
 ### Bug fixes
 

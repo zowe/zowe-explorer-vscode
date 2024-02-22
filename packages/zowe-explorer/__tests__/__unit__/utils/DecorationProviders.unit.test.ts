@@ -53,7 +53,7 @@ describe("PollDecorationProvider - unit tests", () => {
         // Update the icon for a URI that has already been decorated
         PollDecorator.provideFileDecoration(mockUri, undefined as any);
 
-        const decoration = Poller.pollRequests[mockUri.path]["decoration"];
+        const decoration = Poller.pollRequests[mockUri.path].decoration;
         expect(decoration?.tooltip).toBe("Polling (500ms)");
     });
 

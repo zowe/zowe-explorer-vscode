@@ -70,11 +70,6 @@ export async function errorHandling(errorDetails: Error | string, label?: string
                 const isTokenAuth = await ProfilesUtils.isUsingTokenAuth(label);
 
                 if (tokenError.includes("Token is not valid or expired.") || isTokenAuth) {
-                    if (globals.ISTHEIA) {
-                        Gui.errorMessage(errToken);
-                        await Profiles.getInstance().ssoLogin(null, label);
-                        return;
-                    }
                     const message = vscode.l10n.t("Log in to Authentication Service");
                     Gui.showMessage(errToken, { items: [message] }).then(async (selection) => {
                         if (selection) {
@@ -83,11 +78,6 @@ export async function errorHandling(errorDetails: Error | string, label?: string
                     });
                     return;
                 }
-            }
-
-            if (globals.ISTHEIA) {
-                Gui.errorMessage(errMsg);
-                return;
             }
             const checkCredsButton = vscode.l10n.t("Update Credentials");
             await Gui.errorMessage(errMsg, {
@@ -103,7 +93,9 @@ export async function errorHandling(errorDetails: Error | string, label?: string
             return;
         }
     }
-
+    if (errorDetails.toString().includes("Could not find profile")) {
+        return;
+    }
     if (moreInfo === undefined) {
         moreInfo = errorDetails.toString().includes("Error") ? "" : "Error: ";
     } else {

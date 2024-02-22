@@ -123,22 +123,22 @@ describe("ProfileManagement unit tests", () => {
             const mocks = createBlockMocks(createGlobalMocks());
             mocks.mockResolveQp.mockResolvedValueOnce(undefined);
             await ProfileManagement.manageProfile(mocks.mockDsSessionNode);
-            expect(mocks.debugLogSpy).toBeCalledWith(mocks.logMsg);
-            expect(mocks.opCancelledSpy).toBeCalledWith("Operation Cancelled");
+            expect(mocks.debugLogSpy).toHaveBeenCalledWith(mocks.logMsg);
+            expect(mocks.opCancelledSpy).toHaveBeenCalledWith("Operation Cancelled");
         });
         it("profile using basic authentication should see promptCredentials called when Update Credentials chosen", async () => {
             const mocks = createBlockMocks(createGlobalMocks());
             mocks.mockResolveQp.mockResolvedValueOnce(mocks.mockUpdateChosen);
             await ProfileManagement.manageProfile(mocks.mockDsSessionNode);
-            expect(mocks.debugLogSpy).toBeCalledWith(mocks.logMsg);
-            expect(mocks.promptSpy).toBeCalled();
+            expect(mocks.debugLogSpy).toHaveBeenCalledWith(mocks.logMsg);
+            expect(mocks.promptSpy).toHaveBeenCalled();
         });
         it("profile using basic authentication should see editSession called when Edit Profile chosen", async () => {
             const mocks = createBlockMocks(createGlobalMocks());
             mocks.mockResolveQp.mockResolvedValueOnce(mocks.mockEditProfChosen);
             await ProfileManagement.manageProfile(mocks.mockDsSessionNode);
-            expect(mocks.debugLogSpy).toBeCalledWith(mocks.logMsg);
-            expect(mocks.editSpy).toBeCalled();
+            expect(mocks.debugLogSpy).toHaveBeenCalledWith(mocks.logMsg);
+            expect(mocks.editSpy).toHaveBeenCalled();
         });
         it("profile using basic authentication should see editSession called when Delete Profile chosen with v2 profile", async () => {
             const mocks = createBlockMocks(createGlobalMocks());
@@ -148,8 +148,8 @@ describe("ProfileManagement unit tests", () => {
             });
             mocks.mockResolveQp.mockResolvedValueOnce(mocks.mockDeleteProfChosen);
             await ProfileManagement.manageProfile(mocks.mockDsSessionNode);
-            expect(mocks.debugLogSpy).toBeCalledWith(mocks.logMsg);
-            expect(mocks.editSpy).toBeCalled();
+            expect(mocks.debugLogSpy).toHaveBeenCalledWith(mocks.logMsg);
+            expect(mocks.editSpy).toHaveBeenCalled();
         });
         it("profile using basic authentication should see hide session command called for profile in data set tree view", async () => {
             const mocks = createBlockMocks(createGlobalMocks());
@@ -160,7 +160,7 @@ describe("ProfileManagement unit tests", () => {
             mocks.mockResolveQp.mockResolvedValueOnce(mocks.mockHideProfChosen);
             mocks.mockResolveQp.mockResolvedValueOnce(ProfileManagement["getPromptChangeForAllTreesOptions"]()[1]);
             await ProfileManagement.manageProfile(mocks.mockDsSessionNode);
-            expect(mocks.debugLogSpy).toBeCalledWith(mocks.logMsg);
+            expect(mocks.debugLogSpy).toHaveBeenCalledWith(mocks.logMsg);
             expect(mocks.commandSpy).toHaveBeenLastCalledWith("zowe.ds.removeSession", mocks.mockDsSessionNode, null, false);
         });
     });
@@ -177,29 +177,29 @@ describe("ProfileManagement unit tests", () => {
             const mocks = createBlockMocks(createGlobalMocks());
             mocks.mockResolveQp.mockResolvedValueOnce(undefined);
             await ProfileManagement.manageProfile(mocks.mockDsSessionNode);
-            expect(mocks.debugLogSpy).toBeCalledWith(mocks.logMsg);
-            expect(mocks.opCancelledSpy).toBeCalledWith("Operation Cancelled");
+            expect(mocks.debugLogSpy).toHaveBeenCalledWith(mocks.logMsg);
+            expect(mocks.opCancelledSpy).toHaveBeenCalledWith("Operation Cancelled");
         });
         it("profile using token authentication should see ssoLogin called when Log in to authentication service chosen", async () => {
             const mocks = createBlockMocks(createGlobalMocks());
             mocks.mockResolveQp.mockResolvedValueOnce(mocks.mockLoginChosen);
             await ProfileManagement.manageProfile(mocks.mockDsSessionNode);
-            expect(mocks.debugLogSpy).toBeCalledWith(mocks.logMsg);
-            expect(mocks.loginSpy).toBeCalled();
+            expect(mocks.debugLogSpy).toHaveBeenCalledWith(mocks.logMsg);
+            expect(mocks.loginSpy).toHaveBeenCalled();
         });
         it("profile using token authentication should see ssoLogout called when Log out from authentication service chosen", async () => {
             const mocks = createBlockMocks(createGlobalMocks());
             mocks.mockResolveQp.mockResolvedValueOnce(mocks.mockLogoutChosen);
             await ProfileManagement.manageProfile(mocks.mockDsSessionNode);
-            expect(mocks.debugLogSpy).toBeCalledWith(mocks.logMsg);
-            expect(mocks.logoutSpy).toBeCalled();
+            expect(mocks.debugLogSpy).toHaveBeenCalledWith(mocks.logMsg);
+            expect(mocks.logoutSpy).toHaveBeenCalled();
         });
         it("profile using token authentication should see correct command called for hiding a unix tree session node", async () => {
             const mocks = createBlockMocks(createGlobalMocks());
             mocks.mockResolveQp.mockResolvedValueOnce(mocks.mockHideProfChosen);
             mocks.mockResolveQp.mockResolvedValueOnce(ProfileManagement["getPromptChangeForAllTreesOptions"]()[1]);
             await ProfileManagement.manageProfile(mocks.mockUnixSessionNode);
-            expect(mocks.debugLogSpy).toBeCalledWith(mocks.logMsg);
+            expect(mocks.debugLogSpy).toHaveBeenCalledWith(mocks.logMsg);
             expect(mocks.commandSpy).toHaveBeenLastCalledWith("zowe.uss.removeSession", mocks.mockUnixSessionNode, null, false);
         });
         it("profile using token authentication should see correct command called for enabling validation a unix tree session node", async () => {
@@ -207,7 +207,7 @@ describe("ProfileManagement unit tests", () => {
             mocks.mockResolveQp.mockResolvedValueOnce(mocks.mockEnableValidationChosen);
             mocks.mockResolveQp.mockResolvedValueOnce(ProfileManagement["getPromptChangeForAllTreesOptions"]()[1]);
             await ProfileManagement.manageProfile(mocks.mockTreeProviders.uss.mSessionNodes[0]);
-            expect(mocks.debugLogSpy).toBeCalledWith(mocks.logMsg.replace("sestest", "zosmf"));
+            expect(mocks.debugLogSpy).toHaveBeenCalledWith(mocks.logMsg.replace("sestest", "zosmf"));
             expect(mocks.commandSpy).toHaveBeenLastCalledWith("zowe.uss.enableValidation", mocks.mockTreeProviders.uss.mSessionNodes[0]);
         });
         it("profile using token authentication should see correct command called for disabling validation a unix tree session node", async () => {
@@ -215,7 +215,7 @@ describe("ProfileManagement unit tests", () => {
             mocks.mockResolveQp.mockResolvedValueOnce(mocks.mockDisableValidationChosen);
             mocks.mockResolveQp.mockResolvedValueOnce(ProfileManagement["getPromptChangeForAllTreesOptions"]()[1]);
             await ProfileManagement.manageProfile(mocks.mockUnixSessionNode);
-            expect(mocks.debugLogSpy).toBeCalledWith(mocks.logMsg);
+            expect(mocks.debugLogSpy).toHaveBeenCalledWith(mocks.logMsg);
             expect(mocks.commandSpy).toHaveBeenLastCalledWith("zowe.uss.disableValidation", mocks.mockUnixSessionNode);
         });
     });
@@ -230,36 +230,36 @@ describe("ProfileManagement unit tests", () => {
             const mocks = createBlockMocks(createGlobalMocks());
             mocks.mockResolveQp.mockResolvedValueOnce(undefined);
             await ProfileManagement.manageProfile(mocks.mockDsSessionNode);
-            expect(mocks.debugLogSpy).toBeCalledWith(mocks.logMsg);
-            expect(mocks.opCancelledSpy).toBeCalledWith("Operation Cancelled");
+            expect(mocks.debugLogSpy).toHaveBeenCalledWith(mocks.logMsg);
+            expect(mocks.opCancelledSpy).toHaveBeenCalledWith("Operation Cancelled");
         });
         it("profile with no authentication method should see promptCredentials called when Add Basic Credentials chosen", async () => {
             const mocks = createBlockMocks(createGlobalMocks());
             mocks.mockResolveQp.mockResolvedValueOnce(mocks.mockAddBasicChosen);
             await ProfileManagement.manageProfile(mocks.mockDsSessionNode);
-            expect(mocks.debugLogSpy).toBeCalledWith(mocks.logMsg);
-            expect(mocks.promptSpy).toBeCalled();
+            expect(mocks.debugLogSpy).toHaveBeenCalledWith(mocks.logMsg);
+            expect(mocks.promptSpy).toHaveBeenCalled();
         });
         it("profile with no authentication method should see ssoLogin called when Log in to authentication service chosen", async () => {
             const mocks = createBlockMocks(createGlobalMocks());
             mocks.mockResolveQp.mockResolvedValueOnce(mocks.mockLoginChosen);
             await ProfileManagement.manageProfile(mocks.mockDsSessionNode);
-            expect(mocks.debugLogSpy).toBeCalledWith(mocks.logMsg);
-            expect(mocks.loginSpy).toBeCalled();
+            expect(mocks.debugLogSpy).toHaveBeenCalledWith(mocks.logMsg);
+            expect(mocks.loginSpy).toHaveBeenCalled();
         });
         it("profile with no authentication method should see editSession called when Edit Profile chosen", async () => {
             const mocks = createBlockMocks(createGlobalMocks());
             mocks.mockResolveQp.mockResolvedValueOnce(mocks.mockEditProfChosen);
             await ProfileManagement.manageProfile(mocks.mockDsSessionNode);
-            expect(mocks.debugLogSpy).toBeCalledWith(mocks.logMsg);
-            expect(mocks.editSpy).toBeCalled();
+            expect(mocks.debugLogSpy).toHaveBeenCalledWith(mocks.logMsg);
+            expect(mocks.editSpy).toHaveBeenCalled();
         });
         it("profile using token authentication should see correct command called for enabling validation a data set tree session node", async () => {
             const mocks = createBlockMocks(createGlobalMocks());
             mocks.mockResolveQp.mockResolvedValueOnce(mocks.mockEnableValidationChosen);
             mocks.mockResolveQp.mockResolvedValueOnce(ProfileManagement["getPromptChangeForAllTreesOptions"]()[0]);
             await ProfileManagement.manageProfile(mocks.mockTreeProviders.ds.mSessionNodes[1]);
-            expect(mocks.debugLogSpy).toBeCalledWith(mocks.logMsg.replace("sestest", "zosmf2"));
+            expect(mocks.debugLogSpy).toHaveBeenCalledWith(mocks.logMsg.replace("sestest", "zosmf2"));
             expect(mocks.commandSpy).toHaveBeenLastCalledWith("zowe.ds.enableValidation", mocks.mockTreeProviders.ds.mSessionNodes[1]);
         });
         it("profile using token authentication should see correct command called for disabling validation a data set tree session node", async () => {
@@ -267,7 +267,7 @@ describe("ProfileManagement unit tests", () => {
             mocks.mockResolveQp.mockResolvedValueOnce(mocks.mockDisableValidationChosen);
             mocks.mockResolveQp.mockResolvedValueOnce(ProfileManagement["getPromptChangeForAllTreesOptions"]()[0]);
             await ProfileManagement.manageProfile(mocks.mockTreeProviders.ds.mSessionNodes[0]);
-            expect(mocks.debugLogSpy).toBeCalledWith(mocks.logMsg.replace("sestest", "zosmf"));
+            expect(mocks.debugLogSpy).toHaveBeenCalledWith(mocks.logMsg.replace("sestest", "zosmf"));
             expect(mocks.commandSpy).toHaveBeenLastCalledWith("zowe.ds.disableValidation", mocks.mockTreeProviders.ds.mSessionNodes[0]);
         });
     });
@@ -278,7 +278,7 @@ describe("ProfileManagement unit tests", () => {
             const infoMessageSpy = jest.spyOn(Gui, "infoMessage");
             jest.spyOn(ProfileManagement as any, "promptChangeForAllTrees").mockReturnValue(undefined);
             await expect(ProfileManagement["handleHideProfiles"](mocks.mockDsSessionNode)).resolves.toEqual(undefined);
-            expect(infoMessageSpy).toBeCalledTimes(1);
+            expect(infoMessageSpy).toHaveBeenCalledTimes(1);
         });
         it("should hide the job session", async () => {
             const mocks = createGlobalMocks();
@@ -335,7 +335,7 @@ describe("ProfileManagement unit tests", () => {
             globalMocks.mockProfileInstance.allProfiles = [];
             const regSpy = jest.spyOn(blockMocks.registry, "registeredJesApiTypes");
             expect(ProfileManagement.getRegisteredProfileNameList(globals.Trees.JES)).toEqual([]);
-            expect(regSpy).not.toBeCalled();
+            expect(regSpy).not.toHaveBeenCalled();
         });
         it("should return empty array when profile in allProfiles doesn't load", () => {
             const globalMocks = createGlobalMocks();
@@ -343,7 +343,7 @@ describe("ProfileManagement unit tests", () => {
             jest.spyOn(globalMocks.mockProfileInstance, "loadNamedProfile").mockReturnValue(undefined);
             const regSpy = jest.spyOn(blockMocks.registry, "registeredJesApiTypes");
             expect(ProfileManagement.getRegisteredProfileNameList(globals.Trees.JES)).toEqual([]);
-            expect(regSpy).not.toBeCalled();
+            expect(regSpy).not.toHaveBeenCalled();
         });
         it("should return empty array when profile type isn't registered", () => {
             const blockMocks = createBlockMocks(createGlobalMocks());
@@ -366,7 +366,7 @@ describe("ProfileManagement unit tests", () => {
                 configurable: true,
             });
             expect(ProfileManagement.getRegisteredProfileNameList(globals.Trees.JES)).toEqual([]);
-            expect(warnSpy).toBeCalledWith(thrownError);
+            expect(warnSpy).toHaveBeenCalledWith(thrownError);
         });
     });
 
@@ -393,10 +393,10 @@ describe("ProfileManagement unit tests", () => {
             } as any);
             resolveQuickPickSpy.mockResolvedValue(expectedResult);
             await expect(ProfileManagement["promptChangeForAllTrees"]("test", true)).resolves.toEqual(expectedResult);
-            expect(createQuickPickSpy).toBeCalledTimes(1);
-            expect(resolveQuickPickSpy).toBeCalledTimes(1);
-            expect(showSpy).toBeCalledTimes(1);
-            expect(hideSpy).toBeCalledTimes(1);
+            expect(createQuickPickSpy).toHaveBeenCalledTimes(1);
+            expect(resolveQuickPickSpy).toHaveBeenCalledTimes(1);
+            expect(showSpy).toHaveBeenCalledTimes(1);
+            expect(hideSpy).toHaveBeenCalledTimes(1);
         });
     });
     describe("getRegisteredProfileNameList unit tests", () => {
@@ -441,7 +441,7 @@ describe("ProfileManagement unit tests", () => {
             globalMocks.mockProfileInstance.allProfiles = [];
             const regSpy = jest.spyOn(blockMocks.registry, "registeredJesApiTypes");
             expect(ProfileManagement.getRegisteredProfileNameList(globals.Trees.JES)).toEqual([]);
-            expect(regSpy).not.toBeCalled();
+            expect(regSpy).not.toHaveBeenCalled();
         });
         it("should return empty array when profile in allProfiles doesn't load", () => {
             const globalMocks = createGlobalMocks();
@@ -449,7 +449,7 @@ describe("ProfileManagement unit tests", () => {
             jest.spyOn(globalMocks.mockProfileInstance, "loadNamedProfile").mockReturnValue(undefined);
             const regSpy = jest.spyOn(blockMocks.registry, "registeredJesApiTypes");
             expect(ProfileManagement.getRegisteredProfileNameList(globals.Trees.JES)).toEqual([]);
-            expect(regSpy).not.toBeCalled();
+            expect(regSpy).not.toHaveBeenCalled();
         });
         it("should return empty array when profile type isn't registered", () => {
             const blockMocks = createBlockMocks(createGlobalMocks());
@@ -472,7 +472,7 @@ describe("ProfileManagement unit tests", () => {
                 configurable: true,
             });
             expect(ProfileManagement.getRegisteredProfileNameList(globals.Trees.JES)).toEqual([]);
-            expect(warnSpy).toBeCalledWith(thrownError);
+            expect(warnSpy).toHaveBeenCalledWith(thrownError);
         });
     });
 });
