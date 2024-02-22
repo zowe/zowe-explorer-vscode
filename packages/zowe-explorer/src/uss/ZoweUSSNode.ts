@@ -306,7 +306,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
 
     public get openedDocumentInstance(): vscode.TextDocument {
         ZoweLogger.trace("ZoweUSSNode.openedDocumentInstance called.");
-        return vscode.workspace.textDocuments.find((doc) => doc.uri === this.resourceUri);
+        return vscode.workspace.textDocuments.find((doc) => doc.uri.toString() === this.resourceUri.toString());
     }
 
     private renameChild(parentUri: vscode.Uri): void {

@@ -58,8 +58,8 @@ ZoweUSSNode {
         "type": "zosmf",
       },
       "resourceUri": Uri {
-          "path": "/root",
-          "scheme": "zowe-uss",
+        "path": "/root",
+        "scheme": "zowe-uss",
       },
       "session": Session {
         "ISession": {
@@ -89,8 +89,8 @@ ZoweUSSNode {
       "type": "zosmf",
     },
     "resourceUri": Uri {
-        "path": "/root",
-        "scheme": "zowe-uss",
+      "path": "/root",
+      "scheme": "zowe-uss",
     },
     "session": undefined,
     "shortLabel": "",

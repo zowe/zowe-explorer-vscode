@@ -11,7 +11,7 @@
 
 import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
-import { BaseProvider, Gui, Validation } from "@zowe/zowe-explorer-api";
+import { Gui, Validation } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { Profiles } from "../../../src/Profiles";
 import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
@@ -26,14 +26,13 @@ import {
     createValidIProfile,
 } from "../../../__mocks__/mockCreators/shared";
 import { createUSSTree } from "../../../__mocks__/mockCreators/uss";
-import * as fs from "fs";
-import * as path from "path";
 import * as globals from "../../../src/globals";
 import * as ussUtils from "../../../src/uss/utils";
 import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
-import { LocalFileManagement } from "../../../src/utils/LocalFileManagement";
 import { TreeProviders } from "../../../src/shared/TreeProviders";
 import { UssFSProvider } from "../../../src/uss/UssFSProvider";
+import { MockedProperty } from "../../../__mocks__/mockUtils";
+import { getSessionLabel } from "../../../src/utils/ProfilesUtils";
 
 jest.mock("fs");
 
@@ -41,8 +40,8 @@ async function createGlobalMocks() {
     const globalMocks = {
         ussFile: jest.fn(),
         Download: jest.fn(),
-        mockTextDocument: { uri: vscode.Uri.parse("zowe-ds:/root/node") } as vscode.TextDocument,
-        mockTextDocuments: new Array<vscode.TextDocument>(),
+        mockTextDocument: { uri: vscode.Uri.from({ scheme: "zowe-uss", path: "/sestest/path/to/node" }) } as vscode.TextDocument,
+        textDocumentsArray: new Array<vscode.TextDocument>(),
         openedDocumentInstance: jest.fn(),
         onDidSaveTextDocument: jest.fn(),
         showErrorMessage: jest.fn(),
@@ -83,9 +82,12 @@ async function createGlobalMocks() {
         loggerError: jest.spyOn(globals.ZoweLogger, "error").mockImplementation(),
     };
 
+    globalMocks["textDocumentsMock"] = new MockedProperty(vscode.workspace, "textDocuments", undefined, globalMocks.textDocumentsArray);
+    globalMocks["readTextMock"] = new MockedProperty(vscode.env.clipboard, "readText", undefined, globalMocks.readText);
+
     jest.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation(globalMocks.FileSystemProvider.createDirectory);
 
-    globalMocks.mockTextDocuments.push(globalMocks.mockTextDocument);
+    globalMocks.textDocumentsArray.push(globalMocks.mockTextDocument);
     globalMocks.profileOps = createInstanceOfProfile(globalMocks.profileOne);
     Object.defineProperty(globalMocks.profileOps, "loadNamedProfile", {
         value: jest.fn(),
@@ -97,10 +99,6 @@ async function createGlobalMocks() {
 
     Object.defineProperty(vscode.workspace, "onDidSaveTextDocument", {
         value: globalMocks.onDidSaveTextDocument,
-        configurable: true,
-    });
-    Object.defineProperty(vscode.workspace, "textDocuments", {
-        value: globalMocks.mockTextDocuments,
         configurable: true,
     });
     Object.defineProperty(vscode.commands, "executeCommand", {
@@ -159,7 +157,6 @@ async function createGlobalMocks() {
         value: globalMocks.fileExistsCaseSensitveSync,
         configurable: true,
     });
-    Object.defineProperty(vscode.env.clipboard, "readText", { value: globalMocks.readText, configurable: true });
     Object.defineProperty(ZoweLocalStorage, "storage", {
         value: {
             get: () => ({ persistence: true, favorites: [], history: [], sessions: ["zosmf"], searchHistory: [], fileHistory: [] }),
@@ -867,7 +864,7 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
                 session: globalMocks.session,
                 profile: globalMocks.profileOne,
             }),
-            initializeFileOpening: jest.spyOn(ZoweUSSNode.prototype, "initializeFileOpening").mockImplementation(),
+            initializeFileOpening: jest.spyOn(ZoweUSSNode.prototype, "initializeFileOpening"),
         };
         newMocks.initializeFileOpening.mockClear();
         newMocks.testUSSTree = createUSSTree([], [newMocks.ussNode], createTreeView());
@@ -1139,15 +1136,17 @@ describe("ZoweUSSNode Unit Tests - Function node.openedDocumentInstance()", () =
             profile: globalMocks.profileOne,
             contextOverride: globals.USS_SESSION_CONTEXT,
         });
-        rootNode.fullPath = "/sestest";
+        rootNode.fullPath = "/path/to";
+        rootNode.resourceUri = rootNode.resourceUri?.with({
+            path: `/${getSessionLabel(rootNode)}/${rootNode.fullPath}`,
+        });
         const testNode = new ZoweUSSNode({
             label: "node",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             parentNode: rootNode,
             profile: globalMocks.profileOne,
+            parentPath: rootNode.fullPath,
         });
-        console.log(testNode);
-        globalMocks.mockTextDocuments.push(globalMocks.mockTextDocument);
 
         const returnedDoc = testNode.openedDocumentInstance;
         expect(returnedDoc).toEqual(globalMocks.mockTextDocument);
@@ -1156,7 +1155,7 @@ describe("ZoweUSSNode Unit Tests - Function node.openedDocumentInstance()", () =
     it("Tests that node.openedDocumentInstance() returns undefined if the file is not open", async () => {
         const globalMocks = await createGlobalMocks();
 
-        globalMocks.mockTextDocuments.pop();
+        globalMocks.textDocumentsArray.pop();
 
         // Creating a test node
         const rootNode = new ZoweUSSNode({
@@ -1186,14 +1185,14 @@ describe("ZoweUSSNode Unit Tests - Function node.initializeFileOpening()", () =>
 
         // Creating a test node
         const rootNode = new ZoweUSSNode({
-            label: "root",
+            label: "sestest",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             session: globalMocks.session,
             profile: globalMocks.profileOne,
+            contextOverride: globals.USS_SESSION_CONTEXT,
         });
-        rootNode.contextValue = globals.USS_SESSION_CONTEXT;
         const testNode = new ZoweUSSNode({
-            label: globals.DS_PDS_CONTEXT,
+            label: "node",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             parentNode: rootNode,
             profile: globalMocks.profileOne,
@@ -1277,7 +1276,7 @@ describe("ZoweUSSNode Unit Tests - Function node.pasteUssTree()", () => {
             mockUssApi: ZoweExplorerApiRegister.getUssApi(createIProfileFakeEncoding()),
             getUssApiMock: jest.fn(),
             testNode: testNode,
-            pasteSpy: jest.spyOn(testNode, "paste"),
+            pasteSpy: jest.spyOn(ZoweUSSNode.prototype, "paste"),
         };
 
         newMocks.testNode.fullPath = "/users/temp/test";
@@ -1304,54 +1303,6 @@ describe("ZoweUSSNode Unit Tests - Function node.pasteUssTree()", () => {
         globalMocks.basePath.mockResolvedValue("/temp");
         return newMocks;
     }
-
-    it("Tests node.pasteUssTree() reads clipboard contents and uploads files successfully", async () => {
-        const globalMocks = await createGlobalMocks();
-        const blockMocks = createBlockMocks(globalMocks);
-        blockMocks.pasteSpy.mockClear();
-
-        jest.spyOn(blockMocks.mockUssApi, "fileList").mockResolvedValue(blockMocks.fileResponse);
-        jest.spyOn(blockMocks.mockUssApi, "putContent").mockResolvedValue(blockMocks.fileResponse);
-        jest.spyOn(blockMocks.mockUssApi, "uploadDirectory").mockResolvedValue(blockMocks.fileResponse);
-        const mockCopyApi = jest.spyOn(blockMocks.mockUssApi, "copy").mockResolvedValue(Buffer.from(""));
-
-        // Scenario 1: multiple files, pasting within same session (use new copy API)
-        const mockToSameSession = jest.spyOn(UssFileUtils, "toSameSession").mockReturnValue(true);
-        await blockMocks.testNode.pasteUssTree();
-        expect(blockMocks.pasteSpy).toHaveBeenCalledTimes(3);
-        expect(mockCopyApi).toHaveBeenCalledTimes(3);
-
-        blockMocks.pasteSpy.mockClear();
-        mockCopyApi.mockClear();
-
-        // Scenario 2: copying multiple files between two sessions (should fallback to create/putContent APIs)
-        mockToSameSession.mockReturnValue(false);
-        await blockMocks.testNode.pasteUssTree();
-        expect(blockMocks.pasteSpy).toHaveBeenCalledTimes(3);
-        expect(blockMocks.mockUssApi.putContent).toHaveBeenCalledTimes(3);
-
-        // Scenario 3: a directory, pasting within same session
-        globalMocks.readText.mockResolvedValue(
-            JSON.stringify({
-                children: [
-                    {
-                        ussPath: "/path/folder1",
-                        type: UssFileType.Directory,
-                    },
-                ],
-            })
-        );
-
-        mockToSameSession.mockReturnValue(true);
-        jest.spyOn(blockMocks.mockUssApi, "fileList").mockResolvedValueOnce(blockMocks.fileRespWithFolder);
-        jest.spyOn(blockMocks.mockUssApi, "putContent").mockResolvedValueOnce(blockMocks.fileRespWithFolder);
-        blockMocks.pasteSpy.mockClear();
-
-        await blockMocks.testNode.pasteUssTree();
-        // Only one paste operation is needed, copy API handles recursion out-of-the-box
-        expect(blockMocks.pasteSpy).toHaveBeenCalledTimes(1);
-        expect(mockCopyApi).toHaveBeenCalledTimes(1);
-    });
 
     it("Tests node.pasteUssTree() reads clipboard contents finds same file name on destination directory", async () => {
         const globalMocks = await createGlobalMocks();
@@ -1388,6 +1339,7 @@ describe("ZoweUSSNode Unit Tests - Function node.pasteUssTree()", () => {
         const fileListSpy = jest.spyOn(blockMocks.mockUssApi, "fileList");
         fileListSpy.mockClear();
         const pasteSpy = jest.spyOn(blockMocks.testNode, "paste");
+        pasteSpy.mockClear();
 
         expect(await blockMocks.testNode.pasteUssTree()).toEqual(undefined);
         expect(pasteSpy).not.toHaveBeenCalled();

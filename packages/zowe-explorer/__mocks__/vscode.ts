@@ -1261,7 +1261,25 @@ export class Uri {
     fsPath: string;
 
     public toString(): string {
-        return this.path;
+        let result = this.scheme ? `${this.scheme}://` : "";
+
+        if (this.authority) {
+            result += `${this.authority}`;
+        }
+
+        if (this.path) {
+            result += `${this.path}`;
+        }
+
+        if (this.query) {
+            result += `?${this.query}`;
+        }
+
+        if (this.fragment) {
+            result += `#${this.fragment}`;
+        }
+
+        return result;
     }
 }
 
