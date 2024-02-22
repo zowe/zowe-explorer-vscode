@@ -279,16 +279,17 @@ describe("ZosmfUssApi", () => {
         expect(checkStatusSpy).toHaveBeenCalledTimes(1);
     });
 
-    it("should test that copy calls zowe.Utilities.putUSSPayload", () => {
+    it("should test that copy calls zowe.Utilities.putUSSPayload", async () => {
         const api = new ZoweExplorerZosmf.UssApi();
         api.getSession = jest.fn();
+        const response = Buffer.from("hello world!");
 
         Object.defineProperty(zowe.Utilities, "putUSSPayload", {
-            value: jest.fn().mockResolvedValue(Buffer.from("hello world!")),
+            value: jest.fn().mockResolvedValue(response),
             configurable: true,
         });
 
-        expect(api.copy("/")).toStrictEqual(zowe.Utilities.putUSSPayload(api.getSession(), "/", { request: "copy" }));
+        await expect(api.copy("/")).resolves.toEqual(response);
     });
 
     it("getStatus should validate unverified profile", async () => {

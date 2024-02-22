@@ -1621,7 +1621,7 @@ describe("ZoweUSSNode Unit Tests - Function node.pasteUssTree()", () => {
     it("Tests util disposeClipboardContents function correctly free clipboardContents", async () => {
         vscode.env.clipboard.writeText("test");
         ussUtils.disposeClipboardContents();
-        expect(vscode.env.clipboard.readText()).toEqual(Promise.resolve({}));
+        await expect(vscode.env.clipboard.readText()).resolves.not.toThrow();
     });
     it("Tests node.pasteUssTree() reads clipboard contents and returns early if nothing is in the clipboard", async () => {
         const globalMocks = await createGlobalMocks();
