@@ -65,8 +65,8 @@ export function registerCommonCommands(context: vscode.ExtensionContext, provide
 
     // Update imperative.json to false only when VS Code setting is set to false
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.updateSecureCredentials", async (customCredentialManager?: string) => {
-            await globals.setGlobalSecurityValue(customCredentialManager);
+        vscode.commands.registerCommand("zowe.updateSecureCredentials", (customCredentialManager?: string) => {
+            globals.setGlobalSecurityValue(customCredentialManager);
             ProfilesUtils.writeOverridesFile();
         })
     );
@@ -207,7 +207,7 @@ export function registerCommonCommands(context: vscode.ExtensionContext, provide
             })
         );
         context.subscriptions.push(
-            vscode.commands.registerCommand("zowe.compareFileStarted", () => {
+            vscode.commands.registerCommand("zowe.compareFileStarted", (): boolean => {
                 return LocalFileManagement.fileSelectedToCompare;
             })
         );

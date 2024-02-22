@@ -1160,27 +1160,29 @@ export class Uri {
     }
 
     public with(change: { scheme?: string; authority?: string; path?: string; query?: string; fragment?: string }): Uri {
+        let newUri = Uri.from(this);
+
         if (change.scheme) {
-            this.scheme = change.scheme;
+            newUri.scheme = change.scheme;
         }
 
         if (change.authority) {
-            this.authority = change.authority;
+            newUri.authority = change.authority;
         }
 
         if (change.path) {
-            this.path = change.path;
+            newUri.path = change.path;
         }
 
         if (change.query) {
-            this.query = change.query;
+            newUri.query = change.query;
         }
 
         if (change.fragment) {
-            this.fragment = change.fragment;
+            newUri.fragment = change.fragment;
         }
 
-        return this;
+        return newUri !== this ? newUri : this;
     }
 
     public static from(components: {

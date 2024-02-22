@@ -31,6 +31,7 @@ export function createUSSTree(favoriteNodes: ZoweUSSNode[], sessionNodes: ZoweUS
     newTree.resetSearchHistory = jest.fn();
     newTree.resetFileHistory = jest.fn();
     newTree.refresh = jest.fn();
+    newTree.nodeDataChanged = jest.fn();
     newTree.checkCurrentProfile = jest.fn();
     newTree.refreshElement = jest.fn();
     newTree.getChildren = jest.fn();

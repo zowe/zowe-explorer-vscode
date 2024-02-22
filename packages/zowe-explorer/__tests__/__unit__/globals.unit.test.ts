@@ -23,7 +23,7 @@ describe("Globals Unit Tests", () => {
         jest.spyOn(SettingsConfig.SettingsConfig, "isConfigSettingSetByUser").mockReturnValue(false);
         jest.spyOn(SettingsConfig.SettingsConfig, "getDirectValue").mockReturnValue(true);
         const loggerInfoSpy = jest.spyOn(ZoweLogger, "info");
-        await expect(globals.setGlobalSecurityValue()).resolves.not.toThrow();
+        globals.setGlobalSecurityValue();
         expect(globals.PROFILE_SECURITY).toBe(globals.ZOWE_CLI_SCM);
         expect(loggerInfoSpy).toHaveBeenCalledTimes(1);
     });

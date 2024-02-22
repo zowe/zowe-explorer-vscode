@@ -135,7 +135,7 @@ describe("UnixCommand Actions Unit Testing", () => {
         } as imperative.IProfileLoaded,
     ];
 
-    let profilefromConfig = {
+    const profilefromConfig = {
         isDefaultProfile: false,
         profLoc: { osLoc: ["/user/configpath"] },
     };
@@ -538,31 +538,31 @@ describe("UnixCommand Actions Unit Testing", () => {
         expect(showInformationMessage.mock.calls[0][0]).toEqual("Operation Cancelled");
     });
 
-    it("Not able to issue the command", async () =>{
-        Object.defineProperty(ZoweExplorerApiRegister,"getInstance",{
-            value: jest.fn(()=>{
-                return{
-                getCommandApi: jest.fn(()=>undefined),
-                }
-            })
-        })
-        await unixActions.issueUnixCommand(session,null as any,testNode);
+    it("Not able to issue the command", async () => {
+        Object.defineProperty(ZoweExplorerApiRegister, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    getCommandApi: jest.fn(() => undefined),
+                };
+            }),
+        });
+        await unixActions.issueUnixCommand(session, null as any, testNode);
         expect(showErrorMessage.mock.calls[0][0]).toEqual("Issuing Commands is not supported for this profile.");
-    })
+    });
 
-    it("Not yet implemented for specific profile", async ()=>{
-        Object.defineProperty(ZoweExplorerApiRegister,"getInstance",{
-            value: jest.fn(()=>{
-                return{
-                getCommandApi: jest.fn(()=> ({
-                    return : {
-                    issueUnixCommand: jest.fn()
-                    }
-                })),
-                }
-            })
-        })
-        await unixActions.issueUnixCommand(session,null as any,testNode);
+    it("Not yet implemented for specific profile", async () => {
+        Object.defineProperty(ZoweExplorerApiRegister, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    getCommandApi: jest.fn(() => ({
+                        return: {
+                            issueUnixCommand: jest.fn(),
+                        },
+                    })),
+                };
+            }),
+        });
+        await unixActions.issueUnixCommand(session, null as any, testNode);
         expect(showErrorMessage.mock.calls[0][0]).toEqual("Not implemented yet for profile of type: zosmf");
-    })
+    });
 });

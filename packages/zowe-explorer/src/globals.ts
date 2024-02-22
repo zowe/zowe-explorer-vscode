@@ -332,7 +332,7 @@ export function setSavedProfileContents(value: Uint8Array): void {
     SAVED_PROFILE_CONTENTS = value;
 }
 
-export async function setGlobalSecurityValue(credentialManager?: string): Promise<void> {
+export function setGlobalSecurityValue(credentialManager?: string): void {
     const settingEnabled: boolean = SettingsConfig.getDirectValue(this.SETTINGS_SECURE_CREDENTIALS_ENABLED);
     if (settingEnabled && credentialManager) {
         PROFILE_SECURITY = credentialManager;

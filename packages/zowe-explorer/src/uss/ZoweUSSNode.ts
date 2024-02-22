@@ -97,7 +97,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             this.iconPath = icon.path;
         }
         const isSession = opts.parentNode == null;
-        if (!globals.ISTHEIA && isSession) {
+        if (isSession) {
             this.id = `uss.${this.label.toString()}`;
         }
         if (opts.profile) {

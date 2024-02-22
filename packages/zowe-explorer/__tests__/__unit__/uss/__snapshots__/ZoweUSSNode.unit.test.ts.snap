@@ -39,11 +39,11 @@ ZoweUSSNode {
       "etag": "",
       "fullPath": "",
       "iconPath": "Ref: 'folder.svg'",
+      "id": "uss.root",
       "label": "root",
       "mParent": undefined,
       "onUpdateEmitter": EventEmitter {},
       "parentPath": undefined,
-      "prevPath": "",
       "profile": {
         "failNotFound": false,
         "message": "",
@@ -56,6 +56,10 @@ ZoweUSSNode {
           "user": "testuser",
         },
         "type": "zosmf",
+      },
+      "resourceUri": Uri {
+          "path": "/root",
+          "scheme": "zowe-uss",
       },
       "session": Session {
         "ISession": {
@@ -71,7 +75,6 @@ ZoweUSSNode {
     },
     "onUpdateEmitter": EventEmitter {},
     "parentPath": undefined,
-    "prevPath": "",
     "profile": {
       "failNotFound": false,
       "message": "",
@@ -85,12 +88,15 @@ ZoweUSSNode {
       },
       "type": "zosmf",
     },
+    "resourceUri": Uri {
+        "path": "/root",
+        "scheme": "zowe-uss",
+    },
     "session": undefined,
     "shortLabel": "",
   },
   "onUpdateEmitter": EventEmitter {},
   "parentPath": undefined,
-  "prevPath": "",
   "profile": {
     "failNotFound": false,
     "message": "",
@@ -103,6 +109,10 @@ ZoweUSSNode {
       "user": "testuser",
     },
     "type": "zosmf",
+  },
+  "resourceUri": Uri {
+    "path": "/root",
+    "scheme": "zowe-uss",
   },
   "session": undefined,
   "shortLabel": "",
