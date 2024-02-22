@@ -94,7 +94,7 @@ async function createGlobalMocks() {
                 readProfilesFromDisk: mockReadProfilesFromDisk,
             };
         }),
-        mockSetGlobalSecurityValue: jest.fn(),
+        mockUpdateCredMgrSetting: jest.fn(),
         mockWriteOverridesFile: jest.fn(),
         mockProfCacheProfileInfo: createInstanceOfProfileInfo(),
         mockProfilesCache: new ProfilesCache(zowe.imperative.Logger.getAppLogger()),
@@ -302,8 +302,8 @@ async function createGlobalMocks() {
         value: globalMocks.mockOnDidChangeConfiguration,
         configurable: true,
     });
-    Object.defineProperty(globals, "setGlobalSecurityValue", {
-        value: globalMocks.mockSetGlobalSecurityValue,
+    Object.defineProperty(ProfilesUtils, "mockUpdateCredentialManagerSetting", {
+        value: globalMocks.mockUpdateCredMgrSetting,
         configurable: true,
     });
     Object.defineProperty(fs, "readdirSync", { value: globalMocks.mockReaddirSync, configurable: true });

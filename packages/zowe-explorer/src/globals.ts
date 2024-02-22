@@ -14,7 +14,6 @@ import { imperative } from "@zowe/cli";
 import * as vscode from "vscode";
 
 import { FileManagement, IZoweTreeNode } from "@zowe/zowe-explorer-api";
-import { SettingsConfig } from "./utils/SettingsConfig";
 import { ZoweLogger } from "./utils/ZoweLogger";
 
 // Globals
@@ -98,7 +97,6 @@ export const MAX_MEMBER_LENGTH = 8;
 export const DS_NAME_REGEX_CHECK = /^[a-zA-Z#@$][a-zA-Z0-9#@$-]{0,7}(\.[a-zA-Z#@$][a-zA-Z0-9#@$-]{0,7})*$/;
 export const MEMBER_NAME_REGEX_CHECK = /^[a-zA-Z#@$][a-zA-Z0-9#@$]{0,7}$/;
 export let ACTIVATED = false;
-export let PROFILE_SECURITY: string | boolean = ZOWE_CLI_SCM;
 export let SAVED_PROFILE_CONTENTS = new Uint8Array();
 export const JOBS_MAX_PREFIX = 8;
 export let FILE_SELECTED_TO_COMPARE: boolean;
@@ -331,21 +329,6 @@ export function setActivated(value: boolean): void {
 
 export function setSavedProfileContents(value: Uint8Array): void {
     SAVED_PROFILE_CONTENTS = value;
-}
-
-export async function setGlobalSecurityValue(credentialManager?: string): Promise<void> {
-    const settingEnabled: boolean = SettingsConfig.getDirectValue(this.SETTINGS_SECURE_CREDENTIALS_ENABLED);
-    if (settingEnabled && credentialManager) {
-        PROFILE_SECURITY = credentialManager;
-        return;
-    }
-    if (!settingEnabled) {
-        PROFILE_SECURITY = false;
-        ZoweLogger.info(vscode.l10n.t(`Zowe explorer profiles are being set as unsecured.`));
-    } else {
-        PROFILE_SECURITY = ZOWE_CLI_SCM;
-        ZoweLogger.info(vscode.l10n.t(`Zowe explorer profiles are being set as secured.`));
-    }
 }
 
 export function setCompareSelection(val: boolean): void {

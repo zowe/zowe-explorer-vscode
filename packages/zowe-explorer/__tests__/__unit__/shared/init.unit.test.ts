@@ -57,7 +57,7 @@ describe("Test src/shared/extension", () => {
                 name: "zowe.updateSecureCredentials",
                 parm: ["@zowe/cli"],
                 mock: [
-                    { spy: jest.spyOn(globals, "setGlobalSecurityValue"), arg: ["@zowe/cli"] },
+                    { spy: jest.spyOn(profUtils.ProfilesUtils, "updateCredentialManagerSetting"), arg: ["@zowe/cli"] },
                     { spy: jest.spyOn(profUtils.ProfilesUtils, "writeOverridesFile"), arg: [] },
                 ],
             },
