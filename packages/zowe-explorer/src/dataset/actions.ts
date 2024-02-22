@@ -33,7 +33,7 @@ import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import * as contextually from "../shared/context";
 import { markDocumentUnsaved, setFileSaved } from "../utils/workspace";
 import { IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
-import { ZoweLogger } from "../utils/LoggerUtils";
+import { ZoweLogger } from "../utils/ZoweLogger";
 import { ProfileManagement } from "../utils/ProfileManagement";
 import { LocalFileManagement } from "../utils/LocalFileManagement";
 import { Gui, IZoweDatasetTreeNode, ZoweTreeNodeActions, Validation, Types } from "@zowe/zowe-explorer-api";

@@ -19,7 +19,7 @@ import * as utils from "../../../src/utils/ProfilesUtils";
 import { imperative } from "@zowe/cli";
 import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
-import { ZoweLogger } from "../../../src/utils/LoggerUtils";
+import { ZoweLogger } from "../../../src/utils/ZoweLogger";
 import { SshSession } from "@zowe/zos-uss-for-zowe-sdk";
 import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
 import { ProfileManagement } from "../../../src/utils/ProfileManagement";
@@ -538,31 +538,31 @@ describe("UnixCommand Actions Unit Testing", () => {
         expect(showInformationMessage.mock.calls[0][0]).toEqual("Operation Cancelled");
     });
 
-    it("Not able to issue the command", async () =>{
-        Object.defineProperty(ZoweExplorerApiRegister,"getInstance",{
-            value: jest.fn(()=>{
-                return{
-                getCommandApi: jest.fn(()=>undefined),
-                }
-            })
-        })
-        await unixActions.issueUnixCommand(session,null as any,testNode);
+    it("Not able to issue the command", async () => {
+        Object.defineProperty(ZoweExplorerApiRegister, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    getCommandApi: jest.fn(() => undefined),
+                };
+            }),
+        });
+        await unixActions.issueUnixCommand(session, null as any, testNode);
         expect(showErrorMessage.mock.calls[0][0]).toEqual("Issuing Commands is not supported for this profile.");
-    })
+    });
 
-    it("Not yet implemented for specific profile", async ()=>{
-        Object.defineProperty(ZoweExplorerApiRegister,"getInstance",{
-            value: jest.fn(()=>{
-                return{
-                getCommandApi: jest.fn(()=> ({
-                    return : {
-                    issueUnixCommand: jest.fn()
-                    }
-                })),
-                }
-            })
-        })
-        await unixActions.issueUnixCommand(session,null as any,testNode);
+    it("Not yet implemented for specific profile", async () => {
+        Object.defineProperty(ZoweExplorerApiRegister, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    getCommandApi: jest.fn(() => ({
+                        return: {
+                            issueUnixCommand: jest.fn(),
+                        },
+                    })),
+                };
+            }),
+        });
+        await unixActions.issueUnixCommand(session, null as any, testNode);
         expect(showErrorMessage.mock.calls[0][0]).toEqual("Not implemented yet for profile of type: zosmf");
-    })
+    });
 });

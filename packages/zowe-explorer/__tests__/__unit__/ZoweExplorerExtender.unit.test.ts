@@ -23,7 +23,7 @@ import * as path from "path";
 import * as fs from "fs";
 import { FileManagement, Gui } from "@zowe/zowe-explorer-api";
 import * as profUtils from "../../src/utils/ProfilesUtils";
-import { ZoweLogger } from "../../src/utils/LoggerUtils";
+import { ZoweLogger } from "../../src/utils/ZoweLogger";
 import { ZoweLocalStorage } from "../../src/utils/ZoweLocalStorage";
 jest.mock("fs");
 

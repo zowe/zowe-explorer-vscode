@@ -29,14 +29,12 @@ import { ZoweJobNode } from "../../../src/job/ZoweJobNode";
 import { createJobsTree } from "../../../src/job/ZosJobsProvider";
 import { SettingsConfig } from "../../../src/utils/SettingsConfig";
 import { ZoweTreeProvider } from "../../../src/abstract/ZoweTreeProvider";
-import { ZoweLogger } from "../../../src/utils/LoggerUtils";
+import { ZoweLogger } from "../../../src/utils/ZoweLogger";
 import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
 import { createDatasetSessionNode } from "../../../__mocks__/mockCreators/datasets";
 import { TreeProviders } from "../../../src/shared/TreeProviders";
 import { createDatasetTree } from "../../../src/dataset/DatasetTree";
 import * as sharedActions from "../../../src/shared/actions";
-
-jest.mock("../../../src/utils/LoggerUtils");
 
 async function createGlobalMocks() {
     Object.defineProperty(ZoweLocalStorage, "storage", {

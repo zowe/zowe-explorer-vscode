@@ -18,7 +18,7 @@ import { FilterDescriptor, FilterItem, errorHandling } from "../utils/ProfilesUt
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { ZoweCommandProvider } from "../abstract/ZoweCommandProvider";
 import { SettingsConfig } from "../utils/SettingsConfig";
-import { ZoweLogger } from "../utils/LoggerUtils";
+import { ZoweLogger } from "../utils/ZoweLogger";
 import { ProfileManagement } from "../utils/ProfileManagement";
 
 /**

@@ -17,7 +17,7 @@ import { IZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { errorHandling } from "../utils/ProfilesUtils";
 import { PersistentFilters } from "../PersistentFilters";
-import { ZoweLogger } from "../utils/LoggerUtils";
+import { ZoweLogger } from "../utils/ZoweLogger";
 
 export class ZoweCommandProvider {
     // eslint-disable-next-line no-magic-numbers

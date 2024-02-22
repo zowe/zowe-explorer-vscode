@@ -19,7 +19,7 @@ import { IZoweTreeNode, Types, IZoweTree, PersistenceSchemaEnum, Validation } fr
 import { Profiles } from "../Profiles";
 import { setProfile, setSession, errorHandling } from "../utils/ProfilesUtils";
 import { SettingsConfig } from "../utils/SettingsConfig";
-import { ZoweLogger } from "../utils/LoggerUtils";
+import { ZoweLogger } from "../utils/ZoweLogger";
 import { TreeProviders } from "../shared/TreeProviders";
 import { IZoweProviders } from "../shared/init";
 import { resetValidationSettings } from "../shared/actions";

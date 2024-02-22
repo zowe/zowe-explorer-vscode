@@ -15,8 +15,7 @@ import * as vscode from "vscode";
 
 import { FileManagement, IZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { SettingsConfig } from "./utils/SettingsConfig";
-import { ZoweLogger } from "./utils/LoggerUtils";
-export { ZoweLogger } from "./utils/LoggerUtils";
+import { ZoweLogger } from "./utils/ZoweLogger";
 
 // Globals
 export let SETTINGS_TEMP_FOLDER_LOCATION;

@@ -14,7 +14,7 @@ import * as fs from "fs";
 import * as vscode from "vscode";
 import { imperative } from "@zowe/cli";
 import { ZoweUSSNode } from "../uss/ZoweUSSNode";
-import { ZoweLogger } from "../utils/LoggerUtils";
+import { ZoweLogger } from "../utils/ZoweLogger";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { IZoweUSSTreeNode } from "@zowe/zowe-explorer-api";
 

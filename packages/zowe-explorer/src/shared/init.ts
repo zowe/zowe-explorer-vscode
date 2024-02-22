@@ -23,7 +23,8 @@ import { UnixCommandHandler } from "../command/UnixCommandHandler";
 import { saveFile } from "../dataset/actions";
 import { saveUSSFile } from "../uss/actions";
 import { ProfilesUtils } from "../utils/ProfilesUtils";
-import { ZoweLogger } from "../utils/LoggerUtils";
+import { LoggerUtils } from "../utils/LoggerUtils";
+import { ZoweLogger } from "../utils/ZoweLogger";
 import { ZoweSaveQueue } from "../abstract/ZoweSaveQueue";
 import { SettingsConfig } from "../utils/SettingsConfig";
 import { spoolFilePollEvent } from "../job/actions";
@@ -110,7 +111,7 @@ export function registerCommonCommands(context: vscode.ExtensionContext, provide
         vscode.workspace.onDidChangeConfiguration(async (e) => {
             // If the log folder location has been changed, update current log folder preference
             if (e.affectsConfiguration(globals.SETTINGS_LOGS_FOLDER_PATH)) {
-                await ZoweLogger.initializeZoweLogger(context);
+                await initZoweLogger(context);
             }
             // If the temp folder location has been changed, update current temp folder preference
             if (e.affectsConfiguration(globals.SETTINGS_TEMP_FOLDER_PATH)) {
@@ -324,6 +325,11 @@ export async function watchForZoweButtonClick(): Promise<void> {
             await initZoweExplorerUI();
         });
     }
+}
+
+export async function initZoweLogger(context: vscode.ExtensionContext): Promise<void> {
+    const logsPath = await ZoweLogger.initializeZoweLogger(context);
+    ZoweLogger.zeOutputChannel = await LoggerUtils.initVscLogger(context, logsPath);
 }
 
 /**

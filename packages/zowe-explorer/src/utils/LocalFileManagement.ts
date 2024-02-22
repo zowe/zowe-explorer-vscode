@@ -16,7 +16,7 @@ import { IZoweDatasetTreeNode, IZoweTreeNode, IZoweUSSTreeNode, imperative } fro
 import { markDocumentUnsaved } from "./workspace";
 import { isTypeUssTreeNode } from "../shared/context";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
-import { ZoweLogger } from "./LoggerUtils";
+import { ZoweLogger } from "./ZoweLogger";
 import { LocalFileInfo, isZoweDatasetTreeNode, isZoweUSSTreeNode } from "../shared/utils";
 import { downloadDs } from "../dataset/actions";
 import { downloadUnixFile } from "../uss/actions";

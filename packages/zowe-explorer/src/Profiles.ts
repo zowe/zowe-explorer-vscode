@@ -32,7 +32,7 @@ import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
 import { ZoweExplorerExtender } from "./ZoweExplorerExtender";
 import * as globals from "./globals";
 import { SettingsConfig } from "./utils/SettingsConfig";
-import { ZoweLogger } from "./utils/LoggerUtils";
+import { ZoweLogger } from "./utils/ZoweLogger";
 import { TreeProviders } from "./shared/TreeProviders";
 import { ProfileManagement } from "./utils/ProfileManagement";
 

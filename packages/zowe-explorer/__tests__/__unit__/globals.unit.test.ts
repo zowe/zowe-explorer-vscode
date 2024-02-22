@@ -10,7 +10,7 @@
  */
 
 import * as globals from "../../src/globals";
-import { ZoweLogger } from "../../src/utils/LoggerUtils";
+import { ZoweLogger } from "../../src/utils/ZoweLogger";
 import * as SettingsConfig from "../../src/utils/SettingsConfig";
 
 describe("Globals Unit Tests", () => {

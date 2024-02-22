@@ -17,7 +17,7 @@ import * as unixMock from "../../../__mocks__/mockCreators/uss";
 import * as profUtils from "../../../src/utils/ProfilesUtils";
 import { ProfileManagement } from "../../../src/utils/ProfileManagement";
 import { Gui } from "@zowe/zowe-explorer-api";
-import { ZoweLogger } from "../../../src/utils/LoggerUtils";
+import { ZoweLogger } from "../../../src/utils/ZoweLogger";
 import { Profiles } from "../../../src/Profiles";
 import * as vscode from "vscode";
 import { imperative } from "@zowe/cli";

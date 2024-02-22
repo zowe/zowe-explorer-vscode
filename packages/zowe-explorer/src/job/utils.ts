@@ -10,7 +10,7 @@
  */
 
 import { Sorting } from "@zowe/zowe-explorer-api";
-import { ZoweLogger } from "../utils/LoggerUtils";
+import { ZoweLogger } from "../utils/ZoweLogger";
 import { FilterItem } from "../utils/ProfilesUtils";
 import { IJob } from "@zowe/cli";
 import * as vscode from "vscode";

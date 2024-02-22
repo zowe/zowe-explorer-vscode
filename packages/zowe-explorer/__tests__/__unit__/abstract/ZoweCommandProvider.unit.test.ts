@@ -18,7 +18,7 @@ import { createIJobFile } from "../../../__mocks__/mockCreators/jobs";
 import * as contextually from "../../../src/shared/context";
 import { createIProfile, createISession } from "../../../__mocks__/mockCreators/shared";
 import * as utils from "../../../src/utils/ProfilesUtils";
-import { ZoweLogger } from "../../../src/utils/LoggerUtils";
+import { ZoweLogger } from "../../../src/utils/ZoweLogger";
 
 const globalMocks = {
     testSession: createISession(),

@@ -18,7 +18,7 @@ import * as vscode from "vscode";
 import { IApiExplorerExtender, FileManagement, Gui, Types, IZoweTreeNode, ProfilesCache, IZoweExplorerTreeApi } from "@zowe/zowe-explorer-api";
 import { Profiles } from "./Profiles";
 import { getProfile, ProfilesUtils } from "./utils/ProfilesUtils";
-import { ZoweLogger } from "./utils/LoggerUtils";
+import { ZoweLogger } from "./utils/ZoweLogger";
 
 /**
  * The Zowe Explorer API Register singleton that gets exposed to other VS Code

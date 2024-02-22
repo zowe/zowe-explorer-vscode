@@ -26,7 +26,7 @@ import { refreshAll } from "../shared/refresh";
 import { IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
 import { autoDetectEncoding, fileExistsCaseSensitiveSync } from "./utils";
 import { UssFileTree, UssFileType } from "./FileStructure";
-import { ZoweLogger } from "../utils/LoggerUtils";
+import { ZoweLogger } from "../utils/ZoweLogger";
 import { AttributeView } from "./AttributeView";
 import { LocalFileManagement } from "../utils/LocalFileManagement";
 

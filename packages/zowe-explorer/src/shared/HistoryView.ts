@@ -16,7 +16,7 @@ import { IZoweProviders } from "./init";
 import { USSTree } from "../uss/USSTree";
 import { DatasetTree } from "../dataset/DatasetTree";
 import { ZosJobsProvider } from "../job/ZosJobsProvider";
-import { ZoweLogger } from "../utils/LoggerUtils";
+import { ZoweLogger } from "../utils/ZoweLogger";
 
 type TreeProvider = USSTree | DatasetTree | ZosJobsProvider;
 

@@ -10,7 +10,7 @@
  */
 
 import { PersistentFilters } from "../../src/PersistentFilters";
-import { ZoweLogger } from "../../src/utils/LoggerUtils";
+import { ZoweLogger } from "../../src/utils/ZoweLogger";
 import { ZoweLocalStorage } from "../../src/utils/ZoweLocalStorage";
 import * as vscode from "vscode";
 

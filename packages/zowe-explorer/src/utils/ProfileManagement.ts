@@ -12,7 +12,7 @@
 import * as vscode from "vscode";
 import * as globals from "../globals";
 import { Gui, IZoweTreeNode, imperative } from "@zowe/zowe-explorer-api";
-import { ZoweLogger } from "./LoggerUtils";
+import { ZoweLogger } from "./ZoweLogger";
 import { ProfilesUtils } from "./ProfilesUtils";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";

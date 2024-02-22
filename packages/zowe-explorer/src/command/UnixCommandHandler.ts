@@ -18,7 +18,7 @@ import { errorHandling, FilterDescriptor, FilterItem } from "../utils/ProfilesUt
 import { ZoweCommandProvider } from "../abstract/ZoweCommandProvider";
 import { imperative } from "@zowe/cli";
 import { SettingsConfig } from "../utils/SettingsConfig";
-import { ZoweLogger } from "../utils/LoggerUtils";
+import { ZoweLogger } from "../utils/ZoweLogger";
 import * as cli from "@zowe/cli";
 import { SshSession, ISshSession } from "@zowe/zos-uss-for-zowe-sdk";
 import { ProfileManagement } from "../utils/ProfileManagement";

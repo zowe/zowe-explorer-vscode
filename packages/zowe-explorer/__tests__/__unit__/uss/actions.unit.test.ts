@@ -37,11 +37,11 @@ import * as isbinaryfile from "isbinaryfile";
 import * as fs from "fs";
 import { createUssApi, bindUssApi } from "../../../__mocks__/mockCreators/api";
 import * as refreshActions from "../../../src/shared/refresh";
-import { ZoweLogger } from "../../../src/utils/LoggerUtils";
+import { ZoweLogger } from "../../../src/utils/ZoweLogger";
 import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
 import { AttributeView } from "../../../src/uss/AttributeView";
 
-jest.mock("../../../src/utils/LoggerUtils");
+jest.mock("../../../src/utils/ZoweLogger");
 
 function createGlobalMocks() {
     const globalMocks = {

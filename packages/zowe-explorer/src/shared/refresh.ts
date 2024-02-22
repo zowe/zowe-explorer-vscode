@@ -16,7 +16,7 @@ import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { returnIconState } from "./actions";
 import * as contextually from "../shared/context";
 import { removeSession } from "../utils/SessionUtils";
-import { ZoweLogger } from "../utils/LoggerUtils";
+import { ZoweLogger } from "../utils/ZoweLogger";
 
 /**
  * View (DATA SETS, JOBS, USS) refresh button

@@ -19,11 +19,11 @@ import * as vscode from "vscode";
 import * as zowe from "@zowe/cli";
 import { Profiles } from "../../../src/Profiles";
 import { SettingsConfig } from "../../../src/utils/SettingsConfig";
-import { ZoweLogger } from "../../../src/utils/LoggerUtils";
+import { ZoweLogger } from "../../../src/utils/ZoweLogger";
 import { ZoweExplorerExtender } from "../../../src/ZoweExplorerExtender";
 import { createAltTypeIProfile, createInstanceOfProfile, createValidIProfile } from "../../../__mocks__/mockCreators/shared";
 
-jest.mock("../../../src/utils/LoggerUtils");
+jest.mock("../../../src/utils/ZoweLogger");
 jest.mock("fs");
 jest.mock("vscode");
 jest.mock("@zowe/cli");

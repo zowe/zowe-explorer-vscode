@@ -37,9 +37,9 @@ import { createUSSNode, createUSSSessionNode, createUSSTree } from "../../__mock
 import { createIJobObject, createJobsTree } from "../../__mocks__/mockCreators/jobs";
 import * as path from "path";
 import { SettingsConfig } from "../../src/utils/SettingsConfig";
-import { ZoweLogger } from "../../src/utils/LoggerUtils";
+import { ZoweLogger } from "../../src/utils/ZoweLogger";
 import { ZoweLocalStorage } from "../../src/utils/ZoweLocalStorage";
-jest.mock("../../src/utils/LoggerUtils");
+jest.mock("../../src/utils/ZoweLogger");
 import { TreeProviders } from "../../src/shared/TreeProviders";
 
 jest.mock("child_process");

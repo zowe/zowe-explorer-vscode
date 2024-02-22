@@ -15,7 +15,7 @@ import { Profiles } from "../../../src/Profiles";
 import { TsoCommandHandler } from "../../../src/command/TsoCommandHandler";
 import { imperative } from "@zowe/cli";
 import { createInstanceOfProfile, createIProfile } from "../../../__mocks__/mockCreators/shared";
-import { ZoweLogger } from "../../../src/utils/LoggerUtils";
+import { ZoweLogger } from "../../../src/utils/ZoweLogger";
 import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
 
 describe("TsoCommandHandler extended testing", () => {

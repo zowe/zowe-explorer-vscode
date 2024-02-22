@@ -18,7 +18,7 @@ import * as unixActions from "../../../src/uss/actions";
 import * as dsActions from "../../../src/dataset/actions";
 import { LocalFileManagement } from "../../../src/utils/LocalFileManagement";
 import * as utils from "../../../src/shared/utils";
-import { ZoweLogger } from "../../../src/globals";
+import { ZoweLogger } from "../../../src/utils/ZoweLogger";
 
 jest.mock("vscode");
 

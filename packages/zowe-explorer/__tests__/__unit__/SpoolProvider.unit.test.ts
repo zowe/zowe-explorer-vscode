@@ -16,7 +16,6 @@ import { Profiles } from "../../src/Profiles";
 import { createIProfile, createISessionWithoutCredentials } from "../../__mocks__/mockCreators/shared";
 import { bindJesApi, createJesApi } from "../../__mocks__/mockCreators/api";
 import { createJobSessionNode } from "../../__mocks__/mockCreators/jobs";
-jest.mock("../../src/utils/LoggerUtils");
 
 describe("SpoolProvider Unit Tests", () => {
     const iJobFile: zowe.IJobFile = {

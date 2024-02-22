@@ -12,7 +12,7 @@
 import { SettingsConfig } from "../../../src/utils/SettingsConfig";
 import * as vscode from "vscode";
 import { Gui } from "@zowe/zowe-explorer-api";
-import { ZoweLogger } from "../../../src/utils/LoggerUtils";
+import { ZoweLogger } from "../../../src/utils/ZoweLogger";
 import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
 import * as globals from "../../../src/globals";
 

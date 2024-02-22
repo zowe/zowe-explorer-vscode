@@ -18,7 +18,7 @@ import * as sharedExtension from "../../../src/shared/init";
 import { initUSSProvider } from "../../../src/uss/init";
 import { Profiles } from "../../../src/Profiles";
 import { IJestIt, ITestContext, processSubscriptions, spyOnSubscriptions } from "../../__common__/testUtils";
-import { ZoweLogger } from "../../../src/utils/LoggerUtils";
+import { ZoweLogger } from "../../../src/utils/ZoweLogger";
 
 describe("Test src/dataset/extension", () => {
     describe("initDatasetProvider", () => {

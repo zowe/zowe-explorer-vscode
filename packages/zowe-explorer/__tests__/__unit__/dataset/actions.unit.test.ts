@@ -41,14 +41,14 @@ import { Profiles } from "../../../src/Profiles";
 import * as utils from "../../../src/utils/ProfilesUtils";
 import * as wsUtils from "../../../src/utils/workspace";
 import { getNodeLabels } from "../../../src/dataset/utils";
-import { ZoweLogger } from "../../../src/utils/LoggerUtils";
+import { ZoweLogger } from "../../../src/utils/ZoweLogger";
 import * as context from "../../../src/shared/context";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 
 // Missing the definition of path module, because I need the original logic for tests
 jest.mock("fs");
 jest.mock("vscode");
-jest.mock("../../../src/utils/LoggerUtils");
+jest.mock("../../../src/utils/ZoweLogger");
 
 let mockClipboardData = null;
 let clipboard;

@@ -23,7 +23,7 @@ import { autoDetectEncoding, fileExistsCaseSensitiveSync, injectAdditionalDataTo
 import * as contextually from "../shared/context";
 import { closeOpenedTextFile } from "../utils/workspace";
 import { UssFileTree, UssFileType, UssFileUtils } from "./FileStructure";
-import { ZoweLogger } from "../utils/LoggerUtils";
+import { ZoweLogger } from "../utils/ZoweLogger";
 import { downloadUnixFile } from "./actions";
 import { IZoweUssTreeOpts } from "../shared/IZoweTreeOpts";
 import { TreeProviders } from "../shared/TreeProviders";

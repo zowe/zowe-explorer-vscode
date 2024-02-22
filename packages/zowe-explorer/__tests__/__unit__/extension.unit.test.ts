@@ -31,6 +31,7 @@ import { USSTree } from "../../src/uss/USSTree";
 import { ZoweSaveQueue } from "../../src/abstract/ZoweSaveQueue";
 import { ZoweLocalStorage } from "../../src/utils/ZoweLocalStorage";
 jest.mock("../../src/utils/LoggerUtils");
+jest.mock("../../src/utils/ZoweLogger");
 import { ProfilesUtils } from "../../src/utils/ProfilesUtils";
 
 jest.mock("vscode");

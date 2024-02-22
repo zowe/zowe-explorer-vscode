@@ -19,7 +19,7 @@ import * as util from "util";
 import { IZoweTreeNode, ZoweTreeNode, FileManagement, Gui, ProfilesCache, MainframeInteraction } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { imperative, getImperativeConfig } from "@zowe/cli";
-import { ZoweLogger } from "./LoggerUtils";
+import { ZoweLogger } from "./ZoweLogger";
 import { SettingsConfig } from "./SettingsConfig";
 import { TreeProviders } from "../shared/TreeProviders";
 
