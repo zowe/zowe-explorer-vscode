@@ -52,8 +52,6 @@ export namespace Types {
         dispose?: boolean;
         decoration?: FileDecoration;
 
-        decoration?: FileDecoration;
-
         reject?<T = never>(reason?: any): Promise<T>;
         resolve?: (uniqueId: string, data: any) => any;
         request: () => Promise<unknown>;
