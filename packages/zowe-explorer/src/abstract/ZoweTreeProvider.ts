@@ -21,7 +21,7 @@ import { setProfile, setSession, errorHandling } from "../utils/ProfilesUtils";
 import { SettingsConfig } from "../utils/SettingsConfig";
 import { ZoweLogger } from "../utils/ZoweLogger";
 import { TreeProviders } from "../shared/TreeProviders";
-import { IZoweProviders } from "../shared/init";
+import { IZoweProviders } from "../shared/IZoweProviders";
 import { resetValidationSettings } from "../shared/actions";
 
 export class ZoweTreeProvider {

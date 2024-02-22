@@ -32,15 +32,7 @@ import { HistoryView } from "./HistoryView";
 import { ProfileManagement } from "../utils/ProfileManagement";
 import { LocalFileManagement } from "../utils/LocalFileManagement";
 import { TreeProviders } from "./TreeProviders";
-import { DatasetTree } from "../dataset/DatasetTree";
-import { USSTree } from "../uss/USSTree";
-import { ZosJobsProvider } from "../job/ZosJobsProvider";
-
-export interface IZoweProviders {
-    ds: DatasetTree;
-    uss: USSTree;
-    job: ZosJobsProvider;
-}
+import { IZoweProviders } from "./IZoweProviders";
 
 export function registerRefreshCommand(
     context: vscode.ExtensionContext,
