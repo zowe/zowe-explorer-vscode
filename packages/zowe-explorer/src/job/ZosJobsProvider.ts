@@ -387,11 +387,12 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         let favJob: ZoweJobNode;
         if (contextValue.startsWith(globals.JOBS_JOB_CONTEXT)) {
             favJob = new ZoweJobNode({
-                label,
+                label: "",
                 collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
                 parentNode,
                 job: new JobDetail(label),
             });
+            favJob.label = label;
             favJob.contextValue = globals.JOBS_JOB_CONTEXT + globals.FAV_SUFFIX;
             favJob.command = { command: "zowe.zosJobsSelectjob", title: "", arguments: [favJob] };
         } else {

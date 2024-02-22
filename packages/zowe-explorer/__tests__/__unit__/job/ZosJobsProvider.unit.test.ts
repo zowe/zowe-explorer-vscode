@@ -346,17 +346,19 @@ describe("ZosJobsProvider unit tests - Function initializeFavChildNodeForProfile
         const testTree = new ZosJobsProvider();
 
         const favProfileNode = new ZoweJobNode({
-            label: "testProfile",
+            label: "",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             parentNode: blockMocks.jobFavoritesNode,
         });
+        favProfileNode.label = "testProfile";
         favProfileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
         const node = new ZoweJobNode({
-            label: "testJob(JOB123)",
+            label: "",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             parentNode: favProfileNode,
             job: new MockJobDetail("testJob(JOB123)"),
         });
+        node.label = "testJob(JOB123)";
         node.contextValue = globals.JOBS_JOB_CONTEXT + globals.FAV_SUFFIX;
         node.command = { command: "zowe.zosJobsSelectjob", title: "", arguments: [node] };
         const targetIcon = getIconByNode(node);
@@ -398,6 +400,37 @@ describe("ZosJobsProvider unit tests - Function initializeFavChildNodeForProfile
         );
 
         expect(favChildNodeForProfile).toEqual(node);
+    });
+
+    it("To check job label under favorited is correct", async () => {
+        await createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        const testTree = new ZosJobsProvider();
+
+        const favProfileNode = new ZoweJobNode({
+            label: "",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: blockMocks.jobFavoritesNode,
+        });
+        favProfileNode.label = "testProfile";
+        favProfileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
+        const node = new ZoweJobNode({
+            label: "",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: favProfileNode,
+            job: new MockJobDetail("testJob(JOB123)"),
+        });
+        node.label = "testJob(JOB123)";
+        node.contextValue = globals.JOBS_JOB_CONTEXT + globals.FAV_SUFFIX;
+        node.command = { command: "zowe.zosJobsSelectjob", title: "", arguments: [node] };
+        const targetIcon = getIconByNode(node);
+        if (targetIcon) {
+            node.iconPath = targetIcon.path;
+        }
+
+        const favChildNodeForProfile = await testTree.initializeFavChildNodeForProfile("testJob(JOB123)", globals.JOBS_JOB_CONTEXT, favProfileNode);
+
+        expect(favChildNodeForProfile.label).toEqual("testJob(JOB123)");
     });
 });
 
