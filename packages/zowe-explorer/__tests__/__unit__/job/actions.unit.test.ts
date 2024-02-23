@@ -44,6 +44,7 @@ import { SpoolFile } from "../../../src/SpoolProvider";
 import { ZosJobsProvider } from "../../../src/job/ZosJobsProvider";
 import { ProfileManagement } from "../../../src/utils/ProfileManagement";
 import { TreeProviders } from "../../../src/shared/TreeProviders";
+import { mocked } from "../../../__mocks__/mockUtils";
 
 const activeTextEditorDocument = jest.fn();
 
@@ -140,9 +141,6 @@ function createGlobalMocks() {
 
     return newMocks;
 }
-
-// Idea is borrowed from: https://github.com/kulshekhar/ts-jest/blob/master/src/util/testing.ts
-const mocked = <T extends (...args: any[]) => any>(fn: T): jest.Mock<ReturnType<T>> => fn as any;
 
 afterEach(() => {
     jest.clearAllMocks();

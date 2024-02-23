@@ -35,6 +35,7 @@ import { jobStringValidator } from "../../../src/shared/utils";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 import { Poller } from "@zowe/zowe-explorer-api/src/utils";
 import { SettingsConfig } from "../../../src/utils/SettingsConfig";
+import { mocked } from "../../../__mocks__/mockUtils";
 import { TreeProviders } from "../../../src/shared/TreeProviders";
 
 jest.mock("vscode");
@@ -239,9 +240,6 @@ async function createGlobalMocks() {
 
     return globalMocks;
 }
-
-// Idea is borrowed from: https://github.com/kulshekhar/ts-jest/blob/master/src/util/testing.ts
-const mocked = <T extends (...args: any[]) => any>(fn: T): jest.Mock<ReturnType<T>> => fn as any;
 
 describe("ZosJobsProvider unit tests - Function getChildren", () => {
     function createBlockMocks(globalMocks) {

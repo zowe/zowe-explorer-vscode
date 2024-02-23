@@ -442,7 +442,7 @@ export class ProfilesUtils {
         return this.setupDefaultCredentialManager();
     }
 
-    public static async readConfigFromDisk(): Promise<void> {
+    public static async readConfigFromDisk(warnForMissingSchema?: boolean): Promise<void> {
         ZoweLogger.trace("ProfilesUtils.readConfigFromDisk called.");
         let rootPath: string;
         const mProfileInfo = await ProfilesUtils.getProfileInfo(globals.ISTHEIA);
@@ -453,6 +453,14 @@ export class ProfilesUtils {
             await mProfileInfo.readProfilesFromDisk({ homeDir: getZoweDir(), projectDir: undefined });
         }
         if (mProfileInfo.usingTeamConfig) {
+            if (warnForMissingSchema && !mProfileInfo.hasValidSchema) {
+                const schemaWarning = localize(
+                    "profiles.noValidSchema",
+                    "No valid schema was found for the active team configuration. This may introduce issues with profiles in Zowe Explorer."
+                );
+                Gui.warningMessage(schemaWarning);
+                ZoweLogger.warn(schemaWarning);
+            }
             globals.setConfigPath(rootPath);
             ZoweLogger.info(`Zowe Explorer is using the team configuration file "${mProfileInfo.getTeamConfig().configName}"`);
             const layers = mProfileInfo.getTeamConfig().layers || [];
@@ -627,7 +635,7 @@ export class ProfilesUtils {
         }
 
         try {
-            await ProfilesUtils.readConfigFromDisk();
+            await ProfilesUtils.readConfigFromDisk(true);
             ZoweLogger.info(localize("initializeZoweProfiles.success", "Zowe Profiles initialized successfully."));
         } catch (err) {
             if (err instanceof imperative.ImperativeError) {

@@ -19,7 +19,6 @@ import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 
 describe("TsoCommandHandler extended testing", () => {
     // Idea is borrowed from: https://github.com/kulshekhar/ts-jest/blob/master/src/util/testing.ts
-    const mocked = <T extends (...args: any[]) => any>(fn: T): jest.Mock<ReturnType<T>> => fn as any;
     const newMocks = {
         imperativeProfile: createIProfile(),
         profileInstance: null,
