@@ -9,6 +9,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 ### Bug fixes
 
 - Fixed default behavior of "Create a new Team Configuration File" to create a Project Config instead of Project User Config. [#2684](https://github.com/zowe/vscode-extension-for-zowe/issues/2684)
+- Adjusted order of 'Manage Profile' and 'Edit History' in the jobs tree's context menu to match the other trees. [#2670](https://github.com/zowe/vscode-extension-for-zowe/issues/2670)
 
 ## `3.0.0-next.202402142205`
 
@@ -21,7 +22,6 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 ### Bug fixes
 
 - Updated dependencies for technical currency purposes.
-- Adjusted order of 'Manage Profile' and 'Edit History' in the jobs tree's context menu to match the other trees. [#2670](https://github.com/zowe/vscode-extension-for-zowe/issues/2670)
 - Fixed issue where spools with duplicate DD names would overwrite each other causing less spools in job output view [#2315](https://github.com/zowe/vscode-extension-for-zowe/issues/2315)
 
 ## `3.0.0-next.202402071248`
