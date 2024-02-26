@@ -505,7 +505,7 @@ export async function promptForEncoding(node: IZoweDatasetTreeNode | IZoweUSSTre
             });
             if (response != null) {
                 encoding = { kind: "other", codepage: response };
-                let filterEncodingList = encodingHistory.filter((codepage) => codepage !== response);
+                const filterEncodingList = encodingHistory.filter((codepage) => codepage !== response);
                 filterEncodingList.unshift(encoding.codepage);
                 ZoweLocalStorage.setValue("zowe.encodingHistory", filterEncodingList.slice(0, globals.MAX_FILE_HISTORY));
             }
