@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { BaseProvider, DirEntry, FileEntry } from "../../../src/fs";
+import { BaseProvider, DirEntry } from "../../../src/fs";
 import { Gui } from "../../../src/globals";
 import isEqual from "lodash.isequal";
 import { mocked } from "../../../__mocks__/mockUtils";
@@ -25,6 +25,7 @@ function getGlobalMocks() {
         testFolderUri: vscode.Uri.from({ scheme: "zowe-uss", path: "/folder" }),
         fileFsEntry: {
             name: "file.txt",
+            conflictData: null,
             data: new Uint8Array([1, 2, 3]),
             wasAccessed: true,
             type: vscode.FileType.File,
@@ -50,8 +51,7 @@ describe("diffOverwrite", () => {
     it("calls writeFile if URI exists in the file system", async () => {
         const blockMocks = getBlockMocks();
         const fsEntry = {
-            name: "test.txt",
-            data: new Uint8Array([1, 2, 3]),
+            ...globalMocks.fileFsEntry,
             conflictData: {
                 contents: new Uint8Array([4, 5, 6]),
                 etag: undefined,
@@ -72,7 +72,7 @@ describe("diffOverwrite", () => {
             fsEntry.data
         );
         blockMocks.writeFileMock.mockClear();
-        expect(statusBarMsgMock.mock.calls[0][0]).toBe("$(check) Overwrite applied for test.txt");
+        expect(statusBarMsgMock.mock.calls[0][0]).toBe("$(check) Overwrite applied for file.txt");
         expect(fsEntry.conflictData).toBeNull();
     });
 
@@ -98,8 +98,7 @@ describe("diffUseRemote", () => {
         const blockMocks = getBlockMocks();
         const conflictArr = new Uint8Array([4, 5, 6]);
         const fsEntry = {
-            name: "test.txt",
-            data: new Uint8Array([1, 2, 3]),
+            ...globalMocks.fileFsEntry,
             conflictData: {
                 contents: conflictArr,
                 etag: undefined,
@@ -108,7 +107,7 @@ describe("diffUseRemote", () => {
         };
         const statusBarMsgMock = jest.spyOn(Gui, "setStatusBarMessage").mockImplementation();
         const executeCommandMock = jest.spyOn(vscode.commands, "executeCommand").mockImplementation();
-        blockMocks.lookupAsFileMock.mockResolvedValue(fsEntry);
+        blockMocks.lookupAsFileMock.mockResolvedValueOnce(fsEntry);
 
         const prov = new (BaseProvider as any)();
         await prov.diffUseRemote(globalMocks.testFileUri);
@@ -121,7 +120,7 @@ describe("diffUseRemote", () => {
             conflictArr
         );
         blockMocks.writeFileMock.mockClear();
-        expect(statusBarMsgMock.mock.calls[0][0]).toBe("$(check) Overwrite applied for test.txt");
+        expect(statusBarMsgMock.mock.calls[0][0]).toBe("$(check) Overwrite applied for file.txt");
         expect(fsEntry.conflictData).toBeNull();
         expect(executeCommandMock).toHaveBeenCalledWith("workbench.action.closeActiveEditor");
     });
@@ -129,8 +128,7 @@ describe("diffUseRemote", () => {
     it("does not call writeFile if the final data is the same as the conflict data", async () => {
         const blockMocks = getBlockMocks();
         const fsEntry = {
-            name: "test.txt",
-            data: new Uint8Array([1, 2, 3]),
+            ...globalMocks.fileFsEntry,
             conflictData: {
                 contents: new Uint8Array([1, 2, 3]),
                 etag: undefined,
@@ -139,7 +137,7 @@ describe("diffUseRemote", () => {
         };
         const statusBarMsgMock = jest.spyOn(Gui, "setStatusBarMessage").mockImplementation();
         const executeCommandMock = jest.spyOn(vscode.commands, "executeCommand").mockImplementation();
-        blockMocks.lookupAsFileMock.mockResolvedValue(fsEntry);
+        blockMocks.lookupAsFileMock.mockResolvedValueOnce(fsEntry);
         mocked(isEqual).mockReturnValueOnce(true);
 
         const prov = new (BaseProvider as any)();
@@ -147,7 +145,7 @@ describe("diffUseRemote", () => {
 
         expect(blockMocks.lookupAsFileMock).toHaveBeenCalled();
         expect(blockMocks.writeFileMock).not.toHaveBeenCalled();
-        expect(statusBarMsgMock.mock.calls[0][0]).toBe("$(check) Overwrite applied for test.txt");
+        expect(statusBarMsgMock.mock.calls[0][0]).toBe("$(check) Overwrite applied for file.txt");
         expect(fsEntry.conflictData).toBeNull();
         expect(executeCommandMock).toHaveBeenCalledWith("workbench.action.closeActiveEditor");
     });
@@ -165,7 +163,7 @@ describe("diffUseRemote", () => {
 describe("exists", () => {
     function getBlockMocks() {
         return {
-            lookupMock: jest.spyOn((BaseProvider as any).prototype, "_lookup").mockImplementation(),
+            lookupMock: jest.spyOn((BaseProvider as any).prototype, "_lookup"),
         };
     }
 
@@ -176,15 +174,7 @@ describe("exists", () => {
 
     it("returns false when a URI does not exist in the provider", () => {
         const blockMocks = getBlockMocks();
-        blockMocks.lookupMock.mockReturnValueOnce({
-            name: "file.txt",
-            metadata: {
-                profile: { name: "aProfile" } as any,
-                path: "/some/path",
-            },
-            type: vscode.FileType.File,
-            wasAccessed: true,
-        });
+        blockMocks.lookupMock.mockReturnValueOnce({ ...globalMocks.fileFsEntry });
         const prov: BaseProvider = new (BaseProvider as any)();
         expect(prov.exists(globalMocks.testFileUri)).toBe(true);
         expect(blockMocks.lookupMock).toHaveBeenCalledWith(globalMocks.testFileUri, true);
@@ -298,13 +288,57 @@ describe("_updateResourceInEditor", () => {
 });
 
 describe("_lookupAsDirectory", () => {
-    it("returns a directory entry", () => {
+    it("returns a valid entry if it exists in the file system", () => {
         const prov = new (BaseProvider as any)();
         prov.root = new DirEntry("");
         prov.root.entries.set("folder", { ...globalMocks.folderFsEntry });
         const entry = prov._lookupAsDirectory(globalMocks.testFolderUri);
         expect(entry).toStrictEqual(globalMocks.folderFsEntry);
     });
+
+    it("throws an error if the provided URI is a file", () => {
+        const prov = new (BaseProvider as any)();
+        prov.root = new DirEntry("");
+        prov.root.entries.set("file.txt", { ...globalMocks.fileFsEntry });
+        try {
+            prov._lookupAsDirectory(globalMocks.testFileUri);
+            fail("_lookupAsDirectory did not throw an error when provided a file URI.");
+        } catch (err) {
+            expect(err.message).toBe("file not a directory");
+        }
+    });
 });
 
-xdescribe("_lookupParentDirectory", () => {});
+describe("_lookupAsFile", () => {
+    it("returns a valid entry if it exists in the file system", async () => {
+        const prov = new (BaseProvider as any)();
+        prov.root = new DirEntry("");
+        prov.root.entries.set("file.txt", globalMocks.fileFsEntry);
+        expect(await prov._lookupAsFile(globalMocks.testFileUri)).toStrictEqual(globalMocks.fileFsEntry);
+    });
+
+    it("throws an error if the provided URI is a directory", async () => {
+        const prov = new (BaseProvider as any)();
+        prov.root = new DirEntry("");
+        prov.root.entries.set("folder", globalMocks.folderFsEntry);
+        await expect(prov._lookupAsFile(globalMocks.testFileUri)).rejects.toThrow("file is a directory");
+    });
+});
+
+describe("_lookupParentDirectory", () => {
+    it("calls lookupAsDirectory for a given URI", () => {
+        const prov = new (BaseProvider as any)();
+        prov.root = new DirEntry("");
+        prov.root.entries.set("folder", { ...globalMocks.folderFsEntry });
+
+        const lookupAsDirSpy = jest.spyOn((BaseProvider as any).prototype, "_lookupAsDirectory");
+        expect(prov._lookupParentDirectory(globalMocks.testFolderUri)).toBe(prov.root);
+        expect(lookupAsDirSpy).toHaveBeenCalledWith(
+            vscode.Uri.from({
+                scheme: "zowe-uss",
+                path: "/",
+            }),
+            false
+        );
+    });
+});

@@ -866,7 +866,7 @@ export class FileSystemError extends Error {
      * @param messageOrUri Message or uri.
      */
     static FileNotFound(messageOrUri?: string | Uri): FileSystemError {
-        return new FileSystemError();
+        return new FileSystemError("file not found");
     }
 
     /**
@@ -875,7 +875,7 @@ export class FileSystemError extends Error {
      * @param messageOrUri Message or uri.
      */
     static FileExists(messageOrUri?: string | Uri): FileSystemError {
-        return new FileSystemError();
+        return new FileSystemError("file exists");
     }
 
     /**
@@ -883,7 +883,7 @@ export class FileSystemError extends Error {
      * @param messageOrUri Message or uri.
      */
     static FileNotADirectory(messageOrUri?: string | Uri): FileSystemError {
-        return new FileSystemError();
+        return new FileSystemError("file not a directory");
     }
 
     /**
@@ -891,7 +891,7 @@ export class FileSystemError extends Error {
      * @param messageOrUri Message or uri.
      */
     static FileIsADirectory(messageOrUri?: string | Uri): FileSystemError {
-        return new FileSystemError();
+        return new FileSystemError("file is a directory");
     }
 
     /**
@@ -899,7 +899,7 @@ export class FileSystemError extends Error {
      * @param messageOrUri Message or uri.
      */
     static NoPermissions(messageOrUri?: string | Uri): FileSystemError {
-        return new FileSystemError();
+        return new FileSystemError("no permissions");
     }
 
     /**
@@ -908,7 +908,7 @@ export class FileSystemError extends Error {
      * @param messageOrUri Message or uri.
      */
     static Unavailable(messageOrUri?: string | Uri): FileSystemError {
-        return new FileSystemError();
+        return new FileSystemError("unavailable");
     }
 
     /**
@@ -917,7 +917,7 @@ export class FileSystemError extends Error {
      * @param messageOrUri Message or uri.
      */
     constructor(messageOrUri?: string | Uri) {
-        super();
+        super(typeof messageOrUri === "string" ? messageOrUri : undefined);
     }
 
     /**
