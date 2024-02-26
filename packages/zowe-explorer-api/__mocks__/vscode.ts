@@ -298,27 +298,29 @@ export class Uri {
     }
 
     public with(change: { scheme?: string; authority?: string; path?: string; query?: string; fragment?: string }): Uri {
+        let newUri = Uri.from(this);
+
         if (change.scheme) {
-            this.scheme = change.scheme;
+            newUri.scheme = change.scheme;
         }
 
         if (change.authority) {
-            this.authority = change.authority;
+            newUri.authority = change.authority;
         }
 
         if (change.path) {
-            this.path = change.path;
+            newUri.path = change.path;
         }
 
         if (change.query) {
-            this.query = change.query;
+            newUri.query = change.query;
         }
 
         if (change.fragment) {
-            this.fragment = change.fragment;
+            newUri.fragment = change.fragment;
         }
 
-        return this;
+        return newUri !== this ? newUri : this;
     }
 
     public static from(components: {
@@ -397,7 +399,69 @@ export class Uri {
     fsPath: string;
 
     public toString(): string {
-        return this.path;
+        let result = this.scheme ? `${this.scheme}://` : "";
+
+        if (this.authority) {
+            result += `${this.authority}`;
+        }
+
+        if (this.path) {
+            result += `${this.path}`;
+        }
+
+        if (this.query) {
+            result += `?${this.query}`;
+        }
+
+        if (this.fragment) {
+            result += `#${this.fragment}`;
+        }
+
+        return result;
+    }
+}
+
+/**
+ * Enumeration of file types. The types `File` and `Directory` can also be
+ * a symbolic links, in that case use `FileType.File | FileType.SymbolicLink` and
+ * `FileType.Directory | FileType.SymbolicLink`.
+ */
+export enum FileType {
+    /**
+     * The file type is unknown.
+     */
+    Unknown = 0,
+    /**
+     * A regular file.
+     */
+    File = 1,
+    /**
+     * A directory.
+     */
+    Directory = 2,
+    /**
+     * A symbolic link to a file.
+     */
+    SymbolicLink = 64,
+}
+
+export namespace l10n {
+    export function t(
+        options:
+            | {
+                  message: string;
+                  args?: Array<string | number | boolean> | Record<string, any>;
+                  comment?: string | string[];
+              }
+            | string
+    ): string {
+        if (typeof options === "string") {
+            return options;
+        }
+        options.args?.forEach((arg: string, i: number) => {
+            options.message = options.message.replace(`{${i}}`, arg);
+        });
+        return options.message;
     }
 }
 
@@ -526,6 +590,77 @@ export class EventEmitter<T> {
     //dispose(): void;
 }
 
+export enum FilePermission {
+    /**
+     * The file is readonly.
+     *
+     * *Note:* All `FileStat` from a `FileSystemProvider` that is registered with
+     * the option `isReadonly: true` will be implicitly handled as if `FilePermission.Readonly`
+     * is set. As a consequence, it is not possible to have a readonly file system provider
+     * registered where some `FileStat` are not readonly.
+     */
+    Readonly = 1,
+}
+
+/**
+ * The `FileStat`-type represents metadata about a file
+ */
+export interface FileStat {
+    /**
+     * The type of the file, e.g. is a regular file, a directory, or symbolic link
+     * to a file.
+     *
+     * *Note:* This value might be a bitmask, e.g. `FileType.File | FileType.SymbolicLink`.
+     */
+    type: FileType;
+    /**
+     * The creation timestamp in milliseconds elapsed since January 1, 1970 00:00:00 UTC.
+     */
+    ctime: number;
+    /**
+     * The modification timestamp in milliseconds elapsed since January 1, 1970 00:00:00 UTC.
+     *
+     * *Note:* If the file changed, it is important to provide an updated `mtime` that advanced
+     * from the previous value. Otherwise there may be optimizations in place that will not show
+     * the updated file contents in an editor for example.
+     */
+    mtime: number;
+    /**
+     * The size in bytes.
+     *
+     * *Note:* If the file changed, it is important to provide an updated `size`. Otherwise there
+     * may be optimizations in place that will not show the updated file contents in an editor for
+     * example.
+     */
+    size: number;
+    /**
+     * The permissions of the file, e.g. whether the file is readonly.
+     *
+     * *Note:* This value might be a bitmask, e.g. `FilePermission.Readonly | FilePermission.Other`.
+     */
+    permissions?: FilePermission;
+}
+
+/**
+ * Enumeration of file change types.
+ */
+export enum FileChangeType {
+    /**
+     * The contents or metadata of a file have changed.
+     */
+    Changed = 1,
+
+    /**
+     * A file has been created.
+     */
+    Created = 2,
+
+    /**
+     * A file has been deleted.
+     */
+    Deleted = 3,
+}
+
 /**
  * Namespace for dealing with the current workspace. A workspace is the representation
  * of the folder that has been opened. There is no workspace when just a file but not a
@@ -592,6 +727,134 @@ export namespace workspace {
          * The ordinal number of this workspace folder.
          */
         readonly index: number;
+    }
+
+    export namespace fs {
+        /**
+         * Retrieve metadata about a file.
+         *
+         * Note that the metadata for symbolic links should be the metadata of the file they refer to.
+         * Still, the {@link FileType.SymbolicLink SymbolicLink}-type must be used in addition to the actual type, e.g.
+         * `FileType.SymbolicLink | FileType.Directory`.
+         *
+         * @param uri The uri of the file to retrieve metadata about.
+         * @returns The file metadata about the file.
+         * @throws {@linkcode FileSystemError.FileNotFound FileNotFound} when `uri` doesn't exist.
+         */
+        export function stat(uri: Uri): FileStat | Thenable<FileStat> {
+            return {} as FileStat;
+        }
+
+        /**
+         * Retrieve all entries of a {@link FileType.Directory directory}.
+         *
+         * @param uri The uri of the folder.
+         * @returns An array of name/type-tuples or a thenable that resolves to such.
+         * @throws {@linkcode FileSystemError.FileNotFound FileNotFound} when `uri` doesn't exist.
+         */
+        export function readDirectory(uri: Uri): Array<[string, FileType]> | Thenable<Array<[string, FileType]>> {
+            return [];
+        }
+
+        /**
+         * Create a new directory (Note, that new files are created via `write`-calls).
+         *
+         * @param uri The uri of the new folder.
+         * @throws {@linkcode FileSystemError.FileNotFound FileNotFound} when the parent of `uri` doesn't exist, e.g. no mkdirp-logic required.
+         * @throws {@linkcode FileSystemError.FileExists FileExists} when `uri` already exists.
+         * @throws {@linkcode FileSystemError.NoPermissions NoPermissions} when permissions aren't sufficient.
+         */
+        export function createDirectory(uri: Uri): void | Thenable<void> {
+            return;
+        }
+
+        /**
+         * Read the entire contents of a file.
+         *
+         * @param uri The uri of the file.
+         * @returns An array of bytes or a thenable that resolves to such.
+         * @throws {@linkcode FileSystemError.FileNotFound FileNotFound} when `uri` doesn't exist.
+         */
+        export function readFile(uri: Uri): Uint8Array | Thenable<Uint8Array> {
+            return new Uint8Array();
+        }
+
+        /**
+         * Write data to a file, replacing its entire contents.
+         *
+         * @param uri The uri of the file.
+         * @param content The new content of the file.
+         * @param options Defines if missing files should or must be created.
+         * @throws {@linkcode FileSystemError.FileNotFound FileNotFound} when `uri` doesn't exist and `create` is not set.
+         * @throws {@linkcode FileSystemError.FileNotFound FileNotFound} when the parent of `uri` doesn't exist and `create` is set, e.g. no mkdirp-logic required.
+         * @throws {@linkcode FileSystemError.FileExists FileExists} when `uri` already exists, `create` is set but `overwrite` is not set.
+         * @throws {@linkcode FileSystemError.NoPermissions NoPermissions} when permissions aren't sufficient.
+         */
+        export function writeFile(
+            uri: Uri,
+            content: Uint8Array,
+            options: {
+                /**
+                 * Create the file if it does not exist already.
+                 */
+                readonly create: boolean;
+                /**
+                 * Overwrite the file if it does exist.
+                 */
+                readonly overwrite: boolean;
+            }
+        ): void | Thenable<void> {
+            return;
+        }
+
+        /**
+         * Rename a file or folder.
+         *
+         * @param oldUri The existing file.
+         * @param newUri The new location.
+         * @param options Defines if existing files should be overwritten.
+         * @throws {@linkcode FileSystemError.FileNotFound FileNotFound} when `oldUri` doesn't exist.
+         * @throws {@linkcode FileSystemError.FileNotFound FileNotFound} when parent of `newUri` doesn't exist, e.g. no mkdirp-logic required.
+         * @throws {@linkcode FileSystemError.FileExists FileExists} when `newUri` exists and when the `overwrite` option is not `true`.
+         * @throws {@linkcode FileSystemError.NoPermissions NoPermissions} when permissions aren't sufficient.
+         */
+        export function rename(
+            oldUri: Uri,
+            newUri: Uri,
+            options: {
+                /**
+                 * Overwrite the file if it does exist.
+                 */
+                readonly overwrite: boolean;
+            }
+        ): void | Thenable<void> {
+            return;
+        }
+
+        /**
+         * Copy files or folders. Implementing this function is optional but it will speedup
+         * the copy operation.
+         *
+         * @param source The existing file.
+         * @param destination The destination location.
+         * @param options Defines if existing files should be overwritten.
+         * @throws {@linkcode FileSystemError.FileNotFound FileNotFound} when `source` doesn't exist.
+         * @throws {@linkcode FileSystemError.FileNotFound FileNotFound} when parent of `destination` doesn't exist, e.g. no mkdirp-logic required.
+         * @throws {@linkcode FileSystemError.FileExists FileExists} when `destination` exists and when the `overwrite` option is not `true`.
+         * @throws {@linkcode FileSystemError.NoPermissions NoPermissions} when permissions aren't sufficient.
+         */
+        export function copy(
+            source: Uri,
+            destination: Uri,
+            options: {
+                /**
+                 * Overwrite the file if it does exist.
+                 */
+                readonly overwrite: boolean;
+            }
+        ): void | Thenable<void> {
+            return;
+        }
     }
 }
 

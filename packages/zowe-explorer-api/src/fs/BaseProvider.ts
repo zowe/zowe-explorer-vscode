@@ -42,6 +42,9 @@ export class BaseProvider {
      */
     public async diffOverwrite(uri: vscode.Uri): Promise<void> {
         const fsEntry = await this._lookupAsFile(uri);
+        if (fsEntry == null) {
+            return;
+        }
         await vscode.workspace.fs.writeFile(uri.with({ query: "forceUpload=true" }), fsEntry.data);
         Gui.setStatusBarMessage(
             vscode.l10n.t({
@@ -60,6 +63,9 @@ export class BaseProvider {
      */
     public async diffUseRemote(uri: vscode.Uri): Promise<void> {
         const fsEntry = await this._lookupAsFile(uri);
+        if (fsEntry == null) {
+            return;
+        }
 
         // If the data in the diff is different from the conflict data, we need to make another API request to push those changes.
         // If the data is equal, we can just assign the data in the FileSystem and avoid making an API request.
@@ -88,14 +94,20 @@ export class BaseProvider {
      * Removes a local entry from the FS provider if it exists, without making any API requests.
      * @param uri The URI pointing to a local entry in the FS provider
      */
-    public removeEntryIfExists(uri: vscode.Uri): void {
+    public removeEntry(uri: vscode.Uri): boolean {
         const parentEntry = this._lookupParentDirectory(uri, true);
         if (parentEntry == null) {
-            return;
+            return false;
         }
 
-        parentEntry.entries.delete(path.posix.basename(uri.path));
+        const entryName = path.posix.basename(uri.path);
+        if (!parentEntry.entries.has(entryName)) {
+            return false;
+        }
+
+        parentEntry.entries.delete(entryName);
         this._fireSoon({ type: vscode.FileChangeType.Deleted, uri: uri });
+        return true;
     }
 
     /**
@@ -111,15 +123,16 @@ export class BaseProvider {
      * Also removes the URI from the opened URI cache.
      * @param uri the URI whose data should be invalidated
      */
-    public invalidateFileAtUri(uri: vscode.Uri): void {
+    public invalidateFileAtUri(uri: vscode.Uri): boolean {
         const entry = this._lookup(uri, true);
         if (!isFileEntry(entry)) {
-            return;
+            return false;
         }
 
         entry.data = null;
         entry.wasAccessed = false;
         this.openedUris = this.openedUris.filter((u) => u !== uri);
+        return true;
     }
 
     /**
@@ -127,14 +140,15 @@ export class BaseProvider {
      * Also removes the URI from the opened URI cache.
      * @param uri the URI whose data should be invalidated
      */
-    public invalidateDirAtUri(uri: vscode.Uri): void {
+    public invalidateDirAtUri(uri: vscode.Uri): boolean {
         const entry = this._lookup(uri, true);
         if (!isDirectoryEntry(entry)) {
-            return;
+            return false;
         }
 
         entry.entries.clear();
         this._lookupParentDirectory(uri).entries.delete(entry.name);
+        return true;
     }
 
     /**
@@ -142,6 +156,10 @@ export class BaseProvider {
      * @param uri The URI that is open in an editor tab
      */
     protected async _updateResourceInEditor(uri: vscode.Uri): Promise<void> {
+        const entry = this._lookup(uri, true);
+        if (!isFileEntry(entry)) {
+            return;
+        }
         // HACK: does not work for editors that aren't the active one, so...
         // make VS Code switch to this editor and then "revert the file" to show latest contents
         await vscode.commands.executeCommand("vscode.open", uri);

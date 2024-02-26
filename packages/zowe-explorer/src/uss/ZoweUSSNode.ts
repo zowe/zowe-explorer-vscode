@@ -258,7 +258,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         // remove any entries from FS provider that were deleted from mainframe when tree view is refreshed
         for (const node of nodesToRemove) {
             if (node.resourceUri) {
-                UssFSProvider.instance.removeEntryIfExists(node.resourceUri);
+                UssFSProvider.instance.removeEntry(node.resourceUri);
             }
         }
 
