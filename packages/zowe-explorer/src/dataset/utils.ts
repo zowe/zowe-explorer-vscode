@@ -16,6 +16,7 @@ import { ZoweLogger } from "../utils/LoggerUtils";
 
 export const DATASET_SORT_OPTS = [
     vscode.l10n.t("$(case-sensitive) Name (default)"),
+    vscode.l10n.t("$(calendar) Date Created"),
     vscode.l10n.t("$(calendar) Date Modified"),
     vscode.l10n.t("$(account) User ID"),
     vscode.l10n.t("$(fold) Sort Direction"),
