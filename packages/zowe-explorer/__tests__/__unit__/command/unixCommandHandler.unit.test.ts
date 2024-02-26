@@ -135,7 +135,7 @@ describe("UnixCommand Actions Unit Testing", () => {
         } as imperative.IProfileLoaded,
     ];
 
-    let profilefromConfig = {
+    const profilefromConfig = {
         isDefaultProfile: false,
         profLoc: { osLoc: ["/user/configpath"] },
     };
@@ -170,11 +170,6 @@ describe("UnixCommand Actions Unit Testing", () => {
 
     Object.defineProperty(ZoweLogger, "error", { value: jest.fn(), configurable: true });
     Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
-    Object.defineProperty(imperative.ConnectionPropsForSessCfg, "addPropsOrPrompt", {
-        value: jest.fn(() => {
-            return { privateKey: undefined, keyPassphrase: undefined, handshakeTimeout: undefined, type: "basic", port: 22 };
-        }),
-    });
 
     Object.defineProperty(profileLoader.Profiles, "getInstance", {
         value: jest.fn(() => {
@@ -242,7 +237,7 @@ describe("UnixCommand Actions Unit Testing", () => {
         });
         expect(showInputBox.mock.calls.length).toBe(2);
         expect(appendLine.mock.calls.length).toBe(2);
-        expect(appendLine.mock.calls[0][0]).toBe("> testuser@ssh:/u/directorypath$ d iplinfo1");
+        expect(appendLine.mock.calls[0][0]).toBe("> firstName@ssh:/u/directorypath$ d iplinfo1");
         expect(appendLine.mock.calls[1][0]["commandResponse"]).toBe("iplinfo1");
         expect(showInformationMessage.mock.calls.length).toBe(0);
     });
@@ -277,7 +272,7 @@ describe("UnixCommand Actions Unit Testing", () => {
         });
         expect(showInputBox.mock.calls.length).toBe(1);
         expect(appendLine.mock.calls.length).toBe(2);
-        expect(appendLine.mock.calls[0][0]).toBe("> testuser@ssh:/u/directorypath$ d iplinfo0");
+        expect(appendLine.mock.calls[0][0]).toBe("> firstName@ssh:/u/directorypath$ d iplinfo0");
         expect(appendLine.mock.calls[1][0]["commandResponse"]).toBe("iplinfo0");
         expect(showInformationMessage.mock.calls.length).toBe(0);
     });
@@ -538,31 +533,31 @@ describe("UnixCommand Actions Unit Testing", () => {
         expect(showInformationMessage.mock.calls[0][0]).toEqual("Operation Cancelled");
     });
 
-    it("Not able to issue the command", async () =>{
-        Object.defineProperty(ZoweExplorerApiRegister,"getInstance",{
-            value: jest.fn(()=>{
-                return{
-                getCommandApi: jest.fn(()=>undefined),
-                }
-            })
-        })
-        await unixActions.issueUnixCommand(session,null as any,testNode);
+    it("Not able to issue the command", async () => {
+        Object.defineProperty(ZoweExplorerApiRegister, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    getCommandApi: jest.fn(() => undefined),
+                };
+            }),
+        });
+        await unixActions.issueUnixCommand(session, null as any, testNode);
         expect(showErrorMessage.mock.calls[0][0]).toEqual("Issuing Commands is not supported for this profile.");
-    })
+    });
 
-    it("Not yet implemented for specific profile", async ()=>{
-        Object.defineProperty(ZoweExplorerApiRegister,"getInstance",{
-            value: jest.fn(()=>{
-                return{
-                getCommandApi: jest.fn(()=> ({
-                    return : {
-                    issueUnixCommand: jest.fn()
-                    }
-                })),
-                }
-            })
-        })
-        await unixActions.issueUnixCommand(session,null as any,testNode);
+    it("Not yet implemented for specific profile", async () => {
+        Object.defineProperty(ZoweExplorerApiRegister, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    getCommandApi: jest.fn(() => ({
+                        return: {
+                            issueUnixCommand: jest.fn(),
+                        },
+                    })),
+                };
+            }),
+        });
+        await unixActions.issueUnixCommand(session, null as any, testNode);
         expect(showErrorMessage.mock.calls[0][0]).toEqual("Not implemented yet for profile of type: zosmf");
-    })
+    });
 });
