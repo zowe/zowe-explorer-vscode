@@ -844,8 +844,6 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
         expect((await blockMocks.showQuickPick.mock.calls[0][0]).slice(4)).toEqual(encodingHistory.map((x) => ({ label: x })));
         expect(blockMocks.showQuickPick.mock.calls[0][1]).toEqual(expect.objectContaining({ placeHolder: "Current encoding is IBM-1047" }));
         expect(encoding).toEqual({ ...otherEncoding, codepage: encodingHistory[0] });
-
-        con;
     });
 
     it("remembers cached encoding for USS node", async () => {
@@ -898,5 +896,52 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
         await sharedUtils.promptForEncoding(node);
         expect(blockMocks.showQuickPick).toHaveBeenCalled();
         expect(blockMocks.showQuickPick.mock.calls[0][1]).toEqual(expect.objectContaining({ placeHolder: "Current encoding is IBM-1047" }));
+    });
+
+    it("Prompts for other encoding for USS file and make sure new encoding is added to the beginning of the history", async () => {
+        const blockMocks = createBlockMocks();
+        const node = new ZoweUSSNode({
+            label: "testFile",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            session: blockMocks.session,
+            profile: blockMocks.profile,
+            parentPath: "/root",
+        });
+        node.setEncoding(otherEncoding);
+        const encodingHistory = ["IBM-123", "IBM-456", "IBM-789"];
+        blockMocks.localStorageGet.mockReturnValueOnce(encodingHistory);
+        blockMocks.showQuickPick.mockImplementationOnce(async (items) => items[2]);
+        blockMocks.showInputBox.mockResolvedValueOnce(otherEncoding.codepage); // "IBM-1047"
+        const encoding = await sharedUtils.promptForEncoding(node);
+        expect(blockMocks.showQuickPick).toHaveBeenCalled();
+        expect(blockMocks.showInputBox).toHaveBeenCalled();
+
+        //spy on ZoweLocalStorage "zowe.encodingHistory"
+        const setValueSpy = jest.spyOn(ZoweLocalStorage, "setValue");
+        expect(setValueSpy).toBeCalledWith("zowe.encodingHistory", [otherEncoding.codepage].concat(encodingHistory)); //recieve: "zowe.encodingHistory", Array []
+    });
+
+    it("Prompts for other encoding for USS file and supply an existing encoding and filter/move it to the front", async () => {
+        const blockMocks = createBlockMocks();
+        const node = new ZoweUSSNode({
+            label: "testFile",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            session: blockMocks.session,
+            profile: blockMocks.profile,
+            parentPath: "/root",
+        });
+        node.setEncoding(otherEncoding);
+        const encodingHistory = ["IBM-123", "IBM-456", "IBM-789"];
+        blockMocks.localStorageGet.mockReturnValueOnce(encodingHistory);
+        blockMocks.showQuickPick.mockImplementationOnce(async (items) => items[2]);
+        blockMocks.showInputBox.mockResolvedValueOnce(encodingHistory[2]);
+        const encoding = await sharedUtils.promptForEncoding(node);
+        expect(blockMocks.showQuickPick).toHaveBeenCalled();
+        expect(blockMocks.showInputBox).toHaveBeenCalled();
+
+        //spy on ZoweLocalStorage "zowe.encodingHistory"
+        const setValueSpy = jest.spyOn(ZoweLocalStorage, "setValue");
+        encodingHistory.unshift(encodingHistory.splice(2, 1)[0]); // shift 3rd value to front to match with local storage
+        expect(setValueSpy).toBeCalledWith("zowe.encodingHistory", encodingHistory); //recieve: "zowe.encodingHistory", Array []
     });
 });
