@@ -2101,11 +2101,11 @@
     "sinon": "^6.1.0"
   },
   "dependencies": {
-    "@zowe/core-for-zowe-sdk": "8.0.0-next.202402221834",
+    "@zowe/core-for-zowe-sdk": "8.0.0-next.202402261705",
     "@zowe/secrets-for-zowe-sdk": "8.0.0-next.202402221834",
-    "@zowe/zos-files-for-zowe-sdk": "8.0.0-next.202402221834",
-    "@zowe/zos-jobs-for-zowe-sdk": "8.0.0-next.202402221834",
-    "@zowe/zosmf-for-zowe-sdk": "8.0.0-next.202402221834",
+    "@zowe/zos-files-for-zowe-sdk": "8.0.0-next.202402261705",
+    "@zowe/zos-jobs-for-zowe-sdk": "8.0.0-next.202402261705",
+    "@zowe/zosmf-for-zowe-sdk": "8.0.0-next.202402261705",
     "@zowe/zowe-explorer-api": "3.0.0-next-SNAPSHOT",
     "dayjs": "^1.11.10",
     "fs-extra": "8.0.1",
