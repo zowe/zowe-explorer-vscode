@@ -1363,3 +1363,33 @@ describe("Profiles Unit Tests - function enableValidation", () => {
         expect(globalMocks.testNode.contextValue).toEqual(globals.DS_SESSION_CONTEXT + globals.VALIDATE_SUFFIX);
     });
 });
+
+describe("Profiles Unit Tests - function promptChangeForAllTrees", () => {
+    beforeEach(() => {
+        jest.resetAllMocks();
+        jest.clearAllMocks();
+        jest.restoreAllMocks();
+    });
+
+    it("should prompt for applying change to all trees", async () => {
+        jest.spyOn(TreeProviders, "sessionIsPresentInOtherTrees").mockReturnValue(false);
+        const expectedResult = { label: "test", description: "test" } as vscode.QuickPickItem;
+        const createQuickPickSpy = jest.spyOn(Gui, "createQuickPick");
+        const resolveQuickPickSpy = jest.spyOn(Gui, "resolveQuickPick");
+        const showSpy = jest.fn();
+        const hideSpy = jest.fn();
+        createQuickPickSpy.mockReturnValue({
+            placeholder: "",
+            items: [],
+            activeItems: [],
+            show: showSpy,
+            hide: hideSpy,
+        } as any);
+        resolveQuickPickSpy.mockResolvedValue(expectedResult);
+        await expect(Profiles["promptChangeForAllTrees"]("test", true)).resolves.toEqual(expectedResult);
+        expect(createQuickPickSpy).toHaveBeenCalledTimes(1);
+        expect(resolveQuickPickSpy).toHaveBeenCalledTimes(1);
+        expect(showSpy).toHaveBeenCalledTimes(1);
+        expect(hideSpy).toHaveBeenCalledTimes(1);
+    });
+});
