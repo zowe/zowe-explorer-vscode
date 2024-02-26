@@ -189,7 +189,6 @@ export class ZoweExplorerExtender implements IApiExplorerExtender, IZoweExplorer
                     const addResult = profileInfo.addProfileTypeToSchema(typeConfig.type, {
                         schema: typeConfig.schema,
                         sourceApp: "Zowe Explorer (for VS Code)",
-                        version: typeConfig.schema.version,
                     });
                     if (addResult.info.length > 0) {
                         Gui.warningMessage(addResult.info);
@@ -199,7 +198,11 @@ export class ZoweExplorerExtender implements IApiExplorerExtender, IZoweExplorer
                 // Only show an error if we failed to update the on-disk schema.
                 if (err.code === "EACCES" || err.code === "EPERM") {
                     Gui.errorMessage(
-                        vscode.l10n.t("Failed to update Zowe schema: insufficient permissions or read-only file. {0}", err.message ?? "")
+                        vscode.l10n.t({
+                            message: "Failed to update Zowe schema: insufficient permissions or read-only file. {0}",
+                            args: [err.message ?? ""],
+                            comment: ["Error message"],
+                        })
                     );
                 }
             }

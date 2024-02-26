@@ -47,12 +47,10 @@ function createGlobalMocks() {
             return { value: globalMocks.mockProfileInfo, configurable: true };
         }),
     });
-    Object.defineProperty(ZoweLogger, "error", { value: jest.fn(), configurable: true });
-    Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
+    Object.defineProperty(globals.ZoweLogger, "error", { value: jest.fn(), configurable: true });
+    Object.defineProperty(globals.ZoweLogger, "trace", { value: jest.fn(), configurable: true });
 
-    return {
-        isTheia,
-    };
+    return globalMocks;
 }
 
 describe("Utils Unit Tests - Function errorHandling", () => {
