@@ -2298,51 +2298,6 @@ describe("Dataset Actions Unit Tests - Function copyDataSets", () => {
         await expect(dsActions.pasteDataSetMembers(blockMocks.testDatasetTree, blockMocks.memberChild)).toBeFalsy;
     });
 
-    it("Testing downloadDs() called with invalid node", async () => {
-        globals.defineGlobals("");
-        createGlobalMocks();
-        const blockMocks = createBlockMocks();
-        const node = new ZoweDatasetNode({
-            label: "HLQ.TEST.TO.NODE",
-            collapsibleState: vscode.TreeItemCollapsibleState.None,
-            parentNode: blockMocks.pdsSessionNode,
-            profile: blockMocks.imperativeProfile,
-        });
-        blockMocks.pdsSessionNode.contextValue = "fakeContext";
-
-        try {
-            await dsActions.downloadDs(node, true);
-        } catch (err) {
-            /* Do nothing */
-        }
-
-        expect(mocked(Gui.errorMessage)).toHaveBeenCalledWith("Invalid data set or member.");
-    });
-
-    it("Testing downloadDs() called with a member", async () => {
-        globals.defineGlobals("");
-        const globalMocks = createGlobalMocks();
-        const blockMocks = createBlockMocks();
-        const node = new ZoweDatasetNode({
-            label: "HLQ.TEST.TO.NODE",
-            collapsibleState: vscode.TreeItemCollapsibleState.None,
-            parentNode: blockMocks.pdsSessionNode,
-            profile: blockMocks.imperativeProfile,
-        });
-        globalMocks.getContentsSpy.mockResolvedValueOnce({
-            success: true,
-            commandResponse: null,
-            apiResponse: {
-                etag: "123",
-            },
-        });
-
-        const label = node.getParent().getLabel().toString() + "(" + node.getLabel().toString() + ")";
-        const filePathSpy = jest.spyOn(sharedUtils, "getDocumentFilePath");
-        await dsActions.downloadDs(node, true);
-        expect(filePathSpy).toHaveBeenCalledWith(label, node);
-    });
-
     it("Testing refreshDataset() error handling", async () => {
         globals.defineGlobals("");
         createGlobalMocks();

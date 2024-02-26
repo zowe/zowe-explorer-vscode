@@ -23,7 +23,6 @@ import {
     getSelectedNodeList,
     JobSubmitDialogOpts,
     JOB_SUBMIT_DIALOG_OPTS,
-    LocalFileInfo,
     uploadContent,
 } from "../shared/utils";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
@@ -36,7 +35,7 @@ import { IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
 import { ZoweLogger } from "../utils/ZoweLogger";
 import { ProfileManagement } from "../utils/ProfileManagement";
 import { LocalFileManagement } from "../utils/LocalFileManagement";
-import { Gui, IZoweDatasetTreeNode, ZoweTreeNodeActions, Validation, Types } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweDatasetTreeNode, Validation, Types } from "@zowe/zowe-explorer-api";
 
 let typeEnum: zowe.CreateDataSetTypeEnum;
 // Make a nice new mutable array for the DS properties
@@ -452,70 +451,6 @@ export async function createMember(parent: IZoweDatasetTreeNode, datasetProvider
         }
 
         datasetProvider.refresh();
-    }
-}
-
-export async function downloadDs(node: IZoweDatasetTreeNode, forceDownload: boolean): Promise<LocalFileInfo> {
-    ZoweLogger.trace("dataset.actions.downloadDs called.");
-    const fileInfo = {} as LocalFileInfo;
-    const defaultMessage = vscode.l10n.t("Invalid data set or member.");
-    switch (true) {
-        // For favorited or non-favorited sequential DS:
-        case contextually.isFavorite(node):
-        case contextually.isSessionNotFav(node.getParent()):
-            fileInfo.name = node.label as string;
-            break;
-        // For favorited or non-favorited data set members:
-        case contextually.isFavoritePds(node.getParent()):
-        case contextually.isPdsNotFav(node.getParent()):
-            fileInfo.name = node.getParent().getLabel().toString() + "(" + node.getLabel().toString() + ")";
-            break;
-        default:
-            Gui.errorMessage(defaultMessage);
-            throw Error(defaultMessage);
-    }
-    // if local copy exists, open that instead of pulling from mainframe
-    fileInfo.path = getDocumentFilePath(fileInfo.name, node);
-    let responsePromise = node.ongoingActions ? node.ongoingActions[ZoweTreeNodeActions.Interactions.Download] : null;
-    // If there is no ongoing action and the local copy does not exist, fetch contents
-    if (forceDownload || (responsePromise == null && !fs.existsSync(fileInfo.path))) {
-        if (node.ongoingActions) {
-            node.ongoingActions[ZoweTreeNodeActions.Interactions.Download] = downloadDsApiCall(node, fileInfo.path, fileInfo.name);
-            responsePromise = node.ongoingActions[ZoweTreeNodeActions.Interactions.Download];
-        } else {
-            responsePromise = downloadDsApiCall(node, fileInfo.path, fileInfo.name);
-        }
-    }
-    if (responsePromise != null) {
-        const response = await responsePromise;
-        node.setEtag(response.apiResponse?.etag);
-    }
-    return fileInfo;
-}
-
-async function downloadDsApiCall(node: IZoweDatasetTreeNode, documentFilePath: string, label: string): Promise<any> {
-    const prof = node.getProfile();
-    ZoweLogger.info(
-        vscode.l10n.t({
-            message: "Downloading {0}",
-            args: [label],
-            comment: ["Label"],
-        })
-    );
-    const statusMsg = Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Downloading data set..."));
-    try {
-        const response = await ZoweExplorerApiRegister.getMvsApi(prof).getContents(label, {
-            file: documentFilePath,
-            returnEtag: true,
-            binary: node.binary,
-            encoding: node.encoding !== undefined ? node.encoding : prof.profile?.encoding,
-            responseTimeout: prof.profile?.responseTimeout,
-        });
-        statusMsg.dispose();
-        return response;
-    } catch (error) {
-        statusMsg.dispose();
-        throw error;
     }
 }
 

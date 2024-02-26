@@ -13,7 +13,6 @@ import * as path from "path";
 import * as fs from "fs";
 import * as vscode from "vscode";
 import { imperative } from "@zowe/cli";
-import { ZoweUSSNode } from "../uss/ZoweUSSNode";
 import { ZoweLogger } from "../utils/ZoweLogger";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { IZoweUSSTreeNode } from "@zowe/zowe-explorer-api";
@@ -24,7 +23,7 @@ import { IZoweUSSTreeNode } from "@zowe/zowe-explorer-api";
  * @param tooltip
  * @returns {string}
  */
-export function injectAdditionalDataToTooltip(node: ZoweUSSNode, tooltip: string): string {
+export function injectAdditionalDataToTooltip(node: IZoweUSSTreeNode & { downloaded: boolean; downloadedTime: string }, tooltip: string): string {
     ZoweLogger.trace("uss.utils.injectAdditionalDataToTooltip called.");
     if (node.downloaded && node.downloadedTime) {
         const downloadedTime = new Date(node.downloadedTime).toLocaleString(vscode.env.language);

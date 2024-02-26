@@ -14,7 +14,7 @@ import { imperative, IZosFilesResponse } from "@zowe/cli";
 import * as fs from "fs";
 import * as globals from "../globals";
 import * as path from "path";
-import { concatChildNodes, uploadContent, getSelectedNodeList, LocalFileInfo } from "../shared/utils";
+import { concatChildNodes, uploadContent, getSelectedNodeList } from "../shared/utils";
 import { errorHandling } from "../utils/ProfilesUtils";
 import { Gui, Validation, IZoweUSSTreeNode, Types } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
@@ -496,58 +496,4 @@ export async function pasteUss(ussFileProvider: Types.IZoweUSSTreeType, node: IZ
         }
     );
     ussFileProvider.refreshElement(node);
-}
-
-export async function downloadUnixFile(node: IZoweUSSTreeNode, forceDownload: boolean): Promise<LocalFileInfo> {
-    const fileInfo = {} as LocalFileInfo;
-    const errorMsg = vscode.l10n.t("open() called from invalid node.");
-    switch (true) {
-        // For opening favorited and non-favorited files
-        case node.getParent().contextValue === globals.FAV_PROFILE_CONTEXT:
-            break;
-        case contextually.isUssSession(node.getParent()):
-            break;
-        // Handle file path for files in directories and favorited directories
-        case contextually.isUssDirectory(node.getParent()):
-            break;
-        default:
-            Gui.errorMessage(errorMsg);
-            throw Error(errorMsg);
-    }
-
-    fileInfo.path = node.getUSSDocumentFilePath();
-    fileInfo.name = String(node.label);
-    // check if some other file is already created with the same name avoid opening file warn user
-    const fileExists = fs.existsSync(fileInfo.path);
-    if (fileExists && !fileExistsCaseSensitiveSync(fileInfo.path)) {
-        Gui.showMessage(
-            vscode.l10n.t(
-                `There is already a file with the same name.
-                Please change your OS file system settings if you want to give case sensitive file names`
-            )
-        );
-        return;
-    }
-    // if local copy exists, open that instead of pulling from mainframe
-    if (forceDownload || !fileExists) {
-        try {
-            const cachedProfile = Profiles.getInstance().loadNamedProfile(node.getProfileName());
-            await autoDetectEncoding(node, cachedProfile);
-
-            const statusMsg = Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Downloading USS file..."));
-            const response = await ZoweExplorerApiRegister.getUssApi(cachedProfile).getContents(node.fullPath, {
-                file: fileInfo.path,
-                binary: node.binary,
-                returnEtag: true,
-                encoding: node.encoding !== undefined ? node.encoding : cachedProfile.profile?.encoding,
-                responseTimeout: cachedProfile.profile?.responseTimeout,
-            });
-            statusMsg.dispose();
-            node.setEtag(response.apiResponse.etag);
-            return fileInfo;
-        } catch (err) {
-            await errorHandling(err, node.getProfileName());
-            throw err;
-        }
-    }
 }

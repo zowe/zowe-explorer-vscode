@@ -22,9 +22,8 @@ import { ZoweLogger } from "../utils/ZoweLogger";
 import * as dayjs from "dayjs";
 import * as fs from "fs";
 import { promiseStatus, PromiseStatuses } from "promise-status-async";
-import { getDocumentFilePath, updateOpenFiles } from "../shared/utils";
+import { LocalFileInfo, getDocumentFilePath } from "../shared/utils";
 import { IZoweDatasetTreeOpts } from "../shared/IZoweTreeOpts";
-import { downloadDs } from "./actions";
 
 /**
  * A type of TreeItem used to represent sessions and data sets
@@ -475,7 +474,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
 
         if (Profiles.getInstance().validProfile !== Validation.ValidationType.INVALID) {
             try {
-                const fileInfo = await downloadDs(this, forceDownload);
+                const fileInfo = await this.downloadDs(forceDownload);
                 const document = await vscode.workspace.openTextDocument(getDocumentFilePath(fileInfo.name, this));
                 await Gui.showTextDocument(document, { preview: this.wasDoubleClicked != null ? !this.wasDoubleClicked : shouldPreview });
                 // discard ongoing action to allow new requests on this node
@@ -489,6 +488,70 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 await errorHandling(err, this.getProfileName());
                 throw err;
             }
+        }
+    }
+
+    public async downloadDs(forceDownload: boolean): Promise<LocalFileInfo> {
+        ZoweLogger.trace("dataset.actions.downloadDs called.");
+        const fileInfo = {} as LocalFileInfo;
+        const defaultMessage = vscode.l10n.t("Invalid data set or member.");
+        switch (true) {
+            // For favorited or non-favorited sequential DS:
+            case contextually.isFavorite(this):
+            case contextually.isSessionNotFav(this.getParent()):
+                fileInfo.name = this.label as string;
+                break;
+            // For favorited or non-favorited data set members:
+            case contextually.isFavoritePds(this.getParent()):
+            case contextually.isPdsNotFav(this.getParent()):
+                fileInfo.name = this.getParent().getLabel().toString() + "(" + this.getLabel().toString() + ")";
+                break;
+            default:
+                Gui.errorMessage(defaultMessage);
+                throw Error(defaultMessage);
+        }
+        // if local copy exists, open that instead of pulling from mainframe
+        fileInfo.path = getDocumentFilePath(fileInfo.name, this);
+        let responsePromise = this.ongoingActions ? this.ongoingActions[ZoweTreeNodeActions.Interactions.Download] : null;
+        // If there is no ongoing action and the local copy does not exist, fetch contents
+        if (forceDownload || (responsePromise == null && !fs.existsSync(fileInfo.path))) {
+            if (this.ongoingActions) {
+                this.ongoingActions[ZoweTreeNodeActions.Interactions.Download] = this.downloadDsApiCall(fileInfo.path, fileInfo.name);
+                responsePromise = this.ongoingActions[ZoweTreeNodeActions.Interactions.Download];
+            } else {
+                responsePromise = this.downloadDsApiCall(fileInfo.path, fileInfo.name);
+            }
+        }
+        if (responsePromise != null) {
+            const response = await responsePromise;
+            this.setEtag(response.apiResponse?.etag);
+        }
+        return fileInfo;
+    }
+
+    private async downloadDsApiCall(documentFilePath: string, label: string): Promise<zowe.IZosFilesResponse> {
+        const prof = this.getProfile();
+        ZoweLogger.info(
+            vscode.l10n.t({
+                message: "Downloading {0}",
+                args: [label],
+                comment: ["Label"],
+            })
+        );
+        const statusMsg = Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Downloading data set..."));
+        try {
+            const response = await ZoweExplorerApiRegister.getMvsApi(prof).getContents(label, {
+                file: documentFilePath,
+                returnEtag: true,
+                binary: this.binary,
+                encoding: this.encoding !== undefined ? this.encoding : prof.profile?.encoding,
+                responseTimeout: prof.profile?.responseTimeout,
+            });
+            statusMsg.dispose();
+            return response;
+        } catch (error) {
+            statusMsg.dispose();
+            throw error;
         }
     }
 
