@@ -65,6 +65,7 @@ export namespace ZoweExplorerZosmf {
                 _: [""],
                 host: serviceProfile.profile.host as string,
                 port: serviceProfile.profile.port as number,
+                protocol: serviceProfile.profile.protocol as string,
                 basePath: serviceProfile.profile.basePath as string,
                 rejectUnauthorized: serviceProfile.profile.rejectUnauthorized as boolean,
             };

@@ -86,19 +86,16 @@ describe("Zosmf API tests", () => {
     it("should test that getContents calls zowe.Download.ussFile", async () => {
         const api = new ZoweExplorerZosmf.UssApi();
         api.getSession = jest.fn();
+        const response = { shouldMatch: true };
 
         Object.defineProperty(zosfiles, "Download", {
             value: {
-                ussFile: jest.fn().mockResolvedValue({
-                    shouldMatch: true,
-                }),
+                ussFile: jest.fn().mockResolvedValue(response),
             },
             configurable: true,
         });
 
-        expect(api.getContents("/some/input/path", {})).toStrictEqual(
-            Promise.resolve(zosfiles.Download.ussFile(api.getSession(), "/some/input/path", {}))
-        );
+        await expect(api.getContents("/some/input/path", {})).resolves.toEqual(response);
     });
 
     it("should update the tag attribute of a USS file if a new change is made", async () => {

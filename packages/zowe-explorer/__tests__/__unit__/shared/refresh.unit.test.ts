@@ -132,38 +132,29 @@ describe("Refresh Unit Tests - Function refreshAll", () => {
     it("Tests that refreshAll() executed successfully with ussTreeProvider passed", async () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
-        const response = new Promise(() => {
-            return {};
-        });
         const spy = jest.spyOn(refreshActions, "refreshAll");
         await refreshActions.refreshAll(blockMocks.testUSSTree);
         expect(spy).toHaveBeenCalledTimes(1);
-        expect(refreshActions.refreshAll(blockMocks.testUSSTree)).toEqual(response);
+        await expect(refreshActions.refreshAll(blockMocks.testUSSTree)).resolves.not.toThrow();
         spy.mockClear();
     });
 
     it("Testing that refreshAll() is executed successfully with jobsTreeProvider passed", async () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
-        const response = new Promise(() => {
-            return {};
-        });
         const submitJclSpy = jest.spyOn(refreshActions, "refreshAll");
         await refreshActions.refreshAll(blockMocks.jobsTree);
         expect(submitJclSpy).toHaveBeenCalledTimes(1);
-        expect(refreshActions.refreshAll(blockMocks.jobsTree)).toEqual(response);
+        await expect(refreshActions.refreshAll(blockMocks.jobsTree)).resolves.not.toThrow();
         submitJclSpy.mockClear();
     });
     it("Testing that refreshAll() is executed successfully with datasetTreeProvider passed", async () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
-        const response = new Promise(() => {
-            return {};
-        });
         const spy = jest.spyOn(refreshActions, "refreshAll");
         await refreshActions.refreshAll(blockMocks.testUSSTree);
         expect(spy).toHaveBeenCalledTimes(1);
-        expect(refreshActions.refreshAll(blockMocks.testDatasetTree)).toEqual(response);
+        await expect(refreshActions.refreshAll(blockMocks.testDatasetTree)).resolves.not.toThrow();
         spy.mockClear();
     });
 });
