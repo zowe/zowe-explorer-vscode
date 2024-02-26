@@ -75,6 +75,7 @@
     "package": "pnpm run -r package",
     "pretest:integration": "ts-node ./scripts/create-env.ts",
     "posttest:integration": "ts-node ./scripts/clean-env.ts",
-    "preinstall": "npx only-allow pnpm"
+    "preinstall": "npx only-allow pnpm",
+    "update-sdks": "pnpm -r update \"@zowe/*@next\" \"!@zowe/zowe-explorer-api\""
   }
 }
