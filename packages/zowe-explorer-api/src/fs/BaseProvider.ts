@@ -232,7 +232,7 @@ export class BaseProvider {
         }
     }
 
-    protected _getDeleteInfo(uri: vscode.Uri, _options: { recursive: boolean }): DeleteMetadata {
+    protected _getDeleteInfo(uri: vscode.Uri): DeleteMetadata {
         const basename = path.posix.basename(uri.path);
         const parent = this._lookupParentDirectory(uri, false);
 

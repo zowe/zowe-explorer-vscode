@@ -361,7 +361,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
      * @param uri The URI that points to the file/folder to delete
      */
     public async delete(uri: vscode.Uri, options: { recursive: boolean }): Promise<void> {
-        const { entryToDelete, parent, parentUri } = this._getDeleteInfo(uri, options);
+        const { entryToDelete, parent, parentUri } = this._getDeleteInfo(uri);
 
         try {
             await ZoweExplorerApiRegister.getUssApi(parent.metadata.profile).delete(

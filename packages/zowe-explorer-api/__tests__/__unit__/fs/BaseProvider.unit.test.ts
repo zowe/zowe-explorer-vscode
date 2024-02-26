@@ -27,11 +27,17 @@ function getGlobalMocks() {
             name: "file.txt",
             conflictData: null,
             data: new Uint8Array([1, 2, 3]),
+            metadata: {
+                path: "/file.txt",
+            },
             wasAccessed: true,
             type: vscode.FileType.File,
         },
         folderFsEntry: {
             name: "folder",
+            metadata: {
+                path: "/folder",
+            },
             entries: new Map(),
             wasAccessed: true,
             type: vscode.FileType.Directory,
@@ -39,6 +45,25 @@ function getGlobalMocks() {
     };
 }
 const globalMocks = getGlobalMocks();
+
+describe("buildTreeForUri", () => {
+    it("builds the full file tree (and the entry itself) for a given URI", async () => {
+        const prov = new (BaseProvider as any)();
+        prov.root = new DirEntry("");
+        prov.root.metadata = {
+            profile: { name: "testProfile" } as any,
+            path: "/",
+        };
+
+        const fsEntry = await prov.buildTreeForUri(
+            vscode.Uri.from({
+                scheme: "zowe-uss",
+                path: "/a/b/c/d.txt",
+            })
+        );
+        expect(fsEntry.name).toBe("d.txt");
+    });
+});
 
 describe("diffOverwrite", () => {
     function getBlockMocks() {
@@ -340,5 +365,49 @@ describe("_lookupParentDirectory", () => {
             }),
             false
         );
+    });
+});
+
+describe("_updateChildPaths", () => {
+    it("updates the paths for all child entries", () => {
+        const prov = new (BaseProvider as any)();
+        prov.root = new DirEntry("");
+        const relocatedFolder = { ...globalMocks.folderFsEntry };
+        const relocatedFile = { ...globalMocks.fileFsEntry };
+        prov.root.entries.set("folder", relocatedFolder);
+        prov.root.entries.set("file.txt", relocatedFile);
+        prov.root.metadata = {
+            path: "/root/",
+        };
+        prov._updateChildPaths(prov.root);
+        expect(relocatedFile.metadata.path).toBe("/root/file.txt");
+        expect(relocatedFolder.metadata.path).toBe("/root/folder/");
+    });
+});
+
+describe("_getDeleteInfo", () => {
+    it("returns the correct deletion info for a URI", () => {
+        const prov = new (BaseProvider as any)();
+        prov.root = new DirEntry("");
+        prov.root.entries.set("folder", globalMocks.folderFsEntry);
+        expect(prov._getDeleteInfo(globalMocks.testFolderUri)).toStrictEqual({
+            entryToDelete: globalMocks.folderFsEntry,
+            parent: prov.root,
+            parentUri: vscode.Uri.from({
+                scheme: "zowe-uss",
+                path: "/",
+            }),
+        });
+    });
+
+    it("throws an error if given an invalid URI", () => {
+        const prov = new (BaseProvider as any)();
+        prov.root = new DirEntry("");
+        try {
+            prov._getDeleteInfo(globalMocks.testFolderUri);
+            fail("_getDeleteInfo should throw an error when provided an invalid URI.");
+        } catch (err) {
+            expect(err.message).toBe("file not found");
+        }
     });
 });
