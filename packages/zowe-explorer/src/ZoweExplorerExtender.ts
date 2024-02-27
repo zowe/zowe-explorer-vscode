@@ -146,25 +146,17 @@ export class ZoweExplorerExtender implements IApiExplorerExtender, IZoweExplorer
          * If it doesn't exist create instance and read from disk to see if using v1 or v2
          * profile management.
          */
-        let usingTeamConfig: boolean;
         let profileInfo: zowe.imperative.ProfileInfo;
         try {
             profileInfo = await ProfilesUtils.getProfileInfo();
             await profileInfo.readProfilesFromDisk({ homeDir: zoweDir, projectDir });
-            usingTeamConfig = profileInfo.usingTeamConfig;
         } catch (error) {
             ZoweLogger.warn(error);
-            if (error.toString().includes("Error parsing JSON")) {
-                usingTeamConfig = true;
-            }
             ZoweExplorerExtender.showZoweConfigError(error.message);
         }
+
         if (profileTypeConfigurations !== undefined) {
             Profiles.getInstance().addToConfigArray(profileTypeConfigurations);
-        }
-
-        // Check if schema needs updated when the end user is using a team config
-        if (usingTeamConfig) {
             this.updateSchema(profileInfo, profileTypeConfigurations);
         }
 
