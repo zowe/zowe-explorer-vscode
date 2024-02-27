@@ -2,8 +2,6 @@ import * as Client from "ssh2-sftp-client";
 import * as vscode from "vscode";
 import { IDownloadOptions, IUploadOptions, IZosFilesResponse, ZosUssProfile, imperative } from "@zowe/cli";
 import { MainframeInteraction } from "@zowe/zowe-explorer-api";
-import { fileSync } from "tmp";
-import { writeSync } from "fs";
 
 export class SshUssApi implements MainframeInteraction.IUss {
     public constructor(public profile?: imperative.IProfileLoaded) {}
@@ -61,16 +59,10 @@ export class SshUssApi implements MainframeInteraction.IUss {
     }
 
     public uploadFromBuffer(buffer: Buffer, filePath: string, _options?: IUploadOptions): Promise<IZosFilesResponse> {
-        const tmpFile = fileSync();
-        try {
-            writeSync(tmpFile.fd, buffer);
-        } catch (err) {
-            if (err instanceof Error) {
-                throw new Error("Failed to write to temporary file: " + err.message);
-            }
-            throw err;
-        }
-        return this.putContent(tmpFile.name, filePath);
+        return this.withClient(this.getSession(), async (client) => {
+            const response = await client.put(buffer, filePath);
+            return this.buildZosFilesResponse(response);
+        });
     }
 
     public async putContent(inputFilePath: string, ussFilePath: string): Promise<IZosFilesResponse> {
