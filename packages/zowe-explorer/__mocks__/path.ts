@@ -25,3 +25,7 @@ export function extname(file: string): string {
 export function parse(file: string) {
     return { name: file };
 }
+
+export function basename(path: string) {
+    return jest.requireActual("path")["basename"](path);
+}
