@@ -38,6 +38,7 @@ import { PersistentFilters } from "../../../src/PersistentFilters";
 import { TreeProviders } from "../../../src/shared/TreeProviders";
 import { join } from "path";
 import * as sharedUtils from "../../../src/shared/utils";
+import { mocked } from "../../../__mocks__/mockUtils";
 
 async function createGlobalMocks() {
     const globalMocks = {
@@ -1348,8 +1349,6 @@ describe("USSTree Unit Tests - Function getChildren", () => {
         expect(loadProfilesForFavoritesSpy).toHaveBeenCalledWith(log, favProfileNode);
     });
 });
-// Idea is borrowed from: https://github.com/kulshekhar/ts-jest/blob/master/src/util/testing.ts
-const mocked = <T extends (...args: any[]) => any>(fn: T): jest.Mock<ReturnType<T>> => fn as any;
 
 describe("USSTree Unit Tests - Function loadProfilesForFavorites", () => {
     function createBlockMocks(globalMocks) {

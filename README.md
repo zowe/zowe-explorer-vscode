@@ -84,8 +84,6 @@ Use the following list with the description and links to find the topics of your
 
 [Zowe Explorer Developer Setup](https://github.com/zowe/vscode-extension-for-zowe/wiki/Developer-Setup) — contains information on how to install, build, and test Zowe Explorer.
 
-[Zowe Explorer Developing for Theia](https://github.com/zowe/vscode-extension-for-zowe/wiki/Developing-for-Theia) — contains information on how to develop for the Web-based IDE Eclipse Theia.
-
 ## How to Contribute
 
 We encourage you to contribute to Zowe Explorer!

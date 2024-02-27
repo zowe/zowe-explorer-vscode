@@ -32,8 +32,6 @@ import { Gui, imperative, IZoweTreeNode, ProfilesCache, ZosEncoding } from "@zow
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
 
-jest.mock("path");
-
 async function createGlobalMocks() {
     const newMocks = {
         session: createISession(),

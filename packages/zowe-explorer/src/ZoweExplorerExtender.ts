@@ -145,6 +145,8 @@ export class ZoweExplorerExtender implements IApiExplorerExtender, IZoweExplorer
         // will be created with the appropriate meta data. If not called the user will
         // see errors when creating a profile of any type.
         const zoweDir = FileManagement.getZoweDir();
+        const workspaceDir = vscode.workspace.workspaceFolders?.[0];
+        const projectDir = workspaceDir ? FileManagement.getFullPath(workspaceDir.uri.fsPath) : undefined;
 
         /**
          * This should create initialize the loadedConfig if it is not already
@@ -152,31 +154,59 @@ export class ZoweExplorerExtender implements IApiExplorerExtender, IZoweExplorer
          * If it doesn't exist create instance and read from disk to see if using v1 or v2
          * profile management.
          */
-        let usingTeamConfig: boolean;
+        let profileInfo: zowe.imperative.ProfileInfo;
         try {
-            const mProfileInfo = await ProfilesUtils.getProfileInfo();
-            if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders[0]) {
-                const rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
-                await mProfileInfo.readProfilesFromDisk({ homeDir: zoweDir, projectDir: FileManagement.getFullPath(rootPath) });
-            } else {
-                await mProfileInfo.readProfilesFromDisk({ homeDir: zoweDir, projectDir: undefined });
-            }
-            usingTeamConfig = mProfileInfo.usingTeamConfig;
+            profileInfo = await ProfilesUtils.getProfileInfo();
+            await profileInfo.readProfilesFromDisk({ homeDir: zoweDir, projectDir });
         } catch (error) {
             ZoweLogger.warn(error);
-            if (error.toString().includes("Error parsing JSON")) {
-                usingTeamConfig = true;
-            }
             ZoweExplorerExtender.showZoweConfigError(error.message);
         }
+
         if (profileTypeConfigurations !== undefined) {
             Profiles.getInstance().addToConfigArray(profileTypeConfigurations);
+            this.updateSchema(profileInfo, profileTypeConfigurations);
         }
 
         // sequentially reload the internal profiles cache to satisfy all the newly added profile types
         await ZoweExplorerExtender.refreshProfilesQueue.add(async (): Promise<void> => {
             await Profiles.getInstance().refresh();
         });
+    }
+
+    /**
+     * Adds new types to the Zowe schema.
+     * @param profileInfo the ProfileInfo object that has been prepared with `readProfilesFromDisk`, such as the one initialized in `initForZowe`.
+     * @param profileTypeConfigurations (optional) Profile type configurations to add to the schema
+     */
+    private updateSchema(
+        profileInfo: zowe.imperative.ProfileInfo,
+        profileTypeConfigurations?: zowe.imperative.ICommandProfileTypeConfiguration[]
+    ): void {
+        if (profileTypeConfigurations) {
+            try {
+                for (const typeConfig of profileTypeConfigurations) {
+                    const addResult = profileInfo.addProfileTypeToSchema(typeConfig.type, {
+                        schema: typeConfig.schema,
+                        sourceApp: "Zowe Explorer (for VS Code)",
+                    });
+                    if (addResult.info.length > 0) {
+                        Gui.warningMessage(addResult.info);
+                    }
+                }
+            } catch (err) {
+                // Only show an error if we failed to update the on-disk schema.
+                if (err.code === "EACCES" || err.code === "EPERM") {
+                    Gui.errorMessage(
+                        vscode.l10n.t({
+                            message: "Failed to update Zowe schema: insufficient permissions or read-only file. {0}",
+                            args: [err.message ?? ""],
+                            comment: ["Error message"],
+                        })
+                    );
+                }
+            }
+        }
     }
 
     /**

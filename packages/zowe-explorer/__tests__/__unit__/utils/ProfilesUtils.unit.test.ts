@@ -52,7 +52,7 @@ describe("ProfilesUtils unit tests", () => {
 
         Object.defineProperty(fs, "existsSync", { value: newMocks.mockExistsSync, configurable: true });
         Object.defineProperty(fs, "readFileSync", { value: newMocks.mockReadFileSync, configurable: true });
-        Object.defineProperty(fs, "writeFileSync", { value: newMocks.mockWriteFileSync, configurable: true });
+        jest.spyOn(fs, "writeFileSync").mockImplementation(newMocks.mockWriteFileSync);
         Object.defineProperty(fs, "openSync", { value: newMocks.mockOpenSync, configurable: true });
         Object.defineProperty(fs, "mkdirSync", { value: newMocks.mockMkdirSync, configurable: true });
         Object.defineProperty(Gui, "errorMessage", { value: jest.fn(), configurable: true });
@@ -345,6 +345,36 @@ describe("ProfilesUtils unit tests", () => {
             await expect(profUtils.ProfilesUtils.readConfigFromDisk()).resolves.not.toThrow();
             expect(infoMsgSpy).toHaveBeenCalledTimes(2);
             infoMsgSpy.mockRestore();
+            profInfoSpy.mockRestore();
+        });
+
+        it("should warn the user when using team config with a missing schema", async () => {
+            const profInfoSpy = jest.spyOn(profUtils.ProfilesUtils, "getProfileInfo").mockReturnValueOnce({
+                readProfilesFromDisk: jest.fn(),
+                usingTeamConfig: true,
+                hasValidSchema: false,
+                getTeamConfig: () => ({
+                    layers: [
+                        {
+                            path: "test",
+                            exists: true,
+                            properties: {
+                                defaults: "test",
+                            },
+                        },
+                        {
+                            path: "test",
+                            exists: true,
+                            properties: {},
+                        },
+                    ],
+                }),
+            } as never);
+            const warnMsgSpy = jest.spyOn(Gui, "warningMessage");
+            await profUtils.ProfilesUtils.readConfigFromDisk(true);
+            expect(warnMsgSpy).toHaveBeenCalledWith(
+                "No valid schema was found for the active team configuration. This may introduce issues with profiles in Zowe Explorer."
+            );
             profInfoSpy.mockRestore();
         });
     });

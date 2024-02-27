@@ -44,6 +44,7 @@ import { getNodeLabels } from "../../../src/dataset/utils";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 import * as context from "../../../src/shared/context";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
+import { mocked } from "../../../__mocks__/mockUtils";
 
 // Missing the definition of path module, because I need the original logic for tests
 jest.mock("fs");
@@ -125,9 +126,6 @@ function createGlobalMocks() {
 
     return newMocks;
 }
-
-// Idea is borrowed from: https://github.com/kulshekhar/ts-jest/blob/master/src/util/testing.ts
-const mocked = <T extends (...args: any[]) => any>(fn: T): jest.Mock<ReturnType<T>> => fn as any;
 
 const createBlockMocksShared = () => {
     const session = createISession();

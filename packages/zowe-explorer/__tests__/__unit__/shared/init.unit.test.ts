@@ -295,16 +295,7 @@ describe("Test src/shared/extension", () => {
             jest.restoreAllMocks();
         });
 
-        it("Test assuming we are NOT in a Theia environment", async () => {
-            await extRefreshCallback();
-            expect(spyExecuteCommand).not.toHaveBeenCalled();
-            expect(deactivate).toHaveBeenCalled();
-            expect(spyLogError).not.toHaveBeenCalled();
-            expect(dispose).toHaveBeenCalled();
-            expect(activate).toHaveBeenCalled();
-        });
-
-        it("Test assuming we are NOT in a Theia environment and unable to dispose of the subscription", async () => {
+        it("Test assuming we are unable to dispose of the subscription", async () => {
             const testError = new Error("test");
             dispose.mockRejectedValue(testError);
             await extRefreshCallback();
@@ -370,7 +361,7 @@ describe("Test src/shared/extension", () => {
             jest.restoreAllMocks();
         });
 
-        it("should setup listeners if we are NOT in THEIA", () => {
+        it("should setup listeners", () => {
             sharedExtension.initSubscribers(context, provider);
             expect(context.subscriptions).toContain(treeView);
             expect(spyCollapse).toHaveBeenCalled();

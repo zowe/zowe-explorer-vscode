@@ -31,6 +31,7 @@ import { getIconById, IconId, getIconByNode } from "../../../src/generators/icon
 import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
+import { mocked } from "../../../__mocks__/mockUtils";
 
 async function createGlobalMocks() {
     const globalMocks = {
@@ -118,9 +119,6 @@ async function createGlobalMocks() {
 
     return globalMocks;
 }
-
-// Idea is borrowed from: https://github.com/kulshekhar/ts-jest/blob/master/src/util/testing.ts
-const mocked = <T extends (...args: any[]) => any>(fn: T): jest.Mock<ReturnType<T>> => fn as any;
 
 describe("Shared Actions Unit Tests - Function searchInAllLoadedItems", () => {
     function createBlockMocks(globalMocks) {
