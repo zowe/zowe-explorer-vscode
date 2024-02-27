@@ -780,6 +780,10 @@ export namespace workspace {
         };
     }
 
+    export function onDidCloseTextDocument(event) {
+        return Disposable;
+    }
+
     export function onWillSaveTextDocument(event) {
         return Disposable;
     }

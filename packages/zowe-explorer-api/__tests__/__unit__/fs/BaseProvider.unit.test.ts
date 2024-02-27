@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { BaseProvider, DirEntry, FileEntry } from "../../../src/fs";
+import { BaseProvider, ConflictViewSelection, DirEntry, FileEntry } from "../../../src/fs";
 import { Gui } from "../../../src/globals";
 import isEqual from "lodash.isequal";
 import { mocked } from "../../../__mocks__/mockUtils";
@@ -382,6 +382,24 @@ describe("_updateResourceInEditor", () => {
     });
 });
 
+describe("_lookup", () => {
+    it("returns a valid file entry if it exists in the file system", () => {
+        const prov = new (BaseProvider as any)();
+        prov.root = new DirEntry("");
+        prov.root.entries.set("file.txt", { ...globalMocks.fileFsEntry });
+        const entry = prov._lookup(globalMocks.testFileUri);
+        expect(entry).toStrictEqual(globalMocks.fileFsEntry);
+    });
+
+    it("returns a valid folder entry if it exists in the file system", () => {
+        const prov = new (BaseProvider as any)();
+        prov.root = new DirEntry("");
+        prov.root.entries.set("folder", { ...globalMocks.folderFsEntry });
+        const entry = prov._lookup(globalMocks.testFolderUri);
+        expect(entry).toStrictEqual(globalMocks.folderFsEntry);
+    });
+});
+
 describe("_lookupAsDirectory", () => {
     it("returns a valid entry if it exists in the file system", () => {
         const prov = new (BaseProvider as any)();
@@ -572,6 +590,37 @@ describe("_fireSoon", () => {
     });
 });
 
-xdescribe("_lookup", () => {});
+describe("_handleConflict", () => {
+    it("returns 'ConflictViewSelection.UserDismissed' when user dismisses conflict prompt", async () => {
+        jest.spyOn(Gui, "errorMessage").mockResolvedValueOnce(undefined);
+        const prov = new (BaseProvider as any)();
+        expect(await prov._handleConflict(globalMocks.testFileUri, globalMocks.fileFsEntry)).toBe(ConflictViewSelection.UserDismissed);
+    });
 
-xdescribe("_handleConflict", () => {});
+    it("returns 'ConflictViewSelection.Compare' when user selects 'Compare'", async () => {
+        jest.spyOn(Gui, "errorMessage").mockResolvedValueOnce("Compare");
+        const prov = new (BaseProvider as any)();
+        const onDidCloseTextDocMock = jest.spyOn(vscode.workspace, "onDidCloseTextDocument");
+        const executeCmdMock = jest.spyOn(vscode.commands, "executeCommand");
+        expect(await prov._handleConflict(globalMocks.testFileUri, globalMocks.fileFsEntry)).toBe(ConflictViewSelection.Compare);
+        expect(onDidCloseTextDocMock).toHaveBeenCalled();
+        expect(executeCmdMock).toHaveBeenCalledWith(
+            "vscode.diff",
+            globalMocks.testFileUri.with({
+                query: "conflict=true",
+            }),
+            globalMocks.testFileUri.with({
+                query: "inDiff=true",
+            }),
+            "file.txt (Remote) ↔ file.txt"
+        );
+    });
+
+    it("returns 'ConflictViewSelection.Overwrite' when user selects 'Overwrite'", async () => {
+        jest.spyOn(Gui, "errorMessage").mockResolvedValueOnce("Overwrite");
+        const prov = new (BaseProvider as any)();
+        const diffOverwriteMock = jest.spyOn(prov, "diffOverwrite").mockImplementation();
+        expect(await prov._handleConflict(globalMocks.testFileUri, globalMocks.fileFsEntry)).toBe(ConflictViewSelection.Overwrite);
+        expect(diffOverwriteMock).toHaveBeenCalledWith(globalMocks.testFileUri);
+    });
+});
