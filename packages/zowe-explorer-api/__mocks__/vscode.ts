@@ -662,6 +662,21 @@ export enum FileChangeType {
 }
 
 /**
+ * The event filesystem providers must use to signal a file change.
+ */
+export interface FileChangeEvent {
+    /**
+     * The type of change.
+     */
+    readonly type: FileChangeType;
+
+    /**
+     * The uri of the file that has changed.
+     */
+    readonly uri: Uri;
+}
+
+/**
  * A type that filesystem providers should use to signal errors.
  *
  * This class has factory methods for common error-cases, like `FileNotFound` when

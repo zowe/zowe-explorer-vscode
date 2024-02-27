@@ -37,6 +37,55 @@ export class BaseProvider {
     }
 
     /**
+     * Builds the full URI in the tree. Helpful for creating entries when opening external links.
+     * @param uri The full URI to create within the provider
+     * @returns The entry to the newly-created file
+     */
+    protected async buildTreeForUri(uri: vscode.Uri): Promise<FileEntry> {
+        const segments = uri.path.split("/");
+
+        // Start building a new URI from the root
+        let currentUri = vscode.Uri.from({
+            scheme: uri.scheme,
+            path: `/`,
+        });
+        let currentNode: DirEntry | FileEntry = this.root;
+
+        // "Walk" down each segment of the given path to build the full file tree
+        for (let i = 0; i < segments.length; i++) {
+            const segment = segments[i];
+            if (segment.length == 0) {
+                continue;
+            }
+
+            if (isFileEntry(currentNode)) {
+                // reached the file entry and its valid, stop here
+                return currentNode;
+            }
+
+            currentUri = currentUri.with({
+                path: path.posix.join(currentUri.path, segment),
+            });
+
+            if (currentNode == null && i == segments.length - 1) {
+                return this._createFile(currentUri);
+            }
+
+            if (!currentNode.entries.has(segment)) {
+                if (i == segments.length - 1) {
+                    // File segment
+                    return this._createFile(currentUri);
+                } else {
+                    // Folder
+                    await vscode.workspace.fs.createDirectory(currentUri);
+                }
+            }
+
+            currentNode = this._lookup(currentUri, true) as DirEntry | FileEntry;
+        }
+    }
+
+    /**
      * Action for overwriting the remote contents with local data from the provider.
      * @param remoteUri The "remote conflict" URI shown in the diff view
      */
@@ -385,51 +434,6 @@ export class BaseProvider {
         parent.entries.set(basename, entry);
         this._fireSoon({ type: vscode.FileChangeType.Created, uri });
         return entry;
-    }
-
-    /**
-     * Builds the full URI in the tree. Helpful for creating entries when opening external links.
-     * @param uri The full URI to create within the provider
-     * @returns The entry to the newly-created file
-     */
-    protected async buildTreeForUri(uri: vscode.Uri): Promise<FileEntry> {
-        const segments = uri.path.split("/");
-        let currentNode: DirEntry | FileEntry = this.root;
-
-        // Start building a new URI from the root
-        let currentUri = vscode.Uri.from({
-            scheme: uri.scheme,
-            path: `/${this.root.metadata.profile.name}/`,
-        });
-
-        // "Walk" down each segment of the given path to build the full file tree
-        for (let i = 0; i < segments.length; i++) {
-            const segment = segments[i];
-            if (segment.length == 0) {
-                continue;
-            }
-
-            if (isFileEntry(currentNode)) {
-                // reached the file entry and its valid, stop here
-                return currentNode;
-            }
-
-            currentUri = currentUri.with({
-                path: path.posix.join(currentUri.path, segment),
-            });
-
-            if (!currentNode.entries.has(segment)) {
-                if (i == segments.length - 1) {
-                    // File segment
-                    return this._createFile(currentUri);
-                } else {
-                    // Folder
-                    await vscode.workspace.fs.createDirectory(currentUri);
-                }
-            }
-
-            currentNode = currentNode.entries.get(segment);
-        }
     }
 
     protected async _lookupAsFile(uri: vscode.Uri, opts?: { silent?: boolean; buildFullPath?: boolean }): Promise<FileEntry> {

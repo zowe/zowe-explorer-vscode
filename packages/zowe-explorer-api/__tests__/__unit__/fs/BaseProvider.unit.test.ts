@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { BaseProvider, DirEntry } from "../../../src/fs";
+import { BaseProvider, DirEntry, FileEntry } from "../../../src/fs";
 import { Gui } from "../../../src/globals";
 import isEqual from "lodash.isequal";
 import { mocked } from "../../../__mocks__/mockUtils";
@@ -47,21 +47,91 @@ function getGlobalMocks() {
 const globalMocks = getGlobalMocks();
 
 describe("buildTreeForUri", () => {
-    it("builds the full file tree (and the entry itself) for a given URI", async () => {
+    it("calls createDirectory/createFile when building the tree", async () => {
         const prov = new (BaseProvider as any)();
         prov.root = new DirEntry("");
+        const meta = { profile: { name: "testProfile" } as any };
         prov.root.metadata = {
-            profile: { name: "testProfile" } as any,
+            ...meta,
             path: "/",
         };
+        const testProfileEntry = new DirEntry("testProfile");
+        testProfileEntry.metadata = {
+            ...meta,
+            path: "/testProfile",
+        };
+        prov.root.entries.set("testProfile", testProfileEntry);
+        const createFileMock = jest.spyOn((BaseProvider as any).prototype, "_createFile").mockImplementationOnce(() => {
+            const dFile = new FileEntry("d.txt");
+            dFile.metadata = {
+                ...meta,
+                path: "/testProfile/a/b/c/d.txt",
+            };
+            return dFile;
+        });
+        const createDirMock = jest.spyOn(vscode.workspace.fs, "createDirectory").mockImplementation();
+        const lookupMock = jest
+            .spyOn((BaseProvider as any).prototype, "_lookup")
+            .mockImplementationOnce(() => {
+                const bDir = new DirEntry("a");
+                bDir.metadata = {
+                    ...meta,
+                    path: "/testProfile/a",
+                };
+                return bDir;
+            })
+            .mockImplementationOnce(() => {
+                const bDir = new DirEntry("b");
+                bDir.metadata = {
+                    ...meta,
+                    path: "/testProfile/a/b",
+                };
+                return bDir;
+            })
+            .mockImplementationOnce(() => {
+                const cDir = new DirEntry("c");
+                cDir.metadata = {
+                    ...meta,
+                    path: "/testProfile/a/b/c",
+                };
+                return cDir;
+            });
 
-        const fsEntry = await prov.buildTreeForUri(
+        expect(
+            (
+                await prov.buildTreeForUri(
+                    vscode.Uri.from({
+                        scheme: "zowe-uss",
+                        path: "/testProfile/a/b/c/d.txt",
+                    })
+                )
+            ).name
+        ).toBe("d.txt");
+        expect(createDirMock).toHaveBeenCalledWith(
             vscode.Uri.from({
                 scheme: "zowe-uss",
-                path: "/a/b/c/d.txt",
+                path: "/testProfile/a",
             })
         );
-        expect(fsEntry.name).toBe("d.txt");
+        expect(createDirMock).toHaveBeenCalledWith(
+            vscode.Uri.from({
+                scheme: "zowe-uss",
+                path: "/testProfile/a/b",
+            })
+        );
+        expect(createDirMock).toHaveBeenCalledWith(
+            vscode.Uri.from({
+                scheme: "zowe-uss",
+                path: "/testProfile/a/b/c",
+            })
+        );
+        expect(createFileMock).toHaveBeenCalledWith(
+            vscode.Uri.from({
+                scheme: "zowe-uss",
+                path: "/testProfile/a/b/c/d.txt",
+            })
+        );
+        expect(lookupMock).toHaveBeenCalledTimes(4);
     });
 });
 
@@ -411,3 +481,97 @@ describe("_getDeleteInfo", () => {
         }
     });
 });
+
+describe("_createFile", () => {
+    it("successfully creates a file entry", async () => {
+        const prov = new (BaseProvider as any)();
+        prov.root = new DirEntry("");
+        prov.root.metadata = {
+            profile: { name: "testProfile" } as any,
+            path: "/",
+        };
+
+        const entry = await prov._createFile(globalMocks.testFileUri);
+        expect(entry.metadata.path).toBe(globalMocks.testFileUri.path);
+    });
+
+    it("throws an error if the file already exists and overwrite is true", async () => {
+        const prov = new (BaseProvider as any)();
+        prov.root = new DirEntry("");
+        prov.root.metadata = {
+            profile: { name: "testProfile" } as any,
+            path: "/",
+        };
+
+        const entry = await prov._createFile(globalMocks.testFileUri);
+        expect(entry.metadata.path).toBe(globalMocks.testFileUri.path);
+
+        try {
+            await prov._createFile(globalMocks.testFileUri, { overwrite: true });
+        } catch (err) {
+            expect(err.message).toBe("file exists");
+        }
+    });
+
+    it("throws an error if a folder already exists with the same URI", async () => {
+        const prov = new (BaseProvider as any)();
+        prov.root = new DirEntry("");
+        prov.root.metadata = {
+            profile: { name: "testProfile" } as any,
+            path: "/",
+        };
+        const dirEntry = new DirEntry("file.txt");
+        dirEntry.metadata = {
+            ...prov.root.metadata,
+            path: "/file.txt",
+        };
+        prov.root.entries.set("file.txt", dirEntry);
+        jest.spyOn((BaseProvider as any).prototype, "_lookupParentDirectory").mockReturnValueOnce(prov.root);
+
+        try {
+            await prov._createFile(globalMocks.testFileUri);
+            fail("BaseProvider._createFile should fail to create a URI that matches an existing directory");
+        } catch (err) {
+            expect(err.message).toBe("file is a directory");
+        }
+    });
+});
+
+describe("_fireSoon", () => {
+    jest.useFakeTimers();
+
+    it("adds to bufferedEvents and calls setTimeout", () => {
+        const prov = new (BaseProvider as any)();
+        prov.root = new DirEntry("");
+        jest.spyOn(global, "setTimeout");
+        prov._fireSoon({
+            type: vscode.FileChangeType.Deleted,
+            uri: globalMocks.testFileUri,
+        });
+        expect(prov._bufferedEvents.length).toBe(1);
+        expect(setTimeout).toHaveBeenCalled();
+    });
+
+    it("calls clearTimeout if fireSoonHandle is defined", () => {
+        const prov = new (BaseProvider as any)();
+        prov.root = new DirEntry("");
+        jest.spyOn(global, "setTimeout");
+        jest.spyOn(global, "clearTimeout");
+        prov._fireSoon({
+            type: vscode.FileChangeType.Deleted,
+            uri: globalMocks.testFileUri,
+        });
+        expect(prov._bufferedEvents.length).toBe(1);
+        expect(setTimeout).toHaveBeenCalled();
+
+        prov._fireSoon({
+            type: vscode.FileChangeType.Created,
+            uri: globalMocks.testFileUri,
+        });
+        expect(clearTimeout).toHaveBeenCalled();
+    });
+});
+
+xdescribe("_lookup", () => {});
+
+xdescribe("_handleConflict", () => {});
