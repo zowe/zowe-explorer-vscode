@@ -912,7 +912,7 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
         blockMocks.localStorageGet.mockReturnValueOnce(encodingHistory);
         blockMocks.showQuickPick.mockImplementationOnce(async (items) => items[2]);
         blockMocks.showInputBox.mockResolvedValueOnce(otherEncoding.codepage); // "IBM-1047"
-        const encoding = await sharedUtils.promptForEncoding(node);
+        await sharedUtils.promptForEncoding(node);
         expect(blockMocks.showQuickPick).toHaveBeenCalled();
         expect(blockMocks.showInputBox).toHaveBeenCalled();
 
@@ -935,7 +935,7 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
         blockMocks.localStorageGet.mockReturnValueOnce(encodingHistory);
         blockMocks.showQuickPick.mockImplementationOnce(async (items) => items[2]);
         blockMocks.showInputBox.mockResolvedValueOnce(encodingHistory[2]);
-        const encoding = await sharedUtils.promptForEncoding(node);
+        await sharedUtils.promptForEncoding(node);
         expect(blockMocks.showQuickPick).toHaveBeenCalled();
         expect(blockMocks.showInputBox).toHaveBeenCalled();
 
