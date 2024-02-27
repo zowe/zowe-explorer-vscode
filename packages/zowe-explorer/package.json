@@ -2044,7 +2044,6 @@
     "build": "pnpm clean:bundle && pnpm license && webpack --mode development",
     "build:integration": "pnpm createTestProfileData && pnpm license && tsc --pretty --project tsconfig-tests.json",
     "test:unit": "jest \".*__tests__.*\\.unit\\.test\\.ts\" --coverage",
-    "test:theia": "mocha ./out/__tests__/__theia__/*.theia.test.js --timeout 50000 --reporter mocha-multi-reporters --reporter-options configFile=.mocharc.json",
     "test": "pnpm test:unit",
     "vscode:prepublish": "pnpm clean:bundle && pnpm generateLocalization && webpack --mode production --devtool hidden-source-map",
     "package": "vsce package --no-dependencies && node ../../scripts/mv-pack.js vscode-extension-for-zowe vsix",
@@ -2135,7 +2134,6 @@
     "testRegex": "__tests__.*\\.(spec|test)\\.ts$",
     "modulePathIgnorePatterns": [
       "__tests__/__integration__/",
-      "__tests__/__theia__/",
       "out/"
     ],
     "reporters": [

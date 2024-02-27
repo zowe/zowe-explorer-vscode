@@ -9,6 +9,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 ### Bug fixes
 
 - Fixed issue where `zosmf` profiles did not respect the `protocol` property [#2703](https://github.com/zowe/vscode-extension-for-zowe/issues/2703).
+- **Breaking:** ProfilesCache.getProfileInfo no longer accepts any parameters. [#2744](https://github.com/zowe/vscode-extension-for-zowe/pull/2744)
 
 ## `3.0.0-next.202402142205`
 
