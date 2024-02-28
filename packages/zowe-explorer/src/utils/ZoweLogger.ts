@@ -11,8 +11,8 @@
 
 /* eslint-disable @typescript-eslint/restrict-plus-operands */
 
-import { Gui, MessageSeverity, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
-import * as zowe from "@zowe/cli";
+import { Gui, imperative, MessageSeverity, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
+import { padLeft } from "@zowe/core-for-zowe-sdk";
 import * as vscode from "vscode";
 import { join as joinPath } from "path";
 import * as loggerConfig from "../../log4jsconfig.json";
@@ -22,7 +22,7 @@ export class ZoweLogger {
     private static defaultLogLevel: "INFO";
     private static zeLogLevel: string;
 
-    private static impLogger: zowe.imperative.Logger;
+    private static impLogger: imperative.Logger;
 
     public static async initializeZoweLogger(context: vscode.ExtensionContext): Promise<string> {
         try {
@@ -52,8 +52,8 @@ export class ZoweLogger {
             );
             loggerConfigCopy.log4jsConfig.categories[appenderName].level = zeLogLevel;
         }
-        zowe.imperative.Logger.initLogger(loggerConfigCopy);
-        this.impLogger = zowe.imperative.Logger.getAppLogger();
+        imperative.Logger.initLogger(loggerConfigCopy);
+        this.impLogger = imperative.Logger.getAppLogger();
     }
 
     public static trace(message: string): void {
@@ -89,7 +89,7 @@ export class ZoweLogger {
         return this.zeLogLevel ?? this.defaultLogLevel;
     }
 
-    public static get imperativeLogger(): zowe.imperative.Logger {
+    public static get imperativeLogger(): imperative.Logger {
         return this.impLogger;
     }
 
@@ -114,9 +114,9 @@ export class ZoweLogger {
 
     private static getTime(): string {
         const dateObj = new Date(Date.now());
-        const hours = zowe.padLeft(dateObj?.getHours().toString(), 2, "0");
-        const minutes = zowe.padLeft(dateObj?.getMinutes().toString(), 2, "0");
-        const seconds = zowe.padLeft(dateObj?.getSeconds().toString(), 2, "0");
+        const hours = padLeft(dateObj?.getHours().toString(), 2, "0");
+        const minutes = padLeft(dateObj?.getMinutes().toString(), 2, "0");
+        const seconds = padLeft(dateObj?.getSeconds().toString(), 2, "0");
         return `${hours}:${minutes}:${seconds}`;
     }
 }
