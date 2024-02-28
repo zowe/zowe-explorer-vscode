@@ -20,6 +20,7 @@ import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
 import * as globals from "../../../src/globals";
 import { ZoweFtpExtensionError } from "../../../src/ZoweFtpExtensionError";
 import * as tmp from "tmp";
+import { imperative } from "@zowe/zowe-explorer-api";
 
 // two methods to mock modules: create a __mocks__ file for zowe-explorer-api.ts and direct mock for extension.ts
 jest.mock("../../../__mocks__/@zowe/zowe-explorer-api.ts");
@@ -306,7 +307,7 @@ describe("FtpUssApi", () => {
     describe("uploadFromBuffer", () => {
         function getBlockMocks(): Record<string, jest.SpyInstance> {
             return {
-                processNewlinesSpy: jest.spyOn(zowe.imperative.IO, "processNewlines"),
+                processNewlinesSpy: jest.spyOn(imperative.IO, "processNewlines"),
                 putContent: jest.spyOn(UssApi, "putContent").mockImplementation(),
                 tmpFileSyncMock: jest.spyOn(tmp, "fileSync").mockReturnValueOnce({ fd: 12345 } as any),
                 writeSyncMock: jest.spyOn(fs, "writeSync").mockImplementation(),

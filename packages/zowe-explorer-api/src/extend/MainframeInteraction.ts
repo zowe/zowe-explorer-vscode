@@ -124,7 +124,7 @@ export namespace MainframeInteraction {
         /**
          * Uploads a given buffer as the contents of a file on USS.
          */
-        uploadFromBuffer(buffer: Buffer, filePath: string, options?: zowe.IUploadOptions): Promise<string | zowe.IZosFilesResponse>;
+        uploadFromBuffer(buffer: Buffer, filePath: string, options?: zosfiles.IUploadOptions): Promise<string | zosfiles.IZosFilesResponse>;
 
         /**
          * Uploads the file at the given path. Use for Save.
@@ -233,7 +233,7 @@ export namespace MainframeInteraction {
          * @param {zowe.IUploadOptions} [options]
          * @returns {Promise<zowe.IZosFilesResponse>}
          */
-        uploadFromBuffer(buffer: Buffer, dataSetName: string, options?: zowe.IUploadOptions): Promise<zowe.IZosFilesResponse>;
+        uploadFromBuffer(buffer: Buffer, dataSetName: string, options?: zosfiles.IUploadOptions): Promise<zosfiles.IZosFilesResponse>;
 
         /**
          * Upload the content of a file to a data set or member.
