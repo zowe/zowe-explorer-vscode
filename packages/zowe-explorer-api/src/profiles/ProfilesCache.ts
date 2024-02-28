@@ -147,12 +147,11 @@ export class ProfilesCache {
     public async refresh(apiRegister?: extend.IRegisterClient): Promise<void> {
         this.allProfiles = [];
         this.allTypes = [];
-        let mProfileInfo: zowe.imperative.ProfileInfo;
         try {
-            mProfileInfo = await this.getProfileInfo();
-            if (!mProfileInfo.usingTeamConfig) {
+            if (zowe.imperative.ProfileInfo.onlyV1ProfilesExist) {
                 return;
             }
+            const mProfileInfo = await this.getProfileInfo();
             const allTypes = this.getAllProfileTypes(apiRegister?.registeredApiTypes() ?? []);
             allTypes.push("ssh", "base");
             for (const type of allTypes) {

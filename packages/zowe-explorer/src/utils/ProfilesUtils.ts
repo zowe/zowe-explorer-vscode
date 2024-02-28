@@ -415,7 +415,7 @@ export class ProfilesUtils {
         } else {
             await mProfileInfo.readProfilesFromDisk({ homeDir: FileManagement.getZoweDir(), projectDir: undefined });
         }
-        if (mProfileInfo.usingTeamConfig) {
+        if (!imperative.ProfileInfo.onlyV1ProfilesExist) {
             if (warnForMissingSchema && !mProfileInfo.hasValidSchema) {
                 const schemaWarning = vscode.l10n.t(
                     "No valid schema was found for the active team configuration. This may introduce issues with profiles in Zowe Explorer."
@@ -472,7 +472,7 @@ export class ProfilesUtils {
     public static async promptCredentials(node: IZoweTreeNode): Promise<void> {
         ZoweLogger.trace("ProfilesUtils.promptCredentials called.");
         const mProfileInfo = await Profiles.getInstance().getProfileInfo();
-        if (mProfileInfo.usingTeamConfig && !mProfileInfo.getTeamConfig().properties.autoStore) {
+        if (!imperative.ProfileInfo.onlyV1ProfilesExist && !mProfileInfo.getTeamConfig().properties.autoStore) {
             const msg = vscode.l10n.t('"Update Credentials" operation not supported when "autoStore" is false');
             ZoweLogger.warn(msg);
             Gui.showMessage(msg);

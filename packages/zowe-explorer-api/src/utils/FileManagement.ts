@@ -9,9 +9,10 @@
  *
  */
 
-import * as zowe from "@zowe/cli";
-import * as fs from "fs";
-import * as os from "os";
+import { imperative } from "@zowe/cli";
+import { realpathSync } from "fs";
+import { platform, homedir } from "os";
+import { join } from "path";
 import { Constants } from "../globals";
 
 export class FileManagement {
@@ -34,17 +35,25 @@ export class FileManagement {
     }
 
     public static getZoweDir(): string {
-        return zowe.getZoweDir();
+        const defaultHome = join(homedir(), ".zowe");
+        if (imperative.ImperativeConfig.instance.loadedConfig?.defaultHome !== defaultHome) {
+            imperative.ImperativeConfig.instance.loadedConfig = {
+                name: "zowe",
+                defaultHome,
+                envVariablePrefix: "ZOWE"
+            };
+        }
+        return imperative.ImperativeConfig.instance.cliHome;
     }
 
     public static getFullPath(anyPath: string): string {
-        if (os.platform() === "win32") {
+        if (platform() === "win32") {
             try {
-                return fs.realpathSync.native(anyPath);
+                return realpathSync.native(anyPath);
             } catch (err) {
                 // Fallback to realpathSync below
             }
         }
-        return fs.realpathSync(anyPath);
+        return realpathSync(anyPath);
     }
 }
