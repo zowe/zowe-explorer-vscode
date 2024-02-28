@@ -53,7 +53,10 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
             for (let i = 0; i < labelOpts.length; i++) {
                 const opt = labelOpts[i];
                 const [key, val] = opt.split(":");
-                finalLabel += `${key}: ${val}`;
+                finalLabel += `${key}`;
+                if (val !== undefined) {
+                    finalLabel += `: ${val}`;
+                }
                 if (i != labelOpts.length - 1) {
                     finalLabel += " | ";
                 }
