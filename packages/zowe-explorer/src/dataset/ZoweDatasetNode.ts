@@ -328,55 +328,36 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 return sortByName(a, b);
             }
 
-            switch (sort.method) {
-                case DatasetSortOpts.DateCreated: {
-                    const dateA = dayjs(a.stats?.createdDate ?? null);
-                    const dateB = dayjs(b.stats?.createdDate ?? null);
+            function sortByDate(aDate: Date, bDate: Date): number {
+                const dateA = dayjs(aDate ?? null);
+                const dateB = dayjs(bDate ?? null);
 
-                    const aVaild = dateA.isValid();
-                    const bValid = dateB.isValid();
+                const aVaild = dateA.isValid();
+                const bValid = dateB.isValid();
 
-                    a.description = aVaild ? dateA.format("YYYY/MM/DD") : undefined;
-                    b.description = bValid ? dateB.format("YYYY/MM/DD") : undefined;
+                a.description = aVaild ? dateA.format("YYYY/MM/DD") : undefined;
+                b.description = bValid ? dateB.format("YYYY/MM/DD") : undefined;
 
-                    if (!aVaild) {
-                        return sortGreaterThan;
-                    }
-
-                    if (!bValid) {
-                        return sortLessThan;
-                    }
-
-                    if (dateA.isSame(dateB, "second")) {
-                        return sortByName(a, b);
-                    }
-
-                    return dateA.isBefore(dateB, "second") ? sortLessThan : sortGreaterThan;
+                if (!aVaild) {
+                    return sortGreaterThan;
                 }
-                case DatasetSortOpts.LastModified: {
-                    const dateA = dayjs(a.stats?.modifiedDate ?? null);
-                    const dateB = dayjs(b.stats?.modifiedDate ?? null);
 
-                    const aValid = dateA.isValid();
-                    const bValid = dateB.isValid();
+                if (!bValid) {
+                    return sortLessThan;
+                }
 
-                    a.description = aValid ? dateA.format("YYYY/MM/DD HH:mm:ss") : undefined;
-                    b.description = bValid ? dateB.format("YYYY/MM/DD HH:mm:ss") : undefined;
+                if (dateA.isSame(dateB, "second")) {
+                    return sortByName(a, b);
+                }
+                return dateA.isBefore(dateB, "second") ? sortLessThan : sortGreaterThan;
+            }
 
-                    if (!aValid) {
-                        return sortGreaterThan;
-                    }
-
-                    if (!bValid) {
-                        return sortLessThan;
-                    }
-
-                    // for dates that are equal down to the second, fallback to sorting by name
-                    if (dateA.isSame(dateB, "second")) {
-                        return sortByName(a, b);
-                    }
-
-                    return dateA.isBefore(dateB, "second") ? sortLessThan : sortGreaterThan;
+            switch (sort.method) {
+                case Sorting.DatasetSortOpts.DateCreated: {
+                    return sortByDate(a.stats?.createdDate, b.stats?.createdDate);
+                }
+                case Sorting.DatasetSortOpts.LastModified: {
+                    return sortByDate(a.stats?.modifiedDate, b.stats?.modifiedDate);
                 }
                 case DatasetSortOpts.UserId: {
                     const userA = a.stats?.user ?? "";
