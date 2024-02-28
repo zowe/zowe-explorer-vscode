@@ -32,6 +32,7 @@ import { USSTree } from "../../src/uss/USSTree";
 import { ZoweSaveQueue } from "../../src/abstract/ZoweSaveQueue";
 import { ZoweLocalStorage } from "../../src/utils/ZoweLocalStorage";
 jest.mock("../../src/utils/LoggerUtils");
+jest.mock("../../src/utils/ZoweLogger");
 import { ProfilesUtils } from "../../src/utils/ProfilesUtils";
 
 jest.mock("vscode");
@@ -93,7 +94,7 @@ async function createGlobalMocks() {
                 readProfilesFromDisk: mockReadProfilesFromDisk,
             };
         }),
-        mockSetGlobalSecurityValue: jest.fn(),
+        mockUpdateCredMgrSetting: jest.fn(),
         mockWriteOverridesFile: jest.fn(),
         mockProfCacheProfileInfo: createInstanceOfProfileInfo(),
         mockProfilesCache: new ProfilesCache(imperative.Logger.getAppLogger()),
@@ -301,8 +302,8 @@ async function createGlobalMocks() {
         value: globalMocks.mockOnDidChangeConfiguration,
         configurable: true,
     });
-    Object.defineProperty(globals, "setGlobalSecurityValue", {
-        value: globalMocks.mockSetGlobalSecurityValue,
+    Object.defineProperty(ProfilesUtils, "mockUpdateCredentialManagerSetting", {
+        value: globalMocks.mockUpdateCredMgrSetting,
         configurable: true,
     });
     Object.defineProperty(fs, "readdirSync", { value: globalMocks.mockReaddirSync, configurable: true });

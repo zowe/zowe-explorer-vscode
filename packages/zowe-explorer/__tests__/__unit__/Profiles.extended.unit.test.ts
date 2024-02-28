@@ -38,9 +38,9 @@ import { createUSSNode, createUSSSessionNode, createUSSTree } from "../../__mock
 import { createIJobObject, createJobsTree } from "../../__mocks__/mockCreators/jobs";
 import * as path from "path";
 import { SettingsConfig } from "../../src/utils/SettingsConfig";
-import { ZoweLogger } from "../../src/utils/LoggerUtils";
+import { ZoweLogger } from "../../src/utils/ZoweLogger";
 import { ZoweLocalStorage } from "../../src/utils/ZoweLocalStorage";
-jest.mock("../../src/utils/LoggerUtils");
+jest.mock("../../src/utils/ZoweLogger");
 import { TreeProviders } from "../../src/shared/TreeProviders";
 
 jest.mock("child_process");
@@ -862,6 +862,7 @@ describe("Profiles Unit Tests - function checkCurrentProfile", () => {
         } as any);
         jest.spyOn(Profiles.getInstance(), "getLoadedProfConfig").mockResolvedValue(globalMocks.testProfile);
         jest.spyOn(Profiles.getInstance(), "getSecurePropsForProfile").mockResolvedValue([]);
+        Object.defineProperty(globals, "PROFILES_CACHE", { value: Profiles.getInstance(), configurable: true });
     };
 
     it("should show as active in status of profile", async () => {
@@ -1335,5 +1336,35 @@ describe("Profiles Unit Tests - function enableValidation", () => {
         expect(Profiles.getInstance().enableValidation(globalMocks.testNode)).toEqual(globalMocks.testNode);
         expect(enableValidationContextSpy).toHaveBeenCalledTimes(1);
         expect(globalMocks.testNode.contextValue).toEqual(globals.DS_SESSION_CONTEXT + globals.VALIDATE_SUFFIX);
+    });
+});
+
+describe("Profiles Unit Tests - function promptChangeForAllTrees", () => {
+    beforeEach(() => {
+        jest.resetAllMocks();
+        jest.clearAllMocks();
+        jest.restoreAllMocks();
+    });
+
+    it("should prompt for applying change to all trees", async () => {
+        jest.spyOn(TreeProviders, "sessionIsPresentInOtherTrees").mockReturnValue(false);
+        const expectedResult = { label: "test", description: "test" } as vscode.QuickPickItem;
+        const createQuickPickSpy = jest.spyOn(Gui, "createQuickPick");
+        const resolveQuickPickSpy = jest.spyOn(Gui, "resolveQuickPick");
+        const showSpy = jest.fn();
+        const hideSpy = jest.fn();
+        createQuickPickSpy.mockReturnValue({
+            placeholder: "",
+            items: [],
+            activeItems: [],
+            show: showSpy,
+            hide: hideSpy,
+        } as any);
+        resolveQuickPickSpy.mockResolvedValue(expectedResult);
+        await expect(Profiles["promptChangeForAllTrees"]("test", true)).resolves.toEqual(expectedResult);
+        expect(createQuickPickSpy).toHaveBeenCalledTimes(1);
+        expect(resolveQuickPickSpy).toHaveBeenCalledTimes(1);
+        expect(showSpy).toHaveBeenCalledTimes(1);
+        expect(hideSpy).toHaveBeenCalledTimes(1);
     });
 });

@@ -32,9 +32,8 @@ import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
 import { ZoweExplorerExtender } from "./ZoweExplorerExtender";
 import * as globals from "./globals";
 import { SettingsConfig } from "./utils/SettingsConfig";
-import { ZoweLogger } from "./utils/LoggerUtils";
+import { ZoweLogger } from "./utils/ZoweLogger";
 import { TreeProviders } from "./shared/TreeProviders";
-import { ProfileManagement } from "./utils/ProfileManagement";
 import { ProfileConstants } from "@zowe/core-for-zowe-sdk";
 
 let InputBoxOptions: vscode.InputBoxOptions;
@@ -43,6 +42,7 @@ export class Profiles extends ProfilesCache {
     // Processing stops if there are no profiles detected
     public static async createInstance(log: imperative.Logger): Promise<Profiles> {
         Profiles.loader = new Profiles(log, vscode.workspace.workspaceFolders?.[0]?.uri.fsPath);
+        globals.setProfilesCache(Profiles.loader);
         await Profiles.loader.refresh(ZoweExplorerApiRegister.getInstance());
         return Profiles.loader;
     }
@@ -391,7 +391,7 @@ export class Profiles extends ProfilesCache {
                     comment: ["chosen profile", "tree type"],
                 })
             );
-            if (await ProfileManagement.handleChangeForAllTrees(chosenProfile, true)) {
+            if (await Profiles.handleChangeForAllTrees(chosenProfile, true)) {
                 await zoweFileProvider.addSession(chosenProfile);
             } else {
                 await zoweFileProvider.addSession(chosenProfile, undefined, zoweFileProvider);
@@ -492,7 +492,6 @@ export class Profiles extends ProfilesCache {
             await this.openConfigFile(path.join(rootPath, configName));
             return path.join(rootPath, configName);
         } catch (err) {
-            console.log(err);
             ZoweLogger.error(err);
             ZoweExplorerExtender.showZoweConfigError(err.message);
         }
@@ -1116,5 +1115,39 @@ export class Profiles extends ProfilesCache {
 
     public async refresh(apiRegister?: IRegisterClient): Promise<void> {
         return super.refresh(apiRegister ?? ZoweExplorerApiRegister.getInstance());
+    }
+
+    public static async handleChangeForAllTrees(nodeName: string, checkPresence: boolean): Promise<boolean> {
+        const selection = await this.promptChangeForAllTrees(nodeName, checkPresence);
+        if (!selection) {
+            return;
+        }
+        const [all] = this.getPromptChangeForAllTreesOptions();
+        return selection.label === all.label;
+    }
+    private static async promptChangeForAllTrees(nodeName: string, checkPresence: boolean): Promise<vscode.QuickPickItem> {
+        const [qpItemAll, qpItemCurrent] = this.getPromptChangeForAllTreesOptions();
+        if (TreeProviders.sessionIsPresentInOtherTrees(nodeName) === checkPresence) {
+            return qpItemCurrent;
+        }
+        const qp = Gui.createQuickPick();
+        qp.placeholder = vscode.l10n.t("Do you wish to apply this for all trees?");
+        qp.items = [qpItemAll, qpItemCurrent];
+        qp.activeItems = [qp.items[0]];
+        qp.show();
+        const selection = await Gui.resolveQuickPick(qp);
+        qp.hide();
+        return selection;
+    }
+    private static getPromptChangeForAllTreesOptions(): vscode.QuickPickItem[] {
+        const qpItemAll: vscode.QuickPickItem = {
+            label: vscode.l10n.t("Yes"),
+            description: vscode.l10n.t("Apply to all trees"),
+        };
+        const qpItemCurrent: vscode.QuickPickItem = {
+            label: vscode.l10n.t("No"),
+            description: vscode.l10n.t("Apply to current tree selected"),
+        };
+        return [qpItemAll, qpItemCurrent];
     }
 }

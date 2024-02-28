@@ -19,7 +19,7 @@ import { errorHandling, syncSessionNode } from "../utils/ProfilesUtils";
 import { getIconByNode } from "../generators/icons";
 import { JOB_SORT_KEYS } from "./utils";
 import { Profiles } from "../Profiles";
-import { ZoweLogger } from "../utils/LoggerUtils";
+import { ZoweLogger } from "../utils/ZoweLogger";
 import { encodeJobFile } from "../SpoolProvider";
 import { IZoweJobTreeOpts } from "../shared/IZoweTreeOpts";
 

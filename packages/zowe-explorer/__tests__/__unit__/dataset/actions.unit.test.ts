@@ -41,7 +41,7 @@ import { Profiles } from "../../../src/Profiles";
 import * as utils from "../../../src/utils/ProfilesUtils";
 import * as wsUtils from "../../../src/utils/workspace";
 import { getNodeLabels } from "../../../src/dataset/utils";
-import { ZoweLogger } from "../../../src/utils/LoggerUtils";
+import { ZoweLogger } from "../../../src/utils/ZoweLogger";
 import * as context from "../../../src/shared/context";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { mocked } from "../../../__mocks__/mockUtils";
@@ -49,7 +49,7 @@ import { mocked } from "../../../__mocks__/mockUtils";
 // Missing the definition of path module, because I need the original logic for tests
 jest.mock("fs");
 jest.mock("vscode");
-jest.mock("../../../src/utils/LoggerUtils");
+jest.mock("../../../src/utils/ZoweLogger");
 
 let mockClipboardData = null;
 let clipboard;
@@ -2299,51 +2299,6 @@ describe("Dataset Actions Unit Tests - Function copyDataSets", () => {
         const copySpy = jest.spyOn(blockMocks.mvsApi, "copyDataSetMember");
         copySpy.mockRejectedValueOnce("");
         await expect(dsActions.pasteDataSetMembers(blockMocks.testDatasetTree, blockMocks.memberChild)).toBeFalsy;
-    });
-
-    it("Testing downloadDs() called with invalid node", async () => {
-        globals.defineGlobals("");
-        createGlobalMocks();
-        const blockMocks = createBlockMocks();
-        const node = new ZoweDatasetNode({
-            label: "HLQ.TEST.TO.NODE",
-            collapsibleState: vscode.TreeItemCollapsibleState.None,
-            parentNode: blockMocks.pdsSessionNode,
-            profile: blockMocks.imperativeProfile,
-        });
-        blockMocks.pdsSessionNode.contextValue = "fakeContext";
-
-        try {
-            await dsActions.downloadDs(node, true);
-        } catch (err) {
-            /* Do nothing */
-        }
-
-        expect(mocked(Gui.errorMessage)).toHaveBeenCalledWith("Invalid data set or member.");
-    });
-
-    it("Testing downloadDs() called with a member", async () => {
-        globals.defineGlobals("");
-        const globalMocks = createGlobalMocks();
-        const blockMocks = createBlockMocks();
-        const node = new ZoweDatasetNode({
-            label: "HLQ.TEST.TO.NODE",
-            collapsibleState: vscode.TreeItemCollapsibleState.None,
-            parentNode: blockMocks.pdsSessionNode,
-            profile: blockMocks.imperativeProfile,
-        });
-        globalMocks.getContentsSpy.mockResolvedValueOnce({
-            success: true,
-            commandResponse: null,
-            apiResponse: {
-                etag: "123",
-            },
-        });
-
-        const label = node.getParent().getLabel().toString() + "(" + node.getLabel().toString() + ")";
-        const filePathSpy = jest.spyOn(sharedUtils, "getDocumentFilePath");
-        await dsActions.downloadDs(node, true);
-        expect(filePathSpy).toHaveBeenCalledWith(label, node);
     });
 
     it("Testing refreshDataset() error handling", async () => {

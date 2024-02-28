@@ -13,7 +13,7 @@ import * as vscode from "vscode";
 import * as zosjobs from "@zowe/zos-jobs-for-zowe-sdk";
 import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
 import { Profiles } from "./Profiles";
-import { ZoweLogger } from "./utils/LoggerUtils";
+import { ZoweLogger } from "./utils/ZoweLogger";
 import { IZoweJobTreeNode } from "@zowe/zowe-explorer-api";
 
 export default class SpoolProvider implements vscode.TextDocumentContentProvider {

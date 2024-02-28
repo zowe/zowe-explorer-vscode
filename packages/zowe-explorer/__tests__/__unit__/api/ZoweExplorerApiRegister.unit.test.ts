@@ -12,8 +12,8 @@
 import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
 import { imperative, MainframeInteraction, ZoweExplorerZosmf } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
-import { Profiles } from "../../../src/Profiles";
 import { createInstanceOfProfile, createValidIProfile } from "../../../__mocks__/mockCreators/shared";
+import { ZoweExplorerExtender } from "../../../src/ZoweExplorerExtender";
 
 class MockUssApi1 implements MainframeInteraction.IUss {
     public profile?: imperative.IProfileLoaded;
@@ -196,7 +196,7 @@ describe("ZoweExplorerApiRegister unit testing", () => {
             return;
         });
         const profilesForValidation = { status: "active", name: "fake" };
-        Object.defineProperty(Profiles, "getInstance", {
+        Object.defineProperty(ZoweExplorerExtender.prototype, "getProfilesCache", {
             value: jest.fn(() => {
                 return {
                     refresh: mockRefresh,

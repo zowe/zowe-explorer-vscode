@@ -29,7 +29,7 @@ import { createUSSSessionNode, createUSSTree } from "../../../__mocks__/mockCrea
 import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
 import { getIconById, IconId, getIconByNode } from "../../../src/generators/icons";
 import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
-import { ZoweLogger } from "../../../src/utils/LoggerUtils";
+import { ZoweLogger } from "../../../src/utils/ZoweLogger";
 import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
 import { mocked } from "../../../__mocks__/mockUtils";
 
