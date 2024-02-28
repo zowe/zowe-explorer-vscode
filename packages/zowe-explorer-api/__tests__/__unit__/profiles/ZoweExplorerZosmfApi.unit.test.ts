@@ -101,7 +101,7 @@ describe("ZosmfUssApi", () => {
                 protocol: "http",
                 user: "aZosmfUser",
             },
-        } as zowe.imperative.IProfileLoaded;
+        } as imperative.IProfileLoaded;
 
         it("should include profile properties in the built session object", () => {
             const api = new ZoweExplorerZosmf.UssApi();
@@ -206,7 +206,7 @@ describe("ZosmfUssApi", () => {
     });
 
     it("uploads a file from buffer", async () => {
-        const uploadFileSpy = jest.spyOn(zowe.Upload, "bufferToUssFile").mockImplementation();
+        const uploadFileSpy = jest.spyOn(zosfiles.Upload, "bufferToUssFile").mockImplementation();
         const zosmfApi = new ZoweExplorerZosmf.UssApi();
         const buf = Buffer.from("123abc");
         await zosmfApi.uploadFromBuffer(buf, "/some/uss/path");
@@ -504,7 +504,7 @@ describe("ZosmfMvsApi", () => {
     });
 
     it("uploads a data set from buffer", async () => {
-        const uploadFileSpy = jest.spyOn(zowe.Upload, "bufferToDataSet").mockImplementation();
+        const uploadFileSpy = jest.spyOn(zosfiles.Upload, "bufferToDataSet").mockImplementation();
         const zosmfApi = new ZoweExplorerZosmf.MvsApi();
         const buf = Buffer.from("123abc");
         await zosmfApi.uploadFromBuffer(buf, "SOME.DS(MEMB)");
