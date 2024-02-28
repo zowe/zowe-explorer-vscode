@@ -6,6 +6,9 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### New features and enhancements
 
+- **Breaking:** Added the following **required** API: `uploadFromBuffer`
+  - For v3, this API will be used for saving data sets and USS files instead of `putContent(s)`. Extenders must implement this API to continue supporting Zowe Explorer save operations.
+
 ### Bug fixes
 
 - Fixed issue where `zosmf` profiles did not respect the `protocol` property [#2703](https://github.com/zowe/vscode-extension-for-zowe/issues/2703).
