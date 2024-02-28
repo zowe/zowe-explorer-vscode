@@ -302,4 +302,36 @@ describe("FtpUssApi", () => {
             await UssApi.rename("/a/b/c", "a/b/d");
         }).rejects.toThrow(ZoweFtpExtensionError);
     });
+
+    describe("uploadFromBuffer", () => {
+        function getBlockMocks(): Record<string, jest.SpyInstance> {
+            return {
+                processNewlinesSpy: jest.spyOn(zowe.imperative.IO, "processNewlines"),
+                putContent: jest.spyOn(UssApi, "putContent").mockImplementation(),
+                tmpFileSyncMock: jest.spyOn(tmp, "fileSync").mockReturnValueOnce({ fd: 12345 } as any),
+                writeSyncMock: jest.spyOn(fs, "writeSync").mockImplementation(),
+            };
+        }
+
+        it("should upload file from buffer", async () => {
+            const buf = Buffer.from("abc123");
+            const blockMocks = getBlockMocks();
+
+            await UssApi.uploadFromBuffer(buf, "/some/fs/path");
+            expect(blockMocks.tmpFileSyncMock).toHaveBeenCalled();
+            expect(blockMocks.writeSyncMock).toHaveBeenCalled();
+            expect(blockMocks.processNewlinesSpy).toHaveBeenCalled();
+        });
+
+        it("should not process new lines when uploading buffer as binary", async () => {
+            const buf = Buffer.from("abc123");
+            const blockMocks = getBlockMocks();
+            blockMocks.processNewlinesSpy.mockImplementation();
+
+            await UssApi.uploadFromBuffer(buf, "/some/fs/path", { binary: true });
+            expect(blockMocks.tmpFileSyncMock).toHaveBeenCalled();
+            expect(blockMocks.writeSyncMock).toHaveBeenCalled();
+            expect(blockMocks.processNewlinesSpy).not.toHaveBeenCalled();
+        });
+    });
 });

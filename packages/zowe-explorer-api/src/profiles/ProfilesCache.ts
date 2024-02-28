@@ -52,7 +52,7 @@ export class ProfilesCache {
         return this.profileTypeConfigurations;
     }
 
-    public async getProfileInfo(_envTheia = false): Promise<zowe.imperative.ProfileInfo> {
+    public async getProfileInfo(): Promise<zowe.imperative.ProfileInfo> {
         const mProfileInfo = new zowe.imperative.ProfileInfo("zowe", {
             // eslint-disable-next-line @typescript-eslint/no-unsafe-return
             credMgrOverride: zowe.imperative.ProfileCredentials.defaultCredMgrWithKeytar(ProfilesCache.requireKeyring),
@@ -452,10 +452,11 @@ export class ProfilesCache {
     }
 
     private shouldRemoveTokenFromProfile(profile: zowe.imperative.IProfileLoaded, baseProfile: zowe.imperative.IProfileLoaded): boolean {
-        return ((baseProfile?.profile?.host || baseProfile?.profile?.port) &&
+        return (baseProfile?.profile?.host &&
+            baseProfile?.profile?.port &&
             profile?.profile?.host &&
             profile?.profile?.port &&
-            (baseProfile?.profile.host !== profile?.profile.host || (profile?.profile.user && profile?.profile.password)) &&
+            (baseProfile?.profile.host !== profile?.profile.host || (baseProfile?.profile.port !== profile?.profile.port) || (profile?.profile.user && profile?.profile.password)) &&
             profile?.profile.tokenType?.startsWith(zowe.imperative.SessConstants.TOKEN_TYPE_APIML)) as boolean;
     }
 
