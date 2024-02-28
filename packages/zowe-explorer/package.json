@@ -2041,7 +2041,7 @@
     ]
   },
   "scripts": {
-    "build": "pnpm clean:bundle && pnpm license && webpack --mode development",
+    "build": "pnpm clean:bundle && (pnpm madge || true) && pnpm license && webpack --mode development",
     "build:integration": "pnpm createTestProfileData && pnpm license && tsc --pretty --project tsconfig-tests.json",
     "test:unit": "jest \".*__tests__.*\\.unit\\.test\\.ts\" --coverage",
     "test": "pnpm test:unit",
@@ -2061,7 +2061,7 @@
     "clean:bundle": "rimraf out || true",
     "clean:dependencies": "rimraf node_modules || true",
     "fresh-clone": "pnpm clean:bundle && pnpm clean:dependencies",
-    "madge": "madge -c --no-color --no-spinner --exclude __mocks__ --extensions js,ts src/ || true",
+    "madge": "madge -c --no-color --no-spinner --exclude __mocks__ --extensions js,ts src/",
     "pretty": "prettier --write .",
     "createTestProfileData": "ts-node ./scripts/createTestProfileData.ts",
     "createDemoNodes": "ts-node ./scripts/createDemoNodes.ts",
