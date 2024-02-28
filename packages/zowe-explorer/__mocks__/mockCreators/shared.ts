@@ -355,6 +355,7 @@ export function createInstanceOfProfile(profile: imperative.IProfileLoaded) {
         convertV1ProfToConfig: jest.fn(),
         getLoadedProfConfig: jest.fn(),
         getSecurePropsForProfile: jest.fn(),
+        addToConfigArray: jest.fn(),
     } as any;
 }
 

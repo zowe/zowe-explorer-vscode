@@ -12,9 +12,9 @@
 import * as path from "path";
 import { imperative } from "@zowe/cli";
 import * as vscode from "vscode";
-
 import { FileManagement, IZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { ZoweLogger } from "./utils/ZoweLogger";
+import type { Profiles } from "./Profiles";
 
 // Globals
 export let SETTINGS_TEMP_FOLDER_LOCATION;
@@ -101,6 +101,7 @@ export let SAVED_PROFILE_CONTENTS = new Uint8Array();
 export const JOBS_MAX_PREFIX = 8;
 export let FILE_SELECTED_TO_COMPARE: boolean;
 export let filesToCompare: IZoweTreeNode[];
+export let PROFILES_CACHE: Profiles; // Works around circular dependency, see https://github.com/zowe/vscode-extension-for-zowe/issues/2756
 
 // Dictionary describing translation from old configuration names to new standardized names
 export const configurationDictionary: { [k: string]: string } = {
@@ -339,4 +340,8 @@ export function setCompareSelection(val: boolean): void {
 export function resetCompareChoices(): void {
     setCompareSelection(false);
     filesToCompare = [];
+}
+
+export function setProfilesCache(profilesCache: Profiles): void {
+    PROFILES_CACHE = profilesCache;
 }

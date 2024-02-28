@@ -41,6 +41,7 @@ export class Profiles extends ProfilesCache {
     // Processing stops if there are no profiles detected
     public static async createInstance(log: zowe.imperative.Logger): Promise<Profiles> {
         Profiles.loader = new Profiles(log, vscode.workspace.workspaceFolders?.[0]?.uri.fsPath);
+        globals.setProfilesCache(Profiles.loader);
         await Profiles.loader.refresh(ZoweExplorerApiRegister.getInstance());
         return Profiles.loader;
     }

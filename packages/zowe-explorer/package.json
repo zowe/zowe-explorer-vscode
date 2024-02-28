@@ -2041,7 +2041,7 @@
     ]
   },
   "scripts": {
-    "build": "pnpm clean:bundle && pnpm license && webpack --mode development",
+    "build": "pnpm clean:bundle && pnpm license && webpack --mode development && pnpm madge",
     "build:integration": "pnpm createTestProfileData && pnpm license && tsc --pretty --project tsconfig-tests.json",
     "test:unit": "jest \".*__tests__.*\\.unit\\.test\\.ts\" --coverage",
     "test:theia": "mocha ./out/__tests__/__theia__/*.theia.test.js --timeout 50000 --reporter mocha-multi-reporters --reporter-options configFile=.mocharc.json",
@@ -2167,5 +2167,12 @@
   "jest-junit": {
     "outputDirectory": "<rootDir>/results/unit",
     "outputName": "junit.xml"
+  },
+  "madge": {
+    "detectiveOptions": {
+      "ts": {
+        "skipTypeImports": true
+      }
+    }
   }
 }

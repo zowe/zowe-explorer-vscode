@@ -888,6 +888,7 @@ describe("Profiles Unit Tests - function checkCurrentProfile", () => {
         } as any);
         jest.spyOn(Profiles.getInstance(), "getLoadedProfConfig").mockResolvedValue(globalMocks.testProfile);
         jest.spyOn(Profiles.getInstance(), "getSecurePropsForProfile").mockResolvedValue([]);
+        Object.defineProperty(globals, "PROFILES_CACHE", { value: Profiles.getInstance(), configurable: true });
     };
 
     it("should show as active in status of profile", async () => {

@@ -24,7 +24,7 @@
     "semver": "^7.5.3"
   },
   "scripts": {
-    "build": "pnpm check-cli && pnpm copy-secrets && pnpm clean && pnpm madge && tsc -p ./ && pnpm license",
+    "build": "pnpm check-cli && pnpm copy-secrets && pnpm clean && pnpm license && tsc -p ./ && pnpm madge",
     "test:unit": "jest \".*__tests__.*\\.unit\\.test\\.ts\" --coverage",
     "test": "pnpm test:unit",
     "lint": "concurrently -n \"_eslint_,prettier\" \"eslint .\" \"prettier --write . && prettier --check .\"",

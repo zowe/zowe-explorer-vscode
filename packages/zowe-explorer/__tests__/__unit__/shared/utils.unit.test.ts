@@ -30,7 +30,6 @@ import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { Profiles } from "../../../src/Profiles";
 import * as utils from "../../../src/utils/ProfilesUtils";
 import { Gui, IZoweTreeNode, ProfilesCache, ZosEncoding } from "@zowe/zowe-explorer-api";
-import { ZoweLogger } from "../../../src/utils/ZoweLogger";
 import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
 
 jest.mock("path");
@@ -45,12 +44,8 @@ async function createGlobalMocks() {
     };
     newMocks.mockProfilesCache = new ProfilesCache(imperative.Logger.getAppLogger());
     newMocks.mockProfileInstance = createInstanceOfProfile(createIProfile());
-    Object.defineProperty(Profiles, "CreateInstance", {
-        value: () => newMocks.mockProfileInstance,
-        configurable: true,
-    });
-    Object.defineProperty(Profiles, "getInstance", {
-        value: () => newMocks.mockProfileInstance,
+    Object.defineProperty(globals, "PROFILES_CACHE", {
+        value: newMocks.mockProfileInstance,
         configurable: true,
     });
 
@@ -119,8 +114,8 @@ describe("syncSessionNode shared util function", () => {
             } as any);
         // when
         utils.syncSessionNode(sessionForProfile, sessionNode);
-        expect(await sessionNode.getSession()).toEqual(expectedSession);
-        expect(await sessionNode.getProfile()).toEqual(createIProfile());
+        expect(sessionNode.getSession()).toEqual(expectedSession);
+        expect(sessionNode.getProfile()).toEqual(createIProfile());
     });
     it("should do nothing, if there is no profile from provided node in the file system", async () => {
         const profiles = createInstanceOfProfile(serviceProfile);

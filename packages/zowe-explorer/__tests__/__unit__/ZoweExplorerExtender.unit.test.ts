@@ -18,7 +18,6 @@ import { createDatasetSessionNode, createDatasetTree } from "../../__mocks__/moc
 import { createUSSSessionNode, createUSSTree } from "../../__mocks__/mockCreators/uss";
 import { createJobsTree, createIJobObject } from "../../__mocks__/mockCreators/jobs";
 import { ZoweExplorerExtender } from "../../src/ZoweExplorerExtender";
-import { Profiles } from "../../src/Profiles";
 import * as path from "path";
 import * as fs from "fs";
 import { FileManagement, Gui } from "@zowe/zowe-explorer-api";
@@ -29,14 +28,15 @@ jest.mock("fs");
 
 describe("ZoweExplorerExtender unit tests", () => {
     async function createBlockMocks() {
+        const imperativeProfile = createIProfile();
         const newMocks = {
             log: imperative.Logger.getAppLogger(),
             session: createISession(),
-            imperativeProfile: createIProfile(),
+            imperativeProfile,
             altTypeProfile: createAltTypeIProfile(),
             treeView: createTreeView(),
             instTest: ZoweExplorerExtender.getInstance(),
-            profiles: null,
+            profiles: createInstanceOfProfile(imperativeProfile),
             mockGetConfiguration: jest.fn(),
             mockErrorMessage: jest.fn(),
             mockExistsSync: jest.fn(),
@@ -44,16 +44,7 @@ describe("ZoweExplorerExtender unit tests", () => {
         };
 
         Object.defineProperty(fs, "existsSync", { value: newMocks.mockExistsSync, configurable: true });
-        newMocks.profiles = createInstanceOfProfile(newMocks.imperativeProfile);
-        Object.defineProperty(Profiles, "getInstance", {
-            value: jest
-                .fn(() => {
-                    return {
-                        refresh: jest.fn(),
-                    };
-                })
-                .mockReturnValue(newMocks.profiles),
-        });
+        jest.spyOn(ZoweExplorerExtender.prototype, "getProfilesCache").mockReturnValue(newMocks.profiles);
         Object.defineProperty(vscode.window, "createTreeView", {
             value: jest.fn().mockReturnValue({ onDidCollapseElement: jest.fn() }),
             configurable: true,
@@ -74,19 +65,11 @@ describe("ZoweExplorerExtender unit tests", () => {
             },
             configurable: true,
         });
-        Object.defineProperty(Profiles.getInstance(), "addToConfigArray", {
-            value: jest.fn(),
-            configurable: true,
-        });
         Object.defineProperty(ZoweLogger, "error", {
             value: jest.fn(),
             configurable: true,
         });
         Object.defineProperty(ZoweLogger, "trace", {
-            value: jest.fn(),
-            configurable: true,
-        });
-        Object.defineProperty(Profiles.getInstance(), "addToConfigArray", {
             value: jest.fn(),
             configurable: true,
         });

@@ -12,9 +12,9 @@
 import * as zowe from "@zowe/cli";
 import { MainframeInteraction, ZoweExplorerZosmf } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
-import { Profiles } from "../../../src/Profiles";
 import { IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
 import { createInstanceOfProfile, createValidIProfile } from "../../../__mocks__/mockCreators/shared";
+import { ZoweExplorerExtender } from "../../../src/ZoweExplorerExtender";
 
 class MockUssApi1 implements MainframeInteraction.IUss {
     public profile?: zowe.imperative.IProfileLoaded;
@@ -189,7 +189,7 @@ describe("ZoweExplorerApiRegister unit testing", () => {
             return;
         });
         const profilesForValidation = { status: "active", name: "fake" };
-        Object.defineProperty(Profiles, "getInstance", {
+        Object.defineProperty(ZoweExplorerExtender.prototype, "getProfilesCache", {
             value: jest.fn(() => {
                 return {
                     refresh: mockRefresh,

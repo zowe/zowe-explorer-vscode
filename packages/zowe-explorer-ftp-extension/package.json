@@ -30,7 +30,7 @@
     "Zowe.vscode-extension-for-zowe"
   ],
   "scripts": {
-    "build": "pnpm clean && pnpm madge && pnpm license && webpack --mode development",
+    "build": "pnpm clean && pnpm license && webpack --mode development && pnpm madge",
     "test:unit": "jest \".*__tests__.*\\.unit\\.test\\.ts\" --coverage",
     "test": "pnpm test:unit",
     "lint": "concurrently -n \"_eslint_,prettier\" \"eslint .\" \"prettier --write . && prettier --check .\"",

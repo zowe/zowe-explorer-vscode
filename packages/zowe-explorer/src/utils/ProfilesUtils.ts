@@ -17,7 +17,6 @@ import * as path from "path";
 import * as fs from "fs";
 import * as util from "util";
 import { IZoweTreeNode, ZoweTreeNode, FileManagement, Gui, ProfilesCache, MainframeInteraction } from "@zowe/zowe-explorer-api";
-import { Profiles } from "../Profiles";
 import { imperative, getImperativeConfig } from "@zowe/cli";
 import { ZoweLogger } from "./ZoweLogger";
 import { SettingsConfig } from "./SettingsConfig";
@@ -38,13 +37,13 @@ export async function errorHandling(errorDetails: Error | string, label?: string
         const httpErrorCode = Number(imperativeError.mDetails.errorCode);
         // open config file for missing hostname error
         if (imperativeError.toString().includes("hostname")) {
-            const mProfileInfo = await Profiles.getInstance().getProfileInfo();
+            const mProfileInfo = await globals.PROFILES_CACHE.getProfileInfo();
             Gui.errorMessage(vscode.l10n.t("Required parameter 'host' must not be blank."));
             const profAllAttrs = mProfileInfo.getAllProfiles();
             for (const prof of profAllAttrs) {
                 if (prof.profName === label.trim()) {
                     const filePath = prof.profLoc.osLoc[0];
-                    await Profiles.getInstance().openConfigFile(filePath);
+                    await globals.PROFILES_CACHE.openConfigFile(filePath);
                     return;
                 }
             }
@@ -72,7 +71,7 @@ export async function errorHandling(errorDetails: Error | string, label?: string
                     const message = vscode.l10n.t("Log in to Authentication Service");
                     Gui.showMessage(errToken, { items: [message] }).then(async (selection) => {
                         if (selection) {
-                            await Profiles.getInstance().ssoLogin(null, label);
+                            await globals.PROFILES_CACHE.ssoLogin(null, label);
                         }
                     });
                     return;
@@ -87,7 +86,7 @@ export async function errorHandling(errorDetails: Error | string, label?: string
                     Gui.showMessage(vscode.l10n.t("Operation Cancelled"));
                     return;
                 }
-                await Profiles.getInstance().promptCredentials(label.trim(), true);
+                await globals.PROFILES_CACHE.promptCredentials(label.trim(), true);
             });
             return;
         }
@@ -121,7 +120,7 @@ export const syncSessionNode = (
 
     let profile: imperative.IProfileLoaded;
     try {
-        profile = Profiles.getInstance().loadNamedProfile(profileName, profileType);
+        profile = globals.PROFILES_CACHE.loadNamedProfile(profileName, profileType);
     } catch (e) {
         ZoweLogger.warn(e);
         return;
@@ -465,19 +464,19 @@ export class ProfilesUtils {
      * @returns {Promise<boolean>} a boolean representing whether token based auth is being used or not
      */
     public static async isUsingTokenAuth(profileName: string): Promise<boolean> {
-        const secureProfileProps = await Profiles.getInstance().getSecurePropsForProfile(profileName);
+        const secureProfileProps = await globals.PROFILES_CACHE.getSecurePropsForProfile(profileName);
         const profileUsesBasicAuth = secureProfileProps.includes("user") && secureProfileProps.includes("password");
         if (secureProfileProps.includes("tokenValue")) {
             return secureProfileProps.includes("tokenValue") && !profileUsesBasicAuth;
         }
-        const baseProfile = Profiles.getInstance().getDefaultProfile("base");
-        const secureBaseProfileProps = await Profiles.getInstance().getSecurePropsForProfile(baseProfile?.name);
+        const baseProfile = globals.PROFILES_CACHE.getDefaultProfile("base");
+        const secureBaseProfileProps = await globals.PROFILES_CACHE.getSecurePropsForProfile(baseProfile?.name);
         return secureBaseProfileProps.includes("tokenValue") && !profileUsesBasicAuth;
     }
 
     public static async promptCredentials(node: IZoweTreeNode): Promise<void> {
         ZoweLogger.trace("ProfilesUtils.promptCredentials called.");
-        const mProfileInfo = await Profiles.getInstance().getProfileInfo();
+        const mProfileInfo = await globals.PROFILES_CACHE.getProfileInfo();
         if (mProfileInfo.usingTeamConfig && !mProfileInfo.getTeamConfig().properties.autoStore) {
             const msg = vscode.l10n.t('"Update Credentials" operation not supported when "autoStore" is false');
             ZoweLogger.warn(msg);
@@ -501,7 +500,7 @@ export class ProfilesUtils {
             }
         }
 
-        const creds = await Profiles.getInstance().promptCredentials(profile, true);
+        const creds = await globals.PROFILES_CACHE.promptCredentials(profile, true);
 
         if (creds != null) {
             const successMsg = vscode.l10n.t({
@@ -661,7 +660,7 @@ export class ProfilesUtils {
                 }
                 case convertButton: {
                     ZoweLogger.info("Convert v1 profiles to team configuration chosen.");
-                    const convertResults = await Profiles.getInstance().convertV1ProfToConfig();
+                    const convertResults = await globals.PROFILES_CACHE.convertV1ProfToConfig();
                     let responseMsg = "";
                     if (convertResults.success) {
                         responseMsg += `Success: ${convertResults.success}\n`;
