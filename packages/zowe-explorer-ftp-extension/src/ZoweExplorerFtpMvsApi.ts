@@ -210,19 +210,6 @@ export class FtpMvsApi extends AbstractFtpApi implements MainframeInteraction.IM
         }
     }
 
-    public async uploadFromBuffer(buffer: Buffer, filePath: string, options?: zowe.IUploadOptions): Promise<zowe.IZosFilesResponse> {
-        const tempFile = tmp.fileSync();
-        if (options.binary) {
-            fs.writeSync(tempFile.fd, buffer);
-        } else {
-            const text = zowe.imperative.IO.processNewlines(buffer.toString());
-            fs.writeSync(tempFile.fd, text);
-        }
-
-        const result = await this.putContents(tempFile.name, filePath, options);
-        return result;
-    }
-
     public async createDataSet(
         dataSetType: zosfiles.CreateDataSetTypeEnum,
         dataSetName: string,
@@ -396,7 +383,7 @@ export class FtpMvsApi extends AbstractFtpApi implements MainframeInteraction.IM
         };
         const loadResult = await this.getContents(dataSetName, options);
         const etag: string = loadResult.apiResponse.etag;
-        fs.rmSync(tmpFile.name);
+        fs.rmSync(tmpFileName);
         return etag;
     }
     private getDefaultResponse(): zosfiles.IZosFilesResponse {

@@ -11,14 +11,14 @@
 
 import * as vscode from "vscode";
 import { ProfilesCache } from "../../profiles/ProfilesCache";
-import { imperative } from "@zowe/cli";
+import { IProfileLoaded } from "@zowe/imperative";
 import { DirEntry, FileEntry } from "../types";
 
 export type UriFsInfo = {
     isRoot: boolean;
     slashAfterProfilePos: number;
     profileName: string;
-    profile?: imperative.IProfileLoaded;
+    profile?: IProfileLoaded;
 };
 
 /**

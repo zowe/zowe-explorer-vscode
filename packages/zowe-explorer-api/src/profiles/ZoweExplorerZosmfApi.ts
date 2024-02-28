@@ -135,7 +135,7 @@ export namespace ZoweExplorerZosmf {
         }
 
         public async move(oldPath: string, newPath: string): Promise<void> {
-            await zowe.Utilities.putUSSPayload(this.getSession(), newPath, {
+            await zosfiles.Utilities.putUSSPayload(this.getSession(), newPath, {
                 request: "move",
                 from: oldPath,
             });

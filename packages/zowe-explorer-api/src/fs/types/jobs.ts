@@ -9,7 +9,7 @@
  *
  */
 
-import { IJob, IJobFile } from "@zowe/cli";
+import { IJob, IJobFile } from "@zowe/zos-jobs-for-zowe-sdk";
 import { DirEntry, EntryMetadata, FileEntry } from "../types";
 import { FilePermission, FileType } from "vscode";
 

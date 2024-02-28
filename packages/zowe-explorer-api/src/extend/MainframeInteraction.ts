@@ -233,7 +233,7 @@ export namespace MainframeInteraction {
          * @param {zosfiles.IDownloadOptions} [options]
          * @returns {Promise<zosfiles.IZosFilesResponse>}
          */
-        getContents(dataSetName: string, options?: zosfiles.IDownloadOptions): Promise<zosfiles.IZosFilesResponse>;
+        getContents(dataSetName: string, options?: zosfiles.IDownloadSingleOptions): Promise<zosfiles.IZosFilesResponse>;
 
         /**
          * Uploads a given buffer as the contents of a file to a data set or member.
@@ -243,7 +243,7 @@ export namespace MainframeInteraction {
          * @param {zowe.IUploadOptions} [options]
          * @returns {Promise<zowe.IZosFilesResponse>}
          */
-        uploadFromBuffer(buffer: Buffer, dataSetName: string, options?: zosfiles.IUploadSingleOptions): Promise<zosfiles.IZosFilesResponse>;
+        uploadFromBuffer(buffer: Buffer, dataSetName: string, options?: zosfiles.IUploadOptions): Promise<zosfiles.IZosFilesResponse>;
 
         /**
          * Upload the content of a file to a data set or member.

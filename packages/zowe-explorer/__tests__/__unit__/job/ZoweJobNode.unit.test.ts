@@ -491,9 +491,9 @@ describe("ZoweJobNode unit tests - Function getChildren", () => {
         jest.spyOn(contextually, "isSession").mockReturnValueOnce(false);
         const spoolFiles = await globalMocks.testJobNode.getChildren();
         expect(spoolFiles.length).toBe(3);
-        expect(spoolFiles[0].label).toBe("JES2:JESMSGLG - 11");
-        expect(spoolFiles[1].label).toBe("JES2:JESJCL - 21");
-        expect(spoolFiles[2].label).toBe("JES2:JESYSMSG - 6");
+        expect(spoolFiles[0].label).toBe("JES2:JESMSGLG(101)");
+        expect(spoolFiles[1].label).toBe("JES2:JESJCL(101)");
+        expect(spoolFiles[2].label).toBe("JES2:JESYSMSG(101)");
     });
 
     it("To check smfid field in Jobs Tree View", async () => {

@@ -27,7 +27,7 @@ import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { Profiles } from "../Profiles";
 import * as path from "path";
 import { buildUniqueSpoolName } from "../SpoolProvider";
-import { IJob, IJobFile } from "@zowe/cli";
+import { IJob, IJobFile } from "@zowe/zos-jobs-for-zowe-sdk";
 
 export class JobFSProvider extends BaseProvider implements vscode.FileSystemProvider {
     public onDidChangeFile: vscode.Event<vscode.FileChangeEvent[]>;

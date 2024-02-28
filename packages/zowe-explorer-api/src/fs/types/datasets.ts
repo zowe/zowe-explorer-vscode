@@ -10,7 +10,7 @@
  */
 
 import { DirEntry, EntryMetadata, FileEntry } from "../types";
-import { imperative } from "@zowe/cli";
+import { IProfileLoaded } from "@zowe/imperative";
 import { FileType } from "vscode";
 
 export class DsEntry extends FileEntry {
@@ -42,7 +42,7 @@ export class PdsEntry extends DirEntry {
 }
 
 export class DsEntryMetadata implements EntryMetadata {
-    public profile: imperative.IProfileLoaded;
+    public profile: IProfileLoaded;
     public path: string;
 
     public constructor(metadata: EntryMetadata) {

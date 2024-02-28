@@ -10,7 +10,8 @@
  */
 
 import { Duplex } from "stream";
-import { IDownloadSingleOptions, IUploadOptions, IZosFilesResponse, imperative } from "@zowe/cli";
+import { IProfileLoaded } from "@zowe/imperative";
+import { IDownloadSingleOptions, IUploadOptions, IZosFilesResponse } from "@zowe/zos-files-for-zowe-sdk";
 import * as vscode from "vscode";
 
 export enum ConflictViewSelection {
@@ -53,7 +54,7 @@ export class BufferBuilder extends Duplex {
 export const FS_PROVIDER_DELAY = 5;
 
 export type EntryMetadata = {
-    profile: imperative.IProfileLoaded;
+    profile: IProfileLoaded;
     path: string;
 };
 

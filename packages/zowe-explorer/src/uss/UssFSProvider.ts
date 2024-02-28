@@ -9,14 +9,24 @@
  *
  */
 
-import { BaseProvider, BufferBuilder, getInfoForUri, isDirectoryEntry, Gui, EntryMetadata, UssDirectory, UssFile } from "@zowe/zowe-explorer-api";
+import {
+    BaseProvider,
+    BufferBuilder,
+    getInfoForUri,
+    isDirectoryEntry,
+    imperative,
+    Gui,
+    EntryMetadata,
+    UssDirectory,
+    UssFile,
+} from "@zowe/zowe-explorer-api";
 import * as path from "path";
 import * as vscode from "vscode";
 
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { UssFileTree, UssFileType } from "./FileStructure";
 import { Profiles } from "../Profiles";
-import * as zowe from "@zowe/cli";
+import { IZosFilesResponse } from "@zowe/zos-files-for-zowe-sdk";
 export type Entry = UssFile | UssDirectory;
 
 export class UssFSProvider extends BaseProvider implements vscode.FileSystemProvider {
@@ -78,7 +88,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         return true;
     }
 
-    public async listFiles(profile: zowe.imperative.IProfileLoaded, uri: vscode.Uri): Promise<zowe.IZosFilesResponse> {
+    public async listFiles(profile: imperative.IProfileLoaded, uri: vscode.Uri): Promise<IZosFilesResponse> {
         const ussPath = uri.path.substring(uri.path.indexOf("/", 1));
         const response = await ZoweExplorerApiRegister.getUssApi(profile).fileList(ussPath);
         return {

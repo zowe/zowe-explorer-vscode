@@ -97,8 +97,8 @@ describe("FtpUssApi", () => {
         const localFile = tmp.tmpNameSync({ tmpdir: "/tmp" });
         const response = TestUtils.getSingleLineStream();
         UssUtils.uploadFile = jest.fn().mockReturnValue(response);
-        const tmpFileSyncSpy = jest.spyOn(tmp, "fileSync");
-        const rmSyncSpy = jest.spyOn(fs, "rmSync");
+        const tmpNameSyncSpy = jest.spyOn(tmp, "tmpNameSync");
+        const rmSyncSpy = jest.spyOn(fs, "rmSync").mockImplementation();
         jest.spyOn(UssApi, "getContents").mockResolvedValue({ apiResponse: { etag: "test" } } as any);
         const mockParams = {
             inputFilePath: localFile,
@@ -113,12 +113,13 @@ describe("FtpUssApi", () => {
             etag: "test",
             returnEtag: true,
         });
+        jest.spyOn(UssApi as any, "getContentsTag").mockReturnValue("test");
         expect(result.commandResponse).toContain("File uploaded successfully.");
         expect(UssUtils.downloadFile).toHaveBeenCalledTimes(1);
         expect(UssUtils.uploadFile).toHaveBeenCalledTimes(1);
         expect(UssApi.releaseConnection).toHaveBeenCalled();
         // check that correct function is called from node-tmp
-        expect(tmpFileSyncSpy).toHaveBeenCalled();
+        expect(tmpNameSyncSpy).toHaveBeenCalled();
         expect(rmSyncSpy).toHaveBeenCalled();
     });
 

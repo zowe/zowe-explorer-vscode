@@ -355,15 +355,6 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
         return this._searchId;
     }
 
-    private statusNotSupportedMsg(status: string): void {
-        ZoweLogger.trace("ZoweJobNode.statusNotSupportedMsg called.");
-        if (status !== "*") {
-            Gui.warningMessage(
-                vscode.l10n.t("Filtering by job status is not yet supported with this profile type. Will show jobs with all statuses.")
-            );
-        }
-    }
-
     private async getJobs(owner: string, prefix: string, searchId: string, status: string): Promise<zosjobs.IJob[]> {
         ZoweLogger.trace("ZoweJobNode.getJobs called.");
         let jobsInternal: zosjobs.IJob[] = [];

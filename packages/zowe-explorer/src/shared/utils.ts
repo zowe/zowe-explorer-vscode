@@ -14,19 +14,7 @@
 import * as vscode from "vscode";
 import * as path from "path";
 import * as globals from "../globals";
-import {
-    Gui,
-    imperative,
-    IZoweTreeNode,
-    IZoweDatasetTreeNode,
-    IZoweUSSTreeNode,
-    IZoweJobTreeNode,
-    IZoweTree,
-    Types,
-    ZosEncoding,
-} from "@zowe/zowe-explorer-api";
-import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
-import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
+import { Gui, IZoweTreeNode, IZoweDatasetTreeNode, IZoweUSSTreeNode, IZoweJobTreeNode, IZoweTree, Types, ZosEncoding } from "@zowe/zowe-explorer-api";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { ZoweLocalStorage } from "../utils/ZoweLocalStorage";
 
