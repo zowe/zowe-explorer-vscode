@@ -20,7 +20,8 @@ import { createJobsTree, createIJobObject } from "../../__mocks__/mockCreators/j
 import { ZoweExplorerExtender } from "../../src/ZoweExplorerExtender";
 import * as path from "path";
 import * as fs from "fs";
-import { FileManagement, Gui } from "@zowe/zowe-explorer-api";
+import { FileManagement, Gui, ProfilesCache } from "@zowe/zowe-explorer-api";
+import { ProfilesUtils } from "../../src/utils/ProfilesUtils";
 import { ZoweLogger } from "../../src/utils/ZoweLogger";
 import { ZoweLocalStorage } from "../../src/utils/ZoweLocalStorage";
 import { SettingsConfig } from "../../src/utils/SettingsConfig";
