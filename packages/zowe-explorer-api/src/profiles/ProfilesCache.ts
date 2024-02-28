@@ -52,7 +52,7 @@ export class ProfilesCache {
         return this.profileTypeConfigurations;
     }
 
-    public async getProfileInfo(_envTheia = false): Promise<zowe.imperative.ProfileInfo> {
+    public async getProfileInfo(): Promise<zowe.imperative.ProfileInfo> {
         const mProfileInfo = new zowe.imperative.ProfileInfo("zowe", {
             // eslint-disable-next-line @typescript-eslint/no-unsafe-return
             credMgrOverride: zowe.imperative.ProfileCredentials.defaultCredMgrWithKeytar(ProfilesCache.requireKeyring),

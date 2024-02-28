@@ -27,6 +27,10 @@
   "Zowe explorer profiles are being set as unsecured.": "Zowe explorer profiles are being set as unsecured.",
   "Zowe explorer profiles are being set as secured.": "Zowe explorer profiles are being set as secured.",
   "Error encountered when loading your Zowe config. Click \"Show Config\" for more details.": "Error encountered when loading your Zowe config. Click \"Show Config\" for more details.",
+  "Failed to update Zowe schema: insufficient permissions or read-only file. {0}/Error message": {
+    "message": "Failed to update Zowe schema: insufficient permissions or read-only file. {0}",
+    "comment": ["Error message"]
+  },
   "Internal error: A Zowe Explorer extension client tried to register an invalid USS API.": "Internal error: A Zowe Explorer extension client tried to register an invalid USS API.",
   "Internal error: A Zowe Explorer extension client tried to register an invalid MVS API.": "Internal error: A Zowe Explorer extension client tried to register an invalid MVS API.",
   "Internal error: A Zowe Explorer extension client tried to register an invalid JES API.": "Internal error: A Zowe Explorer extension client tried to register an invalid JES API.",
@@ -105,10 +109,6 @@
   "Global: in the Zowe home directory": "Global: in the Zowe home directory",
   "Project: in the current working directory": "Project: in the current working directory",
   "Create New": "Create New",
-  "A Team Configuration File already exists in this location\n{0}\nContinuing may alter the existing file, would you like to proceed?/File path": {
-    "message": "A Team Configuration File already exists in this location\n{0}\nContinuing may alter the existing file, would you like to proceed?",
-    "comment": ["File path"]
-  },
   "Refresh": "Refresh",
   "Delete Selected": "Delete Selected",
   "Select an item before deleting": "Select an item before deleting",
@@ -156,6 +156,7 @@
   "Install": "Install",
   "After installing the extension, please make sure to reload your VS Code window in order to start using the installed credential manager": "After installing the extension, please make sure to reload your VS Code window in order to start using the installed credential manager",
   "Reload": "Reload",
+  "No valid schema was found for the active team configuration. This may introduce issues with profiles in Zowe Explorer.": "No valid schema was found for the active team configuration. This may introduce issues with profiles in Zowe Explorer.",
   "\"Update Credentials\" operation not supported when \"autoStore\" is false": "\"Update Credentials\" operation not supported when \"autoStore\" is false",
   "Connection Name": "Connection Name",
   "Enter a name for the connection.": "Enter a name for the connection.",
@@ -519,6 +520,7 @@
     "comment": ["Job label"]
   },
   "$(case-sensitive) Name (default)": "$(case-sensitive) Name (default)",
+  "$(calendar) Date Created": "$(calendar) Date Created",
   "$(calendar) Date Modified": "$(calendar) Date Modified",
   "$(account) User ID": "$(account) User ID",
   "Partitioned Data Set: Binary": "Partitioned Data Set: Binary",
@@ -773,6 +775,7 @@
   "$(plus) Create a new TSO command": "$(plus) Create a new TSO command",
   "Zowe TSO Command": "Zowe TSO Command",
   "Select the Profile to use to submit the TSO command": "Select the Profile to use to submit the TSO command",
+  "Profile is invalid": "Profile is invalid",
   "Select a TSO command to run against {0} (An option to edit will follow)/Host name": {
     "message": "Select a TSO command to run against {0} (An option to edit will follow)",
     "comment": ["Host name"]

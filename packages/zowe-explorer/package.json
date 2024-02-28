@@ -764,7 +764,7 @@
       },
       {
         "command": "zowe.jobs.filterJobs",
-        "title": "Filter Jobs",
+        "title": "%jobs.filterBy%",
         "category": "Zowe Explorer",
         "icon": "$(list-filter)"
       },
@@ -1332,11 +1332,6 @@
           "group": "002_zowe_jobsWorkspace@0"
         },
         {
-          "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/  && !listMultiSelection",
-          "command": "zowe.jobs.filterJobs",
-          "group": "002_zowe_jobsProfileModification@99"
-        },
-        {
           "when": "view == zowe.jobs.explorer && viewItem =~ /^job.*_fav.*/",
           "command": "zowe.jobs.removeFavorite",
           "group": "002_zowe_jobsWorkspace@2"
@@ -1379,37 +1374,32 @@
         {
           "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)job.*/",
           "command": "zowe.jobs.deleteJob",
-          "group": "099_zowe_jobsModification"
+          "group": "097_zowe_jobsModification"
         },
         {
           "when": "view == zowe.jobs.explorer && viewItem =~ /^job.*/",
           "command": "zowe.jobs.cancelJob",
-          "group": "099_zowe_jobsModification"
+          "group": "097_zowe_jobsModification"
+        },
+        {
+          "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/  && !listMultiSelection",
+          "command": "zowe.jobs.filterJobs",
+          "group": "098_zowe_jobsSort@0"
         },
         {
           "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/  && !listMultiSelection",
           "command": "zowe.jobs.sortBy",
-          "group": "099_zowe_jobsSort"
-        },
-        {
-          "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/  && !listMultiSelection",
-          "command": "zowe.editHistory",
-          "group": "100_zowe_editHistory@100"
+          "group": "098_zowe_jobsSort@1"
         },
         {
           "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/ && !listMultiSelection",
           "command": "zowe.profileManagement",
-          "group": "100_zowe_jobsProfileAuthentication@99"
-        },
-        {
-          "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/ && !listMultiSelection",
-          "command": "zowe.jobs.editSession",
-          "group": "099_zowe_jobsProfileModification@0"
+          "group": "099_zowe_jobsProfileAuthentication"
         },
         {
           "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/  && !listMultiSelection",
-          "command": "zowe.jobs.deleteProfile",
-          "group": "099_zowe_jobsProfileModification@99"
+          "command": "zowe.editHistory",
+          "group": "100_zowe_editHistory"
         },
         {
           "when": "viewItem =~ /^(textFile|member.*|ds.*)/ && !listMultiSelection",
@@ -2044,7 +2034,6 @@
     "build": "pnpm clean:bundle && pnpm license && webpack --mode development && pnpm madge",
     "build:integration": "pnpm createTestProfileData && pnpm license && tsc --pretty --project tsconfig-tests.json",
     "test:unit": "jest \".*__tests__.*\\.unit\\.test\\.ts\" --coverage",
-    "test:theia": "mocha ./out/__tests__/__theia__/*.theia.test.js --timeout 50000 --reporter mocha-multi-reporters --reporter-options configFile=.mocharc.json",
     "test": "pnpm test:unit",
     "vscode:prepublish": "pnpm clean:bundle && pnpm generateLocalization && webpack --mode production --devtool hidden-source-map",
     "package": "vsce package --no-dependencies && node ../../scripts/mv-pack.js vscode-extension-for-zowe vsix",
@@ -2135,7 +2124,6 @@
     "testRegex": "__tests__.*\\.(spec|test)\\.ts$",
     "modulePathIgnorePatterns": [
       "__tests__/__integration__/",
-      "__tests__/__theia__/",
       "out/"
     ],
     "reporters": [
