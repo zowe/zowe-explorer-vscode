@@ -178,7 +178,6 @@ describe("SpoolProvider Unit Tests", () => {
     });
 
     it("Tests that the spool content is returned", async () => {
-        const GetJobs = jest.fn();
         const getSpoolContentById = jest.fn();
         const profileOne: imperative.IProfileLoaded = {
             name: "sessionName",
@@ -205,8 +204,7 @@ describe("SpoolProvider Unit Tests", () => {
                 };
             }),
         });
-        Object.defineProperty(zosjobs, "GetJobs", { value: GetJobs });
-        Object.defineProperty(GetJobs, "getSpoolContentById", { value: getSpoolContentById });
+        Object.defineProperty(zosjobs.GetJobs, "getSpoolContentById", { value: getSpoolContentById });
         getSpoolContentById.mockReturnValue("spool content");
 
         const provider = new SpoolProvider();
