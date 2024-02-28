@@ -9,7 +9,7 @@
  *
  */
 
-import { imperative } from "@zowe/cli";
+import * as imperative from "@zowe/imperative";
 import { ProfilesCache } from "../profiles/ProfilesCache";
 
 /**

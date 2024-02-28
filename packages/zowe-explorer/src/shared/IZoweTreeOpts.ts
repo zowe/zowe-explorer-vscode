@@ -9,8 +9,8 @@
  *
  */
 
-import { IJob, imperative } from "@zowe/cli";
-import { IZoweTreeNode, ZosEncoding } from "@zowe/zowe-explorer-api";
+import * as zosjobs from "@zowe/zos-jobs-for-zowe-sdk";
+import { imperative, IZoweTreeNode, ZosEncoding } from "@zowe/zowe-explorer-api";
 import * as vscode from "vscode";
 
 export interface IZoweTreeOpts {
@@ -34,5 +34,5 @@ export interface IZoweUssTreeOpts extends IZoweTreeOpts {
 }
 
 export interface IZoweJobTreeOpts extends IZoweTreeOpts {
-    job?: IJob;
+    job?: zosjobs.IJob;
 }

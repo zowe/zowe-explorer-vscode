@@ -11,7 +11,8 @@
 
 import * as vscode from "vscode";
 import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
-import { imperative, ZosmfSession } from "@zowe/cli";
+import * as zosmf from "@zowe/zosmf-for-zowe-sdk";
+import { imperative } from "@zowe/zowe-explorer-api";
 import * as dsNodeActions from "../../../src/dataset/actions";
 import * as refreshActions from "../../../src/shared/refresh";
 import { Profiles } from "../../../src/Profiles";
@@ -20,7 +21,7 @@ import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 
 jest.mock("vscode");
 jest.mock("Session");
-jest.mock("@zowe/cli");
+jest.mock("@zowe/zos-files-for-zowe-sdk");
 jest.mock("util");
 jest.mock("DatasetTree");
 jest.mock("USSTree");
@@ -176,7 +177,7 @@ describe("dsNodeActions", () => {
     Object.defineProperty(vscode.window, "showErrorMessage", { value: showErrorMessage });
     Object.defineProperty(vscode.window, "showQuickPick", { value: showQuickPick });
     Object.defineProperty(vscode.window, "showInformationMessage", { value: showInformationMessage });
-    Object.defineProperty(ZosmfSession, "createSessCfgFromArgs", { value: createSessCfgFromArgs });
+    Object.defineProperty(zosmf.ZosmfSession, "createSessCfgFromArgs", { value: createSessCfgFromArgs });
     Object.defineProperty(refreshActions, "refreshAll", { value: jest.fn() });
 
     beforeEach(() => {

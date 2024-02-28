@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { imperative } from "@zowe/cli";
+import * as imperative from "@zowe/imperative";
 import { IZoweTreeNode } from "./IZoweTreeNode";
 
 /**

@@ -10,10 +10,9 @@
  */
 
 import * as vscode from "vscode";
-import { Gui, ProfilesCache } from "@zowe/zowe-explorer-api";
+import { Gui, imperative, ProfilesCache } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../../src/Profiles";
 import { TsoCommandHandler } from "../../../src/command/TsoCommandHandler";
-import { imperative } from "@zowe/cli";
 import { createInstanceOfProfile, createIProfile } from "../../../__mocks__/mockCreators/shared";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";

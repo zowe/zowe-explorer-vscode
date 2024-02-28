@@ -9,8 +9,7 @@
  *
  */
 
-import { IJes, IMvs, IUss } from "@zowe/zowe-explorer-api";
-import { imperative } from "@zowe/cli";
+import { imperative, IJes, IMvs, IUss } from "@zowe/zowe-explorer-api";
 
 import { ZoweExplorerApiRegister } from "../../src/ZoweExplorerApiRegister";
 

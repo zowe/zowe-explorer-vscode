@@ -19,9 +19,8 @@ import {
     createGetConfigMock,
 } from "../../../__mocks__/mockCreators/shared";
 import { createUSSSessionNode } from "../../../__mocks__/mockCreators/uss";
-import { ProfilesCache, Validation, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
+import { imperative, ProfilesCache, Validation, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../../src/Profiles";
-import { imperative } from "@zowe/cli";
 import * as globals from "../../../src/globals";
 import { createUSSTree } from "../../../src/uss/USSTree";
 import { createIJobObject, createJobSessionNode } from "../../../__mocks__/mockCreators/jobs";

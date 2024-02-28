@@ -15,7 +15,8 @@ import { IProfileLoaded, Session } from "@zowe/imperative";
 import { MessageSeverity, IZoweLogger } from "../../../src/logger";
 import { PromptCredentialsOptions, ZoweVsCodeExtension } from "../../../src/vscode";
 import { ProfilesCache, Types } from "../../../src";
-import { Login, Logout, imperative } from "@zowe/cli";
+import { Login, Logout } from "@zowe/core-for-zowe-sdk";
+import * as imperative from "@zowe/imperative";
 
 describe("ZoweVsCodeExtension", () => {
     const fakeVsce = {
