@@ -57,28 +57,26 @@ export class BaseProvider {
             if (segment.length == 0) {
                 continue;
             }
+            const isLastSegment = i === segments.length - 1;
 
             if (isFileEntry(currentNode)) {
-                // reached the file entry and its valid, stop here
-                return currentNode;
+                if (isLastSegment) {
+                    return currentNode;
+                } else {
+                    throw vscode.FileSystemError.FileNotADirectory();
+                }
             }
 
             currentUri = currentUri.with({
                 path: path.posix.join(currentUri.path, segment),
             });
 
-            if (currentNode == null && i == segments.length - 1) {
+            if (currentNode == null && isLastSegment) {
+                // Final segment, node should be null - return a new FileEntry
                 return this._createFile(currentUri);
-            }
-
-            if (!currentNode.entries.has(segment)) {
-                if (i == segments.length - 1) {
-                    // File segment
-                    return this._createFile(currentUri);
-                } else {
-                    // Folder
-                    await vscode.workspace.fs.createDirectory(currentUri);
-                }
+            } else if (!isLastSegment && !currentNode?.entries.has(segment)) {
+                // Create a folder for the intermediate path segment
+                await vscode.workspace.fs.createDirectory(currentUri);
             }
 
             currentNode = this._lookup(currentUri, true) as DirEntry | FileEntry;
@@ -231,6 +229,20 @@ export class BaseProvider {
         }
     }
 
+    private async _reopenEditorForRelocatedUri(oldUri: vscode.Uri, newUri: vscode.Uri): Promise<void> {
+        const tabGroups = vscode.window.tabGroups.all;
+        const allTabs = tabGroups.reduce((acc: vscode.Tab[], group) => acc.concat(group.tabs), []);
+        const tabWithOldUri = allTabs.find((t) => (t.input as any).uri.path === oldUri.path);
+        if (tabWithOldUri) {
+            const parent = tabGroups.find((g) => g.tabs.find((t) => t === tabWithOldUri));
+            const editorCol = parent.viewColumn;
+            // close old uri and reopen new uri
+            // TODO: not sure if we can get around this...
+            await vscode.window.tabGroups.close(tabWithOldUri);
+            await vscode.commands.executeCommand("vscode.openWith", newUri, "default", editorCol);
+        }
+    }
+
     /**
      * Relocates an entry in the provider from `oldUri` to `newUri`.
      * @param oldUri The old, source URI in the provider that needs moved
@@ -238,7 +250,7 @@ export class BaseProvider {
      * @param newUssPath The new path for this entry in USS
      */
     protected async _relocateEntry(oldUri: vscode.Uri, newUri: vscode.Uri, newUssPath: string): Promise<void> {
-        const entry = this._lookup(oldUri, false);
+        const entry = this._lookup(oldUri, true);
         if (!entry) {
             return;
         }
@@ -255,8 +267,9 @@ export class BaseProvider {
         }
 
         entry.metadata.path = newUssPath;
+        const isFile = isFileEntry(entry);
         // write new entry in FS
-        if (isFileEntry(entry)) {
+        if (isFile) {
             // put new contents in relocated file
             await vscode.workspace.fs.writeFile(newUri, entry.data);
             const newEntry = await this._lookupAsFile(newUri);
@@ -268,16 +281,8 @@ export class BaseProvider {
         // delete entry from old parent
         oldParent.entries.delete(entry.name);
         this._fireSoon({ type: vscode.FileChangeType.Deleted, uri: oldUri });
-        const tabGroups = vscode.window.tabGroups.all;
-        const allTabs = tabGroups.reduce((acc: vscode.Tab[], group) => acc.concat(group.tabs), []);
-        const tabWithOldUri = allTabs.find((t) => (t.input as any).uri.path === oldUri.path);
-        if (tabWithOldUri) {
-            const parent = tabGroups.find((g) => g.tabs.find((t) => t === tabWithOldUri));
-            const editorCol = parent.viewColumn;
-            // close old uri and reopen new uri
-            // TODO: not sure if we can get around this...
-            await vscode.window.tabGroups.close(tabWithOldUri);
-            vscode.commands.executeCommand("vscode.openWith", newUri, "default", editorCol);
+        if (isFile) {
+            return this._reopenEditorForRelocatedUri(oldUri, newUri);
         }
     }
 

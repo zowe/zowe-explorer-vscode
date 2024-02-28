@@ -13,7 +13,7 @@ import * as vscode from "vscode";
 import { BaseProvider, ConflictViewSelection, DirEntry, FileEntry } from "../../../src/fs";
 import { Gui } from "../../../src/globals";
 import isEqual from "lodash.isequal";
-import { mocked } from "../../../__mocks__/mockUtils";
+import { MockedProperty, mocked } from "../../../__mocks__/mockUtils";
 
 jest.mock("lodash.isequal", () => ({
     default: jest.fn().mockReturnValue(false),
@@ -201,7 +201,7 @@ describe("diffUseRemote", () => {
             },
         };
         const statusBarMsgMock = jest.spyOn(Gui, "setStatusBarMessage").mockImplementation();
-        const executeCommandMock = jest.spyOn(vscode.commands, "executeCommand").mockImplementation();
+        const executeCommandMock = jest.spyOn(vscode.commands, "executeCommand").mockResolvedValueOnce(undefined);
         blockMocks.lookupAsFileMock.mockResolvedValueOnce(fsEntry);
 
         const prov = new (BaseProvider as any)();
@@ -231,7 +231,7 @@ describe("diffUseRemote", () => {
             },
         };
         const statusBarMsgMock = jest.spyOn(Gui, "setStatusBarMessage").mockImplementation();
-        const executeCommandMock = jest.spyOn(vscode.commands, "executeCommand").mockImplementation();
+        const executeCommandMock = jest.spyOn(vscode.commands, "executeCommand").mockResolvedValueOnce(undefined);
         blockMocks.lookupAsFileMock.mockResolvedValueOnce(fsEntry);
         mocked(isEqual).mockReturnValueOnce(true);
 
@@ -365,7 +365,7 @@ describe("_updateResourceInEditor", () => {
             wasAccessed: true,
             type: vscode.FileType.File,
         });
-        const executeCommandMock = jest.spyOn(vscode.commands, "executeCommand").mockImplementation();
+        const executeCommandMock = jest.spyOn(vscode.commands, "executeCommand").mockResolvedValueOnce(undefined).mockResolvedValueOnce(undefined);
         await prov._updateResourceInEditor(globalMocks.testFileUri);
         expect(executeCommandMock).toHaveBeenCalledWith("vscode.open", globalMocks.testFileUri);
         expect(executeCommandMock).toHaveBeenCalledWith("workbench.action.files.revert");
@@ -375,10 +375,9 @@ describe("_updateResourceInEditor", () => {
         const prov = new (BaseProvider as any)();
         prov.root = new DirEntry("");
 
-        const executeCommandMock = jest.spyOn(vscode.commands, "executeCommand").mockImplementation();
-        executeCommandMock.mockClear();
+        const executeCommandSpy = jest.spyOn(vscode.commands, "executeCommand").mockClear();
         await prov._updateResourceInEditor(globalMocks.testFolderUri);
-        expect(executeCommandMock).not.toHaveBeenCalled();
+        expect(executeCommandSpy).not.toHaveBeenCalled();
     });
 });
 
@@ -601,7 +600,7 @@ describe("_handleConflict", () => {
         jest.spyOn(Gui, "errorMessage").mockResolvedValueOnce("Compare");
         const prov = new (BaseProvider as any)();
         const onDidCloseTextDocMock = jest.spyOn(vscode.workspace, "onDidCloseTextDocument");
-        const executeCmdMock = jest.spyOn(vscode.commands, "executeCommand");
+        const executeCmdMock = jest.spyOn(vscode.commands, "executeCommand").mockResolvedValueOnce(undefined);
         expect(await prov._handleConflict(globalMocks.testFileUri, globalMocks.fileFsEntry)).toBe(ConflictViewSelection.Compare);
         expect(onDidCloseTextDocMock).toHaveBeenCalled();
         expect(executeCmdMock).toHaveBeenCalledWith(
@@ -614,6 +613,7 @@ describe("_handleConflict", () => {
             }),
             "file.txt (Remote) ↔ file.txt"
         );
+        executeCmdMock.mockRestore();
     });
 
     it("returns 'ConflictViewSelection.Overwrite' when user selects 'Overwrite'", async () => {
@@ -622,5 +622,99 @@ describe("_handleConflict", () => {
         const diffOverwriteMock = jest.spyOn(prov, "diffOverwrite").mockImplementation();
         expect(await prov._handleConflict(globalMocks.testFileUri, globalMocks.fileFsEntry)).toBe(ConflictViewSelection.Overwrite);
         expect(diffOverwriteMock).toHaveBeenCalledWith(globalMocks.testFileUri);
+    });
+});
+
+describe("_relocateEntry", () => {
+    it("returns early if the entry does not exist in the file system", () => {
+        const prov = new (BaseProvider as any)();
+        prov.root = new DirEntry("");
+        const lookupAsDirMock = jest.spyOn(prov, "_lookupAsDirectory").mockReturnValueOnce(undefined);
+        lookupAsDirMock.mockClear();
+
+        prov._relocateEntry(
+            globalMocks.testFileUri,
+            globalMocks.testFileUri.with({
+                path: "/file2.txt",
+            }),
+            "/file2.txt"
+        );
+        expect(lookupAsDirMock).not.toHaveBeenCalled();
+    });
+
+    it("returns early if one of the parent paths does not exist in the file system", async () => {
+        const prov = new (BaseProvider as any)();
+        prov.root = new DirEntry("");
+        prov.root.entries.set("file.txt", { ...globalMocks.fileFsEntry });
+        const writeFileMock = jest.spyOn(vscode.workspace.fs, "writeFile");
+        const createDirMock = jest.spyOn(vscode.workspace.fs, "createDirectory");
+        createDirMock.mockClear();
+        const lookupAsDirMock = jest.spyOn(prov, "_lookupAsDirectory").mockReturnValueOnce(globalMocks.folderFsEntry).mockReturnValueOnce(undefined);
+        lookupAsDirMock.mockClear();
+
+        await prov._relocateEntry(
+            globalMocks.testFileUri,
+            globalMocks.testFileUri.with({
+                path: "/file2.txt",
+            }),
+            "/file2.txt"
+        );
+        expect(lookupAsDirMock).toHaveBeenCalledTimes(2);
+        expect(writeFileMock).not.toHaveBeenCalled();
+        expect(createDirMock).not.toHaveBeenCalled();
+        lookupAsDirMock.mockRestore();
+    });
+
+    it("writes new entry in the file system once relocated", async () => {
+        const prov = new (BaseProvider as any)();
+        prov.root = new DirEntry("");
+        prov.root.entries.set("file.txt", { ...globalMocks.fileFsEntry });
+        const deleteEntrySpy = jest.spyOn(prov.root.entries, "delete");
+        const fireSoonSpy = jest.spyOn(prov, "_fireSoon");
+        const writeFileMock = jest.spyOn(vscode.workspace.fs, "writeFile");
+        const createDirMock = jest.spyOn(vscode.workspace.fs, "createDirectory");
+        const reopenEditorMock = jest.spyOn(prov, "_reopenEditorForRelocatedUri").mockResolvedValueOnce(undefined);
+        jest.spyOn(prov, "_lookupAsFile").mockResolvedValueOnce({
+            ...globalMocks.fileFsEntry,
+            metadata: { ...globalMocks.fileFsEntry.metadata, path: "/file2.txt" },
+        });
+        createDirMock.mockClear();
+
+        const oldUri = globalMocks.testFileUri;
+        const newUri = globalMocks.testFileUri.with({
+            path: "/file2.txt",
+        });
+        await prov._relocateEntry(oldUri, newUri, "/file2.txt");
+        expect(writeFileMock).toHaveBeenCalled();
+        expect(createDirMock).not.toHaveBeenCalled();
+        expect(deleteEntrySpy).toHaveBeenCalledWith("file.txt");
+        expect(fireSoonSpy).toHaveBeenCalledWith({ type: vscode.FileChangeType.Deleted, uri: globalMocks.testFileUri });
+        expect(reopenEditorMock).toHaveBeenCalledWith(oldUri, newUri);
+    });
+});
+
+describe("_reopenEditorForRelocatedUri", () => {
+    it("closes the old URI and opens the new, relocated URI", async () => {
+        const tab = {
+            input: { uri: globalMocks.testFileUri },
+            viewColumn: vscode.ViewColumn.One,
+        };
+        const tabGroupsMock = new MockedProperty(vscode.window.tabGroups, "all", undefined, [
+            {
+                isActive: true,
+                tabs: [tab],
+            },
+        ]);
+        const closeTabMock = jest.spyOn(vscode.window.tabGroups, "close").mockImplementation();
+        const executeCmdMock = jest.spyOn(vscode.commands, "executeCommand").mockResolvedValueOnce(undefined);
+        const oldUri = globalMocks.testFileUri;
+        const newUri = globalMocks.testFileUri.with({
+            path: "/file2.txt",
+        });
+        const prov = new (BaseProvider as any)();
+        await prov._reopenEditorForRelocatedUri(oldUri, newUri);
+        expect(closeTabMock).toHaveBeenCalledWith(tab);
+        expect(executeCmdMock).toHaveBeenCalled();
+        tabGroupsMock[Symbol.dispose]();
     });
 });
