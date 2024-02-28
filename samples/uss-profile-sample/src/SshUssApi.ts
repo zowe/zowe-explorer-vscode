@@ -59,6 +59,13 @@ export class SshUssApi implements MainframeInteraction.IUss {
         });
     }
 
+    public uploadFromBuffer(buffer: Buffer, filePath: string, _options?: zosfiles.IUploadOptions): Promise<zosfiles.IZosFilesResponse> {
+        return this.withClient(this.getSession(), async (client) => {
+            const response = await client.put(buffer, filePath);
+            return this.buildZosFilesResponse(response);
+        });
+    }
+
     public async putContent(inputFilePath: string, ussFilePath: string): Promise<zosfiles.IZosFilesResponse> {
         return this.withClient(this.getSession(), async (client) => {
             const response = await client.fastPut(inputFilePath, ussFilePath);

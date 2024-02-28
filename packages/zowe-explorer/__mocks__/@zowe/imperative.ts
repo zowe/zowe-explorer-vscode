@@ -247,11 +247,14 @@ export class ProfileInfo {
         return;
     }
 
-    public addProfileTypeToSchema(profileType: string, typeInfo: {
-        sourceApp: string;
-        schema: any;
-        version?: string;
-    }): any {
+    public addProfileTypeToSchema(
+        profileType: string,
+        typeInfo: {
+            sourceApp: string;
+            schema: any;
+            version?: string;
+        }
+    ): any {
         return;
     }
 }

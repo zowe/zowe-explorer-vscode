@@ -109,6 +109,19 @@ export class FtpMvsApi extends AbstractFtpApi implements MainframeInteraction.IM
         }
     }
 
+    public async uploadFromBuffer(buffer: Buffer, dataSetName: string, options?: zosfiles.IUploadOptions): Promise<zosfiles.IZosFilesResponse> {
+        const tempFile = tmp.fileSync();
+        if (options?.binary) {
+            fs.writeSync(tempFile.fd, buffer);
+        } else {
+            const text = imperative.IO.processNewlines(buffer.toString());
+            fs.writeSync(tempFile.fd, text);
+        }
+
+        const result = await this.putContents(tempFile.name, dataSetName, options);
+        return result;
+    }
+
     public async putContents(inputFilePath: string, dataSetName: string, options: zosfiles.IUploadOptions): Promise<zosfiles.IZosFilesResponse> {
         const file = path.basename(inputFilePath).replace(/[^a-z0-9]+/gi, "");
         const member = file.substr(0, MAX_MEMBER_NAME_LEN);
