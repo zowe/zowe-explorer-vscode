@@ -16,10 +16,11 @@
 import { FtpUssApi } from "../../../src/ZoweExplorerFtpUssApi";
 import { UssUtils } from "@zowe/zos-ftp-for-zowe-cli";
 import TestUtils from "../utils/TestUtils";
-import * as zowe from "@zowe/cli";
+import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
 import * as globals from "../../../src/globals";
 import { ZoweFtpExtensionError } from "../../../src/ZoweFtpExtensionError";
 import * as tmp from "tmp";
+import { imperative } from "@zowe/zowe-explorer-api";
 
 // two methods to mock modules: create a __mocks__ file for zowe-explorer-api.ts and direct mock for extension.ts
 jest.mock("../../../__mocks__/@zowe/zowe-explorer-api.ts");
@@ -124,7 +125,7 @@ describe("FtpUssApi", () => {
     it("should upload uss directory.", async () => {
         const localpath = "/tmp";
         const files = ["file1", "file2"];
-        zowe.ZosFilesUtils.getFileListFromPath = jest.fn().mockReturnValue(files);
+        zosfiles.ZosFilesUtils.getFileListFromPath = jest.fn().mockReturnValue(files);
         const mockParams = {
             inputDirectoryPath: localpath,
             ussDirectoryPath: "/a/b/c",
@@ -300,5 +301,37 @@ describe("FtpUssApi", () => {
         await expect(async () => {
             await UssApi.rename("/a/b/c", "a/b/d");
         }).rejects.toThrow(ZoweFtpExtensionError);
+    });
+
+    describe("uploadFromBuffer", () => {
+        function getBlockMocks(): Record<string, jest.SpyInstance> {
+            return {
+                processNewlinesSpy: jest.spyOn(imperative.IO, "processNewlines"),
+                putContent: jest.spyOn(UssApi, "putContent").mockImplementation(),
+                tmpFileSyncMock: jest.spyOn(tmp, "fileSync").mockReturnValueOnce({ fd: 12345 } as any),
+                writeSyncMock: jest.spyOn(fs, "writeSync").mockImplementation(),
+            };
+        }
+
+        it("should upload file from buffer", async () => {
+            const buf = Buffer.from("abc123");
+            const blockMocks = getBlockMocks();
+
+            await UssApi.uploadFromBuffer(buf, "/some/fs/path");
+            expect(blockMocks.tmpFileSyncMock).toHaveBeenCalled();
+            expect(blockMocks.writeSyncMock).toHaveBeenCalled();
+            expect(blockMocks.processNewlinesSpy).toHaveBeenCalled();
+        });
+
+        it("should not process new lines when uploading buffer as binary", async () => {
+            const buf = Buffer.from("abc123");
+            const blockMocks = getBlockMocks();
+            blockMocks.processNewlinesSpy.mockImplementation();
+
+            await UssApi.uploadFromBuffer(buf, "/some/fs/path", { binary: true });
+            expect(blockMocks.tmpFileSyncMock).toHaveBeenCalled();
+            expect(blockMocks.writeSyncMock).toHaveBeenCalled();
+            expect(blockMocks.processNewlinesSpy).not.toHaveBeenCalled();
+        });
     });
 });

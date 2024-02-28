@@ -16,8 +16,7 @@
     "vscode": "^1.79.0"
   },
   "dependencies": {
-    "@vscode/l10n": "^0.0.18",
-    "@zowe/cli": "8.0.0-next.202402132108"
+    "@vscode/l10n": "^0.0.18"
   },
   "devDependencies": {
     "@types/jest": "^29.2.3",
@@ -76,6 +75,7 @@
     "package": "pnpm run -r package",
     "pretest:integration": "ts-node ./scripts/create-env.ts",
     "posttest:integration": "ts-node ./scripts/clean-env.ts",
-    "preinstall": "npx only-allow pnpm"
+    "preinstall": "npx only-allow pnpm",
+    "update-sdks": "pnpm -r update \"@zowe/*@next\" \"!@zowe/zowe-explorer-api\""
   }
 }

@@ -16,9 +16,8 @@ import * as globals from "../globals";
 import * as path from "path";
 import * as fs from "fs";
 import * as util from "util";
-import { IZoweTreeNode, ZoweTreeNode, FileManagement, Gui, ProfilesCache, MainframeInteraction } from "@zowe/zowe-explorer-api";
+import { FileManagement, Gui, imperative, IZoweTreeNode, MainframeInteraction, ProfilesCache, ZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
-import { imperative } from "@zowe/cli";
 import * as contextually from "../shared/context";
 import { ZoweLogger } from "./LoggerUtils";
 import { SettingsConfig } from "./SettingsConfig";
@@ -410,7 +409,7 @@ export class ProfilesUtils {
         return this.setupDefaultCredentialManager();
     }
 
-    public static async readConfigFromDisk(): Promise<void> {
+    public static async readConfigFromDisk(warnForMissingSchema?: boolean): Promise<void> {
         ZoweLogger.trace("ProfilesUtils.readConfigFromDisk called.");
         let rootPath: string;
         const mProfileInfo = await ProfilesUtils.getProfileInfo();
@@ -421,6 +420,13 @@ export class ProfilesUtils {
             await mProfileInfo.readProfilesFromDisk({ homeDir: FileManagement.getZoweDir(), projectDir: undefined });
         }
         if (mProfileInfo.usingTeamConfig) {
+            if (warnForMissingSchema && !mProfileInfo.hasValidSchema) {
+                const schemaWarning = vscode.l10n.t(
+                    "No valid schema was found for the active team configuration. This may introduce issues with profiles in Zowe Explorer."
+                );
+                Gui.warningMessage(schemaWarning);
+                ZoweLogger.warn(schemaWarning);
+            }
             globals.setConfigPath(rootPath);
             ZoweLogger.info(`Zowe Explorer is using the team configuration file "${mProfileInfo.getTeamConfig().configName}"`);
             const layers = mProfileInfo.getTeamConfig().layers || [];
@@ -615,7 +621,7 @@ export class ProfilesUtils {
         }
 
         try {
-            await ProfilesUtils.readConfigFromDisk();
+            await ProfilesUtils.readConfigFromDisk(true);
             ZoweLogger.info(vscode.l10n.t("Zowe Profiles initialized successfully."));
         } catch (err) {
             if (err instanceof imperative.ImperativeError) {

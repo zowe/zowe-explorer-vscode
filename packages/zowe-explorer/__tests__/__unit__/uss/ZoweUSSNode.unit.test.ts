@@ -10,8 +10,9 @@
  */
 
 import * as vscode from "vscode";
-import * as zowe from "@zowe/cli";
-import { Gui, Validation } from "@zowe/zowe-explorer-api";
+import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
+import * as zosmf from "@zowe/zosmf-for-zowe-sdk";
+import { Gui, imperative, Validation } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { Profiles } from "../../../src/Profiles";
 import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
@@ -133,15 +134,15 @@ async function createGlobalMocks() {
         value: jest.fn().mockReturnValue({ onDidCollapseElement: jest.fn() }),
         configurable: true,
     });
-    Object.defineProperty(zowe, "ZosmfSession", { value: globalMocks.ZosmfSession, configurable: true });
+    Object.defineProperty(zosmf, "ZosmfSession", { value: globalMocks.ZosmfSession, configurable: true });
     Object.defineProperty(globalMocks.ZosmfSession, "createSessCfgFromArgs", {
         value: globalMocks.createSessCfgFromArgs,
         configurable: true,
     });
-    Object.defineProperty(zowe, "Download", { value: globalMocks.Download, configurable: true });
-    Object.defineProperty(zowe, "Utilities", { value: globalMocks.Utilities, configurable: true });
+    Object.defineProperty(zosfiles, "Download", { value: globalMocks.Download, configurable: true });
+    Object.defineProperty(zosfiles, "Utilities", { value: globalMocks.Utilities, configurable: true });
     Object.defineProperty(globalMocks.Download, "ussFile", { value: globalMocks.ussFile, configurable: true });
-    Object.defineProperty(zowe, "Delete", { value: globalMocks.Delete, configurable: true });
+    Object.defineProperty(zosfiles, "Delete", { value: globalMocks.Delete, configurable: true });
     Object.defineProperty(globalMocks.Delete, "ussFile", { value: globalMocks.ussFile, configurable: true });
     Object.defineProperty(Profiles, "createInstance", {
         value: jest.fn(() => globalMocks.profileOps),
@@ -1205,7 +1206,7 @@ describe("ZoweUSSNode Unit Tests - Function node.initializeFileOpening()", () =>
 });
 
 describe("ZoweUSSNode Unit Tests - Function node.pasteUssTree()", () => {
-    function createIProfileFakeEncoding(): zowe.imperative.IProfileLoaded {
+    function createIProfileFakeEncoding(): imperative.IProfileLoaded {
         return {
             name: "fakeProfile",
             profile: {

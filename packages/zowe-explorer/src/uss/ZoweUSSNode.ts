@@ -9,11 +9,11 @@
  *
  */
 
-import { imperative, IUploadOptions, IZosFilesResponse } from "@zowe/cli";
+import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
 import * as globals from "../globals";
 import * as vscode from "vscode";
 import * as path from "path";
-import { Gui, IZoweUSSTreeNode, ZoweTreeNode, Types, Validation, MainframeInteraction, ZosEncoding } from "@zowe/zowe-explorer-api";
+import { Gui, imperative, IZoweUSSTreeNode, ZoweTreeNode, Types, Validation, MainframeInteraction, ZosEncoding } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { errorHandling, getSessionLabel, syncSessionNode } from "../utils/ProfilesUtils";
@@ -158,7 +158,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         }
 
         // Get the list of files/folders at the given USS path and handle any errors
-        let response: IZosFilesResponse;
+        let response: zosfiles.IZosFilesResponse;
         const sessNode = this.getSessionNode();
         let nodeProfile;
         try {
@@ -597,7 +597,10 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      * @param tree The structure of files and folders to paste
      * @param ussApi The USS API to use for this operation
      */
-    public async paste(destUri: vscode.Uri, uss: { tree: UssFileTree; api?: MainframeInteraction.IUss; options?: IUploadOptions }): Promise<void> {
+    public async paste(
+        destUri: vscode.Uri,
+        uss: { tree: UssFileTree; api?: MainframeInteraction.IUss; options?: zosfiles.IUploadOptions }
+    ): Promise<void> {
         ZoweLogger.trace("ZoweUSSNode.paste called.");
         if (!uss.api) {
             ZoweLogger.trace("\terror: paste called with invalid API");
@@ -634,7 +637,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 statusMessage: vscode.l10n.t("Uploading USS files..."),
                 stageName: 0,
             };
-            const options: IUploadOptions = {
+            const options: zosfiles.IUploadOptions = {
                 task,
                 encoding: prof.profile?.encoding,
                 responseTimeout: prof.profile?.responseTimeout,

@@ -11,11 +11,10 @@
 
 import * as vscode from "vscode";
 import * as globals from "../globals";
-import { imperative } from "@zowe/cli";
 import { PersistentFilters } from "../PersistentFilters";
 import { getIconByNode, getIconById, IconId } from "../generators/icons";
 import * as contextually from "../shared/context";
-import { IZoweTreeNode, Types, IZoweTree, PersistenceSchemaEnum, Validation } from "@zowe/zowe-explorer-api";
+import { IZoweTreeNode, imperative, Types, IZoweTree, PersistenceSchemaEnum, Validation } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { setProfile, setSession, errorHandling } from "../utils/ProfilesUtils";
 import { SettingsConfig } from "../utils/SettingsConfig";

@@ -9,14 +9,15 @@
  *
  */
 
-jest.mock("@zowe/cli");
+jest.mock("@zowe/zos-jobs-for-zowe-sdk");
 import { createJobsTree } from "../../../src/job/ZosJobsProvider";
 import * as vscode from "vscode";
-import * as zowe from "@zowe/cli";
+import * as zosjobs from "@zowe/zos-jobs-for-zowe-sdk";
+import * as zosmf from "@zowe/zosmf-for-zowe-sdk";
 import * as globals from "../../../src/globals";
 import { createIJobFile, createIJobObject, createJobSessionNode } from "../../../__mocks__/mockCreators/jobs";
 import { ZoweJobNode } from "../../../src/job/ZoweJobNode";
-import { IZoweJobTreeNode, ProfilesCache, Gui, Sorting } from "@zowe/zowe-explorer-api";
+import { imperative, IZoweJobTreeNode, ProfilesCache, Gui, Sorting } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { Profiles } from "../../../src/Profiles";
 import * as sessUtils from "../../../src/utils/SessionUtils";
@@ -88,7 +89,7 @@ async function createGlobalMocks() {
             };
         }),
         mockProfileInfo: createInstanceOfProfileInfo(),
-        mockProfilesCache: new ProfilesCache(zowe.imperative.Logger.getAppLogger()),
+        mockProfilesCache: new ProfilesCache(imperative.Logger.getAppLogger()),
         mockTreeProviders: createTreeProviders(),
         FileSystemProvider: {
             createDirectory: jest.fn(),
@@ -107,7 +108,7 @@ async function createGlobalMocks() {
     globalMocks.mockProfileInstance = createInstanceOfProfile(globalMocks.testProfile);
     Object.defineProperty(vscode, "ProgressLocation", { value: globalMocks.ProgressLocation, configurable: true });
     Object.defineProperty(vscode.window, "withProgress", { value: globalMocks.withProgress, configurable: true });
-    Object.defineProperty(zowe, "GetJobs", { value: globalMocks.mockGetJobs, configurable: true });
+    Object.defineProperty(zosjobs, "GetJobs", { value: globalMocks.mockGetJobs, configurable: true });
     Object.defineProperty(vscode.window, "showInformationMessage", {
         value: globalMocks.mockShowInformationMessage,
         configurable: true,
@@ -117,7 +118,7 @@ async function createGlobalMocks() {
         value: globalMocks.mockGetJobsByOwnerAndPrefix,
         configurable: true,
     });
-    Object.defineProperty(zowe.ZosmfSession, "createSessCfgFromArgs", {
+    Object.defineProperty(zosmf.ZosmfSession, "createSessCfgFromArgs", {
         value: globalMocks.mockCreateSessCfgFromArgs,
         configurable: true,
     });
@@ -134,7 +135,7 @@ async function createGlobalMocks() {
         value: jest.fn(() => globalMocks.mockProfileInstance),
         configurable: true,
     });
-    Object.defineProperty(zowe, "DeleteJobs", { value: globalMocks.mockDeleteJobs, configurable: true });
+    Object.defineProperty(zosjobs, "DeleteJobs", { value: globalMocks.mockDeleteJobs, configurable: true });
     Object.defineProperty(vscode.window, "createQuickPick", {
         value: globalMocks.mockCreateQuickPick,
         configurable: true,
@@ -351,7 +352,7 @@ describe("ZoweJobNode unit tests - Function getChildren", () => {
 
         const spoolFiles = await globalMocks.testJobNode.getChildren();
         expect(spoolFiles.length).toBe(1);
-        expect(spoolFiles[0].label).toEqual("STEP:STDOUT - 1");
+        expect(spoolFiles[0].label).toEqual("STEP:STDOUT(101)");
         expect(spoolFiles[0].owner).toEqual("fake");
     });
 
@@ -360,7 +361,7 @@ describe("ZoweJobNode unit tests - Function getChildren", () => {
 
         const spoolFiles = await globalMocks.testJobNode.getChildren();
         expect(spoolFiles.length).toBe(1);
-        expect(spoolFiles[0].label).toEqual("STEP:STDOUT - 1");
+        expect(spoolFiles[0].label).toEqual("STEP:STDOUT(101)");
         expect(spoolFiles[0].owner).toEqual("fake");
 
         jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValueOnce({
@@ -369,7 +370,7 @@ describe("ZoweJobNode unit tests - Function getChildren", () => {
         globalMocks.testJobNode.dirty = true;
         const spoolFilesAfter = await globalMocks.testJobNode.getChildren();
         expect(spoolFilesAfter.length).toBe(1);
-        expect(spoolFilesAfter[0].label).toEqual("STEP:STDOUT - 2");
+        expect(spoolFilesAfter[0].label).toEqual("STEP:STDOUT(101)");
         expect(spoolFilesAfter[0].owner).toEqual("fake");
     });
 
@@ -394,7 +395,7 @@ describe("ZoweJobNode unit tests - Function getChildren", () => {
         globalMocks.testJobNode.session.ISession = globalMocks.testSessionNoCred;
         const spoolFiles = await globalMocks.testJobNode.getChildren();
         expect(spoolFiles.length).toBe(1);
-        expect(spoolFiles[0].label).toEqual("STEP:STDOUT - 1");
+        expect(spoolFiles[0].label).toEqual("STEP:STDOUT(101)");
         expect(spoolFiles[0].owner).toEqual("*");
     });
 
@@ -549,9 +550,44 @@ describe("ZoweJobNode unit tests - Function getChildren", () => {
         jest.spyOn(contextually, "isSession").mockReturnValueOnce(false);
         const spoolFiles = await globalMocks.testJobNode.getChildren();
         expect(spoolFiles.length).toBe(3);
-        expect(spoolFiles[0].label).toBe("JES2:JESMSGLG - 11");
-        expect(spoolFiles[1].label).toBe("JES2:JESJCL - 21");
-        expect(spoolFiles[2].label).toBe("JES2:JESYSMSG - 6");
+        expect(spoolFiles[0].label).toBe("JES2:JESMSGLG(101)");
+        expect(spoolFiles[1].label).toBe("JES2:JESJCL(101)");
+        expect(spoolFiles[2].label).toBe("JES2:JESYSMSG(101)");
+    });
+
+    it("Check that jobs with duplicate DD names do not overwrite each other", async () => {
+        const globalMocks = await createGlobalMocks();
+        const mockSpoolOne = { ...globalMocks.mockIJobFile, stepname: "JES2", ddname: "JESMSGLG", "record-count": 11 };
+        const mockSpoolTwo = { ...globalMocks.mockIJobFile, stepname: "SOMEJOB", ddname: "TEST", "record-count": 13 };
+        const mockSpoolThree = { ...globalMocks.mockIJobFile, stepname: "SOMEJOB", ddname: "TEST", "record-count": 5 };
+
+        mockSpoolOne.procstep = "TEST";
+        mockSpoolTwo.id = 12;
+        mockSpoolThree.id = 13;
+
+        globalMocks.testJobsProvider.mSessionNodes[1]._owner = null;
+        globalMocks.testJobsProvider.mSessionNodes[1]._prefix = "*";
+        globalMocks.testJobsProvider.mSessionNodes[1]._searchId = "";
+        globalMocks.testJobNode.session.ISession = globalMocks.testSessionNoCred;
+        jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValueOnce({
+            getSpoolFiles: jest
+                .fn()
+                .mockReturnValueOnce([
+                    mockSpoolOne,
+                    { ...globalMocks.mockIJobFile, stepname: "JES2", ddname: "JESJCL", "record-count": 21 },
+                    { ...globalMocks.mockIJobFile, stepname: "JES2", ddname: "JESYSMSG", "record-count": 6 },
+                    mockSpoolTwo,
+                    mockSpoolThree,
+                ]),
+        } as any);
+        jest.spyOn(contextually, "isSession").mockReturnValueOnce(false);
+        const spoolFiles = await globalMocks.testJobNode.getChildren();
+        expect(spoolFiles.length).toBe(5);
+        expect(spoolFiles[0].label).toBe("JES2:JESMSGLG(101) - TEST");
+        expect(spoolFiles[1].label).toBe("JES2:JESJCL(101)");
+        expect(spoolFiles[2].label).toBe("JES2:JESYSMSG(101)");
+        expect(spoolFiles[3].label).toBe("SOMEJOB:TEST(12)");
+        expect(spoolFiles[4].label).toBe("SOMEJOB:TEST(13)");
     });
 });
 

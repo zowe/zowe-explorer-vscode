@@ -17,7 +17,7 @@ import { FtpMvsApi } from "../../../src/ZoweExplorerFtpMvsApi";
 import { DataSetUtils } from "@zowe/zos-ftp-for-zowe-cli";
 import TestUtils from "../utils/TestUtils";
 import * as tmp from "tmp";
-import { Gui } from "@zowe/zowe-explorer-api";
+import { Gui, imperative } from "@zowe/zowe-explorer-api";
 import * as globals from "../../../src/globals";
 import { ZoweFtpExtensionError } from "../../../src/ZoweFtpExtensionError";
 
@@ -440,5 +440,37 @@ describe("FtpMvsApi", () => {
         await expect(async () => {
             await MvsApi.deleteDataSet("IBMUSER.DS");
         }).rejects.toThrow(ZoweFtpExtensionError);
+    });
+
+    describe("uploadFromBuffer", () => {
+        function getBlockMocks(): Record<string, jest.SpyInstance> {
+            return {
+                processNewlinesSpy: jest.spyOn(imperative.IO, "processNewlines"),
+                putContents: jest.spyOn(MvsApi, "putContents").mockImplementation(),
+                tmpFileSyncMock: jest.spyOn(tmp, "fileSync").mockReturnValueOnce({ fd: 12345 } as any),
+                writeSyncMock: jest.spyOn(fs, "writeSync").mockImplementation(),
+            };
+        }
+
+        it("should upload file from buffer", async () => {
+            const buf = Buffer.from("abc123");
+            const blockMocks = getBlockMocks();
+
+            await MvsApi.uploadFromBuffer(buf, "SOME.DS(MEMB)");
+            expect(blockMocks.tmpFileSyncMock).toHaveBeenCalled();
+            expect(blockMocks.writeSyncMock).toHaveBeenCalled();
+            expect(blockMocks.processNewlinesSpy).toHaveBeenCalled();
+        });
+
+        it("should not process new lines when uploading buffer as binary", async () => {
+            const buf = Buffer.from("abc123");
+            const blockMocks = getBlockMocks();
+            blockMocks.processNewlinesSpy.mockImplementation();
+
+            await MvsApi.uploadFromBuffer(buf, "SOME.DS(MEMB)", { binary: true });
+            expect(blockMocks.tmpFileSyncMock).toHaveBeenCalled();
+            expect(blockMocks.writeSyncMock).toHaveBeenCalled();
+            expect(blockMocks.processNewlinesSpy).not.toHaveBeenCalled();
+        });
     });
 });

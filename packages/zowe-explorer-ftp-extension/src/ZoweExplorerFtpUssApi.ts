@@ -13,10 +13,9 @@ import * as fs from "fs";
 import * as path from "path";
 import * as crypto from "crypto";
 import * as tmp from "tmp";
-import * as zowe from "@zowe/cli";
-import { IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
+import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
 
-import { MainframeInteraction } from "@zowe/zowe-explorer-api";
+import { imperative, MainframeInteraction } from "@zowe/zowe-explorer-api";
 import { CoreUtils, UssUtils, TRANSFER_TYPE_ASCII, TRANSFER_TYPE_BINARY } from "@zowe/zos-ftp-for-zowe-cli";
 import { Buffer } from "buffer";
 import { AbstractFtpApi } from "./ZoweExplorerAbstractFtpApi";
@@ -27,7 +26,7 @@ import { ZoweFtpExtensionError } from "./ZoweFtpExtensionError";
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 
 export class FtpUssApi extends AbstractFtpApi implements MainframeInteraction.IUss {
-    public async fileList(ussFilePath: string): Promise<zowe.IZosFilesResponse> {
+    public async fileList(ussFilePath: string): Promise<zosfiles.IZosFilesResponse> {
         const result = this.getDefaultResponse();
         const session = this.getSession(this.profile);
         try {
@@ -60,20 +59,7 @@ export class FtpUssApi extends AbstractFtpApi implements MainframeInteraction.IU
         return false; // TODO: needs to be implemented checking file type
     }
 
-    public async uploadFromBuffer(buffer: Buffer, filePath: string, options?: zowe.IUploadOptions): Promise<zowe.IZosFilesResponse> {
-        const tempFile = tmp.fileSync();
-        if (options.binary) {
-            fs.writeSync(tempFile.fd, buffer);
-        } else {
-            const text = zowe.imperative.IO.processNewlines(buffer.toString());
-            fs.writeSync(tempFile.fd, text);
-        }
-
-        const result = await this.putContent(tempFile.name, filePath, options);
-        return result;
-    }
-
-    public async getContents(ussFilePath: string, options: zowe.IDownloadSingleOptions): Promise<zowe.IZosFilesResponse> {
+    public async getContents(ussFilePath: string, options: zosfiles.IDownloadSingleOptions): Promise<zosfiles.IZosFilesResponse> {
         const result = this.getDefaultResponse();
         // create empty temp file and close its handle since we don't use it in this fn
         const tmpFile = options.stream ? tmp.fileSync({ discardDescriptor: true }) : null;
@@ -88,7 +74,7 @@ export class FtpUssApi extends AbstractFtpApi implements MainframeInteraction.IU
         try {
             connection = await this.ftpClient(this.checkedProfile());
             if (connection && targetFile) {
-                zowe.imperative.IO.createDirsSyncFromFilePath(targetFile);
+                imperative.IO.createDirsSyncFromFilePath(targetFile);
                 await UssUtils.downloadFile(connection, ussFilePath, transferOptions);
                 result.success = true;
                 result.commandResponse = "";
@@ -113,6 +99,19 @@ export class FtpUssApi extends AbstractFtpApi implements MainframeInteraction.IU
         }
     }
 
+    public async uploadFromBuffer(buffer: Buffer, filePath: string, options?: zosfiles.IUploadOptions): Promise<zosfiles.IZosFilesResponse> {
+        const tempFile = tmp.fileSync();
+        if (options?.binary) {
+            fs.writeSync(tempFile.fd, buffer);
+        } else {
+            const text = imperative.IO.processNewlines(buffer.toString());
+            fs.writeSync(tempFile.fd, text);
+        }
+
+        const result = await this.putContent(tempFile.name, filePath, options);
+        return result;
+    }
+
     /**
      * Upload a file (located at the input path) to the destination path.
      * @param inputFilePath The input file path
@@ -121,7 +120,7 @@ export class FtpUssApi extends AbstractFtpApi implements MainframeInteraction.IU
      *
      * @returns A file response containing the results of the operation.
      */
-    public putContent(inputFilePath: string, ussFilePath: string, options?: zowe.IUploadOptions): Promise<zowe.IZosFilesResponse> {
+    public putContent(inputFilePath: string, ussFilePath: string, options?: zosfiles.IUploadOptions): Promise<zosfiles.IZosFilesResponse> {
         return this.putContents(inputFilePath, ussFilePath, options?.binary, options?.localEncoding, options?.etag, options?.returnEtag);
     }
 
@@ -145,7 +144,7 @@ export class FtpUssApi extends AbstractFtpApi implements MainframeInteraction.IU
         localEncoding?: string,
         etag?: string,
         returnEtag?: boolean
-    ): Promise<zowe.IZosFilesResponse> {
+    ): Promise<zosfiles.IZosFilesResponse> {
         const transferOptions = {
             transferType: binary ? TRANSFER_TYPE_BINARY : TRANSFER_TYPE_ASCII,
             localFile: inputFilePath,
@@ -190,11 +189,15 @@ export class FtpUssApi extends AbstractFtpApi implements MainframeInteraction.IU
         }
     }
 
-    public async uploadDirectory(inputDirectoryPath: string, ussDirectoryPath: string, _options: IUploadOptions): Promise<zowe.IZosFilesResponse> {
+    public async uploadDirectory(
+        inputDirectoryPath: string,
+        ussDirectoryPath: string,
+        _options: zosfiles.IUploadOptions
+    ): Promise<zosfiles.IZosFilesResponse> {
         let result = this.getDefaultResponse();
         try {
             // Check if inputDirectory is directory
-            if (!zowe.imperative.IO.isDir(inputDirectoryPath)) {
+            if (!imperative.IO.isDir(inputDirectoryPath)) {
                 throw new ZoweFtpExtensionError("The local directory path provided does not exist.");
             }
 
@@ -202,7 +205,7 @@ export class FtpUssApi extends AbstractFtpApi implements MainframeInteraction.IU
             await this.putContent(inputDirectoryPath, ussDirectoryPath);
 
             // getting list of files from directory
-            const files = zowe.ZosFilesUtils.getFileListFromPath(inputDirectoryPath, false);
+            const files = zosfiles.ZosFilesUtils.getFileListFromPath(inputDirectoryPath, false);
             // TODO: this solution will not perform very well; rewrite this and putContents methods
             for (const file of files) {
                 const relativePath = path.relative(inputDirectoryPath, file).replace(/\\/g, "/");
@@ -215,7 +218,7 @@ export class FtpUssApi extends AbstractFtpApi implements MainframeInteraction.IU
         }
     }
 
-    public async create(ussPath: string, type: string, _mode?: string): Promise<zowe.IZosFilesResponse> {
+    public async create(ussPath: string, type: string, _mode?: string): Promise<zosfiles.IZosFilesResponse> {
         const result = this.getDefaultResponse();
         let connection;
         try {
@@ -244,7 +247,7 @@ export class FtpUssApi extends AbstractFtpApi implements MainframeInteraction.IU
         }
     }
 
-    public async delete(ussPath: string, recursive?: boolean): Promise<zowe.IZosFilesResponse> {
+    public async delete(ussPath: string, recursive?: boolean): Promise<zosfiles.IZosFilesResponse> {
         const result = this.getDefaultResponse();
         let connection;
         try {
@@ -268,7 +271,7 @@ export class FtpUssApi extends AbstractFtpApi implements MainframeInteraction.IU
         }
     }
 
-    public async rename(currentUssPath: string, newUssPath: string): Promise<zowe.IZosFilesResponse> {
+    public async rename(currentUssPath: string, newUssPath: string): Promise<zosfiles.IZosFilesResponse> {
         const result = this.getDefaultResponse();
         let connection;
         try {
@@ -300,23 +303,18 @@ export class FtpUssApi extends AbstractFtpApi implements MainframeInteraction.IU
     }
 
     private async getContentsTag(ussFilePath: string): Promise<string> {
-        const tmpFile = tmp.fileSync({
-            // We don't want an open file handle, just an empty temp file for writing
-            discardDescriptor: true,
-        });
-        const tmpFileName = tmpFile.name;
-
-        const options: zowe.IDownloadOptions = {
+        const tmpFileName = tmp.tmpNameSync();
+        const options: zosfiles.IDownloadOptions = {
             binary: false,
             file: tmpFileName,
         };
         const loadResult = await this.getContents(ussFilePath, options);
         const etag: string = loadResult.apiResponse.etag;
-        fs.rmSync(tmpFile.name);
+        fs.rmSync(tmpFileName);
         return etag;
     }
 
-    private getDefaultResponse(): zowe.IZosFilesResponse {
+    private getDefaultResponse(): zosfiles.IZosFilesResponse {
         return {
             success: false,
             commandResponse: "Could not get a valid FTP connection.",

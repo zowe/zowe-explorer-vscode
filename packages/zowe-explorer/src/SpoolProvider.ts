@@ -10,12 +10,12 @@
  */
 
 import * as vscode from "vscode";
-import * as zowe from "@zowe/cli";
+import * as zosjobs from "@zowe/zos-jobs-for-zowe-sdk";
 import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
 import { ZoweLogger } from "./utils/LoggerUtils";
 import { IZoweJobTreeNode } from "@zowe/zowe-explorer-api";
 
-export function buildUniqueSpoolName(spool: zowe.IJobFile): string {
+export function buildUniqueSpoolName(spool: zosjobs.IJobFile): string {
     const spoolSegments = [spool.jobname, spool.jobid, spool.stepname, spool.procstep, spool.ddname, spool.id?.toString()];
     return spoolSegments.filter((v) => v && v.length).join(".");
 }
@@ -28,7 +28,7 @@ export function buildUniqueSpoolName(spool: zowe.IJobFile): string {
  * @param session The name of the Zowe profile to use to get the Spool Content
  * @param spool The IJobFile to get the spool content for.
  */
-export function encodeJobFile(session: string, spool: zowe.IJobFile): vscode.Uri {
+export function encodeJobFile(session: string, spool: zosjobs.IJobFile): vscode.Uri {
     ZoweLogger.trace("SpoolProvider.encodeJobFile called.");
     const query = JSON.stringify([session, spool]);
 
@@ -51,7 +51,7 @@ export function encodeJobFile(session: string, spool: zowe.IJobFile): vscode.Uri
  * @param uniqueFragment The unique fragment of the encoded uri (can be timestamp, for example)
  */
 export const toUniqueJobFileUri =
-    (session: string, spool: zowe.IJobFile) =>
+    (session: string, spool: zosjobs.IJobFile) =>
     (uniqueFragment: string): vscode.Uri => {
         ZoweLogger.trace("SpoolProvider.toUniqueJobFileUri called.");
         const encodedUri = encodeJobFile(session, spool);
@@ -65,12 +65,12 @@ export const toUniqueJobFileUri =
  * @param node Selected node for which to extract all spool files
  * @returns Array of spool files
  */
-export async function getSpoolFiles(node: IZoweJobTreeNode): Promise<zowe.IJobFile[]> {
+export async function getSpoolFiles(node: IZoweJobTreeNode): Promise<zosjobs.IJobFile[]> {
     ZoweLogger.trace("SpoolProvider.getSpoolFiles called.");
     if (node.job == null) {
         return [];
     }
-    let spools: zowe.IJobFile[] = [];
+    let spools: zosjobs.IJobFile[] = [];
     spools = await ZoweExplorerApiRegister.getJesApi(node.getProfile()).getSpoolFiles(node.job.jobname, node.job.jobid);
     spools = spools
         // filter out all the objects which do not seem to be correct Job File Document types
@@ -86,7 +86,7 @@ export async function getSpoolFiles(node: IZoweJobTreeNode): Promise<zowe.IJobFi
  * @param node Selected node
  * @returns true if the selected node matches the spool file, false otherwise
  */
-export function matchSpool(spool: zowe.IJobFile, node: IZoweJobTreeNode): boolean {
+export function matchSpool(spool: zosjobs.IJobFile, node: IZoweJobTreeNode): boolean {
     return (
         `${spool.stepname}:${spool.ddname} - ${spool["record-count"]}` === node.label.toString() ||
         `${spool.stepname}:${spool.ddname} - ${spool.procstep}` === node.label.toString()
@@ -98,8 +98,8 @@ export function matchSpool(spool: zowe.IJobFile, node: IZoweJobTreeNode): boolea
  *
  * @param uri The URI passed to TextDocumentContentProvider
  */
-export function decodeJobFile(uri: vscode.Uri): [string, zowe.IJobFile] {
+export function decodeJobFile(uri: vscode.Uri): [string, zosjobs.IJobFile] {
     ZoweLogger.trace("SpoolProvider.decodeJobFile called.");
-    const [session, spool] = JSON.parse(uri.query) as [string, zowe.IJobFile];
+    const [session, spool] = JSON.parse(uri.query) as [string, zosjobs.IJobFile];
     return [session, spool];
 }

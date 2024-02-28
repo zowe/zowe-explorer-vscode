@@ -10,14 +10,13 @@
  */
 
 import { ZoweUSSNode } from "../../src/uss/ZoweUSSNode";
-import { imperative } from "@zowe/cli";
 import * as vscode from "vscode";
 import * as globals from "../../src/globals";
 import { ZoweTreeProvider } from "../../src/abstract/ZoweTreeProvider";
 import { getIconByNode } from "../../src/generators/icons";
 import { removeNodeFromArray } from "./shared";
 import { USSTree } from "../../src/uss/USSTree";
-import { PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
+import { imperative, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
 
 export function createUSSTree(favoriteNodes: ZoweUSSNode[], sessionNodes: ZoweUSSNode[], treeView?: vscode.TreeView<ZoweTreeProvider>): USSTree {
     const newTree = new USSTree();

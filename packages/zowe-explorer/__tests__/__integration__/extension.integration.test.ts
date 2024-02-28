@@ -9,7 +9,8 @@
  *
  */
 
-import * as zowe from "@zowe/cli";
+import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
+import * as zosmf from "@zowe/zosmf-for-zowe-sdk";
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
 import * as extension from "../../src/extension";
@@ -28,7 +29,7 @@ import { DatasetTree, createDatasetTree } from "../../src/dataset/DatasetTree";
 import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
 import { USSTree } from "../../src/uss/USSTree";
 import { ZoweUSSNode } from "../../src/uss/ZoweUSSNode";
-import { IZoweTreeNode } from "@zowe/zowe-explorer-api";
+import { imperative, IZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { SettingsConfig } from "../../src/utils/SettingsConfig";
 import * as globals from "../../src/globals";
 
@@ -36,7 +37,7 @@ const TIMEOUT = 45000;
 declare let it: Mocha.TestFunction;
 // declare var describe: any;
 
-const testProfile: zowe.imperative.IProfileLoaded = {
+const testProfile: imperative.IProfileLoaded = {
     name: testConst.profile.name,
     profile: testConst.profile,
     type: testConst.profile.type,
@@ -48,7 +49,7 @@ describe("Extension Integration Tests", async () => {
     const expect = chai.expect;
     chai.use(chaiAsPromised);
 
-    const cmdArgs: zowe.imperative.ICommandArguments = {
+    const cmdArgs: imperative.ICommandArguments = {
         $0: "zowe",
         _: [""],
         host: testProfile.profile.host,
@@ -58,9 +59,9 @@ describe("Extension Integration Tests", async () => {
         user: testProfile.profile.user,
         password: testProfile.profile.password,
     };
-    const sessCfg = zowe.ZosmfSession.createSessCfgFromArgs(cmdArgs);
-    zowe.imperative.ConnectionPropsForSessCfg.resolveSessCfgProps(sessCfg, cmdArgs);
-    const session = new zowe.imperative.Session(sessCfg);
+    const sessCfg = zosmf.ZosmfSession.createSessCfgFromArgs(cmdArgs);
+    imperative.ConnectionPropsForSessCfg.resolveSessCfgProps(sessCfg, cmdArgs);
+    const session = new imperative.Session(sessCfg);
     const sessionNode = new ZoweDatasetNode({
         label: testConst.profile.name,
         collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
@@ -87,7 +88,7 @@ describe("Extension Integration Tests", async () => {
         this.timeout(TIMEOUT);
         const createTestFileName = pattern + ".EXT.CREATE.DATASET.TEST";
         try {
-            await zowe.Delete.dataSet(session, createTestFileName);
+            await zosfiles.Delete.dataSet(session, createTestFileName);
         } catch (err) {
             // Do nothing
         }
@@ -105,7 +106,7 @@ describe("Extension Integration Tests", async () => {
     describe("Creating a Session", () => {
         it("should add a session", async () => {
             // Grab profiles
-            const profileManager = await new zowe.imperative.CliProfileManager({
+            const profileManager = await new imperative.CliProfileManager({
                 profileRootDirectory: path.join(os.homedir(), ".zowe", "profiles"),
                 type: "zosmf",
             });
@@ -144,7 +145,7 @@ describe("Extension Integration Tests", async () => {
             await dsActions.createFile(sessionNode, testTree);
 
             // Data set should be created
-            const response = await zowe.List.dataSet(sessionNode.getSession(), testFileName, {});
+            const response = await zosfiles.List.dataSet(sessionNode.getSession(), testFileName, {});
             expect(response.success).to.equal(true);
         }).timeout(TIMEOUT);
 
@@ -184,7 +185,7 @@ describe("Extension Integration Tests", async () => {
             });
             await dsActions.createMember(testParentNode, testTree);
 
-            const allMembers = await zowe.List.allMembers(session, testParentName);
+            const allMembers = await zosfiles.List.allMembers(session, testParentName);
 
             expect(allMembers.apiResponse.items[0].member).to.deep.equal(testFileName);
         }).timeout(TIMEOUT);
@@ -281,12 +282,12 @@ describe("Extension Integration Tests", async () => {
 
             await dsActions.allocateLike(testTree, testOriginalNode);
 
-            const response = await zowe.List.dataSet(sessionNode.getSession(), testCopyName, {});
+            const response = await zosfiles.List.dataSet(sessionNode.getSession(), testCopyName, {});
             expect(response.success).to.equal(true);
 
             // Clean up .ALLOC.LIKE
             try {
-                await zowe.Delete.dataSet(session, testCopyName);
+                await zosfiles.Delete.dataSet(session, testCopyName);
             } catch (err) {
                 // Do nothing
             }
@@ -306,7 +307,7 @@ describe("Extension Integration Tests", async () => {
             // Mock user selecting first option from list
             await dsActions.deleteDataset(testNode, testTree);
 
-            const response = await zowe.List.dataSet(session, dataSetName);
+            const response = await zosfiles.List.dataSet(session, dataSetName);
 
             expect(response.apiResponse.items).to.deep.equal([]);
         }).timeout(TIMEOUT);
@@ -352,18 +353,18 @@ describe("Extension Integration Tests", async () => {
                 beforeEach(async () => {
                     await Promise.all(
                         [
-                            zowe.Create.dataSet(sessionNode.getSession(), zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, fromDataSetName),
-                            zowe.Create.dataSet(sessionNode.getSession(), zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, toDataSetName),
+                            zosfiles.Create.dataSet(sessionNode.getSession(), zosfiles.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, fromDataSetName),
+                            zosfiles.Create.dataSet(sessionNode.getSession(), zosfiles.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, toDataSetName),
                         ].map((p) => p.catch((err) => err))
                     );
 
-                    await zowe.Upload.bufferToDataSet(sessionNode.getSession(), Buffer.from("1234"), fromDataSetName).catch((err) => err);
+                    await zosfiles.Upload.bufferToDataSet(sessionNode.getSession(), Buffer.from("1234"), fromDataSetName).catch((err) => err);
                 });
                 afterEach(async () => {
                     await Promise.all(
                         [
-                            zowe.Delete.dataSet(sessionNode.getSession(), fromDataSetName),
-                            zowe.Delete.dataSet(sessionNode.getSession(), toDataSetName),
+                            zosfiles.Delete.dataSet(sessionNode.getSession(), fromDataSetName),
+                            zosfiles.Delete.dataSet(sessionNode.getSession(), toDataSetName),
                         ].map((p) => p.catch((err) => err))
                     );
                 });
@@ -390,7 +391,7 @@ describe("Extension Integration Tests", async () => {
 
                         await dsActions.pasteMember(toNode, testTree);
 
-                        contents = await zowe.Get.dataSet(sessionNode.getSession(), fromDataSetName);
+                        contents = await zosfiles.Get.dataSet(sessionNode.getSession(), fromDataSetName);
                     } catch (err) {
                         error = err;
                     }
@@ -406,14 +407,14 @@ describe("Extension Integration Tests", async () => {
                 const toMemberName = "file2";
 
                 beforeEach(async () => {
-                    await zowe.Create.dataSet(sessionNode.getSession(), zowe.CreateDataSetTypeEnum.DATA_SET_PARTITIONED, dataSetName).catch(
+                    await zosfiles.Create.dataSet(sessionNode.getSession(), zosfiles.CreateDataSetTypeEnum.DATA_SET_PARTITIONED, dataSetName).catch(
                         (err) => err
                     );
 
-                    await zowe.Upload.bufferToDataSet(sessionNode.getSession(), Buffer.from("1234"), `${dataSetName}(${fromMemberName})`);
+                    await zosfiles.Upload.bufferToDataSet(sessionNode.getSession(), Buffer.from("1234"), `${dataSetName}(${fromMemberName})`);
                 });
                 afterEach(async () => {
-                    await zowe.Delete.dataSet(sessionNode.getSession(), dataSetName).catch((err) => err);
+                    await zosfiles.Delete.dataSet(sessionNode.getSession(), dataSetName).catch((err) => err);
                 });
                 it("Should copy a data set", async () => {
                     let error;
@@ -440,7 +441,7 @@ describe("Extension Integration Tests", async () => {
                         await dsActions.copyDataSet(fromNode);
                         await dsActions.pasteMember(parentNode, testTree);
 
-                        contents = await zowe.Get.dataSet(sessionNode.getSession(), `${dataSetName}(${toMemberName})`);
+                        contents = await zosfiles.Get.dataSet(sessionNode.getSession(), `${dataSetName}(${toMemberName})`);
                     } catch (err) {
                         error = err;
                     }
@@ -458,18 +459,18 @@ describe("Extension Integration Tests", async () => {
                 beforeEach(async () => {
                     await Promise.all(
                         [
-                            zowe.Create.dataSet(sessionNode.getSession(), zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, fromDataSetName),
-                            zowe.Create.dataSet(sessionNode.getSession(), zowe.CreateDataSetTypeEnum.DATA_SET_PARTITIONED, toDataSetName),
+                            zosfiles.Create.dataSet(sessionNode.getSession(), zosfiles.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, fromDataSetName),
+                            zosfiles.Create.dataSet(sessionNode.getSession(), zosfiles.CreateDataSetTypeEnum.DATA_SET_PARTITIONED, toDataSetName),
                         ].map((p) => p.catch((err) => err))
                     );
 
-                    await zowe.Upload.bufferToDataSet(sessionNode.getSession(), Buffer.from("1234"), fromDataSetName).catch((err) => err);
+                    await zosfiles.Upload.bufferToDataSet(sessionNode.getSession(), Buffer.from("1234"), fromDataSetName).catch((err) => err);
                 });
                 afterEach(async () => {
                     await Promise.all(
                         [
-                            zowe.Delete.dataSet(sessionNode.getSession(), fromDataSetName),
-                            zowe.Delete.dataSet(sessionNode.getSession(), toDataSetName),
+                            zosfiles.Delete.dataSet(sessionNode.getSession(), fromDataSetName),
+                            zosfiles.Delete.dataSet(sessionNode.getSession(), toDataSetName),
                         ].map((p) => p.catch((err) => err))
                     );
                 });
@@ -500,7 +501,7 @@ describe("Extension Integration Tests", async () => {
                         await dsActions.copyDataSets(nodeList, null, null);
                         await dsActions.pasteMember(toNode, testTree);
 
-                        contents = await zowe.Get.dataSet(sessionNode.getSession(), `${toDataSetName}(${toMemberName})`);
+                        contents = await zosfiles.Get.dataSet(sessionNode.getSession(), `${toDataSetName}(${toMemberName})`);
                     } catch (err) {
                         error = err;
                     }
@@ -518,20 +519,22 @@ describe("Extension Integration Tests", async () => {
                 beforeEach(async () => {
                     await Promise.all(
                         [
-                            zowe.Create.dataSet(sessionNode.getSession(), zowe.CreateDataSetTypeEnum.DATA_SET_PARTITIONED, fromDataSetName),
-                            zowe.Create.dataSet(sessionNode.getSession(), zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, toDataSetName),
+                            zosfiles.Create.dataSet(sessionNode.getSession(), zosfiles.CreateDataSetTypeEnum.DATA_SET_PARTITIONED, fromDataSetName),
+                            zosfiles.Create.dataSet(sessionNode.getSession(), zosfiles.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, toDataSetName),
                         ].map((p) => p.catch((err) => err))
                     );
 
-                    await zowe.Upload.bufferToDataSet(sessionNode.getSession(), Buffer.from("1234"), `${fromDataSetName}(${fromMemberName})`).catch(
-                        (err) => err
-                    );
+                    await zosfiles.Upload.bufferToDataSet(
+                        sessionNode.getSession(),
+                        Buffer.from("1234"),
+                        `${fromDataSetName}(${fromMemberName})`
+                    ).catch((err) => err);
                 });
                 afterEach(async () => {
                     await Promise.all(
                         [
-                            zowe.Delete.dataSet(sessionNode.getSession(), fromDataSetName),
-                            zowe.Delete.dataSet(sessionNode.getSession(), toDataSetName),
+                            zosfiles.Delete.dataSet(sessionNode.getSession(), fromDataSetName),
+                            zosfiles.Delete.dataSet(sessionNode.getSession(), toDataSetName),
                         ].map((p) => p.catch((err) => err))
                     );
                 });
@@ -566,7 +569,7 @@ describe("Extension Integration Tests", async () => {
                         await dsActions.copyDataSets(nodeList, null, null);
                         await dsActions.pasteMember(toNode, testTree);
 
-                        contents = await zowe.Get.dataSet(sessionNode.getSession(), toDataSetName);
+                        contents = await zosfiles.Get.dataSet(sessionNode.getSession(), toDataSetName);
                     } catch (err) {
                         error = err;
                     }
@@ -585,12 +588,12 @@ describe("Extension Integration Tests", async () => {
                 const dataSetName = `${pattern}.SDATA.MIGR`;
 
                 beforeEach(async () => {
-                    await zowe.Delete.dataSet(sessionNode.getSession(), dataSetName).catch((err) => err);
-                    await zowe.Create.dataSet(sessionNode.getSession(), zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, dataSetName);
+                    await zosfiles.Delete.dataSet(sessionNode.getSession(), dataSetName).catch((err) => err);
+                    await zosfiles.Create.dataSet(sessionNode.getSession(), zosfiles.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, dataSetName);
                 });
 
                 afterEach(async () => {
-                    await zowe.Delete.dataSet(sessionNode.getSession(), dataSetName).catch((err) => err);
+                    await zosfiles.Delete.dataSet(sessionNode.getSession(), dataSetName).catch((err) => err);
                 });
 
                 it("Should send a migrate request", async () => {
@@ -616,12 +619,12 @@ describe("Extension Integration Tests", async () => {
                 const dataSetName = `${pattern}.PDATA.MIGR`;
 
                 beforeEach(async () => {
-                    await zowe.Delete.dataSet(sessionNode.getSession(), dataSetName).catch((err) => err);
-                    await zowe.Create.dataSet(sessionNode.getSession(), zowe.CreateDataSetTypeEnum.DATA_SET_PARTITIONED, dataSetName);
+                    await zosfiles.Delete.dataSet(sessionNode.getSession(), dataSetName).catch((err) => err);
+                    await zosfiles.Create.dataSet(sessionNode.getSession(), zosfiles.CreateDataSetTypeEnum.DATA_SET_PARTITIONED, dataSetName);
                 });
 
                 afterEach(async () => {
-                    await zowe.Delete.dataSet(sessionNode.getSession(), dataSetName).catch((err) => err);
+                    await zosfiles.Delete.dataSet(sessionNode.getSession(), dataSetName).catch((err) => err);
                 });
 
                 it("Should send a migrate request", async () => {
@@ -676,12 +679,12 @@ describe("Extension Integration Tests", async () => {
                 const dataSetName = `${pattern}.SDATA.REC`;
 
                 beforeEach(async () => {
-                    await zowe.Delete.dataSet(sessionNode.getSession(), dataSetName).catch((err) => err);
-                    await zowe.Create.dataSet(sessionNode.getSession(), zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, dataSetName);
+                    await zosfiles.Delete.dataSet(sessionNode.getSession(), dataSetName).catch((err) => err);
+                    await zosfiles.Create.dataSet(sessionNode.getSession(), zosfiles.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, dataSetName);
                 });
 
                 afterEach(async () => {
-                    await zowe.Delete.dataSet(sessionNode.getSession(), dataSetName).catch((err) => err);
+                    await zosfiles.Delete.dataSet(sessionNode.getSession(), dataSetName).catch((err) => err);
                 });
 
                 it("Should send a Recall request", async () => {
@@ -707,12 +710,12 @@ describe("Extension Integration Tests", async () => {
                 const dataSetName = `${pattern}.PDATA.REC`;
 
                 beforeEach(async () => {
-                    await zowe.Delete.dataSet(sessionNode.getSession(), dataSetName).catch((err) => err);
-                    await zowe.Create.dataSet(sessionNode.getSession(), zowe.CreateDataSetTypeEnum.DATA_SET_PARTITIONED, dataSetName);
+                    await zosfiles.Delete.dataSet(sessionNode.getSession(), dataSetName).catch((err) => err);
+                    await zosfiles.Create.dataSet(sessionNode.getSession(), zosfiles.CreateDataSetTypeEnum.DATA_SET_PARTITIONED, dataSetName);
                 });
 
                 afterEach(async () => {
-                    await zowe.Delete.dataSet(sessionNode.getSession(), dataSetName).catch((err) => err);
+                    await zosfiles.Delete.dataSet(sessionNode.getSession(), dataSetName).catch((err) => err);
                 });
 
                 it("Should send a Recall request", async () => {
@@ -817,7 +820,7 @@ describe("Extension Integration Tests", async () => {
 
     describe("Initializing Favorites", () => {
         it("should work when provided an empty Favorites list", async () => {
-            const log = zowe.imperative.Logger.getAppLogger();
+            const log = imperative.Logger.getAppLogger();
             await vscode.workspace
                 .getConfiguration()
                 .update(globals.SETTINGS_DS_HISTORY, { persistence: true, favorites: [] }, vscode.ConfigurationTarget.Global);
@@ -826,7 +829,7 @@ describe("Extension Integration Tests", async () => {
         }).timeout(TIMEOUT);
 
         it("should work when provided a valid Favorites list", async () => {
-            const log = zowe.imperative.Logger.getAppLogger();
+            const log = imperative.Logger.getAppLogger();
             const profileName = testConst.profile.name;
             const favorites = [
                 `[${profileName}]: ${pattern}.EXT.PDS{pds}`,
@@ -843,7 +846,7 @@ describe("Extension Integration Tests", async () => {
         }).timeout(TIMEOUT);
 
         it("should log a warn message when provided an invalid Favorites list", async () => {
-            const log = zowe.imperative.Logger.getAppLogger();
+            const log = imperative.Logger.getAppLogger();
             const corruptedFavorite = pattern + ".EXT.ABCDEFGHI.PS[profileName]{ds}";
             const favorites = [pattern + ".EXT.PDS[profileName]{pds}", corruptedFavorite];
             await vscode.workspace
@@ -855,7 +858,7 @@ describe("Extension Integration Tests", async () => {
         }).timeout(TIMEOUT);
 
         it("should still create favorite nodes when given a favorite with invalid profile name", async () => {
-            const log = zowe.imperative.Logger.getAppLogger();
+            const log = imperative.Logger.getAppLogger();
             const profileName = testConst.profile.name;
             // Reset testTree's favorites to be empty
             testTree.mFavorites = [];
@@ -903,7 +906,7 @@ describe("Extension Integration Tests - USS", () => {
     chai.use(chaiAsPromised);
 
     // Profiles.createInstance(Logger.getAppLogger());
-    const cmdArgs: zowe.imperative.ICommandArguments = {
+    const cmdArgs: imperative.ICommandArguments = {
         $0: "zowe",
         _: [""],
         host: testProfile.profile.host,
@@ -913,9 +916,9 @@ describe("Extension Integration Tests - USS", () => {
         user: testProfile.profile.user,
         password: testProfile.profile.password,
     };
-    const sessCfg = zowe.ZosmfSession.createSessCfgFromArgs(cmdArgs);
-    zowe.imperative.ConnectionPropsForSessCfg.resolveSessCfgProps(sessCfg, cmdArgs);
-    const session = new zowe.imperative.Session(sessCfg);
+    const sessCfg = zosmf.ZosmfSession.createSessCfgFromArgs(cmdArgs);
+    imperative.ConnectionPropsForSessCfg.resolveSessCfgProps(sessCfg, cmdArgs);
+    const session = new imperative.Session(sessCfg);
     const ussSessionNode = new ZoweUSSNode({
         label: testConst.profile.name,
         collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
@@ -960,7 +963,7 @@ describe("Extension Integration Tests - USS", () => {
     describe("Creating a Session -USS", () => {
         it("should add a session", async () => {
             // Grab profiles
-            const profileManager = await new zowe.imperative.CliProfileManager({
+            const profileManager = await new imperative.CliProfileManager({
                 profileRootDirectory: path.join(os.homedir(), ".zowe", "profiles"),
                 type: "zosmf",
             });

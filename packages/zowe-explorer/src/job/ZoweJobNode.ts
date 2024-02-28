@@ -10,11 +10,11 @@
  */
 
 import * as vscode from "vscode";
-import * as zowe from "@zowe/cli";
+import * as zosjobs from "@zowe/zos-jobs-for-zowe-sdk";
 import * as globals from "../globals";
 import * as contextually from "../shared/context";
 import * as path from "path";
-import { IZoweJobTreeNode, Sorting, ZoweTreeNode } from "@zowe/zowe-explorer-api";
+import { imperative, IZoweJobTreeNode, Sorting, ZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { errorHandling, getSessionLabel, syncSessionNode } from "../utils/ProfilesUtils";
 import { getIconByNode } from "../generators/icons";
@@ -34,7 +34,7 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
     private _prefix: string;
     private _searchId: string;
     private _jobStatus: string;
-    public job: zowe.IJob;
+    public job: zosjobs.IJob;
     public filtered = false;
     public filter?: string;
 
@@ -138,7 +138,7 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
         if (contextually.isJob(this)) {
             // Fetch spool files under job node
             const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
-            const spools: zowe.IJobFile[] = (
+            const spools: zosjobs.IJobFile[] = (
                 (await ZoweExplorerApiRegister.getJesApi(cachedProfile).getSpoolFiles(this.job.jobname, this.job.jobid)) ?? []
             )
                 // filter out all the objects which do not seem to be correct Job File Document types
@@ -158,9 +158,9 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
                 const procstep = spool.procstep ? spool.procstep : undefined;
                 let newLabel: string;
                 if (procstep) {
-                    newLabel = `${spool.stepname}:${spool.ddname} - ${procstep}`;
+                    newLabel = `${spool.stepname}:${spool.ddname}(${spool.id}) - ${procstep}`;
                 } else {
-                    newLabel = `${spool.stepname}:${spool.ddname} - ${spool["record-count"]}`;
+                    newLabel = `${spool.stepname}:${spool.ddname}(${spool.id})`;
                 }
 
                 // Only look for existing node w/ procstep if spool file has a procstep,
@@ -355,19 +355,28 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
         return this._searchId;
     }
 
-    private async getJobs(owner: string, prefix: string, searchId: string, status: string): Promise<zowe.IJob[]> {
+    private statusNotSupportedMsg(status: string): void {
+        ZoweLogger.trace("ZoweJobNode.statusNotSupportedMsg called.");
+        if (status !== "*") {
+            Gui.warningMessage(
+                vscode.l10n.t("Filtering by job status is not yet supported with this profile type. Will show jobs with all statuses.")
+            );
+        }
+    }
+
+    private async getJobs(owner: string, prefix: string, searchId: string, status: string): Promise<zosjobs.IJob[]> {
         ZoweLogger.trace("ZoweJobNode.getJobs called.");
-        let jobsInternal: zowe.IJob[] = [];
+        let jobsInternal: zosjobs.IJob[] = [];
         const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
         try {
             if (this.searchId.length > 0) {
                 jobsInternal.push(await ZoweExplorerApiRegister.getJesApi(cachedProfile).getJob(searchId));
             } else {
                 if (!ZoweExplorerApiRegister.getJesApi(cachedProfile).getSession(cachedProfile)) {
-                    throw new zowe.imperative.ImperativeError({
+                    throw new imperative.ImperativeError({
                         msg: vscode.l10n.t("Profile auth error"),
                         additionalDetails: vscode.l10n.t("Profile is not authenticated, please log in to continue"),
-                        errorCode: `${zowe.imperative.RestConstants.HTTP_STATUS_401}`,
+                        errorCode: `${imperative.RestConstants.HTTP_STATUS_401}`,
                     });
                 }
                 jobsInternal = await ZoweExplorerApiRegister.getJesApi(cachedProfile).getJobsByParameters({
@@ -384,7 +393,7 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
                  *    filters only the unique jobs present by comparing the ids of these returned
                  *    jobs.
                  */
-                jobsInternal = jobsInternal.reduce((acc: zowe.IJob[], current) => {
+                jobsInternal = jobsInternal.reduce((acc: zosjobs.IJob[], current) => {
                     const duplicateJobExists = acc.find((job) => job.jobid === current.jobid);
                     if (!duplicateJobExists) {
                         return acc.concat([current]);
@@ -404,9 +413,9 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
 
 export class ZoweSpoolNode extends ZoweJobNode {
     public uniqueName: string;
-    public spool: zowe.IJobFile;
+    public spool: zosjobs.IJobFile;
 
-    public constructor(opts: IZoweJobTreeOpts & { spool?: zowe.IJobFile }) {
+    public constructor(opts: IZoweJobTreeOpts & { spool?: zosjobs.IJobFile }) {
         super(opts);
         this.uniqueName = opts.spool ? buildUniqueSpoolName(opts.spool) : "<unknown-spool-id>";
         this.resourceUri = opts.parentNode?.resourceUri.with({

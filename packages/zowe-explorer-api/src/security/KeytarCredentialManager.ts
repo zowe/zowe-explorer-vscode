@@ -13,7 +13,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 
-import { imperative } from "@zowe/cli";
+import * as imperative from "@zowe/imperative";
 import { Constants } from "../globals";
 import { FileManagement } from "../utils";
 import { Types } from "../Types";
@@ -205,7 +205,6 @@ export class KeytarCredentialManager extends imperative.AbstractCredentialManage
  */
 export function getSecurityModules(moduleName: string): NodeModule | undefined {
     const r = typeof __webpack_require__ === "function" ? __non_webpack_require__ : require;
-    // Workaround for Theia issue (https://github.com/eclipse-theia/theia/issues/4935)
     const appRoot = vscode.env.appRoot;
     try {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-return

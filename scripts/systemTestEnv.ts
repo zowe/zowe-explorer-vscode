@@ -10,7 +10,8 @@
  */
 
 import { profile, normalPattern, ussPattern } from "../packages/zowe-explorer/resources/testProfileData";
-import { Create, CreateDataSetTypeEnum, Upload, Delete, imperative } from "@zowe/cli";
+import * as imperative from "@zowe/imperative";
+import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
 
 const session: imperative.Session = new imperative.Session({
     hostname: profile.host,
@@ -25,18 +26,18 @@ const session: imperative.Session = new imperative.Session({
  * Creates the system test environment
  */
 export async function createSystemTestEnvironment() {
-    await createDataset(CreateDataSetTypeEnum.DATA_SET_PARTITIONED, `${normalPattern}.EXT.PDS`);
+    await createDataset(zosfiles.CreateDataSetTypeEnum.DATA_SET_PARTITIONED, `${normalPattern}.EXT.PDS`);
     await createMember(`${normalPattern}.EXT.PDS(MEMBER)`);
-    await createDataset(CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, `${normalPattern}.EXT.PS`);
-    await createDataset(CreateDataSetTypeEnum.DATA_SET_PARTITIONED, `${normalPattern}.EXT.SAMPLE.PDS`);
-    await createDataset(CreateDataSetTypeEnum.DATA_SET_PARTITIONED, `${normalPattern}.DELETE.TEST`);
-    await createDataset(CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, `${normalPattern}.PUBLIC.BIN`);
-    await createDataset(CreateDataSetTypeEnum.DATA_SET_CLASSIC, `${normalPattern}.PUBLIC.TCLASSIC`);
+    await createDataset(zosfiles.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, `${normalPattern}.EXT.PS`);
+    await createDataset(zosfiles.CreateDataSetTypeEnum.DATA_SET_PARTITIONED, `${normalPattern}.EXT.SAMPLE.PDS`);
+    await createDataset(zosfiles.CreateDataSetTypeEnum.DATA_SET_PARTITIONED, `${normalPattern}.DELETE.TEST`);
+    await createDataset(zosfiles.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, `${normalPattern}.PUBLIC.BIN`);
+    await createDataset(zosfiles.CreateDataSetTypeEnum.DATA_SET_CLASSIC, `${normalPattern}.PUBLIC.TCLASSIC`);
     await createMember(`${normalPattern}.PUBLIC.TCLASSIC(NEW)`);
-    await createDataset(CreateDataSetTypeEnum.DATA_SET_PARTITIONED, `${normalPattern}.PUBLIC.TPDS`);
+    await createDataset(zosfiles.CreateDataSetTypeEnum.DATA_SET_PARTITIONED, `${normalPattern}.PUBLIC.TPDS`);
     await createMember(`${normalPattern}.PUBLIC.TPDS(TCHILD1)`);
     await createMember(`${normalPattern}.PUBLIC.TPDS(TCHILD2)`);
-    await createDataset(CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, `${normalPattern}.PUBLIC.TPS`);
+    await createDataset(zosfiles.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, `${normalPattern}.PUBLIC.TPS`);
 
     await createUSSDirectory(`${ussPattern}`);
     await createUSSDirectory(`${ussPattern}/aDir1`);
@@ -57,16 +58,16 @@ export async function createSystemTestEnvironment() {
  * Creates data sets, members, and USS nodes which can be used in our demos
  */
 export async function createDemoNodes() {
-    await createDataset(CreateDataSetTypeEnum.DATA_SET_BINARY, `${normalPattern}.DEMO.BINARY`);
-    await createDataset(CreateDataSetTypeEnum.DATA_SET_C, `${normalPattern}.DEMO.BINARY`);
-    await createDataset(CreateDataSetTypeEnum.DATA_SET_CLASSIC, `${normalPattern}.DEMO.CLASSIC1`);
-    await createDataset(CreateDataSetTypeEnum.DATA_SET_CLASSIC, `${normalPattern}.DEMO.CLASSIC2`);
+    await createDataset(zosfiles.CreateDataSetTypeEnum.DATA_SET_BINARY, `${normalPattern}.DEMO.BINARY`);
+    await createDataset(zosfiles.CreateDataSetTypeEnum.DATA_SET_C, `${normalPattern}.DEMO.BINARY`);
+    await createDataset(zosfiles.CreateDataSetTypeEnum.DATA_SET_CLASSIC, `${normalPattern}.DEMO.CLASSIC1`);
+    await createDataset(zosfiles.CreateDataSetTypeEnum.DATA_SET_CLASSIC, `${normalPattern}.DEMO.CLASSIC2`);
     await createMember(`${normalPattern}.DEMO.CLASSIC2(MEMBER1)`);
     await createMember(`${normalPattern}.DEMO.CLASSIC2(MEMBER2)`);
     await createMember(`${normalPattern}.DEMO.CLASSIC2(MEMBER3)`);
-    await createDataset(CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, `${normalPattern}.DEMO.SDS`);
-    await createDataset(CreateDataSetTypeEnum.DATA_SET_PARTITIONED, `${normalPattern}.DEMO.PDS1`);
-    await createDataset(CreateDataSetTypeEnum.DATA_SET_PARTITIONED, `${normalPattern}.DEMO.PDS2`);
+    await createDataset(zosfiles.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, `${normalPattern}.DEMO.SDS`);
+    await createDataset(zosfiles.CreateDataSetTypeEnum.DATA_SET_PARTITIONED, `${normalPattern}.DEMO.PDS1`);
+    await createDataset(zosfiles.CreateDataSetTypeEnum.DATA_SET_PARTITIONED, `${normalPattern}.DEMO.PDS2`);
     await createMember(`${normalPattern}.DEMO.PDS2(MEMBER1)`);
     await createMember(`${normalPattern}.DEMO.PDS2(MEMBER2)`);
     await createMember(`${normalPattern}.DEMO.PDS2(MEMBER3)`);
@@ -104,7 +105,7 @@ export async function cleanupSystemTestEnvironment() {
 async function createDataset(type: CreateDataSetTypeEnum, name: string) {
     imperative.Logger.getConsoleLogger().info(`Creating Dataset: ${name}`);
     try {
-        return await Create.dataSet(session, type, name);
+        return await zosfiles.Create.dataSet(session, type, name);
     } catch (err) {
         imperative.Logger.getConsoleLogger().error(`Creating Dataset ${name} failed: ${err}`);
         return null;
@@ -114,7 +115,7 @@ async function createDataset(type: CreateDataSetTypeEnum, name: string) {
 async function createMember(name: string) {
     imperative.Logger.getConsoleLogger().info(`Creating DS member: ${name}`);
     try {
-        return await Upload.bufferToDataSet(session, Buffer.from(""), name);
+        return await zosfiles.Upload.bufferToDataSet(session, Buffer.from(""), name);
     } catch (err) {
         imperative.Logger.getConsoleLogger().error(`Creating DS member ${name} failed: ${err}`);
         return null;
@@ -124,7 +125,7 @@ async function createMember(name: string) {
 async function deleteDataset(name: string) {
     imperative.Logger.getConsoleLogger().info(`Deleting Dataset: ${name}`);
     try {
-        return await Delete.dataSet(session, name);
+        return await zosfiles.Delete.dataSet(session, name);
     } catch (err) {
         imperative.Logger.getConsoleLogger().error(`Deleting Dataset ${name} failed: ${err}`);
         return null;
@@ -133,7 +134,7 @@ async function deleteDataset(name: string) {
 async function deleteAllFiles(name: string) {
     imperative.Logger.getConsoleLogger().info(`Deleting files: ${name}`);
     try {
-        return await Delete.ussFile(session, name, true);
+        return await zosfiles.Delete.ussFile(session, name, true);
     } catch (err) {
         imperative.Logger.getConsoleLogger().error(`Deleting files ${name} failed: ${err}`);
         return null;
@@ -143,7 +144,7 @@ async function deleteAllFiles(name: string) {
 async function createUSSFile(name: string) {
     imperative.Logger.getConsoleLogger().info(`Creating USS File: ${name}`);
     try {
-        return await Create.uss(session, name, "file");
+        return await zosfiles.Create.uss(session, name, "file");
     } catch (err) {
         imperative.Logger.getConsoleLogger().error(`Creating USS File ${name} failed: ${err}`);
         return null;
@@ -153,7 +154,7 @@ async function createUSSFile(name: string) {
 async function createUSSDirectory(name: string) {
     imperative.Logger.getConsoleLogger().info(`Creating USS Directory: ${name}`);
     try {
-        return await Create.uss(session, name, "directory");
+        return await zosfiles.Create.uss(session, name, "directory");
     } catch (err) {
         imperative.Logger.getConsoleLogger().error(`Creating USS Directory ${name} failed: ${err}`);
         return null;

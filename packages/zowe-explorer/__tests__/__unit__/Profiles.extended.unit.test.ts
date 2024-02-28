@@ -28,8 +28,9 @@ import { createProfileManager } from "../../__mocks__/mockCreators/profiles";
 import * as vscode from "vscode";
 import * as utils from "../../src/utils/ProfilesUtils";
 import * as globals from "../../src/globals";
-import * as zowe from "@zowe/cli";
-import { Gui, ProfilesCache, ZoweTreeNode, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
+import * as core from "@zowe/core-for-zowe-sdk";
+import * as zosmf from "@zowe/zosmf-for-zowe-sdk";
+import { imperative, Gui, ProfilesCache, ZoweTreeNode, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../src/Profiles";
 import { ZoweExplorerExtender } from "../../src/ZoweExplorerExtender";
 import { ZoweExplorerApiRegister } from "../../../zowe-explorer/src/ZoweExplorerApiRegister";
@@ -51,7 +52,7 @@ jest.mock("fs-extra");
 
 async function createGlobalMocks() {
     const newMocks = {
-        log: zowe.imperative.Logger.getAppLogger(),
+        log: imperative.Logger.getAppLogger(),
         mockShowInputBox: jest.fn(),
         mockGetConfiguration: jest.fn(),
         mockCreateQuickPick: createQuickPickInstance(),
@@ -97,7 +98,7 @@ async function createGlobalMocks() {
     jest.spyOn(JobFSProvider.instance, "createDirectory").mockImplementation(newMocks.FileSystemProvider.createDirectory);
     jest.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation(newMocks.FileSystemProvider.createDirectory);
 
-    newMocks.mockProfilesCache = new ProfilesCache(zowe.imperative.Logger.getAppLogger());
+    newMocks.mockProfilesCache = new ProfilesCache(imperative.Logger.getAppLogger());
     newMocks.withProgress = jest.fn().mockImplementation((_progLocation, _callback) => {
         return newMocks.mockCallback;
     });
@@ -120,7 +121,7 @@ async function createGlobalMocks() {
         configurable: true,
     });
     Object.defineProperty(vscode.window, "createInputBox", { value: newMocks.mockCreateInputBox, configurable: true });
-    Object.defineProperty(zowe.ZosmfSession, "createSessCfgFromArgs", {
+    Object.defineProperty(zosmf.ZosmfSession, "createSessCfgFromArgs", {
         value: newMocks.mockCreateSessCfgFromArgs,
         configurable: true,
     });
@@ -168,11 +169,11 @@ async function createGlobalMocks() {
         configurable: true,
     });
 
-    Object.defineProperty(zowe.imperative, "Config", {
+    Object.defineProperty(imperative, "Config", {
         value: () => newMocks.mockConfigInstance,
         configurable: true,
     });
-    newMocks.mockConfigLoad = Object.defineProperty(zowe.imperative.Config, "load", {
+    newMocks.mockConfigLoad = Object.defineProperty(imperative.Config, "load", {
         value: jest.fn(() => {
             return createConfigLoad();
         }),
@@ -373,7 +374,7 @@ describe("Profiles Unit Tests - Function editZoweConfigFile", () => {
         const spyOpenFile = jest.spyOn(globalMocks.mockProfileInstance, "openConfigFile");
         await Profiles.getInstance().editZoweConfigFile();
         expect(spyQuickPick).toHaveBeenCalled();
-        expect(spyOpenFile).toHaveBeenCalledWith("file://projectPath/zowe.user.config.json");
+        expect(spyOpenFile).toHaveBeenCalledWith("file://projectPath/zowe.config.user.json");
         spyQuickPick.mockClear();
         spyOpenFile.mockClear();
     });
@@ -410,12 +411,12 @@ describe("Profiles Unit Tests - Function createZoweSchema", () => {
         };
         newMocks.testDatasetSessionNode = createDatasetSessionNode(newMocks.session, globalMocks.mockProfileInstance);
         newMocks.testDatasetTree = createDatasetTree(newMocks.testDatasetSessionNode, newMocks.treeView);
-        Object.defineProperty(zowe, "getZoweDir", {
+        Object.defineProperty(core, "getZoweDir", {
             value: jest.fn().mockReturnValue("file://globalPath/.zowe"),
             configurable: true,
         });
         Object.defineProperty(vscode.workspace, "workspaceFolders", {
-            get: () => [{ uri: "file://projectPath/zowe.user.config.json", name: "zowe.user.config.json", index: 0 }],
+            get: () => [{ uri: "file://projectPath/zowe.config.user.json", name: "zowe.config.user.json", index: 0 }],
             configurable: true,
         });
 
@@ -485,28 +486,15 @@ describe("Profiles Unit Tests - Function createZoweSchema", () => {
         const spyLayers = jest.spyOn(privateProf, "getConfigLayers");
         spyLayers.mockResolvedValueOnce([
             {
-                path: "file://projectPath/zowe.user.config.json",
+                path: "file://projectPath/zowe.config.user.json",
                 exists: true,
                 properties: undefined,
                 global: false,
                 user: true,
             },
         ]);
-        Object.defineProperty(zowe.imperative.Config, "load", {
+        Object.defineProperty(imperative.Config, "load", {
             value: jest.fn().mockResolvedValue(createConfigLoad()),
-            configurable: true,
-        });
-        Object.defineProperty(zowe, "getImperativeConfig", {
-            value: jest.fn(() => ({
-                profiles: [],
-                baseProfile: {
-                    type: "base",
-                    schema: {
-                        type: "object",
-                        title: "Base profile",
-                    },
-                } as zowe.imperative.ICommandProfileTypeConfiguration,
-            })),
             configurable: true,
         });
 
@@ -536,7 +524,7 @@ describe("Profiles Unit Tests - Function createZoweSchema", () => {
         jest.spyOn(globalMocks.mockProfileInstance, "checkExistingConfig").mockReturnValue("zowe");
         jest.spyOn(globalMocks.mockProfileInstance, "getConfigLayers").mockResolvedValueOnce([
             {
-                path: "file://projectPath/zowe.user.config.json",
+                path: "file://projectPath/zowe.config.user.json",
                 exists: true,
                 properties: undefined,
                 global: false,
@@ -544,21 +532,7 @@ describe("Profiles Unit Tests - Function createZoweSchema", () => {
             },
         ]);
 
-        Object.defineProperty(zowe, "getImperativeConfig", {
-            value: jest.fn(() => ({
-                profiles: [],
-                baseProfile: {
-                    type: "base",
-                    schema: {
-                        type: "object",
-                        title: "Base profile",
-                    },
-                } as zowe.imperative.ICommandProfileTypeConfiguration,
-            })),
-            configurable: true,
-        });
-
-        Object.defineProperty(zowe.imperative.Config, "setSchema", {
+        Object.defineProperty(imperative.Config, "setSchema", {
             value: jest.fn(),
             configurable: true,
         });
@@ -599,8 +573,8 @@ describe("Profiles Unit Tests - function promptCredentials", () => {
                 user: "test",
                 password: "12345",
                 base64EncodedAuth: "encodedAuth",
-            } as zowe.imperative.IProfile,
-        } as zowe.imperative.IProfileLoaded);
+            } as imperative.IProfile,
+        } as imperative.IProfileLoaded);
         jest.spyOn(Profiles.getInstance(), "updateProfilesArrays").mockImplementation();
         await expect(Profiles.getInstance().promptCredentials("secure_config_props")).resolves.toEqual(["test", "12345", "encodedAuth"]);
     });
@@ -618,7 +592,7 @@ describe("Profiles Unit Tests - function getDeleteProfile", () => {
                     message: "",
                     type: "",
                     failNotFound: false,
-                } as zowe.imperative.IProfileLoaded,
+                } as imperative.IProfileLoaded,
                 {
                     name: "test2",
                     user: "test2",
@@ -626,7 +600,7 @@ describe("Profiles Unit Tests - function getDeleteProfile", () => {
                     message: "",
                     type: "",
                     failNotFound: false,
-                } as zowe.imperative.IProfileLoaded,
+                } as imperative.IProfileLoaded,
             ],
             configurable: true,
         });
@@ -661,7 +635,7 @@ describe("Profiles Unit Tests - function getDeleteProfile", () => {
                     message: "",
                     type: "",
                     failNotFound: false,
-                } as zowe.imperative.IProfileLoaded,
+                } as imperative.IProfileLoaded,
                 {
                     name: "test2",
                     user: "test2",
@@ -669,7 +643,7 @@ describe("Profiles Unit Tests - function getDeleteProfile", () => {
                     message: "",
                     type: "",
                     failNotFound: false,
-                } as zowe.imperative.IProfileLoaded,
+                } as imperative.IProfileLoaded,
             ],
             configurable: true,
         });
@@ -1044,7 +1018,7 @@ describe("Profiles Unit Tests - function ssoLogin", () => {
     });
     it("should perform an SSOLogin successfully while fetching the base profile", async () => {
         jest.spyOn(ZoweExplorerApiRegister.getInstance(), "getCommonApi").mockReturnValue({
-            getTokenTypeName: () => zowe.imperative.SessConstants.TOKEN_TYPE_APIML,
+            getTokenTypeName: () => imperative.SessConstants.TOKEN_TYPE_APIML,
             login: () => "ajshdlfkjshdalfjhas",
         } as never);
         jest.spyOn(Profiles.getInstance() as any, "loginCredentialPrompt").mockReturnValue(["fake", "12345"]);
@@ -1072,7 +1046,7 @@ describe("Profiles Unit Tests - function ssoLogin", () => {
     });
     it("should catch error during login and log error", async () => {
         jest.spyOn(ZoweExplorerApiRegister.getInstance(), "getCommonApi").mockReturnValueOnce({
-            getTokenTypeName: () => zowe.imperative.SessConstants.TOKEN_TYPE_APIML,
+            getTokenTypeName: () => imperative.SessConstants.TOKEN_TYPE_APIML,
             login: () => {
                 throw new Error("test error.");
             },

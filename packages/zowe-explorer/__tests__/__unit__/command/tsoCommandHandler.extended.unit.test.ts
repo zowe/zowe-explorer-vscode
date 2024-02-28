@@ -10,17 +10,15 @@
  */
 
 import * as vscode from "vscode";
-import { Gui, ProfilesCache } from "@zowe/zowe-explorer-api";
+import { Gui, imperative, ProfilesCache } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../../src/Profiles";
 import { TsoCommandHandler } from "../../../src/command/TsoCommandHandler";
-import { imperative } from "@zowe/cli";
 import { createInstanceOfProfile, createIProfile } from "../../../__mocks__/mockCreators/shared";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
 
 describe("TsoCommandHandler extended testing", () => {
     // Idea is borrowed from: https://github.com/kulshekhar/ts-jest/blob/master/src/util/testing.ts
-    const mocked = <T extends (...args: any[]) => any>(fn: T): jest.Mock<ReturnType<T>> => fn as any;
     const newMocks = {
         imperativeProfile: createIProfile(),
         profileInstance: null,

@@ -12,7 +12,8 @@
 import * as semver from "semver";
 import * as vscode from "vscode";
 import { ProfilesCache } from "../profiles";
-import { Login, Logout, imperative } from "@zowe/cli";
+import { Login, Logout } from "@zowe/core-for-zowe-sdk";
+import * as imperative from "@zowe/imperative";
 import { Gui } from "../globals/Gui";
 import { MessageSeverity, IZoweLogger } from "../logger";
 import { PromptCredentialsOptions } from "./doc/PromptCredentials";

@@ -11,8 +11,7 @@
 
 import * as globals from "../globals";
 import { TreeItem } from "vscode";
-import { IZoweTreeNode, IZoweUSSTreeNode } from "@zowe/zowe-explorer-api";
-import { imperative } from "@zowe/cli";
+import { imperative, IZoweTreeNode, IZoweUSSTreeNode } from "@zowe/zowe-explorer-api";
 
 /**
  *

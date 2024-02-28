@@ -9,7 +9,7 @@
  *
  */
 
-import * as zowe from "@zowe/cli";
+import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
 import * as vscode from "vscode";
 import * as globals from "../globals";
 import { errorHandling, getSessionLabel } from "../utils/ProfilesUtils";
@@ -17,6 +17,7 @@ import {
     Sorting,
     Types,
     Gui,
+    imperative,
     ZoweTreeNodeActions,
     IZoweDatasetTreeNode,
     ZoweTreeNode,
@@ -49,7 +50,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     public binary = false;
     public encoding?: string;
     public encodingMap = {};
-    public errorDetails: zowe.imperative.ImperativeError;
+    public errorDetails: imperative.ImperativeError;
     public ongoingActions: Record<ZoweTreeNodeActions.Interactions | string, Promise<any>> = {};
     public wasDoubleClicked: boolean = false;
     public stats: Types.DatasetStats;
@@ -134,16 +135,18 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     }
 
     public updateStats(item: any): void {
-        if ("m4date" in item) {
+        if ("c4date" in item && "m4date" in item) {
             const { m4date, mtime, msec }: { m4date: string; mtime: string; msec: string } = item;
             this.stats = {
                 user: item.user,
+                createdDate: dayjs(item.c4date).toDate(),
                 modifiedDate: dayjs(`${m4date} ${mtime}:${msec}`).toDate(),
             };
         } else if ("id" in item || "changed" in item) {
             // missing keys from API response; check for FTP keys
             this.stats = {
                 user: item.id,
+                createdDate: item.created ? dayjs(item.created).toDate() : undefined,
                 modifiedDate: item.changed ? dayjs(item.changed).toDate() : undefined,
             };
         }
@@ -217,8 +220,8 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     });
                     elementChildren[temp.label.toString()] = temp;
                     // Creates a ZoweDatasetNode for a dataset with imperative errors
-                } else if (item.error instanceof zowe.imperative.ImperativeError) {
-                    temp = new ZoweDatasetNode({
+                } else if (item.error instanceof imperative.ImperativeError) {
+                    const temp = new ZoweDatasetNode({
                         label: item.dsname,
                         collapsibleState: vscode.TreeItemCollapsibleState.None,
                         parentNode: this,
@@ -283,7 +286,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     if (!memberInvalid) {
                         temp.command = { command: "vscode.open", title: "", arguments: [temp.resourceUri] };
                     } else {
-                        temp.errorDetails = new zowe.imperative.ImperativeError({
+                        temp.errorDetails = new imperative.ImperativeError({
                             msg: vscode.l10n.t({
                                 message: "Cannot access member with control characters in the name: {0}",
                                 args: [item.member],
@@ -381,17 +384,17 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 return sortByName(a, b);
             }
 
-            if (sort.method === Sorting.DatasetSortOpts.LastModified) {
-                const dateA = dayjs(a.stats?.modifiedDate ?? null);
-                const dateB = dayjs(b.stats?.modifiedDate ?? null);
+            function sortByDate(aDate: Date, bDate: Date): number {
+                const dateA = dayjs(aDate ?? null);
+                const dateB = dayjs(bDate ?? null);
 
-                const aValid = dateA.isValid();
+                const aVaild = dateA.isValid();
                 const bValid = dateB.isValid();
 
-                a.description = aValid ? dateA.format("YYYY/MM/DD HH:mm:ss") : undefined;
-                b.description = bValid ? dateB.format("YYYY/MM/DD HH:mm:ss") : undefined;
+                a.description = aVaild ? dateA.format("YYYY/MM/DD") : undefined;
+                b.description = bValid ? dateB.format("YYYY/MM/DD") : undefined;
 
-                if (!aValid) {
+                if (!aVaild) {
                     return sortGreaterThan;
                 }
 
@@ -399,27 +402,35 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     return sortLessThan;
                 }
 
-                // for dates that are equal down to the second, fallback to sorting by name
                 if (dateA.isSame(dateB, "second")) {
                     return sortByName(a, b);
                 }
-
                 return dateA.isBefore(dateB, "second") ? sortLessThan : sortGreaterThan;
-            } else if (sort.method === Sorting.DatasetSortOpts.UserId) {
-                const userA = a.stats?.user ?? "";
-                const userB = b.stats?.user ?? "";
-
-                a.description = userA;
-                b.description = userB;
-
-                if (userA === userB) {
-                    return sortByName(a, b);
-                }
-
-                return userA < userB ? sortLessThan : sortGreaterThan;
             }
 
-            return sortByName(a, b);
+            switch (sort.method) {
+                case Sorting.DatasetSortOpts.DateCreated: {
+                    return sortByDate(a.stats?.createdDate, b.stats?.createdDate);
+                }
+                case Sorting.DatasetSortOpts.LastModified: {
+                    return sortByDate(a.stats?.modifiedDate, b.stats?.modifiedDate);
+                }
+                case Sorting.DatasetSortOpts.UserId: {
+                    const userA = a.stats?.user ?? "";
+                    const userB = b.stats?.user ?? "";
+
+                    a.description = userA;
+                    b.description = userB;
+
+                    if (userA === userB) {
+                        return sortByName(a, b);
+                    }
+                    return userA < userB ? sortLessThan : sortGreaterThan;
+                }
+                default: {
+                    return sortByName(a, b);
+                }
+            }
         };
     }
 
@@ -478,11 +489,11 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         // TODO: We don't use this function anymore because of the FSP. Remove?
     }
 
-    private async getDatasets(): Promise<zowe.IZosFilesResponse[]> {
+    private async getDatasets(): Promise<zosfiles.IZosFilesResponse[]> {
         ZoweLogger.trace("ZoweDatasetNode.getDatasets called.");
-        const responses: zowe.IZosFilesResponse[] = [];
+        const responses: zosfiles.IZosFilesResponse[] = [];
         const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
-        const options: zowe.IListOptions = {
+        const options: zosfiles.IListOptions = {
             attributes: true,
             responseTimeout: cachedProfile.profile.responseTimeout,
         };
@@ -497,10 +508,10 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             ];
             const mvsApi = ZoweExplorerApiRegister.getMvsApi(cachedProfile);
             if (!mvsApi.getSession(cachedProfile)) {
-                throw new zowe.imperative.ImperativeError({
+                throw new imperative.ImperativeError({
                     msg: vscode.l10n.t("Profile auth error"),
                     additionalDetails: vscode.l10n.t("Profile is not authenticated, please log in to continue"),
-                    errorCode: `${zowe.imperative.RestConstants.HTTP_STATUS_401}`,
+                    errorCode: `${imperative.RestConstants.HTTP_STATUS_401}`,
                 });
             }
             if (mvsApi.dataSetsMatchingPattern) {

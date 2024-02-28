@@ -13,10 +13,19 @@ import * as vscode from "vscode";
 import * as globals from "../globals";
 import * as path from "path";
 import * as contextually from "../shared/context";
-import { imperative } from "@zowe/cli";
 import { FilterItem, FilterDescriptor, errorHandling, syncSessionNode } from "../utils/ProfilesUtils";
 import { sortTreeItems, getAppName, checkIfChildPath, updateOpenFiles, promptForEncoding } from "../shared/utils";
-import { Gui, IZoweTree, IZoweTreeNode, IZoweUSSTreeNode, PersistenceSchemaEnum, Types, Validation, ZosEncoding } from "@zowe/zowe-explorer-api";
+import {
+    Gui,
+    imperative,
+    IZoweTree,
+    IZoweTreeNode,
+    IZoweUSSTreeNode,
+    PersistenceSchemaEnum,
+    Types,
+    Validation,
+    ZosEncoding,
+} from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { ZoweUSSNode } from "./ZoweUSSNode";

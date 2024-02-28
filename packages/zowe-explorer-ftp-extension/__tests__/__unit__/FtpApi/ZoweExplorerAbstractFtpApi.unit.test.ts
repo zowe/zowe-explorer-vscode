@@ -13,8 +13,7 @@ import * as globals from "../../../src/globals";
 import { AbstractFtpApi } from "../../../src/ZoweExplorerAbstractFtpApi";
 import { FtpSession } from "../../../src/ftpSession";
 import { FTPConfig, IZosFTPProfile } from "@zowe/zos-ftp-for-zowe-cli";
-import { Gui, MessageSeverity } from "@zowe/zowe-explorer-api";
-import { imperative } from "@zowe/cli";
+import { Gui, imperative, MessageSeverity } from "@zowe/zowe-explorer-api";
 
 jest.mock("zos-node-accessor");
 globals.LOGGER.getExtensionName = jest.fn().mockReturnValue("Zowe Explorer FTP Extension");

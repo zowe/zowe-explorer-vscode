@@ -11,16 +11,14 @@
 
 import * as vscode from "vscode";
 import * as globals from "../globals";
-import { Gui, IZoweTreeNode } from "@zowe/zowe-explorer-api";
+import { Gui, imperative, IZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { errorHandling, FilterDescriptor, FilterItem } from "../utils/ProfilesUtils";
 import { ZoweCommandProvider } from "../abstract/ZoweCommandProvider";
-import { imperative } from "@zowe/cli";
 import { SettingsConfig } from "../utils/SettingsConfig";
 import { ZoweLogger } from "../utils/LoggerUtils";
-import * as cli from "@zowe/cli";
-import { SshSession, ISshSession } from "@zowe/zos-uss-for-zowe-sdk";
+import * as zosuss from "@zowe/zos-uss-for-zowe-sdk";
 import { ProfileManagement } from "../utils/ProfileManagement";
 
 /**
@@ -48,7 +46,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
     private opCancelledMsg = vscode.l10n.t("Operation Cancelled");
     public profileInstance = Profiles.getInstance();
     public outputChannel: vscode.OutputChannel;
-    public sshSession: SshSession;
+    public sshSession: zosuss.SshSession;
     public pathInputConfirmationFlag: boolean = true;
     public sshprofile: imperative.IProfileLoaded;
     public user: string;
@@ -58,7 +56,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
         this.outputChannel = Gui.createOutputChannel(vscode.l10n.t("Zowe Unix Command"));
     }
 
-    public getCmdArgs(profile: imperative.IProfileLoaded): cli.imperative.ICommandArguments {
+    public getCmdArgs(profile: imperative.IProfileLoaded): imperative.ICommandArguments {
         const cmdArgs: imperative.ICommandArguments = {
             $0: "zowe",
             _: [""],
@@ -159,15 +157,15 @@ export class UnixCommandHandler extends ZoweCommandProvider {
         }
     }
 
-    public async setsshSession(): Promise<SshSession> {
+    public async setsshSession(): Promise<zosuss.SshSession> {
         ZoweLogger.trace("UnixCommandHandler.setsshSession called.");
         this.sshprofile = await this.getSshProfile();
         if (this.sshprofile) {
             const cmdArgs: imperative.ICommandArguments = this.getCmdArgs(this.sshprofile.profile as imperative.IProfileLoaded);
             // create the ssh session
-            const sshSessCfg = SshSession.createSshSessCfgFromArgs(cmdArgs);
-            imperative.ConnectionPropsForSessCfg.resolveSessCfgProps<ISshSession>(sshSessCfg, cmdArgs);
-            this.sshSession = new SshSession(sshSessCfg);
+            const sshSessCfg = zosuss.SshSession.createSshSessCfgFromArgs(cmdArgs);
+            imperative.ConnectionPropsForSessCfg.resolveSessCfgProps<zosuss.ISshSession>(sshSessCfg, cmdArgs);
+            this.sshSession = new zosuss.SshSession(sshSessCfg);
         } else {
             Gui.showMessage(this.opCancelledMsg);
             return;
@@ -333,8 +331,12 @@ export class UnixCommandHandler extends ZoweCommandProvider {
                 if (command.startsWith("/")) {
                     command = command.substring(1);
                 }
-                const user: string = this.sshprofile.profile.user;
-                this.outputChannel.appendLine(`> ${user}@${this.sshprofile.name}:${cwd ? cwd : "~"}$ ${command}`);
+                const user: string = profile.profile.user;
+                if (this.sshprofile) {
+                    this.outputChannel.appendLine(`> ${user}@${this.sshprofile.name}:${cwd ? cwd : "~"}$ ${command}`);
+                } else {
+                    this.outputChannel.appendLine(`> ${user}:${cwd ? cwd : "~"}$ ${command}`);
+                }
                 const submitResponse = await Gui.withProgress(
                     {
                         location: vscode.ProgressLocation.Notification,

@@ -10,18 +10,10 @@
  */
 
 import * as imperative from "@zowe/imperative";
+import type { ISshSession } from "@zowe/zos-uss-for-zowe-sdk";
 
-/**
- * Non-abstract session class
- * @export
- * @class Session
- * @extends {AbstractSession}
- */
-export declare class Session extends imperative.AbstractSession {
-    /**
-     * Creates an instance of Session.
-     * @param {ISession} newSession - contains input for new session
-     * @memberof Session
-     */
-    constructor(newSession: imperative.ISession);
+export class SshSession {
+    public static createSshSessCfgFromArgs(args: imperative.ICommandArguments): ISshSession {
+        return {};
+    }
 }

@@ -12,7 +12,8 @@
 import * as vscode from "vscode";
 import { ZoweTreeNode } from "../../../src/tree/ZoweTreeNode";
 import { IZoweTreeNode } from "../../../src/tree/IZoweTreeNode";
-import { imperative } from "@zowe/cli";
+import * as imperative from "@zowe/imperative";
+
 describe("ZoweTreeNode", () => {
     const makeNode = (
         name: string,

@@ -11,7 +11,7 @@
 
 import * as loggerConfig from "../log4jsconfig.json";
 import * as path from "path";
-import { imperative } from "@zowe/cli";
+import * as imperative from "@zowe/imperative";
 import { MessageSeverity } from "./MessageSeverity";
 import { Types } from "../Types";
 
