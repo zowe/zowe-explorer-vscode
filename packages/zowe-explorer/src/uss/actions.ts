@@ -10,20 +10,19 @@
  */
 
 import * as vscode from "vscode";
-import { imperative, IZosFilesResponse } from "@zowe/cli";
 import * as fs from "fs";
 import * as globals from "../globals";
 import * as path from "path";
 import { concatChildNodes, uploadContent, getSelectedNodeList } from "../shared/utils";
 import { errorHandling } from "../utils/ProfilesUtils";
-import { Gui, Validation, IZoweUSSTreeNode, Types } from "@zowe/zowe-explorer-api";
+import { Gui, imperative, Validation, IZoweUSSTreeNode, Types } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { isBinaryFileSync } from "isbinaryfile";
 import * as contextually from "../shared/context";
 import { markDocumentUnsaved, setFileSaved } from "../utils/workspace";
 import { refreshAll } from "../shared/refresh";
-import { IUploadOptions } from "@zowe/zos-files-for-zowe-sdk";
+import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
 import { autoDetectEncoding, fileExistsCaseSensitiveSync } from "./utils";
 import { UssFileTree, UssFileType } from "./FileStructure";
 import { ZoweLogger } from "../utils/ZoweLogger";
@@ -198,7 +197,7 @@ export async function uploadFile(node: IZoweUSSTreeNode, doc: vscode.TextDocumen
             statusMessage: vscode.l10n.t("Uploading USS file"),
             stageName: 0, // TaskStage.IN_PROGRESS - https://github.com/kulshekhar/ts-jest/issues/281
         };
-        const options: IUploadOptions = {
+        const options: zosfiles.IUploadOptions = {
             task,
             responseTimeout: prof.profile?.responseTimeout,
         };
@@ -301,7 +300,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: Typ
     try {
         await autoDetectEncoding(node, prof);
 
-        const uploadResponse: IZosFilesResponse = await Gui.withProgress(
+        const uploadResponse: zosfiles.IZosFilesResponse = await Gui.withProgress(
             {
                 location: vscode.ProgressLocation.Window,
                 title: vscode.l10n.t("Saving file..."),

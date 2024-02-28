@@ -10,9 +10,8 @@
  */
 
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import { imperative } from "@zowe/cli";
 import { FTPConfig, IZosFTPProfile } from "@zowe/zos-ftp-for-zowe-cli";
-import { MainframeInteraction } from "@zowe/zowe-explorer-api";
+import { imperative, MainframeInteraction } from "@zowe/zowe-explorer-api";
 import * as globals from "./globals";
 import { FtpSession } from "./ftpSession";
 import { ZoweFtpExtensionError } from "./ZoweFtpExtensionError";

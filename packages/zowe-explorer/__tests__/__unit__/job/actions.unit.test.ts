@@ -10,7 +10,9 @@
  */
 
 import * as vscode from "vscode";
-import * as zowe from "@zowe/cli";
+import * as zosconsole from "@zowe/zos-console-for-zowe-sdk";
+import * as zosjobs from "@zowe/zos-jobs-for-zowe-sdk";
+import * as zosmf from "@zowe/zosmf-for-zowe-sdk";
 import { Gui, IZoweJobTreeNode, Sorting, Validation } from "@zowe/zowe-explorer-api";
 import { ZoweJobNode, ZoweSpoolNode } from "../../../src/job/ZoweJobNode";
 import {
@@ -98,22 +100,17 @@ function createGlobalMocks() {
     Object.defineProperty(Gui, "showOpenDialog", { value: jest.fn(), configurable: true });
     Object.defineProperty(LocalFileManagement, "getDefaultUri", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showWarningMessage", { value: jest.fn(), configurable: true });
-    Object.defineProperty(zowe, "IssueCommand", { value: jest.fn(), configurable: true });
-    Object.defineProperty(zowe.IssueCommand, "issueSimple", { value: jest.fn(), configurable: true });
+    Object.defineProperty(zosconsole.IssueCommand, "issueSimple", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showOpenDialog", { value: jest.fn(), configurable: true });
-    Object.defineProperty(zowe, "CancelJobs", { value: jest.fn(), configurable: true });
-    Object.defineProperty(zowe.CancelJobs, "cancelJobForJob", { value: jest.fn(), configurable: true });
-    Object.defineProperty(zowe, "GetJobs", { value: jest.fn(), configurable: true });
-    Object.defineProperty(zowe.GetJobs, "getJclForJob", { value: jest.fn(), configurable: true });
-    Object.defineProperty(zowe.GetJobs, "getStatusForJob", { value: jest.fn(), configurable: true });
-    Object.defineProperty(zowe.GetJobs, "getSpoolContentById", { value: jest.fn(), configurable: true });
+    Object.defineProperty(zosjobs.CancelJobs, "cancelJobForJob", { value: jest.fn(), configurable: true });
+    Object.defineProperty(zosjobs.GetJobs, "getJclForJob", { value: jest.fn(), configurable: true });
+    Object.defineProperty(zosjobs.GetJobs, "getStatusForJob", { value: jest.fn(), configurable: true });
+    Object.defineProperty(zosjobs.GetJobs, "getSpoolContentById", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.workspace, "openTextDocument", { value: jest.fn(), configurable: true });
     jest.spyOn(Gui, "showTextDocument");
     jest.spyOn(vscode.window, "showTextDocument");
-    Object.defineProperty(zowe, "ZosmfSession", { value: jest.fn(), configurable: true });
-    Object.defineProperty(zowe.ZosmfSession, "createSessCfgFromArgs", { value: jest.fn(), configurable: true });
-    Object.defineProperty(zowe, "DownloadJobs", { value: jest.fn(), configurable: true });
-    Object.defineProperty(zowe.DownloadJobs, "downloadAllSpoolContentCommon", { value: jest.fn(), configurable: true });
+    Object.defineProperty(zosmf.ZosmfSession, "createSessCfgFromArgs", { value: jest.fn(), configurable: true });
+    Object.defineProperty(zosjobs.DownloadJobs, "downloadAllSpoolContentCommon", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showInputBox", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "activeTextEditor", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showQuickPick", { value: jest.fn(), configurable: true });
@@ -142,7 +139,7 @@ function createGlobalMocks() {
         value: jest.fn().mockReturnValue([newMocks.imperativeProfile.name]),
         configurable: true,
     });
-    function settingJobObjects(job: zowe.IJob, setjobname: string, setjobid: string, setjobreturncode: string): zowe.IJob {
+    function settingJobObjects(job: zosjobs.IJob, setjobname: string, setjobid: string, setjobreturncode: string): zosjobs.IJob {
         job.jobname = setjobname;
         job.jobid = setjobid;
         job.retcode = setjobreturncode;
@@ -211,7 +208,7 @@ describe("Jobs Actions Unit Tests - Function stopCommand", () => {
             job: blockMocks.iJob,
         });
 
-        mocked(zowe.IssueCommand.issueSimple).mockResolvedValueOnce({
+        mocked(zosconsole.IssueCommand.issueSimple).mockResolvedValueOnce({
             success: false,
             zosmfResponse: [],
             commandResponse: "fake response",
@@ -228,7 +225,7 @@ describe("Jobs Actions Unit Tests - Function stopCommand", () => {
             session: blockMocks.session,
             profile: blockMocks.imperativeProfile,
         });
-        mocked(zowe.IssueCommand.issueSimple).mockResolvedValueOnce({
+        mocked(zosconsole.IssueCommand.issueSimple).mockResolvedValueOnce({
             success: false,
             zosmfResponse: [],
             commandResponse: "fake response",
@@ -250,7 +247,7 @@ describe("Jobs Actions Unit Tests - Function modifyCommand", () => {
         });
 
         mocked(vscode.window.showInputBox).mockResolvedValue("modify");
-        mocked(zowe.IssueCommand.issueSimple).mockResolvedValueOnce({
+        mocked(zosconsole.IssueCommand.issueSimple).mockResolvedValueOnce({
             success: false,
             zosmfResponse: [],
             commandResponse: "fake response",
@@ -268,7 +265,7 @@ describe("Jobs Actions Unit Tests - Function modifyCommand", () => {
             profile: blockMocks.imperativeProfile,
         });
         mocked(vscode.window.showInputBox).mockResolvedValue("modify");
-        mocked(zowe.IssueCommand.issueSimple).mockResolvedValueOnce({
+        mocked(zosconsole.IssueCommand.issueSimple).mockResolvedValueOnce({
             success: false,
             zosmfResponse: [],
             commandResponse: "fake response",
@@ -349,7 +346,7 @@ describe("Jobs Actions Unit Tests - Function downloadSingleSpool", () => {
         jobs.push(node);
         mocked(Gui.showOpenDialog).mockResolvedValue([fileUri as vscode.Uri]);
         const downloadFileSpy = jest.spyOn(blockMocks.jesApi, "downloadSingleSpool");
-        const spool: zowe.IJobFile = { ...iJobFile, stepname: "test", ddname: "dd", "record-count": 1 };
+        const spool: zosjobs.IJobFile = { ...iJobFile, stepname: "test", ddname: "dd", "record-count": 1 };
         const getSpoolFilesSpy = jest.spyOn(SpoolProvider, "getSpoolFiles").mockResolvedValue([spool]);
 
         await jobActions.downloadSingleSpool(jobs, true);
@@ -385,7 +382,7 @@ describe("Jobs Actions Unit Tests - Function downloadSingleSpool", () => {
         jobs.push(node);
         mocked(Gui.showOpenDialog).mockResolvedValue([fileUri as vscode.Uri]);
         blockMocks.jesApi.downloadSingleSpool = undefined;
-        const spool: zowe.IJobFile = { ...iJobFile, stepname: "test", ddname: "dd", "record-count": 1 };
+        const spool: zosjobs.IJobFile = { ...iJobFile, stepname: "test", ddname: "dd", "record-count": 1 };
         const getSpoolFilesSpy = jest.spyOn(SpoolProvider, "getSpoolFiles").mockResolvedValue([spool]);
 
         await jobActions.downloadSingleSpool(jobs, true);
@@ -407,7 +404,7 @@ describe("Jobs Actions Unit Tests - Function downloadJcl", () => {
             job: blockMocks.iJob,
         });
         await jobActions.downloadJcl(node);
-        expect(mocked(zowe.GetJobs.getJclForJob)).toHaveBeenCalled();
+        expect(mocked(zosjobs.GetJobs.getJclForJob)).toHaveBeenCalled();
         expect(mocked(vscode.workspace.openTextDocument)).toHaveBeenCalled();
         expect(mocked(Gui.showTextDocument)).toHaveBeenCalled();
     });
@@ -468,7 +465,7 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
     it("Checking submit of active text editor content as JCL", async () => {
         createGlobalMocks();
         const blockMocks: any = createBlockMocks();
-        mocked(zowe.ZosmfSession.createSessCfgFromArgs).mockReturnValue(blockMocks.session);
+        mocked(zosmf.ZosmfSession.createSessCfgFromArgs).mockReturnValue(blockMocks.session);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         mocked(vscode.window.showQuickPick).mockReturnValueOnce(
             new Promise((resolve) => {
@@ -501,7 +498,7 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
     it("Checking submit of JCL file from VSC explorer tree", async () => {
         createGlobalMocks();
         const blockMocks: any = createBlockMocks();
-        mocked(zowe.ZosmfSession.createSessCfgFromArgs).mockReturnValue(blockMocks.session);
+        mocked(zosmf.ZosmfSession.createSessCfgFromArgs).mockReturnValue(blockMocks.session);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         mocked(vscode.window.showQuickPick).mockReturnValueOnce(Promise.resolve(blockMocks.datasetSessionNode.label));
         blockMocks.testDatasetTree.getChildren.mockResolvedValueOnce([
@@ -525,7 +522,7 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
     it("Checking submit of active text editor content as JCL with Unverified Profile", async () => {
         createGlobalMocks();
         const blockMocks: any = createBlockMocks();
-        mocked(zowe.ZosmfSession.createSessCfgFromArgs).mockReturnValue(blockMocks.session);
+        mocked(zosmf.ZosmfSession.createSessCfgFromArgs).mockReturnValue(blockMocks.session);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         mocked(vscode.window.showQuickPick).mockReturnValueOnce(
             new Promise((resolve) => {
@@ -590,7 +587,7 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
             value: jest.fn().mockReturnValue(["firstName", "secondName"]),
             configurable: true,
         });
-        mocked(zowe.ZosmfSession.createSessCfgFromArgs).mockReturnValue(blockMocks.session.ISession);
+        mocked(zosmf.ZosmfSession.createSessCfgFromArgs).mockReturnValue(blockMocks.session.ISession);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce(undefined); // Here we imitate the case when no profile was selected
         blockMocks.testDatasetTree.getChildren.mockResolvedValueOnce([
@@ -611,7 +608,7 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
     it("Checking API error on submit of active text editor content as JCL", async () => {
         createGlobalMocks();
         const blockMocks: any = createBlockMocks();
-        mocked(zowe.ZosmfSession.createSessCfgFromArgs).mockReturnValue(blockMocks.session);
+        mocked(zosmf.ZosmfSession.createSessCfgFromArgs).mockReturnValue(blockMocks.session);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         mocked(vscode.window.showQuickPick).mockReturnValueOnce(
             new Promise((resolve) => {
@@ -644,7 +641,7 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
             new ZoweDatasetNode({ label: "node", collapsibleState: vscode.TreeItemCollapsibleState.None, parentNode: blockMocks.datasetSessionNode }),
             blockMocks.datasetSessionNode,
         ]);
-        mocked(zowe.ZosmfSession.createSessCfgFromArgs).mockReturnValue(blockMocks.session);
+        mocked(zosmf.ZosmfSession.createSessCfgFromArgs).mockReturnValue(blockMocks.session);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         activeTextEditorDocument.mockReturnValue(blockMocks.textDocument);
         const showMessagespy = jest.spyOn(Gui, "showMessage");
@@ -657,7 +654,7 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
         globals.defineGlobals("/user/");
         createGlobalMocks();
         const blockMocks: any = createBlockMocks();
-        mocked(zowe.ZosmfSession.createSessCfgFromArgs).mockReturnValue(blockMocks.session);
+        mocked(zosmf.ZosmfSession.createSessCfgFromArgs).mockReturnValue(blockMocks.session);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         blockMocks.testDatasetTree.getChildren.mockResolvedValueOnce([
             new ZoweDatasetNode({ label: "node", collapsibleState: vscode.TreeItemCollapsibleState.None, parentNode: blockMocks.datasetSessionNode }),
@@ -1213,7 +1210,7 @@ describe("Jobs Actions Unit Tests - Function refreshJobsServer", () => {
             job: blockMocks.iJob,
         });
         job.contextValue = globals.JOBS_SESSION_CONTEXT;
-        mocked(zowe.ZosmfSession.createSessCfgFromArgs).mockReturnValueOnce(blockMocks.session.ISession);
+        mocked(zosmf.ZosmfSession.createSessCfgFromArgs).mockReturnValueOnce(blockMocks.session.ISession);
 
         await jobActions.refreshJobsServer(job, blockMocks.testJobTree);
         expect(blockMocks.testJobTree.refreshElement).toHaveBeenCalledWith(job);
@@ -1229,7 +1226,7 @@ describe("Jobs Actions Unit Tests - Function refreshJobsServer", () => {
             job: blockMocks.iJob,
         });
         job.contextValue = globals.JOBS_SESSION_CONTEXT;
-        mocked(zowe.ZosmfSession.createSessCfgFromArgs).mockReturnValueOnce(blockMocks.session.ISession);
+        mocked(zosmf.ZosmfSession.createSessCfgFromArgs).mockReturnValueOnce(blockMocks.session.ISession);
 
         await jobActions.refreshJobsServer(job, blockMocks.testJobTree);
         expect(blockMocks.testJobTree.refreshElement).toHaveBeenCalledWith(job);

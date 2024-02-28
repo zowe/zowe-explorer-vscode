@@ -9,7 +9,7 @@
  *
  */
 
-import { imperative } from "@zowe/cli";
+import * as imperative from "@zowe/imperative";
 import { MainframeInteraction } from "./MainframeInteraction";
 import { Validation } from "../profiles";
 import * as vscode from "vscode";

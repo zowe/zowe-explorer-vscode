@@ -9,7 +9,7 @@
  *
  */
 
-import * as zowe from "@zowe/cli";
+import { getZoweDir } from "@zowe/core-for-zowe-sdk";
 import * as fs from "fs";
 import * as os from "os";
 import { Constants } from "../globals";
@@ -34,7 +34,7 @@ export class FileManagement {
     }
 
     public static getZoweDir(): string {
-        return zowe.getZoweDir();
+        return getZoweDir();
     }
 
     public static getFullPath(anyPath: string): string {

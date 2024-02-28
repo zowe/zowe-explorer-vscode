@@ -10,9 +10,8 @@
  */
 
 import * as vscode from "vscode";
-import { imperative } from "@zowe/cli";
 import * as globals from "../globals";
-import { Validation, IZoweTreeNode, Gui } from "@zowe/zowe-explorer-api";
+import { Validation, imperative, IZoweTreeNode, Gui } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { FilterDescriptor, FilterItem, errorHandling } from "../utils/ProfilesUtils";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";

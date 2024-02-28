@@ -10,8 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { ProfilesCache } from "@zowe/zowe-explorer-api";
-import { imperative } from "@zowe/cli";
+import { imperative, ProfilesCache } from "@zowe/zowe-explorer-api";
 import * as utils from "../../src/utils/ProfilesUtils";
 import { ZoweLogger } from "../../src/utils/ZoweLogger";
 import { createInstanceOfProfile, createInstanceOfProfileInfo, createIProfile, createValidIProfile } from "../../__mocks__/mockCreators/shared";

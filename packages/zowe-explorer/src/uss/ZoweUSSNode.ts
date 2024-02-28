@@ -9,12 +9,12 @@
  *
  */
 
-import { imperative, IUploadOptions, IZosFilesResponse } from "@zowe/cli";
+import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
 import * as globals from "../globals";
 import * as vscode from "vscode";
 import * as fs from "fs";
 import * as path from "path";
-import { Gui, IZoweUSSTreeNode, ZoweTreeNode, Types, Validation, MainframeInteraction, ZosEncoding } from "@zowe/zowe-explorer-api";
+import { Gui, imperative, IZoweUSSTreeNode, ZoweTreeNode, Types, Validation, MainframeInteraction, ZosEncoding } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { errorHandling, syncSessionNode } from "../utils/ProfilesUtils";
@@ -131,7 +131,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         }
 
         // Get the directories from the fullPath and display any thrown errors
-        let response: IZosFilesResponse;
+        let response: zosfiles.IZosFilesResponse;
         const sessNode = this.getSessionNode();
         try {
             const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
@@ -521,7 +521,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             return;
         }
         // if local copy exists, open that instead of pulling from mainframe
-        let response: IZosFilesResponse;
+        let response: zosfiles.IZosFilesResponse;
         if (forceDownload || !fileExists) {
             response = await this.downloadUSSApiCall(fileInfo.path, fileInfo.name);
         }
@@ -531,7 +531,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         return fileInfo;
     }
 
-    private async downloadUSSApiCall(documentFilePath: string, label: string): Promise<IZosFilesResponse> {
+    private async downloadUSSApiCall(documentFilePath: string, label: string): Promise<zosfiles.IZosFilesResponse> {
         ZoweLogger.info(
             vscode.l10n.t({
                 message: "Downloading {0}",
@@ -688,7 +688,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     public async paste(
         sessionName: string,
         rootPath: string,
-        uss: { tree: UssFileTree; api: MainframeInteraction.IUss; options?: IUploadOptions }
+        uss: { tree: UssFileTree; api: MainframeInteraction.IUss; options?: zosfiles.IUploadOptions }
     ): Promise<void> {
         ZoweLogger.trace("ZoweUSSNode.paste called.");
         const hasCopyApi = uss.api.copy != null;
@@ -775,7 +775,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 statusMessage: vscode.l10n.t("Uploading USS files..."),
                 stageName: 0,
             };
-            const options: IUploadOptions = {
+            const options: zosfiles.IUploadOptions = {
                 task,
                 encoding: prof.profile?.encoding,
                 responseTimeout: prof.profile?.responseTimeout,

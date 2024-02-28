@@ -33,7 +33,6 @@
     "watch": "tsc -watch -p ./"
   },
   "dependencies": {
-    "@zowe/cli": "8.0.0-next.202402261705",
     "@zowe/zowe-explorer-api": "file:../../packages/zowe-explorer-api",
     "ssh2-sftp-client": "^9.1.0"
   },
@@ -45,5 +44,9 @@
     "@typescript-eslint/parser": "^5.42.0",
     "eslint": "^8.26.0",
     "typescript": "^5.1.3"
+  },
+  "peerDependencies": {
+    "@zowe/zos-files-for-zowe-sdk": ">=8.0.0-next.0 <8.0.0",
+    "@zowe/zos-uss-for-zowe-sdk": ">=8.0.0-next.0 <8.0.0"
   }
 }

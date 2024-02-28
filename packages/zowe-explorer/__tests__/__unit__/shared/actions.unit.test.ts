@@ -28,7 +28,7 @@ import * as sharedActions from "../../../src/shared/actions";
 import { createUSSSessionNode, createUSSTree } from "../../../__mocks__/mockCreators/uss";
 import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
 import { getIconById, IconId, getIconByNode } from "../../../src/generators/icons";
-import * as zowe from "@zowe/cli";
+import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
 import { ZoweLogger } from "../../../src/utils/ZoweLogger";
 import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
 import { mocked } from "../../../__mocks__/mockUtils";
@@ -87,7 +87,7 @@ async function createGlobalMocks() {
         value: jest.fn().mockReturnValue(createInstanceOfProfile(globalMocks.imperativeProfile)),
         configurable: true,
     });
-    Object.defineProperty(zowe, "Download", {
+    Object.defineProperty(zosfiles, "Download", {
         value: {
             ussFile: jest.fn().mockReturnValue({
                 apiResponse: {
@@ -97,8 +97,8 @@ async function createGlobalMocks() {
         },
         configurable: true,
     });
-    Object.defineProperty(zowe, "Utilities", { value: jest.fn(), configurable: true });
-    Object.defineProperty(zowe.Utilities, "isFileTagBinOrAscii", { value: jest.fn(), configurable: true });
+    Object.defineProperty(zosfiles, "Utilities", { value: jest.fn(), configurable: true });
+    Object.defineProperty(zosfiles.Utilities, "isFileTagBinOrAscii", { value: jest.fn(), configurable: true });
     Object.defineProperty(globals, "LOG", { value: jest.fn(), configurable: true });
     Object.defineProperty(globals.LOG, "debug", { value: jest.fn(), configurable: true });
     Object.defineProperty(globals.LOG, "error", { value: jest.fn(), configurable: true });

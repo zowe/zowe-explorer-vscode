@@ -13,9 +13,9 @@ import { ZoweTreeProvider } from "../../src/abstract/ZoweTreeProvider";
 import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
 import { ZoweUSSNode } from "../../src/uss/ZoweUSSNode";
 import * as vscode from "vscode";
-import { Validation, IZoweTreeNode } from "@zowe/zowe-explorer-api";
+import { imperative, Validation, IZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { FilterDescriptor } from "../../src/utils/ProfilesUtils";
-import { imperative, ZosmfSession } from "@zowe/cli";
+import * as zosmf from "@zowe/zosmf-for-zowe-sdk";
 import { SettingsConfig } from "../../src/utils/SettingsConfig";
 import * as globals from "../../src/globals";
 import { Profiles } from "../../src/Profiles";
@@ -158,7 +158,7 @@ export function createSessCfgFromArgs(testProfile: imperative.IProfileLoaded) {
         user: testProfile.profile.user,
         password: testProfile.profile.password,
     };
-    const sessCfg = ZosmfSession.createSessCfgFromArgs(cmdArgs);
+    const sessCfg = zosmf.ZosmfSession.createSessCfgFromArgs(cmdArgs);
     const session = new imperative.Session(sessCfg);
     return session;
 }
@@ -533,7 +533,7 @@ export function createConfigLoad() {
                 user: false,
             },
             {
-                path: "file://projectPath/zowe.user.config.json",
+                path: "file://projectPath/zowe.config.user.json",
                 exists: true,
                 properties: undefined,
                 global: false,

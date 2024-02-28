@@ -70,6 +70,11 @@ const config = {
                 loader: "node-loader",
             },
             {
+                test: /\.js$/,
+                include: /wontache/,
+                type: "javascript/auto",
+            },
+            {
                 test: /\.ts$/,
                 exclude: /node_modules/,
                 use: [

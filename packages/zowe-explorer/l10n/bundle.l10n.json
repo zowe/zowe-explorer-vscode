@@ -748,6 +748,14 @@
     ]
   },
   "Unable to create member.": "Unable to create member.",
+  "Invalid data set or member.": "Invalid data set or member.",
+  "Downloading {0}/Label": {
+    "message": "Downloading {0}",
+    "comment": [
+      "Label"
+    ]
+  },
+  "$(sync~spin) Downloading data set...": "$(sync~spin) Downloading data set...",
   "Allocating new data set": "Allocating new data set",
   "Attempting to allocate new data set": "Attempting to allocate new data set",
   "Click on parameters to change them": "Click on parameters to change them",

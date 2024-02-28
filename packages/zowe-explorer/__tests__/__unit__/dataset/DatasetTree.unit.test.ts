@@ -12,10 +12,10 @@
 import * as vscode from "vscode";
 import * as globals from "../../../src/globals";
 import * as fs from "fs";
-import * as zowe from "@zowe/cli";
+import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
 import { DatasetTree } from "../../../src/dataset/DatasetTree";
 import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
-import { Gui, IZoweDatasetTreeNode, ProfilesCache, Validation, Sorting } from "@zowe/zowe-explorer-api";
+import { Gui, imperative, IZoweDatasetTreeNode, ProfilesCache, Validation, Sorting } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { Profiles } from "../../../src/Profiles";
 import * as utils from "../../../src/utils/ProfilesUtils";
@@ -60,7 +60,7 @@ function createGlobalMocks() {
         mockProfileInstance: null,
         mockShowWarningMessage: jest.fn(),
         mockProfileInfo: createInstanceOfProfileInfo(),
-        mockProfilesCache: new ProfilesCache(zowe.imperative.Logger.getAppLogger()),
+        mockProfilesCache: new ProfilesCache(imperative.Logger.getAppLogger()),
         mockTreeProviders: createTreeProviders(),
     };
 
@@ -90,10 +90,10 @@ function createGlobalMocks() {
     Object.defineProperty(vscode.window, "showQuickPick", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "createQuickPick", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showInputBox", { value: jest.fn(), configurable: true });
-    Object.defineProperty(zowe, "Rename", { value: jest.fn(), configurable: true });
-    Object.defineProperty(zowe.Rename, "dataSet", { value: jest.fn(), configurable: true });
-    Object.defineProperty(zowe.Rename, "dataSetMember", { value: jest.fn(), configurable: true });
-    Object.defineProperty(zowe, "Download", { value: jest.fn(), configurable: true });
+    Object.defineProperty(zosfiles, "Rename", { value: jest.fn(), configurable: true });
+    Object.defineProperty(zosfiles.Rename, "dataSet", { value: jest.fn(), configurable: true });
+    Object.defineProperty(zosfiles.Rename, "dataSetMember", { value: jest.fn(), configurable: true });
+    Object.defineProperty(zosfiles, "Download", { value: jest.fn(), configurable: true });
     Object.defineProperty(globals, "LOG", { value: jest.fn(), configurable: true });
     Object.defineProperty(globals.LOG, "debug", { value: jest.fn(), configurable: true });
     Object.defineProperty(globals.LOG, "error", { value: jest.fn(), configurable: true });
@@ -135,7 +135,7 @@ function createGlobalMocks() {
             return { value: globalMocks.mockProfileInfo, configurable: true };
         }),
     });
-    Object.defineProperty(zowe.Download, "dataSet", {
+    Object.defineProperty(zosfiles.Download, "dataSet", {
         value: jest.fn().mockResolvedValue({
             success: true,
             commandResponse: null,
@@ -145,7 +145,7 @@ function createGlobalMocks() {
         }),
         configurable: true,
     });
-    Object.defineProperty(zowe.Download, "dataSetMember", {
+    Object.defineProperty(zosfiles.Download, "dataSetMember", {
         value: jest.fn(() => {
             return {
                 success: true,
@@ -394,8 +394,8 @@ describe("Dataset Tree Unit Tests - Function getChildren", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
 
-        const testError = new zowe.imperative.ImperativeError({ msg: "test" });
-        const spyOnDataSetsMatchingPattern = jest.spyOn(zowe.List, "dataSetsMatchingPattern");
+        const testError = new imperative.ImperativeError({ msg: "test" });
+        const spyOnDataSetsMatchingPattern = jest.spyOn(zosfiles.List, "dataSetsMatchingPattern");
         spyOnDataSetsMatchingPattern.mockResolvedValueOnce({
             success: true,
             commandResponse: null,
@@ -450,8 +450,8 @@ describe("Dataset Tree Unit Tests - Function getChildren", () => {
         getMvsApiMock.mockReturnValue(mockMvsApi);
         ZoweExplorerApiRegister.getMvsApi = getMvsApiMock.bind(ZoweExplorerApiRegister);
 
-        const spyOnDataSetsMatchingPattern = jest.spyOn(zowe.List, "dataSetsMatchingPattern");
-        const spyOnDataSet = jest.spyOn(zowe.List, "dataSet");
+        const spyOnDataSetsMatchingPattern = jest.spyOn(zosfiles.List, "dataSetsMatchingPattern");
+        const spyOnDataSet = jest.spyOn(zosfiles.List, "dataSet");
         spyOnDataSet.mockResolvedValueOnce({
             success: true,
             commandResponse: null,
@@ -525,7 +525,7 @@ describe("Dataset Tree Unit Tests - Function getChildren", () => {
     it("Checking function for profile node in Favorites section", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
-        const log = zowe.imperative.Logger.getAppLogger();
+        const log = imperative.Logger.getAppLogger();
         const favProfileNode = new ZoweDatasetNode({
             label: "testProfile",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
@@ -589,7 +589,7 @@ describe("Dataset Tree Unit Tests - Function getChildren", () => {
 });
 describe("Dataset Tree Unit Tests - Function loadProfilesForFavorites", () => {
     function createBlockMocks() {
-        const log = zowe.imperative.Logger.getAppLogger();
+        const log = imperative.Logger.getAppLogger();
         const session = createISession();
         const imperativeProfile = createIProfile();
         const treeView = createTreeView();
@@ -882,7 +882,7 @@ describe("Dataset Tree Unit Tests - Function removeFileHistory", () => {
 describe("Dataset Tree Unit Tests - Function addSession", () => {
     function createBlockMocks() {
         const newMocks = {
-            log: zowe.imperative.Logger.getAppLogger(),
+            log: imperative.Logger.getAppLogger(),
             session: createISession(),
             imperativeProfile: createIProfile(),
             treeView: createTreeView(),
@@ -1513,7 +1513,7 @@ describe("Dataset Tree Unit Tests - Function flipState", () => {
 describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
     async function createBlockMocks(globalMocks) {
         const newMocks = {
-            log: zowe.imperative.Logger.getAppLogger(),
+            log: imperative.Logger.getAppLogger(),
             session: createISession(),
             imperativeProfile: createIProfile(),
             mockDefaultProfile: jest.fn(),
@@ -1855,7 +1855,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
 describe("Dataset Tree Unit Tests - Function editSession", () => {
     async function createBlockMocks() {
         const newMocks = {
-            log: zowe.imperative.Logger.getAppLogger(),
+            log: imperative.Logger.getAppLogger(),
             session: createISession(),
             imperativeProfile: createIProfile(),
             mockDefaultProfile: jest.fn(),
@@ -2473,7 +2473,7 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         const defaultError = new Error("Default error message");
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         mocked(workspaceUtils.closeOpenedTextFile).mockResolvedValueOnce(false);
-        mocked(zowe.Rename.dataSet).mockImplementation(() => {
+        mocked(zosfiles.Rename.dataSet).mockImplementation(() => {
             throw defaultError;
         });
         mocked(vscode.window.showInputBox).mockResolvedValueOnce("HLQ.TEST.RENAME.NODE.NEW");
@@ -2692,7 +2692,7 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         const defaultError = new Error("Default error message");
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         mocked(workspaceUtils.closeOpenedTextFile).mockResolvedValueOnce(false);
-        mocked(zowe.Rename.dataSetMember).mockImplementation(() => {
+        mocked(zosfiles.Rename.dataSetMember).mockImplementation(() => {
             throw defaultError;
         });
         mocked(vscode.window.showInputBox).mockResolvedValueOnce("MEM2");
@@ -2865,7 +2865,7 @@ describe("Dataset Tree Unit Tests - Function initializeFavorites", () => {
         const blockMocks = createBlockMocks();
         const testTree = new DatasetTree();
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
-        const log = zowe.imperative.Logger.getAppLogger();
+        const log = imperative.Logger.getAppLogger();
 
         Object.defineProperty(testTree, "mHistory", {
             value: {

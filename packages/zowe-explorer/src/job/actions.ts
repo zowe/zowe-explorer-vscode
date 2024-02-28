@@ -10,11 +10,11 @@
  */
 
 import * as vscode from "vscode";
-import * as zowe from "@zowe/cli";
+import * as zosjobs from "@zowe/zos-jobs-for-zowe-sdk";
 import { errorHandling } from "../utils/ProfilesUtils";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
-import { Gui, IZoweJobTreeNode, Sorting, Types } from "@zowe/zowe-explorer-api";
+import { Gui, imperative, IZoweJobTreeNode, Sorting, Types } from "@zowe/zowe-explorer-api";
 import { ZoweJobNode, ZoweSpoolNode } from "./ZoweJobNode";
 import SpoolProvider, { encodeJobFile, getSpoolFiles, matchSpool } from "../SpoolProvider";
 import { ZoweLogger } from "../utils/ZoweLogger";
@@ -75,7 +75,7 @@ export async function downloadSingleSpool(nodes: IZoweJobTreeNode[], binary?: bo
         });
         if (dirUri !== undefined) {
             for (const node of nodes) {
-                const spools = (await getSpoolFiles(node)).filter((spool: zowe.IJobFile) => matchSpool(spool, node));
+                const spools = (await getSpoolFiles(node)).filter((spool: zosjobs.IJobFile) => matchSpool(spool, node));
                 for (const spool of spools) {
                     await ZoweExplorerApiRegister.getJesApi(nodes[0].getProfile()).downloadSingleSpool({
                         jobFile: spool,
@@ -100,7 +100,7 @@ export async function downloadSingleSpool(nodes: IZoweJobTreeNode[], binary?: bo
 export async function getSpoolContent(session: string, spoolNode: ZoweSpoolNode): Promise<void> {
     ZoweLogger.trace("job.actions.getSpoolContent called.");
     const profiles = Profiles.getInstance();
-    let zosmfProfile: zowe.imperative.IProfileLoaded;
+    let zosmfProfile: imperative.IProfileLoaded;
     try {
         zosmfProfile = profiles.loadNamedProfile(session);
     } catch (error) {
@@ -501,7 +501,7 @@ export async function cancelJobs(jobsProvider: Types.IZoweJobTreeType, nodes: IZ
 
     const jesApis = {};
 
-    const failedJobs: { job: zowe.IJob; error: string }[] = [];
+    const failedJobs: { job: zosjobs.IJob; error: string }[] = [];
     // Build list of common sessions from node selection
     const sessionNodes = [];
     for (const jobNode of nodes) {

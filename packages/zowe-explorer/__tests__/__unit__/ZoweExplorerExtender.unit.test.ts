@@ -12,7 +12,7 @@
 import * as vscode from "vscode";
 jest.mock("vscode");
 
-import { imperative } from "@zowe/cli";
+import * as imperative from "@zowe/imperative";
 import { createISession, createAltTypeIProfile, createTreeView, createIProfile, createInstanceOfProfile } from "../../__mocks__/mockCreators/shared";
 import { createDatasetSessionNode, createDatasetTree } from "../../__mocks__/mockCreators/datasets";
 import { createUSSSessionNode, createUSSTree } from "../../__mocks__/mockCreators/uss";

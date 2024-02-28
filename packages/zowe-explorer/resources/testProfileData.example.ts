@@ -1,4 +1,4 @@
-import { imperative } from "@zowe/cli";
+import { imperative } from "@zowe/zowe-explorer-api";
 
 export const profile: imperative.IProfile = {
     type: "zosmf",

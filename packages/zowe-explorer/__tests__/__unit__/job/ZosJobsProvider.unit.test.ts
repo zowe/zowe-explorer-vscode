@@ -9,13 +9,13 @@
  *
  */
 
-jest.mock("@zowe/cli");
+jest.mock("@zowe/zos-jobs-for-zowe-sdk");
 import { createJobsTree, ZosJobsProvider } from "../../../src/job/ZosJobsProvider";
 import * as vscode from "vscode";
-import * as zowe from "@zowe/cli";
+import * as zosjobs from "@zowe/zos-jobs-for-zowe-sdk";
 import * as globals from "../../../src/globals";
 import * as utils from "../../../src/utils/ProfilesUtils";
-import { Gui, IZoweJobTreeNode, ProfilesCache, Validation } from "@zowe/zowe-explorer-api";
+import { Gui, imperative, IZoweJobTreeNode, ProfilesCache, Validation } from "@zowe/zowe-explorer-api";
 import { createIJobFile, createIJobObject, createJobFavoritesNode, createJobSessionNode, MockJobDetail } from "../../../__mocks__/mockCreators/jobs";
 import { ZoweJobNode, ZoweSpoolNode } from "../../../src/job/ZoweJobNode";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
@@ -71,7 +71,7 @@ const mockInputBox: vscode.InputBox = {
     ignoreFocusOut: false,
     onDidHide: jest.fn(),
 };
-function setJobObjects(job: zowe.IJob, newJobName: string, newJobId: string, newRetCode: string, newExecMember: string | undefined) {
+function setJobObjects(job: zosjobs.IJob, newJobName: string, newJobId: string, newRetCode: string, newExecMember: string | undefined) {
     job.jobname = newJobName;
     job.jobid = newJobId;
     job.retcode = newRetCode;
@@ -143,7 +143,7 @@ async function createGlobalMocks() {
     });
     Object.defineProperty(vscode, "ProgressLocation", { value: globalMocks.ProgressLocation, configurable: true });
     Object.defineProperty(vscode.window, "withProgress", { value: globalMocks.withProgress, configurable: true });
-    Object.defineProperty(zowe, "GetJobs", { value: globalMocks.mockGetJobs, configurable: true });
+    Object.defineProperty(zosjobs, "GetJobs", { value: globalMocks.mockGetJobs, configurable: true });
     Object.defineProperty(vscode.window, "showInformationMessage", {
         value: globalMocks.mockShowInformationMessage,
         configurable: true,
@@ -182,7 +182,7 @@ async function createGlobalMocks() {
         value: globalMocks.mockGetConfiguration,
         configurable: true,
     });
-    Object.defineProperty(zowe, "DeleteJobs", { value: globalMocks.mockDeleteJobs, configurable: true });
+    Object.defineProperty(zosjobs, "DeleteJobs", { value: globalMocks.mockDeleteJobs, configurable: true });
     Object.defineProperty(vscode.window, "createQuickPick", {
         value: globalMocks.mockCreateQuickPick,
         configurable: true,
@@ -240,7 +240,7 @@ async function createGlobalMocks() {
             return {};
         }),
     });
-    globalMocks.testJobsProvider = await createJobsTree(zowe.imperative.Logger.getAppLogger());
+    globalMocks.testJobsProvider = await createJobsTree(imperative.Logger.getAppLogger());
     globalMocks.testJobsProvider.mSessionNodes.push(globalMocks.testSessionNode);
     Object.defineProperty(globalMocks.testJobsProvider, "refresh", {
         value: globalMocks.mockRefresh,
@@ -305,7 +305,7 @@ describe("ZosJobsProvider unit tests - Function getChildren", () => {
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
 
         const testTree = new ZosJobsProvider();
-        const log = zowe.imperative.Logger.getAppLogger();
+        const log = imperative.Logger.getAppLogger();
         const favProfileNode = new ZoweJobNode({
             label: "sestest",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
@@ -410,7 +410,7 @@ describe("ZosJobsProvider unit tests - Function initializeFavChildNodeForProfile
 
 describe("ZosJobsProvider unit tests - Function loadProfilesForFavorites", () => {
     function createBlockMocks() {
-        const log = zowe.imperative.Logger.getAppLogger();
+        const log = imperative.Logger.getAppLogger();
         const imperativeProfile = createIProfile();
         const session = createISession();
         const jobFavoritesNode = createJobFavoritesNode();

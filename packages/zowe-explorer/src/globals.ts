@@ -10,9 +10,8 @@
  */
 
 import * as path from "path";
-import { imperative } from "@zowe/cli";
 import * as vscode from "vscode";
-import { FileManagement, IZoweTreeNode } from "@zowe/zowe-explorer-api";
+import { FileManagement, imperative, IZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { ZoweLogger } from "./utils/ZoweLogger";
 import type { Profiles } from "./Profiles";
 

@@ -10,12 +10,20 @@
  */
 
 import * as PromiseQueue from "promise-queue";
-import * as zowe from "@zowe/cli";
 import * as path from "path";
 import * as fs from "fs";
 import * as globals from "./globals";
 import * as vscode from "vscode";
-import { IApiExplorerExtender, FileManagement, Gui, Types, IZoweTreeNode, ProfilesCache, IZoweExplorerTreeApi } from "@zowe/zowe-explorer-api";
+import {
+    IApiExplorerExtender,
+    FileManagement,
+    Gui,
+    Types,
+    IZoweTreeNode,
+    ProfilesCache,
+    IZoweExplorerTreeApi,
+    imperative,
+} from "@zowe/zowe-explorer-api";
 import { getProfile, ProfilesUtils } from "./utils/ProfilesUtils";
 import { ZoweLogger } from "./utils/ZoweLogger";
 
@@ -130,7 +138,7 @@ export class ZoweExplorerExtender implements IApiExplorerExtender, IZoweExplorer
      * @param {string} profileType
      * @param {imperative.ICommandProfileTypeConfiguration[]} profileTypeConfigurations
      */
-    public async initForZowe(profileType: string, profileTypeConfigurations: zowe.imperative.ICommandProfileTypeConfiguration[]): Promise<void> {
+    public async initForZowe(profileType: string, profileTypeConfigurations: imperative.ICommandProfileTypeConfiguration[]): Promise<void> {
         // Ensure that when a user has not installed the profile type's CLI plugin
         // and/or created a profile that the profile directory in ~/.zowe/profiles
         // will be created with the appropriate meta data. If not called the user will
@@ -145,7 +153,7 @@ export class ZoweExplorerExtender implements IApiExplorerExtender, IZoweExplorer
          * If it doesn't exist create instance and read from disk to see if using v1 or v2
          * profile management.
          */
-        let profileInfo: zowe.imperative.ProfileInfo;
+        let profileInfo: imperative.ProfileInfo;
         try {
             profileInfo = await ProfilesUtils.getProfileInfo();
             await profileInfo.readProfilesFromDisk({ homeDir: zoweDir, projectDir });
@@ -170,10 +178,7 @@ export class ZoweExplorerExtender implements IApiExplorerExtender, IZoweExplorer
      * @param profileInfo the ProfileInfo object that has been prepared with `readProfilesFromDisk`, such as the one initialized in `initForZowe`.
      * @param profileTypeConfigurations (optional) Profile type configurations to add to the schema
      */
-    private updateSchema(
-        profileInfo: zowe.imperative.ProfileInfo,
-        profileTypeConfigurations?: zowe.imperative.ICommandProfileTypeConfiguration[]
-    ): void {
+    private updateSchema(profileInfo: imperative.ProfileInfo, profileTypeConfigurations?: imperative.ICommandProfileTypeConfiguration[]): void {
         if (profileTypeConfigurations) {
             try {
                 for (const typeConfig of profileTypeConfigurations) {
@@ -207,7 +212,7 @@ export class ZoweExplorerExtender implements IApiExplorerExtender, IZoweExplorer
      * @return The requested profile
      *
      */
-    public getProfile(primaryNode: IZoweTreeNode): zowe.imperative.IProfileLoaded {
+    public getProfile(primaryNode: IZoweTreeNode): imperative.IProfileLoaded {
         return getProfile(primaryNode);
     }
 

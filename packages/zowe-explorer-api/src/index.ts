@@ -19,4 +19,4 @@ export * from "./tree";
 export * from "./utils";
 export * from "./vscode";
 export * from "./Types";
-export { imperative } from "@zowe/cli";
+export * as imperative from "@zowe/imperative";

@@ -10,7 +10,8 @@
  */
 
 import SpoolProvider, { decodeJobFile, encodeJobFile, SpoolFile, matchSpool, getSpoolFiles } from "../../src/SpoolProvider";
-import * as zowe from "@zowe/cli";
+import * as zosjobs from "@zowe/zos-jobs-for-zowe-sdk";
+import { imperative } from "@zowe/zowe-explorer-api";
 import * as vscode from "vscode";
 import { Profiles } from "../../src/Profiles";
 import { createIProfile, createISessionWithoutCredentials } from "../../__mocks__/mockCreators/shared";
@@ -18,7 +19,7 @@ import { bindJesApi, createJesApi } from "../../__mocks__/mockCreators/api";
 import { createJobSessionNode } from "../../__mocks__/mockCreators/jobs";
 
 describe("SpoolProvider Unit Tests", () => {
-    const iJobFile: zowe.IJobFile = {
+    const iJobFile: zosjobs.IJobFile = {
         "byte-count": 128,
         "job-correlator": "",
         "record-count": 1,
@@ -52,7 +53,7 @@ describe("SpoolProvider Unit Tests", () => {
         with: jest.fn(),
         toJSON: jest.fn(),
     };
-    const fullIJobFile: zowe.IJobFile = {
+    const fullIJobFile: zosjobs.IJobFile = {
         "byte-count": 128,
         "job-correlator": "",
         "record-count": 1,
@@ -176,9 +177,8 @@ describe("SpoolProvider Unit Tests", () => {
     });
 
     it("Tests that the spool content is returned", async () => {
-        const GetJobs = jest.fn();
         const getSpoolContentById = jest.fn();
-        const profileOne: zowe.imperative.IProfileLoaded = {
+        const profileOne: imperative.IProfileLoaded = {
             name: "sessionName",
             profile: {
                 user: undefined,
@@ -203,8 +203,7 @@ describe("SpoolProvider Unit Tests", () => {
                 };
             }),
         });
-        Object.defineProperty(zowe, "GetJobs", { value: GetJobs });
-        Object.defineProperty(GetJobs, "getSpoolContentById", { value: getSpoolContentById });
+        Object.defineProperty(zosjobs.GetJobs, "getSpoolContentById", { value: getSpoolContentById });
         getSpoolContentById.mockReturnValue("spool content");
 
         const provider = new SpoolProvider();
@@ -234,7 +233,7 @@ describe("SpoolProvider Unit Tests", () => {
 
     describe("matchSpool", () => {
         it("should match spool to the selected node", () => {
-            const spool: zowe.IJobFile = { ...iJobFile, stepname: "test", ddname: "dd", "record-count": 1, procstep: "proc" };
+            const spool: zosjobs.IJobFile = { ...iJobFile, stepname: "test", ddname: "dd", "record-count": 1, procstep: "proc" };
             let match = matchSpool(spool, { label: "test:dd - 1" } as any);
             expect(match).toBe(true);
 
@@ -272,7 +271,7 @@ describe("SpoolProvider Unit Tests", () => {
             const jesApi = createJesApi(profile);
             bindJesApi(jesApi);
 
-            const spoolOk: zowe.IJobFile = { ...iJobFile, stepname: "test", ddname: "dd", "record-count": 1, procstep: "proc" };
+            const spoolOk: zosjobs.IJobFile = { ...iJobFile, stepname: "test", ddname: "dd", "record-count": 1, procstep: "proc" };
             const { id, ddname, stepname, ...withoutIdDdStep } = spoolOk;
 
             newJobSession.job = spoolOk as any;
