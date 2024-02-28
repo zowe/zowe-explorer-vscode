@@ -12,6 +12,7 @@
 export namespace Sorting {
     export enum DatasetSortOpts {
         Name,
+        DateCreated,
         LastModified,
         UserId,
     }

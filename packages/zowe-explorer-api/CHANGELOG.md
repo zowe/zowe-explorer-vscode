@@ -6,7 +6,9 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### New features and enhancements
 
-- **Breaking:** Added the following **required** API: `uploadFromBuffer`
+- Add Created Date to `stats` optional variable for storing dataset stats [#2565](https://github.com/zowe/vscode-extension-for-zowe/pull/2565)
+- Add Date created to DatasetSortOpts enum [#2565](https://github.com/zowe/vscode-extension-for-zowe/pull/2565)
+- **Breaking:** Added the following **required** API: `uploadFromBuffer` [#2738](https://github.com/zowe/vscode-extension-for-zowe/pull/2738)
   - For v3, this API will be used for saving data sets and USS files instead of `putContent(s)`. Extenders must implement this API to continue supporting Zowe Explorer save operations.
 
 ### Bug fixes
