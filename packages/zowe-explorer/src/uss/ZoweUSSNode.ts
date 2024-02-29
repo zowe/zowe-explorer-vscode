@@ -34,9 +34,10 @@ import { closeOpenedTextFile } from "../utils/workspace";
 import * as nls from "vscode-nls";
 import { UssFileTree, UssFileType, UssFileUtils } from "./FileStructure";
 import { ZoweLogger } from "../utils/LoggerUtils";
-import { updateOpenFiles } from "../shared/utils";
+import { compareFileContent, updateOpenFiles } from "../shared/utils";
 import { IZoweUssTreeOpts } from "../shared/IZoweTreeOpts";
 import { TreeProviders } from "../shared/TreeProviders";
+import { LocalFileManagement } from "../utils/LocalFileManagement";
 
 // Set up localization
 nls.config({
@@ -505,6 +506,13 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 }
 
                 const documentFilePath = this.getUSSDocumentFilePath();
+                const reopenedFile = LocalFileManagement.findReopenedFile(documentFilePath);
+                if (reopenedFile != null) {
+                    await compareFileContent(reopenedFile, this, documentFilePath);
+                    LocalFileManagement.removeReopenedFile(reopenedFile);
+                    return;
+                }
+
                 // check if some other file is already created with the same name avoid opening file warn user
                 const fileExists = fs.existsSync(documentFilePath);
                 if (fileExists && !fileExistsCaseSensitveSync(documentFilePath)) {

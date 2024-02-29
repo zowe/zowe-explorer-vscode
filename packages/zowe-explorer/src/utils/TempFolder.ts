@@ -18,6 +18,8 @@ import { errorHandling } from "../utils/ProfilesUtils";
 import { SettingsConfig } from "./SettingsConfig";
 import { Gui } from "@zowe/zowe-explorer-api";
 import { ZoweLogger } from "./LoggerUtils";
+import * as vscode from "vscode";
+import { LocalFileManagement } from "./LocalFileManagement";
 
 // Set up localization
 nls.config({
@@ -131,5 +133,42 @@ export async function hideTempFolder(zoweDir: string): Promise<void> {
     ZoweLogger.trace("TempFolder.hideTempFolder called.");
     if (SettingsConfig.getDirectValue<boolean>(globals.SETTINGS_TEMP_FOLDER_HIDE)) {
         await SettingsConfig.setDirectValue("files.exclude", { [zoweDir]: true, [globals.ZOWETEMPFOLDER]: true });
+    }
+}
+
+export function findReopenedFiles(): void {
+    ZoweLogger.trace("TempFolder.findReopenedFiles called.");
+    const reopenedFiles: { profile: string; filename: string }[] = [];
+    for (const document of vscode.workspace.textDocuments) {
+        let fileInfo: { profile: string; filename: string } = null;
+        if (document.fileName.toUpperCase().indexOf(globals.DS_DIR.toUpperCase()) >= 0) {
+            const pathSegments = document.fileName.slice(globals.DS_DIR.length + 1).split(path.sep);
+            fileInfo = {
+                profile: pathSegments.shift(),
+                filename: path.basename(pathSegments[0], path.extname(pathSegments[0])),
+            };
+        } else if (document.fileName.toUpperCase().indexOf(globals.USS_DIR.toUpperCase()) >= 0) {
+            const pathSegments = document.fileName.slice(globals.USS_DIR.length + 1).split(path.sep);
+            fileInfo = {
+                profile: pathSegments.shift(),
+                filename: path.posix.join(...pathSegments),
+            };
+        }
+        if (fileInfo != null) {
+            reopenedFiles.push(fileInfo);
+            LocalFileManagement.addReopenedFile(document, fileInfo);
+        }
+    }
+    if (reopenedFiles.length > 0) {
+        Gui.showMessage(
+            localize(
+                "findReopenedFiles.message",
+                "One or more files remained open in your last VS Code session:\n\n{0}\n\nTo prevent losing your updates, navigate to these files in the Zowe Explorer tree to sync them with the mainframe.",
+                reopenedFiles.map(({ profile, filename }) => `[${profile}] ${filename}`).join("\n")
+            ),
+            {
+                vsCodeOpts: { modal: true },
+            }
+        );
     }
 }

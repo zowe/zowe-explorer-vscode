@@ -17,7 +17,7 @@ import { ZoweExplorerExtender } from "./ZoweExplorerExtender";
 import { Profiles } from "./Profiles";
 import { ProfilesUtils } from "./utils/ProfilesUtils";
 import { initializeSpoolProvider } from "./SpoolProvider";
-import { cleanTempDir, hideTempFolder } from "./utils/TempFolder";
+import { cleanTempDir, hideTempFolder, findReopenedFiles } from "./utils/TempFolder";
 import { SettingsConfig } from "./utils/SettingsConfig";
 import { registerCommonCommands, registerCredentialManager, registerRefreshCommand, watchConfigProfile } from "./shared/init";
 import { ZoweLogger } from "./utils/LoggerUtils";
@@ -63,7 +63,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     ZoweExplorerExtender.createInstance(providers.ds, providers.uss, providers.job);
     await SettingsConfig.standardizeSettings();
     await watchConfigProfile(context, providers);
-    globals.setActivated(true);
+    await globals.setActivated(true);
+    findReopenedFiles();
     return ZoweExplorerApiRegister.getInstance();
 }
 /**

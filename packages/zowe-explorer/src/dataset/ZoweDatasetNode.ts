@@ -37,8 +37,9 @@ import { ZoweLogger } from "../utils/LoggerUtils";
 import * as dayjs from "dayjs";
 import * as fs from "fs";
 import { promiseStatus, PromiseStatuses } from "promise-status-async";
-import { getDocumentFilePath, updateOpenFiles } from "../shared/utils";
+import { compareFileContent, getDocumentFilePath, updateOpenFiles } from "../shared/utils";
 import { IZoweDatasetTreeOpts } from "../shared/IZoweTreeOpts";
+import { LocalFileManagement } from "../utils/LocalFileManagement";
 
 // Set up localization
 nls.config({
@@ -542,6 +543,13 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 }
 
                 const documentFilePath = getDocumentFilePath(label, this);
+                const reopenedFile = LocalFileManagement.findReopenedFile(documentFilePath);
+                if (reopenedFile != null) {
+                    await compareFileContent(reopenedFile, this, label);
+                    LocalFileManagement.removeReopenedFile(reopenedFile);
+                    return;
+                }
+
                 let responsePromise = this.ongoingActions ? this.ongoingActions[NodeAction.Download] : null;
                 // If there is no ongoing action and the local copy does not exist, fetch contents
                 if (forceDownload || (responsePromise == null && !fs.existsSync(documentFilePath))) {
