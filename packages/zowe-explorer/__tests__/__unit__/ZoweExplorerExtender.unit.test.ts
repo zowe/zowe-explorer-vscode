@@ -12,32 +12,32 @@
 import * as vscode from "vscode";
 jest.mock("vscode");
 
-import { imperative } from "@zowe/cli";
+import * as imperative from "@zowe/imperative";
 import { createISession, createAltTypeIProfile, createTreeView, createIProfile, createInstanceOfProfile } from "../../__mocks__/mockCreators/shared";
 import { createDatasetSessionNode, createDatasetTree } from "../../__mocks__/mockCreators/datasets";
 import { createUSSSessionNode, createUSSTree } from "../../__mocks__/mockCreators/uss";
 import { createJobsTree, createIJobObject } from "../../__mocks__/mockCreators/jobs";
 import { ZoweExplorerExtender } from "../../src/ZoweExplorerExtender";
-import { Profiles } from "../../src/Profiles";
 import * as path from "path";
 import * as fs from "fs";
 import { FileManagement, Gui, ProfilesCache } from "@zowe/zowe-explorer-api";
 import { ProfilesUtils } from "../../src/utils/ProfilesUtils";
-import { ZoweLogger } from "../../src/utils/LoggerUtils";
+import { ZoweLogger } from "../../src/utils/ZoweLogger";
 import { ZoweLocalStorage } from "../../src/utils/ZoweLocalStorage";
 import { SettingsConfig } from "../../src/utils/SettingsConfig";
 jest.mock("fs");
 
 describe("ZoweExplorerExtender unit tests", () => {
     async function createBlockMocks() {
+        const imperativeProfile = createIProfile();
         const newMocks = {
             log: imperative.Logger.getAppLogger(),
             session: createISession(),
-            imperativeProfile: createIProfile(),
+            imperativeProfile,
             altTypeProfile: createAltTypeIProfile(),
             treeView: createTreeView(),
             instTest: ZoweExplorerExtender.getInstance(),
-            profiles: {},
+            profiles: createInstanceOfProfile(imperativeProfile),
             mockGetConfiguration: jest.fn(),
             mockErrorMessage: jest.fn(),
             mockExistsSync: jest.fn(),
@@ -45,8 +45,7 @@ describe("ZoweExplorerExtender unit tests", () => {
         };
 
         Object.defineProperty(fs, "existsSync", { value: newMocks.mockExistsSync, configurable: true });
-        newMocks.profiles = createInstanceOfProfile(newMocks.imperativeProfile);
-        jest.spyOn(Profiles, "getInstance").mockReturnValue(newMocks.profiles as any);
+        jest.spyOn(ZoweExplorerExtender.prototype, "getProfilesCache").mockReturnValue(newMocks.profiles);
         Object.defineProperty(vscode.window, "createTreeView", {
             value: jest.fn().mockReturnValue({ onDidCollapseElement: jest.fn() }),
             configurable: true,
@@ -65,10 +64,6 @@ describe("ZoweExplorerExtender unit tests", () => {
                 update: jest.fn(),
                 keys: () => [],
             },
-            configurable: true,
-        });
-        Object.defineProperty(Profiles.getInstance(), "addToConfigArray", {
-            value: jest.fn(),
             configurable: true,
         });
         Object.defineProperty(ZoweLogger, "error", {

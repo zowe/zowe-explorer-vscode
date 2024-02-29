@@ -1,7 +1,7 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from "vscode";
-import { ZosUssProfile } from "@zowe/cli";
+import { ZosUssProfile } from "@zowe/zos-uss-for-zowe-sdk";
 import { ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import { SshUssApi } from "./SshUssApi";
 

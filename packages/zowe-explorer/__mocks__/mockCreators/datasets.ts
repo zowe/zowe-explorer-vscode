@@ -11,10 +11,9 @@
 
 import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
 import * as vscode from "vscode";
-import { imperative } from "@zowe/cli";
 import * as globals from "../../src/globals";
 import { removeNodeFromArray } from "./shared";
-import { PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
+import { imperative, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
 
 export function createDatasetSessionNode(session: imperative.Session, profile: imperative.IProfileLoaded) {
     const datasetNode = new ZoweDatasetNode({

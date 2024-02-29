@@ -6,6 +6,7 @@ All notable changes to the "zowe-explorer-ftp-extension" extension will be docum
 
 - Added the following API: `uploadFromBuffer`
   - This API will be used for uploading contents in v3 instead of `putContent(s)`.
+- Migrated from `@zowe/cli` package to individual Zowe SDK packages. [#2719](https://github.com/zowe/vscode-extension-for-zowe/issues/2719)
 
 ### Bug fixes
 

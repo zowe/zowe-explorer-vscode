@@ -9,8 +9,8 @@
  *
  */
 
-import { ZoweExplorerZosmf } from "@zowe/zowe-explorer-api";
-import * as zowe from "@zowe/cli";
+import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
+import { imperative, ZoweExplorerZosmf } from "@zowe/zowe-explorer-api";
 
 export declare enum TaskStage {
     IN_PROGRESS = 0,
@@ -26,7 +26,7 @@ describe("Zosmf API tests", () => {
             return { api: "", commandResponse: "", success: true };
         });
 
-        (zowe as any).Copy = { dataSet };
+        (zosfiles as any).Copy = { dataSet };
 
         const api = new ZoweExplorerZosmf.MvsApi();
         api.getSession = jest.fn();
@@ -39,7 +39,7 @@ describe("Zosmf API tests", () => {
             return { api: "", commandResponse: "", success: true };
         });
 
-        (zowe as any).Copy = { dataSet };
+        (zosfiles as any).Copy = { dataSet };
 
         const api = new ZoweExplorerZosmf.MvsApi();
         api.getSession = jest.fn();
@@ -56,7 +56,7 @@ describe("Zosmf API tests", () => {
             return { api: "", commandResponse: "", success: true };
         });
 
-        (zowe as any).Copy = { dataSet };
+        (zosfiles as any).Copy = { dataSet };
 
         const api = new ZoweExplorerZosmf.MvsApi();
         api.getSession = jest.fn();
@@ -67,13 +67,13 @@ describe("Zosmf API tests", () => {
 
     it("should test putContent method passes all options to Zowe api method", async () => {
         const fileToUssFile = jest.fn(
-            async (session: zowe.imperative.AbstractSession, inputFile: string, ussname: string, options?: zowe.IUploadOptions) => {
+            async (session: imperative.AbstractSession, inputFile: string, ussname: string, options?: zosfiles.IUploadOptions) => {
                 expect(options).toMatchSnapshot();
                 return { api: "", commandResponse: "", success: true };
             }
         );
 
-        (zowe as any).Upload = { fileToUssFile };
+        (zosfiles as any).Upload = { fileToUssFile };
 
         const api = new ZoweExplorerZosmf.UssApi();
         api.getSession = jest.fn();
@@ -88,7 +88,7 @@ describe("Zosmf API tests", () => {
         api.getSession = jest.fn();
         const response = { shouldMatch: true };
 
-        Object.defineProperty(zowe, "Download", {
+        Object.defineProperty(zosfiles, "Download", {
             value: {
                 ussFile: jest.fn().mockResolvedValue(response),
             },
@@ -101,7 +101,7 @@ describe("Zosmf API tests", () => {
     it("should update the tag attribute of a USS file if a new change is made", async () => {
         const api = new ZoweExplorerZosmf.UssApi();
         const changeTagSpy = jest.fn();
-        Object.defineProperty(zowe, "Utilities", {
+        Object.defineProperty(zosfiles, "Utilities", {
             value: {
                 putUSSPayload: changeTagSpy,
             },
@@ -116,7 +116,7 @@ describe("Zosmf API tests", () => {
         jest.spyOn(JSON, "parse").mockReturnValue({
             stdout: ["-t UTF-8 tesfile.txt"],
         });
-        Object.defineProperty(zowe, "Utilities", {
+        Object.defineProperty(zosfiles, "Utilities", {
             value: {
                 putUSSPayload: () => Buffer.from(""),
             },

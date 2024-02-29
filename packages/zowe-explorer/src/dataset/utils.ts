@@ -12,7 +12,7 @@
 import * as globals from "../globals";
 import * as vscode from "vscode";
 import { Types } from "@zowe/zowe-explorer-api";
-import { ZoweLogger } from "../utils/LoggerUtils";
+import { ZoweLogger } from "../utils/ZoweLogger";
 
 export const DATASET_SORT_OPTS = [
     vscode.l10n.t("$(case-sensitive) Name (default)"),

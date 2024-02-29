@@ -9,7 +9,7 @@
  *
  */
 
-import { ZoweLogger } from "../utils/LoggerUtils";
+import { ZoweLogger } from "../utils/ZoweLogger";
 
 /**
  * File types within the USS tree structure

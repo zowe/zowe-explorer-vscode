@@ -11,7 +11,6 @@
 
 import * as sharedUtils from "../../../src/shared/utils";
 import * as globals from "../../../src/globals";
-import { imperative } from "@zowe/cli";
 import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
 import * as vscode from "vscode";
 import * as path from "path";
@@ -27,10 +26,8 @@ import { createDatasetSessionNode } from "../../../__mocks__/mockCreators/datase
 import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
 import { ZoweJobNode } from "../../../src/job/ZoweJobNode";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
-import { Profiles } from "../../../src/Profiles";
 import * as utils from "../../../src/utils/ProfilesUtils";
-import { Gui, IZoweTreeNode, ProfilesCache, ZosEncoding } from "@zowe/zowe-explorer-api";
-import { ZoweLogger } from "../../../src/utils/LoggerUtils";
+import { Gui, imperative, IZoweTreeNode, ProfilesCache, ZosEncoding } from "@zowe/zowe-explorer-api";
 import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
 
 async function createGlobalMocks() {
@@ -43,12 +40,8 @@ async function createGlobalMocks() {
     };
     newMocks.mockProfilesCache = new ProfilesCache(imperative.Logger.getAppLogger());
     newMocks.mockProfileInstance = createInstanceOfProfile(createIProfile());
-    Object.defineProperty(Profiles, "CreateInstance", {
-        value: () => newMocks.mockProfileInstance,
-        configurable: true,
-    });
-    Object.defineProperty(Profiles, "getInstance", {
-        value: () => newMocks.mockProfileInstance,
+    Object.defineProperty(globals, "PROFILES_CACHE", {
+        value: newMocks.mockProfileInstance,
         configurable: true,
     });
 
@@ -117,8 +110,8 @@ describe("syncSessionNode shared util function", () => {
             } as any);
         // when
         utils.syncSessionNode(sessionForProfile, sessionNode);
-        expect(await sessionNode.getSession()).toEqual(expectedSession);
-        expect(await sessionNode.getProfile()).toEqual(createIProfile());
+        expect(sessionNode.getSession()).toEqual(expectedSession);
+        expect(sessionNode.getProfile()).toEqual(createIProfile());
     });
     it("should do nothing, if there is no profile from provided node in the file system", async () => {
         const profiles = createInstanceOfProfile(serviceProfile);

@@ -16,10 +16,10 @@ import { IZoweDatasetTreeNode, IZoweTreeNode, IZoweUSSTreeNode, imperative } fro
 import { markDocumentUnsaved } from "./workspace";
 import { isTypeUssTreeNode } from "../shared/context";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
-import { ZoweLogger } from "./LoggerUtils";
+import { ZoweLogger } from "./ZoweLogger";
 import { LocalFileInfo, isZoweDatasetTreeNode, isZoweUSSTreeNode } from "../shared/utils";
-import { downloadDs } from "../dataset/actions";
-import { downloadUnixFile } from "../uss/actions";
+import { ZoweDatasetNode } from "../dataset/ZoweDatasetNode";
+import { ZoweUSSNode } from "../uss/ZoweUSSNode";
 
 export class LocalFileManagement {
     public static getDefaultUri(): vscode.Uri {
@@ -108,11 +108,11 @@ export class LocalFileManagement {
         let fileInfo = {} as LocalFileInfo;
         switch (true) {
             case isZoweDatasetTreeNode(node): {
-                fileInfo = await downloadDs(node, true);
+                fileInfo = await (node as ZoweDatasetNode).downloadDs(true);
                 break;
             }
             case isZoweUSSTreeNode(node): {
-                fileInfo = await downloadUnixFile(node, true);
+                fileInfo = await (node as ZoweUSSNode).downloadUSS(true);
                 break;
             }
             default: {

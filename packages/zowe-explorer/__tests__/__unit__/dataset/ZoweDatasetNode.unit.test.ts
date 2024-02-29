@@ -27,7 +27,7 @@ import * as path from "path";
 import * as fs from "fs";
 import * as sharedUtils from "../../../src/shared/utils";
 import { Profiles } from "../../../src/Profiles";
-import { ZoweLogger } from "../../../src/utils/LoggerUtils";
+import { ZoweLogger } from "../../../src/utils/ZoweLogger";
 
 // Missing the definition of path module, because I need the original logic for tests
 jest.mock("fs");
@@ -355,6 +355,73 @@ describe("ZoweDatasetNode Unit Tests - Function node.openDs()", () => {
 
         expect(showErrorMessageSpy).toHaveBeenCalledWith("Invalid data set or member.");
         expect(logErrorSpy).toHaveBeenCalledTimes(1);
+    });
+});
+
+describe("ZoweDatasetNode Unit Tests - Function node.downloadDs()", () => {
+    function createBlockMocks() {
+        const session = createISession();
+        const imperativeProfile = createIProfile();
+        const profileInstance = createInstanceOfProfile(imperativeProfile);
+        const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
+        const pdsSessionNode = new ZoweDatasetNode({
+            label: "sestest",
+            collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
+            parentNode: datasetSessionNode,
+            session,
+            profile: profileInstance,
+        });
+        pdsSessionNode.contextValue = globals.DS_PDS_CONTEXT;
+
+        return {
+            imperativeProfile,
+            pdsSessionNode,
+        };
+    }
+
+    it("Testing downloadDs() called with invalid node", async () => {
+        globals.defineGlobals("");
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        const node = new ZoweDatasetNode({
+            label: "HLQ.TEST.TO.NODE",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.pdsSessionNode,
+            profile: blockMocks.imperativeProfile,
+        });
+        blockMocks.pdsSessionNode.contextValue = "fakeContext";
+
+        try {
+            await node.downloadDs(true);
+        } catch (err) {
+            /* Do nothing */
+        }
+
+        expect(mocked(Gui.errorMessage)).toHaveBeenCalledWith("Invalid data set or member.");
+    });
+
+    it("Testing downloadDs() called with a member", async () => {
+        globals.defineGlobals("");
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        const node = new ZoweDatasetNode({
+            label: "HLQ.TEST.TO.NODE",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.pdsSessionNode,
+            profile: blockMocks.imperativeProfile,
+        });
+        globalMocks.getContentsSpy.mockResolvedValueOnce({
+            success: true,
+            commandResponse: null,
+            apiResponse: {
+                etag: "123",
+            },
+        });
+
+        const label = node.getParent().getLabel().toString() + "(" + node.getLabel().toString() + ")";
+        const filePathSpy = jest.spyOn(sharedUtils, "getDocumentFilePath");
+        await node.downloadDs(true);
+        expect(filePathSpy).toHaveBeenCalledWith(label, node);
     });
 });
 

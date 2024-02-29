@@ -9,7 +9,7 @@
  *
  */
 
-import { AbstractSession, ISession } from "@zowe/imperative";
+import * as imperative from "@zowe/imperative";
 
 /**
  * Non-abstract session class
@@ -17,11 +17,11 @@ import { AbstractSession, ISession } from "@zowe/imperative";
  * @class Session
  * @extends {AbstractSession}
  */
-export declare class Session extends AbstractSession {
+export declare class Session extends imperative.AbstractSession {
     /**
      * Creates an instance of Session.
      * @param {ISession} newSession - contains input for new session
      * @memberof Session
      */
-    constructor(newSession: ISession);
+    constructor(newSession: imperative.ISession);
 }

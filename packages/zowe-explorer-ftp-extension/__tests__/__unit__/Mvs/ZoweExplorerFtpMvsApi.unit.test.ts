@@ -17,8 +17,7 @@ import { FtpMvsApi } from "../../../src/ZoweExplorerFtpMvsApi";
 import { DataSetUtils } from "@zowe/zos-ftp-for-zowe-cli";
 import TestUtils from "../utils/TestUtils";
 import * as tmp from "tmp";
-import * as zowe from "@zowe/cli";
-import { Gui } from "@zowe/zowe-explorer-api";
+import { Gui, imperative } from "@zowe/zowe-explorer-api";
 import * as globals from "../../../src/globals";
 import { ZoweFtpExtensionError } from "../../../src/ZoweFtpExtensionError";
 
@@ -446,7 +445,7 @@ describe("FtpMvsApi", () => {
     describe("uploadFromBuffer", () => {
         function getBlockMocks(): Record<string, jest.SpyInstance> {
             return {
-                processNewlinesSpy: jest.spyOn(zowe.imperative.IO, "processNewlines"),
+                processNewlinesSpy: jest.spyOn(imperative.IO, "processNewlines"),
                 putContents: jest.spyOn(MvsApi, "putContents").mockImplementation(),
                 tmpFileSyncMock: jest.spyOn(tmp, "fileSync").mockReturnValueOnce({ fd: 12345 } as any),
                 writeSyncMock: jest.spyOn(fs, "writeSync").mockImplementation(),

@@ -17,7 +17,7 @@ import { filterTreeByString, willForceUpload } from "../shared/utils";
 import { FilterItem, FilterDescriptor } from "../utils/ProfilesUtils";
 import * as contextually from "../shared/context";
 import { getIconById, IconId } from "../generators/icons";
-import { ZoweLogger } from "../utils/LoggerUtils";
+import { ZoweLogger } from "../utils/ZoweLogger";
 import { markDocumentUnsaved } from "../utils/workspace";
 import { LocalFileManagement } from "../utils/LocalFileManagement";
 

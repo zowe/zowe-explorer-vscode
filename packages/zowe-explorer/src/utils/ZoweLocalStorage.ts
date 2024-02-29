@@ -11,7 +11,7 @@
 
 import * as vscode from "vscode";
 import * as meta from "../../package.json";
-import { ZoweLogger } from "./LoggerUtils";
+import { ZoweLogger } from "./ZoweLogger";
 
 export class ZoweLocalStorage {
     private static storage: vscode.Memento;

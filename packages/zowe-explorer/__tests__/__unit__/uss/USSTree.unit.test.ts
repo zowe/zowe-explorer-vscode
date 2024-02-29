@@ -9,7 +9,7 @@
  *
  */
 
-import { Gui, IZoweUSSTreeNode, ProfilesCache, Validation } from "@zowe/zowe-explorer-api";
+import { Gui, imperative, IZoweUSSTreeNode, ProfilesCache, Validation } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { Profiles } from "../../../src/Profiles";
 import * as utils from "../../../src/utils/ProfilesUtils";
@@ -27,7 +27,8 @@ import {
 } from "../../../__mocks__/mockCreators/shared";
 import * as globals from "../../../src/globals";
 import * as vscode from "vscode";
-import * as zowe from "@zowe/cli";
+import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
+import * as zosmf from "@zowe/zosmf-for-zowe-sdk";
 import { createUSSNode, createFavoriteUSSNode, createUSSSessionNode } from "../../../__mocks__/mockCreators/uss";
 import { getIconByNode } from "../../../src/generators/icons";
 import * as workspaceUtils from "../../../src/utils/workspace";
@@ -81,7 +82,7 @@ async function createGlobalMocks() {
         testUSSNode: null,
         testTree: null,
         profilesForValidation: { status: "active", name: "fake" },
-        mockProfilesCache: new ProfilesCache(zowe.imperative.Logger.getAppLogger()),
+        mockProfilesCache: new ProfilesCache(imperative.Logger.getAppLogger()),
         mockTreeProviders: createTreeProviders(),
     };
 
@@ -124,10 +125,10 @@ async function createGlobalMocks() {
         value: globalMocks.createSessCfgFromArgs,
         configurable: true,
     });
-    Object.defineProperty(zowe, "ZosmfSession", { value: globalMocks.ZosmfSession, configurable: true });
+    Object.defineProperty(zosmf, "ZosmfSession", { value: globalMocks.ZosmfSession, configurable: true });
     Object.defineProperty(globalMocks.filters, "getFilters", { value: globalMocks.getFilters, configurable: true });
     Object.defineProperty(vscode.window, "createQuickPick", { value: globalMocks.createQuickPick, configurable: true });
-    Object.defineProperty(zowe, "Download", {
+    Object.defineProperty(zosfiles, "Download", {
         value: {
             ussFile: jest.fn().mockReturnValueOnce({
                 apiResponse: {
@@ -137,8 +138,8 @@ async function createGlobalMocks() {
         },
         configurable: true,
     });
-    Object.defineProperty(zowe, "Utilities", { value: globalMocks.Utilities, configurable: true });
-    Object.defineProperty(zowe.Utilities, "isFileTagBinOrAscii", { value: jest.fn(), configurable: true });
+    Object.defineProperty(zosfiles, "Utilities", { value: globalMocks.Utilities, configurable: true });
+    Object.defineProperty(zosfiles.Utilities, "isFileTagBinOrAscii", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showErrorMessage", {
         value: globalMocks.showErrorMessage,
         configurable: true,
@@ -216,7 +217,7 @@ describe("USSTree Unit Tests - Function initializeFavorites", () => {
             "[test]: /u/aDir{directory}",
             "[test]: /u/myFile.txt{textFile}",
         ]);
-        const testTree1 = await createUSSTree(zowe.imperative.Logger.getAppLogger());
+        const testTree1 = await createUSSTree(imperative.Logger.getAppLogger());
         const favProfileNode = testTree1.mFavorites[0];
         expect(testTree1.mSessionNodes).toBeDefined();
         expect(testTree1.mFavorites.length).toBe(1);
@@ -246,7 +247,7 @@ describe("USSTree Unit Tests - Function initializeFavChildNodeForProfile", () =>
             "[test]: /u/aDir{directory}",
             "[test]: /u/myFile.txt{textFile}",
         ]);
-        const testTree1 = await createUSSTree(zowe.imperative.Logger.getAppLogger());
+        const testTree1 = await createUSSTree(imperative.Logger.getAppLogger());
         const favProfileNode = testTree1.mFavorites[0];
         const label = "/u/fakeuser";
         const line = "[test]: /u/fakeuser{ussSession}";
@@ -1306,7 +1307,7 @@ describe("USSTree Unit Tests - Function getChildren", () => {
         const mockApiResponseWithItems = createFileResponse(mockApiResponseItems);
         globalMocks.withProgress.mockReturnValue(mockApiResponseWithItems);
 
-        jest.spyOn(zowe.List, "fileList").mockResolvedValueOnce({
+        jest.spyOn(zosfiles.List, "fileList").mockResolvedValueOnce({
             success: true,
             apiResponse: {
                 items: [
@@ -1333,7 +1334,7 @@ describe("USSTree Unit Tests - Function getChildren", () => {
     });
     it("Testing that getChildren() gets profile-loaded favorites for profile node in Favorites section", async () => {
         const globalMocks = await createGlobalMocks();
-        const log = zowe.imperative.Logger.getAppLogger();
+        const log = imperative.Logger.getAppLogger();
         const favProfileNode = new ZoweUSSNode({
             label: "sestest",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
@@ -1351,7 +1352,7 @@ describe("USSTree Unit Tests - Function getChildren", () => {
 
 describe("USSTree Unit Tests - Function loadProfilesForFavorites", () => {
     function createBlockMocks(globalMocks) {
-        const log = zowe.imperative.Logger.getAppLogger();
+        const log = imperative.Logger.getAppLogger();
         const ussApi = createUssApi(globalMocks.testProfile);
         bindUssApi(ussApi);
 
@@ -1495,7 +1496,7 @@ describe("USSTree Unit Tests - Function loadProfilesForFavorites", () => {
 });
 
 describe("USSTree Unit Tests - Function editSession", () => {
-    const profileLoad: zowe.imperative.IProfileLoaded = {
+    const profileLoad: imperative.IProfileLoaded = {
         name: "fake",
         profile: {
             host: "fake",

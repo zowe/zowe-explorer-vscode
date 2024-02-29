@@ -19,9 +19,9 @@ import * as vscode from "vscode";
 import * as TempFolder from "../../../src/utils/TempFolder";
 import { SettingsConfig } from "../../../src/utils/SettingsConfig";
 import { Gui } from "@zowe/zowe-explorer-api";
-import { ZoweLogger } from "../../../src/utils/LoggerUtils";
+import { ZoweLogger } from "../../../src/utils/ZoweLogger";
 
-jest.mock("../../../src/utils/LoggerUtils");
+jest.mock("../../../src/utils/ZoweLogger");
 
 jest.mock("fs");
 jest.mock("fs", () => ({

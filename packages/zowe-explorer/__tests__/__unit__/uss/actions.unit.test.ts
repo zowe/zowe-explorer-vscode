@@ -11,8 +11,8 @@
 
 jest.mock("fs");
 
-import * as zowe from "@zowe/cli";
-import { Gui, IZoweTree, IZoweUSSTreeNode, Validation } from "@zowe/zowe-explorer-api";
+import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
+import { Gui, imperative, IZoweTree, IZoweUSSTreeNode, Validation } from "@zowe/zowe-explorer-api";
 import * as ussNodeActions from "../../../src/uss/actions";
 import { UssFileTree, UssFileType, UssFileUtils } from "../../../src/uss/FileStructure";
 import { createUSSTree, createUSSNode, createFavoriteUSSNode } from "../../../__mocks__/mockCreators/uss";
@@ -37,12 +37,12 @@ import * as isbinaryfile from "isbinaryfile";
 import * as fs from "fs";
 import { createUssApi, bindUssApi } from "../../../__mocks__/mockCreators/api";
 import * as refreshActions from "../../../src/shared/refresh";
-import { ZoweLogger } from "../../../src/utils/LoggerUtils";
+import { ZoweLogger } from "../../../src/utils/ZoweLogger";
 import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
 import { AttributeView } from "../../../src/uss/AttributeView";
 import { mocked } from "../../../__mocks__/mockUtils";
 
-jest.mock("../../../src/utils/LoggerUtils");
+jest.mock("../../../src/utils/ZoweLogger");
 
 function createGlobalMocks() {
     const globalMocks = {
@@ -88,7 +88,7 @@ function createGlobalMocks() {
     Object.defineProperty(Gui, "setStatusBarMessage", { value: globalMocks.setStatusBarMessage, configurable: true });
     Object.defineProperty(vscode.window, "showInputBox", { value: globalMocks.mockShowInputBox, configurable: true });
     Object.defineProperty(vscode.window, "showQuickPick", { value: globalMocks.showQuickPick, configurable: true });
-    Object.defineProperty(zowe, "Create", { value: globalMocks.Create, configurable: true });
+    Object.defineProperty(zosfiles, "Create", { value: globalMocks.Create, configurable: true });
     Object.defineProperty(vscode.commands, "executeCommand", { value: globalMocks.executeCommand, configurable: true });
     Object.defineProperty(vscode.window, "showWarningMessage", {
         value: globalMocks.showWarningMessage,
@@ -106,7 +106,7 @@ function createGlobalMocks() {
         value: globalMocks.fileToUSSFile,
         configurable: true,
     });
-    Object.defineProperty(zowe, "Download", { value: globalMocks.Download, configurable: true });
+    Object.defineProperty(zosfiles, "Download", { value: globalMocks.Download, configurable: true });
     Object.defineProperty(vscode.window, "showTextDocument", {
         value: globalMocks.showTextDocument,
         configurable: true,
@@ -116,7 +116,7 @@ function createGlobalMocks() {
         value: globalMocks.renameUSSFile,
         configurable: true,
     });
-    Object.defineProperty(zowe, "Utilities", { value: globalMocks.Utilities, configurable: true });
+    Object.defineProperty(zosfiles, "Utilities", { value: globalMocks.Utilities, configurable: true });
     Object.defineProperty(vscode.window, "createTreeView", { value: globalMocks.createTreeView, configurable: true });
     Object.defineProperty(globalMocks.Utilities, "isFileTagBinOrAscii", {
         value: globalMocks.isFileTagBinOrAscii,
@@ -127,7 +127,7 @@ function createGlobalMocks() {
         configurable: true,
     });
     Object.defineProperty(globalMocks.List, "fileList", { value: globalMocks.fileList, configurable: true });
-    Object.defineProperty(zowe, "Upload", { value: globalMocks.Upload, configurable: true });
+    Object.defineProperty(zosfiles, "Upload", { value: globalMocks.Upload, configurable: true });
     Object.defineProperty(globalMocks.Upload, "fileToUSSFile", {
         value: globalMocks.fileToUSSFile,
         configurable: true,
@@ -683,7 +683,7 @@ describe("USS Action Unit Tests - function uploadFile", () => {
         const blockMocks = await createBlockMocks(globalMocks);
         const putContent = jest.fn();
         ZoweExplorerApiRegister.getUssApi = jest.fn<any, Parameters<typeof ZoweExplorerApiRegister.getUssApi>>(
-            (profile: zowe.imperative.IProfileLoaded) => {
+            (profile: imperative.IProfileLoaded) => {
                 return {
                     putContent,
                 };

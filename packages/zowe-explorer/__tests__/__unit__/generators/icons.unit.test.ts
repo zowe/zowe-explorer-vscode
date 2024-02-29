@@ -13,7 +13,7 @@ jest.mock("vscode");
 
 import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
 import { getIconById, getIconByNode, IconId } from "../../../src/generators/icons/index";
-import { imperative } from "@zowe/cli";
+import { imperative } from "@zowe/zowe-explorer-api";
 import { DatasetTree } from "../../../src/dataset/DatasetTree";
 import * as vscode from "vscode";
 import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";

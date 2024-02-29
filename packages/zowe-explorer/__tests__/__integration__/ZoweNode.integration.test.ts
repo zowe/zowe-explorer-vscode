@@ -9,7 +9,8 @@
  *
  */
 
-import { imperative, ZosmfSession } from "@zowe/cli";
+import * as zosmf from "@zowe/zosmf-for-zowe-sdk";
+import { imperative } from "@zowe/zowe-explorer-api";
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
 import * as expect from "expect";
@@ -43,7 +44,7 @@ describe("ZoweNode Integration Tests", async () => {
         user: testProfile.profile.user,
         password: testProfile.profile.password,
     };
-    const sessCfg = ZosmfSession.createSessCfgFromArgs(cmdArgs);
+    const sessCfg = zosmf.ZosmfSession.createSessCfgFromArgs(cmdArgs);
     imperative.ConnectionPropsForSessCfg.resolveSessCfgProps(sessCfg, cmdArgs);
     const session = new imperative.Session(sessCfg);
     const sessNode = new ZoweDatasetNode({
