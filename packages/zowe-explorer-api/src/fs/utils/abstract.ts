@@ -35,9 +35,8 @@ export function getInfoForUri(uri: vscode.Uri, profilesCache?: ProfilesCache): U
     const startPathPos = isRoot ? uri.path.length : slashAfterProfilePos;
 
     // Load profile that matches the parsed name
-    // Remove "$conflicts" (if present) to get the profile based on the conflict URI
-    const profileName = uri.path.substring(1, startPathPos).replace("$conflicts", "");
-    const profile = profilesCache && profilesCache.loadNamedProfile ? profilesCache.loadNamedProfile(profileName) : null;
+    const profileName = uri.path.substring(1, startPathPos);
+    const profile = profilesCache?.loadNamedProfile ? profilesCache.loadNamedProfile(profileName) : null;
 
     return {
         isRoot,

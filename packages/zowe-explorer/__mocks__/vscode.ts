@@ -1205,7 +1205,7 @@ export class Uri {
         readonly fragment?: string;
     }): Uri {
         let uri = new Uri();
-        if (components.path) {
+        if (components.path != null) {
             uri.path = components.path;
         }
         if (components.scheme) {

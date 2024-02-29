@@ -77,7 +77,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         const ussApi = ZoweExplorerApiRegister.getUssApi(info.profile);
 
         if (!ussApi.move) {
-            Gui.errorMessage(vscode.l10n.t("The 'move' function is not implemented for this USS API."));
+            await Gui.errorMessage(vscode.l10n.t("The 'move' function is not implemented for this USS API."));
             return false;
         }
 
@@ -90,6 +90,11 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
     public async listFiles(profile: imperative.IProfileLoaded, uri: vscode.Uri): Promise<IZosFilesResponse> {
         const ussPath = uri.path.substring(uri.path.indexOf("/", 1));
+        if (ussPath.length === 0) {
+            throw new imperative.ImperativeError({
+                msg: vscode.l10n.t("Could not list USS files: Empty path provided in URI"),
+            });
+        }
         const response = await ZoweExplorerApiRegister.getUssApi(profile).fileList(ussPath);
         return {
             ...response,
@@ -182,7 +187,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
      */
     public async readFile(uri: vscode.Uri): Promise<Uint8Array> {
         const file = await this._lookupAsFile(uri, { silent: false });
-        const profInfo = getInfoForUri(uri, Profiles.getInstance());
+        const profInfo = this._getInfoFromUri(uri);
 
         if (profInfo.profile == null) {
             throw vscode.FileSystemError.FileNotFound(vscode.l10n.t("Profile does not exist for this file."));
@@ -396,7 +401,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         this._fireSoon({ type: vscode.FileChangeType.Changed, uri: parentUri }, { uri, type: vscode.FileChangeType.Deleted });
     }
 
-    public copy(source: vscode.Uri, destination: vscode.Uri, options: { readonly overwrite: boolean }): void | Thenable<void> {
+    public async copy(source: vscode.Uri, destination: vscode.Uri, options: { readonly overwrite: boolean }): Promise<void> {
         const uriQuery = new URLSearchParams(source.query);
         if (!uriQuery.has("tree")) {
             return;
@@ -448,7 +453,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         const fileList = apiResponse.apiResponse?.items;
 
         const fileName = this.buildFileName(fileList, path.basename(sourceInfo.path));
-        const outputPath = `${destInfo.path}/${fileName}`;
+        const outputPath = path.posix.join(destInfo.path, fileName);
 
         if (hasCopyApi && sourceInfo.profile.profile === destInfo.profile.profile) {
             await api.copy(outputPath, {
@@ -514,7 +519,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         );
     }
 
-    public watch(_resource: vscode.Uri, _options: { readonly recursive: boolean; readonly excludes: readonly string[] }): vscode.Disposable {
+    public watch(_resource: vscode.Uri, _options?: { readonly recursive: boolean; readonly excludes: readonly string[] }): vscode.Disposable {
         // ignore, fires for all changes...
         return new vscode.Disposable(() => {});
     }
