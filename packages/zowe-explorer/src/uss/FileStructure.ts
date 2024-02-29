@@ -9,7 +9,7 @@
  *
  */
 
-import { ZoweLogger } from "../utils/LoggerUtils";
+import { ZoweLogger } from "../utils/ZoweLogger";
 import * as vscode from "vscode";
 
 /**

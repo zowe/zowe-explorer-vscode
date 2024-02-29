@@ -21,7 +21,7 @@ import { Profiles } from "../Profiles";
 import { getIconByNode } from "../generators/icons";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import * as contextually from "../shared/context";
-import { ZoweLogger } from "../utils/LoggerUtils";
+import { ZoweLogger } from "../utils/ZoweLogger";
 import { ProfileManagement } from "../utils/ProfileManagement";
 import { LocalFileManagement } from "../utils/LocalFileManagement";
 import { Gui, imperative, IZoweDatasetTreeNode, Validation, Types } from "@zowe/zowe-explorer-api";

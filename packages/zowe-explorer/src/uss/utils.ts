@@ -12,8 +12,8 @@
 import * as path from "path";
 import * as fs from "fs";
 import * as vscode from "vscode";
-import { ZoweUSSNode } from "../uss/ZoweUSSNode";
-import { ZoweLogger } from "../utils/LoggerUtils";
+import type { ZoweUSSNode } from "./ZoweUSSNode";
+import { ZoweLogger } from "../utils/ZoweLogger";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { imperative, IZoweUSSTreeNode } from "@zowe/zowe-explorer-api";
 

@@ -19,7 +19,7 @@ import * as contextuals from "../shared/context";
 import { ZoweJobNode } from "./ZoweJobNode";
 import { getSelectedNodeList } from "../shared/utils";
 import { initSubscribers } from "../shared/init";
-import { ZoweLogger } from "../utils/LoggerUtils";
+import { ZoweLogger } from "../utils/ZoweLogger";
 import { JobFSProvider } from "./JobFSProvider";
 import * as globals from "../globals";
 import { PollDecorator } from "../utils/DecorationProviders";

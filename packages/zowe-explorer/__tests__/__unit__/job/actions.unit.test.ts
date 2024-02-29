@@ -41,15 +41,13 @@ import { Profiles } from "../../../src/Profiles";
 import * as SpoolProvider from "../../../src/SpoolProvider";
 import * as refreshActions from "../../../src/shared/refresh";
 import * as sharedUtils from "../../../src/shared/utils";
-import { ZoweLogger } from "../../../src/utils/LoggerUtils";
+import { ZoweLogger } from "../../../src/utils/ZoweLogger";
 import { ZosJobsProvider } from "../../../src/job/ZosJobsProvider";
 import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
 import { LocalFileManagement } from "../../../src/utils/LocalFileManagement";
 import { ProfileManagement } from "../../../src/utils/ProfileManagement";
 import { mocked } from "../../../__mocks__/mockUtils";
 import { JobFSProvider } from "../../../src/job/JobFSProvider";
-
-jest.mock("../../../src/utils/LoggerUtils");
 
 const activeTextEditorDocument = jest.fn();
 

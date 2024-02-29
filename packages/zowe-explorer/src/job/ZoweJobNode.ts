@@ -20,7 +20,7 @@ import { errorHandling, getSessionLabel, syncSessionNode } from "../utils/Profil
 import { getIconByNode } from "../generators/icons";
 import { JOB_SORT_KEYS } from "./utils";
 import { Profiles } from "../Profiles";
-import { ZoweLogger } from "../utils/LoggerUtils";
+import { ZoweLogger } from "../utils/ZoweLogger";
 import { IZoweJobTreeOpts } from "../shared/IZoweTreeOpts";
 import { JobFSProvider } from "./JobFSProvider";
 import { buildUniqueSpoolName } from "../SpoolProvider";

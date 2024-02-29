@@ -9,13 +9,12 @@
  *
  */
 
-import * as globals from "../../../src/globals";
 import * as vscode from "vscode";
 import * as sharedMock from "../../../__mocks__/mockCreators/shared";
 import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
 import * as dsMock from "../../../__mocks__/mockCreators/datasets";
 import { LocalFileManagement } from "../../../src/utils/LocalFileManagement";
-import { ZoweLogger } from "../../../src/globals";
+import { ZoweLogger } from "../../../src/utils/ZoweLogger";
 import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
 import { createUSSSessionNode } from "../../../__mocks__/mockCreators/uss";
 import { UssFSProvider } from "../../../src/uss/UssFSProvider";

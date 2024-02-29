@@ -18,7 +18,6 @@ import * as sharedExtension from "../../../src/shared/init";
 import { initUSSProvider } from "../../../src/uss/init";
 import { Profiles } from "../../../src/Profiles";
 import { IJestIt, ITestContext, processSubscriptions } from "../../__common__/testUtils";
-import { UssFSProvider } from "../../../src/uss/UssFSProvider";
 
 describe("Test src/uss/extension", () => {
     describe("initUSSProvider", () => {

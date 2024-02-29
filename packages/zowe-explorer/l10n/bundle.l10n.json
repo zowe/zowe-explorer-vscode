@@ -26,8 +26,6 @@
     ]
   },
   "Zowe Explorer has activated successfully.": "Zowe Explorer has activated successfully.",
-  "Zowe explorer profiles are being set as unsecured.": "Zowe explorer profiles are being set as unsecured.",
-  "Zowe explorer profiles are being set as secured.": "Zowe explorer profiles are being set as secured.",
   "Error encountered when loading your Zowe config. Click \"Show Config\" for more details.": "Error encountered when loading your Zowe config. Click \"Show Config\" for more details.",
   "Failed to update Zowe schema: insufficient permissions or read-only file. {0}/Error message": {
     "message": "Failed to update Zowe schema: insufficient permissions or read-only file. {0}",
@@ -142,6 +140,11 @@
   "Global: in the Zowe home directory": "Global: in the Zowe home directory",
   "Project: in the current working directory": "Project: in the current working directory",
   "Create New": "Create New",
+  "Do you wish to apply this for all trees?": "Do you wish to apply this for all trees?",
+  "Yes": "Yes",
+  "Apply to all trees": "Apply to all trees",
+  "No": "No",
+  "Apply to current tree selected": "Apply to current tree selected",
   "Refresh": "Refresh",
   "Delete Selected": "Delete Selected",
   "Select an item before deleting": "Select an item before deleting",
@@ -149,6 +152,7 @@
   "Add New History Item": "Add New History Item",
   "Item": "Item",
   "Select": "Select",
+  "Error encountered while activating and initializing logger": "Error encountered while activating and initializing logger",
   "Error encountered when creating temporary folder!": "Error encountered when creating temporary folder!",
   "Unable to delete temporary folder. {0}/Error message": {
     "message": "Unable to delete temporary folder. {0}",
@@ -173,6 +177,8 @@
   },
   "Log in to Authentication Service": "Log in to Authentication Service",
   "Update Credentials": "Update Credentials",
+  "Zowe explorer profiles are being set as unsecured.": "Zowe explorer profiles are being set as unsecured.",
+  "Zowe explorer profiles are being set as secured.": "Zowe explorer profiles are being set as secured.",
   "Custom credential manager failed to activate": "Custom credential manager failed to activate",
   "Custom credential manager {0} found, attempting to activate./Credential manager display name": {
     "message": "Custom credential manager {0} found, attempting to activate.",
@@ -188,7 +194,6 @@
     ]
   },
   "Do you wish to use this credential manager instead?": "Do you wish to use this credential manager instead?",
-  "Yes": "Yes",
   "Don't ask again": "Don't ask again",
   "Plugin of name '{0}' was defined for custom credential management on imperative.json file./Credential manager display name": {
     "message": "Plugin of name '{0}' was defined for custom credential management on imperative.json file.",
@@ -265,10 +270,6 @@
   "Log in to obtain a new token value": "Log in to obtain a new token value",
   "$(arrow-left) Log out of authentication service": "$(arrow-left) Log out of authentication service",
   "Log out to invalidate and remove stored token value": "Log out to invalidate and remove stored token value",
-  "Apply to all trees": "Apply to all trees",
-  "No": "No",
-  "Apply to current tree selected": "Apply to current tree selected",
-  "Do you wish to apply this for all trees?": "Do you wish to apply this for all trees?",
   "Profile {0} is using basic authentication. Choose a profile action./Profile name": {
     "message": "Profile {0} is using basic authentication. Choose a profile action.",
     "comment": [
@@ -287,7 +288,6 @@
       "Profile name"
     ]
   },
-  "Error encountered while activating and initializing logger": "Error encountered while activating and initializing logger",
   "Zowe Explorer": "Zowe Explorer",
   "Initialized logger for Zowe Explorer": "Initialized logger for Zowe Explorer",
   "This log file can be found at {0}/Log file location": {
@@ -359,9 +359,6 @@
   "Copying file structure...": "Copying file structure...",
   "The paste operation is not supported for this node.": "The paste operation is not supported for this node.",
   "Pasting files...": "Pasting files...",
-  "open() called from invalid node.": "open() called from invalid node.",
-  "There is already a file with the same name.\n                Please change your OS file system settings if you want to give case sensitive file names": "There is already a file with the same name.\n                Please change your OS file system settings if you want to give case sensitive file names",
-  "$(sync~spin) Downloading USS file...": "$(sync~spin) Downloading USS file...",
   "Invalid node": "Invalid node",
   "Profile auth error": "Profile auth error",
   "Profile is not authenticated, please log in to continue": "Profile is not authenticated, please log in to continue",
@@ -381,6 +378,15 @@
       "Label"
     ]
   },
+  "open() called from invalid node.": "open() called from invalid node.",
+  "There is already a file with the same name.\n                    Please change your OS file system settings if you want to give case sensitive file names": "There is already a file with the same name.\n                    Please change your OS file system settings if you want to give case sensitive file names",
+  "Downloading {0}/Label": {
+    "message": "Downloading {0}",
+    "comment": [
+      "Label"
+    ]
+  },
+  "$(sync~spin) Downloading USS file...": "$(sync~spin) Downloading USS file...",
   "refreshUSS() called from invalid node.": "refreshUSS() called from invalid node.",
   "not found": "not found",
   "Unable to find file: {0} was probably deleted./Label": {
@@ -889,6 +895,8 @@
     ]
   },
   "No data sets found": "No data sets found",
+  "Invalid data set or member.": "Invalid data set or member.",
+  "$(sync~spin) Downloading data set...": "$(sync~spin) Downloading data set...",
   "$(plus) Create a new filter. For example: HLQ.*, HLQ.aaa.bbb, HLQ.ccc.ddd(member)": "$(plus) Create a new filter. For example: HLQ.*, HLQ.aaa.bbb, HLQ.ccc.ddd(member)",
   "Initializing profiles with data set favorites.": "Initializing profiles with data set favorites.",
   "No data set favorites found.": "No data set favorites found.",

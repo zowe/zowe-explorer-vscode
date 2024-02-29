@@ -36,7 +36,7 @@ import * as contextually from "../shared/context";
 import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
 import { DATASET_FILTER_OPTS, DATASET_SORT_OPTS, validateDataSetName, validateMemberName } from "./utils";
 import { SettingsConfig } from "../utils/SettingsConfig";
-import { ZoweLogger } from "../utils/LoggerUtils";
+import { ZoweLogger } from "../utils/ZoweLogger";
 import { TreeViewUtils } from "../utils/TreeViewUtils";
 import { TreeProviders } from "../shared/TreeProviders";
 import { DatasetFSProvider } from "./DatasetFSProvider";

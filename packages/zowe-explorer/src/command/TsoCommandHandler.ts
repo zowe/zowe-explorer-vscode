@@ -18,7 +18,7 @@ import { errorHandling, FilterDescriptor, FilterItem } from "../utils/ProfilesUt
 import { ZoweCommandProvider } from "../abstract/ZoweCommandProvider";
 import * as zostso from "@zowe/zos-tso-for-zowe-sdk";
 import { SettingsConfig } from "../utils/SettingsConfig";
-import { ZoweLogger } from "../utils/LoggerUtils";
+import { ZoweLogger } from "../utils/ZoweLogger";
 import { ProfileManagement } from "../utils/ProfileManagement";
 
 /**

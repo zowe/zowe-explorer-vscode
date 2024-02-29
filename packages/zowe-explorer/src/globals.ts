@@ -11,11 +11,9 @@
 
 import * as path from "path";
 import * as vscode from "vscode";
-
 import { FileManagement, imperative } from "@zowe/zowe-explorer-api";
-import { SettingsConfig } from "./utils/SettingsConfig";
-import { ZoweLogger } from "./utils/LoggerUtils";
-export { ZoweLogger } from "./utils/LoggerUtils";
+import { ZoweLogger } from "./utils/ZoweLogger";
+import type { Profiles } from "./Profiles";
 
 // Globals
 export let SETTINGS_TEMP_FOLDER_LOCATION;
@@ -98,9 +96,9 @@ export const MAX_MEMBER_LENGTH = 8;
 export const DS_NAME_REGEX_CHECK = /^[a-zA-Z#@$][a-zA-Z0-9#@$-]{0,7}(\.[a-zA-Z#@$][a-zA-Z0-9#@$-]{0,7})*$/;
 export const MEMBER_NAME_REGEX_CHECK = /^[a-zA-Z#@$][a-zA-Z0-9#@$]{0,7}$/;
 export let ACTIVATED = false;
-export let PROFILE_SECURITY: string | boolean = ZOWE_CLI_SCM;
 export let SAVED_PROFILE_CONTENTS = new Uint8Array();
 export const JOBS_MAX_PREFIX = 8;
+export let PROFILES_CACHE: Profiles; // Works around circular dependency, see https://github.com/zowe/vscode-extension-for-zowe/issues/2756
 
 // Dictionary describing translation from old configuration names to new standardized names
 export const configurationDictionary: { [k: string]: string } = {
@@ -331,17 +329,6 @@ export function setSavedProfileContents(value: Uint8Array): void {
     SAVED_PROFILE_CONTENTS = value;
 }
 
-export function setGlobalSecurityValue(credentialManager?: string): void {
-    const settingEnabled: boolean = SettingsConfig.getDirectValue(this.SETTINGS_SECURE_CREDENTIALS_ENABLED);
-    if (settingEnabled && credentialManager) {
-        PROFILE_SECURITY = credentialManager;
-        return;
-    }
-    if (!settingEnabled) {
-        PROFILE_SECURITY = false;
-        ZoweLogger.info(vscode.l10n.t(`Zowe explorer profiles are being set as unsecured.`));
-    } else {
-        PROFILE_SECURITY = ZOWE_CLI_SCM;
-        ZoweLogger.info(vscode.l10n.t(`Zowe explorer profiles are being set as secured.`));
-    }
+export function setProfilesCache(profilesCache: Profiles): void {
+    PROFILES_CACHE = profilesCache;
 }

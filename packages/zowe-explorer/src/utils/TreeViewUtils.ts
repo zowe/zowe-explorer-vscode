@@ -10,7 +10,7 @@
  */
 
 import { Types, IZoweTree, IZoweTreeNode } from "@zowe/zowe-explorer-api";
-import { ZoweLogger } from "./LoggerUtils";
+import { ZoweLogger } from "./ZoweLogger";
 import { TreeViewExpansionEvent } from "vscode";
 import { getIconByNode } from "../generators/icons";
 import { ZoweTreeProvider } from "../abstract/ZoweTreeProvider";

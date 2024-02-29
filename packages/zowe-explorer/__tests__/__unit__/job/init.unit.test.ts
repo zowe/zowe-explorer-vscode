@@ -18,7 +18,7 @@ import * as sharedExtension from "../../../src/shared/init";
 import { initJobsProvider } from "../../../src/job/init";
 import { Profiles } from "../../../src/Profiles";
 import { IJestIt, ITestContext, processSubscriptions } from "../../__common__/testUtils";
-import { ZoweLogger } from "../../../src/utils/LoggerUtils";
+import { ZoweLogger } from "../../../src/utils/ZoweLogger";
 import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
 import { createISession, createIProfile } from "../../../__mocks__/mockCreators/shared";
 import { createJobNode, createJobSessionNode } from "../../../__mocks__/mockCreators/jobs";

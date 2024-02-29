@@ -17,7 +17,7 @@ import * as profUtils from "../../../src/utils/ProfilesUtils";
 import { createIProfile, createISession, createTreeView } from "../../../__mocks__/mockCreators/shared";
 import { createDatasetSessionNode, createDatasetTree } from "../../../__mocks__/mockCreators/datasets";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
-import { ZoweLogger } from "../../../src/utils/LoggerUtils";
+import { ZoweLogger } from "../../../src/utils/ZoweLogger";
 
 async function createGlobalMocks() {
     const newMocks = {

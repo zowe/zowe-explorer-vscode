@@ -12,7 +12,7 @@
 import * as vscode from "vscode";
 import * as zosjobs from "@zowe/zos-jobs-for-zowe-sdk";
 import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
-import { ZoweLogger } from "./utils/LoggerUtils";
+import { ZoweLogger } from "./utils/ZoweLogger";
 import { IZoweJobTreeNode } from "@zowe/zowe-explorer-api";
 
 export function buildUniqueSpoolName(spool: zosjobs.IJobFile): string {

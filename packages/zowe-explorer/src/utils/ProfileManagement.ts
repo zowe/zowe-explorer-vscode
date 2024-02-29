@@ -12,12 +12,11 @@
 import * as vscode from "vscode";
 import * as globals from "../globals";
 import { Gui, IZoweTreeNode, imperative } from "@zowe/zowe-explorer-api";
-import { ZoweLogger } from "./LoggerUtils";
+import { ZoweLogger } from "./ZoweLogger";
 import { ProfilesUtils } from "./ProfilesUtils";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { getSessionType } from "../shared/context";
-import { TreeProviders } from "../shared/TreeProviders";
 
 export class ProfileManagement {
     public static getRegisteredProfileNameList(registeredTree: globals.Trees): string[] {
@@ -125,39 +124,6 @@ export class ProfileManagement {
             description: vscode.l10n.t("Log out to invalidate and remove stored token value"),
         },
     };
-    public static getPromptChangeForAllTreesOptions(): vscode.QuickPickItem[] {
-        const qpItemAll: vscode.QuickPickItem = {
-            label: vscode.l10n.t("Yes"),
-            description: vscode.l10n.t("Apply to all trees"),
-        };
-        const qpItemCurrent: vscode.QuickPickItem = {
-            label: vscode.l10n.t("No"),
-            description: vscode.l10n.t("Apply to current tree selected"),
-        };
-        return [qpItemAll, qpItemCurrent];
-    }
-    public static async handleChangeForAllTrees(nodeName: string, checkPresence: boolean): Promise<boolean> {
-        const selection = await this.promptChangeForAllTrees(nodeName, checkPresence);
-        if (!selection) {
-            return;
-        }
-        const [all] = this.getPromptChangeForAllTreesOptions();
-        return selection.label === all.label;
-    }
-    private static async promptChangeForAllTrees(nodeName: string, checkPresence: boolean): Promise<vscode.QuickPickItem> {
-        const [qpItemAll, qpItemCurrent] = this.getPromptChangeForAllTreesOptions();
-        if (TreeProviders.sessionIsPresentInOtherTrees(nodeName) === checkPresence) {
-            return qpItemCurrent;
-        }
-        const qp = Gui.createQuickPick();
-        qp.placeholder = vscode.l10n.t("Do you wish to apply this for all trees?");
-        qp.items = [qpItemAll, qpItemCurrent];
-        qp.activeItems = [qp.items[0]];
-        qp.show();
-        const selection = await Gui.resolveQuickPick(qp);
-        qp.hide();
-        return selection;
-    }
     private static async setupProfileManagementQp(managementType: string, node: IZoweTreeNode): Promise<vscode.QuickPickItem> {
         const profile = node.getProfile();
         const qp = Gui.createQuickPick();
@@ -298,7 +264,7 @@ export class ProfileManagement {
     }
 
     private static async handleHideProfiles(node: IZoweTreeNode): Promise<void> {
-        const shouldHideFromAllTrees = await this.handleChangeForAllTrees(node.getLabel().toString(), false);
+        const shouldHideFromAllTrees = await Profiles.handleChangeForAllTrees(node.getLabel().toString(), false);
         if (shouldHideFromAllTrees === undefined) {
             Gui.infoMessage(vscode.l10n.t("Operation Cancelled"));
             return;

@@ -20,7 +20,7 @@ import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import * as contextuals from "../shared/context";
 import { getSelectedNodeList } from "../shared/utils";
 import { initSubscribers } from "../shared/init";
-import { ZoweLogger } from "../utils/LoggerUtils";
+import { ZoweLogger } from "../utils/ZoweLogger";
 import { TreeViewUtils } from "../utils/TreeViewUtils";
 import { DatasetFSProvider } from "./DatasetFSProvider";
 

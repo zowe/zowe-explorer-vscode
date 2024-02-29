@@ -2061,7 +2061,7 @@
     ]
   },
   "scripts": {
-    "build": "pnpm clean:bundle && (pnpm madge || true) && pnpm license && webpack --mode development",
+    "build": "pnpm clean:bundle && pnpm license && webpack --mode development && pnpm madge",
     "build:integration": "pnpm createTestProfileData && pnpm license && tsc --pretty --project tsconfig-tests.json",
     "test:unit": "jest \".*__tests__.*\\.unit\\.test\\.ts\" --coverage",
     "test": "pnpm test:unit",
@@ -2183,5 +2183,12 @@
   "jest-junit": {
     "outputDirectory": "<rootDir>/results/unit",
     "outputName": "junit.xml"
+  },
+  "madge": {
+    "detectiveOptions": {
+      "ts": {
+        "skipTypeImports": true
+      }
+    }
   }
 }

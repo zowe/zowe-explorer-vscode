@@ -16,7 +16,7 @@ import { Gui, imperative, Validation } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { Profiles } from "../../../src/Profiles";
 import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
-import { UssFileType, UssFileUtils } from "../../../src/uss/FileStructure";
+import { UssFileType } from "../../../src/uss/FileStructure";
 import {
     createISession,
     createISessionWithoutCredentials,
@@ -34,6 +34,7 @@ import { TreeProviders } from "../../../src/shared/TreeProviders";
 import { UssFSProvider } from "../../../src/uss/UssFSProvider";
 import { MockedProperty } from "../../../__mocks__/mockUtils";
 import { getSessionLabel } from "../../../src/utils/ProfilesUtils";
+import { ZoweLogger } from "../../../src/utils/ZoweLogger";
 
 jest.mock("fs");
 
@@ -80,7 +81,7 @@ async function createGlobalMocks() {
         FileSystemProvider: {
             createDirectory: jest.fn(),
         },
-        loggerError: jest.spyOn(globals.ZoweLogger, "error").mockImplementation(),
+        loggerError: jest.spyOn(ZoweLogger, "error").mockImplementation(),
     };
 
     globalMocks["textDocumentsMock"] = new MockedProperty(vscode.workspace, "textDocuments", undefined, globalMocks.textDocumentsArray);

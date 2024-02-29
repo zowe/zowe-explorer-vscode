@@ -16,7 +16,7 @@ import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { Gui, IZoweJobTreeNode, Sorting, Types } from "@zowe/zowe-explorer-api";
 import { ZoweJobNode } from "./ZoweJobNode";
 import { getSpoolFiles, matchSpool } from "../SpoolProvider";
-import { ZoweLogger } from "../utils/LoggerUtils";
+import { ZoweLogger } from "../utils/ZoweLogger";
 import { LocalFileManagement } from "../utils/LocalFileManagement";
 import { SORT_DIRS } from "../shared/utils";
 import { ZosJobsProvider } from "./ZosJobsProvider";

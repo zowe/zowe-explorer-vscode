@@ -12,7 +12,7 @@
 import * as vscode from "vscode";
 import * as os from "os";
 import { IZoweTreeNode } from "@zowe/zowe-explorer-api";
-import { ZoweLogger } from "./LoggerUtils";
+import { ZoweLogger } from "./ZoweLogger";
 
 export class LocalFileManagement {
     public static filesToCompare: IZoweTreeNode[] = [];

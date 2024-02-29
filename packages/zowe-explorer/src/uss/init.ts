@@ -19,7 +19,7 @@ import * as contextuals from "../shared/context";
 import { getSelectedNodeList } from "../shared/utils";
 import { USSTree, createUSSTree } from "./USSTree";
 import { initSubscribers } from "../shared/init";
-import { ZoweLogger } from "../utils/LoggerUtils";
+import { ZoweLogger } from "../utils/ZoweLogger";
 import { TreeViewUtils } from "../utils/TreeViewUtils";
 import { UssFSProvider } from "./UssFSProvider";
 

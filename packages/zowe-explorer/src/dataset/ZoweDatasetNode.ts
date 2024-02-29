@@ -29,7 +29,7 @@ import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { getIconByNode } from "../generators/icons";
 import * as contextually from "../shared/context";
 import { Profiles } from "../Profiles";
-import { ZoweLogger } from "../utils/LoggerUtils";
+import { ZoweLogger } from "../utils/ZoweLogger";
 import * as dayjs from "dayjs";
 import { IZoweDatasetTreeOpts } from "../shared/IZoweTreeOpts";
 import { DatasetFSProvider } from "./DatasetFSProvider";

@@ -22,12 +22,13 @@ import { IJestIt, ITestContext, processSubscriptions } from "../../__common__/te
 import { TsoCommandHandler } from "../../../src/command/TsoCommandHandler";
 import { MvsCommandHandler } from "../../../src/command/MvsCommandHandler";
 import { UnixCommandHandler } from "../../../src/command/UnixCommandHandler";
-import { ZoweLogger } from "../../../src/utils/LoggerUtils";
+import { ZoweLogger } from "../../../src/utils/ZoweLogger";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import * as HistoryView from "../../../src/shared/HistoryView";
 import { LocalFileManagement } from "../../../src/utils/LocalFileManagement";
 
 jest.mock("../../../src/utils/LoggerUtils");
+jest.mock("../../../src/utils/ZoweLogger");
 
 describe("Test src/shared/extension", () => {
     describe("registerCommonCommands", () => {
@@ -54,7 +55,7 @@ describe("Test src/shared/extension", () => {
                 name: "zowe.updateSecureCredentials",
                 parm: ["@zowe/cli"],
                 mock: [
-                    { spy: jest.spyOn(globals, "setGlobalSecurityValue"), arg: ["@zowe/cli"] },
+                    { spy: jest.spyOn(profUtils.ProfilesUtils, "updateCredentialManagerSetting"), arg: ["@zowe/cli"] },
                     { spy: jest.spyOn(profUtils.ProfilesUtils, "writeOverridesFile"), arg: [] },
                 ],
             },

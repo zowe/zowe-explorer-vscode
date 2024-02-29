@@ -21,7 +21,7 @@ import { getIconByNode } from "../generators/icons/index";
 import { injectAdditionalDataToTooltip } from "../uss/utils";
 import * as contextually from "../shared/context";
 import { UssFileTree } from "./FileStructure";
-import { ZoweLogger } from "../utils/LoggerUtils";
+import { ZoweLogger } from "../utils/ZoweLogger";
 import { UssFSProvider } from "./UssFSProvider";
 import { IZoweUssTreeOpts } from "../shared/IZoweTreeOpts";
 import { TreeProviders } from "../shared/TreeProviders";
