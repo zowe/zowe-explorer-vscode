@@ -34,7 +34,7 @@ import { closeOpenedTextFile } from "../utils/workspace";
 import * as nls from "vscode-nls";
 import { UssFileTree, UssFileType, UssFileUtils } from "./FileStructure";
 import { ZoweLogger } from "../utils/LoggerUtils";
-import { compareFileContent, updateOpenFiles } from "../shared/utils";
+import { updateOpenFiles } from "../shared/utils";
 import { IZoweUssTreeOpts } from "../shared/IZoweTreeOpts";
 import { TreeProviders } from "../shared/TreeProviders";
 import { LocalFileManagement } from "../utils/LocalFileManagement";
@@ -299,6 +299,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             this.setIcon(icon.path);
         }
 
+        LocalFileManagement.updateFileInfo(this);
         this.tooltip = injectAdditionalDataToTooltip(this, this.fullPath);
         this.dirty = true;
     }
@@ -442,6 +443,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     public setEtag(etagValue): void {
         ZoweLogger.trace("ZoweUSSNode.setEtag called.");
         this.etag = etagValue;
+        LocalFileManagement.updateFileInfo(this);
     }
 
     /**
@@ -506,13 +508,6 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 }
 
                 const documentFilePath = this.getUSSDocumentFilePath();
-                const recoveredFile = LocalFileManagement.findRecoveredFile(documentFilePath);
-                if (recoveredFile != null) {
-                    await compareFileContent(recoveredFile, this, documentFilePath);
-                    LocalFileManagement.removeRecoveredFile(recoveredFile);
-                    return;
-                }
-
                 // check if some other file is already created with the same name avoid opening file warn user
                 const fileExists = fs.existsSync(documentFilePath);
                 if (fileExists && !fileExistsCaseSensitveSync(documentFilePath)) {

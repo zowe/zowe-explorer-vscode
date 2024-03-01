@@ -282,16 +282,6 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
         ZoweLogger.error(sessionError);
         await Gui.errorMessage(sessionError);
         return;
-    } else if (LocalFileManagement.findRecoveredFile(doc.fileName) != null) {
-        const syncError = localize(
-            "saveUSSFile.sync.error",
-            "Cannot save {0} because it is out of sync with {1}. To synchronize this USS file, re-open it in the Zowe Explorer tree.",
-            path.basename(doc.fileName),
-            profile.name
-        );
-        ZoweLogger.error(syncError);
-        await Gui.errorMessage(syncError);
-        return;
     }
 
     const remote = ending.substring(sesName.length).replace(/\\/g, "/");
@@ -319,9 +309,10 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
                 return false;
             }
         }) ?? ussFileProvider.openFiles?.[doc.uri.fsPath];
+    const cachedFileInfo = LocalFileManagement.getFileInfo(doc.uri.fsPath);
 
     // define upload options
-    const etagToUpload = node?.getEtag();
+    const etagToUpload = node?.getEtag() ?? cachedFileInfo?.etag;
     const returnEtag = etagToUpload != null;
 
     const prof = node?.getProfile() ?? profile;
@@ -342,6 +333,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
             // set local etag with the new etag from the updated file on mainframe
             node?.setEtag(uploadResponse.apiResponse.etag);
             setFileSaved(true);
+            LocalFileManagement.removeRecoveredFile(doc);
             // this part never runs! zowe.Upload.fileToUSSFile doesn't return success: false, it just throws the error which is caught below!!!!!
         } else {
             await markDocumentUnsaved(doc);

@@ -9,8 +9,11 @@
  *
  */
 
+import { IZoweDatasetTreeNode, IZoweUSSTreeNode } from "@zowe/zowe-explorer-api";
 import * as vscode from "vscode";
 import * as nls from "vscode-nls";
+import { ZoweLocalStorage } from "./ZoweLocalStorage";
+import { getDocumentFilePath } from "../shared/utils";
 
 // Set up localization
 nls.config({
@@ -19,12 +22,16 @@ nls.config({
 })();
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
+interface IFileInfo {
+    binary?: boolean;
+    encoding?: string;
+    etag?: string;
+}
+
 export class LocalFileManagement {
-    private static recoveredFiles: vscode.TextDocument[] = [];
     private static recoveryDiagnostics: vscode.DiagnosticCollection = vscode.languages.createDiagnosticCollection("zowe-explorer");
 
     public static addRecoveredFile(document: vscode.TextDocument, fileInfo: { profile: string; filename: string }): void {
-        this.recoveredFiles.push(document);
         const firstLine = document.lineAt(0);
         const lastLine = document.lineAt(document.lineCount - 1);
         const textRange = new vscode.Range(firstLine.range.start, lastLine.range.end);
@@ -37,12 +44,29 @@ export class LocalFileManagement {
         ]);
     }
 
-    public static findRecoveredFile(filePath: string): vscode.TextDocument | undefined {
-        return this.recoveredFiles.find((document) => document.fileName == filePath);
+    public static removeRecoveredFile(document: vscode.TextDocument): void {
+        this.recoveryDiagnostics.delete(document.uri);
     }
 
-    public static removeRecoveredFile(document: vscode.TextDocument): void {
-        this.recoveredFiles = this.recoveredFiles.filter((doc) => doc != document);
-        this.recoveryDiagnostics.delete(document.uri);
+    public static updateFileInfo(node: IZoweDatasetTreeNode | IZoweUSSTreeNode, filename?: string): void {
+        const fileInfo = ZoweLocalStorage.getValue<Record<string, IFileInfo>>("zowe.fileInfoCache") ?? {};
+        filename = filename ?? getDocumentFilePath(node.label as string, node);
+        fileInfo[filename] = {
+            binary: node.binary,
+            encoding: node.encoding,
+            etag: node.getEtag(),
+        };
+        ZoweLocalStorage.setValue("zowe.fileInfoCache", fileInfo);
+    }
+
+    public static getFileInfo(filename: string): IFileInfo | undefined {
+        const fileInfo = ZoweLocalStorage.getValue<Record<string, IFileInfo>>("zowe.fileInfoCache") ?? {};
+        return fileInfo[filename];
+    }
+
+    public static deleteFileInfo(filename: string): void {
+        const fileInfo = ZoweLocalStorage.getValue<Record<string, IFileInfo>>("zowe.fileInfoCache") ?? {};
+        delete fileInfo[filename];
+        ZoweLocalStorage.setValue("zowe.fileInfoCache", fileInfo);
     }
 }

@@ -75,7 +75,7 @@ export function disposeClipboardContents(): void {
 }
 
 export async function autoDetectEncoding(node: IZoweUSSTreeNode, profile?: imperative.IProfileLoaded): Promise<void> {
-    if (node.binary || node.encoding !== undefined) {
+    if (node == null || node.binary || node.encoding !== undefined) {
         return;
     }
     const ussApi = ZoweExplorerApiRegister.getUssApi(profile ?? node.getProfile());

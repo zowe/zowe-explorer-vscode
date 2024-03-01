@@ -35,6 +35,7 @@ import { isTypeUssTreeNode } from "./context";
 import { markDocumentUnsaved } from "../utils/workspace";
 import { errorHandling } from "../utils/ProfilesUtils";
 import { ZoweLocalStorage } from "../utils/ZoweLocalStorage";
+import { LocalFileManagement } from "../utils/LocalFileManagement";
 
 // Set up localization
 nls.config({
@@ -229,11 +230,11 @@ export async function uploadContent(
     const uploadOptions: IUploadOptions = {
         etag: etagToUpload,
         returnEtag: true,
-        binary: node.binary,
-        encoding: node.encoding !== undefined ? node.encoding : profile.profile?.encoding,
+        binary: node?.binary,
+        encoding: node?.encoding !== undefined ? node.encoding : profile.profile?.encoding,
         responseTimeout: profile.profile?.responseTimeout,
     };
-    if (isZoweDatasetTreeNode(node)) {
+    if (doc.uri.fsPath.toUpperCase().includes(globals.DS_DIR.toUpperCase())) {
         return ZoweExplorerApiRegister.getMvsApi(profile).putContents(doc.fileName, remotePath, uploadOptions);
     } else {
         // if new api method exists, use it
@@ -265,7 +266,7 @@ export function willForceUpload(
 ): Thenable<void> {
     // setup to handle both cases (dataset & USS)
     let title: string;
-    if (isZoweDatasetTreeNode(node)) {
+    if (doc.uri.fsPath.toUpperCase().includes(globals.DS_DIR.toUpperCase())) {
         title = localize("saveFile.response.save.title", "Saving data set...");
     } else {
         title = localize("saveUSSFile.response.title", "Saving file...");
@@ -376,20 +377,20 @@ export async function compareFileContent(
     const prof = node ? node.getProfile() : profile;
     let downloadResponse;
 
-    if (isTypeUssTreeNode(node)) {
-        downloadResponse = await ZoweExplorerApiRegister.getUssApi(prof).getContents(node.fullPath, {
-            file: node.getUSSDocumentFilePath(),
-            binary: node.binary,
+    if (doc.uri.fsPath.toUpperCase().includes(globals.DS_DIR.toUpperCase())) {
+        downloadResponse = await ZoweExplorerApiRegister.getMvsApi(prof).getContents(label, {
+            file: doc.fileName,
+            binary: node?.binary,
             returnEtag: true,
-            encoding: node.encoding !== undefined ? node.encoding : prof.profile?.encoding,
+            encoding: node?.encoding !== undefined ? node.encoding : prof.profile?.encoding,
             responseTimeout: prof.profile?.responseTimeout,
         });
     } else {
-        downloadResponse = await ZoweExplorerApiRegister.getMvsApi(prof).getContents(label, {
-            file: doc.fileName,
-            binary: node.binary,
+        downloadResponse = await ZoweExplorerApiRegister.getUssApi(prof).getContents(node.fullPath, {
+            file: (node as IZoweUSSTreeNode).getUSSDocumentFilePath(),
+            binary: node?.binary,
             returnEtag: true,
-            encoding: node.encoding !== undefined ? node.encoding : prof.profile?.encoding,
+            encoding: node?.encoding !== undefined ? node.encoding : prof.profile?.encoding,
             responseTimeout: prof.profile?.responseTimeout,
         });
     }
@@ -424,6 +425,11 @@ export async function compareFileContent(
 export function updateOpenFiles<T extends IZoweTreeNode>(treeProvider: IZoweTree<T>, docPath: string, value: T | null): void {
     if (treeProvider.openFiles) {
         treeProvider.openFiles[docPath] = value;
+    }
+    if (value != null) {
+        LocalFileManagement.updateFileInfo(value, docPath);
+    } else {
+        LocalFileManagement.deleteFileInfo(docPath);
     }
 }
 

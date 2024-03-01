@@ -1529,16 +1529,6 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
         ZoweLogger.error(sessionError);
         await api.Gui.errorMessage(sessionError);
         return;
-    } else if (LocalFileManagement.findRecoveredFile(doc.fileName) != null) {
-        const syncError = localize(
-            "saveFile.sync.error",
-            "Cannot save {0} because it is out of sync with {1}. To synchronize this data set, re-open it in the Zowe Explorer tree.",
-            path.basename(doc.fileName),
-            profile.name
-        );
-        ZoweLogger.error(syncError);
-        await api.Gui.errorMessage(syncError);
-        return;
     }
 
     const etagFavorites = (
@@ -1592,10 +1582,11 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
                 return false;
             }
         }) ?? datasetProvider.openFiles?.[doc.uri.fsPath];
+    const cachedFileInfo = LocalFileManagement.getFileInfo(doc.uri.fsPath);
 
     // define upload options
     const uploadOptions: IUploadOptions = {
-        etag: node?.getEtag(),
+        etag: node?.getEtag() ?? cachedFileInfo?.etag,
         returnEtag: true,
     };
 
@@ -1615,6 +1606,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
             // set local etag with the new etag from the updated file on mainframe
             node?.setEtag(uploadResponse.apiResponse[0].etag);
             setFileSaved(true);
+            LocalFileManagement.removeRecoveredFile(doc);
         } else if (!uploadResponse.success && uploadResponse.commandResponse.includes("Rest API failure with HTTP(S) status 412")) {
             resolveFileConflict(node, prof, doc, fileLabel);
         } else {

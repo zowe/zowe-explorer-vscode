@@ -37,7 +37,7 @@ import { ZoweLogger } from "../utils/LoggerUtils";
 import * as dayjs from "dayjs";
 import * as fs from "fs";
 import { promiseStatus, PromiseStatuses } from "promise-status-async";
-import { compareFileContent, getDocumentFilePath, updateOpenFiles } from "../shared/utils";
+import { getDocumentFilePath, updateOpenFiles } from "../shared/utils";
 import { IZoweDatasetTreeOpts } from "../shared/IZoweTreeOpts";
 import { LocalFileManagement } from "../utils/LocalFileManagement";
 
@@ -451,6 +451,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     public setEtag(etagValue): void {
         ZoweLogger.trace("ZoweDatasetNode.setEtag called.");
         this.etag = etagValue;
+        LocalFileManagement.updateFileInfo(this);
     }
 
     private async getDatasets(): Promise<zowe.IZosFilesResponse[]> {
@@ -543,13 +544,6 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 }
 
                 const documentFilePath = getDocumentFilePath(label, this);
-                const recoveredFile = LocalFileManagement.findRecoveredFile(documentFilePath);
-                if (recoveredFile != null) {
-                    await compareFileContent(recoveredFile, this, label);
-                    LocalFileManagement.removeRecoveredFile(recoveredFile);
-                    return;
-                }
-
                 let responsePromise = this.ongoingActions ? this.ongoingActions[NodeAction.Download] : null;
                 // If there is no ongoing action and the local copy does not exist, fetch contents
                 if (forceDownload || (responsePromise == null && !fs.existsSync(documentFilePath))) {
@@ -626,6 +620,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             this.setIcon(icon.path);
         }
 
+        LocalFileManagement.updateFileInfo(this);
         this.dirty = true;
     }
 

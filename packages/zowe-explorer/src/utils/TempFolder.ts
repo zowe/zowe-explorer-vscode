@@ -138,7 +138,7 @@ export async function hideTempFolder(zoweDir: string): Promise<void> {
 
 export function findRecoveredFiles(): void {
     ZoweLogger.trace("TempFolder.findRecoveredFiles called.");
-    const recoveredFiles: { profile: string; filename: string }[] = [];
+    let recoveredFileCount = 0;
     for (const document of vscode.workspace.textDocuments) {
         let fileInfo: { profile: string; filename: string } = null;
         if (document.fileName.toUpperCase().indexOf(globals.DS_DIR.toUpperCase()) >= 0) {
@@ -155,20 +155,16 @@ export function findRecoveredFiles(): void {
             };
         }
         if (fileInfo != null) {
-            recoveredFiles.push(fileInfo);
+            recoveredFileCount++;
             LocalFileManagement.addRecoveredFile(document, fileInfo);
         }
     }
-    if (recoveredFiles.length > 0) {
-        Gui.showMessage(
+    if (recoveredFileCount > 0) {
+        Gui.warningMessage(
             localize(
                 "findRecoveredFiles.message",
-                "One or more files remained open in your last VS Code session:\n\n{0}\n\nTo prevent losing your updates, re-open these files in the Zowe Explorer tree to sync them with the mainframe.",
-                recoveredFiles.map(({ profile, filename }) => `[${profile}] ${filename}`).join("\n")
-            ),
-            {
-                vsCodeOpts: { modal: true },
-            }
+                "One or more files remained open in your last VS Code session. To prevent losing your updates, check the Problems view to see the list of files and re-save them to upload edits to the mainframe."
+            )
         );
     }
 }
