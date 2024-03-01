@@ -449,11 +449,11 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
         const hasCopyApi = api.copy != null;
 
-        const apiResponse = await api.fileList(destInfo.path);
+        const apiResponse = await api.fileList(path.posix.join(destInfo.path, ".."));
         const fileList = apiResponse.apiResponse?.items;
 
-        const fileName = this.buildFileName(fileList, path.basename(sourceInfo.path));
-        const outputPath = path.posix.join(destInfo.path, fileName);
+        const fileName = this.buildFileName(fileList, path.basename(destInfo.path));
+        const outputPath = path.posix.join(destInfo.path, "..", fileName);
 
         if (hasCopyApi && sourceInfo.profile.profile === destInfo.profile.profile) {
             await api.copy(outputPath, {
@@ -471,7 +471,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                         child.localUri,
                         vscode.Uri.from({
                             scheme: "zowe-uss",
-                            path: outputPath,
+                            path: path.posix.join(destInfo.profile.name, outputPath, child.baseName),
                         }),
                         { ...options, tree: child }
                     );
@@ -485,7 +485,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
             if (!fileEntry.wasAccessed) {
                 // must fetch contents of file first before pasting in new path
-                const fileContents = await vscode.workspace.fs.readFile(source);
+                const fileContents = await this.readFile(source);
                 await api.uploadFromBuffer(Buffer.from(fileContents), outputPath);
             }
         }

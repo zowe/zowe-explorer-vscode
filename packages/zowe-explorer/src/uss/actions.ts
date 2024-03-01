@@ -274,7 +274,6 @@ export async function buildFileStructure(node: IZoweUSSTreeNode): Promise<UssFil
     }
 
     return {
-        children: [],
         binary: node.binary,
         localUri: node.resourceUri,
         ussPath: node.fullPath,

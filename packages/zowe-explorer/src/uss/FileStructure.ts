@@ -33,7 +33,7 @@ export interface UssFileTree {
     binary?: boolean;
 
     // Any files/directory trees within this file tree
-    children: UssFileTree[];
+    children?: UssFileTree[];
 
     // The session where this node comes from (optional for root)
     sessionName?: string;
