@@ -20,29 +20,29 @@ nls.config({
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 export class LocalFileManagement {
-    private static reopenedFiles: vscode.TextDocument[] = [];
+    private static recoveredFiles: vscode.TextDocument[] = [];
     private static recoveryDiagnostics: vscode.DiagnosticCollection = vscode.languages.createDiagnosticCollection("zowe-explorer");
 
-    public static addReopenedFile(document: vscode.TextDocument, fileInfo: { profile: string; filename: string }): void {
-        this.reopenedFiles.push(document);
+    public static addRecoveredFile(document: vscode.TextDocument, fileInfo: { profile: string; filename: string }): void {
+        this.recoveredFiles.push(document);
         const firstLine = document.lineAt(0);
         const lastLine = document.lineAt(document.lineCount - 1);
         const textRange = new vscode.Range(firstLine.range.start, lastLine.range.end);
         this.recoveryDiagnostics.set(document.uri, [
             new vscode.Diagnostic(
                 textRange,
-                localize("addReopenedFile.diagnosticMessage", "File is out of sync with mainframe: [{0}] {1}", fileInfo.profile, fileInfo.filename),
+                localize("addRecoveredFile.diagnosticMessage", "File is out of sync with {0}: {1}", fileInfo.profile, fileInfo.filename),
                 vscode.DiagnosticSeverity.Error
             ),
         ]);
     }
 
-    public static findReopenedFile(filePath: string): vscode.TextDocument | undefined {
-        return this.reopenedFiles.find((document) => document.fileName == filePath);
+    public static findRecoveredFile(filePath: string): vscode.TextDocument | undefined {
+        return this.recoveredFiles.find((document) => document.fileName == filePath);
     }
 
-    public static removeReopenedFile(document: vscode.TextDocument): void {
-        this.reopenedFiles = this.reopenedFiles.filter((doc) => doc != document);
+    public static removeRecoveredFile(document: vscode.TextDocument): void {
+        this.recoveredFiles = this.recoveredFiles.filter((doc) => doc != document);
         this.recoveryDiagnostics.delete(document.uri);
     }
 }

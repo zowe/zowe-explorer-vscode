@@ -506,10 +506,10 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 }
 
                 const documentFilePath = this.getUSSDocumentFilePath();
-                const reopenedFile = LocalFileManagement.findReopenedFile(documentFilePath);
-                if (reopenedFile != null) {
-                    await compareFileContent(reopenedFile, this, documentFilePath);
-                    LocalFileManagement.removeReopenedFile(reopenedFile);
+                const recoveredFile = LocalFileManagement.findRecoveredFile(documentFilePath);
+                if (recoveredFile != null) {
+                    await compareFileContent(recoveredFile, this, documentFilePath);
+                    LocalFileManagement.removeRecoveredFile(recoveredFile);
                     return;
                 }
 

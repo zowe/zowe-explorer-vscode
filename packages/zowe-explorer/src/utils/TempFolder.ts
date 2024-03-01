@@ -136,9 +136,9 @@ export async function hideTempFolder(zoweDir: string): Promise<void> {
     }
 }
 
-export function findReopenedFiles(): void {
-    ZoweLogger.trace("TempFolder.findReopenedFiles called.");
-    const reopenedFiles: { profile: string; filename: string }[] = [];
+export function findRecoveredFiles(): void {
+    ZoweLogger.trace("TempFolder.findRecoveredFiles called.");
+    const recoveredFiles: { profile: string; filename: string }[] = [];
     for (const document of vscode.workspace.textDocuments) {
         let fileInfo: { profile: string; filename: string } = null;
         if (document.fileName.toUpperCase().indexOf(globals.DS_DIR.toUpperCase()) >= 0) {
@@ -155,16 +155,16 @@ export function findReopenedFiles(): void {
             };
         }
         if (fileInfo != null) {
-            reopenedFiles.push(fileInfo);
-            LocalFileManagement.addReopenedFile(document, fileInfo);
+            recoveredFiles.push(fileInfo);
+            LocalFileManagement.addRecoveredFile(document, fileInfo);
         }
     }
-    if (reopenedFiles.length > 0) {
+    if (recoveredFiles.length > 0) {
         Gui.showMessage(
             localize(
-                "findReopenedFiles.message",
-                "One or more files remained open in your last VS Code session:\n\n{0}\n\nTo prevent losing your updates, navigate to these files in the Zowe Explorer tree to sync them with the mainframe.",
-                reopenedFiles.map(({ profile, filename }) => `[${profile}] ${filename}`).join("\n")
+                "findRecoveredFiles.message",
+                "One or more files remained open in your last VS Code session:\n\n{0}\n\nTo prevent losing your updates, re-open these files in the Zowe Explorer tree to sync them with the mainframe.",
+                recoveredFiles.map(({ profile, filename }) => `[${profile}] ${filename}`).join("\n")
             ),
             {
                 vsCodeOpts: { modal: true },

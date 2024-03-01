@@ -543,10 +543,10 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 }
 
                 const documentFilePath = getDocumentFilePath(label, this);
-                const reopenedFile = LocalFileManagement.findReopenedFile(documentFilePath);
-                if (reopenedFile != null) {
-                    await compareFileContent(reopenedFile, this, label);
-                    LocalFileManagement.removeReopenedFile(reopenedFile);
+                const recoveredFile = LocalFileManagement.findRecoveredFile(documentFilePath);
+                if (recoveredFile != null) {
+                    await compareFileContent(recoveredFile, this, label);
+                    LocalFileManagement.removeRecoveredFile(recoveredFile);
                     return;
                 }
 

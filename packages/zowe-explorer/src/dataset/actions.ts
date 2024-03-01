@@ -40,6 +40,7 @@ import { ProfileManagement } from "../utils/ProfileManagement";
 // Set up localization
 import * as nls from "vscode-nls";
 import { resolveFileConflict } from "../shared/actions";
+import { LocalFileManagement } from "../utils/LocalFileManagement";
 
 nls.config({
     messageFormat: nls.MessageFormat.bundle,
@@ -1527,6 +1528,16 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
         const sessionError = localize("saveFile.session.error", "Could not locate session when saving data set.");
         ZoweLogger.error(sessionError);
         await api.Gui.errorMessage(sessionError);
+        return;
+    } else if (LocalFileManagement.findRecoveredFile(doc.fileName) != null) {
+        const syncError = localize(
+            "saveFile.sync.error",
+            "Cannot save {0} because it is out of sync with {1}. To synchronize this data set, re-open it in the Zowe Explorer tree.",
+            path.basename(doc.fileName),
+            profile.name
+        );
+        ZoweLogger.error(syncError);
+        await api.Gui.errorMessage(syncError);
         return;
     }
 

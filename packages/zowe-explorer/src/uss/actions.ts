@@ -30,6 +30,7 @@ import { UssFileTree, UssFileType } from "./FileStructure";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { AttributeView } from "./AttributeView";
 import { resolveFileConflict } from "../shared/actions";
+import { LocalFileManagement } from "../utils/LocalFileManagement";
 
 // Set up localization
 nls.config({
@@ -280,6 +281,16 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
         const sessionError = localize("saveUSSFile.session.error", "Could not locate session when saving USS file.");
         ZoweLogger.error(sessionError);
         await Gui.errorMessage(sessionError);
+        return;
+    } else if (LocalFileManagement.findRecoveredFile(doc.fileName) != null) {
+        const syncError = localize(
+            "saveUSSFile.sync.error",
+            "Cannot save {0} because it is out of sync with {1}. To synchronize this USS file, re-open it in the Zowe Explorer tree.",
+            path.basename(doc.fileName),
+            profile.name
+        );
+        ZoweLogger.error(syncError);
+        await Gui.errorMessage(syncError);
         return;
     }
 
