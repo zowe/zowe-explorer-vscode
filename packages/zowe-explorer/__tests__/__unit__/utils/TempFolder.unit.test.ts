@@ -20,6 +20,8 @@ import * as TempFolder from "../../../src/utils/TempFolder";
 import { SettingsConfig } from "../../../src/utils/SettingsConfig";
 import { Gui } from "@zowe/zowe-explorer-api";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
+import { LocalFileManagement } from "../../../src/utils/LocalFileManagement";
+import { Profiles } from "../../../src/Profiles";
 
 jest.mock("fs");
 jest.mock("fs", () => ({
@@ -36,9 +38,12 @@ jest.mock("fs-extra", () => ({
 }));
 
 describe("TempFolder Unit Tests", () => {
+    const testDsDir = "/tmp/ds";
+    const testUssDir = "/tmp/uss";
+
     afterEach(() => {
-        jest.resetAllMocks();
         jest.clearAllMocks();
+        jest.restoreAllMocks();
     });
 
     function createBlockMocks() {
@@ -47,6 +52,8 @@ describe("TempFolder Unit Tests", () => {
             winPath2: "testpath123\\temp",
             unixPath: "testpath12/temp",
             unixPath2: "testpath123/temp",
+            addRecoveredFile: jest.spyOn(LocalFileManagement, "addRecoveredFile").mockImplementation(),
+            loadFileInfo: jest.spyOn(LocalFileManagement, "loadFileInfo").mockImplementation(),
         };
         Object.defineProperty(vscode.workspace, "getConfiguration", {
             value: jest.fn(),
@@ -57,12 +64,17 @@ describe("TempFolder Unit Tests", () => {
             configurable: true,
         });
         Object.defineProperty(Gui, "showMessage", { value: jest.fn() });
+        Object.defineProperty(globals, "DS_DIR", { value: testDsDir, configurable: true });
+        Object.defineProperty(globals, "USS_DIR", { value: testUssDir, configurable: true });
         Object.defineProperty(globals, "LOG", { value: jest.fn(), configurable: true });
         Object.defineProperty(globals.LOG, "error", { value: jest.fn(), configurable: true });
         Object.defineProperty(ZoweLogger, "error", { value: jest.fn(), configurable: true });
         Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
         Object.defineProperty(ZoweLogger, "info", { value: jest.fn(), configurable: true });
         jest.spyOn(ProfileUtils, "errorHandling").mockImplementationOnce(jest.fn());
+        jest.spyOn(Profiles, "getInstance").mockReturnValue({
+            loadNamedProfile: jest.fn((name: string) => ({ name, type: "zosmf" })),
+        } as any);
         return newMocks;
     }
 
@@ -108,7 +120,7 @@ describe("TempFolder Unit Tests", () => {
 
     it("moveTempFolder should return if source and destination path are the same", async () => {
         jest.spyOn(fs, "mkdirSync").mockImplementation();
-        jest.spyOn(path, "join").mockImplementation(() => "testpath123");
+        jest.spyOn(path, "join").mockReturnValueOnce("testpath123");
         await expect(TempFolder.moveTempFolder("", "testpath123")).resolves.toEqual(undefined);
     });
 
@@ -143,5 +155,42 @@ describe("TempFolder Unit Tests", () => {
         const setDirectValueSpy = jest.spyOn(SettingsConfig, "setDirectValue").mockImplementation();
         await expect(TempFolder.hideTempFolder("test")).resolves.not.toThrow();
         expect(setDirectValueSpy).toBeCalledTimes(1);
+    });
+
+    it("findRecoveredFiles should recover data sets and USS files that were left open", () => {
+        const blockMocks = createBlockMocks();
+        const dsDocument = {
+            fileName: path.join(testDsDir, "lpar1_zosmf", "IBMUSER.TEST.PS(member).txt"),
+        };
+        const ussDocument = {
+            fileName: path.join(testUssDir, "lpar1_zosmf", "u/ibmuser/test.txt"),
+        };
+        Object.defineProperty(vscode.workspace, "textDocuments", {
+            value: [dsDocument, ussDocument],
+            configurable: true,
+        });
+        TempFolder.findRecoveredFiles();
+        expect(blockMocks.addRecoveredFile).toHaveBeenNthCalledWith(1, dsDocument, {
+            label: "IBMUSER.TEST.PS(member)",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            profile: { name: "lpar1_zosmf", type: "zosmf" },
+        });
+        expect(blockMocks.addRecoveredFile).toHaveBeenNthCalledWith(2, ussDocument, {
+            label: "/u/ibmuser/test.txt",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            profile: { name: "lpar1_zosmf", type: "zosmf" },
+        });
+        expect(blockMocks.loadFileInfo).toHaveBeenCalledTimes(2);
+    });
+
+    it("findRecoveredFiles should do nothing when no files were left open", () => {
+        const blockMocks = createBlockMocks();
+        Object.defineProperty(vscode.workspace, "textDocuments", {
+            value: [],
+            configurable: true,
+        });
+        TempFolder.findRecoveredFiles();
+        expect(blockMocks.addRecoveredFile).toHaveBeenCalledTimes(0);
+        expect(blockMocks.loadFileInfo).toHaveBeenCalledTimes(0);
     });
 });

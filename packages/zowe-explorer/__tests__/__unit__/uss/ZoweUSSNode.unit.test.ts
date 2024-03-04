@@ -77,7 +77,7 @@ async function createGlobalMocks() {
         response: createFileResponse({ etag: "123" }),
         ussApi: null,
         mockShowWarningMessage: jest.fn(),
-        fileExistsCaseSensitveSync: jest.fn(),
+        fileExistsCaseSensitiveSync: jest.fn(),
         readText: jest.fn(),
         fileToUSSFile: jest.fn(),
         basePath: jest.fn(),
@@ -169,8 +169,8 @@ async function createGlobalMocks() {
     Object.defineProperty(globals, "LOG", { value: jest.fn(), configurable: true });
     Object.defineProperty(globals.LOG, "error", { value: jest.fn(), configurable: true });
     Object.defineProperty(globals.LOG, "warn", { value: jest.fn(), configurable: true });
-    Object.defineProperty(ussUtils, "fileExistsCaseSensitveSync", {
-        value: globalMocks.fileExistsCaseSensitveSync,
+    Object.defineProperty(ussUtils, "fileExistsCaseSensitiveSync", {
+        value: globalMocks.fileExistsCaseSensitiveSync,
         configurable: true,
     });
     Object.defineProperty(vscode.env.clipboard, "readText", { value: globalMocks.readText, configurable: true });
@@ -1141,7 +1141,7 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
 
         globalMocks.existsSync.mockReturnValue("exists");
         globalMocks.mockShowTextDocument.mockRejectedValueOnce(Error("testError"));
-        globalMocks.fileExistsCaseSensitveSync.mockReturnValue(true);
+        globalMocks.fileExistsCaseSensitiveSync.mockReturnValue(true);
 
         try {
             await child.openUSS(false, true, blockMocks.testUSSTree);

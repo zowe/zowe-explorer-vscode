@@ -52,8 +52,8 @@ export function injectAdditionalDataToTooltip(node: ZoweUSSNode, tooltip: string
  * @param filepath
  * @returns {boolean}
  */
-export function fileExistsCaseSensitveSync(filepath: string): boolean {
-    ZoweLogger.trace("uss.utils.fileExistsCaseSensitveSync called.");
+export function fileExistsCaseSensitiveSync(filepath: string): boolean {
+    ZoweLogger.trace("uss.utils.fileExistsCaseSensitiveSync called.");
     const dir = path.dirname(filepath);
     if (dir === path.dirname(dir)) {
         return true;
@@ -62,7 +62,7 @@ export function fileExistsCaseSensitveSync(filepath: string): boolean {
     if (filenames.indexOf(path.basename(filepath)) === -1) {
         return false;
     }
-    return fileExistsCaseSensitveSync(dir);
+    return fileExistsCaseSensitiveSync(dir);
 }
 
 /**

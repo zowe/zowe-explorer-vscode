@@ -151,16 +151,16 @@ export function findRecoveredFiles(): void {
                 profile: Profiles.getInstance().loadNamedProfile(pathSegments[0]),
             };
             LocalFileManagement.addRecoveredFile(document, treeOpts);
-            LocalFileManagement.loadFileInfo(new ZoweDatasetNode(treeOpts), document.uri.fsPath);
+            LocalFileManagement.loadFileInfo(new ZoweDatasetNode(treeOpts), document.fileName);
         } else if (document.fileName.toUpperCase().indexOf(globals.USS_DIR.toUpperCase()) >= 0) {
             const pathSegments = document.fileName.slice(globals.USS_DIR.length + 1).split(path.sep);
             const treeOpts: IZoweTreeOpts = {
-                label: path.posix.join(...pathSegments.slice(1)),
+                label: "/" + path.posix.join(...pathSegments.slice(1)),
                 collapsibleState: vscode.TreeItemCollapsibleState.None,
                 profile: Profiles.getInstance().loadNamedProfile(pathSegments[0]),
             };
             LocalFileManagement.addRecoveredFile(document, treeOpts);
-            LocalFileManagement.loadFileInfo(new ZoweUSSNode(treeOpts), document.uri.fsPath);
+            LocalFileManagement.loadFileInfo(new ZoweUSSNode(treeOpts), document.fileName);
         }
     }
     if (LocalFileManagement.recoveredFileCount > 0) {

@@ -337,6 +337,10 @@ describe("Test force upload", () => {
         return newVariables;
     }
 
+    afterEach(() => {
+        jest.clearAllMocks();
+    });
+
     it("should successfully call upload for a USS file if user clicks 'Yes'", async () => {
         const blockMocks = await createBlockMocks();
         blockMocks.showInformationMessage.mockResolvedValueOnce("Yes");
@@ -688,13 +692,17 @@ describe("Shared utils unit tests - function updateOpenFiles", () => {
     const someTree = { openFiles: {} };
 
     it("sets a file entry to null in the openFiles record", () => {
+        const deleteFileInfoSpy = jest.spyOn(LocalFileManagement, "deleteFileInfo").mockImplementation();
         sharedUtils.updateOpenFiles(someTree as any, "/a/doc/path", null);
         expect(someTree.openFiles["/a/doc/path"]).toBeNull();
+        expect(deleteFileInfoSpy).toHaveBeenCalledTimes(1);
     });
 
     it("sets a file entry to a valid node in the openFiles record", () => {
+        const storeFileInfoSpy = jest.spyOn(LocalFileManagement, "storeFileInfo").mockImplementation();
         sharedUtils.updateOpenFiles(someTree as any, "/a/doc/path", { label: "testLabel" } as IZoweTreeNode);
         expect(someTree.openFiles["/a/doc/path"].label).toBe("testLabel");
+        expect(storeFileInfoSpy).toHaveBeenCalledTimes(1);
     });
 
     it("does nothing if openFiles is not defined", () => {
