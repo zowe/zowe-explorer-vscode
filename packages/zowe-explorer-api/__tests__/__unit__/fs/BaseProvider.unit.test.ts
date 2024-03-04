@@ -412,12 +412,7 @@ describe("_lookupAsDirectory", () => {
         const prov = new (BaseProvider as any)();
         prov.root = new DirEntry("");
         prov.root.entries.set("file.txt", { ...globalMocks.fileFsEntry });
-        try {
-            prov._lookupAsDirectory(globalMocks.testFileUri);
-            fail("_lookupAsDirectory did not throw an error when provided a file URI.");
-        } catch (err) {
-            expect(err.message).toBe("file not a directory");
-        }
+        expect((): unknown => prov._lookupAsDirectory(globalMocks.testFileUri)).toThrow("file not a directory");
     });
 });
 
@@ -490,12 +485,7 @@ describe("_getDeleteInfo", () => {
     it("throws an error if given an invalid URI", () => {
         const prov = new (BaseProvider as any)();
         prov.root = new DirEntry("");
-        try {
-            prov._getDeleteInfo(globalMocks.testFolderUri);
-            fail("_getDeleteInfo should throw an error when provided an invalid URI.");
-        } catch (err) {
-            expect(err.message).toBe("file not found");
-        }
+        expect((): unknown => prov._getDeleteInfo(globalMocks.testFolderUri)).toThrow("file not found");
     });
 });
 
@@ -544,13 +534,7 @@ describe("_createFile", () => {
         };
         prov.root.entries.set("file.txt", dirEntry);
         jest.spyOn((BaseProvider as any).prototype, "_lookupParentDirectory").mockReturnValueOnce(prov.root);
-
-        try {
-            await prov._createFile(globalMocks.testFileUri);
-            fail("BaseProvider._createFile should fail to create a URI that matches an existing directory");
-        } catch (err) {
-            expect(err.message).toBe("file is a directory");
-        }
+        expect((): unknown => prov._createFile(globalMocks.testFileUri)).toThrow("file is a directory");
     });
 });
 
