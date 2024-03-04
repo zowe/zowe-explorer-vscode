@@ -20,7 +20,8 @@ import { UssFileType } from "../../../../src/uss/FileStructure";
 const testProfile = createIProfile();
 const testProfileB = { ...createIProfile(), name: "sestest2", profile: { ...testProfile.profile, host: "fake2" } };
 
-const testUris = {
+type TestUris = Record<string, Readonly<Uri>>;
+const testUris: TestUris = {
     conflictFile: Uri.from({ scheme: "zowe-uss", path: "/sestest/aFile.txt", query: "conflict=true" }),
     file: Uri.from({ scheme: "zowe-uss", path: "/sestest/aFile.txt" }),
     folder: Uri.from({ scheme: "zowe-uss", path: "/sestest/aFolder" }),
@@ -36,20 +37,22 @@ const testEntries = {
             size: 3,
         },
         data: new Uint8Array([1, 2, 3]),
-        etag: undefined,
+        etag: "A123SEEMINGLY456RANDOM789ETAG",
         metadata: {
             profile: { name: "sestest" } as any,
-            path: "/sestest/aFile.txt",
+            path: "/aFile.txt",
         },
-        wasAccessed: false,
+        type: FileType.File,
+        wasAccessed: true,
     } as FileEntry,
     folder: {
         name: "aFolder",
         entries: new Map(),
         metadata: {
             profile: { name: "sestest" } as any,
-            path: "/sestest/aFolder",
+            path: "/aFolder",
         },
+        type: FileType.Directory,
         wasAccessed: false,
     } as DirEntry,
     session: {
@@ -57,9 +60,10 @@ const testEntries = {
         entries: new Map(),
         metadata: {
             profile: { name: "sestest" } as any,
-            path: "/sestest",
+            path: "/",
         },
         size: 0,
+        type: FileType.Directory,
         wasAccessed: false,
     } as DirEntry,
 };
@@ -316,9 +320,204 @@ describe("readFile", () => {
     });
 });
 
-xdescribe("writeFile", () => {});
+describe("writeFile", () => {
+    it("updates a file in the FSP and remote system", async () => {
+        const mockUssApi = {
+            getContents: jest.fn().mockResolvedValueOnce({
+                apiResponse: {
+                    etag: "NEWETAG",
+                },
+            }),
+            uploadFromBuffer: jest.fn(),
+        };
+        const ussApiMock = jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce(mockUssApi as any);
+        const statusMsgMock = jest.spyOn(Gui, "setStatusBarMessage");
+        const folder = {
+            ...testEntries.folder,
+            entries: new Map([[testEntries.file.name, { ...testEntries.file }]]),
+        };
+        const lookupParentDirMock = jest.spyOn(UssFSProvider.instance as any, "_lookupParentDirectory").mockReturnValueOnce(folder);
+        const newContents = new Uint8Array([3, 6, 9]);
+        await UssFSProvider.instance.writeFile(testUris.file, newContents, { create: false, overwrite: true });
 
-xdescribe("rename", () => {});
+        expect(lookupParentDirMock).toHaveBeenCalledWith(testUris.file);
+        expect(statusMsgMock).toHaveBeenCalledWith("$(sync~spin) Saving USS file...");
+        expect(mockUssApi.uploadFromBuffer).toHaveBeenCalledWith(Buffer.from(newContents), testEntries.file.metadata.path, {
+            etag: testEntries.file.etag,
+            returnEtag: true,
+        });
+        const fileEntry = folder.entries.get("aFile.txt")!;
+        expect(fileEntry.etag).toBe("NEWETAG");
+        expect(fileEntry.data).toBe(newContents);
+        ussApiMock.mockRestore();
+    });
+
+    it("updates an empty, unaccessed file entry in the FSP without sending data", async () => {
+        const ussApiMock = jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce({} as any);
+        const folder = {
+            ...testEntries.folder,
+            entries: new Map([[testEntries.file.name, { ...testEntries.file, wasAccessed: false }]]),
+        };
+        const lookupParentDirMock = jest.spyOn(UssFSProvider.instance as any, "_lookupParentDirectory").mockReturnValueOnce(folder);
+        const newContents = new Uint8Array([]);
+        await UssFSProvider.instance.writeFile(testUris.file, newContents, { create: false, overwrite: true });
+
+        expect(lookupParentDirMock).toHaveBeenCalledWith(testUris.file);
+        const fileEntry = folder.entries.get("aFile.txt")!;
+        expect(fileEntry.data.length).toBe(0);
+        ussApiMock.mockRestore();
+    });
+
+    it("updates a file when open in the diff view", async () => {
+        const ussApiMock = jest.spyOn(ZoweExplorerApiRegister, "getUssApi");
+        const folder = {
+            ...testEntries.folder,
+            entries: new Map([[testEntries.file.name, { ...testEntries.file, wasAccessed: false }]]),
+        };
+        const lookupParentDirMock = jest.spyOn(UssFSProvider.instance as any, "_lookupParentDirectory").mockReturnValueOnce(folder);
+        const newContents = new Uint8Array([]);
+        await UssFSProvider.instance.writeFile(
+            testUris.file.with({
+                query: "inDiff=true",
+            }),
+            newContents,
+            { create: false, overwrite: true }
+        );
+
+        expect(lookupParentDirMock).toHaveBeenCalledWith(testUris.file);
+        const fileEntry = folder.entries.get("aFile.txt")!;
+        expect(fileEntry.data.length).toBe(0);
+        expect(fileEntry.inDiffView).toBe(true);
+        expect(ussApiMock).not.toHaveBeenCalled();
+    });
+
+    it("throws an error if entry doesn't exist and 'create' option is false", async () => {
+        try {
+            await UssFSProvider.instance.writeFile(testUris.file, new Uint8Array([]), { create: false, overwrite: true });
+            fail("writeFile should throw when the entry doesn't exist and 'create' option is false");
+        } catch (err) {
+            expect(err).toBeInstanceOf(FileSystemError);
+            expect(err.message).toBe("file not found");
+        }
+    });
+
+    it("throws an error if entry exists and 'overwrite' option is false", async () => {
+        const rootFolder = {
+            ...testEntries.session,
+            entries: new Map([[testEntries.file.name, { ...testEntries.file, wasAccessed: false }]]),
+        };
+        const lookupParentDirMock = jest.spyOn(UssFSProvider.instance as any, "_lookupParentDirectory").mockReturnValueOnce(rootFolder);
+        try {
+            await UssFSProvider.instance.writeFile(testUris.file, new Uint8Array([]), { create: true, overwrite: false });
+            fail("writeFile should throw when the entry exists and the 'overwrite' option is false");
+        } catch (err) {
+            expect(err).toBeInstanceOf(FileSystemError);
+            expect(err.message).toBe("file exists");
+        }
+        lookupParentDirMock.mockRestore();
+    });
+
+    it("throws an error if the given URI is a directory", async () => {
+        const rootFolder = {
+            ...testEntries.session,
+            entries: new Map([[testEntries.folder.name, { ...testEntries.folder }]]),
+        };
+        const lookupParentDirMock = jest.spyOn(UssFSProvider.instance as any, "_lookupParentDirectory").mockReturnValueOnce(rootFolder);
+        try {
+            await UssFSProvider.instance.writeFile(testUris.folder, new Uint8Array([]), { create: true, overwrite: false });
+            fail("writeFile should throw when the given URI is a directory");
+        } catch (err) {
+            expect(err).toBeInstanceOf(FileSystemError);
+            expect(err.message).toBe("file is a directory");
+        }
+        lookupParentDirMock.mockRestore();
+    });
+});
+
+describe("rename", () => {
+    it("throws an error if entry exists and 'overwrite' is false", async () => {
+        const lookupMock = jest.spyOn(UssFSProvider.instance as any, "_lookup").mockReturnValueOnce({ ...testEntries.file });
+        try {
+            await UssFSProvider.instance.rename(testUris.file, testUris.file.with({ path: "/sestest/aFile2.txt" }), { overwrite: false });
+            fail("rename should throw when the entry exists and 'overwrite' is false");
+        } catch (err) {
+            expect(err).toBeInstanceOf(FileSystemError);
+            expect(err.message).toBe("file exists");
+        }
+        lookupMock.mockRestore();
+    });
+
+    it("renames a file entry in the FSP and remote system", async () => {
+        const mockUssApi = {
+            rename: jest.fn(),
+        };
+        const ussApiMock = jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce(mockUssApi as any);
+        const lookupMock = jest.spyOn(UssFSProvider.instance as any, "_lookup").mockReturnValueOnce({ ...testEntries.file });
+        const fileEntry = { ...testEntries.file, metadata: { ...testEntries.file.metadata } };
+        const sessionEntry = {
+            ...testEntries.session,
+            entries: new Map([[testEntries.file.name, fileEntry]]),
+        };
+        (UssFSProvider.instance as any).root.entries.set("sestest", sessionEntry);
+
+        await UssFSProvider.instance.rename(testUris.file, testUris.file.with({ path: "/sestest/aFile2.txt" }), { overwrite: true });
+        expect(mockUssApi.rename).toHaveBeenCalledWith("/aFile.txt", "/aFile2.txt");
+        expect(fileEntry.metadata.path).toBe("/aFile2.txt");
+        expect(sessionEntry.entries.has("aFile2.txt")).toBe(true);
+
+        lookupMock.mockRestore();
+        ussApiMock.mockRestore();
+    });
+
+    it("renames a folder entry in the FSP and remote system, updating child paths", async () => {
+        const mockUssApi = {
+            rename: jest.fn(),
+        };
+        const ussApiMock = jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce(mockUssApi as any);
+        const lookupMock = jest.spyOn(UssFSProvider.instance as any, "_lookup").mockReturnValueOnce({ ...testEntries.folder });
+        const updChildPathsMock = jest.spyOn(UssFSProvider.instance as any, "_updateChildPaths").mockResolvedValueOnce(undefined);
+        const folderEntry = { ...testEntries.folder, metadata: { ...testEntries.folder.metadata } };
+        const sessionEntry = {
+            ...testEntries.session,
+            entries: new Map([[testEntries.folder.name, folderEntry]]),
+        };
+        (UssFSProvider.instance as any).root.entries.set("sestest", sessionEntry);
+
+        await UssFSProvider.instance.rename(testUris.folder, testUris.folder.with({ path: "/sestest/aFolder2" }), { overwrite: true });
+        expect(mockUssApi.rename).toHaveBeenCalledWith("/aFolder", "/aFolder2");
+        expect(folderEntry.metadata.path).toBe("/aFolder2");
+        expect(sessionEntry.entries.has("aFolder2")).toBe(true);
+        expect(updChildPathsMock).toHaveBeenCalledWith(folderEntry);
+
+        lookupMock.mockRestore();
+        ussApiMock.mockRestore();
+        updChildPathsMock.mockRestore();
+    });
+
+    it("displays an error message when renaming fails on the remote system", async () => {
+        const mockUssApi = {
+            rename: jest.fn().mockRejectedValueOnce(new Error("could not upload file")),
+        };
+        const errMsgSpy = jest.spyOn(Gui, "errorMessage");
+        const ussApiMock = jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce(mockUssApi as any);
+        const lookupMock = jest.spyOn(UssFSProvider.instance as any, "_lookup").mockReturnValueOnce({ ...testEntries.folder });
+        const folderEntry = { ...testEntries.folder, metadata: { ...testEntries.folder.metadata } };
+        const sessionEntry = {
+            ...testEntries.session,
+            entries: new Map([[testEntries.folder.name, folderEntry]]),
+        };
+        (UssFSProvider.instance as any).root.entries.set("sestest", sessionEntry);
+
+        await UssFSProvider.instance.rename(testUris.folder, testUris.folder.with({ path: "/sestest/aFolder2" }), { overwrite: true });
+        expect(mockUssApi.rename).toHaveBeenCalledWith("/aFolder", "/aFolder2");
+        expect(folderEntry.metadata.path).toBe("/aFolder");
+        expect(sessionEntry.entries.has("aFolder2")).toBe(false);
+        expect(errMsgSpy).toHaveBeenCalledWith("Renaming /aFolder failed due to API error: could not upload file");
+
+        lookupMock.mockRestore();
+        ussApiMock.mockRestore();
+    });
+});
 
 describe("delete", () => {
     it("successfully deletes an entry", async () => {
@@ -335,7 +534,7 @@ describe("delete", () => {
         } as any);
         expect(await UssFSProvider.instance.delete(testUris.file, { recursive: false })).toBe(undefined);
         expect(getDelInfoMock).toHaveBeenCalledWith(testUris.file);
-        expect(deleteMock).toHaveBeenCalledWith(testUris.file.path, false);
+        expect(deleteMock).toHaveBeenCalledWith(testEntries.file.metadata.path, false);
         expect(testEntries.session.entries.has("aFile.txt")).toBe(false);
         expect(testEntries.session.size).toBe(0);
     });
@@ -355,8 +554,8 @@ describe("delete", () => {
         } as any);
         await UssFSProvider.instance.delete(testUris.file, { recursive: false });
         expect(getDelInfoMock).toHaveBeenCalledWith(testUris.file);
-        expect(deleteMock).toHaveBeenCalledWith(testUris.file.path, false);
-        expect(errorMsgMock).toHaveBeenCalledWith("Deleting /sestest/aFile.txt failed due to API error: insufficient permissions");
+        expect(deleteMock).toHaveBeenCalledWith(testEntries.file.metadata.path, false);
+        expect(errorMsgMock).toHaveBeenCalledWith("Deleting /aFile.txt failed due to API error: insufficient permissions");
         expect(sesEntry.entries.has("aFile.txt")).toBe(true);
         expect(sesEntry.size).toBe(1);
     });
