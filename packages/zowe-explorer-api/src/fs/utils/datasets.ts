@@ -9,15 +9,11 @@
  *
  */
 
-import { FilterEntry, IFileSystemEntry, DsEntry, MemberEntry, PdsEntry } from "../";
+import { IFileSystemEntry, DsEntry, MemberEntry, PdsEntry } from "../";
 import { FileType } from "vscode";
 
 export function isDsEntry(entry: IFileSystemEntry): entry is DsEntry {
     return entry != null && entry.type == FileType.File;
-}
-
-export function isFilterEntry(entry: IFileSystemEntry): entry is FilterEntry {
-    return entry != null && entry instanceof FilterEntry;
 }
 
 export function isMemberEntry(entry: IFileSystemEntry): entry is MemberEntry {

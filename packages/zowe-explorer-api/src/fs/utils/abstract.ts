@@ -12,7 +12,7 @@
 import * as vscode from "vscode";
 import { ProfilesCache } from "../../profiles/ProfilesCache";
 import { IProfileLoaded } from "@zowe/imperative";
-import { DirEntry, FileEntry } from "../types";
+import { DirEntry, FileEntry, FilterEntry } from "../types";
 
 export type UriFsInfo = {
     isRoot: boolean;
@@ -52,4 +52,8 @@ export function isDirectoryEntry(entry: any): entry is DirEntry {
 
 export function isFileEntry(entry: any): entry is FileEntry {
     return entry != null && entry["type"] === vscode.FileType.File;
+}
+
+export function isFilterEntry(entry: any): entry is FilterEntry {
+    return entry != null && "filter" in entry;
 }
