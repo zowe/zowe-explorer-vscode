@@ -44,15 +44,7 @@ const testEntries = {
             id: "SOMEID",
         } as any,
     } as SpoolEntry,
-    session: {
-        name: "sestest",
-        filter: {
-            searchId: "",
-            owner: "",
-            status: "",
-            prefix: "",
-        },
-    } as unknown as FilterEntry,
+    session: new FilterEntry("sestest"),
 };
 
 describe("watch", () => {
@@ -154,13 +146,9 @@ describe("writeFile", () => {
     });
 
     it("throws an error if entry doesn't exist and 'create' option is false", () => {
-        try {
-            JobFSProvider.instance.writeFile(testUris.spool, new Uint8Array([]), { create: false, overwrite: true });
-            fail("writeFile should throw when the entry doesn't exist and 'create' option is false");
-        } catch (err) {
-            expect(err).toBeInstanceOf(FileSystemError);
-            expect(err.message).toBe("file not found");
-        }
+        expect(() => JobFSProvider.instance.writeFile(testUris.spool, new Uint8Array([]), { create: false, overwrite: true })).toThrow(
+            "file not found"
+        );
     });
 
     it("throws an error if the entry exists, 'create' opt is true and 'overwrite' opt is false", () => {
@@ -169,13 +157,7 @@ describe("writeFile", () => {
             entries: new Map([[testEntries.spool.name, { ...testEntries.spool, wasAccessed: false }]]),
         };
         const lookupParentDirMock = jest.spyOn(JobFSProvider.instance as any, "_lookupParentDirectory").mockReturnValueOnce(jobEntry);
-        try {
-            JobFSProvider.instance.writeFile(testUris.spool, new Uint8Array([]), { create: true, overwrite: false });
-            fail("writeFile should throw when the entry exists, 'create' opt is true and 'overwrite' opt is false");
-        } catch (err) {
-            expect(err).toBeInstanceOf(FileSystemError);
-            expect(err.message).toBe("file exists");
-        }
+        expect(() => JobFSProvider.instance.writeFile(testUris.spool, new Uint8Array([]), { create: true, overwrite: false })).toThrow("file exists");
         lookupParentDirMock.mockRestore();
     });
 });
@@ -186,12 +168,14 @@ describe("delete", () => {
             deleteJob: jest.fn(),
         };
         const ussApiMock = jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValueOnce(mockUssApi as any);
-        const lookupMock = jest.spyOn(JobFSProvider.prototype as any, "_lookup").mockReturnValueOnce({ ...testEntries.job });
+        const lookupMock = jest.spyOn(JobFSProvider.instance as any, "_lookup").mockReturnValueOnce({ ...testEntries.job });
         const lookupParentDirMock = jest
-            .spyOn(JobFSProvider.prototype as any, "_lookupParentDirectory")
+            .spyOn(JobFSProvider.instance as any, "_lookupParentDirectory")
             .mockReturnValueOnce({ ...testEntries.session });
         await JobFSProvider.instance.delete(testUris.job, { recursive: true, deleteRemote: true });
-        expect(mockUssApi.deleteJob).toHaveBeenCalledWith(testEntries.job.job!.jobname, testEntries.job.job!.jobid);
+        const jobInfo = testEntries.job.job;
+        expect(jobInfo).not.toBeUndefined();
+        expect(mockUssApi.deleteJob).toHaveBeenCalledWith(jobInfo?.jobname || "TESTJOB", jobInfo?.jobid || "JOB12345");
         ussApiMock.mockRestore();
         lookupMock.mockRestore();
         lookupParentDirMock.mockRestore();
@@ -215,14 +199,11 @@ describe("delete", () => {
 
 describe("rename", () => {
     it("throws an error as renaming is not supported for jobs", async () => {
-        try {
-            await JobFSProvider.instance.rename(testUris.job, testUris.job.with({ path: "/sestest/TESTJOB(JOB54321) - ACTIVE" }), {
+        await expect(async () =>
+            JobFSProvider.instance.rename(testUris.job, testUris.job.with({ path: "/sestest/TESTJOB(JOB54321) - ACTIVE" }), {
                 overwrite: true,
-            });
-            fail("rename should throw an error as it is not supported for jobs");
-        } catch (err) {
-            expect(err.message).toBe("Renaming is not supported for jobs.");
-        }
+            })
+        ).rejects.toThrow("Renaming is not supported for jobs.");
     });
 });
 
