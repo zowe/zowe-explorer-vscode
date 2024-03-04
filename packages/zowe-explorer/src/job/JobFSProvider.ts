@@ -250,19 +250,6 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
     }
 
     /**
-     * Returns metadata about the spool file or job entry from the context of z/OS.
-     * @param uri A URI with a path in the format `zowe-*:/{lpar_name}/{full_path}?`
-     * @returns Metadata for the URI that contains the profile instance and resource path
-     */
-    private _getInfoFromUri(uri: vscode.Uri): EntryMetadata {
-        const uriInfo = getInfoForUri(uri, Profiles.getInstance());
-        return {
-            profile: uriInfo.profile,
-            path: uri.path.substring(uriInfo.slashAfterProfilePos + 1),
-        };
-    }
-
-    /**
      * Deletes a spool file or job at the given URI.
      * @param uri The URI that points to the file/folder to delete
      * @param options Options for deleting the spool file or job
@@ -290,5 +277,18 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
     // unsupported
     public rename(_oldUri: vscode.Uri, _newUri: vscode.Uri, _options: { readonly overwrite: boolean }): void | Thenable<void> {
         throw new Error("Renaming is not supported for jobs.");
+    }
+
+    /**
+     * Returns metadata about the spool file or job entry from the context of z/OS.
+     * @param uri A URI with a path in the format `zowe-*:/{lpar_name}/{full_path}?`
+     * @returns Metadata for the URI that contains the profile instance and resource path
+     */
+    private _getInfoFromUri(uri: vscode.Uri): EntryMetadata {
+        const uriInfo = getInfoForUri(uri, Profiles.getInstance());
+        return {
+            profile: uriInfo.profile,
+            path: uriInfo.isRoot ? "/" : uri.path.substring(uriInfo.slashAfterProfilePos),
+        };
     }
 }
