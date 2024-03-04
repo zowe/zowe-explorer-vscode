@@ -264,7 +264,6 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             this._fireSoon({ type: vscode.FileChangeType.Created, uri });
         } else {
             const urlQuery = new URLSearchParams(uri.query);
-            const shouldForceUpload = urlQuery.has("forceUpload");
 
             if (entry.inDiffView || urlQuery.has("inDiff")) {
                 // Allow users to edit the local copy of a file in the diff view, but don't make any API calls.
@@ -278,6 +277,8 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             const ussApi = ZoweExplorerApiRegister.getUssApi(parentDir.metadata.profile);
 
             if (entry.wasAccessed || content.length > 0) {
+                const shouldForceUpload = urlQuery.has("forceUpload");
+
                 // Entry was already accessed previously, this is an update to the existing file.
                 const statusMsg = Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Saving USS file..."));
                 try {
@@ -339,9 +340,6 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
         const newName = path.posix.basename(newUri.path);
 
-        parentDir.entries.delete(entry.name);
-        entry.name = newName;
-
         // Build the new path using the previous path and new file/folder name.
         let newPath = path.posix.join(entry.metadata.path, "..", newName);
         if (isDir) {
@@ -361,10 +359,13 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             return;
         }
 
+        parentDir.entries.delete(entry.name);
+        entry.name = newName;
+
         entry.metadata.path = newPath;
         // We have to update the path for all child entries if they exist in the FileSystem
         // This way any further API requests in readFile will use the latest paths on the LPAR
-        if (entry instanceof UssDirectory) {
+        if (isDirectoryEntry(entry)) {
             this._updateChildPaths(entry);
         }
         parentDir.entries.set(newName, entry);
