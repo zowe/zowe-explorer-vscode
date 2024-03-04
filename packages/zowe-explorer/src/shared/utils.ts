@@ -234,7 +234,7 @@ export async function uploadContent(
         encoding: node?.encoding !== undefined ? node.encoding : profile.profile?.encoding,
         responseTimeout: profile.profile?.responseTimeout,
     };
-    if (doc.uri.fsPath.toUpperCase().includes(globals.DS_DIR.toUpperCase())) {
+    if (isZoweDatasetTreeNode(node)) {
         return ZoweExplorerApiRegister.getMvsApi(profile).putContents(doc.fileName, remotePath, uploadOptions);
     } else {
         // if new api method exists, use it
@@ -266,7 +266,7 @@ export function willForceUpload(
 ): Thenable<void> {
     // setup to handle both cases (dataset & USS)
     let title: string;
-    if (doc.uri.fsPath.toUpperCase().includes(globals.DS_DIR.toUpperCase())) {
+    if (isZoweDatasetTreeNode(node)) {
         title = localize("saveFile.response.save.title", "Saving data set...");
     } else {
         title = localize("saveUSSFile.response.title", "Saving file...");
@@ -377,17 +377,17 @@ export async function compareFileContent(
     const prof = node ? node.getProfile() : profile;
     let downloadResponse;
 
-    if (doc.uri.fsPath.toUpperCase().includes(globals.DS_DIR.toUpperCase())) {
-        downloadResponse = await ZoweExplorerApiRegister.getMvsApi(prof).getContents(label, {
-            file: doc.fileName,
+    if (isTypeUssTreeNode(node)) {
+        downloadResponse = await ZoweExplorerApiRegister.getUssApi(prof).getContents(node.fullPath, {
+            file: node.getUSSDocumentFilePath(),
             binary: node?.binary,
             returnEtag: true,
             encoding: node?.encoding !== undefined ? node.encoding : prof.profile?.encoding,
             responseTimeout: prof.profile?.responseTimeout,
         });
     } else {
-        downloadResponse = await ZoweExplorerApiRegister.getUssApi(prof).getContents(node.fullPath, {
-            file: (node as IZoweUSSTreeNode).getUSSDocumentFilePath(),
+        downloadResponse = await ZoweExplorerApiRegister.getMvsApi(prof).getContents(label, {
+            file: doc.fileName,
             binary: node?.binary,
             returnEtag: true,
             encoding: node?.encoding !== undefined ? node.encoding : prof.profile?.encoding,

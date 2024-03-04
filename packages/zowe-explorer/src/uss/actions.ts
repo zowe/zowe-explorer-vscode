@@ -309,10 +309,9 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
                 return false;
             }
         }) ?? ussFileProvider.openFiles?.[doc.uri.fsPath];
-    const cachedFileInfo = LocalFileManagement.getFileInfo(doc.uri.fsPath);
 
     // define upload options
-    const etagToUpload = node?.getEtag() ?? cachedFileInfo?.etag;
+    const etagToUpload = node?.getEtag();
     const returnEtag = etagToUpload != null;
 
     const prof = node?.getProfile() ?? profile;

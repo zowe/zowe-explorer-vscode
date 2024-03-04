@@ -1582,11 +1582,10 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
                 return false;
             }
         }) ?? datasetProvider.openFiles?.[doc.uri.fsPath];
-    const cachedFileInfo = LocalFileManagement.getFileInfo(doc.uri.fsPath);
 
     // define upload options
     const uploadOptions: IUploadOptions = {
-        etag: node?.getEtag() ?? cachedFileInfo?.etag,
+        etag: node?.getEtag(),
         returnEtag: true,
     };
 

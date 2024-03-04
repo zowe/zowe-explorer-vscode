@@ -138,28 +138,22 @@ export async function hideTempFolder(zoweDir: string): Promise<void> {
 
 export function findRecoveredFiles(): void {
     ZoweLogger.trace("TempFolder.findRecoveredFiles called.");
-    let recoveredFileCount = 0;
     for (const document of vscode.workspace.textDocuments) {
-        let fileInfo: { profile: string; filename: string } = null;
         if (document.fileName.toUpperCase().indexOf(globals.DS_DIR.toUpperCase()) >= 0) {
             const pathSegments = document.fileName.slice(globals.DS_DIR.length + 1).split(path.sep);
-            fileInfo = {
+            LocalFileManagement.addRecoveredDs(document, {
                 profile: pathSegments.shift(),
-                filename: path.basename(pathSegments[0], path.extname(pathSegments[0])),
-            };
+                label: path.basename(pathSegments[0], path.extname(pathSegments[0])),
+            });
         } else if (document.fileName.toUpperCase().indexOf(globals.USS_DIR.toUpperCase()) >= 0) {
             const pathSegments = document.fileName.slice(globals.USS_DIR.length + 1).split(path.sep);
-            fileInfo = {
+            LocalFileManagement.addRecoveredUss(document, {
                 profile: pathSegments.shift(),
-                filename: path.posix.join(...pathSegments),
-            };
-        }
-        if (fileInfo != null) {
-            recoveredFileCount++;
-            LocalFileManagement.addRecoveredFile(document, fileInfo);
+                label: path.posix.join(...pathSegments),
+            });
         }
     }
-    if (recoveredFileCount > 0) {
+    if (LocalFileManagement.recoveredFileCount > 0) {
         Gui.warningMessage(
             localize(
                 "findRecoveredFiles.message",

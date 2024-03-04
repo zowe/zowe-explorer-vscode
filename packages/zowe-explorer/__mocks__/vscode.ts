@@ -636,6 +636,8 @@ export namespace workspace {
      */
     export let rootPath: string | undefined;
 
+    export let textDocuments: string[] = [];
+
     /**
      * A workspace folder is one of potentially many roots opened by the editor. All workspace folders
      * are equal which means there is no notion of an active or master workspace folder.
@@ -730,3 +732,7 @@ export namespace env {
 }
 
 export const version = "1.53.2";
+
+export namespace languages {
+    export function createDiagnosticCollection(name: string): any {}
+}
