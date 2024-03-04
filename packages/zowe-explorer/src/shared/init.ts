@@ -23,7 +23,8 @@ import { UnixCommandHandler } from "../command/UnixCommandHandler";
 import { saveFile } from "../dataset/actions";
 import { saveUSSFile } from "../uss/actions";
 import { ProfilesUtils } from "../utils/ProfilesUtils";
-import { ZoweLogger } from "../utils/LoggerUtils";
+import { LoggerUtils } from "../utils/LoggerUtils";
+import { ZoweLogger } from "../utils/ZoweLogger";
 import { ZoweSaveQueue } from "../abstract/ZoweSaveQueue";
 import { SettingsConfig } from "../utils/SettingsConfig";
 import { spoolFilePollEvent } from "../job/actions";
@@ -31,15 +32,7 @@ import { HistoryView } from "./HistoryView";
 import { ProfileManagement } from "../utils/ProfileManagement";
 import { LocalFileManagement } from "../utils/LocalFileManagement";
 import { TreeProviders } from "./TreeProviders";
-import { DatasetTree } from "../dataset/DatasetTree";
-import { USSTree } from "../uss/USSTree";
-import { ZosJobsProvider } from "../job/ZosJobsProvider";
-
-export interface IZoweProviders {
-    ds: DatasetTree;
-    uss: USSTree;
-    job: ZosJobsProvider;
-}
+import { IZoweProviders } from "./IZoweProviders";
 
 export function registerRefreshCommand(
     context: vscode.ExtensionContext,
@@ -68,8 +61,8 @@ export function registerCommonCommands(context: vscode.ExtensionContext, provide
 
     // Update imperative.json to false only when VS Code setting is set to false
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.updateSecureCredentials", async (customCredentialManager?: string) => {
-            await globals.setGlobalSecurityValue(customCredentialManager);
+        vscode.commands.registerCommand("zowe.updateSecureCredentials", (customCredentialManager?: string) => {
+            ProfilesUtils.updateCredentialManagerSetting(customCredentialManager);
             ProfilesUtils.writeOverridesFile();
         })
     );
@@ -110,7 +103,7 @@ export function registerCommonCommands(context: vscode.ExtensionContext, provide
         vscode.workspace.onDidChangeConfiguration(async (e) => {
             // If the log folder location has been changed, update current log folder preference
             if (e.affectsConfiguration(globals.SETTINGS_LOGS_FOLDER_PATH)) {
-                await ZoweLogger.initializeZoweLogger(context);
+                await initZoweLogger(context);
             }
             // If the temp folder location has been changed, update current temp folder preference
             if (e.affectsConfiguration(globals.SETTINGS_TEMP_FOLDER_PATH)) {
@@ -324,6 +317,11 @@ export async function watchForZoweButtonClick(): Promise<void> {
             await initZoweExplorerUI();
         });
     }
+}
+
+export async function initZoweLogger(context: vscode.ExtensionContext): Promise<void> {
+    const logsPath = await ZoweLogger.initializeZoweLogger(context);
+    ZoweLogger.zeOutputChannel = await LoggerUtils.initVscLogger(context, logsPath);
 }
 
 /**

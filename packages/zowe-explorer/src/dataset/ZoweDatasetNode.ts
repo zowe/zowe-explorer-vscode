@@ -9,22 +9,31 @@
  *
  */
 
-import * as zowe from "@zowe/cli";
+import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
 import * as vscode from "vscode";
 import * as globals from "../globals";
 import { errorHandling } from "../utils/ProfilesUtils";
-import { Sorting, Types, Gui, ZoweTreeNodeActions, IZoweDatasetTreeNode, ZoweTreeNode, ZosEncoding, Validation } from "@zowe/zowe-explorer-api";
+import {
+    Sorting,
+    Types,
+    Gui,
+    imperative,
+    ZoweTreeNodeActions,
+    IZoweDatasetTreeNode,
+    ZoweTreeNode,
+    ZosEncoding,
+    Validation,
+} from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { getIconByNode } from "../generators/icons";
 import * as contextually from "../shared/context";
 import { Profiles } from "../Profiles";
-import { ZoweLogger } from "../utils/LoggerUtils";
+import { ZoweLogger } from "../utils/ZoweLogger";
 import * as dayjs from "dayjs";
 import * as fs from "fs";
 import { promiseStatus, PromiseStatuses } from "promise-status-async";
-import { getDocumentFilePath, updateOpenFiles } from "../shared/utils";
+import { LocalFileInfo, getDocumentFilePath } from "../shared/utils";
 import { IZoweDatasetTreeOpts } from "../shared/IZoweTreeOpts";
-import { downloadDs } from "./actions";
 
 /**
  * A type of TreeItem used to represent sessions and data sets
@@ -42,7 +51,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     public binary = false;
     public encoding?: string;
     public encodingMap = {};
-    public errorDetails: zowe.imperative.ImperativeError;
+    public errorDetails: imperative.ImperativeError;
     public ongoingActions: Record<ZoweTreeNodeActions.Interactions | string, Promise<any>> = {};
     public wasDoubleClicked: boolean = false;
     public stats: Types.DatasetStats;
@@ -91,16 +100,18 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     }
 
     public updateStats(item: any): void {
-        if ("m4date" in item) {
+        if ("c4date" in item && "m4date" in item) {
             const { m4date, mtime, msec }: { m4date: string; mtime: string; msec: string } = item;
             this.stats = {
                 user: item.user,
+                createdDate: dayjs(item.c4date).toDate(),
                 modifiedDate: dayjs(`${m4date} ${mtime}:${msec}`).toDate(),
             };
         } else if ("id" in item || "changed" in item) {
             // missing keys from API response; check for FTP keys
             this.stats = {
                 user: item.id,
+                createdDate: item.created ? dayjs(item.created).toDate() : undefined,
                 modifiedDate: item.changed ? dayjs(item.changed).toDate() : undefined,
             };
         }
@@ -169,7 +180,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     });
                     elementChildren[temp.label.toString()] = temp;
                     // Creates a ZoweDatasetNode for a dataset with imperative errors
-                } else if (item.error instanceof zowe.imperative.ImperativeError) {
+                } else if (item.error instanceof imperative.ImperativeError) {
                     const temp = new ZoweDatasetNode({
                         label: item.dsname,
                         collapsibleState: vscode.TreeItemCollapsibleState.None,
@@ -235,7 +246,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     if (!memberInvalid) {
                         temp.command = { command: "zowe.ds.ZoweNode.openPS", title: "", arguments: [temp] };
                     } else {
-                        temp.errorDetails = new zowe.imperative.ImperativeError({
+                        temp.errorDetails = new imperative.ImperativeError({
                             msg: vscode.l10n.t({
                                 message: "Cannot access member with control characters in the name: {0}",
                                 args: [item.member],
@@ -309,17 +320,17 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 return sortByName(a, b);
             }
 
-            if (sort.method === Sorting.DatasetSortOpts.LastModified) {
-                const dateA = dayjs(a.stats?.modifiedDate ?? null);
-                const dateB = dayjs(b.stats?.modifiedDate ?? null);
+            function sortByDate(aDate: Date, bDate: Date): number {
+                const dateA = dayjs(aDate ?? null);
+                const dateB = dayjs(bDate ?? null);
 
-                const aValid = dateA.isValid();
+                const aVaild = dateA.isValid();
                 const bValid = dateB.isValid();
 
-                a.description = aValid ? dateA.format("YYYY/MM/DD HH:mm:ss") : undefined;
-                b.description = bValid ? dateB.format("YYYY/MM/DD HH:mm:ss") : undefined;
+                a.description = aVaild ? dateA.format("YYYY/MM/DD") : undefined;
+                b.description = bValid ? dateB.format("YYYY/MM/DD") : undefined;
 
-                if (!aValid) {
+                if (!aVaild) {
                     return sortGreaterThan;
                 }
 
@@ -327,27 +338,35 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     return sortLessThan;
                 }
 
-                // for dates that are equal down to the second, fallback to sorting by name
                 if (dateA.isSame(dateB, "second")) {
                     return sortByName(a, b);
                 }
-
                 return dateA.isBefore(dateB, "second") ? sortLessThan : sortGreaterThan;
-            } else if (sort.method === Sorting.DatasetSortOpts.UserId) {
-                const userA = a.stats?.user ?? "";
-                const userB = b.stats?.user ?? "";
-
-                a.description = userA;
-                b.description = userB;
-
-                if (userA === userB) {
-                    return sortByName(a, b);
-                }
-
-                return userA < userB ? sortLessThan : sortGreaterThan;
             }
 
-            return sortByName(a, b);
+            switch (sort.method) {
+                case Sorting.DatasetSortOpts.DateCreated: {
+                    return sortByDate(a.stats?.createdDate, b.stats?.createdDate);
+                }
+                case Sorting.DatasetSortOpts.LastModified: {
+                    return sortByDate(a.stats?.modifiedDate, b.stats?.modifiedDate);
+                }
+                case Sorting.DatasetSortOpts.UserId: {
+                    const userA = a.stats?.user ?? "";
+                    const userB = b.stats?.user ?? "";
+
+                    a.description = userA;
+                    b.description = userB;
+
+                    if (userA === userB) {
+                        return sortByName(a, b);
+                    }
+                    return userA < userB ? sortLessThan : sortGreaterThan;
+                }
+                default: {
+                    return sortByName(a, b);
+                }
+            }
         };
     }
 
@@ -405,11 +424,11 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         this.etag = etagValue;
     }
 
-    private async getDatasets(): Promise<zowe.IZosFilesResponse[]> {
+    private async getDatasets(): Promise<zosfiles.IZosFilesResponse[]> {
         ZoweLogger.trace("ZoweDatasetNode.getDatasets called.");
-        const responses: zowe.IZosFilesResponse[] = [];
+        const responses: zosfiles.IZosFilesResponse[] = [];
         const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
-        const options: zowe.IListOptions = {
+        const options: zosfiles.IListOptions = {
             attributes: true,
             responseTimeout: cachedProfile.profile.responseTimeout,
         };
@@ -424,10 +443,10 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             ];
             const mvsApi = ZoweExplorerApiRegister.getMvsApi(cachedProfile);
             if (!mvsApi.getSession(cachedProfile)) {
-                throw new zowe.imperative.ImperativeError({
+                throw new imperative.ImperativeError({
                     msg: vscode.l10n.t("Profile auth error"),
                     additionalDetails: vscode.l10n.t("Profile is not authenticated, please log in to continue"),
-                    errorCode: `${zowe.imperative.RestConstants.HTTP_STATUS_401}`,
+                    errorCode: `${imperative.RestConstants.HTTP_STATUS_401}`,
                 });
             }
             if (mvsApi.dataSetsMatchingPattern) {
@@ -475,7 +494,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
 
         if (Profiles.getInstance().validProfile !== Validation.ValidationType.INVALID) {
             try {
-                const fileInfo = await downloadDs(this, forceDownload);
+                const fileInfo = await this.downloadDs(forceDownload);
                 const document = await vscode.workspace.openTextDocument(getDocumentFilePath(fileInfo.name, this));
                 await Gui.showTextDocument(document, { preview: this.wasDoubleClicked != null ? !this.wasDoubleClicked : shouldPreview });
                 // discard ongoing action to allow new requests on this node
@@ -489,6 +508,70 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 await errorHandling(err, this.getProfileName());
                 throw err;
             }
+        }
+    }
+
+    public async downloadDs(forceDownload: boolean): Promise<LocalFileInfo> {
+        ZoweLogger.trace("dataset.actions.downloadDs called.");
+        const fileInfo = {} as LocalFileInfo;
+        const defaultMessage = vscode.l10n.t("Invalid data set or member.");
+        switch (true) {
+            // For favorited or non-favorited sequential DS:
+            case contextually.isFavorite(this):
+            case contextually.isSessionNotFav(this.getParent()):
+                fileInfo.name = this.label as string;
+                break;
+            // For favorited or non-favorited data set members:
+            case contextually.isFavoritePds(this.getParent()):
+            case contextually.isPdsNotFav(this.getParent()):
+                fileInfo.name = this.getParent().getLabel().toString() + "(" + this.getLabel().toString() + ")";
+                break;
+            default:
+                Gui.errorMessage(defaultMessage);
+                throw Error(defaultMessage);
+        }
+        // if local copy exists, open that instead of pulling from mainframe
+        fileInfo.path = getDocumentFilePath(fileInfo.name, this);
+        let responsePromise = this.ongoingActions ? this.ongoingActions[ZoweTreeNodeActions.Interactions.Download] : null;
+        // If there is no ongoing action and the local copy does not exist, fetch contents
+        if (forceDownload || (responsePromise == null && !fs.existsSync(fileInfo.path))) {
+            if (this.ongoingActions) {
+                this.ongoingActions[ZoweTreeNodeActions.Interactions.Download] = this.downloadDsApiCall(fileInfo.path, fileInfo.name);
+                responsePromise = this.ongoingActions[ZoweTreeNodeActions.Interactions.Download];
+            } else {
+                responsePromise = this.downloadDsApiCall(fileInfo.path, fileInfo.name);
+            }
+        }
+        if (responsePromise != null) {
+            const response = await responsePromise;
+            this.setEtag(response.apiResponse?.etag);
+        }
+        return fileInfo;
+    }
+
+    private async downloadDsApiCall(documentFilePath: string, label: string): Promise<zosfiles.IZosFilesResponse> {
+        const prof = this.getProfile();
+        ZoweLogger.info(
+            vscode.l10n.t({
+                message: "Downloading {0}",
+                args: [label],
+                comment: ["Label"],
+            })
+        );
+        const statusMsg = Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Downloading data set..."));
+        try {
+            const response = await ZoweExplorerApiRegister.getMvsApi(prof).getContents(label, {
+                file: documentFilePath,
+                returnEtag: true,
+                binary: this.binary,
+                encoding: this.encoding !== undefined ? this.encoding : prof.profile?.encoding,
+                responseTimeout: prof.profile?.responseTimeout,
+            });
+            statusMsg.dispose();
+            return response;
+        } catch (error) {
+            statusMsg.dispose();
+            throw error;
         }
     }
 

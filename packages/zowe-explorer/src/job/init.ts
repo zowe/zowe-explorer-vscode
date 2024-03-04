@@ -20,7 +20,7 @@ import * as contextuals from "../shared/context";
 import { ZoweJobNode } from "./ZoweJobNode";
 import { getSelectedNodeList } from "../shared/utils";
 import { initSubscribers } from "../shared/init";
-import { ZoweLogger } from "../utils/LoggerUtils";
+import { ZoweLogger } from "../utils/ZoweLogger";
 
 export async function initJobsProvider(context: vscode.ExtensionContext): Promise<ZosJobsProvider> {
     ZoweLogger.trace("job.init.initJobsProvider called.");

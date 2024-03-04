@@ -9,7 +9,9 @@
  *
  */
 
-import { Create, CreateDataSetTypeEnum, Delete, imperative, List, Upload, ZosmfSession } from "@zowe/cli";
+import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
+import * as zosmf from "@zowe/zosmf-for-zowe-sdk";
+import { imperative } from "@zowe/zowe-explorer-api";
 import * as expect from "expect";
 import * as vscode from "vscode";
 import { DatasetTree } from "../../src/dataset/DatasetTree";
@@ -44,7 +46,7 @@ describe("DatasetTree Integration Tests", async () => {
         user: testProfile.profile.user,
         password: testProfile.profile.password,
     };
-    const sessCfg = ZosmfSession.createSessCfgFromArgs(cmdArgs);
+    const sessCfg = zosmf.ZosmfSession.createSessCfgFromArgs(cmdArgs);
     imperative.ConnectionPropsForSessCfg.resolveSessCfgProps(sessCfg, cmdArgs);
     const session = new imperative.Session(sessCfg);
     const sessNode = new ZoweDatasetNode({
@@ -339,14 +341,17 @@ describe("DatasetTree Integration Tests", async () => {
         describe("Success Scenarios", () => {
             afterEach(async () => {
                 await Promise.all(
-                    [Delete.dataSet(sessNode.getSession(), beforeDataSetName), Delete.dataSet(sessNode.getSession(), afterDataSetName)].map((p) =>
-                        p.catch((err) => err)
-                    )
+                    [
+                        zosfiles.Delete.dataSet(sessNode.getSession(), beforeDataSetName),
+                        zosfiles.Delete.dataSet(sessNode.getSession(), afterDataSetName),
+                    ].map((p) => p.catch((err) => err))
                 );
             });
             describe("Rename Sequential Data Set", () => {
                 beforeEach(async () => {
-                    await Create.dataSet(sessNode.getSession(), CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, beforeDataSetName).catch((err) => err);
+                    await zosfiles.Create.dataSet(sessNode.getSession(), zosfiles.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, beforeDataSetName).catch(
+                        (err) => err
+                    );
                 });
                 it("should rename a data set", async () => {
                     let error;
@@ -364,8 +369,8 @@ describe("DatasetTree Integration Tests", async () => {
                         inputBoxStub.returns(afterDataSetName);
 
                         await testTree.rename(testNode);
-                        beforeList = await List.dataSet(sessNode.getSession(), beforeDataSetName);
-                        afterList = await List.dataSet(sessNode.getSession(), afterDataSetName);
+                        beforeList = await zosfiles.List.dataSet(sessNode.getSession(), beforeDataSetName);
+                        afterList = await zosfiles.List.dataSet(sessNode.getSession(), afterDataSetName);
                     } catch (err) {
                         error = err;
                     }
@@ -393,8 +398,8 @@ describe("DatasetTree Integration Tests", async () => {
                         inputBoxStub.returns(lowercaseAfterDataSetName);
 
                         await testTree.rename(testNode);
-                        beforeList = await List.dataSet(sessNode.getSession(), beforeDataSetName);
-                        afterList = await List.dataSet(sessNode.getSession(), afterDataSetName);
+                        beforeList = await zosfiles.List.dataSet(sessNode.getSession(), beforeDataSetName);
+                        afterList = await zosfiles.List.dataSet(sessNode.getSession(), afterDataSetName);
                     } catch (err) {
                         error = err;
                     }
@@ -407,8 +412,12 @@ describe("DatasetTree Integration Tests", async () => {
             });
             describe("Rename Member", () => {
                 beforeEach(async () => {
-                    await Create.dataSet(sessNode.getSession(), CreateDataSetTypeEnum.DATA_SET_PARTITIONED, beforeDataSetName).catch((err) => err);
-                    await Upload.bufferToDataSet(sessNode.getSession(), new Buffer("abc"), `${beforeDataSetName}(mem1)`);
+                    await zosfiles.Create.dataSet(
+                        sessNode.getSession(),
+                        zosfiles.CreateDataSetTypeEnum.DATA_SET_PARTITIONED,
+                        beforeDataSetName
+                    ).catch((err) => err);
+                    await zosfiles.Upload.bufferToDataSet(sessNode.getSession(), new Buffer("abc"), `${beforeDataSetName}(mem1)`);
                     const favProfileNode = new ZoweDatasetNode({
                         label: testConst.profile.name,
                         collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
@@ -442,7 +451,7 @@ describe("DatasetTree Integration Tests", async () => {
                         inputBoxStub.returns("MEM2");
 
                         await testTree.rename(childNode);
-                        list = await List.allMembers(sessNode.getSession(), beforeDataSetName);
+                        list = await zosfiles.List.allMembers(sessNode.getSession(), beforeDataSetName);
                     } catch (err) {
                         error = err;
                     }
@@ -473,7 +482,7 @@ describe("DatasetTree Integration Tests", async () => {
                         inputBoxStub.returns("mem2");
 
                         await testTree.rename(childNode);
-                        list = await List.allMembers(sessNode.getSession(), beforeDataSetName);
+                        list = await zosfiles.List.allMembers(sessNode.getSession(), beforeDataSetName);
                     } catch (err) {
                         error = err;
                     }
@@ -486,7 +495,11 @@ describe("DatasetTree Integration Tests", async () => {
             });
             describe("Rename Partitioned Data Set", () => {
                 beforeEach(async () => {
-                    await Create.dataSet(sessNode.getSession(), CreateDataSetTypeEnum.DATA_SET_PARTITIONED, beforeDataSetName).catch((err) => err);
+                    await zosfiles.Create.dataSet(
+                        sessNode.getSession(),
+                        zosfiles.CreateDataSetTypeEnum.DATA_SET_PARTITIONED,
+                        beforeDataSetName
+                    ).catch((err) => err);
                 });
                 it("should rename a data set", async () => {
                     let error;
@@ -505,8 +518,8 @@ describe("DatasetTree Integration Tests", async () => {
                         inputBoxStub.returns(afterDataSetName);
 
                         await testTree.rename(testNode);
-                        beforeList = await List.dataSet(sessNode.getSession(), beforeDataSetName);
-                        afterList = await List.dataSet(sessNode.getSession(), afterDataSetName);
+                        beforeList = await zosfiles.List.dataSet(sessNode.getSession(), beforeDataSetName);
+                        afterList = await zosfiles.List.dataSet(sessNode.getSession(), afterDataSetName);
                     } catch (err) {
                         error = err;
                     }
@@ -534,8 +547,8 @@ describe("DatasetTree Integration Tests", async () => {
                         inputBoxStub.returns(lowercaseAfterDataSetName);
 
                         await testTree.rename(testNode);
-                        beforeList = await List.dataSet(sessNode.getSession(), beforeDataSetName);
-                        afterList = await List.dataSet(sessNode.getSession(), afterDataSetName);
+                        beforeList = await zosfiles.List.dataSet(sessNode.getSession(), beforeDataSetName);
+                        afterList = await zosfiles.List.dataSet(sessNode.getSession(), afterDataSetName);
                     } catch (err) {
                         error = err;
                     }

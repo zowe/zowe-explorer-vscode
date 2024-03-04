@@ -10,7 +10,8 @@
  */
 
 import * as vscode from "vscode";
-import { IJob, imperative } from "@zowe/cli";
+import * as imperative from "@zowe/imperative";
+import * as zosjobs from "@zowe/zos-jobs-for-zowe-sdk";
 import { Sorting } from "./sorting";
 import { ZoweTreeNodeActions } from "./ZoweNodeActions";
 import type { Types } from "../Types";
@@ -357,7 +358,7 @@ export interface IZoweJobTreeNode extends IZoweTreeNode {
      * Represents the attributes and status of a z/OS batch job
      * @interface IJob
      */
-    job?: IJob;
+    job?: zosjobs.IJob;
     /**
      * Search criteria for a Job search
      */

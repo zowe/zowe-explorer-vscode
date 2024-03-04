@@ -9,12 +9,12 @@
  *
  */
 
-import { imperative, IUploadOptions, IZosFilesResponse } from "@zowe/cli";
+import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
 import * as globals from "../globals";
 import * as vscode from "vscode";
 import * as fs from "fs";
 import * as path from "path";
-import { Gui, IZoweUSSTreeNode, ZoweTreeNode, Types, Validation, MainframeInteraction, ZosEncoding } from "@zowe/zowe-explorer-api";
+import { Gui, imperative, IZoweUSSTreeNode, ZoweTreeNode, Types, Validation, MainframeInteraction, ZosEncoding } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { errorHandling, syncSessionNode } from "../utils/ProfilesUtils";
@@ -23,10 +23,10 @@ import { autoDetectEncoding, fileExistsCaseSensitiveSync, injectAdditionalDataTo
 import * as contextually from "../shared/context";
 import { closeOpenedTextFile } from "../utils/workspace";
 import { UssFileTree, UssFileType, UssFileUtils } from "./FileStructure";
-import { ZoweLogger } from "../utils/LoggerUtils";
-import { downloadUnixFile } from "./actions";
+import { ZoweLogger } from "../utils/ZoweLogger";
 import { IZoweUssTreeOpts } from "../shared/IZoweTreeOpts";
 import { TreeProviders } from "../shared/TreeProviders";
+import { LocalFileInfo } from "../shared/utils";
 
 /**
  * A type of TreeItem used to represent sessions and USS directories and files
@@ -131,7 +131,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         }
 
         // Get the directories from the fullPath and display any thrown errors
-        let response: IZosFilesResponse;
+        let response: zosfiles.IZosFilesResponse;
         const sessNode = this.getSessionNode();
         try {
             const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
@@ -476,7 +476,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         const shouldPreview = doubleClicked ? false : previewFile;
         if (Profiles.getInstance().validProfile !== Validation.ValidationType.INVALID) {
             try {
-                const fileInfo = await downloadUnixFile(this, forceDownload);
+                const fileInfo = await this.downloadUSS(forceDownload);
                 this.downloaded = true;
                 // Add document name to recently-opened files
                 ussFileProvider.addFileHistory(`[${this.getProfile().name}]: ${this.fullPath}`);
@@ -487,6 +487,75 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 await errorHandling(err, this.getProfileName());
                 throw err;
             }
+        }
+    }
+
+    public async downloadUSS(forceDownload: boolean): Promise<LocalFileInfo> {
+        const fileInfo = {} as LocalFileInfo;
+        const errorMsg = vscode.l10n.t("open() called from invalid node.");
+        switch (true) {
+            // For opening favorited and non-favorited files
+            case this.getParent().contextValue === globals.FAV_PROFILE_CONTEXT:
+                break;
+            case contextually.isUssSession(this.getParent()):
+                break;
+            // Handle file path for files in directories and favorited directories
+            case contextually.isUssDirectory(this.getParent()):
+                break;
+            default:
+                Gui.errorMessage(errorMsg);
+                throw Error(errorMsg);
+        }
+
+        fileInfo.path = this.getUSSDocumentFilePath();
+        fileInfo.name = String(this.label);
+        // check if some other file is already created with the same name avoid opening file warn user
+        const fileExists = fs.existsSync(fileInfo.path);
+        if (fileExists && !fileExistsCaseSensitiveSync(fileInfo.path)) {
+            Gui.showMessage(
+                vscode.l10n.t(
+                    `There is already a file with the same name.
+                    Please change your OS file system settings if you want to give case sensitive file names`
+                )
+            );
+            return;
+        }
+        // if local copy exists, open that instead of pulling from mainframe
+        let response: zosfiles.IZosFilesResponse;
+        if (forceDownload || !fileExists) {
+            response = await this.downloadUSSApiCall(fileInfo.path, fileInfo.name);
+        }
+        if (response != null) {
+            this.setEtag(response.apiResponse.etag);
+        }
+        return fileInfo;
+    }
+
+    private async downloadUSSApiCall(documentFilePath: string, label: string): Promise<zosfiles.IZosFilesResponse> {
+        ZoweLogger.info(
+            vscode.l10n.t({
+                message: "Downloading {0}",
+                args: [label],
+                comment: ["Label"],
+            })
+        );
+        try {
+            const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
+            await autoDetectEncoding(this, cachedProfile);
+
+            const statusMsg = Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Downloading USS file..."));
+            const response = await ZoweExplorerApiRegister.getUssApi(cachedProfile).getContents(this.fullPath, {
+                file: documentFilePath,
+                binary: this.binary,
+                returnEtag: true,
+                encoding: this.encoding !== undefined ? this.encoding : cachedProfile.profile?.encoding,
+                responseTimeout: cachedProfile.profile?.responseTimeout,
+            });
+            statusMsg.dispose();
+            return response;
+        } catch (err) {
+            await errorHandling(err, this.getProfileName());
+            throw err;
         }
     }
 
@@ -619,7 +688,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     public async paste(
         sessionName: string,
         rootPath: string,
-        uss: { tree: UssFileTree; api: MainframeInteraction.IUss; options?: IUploadOptions }
+        uss: { tree: UssFileTree; api: MainframeInteraction.IUss; options?: zosfiles.IUploadOptions }
     ): Promise<void> {
         ZoweLogger.trace("ZoweUSSNode.paste called.");
         const hasCopyApi = uss.api.copy != null;
@@ -706,7 +775,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 statusMessage: vscode.l10n.t("Uploading USS files..."),
                 stageName: 0,
             };
-            const options: IUploadOptions = {
+            const options: zosfiles.IUploadOptions = {
                 task,
                 encoding: prof.profile?.encoding,
                 responseTimeout: prof.profile?.responseTimeout,

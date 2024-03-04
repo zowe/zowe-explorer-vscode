@@ -10,7 +10,7 @@
  */
 
 import { FtpSession } from "../../src/ftpSession";
-import { imperative } from "@zowe/cli";
+import { imperative } from "@zowe/zowe-explorer-api";
 
 describe("FtpSession Unit Tests - function releaseConnections", () => {
     it("should release all connecitons", () => {

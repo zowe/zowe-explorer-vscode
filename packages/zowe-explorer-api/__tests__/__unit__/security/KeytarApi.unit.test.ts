@@ -9,7 +9,7 @@
  *
  */
 
-import { imperative } from "@zowe/cli";
+import * as imperative from "@zowe/imperative";
 import { ProfilesCache } from "../../../src/profiles/ProfilesCache";
 import { KeytarApi } from "../../../src/security/KeytarApi";
 

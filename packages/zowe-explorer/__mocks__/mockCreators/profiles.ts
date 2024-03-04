@@ -9,7 +9,7 @@
  *
  */
 
-import { imperative } from "@zowe/cli";
+import { imperative } from "@zowe/zowe-explorer-api";
 
 export function createTestSchemas() {
     const schema1: {} = {

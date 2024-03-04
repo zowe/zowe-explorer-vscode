@@ -9,7 +9,7 @@
  *
  */
 
-import { imperative } from "@zowe/cli";
+import * as imperative from "@zowe/imperative";
 
 export interface ZeApiConvertResponse {
     success: string;

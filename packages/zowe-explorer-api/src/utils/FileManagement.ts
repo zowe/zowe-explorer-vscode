@@ -9,10 +9,9 @@
  *
  */
 
-import { imperative } from "@zowe/cli";
+import { ProfileInfo } from "@zowe/imperative";
 import { realpathSync } from "fs";
-import { platform, homedir } from "os";
-import { join } from "path";
+import { platform } from "os";
 import { Constants } from "../globals";
 
 export class FileManagement {
@@ -35,7 +34,7 @@ export class FileManagement {
     }
 
     public static getZoweDir(): string {
-        return imperative.ProfileInfo.getZoweDir();
+        return ProfileInfo.getZoweDir();
     }
 
     public static getFullPath(anyPath: string): string {

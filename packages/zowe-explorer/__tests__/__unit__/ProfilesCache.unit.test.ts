@@ -10,11 +10,11 @@
  */
 
 jest.mock("fs");
-jest.unmock("@zowe/cli");
+jest.unmock("@zowe/core-for-zowe-sdk");
 jest.unmock("@zowe/imperative");
 
-import { getZoweDir, imperative } from "@zowe/cli";
-import { ProfilesCache } from "@zowe/zowe-explorer-api";
+import { getZoweDir } from "@zowe/core-for-zowe-sdk";
+import { imperative, ProfilesCache } from "@zowe/zowe-explorer-api";
 
 describe("ProfilesCache API", () => {
     const zoweDir = getZoweDir();

@@ -17,20 +17,21 @@ import * as sharedExtension from "../../../src/shared/init";
 import { Profiles } from "../../../src/Profiles";
 import * as profUtils from "../../../src/utils/ProfilesUtils";
 import * as tempFolder from "../../../src/utils/TempFolder";
-import * as zowe from "@zowe/cli";
+import * as core from "@zowe/core-for-zowe-sdk";
 import { IJestIt, ITestContext, processSubscriptions, spyOnSubscriptions } from "../../__common__/testUtils";
 import { TsoCommandHandler } from "../../../src/command/TsoCommandHandler";
 import { MvsCommandHandler } from "../../../src/command/MvsCommandHandler";
 import { UnixCommandHandler } from "../../../src/command/UnixCommandHandler";
 import { saveFile } from "../../../src/dataset/actions";
 import { saveUSSFile } from "../../../src/uss/actions";
-import { ZoweLogger } from "../../../src/utils/LoggerUtils";
+import { ZoweLogger } from "../../../src/utils/ZoweLogger";
 import { ZoweSaveQueue } from "../../../src/abstract/ZoweSaveQueue";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import * as HistoryView from "../../../src/shared/HistoryView";
 import { LocalFileManagement } from "../../../src/utils/LocalFileManagement";
 
 jest.mock("../../../src/utils/LoggerUtils");
+jest.mock("../../../src/utils/ZoweLogger");
 
 describe("Test src/shared/extension", () => {
     describe("registerCommonCommands", () => {
@@ -56,7 +57,7 @@ describe("Test src/shared/extension", () => {
                 name: "zowe.updateSecureCredentials",
                 parm: ["@zowe/cli"],
                 mock: [
-                    { spy: jest.spyOn(globals, "setGlobalSecurityValue"), arg: ["@zowe/cli"] },
+                    { spy: jest.spyOn(profUtils.ProfilesUtils, "updateCredentialManagerSetting"), arg: ["@zowe/cli"] },
                     { spy: jest.spyOn(profUtils.ProfilesUtils, "writeOverridesFile"), arg: [] },
                 ],
             },
@@ -252,7 +253,7 @@ describe("Test src/shared/extension", () => {
             };
             Object.defineProperty(vscode.commands, "registerCommand", { value: registerCommand });
             Object.defineProperty(vscode.workspace, "onDidChangeConfiguration", { value: onDidChangeConfiguration });
-            Object.defineProperty(zowe, "getZoweDir", { value: () => test.value });
+            Object.defineProperty(core, "getZoweDir", { value: () => test.value });
             Object.defineProperty(vscode.commands, "executeCommand", { value: executeCommand.fun });
             Object.defineProperty(globals, "DS_DIR", { value: testGlobals.DS_DIR });
             Object.defineProperty(globals, "USS_DIR", { value: testGlobals.USS_DIR });

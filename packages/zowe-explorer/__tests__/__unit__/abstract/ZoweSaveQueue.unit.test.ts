@@ -15,10 +15,10 @@ import { saveUSSFile } from "../../../src/uss/actions";
 import * as workspaceUtils from "../../../src/utils/workspace";
 import { Gui } from "@zowe/zowe-explorer-api";
 import * as vscode from "vscode";
-import { ZoweLogger } from "../../../src/utils/LoggerUtils";
+import { ZoweLogger } from "../../../src/utils/ZoweLogger";
 import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
 
-jest.mock("../../../src/utils/LoggerUtils");
+jest.mock("../../../src/utils/ZoweLogger");
 
 describe("ZoweSaveQueue - unit tests", () => {
     const createGlobalMocks = () => {

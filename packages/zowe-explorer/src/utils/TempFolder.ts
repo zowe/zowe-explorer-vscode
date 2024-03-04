@@ -17,7 +17,7 @@ import { moveSync } from "fs-extra";
 import { errorHandling } from "../utils/ProfilesUtils";
 import { SettingsConfig } from "./SettingsConfig";
 import { Gui } from "@zowe/zowe-explorer-api";
-import { ZoweLogger } from "./LoggerUtils";
+import { ZoweLogger } from "./ZoweLogger";
 
 // /**
 //  * Moves temp folder to user defined location in preferences

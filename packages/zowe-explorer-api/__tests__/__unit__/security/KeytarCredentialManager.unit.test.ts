@@ -10,7 +10,7 @@
  */
 
 import * as fs from "fs";
-import { imperative } from "@zowe/cli";
+import * as imperative from "@zowe/imperative";
 import { Constants } from "../../../src/globals";
 import { KeytarCredentialManager } from "../../../src/security/KeytarCredentialManager";
 

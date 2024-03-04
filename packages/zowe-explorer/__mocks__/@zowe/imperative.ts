@@ -247,11 +247,14 @@ export class ProfileInfo {
         return;
     }
 
-    public addProfileTypeToSchema(profileType: string, typeInfo: {
-        sourceApp: string;
-        schema: any;
-        version?: string;
-    }): any {
+    public addProfileTypeToSchema(
+        profileType: string,
+        typeInfo: {
+            sourceApp: string;
+            schema: any;
+            version?: string;
+        }
+    ): any {
         return;
     }
 }
@@ -371,3 +374,7 @@ export class TextUtils {
 export namespace SessConstants {
     export declare const AUTH_TYPE_TOKEN = "token";
 }
+
+export const apiErrorHeader = {
+    message: "API Error",
+};

@@ -10,7 +10,7 @@
  */
 
 import { FileDecoration, Uri } from "vscode";
-import { ICreateDataSetOptions } from "@zowe/cli";
+import { ICreateDataSetOptions } from "@zowe/zos-files-for-zowe-sdk";
 import { IApiExplorerExtender, IRegisterClient } from "./extend";
 import { IZoweDatasetTreeNode, IZoweJobTreeNode, IZoweTreeNode, IZoweUSSTreeNode, IZoweTree } from "./tree";
 
@@ -62,6 +62,8 @@ export namespace Types {
 
     export type DatasetStats = {
         user: string;
+        //built from "c4date" variable from the z/OSMF API response
+        createdDate: Date;
         // built from "m4date", "mtime" and "msec" variables from z/OSMF API response
         modifiedDate: Date;
     };

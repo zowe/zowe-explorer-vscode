@@ -2,3 +2,4 @@ out
 results
 scripts
 src/webviews/dist
+l10n/bundle.l10n.json

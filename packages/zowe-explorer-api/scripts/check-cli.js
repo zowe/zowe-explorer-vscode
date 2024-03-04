@@ -1,5 +1,5 @@
 /**
- * Script to scan for the required @zowe/cli dependency for zowe-explorer-api.
+ * Script to scan for the required Zowe SDK dependencies for zowe-explorer-api.
  */
 
 const { resolve } = require("path");
@@ -22,7 +22,7 @@ const findPackage = (folderToScan, nodePackage) => {
 };
 
 let exitCode = 0;
-let nodePackages = ["@zowe/cli", "@zowe/secrets-for-zowe-sdk"];
+let nodePackages = ["@zowe/imperative", "@zowe/secrets-for-zowe-sdk"];
 nodePackages.forEach(element => {
     if (exitCode === 0) {
         if (__dirname.includes("packages") || __dirname.includes("scripts")) {
