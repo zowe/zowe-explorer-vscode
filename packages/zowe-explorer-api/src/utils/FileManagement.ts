@@ -35,15 +35,7 @@ export class FileManagement {
     }
 
     public static getZoweDir(): string {
-        const defaultHome = join(homedir(), ".zowe");
-        if (imperative.ImperativeConfig.instance.loadedConfig?.defaultHome !== defaultHome) {
-            imperative.ImperativeConfig.instance.loadedConfig = {
-                name: "zowe",
-                defaultHome,
-                envVariablePrefix: "ZOWE"
-            };
-        }
-        return imperative.ImperativeConfig.instance.cliHome;
+        return imperative.ProfileInfo.getZoweDir();
     }
 
     public static getFullPath(anyPath: string): string {
