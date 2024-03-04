@@ -45,6 +45,7 @@ import { ZosJobsProvider } from "../../../src/job/ZosJobsProvider";
 import { ProfileManagement } from "../../../src/utils/ProfileManagement";
 import { TreeProviders } from "../../../src/shared/TreeProviders";
 import { mocked } from "../../../__mocks__/mockUtils";
+import { LocalFileManagement } from "../../../src/utils/LocalFileManagement";
 
 const activeTextEditorDocument = jest.fn();
 
@@ -132,6 +133,7 @@ function createGlobalMocks() {
         value: jest.fn().mockReturnValue([newMocks.imperativeProfile.name]),
         configurable: true,
     });
+    jest.spyOn(LocalFileManagement, "storeFileInfo").mockImplementation();
     function settingJobObjects(job: zowe.IJob, setjobname: string, setjobid: string, setjobreturncode: string): zowe.IJob {
         job.jobname = setjobname;
         job.jobid = setjobid;

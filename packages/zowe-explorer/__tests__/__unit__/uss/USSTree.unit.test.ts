@@ -37,6 +37,7 @@ import { TreeProviders } from "../../../src/shared/TreeProviders";
 import { join } from "path";
 import * as sharedUtils from "../../../src/shared/utils";
 import { mocked } from "../../../__mocks__/mockUtils";
+import { LocalFileManagement } from "../../../src/utils/LocalFileManagement";
 
 async function createGlobalMocks() {
     const globalMocks = {
@@ -192,6 +193,8 @@ async function createGlobalMocks() {
         uss: { addSingleSession: jest.fn(), mSessionNodes: [...globalMocks.testTree.mSessionNodes], refresh: jest.fn() } as any,
         jobs: { addSingleSession: jest.fn(), mSessionNodes: [...globalMocks.testTree.mSessionNodes], refresh: jest.fn() } as any,
     } as any);
+    jest.spyOn(LocalFileManagement, "storeFileInfo").mockImplementation();
+    jest.spyOn(LocalFileManagement, "deleteFileInfo").mockImplementation();
 
     return globalMocks;
 }

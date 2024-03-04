@@ -33,6 +33,7 @@ import * as globals from "../../../src/globals";
 import * as ussUtils from "../../../src/uss/utils";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 import { TreeProviders } from "../../../src/shared/TreeProviders";
+import { LocalFileManagement } from "../../../src/utils/LocalFileManagement";
 
 jest.mock("fs");
 jest.mock("path");
@@ -179,6 +180,8 @@ async function createGlobalMocks() {
     Object.defineProperty(ZoweLogger, "warn", { value: jest.fn(), configurable: true });
     Object.defineProperty(ZoweLogger, "info", { value: jest.fn(), configurable: true });
     Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
+    jest.spyOn(LocalFileManagement, "storeFileInfo").mockImplementation();
+
     return globalMocks;
 }
 

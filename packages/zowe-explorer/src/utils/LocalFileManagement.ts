@@ -13,11 +13,9 @@ import { IZoweDatasetTreeNode, IZoweUSSTreeNode } from "@zowe/zowe-explorer-api"
 import * as vscode from "vscode";
 import * as nls from "vscode-nls";
 import { ZoweLocalStorage } from "./ZoweLocalStorage";
-import { getDocumentFilePath, updateOpenFiles } from "../shared/utils";
-import { ZoweDatasetNode } from "../dataset/ZoweDatasetNode";
-import { Profiles } from "../Profiles";
+import { getDocumentFilePath, isZoweDatasetTreeNode, updateOpenFiles } from "../shared/utils";
+import { IZoweTreeOpts } from "../shared/IZoweTreeOpts";
 import { TreeProviders } from "../shared/TreeProviders";
-import { ZoweUSSNode } from "../uss/ZoweUSSNode";
 
 // Set up localization
 nls.config({
@@ -36,38 +34,18 @@ export class LocalFileManagement {
     public static recoveredFileCount: number = 0;
     private static recoveryDiagnostics: vscode.DiagnosticCollection = vscode.languages.createDiagnosticCollection("zowe-explorer");
 
-    public static addRecoveredDs(document: vscode.TextDocument, fileInfo: { profile: string; label: string }): void {
-        LocalFileManagement.addRecoveredFile(document, fileInfo);
-        const cachedFileInfo = LocalFileManagement.getFileInfo(document.uri.fsPath);
-        if (cachedFileInfo == null) {
-            return;
-        }
-        const dsNode = new ZoweDatasetNode({
-            label: fileInfo.label,
-            collapsibleState: vscode.TreeItemCollapsibleState.None,
-            profile: Profiles.getInstance().loadNamedProfile(fileInfo.profile),
-        });
-        for (const [k, v] of Object.entries(cachedFileInfo)) {
-            dsNode[k] = v;
-        }
-        updateOpenFiles(TreeProviders.ds, document.uri.fsPath, dsNode);
-    }
-
-    public static addRecoveredUss(document: vscode.TextDocument, fileInfo: { profile: string; label: string }): void {
-        LocalFileManagement.addRecoveredFile(document, fileInfo);
-        const cachedFileInfo = LocalFileManagement.getFileInfo(document.uri.fsPath);
-        if (cachedFileInfo == null) {
-            return;
-        }
-        const ussNode = new ZoweUSSNode({
-            label: fileInfo.label,
-            collapsibleState: vscode.TreeItemCollapsibleState.None,
-            profile: Profiles.getInstance().loadNamedProfile(fileInfo.profile),
-        });
-        for (const [k, v] of Object.entries(cachedFileInfo)) {
-            ussNode[k] = v;
-        }
-        updateOpenFiles(TreeProviders.uss, document.uri.fsPath, ussNode);
+    public static addRecoveredFile(document: vscode.TextDocument, treeOpts: IZoweTreeOpts): void {
+        const firstLine = document.lineAt(0);
+        const lastLine = document.lineAt(document.lineCount - 1);
+        const textRange = new vscode.Range(firstLine.range.start, lastLine.range.end);
+        this.recoveryDiagnostics.set(document.uri, [
+            new vscode.Diagnostic(
+                textRange,
+                localize("addRecoveredFile.diagnosticMessage", "File is out of sync with {0}: {1}", treeOpts.profile.name, treeOpts.label),
+                vscode.DiagnosticSeverity.Error
+            ),
+        ]);
+        this.recoveredFileCount++;
     }
 
     public static removeRecoveredFile(document: vscode.TextDocument): void {
@@ -75,7 +53,17 @@ export class LocalFileManagement {
         this.recoveredFileCount--;
     }
 
-    public static updateFileInfo(node: IZoweDatasetTreeNode | IZoweUSSTreeNode, filename?: string): void {
+    public static loadFileInfo(node: IZoweDatasetTreeNode | IZoweUSSTreeNode, filename: string): void {
+        const fileInfo = ZoweLocalStorage.getValue<Record<string, IFileInfo>>("zowe.fileInfoCache") ?? {};
+        if (fileInfo[filename] != null) {
+            for (const [k, v] of Object.entries(fileInfo[filename])) {
+                node[k] = v;
+            }
+            updateOpenFiles(isZoweDatasetTreeNode(node) ? TreeProviders.ds : TreeProviders.uss, filename, node);
+        }
+    }
+
+    public static storeFileInfo(node: IZoweDatasetTreeNode | IZoweUSSTreeNode, filename?: string): void {
         const fileInfo = ZoweLocalStorage.getValue<Record<string, IFileInfo>>("zowe.fileInfoCache") ?? {};
         filename = filename ?? getDocumentFilePath(node.label as string, node);
         fileInfo[filename] = {
@@ -90,24 +78,5 @@ export class LocalFileManagement {
         const fileInfo = ZoweLocalStorage.getValue<Record<string, IFileInfo>>("zowe.fileInfoCache") ?? {};
         delete fileInfo[filename];
         ZoweLocalStorage.setValue("zowe.fileInfoCache", fileInfo);
-    }
-
-    private static addRecoveredFile(document: vscode.TextDocument, fileInfo: { profile: string; label: string }): void {
-        const firstLine = document.lineAt(0);
-        const lastLine = document.lineAt(document.lineCount - 1);
-        const textRange = new vscode.Range(firstLine.range.start, lastLine.range.end);
-        this.recoveryDiagnostics.set(document.uri, [
-            new vscode.Diagnostic(
-                textRange,
-                localize("addRecoveredFile.diagnosticMessage", "File is out of sync with {0}: {1}", fileInfo.profile, fileInfo.label),
-                vscode.DiagnosticSeverity.Error
-            ),
-        ]);
-        this.recoveredFileCount++;
-    }
-
-    private static getFileInfo(filename: string): IFileInfo | undefined {
-        const fileInfo = ZoweLocalStorage.getValue<Record<string, IFileInfo>>("zowe.fileInfoCache") ?? {};
-        return fileInfo[filename];
     }
 }

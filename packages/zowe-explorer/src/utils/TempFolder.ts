@@ -20,6 +20,10 @@ import { Gui } from "@zowe/zowe-explorer-api";
 import { ZoweLogger } from "./LoggerUtils";
 import * as vscode from "vscode";
 import { LocalFileManagement } from "./LocalFileManagement";
+import { ZoweDatasetNode } from "../dataset/ZoweDatasetNode";
+import { ZoweUSSNode } from "../uss/ZoweUSSNode";
+import { IZoweTreeOpts } from "../shared/IZoweTreeOpts";
+import { Profiles } from "../Profiles";
 
 // Set up localization
 nls.config({
@@ -141,16 +145,22 @@ export function findRecoveredFiles(): void {
     for (const document of vscode.workspace.textDocuments) {
         if (document.fileName.toUpperCase().indexOf(globals.DS_DIR.toUpperCase()) >= 0) {
             const pathSegments = document.fileName.slice(globals.DS_DIR.length + 1).split(path.sep);
-            LocalFileManagement.addRecoveredDs(document, {
-                profile: pathSegments.shift(),
-                label: path.basename(pathSegments[0], path.extname(pathSegments[0])),
-            });
+            const treeOpts: IZoweTreeOpts = {
+                label: path.basename(pathSegments[1], path.extname(pathSegments[1])),
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                profile: Profiles.getInstance().loadNamedProfile(pathSegments[0]),
+            };
+            LocalFileManagement.addRecoveredFile(document, treeOpts);
+            LocalFileManagement.loadFileInfo(new ZoweDatasetNode(treeOpts), document.uri.fsPath);
         } else if (document.fileName.toUpperCase().indexOf(globals.USS_DIR.toUpperCase()) >= 0) {
             const pathSegments = document.fileName.slice(globals.USS_DIR.length + 1).split(path.sep);
-            LocalFileManagement.addRecoveredUss(document, {
-                profile: pathSegments.shift(),
-                label: path.posix.join(...pathSegments),
-            });
+            const treeOpts: IZoweTreeOpts = {
+                label: path.posix.join(...pathSegments.slice(1)),
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                profile: Profiles.getInstance().loadNamedProfile(pathSegments[0]),
+            };
+            LocalFileManagement.addRecoveredFile(document, treeOpts);
+            LocalFileManagement.loadFileInfo(new ZoweUSSNode(treeOpts), document.uri.fsPath);
         }
     }
     if (LocalFileManagement.recoveredFileCount > 0) {

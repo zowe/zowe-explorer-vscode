@@ -55,6 +55,7 @@ import { TreeProviders } from "../../../src/shared/TreeProviders";
 import { join } from "path";
 import { mocked } from "../../../__mocks__/mockUtils";
 import * as sharedUtils from "../../../src/shared/utils";
+import { LocalFileManagement } from "../../../src/utils/LocalFileManagement";
 
 jest.mock("fs");
 jest.mock("util");
@@ -168,6 +169,8 @@ function createGlobalMocks() {
     Object.defineProperty(ZoweLogger, "warn", { value: jest.fn(), configurable: true });
     Object.defineProperty(ZoweLogger, "info", { value: jest.fn(), configurable: true });
     Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
+    jest.spyOn(LocalFileManagement, "storeFileInfo").mockImplementation();
+    jest.spyOn(LocalFileManagement, "deleteFileInfo").mockImplementation();
 
     return globalMocks;
 }

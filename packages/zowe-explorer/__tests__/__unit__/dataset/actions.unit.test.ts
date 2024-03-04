@@ -42,6 +42,7 @@ import * as utils from "../../../src/utils/ProfilesUtils";
 import { getNodeLabels } from "../../../src/dataset/utils";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 import { mocked } from "../../../__mocks__/mockUtils";
+import { LocalFileManagement } from "../../../src/utils/LocalFileManagement";
 
 // Missing the definition of path module, because I need the original logic for tests
 jest.mock("fs");
@@ -127,6 +128,7 @@ function createGlobalMocks() {
     Object.defineProperty(ZoweLogger, "info", { value: jest.fn(), configurable: true });
     Object.defineProperty(ZoweLogger, "warn", { value: jest.fn(), configurable: true });
     mocked(Profiles.getInstance).mockReturnValue(newMocks.profileInstance);
+    jest.spyOn(LocalFileManagement, "storeFileInfo").mockImplementation();
 
     return newMocks;
 }

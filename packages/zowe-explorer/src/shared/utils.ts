@@ -427,7 +427,7 @@ export function updateOpenFiles<T extends IZoweTreeNode>(treeProvider: IZoweTree
         treeProvider.openFiles[docPath] = value;
     }
     if (value != null) {
-        LocalFileManagement.updateFileInfo(value, docPath);
+        LocalFileManagement.storeFileInfo(value, docPath);
     } else {
         LocalFileManagement.deleteFileInfo(docPath);
     }

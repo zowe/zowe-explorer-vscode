@@ -299,7 +299,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             this.setIcon(icon.path);
         }
 
-        LocalFileManagement.updateFileInfo(this);
+        LocalFileManagement.storeFileInfo(this);
         this.tooltip = injectAdditionalDataToTooltip(this, this.fullPath);
         this.dirty = true;
     }
@@ -443,7 +443,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     public setEtag(etagValue): void {
         ZoweLogger.trace("ZoweUSSNode.setEtag called.");
         this.etag = etagValue;
-        LocalFileManagement.updateFileInfo(this);
+        LocalFileManagement.storeFileInfo(this);
     }
 
     /**

@@ -40,6 +40,7 @@ import * as refreshActions from "../../../src/shared/refresh";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 import { AttributeView } from "../../../src/uss/AttributeView";
 import { mocked } from "../../../__mocks__/mockUtils";
+import { LocalFileManagement } from "../../../src/utils/LocalFileManagement";
 
 function createGlobalMocks() {
     const globalMocks = {
@@ -164,6 +165,7 @@ function createGlobalMocks() {
     Object.defineProperty(ZoweLogger, "warn", { value: jest.fn(), configurable: true });
     Object.defineProperty(ZoweLogger, "info", { value: jest.fn(), configurable: true });
     Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
+    jest.spyOn(LocalFileManagement, "storeFileInfo").mockImplementation();
 
     return globalMocks;
 }

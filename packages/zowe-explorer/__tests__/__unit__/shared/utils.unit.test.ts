@@ -32,6 +32,7 @@ import * as utils from "../../../src/utils/ProfilesUtils";
 import { Gui, IZoweTreeNode, ProfilesCache, ZosEncoding } from "@zowe/zowe-explorer-api";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
+import { LocalFileManagement } from "../../../src/utils/LocalFileManagement";
 
 async function createGlobalMocks() {
     const newMocks = {
@@ -330,6 +331,8 @@ describe("Test force upload", () => {
             configurable: true,
         });
         Object.defineProperty(vscode, "ProgressLocation", { value: newVariables.ProgressLocation, configurable: true });
+        jest.spyOn(LocalFileManagement, "storeFileInfo").mockImplementation();
+        jest.spyOn(LocalFileManagement, "deleteFileInfo").mockImplementation();
 
         return newVariables;
     }

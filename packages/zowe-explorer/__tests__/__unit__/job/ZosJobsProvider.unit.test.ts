@@ -37,6 +37,7 @@ import { Poller } from "@zowe/zowe-explorer-api/src/utils";
 import { SettingsConfig } from "../../../src/utils/SettingsConfig";
 import { mocked } from "../../../__mocks__/mockUtils";
 import { TreeProviders } from "../../../src/shared/TreeProviders";
+import { LocalFileManagement } from "../../../src/utils/LocalFileManagement";
 
 jest.mock("vscode");
 const showMock = jest.fn();
@@ -237,6 +238,7 @@ async function createGlobalMocks() {
         value: globalMocks.mockRefresh,
         configurable: true,
     });
+    jest.spyOn(LocalFileManagement, "deleteFileInfo").mockImplementation();
 
     return globalMocks;
 }

@@ -451,7 +451,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     public setEtag(etagValue): void {
         ZoweLogger.trace("ZoweDatasetNode.setEtag called.");
         this.etag = etagValue;
-        LocalFileManagement.updateFileInfo(this);
+        LocalFileManagement.storeFileInfo(this);
     }
 
     private async getDatasets(): Promise<zowe.IZosFilesResponse[]> {
@@ -620,7 +620,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             this.setIcon(icon.path);
         }
 
-        LocalFileManagement.updateFileInfo(this);
+        LocalFileManagement.storeFileInfo(this);
         this.dirty = true;
     }
 
