@@ -395,6 +395,10 @@ describe("copy", () => {
         await UssFSProvider.instance.copy(uriWithTree, destUri, { overwrite: true });
         expect(copyTreeMock).toHaveBeenCalledWith(uriWithTree, destUri, { overwrite: true, tree: fileTree });
     });
+
+    afterAll(() => {
+        copyTreeMock.mockRestore();
+    });
 });
 
 describe("buildFileName", () => {
@@ -501,6 +505,7 @@ describe("copyTree", () => {
                 recursive: false,
                 overwrite: true,
             });
+            getInfoFromUri.mockRestore();
         });
 
         it("without naming collisions", async () => {
@@ -539,6 +544,7 @@ describe("copyTree", () => {
                 recursive: false,
                 overwrite: true,
             });
+            getInfoFromUri.mockRestore();
         });
     });
 
@@ -577,6 +583,7 @@ describe("copyTree", () => {
                 { tree: { type: UssFileType.File } }
             );
             expect(mockUssApi.uploadFromBuffer).toHaveBeenCalledWith(Buffer.from(testEntries.file.data), "/aFile.txt");
+            getInfoFromUri.mockRestore();
         });
         it("file: without naming collisions", async () => {
             const getInfoFromUri = jest
@@ -612,8 +619,9 @@ describe("copyTree", () => {
                 { tree: { type: UssFileType.File } }
             );
             expect(mockUssApi.uploadFromBuffer).toHaveBeenCalledWith(Buffer.from(testEntries.file.data), "/aFile (1).txt");
+            getInfoFromUri.mockRestore();
         });
-        xit("folder", async () => {
+        it("folder", async () => {
             const getInfoFromUri = jest
                 .spyOn((UssFSProvider as any).prototype, "_getInfoFromUri")
                 // destination info
@@ -628,23 +636,18 @@ describe("copyTree", () => {
                 });
             const mockUssApi = {
                 create: jest.fn(),
-                fileList: jest.fn().mockResolvedValueOnce({
+                fileList: jest.fn().mockResolvedValue({
                     apiResponse: {
                         items: [{ name: "aFile.txt" }],
                     },
                 }),
                 uploadFromBuffer: jest.fn(),
             };
-            jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce(mockUssApi as any);
+            const ussApiMock = jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValue(mockUssApi as any);
 
-            // first call is the actual function, second call is mocked to avoid running through function
-            // for an already-tested scenario (file, see above)
-            const copyTreeMock = jest
-                .spyOn((UssFSProvider as any).instance, "copyTree")
-                .mockImplementationOnce((UssFSProvider.instance as any).copyTree)
-                .mockResolvedValueOnce(undefined);
+            const copyTreeSpy = jest.spyOn(UssFSProvider.instance as any, "copyTree");
             const fileInPathTree = {
-                name: "someFile.txt",
+                baseName: "someFile.txt",
                 localUri: Uri.from({ scheme: "zowe-uss", path: "/sestest/aFolder/someFile.txt" }),
                 type: UssFileType.File,
             };
@@ -659,14 +662,10 @@ describe("copyTree", () => {
                 }),
                 { tree: ussFileTree }
             );
-            expect(copyTreeMock).toHaveBeenCalledWith(
-                fileInPathTree.localUri,
-                Uri.from({
-                    scheme: "zowe-uss",
-                    path: "/sestest2/aFolder/someFile.txt",
-                }),
-                { tree: fileInPathTree }
-            );
+            expect(mockUssApi.create).toHaveBeenCalledWith("/aFolder", "directory");
+            expect(copyTreeSpy).toHaveBeenCalledTimes(2);
+            getInfoFromUri.mockRestore();
+            ussApiMock.mockRestore();
         });
     });
 });
