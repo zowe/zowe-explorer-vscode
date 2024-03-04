@@ -124,19 +124,15 @@ describe("move", () => {
 
 describe("listFiles", () => {
     it("throws an error when called with a URI with an empty path", async () => {
-        try {
-            await UssFSProvider.instance.listFiles(
+        await expect(
+            UssFSProvider.instance.listFiles(
                 testProfile,
                 Uri.from({
                     scheme: "zowe-uss",
                     path: "",
                 })
-            );
-            fail("listFiles should throw an error when the URI has an empty path");
-        } catch (err) {
-            expect(err).toHaveProperty("message");
-            expect(err.message).toBe("Could not list USS files: Empty path provided in URI");
-        }
+            )
+        ).rejects.toThrow("Could not list USS files: Empty path provided in URI");
     });
     it("removes '.', '..', and '...' from IZosFilesResponse items when successful", async () => {
         jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce({
@@ -277,14 +273,7 @@ describe("readFile", () => {
             path: "/aFile.txt",
         });
 
-        try {
-            await UssFSProvider.instance.readFile(testUris.file);
-            fail("readFile should fail when trying to read a file with an unregistered profile");
-        } catch (err) {
-            expect(err).toBeDefined();
-            expect(err).toBeInstanceOf(FileSystemError);
-            expect(err.message).toBe("file not found");
-        }
+        await expect(UssFSProvider.instance.readFile(testUris.file)).rejects.toThrow("file not found");
     });
 
     it("returns data for a file", async () => {
@@ -392,13 +381,9 @@ describe("writeFile", () => {
     });
 
     it("throws an error if entry doesn't exist and 'create' option is false", async () => {
-        try {
-            await UssFSProvider.instance.writeFile(testUris.file, new Uint8Array([]), { create: false, overwrite: true });
-            fail("writeFile should throw when the entry doesn't exist and 'create' option is false");
-        } catch (err) {
-            expect(err).toBeInstanceOf(FileSystemError);
-            expect(err.message).toBe("file not found");
-        }
+        await expect(UssFSProvider.instance.writeFile(testUris.file, new Uint8Array([]), { create: false, overwrite: true })).rejects.toThrow(
+            "file not found"
+        );
     });
 
     it("throws an error if entry exists and 'overwrite' option is false", async () => {
@@ -407,13 +392,9 @@ describe("writeFile", () => {
             entries: new Map([[testEntries.file.name, { ...testEntries.file, wasAccessed: false }]]),
         };
         const lookupParentDirMock = jest.spyOn(UssFSProvider.instance as any, "_lookupParentDirectory").mockReturnValueOnce(rootFolder);
-        try {
-            await UssFSProvider.instance.writeFile(testUris.file, new Uint8Array([]), { create: true, overwrite: false });
-            fail("writeFile should throw when the entry exists and the 'overwrite' option is false");
-        } catch (err) {
-            expect(err).toBeInstanceOf(FileSystemError);
-            expect(err.message).toBe("file exists");
-        }
+        await expect(UssFSProvider.instance.writeFile(testUris.file, new Uint8Array([]), { create: true, overwrite: false })).rejects.toThrow(
+            "file exists"
+        );
         lookupParentDirMock.mockRestore();
     });
 
@@ -423,13 +404,9 @@ describe("writeFile", () => {
             entries: new Map([[testEntries.folder.name, { ...testEntries.folder }]]),
         };
         const lookupParentDirMock = jest.spyOn(UssFSProvider.instance as any, "_lookupParentDirectory").mockReturnValueOnce(rootFolder);
-        try {
-            await UssFSProvider.instance.writeFile(testUris.folder, new Uint8Array([]), { create: true, overwrite: false });
-            fail("writeFile should throw when the given URI is a directory");
-        } catch (err) {
-            expect(err).toBeInstanceOf(FileSystemError);
-            expect(err.message).toBe("file is a directory");
-        }
+        await expect(UssFSProvider.instance.writeFile(testUris.folder, new Uint8Array([]), { create: true, overwrite: false })).rejects.toThrow(
+            "file is a directory"
+        );
         lookupParentDirMock.mockRestore();
     });
 });
@@ -437,13 +414,10 @@ describe("writeFile", () => {
 describe("rename", () => {
     it("throws an error if entry exists and 'overwrite' is false", async () => {
         const lookupMock = jest.spyOn(UssFSProvider.instance as any, "_lookup").mockReturnValueOnce({ ...testEntries.file });
-        try {
-            await UssFSProvider.instance.rename(testUris.file, testUris.file.with({ path: "/sestest/aFile2.txt" }), { overwrite: false });
-            fail("rename should throw when the entry exists and 'overwrite' is false");
-        } catch (err) {
-            expect(err).toBeInstanceOf(FileSystemError);
-            expect(err.message).toBe("file exists");
-        }
+        await expect(
+            UssFSProvider.instance.rename(testUris.file, testUris.file.with({ path: "/sestest/aFile2.txt" }), { overwrite: false })
+        ).rejects.toThrow("file exists");
+
         lookupMock.mockRestore();
     });
 
