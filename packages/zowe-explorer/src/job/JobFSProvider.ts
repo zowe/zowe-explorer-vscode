@@ -19,6 +19,7 @@ import {
     getInfoForUri,
     isFilterEntry,
     isJobEntry,
+    isSpoolEntry,
     JobEntry,
     JobFilter,
     SpoolEntry,
@@ -57,7 +58,12 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
      * @returns A structure containing file type, time, size and other metrics
      */
     public stat(uri: vscode.Uri): vscode.FileStat | Thenable<vscode.FileStat> {
-        return this._lookup(uri, false);
+        const entry = this._lookup(uri, false);
+        if (isSpoolEntry(entry)) {
+            return { ...entry, permissions: vscode.FilePermission.Readonly };
+        }
+
+        return entry;
     }
 
     /**
@@ -113,7 +119,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
      * @param filter The filter info to assign to the filter entry (owner, status, prefix)
      */
     public updateFilterForUri(uri: vscode.Uri, filter: JobFilter): void {
-        const filterEntry = this._lookupAsDirectory(uri, false) as DirEntry | FilterEntry;
+        const filterEntry = this._lookupAsDirectory(uri, false);
         if (!isFilterEntry(filterEntry)) {
             return;
         }
@@ -258,16 +264,15 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
     public async delete(uri: vscode.Uri, options: { readonly recursive: boolean; readonly deleteRemote: boolean }): Promise<void> {
         const entry = this._lookup(uri, false);
         const isJob = isJobEntry(entry);
+        if (!isJob) {
+            return;
+        }
 
-        const parent = this._lookupAsDirectory(
-            uri.with({
-                path: uri.path.substring(0, uri.path.indexOf("/", 1)),
-            }),
-            false
-        );
+        const parent = this._lookupParentDirectory(uri, false);
 
         const profInfo = getInfoForUri(uri, Profiles.getInstance());
-        if (options.deleteRemote && isJob) {
+
+        if (options.deleteRemote) {
             await ZoweExplorerApiRegister.getJesApi(profInfo.profile).deleteJob(entry.job.jobname, entry.job.jobid);
         }
         parent.entries.delete(entry.name);
