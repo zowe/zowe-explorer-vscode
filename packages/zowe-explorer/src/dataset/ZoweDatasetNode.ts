@@ -633,4 +633,16 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         this.iconPath = iconPath;
         vscode.commands.executeCommand("zowe.ds.refreshDataset", this);
     }
+
+    /**
+     * Returns the local file path for the ZoweDatasetNode
+     *
+     */
+    public getDsDocumentFilePath(): string {
+        ZoweLogger.trace("ZoweDatasetNode.getDsDocumentFilePath called.");
+        if (contextually.isDsMember(this)) {
+            return getDocumentFilePath(`${this.getParent().label as string}(${this.label as string})`, this);
+        }
+        return getDocumentFilePath(this.label as string, this);
+    }
 }

@@ -6,6 +6,14 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### New features and enhancements
 
+- Added optional method `getDsDocumentFilePath` to `IZoweDatasetTreeNode` interface.
+
+### Bug fixes
+
+## `2.15.0`
+
+### New features and enhancements
+
 ### Bug fixes
 
 ## `2.15.1`

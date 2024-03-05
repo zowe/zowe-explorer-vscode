@@ -36,6 +36,7 @@ import { markDocumentUnsaved } from "../utils/workspace";
 import { errorHandling } from "../utils/ProfilesUtils";
 import { ZoweLocalStorage } from "../utils/ZoweLocalStorage";
 import { LocalFileManagement } from "../utils/LocalFileManagement";
+import { TreeProviders } from "./TreeProviders";
 
 // Set up localization
 nls.config({
@@ -134,7 +135,7 @@ export function getAppName(isTheia: boolean): "Theia" | "VS Code" {
  * @param {IZoweTreeNode} node
  */
 export function getDocumentFilePath(label: string, node: IZoweTreeNode): string {
-    const dsDir = globals.DS_DIR;
+    const dsDir = globals.DS_DIR || "";
     const profName = node.getProfileName();
     const suffix = appendSuffix(label);
     return path.join(dsDir, profName || "", suffix);
@@ -375,6 +376,7 @@ export async function compareFileContent(
 ): Promise<void> {
     await markDocumentUnsaved(doc);
     const prof = node ? node.getProfile() : profile;
+    node = node ?? TreeProviders.ds.openFiles?.[doc.uri.fsPath] ?? TreeProviders.uss.openFiles?.[doc.uri.fsPath];
     let downloadResponse;
 
     if (isTypeUssTreeNode(node)) {

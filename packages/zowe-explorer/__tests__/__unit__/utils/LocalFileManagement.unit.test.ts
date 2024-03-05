@@ -17,7 +17,6 @@ import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
 import { TreeProviders } from "../../../src/shared/TreeProviders";
 import { IZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
-import * as sharedUtils from "../../../src/shared/utils";
 
 describe("LocalFileManagement Unit Tests", () => {
     function createBlockMocks() {
@@ -106,7 +105,6 @@ describe("LocalFileManagement Unit Tests", () => {
 
     it("should store file info for dataset node", () => {
         const blockMocks = createBlockMocks();
-        jest.spyOn(sharedUtils, "getDocumentFilePath").mockReturnValue("file:///abc.txt");
         const dsNode = new ZoweDatasetNode({
             label: "member",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
@@ -114,7 +112,7 @@ describe("LocalFileManagement Unit Tests", () => {
         });
         dsNode.setEncoding({ kind: "text" });
         dsNode.setEtag("fakeEtag");
-        jest.spyOn(sharedUtils, "getDocumentFilePath").mockReturnValue("file:///abc.txt");
+        jest.spyOn(dsNode, "getDsDocumentFilePath").mockReturnValue("file:///abc.txt");
         LocalFileManagement.storeFileInfo(dsNode);
         expect(blockMocks.storageUpdate).toHaveBeenLastCalledWith("zowe.fileInfoCache", {
             "file:///abc.txt": {

@@ -13,7 +13,7 @@ import { IZoweDatasetTreeNode, IZoweUSSTreeNode } from "@zowe/zowe-explorer-api"
 import * as vscode from "vscode";
 import * as nls from "vscode-nls";
 import { ZoweLocalStorage } from "./ZoweLocalStorage";
-import { getDocumentFilePath, isZoweDatasetTreeNode, updateOpenFiles } from "../shared/utils";
+import { isZoweDatasetTreeNode, updateOpenFiles } from "../shared/utils";
 import { IZoweDatasetTreeOpts, IZoweUssTreeOpts } from "../shared/IZoweTreeOpts";
 import { TreeProviders } from "../shared/TreeProviders";
 
@@ -67,7 +67,7 @@ export class LocalFileManagement {
     public static storeFileInfo(node: IZoweDatasetTreeNode | IZoweUSSTreeNode, filename?: string): void {
         const fileInfo = ZoweLocalStorage.getValue<Record<string, IFileInfo>>("zowe.fileInfoCache") ?? {};
         if (filename == null) {
-            filename = isZoweDatasetTreeNode(node) ? getDocumentFilePath(node.label as string, node) : node.getUSSDocumentFilePath();
+            filename = isZoweDatasetTreeNode(node) ? node.getDsDocumentFilePath() : node.getUSSDocumentFilePath();
         }
         fileInfo[filename] = {
             binary: node.binary,
