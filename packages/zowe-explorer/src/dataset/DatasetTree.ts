@@ -1100,7 +1100,7 @@ export class DatasetTree extends ZoweTreeProvider implements Types.IZoweDatasetT
             }
             this.addSearchHistory(pattern);
         }
-        DatasetFSProvider.instance.updateFilterEntry(nonFaveNode.resourceUri, pattern);
+        DatasetFSProvider.instance.updateFilterForUri(nonFaveNode.resourceUri, pattern);
         await TreeViewUtils.expandNode(nonFaveNode, this);
     }
 

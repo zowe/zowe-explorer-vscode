@@ -52,7 +52,8 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
     }
 
     public watch(_uri: vscode.Uri, _options: { readonly recursive: boolean; readonly excludes: readonly string[] }): vscode.Disposable {
-        throw new Error("Method not implemented.");
+        // ignore, fires for all changes...
+        return new vscode.Disposable(() => {});
     }
 
     /**
@@ -60,7 +61,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
      * @param uri A URI that must exist as an entry in the provider
      * @returns A structure containing file type, time, size and other metrics
      */
-    public stat(uri: vscode.Uri): vscode.FileStat | Thenable<vscode.FileStat> {
+    public stat(uri: vscode.Uri): vscode.FileStat {
         return this._lookup(uri, false);
     }
 
@@ -123,7 +124,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         return results;
     }
 
-    public updateFilterEntry(uri: vscode.Uri, pattern: string): void {
+    public updateFilterForUri(uri: vscode.Uri, pattern: string): void {
         const filterEntry = this._lookup(uri, false);
         if (!isFilterEntry(filterEntry)) {
             return;
@@ -144,7 +145,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 ? {
                       profile: parent.metadata.profile,
                       // we can strip profile name from path because its not involved in API calls
-                      path: parent.metadata.path.concat(`${basename}/`),
+                      path: path.posix.join(parent.metadata.path, basename),
                   }
                 : this._getInfoFromUri(uri);
 
@@ -241,7 +242,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             const profInfo = parent.metadata
                 ? new DsEntryMetadata({
                       profile: parent.metadata.profile,
-                      path: parent.metadata.path.concat(`${basename}`),
+                      path: path.posix.join(parent.metadata.path, basename),
                   })
                 : this._getInfoFromUri(uri);
             entry.metadata = profInfo;
