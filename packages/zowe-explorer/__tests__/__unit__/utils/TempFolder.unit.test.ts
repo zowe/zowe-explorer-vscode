@@ -159,6 +159,9 @@ describe("TempFolder Unit Tests", () => {
 
     it("findRecoveredFiles should recover data sets and USS files that were left open", () => {
         const blockMocks = createBlockMocks();
+        blockMocks.addRecoveredFile.mockImplementation(() => {
+            LocalFileManagement.recoveredFileCount++;
+        });
         const dsDocument = {
             fileName: path.join(testDsDir, "lpar1_zosmf", "IBMUSER.TEST.PS(member).txt"),
         };
@@ -169,6 +172,7 @@ describe("TempFolder Unit Tests", () => {
             value: [dsDocument, ussDocument],
             configurable: true,
         });
+        const warningMessageSpy = jest.spyOn(Gui, "warningMessage").mockImplementation();
         TempFolder.findRecoveredFiles();
         expect(blockMocks.addRecoveredFile).toHaveBeenNthCalledWith(1, dsDocument, {
             label: "IBMUSER.TEST.PS(member)",
@@ -181,6 +185,7 @@ describe("TempFolder Unit Tests", () => {
             profile: { name: "lpar1_zosmf", type: "zosmf" },
         });
         expect(blockMocks.loadFileInfo).toHaveBeenCalledTimes(2);
+        expect(warningMessageSpy).toHaveBeenCalledTimes(1);
     });
 
     it("findRecoveredFiles should do nothing when no files were left open", () => {

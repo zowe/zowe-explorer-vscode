@@ -230,8 +230,8 @@ export async function uploadContent(
     const uploadOptions: IUploadOptions = {
         etag: etagToUpload,
         returnEtag: true,
-        binary: node?.binary,
-        encoding: node?.encoding !== undefined ? node.encoding : profile.profile?.encoding,
+        binary: node.binary,
+        encoding: node.encoding !== undefined ? node.encoding : profile.profile?.encoding,
         responseTimeout: profile.profile?.responseTimeout,
     };
     if (isZoweDatasetTreeNode(node)) {
@@ -380,17 +380,17 @@ export async function compareFileContent(
     if (isTypeUssTreeNode(node)) {
         downloadResponse = await ZoweExplorerApiRegister.getUssApi(prof).getContents(node.fullPath, {
             file: node.getUSSDocumentFilePath(),
-            binary: node?.binary,
+            binary: node.binary,
             returnEtag: true,
-            encoding: node?.encoding !== undefined ? node.encoding : prof.profile?.encoding,
+            encoding: node.encoding !== undefined ? node.encoding : prof.profile?.encoding,
             responseTimeout: prof.profile?.responseTimeout,
         });
     } else {
         downloadResponse = await ZoweExplorerApiRegister.getMvsApi(prof).getContents(label, {
             file: doc.fileName,
-            binary: node?.binary,
+            binary: node.binary,
             returnEtag: true,
-            encoding: node?.encoding !== undefined ? node.encoding : prof.profile?.encoding,
+            encoding: node.encoding !== undefined ? node.encoding : prof.profile?.encoding,
             responseTimeout: prof.profile?.responseTimeout,
         });
     }

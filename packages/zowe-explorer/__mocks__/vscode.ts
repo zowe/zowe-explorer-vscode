@@ -736,3 +736,12 @@ export const version = "1.53.2";
 export namespace languages {
     export function createDiagnosticCollection(name: string): any {}
 }
+
+export class Diagnostic {}
+
+export enum DiagnosticSeverity {
+    Error = 0,
+    Warning = 1,
+    Information = 2,
+    Hint = 3,
+}
