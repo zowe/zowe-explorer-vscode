@@ -9,13 +9,14 @@
  *
  */
 
-import { Disposable, FilePermission, FileSystemError, FileType, Uri } from "vscode";
+import { Disposable, FilePermission, FileType, Uri } from "vscode";
 import { JobFSProvider } from "../../../../src/job/JobFSProvider";
 import { FilterEntry, JobEntry, SpoolEntry } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../../../../src/ZoweExplorerApiRegister";
 import { createIProfile } from "../../../../__mocks__/mockCreators/shared";
 import { createIJobFile, createIJobObject } from "../../../../__mocks__/mockCreators/jobs";
 import { buildUniqueSpoolName } from "../../../../src/SpoolProvider";
+import { MockedProperty } from "../../../../__mocks__/mockUtils";
 
 const testProfile = createIProfile();
 
@@ -31,6 +32,10 @@ const testEntries = {
         name: "TESTJOB(JOB1234) - ACTIVE",
         job: createIJobObject(),
         type: FileType.Directory,
+        metadata: {
+            profile: testProfile,
+            path: "/TESTJOB(JOB1234) - ACTIVE",
+        },
     } as unknown as JobEntry,
     spool: {
         data: new Uint8Array([1, 2, 3]),
@@ -38,12 +43,19 @@ const testEntries = {
         wasAccessed: false,
         metadata: {
             profile: testProfile,
+            path: "/TESTJOB(JOB1234) - ACTIVE/JES2.JESMSGLG.2",
         },
         spool: {
             id: "SOMEID",
         } as any,
     } as SpoolEntry,
-    session: new FilterEntry("sestest"),
+    session: {
+        ...new FilterEntry("sestest"),
+        metadata: {
+            profile: testProfile,
+            path: "/",
+        },
+    },
 };
 
 describe("watch", () => {
@@ -71,6 +83,21 @@ describe("stat", () => {
 });
 
 describe("readDirectory", () => {
+    it("throws an error if getJobsByParameters does not exist", async () => {
+        const mockJesApi = {};
+        const jesApiMock = jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValueOnce(mockJesApi as any);
+        const lookupAsDirMock = jest.spyOn(JobFSProvider.instance as any, "_lookupAsDirectory").mockReturnValueOnce({
+            ...testEntries.session,
+            filter: { ...testEntries.session.filter, owner: "USER", prefix: "JOB*", status: "*" },
+            entries: new Map(),
+        } as any);
+        await expect(JobFSProvider.instance.readDirectory(testUris.session)).rejects.toThrow(
+            "Failed to fetch jobs: getJobsByParameters is not implemented for this session's JES API."
+        );
+        expect(lookupAsDirMock).toHaveBeenCalledWith(testUris.session, false);
+        jesApiMock.mockRestore();
+    });
+
     it("calls getJobsByParameters to list jobs under a session", async () => {
         const fakeJob2 = { ...createIJobObject(), jobid: "JOB3456" };
         const mockJesApi = {
@@ -112,7 +139,7 @@ describe("readDirectory", () => {
             [buildUniqueSpoolName(fakeSpool2), FileType.File],
         ]);
         expect(lookupAsDirMock).toHaveBeenCalledWith(testUris.job, false);
-        expect(mockJesApi.getSpoolFiles).toHaveBeenCalledWith(testEntries.job.job!.jobname, testEntries.job.job!.jobid);
+        expect(mockJesApi.getSpoolFiles).toHaveBeenCalledWith(testEntries.job.job?.jobname, testEntries.job.job?.jobid);
         jesApiMock.mockRestore();
     });
 });
@@ -133,7 +160,24 @@ describe("updateFilterForUri", () => {
     });
 });
 
-xdescribe("createDirectory", () => {});
+describe("createDirectory", () => {
+    it("creates a directory for a session entry", () => {
+        const fakeRoot = { ...(JobFSProvider.instance as any).root };
+        const rootMock = new MockedProperty(JobFSProvider.instance, "root", undefined, fakeRoot);
+        JobFSProvider.instance.createDirectory(testUris.session);
+        expect(fakeRoot.entries.has("sestest")).toBe(true);
+        rootMock[Symbol.dispose]();
+    });
+
+    it("creates a directory for a job entry", () => {
+        const fakeSessionEntry = new FilterEntry("sestest");
+        fakeSessionEntry.metadata = testEntries.session.metadata;
+        jest.spyOn(JobFSProvider.instance as any, "_lookupParentDirectory").mockReturnValueOnce(fakeSessionEntry);
+        JobFSProvider.instance.createDirectory(testUris.job);
+        expect(fakeSessionEntry.entries.has("TESTJOB(JOB1234) - ACTIVE")).toBe(true);
+    });
+});
+
 describe("fetchSpoolAtUri", () => {
     it("fetches the spool contents for a given URI", async () => {
         const lookupAsFileMock = jest
@@ -167,6 +211,21 @@ describe("readFile", () => {
 });
 
 describe("writeFile", () => {
+    it("adds a spool entry to the FSP", () => {
+        const jobEntry = {
+            ...testEntries.job,
+            entries: new Map(),
+            metadata: testEntries.job.metadata,
+        };
+        const lookupParentDirMock = jest.spyOn(JobFSProvider.instance as any, "_lookupParentDirectory").mockReturnValueOnce(jobEntry);
+        const newContents = new Uint8Array([3, 6, 9]);
+        JobFSProvider.instance.writeFile(testUris.spool, newContents, { create: true, overwrite: false });
+
+        expect(lookupParentDirMock).toHaveBeenCalledWith(testUris.spool);
+        const spoolEntry = jobEntry.entries.get("JES2.JESMSGLG.2")!;
+        expect(spoolEntry.data).toBe(newContents);
+    });
+
     it("updates a spool entry in the FSP", () => {
         const jobEntry = {
             ...testEntries.job,

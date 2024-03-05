@@ -79,11 +79,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
         const jesApi = ZoweExplorerApiRegister.getJesApi(uriInfo.profile);
         if (isFilterEntry(fsEntry)) {
             if (!jesApi.getJobsByParameters) {
-                throw new Error(
-                    vscode.l10n.t(
-                        "Failed to read directory for job in file system: getJobsByParameters is not implemented for this session's JES API."
-                    )
-                );
+                throw new Error(vscode.l10n.t("Failed to fetch jobs: getJobsByParameters is not implemented for this session's JES API."));
             }
 
             const jobFiles = await jesApi.getJobsByParameters({
@@ -144,9 +140,9 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
         const basename = path.posix.basename(uri.path);
         const parent = this._lookupParentDirectory(uri, false);
 
-        const EntryType = options.isFilter ? FilterEntry : JobEntry;
+        const EntryType = options?.isFilter ? FilterEntry : JobEntry;
         const entry = new EntryType(basename);
-        if (isJobEntry(entry)) {
+        if (isJobEntry(entry) && options?.job) {
             entry.job = options.job;
         }
 
@@ -155,7 +151,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
                 ? {
                       profile: parent.metadata.profile,
                       // we can strip profile name from path because its not involved in API calls
-                      path: parent.metadata.path.concat(`${basename}/`),
+                      path: path.posix.join(parent.metadata.path, basename),
                   }
                 : this._getInfoFromUri(uri);
         entry.metadata = profInfo;
@@ -248,7 +244,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
             entry.data = content;
             entry.metadata = {
                 ...parent.metadata,
-                path: parent.metadata.path.concat(`${basename}`),
+                path: path.posix.join(parent.metadata.path, basename),
             };
             parent.entries.set(spoolName, entry);
             this._fireSoon({ type: vscode.FileChangeType.Created, uri });
