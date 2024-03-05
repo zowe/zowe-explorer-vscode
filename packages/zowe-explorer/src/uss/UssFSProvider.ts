@@ -238,7 +238,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             // or build it using the helper function
             entry.metadata = {
                 ...parentDir.metadata,
-                path: parentDir.metadata.path.concat(`${fileName}`),
+                path: path.posix.join(parentDir.metadata.path, fileName),
             };
 
             if (content.byteLength > 0) {
@@ -506,7 +506,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                 ? {
                       profile: parent.metadata.profile,
                       // we can strip profile name from path because its not involved in API calls
-                      path: parent.metadata.path.concat(`${basename}/`),
+                      path: path.posix.join(parent.metadata.path, basename),
                   }
                 : this._getInfoFromUri(uri);
         entry.metadata = profInfo;
