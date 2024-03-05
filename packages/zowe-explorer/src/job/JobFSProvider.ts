@@ -78,21 +78,25 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
 
         const jesApi = ZoweExplorerApiRegister.getJesApi(uriInfo.profile);
         if (isFilterEntry(fsEntry)) {
-            if (jesApi.getJobsByParameters) {
-                const jobFiles = await jesApi.getJobsByParameters({
-                    owner: fsEntry.filter["owner"],
-                    status: fsEntry.filter["status"],
-                    prefix: fsEntry.filter["prefix"],
-                });
-                for (const job of jobFiles) {
-                    if (!fsEntry.entries.has(job.jobid)) {
-                        const newJob = new JobEntry(job.jobid);
-                        newJob.job = job;
-                        fsEntry.entries.set(job.jobid, newJob);
-                    }
+            if (!jesApi.getJobsByParameters) {
+                throw new Error(
+                    vscode.l10n.t(
+                        "Failed to read directory for job in file system: getJobsByParameters is not implemented for this session's JES API."
+                    )
+                );
+            }
+
+            const jobFiles = await jesApi.getJobsByParameters({
+                owner: fsEntry.filter["owner"] ?? "*",
+                status: fsEntry.filter["status"] ?? "*",
+                prefix: fsEntry.filter["prefix"] ?? "*",
+            });
+            for (const job of jobFiles) {
+                if (!fsEntry.entries.has(job.jobid)) {
+                    const newJob = new JobEntry(job.jobid);
+                    newJob.job = job;
+                    fsEntry.entries.set(job.jobid, newJob);
                 }
-            } else {
-                // TODO: make API call to filter by params w/ old method
             }
         } else if (isJobEntry(fsEntry)) {
             const spoolFiles = await jesApi.getSpoolFiles(fsEntry.job.jobname, fsEntry.job.jobid);
