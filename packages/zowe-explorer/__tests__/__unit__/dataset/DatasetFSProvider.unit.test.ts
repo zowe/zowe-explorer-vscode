@@ -11,8 +11,21 @@
 
 import { Disposable, Uri } from "vscode";
 import { DatasetFSProvider } from "../../../src/dataset/DatasetFSProvider";
+import { createIProfile } from "../../../__mocks__/mockCreators/shared";
+import { FileEntry } from "@zowe/zowe-explorer-api";
+import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 
-const testEntries = {};
+const testProfile = createIProfile();
+const testEntries = {
+    po: {
+        name: "USER.DATA.PO",
+        data: new Uint8Array(),
+        metadata: {
+            profile: testProfile,
+            path: "/USER.DATA.PO",
+        },
+    } as FileEntry,
+};
 
 type TestUris = Record<string, Readonly<Uri>>;
 const testUris: TestUris = {
@@ -24,7 +37,33 @@ const testUris: TestUris = {
 
 xdescribe("createDirectory", () => {});
 xdescribe("readDirectory", () => {});
-xdescribe("fetchDatasetAtUri", () => {});
+describe("fetchDatasetAtUri", () => {
+    it("fetches a data set at the given URI", async () => {
+        const contents = "dataset contents";
+        const mockMvsApi = {
+            getContents: jest.fn((dsn, opts) => {
+                opts.stream.write(contents);
+
+                return {
+                    apiResponse: {
+                        etag: "123ANETAG",
+                    },
+                };
+            }),
+        };
+        const fakePo = { ...testEntries.po };
+        const lookupAsFileMock = jest.spyOn(DatasetFSProvider.instance as any, "_lookupAsFile").mockResolvedValueOnce(fakePo);
+        const mvsApiMock = jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValueOnce(mockMvsApi as any);
+        await DatasetFSProvider.instance.fetchDatasetAtUri(testUris.po);
+        expect(fakePo.data.toString()).toStrictEqual(contents.toString());
+        expect(fakePo.etag).toBe("123ANETAG");
+
+        lookupAsFileMock.mockRestore();
+        mvsApiMock.mockRestore();
+    });
+
+    xit("calls _updateResourceInEditor if 'editor' is specified", () => {});
+});
 xdescribe("readFile", () => {});
 xdescribe("writeFile", () => {});
 describe("watch", () => {
