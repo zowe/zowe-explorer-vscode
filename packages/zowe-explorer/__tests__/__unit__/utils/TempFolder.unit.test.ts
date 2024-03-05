@@ -159,7 +159,7 @@ describe("TempFolder Unit Tests", () => {
             LocalFileManagement.recoveredFileCount++;
         });
         const dsDocument = {
-            fileName: path.join(globals.DS_DIR, "lpar1_zosmf", "IBMUSER.TEST.PS(member).txt"),
+            fileName: path.join(globals.DS_DIR, "lpar1_zosmf", "IBMUSER.TEST.PS(member)"),
         };
         const ussDocument = {
             fileName: path.join(globals.USS_DIR, "lpar1_zosmf", "u/ibmuser/test.txt"),
@@ -176,9 +176,10 @@ describe("TempFolder Unit Tests", () => {
             profile: { name: "lpar1_zosmf", type: "zosmf" },
         });
         expect(blockMocks.addRecoveredFile).toHaveBeenNthCalledWith(2, ussDocument, {
-            label: "/u/ibmuser/test.txt",
+            label: "test.txt",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             profile: { name: "lpar1_zosmf", type: "zosmf" },
+            parentPath: "/u/ibmuser",
         });
         expect(blockMocks.loadFileInfo).toHaveBeenCalledTimes(2);
         expect(warningMessageSpy).toHaveBeenCalledTimes(1);

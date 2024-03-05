@@ -114,7 +114,8 @@ describe("LocalFileManagement Unit Tests", () => {
         });
         dsNode.setEncoding({ kind: "text" });
         dsNode.setEtag("fakeEtag");
-        LocalFileManagement.storeFileInfo(dsNode, "file:///abc.txt");
+        jest.spyOn(sharedUtils, "getDocumentFilePath").mockReturnValue("file:///abc.txt");
+        LocalFileManagement.storeFileInfo(dsNode);
         expect(blockMocks.storageUpdate).toHaveBeenLastCalledWith("zowe.fileInfoCache", {
             "file:///abc.txt": {
                 binary: false,
@@ -126,7 +127,6 @@ describe("LocalFileManagement Unit Tests", () => {
 
     it("should store file info for USS node", () => {
         const blockMocks = createBlockMocks();
-        jest.spyOn(sharedUtils, "getDocumentFilePath").mockReturnValue("file:///abc.txt");
         const ussNode = new ZoweUSSNode({
             label: "abc.txt",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
@@ -134,6 +134,7 @@ describe("LocalFileManagement Unit Tests", () => {
         });
         ussNode.setEncoding({ kind: "binary" });
         ussNode.setEtag("fakeEtag");
+        jest.spyOn(ussNode, "getUSSDocumentFilePath").mockReturnValue("file:///abc.txt");
         LocalFileManagement.storeFileInfo(ussNode);
         expect(blockMocks.storageUpdate).toHaveBeenLastCalledWith("zowe.fileInfoCache", {
             "file:///abc.txt": {

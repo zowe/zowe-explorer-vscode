@@ -14,7 +14,7 @@ import * as vscode from "vscode";
 import * as nls from "vscode-nls";
 import { ZoweLocalStorage } from "./ZoweLocalStorage";
 import { getDocumentFilePath, isZoweDatasetTreeNode, updateOpenFiles } from "../shared/utils";
-import { IZoweTreeOpts } from "../shared/IZoweTreeOpts";
+import { IZoweDatasetTreeOpts, IZoweUssTreeOpts } from "../shared/IZoweTreeOpts";
 import { TreeProviders } from "../shared/TreeProviders";
 
 // Set up localization
@@ -34,14 +34,15 @@ export class LocalFileManagement {
     public static recoveredFileCount: number = 0;
     private static recoveryDiagnostics: vscode.DiagnosticCollection = vscode.languages.createDiagnosticCollection("zowe-explorer");
 
-    public static addRecoveredFile(document: vscode.TextDocument, treeOpts: IZoweTreeOpts): void {
+    public static addRecoveredFile(document: vscode.TextDocument, treeOpts: IZoweDatasetTreeOpts | IZoweUssTreeOpts): void {
         const firstLine = document.lineAt(0);
         const lastLine = document.lineAt(document.lineCount - 1);
         const textRange = new vscode.Range(firstLine.range.start, lastLine.range.end);
+        const fullPath = "parentPath" in treeOpts ? `${treeOpts.parentPath}/${treeOpts.label}` : treeOpts.label;
         this.recoveryDiagnostics.set(document.uri, [
             new vscode.Diagnostic(
                 textRange,
-                localize("addRecoveredFile.diagnosticMessage", "File is out of sync with {0}: {1}", treeOpts.profile.name, treeOpts.label),
+                localize("addRecoveredFile.diagnosticMessage", "File is out of sync with {0}: {1}", treeOpts.profile.name, fullPath),
                 vscode.DiagnosticSeverity.Error
             ),
         ]);
@@ -65,7 +66,9 @@ export class LocalFileManagement {
 
     public static storeFileInfo(node: IZoweDatasetTreeNode | IZoweUSSTreeNode, filename?: string): void {
         const fileInfo = ZoweLocalStorage.getValue<Record<string, IFileInfo>>("zowe.fileInfoCache") ?? {};
-        filename = filename ?? getDocumentFilePath(node.label as string, node);
+        if (filename == null) {
+            filename = isZoweDatasetTreeNode(node) ? getDocumentFilePath(node.label as string, node) : node.getUSSDocumentFilePath();
+        }
         fileInfo[filename] = {
             binary: node.binary,
             encoding: node.encoding,

@@ -22,8 +22,9 @@ import * as vscode from "vscode";
 import { LocalFileManagement } from "./LocalFileManagement";
 import { ZoweDatasetNode } from "../dataset/ZoweDatasetNode";
 import { ZoweUSSNode } from "../uss/ZoweUSSNode";
-import { IZoweTreeOpts } from "../shared/IZoweTreeOpts";
+import { IZoweDatasetTreeOpts, IZoweUssTreeOpts } from "../shared/IZoweTreeOpts";
 import { Profiles } from "../Profiles";
+import { checkForAddedSuffix } from "../shared/utils";
 
 // Set up localization
 nls.config({
@@ -145,8 +146,8 @@ export function findRecoveredFiles(): void {
     for (const document of vscode.workspace.textDocuments) {
         if (document.fileName.toUpperCase().indexOf(globals.DS_DIR.toUpperCase()) >= 0) {
             const pathSegments = document.fileName.slice(globals.DS_DIR.length + 1).split(path.sep);
-            const treeOpts: IZoweTreeOpts = {
-                label: path.basename(pathSegments[1], path.extname(pathSegments[1])),
+            const treeOpts: IZoweDatasetTreeOpts = {
+                label: checkForAddedSuffix(pathSegments[1]) ? path.parse(pathSegments[1]).name : pathSegments[1],
                 collapsibleState: vscode.TreeItemCollapsibleState.None,
                 profile: Profiles.getInstance().loadNamedProfile(pathSegments[0]),
             };
@@ -154,10 +155,11 @@ export function findRecoveredFiles(): void {
             LocalFileManagement.loadFileInfo(new ZoweDatasetNode(treeOpts), document.fileName);
         } else if (document.fileName.toUpperCase().indexOf(globals.USS_DIR.toUpperCase()) >= 0) {
             const pathSegments = document.fileName.slice(globals.USS_DIR.length + 1).split(path.sep);
-            const treeOpts: IZoweTreeOpts = {
-                label: "/" + path.posix.join(...pathSegments.slice(1)),
+            const treeOpts: IZoweUssTreeOpts = {
+                label: pathSegments[pathSegments.length - 1],
                 collapsibleState: vscode.TreeItemCollapsibleState.None,
                 profile: Profiles.getInstance().loadNamedProfile(pathSegments[0]),
+                parentPath: "/" + path.posix.join(...pathSegments.slice(1, -1)),
             };
             LocalFileManagement.addRecoveredFile(document, treeOpts);
             LocalFileManagement.loadFileInfo(new ZoweUSSNode(treeOpts), document.fileName);
