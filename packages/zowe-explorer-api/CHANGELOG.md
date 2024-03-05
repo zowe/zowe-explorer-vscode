@@ -6,6 +6,8 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### New features and enhancements
 
+- **Breaking:** Made `MainframeInteraction.IJes.getJobsByParameters` a required function now that `getJobsByOwnerAndPrefix` has been removed.
+
 ### Bug fixes
 
 ## `3.0.0-next.202403051607`
