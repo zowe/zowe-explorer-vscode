@@ -38,9 +38,6 @@ jest.mock("fs-extra", () => ({
 }));
 
 describe("TempFolder Unit Tests", () => {
-    const testDsDir = "/tmp/ds";
-    const testUssDir = "/tmp/uss";
-
     afterEach(() => {
         jest.clearAllMocks();
         jest.restoreAllMocks();
@@ -64,8 +61,6 @@ describe("TempFolder Unit Tests", () => {
             configurable: true,
         });
         Object.defineProperty(Gui, "showMessage", { value: jest.fn() });
-        Object.defineProperty(globals, "DS_DIR", { value: testDsDir, configurable: true });
-        Object.defineProperty(globals, "USS_DIR", { value: testUssDir, configurable: true });
         Object.defineProperty(globals, "LOG", { value: jest.fn(), configurable: true });
         Object.defineProperty(globals.LOG, "error", { value: jest.fn(), configurable: true });
         Object.defineProperty(ZoweLogger, "error", { value: jest.fn(), configurable: true });
@@ -159,14 +154,15 @@ describe("TempFolder Unit Tests", () => {
 
     it("findRecoveredFiles should recover data sets and USS files that were left open", () => {
         const blockMocks = createBlockMocks();
+        globals.defineGlobals(__dirname);
         blockMocks.addRecoveredFile.mockImplementation(() => {
             LocalFileManagement.recoveredFileCount++;
         });
         const dsDocument = {
-            fileName: path.join(testDsDir, "lpar1_zosmf", "IBMUSER.TEST.PS(member).txt"),
+            fileName: path.join(globals.DS_DIR, "lpar1_zosmf", "IBMUSER.TEST.PS(member).txt"),
         };
         const ussDocument = {
-            fileName: path.join(testUssDir, "lpar1_zosmf", "u/ibmuser/test.txt"),
+            fileName: path.join(globals.USS_DIR, "lpar1_zosmf", "u/ibmuser/test.txt"),
         };
         Object.defineProperty(vscode.workspace, "textDocuments", {
             value: [dsDocument, ussDocument],
