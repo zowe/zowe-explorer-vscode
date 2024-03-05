@@ -14,25 +14,24 @@ import { JobFSProvider } from "../../../../src/job/JobFSProvider";
 import { FilterEntry, JobEntry, SpoolEntry } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../../../../src/ZoweExplorerApiRegister";
 import { createIProfile } from "../../../../__mocks__/mockCreators/shared";
+import { createIJobFile, createIJobObject } from "../../../../__mocks__/mockCreators/jobs";
+import { buildUniqueSpoolName } from "../../../../src/SpoolProvider";
 
 const testProfile = createIProfile();
 
 type TestUris = Record<string, Readonly<Uri>>;
 const testUris: TestUris = {
-    spool: Uri.from({ scheme: "zowe-jobs", path: "/sestest/TESTJOB(JOB12345) - ACTIVE/JES2.JESMSGLG.2" }),
-    job: Uri.from({ scheme: "zowe-jobs", path: "/sestest/TESTJOB(JOB12345) - ACTIVE" }),
+    spool: Uri.from({ scheme: "zowe-jobs", path: "/sestest/TESTJOB(JOB1234) - ACTIVE/JES2.JESMSGLG.2" }),
+    job: Uri.from({ scheme: "zowe-jobs", path: "/sestest/TESTJOB(JOB1234) - ACTIVE" }),
     session: Uri.from({ scheme: "zowe-jobs", path: "/sestest" }),
 };
 
 const testEntries = {
     job: {
-        name: "TESTJOB(JOB12345) - ACTIVE",
-        job: {
-            jobid: "JOB12345",
-            jobname: "TESTJOB",
-        },
+        name: "TESTJOB(JOB1234) - ACTIVE",
+        job: createIJobObject(),
         type: FileType.Directory,
-    } as JobEntry,
+    } as unknown as JobEntry,
     spool: {
         data: new Uint8Array([1, 2, 3]),
         name: "JES2.JESMSGLG.2",
@@ -59,6 +58,7 @@ describe("stat", () => {
             ...testEntries.spool,
             permissions: FilePermission.Readonly,
         });
+        lookupMock.mockRestore();
     });
 
     it("returns a job entry", () => {
@@ -66,9 +66,57 @@ describe("stat", () => {
         expect(JobFSProvider.instance.stat(testUris.spool)).toStrictEqual({
             ...testEntries.job,
         });
+        lookupMock.mockRestore();
     });
 });
-xdescribe("readDirectory", () => {});
+
+describe("readDirectory", () => {
+    it("calls getJobsByParameters to list jobs under a session", async () => {
+        const fakeJob2 = { ...createIJobObject(), jobid: "JOB3456" };
+        const mockJesApi = {
+            getJobsByParameters: jest.fn().mockResolvedValueOnce([createIJobObject(), fakeJob2]),
+        };
+        const jesApiMock = jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValueOnce(mockJesApi as any);
+        const lookupAsDirMock = jest.spyOn(JobFSProvider.instance as any, "_lookupAsDirectory").mockReturnValueOnce({
+            ...testEntries.session,
+            filter: { ...testEntries.session.filter, owner: "USER", prefix: "JOB*", status: "*" },
+            entries: new Map(),
+        } as any);
+        expect(await JobFSProvider.instance.readDirectory(testUris.session)).toStrictEqual([
+            ["JOB1234", FileType.Directory],
+            ["JOB3456", FileType.Directory],
+        ]);
+        expect(lookupAsDirMock).toHaveBeenCalledWith(testUris.session, false);
+        expect(mockJesApi.getJobsByParameters).toHaveBeenCalledWith({
+            owner: "USER",
+            prefix: "JOB*",
+            status: "*",
+        });
+        jesApiMock.mockRestore();
+    });
+
+    it("calls getSpoolFiles to list spool files under a job", async () => {
+        const fakeSpool = createIJobFile();
+        const fakeSpool2 = { ...createIJobFile(), id: 102 };
+        const mockJesApi = {
+            getSpoolFiles: jest.fn().mockResolvedValueOnce([fakeSpool, fakeSpool2]),
+        };
+        const jesApiMock = jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValueOnce(mockJesApi as any);
+        const lookupAsDirMock = jest.spyOn(JobFSProvider.instance as any, "_lookupAsDirectory").mockReturnValueOnce({
+            ...testEntries.job,
+            entries: new Map(),
+            job: testEntries.job.job,
+        } as any);
+        expect(await JobFSProvider.instance.readDirectory(testUris.job)).toStrictEqual([
+            [buildUniqueSpoolName(fakeSpool), FileType.File],
+            [buildUniqueSpoolName(fakeSpool2), FileType.File],
+        ]);
+        expect(lookupAsDirMock).toHaveBeenCalledWith(testUris.job, false);
+        expect(mockJesApi.getSpoolFiles).toHaveBeenCalledWith(testEntries.job.job!.jobname, testEntries.job.job!.jobid);
+        jesApiMock.mockRestore();
+    });
+});
+
 describe("updateFilterForUri", () => {
     it("updates the session entry with the given filter", () => {
         const sessionEntry = { ...testEntries.session };
@@ -81,6 +129,7 @@ describe("updateFilterForUri", () => {
         const lookupAsDirMock = jest.spyOn(JobFSProvider.instance as any, "_lookupAsDirectory").mockReturnValueOnce(sessionEntry);
         JobFSProvider.instance.updateFilterForUri(testUris.session, newFilter);
         expect(sessionEntry.filter).toStrictEqual(newFilter);
+        lookupAsDirMock.mockRestore();
     });
 });
 
@@ -101,6 +150,7 @@ describe("fetchSpoolAtUri", () => {
         expect(mockJesApi.downloadSingleSpool).toHaveBeenCalled();
         expect(entry.data.toString()).toStrictEqual(newData.toString());
         jesApiMock.mockRestore();
+        lookupAsFileMock.mockRestore();
     });
 });
 
@@ -117,7 +167,7 @@ describe("readFile", () => {
 });
 
 describe("writeFile", () => {
-    it("updates a spool entry in the FSP", async () => {
+    it("updates a spool entry in the FSP", () => {
         const jobEntry = {
             ...testEntries.job,
             entries: new Map([[testEntries.spool.name, { ...testEntries.spool }]]),
@@ -131,7 +181,7 @@ describe("writeFile", () => {
         expect(spoolEntry.data).toBe(newContents);
     });
 
-    it("updates an empty, unaccessed spool entry in the FSP without sending data", async () => {
+    it("updates an empty, unaccessed spool entry in the FSP without sending data", () => {
         const jobEntry = {
             ...testEntries.job,
             entries: new Map([[testEntries.spool.name, { ...testEntries.spool, wasAccessed: false }]]),
@@ -211,7 +261,7 @@ describe("_getInfoFromUri", () => {
     it("removes session segment from path", () => {
         expect((JobFSProvider.instance as any)._getInfoFromUri(testUris.job)).toStrictEqual({
             profile: null,
-            path: "/TESTJOB(JOB12345) - ACTIVE",
+            path: "/TESTJOB(JOB1234) - ACTIVE",
         });
     });
 });
