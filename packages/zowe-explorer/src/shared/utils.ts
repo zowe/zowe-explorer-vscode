@@ -115,8 +115,8 @@ export function getAppName(): "VS Code" {
 export function getDocumentFilePath(label: string, node: IZoweTreeNode): string {
     const dsDir = globals.DS_DIR;
     const profName = node.getProfileName();
-    const suffix = appendSuffix(label);
-    return path.join(dsDir, profName || "", suffix);
+    //const suffix = appendSuffix(label);
+    return path.join(dsDir, profName || "", label);
 }
 
 /**
@@ -127,43 +127,46 @@ export function getDocumentFilePath(label: string, node: IZoweTreeNode): string 
  *   the language is specified
  *  2. Dont do this for the top level HLQ
  */
-function appendSuffix(label: string): string {
+export function getLanguageId(label: string): string | null {
     const limit = 5;
     const bracket = label.indexOf("(");
     const split = bracket > -1 ? label.substr(0, bracket).split(".", limit) : label.split(".", limit);
     for (let i = split.length - 1; i > 0; i--) {
+        if (split[i] === "C") {
+            return "c";
+        }
         if (["JCL", "JCLLIB", "CNTL", "PROC", "PROCLIB"].includes(split[i])) {
-            return label.concat(".jcl");
+            return "jcl";
         }
         if (["COBOL", "CBL", "COB", "SCBL"].includes(split[i])) {
-            return label.concat(".cbl");
+            return "cobol";
         }
         if (["COPYBOOK", "COPY", "CPY", "COBCOPY"].includes(split[i])) {
-            return label.concat(".cpy");
+            return "copybook";
         }
         if (["INC", "INCLUDE", "PLINC"].includes(split[i])) {
-            return label.concat(".inc");
+            return "inc";
         }
         if (["PLI", "PL1", "PLX", "PCX"].includes(split[i])) {
-            return label.concat(".pli");
+            return "pli";
         }
         if (["SH", "SHELL"].includes(split[i])) {
-            return label.concat(".sh");
+            return "shellscript";
         }
         if (["REXX", "REXEC", "EXEC"].includes(split[i])) {
-            return label.concat(".rexx");
+            return "rexx";
         }
         if (split[i] === "XML") {
-            return label.concat(".xml");
+            return "xml";
         }
         if (split[i] === "ASM" || split[i].indexOf("ASSEMBL") > -1) {
-            return label.concat(".asm");
+            return "asm";
         }
         if (split[i] === "LOG" || split[i].indexOf("SPFLOG") > -1) {
-            return label.concat(".log");
+            return "log";
         }
     }
-    return label;
+    return null;
 }
 
 export function checkForAddedSuffix(filename: string): boolean {

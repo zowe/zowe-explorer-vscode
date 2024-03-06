@@ -235,7 +235,7 @@ describe("Shared Utils Unit Tests - Function getDocumentFilePath", () => {
             parentNode: blockMocks.datasetSessionNode,
         });
         expect(sharedUtils.getDocumentFilePath(node.label.toString(), node)).toBe(
-            path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.TEST.JCL(member).jcl")
+            path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.TEST.JCL(member)")
         );
         node = new ZoweDatasetNode({
             label: "AUSER.TEST.ASM(member)",
@@ -243,7 +243,7 @@ describe("Shared Utils Unit Tests - Function getDocumentFilePath", () => {
             parentNode: blockMocks.datasetSessionNode,
         });
         expect(sharedUtils.getDocumentFilePath(node.label.toString(), node)).toBe(
-            path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.TEST.ASM(member).asm")
+            path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.TEST.ASM(member)")
         );
         node = new ZoweDatasetNode({
             label: "AUSER.COBOL.TEST(member)",
@@ -251,7 +251,7 @@ describe("Shared Utils Unit Tests - Function getDocumentFilePath", () => {
             parentNode: blockMocks.datasetSessionNode,
         });
         expect(sharedUtils.getDocumentFilePath(node.label.toString(), node)).toBe(
-            path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.COBOL.TEST(member).cbl")
+            path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.COBOL.TEST(member)")
         );
         node = new ZoweDatasetNode({
             label: "AUSER.PROD.PLI(member)",
@@ -259,7 +259,7 @@ describe("Shared Utils Unit Tests - Function getDocumentFilePath", () => {
             parentNode: blockMocks.datasetSessionNode,
         });
         expect(sharedUtils.getDocumentFilePath(node.label.toString(), node)).toBe(
-            path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.PROD.PLI(member).pli")
+            path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.PROD.PLI(member)")
         );
         node = new ZoweDatasetNode({
             label: "AUSER.PROD.PLX(member)",
@@ -267,7 +267,7 @@ describe("Shared Utils Unit Tests - Function getDocumentFilePath", () => {
             parentNode: blockMocks.datasetSessionNode,
         });
         expect(sharedUtils.getDocumentFilePath(node.label.toString(), node)).toBe(
-            path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.PROD.PLX(member).pli")
+            path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.PROD.PLX(member)")
         );
         node = new ZoweDatasetNode({
             label: "AUSER.PROD.SH(member)",
@@ -275,7 +275,7 @@ describe("Shared Utils Unit Tests - Function getDocumentFilePath", () => {
             parentNode: blockMocks.datasetSessionNode,
         });
         expect(sharedUtils.getDocumentFilePath(node.label.toString(), node)).toBe(
-            path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.PROD.SH(member).sh")
+            path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.PROD.SH(member)")
         );
         node = new ZoweDatasetNode({
             label: "AUSER.REXX.EXEC(member)",
@@ -283,7 +283,7 @@ describe("Shared Utils Unit Tests - Function getDocumentFilePath", () => {
             parentNode: blockMocks.datasetSessionNode,
         });
         expect(sharedUtils.getDocumentFilePath(node.label.toString(), node)).toBe(
-            path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.REXX.EXEC(member).rexx")
+            path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.REXX.EXEC(member)")
         );
         node = new ZoweDatasetNode({
             label: "AUSER.TEST.XML(member)",
@@ -291,7 +291,7 @@ describe("Shared Utils Unit Tests - Function getDocumentFilePath", () => {
             parentNode: blockMocks.datasetSessionNode,
         });
         expect(sharedUtils.getDocumentFilePath(node.label.toString(), node)).toBe(
-            path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.TEST.XML(member).xml")
+            path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.TEST.XML(member)")
         );
 
         node = new ZoweDatasetNode({
@@ -300,7 +300,7 @@ describe("Shared Utils Unit Tests - Function getDocumentFilePath", () => {
             parentNode: blockMocks.datasetSessionNode,
         });
         expect(sharedUtils.getDocumentFilePath(node.label.toString(), node)).toBe(
-            path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.TEST.XML.xml")
+            path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.TEST.XML")
         );
         node = new ZoweDatasetNode({
             label: "AUSER.TEST.TXML",
@@ -316,7 +316,7 @@ describe("Shared Utils Unit Tests - Function getDocumentFilePath", () => {
             parentNode: blockMocks.datasetSessionNode,
         });
         expect(sharedUtils.getDocumentFilePath(node.label.toString(), node)).toBe(
-            path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.XML.TGML.xml")
+            path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.XML.TGML")
         );
         node = new ZoweDatasetNode({
             label: "AUSER.XML.ASM",
@@ -324,7 +324,7 @@ describe("Shared Utils Unit Tests - Function getDocumentFilePath", () => {
             parentNode: blockMocks.datasetSessionNode,
         });
         expect(sharedUtils.getDocumentFilePath(node.label.toString(), node)).toBe(
-            path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.XML.ASM.asm")
+            path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.XML.ASM")
         );
         node = new ZoweDatasetNode({
             label: "AUSER",
@@ -340,7 +340,7 @@ describe("Shared Utils Unit Tests - Function getDocumentFilePath", () => {
             parentNode: blockMocks.datasetSessionNode,
         });
         expect(sharedUtils.getDocumentFilePath(node.label.toString(), node)).toBe(
-            path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.XML.TEST(member).xml")
+            path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.XML.TEST(member)")
         );
         node = new ZoweDatasetNode({
             label: "XML.AUSER.TEST(member)",
@@ -356,7 +356,7 @@ describe("Shared Utils Unit Tests - Function getDocumentFilePath", () => {
             parentNode: blockMocks.datasetSessionNode,
         });
         expect(sharedUtils.getDocumentFilePath(node.label.toString(), node)).toBe(
-            path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.COBOL.PL1.XML.TEST(member).xml")
+            path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.COBOL.PL1.XML.TEST(member)")
         );
         node = new ZoweDatasetNode({
             label: "AUSER.COBOL.PL1.XML.ASSEMBLER.TEST(member)",
@@ -364,7 +364,7 @@ describe("Shared Utils Unit Tests - Function getDocumentFilePath", () => {
             parentNode: blockMocks.datasetSessionNode,
         });
         expect(sharedUtils.getDocumentFilePath(node.label.toString(), node)).toBe(
-            path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.COBOL.PL1.XML.ASSEMBLER.TEST(member).asm")
+            path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.COBOL.PL1.XML.ASSEMBLER.TEST(member)")
         );
         node = new ZoweDatasetNode({
             label: "AUSER.TEST.COPYBOOK",
@@ -372,7 +372,7 @@ describe("Shared Utils Unit Tests - Function getDocumentFilePath", () => {
             parentNode: blockMocks.datasetSessionNode,
         });
         expect(sharedUtils.getDocumentFilePath(node.label.toString(), node)).toBe(
-            path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.TEST.COPYBOOK.cpy")
+            path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.TEST.COPYBOOK")
         );
         node = new ZoweDatasetNode({
             label: "AUSER.TEST.PLINC",
@@ -380,7 +380,7 @@ describe("Shared Utils Unit Tests - Function getDocumentFilePath", () => {
             parentNode: blockMocks.datasetSessionNode,
         });
         expect(sharedUtils.getDocumentFilePath(node.label.toString(), node)).toBe(
-            path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.TEST.PLINC.inc")
+            path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.TEST.PLINC")
         );
         node = new ZoweDatasetNode({
             label: "AUSER.TEST.SPFLOG1",
@@ -388,7 +388,7 @@ describe("Shared Utils Unit Tests - Function getDocumentFilePath", () => {
             parentNode: blockMocks.datasetSessionNode,
         });
         expect(sharedUtils.getDocumentFilePath(node.label.toString(), node)).toEqual(
-            path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.TEST.SPFLOG1.log")
+            path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.TEST.SPFLOG1")
         );
     });
 });

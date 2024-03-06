@@ -18,11 +18,12 @@ import { Profiles } from "../Profiles";
 import { DatasetTree, createDatasetTree } from "./DatasetTree";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import * as contextuals from "../shared/context";
-import { getSelectedNodeList } from "../shared/utils";
+import { getLanguageId, getSelectedNodeList } from "../shared/utils";
 import { initSubscribers } from "../shared/init";
 import { ZoweLogger } from "../utils/ZoweLogger";
 import { TreeViewUtils } from "../utils/TreeViewUtils";
 import { DatasetFSProvider } from "./DatasetFSProvider";
+import { posix as posixPath } from "path";
 
 export async function initDatasetProvider(context: vscode.ExtensionContext): Promise<DatasetTree> {
     ZoweLogger.trace("dataset.init.initDatasetProvider called.");
@@ -220,6 +221,25 @@ export async function initDatasetProvider(context: vscode.ExtensionContext): Pro
     context.subscriptions.push(
         vscode.workspace.onDidChangeConfiguration(async (e) => {
             await datasetProvider.onDidChangeConfiguration(e);
+        })
+    );
+    context.subscriptions.push(
+        vscode.workspace.onDidOpenTextDocument(async (doc) => {
+            if (doc.uri.scheme !== "zowe-ds") {
+                return;
+            }
+
+            const parentPath = posixPath.basename(posixPath.join(doc.uri.path, ".."));
+            const languageId = getLanguageId(parentPath);
+            if (languageId == null) {
+                return;
+            }
+
+            try {
+                await vscode.languages.setTextDocumentLanguage(doc, languageId);
+            } catch (err) {
+                ZoweLogger.warn(`Could not set document language for ${doc.fileName} - tried languageId '${languageId}'`);
+            }
         })
     );
     context.subscriptions.push(vscode.workspace.onDidCloseTextDocument(DatasetTree.onDidCloseTextDocument));
