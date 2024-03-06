@@ -230,7 +230,7 @@ export async function uploadContent(
 ): Promise<IZosFilesResponse> {
     const uploadOptions: IUploadOptions = {
         etag: etagToUpload,
-        returnEtag: true,
+        returnEtag: returnEtag ?? true,
         binary: node.binary,
         encoding: node.encoding !== undefined ? node.encoding : profile.profile?.encoding,
         responseTimeout: profile.profile?.responseTimeout,
