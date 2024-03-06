@@ -269,9 +269,10 @@ export async function modifyCommand(job: ZoweJobNode): Promise<void> {
         };
         const command = await Gui.showInputBox(options);
         if (command !== undefined) {
-            const commandApi = ZoweExplorerApiRegister.getInstance().getCommandApi(job.getProfile());
+            const profile = job.getProfile();
+            const commandApi = ZoweExplorerApiRegister.getInstance().getCommandApi(profile);
             if (commandApi) {
-                const response = await ZoweExplorerApiRegister.getCommandApi(job.getProfile()).issueMvsCommand(`f ${job.job.jobname},${command}`);
+                const response = await commandApi.issueMvsCommand(`f ${job.job.jobname},${command}`, profile.profile?.consoleName);
                 Gui.showMessage(localize("jobActions.modifyCommand.response", "Command response: ") + response.commandResponse);
             }
         }
@@ -295,9 +296,10 @@ export async function modifyCommand(job: ZoweJobNode): Promise<void> {
 export async function stopCommand(job: ZoweJobNode): Promise<void> {
     ZoweLogger.trace("job.actions.stopCommand called.");
     try {
-        const commandApi = ZoweExplorerApiRegister.getInstance().getCommandApi(job.getProfile());
+        const profile = job.getProfile();
+        const commandApi = ZoweExplorerApiRegister.getInstance().getCommandApi(profile);
         if (commandApi) {
-            const response = await ZoweExplorerApiRegister.getCommandApi(job.getProfile()).issueMvsCommand(`p ${job.job.jobname}`);
+            const response = await commandApi.issueMvsCommand(`p ${job.job.jobname}`, profile.profile?.consoleName);
             Gui.showMessage(localize("jobActions.stopCommand.response", "Command response: ") + response.commandResponse);
         }
     } catch (error) {
