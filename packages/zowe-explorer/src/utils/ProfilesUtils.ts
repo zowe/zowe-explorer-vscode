@@ -138,7 +138,7 @@ export interface IFilterItem {
 }
 
 export class FilterItem implements vscode.QuickPickItem {
-    public constructor(public filterItem: IFilterItem) { }
+    public constructor(public filterItem: IFilterItem) {}
     public get label(): string {
         const icon = this.filterItem.icon ? this.filterItem.icon + " " : null;
         return (icon ?? "") + this.filterItem.text;
@@ -156,7 +156,7 @@ export class FilterItem implements vscode.QuickPickItem {
 }
 
 export class FilterDescriptor implements vscode.QuickPickItem {
-    public constructor(private text: string) { }
+    public constructor(private text: string) {}
     public get label(): string {
         return this.text;
     }
@@ -439,9 +439,10 @@ export class ProfilesUtils {
             const layers = mProfileInfo.getTeamConfig().layers || [];
             const layerSummary = layers.map(
                 (config: imperative.IConfigLayer) =>
-                    `Path: ${config.path}: ${config.exists
-                        ? "Found, with the following defaults:" + JSON.stringify(config.properties?.defaults || "Undefined default")
-                        : "Not available"
+                    `Path: ${config.path}: ${
+                        config.exists
+                            ? "Found, with the following defaults:" + JSON.stringify(config.properties?.defaults || "Undefined default")
+                            : "Not available"
                     } `
             );
             ZoweLogger.debug(`Summary of team configuration files considered for Zowe Explorer: ${JSON.stringify(layerSummary)}`);

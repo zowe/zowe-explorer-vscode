@@ -19,12 +19,11 @@ import * as globals from "../../src/globals";
 import * as tempFolderUtils from "../../src/utils/TempFolder";
 import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
 import * as zosmf from "@zowe/zosmf-for-zowe-sdk";
-import { imperative, Gui, Validation, ProfilesCache } from "@zowe/zowe-explorer-api";
+import { imperative, Gui, Validation, ProfilesCache, FileManagement } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../src/Profiles";
 import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
 import { createGetConfigMock, createInstanceOfProfileInfo, createIProfile, createTreeView } from "../../__mocks__/mockCreators/shared";
 import { ZoweUSSNode } from "../../src/uss/ZoweUSSNode";
-import { getSelectedNodeList } from "../../src/shared/utils";
 import { SettingsConfig } from "../../src/utils/SettingsConfig";
 import { ZoweExplorerExtender } from "../../src/ZoweExplorerExtender";
 import { DatasetTree } from "../../src/dataset/DatasetTree";
@@ -92,6 +91,7 @@ async function createGlobalMocks() {
                 mCredentials: {},
                 mUSingTeamConfig: true,
                 readProfilesFromDisk: mockReadProfilesFromDisk,
+                getZoweDir: jest.fn(),
             };
         }),
         mockUpdateCredMgrSetting: jest.fn(),
@@ -375,7 +375,7 @@ async function createGlobalMocks() {
     });
     Object.defineProperty(ZoweExplorerExtender, "showZoweConfigError", { value: jest.fn(), configurable: true });
     Object.defineProperty(imperative, "ProfileInfo", {
-        value: globalMocks.mockImperativeProfileInfo,
+        get: globalMocks.mockImperativeProfileInfo,
         configurable: true,
     });
 
@@ -456,7 +456,7 @@ describe("Extension Unit Tests", () => {
         globalMocks = await createGlobalMocks();
         jest.spyOn(fs, "readFileSync").mockReturnValue(Buffer.from(JSON.stringify({ overrides: { credentialManager: "@zowe/cli" } }), "utf-8"));
         Object.defineProperty(imperative, "ProfileInfo", {
-            value: globalMocks.mockImperativeProfileInfo,
+            get: globalMocks.mockImperativeProfileInfo,
             configurable: true,
         });
         globalMocks.mockReadFileSync.mockReturnValueOnce('{ "overrides": { "CredentialManager": "Managed by ANO" }}');
@@ -495,6 +495,9 @@ describe("Extension Unit Tests", () => {
     });
 
     it("Tests that activate() fails when trying to load with an invalid config", async () => {
+        // Mock the FileManagement.getZoweDir to avoid calling the static method: ProfileInfo.getZoweDir()
+        jest.spyOn(FileManagement, "getZoweDir").mockImplementation();
+
         Object.defineProperty(imperative, "ProfileInfo", {
             value: jest.fn().mockImplementation(() => {
                 throw new Error("Error in ProfileInfo to break activate function");

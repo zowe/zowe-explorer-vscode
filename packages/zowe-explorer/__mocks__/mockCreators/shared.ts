@@ -431,6 +431,7 @@ export function createInstanceOfProfileInfo() {
         loadSecureArg: jest.fn(),
         initSessCfg: jest.fn(),
         getOsLocInfo: jest.fn(),
+        getZoweDir: jest.fn(),
     } as any;
 }
 

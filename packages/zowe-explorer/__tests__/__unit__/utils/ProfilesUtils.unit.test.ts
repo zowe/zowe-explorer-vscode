@@ -304,13 +304,16 @@ describe("ProfilesUtils unit tests", () => {
             const mockReadProfilesFromDisk = jest.fn();
             const profInfoSpy = jest.spyOn(profUtils.ProfilesUtils, "getProfileInfo").mockReturnValueOnce({
                 readProfilesFromDisk: mockReadProfilesFromDisk,
-                usingTeamConfig: false,
                 getTeamConfig: jest.fn().mockReturnValue([]),
                 getAllProfiles: jest.fn().mockReturnValue([createValidIProfile(), createAltTypeIProfile()]),
             } as never);
             const msgSpy = jest.spyOn(Gui, "infoMessage").mockResolvedValueOnce("Create New" as any);
             const commandSpy = jest.spyOn(vscode.commands, "executeCommand");
+
+            Object.defineProperty(imperative.ProfileInfo, "onlyV1ProfilesExist", { value: true, configurable: true });
             await expect(profUtils.ProfilesUtils.readConfigFromDisk()).resolves.not.toThrow();
+            Object.defineProperty(imperative.ProfileInfo, "onlyV1ProfilesExist", { value: false, configurable: true });
+
             expect(msgSpy).toHaveBeenCalledWith(
                 "Zowe v1 profiles in use.\nZowe Explorer no longer supports v1 profiles, choose to convert existing profiles to a team configuration or create new.",
                 { items: ["Create New", "Convert Existing Profiles"], vsCodeOpts: { modal: true } }
@@ -324,13 +327,15 @@ describe("ProfilesUtils unit tests", () => {
             const mockReadProfilesFromDisk = jest.fn();
             const profInfoSpy = jest.spyOn(profUtils.ProfilesUtils, "getProfileInfo").mockReturnValueOnce({
                 readProfilesFromDisk: mockReadProfilesFromDisk,
-                usingTeamConfig: false,
                 getTeamConfig: jest.fn().mockReturnValue([]),
                 getAllProfiles: jest.fn().mockReturnValue([createValidIProfile(), createAltTypeIProfile()]),
             } as never);
             const infoMsgSpy = jest.spyOn(Gui, "infoMessage").mockResolvedValueOnce(undefined);
 
+            Object.defineProperty(imperative.ProfileInfo, "onlyV1ProfilesExist", { value: true, configurable: true });
             await expect(profUtils.ProfilesUtils.readConfigFromDisk()).resolves.not.toThrow();
+            Object.defineProperty(imperative.ProfileInfo, "onlyV1ProfilesExist", { value: false, configurable: true });
+
             expect(infoMsgSpy).toHaveBeenCalledTimes(2);
             expect(infoMsgSpy).toHaveBeenLastCalledWith("Operation cancelled");
             infoMsgSpy.mockRestore();
@@ -341,7 +346,6 @@ describe("ProfilesUtils unit tests", () => {
             const mockReadProfilesFromDisk = jest.fn();
             const profInfoSpy = jest.spyOn(profUtils.ProfilesUtils, "getProfileInfo").mockReturnValueOnce({
                 readProfilesFromDisk: mockReadProfilesFromDisk,
-                usingTeamConfig: false,
                 getTeamConfig: jest.fn().mockReturnValue([]),
                 getAllProfiles: jest.fn().mockReturnValue([createValidIProfile(), createAltTypeIProfile()]),
             } as never);
@@ -352,7 +356,11 @@ describe("ProfilesUtils unit tests", () => {
                 }),
                 configurable: true,
             });
+
+            Object.defineProperty(imperative.ProfileInfo, "onlyV1ProfilesExist", { value: true, configurable: true });
             await expect(profUtils.ProfilesUtils.readConfigFromDisk()).resolves.not.toThrow();
+            Object.defineProperty(imperative.ProfileInfo, "onlyV1ProfilesExist", { value: false, configurable: true });
+
             expect(infoMsgSpy).toHaveBeenCalledTimes(2);
             infoMsgSpy.mockRestore();
             profInfoSpy.mockRestore();
@@ -390,14 +398,15 @@ describe("ProfilesUtils unit tests", () => {
     });
 
     describe("promptCredentials", () => {
+        const prof = {
+            getAllProfiles: jest.fn().mockReturnValue([]),
+            isSecured: jest.fn().mockReturnValue(true),
+            readProfilesFromDisk: jest.fn(),
+            getTeamConfig: () => ({ properties: { autoStore: true } }),
+        };
         it("calls getProfileInfo", async () => {
             const mockProfileInstance = new Profiles(imperative.Logger.getAppLogger());
             const getProfileInfoSpy = jest.spyOn(Profiles.prototype, "getProfileInfo");
-            const prof = {
-                getAllProfiles: jest.fn().mockReturnValue([]),
-                isSecured: jest.fn().mockReturnValue(true),
-                readProfilesFromDisk: jest.fn(),
-            };
             jest.spyOn(ProfilesCache.prototype, "getProfileInfo").mockResolvedValue(prof as unknown as imperative.ProfileInfo);
             jest.spyOn(ProfilesCache.prototype, "getLoadedProfConfig").mockResolvedValue({
                 profile: prof,
@@ -414,11 +423,6 @@ describe("ProfilesUtils unit tests", () => {
 
         it("shows an error message if the profile input is undefined", async () => {
             const mockProfileInstance = new Profiles(imperative.Logger.getAppLogger());
-            const prof = {
-                getAllProfiles: jest.fn().mockReturnValue([]),
-                isSecured: jest.fn().mockReturnValue(true),
-                readProfilesFromDisk: jest.fn(),
-            };
             jest.spyOn(ProfilesCache.prototype, "getProfileInfo").mockResolvedValue(prof as unknown as imperative.ProfileInfo);
             jest.spyOn(ProfilesCache.prototype, "getLoadedProfConfig").mockResolvedValue({
                 profile: prof,
@@ -435,11 +439,6 @@ describe("ProfilesUtils unit tests", () => {
 
         it("shows an info message if the profile credentials were updated", async () => {
             const mockProfileInstance = new Profiles(imperative.Logger.getAppLogger());
-            const prof = {
-                getAllProfiles: jest.fn().mockReturnValue([]),
-                isSecured: jest.fn().mockReturnValue(true),
-                readProfilesFromDisk: jest.fn(),
-            };
             jest.spyOn(ProfilesCache.prototype, "getProfileInfo").mockResolvedValue(prof as unknown as imperative.ProfileInfo);
             jest.spyOn(ProfilesCache.prototype, "getLoadedProfConfig").mockResolvedValue({
                 profile: prof,
