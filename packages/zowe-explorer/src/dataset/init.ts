@@ -165,7 +165,7 @@ export async function initDatasetProvider(context: vscode.ExtensionContext): Pro
             let selectedNodes = getSelectedNodeList(node, nodeList);
             selectedNodes = selectedNodes.filter((element) => contextuals.isDs(element) || contextuals.isPdsNotFav(element));
             for (const item of selectedNodes) {
-                await dsActions.hMigrateDataSet(item as ZoweDatasetNode);
+                await dsActions.hMigrateDataSet(datasetProvider, item as ZoweDatasetNode);
             }
         })
     );
@@ -174,7 +174,7 @@ export async function initDatasetProvider(context: vscode.ExtensionContext): Pro
             let selectedNodes = getSelectedNodeList(node, nodeList);
             selectedNodes = selectedNodes.filter((element) => contextuals.isMigrated(element));
             for (const item of selectedNodes) {
-                await dsActions.hRecallDataSet(item as ZoweDatasetNode);
+                await dsActions.hRecallDataSet(datasetProvider, item as ZoweDatasetNode);
             }
         })
     );
