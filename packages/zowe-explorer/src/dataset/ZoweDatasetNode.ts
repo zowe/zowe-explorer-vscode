@@ -320,27 +320,27 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
 
             const sortDirection = sort.direction == SortDirection.Ascending ? 1 : -1;
             if (!a.stats && !b.stats) {
-                return a.compareByName(b) * sortDirection;
+                return a.compareByName(b, sortDirection);
             }
 
             switch (sort.method) {
                 case DatasetSortOpts.DateCreated:
-                    return a.compareByDateStat(b, "createdDate") * sortDirection;
+                    return a.compareByDateStat(b, "createdDate", sortDirection);
                 case DatasetSortOpts.LastModified:
-                    return a.compareByDateStat(b, "modifiedDate") * sortDirection;
+                    return a.compareByDateStat(b, "modifiedDate", sortDirection);
                 case DatasetSortOpts.UserId:
-                    return a.compareByStat(b, "user") * sortDirection;
+                    return a.compareByStat(b, "user", sortDirection);
                 default:
-                    return a.compareByName(b) * sortDirection;
+                    return a.compareByName(b, sortDirection);
             }
         };
     }
 
-    private compareByName(otherNode: IZoweDatasetTreeNode): number {
-        return (this.label as string).localeCompare(otherNode.label as string);
+    private compareByName(otherNode: IZoweDatasetTreeNode, sortDirection = 1): number {
+        return (this.label as string).localeCompare(otherNode.label as string) * sortDirection;
     }
 
-    private compareByStat(otherNode: IZoweDatasetTreeNode, statName: keyof DatasetStats): number {
+    private compareByStat(otherNode: IZoweDatasetTreeNode, statName: keyof DatasetStats, sortDirection = 1): number {
         const valueA = (this.stats?.[statName] as string) ?? "";
         const valueB = (otherNode.stats?.[statName] as string) ?? "";
 
@@ -355,10 +355,10 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             return -1;
         }
 
-        return valueA.localeCompare(valueB) || this.compareByName(otherNode);
+        return (valueA.localeCompare(valueB) || this.compareByName(otherNode)) * sortDirection;
     }
 
-    private compareByDateStat(otherNode: IZoweDatasetTreeNode, statName: "createdDate" | "modifiedDate"): number {
+    private compareByDateStat(otherNode: IZoweDatasetTreeNode, statName: "createdDate" | "modifiedDate", sortDirection = 1): number {
         const dateA = dayjs(this.stats?.[statName] ?? null);
         const dateB = dayjs(otherNode.stats?.[statName] ?? null);
 
@@ -377,10 +377,10 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         }
 
         if (dateA.isSame(dateB, "second")) {
-            return this.compareByName(otherNode);
+            return this.compareByName(otherNode, sortDirection);
         }
 
-        return dateA.isBefore(dateB, "second") ? -1 : 1;
+        return dateA.isBefore(dateB, "second") ? -sortDirection : sortDirection;
     }
 
     /**
