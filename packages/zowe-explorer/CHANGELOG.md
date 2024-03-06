@@ -6,6 +6,12 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
+### Bug fixes
+
+## `3.0.0-next.202403051607`
+
+### New features and enhancements
+
 - Implemented sorting of PDS members by date created [#2565](https://github.com/zowe/vscode-extension-for-zowe/pull/2565)
 - Added the capability for extenders to contribute new profile types to the Zowe schema during extender activation. [#2508](https://github.com/zowe/vscode-extension-for-zowe/issues/2508)
 - Migrated from `@zowe/cli` package to individual Zowe SDK packages. [#2719](https://github.com/zowe/vscode-extension-for-zowe/issues/2719)
