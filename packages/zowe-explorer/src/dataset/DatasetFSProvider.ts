@@ -30,6 +30,7 @@ import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 
 // Set up localization
 import { Profiles } from "../Profiles";
+import { IZosFilesResponse } from "@zowe/zos-files-for-zowe-sdk";
 
 export class DatasetFSProvider extends BaseProvider implements vscode.FileSystemProvider {
     public onDidChangeFile: vscode.Event<vscode.FileChangeEvent[]>;
@@ -77,42 +78,63 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         const results: [string, vscode.FileType][] = [];
 
         if (isFilterEntry(dsEntry)) {
-            const datasets = await ZoweExplorerApiRegister.getMvsApi(uriInfo.profile).dataSet(dsEntry.filter["pattern"]);
+            const mvsApi = ZoweExplorerApiRegister.getMvsApi(uriInfo.profile);
+            const datasetResponses: IZosFilesResponse[] = [];
+            const dsPatterns = [
+                ...new Set(
+                    dsEntry.filter["pattern"]
+                        .toUpperCase()
+                        .split(",")
+                        .map((p) => p.trim())
+                ),
+            ];
 
-            for (const ds of datasets.apiResponse?.items || []) {
-                let tempEntry = dsEntry.entries.get(ds.dsname);
-                if (tempEntry == null) {
-                    if (ds.dsorg === "PO" || ds.dsorg === "PO-E") {
-                        // Entry is a PDS
-                        tempEntry = new PdsEntry(ds.dsname);
-                    } else {
-                        // Entry is a data set (VSAM, migrated, PS)
-                        if (ds.dsorg === "VS") {
-                            // VSAM
-                            const dsName: string = ds.dsname;
-                            const endPoint = dsName.includes(".DATA") ? dsName.indexOf(".DATA") : dsName.indexOf(".INDEX");
-                            tempEntry = new DsEntry(endPoint > -1 ? dsName.substring(0, endPoint) : dsName);
-                        } else if (ds.migr?.toUpperCase() === "YES") {
-                            // migrated
-                            tempEntry = new DsEntry(ds.dsname);
-                        } else {
-                            // PS
-                            tempEntry = new DsEntry(ds.dsname);
-                        }
-                    }
-
-                    if (tempEntry == null) {
-                        continue;
-                    }
-                    dsEntry.entries.set(ds.dsname, tempEntry);
+            if (mvsApi.dataSetsMatchingPattern) {
+                datasetResponses.push(await mvsApi.dataSetsMatchingPattern(dsPatterns));
+            } else {
+                for (const dsp of dsPatterns) {
+                    datasetResponses.push(await mvsApi.dataSet(dsp));
                 }
-                results.push([tempEntry.name, tempEntry instanceof DsEntry ? vscode.FileType.File : vscode.FileType.Directory]);
+            }
+
+            for (const resp of datasetResponses) {
+                for (const ds of resp.apiResponse?.items ?? resp.apiResponse ?? []) {
+                    let tempEntry = dsEntry.entries.get(ds.dsname);
+                    if (tempEntry == null) {
+                        if (ds.dsorg === "PO" || ds.dsorg === "PO-E") {
+                            // Entry is a PDS
+                            tempEntry = new PdsEntry(ds.dsname);
+                        } else {
+                            // Entry is a data set (VSAM, migrated, or PS)
+                            if (ds.dsorg === "VS") {
+                                // TODO: Add VSAM and ZFS support in Zowe Explorer
+                                continue;
+
+                                // const dsName: string = ds.dsname;
+                                // const endPoint = dsName.includes(".DATA") ? dsName.indexOf(".DATA") : dsName.indexOf(".INDEX");
+                                // tempEntry = new DsEntry(endPoint > -1 ? dsName.substring(0, endPoint) : dsName);
+                            } else if (ds.migr?.toUpperCase() === "YES") {
+                                // migrated
+                                tempEntry = new DsEntry(ds.dsname);
+                            } else {
+                                // PS
+                                tempEntry = new DsEntry(ds.dsname);
+                            }
+                        }
+
+                        if (tempEntry == null) {
+                            continue;
+                        }
+                        dsEntry.entries.set(ds.dsname, tempEntry);
+                    }
+                    results.push([tempEntry.name, tempEntry instanceof DsEntry ? vscode.FileType.File : vscode.FileType.Directory]);
+                }
             }
         } else if (isDirectoryEntry(dsEntry)) {
             const members = await ZoweExplorerApiRegister.getMvsApi(uriInfo.profile).allMembers(dsEntry.name);
 
             for (const ds of members.apiResponse?.items || []) {
-                let tempEntry = dsEntry.entries.get(ds.dsname);
+                let tempEntry = dsEntry.entries.get(ds.member);
                 if (tempEntry == null) {
                     tempEntry = new MemberEntry(ds.member);
                     dsEntry.entries.set(ds.member, tempEntry);
@@ -199,7 +221,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
      */
     public async readFile(uri: vscode.Uri): Promise<Uint8Array> {
         const file = await this._lookupAsFile(uri);
-        const profInfo = getInfoForUri(uri, Profiles.getInstance());
+        const profInfo = this._getInfoFromUri(uri);
 
         if (profInfo.profile == null) {
             throw vscode.FileSystemError.FileNotFound(vscode.l10n.t("Profile does not exist for this file."));
@@ -374,10 +396,10 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         entry.name = newName;
 
         // Build the new path using the previous path and new file/folder name.
-        let newPath = path.posix.join(entry.metadata.path, "..", newName);
-        if (isDir) {
-            newPath += "/";
-        }
+        const newPath = path.posix.join(entry.metadata.path, "..", newName);
+        // if (isDir) {
+        //     newPath += "/";
+        // }
 
         try {
             if (isDir) {

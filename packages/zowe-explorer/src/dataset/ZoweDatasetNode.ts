@@ -104,16 +104,6 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     path: `/${sessionLabel}/`,
                 });
                 DatasetFSProvider.instance.createDirectory(this.resourceUri, this.pattern);
-            } else if (this.contextValue === globals.DS_MEMBER_CONTEXT) {
-                this.resourceUri = vscode.Uri.from({
-                    scheme: "zowe-ds",
-                    path: `/${sessionLabel}/${this.getParent().label as string}/${this.label as string}`,
-                });
-                this.command = {
-                    command: "vscode.open",
-                    title: "",
-                    arguments: [this.resourceUri],
-                };
             } else if (
                 this.contextValue === globals.DS_DS_CONTEXT ||
                 this.contextValue === globals.DS_PDS_CONTEXT ||
@@ -130,6 +120,22 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                         arguments: [this.resourceUri],
                     };
                 }
+            } else if (this.contextValue === globals.DS_MEMBER_CONTEXT) {
+                this.resourceUri = vscode.Uri.from({
+                    scheme: "zowe-ds",
+                    path: `/${sessionLabel}/${this.getParent().label as string}/${this.label as string}`,
+                });
+                this.command = {
+                    command: "vscode.open",
+                    title: "",
+                    arguments: [this.resourceUri],
+                };
+            } else {
+                this.resourceUri = null;
+                this.command = {
+                    command: "zowe.placeholderCommand",
+                    title: "Placeholder",
+                };
             }
         }
     }
@@ -304,21 +310,23 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     continue;
                 }
 
-                if (temp?.collapsibleState !== vscode.TreeItemCollapsibleState.None) {
-                    // Create an entry for the PDS if it doesn't exist.
-                    if (!DatasetFSProvider.instance.exists(temp.resourceUri)) {
-                        vscode.workspace.fs.createDirectory(temp.resourceUri);
+                if (temp.resourceUri) {
+                    if (temp.collapsibleState !== vscode.TreeItemCollapsibleState.None) {
+                        // Create an entry for the PDS if it doesn't exist.
+                        if (!DatasetFSProvider.instance.exists(temp.resourceUri)) {
+                            vscode.workspace.fs.createDirectory(temp.resourceUri);
+                        }
+                    } else {
+                        // Create an entry for the data set if it doesn't exist.
+                        if (!DatasetFSProvider.instance.exists(temp.resourceUri)) {
+                            await vscode.workspace.fs.writeFile(temp.resourceUri, new Uint8Array());
+                        }
+                        temp.command = {
+                            command: "vscode.open",
+                            title: vscode.l10n.t("Open"),
+                            arguments: [temp.resourceUri],
+                        };
                     }
-                } else {
-                    // Create an entry for the data set if it doesn't exist.
-                    if (!DatasetFSProvider.instance.exists(temp.resourceUri)) {
-                        await vscode.workspace.fs.writeFile(temp.resourceUri, new Uint8Array());
-                    }
-                    temp.command = {
-                        command: "vscode.open",
-                        title: vscode.l10n.t("Open"),
-                        arguments: [temp.resourceUri],
-                    };
                 }
             }
         }
