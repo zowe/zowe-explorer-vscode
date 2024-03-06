@@ -311,72 +311,76 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
      * @param method The sorting method to use
      * @returns A function that sorts 2 nodes based on the given sorting method
      */
-    public static sortBy(sort: NodeSort): (a: IZoweDatasetTreeNode, b: IZoweDatasetTreeNode) => number {
+    public static sortBy(sort: NodeSort): (a: ZoweDatasetNode, b: ZoweDatasetNode) => number {
         return (a, b): number => {
             const aParent = a.getParent();
             if (aParent == null || !contextually.isPds(aParent)) {
-                return (a.label as string) < (b.label as string) ? -1 : 1;
+                return a.compareByName(b);
             }
 
-            const sortLessThan = sort.direction == SortDirection.Ascending ? -1 : 1;
-            const sortGreaterThan = sortLessThan * -1;
-
-            const sortByName = (nodeA: IZoweDatasetTreeNode, nodeB: IZoweDatasetTreeNode): number =>
-                (nodeA.label as string) < (nodeB.label as string) ? sortLessThan : sortGreaterThan;
-
+            const sortDirection = sort.direction == SortDirection.Ascending ? 1 : -1;
             if (!a.stats && !b.stats) {
-                return sortByName(a, b);
-            }
-
-            function sortByDate(aDate: Date, bDate: Date): number {
-                const dateA = dayjs(aDate ?? null);
-                const dateB = dayjs(bDate ?? null);
-
-                const aVaild = dateA.isValid();
-                const bValid = dateB.isValid();
-
-                a.description = aVaild ? dateA.format("YYYY/MM/DD") : undefined;
-                b.description = bValid ? dateB.format("YYYY/MM/DD") : undefined;
-
-                if (!aVaild) {
-                    return sortGreaterThan;
-                }
-
-                if (!bValid) {
-                    return sortLessThan;
-                }
-
-                if (dateA.isSame(dateB, "second")) {
-                    return sortByName(a, b);
-                }
-                return dateA.isBefore(dateB, "second") ? sortLessThan : sortGreaterThan;
+                return a.compareByName(b) * sortDirection;
             }
 
             switch (sort.method) {
-                case Sorting.DatasetSortOpts.DateCreated: {
-                    return sortByDate(a.stats?.createdDate, b.stats?.createdDate);
-                }
-                case Sorting.DatasetSortOpts.LastModified: {
-                    return sortByDate(a.stats?.modifiedDate, b.stats?.modifiedDate);
-                }
-                case DatasetSortOpts.UserId: {
-                    const userA = a.stats?.user ?? "";
-                    const userB = b.stats?.user ?? "";
-
-                    a.description = userA;
-                    b.description = userB;
-
-                    if (userA === userB) {
-                        return sortByName(a, b);
-                    }
-
-                    return userA < userB ? sortLessThan : sortGreaterThan;
-                }
-                default: {
-                    return sortByName(a, b);
-                }
+                case DatasetSortOpts.DateCreated:
+                    return a.compareByDateStat(b, "createdDate") * sortDirection;
+                case DatasetSortOpts.LastModified:
+                    return a.compareByDateStat(b, "modifiedDate") * sortDirection;
+                case DatasetSortOpts.UserId:
+                    return a.compareByStat(b, "user") * sortDirection;
+                default:
+                    return a.compareByName(b) * sortDirection;
             }
         };
+    }
+
+    private compareByName(otherNode: IZoweDatasetTreeNode): number {
+        return (this.label as string).localeCompare(otherNode.label as string);
+    }
+
+    private compareByStat(otherNode: IZoweDatasetTreeNode, statName: keyof DatasetStats): number {
+        const valueA = (this.stats?.[statName] as string) ?? "";
+        const valueB = (otherNode.stats?.[statName] as string) ?? "";
+
+        this.description = valueA;
+        otherNode.description = valueB;
+
+        if (!valueA) {
+            return 1;
+        }
+
+        if (!valueB) {
+            return -1;
+        }
+
+        return valueA.localeCompare(valueB) || this.compareByName(otherNode);
+    }
+
+    private compareByDateStat(otherNode: IZoweDatasetTreeNode, statName: "createdDate" | "modifiedDate"): number {
+        const dateA = dayjs(this.stats?.[statName] ?? null);
+        const dateB = dayjs(otherNode.stats?.[statName] ?? null);
+
+        const aValid = dateA.isValid();
+        const bValid = dateB.isValid();
+
+        this.description = aValid ? dateA.format("YYYY/MM/DD") : undefined;
+        otherNode.description = bValid ? dateB.format("YYYY/MM/DD") : undefined;
+
+        if (!aValid) {
+            return 1;
+        }
+
+        if (!bValid) {
+            return -1;
+        }
+
+        if (dateA.isSame(dateB, "second")) {
+            return this.compareByName(otherNode);
+        }
+
+        return dateA.isBefore(dateB, "second") ? -1 : 1;
     }
 
     /**
