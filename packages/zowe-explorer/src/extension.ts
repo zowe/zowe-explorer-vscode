@@ -45,7 +45,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     registerRefreshCommand(context, activate, deactivate);
     ZoweExplorerExtender.createInstance(providers.ds, providers.uss, providers.job);
 
-    await watchConfigProfile(context, providers);
+    watchConfigProfile(context, providers);
     await watchForZoweButtonClick();
 
     return ZoweExplorerApiRegister.getInstance();
