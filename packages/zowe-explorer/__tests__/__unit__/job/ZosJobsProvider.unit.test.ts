@@ -418,7 +418,7 @@ describe("ZosJobsProvider unit tests - Function initializeFavChildNodeForProfile
         if (targetIcon) {
             node.iconPath = targetIcon.path;
         }
-        node.command = undefined;
+        // node.command = undefined;
 
         const favChildNodeForProfile = await testTree.initializeFavChildNodeForProfile("testJob(JOB123)", globals.JOBS_JOB_CONTEXT, favProfileNode);
 
@@ -440,6 +440,7 @@ describe("ZosJobsProvider unit tests - Function initializeFavChildNodeForProfile
         const favChildNodeForProfile = await testTree.initializeFavChildNodeForProfile("testJob(JOB456)", globals.JOBS_JOB_CONTEXT, favProfileNode);
 
         expect(favChildNodeForProfile.label).toEqual("testJob(JOB456)");
+        expect(favChildNodeForProfile.command).toBeUndefined();
     });
 });
 
