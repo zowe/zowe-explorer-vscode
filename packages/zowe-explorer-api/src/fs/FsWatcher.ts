@@ -33,7 +33,14 @@ export class ZoweFsWatcher {
         };
     }
 
+    private static validateWatchers(): void {
+        if (this.watchers == null) {
+            throw new Error("ZoweFsWatcher.registerWatchers must be called first before registering an event listener.");
+        }
+    }
+
     public static onFileChanged(uri: Uri, listener: (e: Uri) => any): VSDisposable {
+        this.validateWatchers();
         switch (uri.scheme) {
             case "zowe-ds":
                 return this.watchers.ds.onDidChange(listener);
@@ -47,6 +54,7 @@ export class ZoweFsWatcher {
     }
 
     public static onFileCreated(uri: Uri, listener: (e: Uri) => any): VSDisposable {
+        this.validateWatchers();
         switch (uri.scheme) {
             case "zowe-ds":
                 return this.watchers.ds.onDidCreate(listener);
@@ -60,6 +68,7 @@ export class ZoweFsWatcher {
     }
 
     public static onFileDeleted(uri: Uri, listener: (e: Uri) => any): VSDisposable {
+        this.validateWatchers();
         switch (uri.scheme) {
             case "zowe-ds":
                 return this.watchers.ds.onDidDelete(listener);
