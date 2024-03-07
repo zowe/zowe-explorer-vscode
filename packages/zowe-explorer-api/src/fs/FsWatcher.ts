@@ -17,6 +17,12 @@ interface CoreWatchers {
     uss: FileSystemWatcher;
 }
 
+export enum ZoweScheme {
+    DS = "zowe-ds",
+    Jobs = "zowe-jobs",
+    USS = "zowe-uss",
+}
+
 export class ZoweFsWatcher {
     private static watchers: CoreWatchers;
 
@@ -27,9 +33,9 @@ export class ZoweFsWatcher {
      */
     public static registerWatchers(): void {
         this.watchers = {
-            ds: workspace.createFileSystemWatcher("zowe-ds:/**"),
-            jobs: workspace.createFileSystemWatcher("zowe-jobs:/**"),
-            uss: workspace.createFileSystemWatcher("zowe-uss:/**"),
+            ds: workspace.createFileSystemWatcher(`${ZoweScheme.DS}:/**`),
+            jobs: workspace.createFileSystemWatcher(`${ZoweScheme.Jobs}:/**`),
+            uss: workspace.createFileSystemWatcher(`${ZoweScheme.USS}:/**`),
         };
     }
 
@@ -42,42 +48,42 @@ export class ZoweFsWatcher {
     public static onFileChanged(uri: Uri, listener: (e: Uri) => any): VSDisposable {
         this.validateWatchers();
         switch (uri.scheme) {
-            case "zowe-ds":
+            case ZoweScheme.DS:
                 return this.watchers.ds.onDidChange(listener);
-            case "zowe-jobs":
+            case ZoweScheme.Jobs:
                 return this.watchers.jobs.onDidChange(listener);
-            case "zowe-uss":
+            case ZoweScheme.USS:
                 return this.watchers.uss.onDidChange(listener);
             default:
-                throw new Error("FsWatcher only supports core schemes: zowe-ds, zowe-jobs, zowe-uss");
+                throw new Error(`FsWatcher only supports core schemes: ${ZoweScheme.DS}, ${ZoweScheme.Jobs}, ${ZoweScheme.USS}`);
         }
     }
 
     public static onFileCreated(uri: Uri, listener: (e: Uri) => any): VSDisposable {
         this.validateWatchers();
         switch (uri.scheme) {
-            case "zowe-ds":
+            case ZoweScheme.DS:
                 return this.watchers.ds.onDidCreate(listener);
-            case "zowe-jobs":
+            case ZoweScheme.Jobs:
                 return this.watchers.jobs.onDidCreate(listener);
-            case "zowe-uss":
+            case ZoweScheme.USS:
                 return this.watchers.uss.onDidCreate(listener);
             default:
-                throw new Error("FsWatcher only supports core schemes: zowe-ds, zowe-jobs, zowe-uss");
+                throw new Error(`FsWatcher only supports core schemes: ${ZoweScheme.DS}, ${ZoweScheme.Jobs}, ${ZoweScheme.USS}`);
         }
     }
 
     public static onFileDeleted(uri: Uri, listener: (e: Uri) => any): VSDisposable {
         this.validateWatchers();
         switch (uri.scheme) {
-            case "zowe-ds":
+            case ZoweScheme.DS:
                 return this.watchers.ds.onDidDelete(listener);
-            case "zowe-jobs":
+            case ZoweScheme.Jobs:
                 return this.watchers.jobs.onDidDelete(listener);
-            case "zowe-uss":
+            case ZoweScheme.USS:
                 return this.watchers.uss.onDidDelete(listener);
             default:
-                throw new Error("FsWatcher only supports core schemes: zowe-ds, zowe-jobs, zowe-uss");
+                throw new Error(`FsWatcher only supports core schemes: ${ZoweScheme.DS}, ${ZoweScheme.Jobs}, ${ZoweScheme.USS}`);
         }
     }
 }

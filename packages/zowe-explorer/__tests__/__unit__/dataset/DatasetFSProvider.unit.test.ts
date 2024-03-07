@@ -12,7 +12,7 @@
 import { Disposable, FileType, TextEditor, Uri } from "vscode";
 import { DatasetFSProvider } from "../../../src/dataset/DatasetFSProvider";
 import { createIProfile } from "../../../__mocks__/mockCreators/shared";
-import { DirEntry, DsEntry, FileEntry, FilterEntry, Gui, PdsEntry } from "@zowe/zowe-explorer-api";
+import { DirEntry, DsEntry, FileEntry, FilterEntry, Gui, PdsEntry, ZoweScheme } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { MockedProperty } from "../../../__mocks__/mockUtils";
 
@@ -51,10 +51,10 @@ const testEntries = {
 
 type TestUris = Record<string, Readonly<Uri>>;
 const testUris: TestUris = {
-    ps: Uri.from({ scheme: "zowe-ds", path: "/sestest/USER.DATA.PS" }),
-    pds: Uri.from({ scheme: "zowe-ds", path: "/sestest/USER.DATA.PDS" }),
-    pdsMember: Uri.from({ scheme: "zowe-ds", path: "/sestest/USER.DATA.PDS/MEMBER1" }),
-    session: Uri.from({ scheme: "zowe-ds", path: "/sestest" }),
+    ps: Uri.from({ scheme: ZoweScheme.DS, path: "/sestest/USER.DATA.PS" }),
+    pds: Uri.from({ scheme: ZoweScheme.DS, path: "/sestest/USER.DATA.PDS" }),
+    pdsMember: Uri.from({ scheme: ZoweScheme.DS, path: "/sestest/USER.DATA.PDS/MEMBER1" }),
+    session: Uri.from({ scheme: ZoweScheme.DS, path: "/sestest" }),
 };
 
 describe("createDirectory", () => {
@@ -173,7 +173,7 @@ describe("fetchDatasetAtUri", () => {
             }),
         };
         const fakePo = { ...testEntries.ps };
-        const lookupAsFileMock = jest.spyOn(DatasetFSProvider.instance as any, "_lookupAsFile").mockResolvedValueOnce(fakePo);
+        const lookupAsFileMock = jest.spyOn(DatasetFSProvider.instance as any, "_lookupAsFile").mockReturnValueOnce(fakePo);
         const mvsApiMock = jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValueOnce(mockMvsApi as any);
         await DatasetFSProvider.instance.fetchDatasetAtUri(testUris.ps);
         expect(fakePo.data.toString()).toStrictEqual(contents.toString());
@@ -198,7 +198,7 @@ describe("fetchDatasetAtUri", () => {
         };
         const fakePo = { ...testEntries.ps };
         const _updateResourceInEditorMock = jest.spyOn(DatasetFSProvider.instance as any, "_updateResourceInEditor").mockImplementation();
-        const lookupAsFileMock = jest.spyOn(DatasetFSProvider.instance as any, "_lookupAsFile").mockResolvedValueOnce(fakePo);
+        const lookupAsFileMock = jest.spyOn(DatasetFSProvider.instance as any, "_lookupAsFile").mockReturnValueOnce(fakePo);
         const mvsApiMock = jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValueOnce(mockMvsApi as any);
         await DatasetFSProvider.instance.fetchDatasetAtUri(testUris.ps, {} as TextEditor);
         expect(fakePo.data.toString()).toStrictEqual(contents.toString());
@@ -213,7 +213,7 @@ describe("readFile", () => {
     it("throws an error if the entry does not have a profile", async () => {
         const _lookupAsFileMock = jest
             .spyOn(DatasetFSProvider.instance as any, "_lookupAsFile")
-            .mockResolvedValueOnce({ ...testEntries.ps, metadata: { profile: null } });
+            .mockReturnValueOnce({ ...testEntries.ps, metadata: { profile: null } });
 
         await expect(DatasetFSProvider.instance.readFile(testUris.ps)).rejects.toThrow("file not found");
         expect(_lookupAsFileMock).toHaveBeenCalledWith(testUris.ps);
@@ -223,7 +223,7 @@ describe("readFile", () => {
     it("calls fetchDatasetAtUri if the entry has not yet been accessed", async () => {
         const _lookupAsFileMock = jest
             .spyOn(DatasetFSProvider.instance as any, "_lookupAsFile")
-            .mockResolvedValueOnce({ ...testEntries.ps, wasAccessed: false });
+            .mockReturnValueOnce({ ...testEntries.ps, wasAccessed: false });
         const _getInfoFromUriMock = jest.spyOn(DatasetFSProvider.instance as any, "_getInfoFromUri").mockReturnValueOnce({
             profile: testProfile,
             path: "/USER.DATA.PS",
@@ -239,7 +239,7 @@ describe("readFile", () => {
 
     it("returns the data for an entry", async () => {
         const fakePs = { ...testEntries.ps, wasAccessed: true, data: new Uint8Array([1, 2, 3]) };
-        const _lookupAsFileMock = jest.spyOn(DatasetFSProvider.instance as any, "_lookupAsFile").mockResolvedValueOnce(fakePs);
+        const _lookupAsFileMock = jest.spyOn(DatasetFSProvider.instance as any, "_lookupAsFile").mockReturnValueOnce(fakePs);
         const _getInfoFromUriMock = jest.spyOn(DatasetFSProvider.instance as any, "_getInfoFromUri").mockReturnValueOnce({
             profile: testProfile,
             path: "/USER.DATA.PS",
