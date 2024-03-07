@@ -3097,6 +3097,17 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
             expect(mocks.refreshElement).not.toHaveBeenCalled();
         });
 
+        it("sorts by created date: handling node with undefined property", async () => {
+            const mocks = getBlockMocks();
+            const nodes = nodesForSuite();
+            delete (nodes.pds.children as any)[1].stats.createdDate;
+            mocks.showQuickPick.mockResolvedValueOnce({ label: "$(calendar) Date Created" });
+            await tree.sortPdsMembersDialog(nodes.pds);
+            expect(mocks.nodeDataChanged).toHaveBeenCalled();
+            expect(mocks.refreshElement).not.toHaveBeenCalled();
+            expect(nodes.pds.children?.map((c: IZoweDatasetTreeNode) => c.label)).toStrictEqual(["C", "A", "B"]);
+        });
+
         it("sorts by last modified date", async () => {
             const mocks = getBlockMocks();
             const nodes = nodesForSuite();
@@ -3128,6 +3139,17 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
             expect(nodes.pds.children?.map((c: IZoweDatasetTreeNode) => c.label)).toStrictEqual(["A", "D", "C", "B"]);
         });
 
+        it("sorts by last modified date: handling node with undefined property", async () => {
+            const mocks = getBlockMocks();
+            const nodes = nodesForSuite();
+            delete (nodes.pds.children as any)[1].stats.modifiedDate;
+            mocks.showQuickPick.mockResolvedValueOnce({ label: "$(calendar) Date Modified" });
+            await tree.sortPdsMembersDialog(nodes.pds);
+            expect(mocks.nodeDataChanged).toHaveBeenCalled();
+            expect(mocks.refreshElement).not.toHaveBeenCalled();
+            expect(nodes.pds.children?.map((c: IZoweDatasetTreeNode) => c.label)).toStrictEqual(["C", "A", "B"]);
+        });
+
         it("sorts by user ID", async () => {
             const mocks = getBlockMocks();
             const nodes = nodesForSuite();
@@ -3136,6 +3158,17 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
             expect(mocks.nodeDataChanged).toHaveBeenCalled();
             expect(mocks.refreshElement).not.toHaveBeenCalled();
             expect(nodes.pds.children?.map((c: IZoweDatasetTreeNode) => c.label)).toStrictEqual(["B", "A", "C"]);
+        });
+
+        it("sorts by user ID: handling node with undefined property", async () => {
+            const mocks = getBlockMocks();
+            const nodes = nodesForSuite();
+            delete (nodes.pds.children as any)[0].stats.user;
+            mocks.showQuickPick.mockResolvedValueOnce({ label: "$(account) User ID" });
+            await tree.sortPdsMembersDialog(nodes.pds);
+            expect(mocks.nodeDataChanged).toHaveBeenCalled();
+            expect(mocks.refreshElement).not.toHaveBeenCalled();
+            expect(nodes.pds.children?.map((c: IZoweDatasetTreeNode) => c.label)).toStrictEqual(["B", "C", "A"]);
         });
 
         it("returns to sort selection dialog when sort direction selection is canceled", async () => {
