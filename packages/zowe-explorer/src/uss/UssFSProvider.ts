@@ -19,6 +19,8 @@ import {
     EntryMetadata,
     UssDirectory,
     UssFile,
+    ZoweScheme,
+    ZosEncoding,
 } from "@zowe/zowe-explorer-api";
 import * as path from "path";
 import * as vscode from "vscode";
@@ -150,15 +152,17 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
      * @param editor (optional) An editor instance to reload if the URI is already open
      */
     public async fetchFileAtUri(uri: vscode.Uri, options?: { editor?: vscode.TextEditor | null; isConflict?: boolean }): Promise<void> {
-        const file = await this._lookupAsFile(uri);
+        const file = this._lookupAsFile(uri);
         const uriInfo = getInfoForUri(uri, Profiles.getInstance());
         const bufBuilder = new BufferBuilder();
         const filePath = uri.path.substring(uriInfo.slashAfterProfilePos);
         const metadata = file.metadata;
+        const profileEncoding = file.encoding ? null : file.metadata.profile.profile?.encoding;
         const resp = await ZoweExplorerApiRegister.getUssApi(metadata.profile).getContents(filePath, {
-            returnEtag: true,
-            encoding: metadata.profile.profile?.encoding,
+            binary: file.encoding?.kind === "binary",
+            encoding: file.encoding?.kind === "other" ? file.encoding.codepage : profileEncoding,
             responseTimeout: metadata.profile.profile?.responseTimeout,
+            returnEtag: true,
             stream: bufBuilder,
         });
 
@@ -186,7 +190,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
      * @returns The file's contents as an array of bytes
      */
     public async readFile(uri: vscode.Uri): Promise<Uint8Array> {
-        const file = await this._lookupAsFile(uri, { silent: false });
+        const file = this._lookupAsFile(uri, { silent: false });
         const profInfo = this._getInfoFromUri(uri);
 
         if (profInfo.profile == null) {
@@ -241,24 +245,27 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                 path: path.posix.join(parentDir.metadata.path, fileName),
             };
 
-            if (content.byteLength > 0) {
-                const statusMsg = Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Saving USS file..."));
-                // user is trying to edit a file that was just deleted: make the API call
-                const ussApi = ZoweExplorerApiRegister.getUssApi(parentDir.metadata.profile);
-                await ussApi.uploadFromBuffer(Buffer.from(content), entry.metadata.path, {
-                    etag: undefined,
-                    returnEtag: true,
-                });
+            // if (content.byteLength > 0) {
+            //     const statusMsg = Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Saving USS file..."));
+            //     // user is trying to edit a file that was just deleted: make the API call
+            //     const ussApi = ZoweExplorerApiRegister.getUssApi(parentDir.metadata.profile);
+            //     const profileEncoding = entry.encoding ? null : entry.metadata.profile.profile?.encoding;
+            //     await ussApi.uploadFromBuffer(Buffer.from(content), entry.metadata.path, {
+            //         binary: entry.encoding?.kind === "binary",
+            //         encoding: entry.encoding?.kind === "other" ? entry.encoding.codepage : profileEncoding,
+            //         etag: undefined,
+            //         returnEtag: true,
+            //     });
 
-                // Update e-tag if write was successful.
-                // TODO: This call below can be removed once zowe.Upload.bufferToUssFile returns response headers.
-                // This is necessary at the moment on z/OSMF to fetch the new e-tag.
-                const newData = await ussApi.getContents(entry.metadata.path, {
-                    returnEtag: true,
-                });
-                entry.etag = newData.apiResponse.etag;
-                statusMsg.dispose();
-            }
+            //     // Update e-tag if write was successful.
+            //     // TODO: This call below can be removed once zowe.Upload.bufferToUssFile returns response headers.
+            //     // This is necessary at the moment on z/OSMF to fetch the new e-tag.
+            //     const newData = await ussApi.getContents(entry.metadata.path, {
+            //         returnEtag: true,
+            //     });
+            //     entry.etag = newData.apiResponse.etag;
+            //     statusMsg.dispose();
+            // }
             entry.data = content;
             parentDir.entries.set(fileName, entry);
             this._fireSoon({ type: vscode.FileChangeType.Created, uri });
@@ -317,6 +324,22 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         entry.mtime = Date.now();
         entry.size = content.byteLength;
         this._fireSoon({ type: vscode.FileChangeType.Changed, uri });
+    }
+
+    public makeEmptyFileWithEncoding(uri: vscode.Uri, encoding: ZosEncoding): void {
+        const parentDir = this._lookupParentDirectory(uri);
+        //const encodingValue = encoding.kind === "other" ? encoding.codepage : null;
+        const fileName = path.posix.basename(uri.path);
+        const entry = new UssFile(fileName);
+        entry.encoding = encoding;
+        // Build the metadata for the file using the parent's metadata (if available),
+        // or build it using the helper function
+        entry.metadata = {
+            ...parentDir.metadata,
+            path: path.posix.join(parentDir.metadata.path, fileName),
+        };
+        entry.data = new Uint8Array();
+        parentDir.entries.set(fileName, entry);
     }
 
     /**
@@ -402,6 +425,16 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         this._fireSoon({ type: vscode.FileChangeType.Changed, uri: parentUri }, { uri, type: vscode.FileChangeType.Deleted });
     }
 
+    public getEncodingForFile(uri: vscode.Uri): ZosEncoding {
+        const fileEntry = this._lookupAsFile(uri);
+        return fileEntry.encoding;
+    }
+
+    public setEncodingForFile(uri: vscode.Uri, encoding: ZosEncoding): void {
+        const fileEntry = this._lookupAsFile(uri);
+        fileEntry.encoding = encoding;
+    }
+
     public async copy(source: vscode.Uri, destination: vscode.Uri, options: { readonly overwrite: boolean }): Promise<void> {
         const uriQuery = new URLSearchParams(source.query);
         if (!uriQuery.has("tree")) {
@@ -471,7 +504,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                     await this.copyTree(
                         child.localUri,
                         vscode.Uri.from({
-                            scheme: "zowe-uss",
+                            scheme: ZoweScheme.USS,
                             path: path.posix.join(destInfo.profile.name, outputPath, child.baseName),
                         }),
                         { ...options, tree: child }

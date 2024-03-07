@@ -13,7 +13,17 @@ import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
 import * as globals from "../globals";
 import * as vscode from "vscode";
 import * as path from "path";
-import { Gui, imperative, IZoweUSSTreeNode, ZoweTreeNode, Types, Validation, MainframeInteraction, ZosEncoding } from "@zowe/zowe-explorer-api";
+import {
+    Gui,
+    imperative,
+    IZoweUSSTreeNode,
+    ZoweTreeNode,
+    Types,
+    Validation,
+    MainframeInteraction,
+    ZosEncoding,
+    ZoweScheme,
+} from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { errorHandling, getSessionLabel, syncSessionNode } from "../utils/ProfilesUtils";
@@ -39,7 +49,6 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     public children: IZoweUSSTreeNode[] = [];
     public collapsibleState: vscode.TreeItemCollapsibleState;
     public binary = false;
-    public encoding?: string;
     public encodingMap = {};
     public shortLabel = "";
     public downloadedTime = null;
@@ -60,9 +69,6 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     public constructor(opts: IZoweUssTreeOpts) {
         super(opts.label, opts.collapsibleState, opts.parentNode, opts.session, opts.profile);
         this.binary = opts.encoding?.kind === "binary";
-        if (!this.binary && opts.encoding != null) {
-            this.encoding = opts.encoding.kind === "other" ? opts.encoding.codepage : null;
-        }
         this.parentPath = opts.parentPath;
         if (opts.collapsibleState !== vscode.TreeItemCollapsibleState.None) {
             this.contextValue = globals.USS_DIR_CONTEXT;
@@ -106,11 +112,15 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         this.onUpdateEmitter = new vscode.EventEmitter<IZoweUSSTreeNode>();
         if (opts.label !== vscode.l10n.t("Favorites")) {
             this.resourceUri = vscode.Uri.from({
-                scheme: "zowe-uss",
+                scheme: ZoweScheme.USS,
                 path: `/${getSessionLabel(this)}${this.fullPath}`,
             });
             if (isSession) {
                 UssFSProvider.instance.createDirectory(this.resourceUri);
+            }
+
+            if (opts.encoding != null) {
+                UssFSProvider.instance.makeEmptyFileWithEncoding(this.resourceUri, opts.encoding);
             }
         }
     }
@@ -270,22 +280,28 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         return this.children;
     }
 
-    public setEncoding(encoding: ZosEncoding): void {
+    public getEncoding(): ZosEncoding {
+        return UssFSProvider.instance.getEncodingForFile(this.resourceUri);
+    }
+
+    public async setEncoding(encoding: ZosEncoding): Promise<void> {
         ZoweLogger.trace("ZoweUSSNode.setEncoding called.");
         if (!(this.contextValue.startsWith(globals.USS_BINARY_FILE_CONTEXT) || this.contextValue.startsWith(globals.USS_TEXT_FILE_CONTEXT))) {
             throw new Error(`Cannot set encoding for node with context ${this.contextValue}`);
         }
+        let newEncoding;
         if (encoding?.kind === "binary") {
             this.contextValue = globals.USS_BINARY_FILE_CONTEXT;
             this.binary = true;
-            this.encoding = undefined;
+            newEncoding = undefined;
         } else {
             this.contextValue = globals.USS_TEXT_FILE_CONTEXT;
             this.binary = false;
-            this.encoding = encoding?.kind === "text" ? null : encoding?.codepage;
+            newEncoding = encoding?.kind === "text" ? null : encoding?.codepage;
         }
-        if (encoding != null) {
-            this.getSessionNode().encodingMap[this.fullPath] = encoding;
+        await UssFSProvider.instance.setEncodingForFile(this.resourceUri, newEncoding);
+        if (newEncoding != null) {
+            this.getSessionNode().encodingMap[this.fullPath] = newEncoding;
         } else {
             delete this.getSessionNode().encodingMap[this.fullPath];
         }
@@ -334,11 +350,11 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         ZoweLogger.trace("ZoweUSSNode.rename called.");
 
         const oldUri = vscode.Uri.from({
-            scheme: "zowe-uss",
+            scheme: ZoweScheme.USS,
             path: `/${this.profile.name}${this.fullPath}`,
         });
         const newUri = vscode.Uri.from({
-            scheme: "zowe-uss",
+            scheme: ZoweScheme.USS,
             path: `/${this.profile.name}${newFullPath}`,
         });
 
@@ -646,7 +662,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             for (const subnode of fileTreeToPaste.children) {
                 await this.paste(
                     vscode.Uri.from({
-                        scheme: "zowe-uss",
+                        scheme: ZoweScheme.USS,
                         path: `/${this.profile.name}${this.fullPath}`,
                     }),
                     { api, tree: subnode, options }

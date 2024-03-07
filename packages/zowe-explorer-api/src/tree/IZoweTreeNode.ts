@@ -205,13 +205,6 @@ export interface IZoweUSSTreeNode extends IZoweTreeNode {
      */
     onUpdateEmitter?: vscode.EventEmitter<IZoweUSSTreeNode>;
     /**
-     * Remote encoding of the data set
-     *
-     * * `null` = user selected z/OS default codepage
-     * * `undefined` = user did not specify
-     */
-    encoding?: string;
-    /**
      * Event that fires whenever an existing node is updated.
      */
     onUpdate?: vscode.Event<IZoweUSSTreeNode>;
@@ -239,6 +232,12 @@ export interface IZoweUSSTreeNode extends IZoweTreeNode {
      * @param {string} newNamePath
      */
     rename?(newNamePath: string);
+    /**
+     * Sets the codepage value for the file
+     *
+     * @param {string}
+     */
+    getEncoding?(): ZosEncoding;
     /**
      * Sets the codepage value for the file
      *

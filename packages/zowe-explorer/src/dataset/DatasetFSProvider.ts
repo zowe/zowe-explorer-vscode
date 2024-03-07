@@ -24,6 +24,7 @@ import {
     isPdsEntry,
     FilterEntry,
     Gui,
+    ZosEncoding,
 } from "@zowe/zowe-explorer-api";
 import * as path from "path";
 import * as vscode from "vscode";
@@ -195,14 +196,16 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
      * @param editor (optional) An editor instance to reload if the URI is already open
      */
     public async fetchDatasetAtUri(uri: vscode.Uri, editor?: vscode.TextEditor | null): Promise<void> {
-        const file = (await this._lookupAsFile(uri)) as DsEntry;
+        const file = this._lookupAsFile(uri) as DsEntry;
         // we need to fetch the contents from the mainframe since the file hasn't been accessed yet
         const bufBuilder = new BufferBuilder();
         const metadata = file.metadata ?? this._getInfoFromUri(uri);
+        const profileEncoding = file.encoding ? null : file.metadata.profile.profile?.encoding;
         const resp = await ZoweExplorerApiRegister.getMvsApi(metadata.profile).getContents(metadata.dsname, {
-            returnEtag: true,
-            encoding: metadata.profile.profile?.encoding,
+            binary: file.encoding?.kind === "binary",
+            encoding: file.encoding?.kind === "other" ? file.encoding.codepage : profileEncoding,
             responseTimeout: metadata.profile.profile?.responseTimeout,
+            returnEtag: true,
             stream: bufBuilder,
         });
 
@@ -219,7 +222,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
      * @returns The data set's contents as an array of bytes
      */
     public async readFile(uri: vscode.Uri): Promise<Uint8Array> {
-        const file = await this._lookupAsFile(uri);
+        const file = this._lookupAsFile(uri);
         const profInfo = this._getInfoFromUri(uri);
 
         if (profInfo.profile == null) {
@@ -233,6 +236,16 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         }
 
         return file.data;
+    }
+
+    public getEncodingForFile(uri: vscode.Uri): ZosEncoding {
+        const fileEntry = this._lookupAsFile(uri);
+        return fileEntry.encoding;
+    }
+
+    public setEncodingForFile(uri: vscode.Uri, encoding: ZosEncoding): void {
+        const fileEntry = this._lookupAsFile(uri);
+        fileEntry.encoding = encoding;
     }
 
     /**
@@ -268,24 +281,27 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 : this._getInfoFromUri(uri);
             entry.metadata = profInfo;
 
-            if (content.byteLength > 0) {
-                const statusMsg = Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Saving data set..."));
-                const mvsApi = ZoweExplorerApiRegister.getMvsApi(parent.metadata.profile);
-                // create the data set member as it did not exist previously
-                const dsName = `${parent.name}(${entry.name})`;
-                await mvsApi.createDataSetMember(dsName);
-                await mvsApi.uploadFromBuffer(Buffer.from(content), dsName, {
-                    etag: undefined,
-                    returnEtag: true,
-                });
-                // Update e-tag if write was successful.
-                const newData = await mvsApi.getContents(dsName, {
-                    returnEtag: true,
-                });
-                entry.etag = newData.apiResponse.etag;
-                entry.data = content;
-                statusMsg.dispose();
-            }
+            // if (content.byteLength > 0) {
+            //     const statusMsg = Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Saving data set..."));
+            //     const mvsApi = ZoweExplorerApiRegister.getMvsApi(parent.metadata.profile);
+            //     // create the data set member as it did not exist previously
+            //     const dsName = `${parent.name}(${entry.name})`;
+            //     await mvsApi.createDataSetMember(dsName);
+            //     const profileEncoding = entry.encoding ? null : entry.metadata.profile.profile?.encoding;
+            //     await mvsApi.uploadFromBuffer(Buffer.from(content), dsName, {
+            //         binary: entry.encoding?.kind === "binary",
+            //         encoding: entry.encoding?.kind === "other" ? entry.encoding.codepage : profileEncoding,
+            //         etag: undefined,
+            //         returnEtag: true,
+            //     });
+            //     // Update e-tag if write was successful.
+            //     const newData = await mvsApi.getContents(dsName, {
+            //         returnEtag: true,
+            //     });
+            //     entry.etag = newData.apiResponse.etag;
+            //     entry.data = content;
+            //     statusMsg.dispose();
+            // }
             parent.entries.set(basename, entry);
             this._fireSoon({ type: vscode.FileChangeType.Created, uri });
         } else {
@@ -314,10 +330,13 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
                 const isPdsMember = parent instanceof PdsEntry && !isFilterEntry(parent);
                 const fullName = isPdsMember ? `${parent.name}(${entry.name})` : entry.name;
+                const profileEncoding = entry.encoding ? null : entry.metadata.profile.profile?.encoding;
 
                 // Attempt to write data to remote system, and handle any conflicts from e-tag mismatch
                 try {
-                    const resp = await mvsApi.uploadFromBuffer(Buffer.from(content), fullName, {
+                    await mvsApi.uploadFromBuffer(Buffer.from(content), fullName, {
+                        binary: entry.encoding?.kind === "binary",
+                        encoding: entry.encoding?.kind === "other" ? entry.encoding.codepage : profileEncoding,
                         etag: shouldForceUpload ? undefined : entry.etag,
                         returnEtag: true,
                     });

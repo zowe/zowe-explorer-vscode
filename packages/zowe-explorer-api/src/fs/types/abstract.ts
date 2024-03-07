@@ -13,6 +13,7 @@ import { Duplex } from "stream";
 import { IProfileLoaded } from "@zowe/imperative";
 import { IDownloadSingleOptions, IUploadOptions, IZosFilesResponse } from "@zowe/zos-files-for-zowe-sdk";
 import * as vscode from "vscode";
+import { ZosEncoding } from "../../tree";
 
 export enum ConflictViewSelection {
     UserDismissed = 0,
@@ -82,11 +83,14 @@ export class FileEntry implements IFileSystemEntry {
     public mtime: number;
     public size: number;
     public permissions?: vscode.FilePermission;
+    /**
+     * Remote encoding of the data set
+     */
+    public encoding?: ZosEncoding;
 
     // optional types for conflict and file management that some FileSystems will not leverage
     public conflictData?: ConflictData;
     public inDiffView?: boolean;
-    public binary?: boolean;
     public etag?: string;
     public constructor(n: string, readOnly?: boolean) {
         this.name = n;
@@ -96,6 +100,7 @@ export class FileEntry implements IFileSystemEntry {
         this.size = 0;
         this.data = new Uint8Array();
         this.wasAccessed = false;
+        this.encoding = undefined;
         if (readOnly) {
             this.permissions = vscode.FilePermission.Readonly;
         }

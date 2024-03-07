@@ -25,6 +25,7 @@ import {
     Types,
     Validation,
     ZosEncoding,
+    ZoweScheme,
 } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
@@ -144,7 +145,7 @@ export class USSTree extends ZoweTreeProvider implements Types.IZoweUSSTreeType 
             }
 
             const newUriForNode = vscode.Uri.from({
-                scheme: "zowe-uss",
+                scheme: ZoweScheme.USS,
                 path: `/${target.getProfile().name}${target.fullPath}/${item.label as string}`,
             });
             if (await UssFSProvider.instance.move(item.uri, newUriForNode)) {
@@ -1047,7 +1048,7 @@ export class USSTree extends ZoweTreeProvider implements Types.IZoweUSSTreeType 
             encoding = await promptForEncoding(node, taggedEncoding !== "untagged" ? taggedEncoding : undefined);
         }
         if (encoding !== undefined) {
-            node.setEncoding(encoding);
+            await node.setEncoding(encoding);
             await node.openUSS(true, false, this);
         }
     }
