@@ -418,6 +418,7 @@ describe("ZosJobsProvider unit tests - Function initializeFavChildNodeForProfile
         if (targetIcon) {
             node.iconPath = targetIcon.path;
         }
+        node.command = undefined;
 
         const favChildNodeForProfile = await testTree.initializeFavChildNodeForProfile("testJob(JOB123)", globals.JOBS_JOB_CONTEXT, favProfileNode);
 
