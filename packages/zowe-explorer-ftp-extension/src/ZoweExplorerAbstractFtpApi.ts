@@ -61,7 +61,7 @@ export abstract class AbstractFtpApi implements MainframeInteraction.ICommon {
     }
 
     public ftpClient(profile: imperative.IProfileLoaded): Promise<unknown> {
-        const ftpProfile = profile.profile as IZosFTPProfile;
+        const ftpProfile = profile.profile as imperative.ICommandArguments;
         return FTPConfig.connectFromArguments(ftpProfile);
     }
 

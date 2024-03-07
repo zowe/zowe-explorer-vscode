@@ -37,7 +37,7 @@
     "lint:html": "eslint . --format html > results/eslint.html",
     "madge": "madge -c --no-color --no-spinner --exclude __mocks__ --extensions js,ts src/",
     "pretty": "prettier --write .",
-    "watch": "webpack --mode development --watch --info-verbosity verbose",
+    "watch": "webpack --mode development --watch",
     "clean": "rimraf out",
     "fresh-clone": "pnpm clean && (rimraf node_modules || true)",
     "vscode:prepublish": "webpack --mode production",

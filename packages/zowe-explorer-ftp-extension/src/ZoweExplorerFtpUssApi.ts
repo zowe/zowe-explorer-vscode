@@ -16,7 +16,7 @@ import * as tmp from "tmp";
 import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
 
 import { imperative, MainframeInteraction } from "@zowe/zowe-explorer-api";
-import { CoreUtils, UssUtils, TRANSFER_TYPE_ASCII, TRANSFER_TYPE_BINARY } from "@zowe/zos-ftp-for-zowe-cli";
+import { CoreUtils, UssUtils, TRANSFER_TYPE_ASCII, TRANSFER_TYPE_BINARY, ITransferMode } from "@zowe/zos-ftp-for-zowe-cli";
 import { Buffer } from "buffer";
 import { AbstractFtpApi } from "./ZoweExplorerAbstractFtpApi";
 import { ZoweFtpExtensionError } from "./ZoweFtpExtensionError";
@@ -63,7 +63,7 @@ export class FtpUssApi extends AbstractFtpApi implements MainframeInteraction.IU
         const result = this.getDefaultResponse();
         const targetFile = options.file;
         const transferOptions = {
-            transferType: options.binary ? TRANSFER_TYPE_BINARY : TRANSFER_TYPE_ASCII,
+            transferType: CoreUtils.getBinaryTransferModeOrDefault(options.binary),
             localFile: targetFile,
             size: 1,
         };
@@ -134,7 +134,7 @@ export class FtpUssApi extends AbstractFtpApi implements MainframeInteraction.IU
         returnEtag?: boolean
     ): Promise<zosfiles.IZosFilesResponse> {
         const transferOptions = {
-            transferType: binary ? TRANSFER_TYPE_BINARY : TRANSFER_TYPE_ASCII,
+            transferType: CoreUtils.getBinaryTransferModeOrDefault(binary),
             localFile: inputFilePath,
         };
         const result = this.getDefaultResponse();
@@ -212,7 +212,7 @@ export class FtpUssApi extends AbstractFtpApi implements MainframeInteraction.IU
                 } else if (type === "File" || type === "file") {
                     const content = Buffer.from(CoreUtils.addCarriageReturns(""));
                     const transferOptions = {
-                        transferType: TRANSFER_TYPE_ASCII,
+                        transferType: ITransferMode.ASCII as unknown as ITransferMode,
                         content: content,
                     };
                     await UssUtils.uploadFile(connection, ussPath, transferOptions);

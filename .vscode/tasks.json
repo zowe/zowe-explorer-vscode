@@ -85,15 +85,18 @@
             {
               "regexp": "\\s*TS\\d+:\\s*(.*)",
               "message": 1
+            },
+            {
+              "regexp": "webpack (.*) compiled (.*) error"
             }
           ],
           "background": {
             "activeOnStart": true,
             "beginsPattern": {
-              "regexp": "Compilation (.*?)starting…"
+              "regexp": "webpack --mode development"
             },
             "endsPattern": {
-              "regexp": "Compilation (.*?)finished"
+              "regexp": "webpack (.*) compiled with"
             }
           }
         }
