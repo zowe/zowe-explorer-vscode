@@ -426,7 +426,7 @@ export class ProfilesUtils {
         } else {
             await mProfileInfo.readProfilesFromDisk({ homeDir: FileManagement.getZoweDir(), projectDir: undefined });
         }
-        if (!imperative.ProfileInfo.onlyV1ProfilesExist) {
+        if (mProfileInfo.getTeamConfig().exists) {
             if (warnForMissingSchema && !mProfileInfo.hasValidSchema) {
                 const schemaWarning = vscode.l10n.t(
                     "No valid schema was found for the active team configuration. This may introduce issues with profiles in Zowe Explorer."

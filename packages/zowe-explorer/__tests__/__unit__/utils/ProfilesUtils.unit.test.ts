@@ -124,7 +124,7 @@ describe("ProfilesUtils unit tests", () => {
             Object.defineProperty(globals, "PROFILES_CACHE", {
                 value: {
                     getProfileInfo: () => ({
-                        usingTeamConfig: true,
+                        getTeamConfig: () => ({ exists: true }),
                         getAllProfiles: () => [
                             {
                                 profName: "test",
@@ -253,8 +253,8 @@ describe("ProfilesUtils unit tests", () => {
             const mockReadProfilesFromDisk = jest.fn();
             const profInfoSpy = jest.spyOn(profUtils.ProfilesUtils, "getProfileInfo").mockReturnValue({
                 readProfilesFromDisk: mockReadProfilesFromDisk,
-                usingTeamConfig: true,
                 getTeamConfig: () => ({
+                    exists: true,
                     layers: [
                         {
                             path: "test",
@@ -280,8 +280,7 @@ describe("ProfilesUtils unit tests", () => {
             const mockReadProfilesFromDisk = jest.fn();
             const profInfoSpy = jest.spyOn(profUtils.ProfilesUtils, "getProfileInfo").mockReturnValue({
                 readProfilesFromDisk: mockReadProfilesFromDisk,
-                usingTeamConfig: true,
-                getTeamConfig: () => [],
+                getTeamConfig: () => ({ exists: true }),
             } as never);
             await expect(profUtils.ProfilesUtils.readConfigFromDisk()).resolves.not.toThrow();
             expect(mockReadProfilesFromDisk).toHaveBeenCalledTimes(1);
@@ -293,8 +292,7 @@ describe("ProfilesUtils unit tests", () => {
             const mockReadProfilesFromDisk = jest.fn().mockRejectedValue(impErr);
             const profInfoSpy = jest.spyOn(profUtils.ProfilesUtils, "getProfileInfo").mockReturnValue({
                 readProfilesFromDisk: mockReadProfilesFromDisk,
-                usingTeamConfig: true,
-                getTeamConfig: () => [],
+                getTeamConfig: () => ({ exists: true }),
             } as never);
             await expect(profUtils.ProfilesUtils.readConfigFromDisk()).rejects.toBe(impErr);
             expect(mockReadProfilesFromDisk).toHaveBeenCalledTimes(1);
@@ -369,9 +367,9 @@ describe("ProfilesUtils unit tests", () => {
         it("should warn the user when using team config with a missing schema", async () => {
             const profInfoSpy = jest.spyOn(profUtils.ProfilesUtils, "getProfileInfo").mockReturnValueOnce({
                 readProfilesFromDisk: jest.fn(),
-                usingTeamConfig: true,
                 hasValidSchema: false,
                 getTeamConfig: () => ({
+                    exists: true,
                     layers: [
                         {
                             path: "test",
@@ -464,8 +462,8 @@ describe("ProfilesUtils unit tests", () => {
                 value: jest.fn(() => {
                     return {
                         profileName: "emptyConfig",
-                        usingTeamConfig: true,
                         getTeamConfig: jest.fn().mockReturnValueOnce({
+                            exists: true,
                             properties: {
                                 autoStore: false,
                             },

@@ -152,10 +152,10 @@ export class ProfilesCache {
         this.allProfiles = [];
         this.allTypes = [];
         try {
-            if (imperative.ProfileInfo.onlyV1ProfilesExist) {
+            const mProfileInfo = await this.getProfileInfo();
+            if (!mProfileInfo.getTeamConfig().exists) {
                 return;
             }
-            const mProfileInfo = await this.getProfileInfo();
             const allTypes = this.getAllProfileTypes(apiRegister?.registeredApiTypes() ?? []);
             allTypes.push("ssh", "base");
             for (const type of allTypes) {
