@@ -41,4 +41,5 @@ export enum JobSortOpts {
     DateSubmitted,
     Name,
     ReturnCode,
+    TimeStamp,
 }

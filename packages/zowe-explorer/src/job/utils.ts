@@ -27,14 +27,16 @@ export const JOB_SORT_OPTS = [
     localize("jobs.sortByDateSubmitted", "$(calendar) Date Submitted"),
     localize("jobs.sortByName", "$(case-sensitive) Job Name"),
     localize("jobs.sortByReturnCode", "$(symbol-numeric) Return Code"),
+    localize("jobs.sortByTimeStamp", "$(clock) Time Stamp"),
     localize("setSortDirection", "$(fold) Sort Direction"),
 ];
 
-export const JOB_SORT_KEYS: Record<JobSortOpts, keyof (IJob & { "exec-submitted": string })> = {
+export const JOB_SORT_KEYS: Record<JobSortOpts, keyof (IJob & { "exec-submitted": string } & { "exec-ended": string })> = {
     [JobSortOpts.Id]: "jobid",
     [JobSortOpts.DateSubmitted]: "exec-submitted",
     [JobSortOpts.Name]: "jobname",
     [JobSortOpts.ReturnCode]: "retcode",
+    [JobSortOpts.TimeStamp]: "exec-ended",
 };
 
 export const JOB_FILTER_OPTS = [
