@@ -6,7 +6,8 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### New features and enhancements
 
-- **Breaking:** Made `MainframeInteraction.IJes.getJobsByParameters` a required function now that `getJobsByOwnerAndPrefix` has been removed.
+- **Breaking:** Marked `getJobsByParameters` as a required function for the `MainframeInteraction.IJes` interface. [#2764](https://github.com/zowe/vscode-extension-for-zowe/pull/2764)
+  - The new `getJobsByParameters` API is meant to replace `getJobsByOwnerAndPrefix`, and it adds new capabilities such as querying by status and limiting the amount of returned jobs.
 
 ### Bug fixes
 
