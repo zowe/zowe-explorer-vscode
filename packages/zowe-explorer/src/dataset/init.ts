@@ -13,7 +13,7 @@ import * as vscode from "vscode";
 import * as globals from "../globals";
 import * as dsActions from "./actions";
 import * as refreshActions from "../shared/refresh";
-import { IZoweDatasetTreeNode, IZoweTreeNode, ZosEncoding } from "@zowe/zowe-explorer-api";
+import { IZoweDatasetTreeNode, IZoweTreeNode, ZosEncoding, ZoweScheme } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { DatasetTree, createDatasetTree } from "./DatasetTree";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
@@ -28,7 +28,7 @@ import { posix as posixPath } from "path";
 export async function initDatasetProvider(context: vscode.ExtensionContext): Promise<DatasetTree> {
     ZoweLogger.trace("dataset.init.initDatasetProvider called.");
 
-    context.subscriptions.push(vscode.workspace.registerFileSystemProvider("zowe-ds", DatasetFSProvider.instance, { isCaseSensitive: true }));
+    context.subscriptions.push(vscode.workspace.registerFileSystemProvider(ZoweScheme.DS, DatasetFSProvider.instance, { isCaseSensitive: true }));
 
     const datasetProvider = await createDatasetTree(globals.LOG);
     if (datasetProvider == null) {
@@ -225,7 +225,7 @@ export async function initDatasetProvider(context: vscode.ExtensionContext): Pro
     );
     context.subscriptions.push(
         vscode.workspace.onDidOpenTextDocument(async (doc) => {
-            if (doc.uri.scheme !== "zowe-ds") {
+            if (doc.uri.scheme !== ZoweScheme.DS) {
                 return;
             }
 

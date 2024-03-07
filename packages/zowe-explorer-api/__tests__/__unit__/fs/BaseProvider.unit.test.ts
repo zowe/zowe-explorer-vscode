@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { BaseProvider, ConflictViewSelection, DirEntry, FileEntry } from "../../../src/fs";
+import { BaseProvider, ConflictViewSelection, DirEntry, FileEntry, ZoweScheme } from "../../../src/fs";
 import { Gui } from "../../../src/globals";
 import isEqual from "lodash.isequal";
 import { MockedProperty, mocked } from "../../../__mocks__/mockUtils";
@@ -21,8 +21,8 @@ jest.mock("lodash.isequal", () => ({
 
 function getGlobalMocks() {
     return {
-        testFileUri: vscode.Uri.from({ scheme: "zowe-uss", path: "/file.txt" }),
-        testFolderUri: vscode.Uri.from({ scheme: "zowe-uss", path: "/folder" }),
+        testFileUri: vscode.Uri.from({ scheme: ZoweScheme.USS, path: "/file.txt" }),
+        testFolderUri: vscode.Uri.from({ scheme: ZoweScheme.USS, path: "/folder" }),
         fileFsEntry: {
             name: "file.txt",
             conflictData: null,
@@ -101,7 +101,7 @@ describe("buildTreeForUri", () => {
             (
                 await prov.buildTreeForUri(
                     vscode.Uri.from({
-                        scheme: "zowe-uss",
+                        scheme: ZoweScheme.USS,
                         path: "/testProfile/a/b/c/d.txt",
                     })
                 )
@@ -109,25 +109,25 @@ describe("buildTreeForUri", () => {
         ).toBe("d.txt");
         expect(createDirMock).toHaveBeenCalledWith(
             vscode.Uri.from({
-                scheme: "zowe-uss",
+                scheme: ZoweScheme.USS,
                 path: "/testProfile/a",
             })
         );
         expect(createDirMock).toHaveBeenCalledWith(
             vscode.Uri.from({
-                scheme: "zowe-uss",
+                scheme: ZoweScheme.USS,
                 path: "/testProfile/a/b",
             })
         );
         expect(createDirMock).toHaveBeenCalledWith(
             vscode.Uri.from({
-                scheme: "zowe-uss",
+                scheme: ZoweScheme.USS,
                 path: "/testProfile/a/b/c",
             })
         );
         expect(createFileMock).toHaveBeenCalledWith(
             vscode.Uri.from({
-                scheme: "zowe-uss",
+                scheme: ZoweScheme.USS,
                 path: "/testProfile/a/b/c/d.txt",
             })
         );
@@ -442,7 +442,7 @@ describe("_lookupParentDirectory", () => {
         expect(prov._lookupParentDirectory(globalMocks.testFolderUri)).toBe(prov.root);
         expect(lookupAsDirSpy).toHaveBeenCalledWith(
             vscode.Uri.from({
-                scheme: "zowe-uss",
+                scheme: ZoweScheme.USS,
                 path: "/",
             }),
             false
@@ -476,7 +476,7 @@ describe("_getDeleteInfo", () => {
             entryToDelete: globalMocks.folderFsEntry,
             parent: prov.root,
             parentUri: vscode.Uri.from({
-                scheme: "zowe-uss",
+                scheme: ZoweScheme.USS,
                 path: "/",
             }),
         });
@@ -658,7 +658,7 @@ describe("_relocateEntry", () => {
         const writeFileMock = jest.spyOn(vscode.workspace.fs, "writeFile");
         const createDirMock = jest.spyOn(vscode.workspace.fs, "createDirectory");
         const reopenEditorMock = jest.spyOn(prov, "_reopenEditorForRelocatedUri").mockResolvedValueOnce(undefined);
-        jest.spyOn(prov, "_lookupAsFile").mockResolvedValueOnce({
+        jest.spyOn(prov, "_lookupAsFile").mockReturnValueOnce({
             ...globalMocks.fileFsEntry,
             metadata: { ...globalMocks.fileFsEntry.metadata, path: "/file2.txt" },
         });

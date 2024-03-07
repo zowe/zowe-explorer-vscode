@@ -12,7 +12,7 @@
 import * as vscode from "vscode";
 import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
 import * as zosmf from "@zowe/zosmf-for-zowe-sdk";
-import { Gui, imperative, Validation } from "@zowe/zowe-explorer-api";
+import { Gui, imperative, Validation, ZoweScheme } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { Profiles } from "../../../src/Profiles";
 import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
@@ -42,7 +42,7 @@ async function createGlobalMocks() {
     const globalMocks = {
         ussFile: jest.fn(),
         Download: jest.fn(),
-        mockTextDocument: { uri: vscode.Uri.from({ scheme: "zowe-uss", path: "/sestest/path/to/node" }) } as vscode.TextDocument,
+        mockTextDocument: { uri: vscode.Uri.from({ scheme: ZoweScheme.USS, path: "/sestest/path/to/node" }) } as vscode.TextDocument,
         textDocumentsArray: new Array<vscode.TextDocument>(),
         openedDocumentInstance: jest.fn(),
         onDidSaveTextDocument: jest.fn(),

@@ -2339,8 +2339,8 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
 
         await testTree.rename(node);
         expect(blockMocks.rename).toHaveBeenLastCalledWith(
-            { path: "/sestest/HLQ.TEST.RENAME.NODE", scheme: "zowe-ds" },
-            { path: "/sestest/HLQ.TEST.RENAME.NODE.NEW", scheme: "zowe-ds" },
+            { path: "/sestest/HLQ.TEST.RENAME.NODE", scheme: ZoweScheme.DS },
+            { path: "/sestest/HLQ.TEST.RENAME.NODE.NEW", scheme: ZoweScheme.DS },
             { overwrite: false }
         );
     });

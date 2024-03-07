@@ -11,7 +11,7 @@
 
 import { Disposable, FilePermission, FileType, Uri } from "vscode";
 import { JobFSProvider } from "../../../../src/job/JobFSProvider";
-import { FilterEntry, JobEntry, SpoolEntry } from "@zowe/zowe-explorer-api";
+import { FilterEntry, JobEntry, SpoolEntry, ZoweScheme } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../../../../src/ZoweExplorerApiRegister";
 import { createIProfile } from "../../../../__mocks__/mockCreators/shared";
 import { createIJobFile, createIJobObject } from "../../../../__mocks__/mockCreators/jobs";
@@ -22,9 +22,9 @@ const testProfile = createIProfile();
 
 type TestUris = Record<string, Readonly<Uri>>;
 const testUris: TestUris = {
-    spool: Uri.from({ scheme: "zowe-jobs", path: "/sestest/TESTJOB(JOB1234) - ACTIVE/JES2.JESMSGLG.2" }),
-    job: Uri.from({ scheme: "zowe-jobs", path: "/sestest/TESTJOB(JOB1234) - ACTIVE" }),
-    session: Uri.from({ scheme: "zowe-jobs", path: "/sestest" }),
+    spool: Uri.from({ scheme: ZoweScheme.Jobs, path: "/sestest/TESTJOB(JOB1234) - ACTIVE/JES2.JESMSGLG.2" }),
+    job: Uri.from({ scheme: ZoweScheme.Jobs, path: "/sestest/TESTJOB(JOB1234) - ACTIVE" }),
+    session: Uri.from({ scheme: ZoweScheme.Jobs, path: "/sestest" }),
 };
 
 const testEntries = {
@@ -182,7 +182,7 @@ describe("fetchSpoolAtUri", () => {
     it("fetches the spool contents for a given URI", async () => {
         const lookupAsFileMock = jest
             .spyOn(JobFSProvider.instance as any, "_lookupAsFile")
-            .mockResolvedValueOnce({ ...testEntries.spool, data: new Uint8Array() });
+            .mockReturnValueOnce({ ...testEntries.spool, data: new Uint8Array() });
         const newData = "spool contents";
         const mockJesApi = {
             downloadSingleSpool: jest.fn((opts) => {
@@ -201,7 +201,7 @@ describe("fetchSpoolAtUri", () => {
 describe("readFile", () => {
     it("returns data for the spool file", async () => {
         const spoolEntry = { ...testEntries.spool };
-        const lookupAsFileMock = jest.spyOn(JobFSProvider.instance as any, "_lookupAsFile").mockResolvedValueOnce(spoolEntry);
+        const lookupAsFileMock = jest.spyOn(JobFSProvider.instance as any, "_lookupAsFile").mockReturnValueOnce(spoolEntry);
         const fetchSpoolAtUriMock = jest.spyOn(JobFSProvider.instance, "fetchSpoolAtUri").mockResolvedValueOnce(spoolEntry);
         expect(await JobFSProvider.instance.readFile(testUris.spool)).toBe(spoolEntry.data);
         expect(spoolEntry.wasAccessed).toBe(true);

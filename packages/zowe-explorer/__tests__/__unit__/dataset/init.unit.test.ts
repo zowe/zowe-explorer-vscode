@@ -30,7 +30,7 @@ describe("Test src/dataset/extension", () => {
                 label: "test",
                 getParent: () => "test",
                 openDs: jest.fn(),
-                command: { command: "vscode.open", title: "", arguments: [vscode.Uri.from({ scheme: "zowe-ds", path: "TEST.DS" })] },
+                command: { command: "vscode.open", title: "", arguments: [vscode.Uri.from({ scheme: ZoweScheme.DS, path: "TEST.DS" })] },
             },
             _: { _: "_" },
         };

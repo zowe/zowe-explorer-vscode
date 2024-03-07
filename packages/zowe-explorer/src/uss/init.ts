@@ -13,7 +13,7 @@ import * as vscode from "vscode";
 import * as ussActions from "./actions";
 import * as refreshActions from "../shared/refresh";
 import * as globals from "../globals";
-import { IZoweUSSTreeNode, IZoweTreeNode, ZosEncoding, Gui } from "@zowe/zowe-explorer-api";
+import { IZoweUSSTreeNode, IZoweTreeNode, ZosEncoding, Gui, ZoweScheme } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import * as contextuals from "../shared/context";
 import { getSelectedNodeList } from "../shared/utils";
@@ -26,7 +26,7 @@ import { UssFSProvider } from "./UssFSProvider";
 export async function initUSSProvider(context: vscode.ExtensionContext): Promise<USSTree> {
     ZoweLogger.trace("init.initUSSProvider called.");
 
-    context.subscriptions.push(vscode.workspace.registerFileSystemProvider("zowe-uss", UssFSProvider.instance, { isCaseSensitive: true }));
+    context.subscriptions.push(vscode.workspace.registerFileSystemProvider(ZoweScheme.USS, UssFSProvider.instance, { isCaseSensitive: true }));
     const ussFileProvider: USSTree = await createUSSTree(globals.LOG);
     if (ussFileProvider == null) {
         return null;
@@ -218,7 +218,7 @@ export async function initUSSProvider(context: vscode.ExtensionContext): Promise
     );
     context.subscriptions.push(
         vscode.workspace.onDidOpenTextDocument((doc) => {
-            if (doc.uri.scheme !== "zowe-uss") {
+            if (doc.uri.scheme !== ZoweScheme.USS) {
                 return;
             }
 

@@ -12,7 +12,7 @@
 import * as vscode from "vscode";
 import * as jobActions from "./actions";
 import * as refreshActions from "../shared/refresh";
-import { IZoweJobTreeNode, IZoweTreeNode, Gui } from "@zowe/zowe-explorer-api";
+import { IZoweJobTreeNode, IZoweTreeNode, Gui, ZoweScheme } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { ZosJobsProvider, createJobsTree } from "./ZosJobsProvider";
 import * as contextuals from "../shared/context";
@@ -27,7 +27,7 @@ import { PollDecorator } from "../utils/DecorationProviders";
 export async function initJobsProvider(context: vscode.ExtensionContext): Promise<ZosJobsProvider> {
     ZoweLogger.trace("job.init.initJobsProvider called.");
 
-    context.subscriptions.push(vscode.workspace.registerFileSystemProvider("zowe-jobs", JobFSProvider.instance, { isCaseSensitive: false }));
+    context.subscriptions.push(vscode.workspace.registerFileSystemProvider(ZoweScheme.Jobs, JobFSProvider.instance, { isCaseSensitive: false }));
 
     const jobsProvider = await createJobsTree(globals.LOG);
     if (jobsProvider == null) {
@@ -185,7 +185,7 @@ export async function initJobsProvider(context: vscode.ExtensionContext): Promis
     context.subscriptions.push(vscode.workspace.onDidCloseTextDocument(ZosJobsProvider.onDidCloseTextDocument));
     context.subscriptions.push(
         vscode.workspace.onDidOpenTextDocument((doc) => {
-            if (doc.uri.scheme !== "zowe-jobs") {
+            if (doc.uri.scheme !== ZoweScheme.Jobs) {
                 return;
             }
 

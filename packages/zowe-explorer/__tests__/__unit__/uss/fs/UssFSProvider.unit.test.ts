@@ -13,7 +13,7 @@ import { Disposable, FilePermission, FileSystemError, FileType, TextEditor, Uri 
 import { UssFSProvider } from "../../../../src/uss/UssFSProvider";
 import { createIProfile } from "../../../../__mocks__/mockCreators/shared";
 import { ZoweExplorerApiRegister } from "../../../../src/ZoweExplorerApiRegister";
-import { BaseProvider, DirEntry, FileEntry, Gui } from "@zowe/zowe-explorer-api";
+import { BaseProvider, DirEntry, FileEntry, Gui, ZoweScheme } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../../../src/Profiles";
 import { UssFileType } from "../../../../src/uss/FileStructure";
 
@@ -22,10 +22,10 @@ const testProfileB = { ...createIProfile(), name: "sestest2", profile: { ...test
 
 type TestUris = Record<string, Readonly<Uri>>;
 const testUris: TestUris = {
-    conflictFile: Uri.from({ scheme: "zowe-uss", path: "/sestest/aFile.txt", query: "conflict=true" }),
-    file: Uri.from({ scheme: "zowe-uss", path: "/sestest/aFile.txt" }),
-    folder: Uri.from({ scheme: "zowe-uss", path: "/sestest/aFolder" }),
-    session: Uri.from({ scheme: "zowe-uss", path: "/sestest" }),
+    conflictFile: Uri.from({ scheme: ZoweScheme.USS, path: "/sestest/aFile.txt", query: "conflict=true" }),
+    file: Uri.from({ scheme: ZoweScheme.USS, path: "/sestest/aFile.txt" }),
+    folder: Uri.from({ scheme: ZoweScheme.USS, path: "/sestest/aFolder" }),
+    session: Uri.from({ scheme: ZoweScheme.USS, path: "/sestest" }),
 };
 
 const testEntries = {
@@ -128,7 +128,7 @@ describe("listFiles", () => {
             UssFSProvider.instance.listFiles(
                 testProfile,
                 Uri.from({
-                    scheme: "zowe-uss",
+                    scheme: ZoweScheme.USS,
                     path: "",
                 })
             )
@@ -194,7 +194,7 @@ describe("readDirectory", () => {
 describe("fetchFileAtUri", () => {
     it("calls getContents to get the data for a file entry", async () => {
         const fileEntry = { ...testEntries.file };
-        const lookupAsFileMock = jest.spyOn((UssFSProvider as any).prototype, "_lookupAsFile").mockResolvedValueOnce(fileEntry);
+        const lookupAsFileMock = jest.spyOn((UssFSProvider as any).prototype, "_lookupAsFile").mockReturnValueOnce(fileEntry);
         const exampleData = "hello world!";
         jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce({
             getContents: jest.fn().mockImplementationOnce((filePath, opts) => {
@@ -216,7 +216,7 @@ describe("fetchFileAtUri", () => {
     });
     it("assigns conflictData if the 'isConflict' option is specified", async () => {
         const fileEntry = { ...testEntries.file };
-        const lookupAsFileMock = jest.spyOn((UssFSProvider as any).prototype, "_lookupAsFile").mockResolvedValueOnce(fileEntry);
+        const lookupAsFileMock = jest.spyOn((UssFSProvider as any).prototype, "_lookupAsFile").mockReturnValueOnce(fileEntry);
         const exampleData = "<remote data>";
         jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce({
             getContents: jest.fn().mockImplementationOnce((filePath, opts) => {
@@ -238,7 +238,7 @@ describe("fetchFileAtUri", () => {
     });
     it("calls '_updateResourceInEditor' if the 'editor' option is specified", async () => {
         const fileEntry = { ...testEntries.file };
-        const lookupAsFileMock = jest.spyOn((UssFSProvider as any).prototype, "_lookupAsFile").mockResolvedValueOnce(fileEntry);
+        const lookupAsFileMock = jest.spyOn((UssFSProvider as any).prototype, "_lookupAsFile").mockReturnValueOnce(fileEntry);
         const exampleData = "hello world!";
         jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce({
             getContents: jest.fn().mockImplementationOnce((filePath, opts) => {
@@ -500,7 +500,7 @@ describe("delete", () => {
         const getDelInfoMock = jest.spyOn((BaseProvider as any).prototype, "_getDeleteInfo").mockReturnValueOnce({
             entryToDelete: testEntries.file,
             parent: testEntries.session,
-            parentUri: Uri.from({ scheme: "zowe-uss", path: "/sestest" }),
+            parentUri: Uri.from({ scheme: ZoweScheme.USS, path: "/sestest" }),
         });
         const deleteMock = jest.fn().mockResolvedValueOnce(undefined);
         jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce({
@@ -519,7 +519,7 @@ describe("delete", () => {
         const getDelInfoMock = jest.spyOn((BaseProvider as any).prototype, "_getDeleteInfo").mockReturnValueOnce({
             entryToDelete: testEntries.file,
             parent: sesEntry,
-            parentUri: Uri.from({ scheme: "zowe-uss", path: "/sestest" }),
+            parentUri: Uri.from({ scheme: ZoweScheme.USS, path: "/sestest" }),
         });
         const errorMsgMock = jest.spyOn(Gui, "errorMessage").mockResolvedValueOnce(undefined);
         const deleteMock = jest.fn().mockRejectedValueOnce(new Error("insufficient permissions"));
@@ -821,7 +821,7 @@ describe("copyTree", () => {
             const copyTreeSpy = jest.spyOn(UssFSProvider.instance as any, "copyTree");
             const fileInPathTree = {
                 baseName: "someFile.txt",
-                localUri: Uri.from({ scheme: "zowe-uss", path: "/sestest/aFolder/someFile.txt" }),
+                localUri: Uri.from({ scheme: ZoweScheme.USS, path: "/sestest/aFolder/someFile.txt" }),
                 type: UssFileType.File,
             };
             const ussFileTree = {

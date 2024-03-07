@@ -24,6 +24,7 @@ import {
     ZosEncoding,
     Validation,
     DsEntry,
+    ZoweScheme,
 } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { getIconByNode } from "../generators/icons";
@@ -100,7 +101,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             const sessionLabel = getSessionLabel(this);
             if (this.getParent() == null) {
                 this.resourceUri = vscode.Uri.from({
-                    scheme: "zowe-ds",
+                    scheme: ZoweScheme.DS,
                     path: `/${sessionLabel}/`,
                 });
                 DatasetFSProvider.instance.createDirectory(this.resourceUri, this.pattern);
@@ -110,7 +111,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 this.contextValue === globals.DS_MIGRATED_FILE_CONTEXT
             ) {
                 this.resourceUri = vscode.Uri.from({
-                    scheme: "zowe-ds",
+                    scheme: ZoweScheme.DS,
                     path: `/${sessionLabel}/${this.label as string}`,
                 });
                 if (this.contextValue === globals.DS_DS_CONTEXT) {
@@ -122,7 +123,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 }
             } else if (this.contextValue === globals.DS_MEMBER_CONTEXT) {
                 this.resourceUri = vscode.Uri.from({
-                    scheme: "zowe-ds",
+                    scheme: ZoweScheme.DS,
                     path: `/${sessionLabel}/${this.getParent().label as string}/${this.label as string}`,
                 });
                 this.command = {

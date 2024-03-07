@@ -88,7 +88,7 @@ export class BaseProvider {
      * @param remoteUri The "remote conflict" URI shown in the diff view
      */
     public async diffOverwrite(uri: vscode.Uri): Promise<void> {
-        const fsEntry = await this._lookupAsFile(uri);
+        const fsEntry = this._lookupAsFile(uri);
         if (fsEntry == null) {
             return;
         }
@@ -109,7 +109,7 @@ export class BaseProvider {
      * @param localUri The local URI shown in the diff view
      */
     public async diffUseRemote(uri: vscode.Uri): Promise<void> {
-        const fsEntry = await this._lookupAsFile(uri);
+        const fsEntry = this._lookupAsFile(uri);
         if (fsEntry == null) {
             return;
         }
@@ -272,7 +272,7 @@ export class BaseProvider {
         if (isFile) {
             // put new contents in relocated file
             await vscode.workspace.fs.writeFile(newUri, entry.data);
-            const newEntry = await this._lookupAsFile(newUri);
+            const newEntry = this._lookupAsFile(newUri);
             newEntry.etag = entry.etag;
         } else {
             // create directory in FS; when expanded in the tree, it will fetch any files
@@ -441,16 +441,8 @@ export class BaseProvider {
         return entry;
     }
 
-    protected async _lookupAsFile(uri: vscode.Uri, opts?: { silent?: boolean; buildFullPath?: boolean }): Promise<FileEntry> {
-        let entry: IFileSystemEntry;
-        try {
-            entry = this._lookup(uri, opts?.silent ?? false);
-        } catch (err) {
-            if (opts?.buildFullPath) {
-                // Create the whole path structure in the FSP (for opening a link from an external app).
-                entry = await this.buildTreeForUri(uri);
-            }
-        }
+    protected _lookupAsFile(uri: vscode.Uri, opts?: { silent?: boolean }): FileEntry {
+        const entry = this._lookup(uri, opts?.silent ?? false);
         if (isFileEntry(entry)) {
             return entry;
         }

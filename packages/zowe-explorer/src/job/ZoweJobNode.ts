@@ -14,7 +14,7 @@ import * as zosjobs from "@zowe/zos-jobs-for-zowe-sdk";
 import * as globals from "../globals";
 import * as contextually from "../shared/context";
 import * as path from "path";
-import { imperative, IZoweJobTreeNode, Sorting, ZoweTreeNode } from "@zowe/zowe-explorer-api";
+import { imperative, IZoweJobTreeNode, Sorting, ZoweScheme, ZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { errorHandling, getSessionLabel, syncSessionNode } from "../utils/ProfilesUtils";
 import { getIconByNode } from "../generators/icons";
@@ -68,7 +68,7 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
             // non-favorited, session node
             this.contextValue = globals.JOBS_SESSION_CONTEXT;
             this.resourceUri = vscode.Uri.from({
-                scheme: "zowe-jobs",
+                scheme: ZoweScheme.Jobs,
                 path: `/${sessionName}/`,
             });
             JobFSProvider.instance.createDirectory(this.resourceUri, { isFilter: true });
@@ -98,7 +98,7 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
             this.id = this.label as string;
         } else if (this.job != null) {
             this.resourceUri = vscode.Uri.from({
-                scheme: "zowe-jobs",
+                scheme: ZoweScheme.Jobs,
                 path: `/${sessionName}/${this.job.jobid}`,
             });
         }
