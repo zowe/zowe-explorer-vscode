@@ -42,7 +42,7 @@ export class LocalFileManagement {
         this.recoveryDiagnostics.set(document.uri, [
             new vscode.Diagnostic(
                 textRange,
-                localize("addRecoveredFile.diagnosticMessage", "File is out of sync with {0}: {1}", treeOpts.profile.name, fullPath),
+                localize("addRecoveredFile.diagnosticMessage", "File content is out of sync with {0}: {1}", treeOpts.profile.name, fullPath),
                 vscode.DiagnosticSeverity.Error
             ),
         ]);

@@ -690,6 +690,8 @@ describe("Shared utils unit tests - function sortTreeItems", () => {
 
 describe("Shared utils unit tests - function updateOpenFiles", () => {
     const someTree = { openFiles: {} };
+    const testDsPath = path.join("~", "temp", "_D_", "dsname");
+    const testUssPath = path.join("~", "temp", "_U_", "fspath");
 
     beforeAll(() => {
         globals.defineGlobals("~");
@@ -697,23 +699,23 @@ describe("Shared utils unit tests - function updateOpenFiles", () => {
 
     it("sets a file entry to null in the openFiles record", () => {
         const deleteFileInfoSpy = jest.spyOn(LocalFileManagement, "deleteFileInfo").mockImplementation();
-        sharedUtils.updateOpenFiles(someTree as any, "~/temp/_D_/dsname", null);
-        expect(someTree.openFiles["~/temp/_D_/dsname"]).toBeNull();
+        sharedUtils.updateOpenFiles(someTree as any, testDsPath, null);
+        expect(someTree.openFiles[testDsPath]).toBeNull();
         expect(deleteFileInfoSpy).toHaveBeenCalledTimes(1);
     });
 
     it("sets a file entry to a valid node in the openFiles record", () => {
         const storeFileInfoSpy = jest.spyOn(LocalFileManagement, "storeFileInfo").mockImplementation();
-        sharedUtils.updateOpenFiles(someTree as any, "~/temp/_D_/dsname", { label: "testDsLabel" } as IZoweTreeNode);
-        sharedUtils.updateOpenFiles(someTree as any, "~/temp/_U_/fspath", { label: "testUssLabel" } as IZoweTreeNode);
-        expect(someTree.openFiles["~/temp/_D_/dsname"].label).toBe("testDsLabel");
-        expect(someTree.openFiles["~/temp/_U_/fspath"].label).toBe("testUssLabel");
+        sharedUtils.updateOpenFiles(someTree as any, testDsPath, { label: "testDsLabel" } as IZoweTreeNode);
+        sharedUtils.updateOpenFiles(someTree as any, testUssPath, { label: "testUssLabel" } as IZoweTreeNode);
+        expect(someTree.openFiles[testDsPath].label).toBe("testDsLabel");
+        expect(someTree.openFiles[testUssPath].label).toBe("testUssLabel");
         expect(storeFileInfoSpy).toHaveBeenCalledTimes(2);
     });
 
     it("does nothing if openFiles is not defined", () => {
         someTree.openFiles = undefined as any;
-        sharedUtils.updateOpenFiles(someTree as any, "~/temp/_D_/dsname", null);
+        sharedUtils.updateOpenFiles(someTree as any, testDsPath, null);
         expect(someTree.openFiles).toBeUndefined();
     });
 });

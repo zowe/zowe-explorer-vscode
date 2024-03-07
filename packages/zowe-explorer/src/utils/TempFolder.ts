@@ -169,7 +169,7 @@ export function findRecoveredFiles(): void {
         Gui.warningMessage(
             localize(
                 "findRecoveredFiles.message",
-                "One or more files remained open in your last VS Code session. To prevent losing your updates, check the Problems view to see the list of files and re-save them to upload edits to the mainframe."
+                "One or more files remained open in your last VS Code session. To avoid losing your updates, check the Problems view to see the list of files and re-save them to upload the changes to the mainframe."
             )
         );
     }

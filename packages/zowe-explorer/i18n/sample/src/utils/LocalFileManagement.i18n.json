@@ -1,3 +1,3 @@
 {
-  "addRecoveredFile.diagnosticMessage": "File is out of sync with {0}: {1}"
+  "addRecoveredFile.diagnosticMessage": "File content is out of sync with {0}: {1}"
 }
