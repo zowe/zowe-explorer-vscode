@@ -132,10 +132,6 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 };
             } else {
                 this.resourceUri = null;
-                this.command = {
-                    command: "zowe.placeholderCommand",
-                    title: "Placeholder",
-                };
             }
         }
     }

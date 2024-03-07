@@ -22,13 +22,13 @@ export class BaseProvider {
     // eslint-disable-next-line no-magic-numbers
     private readonly FS_PROVIDER_UI_TIMEOUT = 4000;
 
-    protected _emitter = new vscode.EventEmitter<vscode.FileChangeEvent[]>();
+    protected _onDidChangeFileEmitter = new vscode.EventEmitter<vscode.FileChangeEvent[]>();
     protected _bufferedEvents: vscode.FileChangeEvent[] = [];
     protected _fireSoonHandle?: NodeJS.Timeout;
 
     protected _profilesCache: ProfilesCache;
 
-    public readonly onDidChangeFile: vscode.Event<vscode.FileChangeEvent[]> = this._emitter.event;
+    public onDidChangeFile: vscode.Event<vscode.FileChangeEvent[]> = this._onDidChangeFileEmitter.event;
     protected root: DirEntry;
     public openedUris: vscode.Uri[] = [];
 
@@ -369,7 +369,7 @@ export class BaseProvider {
         }
 
         this._fireSoonHandle = setTimeout(() => {
-            this._emitter.fire(this._bufferedEvents);
+            this._onDidChangeFileEmitter.fire(this._bufferedEvents);
             this._bufferedEvents.length = 0;
         }, FS_PROVIDER_DELAY);
     }

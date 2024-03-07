@@ -21,6 +21,7 @@ import {
     getInfoForUri,
     isDirectoryEntry,
     isFilterEntry,
+    isPdsEntry,
     FilterEntry,
     Gui,
 } from "@zowe/zowe-explorer-api";
@@ -33,8 +34,6 @@ import { Profiles } from "../Profiles";
 import { IZosFilesResponse } from "@zowe/zos-files-for-zowe-sdk";
 
 export class DatasetFSProvider extends BaseProvider implements vscode.FileSystemProvider {
-    public onDidChangeFile: vscode.Event<vscode.FileChangeEvent[]>;
-
     private static _instance: DatasetFSProvider;
     private constructor() {
         super(Profiles.getInstance());
@@ -300,6 +299,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 entry.data = content;
                 entry.mtime = Date.now();
                 entry.size = content.byteLength;
+                entry.inDiffView = true;
                 return;
             }
 
@@ -321,7 +321,11 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                         etag: shouldForceUpload ? undefined : entry.etag,
                         returnEtag: true,
                     });
-                    entry.etag = resp.apiResponse.etag;
+                    // Update e-tag if write was successful.
+                    const newData = await mvsApi.getContents(fullName, {
+                        returnEtag: true,
+                    });
+                    entry.etag = newData.apiResponse.etag;
                     entry.data = content;
                     statusMsg.dispose();
                 } catch (err) {
@@ -354,24 +358,34 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         const uriInfo = getInfoForUri(uri, Profiles.getInstance());
         return new DsEntryMetadata({
             profile: uriInfo.profile,
-            path: uri.path.substring(uriInfo.slashAfterProfilePos + 1),
+            path: uri.path.substring(uriInfo.slashAfterProfilePos),
         });
     }
 
     public async delete(uri: vscode.Uri, _options: { readonly recursive: boolean }): Promise<void> {
         const entry = this._lookup(uri, false);
         const parent = this._lookupParentDirectory(uri);
-        const isMember = entry instanceof DsEntry;
         let fullName: string = "";
-        if (isMember) {
+        if (isPdsEntry(parent)) {
             fullName = `${parent.name}(${entry.name})`;
         } else {
             fullName = entry.name;
         }
 
-        await ZoweExplorerApiRegister.getMvsApi(entry.metadata.profile).deleteDataSet(fullName, {
-            responseTimeout: entry.metadata.profile.profile?.responseTimeout,
-        });
+        try {
+            await ZoweExplorerApiRegister.getMvsApi(entry.metadata.profile).deleteDataSet(fullName, {
+                responseTimeout: entry.metadata.profile.profile?.responseTimeout,
+            });
+        } catch (err) {
+            await Gui.errorMessage(
+                vscode.l10n.t({
+                    message: "Deleting {0} failed due to API error: {1}",
+                    args: [entry.metadata.path, err.message],
+                    comment: ["File path", "Error message"],
+                })
+            );
+            return;
+        }
 
         parent.entries.delete(entry.name);
         parent.size -= 1;
@@ -386,7 +400,6 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         }
 
         const entry = this._lookup(oldUri, false) as PdsEntry | DsEntry;
-        const isDir = entry instanceof PdsEntry;
         const parentDir = this._lookupParentDirectory(oldUri);
 
         const oldName = entry.name;
@@ -397,12 +410,9 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
         // Build the new path using the previous path and new file/folder name.
         const newPath = path.posix.join(entry.metadata.path, "..", newName);
-        // if (isDir) {
-        //     newPath += "/";
-        // }
 
         try {
-            if (isDir) {
+            if (isPdsEntry(entry)) {
                 await ZoweExplorerApiRegister.getMvsApi(entry.metadata.profile).renameDataSet(oldName, newName);
             } else {
                 const pdsName = path.basename(path.posix.join(entry.metadata.path, ".."));
@@ -412,7 +422,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             await Gui.errorMessage(
                 vscode.l10n.t({
                     message: "Renaming {0} failed due to API error: {1}",
-                    args: [entry.metadata.path, err.message],
+                    args: [path.posix.basename(entry.metadata.path), err.message],
                     comment: ["File path", "Error message"],
                 })
             );

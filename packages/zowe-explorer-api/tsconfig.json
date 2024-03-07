@@ -12,6 +12,7 @@
     "removeComments": false,
     "pretty": true,
     "sourceMap": true,
+    "stripInternal": true,
     "newLine": "lf",
     "resolveJsonModule": true,
     "composite": true,
