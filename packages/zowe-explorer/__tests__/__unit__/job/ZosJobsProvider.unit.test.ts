@@ -161,10 +161,6 @@ async function createGlobalMocks() {
         configurable: true,
     });
     Object.defineProperty(globalMocks.mockGetJobs, "getJob", { value: globalMocks.mockGetJob, configurable: true });
-    Object.defineProperty(globalMocks.mockGetJobs, "getJobsByOwnerAndPrefix", {
-        value: globalMocks.mockGetJobsByOwnerAndPrefix,
-        configurable: true,
-    });
     Object.defineProperty(globalMocks.mockGetJobs, "getSpoolFiles", {
         value: globalMocks.mockGetSpoolFiles,
         configurable: true,
