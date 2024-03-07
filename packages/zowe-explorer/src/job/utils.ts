@@ -30,8 +30,12 @@ export const JOB_SORT_OPTS = [
     localize("jobs.sortByTimeStamp", "$(clock) Time Stamp"),
     localize("setSortDirection", "$(fold) Sort Direction"),
 ];
+interface IJobExtendedOpts {
+    "exec-ended": string;
+    "exec-submitted": string;
+}
 
-export const JOB_SORT_KEYS: Record<JobSortOpts, keyof (IJob & { "exec-submitted": string } & { "exec-ended": string })> = {
+export const JOB_SORT_KEYS: Record<JobSortOpts, keyof (IJob & IJobExtendedOpts)> = {
     [JobSortOpts.Id]: "jobid",
     [JobSortOpts.DateSubmitted]: "exec-submitted",
     [JobSortOpts.Name]: "jobname",
