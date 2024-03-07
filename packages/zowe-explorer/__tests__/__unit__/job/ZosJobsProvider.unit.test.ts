@@ -356,7 +356,6 @@ describe("ZosJobsProvider unit tests - Function initializeFavChildNodeForProfile
             job: new MockJobDetail("testJob(JOB123)"),
         });
         node.contextValue = globals.JOBS_JOB_CONTEXT + globals.FAV_SUFFIX;
-        node.command = { command: "zowe.zosJobsSelectjob", title: "", arguments: [node] };
         const targetIcon = getIconByNode(node);
         if (targetIcon) {
             node.iconPath = targetIcon.path;
@@ -415,15 +414,33 @@ describe("ZosJobsProvider unit tests - Function initializeFavChildNodeForProfile
             job: new MockJobDetail("testJob(JOB123)"),
         });
         node.contextValue = globals.JOBS_JOB_CONTEXT + globals.FAV_SUFFIX;
-        node.command = { command: "zowe.zosJobsSelectjob", title: "", arguments: [node] };
         const targetIcon = getIconByNode(node);
         if (targetIcon) {
             node.iconPath = targetIcon.path;
         }
+        // node.command = undefined;
 
         const favChildNodeForProfile = await testTree.initializeFavChildNodeForProfile("testJob(JOB123)", globals.JOBS_JOB_CONTEXT, favProfileNode);
 
         expect(favChildNodeForProfile.label).toEqual("testJob(JOB123)");
+    });
+
+    it("To check Error is not triggered when clicked on favorited job", async () => {
+        await createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        const testTree = new ZosJobsProvider();
+
+        const favProfileNode = new ZoweJobNode({
+            label: "testProfile",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: blockMocks.jobFavoritesNode,
+        });
+        favProfileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
+
+        const favChildNodeForProfile = await testTree.initializeFavChildNodeForProfile("testJob(JOB456)", globals.JOBS_JOB_CONTEXT, favProfileNode);
+
+        expect(favChildNodeForProfile.label).toEqual("testJob(JOB456)");
+        expect(favChildNodeForProfile.command).toBeUndefined();
     });
 });
 
