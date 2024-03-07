@@ -34,7 +34,7 @@ import { ZoweLogger } from "../utils/LoggerUtils";
 import { isTypeUssTreeNode } from "./context";
 import { markDocumentUnsaved } from "../utils/workspace";
 import { errorHandling } from "../utils/ProfilesUtils";
-import { ZoweLocalStorage } from "../utils/ZoweLocalStorage";
+import { LocalStorageKey, ZoweLocalStorage } from "../utils/ZoweLocalStorage";
 import { LocalFileManagement } from "../utils/LocalFileManagement";
 import { TreeProviders } from "./TreeProviders";
 
@@ -428,10 +428,12 @@ export function updateOpenFiles<T extends IZoweTreeNode>(treeProvider: IZoweTree
     if (treeProvider.openFiles) {
         treeProvider.openFiles[docPath] = value;
     }
-    if (value != null) {
-        LocalFileManagement.storeFileInfo(value, docPath);
-    } else {
-        LocalFileManagement.deleteFileInfo(docPath);
+    if (docPath.includes(globals.DS_DIR) || docPath.includes(globals.USS_DIR)) {
+        if (value != null) {
+            LocalFileManagement.storeFileInfo(value, docPath);
+        } else {
+            LocalFileManagement.deleteFileInfo(docPath);
+        }
     }
 }
 
@@ -481,7 +483,7 @@ export async function promptForEncoding(node: IZoweDatasetTreeNode | IZoweUSSTre
     } else if (node.encoding === null || currentEncoding === "text") {
         currentEncoding = ebcdicItem.label;
     }
-    const encodingHistory = ZoweLocalStorage.getValue<string[]>("zowe.encodingHistory") ?? [];
+    const encodingHistory = ZoweLocalStorage.getValue<string[]>(LocalStorageKey.ENCODING_HISTORY) ?? [];
     if (encodingHistory.length > 0) {
         for (const encoding of encodingHistory) {
             items.push({ label: encoding });
@@ -514,7 +516,7 @@ export async function promptForEncoding(node: IZoweDatasetTreeNode | IZoweUSSTre
             if (response != null) {
                 encoding = { kind: "other", codepage: response };
                 encodingHistory.push(encoding.codepage);
-                ZoweLocalStorage.setValue("zowe.encodingHistory", encodingHistory.slice(0, globals.MAX_FILE_HISTORY));
+                ZoweLocalStorage.setValue(LocalStorageKey.ENCODING_HISTORY, encodingHistory.slice(0, globals.MAX_FILE_HISTORY));
             }
             break;
         default:

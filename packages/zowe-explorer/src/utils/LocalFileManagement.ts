@@ -12,7 +12,7 @@
 import { IZoweDatasetTreeNode, IZoweUSSTreeNode } from "@zowe/zowe-explorer-api";
 import * as vscode from "vscode";
 import * as nls from "vscode-nls";
-import { ZoweLocalStorage } from "./ZoweLocalStorage";
+import { LocalStorageKey, ZoweLocalStorage } from "./ZoweLocalStorage";
 import { isZoweDatasetTreeNode, updateOpenFiles } from "../shared/utils";
 import { IZoweDatasetTreeOpts, IZoweUssTreeOpts } from "../shared/IZoweTreeOpts";
 import { TreeProviders } from "../shared/TreeProviders";
@@ -55,7 +55,7 @@ export class LocalFileManagement {
     }
 
     public static loadFileInfo(node: IZoweDatasetTreeNode | IZoweUSSTreeNode, filename: string): void {
-        const fileInfo = ZoweLocalStorage.getValue<Record<string, IFileInfo>>("zowe.fileInfoCache") ?? {};
+        const fileInfo = ZoweLocalStorage.getValue<Record<string, IFileInfo>>(LocalStorageKey.FILE_INFO_CACHE) ?? {};
         if (fileInfo[filename] != null) {
             for (const [k, v] of Object.entries(fileInfo[filename])) {
                 node[k] = v;
@@ -65,7 +65,7 @@ export class LocalFileManagement {
     }
 
     public static storeFileInfo(node: IZoweDatasetTreeNode | IZoweUSSTreeNode, filename?: string): void {
-        const fileInfo = ZoweLocalStorage.getValue<Record<string, IFileInfo>>("zowe.fileInfoCache") ?? {};
+        const fileInfo = ZoweLocalStorage.getValue<Record<string, IFileInfo>>(LocalStorageKey.FILE_INFO_CACHE) ?? {};
         if (filename == null) {
             filename = isZoweDatasetTreeNode(node) ? node.getDsDocumentFilePath() : node.getUSSDocumentFilePath();
         }
@@ -74,12 +74,12 @@ export class LocalFileManagement {
             encoding: node.encoding,
             etag: node.getEtag(),
         };
-        ZoweLocalStorage.setValue("zowe.fileInfoCache", fileInfo);
+        ZoweLocalStorage.setValue(LocalStorageKey.FILE_INFO_CACHE, fileInfo);
     }
 
     public static deleteFileInfo(filename: string): void {
-        const fileInfo = ZoweLocalStorage.getValue<Record<string, IFileInfo>>("zowe.fileInfoCache") ?? {};
+        const fileInfo = ZoweLocalStorage.getValue<Record<string, IFileInfo>>(LocalStorageKey.FILE_INFO_CACHE) ?? {};
         delete fileInfo[filename];
-        ZoweLocalStorage.setValue("zowe.fileInfoCache", fileInfo);
+        ZoweLocalStorage.setValue(LocalStorageKey.FILE_INFO_CACHE, fileInfo);
     }
 }

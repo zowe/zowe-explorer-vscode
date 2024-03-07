@@ -31,7 +31,7 @@ import { Profiles } from "../../../src/Profiles";
 import * as utils from "../../../src/utils/ProfilesUtils";
 import { Gui, IZoweTreeNode, ProfilesCache, ZosEncoding } from "@zowe/zowe-explorer-api";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
-import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
+import { LocalStorageKey, ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
 import { LocalFileManagement } from "../../../src/utils/LocalFileManagement";
 
 async function createGlobalMocks() {
@@ -691,23 +691,29 @@ describe("Shared utils unit tests - function sortTreeItems", () => {
 describe("Shared utils unit tests - function updateOpenFiles", () => {
     const someTree = { openFiles: {} };
 
+    beforeAll(() => {
+        globals.defineGlobals("/");
+    });
+
     it("sets a file entry to null in the openFiles record", () => {
         const deleteFileInfoSpy = jest.spyOn(LocalFileManagement, "deleteFileInfo").mockImplementation();
-        sharedUtils.updateOpenFiles(someTree as any, "/a/doc/path", null);
-        expect(someTree.openFiles["/a/doc/path"]).toBeNull();
+        sharedUtils.updateOpenFiles(someTree as any, "/temp/_D_/dsname", null);
+        expect(someTree.openFiles["/temp/_D_/dsname"]).toBeNull();
         expect(deleteFileInfoSpy).toHaveBeenCalledTimes(1);
     });
 
     it("sets a file entry to a valid node in the openFiles record", () => {
         const storeFileInfoSpy = jest.spyOn(LocalFileManagement, "storeFileInfo").mockImplementation();
-        sharedUtils.updateOpenFiles(someTree as any, "/a/doc/path", { label: "testLabel" } as IZoweTreeNode);
-        expect(someTree.openFiles["/a/doc/path"].label).toBe("testLabel");
-        expect(storeFileInfoSpy).toHaveBeenCalledTimes(1);
+        sharedUtils.updateOpenFiles(someTree as any, "/temp/_D_/dsname", { label: "testDsLabel" } as IZoweTreeNode);
+        sharedUtils.updateOpenFiles(someTree as any, "/temp/_U_/fspath", { label: "testUssLabel" } as IZoweTreeNode);
+        expect(someTree.openFiles["/temp/_D_/dsname"].label).toBe("testDsLabel");
+        expect(someTree.openFiles["/temp/_U_/fspath"].label).toBe("testUssLabel");
+        expect(storeFileInfoSpy).toHaveBeenCalledTimes(2);
     });
 
     it("does nothing if openFiles is not defined", () => {
         someTree.openFiles = undefined as any;
-        sharedUtils.updateOpenFiles(someTree as any, "/a/doc/path", null);
+        sharedUtils.updateOpenFiles(someTree as any, "/temp/_D_/dsname", null);
         expect(someTree.openFiles).toBeUndefined();
     });
 });

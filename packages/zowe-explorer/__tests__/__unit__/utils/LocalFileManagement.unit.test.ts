@@ -11,7 +11,7 @@
 
 import * as vscode from "vscode";
 import { LocalFileManagement } from "../../../src/utils/LocalFileManagement";
-import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
+import { LocalStorageKey, ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
 import { IZoweTreeOpts } from "../../../src/shared/IZoweTreeOpts";
 import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
 import { TreeProviders } from "../../../src/shared/TreeProviders";
@@ -114,7 +114,7 @@ describe("LocalFileManagement Unit Tests", () => {
         dsNode.setEtag("fakeEtag");
         jest.spyOn(dsNode, "getDsDocumentFilePath").mockReturnValue("file:///abc.txt");
         LocalFileManagement.storeFileInfo(dsNode);
-        expect(blockMocks.storageUpdate).toHaveBeenLastCalledWith("zowe.fileInfoCache", {
+        expect(blockMocks.storageUpdate).toHaveBeenLastCalledWith(LocalStorageKey.FILE_INFO_CACHE, {
             "file:///abc.txt": {
                 binary: false,
                 encoding: null,
@@ -134,7 +134,7 @@ describe("LocalFileManagement Unit Tests", () => {
         ussNode.setEtag("fakeEtag");
         jest.spyOn(ussNode, "getUSSDocumentFilePath").mockReturnValue("file:///abc.txt");
         LocalFileManagement.storeFileInfo(ussNode);
-        expect(blockMocks.storageUpdate).toHaveBeenLastCalledWith("zowe.fileInfoCache", {
+        expect(blockMocks.storageUpdate).toHaveBeenLastCalledWith(LocalStorageKey.FILE_INFO_CACHE, {
             "file:///abc.txt": {
                 binary: true,
                 encoding: undefined,
