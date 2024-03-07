@@ -372,7 +372,7 @@ export namespace MainframeInteraction {
          * @param {string} owner
          * @returns {Promise<zosjobs.IJob[]>} an array if IJob
          */
-        getJobsByParameters?(params: zosjobs.IGetJobsParms): Promise<zosjobs.IJob[]>;
+        getJobsByParameters(params: zosjobs.IGetJobsParms): Promise<zosjobs.IJob[]>;
 
         /**
          * Returns meta-data for one specific job identified by id.

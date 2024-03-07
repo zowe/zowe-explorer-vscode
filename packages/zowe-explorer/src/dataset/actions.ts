@@ -125,7 +125,7 @@ export async function allocateLike(datasetProvider: Types.IZoweDatasetTreeType, 
     // Get new data set name
     const options: vscode.InputBoxOptions = {
         ignoreFocusOut: true,
-        placeHolder: vscode.l10n.t("allocateLike.inputBox.placeHolder", "Enter a name for the new data set"),
+        placeHolder: vscode.l10n.t("Enter a name for the new data set"),
         validateInput: (text) => {
             return dsUtils.validateDataSetName(text) === true ? null : vscode.l10n.t("Enter a valid data set name.");
         },
