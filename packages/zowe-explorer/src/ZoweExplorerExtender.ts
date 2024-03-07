@@ -22,6 +22,7 @@ import {
     ProfilesCache,
     IZoweExplorerTreeApi,
     imperative,
+    ZoweFsWatcher,
 } from "@zowe/zowe-explorer-api";
 import { getProfile, ProfilesUtils } from "./utils/ProfilesUtils";
 import { ZoweLogger } from "./utils/ZoweLogger";
@@ -108,6 +109,7 @@ export class ZoweExplorerExtender implements IApiExplorerExtender, IZoweExplorer
         ZoweExplorerExtender.instance.datasetProvider = datasetProvider;
         ZoweExplorerExtender.instance.ussFileProvider = ussFileProvider;
         ZoweExplorerExtender.instance.jobsProvider = jobsProvider;
+        ZoweFsWatcher.registerWatchers();
         return ZoweExplorerExtender.instance;
     }
 

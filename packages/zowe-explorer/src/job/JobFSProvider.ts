@@ -31,8 +31,6 @@ import { buildUniqueSpoolName } from "../SpoolProvider";
 import { IJob, IJobFile } from "@zowe/zos-jobs-for-zowe-sdk";
 
 export class JobFSProvider extends BaseProvider implements vscode.FileSystemProvider {
-    public onDidChangeFile: vscode.Event<vscode.FileChangeEvent[]>;
-
     private static _instance: JobFSProvider;
     private constructor() {
         super(Profiles.getInstance());
@@ -186,6 +184,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
             return;
         }
 
+        this._fireSoon({ type: vscode.FileChangeType.Changed, uri });
         spoolEntry.data = bufBuilder.read();
         if (editor) {
             await this._updateResourceInEditor(uri);

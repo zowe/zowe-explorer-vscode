@@ -390,7 +390,6 @@ export class ZosJobsProvider extends ZoweTreeProvider implements Types.IZoweJobT
                 job: new JobDetail(label),
             });
             favJob.contextValue = globals.JOBS_JOB_CONTEXT + globals.FAV_SUFFIX;
-            favJob.command = { command: "zowe.zosJobsSelectjob", title: "", arguments: [favJob] };
         } else {
             // for search
             favJob = new ZoweJobNode({
@@ -532,7 +531,6 @@ export class ZosJobsProvider extends ZoweTreeProvider implements Types.IZoweJobT
                 job: node.job,
             });
             favJob.contextValue = node.contextValue;
-            favJob.command = { command: "zowe.zosJobsSelectjob", title: "", arguments: [favJob] };
             this.createJobsFavorite(favJob);
         }
         const icon = getIconByNode(favJob);

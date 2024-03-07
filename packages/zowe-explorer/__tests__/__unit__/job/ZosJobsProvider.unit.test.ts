@@ -373,7 +373,6 @@ describe("ZosJobsProvider unit tests - Function initializeFavChildNodeForProfile
             job: new MockJobDetail("testJob(JOB123)"),
         });
         node.contextValue = globals.JOBS_JOB_CONTEXT + globals.FAV_SUFFIX;
-        node.command = { command: "zowe.zosJobsSelectjob", title: "", arguments: [node] };
         const targetIcon = getIconByNode(node);
         if (targetIcon) {
             node.iconPath = targetIcon.path;
