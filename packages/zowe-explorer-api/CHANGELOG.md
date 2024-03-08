@@ -8,6 +8,8 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### Bug fixes
 
+- Fixed TypeError encountered when iterating over the profiles by type in `ProfilesCache.checkMergingConfigAllProfiles`.
+
 ## `2.14.1`
 
 ### Bug fixes

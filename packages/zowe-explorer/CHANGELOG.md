@@ -8,6 +8,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
+- Fixed issue where VS Code quick pick separators were used in environments that did not support the feature.
+
 ## `2.14.1`
 
 ### Bug fixes
