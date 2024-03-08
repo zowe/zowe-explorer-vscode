@@ -547,11 +547,17 @@ describe("ZoweUSSNode Unit Tests - Function node.reopen()", () => {
 });
 
 describe("ZoweUSSNode Unit Tests - Function node.setEncoding()", () => {
+    const setEncodingForFileMock = jest.spyOn(UssFSProvider.instance, "setEncodingForFile").mockImplementation();
+
+    afterAll(() => {
+        setEncodingForFileMock.mockRestore();
+    });
+
     it("sets encoding to binary", () => {
         const node = new ZoweUSSNode({ label: "encodingTest", collapsibleState: vscode.TreeItemCollapsibleState.None });
         node.setEncoding({ kind: "binary" });
         expect(node.binary).toEqual(true);
-        expect(node.encoding).toBeUndefined();
+        expect(setEncodingForFileMock).toHaveBeenCalledWith(node.resourceUri, { kind: "binary" });
         expect(node.tooltip).toContain("Encoding: Binary");
         expect(node.contextValue).toEqual(globals.USS_BINARY_FILE_CONTEXT);
         expect(JSON.stringify(node.iconPath)).toContain("document-binary.svg");
@@ -561,7 +567,7 @@ describe("ZoweUSSNode Unit Tests - Function node.setEncoding()", () => {
         const node = new ZoweUSSNode({ label: "encodingTest", collapsibleState: vscode.TreeItemCollapsibleState.None });
         node.setEncoding({ kind: "text" });
         expect(node.binary).toEqual(false);
-        expect(node.encoding).toBeNull();
+        expect(setEncodingForFileMock).toHaveBeenCalledWith(node.resourceUri, { kind: "text" });
         expect(node.tooltip).not.toContain("Encoding:");
         expect(node.contextValue).toEqual(globals.USS_TEXT_FILE_CONTEXT);
     });
@@ -570,7 +576,7 @@ describe("ZoweUSSNode Unit Tests - Function node.setEncoding()", () => {
         const node = new ZoweUSSNode({ label: "encodingTest", collapsibleState: vscode.TreeItemCollapsibleState.None });
         node.setEncoding({ kind: "other", codepage: "IBM-1047" });
         expect(node.binary).toEqual(false);
-        expect(node.encoding).toEqual("IBM-1047");
+        expect(setEncodingForFileMock).toHaveBeenCalledWith(node.resourceUri, { kind: "other", codepage: "IBM-1047" });
         expect(node.tooltip).toContain("Encoding: IBM-1047");
     });
 
@@ -583,7 +589,7 @@ describe("ZoweUSSNode Unit Tests - Function node.setEncoding()", () => {
         const node = new ZoweUSSNode({ label: "encodingTest", collapsibleState: vscode.TreeItemCollapsibleState.None, parentNode });
         node.setEncoding({ kind: "text" });
         expect(node.binary).toEqual(false);
-        expect(node.encoding).toBeNull();
+        expect(setEncodingForFileMock).toHaveBeenCalledWith(node.resourceUri, { kind: "text" });
         expect(node.contextValue).toEqual(globals.USS_TEXT_FILE_CONTEXT + globals.FAV_SUFFIX);
     });
 
@@ -591,7 +597,7 @@ describe("ZoweUSSNode Unit Tests - Function node.setEncoding()", () => {
         const node = new ZoweUSSNode({ label: "encodingTest", collapsibleState: vscode.TreeItemCollapsibleState.None });
         node.setEncoding(undefined as any);
         expect(node.binary).toEqual(false);
-        expect(node.encoding).toBeUndefined();
+        expect(setEncodingForFileMock).toHaveBeenCalledWith(node.resourceUri, { kind: "text" });
     });
 
     it("fails to set encoding for session node", () => {

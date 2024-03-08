@@ -267,7 +267,7 @@ describe("readFile", () => {
     const getInfoFromUriMock = jest.spyOn((UssFSProvider as any).prototype, "_getInfoFromUri");
 
     it("throws an error when trying to read a file that doesn't have a profile registered", async () => {
-        lookupAsFileMock.mockResolvedValueOnce(testEntries.file);
+        lookupAsFileMock.mockReturnValueOnce(testEntries.file);
         getInfoFromUriMock.mockReturnValueOnce({
             profile: null,
             path: "/aFile.txt",
@@ -277,7 +277,7 @@ describe("readFile", () => {
     });
 
     it("returns data for a file", async () => {
-        lookupAsFileMock.mockResolvedValueOnce(testEntries.file);
+        lookupAsFileMock.mockReturnValueOnce(testEntries.file);
         getInfoFromUriMock.mockReturnValueOnce({
             profile: testProfile,
             path: "/aFile.txt",
@@ -288,7 +288,7 @@ describe("readFile", () => {
     });
 
     it("returns conflict data for a file with the conflict query parameter", async () => {
-        lookupAsFileMock.mockResolvedValueOnce(testEntries.file);
+        lookupAsFileMock.mockReturnValueOnce(testEntries.file);
         getInfoFromUriMock.mockReturnValueOnce({
             profile: testProfile,
             path: "/aFile.txt",
@@ -746,7 +746,7 @@ describe("copyTree", () => {
                 uploadFromBuffer: jest.fn(),
             };
             jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce(mockUssApi as any);
-            jest.spyOn((UssFSProvider as any).instance, "_lookup").mockResolvedValueOnce(testEntries.file);
+            jest.spyOn((UssFSProvider as any).instance, "_lookup").mockReturnValueOnce(testEntries.file);
             jest.spyOn((UssFSProvider as any).instance, "readFile").mockResolvedValueOnce(testEntries.file.data);
             await (UssFSProvider.instance as any).copyTree(
                 testUris.file,
@@ -782,7 +782,7 @@ describe("copyTree", () => {
                 uploadFromBuffer: jest.fn(),
             };
             jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce(mockUssApi as any);
-            jest.spyOn((UssFSProvider as any).instance, "_lookup").mockResolvedValueOnce(testEntries.file);
+            jest.spyOn((UssFSProvider as any).instance, "_lookup").mockReturnValueOnce(testEntries.file);
             jest.spyOn((UssFSProvider as any).instance, "readFile").mockResolvedValueOnce(testEntries.file.data);
             await (UssFSProvider.instance as any).copyTree(
                 testUris.file,

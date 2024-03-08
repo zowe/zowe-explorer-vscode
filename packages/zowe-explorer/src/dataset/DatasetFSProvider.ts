@@ -238,14 +238,17 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         return file.data;
     }
 
-    public getEncodingForFile(uri: vscode.Uri): ZosEncoding {
-        const fileEntry = this._lookupAsFile(uri);
-        return fileEntry.encoding;
-    }
-
-    public setEncodingForFile(uri: vscode.Uri, encoding: ZosEncoding): void {
-        const fileEntry = this._lookupAsFile(uri);
-        fileEntry.encoding = encoding;
+    public makeEmptyDsWithEncoding(uri: vscode.Uri, encoding: ZosEncoding): void {
+        const parentDir = this._lookupParentDirectory(uri);
+        const fileName = path.posix.basename(uri.path);
+        const entry = new DsEntry(fileName);
+        entry.encoding = encoding;
+        entry.metadata = new DsEntryMetadata({
+            ...parentDir.metadata,
+            path: path.posix.join(parentDir.metadata.path, fileName),
+        });
+        entry.data = new Uint8Array();
+        parentDir.entries.set(fileName, entry);
     }
 
     /**

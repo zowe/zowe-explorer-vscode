@@ -169,6 +169,12 @@ export interface IZoweDatasetTreeNode extends IZoweTreeNode {
      */
     openDs?(download: boolean, previewFile: boolean, datasetFileProvider: Types.IZoweDatasetTreeType): Promise<void>;
     /**
+     * Gets the codepage value for the file
+     *
+     * @param {string}
+     */
+    getEncoding?(): ZosEncoding;
+    /**
      * Sets the codepage value for the file
      *
      * @param {string}
@@ -233,7 +239,7 @@ export interface IZoweUSSTreeNode extends IZoweTreeNode {
      */
     rename?(newNamePath: string);
     /**
-     * Sets the codepage value for the file
+     * Gets the codepage value for the file
      *
      * @param {string}
      */

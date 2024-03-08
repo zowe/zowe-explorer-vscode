@@ -15,7 +15,7 @@ import * as fs from "fs";
 import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
 import { DatasetTree } from "../../../src/dataset/DatasetTree";
 import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
-import { Gui, imperative, IZoweDatasetTreeNode, ProfilesCache, Validation, Sorting } from "@zowe/zowe-explorer-api";
+import { Gui, imperative, IZoweDatasetTreeNode, ProfilesCache, Validation, Sorting, ZoweScheme } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { Profiles } from "../../../src/Profiles";
 import * as utils from "../../../src/utils/ProfilesUtils";
@@ -3229,32 +3229,37 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
 
 describe("Dataset Tree Unit Tests - Function openWithEncoding", () => {
     it("sets binary encoding if selection was made", async () => {
+        const setEncodingMock = jest.spyOn(DatasetFSProvider.instance, "setEncodingForFile").mockImplementation();
         const node = new ZoweDatasetNode({ label: "encodingTest", collapsibleState: vscode.TreeItemCollapsibleState.None });
         node.openDs = jest.fn();
         jest.spyOn(sharedUtils, "promptForEncoding").mockResolvedValueOnce({ kind: "binary" });
         await DatasetTree.prototype.openWithEncoding(node);
         expect(node.binary).toBe(true);
-        expect(node.encoding).toBeUndefined();
+        expect(setEncodingMock).toHaveBeenCalledWith(node.resourceUri, { kind: "binary" });
         expect(node.openDs).toHaveBeenCalledTimes(1);
+        setEncodingMock.mockRestore();
     });
 
     it("sets text encoding if selection was made", async () => {
+        const setEncodingMock = jest.spyOn(DatasetFSProvider.instance, "setEncodingForFile").mockImplementation();
         const node = new ZoweDatasetNode({ label: "encodingTest", collapsibleState: vscode.TreeItemCollapsibleState.None });
         node.openDs = jest.fn();
         jest.spyOn(sharedUtils, "promptForEncoding").mockResolvedValueOnce({ kind: "text" });
         await DatasetTree.prototype.openWithEncoding(node);
         expect(node.binary).toBe(false);
-        expect(node.encoding).toBeNull();
+        expect(setEncodingMock).toHaveBeenCalledWith(node.resourceUri, { kind: "text" });
         expect(node.openDs).toHaveBeenCalledTimes(1);
+        setEncodingMock.mockRestore();
     });
 
     it("does not set encoding if prompt was cancelled", async () => {
+        const setEncodingSpy = jest.spyOn(DatasetFSProvider.instance, "setEncodingForFile");
         const node = new ZoweDatasetNode({ label: "encodingTest", collapsibleState: vscode.TreeItemCollapsibleState.None });
         node.openDs = jest.fn();
         jest.spyOn(sharedUtils, "promptForEncoding").mockResolvedValueOnce(undefined);
         await DatasetTree.prototype.openWithEncoding(node);
         expect(node.binary).toBe(false);
-        expect(node.encoding).toBeUndefined();
+        expect(setEncodingSpy).not.toHaveBeenCalled();
         expect(node.openDs).toHaveBeenCalledTimes(0);
     });
 });

@@ -17,6 +17,7 @@ import { isDirectoryEntry, isFileEntry } from "./utils";
 import { Gui } from "../globals/Gui";
 import { ZoweVsCodeExtension } from "../vscode";
 import { ProfilesCache } from "../profiles";
+import { ZosEncoding } from "../tree";
 
 export class BaseProvider {
     // eslint-disable-next-line no-magic-numbers
@@ -34,53 +35,6 @@ export class BaseProvider {
 
     protected constructor(profilesCache?: ProfilesCache) {
         this._profilesCache = profilesCache ?? ZoweVsCodeExtension.profilesCache;
-    }
-
-    /**
-     * Builds the full URI in the tree. Helpful for creating entries when opening external links.
-     * @param uri The full URI to create within the provider
-     * @returns The entry to the newly-created file
-     */
-    protected async buildTreeForUri(uri: vscode.Uri): Promise<FileEntry> {
-        const segments = uri.path.split("/");
-
-        // Start building a new URI from the root
-        let currentUri = vscode.Uri.from({
-            scheme: uri.scheme,
-            path: `/`,
-        });
-        let currentNode: DirEntry | FileEntry = this.root;
-
-        // "Walk" down each segment of the given path to build the full file tree
-        for (let i = 0; i < segments.length; i++) {
-            const segment = segments[i];
-            if (segment.length == 0) {
-                continue;
-            }
-            const isLastSegment = i === segments.length - 1;
-
-            if (isFileEntry(currentNode)) {
-                if (isLastSegment) {
-                    return currentNode;
-                } else {
-                    throw vscode.FileSystemError.FileNotADirectory();
-                }
-            }
-
-            currentUri = currentUri.with({
-                path: path.posix.join(currentUri.path, segment),
-            });
-
-            if (currentNode == null && isLastSegment) {
-                // Final segment, node should be null - return a new FileEntry
-                return this._createFile(currentUri);
-            } else if (!isLastSegment && !currentNode?.entries.has(segment)) {
-                // Create a folder for the intermediate path segment
-                await vscode.workspace.fs.createDirectory(currentUri);
-            }
-
-            currentNode = this._lookup(currentUri, true) as DirEntry | FileEntry;
-        }
     }
 
     /**
@@ -196,6 +150,26 @@ export class BaseProvider {
         entry.entries.clear();
         this._lookupParentDirectory(uri).entries.delete(entry.name);
         return true;
+    }
+
+    /**
+     * Returns the encoding for a file entry matching the given URI.
+     * @param uri The URI that corresponds to an existing file entry
+     * @returns The encoding for the file
+     */
+    public getEncodingForFile(uri: vscode.Uri): ZosEncoding {
+        const fileEntry = this._lookupAsFile(uri);
+        return fileEntry.encoding;
+    }
+
+    /**
+     * Sets the encoding for a file entry matching the given URI.
+     * @param uri The URI that corresponds to an existing file entry
+     * @param encoding The new encoding for the file entry
+     */
+    public setEncodingForFile(uri: vscode.Uri, encoding: ZosEncoding): void {
+        const fileEntry = this._lookupAsFile(uri);
+        fileEntry.encoding = encoding;
     }
 
     /**

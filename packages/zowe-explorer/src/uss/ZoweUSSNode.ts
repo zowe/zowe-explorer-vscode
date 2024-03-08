@@ -284,24 +284,21 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         return UssFSProvider.instance.getEncodingForFile(this.resourceUri);
     }
 
-    public async setEncoding(encoding: ZosEncoding): Promise<void> {
+    public setEncoding(encoding: ZosEncoding): void {
         ZoweLogger.trace("ZoweUSSNode.setEncoding called.");
         if (!(this.contextValue.startsWith(globals.USS_BINARY_FILE_CONTEXT) || this.contextValue.startsWith(globals.USS_TEXT_FILE_CONTEXT))) {
             throw new Error(`Cannot set encoding for node with context ${this.contextValue}`);
         }
-        let newEncoding;
         if (encoding?.kind === "binary") {
             this.contextValue = globals.USS_BINARY_FILE_CONTEXT;
             this.binary = true;
-            newEncoding = undefined;
         } else {
             this.contextValue = globals.USS_TEXT_FILE_CONTEXT;
             this.binary = false;
-            newEncoding = encoding?.kind === "text" ? null : encoding?.codepage;
         }
-        await UssFSProvider.instance.setEncodingForFile(this.resourceUri, newEncoding);
-        if (newEncoding != null) {
-            this.getSessionNode().encodingMap[this.fullPath] = newEncoding;
+        UssFSProvider.instance.setEncodingForFile(this.resourceUri, encoding);
+        if (encoding != null) {
+            this.getSessionNode().encodingMap[this.fullPath] = encoding;
         } else {
             delete this.getSessionNode().encodingMap[this.fullPath];
         }

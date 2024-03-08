@@ -922,6 +922,12 @@ describe("USSTree Unit Tests - Function rename", () => {
         return newMocks;
     }
 
+    const getEncodingForFileMock = jest.spyOn(UssFSProvider.instance, "getEncodingForFile").mockReturnValue({ kind: "text" });
+
+    afterAll(() => {
+        getEncodingForFileMock.mockRestore();
+    });
+
     it("Tests that USSTree.rename() shows no error if an open dirty file's fullpath includes that of the node being renamed", async () => {
         // Open dirty file defined by globalMocks.mockTextDocumentDirty, with filepath including "sestest/test/node"
         const globalMocks = await createGlobalMocks();
@@ -1629,32 +1635,39 @@ describe("USSTree Unit Tests - Function openWithEncoding", () => {
     });
 
     it("sets binary encoding if selection was made", async () => {
+        const setEncodingMock = jest.spyOn(UssFSProvider.instance, "setEncodingForFile").mockImplementation();
         const node = new ZoweUSSNode({ label: "encodingTest", collapsibleState: vscode.TreeItemCollapsibleState.None });
         node.openUSS = jest.fn();
+        const setEncodingNodeMock = jest.spyOn(node, "setEncoding").mockImplementation();
         jest.spyOn(sharedUtils, "promptForEncoding").mockResolvedValueOnce({ kind: "binary" });
         await USSTree.prototype.openWithEncoding(node);
-        expect(node.binary).toBe(true);
-        expect(node.encoding).toBeUndefined();
+        expect(setEncodingNodeMock).toHaveBeenCalledWith({ kind: "binary" });
         expect(node.openUSS).toHaveBeenCalledTimes(1);
+        setEncodingMock.mockRestore();
+        setEncodingNodeMock.mockRestore();
     });
 
     it("sets text encoding if selection was made", async () => {
+        const setEncodingMock = jest.spyOn(UssFSProvider.instance, "setEncodingForFile").mockImplementation();
+        const getEncodingMock = jest.spyOn(UssFSProvider.instance, "getEncodingForFile").mockReturnValueOnce(null as any);
         const node = new ZoweUSSNode({ label: "encodingTest", collapsibleState: vscode.TreeItemCollapsibleState.None });
         node.openUSS = jest.fn();
         jest.spyOn(sharedUtils, "promptForEncoding").mockResolvedValueOnce({ kind: "text" });
         await USSTree.prototype.openWithEncoding(node);
         expect(node.binary).toBe(false);
-        expect(node.encoding).toBeNull();
+        expect(setEncodingMock).toHaveBeenCalledWith(node.resourceUri, { kind: "text" });
         expect(node.openUSS).toHaveBeenCalledTimes(1);
     });
 
     it("does not set encoding if prompt was cancelled", async () => {
+        const setEncodingSpy = jest.spyOn(UssFSProvider.instance, "setEncodingForFile").mockClear();
+        const getEncodingMock = jest.spyOn(UssFSProvider.instance, "getEncodingForFile").mockReturnValueOnce(null as any);
         const node = new ZoweUSSNode({ label: "encodingTest", collapsibleState: vscode.TreeItemCollapsibleState.None });
         node.openUSS = jest.fn();
         jest.spyOn(sharedUtils, "promptForEncoding").mockResolvedValueOnce(undefined);
         await USSTree.prototype.openWithEncoding(node);
         expect(node.binary).toBe(false);
-        expect(node.encoding).toBeUndefined();
+        expect(setEncodingSpy).not.toHaveBeenCalled();
         expect(node.openUSS).toHaveBeenCalledTimes(0);
     });
 });

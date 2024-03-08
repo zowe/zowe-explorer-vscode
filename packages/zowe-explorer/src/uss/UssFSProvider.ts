@@ -328,12 +328,9 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
     public makeEmptyFileWithEncoding(uri: vscode.Uri, encoding: ZosEncoding): void {
         const parentDir = this._lookupParentDirectory(uri);
-        //const encodingValue = encoding.kind === "other" ? encoding.codepage : null;
         const fileName = path.posix.basename(uri.path);
         const entry = new UssFile(fileName);
         entry.encoding = encoding;
-        // Build the metadata for the file using the parent's metadata (if available),
-        // or build it using the helper function
         entry.metadata = {
             ...parentDir.metadata,
             path: path.posix.join(parentDir.metadata.path, fileName),
@@ -423,16 +420,6 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         parent.size -= 1;
 
         this._fireSoon({ type: vscode.FileChangeType.Changed, uri: parentUri }, { uri, type: vscode.FileChangeType.Deleted });
-    }
-
-    public getEncodingForFile(uri: vscode.Uri): ZosEncoding {
-        const fileEntry = this._lookupAsFile(uri);
-        return fileEntry.encoding;
-    }
-
-    public setEncodingForFile(uri: vscode.Uri, encoding: ZosEncoding): void {
-        const fileEntry = this._lookupAsFile(uri);
-        fileEntry.encoding = encoding;
     }
 
     public async copy(source: vscode.Uri, destination: vscode.Uri, options: { readonly overwrite: boolean }): Promise<void> {

@@ -17,7 +17,7 @@ import { ZoweLogger } from "../utils/ZoweLogger";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { imperative, IZoweUSSTreeNode, ZosEncoding } from "@zowe/zowe-explorer-api";
 
-function zosEncodingToString(encoding: ZosEncoding): string {
+export function zosEncodingToString(encoding: ZosEncoding): string {
     switch (encoding.kind) {
         case "binary":
             return vscode.l10n.t("Binary");
@@ -47,7 +47,7 @@ export function injectAdditionalDataToTooltip(node: ZoweUSSNode, tooltip: string
             });
     }
 
-    const encodingString = zosEncodingToString(node.getEncoding());
+    const encodingString = node.getEncoding() ? zosEncodingToString(node.getEncoding()) : null;
     if (encodingString != null) {
         tooltip +=
             "  \n" +
@@ -97,8 +97,8 @@ export async function autoDetectEncoding(node: IZoweUSSTreeNode, profile?: imper
         const taggedEncoding = await ussApi.getTag(node.fullPath);
         if (taggedEncoding === "binary" || taggedEncoding === "mixed") {
             await node.setEncoding({ kind: "binary" });
-        } else {
-            await node.setEncoding(taggedEncoding !== "untagged" ? { kind: "other", codepage: taggedEncoding } : undefined);
+        } else if (taggedEncoding !== "untagged") {
+            await node.setEncoding({ kind: "other", codepage: taggedEncoding });
         }
     } else {
         const isBinary = await ussApi.isFileTagBinOrAscii(node.fullPath);

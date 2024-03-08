@@ -17,6 +17,7 @@ import * as globals from "../globals";
 import { Gui, IZoweTreeNode, IZoweDatasetTreeNode, IZoweUSSTreeNode, IZoweJobTreeNode, IZoweTree, Types, ZosEncoding } from "@zowe/zowe-explorer-api";
 import { ZoweLogger } from "../utils/ZoweLogger";
 import { ZoweLocalStorage } from "../utils/ZoweLocalStorage";
+import { zosEncodingToString } from "../uss/utils";
 
 export enum JobSubmitDialogOpts {
     Disabled,
@@ -290,10 +291,11 @@ export async function promptForEncoding(node: IZoweDatasetTreeNode | IZoweUSSTre
         });
     }
 
-    let currentEncoding = node.encoding ?? getCachedEncoding(node);
+    const zosEncoding = node.getEncoding();
+    let currentEncoding = zosEncoding ? zosEncodingToString(zosEncoding) : getCachedEncoding(node);
     if (node.binary || currentEncoding === "binary") {
         currentEncoding = binaryItem.label;
-    } else if (node.encoding === null || currentEncoding === "text") {
+    } else if (zosEncoding === null || currentEncoding === "text") {
         currentEncoding = ebcdicItem.label;
     }
     const encodingHistory = ZoweLocalStorage.getValue<string[]>("zowe.encodingHistory") ?? [];

@@ -18,6 +18,7 @@ import * as sharedExtension from "../../../src/shared/init";
 import { initDatasetProvider } from "../../../src/dataset/init";
 import { Profiles } from "../../../src/Profiles";
 import { IJestIt, ITestContext, processSubscriptions } from "../../__common__/testUtils";
+import { ZoweScheme } from "@zowe/zowe-explorer-api";
 
 describe("Test src/dataset/extension", () => {
     describe("initDatasetProvider", () => {

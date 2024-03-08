@@ -28,6 +28,7 @@ import * as fs from "fs";
 import * as sharedUtils from "../../../src/shared/utils";
 import { Profiles } from "../../../src/Profiles";
 import { ZoweLogger } from "../../../src/utils/ZoweLogger";
+import { DatasetFSProvider } from "../../../src/dataset/DatasetFSProvider";
 
 // Missing the definition of path module, because I need the original logic for tests
 jest.mock("fs");
@@ -278,25 +279,31 @@ describe("ZoweDatasetNode Unit Tests - Function node.openDs()", () => {
 });
 
 describe("ZoweDatasetNode Unit Tests - Function node.setEncoding()", () => {
+    const setEncodingForFileMock = jest.spyOn(DatasetFSProvider.instance, "setEncodingForFile").mockImplementation();
+
+    afterAll(() => {
+        setEncodingForFileMock.mockRestore();
+    });
+
     it("sets encoding to binary", () => {
         const node = new ZoweDatasetNode({ label: "encodingTest", collapsibleState: vscode.TreeItemCollapsibleState.None });
         node.setEncoding({ kind: "binary" });
         expect(node.binary).toEqual(true);
-        expect(node.encoding).toBeUndefined();
+        expect(setEncodingForFileMock).toHaveBeenCalledWith(node.resourceUri, { kind: "binary" });
     });
 
     it("sets encoding to text", () => {
         const node = new ZoweDatasetNode({ label: "encodingTest", collapsibleState: vscode.TreeItemCollapsibleState.None });
         node.setEncoding({ kind: "text" });
         expect(node.binary).toEqual(false);
-        expect(node.encoding).toBeNull();
+        expect(setEncodingForFileMock).toHaveBeenCalledWith(node.resourceUri, { kind: "text" });
     });
 
     it("sets encoding to other codepage", () => {
         const node = new ZoweDatasetNode({ label: "encodingTest", collapsibleState: vscode.TreeItemCollapsibleState.None });
         node.setEncoding({ kind: "other", codepage: "IBM-1047" });
         expect(node.binary).toEqual(false);
-        expect(node.encoding).toEqual("IBM-1047");
+        expect(setEncodingForFileMock).toHaveBeenCalledWith(node.resourceUri, { kind: "other", codepage: "IBM-1047" });
     });
 
     it("sets encoding for favorite node", () => {
@@ -308,14 +315,14 @@ describe("ZoweDatasetNode Unit Tests - Function node.setEncoding()", () => {
         const node = new ZoweDatasetNode({ label: "encodingTest", collapsibleState: vscode.TreeItemCollapsibleState.None, parentNode });
         node.setEncoding({ kind: "text" });
         expect(node.binary).toEqual(false);
-        expect(node.encoding).toBeNull();
+        expect(setEncodingForFileMock).toHaveBeenCalledWith(node.resourceUri, { kind: "text" });
     });
 
     it("resets encoding to undefined", () => {
         const node = new ZoweDatasetNode({ label: "encodingTest", collapsibleState: vscode.TreeItemCollapsibleState.None });
         node.setEncoding(undefined as any);
         expect(node.binary).toEqual(false);
-        expect(node.encoding).toBeUndefined();
+        expect(setEncodingForFileMock).toHaveBeenCalledWith(node.resourceUri, undefined);
     });
 
     it("fails to set encoding for session node", () => {

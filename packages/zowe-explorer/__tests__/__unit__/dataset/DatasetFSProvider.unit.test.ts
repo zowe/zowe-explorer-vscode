@@ -275,6 +275,8 @@ describe("writeFile", () => {
         expect(lookupParentDirMock).toHaveBeenCalledWith(testUris.ps);
         expect(statusMsgMock).toHaveBeenCalledWith("$(sync~spin) Saving data set...");
         expect(mockMvsApi.uploadFromBuffer).toHaveBeenCalledWith(Buffer.from(newContents), testEntries.ps.name, {
+            binary: false,
+            encoding: undefined,
             etag: testEntries.ps.etag,
             returnEtag: true,
         });
@@ -322,6 +324,11 @@ describe("writeFile", () => {
     });
 
     it("throws an error if entry doesn't exist and 'create' option is false", async () => {
+        const session = {
+            ...testEntries.session,
+            entries: new Map(),
+        };
+        const lookupParentDirMock = jest.spyOn(DatasetFSProvider.instance as any, "_lookupParentDirectory").mockReturnValueOnce(session);
         await expect(DatasetFSProvider.instance.writeFile(testUris.ps, new Uint8Array([]), { create: false, overwrite: true })).rejects.toThrow(
             "file not found"
         );

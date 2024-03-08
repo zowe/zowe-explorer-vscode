@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { BaseProvider, ConflictViewSelection, DirEntry, FileEntry, ZoweScheme } from "../../../src/fs";
+import { BaseProvider, ConflictViewSelection, DirEntry, ZoweScheme } from "../../../src/fs";
 import { Gui } from "../../../src/globals";
 import isEqual from "lodash.isequal";
 import { MockedProperty, mocked } from "../../../__mocks__/mockUtils";
@@ -46,95 +46,6 @@ function getGlobalMocks() {
 }
 const globalMocks = getGlobalMocks();
 
-describe("buildTreeForUri", () => {
-    it("calls createDirectory/createFile when building the tree", async () => {
-        const prov = new (BaseProvider as any)();
-        prov.root = new DirEntry("");
-        const meta = { profile: { name: "testProfile" } as any };
-        prov.root.metadata = {
-            ...meta,
-            path: "/",
-        };
-        const testProfileEntry = new DirEntry("testProfile");
-        testProfileEntry.metadata = {
-            ...meta,
-            path: "/testProfile",
-        };
-        prov.root.entries.set("testProfile", testProfileEntry);
-        const createFileMock = jest.spyOn((BaseProvider as any).prototype, "_createFile").mockImplementationOnce(() => {
-            const dFile = new FileEntry("d.txt");
-            dFile.metadata = {
-                ...meta,
-                path: "/testProfile/a/b/c/d.txt",
-            };
-            return dFile;
-        });
-        const createDirMock = jest.spyOn(vscode.workspace.fs, "createDirectory").mockImplementation();
-        const lookupMock = jest
-            .spyOn((BaseProvider as any).prototype, "_lookup")
-            .mockImplementationOnce(() => {
-                const bDir = new DirEntry("a");
-                bDir.metadata = {
-                    ...meta,
-                    path: "/testProfile/a",
-                };
-                return bDir;
-            })
-            .mockImplementationOnce(() => {
-                const bDir = new DirEntry("b");
-                bDir.metadata = {
-                    ...meta,
-                    path: "/testProfile/a/b",
-                };
-                return bDir;
-            })
-            .mockImplementationOnce(() => {
-                const cDir = new DirEntry("c");
-                cDir.metadata = {
-                    ...meta,
-                    path: "/testProfile/a/b/c",
-                };
-                return cDir;
-            });
-
-        expect(
-            (
-                await prov.buildTreeForUri(
-                    vscode.Uri.from({
-                        scheme: ZoweScheme.USS,
-                        path: "/testProfile/a/b/c/d.txt",
-                    })
-                )
-            ).name
-        ).toBe("d.txt");
-        expect(createDirMock).toHaveBeenCalledWith(
-            vscode.Uri.from({
-                scheme: ZoweScheme.USS,
-                path: "/testProfile/a",
-            })
-        );
-        expect(createDirMock).toHaveBeenCalledWith(
-            vscode.Uri.from({
-                scheme: ZoweScheme.USS,
-                path: "/testProfile/a/b",
-            })
-        );
-        expect(createDirMock).toHaveBeenCalledWith(
-            vscode.Uri.from({
-                scheme: ZoweScheme.USS,
-                path: "/testProfile/a/b/c",
-            })
-        );
-        expect(createFileMock).toHaveBeenCalledWith(
-            vscode.Uri.from({
-                scheme: ZoweScheme.USS,
-                path: "/testProfile/a/b/c/d.txt",
-            })
-        );
-        expect(lookupMock).toHaveBeenCalledTimes(4);
-    });
-});
-
 describe("diffOverwrite", () => {
     function getBlockMocks() {
         return {
@@ -154,7 +65,7 @@ describe("diffOverwrite", () => {
             },
         };
         const statusBarMsgMock = jest.spyOn(Gui, "setStatusBarMessage").mockImplementation();
-        blockMocks.lookupAsFileMock.mockResolvedValueOnce(fsEntry);
+        blockMocks.lookupAsFileMock.mockReturnValueOnce(fsEntry);
 
         const prov = new (BaseProvider as any)();
         await prov.diffOverwrite(globalMocks.testFileUri);
@@ -173,7 +84,7 @@ describe("diffOverwrite", () => {
 
     it("returns early if the URI is not present in the file system", async () => {
         const blockMocks = getBlockMocks();
-        blockMocks.lookupAsFileMock.mockResolvedValueOnce(undefined);
+        blockMocks.lookupAsFileMock.mockReturnValueOnce(undefined);
         const prov = new (BaseProvider as any)();
         await prov.diffOverwrite(globalMocks.testFileUri);
         expect(blockMocks.lookupAsFileMock).toHaveBeenCalledWith(globalMocks.testFileUri);
@@ -182,15 +93,14 @@ describe("diffOverwrite", () => {
 });
 
 describe("diffUseRemote", () => {
-    function getBlockMocks() {
+    function getBlockMocks(prov) {
         return {
-            lookupAsFileMock: jest.spyOn((BaseProvider as any).prototype, "_lookupAsFile"),
+            lookupAsFileMock: jest.spyOn(prov, "_lookupAsFile"),
             writeFileMock: jest.spyOn(vscode.workspace.fs, "writeFile").mockImplementation(),
         };
     }
 
     it("calls writeFile if the final data is different from the conflict data", async () => {
-        const blockMocks = getBlockMocks();
         const conflictArr = new Uint8Array([4, 5, 6]);
         const fsEntry = {
             ...globalMocks.fileFsEntry,
@@ -202,9 +112,10 @@ describe("diffUseRemote", () => {
         };
         const statusBarMsgMock = jest.spyOn(Gui, "setStatusBarMessage").mockImplementation();
         const executeCommandMock = jest.spyOn(vscode.commands, "executeCommand").mockResolvedValueOnce(undefined);
-        blockMocks.lookupAsFileMock.mockResolvedValueOnce(fsEntry);
 
         const prov = new (BaseProvider as any)();
+        const blockMocks = getBlockMocks(prov);
+        blockMocks.lookupAsFileMock.mockReturnValueOnce(fsEntry);
         await prov.diffUseRemote(globalMocks.testFileUri);
 
         expect(blockMocks.lookupAsFileMock).toHaveBeenCalled();
@@ -221,7 +132,6 @@ describe("diffUseRemote", () => {
     });
 
     it("does not call writeFile if the final data is the same as the conflict data", async () => {
-        const blockMocks = getBlockMocks();
         const fsEntry = {
             ...globalMocks.fileFsEntry,
             conflictData: {
@@ -232,10 +142,11 @@ describe("diffUseRemote", () => {
         };
         const statusBarMsgMock = jest.spyOn(Gui, "setStatusBarMessage").mockImplementation();
         const executeCommandMock = jest.spyOn(vscode.commands, "executeCommand").mockResolvedValueOnce(undefined);
-        blockMocks.lookupAsFileMock.mockResolvedValueOnce(fsEntry);
         mocked(isEqual).mockReturnValueOnce(true);
 
         const prov = new (BaseProvider as any)();
+        const blockMocks = getBlockMocks(prov);
+        blockMocks.lookupAsFileMock.mockReturnValueOnce(fsEntry);
         await prov.diffUseRemote(globalMocks.testFileUri);
 
         expect(blockMocks.lookupAsFileMock).toHaveBeenCalled();
@@ -246,9 +157,9 @@ describe("diffUseRemote", () => {
     });
 
     it("returns early if the URI is not present in the file system", async () => {
-        const blockMocks = getBlockMocks();
-        blockMocks.lookupAsFileMock.mockResolvedValueOnce(undefined);
         const prov = new (BaseProvider as any)();
+        const blockMocks = getBlockMocks(prov);
+        blockMocks.lookupAsFileMock.mockReturnValueOnce(undefined);
         await prov.diffUseRemote(globalMocks.testFileUri);
         expect(blockMocks.lookupAsFileMock).toHaveBeenCalledWith(globalMocks.testFileUri);
         expect(blockMocks.writeFileMock).not.toHaveBeenCalled();
@@ -280,6 +191,16 @@ describe("exists", () => {
         const prov: BaseProvider = new (BaseProvider as any)();
         expect(prov.exists(globalMocks.testFileUri)).toBe(false);
         expect(blockMocks.lookupMock).toHaveBeenCalledWith(globalMocks.testFileUri, true);
+    });
+});
+
+describe("getEncodingForFile", () => {
+    it("gets the encoding for a file entry", () => {
+        const prov = new (BaseProvider as any)();
+        const fileEntry = { ...globalMocks.fileFsEntry, encoding: { kind: "text" } };
+        const _lookupAsFileMock = jest.spyOn(prov, "_lookupAsFile").mockReturnValueOnce(fileEntry);
+        expect(prov.getEncodingForFile(globalMocks.testFileUri)).toStrictEqual({ kind: "text" });
+        _lookupAsFileMock.mockRestore();
     });
 });
 
@@ -355,6 +276,17 @@ describe("invalidateDirAtUri", () => {
     });
 });
 
+describe("setEncodingForFile", () => {
+    it("sets the encoding for a file entry", () => {
+        const prov = new (BaseProvider as any)();
+        const fileEntry = { ...globalMocks.fileFsEntry, encoding: undefined };
+        const _lookupAsFileMock = jest.spyOn(prov, "_lookupAsFile").mockReturnValueOnce(fileEntry);
+        prov.setEncodingForFile(globalMocks.testFileUri, { kind: "text" });
+        expect(fileEntry.encoding).toStrictEqual({ kind: "text" });
+        _lookupAsFileMock.mockRestore();
+    });
+});
+
 describe("_updateResourceInEditor", () => {
     it("executes vscode.open and workbench.action.files.revert commands", async () => {
         const prov = new (BaseProvider as any)();
@@ -417,18 +349,18 @@ describe("_lookupAsDirectory", () => {
 });
 
 describe("_lookupAsFile", () => {
-    it("returns a valid entry if it exists in the file system", async () => {
+    it("returns a valid entry if it exists in the file system", () => {
         const prov = new (BaseProvider as any)();
         prov.root = new DirEntry("");
         prov.root.entries.set("file.txt", globalMocks.fileFsEntry);
-        expect(await prov._lookupAsFile(globalMocks.testFileUri)).toStrictEqual(globalMocks.fileFsEntry);
+        expect(prov._lookupAsFile(globalMocks.testFileUri)).toStrictEqual(globalMocks.fileFsEntry);
     });
 
-    it("throws an error if the provided URI is a directory", async () => {
+    it("throws an error if the provided URI is a directory", () => {
         const prov = new (BaseProvider as any)();
         prov.root = new DirEntry("");
         prov.root.entries.set("folder", globalMocks.folderFsEntry);
-        await expect(prov._lookupAsFile(globalMocks.testFileUri)).rejects.toThrow("file is a directory");
+        expect((): any => prov._lookupAsFile(globalMocks.testFolderUri)).toThrow("file is a directory");
     });
 });
 

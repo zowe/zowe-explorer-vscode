@@ -631,7 +631,6 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
             parentPath: "/root",
         });
         node.setEncoding(binaryEncoding);
-        delete node.encoding; // Reset encoding property so that cache is used
         await sharedUtils.promptForEncoding(node);
         expect(blockMocks.showQuickPick).toHaveBeenCalled();
         expect(blockMocks.showQuickPick.mock.calls[0][1]).toEqual(expect.objectContaining({ placeHolder: "Current encoding is Binary" }));
@@ -646,7 +645,6 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
             profile: blockMocks.profile,
         });
         node.setEncoding(textEncoding);
-        delete node.encoding; // Reset encoding property so that cache is used
         await sharedUtils.promptForEncoding(node);
         expect(blockMocks.showQuickPick).toHaveBeenCalled();
         expect(blockMocks.showQuickPick.mock.calls[0][1]).toEqual(expect.objectContaining({ placeHolder: "Current encoding is EBCDIC" }));
@@ -667,7 +665,6 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
             contextOverride: globals.DS_MEMBER_CONTEXT,
         });
         node.setEncoding(otherEncoding);
-        delete node.encoding; // Reset encoding property so that cache is used
         await sharedUtils.promptForEncoding(node);
         expect(blockMocks.showQuickPick).toHaveBeenCalled();
         expect(blockMocks.showQuickPick.mock.calls[0][1]).toEqual(expect.objectContaining({ placeHolder: "Current encoding is IBM-1047" }));

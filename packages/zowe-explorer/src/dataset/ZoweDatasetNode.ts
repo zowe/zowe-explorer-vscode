@@ -49,7 +49,6 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     public dirty = true;
     public children: ZoweDatasetNode[] = [];
     public binary = false;
-    public encoding?: string;
     public encodingMap = {};
     public errorDetails: imperative.ImperativeError;
     public ongoingActions: Record<ZoweTreeNodeActions.Interactions | string, Promise<any>> = {};
@@ -67,8 +66,8 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     public constructor(opts: IZoweDatasetTreeOpts) {
         super(opts.label, opts.collapsibleState, opts.parentNode, opts.session, opts.profile);
         this.binary = opts.encoding?.kind === "binary";
-        if (!this.binary && opts.encoding != null) {
-            this.encoding = opts.encoding.kind === "other" ? opts.encoding.codepage : null;
+        if (opts.encoding != null) {
+            this.setEncoding(opts.encoding);
         }
         if (opts.contextOverride) {
             this.contextValue = opts.contextOverride;
@@ -133,6 +132,10 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 };
             } else {
                 this.resourceUri = null;
+            }
+
+            if (opts.encoding != null) {
+                DatasetFSProvider.instance.makeEmptyDsWithEncoding(this.resourceUri, opts.encoding);
             }
         }
     }
@@ -568,6 +571,10 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         }
     }
 
+    public getEncoding(): ZosEncoding {
+        return DatasetFSProvider.instance.getEncodingForFile(this.resourceUri);
+    }
+
     public setEncoding(encoding: ZosEncoding): void {
         ZoweLogger.trace("ZoweDatasetNode.setEncoding called.");
         if (!(this.contextValue.startsWith(globals.DS_DS_CONTEXT) || this.contextValue.startsWith(globals.DS_MEMBER_CONTEXT))) {
@@ -577,12 +584,11 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         if (encoding?.kind === "binary") {
             this.contextValue = isMemberNode ? globals.DS_MEMBER_BINARY_CONTEXT : globals.DS_DS_BINARY_CONTEXT;
             this.binary = true;
-            this.encoding = undefined;
         } else {
             this.contextValue = isMemberNode ? globals.DS_MEMBER_CONTEXT : globals.DS_DS_CONTEXT;
             this.binary = false;
-            this.encoding = encoding?.kind === "text" ? null : encoding?.codepage;
         }
+        DatasetFSProvider.instance.setEncodingForFile(this.resourceUri, encoding);
         const fullPath = isMemberNode ? `${this.getParent().label as string}(${this.label as string})` : (this.label as string);
         if (encoding != null) {
             this.getSessionNode().encodingMap[fullPath] = encoding;
