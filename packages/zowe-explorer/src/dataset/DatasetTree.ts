@@ -934,7 +934,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                             placeHolder: localize("searchHistory.options.prompt", "Select a filter"),
                         };
                         // get user selection
-                        const choice = await Gui.showQuickPick([createPick, globals.SEPARATORS.RECENT_FILTERS, ...items], options1);
+                        const choice = await Gui.showQuickPick([createPick, globals.SEPARATORS.RECENT_FILTERS, ...items].filter(Boolean), options1);
                         if (!choice) {
                             Gui.showMessage(localize("enterPattern.pattern", "No selection made. Operation cancelled."));
                             return;
@@ -942,7 +942,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                         pattern = choice === createPick ? "" : choice.label;
                     } else {
                         const quickpick = Gui.createQuickPick();
-                        quickpick.items = [createPick, globals.SEPARATORS.RECENT_FILTERS, ...items];
+                        quickpick.items = [createPick, globals.SEPARATORS.RECENT_FILTERS, ...items].filter(Boolean);
                         quickpick.placeholder = localize("searchHistory.options.prompt", "Select a filter");
                         quickpick.ignoreFocusOut = true;
                         quickpick.show();

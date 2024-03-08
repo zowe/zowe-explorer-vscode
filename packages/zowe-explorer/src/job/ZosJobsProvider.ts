@@ -681,7 +681,10 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
                 placeHolder: localize("searchHistory.options.prompt", "Select a filter"),
             };
             // get user selection
-            const choice = await Gui.showQuickPick([this.searchByQuery, this.searchById, globals.SEPARATORS.RECENT_FILTERS, ...items], selectFilter);
+            const choice = await Gui.showQuickPick(
+                [this.searchByQuery, this.searchById, globals.SEPARATORS.RECENT_FILTERS, ...items].filter(Boolean),
+                selectFilter
+            );
             if (!choice) {
                 Gui.showMessage(localize("enterPattern.pattern", "No selection made. Operation cancelled."));
                 return undefined;
@@ -691,7 +694,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
 
         // VSCode route to create a QuickPick
         const quickpick = Gui.createQuickPick();
-        quickpick.items = [this.searchByQuery, this.searchById, globals.SEPARATORS.RECENT_FILTERS, ...items];
+        quickpick.items = [this.searchByQuery, this.searchById, globals.SEPARATORS.RECENT_FILTERS, ...items].filter(Boolean);
         quickpick.placeholder = localize("searchHistory.options.prompt", "Select a filter");
         quickpick.ignoreFocusOut = true;
         quickpick.show();
@@ -949,7 +952,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         const editableItems: vscode.QuickPickItem[] = [
             new FilterItem({ text: ZosJobsProvider.submitJobQueryLabel, show: true }),
             globals.SEPARATORS.BLANK,
-        ];
+        ].filter(Boolean);
         jobProperties.forEach((prop) => {
             if (prop.key === "owner" && !prop.value) {
                 const session = node.getSession();

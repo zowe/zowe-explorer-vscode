@@ -452,7 +452,7 @@ export async function promptForEncoding(node: IZoweDatasetTreeNode | IZoweUSSTre
         label: localize("zowe.shared.utils.promptForEncoding.other.label", "Other"),
         description: localize("zowe.shared.utils.promptForEncoding.other.description", "Specify another codepage"),
     };
-    const items: vscode.QuickPickItem[] = [ebcdicItem, binaryItem, otherItem, globals.SEPARATORS.RECENT];
+    const items: vscode.QuickPickItem[] = [ebcdicItem, binaryItem, otherItem, globals.SEPARATORS.RECENT].filter(Boolean);
     const profile = node.getProfile();
     if (profile.profile?.encoding != null) {
         items.splice(0, 0, {
