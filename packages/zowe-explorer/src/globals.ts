@@ -293,7 +293,8 @@ export enum JobPickerTypes {
     History = "History",
 }
 
-export const ZE_VSC_ENGINE = "1.53";
+// Engine version defined in package.json for v2
+export const ZE_VSC_ENGINE = "1.53.2";
 export const [VSC_MAJOR, VSC_MINOR, VSC_PATCH] = (vscode.version || ZE_VSC_ENGINE).split(".").map(parseInt);
 export const SEPARATORS =
     VSC_MAJOR > 1 || VSC_MINOR >= 64
