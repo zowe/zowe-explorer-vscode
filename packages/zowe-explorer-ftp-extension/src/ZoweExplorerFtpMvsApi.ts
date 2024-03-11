@@ -64,10 +64,13 @@ export class FtpMvsApi extends AbstractFtpApi implements MainframeInteraction.IM
                 const response = await DataSetUtils.listMembers(connection, dataSetName);
                 if (response) {
                     result.success = true;
+                    // result.apiResponse.items = response;
                     result.apiResponse.items = response.map((element) => ({
                         member: element.name,
                         changed: element.changed,
                         created: element.created,
+                        size: element.size,
+                        version: element.version,
                         // id: element.id, // Removed in zos-node-accessor v2
                     }));
                 }

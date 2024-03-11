@@ -483,7 +483,7 @@ export class ProfilesUtils {
     public static async promptCredentials(node: IZoweTreeNode): Promise<void> {
         ZoweLogger.trace("ProfilesUtils.promptCredentials called.");
         const mProfileInfo = await globals.PROFILES_CACHE.getProfileInfo();
-        if (!imperative.ProfileInfo.onlyV1ProfilesExist && !mProfileInfo.getTeamConfig().properties.autoStore) {
+        if (!mProfileInfo.getTeamConfig().exists && !mProfileInfo.getTeamConfig().properties.autoStore) {
             const msg = vscode.l10n.t('"Update Credentials" operation not supported when "autoStore" is false');
             ZoweLogger.warn(msg);
             Gui.showMessage(msg);

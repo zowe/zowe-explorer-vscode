@@ -178,7 +178,9 @@ export class PersistentFilters {
     }
 
     public getDsTemplates(): Types.DataSetAllocTemplate[] {
-        const dsTemplateLines: Types.DataSetAllocTemplate[] = ZoweLocalStorage.getValue<PersistentFilter>(this.schema).templates;
+        const dsTemplateLines: Types.DataSetAllocTemplate[] =
+            // See https://github.com/zowe/vscode-extension-for-zowe/issues/2770
+            ZoweLocalStorage.getValue<PersistentFilter>(this.schema).templates ?? [];
         if (dsTemplateLines.length !== this.mDsTemplates.length) {
             this.mDsTemplates = dsTemplateLines;
         }
