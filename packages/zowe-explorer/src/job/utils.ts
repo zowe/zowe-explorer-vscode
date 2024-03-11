@@ -25,9 +25,9 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 export const JOB_SORT_OPTS = [
     localize("jobs.sortById", "$(list-ordered) Job ID (default)"),
     localize("jobs.sortByDateSubmitted", "$(calendar) Date Submitted"),
+    localize("jobs.sortByDateCompleted", "$(calendar) Date Completed"),
     localize("jobs.sortByName", "$(case-sensitive) Job Name"),
     localize("jobs.sortByReturnCode", "$(symbol-numeric) Return Code"),
-    localize("jobs.sortByTimeStamp", "$(clock) Time Stamp"),
     localize("setSortDirection", "$(fold) Sort Direction"),
 ];
 interface IJobExtendedOpts {
@@ -38,9 +38,9 @@ interface IJobExtendedOpts {
 export const JOB_SORT_KEYS: Record<JobSortOpts, keyof (IJob & IJobExtendedOpts)> = {
     [JobSortOpts.Id]: "jobid",
     [JobSortOpts.DateSubmitted]: "exec-submitted",
+    [JobSortOpts.DateCompleted]: "exec-ended",
     [JobSortOpts.Name]: "jobname",
     [JobSortOpts.ReturnCode]: "retcode",
-    [JobSortOpts.TimeStamp]: "exec-ended",
 };
 
 export const JOB_FILTER_OPTS = [

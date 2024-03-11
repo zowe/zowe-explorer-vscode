@@ -39,7 +39,7 @@ export type NodeSort = {
 export enum JobSortOpts {
     Id,
     DateSubmitted,
+    DateCompleted,
     Name,
     ReturnCode,
-    TimeStamp,
 }

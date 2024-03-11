@@ -256,7 +256,6 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
         return (x, y) => {
             const sortLessThan = sortOpts.direction == SortDirection.Ascending ? -1 : 1;
             const sortGreaterThan = sortLessThan * -1;
-
             const keyToSortBy = JOB_SORT_KEYS[sortOpts.method];
             let xCompare, yCompare;
             if (keyToSortBy === "retcode") {
@@ -268,11 +267,16 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
                 xCompare = x.job[keyToSortBy];
                 yCompare = y.job[keyToSortBy];
             }
-
+            if (keyToSortBy === "exec-ended") {
+                x.description = x.job["exec-ended"];
+                y.description = y.job["exec-ended"];
+            } else {
+                x.description = "";
+                y.description = "";
+            }
             if (xCompare === yCompare) {
                 return x.job["jobid"] > y.job["jobid"] ? sortGreaterThan : sortLessThan;
             }
-
             return xCompare > yCompare ? sortGreaterThan : sortLessThan;
         };
     }
