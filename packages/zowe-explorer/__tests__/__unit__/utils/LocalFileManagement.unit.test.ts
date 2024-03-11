@@ -29,6 +29,7 @@ describe("LocalFileManagement Unit Tests", () => {
 
         Object.defineProperty(LocalFileManagement, "recoveryDiagnostics", {
             value: {
+                has: jest.fn().mockReturnValue(true),
                 set: newMocks.diagnosticsSet,
                 delete: newMocks.diagnosticsDelete,
             },

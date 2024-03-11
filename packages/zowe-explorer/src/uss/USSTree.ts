@@ -27,6 +27,7 @@ import * as nls from "vscode-nls";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { TreeViewUtils } from "../utils/TreeViewUtils";
 import { TreeProviders } from "../shared/TreeProviders";
+import { LocalFileManagement } from "../utils/LocalFileManagement";
 
 // Set up localization
 nls.config({
@@ -950,6 +951,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
     public static onDidCloseTextDocument(this: void, doc: vscode.TextDocument): void {
         if (doc.uri.fsPath.includes(globals.USS_DIR)) {
             updateOpenFiles(TreeProviders.uss, doc.uri.fsPath, null);
+            LocalFileManagement.removeRecoveredFile(doc);
         }
     }
 

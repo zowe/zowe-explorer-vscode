@@ -195,6 +195,7 @@ async function createGlobalMocks() {
     } as any);
     jest.spyOn(LocalFileManagement, "storeFileInfo").mockImplementation();
     jest.spyOn(LocalFileManagement, "deleteFileInfo").mockImplementation();
+    jest.spyOn(LocalFileManagement, "removeRecoveredFile").mockImplementation();
 
     return globalMocks;
 }

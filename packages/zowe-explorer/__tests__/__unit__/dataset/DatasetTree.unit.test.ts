@@ -171,6 +171,7 @@ function createGlobalMocks() {
     Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
     jest.spyOn(LocalFileManagement, "storeFileInfo").mockImplementation();
     jest.spyOn(LocalFileManagement, "deleteFileInfo").mockImplementation();
+    jest.spyOn(LocalFileManagement, "removeRecoveredFile").mockImplementation();
 
     return globalMocks;
 }

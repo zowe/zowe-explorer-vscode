@@ -50,8 +50,10 @@ export class LocalFileManagement {
     }
 
     public static removeRecoveredFile(document: vscode.TextDocument): void {
-        this.recoveryDiagnostics.delete(document.uri);
-        this.recoveredFileCount--;
+        if (this.recoveryDiagnostics.has(document.uri)) {
+            this.recoveryDiagnostics.delete(document.uri);
+            this.recoveredFileCount--;
+        }
     }
 
     public static loadFileInfo(node: IZoweDatasetTreeNode | IZoweUSSTreeNode, filename: string): void {
@@ -79,7 +81,9 @@ export class LocalFileManagement {
 
     public static deleteFileInfo(filename: string): void {
         const fileInfo = ZoweLocalStorage.getValue<Record<string, IFileInfo>>(LocalStorageKey.FILE_INFO_CACHE) ?? {};
-        delete fileInfo[filename];
-        ZoweLocalStorage.setValue(LocalStorageKey.FILE_INFO_CACHE, fileInfo);
+        if (filename in fileInfo) {
+            delete fileInfo[filename];
+            ZoweLocalStorage.setValue(LocalStorageKey.FILE_INFO_CACHE, fileInfo);
+        }
     }
 }
