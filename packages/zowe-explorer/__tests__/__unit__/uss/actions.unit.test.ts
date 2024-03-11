@@ -39,6 +39,7 @@ import { createUssApi, bindUssApi } from "../../../__mocks__/mockCreators/api";
 import * as refreshActions from "../../../src/shared/refresh";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 import { AttributeView } from "../../../src/uss/AttributeView";
+import { mocked } from "../../../__mocks__/mockUtils";
 
 function createGlobalMocks() {
     const globalMocks = {
@@ -166,8 +167,6 @@ function createGlobalMocks() {
 
     return globalMocks;
 }
-// Idea is borrowed from: https://github.com/kulshekhar/ts-jest/blob/master/src/util/testing.ts
-const mocked = <T extends (...args: any[]) => any>(fn: T): jest.Mock<ReturnType<T>> => fn as any;
 
 describe("USS Action Unit Tests - Function createUSSNodeDialog", () => {
     async function createBlockMocks(globalMocks) {

@@ -156,6 +156,8 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
         // will be created with the appropriate meta data. If not called the user will
         // see errors when creating a profile of any type.
         const zoweDir = getZoweDir();
+        const workspaceDir = vscode.workspace.workspaceFolders?.[0];
+        const projectDir = workspaceDir ? getFullPath(workspaceDir.uri.fsPath) : undefined;
 
         /**
          * This should create initialize the loadedConfig if it is not already
@@ -164,15 +166,11 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
          * profile management.
          */
         let usingTeamConfig: boolean;
+        let profileInfo: zowe.imperative.ProfileInfo;
         try {
-            const mProfileInfo = await ProfilesUtils.getProfileInfo(globals.ISTHEIA);
-            if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders[0]) {
-                const rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
-                await mProfileInfo.readProfilesFromDisk({ homeDir: zoweDir, projectDir: getFullPath(rootPath) });
-            } else {
-                await mProfileInfo.readProfilesFromDisk({ homeDir: zoweDir, projectDir: undefined });
-            }
-            usingTeamConfig = mProfileInfo.usingTeamConfig;
+            profileInfo = await ProfilesUtils.getProfileInfo(globals.ISTHEIA);
+            await profileInfo.readProfilesFromDisk({ homeDir: zoweDir, projectDir });
+            usingTeamConfig = profileInfo.usingTeamConfig;
         } catch (error) {
             ZoweLogger.warn(error);
             if (error.toString().includes("Error parsing JSON")) {
@@ -181,7 +179,9 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
             ZoweExplorerExtender.showZoweConfigError(error.message);
         }
 
-        if (profileTypeConfigurations && !usingTeamConfig) {
+        const hasProfileTypes = profileTypeConfigurations != null && profileTypeConfigurations.length > 0;
+
+        if (!usingTeamConfig && hasProfileTypes) {
             const configOptions = Array.from(profileTypeConfigurations);
             const exists = fs.existsSync(path.join(zoweDir, "profiles", profileType));
             if (configOptions && !exists) {
@@ -191,12 +191,55 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
                 });
             }
         }
-        if (profileTypeConfigurations !== undefined) Profiles.getInstance().addToConfigArray(profileTypeConfigurations);
+
+        if (hasProfileTypes) {
+            Profiles.getInstance().addToConfigArray(profileTypeConfigurations);
+        }
+
+        // Check if schema needs updated when the end user is using a team config
+        if (usingTeamConfig) {
+            this.updateSchema(profileInfo, profileTypeConfigurations);
+        }
 
         // sequentially reload the internal profiles cache to satisfy all the newly added profile types
         await ZoweExplorerExtender.refreshProfilesQueue.add(async (): Promise<void> => {
             await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
         });
+    }
+
+    /**
+     * Adds new types to the Zowe schema.
+     * @param profileInfo a ProfileInfo object that has been prepared with `readProfilesFromDisk` (such as the one initialized in `initForZowe`).
+     * @param profileTypeConfigurations (optional) Profile type configurations to add to the schema
+     */
+    private updateSchema(
+        profileInfo: zowe.imperative.ProfileInfo,
+        profileTypeConfigurations?: zowe.imperative.ICommandProfileTypeConfiguration[]
+    ): void {
+        if (profileTypeConfigurations) {
+            try {
+                for (const typeConfig of profileTypeConfigurations) {
+                    const addResult = profileInfo.addProfileTypeToSchema(typeConfig.type, {
+                        schema: typeConfig.schema,
+                        sourceApp: "Zowe Explorer (for VS Code)",
+                    });
+                    if (addResult.info.length > 0) {
+                        Gui.warningMessage(addResult.info);
+                    }
+                }
+            } catch (err) {
+                // Only show an error if we failed to update the on-disk schema.
+                if (err.code === "EACCES" || err.code === "EPERM") {
+                    Gui.errorMessage(
+                        localize(
+                            "schema.cannotAccess",
+                            "Failed to update Zowe schema: insufficient permissions or read-only file. {0}",
+                            err.message ?? ""
+                        )
+                    );
+                }
+            }
+        }
     }
 
     /**
