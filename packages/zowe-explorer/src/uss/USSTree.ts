@@ -115,6 +115,8 @@ export class USSTree extends ZoweTreeProvider implements Types.IZoweUSSTreeType 
             return;
         }
 
+        const movingMsg = Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Moving USS files..."));
+
         // determine if any overwrites may occur
         const willOverwrite = Object.values(this.draggedNodes).reduce(
             (all, n) => all || target.children?.find((tc) => tc.label === n.label) != null,
@@ -132,6 +134,7 @@ export class USSTree extends ZoweTreeProvider implements Types.IZoweUSSTreeType 
                 }
             );
             if (resp == null || resp !== userOpts[0]) {
+                movingMsg.dispose();
                 return;
             }
         }
@@ -191,6 +194,7 @@ export class USSTree extends ZoweTreeProvider implements Types.IZoweUSSTreeType 
             this.refresh();
             await this.treeView.reveal(target, { expand: true });
         }
+        movingMsg.dispose();
         this.draggedNodes = {};
     }
 
