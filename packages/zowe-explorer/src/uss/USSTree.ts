@@ -16,6 +16,7 @@ import * as contextually from "../shared/context";
 import { FilterItem, FilterDescriptor, errorHandling, syncSessionNode } from "../utils/ProfilesUtils";
 import { sortTreeItems, getAppName, checkIfChildPath, updateOpenFiles, promptForEncoding } from "../shared/utils";
 import {
+    findDocMatchingUri,
     Gui,
     imperative,
     IZoweTree,
@@ -148,26 +149,46 @@ export class USSTree extends ZoweTreeProvider implements Types.IZoweUSSTreeType 
                 scheme: ZoweScheme.USS,
                 path: `/${target.getProfile().name}${target.fullPath}/${item.label as string}`,
             });
-            if (await UssFSProvider.instance.move(item.uri, newUriForNode)) {
-                // remove node from old parent and relocate to new parent
-                const oldParent = node.getParent();
-                oldParent.children = oldParent.children.filter((c) => c !== node);
-                this.nodeDataChanged(oldParent);
-                node.resourceUri = newUriForNode;
 
-                if (!multipleItems) {
-                    // fetch children for target
-                    this.refreshElement(target);
-                    target.dirty = true;
-                    const newNode = (await target.getChildren()).find((n: IZoweUSSTreeNode) => n.resourceUri === newUriForNode);
-                    if (newNode) {
-                        await this.treeView.reveal(newNode);
+            if (target.getProfile() !== node.getProfile()) {
+                // cross-LPAR, write the file on the new LPAR and delete from old LPAR
+                const isDir = contextually.isUssDirectory(node);
+                if (isDir) {
+                    // TODO: add support for cross-LPAR copy of directories
+                    // const filePaths = await ussFileStructure([node]);
+                    return;
+                } else {
+                    await UssFSProvider.instance.writeFile(
+                        newUriForNode.with({
+                            query: "forceUpload=true",
+                        }),
+                        await UssFSProvider.instance.readFile(node.resourceUri),
+                        { create: true, overwrite: true }
+                    );
+                }
+                await UssFSProvider.instance.delete(node.resourceUri, { recursive: isDir });
+            } else {
+                if (await UssFSProvider.instance.move(item.uri, newUriForNode)) {
+                    // remove node from old parent and relocate to new parent
+                    const oldParent = node.getParent();
+                    oldParent.children = oldParent.children.filter((c) => c !== node);
+                    this.nodeDataChanged(oldParent);
+                    node.resourceUri = newUriForNode;
+
+                    if (!multipleItems) {
+                        // fetch children for target
+                        this.refreshElement(target);
+                        target.dirty = true;
+                        const newNode = (await target.getChildren()).find((n: IZoweUSSTreeNode) => n.resourceUri === newUriForNode);
+                        if (newNode) {
+                            await this.treeView.reveal(newNode);
+                        }
                     }
                 }
             }
         }
         if (multipleItems) {
-            this.refreshElement(target);
+            this.refresh();
             await this.treeView.reveal(target, { expand: true });
         }
         this.draggedNodes = {};
@@ -1048,6 +1069,25 @@ export class USSTree extends ZoweTreeProvider implements Types.IZoweUSSTreeType 
             encoding = await promptForEncoding(node, taggedEncoding !== "untagged" ? taggedEncoding : undefined);
         }
         if (encoding !== undefined) {
+            const doc = findDocMatchingUri(node.resourceUri);
+            if (doc != null && doc.isDirty) {
+                const continueItem = vscode.l10n.t("Continue");
+                if (
+                    (await Gui.warningMessage(
+                        vscode.l10n.t(
+                            "{0} is opened and modified in the editor. By selecting 'Continue', the file's contents will be replaced.",
+                            node.label as string
+                        ),
+                        {
+                            items: [continueItem],
+                            vsCodeOpts: { modal: true },
+                        }
+                    )) !== continueItem
+                ) {
+                    return;
+                }
+            }
+
             await node.setEncoding(encoding);
             await node.openUSS(true, false, this);
         }

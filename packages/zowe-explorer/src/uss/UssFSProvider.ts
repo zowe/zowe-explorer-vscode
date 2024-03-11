@@ -179,6 +179,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             file.size = file.data.byteLength;
         }
 
+        this._fireSoon({ type: vscode.FileChangeType.Changed, uri: uri });
         if (options?.editor) {
             await this._updateResourceInEditor(uri);
         }
@@ -245,27 +246,27 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                 path: path.posix.join(parentDir.metadata.path, fileName),
             };
 
-            // if (content.byteLength > 0) {
-            //     const statusMsg = Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Saving USS file..."));
-            //     // user is trying to edit a file that was just deleted: make the API call
-            //     const ussApi = ZoweExplorerApiRegister.getUssApi(parentDir.metadata.profile);
-            //     const profileEncoding = entry.encoding ? null : entry.metadata.profile.profile?.encoding;
-            //     await ussApi.uploadFromBuffer(Buffer.from(content), entry.metadata.path, {
-            //         binary: entry.encoding?.kind === "binary",
-            //         encoding: entry.encoding?.kind === "other" ? entry.encoding.codepage : profileEncoding,
-            //         etag: undefined,
-            //         returnEtag: true,
-            //     });
+            if (content.byteLength > 0) {
+                const statusMsg = Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Saving USS file..."));
+                // user is trying to edit a file that was just deleted: make the API call
+                const ussApi = ZoweExplorerApiRegister.getUssApi(parentDir.metadata.profile);
+                const profileEncoding = entry.encoding ? null : entry.metadata.profile.profile?.encoding;
+                await ussApi.uploadFromBuffer(Buffer.from(content), entry.metadata.path, {
+                    binary: entry.encoding?.kind === "binary",
+                    encoding: entry.encoding?.kind === "other" ? entry.encoding.codepage : profileEncoding,
+                    etag: undefined,
+                    returnEtag: true,
+                });
 
-            //     // Update e-tag if write was successful.
-            //     // TODO: This call below can be removed once zowe.Upload.bufferToUssFile returns response headers.
-            //     // This is necessary at the moment on z/OSMF to fetch the new e-tag.
-            //     const newData = await ussApi.getContents(entry.metadata.path, {
-            //         returnEtag: true,
-            //     });
-            //     entry.etag = newData.apiResponse.etag;
-            //     statusMsg.dispose();
-            // }
+                // Update e-tag if write was successful.
+                // TODO: This call below can be removed once zowe.Upload.bufferToUssFile returns response headers.
+                // This is necessary at the moment on z/OSMF to fetch the new e-tag.
+                const newData = await ussApi.getContents(entry.metadata.path, {
+                    returnEtag: true,
+                });
+                entry.etag = newData.apiResponse.etag;
+                statusMsg.dispose();
+            }
             entry.data = content;
             parentDir.entries.set(fileName, entry);
             this._fireSoon({ type: vscode.FileChangeType.Created, uri });

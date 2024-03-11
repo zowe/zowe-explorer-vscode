@@ -506,7 +506,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      *
      * @param {IZoweTreeNode} node
      */
-    public async openUSS(_download: boolean, _previewFile: boolean, ussFileProvider: Types.IZoweUSSTreeType): Promise<void> {
+    public async openUSS(download: boolean, _previewFile: boolean, ussFileProvider: Types.IZoweUSSTreeType): Promise<void> {
         ZoweLogger.trace("ZoweUSSNode.openUSS called.");
         const errorMsg = vscode.l10n.t("open() called from invalid node.");
         switch (true) {
@@ -531,7 +531,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 ussFileProvider.addFileHistory(`[${this.getProfile().name}]: ${this.fullPath}`);
                 ussFileProvider.getTreeView().reveal(this, { select: true, focus: true, expand: false });
                 const statusMsg = Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Downloading USS file..."));
-                await this.initializeFileOpening(this.resourceUri);
+                await this.initializeFileOpening(download ? this.resourceUri.with({ query: "redownload=true" }) : this.resourceUri);
                 statusMsg.dispose();
             } catch (err) {
                 await errorHandling(err, this.getProfileName());
@@ -586,8 +586,18 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             return;
         }
 
+        const urlQuery = new URLSearchParams(uri.query);
         try {
-            await vscode.commands.executeCommand("vscode.open", uri);
+            if (urlQuery.has("redownload")) {
+                // if the encoding has changed, fetch the contents with the new encoding
+                await UssFSProvider.instance.fetchFileAtUri(uri);
+                await vscode.commands.executeCommand("vscode.open", uri.with({ query: "" }));
+                // TODO: find a better method to reload editor tab with new contents
+                vscode.commands.executeCommand("workbench.action.files.revert");
+            } else {
+                await vscode.commands.executeCommand("vscode.open", uri);
+            }
+
             this.downloaded = true;
         } catch (err) {
             ZoweLogger.warn(err);

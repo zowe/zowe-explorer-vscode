@@ -51,7 +51,7 @@ export class DsEntryMetadata implements EntryMetadata {
     }
 
     public get dsname(): string {
-        const segments = this.path.split("/");
+        const segments = this.path.split("/").filter(Boolean);
         return segments[1] ? `${segments[0]}(${segments[1]})` : segments[0];
     }
 }

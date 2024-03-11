@@ -285,7 +285,7 @@ export enum JobPickerTypes {
 
 export const SEPARATORS = {
     BLANK: { kind: vscode.QuickPickItemKind.Separator, label: "" },
-    RECENT: { kind: vscode.QuickPickItemKind.Separator, label: vscode.l10n.t("zowe.separator.recent", "Recent") },
+    RECENT: { kind: vscode.QuickPickItemKind.Separator, label: vscode.l10n.t("Recent") },
     RECENT_FILTERS: { kind: vscode.QuickPickItemKind.Separator, label: vscode.l10n.t(`Recent Filters`) },
     OPTIONS: { kind: vscode.QuickPickItemKind.Separator, label: vscode.l10n.t(`Options`) },
 };

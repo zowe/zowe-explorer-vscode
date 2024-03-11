@@ -46,6 +46,10 @@ export function getInfoForUri(uri: vscode.Uri, profilesCache?: ProfilesCache): U
     };
 }
 
+export function findDocMatchingUri(uri: vscode.Uri): vscode.TextDocument {
+    return vscode.workspace.textDocuments.find((doc) => doc.uri.toString() === uri.toString());
+}
+
 export function isDirectoryEntry(entry: any): entry is DirEntry {
     return entry != null && entry["type"] === vscode.FileType.Directory;
 }
