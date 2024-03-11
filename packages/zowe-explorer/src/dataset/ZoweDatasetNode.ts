@@ -541,7 +541,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         return responses;
     }
 
-    public async openDs(_forceDownload: boolean, _previewMember: boolean, datasetProvider: Types.IZoweDatasetTreeType): Promise<void> {
+    public async openDs(forceDownload: boolean, _previewMember: boolean, datasetProvider: Types.IZoweDatasetTreeType): Promise<void> {
         ZoweLogger.trace("ZoweDatasetNode.openDs called.");
         await datasetProvider.checkCurrentProfile(this);
         const invalidItem = vscode.l10n.t("Cannot download, item invalid.");
@@ -560,7 +560,15 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
 
         if (Profiles.getInstance().validProfile !== Validation.ValidationType.INVALID) {
             try {
-                await vscode.commands.executeCommand("vscode.open", this.resourceUri);
+                if (forceDownload) {
+                    // if the encoding has changed, fetch the contents with the new encoding
+                    await DatasetFSProvider.instance.fetchDatasetAtUri(this.resourceUri);
+                    await vscode.commands.executeCommand("vscode.open", this.resourceUri);
+                    // TODO: find a better method to reload editor tab with new contents
+                    vscode.commands.executeCommand("workbench.action.files.revert");
+                } else {
+                    await vscode.commands.executeCommand("vscode.open", this.resourceUri);
+                }
                 if (datasetProvider) {
                     datasetProvider.addFileHistory(`[${this.getProfileName()}]: ${this.label as string}`);
                 }
