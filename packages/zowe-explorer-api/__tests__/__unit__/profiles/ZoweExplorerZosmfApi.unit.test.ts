@@ -587,8 +587,9 @@ describe("ZosmfCommandApi", () => {
         },
         {
             name: "issueMvsCommand",
-            spy: jest.spyOn(zowe.IssueCommand, "issueSimple"),
-            args: ["command"],
+            spy: jest.spyOn(zowe.IssueCommand, "issue"),
+            args: ["command", "defcn"],
+            transform: (args) => [{ command: args[0], consoleName: args[1], processResponses: true }],
         },
     ];
     commandApis.forEach((commandApi) => {
