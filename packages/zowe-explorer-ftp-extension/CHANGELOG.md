@@ -6,6 +6,8 @@ All notable changes to the "zowe-explorer-ftp-extension" extension will be docum
 
 ### Bug fixes
 
+## `2.15.0`
+
 ## `2.14.1`
 
 ### Bug fixes

@@ -16,6 +16,10 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### Bug fixes
 
+## `2.15.0`
+
+### Bug fixes
+
 - Fix login and logout operations when APIML dynamic tokens are enabled. [#2692](https://github.com/zowe/vscode-extension-for-zowe/pull/2692)
 - Fixed issue where `zosmf` profiles did not respect the `protocol` property. [#2703](https://github.com/zowe/vscode-extension-for-zowe/issues/2703)
 - Fix to restore accessibility to all profiles when default profile has APIML token authentication. [#2111](https://github.com/zowe/vscode-extension-for-zowe/issues/2111)
