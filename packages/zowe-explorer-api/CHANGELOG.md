@@ -8,7 +8,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### Bug fixes
 
-- Fixed TypeError encountered when iterating over the profiles by type in `ProfilesCache.checkMergingConfigAllProfiles`.
+- Fixed TypeError encountered in the `ProfilesCache.checkMergingConfigAllProfiles` function when merging profiles. [#2771](https://github.com/zowe/vscode-extension-for-zowe/pull/2771)
 
 ## `2.14.1`
 
