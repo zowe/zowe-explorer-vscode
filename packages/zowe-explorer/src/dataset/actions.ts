@@ -1349,7 +1349,10 @@ export async function copyDataSets(node, nodeList: ZoweDatasetNode[], datasetPro
  * @export
  * @param {IZoweDatasetTreeNode} node - The node to migrate
  */
-export async function hMigrateDataSet(node: ZoweDatasetNode): Promise<zowe.IZosFilesResponse> {
+export async function hMigrateDataSet(
+    datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>,
+    node: ZoweDatasetNode
+): Promise<zowe.IZosFilesResponse> {
     ZoweLogger.trace("dataset.actions.hMigrateDataSet called.");
     await Profiles.getInstance().checkCurrentProfile(node.getProfile());
     if (Profiles.getInstance().validProfile !== api.ValidProfileEnum.INVALID) {
@@ -1357,6 +1360,9 @@ export async function hMigrateDataSet(node: ZoweDatasetNode): Promise<zowe.IZosF
         try {
             const response = await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).hMigrateDataSet(dataSetName);
             api.Gui.showMessage(localize("hMigrateDataSet.requestSent", "Migration of data set {0} requested.", dataSetName));
+            node.contextValue = globals.DS_MIGRATED_FILE_CONTEXT;
+            node.setIcon(getIconByNode(node).path);
+            datasetProvider.refresh();
             return response;
         } catch (err) {
             ZoweLogger.error(err);
@@ -1374,7 +1380,10 @@ export async function hMigrateDataSet(node: ZoweDatasetNode): Promise<zowe.IZosF
  * @export
  * @param {IZoweDatasetTreeNode} node - The node to recall
  */
-export async function hRecallDataSet(node: ZoweDatasetNode): Promise<zowe.IZosFilesResponse> {
+export async function hRecallDataSet(
+    datasetProvider: api.IZoweTree<api.IZoweDatasetTreeNode>,
+    node: ZoweDatasetNode
+): Promise<zowe.IZosFilesResponse> {
     ZoweLogger.trace("dataset.actions.hRecallDataSet called.");
     await Profiles.getInstance().checkCurrentProfile(node.getProfile());
     if (Profiles.getInstance().validProfile !== api.ValidProfileEnum.INVALID) {
@@ -1382,6 +1391,13 @@ export async function hRecallDataSet(node: ZoweDatasetNode): Promise<zowe.IZosFi
         try {
             const response = await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).hRecallDataSet(dataSetName);
             api.Gui.showMessage(localize("hRecallDataSet.requestSent", "Recall of data set {0} requested.", dataSetName));
+            if (node.collapsibleState !== vscode.TreeItemCollapsibleState.None) {
+                node.contextValue = globals.DS_PDS_CONTEXT;
+            } else {
+                node.contextValue = node.binary ? globals.DS_DS_BINARY_CONTEXT : globals.DS_DS_CONTEXT;
+            }
+            node.setIcon(getIconByNode(node).path);
+            datasetProvider.refresh();
             return response;
         } catch (err) {
             ZoweLogger.error(err);

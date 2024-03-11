@@ -6,6 +6,14 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
+- Updated sorting of PDS members to show items without stats at bottom of list [#2660](https://github.com/zowe/vscode-extension-for-zowe/issues/2660)
+
+### Bug fixes
+
+## `2.15.0`
+
+### New features and enhancements
+
 - Implemented sorting of PDS members by date created [#2707](https://github.com/zowe/vscode-extension-for-zowe/pull/2707)
 - Added the capability for extenders to contribute new profile types to the Zowe schema during extender activation. [#2508](https://github.com/zowe/vscode-extension-for-zowe/issues/2508)
 - Sort encoding by the latest encoding and filter any duplicate encoding if it already exists.
@@ -16,6 +24,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Adjusted order of 'Manage Profile' and 'Edit History' in the jobs tree's context menu to match the other trees. [#2670](https://github.com/zowe/vscode-extension-for-zowe/issues/2670)
 - Fixed issue where spools with duplicate DD names would overwrite each other causing less spools in job output view [#2315](https://github.com/zowe/vscode-extension-for-zowe/issues/2315)
 - To fix Strange behaviour with the Job label in Job Favorites [#2632](https://github.com/zowe/vscode-extension-for-zowe/issues/2632)
+- Fixed issue of migrate/recall icons and right-click options now update instantly upon selection, eliminating the need to reload VSCode [#2755](https://github.com/zowe/vscode-extension-for-zowe/issues/2755)
+- To fix error when user clicks on a favourited job [#2618](https://github.com/zowe/vscode-extension-for-zowe/issues/2618)
 
 ## `2.14.1`
 
