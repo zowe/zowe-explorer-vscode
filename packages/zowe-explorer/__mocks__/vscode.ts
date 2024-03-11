@@ -951,6 +951,7 @@ export class FileSystemError extends Error {
  * the editor-process so that they should be always used instead of nodejs-equivalents.
  */
 export namespace workspace {
+    export const textDocuments: TextDocument[] = [];
     /**
      * Register a filesystem provider for a given scheme, e.g. `ftp`.
      *

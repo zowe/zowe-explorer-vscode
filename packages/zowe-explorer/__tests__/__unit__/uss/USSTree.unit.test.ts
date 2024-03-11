@@ -63,8 +63,16 @@ async function createGlobalMocks() {
         mockDisableValidationContext: jest.fn(),
         mockEnableValidationContext: jest.fn(),
         mockCheckCurrentProfile: jest.fn(),
-        mockTextDocumentDirty: { fileName: `/test/path/temp/_U_/sestest/test/node`, isDirty: true },
-        mockTextDocumentClean: { fileName: `/test/path/temp/_U_/sestest/testClean/node`, isDirty: false },
+        mockTextDocumentDirty: {
+            fileName: `/test/path/temp/_U_/sestest/test/node`,
+            isDirty: true,
+            uri: vscode.Uri.from({ scheme: "file", path: "/test/path/temp/_U_/sestest/test/node" }),
+        },
+        mockTextDocumentClean: {
+            fileName: `/test/path/temp/_U_/sestest/testClean/node`,
+            isDirty: false,
+            uri: vscode.Uri.from({ scheme: "file", path: "/test/path/temp/_U_/sestest/testClean/node" }),
+        },
         mockTextDocuments: [],
         mockProfilesInstance: null,
         withProgress: jest.fn(),

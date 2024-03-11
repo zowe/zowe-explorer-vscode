@@ -888,6 +888,7 @@ export class FileSystemError extends Error {
  * the editor-process so that they should be always used instead of nodejs-equivalents.
  */
 export namespace workspace {
+    export const textDocuments: TextDocument[] = [];
     export function getConfiguration(configuration: string) {
         return {
             update: () => {
