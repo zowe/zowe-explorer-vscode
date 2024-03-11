@@ -47,7 +47,8 @@ export function injectAdditionalDataToTooltip(node: ZoweUSSNode, tooltip: string
             });
     }
 
-    const encodingString = node.getEncoding() ? zosEncodingToString(node.getEncoding()) : null;
+    const zosEncoding = node.getEncoding();
+    const encodingString = zosEncoding ? zosEncodingToString(zosEncoding) : null;
     if (encodingString != null) {
         tooltip +=
             "  \n" +

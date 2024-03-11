@@ -506,9 +506,9 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
             if (!fileEntry.wasAccessed) {
                 // must fetch contents of file first before pasting in new path
-                const fileContents = await this.readFile(source);
-                await api.uploadFromBuffer(Buffer.from(fileContents), outputPath);
+                await this.readFile(source);
             }
+            await api.uploadFromBuffer(Buffer.from(fileEntry.data), outputPath);
         }
     }
 

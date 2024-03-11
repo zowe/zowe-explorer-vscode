@@ -444,6 +444,7 @@ describe("ZoweUSSNode Unit Tests - Function node.rename()", () => {
                 job: { addSingleSession: jest.fn(), mSessionNodes: [], refresh: jest.fn() } as any,
             }),
             renameSpy: jest.spyOn(UssFSProvider.instance, "rename").mockImplementation(),
+            getEncodingForFile: jest.spyOn(UssFSProvider.instance as any, "getEncodingForFile").mockReturnValue(undefined),
         };
         newMocks.ussDir.contextValue = globals.USS_DIR_CONTEXT;
         return newMocks;
@@ -548,35 +549,46 @@ describe("ZoweUSSNode Unit Tests - Function node.reopen()", () => {
 
 describe("ZoweUSSNode Unit Tests - Function node.setEncoding()", () => {
     const setEncodingForFileMock = jest.spyOn(UssFSProvider.instance, "setEncodingForFile").mockImplementation();
+    const getEncodingMock = jest.spyOn(UssFSProvider.instance as any, "getEncodingForFile");
 
     afterAll(() => {
         setEncodingForFileMock.mockRestore();
     });
 
+    afterEach(() => {
+        getEncodingMock.mockReset();
+    });
+
     it("sets encoding to binary", () => {
+        const binaryEncoding = { kind: "binary" };
+        getEncodingMock.mockReturnValue(binaryEncoding);
         const node = new ZoweUSSNode({ label: "encodingTest", collapsibleState: vscode.TreeItemCollapsibleState.None });
-        node.setEncoding({ kind: "binary" });
+        node.setEncoding(binaryEncoding);
         expect(node.binary).toEqual(true);
-        expect(setEncodingForFileMock).toHaveBeenCalledWith(node.resourceUri, { kind: "binary" });
+        expect(setEncodingForFileMock).toHaveBeenCalledWith(node.resourceUri, binaryEncoding);
         expect(node.tooltip).toContain("Encoding: Binary");
         expect(node.contextValue).toEqual(globals.USS_BINARY_FILE_CONTEXT);
         expect(JSON.stringify(node.iconPath)).toContain("document-binary.svg");
     });
 
     it("sets encoding to text", () => {
+        const textEncoding = { kind: "text" };
+        getEncodingMock.mockReturnValue(textEncoding);
         const node = new ZoweUSSNode({ label: "encodingTest", collapsibleState: vscode.TreeItemCollapsibleState.None });
-        node.setEncoding({ kind: "text" });
+        node.setEncoding(textEncoding);
         expect(node.binary).toEqual(false);
-        expect(setEncodingForFileMock).toHaveBeenCalledWith(node.resourceUri, { kind: "text" });
+        expect(setEncodingForFileMock).toHaveBeenCalledWith(node.resourceUri, textEncoding);
         expect(node.tooltip).not.toContain("Encoding:");
         expect(node.contextValue).toEqual(globals.USS_TEXT_FILE_CONTEXT);
     });
 
     it("sets encoding to other codepage", () => {
+        const otherEncoding = { kind: "other", codepage: "IBM-1047" };
+        getEncodingMock.mockReturnValue(otherEncoding);
         const node = new ZoweUSSNode({ label: "encodingTest", collapsibleState: vscode.TreeItemCollapsibleState.None });
-        node.setEncoding({ kind: "other", codepage: "IBM-1047" });
+        node.setEncoding(otherEncoding);
         expect(node.binary).toEqual(false);
-        expect(setEncodingForFileMock).toHaveBeenCalledWith(node.resourceUri, { kind: "other", codepage: "IBM-1047" });
+        expect(setEncodingForFileMock).toHaveBeenCalledWith(node.resourceUri, otherEncoding);
         expect(node.tooltip).toContain("Encoding: IBM-1047");
     });
 
@@ -586,18 +598,21 @@ describe("ZoweUSSNode Unit Tests - Function node.setEncoding()", () => {
             collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
         });
         parentNode.contextValue = globals.FAV_PROFILE_CONTEXT;
+        const textEncoding = { kind: "text" };
+        getEncodingMock.mockReturnValue(textEncoding);
         const node = new ZoweUSSNode({ label: "encodingTest", collapsibleState: vscode.TreeItemCollapsibleState.None, parentNode });
-        node.setEncoding({ kind: "text" });
+        node.setEncoding(textEncoding);
         expect(node.binary).toEqual(false);
-        expect(setEncodingForFileMock).toHaveBeenCalledWith(node.resourceUri, { kind: "text" });
+        expect(setEncodingForFileMock).toHaveBeenCalledWith(node.resourceUri, textEncoding);
         expect(node.contextValue).toEqual(globals.USS_TEXT_FILE_CONTEXT + globals.FAV_SUFFIX);
     });
 
     it("resets encoding to undefined", () => {
         const node = new ZoweUSSNode({ label: "encodingTest", collapsibleState: vscode.TreeItemCollapsibleState.None });
+        getEncodingMock.mockReturnValue(undefined);
         node.setEncoding(undefined as any);
         expect(node.binary).toEqual(false);
-        expect(setEncodingForFileMock).toHaveBeenCalledWith(node.resourceUri, { kind: "text" });
+        expect(setEncodingForFileMock).toHaveBeenCalledWith(node.resourceUri, undefined);
     });
 
     it("fails to set encoding for session node", () => {

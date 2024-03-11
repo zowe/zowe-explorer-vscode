@@ -19,7 +19,7 @@ import { createDatasetSessionNode } from "../../../__mocks__/mockCreators/datase
 import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
 import { ZoweJobNode } from "../../../src/job/ZoweJobNode";
 import * as utils from "../../../src/utils/ProfilesUtils";
-import { Gui, imperative, IZoweTreeNode, ProfilesCache, ZosEncoding } from "@zowe/zowe-explorer-api";
+import { BaseProvider, Gui, imperative, IZoweTreeNode, ProfilesCache, ZosEncoding } from "@zowe/zowe-explorer-api";
 import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
 import { UssFSProvider } from "../../../src/uss/UssFSProvider";
 
@@ -486,6 +486,8 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
         const showQuickPick = jest.spyOn(Gui, "showQuickPick").mockResolvedValue(undefined);
         const localStorageGet = jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(undefined);
         const localStorageSet = jest.spyOn(ZoweLocalStorage, "setValue").mockReturnValue(undefined);
+        const getEncodingForFile = jest.spyOn((BaseProvider as any).prototype, "getEncodingForFile");
+        const setEncodingForFile = jest.spyOn((BaseProvider as any).prototype, "setEncodingForFile").mockReturnValue(undefined);
 
         return {
             profile: createIProfile(),
@@ -494,6 +496,8 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
             showQuickPick,
             localStorageGet,
             localStorageSet,
+            getEncodingForFile,
+            setEncodingForFile,
         };
     }
 
@@ -511,6 +515,7 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
             parentPath: "/root",
         });
         blockMocks.showQuickPick.mockImplementationOnce(async (items) => items[0]);
+        blockMocks.getEncodingForFile.mockReturnValueOnce(undefined);
         const encoding = await sharedUtils.promptForEncoding(node);
         expect(blockMocks.showQuickPick).toHaveBeenCalled();
         expect(encoding).toEqual(textEncoding);
@@ -592,6 +597,7 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
             parentPath: "/root",
         });
         node.setEncoding(textEncoding);
+        blockMocks.getEncodingForFile.mockReturnValueOnce(undefined);
         await sharedUtils.promptForEncoding(node);
         expect(blockMocks.showQuickPick).toHaveBeenCalled();
         expect(await blockMocks.showQuickPick.mock.calls[0][0][0]).toEqual({
@@ -611,6 +617,7 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
             parentPath: "/root",
         });
         node.setEncoding(otherEncoding);
+        blockMocks.getEncodingForFile.mockReturnValueOnce(otherEncoding);
         const encodingHistory = ["IBM-123", "IBM-456", "IBM-789"];
         blockMocks.localStorageGet.mockReturnValueOnce(encodingHistory);
         blockMocks.showQuickPick.mockImplementationOnce(async (items) => items[4]);
@@ -631,6 +638,7 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
             parentPath: "/root",
         });
         node.setEncoding(binaryEncoding);
+        blockMocks.getEncodingForFile.mockReturnValueOnce(binaryEncoding);
         await sharedUtils.promptForEncoding(node);
         expect(blockMocks.showQuickPick).toHaveBeenCalled();
         expect(blockMocks.showQuickPick.mock.calls[0][1]).toEqual(expect.objectContaining({ placeHolder: "Current encoding is Binary" }));
@@ -645,6 +653,7 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
             profile: blockMocks.profile,
         });
         node.setEncoding(textEncoding);
+        blockMocks.getEncodingForFile.mockReturnValueOnce(undefined);
         await sharedUtils.promptForEncoding(node);
         expect(blockMocks.showQuickPick).toHaveBeenCalled();
         expect(blockMocks.showQuickPick.mock.calls[0][1]).toEqual(expect.objectContaining({ placeHolder: "Current encoding is EBCDIC" }));
@@ -665,6 +674,7 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
             contextOverride: globals.DS_MEMBER_CONTEXT,
         });
         node.setEncoding(otherEncoding);
+        blockMocks.getEncodingForFile.mockReturnValueOnce(undefined);
         await sharedUtils.promptForEncoding(node);
         expect(blockMocks.showQuickPick).toHaveBeenCalled();
         expect(blockMocks.showQuickPick.mock.calls[0][1]).toEqual(expect.objectContaining({ placeHolder: "Current encoding is IBM-1047" }));
