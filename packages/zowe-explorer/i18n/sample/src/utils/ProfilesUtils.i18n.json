@@ -18,6 +18,7 @@
   "ProfilesUtils.promptAndHandleMissingCredentialManager.install": "Install",
   "ProfilesUtils.promptAndHandleMissingCredentialManager.refreshMessage": "After installing the extension, please make sure to reload your VS Code window in order\n                             to start using the installed credential manager",
   "ProfilesUtils.promptAndHandleMissingCredentialManager.refreshButton": "Reload",
+  "profiles.noValidSchema": "No valid schema was found for the active team configuration. This may introduce issues with profiles in Zowe Explorer.",
   "zowe.promptCredentials.notSupported": "\"Update Credentials\" operation not supported when \"autoStore\" is false",
   "createNewConnection.option.prompt.profileName.placeholder": "Connection Name",
   "createNewConnection.option.prompt.profileName": "Enter a name for the connection.",

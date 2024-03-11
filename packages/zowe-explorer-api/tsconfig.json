@@ -12,8 +12,10 @@
     "pretty": true,
     "sourceMap": true,
     "newLine": "lf",
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "composite": true,
+    "rootDir": "./src"
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*.ts", "src/log4jsconfig.json"],
   "exclude": ["lib", "node_modules"]
 }

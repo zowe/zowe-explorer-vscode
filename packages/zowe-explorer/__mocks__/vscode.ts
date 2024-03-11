@@ -279,6 +279,18 @@ export namespace window {
         return Promise.resolve("");
     }
 
+    /**
+     * Show a warning message to users. Optionally provide an array of items which will be presented as
+     * clickable buttons.
+     *
+     * @param message The message to show.
+     * @param items A set of items that will be rendered as actions in the message.
+     * @return A thenable that resolves to the selected item or `undefined` when being dismissed.
+     */
+    export function showWarningMessage(message: string, ...items: string[]): Thenable<string> {
+        return Promise.resolve("");
+    }
+
     export function showTextDocument(document: TextDocument, column?: ViewColumn, preserveFocus?: boolean): any {
         return undefined;
     }

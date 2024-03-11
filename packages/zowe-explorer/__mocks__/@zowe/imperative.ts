@@ -246,6 +246,17 @@ export class ProfileInfo {
     public readProfilesFromDisk(teamCfgOpts?: IConfigOpts) {
         return;
     }
+
+    public addProfileTypeToSchema(
+        profileType: string,
+        typeInfo: {
+            sourceApp: string;
+            schema: any;
+            version?: string;
+        }
+    ): any {
+        return;
+    }
 }
 
 export class ImperativeError extends Error {
@@ -278,6 +289,10 @@ export class ImperativeConfig {
 export class ConfigSchema {
     public static buildSchema() {
         return {};
+    }
+
+    public static loadSchema() {
+        return [];
     }
 }
 

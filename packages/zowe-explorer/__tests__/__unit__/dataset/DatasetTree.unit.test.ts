@@ -53,6 +53,7 @@ import * as sharedActions from "../../../src/shared/actions";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 import { TreeProviders } from "../../../src/shared/TreeProviders";
 import { join } from "path";
+import { mocked } from "../../../__mocks__/mockUtils";
 import * as sharedUtils from "../../../src/shared/utils";
 
 jest.mock("fs");
@@ -170,9 +171,6 @@ function createGlobalMocks() {
 
     return globalMocks;
 }
-
-// Idea is borrowed from: https://github.com/kulshekhar/ts-jest/blob/eadf408f90ca2007b85f5a61c6c0b74b4e431943/src/utils/testing.ts
-const mocked = <T extends (...args: any[]) => any>(fn: T): jest.Mock<ReturnType<T>> => fn as any;
 
 describe("Dataset Tree Unit Tests - Initialisation", () => {
     function createBlockMocks() {
@@ -2965,21 +2963,21 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
             parentNode: pds,
             session: createISession(),
         });
-        nodeA.stats = { user: "someUser", modifiedDate: new Date() };
+        nodeA.stats = { user: "someUser", createdDate: new Date(), modifiedDate: new Date() };
         const nodeB = new ZoweDatasetNode({
             label: "B",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             parentNode: pds,
             session: createISession(),
         });
-        nodeB.stats = { user: "anotherUser", modifiedDate: new Date("2022-01-01T12:00:00") };
+        nodeB.stats = { user: "anotherUser", createdDate: new Date("2021-01-01T12:00:00"), modifiedDate: new Date("2022-01-01T12:00:00") };
         const nodeC = new ZoweDatasetNode({
             label: "C",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             parentNode: pds,
             session: createISession(),
         });
-        nodeC.stats = { user: "someUser", modifiedDate: new Date("2022-03-15T16:30:00") };
+        nodeC.stats = { user: "someUser", createdDate: new Date("2022-02-01T12:00:00"), modifiedDate: new Date("2022-03-15T16:30:00") };
         pds.children = [nodeA, nodeB, nodeC];
         pds.sort = {
             method: DatasetSortOpts.Name,
@@ -3044,6 +3042,61 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
             expect(nodes.pds.children?.reduce((val, cur) => val + (cur.description as string), "")).toBe("");
         });
 
+        it("sorts by created date", async () => {
+            const mocks = getBlockMocks();
+            const nodes = nodesForSuite();
+            nodes.pds.sort = {
+                method: DatasetSortOpts.Name,
+                direction: SortDirection.Descending,
+            };
+            mocks.showQuickPick.mockResolvedValueOnce({ label: "$(calendar) Date Created" });
+            await tree.sortPdsMembersDialog(nodes.pds);
+            expect(mocks.nodeDataChanged).toHaveBeenCalled();
+            expect(mocks.refreshElement).not.toHaveBeenCalled();
+            expect(nodes.pds.children?.map((c: IZoweDatasetTreeNode) => c.label)).toStrictEqual(["A", "C", "B"]);
+        });
+
+        it("sorts by created date: handling 2 nodes with same date", async () => {
+            const mocks = getBlockMocks();
+            const nodes = nodesForSuite();
+            nodes.pds.sort = {
+                method: DatasetSortOpts.Name,
+                direction: SortDirection.Descending,
+            };
+            // insert node with same date modified
+            const nodeD = new ZoweDatasetNode({
+                label: "D",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                parentNode: nodes.pds,
+                session: createISession(),
+            });
+            nodeD.stats = { user: "someUser", createdDate: new Date("2021-01-01T12:00:00"), modifiedDate: new Date("2022-03-15T16:30:00") };
+            nodes.pds.children = [...(nodes.pds.children ?? []), nodeD];
+            mocks.showQuickPick.mockResolvedValueOnce({ label: "$(calendar) Date Created" });
+            await tree.sortPdsMembersDialog(nodes.pds);
+            expect(mocks.nodeDataChanged).toHaveBeenCalled();
+            expect(mocks.refreshElement).not.toHaveBeenCalled();
+            expect(nodes.pds.children?.map((c: IZoweDatasetTreeNode) => c.label)).toStrictEqual(["A", "C", "D", "B"]);
+        });
+
+        it("sorts by created date: handling a invalid date", async () => {
+            const mocks = getBlockMocks();
+            const nodes = nodesForSuite();
+            // insert node with same date modified
+            const nodeD = new ZoweDatasetNode({
+                label: "D",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                parentNode: nodes.pds,
+                session: createISession(),
+            });
+            nodeD.stats = { user: "someUser", createdDate: new Date("not a valid date"), modifiedDate: new Date("2022-03-15T16:30:00") };
+            nodes.pds.children = [...(nodes.pds.children ?? []), nodeD];
+            mocks.showQuickPick.mockResolvedValueOnce({ label: "$(calendar) Date Created" });
+            await tree.sortPdsMembersDialog(nodes.pds);
+            expect(mocks.nodeDataChanged).toHaveBeenCalled();
+            expect(mocks.refreshElement).not.toHaveBeenCalled();
+        });
+
         it("sorts by last modified date", async () => {
             const mocks = getBlockMocks();
             const nodes = nodesForSuite();
@@ -3067,7 +3120,7 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
                 parentNode: nodes.pds,
                 session: createISession(),
             });
-            nodeD.stats = { user: "someUser", modifiedDate: new Date("2022-03-15T16:30:00") };
+            nodeD.stats = { user: "someUser", createdDate: new Date("2021-01-01T12:00:00"), modifiedDate: new Date("2022-03-15T16:30:00") };
             nodes.pds.children = [...(nodes.pds.children ?? []), nodeD];
             await tree.sortPdsMembersDialog(nodes.pds);
             expect(mocks.nodeDataChanged).toHaveBeenCalled();

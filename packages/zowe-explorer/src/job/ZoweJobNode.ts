@@ -53,7 +53,10 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
             for (let i = 0; i < labelOpts.length; i++) {
                 const opt = labelOpts[i];
                 const [key, val] = opt.split(":");
-                finalLabel += `${key}: ${val}`;
+                finalLabel += `${key}`;
+                if (val !== undefined) {
+                    finalLabel += `: ${val}`;
+                }
                 if (i != labelOpts.length - 1) {
                     finalLabel += " | ";
                 }
@@ -143,9 +146,9 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
                 const procstep = spool.procstep ? spool.procstep : undefined;
                 let newLabel: string;
                 if (procstep) {
-                    newLabel = `${spool.stepname}:${spool.ddname} - ${procstep}`;
+                    newLabel = `${spool.stepname}:${spool.ddname}(${spool.id}) - ${procstep}`;
                 } else {
-                    newLabel = `${spool.stepname}:${spool.ddname} - ${spool["record-count"]}`;
+                    newLabel = `${spool.stepname}:${spool.ddname}(${spool.id})`;
                 }
 
                 // Only look for existing node w/ procstep if spool file has a procstep,

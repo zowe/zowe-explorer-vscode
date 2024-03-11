@@ -296,7 +296,7 @@ export async function deleteDatasetPrompt(datasetProvider: api.IZoweTree<api.IZo
             ? ` ${deletedNode.getParent().getLabel().toString()}(${deletedNode.getLabel().toString()})`
             : ` ${deletedNode.getLabel().toString()}`;
     });
-    nodesToDelete.sort();
+    nodesToDelete.sort((a, b) => a.localeCompare(b));
 
     const nodesDeleted: string[] = [];
 
@@ -376,7 +376,7 @@ export async function deleteDatasetPrompt(datasetProvider: api.IZoweTree<api.IZo
         );
     }
     if (nodesDeleted.length > 0) {
-        nodesDeleted.sort();
+        nodesDeleted.sort((a, b) => a.localeCompare(b));
         api.Gui.showMessage(
             localize("deleteDatasetPrompt.success", "The following {0} item(s) were deleted:{1}", nodesDeleted.length, nodesDeleted.toString())
         );
@@ -926,7 +926,7 @@ export async function submitJcl(datasetProvider: api.IZoweTree<api.IZoweDatasetT
     }
 
     // get session name
-    const sessionregex = /\[(.*)(\])(?!.*\])/g;
+    const sessionregex = /\[(.*)(\])(?!.*\])/;
     const regExp = sessionregex.exec(doc.fileName);
     const profiles = Profiles.getInstance();
     let sessProfileName;
