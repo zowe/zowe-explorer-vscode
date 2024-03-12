@@ -59,21 +59,21 @@ function createGlobalMocks() {
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             session: createISession(),
             profile: createIProfile(),
-            job: settingJobObjects(createIJobObject(), "ZOWEUSR1", "JOB045123", "ABEND S222"),
+            job: settingJobObjects(createIJobObject(), "ZOWEUSR1", "JOB045123", "ABEND S222", "2024-03-12T10:50:08.950Z"),
         }),
         JobNode2: new ZoweJobNode({
             label: "testProfile",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             session: createISession(),
             profile: createIProfile(),
-            job: settingJobObjects(createIJobObject(), "ZOWEUSR1", "JOB045120", "CC 0000"),
+            job: settingJobObjects(createIJobObject(), "ZOWEUSR1", "JOB045120", "CC 0000", "2024-03-12T10:20:08.950Z"),
         }),
         JobNode3: new ZoweJobNode({
             label: "testProfile",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             session: createISession(),
             profile: createIProfile(),
-            job: settingJobObjects(createIJobObject(), "ZOWEUSR2", "JOB045125", "CC 0000"),
+            job: settingJobObjects(createIJobObject(), "ZOWEUSR2", "JOB045125", "CC 0000", "2024-03-12T08:30:08.950Z"),
         }),
         mockJobArray: [],
         testJobsTree: null as any,
@@ -132,10 +132,11 @@ function createGlobalMocks() {
         value: jest.fn().mockReturnValue([newMocks.imperativeProfile.name]),
         configurable: true,
     });
-    function settingJobObjects(job: zowe.IJob, setjobname: string, setjobid: string, setjobreturncode: string): zowe.IJob {
+    function settingJobObjects(job: zowe.IJob, setjobname: string, setjobid: string, setjobreturncode: string, datecompleted: string): zowe.IJob {
         job.jobname = setjobname;
         job.jobid = setjobid;
         job.retcode = setjobreturncode;
+        job["exec-ended"] = datecompleted;
         return job;
     }
 
@@ -1516,6 +1517,26 @@ describe("sortJobs function", () => {
         expect(sortbyretcodespy).toBeCalledWith(testtree.mSessionNodes[0]);
         expect(sortbyretcodespy).toHaveBeenCalled();
         expect(sortbyretcodespy.mock.calls[0][0].children).toStrictEqual(expected.mSessionNodes[0].children);
+    });
+
+    it("sort by date completed", async () => {
+        const globalMocks = createGlobalMocks();
+        const testtree = new ZosJobsProvider();
+        const expected = new ZosJobsProvider();
+        testtree.mSessionNodes[0].sort = {
+            method: JobSortOpts.DateCompleted,
+            direction: SortDirection.Ascending,
+        };
+        testtree.mSessionNodes[0].children = [...[globalMocks.mockJobArray[0], globalMocks.mockJobArray[1], globalMocks.mockJobArray[2]]];
+        expected.mSessionNodes[0].children = [...[globalMocks.mockJobArray[2], globalMocks.mockJobArray[1], globalMocks.mockJobArray[0]]];
+        jest.spyOn(Gui, "showQuickPick").mockResolvedValueOnce({ label: "$(calendar) Date Completed" });
+        const sortbynamespy = jest.spyOn(ZosJobsProvider.prototype, "sortBy");
+        //act
+        await jobActions.sortJobs(testtree.mSessionNodes[0], testtree);
+        //asert
+        expect(sortbynamespy).toBeCalledWith(testtree.mSessionNodes[0]);
+        expect(sortbynamespy).toHaveBeenCalled();
+        expect(sortbynamespy.mock.calls[0][0].children).toStrictEqual(expected.mSessionNodes[0].children);
     });
 
     it("updates sort options after selecting sort direction; returns user to sort selection", async () => {
