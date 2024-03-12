@@ -67,9 +67,6 @@ describe("TempFolder Unit Tests", () => {
         Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
         Object.defineProperty(ZoweLogger, "info", { value: jest.fn(), configurable: true });
         jest.spyOn(ProfileUtils, "errorHandling").mockImplementationOnce(jest.fn());
-        jest.spyOn(Profiles, "getInstance").mockReturnValue({
-            loadNamedProfile: jest.fn((name: string) => ({ name, type: "zosmf" })),
-        } as any);
         return newMocks;
     }
 
@@ -173,12 +170,12 @@ describe("TempFolder Unit Tests", () => {
         expect(blockMocks.addRecoveredFile).toHaveBeenNthCalledWith(1, dsDocument, {
             label: "IBMUSER.TEST.PS(member)",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
-            profile: { name: "lpar1_zosmf", type: "zosmf" },
+            profile: { name: "lpar1_zosmf" },
         });
         expect(blockMocks.addRecoveredFile).toHaveBeenNthCalledWith(2, ussDocument, {
             label: "test.txt",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
-            profile: { name: "lpar1_zosmf", type: "zosmf" },
+            profile: { name: "lpar1_zosmf" },
             parentPath: "/u/ibmuser",
         });
         expect(blockMocks.loadFileInfo).toHaveBeenCalledTimes(2);

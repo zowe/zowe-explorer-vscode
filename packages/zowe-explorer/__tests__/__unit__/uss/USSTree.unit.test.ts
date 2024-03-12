@@ -1656,7 +1656,7 @@ describe("USSTree Unit Tests - Function editSession", () => {
             const doc = { uri: { fsPath: join(globals.USS_DIR, "lpar", "someFile.txt") } } as vscode.TextDocument;
 
             jest.spyOn(TreeProviders, "uss", "get").mockReturnValue(tree);
-            USSTree.onDidCloseTextDocument(doc);
+            await USSTree.onDidCloseTextDocument(doc);
             expect(tree.openFiles[doc.uri.fsPath]).toBeNull();
         });
     });

@@ -3329,11 +3329,11 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
     });
 
     describe("onDidCloseTextDocument", () => {
-        it("sets the entry in openFiles record to null if Data Set URI is valid", () => {
+        it("sets the entry in openFiles record to null if Data Set URI is valid", async () => {
             const doc = { uri: { fsPath: join(globals.DS_DIR, "lpar", "SOME.PS") } } as vscode.TextDocument;
 
             jest.spyOn(TreeProviders, "ds", "get").mockReturnValue(tree);
-            DatasetTree.onDidCloseTextDocument(doc);
+            await DatasetTree.onDidCloseTextDocument(doc);
             expect(tree.openFiles[doc.uri.fsPath]).toBeNull();
         });
     });

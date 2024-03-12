@@ -16,7 +16,7 @@ import { moveSync } from "fs-extra";
 import * as nls from "vscode-nls";
 import { errorHandling } from "../utils/ProfilesUtils";
 import { SettingsConfig } from "./SettingsConfig";
-import { Gui } from "@zowe/zowe-explorer-api";
+import { Gui, imperative, IZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { ZoweLogger } from "./LoggerUtils";
 import * as vscode from "vscode";
 import { LocalFileManagement } from "./LocalFileManagement";
@@ -143,26 +143,31 @@ export async function hideTempFolder(zoweDir: string): Promise<void> {
 
 export function findRecoveredFiles(): void {
     ZoweLogger.trace("TempFolder.findRecoveredFiles called.");
+    const injectProfile = (tempNode: IZoweTreeNode): IZoweTreeNode => {
+        const profName = tempNode.getProfileName();
+        tempNode.getProfile = (): imperative.IProfileLoaded => Profiles.getInstance().loadNamedProfile(profName);
+        return tempNode;
+    };
     for (const document of vscode.workspace.textDocuments) {
         if (document.fileName.toUpperCase().indexOf(globals.DS_DIR.toUpperCase()) >= 0) {
             const pathSegments = document.fileName.slice(globals.DS_DIR.length + 1).split(path.sep);
             const treeOpts: IZoweDatasetTreeOpts = {
                 label: checkForAddedSuffix(pathSegments[1]) ? path.parse(pathSegments[1]).name : pathSegments[1],
                 collapsibleState: vscode.TreeItemCollapsibleState.None,
-                profile: Profiles.getInstance().loadNamedProfile(pathSegments[0]),
+                profile: { name: pathSegments[0] } as imperative.IProfileLoaded,
             };
             LocalFileManagement.addRecoveredFile(document, treeOpts);
-            LocalFileManagement.loadFileInfo(new ZoweDatasetNode(treeOpts), document.fileName);
+            LocalFileManagement.loadFileInfo(injectProfile(new ZoweDatasetNode(treeOpts)), document.fileName);
         } else if (document.fileName.toUpperCase().indexOf(globals.USS_DIR.toUpperCase()) >= 0) {
             const pathSegments = document.fileName.slice(globals.USS_DIR.length + 1).split(path.sep);
             const treeOpts: IZoweUssTreeOpts = {
                 label: pathSegments[pathSegments.length - 1],
                 collapsibleState: vscode.TreeItemCollapsibleState.None,
-                profile: Profiles.getInstance().loadNamedProfile(pathSegments[0]),
+                profile: { name: pathSegments[0] } as imperative.IProfileLoaded,
                 parentPath: "/" + path.posix.join(...pathSegments.slice(1, -1)),
             };
             LocalFileManagement.addRecoveredFile(document, treeOpts);
-            LocalFileManagement.loadFileInfo(new ZoweUSSNode(treeOpts), document.fileName);
+            LocalFileManagement.loadFileInfo(injectProfile(new ZoweUSSNode(treeOpts)), document.fileName);
         }
     }
     if (LocalFileManagement.recoveredFileCount > 0) {

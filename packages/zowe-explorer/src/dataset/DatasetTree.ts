@@ -46,6 +46,7 @@ import { ZoweLogger } from "../utils/LoggerUtils";
 import { TreeViewUtils } from "../utils/TreeViewUtils";
 import { TreeProviders } from "../shared/TreeProviders";
 import { LocalFileManagement } from "../utils/LocalFileManagement";
+import { ZoweSaveQueue } from "../abstract/ZoweSaveQueue";
 
 // Set up localization
 nls.config({
@@ -1514,10 +1515,12 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      * @param this (resolves ESlint warning about unbound methods)
      * @param doc A doc URI that was closed
      */
-    public static onDidCloseTextDocument(this: void, doc: vscode.TextDocument): void {
+    public static onDidCloseTextDocument(this: void, doc: vscode.TextDocument): Promise<void> {
         if (doc.uri.fsPath.includes(globals.DS_DIR)) {
-            updateOpenFiles(TreeProviders.ds, doc.uri.fsPath, null);
-            LocalFileManagement.removeRecoveredFile(doc);
+            return ZoweSaveQueue.all().then(() => {
+                updateOpenFiles(TreeProviders.ds, doc.uri.fsPath, null);
+                LocalFileManagement.removeRecoveredFile(doc);
+            });
         }
     }
 
