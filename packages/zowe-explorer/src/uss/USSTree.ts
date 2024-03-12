@@ -952,8 +952,11 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
     public static onDidCloseTextDocument(this: void, doc: vscode.TextDocument): Promise<void> {
         if (doc.uri.fsPath.includes(globals.USS_DIR)) {
             return ZoweSaveQueue.all().then(() => {
-                updateOpenFiles(TreeProviders.uss, doc.uri.fsPath, null);
-                LocalFileManagement.removeRecoveredFile(doc);
+                if (!doc.isDirty) {
+                    // Remove document from cache only if there are no pending unsaved changes
+                    updateOpenFiles(TreeProviders.uss, doc.uri.fsPath, null);
+                    LocalFileManagement.removeRecoveredFile(doc);
+                }
             });
         }
     }
