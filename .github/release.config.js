@@ -8,7 +8,7 @@ module.exports = {
         {
             name: "maintenance",
             channel: "latest",
-            level: "patch",
+            level: "minor", // Use maintenance branch for releases until v3
         },
         {
             name: "v1-lts",
