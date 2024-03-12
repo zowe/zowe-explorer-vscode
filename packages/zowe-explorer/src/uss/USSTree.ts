@@ -16,7 +16,7 @@ import * as contextually from "../shared/context";
 import { FilterItem, FilterDescriptor, errorHandling, syncSessionNode } from "../utils/ProfilesUtils";
 import { sortTreeItems, getAppName, checkIfChildPath, updateOpenFiles, promptForEncoding } from "../shared/utils";
 import {
-    findDocMatchingUri,
+    confirmForUnsavedDoc,
     Gui,
     imperative,
     IZoweTree,
@@ -1073,25 +1073,9 @@ export class USSTree extends ZoweTreeProvider implements Types.IZoweUSSTreeType 
             encoding = await promptForEncoding(node, taggedEncoding !== "untagged" ? taggedEncoding : undefined);
         }
         if (encoding !== undefined) {
-            const doc = findDocMatchingUri(node.resourceUri);
-            if (doc != null && doc.isDirty) {
-                const continueItem = vscode.l10n.t("Continue");
-                if (
-                    (await Gui.warningMessage(
-                        vscode.l10n.t(
-                            "{0} is opened and modified in the editor. By selecting 'Continue', the file's contents will be replaced.",
-                            node.label as string
-                        ),
-                        {
-                            items: [continueItem],
-                            vsCodeOpts: { modal: true },
-                        }
-                    )) !== continueItem
-                ) {
-                    return;
-                }
+            if (!(await confirmForUnsavedDoc(node.resourceUri))) {
+                return;
             }
-
             await node.setEncoding(encoding);
             await node.openUSS(true, false, this);
         }

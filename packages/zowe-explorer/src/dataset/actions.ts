@@ -24,7 +24,7 @@ import * as contextually from "../shared/context";
 import { ZoweLogger } from "../utils/ZoweLogger";
 import { ProfileManagement } from "../utils/ProfileManagement";
 import { LocalFileManagement } from "../utils/LocalFileManagement";
-import { Gui, imperative, IZoweDatasetTreeNode, Validation, Types } from "@zowe/zowe-explorer-api";
+import { Gui, imperative, IZoweDatasetTreeNode, Validation, Types, confirmForUnsavedDoc } from "@zowe/zowe-explorer-api";
 import { DatasetFSProvider } from "./DatasetFSProvider";
 
 let typeEnum: zosfiles.CreateDataSetTypeEnum;
@@ -1249,6 +1249,10 @@ export async function refreshPS(node: IZoweDatasetTreeNode): Promise<void> {
                 break;
             default:
                 throw Error(vscode.l10n.t("Item invalid."));
+        }
+
+        if (!(await confirmForUnsavedDoc(node.resourceUri))) {
+            return;
         }
 
         const statusMsg = Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Fetching data set..."));

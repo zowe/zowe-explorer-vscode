@@ -23,7 +23,7 @@ import {
     IZoweTreeNode,
     Sorting,
     ZosEncoding,
-    findDocMatchingUri,
+    confirmForUnsavedDoc,
 } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
@@ -1543,23 +1543,8 @@ export class DatasetTree extends ZoweTreeProvider implements Types.IZoweDatasetT
     public async openWithEncoding(node: IZoweDatasetTreeNode, encoding?: ZosEncoding): Promise<void> {
         encoding = encoding ?? (await promptForEncoding(node));
         if (encoding !== undefined) {
-            const doc = findDocMatchingUri(node.resourceUri);
-            if (doc != null && doc.isDirty) {
-                const continueItem = vscode.l10n.t("Continue");
-                if (
-                    (await Gui.warningMessage(
-                        vscode.l10n.t(
-                            "{0} is opened and modified in the editor. By selecting 'Continue', the data set's contents will be replaced.",
-                            node.label as string
-                        ),
-                        {
-                            items: [continueItem],
-                            vsCodeOpts: { modal: true },
-                        }
-                    )) !== continueItem
-                ) {
-                    return;
-                }
+            if (!(await confirmForUnsavedDoc(node.resourceUri))) {
+                return;
             }
             node.setEncoding(encoding);
             await node.openDs(true, false, this);

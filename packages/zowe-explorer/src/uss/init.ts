@@ -13,7 +13,7 @@ import * as vscode from "vscode";
 import * as ussActions from "./actions";
 import * as refreshActions from "../shared/refresh";
 import * as globals from "../globals";
-import { IZoweUSSTreeNode, IZoweTreeNode, ZosEncoding, Gui, ZoweScheme } from "@zowe/zowe-explorer-api";
+import { IZoweUSSTreeNode, IZoweTreeNode, ZosEncoding, Gui, ZoweScheme, confirmForUnsavedDoc } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import * as contextuals from "../shared/context";
 import { getSelectedNodeList } from "../shared/utils";
@@ -65,6 +65,9 @@ export async function initUSSProvider(context: vscode.ExtensionContext): Promise
                     // just refresh item to grab latest files
                     ussFileProvider.refreshElement(item);
                 } else {
+                    if (!(await confirmForUnsavedDoc(node.resourceUri))) {
+                        return;
+                    }
                     const statusMsg = Gui.setStatusBarMessage("$(sync~spin) Fetching USS file...");
                     // need to pull content for file and apply to FS entry
                     await UssFSProvider.instance.fetchFileAtUri(item.resourceUri, {
