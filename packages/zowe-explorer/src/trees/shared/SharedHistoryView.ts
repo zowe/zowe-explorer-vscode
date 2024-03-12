@@ -16,6 +16,7 @@ import { ExtensionContext } from "vscode";
 import { ZoweLogger } from "../../tools/ZoweLogger";
 import { JobTree } from "../job/JobTree";
 import { Constants } from "../../configuration/Constants";
+import { USSTree } from "../uss/USSTree";
 
 export class SharedHistoryView extends WebView {
     private treeProviders: Definitions.IZoweProviders;
@@ -74,6 +75,7 @@ export class SharedHistoryView extends WebView {
             sessions: treeProvider.getSessions(),
             fileHistory: treeProvider.getFileHistory(),
             favorites: treeProvider.getFavorites(),
+            encodingHistory: type === "uss" ? (treeProvider as USSTree).getEncodingHistory() : undefined,
         };
     }
 
@@ -123,6 +125,13 @@ export class SharedHistoryView extends WebView {
                     });
                 }
                 break;
+            case "encodingHistory":
+                Object.keys(message.attrs.selectedItems).forEach((selectedItem) => {
+                    if (message.attrs.selectedItems[selectedItem]) {
+                        (treeProvider as USSTree).removeEncodingHistory(selectedItem);
+                    }
+                });
+                break;
             default:
                 Gui.showMessage(vscode.l10n.t("action is not supported for this property type."));
                 break;
@@ -146,6 +155,9 @@ export class SharedHistoryView extends WebView {
                     if (!(treeProvider instanceof JobTree)) {
                         treeProvider.resetFileHistory();
                     }
+                    break;
+                case "encodingHistory":
+                    (treeProvider as USSTree).resetEncodingHistory();
                     break;
                 default:
                     Gui.showMessage(vscode.l10n.t("action is not supported for this property type."));

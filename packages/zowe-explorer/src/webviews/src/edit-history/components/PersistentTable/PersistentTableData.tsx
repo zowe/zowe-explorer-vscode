@@ -35,7 +35,7 @@ export default function PersistentTableData({ persistentProp }: Readonly<{ persi
   };
 
   const renderSelectButton = (item: string, i: number) => {
-    return selection[type] === "search" || selection[type] === "fileHistory" ? (
+    return selection[type] === "search" || selection[type] === "fileHistory" || selection[type] === "encodingHistory" ? (
       <VSCodeDataGridCell grid-column="2" style={{ maxWidth: "20vw", textAlign: "center" }}>
         <VSCodeCheckbox key={`${i}${item}`} onClick={(event: any) => handleClick(event, i)}></VSCodeCheckbox>
       </VSCodeDataGridCell>
