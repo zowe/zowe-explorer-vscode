@@ -217,7 +217,7 @@ export class MvsCommandHandler extends ZoweCommandProvider {
                         title: localize("issueMvsCommand.command.submitted", "MVS command submitted."),
                     },
                     () => {
-                        return ZoweExplorerApiRegister.getCommandApi(profile).issueMvsCommand(command);
+                        return ZoweExplorerApiRegister.getCommandApi(profile).issueMvsCommand(command, profile.profile?.consoleName);
                     }
                 );
                 if (submitResponse.success) {

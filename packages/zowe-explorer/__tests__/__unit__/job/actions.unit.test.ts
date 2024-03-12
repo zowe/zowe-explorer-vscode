@@ -97,7 +97,7 @@ function createGlobalMocks() {
     Object.defineProperty(sharedUtils, "getDefaultUri", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showWarningMessage", { value: jest.fn(), configurable: true });
     Object.defineProperty(zowe, "IssueCommand", { value: jest.fn(), configurable: true });
-    Object.defineProperty(zowe.IssueCommand, "issueSimple", { value: jest.fn(), configurable: true });
+    Object.defineProperty(zowe.IssueCommand, "issue", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showOpenDialog", { value: jest.fn(), configurable: true });
     Object.defineProperty(zowe, "CancelJobs", { value: jest.fn(), configurable: true });
     Object.defineProperty(zowe.CancelJobs, "cancelJobForJob", { value: jest.fn(), configurable: true });
@@ -201,7 +201,7 @@ describe("Jobs Actions Unit Tests - Function stopCommand", () => {
             job: blockMocks.iJob,
         });
 
-        mocked(zowe.IssueCommand.issueSimple).mockResolvedValueOnce({
+        mocked(zowe.IssueCommand.issue).mockResolvedValueOnce({
             success: false,
             zosmfResponse: [],
             commandResponse: "fake response",
@@ -218,7 +218,7 @@ describe("Jobs Actions Unit Tests - Function stopCommand", () => {
             session: blockMocks.session,
             profile: blockMocks.imperativeProfile,
         });
-        mocked(zowe.IssueCommand.issueSimple).mockResolvedValueOnce({
+        mocked(zowe.IssueCommand.issue).mockResolvedValueOnce({
             success: false,
             zosmfResponse: [],
             commandResponse: "fake response",
@@ -240,7 +240,7 @@ describe("Jobs Actions Unit Tests - Function modifyCommand", () => {
         });
 
         mocked(vscode.window.showInputBox).mockResolvedValue("modify");
-        mocked(zowe.IssueCommand.issueSimple).mockResolvedValueOnce({
+        mocked(zowe.IssueCommand.issue).mockResolvedValueOnce({
             success: false,
             zosmfResponse: [],
             commandResponse: "fake response",
@@ -258,7 +258,7 @@ describe("Jobs Actions Unit Tests - Function modifyCommand", () => {
             profile: blockMocks.imperativeProfile,
         });
         mocked(vscode.window.showInputBox).mockResolvedValue("modify");
-        mocked(zowe.IssueCommand.issueSimple).mockResolvedValueOnce({
+        mocked(zowe.IssueCommand.issue).mockResolvedValueOnce({
             success: false,
             zosmfResponse: [],
             commandResponse: "fake response",
