@@ -9,7 +9,6 @@
   "repository": {
     "url": "https://github.com/zowe/vscode-extension-for-zowe"
   },
-  "enabledApiProposals": [],
   "icon": "resources/zowe-icon-color.png",
   "keywords": [
     "mainframe",
