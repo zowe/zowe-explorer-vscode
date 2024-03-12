@@ -21,7 +21,6 @@ import { SettingsConfig } from "../../../src/utils/SettingsConfig";
 import { Gui } from "@zowe/zowe-explorer-api";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 import { LocalFileManagement } from "../../../src/utils/LocalFileManagement";
-import { Profiles } from "../../../src/Profiles";
 
 jest.mock("fs");
 jest.mock("fs", () => ({
