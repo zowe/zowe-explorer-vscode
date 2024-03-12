@@ -6,6 +6,14 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
+### Bug fixes
+
+- Fixed issue where "Allocate Like" input box placeholder was showing a localization ID instead of the intended message ("Enter a name for the new data set"). [#2759](https://github.com/zowe/vscode-extension-for-zowe/issues/2759)
+
+## `3.0.0-next.202403051607`
+
+### New features and enhancements
+
 - Implemented sorting of PDS members by date created [#2565](https://github.com/zowe/vscode-extension-for-zowe/pull/2565)
 - Added the capability for extenders to contribute new profile types to the Zowe schema during extender activation. [#2508](https://github.com/zowe/vscode-extension-for-zowe/issues/2508)
 - Migrated from `@zowe/cli` package to individual Zowe SDK packages. [#2719](https://github.com/zowe/vscode-extension-for-zowe/issues/2719)

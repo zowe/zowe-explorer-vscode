@@ -114,10 +114,6 @@ async function createGlobalMocks() {
         configurable: true,
     });
     Object.defineProperty(globalMocks.mockGetJobs, "getJob", { value: globalMocks.mockGetJob, configurable: true });
-    Object.defineProperty(globalMocks.mockGetJobs, "getJobsByOwnerAndPrefix", {
-        value: globalMocks.mockGetJobsByOwnerAndPrefix,
-        configurable: true,
-    });
     Object.defineProperty(zosmf.ZosmfSession, "createSessCfgFromArgs", {
         value: globalMocks.mockCreateSessCfgFromArgs,
         configurable: true,
@@ -970,8 +966,7 @@ describe("ZosJobsProvider - getJobs", () => {
         const globalMocks = await createGlobalMocks();
         Object.defineProperty(ZoweExplorerApiRegister, "getJesApi", {
             value: () => ({
-                getJobsByParameters: false,
-                getJobsByOwnerAndPrefix: () => ["test"],
+                getJobsByParameters: () => ["test"],
                 getSession: () => globalMocks.testSession,
             }),
         });
