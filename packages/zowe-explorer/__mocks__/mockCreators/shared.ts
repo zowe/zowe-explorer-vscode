@@ -608,6 +608,8 @@ export function createTreeProviders() {
             refresh: jest.fn(),
             addSingleSession: jest.fn(),
             refreshElement: jest.fn(),
+            addEncodingHistory: jest.fn(),
+            getEncodingHistory: jest.fn(),
         } as any,
         job: {
             mSessionNodes: [

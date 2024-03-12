@@ -26,12 +26,14 @@ export class PersistentFilters {
     private static readonly fileHistory: string = "fileHistory";
     private static readonly sessions: string = "sessions";
     private static readonly templates: string = "templates";
+    private static readonly encodingHistory: string = "encodingHistory";
 
     public schema: string;
     private mSearchHistory: string[] = [];
     private mFileHistory: string[] = [];
     private mSessions: string[] = [];
     private mDsTemplates: api.DataSetAllocTemplate[] = [];
+    private mEncodingHistory: string[] = [];
 
     public constructor(schema: string, private maxSearchHistory = globals.MAX_SEARCH_HISTORY, private maxFileHistory = globals.MAX_FILE_HISTORY) {
         this.schema = schema;
@@ -144,6 +146,21 @@ export class PersistentFilters {
         this.updateSessions();
     }
 
+    public addEncodingHistory(criteria: string): void {
+        if (criteria) {
+            criteria = criteria.toUpperCase();
+            // Remove any entries that match
+            this.mEncodingHistory = this.mEncodingHistory.filter((element) => {
+                return element.trim() !== criteria.trim();
+            });
+
+            // Add value to front of stack
+            this.mEncodingHistory.unshift(criteria);
+
+            this.updateEncodingHistory();
+        }
+    }
+
     /*********************************************************************************************************************************************/
     /* Get/read functions, for returning the values stored in the persistent arrays
     /*********************************************************************************************************************************************/
@@ -173,6 +190,10 @@ export class PersistentFilters {
             return vscode.workspace.getConfiguration(this.schema).get(PersistentFilters.favorites);
         }
         return [];
+    }
+
+    public getEncodingHistory(): string[] {
+        return this.mEncodingHistory;
     }
 
     /*********************************************************************************************************************************************/
@@ -210,6 +231,16 @@ export class PersistentFilters {
         return this.updateSearchHistory();
     }
 
+    public removeEncodingHistory(name: string): Thenable<void> {
+        const index = this.mEncodingHistory.findIndex((encodingHistoryItem) => {
+            return encodingHistoryItem.includes(name);
+        });
+        if (index >= 0) {
+            this.mEncodingHistory.splice(index, 1);
+        }
+        return this.updateEncodingHistory();
+    }
+
     /*********************************************************************************************************************************************/
     /* Reset functions, for resetting the persistent array to empty (in the extension and in settings.json)
     /*********************************************************************************************************************************************/
@@ -232,6 +263,11 @@ export class PersistentFilters {
     public resetDsTemplateHistory(): void {
         this.mDsTemplates = [];
         this.updateDsTemplateHistory();
+    }
+
+    public resetEncodingHistory(): void {
+        this.mEncodingHistory = [];
+        this.updateEncodingHistory();
     }
 
     /*********************************************************************************************************************************************/
@@ -283,16 +319,27 @@ export class PersistentFilters {
         }
     }
 
+    private updateEncodingHistory(): Thenable<void> {
+        // settings are read-only, so make a clone
+        const settings: any = { ...vscode.workspace.getConfiguration(this.schema) };
+        if (settings.persistence) {
+            settings.encodingHistory = this.mEncodingHistory;
+            return SettingsConfig.setDirectValue(this.schema, settings);
+        }
+    }
+
     private initialize(): void {
         let searchHistoryLines: string[];
         let sessionLines: string[];
         let fileHistoryLines: string[];
         let dsTemplateLines: api.DataSetAllocTemplate[];
+        let encodingHistoryLines: string[];
         if (vscode.workspace.getConfiguration(this.schema)) {
             searchHistoryLines = vscode.workspace.getConfiguration(this.schema).get(PersistentFilters.searchHistory);
             sessionLines = vscode.workspace.getConfiguration(this.schema).get(PersistentFilters.sessions);
             fileHistoryLines = vscode.workspace.getConfiguration(this.schema).get(PersistentFilters.fileHistory);
             dsTemplateLines = vscode.workspace.getConfiguration(this.schema).get(PersistentFilters.templates);
+            encodingHistoryLines = vscode.workspace.getConfiguration(this.schema).get(PersistentFilters.encodingHistory);
         }
         if (searchHistoryLines) {
             this.mSearchHistory = searchHistoryLines;
@@ -313,6 +360,11 @@ export class PersistentFilters {
             this.mDsTemplates = dsTemplateLines;
         } else {
             this.resetDsTemplateHistory();
+        }
+        if (encodingHistoryLines) {
+            this.mEncodingHistory = encodingHistoryLines;
+        } else {
+            this.resetEncodingHistory();
         }
     }
 }

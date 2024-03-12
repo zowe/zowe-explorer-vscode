@@ -29,6 +29,7 @@ type History = {
     fileHistory: string[];
     dsTemplates?: DataSetAllocTemplate[];
     favorites: string[];
+    encodingHistory: string[];
 };
 
 const tabs = {
@@ -95,6 +96,7 @@ export class HistoryView extends WebView {
             fileHistory: treeProvider.getFileHistory(),
             dsTemplates: type === "ds" ? (treeProvider as DatasetTree).getDsTemplates() : undefined,
             favorites: treeProvider.getFavorites(),
+            encodingHistory: type === "uss" ? (treeProvider as USSTree).getEncodingHistory() : undefined,
         };
     }
 
@@ -144,6 +146,13 @@ export class HistoryView extends WebView {
                     });
                 }
                 break;
+            case "encodingHistory":
+                Object.keys(message.attrs.selectedItems).forEach((selectedItem) => {
+                    if (message.attrs.selectedItems[selectedItem]) {
+                        (treeProvider as USSTree).removeEncodingHistory(selectedItem);
+                    }
+                });
+                break;
             default:
                 Gui.showMessage(localize("HistoryView.removeItem.notSupported", "action is not supported for this property type."));
                 break;
@@ -167,6 +176,9 @@ export class HistoryView extends WebView {
                     if (!(treeProvider instanceof ZosJobsProvider)) {
                         treeProvider.resetFileHistory();
                     }
+                    break;
+                case "encodingHistory":
+                    (treeProvider as USSTree).resetEncodingHistory();
                     break;
                 default:
                     Gui.showMessage(localize("HistoryView.removeItem.notSupported", "action is not supported for this property type."));

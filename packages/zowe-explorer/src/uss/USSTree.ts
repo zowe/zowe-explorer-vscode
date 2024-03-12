@@ -889,6 +889,27 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         return this.mHistory.readFavorites();
     }
 
+    public addEncodingHistory(criteria: string): void {
+        ZoweLogger.trace("USSTree.addEncodingHistory called.");
+        this.mHistory.addEncodingHistory(criteria);
+        this.refresh();
+    }
+
+    public getEncodingHistory(): string[] {
+        ZoweLogger.trace("USSTree.getEncodingHistory called.");
+        return this.mHistory.getEncodingHistory();
+    }
+
+    public removeEncodingHistory(name: string): void {
+        ZoweLogger.trace("USSTree.removeEncodingHistory called.");
+        this.mHistory.removeEncodingHistory(name);
+    }
+
+    public resetEncodingHistory(): void {
+        ZoweLogger.trace("USSTree.resetEncodingHistory called.");
+        this.mHistory.resetEncodingHistory();
+    }
+
     /**
      * Opens a USS item & reveals it in the tree
      *

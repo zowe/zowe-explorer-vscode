@@ -35,6 +35,7 @@ import { isTypeUssTreeNode } from "./context";
 import { markDocumentUnsaved } from "../utils/workspace";
 import { errorHandling } from "../utils/ProfilesUtils";
 import { ZoweLocalStorage } from "../utils/ZoweLocalStorage";
+import { TreeProviders } from "./TreeProviders";
 
 // Set up localization
 nls.config({
@@ -473,7 +474,7 @@ export async function promptForEncoding(node: IZoweDatasetTreeNode | IZoweUSSTre
     } else if (node.encoding === null || currentEncoding === "text") {
         currentEncoding = ebcdicItem.label;
     }
-    const encodingHistory = ZoweLocalStorage.getValue<string[]>("zowe.encodingHistory") ?? [];
+    const encodingHistory = TreeProviders.uss.getEncodingHistory() ?? []; // ZoweLocalStorage.getValue<string[]>("zowe.encodingHistory") ?? [];
     if (encodingHistory.length > 0) {
         for (const encoding of encodingHistory) {
             items.push({ label: encoding });
@@ -507,7 +508,8 @@ export async function promptForEncoding(node: IZoweDatasetTreeNode | IZoweUSSTre
                 encoding = { kind: "other", codepage: response };
                 const filterEncodingList = encodingHistory.filter((codepage) => codepage !== response);
                 filterEncodingList.unshift(encoding.codepage);
-                ZoweLocalStorage.setValue("zowe.encodingHistory", filterEncodingList.slice(0, globals.MAX_FILE_HISTORY));
+                //ZoweLocalStorage.setValue("zowe.encodingHistory", filterEncodingList.slice(0, globals.MAX_FILE_HISTORY));
+                TreeProviders.uss.addEncodingHistory(encoding.codepage);
             }
             break;
         default:

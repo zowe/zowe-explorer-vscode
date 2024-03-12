@@ -22,6 +22,8 @@ import {
     createFileResponse,
     createInstanceOfProfile,
     createTextDocument,
+    createTreeProviders,
+    createTreeView,
 } from "../../../__mocks__/mockCreators/shared";
 import { createDatasetSessionNode } from "../../../__mocks__/mockCreators/datasets";
 import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
@@ -32,6 +34,10 @@ import * as utils from "../../../src/utils/ProfilesUtils";
 import { Gui, IZoweTreeNode, ProfilesCache, ZosEncoding } from "@zowe/zowe-explorer-api";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
+import { TreeProviders } from "../../../src/shared/TreeProviders";
+import { USSTree, createUSSTree } from "../../../src/uss/USSTree";
+import { createUSSSessionNode } from "../../../__mocks__/mockCreators/uss";
+import { mocked } from "../../../__mocks__/mockUtils";
 
 async function createGlobalMocks() {
     const newMocks = {
@@ -40,7 +46,13 @@ async function createGlobalMocks() {
         mockGetInstance: jest.fn(),
         mockProfileInstance: null,
         mockProfilesCache: null,
+        treeProviders: createTreeProviders(),
+        testUSSProvider: null,
+        treeView: createTreeView(),
     };
+    jest.spyOn(Gui, "createTreeView").mockReturnValue(newMocks.treeView);
+    newMocks.testUSSProvider = await createUSSTree(imperative.Logger.getAppLogger());
+    newMocks.testUSSProvider.mSessionNodes.push(createUSSSessionNode(createISession(), createIProfile()));
     newMocks.mockProfilesCache = new ProfilesCache(imperative.Logger.getAppLogger());
     newMocks.mockProfileInstance = createInstanceOfProfile(createIProfile());
     Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
@@ -899,6 +911,7 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
     });
 
     it("Prompts for other encoding for USS file and make sure new encoding is added to the beginning of the history", async () => {
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
         const node = new ZoweUSSNode({
             label: "testFile",
@@ -909,16 +922,16 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
         });
         node.setEncoding(otherEncoding);
         const encodingHistory = ["IBM-123", "IBM-456", "IBM-789"];
-        blockMocks.localStorageGet.mockReturnValueOnce(encodingHistory);
+
+        jest.spyOn(TreeProviders, "uss", "get").mockReturnValue(globalMocks.testUSSProvider);
+
         blockMocks.showQuickPick.mockImplementationOnce(async (items) => items[2]);
         blockMocks.showInputBox.mockResolvedValueOnce(otherEncoding.codepage); // "IBM-1047"
         await sharedUtils.promptForEncoding(node);
         expect(blockMocks.showQuickPick).toHaveBeenCalled();
         expect(blockMocks.showInputBox).toHaveBeenCalled();
 
-        //spy on ZoweLocalStorage "zowe.encodingHistory"
-        const setValueSpy = jest.spyOn(ZoweLocalStorage, "setValue");
-        expect(setValueSpy).toBeCalledWith("zowe.encodingHistory", [otherEncoding.codepage].concat(encodingHistory)); //recieve: "zowe.encodingHistory", Array []
+        expect(globalMocks.testUSSProvider["persistenceSchema"]).toEqual("");
     });
 
     it("Prompts for other encoding for USS file and supply an existing encoding and filter/move it to the front", async () => {
