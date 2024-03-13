@@ -1650,6 +1650,10 @@ describe("USSTree Unit Tests - Function editSession", () => {
         it("sets the entry in openFiles record to null if USS URI is valid", async () => {
             const globalMocks = await createGlobalMocks();
             const tree = globalMocks.testTree as unknown as any;
+            Object.defineProperty(vscode.workspace, "textDocuments", {
+                value: [],
+                configurable: true,
+            });
             Object.defineProperty(globals, "USS_DIR", {
                 value: join("some", "fspath", "_U_"),
             });

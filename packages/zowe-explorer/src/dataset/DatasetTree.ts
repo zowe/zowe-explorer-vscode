@@ -1518,7 +1518,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
     public static onDidCloseTextDocument(this: void, doc: vscode.TextDocument): Promise<void> {
         if (doc.uri.fsPath.includes(globals.DS_DIR)) {
             return ZoweSaveQueue.all().then(() => {
-                if (!doc.isDirty) {
+                if (!vscode.workspace.textDocuments.find(({ uri }) => uri.fsPath === doc.uri.fsPath)?.isDirty) {
                     // Remove document from cache only if there are no pending unsaved changes
                     updateOpenFiles(TreeProviders.ds, doc.uri.fsPath, null);
                     LocalFileManagement.removeRecoveredFile(doc);

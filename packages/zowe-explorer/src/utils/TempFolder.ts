@@ -25,6 +25,7 @@ import { ZoweUSSNode } from "../uss/ZoweUSSNode";
 import { IZoweDatasetTreeOpts, IZoweUssTreeOpts } from "../shared/IZoweTreeOpts";
 import { Profiles } from "../Profiles";
 import { checkForAddedSuffix } from "../shared/utils";
+import { LocalStorageKey, ZoweLocalStorage } from "./ZoweLocalStorage";
 
 // Set up localization
 nls.config({
@@ -121,6 +122,7 @@ export function cleanTempDir(): Promise<void> {
     }
     try {
         cleanDir(globals.ZOWETEMPFOLDER);
+        ZoweLocalStorage.setValue(LocalStorageKey.FILE_INFO_CACHE, undefined);
     } catch (err) {
         ZoweLogger.error(err);
         if (err instanceof Error) {
