@@ -170,16 +170,6 @@ export function getLanguageId(label: string): string | null {
     return null;
 }
 
-export function checkForAddedSuffix(filename: string): boolean {
-    // identify how close to the end of the string the last . is
-    const dotPos = filename.length - (1 + filename.lastIndexOf("."));
-    return (
-        dotPos >= 2 &&
-        dotPos <= 4 && // if the last characters are 2 to 4 long and lower case it has been added
-        filename.substring(filename.length - dotPos) === filename.substring(filename.length - dotPos).toLowerCase()
-    );
-}
-
 export function checkIfChildPath(parentPath: string, childPath: string): boolean {
     const relativePath = path.relative(parentPath, childPath);
     return relativePath && !relativePath.startsWith("..") && !path.isAbsolute(relativePath);
