@@ -16,7 +16,7 @@ import * as tmp from "tmp";
 import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
 
 import { imperative, MainframeInteraction } from "@zowe/zowe-explorer-api";
-import { CoreUtils, UssUtils, TRANSFER_TYPE_ASCII, TRANSFER_TYPE_BINARY, ITransferMode } from "@zowe/zos-ftp-for-zowe-cli";
+import { CoreUtils, UssUtils, ITransferMode } from "@zowe/zos-ftp-for-zowe-cli";
 import { Buffer } from "buffer";
 import { AbstractFtpApi } from "./ZoweExplorerAbstractFtpApi";
 import { ZoweFtpExtensionError } from "./ZoweFtpExtensionError";
@@ -108,41 +108,19 @@ export class FtpUssApi extends AbstractFtpApi implements MainframeInteraction.IU
      *
      * @returns A file response containing the results of the operation.
      */
-    public putContent(inputFilePath: string, ussFilePath: string, options?: zosfiles.IUploadOptions): Promise<zosfiles.IZosFilesResponse> {
-        return this.putContents(inputFilePath, ussFilePath, options?.binary, options?.localEncoding, options?.etag, options?.returnEtag);
-    }
+    public async putContent(inputFilePath: string, ussFilePath: string, options?: zosfiles.IUploadOptions): Promise<zosfiles.IZosFilesResponse> {
+        const opts = options ?? {};
 
-    /**
-     * Upload a file (located at the input path) to the destination path.
-     *
-     * @deprecated in favor of `putContent`
-     * @param inputFilePath The input file path
-     * @param ussFilePath The destination file path on USS
-     * @param binary Whether the contents are binary
-     * @param localEncoding The local encoding for the file
-     * @param etag The e-tag associated with the file on the mainframe (optional)
-     * @param returnEtag Whether to return the e-tag after uploading the file
-     *
-     * @returns A file response containing the results of the operation.
-     */
-    public async putContents(
-        inputFilePath: string,
-        ussFilePath: string,
-        binary?: boolean,
-        localEncoding?: string,
-        etag?: string,
-        returnEtag?: boolean
-    ): Promise<zosfiles.IZosFilesResponse> {
         const transferOptions = {
-            transferType: CoreUtils.getBinaryTransferModeOrDefault(binary),
+            transferType: CoreUtils.getBinaryTransferModeOrDefault(opts.binary),
             localFile: inputFilePath,
         };
         const result = this.getDefaultResponse();
         // Save-Save with FTP requires loading the file first
         // (moved this block above connection request so only one connection is active at a time)
-        if (returnEtag && etag) {
+        if (opts.returnEtag && opts.etag) {
             const contentsTag = await this.getContentsTag(ussFilePath);
-            if (contentsTag && contentsTag !== etag) {
+            if (contentsTag && contentsTag !== opts.etag) {
                 throw new Error("Rest API failure with HTTP(S) status 412 Save conflict.");
             }
         }
@@ -155,7 +133,7 @@ export class FtpUssApi extends AbstractFtpApi implements MainframeInteraction.IU
             await UssUtils.uploadFile(connection, ussFilePath, transferOptions);
 
             result.success = true;
-            if (returnEtag) {
+            if (opts.returnEtag) {
                 // release this connection instance because a new one will be made with getContentsTag
                 this.releaseConnection(connection);
                 connection = null;
@@ -189,7 +167,7 @@ export class FtpUssApi extends AbstractFtpApi implements MainframeInteraction.IU
 
             // getting list of files from directory
             const files = zosfiles.ZosFilesUtils.getFileListFromPath(inputDirectoryPath, false);
-            // TODO: this solution will not perform very well; rewrite this and putContents methods
+            // TODO: this solution will not perform very well; rewrite this and putContent methods
             for (const file of files) {
                 const relativePath = path.relative(inputDirectoryPath, file).replace(/\\/g, "/");
                 const putResult = await this.putContent(file, path.posix.join(ussDirectoryPath, relativePath));

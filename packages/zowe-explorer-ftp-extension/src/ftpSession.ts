@@ -12,9 +12,9 @@
 import { imperative } from "@zowe/zowe-explorer-api";
 
 export class FtpSession extends imperative.Session {
-    public ussListConnection;
-    public mvsListConnection;
-    public jesListConnection;
+    public ussListConnection; // TODO(zFernand0): type as zna.ZosAccessor
+    public mvsListConnection; // TODO(zFernand0): type as zna.ZosAccessor
+    public jesListConnection; // TODO(zFernand0): type as zna.ZosAccessor
     public constructor(newSession: imperative.ISession) {
         super(newSession);
     }

@@ -16,7 +16,7 @@ import * as path from "path";
 
 import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
 import { Gui, imperative, MainframeInteraction, MessageSeverity } from "@zowe/zowe-explorer-api";
-import { CoreUtils, DataSetUtils, IUploadDataSetOption, TRANSFER_TYPE_ASCII, TRANSFER_TYPE_BINARY } from "@zowe/zos-ftp-for-zowe-cli";
+import { CoreUtils, DataSetUtils } from "@zowe/zos-ftp-for-zowe-cli";
 import { AbstractFtpApi } from "./ZoweExplorerAbstractFtpApi";
 import * as globals from "./globals";
 import { ZoweFtpExtensionError } from "./ZoweFtpExtensionError";

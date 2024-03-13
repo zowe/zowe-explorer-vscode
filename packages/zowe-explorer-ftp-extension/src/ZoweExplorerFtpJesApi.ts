@@ -10,7 +10,7 @@
  */
 
 import * as zosJobs from "@zowe/zos-jobs-for-zowe-sdk";
-import { imperative, MainframeInteraction } from "@zowe/zowe-explorer-api";
+import { MainframeInteraction } from "@zowe/zowe-explorer-api";
 import { JobUtils, DataSetUtils, ITransferMode, IJob, IJobStatus, ISpoolFile, IGetSpoolFileOption } from "@zowe/zos-ftp-for-zowe-cli";
 import { AbstractFtpApi, ConnectionType } from "./ZoweExplorerAbstractFtpApi";
 import { ZoweFtpExtensionError } from "./ZoweFtpExtensionError";
