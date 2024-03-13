@@ -19,17 +19,6 @@ import { ZoweFtpExtensionError } from "./ZoweFtpExtensionError";
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 
-interface IJobRefactor extends IJob {
-    jobId: string;
-    jobName: string;
-}
-
-interface ISpoolFileRefactor extends ISpoolFile {
-    stepName: string;
-    procStep: string;
-    ddName: string;
-}
-
 export class FtpJesApi extends AbstractFtpApi implements MainframeInteraction.IJes {
     public async getJobsByParameters(params: zosJobs.IGetJobsParms): Promise<zosJobs.IJob[]> {
         const result = this.getIJobResponse();
@@ -49,9 +38,8 @@ export class FtpJesApi extends AbstractFtpApi implements MainframeInteraction.IJ
                     const results = response.map((job: IJob) => {
                         return {
                             ...result,
-                            /* it’s prepared for the potential change in zftp api, renaming jobid to jobId, jobname to jobName. */
-                            jobid: (job as IJobRefactor).jobId || job.jobId,
-                            jobname: (job as IJobRefactor).jobName || job.jobName,
+                            jobid: job.jobId,
+                            jobname: job.jobName,
                             owner: job.owner,
                             class: job.class,
                             status: job.status,
@@ -76,9 +64,8 @@ export class FtpJesApi extends AbstractFtpApi implements MainframeInteraction.IJ
                 if (jobStatus) {
                     return {
                         ...result,
-                        /* it’s prepared for the potential change in zftp api, renaming jobid to jobId, jobname to jobName. */
-                        jobid: (jobStatus as IJobRefactor).jobId || jobStatus.jobId,
-                        jobname: (jobStatus as IJobRefactor).jobName || jobStatus.jobName,
+                        jobid: jobStatus.jobId,
+                        jobname: jobStatus.jobName,
                         owner: jobStatus.owner,
                         class: jobStatus.class,
                         status: jobStatus.status,
@@ -104,18 +91,14 @@ export class FtpJesApi extends AbstractFtpApi implements MainframeInteraction.IJ
                 if (files) {
                     return files.map((file: ISpoolFile) => {
                         return {
-                            /**
-                             * prepared for the potential change in zftp api:
-                             * renaming stepname to stepName, procstep to procStep, ddname to ddName.
-                             **/
                             jobid: jobId,
                             jobname: jobName,
                             "byte-count": file.byteCount,
                             id: file.id,
-                            stepname: (file as ISpoolFileRefactor).stepName || file.stepname,
-                            procstep: (file as ISpoolFileRefactor).procStep || file.procstep,
+                            stepname: file.stepName,
+                            procstep: file.procStep,
                             class: file.class,
-                            ddname: (file as ISpoolFileRefactor).ddName || file.ddname,
+                            ddname: file.ddName,
                         } as unknown as zosJobs.IJobFile;
                     });
                 }
@@ -128,45 +111,17 @@ export class FtpJesApi extends AbstractFtpApi implements MainframeInteraction.IJ
         }
     }
     public async downloadSpoolContent(parms: zosJobs.IDownloadAllSpoolContentParms): Promise<void> {
+        if (parms.binary) {
+            throw new Error("Unable to download spool content in binary format");
+        }
         let connection;
         try {
             connection = await this.ftpClient(this.checkedProfile());
-            /* it's duplicate code with zftp. We may add new job API in the next zftp to cover spool file downloading. */
             if (connection) {
-                const jobDetails = await JobUtils.findJobByID(connection, parms.jobid);
-                if (jobDetails.spoolFiles == null || jobDetails.spoolFiles.length === 0) {
-                    throw new Error("No spool files were available.");
-                }
-                const fullSpoolFiles = await JobUtils.getSpoolFiles(connection, jobDetails.jobId);
-                for (const spoolFileToDownload of fullSpoolFiles) {
-                    const mockJobFile: zosJobs.IJobFile = {
-                        // mock a job file to get the same format of download directories
-                        jobid: jobDetails.jobId,
-                        jobname: jobDetails.jobName,
-                        recfm: "FB",
-                        lrecl: 80,
-                        "byte-count": Number(spoolFileToDownload.byteCount),
-                        // todo is recfm or lrecl available? FB 80 could be wrong
-                        "record-count": 0,
-                        "job-correlator": "", // most of these options don't matter for download
-                        class: "A",
-                        ddname: String(spoolFileToDownload.ddname),
-                        id: Number(spoolFileToDownload.id),
-                        "records-url": "",
-                        subsystem: "JES2",
-                        stepname: String(spoolFileToDownload.stepname),
-                        procstep: String(
-                            spoolFileToDownload.procstep === "N/A" || spoolFileToDownload.procstep == null ? undefined : spoolFileToDownload.procstep
-                        ),
-                    };
-                    const destinationFile = zosJobs.DownloadJobs.getSpoolDownloadFilePath({
-                        jobFile: mockJobFile,
-                        omitJobidDirectory: parms.omitJobidDirectory,
-                        outDir: parms.outDir,
-                    });
-                    imperative.IO.createDirsSyncFromFilePath(destinationFile);
-                    imperative.IO.writeFile(destinationFile, spoolFileToDownload.contents);
-                }
+                await JobUtils.downloadSpoolContent(connection, {
+                    ...parms,
+                    jobId: parms.jobid,
+                });
             }
         } catch (err) {
             throw new ZoweFtpExtensionError(err.message);
@@ -175,7 +130,7 @@ export class FtpJesApi extends AbstractFtpApi implements MainframeInteraction.IJ
         }
     }
 
-    public async getSpoolContentById(jobname: string, jobid: string, spoolId: number): Promise<string> {
+    public async getSpoolContentById(jobName: string, jobId: string, spoolId: number): Promise<string> {
         let connection;
         try {
             connection = await this.ftpClient(this.checkedProfile());
@@ -183,8 +138,8 @@ export class FtpJesApi extends AbstractFtpApi implements MainframeInteraction.IJ
             if (connection) {
                 const options: IGetSpoolFileOption = {
                     fileId: spoolId,
-                    // jobName: jobname,
-                    jobId: jobid,
+                    // jobName: jobName, // Removed in zos-node-accessor 2.0
+                    jobId: jobId,
                     owner: "*",
                 };
                 response = await JobUtils.getSpoolFileContent(connection, options);
@@ -228,12 +183,12 @@ export class FtpJesApi extends AbstractFtpApi implements MainframeInteraction.IJ
             this.releaseConnection(connection);
         }
     }
-    public async deleteJob(jobname: string, jobid: string): Promise<void> {
+    public async deleteJob(jobName: string, jobId: string): Promise<void> {
         let connection;
         try {
             connection = await this.ftpClient(this.checkedProfile());
             if (connection) {
-                await JobUtils.deleteJob(connection, jobid);
+                await JobUtils.deleteJob(connection, jobId);
             }
         } catch (err) {
             throw new ZoweFtpExtensionError(err.message);
