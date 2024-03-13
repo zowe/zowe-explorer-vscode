@@ -8,6 +8,9 @@
   "repository": {
     "url": "https://github.com/zowe/zowe-explorer-vscode"
   },
+  "publishConfig": {
+    "provenance": true
+  },
   "main": "lib/index.js",
   "files": [
     "lib"
