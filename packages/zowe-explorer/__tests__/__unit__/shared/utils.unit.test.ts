@@ -682,7 +682,7 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
 });
 
 describe("Shared utils unit tests - function getLanguageId", () => {
-    it("returns the proper language id", () => {
+    it("returns the proper language ID", () => {
         const pairs = [
             { name: "TEST.DS.C", languageId: "c" },
             { name: "TEST.DS.JCL", languageId: "jcl" },
@@ -699,5 +699,8 @@ describe("Shared utils unit tests - function getLanguageId", () => {
         for (const pair of pairs) {
             expect(sharedUtils.getLanguageId(pair.name)).toBe(pair.languageId);
         }
+    });
+    it("returns null if no language ID was found", () => {
+        expect(sharedUtils.getLanguageId("TEST.DS")).toBe(null);
     });
 });

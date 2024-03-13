@@ -395,7 +395,7 @@ describe("_updateChildPaths", () => {
         };
         prov._updateChildPaths(prov.root);
         expect(relocatedFile.metadata.path).toBe("/root/file.txt");
-        expect(relocatedFolder.metadata.path).toBe("/root/folder/");
+        expect(relocatedFolder.metadata.path).toBe("/root/folder");
     });
 });
 
