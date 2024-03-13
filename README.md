@@ -94,7 +94,7 @@ Check the current [open issues](https://github.com/zowe/zowe-explorer-vscode/iss
 
 To report a bug or request a specific feature, please open a GitHub issue using the [appropriate template](https://github.com/zowe/zowe-explorer-vscode/issues/new/choose). Feature requests will be added to our backlog after it receives 10 upvotes from the community.
 
-Also, you can check our [GitHub Projects board](https://github.com/orgs/zowe/projects/15) for a more convenient view of issues that is categorized by priority and shows work in progress.
+Also, you can check our [GitHub Projects board](https://github.com/orgs/zowe/projects/15) for a more convenient view of issues, which are organized by priority and work-in-progress status.
 
 For more information on how to contribute, see [Contributor Guidance](https://github.com/zowe/zowe-explorer-vscode/wiki/Contributor-Guidance).
 
