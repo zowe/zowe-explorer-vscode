@@ -148,7 +148,7 @@ node('ca-jenkins-agent') {
 
       // Create the GitHub Release
       withCredentials([usernamePassword(credentialsId: ZOWE_ROBOT_TOKEN, usernameVariable: 'USERNAME', passwordVariable: 'TOKEN')]) {
-        sh "git push --tags https://$TOKEN:x-oauth-basic@github.com/zowe/vscode-extension-for-zowe.git"
+        sh "git push --tags https://$TOKEN:x-oauth-basic@github.com/zowe/zowe-explorer-vscode.git"
 
         // Grab changelog, convert to unix line endings, get changes under current version, publish release to github with changes in body
         def releaseVersion = sh(returnStdout: true, script: "echo ${version} | cut -c 2-").trim()
@@ -157,7 +157,7 @@ node('ca-jenkins-agent') {
         def releaseChanges = sh(returnStdout: true, script: "awk -v ver=${releaseVersion} '/## / {if (p) { exit }; if (\$2 ~ ver) { p=1; next} } p && NF' CHANGELOG.md | sed -z \"s/'/'\\\\\\''/g\" | sed -z 's/\"/\\\"/g' | sed -z 's/\\n/\\\\n/g'").trim()
 
         // Gather details about the GitHub APIs used to publish a release
-        def releaseAPI = "repos/zowe/vscode-extension-for-zowe/releases"
+        def releaseAPI = "repos/zowe/zowe-explorer-vscode/releases"
         def releaseDetails = "{\"tag_name\":\"$version\",\"target_commitish\":\"main\",\"name\":\"$version\",\"body\":\"$releaseChanges\",\"draft\":false,\"prerelease\":false}"
         def releaseUrl = "https://$TOKEN:x-oauth-basic@api.github.com/${releaseAPI}"
 

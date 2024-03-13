@@ -8,7 +8,7 @@
   "version": "2.16.0-SNAPSHOT",
   "icon": "resources/zowe-ftp-color.png",
   "repository": {
-    "url": "https://github.com/zowe/vscode-extension-for-zowe"
+    "url": "https://github.com/zowe/zowe-explorer-vscode"
   },
   "categories": [
     "Other"
