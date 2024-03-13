@@ -20,6 +20,9 @@ jobs:
   release:
     if: github.event_name == 'workflow_dispatch' || github.ref_protected
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
 
     steps:
       - name: Checkout
