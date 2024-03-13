@@ -462,7 +462,7 @@ describe("ProfilesUtils unit tests", () => {
                 value: jest.fn(() => {
                     return {
                         profileName: "emptyConfig",
-                        getTeamConfig: jest.fn().mockReturnValueOnce({
+                        getTeamConfig: jest.fn().mockReturnValue({
                             exists: true,
                             properties: {
                                 autoStore: false,
