@@ -26,6 +26,7 @@ import { ZoweLogger } from "../../../src/utils/ZoweLogger";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import * as HistoryView from "../../../src/shared/HistoryView";
 import { LocalFileManagement } from "../../../src/utils/LocalFileManagement";
+import { FileManagement } from "@zowe/zowe-explorer-api";
 
 jest.mock("../../../src/utils/LoggerUtils");
 jest.mock("../../../src/utils/ZoweLogger");
@@ -113,6 +114,7 @@ describe("Test src/shared/extension", () => {
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [globals.SETTINGS_TEMP_FOLDER_PATH], ret: false },
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [globals.SETTINGS_AUTOMATIC_PROFILE_VALIDATION], ret: false },
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [globals.SETTINGS_TEMP_FOLDER_HIDE], ret: true },
+                    { spy: jest.spyOn(FileManagement, "getZoweDir"), arg: [], ret: test.value },
                     { spy: jest.spyOn(tempFolder, "hideTempFolder"), arg: [test.value] },
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [globals.SETTINGS_SECURE_CREDENTIALS_ENABLED], ret: false },
                 ],

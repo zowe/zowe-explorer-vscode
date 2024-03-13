@@ -13,6 +13,8 @@
  * This interface defines the options that can be sent into the download data set function
  */
 
+import * as os from "os";
+import * as path from "path";
 const log4js = require("log4js");
 
 /**
@@ -241,6 +243,7 @@ export class CliProfileManager {
 }
 
 export class ProfileInfo {
+    public static onlyV1ProfilesExist = false;
     constructor(appName: string, profInfoOpts?: IProfOpts) {}
 
     public readProfilesFromDisk(teamCfgOpts?: IConfigOpts) {
@@ -256,6 +259,18 @@ export class ProfileInfo {
         }
     ): any {
         return;
+    }
+
+    public static getZoweDir(): string {
+        const defaultHome = path.join(os.homedir(), ".zowe");
+        if (ImperativeConfig.instance.loadedConfig?.defaultHome !== defaultHome) {
+            ImperativeConfig.instance.loadedConfig = {
+                name: "zowe",
+                defaultHome,
+                envVariablePrefix: "ZOWE",
+            };
+        }
+        return ImperativeConfig.instance.cliHome;
     }
 }
 

@@ -255,7 +255,7 @@ export class ProfileManagement {
     }
     private static async handleDeleteProfiles(node: IZoweTreeNode): Promise<void> {
         const profInfo = await Profiles.getInstance().getProfileInfo();
-        if (profInfo.usingTeamConfig) {
+        if (profInfo.getTeamConfig().exists) {
             const profile = node.getProfile();
             await Profiles.getInstance().editSession(profile, profile.name);
             return;

@@ -878,7 +878,7 @@ export class Profiles extends ProfilesCache {
         }
         const usingSecureCreds = SettingsConfig.getDirectValue(globals.SETTINGS_SECURE_CREDENTIALS_ENABLED);
         const profInfo = await this.getProfileInfo();
-        if (profInfo.usingTeamConfig && usingSecureCreds) {
+        if (usingSecureCreds && profInfo.getTeamConfig().exists) {
             return profInfo.getTeamConfig().api.secure.securePropsForProfile(profileName);
         }
         const profAttrs = await this.getProfileFromConfig(profileName);

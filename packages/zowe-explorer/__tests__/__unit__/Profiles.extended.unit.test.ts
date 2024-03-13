@@ -411,7 +411,7 @@ describe("Profiles Unit Tests - Function createZoweSchema", () => {
         };
         newMocks.testDatasetSessionNode = createDatasetSessionNode(newMocks.session, globalMocks.mockProfileInstance);
         newMocks.testDatasetTree = createDatasetTree(newMocks.testDatasetSessionNode, newMocks.treeView);
-        Object.defineProperty(core, "getZoweDir", {
+        Object.defineProperty(imperative.ProfileInfo, "getZoweDir", {
             value: jest.fn().mockReturnValue("file://globalPath/.zowe"),
             configurable: true,
         });
