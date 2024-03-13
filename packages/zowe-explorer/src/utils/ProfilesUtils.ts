@@ -483,7 +483,7 @@ export class ProfilesUtils {
      */
     public static isProfileUsingBasicAuth(profile: imperative.IProfileLoaded): boolean {
         const prof = profile.profile;
-        // See https://github.com/zowe/vscode-extension-for-zowe/issues/2664
+        // See https://github.com/zowe/zowe-explorer-vscode/issues/2664
         return prof.user != null && prof.password != null;
     }
 
