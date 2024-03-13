@@ -403,9 +403,8 @@ export function createInstanceOfProfileInfo() {
         ],
         updateProperty: jest.fn(),
         updateKnownProperty: jest.fn(),
-        getTeamConfig: jest.fn(),
         createSession: jest.fn(),
-        usingTeamConfig: true,
+        getTeamConfig: () => ({ exists: true }),
         mergeArgsForProfile: jest.fn().mockReturnValue({
             knownArgs: [
                 {
@@ -431,6 +430,7 @@ export function createInstanceOfProfileInfo() {
         loadSecureArg: jest.fn(),
         initSessCfg: jest.fn(),
         getOsLocInfo: jest.fn(),
+        getZoweDir: jest.fn(),
     } as any;
 }
 

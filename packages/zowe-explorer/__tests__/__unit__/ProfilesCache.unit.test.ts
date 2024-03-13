@@ -10,14 +10,12 @@
  */
 
 jest.mock("fs");
-jest.unmock("@zowe/core-for-zowe-sdk");
 jest.unmock("@zowe/imperative");
 
-import { getZoweDir } from "@zowe/core-for-zowe-sdk";
 import { imperative, ProfilesCache } from "@zowe/zowe-explorer-api";
 
 describe("ProfilesCache API", () => {
-    const zoweDir = getZoweDir();
+    const zoweDir = imperative.ProfileInfo.getZoweDir();
 
     beforeAll(() => {
         // Disable loading credential manager in ProfileInfo API

@@ -9,21 +9,7 @@
  *
  */
 
-import * as os from "os";
-import * as path from "path";
 import * as imperative from "@zowe/imperative";
-
-export function getZoweDir(): string {
-    const defaultHome = path.join(os.homedir(), ".zowe");
-    if (imperative.ImperativeConfig.instance.loadedConfig?.defaultHome !== defaultHome) {
-        imperative.ImperativeConfig.instance.loadedConfig = {
-            name: "zowe",
-            defaultHome,
-            envVariablePrefix: "ZOWE",
-        };
-    }
-    return imperative.ImperativeConfig.instance.cliHome;
-}
 
 export namespace Login {
     export function apimlLogin(session: imperative.Session) {

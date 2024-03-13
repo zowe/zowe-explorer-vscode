@@ -9,9 +9,9 @@
  *
  */
 
-import { getZoweDir } from "@zowe/core-for-zowe-sdk";
-import * as fs from "fs";
-import * as os from "os";
+import { ProfileInfo } from "@zowe/imperative";
+import { realpathSync } from "fs";
+import { platform } from "os";
 import { Constants } from "../globals";
 
 export class FileManagement {
@@ -34,17 +34,17 @@ export class FileManagement {
     }
 
     public static getZoweDir(): string {
-        return getZoweDir();
+        return ProfileInfo.getZoweDir();
     }
 
     public static getFullPath(anyPath: string): string {
-        if (os.platform() === "win32") {
+        if (platform() === "win32") {
             try {
-                return fs.realpathSync.native(anyPath);
+                return realpathSync.native(anyPath);
             } catch (err) {
                 // Fallback to realpathSync below
             }
         }
-        return fs.realpathSync(anyPath);
+        return realpathSync(anyPath);
     }
 }

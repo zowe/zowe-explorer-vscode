@@ -54,7 +54,7 @@ describe("ProfileManagement unit tests", () => {
             mockHideProfChosen: ProfileManagement.hideProfileQpItems[ProfileManagement.AuthQpLabels.hide],
             mockEnableValidationChosen: ProfileManagement.enableProfileValildationQpItem[ProfileManagement.AuthQpLabels.enable],
             mockDisableValidationChosen: ProfileManagement.disableProfileValildationQpItem[ProfileManagement.AuthQpLabels.disable],
-            mockProfileInfo: { usingTeamConfig: true },
+            mockProfileInfo: { getTeamConfig: () => ({ exists: true }) },
             mockProfileInstance: null as any,
             mockTreeProviders: sharedMock.createTreeProviders(),
             debugLogSpy: null as any,

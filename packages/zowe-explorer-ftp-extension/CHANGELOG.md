@@ -6,6 +6,8 @@ All notable changes to the "zowe-explorer-ftp-extension" extension will be docum
 
 ### Bug fixes
 
+- Updated the SDK dependencies to `8.0.0-next.202403041352` for technical currency [#2754](https://github.com/zowe/vscode-extension-for-zowe/pull/2754).
+
 ## `3.0.0-next.202403051607`
 
 ### New features and enhancements
@@ -15,8 +17,6 @@ All notable changes to the "zowe-explorer-ftp-extension" extension will be docum
 - Migrated from `@zowe/cli` package to individual Zowe SDK packages. [#2719](https://github.com/zowe/vscode-extension-for-zowe/issues/2719)
 
 ## `3.0.0-next.202402142205`
-
-### New features and enhancements
 
 ### Bug fixes
 
