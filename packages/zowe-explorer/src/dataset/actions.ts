@@ -1567,7 +1567,9 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
             return;
         }
     } catch (err) {
+        await markDocumentUnsaved(doc);
         await errorHandling(err, sesName);
+        return;
     }
     // Get specific node based on label and parent tree (session / favorites)
     const nodes = concatChildNodes(sesNode ? [sesNode] : datasetProvider.mSessionNodes);
