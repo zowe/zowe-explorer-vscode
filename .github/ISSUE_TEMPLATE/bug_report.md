@@ -5,7 +5,7 @@ labels: bug, new
 ---
 
 <!--
-  Before opening a new issue, please search our existing issues: https://github.com/zowe/vscode-extension-for-zowe/issues
+  Before opening a new issue, please search our existing issues: https://github.com/zowe/zowe-explorer-vscode/issues
 -->
 
 **Describe the bug**
@@ -36,7 +36,7 @@ Steps to reproduce the behavior:
 - Zowe Explorer Version:
 - (Optional) Zowe CLI Version:
 - (Optional) Are you using Secure Credential Store?
-<!-- If you have SCS installed, please read the documentation for Integrating SCS within Zowe Explorer: https://github.com/zowe/vscode-extension-for-zowe/blob/main/docs/README-Security.md -->
+<!-- If you have SCS installed, please read the documentation for Integrating SCS within Zowe Explorer: https://github.com/zowe/zowe-explorer-vscode/blob/main/docs/README-Security.md -->
 
 **Additional context**
 
