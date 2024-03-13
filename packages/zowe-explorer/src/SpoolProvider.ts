@@ -9,7 +9,6 @@
  *
  */
 
-import * as vscode from "vscode";
 import * as zosjobs from "@zowe/zos-jobs-for-zowe-sdk";
 import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
 import { ZoweLogger } from "./utils/ZoweLogger";
@@ -19,46 +18,6 @@ export function buildUniqueSpoolName(spool: zosjobs.IJobFile): string {
     const spoolSegments = [spool.jobname, spool.jobid, spool.stepname, spool.procstep, spool.ddname, spool.id?.toString()];
     return spoolSegments.filter((v) => v && v.length).join(".");
 }
-
-/**
- * (use {@link toUniqueJobFileUri} instead to use VSCode's cache invalidation)
- *
- * Encode the information needed to get the Spool content.
- *
- * @param session The name of the Zowe profile to use to get the Spool Content
- * @param spool The IJobFile to get the spool content for.
- */
-export function encodeJobFile(session: string, spool: zosjobs.IJobFile): vscode.Uri {
-    ZoweLogger.trace("SpoolProvider.encodeJobFile called.");
-    const query = JSON.stringify([session, spool]);
-
-    return vscode.Uri.parse("").with({
-        path: buildUniqueSpoolName(spool),
-        query,
-    });
-}
-
-/**
- * Encode the information needed to get the Spool content with support of the built in VSCode cache invalidation.
- *
- * VSCode built in cache will be applied automatically in case of several requests for the same URI,
- * so consumers can control the amount of spool content requests by specifying different unique fragments
- *
- * Should be used carefully because of the possible memory leaks.
- *
- * @param session The name of the Zowe profile to use to get the Spool Content
- * @param spool The IJobFile to get the spool content for.
- * @param uniqueFragment The unique fragment of the encoded uri (can be timestamp, for example)
- */
-export const toUniqueJobFileUri =
-    (session: string, spool: zosjobs.IJobFile) =>
-    (uniqueFragment: string): vscode.Uri => {
-        ZoweLogger.trace("SpoolProvider.toUniqueJobFileUri called.");
-        const encodedUri = encodeJobFile(session, spool);
-        return encodedUri.with({
-            fragment: uniqueFragment,
-        });
-    };
 
 /**
  * Gather all spool files for a given job
@@ -91,15 +50,4 @@ export function matchSpool(spool: zosjobs.IJobFile, node: IZoweJobTreeNode): boo
         `${spool.stepname}:${spool.ddname} - ${spool["record-count"]}` === node.label.toString() ||
         `${spool.stepname}:${spool.ddname} - ${spool.procstep}` === node.label.toString()
     );
-}
-
-/**
- * Decode the information needed to get the Spool content.
- *
- * @param uri The URI passed to TextDocumentContentProvider
- */
-export function decodeJobFile(uri: vscode.Uri): [string, zosjobs.IJobFile] {
-    ZoweLogger.trace("SpoolProvider.decodeJobFile called.");
-    const [session, spool] = JSON.parse(uri.query) as [string, zosjobs.IJobFile];
-    return [session, spool];
 }

@@ -185,23 +185,6 @@ export function checkIfChildPath(parentPath: string, childPath: string): boolean
     return relativePath && !relativePath.startsWith("..") && !path.isAbsolute(relativePath);
 }
 
-/**
- * Function that rewrites the document in the active editor thus marking it dirty
- * @param {vscode.TextDocument} doc - document to rewrite
- * @returns void
- */
-
-export function markFileAsDirty(doc: vscode.TextDocument): void {
-    const docText = doc.getText();
-    const startPosition = new vscode.Position(0, 0);
-    const endPosition = new vscode.Position(doc.lineCount, 0);
-    const deleteRange = new vscode.Range(startPosition, endPosition);
-    vscode.window.activeTextEditor.edit((editBuilder) => {
-        editBuilder.delete(deleteRange);
-        editBuilder.insert(startPosition, docText);
-    });
-}
-
 // Type guarding for current IZoweNodeType.
 // Makes it possible to have multiple types in a function signature, but still be able to use type specific code inside the function definition
 export function isZoweDatasetTreeNode(node: Types.IZoweNodeType): node is IZoweDatasetTreeNode {
