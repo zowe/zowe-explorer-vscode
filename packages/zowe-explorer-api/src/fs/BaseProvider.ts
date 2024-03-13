@@ -195,9 +195,8 @@ export class BaseProvider {
     protected _updateChildPaths(entry: DirEntry): void {
         // update child entries
         for (const child of entry.entries.values()) {
-            child.metadata.path = entry.metadata.path.concat(child.name);
+            child.metadata.path = path.posix.join(entry.metadata.path, child.name);
             if (isDirectoryEntry(child)) {
-                child.metadata.path += "/";
                 this._updateChildPaths(child);
             }
         }

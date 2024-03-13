@@ -356,16 +356,12 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         }
 
         const entry = this._lookup(oldUri, false) as UssDirectory | UssFile;
-        const isDir = entry instanceof UssDirectory;
         const parentDir = this._lookupParentDirectory(oldUri);
 
         const newName = path.posix.basename(newUri.path);
 
         // Build the new path using the previous path and new file/folder name.
-        let newPath = path.posix.join(entry.metadata.path, "..", newName);
-        if (isDir) {
-            newPath += "/";
-        }
+        const newPath = path.posix.join(entry.metadata.path, "..", newName);
 
         try {
             await ZoweExplorerApiRegister.getUssApi(entry.metadata.profile).rename(entry.metadata.path, newPath);
