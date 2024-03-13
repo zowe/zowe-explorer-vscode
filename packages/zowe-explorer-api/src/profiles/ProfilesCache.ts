@@ -151,10 +151,9 @@ export class ProfilesCache {
     public async refresh(apiRegister?: extend.IRegisterClient): Promise<void> {
         this.allProfiles = [];
         this.allTypes = [];
-        let mProfileInfo: imperative.ProfileInfo;
         try {
-            mProfileInfo = await this.getProfileInfo();
-            if (!mProfileInfo.usingTeamConfig) {
+            const mProfileInfo = await this.getProfileInfo();
+            if (!mProfileInfo.getTeamConfig().exists) {
                 return;
             }
             const allTypes = this.getAllProfileTypes(apiRegister?.registeredApiTypes() ?? []);

@@ -11,19 +11,11 @@
 
 import * as path from "path";
 import * as fs from "fs";
-import { getZoweDir } from "@zowe/core-for-zowe-sdk";
 import * as imperative from "@zowe/imperative";
 import { ProfilesCache } from "../../../src/profiles/ProfilesCache";
 import { FileManagement, ZoweExplorerApi } from "../../../src";
 
 jest.mock("fs");
-jest.mock("@zowe/core-for-zowe-sdk", () => {
-    /* eslint-disable @typescript-eslint/no-unsafe-return */
-    return {
-        ...jest.requireActual("@zowe/core-for-zowe-sdk"),
-        getZoweDir: jest.fn().mockReturnValue("~/.zowe"),
-    };
-});
 
 const fakeSchema: { properties: object } = {
     properties: {
@@ -129,16 +121,17 @@ function createProfInfoMock(profiles: Partial<imperative.IProfileLoaded>[]): imp
                 knownArgs: Object.entries(profile.profile as object).map(([k, v]) => ({ argName: k, argValue: v as unknown })),
             };
         },
-        usingTeamConfig: true,
+        getTeamConfig: () => ({ exists: true }),
         updateProperty: jest.fn(),
         updateKnownProperty: jest.fn(),
         isSecured: jest.fn(),
+        getZoweDir: jest.fn().mockReturnValue("~/.zowe"),
     } as any;
 }
 
 describe("ProfilesCache", () => {
     const fakeLogger = { debug: jest.fn() };
-    const fakeZoweDir = getZoweDir();
+    const fakeZoweDir = "~/.zowe";
     const readProfilesFromDiskSpy = jest.spyOn(imperative.ProfileInfo.prototype, "readProfilesFromDisk");
     const defaultCredMgrWithKeytarSpy = jest.spyOn(imperative.ProfileCredentials, "defaultCredMgrWithKeytar");
 
