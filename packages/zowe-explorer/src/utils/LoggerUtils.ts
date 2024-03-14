@@ -35,16 +35,11 @@ export class ZoweLogger {
     public static async initializeZoweLogger(context: vscode.ExtensionContext): Promise<void> {
         try {
             const logsPath: string = ZoweVsCodeExtension.customLoggingPath ?? context.extensionPath;
+            const extInfo = context.extension ?? vscode.extensions.getExtension("zowe.vscode-extension-for-zowe");
+            this.displayName = extInfo.packageJSON.displayName;
+            this.zeVersion = extInfo.packageJSON.version;
             globals.initLogger(logsPath);
             await this.initVscLogger(logsPath);
-            if (context.extension?.packageJSON) {
-                this.displayName = context.extension.packageJSON.displayName;
-                this.zeVersion = context.extension.packageJSON.version;
-            } else {
-                const extInfo = vscode.extensions.getExtension("zowe.vscode-extension-for-zowe");
-                this.displayName = extInfo.packageJSON.displayName;
-                this.zeVersion = extInfo.packageJSON.version;
-            }
         } catch (err) {
             // Don't log error if logger failed to initialize
             if (err instanceof Error) {
