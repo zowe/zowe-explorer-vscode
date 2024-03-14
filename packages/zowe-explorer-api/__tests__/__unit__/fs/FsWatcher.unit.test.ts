@@ -60,13 +60,21 @@ describe("onFileChanged", () => {
         ZoweFsWatcher.onFileChanged(testUris.jobs, listenerFn);
         expect(onDidChangeJobsSpy).toHaveBeenCalledWith(listenerFn);
     });
+
+    it("throws an error if the URI is not a Zowe scheme", () => {
+        ZoweFsWatcher.registerWatchers();
+        const callbackMock = jest.fn();
+        expect(() => ZoweFsWatcher.onFileChanged(Uri.from({ scheme: "file", path: "/a/b/c.txt" }), () => callbackMock())).toThrow(
+            "FsWatcher only supports core schemes: zowe-ds, zowe-jobs, zowe-uss"
+        );
+    });
 });
 
 describe("onFileDeleted", () => {
     it("registers an event listener to the correct watcher", () => {
         ZoweFsWatcher.registerWatchers();
         const onDidDeleteDsSpy = jest.spyOn((ZoweFsWatcher as any).watchers.ds, "onDidDelete");
-        const listenerFn = (uri) => {};
+        const listenerFn = (uri): void => {};
 
         ZoweFsWatcher.onFileDeleted(testUris.ds, listenerFn);
         expect(onDidDeleteDsSpy).toHaveBeenCalledWith(listenerFn);
@@ -78,6 +86,14 @@ describe("onFileDeleted", () => {
         const onDidDeleteJobsSpy = jest.spyOn((ZoweFsWatcher as any).watchers.jobs, "onDidDelete");
         ZoweFsWatcher.onFileDeleted(testUris.jobs, listenerFn);
         expect(onDidDeleteJobsSpy).toHaveBeenCalledWith(listenerFn);
+    });
+
+    it("throws an error if the URI is not a Zowe scheme", () => {
+        ZoweFsWatcher.registerWatchers();
+        const callbackMock = jest.fn();
+        expect(() => ZoweFsWatcher.onFileDeleted(Uri.from({ scheme: "file", path: "/a/b/c.txt" }), () => callbackMock())).toThrow(
+            "FsWatcher only supports core schemes: zowe-ds, zowe-jobs, zowe-uss"
+        );
     });
 });
 
@@ -97,5 +113,13 @@ describe("onFileCreated", () => {
         const onDidCreateJobsSpy = jest.spyOn((ZoweFsWatcher as any).watchers.jobs, "onDidCreate");
         ZoweFsWatcher.onFileCreated(testUris.jobs, listenerFn);
         expect(onDidCreateJobsSpy).toHaveBeenCalledWith(listenerFn);
+    });
+
+    it("throws an error if the URI is not a Zowe scheme", () => {
+        ZoweFsWatcher.registerWatchers();
+        const callbackMock = jest.fn();
+        expect(() => ZoweFsWatcher.onFileCreated(Uri.from({ scheme: "file", path: "/a/b/c.txt" }), () => callbackMock())).toThrow(
+            "FsWatcher only supports core schemes: zowe-ds, zowe-jobs, zowe-uss"
+        );
     });
 });
