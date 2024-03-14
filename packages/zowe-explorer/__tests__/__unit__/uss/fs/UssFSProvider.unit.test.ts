@@ -332,7 +332,42 @@ describe("writeFile", () => {
         expect(lookupParentDirMock).toHaveBeenCalledWith(testUris.file);
         expect(statusMsgMock).toHaveBeenCalledWith("$(sync~spin) Saving USS file...");
         expect(mockUssApi.uploadFromBuffer).toHaveBeenCalledWith(Buffer.from(newContents), testEntries.file.metadata.path, {
+            binary: false,
+            encoding: undefined,
             etag: testEntries.file.etag,
+            returnEtag: true,
+        });
+        const fileEntry = folder.entries.get("aFile.txt")!;
+        expect(fileEntry.etag).toBe("NEWETAG");
+        expect(fileEntry.data).toBe(newContents);
+        ussApiMock.mockRestore();
+    });
+
+    it("upload changes to a remote file even if its not yet in the FSP", async () => {
+        const mockUssApi = {
+            getContents: jest.fn().mockResolvedValueOnce({
+                apiResponse: {
+                    etag: "NEWETAG",
+                },
+            }),
+            uploadFromBuffer: jest.fn(),
+        };
+        const ussApiMock = jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce(mockUssApi as any);
+        const statusMsgMock = jest.spyOn(Gui, "setStatusBarMessage");
+        const folder = {
+            ...testEntries.session,
+            entries: new Map(),
+        };
+        const lookupParentDirMock = jest.spyOn(UssFSProvider.instance as any, "_lookupParentDirectory").mockReturnValueOnce(folder);
+        const newContents = new Uint8Array([3, 6, 9]);
+        await UssFSProvider.instance.writeFile(testUris.file, newContents, { create: true, overwrite: true });
+
+        expect(lookupParentDirMock).toHaveBeenCalledWith(testUris.file);
+        expect(statusMsgMock).toHaveBeenCalledWith("$(sync~spin) Saving USS file...");
+        expect(mockUssApi.uploadFromBuffer).toHaveBeenCalledWith(Buffer.from(newContents), testEntries.file.metadata.path, {
+            binary: false,
+            encoding: undefined,
+            etag: undefined,
             returnEtag: true,
         });
         const fileEntry = folder.entries.get("aFile.txt")!;
@@ -408,6 +443,16 @@ describe("writeFile", () => {
             "file is a directory"
         );
         lookupParentDirMock.mockRestore();
+    });
+});
+
+describe("makeEmptyFileWithEncoding", () => {
+    it("creates an empty file in the provider with the given encoding", () => {
+        const fakeSession = { ...testEntries.session };
+        const parentDirMock = jest.spyOn(UssFSProvider.instance as any, "_lookupParentDirectory").mockReturnValueOnce(fakeSession);
+        expect(UssFSProvider.instance.makeEmptyFileWithEncoding(testUris.file, { kind: "binary" }));
+        expect(fakeSession.entries.has(testEntries.file.name)).toBe(true);
+        parentDirMock.mockRestore();
     });
 });
 

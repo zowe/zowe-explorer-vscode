@@ -286,12 +286,15 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
             if (entry.wasAccessed || content.length > 0) {
                 const shouldForceUpload = urlQuery.has("forceUpload");
+                const profileEncoding = entry.encoding ? null : entry.metadata.profile.profile?.encoding;
 
                 // Entry was already accessed previously, this is an update to the existing file.
                 const statusMsg = Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Saving USS file..."));
                 try {
                     // Attempt to write data to remote system, and handle any conflicts from e-tag mismatch
                     await ussApi.uploadFromBuffer(Buffer.from(content), entry.metadata.path, {
+                        binary: entry.encoding?.kind === "binary",
+                        encoding: entry.encoding?.kind === "other" ? entry.encoding.codepage : profileEncoding,
                         etag: shouldForceUpload || entry.etag == null ? undefined : entry.etag,
                         returnEtag: true,
                     });
