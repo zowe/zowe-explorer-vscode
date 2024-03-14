@@ -66,7 +66,7 @@ function createGlobalMocks() {
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             session: createISession(),
             profile: createIProfile(),
-            job: settingJobObjects(createIJobObject(), "ZOWEUSR1", "JOB045120", "CC 0000", "2024-03-12T10:20:08.950Z"),
+            job: settingJobObjects(createIJobObject(), "ZOWEUSR1", "JOB045120", "CC 0000"),
         }),
         JobNode3: new ZoweJobNode({
             label: "testProfile",
@@ -132,7 +132,7 @@ function createGlobalMocks() {
         value: jest.fn().mockReturnValue([newMocks.imperativeProfile.name]),
         configurable: true,
     });
-    function settingJobObjects(job: zowe.IJob, setjobname: string, setjobid: string, setjobreturncode: string, datecompleted: string): zowe.IJob {
+    function settingJobObjects(job: zowe.IJob, setjobname: string, setjobid: string, setjobreturncode: string, datecompleted?: string): zowe.IJob {
         job.jobname = setjobname;
         job.jobid = setjobid;
         job.retcode = setjobreturncode;
@@ -1528,7 +1528,7 @@ describe("sortJobs function", () => {
             direction: SortDirection.Ascending,
         };
         testtree.mSessionNodes[0].children = [...[globalMocks.mockJobArray[0], globalMocks.mockJobArray[1], globalMocks.mockJobArray[2]]];
-        expected.mSessionNodes[0].children = [...[globalMocks.mockJobArray[2], globalMocks.mockJobArray[1], globalMocks.mockJobArray[0]]];
+        expected.mSessionNodes[0].children = [...[globalMocks.mockJobArray[2], globalMocks.mockJobArray[0], globalMocks.mockJobArray[1]]];
         jest.spyOn(Gui, "showQuickPick").mockResolvedValueOnce({ label: "$(calendar) Date Completed" });
         const sortbynamespy = jest.spyOn(ZosJobsProvider.prototype, "sortBy");
         //act
