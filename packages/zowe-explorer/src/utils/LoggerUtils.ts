@@ -91,6 +91,7 @@ export class ZoweLogger {
 
     private static writeVscLoggerInfo(logFileLocation: string): void {
         this.zeOutputChannel?.appendLine(`${this.displayName} ${this.zeVersion}`);
+        this.zeOutputChannel?.appendLine(`VS Code version: ${vscode.version}`);
         this.zeOutputChannel?.appendLine(localize("initialize.log.location", "This log file can be found at {0}", logFileLocation));
         this.zeOutputChannel?.appendLine(localize("initialize.log.level", "Zowe Explorer log level: {0}", this.getLogSetting()));
     }
