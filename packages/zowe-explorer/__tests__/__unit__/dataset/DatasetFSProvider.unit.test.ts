@@ -286,6 +286,41 @@ describe("writeFile", () => {
         lookupMock.mockRestore();
     });
 
+    it("upload changes to a remote DS even if its not yet in the FSP", async () => {
+        const mockMvsApi = {
+            createDataSetMember: jest.fn(),
+            getContents: jest.fn().mockResolvedValueOnce({
+                apiResponse: {
+                    etag: "NEWETAG",
+                },
+            }),
+            uploadFromBuffer: jest.fn(),
+        };
+        const mvsApiMock = jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValueOnce(mockMvsApi as any);
+        const statusMsgMock = jest.spyOn(Gui, "setStatusBarMessage");
+        const session = {
+            ...testEntries.session,
+            entries: new Map(),
+        };
+        const lookupParentDirMock = jest.spyOn(DatasetFSProvider.instance as any, "_lookupParentDirectory").mockReturnValueOnce(session);
+        const newContents = new Uint8Array([3, 6, 9]);
+        await DatasetFSProvider.instance.writeFile(testUris.ps, newContents, { create: true, overwrite: true });
+        expect(mockMvsApi.createDataSetMember).toHaveBeenCalledWith(testEntries.ps.name);
+
+        expect(lookupParentDirMock).toHaveBeenCalledWith(testUris.ps);
+        expect(statusMsgMock).toHaveBeenCalledWith("$(sync~spin) Saving data set...");
+        expect(mockMvsApi.uploadFromBuffer).toHaveBeenCalledWith(Buffer.from(newContents), testEntries.ps.name, {
+            binary: false,
+            encoding: undefined,
+            etag: undefined,
+            returnEtag: true,
+        });
+        const psEntry = session.entries.get("USER.DATA.PS")!;
+        expect(psEntry.etag).toBe("NEWETAG");
+        expect(psEntry.data).toBe(newContents);
+        mvsApiMock.mockRestore();
+    });
+
     it("updates an empty, unaccessed PS entry in the FSP without sending data", async () => {
         const mvsApiMock = jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValueOnce({} as any);
         const session = {
@@ -454,6 +489,16 @@ describe("delete", () => {
         expect(fakeSession.entries.has(fakePs.name)).toBe(true);
         mvsApiMock.mockRestore();
         errorMsgMock.mockRestore();
+    });
+});
+
+describe("makeEmptyDsWithEncoding", () => {
+    it("creates an empty data set in the provider with the given encoding", () => {
+        const fakeSession = { ...testEntries.session };
+        const parentDirMock = jest.spyOn(DatasetFSProvider.instance as any, "_lookupParentDirectory").mockReturnValueOnce(fakeSession);
+        expect(DatasetFSProvider.instance.makeEmptyDsWithEncoding(testUris.ps, { kind: "binary" }));
+        expect(fakeSession.entries.has(testEntries.ps.name)).toBe(true);
+        parentDirMock.mockRestore();
     });
 });
 

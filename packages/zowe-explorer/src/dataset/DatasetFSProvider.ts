@@ -284,27 +284,27 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 : this._getInfoFromUri(uri);
             entry.metadata = profInfo;
 
-            // if (content.byteLength > 0) {
-            //     const statusMsg = Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Saving data set..."));
-            //     const mvsApi = ZoweExplorerApiRegister.getMvsApi(parent.metadata.profile);
-            //     // create the data set member as it did not exist previously
-            //     const dsName = `${parent.name}(${entry.name})`;
-            //     await mvsApi.createDataSetMember(dsName);
-            //     const profileEncoding = entry.encoding ? null : entry.metadata.profile.profile?.encoding;
-            //     await mvsApi.uploadFromBuffer(Buffer.from(content), dsName, {
-            //         binary: entry.encoding?.kind === "binary",
-            //         encoding: entry.encoding?.kind === "other" ? entry.encoding.codepage : profileEncoding,
-            //         etag: undefined,
-            //         returnEtag: true,
-            //     });
-            //     // Update e-tag if write was successful.
-            //     const newData = await mvsApi.getContents(dsName, {
-            //         returnEtag: true,
-            //     });
-            //     entry.etag = newData.apiResponse.etag;
-            //     entry.data = content;
-            //     statusMsg.dispose();
-            // }
+            if (content.byteLength > 0) {
+                const statusMsg = Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Saving data set..."));
+                const mvsApi = ZoweExplorerApiRegister.getMvsApi(parent.metadata.profile);
+                // create the data set member as it did not exist previously
+                const dsName = isFilterEntry(parent) ? entry.name : `${parent.name}(${entry.name})`;
+                await mvsApi.createDataSetMember(dsName);
+                const profileEncoding = entry.encoding ? null : entry.metadata.profile.profile?.encoding;
+                await mvsApi.uploadFromBuffer(Buffer.from(content), dsName, {
+                    binary: entry.encoding?.kind === "binary",
+                    encoding: entry.encoding?.kind === "other" ? entry.encoding.codepage : profileEncoding,
+                    etag: undefined,
+                    returnEtag: true,
+                });
+                // Update e-tag if write was successful.
+                const newData = await mvsApi.getContents(dsName, {
+                    returnEtag: true,
+                });
+                entry.etag = newData.apiResponse.etag;
+                entry.data = content;
+                statusMsg.dispose();
+            }
             parent.entries.set(basename, entry);
             this._fireSoon({ type: vscode.FileChangeType.Created, uri });
         } else {
