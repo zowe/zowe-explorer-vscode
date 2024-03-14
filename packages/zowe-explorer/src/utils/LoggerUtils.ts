@@ -29,12 +29,22 @@ export class ZoweLogger {
     public static zeOutputChannel: vscode.OutputChannel;
     private static defaultLogLevel: "INFO";
     private static zeLogLevel: string;
+    private static displayName: string;
+    private static zeVersion: string;
 
     public static async initializeZoweLogger(context: vscode.ExtensionContext): Promise<void> {
         try {
             const logsPath: string = ZoweVsCodeExtension.customLoggingPath ?? context.extensionPath;
             globals.initLogger(logsPath);
-            await this.initVscLogger(context, logsPath);
+            await this.initVscLogger(logsPath);
+            if (context.extension?.packageJSON) {
+                this.displayName = context.extension.packageJSON.displayName;
+                this.zeVersion = context.extension.packageJSON.version;
+            } else {
+                const extInfo = vscode.extensions.getExtension("zowe.vscode-extension-for-zowe");
+                this.displayName = extInfo.packageJSON.displayName;
+                this.zeVersion = extInfo.packageJSON.version;
+            }
         } catch (err) {
             // Don't log error if logger failed to initialize
             if (err instanceof Error) {
@@ -77,15 +87,15 @@ export class ZoweLogger {
         return this.zeLogLevel ?? this.defaultLogLevel;
     }
 
-    private static async initVscLogger(context: vscode.ExtensionContext, logFileLocation: string): Promise<void> {
+    private static async initVscLogger(logFileLocation: string): Promise<void> {
         this.zeOutputChannel = Gui.createOutputChannel(localize("zoweExplorer.outputchannel.title", "Zowe Explorer"));
-        this.writeVscLoggerInfo(logFileLocation, context);
+        this.writeVscLoggerInfo(logFileLocation);
         this.info(localize("initialize.log.info", "Initialized logger for Zowe Explorer"));
         await this.compareCliLogSetting();
     }
 
-    private static writeVscLoggerInfo(logFileLocation: string, context: vscode.ExtensionContext): void {
-        this.zeOutputChannel?.appendLine(`${context.extension.packageJSON.displayName as string} ${context.extension.packageJSON.version as string}`);
+    private static writeVscLoggerInfo(logFileLocation: string): void {
+        this.zeOutputChannel?.appendLine(`${this.displayName} ${this.zeVersion}`);
         this.zeOutputChannel?.appendLine(localize("initialize.log.location", "This log file can be found at {0}", logFileLocation));
         this.zeOutputChannel?.appendLine(localize("initialize.log.level", "Zowe Explorer log level: {0}", this.getLogSetting()));
     }
