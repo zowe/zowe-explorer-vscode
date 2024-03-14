@@ -256,9 +256,15 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
         return (x, y) => {
             const sortLessThan = sortOpts.direction == SortDirection.Ascending ? -1 : 1;
             const sortGreaterThan = sortLessThan * -1;
-
-            const keyToSortBy = JOB_SORT_KEYS[sortOpts.method];
+            let keyToSortBy = JOB_SORT_KEYS[sortOpts.method];
             let xCompare, yCompare;
+            if (!x.job[keyToSortBy] && !y.job[keyToSortBy]) {
+                keyToSortBy = JOB_SORT_KEYS[3];
+            } else if (!x.job[keyToSortBy]) {
+                return 1;
+            } else if (!y.job[keyToSortBy]) {
+                return -1;
+            }
             if (keyToSortBy === "retcode") {
                 // some jobs (such as active ones) will have a null retcode
                 // in this case, use status as the key to compare for that node only
@@ -269,10 +275,16 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
                 yCompare = y.job[keyToSortBy];
             }
 
+            if (keyToSortBy === "exec-ended") {
+                x.description = x.job["exec-ended"];
+                y.description = y.job["exec-ended"];
+            } else {
+                x.description = "";
+                y.description = "";
+            }
             if (xCompare === yCompare) {
                 return x.job["jobid"] > y.job["jobid"] ? sortGreaterThan : sortLessThan;
             }
-
             return xCompare > yCompare ? sortGreaterThan : sortLessThan;
         };
     }
