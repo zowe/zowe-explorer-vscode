@@ -55,18 +55,18 @@ export function findDocMatchingUri(uri: vscode.Uri): vscode.TextDocument {
 export async function confirmForUnsavedDoc(uri: vscode.Uri): Promise<boolean> {
     const doc = findDocMatchingUri(uri);
     if (doc != null && doc.isDirty) {
-        const continueItem = vscode.l10n.t("Continue");
+        const confirmItem = vscode.l10n.t("Confirm");
         return (
             (await Gui.warningMessage(
                 vscode.l10n.t(
-                    "{0} is opened and has pending changes in the editor. By selecting 'Continue', any unsaved changes will be lost.",
+                    "{0} is opened and has pending changes in the editor. By selecting 'Confirm', any unsaved changes will be lost.",
                     posix.basename(doc.fileName)
                 ),
                 {
-                    items: [continueItem],
+                    items: [confirmItem],
                     vsCodeOpts: { modal: true },
                 }
-            )) === continueItem
+            )) === confirmItem
         );
     }
 
