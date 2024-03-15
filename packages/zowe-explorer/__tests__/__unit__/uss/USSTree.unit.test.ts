@@ -1679,3 +1679,21 @@ describe("USSTree Unit Tests - Function openWithEncoding", () => {
         expect(node.openUSS).toHaveBeenCalledTimes(0);
     });
 });
+
+describe("USSTree Unit Tests - Function handleDrag", () => {
+    it("adds a DataTransferItem containing info about the dragged USS node", async () => {
+        const globalMocks = await createGlobalMocks();
+        const ussnode = createUSSNode(globalMocks.testSession, globalMocks.testProfile);
+        const dataTransferSetMock = jest.fn();
+        globalMocks.testTree.handleDrag([ussnode], { set: dataTransferSetMock }, undefined);
+        expect(dataTransferSetMock).toHaveBeenCalledWith(
+            "application/vnd.code.tree.zowe.uss.explorer",
+            new vscode.DataTransferItem([
+                {
+                    label: ussnode.label,
+                    uri: ussnode.resourceUri,
+                },
+            ])
+        );
+    });
+});
