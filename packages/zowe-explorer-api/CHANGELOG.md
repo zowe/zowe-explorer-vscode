@@ -8,7 +8,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 - **Breaking:** Marked `getJobsByParameters` as a required function for the `MainframeInteraction.IJes` interface. [#2764](https://github.com/zowe/vscode-extension-for-zowe/pull/2764)
   - The new `getJobsByParameters` API is meant to replace `getJobsByOwnerAndPrefix`, and it adds new capabilities such as querying by status and limiting the amount of returned jobs.
-- **Breaking:** Removed string as a return type of `uploadFromBuffer`, since the z/OSMF API has been fixed to return a response object that includes an etag. [#2785](https://github.com/zowe/zowe-explorer-vscode/issues/2785)
+- **Breaking:** Removed string as a return type of the `uploadFromBuffer` method, since the z/OSMF API has been fixed to return a response object that includes an etag. [#2785](https://github.com/zowe/zowe-explorer-vscode/issues/2785)
 
 ### Bug fixes
 
