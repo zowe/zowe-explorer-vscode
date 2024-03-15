@@ -286,6 +286,36 @@ describe("writeFile", () => {
         lookupMock.mockRestore();
     });
 
+    it("calls _handleConflict when there is an e-tag error", async () => {
+        const mockMvsApi = {
+            getContents: jest.fn(),
+            uploadFromBuffer: jest.fn().mockRejectedValueOnce(new Error("Rest API failure with HTTP(S) status 412")),
+        };
+        const mvsApiMock = jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValueOnce(mockMvsApi as any);
+        const statusMsgMock = jest.spyOn(Gui, "setStatusBarMessage");
+        const psEntry = { ...testEntries.ps, metadata: testEntries.ps.metadata } as DsEntry;
+        const sessionEntry = { ...testEntries.session };
+        sessionEntry.entries.set("USER.DATA.PS", psEntry);
+        const lookupParentDirMock = jest.spyOn(DatasetFSProvider.instance as any, "_lookupParentDirectory").mockReturnValueOnce(sessionEntry);
+        const lookupMock = jest.spyOn(DatasetFSProvider.instance as any, "_lookup").mockReturnValueOnce(psEntry);
+        const handleConflictMock = jest.spyOn(DatasetFSProvider.instance as any, "_handleConflict").mockImplementation();
+        const newContents = new Uint8Array([3, 6, 9]);
+        await DatasetFSProvider.instance.writeFile(testUris.ps, newContents, { create: false, overwrite: true });
+
+        expect(lookupParentDirMock).toHaveBeenCalledWith(testUris.ps);
+        expect(statusMsgMock).toHaveBeenCalledWith("$(sync~spin) Saving data set...");
+        expect(mockMvsApi.uploadFromBuffer).toHaveBeenCalledWith(Buffer.from(newContents), testEntries.ps.name, {
+            binary: false,
+            encoding: undefined,
+            etag: testEntries.ps.etag,
+            returnEtag: true,
+        });
+        expect(handleConflictMock).toHaveBeenCalled();
+        handleConflictMock.mockRestore();
+        mvsApiMock.mockRestore();
+        lookupMock.mockRestore();
+    });
+
     it("upload changes to a remote DS even if its not yet in the FSP", async () => {
         const mockMvsApi = {
             createDataSetMember: jest.fn(),
@@ -549,5 +579,27 @@ describe("rename", () => {
             DatasetFSProvider.instance.rename(testUris.ps, testUris.ps.with({ path: "/USER.DATA.PS2" }), { overwrite: false })
         ).rejects.toThrow("file exists");
         _lookupMock.mockRestore();
+    });
+
+    it("displays an error message when renaming fails on the remote system", async () => {
+        const oldPds = new PdsEntry("USER.DATA.PDS");
+        oldPds.metadata = testEntries.pds.metadata;
+        const mockMvsApi = {
+            renameDataSet: jest.fn().mockRejectedValueOnce(new Error("could not upload data set")),
+        };
+        const errMsgSpy = jest.spyOn(Gui, "errorMessage");
+        const mvsApiMock = jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValueOnce(mockMvsApi as any);
+        const _lookupMock = jest
+            .spyOn(DatasetFSProvider.instance as any, "_lookup")
+            .mockImplementation((uri): DirEntry | FileEntry => ((uri as Uri).path.includes("USER.DATA.PDS2") ? (undefined as any) : oldPds));
+        const _lookupParentDirectoryMock = jest
+            .spyOn(DatasetFSProvider.instance as any, "_lookupParentDirectory")
+            .mockReturnValueOnce({ ...testEntries.session });
+        await DatasetFSProvider.instance.rename(testUris.pds, testUris.pds.with({ path: "/USER.DATA.PDS2" }), { overwrite: true });
+        expect(mockMvsApi.renameDataSet).toHaveBeenCalledWith("USER.DATA.PDS", "USER.DATA.PDS2");
+        expect(errMsgSpy).toHaveBeenCalledWith("Renaming USER.DATA.PDS failed due to API error: could not upload data set");
+        _lookupMock.mockRestore();
+        mvsApiMock.mockRestore();
+        _lookupParentDirectoryMock.mockRestore();
     });
 });

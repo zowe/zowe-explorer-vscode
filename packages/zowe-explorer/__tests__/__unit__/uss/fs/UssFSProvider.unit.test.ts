@@ -343,6 +343,35 @@ describe("writeFile", () => {
         ussApiMock.mockRestore();
     });
 
+    it("calls _handleConflict when there is an etag error", async () => {
+        const mockUssApi = {
+            getContents: jest.fn(),
+            uploadFromBuffer: jest.fn().mockRejectedValueOnce(new Error("Rest API failure with HTTP(S) status 412")),
+        };
+        const ussApiMock = jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce(mockUssApi as any);
+        const statusMsgMock = jest.spyOn(Gui, "setStatusBarMessage");
+        const folder = {
+            ...testEntries.folder,
+            entries: new Map([[testEntries.file.name, { ...testEntries.file }]]),
+        };
+        const lookupParentDirMock = jest.spyOn(UssFSProvider.instance as any, "_lookupParentDirectory").mockReturnValueOnce(folder);
+        const newContents = new Uint8Array([3, 6, 9]);
+        const handleConflictMock = jest.spyOn(UssFSProvider.instance as any, "_handleConflict").mockImplementation();
+        await UssFSProvider.instance.writeFile(testUris.file, newContents, { create: false, overwrite: true });
+
+        expect(lookupParentDirMock).toHaveBeenCalledWith(testUris.file);
+        expect(statusMsgMock).toHaveBeenCalledWith("$(sync~spin) Saving USS file...");
+        expect(mockUssApi.uploadFromBuffer).toHaveBeenCalledWith(Buffer.from(newContents), testEntries.file.metadata.path, {
+            binary: false,
+            encoding: undefined,
+            etag: testEntries.file.etag,
+            returnEtag: true,
+        });
+        expect(handleConflictMock).toHaveBeenCalled();
+        handleConflictMock.mockRestore();
+        ussApiMock.mockRestore();
+    });
+
     it("upload changes to a remote file even if its not yet in the FSP", async () => {
         const mockUssApi = {
             getContents: jest.fn().mockResolvedValueOnce({

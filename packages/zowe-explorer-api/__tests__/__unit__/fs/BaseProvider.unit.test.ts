@@ -219,6 +219,13 @@ describe("removeEntry", () => {
 
         expect(prov.removeEntry(globalMocks.testFileUri)).toBe(false);
     });
+
+    it("returns early if it could not find the parent directory of the item to remove", () => {
+        const parentDirMock = jest.spyOn(BaseProvider.prototype as any, "_lookupParentDirectory").mockReturnValue(undefined);
+        const prov = new (BaseProvider as any)();
+        expect(prov.removeEntry(globalMocks.testFileUri)).toBe(false);
+        parentDirMock.mockRestore();
+    });
 });
 
 describe("cacheOpenedUri", () => {

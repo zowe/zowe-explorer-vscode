@@ -121,10 +121,6 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                                 tempEntry = new DsEntry(ds.dsname);
                             }
                         }
-
-                        if (tempEntry == null) {
-                            continue;
-                        }
                         dsEntry.entries.set(ds.dsname, tempEntry);
                     }
                     results.push([tempEntry.name, tempEntry instanceof DsEntry ? vscode.FileType.File : vscode.FileType.Directory]);
@@ -355,10 +351,10 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                     if (!err.message.includes("Rest API failure with HTTP(S) status 412")) {
                         throw err;
                     }
-                    entry.data = content;
-                    if ((await this._handleConflict(uri, entry)) != ConflictViewSelection.Overwrite) {
-                        return;
-                    }
+
+                    // Prompt the user with the conflict dialog
+                    await this._handleConflict(uri, entry);
+                    return;
                 }
             } else {
                 // if the entry hasn't been accessed yet, we don't need to call the API since we are just creating the file
@@ -427,12 +423,6 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         const oldName = entry.name;
         const newName = path.posix.basename(newUri.path);
 
-        parentDir.entries.delete(entry.name);
-        entry.name = newName;
-
-        // Build the new path using the previous path and new file/folder name.
-        const newPath = path.posix.join(entry.metadata.path, "..", newName);
-
         try {
             if (isPdsEntry(entry)) {
                 await ZoweExplorerApiRegister.getMvsApi(entry.metadata.profile).renameDataSet(oldName, newName);
@@ -444,12 +434,18 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             await Gui.errorMessage(
                 vscode.l10n.t({
                     message: "Renaming {0} failed due to API error: {1}",
-                    args: [path.posix.basename(entry.metadata.path), err.message],
-                    comment: ["File path", "Error message"],
+                    args: [oldName, err.message],
+                    comment: ["File name", "Error message"],
                 })
             );
             return;
         }
+
+        parentDir.entries.delete(entry.name);
+        entry.name = newName;
+
+        // Build the new path using the previous path and new file/folder name.
+        const newPath = path.posix.join(entry.metadata.path, "..", newName);
 
         entry.metadata.path = newPath;
         parentDir.entries.set(newName, entry);

@@ -278,6 +278,20 @@ export class BaseProvider {
         };
     }
 
+    // This event removes the "diff view" flag from the local file,
+    // so that API calls can continue after the conflict dialog is closed.
+    private static async onCloseEvent(provider: BaseProvider, e: vscode.TextDocument): Promise<void> {
+        if (e.uri.query && e.uri.scheme.startsWith("zowe-")) {
+            const queryParams = new URLSearchParams(e.uri.query);
+            if (queryParams.has("conflict")) {
+                const fsEntry = await provider._lookupAsFile(e.uri, { silent: true });
+                if (fsEntry) {
+                    fsEntry.inDiffView = false;
+                }
+            }
+        }
+    }
+
     /**
      * Utility functions for conflict management:
      */
@@ -302,21 +316,7 @@ export class BaseProvider {
 
         // User selected "Compare", show diff with local contents and LPAR contents
         if (userSelection === conflictOptions[0]) {
-            // This event removes the "diff view" flag from the local file,
-            // so that API calls can continue after the conflict dialog is closed.
-            const onCloseEvent = async (provider: BaseProvider, e: vscode.TextDocument): Promise<void> => {
-                if (e.uri.query && e.uri.scheme.startsWith("zowe-")) {
-                    const queryParams = new URLSearchParams(e.uri.query);
-                    if (queryParams.has("conflict")) {
-                        const fsEntry = await provider._lookupAsFile(e.uri, { silent: true });
-                        if (fsEntry) {
-                            fsEntry.inDiffView = false;
-                        }
-                    }
-                }
-            };
-            vscode.workspace.onDidCloseTextDocument(onCloseEvent.bind(this));
-
+            vscode.workspace.onDidCloseTextDocument(BaseProvider.onCloseEvent.bind(this));
             vscode.commands.executeCommand(
                 "vscode.diff",
                 uri.with({ query: "conflict=true" }),
