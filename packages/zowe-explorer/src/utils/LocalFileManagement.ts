@@ -52,12 +52,8 @@ export class LocalFileManagement {
         if (docUriArray.length === 2) {
             await vscode.commands.executeCommand("vscode.diff", docUriArray[0], docUriArray[1]);
             if (readOnly) {
-                this.readOnlyFile();
+                vscode.commands.executeCommand("workbench.action.files.setActiveEditorReadonlyInSession");
             }
         }
-    }
-
-    private static readOnlyFile(): void {
-        vscode.commands.executeCommand("workbench.action.files.setActiveEditorReadonlyInSession");
     }
 }

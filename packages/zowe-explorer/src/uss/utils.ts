@@ -63,24 +63,6 @@ export function injectAdditionalDataToTooltip(node: ZoweUSSNode, tooltip: string
 }
 
 /**
- * Checks whether file already exists while case sensitivity taken into account
- * @param filepath
- * @returns {boolean}
- */
-export function fileExistsCaseSensitiveSync(filepath: string): boolean {
-    ZoweLogger.trace("uss.utils.fileExistsCaseSensitveSync called.");
-    const dir = path.dirname(filepath);
-    if (dir === path.dirname(dir)) {
-        return true;
-    }
-    const filenames = fs.readdirSync(dir);
-    if (filenames.indexOf(path.basename(filepath)) === -1) {
-        return false;
-    }
-    return fileExistsCaseSensitiveSync(dir);
-}
-
-/**
  * Removes clipboard contents
  * @returns {void}
  */

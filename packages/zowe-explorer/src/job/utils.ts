@@ -10,8 +10,6 @@
  */
 
 import { Sorting } from "@zowe/zowe-explorer-api";
-import { ZoweLogger } from "../utils/ZoweLogger";
-import { FilterItem } from "../utils/ProfilesUtils";
 import * as zosjobs from "@zowe/zos-jobs-for-zowe-sdk";
 import * as vscode from "vscode";
 
@@ -31,11 +29,3 @@ export const JOB_SORT_KEYS: Record<Sorting.JobSortOpts, keyof (zosjobs.IJob & { 
 };
 
 export const JOB_FILTER_OPTS = [vscode.l10n.t("Go to Local Filtering"), vscode.l10n.t("$(clear-all) Clear filter for profile")];
-
-export async function resolveQuickPickHelper(quickpick): Promise<FilterItem | undefined> {
-    ZoweLogger.trace("job.utils.resolveQuickPickHelper called.");
-    return new Promise<FilterItem | undefined>((c) => {
-        quickpick.onDidAccept(() => c(quickpick.activeItems[0]));
-        quickpick.onDidHide(() => c(undefined));
-    });
-}
