@@ -134,11 +134,7 @@ export namespace ZoweExplorerZosmf {
             return zosfiles.Utilities.putUSSPayload(this.getSession(), outputPath, { ...(options ?? {}), request: "copy" });
         }
 
-        public uploadFromBuffer(buffer: Buffer, filePath: string, options?: zosfiles.IUploadOptions): Promise<string> {
-            // for z/OSMF this is always an empty string, this is because bufferToUssFile in zos-files SDK returns
-            // the data string - but, the API returns a 204 No Content when successful, so the response data will always be empty
-
-            // Once bufferToUssFile is updated to use putExpectJSON, we can also get the e-tag from the response headers.
+        public uploadFromBuffer(buffer: Buffer, filePath: string, options?: zosfiles.IUploadOptions): Promise<zosfiles.IZosFilesResponse> {
             return zosfiles.Upload.bufferToUssFile(this.getSession(), filePath, buffer, options);
         }
 
@@ -244,10 +240,6 @@ export namespace ZoweExplorerZosmf {
         }
 
         public uploadFromBuffer(buffer: Buffer, dataSetName: string, options?: zosfiles.IUploadOptions): Promise<zosfiles.IZosFilesResponse> {
-            // for z/OSMF this is always an empty string, this is because bufferToDataSet in zos-files SDK returns
-            // the data string - but, the API returns a 204 No Content when successful, so the response data will always be empty
-
-            // Once bufferToDataSet is updated to use putExpectJSON, we can also get the e-tag from the response headers.
             return zosfiles.Upload.bufferToDataSet(this.getSession(), buffer, dataSetName, options);
         }
 
