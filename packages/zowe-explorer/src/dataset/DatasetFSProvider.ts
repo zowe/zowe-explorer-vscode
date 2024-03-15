@@ -12,7 +12,6 @@
 import {
     BaseProvider,
     BufferBuilder,
-    ConflictViewSelection,
     DirEntry,
     DsEntry,
     DsEntryMetadata,
@@ -269,70 +268,68 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             throw vscode.FileSystemError.FileExists(uri);
         }
 
-        if (!entry) {
-            entry = new DsEntry(basename);
-            entry.data = content;
-            const profInfo = parent.metadata
-                ? new DsEntryMetadata({
-                      profile: parent.metadata.profile,
-                      path: path.posix.join(parent.metadata.path, basename),
-                  })
-                : this._getInfoFromUri(uri);
-            entry.metadata = profInfo;
+        // Attempt to write data to remote system, and handle any conflicts from e-tag mismatch
+        const statusMsg = Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Saving data set..."));
+        try {
+            if (!entry) {
+                entry = new DsEntry(basename);
+                entry.data = content;
+                const profInfo = parent.metadata
+                    ? new DsEntryMetadata({
+                          profile: parent.metadata.profile,
+                          path: path.posix.join(parent.metadata.path, basename),
+                      })
+                    : this._getInfoFromUri(uri);
+                entry.metadata = profInfo;
 
-            if (content.byteLength > 0) {
-                const statusMsg = Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Saving data set..."));
+                if (content.byteLength > 0) {
+                    const mvsApi = ZoweExplorerApiRegister.getMvsApi(parent.metadata.profile);
+                    // create the data set member as it did not exist previously
+                    const dsName = isFilterEntry(parent) ? entry.name : `${parent.name}(${entry.name})`;
+                    await mvsApi.createDataSetMember(dsName);
+                    const profileEncoding = entry.encoding ? null : entry.metadata.profile.profile?.encoding;
+                    await mvsApi.uploadFromBuffer(Buffer.from(content), dsName, {
+                        binary: entry.encoding?.kind === "binary",
+                        encoding: entry.encoding?.kind === "other" ? entry.encoding.codepage : profileEncoding,
+                        etag: undefined,
+                        returnEtag: true,
+                    });
+                    // Update e-tag if write was successful.
+                    const newData = await mvsApi.getContents(dsName, {
+                        returnEtag: true,
+                    });
+                    entry.etag = newData.apiResponse.etag;
+                    entry.data = content;
+                    statusMsg.dispose();
+                }
+                parent.entries.set(basename, entry);
+                this._fireSoon({ type: vscode.FileChangeType.Created, uri });
+            } else {
+                const urlQuery = new URLSearchParams(uri.query);
+                const shouldForceUpload = urlQuery.has("forceUpload");
+
+                if (urlQuery.has("inDiff")) {
+                    // Allow users to edit files in diff view.
+                    // If in diff view, we don't want to make any API calls, just keep track of latest
+                    // changes to data.
+                    entry.data = content;
+                    entry.mtime = Date.now();
+                    entry.size = content.byteLength;
+                    entry.inDiffView = true;
+                    return;
+                }
+
                 const mvsApi = ZoweExplorerApiRegister.getMvsApi(parent.metadata.profile);
-                // create the data set member as it did not exist previously
-                const dsName = isFilterEntry(parent) ? entry.name : `${parent.name}(${entry.name})`;
-                await mvsApi.createDataSetMember(dsName);
-                const profileEncoding = entry.encoding ? null : entry.metadata.profile.profile?.encoding;
-                await mvsApi.uploadFromBuffer(Buffer.from(content), dsName, {
-                    binary: entry.encoding?.kind === "binary",
-                    encoding: entry.encoding?.kind === "other" ? entry.encoding.codepage : profileEncoding,
-                    etag: undefined,
-                    returnEtag: true,
-                });
-                // Update e-tag if write was successful.
-                const newData = await mvsApi.getContents(dsName, {
-                    returnEtag: true,
-                });
-                entry.etag = newData.apiResponse.etag;
-                entry.data = content;
-                statusMsg.dispose();
-            }
-            parent.entries.set(basename, entry);
-            this._fireSoon({ type: vscode.FileChangeType.Created, uri });
-        } else {
-            const urlQuery = new URLSearchParams(uri.query);
-            const shouldForceUpload = urlQuery.has("forceUpload");
 
-            if (urlQuery.has("inDiff")) {
-                // Allow users to edit files in diff view.
-                // If in diff view, we don't want to make any API calls, just keep track of latest
-                // changes to data.
-                entry.data = content;
-                entry.mtime = Date.now();
-                entry.size = content.byteLength;
-                entry.inDiffView = true;
-                return;
-            }
+                if (entry.wasAccessed || content.length > 0) {
+                    // Entry was already accessed, this is an update to the existing file.
+                    // Note that we don't want to call the API when making changes to the conflict file,
+                    // because the conflict file serves as the "remote" point of reference at the time of conflict,
+                    // and provides the data when comparing local/remote versions of a file.
 
-            const mvsApi = ZoweExplorerApiRegister.getMvsApi(parent.metadata.profile);
-
-            if (entry.wasAccessed || content.length > 0) {
-                // Entry was already accessed, this is an update to the existing file.
-                // Note that we don't want to call the API when making changes to the conflict file,
-                // because the conflict file serves as the "remote" point of reference at the time of conflict,
-                // and provides the data when comparing local/remote versions of a file.
-                const statusMsg = Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Saving data set..."));
-
-                const isPdsMember = parent instanceof PdsEntry && !isFilterEntry(parent);
-                const fullName = isPdsMember ? `${parent.name}(${entry.name})` : entry.name;
-                const profileEncoding = entry.encoding ? null : entry.metadata.profile.profile?.encoding;
-
-                // Attempt to write data to remote system, and handle any conflicts from e-tag mismatch
-                try {
+                    const isPdsMember = parent instanceof PdsEntry && !isFilterEntry(parent);
+                    const fullName = isPdsMember ? `${parent.name}(${entry.name})` : entry.name;
+                    const profileEncoding = entry.encoding ? null : entry.metadata.profile.profile?.encoding;
                     await mvsApi.uploadFromBuffer(Buffer.from(content), fullName, {
                         binary: entry.encoding?.kind === "binary",
                         encoding: entry.encoding?.kind === "other" ? entry.encoding.codepage : profileEncoding,
@@ -346,20 +343,20 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                     entry.etag = newData.apiResponse.etag;
                     entry.data = content;
                     statusMsg.dispose();
-                } catch (err) {
-                    statusMsg.dispose();
-                    if (!err.message.includes("Rest API failure with HTTP(S) status 412")) {
-                        throw err;
-                    }
-
-                    // Prompt the user with the conflict dialog
-                    await this._handleConflict(uri, entry);
-                    return;
+                } else {
+                    // if the entry hasn't been accessed yet, we don't need to call the API since we are just creating the file
+                    entry.data = content;
                 }
-            } else {
-                // if the entry hasn't been accessed yet, we don't need to call the API since we are just creating the file
-                entry.data = content;
             }
+        } catch (err) {
+            statusMsg.dispose();
+            if (!err.message.includes("Rest API failure with HTTP(S) status 412")) {
+                throw err;
+            }
+
+            // Prompt the user with the conflict dialog
+            await this._handleConflict(uri, entry);
+            return;
         }
 
         entry.mtime = Date.now();

@@ -237,61 +237,60 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             throw vscode.FileSystemError.FileExists(uri);
         }
 
-        if (!entry) {
-            entry = new UssFile(fileName);
-            // Build the metadata for the file using the parent's metadata (if available),
-            // or build it using the helper function
-            entry.metadata = {
-                ...parentDir.metadata,
-                path: path.posix.join(parentDir.metadata.path, fileName),
-            };
+        // Attempt to write data to remote system, and handle any conflicts from e-tag mismatch
+        const statusMsg = Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Saving USS file..."));
+        try {
+            if (!entry) {
+                entry = new UssFile(fileName);
+                // Build the metadata for the file using the parent's metadata (if available),
+                // or build it using the helper function
+                entry.metadata = {
+                    ...parentDir.metadata,
+                    path: path.posix.join(parentDir.metadata.path, fileName),
+                };
 
-            if (content.byteLength > 0) {
-                const statusMsg = Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Saving USS file..."));
-                // user is trying to edit a file that was just deleted: make the API call
-                const ussApi = ZoweExplorerApiRegister.getUssApi(parentDir.metadata.profile);
-                const profileEncoding = entry.encoding ? null : entry.metadata.profile.profile?.encoding;
-                await ussApi.uploadFromBuffer(Buffer.from(content), entry.metadata.path, {
-                    binary: entry.encoding?.kind === "binary",
-                    encoding: entry.encoding?.kind === "other" ? entry.encoding.codepage : profileEncoding,
-                    etag: undefined,
-                    returnEtag: true,
-                });
+                if (content.byteLength > 0) {
+                    // user is trying to edit a file that was just deleted: make the API call
+                    const ussApi = ZoweExplorerApiRegister.getUssApi(parentDir.metadata.profile);
+                    const profileEncoding = entry.encoding ? null : entry.metadata.profile.profile?.encoding;
+                    await ussApi.uploadFromBuffer(Buffer.from(content), entry.metadata.path, {
+                        binary: entry.encoding?.kind === "binary",
+                        encoding: entry.encoding?.kind === "other" ? entry.encoding.codepage : profileEncoding,
+                        etag: undefined,
+                        returnEtag: true,
+                    });
 
-                // Update e-tag if write was successful.
-                // TODO: This call below can be removed once zowe.Upload.bufferToUssFile returns response headers.
-                // This is necessary at the moment on z/OSMF to fetch the new e-tag.
-                const newData = await ussApi.getContents(entry.metadata.path, {
-                    returnEtag: true,
-                });
-                entry.etag = newData.apiResponse.etag;
-                statusMsg.dispose();
-            }
-            entry.data = content;
-            parentDir.entries.set(fileName, entry);
-            this._fireSoon({ type: vscode.FileChangeType.Created, uri });
-        } else {
-            const urlQuery = new URLSearchParams(uri.query);
-
-            if (entry.inDiffView || urlQuery.has("inDiff")) {
-                // Allow users to edit the local copy of a file in the diff view, but don't make any API calls.
-                entry.inDiffView = true;
+                    // Update e-tag if write was successful.
+                    // TODO: This call below can be removed once zowe.Upload.bufferToUssFile returns response headers.
+                    // This is necessary at the moment on z/OSMF to fetch the new e-tag.
+                    const newData = await ussApi.getContents(entry.metadata.path, {
+                        returnEtag: true,
+                    });
+                    entry.etag = newData.apiResponse.etag;
+                    statusMsg.dispose();
+                }
                 entry.data = content;
-                entry.mtime = Date.now();
-                entry.size = content.byteLength;
-                return;
-            }
+                parentDir.entries.set(fileName, entry);
+                this._fireSoon({ type: vscode.FileChangeType.Created, uri });
+            } else {
+                const urlQuery = new URLSearchParams(uri.query);
 
-            const ussApi = ZoweExplorerApiRegister.getUssApi(parentDir.metadata.profile);
+                if (entry.inDiffView || urlQuery.has("inDiff")) {
+                    // Allow users to edit the local copy of a file in the diff view, but don't make any API calls.
+                    entry.inDiffView = true;
+                    entry.data = content;
+                    entry.mtime = Date.now();
+                    entry.size = content.byteLength;
+                    return;
+                }
 
-            if (entry.wasAccessed || content.length > 0) {
-                const shouldForceUpload = urlQuery.has("forceUpload");
-                const profileEncoding = entry.encoding ? null : entry.metadata.profile.profile?.encoding;
+                const ussApi = ZoweExplorerApiRegister.getUssApi(parentDir.metadata.profile);
 
-                // Entry was already accessed previously, this is an update to the existing file.
-                const statusMsg = Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Saving USS file..."));
-                try {
-                    // Attempt to write data to remote system, and handle any conflicts from e-tag mismatch
+                if (entry.wasAccessed || content.length > 0) {
+                    const shouldForceUpload = urlQuery.has("forceUpload");
+                    const profileEncoding = entry.encoding ? null : entry.metadata.profile.profile?.encoding;
+
+                    // Entry was already accessed previously, this is an update to the existing file.
                     await ussApi.uploadFromBuffer(Buffer.from(content), entry.metadata.path, {
                         binary: entry.encoding?.kind === "binary",
                         encoding: entry.encoding?.kind === "other" ? entry.encoding.codepage : profileEncoding,
@@ -308,21 +307,21 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                     entry.etag = newData.apiResponse.etag;
                     entry.data = content;
                     statusMsg.dispose();
-                } catch (err) {
-                    statusMsg.dispose();
-                    if (!err.message.includes("Rest API failure with HTTP(S) status 412")) {
-                        // Some unknown error happened, don't update the entry
-                        throw err;
-                    }
-
-                    // Prompt the user with the conflict dialog
-                    await this._handleConflict(uri, entry);
-                    return;
+                } else {
+                    // The entry hasn't been accessed yet, this call is to setup a placeholder entry.
+                    entry.data = content;
                 }
-            } else {
-                // The entry hasn't been accessed yet, this call is to setup a placeholder entry.
-                entry.data = content;
             }
+        } catch (err) {
+            statusMsg.dispose();
+            if (!err.message.includes("Rest API failure with HTTP(S) status 412")) {
+                // Some unknown error happened, don't update the entry
+                throw err;
+            }
+
+            // Prompt the user with the conflict dialog
+            await this._handleConflict(uri, entry);
+            return;
         }
 
         entry.mtime = Date.now();
