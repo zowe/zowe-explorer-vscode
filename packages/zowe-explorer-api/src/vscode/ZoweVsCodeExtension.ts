@@ -168,7 +168,8 @@ export class ZoweVsCodeExtension {
         zeProfiles?: ProfilesCache // Profiles extends ProfilesCache
     ): Promise<boolean> {
         const cache: ProfilesCache = zeProfiles ?? ZoweVsCodeExtension.profilesCache;
-        const baseProfile = await cache.fetchBaseProfile();
+        // const baseProfile = await cache.fetchBaseProfile();
+        const baseProfile = await this.promptForBaseProfile(cache, typeof serviceProfile === "string" ? serviceProfile : serviceProfile.name);
         if (baseProfile == null) {
             return false;
         }
@@ -269,6 +270,27 @@ export class ZoweVsCodeExtension {
             } else {
                 await cache.updateBaseProfileFileLogout(serviceProfile);
             }
+        }
+    }
+
+    private static async promptForBaseProfile(zeProfiles: ProfilesCache, profileName: string): Promise<imperative.IProfileLoaded> {
+        const baseProfiles = await zeProfiles.fetchAllProfilesByType("base");
+        const qpItems = baseProfiles.map((profile: imperative.IProfileLoaded): vscode.QuickPickItem => {
+            return {
+                label: profile.name,
+                description: `${profile.profile.host as string}:${profile.profile.port as number}`,
+            };
+        });
+        const response = await Gui.showQuickPick(qpItems, {
+            placeHolder: "Select profile where API ML authentication token should be stored",
+            title: `[${profileName}] Log in to authentication service`,
+        });
+        if (response != null) {
+            const baseProfileName = response.label;
+            const configApi = (await zeProfiles.getProfileInfo()).getTeamConfig();
+            configApi.set(`profileLinks.${profileName}`, [baseProfileName]);
+            await configApi.save();
+            return zeProfiles.getLoadedProfConfig(baseProfileName, "base");
         }
     }
 
