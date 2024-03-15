@@ -89,6 +89,7 @@ describe("refreshSpool", () => {
         const node = { resourceUri: testUris.spool, contextValue: "job" } as any;
         await JobFSProvider.refreshSpool(node);
         expect(statusBarMsgMock).not.toHaveBeenCalledWith("$(sync~spin) Fetching spool file...");
+        statusBarMsgMock.mockRestore();
     });
 
     it("calls fetchSpoolAtUri for a valid spool node", async () => {
@@ -100,6 +101,8 @@ describe("refreshSpool", () => {
         expect(statusBarMsgMock).toHaveBeenCalledWith("$(sync~spin) Fetching spool file...");
         expect(fetchSpoolAtUriMock).toHaveBeenCalledWith(node.resourceUri);
         expect(disposeMock).toHaveBeenCalled();
+        fetchSpoolAtUriMock.mockRestore();
+        statusBarMsgMock.mockRestore();
     });
 });
 
