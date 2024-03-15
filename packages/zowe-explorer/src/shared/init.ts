@@ -123,9 +123,6 @@ export function registerCommonCommands(context: vscode.ExtensionContext, provide
             if (e.affectsConfiguration(globals.SETTINGS_SECURE_CREDENTIALS_ENABLED)) {
                 await vscode.commands.executeCommand("zowe.updateSecureCredentials");
             }
-            if (e.affectsConfiguration(globals.LOGGER_SETTINGS)) {
-                await vscode.commands.executeCommand("zowe.extRefresh");
-            }
         })
     );
 

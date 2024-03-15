@@ -14,7 +14,7 @@
 import { Gui, MessageSeverity } from "@zowe/zowe-explorer-api";
 import * as vscode from "vscode";
 import { SettingsConfig } from "./SettingsConfig";
-import { ZoweLocalStorage } from "./ZoweLocalStorage";
+import { LocalStorageKey, ZoweLocalStorage } from "./ZoweLocalStorage";
 import { ZoweLogger } from "./ZoweLogger";
 
 export class LoggerUtils {
@@ -76,7 +76,7 @@ export class LoggerUtils {
     }
 
     private static setLogSetting(setting: string): void {
-        ZoweLocalStorage.setValue("zowe.logger", setting);
+        ZoweLocalStorage.setValue(LocalStorageKey.LOGGER, setting);
     }
 
     private static getZoweLogEnvVar(): string {

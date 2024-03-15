@@ -23,7 +23,7 @@ import { createFavoriteUSSNode, createUSSNode, createUSSTree } from "../../../__
 import { createIJobObject, createJobsTree } from "../../../__mocks__/mockCreators/jobs";
 import * as refreshActions from "../../../src/shared/refresh";
 import { createDatasetSessionNode, createDatasetTree } from "../../../__mocks__/mockCreators/datasets";
-import * as sessUtils from "../../../src/utils/SessionUtils";
+import { TreeViewUtils } from "../../../src/utils/TreeViewUtils";
 import { SettingsConfig } from "../../../src/utils/SettingsConfig";
 import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
 
@@ -74,7 +74,7 @@ function createGlobalMocks() {
             "zowe.automaticProfileValidation": true,
         }),
     });
-    Object.defineProperty(sessUtils, "removeSession", {
+    Object.defineProperty(TreeViewUtils, "removeSession", {
         value: jest.fn().mockImplementationOnce(() => Promise.resolve()),
         configurable: true,
     });
@@ -119,7 +119,7 @@ describe("Refresh Unit Tests - Function refreshAll", () => {
                 "zowe.automaticProfileValidation": true,
             }),
         });
-        Object.defineProperty(sessUtils, "removeSession", {
+        Object.defineProperty(TreeViewUtils, "removeSession", {
             value: jest.fn().mockImplementationOnce(() => Promise.resolve()),
             configurable: true,
         });

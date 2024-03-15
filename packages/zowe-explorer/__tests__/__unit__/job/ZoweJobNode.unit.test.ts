@@ -20,7 +20,7 @@ import { ZoweJobNode } from "../../../src/job/ZoweJobNode";
 import { imperative, IZoweJobTreeNode, ProfilesCache, Gui, Sorting } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { Profiles } from "../../../src/Profiles";
-import * as sessUtils from "../../../src/utils/SessionUtils";
+import { TreeViewUtils } from "../../../src/utils/TreeViewUtils";
 import {
     createIProfile,
     createISession,
@@ -132,7 +132,7 @@ async function createGlobalMocks() {
         value: globalMocks.mockDeleteJob,
         configurable: true,
     });
-    Object.defineProperty(sessUtils, "removeSession", {
+    Object.defineProperty(TreeViewUtils, "removeSession", {
         value: jest.fn().mockImplementationOnce(() => Promise.resolve()),
         configurable: true,
     });

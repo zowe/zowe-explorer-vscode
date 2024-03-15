@@ -56,9 +56,6 @@ export class Profiles extends ProfilesCache {
 
     public loadedProfile: imperative.IProfileLoaded;
     public validProfile: Validation.ValidationType = Validation.ValidationType.INVALID;
-    private dsSchema: string = globals.SETTINGS_DS_HISTORY;
-    private ussSchema: string = globals.SETTINGS_USS_HISTORY;
-    private jobsSchema: string = globals.SETTINGS_JOBS_HISTORY;
     private mProfileInfo: imperative.ProfileInfo;
     private profilesOpCancelled = vscode.l10n.t(`Operation Cancelled`);
     private manualEditMsg = vscode.l10n.t(

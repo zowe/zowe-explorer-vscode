@@ -30,7 +30,7 @@ import {
 } from "../../../__mocks__/mockCreators/shared";
 import { getIconByNode } from "../../../src/generators/icons";
 import { createJesApi } from "../../../__mocks__/mockCreators/api";
-import * as sessUtils from "../../../src/utils/SessionUtils";
+import { TreeViewUtils } from "../../../src/utils/TreeViewUtils";
 import { jobStringValidator } from "../../../src/shared/utils";
 import { ZoweLogger } from "../../../src/utils/ZoweLogger";
 import { Poller } from "@zowe/zowe-explorer-api/src/utils";
@@ -200,7 +200,7 @@ async function createGlobalMocks() {
         value: jest.fn(() => globalMocks.mockProfileInstance),
         configurable: true,
     });
-    Object.defineProperty(sessUtils, "removeSession", {
+    Object.defineProperty(TreeViewUtils, "removeSession", {
         value: jest.fn().mockImplementationOnce(() => Promise.resolve()),
         configurable: true,
     });

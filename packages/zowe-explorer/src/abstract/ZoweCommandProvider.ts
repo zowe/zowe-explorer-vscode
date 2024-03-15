@@ -13,7 +13,7 @@ import * as vscode from "vscode";
 import * as globals from "../globals";
 import { getIconById, IconId } from "../generators/icons";
 import * as contextually from "../shared/context";
-import { IZoweTreeNode } from "@zowe/zowe-explorer-api";
+import { IZoweTreeNode, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { errorHandling } from "../utils/ProfilesUtils";
 import { PersistentFilters } from "../PersistentFilters";
@@ -22,7 +22,6 @@ import { ZoweLogger } from "../utils/ZoweLogger";
 export class ZoweCommandProvider {
     // eslint-disable-next-line no-magic-numbers
     private static readonly totalFilters: number = 10;
-    private static readonly persistenceSchema: string = globals.SETTINGS_COMMANDS_HISTORY;
 
     public history: PersistentFilters;
     // Event Emitters used to notify subscribers that the refresh event has fired
@@ -30,7 +29,7 @@ export class ZoweCommandProvider {
     public readonly onDidChangeTreeData: vscode.Event<IZoweTreeNode | void> = this.mOnDidChangeTreeData.event;
 
     public constructor() {
-        this.history = new PersistentFilters(ZoweCommandProvider.persistenceSchema, ZoweCommandProvider.totalFilters);
+        this.history = new PersistentFilters(PersistenceSchemaEnum.Commands, ZoweCommandProvider.totalFilters);
     }
 
     /**
