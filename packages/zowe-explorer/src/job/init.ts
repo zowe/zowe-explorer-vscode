@@ -59,13 +59,7 @@ export async function initJobsProvider(context: vscode.ExtensionContext): Promis
         })
     );
     context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.refreshJob", (job) => jobActions.refreshJob(job.mParent, jobsProvider)));
-    context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.jobs.refreshSpool", async (node) => {
-            const statusBarMsg = Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Fetching spool file..."));
-            await JobFSProvider.instance.fetchSpoolAtUri(node.resourceUri);
-            statusBarMsg.dispose();
-        })
-    );
+    context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.refreshSpool", async (node) => JobFSProvider.refreshSpool(node)));
 
     const downloadSingleSpoolHandler = (binary: boolean) => async (node, nodeList) => {
         const selectedNodes = getSelectedNodeList(node, nodeList) as IZoweJobTreeNode[];

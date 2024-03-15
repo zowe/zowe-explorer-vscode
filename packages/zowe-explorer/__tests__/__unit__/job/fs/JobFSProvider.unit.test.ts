@@ -11,7 +11,7 @@
 
 import { Disposable, FilePermission, FileType, Uri } from "vscode";
 import { JobFSProvider } from "../../../../src/job/JobFSProvider";
-import { FilterEntry, JobEntry, SpoolEntry, ZoweScheme } from "@zowe/zowe-explorer-api";
+import { FilterEntry, Gui, JobEntry, SpoolEntry, ZoweScheme } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../../../../src/ZoweExplorerApiRegister";
 import { createIProfile } from "../../../../__mocks__/mockCreators/shared";
 import { createIJobFile, createIJobObject } from "../../../../__mocks__/mockCreators/jobs";
@@ -79,6 +79,27 @@ describe("stat", () => {
             ...testEntries.job,
         });
         lookupMock.mockRestore();
+    });
+});
+
+describe("refreshSpool", () => {
+    it("returns early if the node is not a spool file", async () => {
+        const statusBarMsgMock = jest.spyOn(Gui, "setStatusBarMessage").mockImplementation();
+        statusBarMsgMock.mockReset();
+        const node = { resourceUri: testUris.spool, contextValue: "job" } as any;
+        await JobFSProvider.refreshSpool(node);
+        expect(statusBarMsgMock).not.toHaveBeenCalledWith("$(sync~spin) Fetching spool file...");
+    });
+
+    it("calls fetchSpoolAtUri for a valid spool node", async () => {
+        const fetchSpoolAtUriMock = jest.spyOn(JobFSProvider.instance, "fetchSpoolAtUri").mockImplementation();
+        const disposeMock = jest.fn();
+        const statusBarMsgMock = jest.spyOn(Gui, "setStatusBarMessage").mockReturnValue({ dispose: disposeMock });
+        const node = { resourceUri: testUris.spool, contextValue: "spool" } as any;
+        await JobFSProvider.refreshSpool(node);
+        expect(statusBarMsgMock).toHaveBeenCalledWith("$(sync~spin) Fetching spool file...");
+        expect(fetchSpoolAtUriMock).toHaveBeenCalledWith(node.resourceUri);
+        expect(disposeMock).toHaveBeenCalled();
     });
 });
 

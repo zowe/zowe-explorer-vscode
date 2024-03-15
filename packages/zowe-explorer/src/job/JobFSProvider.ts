@@ -17,9 +17,11 @@ import {
     EntryMetadata,
     FilterEntry,
     getInfoForUri,
+    Gui,
     isFilterEntry,
     isJobEntry,
     isSpoolEntry,
+    IZoweJobTreeNode,
     JobEntry,
     JobFilter,
     SpoolEntry,
@@ -29,6 +31,7 @@ import { Profiles } from "../Profiles";
 import * as path from "path";
 import { buildUniqueSpoolName } from "../SpoolProvider";
 import { IJob, IJobFile } from "@zowe/zos-jobs-for-zowe-sdk";
+import * as contextually from "../shared/context";
 
 export class JobFSProvider extends BaseProvider implements vscode.FileSystemProvider {
     private static _instance: JobFSProvider;
@@ -48,6 +51,15 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
     public watch(uri: vscode.Uri, options: { readonly recursive: boolean; readonly excludes: readonly string[] }): vscode.Disposable {
         // ignore, fires for all changes...
         return new vscode.Disposable(() => {});
+    }
+
+    public static async refreshSpool(node: IZoweJobTreeNode): Promise<void> {
+        if (!contextually.isSpoolFile(node)) {
+            return;
+        }
+        const statusBarMsg = Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Fetching spool file..."));
+        await JobFSProvider.instance.fetchSpoolAtUri(node.resourceUri);
+        statusBarMsg.dispose();
     }
 
     /**
