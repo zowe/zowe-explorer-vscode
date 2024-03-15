@@ -92,7 +92,7 @@ export let SAVED_PROFILE_CONTENTS = new Uint8Array();
 export const JOBS_MAX_PREFIX = 8;
 export let FILE_SELECTED_TO_COMPARE: boolean;
 export let filesToCompare: IZoweTreeNode[];
-export let PROFILES_CACHE: Profiles; // Works around circular dependency, see https://github.com/zowe/vscode-extension-for-zowe/issues/2756
+export let PROFILES_CACHE: Profiles; // Works around circular dependency, see https://github.com/zowe/zowe-explorer-vscode/issues/2756
 
 // Dictionary describing translation from old configuration names to new standardized names
 export const configurationDictionary: { [k: string]: string } = {

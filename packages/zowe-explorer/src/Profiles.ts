@@ -555,7 +555,7 @@ export class Profiles extends ProfilesCache {
         );
         if (!promptInfo) {
             Gui.showMessage(this.profilesOpCancelled);
-            return; // See https://github.com/zowe/vscode-extension-for-zowe/issues/1827
+            return; // See https://github.com/zowe/zowe-explorer-vscode/issues/1827
         }
 
         const returnValue: string[] = [promptInfo.profile.user, promptInfo.profile.password, promptInfo.profile.base64EncodedAuth];

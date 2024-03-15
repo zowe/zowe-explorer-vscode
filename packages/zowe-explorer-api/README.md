@@ -3,9 +3,9 @@
 [![version](https://img.shields.io/npm/v/@zowe/zowe-explorer-api)](https://img.shields.io/npm/v/@zowe/zowe-explorer-api)
 [![downloads](https://img.shields.io/npm/dt/@zowe/zowe-explorer-api)](https://img.shields.io/npm/dt/@zowe/zowe-explorer-api)
 
-Extensibility API for Zowe Explorer is a collection of APIs that can be used to extend the [Zowe Explorer](https://github.com/zowe/vscode-extension-for-zowe) VS Code extension with alternative z/OS interaction protocols and new capabilities.
+Extensibility API for Zowe Explorer is a collection of APIs that can be used to extend the [Zowe Explorer](https://github.com/zowe/zowe-explorer-vscode) VS Code extension with alternative z/OS interaction protocols and new capabilities.
 
-The current state of this API is experimental, but the goal is provide a stabilized version that can be used for Zowe Conformance certifications in the future. See this issue for more details: <https://github.com/zowe/vscode-extension-for-zowe/issues/837>.
+The current state of this API is experimental, but the goal is provide a stabilized version that can be used for Zowe Conformance certifications in the future. See this issue for more details: <https://github.com/zowe/zowe-explorer-vscode/issues/837>.
 
 However, the current API is being used by other extensions already, such as for Zowe Explorer with the [Zowe Explorer FTP Extension](../zowe-explorer-ftp-extension) that you can find in this same Git repository, as well as for commercial extensions maintained by Zowe's contributors and available on their company websites.
 
@@ -43,14 +43,14 @@ import * as vscode from "vscode";
 
 imports.
 
-See this [documentation on Extending Zowe Explorer](https://github.com/zowe/vscode-extension-for-zowe/wiki/Extending-Zowe-Explorer) to learn more about the Tree APIs available.
+See this [documentation on Extending Zowe Explorer](https://github.com/zowe/zowe-explorer-vscode/wiki/Extending-Zowe-Explorer) to learn more about the Tree APIs available.
 
 ## Logger API
 
-See this [special extension document](https://github.com/zowe/vscode-extension-for-zowe/wiki/Error-Handling-for-Extenders#logging-of-error-message) for more information about using the Logger API.
+See this [special extension document](https://github.com/zowe/zowe-explorer-vscode/wiki/Error-Handling-for-Extenders#logging-of-error-message) for more information about using the Logger API.
 
 ## Providing feedback or help contributing
 
-Extensibility API for Zowe Explorer is part of the [Zowe Explorer monorepo on Github](https://github.com/zowe/vscode-extension-for-zowe). You find the sources there in the `/packages/zowe-explorer-api` sub-folder.
+Extensibility API for Zowe Explorer is part of the [Zowe Explorer monorepo on Github](https://github.com/zowe/zowe-explorer-vscode). You find the sources there in the `/packages/zowe-explorer-api` sub-folder.
 
-To file issues, use the [Zowe Explorer issue list](https://github.com/zowe/vscode-extension-for-zowe/issues) after reviewing the [API Roadmap item](https://github.com/zowe/vscode-extension-for-zowe/issues/837).
+To file issues, use the [Zowe Explorer issue list](https://github.com/zowe/zowe-explorer-vscode/issues) after reviewing the [API Roadmap item](https://github.com/zowe/zowe-explorer-vscode/issues/837).

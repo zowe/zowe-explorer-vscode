@@ -2,7 +2,7 @@
 
 [![version](https://img.shields.io/visual-studio-marketplace/v/Zowe.vscode-extension-for-zowe.svg)](https://img.shields.io/visual-studio-marketplace/v/Zowe.vscode-extension-for-zowe.svg)
 [![downloads](https://img.shields.io/visual-studio-marketplace/d/Zowe.vscode-extension-for-zowe.svg)](https://img.shields.io/visual-studio-marketplace/d/Zowe.vscode-extension-for-zowe.svg)
-[![codecov](https://codecov.io/gh/zowe/vscode-extension-for-zowe/branch/main/graph/badge.svg)](https://codecov.io/gh/zowe/vscode-extension-for-zowe)
+[![codecov](https://codecov.io/gh/zowe/zowe-explorer-vscode/branch/main/graph/badge.svg)](https://codecov.io/gh/zowe/zowe-explorer-vscode)
 [![slack](https://img.shields.io/badge/chat-on%20Slack-blue)](https://slack.openmainframeproject.org/)
 
 Welcome to Zowe Explorer! Zowe Explorer brings mainframe capabilities to modern IDEs, such as VS Code. [Zowe](https://www.zowe.org/) is a project hosted by the [Open Mainframe Project](https://www.openmainframeproject.org/), a [Linux Foundation](https://www.linuxfoundation.org/) project.
@@ -39,7 +39,7 @@ Clone the repository, build a VSIX file, and start working with the extension.
 1. Clone the repository by issuing the following command in your local command-line interface:
 
    ```shell
-   git clone https://github.com/zowe/vscode-extension-for-zowe.git
+   git clone https://github.com/zowe/zowe-explorer-vscode.git
    ```
 
 2. Change directories into the newly-cloned repository:
@@ -64,7 +64,7 @@ Now install the extension to VS Code.
 
 You can now use the extension.
 
-For more information on how to run tests for the extension, see [Developer Setup](https://github.com/zowe/vscode-extension-for-zowe/wiki/Developer-Setup).
+For more information on how to run tests for the extension, see [Developer Setup](https://github.com/zowe/zowe-explorer-vscode/wiki/Developer-Setup).
 
 ## Available Documentation
 
@@ -72,29 +72,29 @@ The current repository of the VS Code extension Zowe Explorer includes several R
 
 Use the following list with the description and links to find the topics of your interest:
 
-[Core Zowe Explorer ReadMe](https://github.com/zowe/vscode-extension-for-zowe/blob/main/packages/zowe-explorer/README.md) — contains information about how to install, configure, and use Zowe Explorer. This ReadMe helps you to familiarize yourself with the basic features of the extension.
+[Core Zowe Explorer ReadMe](https://github.com/zowe/zowe-explorer-vscode/blob/main/packages/zowe-explorer/README.md) — contains information about how to install, configure, and use Zowe Explorer. This ReadMe helps you to familiarize yourself with the basic features of the extension.
 
-[Zowe Explorer ESlint Plug-in ReadMe](https://github.com/zowe/vscode-extension-for-zowe/blob/main/packages/eslint-plugin-zowe-explorer/README.md) — contains information about how to install ESLint and configure ESLint rules. ESLint helps you to find and fix problems in your JavaScript code.
+[Zowe Explorer ESlint Plug-in ReadMe](https://github.com/zowe/zowe-explorer-vscode/blob/main/packages/eslint-plugin-zowe-explorer/README.md) — contains information about how to install ESLint and configure ESLint rules. ESLint helps you to find and fix problems in your JavaScript code.
 
-[Zowe Explorer Extensibility API ReadMe](https://github.com/zowe/vscode-extension-for-zowe/blob/main/packages/zowe-explorer-api/README.md) — contains information about how to extend the capabilities of Zowe Explorer, using the extensibility API.
+[Zowe Explorer Extensibility API ReadMe](https://github.com/zowe/zowe-explorer-vscode/blob/main/packages/zowe-explorer-api/README.md) — contains information about how to extend the capabilities of Zowe Explorer, using the extensibility API.
 
-[Zowe Explorer FTP Extension ReadMe](https://github.com/zowe/vscode-extension-for-zowe/blob/main/packages/zowe-explorer-ftp-extension/README.md) — contains information about how to install and use the Zowe Explorer extension for FTP. The extension adds the FTP protocol to Zowe Explorer, enabling you to use z/OS FTP Plug-in for Zowe CLI profiles to connect and interact with z/OS USS and MVS.
+[Zowe Explorer FTP Extension ReadMe](https://github.com/zowe/zowe-explorer-vscode/blob/main/packages/zowe-explorer-ftp-extension/README.md) — contains information about how to install and use the Zowe Explorer extension for FTP. The extension adds the FTP protocol to Zowe Explorer, enabling you to use z/OS FTP Plug-in for Zowe CLI profiles to connect and interact with z/OS USS and MVS.
 
 **Note**: Zowe Explorer FTP extension is an example that shows how the extensibility API is used to add new capabilities to Zowe Explorer.
 
-[Zowe Explorer Developer Setup](https://github.com/zowe/vscode-extension-for-zowe/wiki/Developer-Setup) — contains information on how to install, build, and test Zowe Explorer.
+[Zowe Explorer Developer Setup](https://github.com/zowe/zowe-explorer-vscode/wiki/Developer-Setup) — contains information on how to install, build, and test Zowe Explorer.
 
 ## How to Contribute
 
 We encourage you to contribute to Zowe Explorer!
 
-Check the current [open issues](https://github.com/zowe/vscode-extension-for-zowe/issues) to choose where you can contribute. You can look for the `help wanted`-labeled issues to find issues that require additional input. If you are new to the project, you might want to check the issues with the `good first issue` label.
+Check the current [open issues](https://github.com/zowe/zowe-explorer-vscode/issues) to choose where you can contribute. You can look for the `help wanted`-labeled issues to find issues that require additional input. If you are new to the project, you might want to check the issues with the `good first issue` label.
 
-To report a bug or request a specific feature, please open a GitHub issue using the [appropriate template](https://github.com/zowe/vscode-extension-for-zowe/issues/new/choose). Feature requests will be added to our backlog after it receives 10 upvotes from the community.
+To report a bug or request a specific feature, please open a GitHub issue using the [appropriate template](https://github.com/zowe/zowe-explorer-vscode/issues/new/choose). Feature requests will be added to our backlog after it receives 10 upvotes from the community.
 
 Also, you can check our [GitHub Projects board](https://github.com/orgs/zowe/projects/15) for a more convenient view of issues, which are organized by priority and work-in-progress status.
 
-For more information on how to contribute, see [Contributor Guidance](https://github.com/zowe/vscode-extension-for-zowe/wiki/Contributor-Guidance).
+For more information on how to contribute, see [Contributor Guidance](https://github.com/zowe/zowe-explorer-vscode/wiki/Contributor-Guidance).
 
 ## External Links
 
