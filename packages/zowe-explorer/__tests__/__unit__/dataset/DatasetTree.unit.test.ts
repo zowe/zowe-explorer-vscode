@@ -2564,10 +2564,13 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         favProfileNode.children.push(favParent);
         testTree.mFavorites.push(favProfileNode);
         const renameDataSetMemberSpy = jest.spyOn((DatasetTree as any).prototype, "renameDataSetMember");
+        const renameMock = jest.spyOn(DatasetFSProvider.instance, "rename").mockImplementation();
 
         await testTree.rename(child);
 
         expect(renameDataSetMemberSpy).toHaveBeenLastCalledWith(child);
+        expect(renameMock).toHaveBeenCalled();
+        renameMock.mockRestore();
     });
     it("Checking function with favorite PDS Member", async () => {
         globals.defineGlobals("");

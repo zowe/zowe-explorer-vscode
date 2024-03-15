@@ -16,7 +16,8 @@ import * as dsMock from "../../../__mocks__/mockCreators/datasets";
 import { LocalFileManagement } from "../../../src/utils/LocalFileManagement";
 import { ZoweLogger } from "../../../src/utils/ZoweLogger";
 import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
-import { createUSSSessionNode } from "../../../__mocks__/mockCreators/uss";
+import { createUSSSessionNode, createUSSNode } from "../../../__mocks__/mockCreators/uss";
+import { createISession, createIProfile } from "../../../__mocks__/mockCreators/shared";
 import { UssFSProvider } from "../../../src/uss/UssFSProvider";
 import { DatasetFSProvider } from "../../../src/dataset/DatasetFSProvider";
 
@@ -77,6 +78,31 @@ describe("LocalFileManagement unit tests", () => {
             await LocalFileManagement.compareChosenFileContent(mocks.fileNodes.ds[0]);
             expect(mocks.executeCommand).toHaveBeenCalledWith("vscode.diff", mocks.fileNodes.uss[0].resourceUri, mocks.fileNodes.ds[0].resourceUri);
             expect(mocks.warnLogSpy).not.toHaveBeenCalled();
+        });
+
+        it("should pass with 2 UNIX files chosen - readonly", async () => {
+            const mocks = createGlobalMocks();
+            LocalFileManagement.filesToCompare = [mocks.fileNodes.uss[0]];
+            await LocalFileManagement.compareChosenFileContent(mocks.fileNodes.uss[1], true);
+            expect(mocks.executeCommand).toHaveBeenCalledWith("vscode.diff", mocks.fileNodes.uss[0].resourceUri, mocks.fileNodes.uss[1].resourceUri);
+            expect(mocks.warnLogSpy).not.toHaveBeenCalled();
+            expect(mocks.executeCommand).toHaveBeenCalledWith("workbench.action.files.setActiveEditorReadonlyInSession");
+        });
+    });
+
+    describe("selectFileForCompare", () => {
+        it("calls reset when elements exist in filesToCompare array", () => {
+            const node2 = createUSSNode(createISession(), createIProfile());
+            node2.label = "node2";
+            LocalFileManagement.filesToCompare = [createUSSNode(createISession(), createIProfile())];
+            const setCompareSelectionSpy = jest.spyOn(LocalFileManagement, "setCompareSelection");
+            const resetSpy = jest.spyOn(LocalFileManagement, "reset");
+            const traceSpy = jest.spyOn(ZoweLogger, "trace");
+            LocalFileManagement.selectFileForCompare(node2);
+            expect(resetSpy).toHaveBeenCalled();
+            expect(setCompareSelectionSpy).toHaveBeenCalledWith(true);
+            expect(LocalFileManagement.filesToCompare[0]).toBe(node2);
+            expect(traceSpy).toHaveBeenCalledWith("node2 selected for compare.");
         });
     });
 });
