@@ -16,7 +16,7 @@ import * as tmp from "tmp";
 import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
 
 import { imperative, MainframeInteraction } from "@zowe/zowe-explorer-api";
-import { CoreUtils, UssUtils, ITransferMode } from "@zowe/zos-ftp-for-zowe-cli";
+import { CoreUtils, UssUtils, TransferMode } from "@zowe/zos-ftp-for-zowe-cli";
 import { Buffer } from "buffer";
 import { AbstractFtpApi } from "./ZoweExplorerAbstractFtpApi";
 import { ZoweFtpExtensionError } from "./ZoweFtpExtensionError";
@@ -190,7 +190,7 @@ export class FtpUssApi extends AbstractFtpApi implements MainframeInteraction.IU
                 } else if (type === "File" || type === "file") {
                     const content = Buffer.from(CoreUtils.addCarriageReturns(""));
                     const transferOptions = {
-                        transferType: ITransferMode.ASCII as unknown as ITransferMode,
+                        transferType: TransferMode.ASCII,
                         content: content,
                     };
                     await UssUtils.uploadFile(connection, ussPath, transferOptions);

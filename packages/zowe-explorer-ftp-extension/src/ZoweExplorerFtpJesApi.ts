@@ -11,7 +11,7 @@
 
 import * as zosJobs from "@zowe/zos-jobs-for-zowe-sdk";
 import { MainframeInteraction } from "@zowe/zowe-explorer-api";
-import { JobUtils, DataSetUtils, ITransferMode, IJob, IJobStatus, ISpoolFile, IGetSpoolFileOption } from "@zowe/zos-ftp-for-zowe-cli";
+import { JobUtils, DataSetUtils, TransferMode, IJob, IJobStatus, ISpoolFile, IGetSpoolFileOption } from "@zowe/zos-ftp-for-zowe-cli";
 import { AbstractFtpApi, ConnectionType } from "./ZoweExplorerAbstractFtpApi";
 import { ZoweFtpExtensionError } from "./ZoweFtpExtensionError";
 
@@ -167,7 +167,7 @@ export class FtpJesApi extends AbstractFtpApi implements MainframeInteraction.IJ
             connection = await this.ftpClient(this.checkedProfile());
             if (connection) {
                 const transferOptions = {
-                    transferType: ITransferMode.ASCII as unknown as ITransferMode,
+                    transferType: TransferMode.ASCII,
                 };
                 const content = await DataSetUtils.downloadDataSet(connection, jobDataSet, transferOptions);
                 const jcl = content.toString();
