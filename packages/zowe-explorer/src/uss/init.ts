@@ -214,16 +214,6 @@ export async function initUSSProvider(context: vscode.ExtensionContext): Promise
         })
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.diff.useLocalContent", async (localUri) => {
-            await UssFSProvider.instance.diffOverwrite(localUri);
-        })
-    );
-    context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.diff.useRemoteContent", async (localUri) => {
-            await UssFSProvider.instance.diffUseRemote(localUri);
-        })
-    );
-    context.subscriptions.push(
         vscode.workspace.onDidOpenTextDocument((doc) => {
             if (doc.uri.scheme !== ZoweScheme.USS) {
                 return;

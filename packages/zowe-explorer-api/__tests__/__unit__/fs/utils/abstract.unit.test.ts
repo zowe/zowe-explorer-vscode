@@ -9,11 +9,21 @@
  *
  */
 
-import { DirEntry, FileEntry, FilterEntry, findDocMatchingUri, getInfoForUri, isDirectoryEntry, isFileEntry, isFilterEntry } from "../../../../src";
+import {
+    DirEntry,
+    FileEntry,
+    FilterEntry,
+    findDocMatchingUri,
+    getInfoForUri,
+    isDirectoryEntry,
+    isFileEntry,
+    isFilterEntry,
+    ZoweScheme,
+} from "../../../../src";
 import { MockedProperty } from "../../../../__mocks__/mockUtils";
 import * as vscode from "vscode";
 
-const fakeUri = vscode.Uri.from({ scheme: "zowe-uss", path: "/test.lpar/file.txt" });
+const fakeUri = vscode.Uri.from({ scheme: ZoweScheme.USS, path: "/test.lpar/file.txt" });
 
 describe("getInfoForUri", () => {
     it("returns the correct info for an inner URI", () => {
@@ -26,7 +36,7 @@ describe("getInfoForUri", () => {
     });
 
     it("returns the correct info for a root URI", () => {
-        expect(getInfoForUri(vscode.Uri.from({ scheme: "zowe-uss", path: "/test.lpar" }))).toStrictEqual({
+        expect(getInfoForUri(vscode.Uri.from({ scheme: ZoweScheme.USS, path: "/test.lpar" }))).toStrictEqual({
             isRoot: true,
             slashAfterProfilePos: -1,
             profileName: "test.lpar",

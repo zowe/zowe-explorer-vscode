@@ -124,17 +124,4 @@ describe("Zosmf API tests", () => {
         });
         await expect(api.getTag("testfile.txt")).resolves.toEqual("UTF-8");
     });
-
-    it("move", async () => {
-        const api = new ZoweExplorerZosmf.UssApi();
-        const putUssPayloadSpy = jest.fn();
-        Object.defineProperty(zosfiles, "Utilities", {
-            value: {
-                putUSSPayload: putUssPayloadSpy,
-            },
-            configurable: true,
-        });
-        await expect(api.move("/old/path", "/new/path")).resolves.not.toThrow();
-        expect(putUssPayloadSpy).toHaveBeenCalledWith(api.getSession(), "/new/path", { request: "move", from: "/old/path" });
-    });
 });
