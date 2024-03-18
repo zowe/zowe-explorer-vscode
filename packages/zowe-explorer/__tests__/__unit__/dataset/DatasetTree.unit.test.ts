@@ -2001,38 +2001,6 @@ describe("Dataset Tree Unit Tests - Function renameNode", () => {
             datasetSessionNode,
         };
     }
-
-    // TODO: FIXME
-    // it("Checking common run of function", async () => {
-    //     createGlobalMocks();
-    //     const blockMocks = createBlockMocks();
-    //     const testTree = new DatasetTree();
-    //     const beforeNode = new ZoweDatasetNode({
-    //         label: "TO.RENAME",
-    //         collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
-    //         parentNode: blockMocks.datasetSessionNode,
-    //         session: blockMocks.session,
-    //         profile: blockMocks.imperativeProfile,
-    //         contextOverride: globals.DS_PDS_CONTEXT,
-    //     });
-    //     const afterNode = new ZoweDatasetNode({
-    //         label: "RENAMED",
-    //         collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
-    //         parentNode: blockMocks.datasetSessionNode,
-    //         session: blockMocks.session,
-    //         profile: blockMocks.imperativeProfile,
-    //         contextOverride: globals.DS_PDS_CONTEXT,
-    //     });
-    //     // the IDs will never match, so for the sake of this test,
-    //     // going to fake the IDs so that the expect passes
-    //     afterNode.id = "<root>.TO.RENAME";
-    //     blockMocks.datasetSessionNode.children.push(beforeNode);
-    //     testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
-
-    //     await testTree.renameNode("sestest", "TO.RENAME", "RENAMED");
-
-    //     expect(testTree.mSessionNodes[1].children[0]).toEqual({ ...afterNode, id: beforeNode.id });
-    // });
 });
 
 describe("Dataset Tree Unit Tests - Function findFavoritedNode", () => {
