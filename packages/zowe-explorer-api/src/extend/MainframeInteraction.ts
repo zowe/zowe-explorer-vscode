@@ -123,13 +123,12 @@ export namespace MainframeInteraction {
 
         /**
          * Uploads a given buffer as the contents of a file on USS.
+         * @param {Buffer} buffer
+         * @param {string} filePath
+         * @param [options] Upload options
+         * @returns {Promise<zosfiles.IZosFilesResponse>}
          */
         uploadFromBuffer(buffer: Buffer, filePath: string, options?: zosfiles.IUploadOptions): Promise<zosfiles.IZosFilesResponse>;
-
-        /**
-         * Uploads a given buffer as the contents of a file on USS.
-         */
-        uploadFromBuffer(buffer: Buffer, filePath: string, options?: zosfiles.IUploadOptions): Promise<string | zosfiles.IZosFilesResponse>;
 
         /**
          * Moves a file or folder to the new path provided.
@@ -240,7 +239,7 @@ export namespace MainframeInteraction {
          *
          * @param {Buffer} buffer
          * @param {string} dataSetName
-         * @param {zowe.IUploadOptions} [options]
+         * @param [options] Upload options
          * @returns {Promise<zowe.IZosFilesResponse>}
          */
         uploadFromBuffer(buffer: Buffer, dataSetName: string, options?: zosfiles.IUploadOptions): Promise<zosfiles.IZosFilesResponse>;
@@ -496,7 +495,7 @@ export namespace MainframeInteraction {
          *
          * @param {string} command
          * @param {zostso.IStartTsoParms} parms
-         * @returns {zostso.IIssueResponse}
+         * @returns {Promise<zostso.IIssueResponse>}
          * @memberof ICommand
          */
         issueTsoCommandWithParms?(command: string, parms?: zostso.IStartTsoParms): Promise<zostso.IIssueResponse>;
@@ -505,7 +504,7 @@ export namespace MainframeInteraction {
          * Issues a MVS Command and returns a Console Command API response.
          *
          * @param {string} command
-         * @returns {zosconsole.IConsoleResponse}
+         * @returns {Promise<zosconsole.IConsoleResponse>}
          * @memberof ICommand
          */
         issueMvsCommand?(command: string): Promise<zosconsole.IConsoleResponse>;
