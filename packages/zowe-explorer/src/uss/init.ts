@@ -33,6 +33,10 @@ export async function initUSSProvider(context: vscode.ExtensionContext): Promise
     }
 
     context.subscriptions.push(
+        vscode.commands.registerCommand("zowe.onUssChanged", (): vscode.Event<vscode.FileChangeEvent[]> => UssFSProvider.instance.onDidChangeFile)
+    );
+
+    context.subscriptions.push(
         vscode.commands.registerCommand("zowe.uss.addFavorite", async (node, nodeList) => {
             const selectedNodes = getSelectedNodeList(node, nodeList);
             for (const item of selectedNodes) {

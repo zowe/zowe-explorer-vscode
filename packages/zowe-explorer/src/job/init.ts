@@ -28,6 +28,9 @@ export async function initJobsProvider(context: vscode.ExtensionContext): Promis
     ZoweLogger.trace("job.init.initJobsProvider called.");
 
     context.subscriptions.push(vscode.workspace.registerFileSystemProvider(ZoweScheme.Jobs, JobFSProvider.instance, { isCaseSensitive: false }));
+    context.subscriptions.push(
+        vscode.commands.registerCommand("zowe.onJobChanged", (): vscode.Event<vscode.FileChangeEvent[]> => JobFSProvider.instance.onDidChangeFile)
+    );
 
     const jobsProvider = await createJobsTree(globals.LOG);
     if (jobsProvider == null) {
