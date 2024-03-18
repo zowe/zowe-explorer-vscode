@@ -257,10 +257,9 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         }
 
         // Attempt to write data to remote system, and handle any conflicts from e-tag mismatch
-        let statusMsg;
-        if (!options.noStatusMsg) {
-            statusMsg = Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Saving USS file..."));
-        }
+        const statusMsg = options.noStatusMsg
+            ? new vscode.Disposable(() => {})
+            : Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Saving USS file..."));
         const urlQuery = new URLSearchParams(uri.query);
         const shouldForceUpload = urlQuery.has("forceUpload");
         try {
@@ -288,25 +287,18 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                     entry.data = content;
                     entry.mtime = Date.now();
                     entry.size = content.byteLength;
-                    if (statusMsg) {
-                        statusMsg.dispose();
-                    }
+                    statusMsg.dispose();
                     return;
                 }
 
                 if (entry.wasAccessed || content.length > 0) {
                     const resp = await this.uploadEntry(entry, content, shouldForceUpload);
                     entry.etag = resp.apiResponse.etag;
-                    entry.data = content;
-                } else {
-                    // The entry hasn't been accessed yet, this call is to setup a placeholder entry.
-                    entry.data = content;
                 }
+                entry.data = content;
             }
         } catch (err) {
-            if (statusMsg) {
-                statusMsg.dispose();
-            }
+            statusMsg.dispose();
             if (!err.message.includes("Rest API failure with HTTP(S) status 412")) {
                 // Some unknown error happened, don't update the entry
                 throw err;
@@ -317,9 +309,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             return;
         }
 
-        if (statusMsg) {
-            statusMsg.dispose();
-        }
+        statusMsg.dispose();
         entry.mtime = Date.now();
         entry.size = content.byteLength;
         this._fireSoon({ type: vscode.FileChangeType.Changed, uri });

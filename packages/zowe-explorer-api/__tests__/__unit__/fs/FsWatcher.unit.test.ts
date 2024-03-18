@@ -9,8 +9,9 @@
  *
  */
 
-import { Event, FileChangeEvent, Uri } from "vscode";
+import { Uri } from "vscode";
 import { BaseProvider, ZoweFsWatcher, ZoweScheme } from "../../../src/fs";
+import { MockedProperty } from "../../../__mocks__/mockUtils";
 
 type TestUris = Record<string, Readonly<Uri>>;
 const testUris: TestUris = {
@@ -21,7 +22,6 @@ const testUris: TestUris = {
 
 describe("registerEventForScheme", () => {
     it("successfully adds onDidChangeFile event", () => {
-        expect((ZoweFsWatcher as any).watchers).toBeUndefined();
         ZoweFsWatcher.registerEventForScheme(ZoweScheme.USS, {} as any);
         expect((ZoweFsWatcher as any).watchers).not.toBeUndefined();
     });
@@ -29,25 +29,24 @@ describe("registerEventForScheme", () => {
 
 describe("validateWatchers", () => {
     it("returns gracefully if watchers are registered", () => {
-        (ZoweFsWatcher as any).watchers = {
-            ds: {} as Event<FileChangeEvent[]>,
-        };
-        expect((ZoweFsWatcher as any).validateWatchers()).toBe(undefined);
+        ZoweFsWatcher.registerEventForScheme(ZoweScheme.DS, {} as any);
+        expect(() => (ZoweFsWatcher as any).validateWatcher(ZoweScheme.DS)).not.toThrow();
     });
 
     it("throws an error if watchers aren't registered", () => {
-        (ZoweFsWatcher as any).watchers = undefined;
+        const watchersMock = new MockedProperty(ZoweFsWatcher as any, "watchers", undefined, {});
         // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-        expect(() => (ZoweFsWatcher as any).validateWatchers()).toThrow(
-            "ZoweFsWatcher.registerWatchers must be called first before registering an event listener"
+        expect(() => (ZoweFsWatcher as any).validateWatcher(ZoweScheme.DS)).toThrow(
+            "ZoweFsWatcher.registerEventForScheme must be called first before registering an event listener"
         );
+        watchersMock[Symbol.dispose]();
     });
 });
 
 describe("onFileChanged", () => {
     it("registers an event listener to the correct watcher", () => {
-        const prov = new (BaseProvider as any)();
-        ZoweFsWatcher.registerEventForScheme(ZoweScheme.DS, prov.onDidChangeFile);
+        // register a fake event
+        ZoweFsWatcher.registerEventForScheme(ZoweScheme.DS, ((uri) => {}) as any);
         const listenerFn = (uri) => {};
 
         expect(() => ZoweFsWatcher.onFileChanged(testUris.ds, listenerFn)).not.toThrow();

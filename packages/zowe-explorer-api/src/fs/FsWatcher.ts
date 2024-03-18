@@ -16,7 +16,7 @@ export enum ZoweScheme {
     Jobs = "zowe-jobs",
     USS = "zowe-uss",
 }
-type CoreWatchers = Record<ZoweScheme, Event<FileChangeEvent[]>>;
+type CoreWatchers = Partial<Record<ZoweScheme, Event<FileChangeEvent[]>>>;
 
 export class ZoweFsWatcher {
     private static watchers: CoreWatchers = {
@@ -29,18 +29,17 @@ export class ZoweFsWatcher {
         this.watchers[scheme] = event;
     }
 
-    private static validateWatchers(): void {
-        if (this.watchers == null) {
-            throw new Error("ZoweFsWatcher.registerWatchers must be called first before registering an event listener.");
+    private static validateWatcher(scheme: string): void {
+        if (this.watchers[scheme] == null) {
+            throw new Error("ZoweFsWatcher.registerEventForScheme must be called first before registering an event listener.");
         }
     }
 
     public static onFileChanged(uri: Uri, listener: (e: FileChangeEvent[]) => any): VSDisposable {
-        this.validateWatchers();
         if (!(uri.scheme in this.watchers)) {
             throw new Error(`FsWatcher only supports core schemes: ${ZoweScheme.DS}, ${ZoweScheme.Jobs}, ${ZoweScheme.USS}`);
         }
-
+        this.validateWatcher(uri.scheme);
         return this.watchers[uri.scheme](listener) as VSDisposable;
     }
 }
