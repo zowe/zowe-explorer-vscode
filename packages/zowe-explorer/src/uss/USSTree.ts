@@ -17,6 +17,7 @@ import { FilterItem, FilterDescriptor, errorHandling, syncSessionNode } from "..
 import { sortTreeItems, getAppName, checkIfChildPath, updateOpenFiles, promptForEncoding } from "../shared/utils";
 import {
     confirmForUnsavedDoc,
+    getInfoForUri,
     Gui,
     imperative,
     IZoweTree,
@@ -109,13 +110,46 @@ export class USSTree extends ZoweTreeProvider implements Types.IZoweUSSTreeType 
         dataTransfer.set("application/vnd.code.tree.zowe.uss.explorer", new vscode.DataTransferItem(items));
     }
 
+    private async crossLparMove(node: IZoweUSSTreeNode, uri: vscode.Uri, recursiveCall?: boolean): Promise<void> {
+        if (contextually.isUssDirectory(node)) {
+            if (!UssFSProvider.instance.exists(uri)) {
+                const uriInfo = getInfoForUri(uri, Profiles.getInstance());
+                // create directory on remote FS
+                await ZoweExplorerApiRegister.getUssApi(uriInfo.profile).create(uri.path.substring(uriInfo.slashAfterProfilePos), "directory");
+                // create directory for local FS
+                await UssFSProvider.instance.createDirectory(uri);
+            }
+            const children = await node.getChildren();
+            for (const childNode of children) {
+                await this.crossLparMove(
+                    childNode,
+                    uri.with({
+                        path: path.posix.join(uri.path, childNode.label as string),
+                    }),
+                    true
+                );
+            }
+            await UssFSProvider.instance.delete(node.resourceUri, { recursive: true });
+        } else {
+            const contents = await UssFSProvider.instance.readFile(node.resourceUri);
+            await UssFSProvider.instance.writeFile(
+                uri.with({
+                    query: "forceUpload=true",
+                }),
+                contents,
+                { create: true, overwrite: true, noStatusMsg: true }
+            );
+            if (!recursiveCall) {
+                await UssFSProvider.instance.delete(node.resourceUri, { recursive: false });
+            }
+        }
+    }
+
     public async handleDrop(target: IZoweUSSTreeNode | undefined, dataTransfer: vscode.DataTransfer, token: vscode.CancellationToken): Promise<void> {
         const droppedItems = dataTransfer.get("application/vnd.code.tree.zowe.uss.explorer");
         if (!droppedItems) {
             return;
         }
-
-        const movingMsg = Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Moving USS files..."));
 
         // determine if any overwrites may occur
         const willOverwrite = Object.values(this.draggedNodes).reduce(
@@ -134,12 +168,14 @@ export class USSTree extends ZoweTreeProvider implements Types.IZoweUSSTreeType 
                 }
             );
             if (resp == null || resp !== userOpts[0]) {
-                movingMsg.dispose();
                 return;
             }
         }
 
+        const movingMsg = Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Moving USS files..."));
+
         const multipleItems = Object.keys(this.draggedNodes).length > 1;
+        const changedSessions = new Map<string, IZoweUSSTreeNode>();
 
         for (const item of droppedItems.value) {
             const node = this.draggedNodes[item.uri.path];
@@ -148,28 +184,20 @@ export class USSTree extends ZoweTreeProvider implements Types.IZoweUSSTreeType 
                 continue;
             }
 
+            const sessionNode = node.getSessionNode();
+            if (!changedSessions.has(sessionNode.label as string)) {
+                changedSessions.set(sessionNode.label as string, sessionNode);
+            }
             const newUriForNode = vscode.Uri.from({
                 scheme: ZoweScheme.USS,
                 path: `/${target.getProfile().name}${target.fullPath}/${item.label as string}`,
             });
+            const prof = node.getProfile();
+            const hasMoveApi = ZoweExplorerApiRegister.getUssApi(prof).move != null;
 
-            if (target.getProfile() !== node.getProfile()) {
-                // cross-LPAR, write the file on the new LPAR and delete from old LPAR
-                const isDir = contextually.isUssDirectory(node);
-                if (isDir) {
-                    // TODO: add support for cross-LPAR copy of directories
-                    // const filePaths = await ussFileStructure([node]);
-                    return;
-                } else {
-                    await UssFSProvider.instance.writeFile(
-                        newUriForNode.with({
-                            query: "forceUpload=true",
-                        }),
-                        await UssFSProvider.instance.readFile(node.resourceUri),
-                        { create: true, overwrite: true }
-                    );
-                }
-                await UssFSProvider.instance.delete(node.resourceUri, { recursive: isDir });
+            if (target.getProfile() !== prof || !hasMoveApi) {
+                // Cross-LPAR, or the "move" API does not exist: write the folders/files on the destination LPAR and delete from source LPAR
+                await this.crossLparMove(node, newUriForNode);
             } else {
                 if (await UssFSProvider.instance.move(item.uri, newUriForNode)) {
                     // remove node from old parent and relocate to new parent
@@ -190,8 +218,11 @@ export class USSTree extends ZoweTreeProvider implements Types.IZoweUSSTreeType 
                 }
             }
         }
-        if (multipleItems) {
-            this.refresh();
+        this.refreshElement(target);
+        for (const session of changedSessions.values()) {
+            this.refreshElement(session);
+        }
+        if (multipleItems && target.collapsibleState === vscode.TreeItemCollapsibleState.Collapsed) {
             await this.treeView.reveal(target, { expand: true });
         }
         movingMsg.dispose();

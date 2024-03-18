@@ -21,6 +21,7 @@ import {
     UssFile,
     ZoweScheme,
     ZosEncoding,
+    ZoweFsWatcher,
 } from "@zowe/zowe-explorer-api";
 import * as path from "path";
 import * as vscode from "vscode";
@@ -46,6 +47,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
     public static get instance(): UssFSProvider {
         if (!UssFSProvider._instance) {
             UssFSProvider._instance = new UssFSProvider();
+            ZoweFsWatcher.registerEventForScheme(ZoweScheme.USS, UssFSProvider.instance.onDidChangeFile);
         }
 
         return UssFSProvider._instance;
@@ -235,7 +237,11 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
      * - `create` - Creates the file if it does not exist
      * - `overwrite` - Overwrites the content if the file exists
      */
-    public async writeFile(uri: vscode.Uri, content: Uint8Array, options: { create: boolean; overwrite: boolean }): Promise<void> {
+    public async writeFile(
+        uri: vscode.Uri,
+        content: Uint8Array,
+        options: { create: boolean; overwrite: boolean; noStatusMsg?: boolean }
+    ): Promise<void> {
         const fileName = path.posix.basename(uri.path);
         const parentDir = this._lookupParentDirectory(uri);
 
@@ -251,7 +257,10 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         }
 
         // Attempt to write data to remote system, and handle any conflicts from e-tag mismatch
-        const statusMsg = Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Saving USS file..."));
+        let statusMsg;
+        if (!options.noStatusMsg) {
+            statusMsg = Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Saving USS file..."));
+        }
         const urlQuery = new URLSearchParams(uri.query);
         const shouldForceUpload = urlQuery.has("forceUpload");
         try {
@@ -268,7 +277,6 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                     // user is trying to edit a file that was just deleted: make the API call
                     const resp = await this.uploadEntry(entry, content, shouldForceUpload);
                     entry.etag = resp.apiResponse.etag;
-                    statusMsg.dispose();
                 }
                 entry.data = content;
                 parentDir.entries.set(fileName, entry);
@@ -280,6 +288,9 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                     entry.data = content;
                     entry.mtime = Date.now();
                     entry.size = content.byteLength;
+                    if (statusMsg) {
+                        statusMsg.dispose();
+                    }
                     return;
                 }
 
@@ -287,14 +298,15 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                     const resp = await this.uploadEntry(entry, content, shouldForceUpload);
                     entry.etag = resp.apiResponse.etag;
                     entry.data = content;
-                    statusMsg.dispose();
                 } else {
                     // The entry hasn't been accessed yet, this call is to setup a placeholder entry.
                     entry.data = content;
                 }
             }
         } catch (err) {
-            statusMsg.dispose();
+            if (statusMsg) {
+                statusMsg.dispose();
+            }
             if (!err.message.includes("Rest API failure with HTTP(S) status 412")) {
                 // Some unknown error happened, don't update the entry
                 throw err;
@@ -305,6 +317,9 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             return;
         }
 
+        if (statusMsg) {
+            statusMsg.dispose();
+        }
         entry.mtime = Date.now();
         entry.size = content.byteLength;
         this._fireSoon({ type: vscode.FileChangeType.Changed, uri });
