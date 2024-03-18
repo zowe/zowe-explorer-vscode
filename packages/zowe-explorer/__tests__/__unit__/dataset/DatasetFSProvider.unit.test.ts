@@ -255,12 +255,11 @@ describe("readFile", () => {
 describe("writeFile", () => {
     it("updates a PS in the FSP and remote system", async () => {
         const mockMvsApi = {
-            getContents: jest.fn().mockResolvedValueOnce({
+            uploadFromBuffer: jest.fn().mockResolvedValueOnce({
                 apiResponse: {
                     etag: "NEWETAG",
                 },
             }),
-            uploadFromBuffer: jest.fn(),
         };
         const mvsApiMock = jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValueOnce(mockMvsApi as any);
         const statusMsgMock = jest.spyOn(Gui, "setStatusBarMessage");
@@ -288,7 +287,6 @@ describe("writeFile", () => {
 
     it("calls _handleConflict when there is an e-tag error", async () => {
         const mockMvsApi = {
-            getContents: jest.fn(),
             uploadFromBuffer: jest.fn().mockRejectedValueOnce(new Error("Rest API failure with HTTP(S) status 412")),
         };
         const mvsApiMock = jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValueOnce(mockMvsApi as any);
@@ -318,13 +316,11 @@ describe("writeFile", () => {
 
     it("upload changes to a remote DS even if its not yet in the FSP", async () => {
         const mockMvsApi = {
-            createDataSetMember: jest.fn(),
-            getContents: jest.fn().mockResolvedValueOnce({
+            uploadFromBuffer: jest.fn().mockResolvedValueOnce({
                 apiResponse: {
                     etag: "NEWETAG",
                 },
             }),
-            uploadFromBuffer: jest.fn(),
         };
         const mvsApiMock = jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValueOnce(mockMvsApi as any);
         const statusMsgMock = jest.spyOn(Gui, "setStatusBarMessage");
@@ -335,7 +331,6 @@ describe("writeFile", () => {
         const lookupParentDirMock = jest.spyOn(DatasetFSProvider.instance as any, "_lookupParentDirectory").mockReturnValueOnce(session);
         const newContents = new Uint8Array([3, 6, 9]);
         await DatasetFSProvider.instance.writeFile(testUris.ps, newContents, { create: true, overwrite: true });
-        expect(mockMvsApi.createDataSetMember).toHaveBeenCalledWith(testEntries.ps.name);
 
         expect(lookupParentDirMock).toHaveBeenCalledWith(testUris.ps);
         expect(statusMsgMock).toHaveBeenCalledWith("$(sync~spin) Saving data set...");

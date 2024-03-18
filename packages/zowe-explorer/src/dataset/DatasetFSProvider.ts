@@ -246,6 +246,20 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         parentDir.entries.set(fileName, entry);
     }
 
+    private async uploadEntry(parent: DirEntry, entry: DsEntry, content: Uint8Array, shouldForceUpload?: boolean): Promise<IZosFilesResponse> {
+        const mvsApi = ZoweExplorerApiRegister.getMvsApi(entry.metadata.profile);
+
+        const isPdsMember = isPdsEntry(parent) && !isFilterEntry(parent);
+        const fullName = isPdsMember ? `${parent.name}(${entry.name})` : entry.name;
+        const profileEncoding = entry.encoding ? null : entry.metadata.profile.profile?.encoding;
+        return mvsApi.uploadFromBuffer(Buffer.from(content), fullName, {
+            binary: entry.encoding?.kind === "binary",
+            encoding: entry.encoding?.kind === "other" ? entry.encoding.codepage : profileEncoding,
+            etag: shouldForceUpload ? undefined : entry.etag,
+            returnEtag: true,
+        });
+    }
+
     /**
      * Attempts to write a data set at the given URI.
      * @param uri The URI pointing to a data set entry that should be written
@@ -270,6 +284,9 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
         // Attempt to write data to remote system, and handle any conflicts from e-tag mismatch
         const statusMsg = Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Saving data set..."));
+        const urlQuery = new URLSearchParams(uri.query);
+        const shouldForceUpload = urlQuery.has("forceUpload");
+
         try {
             if (!entry) {
                 entry = new DsEntry(basename);
@@ -283,31 +300,15 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 entry.metadata = profInfo;
 
                 if (content.byteLength > 0) {
-                    const mvsApi = ZoweExplorerApiRegister.getMvsApi(parent.metadata.profile);
-                    // create the data set member as it did not exist previously
-                    const dsName = isFilterEntry(parent) ? entry.name : `${parent.name}(${entry.name})`;
-                    await mvsApi.createDataSetMember(dsName);
-                    const profileEncoding = entry.encoding ? null : entry.metadata.profile.profile?.encoding;
-                    await mvsApi.uploadFromBuffer(Buffer.from(content), dsName, {
-                        binary: entry.encoding?.kind === "binary",
-                        encoding: entry.encoding?.kind === "other" ? entry.encoding.codepage : profileEncoding,
-                        etag: undefined,
-                        returnEtag: true,
-                    });
                     // Update e-tag if write was successful.
-                    const newData = await mvsApi.getContents(dsName, {
-                        returnEtag: true,
-                    });
-                    entry.etag = newData.apiResponse.etag;
+                    const resp = await this.uploadEntry(parent, entry as DsEntry, content, shouldForceUpload);
+                    entry.etag = resp.apiResponse.etag;
                     entry.data = content;
                     statusMsg.dispose();
                 }
                 parent.entries.set(basename, entry);
                 this._fireSoon({ type: vscode.FileChangeType.Created, uri });
             } else {
-                const urlQuery = new URLSearchParams(uri.query);
-                const shouldForceUpload = urlQuery.has("forceUpload");
-
                 if (urlQuery.has("inDiff")) {
                     // Allow users to edit files in diff view.
                     // If in diff view, we don't want to make any API calls, just keep track of latest
@@ -319,28 +320,9 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                     return;
                 }
 
-                const mvsApi = ZoweExplorerApiRegister.getMvsApi(parent.metadata.profile);
-
                 if (entry.wasAccessed || content.length > 0) {
-                    // Entry was already accessed, this is an update to the existing file.
-                    // Note that we don't want to call the API when making changes to the conflict file,
-                    // because the conflict file serves as the "remote" point of reference at the time of conflict,
-                    // and provides the data when comparing local/remote versions of a file.
-
-                    const isPdsMember = parent instanceof PdsEntry && !isFilterEntry(parent);
-                    const fullName = isPdsMember ? `${parent.name}(${entry.name})` : entry.name;
-                    const profileEncoding = entry.encoding ? null : entry.metadata.profile.profile?.encoding;
-                    await mvsApi.uploadFromBuffer(Buffer.from(content), fullName, {
-                        binary: entry.encoding?.kind === "binary",
-                        encoding: entry.encoding?.kind === "other" ? entry.encoding.codepage : profileEncoding,
-                        etag: shouldForceUpload ? undefined : entry.etag,
-                        returnEtag: true,
-                    });
-                    // Update e-tag if write was successful.
-                    const newData = await mvsApi.getContents(fullName, {
-                        returnEtag: true,
-                    });
-                    entry.etag = newData.apiResponse.etag;
+                    const resp = await this.uploadEntry(parent, entry as DsEntry, content, shouldForceUpload);
+                    entry.etag = resp.apiResponse.etag;
                     entry.data = content;
                     statusMsg.dispose();
                 } else {

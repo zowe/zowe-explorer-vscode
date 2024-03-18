@@ -214,6 +214,19 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         return isConflict ? file.conflictData.contents : file.data;
     }
 
+    private async uploadEntry(entry: UssFile, content: Uint8Array, shouldForceUpload?: boolean): Promise<IZosFilesResponse> {
+        const ussApi = ZoweExplorerApiRegister.getUssApi(entry.metadata.profile);
+        const profileEncoding = entry.encoding ? null : entry.metadata.profile.profile?.encoding;
+
+        // Entry was already accessed previously, this is an update to the existing file.
+        return ussApi.uploadFromBuffer(Buffer.from(content), entry.metadata.path, {
+            binary: entry.encoding?.kind === "binary",
+            encoding: entry.encoding?.kind === "other" ? entry.encoding.codepage : profileEncoding,
+            etag: shouldForceUpload || entry.etag == null ? undefined : entry.etag,
+            returnEtag: true,
+        });
+    }
+
     /**
      * Attempts to write a file at the given URI.
      * @param uri The URI pointing to a file entry that should be written
@@ -239,6 +252,8 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
         // Attempt to write data to remote system, and handle any conflicts from e-tag mismatch
         const statusMsg = Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Saving USS file..."));
+        const urlQuery = new URLSearchParams(uri.query);
+        const shouldForceUpload = urlQuery.has("forceUpload");
         try {
             if (!entry) {
                 entry = new UssFile(fileName);
@@ -251,30 +266,14 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
                 if (content.byteLength > 0) {
                     // user is trying to edit a file that was just deleted: make the API call
-                    const ussApi = ZoweExplorerApiRegister.getUssApi(parentDir.metadata.profile);
-                    const profileEncoding = entry.encoding ? null : entry.metadata.profile.profile?.encoding;
-                    await ussApi.uploadFromBuffer(Buffer.from(content), entry.metadata.path, {
-                        binary: entry.encoding?.kind === "binary",
-                        encoding: entry.encoding?.kind === "other" ? entry.encoding.codepage : profileEncoding,
-                        etag: undefined,
-                        returnEtag: true,
-                    });
-
-                    // Update e-tag if write was successful.
-                    // TODO: This call below can be removed once zowe.Upload.bufferToUssFile returns response headers.
-                    // This is necessary at the moment on z/OSMF to fetch the new e-tag.
-                    const newData = await ussApi.getContents(entry.metadata.path, {
-                        returnEtag: true,
-                    });
-                    entry.etag = newData.apiResponse.etag;
+                    const resp = await this.uploadEntry(entry, content, shouldForceUpload);
+                    entry.etag = resp.apiResponse.etag;
                     statusMsg.dispose();
                 }
                 entry.data = content;
                 parentDir.entries.set(fileName, entry);
                 this._fireSoon({ type: vscode.FileChangeType.Created, uri });
             } else {
-                const urlQuery = new URLSearchParams(uri.query);
-
                 if (entry.inDiffView || urlQuery.has("inDiff")) {
                     // Allow users to edit the local copy of a file in the diff view, but don't make any API calls.
                     entry.inDiffView = true;
@@ -284,27 +283,9 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                     return;
                 }
 
-                const ussApi = ZoweExplorerApiRegister.getUssApi(parentDir.metadata.profile);
-
                 if (entry.wasAccessed || content.length > 0) {
-                    const shouldForceUpload = urlQuery.has("forceUpload");
-                    const profileEncoding = entry.encoding ? null : entry.metadata.profile.profile?.encoding;
-
-                    // Entry was already accessed previously, this is an update to the existing file.
-                    await ussApi.uploadFromBuffer(Buffer.from(content), entry.metadata.path, {
-                        binary: entry.encoding?.kind === "binary",
-                        encoding: entry.encoding?.kind === "other" ? entry.encoding.codepage : profileEncoding,
-                        etag: shouldForceUpload || entry.etag == null ? undefined : entry.etag,
-                        returnEtag: true,
-                    });
-
-                    // Update e-tag if write was successful.
-                    // TODO: This call below can be removed once zowe.Upload.bufferToUssFile returns response headers.
-                    // This is necessary at the moment on z/OSMF to fetch the new e-tag.
-                    const newData = await ussApi.getContents(entry.metadata.path, {
-                        returnEtag: true,
-                    });
-                    entry.etag = newData.apiResponse.etag;
+                    const resp = await this.uploadEntry(entry, content, shouldForceUpload);
+                    entry.etag = resp.apiResponse.etag;
                     entry.data = content;
                     statusMsg.dispose();
                 } else {

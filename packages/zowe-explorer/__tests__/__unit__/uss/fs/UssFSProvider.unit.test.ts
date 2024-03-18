@@ -312,12 +312,11 @@ describe("readFile", () => {
 describe("writeFile", () => {
     it("updates a file in the FSP and remote system", async () => {
         const mockUssApi = {
-            getContents: jest.fn().mockResolvedValueOnce({
+            uploadFromBuffer: jest.fn().mockResolvedValueOnce({
                 apiResponse: {
                     etag: "NEWETAG",
                 },
             }),
-            uploadFromBuffer: jest.fn(),
         };
         const ussApiMock = jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce(mockUssApi as any);
         const statusMsgMock = jest.spyOn(Gui, "setStatusBarMessage");
@@ -345,7 +344,6 @@ describe("writeFile", () => {
 
     it("calls _handleConflict when there is an etag error", async () => {
         const mockUssApi = {
-            getContents: jest.fn(),
             uploadFromBuffer: jest.fn().mockRejectedValueOnce(new Error("Rest API failure with HTTP(S) status 412")),
         };
         const ussApiMock = jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce(mockUssApi as any);
@@ -374,12 +372,11 @@ describe("writeFile", () => {
 
     it("upload changes to a remote file even if its not yet in the FSP", async () => {
         const mockUssApi = {
-            getContents: jest.fn().mockResolvedValueOnce({
+            uploadFromBuffer: jest.fn().mockResolvedValueOnce({
                 apiResponse: {
                     etag: "NEWETAG",
                 },
             }),
-            uploadFromBuffer: jest.fn(),
         };
         const ussApiMock = jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce(mockUssApi as any);
         const statusMsgMock = jest.spyOn(Gui, "setStatusBarMessage");
