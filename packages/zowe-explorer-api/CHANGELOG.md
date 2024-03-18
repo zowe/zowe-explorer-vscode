@@ -10,7 +10,6 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
   - The new `getJobsByParameters` API is meant to replace `getJobsByOwnerAndPrefix`, and it adds new capabilities such as querying by status and limiting the amount of returned jobs.
 - **Breaking:** Removed string as a return type of the `uploadFromBuffer` method, since the z/OSMF API has been fixed to return a response object that includes an etag. [#2785](https://github.com/zowe/zowe-explorer-vscode/issues/2785)
 - **Breaking:** Changed the type for the options parameter in the `getContents` function (`MainframeInteraction.IUss` interface) to `zosfiles.IDownloadSingleOptions`.
-- Added a `ZoweFsWatcher` class to allow extenders to subscribe to file events (created, changed, and deleted) for USS files, data sets and spool files.
 - Added a `ZoweScheme` enum to expose the core FileSystemProvider schemes for USS files, data sets and jobs.
 
 ### Bug fixes

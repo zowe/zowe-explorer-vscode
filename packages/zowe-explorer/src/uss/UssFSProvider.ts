@@ -19,9 +19,8 @@ import {
     EntryMetadata,
     UssDirectory,
     UssFile,
-    ZoweScheme,
     ZosEncoding,
-    ZoweFsWatcher,
+    ZoweScheme,
 } from "@zowe/zowe-explorer-api";
 import * as path from "path";
 import * as vscode from "vscode";
@@ -47,7 +46,6 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
     public static get instance(): UssFSProvider {
         if (!UssFSProvider._instance) {
             UssFSProvider._instance = new UssFSProvider();
-            ZoweFsWatcher.registerEventForScheme(ZoweScheme.USS, UssFSProvider.instance.onDidChangeFile);
         }
 
         return UssFSProvider._instance;

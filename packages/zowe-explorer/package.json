@@ -1807,6 +1807,18 @@
         {
           "command": "zowe.uss.openWithEncoding",
           "when": "never"
+        },
+        {
+          "command": "zowe.onDatasetChanged",
+          "when": "never"
+        },
+        {
+          "command": "zowe.onJobChanged",
+          "when": "never"
+        },
+        {
+          "command": "zowe.onUssChanged",
+          "when": "never"
         }
       ]
     },

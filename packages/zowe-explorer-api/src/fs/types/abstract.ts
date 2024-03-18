@@ -15,6 +15,12 @@ import { IDownloadSingleOptions, IUploadOptions, IZosFilesResponse } from "@zowe
 import * as vscode from "vscode";
 import { ZosEncoding } from "../../tree";
 
+export enum ZoweScheme {
+    DS = "zowe-ds",
+    Jobs = "zowe-jobs",
+    USS = "zowe-uss",
+}
+
 export enum ConflictViewSelection {
     UserDismissed = 0,
     Compare = 1,

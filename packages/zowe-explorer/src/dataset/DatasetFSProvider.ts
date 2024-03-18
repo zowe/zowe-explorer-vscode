@@ -24,8 +24,6 @@ import {
     FilterEntry,
     Gui,
     ZosEncoding,
-    ZoweScheme,
-    ZoweFsWatcher,
 } from "@zowe/zowe-explorer-api";
 import * as path from "path";
 import * as vscode from "vscode";
@@ -48,7 +46,6 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
     public static get instance(): DatasetFSProvider {
         if (!DatasetFSProvider._instance) {
             DatasetFSProvider._instance = new DatasetFSProvider();
-            ZoweFsWatcher.registerEventForScheme(ZoweScheme.DS, DatasetFSProvider.instance.onDidChangeFile);
         }
 
         return DatasetFSProvider._instance;
