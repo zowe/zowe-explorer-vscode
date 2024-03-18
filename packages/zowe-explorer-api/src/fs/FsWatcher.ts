@@ -11,11 +11,11 @@
 
 import { Disposable as VSDisposable, FileSystemWatcher, Uri, workspace } from "vscode";
 
-interface CoreWatchers {
+type CoreWatchers = {
     ds: FileSystemWatcher;
     jobs: FileSystemWatcher;
     uss: FileSystemWatcher;
-}
+};
 
 export enum ZoweScheme {
     DS = "zowe-ds",
