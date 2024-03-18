@@ -144,7 +144,7 @@ describe("Test src/shared/extension", () => {
                 mock: [],
             },
             {
-                name: "onDidSaveTextDocument:4",
+                name: "onDidSaveTextDocument:2",
                 parm: [{ isDirty: true, fileName: "NOT_DATASET" }],
                 mock: [],
             },
