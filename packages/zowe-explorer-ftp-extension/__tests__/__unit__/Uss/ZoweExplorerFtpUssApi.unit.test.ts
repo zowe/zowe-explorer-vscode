@@ -21,6 +21,7 @@ import * as globals from "../../../src/globals";
 import { ZoweFtpExtensionError } from "../../../src/ZoweFtpExtensionError";
 import * as tmp from "tmp";
 import { imperative } from "@zowe/zowe-explorer-api";
+import { AbstractFtpApi } from "../../../src/ZoweExplorerAbstractFtpApi";
 
 // two methods to mock modules: create a __mocks__ file for zowe-explorer-api.ts and direct mock for extension.ts
 jest.mock("../../../__mocks__/@zowe/zowe-explorer-api.ts");
@@ -39,7 +40,7 @@ describe("FtpUssApi", () => {
         UssApi.checkedProfile = jest.fn().mockReturnValue({ message: "success", type: "zftp", failNotFound: false });
         UssApi.ftpClient = jest.fn().mockReturnValue({ host: "", user: "", password: "", port: "" });
         UssApi.releaseConnection = jest.fn();
-        globals.SESSION_MAP.get = jest.fn().mockReturnValue({ ussListConnection: { connected: true } });
+        globals.SESSION_MAP.get = jest.fn().mockReturnValue({ ussListConnection: { isConnected: () => true } });
         globals.LOGGER.getExtensionName = jest.fn().mockReturnValue("Zowe Explorer FTP Extension");
     });
 

@@ -23,7 +23,6 @@ export function activate(_context: vscode.ExtensionContext): void {
 }
 
 export function deactivate(_context: vscode.ExtensionContext): void {
-    /* eslint-disable-next-line @typescript-eslint/no-misused-promises */
     globals.SESSION_MAP.forEach((session) => session.releaseConnections());
     globals.SESSION_MAP.clear();
 }

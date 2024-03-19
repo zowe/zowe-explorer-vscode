@@ -20,19 +20,19 @@ export class FtpSession extends imperative.Session {
         super(newSession);
     }
 
-    /* eslint-disable @typescript-eslint/no-unsafe-call,@typescript-eslint/no-unsafe-member-access*/
-    public async releaseConnections(): Promise<void> {
+    /* eslint-disable zowe-explorer/no-floating-promises*/
+    public releaseConnections(): void {
         if (this.ussListConnection) {
-            await this.ussListConnection.close();
+            this.ussListConnection.close();
             this.ussListConnection = undefined;
         }
         if (this.mvsListConnection) {
-            await this.mvsListConnection.close();
+            this.mvsListConnection.close();
             this.mvsListConnection = undefined;
         }
 
         if (this.jesListConnection) {
-            await this.jesListConnection.close();
+            this.jesListConnection.close();
             this.jesListConnection = undefined;
         }
     }

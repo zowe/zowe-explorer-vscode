@@ -72,10 +72,10 @@ export abstract class AbstractFtpApi implements MainframeInteraction.ICommon {
         }
     }
 
-    public async logout(_session): Promise<void> {
+    public logout(_session): Promise<void> {
         const ftpsession = globals.SESSION_MAP.get(this.profile);
         if (ftpsession !== undefined) {
-            await ftpsession.releaseConnections();
+            ftpsession.releaseConnections();
             globals.SESSION_MAP.delete(this.profile);
         }
         return;

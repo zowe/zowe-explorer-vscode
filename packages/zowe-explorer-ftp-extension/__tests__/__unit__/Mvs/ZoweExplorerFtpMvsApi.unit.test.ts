@@ -39,7 +39,7 @@ describe("FtpMvsApi", () => {
         MvsApi.checkedProfile = jest.fn().mockReturnValue({ message: "success", type: "zftp", profile: { secureFtp: false }, failNotFound: false });
         MvsApi.ftpClient = jest.fn().mockReturnValue({ host: "", user: "", password: "", port: "" });
         MvsApi.releaseConnection = jest.fn();
-        globals.SESSION_MAP.get = jest.fn().mockReturnValue({ mvsListConnection: { connected: true } });
+        globals.SESSION_MAP.get = jest.fn().mockReturnValue({ mvsListConnection: { isConnected: () => true } });
         globals.LOGGER.getExtensionName = jest.fn().mockReturnValue("Zowe Explorer FTP Extension");
     });
 

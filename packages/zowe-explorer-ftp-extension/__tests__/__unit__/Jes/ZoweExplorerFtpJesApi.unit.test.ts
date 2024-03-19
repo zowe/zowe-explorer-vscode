@@ -32,7 +32,7 @@ describe("FtpJesApi", () => {
         JesApi.checkedProfile = jest.fn().mockReturnValue({ message: "success", type: "zftp", failNotFound: false });
         JesApi.ftpClient = jest.fn().mockReturnValue({ host: "", user: "", password: "", port: "" });
         JesApi.releaseConnection = jest.fn();
-        globals.SESSION_MAP.get = jest.fn().mockReturnValue({ jesListConnection: { connected: true } });
+        globals.SESSION_MAP.get = jest.fn().mockReturnValue({ jesListConnection: { isConnected: () => true } });
         globals.LOGGER.getExtensionName = jest.fn().mockReturnValue("Zowe Explorer FTP Extension");
     });
 
