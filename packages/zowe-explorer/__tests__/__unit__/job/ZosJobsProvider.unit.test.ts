@@ -778,19 +778,35 @@ describe("ZosJobsProvider unit tests - Function getUserJobsMenuChoice", () => {
         jest.spyOn(globalMocks.testJobsProvider.mHistory, "getSearchHistory").mockReturnValue(["JobId:123"]);
     });
     it("should return undefined and warn if user did not select a menu", async () => {
-        jest.spyOn(Gui, "resolveQuickPick").mockReturnValue(undefined);
+        const resolveQuickPickMock = jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(undefined);
         const result = await globalMocks.testJobsProvider.getUserJobsMenuChoice();
         expect(result).toEqual(undefined);
-        expect(showInformationMessage).toHaveBeenCalled();
+        expect(showInformationMessage).toHaveBeenCalledWith("No selection made. Operation cancelled.");
         showInformationMessage.mockClear();
+        resolveQuickPickMock.mockRestore();
     });
+
+    it("should return undefined and warn if user did not select a menu - Theia", async () => {
+        const oldIsTheia = globals.ISTHEIA;
+        Object.defineProperty(globals, "ISTHEIA", { value: true });
+        const showQuickPickMock = jest.spyOn(Gui, "showQuickPick").mockClear().mockResolvedValueOnce(undefined);
+        const result = await globalMocks.testJobsProvider.getUserJobsMenuChoice();
+        expect(result).toEqual(undefined);
+        expect(showInformationMessage).toHaveBeenCalledWith("No selection made. Operation cancelled.");
+        expect(showQuickPickMock).toHaveBeenCalled();
+        showInformationMessage.mockClear();
+        showQuickPickMock.mockRestore();
+        Object.defineProperty(globals, "ISTHEIA", { value: oldIsTheia, configurable: true });
+    });
+
     it("should return user menu choice and not show vscode warning", async () => {
         const menuItem = new utils.FilterItem({ text: "searchById" });
-        jest.spyOn(Gui, "resolveQuickPick").mockReturnValue(Promise.resolve(menuItem));
+        const resolveQuickPickMock = jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(menuItem);
         const result = await globalMocks.testJobsProvider.getUserJobsMenuChoice();
         expect(result).toEqual(menuItem);
         expect(showInformationMessage).not.toHaveBeenCalled();
         showInformationMessage.mockClear();
+        resolveQuickPickMock.mockRestore();
     });
 });
 

@@ -728,3 +728,5 @@ export namespace env {
         },
     };
 }
+
+export const version = "1.53.2";

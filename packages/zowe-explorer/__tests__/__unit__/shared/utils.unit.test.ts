@@ -838,10 +838,10 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
         node.setEncoding(otherEncoding);
         const encodingHistory = ["IBM-123", "IBM-456", "IBM-789"];
         blockMocks.localStorageGet.mockReturnValueOnce(encodingHistory);
-        blockMocks.showQuickPick.mockImplementationOnce(async (items) => items[4]);
+        blockMocks.showQuickPick.mockImplementationOnce(async (items) => items[3]);
         const encoding = await sharedUtils.promptForEncoding(node);
         expect(blockMocks.showQuickPick).toHaveBeenCalled();
-        expect((await blockMocks.showQuickPick.mock.calls[0][0]).slice(4)).toEqual(encodingHistory.map((x) => ({ label: x })));
+        expect((await blockMocks.showQuickPick.mock.calls[0][0]).slice(3)).toEqual(encodingHistory.map((x) => ({ label: x })));
         expect(blockMocks.showQuickPick.mock.calls[0][1]).toEqual(expect.objectContaining({ placeHolder: "Current encoding is IBM-1047" }));
         expect(encoding).toEqual({ ...otherEncoding, codepage: encodingHistory[0] });
     });
