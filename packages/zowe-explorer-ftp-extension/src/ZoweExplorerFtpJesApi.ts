@@ -134,7 +134,7 @@ export class FtpJesApi extends AbstractFtpApi implements MainframeInteraction.IJ
         let connection;
         try {
             connection = await this.ftpClient(this.checkedProfile());
-            let response;
+            let response: string;
             if (connection) {
                 const options: IGetSpoolFileOption = {
                     fileId: spoolId,
