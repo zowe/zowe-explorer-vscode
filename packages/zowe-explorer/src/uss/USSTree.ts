@@ -220,7 +220,7 @@ export class USSTree extends ZoweTreeProvider implements Types.IZoweUSSTreeType 
         for (const session of changedSessions.values()) {
             this.refreshElement(session);
         }
-        if (multipleItems && target.collapsibleState === vscode.TreeItemCollapsibleState.Collapsed) {
+        if (target.collapsibleState === vscode.TreeItemCollapsibleState.Collapsed) {
             await this.treeView.reveal(target, { expand: true });
         }
         movingMsg.dispose();
