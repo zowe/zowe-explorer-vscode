@@ -38,7 +38,7 @@ export default function PersistentDropdownOptions({ handleChange }: Readonly<{ h
     <VSCodeOption value="encodingHistory" key="encodingHistory">
       Encoding History
     </VSCodeOption>,
-  ].filter((option) => dataPanelContext.type === "uss" || option.props.value !== "encodingHistory");
+  ].filter((option) => dataPanelContext.type === "uss" || dataPanelContext.type === "ds" || option.props.value !== "encodingHistory");
 
   return (
     <div style={{ display: "flex", flexDirection: "row", alignItems: "center", margin: "15px 15px 15px 0px" }}>

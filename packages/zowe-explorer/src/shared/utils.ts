@@ -474,7 +474,7 @@ export async function promptForEncoding(node: IZoweDatasetTreeNode | IZoweUSSTre
     } else if (node.encoding === null || currentEncoding === "text") {
         currentEncoding = ebcdicItem.label;
     }
-    const encodingHistory = TreeProviders.uss.getEncodingHistory() ?? []; // ZoweLocalStorage.getValue<string[]>("zowe.encodingHistory") ?? [];
+    const encodingHistory = ZoweLocalStorage.getValue<string[]>("zowe.encodingHistory") ?? []; //TreeProviders.uss.getEncodingHistory() ?? [];
     if (encodingHistory.length > 0) {
         for (const encoding of encodingHistory) {
             items.push({ label: encoding });
@@ -508,7 +508,7 @@ export async function promptForEncoding(node: IZoweDatasetTreeNode | IZoweUSSTre
                 encoding = { kind: "other", codepage: response };
                 const filterEncodingList = encodingHistory.filter((codepage) => codepage !== response);
                 filterEncodingList.unshift(encoding.codepage);
-                TreeProviders.uss.addEncodingHistory(encoding.codepage);
+                ZoweLocalStorage.setValue("zowe.encodingHistory", filterEncodingList.slice(0, globals.MAX_FILE_HISTORY)); //TreeProviders.uss.addEncodingHistory(encoding.codepage);
             }
             break;
         default:

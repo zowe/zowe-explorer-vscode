@@ -18,6 +18,7 @@ import { USSTree } from "../uss/USSTree";
 import { DatasetTree } from "../dataset/DatasetTree";
 import { ZosJobsProvider } from "../job/ZosJobsProvider";
 import { ZoweLogger } from "../utils/LoggerUtils";
+import { ZoweLocalStorage } from "../utils/ZoweLocalStorage";
 
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
@@ -96,8 +97,12 @@ export class HistoryView extends WebView {
             fileHistory: treeProvider.getFileHistory(),
             dsTemplates: type === "ds" ? (treeProvider as DatasetTree).getDsTemplates() : undefined,
             favorites: treeProvider.getFavorites(),
-            encodingHistory: type === "uss" ? (treeProvider as USSTree).getEncodingHistory() : undefined,
+            encodingHistory: type === "uss" || type === "ds" ? this.fetchEncodingHistory() : [],
         };
+    }
+
+    private fetchEncodingHistory(): string[] {
+        return ZoweLocalStorage.getValue<string[]>("zowe.encodingHistory") ?? [];
     }
 
     private showError(message): void {
@@ -149,7 +154,12 @@ export class HistoryView extends WebView {
             case "encodingHistory":
                 Object.keys(message.attrs.selectedItems).forEach((selectedItem) => {
                     if (message.attrs.selectedItems[selectedItem]) {
-                        (treeProvider as USSTree).removeEncodingHistory(selectedItem);
+                        //(treeProvider as USSTree).removeEncodingHistory(selectedItem);
+                        const encodingHistory = this.fetchEncodingHistory();
+                        ZoweLocalStorage.setValue(
+                            "zowe.encodingHistory",
+                            encodingHistory.filter((element) => element !== selectedItem)
+                        );
                     }
                 });
                 break;
@@ -178,7 +188,8 @@ export class HistoryView extends WebView {
                     }
                     break;
                 case "encodingHistory":
-                    (treeProvider as USSTree).resetEncodingHistory();
+                    //(treeProvider as USSTree).resetEncodingHistory();
+                    ZoweLocalStorage.setValue("zowe.encodingHistory", []);
                     break;
                 default:
                     Gui.showMessage(localize("HistoryView.removeItem.notSupported", "action is not supported for this property type."));
