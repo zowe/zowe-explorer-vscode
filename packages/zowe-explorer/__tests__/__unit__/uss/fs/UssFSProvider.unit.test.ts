@@ -342,6 +342,25 @@ describe("writeFile", () => {
         ussApiMock.mockRestore();
     });
 
+    it("throws an error when there is an error unrelated to etag", async () => {
+        const mockUssApi = {
+            uploadFromBuffer: jest.fn().mockRejectedValueOnce(new Error("Unknown error on remote system")),
+        };
+        const ussApiMock = jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce(mockUssApi as any);
+        const folder = {
+            ...testEntries.folder,
+            entries: new Map([[testEntries.file.name, { ...testEntries.file }]]),
+        };
+        const lookupParentDirMock = jest.spyOn(UssFSProvider.instance as any, "_lookupParentDirectory").mockReturnValueOnce(folder);
+        const newContents = new Uint8Array([3, 6, 9]);
+        await expect(UssFSProvider.instance.writeFile(testUris.file, newContents, { create: false, overwrite: true })).rejects.toThrow(
+            "Unknown error on remote system"
+        );
+
+        lookupParentDirMock.mockRestore();
+        ussApiMock.mockRestore();
+    });
+
     it("calls _handleConflict when there is an etag error", async () => {
         const mockUssApi = {
             uploadFromBuffer: jest.fn().mockRejectedValueOnce(new Error("Rest API failure with HTTP(S) status 412")),

@@ -285,6 +285,32 @@ describe("writeFile", () => {
         lookupMock.mockRestore();
     });
 
+    it("throws an error when there is an error unrelated to etag", async () => {
+        const mockMvsApi = {
+            uploadFromBuffer: jest.fn().mockRejectedValueOnce(new Error("Unknown error on remote system")),
+        };
+        const mvsApiMock = jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValueOnce(mockMvsApi as any);
+        const psEntry = { ...testEntries.ps, metadata: testEntries.ps.metadata } as DsEntry;
+        const sessionEntry = { ...testEntries.session };
+        sessionEntry.entries.set("USER.DATA.PS", psEntry);
+        const lookupParentDirMock = jest.spyOn(DatasetFSProvider.instance as any, "_lookupParentDirectory").mockReturnValueOnce(sessionEntry);
+        const lookupMock = jest.spyOn(DatasetFSProvider.instance as any, "_lookup").mockReturnValueOnce(psEntry);
+        const newContents = new Uint8Array([3, 6, 9]);
+        await expect(DatasetFSProvider.instance.writeFile(testUris.ps, newContents, { create: false, overwrite: true })).rejects.toThrow(
+            "Unknown error on remote system"
+        );
+
+        expect(lookupParentDirMock).toHaveBeenCalledWith(testUris.ps);
+        expect(mockMvsApi.uploadFromBuffer).toHaveBeenCalledWith(Buffer.from(newContents), testEntries.ps.name, {
+            binary: false,
+            encoding: undefined,
+            etag: testEntries.ps.etag,
+            returnEtag: true,
+        });
+        mvsApiMock.mockRestore();
+        lookupMock.mockRestore();
+    });
+
     it("calls _handleConflict when there is an e-tag error", async () => {
         const mockMvsApi = {
             uploadFromBuffer: jest.fn().mockRejectedValueOnce(new Error("Rest API failure with HTTP(S) status 412")),
