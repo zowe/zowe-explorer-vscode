@@ -59,17 +59,14 @@ export class FtpUssApi extends AbstractFtpApi implements MainframeInteraction.IU
         return false; // TODO: needs to be implemented checking file type
     }
 
-    public async getContents(ussFilePath: string, options: zosfiles.IDownloadSingleOptions): Promise<zosfiles.IZosFilesResponse> {
+    public async getContents(ussFilePath: string, options: zosfiles.IDownloadOptions): Promise<zosfiles.IZosFilesResponse> {
         const result = this.getDefaultResponse();
-        // create empty temp file and close its handle since we don't use it in this fn
-        const tmpFile = options.stream ? tmp.fileSync({ discardDescriptor: true }) : null;
-        const targetFile = options.stream ? tmpFile.name : options.file;
+        const targetFile = options.file;
         const transferOptions = {
             transferType: options.binary ? TRANSFER_TYPE_BINARY : TRANSFER_TYPE_ASCII,
             localFile: targetFile,
             size: 1,
         };
-
         let connection;
         try {
             connection = await this.ftpClient(this.checkedProfile());
@@ -82,19 +79,10 @@ export class FtpUssApi extends AbstractFtpApi implements MainframeInteraction.IU
             } else {
                 throw new Error(result.commandResponse);
             }
-
-            if (options.stream) {
-                options.stream.write(fs.readFileSync(targetFile));
-                options.stream.end();
-            }
-
             return result;
         } catch (err) {
             throw new ZoweFtpExtensionError(err.message);
         } finally {
-            if (tmpFile != null) {
-                fs.rmSync(tmpFile.name);
-            }
             this.releaseConnection(connection);
         }
     }
@@ -149,7 +137,6 @@ export class FtpUssApi extends AbstractFtpApi implements MainframeInteraction.IU
             transferType: binary ? TRANSFER_TYPE_BINARY : TRANSFER_TYPE_ASCII,
             localFile: inputFilePath,
         };
-
         const result = this.getDefaultResponse();
         // Save-Save with FTP requires loading the file first
         // (moved this block above connection request so only one connection is active at a time)
@@ -167,11 +154,6 @@ export class FtpUssApi extends AbstractFtpApi implements MainframeInteraction.IU
             }
             await UssUtils.uploadFile(connection, ussFilePath, transferOptions);
 
-            // release the connection after the file has been uploaded
-            // the e-tag check below might also create a new connection)
-            this.releaseConnection(connection);
-            connection = null;
-
             result.success = true;
             if (returnEtag) {
                 // release this connection instance because a new one will be made with getContentsTag
@@ -181,6 +163,7 @@ export class FtpUssApi extends AbstractFtpApi implements MainframeInteraction.IU
                 result.apiResponse.etag = contentsTag;
             }
             result.commandResponse = "File uploaded successfully.";
+
             return result;
         } catch (err) {
             throw new ZoweFtpExtensionError(err.message);
@@ -310,7 +293,7 @@ export class FtpUssApi extends AbstractFtpApi implements MainframeInteraction.IU
         };
         const loadResult = await this.getContents(ussFilePath, options);
         const etag: string = loadResult.apiResponse.etag;
-        fs.rmSync(tmpFileName);
+        fs.rmSync(tmpFileName, { force: true });
         return etag;
     }
 

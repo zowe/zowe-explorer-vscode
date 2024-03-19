@@ -101,7 +101,7 @@ describe("FtpMvsApi", () => {
     it("should upload content to dataset.", async () => {
         const localFile = tmp.tmpNameSync({ tmpdir: "/tmp" });
         const tmpNameSyncSpy = jest.spyOn(tmp, "tmpNameSync");
-        const rmSyncSpy = jest.spyOn(fs, "rmSync").mockImplementation();
+        const rmSyncSpy = jest.spyOn(fs, "rmSync");
 
         fs.writeFileSync(localFile, "hello");
         const response = TestUtils.getSingleLineStream();

@@ -98,7 +98,7 @@ describe("FtpUssApi", () => {
         const response = TestUtils.getSingleLineStream();
         UssUtils.uploadFile = jest.fn().mockReturnValue(response);
         const tmpNameSyncSpy = jest.spyOn(tmp, "tmpNameSync");
-        const rmSyncSpy = jest.spyOn(fs, "rmSync").mockImplementation();
+        const rmSyncSpy = jest.spyOn(fs, "rmSync");
         jest.spyOn(UssApi, "getContents").mockResolvedValue({ apiResponse: { etag: "test" } } as any);
         const mockParams = {
             inputFilePath: localFile,

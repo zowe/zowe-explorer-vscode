@@ -383,7 +383,7 @@ export class FtpMvsApi extends AbstractFtpApi implements MainframeInteraction.IM
         };
         const loadResult = await this.getContents(dataSetName, options);
         const etag: string = loadResult.apiResponse.etag;
-        fs.rmSync(tmpFileName);
+        fs.rmSync(tmpFileName, { force: true });
         return etag;
     }
     private getDefaultResponse(): zosfiles.IZosFilesResponse {
