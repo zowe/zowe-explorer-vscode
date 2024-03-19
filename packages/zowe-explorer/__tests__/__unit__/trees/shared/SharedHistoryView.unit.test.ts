@@ -72,9 +72,14 @@ function createGlobalMocks(): any {
 }
 
 function createBlockMocks(globalMocks: any): any {
+    const localStorageGet = jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(undefined);
+    const localStorageSet = jest.spyOn(ZoweLocalStorage, "setValue").mockReturnValue(undefined);
+
     return {
         datasetSessionNode: createDatasetSessionNode(globalMocks.session, globalMocks.imperativeProfile),
         ussSessionNode: createUSSSessionNode(globalMocks.session, globalMocks.imperativeProfile),
+        localStorageGet,
+        localStorageSet,
     };
 }
 
@@ -195,6 +200,22 @@ describe("HistoryView Unit Tests", () => {
             expect(showMessageSpy).toHaveBeenCalledTimes(1);
         });
 
+        it("should handle the case where 'remove-item' is the command sent and the selection is 'encodingHistory'", async () => {
+            const globalMocks = await createGlobalMocks();
+            const blockMocks = createBlockMocks(globalMocks);
+            const historyView = await initializeHistoryViewMock(blockMocks, globalMocks);
+            jest.spyOn(historyView as any, "refreshView").mockImplementation();
+            blockMocks.localStorageGet.mockReturnValueOnce(["test"]);
+            const removeEncodingHistorySpy = blockMocks.localStorageSet;
+
+            await historyView["onDidReceiveMessage"]({
+                command: "remove-item",
+                attrs: { type: "uss", selection: "encodingHistory", selectedItems: { test: "test" } },
+            });
+            expect(historyView["currentSelection"]).toEqual({ ds: "search", jobs: "search", uss: "search" });
+            expect(removeEncodingHistorySpy).toHaveBeenCalledWith("zowe.encodingHistory", []);
+        });
+
         it("should handle the case where 'clear-all' is the command sent and the selection is 'search'", async () => {
             const globalMocks = await createGlobalMocks();
             const blockMocks = createBlockMocks(globalMocks);
@@ -241,6 +262,22 @@ describe("HistoryView Unit Tests", () => {
             expect(historyView["currentSelection"]).toEqual({ ds: "search", jobs: "search", uss: "search" });
             expect(showMessageSpy).toHaveBeenCalledTimes(2);
         });
+
+        it("should handle the case where 'clear-all' is the command sent and the selection is 'encodingHistory'", async () => {
+            const globalMocks = await createGlobalMocks();
+            const blockMocks = createBlockMocks(globalMocks);
+            const historyView = await initializeHistoryViewMock(blockMocks, globalMocks);
+            jest.spyOn(historyView as any, "refreshView").mockImplementation();
+            jest.spyOn(Gui, "showMessage").mockResolvedValue("Yes");
+
+            const resetEncodingHistorySpy = blockMocks.localStorageSet;
+            await historyView["onDidReceiveMessage"]({
+                command: "clear-all",
+                attrs: { type: "ds", selection: "encodingHistory" },
+            });
+            expect(historyView["currentSelection"]).toEqual({ ds: "search", jobs: "search", uss: "search" });
+            expect(resetEncodingHistorySpy).toHaveBeenCalledTimes(2);
+        });
     });
 
     describe("getHistoryData", () => {
@@ -253,7 +290,8 @@ describe("HistoryView Unit Tests", () => {
                 favorites: undefined,
                 fileHistory: [],
                 search: undefined,
-                sessions: [],
+                sessions: undefined,
+                encodingHistory: [],
             });
         });
     });

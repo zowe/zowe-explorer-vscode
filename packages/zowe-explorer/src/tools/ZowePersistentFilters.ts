@@ -133,21 +133,6 @@ export class ZowePersistentFilters {
         this.updateSessions();
     }
 
-    public addEncodingHistory(criteria: string): void {
-        if (criteria) {
-            criteria = criteria.toUpperCase();
-            // Remove any entries that match
-            this.mEncodingHistory = this.mEncodingHistory.filter((element) => {
-                return element.trim() !== criteria.trim();
-            });
-
-            // Add value to front of stack
-            this.mEncodingHistory.unshift(criteria);
-
-            this.updateEncodingHistory();
-        }
-    }
-
     /*********************************************************************************************************************************************/
     /* Get/read functions, for returning the values stored in the persistent arrays
     /*********************************************************************************************************************************************/
@@ -174,10 +159,6 @@ export class ZowePersistentFilters {
             return localStorageSchema[ZowePersistentFilters.favorites] as string[];
         }
         return [];
-    }
-
-    public getEncodingHistory(): string[] {
-        return this.mEncodingHistory;
     }
 
     /*********************************************************************************************************************************************/
