@@ -9,7 +9,7 @@
  *
  */
 
-import { Gui, imperative, IZoweUSSTreeNode, ProfilesCache, Validation } from "@zowe/zowe-explorer-api";
+import { Gui, imperative, IZoweUSSTreeNode, ProfilesCache, Validation, ZoweScheme } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { Profiles } from "../../../src/Profiles";
 import * as utils from "../../../src/utils/ProfilesUtils";
@@ -1695,5 +1695,52 @@ describe("USSTree Unit Tests - Function handleDrag", () => {
                 },
             ])
         );
+    });
+});
+
+xdescribe("USSTree Unit Tests - Function handleDrop", () => {});
+
+describe("USSTree Unit Tests - Function crossLparMove", () => {
+    it("calls the function recursively for directories, and calls appropriate APIs for files", async () => {
+        const globalMocks = await createGlobalMocks();
+        const ussDirNode = createUSSNode(globalMocks.testSession, globalMocks.testProfile);
+        ussDirNode.children = [
+            new ZoweUSSNode({
+                label: "file.txt",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                profile: ussDirNode.getProfile(),
+            }),
+        ];
+
+        const deleteMock = jest.spyOn(UssFSProvider.instance, "delete").mockResolvedValue(undefined);
+        const readFileMock = jest.spyOn(UssFSProvider.instance, "readFile").mockResolvedValue(new Uint8Array([1, 2, 3]));
+        const writeFileMock = jest.spyOn(UssFSProvider.instance, "writeFile").mockResolvedValue(undefined);
+        const existsMock = jest.spyOn(UssFSProvider.instance, "exists").mockReturnValueOnce(false);
+
+        const createDirMock = jest.spyOn(UssFSProvider.instance as any, "createDirectory").mockResolvedValueOnce(undefined);
+        const createMock = jest.fn();
+        const ussApiMock = jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValue({
+            create: createMock,
+        } as any);
+        const profilesMock = jest.spyOn(Profiles, "getInstance").mockReturnValueOnce({
+            loadNamedProfile: jest.fn().mockResolvedValueOnce(globalMocks.testProfile),
+        } as any);
+
+        await (globalMocks.testTree as any).crossLparMove(ussDirNode, ussDirNode.resourceUri?.with({ path: "/sestest/u/myuser/subfolder/usstest" }));
+        const newUri = vscode.Uri.from({
+            scheme: ZoweScheme.USS,
+            path: "/sestest/u/myuser/subfolder/usstest",
+        });
+        expect(existsMock).toHaveBeenCalledWith(newUri);
+        expect(createMock).toHaveBeenCalledWith("/u/myuser/subfolder/usstest", "directory");
+        expect(createDirMock).toHaveBeenCalledWith(newUri);
+        expect(deleteMock).toHaveBeenCalledWith(ussDirNode.resourceUri, { recursive: true });
+        createDirMock.mockRestore();
+        deleteMock.mockRestore();
+        existsMock.mockRestore();
+        profilesMock.mockRestore();
+        readFileMock.mockRestore();
+        writeFileMock.mockRestore();
+        ussApiMock.mockRestore();
     });
 });
