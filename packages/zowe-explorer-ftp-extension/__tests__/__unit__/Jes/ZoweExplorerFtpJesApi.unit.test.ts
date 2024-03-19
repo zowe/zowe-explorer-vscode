@@ -38,8 +38,8 @@ describe("FtpJesApi", () => {
 
     it("should list jobs by owner and prefix.", async () => {
         const response = [
-            { jobid: "123", jobname: "JOB1" },
-            { jobid: "234", jonname: "JOB2" },
+            { jobId: "123", jobName: "JOB1" },
+            { jobId: "234", jobName: "JOB2" },
         ];
         JobUtils.listJobs = jest.fn().mockReturnValue(response);
         const mockParams = {
@@ -54,7 +54,7 @@ describe("FtpJesApi", () => {
     });
 
     it("should get job by jobid.", async () => {
-        const jobStatus = { jobid: "123", jobname: "JOB1" };
+        const jobStatus = { jobId: "123", jobName: "JOB1" };
         JobUtils.findJobByID = jest.fn().mockReturnValue(jobStatus);
         const mockParams = {
             jobid: "123",
@@ -67,7 +67,7 @@ describe("FtpJesApi", () => {
     });
 
     it("should get spoolfiles.", async () => {
-        const response = { jobid: "123", jobname: "JOB1", spoolFiles: [{ id: "1" }] };
+        const response = { jobId: "123", jobName: "JOB1", spoolFiles: [{ id: 1 }] };
         JobUtils.findJobByID = jest.fn().mockReturnValue(response);
         const mockParams = {
             jobname: "JOB1",
@@ -75,16 +75,15 @@ describe("FtpJesApi", () => {
         };
         const result = await JesApi.getSpoolFiles(mockParams.jobname, mockParams.jobid);
 
-        expect(result[0].id).toContain("1");
+        expect(result[0].id).toEqual(1);
         expect(JobUtils.findJobByID).toHaveBeenCalledTimes(1);
         expect(JesApi.releaseConnection).toHaveBeenCalled();
     });
 
     it("should download spool content.", async () => {
-        const jobDetails = { jobid: "123", jobname: "JOB1", spoolFiles: [{ id: "1" }, { id: "2" }] };
+        const jobDetails = { jobId: "123", jobName: "JOB1", spoolFiles: [{ id: 1 }, { id: 2 }] };
         JobUtils.findJobByID = jest.fn().mockReturnValue(jobDetails);
         JobUtils.getSpoolFiles = jest.fn().mockReturnValue(jobDetails.spoolFiles);
-        zosjobs.DownloadJobs.getSpoolDownloadFilePath = jest.fn().mockReturnValue("/tmp/file1");
         imperative.IO.writeFile = jest.fn();
         const mockParams = {
             parms: { jobname: "JOB1", jobid: "123", outDir: "/a/b/c" },
@@ -93,7 +92,6 @@ describe("FtpJesApi", () => {
         await JesApi.downloadSpoolContent(mockParams.parms);
         expect(JobUtils.findJobByID).toHaveBeenCalledTimes(1);
         expect(JobUtils.getSpoolFiles).toHaveBeenCalledTimes(1);
-        expect(zosjobs.DownloadJobs.getSpoolDownloadFilePath).toHaveBeenCalledTimes(2);
         expect(imperative.IO.writeFile).toHaveBeenCalledTimes(2);
         expect(JesApi.releaseConnection).toHaveBeenCalled();
     });
@@ -102,7 +100,7 @@ describe("FtpJesApi", () => {
         const jobDetails = { jobid: "123", jobname: "JOB1" };
         JobUtils.findJobByID = jest.fn().mockReturnValue(jobDetails);
 
-        expect(JesApi.downloadSpoolContent).rejects.toThrowError();
+        expect(JesApi.downloadSpoolContent).rejects.toThrow();
     });
 
     it("should get spool content by id.", async () => {
