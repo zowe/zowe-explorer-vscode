@@ -21,7 +21,6 @@ import * as globals from "../../../src/globals";
 import { ZoweFtpExtensionError } from "../../../src/ZoweFtpExtensionError";
 import * as tmp from "tmp";
 import { imperative } from "@zowe/zowe-explorer-api";
-import { AbstractFtpApi } from "../../../src/ZoweExplorerAbstractFtpApi";
 
 // two methods to mock modules: create a __mocks__ file for zowe-explorer-api.ts and direct mock for extension.ts
 jest.mock("../../../__mocks__/@zowe/zowe-explorer-api.ts");
