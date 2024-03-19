@@ -21,20 +21,19 @@ export class FtpSession extends imperative.Session {
     }
 
     /* eslint-disable @typescript-eslint/no-unsafe-call,@typescript-eslint/no-unsafe-member-access*/
-    public releaseConnections(): void {
+    public async releaseConnections(): Promise<void> {
         if (this.ussListConnection) {
-            this.ussListConnection.close();
+            await this.ussListConnection.close();
             this.ussListConnection = undefined;
         }
         if (this.mvsListConnection) {
-            this.mvsListConnection.close();
+            await this.mvsListConnection.close();
             this.mvsListConnection = undefined;
         }
 
         if (this.jesListConnection) {
-            this.jesListConnection.close();
+            await this.jesListConnection.close();
             this.jesListConnection = undefined;
         }
-        return;
     }
 }

@@ -30,11 +30,11 @@ export class FtpUssApi extends AbstractFtpApi implements MainframeInteraction.IU
         const result = this.getDefaultResponse();
         const session = this.getSession(this.profile);
         try {
-            if (session.ussListConnection === undefined || session.ussListConnection.connected === false) {
+            if (!session.ussListConnection?.isConnected()) {
                 session.ussListConnection = await this.ftpClient(this.checkedProfile());
             }
 
-            if (session.ussListConnection.connected === true) {
+            if (session.ussListConnection.isConnected()) {
                 const response = await UssUtils.listFiles(session.ussListConnection, ussFilePath);
                 if (response) {
                     result.success = true;

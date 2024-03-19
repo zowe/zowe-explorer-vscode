@@ -24,11 +24,11 @@ export class FtpJesApi extends AbstractFtpApi implements MainframeInteraction.IJ
         const result = this.getIJobResponse();
         const session = this.getSession(this.profile);
         try {
-            if (session.jesListConnection === undefined || session.jesListConnection.connected === false) {
+            if (!session.jesListConnection?.isConnected()) {
                 session.jesListConnection = await this.ftpClient(this.checkedProfile());
             }
 
-            if (session.jesListConnection.connected === true) {
+            if (session.jesListConnection.isConnected() === true) {
                 const options = {
                     owner: params.owner,
                     status: params.status,

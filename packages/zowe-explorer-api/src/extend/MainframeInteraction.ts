@@ -71,7 +71,7 @@ export namespace MainframeInteraction {
          *
          * @param {imperative.Session} session a Zowe CLI Session
          */
-        logout?(session: imperative.Session);
+        logout?(session: imperative.Session): Promise<void>;
 
         /**
          * Return the type name of the token supported by this api.

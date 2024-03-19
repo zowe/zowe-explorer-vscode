@@ -10,7 +10,7 @@
  */
 
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import { FTPConfig } from "@zowe/zos-ftp-for-zowe-cli";
+import { FTPConfig, zosNodeAccessor } from "@zowe/zos-ftp-for-zowe-cli";
 import { imperative, MainframeInteraction } from "@zowe/zowe-explorer-api";
 import * as globals from "./globals";
 import { FtpSession } from "./ftpSession";
@@ -60,7 +60,7 @@ export abstract class AbstractFtpApi implements MainframeInteraction.ICommon {
         return this.profile;
     }
 
-    public ftpClient(profile: imperative.IProfileLoaded): Promise<unknown> {
+    public ftpClient(profile: imperative.IProfileLoaded): Promise<zosNodeAccessor.ZosAccessor> {
         const ftpProfile = profile.profile as imperative.ICommandArguments;
         return FTPConfig.connectFromArguments(ftpProfile);
     }
@@ -72,10 +72,10 @@ export abstract class AbstractFtpApi implements MainframeInteraction.ICommon {
         }
     }
 
-    public logout(_session): Promise<void> {
+    public async logout(_session): Promise<void> {
         const ftpsession = globals.SESSION_MAP.get(this.profile);
         if (ftpsession !== undefined) {
-            ftpsession.releaseConnections();
+            await ftpsession.releaseConnections();
             globals.SESSION_MAP.delete(this.profile);
         }
         return;

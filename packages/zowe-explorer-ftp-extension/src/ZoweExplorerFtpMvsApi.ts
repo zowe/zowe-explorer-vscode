@@ -31,10 +31,10 @@ export class FtpMvsApi extends AbstractFtpApi implements MainframeInteraction.IM
         const result = this.getDefaultResponse();
         const session = this.getSession(this.profile);
         try {
-            if (session.mvsListConnection === undefined || session.mvsListConnection.connected === false) {
+            if (!session.mvsListConnection?.isConnected()) {
                 session.mvsListConnection = await this.ftpClient(this.checkedProfile());
             }
-            if (session.mvsListConnection.connected === true) {
+            if (session.mvsListConnection.isConnected()) {
                 const response = await DataSetUtils.listDataSets(session.mvsListConnection, filter);
                 if (response) {
                     result.success = true;
