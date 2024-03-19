@@ -64,7 +64,7 @@ export class FtpMvsApi extends AbstractFtpApi implements MainframeInteraction.IM
                 const response = await DataSetUtils.listMembers(connection, dataSetName);
                 if (response) {
                     result.success = true;
-                    // result.apiResponse.items = response;
+                    // Ideally we could just do `result.apiResponse.items = response;`
                     result.apiResponse.items = response.map((element) => ({
                         member: element.name,
                         changed: element.changed,
@@ -139,7 +139,7 @@ export class FtpMvsApi extends AbstractFtpApi implements MainframeInteraction.IM
         }
         const dsAtrribute = await this.dataSet(dataSetNameWithoutMember);
         const dsorg = dsAtrribute.apiResponse.items[0].dsorg;
-        if (dsorg === "PS" || dataSetName.substring(dataSetName.length - 1) == ")") {
+        if (dsorg === "PS" || dataSetName.endsWith(")")) {
             targetDataset = dataSetName;
         } else {
             targetDataset = dataSetName + "(" + member + ")";

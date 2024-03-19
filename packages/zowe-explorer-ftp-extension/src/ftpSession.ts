@@ -9,12 +9,13 @@
  *
  */
 
+import { zosNodeAccessor } from "@zowe/zos-ftp-for-zowe-cli";
 import { imperative } from "@zowe/zowe-explorer-api";
 
 export class FtpSession extends imperative.Session {
-    public ussListConnection; // TODO(zFernand0): type as zna.ZosAccessor
-    public mvsListConnection; // TODO(zFernand0): type as zna.ZosAccessor
-    public jesListConnection; // TODO(zFernand0): type as zna.ZosAccessor
+    public ussListConnection: zosNodeAccessor.ZosAccessor;
+    public mvsListConnection: zosNodeAccessor.ZosAccessor;
+    public jesListConnection: zosNodeAccessor.ZosAccessor;
     public constructor(newSession: imperative.ISession) {
         super(newSession);
     }
