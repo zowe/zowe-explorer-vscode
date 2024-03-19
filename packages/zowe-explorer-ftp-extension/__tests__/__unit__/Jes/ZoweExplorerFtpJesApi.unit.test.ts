@@ -84,6 +84,7 @@ describe("FtpJesApi", () => {
         const jobDetails = { jobId: "123", jobName: "JOB1", spoolFiles: [{ id: 1 }, { id: 2 }] };
         JobUtils.findJobByID = jest.fn().mockReturnValue(jobDetails);
         JobUtils.getSpoolFiles = jest.fn().mockReturnValue(jobDetails.spoolFiles);
+        imperative.IO.createDirsSyncFromFilePath = jest.fn();
         imperative.IO.writeFile = jest.fn();
         const mockParams = {
             parms: { jobname: "JOB1", jobid: "123", outDir: "/a/b/c" },
@@ -92,15 +93,19 @@ describe("FtpJesApi", () => {
         await JesApi.downloadSpoolContent(mockParams.parms);
         expect(JobUtils.findJobByID).toHaveBeenCalledTimes(1);
         expect(JobUtils.getSpoolFiles).toHaveBeenCalledTimes(1);
+        expect(imperative.IO.createDirsSyncFromFilePath).toHaveBeenCalledTimes(2);
         expect(imperative.IO.writeFile).toHaveBeenCalledTimes(2);
         expect(JesApi.releaseConnection).toHaveBeenCalled();
     });
 
     it("should throw an error when downloading spool content if no spool files are available.", async () => {
-        const jobDetails = { jobid: "123", jobname: "JOB1" };
+        const jobDetails = { jobId: "123", jobName: "JOB1" };
+        const mockParams = {
+            parms: { jobname: "JOB1", jobid: "123", outDir: "/a/b/c" },
+        };
         JobUtils.findJobByID = jest.fn().mockReturnValue(jobDetails);
 
-        expect(JesApi.downloadSpoolContent).rejects.toThrow();
+        await expect(JesApi.downloadSpoolContent(mockParams.parms)).rejects.toThrow();
     });
 
     it("should get spool content by id.", async () => {

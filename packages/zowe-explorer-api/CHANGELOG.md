@@ -12,6 +12,8 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### Bug fixes
 
+- Updated the SDK dependencies to `8.0.0-next.202403141949` for technical currency [#2783](https://github.com/zowe/vscode-extension-for-zowe/pull/2783).
+
 ## `3.0.0-next.202403051607`
 
 ### New features and enhancements

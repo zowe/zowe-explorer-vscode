@@ -6,6 +6,8 @@ All notable changes to the "zowe-explorer-ftp-extension" extension will be docum
 
 ### Bug fixes
 
+- Updated the FTP plugin dependency to `3.0.0-next.202403191358` for technical currency [#2783](https://github.com/zowe/vscode-extension-for-zowe/pull/2783).
+- Updated the SDK dependencies to `8.0.0-next.202403141949` for technical currency [#2783](https://github.com/zowe/vscode-extension-for-zowe/pull/2783).
 - Updated the SDK dependencies to `8.0.0-next.202403041352` for technical currency [#2754](https://github.com/zowe/vscode-extension-for-zowe/pull/2754).
 
 ## `3.0.0-next.202403051607`
