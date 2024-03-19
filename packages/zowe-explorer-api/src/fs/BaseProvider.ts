@@ -184,7 +184,6 @@ export class BaseProvider {
         // HACK: does not work for editors that aren't the active one, so...
         // make VS Code switch to this editor and then "revert the file" to show latest contents
         await vscode.commands.executeCommand("vscode.open", uri);
-        // TODO: find a better method to reload editor tab with new contents
         vscode.commands.executeCommand("workbench.action.files.revert");
     }
 
@@ -210,7 +209,6 @@ export class BaseProvider {
             const parent = tabGroups.find((g) => g.tabs.find((t) => t === tabWithOldUri));
             const editorCol = parent.viewColumn;
             // close old uri and reopen new uri
-            // TODO: not sure if we can get around this...
             await vscode.window.tabGroups.close(tabWithOldUri);
             await vscode.commands.executeCommand("vscode.openWith", newUri, "default", editorCol);
         }

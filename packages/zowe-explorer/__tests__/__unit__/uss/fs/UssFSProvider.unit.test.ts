@@ -9,7 +9,7 @@
  *
  */
 
-import { Disposable, FilePermission, FileSystemError, FileType, TextEditor, Uri } from "vscode";
+import { Disposable, FilePermission, FileType, TextEditor, Uri } from "vscode";
 import { UssFSProvider } from "../../../../src/uss/UssFSProvider";
 import { createIProfile } from "../../../../__mocks__/mockCreators/shared";
 import { ZoweExplorerApiRegister } from "../../../../src/ZoweExplorerApiRegister";

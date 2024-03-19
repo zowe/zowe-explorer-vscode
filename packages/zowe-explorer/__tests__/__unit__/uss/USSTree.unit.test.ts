@@ -1366,50 +1366,6 @@ describe("USSTree Unit Tests - Function loadProfilesForFavorites", () => {
         };
     }
 
-    // TODO: FIXME
-    // it("Tests that loaded profile and session values are added to the profile grouping node in Favorites", async () => {
-    //     const globalMocks = await createGlobalMocks();
-    //     const blockMocks = createBlockMocks(globalMocks);
-    //     const favProfileNode = new ZoweUSSNode({
-    //         label: "sestest",
-    //         collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
-    //         parentNode: globalMocks.testTree.mFavoriteSession,
-    //     });
-    //     globalMocks.testTree.mFavorites.push(favProfileNode);
-    //     const expectedFavProfileNode = new ZoweUSSNode({
-    //         label: "sestest",
-    //         collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
-    //         parentNode: globalMocks.testTree.mFavoriteSession,
-    //         session: globalMocks.testSession,
-    //         profile: globalMocks.testProfile,
-    //     });
-
-    //     // Mock successful loading of profile/session
-    //     Object.defineProperty(Profiles, "getInstance", {
-    //         value: jest.fn(() => {
-    //             return {
-    //                 loadNamedProfile: jest.fn(() => {
-    //                     return globalMocks.testProfile;
-    //                 }),
-    //                 checkCurrentProfile: jest.fn(() => {
-    //                     return globalMocks.profilesForValidation;
-    //                 }),
-    //                 validProfile: Validation.ValidationType.VALID,
-    //             };
-    //         }),
-    //         configurable: true,
-    //     });
-    //     Object.defineProperty(blockMocks.ussApi, "getSession", {
-    //         value: jest.fn(() => {
-    //             return globalMocks.testSession;
-    //         }),
-    //     });
-
-    //     await globalMocks.testTree.loadProfilesForFavorites(blockMocks.log, favProfileNode);
-    //     const resultFavProfileNode = globalMocks.testTree.mFavorites[0];
-
-    //     expect(resultFavProfileNode).toEqual(expectedFavProfileNode);
-    // });
     it("Tests that error is handled if profile not successfully loaded for profile grouping node in Favorites", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);

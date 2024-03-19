@@ -487,16 +487,6 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         return fileEntry.etag;
     }
 
-    /**
-     * Set the [etag] for this node
-     *
-     * @returns {void}
-     */
-    public setEtag(etagValue): void {
-        ZoweLogger.trace("ZoweDatasetNode.setEtag called.");
-        // TODO: We don't use this function anymore because of the FSP. Remove?
-    }
-
     private async getDatasets(): Promise<zosfiles.IZosFilesResponse[]> {
         ZoweLogger.trace("ZoweDatasetNode.getDatasets called.");
         const responses: zosfiles.IZosFilesResponse[] = [];
@@ -564,7 +554,6 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     // if the encoding has changed, fetch the contents with the new encoding
                     await DatasetFSProvider.instance.fetchDatasetAtUri(this.resourceUri);
                     await vscode.commands.executeCommand("vscode.open", this.resourceUri);
-                    // TODO: find a better method to reload editor tab with new contents
                     vscode.commands.executeCommand("workbench.action.files.revert");
                 } else {
                     await vscode.commands.executeCommand("vscode.open", this.resourceUri);

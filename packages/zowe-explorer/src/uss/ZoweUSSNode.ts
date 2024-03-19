@@ -458,16 +458,6 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     }
 
     /**
-     * Set the [etag] for this node
-     *
-     * @returns {void}
-     */
-    public setEtag(etagValue): void {
-        ZoweLogger.trace("ZoweUSSNode.setEtag called.");
-        this.etag = etagValue;
-    }
-
-    /**
      * Getter for downloaded property
      *
      * @returns boolean
@@ -592,7 +582,6 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 // if the encoding has changed, fetch the contents with the new encoding
                 await UssFSProvider.instance.fetchFileAtUri(uri);
                 await vscode.commands.executeCommand("vscode.open", uri.with({ query: "" }));
-                // TODO: find a better method to reload editor tab with new contents
                 vscode.commands.executeCommand("workbench.action.files.revert");
             } else {
                 await vscode.commands.executeCommand("vscode.open", uri);

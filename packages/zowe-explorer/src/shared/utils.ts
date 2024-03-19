@@ -107,20 +107,6 @@ export function getAppName(): "VS Code" {
 }
 
 /**
- * Returns the file path for the IZoweTreeNode
- *
- * @export
- * @param {string} label - If node is a member, label includes the name of the PDS
- * @param {IZoweTreeNode} node
- */
-export function getDocumentFilePath(label: string, node: IZoweTreeNode): string {
-    const dsDir = globals.DS_DIR;
-    const profName = node.getProfileName();
-    //const suffix = appendSuffix(label);
-    return path.join(dsDir, profName || "", label);
-}
-
-/**
  * Append a suffix on a ds file so it can be interpretted with syntax highlighter
  *
  * Rules of mapping:

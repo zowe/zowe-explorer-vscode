@@ -412,22 +412,6 @@ describe("ZoweUSSNode Unit Tests - Function node.getEtag()", () => {
     });
 });
 
-describe("ZoweUSSNode Unit Tests - Function node.setEtag()", () => {
-    it("Tests that setEtag() assigns a value", async () => {
-        const globalMocks = await createGlobalMocks();
-
-        const rootNode = new ZoweUSSNode({
-            label: "gappy",
-            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
-            session: globalMocks.session,
-            profile: globalMocks.profileOne,
-        });
-        expect(rootNode.getEtag() === "123");
-        rootNode.setEtag("ABC");
-        expect(rootNode.getEtag() === "ABC");
-    });
-});
-
 describe("ZoweUSSNode Unit Tests - Function node.rename()", () => {
     async function createBlockMocks(globalMocks) {
         const newMocks = {

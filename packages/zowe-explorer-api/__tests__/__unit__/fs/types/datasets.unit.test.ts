@@ -9,7 +9,7 @@
  *
  */
 
-import { DsEntry, DsEntryMetadata, FileEntry, PdsEntry } from "../../../../src/";
+import { DsEntry, DsEntryMetadata, PdsEntry } from "../../../../src/";
 
 describe("DsEntry", () => {
     it("calls the FileEntry class constructor when initialized", () => {
