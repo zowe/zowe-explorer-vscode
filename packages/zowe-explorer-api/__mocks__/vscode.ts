@@ -265,7 +265,7 @@ export namespace window {
     /**
      * Represents the grid widget within the main editor area
      */
-    export let tabGroups: TabGroups = {
+    export const tabGroups: TabGroups = {
         all: [],
         activeTabGroup: {
             isActive: true,

@@ -102,7 +102,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             ...response,
             apiResponse: {
                 ...response.apiResponse,
-                items: (response.apiResponse.items ?? []).filter((it) => !(it.name as string).match(/^\.{1,3}$/)),
+                items: (response.apiResponse.items ?? []).filter((it) => !/^\.{1,3}$/.exec(it.name as string)),
             },
         };
     }

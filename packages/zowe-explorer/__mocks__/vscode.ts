@@ -324,7 +324,7 @@ export interface FileDecorationProvider {
 }
 
 export namespace window {
-    export let visibleTextEditors = [];
+    export const visibleTextEditors = [];
     /**
      * Options for creating a {@link TreeView}
      */

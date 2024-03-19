@@ -106,10 +106,6 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                         } else if (ds.dsorg === "VS") {
                             // TODO: Add VSAM and ZFS support in Zowe Explorer
                             continue;
-
-                            // const dsName: string = ds.dsname;
-                            // const endPoint = dsName.includes(".DATA") ? dsName.indexOf(".DATA") : dsName.indexOf(".INDEX");
-                            // tempEntry = new DsEntry(endPoint > -1 ? dsName.substring(0, endPoint) : dsName);
                         } else if (ds.migr?.toUpperCase() === "YES") {
                             // migrated
                             tempEntry = new DsEntry(ds.dsname);
