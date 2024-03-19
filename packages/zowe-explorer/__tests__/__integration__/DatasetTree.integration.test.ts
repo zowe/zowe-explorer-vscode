@@ -417,7 +417,7 @@ describe("DatasetTree Integration Tests", async () => {
                         zosfiles.CreateDataSetTypeEnum.DATA_SET_PARTITIONED,
                         beforeDataSetName
                     ).catch((err) => err);
-                    await zosfiles.Upload.bufferToDataSet(sessNode.getSession(), new Buffer("abc"), `${beforeDataSetName}(mem1)`);
+                    await zosfiles.Upload.bufferToDataSet(sessNode.getSession(), Buffer.from("abc"), `${beforeDataSetName}(mem1)`);
                     const favProfileNode = new ZoweDatasetNode({
                         label: testConst.profile.name,
                         collapsibleState: vscode.TreeItemCollapsibleState.Expanded,

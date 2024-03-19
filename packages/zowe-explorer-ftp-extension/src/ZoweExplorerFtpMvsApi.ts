@@ -127,19 +127,19 @@ export class FtpMvsApi extends AbstractFtpApi implements MainframeInteraction.IM
 
     public async putContents(inputFilePath: string, dataSetName: string, options: zosfiles.IUploadOptions): Promise<zosfiles.IZosFilesResponse> {
         const file = path.basename(inputFilePath).replace(/[^a-z0-9]+/gi, "");
-        const member = file.substr(0, MAX_MEMBER_NAME_LEN);
+        const member = file.substring(0, MAX_MEMBER_NAME_LEN);
         // The above logic seems to create a dummy member name and is technically never used
         let targetDataset: string;
         const end = dataSetName.indexOf("(");
         let dataSetNameWithoutMember: string;
         if (end > 0) {
-            dataSetNameWithoutMember = dataSetName.substr(0, end);
+            dataSetNameWithoutMember = dataSetName.substring(0, end);
         } else {
             dataSetNameWithoutMember = dataSetName;
         }
         const dsAtrribute = await this.dataSet(dataSetNameWithoutMember);
         const dsorg = dsAtrribute.apiResponse.items[0].dsorg;
-        if (dsorg === "PS" || dataSetName.substr(dataSetName.length - 1) == ")") {
+        if (dsorg === "PS" || dataSetName.substring(dataSetName.length - 1) == ")") {
             targetDataset = dataSetName;
         } else {
             targetDataset = dataSetName + "(" + member + ")";
