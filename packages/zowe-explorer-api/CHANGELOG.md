@@ -2,6 +2,12 @@
 
 All notable changes to the "zowe-explorer-api" extension will be documented in this file.
 
+## TBD Release
+
+### New features and enhancements
+
+### Bug fixes
+
 ## `2.15.1`
 
 ### New features and enhancements
