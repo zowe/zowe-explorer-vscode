@@ -278,11 +278,11 @@ export class BaseProvider {
 
     // This event removes the "diff view" flag from the local file,
     // so that API calls can continue after the conflict dialog is closed.
-    private static async onCloseEvent(provider: BaseProvider, e: vscode.TextDocument): Promise<void> {
+    private static onCloseEvent(provider: BaseProvider, e: vscode.TextDocument): void {
         if (e.uri.query && e.uri.scheme.startsWith("zowe-")) {
             const queryParams = new URLSearchParams(e.uri.query);
             if (queryParams.has("conflict")) {
-                const fsEntry = await provider._lookupAsFile(e.uri, { silent: true });
+                const fsEntry = provider._lookupAsFile(e.uri, { silent: true });
                 if (fsEntry) {
                     fsEntry.inDiffView = false;
                 }

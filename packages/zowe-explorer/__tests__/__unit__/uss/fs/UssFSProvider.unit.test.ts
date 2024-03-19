@@ -188,6 +188,8 @@ describe("readDirectory", () => {
             ["test.txt", FileType.File],
             ["innerFolder", FileType.Directory],
         ]);
+        lookupAsDirMock.mockRestore();
+        listFilesMock.mockRestore();
     });
 });
 

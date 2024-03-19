@@ -267,7 +267,6 @@ export class ZosJobsProvider extends ZoweTreeProvider implements Types.IZoweJobT
     public async delete(node: IZoweJobTreeNode): Promise<void> {
         ZoweLogger.trace("ZosJobsProvider.delete called.");
 
-        //await ZoweExplorerApiRegister.getJesApi(node.getProfile()).deleteJob(node.job.jobname, node.job.jobid);
         await JobFSProvider.instance.delete(node.resourceUri, { recursive: false, deleteRemote: true });
         await this.removeFavorite(this.createJobsFavorite(node));
         node.getSessionNode().children = node.getSessionNode().children.filter((n) => n !== node);

@@ -16,7 +16,7 @@ import { IZoweJobTreeNode } from "@zowe/zowe-explorer-api";
 
 export function buildUniqueSpoolName(spool: zosjobs.IJobFile): string {
     const spoolSegments = [spool.jobname, spool.jobid, spool.stepname, spool.procstep, spool.ddname, spool.id?.toString()];
-    return spoolSegments.filter((v) => v && v.length).join(".");
+    return spoolSegments.filter((v) => v?.length).join(".");
 }
 
 /**

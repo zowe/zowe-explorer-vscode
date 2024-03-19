@@ -54,7 +54,7 @@ export function findDocMatchingUri(uri: vscode.Uri): vscode.TextDocument {
 
 export async function confirmForUnsavedDoc(uri: vscode.Uri): Promise<boolean> {
     const doc = findDocMatchingUri(uri);
-    if (doc != null && doc.isDirty) {
+    if (doc?.isDirty) {
         const confirmItem = vscode.l10n.t("Confirm");
         return (
             (await Gui.warningMessage(

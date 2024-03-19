@@ -418,6 +418,7 @@ describe("writeFile", () => {
         await expect(DatasetFSProvider.instance.writeFile(testUris.ps, new Uint8Array([]), { create: false, overwrite: true })).rejects.toThrow(
             "file not found"
         );
+        lookupParentDirMock.mockRestore();
     });
 
     it("throws an error if entry exists and 'overwrite' option is false", async () => {

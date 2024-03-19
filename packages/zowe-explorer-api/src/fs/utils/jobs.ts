@@ -17,5 +17,5 @@ export function isJobEntry(entry: IFileSystemEntry): entry is JobEntry {
 }
 
 export function isSpoolEntry(entry: IFileSystemEntry): entry is SpoolEntry {
-    return entry != null && entry["wasAccessed"] !== undefined;
+    return entry?.wasAccessed !== undefined;
 }

@@ -1621,6 +1621,7 @@ describe("USSTree Unit Tests - Function openWithEncoding", () => {
         expect(node.binary).toBe(false);
         expect(setEncodingMock).toHaveBeenCalledWith(node.resourceUri, { kind: "text" });
         expect(node.openUSS).toHaveBeenCalledTimes(1);
+        getEncodingMock.mockRestore();
     });
 
     it("does not set encoding if prompt was cancelled", async () => {
@@ -1633,6 +1634,7 @@ describe("USSTree Unit Tests - Function openWithEncoding", () => {
         expect(node.binary).toBe(false);
         expect(setEncodingSpy).not.toHaveBeenCalled();
         expect(node.openUSS).toHaveBeenCalledTimes(0);
+        getEncodingMock.mockRestore();
     });
 });
 
@@ -1682,7 +1684,7 @@ describe("USSTree Unit Tests - Function crossLparMove", () => {
             loadNamedProfile: jest.fn().mockResolvedValueOnce(globalMocks.testProfile),
         } as any);
 
-        await (globalMocks.testTree as any).crossLparMove(ussDirNode, ussDirNode.resourceUri?.with({ path: "/sestest/u/myuser/subfolder/usstest" }));
+        await globalMocks.testTree.crossLparMove(ussDirNode, ussDirNode.resourceUri?.with({ path: "/sestest/u/myuser/subfolder/usstest" }));
         const newUri = vscode.Uri.from({
             scheme: ZoweScheme.USS,
             path: "/sestest/u/myuser/subfolder/usstest",

@@ -117,7 +117,7 @@ export class USSTree extends ZoweTreeProvider implements Types.IZoweUSSTreeType 
                 // create directory on remote FS
                 await ZoweExplorerApiRegister.getUssApi(uriInfo.profile).create(uri.path.substring(uriInfo.slashAfterProfilePos), "directory");
                 // create directory for local FS
-                await UssFSProvider.instance.createDirectory(uri);
+                UssFSProvider.instance.createDirectory(uri);
             }
             const children = await node.getChildren();
             for (const childNode of children) {
@@ -198,22 +198,20 @@ export class USSTree extends ZoweTreeProvider implements Types.IZoweUSSTreeType 
             if (target.getProfile() !== prof || !hasMoveApi) {
                 // Cross-LPAR, or the "move" API does not exist: write the folders/files on the destination LPAR and delete from source LPAR
                 await this.crossLparMove(node, newUriForNode);
-            } else {
-                if (await UssFSProvider.instance.move(item.uri, newUriForNode)) {
-                    // remove node from old parent and relocate to new parent
-                    const oldParent = node.getParent();
-                    oldParent.children = oldParent.children.filter((c) => c !== node);
-                    this.nodeDataChanged(oldParent);
-                    node.resourceUri = newUriForNode;
+            } else if (await UssFSProvider.instance.move(item.uri, newUriForNode)) {
+                // remove node from old parent and relocate to new parent
+                const oldParent = node.getParent();
+                oldParent.children = oldParent.children.filter((c) => c !== node);
+                this.nodeDataChanged(oldParent);
+                node.resourceUri = newUriForNode;
 
-                    if (!multipleItems) {
-                        // fetch children for target
-                        this.refreshElement(target);
-                        target.dirty = true;
-                        const newNode = (await target.getChildren()).find((n: IZoweUSSTreeNode) => n.resourceUri === newUriForNode);
-                        if (newNode) {
-                            await this.treeView.reveal(newNode);
-                        }
+                if (!multipleItems) {
+                    // fetch children for target
+                    this.refreshElement(target);
+                    target.dirty = true;
+                    const newNode = (await target.getChildren()).find((n: IZoweUSSTreeNode) => n.resourceUri === newUriForNode);
+                    if (newNode) {
+                        await this.treeView.reveal(newNode);
                     }
                 }
             }
