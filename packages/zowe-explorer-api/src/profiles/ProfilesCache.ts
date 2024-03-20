@@ -194,6 +194,7 @@ export class ProfilesCache {
     public async refresh(apiRegister?: ZoweExplorerApi.IApiRegisterClient): Promise<void> {
         this.allProfiles = [];
         this.allTypes = [];
+        this.profilesByType.clear();
         let mProfileInfo: zowe.imperative.ProfileInfo;
         try {
             mProfileInfo = await this.getProfileInfo();
