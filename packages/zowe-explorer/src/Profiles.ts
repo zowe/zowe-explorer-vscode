@@ -1184,7 +1184,7 @@ export class Profiles extends ProfilesCache {
         return filteredProfile;
     }
 
-    public async ssoLogin(node?: IZoweNodeType, label?: string): Promise<void> {
+    public async ssoLogin(node?: IZoweNodeType, label?: string, useCerts?: boolean): Promise<void> {
         ZoweLogger.trace("Profiles.ssoLogin called.");
         let loginTokenType: string;
         let serviceProfile: zowe.imperative.IProfileLoaded;
@@ -1214,7 +1214,7 @@ export class Profiles extends ProfilesCache {
             if (loginTokenType && !loginTokenType.startsWith(zowe.imperative.SessConstants.TOKEN_TYPE_APIML)) {
                 loginOk = await this.loginWithRegularProfile(serviceProfile, node);
             } else {
-                loginOk = await ZoweVsCodeExtension.loginWithBaseProfile(serviceProfile, loginTokenType, node, zeInstance, this);
+                loginOk = await ZoweVsCodeExtension.loginWithBaseProfile(serviceProfile, loginTokenType, node, zeInstance, this, useCerts);
             }
             if (loginOk) {
                 Gui.showMessage(localize("ssoLogin.successful", "Login to authentication service was successful."));

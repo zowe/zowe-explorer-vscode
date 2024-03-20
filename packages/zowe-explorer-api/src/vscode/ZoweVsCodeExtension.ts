@@ -13,7 +13,7 @@ import * as semver from "semver";
 import * as vscode from "vscode";
 import { ProfilesCache, ZoweExplorerApi } from "../profiles";
 import { Login, Logout, imperative } from "@zowe/cli";
-import { IPromptCredentialsOptions, IPromptUserPassOptions } from "./doc/IPromptCredentials";
+import { IPromptCertificateOptions, IPromptCredentialsOptions, IPromptUserPassOptions } from "./doc/IPromptCredentials";
 import { Gui } from "../globals/Gui";
 import { MessageSeverity, IZoweLogger } from "../logger";
 import { IZoweNodeType } from "../tree/IZoweTreeNode";
@@ -165,7 +165,8 @@ export class ZoweVsCodeExtension {
         loginTokenType?: string,
         node?: IZoweNodeType,
         zeRegister?: ZoweExplorerApi.IApiRegisterClient, // ZoweExplorerApiRegister
-        zeProfiles?: ProfilesCache // Profiles extends ProfilesCache
+        zeProfiles?: ProfilesCache, // Profiles extends ProfilesCache
+        useCerts?: boolean
     ): Promise<boolean> {
         const cache: ProfilesCache = zeProfiles ?? ZoweVsCodeExtension.profilesCache;
         const baseProfile = await cache.fetchBaseProfile();
@@ -188,17 +189,28 @@ export class ZoweVsCodeExtension {
         });
         delete updSession.ISession.user;
         delete updSession.ISession.password;
-        const creds = await ZoweVsCodeExtension.promptUserPass({ session: updSession.ISession, rePrompt: true });
-        if (!creds) {
-            return false;
+        if (!useCerts) {
+            const creds = await ZoweVsCodeExtension.promptUserPass({ session: updSession.ISession, rePrompt: true });
+            if (!creds) {
+                return false;
+            }
+            updSession.ISession.base64EncodedAuth = imperative.AbstractSession.getBase64Auth(creds[0], creds[1]);
+        } else {
+            const creds = await ZoweVsCodeExtension.promptCertificate({ session: updSession.ISession, rePrompt: true });
+            if (!creds) {
+                return false;
+            }
+            delete updSession.ISession.base64EncodedAuth;
+            updSession.ISession.storeCookie = true;
+            updSession.ISession.type = imperative.SessConstants.AUTH_TYPE_CERT_PEM;
         }
-        updSession.ISession.base64EncodedAuth = imperative.AbstractSession.getBase64Auth(creds[0], creds[1]);
 
         const loginToken = await (zeRegister?.getCommonApi(serviceProfile).login ?? Login.apimlLogin)(updSession);
         const updBaseProfile: imperative.IProfile = {
             tokenType: updSession.ISession.tokenType ?? tokenType,
             tokenValue: loginToken,
         };
+        updSession.ISession.storeCookie = false;
 
         // A simplified version of the ProfilesCache.shouldRemoveTokenFromProfile `private` method
         const connOk =
@@ -315,7 +327,7 @@ export class ZoweVsCodeExtension {
         if (!newUser || options.rePrompt) {
             newUser = await Gui.showInputBox({
                 placeHolder: "User Name",
-                prompt: "Enter the user name for the connection. Leave blank to not store.",
+                prompt: "Enter the user name for the connection." + (options.rePrompt ? "" : " Leave blank to not store."),
                 ignoreFocusOut: true,
                 value: newUser,
                 ...(options.userInputBoxOptions ?? {}),
@@ -330,7 +342,7 @@ export class ZoweVsCodeExtension {
         if (!newPass || options.rePrompt) {
             newPass = await Gui.showInputBox({
                 placeHolder: "Password",
-                prompt: "Enter the password for the connection. Leave blank to not store.",
+                prompt: "Enter the password for the connection." + (options.rePrompt ? "" : " Leave blank to not store."),
                 password: true,
                 ignoreFocusOut: true,
                 value: newPass,
@@ -343,5 +355,70 @@ export class ZoweVsCodeExtension {
         }
 
         return [newUser.trim(), newPass.trim()];
+    }
+
+    private static async promptCertificate(options: IPromptCertificateOptions): Promise<string[] | undefined> {
+        let cert = options.session.cert;
+        if (!cert || options.rePrompt) {
+            let existingURI;
+            try {
+                if (cert) {
+                    existingURI = vscode.Uri.file(cert);
+                }
+            } catch (err) {
+                // Do nothing
+            }
+            const tempCert = await Gui.showOpenDialog({
+                title: "Enter the path to the certificate for authenticating the connection.",
+                canSelectFiles: true,
+                canSelectFolders: false,
+                canSelectMany: false,
+                defaultUri: existingURI,
+                filters: { "Certificate Files": [".cer", ".crt", ".pem"], "All Files": ["*"] },
+                ...(options.openDialogOptions ?? {}),
+            });
+            if (tempCert != null && tempCert[0] != null && tempCert[0].fsPath) {
+                cert = tempCert[0].fsPath;
+            } else {
+                cert = "";
+            }
+            options.session.cert = cert;
+        }
+        if (!cert || (options.rePrompt && cert === "")) {
+            return undefined;
+        }
+
+        let certKey = options.session.certKey;
+        if (!certKey || options.rePrompt) {
+            let existingURI;
+            try {
+                if (certKey) {
+                    existingURI = vscode.Uri.file(certKey);
+                }
+            } catch (err) {
+                // Do nothing
+            }
+
+            const tempCertKey = await Gui.showOpenDialog({
+                title: "Enter the path to the certificate key for authenticating the connection.",
+                canSelectFiles: true,
+                canSelectFolders: false,
+                canSelectMany: false,
+                defaultUri: existingURI,
+                filters: { "Certificate Keys": [".cer", ".crt", ".pem", ".key"], "All Files": ["*"] },
+                ...(options.openDialogOptions ?? {}),
+            });
+            if (tempCertKey != null && tempCertKey[0] != null && tempCertKey[0].fsPath) {
+                certKey = tempCertKey[0].fsPath;
+            } else {
+                certKey = "";
+            }
+            options.session.certKey = certKey;
+        }
+        if (!certKey || (options.rePrompt && certKey === "")) {
+            return undefined;
+        }
+
+        return [cert, certKey];
     }
 }

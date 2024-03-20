@@ -10,7 +10,7 @@
  */
 
 import { imperative } from "@zowe/cli";
-import { InputBoxOptions } from "vscode";
+import { InputBoxOptions, OpenDialogOptions } from "vscode";
 
 export interface IPromptCredentialsCommonOptions {
     rePrompt?: boolean;
@@ -27,4 +27,8 @@ export interface IPromptCredentialsOptions extends IPromptCredentialsCommonOptio
 
 export interface IPromptUserPassOptions extends IPromptCredentialsCommonOptions {
     session: imperative.ISession;
+}
+
+export interface IPromptCertificateOptions extends IPromptUserPassOptions {
+    openDialogOptions?: OpenDialogOptions;
 }
