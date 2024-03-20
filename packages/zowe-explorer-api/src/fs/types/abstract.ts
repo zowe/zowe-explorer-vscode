@@ -11,7 +11,6 @@
 
 import { Duplex } from "stream";
 import { IProfileLoaded } from "@zowe/imperative";
-import { IDownloadSingleOptions, IUploadOptions, IZosFilesResponse } from "@zowe/zos-files-for-zowe-sdk";
 import * as vscode from "vscode";
 import { ZosEncoding } from "../../tree";
 
@@ -32,11 +31,6 @@ export type DeleteMetadata = {
     parent: DirEntry;
     parentUri: vscode.Uri;
 };
-
-export interface Conflictable {
-    getContents: (filePath: string, options: IDownloadSingleOptions) => Promise<IZosFilesResponse>;
-    uploadFromBuffer?(buffer: Buffer, filePath: string, options?: IUploadOptions): Promise<string | IZosFilesResponse>;
-}
 
 export class BufferBuilder extends Duplex {
     private chunks: Uint8Array[];
