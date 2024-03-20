@@ -132,7 +132,6 @@ export class SharedHistoryView extends WebView {
             case "encodingHistory":
                 Object.keys(message.attrs.selectedItems).forEach((selectedItem) => {
                     if (message.attrs.selectedItems[selectedItem]) {
-                        //(treeProvider as USSTree).removeEncodingHistory(selectedItem);
                         const encodingHistory = this.fetchEncodingHistory();
                         ZoweLocalStorage.setValue(
                             Definitions.LocalStorageKey.ENCODING_HISTORY,

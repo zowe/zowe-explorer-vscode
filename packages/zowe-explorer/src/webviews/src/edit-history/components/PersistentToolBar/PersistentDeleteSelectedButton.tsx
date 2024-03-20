@@ -37,7 +37,8 @@ export default function PersistentDeleteSelectedButton(): JSXInternal.Element {
   };
 
   const renderDeleteSelectedButton = () => {
-    return selection[type] === "search" || selection[type] === "fileHistory" || selection[type] === "encodingHistory" ? (
+    const selectionType = ["search", "fileHistory", "encodingHistory"];
+    return selectionType.includes(selection[type]) ? (
       <VSCodeButton
         title={deleteSelectedText}
         appearance="secondary"
