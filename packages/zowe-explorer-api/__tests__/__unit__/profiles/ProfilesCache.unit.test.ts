@@ -293,6 +293,18 @@ describe("ProfilesCache", () => {
             expect(profCache.getAllTypes().length).toEqual(0);
             expect(mockLogError).toHaveBeenCalledWith(fakeError);
         });
+
+        it("should clear the profilesByType map before reloading profiles", async () => {
+            const profCache = new ProfilesCache({ ...fakeLogger, error: mockLogError } as unknown as zowe.imperative.Logger);
+            const profInfoMock = jest.spyOn(profCache, "getProfileInfo").mockRejectedValueOnce("some error");
+            const errorMock = jest.spyOn((profCache as any).log, "error").mockImplementation();
+            (profCache as any).profilesByType["test-type"] = { name: "someProf" as any };
+            await profCache.refresh();
+            expect((profCache as any).profilesByType.size).toBe(0);
+            expect(errorMock).toHaveBeenCalledWith("some error");
+            profInfoMock.mockRestore();
+            errorMock.mockRestore();
+        });
     });
 
     describe("validateAndParseUrl", () => {
