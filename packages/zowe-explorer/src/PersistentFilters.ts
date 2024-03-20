@@ -26,7 +26,6 @@ export class PersistentFilters {
     private static readonly fileHistory: string = "fileHistory";
     private static readonly sessions: string = "sessions";
     private static readonly templates: string = "templates";
-    private static readonly encodingHistory: string = "encodingHistory";
 
     public schema: string;
     private mSearchHistory: string[] = [];

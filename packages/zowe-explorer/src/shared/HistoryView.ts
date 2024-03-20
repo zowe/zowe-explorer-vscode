@@ -154,7 +154,6 @@ export class HistoryView extends WebView {
             case "encodingHistory":
                 Object.keys(message.attrs.selectedItems).forEach((selectedItem) => {
                     if (message.attrs.selectedItems[selectedItem]) {
-                        //(treeProvider as USSTree).removeEncodingHistory(selectedItem);
                         const encodingHistory = this.fetchEncodingHistory();
                         ZoweLocalStorage.setValue(
                             "zowe.encodingHistory",
@@ -188,7 +187,6 @@ export class HistoryView extends WebView {
                     }
                     break;
                 case "encodingHistory":
-                    //(treeProvider as USSTree).resetEncodingHistory();
                     ZoweLocalStorage.setValue("zowe.encodingHistory", []);
                     break;
                 default:
