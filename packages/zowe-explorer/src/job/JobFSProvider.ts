@@ -13,6 +13,7 @@ import * as vscode from "vscode";
 import {
     BaseProvider,
     BufferBuilder,
+    buildUniqueSpoolName,
     DirEntry,
     EntryMetadata,
     FilterEntry,
@@ -29,7 +30,6 @@ import {
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { Profiles } from "../Profiles";
 import * as path from "path";
-import { buildUniqueSpoolName } from "../SpoolProvider";
 import { IJob, IJobFile } from "@zowe/zos-jobs-for-zowe-sdk";
 import * as contextually from "../shared/context";
 

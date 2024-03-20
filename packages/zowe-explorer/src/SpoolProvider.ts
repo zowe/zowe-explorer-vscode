@@ -14,11 +14,6 @@ import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
 import { ZoweLogger } from "./utils/ZoweLogger";
 import { IZoweJobTreeNode } from "@zowe/zowe-explorer-api";
 
-export function buildUniqueSpoolName(spool: zosjobs.IJobFile): string {
-    const spoolSegments = [spool.jobname, spool.jobid, spool.stepname, spool.procstep, spool.ddname, spool.id?.toString()];
-    return spoolSegments.filter((v) => v?.length).join(".");
-}
-
 /**
  * Gather all spool files for a given job
  * @param node Selected node for which to extract all spool files

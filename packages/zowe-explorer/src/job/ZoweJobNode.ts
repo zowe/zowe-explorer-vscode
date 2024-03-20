@@ -14,7 +14,7 @@ import * as zosjobs from "@zowe/zos-jobs-for-zowe-sdk";
 import * as globals from "../globals";
 import * as contextually from "../shared/context";
 import * as path from "path";
-import { imperative, IZoweJobTreeNode, Sorting, ZoweScheme, ZoweTreeNode } from "@zowe/zowe-explorer-api";
+import { buildUniqueSpoolName, imperative, IZoweJobTreeNode, Sorting, ZoweScheme, ZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { errorHandling, getSessionLabel, syncSessionNode } from "../utils/ProfilesUtils";
 import { getIconByNode } from "../generators/icons";
@@ -23,7 +23,6 @@ import { Profiles } from "../Profiles";
 import { ZoweLogger } from "../utils/ZoweLogger";
 import { IZoweJobTreeOpts } from "../shared/IZoweTreeOpts";
 import { JobFSProvider } from "./JobFSProvider";
-import { buildUniqueSpoolName } from "../SpoolProvider";
 
 export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
     public children: IZoweJobTreeNode[] = [];

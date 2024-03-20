@@ -9,6 +9,7 @@
  *
  */
 
+import { IJobFile } from "@zowe/zos-jobs-for-zowe-sdk";
 import { IFileSystemEntry, JobEntry, SpoolEntry } from "../types";
 import { FileType } from "vscode";
 
@@ -18,4 +19,9 @@ export function isJobEntry(entry: IFileSystemEntry): entry is JobEntry {
 
 export function isSpoolEntry(entry: IFileSystemEntry): entry is SpoolEntry {
     return entry?.wasAccessed !== undefined;
+}
+
+export function buildUniqueSpoolName(spool: IJobFile): string {
+    const spoolSegments = [spool.jobname, spool.jobid, spool.stepname, spool.procstep, spool.ddname, spool.id?.toString()];
+    return spoolSegments.filter((v) => v?.length).join(".");
 }

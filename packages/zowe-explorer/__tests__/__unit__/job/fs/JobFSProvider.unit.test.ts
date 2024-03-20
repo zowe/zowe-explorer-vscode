@@ -11,11 +11,10 @@
 
 import { Disposable, FilePermission, FileType, Uri } from "vscode";
 import { JobFSProvider } from "../../../../src/job/JobFSProvider";
-import { FilterEntry, Gui, JobEntry, SpoolEntry, ZoweScheme } from "@zowe/zowe-explorer-api";
+import { buildUniqueSpoolName, FilterEntry, Gui, JobEntry, SpoolEntry, ZoweScheme } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../../../../src/ZoweExplorerApiRegister";
 import { createIProfile } from "../../../../__mocks__/mockCreators/shared";
 import { createIJobFile, createIJobObject } from "../../../../__mocks__/mockCreators/jobs";
-import { buildUniqueSpoolName } from "../../../../src/SpoolProvider";
 import { MockedProperty } from "../../../../__mocks__/mockUtils";
 
 const testProfile = createIProfile();
