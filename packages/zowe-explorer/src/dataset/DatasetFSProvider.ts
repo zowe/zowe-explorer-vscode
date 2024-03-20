@@ -189,7 +189,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         const bufBuilder = new BufferBuilder();
         const metadata = file.metadata ?? this._getInfoFromUri(uri);
         const profileEncoding = file.encoding ? null : file.metadata.profile.profile?.encoding;
-        const resp = await ZoweExplorerApiRegister.getMvsApi(metadata.profile).getContents(metadata.dsname, {
+        const resp = await ZoweExplorerApiRegister.getMvsApi(metadata.profile).getContents(metadata.dsName, {
             binary: file.encoding?.kind === "binary",
             encoding: file.encoding?.kind === "other" ? file.encoding.codepage : profileEncoding,
             responseTimeout: metadata.profile.profile?.responseTimeout,

@@ -37,18 +37,18 @@ describe("DsEntryMetadata", () => {
         expect(entryMeta.path).toBe("/TEST.DS");
     });
 
-    it("returns a proper dsname", () => {
+    it("returns a proper value for dsName", () => {
         const fakeProfile: any = { name: "testProfile" };
         const entryMeta = new DsEntryMetadata({
             profile: fakeProfile,
             path: "/TEST.DS",
         });
-        expect(entryMeta.dsname).toBe("TEST.DS");
+        expect(entryMeta.dsName).toBe("TEST.DS");
 
         const pdsEntryMeta = new DsEntryMetadata({
             profile: fakeProfile,
             path: "/TEST.PDS/MEMBER",
         });
-        expect(pdsEntryMeta.dsname).toBe("TEST.PDS(MEMBER)");
+        expect(pdsEntryMeta.dsName).toBe("TEST.PDS(MEMBER)");
     });
 });

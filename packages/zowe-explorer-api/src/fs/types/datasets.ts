@@ -11,19 +11,9 @@
 
 import { DirEntry, EntryMetadata, FileEntry } from "../types";
 import { IProfileLoaded } from "@zowe/imperative";
-import { FileType } from "vscode";
 
 export class DsEntry extends FileEntry {
-    public name: string;
     public metadata: DsEntryMetadata;
-    public type: FileType;
-    public wasAccessed: boolean;
-
-    public ctime: number;
-    public mtime: number;
-    public size: number;
-    public data: Uint8Array;
-    public etag?: string;
 
     public constructor(name: string) {
         super(name);
@@ -50,7 +40,7 @@ export class DsEntryMetadata implements EntryMetadata {
         this.path = metadata.path;
     }
 
-    public get dsname(): string {
+    public get dsName(): string {
         const segments = this.path.split("/").filter(Boolean);
         return segments[1] ? `${segments[0]}(${segments[1]})` : segments[0];
     }
