@@ -12,7 +12,7 @@
 import * as vscode from "vscode";
 import { ProfilesCache } from "../../profiles/ProfilesCache";
 import { IProfileLoaded } from "@zowe/imperative";
-import { DirEntry, FileEntry, FilterEntry } from "../types";
+import { DirEntry, FileEntry, FilterEntry, IFileSystemEntry } from "../types";
 import { Gui } from "../..";
 import { posix } from "path";
 
@@ -74,14 +74,14 @@ export async function confirmForUnsavedDoc(uri: vscode.Uri): Promise<boolean> {
     return true;
 }
 
-export function isDirectoryEntry(entry: any): entry is DirEntry {
+export function isDirectoryEntry(entry: IFileSystemEntry): entry is DirEntry {
     return entry != null && entry["type"] === vscode.FileType.Directory;
 }
 
-export function isFileEntry(entry: any): entry is FileEntry {
+export function isFileEntry(entry: IFileSystemEntry): entry is FileEntry {
     return entry != null && entry["type"] === vscode.FileType.File;
 }
 
-export function isFilterEntry(entry: any): entry is FilterEntry {
+export function isFilterEntry(entry: IFileSystemEntry): entry is FilterEntry {
     return entry != null && "filter" in entry;
 }
