@@ -200,8 +200,9 @@ export class ZoweVsCodeExtension {
             }
             updSession.ISession.base64EncodedAuth = imperative.AbstractSession.getBase64Auth(creds[0], creds[1]);
         } else if (response === qpItems[1]) {
-            const creds = await ZoweVsCodeExtension.promptCertificate({ session: updSession.ISession, rePrompt: true });
-            if (!creds) {
+            try {
+                await ZoweVsCodeExtension.promptCertificate({ profile: serviceProfile, session: updSession.ISession, rePrompt: true });
+            } catch (err) {
                 return false;
             }
             delete updSession.ISession.base64EncodedAuth;
@@ -363,12 +364,13 @@ export class ZoweVsCodeExtension {
         return [newUser.trim(), newPass.trim()];
     }
 
-    private static async promptCertificate(options: IPromptCertificateOptions): Promise<string[] | undefined> {
-        await vscode.commands.executeCommand("zowe.certificateWizard", {
-            certUri: options.session.cert ? vscode.Uri.file(options.session.cert) : undefined,
-            keyUri: options.session.certKey ? vscode.Uri.file(options.session.certKey) : undefined,
+    private static async promptCertificate(options: IPromptCertificateOptions): Promise<void> {
+        const response: { cert: string; certKey: string } = await vscode.commands.executeCommand("zowe.certificateWizard", {
+            cert: options.profile.profile.certFile,
+            certKey: options.profile.profile.certKeyFile,
             dialogOpts: options.openDialogOptions,
         });
-        return [];
+        options.session.cert = response.cert;
+        options.session.certKey = response.certKey;
     }
 }

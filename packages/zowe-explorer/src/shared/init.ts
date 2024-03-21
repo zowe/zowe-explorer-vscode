@@ -103,8 +103,11 @@ export function registerCommonCommands(context: vscode.ExtensionContext, provide
     );
 
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.certificateWizard", (opts) => {
-            return new CertificateWizard(context, opts);
+        vscode.commands.registerCommand("zowe.certificateWizard", async (opts) => {
+            const certWizard = new CertificateWizard(context, opts);
+            const ret = await certWizard.userSubmission.promise;
+            certWizard.panel.dispose();
+            return ret;
         })
     );
 

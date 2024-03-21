@@ -31,4 +31,5 @@ export interface IPromptUserPassOptions extends IPromptCredentialsCommonOptions 
 
 export interface IPromptCertificateOptions extends IPromptUserPassOptions {
     openDialogOptions?: OpenDialogOptions;
+    profile?: imperative.IProfileLoaded;
 }
