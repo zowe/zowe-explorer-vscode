@@ -368,6 +368,9 @@ export class ZoweVsCodeExtension {
             } catch (err) {
                 // Do nothing
             }
+
+            vscode.commands.executeCommand("zowe.certificateWizard");
+
             const tempCert = await Gui.showOpenDialog({
                 title: "Enter the path to the certificate for authenticating the connection.",
                 canSelectFiles: true,
@@ -375,6 +378,7 @@ export class ZoweVsCodeExtension {
                 canSelectMany: false,
                 defaultUri: existingURI,
                 filters: { "Certificate Files": [".cer", ".crt", ".pem"], "All Files": ["*"] },
+                openLabel: "Select Certificate",
                 ...(options.openDialogOptions ?? {}),
             });
             if (tempCert != null && tempCert[0] != null && tempCert[0].fsPath) {
@@ -406,6 +410,7 @@ export class ZoweVsCodeExtension {
                 canSelectMany: false,
                 defaultUri: existingURI,
                 filters: { "Certificate Keys": [".cer", ".crt", ".pem", ".key"], "All Files": ["*"] },
+                openLabel: "Select Certificate Key",
                 ...(options.openDialogOptions ?? {}),
             });
             if (tempCertKey != null && tempCertKey[0] != null && tempCertKey[0].fsPath) {

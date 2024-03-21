@@ -32,6 +32,7 @@ import { ProfileManagement } from "../utils/ProfileManagement";
 import { DatasetTree } from "../dataset/DatasetTree";
 import { USSTree } from "../uss/USSTree";
 import { ZosJobsProvider } from "../job/ZosJobsProvider";
+import { CertificateWizard } from "../utils/CertificateWizard";
 
 // Set up localization
 nls.config({
@@ -98,6 +99,12 @@ export function registerCommonCommands(context: vscode.ExtensionContext, provide
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.profileManagement", async (node: IZoweTreeNode) => {
             await ProfileManagement.manageProfile(node);
+        })
+    );
+
+    context.subscriptions.push(
+        vscode.commands.registerCommand("zowe.certificateWizard", () => {
+            return new CertificateWizard(context);
         })
     );
 
