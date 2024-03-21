@@ -12,7 +12,6 @@
 import * as vscode from "vscode";
 import { DirEntry, FileEntry, IFileSystemEntry, FS_PROVIDER_DELAY, ConflictViewSelection, DeleteMetadata } from "./types";
 import * as path from "path";
-import isEqual from "lodash.isequal";
 import { isDirectoryEntry, isFileEntry } from "./utils";
 import { Gui } from "../globals/Gui";
 import { ZoweVsCodeExtension } from "../vscode";
@@ -35,6 +34,26 @@ export class BaseProvider {
 
     protected constructor(profilesCache?: ProfilesCache) {
         this._profilesCache = profilesCache ?? ZoweVsCodeExtension.profilesCache;
+    }
+
+    /**
+     * Compares the data for 2 Uint8Arrays, byte by byte.
+     * @param a The first Uint8Array to compare
+     * @param b The second Uint8Array to compare
+     * @returns `true` if the arrays are equal, `false` otherwise
+     */
+    public static areContentsEqual(a: Uint8Array, b: Uint8Array): boolean {
+        if (a.length !== b.length) {
+            return false;
+        }
+
+        for (let i = 0; i < a.byteLength; i++) {
+            if (a[i] !== b[i]) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**
@@ -70,7 +89,7 @@ export class BaseProvider {
 
         // If the data in the diff is different from the conflict data, we need to make another API request to push those changes.
         // If the data is equal, we can just assign the data in the FileSystem and avoid making an API request.
-        const isDataEqual = isEqual(fsEntry.data, fsEntry.conflictData.contents);
+        const isDataEqual = BaseProvider.areContentsEqual(fsEntry.data, fsEntry.conflictData.contents);
         if (!isDataEqual) {
             await vscode.workspace.fs.writeFile(uri.with({ query: "forceUpload=true" }), fsEntry.conflictData.contents);
         }

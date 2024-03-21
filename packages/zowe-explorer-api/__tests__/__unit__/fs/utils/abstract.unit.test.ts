@@ -66,7 +66,7 @@ describe("isDirectoryEntry", () => {
         expect(isDirectoryEntry(dirEntry)).toBe(true);
     });
 
-    it("returns false if value is not a SpoolEntry", () => {
+    it("returns false if value is not a DirEntry", () => {
         const file = new FileEntry("test");
         expect(isDirectoryEntry(file)).toBe(false);
     });

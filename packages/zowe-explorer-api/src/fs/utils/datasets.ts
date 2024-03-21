@@ -10,10 +10,9 @@
  */
 
 import { IFileSystemEntry, DsEntry, MemberEntry, PdsEntry } from "../";
-import { FileType } from "vscode";
 
 export function isDsEntry(entry: IFileSystemEntry): entry is DsEntry {
-    return entry != null && entry.type == FileType.File;
+    return entry instanceof DsEntry;
 }
 
 export function isMemberEntry(entry: IFileSystemEntry): entry is MemberEntry {

@@ -11,14 +11,13 @@
 
 import { IJobFile } from "@zowe/zos-jobs-for-zowe-sdk";
 import { IFileSystemEntry, JobEntry, SpoolEntry } from "../types";
-import { FileType } from "vscode";
 
 export function isJobEntry(entry: IFileSystemEntry): entry is JobEntry {
-    return entry != null && entry.type == FileType.Directory;
+    return entry instanceof JobEntry;
 }
 
 export function isSpoolEntry(entry: IFileSystemEntry): entry is SpoolEntry {
-    return entry?.wasAccessed !== undefined;
+    return entry instanceof SpoolEntry;
 }
 
 export function buildUniqueSpoolName(spool: IJobFile): string {

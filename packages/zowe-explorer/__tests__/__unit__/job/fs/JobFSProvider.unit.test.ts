@@ -28,18 +28,16 @@ const testUris: TestUris = {
 
 const testEntries = {
     job: {
-        name: "TESTJOB(JOB1234) - ACTIVE",
+        ...new JobEntry("TESTJOB(JOB1234) - ACTIVE"),
         job: createIJobObject(),
-        type: FileType.Directory,
         metadata: {
             profile: testProfile,
             path: "/TESTJOB(JOB1234) - ACTIVE",
         },
-    } as unknown as JobEntry,
+    } as JobEntry,
     spool: {
+        ...new SpoolEntry("JES2.JESMSGLG.2"),
         data: new Uint8Array([1, 2, 3]),
-        name: "JES2.JESMSGLG.2",
-        wasAccessed: false,
         metadata: {
             profile: testProfile,
             path: "/TESTJOB(JOB1234) - ACTIVE/JES2.JESMSGLG.2",
@@ -64,9 +62,10 @@ describe("watch", () => {
 });
 describe("stat", () => {
     it("returns a spool entry as read-only", () => {
-        const lookupMock = jest.spyOn(JobFSProvider.instance as any, "_lookup").mockReturnValueOnce(testEntries.spool);
+        const fakeSpool = new SpoolEntry(testEntries.spool.name);
+        const lookupMock = jest.spyOn(JobFSProvider.instance as any, "_lookup").mockReturnValueOnce(fakeSpool);
         expect(JobFSProvider.instance.stat(testUris.spool)).toStrictEqual({
-            ...testEntries.spool,
+            ...fakeSpool,
             permissions: FilePermission.Readonly,
         });
         lookupMock.mockRestore();
@@ -152,11 +151,9 @@ describe("readDirectory", () => {
             getSpoolFiles: jest.fn().mockResolvedValueOnce([fakeSpool, fakeSpool2]),
         };
         const jesApiMock = jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValueOnce(mockJesApi as any);
-        const lookupAsDirMock = jest.spyOn(JobFSProvider.instance as any, "_lookupAsDirectory").mockReturnValueOnce({
-            ...testEntries.job,
-            entries: new Map(),
-            job: testEntries.job.job,
-        } as any);
+        const fakeJob = new JobEntry(testEntries.job.name);
+        fakeJob.job = testEntries.job.job;
+        const lookupAsDirMock = jest.spyOn(JobFSProvider.instance as any, "_lookupAsDirectory").mockReturnValueOnce(fakeJob);
         expect(await JobFSProvider.instance.readDirectory(testUris.job)).toStrictEqual([
             [buildUniqueSpoolName(fakeSpool), FileType.File],
             [buildUniqueSpoolName(fakeSpool2), FileType.File],
@@ -300,7 +297,9 @@ describe("delete", () => {
             deleteJob: jest.fn(),
         };
         const ussApiMock = jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValueOnce(mockUssApi as any);
-        const lookupMock = jest.spyOn(JobFSProvider.instance as any, "_lookup").mockReturnValueOnce({ ...testEntries.job });
+        const fakeJob = new JobEntry(testEntries.job.name);
+        fakeJob.job = testEntries.job.job;
+        const lookupMock = jest.spyOn(JobFSProvider.instance as any, "_lookup").mockReturnValueOnce(fakeJob);
         const lookupParentDirMock = jest
             .spyOn(JobFSProvider.instance as any, "_lookupParentDirectory")
             .mockReturnValueOnce({ ...testEntries.session });
@@ -318,8 +317,12 @@ describe("delete", () => {
             deleteJob: jest.fn(),
         };
         const ussApiMock = jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValueOnce(mockUssApi as any);
-        const lookupMock = jest.spyOn(JobFSProvider.prototype as any, "_lookup").mockReturnValueOnce({ ...testEntries.spool });
-        const lookupParentDirMock = jest.spyOn(JobFSProvider.prototype as any, "_lookupParentDirectory").mockReturnValueOnce({ ...testEntries.job });
+        const fakeSpool = new SpoolEntry(testEntries.spool.name);
+        fakeSpool.spool = testEntries.spool.spool;
+        const fakeJob = new JobEntry(testEntries.job.name);
+        fakeJob.job = testEntries.job.job;
+        const lookupMock = jest.spyOn(JobFSProvider.instance as any, "_lookup").mockReturnValueOnce(fakeSpool);
+        const lookupParentDirMock = jest.spyOn(JobFSProvider.instance as any, "_lookupParentDirectory").mockReturnValueOnce(fakeJob);
         await JobFSProvider.instance.delete(testUris.spool, { recursive: true, deleteRemote: true });
         expect(mockUssApi.deleteJob).not.toHaveBeenCalled();
         expect(lookupParentDirMock).not.toHaveBeenCalled();

@@ -12,12 +12,7 @@
 import * as vscode from "vscode";
 import { BaseProvider, ConflictViewSelection, DirEntry, ZoweScheme } from "../../../src/fs";
 import { Gui } from "../../../src/globals";
-import isEqual from "lodash.isequal";
-import { MockedProperty, mocked } from "../../../__mocks__/mockUtils";
-
-jest.mock("lodash.isequal", () => ({
-    default: jest.fn().mockReturnValue(false),
-}));
+import { MockedProperty } from "../../../__mocks__/mockUtils";
 
 function getGlobalMocks() {
     return {
@@ -142,7 +137,6 @@ describe("diffUseRemote", () => {
         };
         const statusBarMsgMock = jest.spyOn(Gui, "setStatusBarMessage").mockImplementation();
         const executeCommandMock = jest.spyOn(vscode.commands, "executeCommand").mockResolvedValueOnce(undefined);
-        mocked(isEqual).mockReturnValueOnce(true);
 
         const prov = new (BaseProvider as any)();
         const blockMocks = getBlockMocks(prov);
