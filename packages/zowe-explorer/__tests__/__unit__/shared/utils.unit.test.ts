@@ -944,4 +944,25 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
         encodingHistory.unshift(encodingHistory.splice(2, 1)[0]); // shift 3rd value to front to match with local storage
         expect(setValueSpy).toBeCalledWith("zowe.encodingHistory", encodingHistory); //recieve: "zowe.encodingHistory", Array []
     });
+
+    it("Prompts for other encoding for USS file and add encoding in lowercase and expect to save it in upper case", async () => {
+        const blockMocks = createBlockMocks();
+        const node = new ZoweUSSNode({
+            label: "testFile",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            session: blockMocks.session,
+            profile: blockMocks.profile,
+            parentPath: "/root",
+        });
+        node.setEncoding(otherEncoding);
+        const encodingHistory = ["IBM-123", "IBM-456", "IBM-789"];
+        blockMocks.localStorageGet.mockReturnValueOnce(encodingHistory);
+        blockMocks.showQuickPick.mockImplementationOnce(async (items) => items[2]);
+        blockMocks.showInputBox.mockResolvedValueOnce("utf-8"); // add "utf-8" encoding in lowercase
+        await sharedUtils.promptForEncoding(node);
+
+        const setValueSpy = jest.spyOn(ZoweLocalStorage, "setValue");
+        expect(setValueSpy).toBeCalledWith("zowe.encodingHistory", ["UTF-8", "IBM-123", "IBM-456", "IBM-789"]); //recieve added encoding in upper case (first entry)
+        expect(setValueSpy);
+    });
 });
