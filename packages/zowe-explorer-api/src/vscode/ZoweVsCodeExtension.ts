@@ -358,72 +358,11 @@ export class ZoweVsCodeExtension {
     }
 
     private static async promptCertificate(options: IPromptCertificateOptions): Promise<string[] | undefined> {
-        let cert = options.session.cert;
-        if (!cert || options.rePrompt) {
-            let existingURI;
-            try {
-                if (cert) {
-                    existingURI = vscode.Uri.file(cert);
-                }
-            } catch (err) {
-                // Do nothing
-            }
-
-            vscode.commands.executeCommand("zowe.certificateWizard");
-
-            const tempCert = await Gui.showOpenDialog({
-                title: "Enter the path to the certificate for authenticating the connection.",
-                canSelectFiles: true,
-                canSelectFolders: false,
-                canSelectMany: false,
-                defaultUri: existingURI,
-                filters: { "Certificate Files": [".cer", ".crt", ".pem"], "All Files": ["*"] },
-                openLabel: "Select Certificate",
-                ...(options.openDialogOptions ?? {}),
-            });
-            if (tempCert != null && tempCert[0] != null && tempCert[0].fsPath) {
-                cert = tempCert[0].fsPath;
-            } else {
-                cert = "";
-            }
-            options.session.cert = cert;
-        }
-        if (!cert || (options.rePrompt && cert === "")) {
-            return undefined;
-        }
-
-        let certKey = options.session.certKey;
-        if (!certKey || options.rePrompt) {
-            let existingURI;
-            try {
-                if (certKey) {
-                    existingURI = vscode.Uri.file(certKey);
-                }
-            } catch (err) {
-                // Do nothing
-            }
-
-            const tempCertKey = await Gui.showOpenDialog({
-                title: "Enter the path to the certificate key for authenticating the connection.",
-                canSelectFiles: true,
-                canSelectFolders: false,
-                canSelectMany: false,
-                defaultUri: existingURI,
-                filters: { "Certificate Keys": [".cer", ".crt", ".pem", ".key"], "All Files": ["*"] },
-                openLabel: "Select Certificate Key",
-                ...(options.openDialogOptions ?? {}),
-            });
-            if (tempCertKey != null && tempCertKey[0] != null && tempCertKey[0].fsPath) {
-                certKey = tempCertKey[0].fsPath;
-            } else {
-                certKey = "";
-            }
-            options.session.certKey = certKey;
-        }
-        if (!certKey || (options.rePrompt && certKey === "")) {
-            return undefined;
-        }
-
-        return [cert, certKey];
+        await vscode.commands.executeCommand("zowe.certificateWizard", {
+            certUri: options.session.cert ? vscode.Uri.file(options.session.cert) : undefined,
+            keyUri: options.session.certKey ? vscode.Uri.file(options.session.certKey) : undefined,
+            dialogOpts: options.openDialogOptions,
+        });
+        return [];
     }
 }
