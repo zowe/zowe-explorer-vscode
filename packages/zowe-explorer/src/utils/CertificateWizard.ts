@@ -41,7 +41,7 @@ export class CertificateWizard extends WebView {
                         openLabel: "Select Certificate",
                         ...(this.opts.dialogOpts ?? {}),
                     });
-                    if (tempCert != null && tempCert[0] != null && tempCert[0].fsPath) {
+                    if (tempCert != null && tempCert[0] != null) {
                         this.opts.certUri = tempCert[0];
                     }
                 }
@@ -58,11 +58,14 @@ export class CertificateWizard extends WebView {
                         openLabel: "Select Certificate Key",
                         ...(this.opts.dialogOpts ?? {}),
                     });
-                    if (tempCertKey != null && tempCertKey[0] != null && tempCertKey[0].fsPath) {
+                    if (tempCertKey != null && tempCertKey[0] != null) {
                         this.opts.keyUri = tempCertKey[0];
                     }
                 }
                 break;
+            case "submitted":
+                // TODO: update session w/ cert and key
+                return;
             default:
                 break;
         }
