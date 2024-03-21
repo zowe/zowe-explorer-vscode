@@ -17,7 +17,6 @@ import { PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
 export enum LocalStorageKey {
     CLI_LOGGER_SETTING_PRESENTED = "zowe.cliLoggerSetting.presented",
     ENCODING_HISTORY = "zowe.encodingHistory",
-    LOGGER = "zowe.logger",
     SETTINGS_LOCAL_STORAGE_MIGRATED = "zowe.settings.localStorageMigrated",
     SETTINGS_OLD_SETTINGS_MIGRATED = "zowe.settings.oldSettingsMigrated",
 }

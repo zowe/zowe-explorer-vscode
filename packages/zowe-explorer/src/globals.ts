@@ -81,6 +81,7 @@ export const SETTINGS_COMMANDS_ALWAYS_EDIT = "zowe.commands.alwaysEdit";
 export const SETTINGS_AUTOMATIC_PROFILE_VALIDATION = "zowe.automaticProfileValidation";
 export const SETTINGS_SECURE_CREDENTIALS_ENABLED = "zowe.security.secureCredentialsEnabled";
 export const SETTINGS_CHECK_FOR_CUSTOM_CREDENTIAL_MANAGERS = "zowe.security.checkForCustomCredentialManagers";
+export const LOGGER_SETTINGS = "zowe.logger";
 export const EXTENDER_CONFIG: imperative.ICommandProfileTypeConfiguration[] = [];
 export const ZOWE_CLI_SCM = "@zowe/cli";
 export const MAX_DATASET_LENGTH = 44;
