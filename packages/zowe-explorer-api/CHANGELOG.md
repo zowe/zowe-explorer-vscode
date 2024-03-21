@@ -10,7 +10,14 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
   - The new `getJobsByParameters` API is meant to replace `getJobsByOwnerAndPrefix`, and it adds new capabilities such as querying by status and limiting the amount of returned jobs.
 - **Breaking:** Removed string as a return type of the `uploadFromBuffer` method, since the z/OSMF API has been fixed to return a response object that includes an etag. [#2785](https://github.com/zowe/zowe-explorer-vscode/issues/2785)
 - **Breaking:** Changed the type for the options parameter in the `getContents` function (`MainframeInteraction.IUss` interface) to `zosfiles.IDownloadSingleOptions`.
+- Added the `getEncoding` optional function to the `IZoweDatasetTreeNode` and `IZoweUSSTreeNode` interfaces.
+  - **Breaking:** Removed the `encoding` property from the `IZoweUSSTreeNode` interface in favor of the new `getEncoding` function.
+- Added an optional function `nodeDataChanged` to the `IZoweTree` interface to signal an event when a tree node needs updated.
+- Added the optional `vscode.DragAndDropController` interface to the `IZoweTree` interface.
 - Added a `ZoweScheme` enum to expose the core FileSystemProvider schemes for USS files, data sets and jobs.
+- Added optional function `move` to the `MainframeInteraction.IUss` interface to move USS folders/files from one path to another.
+- Added the `buildUniqueSpoolName` function to build spool names for Zowe resource URIs and VS Code editor tabs.
+- Added the `isNodeInEditor` function to determine whether a tree node is open in the editor.
 
 ### Bug fixes
 

@@ -444,7 +444,9 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         ussFileProvider.removeFileHistory(`[${this.getProfileName()}]: ${this.parentPath}/${this.label.toString()}`);
         const parent = this.getParent();
         parent.children = parent.children.filter((c) => c !== this);
-        ussFileProvider.nodeDataChanged(parent);
+        if (ussFileProvider.nodeDataChanged) {
+            ussFileProvider.nodeDataChanged(parent);
+        }
     }
 
     /**

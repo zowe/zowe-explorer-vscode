@@ -231,7 +231,7 @@ export function registerCommonCommands(context: vscode.ExtensionContext, provide
             })
         );
         // initialize the globals.filesToCompare array during initialization
-        LocalFileManagement.reset();
+        LocalFileManagement.resetCompareSelection();
     }
 }
 

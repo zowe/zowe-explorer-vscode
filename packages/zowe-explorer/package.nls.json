@@ -168,5 +168,6 @@
   "compareWithSelected": "Compare with Selected",
   "compareWithSelectedReadOnly": "Compare with Selected (Read-Only)",
   "compareFileStarted": "A file has been chosen for compare",
-  "openWithEncoding": "Open with Encoding"
+  "openWithEncoding": "Open with Encoding",
+  "zowe.placeholderCommand": "Placeholder"
 }

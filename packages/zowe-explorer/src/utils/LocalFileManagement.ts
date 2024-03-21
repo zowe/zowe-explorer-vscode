@@ -27,14 +27,14 @@ export class LocalFileManagement {
         vscode.commands.executeCommand("setContext", "zowe.compareFileStarted", val);
     }
 
-    public static reset(): void {
+    public static resetCompareSelection(): void {
         LocalFileManagement.filesToCompare = [];
         LocalFileManagement.setCompareSelection(false);
     }
 
     public static selectFileForCompare(node: IZoweTreeNode): void {
         if (LocalFileManagement.filesToCompare.length > 0) {
-            LocalFileManagement.reset();
+            LocalFileManagement.resetCompareSelection();
         }
         LocalFileManagement.filesToCompare.push(node);
         LocalFileManagement.setCompareSelection(true);
@@ -48,7 +48,7 @@ export class LocalFileManagement {
     public static async compareChosenFileContent(node: IZoweTreeNode, readOnly = false): Promise<void> {
         LocalFileManagement.filesToCompare.push(node);
         const docUriArray: vscode.Uri[] = LocalFileManagement.filesToCompare.map((n) => n.resourceUri);
-        LocalFileManagement.reset();
+        LocalFileManagement.resetCompareSelection();
         if (docUriArray.length === 2) {
             await vscode.commands.executeCommand("vscode.diff", docUriArray[0], docUriArray[1]);
             if (readOnly) {

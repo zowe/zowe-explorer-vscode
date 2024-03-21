@@ -96,13 +96,24 @@ describe("LocalFileManagement unit tests", () => {
             node2.label = "node2";
             LocalFileManagement.filesToCompare = [createUSSNode(createISession(), createIProfile())];
             const setCompareSelectionSpy = jest.spyOn(LocalFileManagement, "setCompareSelection");
-            const resetSpy = jest.spyOn(LocalFileManagement, "reset");
+            const resetSpy = jest.spyOn(LocalFileManagement, "resetCompareSelection");
             const traceSpy = jest.spyOn(ZoweLogger, "trace");
             LocalFileManagement.selectFileForCompare(node2);
             expect(resetSpy).toHaveBeenCalled();
             expect(setCompareSelectionSpy).toHaveBeenCalledWith(true);
             expect(LocalFileManagement.filesToCompare[0]).toBe(node2);
             expect(traceSpy).toHaveBeenCalledWith("node2 selected for compare.");
+        });
+    });
+
+    describe("resetCompareSelection", () => {
+        it("resets the compare selection and calls setCompareSelection", () => {
+            const node = createUSSNode(createISession(), createIProfile());
+            const setCompareSelectionSpy = jest.spyOn(LocalFileManagement, "setCompareSelection");
+            LocalFileManagement.filesToCompare = [node];
+            LocalFileManagement.resetCompareSelection();
+            expect(setCompareSelectionSpy).toHaveBeenCalled();
+            expect(LocalFileManagement.filesToCompare.length).toBe(0);
         });
     });
 });
