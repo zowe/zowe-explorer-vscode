@@ -67,9 +67,9 @@ export class LoggerUtils {
         await Gui.infoMessage(message, {
             items: [updateLoggerButton],
             vsCodeOpts: { modal: true },
-        }).then(async (selection) => {
+        }).then((selection) => {
             if (selection === updateLoggerButton) {
-                await this.setLogSetting(cliSetting);
+                this.setLogSetting(cliSetting);
             }
             SettingsConfig.setCliLoggerSetting(true);
         });

@@ -27,6 +27,7 @@ function createGlobalMocks() {
         mockGetConfiguration: jest.fn(),
         mockLogger: jest.fn(),
         testContext: {} as unknown as vscode.ExtensionContext,
+        mockSetDirectValue: jest.fn(),
     };
     newMocks.testContext = {
         subscriptions: [],
@@ -56,7 +57,7 @@ function createGlobalMocks() {
     jest.spyOn(ZoweLogger as any, "getDate").mockReturnValue("2023/1/1");
     jest.spyOn(ZoweLogger as any, "getTime").mockReturnValue("08:00:00");
     Object.defineProperty(core, "padLeft", { value: jest.fn(), configurable: true });
-    Object.defineProperty(SettingsConfig, "setDirectValue", { value: jest.fn(), configurable: true });
+    Object.defineProperty(SettingsConfig, "setDirectValue", { value: newMocks.mockSetDirectValue, configurable: true });
 
     return newMocks;
 }
@@ -244,14 +245,16 @@ describe("ZoweLogger.dispose()", () => {
 
 describe("LoggerUtils.updateVscLoggerSetting", () => {
     it("should set the CLI logger setting", async () => {
+        const globalMocks = createGlobalMocks();
         const testCLISetting = {};
         const setCliLoggerSettingSpy = jest.spyOn(SettingsConfig, "setCliLoggerSetting");
         const guiInfoSpy = jest.spyOn(Gui, "infoMessage");
-        guiInfoSpy.mockResolvedValue("Test");
-        jest.spyOn(vscode.workspace, "getConfiguration").mockReturnValue({
+        guiInfoSpy.mockResolvedValue("Update");
+        globalMocks.mockGetConfiguration.mockReturnValue({
             get: jest.fn(),
         } as any);
         await (LoggerUtils as any).updateVscLoggerSetting(testCLISetting);
+        expect(globalMocks.mockSetDirectValue).toHaveBeenCalledWith("zowe.logger", testCLISetting);
         expect(setCliLoggerSettingSpy).toHaveBeenCalledWith(true);
     });
 });
