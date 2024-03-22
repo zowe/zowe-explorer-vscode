@@ -505,8 +505,8 @@ export async function promptForEncoding(node: IZoweDatasetTreeNode | IZoweUSSTre
             });
             if (response != null) {
                 encoding = { kind: "other", codepage: response };
-                const filterEncodingList = encodingHistory.filter((codepage) => codepage !== response);
-                filterEncodingList.unshift(encoding.codepage);
+                const filterEncodingList = encodingHistory.filter((codepage) => codepage.toUpperCase() !== response.toUpperCase());
+                filterEncodingList.unshift(encoding.codepage.toUpperCase());
                 ZoweLocalStorage.setValue("zowe.encodingHistory", filterEncodingList.slice(0, globals.MAX_FILE_HISTORY));
             }
             break;
