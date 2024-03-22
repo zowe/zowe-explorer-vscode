@@ -21,7 +21,6 @@ export class UssFile extends FileEntry {
     public ctime: number;
     public mtime: number;
     public size: number;
-    public binary?: boolean;
     public conflictData?: ConflictData;
     public data: Uint8Array;
     public etag?: string;
@@ -29,7 +28,6 @@ export class UssFile extends FileEntry {
 
     public constructor(name: string) {
         super(name);
-        this.binary = false;
     }
 }
 

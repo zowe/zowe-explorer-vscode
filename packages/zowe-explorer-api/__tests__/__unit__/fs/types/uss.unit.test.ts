@@ -12,10 +12,9 @@
 import { UssDirectory, UssFile } from "../../../../src";
 
 describe("UssFile", () => {
-    it("calls FileEntry constructor on initialization and sets binary to false", () => {
+    it("calls FileEntry constructor on initialization", () => {
         const newFile = new UssFile("testFile.txt");
         expect(newFile.name).toBe("testFile.txt");
-        expect(newFile.binary).toBe(false);
     });
 });
 

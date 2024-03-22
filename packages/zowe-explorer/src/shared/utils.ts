@@ -18,6 +18,7 @@ import { Gui, IZoweTreeNode, IZoweDatasetTreeNode, IZoweUSSTreeNode, IZoweJobTre
 import { ZoweLogger } from "../utils/ZoweLogger";
 import { ZoweLocalStorage } from "../utils/ZoweLocalStorage";
 import { zosEncodingToString } from "../uss/utils";
+import { UssFSProvider } from "../uss/UssFSProvider";
 
 export enum JobSubmitDialogOpts {
     Disabled,
@@ -206,7 +207,7 @@ export function updateOpenFiles<T extends IZoweTreeNode>(treeProvider: IZoweTree
     }
 }
 
-function getCachedEncoding(node: IZoweTreeNode): string | undefined {
+export function getCachedEncoding(node: IZoweTreeNode): string | undefined {
     let cachedEncoding: ZosEncoding;
     if (isZoweUSSTreeNode(node)) {
         cachedEncoding = (node.getSessionNode() as IZoweUSSTreeNode).encodingMap[node.fullPath];
@@ -250,11 +251,14 @@ export async function promptForEncoding(node: IZoweDatasetTreeNode | IZoweUSSTre
         });
     }
 
-    const zosEncoding = node.getEncoding();
+    let zosEncoding = node.getEncoding();
+    if (zosEncoding === undefined && isZoweUSSTreeNode(node)) {
+        zosEncoding = await UssFSProvider.instance.fetchEncodingForUri(node.resourceUri);
+    }
     let currentEncoding = zosEncoding ? zosEncodingToString(zosEncoding) : getCachedEncoding(node);
-    if (node.binary || currentEncoding === "binary") {
+    if (zosEncoding?.kind === "binary") {
         currentEncoding = binaryItem.label;
-    } else if (zosEncoding === null || currentEncoding === "text") {
+    } else if (zosEncoding === null || zosEncoding?.kind === "text") {
         currentEncoding = ebcdicItem.label;
     }
     const encodingHistory = ZoweLocalStorage.getValue<string[]>("zowe.encodingHistory") ?? [];

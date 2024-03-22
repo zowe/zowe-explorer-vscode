@@ -165,6 +165,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             returnEtag: true,
             stream: bufBuilder,
         });
+        await this.autoDetectEncoding(file);
 
         const data: Uint8Array = bufBuilder.read() ?? new Uint8Array();
         if (options?.isConflict) {
@@ -183,6 +184,32 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         if (options?.editor) {
             await this._updateResourceInEditor(uri);
         }
+    }
+
+    public async autoDetectEncoding(entry: UssFile): Promise<void> {
+        if (entry.encoding !== undefined) {
+            return;
+        }
+
+        const ussApi = ZoweExplorerApiRegister.getUssApi(entry.metadata.profile);
+        if (ussApi.getTag != null) {
+            const taggedEncoding = await ussApi.getTag(entry.metadata.path);
+            if (taggedEncoding === "binary" || taggedEncoding === "mixed") {
+                entry.encoding = { kind: "binary" };
+            } else if (taggedEncoding !== "untagged") {
+                entry.encoding = { kind: "other", codepage: taggedEncoding };
+            }
+        } else {
+            const isBinary = await ussApi.isFileTagBinOrAscii(entry.metadata.path);
+            entry.encoding = isBinary ? { kind: "binary" } : undefined;
+        }
+    }
+
+    public async fetchEncodingForUri(uri: vscode.Uri): Promise<ZosEncoding> {
+        const file = this._lookupAsFile(uri);
+        await this.autoDetectEncoding(file);
+
+        return file.encoding;
     }
 
     /**
@@ -216,6 +243,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
     private async uploadEntry(entry: UssFile, content: Uint8Array, shouldForceUpload?: boolean): Promise<IZosFilesResponse> {
         const ussApi = ZoweExplorerApiRegister.getUssApi(entry.metadata.profile);
+        await this.autoDetectEncoding(entry);
         const profileEncoding = entry.encoding ? null : entry.metadata.profile.profile?.encoding;
 
         // Entry was already accessed previously, this is an update to the existing file.

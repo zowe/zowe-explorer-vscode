@@ -12,8 +12,7 @@
 import * as vscode from "vscode";
 import type { ZoweUSSNode } from "./ZoweUSSNode";
 import { ZoweLogger } from "../utils/ZoweLogger";
-import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
-import { imperative, IZoweUSSTreeNode, ZosEncoding } from "@zowe/zowe-explorer-api";
+import { ZosEncoding } from "@zowe/zowe-explorer-api";
 
 export function zosEncodingToString(encoding: ZosEncoding): string {
     switch (encoding.kind) {
@@ -67,22 +66,4 @@ export function injectAdditionalDataToTooltip(node: ZoweUSSNode, tooltip: string
 export function disposeClipboardContents(): void {
     ZoweLogger.trace("uss.utils.disposeClipboardContents called.");
     vscode.env.clipboard.writeText("");
-}
-
-export async function autoDetectEncoding(node: IZoweUSSTreeNode, profile?: imperative.IProfileLoaded): Promise<void> {
-    if (node.getEncoding() !== undefined) {
-        return;
-    }
-    const ussApi = ZoweExplorerApiRegister.getUssApi(profile ?? node.getProfile());
-    if (ussApi.getTag != null) {
-        const taggedEncoding = await ussApi.getTag(node.fullPath);
-        if (taggedEncoding === "binary" || taggedEncoding === "mixed") {
-            await node.setEncoding({ kind: "binary" });
-        } else if (taggedEncoding !== "untagged") {
-            await node.setEncoding({ kind: "other", codepage: taggedEncoding });
-        }
-    } else {
-        const isBinary = await ussApi.isFileTagBinOrAscii(node.fullPath);
-        await node.setEncoding(isBinary ? { kind: "binary" } : undefined);
-    }
 }

@@ -13,7 +13,7 @@ import { Disposable, FilePermission, FileType, TextEditor, Uri } from "vscode";
 import { UssFSProvider } from "../../../../src/uss/UssFSProvider";
 import { createIProfile } from "../../../../__mocks__/mockCreators/shared";
 import { ZoweExplorerApiRegister } from "../../../../src/ZoweExplorerApiRegister";
-import { BaseProvider, DirEntry, FileEntry, Gui, ZoweScheme } from "@zowe/zowe-explorer-api";
+import { BaseProvider, DirEntry, FileEntry, Gui, UssFile, ZoweScheme } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../../../src/Profiles";
 import { UssFileType } from "../../../../src/uss/FileStructure";
 
@@ -198,6 +198,7 @@ describe("fetchFileAtUri", () => {
         const fileEntry = { ...testEntries.file };
         const lookupAsFileMock = jest.spyOn((UssFSProvider as any).prototype, "_lookupAsFile").mockReturnValueOnce(fileEntry);
         const exampleData = "hello world!";
+        const autoDetectEncodingMock = jest.spyOn(UssFSProvider.instance, "autoDetectEncoding").mockImplementation();
         jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce({
             getContents: jest.fn().mockImplementationOnce((filePath, opts) => {
                 opts.stream.write(exampleData);
@@ -212,14 +213,17 @@ describe("fetchFileAtUri", () => {
         await UssFSProvider.instance.fetchFileAtUri(testUris.file);
 
         expect(lookupAsFileMock).toHaveBeenCalledWith(testUris.file);
+        expect(autoDetectEncodingMock).toHaveBeenCalledWith(fileEntry);
         expect(fileEntry.data.toString()).toBe(exampleData);
         expect(fileEntry.etag).toBe("123abc");
         expect(fileEntry.data.byteLength).toBe(exampleData.length);
+        autoDetectEncodingMock.mockRestore();
     });
     it("assigns conflictData if the 'isConflict' option is specified", async () => {
         const fileEntry = { ...testEntries.file };
         const lookupAsFileMock = jest.spyOn((UssFSProvider as any).prototype, "_lookupAsFile").mockReturnValueOnce(fileEntry);
         const exampleData = "<remote data>";
+        const autoDetectEncodingMock = jest.spyOn(UssFSProvider.instance, "autoDetectEncoding").mockImplementation();
         jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce({
             getContents: jest.fn().mockImplementationOnce((filePath, opts) => {
                 opts.stream.write(exampleData);
@@ -234,13 +238,16 @@ describe("fetchFileAtUri", () => {
         await UssFSProvider.instance.fetchFileAtUri(testUris.file, { isConflict: true });
 
         expect(lookupAsFileMock).toHaveBeenCalledWith(testUris.file);
+        expect(autoDetectEncodingMock).toHaveBeenCalledWith(fileEntry);
         expect(fileEntry.conflictData?.contents.toString()).toBe(exampleData);
         expect(fileEntry.conflictData?.etag).toBe("321cba");
         expect(fileEntry.conflictData?.contents.byteLength).toBe(exampleData.length);
+        autoDetectEncodingMock.mockRestore();
     });
     it("calls '_updateResourceInEditor' if the 'editor' option is specified", async () => {
         const fileEntry = { ...testEntries.file };
         const lookupAsFileMock = jest.spyOn((UssFSProvider as any).prototype, "_lookupAsFile").mockReturnValueOnce(fileEntry);
+        const autoDetectEncodingMock = jest.spyOn(UssFSProvider.instance, "autoDetectEncoding").mockImplementation();
         const exampleData = "hello world!";
         jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce({
             getContents: jest.fn().mockImplementationOnce((filePath, opts) => {
@@ -257,10 +264,89 @@ describe("fetchFileAtUri", () => {
         await UssFSProvider.instance.fetchFileAtUri(testUris.file, { editor: {} as TextEditor });
 
         expect(lookupAsFileMock).toHaveBeenCalledWith(testUris.file);
+        expect(autoDetectEncodingMock).toHaveBeenCalledWith(fileEntry);
         expect(fileEntry.data.toString()).toBe(exampleData);
         expect(fileEntry.etag).toBe("123abc");
         expect(fileEntry.data.byteLength).toBe(exampleData.length);
         expect(_updateResourceInEditorMock).toHaveBeenCalledWith(testUris.file);
+        autoDetectEncodingMock.mockRestore();
+    });
+});
+
+describe("autoDetectEncoding", () => {
+    const getTagMock = jest.fn();
+    let mockUssApi;
+
+    beforeEach(() => {
+        mockUssApi = jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValue({
+            getTag: getTagMock.mockClear(),
+        } as any);
+    });
+
+    it("sets encoding if file tagged as binary", async () => {
+        getTagMock.mockResolvedValueOnce("binary");
+        const testEntry = new UssFile("testFile");
+        testEntry.metadata = {
+            path: "/testFile",
+            profile: testProfile,
+        };
+        await UssFSProvider.instance.autoDetectEncoding(testEntry);
+        expect(getTagMock).toHaveBeenCalledTimes(1);
+        expect(testEntry.encoding).toStrictEqual({ kind: "binary" });
+    });
+
+    it("sets encoding if file tagged as binary - old API", async () => {
+        const isFileTagBinOrAsciiMock = jest.fn().mockResolvedValueOnce(true);
+        mockUssApi.mockReturnValueOnce({
+            isFileTagBinOrAscii: isFileTagBinOrAsciiMock,
+        } as any);
+        const testEntry = new UssFile("testFile");
+        testEntry.metadata = {
+            path: "/testFile",
+            profile: testProfile,
+        };
+        await UssFSProvider.instance.autoDetectEncoding(testEntry);
+        expect(testEntry.encoding?.kind).toBe("binary");
+        expect(isFileTagBinOrAsciiMock).toHaveBeenCalledTimes(1);
+    });
+
+    it("sets encoding if file tagged as EBCDIC", async () => {
+        getTagMock.mockResolvedValueOnce("IBM-1047");
+        const testEntry = new UssFile("testFile");
+        testEntry.metadata = {
+            path: "/testFile",
+            profile: testProfile,
+        };
+        await UssFSProvider.instance.autoDetectEncoding(testEntry);
+        expect(testEntry.encoding).toStrictEqual({
+            kind: "other",
+            codepage: "IBM-1047",
+        });
+        expect(getTagMock).toHaveBeenCalledTimes(1);
+    });
+
+    it("does not set encoding if file is untagged", async () => {
+        getTagMock.mockResolvedValueOnce("untagged");
+        const testEntry = new UssFile("testFile");
+        testEntry.metadata = {
+            path: "/testFile",
+            profile: testProfile,
+        };
+        await UssFSProvider.instance.autoDetectEncoding(testEntry);
+        expect(testEntry.encoding).toBe(undefined);
+        expect(getTagMock).toHaveBeenCalledTimes(1);
+    });
+
+    it("does not set encoding if already defined on node", async () => {
+        const testEntry = new UssFile("testFile");
+        testEntry.metadata = {
+            path: "/testFile",
+            profile: testProfile,
+        };
+        testEntry.encoding = { kind: "binary" };
+        await UssFSProvider.instance.autoDetectEncoding(testEntry);
+        expect(testEntry.encoding.kind).toBe("binary");
+        expect(getTagMock).toHaveBeenCalledTimes(0);
     });
 });
 
@@ -354,6 +440,7 @@ describe("writeFile", () => {
             entries: new Map([[testEntries.file.name, { ...testEntries.file }]]),
         };
         const lookupParentDirMock = jest.spyOn(UssFSProvider.instance as any, "_lookupParentDirectory").mockReturnValueOnce(folder);
+        const autoDetectEncodingMock = jest.spyOn(UssFSProvider.instance, "autoDetectEncoding").mockResolvedValue(undefined);
         const newContents = new Uint8Array([3, 6, 9]);
         await expect(UssFSProvider.instance.writeFile(testUris.file, newContents, { create: false, overwrite: true })).rejects.toThrow(
             "Unknown error on remote system"
@@ -361,6 +448,7 @@ describe("writeFile", () => {
 
         lookupParentDirMock.mockRestore();
         ussApiMock.mockRestore();
+        autoDetectEncodingMock.mockRestore();
     });
 
     it("calls _handleConflict when there is an etag error", async () => {
@@ -374,6 +462,7 @@ describe("writeFile", () => {
             entries: new Map([[testEntries.file.name, { ...testEntries.file }]]),
         };
         const lookupParentDirMock = jest.spyOn(UssFSProvider.instance as any, "_lookupParentDirectory").mockReturnValueOnce(folder);
+        const autoDetectEncodingMock = jest.spyOn(UssFSProvider.instance, "autoDetectEncoding").mockResolvedValue(undefined);
         const newContents = new Uint8Array([3, 6, 9]);
         const handleConflictMock = jest.spyOn(UssFSProvider.instance as any, "_handleConflict").mockImplementation();
         await UssFSProvider.instance.writeFile(testUris.file, newContents, { create: false, overwrite: true });
@@ -389,6 +478,7 @@ describe("writeFile", () => {
         expect(handleConflictMock).toHaveBeenCalled();
         handleConflictMock.mockRestore();
         ussApiMock.mockRestore();
+        autoDetectEncodingMock.mockRestore();
     });
 
     it("upload changes to a remote file even if its not yet in the FSP", async () => {
@@ -406,6 +496,7 @@ describe("writeFile", () => {
             entries: new Map(),
         };
         const lookupParentDirMock = jest.spyOn(UssFSProvider.instance as any, "_lookupParentDirectory").mockReturnValueOnce(folder);
+        const autoDetectEncodingMock = jest.spyOn(UssFSProvider.instance, "autoDetectEncoding").mockResolvedValue(undefined);
         const newContents = new Uint8Array([3, 6, 9]);
         await UssFSProvider.instance.writeFile(testUris.file, newContents, { create: true, overwrite: true });
 
@@ -421,6 +512,7 @@ describe("writeFile", () => {
         expect(fileEntry.etag).toBe("NEWETAG");
         expect(fileEntry.data).toBe(newContents);
         ussApiMock.mockRestore();
+        autoDetectEncodingMock.mockRestore();
     });
 
     it("updates an empty, unaccessed file entry in the FSP without sending data", async () => {
