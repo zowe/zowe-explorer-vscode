@@ -31,7 +31,7 @@ import {
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { FilterDescriptor, FilterItem, errorHandling, syncSessionNode } from "../utils/ProfilesUtils";
-import { sortTreeItems, getAppName, getDocumentFilePath, SORT_DIRS, promptForEncoding, updateOpenFiles } from "../shared/utils";
+import { sortTreeItems, getAppName, getDocumentFilePath, SORT_DIRS, promptForEncoding, updateOpenFiles, isClosedFileDirty } from "../shared/utils";
 import { ZoweTreeProvider } from "../abstract/ZoweTreeProvider";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { getIconById, getIconByNode, IconId, IIconItem } from "../generators/icons";
@@ -46,7 +46,6 @@ import { ZoweLogger } from "../utils/LoggerUtils";
 import { TreeViewUtils } from "../utils/TreeViewUtils";
 import { TreeProviders } from "../shared/TreeProviders";
 import { LocalFileManagement } from "../utils/LocalFileManagement";
-import { ZoweSaveQueue } from "../abstract/ZoweSaveQueue";
 
 // Set up localization
 nls.config({
@@ -1515,15 +1514,10 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      * @param this (resolves ESlint warning about unbound methods)
      * @param doc A doc URI that was closed
      */
-    public static onDidCloseTextDocument(this: void, doc: vscode.TextDocument): Promise<void> {
-        if (doc.uri.fsPath.includes(globals.DS_DIR)) {
-            return ZoweSaveQueue.all().then(() => {
-                if (!vscode.workspace.textDocuments.find(({ uri }) => uri.fsPath === doc.uri.fsPath)?.isDirty) {
-                    // Remove document from cache only if there are no pending unsaved changes
-                    updateOpenFiles(TreeProviders.ds, doc.uri.fsPath, null);
-                    LocalFileManagement.removeRecoveredFile(doc);
-                }
-            });
+    public static async onDidCloseTextDocument(this: void, doc: vscode.TextDocument): Promise<void> {
+        if (doc.uri.fsPath.includes(globals.DS_DIR) && !(await isClosedFileDirty(doc))) {
+            updateOpenFiles(TreeProviders.ds, doc.uri.fsPath, null);
+            LocalFileManagement.removeRecoveredFile(doc);
         }
     }
 

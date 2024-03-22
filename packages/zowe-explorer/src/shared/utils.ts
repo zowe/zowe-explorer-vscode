@@ -37,6 +37,7 @@ import { errorHandling } from "../utils/ProfilesUtils";
 import { LocalStorageKey, ZoweLocalStorage } from "../utils/ZoweLocalStorage";
 import { LocalFileManagement } from "../utils/LocalFileManagement";
 import { TreeProviders } from "./TreeProviders";
+import { ZoweSaveQueue } from "../abstract/ZoweSaveQueue";
 
 // Set up localization
 nls.config({
@@ -435,6 +436,14 @@ export function updateOpenFiles<T extends IZoweTreeNode>(treeProvider: IZoweTree
             LocalFileManagement.deleteFileInfo(docPath);
         }
     }
+}
+
+/**
+ * Check for pending unsaved changes on a document that has just been closed.
+ */
+export async function isClosedFileDirty(doc: vscode.TextDocument): Promise<boolean> {
+    await ZoweSaveQueue.all();
+    return vscode.workspace.textDocuments.find(({ uri }) => uri.fsPath === doc.uri.fsPath)?.isDirty;
 }
 
 function getCachedEncoding(node: IZoweTreeNode): string | undefined {
