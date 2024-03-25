@@ -40,6 +40,7 @@ import { ProfileManagement } from "../utils/ProfileManagement";
 // Set up localization
 import * as nls from "vscode-nls";
 import { resolveFileConflict } from "../shared/actions";
+import { LocalFileManagement } from "../utils/LocalFileManagement";
 
 nls.config({
     messageFormat: nls.MessageFormat.bundle,
@@ -1566,7 +1567,9 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
             return;
         }
     } catch (err) {
+        await markDocumentUnsaved(doc);
         await errorHandling(err, sesName);
+        return;
     }
     // Get specific node based on label and parent tree (session / favorites)
     const nodes = concatChildNodes(sesNode ? [sesNode] : datasetProvider.mSessionNodes);
@@ -1604,6 +1607,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
             // set local etag with the new etag from the updated file on mainframe
             node?.setEtag(uploadResponse.apiResponse[0].etag);
             setFileSaved(true);
+            LocalFileManagement.removeRecoveredFile(doc);
         } else if (!uploadResponse.success && uploadResponse.commandResponse.includes("Rest API failure with HTTP(S) status 412")) {
             resolveFileConflict(node, prof, doc, fileLabel);
         } else {

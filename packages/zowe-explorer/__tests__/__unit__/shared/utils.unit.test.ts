@@ -31,7 +31,8 @@ import { Profiles } from "../../../src/Profiles";
 import * as utils from "../../../src/utils/ProfilesUtils";
 import { Gui, IZoweTreeNode, ProfilesCache, ZosEncoding } from "@zowe/zowe-explorer-api";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
-import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
+import { LocalStorageKey, ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
+import { LocalFileManagement } from "../../../src/utils/LocalFileManagement";
 
 async function createGlobalMocks() {
     const newMocks = {
@@ -330,9 +331,15 @@ describe("Test force upload", () => {
             configurable: true,
         });
         Object.defineProperty(vscode, "ProgressLocation", { value: newVariables.ProgressLocation, configurable: true });
+        jest.spyOn(LocalFileManagement, "storeFileInfo").mockImplementation();
+        jest.spyOn(LocalFileManagement, "deleteFileInfo").mockImplementation();
 
         return newVariables;
     }
+
+    afterEach(() => {
+        jest.clearAllMocks();
+    });
 
     it("should successfully call upload for a USS file if user clicks 'Yes'", async () => {
         const blockMocks = await createBlockMocks();
@@ -683,20 +690,32 @@ describe("Shared utils unit tests - function sortTreeItems", () => {
 
 describe("Shared utils unit tests - function updateOpenFiles", () => {
     const someTree = { openFiles: {} };
+    const testDsPath = path.join("~", "temp", "_D_", "dsname");
+    const testUssPath = path.join("~", "temp", "_U_", "fspath");
+
+    beforeAll(() => {
+        globals.defineGlobals("~");
+    });
 
     it("sets a file entry to null in the openFiles record", () => {
-        sharedUtils.updateOpenFiles(someTree as any, "/a/doc/path", null);
-        expect(someTree.openFiles["/a/doc/path"]).toBeNull();
+        const deleteFileInfoSpy = jest.spyOn(LocalFileManagement, "deleteFileInfo").mockImplementation();
+        sharedUtils.updateOpenFiles(someTree as any, testDsPath, null);
+        expect(someTree.openFiles[testDsPath]).toBeNull();
+        expect(deleteFileInfoSpy).toHaveBeenCalledTimes(1);
     });
 
     it("sets a file entry to a valid node in the openFiles record", () => {
-        sharedUtils.updateOpenFiles(someTree as any, "/a/doc/path", { label: "testLabel" } as IZoweTreeNode);
-        expect(someTree.openFiles["/a/doc/path"].label).toBe("testLabel");
+        const storeFileInfoSpy = jest.spyOn(LocalFileManagement, "storeFileInfo").mockImplementation();
+        sharedUtils.updateOpenFiles(someTree as any, testDsPath, { label: "testDsLabel" } as IZoweTreeNode);
+        sharedUtils.updateOpenFiles(someTree as any, testUssPath, { label: "testUssLabel" } as IZoweTreeNode);
+        expect(someTree.openFiles[testDsPath].label).toBe("testDsLabel");
+        expect(someTree.openFiles[testUssPath].label).toBe("testUssLabel");
+        expect(storeFileInfoSpy).toHaveBeenCalledTimes(2);
     });
 
     it("does nothing if openFiles is not defined", () => {
         someTree.openFiles = undefined as any;
-        sharedUtils.updateOpenFiles(someTree as any, "/a/doc/path", null);
+        sharedUtils.updateOpenFiles(someTree as any, testDsPath, null);
         expect(someTree.openFiles).toBeUndefined();
     });
 });

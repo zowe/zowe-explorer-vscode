@@ -37,6 +37,7 @@ import { TreeProviders } from "../../../src/shared/TreeProviders";
 import { join } from "path";
 import * as sharedUtils from "../../../src/shared/utils";
 import { mocked } from "../../../__mocks__/mockUtils";
+import { LocalFileManagement } from "../../../src/utils/LocalFileManagement";
 
 async function createGlobalMocks() {
     const globalMocks = {
@@ -192,6 +193,9 @@ async function createGlobalMocks() {
         uss: { addSingleSession: jest.fn(), mSessionNodes: [...globalMocks.testTree.mSessionNodes], refresh: jest.fn() } as any,
         jobs: { addSingleSession: jest.fn(), mSessionNodes: [...globalMocks.testTree.mSessionNodes], refresh: jest.fn() } as any,
     } as any);
+    jest.spyOn(LocalFileManagement, "storeFileInfo").mockImplementation();
+    jest.spyOn(LocalFileManagement, "deleteFileInfo").mockImplementation();
+    jest.spyOn(LocalFileManagement, "removeRecoveredFile").mockImplementation();
 
     return globalMocks;
 }
@@ -1646,13 +1650,17 @@ describe("USSTree Unit Tests - Function editSession", () => {
         it("sets the entry in openFiles record to null if USS URI is valid", async () => {
             const globalMocks = await createGlobalMocks();
             const tree = globalMocks.testTree as unknown as any;
+            Object.defineProperty(vscode.workspace, "textDocuments", {
+                value: [],
+                configurable: true,
+            });
             Object.defineProperty(globals, "USS_DIR", {
                 value: join("some", "fspath", "_U_"),
             });
             const doc = { uri: { fsPath: join(globals.USS_DIR, "lpar", "someFile.txt") } } as vscode.TextDocument;
 
             jest.spyOn(TreeProviders, "uss", "get").mockReturnValue(tree);
-            USSTree.onDidCloseTextDocument(doc);
+            await USSTree.onDidCloseTextDocument(doc);
             expect(tree.openFiles[doc.uri.fsPath]).toBeNull();
         });
     });

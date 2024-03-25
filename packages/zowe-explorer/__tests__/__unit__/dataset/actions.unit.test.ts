@@ -42,6 +42,7 @@ import * as utils from "../../../src/utils/ProfilesUtils";
 import { getNodeLabels } from "../../../src/dataset/utils";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 import { mocked } from "../../../__mocks__/mockUtils";
+import { LocalFileManagement } from "../../../src/utils/LocalFileManagement";
 
 // Missing the definition of path module, because I need the original logic for tests
 jest.mock("fs");
@@ -127,6 +128,7 @@ function createGlobalMocks() {
     Object.defineProperty(ZoweLogger, "info", { value: jest.fn(), configurable: true });
     Object.defineProperty(ZoweLogger, "warn", { value: jest.fn(), configurable: true });
     mocked(Profiles.getInstance).mockReturnValue(newMocks.profileInstance);
+    jest.spyOn(LocalFileManagement, "storeFileInfo").mockImplementation();
 
     return newMocks;
 }
@@ -1028,6 +1030,7 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
         const testDatasetTree = createDatasetTree(datasetSessionNode, treeView, datasetFavoritesNode);
         const mvsApi = createMvsApi(imperativeProfile);
         bindMvsApi(mvsApi);
+        const uploadContentSpy = jest.spyOn(sharedUtils, "uploadContent");
 
         return {
             session,
@@ -1040,8 +1043,11 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
             mvsApi,
             profileInstance,
             testDatasetTree,
+            uploadContentSpy,
         };
     }
+
+    afterEach(() => jest.clearAllMocks());
 
     afterAll(() => jest.restoreAllMocks());
 
@@ -1197,6 +1203,7 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
 
         expect(dataSetSpy).toBeCalledWith("HLQ.TEST.AFILE", { responseTimeout: blockMocks.imperativeProfile.profile?.responseTimeout });
         expect(mocked(Gui.errorMessage)).toBeCalledWith("Data set failed to save. Data set may have been deleted or renamed on mainframe.");
+        expect(blockMocks.uploadContentSpy).not.toHaveBeenCalled();
     });
     it("Checking common dataset saving", async () => {
         globals.defineGlobals("");
@@ -1242,6 +1249,7 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
         expect(mocked(sharedUtils.concatChildNodes)).toBeCalled();
         expect(mockSetEtag).toHaveBeenCalledWith("123");
         expect(mocked(globalMocks.statusBarMsgSpy)).toBeCalledWith("success", globals.STATUS_BAR_TIMEOUT_MS);
+        expect(blockMocks.uploadContentSpy).toHaveBeenCalledTimes(1);
     });
     it("Checking common dataset failed saving attempt", async () => {
         globals.defineGlobals("");
@@ -1331,14 +1339,13 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
         });
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         blockMocks.profileInstance.loadNamedProfile.mockReturnValue(blockMocks.imperativeProfile);
-        const mockSetEtag = jest.spyOn(node, "setEtag").mockImplementation(() => null);
         const testDocument = createTextDocument("HLQ.TEST.AFILE", blockMocks.datasetSessionNode);
         (testDocument as any).fileName = path.join(globals.DS_DIR, blockMocks.imperativeProfile.name, testDocument.fileName);
 
         await dsActions.saveFile(testDocument, blockMocks.testDatasetTree);
 
         expect(mocked(sharedUtils.concatChildNodes)).toBeCalled();
-        expect(mocked(globalMocks.statusBarMsgSpy)).toBeCalledWith("success", globals.STATUS_BAR_TIMEOUT_MS);
+        expect(globalMocks.statusBarMsgSpy).toBeCalledWith("success", globals.STATUS_BAR_TIMEOUT_MS);
     });
     it("Checking favorite PDS Member saving", async () => {
         globals.defineGlobals("");
@@ -1441,25 +1448,31 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
         expect(mocked(zowe.List.dataSet)).not.toBeCalled();
         expect(mocked(zowe.Upload.pathToDataSet)).not.toBeCalled();
     });
-    it("Checking PDS member saving attempt", async () => {
+    fit("Checking PDS member saving attempt", async () => {
         globals.defineGlobals("");
-        createGlobalMocks();
+        const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks();
-        const node = new ZoweDatasetNode({
-            label: "HLQ.TEST.AFILE(mem)",
-            collapsibleState: vscode.TreeItemCollapsibleState.None,
+        const dsNode = new ZoweDatasetNode({
+            label: "HLQ.TEST.AFILE",
+            collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
             parentNode: blockMocks.datasetSessionNode,
             profile: blockMocks.imperativeProfile,
         });
-        blockMocks.datasetSessionNode.children.push(node);
+        const memberNode = new ZoweDatasetNode({
+            label: "MEMBER",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: dsNode,
+            contextOverride: globals.DS_MEMBER_CONTEXT,
+        });
+        blockMocks.datasetSessionNode.children.push(memberNode);
 
-        mocked(sharedUtils.concatChildNodes).mockReturnValueOnce([node]);
+        mocked(sharedUtils.concatChildNodes).mockReturnValueOnce([memberNode]);
         blockMocks.testDatasetTree.getChildren.mockReturnValueOnce([blockMocks.datasetSessionNode]);
         mocked(zowe.List.dataSet).mockResolvedValue({
             success: true,
             commandResponse: "",
             apiResponse: {
-                items: [{ dsname: "HLQ.TEST.AFILE" }, { dsname: "HLQ.TEST.AFILE(mem)" }],
+                items: [{ dsname: "HLQ.TEST.AFILE" }, { dsname: "HLQ.TEST.AFILE(MEMBER)" }],
             },
         });
         mocked(zowe.Upload.pathToDataSet).mockResolvedValueOnce({
@@ -1476,13 +1489,13 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
         });
         blockMocks.profileInstance.loadNamedProfile.mockReturnValueOnce(blockMocks.imperativeProfile);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
-        const testDocument = createTextDocument("HLQ.TEST.AFILE(mem)", blockMocks.datasetSessionNode);
+        const testDocument = createTextDocument("HLQ.TEST.AFILE(MEMBER)", blockMocks.datasetSessionNode);
         (testDocument as any).fileName = path.join(globals.DS_DIR, testDocument.fileName);
 
         await dsActions.saveFile(testDocument, blockMocks.testDatasetTree);
 
         expect(mocked(sharedUtils.concatChildNodes)).toBeCalled();
-        expect(mocked(Gui.setStatusBarMessage)).toBeCalledWith("success", globals.STATUS_BAR_TIMEOUT_MS);
+        expect(globalMocks.statusBarMsgSpy).toBeCalledWith("success", globals.STATUS_BAR_TIMEOUT_MS);
     });
 });
 
