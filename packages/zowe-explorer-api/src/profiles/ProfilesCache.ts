@@ -195,6 +195,7 @@ export class ProfilesCache {
         this.allProfiles = [];
         this.allTypes = [];
         this.profilesByType.clear();
+        this.defaultProfileByType.clear();
         let mProfileInfo: zowe.imperative.ProfileInfo;
         try {
             mProfileInfo = await this.getProfileInfo();
