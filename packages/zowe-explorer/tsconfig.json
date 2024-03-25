@@ -4,7 +4,7 @@
     "target": "es6",
     "outDir": "out",
     "jsx": "react",
-    "lib": ["es6"],
+    "lib": ["es6", "dom"],
     "skipLibCheck": true,
     "sourceMap": true,
     /* Strict Type-Checking Option */
