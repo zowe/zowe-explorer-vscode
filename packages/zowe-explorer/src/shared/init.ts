@@ -145,27 +145,22 @@ export function registerCommonCommands(context: vscode.ExtensionContext, provide
             vscode.workspace.onDidSaveTextDocument((savedFile) => {
                 ZoweLogger.debug(
                     localize(
-                        "onDidSaveTextDocument1",
-                        "File was saved -- determining whether the file is a USS file or Data set.\n Comparing (case insensitive) "
-                    ) +
-                        savedFile.fileName +
-                        localize("onDidSaveTextDocument2", " against directory ") +
-                        globals.DS_DIR +
-                        localize("onDidSaveTextDocument3", "and") +
+                        "onDidSaveTextDocument.wasSaved",
+                        // eslint-disable-next-line max-len
+                        "File was saved -- determining whether the file is a USS file or Data set: {0}\nComparing (case insensitive) against these directories:\n\t{1}\n\t{2}",
+                        savedFile.fileName,
+                        globals.DS_DIR,
                         globals.USS_DIR
+                    )
                 );
                 if (savedFile.fileName.toUpperCase().indexOf(globals.DS_DIR.toUpperCase()) >= 0) {
-                    ZoweLogger.debug(localize("activate.didSaveText.isDataSet", "File is a data set-- saving "));
+                    ZoweLogger.debug(localize("onDidSaveTextDocument.isDataSet", "File is a data set -- saving"));
                     ZoweSaveQueue.push({ uploadRequest: saveFile, savedFile, fileProvider: providers.ds });
                 } else if (savedFile.fileName.toUpperCase().indexOf(globals.USS_DIR.toUpperCase()) >= 0) {
-                    ZoweLogger.debug(localize("activate.didSaveText.isUSSFile", "File is a USS file -- saving"));
+                    ZoweLogger.debug(localize("onDidSaveTextDocument.isUSSFile", "File is a USS file -- saving"));
                     ZoweSaveQueue.push({ uploadRequest: saveUSSFile, savedFile, fileProvider: providers.uss });
                 } else {
-                    ZoweLogger.debug(
-                        localize("activate.didSaveText.file", "File ") +
-                            savedFile.fileName +
-                            localize("activate.didSaveText.notDataSet", " is not a data set or USS file ")
-                    );
+                    ZoweLogger.debug(localize("onDidSaveTextDocument.notDataSet", "File {0} is not a data set or USS file", savedFile.fileName));
                 }
             })
         );

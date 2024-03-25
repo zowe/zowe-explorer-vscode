@@ -1211,7 +1211,8 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
      * @param doc A doc URI that was closed
      */
     public static onDidCloseTextDocument(this: void, doc: vscode.TextDocument): void {
-        if (doc.uri.scheme === "zosspool") {
+        if (doc.uri.scheme === "zosspool" && doc.isClosed) {
+            ZoweLogger.debug(`Handling close event for ${doc.uri.fsPath}: closed=${doc.isClosed.toString()}, dirty=${doc.isDirty.toString()}`);
             updateOpenFiles(TreeProviders.job, doc.uri.path, null);
         }
     }

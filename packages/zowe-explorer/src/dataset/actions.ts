@@ -1201,6 +1201,7 @@ export async function refreshPS(node: api.IZoweDatasetTreeNode): Promise<void> {
             default:
                 throw Error(localize("refreshPS.invalidNode.error", "Item invalid."));
         }
+        ZoweLogger.info(`Refreshing data set ${label}`);
         const documentFilePath = getDocumentFilePath(label, node);
         const prof = node.getProfile();
         const response = await ZoweExplorerApiRegister.getMvsApi(prof).getContents(label, {

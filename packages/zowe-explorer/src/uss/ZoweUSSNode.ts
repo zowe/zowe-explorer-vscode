@@ -573,6 +573,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 Gui.errorMessage(localize("refreshUSS.error.invalidNode", "refreshUSS() called from invalid node."));
                 throw Error(localize("refreshUSS.error.invalidNode", "refreshUSS() called from invalid node."));
         }
+        ZoweLogger.info(`Refreshing USS file ${label}`);
         try {
             const ussDocumentFilePath = this.getUSSDocumentFilePath();
             const isDirty = this.isDirtyInEditor;
