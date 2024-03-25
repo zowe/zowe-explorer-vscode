@@ -6,13 +6,13 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### New features and enhancements
 
+- Added optional method `getDsDocumentFilePath` to `IZoweDatasetTreeNode` interface to make it easier for extenders to get the local file path of a data set node. [#2760](https://github.com/zowe/vscode-extension-for-zowe/pull/2760)
+
 ### Bug fixes
 
 - Fixed an issue where the `ProfilesCache` class would retain old service profiles, even if they were removed from the team config. [#2395](https://github.com/zowe/zowe-explorer-vscode/issues/2395)
 
 ## `2.15.1`
-
-### New features and enhancements
 
 ### Bug fixes
 

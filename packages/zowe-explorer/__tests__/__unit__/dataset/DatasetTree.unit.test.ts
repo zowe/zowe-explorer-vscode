@@ -55,6 +55,7 @@ import { TreeProviders } from "../../../src/shared/TreeProviders";
 import { join } from "path";
 import { mocked } from "../../../__mocks__/mockUtils";
 import * as sharedUtils from "../../../src/shared/utils";
+import { LocalFileManagement } from "../../../src/utils/LocalFileManagement";
 
 jest.mock("fs");
 jest.mock("util");
@@ -168,6 +169,9 @@ function createGlobalMocks() {
     Object.defineProperty(ZoweLogger, "warn", { value: jest.fn(), configurable: true });
     Object.defineProperty(ZoweLogger, "info", { value: jest.fn(), configurable: true });
     Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
+    jest.spyOn(LocalFileManagement, "storeFileInfo").mockImplementation();
+    jest.spyOn(LocalFileManagement, "deleteFileInfo").mockImplementation();
+    jest.spyOn(LocalFileManagement, "removeRecoveredFile").mockImplementation();
 
     return globalMocks;
 }
@@ -3325,11 +3329,11 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
     });
 
     describe("onDidCloseTextDocument", () => {
-        it("sets the entry in openFiles record to null if Data Set URI is valid", () => {
+        it("sets the entry in openFiles record to null if Data Set URI is valid", async () => {
             const doc = { uri: { fsPath: join(globals.DS_DIR, "lpar", "SOME.PS") } } as vscode.TextDocument;
 
             jest.spyOn(TreeProviders, "ds", "get").mockReturnValue(tree);
-            DatasetTree.onDidCloseTextDocument(doc);
+            await DatasetTree.onDidCloseTextDocument(doc);
             expect(tree.openFiles[doc.uri.fsPath]).toBeNull();
         });
     });

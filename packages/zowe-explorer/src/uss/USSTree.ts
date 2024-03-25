@@ -14,7 +14,7 @@ import * as globals from "../globals";
 import * as path from "path";
 import { imperative } from "@zowe/cli";
 import { FilterItem, FilterDescriptor, errorHandling, syncSessionNode } from "../utils/ProfilesUtils";
-import { sortTreeItems, getAppName, checkIfChildPath, updateOpenFiles, promptForEncoding } from "../shared/utils";
+import { sortTreeItems, getAppName, checkIfChildPath, updateOpenFiles, promptForEncoding, isClosedFileDirty } from "../shared/utils";
 import { Gui, IZoweTree, IZoweTreeNode, IZoweUSSTreeNode, NodeInteraction, ValidProfileEnum, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
@@ -27,6 +27,7 @@ import * as nls from "vscode-nls";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { TreeViewUtils } from "../utils/TreeViewUtils";
 import { TreeProviders } from "../shared/TreeProviders";
+import { LocalFileManagement } from "../utils/LocalFileManagement";
 
 // Set up localization
 nls.config({
@@ -947,9 +948,10 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
      * @param this (resolves ESlint warning about unbound methods)
      * @param doc A doc URI that was closed
      */
-    public static onDidCloseTextDocument(this: void, doc: vscode.TextDocument): void {
-        if (doc.uri.fsPath.includes(globals.USS_DIR)) {
+    public static async onDidCloseTextDocument(this: void, doc: vscode.TextDocument): Promise<void> {
+        if (doc.uri.fsPath.includes(globals.USS_DIR) && !(await isClosedFileDirty(doc))) {
             updateOpenFiles(TreeProviders.uss, doc.uri.fsPath, null);
+            LocalFileManagement.removeRecoveredFile(doc);
         }
     }
 

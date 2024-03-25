@@ -8,6 +8,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
+- Fixed issue where files left open in prior VS Code session cannot be uploaded to mainframe after window is reloaded. [#2758](https://github.com/zowe/vscode-extension-for-zowe/issues/2758)
+
 ## `2.15.1`
 
 ### New features and enhancements
