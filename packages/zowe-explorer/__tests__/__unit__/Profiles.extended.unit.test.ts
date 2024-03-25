@@ -1639,17 +1639,13 @@ describe("Profiles Unit Tests - function ssoLogin", () => {
         warnSpy.mockClear();
     });
     it("should catch error during login and log error", async () => {
-        jest.spyOn(ZoweExplorerApiRegister.getInstance(), "getCommonApi").mockReturnValueOnce({
-            getTokenTypeName: () => zowe.imperative.SessConstants.TOKEN_TYPE_APIML,
-            login: () => {
-                throw new Error("test error.");
-            },
-        } as never);
+        const loginBaseProfMock = jest.spyOn(ZoweVsCodeExtension, "loginWithBaseProfile").mockRejectedValueOnce(new Error("test error."));
         jest.spyOn(Profiles.getInstance() as any, "loginCredentialPrompt").mockReturnValue(["fake", "12345"]);
         const errorSpy = jest.spyOn(ZoweLogger, "error");
         await expect(Profiles.getInstance().ssoLogin(testNode, "fake")).resolves.not.toThrow();
-        expect(errorSpy).toBeCalled();
+        expect(errorSpy).toHaveBeenCalled();
         errorSpy.mockClear();
+        loginBaseProfMock.mockRestore();
     });
 });
 
