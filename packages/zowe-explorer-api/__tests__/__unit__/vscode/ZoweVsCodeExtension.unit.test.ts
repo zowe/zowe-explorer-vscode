@@ -238,129 +238,149 @@ describe("ZoweVsCodeExtension", () => {
             expect(testCache.fetchBaseProfile).toHaveBeenCalledTimes(1);
             expect(testCache.updateBaseProfileFileLogin).not.toHaveBeenCalled();
         });
-        it("should login using the base profile given a simple profile name", async () => {
-            testCache.fetchBaseProfile.mockResolvedValue(baseProfile);
-            const testSpy = jest.spyOn(ZoweVsCodeExtension as any, "getServiceProfileForAuthPurposes");
-            jest.spyOn(ZoweVsCodeExtension as any, "promptUserPass").mockResolvedValue(["user", "pass"]);
-            const loginSpy = jest.spyOn(Login, "apimlLogin").mockResolvedValue("tokenValue");
 
-            await ZoweVsCodeExtension.loginWithBaseProfile("service");
+        describe("user and password chosen", () => {
+            it("should login using the base profile given a simple profile name", async () => {
+                testCache.fetchBaseProfile.mockResolvedValue(baseProfile);
+                const testSpy = jest.spyOn(ZoweVsCodeExtension as any, "getServiceProfileForAuthPurposes");
+                jest.spyOn(ZoweVsCodeExtension as any, "promptUserPass").mockResolvedValue(["user", "pass"]);
+                const loginSpy = jest.spyOn(Login, "apimlLogin").mockResolvedValue("tokenValue");
 
-            const testSession = new Session(JSON.parse(JSON.stringify(expectedSession.ISession)));
-            delete testSession.ISession.user;
-            delete testSession.ISession.password;
-            testSession.ISession.base64EncodedAuth = "dXNlcjpwYXNz";
+                // case 1: User selects "user/password" for login quick pick
+                const quickPickMock = jest.spyOn(Gui, "showQuickPick").mockImplementation((items) => items[0]);
+                await ZoweVsCodeExtension.loginWithBaseProfile("service");
 
-            expect(loginSpy).toHaveBeenCalledWith(testSession);
-            expect(testSpy).toHaveBeenCalledWith(testCache, "service");
-            expect(testCache.updateBaseProfileFileLogin).toHaveBeenCalledWith(baseProfile, updProfile, false);
+                const testSession = new Session(JSON.parse(JSON.stringify(expectedSession.ISession)));
+                delete testSession.ISession.user;
+                delete testSession.ISession.password;
+                testSession.ISession.base64EncodedAuth = "dXNlcjpwYXNz";
+                testSession.ISession.storeCookie = false;
+
+                expect(loginSpy).toHaveBeenCalledWith(testSession);
+                expect(testSpy).toHaveBeenCalledWith(testCache, "service");
+                expect(quickPickMock).toHaveBeenCalled();
+                expect(testCache.updateBaseProfileFileLogin).toHaveBeenCalledWith(baseProfile, updProfile, false);
+            });
+            it("should logout using the base profile given a simple profile name", async () => {
+                testCache.fetchBaseProfile.mockResolvedValue(baseProfile);
+                const testSpy = jest.spyOn(ZoweVsCodeExtension as any, "getServiceProfileForAuthPurposes");
+                testSpy.mockResolvedValue({ profile: { ...testProfile, ...updProfile } });
+                const logoutSpy = jest.spyOn(Logout, "apimlLogout").mockImplementation(jest.fn());
+
+                // case 1: User selects "user/password" for login quick pick
+                const quickPickMock = jest.spyOn(Gui, "showQuickPick").mockImplementation((items) => items[0]);
+                await ZoweVsCodeExtension.logoutWithBaseProfile("service");
+
+                const testSession = new Session(JSON.parse(JSON.stringify(expectedSession.ISession)));
+                testSession.ISession.tokenValue = "tokenValue";
+                delete testSession.ISession.base64EncodedAuth;
+                delete testSession.ISession.user;
+                delete testSession.ISession.password;
+
+                expect(logoutSpy).toHaveBeenCalledWith(testSession);
+                expect(testSpy).toHaveBeenCalledWith(testCache, "service");
+                expect(testCache.updateBaseProfileFileLogout).toHaveBeenCalledWith(baseProfile);
+            });
+            it("should login using the base profile if the base profile does not have a tokenType stored", async () => {
+                const tempBaseProfile = JSON.parse(JSON.stringify(baseProfile));
+                tempBaseProfile.profile.tokenType = undefined;
+                testCache.fetchBaseProfile.mockResolvedValue(tempBaseProfile);
+                const testSpy = jest.spyOn(ZoweVsCodeExtension as any, "getServiceProfileForAuthPurposes");
+                const newServiceProfile = { ...serviceProfile, profile: { ...testProfile, tokenValue: "tokenValue", host: "service" } };
+                testSpy.mockResolvedValue(newServiceProfile);
+                jest.spyOn(ZoweVsCodeExtension as any, "promptUserPass").mockResolvedValue(["user", "pass"]);
+                const loginSpy = jest.spyOn(Login, "apimlLogin").mockResolvedValue("tokenValue");
+
+                // case 1: User selects "user/password" for login quick pick
+                const quickPickMock = jest.spyOn(Gui, "showQuickPick").mockImplementation((items) => items[0]);
+                await ZoweVsCodeExtension.loginWithBaseProfile("service");
+
+                const testSession = new Session(JSON.parse(JSON.stringify(expectedSession.ISession)));
+                delete testSession.ISession.user;
+                delete testSession.ISession.password;
+                testSession.ISession.hostname = "service";
+                testSession.ISession.base64EncodedAuth = "dXNlcjpwYXNz";
+                testSession.ISession.storeCookie = false;
+
+                expect(loginSpy).toHaveBeenCalledWith(testSession);
+                expect(testSpy).toHaveBeenCalledWith(testCache, "service");
+                expect(testCache.updateBaseProfileFileLogin).toHaveBeenCalledWith(tempBaseProfile, updProfile, false);
+            });
+            it("should login using the service profile given a simple profile name", async () => {
+                const tempBaseProfile = JSON.parse(JSON.stringify(baseProfile));
+                tempBaseProfile.profile.tokenType = "some-dummy-token-type";
+                testCache.fetchBaseProfile.mockResolvedValue(tempBaseProfile);
+                const testSpy = jest.spyOn(ZoweVsCodeExtension as any, "getServiceProfileForAuthPurposes");
+                const newServiceProfile = { ...serviceProfile, profile: { ...testProfile, tokenValue: "tokenValue", host: "service" } };
+                testSpy.mockResolvedValue(newServiceProfile);
+                jest.spyOn(ZoweVsCodeExtension as any, "promptUserPass").mockResolvedValue(["user", "pass"]);
+                const loginSpy = jest.spyOn(Login, "apimlLogin").mockResolvedValue("tokenValue");
+
+                // case 1: User selects "user/password" for login quick pick
+                const quickPickMock = jest.spyOn(Gui, "showQuickPick").mockImplementation((items) => items[0]);
+                await ZoweVsCodeExtension.loginWithBaseProfile("service");
+
+                const testSession = new Session(JSON.parse(JSON.stringify(expectedSession.ISession)));
+                delete testSession.ISession.user;
+                delete testSession.ISession.password;
+                testSession.ISession.hostname = "service";
+                testSession.ISession.base64EncodedAuth = "dXNlcjpwYXNz";
+                testSession.ISession.tokenType = tempBaseProfile.profile.tokenType;
+                testSession.ISession.storeCookie = false;
+
+                expect(loginSpy).toHaveBeenCalledWith(testSession);
+                expect(testSpy).toHaveBeenCalledWith(testCache, "service");
+                expect(testCache.updateBaseProfileFileLogin).toHaveBeenCalledWith(
+                    newServiceProfile,
+                    {
+                        tokenType: tempBaseProfile.profile.tokenType,
+                        tokenValue: "tokenValue",
+                    },
+                    true
+                );
+            });
+            it("should logout using the service profile given a simple profile name", async () => {
+                testCache.fetchBaseProfile.mockResolvedValue(baseProfile);
+                const testSpy = jest.spyOn(ZoweVsCodeExtension as any, "getServiceProfileForAuthPurposes");
+                const newServiceProfile = { ...serviceProfile, profile: { ...testProfile, ...updProfile, host: "service" } };
+                testSpy.mockResolvedValue(newServiceProfile);
+                const logoutSpy = jest.spyOn(Logout, "apimlLogout").mockImplementation(jest.fn());
+
+                // case 1: User selects "user/password" for login quick pick
+                const quickPickMock = jest.spyOn(Gui, "showQuickPick").mockImplementation((items) => items[0]);
+                await ZoweVsCodeExtension.logoutWithBaseProfile("service");
+
+                const testSession = new Session(JSON.parse(JSON.stringify(expectedSession.ISession)));
+                testSession.ISession.hostname = "service";
+                testSession.ISession.tokenValue = "tokenValue";
+                delete testSession.ISession.base64EncodedAuth;
+                delete testSession.ISession.user;
+                delete testSession.ISession.password;
+
+                expect(logoutSpy).toHaveBeenCalledWith(testSession);
+                expect(testSpy).toHaveBeenCalledWith(testCache, "service");
+                expect(testCache.updateBaseProfileFileLogout).toHaveBeenCalledWith(newServiceProfile);
+            });
+            it("should login using the base profile when provided with a node, register, and cache instance", async () => {
+                testCache.fetchBaseProfile.mockResolvedValue(baseProfile);
+                const testSpy = jest.spyOn(ZoweVsCodeExtension as any, "getServiceProfileForAuthPurposes");
+                jest.spyOn(ZoweVsCodeExtension as any, "promptUserPass").mockResolvedValue(["user", "pass"]);
+                const loginSpy = jest.spyOn(Login, "apimlLogin").mockResolvedValue("tokenValue");
+
+                // case 1: User selects "user/password" for login quick pick
+                const quickPickMock = jest.spyOn(Gui, "showQuickPick").mockImplementation((items) => items[0]);
+                await ZoweVsCodeExtension.loginWithBaseProfile(serviceProfile, "apimlAuthenticationToken", testNode, testRegister, testCache);
+
+                const testSession = new Session(JSON.parse(JSON.stringify(expectedSession.ISession)));
+                testSession.ISession.base64EncodedAuth = "dXNlcjpwYXNz";
+
+                expect(loginSpy).not.toHaveBeenCalled();
+                expect(testSpy).not.toHaveBeenCalled();
+                expect(testCache.updateBaseProfileFileLogin).toHaveBeenCalledWith(baseProfile, updProfile, false);
+                expect(testNode.setProfileToChoice).toHaveBeenCalled();
+            });
         });
-        it("should logout using the base profile given a simple profile name", async () => {
-            testCache.fetchBaseProfile.mockResolvedValue(baseProfile);
-            const testSpy = jest.spyOn(ZoweVsCodeExtension as any, "getServiceProfileForAuthPurposes");
-            testSpy.mockResolvedValue({ profile: { ...testProfile, ...updProfile } });
-            const logoutSpy = jest.spyOn(Logout, "apimlLogout").mockImplementation(jest.fn());
 
-            await ZoweVsCodeExtension.logoutWithBaseProfile("service");
-
-            const testSession = new Session(JSON.parse(JSON.stringify(expectedSession.ISession)));
-            testSession.ISession.tokenValue = "tokenValue";
-            delete testSession.ISession.base64EncodedAuth;
-            delete testSession.ISession.user;
-            delete testSession.ISession.password;
-
-            expect(logoutSpy).toHaveBeenCalledWith(testSession);
-            expect(testSpy).toHaveBeenCalledWith(testCache, "service");
-            expect(testCache.updateBaseProfileFileLogout).toHaveBeenCalledWith(baseProfile);
-        });
-        it("should login using the base profile if the base profile does not have a tokenType stored", async () => {
-            const tempBaseProfile = JSON.parse(JSON.stringify(baseProfile));
-            tempBaseProfile.profile.tokenType = undefined;
-            testCache.fetchBaseProfile.mockResolvedValue(tempBaseProfile);
-            const testSpy = jest.spyOn(ZoweVsCodeExtension as any, "getServiceProfileForAuthPurposes");
-            const newServiceProfile = { ...serviceProfile, profile: { ...testProfile, tokenValue: "tokenValue", host: "service" } };
-            testSpy.mockResolvedValue(newServiceProfile);
-            jest.spyOn(ZoweVsCodeExtension as any, "promptUserPass").mockResolvedValue(["user", "pass"]);
-            const loginSpy = jest.spyOn(Login, "apimlLogin").mockResolvedValue("tokenValue");
-
-            await ZoweVsCodeExtension.loginWithBaseProfile("service");
-
-            const testSession = new Session(JSON.parse(JSON.stringify(expectedSession.ISession)));
-            delete testSession.ISession.user;
-            delete testSession.ISession.password;
-            testSession.ISession.hostname = "service";
-            testSession.ISession.base64EncodedAuth = "dXNlcjpwYXNz";
-
-            expect(loginSpy).toHaveBeenCalledWith(testSession);
-            expect(testSpy).toHaveBeenCalledWith(testCache, "service");
-            expect(testCache.updateBaseProfileFileLogin).toHaveBeenCalledWith(tempBaseProfile, updProfile, false);
-        });
-        it("should login using the service profile given a simple profile name", async () => {
-            const tempBaseProfile = JSON.parse(JSON.stringify(baseProfile));
-            tempBaseProfile.profile.tokenType = "some-dummy-token-type";
-            testCache.fetchBaseProfile.mockResolvedValue(tempBaseProfile);
-            const testSpy = jest.spyOn(ZoweVsCodeExtension as any, "getServiceProfileForAuthPurposes");
-            const newServiceProfile = { ...serviceProfile, profile: { ...testProfile, tokenValue: "tokenValue", host: "service" } };
-            testSpy.mockResolvedValue(newServiceProfile);
-            jest.spyOn(ZoweVsCodeExtension as any, "promptUserPass").mockResolvedValue(["user", "pass"]);
-            const loginSpy = jest.spyOn(Login, "apimlLogin").mockResolvedValue("tokenValue");
-
-            await ZoweVsCodeExtension.loginWithBaseProfile("service");
-
-            const testSession = new Session(JSON.parse(JSON.stringify(expectedSession.ISession)));
-            delete testSession.ISession.user;
-            delete testSession.ISession.password;
-            testSession.ISession.hostname = "service";
-            testSession.ISession.base64EncodedAuth = "dXNlcjpwYXNz";
-            testSession.ISession.tokenType = tempBaseProfile.profile.tokenType;
-
-            expect(loginSpy).toHaveBeenCalledWith(testSession);
-            expect(testSpy).toHaveBeenCalledWith(testCache, "service");
-            expect(testCache.updateBaseProfileFileLogin).toHaveBeenCalledWith(
-                newServiceProfile,
-                {
-                    tokenType: tempBaseProfile.profile.tokenType,
-                    tokenValue: "tokenValue",
-                },
-                true
-            );
-        });
-        it("should logout using the service profile given a simple profile name", async () => {
-            testCache.fetchBaseProfile.mockResolvedValue(baseProfile);
-            const testSpy = jest.spyOn(ZoweVsCodeExtension as any, "getServiceProfileForAuthPurposes");
-            const newServiceProfile = { ...serviceProfile, profile: { ...testProfile, ...updProfile, host: "service" } };
-            testSpy.mockResolvedValue(newServiceProfile);
-            const logoutSpy = jest.spyOn(Logout, "apimlLogout").mockImplementation(jest.fn());
-
-            await ZoweVsCodeExtension.logoutWithBaseProfile("service");
-
-            const testSession = new Session(JSON.parse(JSON.stringify(expectedSession.ISession)));
-            testSession.ISession.hostname = "service";
-            testSession.ISession.tokenValue = "tokenValue";
-            delete testSession.ISession.base64EncodedAuth;
-            delete testSession.ISession.user;
-            delete testSession.ISession.password;
-
-            expect(logoutSpy).toHaveBeenCalledWith(testSession);
-            expect(testSpy).toHaveBeenCalledWith(testCache, "service");
-            expect(testCache.updateBaseProfileFileLogout).toHaveBeenCalledWith(newServiceProfile);
-        });
-        it("should login using the base profile when provided with a node, register, and cache instance", async () => {
-            testCache.fetchBaseProfile.mockResolvedValue(baseProfile);
-            const testSpy = jest.spyOn(ZoweVsCodeExtension as any, "getServiceProfileForAuthPurposes");
-            jest.spyOn(ZoweVsCodeExtension as any, "promptUserPass").mockResolvedValue(["user", "pass"]);
-            const loginSpy = jest.spyOn(Login, "apimlLogin").mockResolvedValue("tokenValue");
-
-            await ZoweVsCodeExtension.loginWithBaseProfile(serviceProfile, "apimlAuthenticationToken", testNode, testRegister, testCache);
-
-            const testSession = new Session(JSON.parse(JSON.stringify(expectedSession.ISession)));
-            testSession.ISession.base64EncodedAuth = "dXNlcjpwYXNz";
-
-            expect(loginSpy).not.toHaveBeenCalled();
-            expect(testSpy).not.toHaveBeenCalled();
-            expect(testCache.updateBaseProfileFileLogin).toHaveBeenCalledWith(baseProfile, updProfile, false);
-            expect(testNode.setProfileToChoice).toHaveBeenCalled();
-        });
         it("should logout using the base profile when provided with a node, register, and cache instance", async () => {
             testCache.fetchBaseProfile.mockResolvedValue(baseProfile);
             const testSpy = jest.spyOn(ZoweVsCodeExtension as any, "getServiceProfileForAuthPurposes");
