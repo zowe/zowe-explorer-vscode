@@ -258,7 +258,7 @@ export async function promptForEncoding(node: IZoweDatasetTreeNode | IZoweUSSTre
     let currentEncoding = zosEncoding ? zosEncodingToString(zosEncoding) : getCachedEncoding(node);
     if (zosEncoding?.kind === "binary") {
         currentEncoding = binaryItem.label;
-    } else if (zosEncoding === null || zosEncoding?.kind === "text") {
+    } else if (zosEncoding === null || zosEncoding?.kind === "text" || currentEncoding === null || currentEncoding === "text") {
         currentEncoding = ebcdicItem.label;
     }
     const encodingHistory = ZoweLocalStorage.getValue<string[]>("zowe.encodingHistory") ?? [];

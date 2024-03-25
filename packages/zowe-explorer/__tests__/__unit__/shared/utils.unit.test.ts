@@ -464,22 +464,22 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
         expect(blockMocks.showQuickPick.mock.calls[0][1]).toEqual(expect.objectContaining({ placeHolder: "Current encoding is Binary" }));
     });
 
-    // TODO: rewrite this test because it does not work correctly (no session available to get the cached encoding from)
-
-    // it("remembers cached encoding for data set node", async () => {
-    //     const blockMocks = createBlockMocks();
-    //     const node = new ZoweDatasetNode({
-    //         label: "TEST.PS",
-    //         collapsibleState: vscode.TreeItemCollapsibleState.None,
-    //         session: blockMocks.session,
-    //         profile: blockMocks.profile,
-    //     });
-    //     (node.getSessionNode() as any).encodingMap["TEST.PS"] = { kind: "text" };
-    //     blockMocks.getEncodingForFile.mockReturnValueOnce(undefined);
-    //     await sharedUtils.promptForEncoding(node);
-    //     expect(blockMocks.showQuickPick).toHaveBeenCalled();
-    //     expect(blockMocks.showQuickPick.mock.calls[0][1]).toEqual(expect.objectContaining({ placeHolder: "Current encoding is EBCDIC" }));
-    // });
+    it("remembers cached encoding for data set node", async () => {
+        const blockMocks = createBlockMocks();
+        const sessionNode = createDatasetSessionNode(blockMocks.session, blockMocks.profile);
+        const node = new ZoweDatasetNode({
+            label: "TEST.PS",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            session: blockMocks.session,
+            profile: blockMocks.profile,
+            parentNode: sessionNode,
+        });
+        sessionNode.encodingMap["TEST.PS"] = { kind: "text" };
+        blockMocks.getEncodingForFile.mockReturnValueOnce(undefined);
+        await sharedUtils.promptForEncoding(node);
+        expect(blockMocks.showQuickPick).toHaveBeenCalled();
+        expect(blockMocks.showQuickPick.mock.calls[0][1]).toEqual(expect.objectContaining({ placeHolder: "Current encoding is EBCDIC" }));
+    });
 
     it("remembers cached encoding for data set member node", async () => {
         const blockMocks = createBlockMocks();
