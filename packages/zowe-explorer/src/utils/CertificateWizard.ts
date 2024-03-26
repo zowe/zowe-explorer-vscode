@@ -22,7 +22,7 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 export type CertWizardOpts = {
     cert?: string;
     certKey?: string;
-    dialogOpts: OpenDialogOptions;
+    dialogOpts?: OpenDialogOptions;
 };
 
 class DeferredPromise<T> {
@@ -48,7 +48,7 @@ export class CertificateWizard extends WebView {
         certKey: string;
     }> = new DeferredPromise();
 
-    public constructor(context: ExtensionContext, opts: CertWizardOpts) {
+    public constructor(context: ExtensionContext, opts?: CertWizardOpts) {
         super("Certificate Wizard", "certificate-wizard", context, (message: object) => this.onDidReceiveMessage(message));
         this.opts = opts;
         this.panel.onDidDispose(() => {
