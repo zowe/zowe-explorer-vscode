@@ -13,7 +13,7 @@ import * as vscode from "vscode";
 import { Gui } from "../../../src/globals/Gui";
 import { MessageSeverity, IZoweLogger } from "../../../src/logger/IZoweLogger";
 import { IProfileLoaded, Session } from "@zowe/imperative";
-import { IPromptCredentialsOptions, ZoweVsCodeExtension } from "../../../src/vscode";
+import { IPromptCertificateOptions, IPromptCredentialsOptions, ZoweVsCodeExtension } from "../../../src/vscode";
 import { ProfilesCache, ZoweExplorerApi } from "../../../src";
 import { Login, Logout, imperative } from "@zowe/cli";
 
@@ -597,6 +597,33 @@ describe("ZoweVsCodeExtension", () => {
             expect(profileLoaded).toBeUndefined();
             expect(getLoadedProfConfigSpy).not.toHaveBeenCalled();
             expect(showInputBoxSpy).not.toHaveBeenCalled();
+        });
+    });
+
+    describe("promptCertificate", () => {
+        it("should set up options related to certificates", async () => {
+            const options: IPromptCertificateOptions = {
+                session: {
+                    cert: undefined,
+                    certKey: undefined,
+                },
+                openDialogOptions: {},
+                profile: {
+                    profile: {
+                        cert: "/test/cert/path",
+                        certKey: "/test/key/path",
+                    },
+                } as any,
+            };
+
+            jest.spyOn(vscode.commands, "executeCommand").mockResolvedValue({
+                cert: options.profile?.profile?.cert,
+                certKey: options.profile?.profile?.certKey,
+            });
+
+            await (ZoweVsCodeExtension as any).promptCertificate(options);
+            expect(options.session.cert).toEqual("/test/cert/path");
+            expect(options.session.certKey).toEqual("/test/key/path");
         });
     });
 });
