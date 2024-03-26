@@ -12,6 +12,7 @@
 import { Gui, WebView } from "@zowe/zowe-explorer-api";
 import { Disposable, ExtensionContext, OpenDialogOptions, Uri } from "vscode";
 import * as nls from "vscode-nls";
+import { ZoweLogger } from "./LoggerUtils";
 
 // Set up localization
 nls.config({
@@ -48,7 +49,7 @@ export class CertificateWizard extends WebView {
         certKey: string;
     }> = new DeferredPromise();
 
-    public constructor(context: ExtensionContext, opts?: CertWizardOpts) {
+    public constructor(context: ExtensionContext, opts: CertWizardOpts) {
         super("Certificate Wizard", "certificate-wizard", context, (message: object) => this.onDidReceiveMessage(message));
         this.opts = opts;
         this.panel.onDidDispose(() => {
@@ -117,6 +118,7 @@ export class CertificateWizard extends WebView {
                 setImmediate(() => {
                     this.panel.dispose();
                 });
+                ZoweLogger.trace(localize("zowe.certWizard.dismissed", "User dismissed the certificate wizard."));
                 break;
             default:
                 break;

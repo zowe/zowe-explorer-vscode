@@ -363,6 +363,7 @@ export namespace window {
         return {};
     }
 }
+
 export namespace commands {
     /**
      * Registers a command that can be invoked via a keyboard shortcut,
@@ -676,7 +677,7 @@ export class Uri {
     }
     public static parse(value: string, strict?: boolean): Uri {
         const newUri = new Uri();
-        newUri.path = value;
+        newUri.path = newUri.fsPath = value;
 
         return newUri;
     }
@@ -684,6 +685,7 @@ export class Uri {
         return this;
     }
 
+    public fsPath: string;
     public path: string;
     public toString(): string {
         return this.path;
