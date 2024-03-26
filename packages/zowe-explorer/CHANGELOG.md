@@ -12,6 +12,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
+- To fix clicking submitted job hyperlink throws error [#2804](https://github.com/zowe/vscode-extension-for-zowe/issues/2804)
+
 ## `2.15.0`
 
 ### New features and enhancements
