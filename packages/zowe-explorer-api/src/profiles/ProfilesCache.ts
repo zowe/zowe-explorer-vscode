@@ -153,7 +153,6 @@ export class ProfilesCache {
         this.allTypes = [];
         this.profilesByType.clear();
         this.defaultProfileByType.clear();
-        let mProfileInfo: zowe.imperative.ProfileInfo;
         try {
             const mProfileInfo = await this.getProfileInfo();
             if (!mProfileInfo.getTeamConfig().exists) {
