@@ -84,7 +84,7 @@ describe("CertificateWizard", () => {
             certKey: "/a/b/cert.key.pem",
         });
         Object.defineProperty(certWizard.panel, "dispose", {
-            value: jest.fn()
+            value: jest.fn(),
         });
         const traceMock = jest.spyOn(ZoweLogger, "trace").mockImplementation();
         await (certWizard as any).onDidReceiveMessage({
