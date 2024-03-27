@@ -246,7 +246,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     elementChildren[temp.label.toString()] = temp;
                 } else {
                     // Creates a ZoweDatasetNode for a PDS member
-                    const memberInvalid = item.member?.includes("\ufffd");
+                    const memberInvalid = item.member?.startsWith("…");
                     const cachedEncoding = this.getSessionNode().encodingMap[`${item.dsname as string}(${item.member as string})`];
                     const temp = new ZoweDatasetNode({
                         label: item.member,
@@ -260,7 +260,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                         temp.command = { command: "zowe.ds.ZoweNode.openPS", title: "", arguments: [temp] };
                     } else {
                         temp.errorDetails = new zowe.imperative.ImperativeError({
-                            msg: localize("getChildren.invalidMember", "Cannot access member with control characters in the name: {0}", item.member),
+                            msg: localize("getChildren.invalidMember", "Failed to load members with control characters in the name"),
                         });
                     }
 
@@ -317,6 +317,9 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             const aParent = a.getParent();
             if (aParent == null || !contextually.isPds(aParent)) {
                 return (a.label as string) < (b.label as string) ? -1 : 1;
+            } else if ((a.label as string).startsWith("…") || (b.label as string).startsWith("…")) {
+                // Keep invalid member nodes at bottom ("... N more members")
+                return (a.label as string).startsWith("…") ? 1 : -1;
             }
 
             const sortLessThan = sort.direction == SortDirection.Ascending ? -1 : 1;
