@@ -18,6 +18,7 @@ import { USSTree } from "../uss/USSTree";
 import { DatasetTree } from "../dataset/DatasetTree";
 import { ZosJobsProvider } from "../job/ZosJobsProvider";
 import { ZoweLogger } from "../utils/LoggerUtils";
+import { ZoweLocalStorage } from "../utils/ZoweLocalStorage";
 
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
@@ -29,6 +30,7 @@ type History = {
     fileHistory: string[];
     dsTemplates?: DataSetAllocTemplate[];
     favorites: string[];
+    encodingHistory: string[];
 };
 
 const tabs = {
@@ -95,7 +97,12 @@ export class HistoryView extends WebView {
             fileHistory: treeProvider.getFileHistory(),
             dsTemplates: type === "ds" ? (treeProvider as DatasetTree).getDsTemplates() : undefined,
             favorites: treeProvider.getFavorites(),
+            encodingHistory: type === "uss" || type === "ds" ? this.fetchEncodingHistory() : [],
         };
+    }
+
+    private fetchEncodingHistory(): string[] {
+        return ZoweLocalStorage.getValue<string[]>("zowe.encodingHistory") ?? [];
     }
 
     private showError(message): void {
@@ -144,6 +151,17 @@ export class HistoryView extends WebView {
                     });
                 }
                 break;
+            case "encodingHistory":
+                Object.keys(message.attrs.selectedItems).forEach((selectedItem) => {
+                    if (message.attrs.selectedItems[selectedItem]) {
+                        const encodingHistory = this.fetchEncodingHistory();
+                        ZoweLocalStorage.setValue(
+                            "zowe.encodingHistory",
+                            encodingHistory.filter((element) => element !== selectedItem)
+                        );
+                    }
+                });
+                break;
             default:
                 Gui.showMessage(localize("HistoryView.removeItem.notSupported", "action is not supported for this property type."));
                 break;
@@ -167,6 +185,9 @@ export class HistoryView extends WebView {
                     if (!(treeProvider instanceof ZosJobsProvider)) {
                         treeProvider.resetFileHistory();
                     }
+                    break;
+                case "encodingHistory":
+                    ZoweLocalStorage.setValue("zowe.encodingHistory", []);
                     break;
                 default:
                     Gui.showMessage(localize("HistoryView.removeItem.notSupported", "action is not supported for this property type."));
