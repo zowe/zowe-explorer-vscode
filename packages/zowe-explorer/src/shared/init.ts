@@ -204,6 +204,11 @@ export function registerCommonCommands(context: vscode.ExtensionContext, provide
                 }
             })
         );
+        context.subscriptions.push(
+            vscode.commands.registerCommand("zowe.placeholderCommand", () => {
+                // This command does nothing, its here to let us disable individual items in the tree view
+            })
+        );
     }
 }
 

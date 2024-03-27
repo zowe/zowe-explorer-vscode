@@ -60,6 +60,7 @@ export const DS_MEMBER_CONTEXT = "member";
 export const DS_MEMBER_BINARY_CONTEXT = "memberBinary";
 export const DS_MIGRATED_FILE_CONTEXT = "migr";
 export const DS_FILE_ERROR_CONTEXT = "fileError";
+export const DS_FILE_ERROR_MEMBER_CONTEXT = "fileError_member";
 export const USS_SESSION_CONTEXT = "ussSession";
 export const USS_DIR_CONTEXT = "directory";
 export const USS_FAV_DIR_CONTEXT = "directory_fav";
