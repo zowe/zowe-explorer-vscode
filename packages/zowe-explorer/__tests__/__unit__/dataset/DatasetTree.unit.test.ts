@@ -439,6 +439,7 @@ describe("Dataset Tree Unit Tests - Function getChildren", () => {
         });
         const sampleChildren: ZoweDatasetNode[] = [nodeOk, nodeImpError, nodeMigrated];
         sampleChildren[0].command = { command: "zowe.ds.ZoweNode.openPS", title: "", arguments: [sampleChildren[0]] };
+        sampleChildren[1].command = { command: "zowe.placeholderCommand", title: "" };
 
         const children = await testTree.getChildren(testTree.mSessionNodes[1]);
         expect(children.map((c) => c.label)).toEqual(sampleChildren.map((c) => c.label));
