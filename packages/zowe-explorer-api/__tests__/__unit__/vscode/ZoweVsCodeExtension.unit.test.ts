@@ -399,6 +399,51 @@ describe("ZoweVsCodeExtension", () => {
             expect(testSpy).not.toHaveBeenCalled();
             expect(testCache.updateBaseProfileFileLogout).toHaveBeenCalledWith(baseProfile);
         });
+
+        it("calls promptCertificate if 'Certificate' was selected in quick pick", async () => {
+            testCache.fetchBaseProfile.mockResolvedValue(baseProfile);
+            const testSpy = jest.spyOn(ZoweVsCodeExtension as any, "getServiceProfileForAuthPurposes");
+            jest.spyOn(ZoweVsCodeExtension as any, "promptUserPass").mockResolvedValue(["user", "pass"]);
+            let sessionCopy;
+            const loginSpy = jest.spyOn(Login, "apimlLogin").mockImplementation(async (session: imperative.Session) => {
+                sessionCopy = Object.assign(Object.create(Object.getPrototypeOf(session)), session);
+                return "tokenValue";
+            });
+
+            // case 1: User selects "user/password" for login quick pick
+            const promptCertMock = jest.spyOn(ZoweVsCodeExtension as any, "promptCertificate").mockImplementation();
+            const quickPickMock = jest.spyOn(Gui, "showQuickPick").mockImplementation((items) => items[1]);
+            await ZoweVsCodeExtension.loginWithBaseProfile("service");
+
+            const testSession = new Session(JSON.parse(JSON.stringify(expectedSession.ISession)));
+            delete testSession.ISession.user;
+            delete testSession.ISession.password;
+            delete testSession.ISession.base64EncodedAuth;
+            testSession.ISession.storeCookie = false;
+
+            expect(sessionCopy.ISession.type).toBe(imperative.SessConstants.AUTH_TYPE_CERT_PEM);
+            expect(testSpy).toHaveBeenCalledWith(testCache, "service");
+            expect(loginSpy).toHaveBeenCalledWith(sessionCopy);
+            expect(promptCertMock).toHaveBeenCalled();
+            expect(quickPickMock).toHaveBeenCalled();
+            expect(testCache.updateBaseProfileFileLogin).toHaveBeenCalledWith(baseProfile, updProfile, false);
+            promptCertMock.mockRestore();
+        });
+
+        it("returns false if there's an error from promptCertificate", async () => {
+            testCache.fetchBaseProfile.mockResolvedValue(baseProfile);
+            jest.spyOn(ZoweVsCodeExtension as any, "promptUserPass").mockResolvedValue(["user", "pass"]);
+
+            // case 1: User selects "user/password" for login quick pick
+            const quickPickMock = jest.spyOn(Gui, "showQuickPick").mockImplementation((items) => items[1]);
+
+            const promptCertMock = jest
+                .spyOn(ZoweVsCodeExtension as any, "promptCertificate")
+                .mockRejectedValueOnce(new Error("invalid certificate"));
+            await expect(ZoweVsCodeExtension.loginWithBaseProfile("service")).resolves.toBe(false);
+            expect(promptCertMock).toHaveBeenCalled();
+            expect(quickPickMock).toHaveBeenCalled();
+        });
     });
     describe("updateCredentials", () => {
         const promptCredsOptions: IPromptCredentialsOptions = {
