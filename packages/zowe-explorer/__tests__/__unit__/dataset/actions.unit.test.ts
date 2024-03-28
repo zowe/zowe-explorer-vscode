@@ -189,7 +189,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
             placeHolder: "Name of Member",
             validateInput: expect.any(Function),
         });
-        expect(mocked(zowe.Upload.bufferToDataSet)).toBeCalledWith(blockMocks.zosmfSession, Buffer.from(""), parent.label + "(testMember)", {
+        expect(mocked(zowe.Upload.bufferToDataSet)).toBeCalledWith(blockMocks.zosmfSession, Buffer.from(""), parent.label + "(TESTMEMBER)", {
             responseTimeout: blockMocks.imperativeProfile.profile?.responseTimeout,
         });
     });
@@ -256,7 +256,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
         await dsActions.createMember(parent, blockMocks.testDatasetTree);
 
         expect(mySpy).toBeCalledWith({ placeHolder: "Name of Member", validateInput: expect.any(Function) });
-        expect(mocked(zowe.Upload.bufferToDataSet)).toBeCalledWith(blockMocks.zosmfSession, Buffer.from(""), nonFavoriteLabel + "(testMember)", {
+        expect(mocked(zowe.Upload.bufferToDataSet)).toBeCalledWith(blockMocks.zosmfSession, Buffer.from(""), nonFavoriteLabel + "(TESTMEMBER)", {
             responseTimeout: blockMocks.imperativeProfile.profile?.responseTimeout,
         });
     });
@@ -1448,7 +1448,7 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
         expect(mocked(zowe.List.dataSet)).not.toBeCalled();
         expect(mocked(zowe.Upload.pathToDataSet)).not.toBeCalled();
     });
-    fit("Checking PDS member saving attempt", async () => {
+    it("Checking PDS member saving attempt", async () => {
         globals.defineGlobals("");
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks();

@@ -405,7 +405,7 @@ export async function createMember(parent: api.IZoweDatasetTreeNode, datasetProv
             return dsUtils.validateMemberName(text) === true ? null : localize("createMember.member.validation", "Enter valid member name");
         },
     };
-    const name = await api.Gui.showInputBox(options);
+    const name = (await api.Gui.showInputBox(options))?.toUpperCase();
     ZoweLogger.debug(localize("createMember.creating", "Creating new data set member {0}", name));
     if (name) {
         const label = parent.label as string;
@@ -420,15 +420,18 @@ export async function createMember(parent: api.IZoweDatasetTreeNode, datasetProv
             }
             throw err;
         }
-        parent.dirty = true;
-        datasetProvider.refreshElement(parent);
 
-        await new ZoweDatasetNode({
+        const newNode = new ZoweDatasetNode({
             label: name,
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             parentNode: parent,
             profile: parent.getProfile(),
-        }).openDs(false, true, datasetProvider);
+        });
+        await newNode.openDs(false, true, datasetProvider);
+
+        parent.children.push(newNode);
+        parent.dirty = true;
+        datasetProvider.refreshElement(parent);
 
         // Refresh corresponding tree parent to reflect addition
         const otherTreeParent = datasetProvider.findEquivalentNode(parent, contextually.isFavorite(parent));
@@ -1522,9 +1525,6 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
     const ending = doc.fileName.substring(start);
     const sesName = ending.substring(0, ending.indexOf(path.sep));
     const profile = Profiles.getInstance().loadNamedProfile(sesName);
-    const fileLabel = path.basename(doc.fileName);
-    const dataSetName = fileLabel.substring(0, fileLabel.indexOf("("));
-    const memberName = fileLabel.substring(fileLabel.indexOf("(") + 1, fileLabel.indexOf(")"));
     if (!profile) {
         const sessionError = localize("saveFile.session.error", "Could not locate session when saving data set.");
         ZoweLogger.error(sessionError);
@@ -1532,16 +1532,10 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
         return;
     }
 
-    const etagFavorites = (
-        datasetProvider.mFavorites
-            .find((child) => child.label.toString().trim() === sesName)
-            ?.children.find((child) => child.label.toString().trim() === dataSetName)
-            ?.children.find((child) => child.label.toString().trim() === memberName) as api.IZoweDatasetTreeNode
-    )?.getEtag();
+    // TODO Handle case where same data set is open as both favorite and non-favorite to prevent desync between equivalent nodes
     const sesNode =
-        etagFavorites !== "" && etagFavorites !== undefined
-            ? datasetProvider.mFavorites.find((child) => child.label.toString().trim() === sesName)
-            : datasetProvider.mSessionNodes.find((child) => child.label.toString().trim() === sesName);
+        datasetProvider.mFavorites.find((child) => child.label.toString().trim() === sesName) ??
+        datasetProvider.mSessionNodes.find((child) => child.label.toString().trim() === sesName);
     if (!sesNode) {
         // if saving from favorites, a session might not exist for this node
         ZoweLogger.debug(localize("saveFile.missingSessionNode", "Could not find session node"));
@@ -1610,7 +1604,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
             setFileSaved(true);
             LocalFileManagement.removeRecoveredFile(doc);
         } else if (!uploadResponse.success && uploadResponse.commandResponse.includes("Rest API failure with HTTP(S) status 412")) {
-            resolveFileConflict(node, prof, doc, fileLabel);
+            resolveFileConflict(node, prof, doc, label);
         } else {
             await markDocumentUnsaved(doc);
             api.Gui.errorMessage(uploadResponse.commandResponse);

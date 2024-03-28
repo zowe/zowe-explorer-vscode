@@ -170,7 +170,7 @@ function createGlobalMocks() {
     return globalMocks;
 }
 
-describe("USS Action Unit Tests - Function createUSSNodeDialog", () => {
+describe("USS Action Unit Tests - Function createUSSNode", () => {
     async function createBlockMocks(globalMocks) {
         const newMocks = {
             testUSSTree: null,
@@ -201,29 +201,6 @@ describe("USS Action Unit Tests - Function createUSSNodeDialog", () => {
         await ussNodeActions.createUSSNode(blockMocks.ussNode, blockMocks.testUSSTree, "folder", isTopLevel);
         expect(blockMocks.testUSSTree.refreshElement).toHaveBeenCalled();
         expect(refreshActions.refreshAll).not.toHaveBeenCalled();
-    });
-
-    it("Tests if createUSSNode is executed successfully with Unverified profile", async () => {
-        const globalMocks = createGlobalMocks();
-        const blockMocks = await createBlockMocks(globalMocks);
-
-        Object.defineProperty(Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    checkCurrentProfile: blockMocks.mockCheckCurrentProfile.mockReturnValueOnce({
-                        name: globalMocks.testProfile.name,
-                        status: "unverified",
-                    }),
-                    validProfile: ValidProfileEnum.UNVERIFIED,
-                };
-            }),
-        });
-        globalMocks.showQuickPick.mockResolvedValueOnce("File");
-        globalMocks.mockShowInputBox.mockReturnValueOnce("USSFolder");
-
-        await ussNodeActions.createUSSNodeDialog(blockMocks.ussNode.getParent(), blockMocks.testUSSTree);
-        expect(blockMocks.testUSSTree.refreshElement).not.toHaveBeenCalled();
-        expect(globalMocks.showErrorMessage.mock.calls.length).toBe(0);
     });
 
     it("Tests that createUSSNode does not execute if node name was not entered", async () => {
