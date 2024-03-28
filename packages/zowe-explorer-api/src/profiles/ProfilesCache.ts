@@ -151,6 +151,8 @@ export class ProfilesCache {
     public async refresh(apiRegister?: extend.IRegisterClient): Promise<void> {
         this.allProfiles = [];
         this.allTypes = [];
+        this.profilesByType.clear();
+        this.defaultProfileByType.clear();
         try {
             const mProfileInfo = await this.getProfileInfo();
             if (!mProfileInfo.getTeamConfig().exists) {
