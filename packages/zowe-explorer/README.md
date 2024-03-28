@@ -2,12 +2,12 @@
 
 [![version](https://img.shields.io/visual-studio-marketplace/v/Zowe.vscode-extension-for-zowe.svg)](https://img.shields.io/visual-studio-marketplace/v/Zowe.vscode-extension-for-zowe.svg)
 [![downloads](https://img.shields.io/visual-studio-marketplace/d/Zowe.vscode-extension-for-zowe.svg)](https://img.shields.io/visual-studio-marketplace/d/Zowe.vscode-extension-for-zowe.svg)
-[![codecov](https://codecov.io/gh/zowe/vscode-extension-for-zowe/branch/main/graph/badge.svg)](https://codecov.io/gh/zowe/vscode-extension-for-zowe)
+[![codecov](https://codecov.io/gh/zowe/zowe-explorer-vscode/branch/main/graph/badge.svg)](https://codecov.io/gh/zowe/zowe-explorer-vscode)
 [![slack](https://img.shields.io/badge/chat-on%20Slack-blue)](https://slack.openmainframeproject.org/)
 
-> ## v3 Pre-release is now available in our [Github Releases](https://github.com/zowe/vscode-extension-for-zowe/releases) with the removal of v1 profile support. Keep an eye on [changes affecting users and extenders](https://github.com/zowe/vscode-extension-for-zowe/wiki/v3-Changes-for-Users-and-Extenders) for the full list of changes
+> ## v3 Pre-release is now available in our [Github Releases](https://github.com/zowe/zowe-explorer-vscode/releases) with the removal of v1 profile support. Keep an eye on [changes affecting users and extenders](https://github.com/zowe/zowe-explorer-vscode/wiki/v3-Changes-for-Users-and-Extenders) for the full list of changes
 >
-> ## With the removal of the keytar shim from VS Code, we have replaced `node-keytar` with `@zowe/secrets-for-zowe-sdk` in the v2.10.0 release to avoid user interruptions. Extenders, please check out the usage [documentation](https://github.com/zowe/vscode-extension-for-zowe/wiki/Secure-Credentials-for-Extenders)
+> ## With the removal of the keytar shim from VS Code, we have replaced `node-keytar` with `@zowe/secrets-for-zowe-sdk` in the v2.10.0 release to avoid user interruptions. Extenders, please check out the usage [documentation](https://github.com/zowe/zowe-explorer-vscode/wiki/Secure-Credentials-for-Extenders)
 
 ## Introduction
 
@@ -177,9 +177,9 @@ For the comprehensive Zowe Explorer documentation that also includes information
 
 ## Extending Zowe Explorer
 
-You can add new functionalities to Zowe Explorer by creating your own extension. For more information, see [Extensions for Zowe Explorer](https://github.com/zowe/vscode-extension-for-zowe/blob/main/docs/README-Extending.md).
+You can add new functionalities to Zowe Explorer by creating your own extension. For more information, see [Extensions for Zowe Explorer](https://github.com/zowe/zowe-explorer-vscode/blob/main/docs/README-Extending.md).
 
-**Tip:** View an example of a Zowe Explorer extension: [Zowe Explorer FTP extension documentation](https://github.com/zowe/vscode-extension-for-zowe#available-documentation).
+**Tip:** View an example of a Zowe Explorer extension: [Zowe Explorer FTP extension documentation](https://github.com/zowe/zowe-explorer-vscode#available-documentation).
 
 ## Known Issues
 

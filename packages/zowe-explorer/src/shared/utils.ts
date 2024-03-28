@@ -16,7 +16,7 @@ import * as path from "path";
 import * as globals from "../globals";
 import { Gui, IZoweTreeNode, IZoweDatasetTreeNode, IZoweUSSTreeNode, IZoweJobTreeNode, IZoweTree, Types, ZosEncoding } from "@zowe/zowe-explorer-api";
 import { ZoweLogger } from "../utils/ZoweLogger";
-import { ZoweLocalStorage } from "../utils/ZoweLocalStorage";
+import { LocalStorageKey, ZoweLocalStorage } from "../utils/ZoweLocalStorage";
 import { zosEncodingToString } from "../uss/utils";
 import { UssFSProvider } from "../uss/UssFSProvider";
 
@@ -261,7 +261,7 @@ export async function promptForEncoding(node: IZoweDatasetTreeNode | IZoweUSSTre
     } else if (zosEncoding === null || zosEncoding?.kind === "text" || currentEncoding === null || currentEncoding === "text") {
         currentEncoding = ebcdicItem.label;
     }
-    const encodingHistory = ZoweLocalStorage.getValue<string[]>("zowe.encodingHistory") ?? [];
+    const encodingHistory = ZoweLocalStorage.getValue<string[]>(LocalStorageKey.ENCODING_HISTORY) ?? [];
     if (encodingHistory.length > 0) {
         for (const encoding of encodingHistory) {
             items.push({ label: encoding });
@@ -307,7 +307,7 @@ export async function promptForEncoding(node: IZoweDatasetTreeNode | IZoweUSSTre
             if (response != null) {
                 encoding = { kind: "other", codepage: response };
                 encodingHistory.push(encoding.codepage);
-                ZoweLocalStorage.setValue("zowe.encodingHistory", encodingHistory.slice(0, globals.MAX_FILE_HISTORY));
+                ZoweLocalStorage.setValue(LocalStorageKey.ENCODING_HISTORY, encodingHistory.slice(0, globals.MAX_FILE_HISTORY));
             }
             break;
         default:

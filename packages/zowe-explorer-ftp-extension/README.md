@@ -3,9 +3,9 @@
 [![version](https://img.shields.io/visual-studio-marketplace/v/Zowe.zowe-explorer-ftp-extension.svg)](https://img.shields.io/visual-studio-marketplace/v/Zowe.zowe-explorer-ftp-extension.svg)
 [![downloads](https://img.shields.io/visual-studio-marketplace/d/Zowe.zowe-explorer-ftp-extension.svg)](https://img.shields.io/visual-studio-marketplace/d/Zowe.zowe-explorer-ftp-extension.svg)
 
-Zowe Explorer's FTP extension adds the FTP protocol to the [Zowe Explorer](https://github.com/zowe/vscode-extension-for-zowe) VS Code extension, allowing you to use [z/OS FTP Plug-in for Zowe CLI](https://github.com/zowe/zowe-cli-ftp-plugin) profiles to connect and interact with z/OS USS.
+Zowe Explorer's FTP extension adds the FTP protocol to the [Zowe Explorer](https://github.com/zowe/zowe-explorer-vscode) VS Code extension, allowing you to use [z/OS FTP Plug-in for Zowe CLI](https://github.com/zowe/zowe-cli-ftp-plugin) profiles to connect and interact with z/OS USS.
 
-This VS Code extension also serves as a [source code example](https://github.com/zowe/vscode-extension-for-zowe/tree/main/packages/zowe-explorer-ftp-extension) demonstrating how to use the [Zowe Explorer Extensibility API](https://github.com/zowe/vscode-extension-for-zowe/tree/main/packages/zowe-explorer-api) to create VS Code extensions that extend the Zowe Explorer VS Code extensions with new capabilities.
+This VS Code extension also serves as a [source code example](https://github.com/zowe/zowe-explorer-vscode/tree/main/packages/zowe-explorer-ftp-extension) demonstrating how to use the [Zowe Explorer Extensibility API](https://github.com/zowe/zowe-explorer-vscode/tree/main/packages/zowe-explorer-api) to create VS Code extensions that extend the Zowe Explorer VS Code extensions with new capabilities.
 
 ## Prerequisites
 
@@ -119,8 +119,8 @@ Partitioned Dataset Member:
 
 ## Providing feedback or help contributing
 
-Zowe Explorer's FTP extension is now part of the [Zowe Explorer monorepo on Github](https://github.com/zowe/vscode-extension-for-zowe). You can find the sources there in the `/packages/zowe-explorer-ftp-extension` sub-folder.
+Zowe Explorer's FTP extension is now part of the [Zowe Explorer monorepo on Github](https://github.com/zowe/zowe-explorer-vscode). You can find the sources there in the `/packages/zowe-explorer-ftp-extension` sub-folder.
 
-To file issues, use the [Zowe Explorer issue list](https://github.com/zowe/vscode-extension-for-zowe/issues).
+To file issues, use the [Zowe Explorer issue list](https://github.com/zowe/zowe-explorer-vscode/issues).
 
-For [instructions on how to build](https://github.com/zowe/vscode-extension-for-zowe#build-locally).
+For [instructions on how to build](https://github.com/zowe/zowe-explorer-vscode#build-locally).

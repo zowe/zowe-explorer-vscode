@@ -14,7 +14,7 @@
 import { Gui, MessageSeverity } from "@zowe/zowe-explorer-api";
 import * as vscode from "vscode";
 import { SettingsConfig } from "./SettingsConfig";
-import { ZoweLocalStorage } from "./ZoweLocalStorage";
+import * as globals from "../globals";
 import { ZoweLogger } from "./ZoweLogger";
 
 export class LoggerUtils {
@@ -67,16 +67,16 @@ export class LoggerUtils {
         await Gui.infoMessage(message, {
             items: [updateLoggerButton],
             vsCodeOpts: { modal: true },
-        }).then(async (selection) => {
+        }).then((selection) => {
             if (selection === updateLoggerButton) {
-                await this.setLogSetting(cliSetting);
+                this.setLogSetting(cliSetting);
             }
             SettingsConfig.setCliLoggerSetting(true);
         });
     }
 
     private static setLogSetting(setting: string): void {
-        ZoweLocalStorage.setValue("zowe.logger", setting);
+        SettingsConfig.setDirectValue(globals.LOGGER_SETTINGS, setting);
     }
 
     private static getZoweLogEnvVar(): string {

@@ -10,7 +10,7 @@
  */
 
 import * as globals from "./globals";
-import { Types } from "@zowe/zowe-explorer-api";
+import { PersistenceSchemaEnum, Types } from "@zowe/zowe-explorer-api";
 import { ZoweLogger } from "./utils/ZoweLogger";
 import { ZoweLocalStorage } from "./utils/ZoweLocalStorage";
 
@@ -36,13 +36,17 @@ export class PersistentFilters {
     private static readonly fileHistory: string = "fileHistory";
     private static readonly sessions: string = "sessions";
 
-    public schema: string;
+    public schema: PersistenceSchemaEnum;
     private mSearchHistory: string[] = [];
     private mFileHistory: string[] = [];
     private mSessions: string[] = [];
     private mDsTemplates: Types.DataSetAllocTemplate[] = [];
 
-    public constructor(schema: string, private maxSearchHistory = globals.MAX_SEARCH_HISTORY, private maxFileHistory = globals.MAX_FILE_HISTORY) {
+    public constructor(
+        schema: PersistenceSchemaEnum,
+        private maxSearchHistory = globals.MAX_SEARCH_HISTORY,
+        private maxFileHistory = globals.MAX_FILE_HISTORY
+    ) {
         ZoweLogger.trace("PersistentFilters.constructor called.");
         this.schema = schema;
         this.initialize();

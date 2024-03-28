@@ -9,11 +9,12 @@
  *
  */
 
-import { Types, IZoweTree, IZoweTreeNode } from "@zowe/zowe-explorer-api";
+import { Types, IZoweTree, IZoweTreeNode, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
 import { ZoweLogger } from "./ZoweLogger";
 import { TreeViewExpansionEvent } from "vscode";
 import { getIconByNode } from "../generators/icons";
 import { ZoweTreeProvider } from "../abstract/ZoweTreeProvider";
+import { ZoweLocalStorage } from "./ZoweLocalStorage";
 
 export class TreeViewUtils {
     /**
@@ -52,5 +53,44 @@ export class TreeViewUtils {
                 treeProvider.mOnDidChangeTreeData.fire(e.element);
             }
         };
+    }
+
+    public static removeSession(treeProvider: IZoweTree<IZoweTreeNode>, profileName: string): void {
+        ZoweLogger.trace("SessionUtils.removeSession called.");
+        const treeType = treeProvider.getTreeType();
+        if (treeType !== PersistenceSchemaEnum.Job) {
+            // Delete from file history
+            const fileHistory: string[] = treeProvider.getFileHistory();
+            fileHistory
+                .slice()
+                .reverse()
+                .filter((item) => item.substring(1, item.indexOf("]")).trim() === profileName.toUpperCase())
+                .forEach((file) => {
+                    treeProvider.removeFileHistory(file);
+                });
+        }
+        // Delete from Favorites
+        treeProvider.removeFavProfile(profileName, false);
+        // Delete from Tree
+        treeProvider.mSessionNodes.forEach((sessNode) => {
+            if (sessNode.getProfileName() === profileName) {
+                treeProvider.deleteSession(sessNode);
+                sessNode.dirty = true;
+                treeProvider.refresh();
+            }
+        });
+        // Delete from Sessions list
+        const setting: any = ZoweLocalStorage.getValue(treeType);
+        let sess: string[] = setting.sessions;
+        let fave: string[] = setting.favorites;
+        sess = sess?.filter((value) => {
+            return value.trim() !== profileName;
+        });
+        fave = fave?.filter((element) => {
+            return element.substring(1, element.indexOf("]")).trim() !== profileName;
+        });
+        setting.sessions = sess;
+        setting.favorites = fave;
+        ZoweLocalStorage.setValue(treeType, setting);
     }
 }

@@ -11,7 +11,7 @@
 
 import * as path from "path";
 import * as vscode from "vscode";
-import { FileManagement, imperative } from "@zowe/zowe-explorer-api";
+import { FileManagement, imperative, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
 import { ZoweLogger } from "./utils/ZoweLogger";
 import type { Profiles } from "./Profiles";
 
@@ -67,25 +67,18 @@ export const ICON_STATE_CLOSED = "closed";
 export const FILTER_SEARCH = "isFilterSearch";
 export const VSCODE_APPNAME: string[] = ["Visual Studio Code", "VSCodium"];
 export const ROOTPATH = path.join(__dirname, "..", "..");
-export const SETTINGS_OLD_SETTINGS_MIGRATED = "zowe.settings.oldSettingsMigrated";
-export const SETTINGS_LOCAL_STORAGE_MIGRATED = "zowe.settings.localStorageMigrated";
 export const SETTINGS_TEMP_FOLDER_PATH = "zowe.files.temporaryDownloadsFolder.path";
 export const SETTINGS_TEMP_FOLDER_CLEANUP = "zowe.files.temporaryDownloadsFolder.cleanup";
 export const SETTINGS_TEMP_FOLDER_HIDE = "zowe.files.temporaryDownloadsFolder.hide";
 export const SETTINGS_LOGS_FOLDER_PATH = "zowe.files.logsFolder.path";
-export const SETTINGS_LOGS_SETTING_PRESENTED = "zowe.cliLoggerSetting.presented";
 export const SETTINGS_DS_DEFAULT_BINARY = "zowe.ds.default.binary";
 export const SETTINGS_DS_DEFAULT_C = "zowe.ds.default.c";
 export const SETTINGS_DS_DEFAULT_CLASSIC = "zowe.ds.default.classic";
 export const SETTINGS_DS_DEFAULT_PDS = "zowe.ds.default.pds";
 export const SETTINGS_DS_DEFAULT_EXTENDED = "zowe.ds.default.extended";
 export const SETTINGS_DS_DEFAULT_PS = "zowe.ds.default.ps";
-export const SETTINGS_COMMANDS_HISTORY = "zowe.commands.history";
 export const SETTINGS_COMMANDS_ALWAYS_EDIT = "zowe.commands.alwaysEdit";
 export const SETTINGS_AUTOMATIC_PROFILE_VALIDATION = "zowe.automaticProfileValidation";
-export const SETTINGS_DS_HISTORY = "zowe.ds.history";
-export const SETTINGS_USS_HISTORY = "zowe.uss.history";
-export const SETTINGS_JOBS_HISTORY = "zowe.jobs.history";
 export const SETTINGS_SECURE_CREDENTIALS_ENABLED = "zowe.security.secureCredentialsEnabled";
 export const SETTINGS_CHECK_FOR_CUSTOM_CREDENTIAL_MANAGERS = "zowe.security.checkForCustomCredentialManagers";
 export const LOGGER_SETTINGS = "zowe.logger";
@@ -98,7 +91,7 @@ export const MEMBER_NAME_REGEX_CHECK = /^[a-zA-Z#@$][a-zA-Z0-9#@$]{0,7}$/;
 export let ACTIVATED = false;
 export let SAVED_PROFILE_CONTENTS = new Uint8Array();
 export const JOBS_MAX_PREFIX = 8;
-export let PROFILES_CACHE: Profiles; // Works around circular dependency, see https://github.com/zowe/vscode-extension-for-zowe/issues/2756
+export let PROFILES_CACHE: Profiles; // Works around circular dependency, see https://github.com/zowe/zowe-explorer-vscode/issues/2756
 
 // Dictionary describing translation from old configuration names to new standardized names
 export const configurationDictionary: { [k: string]: string } = {
@@ -109,12 +102,12 @@ export const configurationDictionary: { [k: string]: string } = {
     "Zowe-Default-Datasets-Extended": SETTINGS_DS_DEFAULT_EXTENDED,
     "Zowe-Default-Datasets-PS": SETTINGS_DS_DEFAULT_PS,
     "Zowe-Temp-Folder-Location": SETTINGS_TEMP_FOLDER_PATH,
-    "Zowe Commands: History": SETTINGS_COMMANDS_HISTORY,
+    "Zowe Commands: History": PersistenceSchemaEnum.Commands,
     "Zowe Commands: Always edit": SETTINGS_COMMANDS_ALWAYS_EDIT,
     "Zowe-Automatic-Validation": SETTINGS_AUTOMATIC_PROFILE_VALIDATION,
-    "Zowe-DS-Persistent": SETTINGS_DS_HISTORY,
-    "Zowe-USS-Persistent": SETTINGS_USS_HISTORY,
-    "Zowe-Jobs-Persistent": SETTINGS_JOBS_HISTORY,
+    "Zowe-DS-Persistent": PersistenceSchemaEnum.Dataset,
+    "Zowe-USS-Persistent": PersistenceSchemaEnum.USS,
+    "Zowe-Jobs-Persistent": PersistenceSchemaEnum.Job,
 };
 export enum Trees {
     USS,
