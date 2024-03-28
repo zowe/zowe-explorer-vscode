@@ -1735,7 +1735,11 @@ describe("USSTree Unit Tests - Function crossLparMove", () => {
             loadNamedProfile: jest.fn().mockResolvedValueOnce(globalMocks.testProfile),
         } as any);
 
-        await globalMocks.testTree.crossLparMove(ussDirNode, ussDirNode.resourceUri?.with({ path: "/sestest/u/myuser/subfolder/usstest" }));
+        await globalMocks.testTree.crossLparMove(
+            ussDirNode,
+            ussDirNode.resourceUri,
+            ussDirNode.resourceUri?.with({ path: "/sestest/u/myuser/subfolder/usstest" })
+        );
         const newUri = vscode.Uri.from({
             scheme: ZoweScheme.USS,
             path: "/sestest/u/myuser/subfolder/usstest",
