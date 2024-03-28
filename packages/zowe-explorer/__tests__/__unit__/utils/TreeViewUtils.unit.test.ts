@@ -11,8 +11,36 @@
 
 import { TreeViewUtils } from "../../../src/utils/TreeViewUtils";
 import * as globals from "../../../src/globals";
+import { PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
+import * as vscode from "vscode";
+import { createDatasetSessionNode, createDatasetTree } from "../../../__mocks__/mockCreators/datasets";
+import { createIProfile, createISession, createPersistentConfig, createTreeView } from "../../../__mocks__/mockCreators/shared";
+import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
 
 describe("TreeViewUtils Unit Tests", () => {
+    function createBlockMocks() {
+        const newMocks = {
+            session: createISession(),
+            imperativeProfile: createIProfile(),
+            treeView: createTreeView(),
+            testDatasetTree: null,
+            datasetSessionNode: null,
+            mockGetConfiguration: jest.fn(),
+        };
+        newMocks.datasetSessionNode = createDatasetSessionNode(newMocks.session, newMocks.imperativeProfile);
+        newMocks.testDatasetTree = createDatasetTree(newMocks.datasetSessionNode, newMocks.treeView);
+        newMocks.testDatasetTree.addFileHistory("[profile1]: TEST.NODE");
+        Object.defineProperty(vscode.window, "createTreeView", {
+            value: jest.fn().mockReturnValue({ onDidCollapseElement: jest.fn() }),
+            configurable: true,
+        });
+        Object.defineProperty(ZoweLocalStorage, "storage", {
+            value: createPersistentConfig(),
+            configurable: true,
+        });
+
+        return newMocks;
+    }
     it("refreshIconOnCollapse - generated listener function works as intended", () => {
         const testTreeProvider = { mOnDidChangeTreeData: { fire: jest.fn() } } as any;
         const listenerFn = TreeViewUtils.refreshIconOnCollapse(
@@ -22,5 +50,30 @@ describe("TreeViewUtils Unit Tests", () => {
         const element = { label: "somenode", contextValue: globals.DS_PDS_CONTEXT } as any;
         listenerFn({ element });
         expect(testTreeProvider.mOnDidChangeTreeData.fire).toHaveBeenCalledWith(element);
+    });
+    it("should remove session from treeView", () => {
+        const blockMocks = createBlockMocks();
+        const originalLength = blockMocks.testDatasetTree.mSessionNodes.length;
+        TreeViewUtils.removeSession(blockMocks.testDatasetTree, blockMocks.imperativeProfile.name);
+        expect(blockMocks.testDatasetTree.mSessionNodes.length).toEqual(originalLength - 1);
+    });
+    it("should not find session in treeView", () => {
+        const blockMocks = createBlockMocks();
+        const originalLength = blockMocks.testDatasetTree.mSessionNodes.length;
+        TreeViewUtils.removeSession(blockMocks.testDatasetTree, "fake");
+        expect(blockMocks.testDatasetTree.mSessionNodes.length).toEqual(originalLength);
+    });
+    it("should not run treeProvider.removeFileHistory when job is returned for type", () => {
+        const blockMocks = createBlockMocks();
+        jest.spyOn(blockMocks.testDatasetTree, "getTreeType").mockReturnValue(PersistenceSchemaEnum.Job);
+        TreeViewUtils.removeSession(blockMocks.testDatasetTree, "SESTEST");
+        expect(blockMocks.testDatasetTree.removeFileHistory).toHaveBeenCalledTimes(0);
+    });
+    it("should run treeProvider.removeFileHistory", () => {
+        const blockMocks = createBlockMocks();
+        jest.spyOn(blockMocks.testDatasetTree, "getTreeType").mockReturnValue(PersistenceSchemaEnum.USS);
+        jest.spyOn(blockMocks.testDatasetTree, "getFileHistory").mockReturnValue(["[SESTEST]: /u/test/test.txt"]);
+        TreeViewUtils.removeSession(blockMocks.testDatasetTree, "SESTEST");
+        expect(blockMocks.testDatasetTree.removeFileHistory).toHaveBeenCalledTimes(1);
     });
 });

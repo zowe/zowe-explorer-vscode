@@ -38,7 +38,7 @@ Install vNext.
 
 **Follow these steps**:
 
-1. Download the [vNext-enabled Zowe Explorer version](https://github.com/zowe/vscode-extension-for-zowe/releases) from the Zowe Explorer Github release page.
+1. Download the [vNext-enabled Zowe Explorer version](https://github.com/zowe/zowe-explorer-vscode/releases) from the Zowe Explorer Github release page.
 2. Open VS Code.
 3. Navigate to **File** > **Preferences** > **Extensions** > **Install from vsix\*\***.
 4. Select the .vsix file to install.

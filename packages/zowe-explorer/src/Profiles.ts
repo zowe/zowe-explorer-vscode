@@ -56,9 +56,6 @@ export class Profiles extends ProfilesCache {
 
     public loadedProfile: imperative.IProfileLoaded;
     public validProfile: Validation.ValidationType = Validation.ValidationType.INVALID;
-    private dsSchema: string = globals.SETTINGS_DS_HISTORY;
-    private ussSchema: string = globals.SETTINGS_USS_HISTORY;
-    private jobsSchema: string = globals.SETTINGS_JOBS_HISTORY;
     private mProfileInfo: imperative.ProfileInfo;
     private profilesOpCancelled = vscode.l10n.t(`Operation Cancelled`);
     private manualEditMsg = vscode.l10n.t(
@@ -558,7 +555,7 @@ export class Profiles extends ProfilesCache {
         );
         if (!promptInfo) {
             Gui.showMessage(this.profilesOpCancelled);
-            return; // See https://github.com/zowe/vscode-extension-for-zowe/issues/1827
+            return; // See https://github.com/zowe/zowe-explorer-vscode/issues/1827
         }
 
         const returnValue: string[] = [promptInfo.profile.user, promptInfo.profile.password, promptInfo.profile.base64EncodedAuth];
