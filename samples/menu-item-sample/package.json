@@ -4,7 +4,7 @@
   "description": "Menu item sample for Zowe Explorer",
   "version": "0.0.1",
   "publisher": "Zowe",
-  "repository": "https://github.com/zowe/vscode-extension-for-zowe/samples/menu-item-sample",
+  "repository": "https://github.com/zowe/zowe-explorer-vscode/samples/menu-item-sample",
   "engines": {
     "vscode": "^1.79.0"
   },

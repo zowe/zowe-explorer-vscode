@@ -11,7 +11,7 @@ This repo uses [PNPM](https://pnpm.io/) for building.
 1. Clone this `zowe-explorer` repo:
 
    ```bash
-   git clone git@github.com:zowe/zowe/vscode-extension-for-zowe.git
+   git clone git@github.com:zowe/zowe/zowe-explorer-vscode.git
    ```
 
 1. Build the entire repo comprising of Zowe Explorer, Zowe Explorer API, and Zowe Explorer FTP with the following command:

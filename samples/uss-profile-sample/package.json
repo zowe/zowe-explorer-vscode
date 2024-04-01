@@ -4,7 +4,7 @@
   "description": "USS profile sample for Zowe Explorer",
   "version": "0.0.1",
   "publisher": "Zowe",
-  "repository": "https://github.com/zowe/vscode-extension-for-zowe/samples/uss-profile-sample",
+  "repository": "https://github.com/zowe/zowe-explorer-vscode/samples/uss-profile-sample",
   "engines": {
     "vscode": "^1.79.0"
   },

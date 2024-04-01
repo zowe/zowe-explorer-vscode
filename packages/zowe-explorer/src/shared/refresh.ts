@@ -15,8 +15,8 @@ import { syncSessionNode } from "../utils/ProfilesUtils";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { returnIconState } from "./actions";
 import * as contextually from "../shared/context";
-import { removeSession } from "../utils/SessionUtils";
 import { ZoweLogger } from "../utils/ZoweLogger";
+import { TreeViewUtils } from "../utils/TreeViewUtils";
 
 /**
  * View (DATA SETS, JOBS, USS) refresh button
@@ -37,7 +37,7 @@ export async function refreshAll(treeProvider: IZoweTree<IZoweTreeNode>): Promis
                 syncSessionNode((profile) => ZoweExplorerApiRegister.getCommonApi(profile), sessNode);
             }
         } else {
-            await removeSession(treeProvider, sessNode.label.toString().trim());
+            TreeViewUtils.removeSession(treeProvider, sessNode.label.toString().trim());
         }
     }
     treeProvider.refresh();
