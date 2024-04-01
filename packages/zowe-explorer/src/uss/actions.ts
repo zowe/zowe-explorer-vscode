@@ -268,7 +268,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
     const nodes: IZoweUSSTreeNode[] = concatChildNodes(sesNode ? [sesNode] : ussFileProvider.mSessionNodes);
     const node: IZoweUSSTreeNode =
         nodes.find((zNode) => {
-            if (contextually.isText(zNode)) {
+            if (contextually.isText(zNode) || contextually.isBinary(zNode)) {
                 return zNode.fullPath.trim() === remote;
             } else {
                 return false;
