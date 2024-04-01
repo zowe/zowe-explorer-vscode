@@ -50,7 +50,7 @@ async function createGlobalMocks() {
         mockDeleteJobs: jest.fn(),
         mockShowInputBox: jest.fn(),
         mockDeleteJob: jest.fn(),
-        mockGetJobsByOwnerAndPrefix: jest.fn(),
+        mockGetJobsByParameters: jest.fn(),
         mockShowInformationMessage: jest.fn(),
         mockLoadNamedProfile: jest.fn(),
         mockCreateQuickPick: jest.fn(),
@@ -107,8 +107,8 @@ async function createGlobalMocks() {
         configurable: true,
     });
     Object.defineProperty(globalMocks.mockGetJobs, "getJob", { value: globalMocks.mockGetJob, configurable: true });
-    Object.defineProperty(globalMocks.mockGetJobs, "getJobsByOwnerAndPrefix", {
-        value: globalMocks.mockGetJobsByOwnerAndPrefix,
+    Object.defineProperty(globalMocks.mockGetJobs, "getJobsByParameters", {
+        value: globalMocks.mockGetJobsByParameters,
         configurable: true,
     });
     Object.defineProperty(zowe.ZosmfSession, "createSessCfgFromArgs", {
@@ -171,7 +171,7 @@ async function createGlobalMocks() {
     globalMocks.mockCreateSessCfgFromArgs.mockReturnValue(globalMocks.testSession);
     globalMocks.testSessionNode = createJobSessionNode(globalMocks.testSession, globalMocks.testProfile);
     globalMocks.mockGetJob.mockReturnValue(globalMocks.testIJob);
-    globalMocks.mockGetJobsByOwnerAndPrefix.mockReturnValue([globalMocks.testIJob, globalMocks.testIJobComplete]);
+    globalMocks.mockGetJobsByParameters.mockReturnValue([globalMocks.testIJob, globalMocks.testIJobComplete]);
     globalMocks.mockProfileInstance.editSession = jest.fn(() => globalMocks.testProfile);
     globalMocks.testJobNode = new ZoweJobNode({
         label: "jobtest",
@@ -197,6 +197,12 @@ async function createGlobalMocks() {
         configurable: true,
     });
 
+    jest.spyOn(TreeProviders, "providers", "get").mockReturnValue({
+        ds: { addSingleSession: jest.fn(), mSessionNodes: [...globalMocks.testJobsProvider.mSessionNodes], refresh: jest.fn() } as any,
+        uss: { addSingleSession: jest.fn(), mSessionNodes: [...globalMocks.testJobsProvider.mSessionNodes], refresh: jest.fn() } as any,
+        jobs: { addSingleSession: jest.fn(), mSessionNodes: [...globalMocks.testJobsProvider.mSessionNodes], refresh: jest.fn() } as any,
+    } as any);
+
     // Reset getConfiguration because we called it when testJobsProvider was assigned
     globalMocks.getConfiguration.mockClear();
 
@@ -218,11 +224,6 @@ describe("ZoweJobNode unit tests - Function createJobsTree", () => {
 describe("ZoweJobNode unit tests - Function addSession", () => {
     it("Tests that addSession adds the session to the tree", async () => {
         const globalMocks = await createGlobalMocks();
-        jest.spyOn(TreeProviders, "providers", "get").mockReturnValue({
-            ds: { addSingleSession: jest.fn(), mSessionNodes: [...globalMocks.testJobsProvider.mSessionNodes], refresh: jest.fn() } as any,
-            uss: { addSingleSession: jest.fn(), mSessionNodes: [...globalMocks.testJobsProvider.mSessionNodes], refresh: jest.fn() } as any,
-            jobs: { addSingleSession: jest.fn(), mSessionNodes: [...globalMocks.testJobsProvider.mSessionNodes], refresh: jest.fn() } as any,
-        } as any);
         await globalMocks.testJobsProvider.addSession("sestest");
         expect(globalMocks.testJobsProvider.mSessionNodes[1]).toBeDefined();
         expect(globalMocks.testJobsProvider.mSessionNodes[1].label).toEqual("sestest");
@@ -295,17 +296,18 @@ describe("ZoweJobNode unit tests - Function onDidConfiguration", () => {
 });
 
 describe("ZoweJobNode unit tests - Function getChildren", () => {
-    xit("Tests that getChildren returns the jobs of the session, when called on the session", async () => {
+    it("Tests that getChildren returns the jobs of the session, when called on the session", async () => {
         const globalMocks = await createGlobalMocks();
 
         await globalMocks.testJobsProvider.addSession("fake");
+        globalMocks.testJobsProvider.mSessionNodes[1].filtered = true;
 
         const jobs = await globalMocks.testJobsProvider.mSessionNodes[1].getChildren();
         expect(jobs.length).toBe(2);
         expect(jobs[0].job.jobid).toEqual(globalMocks.testIJob.jobid);
-        expect(jobs[0].tooltip).toEqual("TESTJOB(JOB1234)");
+        expect(jobs[0].tooltip).toEqual("TESTJOB(JOB1234) - ACTIVE");
         expect(jobs[1].job.jobid).toEqual(globalMocks.testIJobComplete.jobid);
-        expect(jobs[1].tooltip).toEqual("TESTJOB(JOB1235) - 0");
+        expect(jobs[1].tooltip).toEqual("TESTJOB(JOB1235) - sampleMember - 0");
     });
 
     it("Tests that getChildren updates existing job nodes with new statuses", async () => {
