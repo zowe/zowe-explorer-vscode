@@ -301,7 +301,7 @@ describe("USSTree Unit Tests - Function checkDuplicateLabel", () => {
     it("Tests that checkDuplicateLabel() returns an error message if passed a name that's already used for an existing folder", async () => {
         const globalMocks = await createGlobalMocks();
 
-        const returnVal = globalMocks.testTree.checkDuplicateLabel("/u/myuser/usstest", [globalMocks.testUSSNode]);
+        const returnVal = globalMocks.testTree.checkDuplicateLabel("/u/myuser/testDir", [globalMocks.testUSSNode]);
         expect(returnVal).toEqual("A folder already exists with this name. Please choose a different name.");
     });
 });
@@ -755,23 +755,20 @@ const setupUssFavNode = (globalMocks): ZoweUSSNode => {
 describe("USSTree Unit Tests - Function findFavoritedNode", () => {
     it("Testing that findFavoritedNode() returns the favorite of a non-favorited node", async () => {
         const globalMocks = await createGlobalMocks();
-        globalMocks.testUSSNode.contextValue = globals.USS_TEXT_FILE_CONTEXT;
 
         const ussFavNode = setupUssFavNode(globalMocks);
-
         const foundNode = await globalMocks.testTree.findFavoritedNode(globalMocks.testUSSNode);
 
         expect(foundNode).toStrictEqual(ussFavNode);
     });
-    it("Tests that findFavoritedNode() does not error when there is no favorite or matching profile node in Favorites", async () => {
+    it("Tests that findFavoritedNode() returns undefined when there is no favorite or matching profile node in Favorites", async () => {
         const globalMocks = await createGlobalMocks();
         globalMocks.testTree.mSessionNodes[1].children.push(globalMocks.testUSSNode);
 
         const node = createUSSNode(globalMocks.testSession, globalMocks.testProfile);
+        const foundNode = await globalMocks.testTree.findFavoritedNode(node);
 
-        expect(() => {
-            globalMocks.testTree.findFavoritedNode(node);
-        }).not.toThrow();
+        expect(foundNode).toBeUndefined();
     });
 });
 
@@ -1657,7 +1654,7 @@ describe("USSTree Unit Tests - Function editSession", () => {
             Object.defineProperty(globals, "USS_DIR", {
                 value: join("some", "fspath", "_U_"),
             });
-            const doc = { uri: { fsPath: join(globals.USS_DIR, "lpar", "someFile.txt") } } as vscode.TextDocument;
+            const doc = { isClosed: true, isDirty: false, uri: { fsPath: join(globals.USS_DIR, "lpar", "someFile.txt") } } as vscode.TextDocument;
 
             jest.spyOn(TreeProviders, "uss", "get").mockReturnValue(tree);
             await USSTree.onDidCloseTextDocument(doc);
