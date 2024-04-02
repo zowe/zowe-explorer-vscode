@@ -476,6 +476,16 @@ describe("Extension Unit Tests", () => {
         await extension.activate(globalMocks.mockExtension);
         expect(ZoweExplorerExtender.showZoweConfigError).toHaveBeenCalled();
     });
+    afterEach(() => {
+        jest.resetAllMocks();
+        jest.restoreAllMocks();
+        jest.clearAllMocks();
+    });
+
+    it("Testing that activate correctly executes", () => {
+        expect(allCommands.map((c) => c.cmd)).toEqual(globalMocks.expectedCommands);
+    });
+
     it("should deactivate the extension", async () => {
         const spyAwaitAllSaves = jest.spyOn(ZoweSaveQueue, "all");
         const spyCleanTempDir = jest.spyOn(TempFolder, "cleanDir");

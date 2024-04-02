@@ -43,6 +43,24 @@ export class SettingsConfig {
         return vscode.workspace.getConfiguration(first).update(rest.join("."), value, target);
     }
 
+    /**
+     * Updates a generic setting for all scopes
+     * @param key the key of the setting, e.g., 'zowe.security.secureCredentialsEnabled'
+     * @param value the new value of the setting e.g., true
+     */
+    public static async setDirectValueForAll(key: string, value: any): Promise<void> {
+        ZoweLogger.trace("SettingsConfig.setDirectValueForAll called.");
+        const keys = [...Object.keys(vscode.ConfigurationTarget)];
+        const targets = [...(Object.values(vscode.ConfigurationTarget) as vscode.ConfigurationTarget[])];
+        for (const target of targets) {
+            try {
+                await SettingsConfig.setDirectValue(key, value, target);
+            } catch (err) {
+                ZoweLogger.warn(vscode.l10n.t("{0} scope was not updated, since setting is not available there.", [keys[target]]));
+            }
+        }
+    }
+
     public static isConfigSettingSetByUser(key: string): boolean {
         const [first, ...rest] = key.split(".");
         const inspect = vscode.workspace.getConfiguration(first).inspect(rest.join("."));

@@ -290,7 +290,7 @@ describe("HistoryView Unit Tests", () => {
                 favorites: undefined,
                 fileHistory: [],
                 search: undefined,
-                sessions: undefined,
+                sessions: [],
                 encodingHistory: [],
             });
         });
