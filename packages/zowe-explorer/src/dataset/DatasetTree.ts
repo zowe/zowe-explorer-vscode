@@ -1515,7 +1515,8 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
      * @param doc A doc URI that was closed
      */
     public static async onDidCloseTextDocument(this: void, doc: vscode.TextDocument): Promise<void> {
-        if (doc.uri.fsPath.includes(globals.DS_DIR) && !(await isClosedFileDirty(doc))) {
+        if (doc.uri.fsPath.includes(globals.DS_DIR) && doc.isClosed && !(await isClosedFileDirty(doc))) {
+            ZoweLogger.debug(`Handling close event for ${doc.uri.fsPath}: closed=${doc.isClosed.toString()}, dirty=${doc.isDirty.toString()}`);
             updateOpenFiles(TreeProviders.ds, doc.uri.fsPath, null);
             LocalFileManagement.removeRecoveredFile(doc);
         }

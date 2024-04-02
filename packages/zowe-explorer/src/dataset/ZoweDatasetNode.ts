@@ -575,7 +575,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 }
                 statusMsg.dispose();
                 updateOpenFiles(datasetProvider, documentFilePath, this);
-                const document = await vscode.workspace.openTextDocument(getDocumentFilePath(label, this));
+                const document = await vscode.workspace.openTextDocument(documentFilePath);
                 await Gui.showTextDocument(document, { preview: this.wasDoubleClicked != null ? !this.wasDoubleClicked : shouldPreview });
                 // discard ongoing action to allow new requests on this node
                 if (this.ongoingActions) {
