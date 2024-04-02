@@ -251,6 +251,10 @@ export const focusOnJob = async (jobsProvider: IZoweTree<IZoweJobTreeNode>, sess
     sessionNode.searchId = jobId;
     sessionNode.filtered = true;
     await TreeViewUtils.expandNode(sessionNode, jobsProvider);
+    const jobNode: IZoweJobTreeNode | undefined = sessionNode.children.find((job) => job.job.jobid.toString() === jobId.trim());
+    if (jobNode) {
+        jobsProvider.setItem(jobsProvider.getTreeView(), jobNode);
+    }
 };
 
 /**
