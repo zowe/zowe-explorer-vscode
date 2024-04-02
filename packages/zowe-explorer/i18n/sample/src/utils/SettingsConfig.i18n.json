@@ -1,4 +1,5 @@
 {
+  "SettingsConfig.setDirectValueForAll.warn": "{0} scope was not updated, since setting is not available there.",
   "standardization.reload.button": "Reload Window",
   "standardization.reload.infoMessage": "Settings have been successfully migrated for Zowe Explorer version 2 and above. To apply these settings, please reload your VS Code window."
 }
