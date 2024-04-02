@@ -584,7 +584,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 // if the encoding has changed, fetch the contents with the new encoding
                 await UssFSProvider.instance.fetchFileAtUri(uri);
                 await vscode.commands.executeCommand("vscode.open", uri.with({ query: "" }));
-                vscode.commands.executeCommand("workbench.action.files.revert");
+                await UssFSProvider.revertFileInEditor();
             } else {
                 await vscode.commands.executeCommand("vscode.open", uri);
             }

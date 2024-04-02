@@ -200,10 +200,20 @@ export class BaseProvider {
         if (!isFileEntry(entry)) {
             return;
         }
-        // HACK: does not work for editors that aren't the active one, so...
-        // make VS Code switch to this editor and then "revert the file" to show latest contents
+        // NOTE: This does not work for editors that aren't the active one, so...
+        // Make VS Code switch to this editor, and then "revert the file" to show the latest contents
         await vscode.commands.executeCommand("vscode.open", uri);
-        vscode.commands.executeCommand("workbench.action.files.revert");
+        await BaseProvider.revertFileInEditor();
+    }
+
+    /**
+     * This function is used to revert changes in the active editor.
+     * It can also be used to update an editor with the newest contents of a resource.
+     *
+     * https://github.com/microsoft/vscode/issues/110493#issuecomment-726542367
+     */
+    public static async revertFileInEditor(): Promise<void> {
+        await vscode.commands.executeCommand("workbench.action.files.revert");
     }
 
     /**

@@ -554,7 +554,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     // if the encoding has changed, fetch the contents with the new encoding
                     await DatasetFSProvider.instance.fetchDatasetAtUri(this.resourceUri);
                     await vscode.commands.executeCommand("vscode.open", this.resourceUri);
-                    vscode.commands.executeCommand("workbench.action.files.revert");
+                    await DatasetFSProvider.revertFileInEditor();
                 } else {
                     await vscode.commands.executeCommand("vscode.open", this.resourceUri);
                 }
