@@ -18,7 +18,7 @@ import { USSTree } from "../uss/USSTree";
 import { DatasetTree } from "../dataset/DatasetTree";
 import { ZosJobsProvider } from "../job/ZosJobsProvider";
 import { ZoweLogger } from "../utils/LoggerUtils";
-import { ZoweLocalStorage } from "../utils/ZoweLocalStorage";
+import { LocalStorageKey, ZoweLocalStorage } from "../utils/ZoweLocalStorage";
 
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
@@ -102,7 +102,7 @@ export class HistoryView extends WebView {
     }
 
     private fetchEncodingHistory(): string[] {
-        return ZoweLocalStorage.getValue<string[]>("zowe.encodingHistory") ?? [];
+        return ZoweLocalStorage.getValue<string[]>(LocalStorageKey.ENCODING_HISTORY) ?? [];
     }
 
     private showError(message): void {
@@ -156,7 +156,7 @@ export class HistoryView extends WebView {
                     if (message.attrs.selectedItems[selectedItem]) {
                         const encodingHistory = this.fetchEncodingHistory();
                         ZoweLocalStorage.setValue(
-                            "zowe.encodingHistory",
+                            LocalStorageKey.ENCODING_HISTORY,
                             encodingHistory.filter((element) => element !== selectedItem)
                         );
                     }
@@ -187,7 +187,7 @@ export class HistoryView extends WebView {
                     }
                     break;
                 case "encodingHistory":
-                    ZoweLocalStorage.setValue("zowe.encodingHistory", []);
+                    ZoweLocalStorage.setValue(LocalStorageKey.ENCODING_HISTORY, []);
                     break;
                 default:
                     Gui.showMessage(localize("HistoryView.removeItem.notSupported", "action is not supported for this property type."));

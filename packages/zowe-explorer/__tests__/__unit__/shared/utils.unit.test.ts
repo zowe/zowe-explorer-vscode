@@ -937,7 +937,7 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
 
         //spy on ZoweLocalStorage "zowe.encodingHistory"
         const setValueSpy = jest.spyOn(ZoweLocalStorage, "setValue");
-        expect(setValueSpy).toBeCalledWith("zowe.encodingHistory", [otherEncoding.codepage].concat(encodingHistory)); //recieve: "zowe.encodingHistory", Array []
+        expect(setValueSpy).toBeCalledWith(LocalStorageKey.ENCODING_HISTORY, [otherEncoding.codepage].concat(encodingHistory));
     });
 
     it("Prompts for other encoding for USS file and supply an existing encoding and filter/move it to the front", async () => {
@@ -961,7 +961,7 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
         //spy on ZoweLocalStorage "zowe.encodingHistory"
         const setValueSpy = jest.spyOn(ZoweLocalStorage, "setValue");
         encodingHistory.unshift(encodingHistory.splice(2, 1)[0]); // shift 3rd value to front to match with local storage
-        expect(setValueSpy).toBeCalledWith("zowe.encodingHistory", encodingHistory); //recieve: "zowe.encodingHistory", Array []
+        expect(setValueSpy).toBeCalledWith(LocalStorageKey.ENCODING_HISTORY, encodingHistory);
     });
 
     it("Prompts for other encoding for USS file and add encoding in lowercase and expect to save it in upper case", async () => {
@@ -981,7 +981,8 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
         await sharedUtils.promptForEncoding(node);
 
         const setValueSpy = jest.spyOn(ZoweLocalStorage, "setValue");
-        expect(setValueSpy).toBeCalledWith("zowe.encodingHistory", ["UTF-8", "IBM-123", "IBM-456", "IBM-789"]); //recieve added encoding in upper case (first entry)
+        // receive added encoding in upper case (first entry)
+        expect(setValueSpy).toBeCalledWith(LocalStorageKey.ENCODING_HISTORY, ["UTF-8", "IBM-123", "IBM-456", "IBM-789"]);
         expect(setValueSpy);
     });
 });
