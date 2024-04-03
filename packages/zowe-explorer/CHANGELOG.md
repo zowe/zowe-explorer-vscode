@@ -117,6 +117,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 ## New features and enhancements
 
 - Added Status bar to indicate that data is being pulled from mainframe. [#2484](https://github.com/zowe/zowe-explorer-vscode/issues/2484)
+- Updated MVS view progress indicator for entering a filter search. [#2181](https://github.com/zowe/zowe-explorer-vscode/issues/2181)
 
 ## `2.14.0`
 
