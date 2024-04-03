@@ -22,7 +22,9 @@ import {
     IZoweTreeNode,
     IZoweUSSTreeNode,
     PersistenceSchemaEnum,
+    StateManagement,
     Types,
+    UssState,
     Validation,
     ZosEncoding,
 } from "@zowe/zowe-explorer-api";
@@ -65,6 +67,8 @@ export class USSTree extends ZoweTreeProvider implements Types.IZoweUSSTreeType 
     private treeView: vscode.TreeView<IZoweUSSTreeNode>;
     public copying: Promise<unknown>;
     public openFiles: Record<string, IZoweUSSTreeNode> = {};
+
+    public context: StateManagement<UssState> = new StateManagement();
 
     public constructor() {
         super(

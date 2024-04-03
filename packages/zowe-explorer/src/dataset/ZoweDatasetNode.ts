@@ -12,7 +12,7 @@
 import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
 import * as vscode from "vscode";
 import * as globals from "../globals";
-import { errorHandling } from "../utils/ProfilesUtils";
+import { errorHandling, getSessionLabel } from "../utils/ProfilesUtils";
 import {
     Sorting,
     Types,
@@ -23,6 +23,7 @@ import {
     ZoweTreeNode,
     ZosEncoding,
     Validation,
+    DatasetState,
 } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { getIconByNode } from "../generators/icons";
@@ -34,6 +35,7 @@ import * as fs from "fs";
 import { promiseStatus, PromiseStatuses } from "promise-status-async";
 import { LocalFileInfo, getDocumentFilePath } from "../shared/utils";
 import { IZoweDatasetTreeOpts } from "../shared/IZoweTreeOpts";
+import { TreeProviders } from "../shared/TreeProviders";
 
 /**
  * A type of TreeItem used to represent sessions and data sets
@@ -58,6 +60,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     public sort?: Sorting.NodeSort;
     public filter?: Sorting.DatasetFilter;
     private etag?: string;
+    public resourceUri?: vscode.Uri;
 
     /**
      * Creates an instance of ZoweDatasetNode
@@ -97,23 +100,53 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         if (contextually.isSession(this)) {
             this.id = this.label as string;
         }
+
+        if (this.label !== vscode.l10n.t("Favorites")) {
+            const sessionLabel = getSessionLabel(this);
+            if (this.getParent() == null) {
+                this.resourceUri = vscode.Uri.from({
+                    scheme: "zowe-ds",
+                    path: `/${sessionLabel}/`,
+                });
+            } else if (
+                this.contextValue === globals.DS_DS_CONTEXT ||
+                this.contextValue === globals.DS_PDS_CONTEXT ||
+                this.contextValue === globals.DS_MIGRATED_FILE_CONTEXT
+            ) {
+                this.resourceUri = vscode.Uri.from({
+                    scheme: "zowe-ds",
+                    path: `/${sessionLabel}/${this.label as string}`,
+                });
+            } else if (this.contextValue === globals.DS_MEMBER_CONTEXT) {
+                this.resourceUri = vscode.Uri.from({
+                    scheme: "zowe-ds",
+                    path: `/${sessionLabel}/${this.getParent().label as string}/${this.label as string}`,
+                });
+            } else {
+                this.resourceUri = null;
+            }
+        }
     }
 
     public updateStats(item: any): void {
         if ("c4date" in item && "m4date" in item) {
             const { m4date, mtime, msec }: { m4date: string; mtime: string; msec: string } = item;
-            this.stats = {
-                user: item.user,
-                createdDate: dayjs(item.c4date).toDate(),
-                modifiedDate: dayjs(`${m4date} ${mtime}:${msec}`).toDate(),
-            };
+            TreeProviders.ds.context.setState(this.resourceUri, {
+                stats: {
+                    user: item.user,
+                    createdDate: dayjs(item.c4date).toDate(),
+                    modifiedDate: dayjs(`${m4date} ${mtime}:${msec}`).toDate(),
+                },
+            });
         } else if ("id" in item || "changed" in item) {
             // missing keys from API response; check for FTP keys
-            this.stats = {
-                user: item.id,
-                createdDate: item.created ? dayjs(item.created).toDate() : undefined,
-                modifiedDate: item.changed ? dayjs(item.changed).toDate() : undefined,
-            };
+            TreeProviders.ds.context.setState(this.resourceUri, {
+                stats: {
+                    user: item.id,
+                    createdDate: item.created ? dayjs(item.created).toDate() : undefined,
+                    modifiedDate: item.changed ? dayjs(item.changed).toDate() : undefined,
+                },
+            });
         }
     }
 
@@ -466,6 +499,10 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             responses.push(await ZoweExplorerApiRegister.getMvsApi(cachedProfile).allMembers(this.label as string, options));
         }
         return responses;
+    }
+
+    public getState(): DatasetState {
+        return TreeProviders.ds.context.getState(this.resourceUri);
     }
 
     public async openDs(forceDownload: boolean, previewMember: boolean, datasetProvider: Types.IZoweDatasetTreeType): Promise<void> {

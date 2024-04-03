@@ -14,10 +14,20 @@ import * as globals from "../globals";
 import * as vscode from "vscode";
 import * as fs from "fs";
 import * as path from "path";
-import { Gui, imperative, IZoweUSSTreeNode, ZoweTreeNode, Types, Validation, MainframeInteraction, ZosEncoding } from "@zowe/zowe-explorer-api";
+import {
+    Gui,
+    imperative,
+    IZoweUSSTreeNode,
+    ZoweTreeNode,
+    Types,
+    Validation,
+    MainframeInteraction,
+    ZosEncoding,
+    UssState,
+} from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
-import { errorHandling, syncSessionNode } from "../utils/ProfilesUtils";
+import { errorHandling, getSessionLabel, syncSessionNode } from "../utils/ProfilesUtils";
 import { getIconByNode } from "../generators/icons/index";
 import { autoDetectEncoding, fileExistsCaseSensitiveSync, injectAdditionalDataToTooltip } from "../uss/utils";
 import * as contextually from "../shared/context";
@@ -38,20 +48,14 @@ import { LocalFileInfo } from "../shared/utils";
 export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     public command: vscode.Command;
     public prevPath = "";
-    public fullPath = "";
     public dirty = true;
     public children: IZoweUSSTreeNode[] = [];
     public binary = false;
-    public encoding?: string;
-    public encodingMap = {};
     public shortLabel = "";
     public downloadedTime = null as string;
     private downloadedInternal = false;
 
-    public attributes?: Types.FileAttributes;
     public onUpdateEmitter: vscode.EventEmitter<IZoweUSSTreeNode>;
-    private parentPath: string;
-    private etag?: string;
 
     /**
      * Creates an instance of ZoweUSSNode
@@ -60,11 +64,8 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      */
     public constructor(opts: IZoweUssTreeOpts) {
         super(opts.label, opts.collapsibleState, opts.parentNode, opts.session, opts.profile);
-        this.binary = opts.encoding?.kind === "binary";
-        if (!this.binary && opts.encoding != null) {
-            this.encoding = opts.encoding.kind === "other" ? opts.encoding.codepage : null;
-        }
-        this.parentPath = opts.parentPath;
+        const binary = opts.encoding?.kind === "binary";
+        const parentPath = opts.parentPath;
         if (opts.collapsibleState !== vscode.TreeItemCollapsibleState.None) {
             this.contextValue = globals.USS_DIR_CONTEXT;
         } else if (this.binary) {
@@ -72,28 +73,42 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         } else {
             this.contextValue = globals.USS_TEXT_FILE_CONTEXT;
         }
-        if (this.parentPath) {
-            this.fullPath = this.tooltip = this.parentPath + "/" + opts.label;
+        let resourcePath = "";
+        if (parentPath) {
+            resourcePath = this.tooltip = parentPath + "/" + opts.label;
             if (opts.parentPath === "/") {
                 // Keep fullPath of root level nodes preceded by a single slash
-                this.fullPath = this.tooltip = "/" + opts.label;
+                resourcePath = this.tooltip = "/" + opts.label;
             }
         }
         if (opts.parentNode && opts.parentNode.contextValue === globals.FAV_PROFILE_CONTEXT) {
-            this.fullPath = opts.label.trim();
+            resourcePath = opts.label.trim();
             // File or directory name only (no parent path)
-            this.shortLabel = this.fullPath.split("/", this.fullPath.length).pop();
             // Display name for favorited file or directory in tree view
-            this.label = this.shortLabel;
-            this.tooltip = this.fullPath;
+            this.label = resourcePath.split("/", resourcePath.length).pop();
+            this.tooltip = resourcePath;
         }
-        this.etag = opts.etag ? opts.etag : "";
         const icon = getIconByNode(this);
         if (icon) {
             this.iconPath = icon.path;
         }
         if (contextually.isSession(this)) {
             this.id = `uss.${this.label.toString()}`;
+        }
+        if (opts.label !== vscode.l10n.t("Favorites")) {
+            this.resourceUri = vscode.Uri.from({
+                scheme: "zowe-uss",
+                path: `/${getSessionLabel(this)}${resourcePath}`,
+            });
+            TreeProviders.uss.context.setState(this.resourceUri, {
+                binary,
+                encoding: !binary && opts.encoding != null ? (opts.encoding?.kind === "other" ? opts.encoding.codepage : null) : undefined,
+                etag: opts.etag ?? "",
+                fullPath: resourcePath,
+                parentPath,
+                shortLabel:
+                    opts.parentNode?.contextValue === globals.FAV_PROFILE_CONTEXT ? resourcePath.split("/", resourcePath.length).pop() : undefined,
+            });
         }
         this.onUpdateEmitter = new vscode.EventEmitter<IZoweUSSTreeNode>();
     }
@@ -105,6 +120,10 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     public getSessionNode(): IZoweUSSTreeNode {
         ZoweLogger.trace("ZoweUSSNode.getSessionNode called.");
         return this.session ? this : this.getParent()?.getSessionNode() ?? this;
+    }
+
+    public getState(): UssState {
+        return TreeProviders.uss.context.getState(this.resourceUri);
     }
 
     /**
@@ -169,7 +188,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             const existing = this.children.find(
                 // Ensure both parent path and short label match.
                 // (Can't use mParent fullPath since that is already updated with new value by this point in getChildren.)
-                (element: ZoweUSSNode) => element.parentPath === this.fullPath && element.label.toString() === item.name
+                (element: ZoweUSSNode) => element.getState().parentPath === this.fullPath && element.label.toString() === item.name
             );
 
             // The child node already exists. Use that node for the list instead, and update the file attributes in case they've changed
@@ -195,13 +214,15 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                     parentPath: this.fullPath,
                     profile: this.profile,
                 });
-                temp.attributes = {
-                    gid: item.gid,
-                    uid: item.uid,
-                    group: item.group,
-                    perms: item.mode,
-                    owner: item.user,
-                };
+                TreeProviders.uss.context.setState(temp.resourceUri, {
+                    attributes: {
+                        gid: item.gid,
+                        uid: item.uid,
+                        group: item.group,
+                        perms: item.mode,
+                        owner: item.user,
+                    },
+                });
                 responseNodes.push(temp);
             } else {
                 // Create a node for the USS file.
@@ -214,13 +235,15 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                     parentPath: this.fullPath,
                     encoding: cachedEncoding,
                 });
-                temp.attributes = {
-                    gid: item.gid,
-                    uid: item.uid,
-                    group: item.group,
-                    perms: item.mode,
-                    owner: item.user,
-                };
+                TreeProviders.uss.context.setState(temp.resourceUri, {
+                    attributes: {
+                        gid: item.gid,
+                        uid: item.uid,
+                        group: item.group,
+                        perms: item.mode,
+                        owner: item.user,
+                    },
+                });
                 temp.command = {
                     command: "zowe.uss.ZoweUSSNode.open",
                     title: vscode.l10n.t("Open"),
@@ -249,12 +272,16 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         }
         if (encoding?.kind === "binary") {
             this.contextValue = globals.USS_BINARY_FILE_CONTEXT;
-            this.binary = true;
-            this.encoding = undefined;
+            TreeProviders.uss.context.setState(this.resourceUri, {
+                binary: true,
+                encoding: undefined,
+            });
         } else {
             this.contextValue = globals.USS_TEXT_FILE_CONTEXT;
-            this.binary = false;
-            this.encoding = encoding?.kind === "text" ? null : encoding?.codepage;
+            TreeProviders.uss.context.setState(this.resourceUri, {
+                binary: false,
+                encoding: encoding,
+            });
         }
         if (encoding != null) {
             this.getSessionNode().encodingMap[this.fullPath] = encoding;
@@ -405,8 +432,12 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
 
         // Remove node from the USS Favorites tree
         ussFileProvider.removeFavorite(this);
-        ussFileProvider.removeFileHistory(`[${this.getProfileName()}]: ${this.parentPath}/${this.label.toString()}`);
+        ussFileProvider.removeFileHistory(`[${this.getProfileName()}]: ${this.getParentPath()}/${this.label.toString()}`);
         ussFileProvider.refresh();
+    }
+
+    private getParentPath(): string {
+        return this.getState(this.resourceUri).parentPath;
     }
 
     /**
@@ -416,7 +447,11 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      */
     public getEtag(): string {
         ZoweLogger.trace("ZoweUSSNode.getEtag called.");
-        return this.etag;
+        return this.getState(this.resourceUri).etag;
+    }
+
+    private getEncoding(): ZosEncoding {
+        return this.getState(this.resourceUri).encoding;
     }
 
     /**
@@ -426,7 +461,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      */
     public setEtag(etagValue): void {
         ZoweLogger.trace("ZoweUSSNode.setEtag called.");
-        this.etag = etagValue;
+        TreeProviders.uss.context.setState(this.resourceUri, { etag: etagValue });
     }
 
     /**

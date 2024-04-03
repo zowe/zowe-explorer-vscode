@@ -13,17 +13,20 @@ import * as vscode from "vscode";
 import { IZoweProviders } from "./IZoweProviders";
 import { Types } from "@zowe/zowe-explorer-api";
 import { getSessionType } from "./context";
+import type { DatasetTree } from "../dataset/DatasetTree";
+import type { USSTree } from "../uss/USSTree";
+import type { ZosJobsProvider } from "../job/ZosJobsProvider";
 
 type ProviderFunctions = {
-    ds: (context: vscode.ExtensionContext) => Promise<Types.IZoweDatasetTreeType>;
-    uss: (context: vscode.ExtensionContext) => Promise<Types.IZoweUSSTreeType>;
-    job: (context: vscode.ExtensionContext) => Promise<Types.IZoweJobTreeType>;
+    ds: (context: vscode.ExtensionContext) => Promise<DatasetTree>;
+    uss: (context: vscode.ExtensionContext) => Promise<USSTree>;
+    job: (context: vscode.ExtensionContext) => Promise<ZosJobsProvider>;
 };
 
 export class TreeProviders {
-    static #ds: Types.IZoweDatasetTreeType;
-    static #uss: Types.IZoweUSSTreeType;
-    static #job: Types.IZoweJobTreeType;
+    static #ds: DatasetTree;
+    static #uss: USSTree;
+    static #job: ZosJobsProvider;
 
     public static async initializeProviders(context: vscode.ExtensionContext, initializers: ProviderFunctions): Promise<IZoweProviders> {
         TreeProviders.#ds = await initializers.ds(context);
@@ -32,15 +35,15 @@ export class TreeProviders {
         return TreeProviders.providers;
     }
 
-    public static get ds(): Types.IZoweDatasetTreeType {
+    public static get ds(): DatasetTree {
         return TreeProviders.#ds;
     }
 
-    public static get uss(): Types.IZoweUSSTreeType {
+    public static get uss(): USSTree {
         return TreeProviders.#uss;
     }
 
-    public static get job(): Types.IZoweJobTreeType {
+    public static get job(): ZosJobsProvider {
         return TreeProviders.#job;
     }
 

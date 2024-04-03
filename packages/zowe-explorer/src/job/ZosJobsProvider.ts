@@ -24,7 +24,7 @@ import * as contextually from "../shared/context";
 import { SettingsConfig } from "../utils/SettingsConfig";
 import { ZoweLogger } from "../utils/ZoweLogger";
 import SpoolProvider, { encodeJobFile } from "../SpoolProvider";
-import { Poller } from "@zowe/zowe-explorer-api/src/utils";
+import { JobState, Poller, StateManagement } from "@zowe/zowe-explorer-api/src/utils";
 import { PollDecorator } from "../utils/DecorationProviders";
 import { TreeViewUtils } from "../utils/TreeViewUtils";
 import { TreeProviders } from "../shared/TreeProviders";
@@ -78,6 +78,8 @@ export class ZosJobsProvider extends ZoweTreeProvider implements Types.IZoweJobT
     private static readonly submitJobQueryLabel = vscode.l10n.t("$(check) Submit this query");
     private static readonly chooseJobStatusLabel = "Job Status";
     public openFiles: Record<string, IZoweJobTreeNode> = {};
+
+    public context: StateManagement<JobState> = new StateManagement();
 
     public JOB_PROPERTIES = [
         {

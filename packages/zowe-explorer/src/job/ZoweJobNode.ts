@@ -13,25 +13,24 @@ import * as vscode from "vscode";
 import * as zosjobs from "@zowe/zos-jobs-for-zowe-sdk";
 import * as globals from "../globals";
 import * as contextually from "../shared/context";
-import { Gui, imperative, IZoweJobTreeNode, Sorting, ZoweTreeNode } from "@zowe/zowe-explorer-api";
+import { Gui, imperative, IZoweJobTreeNode, JobState, Sorting, ZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
-import { errorHandling, syncSessionNode } from "../utils/ProfilesUtils";
+import { errorHandling, getSessionLabel, syncSessionNode } from "../utils/ProfilesUtils";
 import { getIconByNode } from "../generators/icons";
 import { JOB_SORT_KEYS } from "./utils";
 import { Profiles } from "../Profiles";
 import { ZoweLogger } from "../utils/ZoweLogger";
 import { encodeJobFile } from "../SpoolProvider";
 import { IZoweJobTreeOpts } from "../shared/IZoweTreeOpts";
+import { TreeProviders } from "../shared/TreeProviders";
 
 export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
     public children: IZoweJobTreeNode[] = [];
     public dirty = true;
     public sort: Sorting.NodeSort;
-    private _owner: string;
     private _prefix: string;
     private _searchId: string;
     private _jobStatus: string;
-    public job: zosjobs.IJob;
     public filtered = false;
     public filter?: string;
 
@@ -56,18 +55,13 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
         this._searchId = "";
         this._jobStatus = "*";
         this.tooltip = opts.label;
-        this.job = opts.job ?? null; // null instead of undefined to satisfy isZoweJobTreeNode
+        const job = opts.job ?? null; // null instead of undefined to satisfy isZoweJobTreeNode
 
         if (opts.parentNode == null && opts.label !== "Favorites") {
             this.contextValue = globals.JOBS_SESSION_CONTEXT;
         }
 
-        if (opts.session) {
-            this._owner = "*";
-            if (opts.session.ISession?.user) {
-                this._owner = opts.session.ISession.user;
-            }
-        }
+        const owner = opts.session?.ISession?.user ?? opts.session ? "*" : undefined;
 
         const icon = getIconByNode(this);
         if (icon) {
@@ -81,6 +75,19 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
             };
             this.id = this.label as string;
         }
+
+        if (job != null) {
+            const sessionName = getSessionLabel(this);
+            this.resourceUri = vscode.Uri.from({
+                scheme: "zowe-jobs",
+                path: `/${sessionName}/${job.jobid}`,
+            });
+            TreeProviders.job.context.setState(this.resourceUri, { job, owner });
+        }
+    }
+
+    public getState(): JobState {
+        return TreeProviders.job.context.getState(this.resourceUri);
     }
 
     /**
@@ -110,11 +117,10 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
 
         const elementChildren: Record<string, IZoweJobTreeNode> = {};
         if (contextually.isJob(this)) {
+            const { job } = this.getState();
             // Fetch spool files under job node
             const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
-            const spools: zosjobs.IJobFile[] = (
-                (await ZoweExplorerApiRegister.getJesApi(cachedProfile).getSpoolFiles(this.job.jobname, this.job.jobid)) ?? []
-            )
+            const spools: zosjobs.IJobFile[] = ((await ZoweExplorerApiRegister.getJesApi(cachedProfile).getSpoolFiles(job.jobname, job.jobid)) ?? [])
                 // filter out all the objects which do not seem to be correct Job File Document types
                 // see an issue #845 for the details
                 .filter((item) => !(item.id === undefined && item.ddname === undefined && item.stepname === undefined));
@@ -154,7 +160,7 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
                         parentNode: this,
                         session: this.session,
                         profile: this.profile,
-                        job: this.job,
+                        job,
                         spool,
                     });
                     const icon = getIconByNode(spoolNode);
@@ -170,8 +176,9 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
                 }
             });
         } else {
+            const { owner, prefix, searchId, status } = this.getState();
             // Fetch jobs under session node
-            const jobs = await this.getJobs(this._owner, this._prefix, this._searchId, this._jobStatus);
+            const jobs = await this.getJobs(owner, prefix, searchId, status);
             if (jobs.length === 0) {
                 const noJobsNode = new ZoweJobNode({
                     label: vscode.l10n.t("No jobs found"),
@@ -271,16 +278,14 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
 
     public set owner(newOwner: string) {
         if (newOwner !== undefined) {
-            if (newOwner.length === 0) {
-                this._owner = this.session.ISession.user;
-            } else {
-                this._owner = newOwner;
-            }
+            TreeProviders.job.context.setState(this.resourceUri, {
+                owner: newOwner.length === 0 ? this.session.ISession.user : newOwner,
+            });
         }
     }
 
     public get owner(): string {
-        return this._owner;
+        return TreeProviders.job.context.getState(this.resourceUri).owner;
     }
 
     public set status(newStatus: string) {

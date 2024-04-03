@@ -20,6 +20,7 @@ import { IZoweTreeNode, ZoweTreeNode, FileManagement, Gui, ProfilesCache, Mainfr
 import { ZoweLogger } from "./ZoweLogger";
 import { SettingsConfig } from "./SettingsConfig";
 import { TreeProviders } from "../shared/TreeProviders";
+import * as contextually from "../shared/context";
 
 /*************************************************************************************************************
  * Error Handling
@@ -100,6 +101,10 @@ export async function errorHandling(errorDetails: Error | string, label?: string
     }
     // Try to keep message readable since VS Code doesn't support newlines in error messages
     Gui.errorMessage(moreInfo + errorDetails.toString().replace(/\n/g, " | "));
+}
+
+export function getSessionLabel(node: IZoweTreeNode): string {
+    return (contextually.isSession(node) ? node : node.getSessionNode()).label as string;
 }
 
 /**
