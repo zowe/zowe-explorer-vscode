@@ -194,6 +194,8 @@ export class ProfilesCache {
     public async refresh(apiRegister?: ZoweExplorerApi.IApiRegisterClient): Promise<void> {
         this.allProfiles = [];
         this.allTypes = [];
+        this.profilesByType.clear();
+        this.defaultProfileByType.clear();
         let mProfileInfo: zowe.imperative.ProfileInfo;
         try {
             mProfileInfo = await this.getProfileInfo();
@@ -481,40 +483,18 @@ export class ProfilesCache {
 
     // used by refresh to check correct merging of allProfiles
     protected checkMergingConfigAllProfiles(): void {
-        const baseProfile = this.defaultProfileByType.get("base");
-        const allProfiles: zowe.imperative.IProfileLoaded[] = [];
-        this.allTypes.forEach((type) => {
-            try {
-                const allProfilesByType: zowe.imperative.IProfileLoaded[] = [];
-                const profByType = this.profilesByType.get(type);
-                profByType.forEach((profile) => {
-                    if (this.shouldRemoveTokenFromProfile(profile, baseProfile)) {
-                        profile.profile.tokenType = undefined;
-                        profile.profile.tokenValue = undefined;
-                        // update default profile of type if changed
-                        if (profile.name === this.defaultProfileByType.get(type).name) {
-                            this.defaultProfileByType.set(type, profile);
-                        }
-                    }
-                    allProfiles.push(profile);
-                    allProfilesByType.push(profile);
-                });
-                this.profilesByType.set(type, allProfilesByType);
-            } catch (error) {
-                // do nothing, skip if profile type is not included in config file
-                this.log.debug(error as string);
-            }
-        });
-        this.allProfiles = [];
-        this.allProfiles.push(...allProfiles);
+        for (const profs of this.profilesByType.values()) {
+            profs.forEach((profile) => {
+                this.checkMergingConfigSingleProfile(profile);
+            });
+        }
     }
 
     // check correct merging of a single profile
     protected checkMergingConfigSingleProfile(profile: zowe.imperative.IProfileLoaded): zowe.imperative.IProfileLoaded {
         const baseProfile = this.defaultProfileByType.get("base");
         if (this.shouldRemoveTokenFromProfile(profile, baseProfile)) {
-            profile.profile.tokenType = undefined;
-            profile.profile.tokenValue = undefined;
+            profile.profile.tokenType = profile.profile.tokenValue = undefined;
         }
         return profile;
     }

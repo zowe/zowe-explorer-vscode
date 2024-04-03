@@ -12,6 +12,23 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
+## `2.15.2`
+
+### New features and enhancements
+
+### Bug fixes
+
+- Fixed issue where files left open in prior VS Code session cannot be uploaded to mainframe after window is reloaded. [#2758](https://github.com/zowe/vscode-extension-for-zowe/issues/2758)
+- Fixed issue where saving changes to favorited data set or USS file could fail. [#2801](https://github.com/zowe/vscode-extension-for-zowe/pull/2801)
+
+## `2.15.1`
+
+### New features and enhancements
+
+### Bug fixes
+
+- Fixed issue where VS Code quick pick separators were used in environments that did not support the feature. [#2771](https://github.com/zowe/vscode-extension-for-zowe/pull/2771)
+
 ## `2.15.0`
 
 ### New features and enhancements

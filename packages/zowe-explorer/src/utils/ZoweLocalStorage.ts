@@ -12,18 +12,23 @@
 import * as vscode from "vscode";
 import { ZoweLogger } from "./LoggerUtils";
 
+export enum LocalStorageKey {
+    ENCODING_HISTORY = "zowe.encodingHistory",
+    FILE_INFO_CACHE = "zowe.fileInfoCache",
+}
+
 export class ZoweLocalStorage {
     private static storage: vscode.Memento;
     public static initializeZoweLocalStorage(state: vscode.Memento): void {
         ZoweLocalStorage.storage = state;
     }
 
-    public static getValue<T>(key: string): T {
+    public static getValue<T>(key: LocalStorageKey): T {
         ZoweLogger.trace("ZoweLocalStorage.getValue called.");
         return ZoweLocalStorage.storage.get<T>(key);
     }
 
-    public static setValue<T>(key: string, value: T): void {
+    public static setValue<T>(key: LocalStorageKey, value: T): void {
         ZoweLogger.trace("ZoweLocalStorage.setValue called.");
         ZoweLocalStorage.storage.update(key, value);
     }
