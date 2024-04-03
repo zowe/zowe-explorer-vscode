@@ -1150,6 +1150,7 @@ describe("focusing on a job in the tree view", () => {
     it("should handle error on clicking the hyperlink of job submitted", async () => {
         // arrange
         const blockMocks = createBlockMocks();
+        blockMocks.existingJobSession.children.push(blockMocks.submittedJobNode);
         blockMocks.jobTreeProvider.mSessionNodes.push(blockMocks.existingJobSession);
         const updatedJobs = [blockMocks.submittedJobNode];
         blockMocks.existingJobSession.getChildren = jest.fn();
