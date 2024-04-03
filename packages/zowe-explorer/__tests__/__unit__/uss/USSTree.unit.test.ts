@@ -242,7 +242,7 @@ describe("USSTree Unit Tests - Function initializeFavorites", () => {
         expectedUSSFavorites.forEach((node) => (node.contextValue += globals.FAV_SUFFIX));
         expectedUSSFavorites.forEach((node) => {
             if (node.contextValue !== globals.USS_DIR_CONTEXT + globals.FAV_SUFFIX) {
-                node.command = { command: "zowe.uss.ZoweUSSNode.open", title: "Open", arguments: [node] };
+                node.command = { command: "vscode.open", title: "Open", arguments: [node.resourceUri] };
             }
         });
         expect(favProfileNode.children[0].fullPath).toEqual("/u/aDir");
@@ -1296,7 +1296,7 @@ describe("USSTree Unit Tests - Function getChildren", () => {
         });
         const file = new ZoweUSSNode({ label: "myFile.txt", collapsibleState: vscode.TreeItemCollapsibleState.None, parentNode: directory });
         const sampleChildren: ZoweUSSNode[] = [file];
-        sampleChildren[0].command = { command: "zowe.uss.ZoweUSSNode.open", title: "", arguments: [sampleChildren[0]] };
+        sampleChildren[0].command = { command: "vscode.open", title: "", arguments: [sampleChildren[0].resourceUri] };
         directory.children.push(file);
         directory.dirty = true;
         const mockApiResponseItems = {

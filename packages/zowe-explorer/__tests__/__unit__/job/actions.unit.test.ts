@@ -38,7 +38,7 @@ import * as dsActions from "../../../src/dataset/actions";
 import * as globals from "../../../src/globals";
 import { createDatasetSessionNode, createDatasetTree } from "../../../__mocks__/mockCreators/datasets";
 import { Profiles } from "../../../src/Profiles";
-import * as SpoolProvider from "../../../src/SpoolProvider";
+import * as SpoolProvider from "../../../src/SpoolUtils";
 import * as refreshActions from "../../../src/shared/refresh";
 import * as sharedUtils from "../../../src/shared/utils";
 import { ZoweLogger } from "../../../src/utils/ZoweLogger";

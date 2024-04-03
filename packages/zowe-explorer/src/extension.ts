@@ -38,7 +38,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
 
     await ProfilesUtils.initializeZoweProfiles((msg) => ZoweExplorerExtender.showZoweConfigError(msg));
     await Profiles.createInstance(ZoweLogger.imperativeLogger);
-    await Profiles.getInstance().getProfileInfo();
 
     const providers = await TreeProviders.initializeProviders(context, { ds: initDatasetProvider, uss: initUSSProvider, job: initJobsProvider });
     registerCommonCommands(context, providers);

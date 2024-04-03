@@ -43,17 +43,7 @@ export class BaseProvider {
      * @returns `true` if the arrays are equal, `false` otherwise
      */
     public static areContentsEqual(a: Uint8Array, b: Uint8Array): boolean {
-        if (a.length !== b.length) {
-            return false;
-        }
-
-        for (let i = 0; i < a.byteLength; i++) {
-            if (a[i] !== b[i]) {
-                return false;
-            }
-        }
-
-        return true;
+        return a.byteLength === b.byteLength && a.every((byte, i) => byte === b[i]);
     }
 
     /**

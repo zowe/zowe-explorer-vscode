@@ -9,7 +9,7 @@
  *
  */
 
-import { matchSpool, getSpoolFiles } from "../../src/SpoolProvider";
+import { matchSpool, getSpoolFiles } from "../../src/SpoolUtils";
 import * as zosjobs from "@zowe/zos-jobs-for-zowe-sdk";
 import { Profiles } from "../../src/Profiles";
 import { createIProfile, createISessionWithoutCredentials } from "../../__mocks__/mockCreators/shared";

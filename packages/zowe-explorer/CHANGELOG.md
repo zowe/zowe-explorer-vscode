@@ -9,6 +9,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Implemented the FileSystemProvider for the Data Sets, Jobs and USS trees to handle all read/write actions as well as conflict resolution. [#2207](https://github.com/zowe/zowe-explorer-vscode/issues/2207)
 - **Breaking:** Removed the `zowe.jobs.zosJobsOpenSpool` command in favor of using `vscode.open` with a spool URI. See the [FileSystemProvider wiki page](https://github.com/zowe/zowe-explorer-vscode/wiki/FileSystemProvider#file-paths-vs-uris) for more information on spool URIs. [#2207](https://github.com/zowe/zowe-explorer-vscode/issues/2207)
 - **Breaking:** Removed the `zowe.ds.ZoweNode.openPS` command in favor of using `vscode.open` with a data set URI. See the [FileSystemProvider wiki page](https://github.com/zowe/zowe-explorer-vscode/wiki/FileSystemProvider#file-paths-vs-uris) for more information on data set URIs. [#2207](https://github.com/zowe/zowe-explorer-vscode/issues/2207)
+- **Breaking:** Removed the `zowe.uss.ZoweUSSNode.open` command in favor of using `vscode.open` with a USS URI. See the [FileSystemProvider wiki page](https://github.com/zowe/zowe-explorer-vscode/wiki/FileSystemProvider#file-paths-vs-uris) for more information on data set URIs. [#2207](https://github.com/zowe/zowe-explorer-vscode/issues/2207)
 
 ### Bug fixes
 

@@ -506,8 +506,8 @@ describe("ZoweUSSNode Unit Tests - Function node.reopen()", () => {
 
         await ussFile.reopen(hasClosedTab);
 
-        expect(vscodeCommandSpy.mock.calls[0][0]).toEqual("zowe.uss.ZoweUSSNode.open");
-        expect(vscodeCommandSpy.mock.calls[0][1]).toEqual(ussFile);
+        expect(vscodeCommandSpy.mock.calls[0][0]).toEqual("vscode.open");
+        expect(vscodeCommandSpy.mock.calls[0][1]).toEqual(ussFile.resourceUri);
         vscodeCommandSpy.mockClear();
     });
 
@@ -526,7 +526,7 @@ describe("ZoweUSSNode Unit Tests - Function node.reopen()", () => {
 
         await rootNode.reopen(true);
 
-        expect(vscodeCommandSpy).toHaveBeenCalledWith("zowe.uss.ZoweUSSNode.open", rootNode);
+        expect(vscodeCommandSpy).toHaveBeenCalledWith("vscode.open", rootNode.resourceUri);
         vscodeCommandSpy.mockClear();
     });
 });
@@ -736,9 +736,9 @@ describe("ZoweUSSNode Unit Tests - Function node.getChildren()", () => {
             }),
         ];
         sampleChildren[1].command = {
-            command: "zowe.uss.ZoweUSSNode.open",
+            command: "vscode.open",
             title: "Open",
-            arguments: [sampleChildren[1]],
+            arguments: [sampleChildren[1].resourceUri],
         };
         blockMocks.rootNode.children.push(sampleChildren[0]);
 

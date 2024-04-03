@@ -923,9 +923,9 @@ export class USSTree extends ZoweTreeProvider implements Types.IZoweUSSTreeType 
                 parentNode,
             });
             node.command = {
-                command: "zowe.uss.ZoweUSSNode.open",
+                command: "vscode.open",
                 title: vscode.l10n.t("Open"),
-                arguments: [node],
+                arguments: [node.resourceUri],
             };
         }
         node.contextValue = contextually.asFavorite(node);

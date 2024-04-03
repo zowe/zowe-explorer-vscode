@@ -44,6 +44,7 @@ export class Profiles extends ProfilesCache {
         Profiles.loader = new Profiles(log, vscode.workspace.workspaceFolders?.[0]?.uri.fsPath);
         globals.setProfilesCache(Profiles.loader);
         await Profiles.loader.refresh(ZoweExplorerApiRegister.getInstance());
+        await Profiles.getInstance().getProfileInfo();
         return Profiles.loader;
     }
 

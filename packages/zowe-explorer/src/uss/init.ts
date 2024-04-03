@@ -101,9 +101,6 @@ export async function initUSSProvider(context: vscode.ExtensionContext): Promise
         vscode.commands.registerCommand("zowe.uss.editSession", async (node) => ussFileProvider.editSession(node, ussFileProvider))
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.uss.ZoweUSSNode.open", async (node: IZoweUSSTreeNode) => node.openUSS(false, true, ussFileProvider))
-    );
-    context.subscriptions.push(
         vscode.commands.registerCommand("zowe.uss.removeSession", async (node: IZoweUSSTreeNode, nodeList, hideFromAllTrees: boolean) => {
             let selectedNodes = getSelectedNodeList(node, nodeList);
             selectedNodes = selectedNodes.filter((element) => contextuals.isUssSession(element));

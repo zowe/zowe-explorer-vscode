@@ -385,7 +385,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     public async reopen(hasClosedInstance = false): Promise<void> {
         ZoweLogger.trace("ZoweUSSNode.reopen called.");
         if (!this.isFolder && (hasClosedInstance || (this.binary && this.downloaded))) {
-            await vscode.commands.executeCommand("zowe.uss.ZoweUSSNode.open", this);
+            await vscode.commands.executeCommand("vscode.open", this.resourceUri);
         }
     }
 
