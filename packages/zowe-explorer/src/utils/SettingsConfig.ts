@@ -57,18 +57,14 @@ export class SettingsConfig {
      */
     public static async setDirectValueForAll(key: string, value: any): Promise<void> {
         ZoweLogger.trace("SettingsConfig.setDirectValueForAll called.");
-        const keys = [...Object.keys(vscode.ConfigurationTarget)];
-        const targets = [...(Object.values(vscode.ConfigurationTarget) as vscode.ConfigurationTarget[])];
+        // Ignore number values
+        const targets = Object.values(vscode.ConfigurationTarget).filter((val) => typeof val === "string") as vscode.ConfigurationTarget[];
         for (const target of targets) {
             try {
                 await SettingsConfig.setDirectValue(key, value, target);
             } catch (err) {
                 ZoweLogger.warn(
-                    localize(
-                        "SettingsConfig.setDirectValueForAll.warn",
-                        "{0} scope was not updated, since setting is not available there.",
-                        keys[target]
-                    )
+                    localize("SettingsConfig.setDirectValueForAll.warn", "{0} scope was not updated, since setting is not available there.", target)
                 );
             }
         }
