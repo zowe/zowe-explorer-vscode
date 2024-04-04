@@ -147,14 +147,15 @@ export class ProfilesUtils {
      */
     public static async promptAndDisableCredentialManagement(): Promise<void> {
         ZoweLogger.trace("ProfilesUtils.promptAndDisableCredentialManagement called.");
+        const noButton = vscode.l10n.t("No");
         const yesButton = vscode.l10n.t("Yes");
         const response = await Gui.warningMessage(
             vscode.l10n.t(
-                `Zowe Explorer failed to activate since the default credential manager is not supported in your environment. 
-                \nDo you wish to disable credential management for all setting scopes? (VS Code window reload will be triggered)`
+                // eslint-disable-next-line max-len
+                "Zowe Explorer failed to activate since the default credential manager is not supported in your environment. Do you wish to disable credential management for all setting scopes? (VS Code window reload will be triggered)"
             ),
             {
-                items: [yesButton],
+                items: [noButton, yesButton],
                 vsCodeOpts: {
                     modal: true,
                 },
@@ -166,8 +167,8 @@ export class ProfilesUtils {
         } else {
             throw new imperative.ImperativeError({
                 msg: vscode.l10n.t(
-                    `Failed to load credential manager. This may be related to Zowe Explorer being unable 
-                    to use the default credential manager in a browser based environment.`
+                    // eslint-disable-next-line max-len
+                    "Failed to load credential manager. This may be related to Zowe Explorer being unable to use the default credential manager in a browser based environment."
                 ),
             });
         }
@@ -190,6 +191,7 @@ export class ProfilesUtils {
             await profileInfo.readProfilesFromDisk();
             return profileInfo;
         } catch (err) {
+            ZoweLogger.error(err);
             await ProfilesUtils.promptAndDisableCredentialManagement();
         }
     }
