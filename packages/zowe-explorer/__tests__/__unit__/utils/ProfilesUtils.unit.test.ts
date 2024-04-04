@@ -1043,9 +1043,10 @@ describe("ProfilesUtils unit tests", () => {
 
         it("should prompt whether to disable credential management, and throw error if 'No'", async () => {
             warningMessageSpy.mockResolvedValue("No");
-            await expect(ProfilesUtils.promptAndDisableCredentialManagement()).rejects
-                .toThrow(`Failed to load credential manager. This may be related to Zowe Explorer being unable 
-                    to use the default credential manager in a browser based environment.`);
+            await expect(ProfilesUtils.promptAndDisableCredentialManagement()).rejects.toThrow(
+                // eslint-disable-next-line max-len
+                "Failed to load credential manager. This may be related to Zowe Explorer being unable to use the default credential manager in a browser based environment."
+            );
         });
     });
 });
