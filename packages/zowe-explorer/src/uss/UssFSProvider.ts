@@ -29,7 +29,6 @@ import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { UssFileTree, UssFileType } from "./FileStructure";
 import { IZosFilesResponse } from "@zowe/zos-files-for-zowe-sdk";
 import { Profiles } from "../Profiles";
-export type Entry = UssFile | UssDirectory;
 
 export class UssFSProvider extends BaseProvider implements vscode.FileSystemProvider {
     // Event objects for provider
@@ -284,9 +283,12 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         }
 
         // Attempt to write data to remote system, and handle any conflicts from e-tag mismatch
-        const statusMsg = options.noStatusMsg
-            ? new vscode.Disposable(() => {})
-            : Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Saving USS file..."));
+        const statusMsg =
+            // only show a status message if "noStatusMsg" is not specified,
+            // or if the entry does not exist and the new contents are empty (new placeholder entry)
+            options.noStatusMsg || (!entry && content.byteLength === 0)
+                ? new vscode.Disposable(() => {})
+                : Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Saving USS file..."));
         const urlQuery = new URLSearchParams(uri.query);
         const shouldForceUpload = urlQuery.has("forceUpload");
         try {

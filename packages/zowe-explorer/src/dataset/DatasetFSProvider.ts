@@ -278,7 +278,6 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         }
 
         // Attempt to write data to remote system, and handle any conflicts from e-tag mismatch
-        const statusMsg = Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Saving data set..."));
         const urlQuery = new URLSearchParams(uri.query);
         const shouldForceUpload = urlQuery.has("forceUpload");
 
@@ -295,6 +294,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 entry.metadata = profInfo;
 
                 if (content.byteLength > 0) {
+                    const statusMsg = Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Saving data set..."));
                     // Update e-tag if write was successful.
                     const resp = await this.uploadEntry(parent, entry as DsEntry, content, shouldForceUpload);
                     entry.etag = resp.apiResponse.etag;
@@ -316,6 +316,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 }
 
                 if (entry.wasAccessed || content.length > 0) {
+                    const statusMsg = Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Saving data set..."));
                     const resp = await this.uploadEntry(parent, entry as DsEntry, content, shouldForceUpload);
                     entry.etag = resp.apiResponse.etag;
                     entry.data = content;
@@ -326,7 +327,6 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 }
             }
         } catch (err) {
-            statusMsg.dispose();
             if (!err.message.includes("Rest API failure with HTTP(S) status 412")) {
                 throw err;
             }
