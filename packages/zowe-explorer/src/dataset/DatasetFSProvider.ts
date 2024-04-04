@@ -242,7 +242,9 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         // we need to fetch the contents from the mainframe if the file hasn't been accessed yet
         if (!file.wasAccessed || isConflict) {
             await this.fetchDatasetAtUri(uri, { isConflict });
-            file.wasAccessed = true;
+            if (!isConflict) {
+                file.wasAccessed = true;
+            }
         }
 
         return isConflict ? file.conflictData.contents : file.data;
@@ -300,6 +302,13 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         // Attempt to write data to remote system, and handle any conflicts from e-tag mismatch
         const urlQuery = new URLSearchParams(uri.query);
         const shouldForceUpload = urlQuery.has("forceUpload");
+        // Attempt to write data to remote system, and handle any conflicts from e-tag mismatch
+        const statusMsg =
+            // only show a status message if "noStatusMsg" is not specified,
+            // or if the entry does not exist and the new contents are empty (new placeholder entry)
+            !entry && content.byteLength === 0
+                ? new vscode.Disposable(() => {})
+                : Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Saving data set..."));
 
         try {
             if (!entry) {
@@ -314,7 +323,6 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 entry.metadata = profInfo;
 
                 if (content.byteLength > 0) {
-                    const statusMsg = Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Saving data set..."));
                     // Update e-tag if write was successful.
                     const resp = await this.uploadEntry(parent, entry as DsEntry, content, shouldForceUpload);
                     entry.etag = resp.apiResponse.etag;
@@ -336,26 +344,24 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 }
 
                 if (entry.wasAccessed || content.length > 0) {
-                    const statusMsg = Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Saving data set..."));
                     const resp = await this.uploadEntry(parent, entry as DsEntry, content, shouldForceUpload);
                     entry.etag = resp.apiResponse.etag;
-                    entry.data = content;
-                    statusMsg.dispose();
-                } else {
-                    // if the entry hasn't been accessed yet, we don't need to call the API since we are just creating the file
-                    entry.data = content;
                 }
+                entry.data = content;
             }
         } catch (err) {
+            statusMsg.dispose();
             if (!err.message.includes("Rest API failure with HTTP(S) status 412")) {
                 throw err;
             }
 
+            entry.data = content;
             // Prompt the user with the conflict dialog
             await this._handleConflict(uri, entry);
             return;
         }
 
+        statusMsg.dispose();
         entry.mtime = Date.now();
         entry.size = content.byteLength;
         this._fireSoon({ type: vscode.FileChangeType.Changed, uri });

@@ -333,6 +333,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                 throw err;
             }
 
+            entry.data = content;
             // Prompt the user with the conflict dialog
             await this._handleConflict(uri, entry);
             return;

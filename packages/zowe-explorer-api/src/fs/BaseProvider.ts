@@ -59,6 +59,7 @@ export class BaseProvider {
             this.FS_PROVIDER_UI_TIMEOUT
         );
         fsEntry.conflictData = null;
+        vscode.commands.executeCommand("workbench.action.closeActiveEditor");
     }
 
     /**
@@ -328,7 +329,7 @@ export class BaseProvider {
         // User selected "Compare", show diff with local contents and LPAR contents
         if (userSelection === conflictOptions[0]) {
             vscode.workspace.onDidCloseTextDocument(BaseProvider.onCloseEvent.bind(this));
-            vscode.commands.executeCommand(
+            await vscode.commands.executeCommand(
                 "vscode.diff",
                 uri.with({ query: "conflict=true" }),
                 uri.with({ query: "inDiff=true" }),
