@@ -64,6 +64,12 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
      * @returns A structure containing file type, time, size and other metrics
      */
     public stat(uri: vscode.Uri): vscode.FileStat {
+        if (uri.query) {
+            const queryParams = new URLSearchParams(uri.query);
+            if (queryParams.has("conflict")) {
+                return { ...this._lookup(uri, false), permissions: vscode.FilePermission.Readonly };
+            }
+        }
         return this._lookup(uri, false);
     }
 
@@ -185,7 +191,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
      * @param uri The URI pointing to a valid file to fetch from the remote system
      * @param editor (optional) An editor instance to reload if the URI is already open
      */
-    public async fetchDatasetAtUri(uri: vscode.Uri, editor?: vscode.TextEditor | null): Promise<void> {
+    public async fetchDatasetAtUri(uri: vscode.Uri, options?: { editor?: vscode.TextEditor | null; isConflict?: boolean }): Promise<void> {
         const file = this._lookupAsFile(uri) as DsEntry;
         // we need to fetch the contents from the mainframe since the file hasn't been accessed yet
         const bufBuilder = new BufferBuilder();
@@ -198,10 +204,21 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             returnEtag: true,
             stream: bufBuilder,
         });
+        const data: Uint8Array = bufBuilder.read() ?? new Uint8Array();
 
-        file.data = bufBuilder.read() ?? new Uint8Array();
-        file.etag = resp.apiResponse.etag;
-        if (editor) {
+        if (options?.isConflict) {
+            file.conflictData = {
+                contents: data,
+                etag: resp.apiResponse.etag,
+                size: data.byteLength,
+            };
+        } else {
+            file.data = data;
+            file.etag = resp.apiResponse.etag;
+            file.size = file.data.byteLength;
+        }
+
+        if (options?.editor) {
             await this._updateResourceInEditor(uri);
         }
     }
@@ -219,13 +236,16 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             throw vscode.FileSystemError.FileNotFound(vscode.l10n.t("Profile does not exist for this file."));
         }
 
+        const urlQuery = new URLSearchParams(uri.query);
+        const isConflict = urlQuery.has("conflict");
+
         // we need to fetch the contents from the mainframe if the file hasn't been accessed yet
-        if (!file.wasAccessed) {
-            await this.fetchDatasetAtUri(uri);
+        if (!file.wasAccessed || isConflict) {
+            await this.fetchDatasetAtUri(uri, { isConflict });
             file.wasAccessed = true;
         }
 
-        return file.data;
+        return isConflict ? file.conflictData.contents : file.data;
     }
 
     public makeEmptyDsWithEncoding(uri: vscode.Uri, encoding: ZosEncoding): void {

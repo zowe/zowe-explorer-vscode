@@ -283,7 +283,7 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
         });
 
         await dsActions.refreshPS(node);
-        expect(blockMocks.fetchDsAtUri).toHaveBeenCalledWith(node.resourceUri, undefined);
+        expect(blockMocks.fetchDsAtUri).toHaveBeenCalledWith(node.resourceUri, { editor: undefined });
     });
     it("Checking duplicate PS dataset refresh attempt", async () => {
         globals.defineGlobals("");
@@ -352,7 +352,7 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
         node.contextValue = globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX;
 
         await dsActions.refreshPS(node);
-        expect(blockMocks.fetchDsAtUri).toHaveBeenCalledWith(node.resourceUri, undefined);
+        expect(blockMocks.fetchDsAtUri).toHaveBeenCalledWith(node.resourceUri, { editor: undefined });
     });
     it("Checking favorite PDS Member refresh", async () => {
         globals.defineGlobals("");
@@ -367,7 +367,7 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
         parent.contextValue = globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX;
 
         await dsActions.refreshPS(child);
-        expect(blockMocks.fetchDsAtUri).toHaveBeenCalledWith(child.resourceUri, undefined);
+        expect(blockMocks.fetchDsAtUri).toHaveBeenCalledWith(child.resourceUri, { editor: undefined });
     });
     it("Checking favorite PS refresh", async () => {
         globals.defineGlobals("");
@@ -382,7 +382,7 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
         child.contextValue = globals.DS_FAV_CONTEXT;
 
         await dsActions.refreshPS(child);
-        expect(blockMocks.fetchDsAtUri).toHaveBeenCalledWith(child.resourceUri, undefined);
+        expect(blockMocks.fetchDsAtUri).toHaveBeenCalledWith(child.resourceUri, { editor: undefined });
     });
 });
 
