@@ -26,17 +26,19 @@ import {
     JobEntry,
     JobFilter,
     SpoolEntry,
+    ZoweScheme,
 } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
-import { Profiles } from "../Profiles";
 import * as path from "path";
 import { IJob, IJobFile } from "@zowe/zos-jobs-for-zowe-sdk";
 import * as contextually from "../shared/context";
+import { Profiles } from "../Profiles";
 
 export class JobFSProvider extends BaseProvider implements vscode.FileSystemProvider {
     private static _instance: JobFSProvider;
     private constructor() {
         super(Profiles.getInstance());
+        ZoweExplorerApiRegister.addFileSystemEvent(ZoweScheme.Jobs, this.onDidChangeFile);
         this.root = new DirEntry("");
     }
 

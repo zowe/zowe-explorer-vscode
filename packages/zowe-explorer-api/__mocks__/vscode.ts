@@ -148,6 +148,11 @@ export namespace extensions {
 export interface QuickPickItem {}
 export interface QuickPick<T extends QuickPickItem> {}
 
+export enum QuickPickItemKind {
+    Separator = -1,
+    Default = 0,
+}
+
 /**
  * Represents a tab within a {@link TabGroup group of tabs}.
  * Tabs are merely the graphical representation within the editor area.

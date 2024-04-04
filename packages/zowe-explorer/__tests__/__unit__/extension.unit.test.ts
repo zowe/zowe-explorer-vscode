@@ -142,7 +142,6 @@ async function createGlobalMocks() {
         appName: vscode.env.appName,
         uriScheme: vscode.env.uriScheme,
         expectedCommands: [
-            "zowe.onDatasetChanged",
             "zowe.all.config.init",
             "zowe.ds.addSession",
             "zowe.ds.addFavorite",
@@ -181,7 +180,6 @@ async function createGlobalMocks() {
             "zowe.ds.sortBy",
             "zowe.ds.filterBy",
             "zowe.ds.openWithEncoding",
-            "zowe.onUssChanged",
             "zowe.uss.addFavorite",
             "zowe.uss.removeFavorite",
             "zowe.uss.addSession",
@@ -210,7 +208,6 @@ async function createGlobalMocks() {
             "zowe.uss.pasteUssFile",
             "zowe.uss.copyUssFile",
             "zowe.uss.openWithEncoding",
-            "zowe.onJobChanged",
             "zowe.jobs.deleteJob",
             "zowe.jobs.runModifyCommand",
             "zowe.jobs.runStopCommand",

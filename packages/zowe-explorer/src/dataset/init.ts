@@ -29,12 +29,6 @@ export async function initDatasetProvider(context: vscode.ExtensionContext): Pro
     ZoweLogger.trace("dataset.init.initDatasetProvider called.");
 
     context.subscriptions.push(vscode.workspace.registerFileSystemProvider(ZoweScheme.DS, DatasetFSProvider.instance, { isCaseSensitive: true }));
-    context.subscriptions.push(
-        vscode.commands.registerCommand(
-            "zowe.onDatasetChanged",
-            (): vscode.Event<vscode.FileChangeEvent[]> => DatasetFSProvider.instance.onDidChangeFile
-        )
-    );
 
     const datasetProvider = await createDatasetTree(globals.LOG);
     if (datasetProvider == null) {

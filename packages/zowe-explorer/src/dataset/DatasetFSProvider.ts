@@ -24,19 +24,21 @@ import {
     FilterEntry,
     Gui,
     ZosEncoding,
+    ZoweScheme,
 } from "@zowe/zowe-explorer-api";
 import * as path from "path";
 import * as vscode from "vscode";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 
 // Set up localization
-import { Profiles } from "../Profiles";
 import { IZosFilesResponse } from "@zowe/zos-files-for-zowe-sdk";
+import { Profiles } from "../Profiles";
 
 export class DatasetFSProvider extends BaseProvider implements vscode.FileSystemProvider {
     private static _instance: DatasetFSProvider;
     private constructor() {
-        super(Profiles.getInstance());
+        super();
+        ZoweExplorerApiRegister.addFileSystemEvent(ZoweScheme.DS, this.onDidChangeFile);
         this.root = new DirEntry("");
     }
 

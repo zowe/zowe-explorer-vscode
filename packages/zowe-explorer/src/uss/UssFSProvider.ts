@@ -27,8 +27,8 @@ import * as vscode from "vscode";
 
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { UssFileTree, UssFileType } from "./FileStructure";
-import { Profiles } from "../Profiles";
 import { IZosFilesResponse } from "@zowe/zos-files-for-zowe-sdk";
+import { Profiles } from "../Profiles";
 export type Entry = UssFile | UssDirectory;
 
 export class UssFSProvider extends BaseProvider implements vscode.FileSystemProvider {
@@ -37,6 +37,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
     private static _instance: UssFSProvider;
     private constructor() {
         super(Profiles.getInstance());
+        ZoweExplorerApiRegister.addFileSystemEvent(ZoweScheme.USS, this.onDidChangeFile);
         this.root = new UssDirectory();
     }
 
