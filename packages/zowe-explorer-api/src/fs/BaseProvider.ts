@@ -14,8 +14,6 @@ import { DirEntry, FileEntry, IFileSystemEntry, FS_PROVIDER_DELAY, ConflictViewS
 import * as path from "path";
 import { isDirectoryEntry, isFileEntry } from "./utils";
 import { Gui } from "../globals/Gui";
-import { ZoweVsCodeExtension } from "../vscode";
-import { ProfilesCache } from "../profiles";
 import { ZosEncoding } from "../tree";
 
 export class BaseProvider {
@@ -26,15 +24,11 @@ export class BaseProvider {
     protected _bufferedEvents: vscode.FileChangeEvent[] = [];
     protected _fireSoonHandle?: NodeJS.Timeout;
 
-    protected _profilesCache: ProfilesCache;
-
     public onDidChangeFile: vscode.Event<vscode.FileChangeEvent[]> = this._onDidChangeFileEmitter.event;
     protected root: DirEntry;
     public openedUris: vscode.Uri[] = [];
 
-    protected constructor(profilesCache?: ProfilesCache) {
-        this._profilesCache = profilesCache ?? ZoweVsCodeExtension.profilesCache;
-    }
+    protected constructor() {}
 
     /**
      * Compares the data for 2 Uint8Arrays, byte by byte.

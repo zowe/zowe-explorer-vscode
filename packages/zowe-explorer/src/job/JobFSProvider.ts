@@ -37,7 +37,7 @@ import { Profiles } from "../Profiles";
 export class JobFSProvider extends BaseProvider implements vscode.FileSystemProvider {
     private static _instance: JobFSProvider;
     private constructor() {
-        super(Profiles.getInstance());
+        super();
         ZoweExplorerApiRegister.addFileSystemEvent(ZoweScheme.Jobs, this.onDidChangeFile);
         this.root = new DirEntry("");
     }

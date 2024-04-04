@@ -36,7 +36,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
     private static _instance: UssFSProvider;
     private constructor() {
-        super(Profiles.getInstance());
+        super();
         ZoweExplorerApiRegister.addFileSystemEvent(ZoweScheme.USS, this.onDidChangeFile);
         this.root = new UssDirectory();
     }
