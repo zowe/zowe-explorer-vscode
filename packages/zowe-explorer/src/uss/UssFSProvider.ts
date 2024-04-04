@@ -40,6 +40,8 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         this.root = new UssDirectory();
     }
 
+    public encodingMap: Record<string, ZosEncoding> = {};
+
     /**
      * @returns the USS FileSystemProvider singleton instance
      */
@@ -167,7 +169,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             returnEtag: true,
             stream: bufBuilder,
         });
-        await this.autoDetectEncoding(file);
+        await this.autoDetectEncoding(file as UssFile);
 
         const data: Uint8Array = bufBuilder.read() ?? new Uint8Array();
         if (options?.isConflict) {
@@ -208,7 +210,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
     }
 
     public async fetchEncodingForUri(uri: vscode.Uri): Promise<ZosEncoding> {
-        const file = this._lookupAsFile(uri);
+        const file = this._lookupAsFile(uri) as UssFile;
         await this.autoDetectEncoding(file);
 
         return file.encoding;

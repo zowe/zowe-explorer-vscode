@@ -157,14 +157,14 @@ export function updateOpenFiles<T extends IZoweTreeNode>(treeProvider: IZoweTree
     }
 }
 
-export function getCachedEncoding(node: IZoweTreeNode): string | undefined {
+export async function getCachedEncoding(node: IZoweTreeNode): Promise<string | undefined> {
     let cachedEncoding: ZosEncoding;
     if (isZoweUSSTreeNode(node)) {
-        cachedEncoding = (node.getSessionNode() as IZoweUSSTreeNode).encodingMap[node.fullPath];
+        cachedEncoding = await node.getEncodingInMap(node.fullPath);
     } else {
         const isMemberNode = node.contextValue.startsWith(globals.DS_MEMBER_CONTEXT);
         const dsKey = isMemberNode ? `${node.getParent().label as string}(${node.label as string})` : (node.label as string);
-        cachedEncoding = (node.getSessionNode() as IZoweDatasetTreeNode).encodingMap[dsKey];
+        cachedEncoding = await (node as IZoweDatasetTreeNode).getEncodingInMap(dsKey);
     }
     return cachedEncoding?.kind === "other" ? cachedEncoding.codepage : cachedEncoding?.kind;
 }
@@ -201,11 +201,11 @@ export async function promptForEncoding(node: IZoweDatasetTreeNode | IZoweUSSTre
         });
     }
 
-    let zosEncoding = node.getEncoding();
+    let zosEncoding = await node.getEncoding();
     if (zosEncoding === undefined && isZoweUSSTreeNode(node)) {
         zosEncoding = await UssFSProvider.instance.fetchEncodingForUri(node.resourceUri);
     }
-    let currentEncoding = zosEncoding ? zosEncodingToString(zosEncoding) : getCachedEncoding(node);
+    let currentEncoding = zosEncoding ? zosEncodingToString(zosEncoding) : await getCachedEncoding(node);
     if (zosEncoding?.kind === "binary") {
         currentEncoding = binaryItem.label;
     } else if (zosEncoding === null || zosEncoding?.kind === "text" || currentEncoding === null || currentEncoding === "text") {

@@ -274,7 +274,7 @@ export async function buildFileStructure(node: IZoweUSSTreeNode): Promise<UssFil
     }
 
     return {
-        binary: node.binary,
+        binary: (await node.getEncoding())?.kind === "binary",
         localUri: node.resourceUri,
         ussPath: node.fullPath,
         baseName: node.getLabel() as string,

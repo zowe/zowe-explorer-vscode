@@ -3038,7 +3038,6 @@ describe("Dataset Tree Unit Tests - Function openWithEncoding", () => {
         node.openDs = jest.fn();
         jest.spyOn(sharedUtils, "promptForEncoding").mockResolvedValueOnce({ kind: "binary" });
         await DatasetTree.prototype.openWithEncoding(node);
-        expect(node.binary).toBe(true);
         expect(setEncodingMock).toHaveBeenCalledWith(node.resourceUri, { kind: "binary" });
         expect(node.openDs).toHaveBeenCalledTimes(1);
         setEncodingMock.mockRestore();
@@ -3050,7 +3049,6 @@ describe("Dataset Tree Unit Tests - Function openWithEncoding", () => {
         node.openDs = jest.fn();
         jest.spyOn(sharedUtils, "promptForEncoding").mockResolvedValueOnce({ kind: "text" });
         await DatasetTree.prototype.openWithEncoding(node);
-        expect(node.binary).toBe(false);
         expect(setEncodingMock).toHaveBeenCalledWith(node.resourceUri, { kind: "text" });
         expect(node.openDs).toHaveBeenCalledTimes(1);
         setEncodingMock.mockRestore();
@@ -3062,7 +3060,6 @@ describe("Dataset Tree Unit Tests - Function openWithEncoding", () => {
         node.openDs = jest.fn();
         jest.spyOn(sharedUtils, "promptForEncoding").mockResolvedValueOnce(undefined);
         await DatasetTree.prototype.openWithEncoding(node);
-        expect(node.binary).toBe(false);
         expect(setEncodingSpy).not.toHaveBeenCalled();
         expect(node.openDs).toHaveBeenCalledTimes(0);
     });

@@ -25,6 +25,8 @@ import {
     Validation,
     DsEntry,
     ZoweScheme,
+    PdsEntry,
+    isPdsEntry,
 } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { getIconByNode } from "../generators/icons";
@@ -48,12 +50,9 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     public memberPattern = "";
     public dirty = true;
     public children: ZoweDatasetNode[] = [];
-    public binary = false;
-    public encodingMap = {};
     public errorDetails: imperative.ImperativeError;
     public ongoingActions: Record<ZoweTreeNodeActions.Interactions | string, Promise<any>> = {};
     public wasDoubleClicked: boolean = false;
-    public stats: Types.DatasetStats;
     public sort?: Sorting.NodeSort;
     public filter?: Sorting.DatasetFilter;
     public resourceUri?: vscode.Uri;
@@ -65,18 +64,18 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
      */
     public constructor(opts: IZoweDatasetTreeOpts) {
         super(opts.label, opts.collapsibleState, opts.parentNode, opts.session, opts.profile);
-        this.binary = opts.encoding?.kind === "binary";
         if (opts.encoding != null) {
             this.setEncoding(opts.encoding);
         }
+        const isBinary = opts.encoding?.kind === "binary";
         if (opts.contextOverride) {
             this.contextValue = opts.contextOverride;
         } else if (opts.collapsibleState !== vscode.TreeItemCollapsibleState.None) {
             this.contextValue = globals.DS_PDS_CONTEXT;
         } else if (opts.parentNode && opts.parentNode.getParent()) {
-            this.contextValue = this.binary ? globals.DS_MEMBER_BINARY_CONTEXT : globals.DS_MEMBER_CONTEXT;
+            this.contextValue = isBinary ? globals.DS_MEMBER_BINARY_CONTEXT : globals.DS_MEMBER_CONTEXT;
         } else {
-            this.contextValue = this.binary ? globals.DS_DS_BINARY_CONTEXT : globals.DS_DS_CONTEXT;
+            this.contextValue = isBinary ? globals.DS_DS_BINARY_CONTEXT : globals.DS_DS_CONTEXT;
         }
         this.tooltip = this.label as string;
         const icon = getIconByNode(this);
@@ -143,19 +142,54 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     public updateStats(item: any): void {
         if ("c4date" in item && "m4date" in item) {
             const { m4date, mtime, msec }: { m4date: string; mtime: string; msec: string } = item;
-            this.stats = {
+            this.setStats({
                 user: item.user,
                 createdDate: dayjs(item.c4date).toDate(),
                 modifiedDate: dayjs(`${m4date} ${mtime}:${msec}`).toDate(),
-            };
+            });
         } else if ("id" in item || "changed" in item) {
             // missing keys from API response; check for FTP keys
-            this.stats = {
+            this.setStats({
                 user: item.id,
                 createdDate: item.created ? dayjs(item.created).toDate() : undefined,
                 modifiedDate: item.changed ? dayjs(item.changed).toDate() : undefined,
-            };
+            });
         }
+    }
+
+    public getEncodingInMap(uriPath: string): ZosEncoding {
+        return DatasetFSProvider.instance.encodingMap[uriPath];
+    }
+
+    public updateEncodingInMap(uriPath: string, encoding: ZosEncoding): void {
+        DatasetFSProvider.instance.encodingMap[uriPath] = encoding;
+    }
+
+    public setEtag(etag: string): void {
+        const dsEntry = DatasetFSProvider.instance.stat(this.resourceUri) as DsEntry | PdsEntry;
+        if (isPdsEntry(dsEntry)) {
+            return;
+        }
+
+        dsEntry.etag = etag;
+    }
+
+    public setStats(stats: Partial<Types.DatasetStats>): void {
+        const dsEntry = DatasetFSProvider.instance.stat(this.resourceUri) as DsEntry | PdsEntry;
+        if (isPdsEntry(dsEntry)) {
+            return;
+        }
+
+        dsEntry.stats = { ...dsEntry.stats, ...stats };
+    }
+
+    public getStats(): Types.DatasetStats {
+        const dsEntry = DatasetFSProvider.instance.stat(this.resourceUri) as DsEntry | PdsEntry;
+        if (isPdsEntry(dsEntry)) {
+            return;
+        }
+
+        return dsEntry.stats;
     }
 
     /**
@@ -267,7 +301,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     }
                 } else if (contextually.isSessionNotFav(this)) {
                     // Creates a ZoweDatasetNode for a PS
-                    const cachedEncoding = this.getSessionNode().encodingMap[item.dsname];
+                    const cachedEncoding = this.getEncodingInMap(item.dsname);
                     temp = new ZoweDatasetNode({
                         label: item.dsname,
                         collapsibleState: vscode.TreeItemCollapsibleState.None,
@@ -280,7 +314,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 } else {
                     // Creates a ZoweDatasetNode for a PDS member
                     const memberInvalid = item.member?.includes("\ufffd");
-                    const cachedEncoding = this.getSessionNode().encodingMap[`${item.dsname as string}(${item.member as string})`];
+                    const cachedEncoding = this.getEncodingInMap(`${item.dsname as string}(${item.member as string})`);
                     temp = new ZoweDatasetNode({
                         label: item.member,
                         collapsibleState: vscode.TreeItemCollapsibleState.None,
@@ -474,7 +508,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
 
     public getSessionNode(): IZoweDatasetTreeNode {
         ZoweLogger.trace("ZoweDatasetNode.getSessionNode called.");
-        return this.getParent() ? this.getParent().getSessionNode() : this;
+        return this.getParent() ? (this.getParent().getSessionNode() as IZoweDatasetTreeNode) : this;
     }
     /**
      * Returns the [etag] for this node
@@ -580,17 +614,15 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         const isMemberNode = this.contextValue.startsWith(globals.DS_MEMBER_CONTEXT);
         if (encoding?.kind === "binary") {
             this.contextValue = isMemberNode ? globals.DS_MEMBER_BINARY_CONTEXT : globals.DS_DS_BINARY_CONTEXT;
-            this.binary = true;
         } else {
             this.contextValue = isMemberNode ? globals.DS_MEMBER_CONTEXT : globals.DS_DS_CONTEXT;
-            this.binary = false;
         }
         DatasetFSProvider.instance.setEncodingForFile(this.resourceUri, encoding);
         const fullPath = isMemberNode ? `${this.getParent().label as string}(${this.label as string})` : (this.label as string);
         if (encoding != null) {
-            this.getSessionNode().encodingMap[fullPath] = encoding;
+            this.updateEncodingInMap(fullPath, encoding);
         } else {
-            delete this.getSessionNode().encodingMap[fullPath];
+            delete DatasetFSProvider.instance.encodingMap[fullPath];
         }
         if (this.getParent() && this.getParent().contextValue === globals.FAV_PROFILE_CONTEXT) {
             this.contextValue += globals.FAV_SUFFIX;

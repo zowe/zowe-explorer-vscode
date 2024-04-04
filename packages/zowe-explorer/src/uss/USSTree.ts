@@ -59,7 +59,7 @@ export async function createUSSTree(log: imperative.Logger): Promise<USSTree> {
  * @class USSTree
  * @implements {vscode.TreeDataProvider}
  */
-export class USSTree extends ZoweTreeProvider implements Types.IZoweUSSTreeType {
+export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types.IZoweUSSTreeType {
     public static readonly defaultDialogText: string = vscode.l10n.t("$(plus) Create a new filter");
     private static readonly persistenceSchema: PersistenceSchemaEnum = PersistenceSchemaEnum.USS;
     public mFavoriteSession: ZoweUSSNode;
@@ -90,7 +90,7 @@ export class USSTree extends ZoweTreeProvider implements Types.IZoweUSSTreeType 
             this.mFavoriteSession.iconPath = icon.path;
         }
         this.mSessionNodes = [this.mFavoriteSession as IZoweUSSTreeNode];
-        this.treeView = Gui.createTreeView("zowe.uss.explorer", {
+        this.treeView = Gui.createTreeView<IZoweUSSTreeNode>("zowe.uss.explorer", {
             treeDataProvider: this,
             dragAndDropController: this,
             canSelectMany: true,
@@ -244,7 +244,7 @@ export class USSTree extends ZoweTreeProvider implements Types.IZoweUSSTreeType 
                 await this.crossLparMove(node, node.resourceUri, newUriForNode);
             } else if (await UssFSProvider.instance.move(item.uri, newUriForNode)) {
                 // remove node from old parent and relocate to new parent
-                const oldParent = node.getParent();
+                const oldParent = node.getParent() as IZoweUSSTreeNode;
                 oldParent.children = oldParent.children.filter((c) => c !== node);
                 node.resourceUri = newUriForNode;
             }
@@ -720,7 +720,7 @@ export class USSTree extends ZoweTreeProvider implements Types.IZoweUSSTreeType 
                     const children = nodeToCheck.children;
                     if (children.length !== 0) {
                         for (const child of children) {
-                            await checkForChildren(child);
+                            await checkForChildren(child as IZoweUSSTreeNode);
                         }
                     }
                     loadedNodes.push(nodeToCheck);
@@ -1018,13 +1018,13 @@ export class USSTree extends ZoweTreeProvider implements Types.IZoweUSSTreeType 
         for (const favorite of favsForProfile) {
             // If profile and session already exists for favorite node, add to updatedFavsForProfile and go to next array item
             if (favorite.getProfile() && favorite.getSession()) {
-                updatedFavsForProfile.push(favorite);
+                updatedFavsForProfile.push(favorite as IZoweUSSTreeNode);
                 continue;
             }
             // If no profile/session for favorite node yet, then add session and profile to favorite node:
             favorite.setProfileToChoice(profile);
             favorite.setSessionToChoice(session);
-            updatedFavsForProfile.push(favorite);
+            updatedFavsForProfile.push(favorite as IZoweUSSTreeNode);
         }
         // This updates the profile node's children in the this.mFavorites array, as well.
         return updatedFavsForProfile;
@@ -1116,17 +1116,17 @@ export class USSTree extends ZoweTreeProvider implements Types.IZoweUSSTreeType 
     protected findMatchInLoadedChildren(parentNode: IZoweUSSTreeNode, fullPath: string): IZoweUSSTreeNode {
         ZoweLogger.trace("USSTree.findMatchInLoadedChildren called.");
         // // Is match direct child?
-        const match: IZoweUSSTreeNode = parentNode.children.find((child) => child.fullPath === fullPath);
+        const match = parentNode.children.find((child) => child.fullPath === fullPath);
         if (match === undefined) {
             // Is match contained within one of the children?
             for (const node of parentNode.children) {
                 const isFullPathChild: boolean = checkIfChildPath(node.fullPath, fullPath);
                 if (isFullPathChild) {
-                    return this.findMatchInLoadedChildren(node, fullPath);
+                    return this.findMatchInLoadedChildren(node as IZoweUSSTreeNode, fullPath);
                 }
             }
         }
-        return match;
+        return match as IZoweUSSTreeNode;
     }
 
     /**

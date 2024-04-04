@@ -918,7 +918,6 @@ describe("USSTree Unit Tests - Function rename", () => {
             session: globalMocks.testSession,
             profile: globalMocks.testProfile.name,
         });
-        ussFavNodeParent.shortLabel = "usstest";
         ussFavNodeParent.fullPath = globalMocks.testUSSNode.fullPath;
         ussFavNodeParent.children.push(ussFavNode);
         globalMocks.testTree.mFavorites.push(ussFavNodeParent);

@@ -61,7 +61,7 @@ export async function createDatasetTree(log: imperative.Logger): Promise<Dataset
  * @class DatasetTree
  * @implements {vscode.TreeDataProvider}
  */
-export class DatasetTree extends ZoweTreeProvider implements Types.IZoweDatasetTreeType {
+export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implements Types.IZoweDatasetTreeType {
     private static readonly persistenceSchema: PersistenceSchemaEnum = PersistenceSchemaEnum.Dataset;
     private static readonly defaultDialogText: string = vscode.l10n.t(
         "$(plus) Create a new filter. For example: HLQ.*, HLQ.aaa.bbb, HLQ.ccc.ddd(member)"
@@ -92,7 +92,7 @@ export class DatasetTree extends ZoweTreeProvider implements Types.IZoweDatasetT
             this.mFavoriteSession.iconPath = icon.path;
         }
         this.mSessionNodes = [this.mFavoriteSession];
-        this.treeView = Gui.createTreeView("zowe.ds.explorer", {
+        this.treeView = Gui.createTreeView<IZoweDatasetTreeNode>("zowe.ds.explorer", {
             treeDataProvider: this,
             canSelectMany: true,
         });
@@ -403,13 +403,13 @@ export class DatasetTree extends ZoweTreeProvider implements Types.IZoweDatasetT
         for (const favorite of favsForProfile) {
             // If profile and session already exists for favorite node, add to updatedFavsForProfile and go to next array item
             if (favorite.getProfile() && favorite.getSession()) {
-                updatedFavsForProfile.push(favorite);
+                updatedFavsForProfile.push(favorite as IZoweDatasetTreeNode);
                 continue;
             }
             // If no profile/session for favorite node yet, then add session and profile to favorite node:
             favorite.setProfileToChoice(profile);
             favorite.setSessionToChoice(session);
-            updatedFavsForProfile.push(favorite);
+            updatedFavsForProfile.push(favorite as IZoweDatasetTreeNode);
         }
         // This updates the profile node's children in the this.mFavorites array, as well.
         return updatedFavsForProfile;
@@ -507,7 +507,7 @@ export class DatasetTree extends ZoweTreeProvider implements Types.IZoweDatasetT
                 Gui.showMessage(vscode.l10n.t("PDS already in favorites"));
                 return;
             }
-            await this.addFavorite(node.getParent());
+            await this.addFavorite(node.getParent() as IZoweDatasetTreeNode);
             return;
         } else if (contextually.isDsSession(node)) {
             temp = new ZoweDatasetNode({
@@ -516,7 +516,7 @@ export class DatasetTree extends ZoweTreeProvider implements Types.IZoweDatasetT
                 parentNode: profileNodeInFavorites,
                 session: node.getSession(),
                 contextOverride: node.contextValue,
-                etag: node.getEtag(),
+                etag: await node.getEtag(),
                 profile: node.getProfile(),
             });
 
@@ -538,7 +538,7 @@ export class DatasetTree extends ZoweTreeProvider implements Types.IZoweDatasetT
                 parentNode: profileNodeInFavorites,
                 session: node.getSession(),
                 contextOverride: node.contextValue,
-                etag: node.getEtag(),
+                etag: await node.getEtag(),
                 profile: node.getProfile(),
             });
             temp.contextValue = contextually.asFavorite(temp);
@@ -577,7 +577,7 @@ export class DatasetTree extends ZoweTreeProvider implements Types.IZoweDatasetT
             if (matchingNode) {
                 matchingNode.label = afterLabel;
                 matchingNode.tooltip = afterLabel;
-                this.refreshElement(matchingNode);
+                this.refreshElement(matchingNode as IZoweDatasetTreeNode);
             }
         }
     }
@@ -593,7 +593,7 @@ export class DatasetTree extends ZoweTreeProvider implements Types.IZoweDatasetT
         if (matchingNode) {
             matchingNode.label = newLabel;
             matchingNode.tooltip = newLabel;
-            this.refreshElement(matchingNode);
+            this.refreshElement(matchingNode as IZoweDatasetTreeNode);
         }
     }
 
@@ -900,10 +900,10 @@ export class DatasetTree extends ZoweTreeProvider implements Types.IZoweDatasetT
                 if (session.children) {
                     for (const node of session.children) {
                         if (node.contextValue !== globals.INFORMATION_CONTEXT) {
-                            loadedItems.push(node);
+                            loadedItems.push(node as IZoweDatasetTreeNode);
                             for (const member of node.children) {
                                 if (member.contextValue !== globals.INFORMATION_CONTEXT) {
-                                    loadedItems.push(member);
+                                    loadedItems.push(member as IZoweDatasetTreeNode);
                                 }
                             }
                         }
@@ -1202,16 +1202,16 @@ export class DatasetTree extends ZoweTreeProvider implements Types.IZoweDatasetT
             node.resourceUri = newUri;
             node.label = afterMemberName;
             node.tooltip = afterMemberName;
-            const otherParent = this.findEquivalentNode(node.getParent(), contextually.isFavorite(node.getParent()));
+            const otherParent = this.findEquivalentNode(node.getParent() as IZoweDatasetTreeNode, contextually.isFavorite(node.getParent()));
             if (otherParent) {
                 const otherMember = otherParent.children.find((child) => child.label === beforeMemberName);
                 if (otherMember) {
                     otherMember.label = afterMemberName;
                     otherMember.tooltip = afterMemberName;
-                    this.refreshElement(otherMember);
+                    this.refreshElement(otherMember as IZoweDatasetTreeNode);
                 }
             }
-            this.refreshElement(node.getParent());
+            this.refreshElement(node.getParent() as IZoweDatasetTreeNode);
         }
     }
 
@@ -1260,7 +1260,7 @@ export class DatasetTree extends ZoweTreeProvider implements Types.IZoweDatasetT
             node.resourceUri = newUri;
             node.label = afterDataSetName;
             node.tooltip = afterDataSetName;
-            this.refreshElement(node.getParent());
+            this.refreshElement(node.getParent() as IZoweDatasetTreeNode);
             this.updateFavorites();
         }
     }
@@ -1287,7 +1287,7 @@ export class DatasetTree extends ZoweTreeProvider implements Types.IZoweDatasetT
                         }
 
                         c.children.sort(ZoweDatasetNode.sortBy(node.sort));
-                        this.nodeDataChanged(c);
+                        this.nodeDataChanged(c as IZoweDatasetTreeNode);
                     }
                 }
             }
@@ -1411,15 +1411,15 @@ export class DatasetTree extends ZoweTreeProvider implements Types.IZoweDatasetT
                         // If there was an old session-wide filter set: refresh to get any
                         // missing nodes - new filter will be applied
                         if (oldFilter != null) {
-                            this.refreshElement(c);
+                            this.refreshElement(c as IZoweDatasetTreeNode);
                             continue;
                         }
 
                         if (newFilter != null && c.children?.length > 0) {
                             c.children = c.children.filter(ZoweDatasetNode.filterBy(newFilter));
-                            this.nodeDataChanged(c);
+                            this.nodeDataChanged(c as IZoweDatasetTreeNode);
                         } else {
-                            this.refreshElement(c);
+                            this.refreshElement(c as IZoweDatasetTreeNode);
                         }
                     }
                 }

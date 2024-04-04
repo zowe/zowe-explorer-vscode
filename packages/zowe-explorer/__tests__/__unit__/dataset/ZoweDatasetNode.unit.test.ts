@@ -288,21 +288,18 @@ describe("ZoweDatasetNode Unit Tests - Function node.setEncoding()", () => {
     it("sets encoding to binary", () => {
         const node = new ZoweDatasetNode({ label: "encodingTest", collapsibleState: vscode.TreeItemCollapsibleState.None });
         node.setEncoding({ kind: "binary" });
-        expect(node.binary).toEqual(true);
         expect(setEncodingForFileMock).toHaveBeenCalledWith(node.resourceUri, { kind: "binary" });
     });
 
     it("sets encoding to text", () => {
         const node = new ZoweDatasetNode({ label: "encodingTest", collapsibleState: vscode.TreeItemCollapsibleState.None });
         node.setEncoding({ kind: "text" });
-        expect(node.binary).toEqual(false);
         expect(setEncodingForFileMock).toHaveBeenCalledWith(node.resourceUri, { kind: "text" });
     });
 
     it("sets encoding to other codepage", () => {
         const node = new ZoweDatasetNode({ label: "encodingTest", collapsibleState: vscode.TreeItemCollapsibleState.None });
         node.setEncoding({ kind: "other", codepage: "IBM-1047" });
-        expect(node.binary).toEqual(false);
         expect(setEncodingForFileMock).toHaveBeenCalledWith(node.resourceUri, { kind: "other", codepage: "IBM-1047" });
     });
 
@@ -314,14 +311,12 @@ describe("ZoweDatasetNode Unit Tests - Function node.setEncoding()", () => {
         });
         const node = new ZoweDatasetNode({ label: "encodingTest", collapsibleState: vscode.TreeItemCollapsibleState.None, parentNode });
         node.setEncoding({ kind: "text" });
-        expect(node.binary).toEqual(false);
         expect(setEncodingForFileMock).toHaveBeenCalledWith(node.resourceUri, { kind: "text" });
     });
 
     it("resets encoding to undefined", () => {
         const node = new ZoweDatasetNode({ label: "encodingTest", collapsibleState: vscode.TreeItemCollapsibleState.None });
         node.setEncoding(undefined as any);
-        expect(node.binary).toEqual(false);
         expect(setEncodingForFileMock).toHaveBeenCalledWith(node.resourceUri, undefined);
     });
 

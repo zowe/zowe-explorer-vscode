@@ -36,7 +36,7 @@ export async function initUSSProvider(context: vscode.ExtensionContext): Promise
         vscode.commands.registerCommand("zowe.uss.addFavorite", async (node, nodeList) => {
             const selectedNodes = getSelectedNodeList(node, nodeList);
             for (const item of selectedNodes) {
-                await ussFileProvider.addFavorite(item);
+                await ussFileProvider.addFavorite(item as IZoweUSSTreeNode);
             }
         })
     );
@@ -44,7 +44,7 @@ export async function initUSSProvider(context: vscode.ExtensionContext): Promise
         vscode.commands.registerCommand("zowe.uss.removeFavorite", async (node, nodeList) => {
             const selectedNodes = getSelectedNodeList(node, nodeList);
             for (const item of selectedNodes) {
-                await ussFileProvider.removeFavorite(item);
+                await ussFileProvider.removeFavorite(item as IZoweUSSTreeNode);
             }
         })
     );
@@ -101,7 +101,7 @@ export async function initUSSProvider(context: vscode.ExtensionContext): Promise
             let selectedNodes = getSelectedNodeList(node, nodeList);
             selectedNodes = selectedNodes.filter((element) => contextuals.isUssSession(element));
             for (const item of selectedNodes) {
-                ussFileProvider.deleteSession(item, hideFromAllTrees);
+                ussFileProvider.deleteSession(item as IZoweUSSTreeNode, hideFromAllTrees);
             }
             await TreeViewUtils.fixVsCodeMultiSelect(ussFileProvider);
         })

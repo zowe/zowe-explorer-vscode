@@ -69,7 +69,7 @@ export async function createJobsTree(log: imperative.Logger): Promise<ZosJobsPro
     return tree;
 }
 
-export class ZosJobsProvider extends ZoweTreeProvider implements Types.IZoweJobTreeType {
+export class ZosJobsProvider extends ZoweTreeProvider<IZoweJobTreeNode> implements Types.IZoweJobTreeType {
     public static readonly JobId = "JobId: ";
     public static readonly Owner = "Owner: ";
     public static readonly Prefix = "Prefix: ";

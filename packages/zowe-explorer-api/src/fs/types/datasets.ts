@@ -9,26 +9,35 @@
  *
  */
 
+import { Types } from "../..";
 import { DirEntry, EntryMetadata, FileEntry } from "../types";
 import { IProfileLoaded } from "@zowe/imperative";
 
-export class DsEntry extends FileEntry {
+interface DsEntryProps {
+    stats: Types.DatasetStats;
+}
+
+export class DsEntry extends FileEntry implements DsEntryProps {
     public metadata: DsEntryMetadata;
 
     public constructor(name: string) {
         super(name);
     }
+
+    public stats: Types.DatasetStats;
 }
 
 export class MemberEntry extends DsEntry {}
 
-export class PdsEntry extends DirEntry {
+export class PdsEntry extends DirEntry implements DsEntryProps {
     public entries: Map<string, MemberEntry>;
 
     public constructor(name: string) {
         super(name);
         this.entries = new Map();
     }
+
+    public stats: Types.DatasetStats;
 }
 
 export class DsEntryMetadata implements EntryMetadata {

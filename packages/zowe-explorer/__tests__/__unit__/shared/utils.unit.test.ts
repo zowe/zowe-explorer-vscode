@@ -21,6 +21,7 @@ import * as utils from "../../../src/utils/ProfilesUtils";
 import { BaseProvider, Gui, imperative, IZoweTreeNode, ProfilesCache, ZosEncoding } from "@zowe/zowe-explorer-api";
 import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
 import { UssFSProvider } from "../../../src/uss/UssFSProvider";
+import { DatasetFSProvider } from "../../../src/dataset/DatasetFSProvider";
 
 async function createGlobalMocks() {
     const newMocks = {
@@ -474,7 +475,7 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
             profile: blockMocks.profile,
             parentNode: sessionNode,
         });
-        sessionNode.encodingMap["TEST.PS"] = { kind: "text" };
+        DatasetFSProvider.instance.encodingMap["TEST.PS"] = { kind: "text" };
         blockMocks.getEncodingForFile.mockReturnValueOnce(undefined);
         await sharedUtils.promptForEncoding(node);
         expect(blockMocks.showQuickPick).toHaveBeenCalled();

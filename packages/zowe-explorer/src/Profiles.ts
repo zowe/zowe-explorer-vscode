@@ -761,9 +761,9 @@ export class Profiles extends ProfilesCache {
         if (!TreeProviders.ds?.mSessionNodes || !TreeProviders.ds?.mSessionNodes.length) {
             return;
         }
-        const dsNode: IZoweDatasetTreeNode = TreeProviders.ds.mSessionNodes.find(
+        const dsNode = TreeProviders.ds.mSessionNodes.find(
             (sessionNode: IZoweDatasetTreeNode) => sessionNode.getProfile()?.name === node.getProfile()?.name
-        );
+        ) as IZoweDatasetTreeNode;
         if (!dsNode) {
             return;
         }
@@ -778,7 +778,7 @@ export class Profiles extends ProfilesCache {
         if (!TreeProviders.uss?.mSessionNodes || !TreeProviders.uss?.mSessionNodes.length) {
             return;
         }
-        const ussNode: IZoweUSSTreeNode = TreeProviders.uss.mSessionNodes.find(
+        const ussNode = TreeProviders.uss.mSessionNodes.find(
             (sessionNode: IZoweUSSTreeNode) => sessionNode.getProfile()?.name === node.getProfile()?.name
         );
         if (!ussNode) {
