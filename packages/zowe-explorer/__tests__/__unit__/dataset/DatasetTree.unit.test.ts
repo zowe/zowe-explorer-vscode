@@ -1887,7 +1887,6 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
             label: "TEST.PDS",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             parentNode: testTree.mSessionNodes[1],
-            session: blockMocks.session,
         });
         testTree.mSessionNodes[1].children = [newNode];
         const updateStatsSpy = jest.spyOn(ZoweDatasetNode.prototype, "updateStats");
@@ -2957,7 +2956,6 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
             label: "testPds",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             parentNode: session,
-            session: createISession(),
         });
         pds.contextValue = globals.DS_PDS_CONTEXT;
 
@@ -2965,21 +2963,18 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
             label: "A",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             parentNode: pds,
-            session: createISession(),
         });
         nodeA.stats = { user: "someUser", createdDate: new Date(), modifiedDate: new Date() };
         const nodeB = new ZoweDatasetNode({
             label: "B",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             parentNode: pds,
-            session: createISession(),
         });
         nodeB.stats = { user: "anotherUser", createdDate: new Date("2021-01-01T12:00:00"), modifiedDate: new Date("2022-01-01T12:00:00") };
         const nodeC = new ZoweDatasetNode({
             label: "C",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             parentNode: pds,
-            session: createISession(),
         });
         nodeC.stats = { user: "someUser", createdDate: new Date("2022-02-01T12:00:00"), modifiedDate: new Date("2022-03-15T16:30:00") };
         pds.children = [nodeA, nodeB, nodeC];
@@ -3330,7 +3325,11 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
 
     describe("onDidCloseTextDocument", () => {
         it("sets the entry in openFiles record to null if Data Set URI is valid", async () => {
-            const doc = { isClosed: true, isDirty: false, uri: { fsPath: join(globals.DS_DIR, "lpar", "SOME.PS") } } as vscode.TextDocument;
+            const doc = {
+                isClosed: true,
+                isDirty: false,
+                uri: { scheme: "file", fsPath: join(globals.DS_DIR, "lpar", "SOME.PS") },
+            } as vscode.TextDocument;
 
             jest.spyOn(TreeProviders, "ds", "get").mockReturnValue(tree);
             await DatasetTree.onDidCloseTextDocument(doc);
