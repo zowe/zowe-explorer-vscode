@@ -241,18 +241,33 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         return isConflict ? file.conflictData.contents : file.data;
     }
 
-    private async uploadEntry(entry: UssFile, content: Uint8Array, shouldForceUpload?: boolean): Promise<IZosFilesResponse> {
-        const ussApi = ZoweExplorerApiRegister.getUssApi(entry.metadata.profile);
-        await this.autoDetectEncoding(entry);
-        const profileEncoding = entry.encoding ? null : entry.metadata.profile.profile?.encoding;
+    private async uploadEntry(
+        entry: UssFile,
+        content: Uint8Array,
+        options?: { forceUpload?: boolean; noStatusMsg?: boolean }
+    ): Promise<IZosFilesResponse> {
+        const statusMsg =
+            // only show a status message if "noStatusMsg" is not specified,
+            // or if the entry does not exist and the new contents are empty (new placeholder entry)
+            options?.noStatusMsg || (!entry && content.byteLength === 0)
+                ? new vscode.Disposable(() => {})
+                : Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Saving USS file..."));
 
-        // Entry was already accessed previously, this is an update to the existing file.
-        return ussApi.uploadFromBuffer(Buffer.from(content), entry.metadata.path, {
-            binary: entry.encoding?.kind === "binary",
-            encoding: entry.encoding?.kind === "other" ? entry.encoding.codepage : profileEncoding,
-            etag: shouldForceUpload || entry.etag == null ? undefined : entry.etag,
-            returnEtag: true,
-        });
+        try {
+            const ussApi = ZoweExplorerApiRegister.getUssApi(entry.metadata.profile);
+            await this.autoDetectEncoding(entry);
+            const profileEncoding = entry.encoding ? null : entry.metadata.profile.profile?.encoding;
+
+            return ussApi.uploadFromBuffer(Buffer.from(content), entry.metadata.path, {
+                binary: entry.encoding?.kind === "binary",
+                encoding: entry.encoding?.kind === "other" ? entry.encoding.codepage : profileEncoding,
+                etag: options?.forceUpload || entry.etag == null ? undefined : entry.etag,
+                returnEtag: true,
+            });
+        } catch (err) {
+            statusMsg.dispose();
+            throw err;
+        }
     }
 
     /**
@@ -283,14 +298,8 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         }
 
         // Attempt to write data to remote system, and handle any conflicts from e-tag mismatch
-        const statusMsg =
-            // only show a status message if "noStatusMsg" is not specified,
-            // or if the entry does not exist and the new contents are empty (new placeholder entry)
-            options.noStatusMsg || (!entry && content.byteLength === 0)
-                ? new vscode.Disposable(() => {})
-                : Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Saving USS file..."));
         const urlQuery = new URLSearchParams(uri.query);
-        const shouldForceUpload = urlQuery.has("forceUpload");
+        const forceUpload = urlQuery.has("forceUpload");
         try {
             if (!entry) {
                 entry = new UssFile(fileName);
@@ -303,7 +312,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
                 if (content.byteLength > 0) {
                     // user is trying to edit a file that was just deleted: make the API call
-                    const resp = await this.uploadEntry(entry, content, shouldForceUpload);
+                    const resp = await this.uploadEntry(entry as UssFile, content, { forceUpload });
                     entry.etag = resp.apiResponse.etag;
                 }
                 entry.data = content;
@@ -316,18 +325,16 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                     entry.data = content;
                     entry.mtime = Date.now();
                     entry.size = content.byteLength;
-                    statusMsg.dispose();
                     return;
                 }
 
                 if (entry.wasAccessed || content.length > 0) {
-                    const resp = await this.uploadEntry(entry, content, shouldForceUpload);
+                    const resp = await this.uploadEntry(entry as UssFile, content, { forceUpload });
                     entry.etag = resp.apiResponse.etag;
                 }
                 entry.data = content;
             }
         } catch (err) {
-            statusMsg.dispose();
             if (!err.message.includes("Rest API failure with HTTP(S) status 412")) {
                 // Some unknown error happened, don't update the entry
                 throw err;
@@ -339,7 +346,6 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             return;
         }
 
-        statusMsg.dispose();
         entry.mtime = Date.now();
         entry.size = content.byteLength;
         this._fireSoon({ type: vscode.FileChangeType.Changed, uri });

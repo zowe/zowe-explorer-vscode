@@ -263,18 +263,23 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         parentDir.entries.set(fileName, entry);
     }
 
-    private async uploadEntry(parent: DirEntry, entry: DsEntry, content: Uint8Array, shouldForceUpload?: boolean): Promise<IZosFilesResponse> {
-        const mvsApi = ZoweExplorerApiRegister.getMvsApi(entry.metadata.profile);
-
+    private async uploadEntry(parent: DirEntry, entry: DsEntry, content: Uint8Array, forceUpload?: boolean): Promise<IZosFilesResponse> {
+        const statusMsg = Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Saving data set..."));
         const isPdsMember = isPdsEntry(parent) && !isFilterEntry(parent);
         const fullName = isPdsMember ? `${parent.name}(${entry.name})` : entry.name;
-        const profileEncoding = entry.encoding ? null : entry.metadata.profile.profile?.encoding;
-        return mvsApi.uploadFromBuffer(Buffer.from(content), fullName, {
-            binary: entry.encoding?.kind === "binary",
-            encoding: entry.encoding?.kind === "other" ? entry.encoding.codepage : profileEncoding,
-            etag: shouldForceUpload ? undefined : entry.etag,
-            returnEtag: true,
-        });
+        try {
+            const mvsApi = ZoweExplorerApiRegister.getMvsApi(entry.metadata.profile);
+            const profileEncoding = entry.encoding ? null : entry.metadata.profile.profile?.encoding;
+            return mvsApi.uploadFromBuffer(Buffer.from(content), fullName, {
+                binary: entry.encoding?.kind === "binary",
+                encoding: entry.encoding?.kind === "other" ? entry.encoding.codepage : profileEncoding,
+                etag: forceUpload ? undefined : entry.etag,
+                returnEtag: true,
+            });
+        } catch (err) {
+            statusMsg.dispose();
+            throw err;
+        }
     }
 
     /**
@@ -301,14 +306,8 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
         // Attempt to write data to remote system, and handle any conflicts from e-tag mismatch
         const urlQuery = new URLSearchParams(uri.query);
-        const shouldForceUpload = urlQuery.has("forceUpload");
+        const forceUpload = urlQuery.has("forceUpload");
         // Attempt to write data to remote system, and handle any conflicts from e-tag mismatch
-        const statusMsg =
-            // only show a status message if "noStatusMsg" is not specified,
-            // or if the entry does not exist and the new contents are empty (new placeholder entry)
-            !entry && content.byteLength === 0
-                ? new vscode.Disposable(() => {})
-                : Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Saving data set..."));
 
         try {
             if (!entry) {
@@ -324,10 +323,9 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
                 if (content.byteLength > 0) {
                     // Update e-tag if write was successful.
-                    const resp = await this.uploadEntry(parent, entry as DsEntry, content, shouldForceUpload);
+                    const resp = await this.uploadEntry(parent, entry as DsEntry, content, forceUpload);
                     entry.etag = resp.apiResponse.etag;
                     entry.data = content;
-                    statusMsg.dispose();
                 }
                 parent.entries.set(basename, entry);
                 this._fireSoon({ type: vscode.FileChangeType.Created, uri });
@@ -344,13 +342,12 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 }
 
                 if (entry.wasAccessed || content.length > 0) {
-                    const resp = await this.uploadEntry(parent, entry as DsEntry, content, shouldForceUpload);
+                    const resp = await this.uploadEntry(parent, entry as DsEntry, content, forceUpload);
                     entry.etag = resp.apiResponse.etag;
                 }
                 entry.data = content;
             }
         } catch (err) {
-            statusMsg.dispose();
             if (!err.message.includes("Rest API failure with HTTP(S) status 412")) {
                 throw err;
             }
@@ -361,7 +358,6 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             return;
         }
 
-        statusMsg.dispose();
         entry.mtime = Date.now();
         entry.size = content.byteLength;
         this._fireSoon({ type: vscode.FileChangeType.Changed, uri });
