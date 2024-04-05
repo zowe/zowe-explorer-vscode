@@ -97,7 +97,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         }
 
         if (this.label !== vscode.l10n.t("Favorites")) {
-            const sessionLabel = getSessionLabel(this);
+            const sessionLabel = opts.profile?.name ?? getSessionLabel(this);
             if (this.getParent() == null) {
                 this.resourceUri = vscode.Uri.from({
                     scheme: ZoweScheme.DS,

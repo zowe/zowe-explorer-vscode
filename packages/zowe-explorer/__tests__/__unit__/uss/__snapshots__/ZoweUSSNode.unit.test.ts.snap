@@ -39,8 +39,8 @@ ZoweUSSNode {
       "etag": "",
       "fullPath": "",
       "iconPath": "Ref: 'folder.svg'",
-      "id": "uss.root",
-      "label": "root",
+      "id": "uss.sestest",
+      "label": "sestest",
       "mParent": undefined,
       "onUpdateEmitter": EventEmitter {},
       "parentPath": undefined,
@@ -58,7 +58,7 @@ ZoweUSSNode {
         "type": "zosmf",
       },
       "resourceUri": Uri {
-        "path": "/root",
+        "path": "/sestest",
         "scheme": "zowe-uss",
       },
       "session": Session {
@@ -89,7 +89,7 @@ ZoweUSSNode {
       "type": "zosmf",
     },
     "resourceUri": Uri {
-      "path": "/root",
+      "path": "/sestest",
       "scheme": "zowe-uss",
     },
     "session": undefined,
@@ -111,7 +111,7 @@ ZoweUSSNode {
     "type": "zosmf",
   },
   "resourceUri": Uri {
-    "path": "/root",
+    "path": "/sestest",
     "scheme": "zowe-uss",
   },
   "session": undefined,

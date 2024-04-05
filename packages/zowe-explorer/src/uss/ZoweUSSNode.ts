@@ -111,9 +111,10 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         }
         this.onUpdateEmitter = new vscode.EventEmitter<IZoweUSSTreeNode>();
         if (opts.label !== vscode.l10n.t("Favorites")) {
+            const sessionLabel = opts.profile?.name ?? getSessionLabel(this);
             this.resourceUri = vscode.Uri.from({
                 scheme: ZoweScheme.USS,
-                path: `/${getSessionLabel(this)}${this.fullPath}`,
+                path: `/${sessionLabel}${this.fullPath}`,
             });
             if (isSession) {
                 UssFSProvider.instance.createDirectory(this.resourceUri);

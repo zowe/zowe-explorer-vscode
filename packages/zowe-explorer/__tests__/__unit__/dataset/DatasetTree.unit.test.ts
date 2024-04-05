@@ -564,7 +564,7 @@ describe("Dataset Tree Unit Tests - Function loadProfilesForFavorites", () => {
 
         expect(resultFavPdsNode).toEqual(expectedFavPdsNode);
     });
-    it("Checking that loaded profile/session from profile node in Favorites gets passed to child favorites without profile/session", async () => {
+    it("Checking that loaded profile/session from profile node in Favorites is inherited for child nodes", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         const favProfileNode = new ZoweDatasetNode({
@@ -575,10 +575,10 @@ describe("Dataset Tree Unit Tests - Function loadProfilesForFavorites", () => {
             profile: blockMocks.imperativeProfile,
             contextOverride: globals.FAV_PROFILE_CONTEXT,
         });
-        // Leave mParent parameter undefined for favPDsNode and expectedFavPdsNode to test undefined profile/session condition
         const favPdsNode = new ZoweDatasetNode({
             label: "favoritePds",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            profile: blockMocks.imperativeProfile,
             contextOverride: globals.PDS_FAV_CONTEXT,
         });
         const testTree = new DatasetTree();

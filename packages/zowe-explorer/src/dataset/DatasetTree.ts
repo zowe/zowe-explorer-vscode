@@ -523,6 +523,7 @@ export class DatasetTree extends ZoweTreeProvider implements Types.IZoweDatasetT
             await this.checkCurrentProfile(node);
 
             temp.contextValue = globals.DS_SESSION_CONTEXT + globals.FAV_SUFFIX;
+            temp.resourceUri = node.resourceUri;
             const icon = getIconByNode(temp);
             if (icon) {
                 temp.iconPath = icon.path;
@@ -541,6 +542,7 @@ export class DatasetTree extends ZoweTreeProvider implements Types.IZoweDatasetT
                 profile: node.getProfile(),
             });
             temp.contextValue = contextually.asFavorite(temp);
+            temp.resourceUri = node.resourceUri;
             if (contextually.isFavoriteDs(temp)) {
                 temp.command = { command: "vscode.open", title: "", arguments: [temp.resourceUri] };
             }

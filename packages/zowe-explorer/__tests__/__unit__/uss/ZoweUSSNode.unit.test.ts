@@ -178,7 +178,7 @@ describe("ZoweUSSNode Unit Tests - Initialization of class", () => {
             return callback();
         });
         const rootNode = new ZoweUSSNode({
-            label: "root",
+            label: "sestest",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             session: globalMocks.session,
             profile: globalMocks.profileOne,
