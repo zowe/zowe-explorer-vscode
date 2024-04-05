@@ -81,6 +81,11 @@ const config = {
                     },
                 ],
             },
+            {
+                test: /\.mjs$/,
+                include: /markdown-it/,
+                type: "javascript/auto",
+            },
         ],
     },
     plugins: [

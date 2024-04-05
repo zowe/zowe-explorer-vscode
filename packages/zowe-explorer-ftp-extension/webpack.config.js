@@ -79,6 +79,11 @@ const config = {
                     },
                 ],
             },
+            {
+                test: /\.mjs$/,
+                include: /markdown-it/,
+                type: "javascript/auto",
+            },
         ],
     },
     plugins: [new webpack.BannerPlugin(fs.readFileSync("../../scripts/banner.txt", "utf8"))],
