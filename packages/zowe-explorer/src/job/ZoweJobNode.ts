@@ -279,7 +279,7 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
 
     public getSessionNode(): IZoweJobTreeNode {
         ZoweLogger.trace("ZoweJobNode.getSessionNode called.");
-        return this.getParent() ? this.getParent().getSessionNode() : this;
+        return this.session ? this : this.getParent()?.getSessionNode() ?? this;
     }
 
     public set owner(newOwner: string) {
