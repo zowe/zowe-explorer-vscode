@@ -78,7 +78,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             this.contextValue = globals.USS_TEXT_FILE_CONTEXT;
         }
         if (this.parentPath) {
-            this.fullPath = this.tooltip = this.parentPath + "/" + opts.label;
+            this.fullPath = this.tooltip = path.posix.join(this.parentPath, opts.label);
             if (opts.parentPath === "/") {
                 // Keep fullPath of root level nodes preceded by a single slash
                 this.fullPath = this.tooltip = "/" + opts.label;
@@ -114,7 +114,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             const sessionLabel = opts.profile?.name ?? getSessionLabel(this);
             this.resourceUri = vscode.Uri.from({
                 scheme: ZoweScheme.USS,
-                path: `/${sessionLabel}${this.fullPath}`,
+                path: path.posix.join("/", sessionLabel, this.fullPath),
             });
             if (isSession) {
                 UssFSProvider.instance.createDirectory(this.resourceUri);

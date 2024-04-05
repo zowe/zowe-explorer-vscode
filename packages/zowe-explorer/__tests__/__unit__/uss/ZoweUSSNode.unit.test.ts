@@ -180,25 +180,28 @@ describe("ZoweUSSNode Unit Tests - Initialization of class", () => {
         const rootNode = new ZoweUSSNode({
             label: "sestest",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            contextOverride: globals.USS_SESSION_CONTEXT,
             session: globalMocks.session,
             profile: globalMocks.profileOne,
         });
-        rootNode.contextValue = globals.USS_SESSION_CONTEXT;
+        rootNode.fullPath = "/";
         rootNode.dirty = true;
         const testDir = new ZoweUSSNode({
             label: "testDir",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             parentNode: rootNode,
+            parentPath: rootNode.fullPath,
             profile: globalMocks.profileOne,
         });
         const testFile = new ZoweUSSNode({
             label: "testFile",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             parentNode: testDir,
+            parentPath: testDir.fullPath,
             profile: globalMocks.profileOne,
         });
         testFile.contextValue = globals.USS_TEXT_FILE_CONTEXT;
-        expect(JSON.stringify(rootNode.iconPath)).toContain("folder-closed.svg");
+        expect(JSON.stringify(rootNode.iconPath)).toContain("folder-root-unverified-closed.svg");
         expect(JSON.stringify(testDir.iconPath)).toContain("folder-closed.svg");
         expect(JSON.stringify(testFile.iconPath)).toContain("document.svg");
         rootNode.iconPath = "Ref: 'folder.svg'";

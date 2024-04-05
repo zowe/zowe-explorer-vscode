@@ -11,7 +11,7 @@ ZoweUSSNode {
   "downloadedTime": null,
   "encodingMap": {},
   "etag": "",
-  "fullPath": "",
+  "fullPath": "/testDir/testFile",
   "iconPath": "Ref: 'document.svg'",
   "label": "testFile",
   "mParent": ZoweUSSNode {
@@ -24,7 +24,7 @@ ZoweUSSNode {
     "downloadedTime": null,
     "encodingMap": {},
     "etag": "",
-    "fullPath": "",
+    "fullPath": "/testDir",
     "iconPath": "Ref: 'folder.svg'",
     "label": "testDir",
     "mParent": ZoweUSSNode {
@@ -37,7 +37,7 @@ ZoweUSSNode {
       "downloadedTime": null,
       "encodingMap": {},
       "etag": "",
-      "fullPath": "",
+      "fullPath": "/",
       "iconPath": "Ref: 'folder.svg'",
       "id": "uss.sestest",
       "label": "sestest",
@@ -74,7 +74,7 @@ ZoweUSSNode {
       "shortLabel": "",
     },
     "onUpdateEmitter": EventEmitter {},
-    "parentPath": undefined,
+    "parentPath": "/",
     "profile": {
       "failNotFound": false,
       "message": "",
@@ -89,14 +89,15 @@ ZoweUSSNode {
       "type": "zosmf",
     },
     "resourceUri": Uri {
-      "path": "/sestest",
+      "path": "/sestest/testDir",
       "scheme": "zowe-uss",
     },
     "session": undefined,
     "shortLabel": "",
+    "tooltip": "/testDir",
   },
   "onUpdateEmitter": EventEmitter {},
-  "parentPath": undefined,
+  "parentPath": "/testDir",
   "profile": {
     "failNotFound": false,
     "message": "",
@@ -111,10 +112,11 @@ ZoweUSSNode {
     "type": "zosmf",
   },
   "resourceUri": Uri {
-    "path": "/sestest",
+    "path": "/sestest/testDir/testFile",
     "scheme": "zowe-uss",
   },
   "session": undefined,
   "shortLabel": "",
+  "tooltip": "/testDir/testFile",
 }
 `;

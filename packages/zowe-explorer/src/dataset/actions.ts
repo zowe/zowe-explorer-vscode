@@ -1256,10 +1256,9 @@ export async function refreshPS(node: IZoweDatasetTreeNode): Promise<void> {
         }
 
         const statusMsg = Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Fetching data set..."));
-        await DatasetFSProvider.instance.fetchDatasetAtUri(
-            node.resourceUri,
-            { editor: vscode.window.visibleTextEditors.find((v) => v.document.uri.path === node.resourceUri.path) }
-        );
+        await DatasetFSProvider.instance.fetchDatasetAtUri(node.resourceUri, {
+            editor: vscode.window.visibleTextEditors.find((v) => v.document.uri.path === node.resourceUri.path),
+        });
         statusMsg.dispose();
     } catch (err) {
         if (err.message.includes(vscode.l10n.t("not found"))) {

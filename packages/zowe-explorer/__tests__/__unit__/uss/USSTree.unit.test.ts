@@ -1222,7 +1222,7 @@ describe("USSTree Unit Tests - Function getChildren", () => {
         ];
         sessNode[0].contextValue = globals.FAVORITE_CONTEXT;
         sessNode[1].contextValue = globals.USS_SESSION_CONTEXT;
-        sessNode[1].fullPath = "test";
+        sessNode[1].fullPath = "/test";
 
         // Set icon
         let targetIcon = getIconByNode(sessNode[0]);
@@ -1671,16 +1671,22 @@ describe("USSTree Unit Tests - Function handleDrop", () => {
         const statusBarMsgSpy = jest.spyOn(Gui, "setStatusBarMessage");
         const warningMsgSpy = jest.spyOn(Gui, "warningMessage").mockClear().mockResolvedValueOnce(undefined);
         const ussSession = createUSSSessionNode(globalMocks.testSession, globalMocks.testProfile);
-        const ussDirNode = createUSSNode(globalMocks.testSession, globalMocks.testProfile);
-        ussDirNode.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
+        const ussDirNode = new ZoweUSSNode({
+            label: "folder",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: ussSession,
+            parentPath: ussSession.fullPath,
+            profile: ussSession.getProfile(),
+        });
         const ussFileNode = new ZoweUSSNode({
             label: "file.txt",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
-            parentNode: ussDirNode,
+            parentNode: ussSession,
+            parentPath: ussSession.fullPath,
             profile: ussDirNode.getProfile(),
         });
-        ussDirNode.children = [ussFileNode];
-        ussSession.children = [ussDirNode];
+        ussDirNode.children = [];
+        ussSession.children = [ussDirNode, ussFileNode];
         const dataTransfer = new vscode.DataTransfer();
         const getDataTransferMock = jest.spyOn(dataTransfer, "get").mockReturnValueOnce({
             value: [
@@ -1696,7 +1702,7 @@ describe("USSTree Unit Tests - Function handleDrop", () => {
         } as any);
         const fspMoveMock = jest.spyOn(UssFSProvider.instance, "move").mockResolvedValue(true);
         const draggedNodeMock = new MockedProperty(globalMocks.testTree, "draggedNodes", undefined, {
-            [ussDirNode.resourceUri.path]: ussDirNode,
+            [ussFileNode.resourceUri.path]: ussFileNode,
         });
         await globalMocks.testTree.handleDrop(ussDirNode, dataTransfer, undefined);
         expect(statusBarMsgSpy).toHaveBeenCalledWith("$(sync~spin) Moving USS files...");
@@ -1745,7 +1751,7 @@ describe("USSTree Unit Tests - Function crossLparMove", () => {
             path: "/sestest/u/myuser/subfolder/usstest",
         });
         expect(existsMock).toHaveBeenCalledWith(newUri);
-        expect(createMock).toHaveBeenCalledWith("/u/myuser/subfolder/usstest", "directory");
+        expect(createMock).toHaveBeenCalledWith("/u/myuser/subfolder/usstest/file.txt", "file");
         expect(createDirMock).toHaveBeenCalledWith(newUri);
         expect(deleteMock).toHaveBeenCalledWith(ussDirNode.resourceUri, { recursive: true });
         createDirMock.mockRestore();

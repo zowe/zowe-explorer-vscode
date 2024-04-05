@@ -180,17 +180,32 @@ export class USSTree extends ZoweTreeProvider implements Types.IZoweUSSTreeType 
         }
     }
 
-    public async handleDrop(target: IZoweUSSTreeNode | undefined, dataTransfer: vscode.DataTransfer, token: vscode.CancellationToken): Promise<void> {
+    public async handleDrop(
+        targetNode: IZoweUSSTreeNode | undefined,
+        dataTransfer: vscode.DataTransfer,
+        token: vscode.CancellationToken
+    ): Promise<void> {
         const droppedItems = dataTransfer.get("application/vnd.code.tree.zowe.uss.explorer");
         if (!droppedItems) {
             return;
         }
 
+        // get the closest parent folder if the target is a file node
+        let target = targetNode;
+        if (!contextually.isUssDirectory(target)) {
+            target = target.getParent();
+        }
+
+        // If the target path fully contains the path of the dragged node,
+        // the user is trying to move a parent node into its child - invalid operation
+        const movedIntoChild = Object.values(this.draggedNodes).some((n) => target.resourceUri.path.startsWith(n.resourceUri.path));
+        if (movedIntoChild) {
+            this.draggedNodes = {};
+            return;
+        }
+
         // determine if any overwrites may occur
-        const willOverwrite = Object.values(this.draggedNodes).reduce(
-            (all, n) => all || target.children?.find((tc) => tc.label === n.label) != null,
-            false
-        );
+        const willOverwrite = Object.values(this.draggedNodes).some((n) => target.children?.find((tc) => tc.label === n.label) != null);
         if (willOverwrite) {
             const userOpts = [vscode.l10n.t("Confirm")];
             const resp = await Gui.warningMessage(
@@ -215,7 +230,7 @@ export class USSTree extends ZoweTreeProvider implements Types.IZoweUSSTreeType 
         for (const item of droppedItems.value) {
             const node = this.draggedNodes[item.uri.path];
             if (node.getParent() === target) {
-                // no sense in moving an object to a different spot in the same tree level
+                // skip nodes that are direct children of the target node
                 continue;
             }
 
@@ -225,7 +240,7 @@ export class USSTree extends ZoweTreeProvider implements Types.IZoweUSSTreeType 
             }
             const newUriForNode = vscode.Uri.from({
                 scheme: ZoweScheme.USS,
-                path: `/${target.getProfile().name}${target.fullPath}/${item.label as string}`,
+                path: path.posix.join("/", target.getProfile().name, target.fullPath, item.label as string),
             });
             const prof = node.getProfile();
             const hasMoveApi = ZoweExplorerApiRegister.getUssApi(prof).move != null;
