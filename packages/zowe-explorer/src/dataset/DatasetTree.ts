@@ -244,10 +244,9 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         }
         // Line validation
 
-        const favoriteDataSetPattern = /^\[.+\]:\s[a-zA-Z#@$][a-zA-Z0-9#@$-]{0,7}(\.[a-zA-Z#@$][a-zA-Z0-9#@$-]{0,7})*\{p?ds\}$/;
-        const favoriteSearchPattern = /^\[.+\]:\s.*\{session}$/;
+        const favPattern = /^\[(.+)\]:\s(.+?)\{(.+)\}$/;
         for (const line of lines) {
-            if (!(favoriteDataSetPattern.test(line) || favoriteSearchPattern.test(line))) {
+            if (!favPattern.test(line)) {
                 ZoweLogger.warn(
                     vscode.l10n.t({
                         message:
@@ -258,18 +257,16 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 );
                 continue;
             }
-            // Parse line
-            const profileName = line.substring(1, line.lastIndexOf("]")).trim();
-            const favLabel = line.substring(line.indexOf(":") + 2, line.indexOf("{"));
-            const favContextValue = line.substring(line.indexOf("{") + 1, line.lastIndexOf("}"));
+
+            const [profName, dsName, contextValue] = favPattern.exec(line);
             // The profile node used for grouping respective favorited items. (Undefined if not created yet.)
-            let profileNodeInFavorites = this.findMatchingProfileInArray(this.mFavorites, profileName);
+            let profileNodeInFavorites = this.findMatchingProfileInArray(this.mFavorites, profName);
             if (profileNodeInFavorites === undefined) {
                 // If favorite node for profile doesn't exist yet, create a new one for it
-                profileNodeInFavorites = this.createProfileNodeForFavs(profileName, await Profiles.getInstance().getLoadedProfConfig(profileName));
+                profileNodeInFavorites = this.createProfileNodeForFavs(profName, await Profiles.getInstance().getLoadedProfConfig(profName));
             }
             // Initialize and attach favorited item nodes under their respective profile node in Favorrites
-            const favChildNodeForProfile = this.initializeFavChildNodeForProfile(favLabel, favContextValue, profileNodeInFavorites);
+            const favChildNodeForProfile = this.initializeFavChildNodeForProfile(dsName, contextValue, profileNodeInFavorites);
             profileNodeInFavorites.children.push(favChildNodeForProfile);
         }
     }

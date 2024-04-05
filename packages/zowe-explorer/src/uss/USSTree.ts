@@ -868,18 +868,26 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
             ZoweLogger.debug(vscode.l10n.t("No USS favorites found."));
             return;
         }
+        const favPattern = /^\[(.+)\]:\s(.+?)\{(.+)\}$/;
         for (const line of lines) {
-            const profileName = line.substring(1, line.lastIndexOf("]"));
-            const favLabel = line.substring(line.indexOf(":") + 1, line.indexOf("{")).trim();
+            if (!favPattern.test(line)) {
+                continue;
+            }
+            const [profName, label, context] = favPattern.exec(line);
             // The profile node used for grouping respective favorited items. (Undefined if not created yet.)
-            let profileNodeInFavorites = this.findMatchingProfileInArray(this.mFavorites, profileName);
+            let profileNodeInFavorites = this.findMatchingProfileInArray(this.mFavorites, profName);
             if (profileNodeInFavorites === undefined) {
                 // If favorite node for profile doesn't exist yet, create a new one for it
-                profileNodeInFavorites = this.createProfileNodeForFavs(profileName);
+                profileNodeInFavorites = this.createProfileNodeForFavs(profName);
+            }
+            if (context == null) {
+                continue;
             }
             // Initialize and attach favorited item nodes under their respective profile node in Favorrites
-            const favChildNodeForProfile = await this.initializeFavChildNodeForProfile(favLabel, line, profileNodeInFavorites);
-            profileNodeInFavorites.children.push(favChildNodeForProfile);
+            const favChildNodeForProfile = await this.initializeFavChildNodeForProfile(label, context, profileNodeInFavorites);
+            if (favChildNodeForProfile != null) {
+                profileNodeInFavorites.children.push(favChildNodeForProfile);
+            }
         }
     }
 
@@ -891,15 +899,11 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
      * @param parentNode The profile node in this.mFavorites that the favorite belongs to
      * @returns IZoweUssTreeNode
      */
-    public async initializeFavChildNodeForProfile(label: string, line: string, parentNode: IZoweUSSTreeNode): Promise<ZoweUSSNode> {
+    public async initializeFavChildNodeForProfile(label: string, context: string, parentNode: IZoweUSSTreeNode): Promise<ZoweUSSNode> {
         ZoweLogger.trace("USSTree.initializeFavChildNodeForProfile called.");
-        const favoriteSearchPattern = /^\[.+\]:\s.*\{ussSession\}$/;
-        const directorySearchPattern = /^\[.+\]:\s.*\{directory\}$/;
-
         const profile = parentNode.getProfile();
-
         let node: ZoweUSSNode;
-        if (directorySearchPattern.test(line)) {
+        if (context === "directory") {
             node = new ZoweUSSNode({
                 label,
                 collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
@@ -909,7 +913,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
             if (!UssFSProvider.instance.exists(node.resourceUri)) {
                 await vscode.workspace.fs.createDirectory(node.resourceUri);
             }
-        } else if (favoriteSearchPattern.test(line)) {
+        } else if (context === "ussSession") {
             node = new ZoweUSSNode({
                 label,
                 collapsibleState: vscode.TreeItemCollapsibleState.None,
@@ -922,6 +926,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
             // add a command to execute the search
             node.command = { command: "zowe.uss.fullPath", title: "", arguments: [node] };
         } else {
+            // assume context is "textFile"
             node = new ZoweUSSNode({
                 label,
                 collapsibleState: vscode.TreeItemCollapsibleState.None,
