@@ -77,10 +77,6 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         }
         if (this.parentPath) {
             this.fullPath = this.tooltip = path.posix.join(this.parentPath, opts.label);
-            if (opts.parentPath === "/") {
-                // Keep fullPath of root level nodes preceded by a single slash
-                this.fullPath = this.tooltip = "/" + opts.label;
-            }
         }
         if (opts.parentNode && opts.parentNode.contextValue === globals.FAV_PROFILE_CONTEXT) {
             this.fullPath = opts.label.trim();
@@ -250,13 +246,13 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
 
             // The child node already exists. Use that node for the list instead, and update the file attributes in case they've changed
             if (existing) {
-                existing.attributes = {
+                existing.setAttributes({
                     gid: item.gid,
                     uid: item.uid,
                     group: item.group,
                     perms: item.mode,
                     owner: item.user,
-                };
+                });
                 responseNodes.push(existing);
                 existing.onUpdateEmitter.fire(existing);
                 continue;

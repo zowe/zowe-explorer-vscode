@@ -422,7 +422,10 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             const sortByName = (nodeA: IZoweDatasetTreeNode, nodeB: IZoweDatasetTreeNode): number =>
                 (nodeA.label as string) < (nodeB.label as string) ? sortLessThan : sortGreaterThan;
 
-            if (!a.stats && !b.stats) {
+            const aStats = a.getStats();
+            const bStats = b.getStats();
+
+            if (!aStats && !bStats) {
                 return sortByName(a, b);
             }
 
@@ -430,13 +433,13 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 const dateA = dayjs(aDate ?? null);
                 const dateB = dayjs(bDate ?? null);
 
-                const aVaild = dateA.isValid();
+                const aValid = dateA.isValid();
                 const bValid = dateB.isValid();
 
-                a.description = aVaild ? dateA.format("YYYY/MM/DD") : undefined;
+                a.description = aValid ? dateA.format("YYYY/MM/DD") : undefined;
                 b.description = bValid ? dateB.format("YYYY/MM/DD") : undefined;
 
-                if (!aVaild) {
+                if (!aValid) {
                     return sortGreaterThan;
                 }
 
@@ -452,14 +455,14 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
 
             switch (sort.method) {
                 case Sorting.DatasetSortOpts.DateCreated: {
-                    return sortByDate(a.stats?.createdDate, b.stats?.createdDate);
+                    return sortByDate(aStats?.createdDate, bStats?.createdDate);
                 }
                 case Sorting.DatasetSortOpts.LastModified: {
-                    return sortByDate(a.stats?.modifiedDate, b.stats?.modifiedDate);
+                    return sortByDate(aStats?.modifiedDate, bStats?.modifiedDate);
                 }
                 case Sorting.DatasetSortOpts.UserId: {
-                    const userA = a.stats?.user ?? "";
-                    const userB = b.stats?.user ?? "";
+                    const userA = aStats?.user ?? "";
+                    const userB = bStats?.user ?? "";
 
                     a.description = userA;
                     b.description = userB;
@@ -499,9 +502,9 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                         return true;
                     }
 
-                    return dayjs(node.stats?.modifiedDate).isSame(filter.value, "day");
+                    return dayjs(node.getStats()?.modifiedDate).isSame(filter.value, "day");
                 case Sorting.DatasetFilterOpts.UserId:
-                    return node.stats?.user === filter.value;
+                    return node.getStats()?.user === filter.value;
             }
         };
     }

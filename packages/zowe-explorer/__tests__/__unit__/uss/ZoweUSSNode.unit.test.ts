@@ -712,6 +712,8 @@ describe("ZoweUSSNode Unit Tests - Function node.getChildren()", () => {
         blockMocks.rootNode.contextValue = globals.USS_DIR_CONTEXT;
         blockMocks.rootNode.dirty = true;
 
+        const setAttrsMock = jest.spyOn(ZoweUSSNode.prototype, "setAttributes").mockImplementation();
+
         // Creating structure of files and directories
         const sampleChildren: ZoweUSSNode[] = [
             new ZoweUSSNode({
@@ -742,6 +744,7 @@ describe("ZoweUSSNode Unit Tests - Function node.getChildren()", () => {
         expect(rootChildren.length).toBe(2);
         expect(rootChildren[0].label).toBe("aDir");
         expect(rootChildren[1].label).toBe("myFile.txt");
+        setAttrsMock.mockRestore();
     });
 
     it("Tests that node.getChildren() returns no children if none exist", async () => {
@@ -769,6 +772,8 @@ describe("ZoweUSSNode Unit Tests - Function node.getChildren()", () => {
         const blockMocks = await createBlockMocks(globalMocks);
         const oldPath = "/u/oldUser";
         const newPath = "/u/newUser";
+
+        const setAttrsMock = jest.spyOn(ZoweUSSNode.prototype, "setAttributes").mockImplementation();
 
         const parentNode = new ZoweUSSNode({
             label: "newUser",
@@ -807,6 +812,7 @@ describe("ZoweUSSNode Unit Tests - Function node.getChildren()", () => {
         expect(newChildren[1].fullPath).not.toContain(oldPath);
         expect(newChildren[0].fullPath).toContain(newPath);
         expect(newChildren[1].fullPath).toContain(newPath);
+        setAttrsMock.mockRestore();
     });
 
     it("Tests that error is thrown when node label is blank", async () => {

@@ -203,7 +203,7 @@ export interface IZoweDatasetTreeNode extends IZoweTreeNode {
     /**
      * Returns the stats for a data set.
      */
-    getStats(): Types.DatasetStats | PromiseLike<Types.DatasetStats>;
+    getStats(): Types.DatasetStats;
 
     /**
      * Sets the stats for a data set.

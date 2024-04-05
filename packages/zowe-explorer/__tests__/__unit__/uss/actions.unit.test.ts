@@ -588,10 +588,12 @@ describe("USS Action Unit Tests - copy file / directory", () => {
     it("Copy file(s), Directory(s) paths into clipboard", async () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
+        const getEncodingForFileMock = jest.spyOn(ZoweUSSNode.prototype, "getEncoding").mockReturnValue(undefined as any);
         const fileStructure = JSON.stringify(await ussNodeActions.ussFileStructure(blockMocks.nodes));
         await ussNodeActions.copyUssFilesToClipboard(blockMocks.nodes);
 
         expect(globalMocks.writeText).toHaveBeenCalledWith(fileStructure);
+        getEncodingForFileMock.mockRestore();
     });
 
     it("Has the proper responses for toSameSession in UssFileUtils", async () => {

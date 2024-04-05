@@ -927,6 +927,7 @@ describe("USSTree Unit Tests - Function rename", () => {
         const newMocks = {
             ussFavNode,
             ussFavNodeParent,
+            setAttributes: jest.spyOn(ZoweUSSNode.prototype, "setAttributes").mockImplementation(),
         };
 
         return newMocks;
@@ -1064,14 +1065,9 @@ describe("USSTree Unit Tests - Function rename", () => {
         const globalMocks = await createGlobalMocks();
         createBlockMocks(globalMocks);
         globalMocks.showInputBox.mockReturnValueOnce("new name");
-        globalMocks.FileSystemProvider.rename.mockRejectedValueOnce(Error("testError"));
 
-        try {
-            await globalMocks.testTree.rename(globalMocks.testUSSNode);
-        } catch (err) {
-            // Prevent exception from failing test
-        }
-        expect(globalMocks.showErrorMessage.mock.calls.length).toBe(1);
+        jest.spyOn(globalMocks.testUSSNode as unknown as any, "rename").mockRejectedValueOnce(Error("testError"));
+        await expect(globalMocks.testTree.rename(globalMocks.testUSSNode)).rejects.toThrow("testError");
     });
 });
 
@@ -1614,7 +1610,6 @@ describe("USSTree Unit Tests - Function openWithEncoding", () => {
         node.openUSS = jest.fn();
         jest.spyOn(sharedUtils, "promptForEncoding").mockResolvedValueOnce({ kind: "text" });
         await USSTree.prototype.openWithEncoding(node);
-        expect(node.binary).toBe(false);
         expect(setEncodingMock).toHaveBeenCalledWith(node.resourceUri, { kind: "text" });
         expect(node.openUSS).toHaveBeenCalledTimes(1);
         getEncodingMock.mockRestore();
@@ -1627,7 +1622,6 @@ describe("USSTree Unit Tests - Function openWithEncoding", () => {
         node.openUSS = jest.fn();
         jest.spyOn(sharedUtils, "promptForEncoding").mockResolvedValueOnce(undefined);
         await USSTree.prototype.openWithEncoding(node);
-        expect(node.binary).toBe(false);
         expect(setEncodingSpy).not.toHaveBeenCalled();
         expect(node.openUSS).toHaveBeenCalledTimes(0);
         getEncodingMock.mockRestore();

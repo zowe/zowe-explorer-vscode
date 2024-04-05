@@ -2646,21 +2646,29 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
             parentNode: pds,
             session: createISession(),
         });
-        nodeA.stats = { user: "someUser", createdDate: new Date(), modifiedDate: new Date() };
+        jest.spyOn(nodeA, "getStats").mockReturnValue({ user: "someUser", createdDate: new Date(), modifiedDate: new Date() });
         const nodeB = new ZoweDatasetNode({
             label: "B",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             parentNode: pds,
             session: createISession(),
         });
-        nodeB.stats = { user: "anotherUser", createdDate: new Date("2021-01-01T12:00:00"), modifiedDate: new Date("2022-01-01T12:00:00") };
+        jest.spyOn(nodeB, "getStats").mockReturnValue({
+            user: "anotherUser",
+            createdDate: new Date("2021-01-01T12:00:00"),
+            modifiedDate: new Date("2022-01-01T12:00:00"),
+        });
         const nodeC = new ZoweDatasetNode({
             label: "C",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             parentNode: pds,
             session: createISession(),
         });
-        nodeC.stats = { user: "someUser", createdDate: new Date("2022-02-01T12:00:00"), modifiedDate: new Date("2022-03-15T16:30:00") };
+        jest.spyOn(nodeC, "getStats").mockReturnValue({
+            user: "someUser",
+            createdDate: new Date("2022-02-01T12:00:00"),
+            modifiedDate: new Date("2022-03-15T16:30:00"),
+        });
         pds.children = [nodeA, nodeB, nodeC];
         pds.sort = {
             method: Sorting.DatasetSortOpts.Name,
@@ -2753,7 +2761,11 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
                 parentNode: nodes.pds,
                 session: createISession(),
             });
-            nodeD.stats = { user: "someUser", createdDate: new Date("2021-01-01T12:00:00"), modifiedDate: new Date("2022-03-15T16:30:00") };
+            jest.spyOn(nodeD, "getStats").mockReturnValue({
+                user: "someUser",
+                createdDate: new Date("2021-01-01T12:00:00"),
+                modifiedDate: new Date("2022-03-15T16:30:00"),
+            });
             nodes.pds.children = [...(nodes.pds.children ?? []), nodeD];
             mocks.showQuickPick.mockResolvedValueOnce({ label: "$(calendar) Date Created" });
             await tree.sortPdsMembersDialog(nodes.pds);
@@ -2772,7 +2784,11 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
                 parentNode: nodes.pds,
                 session: createISession(),
             });
-            nodeD.stats = { user: "someUser", createdDate: new Date("not a valid date"), modifiedDate: new Date("2022-03-15T16:30:00") };
+            jest.spyOn(nodeD, "getStats").mockReturnValue({
+                user: "someUser",
+                createdDate: new Date("not a valid date"),
+                modifiedDate: new Date("2022-03-15T16:30:00"),
+            });
             nodes.pds.children = [...(nodes.pds.children ?? []), nodeD];
             mocks.showQuickPick.mockResolvedValueOnce({ label: "$(calendar) Date Created" });
             await tree.sortPdsMembersDialog(nodes.pds);
@@ -2803,7 +2819,11 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
                 parentNode: nodes.pds,
                 session: createISession(),
             });
-            nodeD.stats = { user: "someUser", createdDate: new Date("2021-01-01T12:00:00"), modifiedDate: new Date("2022-03-15T16:30:00") };
+            jest.spyOn(nodeD, "getStats").mockReturnValue({
+                user: "someUser",
+                createdDate: new Date("2021-01-01T12:00:00"),
+                modifiedDate: new Date("2022-03-15T16:30:00"),
+            });
             nodes.pds.children = [...(nodes.pds.children ?? []), nodeD];
             await tree.sortPdsMembersDialog(nodes.pds);
             expect(mocks.nodeDataChanged).toHaveBeenCalled();
