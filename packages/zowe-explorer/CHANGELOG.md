@@ -10,8 +10,11 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Updated sorting of PDS members to show items without stats at bottom of list [#2660](https://github.com/zowe/vscode-extension-for-zowe/issues/2660)
 - Added support to view the Encoding history for MVS and Dataset in the History View [#2776](https://github.com/zowe/vscode-extension-for-zowe/issues/2776)
 - Updated MVS view progress indicator for entering a filter search. [#2181](https://github.com/zowe/zowe-explorer-vscode/issues/2181)
+- Added support to view the Encoding history for MVS and Dataset in the History View [#2813](https://github.com/zowe/zowe-explorer-vscode/issues/2813)
 
 ### Bug fixes
+
+- To fix clicking submitted job hyperlink throws error [#2804](https://github.com/zowe/vscode-extension-for-zowe/issues/2804)
 
 ## `2.15.0`
 
