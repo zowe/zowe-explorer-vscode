@@ -95,7 +95,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         if (icon) {
             this.iconPath = icon.path;
         }
-        const isSession = opts.parentNode == null;
+        const isSession = this.getParent() == null;
         if (isSession) {
             this.id = `uss.${this.label.toString()}`;
         }
@@ -271,12 +271,12 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             if (isDir) {
                 // Create an entry for the USS folder if it doesn't exist.
                 if (!UssFSProvider.instance.exists(temp.resourceUri)) {
-                    vscode.workspace.fs.createDirectory(temp.resourceUri);
+                    UssFSProvider.instance.createDirectory(temp.resourceUri);
                 }
             } else {
                 // Create an entry for the USS file if it doesn't exist.
                 if (!UssFSProvider.instance.exists(temp.resourceUri)) {
-                    await vscode.workspace.fs.writeFile(temp.resourceUri, new Uint8Array());
+                    await UssFSProvider.instance.writeFile(temp.resourceUri, new Uint8Array(), { create: true, overwrite: true });
                 }
                 temp.command = {
                     command: "vscode.open",

@@ -248,7 +248,6 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 const existing = this.children.find((element) => element.label.toString() === dsEntry);
                 let temp = existing;
                 if (existing) {
-                    existing.updateStats(item);
                     elementChildren[existing.label.toString()] = existing;
                     // Creates a ZoweDatasetNode for a PDS
                 } else if (item.dsorg === "PO" || item.dsorg === "PO-E") {
@@ -336,7 +335,6 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     }
 
                     // get user and last modified date for sorting, if available
-                    temp.updateStats(item);
                     elementChildren[temp.label.toString()] = temp;
                 }
 
@@ -348,12 +346,12 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     if (temp.collapsibleState !== vscode.TreeItemCollapsibleState.None) {
                         // Create an entry for the PDS if it doesn't exist.
                         if (!DatasetFSProvider.instance.exists(temp.resourceUri)) {
-                            vscode.workspace.fs.createDirectory(temp.resourceUri);
+                            DatasetFSProvider.instance.createDirectory(temp.resourceUri);
                         }
                     } else {
                         // Create an entry for the data set if it doesn't exist.
                         if (!DatasetFSProvider.instance.exists(temp.resourceUri)) {
-                            await vscode.workspace.fs.writeFile(temp.resourceUri, new Uint8Array());
+                            await DatasetFSProvider.instance.writeFile(temp.resourceUri, new Uint8Array(), { create: true, overwrite: true });
                         }
                         temp.command = {
                             command: "vscode.open",
@@ -361,6 +359,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                             arguments: [temp.resourceUri],
                         };
                     }
+                    temp.updateStats(item);
                 }
             }
         }

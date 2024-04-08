@@ -100,6 +100,19 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             });
         }
         const response = await ZoweExplorerApiRegister.getUssApi(profile).fileList(ussPath);
+        // If request was successful, create directories for the intermediate path if it doesn't exist
+        const uriSegments = uri.path.split("/");
+        // Factor out first empty segment and profile name
+        uriSegments.shift();
+        const profileName = uriSegments.shift();
+        let intermediateUri = uri.with({ path: `/${profileName}` });
+        for (const segment of uriSegments) {
+            intermediateUri = uri.with({ path: path.posix.join(intermediateUri.path, segment) });
+            if (!this.exists(intermediateUri)) {
+                this.createDirectory(intermediateUri);
+            }
+        }
+
         return {
             ...response,
             apiResponse: {
