@@ -487,6 +487,13 @@ export namespace window {
         return {};
     }
 }
+
+export namespace languages {
+    export function setTextDocumentLanguage(document: TextDocument, languageId: string): Thenable<TextDocument> {
+        return {} as Thenable<TextDocument>;
+    }
+}
+
 export namespace commands {
     /**
      * Registers a command that can be invoked via a keyboard shortcut,

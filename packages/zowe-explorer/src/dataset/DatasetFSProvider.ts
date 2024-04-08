@@ -33,6 +33,8 @@ import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 // Set up localization
 import { IZosFilesResponse } from "@zowe/zos-files-for-zowe-sdk";
 import { Profiles } from "../Profiles";
+import { getLanguageId } from "../dataset/utils";
+import { ZoweLogger } from "../utils/ZoweLogger";
 
 export class DatasetFSProvider extends BaseProvider implements vscode.FileSystemProvider {
     private static _instance: DatasetFSProvider;
@@ -51,6 +53,29 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         }
 
         return DatasetFSProvider._instance;
+    }
+
+    /**
+     * onDidOpenTextDocument event listener for the dataset provider.
+     * Updates the opened document with the correct language ID.
+     * @param doc The document received from the onDidOpenTextDocument event.
+     */
+    public static async onDidOpenTextDocument(this: void, doc: vscode.TextDocument): Promise<void> {
+        if (doc.uri.scheme !== ZoweScheme.DS) {
+            return;
+        }
+
+        const parentPath = path.posix.basename(path.posix.join(doc.uri.path, ".."));
+        const languageId = getLanguageId(parentPath);
+        if (languageId == null) {
+            return;
+        }
+
+        try {
+            await vscode.languages.setTextDocumentLanguage(doc, languageId);
+        } catch (err) {
+            ZoweLogger.warn(`Could not set document language for ${doc.fileName} - tried languageId '${languageId}'`);
+        }
     }
 
     public watch(_uri: vscode.Uri, _options: { readonly recursive: boolean; readonly excludes: readonly string[] }): vscode.Disposable {

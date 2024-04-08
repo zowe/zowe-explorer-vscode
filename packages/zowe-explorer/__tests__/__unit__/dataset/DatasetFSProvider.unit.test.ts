@@ -9,12 +9,13 @@
  *
  */
 
-import { Disposable, FileType, TextEditor, Uri } from "vscode";
+import { Disposable, FilePermission, FileType, languages, TextDocument, TextEditor, Uri } from "vscode";
 import { DatasetFSProvider } from "../../../src/dataset/DatasetFSProvider";
 import { createIProfile } from "../../../__mocks__/mockCreators/shared";
 import { DirEntry, DsEntry, FileEntry, FilterEntry, Gui, PdsEntry, ZoweScheme } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { MockedProperty } from "../../../__mocks__/mockUtils";
+import { ZoweLogger } from "../../../src/utils/ZoweLogger";
 
 const testProfile = createIProfile();
 const testEntries = {
@@ -183,6 +184,31 @@ describe("fetchDatasetAtUri", () => {
         mvsApiMock.mockRestore();
     });
 
+    it("fetches a data set at the given URI - conflict view", async () => {
+        const contents = "dataset contents";
+        const mockMvsApi = {
+            getContents: jest.fn((dsn, opts) => {
+                opts.stream.write(contents);
+
+                return {
+                    apiResponse: {
+                        etag: "123ANETAG",
+                    },
+                };
+            }),
+        };
+        const fakePo = { ...testEntries.ps };
+        const lookupAsFileMock = jest.spyOn(DatasetFSProvider.instance as any, "_lookupAsFile").mockReturnValueOnce(fakePo);
+        const mvsApiMock = jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValueOnce(mockMvsApi as any);
+        await DatasetFSProvider.instance.fetchDatasetAtUri(testUris.ps, { isConflict: true });
+        expect(fakePo.conflictData?.contents.toString()).toStrictEqual(contents.toString());
+        expect(fakePo.conflictData?.etag).toBe("123ANETAG");
+        expect(fakePo.conflictData?.size).toBe(contents.length);
+
+        lookupAsFileMock.mockRestore();
+        mvsApiMock.mockRestore();
+    });
+
     it("calls _updateResourceInEditor if 'editor' is specified", async () => {
         const contents = "dataset contents";
         const mockMvsApi = {
@@ -200,9 +226,10 @@ describe("fetchDatasetAtUri", () => {
         const _updateResourceInEditorMock = jest.spyOn(DatasetFSProvider.instance as any, "_updateResourceInEditor").mockImplementation();
         const lookupAsFileMock = jest.spyOn(DatasetFSProvider.instance as any, "_lookupAsFile").mockReturnValueOnce(fakePo);
         const mvsApiMock = jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValueOnce(mockMvsApi as any);
-        await DatasetFSProvider.instance.fetchDatasetAtUri(testUris.ps, {} as TextEditor);
+        await DatasetFSProvider.instance.fetchDatasetAtUri(testUris.ps, { editor: {} as TextEditor, isConflict: false });
         expect(fakePo.data.toString()).toStrictEqual(contents.toString());
         expect(fakePo.etag).toBe("123ANETAG");
+        expect(_updateResourceInEditorMock).toHaveBeenCalledWith(testUris.ps);
 
         lookupAsFileMock.mockRestore();
         mvsApiMock.mockRestore();
@@ -287,8 +314,12 @@ describe("writeFile", () => {
 
     it("throws an error when there is an error unrelated to etag", async () => {
         const mockMvsApi = {
-            uploadFromBuffer: jest.fn().mockRejectedValueOnce(new Error("Unknown error on remote system")),
+            uploadFromBuffer: jest.fn().mockImplementation(() => {
+                throw new Error("Unknown error on remote system");
+            }),
         };
+        const disposeMock = jest.fn();
+        const setStatusBarMsg = jest.spyOn(Gui, "setStatusBarMessage").mockReturnValueOnce({ dispose: disposeMock });
         const mvsApiMock = jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValueOnce(mockMvsApi as any);
         const psEntry = { ...testEntries.ps, metadata: testEntries.ps.metadata } as DsEntry;
         const sessionEntry = { ...testEntries.session };
@@ -301,12 +332,15 @@ describe("writeFile", () => {
         );
 
         expect(lookupParentDirMock).toHaveBeenCalledWith(testUris.ps);
+        expect(setStatusBarMsg).toHaveBeenCalled();
         expect(mockMvsApi.uploadFromBuffer).toHaveBeenCalledWith(Buffer.from(newContents), testEntries.ps.name, {
             binary: false,
             encoding: undefined,
             etag: testEntries.ps.etag,
             returnEtag: true,
         });
+        expect(disposeMock).toHaveBeenCalled();
+        setStatusBarMsg.mockRestore();
         mvsApiMock.mockRestore();
         lookupMock.mockRestore();
     });
@@ -456,6 +490,13 @@ describe("stat", () => {
         const lookupMock = jest.spyOn(DatasetFSProvider.instance as any, "_lookup").mockImplementation();
         DatasetFSProvider.instance.stat(testUris.ps);
         expect(lookupMock).toHaveBeenCalledWith(testUris.ps, false);
+        lookupMock.mockRestore();
+    });
+    it("returns readonly if the URI is in the conflict view", () => {
+        const lookupMock = jest.spyOn(DatasetFSProvider.instance as any, "_lookup").mockImplementation();
+        const conflictUri = testUris.ps.with({ query: "conflict=true" });
+        expect(DatasetFSProvider.instance.stat(conflictUri).permissions).toBe(FilePermission.Readonly);
+        expect(lookupMock).toHaveBeenCalledWith(conflictUri, false);
         lookupMock.mockRestore();
     });
 });
@@ -623,5 +664,74 @@ describe("rename", () => {
         _lookupMock.mockRestore();
         mvsApiMock.mockRestore();
         _lookupParentDirectoryMock.mockRestore();
+    });
+});
+
+describe("onDidOpenTextDocument", () => {
+    const setTextDocLanguage = jest.spyOn(languages, "setTextDocumentLanguage");
+
+    afterEach(() => {
+        setTextDocLanguage.mockClear();
+    });
+
+    it("handles ZoweScheme.DS documents", async () => {
+        const dsUri = Uri.from({
+            path: "/profile/USER.WONDROUS.C/AMAZING",
+            scheme: ZoweScheme.DS,
+        });
+        const doc = {
+            uri: dsUri,
+            languageId: undefined,
+        } as unknown as TextDocument;
+        await DatasetFSProvider.onDidOpenTextDocument(doc);
+        expect(setTextDocLanguage).toHaveBeenCalledWith(doc, "c");
+    });
+
+    it("returns early if the language ID could not be identified", async () => {
+        const dsUri = Uri.from({
+            path: "/profile/TEST.DS/AMAZING",
+            scheme: ZoweScheme.DS,
+        });
+        const doc = {
+            uri: dsUri,
+            languageId: undefined,
+        } as unknown as TextDocument;
+        await DatasetFSProvider.onDidOpenTextDocument(doc);
+        expect(setTextDocLanguage).not.toHaveBeenCalled();
+    });
+
+    it("returns early if the scheme is not ZoweScheme.DS", async () => {
+        const fileUri = Uri.from({
+            path: "/var/www/AMAZING.txt",
+            scheme: "file",
+        });
+        const doc = {
+            uri: fileUri,
+            languageId: "plaintext",
+        } as unknown as TextDocument;
+        await DatasetFSProvider.onDidOpenTextDocument(doc);
+        expect(setTextDocLanguage).not.toHaveBeenCalled();
+        expect(doc.languageId).toBe("plaintext");
+    });
+
+    it("handles an error when setting the language ID", async () => {
+        setTextDocLanguage.mockImplementationOnce(() => {
+            throw new Error("Not available");
+        });
+        const dsUri = Uri.from({
+            path: "/profile/TEST.C.DS/MISSING",
+            scheme: ZoweScheme.DS,
+        });
+        const doc = {
+            fileName: "MISSING",
+            uri: dsUri,
+            languageId: "rust",
+        } as unknown as TextDocument;
+
+        const warnSpy = jest.spyOn(ZoweLogger, "warn");
+        await DatasetFSProvider.onDidOpenTextDocument(doc);
+        expect(setTextDocLanguage).toHaveBeenCalled();
+        expect(warnSpy).toHaveBeenCalledWith("Could not set document language for MISSING - tried languageId 'c'");
+        expect(doc.languageId).toBe("rust");
     });
 });

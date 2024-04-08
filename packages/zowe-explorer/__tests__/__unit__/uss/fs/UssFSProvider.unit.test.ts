@@ -13,7 +13,7 @@ import { Disposable, FilePermission, FileType, TextEditor, Uri } from "vscode";
 import { UssFSProvider } from "../../../../src/uss/UssFSProvider";
 import { createIProfile } from "../../../../__mocks__/mockCreators/shared";
 import { ZoweExplorerApiRegister } from "../../../../src/ZoweExplorerApiRegister";
-import { BaseProvider, DirEntry, FileEntry, Gui, UssFile, ZoweScheme } from "@zowe/zowe-explorer-api";
+import { BaseProvider, DirEntry, FileEntry, Gui, UssFile, ZosEncoding, ZoweScheme } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../../../src/Profiles";
 import { UssFileType } from "../../../../src/uss/FileStructure";
 
@@ -269,6 +269,22 @@ describe("fetchFileAtUri", () => {
         expect(fileEntry.etag).toBe("123abc");
         expect(fileEntry.data.byteLength).toBe(exampleData.length);
         expect(_updateResourceInEditorMock).toHaveBeenCalledWith(testUris.file);
+        autoDetectEncodingMock.mockRestore();
+    });
+});
+
+describe("fetchEncodingForUri", () => {
+    it("returns the correct encoding for a URI", async () => {
+        const fileEntry = { ...testEntries.file };
+        const lookupAsFileMock = jest.spyOn((UssFSProvider as any).prototype, "_lookupAsFile").mockReturnValueOnce(fileEntry);
+        const autoDetectEncodingMock = jest.spyOn(UssFSProvider.instance, "autoDetectEncoding").mockImplementation(async (entry) => {
+            entry.encoding = { kind: "text" };
+        });
+        await UssFSProvider.instance.fetchEncodingForUri(testUris.file);
+
+        expect(lookupAsFileMock).toHaveBeenCalledWith(testUris.file);
+        expect(autoDetectEncodingMock).toHaveBeenCalledWith(fileEntry);
+        expect(fileEntry.encoding).toStrictEqual({ kind: "text" });
         autoDetectEncodingMock.mockRestore();
     });
 });

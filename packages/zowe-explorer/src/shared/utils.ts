@@ -107,56 +107,6 @@ export function getAppName(): "VS Code" {
     return "VS Code";
 }
 
-/**
- * Append a suffix on a ds file so it can be interpretted with syntax highlighter
- *
- * Rules of mapping:
- *  1. Start with LLQ and work backwards as it is at this end usually
- *   the language is specified
- *  2. Dont do this for the top level HLQ
- */
-export function getLanguageId(label: string): string | null {
-    const limit = 5;
-    const bracket = label.indexOf("(");
-    const split = bracket > -1 ? label.substr(0, bracket).split(".", limit) : label.split(".", limit);
-    for (let i = split.length - 1; i > 0; i--) {
-        if (split[i] === "C") {
-            return "c";
-        }
-        if (["JCL", "JCLLIB", "CNTL", "PROC", "PROCLIB"].includes(split[i])) {
-            return "jcl";
-        }
-        if (["COBOL", "CBL", "COB", "SCBL"].includes(split[i])) {
-            return "cobol";
-        }
-        if (["COPYBOOK", "COPY", "CPY", "COBCOPY"].includes(split[i])) {
-            return "copybook";
-        }
-        if (["INC", "INCLUDE", "PLINC"].includes(split[i])) {
-            return "inc";
-        }
-        if (["PLI", "PL1", "PLX", "PCX"].includes(split[i])) {
-            return "pli";
-        }
-        if (["SH", "SHELL"].includes(split[i])) {
-            return "shellscript";
-        }
-        if (["REXX", "REXEC", "EXEC"].includes(split[i])) {
-            return "rexx";
-        }
-        if (split[i] === "XML") {
-            return "xml";
-        }
-        if (split[i] === "ASM" || split[i].indexOf("ASSEMBL") > -1) {
-            return "asm";
-        }
-        if (split[i] === "LOG" || split[i].indexOf("SPFLOG") > -1) {
-            return "log";
-        }
-    }
-    return null;
-}
-
 export function checkIfChildPath(parentPath: string, childPath: string): boolean {
     const relativePath = path.relative(parentPath, childPath);
     return relativePath && !relativePath.startsWith("..") && !path.isAbsolute(relativePath);
