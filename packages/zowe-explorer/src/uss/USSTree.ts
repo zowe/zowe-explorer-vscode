@@ -47,7 +47,7 @@ import { UssFSProvider } from "./UssFSProvider";
 export async function createUSSTree(log: imperative.Logger): Promise<USSTree> {
     ZoweLogger.trace("uss.USSTree.createUSSTree called.");
     const tree = new USSTree();
-    tree.initializeFavorites(log);
+    await tree.initializeFavorites(log);
     await tree.addSession(undefined, undefined, tree);
     return tree;
 }
@@ -859,7 +859,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
      * Profile loading only occurs in loadProfilesForFavorites when the profile node in Favorites is clicked on.
      * @param log
      */
-    public initializeFavorites(log: imperative.Logger): void {
+    public async initializeFavorites(log: imperative.Logger): Promise<void> {
         ZoweLogger.trace("USSTree.initializeFavorites called.");
         this.log = log;
         ZoweLogger.debug(vscode.l10n.t("Initializing profiles with USS favorites."));
@@ -881,7 +881,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
             }
 
             // Initialize and attach favorited item nodes under their respective profile node in Favorrites
-            const favChildNode = this.initializeFavChildNodeForProfile(fav.label, fav.contextValue, favProfileNode);
+            const favChildNode = await this.initializeFavChildNodeForProfile(fav.label, fav.contextValue, favProfileNode);
             if (favChildNode != null) {
                 favProfileNode.children.push(favChildNode);
             }
@@ -930,6 +930,13 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                 parentNode,
                 profile,
             });
+            if (!UssFSProvider.instance.exists(node.resourceUri)) {
+                const parentUri = node.resourceUri.with({ path: path.posix.join(node.resourceUri.path, "..") });
+                if (!UssFSProvider.instance.exists(parentUri)) {
+                    await vscode.workspace.fs.createDirectory(parentUri);
+                }
+                await vscode.workspace.fs.writeFile(node.resourceUri, new Uint8Array());
+            }
             node.command = {
                 command: "vscode.open",
                 title: vscode.l10n.t("Open"),

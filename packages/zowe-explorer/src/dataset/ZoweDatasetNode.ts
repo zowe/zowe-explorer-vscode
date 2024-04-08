@@ -97,7 +97,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
 
         if (this.label !== vscode.l10n.t("Favorites")) {
             const sessionLabel = opts.profile?.name ?? getSessionLabel(this);
-            if (this.getParent() == null) {
+            if (this.getParent() == null || this.getParent().label === vscode.l10n.t("Favorites")) {
                 this.resourceUri = vscode.Uri.from({
                     scheme: ZoweScheme.DS,
                     path: `/${sessionLabel}/`,
@@ -346,12 +346,12 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     if (temp.collapsibleState !== vscode.TreeItemCollapsibleState.None) {
                         // Create an entry for the PDS if it doesn't exist.
                         if (!DatasetFSProvider.instance.exists(temp.resourceUri)) {
-                            DatasetFSProvider.instance.createDirectory(temp.resourceUri);
+                            await vscode.workspace.fs.createDirectory(temp.resourceUri);
                         }
                     } else {
                         // Create an entry for the data set if it doesn't exist.
                         if (!DatasetFSProvider.instance.exists(temp.resourceUri)) {
-                            await DatasetFSProvider.instance.writeFile(temp.resourceUri, new Uint8Array(), { create: true, overwrite: true });
+                            await vscode.workspace.fs.writeFile(temp.resourceUri, new Uint8Array());
                         }
                         temp.command = {
                             command: "vscode.open",
