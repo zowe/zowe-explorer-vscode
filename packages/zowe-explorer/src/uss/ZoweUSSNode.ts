@@ -329,8 +329,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         this.resourceUri = parentUri.with({
             path: childPath,
         });
-        this.shortLabel = childPath.split("/").pop();
-        this.label = this.shortLabel;
+        this.label = this.shortLabel = path.posix.basename(this.fullPath);
         this.tooltip = injectAdditionalDataToTooltip(this, childPath);
 
         if (this.children.length > 0) {
@@ -349,11 +348,11 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
 
         const oldUri = vscode.Uri.from({
             scheme: ZoweScheme.USS,
-            path: `/${this.profile.name}${this.fullPath}`,
+            path: path.posix.join("/", this.profile.name, this.fullPath),
         });
         const newUri = vscode.Uri.from({
             scheme: ZoweScheme.USS,
-            path: `/${this.profile.name}${newFullPath}`,
+            path: path.posix.join("/", this.profile.name, newFullPath),
         });
 
         try {
@@ -365,8 +364,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
 
         this.fullPath = newFullPath;
         this.resourceUri = newUri;
-        this.shortLabel = newFullPath.split("/").pop();
-        this.label = this.shortLabel;
+        this.label = this.shortLabel = path.posix.basename(newFullPath);
         this.tooltip = injectAdditionalDataToTooltip(this, newFullPath);
         // Update the full path of any children already loaded locally
         if (this.children.length > 0) {

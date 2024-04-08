@@ -12,6 +12,7 @@
 import * as vscode from "vscode";
 import type { ZoweUSSNode } from "./ZoweUSSNode";
 import { ZoweLogger } from "../utils/ZoweLogger";
+import * as contextually from "../shared/context";
 import { ZosEncoding } from "@zowe/zowe-explorer-api";
 
 export function zosEncodingToString(encoding: ZosEncoding): string {
@@ -44,18 +45,19 @@ export function injectAdditionalDataToTooltip(node: ZoweUSSNode, tooltip: string
             });
     }
 
-    const zosEncoding = node.getEncoding();
-    const encodingString = zosEncoding ? zosEncodingToString(zosEncoding) : null;
-    if (encodingString != null) {
-        tooltip +=
-            "  \n" +
-            vscode.l10n.t({
-                message: "Encoding: {0}",
-                args: [encodingString],
-                comment: ["Encoding name"],
-            });
+    if (!contextually.isUssDirectory(node)) {
+        const zosEncoding = node.getEncoding();
+        const encodingString = zosEncoding ? zosEncodingToString(zosEncoding) : null;
+        if (encodingString != null) {
+            tooltip +=
+                "  \n" +
+                vscode.l10n.t({
+                    message: "Encoding: {0}",
+                    args: [encodingString],
+                    comment: ["Encoding name"],
+                });
+        }
     }
-
     return tooltip;
 }
 
