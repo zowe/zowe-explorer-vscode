@@ -162,8 +162,12 @@ export class BaseProvider {
      * @returns The encoding for the file
      */
     public getEncodingForFile(uri: vscode.Uri): ZosEncoding {
-        const fileEntry = this._lookupAsFile(uri);
-        return fileEntry.encoding;
+        const entry = this._lookup(uri, false) as FileEntry | DirEntry;
+        if (isDirectoryEntry(entry)) {
+            return undefined;
+        }
+
+        return entry.encoding;
     }
 
     /**
@@ -363,9 +367,7 @@ export class BaseProvider {
      * VScode utility functions for entries in the provider:
      */
 
-    protected _lookup(uri: vscode.Uri, silent: false): IFileSystemEntry;
-    protected _lookup(uri: vscode.Uri, silent: boolean): IFileSystemEntry | undefined;
-    protected _lookup(uri: vscode.Uri, silent: boolean): IFileSystemEntry | undefined {
+    protected _lookup(uri: vscode.Uri, silent: boolean = false): IFileSystemEntry | undefined {
         if (uri.path === "/") {
             return this.root;
         }

@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { BaseProvider, ConflictViewSelection, DirEntry, ZoweScheme } from "../../../src/fs";
+import { BaseProvider, ConflictViewSelection, DirEntry, FileEntry, ZoweScheme } from "../../../src/fs";
 import { Gui } from "../../../src/globals";
 import { MockedProperty } from "../../../__mocks__/mockUtils";
 
@@ -192,7 +192,7 @@ describe("getEncodingForFile", () => {
     it("gets the encoding for a file entry", () => {
         const prov = new (BaseProvider as any)();
         const fileEntry = { ...globalMocks.fileFsEntry, encoding: { kind: "text" } };
-        const _lookupAsFileMock = jest.spyOn(prov, "_lookupAsFile").mockReturnValueOnce(fileEntry);
+        const _lookupAsFileMock = jest.spyOn(prov, "_lookup").mockReturnValueOnce(fileEntry);
         expect(prov.getEncodingForFile(globalMocks.testFileUri)).toStrictEqual({ kind: "text" });
         _lookupAsFileMock.mockRestore();
     });
@@ -281,7 +281,7 @@ describe("setEncodingForFile", () => {
     it("sets the encoding for a file entry", () => {
         const prov = new (BaseProvider as any)();
         const fileEntry = { ...globalMocks.fileFsEntry, encoding: undefined };
-        const _lookupAsFileMock = jest.spyOn(prov, "_lookupAsFile").mockReturnValueOnce(fileEntry);
+        const _lookupAsFileMock = jest.spyOn(prov, "_lookup").mockReturnValueOnce(fileEntry);
         prov.setEncodingForFile(globalMocks.testFileUri, { kind: "text" });
         expect(fileEntry.encoding).toStrictEqual({ kind: "text" });
         _lookupAsFileMock.mockRestore();
@@ -353,8 +353,9 @@ describe("_lookupAsFile", () => {
     it("returns a valid entry if it exists in the file system", () => {
         const prov = new (BaseProvider as any)();
         prov.root = new DirEntry("");
-        prov.root.entries.set("file.txt", globalMocks.fileFsEntry);
-        expect(prov._lookupAsFile(globalMocks.testFileUri)).toStrictEqual(globalMocks.fileFsEntry);
+        const fileEntry = new FileEntry(globalMocks.fileFsEntry.name);
+        prov.root.entries.set("file.txt", fileEntry);
+        expect(prov._lookupAsFile(globalMocks.testFileUri)).toBe(fileEntry);
     });
 
     it("throws an error if the provided URI is a directory", () => {
