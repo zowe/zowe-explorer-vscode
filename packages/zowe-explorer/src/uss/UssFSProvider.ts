@@ -136,7 +136,9 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
                 // create new entries for any files/folders that aren't in the provider
                 const UssType = item.mode.startsWith("d") ? UssDirectory : UssFile;
-                dir.entries.set(itemName, new UssType(itemName));
+                const newEntry = new UssType(itemName);
+                newEntry.metadata = { ...dir.metadata, path: path.posix.join(dir.metadata.path, itemName) };
+                dir.entries.set(itemName, newEntry);
             }
         }
 

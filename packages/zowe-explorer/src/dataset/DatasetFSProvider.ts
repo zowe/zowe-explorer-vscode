@@ -121,6 +121,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                             // PS
                             tempEntry = new DsEntry(ds.dsname);
                         }
+                        tempEntry.metadata = { ...dsEntry.metadata, path: path.posix.join(dsEntry.metadata.path, ds.dsname) };
                         dsEntry.entries.set(ds.dsname, tempEntry);
                     }
                     results.push([tempEntry.name, tempEntry instanceof DsEntry ? vscode.FileType.File : vscode.FileType.Directory]);
@@ -133,6 +134,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 let tempEntry = dsEntry.entries.get(ds.member);
                 if (tempEntry == null) {
                     tempEntry = new MemberEntry(ds.member);
+                    tempEntry.metadata = { ...dsEntry.metadata, path: path.posix.join(dsEntry.metadata.path, ds.member) };
                     dsEntry.entries.set(ds.member, tempEntry);
                 }
                 results.push([tempEntry.name, vscode.FileType.File]);
