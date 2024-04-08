@@ -28,7 +28,7 @@ import {
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { FilterDescriptor, FilterItem, errorHandling, syncSessionNode } from "../utils/ProfilesUtils";
-import { sortTreeItems, getAppName, SORT_DIRS, promptForEncoding, updateOpenFiles } from "../shared/utils";
+import { sortTreeItems, getAppName, SORT_DIRS, promptForEncoding, updateOpenFiles, parseFavorites } from "../shared/utils";
 import { ZoweTreeProvider } from "../abstract/ZoweTreeProvider";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { getIconById, getIconByNode, IconId, IIconItem } from "../generators/icons";
@@ -242,32 +242,18 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             ZoweLogger.debug(vscode.l10n.t("No data set favorites found."));
             return;
         }
-        // Line validation
 
-        const favPattern = /^\[(.+)\]:\s(.+?)\{(.+)\}$/;
-        for (const line of lines) {
-            if (!favPattern.test(line)) {
-                ZoweLogger.warn(
-                    vscode.l10n.t({
-                        message:
-                            "Invalid Data Sets favorite: {0}. Please check formatting of the zowe.ds.history 'favorites' settings in the {1} user settings.",
-                        args: [line, getAppName()],
-                        comment: ["Data Sets Favorite line", "Application name"],
-                    })
-                );
-                continue;
-            }
-
-            const [profName, dsName, contextValue] = favPattern.exec(line);
+        const favorites = parseFavorites(lines);
+        for (const fav of favorites) {
             // The profile node used for grouping respective favorited items. (Undefined if not created yet.)
-            let profileNodeInFavorites = this.findMatchingProfileInArray(this.mFavorites, profName);
-            if (profileNodeInFavorites === undefined) {
-                // If favorite node for profile doesn't exist yet, create a new one for it
-                profileNodeInFavorites = this.createProfileNodeForFavs(profName, await Profiles.getInstance().getLoadedProfConfig(profName));
-            }
-            // Initialize and attach favorited item nodes under their respective profile node in Favorrites
-            const favChildNodeForProfile = this.initializeFavChildNodeForProfile(dsName, contextValue, profileNodeInFavorites);
-            profileNodeInFavorites.children.push(favChildNodeForProfile);
+            // If favorite node for profile doesn't exist yet, create a new one for it
+            const favProfileNode =
+                this.findMatchingProfileInArray(this.mFavorites, fav.profileName) ??
+                this.createProfileNodeForFavs(fav.profileName, await Profiles.getInstance().getLoadedProfConfig(fav.profileName));
+
+            // Initialize and attach favorited item nodes under their respective profile node in Favorites
+            const favChildNode = this.initializeFavChildNodeForProfile(fav.label, fav.contextValue, favProfileNode);
+            favProfileNode.children.push(favChildNode);
         }
     }
 

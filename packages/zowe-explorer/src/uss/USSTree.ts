@@ -14,7 +14,7 @@ import * as globals from "../globals";
 import * as path from "path";
 import * as contextually from "../shared/context";
 import { FilterItem, FilterDescriptor, errorHandling, syncSessionNode } from "../utils/ProfilesUtils";
-import { sortTreeItems, getAppName, checkIfChildPath, updateOpenFiles, promptForEncoding } from "../shared/utils";
+import { sortTreeItems, getAppName, checkIfChildPath, updateOpenFiles, promptForEncoding, parseFavorites } from "../shared/utils";
 import {
     confirmForUnsavedDoc,
     getInfoForUri,
@@ -47,7 +47,7 @@ import { UssFSProvider } from "./UssFSProvider";
 export async function createUSSTree(log: imperative.Logger): Promise<USSTree> {
     ZoweLogger.trace("uss.USSTree.createUSSTree called.");
     const tree = new USSTree();
-    await tree.initializeFavorites(log);
+    tree.initializeFavorites(log);
     await tree.addSession(undefined, undefined, tree);
     return tree;
 }
@@ -193,7 +193,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
         // get the closest parent folder if the target is a file node
         let target = targetNode;
         if (!contextually.isUssDirectory(target)) {
-            target = target.getParent();
+            target = target.getParent() as IZoweUSSTreeNode;
         }
 
         // If the target path fully contains the path of the dragged node,
@@ -859,7 +859,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
      * Profile loading only occurs in loadProfilesForFavorites when the profile node in Favorites is clicked on.
      * @param log
      */
-    public async initializeFavorites(log: imperative.Logger): Promise<void> {
+    public initializeFavorites(log: imperative.Logger): void {
         ZoweLogger.trace("USSTree.initializeFavorites called.");
         this.log = log;
         ZoweLogger.debug(vscode.l10n.t("Initializing profiles with USS favorites."));
@@ -868,25 +868,22 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
             ZoweLogger.debug(vscode.l10n.t("No USS favorites found."));
             return;
         }
-        const favPattern = /^\[(.+)\]:\s(.+?)\{(.+)\}$/;
-        for (const line of lines) {
-            if (!favPattern.test(line)) {
-                continue;
-            }
-            const [profName, label, context] = favPattern.exec(line);
+
+        const favorites = parseFavorites(lines);
+        for (const fav of favorites) {
             // The profile node used for grouping respective favorited items. (Undefined if not created yet.)
-            let profileNodeInFavorites = this.findMatchingProfileInArray(this.mFavorites, profName);
-            if (profileNodeInFavorites === undefined) {
-                // If favorite node for profile doesn't exist yet, create a new one for it
-                profileNodeInFavorites = this.createProfileNodeForFavs(profName);
-            }
-            if (context == null) {
+            // If favorite node for profile doesn't exist yet, create a new one for it
+            const favProfileNode =
+                this.findMatchingProfileInArray(this.mFavorites, fav.profileName) ?? this.createProfileNodeForFavs(fav.profileName);
+
+            if (fav.contextValue == null) {
                 continue;
             }
+
             // Initialize and attach favorited item nodes under their respective profile node in Favorrites
-            const favChildNodeForProfile = await this.initializeFavChildNodeForProfile(label, context, profileNodeInFavorites);
-            if (favChildNodeForProfile != null) {
-                profileNodeInFavorites.children.push(favChildNodeForProfile);
+            const favChildNode = this.initializeFavChildNodeForProfile(fav.label, fav.contextValue, favProfileNode);
+            if (favChildNode != null) {
+                favProfileNode.children.push(favChildNode);
             }
         }
     }

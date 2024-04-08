@@ -169,6 +169,23 @@ export async function getCachedEncoding(node: IZoweTreeNode): Promise<string | u
     return cachedEncoding?.kind === "other" ? cachedEncoding.codepage : cachedEncoding?.kind;
 }
 
+export type FavoriteData = {
+    profileName: string;
+    label: string;
+    contextValue?: string;
+};
+
+export function parseFavorites(lines: string[]): FavoriteData[] {
+    return lines
+        .map((line) => /^\[(.+?)\]:\s(.+?)\{(.+?)\}$/g.exec(line), [])
+        .filter((arr) => arr?.length)
+        .map(([_fullMatch, profileName, label, contextValue]) => ({
+            profileName,
+            label,
+            contextValue,
+        }));
+}
+
 export async function promptForEncoding(node: IZoweDatasetTreeNode | IZoweUSSTreeNode, taggedEncoding?: string): Promise<ZosEncoding | undefined> {
     const ebcdicItem: vscode.QuickPickItem = {
         label: vscode.l10n.t("EBCDIC"),
