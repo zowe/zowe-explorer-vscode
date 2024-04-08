@@ -861,6 +861,7 @@ export class USSTree extends ZoweTreeProvider implements Types.IZoweUSSTreeType 
             label: profileName,
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             parentNode: this.mFavoriteSession,
+            profile: Profiles.getInstance().loadNamedProfile(profileName),
         });
         favProfileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
         const icon = getIconByNode(favProfileNode);
@@ -909,22 +910,30 @@ export class USSTree extends ZoweTreeProvider implements Types.IZoweUSSTreeType 
      * @param parentNode The profile node in this.mFavorites that the favorite belongs to
      * @returns IZoweUssTreeNode
      */
-    public initializeFavChildNodeForProfile(label: string, line: string, parentNode: IZoweUSSTreeNode): ZoweUSSNode {
+    public async initializeFavChildNodeForProfile(label: string, line: string, parentNode: IZoweUSSTreeNode): Promise<ZoweUSSNode> {
         ZoweLogger.trace("USSTree.initializeFavChildNodeForProfile called.");
         const favoriteSearchPattern = /^\[.+\]:\s.*\{ussSession\}$/;
         const directorySearchPattern = /^\[.+\]:\s.*\{directory\}$/;
+
+        const profile = parentNode.getProfile();
+
         let node: ZoweUSSNode;
         if (directorySearchPattern.test(line)) {
             node = new ZoweUSSNode({
                 label,
                 collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
                 parentNode,
+                profile,
             });
+            if (!UssFSProvider.instance.exists(node.resourceUri)) {
+                await vscode.workspace.fs.createDirectory(node.resourceUri);
+            }
         } else if (favoriteSearchPattern.test(line)) {
             node = new ZoweUSSNode({
                 label,
                 collapsibleState: vscode.TreeItemCollapsibleState.None,
                 parentNode,
+                profile,
             });
             node.contextValue = globals.USS_SESSION_CONTEXT;
             node.fullPath = label;
@@ -936,12 +945,20 @@ export class USSTree extends ZoweTreeProvider implements Types.IZoweUSSTreeType 
                 label,
                 collapsibleState: vscode.TreeItemCollapsibleState.None,
                 parentNode,
+                profile,
             });
             node.command = {
                 command: "vscode.open",
                 title: vscode.l10n.t("Open"),
                 arguments: [node.resourceUri],
             };
+            if (!UssFSProvider.instance.exists(node.resourceUri)) {
+                const parentUri = node.resourceUri.with({ path: path.posix.join(node.resourceUri.path, "..") });
+                if (!UssFSProvider.instance.exists(parentUri)) {
+                    await vscode.workspace.fs.createDirectory(parentUri);
+                }
+                await vscode.workspace.fs.writeFile(node.resourceUri, new Uint8Array());
+            }
         }
         node.contextValue = contextually.asFavorite(node);
         const icon = getIconByNode(node);

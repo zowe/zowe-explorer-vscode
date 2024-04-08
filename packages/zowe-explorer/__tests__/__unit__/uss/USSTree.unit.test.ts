@@ -252,7 +252,7 @@ describe("USSTree Unit Tests - Function initializeFavorites", () => {
 
 describe("USSTree Unit Tests - Function initializeFavChildNodeForProfile", () => {
     it("Tests initializeFavChildNodeForProfile() for favorited search", async () => {
-        await createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
 
         jest.spyOn(PersistentFilters.prototype, "readFavorites").mockReturnValueOnce([
             "[test]: /u/aDir{directory}",
@@ -266,6 +266,7 @@ describe("USSTree Unit Tests - Function initializeFavChildNodeForProfile", () =>
             label: "/u/fakeuser",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             parentNode: favProfileNode,
+            profile: globalMocks.testProfile,
         });
         expectedFavSearchNode.contextValue = globals.USS_SESSION_CONTEXT + globals.FAV_SUFFIX;
         expectedFavSearchNode.fullPath = label;
@@ -288,6 +289,7 @@ describe("USSTree Unit Tests - Function createProfileNodeForFavs", () => {
             label: "testProfile",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             parentNode: globalMocks.testTree.mFavoriteSession,
+            profile: globalMocks.testProfile,
         });
         expectedFavProfileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
 
@@ -301,6 +303,7 @@ describe("USSTree Unit Tests - Function createProfileNodeForFavs", () => {
             label: "testProfile",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             parentNode: globalMocks.testTree.mFavoriteSession,
+            profile: globalMocks.testProfile,
         });
         expectedFavProfileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
         const icons = await import("../../../src/generators/icons");
@@ -1211,28 +1214,22 @@ describe("USSTree Unit Tests - Function getChildren", () => {
         const rootChildren = await globalMocks.testTree.getChildren();
         // Creating rootNode
         const sessNode = [
-            new ZoweUSSNode({ label: "Favorites", collapsibleState: vscode.TreeItemCollapsibleState.Collapsed }),
+            new ZoweUSSNode({
+                label: "Favorites",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                contextOverride: globals.FAVORITE_CONTEXT,
+            }),
             new ZoweUSSNode({
                 label: "sestest",
                 collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                contextOverride: globals.USS_SESSION_CONTEXT,
                 session: globalMocks.testSession,
                 profile: globalMocks.testProfile,
                 parentPath: "/",
             }),
         ];
-        sessNode[0].contextValue = globals.FAVORITE_CONTEXT;
-        sessNode[1].contextValue = globals.USS_SESSION_CONTEXT;
-        sessNode[1].fullPath = "/test";
 
-        // Set icon
-        let targetIcon = getIconByNode(sessNode[0]);
-        if (targetIcon) {
-            sessNode[0].iconPath = targetIcon.path;
-        }
-        targetIcon = getIconByNode(sessNode[1]);
-        if (targetIcon) {
-            sessNode[1].iconPath = targetIcon.path;
-        }
+        sessNode[1].fullPath = "/test";
 
         expect(sessNode).toEqual(rootChildren);
         expect(JSON.stringify(sessNode[0].iconPath)).toContain("folder-root-favorite-star-closed.svg");

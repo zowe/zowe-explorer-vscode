@@ -542,6 +542,9 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
     public createDirectory(uri: vscode.Uri): void {
         const basename = path.posix.basename(uri.path);
         const parent = this._lookupParentDirectory(uri, false);
+        if (parent.entries.has(basename)) {
+            return;
+        }
 
         const entry = new UssDirectory(basename);
         const profInfo =

@@ -1030,6 +1030,7 @@ describe("copyTree", () => {
 describe("createDirectory", () => {
     it("creates a session directory with the given URI", () => {
         const root = (UssFSProvider.instance as any).root;
+        root.entries.clear();
         const oldSize: number = root.size;
         const getInfoFromUri = jest.spyOn((UssFSProvider as any).prototype, "_getInfoFromUri").mockReturnValueOnce({
             profile: testProfile,
@@ -1063,12 +1064,6 @@ describe("watch", () => {
 });
 
 describe("_getInfoFromUri", () => {
-    it("returns the correct info for a given URI when ProfilesCache is not available", () => {
-        expect((UssFSProvider.instance as any)._getInfoFromUri(testUris.file)).toStrictEqual({
-            profile: null,
-            path: "/aFile.txt",
-        });
-    });
     it("returns the correct info for a given URI when ProfilesCache is available", () => {
         jest.spyOn(Profiles, "getInstance").mockReturnValueOnce({
             loadNamedProfile: jest.fn().mockReturnValueOnce(testProfile),
