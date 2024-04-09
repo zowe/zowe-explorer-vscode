@@ -246,7 +246,6 @@ describe("ZoweVsCodeExtension", () => {
                 jest.spyOn(ZoweVsCodeExtension as any, "promptUserPass").mockResolvedValue(["user", "pass"]);
                 const loginSpy = jest.spyOn(Login, "apimlLogin").mockResolvedValue("tokenValue");
 
-                // case 1: User selects "user/password" for login quick pick
                 const quickPickMock = jest.spyOn(Gui, "showQuickPick").mockImplementation((items) => items[0]);
                 await ZoweVsCodeExtension.loginWithBaseProfile("service");
 
@@ -267,7 +266,6 @@ describe("ZoweVsCodeExtension", () => {
                 testSpy.mockResolvedValue({ profile: { ...testProfile, ...updProfile } });
                 const logoutSpy = jest.spyOn(Logout, "apimlLogout").mockImplementation(jest.fn());
 
-                // case 1: User selects "user/password" for login quick pick
                 const quickPickMock = jest.spyOn(Gui, "showQuickPick").mockImplementation((items) => items[0]);
                 await ZoweVsCodeExtension.logoutWithBaseProfile("service");
 
@@ -280,6 +278,7 @@ describe("ZoweVsCodeExtension", () => {
                 expect(logoutSpy).toHaveBeenCalledWith(testSession);
                 expect(testSpy).toHaveBeenCalledWith(testCache, "service");
                 expect(testCache.updateBaseProfileFileLogout).toHaveBeenCalledWith(baseProfile);
+                quickPickMock.mockRestore();
             });
             it("should login using the base profile if the base profile does not have a tokenType stored", async () => {
                 const tempBaseProfile = JSON.parse(JSON.stringify(baseProfile));
@@ -291,7 +290,6 @@ describe("ZoweVsCodeExtension", () => {
                 jest.spyOn(ZoweVsCodeExtension as any, "promptUserPass").mockResolvedValue(["user", "pass"]);
                 const loginSpy = jest.spyOn(Login, "apimlLogin").mockResolvedValue("tokenValue");
 
-                // case 1: User selects "user/password" for login quick pick
                 const quickPickMock = jest.spyOn(Gui, "showQuickPick").mockImplementation((items) => items[0]);
                 await ZoweVsCodeExtension.loginWithBaseProfile("service");
 
@@ -305,6 +303,7 @@ describe("ZoweVsCodeExtension", () => {
                 expect(loginSpy).toHaveBeenCalledWith(testSession);
                 expect(testSpy).toHaveBeenCalledWith(testCache, "service");
                 expect(testCache.updateBaseProfileFileLogin).toHaveBeenCalledWith(tempBaseProfile, updProfile, false);
+                quickPickMock.mockRestore();
             });
             it("should login using the service profile given a simple profile name", async () => {
                 const tempBaseProfile = JSON.parse(JSON.stringify(baseProfile));
@@ -316,7 +315,6 @@ describe("ZoweVsCodeExtension", () => {
                 jest.spyOn(ZoweVsCodeExtension as any, "promptUserPass").mockResolvedValue(["user", "pass"]);
                 const loginSpy = jest.spyOn(Login, "apimlLogin").mockResolvedValue("tokenValue");
 
-                // case 1: User selects "user/password" for login quick pick
                 const quickPickMock = jest.spyOn(Gui, "showQuickPick").mockImplementation((items) => items[0]);
                 await ZoweVsCodeExtension.loginWithBaseProfile("service");
 
@@ -338,6 +336,7 @@ describe("ZoweVsCodeExtension", () => {
                     },
                     true
                 );
+                quickPickMock.mockRestore();
             });
             it("should logout using the service profile given a simple profile name", async () => {
                 testCache.fetchBaseProfile.mockResolvedValue(baseProfile);
@@ -346,7 +345,6 @@ describe("ZoweVsCodeExtension", () => {
                 testSpy.mockResolvedValue(newServiceProfile);
                 const logoutSpy = jest.spyOn(Logout, "apimlLogout").mockImplementation(jest.fn());
 
-                // case 1: User selects "user/password" for login quick pick
                 const quickPickMock = jest.spyOn(Gui, "showQuickPick").mockImplementation((items) => items[0]);
                 await ZoweVsCodeExtension.logoutWithBaseProfile("service");
 
@@ -360,6 +358,7 @@ describe("ZoweVsCodeExtension", () => {
                 expect(logoutSpy).toHaveBeenCalledWith(testSession);
                 expect(testSpy).toHaveBeenCalledWith(testCache, "service");
                 expect(testCache.updateBaseProfileFileLogout).toHaveBeenCalledWith(newServiceProfile);
+                quickPickMock.mockRestore();
             });
             it("should login using the base profile when provided with a node, register, and cache instance", async () => {
                 testCache.fetchBaseProfile.mockResolvedValue(baseProfile);
@@ -367,7 +366,6 @@ describe("ZoweVsCodeExtension", () => {
                 jest.spyOn(ZoweVsCodeExtension as any, "promptUserPass").mockResolvedValue(["user", "pass"]);
                 const loginSpy = jest.spyOn(Login, "apimlLogin").mockResolvedValue("tokenValue");
 
-                // case 1: User selects "user/password" for login quick pick
                 const quickPickMock = jest.spyOn(Gui, "showQuickPick").mockImplementation((items) => items[0]);
                 await ZoweVsCodeExtension.loginWithBaseProfile(serviceProfile, "apimlAuthenticationToken", testNode, testRegister, testCache);
 
@@ -378,6 +376,7 @@ describe("ZoweVsCodeExtension", () => {
                 expect(testSpy).not.toHaveBeenCalled();
                 expect(testCache.updateBaseProfileFileLogin).toHaveBeenCalledWith(baseProfile, updProfile, false);
                 expect(testNode.setProfileToChoice).toHaveBeenCalled();
+                quickPickMock.mockRestore();
             });
         });
 
