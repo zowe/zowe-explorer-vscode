@@ -223,9 +223,7 @@ export class USSTree extends ZoweTreeProvider implements Types.IZoweUSSTreeType 
         }
 
         const movingMsg = Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Moving USS files..."));
-
-        const multipleItems = Object.keys(this.draggedNodes).length > 1;
-        const changedSessions = new Map<string, IZoweUSSTreeNode>();
+        const parentsToUpdate = new Set<IZoweUSSTreeNode>();
 
         for (const item of droppedItems.value) {
             const node = this.draggedNodes[item.uri.path];
@@ -234,10 +232,6 @@ export class USSTree extends ZoweTreeProvider implements Types.IZoweUSSTreeType 
                 continue;
             }
 
-            const sessionNode = node.getSessionNode();
-            if (!changedSessions.has(sessionNode.label as string)) {
-                changedSessions.set(sessionNode.label as string, sessionNode);
-            }
             const newUriForNode = vscode.Uri.from({
                 scheme: ZoweScheme.USS,
                 path: path.posix.join("/", target.getProfile().name, target.fullPath, item.label as string),
@@ -254,22 +248,13 @@ export class USSTree extends ZoweTreeProvider implements Types.IZoweUSSTreeType 
                 oldParent.children = oldParent.children.filter((c) => c !== node);
                 this.nodeDataChanged(oldParent);
                 node.resourceUri = newUriForNode;
-
-                if (!multipleItems) {
-                    // fetch children for target
-                    this.refreshElement(target);
-                    target.dirty = true;
-                    const newNode = (await target.getChildren()).find((n: IZoweUSSTreeNode) => n.resourceUri === newUriForNode);
-                    if (newNode) {
-                        await this.treeView.reveal(newNode);
-                    }
-                }
             }
+            parentsToUpdate.add(node.getParent());
+        }
+        for (const parent of parentsToUpdate) {
+            this.refreshElement(parent);
         }
         this.refreshElement(target);
-        for (const session of changedSessions.values()) {
-            this.refreshElement(session);
-        }
         if (target.collapsibleState === vscode.TreeItemCollapsibleState.Collapsed) {
             await this.treeView.reveal(target, { expand: true });
         }
