@@ -900,55 +900,59 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
         ZoweLogger.trace("USSTree.initializeFavChildNodeForProfile called.");
         const profile = parentNode.getProfile();
         let node: ZoweUSSNode;
-        if (context === globals.USS_DIR_CONTEXT) {
-            node = new ZoweUSSNode({
-                label,
-                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
-                parentNode,
-                profile,
-            });
-            if (!UssFSProvider.instance.exists(node.resourceUri)) {
-                await vscode.workspace.fs.createDirectory(node.resourceUri);
-            }
-        } else if (context === globals.USS_SESSION_CONTEXT) {
-            node = new ZoweUSSNode({
-                label,
-                collapsibleState: vscode.TreeItemCollapsibleState.None,
-                parentNode,
-                profile,
-            });
-            node.contextValue = globals.USS_SESSION_CONTEXT;
-            node.fullPath = label;
-            node.label = node.tooltip = label;
-            // add a command to execute the search
-            node.command = { command: "zowe.uss.fullPath", title: "", arguments: [node] };
-        } else {
-            // assume context is "textFile"
-            node = new ZoweUSSNode({
-                label,
-                collapsibleState: vscode.TreeItemCollapsibleState.None,
-                parentNode,
-                profile,
-            });
-            if (!UssFSProvider.instance.exists(node.resourceUri)) {
-                const parentUri = node.resourceUri.with({ path: path.posix.join(node.resourceUri.path, "..") });
-                if (!UssFSProvider.instance.exists(parentUri)) {
-                    await vscode.workspace.fs.createDirectory(parentUri);
+        switch (context) {
+            case globals.USS_DIR_CONTEXT:
+                node = new ZoweUSSNode({
+                    label,
+                    collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                    parentNode,
+                    profile,
+                });
+                if (!UssFSProvider.instance.exists(node.resourceUri)) {
+                    await vscode.workspace.fs.createDirectory(node.resourceUri);
                 }
-                await vscode.workspace.fs.writeFile(node.resourceUri, new Uint8Array());
-            }
-            node.command = {
-                command: "vscode.open",
-                title: vscode.l10n.t("Open"),
-                arguments: [node.resourceUri],
-            };
-            if (!UssFSProvider.instance.exists(node.resourceUri)) {
-                const parentUri = node.resourceUri.with({ path: path.posix.join(node.resourceUri.path, "..") });
-                if (!UssFSProvider.instance.exists(parentUri)) {
-                    await vscode.workspace.fs.createDirectory(parentUri);
+                break;
+            case globals.USS_SESSION_CONTEXT:
+                node = new ZoweUSSNode({
+                    label,
+                    collapsibleState: vscode.TreeItemCollapsibleState.None,
+                    parentNode,
+                    profile,
+                });
+                node.contextValue = globals.USS_SESSION_CONTEXT;
+                node.fullPath = label;
+                node.label = node.tooltip = label;
+                // add a command to execute the search
+                node.command = { command: "zowe.uss.fullPath", title: "", arguments: [node] };
+                break;
+            default:
+                // assume context is "textFile"
+                node = new ZoweUSSNode({
+                    label,
+                    collapsibleState: vscode.TreeItemCollapsibleState.None,
+                    parentNode,
+                    profile,
+                });
+                if (!UssFSProvider.instance.exists(node.resourceUri)) {
+                    const parentUri = node.resourceUri.with({ path: path.posix.join(node.resourceUri.path, "..") });
+                    if (!UssFSProvider.instance.exists(parentUri)) {
+                        await vscode.workspace.fs.createDirectory(parentUri);
+                    }
+                    await vscode.workspace.fs.writeFile(node.resourceUri, new Uint8Array());
                 }
-                await vscode.workspace.fs.writeFile(node.resourceUri, new Uint8Array());
-            }
+                node.command = {
+                    command: "vscode.open",
+                    title: vscode.l10n.t("Open"),
+                    arguments: [node.resourceUri],
+                };
+                if (!UssFSProvider.instance.exists(node.resourceUri)) {
+                    const parentUri = node.resourceUri.with({ path: path.posix.join(node.resourceUri.path, "..") });
+                    if (!UssFSProvider.instance.exists(parentUri)) {
+                        await vscode.workspace.fs.createDirectory(parentUri);
+                    }
+                    await vscode.workspace.fs.writeFile(node.resourceUri, new Uint8Array());
+                }
+                break;
         }
         node.contextValue = contextually.asFavorite(node);
         const icon = getIconByNode(node);
