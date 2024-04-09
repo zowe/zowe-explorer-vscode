@@ -2306,14 +2306,20 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         favProfileNode.children.push(favParent);
         testTree.mFavorites.push(favProfileNode);
 
+        const findEquivalentNodeSpy = jest.spyOn(testTree, "findEquivalentNode");
+        const refreshElementSpy = jest.spyOn(testTree, "refreshElement");
+
         const renameDataSetMemberSpy = jest.spyOn((DatasetTree as any).prototype, "renameDataSetMember");
 
-        mocked(vscode.window.showInputBox).mockImplementation((options) => {
+        mocked(Gui.showInputBox).mockImplementation((options) => {
             options.validateInput("HLQ.TEST.RENAME.NODE");
             return Promise.resolve("HLQ.TEST.RENAME.NODE");
         });
         await testTree.rename(child);
         expect(renameDataSetMemberSpy).toHaveBeenLastCalledWith(child);
+        expect(findEquivalentNodeSpy).toHaveBeenCalledWith(child.getParent(), false);
+        expect(findEquivalentNodeSpy).toHaveBeenCalledWith(child.getParent(), false);
+        expect(refreshElementSpy).toHaveBeenCalledWith(child.getParent());
     });
 
     it("Checking function with PDS Member given in lowercase", async () => {
