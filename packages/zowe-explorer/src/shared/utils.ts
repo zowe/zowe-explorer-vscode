@@ -176,14 +176,41 @@ export type FavoriteData = {
 };
 
 export function parseFavorites(lines: string[]): FavoriteData[] {
+    const invalidFavoriteWarning = (line: string): void =>
+        ZoweLogger.warn(
+            vscode.l10n.t({ message: "Failed to parse a saved favorite. Attempted to parse: {0}", args: [line], comment: ["Plaintext line"] })
+        );
+
     return lines
-        .map((line) => /^\[(.+?)\]:\s(.+?)\{(.+?)\}$/g.exec(line), [])
-        .filter((arr) => arr?.length)
-        .map(([_fullMatch, profileName, label, contextValue]) => ({
-            profileName,
-            label,
-            contextValue,
-        }));
+        .map((line) => {
+            // [profile]: label{context}
+            const closingSquareBracket = line.indexOf("]");
+
+            // Filter out lines with a missing opening/closing square bracket as they are invalid
+            if (!line.startsWith("[") || closingSquareBracket === -1) {
+                invalidFavoriteWarning(line);
+                return null;
+            }
+
+            const profileName = line.substring(line.indexOf("[") + 1, closingSquareBracket);
+
+            // label{context}
+            const remainderOfLine = line.substring(closingSquareBracket + 2);
+
+            // Filter out lines that do not contain a label and context value
+            if (remainderOfLine.length === 0) {
+                invalidFavoriteWarning(line);
+                return null;
+            }
+
+            const openingCurlyBrace = remainderOfLine.indexOf("{");
+            return {
+                profileName,
+                label: remainderOfLine.substring(0, openingCurlyBrace).trim(),
+                contextValue: openingCurlyBrace > 0 ? remainderOfLine.substring(openingCurlyBrace + 1, remainderOfLine.indexOf("}")) : undefined,
+            };
+        })
+        .filter(Boolean);
 }
 
 export async function promptForEncoding(node: IZoweDatasetTreeNode | IZoweUSSTreeNode, taggedEncoding?: string): Promise<ZosEncoding | undefined> {
