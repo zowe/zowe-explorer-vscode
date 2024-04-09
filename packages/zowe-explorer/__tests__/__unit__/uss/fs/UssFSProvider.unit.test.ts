@@ -13,7 +13,7 @@ import { Disposable, FilePermission, FileType, TextEditor, Uri } from "vscode";
 import { UssFSProvider } from "../../../../src/uss/UssFSProvider";
 import { createIProfile } from "../../../../__mocks__/mockCreators/shared";
 import { ZoweExplorerApiRegister } from "../../../../src/ZoweExplorerApiRegister";
-import { BaseProvider, DirEntry, FileEntry, Gui, UssFile, ZosEncoding, ZoweScheme } from "@zowe/zowe-explorer-api";
+import { BaseProvider, DirEntry, FileEntry, Gui, UssFile, ZoweScheme } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../../../src/Profiles";
 import { UssFileType } from "../../../../src/uss/FileStructure";
 

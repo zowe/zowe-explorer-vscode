@@ -71,7 +71,7 @@ export function validateMemberName(member: string): boolean {
 export function getLanguageId(label: string): string | null {
     const limit = 5;
     const bracket = label.indexOf("(");
-    const split = bracket > -1 ? label.substr(0, bracket).split(".", limit) : label.split(".", limit);
+    const split = bracket > -1 ? label.substring(0, bracket).split(".", limit) : label.split(".", limit);
     for (let i = split.length - 1; i > 0; i--) {
         if (split[i] === "C") {
             return "c";

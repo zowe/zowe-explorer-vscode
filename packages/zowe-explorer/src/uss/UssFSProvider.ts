@@ -255,12 +255,13 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                 ? new vscode.Disposable(() => {})
                 : Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Saving USS file..."));
 
+        let resp: IZosFilesResponse;
         try {
             const ussApi = ZoweExplorerApiRegister.getUssApi(entry.metadata.profile);
             await this.autoDetectEncoding(entry);
             const profileEncoding = entry.encoding ? null : entry.metadata.profile.profile?.encoding;
 
-            return ussApi.uploadFromBuffer(Buffer.from(content), entry.metadata.path, {
+            resp = await ussApi.uploadFromBuffer(Buffer.from(content), entry.metadata.path, {
                 binary: entry.encoding?.kind === "binary",
                 encoding: entry.encoding?.kind === "other" ? entry.encoding.codepage : profileEncoding,
                 etag: options?.forceUpload || entry.etag == null ? undefined : entry.etag,
@@ -270,6 +271,9 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             statusMsg.dispose();
             throw err;
         }
+
+        statusMsg.dispose();
+        return resp;
     }
 
     /**
