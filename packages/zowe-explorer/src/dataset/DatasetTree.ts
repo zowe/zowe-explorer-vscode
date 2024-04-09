@@ -271,7 +271,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
      */
     public async initializeFavChildNodeForProfile(label: string, contextValue: string, parentNode: IZoweDatasetTreeNode): Promise<ZoweDatasetNode> {
         ZoweLogger.trace("DatasetTree.initializeFavChildNodeForProfile called.");
-        const profileName = parentNode.label as string;
+        const profile = parentNode.getProfile();
         let node: ZoweDatasetNode;
         if (contextValue === globals.DS_PDS_CONTEXT || contextValue === globals.DS_DS_CONTEXT) {
             if (contextValue === globals.DS_PDS_CONTEXT) {
@@ -279,7 +279,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                     label,
                     collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
                     parentNode,
-                    profile: Profiles.getInstance().loadNamedProfile(profileName),
+                    profile,
                 });
                 if (!DatasetFSProvider.instance.exists(node.resourceUri)) {
                     await vscode.workspace.fs.createDirectory(node.resourceUri);
@@ -289,7 +289,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                     label,
                     collapsibleState: vscode.TreeItemCollapsibleState.None,
                     parentNode,
-                    profile: Profiles.getInstance().loadNamedProfile(profileName),
+                    profile,
                     contextOverride: contextValue,
                 });
                 if (!DatasetFSProvider.instance.exists(node.resourceUri)) {
@@ -307,7 +307,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 label,
                 collapsibleState: vscode.TreeItemCollapsibleState.None,
                 parentNode,
-                profile: Profiles.getInstance().loadNamedProfile(profileName),
+                profile,
             });
             node.command = { command: "zowe.ds.pattern", title: "", arguments: [node] };
             node.contextValue = globals.DS_SESSION_CONTEXT + globals.FAV_SUFFIX;
@@ -320,7 +320,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             Gui.errorMessage(
                 vscode.l10n.t({
                     message: "Error creating data set favorite node: {0} for profile {1}.",
-                    args: [label, profileName],
+                    args: [label, profile.name],
                     comment: ["Label", "Profile name"],
                 })
             );

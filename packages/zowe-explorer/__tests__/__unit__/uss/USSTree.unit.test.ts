@@ -1282,9 +1282,11 @@ describe("USSTree Unit Tests - Function getChildren", () => {
         const globalMocks = await createGlobalMocks();
 
         const directory = new ZoweUSSNode({
-            label: "/u",
+            label: "u",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentPath: "/",
             parentNode: globalMocks.testTree.mSessionNodes[1],
+            profile: globalMocks.testProfile,
         });
         const file = new ZoweUSSNode({ label: "myFile.txt", collapsibleState: vscode.TreeItemCollapsibleState.None, parentNode: directory });
         const sampleChildren: ZoweUSSNode[] = [file];

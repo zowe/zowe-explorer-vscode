@@ -273,6 +273,7 @@ describe("Dataset Tree Unit tests - Function initializeFavChildNodeForProfile", 
             label: "BRTVS99.PS",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             parentNode: blockMocks.datasetSessionNode,
+            profile: blockMocks.imperativeProfile,
             contextOverride: globals.DS_FAV_CONTEXT,
         });
         node.resourceUri = blockMocks.datasetSessionNode.resourceUri?.with({
@@ -455,6 +456,8 @@ describe("Dataset Tree Unit Tests - Function loadProfilesForFavorites", () => {
             label: "testProfile",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             parentNode: blockMocks.datasetFavoriteNode,
+            session: blockMocks.session,
+            profile: blockMocks.imperativeProfile,
             contextOverride: globals.FAV_PROFILE_CONTEXT,
         });
         const testTree = new DatasetTree();

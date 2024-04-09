@@ -271,12 +271,12 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             if (isDir) {
                 // Create an entry for the USS folder if it doesn't exist.
                 if (!UssFSProvider.instance.exists(temp.resourceUri)) {
-                    UssFSProvider.instance.createDirectory(temp.resourceUri);
+                    await vscode.workspace.fs.createDirectory(temp.resourceUri);
                 }
             } else {
                 // Create an entry for the USS file if it doesn't exist.
                 if (!UssFSProvider.instance.exists(temp.resourceUri)) {
-                    await UssFSProvider.instance.writeFile(temp.resourceUri, new Uint8Array(), { create: true, overwrite: true });
+                    await vscode.workspace.fs.writeFile(temp.resourceUri, new Uint8Array());
                 }
                 temp.command = {
                     command: "vscode.open",
@@ -359,7 +359,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         this.resourceUri = parentUri.with({
             path: childPath,
         });
-        this.label = this.shortLabel = path.posix.basename(this.fullPath);
+        this.label = path.posix.basename(this.fullPath);
         this.tooltip = injectAdditionalDataToTooltip(this, childPath);
 
         if (this.children.length > 0) {
@@ -394,7 +394,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
 
         this.fullPath = newFullPath;
         this.resourceUri = newUri;
-        this.label = this.shortLabel = path.posix.basename(newFullPath);
+        this.label = path.posix.basename(newFullPath);
         this.tooltip = injectAdditionalDataToTooltip(this, newFullPath);
         // Update the full path of any children already loaded locally
         if (this.children.length > 0) {
