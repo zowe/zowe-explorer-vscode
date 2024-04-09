@@ -19,7 +19,6 @@ import { Profiles } from "../../src/Profiles";
 import * as globals from "../../src/globals";
 import { imperative, Sorting } from "@zowe/zowe-explorer-api";
 import { DatasetFSProvider } from "../../src/dataset/DatasetFSProvider";
-import { ZoweExplorerApiRegister } from "../../src/ZoweExplorerApiRegister";
 
 describe("Unit Tests (Jest)", () => {
     // Globals

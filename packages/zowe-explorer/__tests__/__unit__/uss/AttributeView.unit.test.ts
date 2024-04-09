@@ -42,7 +42,10 @@ describe("AttributeView unit tests", () => {
         view = new AttributeView(context, treeProvider, node);
     });
 
-    afterEach(() => {});
+    afterAll(() => {
+        createDirMock.mockRestore();
+        onUpdateMocked[Symbol.dispose]();
+    });
 
     it("refreshes properly when webview sends 'refresh' command", async () => {
         // case 1: node is a root node
@@ -69,6 +72,7 @@ describe("AttributeView unit tests", () => {
             name: node.fullPath,
             readonly: false,
         });
+        getAttributesMock.mockRestore();
     });
 
     it("updates attributes when 'update-attributes' command is received", async () => {
