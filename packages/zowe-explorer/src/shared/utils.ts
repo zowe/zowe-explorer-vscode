@@ -34,7 +34,10 @@ import { ZoweLogger } from "../utils/LoggerUtils";
 import { isTypeUssTreeNode } from "./context";
 import { markDocumentUnsaved } from "../utils/workspace";
 import { errorHandling } from "../utils/ProfilesUtils";
-import { ZoweLocalStorage } from "../utils/ZoweLocalStorage";
+import { LocalStorageKey, ZoweLocalStorage } from "../utils/ZoweLocalStorage";
+import { LocalFileManagement } from "../utils/LocalFileManagement";
+import { TreeProviders } from "./TreeProviders";
+import { ZoweSaveQueue } from "../abstract/ZoweSaveQueue";
 
 // Set up localization
 nls.config({
@@ -133,7 +136,7 @@ export function getAppName(isTheia: boolean): "Theia" | "VS Code" {
  * @param {IZoweTreeNode} node
  */
 export function getDocumentFilePath(label: string, node: IZoweTreeNode): string {
-    const dsDir = globals.DS_DIR;
+    const dsDir = globals.DS_DIR || "";
     const profName = node.getProfileName();
     const suffix = appendSuffix(label);
     return path.join(dsDir, profName || "", suffix);
@@ -228,7 +231,7 @@ export async function uploadContent(
 ): Promise<IZosFilesResponse> {
     const uploadOptions: IUploadOptions = {
         etag: etagToUpload,
-        returnEtag: true,
+        returnEtag: returnEtag ?? true,
         binary: node.binary,
         encoding: node.encoding !== undefined ? node.encoding : profile.profile?.encoding,
         responseTimeout: profile.profile?.responseTimeout,
@@ -374,6 +377,7 @@ export async function compareFileContent(
 ): Promise<void> {
     await markDocumentUnsaved(doc);
     const prof = node ? node.getProfile() : profile;
+    node = node ?? TreeProviders.ds.openFiles?.[doc.uri.fsPath] ?? TreeProviders.uss.openFiles?.[doc.uri.fsPath];
     let downloadResponse;
 
     if (isTypeUssTreeNode(node)) {
@@ -425,6 +429,21 @@ export function updateOpenFiles<T extends IZoweTreeNode>(treeProvider: IZoweTree
     if (treeProvider.openFiles) {
         treeProvider.openFiles[docPath] = value;
     }
+    if (docPath.includes(globals.DS_DIR) || docPath.includes(globals.USS_DIR)) {
+        if (value != null) {
+            LocalFileManagement.storeFileInfo(value, docPath);
+        } else {
+            LocalFileManagement.deleteFileInfo(docPath);
+        }
+    }
+}
+
+/**
+ * Check for pending unsaved changes on a document that has just been closed.
+ */
+export async function isClosedFileDirty(doc: vscode.TextDocument): Promise<boolean> {
+    await ZoweSaveQueue.all();
+    return vscode.workspace.textDocuments.find(({ uri }) => uri.fsPath === doc.uri.fsPath)?.isDirty;
 }
 
 function getCachedEncoding(node: IZoweTreeNode): string | undefined {
@@ -452,7 +471,7 @@ export async function promptForEncoding(node: IZoweDatasetTreeNode | IZoweUSSTre
         label: localize("zowe.shared.utils.promptForEncoding.other.label", "Other"),
         description: localize("zowe.shared.utils.promptForEncoding.other.description", "Specify another codepage"),
     };
-    const items: vscode.QuickPickItem[] = [ebcdicItem, binaryItem, otherItem, globals.SEPARATORS.RECENT];
+    const items: vscode.QuickPickItem[] = [ebcdicItem, binaryItem, otherItem, globals.SEPARATORS.RECENT].filter(Boolean);
     const profile = node.getProfile();
     if (profile.profile?.encoding != null) {
         items.splice(0, 0, {
@@ -473,7 +492,7 @@ export async function promptForEncoding(node: IZoweDatasetTreeNode | IZoweUSSTre
     } else if (node.encoding === null || currentEncoding === "text") {
         currentEncoding = ebcdicItem.label;
     }
-    const encodingHistory = ZoweLocalStorage.getValue<string[]>("zowe.encodingHistory") ?? [];
+    const encodingHistory = ZoweLocalStorage.getValue<string[]>(LocalStorageKey.ENCODING_HISTORY) ?? [];
     if (encodingHistory.length > 0) {
         for (const encoding of encodingHistory) {
             items.push({ label: encoding });
@@ -507,7 +526,7 @@ export async function promptForEncoding(node: IZoweDatasetTreeNode | IZoweUSSTre
                 encoding = { kind: "other", codepage: response };
                 const filterEncodingList = encodingHistory.filter((codepage) => codepage.toUpperCase() !== response.toUpperCase());
                 filterEncodingList.unshift(encoding.codepage.toUpperCase());
-                ZoweLocalStorage.setValue("zowe.encodingHistory", filterEncodingList.slice(0, globals.MAX_FILE_HISTORY));
+                ZoweLocalStorage.setValue(LocalStorageKey.ENCODING_HISTORY, filterEncodingList.slice(0, globals.MAX_FILE_HISTORY));
             }
             break;
         default:

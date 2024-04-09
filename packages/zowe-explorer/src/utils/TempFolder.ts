@@ -16,8 +16,16 @@ import { moveSync } from "fs-extra";
 import * as nls from "vscode-nls";
 import { errorHandling } from "../utils/ProfilesUtils";
 import { SettingsConfig } from "./SettingsConfig";
-import { Gui } from "@zowe/zowe-explorer-api";
+import { Gui, imperative, IZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { ZoweLogger } from "./LoggerUtils";
+import * as vscode from "vscode";
+import { LocalFileManagement } from "./LocalFileManagement";
+import { ZoweDatasetNode } from "../dataset/ZoweDatasetNode";
+import { ZoweUSSNode } from "../uss/ZoweUSSNode";
+import { IZoweDatasetTreeOpts, IZoweUssTreeOpts } from "../shared/IZoweTreeOpts";
+import { Profiles } from "../Profiles";
+import { checkForAddedSuffix } from "../shared/utils";
+import { LocalStorageKey, ZoweLocalStorage } from "./ZoweLocalStorage";
 
 // Set up localization
 nls.config({
@@ -114,6 +122,7 @@ export function cleanTempDir(): Promise<void> {
     }
     try {
         cleanDir(globals.ZOWETEMPFOLDER);
+        ZoweLocalStorage.setValue(LocalStorageKey.FILE_INFO_CACHE, undefined);
     } catch (err) {
         ZoweLogger.error(err);
         if (err instanceof Error) {
@@ -131,5 +140,44 @@ export async function hideTempFolder(zoweDir: string): Promise<void> {
     ZoweLogger.trace("TempFolder.hideTempFolder called.");
     if (SettingsConfig.getDirectValue<boolean>(globals.SETTINGS_TEMP_FOLDER_HIDE)) {
         await SettingsConfig.setDirectValue("files.exclude", { [zoweDir]: true, [globals.ZOWETEMPFOLDER]: true });
+    }
+}
+
+export function findRecoveredFiles(): void {
+    ZoweLogger.trace("TempFolder.findRecoveredFiles called.");
+    const injectProfile = (tempNode: IZoweTreeNode): IZoweTreeNode => {
+        const profName = tempNode.getProfileName();
+        tempNode.getProfile = (): imperative.IProfileLoaded => Profiles.getInstance().loadNamedProfile(profName);
+        return tempNode;
+    };
+    for (const document of vscode.workspace.textDocuments) {
+        if (document.fileName.toUpperCase().indexOf(globals.DS_DIR.toUpperCase()) >= 0) {
+            const pathSegments = document.fileName.slice(globals.DS_DIR.length + 1).split(path.sep);
+            const treeOpts: IZoweDatasetTreeOpts = {
+                label: checkForAddedSuffix(pathSegments[1]) ? path.parse(pathSegments[1]).name : pathSegments[1],
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                profile: { name: pathSegments[0] } as imperative.IProfileLoaded,
+            };
+            LocalFileManagement.addRecoveredFile(document, treeOpts);
+            LocalFileManagement.loadFileInfo(injectProfile(new ZoweDatasetNode(treeOpts)), document.fileName);
+        } else if (document.fileName.toUpperCase().indexOf(globals.USS_DIR.toUpperCase()) >= 0) {
+            const pathSegments = document.fileName.slice(globals.USS_DIR.length + 1).split(path.sep);
+            const treeOpts: IZoweUssTreeOpts = {
+                label: pathSegments[pathSegments.length - 1],
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                profile: { name: pathSegments[0] } as imperative.IProfileLoaded,
+                parentPath: "/" + path.posix.join(...pathSegments.slice(1, -1)),
+            };
+            LocalFileManagement.addRecoveredFile(document, treeOpts);
+            LocalFileManagement.loadFileInfo(injectProfile(new ZoweUSSNode(treeOpts)), document.fileName);
+        }
+    }
+    if (LocalFileManagement.recoveredFileCount > 0) {
+        Gui.warningMessage(
+            localize(
+                "findRecoveredFiles.message",
+                "One or more files remained open in your last VS Code session. To avoid losing your updates, check the Problems view to see the list of files and re-save them to upload the changes to the mainframe."
+            )
+        );
     }
 }

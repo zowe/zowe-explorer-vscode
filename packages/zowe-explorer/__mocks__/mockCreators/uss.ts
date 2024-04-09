@@ -51,13 +51,13 @@ export function createUSSTree(favoriteNodes: ZoweUSSNode[], sessionNodes: ZoweUS
 
 export function createUSSNode(session, profile) {
     const parentNode = new ZoweUSSNode({
-        label: "parentNode",
+        label: "usstest",
         collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
         session,
         profile,
     });
     const ussNode = new ZoweUSSNode({
-        label: "usstest",
+        label: "testDir",
         collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
         parentNode,
         session,
@@ -66,7 +66,8 @@ export function createUSSNode(session, profile) {
     parentNode.contextValue = globals.USS_SESSION_CONTEXT;
     ussNode.contextValue = globals.USS_DIR_CONTEXT;
     parentNode.fullPath = "/u/myuser";
-    ussNode.fullPath = "/u/myuser/usstest";
+    ussNode.fullPath = "/u/myuser/testDir";
+    parentNode.children.push(ussNode);
     return ussNode;
 }
 
@@ -88,25 +89,23 @@ export function createUSSSessionNode(session: imperative.Session, profile: imper
     return zoweUSSNode;
 }
 
-// This is NOT a favorite equivalent of the node created by createdUSSNode.
-// This is a favorited textfile node. createUSSNode creates a USS session node.
 export function createFavoriteUSSNode(session, profile) {
     const parentNode = new ZoweUSSNode({
-        label: "parentNode",
+        label: "usstest",
         collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
         session,
         profile,
     });
     const ussNodeF = new ZoweUSSNode({
-        label: "usstest",
+        label: "testDir",
         collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
         parentNode,
         session,
         profile,
     });
     parentNode.contextValue = globals.FAV_PROFILE_CONTEXT;
-    ussNodeF.contextValue = globals.USS_TEXT_FILE_CONTEXT + globals.FAV_SUFFIX;
-    ussNodeF.fullPath = "/u/myuser/usstest";
-    ussNodeF.tooltip = "/u/myuser/usstest";
+    ussNodeF.contextValue = globals.USS_DIR_CONTEXT + globals.FAV_SUFFIX;
+    ussNodeF.fullPath = ussNodeF.tooltip = "/u/myuser/testDir";
+    parentNode.children.push(ussNodeF);
     return ussNodeF;
 }
