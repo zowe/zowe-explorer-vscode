@@ -28,7 +28,7 @@ import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { errorHandling, syncSessionNode } from "../utils/ProfilesUtils";
 import { getIconByNode } from "../generators/icons/index";
-import { autoDetectEncoding, fileExistsCaseSensitveSync, injectAdditionalDataToTooltip } from "../uss/utils";
+import { autoDetectEncoding, fileExistsCaseSensitiveSync, injectAdditionalDataToTooltip } from "../uss/utils";
 import * as contextually from "../shared/context";
 import { closeOpenedTextFile } from "../utils/workspace";
 import * as nls from "vscode-nls";
@@ -37,6 +37,7 @@ import { ZoweLogger } from "../utils/LoggerUtils";
 import { updateOpenFiles } from "../shared/utils";
 import { IZoweUssTreeOpts } from "../shared/IZoweTreeOpts";
 import { TreeProviders } from "../shared/TreeProviders";
+import { LocalFileManagement } from "../utils/LocalFileManagement";
 
 // Set up localization
 nls.config({
@@ -298,6 +299,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             this.setIcon(icon.path);
         }
 
+        LocalFileManagement.storeFileInfo(this);
         this.tooltip = injectAdditionalDataToTooltip(this, this.fullPath);
         this.dirty = true;
     }
@@ -441,6 +443,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     public setEtag(etagValue): void {
         ZoweLogger.trace("ZoweUSSNode.setEtag called.");
         this.etag = etagValue;
+        LocalFileManagement.storeFileInfo(this);
     }
 
     /**
@@ -507,7 +510,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 const documentFilePath = this.getUSSDocumentFilePath();
                 // check if some other file is already created with the same name avoid opening file warn user
                 const fileExists = fs.existsSync(documentFilePath);
-                if (fileExists && !fileExistsCaseSensitveSync(documentFilePath)) {
+                if (fileExists && !fileExistsCaseSensitiveSync(documentFilePath)) {
                     Gui.showMessage(
                         localize(
                             "openUSS.name.exists",
@@ -570,6 +573,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 Gui.errorMessage(localize("refreshUSS.error.invalidNode", "refreshUSS() called from invalid node."));
                 throw Error(localize("refreshUSS.error.invalidNode", "refreshUSS() called from invalid node."));
         }
+        ZoweLogger.info(`Refreshing USS file ${label}`);
         try {
             const ussDocumentFilePath = this.getUSSDocumentFilePath();
             const isDirty = this.isDirtyInEditor;

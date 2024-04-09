@@ -96,6 +96,27 @@ describe("Logger Utils Unit Tests - function initializeZoweLogger", () => {
         expect(infoSpy).toHaveBeenCalled();
         infoSpy.mockClear();
     });
+
+    it("should call vscode.extensions.getExtension when package JSON is invalid in ExtensionContext", async () => {
+        const globalMocks = createGlobalMocks();
+        jest.spyOn(globals, "initLogger").mockReturnValueOnce();
+        globalMocks.mockGetConfiguration.mockReturnValue({
+            get: getSettingMock,
+        });
+        const infoSpy = jest.spyOn(logger.ZoweLogger, "info");
+        const getExtensionMock = jest.spyOn(vscode.extensions, "getExtension").mockReturnValueOnce({
+            packageJSON: {
+                displayName: "Zowe Explorer",
+                version: "2.15.0",
+            },
+        } as any);
+
+        expect(await logger.ZoweLogger.initializeZoweLogger({ extension: undefined } as any)).toBeUndefined();
+        expect(infoSpy).toHaveBeenCalled();
+        expect(getExtensionMock).toHaveBeenCalledWith("zowe.vscode-extension-for-zowe");
+        infoSpy.mockClear();
+    });
+
     it("should initialize loggers successfully with not changing to cli logger setting", async () => {
         const globalMocks = createGlobalMocks();
         jest.spyOn(globals, "initLogger").mockReturnValueOnce();

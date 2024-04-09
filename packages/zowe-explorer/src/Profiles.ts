@@ -328,7 +328,7 @@ export class Profiles extends ProfilesCache {
         const createPick = new FilterDescriptor(createNewProfile);
         const configPick = new FilterDescriptor(createNewConfig);
         const configEdit = new FilterDescriptor(editConfig);
-        const items: vscode.QuickPickItem[] = [globals.SEPARATORS.BLANK];
+        const items: vscode.QuickPickItem[] = [globals.SEPARATORS.BLANK].filter(Boolean);
         let mProfileInfo: zowe.imperative.ProfileInfo;
         try {
             mProfileInfo = await this.getProfileInfo();

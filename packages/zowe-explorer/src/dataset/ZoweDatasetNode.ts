@@ -39,6 +39,7 @@ import * as fs from "fs";
 import { promiseStatus, PromiseStatuses } from "promise-status-async";
 import { getDocumentFilePath, updateOpenFiles } from "../shared/utils";
 import { IZoweDatasetTreeOpts } from "../shared/IZoweTreeOpts";
+import { LocalFileManagement } from "../utils/LocalFileManagement";
 
 // Set up localization
 nls.config({
@@ -435,6 +436,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     public setEtag(etagValue): void {
         ZoweLogger.trace("ZoweDatasetNode.setEtag called.");
         this.etag = etagValue;
+        LocalFileManagement.storeFileInfo(this);
     }
 
     private async getDatasets(): Promise<zowe.IZosFilesResponse[]> {
@@ -558,7 +560,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 }
                 statusMsg.dispose();
                 updateOpenFiles(datasetProvider, documentFilePath, this);
-                const document = await vscode.workspace.openTextDocument(getDocumentFilePath(label, this));
+                const document = await vscode.workspace.openTextDocument(documentFilePath);
                 await Gui.showTextDocument(document, { preview: this.wasDoubleClicked != null ? !this.wasDoubleClicked : shouldPreview });
                 // discard ongoing action to allow new requests on this node
                 if (this.ongoingActions) {
@@ -603,6 +605,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             this.setIcon(icon.path);
         }
 
+        LocalFileManagement.storeFileInfo(this);
         this.dirty = true;
     }
 
@@ -614,5 +617,17 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         ZoweLogger.trace("ZoweDatasetNode.setIcon called.");
         this.iconPath = iconPath;
         vscode.commands.executeCommand("zowe.ds.refreshDataset", this);
+    }
+
+    /**
+     * Returns the local file path for the ZoweDatasetNode
+     *
+     */
+    public getDsDocumentFilePath(): string {
+        ZoweLogger.trace("ZoweDatasetNode.getDsDocumentFilePath called.");
+        if (contextually.isDsMember(this)) {
+            return getDocumentFilePath(`${this.getParent().label as string}(${this.label as string})`, this);
+        }
+        return getDocumentFilePath(this.label as string, this);
     }
 }

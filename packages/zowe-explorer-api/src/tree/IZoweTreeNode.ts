@@ -213,6 +213,11 @@ export interface IZoweDatasetTreeNode extends IZoweTreeNode {
      */
     openDs?(download: boolean, previewFile: boolean, datasetFileProvider: IZoweTree<IZoweDatasetTreeNode>): Promise<void>;
     /**
+     * Returns the local file path for the ZoweDatasetNode
+     *
+     */
+    getDsDocumentFilePath?(): string;
+    /**
      * Sets the codepage value for the file
      *
      * @param {string}
