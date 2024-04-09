@@ -368,7 +368,7 @@ export class ZoweVsCodeExtension {
         const response: { cert: string; certKey: string } = await vscode.commands.executeCommand("zowe.certificateWizard", {
             cert: options.profile.profile.certFile,
             certKey: options.profile.profile.certKeyFile,
-            dialogOpts: options.openDialogOptions,
+            dialogOpts: { ...(options.openDialogOptions ?? {}), canSelectFiles: true, canSelectFolders: false, canSelectMany: false },
         });
         options.session.cert = response.cert;
         options.session.certKey = response.certKey;

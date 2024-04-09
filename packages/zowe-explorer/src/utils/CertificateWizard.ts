@@ -10,7 +10,7 @@
  */
 
 import { Gui, WebView } from "@zowe/zowe-explorer-api";
-import { Disposable, ExtensionContext, OpenDialogOptions, Uri } from "vscode";
+import { ExtensionContext, OpenDialogOptions, Uri } from "vscode";
 import * as nls from "vscode-nls";
 import { ZoweLogger } from "./LoggerUtils";
 
@@ -39,10 +39,10 @@ class DeferredPromise<T> {
     }
 }
 
+const allFiles = localize("fileDialog.allFiles", "All Files");
 const userDismissed = localize("zowe.certWizard.dismissed", "User dismissed the certificate wizard.");
 
 export class CertificateWizard extends WebView {
-    private onUpdateDisposable: Disposable;
     private opts: CertWizardOpts;
     public userSubmission: DeferredPromise<{
         cert: string;
@@ -50,7 +50,9 @@ export class CertificateWizard extends WebView {
     }> = new DeferredPromise();
 
     public constructor(context: ExtensionContext, opts: CertWizardOpts) {
-        super("Certificate Wizard", "certificate-wizard", context, (message: object) => this.onDidReceiveMessage(message));
+        super(localize("cert.viewTitle", "Certificate Wizard"), "certificate-wizard", context, (message: object) =>
+            this.onDidReceiveMessage(message)
+        );
         this.opts = opts;
         this.panel.onDidDispose(() => {
             this.userSubmission.reject(userDismissed);
@@ -63,12 +65,9 @@ export class CertificateWizard extends WebView {
                 {
                     const tempCert = await Gui.showOpenDialog({
                         title: "Enter the path to the certificate for authenticating the connection.",
-                        canSelectFiles: true,
-                        canSelectFolders: false,
-                        canSelectMany: false,
                         defaultUri: this.opts.cert ? Uri.file(this.opts.cert) : undefined,
-                        filters: { "Certificate Files": ["cer", "crt", "pem"], "All Files": ["*"] },
-                        openLabel: "Select Certificate",
+                        filters: { [localize("cert.files", "Certificate Files")]: ["cer", "crt", "pem"], [allFiles]: ["*"] },
+                        openLabel: localize("cert.select", "Select Certificate"),
                         ...(this.opts.dialogOpts ?? {}),
                     });
                     if (tempCert != null && tempCert[0] != null) {
@@ -84,13 +83,13 @@ export class CertificateWizard extends WebView {
             case "promptCertKey":
                 {
                     const tempCertKey = await Gui.showOpenDialog({
-                        title: "Enter the path to the certificate key for authenticating the connection.",
-                        canSelectFiles: true,
-                        canSelectFolders: false,
-                        canSelectMany: false,
+                        title: localize("cert.enterKeyPath", "Enter the path to the certificate key for authenticating the connection."),
                         defaultUri: this.opts.certKey ? Uri.file(this.opts.certKey) : undefined,
-                        filters: { "Certificate Keys": ["cer", "crt", "pem", "key"], "All Files": ["*"] },
-                        openLabel: "Select Certificate Key",
+                        filters: {
+                            [localize("cert.keys", "Certificate Keys")]: ["cer", "crt", "pem", "key"],
+                            [allFiles]: ["*"],
+                        },
+                        openLabel: localize("cert.selectKey", "Select Certificate Key"),
                         ...(this.opts.dialogOpts ?? {}),
                     });
                     if (tempCertKey != null && tempCertKey[0] != null) {
@@ -118,7 +117,7 @@ export class CertificateWizard extends WebView {
                 setImmediate(() => {
                     this.panel.dispose();
                 });
-                ZoweLogger.trace(localize("zowe.certWizard.dismissed", "User dismissed the certificate wizard."));
+                ZoweLogger.trace(userDismissed);
                 break;
             default:
                 break;
