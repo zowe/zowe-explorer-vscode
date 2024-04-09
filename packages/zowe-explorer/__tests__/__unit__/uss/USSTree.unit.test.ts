@@ -261,14 +261,13 @@ describe("USSTree Unit Tests - Function initializeFavChildNodeForProfile", () =>
         const testTree1 = await createUSSTree(imperative.Logger.getAppLogger());
         const favProfileNode = testTree1.mFavorites[0];
         const label = "/u/fakeuser";
-        const line = "[test]: /u/fakeuser{ussSession}";
         const expectedFavSearchNode = new ZoweUSSNode({
             label: "/u/fakeuser",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
+            contextOverride: globals.USS_SESSION_CONTEXT + globals.FAV_SUFFIX,
             parentNode: favProfileNode,
             profile: globalMocks.testProfile,
         });
-        expectedFavSearchNode.contextValue = globals.USS_SESSION_CONTEXT + globals.FAV_SUFFIX;
         expectedFavSearchNode.fullPath = label;
         expectedFavSearchNode.label = expectedFavSearchNode.tooltip = label;
         expectedFavSearchNode.command = { command: "zowe.uss.fullPath", title: "", arguments: [expectedFavSearchNode] };
@@ -276,8 +275,7 @@ describe("USSTree Unit Tests - Function initializeFavChildNodeForProfile", () =>
         if (targetIcon) {
             expectedFavSearchNode.iconPath = targetIcon.path;
         }
-        const favSearchNode = await testTree1.initializeFavChildNodeForProfile(label, line, favProfileNode);
-
+        const favSearchNode = await testTree1.initializeFavChildNodeForProfile(label, "ussSession", favProfileNode);
         expect(favSearchNode).toEqual(expectedFavSearchNode);
     });
 });

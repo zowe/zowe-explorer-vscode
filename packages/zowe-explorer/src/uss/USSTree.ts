@@ -248,7 +248,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                 oldParent.children = oldParent.children.filter((c) => c !== node);
                 node.resourceUri = newUriForNode;
             }
-            parentsToUpdate.add(node.getParent());
+            parentsToUpdate.add(node.getParent() as IZoweUSSTreeNode);
         }
         for (const parent of parentsToUpdate) {
             this.refreshElement(parent);
@@ -889,7 +889,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
     }
 
     /**
-     * Creates an individual favorites node WITHOUT profiles or sessions, to be added to the specified profile node in Favorites during activation.
+     * Creates an individual favorites node to be added to the specified profile node in Favorites during activation.
      * This allows label and contextValue to be passed into these child nodes.
      * @param label The favorited file/folder's label
      * @param contextValue The favorited file/folder's context value
@@ -900,7 +900,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
         ZoweLogger.trace("USSTree.initializeFavChildNodeForProfile called.");
         const profile = parentNode.getProfile();
         let node: ZoweUSSNode;
-        if (context === "directory") {
+        if (context === globals.USS_DIR_CONTEXT) {
             node = new ZoweUSSNode({
                 label,
                 collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
@@ -910,7 +910,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
             if (!UssFSProvider.instance.exists(node.resourceUri)) {
                 await vscode.workspace.fs.createDirectory(node.resourceUri);
             }
-        } else if (context === "ussSession") {
+        } else if (context === globals.USS_SESSION_CONTEXT) {
             node = new ZoweUSSNode({
                 label,
                 collapsibleState: vscode.TreeItemCollapsibleState.None,
