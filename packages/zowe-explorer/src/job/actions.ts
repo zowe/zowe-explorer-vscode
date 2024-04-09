@@ -24,6 +24,7 @@ import { ZosJobsProvider } from "./ZosJobsProvider";
 import { JOB_SORT_OPTS } from "./utils";
 import * as globals from "../globals";
 import { TreeProviders } from "../shared/TreeProviders";
+import { TreeViewUtils } from "../utils/TreeViewUtils";
 
 // Set up localization
 nls.config({
@@ -249,10 +250,10 @@ export const focusOnJob = async (jobsProvider: IZoweTree<IZoweJobTreeNode>, sess
     }
     sessionNode.searchId = jobId;
     sessionNode.filtered = true;
-    const jobs: IZoweJobTreeNode[] = await sessionNode.getChildren();
-    const job = jobs.find((jobNode) => jobNode.job.jobid === jobId);
-    if (job) {
-        jobsProvider.setItem(jobsProvider.getTreeView(), job);
+    await TreeViewUtils.expandNode(sessionNode, jobsProvider);
+    const jobNode: IZoweJobTreeNode | undefined = sessionNode.children.find((job) => job.job.jobid.toString() === jobId.trim());
+    if (jobNode) {
+        jobsProvider.setItem(jobsProvider.getTreeView(), jobNode);
     }
 };
 
