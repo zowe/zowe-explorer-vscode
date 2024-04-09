@@ -297,10 +297,11 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         const statusMsg = Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Saving data set..."));
         const isPdsMember = isPdsEntry(parent) && !isFilterEntry(parent);
         const fullName = isPdsMember ? `${parent.name}(${entry.name})` : entry.name;
+        let resp: IZosFilesResponse;
         try {
             const mvsApi = ZoweExplorerApiRegister.getMvsApi(entry.metadata.profile);
             const profileEncoding = entry.encoding ? null : entry.metadata.profile.profile?.encoding;
-            return mvsApi.uploadFromBuffer(Buffer.from(content), fullName, {
+            resp = await mvsApi.uploadFromBuffer(Buffer.from(content), fullName, {
                 binary: entry.encoding?.kind === "binary",
                 encoding: entry.encoding?.kind === "other" ? entry.encoding.codepage : profileEncoding,
                 etag: forceUpload ? undefined : entry.etag,
@@ -310,6 +311,8 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             statusMsg.dispose();
             throw err;
         }
+        statusMsg.dispose();
+        return resp;
     }
 
     /**
