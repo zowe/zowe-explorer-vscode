@@ -246,7 +246,6 @@ export class USSTree extends ZoweTreeProvider implements Types.IZoweUSSTreeType 
                 // remove node from old parent and relocate to new parent
                 const oldParent = node.getParent();
                 oldParent.children = oldParent.children.filter((c) => c !== node);
-                this.nodeDataChanged(oldParent);
                 node.resourceUri = newUriForNode;
             }
             parentsToUpdate.add(node.getParent());
@@ -255,9 +254,6 @@ export class USSTree extends ZoweTreeProvider implements Types.IZoweUSSTreeType 
             this.refreshElement(parent);
         }
         this.refreshElement(target);
-        if (target.collapsibleState === vscode.TreeItemCollapsibleState.Collapsed) {
-            await this.treeView.reveal(target, { expand: true });
-        }
         movingMsg.dispose();
         this.draggedNodes = {};
     }
