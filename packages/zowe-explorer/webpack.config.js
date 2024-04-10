@@ -30,7 +30,7 @@ const config = {
         devtoolModuleFilenameTemplate: "webpack:///[absolute-resource-path]",
     },
     devtool: "source-map",
-    externals: ["vscode"],
+    externals: ["vscode", "cpu-features"],
     resolve: {
         extensions: [".ts", ".js"],
         alias: {
