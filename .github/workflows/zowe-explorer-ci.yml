@@ -24,7 +24,7 @@ jobs:
       # Continue to run tests on the other systems if one fails
       fail-fast: false
       matrix:
-        node-version: [18.x] # Add 20.x when vscode-l10n supports it
+        node-version: [18.x, 20.x]
         # order operating systems from best to worst
         os: [windows-latest, ubuntu-latest, macos-latest]
 
