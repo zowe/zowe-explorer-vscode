@@ -1390,6 +1390,19 @@ describe("ZoweUSSNode Unit Tests - Function node.setEtag", () => {
     });
 });
 
+describe("ZoweUSSNode Unit Tests - Function node.getAttributes", () => {
+    const attrs = { owner: "aUser", uid: 0, gid: 1000, group: "USERS", perms: "rwxrwxrwx" };
+    it("gets the attributes for a file", () => {
+        const fileEntry = new UssFile("testFile");
+        fileEntry.attributes = attrs;
+        const statMock = jest.spyOn(UssFSProvider.instance, "stat").mockReturnValueOnce(fileEntry);
+
+        const node = new ZoweUSSNode({ label: "testFile", collapsibleState: vscode.TreeItemCollapsibleState.None });
+        expect(node.getAttributes()).toStrictEqual(attrs);
+        statMock.mockRestore();
+    });
+});
+
 describe("ZoweUSSNode Unit Tests - Function node.setAttributes", () => {
     const attrs = { owner: "aUser", uid: 0, gid: 1000, group: "USERS", perms: "rwxrwxrwx" };
     it("sets the attributes for a file", () => {
@@ -1414,5 +1427,13 @@ describe("ZoweUSSNode Unit Tests - Function node.setAttributes", () => {
         expect(statMock).toHaveBeenCalled();
         expect(dirEntry.attributes).toStrictEqual({ ...attrs, perms: "r-xr-xr-x" });
         statMock.mockRestore();
+    });
+});
+
+describe("ZoweUSSNode Unit Tests - Function node.getBaseName", () => {
+    it("returns the base name for a USS node based on its URI", async () => {
+        const node = new ZoweUSSNode({ label: "testFile", collapsibleState: vscode.TreeItemCollapsibleState.None });
+        node.resourceUri = vscode.Uri.from({ scheme: ZoweScheme.USS, path: "/someProfile/a/b/c/testFile" });
+        expect(node.getBaseName()).toBe("testFile");
     });
 });
