@@ -706,7 +706,7 @@
       "Like Data Set name"
     ]
   },
-  "allocateLike.inputBox.placeHolder": "allocateLike.inputBox.placeHolder",
+  "Enter a name for the new data set": "Enter a name for the new data set",
   "Unable to create data set.": "Unable to create data set.",
   "{0} was created like {1}./New Data Set nameLike Data Set name": {
     "message": "{0} was created like {1}.",
@@ -877,7 +877,6 @@
   "The data set member already exists.\nDo you want to replace it?": "The data set member already exists.\nDo you want to replace it?",
   "The physical sequential (PS) data set already exists.\nDo you want to replace it?": "The physical sequential (PS) data set already exists.\nDo you want to replace it?",
   "The partitioned (PO) data set already exists.\nDo you want to merge them while replacing any existing members?": "The partitioned (PO) data set already exists.\nDo you want to merge them while replacing any existing members?",
-  "Enter a name for the new data set": "Enter a name for the new data set",
   "Unable to copy data set.": "Unable to copy data set.",
   "Use the search button to display data sets": "Use the search button to display data sets",
   "Cannot access member with control characters in the name: {0}/Data Set member": {
