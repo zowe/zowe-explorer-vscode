@@ -1,6 +1,9 @@
 {
   "extends": "./tsconfig.json",
-  "exclude": ["node_modules", ".vscode-test"],
+  "exclude": [
+    "node_modules",
+    ".vscode-test"
+  ],
   "include": [
     // Needed for integration tests to work:
     "__tests__",

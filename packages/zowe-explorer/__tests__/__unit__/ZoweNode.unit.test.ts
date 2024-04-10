@@ -9,15 +9,15 @@
  *
  */
 
+import * as vscode from "vscode";
+import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
+import { imperative, Sorting } from "@zowe/zowe-explorer-api";
+import { ZoweDatasetNode } from "../../src/trees/dataset";
+import { Constants, Profiles } from "../../src/configuration";
+
 jest.mock("vscode");
 jest.mock("@zowe/zos-files-for-zowe-sdk");
 jest.mock("Session");
-import * as vscode from "vscode";
-import { ZoweDatasetNode } from "../../src/dataset/ZoweDatasetNode";
-import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
-import { Profiles } from "../../src/Profiles";
-import * as globals from "../../src/globals";
-import { imperative, Sorting } from "@zowe/zowe-explorer-api";
 
 describe("Unit Tests (Jest)", () => {
     // Globals
@@ -64,9 +64,9 @@ describe("Unit Tests (Jest)", () => {
     /*************************************************************************************************************
      * Creates an ZoweDatasetNode and checks that its members are all initialized by the constructor
      *************************************************************************************************************/
-    it("Testing that the ZoweDatasetNode is defined", async () => {
+    it("Testing that the ZoweDatasetNode is defined", () => {
         const testNode = new ZoweDatasetNode({ label: "BRTVS99", collapsibleState: vscode.TreeItemCollapsibleState.None, session });
-        testNode.contextValue = globals.DS_SESSION_CONTEXT;
+        testNode.contextValue = Constants.DS_SESSION_CONTEXT;
 
         expect(testNode.label).toBeDefined();
         expect(testNode.collapsibleState).toBeDefined();
@@ -94,7 +94,7 @@ describe("Unit Tests (Jest)", () => {
             profile: profileOne,
         });
         rootNode.dirty = true;
-        rootNode.contextValue = globals.DS_SESSION_CONTEXT;
+        rootNode.contextValue = Constants.DS_SESSION_CONTEXT;
         rootNode.pattern = "SAMPLE, SAMPLE.PUBLIC, SAMPLE";
         let rootChildren = await rootNode.getChildren();
 
@@ -111,7 +111,7 @@ describe("Unit Tests (Jest)", () => {
                 collapsibleState: vscode.TreeItemCollapsibleState.None,
                 parentNode: rootNode,
                 profile: profileOne,
-                contextOverride: globals.DS_MIGRATED_FILE_CONTEXT,
+                contextOverride: Constants.DS_MIGRATED_FILE_CONTEXT,
             }),
             new ZoweDatasetNode({
                 label: "BRTVS99.CA11.SPFTEMP0.CNTL",
@@ -130,7 +130,7 @@ describe("Unit Tests (Jest)", () => {
                 collapsibleState: vscode.TreeItemCollapsibleState.None,
                 parentNode: rootNode,
                 profile: profileOne,
-                contextOverride: globals.VSAM_CONTEXT,
+                contextOverride: Constants.VSAM_CONTEXT,
             }),
         ];
         sampleChildren[0].command = { command: "zowe.ds.ZoweNode.openPS", title: "", arguments: [sampleChildren[0]] };
@@ -179,7 +179,7 @@ describe("Unit Tests (Jest)", () => {
         });
         // Creating a rootNode
         const rootNode = new ZoweDatasetNode({ label: "root", collapsibleState: vscode.TreeItemCollapsibleState.None, session, profile: profileOne });
-        rootNode.contextValue = globals.DS_SESSION_CONTEXT;
+        rootNode.contextValue = Constants.DS_SESSION_CONTEXT;
         rootNode.dirty = true;
         const subNode = new ZoweDatasetNode({
             label: "sub",
@@ -232,7 +232,7 @@ describe("Unit Tests (Jest)", () => {
                 session,
                 profile: profileOne,
             });
-            rootNode.contextValue = globals.DS_SESSION_CONTEXT;
+            rootNode.contextValue = Constants.DS_SESSION_CONTEXT;
             rootNode.dirty = true;
             const subNode = new ZoweDatasetNode({
                 label: "Response Fail",
@@ -270,9 +270,9 @@ describe("Unit Tests (Jest)", () => {
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             parentNode: rootNode,
             profile: profileOne,
-            contextOverride: globals.INFORMATION_CONTEXT,
+            contextOverride: Constants.INFORMATION_CONTEXT,
         });
-        rootNode.contextValue = globals.DS_SESSION_CONTEXT;
+        rootNode.contextValue = Constants.DS_SESSION_CONTEXT;
         rootNode.dirty = false;
         await expect(await rootNode.getChildren()).toEqual([infoChild]);
     });
@@ -293,9 +293,9 @@ describe("Unit Tests (Jest)", () => {
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             parentNode: rootNode,
             profile: profileOne,
-            contextOverride: globals.INFORMATION_CONTEXT,
+            contextOverride: Constants.INFORMATION_CONTEXT,
         });
-        rootNode.contextValue = globals.DS_SESSION_CONTEXT;
+        rootNode.contextValue = Constants.DS_SESSION_CONTEXT;
         await expect(await rootNode.getChildren()).toEqual([infoChild]);
     });
 
@@ -310,15 +310,15 @@ describe("Unit Tests (Jest)", () => {
             session,
             profile: profileOne,
         });
-        rootNode.contextValue = globals.DS_SESSION_CONTEXT;
+        rootNode.contextValue = Constants.DS_SESSION_CONTEXT;
         const subNode = new ZoweDatasetNode({
-            label: globals.DS_PDS_CONTEXT,
+            label: Constants.DS_PDS_CONTEXT,
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             parentNode: rootNode,
             profile: profileOne,
         });
         const member = new ZoweDatasetNode({
-            label: globals.DS_MEMBER_CONTEXT,
+            label: Constants.DS_MEMBER_CONTEXT,
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             parentNode: subNode,
             profile: profileOne,
@@ -337,11 +337,11 @@ describe("Unit Tests (Jest)", () => {
             profile: profileOne,
         });
         rootNode.dirty = true;
-        rootNode.contextValue = globals.DS_DS_CONTEXT;
+        rootNode.contextValue = Constants.DS_DS_CONTEXT;
         expect(await rootNode.getChildren()).toHaveLength(0);
-        rootNode.contextValue = globals.DS_MEMBER_CONTEXT;
+        rootNode.contextValue = Constants.DS_MEMBER_CONTEXT;
         expect(await rootNode.getChildren()).toHaveLength(0);
-        rootNode.contextValue = globals.INFORMATION_CONTEXT;
+        rootNode.contextValue = Constants.INFORMATION_CONTEXT;
         expect(await rootNode.getChildren()).toHaveLength(0);
     });
     /*************************************************************************************************************
@@ -359,7 +359,7 @@ describe("Unit Tests (Jest)", () => {
             new ZoweDatasetNode({ label: "onestep", collapsibleState: vscode.TreeItemCollapsibleState.Collapsed, session, profile: profileOne }),
         ];
         rootNode.dirty = false;
-        rootNode.contextValue = globals.DS_PDS_CONTEXT;
+        rootNode.contextValue = Constants.DS_PDS_CONTEXT;
         expect((await rootNode.getChildren())[0].label).toEqual("onestep");
     });
 
@@ -382,7 +382,7 @@ describe("Unit Tests (Jest)", () => {
             profile: profileOne,
         });
         pds.dirty = true;
-        pds.contextValue = globals.DS_PDS_CONTEXT;
+        pds.contextValue = Constants.DS_PDS_CONTEXT;
         expect((await pds.getChildren())[0].label).toEqual("BRTVS99");
     });
 
@@ -412,7 +412,7 @@ describe("Unit Tests (Jest)", () => {
             profile: profileOne,
         });
         pds.dirty = true;
-        pds.contextValue = globals.DS_PDS_CONTEXT;
+        pds.contextValue = Constants.DS_PDS_CONTEXT;
         const allMembers = jest.fn();
         allMembers.mockImplementationOnce(() => {
             return {
@@ -425,9 +425,9 @@ describe("Unit Tests (Jest)", () => {
         Object.defineProperty(zosfiles.List, "allMembers", { value: allMembers });
         const pdsChildren = await pds.getChildren();
         expect(pdsChildren[0].label).toEqual("BADMEM\ufffd");
-        expect(pdsChildren[0].contextValue).toEqual(globals.DS_FILE_ERROR_CONTEXT);
+        expect(pdsChildren[0].contextValue).toEqual(Constants.DS_FILE_ERROR_CONTEXT);
         expect(pdsChildren[1].label).toEqual("GOODMEM1");
-        expect(pdsChildren[1].contextValue).toEqual(globals.DS_MEMBER_CONTEXT);
+        expect(pdsChildren[1].contextValue).toEqual(Constants.DS_MEMBER_CONTEXT);
         getSessionNodeSpy.mockRestore();
     });
 
@@ -450,7 +450,7 @@ describe("Unit Tests (Jest)", () => {
             profile: profileOne,
         });
         pds.dirty = true;
-        pds.contextValue = globals.DS_PDS_CONTEXT;
+        pds.contextValue = Constants.DS_PDS_CONTEXT;
         const allMembers = jest.fn();
         allMembers.mockImplementationOnce(() => {
             return {

@@ -12,14 +12,14 @@
 jest.mock("Session");
 
 import * as vscode from "vscode";
-import { Gui, imperative, Validation } from "@zowe/zowe-explorer-api";
-import * as profileLoader from "../../../src/Profiles";
-import { TsoCommandHandler } from "../../../src/command/TsoCommandHandler";
 import * as utils from "../../../src/utils/ProfilesUtils";
-import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
-import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
-import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
-import { ProfileManagement } from "../../../src/utils/ProfileManagement";
+import * as profileLoader from "../../../src/configuration";
+import { Gui, imperative, Validation } from "@zowe/zowe-explorer-api";
+import { TsoCommandHandler } from "../../../src/command/TsoCommandHandler";
+import { ZoweDatasetNode } from "../../../src/trees/dataset";
+import { ZoweExplorerApiRegister } from "../../../src/extending";
+import { ZoweLocalStorage } from "../../../src/tools";
+import { ProfileManagement } from "../../../src/management";
 
 describe("TsoCommandHandler unit testing", () => {
     const showErrorMessage = jest.fn();
@@ -132,7 +132,7 @@ describe("TsoCommandHandler unit testing", () => {
 
     mockLoadNamedProfile.mockReturnValue({ profile: { name: "aProfile", type: "zosmf" } });
     getConfiguration.mockReturnValue({
-        get: (setting: string) => undefined,
+        get: () => undefined,
         update: jest.fn(() => {
             return {};
         }),

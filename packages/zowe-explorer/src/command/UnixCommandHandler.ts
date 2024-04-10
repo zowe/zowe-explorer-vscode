@@ -10,16 +10,14 @@
  */
 
 import * as vscode from "vscode";
-import * as globals from "../globals";
-import { Gui, Validation, imperative, IZoweTreeNode } from "@zowe/zowe-explorer-api";
-import { Profiles } from "../Profiles";
-import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
-import { errorHandling, FilterDescriptor, FilterItem } from "../utils/ProfilesUtils";
-import { ZoweCommandProvider } from "../abstract/ZoweCommandProvider";
-import { SettingsConfig } from "../utils/SettingsConfig";
-import { ZoweLogger } from "../utils/ZoweLogger";
 import * as zosuss from "@zowe/zos-uss-for-zowe-sdk";
-import { ProfileManagement } from "../utils/ProfileManagement";
+import { Gui, imperative, IZoweTreeNode } from "@zowe/zowe-explorer-api";
+import { ZoweExplorerApiRegister } from "../extending";
+import { ProfilesUtils, FilterDescriptor, FilterItem } from "../utils";
+import { ZoweCommandProvider } from "../providers";
+import { Profiles, Constants, SettingsConfig } from "../configuration";
+import { ZoweLogger } from "../tools";
+import { ProfileManagement } from "../management";
 
 /**
  * Provides a class that manages submitting a Unix command on the server
@@ -139,7 +137,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
                     })
                 );
             } else {
-                await errorHandling(error, profile.name);
+                await ProfilesUtils.errorHandling(error, profile.name);
             }
         }
     }
@@ -244,7 +242,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
         if (!session) {
             const allProfiles = this.profileInstance.allProfiles;
             res = this.checkForSshRequired(allProfiles);
-            const profileNamesList = ProfileManagement.getRegisteredProfileNameList(globals.Trees.USS);
+            const profileNamesList = ProfileManagement.getRegisteredProfileNameList(Constants.Trees.USS);
             if (profileNamesList.length) {
                 if (!res) {
                     const quickPickOptions: vscode.QuickPickOptions = {
@@ -273,7 +271,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
     private async getQuickPick(cwd: string): Promise<string> {
         ZoweLogger.trace("UnixCommandHandler.getQuickPick called.");
         let response = "";
-        const alwaysEdit: boolean = SettingsConfig.getDirectValue(globals.SETTINGS_COMMANDS_ALWAYS_EDIT);
+        const alwaysEdit: boolean = SettingsConfig.getDirectValue(Constants.SETTINGS_COMMANDS_ALWAYS_EDIT);
         if (this.history.getSearchHistory().length > 0) {
             const createPick = new FilterDescriptor(UnixCommandHandler.defaultDialogText);
             const items: vscode.QuickPickItem[] = this.history.getSearchHistory().map((element) => new FilterItem({ text: element }));
@@ -358,7 +356,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
                 this.outputChannel.show(true);
             }
         } catch (error) {
-            await errorHandling(error, profile.name);
+            await ProfilesUtils.errorHandling(error, profile.name);
         }
         this.history.addSearchHistory(command);
     }

@@ -10,15 +10,14 @@
  */
 
 import * as path from "path";
-import { LoggerUtils } from "../../../src/utils/LoggerUtils";
-import { ZoweLogger } from "../../../src/utils/ZoweLogger";
 import * as vscode from "vscode";
 import * as core from "@zowe/core-for-zowe-sdk";
+import * as shared from "../../__mocks__/mockCreators/shared";
 import { Gui, imperative, MessageSeverity } from "@zowe/zowe-explorer-api";
-import * as shared from "../../../__mocks__/mockCreators/shared";
-import { SettingsConfig } from "../../../src/utils/SettingsConfig";
-import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
-import { initZoweLogger } from "../../../src/shared/init";
+import { ZoweLocalStorage, ZoweLogger } from "../../../src/tools";
+import { SettingsConfig } from "../../../src/configuration";
+import { SharedInit } from "../../../src/trees/shared";
+import { LoggerUtils } from "../../../src/utils";
 
 function createGlobalMocks() {
     const newMocks = {
@@ -94,7 +93,7 @@ describe("Logger Utils Unit Tests - function initializeZoweLogger", () => {
             get: getSettingMock,
         });
 
-        expect(await initZoweLogger(globalMocks.testContext)).toBeUndefined();
+        expect(await SharedInit.initZoweLogger(globalMocks.testContext)).toBeUndefined();
         expect(infoMock).toHaveBeenCalled();
     });
     it("should initialize loggers successfully with not changing to cli logger setting", async () => {
@@ -104,7 +103,7 @@ describe("Logger Utils Unit Tests - function initializeZoweLogger", () => {
         });
         process.env.ZOWE_APP_LOG_LEVEL = "DEBUG";
 
-        expect(await initZoweLogger(globalMocks.testContext)).toBeUndefined();
+        expect(await SharedInit.initZoweLogger(globalMocks.testContext)).toBeUndefined();
     });
     it("should initialize loggers successfully with changing to cli logger setting", async () => {
         const globalMocks = createGlobalMocks();
@@ -114,7 +113,7 @@ describe("Logger Utils Unit Tests - function initializeZoweLogger", () => {
         const infoSpy = jest.spyOn(ZoweLogger, "info");
         process.env.ZOWE_APP_LOG_LEVEL = "DEBUG";
 
-        expect(await initZoweLogger(globalMocks.testContext)).toBeUndefined();
+        expect(await SharedInit.initZoweLogger(globalMocks.testContext)).toBeUndefined();
         expect(infoSpy).toHaveBeenCalled();
         infoSpy.mockClear();
     });

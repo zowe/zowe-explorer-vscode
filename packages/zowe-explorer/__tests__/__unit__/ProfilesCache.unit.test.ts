@@ -9,10 +9,10 @@
  *
  */
 
+import { imperative, ProfilesCache } from "@zowe/zowe-explorer-api";
+
 jest.mock("fs");
 jest.unmock("@zowe/imperative");
-
-import { imperative, ProfilesCache } from "@zowe/zowe-explorer-api";
 
 describe("ProfilesCache API", () => {
     const zoweDir = imperative.ProfileInfo.getZoweDir();

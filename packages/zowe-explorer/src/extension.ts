@@ -9,22 +9,16 @@
  *
  */
 
-import * as globals from "./globals";
 import * as vscode from "vscode";
-import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
-import { ZoweExplorerExtender } from "./ZoweExplorerExtender";
-import { Profiles } from "./Profiles";
-import { ProfilesUtils } from "./utils/ProfilesUtils";
-import { initializeSpoolProvider } from "./SpoolProvider";
-import { cleanTempDir } from "./utils/TempFolder";
-import { initZoweLogger, registerCommonCommands, registerRefreshCommand, watchConfigProfile, watchForZoweButtonClick } from "./shared/init";
-import { ZoweLogger } from "./utils/ZoweLogger";
-import { ZoweSaveQueue } from "./abstract/ZoweSaveQueue";
-import { ZoweLocalStorage } from "./utils/ZoweLocalStorage";
-import { TreeProviders } from "./shared/TreeProviders";
-import { initDatasetProvider } from "./dataset/init";
-import { initUSSProvider } from "./uss/init";
-import { initJobsProvider } from "./job/init";
+import { ZoweExplorerExtender, ZoweExplorerApiRegister } from "./extending";
+import { Profiles, TempFolder, Constants } from "./configuration";
+import { ProfilesUtils } from "./utils";
+import { SpoolProvider } from "./providers";
+import { SharedInit, SharedTreeProviders } from "./trees/shared";
+import { ZoweLogger, ZoweSaveQueue, ZoweLocalStorage } from "./tools";
+import { DatasetInit } from "./trees/dataset";
+import { USSInit } from "./trees/uss";
+import { JobInit } from "./trees/job";
 
 /**
  * The function that runs when the extension is loaded
@@ -35,19 +29,23 @@ import { initJobsProvider } from "./job/init";
  */
 export async function activate(context: vscode.ExtensionContext): Promise<ZoweExplorerApiRegister> {
     ZoweLocalStorage.initializeZoweLocalStorage(context.globalState);
-    await initZoweLogger(context);
+    await SharedInit.initZoweLogger(context);
 
     await ProfilesUtils.initializeZoweProfiles((msg) => ZoweExplorerExtender.showZoweConfigError(msg));
     await Profiles.createInstance(ZoweLogger.imperativeLogger);
-    initializeSpoolProvider(context);
+    SpoolProvider.initializeSpoolProvider(context);
 
-    const providers = await TreeProviders.initializeProviders(context, { ds: initDatasetProvider, uss: initUSSProvider, job: initJobsProvider });
-    registerCommonCommands(context, providers);
-    registerRefreshCommand(context, activate, deactivate);
+    const providers = await SharedTreeProviders.initializeProviders({
+        ds: () => DatasetInit.initDatasetProvider(context),
+        uss: () => USSInit.initUSSProvider(context),
+        job: () => JobInit.initJobsProvider(context),
+    });
+    SharedInit.registerCommonCommands(context, providers);
+    SharedInit.registerRefreshCommand(context, activate, deactivate);
     ZoweExplorerExtender.createInstance(providers.ds, providers.uss, providers.job);
 
-    await watchConfigProfile(context, providers);
-    await watchForZoweButtonClick();
+    await SharedInit.watchConfigProfile(context, providers);
+    await SharedInit.watchForZoweButtonClick();
 
     return ZoweExplorerApiRegister.getInstance();
 }
@@ -58,7 +56,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
  */
 export async function deactivate(): Promise<void> {
     await ZoweSaveQueue.all();
-    await cleanTempDir();
-    globals.setActivated(false);
+    TempFolder.cleanDir(Constants.ZOWETEMPFOLDER);
+    Constants.setActivated(false);
     ZoweLogger.disposeZoweLogger();
 }

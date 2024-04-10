@@ -12,16 +12,14 @@
 jest.mock("Session");
 
 import * as vscode from "vscode";
-import { Gui, imperative, Validation } from "@zowe/zowe-explorer-api";
-import * as profileLoader from "../../../src/Profiles";
-import { MvsCommandHandler } from "../../../src/command/MvsCommandHandler";
 import * as utils from "../../../src/utils/ProfilesUtils";
-import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
-import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
-import * as globals from "../../../src/globals";
-import { ZoweLogger } from "../../../src/utils/ZoweLogger";
-import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
-import { ProfileManagement } from "../../../src/utils/ProfileManagement";
+import * as profileLoader from "../../../src/configuration/Profiles";
+import { Gui, imperative, Validation } from "@zowe/zowe-explorer-api";
+import { MvsCommandHandler } from "../../../src/command/MvsCommandHandler";
+import { ZoweDatasetNode } from "../../../src/trees/dataset";
+import { ZoweExplorerApiRegister } from "../../../src/extending";
+import { ZoweLogger, ZoweLocalStorage } from "../../../src/tools";
+import { ProfileManagement } from "../../../src/management";
 
 describe("mvsCommandActions unit testing", () => {
     const showErrorMessage = jest.fn();
@@ -136,7 +134,7 @@ describe("mvsCommandActions unit testing", () => {
 
     mockLoadNamedProfile.mockReturnValue({ profile: { name: "aProfile", type: "zosmf" } });
     getConfiguration.mockReturnValue({
-        get: (setting: string) => undefined,
+        get: () => undefined,
         update: jest.fn(() => {
             return {};
         }),
@@ -565,7 +563,7 @@ describe("mvsCommandActions unit testing", () => {
             }),
         });
 
-        jest.spyOn(mvsActions, "checkCurrentProfile").mockReturnValue(undefined);
+        jest.spyOn(mvsActions, "checkCurrentProfile").mockReturnValue(undefined as any);
 
         const mockCommandApi = await apiRegisterInstance.getCommandApi(profileOne);
         const getCommandApiMock = jest.fn();
@@ -575,7 +573,7 @@ describe("mvsCommandActions unit testing", () => {
         showInputBox.mockReturnValueOnce("/d iplinfo1");
         jest.spyOn(mockCommandApi, "issueMvsCommand").mockReturnValueOnce({ commandResponse: "fake response" } as any);
 
-        await mvsActions.issueMvsCommand(session, null, testNode);
+        await mvsActions.issueMvsCommand(session, null as any, testNode);
 
         expect(showInputBox.mock.calls.length).toBe(1);
         expect(showInformationMessage.mock.calls.length).toBe(0);

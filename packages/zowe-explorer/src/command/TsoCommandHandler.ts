@@ -10,16 +10,14 @@
  */
 
 import * as vscode from "vscode";
-import * as globals from "../globals";
-import { Gui, Validation, imperative, IZoweTreeNode } from "@zowe/zowe-explorer-api";
-import { Profiles } from "../Profiles";
-import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
-import { errorHandling, FilterDescriptor, FilterItem } from "../utils/ProfilesUtils";
-import { ZoweCommandProvider } from "../abstract/ZoweCommandProvider";
 import * as zostso from "@zowe/zos-tso-for-zowe-sdk";
-import { SettingsConfig } from "../utils/SettingsConfig";
-import { ZoweLogger } from "../utils/ZoweLogger";
-import { ProfileManagement } from "../utils/ProfileManagement";
+import { Gui, Validation, imperative, IZoweTreeNode } from "@zowe/zowe-explorer-api";
+import { Profiles, Constants, SettingsConfig } from "../configuration";
+import { ZoweExplorerApiRegister } from "../extending";
+import { ProfilesUtils, FilterDescriptor, FilterItem } from "../utils";
+import { ZoweCommandProvider } from "../providers";
+import { ZoweLogger } from "../tools";
+import { ProfileManagement } from "../management";
 
 /**
  * Provides a class that manages submitting a TSO command on the server
@@ -70,7 +68,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
             }
         }
         if (!session) {
-            const profileNamesList = ProfileManagement.getRegisteredProfileNameList(globals.Trees.MVS);
+            const profileNamesList = ProfileManagement.getRegisteredProfileNameList(Constants.Trees.MVS);
             if (profileNamesList.length > 0) {
                 const quickPickOptions: vscode.QuickPickOptions = {
                     placeHolder: vscode.l10n.t("Select the Profile to use to submit the TSO command"),
@@ -132,7 +130,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
                     })
                 );
             } else {
-                await errorHandling(error, profile.name);
+                await ProfilesUtils.errorHandling(error, profile.name);
             }
         }
     }
@@ -140,7 +138,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
     private async getQuickPick(hostname: string): Promise<string> {
         ZoweLogger.trace("TsoCommandHandler.getQuickPick called.");
         let response = "";
-        const alwaysEdit: boolean = SettingsConfig.getDirectValue(globals.SETTINGS_COMMANDS_ALWAYS_EDIT);
+        const alwaysEdit: boolean = SettingsConfig.getDirectValue(Constants.SETTINGS_COMMANDS_ALWAYS_EDIT);
         if (this.history.getSearchHistory().length > 0) {
             const createPick = new FilterDescriptor(TsoCommandHandler.defaultDialogText);
             const items: vscode.QuickPickItem[] = this.history.getSearchHistory().map((element) => new FilterItem({ text: element }));
@@ -227,7 +225,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
                 ZoweLogger.error(message);
                 Gui.errorMessage(message);
             } else {
-                await errorHandling(error, profile.name);
+                await ProfilesUtils.errorHandling(error, profile.name);
             }
         }
     }

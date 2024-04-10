@@ -9,13 +9,13 @@
  *
  */
 
-import { TreeViewUtils } from "../../../src/utils/TreeViewUtils";
-import * as globals from "../../../src/globals";
-import { PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
 import * as vscode from "vscode";
-import { createDatasetSessionNode, createDatasetTree } from "../../../__mocks__/mockCreators/datasets";
-import { createIProfile, createISession, createPersistentConfig, createTreeView } from "../../../__mocks__/mockCreators/shared";
-import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
+import { PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
+import { createDatasetSessionNode, createDatasetTree } from "../../__mocks__/mockCreators/datasets";
+import { createIProfile, createISession, createPersistentConfig, createTreeView } from "../../__mocks__/mockCreators/shared";
+import { ZoweLocalStorage } from "../../../src/tools";
+import { TreeViewUtils } from "../../../src/utils";
+import { Constants } from "../../../src/configuration";
 
 describe("TreeViewUtils Unit Tests", () => {
     function createBlockMocks() {
@@ -44,10 +44,10 @@ describe("TreeViewUtils Unit Tests", () => {
     it("refreshIconOnCollapse - generated listener function works as intended", () => {
         const testTreeProvider = { mOnDidChangeTreeData: { fire: jest.fn() } } as any;
         const listenerFn = TreeViewUtils.refreshIconOnCollapse(
-            [(node): boolean => (node.contextValue as any).includes(globals.DS_PDS_CONTEXT) as boolean],
+            [(node): boolean => (node.contextValue as any).includes(Constants.DS_PDS_CONTEXT) as boolean],
             testTreeProvider
         );
-        const element = { label: "somenode", contextValue: globals.DS_PDS_CONTEXT } as any;
+        const element = { label: "somenode", contextValue: Constants.DS_PDS_CONTEXT } as any;
         listenerFn({ element });
         expect(testTreeProvider.mOnDidChangeTreeData.fire).toHaveBeenCalledWith(element);
     });

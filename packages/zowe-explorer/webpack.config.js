@@ -30,9 +30,8 @@ const config = {
         devtoolModuleFilenameTemplate: "webpack:///[absolute-resource-path]",
     },
     devtool: "source-map",
-    externals: ["vscode", "cpu-features"],
+    externals: ["vscode"],
     resolve: {
-        modules: [path.resolve(__dirname, "../../node_modules"), path.resolve(__dirname, "node_modules")],
         extensions: [".ts", ".js"],
         alias: {
             "@zowe/zowe-explorer-api$": path.resolve(__dirname, "..", "zowe-explorer-api/src"),
@@ -66,16 +65,7 @@ const config = {
     module: {
         rules: [
             {
-                test: /\.node$/,
-                loader: "node-loader",
-            },
-            {
-                test: /\.js$/,
-                include: /wontache/,
-                type: "javascript/auto",
-            },
-            {
-                test: /\.ts$/,
+                test: /\.ts|\.tsx$/,
                 exclude: /node_modules/,
                 use: [
                     {
@@ -84,10 +74,18 @@ const config = {
                             compilerOptions: {
                                 sourceMap: true,
                             },
-                            projectReferences: true,
                         },
                     },
                 ],
+            },
+            {
+                test: /\.js/,
+                include: /wontache/, // https://gitlab.com/jgonggrijp/wontache/-/issues/68
+                type: "javascript/auto",
+            },
+            {
+                test: /\.node$/,
+                loader: "node-loader",
             },
         ],
     },
