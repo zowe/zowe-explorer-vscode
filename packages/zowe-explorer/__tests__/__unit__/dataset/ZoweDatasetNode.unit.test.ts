@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { Gui, Validation } from "@zowe/zowe-explorer-api";
+import { DsEntry, Gui, PdsEntry, Validation } from "@zowe/zowe-explorer-api";
 import {
     createSessCfgFromArgs,
     createInstanceOfProfile,
@@ -23,9 +23,7 @@ import { createDatasetSessionNode, createDatasetTree } from "../../../__mocks__/
 import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
 import { bindMvsApi, createMvsApi } from "../../../__mocks__/mockCreators/api";
 import * as globals from "../../../src/globals";
-import * as path from "path";
 import * as fs from "fs";
-import * as sharedUtils from "../../../src/shared/utils";
 import { Profiles } from "../../../src/Profiles";
 import { ZoweLogger } from "../../../src/utils/ZoweLogger";
 import { DatasetFSProvider } from "../../../src/dataset/DatasetFSProvider";
@@ -337,5 +335,54 @@ describe("ZoweDatasetNode Unit Tests - Function node.setIcon()", () => {
         node.setIcon(iconTest);
         expect(node.iconPath).toEqual(iconTest);
         expect(mocked(vscode.commands.executeCommand)).toHaveBeenCalledWith("zowe.ds.refreshDataset", node);
+    });
+});
+
+describe("ZoweDatasetNode Unit Tests - Function node.setEtag", () => {
+    it("sets the e-tag for a member/PS", () => {
+        const dsEntry = new DsEntry("TEST.DS");
+        const statMock = jest.spyOn(DatasetFSProvider.instance, "stat").mockReturnValueOnce(dsEntry);
+
+        const node = new ZoweDatasetNode({ label: "etagTest", collapsibleState: vscode.TreeItemCollapsibleState.None });
+        node.setEtag("123ETAG");
+        expect(statMock).toHaveBeenCalled();
+        expect(dsEntry.etag).toBe("123ETAG");
+        statMock.mockRestore();
+    });
+
+    it("returns early when trying to set the e-tag for a PDS", () => {
+        const pdsEntry = new PdsEntry("TEST.PDS");
+        const statMock = jest.spyOn(DatasetFSProvider.instance, "stat").mockReturnValueOnce(pdsEntry);
+
+        const node = new ZoweDatasetNode({ label: "pds", collapsibleState: vscode.TreeItemCollapsibleState.Collapsed });
+        node.setEtag("123ETAG");
+        expect(statMock).toHaveBeenCalled();
+        expect(pdsEntry).not.toHaveProperty("etag");
+        statMock.mockRestore();
+    });
+});
+
+describe("ZoweDatasetNode Unit Tests - Function node.setStats", () => {
+    it("sets the stats for a data set or PDS member", () => {
+        const dsEntry = new DsEntry("TEST.DS");
+        dsEntry.stats = { user: "aUser" };
+        const statMock = jest.spyOn(DatasetFSProvider.instance, "stat").mockReturnValueOnce(dsEntry);
+
+        const node = new ZoweDatasetNode({ label: "statsTest", collapsibleState: vscode.TreeItemCollapsibleState.None });
+        node.setStats({ user: "bUser" });
+        expect(statMock).toHaveBeenCalled();
+        expect(dsEntry.stats).toStrictEqual({ user: "bUser" });
+        statMock.mockRestore();
+    });
+
+    it("returns early when trying to set the stats for a PDS", () => {
+        const pdsEntry = new PdsEntry("TEST.PDS");
+        const statMock = jest.spyOn(DatasetFSProvider.instance, "stat").mockClear().mockReturnValueOnce(pdsEntry);
+
+        const node = new ZoweDatasetNode({ label: "pds", collapsibleState: vscode.TreeItemCollapsibleState.Collapsed });
+        node.setStats({ user: "bUser" });
+        expect(statMock).toHaveBeenCalled();
+        expect(pdsEntry).not.toHaveProperty("stats");
+        statMock.mockRestore();
     });
 });
