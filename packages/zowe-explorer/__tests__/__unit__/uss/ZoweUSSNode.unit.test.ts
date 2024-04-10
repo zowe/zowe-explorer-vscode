@@ -12,7 +12,7 @@
 import * as vscode from "vscode";
 import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
 import * as zosmf from "@zowe/zosmf-for-zowe-sdk";
-import { Gui, imperative, Validation, ZoweScheme } from "@zowe/zowe-explorer-api";
+import { Gui, imperative, UssDirectory, UssFile, Validation, ZoweScheme } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { Profiles } from "../../../src/Profiles";
 import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
@@ -1363,5 +1363,56 @@ describe("ZoweUSSNode Unit Tests - Function node.pasteUssTree()", () => {
         jest.spyOn(blockMocks.mockUssApi, "uploadDirectory").mockRejectedValueOnce(blockMocks.fileResponse);
 
         await blockMocks.testNode.pasteUssTree();
+    });
+});
+
+describe("ZoweUSSNode Unit Tests - Function node.setEtag", () => {
+    it("sets the e-tag for a file", () => {
+        const fileEntry = new UssFile("testFile");
+        const statMock = jest.spyOn(UssFSProvider.instance, "stat").mockReturnValueOnce(fileEntry);
+
+        const node = new ZoweUSSNode({ label: "testFile", collapsibleState: vscode.TreeItemCollapsibleState.None });
+        node.setEtag("123ETAG");
+        expect(statMock).toHaveBeenCalled();
+        expect(fileEntry.etag).toBe("123ETAG");
+        statMock.mockRestore();
+    });
+
+    it("returns early when trying to set the e-tag for a directory", () => {
+        const dirEntry = new UssDirectory("testDir");
+        const statMock = jest.spyOn(UssFSProvider.instance, "stat").mockReturnValueOnce(dirEntry);
+
+        const node = new ZoweUSSNode({ label: "testDir", collapsibleState: vscode.TreeItemCollapsibleState.Collapsed });
+        node.setEtag("123ETAG");
+        expect(statMock).toHaveBeenCalled();
+        expect(dirEntry).not.toHaveProperty("etag");
+        statMock.mockRestore();
+    });
+});
+
+describe("ZoweUSSNode Unit Tests - Function node.setAttributes", () => {
+    const attrs = { owner: "aUser", uid: 0, gid: 1000, group: "USERS", perms: "rwxrwxrwx" };
+    it("sets the attributes for a file", () => {
+        const fileEntry = new UssFile("testFile");
+        fileEntry.attributes = { ...attrs };
+        const statMock = jest.spyOn(UssFSProvider.instance, "stat").mockReturnValueOnce(fileEntry);
+
+        const node = new ZoweUSSNode({ label: "testFile", collapsibleState: vscode.TreeItemCollapsibleState.None });
+        node.setAttributes({ perms: "r-xr-xr-x" });
+        expect(statMock).toHaveBeenCalled();
+        expect(fileEntry.attributes).toStrictEqual({ ...attrs, perms: "r-xr-xr-x" });
+        statMock.mockRestore();
+    });
+
+    it("sets the attributes for a directory", () => {
+        const dirEntry = new UssDirectory("testFolder");
+        const statMock = jest.spyOn(UssFSProvider.instance, "stat").mockClear().mockReturnValueOnce(dirEntry);
+        dirEntry.attributes = { ...attrs };
+
+        const node = new ZoweUSSNode({ label: "testFolder", collapsibleState: vscode.TreeItemCollapsibleState.Collapsed });
+        node.setAttributes({ perms: "r-xr-xr-x" });
+        expect(statMock).toHaveBeenCalled();
+        expect(dirEntry.attributes).toStrictEqual({ ...attrs, perms: "r-xr-xr-x" });
+        statMock.mockRestore();
     });
 });
