@@ -506,10 +506,10 @@ export namespace MainframeInteraction {
          * @param {string} command
          * @param {string} cwd
          * @param {boolean} flag
-         * @returns {string>}
+         * @returns {string}
          * @memberof ICommand
          */
-        issueUnixCommand?(sshSession: zosuss.SshSession, command: string, cwd: string, flag: boolean): Promise<string>;
+        issueUnixCommand?(command: string, cwd: string, flag: boolean, sshSession?: zosuss.SshSession): Promise<string>;
         sshProfileRequired?(): boolean;
     }
 }

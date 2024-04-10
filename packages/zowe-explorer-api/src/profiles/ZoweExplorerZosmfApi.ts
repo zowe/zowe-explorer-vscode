@@ -381,7 +381,7 @@ export namespace ZoweExplorerZosmf {
             return zosconsole.IssueCommand.issueSimple(this.getSession(), command);
         }
 
-        public async issueUnixCommand(sshSession: zosuss.SshSession, command: string, cwd: string, flag: boolean): Promise<string> {
+        public async issueUnixCommand(command: string, cwd: string, flag: boolean, sshSession?: zosuss.SshSession): Promise<string> {
             let stdout = "";
             if (flag) {
                 await zosuss.Shell.executeSshCwd(sshSession, command, '"' + cwd + '"', (data: string) => {

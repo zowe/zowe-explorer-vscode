@@ -345,12 +345,16 @@ export class UnixCommandHandler extends ZoweCommandProvider {
                     () => {
                         if (ZoweExplorerApiRegister.getCommandApi(profile).issueUnixCommand) {
                             // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-                            return ZoweExplorerApiRegister.getCommandApi(profile).issueUnixCommand(
-                                this.sshSession,
-                                command,
-                                cwd,
-                                this.pathInputConfirmationFlag
-                            );
+                            if (this.sshSession) {
+                                return ZoweExplorerApiRegister.getCommandApi(profile).issueUnixCommand(
+                                    command,
+                                    cwd,
+                                    this.pathInputConfirmationFlag,
+                                    this.sshSession
+                                );
+                            } else {
+                                return ZoweExplorerApiRegister.getCommandApi(profile).issueUnixCommand(command, cwd, this.pathInputConfirmationFlag);
+                            }
                         }
                     }
                 );
