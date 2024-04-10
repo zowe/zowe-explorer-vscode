@@ -31,7 +31,8 @@ import { Profiles } from "../../../src/Profiles";
 import * as utils from "../../../src/utils/ProfilesUtils";
 import { Gui, IZoweTreeNode, ProfilesCache, ZosEncoding } from "@zowe/zowe-explorer-api";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
-import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
+import { LocalStorageKey, ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
+import { LocalFileManagement } from "../../../src/utils/LocalFileManagement";
 
 async function createGlobalMocks() {
     const newMocks = {
@@ -330,9 +331,15 @@ describe("Test force upload", () => {
             configurable: true,
         });
         Object.defineProperty(vscode, "ProgressLocation", { value: newVariables.ProgressLocation, configurable: true });
+        jest.spyOn(LocalFileManagement, "storeFileInfo").mockImplementation();
+        jest.spyOn(LocalFileManagement, "deleteFileInfo").mockImplementation();
 
         return newVariables;
     }
+
+    afterEach(() => {
+        jest.clearAllMocks();
+    });
 
     it("should successfully call upload for a USS file if user clicks 'Yes'", async () => {
         const blockMocks = await createBlockMocks();
@@ -683,20 +690,32 @@ describe("Shared utils unit tests - function sortTreeItems", () => {
 
 describe("Shared utils unit tests - function updateOpenFiles", () => {
     const someTree = { openFiles: {} };
+    const testDsPath = path.join("~", "temp", "_D_", "dsname");
+    const testUssPath = path.join("~", "temp", "_U_", "fspath");
+
+    beforeAll(() => {
+        globals.defineGlobals("~");
+    });
 
     it("sets a file entry to null in the openFiles record", () => {
-        sharedUtils.updateOpenFiles(someTree as any, "/a/doc/path", null);
-        expect(someTree.openFiles["/a/doc/path"]).toBeNull();
+        const deleteFileInfoSpy = jest.spyOn(LocalFileManagement, "deleteFileInfo").mockImplementation();
+        sharedUtils.updateOpenFiles(someTree as any, testDsPath, null);
+        expect(someTree.openFiles[testDsPath]).toBeNull();
+        expect(deleteFileInfoSpy).toHaveBeenCalledTimes(1);
     });
 
     it("sets a file entry to a valid node in the openFiles record", () => {
-        sharedUtils.updateOpenFiles(someTree as any, "/a/doc/path", { label: "testLabel" } as IZoweTreeNode);
-        expect(someTree.openFiles["/a/doc/path"].label).toBe("testLabel");
+        const storeFileInfoSpy = jest.spyOn(LocalFileManagement, "storeFileInfo").mockImplementation();
+        sharedUtils.updateOpenFiles(someTree as any, testDsPath, { label: "testDsLabel" } as IZoweTreeNode);
+        sharedUtils.updateOpenFiles(someTree as any, testUssPath, { label: "testUssLabel" } as IZoweTreeNode);
+        expect(someTree.openFiles[testDsPath].label).toBe("testDsLabel");
+        expect(someTree.openFiles[testUssPath].label).toBe("testUssLabel");
+        expect(storeFileInfoSpy).toHaveBeenCalledTimes(2);
     });
 
     it("does nothing if openFiles is not defined", () => {
         someTree.openFiles = undefined as any;
-        sharedUtils.updateOpenFiles(someTree as any, "/a/doc/path", null);
+        sharedUtils.updateOpenFiles(someTree as any, testDsPath, null);
         expect(someTree.openFiles).toBeUndefined();
     });
 });
@@ -838,10 +857,10 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
         node.setEncoding(otherEncoding);
         const encodingHistory = ["IBM-123", "IBM-456", "IBM-789"];
         blockMocks.localStorageGet.mockReturnValueOnce(encodingHistory);
-        blockMocks.showQuickPick.mockImplementationOnce(async (items) => items[4]);
+        blockMocks.showQuickPick.mockImplementationOnce(async (items) => items[3]);
         const encoding = await sharedUtils.promptForEncoding(node);
         expect(blockMocks.showQuickPick).toHaveBeenCalled();
-        expect((await blockMocks.showQuickPick.mock.calls[0][0]).slice(4)).toEqual(encodingHistory.map((x) => ({ label: x })));
+        expect((await blockMocks.showQuickPick.mock.calls[0][0]).slice(3)).toEqual(encodingHistory.map((x) => ({ label: x })));
         expect(blockMocks.showQuickPick.mock.calls[0][1]).toEqual(expect.objectContaining({ placeHolder: "Current encoding is IBM-1047" }));
         expect(encoding).toEqual({ ...otherEncoding, codepage: encodingHistory[0] });
     });
@@ -918,7 +937,7 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
 
         //spy on ZoweLocalStorage "zowe.encodingHistory"
         const setValueSpy = jest.spyOn(ZoweLocalStorage, "setValue");
-        expect(setValueSpy).toBeCalledWith("zowe.encodingHistory", [otherEncoding.codepage].concat(encodingHistory)); //recieve: "zowe.encodingHistory", Array []
+        expect(setValueSpy).toBeCalledWith(LocalStorageKey.ENCODING_HISTORY, [otherEncoding.codepage].concat(encodingHistory));
     });
 
     it("Prompts for other encoding for USS file and supply an existing encoding and filter/move it to the front", async () => {
@@ -942,7 +961,7 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
         //spy on ZoweLocalStorage "zowe.encodingHistory"
         const setValueSpy = jest.spyOn(ZoweLocalStorage, "setValue");
         encodingHistory.unshift(encodingHistory.splice(2, 1)[0]); // shift 3rd value to front to match with local storage
-        expect(setValueSpy).toBeCalledWith("zowe.encodingHistory", encodingHistory); //recieve: "zowe.encodingHistory", Array []
+        expect(setValueSpy).toBeCalledWith(LocalStorageKey.ENCODING_HISTORY, encodingHistory);
     });
 
     it("Prompts for other encoding for USS file and add encoding in lowercase and expect to save it in upper case", async () => {
@@ -962,7 +981,8 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
         await sharedUtils.promptForEncoding(node);
 
         const setValueSpy = jest.spyOn(ZoweLocalStorage, "setValue");
-        expect(setValueSpy).toBeCalledWith("zowe.encodingHistory", ["UTF-8", "IBM-123", "IBM-456", "IBM-789"]); //recieve added encoding in upper case (first entry)
+        // receive added encoding in upper case (first entry)
+        expect(setValueSpy).toBeCalledWith(LocalStorageKey.ENCODING_HISTORY, ["UTF-8", "IBM-123", "IBM-456", "IBM-789"]);
         expect(setValueSpy);
     });
 });

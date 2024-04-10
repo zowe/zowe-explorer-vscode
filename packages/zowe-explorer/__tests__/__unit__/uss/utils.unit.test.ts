@@ -14,6 +14,7 @@ import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
 import * as utils from "../../../src/uss/utils";
 import { createIProfile } from "../../../__mocks__/mockCreators/shared";
+import { LocalFileManagement } from "../../../src/utils/LocalFileManagement";
 
 describe("USS utils unit tests - function autoDetectEncoding", () => {
     const getTagMock = jest.fn();
@@ -23,6 +24,7 @@ describe("USS utils unit tests - function autoDetectEncoding", () => {
         mockUssApi = jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValue({
             getTag: getTagMock.mockClear(),
         } as any);
+        jest.spyOn(LocalFileManagement, "storeFileInfo").mockImplementation();
     });
 
     afterAll(() => {

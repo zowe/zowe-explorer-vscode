@@ -293,12 +293,23 @@ export enum JobPickerTypes {
     History = "History",
 }
 
-export const SEPARATORS = {
-    BLANK: { kind: vscode.QuickPickItemKind.Separator, label: "" },
-    RECENT: { kind: vscode.QuickPickItemKind.Separator, label: localize("zowe.separator.recent", "Recent") },
-    RECENT_FILTERS: { kind: vscode.QuickPickItemKind.Separator, label: localize("zowe.separator.recentFilters", "Recent Filters") },
-    OPTIONS: { kind: vscode.QuickPickItemKind.Separator, label: localize("zowe.separator.options", "Options") },
-};
+// Engine version defined in package.json for v2
+export const ZE_VSC_ENGINE = "1.53.2";
+export const [VSC_MAJOR, VSC_MINOR, VSC_PATCH] = (vscode.version || ZE_VSC_ENGINE).split(".").map(parseInt);
+export const SEPARATORS =
+    VSC_MAJOR > 1 || VSC_MINOR >= 64
+        ? {
+              BLANK: { kind: vscode.QuickPickItemKind.Separator, label: "" },
+              RECENT: { kind: vscode.QuickPickItemKind.Separator, label: localize("zowe.separator.recent", "Recent") },
+              RECENT_FILTERS: { kind: vscode.QuickPickItemKind.Separator, label: localize("zowe.separator.recentFilters", "Recent Filters") },
+              OPTIONS: { kind: vscode.QuickPickItemKind.Separator, label: localize("zowe.separator.options", "Options") },
+          }
+        : {
+              BLANK: undefined,
+              RECENT: undefined,
+              RECENT_FILTERS: undefined,
+              OPTIONS: undefined,
+          };
 
 /**
  * Defines all global variables

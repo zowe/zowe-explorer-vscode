@@ -33,6 +33,7 @@ import * as globals from "../../../src/globals";
 import * as ussUtils from "../../../src/uss/utils";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 import { TreeProviders } from "../../../src/shared/TreeProviders";
+import { LocalFileManagement } from "../../../src/utils/LocalFileManagement";
 
 jest.mock("fs");
 jest.mock("path");
@@ -76,7 +77,7 @@ async function createGlobalMocks() {
         response: createFileResponse({ etag: "123" }),
         ussApi: null,
         mockShowWarningMessage: jest.fn(),
-        fileExistsCaseSensitveSync: jest.fn(),
+        fileExistsCaseSensitiveSync: jest.fn(),
         readText: jest.fn(),
         fileToUSSFile: jest.fn(),
         basePath: jest.fn(),
@@ -168,8 +169,8 @@ async function createGlobalMocks() {
     Object.defineProperty(globals, "LOG", { value: jest.fn(), configurable: true });
     Object.defineProperty(globals.LOG, "error", { value: jest.fn(), configurable: true });
     Object.defineProperty(globals.LOG, "warn", { value: jest.fn(), configurable: true });
-    Object.defineProperty(ussUtils, "fileExistsCaseSensitveSync", {
-        value: globalMocks.fileExistsCaseSensitveSync,
+    Object.defineProperty(ussUtils, "fileExistsCaseSensitiveSync", {
+        value: globalMocks.fileExistsCaseSensitiveSync,
         configurable: true,
     });
     Object.defineProperty(vscode.env.clipboard, "readText", { value: globalMocks.readText, configurable: true });
@@ -179,6 +180,8 @@ async function createGlobalMocks() {
     Object.defineProperty(ZoweLogger, "warn", { value: jest.fn(), configurable: true });
     Object.defineProperty(ZoweLogger, "info", { value: jest.fn(), configurable: true });
     Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
+    jest.spyOn(LocalFileManagement, "storeFileInfo").mockImplementation();
+
     return globalMocks;
 }
 
@@ -1138,7 +1141,7 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
 
         globalMocks.existsSync.mockReturnValue("exists");
         globalMocks.mockShowTextDocument.mockRejectedValueOnce(Error("testError"));
-        globalMocks.fileExistsCaseSensitveSync.mockReturnValue(true);
+        globalMocks.fileExistsCaseSensitiveSync.mockReturnValue(true);
 
         try {
             await child.openUSS(false, true, blockMocks.testUSSTree);

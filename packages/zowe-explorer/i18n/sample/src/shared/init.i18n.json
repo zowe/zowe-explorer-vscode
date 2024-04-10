@@ -1,11 +1,8 @@
 {
-  "onDidSaveTextDocument1": "File was saved -- determining whether the file is a USS file or Data set.\n Comparing (case insensitive) ",
-  "onDidSaveTextDocument2": " against directory ",
-  "onDidSaveTextDocument3": "and",
-  "activate.didSaveText.isDataSet": "File is a data set-- saving ",
-  "activate.didSaveText.isUSSFile": "File is a USS file -- saving",
-  "activate.didSaveText.file": "File ",
-  "activate.didSaveText.notDataSet": " is not a data set or USS file ",
+  "onDidSaveTextDocument.wasSaved": "File was saved -- determining whether the file is a USS file or Data set: {0}\nComparing (case insensitive) against these directories:\n\t{1}\n\t{2}",
+  "onDidSaveTextDocument.isDataSet": "File is a data set -- saving",
+  "onDidSaveTextDocument.isUSSFile": "File is a USS file -- saving",
+  "onDidSaveTextDocument.notDataSet": "File {0} is not a data set or USS file",
   "watchConfigProfile.create": "Team config file created, refreshing Zowe Explorer.",
   "watchConfigProfile.delete": "Team config file deleted, refreshing Zowe Explorer.",
   "watchConfigProfile.update": "Team config file updated."
