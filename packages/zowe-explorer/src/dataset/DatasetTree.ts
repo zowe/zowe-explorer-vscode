@@ -216,13 +216,13 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         const favProfileNode = new ZoweDatasetNode({
             label: profileName,
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            contextOverride: globals.FAV_PROFILE_CONTEXT,
             parentNode: this.mFavoriteSession,
             profile,
         });
         if (!DatasetFSProvider.instance.exists(favProfileNode.resourceUri)) {
             DatasetFSProvider.instance.createDirectory(favProfileNode.resourceUri);
         }
-        favProfileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
         const icon = getIconByNode(favProfileNode);
         if (icon) {
             favProfileNode.iconPath = icon.path;

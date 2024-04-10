@@ -3093,3 +3093,20 @@ describe("Dataset Tree Unit Tests - Function openWithEncoding", () => {
         expect(node.openDs).toHaveBeenCalledTimes(0);
     });
 });
+
+describe("Dataset Tree Unit Tests - Function createProfileNodeForFavs", () => {
+    it("Tests that profile grouping node is created correctly", async () => {
+        const globalMocks = await createGlobalMocks();
+        const testTree = new DatasetTree();
+        const expectedFavProfileNode = new ZoweDatasetNode({
+            label: "testProfile",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            contextOverride: globals.FAV_PROFILE_CONTEXT,
+            parentNode: testTree.mFavoriteSession,
+            profile: globalMocks.testProfileLoaded,
+        });
+
+        const createdFavProfileNode = await testTree.createProfileNodeForFavs("testProfile", globalMocks.testProfileLoaded);
+        expect(createdFavProfileNode).toEqual(expectedFavProfileNode);
+    });
+});
