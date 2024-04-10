@@ -118,11 +118,11 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             }
         }
     }
-    public getBaseName(): string | PromiseLike<string> {
+    public getBaseName(): string {
         return path.basename(this.resourceUri.path);
     }
 
-    public getEncodingInMap(uriPath: string): ZosEncoding | PromiseLike<ZosEncoding> {
+    public getEncodingInMap(uriPath: string): ZosEncoding {
         return UssFSProvider.instance.encodingMap[uriPath];
     }
 
@@ -132,7 +132,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
 
     public setEtag(etag: string): void {
         const ussEntry = UssFSProvider.instance.stat(this.resourceUri) as UssFile | UssDirectory;
-        if (isDirectoryEntry(ussEntry) || ussEntry == null) {
+        if (isDirectoryEntry(ussEntry)) {
             return;
         }
 
@@ -141,19 +141,11 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
 
     public getAttributes(): Types.FileAttributes | PromiseLike<Types.FileAttributes> {
         const ussEntry = UssFSProvider.instance.stat(this.resourceUri) as UssFile | UssDirectory;
-        if (ussEntry == null) {
-            return undefined;
-        }
-
         return ussEntry.attributes;
     }
 
     public setAttributes(attributes: Partial<Types.FileAttributes>): void {
         const ussEntry = UssFSProvider.instance.stat(this.resourceUri) as UssFile | UssDirectory;
-        if (ussEntry == null) {
-            return undefined;
-        }
-
         ussEntry.attributes = { ...ussEntry.attributes, ...attributes };
     }
 
