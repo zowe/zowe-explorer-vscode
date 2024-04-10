@@ -9,11 +9,28 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Added support for `consoleName` property in z/OSMF profiles when issuing MVS commands [#1667](https://github.com/zowe/vscode-extension-for-zowe/issues/1667)
 - Updated sorting of PDS members to show items without stats at bottom of list [#2660](https://github.com/zowe/vscode-extension-for-zowe/issues/2660)
 - Added error handling for when the default credential manager is unable to intialize [#2811](https://github.com/zowe/zowe-explorer-vscode/issues/2811)
-- Added support to view the Encoding history for MVS and Dataset in the History View [#2813](https://github.com/zowe/zowe-explorer-vscode/issues/2813)
+- Added support to view the Encoding history for MVS and Dataset in the History View [#2776](https://github.com/zowe/zowe-explorer-vscode/issues/2776)
 
 ### Bug fixes
 
-- To fix clicking submitted job hyperlink throws error [#2804](https://github.com/zowe/vscode-extension-for-zowe/issues/2804)
+- To fix clicking submitted job hyperlink throws error [#2813](https://github.com/zowe/vscode-extension-for-zowe/issues/2813)
+
+## `2.15.2`
+
+### New features and enhancements
+
+### Bug fixes
+
+- Fixed issue where files left open in prior VS Code session cannot be uploaded to mainframe after window is reloaded. [#2758](https://github.com/zowe/vscode-extension-for-zowe/issues/2758)
+- Fixed issue where saving changes to favorited data set or USS file could fail. [#2801](https://github.com/zowe/vscode-extension-for-zowe/pull/2801)
+
+## `2.15.1`
+
+### New features and enhancements
+
+### Bug fixes
+
+- Fixed issue where VS Code quick pick separators were used in environments that did not support the feature. [#2771](https://github.com/zowe/vscode-extension-for-zowe/pull/2771)
 
 ## `2.15.0`
 

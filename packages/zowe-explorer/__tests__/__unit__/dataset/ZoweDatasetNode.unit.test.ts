@@ -28,6 +28,7 @@ import * as fs from "fs";
 import * as sharedUtils from "../../../src/shared/utils";
 import { Profiles } from "../../../src/Profiles";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
+import { LocalFileManagement } from "../../../src/utils/LocalFileManagement";
 
 // Missing the definition of path module, because I need the original logic for tests
 jest.mock("fs");
@@ -59,6 +60,7 @@ function createGlobalMocks() {
         configurable: true,
     });
     Object.defineProperty(vscode.workspace, "openTextDocument", { value: jest.fn(), configurable: true });
+    jest.spyOn(LocalFileManagement, "storeFileInfo").mockImplementation();
 
     return newMocks;
 }

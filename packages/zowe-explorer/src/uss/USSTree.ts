@@ -14,7 +14,7 @@ import * as globals from "../globals";
 import * as path from "path";
 import { imperative } from "@zowe/cli";
 import { FilterItem, FilterDescriptor, errorHandling, syncSessionNode } from "../utils/ProfilesUtils";
-import { sortTreeItems, getAppName, checkIfChildPath, updateOpenFiles, promptForEncoding } from "../shared/utils";
+import { sortTreeItems, getAppName, checkIfChildPath, updateOpenFiles, promptForEncoding, isClosedFileDirty } from "../shared/utils";
 import { Gui, IZoweTree, IZoweTreeNode, IZoweUSSTreeNode, NodeInteraction, ValidProfileEnum, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
@@ -27,6 +27,7 @@ import * as nls from "vscode-nls";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { TreeViewUtils } from "../utils/TreeViewUtils";
 import { TreeProviders } from "../shared/TreeProviders";
+import { LocalFileManagement } from "../utils/LocalFileManagement";
 
 // Set up localization
 nls.config({
@@ -577,7 +578,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                     const items: vscode.QuickPickItem[] = this.mHistory.getSearchHistory().map((element) => new FilterItem({ text: element }));
                     if (globals.ISTHEIA) {
                         // get user selection
-                        const choice = await Gui.showQuickPick([createPick, globals.SEPARATORS.RECENT_FILTERS, ...items], {
+                        const choice = await Gui.showQuickPick([createPick, globals.SEPARATORS.RECENT_FILTERS, ...items].filter(Boolean), {
                             placeHolder: localize("searchHistory.options.prompt", "Select a filter"),
                         });
                         if (!choice) {
@@ -588,7 +589,7 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
                     } else {
                         const quickpick = Gui.createQuickPick();
                         quickpick.placeholder = localize("searchHistory.options.prompt", "Select a filter");
-                        quickpick.items = [createPick, globals.SEPARATORS.RECENT_FILTERS, ...items];
+                        quickpick.items = [createPick, globals.SEPARATORS.RECENT_FILTERS, ...items].filter(Boolean);
                         quickpick.ignoreFocusOut = true;
                         quickpick.show();
                         const choice = await Gui.resolveQuickPick(quickpick);
@@ -947,9 +948,11 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
      * @param this (resolves ESlint warning about unbound methods)
      * @param doc A doc URI that was closed
      */
-    public static onDidCloseTextDocument(this: void, doc: vscode.TextDocument): void {
-        if (doc.uri.fsPath.includes(globals.USS_DIR)) {
+    public static async onDidCloseTextDocument(this: void, doc: vscode.TextDocument): Promise<void> {
+        if (doc.uri.fsPath.includes(globals.USS_DIR) && doc.isClosed && !(await isClosedFileDirty(doc))) {
+            ZoweLogger.debug(`Handling close event for ${doc.uri.fsPath}: closed=${doc.isClosed.toString()}, dirty=${doc.isDirty.toString()}`);
             updateOpenFiles(TreeProviders.uss, doc.uri.fsPath, null);
+            LocalFileManagement.removeRecoveredFile(doc);
         }
     }
 

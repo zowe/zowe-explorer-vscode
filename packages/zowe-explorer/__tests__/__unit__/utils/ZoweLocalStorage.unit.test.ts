@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
+import { LocalStorageKey, ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
 
 describe("ZoweLocalStorage Unit Tests", () => {
     it("should initialize successfully", () => {
@@ -27,7 +27,7 @@ describe("ZoweLocalStorage Unit Tests", () => {
             keys: () => [],
         };
         ZoweLocalStorage.initializeZoweLocalStorage(mockGlobalState);
-        ZoweLocalStorage.setValue("fruit", "banana");
-        expect(ZoweLocalStorage.getValue("fruit")).toEqual("banana");
+        ZoweLocalStorage.setValue("fruit" as LocalStorageKey, "banana");
+        expect(ZoweLocalStorage.getValue("fruit" as LocalStorageKey)).toEqual("banana");
     });
 });
