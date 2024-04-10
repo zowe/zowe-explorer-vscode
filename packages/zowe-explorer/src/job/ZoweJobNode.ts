@@ -407,7 +407,7 @@ export class ZoweSpoolNode extends ZoweJobNode {
 
     public constructor(opts: IZoweJobTreeOpts & { spool?: zosjobs.IJobFile }) {
         super(opts);
-        this.uniqueName = opts.spool ? buildUniqueSpoolName(opts.spool) : "<unknown-spool-id>";
+        this.uniqueName = opts.spool ? buildUniqueSpoolName(opts.spool).replace("/", "") : "<unknown-spool-id>";
         this.resourceUri = opts.parentNode?.resourceUri.with({
             path: path.posix.join(opts.parentNode.resourceUri.path, this.uniqueName),
         });
