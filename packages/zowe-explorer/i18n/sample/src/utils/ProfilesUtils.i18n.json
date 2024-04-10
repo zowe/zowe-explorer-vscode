@@ -7,6 +7,7 @@
   "errorHandling.checkCredentials.cancelled": "Operation Cancelled",
   "activateCredentialManagerOverride.failedToActivate": "Custom credential manager failed to activate",
   "ProfilesUtils.setupCustomCredentialManager.usingCustom": "Custom credential manager {0} found, attempting to activate.",
+  "ProfileUtils.promptAndDisableCredentialManagement.noButton": "No",
   "ProfileUtils.promptAndDisableCredentialManagement.yesButton": "Yes",
   "ProfileUtils.promptAndDisableCredentialManagement.warning": "Zowe Explorer failed to activate since the default credential manager is not supported in your environment. Do you wish to disable credential management for all setting scopes? (VS Code window reload will be triggered)",
   "ProfileUtils.promptAndDisableCredentialManagement.error": "Failed to load credential manager. This may be related to Zowe Explorer being unable to use the default credential manager in a browser based environment.",

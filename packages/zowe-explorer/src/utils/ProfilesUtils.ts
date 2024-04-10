@@ -317,7 +317,7 @@ export class ProfilesUtils {
      */
     public static async promptAndDisableCredentialManagement(): Promise<void> {
         ZoweLogger.trace("ProfilesUtils.promptAndDisableCredentialManagement called.");
-        const noButton = localize("ProfileUtils.promptAndDisableCredentialManagement.yesButton", "No");
+        const noButton = localize("ProfileUtils.promptAndDisableCredentialManagement.noButton", "No");
         const yesButton = localize("ProfileUtils.promptAndDisableCredentialManagement.yesButton", "Yes");
         const response = await Gui.warningMessage(
             localize(
