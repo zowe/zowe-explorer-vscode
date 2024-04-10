@@ -2127,8 +2127,7 @@
     "dayjs": "^1.11.10",
     "fs-extra": "8.0.1",
     "isbinaryfile": "4.0.4",
-    "promise-queue": "2.2.5",
-    "zustand": "^4.5.2"
+    "promise-queue": "2.2.5"
   },
   "jest": {
     "moduleFileExtensions": [
