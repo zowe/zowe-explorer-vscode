@@ -188,10 +188,17 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
         // we need to fetch the contents from the mainframe since the file hasn't been accessed yet
         const bufBuilder = new BufferBuilder();
 
-        await ZoweExplorerApiRegister.getJesApi(spoolEntry.metadata.profile).downloadSingleSpool({
-            jobFile: spoolEntry.spool,
-            stream: bufBuilder,
-        });
+        const jesApi = ZoweExplorerApiRegister.getJesApi(spoolEntry.metadata.profile);
+
+        if (jesApi.downloadSingleSpool) {
+            await jesApi.downloadSingleSpool({
+                jobFile: spoolEntry.spool,
+                stream: bufBuilder,
+            });
+        } else {
+            const jobEntry = this._lookupParentDirectory(uri) as JobEntry;
+            bufBuilder.write(await jesApi.getSpoolContentById(jobEntry.job.jobname, jobEntry.job.jobid, spoolEntry.spool.id));
+        }
 
         this._fireSoon({ type: vscode.FileChangeType.Changed, uri });
         spoolEntry.data = bufBuilder.read();

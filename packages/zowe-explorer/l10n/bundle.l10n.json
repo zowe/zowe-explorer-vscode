@@ -356,6 +356,7 @@
     ]
   },
   "$(plus) Create a new filter": "$(plus) Create a new filter",
+  "Failed to move file {0}: {1}": "Failed to move file {0}: {1}",
   "Confirm": "Confirm",
   "One or more items may be overwritten from this drop operation. Confirm or cancel?": "One or more items may be overwritten from this drop operation. Confirm or cancel?",
   "$(sync~spin) Moving USS files...": "$(sync~spin) Moving USS files...",
