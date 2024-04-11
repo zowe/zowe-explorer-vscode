@@ -9,7 +9,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Added support for `consoleName` property in z/OSMF profiles when issuing MVS commands [#1667](https://github.com/zowe/vscode-extension-for-zowe/issues/1667)
 - Updated sorting of PDS members to show items without stats at bottom of list [#2660](https://github.com/zowe/vscode-extension-for-zowe/issues/2660)
 - Added error handling for when the default credential manager is unable to intialize [#2811](https://github.com/zowe/zowe-explorer-vscode/issues/2811)
-- Added support to view the Encoding history for MVS and Dataset in the History View [#2776](https://github.com/zowe/zowe-explorer-vscode/issues/2776)
+- Added support to view the Encoding history for MVS and Dataset in the History View [#2813](https://github.com/zowe/zowe-explorer-vscode/issues/2813)
+- Updated MVS view progress indicator for entering a filter search. [#2181](https://github.com/zowe/zowe-explorer-vscode/issues/2181)
 
 ### Bug fixes
 
