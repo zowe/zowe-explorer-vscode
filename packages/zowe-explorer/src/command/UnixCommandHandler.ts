@@ -170,7 +170,6 @@ export class UnixCommandHandler extends ZoweCommandProvider {
             Gui.showMessage(this.opCancelledMsg);
             return;
         }
-        console.log(this.sshSession);
         return this.sshSession;
     }
 
