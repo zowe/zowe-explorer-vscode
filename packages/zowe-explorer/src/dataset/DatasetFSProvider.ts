@@ -146,7 +146,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                             // PS
                             tempEntry = new DsEntry(ds.dsname);
                         }
-                        tempEntry.metadata = { ...dsEntry.metadata, path: path.posix.join(dsEntry.metadata.path, ds.dsname) };
+                        tempEntry.metadata = new DsEntryMetadata({ ...dsEntry.metadata, path: path.posix.join(dsEntry.metadata.path, ds.dsname) });
                         dsEntry.entries.set(ds.dsname, tempEntry);
                     }
                     results.push([tempEntry.name, tempEntry instanceof DsEntry ? vscode.FileType.File : vscode.FileType.Directory]);
@@ -159,7 +159,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 let tempEntry = dsEntry.entries.get(ds.member);
                 if (tempEntry == null) {
                     tempEntry = new MemberEntry(ds.member);
-                    tempEntry.metadata = { ...dsEntry.metadata, path: path.posix.join(dsEntry.metadata.path, ds.member) };
+                    tempEntry.metadata = new DsEntryMetadata({ ...dsEntry.metadata, path: path.posix.join(dsEntry.metadata.path, ds.member) });
                     dsEntry.entries.set(ds.member, tempEntry);
                 }
                 results.push([tempEntry.name, vscode.FileType.File]);
@@ -190,11 +190,11 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         }
         const profInfo =
             parent !== this.root
-                ? {
+                ? new DsEntryMetadata({
                       profile: parent.metadata.profile,
                       // we can strip profile name from path because its not involved in API calls
                       path: path.posix.join(parent.metadata.path, basename),
-                  }
+                  })
                 : this._getInfoFromUri(uri);
 
         if (isFilterEntry(parent)) {
