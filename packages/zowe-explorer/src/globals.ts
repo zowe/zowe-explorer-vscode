@@ -35,7 +35,7 @@ export let DS_DIR: string;
 export let CONFIG_PATH; // set during activate
 export let ISTHEIA = false; // set during activate
 export let LOG: imperative.Logger;
-export const COMMAND_COUNT = 118;
+export const COMMAND_COUNT = 119;
 export const MAX_SEARCH_HISTORY = 5;
 export const MAX_FILE_HISTORY = 10;
 export const MS_PER_SEC = 1000;
@@ -60,6 +60,7 @@ export const DS_MEMBER_CONTEXT = "member";
 export const DS_MEMBER_BINARY_CONTEXT = "memberBinary";
 export const DS_MIGRATED_FILE_CONTEXT = "migr";
 export const DS_FILE_ERROR_CONTEXT = "fileError";
+export const DS_FILE_ERROR_MEMBER_CONTEXT = "fileError_member";
 export const USS_SESSION_CONTEXT = "ussSession";
 export const USS_DIR_CONTEXT = "directory";
 export const USS_FAV_DIR_CONTEXT = "directory_fav";
