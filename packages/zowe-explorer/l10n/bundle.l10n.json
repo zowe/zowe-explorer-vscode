@@ -15,9 +15,11 @@
       "Credential manager display name"
     ]
   },
-  "Yes": "Yes",
-  "Zowe Explorer failed to activate since the default credential manager is not supported in your environment. \n                \nDo you wish to disable credential management for all setting scopes? (VS Code window reload will be triggered)": "Zowe Explorer failed to activate since the default credential manager is not supported in your environment. \n                \nDo you wish to disable credential management for all setting scopes? (VS Code window reload will be triggered)",
-  "Failed to load credential manager. This may be related to Zowe Explorer being unable \n                    to use the default credential manager in a browser based environment.": "Failed to load credential manager. This may be related to Zowe Explorer being unable \n                    to use the default credential manager in a browser based environment.",
+  "No": "No",
+  "Yes, globally": "Yes, globally",
+  "Only for this workspace": "Only for this workspace",
+  "Zowe Explorer failed to activate since the default credential manager is not supported in your environment.": "Zowe Explorer failed to activate since the default credential manager is not supported in your environment.",
+  "Do you wish to disable credential management? (VS Code window reload will be triggered)": "Do you wish to disable credential management? (VS Code window reload will be triggered)",
   "No custom credential managers found, using the default instead.": "No custom credential managers found, using the default instead.",
   "Custom credential manager {0} found/Credential manager display name": {
     "message": "Custom credential manager {0} found",
@@ -26,6 +28,7 @@
     ]
   },
   "Do you wish to use this credential manager instead?": "Do you wish to use this credential manager instead?",
+  "Yes": "Yes",
   "Don't ask again": "Don't ask again",
   "Plugin of name '{0}' was defined for custom credential management on imperative.json file./Credential manager display name": {
     "message": "Plugin of name '{0}' was defined for custom credential management on imperative.json file.",
@@ -329,7 +332,6 @@
   "Type the new pattern to add to history": "Type the new pattern to add to history",
   "action is not supported for this property type.": "action is not supported for this property type.",
   "Clear all history items for this persistent property?": "Clear all history items for this persistent property?",
-  "No": "No",
   "Enter a filter": "Enter a filter",
   "No items are loaded in the tree.": "No items are loaded in the tree.",
   "You must enter a pattern.": "You must enter a pattern.",
@@ -888,7 +890,6 @@
       "Error message"
     ]
   },
-  "{0} scope was not updated, since setting is not available there.": "{0} scope was not updated, since setting is not available there.",
   "Reload Window": "Reload Window",
   "The Team configuration file has been opened in the editor. Editing or removal of profiles will need to be done manually.": "The Team configuration file has been opened in the editor. Editing or removal of profiles will need to be done manually.",
   "Token auth error": "Token auth error",

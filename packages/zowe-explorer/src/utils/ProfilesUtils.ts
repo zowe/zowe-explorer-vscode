@@ -148,21 +148,21 @@ export class ProfilesUtils {
     public static async promptAndDisableCredentialManagement(): Promise<void> {
         ZoweLogger.trace("ProfilesUtils.promptAndDisableCredentialManagement called.");
         const noButton = vscode.l10n.t("No");
-        const yesButton = vscode.l10n.t("Yes");
+        const yesGloballyButton = vscode.l10n.t("Yes, globally");
+        const yesWorkspaceButton = vscode.l10n.t("Only for this workspace");
         const response = await Gui.warningMessage(
-            vscode.l10n.t(
-                // eslint-disable-next-line max-len
-                "Zowe Explorer failed to activate since the default credential manager is not supported in your environment. Do you wish to disable credential management for all setting scopes? (VS Code window reload will be triggered)"
-            ),
+            vscode.l10n.t("Zowe Explorer failed to activate since the default credential manager is not supported in your environment."),
             {
-                items: [noButton, yesButton],
+                items: [noButton, yesGloballyButton, yesWorkspaceButton],
                 vsCodeOpts: {
                     modal: true,
+                    detail: vscode.l10n.t("Do you wish to disable credential management? (VS Code window reload will be triggered)"),
                 },
             }
         );
-        if (response === yesButton) {
-            await SettingsConfig.setDirectValueForAll("zowe.security.secureCredentialsEnabled", false);
+        if (response === yesGloballyButton || response === yesWorkspaceButton) {
+            const scope = response === yesGloballyButton ? vscode.ConfigurationTarget.Global : vscode.ConfigurationTarget.Workspace;
+            await SettingsConfig.setDirectValue(Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED, false, scope);
             await vscode.commands.executeCommand("workbench.action.reloadWindow");
         } else {
             throw new imperative.ImperativeError({
@@ -191,8 +191,13 @@ export class ProfilesUtils {
             await profileInfo.readProfilesFromDisk();
             return profileInfo;
         } catch (err) {
-            ZoweLogger.error(err);
-            await ProfilesUtils.promptAndDisableCredentialManagement();
+            if (err instanceof imperative.ProfInfoErr) {
+                if (err.message.includes("Failed to initialize secure credential manager")) {
+                    await ProfilesUtils.promptAndDisableCredentialManagement();
+                    return;
+                }
+            }
+            throw err;
         }
     }
 
