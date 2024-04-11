@@ -436,6 +436,21 @@ describe("ZoweUSSNode Unit Tests - Function node.rename()", () => {
         newMocks.ussDir.contextValue = globals.USS_DIR_CONTEXT;
         return newMocks;
     }
+
+    it("Tests that when rename fails, an error message is thrown", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        const newFullPath = "/u/user/newName";
+        const errMessageMock = jest.spyOn(Gui, "errorMessage").mockImplementation();
+        const renameMock = jest.spyOn(UssFSProvider.instance, "rename").mockRejectedValueOnce(new Error("Rename error: file is busy"));
+        await blockMocks.ussDir.rename(newFullPath);
+
+        expect(errMessageMock).toHaveBeenCalledWith("Rename error: file is busy");
+        errMessageMock.mockRestore();
+        renameMock.mockRestore();
+    });
+
     it("Tests that rename updates and refreshes the UI components of the node", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
@@ -532,7 +547,7 @@ describe("ZoweUSSNode Unit Tests - Function node.reopen()", () => {
     });
 });
 
-describe("ZoweUSSNode Unit Tests - Function node.setEncoding()", () => {
+describe("ZoweUSSNode Unit Tests - node.setEncoding() and encoding behaviors", () => {
     const setEncodingForFileMock = jest.spyOn(UssFSProvider.instance, "setEncodingForFile").mockImplementation();
     const getEncodingMock = jest.spyOn(UssFSProvider.instance as any, "getEncodingForFile");
 
@@ -812,6 +827,7 @@ describe("ZoweUSSNode Unit Tests - Function node.getChildren()", () => {
         expect(newChildren[1].fullPath).not.toContain(oldPath);
         expect(newChildren[0].fullPath).toContain(newPath);
         expect(newChildren[1].fullPath).toContain(newPath);
+        expect(setAttrsMock).toHaveBeenCalled();
         setAttrsMock.mockRestore();
     });
 
