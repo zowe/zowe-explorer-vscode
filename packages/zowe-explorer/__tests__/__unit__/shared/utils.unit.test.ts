@@ -22,6 +22,7 @@ import { BaseProvider, Gui, imperative, IZoweTreeNode, ProfilesCache, ZosEncodin
 import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
 import { UssFSProvider } from "../../../src/uss/UssFSProvider";
 import { DatasetFSProvider } from "../../../src/dataset/DatasetFSProvider";
+import { ZoweLogger } from "../../../src/utils/ZoweLogger";
 
 async function createGlobalMocks() {
     const newMocks = {
@@ -501,5 +502,23 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
         await sharedUtils.promptForEncoding(node);
         expect(blockMocks.showQuickPick).toHaveBeenCalled();
         expect(blockMocks.showQuickPick.mock.calls[0][1]).toEqual(expect.objectContaining({ placeHolder: "Current encoding is IBM-1047" }));
+    });
+});
+
+describe("Shared utils unit tests - function parseFavorites", () => {
+    it("correctly parses a saved favorite", () => {
+        const favData = sharedUtils.parseFavorites(["[testProfile]: favoriteDir{directory}"]);
+        expect(favData[0]).toStrictEqual({
+            profileName: "testProfile",
+            label: "favoriteDir",
+            contextValue: "directory",
+        });
+    });
+
+    it("filters out an incomplete favorite entry (missing label and context)", () => {
+        const warnSpy = jest.spyOn(ZoweLogger, "warn");
+        const favData = sharedUtils.parseFavorites(["[testProfile]: "]);
+        expect(favData.length).toBe(0);
+        expect(warnSpy).toHaveBeenCalledWith("Failed to parse a saved favorite. Attempted to parse: [testProfile]: ");
     });
 });

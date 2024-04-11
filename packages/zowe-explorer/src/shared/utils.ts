@@ -195,7 +195,7 @@ export function parseFavorites(lines: string[]): FavoriteData[] {
             const profileName = line.substring(line.indexOf("[") + 1, closingSquareBracket);
 
             // label{context}
-            const remainderOfLine = line.substring(closingSquareBracket + 2);
+            const remainderOfLine = line.substring(closingSquareBracket + 2).trim();
 
             // Filter out lines that do not contain a label and context value
             if (remainderOfLine.length === 0) {
