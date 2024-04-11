@@ -3105,8 +3105,14 @@ describe("Dataset Tree Unit Tests - Function createProfileNodeForFavs", () => {
             profile: globalMocks.testProfileLoaded,
         });
         expectedFavProfileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
+        const createDirMock = jest.spyOn(DatasetFSProvider.instance, "createDirectory").mockImplementation();
+        const existsMock = jest.spyOn(DatasetFSProvider.instance, "exists").mockReturnValueOnce(false);
 
         const createdFavProfileNode = await testTree.createProfileNodeForFavs("testProfile", globalMocks.testProfileLoaded);
         expect(createdFavProfileNode).toEqual(expectedFavProfileNode);
+        expect(existsMock).toHaveBeenCalledWith(expectedFavProfileNode.resourceUri);
+        expect(createDirMock).toHaveBeenCalledWith(expectedFavProfileNode.resourceUri);
+        createDirMock.mockRestore();
+        existsMock.mockRestore();
     });
 });
