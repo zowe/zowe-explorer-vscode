@@ -46,7 +46,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
     private opCancelledMsg = vscode.l10n.t("Operation Cancelled");
     public profileInstance = Profiles.getInstance();
     public outputChannel: vscode.OutputChannel;
-    public sshSession: zosuss.SshSession;
+    public sshSession: zosuss.SshSession | undefined;
     public pathInputConfirmationFlag: boolean = true;
     public sshprofile: imperative.IProfileLoaded;
     public user: string;
@@ -170,6 +170,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
             Gui.showMessage(this.opCancelledMsg);
             return;
         }
+        console.log(this.sshSession);
         return this.sshSession;
     }
 
