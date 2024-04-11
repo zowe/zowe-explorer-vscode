@@ -139,7 +139,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         ussEntry.etag = etag;
     }
 
-    public getAttributes(): Types.FileAttributes | PromiseLike<Types.FileAttributes> {
+    public getAttributes(): Types.FileAttributes {
         const ussEntry = UssFSProvider.instance.stat(this.resourceUri) as UssFile | UssDirectory;
         return ussEntry.attributes;
     }
