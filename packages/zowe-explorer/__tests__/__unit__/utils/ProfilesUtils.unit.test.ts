@@ -417,7 +417,7 @@ describe("ProfilesUtils unit tests", () => {
                 configurable: true,
             });
             jest.spyOn(ZoweVsCodeExtension as any, "promptUserPass").mockResolvedValue([]);
-            await profUtils.ProfilesUtils.promptCredentials(null);
+            await profUtils.ProfilesUtils.promptCredentials(null as any);
             expect(getProfileInfoSpy).toHaveBeenCalled();
         });
 
@@ -438,7 +438,7 @@ describe("ProfilesUtils unit tests", () => {
                 configurable: true,
             });
             jest.spyOn(ZoweVsCodeExtension as any, "promptUserPass").mockResolvedValue([]);
-            await profUtils.ProfilesUtils.promptCredentials(null);
+            await profUtils.ProfilesUtils.promptCredentials(null as any);
             expect(Gui.showMessage).toHaveBeenCalledWith("Operation Cancelled");
         });
 
@@ -463,7 +463,7 @@ describe("ProfilesUtils unit tests", () => {
                 configurable: true,
             });
             jest.spyOn(Profiles.prototype, "promptCredentials").mockResolvedValue(["some_user", "some_pass", "c29tZV9iYXNlNjRfc3RyaW5n"]);
-            await profUtils.ProfilesUtils.promptCredentials(null);
+            await profUtils.ProfilesUtils.promptCredentials(null as any);
             expect(Gui.showMessage).toHaveBeenCalledWith("Credentials for testConfig were successfully updated");
         });
 
@@ -491,7 +491,7 @@ describe("ProfilesUtils unit tests", () => {
                 value: jest.fn(),
                 configurable: true,
             });
-            await profUtils.ProfilesUtils.promptCredentials(null);
+            await profUtils.ProfilesUtils.promptCredentials(null as any);
             expect(mockProfileInstance.getProfileInfo).toHaveBeenCalled();
             expect(Gui.showMessage).toHaveBeenCalledWith('"Update Credentials" operation not supported when "autoStore" is false');
         });
@@ -772,6 +772,9 @@ describe("ProfilesUtils unit tests", () => {
         });
 
         it("should retrieve the default credential manager and prompt to disable credential management if environment not supported", async () => {
+            const expectedErrMsg =
+                // eslint-disable-next-line max-len
+                "Failed to load credential manager. This may be related to Zowe Explorer being unable to use the default credential manager in a browser based environment.";
             getDirectValueSpy.mockReturnValueOnce(false);
             getCredentialManagerOverrideSpy.mockReturnValue("@zowe/cli");
             isVSCodeCredentialPluginInstalledSpy.mockReturnValueOnce(false);
@@ -779,10 +782,27 @@ describe("ProfilesUtils unit tests", () => {
             getCredentialManagerMapSpy.mockReturnValueOnce(undefined);
             setupCustomCredentialManagerSpy.mockReturnValueOnce({});
             readProfilesFromDiskSpy.mockImplementation(() => {
-                throw new Error("Failed to initialize credential manager");
+                throw new zowe.imperative.ProfInfoErr({
+                    msg: "Failed to initialize secure credential manager",
+                });
             });
-            await expect(profUtils.ProfilesUtils.getProfileInfo(false)).rejects.toThrow();
+            await expect(profUtils.ProfilesUtils.getProfileInfo(false)).rejects.toThrow(expectedErrMsg);
             expect(promptAndDisableCredentialManagementSpy).toHaveBeenCalledTimes(1);
+        });
+
+        it("should throw new error if error is not an instance of ProfInfoErr", async () => {
+            const expectedErrorMsg = "Another error unrelated to credential management";
+            getDirectValueSpy.mockReturnValueOnce(false);
+            getCredentialManagerOverrideSpy.mockReturnValue("@zowe/cli");
+            isVSCodeCredentialPluginInstalledSpy.mockReturnValueOnce(false);
+            getDirectValueSpy.mockReturnValueOnce(true);
+            getCredentialManagerMapSpy.mockReturnValueOnce(undefined);
+            setupCustomCredentialManagerSpy.mockReturnValueOnce({});
+            readProfilesFromDiskSpy.mockImplementation(() => {
+                throw new Error(expectedErrorMsg);
+            });
+            await expect(profUtils.ProfilesUtils.getProfileInfo(false)).rejects.toThrow(expectedErrorMsg);
+            expect(promptAndDisableCredentialManagementSpy).toHaveBeenCalledTimes(0);
         });
     });
 
@@ -987,7 +1007,7 @@ describe("ProfilesUtils unit tests", () => {
     });
 
     describe("promptAndDisableCredentialManagement", () => {
-        let setDirectValueForAllSpy: jest.SpyInstance;
+        let setDirectValueSpy: jest.SpyInstance;
         let warningMessageSpy: jest.SpyInstance;
         let executeCommandSpy: jest.SpyInstance;
 
@@ -995,15 +1015,22 @@ describe("ProfilesUtils unit tests", () => {
             jest.clearAllMocks();
             jest.resetModules();
             jest.restoreAllMocks();
-            setDirectValueForAllSpy = jest.spyOn(SettingsConfig, "setDirectValueForAll");
+            setDirectValueSpy = jest.spyOn(SettingsConfig, "setDirectValue");
             warningMessageSpy = jest.spyOn(Gui, "warningMessage");
             executeCommandSpy = jest.spyOn(vscode.commands, "executeCommand");
         });
 
-        it("should prompt whether to disable credential management, and disable if 'Yes'", async () => {
-            warningMessageSpy.mockResolvedValue("Yes");
+        it("should prompt whether to disable credential management, and disable globally if 'Yes, globally' selected", async () => {
+            warningMessageSpy.mockResolvedValue("Yes, globally");
             await expect(profUtils.ProfilesUtils.promptAndDisableCredentialManagement()).resolves.not.toThrow();
-            expect(setDirectValueForAllSpy).toHaveBeenCalledTimes(1);
+            expect(setDirectValueSpy).toHaveBeenCalledWith(globals.SETTINGS_SECURE_CREDENTIALS_ENABLED, false, vscode.ConfigurationTarget.Global);
+            expect(executeCommandSpy).toHaveBeenCalledWith("workbench.action.reloadWindow");
+        });
+
+        it("should prompt whether to disable credential management, and disable on workspace if 'Only for this workspace' selected", async () => {
+            warningMessageSpy.mockResolvedValue("Only for this workspace");
+            await expect(profUtils.ProfilesUtils.promptAndDisableCredentialManagement()).resolves.not.toThrow();
+            expect(setDirectValueSpy).toHaveBeenCalledWith(globals.SETTINGS_SECURE_CREDENTIALS_ENABLED, false, vscode.ConfigurationTarget.Workspace);
             expect(executeCommandSpy).toHaveBeenCalledWith("workbench.action.reloadWindow");
         });
 

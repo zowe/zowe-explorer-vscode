@@ -188,25 +188,3 @@ describe("SettingsConfig Unit Tests - function currentVersionNumber", () => {
         expect((SettingsConfig as any).currentVersionNumber).toBe(2);
     });
 });
-
-describe("SettingsConfig Unit Tests - function setDirectValueForAll", () => {
-    let setDirectValueSpy: jest.SpyInstance;
-    let zoweLoggerWarnSpy: jest.SpyInstance;
-
-    beforeEach(() => {
-        jest.clearAllMocks();
-        jest.resetAllMocks();
-        jest.restoreAllMocks();
-        setDirectValueSpy = jest.spyOn(SettingsConfig, "setDirectValue");
-        zoweLoggerWarnSpy = jest.spyOn(ZoweLogger, "warn");
-    });
-
-    it("check that setting is updated for 2 out of 3 scopes and shows warning", async () => {
-        setDirectValueSpy.mockImplementationOnce(() => {
-            throw new Error("setting scope does not exist");
-        });
-        await expect(SettingsConfig.setDirectValueForAll("zowe.test.example", true)).resolves.not.toThrow();
-        expect(setDirectValueSpy).toHaveBeenCalledTimes(3);
-        expect(zoweLoggerWarnSpy).toHaveBeenCalledTimes(1);
-    });
-});

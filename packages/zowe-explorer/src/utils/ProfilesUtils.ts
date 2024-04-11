@@ -318,22 +318,28 @@ export class ProfilesUtils {
     public static async promptAndDisableCredentialManagement(): Promise<void> {
         ZoweLogger.trace("ProfilesUtils.promptAndDisableCredentialManagement called.");
         const noButton = localize("ProfileUtils.promptAndDisableCredentialManagement.noButton", "No");
-        const yesButton = localize("ProfileUtils.promptAndDisableCredentialManagement.yesButton", "Yes");
+        const yesGloballyButton = localize("ProfileUtils.promptAndDisableCredentialManagement.yesGloballyButton", "Yes, globally");
+        const yesWorkspaceButton = localize("ProfileUtils.promptAndDisableCredentialManagement.yesWorkspaceButton", "Only for this workspace");
         const response = await Gui.warningMessage(
             localize(
                 "ProfileUtils.promptAndDisableCredentialManagement.warning",
-                // eslint-disable-next-line max-len
-                "Zowe Explorer failed to activate since the default credential manager is not supported in your environment. Do you wish to disable credential management for all setting scopes? (VS Code window reload will be triggered)"
+                "Zowe Explorer failed to activate since the default credential manager is not supported in your environment."
             ),
             {
-                items: [noButton, yesButton],
+                items: [noButton, yesGloballyButton, yesWorkspaceButton],
                 vsCodeOpts: {
                     modal: true,
+                    detail: localize(
+                        "ProfileUtils.promptAndDisableCredentialManagement.errorHandlingSuggestion",
+                        // eslint-disable-next-line max-len
+                        "Do you wish to disable credential management? (VS Code window reload will be triggered)"
+                    ),
                 },
             }
         );
-        if (response === yesButton) {
-            await SettingsConfig.setDirectValueForAll("zowe.security.secureCredentialsEnabled", false);
+        if (response === yesGloballyButton || response === yesWorkspaceButton) {
+            const scope = response === yesGloballyButton ? vscode.ConfigurationTarget.Global : vscode.ConfigurationTarget.Workspace;
+            await SettingsConfig.setDirectValue(globals.SETTINGS_SECURE_CREDENTIALS_ENABLED, false, scope);
             await vscode.commands.executeCommand("workbench.action.reloadWindow");
         } else {
             throw new imperative.ImperativeError({
@@ -368,8 +374,13 @@ export class ProfilesUtils {
             await profileInfo.readProfilesFromDisk();
             return profileInfo;
         } catch (err) {
-            ZoweLogger.error(err);
-            await ProfilesUtils.promptAndDisableCredentialManagement();
+            if (err instanceof imperative.ProfInfoErr) {
+                if (err.message.includes("Failed to initialize secure credential manager")) {
+                    await ProfilesUtils.promptAndDisableCredentialManagement();
+                    return;
+                }
+            }
+            throw err;
         }
     }
 
