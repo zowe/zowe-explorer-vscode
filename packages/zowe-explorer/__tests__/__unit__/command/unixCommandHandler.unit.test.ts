@@ -9,8 +9,6 @@
  *
  */
 
-jest.mock("Session");
-
 import * as vscode from "vscode";
 import * as profileLoader from "../../../src/configuration/Profiles";
 import * as utils from "../../../src/utils/ProfilesUtils";
@@ -21,6 +19,8 @@ import { ZoweDatasetNode } from "../../../src/trees/dataset";
 import { ZoweExplorerApiRegister } from "../../../src/extending";
 import { ZoweLogger, ZoweLocalStorage } from "../../../src/tools";
 import { ProfileManagement } from "../../../src/management";
+
+jest.mock("Session");
 
 describe("UnixCommand Actions Unit Testing", () => {
     const showErrorMessage = jest.fn();
