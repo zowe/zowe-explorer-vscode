@@ -15,7 +15,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 - To fix clicking submitted job hyperlink throws error [#2813](https://github.com/zowe/vscode-extension-for-zowe/issues/2813)
 
-## `2.15.3 TBD`
+## `2.15.3`
 
 - Fixed error that could occur when listing data set members that contain control characters in the name [#2807](https://github.com/zowe/zowe-explorer-vscode/pull/2807)
 
