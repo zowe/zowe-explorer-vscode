@@ -55,14 +55,17 @@ export async function clickOnFavoriteTabInJobs() {
 }
 
 export async function clickOnDatasetsTab() {
+    await driverChrome.findElement(By.id(DatasetsLocators.datasetTabId)).click();
     await driverChrome.findElement(By.xpath(DatasetsLocators.datasetTabXpath)).click();
 }
 
 export async function clickOnUssTab() {
+    await driverChrome.findElement(By.id(UssLocators.ussTabId)).click();
     await driverChrome.findElement(By.xpath(UssLocators.ussTabXpath)).click();
 }
 
 export async function clickOnJobsTab() {
+    await driverChrome.findElement(By.id(JobsLocators.jobTabId)).click();
     await driverChrome.findElement(By.xpath(JobsLocators.jobTabXpath)).click();
 }
 
@@ -110,6 +113,7 @@ export async function removeFavoriteProfileFromJobs() {
 }
 
 export async function addProfileToFavoritesInDatasets() {
+    await driverChrome.findElement(By.id(DatasetsLocators.datasetTabId)).click();
     const addTofavorite = await driverChrome.wait(until.elementLocated(By.xpath(DatasetsLocators.secondDatasetProfileXpath)), WAITTIME);
     await driverChrome.actions().click(addTofavorite, Button.RIGHT).perform();
     await driverChrome.sleep(SHORTSLEEPTIME);
@@ -117,14 +121,15 @@ export async function addProfileToFavoritesInDatasets() {
 }
 
 export async function addProfileToFavoritesInUss() {
+    await driverChrome.findElement(By.id(UssLocators.ussTabId)).click();
     const addTofavorite = await driverChrome.wait(until.elementLocated(By.xpath(UssLocators.secondUssProfileXpath)), WAITTIME);
-
     await driverChrome.actions().click(addTofavorite, Button.RIGHT).perform();
     await driverChrome.sleep(SHORTSLEEPTIME);
     await driverChrome.wait(until.elementLocated(By.xpath(UssLocators.addToFavoriteOptionXpath)), WAITTIME).click();
 }
 
 export async function addProfileToFavoritesInJobs() {
+    await driverChrome.findElement(By.id(JobsLocators.jobTabId)).click();
     const addTofavorite = await driverChrome.wait(until.elementLocated(By.xpath(JobsLocators.secondJobsProfileXpath)), WAITTIME);
     await driverChrome.actions().click(addTofavorite, Button.RIGHT).perform();
     await driverChrome.sleep(SHORTSLEEPTIME);
