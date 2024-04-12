@@ -14,6 +14,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 ### Bug fixes
 
 - Fixed an issue where the `ProfilesCache` class would retain old service profiles, even if they were removed from the team config. [#2395](https://github.com/zowe/zowe-explorer-vscode/issues/2395)
+- **Breaking:** issueUnixCommand now takes sshSession as a optional parameter. [#2830](https://github.com/zowe/zowe-explorer-vscode/pull/2830)
 
 ## `3.0.0-next.202403051607`
 

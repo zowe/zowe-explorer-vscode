@@ -458,16 +458,6 @@ describe("UnixCommand Actions Unit Testing", () => {
         expect(showInformationMessage.mock.calls.length).toBe(0);
     });
 
-    it("sshSession being undefined", async () => {
-        const mockCommandApi = await apiRegisterInstance.getCommandApi(profileOne);
-        const getCommandApiMock = jest.fn();
-        getCommandApiMock.mockReturnValue(mockCommandApi);
-        apiRegisterInstance.getCommandApi = getCommandApiMock.bind(apiRegisterInstance);
-        jest.spyOn(mockCommandApi, "issueUnixCommand").mockReturnValue("iplinfo1" as any);
-        unixActions.sshSession = undefined;
-        await (unixActions as any).issueCommand(fetchSshProfiles[0], "/iplinfo1" as any, "/u" as any);
-    });
-
     it("ssh profile not found", async () => {
         fetchSshProfiles = [];
         await (unixActions as any).getSshProfile();

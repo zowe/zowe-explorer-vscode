@@ -11,7 +11,7 @@
 
 import * as vscode from "vscode";
 import * as globals from "../globals";
-import { Gui, Validation, imperative, IZoweTreeNode } from "@zowe/zowe-explorer-api";
+import { Gui, imperative, IZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { errorHandling, FilterDescriptor, FilterItem } from "../utils/ProfilesUtils";
@@ -46,7 +46,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
     private opCancelledMsg = vscode.l10n.t("Operation Cancelled");
     public profileInstance = Profiles.getInstance();
     public outputChannel: vscode.OutputChannel;
-    public sshSession: zosuss.SshSession | undefined;
+    public sshSession: zosuss.SshSession;
     public pathInputConfirmationFlag: boolean = true;
     public sshprofile: imperative.IProfileLoaded;
     public user: string;
@@ -345,16 +345,12 @@ export class UnixCommandHandler extends ZoweCommandProvider {
                     () => {
                         if (ZoweExplorerApiRegister.getCommandApi(profile).issueUnixCommand) {
                             // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-                            if (this.sshSession) {
-                                return ZoweExplorerApiRegister.getCommandApi(profile).issueUnixCommand(
-                                    command,
-                                    cwd,
-                                    this.pathInputConfirmationFlag,
-                                    this.sshSession
-                                );
-                            } else {
-                                return ZoweExplorerApiRegister.getCommandApi(profile).issueUnixCommand(command, cwd, this.pathInputConfirmationFlag);
-                            }
+                            return ZoweExplorerApiRegister.getCommandApi(profile).issueUnixCommand(
+                                command,
+                                cwd,
+                                this.pathInputConfirmationFlag,
+                                this.sshSession
+                            );
                         }
                     }
                 );
