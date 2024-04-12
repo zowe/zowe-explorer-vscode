@@ -1,6 +1,6 @@
 # Change Log
 
-## TBD Release
+## `1.22.7`
 
 ### Bug fixes
 
