@@ -375,7 +375,7 @@ export class ProfilesUtils {
             return profileInfo;
         } catch (err) {
             if (err instanceof imperative.ProfInfoErr) {
-                if (err.message.includes("Failed to initialize secure credential manager")) {
+                if (err.errorCode === imperative.ProfInfoErr.LOAD_CRED_MGR_FAILED) {
                     await ProfilesUtils.promptAndDisableCredentialManagement();
                     return;
                 }

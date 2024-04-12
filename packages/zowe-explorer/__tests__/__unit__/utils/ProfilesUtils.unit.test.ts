@@ -782,9 +782,14 @@ describe("ProfilesUtils unit tests", () => {
             getCredentialManagerMapSpy.mockReturnValueOnce(undefined);
             setupCustomCredentialManagerSpy.mockReturnValueOnce({});
             readProfilesFromDiskSpy.mockImplementation(() => {
-                throw new zowe.imperative.ProfInfoErr({
-                    msg: "Failed to initialize secure credential manager",
+                const err = new zowe.imperative.ProfInfoErr({
+                    msg: expectedErrMsg,
                 });
+                Object.defineProperty(err, "errorCode", {
+                    value: zowe.imperative.ProfInfoErr.LOAD_CRED_MGR_FAILED,
+                    configurable: true,
+                });
+                throw err;
             });
             await expect(profUtils.ProfilesUtils.getProfileInfo(false)).rejects.toThrow(expectedErrMsg);
             expect(promptAndDisableCredentialManagementSpy).toHaveBeenCalledTimes(1);
