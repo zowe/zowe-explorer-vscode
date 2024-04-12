@@ -823,7 +823,7 @@
       },
       {
         "command": "zowe.placeholderCommand",
-        "title": "%zowe.placeholderCommand%",
+        "title": "",
         "enablement": "false"
       }
     ],
