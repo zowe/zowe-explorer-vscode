@@ -12,6 +12,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - **Breaking:** Removed the `zowe.uss.ZoweUSSNode.open` command in favor of using `vscode.open` with a USS URI. See the [FileSystemProvider wiki page](https://github.com/zowe/zowe-explorer-vscode/wiki/FileSystemProvider#file-paths-vs-uris) for more information on USS URIs. [#2207](https://github.com/zowe/zowe-explorer-vscode/issues/2207)
 - Added the `onResourceChanged` function to the `ZoweExplorerApiRegister` class to allow extenders to subscribe to any changes to Zowe resources (Data Sets, USS files/folders, Jobs, etc.). See the [FileSystemProvider wiki page](https://github.com/zowe/zowe-explorer-vscode/wiki/FileSystemProvider) for more information on Zowe resources.
 - Added the `addFileSystemEvent` function to the `ZoweExplorerApiRegister` class to allow extenders to register their FileSystemProvider "onDidChangeFile" events. See the [FileSystemProvider wiki page](https://github.com/zowe/zowe-explorer-vscode/wiki/FileSystemProvider) for more information on the FileSystemProvider.
+- Refactored the initialization, parsing and management of favorited nodes in Zowe Explorer. [#2026](https://github.com/zowe/zowe-explorer-vscode/issues/2026)
 
 ### Bug fixes
 
