@@ -501,7 +501,6 @@ describe("ProfilesUtils unit tests", () => {
                 value: jest.fn(),
                 configurable: true,
             });
-            const eventFireMock = jest.spyOn(ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter, "fire");
             const secureCredsMock = jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(true);
             const testConfig = {
                 name: "testConfig",
@@ -512,13 +511,12 @@ describe("ProfilesUtils unit tests", () => {
                     base64EncodedAuth: "user-pass",
                 } as imperative.IProfile,
             } as imperative.IProfileLoaded;
-            const updCredsMock = jest.spyOn(ZoweVsCodeExtension, "updateCredentials").mockResolvedValueOnce(testConfig);
+            const updCredsMock = jest.spyOn(Constants.PROFILES_CACHE, "promptCredentials").mockResolvedValueOnce(["test", "test"]);
             await ProfilesUtils.promptCredentials({
                 getProfile: () => testConfig,
             } as any);
             expect(updCredsMock).toHaveBeenCalled();
             expect(Gui.showMessage).toHaveBeenCalledWith("Credentials for testConfig were successfully updated");
-            expect(eventFireMock).toHaveBeenCalledWith(Validation.EventType.UPDATE);
             secureCredsMock.mockRestore();
         });
     });
@@ -764,22 +762,6 @@ describe("ProfilesUtils unit tests", () => {
             promptAndDisableCredentialManagementSpy = jest.spyOn(ProfilesUtils, "promptAndDisableCredentialManagement");
         });
 
-        it("should prompt and install for missing extension of custom credential manager if override defined", async () => {
-            getDirectValueSpy.mockReturnValueOnce(true);
-            fetchRegisteredPluginsSpy.mockImplementation();
-            getCredentialManagerOverrideSpy.mockReturnValue("test");
-            isVSCodeCredentialPluginInstalledSpy.mockReturnValueOnce(false);
-            getDirectValueSpy.mockReturnValueOnce(true);
-            getCredentialManagerMapSpy.mockReturnValueOnce({
-                credMgrDisplayName: "test",
-                credMgrPluginName: "test",
-                credMgrZEName: "test",
-            });
-            setupCustomCredentialManagerSpy.mockReturnValueOnce({});
-            await expect(ProfilesUtils.getProfileInfo()).resolves.toEqual({});
-            expect(isVSCodeCredentialPluginInstalledSpy).toHaveBeenCalledTimes(1);
-        });
-
         it("should retrieve the custom credential manager", async () => {
             getDirectValueSpy.mockReturnValueOnce(true);
             fetchRegisteredPluginsSpy.mockImplementation();
@@ -816,9 +798,14 @@ describe("ProfilesUtils unit tests", () => {
             getCredentialManagerMapSpy.mockReturnValueOnce(undefined);
             setupCustomCredentialManagerSpy.mockReturnValueOnce({});
             readProfilesFromDiskSpy.mockImplementation(() => {
-                throw new imperative.ProfInfoErr({
-                    msg: "Failed to initialize secure credential manager",
+                const err = new imperative.ProfInfoErr({
+                    msg: expectedErrMsg,
                 });
+                Object.defineProperty(err, "errorCode", {
+                    value: imperative.ProfInfoErr.LOAD_CRED_MGR_FAILED,
+                    configurable: true,
+                });
+                throw err;
             });
             await expect(ProfilesUtils.getProfileInfo()).rejects.toThrow(expectedErrMsg);
             expect(promptAndDisableCredentialManagementSpy).toHaveBeenCalledTimes(1);

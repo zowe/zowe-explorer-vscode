@@ -476,16 +476,6 @@ describe("Extension Unit Tests", () => {
         await extension.activate(globalMocks.mockExtension);
         expect(ZoweExplorerExtender.showZoweConfigError).toHaveBeenCalled();
     });
-    afterEach(() => {
-        jest.resetAllMocks();
-        jest.restoreAllMocks();
-        jest.clearAllMocks();
-    });
-
-    it("Testing that activate correctly executes", () => {
-        expect(allCommands.map((c) => c.cmd)).toEqual(globalMocks.expectedCommands);
-    });
-
     it("should deactivate the extension", async () => {
         const spyAwaitAllSaves = jest.spyOn(ZoweSaveQueue, "all");
         const spyCleanTempDir = jest.spyOn(TempFolder, "cleanDir");
@@ -496,6 +486,9 @@ describe("Extension Unit Tests", () => {
         // Test that upload operations complete before cleaning temp dir
         expect(spyAwaitAllSaves.mock.invocationCallOrder[0]).toBeLessThan(spyCleanTempDir.mock.invocationCallOrder[0]);
         expect(Constants.ACTIVATED).toBe(false);
+    });
+    it("Testing that activate correctly executes", () => {
+        expect(allCommands.map((c) => c.cmd)).toEqual(globalMocks.expectedCommands);
     });
 
     async function removeSessionTest(command: string, contextValue: string, providerObject: any) {

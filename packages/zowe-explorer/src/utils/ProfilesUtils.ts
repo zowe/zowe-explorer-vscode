@@ -192,7 +192,7 @@ export class ProfilesUtils {
             return profileInfo;
         } catch (err) {
             if (err instanceof imperative.ProfInfoErr) {
-                if (err.message.includes("Failed to initialize secure credential manager")) {
+                if (err.errorCode === imperative.ProfInfoErr.LOAD_CRED_MGR_FAILED) {
                     await ProfilesUtils.promptAndDisableCredentialManagement();
                     return;
                 }
@@ -290,10 +290,12 @@ export class ProfilesUtils {
 
     public static async getProfileInfo(): Promise<imperative.ProfileInfo> {
         ZoweLogger.trace("ProfilesUtils.getProfileInfo called.");
-        const hasSecureCredentialManagerEnabled: boolean = SettingsConfig.getDirectValue(Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED);
+        const hasSecureCredentialManagerEnabled: boolean = SettingsConfig.getDirectValue<boolean>(Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED);
 
         if (hasSecureCredentialManagerEnabled) {
-            const shouldCheckForCustomCredentialManagers = SettingsConfig.getDirectValue(Constants.SETTINGS_CHECK_FOR_CUSTOM_CREDENTIAL_MANAGERS);
+            const shouldCheckForCustomCredentialManagers = SettingsConfig.getDirectValue<boolean>(
+                Constants.SETTINGS_CHECK_FOR_CUSTOM_CREDENTIAL_MANAGERS
+            );
             if (shouldCheckForCustomCredentialManagers) {
                 await this.fetchRegisteredPlugins();
             }
