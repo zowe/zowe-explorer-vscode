@@ -42,15 +42,11 @@ export async function clickOnDatasetsTab() {
 }
 
 export async function clickOnUssTab() {
-    await driverFirefox.findElement(By.id(UssLocators.ussTabId)).click();
-}
-
-export async function clickOnUssTabs() {
     await driverFirefox.findElement(By.xpath(UssLocators.ussTabXpath)).click();
 }
 
 export async function clickOnJobsTab() {
-    await driverFirefox.findElement(By.id(JobsLocators.jobTabId)).click();
+    await driverFirefox.findElement(By.xpath(JobsLocators.jobTabXpath)).click();
 }
 
 export async function clickOnUssPanel() {

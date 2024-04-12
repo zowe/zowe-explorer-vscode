@@ -59,15 +59,11 @@ export async function clickOnDatasetsTab() {
 }
 
 export async function clickOnUssTab() {
-    await driverChrome.findElement(By.id(UssLocators.ussTabId)).click();
-}
-
-export async function clickOnUssTabs() {
     await driverChrome.findElement(By.xpath(UssLocators.ussTabXpath)).click();
 }
 
 export async function clickOnJobsTab() {
-    await driverChrome.findElement(By.id(JobsLocators.jobTabId)).click();
+    await driverChrome.findElement(By.xpath(JobsLocators.jobTabXpath)).click();
 }
 
 export async function getFavoriteProfileNameFromDatasets() {
