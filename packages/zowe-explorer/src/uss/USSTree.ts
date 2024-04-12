@@ -871,8 +871,8 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
 
         const favorites = parseFavorites(lines);
         for (const fav of favorites) {
-            // The profile node used for grouping respective favorited items. (Undefined if not created yet.)
-            // If favorite node for profile doesn't exist yet, create a new one for it
+            // The profile node used for grouping respective favorited items.
+            // Create a node if it does not already exist in the Favorites array
             const favProfileNode =
                 this.findMatchingProfileInArray(this.mFavorites, fav.profileName) ?? this.createProfileNodeForFavs(fav.profileName);
 

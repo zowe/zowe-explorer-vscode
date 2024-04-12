@@ -249,11 +249,15 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
 
         const favorites = parseFavorites(lines);
         for (const fav of favorites) {
-            // The profile node used for grouping respective favorited items. (Undefined if not created yet.)
-            // If favorite node for profile doesn't exist yet, create a new one for it
+            // The profile node used for grouping respective favorited items.
+            // Create a node if it does not already exist in the Favorites array
             const favProfileNode =
                 this.findMatchingProfileInArray(this.mFavorites, fav.profileName) ??
                 this.createProfileNodeForFavs(fav.profileName, await Profiles.getInstance().getLoadedProfConfig(fav.profileName));
+
+            if (fav.contextValue == null) {
+                continue;
+            }
 
             // Initialize and attach favorited item nodes under their respective profile node in Favorites
             const favChildNode = await this.initializeFavChildNodeForProfile(fav.label, fav.contextValue, favProfileNode);
