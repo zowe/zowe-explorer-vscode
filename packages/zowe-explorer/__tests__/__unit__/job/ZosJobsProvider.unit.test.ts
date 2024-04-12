@@ -435,6 +435,7 @@ describe("ZosJobsProvider unit tests - Function loadProfilesForFavorites", () =>
             label: "testProfile",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             parentNode: blockMocks.jobFavoritesNode,
+            profile: blockMocks.imperativeProfile,
         });
         favProfileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
         const testTree = new ZosJobsProvider();
@@ -575,18 +576,24 @@ describe("ZosJobsProvider unit tests - Function loadProfilesForFavorites", () =>
         });
         favProfileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
         // Leave mParent parameter undefined for favJobNode and expectedFavPdsNode to test undefined profile/session condition
-        const favJobNode = new ZoweJobNode({ label: "JOBTEST(JOB1234)", collapsibleState: vscode.TreeItemCollapsibleState.Collapsed });
-        favJobNode.contextValue = globals.JOBS_JOB_CONTEXT + globals.FAV_SUFFIX;
+        const favJobNode = new ZoweJobNode({
+            label: "JOBTEST(JOB1234)",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            contextOverride: globals.JOBS_JOB_CONTEXT + globals.FAV_SUFFIX,
+            parentNode: blockMocks.jobFavoritesNode,
+            profile: blockMocks.imperativeProfile,
+        });
         const testTree = new ZosJobsProvider();
         favProfileNode.children.push(favJobNode);
         testTree.mFavorites.push(favProfileNode);
         const expectedFavJobNode = new ZoweJobNode({
             label: "JOBTEST(JOB1234)",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            contextOverride: globals.JOBS_JOB_CONTEXT + globals.FAV_SUFFIX,
             session: blockMocks.session,
+            parentNode: blockMocks.jobFavoritesNode,
             profile: blockMocks.imperativeProfile,
         });
-        expectedFavJobNode.contextValue = globals.JOBS_JOB_CONTEXT + globals.FAV_SUFFIX;
 
         await testTree.loadProfilesForFavorites(blockMocks.log, favProfileNode);
         const resultFavJobNode = testTree.mFavorites[0].children[0];
