@@ -10,18 +10,21 @@
  */
 
 import { writeFileSync } from "fs";
-import { Builder, By, Key, until } from "selenium-webdriver";
+import { Builder, By, Key, until, WebDriver } from "selenium-webdriver";
 import * as firefox from "selenium-webdriver/firefox";
 import { TheiaLocator, DatasetsLocators, UssLocators, JobsLocators } from "./Locators";
 
 const SHORTSLEEPTIME = 2000;
 const WAITTIME = 30000;
-let driverFirefox: any;
+let driverFirefox: WebDriver;
 
-export async function openBrowser() {
+export async function openBrowser(headless = true) {
     const firefoxOptions = new firefox.Options();
-    firefoxOptions.headless();
+    if (headless) {
+        firefoxOptions.headless();
+    }
     driverFirefox = new Builder().forBrowser("firefox").setFirefoxOptions(firefoxOptions).build();
+    return driverFirefox;
 }
 
 export async function takeScreenshot(filename: string) {
