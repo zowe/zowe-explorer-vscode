@@ -8,16 +8,19 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 - Added support for `consoleName` property in z/OSMF profiles when issuing MVS commands [#1667](https://github.com/zowe/vscode-extension-for-zowe/issues/1667)
 - Updated sorting of PDS members to show items without stats at bottom of list [#2660](https://github.com/zowe/vscode-extension-for-zowe/issues/2660)
-- Added support to view the Encoding history for MVS and Dataset in the History View [#2813](https://github.com/zowe/zowe-explorer-vscode/issues/2813)
+- Added support to view the Encoding history for MVS and Dataset in the History View [#2776](https://github.com/zowe/zowe-explorer-vscode/pull/2776)
 - Updated MVS view progress indicator for entering a filter search. [#2181](https://github.com/zowe/zowe-explorer-vscode/issues/2181)
+- Added error handling for when the default credential manager is unable to intialize [#2811](https://github.com/zowe/zowe-explorer-vscode/issues/2811)
 
 ### Bug fixes
 
 - To fix clicking submitted job hyperlink throws error [#2813](https://github.com/zowe/vscode-extension-for-zowe/issues/2813)
 
-## `2.15.2`
+## `2.15.3`
 
-### New features and enhancements
+- Fixed error that could occur when listing data set members that contain control characters in the name [#2807](https://github.com/zowe/zowe-explorer-vscode/pull/2807)
+
+## `2.15.2`
 
 ### Bug fixes
 
@@ -25,8 +28,6 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed issue where saving changes to favorited data set or USS file could fail. [#2801](https://github.com/zowe/vscode-extension-for-zowe/pull/2801)
 
 ## `2.15.1`
-
-### New features and enhancements
 
 ### Bug fixes
 
