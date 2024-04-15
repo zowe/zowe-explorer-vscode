@@ -201,6 +201,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                         contextOverride: globals.DS_FILE_ERROR_CONTEXT,
                         profile: this.getProfile(),
                     });
+                    temp.command = { command: "zowe.placeholderCommand", title: "" };
                     temp.errorDetails = item.error; // Save imperative error to avoid extra z/OS requests
                     elementChildren[temp.label.toString()] = temp;
                     // Creates a ZoweDatasetNode for a migrated dataset
@@ -246,28 +247,45 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     elementChildren[temp.label.toString()] = temp;
                 } else {
                     // Creates a ZoweDatasetNode for a PDS member
-                    const memberInvalid = item.member?.includes("\ufffd");
                     const cachedEncoding = this.getSessionNode().encodingMap[`${item.dsname as string}(${item.member as string})`];
                     const temp = new ZoweDatasetNode({
                         label: item.member,
                         collapsibleState: vscode.TreeItemCollapsibleState.None,
                         parentNode: this,
-                        contextOverride: memberInvalid ? globals.DS_FILE_ERROR_CONTEXT : undefined,
                         encoding: cachedEncoding,
                         profile: this.getProfile(),
                     });
-                    if (!memberInvalid) {
-                        temp.command = { command: "zowe.ds.ZoweNode.openPS", title: "", arguments: [temp] };
-                    } else {
-                        temp.errorDetails = new zowe.imperative.ImperativeError({
-                            msg: localize("getChildren.invalidMember", "Cannot access member with control characters in the name: {0}", item.member),
-                        });
-                    }
+                    temp.command = { command: "zowe.ds.ZoweNode.openPS", title: "", arguments: [temp] };
 
                     // get user and last modified date for sorting, if available
                     temp.updateStats(item);
                     elementChildren[temp.label.toString()] = temp;
                 }
+            }
+
+            if (
+                response.apiResponse.items &&
+                response.apiResponse.returnedRows &&
+                response.apiResponse.items.length < response.apiResponse.returnedRows
+            ) {
+                const invalidMemberCount = response.apiResponse.returnedRows - response.apiResponse.items.length;
+                const temp = new ZoweDatasetNode({
+                    label: `${invalidMemberCount} members with errors`,
+                    collapsibleState: vscode.TreeItemCollapsibleState.None,
+                    parentNode: this,
+                    contextOverride: globals.DS_FILE_ERROR_MEMBER_CONTEXT,
+                    profile: this.getProfile(),
+                });
+                temp.command = { command: "zowe.placeholderCommand", title: "" };
+                temp.errorDetails = new zowe.imperative.ImperativeError({
+                    msg: localize(
+                        "getChildren.invalidMember",
+                        "{0} members failed to load due to invalid name errors for {1}",
+                        invalidMemberCount,
+                        this.label as string
+                    ),
+                });
+                elementChildren[temp.label.toString()] = temp;
             }
         }
 
@@ -316,7 +334,10 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         return (a, b): number => {
             const aParent = a.getParent();
             if (aParent == null || !contextually.isPds(aParent)) {
-                return a.compareByName(b);
+                return (a.label as string) < (b.label as string) ? -1 : 1;
+            } else if (a.contextValue === globals.DS_FILE_ERROR_MEMBER_CONTEXT || b.contextValue === globals.DS_FILE_ERROR_MEMBER_CONTEXT) {
+                // Keep invalid member node at bottom ("N members with errors")
+                return a.contextValue === globals.DS_FILE_ERROR_MEMBER_CONTEXT ? 1 : -1;
             }
 
             const sortDirection = sort.direction == SortDirection.Ascending ? 1 : -1;
