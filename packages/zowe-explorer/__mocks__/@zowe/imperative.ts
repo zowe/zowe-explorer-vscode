@@ -161,6 +161,15 @@ export interface IConfigOpts {
     vault?: string;
 }
 
+export interface IImperativeErrorParms {
+    logger?: Logger;
+    tag?: string;
+}
+
+export interface IProfInfoErrParms extends IImperativeErrorParms {
+    itemsInError?: string[];
+}
+
 export interface ICredentialManagerNameMap {
     credMgrDisplayName: string;
     credMgrPluginName?: string;
@@ -267,6 +276,21 @@ export class ImperativeError extends Error {
     }
     public get message() {
         return this.msg;
+    }
+}
+
+export class ProfInfoErr extends ImperativeError {
+    public static readonly LOAD_CRED_MGR_FAILED: string = "LoadCredMgrFailed";
+    constructor(impErrDetails: IImperativeError, profErrParms?: IProfInfoErrParms) {
+        super(impErrDetails);
+        this.name = "ProfInfoErr";
+        if (profErrParms) {
+            this.mItemsInError = [...(profErrParms.itemsInError ?? "")];
+        }
+    }
+    private mItemsInError: string[] = [];
+    public get itemsInError(): string[] {
+        return this.mItemsInError;
     }
 }
 
