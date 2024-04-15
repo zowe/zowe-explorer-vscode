@@ -912,10 +912,10 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                 node = new ZoweUSSNode({
                     label,
                     collapsibleState: vscode.TreeItemCollapsibleState.None,
+                    contextOverride: globals.USS_SESSION_CONTEXT + globals.FAV_SUFFIX,
                     parentNode,
                     profile,
                 });
-                node.contextValue = globals.USS_SESSION_CONTEXT;
                 node.fullPath = label;
                 node.label = node.tooltip = label;
                 // add a command to execute the search
