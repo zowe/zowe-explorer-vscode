@@ -820,6 +820,11 @@
         "command": "zowe.uss.openWithEncoding",
         "title": "%openWithEncoding%",
         "category": "Zowe Explorer"
+      },
+      {
+        "command": "zowe.placeholderCommand",
+        "title": "%zowe.placeholderCommand%",
+        "enablement": "false"
       }
     ],
     "menus": {

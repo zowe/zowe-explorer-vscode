@@ -260,6 +260,7 @@ async function createGlobalMocks() {
             "zowe.jobs.deleteProfile",
             "zowe.issueTsoCmd",
             "zowe.issueMvsCmd",
+            "zowe.placeholderCommand",
         ],
     };
 

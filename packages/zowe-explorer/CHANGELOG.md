@@ -16,9 +16,11 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 - To fix clicking submitted job hyperlink throws error [#2813](https://github.com/zowe/vscode-extension-for-zowe/issues/2813)
 
-## `2.15.2`
+## `2.15.3`
 
-### New features and enhancements
+- Fixed error that could occur when listing data set members that contain control characters in the name [#2807](https://github.com/zowe/zowe-explorer-vscode/pull/2807)
+
+## `2.15.2`
 
 ### Bug fixes
 
@@ -26,8 +28,6 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed issue where saving changes to favorited data set or USS file could fail. [#2801](https://github.com/zowe/vscode-extension-for-zowe/pull/2801)
 
 ## `2.15.1`
-
-### New features and enhancements
 
 ### Bug fixes
 

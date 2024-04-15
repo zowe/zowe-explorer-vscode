@@ -82,6 +82,11 @@ const config = {
                     },
                 ],
             },
+            {
+                test: /\.mjs$/,
+                include: /markdown-it/,
+                type: "javascript/auto",
+            },
         ],
     },
     plugins: [new webpack.BannerPlugin(fs.readFileSync("../../scripts/LICENSE_HEADER", "utf-8"))],
