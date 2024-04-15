@@ -95,64 +95,41 @@ export class FtpUssApi extends AbstractFtpApi implements MainframeInteraction.IU
         }
     }
 
+    /**
+     * Uploads a USS file from the given buffer.
+     * @param buffer The buffer containing the contents of the USS file
+     * @param filePath The path for the USS file
+     * @param options Any options for the upload
+     *
+     * @returns A file response with the results of the upload operation.
+     */
     public async uploadFromBuffer(buffer: Buffer, filePath: string, options?: zosfiles.IUploadOptions): Promise<zosfiles.IZosFilesResponse> {
-        const tempFile = tmp.fileSync();
-        if (options?.binary) {
-            fs.writeSync(tempFile.fd, buffer);
-        } else {
-            const text = imperative.IO.processNewlines(buffer.toString());
-            fs.writeSync(tempFile.fd, text);
-        }
-
-        const result = await this.putContent(tempFile.name, filePath, options);
+        const result = await this.putContent(buffer, filePath, options);
         return result;
     }
 
     /**
      * Upload a file (located at the input path) to the destination path.
-     * @param inputFilePath The input file path
+     *
+     * @param input The input file path or buffer to upload
      * @param ussFilePath The destination file path on USS
      * @param options Any options for the upload
      *
      * @returns A file response containing the results of the operation.
      */
-    public putContent(inputFilePath: string, ussFilePath: string, options?: zosfiles.IUploadOptions): Promise<zosfiles.IZosFilesResponse> {
-        return this.putContents(inputFilePath, ussFilePath, options?.binary, options?.localEncoding, options?.etag, options?.returnEtag);
-    }
-
-    /**
-     * Upload a file (located at the input path) to the destination path.
-     *
-     * @deprecated in favor of `putContent`
-     * @param input The input file path or buffer to upload
-     * @param ussFilePath The destination file path on USS
-     * @param binary Whether the contents are binary
-     * @param localEncoding The local encoding for the file
-     * @param etag The e-tag associated with the file on the mainframe (optional)
-     * @param returnEtag Whether to return the e-tag after uploading the file
-     *
-     * @returns A file response containing the results of the operation.
-     */
-    public async putContents(
-        input: string | Buffer,
-        ussFilePath: string,
-        binary?: boolean,
-        localEncoding?: string,
-        etag?: string,
-        returnEtag?: boolean
-    ): Promise<zosfiles.IZosFilesResponse> {
+    public async putContent(input: string | Buffer, ussFilePath: string, options?: zosfiles.IUploadOptions): Promise<zosfiles.IZosFilesResponse> {
         const inputIsBuffer = input instanceof Buffer;
         const transferOptions = {
             content: inputIsBuffer ? input : undefined,
             localFile: inputIsBuffer ? undefined : input,
-            transferType: binary ? TRANSFER_TYPE_BINARY : TRANSFER_TYPE_ASCII,
+            transferType: options?.binary ? TRANSFER_TYPE_BINARY : TRANSFER_TYPE_ASCII,
         };
         const result = this.getDefaultResponse();
         // Save-Save with FTP requires loading the file first
         // (moved this block above connection request so only one connection is active at a time)
-        if (returnEtag && etag) {
+        if (options?.returnEtag && options.etag) {
             const contentsTag = await this.getContentsTag(ussFilePath, inputIsBuffer);
-            if (contentsTag && contentsTag !== etag) {
+            if (contentsTag && contentsTag !== options.etag) {
                 throw new Error("Rest API failure with HTTP(S) status 412 Save conflict.");
             }
         }
@@ -165,7 +142,7 @@ export class FtpUssApi extends AbstractFtpApi implements MainframeInteraction.IU
             await UssUtils.uploadFile(connection, ussFilePath, transferOptions);
 
             result.success = true;
-            if (returnEtag) {
+            if (options?.returnEtag) {
                 // release this connection instance because a new one will be made with getContentsTag
                 this.releaseConnection(connection);
                 connection = null;

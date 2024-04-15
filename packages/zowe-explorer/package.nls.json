@@ -2,6 +2,7 @@
   "displayName": "Zowe Explorer",
   "description": "VS Code extension, powered by Zowe CLI, that streamlines interaction with mainframe data sets, USS files, and jobs",
   "viewsContainers.activitybar": "Zowe Explorer",
+  "zowe.placeholderCommand": "Placeholder",
   "zowe.promptCredentials": "Update Credentials",
   "zowe.profileManagement": "Manage Profile",
   "zowe.extRefresh": "Refresh Zowe Explorer",
@@ -168,6 +169,5 @@
   "compareWithSelected": "Compare with Selected",
   "compareWithSelectedReadOnly": "Compare with Selected (Read-Only)",
   "compareFileStarted": "A file has been chosen for compare",
-  "openWithEncoding": "Open with Encoding",
-  "zowe.placeholderCommand": "Placeholder"
+  "openWithEncoding": "Open with Encoding"
 }
