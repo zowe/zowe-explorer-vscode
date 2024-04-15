@@ -841,14 +841,10 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
         const favProfileNode = new ZoweUSSNode({
             label: profileName,
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            contextOverride: globals.FAV_PROFILE_CONTEXT,
             parentNode: this.mFavoriteSession,
             profile: Profiles.getInstance().loadNamedProfile(profileName),
         });
-        favProfileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
-        const icon = getIconByNode(favProfileNode);
-        if (icon) {
-            favProfileNode.iconPath = icon.path;
-        }
         this.mFavorites.push(favProfileNode);
         return favProfileNode;
     }

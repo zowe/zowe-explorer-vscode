@@ -3101,10 +3101,10 @@ describe("Dataset Tree Unit Tests - Function createProfileNodeForFavs", () => {
         const expectedFavProfileNode = new ZoweDatasetNode({
             label: "testProfile",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            contextOverride: globals.FAV_PROFILE_CONTEXT,
             parentNode: testTree.mFavoriteSession,
             profile: globalMocks.testProfileLoaded,
         });
-        expectedFavProfileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
         const createDirMock = jest.spyOn(DatasetFSProvider.instance, "createDirectory").mockImplementation();
         const existsMock = jest.spyOn(DatasetFSProvider.instance, "exists").mockReturnValueOnce(false);
 

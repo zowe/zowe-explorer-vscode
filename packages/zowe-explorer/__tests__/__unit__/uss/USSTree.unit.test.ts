@@ -286,13 +286,11 @@ describe("USSTree Unit Tests - Function createProfileNodeForFavs", () => {
         const expectedFavProfileNode = new ZoweUSSNode({
             label: "testProfile",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            contextOverride: globals.FAV_PROFILE_CONTEXT,
             parentNode: globalMocks.testTree.mFavoriteSession,
             profile: globalMocks.testProfile,
         });
-        expectedFavProfileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
-
         const createdFavProfileNode = await globalMocks.testTree.createProfileNodeForFavs("testProfile");
-
         expect(createdFavProfileNode).toEqual(expectedFavProfileNode);
     });
     it("Tests that profile grouping node is created correctly if icon is defined", async () => {

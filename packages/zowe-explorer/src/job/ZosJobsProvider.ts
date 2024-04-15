@@ -328,16 +328,12 @@ export class ZosJobsProvider extends ZoweTreeProvider<IZoweJobTreeNode> implemen
         const favProfileNode = new ZoweJobNode({
             label: profileName,
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            contextOverride: globals.FAV_PROFILE_CONTEXT,
             parentNode: this.mFavoriteSession,
             profile,
         });
-        favProfileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
         if (!JobFSProvider.instance.exists(favProfileNode.resourceUri)) {
             JobFSProvider.instance.createDirectory(favProfileNode.resourceUri);
-        }
-        const icon = getIconByNode(favProfileNode);
-        if (icon) {
-            favProfileNode.iconPath = icon.path;
         }
         this.mFavorites.push(favProfileNode);
         return favProfileNode;
