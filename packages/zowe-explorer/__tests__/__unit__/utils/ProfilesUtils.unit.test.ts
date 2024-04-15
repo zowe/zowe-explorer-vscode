@@ -417,7 +417,7 @@ describe("ProfilesUtils unit tests", () => {
                 configurable: true,
             });
             jest.spyOn(ZoweVsCodeExtension as any, "promptUserPass").mockResolvedValue([]);
-            await profUtils.ProfilesUtils.promptCredentials(null);
+            await profUtils.ProfilesUtils.promptCredentials(null as any);
             expect(getProfileInfoSpy).toHaveBeenCalled();
         });
 
@@ -438,7 +438,7 @@ describe("ProfilesUtils unit tests", () => {
                 configurable: true,
             });
             jest.spyOn(ZoweVsCodeExtension as any, "promptUserPass").mockResolvedValue([]);
-            await profUtils.ProfilesUtils.promptCredentials(null);
+            await profUtils.ProfilesUtils.promptCredentials(null as any);
             expect(Gui.showMessage).toHaveBeenCalledWith("Operation Cancelled");
         });
 
@@ -463,7 +463,7 @@ describe("ProfilesUtils unit tests", () => {
                 configurable: true,
             });
             jest.spyOn(Profiles.prototype, "promptCredentials").mockResolvedValue(["some_user", "some_pass", "c29tZV9iYXNlNjRfc3RyaW5n"]);
-            await profUtils.ProfilesUtils.promptCredentials(null);
+            await profUtils.ProfilesUtils.promptCredentials(null as any);
             expect(Gui.showMessage).toHaveBeenCalledWith("Credentials for testConfig were successfully updated");
         });
 
@@ -491,7 +491,7 @@ describe("ProfilesUtils unit tests", () => {
                 value: jest.fn(),
                 configurable: true,
             });
-            await profUtils.ProfilesUtils.promptCredentials(null);
+            await profUtils.ProfilesUtils.promptCredentials(null as any);
             expect(mockProfileInstance.getProfileInfo).toHaveBeenCalled();
             expect(Gui.showMessage).toHaveBeenCalledWith('"Update Credentials" operation not supported when "autoStore" is false');
         });
@@ -697,62 +697,117 @@ describe("ProfilesUtils unit tests", () => {
         });
     });
 
-    describe("getProfilesInfo", () => {
-        afterEach(() => {
-            jest.clearAllMocks();
-            jest.resetAllMocks();
-        });
-
-        it("should prompt and install for missing extension of custom credential manager if override defined", async () => {
-            const isVSCodeCredentialPluginInstalledSpy = jest.spyOn(profUtils.ProfilesUtils, "isVSCodeCredentialPluginInstalled");
-
-            jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(true);
-            jest.spyOn(profUtils.ProfilesUtils as any, "fetchRegisteredPlugins").mockImplementation();
-            jest.spyOn(profUtils.ProfilesUtils, "getCredentialManagerOverride").mockReturnValue("test");
-            jest.spyOn(profUtils.ProfilesUtils, "isVSCodeCredentialPluginInstalled").mockReturnValueOnce(false);
-            jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(true);
-            jest.spyOn(profUtils.ProfilesUtils, "getCredentialManagerMap").mockReturnValueOnce({
-                credMgrDisplayName: "test",
-                credMgrPluginName: "test",
-                credMgrZEName: "test",
-            });
-            jest.spyOn((profUtils as any).ProfilesUtils, "setupCustomCredentialManager").mockReturnValueOnce({});
-            await expect(profUtils.ProfilesUtils.getProfileInfo(false)).resolves.toEqual({});
-            expect(isVSCodeCredentialPluginInstalledSpy).toBeCalledTimes(1);
-        });
-
-        it("should retrieve the custom credential manager", async () => {
-            jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(true);
-            jest.spyOn(profUtils.ProfilesUtils as any, "fetchRegisteredPlugins").mockImplementation();
-            jest.spyOn(profUtils.ProfilesUtils, "getCredentialManagerOverride").mockReturnValue("test");
-            jest.spyOn(profUtils.ProfilesUtils, "isVSCodeCredentialPluginInstalled").mockReturnValueOnce(true);
-            jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(true);
-            jest.spyOn(profUtils.ProfilesUtils, "getCredentialManagerMap").mockReturnValueOnce({
-                credMgrDisplayName: "test",
-                credMgrPluginName: "test",
-                credMgrZEName: "test",
-            });
-            jest.spyOn((profUtils as any).ProfilesUtils, "setupCustomCredentialManager").mockReturnValueOnce({});
-            await expect(profUtils.ProfilesUtils.getProfileInfo(false)).resolves.toEqual({});
-        });
-
-        it("should retrieve the default credential manager if no custom credential manager is found", async () => {
-            jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(false);
-            jest.spyOn(profUtils.ProfilesUtils, "getCredentialManagerOverride").mockReturnValue("@zowe/cli");
-            jest.spyOn(profUtils.ProfilesUtils, "isVSCodeCredentialPluginInstalled").mockReturnValueOnce(false);
-            jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(true);
-            jest.spyOn(profUtils.ProfilesUtils, "getCredentialManagerMap").mockReturnValueOnce(undefined);
-            jest.spyOn((profUtils as any).ProfilesUtils, "setupDefaultCredentialManager").mockReturnValueOnce({});
-            await expect(profUtils.ProfilesUtils.getProfileInfo(false)).resolves.toEqual({});
-        });
-    });
-
     describe("isUsingTokenAuth", () => {
         it("should check the profile in use if using token based auth instead of the base profile", async () => {
             jest.spyOn(Profiles.getInstance(), "getDefaultProfile").mockReturnValueOnce({} as any);
             jest.spyOn(Profiles.getInstance(), "getLoadedProfConfig").mockResolvedValue({ type: "test" } as any);
             jest.spyOn(Profiles.getInstance(), "getSecurePropsForProfile").mockResolvedValue([]);
             await expect(profUtils.ProfilesUtils.isUsingTokenAuth("test")).resolves.toEqual(false);
+        });
+    });
+
+    describe("getProfilesInfo", () => {
+        let isVSCodeCredentialPluginInstalledSpy: jest.SpyInstance;
+        let getDirectValueSpy: jest.SpyInstance;
+        let fetchRegisteredPluginsSpy: jest.SpyInstance;
+        let getCredentialManagerOverrideSpy: jest.SpyInstance;
+        let getCredentialManagerMapSpy: jest.SpyInstance;
+        let setupCustomCredentialManagerSpy: jest.SpyInstance;
+        let readProfilesFromDiskSpy: jest.SpyInstance;
+        let promptAndDisableCredentialManagementSpy: jest.SpyInstance;
+
+        beforeEach(() => {
+            jest.clearAllMocks();
+            jest.resetAllMocks();
+            jest.restoreAllMocks();
+            getDirectValueSpy = jest.spyOn(SettingsConfig, "getDirectValue");
+            isVSCodeCredentialPluginInstalledSpy = jest.spyOn(profUtils.ProfilesUtils, "isVSCodeCredentialPluginInstalled");
+            fetchRegisteredPluginsSpy = jest.spyOn(profUtils.ProfilesUtils as any, "fetchRegisteredPlugins");
+            getCredentialManagerOverrideSpy = jest.spyOn(profUtils.ProfilesUtils, "getCredentialManagerOverride");
+            getCredentialManagerMapSpy = jest.spyOn(profUtils.ProfilesUtils, "getCredentialManagerMap");
+            setupCustomCredentialManagerSpy = jest.spyOn((profUtils as any).ProfilesUtils, "setupCustomCredentialManager");
+            readProfilesFromDiskSpy = jest.spyOn(zowe.imperative.ProfileInfo.prototype, "readProfilesFromDisk");
+            promptAndDisableCredentialManagementSpy = jest.spyOn(profUtils.ProfilesUtils, "promptAndDisableCredentialManagement");
+        });
+
+        it("should prompt and install for missing extension of custom credential manager if override defined", async () => {
+            getDirectValueSpy.mockReturnValueOnce(true);
+            fetchRegisteredPluginsSpy.mockImplementation();
+            getCredentialManagerOverrideSpy.mockReturnValue("test");
+            isVSCodeCredentialPluginInstalledSpy.mockReturnValueOnce(false);
+            getDirectValueSpy.mockReturnValueOnce(true);
+            getCredentialManagerMapSpy.mockReturnValueOnce({
+                credMgrDisplayName: "test",
+                credMgrPluginName: "test",
+                credMgrZEName: "test",
+            });
+            setupCustomCredentialManagerSpy.mockReturnValueOnce({});
+            await expect(profUtils.ProfilesUtils.getProfileInfo(false)).resolves.toEqual({});
+            expect(isVSCodeCredentialPluginInstalledSpy).toBeCalledTimes(1);
+        });
+
+        it("should retrieve the custom credential manager", async () => {
+            getDirectValueSpy.mockReturnValueOnce(true);
+            fetchRegisteredPluginsSpy.mockImplementation();
+            getCredentialManagerOverrideSpy.mockReturnValue("test");
+            isVSCodeCredentialPluginInstalledSpy.mockReturnValueOnce(true);
+            getDirectValueSpy.mockReturnValueOnce(true);
+            getCredentialManagerMapSpy.mockReturnValueOnce({
+                credMgrDisplayName: "test",
+                credMgrPluginName: "test",
+                credMgrZEName: "test",
+            });
+            setupCustomCredentialManagerSpy.mockReturnValueOnce({});
+            await expect(profUtils.ProfilesUtils.getProfileInfo(false)).resolves.toEqual({});
+        });
+
+        it("should retrieve the default credential manager if no custom credential manager is found", async () => {
+            getDirectValueSpy.mockReturnValueOnce(false);
+            getCredentialManagerOverrideSpy.mockReturnValue("@zowe/cli");
+            isVSCodeCredentialPluginInstalledSpy.mockReturnValueOnce(false);
+            getDirectValueSpy.mockReturnValueOnce(true);
+            getCredentialManagerMapSpy.mockReturnValueOnce(undefined);
+            setupCustomCredentialManagerSpy.mockReturnValueOnce({});
+            await expect(profUtils.ProfilesUtils.getProfileInfo(false)).resolves.toEqual({});
+        });
+
+        it("should retrieve the default credential manager and prompt to disable credential management if environment not supported", async () => {
+            const expectedErrMsg =
+                // eslint-disable-next-line max-len
+                "Failed to load credential manager. This may be related to Zowe Explorer being unable to use the default credential manager in a browser based environment.";
+            getDirectValueSpy.mockReturnValueOnce(false);
+            getCredentialManagerOverrideSpy.mockReturnValue("@zowe/cli");
+            isVSCodeCredentialPluginInstalledSpy.mockReturnValueOnce(false);
+            getDirectValueSpy.mockReturnValueOnce(true);
+            getCredentialManagerMapSpy.mockReturnValueOnce(undefined);
+            setupCustomCredentialManagerSpy.mockReturnValueOnce({});
+            readProfilesFromDiskSpy.mockImplementation(() => {
+                const err = new zowe.imperative.ProfInfoErr({
+                    msg: expectedErrMsg,
+                });
+                Object.defineProperty(err, "errorCode", {
+                    value: zowe.imperative.ProfInfoErr.LOAD_CRED_MGR_FAILED,
+                    configurable: true,
+                });
+                throw err;
+            });
+            await expect(profUtils.ProfilesUtils.getProfileInfo(false)).rejects.toThrow(expectedErrMsg);
+            expect(promptAndDisableCredentialManagementSpy).toHaveBeenCalledTimes(1);
+        });
+
+        it("should throw new error if error is not an instance of ProfInfoErr", async () => {
+            const expectedErrorMsg = "Another error unrelated to credential management";
+            getDirectValueSpy.mockReturnValueOnce(false);
+            getCredentialManagerOverrideSpy.mockReturnValue("@zowe/cli");
+            isVSCodeCredentialPluginInstalledSpy.mockReturnValueOnce(false);
+            getDirectValueSpy.mockReturnValueOnce(true);
+            getCredentialManagerMapSpy.mockReturnValueOnce(undefined);
+            setupCustomCredentialManagerSpy.mockReturnValueOnce({});
+            readProfilesFromDiskSpy.mockImplementation(() => {
+                throw new Error(expectedErrorMsg);
+            });
+            await expect(profUtils.ProfilesUtils.getProfileInfo(false)).rejects.toThrow(expectedErrorMsg);
+            expect(promptAndDisableCredentialManagementSpy).toHaveBeenCalledTimes(0);
         });
     });
 
@@ -953,6 +1008,43 @@ describe("ProfilesUtils unit tests", () => {
             ).resolves.not.toThrow();
             expect(zoweLoggerTraceSpy).toBeCalledTimes(1);
             expect(reloadWindowSpy).toBeCalledWith("workbench.action.reloadWindow");
+        });
+    });
+
+    describe("promptAndDisableCredentialManagement", () => {
+        let setDirectValueSpy: jest.SpyInstance;
+        let warningMessageSpy: jest.SpyInstance;
+        let executeCommandSpy: jest.SpyInstance;
+
+        beforeEach(() => {
+            jest.clearAllMocks();
+            jest.resetModules();
+            jest.restoreAllMocks();
+            setDirectValueSpy = jest.spyOn(SettingsConfig, "setDirectValue");
+            warningMessageSpy = jest.spyOn(Gui, "warningMessage");
+            executeCommandSpy = jest.spyOn(vscode.commands, "executeCommand");
+        });
+
+        it("should prompt whether to disable credential management, and disable globally if 'Yes, globally' selected", async () => {
+            warningMessageSpy.mockResolvedValue("Yes, globally");
+            await expect(profUtils.ProfilesUtils.promptAndDisableCredentialManagement()).resolves.not.toThrow();
+            expect(setDirectValueSpy).toHaveBeenCalledWith(globals.SETTINGS_SECURE_CREDENTIALS_ENABLED, false, vscode.ConfigurationTarget.Global);
+            expect(executeCommandSpy).toHaveBeenCalledWith("workbench.action.reloadWindow");
+        });
+
+        it("should prompt whether to disable credential management, and disable on workspace if 'Only for this workspace' selected", async () => {
+            warningMessageSpy.mockResolvedValue("Only for this workspace");
+            await expect(profUtils.ProfilesUtils.promptAndDisableCredentialManagement()).resolves.not.toThrow();
+            expect(setDirectValueSpy).toHaveBeenCalledWith(globals.SETTINGS_SECURE_CREDENTIALS_ENABLED, false, vscode.ConfigurationTarget.Workspace);
+            expect(executeCommandSpy).toHaveBeenCalledWith("workbench.action.reloadWindow");
+        });
+
+        it("should prompt whether to disable credential management, and throw error if 'No'", async () => {
+            warningMessageSpy.mockResolvedValue("No");
+            await expect(profUtils.ProfilesUtils.promptAndDisableCredentialManagement()).rejects.toThrowError(
+                // eslint-disable-next-line max-len
+                "Failed to load credential manager. This may be related to Zowe Explorer being unable to use the default credential manager in a browser based environment."
+            );
         });
     });
 });
