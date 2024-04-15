@@ -574,9 +574,8 @@ describe("USS Action Unit Tests - Functions uploadDialog & uploadFile", () => {
         globalMocks.openTextDocument.mockResolvedValue(blockMocks.testDoc);
         const fileUri = { fsPath: "/tmp/foo.txt" };
         globalMocks.showOpenDialog.mockReturnValue([fileUri]);
-        globalMocks.isBinaryFileSync.mockReturnValueOnce(false);
 
-        await ussNodeActions.uploadDialog(blockMocks.ussNode, blockMocks.testUSSTree);
+        await ussNodeActions.uploadDialog(blockMocks.ussNode, blockMocks.testUSSTree, false);
         expect(globalMocks.showOpenDialog).toBeCalled();
         expect(globalMocks.openTextDocument).toBeCalled();
         expect(blockMocks.testUSSTree.refresh).toBeCalled();
@@ -589,9 +588,8 @@ describe("USS Action Unit Tests - Functions uploadDialog & uploadFile", () => {
         globalMocks.openTextDocument.mockResolvedValue(blockMocks.testDoc);
         const fileUri = { fsPath: "/tmp/foo.zip" };
         globalMocks.showOpenDialog.mockReturnValue([fileUri]);
-        globalMocks.isBinaryFileSync.mockReturnValueOnce(true);
 
-        await ussNodeActions.uploadDialog(blockMocks.ussNode, blockMocks.testUSSTree);
+        await ussNodeActions.uploadDialog(blockMocks.ussNode, blockMocks.testUSSTree, true);
         expect(globalMocks.showOpenDialog).toBeCalled();
         expect(blockMocks.testUSSTree.refresh).toBeCalled();
     });
@@ -610,7 +608,7 @@ describe("USS Action Unit Tests - Functions uploadDialog & uploadFile", () => {
         globalMocks.isBinaryFileSync.mockReturnValueOnce(false);
 
         try {
-            await ussNodeActions.uploadDialog(blockMocks.ussNode, blockMocks.testUSSTree);
+            await ussNodeActions.uploadDialog(blockMocks.ussNode, blockMocks.testUSSTree, false);
         } catch (err) {
             // prevent exception from failing test
         }

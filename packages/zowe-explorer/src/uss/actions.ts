@@ -133,7 +133,7 @@ export function deleteFromDisk(node: IZoweUSSTreeNode, filePath: string): void {
     }
 }
 
-export async function uploadDialog(node: IZoweUSSTreeNode, ussFileProvider: IZoweTree<IZoweUSSTreeNode>): Promise<void> {
+export async function uploadDialog(node: IZoweUSSTreeNode, ussFileProvider: IZoweTree<IZoweUSSTreeNode>, isBinary?: boolean): Promise<void> {
     ZoweLogger.trace("uss.actions.uploadDialog called.");
     const fileOpenOptions = {
         canSelectFiles: true,
@@ -146,9 +146,8 @@ export async function uploadDialog(node: IZoweUSSTreeNode, ussFileProvider: IZow
 
     await Promise.all(
         value.map(async (item) => {
-            const isBinary = isBinaryFileSync(item.fsPath);
-
-            if (isBinary) {
+            const Binary = isBinaryFileSync(item.fsPath);
+            if (isBinary || Binary) {
                 await uploadBinaryFile(node, item.fsPath);
             } else {
                 const doc = await vscode.workspace.openTextDocument(item);
