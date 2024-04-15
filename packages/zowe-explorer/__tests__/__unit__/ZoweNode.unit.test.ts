@@ -236,39 +236,6 @@ describe("Unit Tests (Jest)", () => {
     });
 
     /*************************************************************************************************************
-     * Run with a favorite
-     *************************************************************************************************************/
-    // it("Testing Run with a favorite", async () => {
-    //     Object.defineProperty(Profiles, "getInstance", {
-    //         value: jest.fn(() => {
-    //             return {
-    //                 loadNamedProfile: jest.fn().mockReturnValue(profileOne),
-    //             };
-    //         }),
-    //     });
-    //     const sessionInfo = {
-    //         label: "sestest",
-    //         encodingMap: {},
-    //         sort: { method: Sorting.DatasetSortOpts.Name, direction: Sorting.SortDirection.Ascending },
-    //     };
-    //     const sessionNode = {
-    //         ...sessionInfo,
-    //         getSessionNode: jest.fn().mockReturnValue(sessionInfo),
-    //     } as unknown as ZoweDatasetNode;
-    //     // Creating a rootNode
-    //     const pds = new ZoweDatasetNode({
-    //         label: "[root]: something",
-    //         collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
-    //         session,
-    //         parentNode: sessionNode,
-    //         profile: profileOne,
-    //     });
-    //     pds.dirty = true;
-    //     pds.contextValue = globals.DS_PDS_CONTEXT;
-    //     expect((await pds.getChildren())[0].label).toEqual("BRTVS99");
-    // });
-
-    /*************************************************************************************************************
      * Multiple member names returned
      *************************************************************************************************************/
     it("Testing what happens when response has multiple members", async () => {
@@ -319,32 +286,4 @@ describe("Unit Tests (Jest)", () => {
         getSessionNodeSpy.mockRestore();
         getStatsMock.mockRestore();
     });
-
-    /*************************************************************************************************************
-     * No values returned
-     *************************************************************************************************************/
-    // it("Testing what happens when response has no members", async () => {
-    //     Object.defineProperty(Profiles, "getInstance", {
-    //         value: jest.fn(() => {
-    //             return {
-    //                 loadNamedProfile: jest.fn().mockReturnValue(profileOne),
-    //             };
-    //         }),
-    //     });
-    //     // Creating a session node
-    //     const sesnode = new ZoweDatasetNode({
-    //         label: "[root session]",
-    //         collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
-    //         session,
-    //         profile: profileOne,
-    //         contextOverride: globals.DS_SESSION_CONTEXT,
-    //     });
-    //     sesnode.dirty = true;
-    //     const dataSetsMatchingPattern = jest.fn();
-    //     const mvsApiMock = jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValueOnce({
-    //         dataSetsMatchingPattern,
-    //     } as any);
-    //     expect((await sesnode.getChildren())[0].label).toEqual("No data sets found");
-    //     mvsApiMock.mockRestore();
-    // });
 });
