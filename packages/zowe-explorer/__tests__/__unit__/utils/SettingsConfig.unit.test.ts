@@ -21,6 +21,7 @@ beforeEach(() => {
 afterEach(() => {
     jest.clearAllMocks();
     jest.resetAllMocks();
+    jest.restoreAllMocks();
 });
 
 describe("SettingsConfig Unit Tests - function isConfigSettingSetByUser", () => {
