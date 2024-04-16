@@ -15,6 +15,14 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 ### Bug fixes
 
 - Fixed vNext-only issue where users are not able to create data sets. [#2783](https://github.com/zowe/vscode-extension-for-zowe/pull/2783).
+- Omitted the following Zowe Explorer commands from the Command Palette that do not execute properly when run as a standalone command:
+  - `Zowe Explorer: Cancel job`
+  - `Zowe Explorer: Filter jobs`
+  - `Zowe Explorer: Filter PDS members`
+  - `Zowe Explorer: Sort jobs`
+  - `Zowe Explorer: Sort PDS members`
+  - `Zowe Explorer: Start Polling`
+  - `Zowe Explorer: Stop Polling`
 
 ## `3.0.0-next.202404242037`
 
