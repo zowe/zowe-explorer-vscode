@@ -439,6 +439,7 @@ describe("Dataset Tree Unit Tests - Function getChildren", () => {
         });
         const sampleChildren: ZoweDatasetNode[] = [nodeOk, nodeImpError, nodeMigrated];
         sampleChildren[0].command = { command: "zowe.ds.ZoweNode.openPS", title: "", arguments: [sampleChildren[0]] };
+        sampleChildren[1].command = { command: "zowe.placeholderCommand", title: "" };
 
         const children = await testTree.getChildren(testTree.mSessionNodes[1]);
         expect(children.map((c) => c.label)).toEqual(sampleChildren.map((c) => c.label));
@@ -1748,7 +1749,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
 
         expect(mocked(Gui.showMessage)).toBeCalledWith("You must enter a pattern.");
     });
-    it("Checking usage of existing filter", async () => {
+    it("Checking usage of existing filter from filterPrompt", async () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
 
@@ -1765,7 +1766,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
         testTree.addSearchHistory("test");
 
-        await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
+        await testTree.filterPrompt(testTree.mSessionNodes[1]);
 
         expect(testTree.mSessionNodes[1].pattern).toEqual("HLQ.PROD1.STUFF");
     });
