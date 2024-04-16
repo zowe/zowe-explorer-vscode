@@ -94,7 +94,7 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
                 method: Sorting.JobSortOpts.Id,
                 direction: Sorting.SortDirection.Ascending,
             };
-            if (this.getParent()?.label !== vscode.l10n.t("Favorites")) {
+            if (this.getParent()?.label !== vscode.l10n.t("Favorites") && !contextually.isFavorite(this)) {
                 this.id = this.label as string;
             }
         } else if (this.job != null) {

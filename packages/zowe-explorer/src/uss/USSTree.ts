@@ -749,10 +749,8 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
         }
         await this.checkCurrentProfile(node);
         if (Profiles.getInstance().validProfile !== Validation.ValidationType.INVALID) {
-            let sessionNode;
             let remotepath: string;
             if (contextually.isSessionNotFav(node)) {
-                sessionNode = node;
                 if (this.mHistory.getSearchHistory().length > 0) {
                     const createPick = new FilterDescriptor(USSTree.defaultDialogText);
                     const items: vscode.QuickPickItem[] = this.mHistory.getSearchHistory().map((element) => new FilterItem({ text: element }));
@@ -789,33 +787,36 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
             } else {
                 // executing search from saved search in favorites
                 remotepath = node.label as string;
+                // add the session if it doesn't already exist
                 const profileName = node.getProfileName();
                 await this.addSession(profileName);
-                const faveNode = node;
-                sessionNode = this.mSessionNodes.find((tempNode) => tempNode.getProfileName() === profileName);
-                if (!sessionNode.getSession().ISession.user || !sessionNode.getSession().ISession.password) {
-                    sessionNode.getSession().ISession.user = faveNode.getSession().ISession.user;
-                    sessionNode.getSession().ISession.password = faveNode.getSession().ISession.password;
-                    sessionNode.getSession().ISession.base64EncodedAuth = faveNode.getSession().ISession.base64EncodedAuth;
+                // grab the session and check to see if the session on the favorited node needs updated
+                const nonFavNode = this.mSessionNodes.find((tempNode) => tempNode.getProfileName() === profileName);
+                if (!node.getSession().ISession.user || !node.getSession().ISession.password) {
+                    node.getSession().ISession.user = nonFavNode.getSession().ISession.user;
+                    node.getSession().ISession.password = nonFavNode.getSession().ISession.password;
+                    node.getSession().ISession.base64EncodedAuth = nonFavNode.getSession().ISession.base64EncodedAuth;
                 }
             }
             // Get session for sessionNode
             syncSessionNode((profile) => ZoweExplorerApiRegister.getUssApi(profile), node);
             // Sanitization: Replace multiple forward slashes with just one forward slash
             const sanitizedPath = remotepath.replace(/\/+/g, "/").replace(/(\/*)$/, "");
-            sessionNode.tooltip = sessionNode.fullPath = sanitizedPath;
-            const icon = getIconByNode(sessionNode);
+            node.fullPath = sanitizedPath;
+            const icon = getIconByNode(node);
             if (icon) {
-                sessionNode.iconPath = icon.path;
+                node.iconPath = icon.path;
             }
             // update the treeview with the new path
-            sessionNode.description = sanitizedPath;
-            if (!contextually.isFilterFolder(sessionNode)) {
-                sessionNode.contextValue += `_${globals.FILTER_SEARCH}`;
+            if (!contextually.isFavorite(node)) {
+                node.description = sanitizedPath;
             }
-            sessionNode.dirty = true;
+            if (!contextually.isFilterFolder(node)) {
+                node.contextValue += `_${globals.FILTER_SEARCH}`;
+            }
+            node.dirty = true;
             this.addSearchHistory(sanitizedPath);
-            await TreeViewUtils.expandNode(sessionNode, this);
+            await TreeViewUtils.expandNode(node, this);
             this.refresh();
         }
     }
@@ -911,15 +912,13 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
             case globals.USS_SESSION_CONTEXT:
                 node = new ZoweUSSNode({
                     label,
-                    collapsibleState: vscode.TreeItemCollapsibleState.None,
+                    collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
                     contextOverride: globals.USS_SESSION_CONTEXT + globals.FAV_SUFFIX,
                     parentNode,
                     profile,
                 });
                 node.fullPath = label;
                 node.label = node.tooltip = label;
-                // add a command to execute the search
-                node.command = { command: "zowe.uss.fullPath", title: "", arguments: [node] };
                 break;
             default:
                 // assume context is "textFile"

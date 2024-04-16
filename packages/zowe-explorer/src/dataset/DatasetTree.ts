@@ -305,16 +305,12 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         } else if (contextValue === globals.DS_SESSION_CONTEXT) {
             node = new ZoweDatasetNode({
                 label,
-                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                contextOverride: globals.DS_SESSION_CONTEXT + globals.FAV_SUFFIX,
                 parentNode,
                 profile,
             });
-            node.command = { command: "zowe.ds.pattern", title: "", arguments: [node] };
-            node.contextValue = globals.DS_SESSION_CONTEXT + globals.FAV_SUFFIX;
-            const icon = getIconByNode(node);
-            if (icon) {
-                node.iconPath = icon.path;
-            }
+            node.pattern = label;
         } else {
             // This case should not happen if the regex for initializeFavorites is defined correctly, but is here as a catch-all just in case.
             Gui.errorMessage(
@@ -915,11 +911,10 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         ZoweLogger.debug(vscode.l10n.t("Prompting the user for a data set pattern"));
         let pattern: string;
         await this.checkCurrentProfile(node);
-        let nonFaveNode;
+        const sessionNode = node;
 
         if (Profiles.getInstance().validProfile !== Validation.ValidationType.INVALID) {
             if (contextually.isSessionNotFav(node)) {
-                nonFaveNode = node;
                 if (this.mHistory.getSearchHistory().length > 0) {
                     const createPick = new FilterDescriptor(DatasetTree.defaultDialogText);
                     const items: vscode.QuickPickItem[] = this.mHistory.getSearchHistory().map((element) => new FilterItem({ text: element }));
@@ -957,17 +952,17 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 pattern = node.getLabel() as string;
                 const sessionName = node.getProfileName();
                 await this.addSession(sessionName);
-                nonFaveNode = this.mSessionNodes.find((tempNode) => tempNode.label.toString() === sessionName);
-                if (!nonFaveNode.getSession().ISession.user || !nonFaveNode.getSession().ISession.password) {
-                    nonFaveNode.getSession().ISession.user = node.getSession().ISession.user;
-                    nonFaveNode.getSession().ISession.password = node.getSession().ISession.password;
-                    nonFaveNode.getSession().ISession.base64EncodedAuth = node.getSession().ISession.base64EncodedAuth;
+                const nonFavNode = this.mSessionNodes.find((tempNode) => tempNode.label.toString() === sessionName);
+                if (!nonFavNode.getSession().ISession.user || !nonFavNode.getSession().ISession.password) {
+                    nonFavNode.getSession().ISession.user = node.getSession().ISession.user;
+                    nonFavNode.getSession().ISession.password = node.getSession().ISession.password;
+                    nonFavNode.getSession().ISession.base64EncodedAuth = node.getSession().ISession.base64EncodedAuth;
                 }
             }
             // looking for members in pattern
             node.children = [];
             node.dirty = true;
-            syncSessionNode((profile) => ZoweExplorerApiRegister.getMvsApi(profile), nonFaveNode);
+            syncSessionNode((profile) => ZoweExplorerApiRegister.getMvsApi(profile), sessionNode);
             let dataSet: zosfiles.IDataSet;
             const dsSets: (zosfiles.IDataSet & { memberPattern?: string })[] = [];
             const dsNames = pattern.split(",");
@@ -1000,18 +995,18 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 }
             }
             if (datasets) {
-                nonFaveNode.tooltip = nonFaveNode.pattern = datasets.toUpperCase();
+                sessionNode.tooltip = sessionNode.pattern = datasets.toUpperCase();
             } else {
-                nonFaveNode.tooltip = nonFaveNode.pattern = pattern.toUpperCase();
+                sessionNode.tooltip = sessionNode.pattern = pattern.toUpperCase();
             }
             let response: IZoweDatasetTreeNode[] = [];
             try {
-                response = await this.getChildren(nonFaveNode);
+                response = await this.getChildren(sessionNode);
             } catch (err) {
                 await errorHandling(err, String(node.label));
             }
             if (response.length === 0) {
-                nonFaveNode.tooltip = nonFaveNode.pattern = undefined;
+                sessionNode.tooltip = sessionNode.pattern = undefined;
                 return;
             }
             // reset and remove previous search patterns for each child of getChildren
@@ -1090,17 +1085,19 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                         }
                     }
                 }
-                nonFaveNode.dirty = true;
-                const icon = getIconByNode(nonFaveNode);
+                sessionNode.dirty = true;
+                const icon = getIconByNode(sessionNode);
                 if (icon) {
-                    nonFaveNode.iconPath = icon.path;
+                    sessionNode.iconPath = icon.path;
                 }
                 child.contextValue = contextually.withProfile(child);
             }
             this.addSearchHistory(pattern);
         }
-        DatasetFSProvider.instance.updateFilterForUri(nonFaveNode.resourceUri, pattern);
-        await TreeViewUtils.expandNode(nonFaveNode, this);
+        if (!contextually.isFavorite(sessionNode)) {
+            DatasetFSProvider.instance.updateFilterForUri(sessionNode.resourceUri, pattern);
+        }
+        await TreeViewUtils.expandNode(sessionNode, this);
     }
 
     public checkFilterPattern(dsName: string, itemName: string): boolean {

@@ -208,9 +208,11 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             if (contextually.isSession(this)) {
                 response = await UssFSProvider.instance.listFiles(
                     nodeProfile,
-                    this.resourceUri.with({
-                        path: path.posix.join(this.resourceUri.path, this.fullPath),
-                    })
+                    contextually.isFavorite(this)
+                        ? this.resourceUri
+                        : this.resourceUri.with({
+                              path: path.posix.join(this.resourceUri.path, this.fullPath),
+                          })
                 );
             } else {
                 response = await UssFSProvider.instance.listFiles(nodeProfile, this.resourceUri);

@@ -391,21 +391,16 @@ describe("ZosJobsProvider unit tests - Function initializeFavChildNodeForProfile
         favProfileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
         const node = new ZoweJobNode({
             label: "Owner:USER Prefix:*",
-            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            contextOverride: globals.JOBS_SESSION_CONTEXT + globals.FAV_SUFFIX,
             parentNode: favProfileNode,
         });
-        node.command = { command: "zowe.jobs.search", title: "", arguments: [node] };
-        node.contextValue = globals.JOBS_SESSION_CONTEXT + globals.FAV_SUFFIX;
         const targetIcon = getIconByNode(node);
         if (targetIcon) {
             node.iconPath = targetIcon.path;
         }
 
-        const favChildNodeForProfile = await testTree.initializeFavChildNodeForProfile(
-            "Owner:USER Prefix:*",
-            globals.JOBS_SESSION_CONTEXT,
-            favProfileNode
-        );
+        const favChildNodeForProfile = testTree.initializeFavChildNodeForProfile("Owner:USER Prefix:*", globals.JOBS_SESSION_CONTEXT, favProfileNode);
 
         expect(favChildNodeForProfile).toEqual(node);
     });

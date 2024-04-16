@@ -398,12 +398,11 @@ export class ZosJobsProvider extends ZoweTreeProvider<IZoweJobTreeNode> implemen
             // for search
             favJob = new ZoweJobNode({
                 label,
-                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
                 contextOverride: globals.JOBS_SESSION_CONTEXT + globals.FAV_SUFFIX,
                 parentNode,
                 profile: parentNode.getProfile(),
             });
-            favJob.command = { command: "zowe.jobs.search", title: "", arguments: [favJob] };
         }
         const icon = getIconByNode(favJob);
         if (icon) {

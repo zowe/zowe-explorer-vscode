@@ -263,14 +263,13 @@ describe("USSTree Unit Tests - Function initializeFavChildNodeForProfile", () =>
         const label = "/u/fakeuser";
         const expectedFavSearchNode = new ZoweUSSNode({
             label: "/u/fakeuser",
-            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             contextOverride: globals.USS_SESSION_CONTEXT + globals.FAV_SUFFIX,
             parentNode: favProfileNode,
             profile: globalMocks.testProfile,
         });
         expectedFavSearchNode.fullPath = label;
         expectedFavSearchNode.label = expectedFavSearchNode.tooltip = label;
-        expectedFavSearchNode.command = { command: "zowe.uss.fullPath", title: "", arguments: [expectedFavSearchNode] };
         const targetIcon = getIconByNode(expectedFavSearchNode);
         if (targetIcon) {
             expectedFavSearchNode.iconPath = targetIcon.path;
@@ -639,21 +638,16 @@ describe("USSTree Unit Tests - Function filterPrompt", () => {
 
         const sessionWithCred = createISession();
         globalMocks.createSessCfgFromArgs.mockReturnValue(sessionWithCred);
-        const dsNode = new ZoweUSSNode({
-            label: "/u/myFile.txt",
+        const node = new ZoweUSSNode({
+            label: "/u/myFolder",
             collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
+            contextOverride: globals.USS_SESSION_CONTEXT + globals.FAV_SUFFIX,
             session: sessionWithCred,
             profile: { name: "ussTestSess2" } as any,
         });
-        dsNode.contextValue = globals.USS_SESSION_CONTEXT + globals.FAV_SUFFIX;
-        globalMocks.testTree.mSessionNodes.push(dsNode);
-
-        await globalMocks.testTree.filterPrompt(dsNode);
-        globalMocks.testTree.mSessionNodes.forEach((sessionNode) => {
-            if (sessionNode === dsNode) {
-                expect(sessionNode.fullPath).toEqual("/u/myFile.txt");
-            }
-        });
+        node.fullPath = "/u/myFolder";
+        globalMocks.testTree.mFavorites.push(node);
+        await expect(globalMocks.testTree.filterPrompt(node)).resolves.not.toThrow();
     });
 
     it("Tests that filter() works correctly for favorited search nodes without credentials", async () => {
@@ -662,24 +656,20 @@ describe("USSTree Unit Tests - Function filterPrompt", () => {
 
         const sessionNoCred = createISessionWithoutCredentials();
         globalMocks.createSessCfgFromArgs.mockReturnValue(sessionNoCred);
-        const dsNode = new ZoweUSSNode({
-            label: "/u/myFile.txt",
+        const node = new ZoweUSSNode({
+            label: "/u/myFolder",
             collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
+            contextOverride: globals.USS_SESSION_CONTEXT + globals.FAV_SUFFIX,
             session: sessionNoCred,
             profile: { name: "ussTestSess2" } as any,
         });
-        dsNode.getSession().ISession.user = "";
-        dsNode.getSession().ISession.password = "";
-        dsNode.getSession().ISession.base64EncodedAuth = "";
-        dsNode.contextValue = globals.USS_SESSION_CONTEXT + globals.FAV_SUFFIX;
-        globalMocks.testTree.mSessionNodes.push(dsNode);
+        node.fullPath = "/u/myFolder";
+        node.getSession().ISession.user = "";
+        node.getSession().ISession.password = "";
+        node.getSession().ISession.base64EncodedAuth = "";
+        globalMocks.testTree.mFavorites.push(node);
 
-        await globalMocks.testTree.filterPrompt(dsNode);
-        globalMocks.testTree.mSessionNodes.forEach((sessionNode) => {
-            if (sessionNode === dsNode) {
-                expect(sessionNode.fullPath).toEqual("/u/myFile.txt");
-            }
-        });
+        await expect(globalMocks.testTree.filterPrompt(node)).resolves.not.toThrow();
     });
 });
 

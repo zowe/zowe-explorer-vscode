@@ -1403,12 +1403,12 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         const addSessionSpy = jest.spyOn(testTree, "addSession");
         const favoriteSearch = new ZoweDatasetNode({
             label: `[${blockMocks.datasetSessionNode.label}]: HLQ.PROD1.STUFF`,
-            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            contextOverride: globals.DS_SESSION_CONTEXT + globals.FAV_SUFFIX,
             parentNode: testTree.mSessionNodes[1],
             session: blockMocks.session,
             profile: blockMocks.imperativeProfile,
         });
-        favoriteSearch.contextValue = globals.DS_SESSION_CONTEXT + globals.FAV_SUFFIX;
 
         jest.spyOn(testTree, "addSingleSession").mockImplementation();
         jest.spyOn(TreeProviders, "providers", "get").mockReturnValue({
@@ -1418,7 +1418,6 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         } as any);
 
         await testTree.datasetFilterPrompt(favoriteSearch);
-
         expect(addSessionSpy).toHaveBeenLastCalledWith(blockMocks.datasetSessionNode.label.trim());
     });
     it("Checking adding of new filter", async () => {

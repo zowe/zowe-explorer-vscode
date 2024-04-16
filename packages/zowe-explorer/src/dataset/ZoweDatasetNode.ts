@@ -298,7 +298,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                             profile: this.getProfile(),
                         });
                     }
-                } else if (contextually.isSessionNotFav(this)) {
+                } else if (contextually.isSession(this)) {
                     // Creates a ZoweDatasetNode for a PS
                     const cachedEncoding = this.getEncodingInMap(item.dsname);
                     temp = new ZoweDatasetNode({
@@ -310,9 +310,9 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     });
                     temp.command = { command: "vscode.open", title: "", arguments: [temp.resourceUri] };
                     elementChildren[temp.label.toString()] = temp;
-                } else {
+                } else if (item.member) {
                     // Creates a ZoweDatasetNode for a PDS member
-                    const memberInvalid = item.member?.includes("\ufffd");
+                    const memberInvalid = item.member.includes("\ufffd");
                     const cachedEncoding = this.getEncodingInMap(`${item.dsname as string}(${item.member as string})`);
                     temp = new ZoweDatasetNode({
                         label: item.member,
@@ -531,7 +531,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             attributes: true,
             responseTimeout: cachedProfile.profile.responseTimeout,
         };
-        if (contextually.isSessionNotFav(this)) {
+        if (contextually.isSession(this) && this.pattern) {
             const dsPatterns = [
                 ...new Set(
                     this.pattern
