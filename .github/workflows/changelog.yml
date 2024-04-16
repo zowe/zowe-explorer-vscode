@@ -20,7 +20,7 @@ jobs:
 
       # Make pnpm available for Changelog Checks
       - name: Install pnpm
-        run: npm install -g pnpm
+        run: npm install -g pnpm@8
 
       - name: Check Changelog Updated
         uses: awharn/check_changelog_action@v1

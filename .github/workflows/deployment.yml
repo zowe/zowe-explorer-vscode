@@ -39,7 +39,7 @@ jobs:
           node-version: '18.x'
 
       - name: Install pnpm and Lerna
-        run: npm install -g pnpm lerna@6
+        run: npm install -g pnpm@8 lerna@6
 
       - name: Build Source
         run: |
