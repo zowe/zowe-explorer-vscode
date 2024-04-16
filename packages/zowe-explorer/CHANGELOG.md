@@ -15,7 +15,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 ### Bug fixes
 
 - To fix clicking submitted job hyperlink throws error [#2813](https://github.com/zowe/vscode-extension-for-zowe/issues/2813)
-- Omitted the following Zowe Explorer commands from the Command Palette that do not execute properly when run as a standalone command:
+- Omitted the following Zowe Explorer commands from the Command Palette that do not execute properly when run as a standalone command: [#2853](https://github.com/zowe/zowe-explorer-vscode/pull/2853)
   - `Zowe Explorer: Cancel job`
   - `Zowe Explorer: Filter jobs`
   - `Zowe Explorer: Filter PDS members`
