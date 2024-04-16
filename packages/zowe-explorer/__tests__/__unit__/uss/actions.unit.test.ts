@@ -541,6 +541,21 @@ describe("USS Action Unit Tests - Function saveUSSFile", () => {
 
 describe("USS Action Unit Tests - Functions uploadDialog & uploadFile", () => {
     async function createBlockMocks(globalMocks) {
+        Object.defineProperty(vscode.window, "withProgress", {
+            value: jest.fn().mockImplementation((progLocation, callback) => {
+                const progress = {
+                    report: (message) => {
+                        return;
+                    },
+                };
+                const token = {
+                    isCancellationRequested: false,
+                    onCancellationRequested: undefined,
+                };
+                return callback(progress, token);
+            }),
+            configurable: true,
+        });
         const newMocks = {
             node: null,
             mockGetEtag: null,
@@ -578,7 +593,7 @@ describe("USS Action Unit Tests - Functions uploadDialog & uploadFile", () => {
         await ussNodeActions.uploadDialog(blockMocks.ussNode, blockMocks.testUSSTree, false);
         expect(globalMocks.showOpenDialog).toBeCalled();
         expect(globalMocks.openTextDocument).toBeCalled();
-        expect(blockMocks.testUSSTree.refresh).toBeCalled();
+        expect(blockMocks.testUSSTree.refreshElement).toBeCalledWith(blockMocks.ussNode);
     });
 
     it("Tests that uploadDialog() works for binary file", async () => {
@@ -591,7 +606,7 @@ describe("USS Action Unit Tests - Functions uploadDialog & uploadFile", () => {
 
         await ussNodeActions.uploadDialog(blockMocks.ussNode, blockMocks.testUSSTree, true);
         expect(globalMocks.showOpenDialog).toBeCalled();
-        expect(blockMocks.testUSSTree.refresh).toBeCalled();
+        expect(blockMocks.testUSSTree.refreshElement).toBeCalledWith(blockMocks.ussNode);
     });
 
     it("Tests that uploadDialog() throws an error successfully", async () => {
