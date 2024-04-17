@@ -5,6 +5,7 @@
   "zowe.jobs.confirmSubmission.allJobs": "All jobs",
   "sort.asc": "Ascending",
   "sort.desc": "Descending",
+  "saveFile.nodeNotFound.error": "Could not find {0} in tree",
   "uploadContent.putContents": "Uploading USS file",
   "saveFile.response.save.title": "Saving data set...",
   "saveUSSFile.response.title": "Saving file...",
