@@ -663,11 +663,19 @@ describe("USSTree Unit Tests - Function filterPrompt", () => {
             session: sessionNoCred,
             profile: { name: "ussTestSess2" } as any,
         });
+        const nonFavNode = new ZoweUSSNode({
+            label: "/u/myFolder",
+            collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
+            contextOverride: globals.USS_SESSION_CONTEXT,
+            session: globalMocks.testSession,
+            profile: { name: "ussTestSess2" } as any,
+        });
         node.fullPath = "/u/myFolder";
         node.getSession().ISession.user = "";
         node.getSession().ISession.password = "";
         node.getSession().ISession.base64EncodedAuth = "";
         globalMocks.testTree.mFavorites.push(node);
+        globalMocks.testTree.mSessionNodes.push(nonFavNode);
 
         await expect(globalMocks.testTree.filterPrompt(node)).resolves.not.toThrow();
     });

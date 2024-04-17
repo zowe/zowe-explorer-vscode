@@ -792,7 +792,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                 await this.addSession(profileName);
                 // grab the session and check to see if the session on the favorited node needs updated
                 const nonFavNode = this.mSessionNodes.find((tempNode) => tempNode.getProfileName() === profileName);
-                if (!node.getSession().ISession.user || !node.getSession().ISession.password) {
+                if (nonFavNode && (!node.getSession().ISession.user || !node.getSession().ISession.password)) {
                     node.getSession().ISession.user = nonFavNode.getSession().ISession.user;
                     node.getSession().ISession.password = nonFavNode.getSession().ISession.password;
                     node.getSession().ISession.base64EncodedAuth = nonFavNode.getSession().ISession.base64EncodedAuth;
