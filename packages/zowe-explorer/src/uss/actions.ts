@@ -153,7 +153,7 @@ export async function uploadDialog(node: IZoweUSSTreeNode, ussFileProvider: IZow
             async (progress, token) => {
                 let index = 0;
                 for (const item of value) {
-                    if (token.onCancellationRequested) {
+                    if (token.isCancellationRequested) {
                         Gui.showMessage(localize("uploadFile.uploadCancelled", "Upload action was cancelled."));
                         break;
                     }
@@ -169,8 +169,11 @@ export async function uploadDialog(node: IZoweUSSTreeNode, ussFileProvider: IZow
                 index++;
             }
         );
+        ussFileProvider.refreshElement(node);
+        ussFileProvider.getTreeView().reveal(node, { expand: true, focus: true });
+    } else {
+        Gui.showMessage(localize("uploadFile.operationCancelled", "Operation Cancelled"));
     }
-    ussFileProvider.refreshElement(node);
 }
 
 export async function uploadBinaryFile(node: IZoweUSSTreeNode, filePath: string): Promise<void> {
