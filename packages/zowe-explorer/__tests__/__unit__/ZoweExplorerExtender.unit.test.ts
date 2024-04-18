@@ -258,5 +258,27 @@ describe("ZoweExplorerExtender unit tests", () => {
             });
             expect(errorMessageSpy).toHaveBeenCalledWith("Failed to update Zowe schema: insufficient permissions or read-only file. test error");
         });
+
+        it("should log a message if addProfileTypeToSchema returns a warning", async () => {
+            const blockMocks = await createBlockMocks();
+            const profInfo = new imperative.ProfileInfo("zowe", {
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+                credMgrOverride: imperative.ProfileCredentials.defaultCredMgrWithKeytar(ProfilesCache.requireKeyring),
+            });
+            const addProfTypeToSchema = jest.spyOn(imperative.ProfileInfo.prototype, "addProfileTypeToSchema").mockReturnValue({
+                success: false,
+                info: "Schema version is older than the installed version",
+            });
+            const warnSpy = jest.spyOn(ZoweLogger, "warn");
+            await (blockMocks.instTest as any).updateSchema(profInfo, [
+                {
+                    type: "test-type",
+                    schema: {} as any,
+                } as any,
+            ]);
+            expect(addProfTypeToSchema).toHaveBeenCalled();
+            expect(warnSpy).toHaveBeenCalledWith("Schema version is older than the installed version");
+            addProfTypeToSchema.mockRestore();
+        });
     });
 });
