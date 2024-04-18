@@ -106,7 +106,7 @@ export async function initUSSProvider(context: vscode.ExtensionContext): Promise
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.uss.deleteNode", async (node, nodeList) => {
             let selectedNodes = getSelectedNodeList(node, nodeList) as IZoweUSSTreeNode[];
-            selectedNodes = selectedNodes.filter((x) => contextuals.isDocument(x) || contextuals.isUssDirectory(x));
+            selectedNodes = selectedNodes.filter((x) => contextuals.isDocument(x) || contextuals.isUssDirectory(x) || contextuals.isBinary(x));
             const cancelled = await ussActions.deleteUSSFilesPrompt(selectedNodes);
             for (const item of selectedNodes) {
                 await item.deleteUSSNode(ussFileProvider, item.getUSSDocumentFilePath(), cancelled);
