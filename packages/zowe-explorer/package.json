@@ -1733,6 +1733,34 @@
         {
           "command": "zowe.uss.openWithEncoding",
           "when": "never"
+        },
+        {
+          "command": "zowe.jobs.cancelJob",
+          "when": "never"
+        },
+        {
+          "command": "zowe.jobs.filterJobs",
+          "when": "never"
+        },
+        {
+          "command": "zowe.ds.filterBy",
+          "when": "never"
+        },
+        {
+          "command": "zowe.jobs.sortBy",
+          "when": "never"
+        },
+        {
+          "command": "zowe.ds.sortBy",
+          "when": "never"
+        },
+        {
+          "command": "zowe.jobs.startPolling",
+          "when": "never"
+        },
+        {
+          "command": "zowe.jobs.stopPolling",
+          "when": "never"
         }
       ]
     },
