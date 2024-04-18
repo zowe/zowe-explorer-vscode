@@ -127,7 +127,7 @@ describe("Default profile Visible in USS and JOBS", () => {
     });
 
     it("Should Default profile visible in JOBS", async () => {
-        await driverFirefox.clickOnUssTabs();
+        await driverFirefox.clickOnUssTab();
         await driverFirefox.clickOnJobsTab();
         const jobsProfile = await driverFirefox.getJobsDefaultProfilename();
         expect(jobsProfile).to.equal("DefaultProfile");
@@ -200,7 +200,7 @@ describe("Test Adding and Removing Favorites", () => {
     it("Should Add Profile to Favorites under USS", async () => {
         await driverChrome.clickOnDatasetsTab();
         await driverChrome.sleepTime(SHORTSLEEPTIME);
-        await driverChrome.clickOnUssTabs();
+        await driverChrome.clickOnUssTab();
         await driverChrome.sleepTime(SHORTSLEEPTIME);
         await driverChrome.addProfileToFavoritesInUss();
         await driverChrome.sleepTime(SHORTSLEEPTIME);
@@ -218,7 +218,7 @@ describe("Test Adding and Removing Favorites", () => {
     });
 
     it("Should Add Profile to Favorites under JOBS", async () => {
-        await driverChrome.clickOnUssTabs();
+        await driverChrome.clickOnUssTab();
         await driverChrome.sleepTime(SHORTSLEEPTIME);
         await driverChrome.clickOnJobsTab();
         await driverChrome.sleepTime(SHORTSLEEPTIME);
@@ -254,7 +254,7 @@ describe("Hide Profiles", () => {
     it("Should Hide Profile from USS", async () => {
         await driverChrome.clickOnDatasetsTab();
         await driverChrome.sleepTime(SHORTSLEEPTIME);
-        await driverChrome.clickOnUssTabs();
+        await driverChrome.clickOnUssTab();
         await driverChrome.sleepTime(SHORTSLEEPTIME);
         await driverChrome.hideProfileInUss();
         await driverChrome.sleepTime(SHORTSLEEPTIME);
@@ -262,7 +262,7 @@ describe("Hide Profiles", () => {
         expect(hiddenProfile).to.equal(true);
     });
     it("Should Hide Profile from JOBS", async () => {
-        await driverChrome.clickOnUssTabs();
+        await driverChrome.clickOnUssTab();
         await driverChrome.sleepTime(SHORTSLEEPTIME);
         await driverChrome.clickOnJobsTab();
         await driverChrome.sleepTime(SHORTSLEEPTIME);
@@ -303,14 +303,14 @@ describe("Delete Profiles", () => {
     it("Should Default Profile deleted from USS", async () => {
         await driverChrome.clickOnDatasetsTab();
         await driverChrome.sleepTime(SHORTSLEEPTIME);
-        await driverChrome.clickOnUssTabs();
+        await driverChrome.clickOnUssTab();
         await driverChrome.sleepTime(SHORTSLEEPTIME);
         const deletedDefaultProfile = await driverChrome.verifyRemovedDefaultProfileInUss();
         expect(deletedDefaultProfile).to.equal(true);
     });
 
     it("Should Default Profile deleted from JOBS", async () => {
-        await driverChrome.clickOnUssTabs();
+        await driverChrome.clickOnUssTab();
         await driverChrome.sleepTime(SHORTSLEEPTIME);
         await driverChrome.clickOnJobsTab();
         await driverChrome.sleepTime(SHORTSLEEPTIME);
