@@ -24,6 +24,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
   - `Zowe Explorer: Sort PDS members`
   - `Zowe Explorer: Start Polling`
   - `Zowe Explorer: Stop Polling`
+- Duplicated profile schema writing on repeated Team Config file initialization:
+  [#2828](https://github.com/zowe/zowe-explorer-vscode/pull/2828)
 
 ## `2.15.3`
 
