@@ -106,7 +106,7 @@ export async function initUSSProvider(context: vscode.ExtensionContext): Promise
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.uss.deleteNode", async (node, nodeList) => {
             let selectedNodes = getSelectedNodeList(node, nodeList) as IZoweUSSTreeNode[];
-            selectedNodes = selectedNodes.filter((x) => contextuals.isDocument(x) || contextuals.isUssDirectory(x));
+            selectedNodes = selectedNodes.filter((x) => contextuals.isDocument(x) || contextuals.isUssDirectory(x) || contextuals.isBinary(x));
             const cancelled = await ussActions.deleteUSSFilesPrompt(selectedNodes);
             for (const item of selectedNodes) {
                 await item.deleteUSSNode(ussFileProvider, item.getUSSDocumentFilePath(), cancelled);
@@ -134,9 +134,13 @@ export async function initUSSProvider(context: vscode.ExtensionContext): Promise
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.uss.renameNode", (node: IZoweUSSTreeNode): Promise<void> => ussFileProvider.rename(node))
     );
-    context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.uss.uploadDialog", async (node: IZoweUSSTreeNode) => ussActions.uploadDialog(node, ussFileProvider))
-    );
+
+    const uploadDialogHandler = (binary: boolean) => async (node) => {
+        await ussActions.uploadDialog(node, ussFileProvider, binary);
+    };
+    context.subscriptions.push(vscode.commands.registerCommand("zowe.uss.uploadDialog", uploadDialogHandler(false)));
+    context.subscriptions.push(vscode.commands.registerCommand("zowe.uss.uploadDialogBinary", uploadDialogHandler(true)));
+
     context.subscriptions.push(vscode.commands.registerCommand("zowe.uss.copyPath", (node: IZoweUSSTreeNode): void => ussActions.copyPath(node)));
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.uss.editFile", async (node: IZoweUSSTreeNode) => node.openUSS(false, false, ussFileProvider))
