@@ -13,19 +13,16 @@ import * as globals from "../globals";
 import * as vscode from "vscode";
 import * as refreshActions from "./refresh";
 import * as sharedActions from "./actions";
-import { FileManagement, IZoweTree, IZoweTreeNode, Validation } from "@zowe/zowe-explorer-api";
+import { FileManagement, IZoweTree, IZoweTreeNode, Validation, ZoweScheme } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { Profiles } from "../Profiles";
 import { hideTempFolder, moveTempFolder } from "../utils/TempFolder";
 import { TsoCommandHandler } from "../command/TsoCommandHandler";
 import { MvsCommandHandler } from "../command/MvsCommandHandler";
 import { UnixCommandHandler } from "../command/UnixCommandHandler";
-import { saveFile } from "../dataset/actions";
-import { saveUSSFile } from "../uss/actions";
 import { ProfilesUtils } from "../utils/ProfilesUtils";
 import { LoggerUtils } from "../utils/LoggerUtils";
 import { ZoweLogger } from "../utils/ZoweLogger";
-import { ZoweSaveQueue } from "../abstract/ZoweSaveQueue";
 import { SettingsConfig } from "../utils/SettingsConfig";
 import { spoolFilePollEvent } from "../job/actions";
 import { HistoryView } from "./HistoryView";
@@ -33,6 +30,8 @@ import { ProfileManagement } from "../utils/ProfileManagement";
 import { LocalFileManagement } from "../utils/LocalFileManagement";
 import { TreeProviders } from "./TreeProviders";
 import { IZoweProviders } from "./IZoweProviders";
+import { UssFSProvider } from "../uss/UssFSProvider";
+import { DatasetFSProvider } from "../dataset/DatasetFSProvider";
 
 export function registerRefreshCommand(
     context: vscode.ExtensionContext,
@@ -98,6 +97,25 @@ export function registerCommonCommands(context: vscode.ExtensionContext, provide
         })
     );
 
+    context.subscriptions.push(
+        vscode.commands.registerCommand("zowe.diff.useLocalContent", async (localUri) => {
+            if (localUri.scheme === ZoweScheme.USS) {
+                await UssFSProvider.instance.diffOverwrite(localUri);
+            } else if (localUri.scheme === ZoweScheme.DS) {
+                await DatasetFSProvider.instance.diffOverwrite(localUri);
+            }
+        })
+    );
+    context.subscriptions.push(
+        vscode.commands.registerCommand("zowe.diff.useRemoteContent", async (localUri) => {
+            if (localUri.scheme === ZoweScheme.USS) {
+                await UssFSProvider.instance.diffUseRemote(localUri);
+            } else if (localUri.scheme === ZoweScheme.DS) {
+                await DatasetFSProvider.instance.diffUseRemote(localUri);
+            }
+        })
+    );
+
     // Register functions & event listeners
     context.subscriptions.push(
         vscode.workspace.onDidChangeConfiguration(async (e) => {
@@ -137,33 +155,6 @@ export function registerCommonCommands(context: vscode.ExtensionContext, provide
             vscode.commands.registerCommand("zowe.searchInAllLoadedItems", async () =>
                 sharedActions.searchInAllLoadedItems(providers.ds, providers.uss)
             )
-        );
-        context.subscriptions.push(
-            vscode.workspace.onDidSaveTextDocument((savedFile) => {
-                ZoweLogger.debug(
-                    vscode.l10n.t({
-                        message: `File was saved -- determining whether the file is a USS file or Data set.
-                        \n Comparing (case insensitive) {0} against directory {1} and {2}`,
-                        args: [savedFile.fileName, globals.DS_DIR, globals.USS_DIR],
-                        comment: ["Saved file name", "Data Set directory", "USS directory"],
-                    })
-                );
-                if (savedFile.fileName.toUpperCase().indexOf(globals.DS_DIR.toUpperCase()) >= 0) {
-                    ZoweLogger.debug(vscode.l10n.t("File is a Data Set-- saving "));
-                    ZoweSaveQueue.push({ uploadRequest: saveFile, savedFile, fileProvider: providers.ds });
-                } else if (savedFile.fileName.toUpperCase().indexOf(globals.USS_DIR.toUpperCase()) >= 0) {
-                    ZoweLogger.debug(vscode.l10n.t("File is a USS file -- saving"));
-                    ZoweSaveQueue.push({ uploadRequest: saveUSSFile, savedFile, fileProvider: providers.uss });
-                } else {
-                    ZoweLogger.debug(
-                        vscode.l10n.t({
-                            message: "File {0} is not a Data Set or USS file",
-                            args: [savedFile.fileName],
-                            comment: ["Saved file name"],
-                        })
-                    );
-                }
-            })
         );
     }
     if (providers.ds || providers.uss || providers.job) {
@@ -230,12 +221,17 @@ export function registerCommonCommands(context: vscode.ExtensionContext, provide
             })
         );
         context.subscriptions.push(
-            vscode.commands.registerCommand("zowe.compareFileStarted", () => {
-                return globals.FILE_SELECTED_TO_COMPARE;
+            vscode.commands.registerCommand("zowe.compareFileStarted", (): boolean => {
+                return LocalFileManagement.fileSelectedToCompare;
+            })
+        );
+        context.subscriptions.push(
+            vscode.commands.registerCommand("zowe.placeholderCommand", () => {
+                // This command does nothing, its here to let us disable individual items in the tree view
             })
         );
         // initialize the globals.filesToCompare array during initialization
-        globals.resetCompareChoices();
+        LocalFileManagement.resetCompareSelection();
     }
 }
 

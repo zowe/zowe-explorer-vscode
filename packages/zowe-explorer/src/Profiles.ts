@@ -44,6 +44,7 @@ export class Profiles extends ProfilesCache {
         Profiles.loader = new Profiles(log, vscode.workspace.workspaceFolders?.[0]?.uri.fsPath);
         globals.setProfilesCache(Profiles.loader);
         await Profiles.loader.refresh(ZoweExplorerApiRegister.getInstance());
+        await Profiles.getInstance().getProfileInfo();
         return Profiles.loader;
     }
 
@@ -529,10 +530,6 @@ export class Profiles extends ProfilesCache {
 
     public async promptCredentials(profile: string | imperative.IProfileLoaded, rePrompt?: boolean): Promise<string[]> {
         ZoweLogger.trace("Profiles.promptCredentials called.");
-        let profType = "";
-        if (typeof profile !== "string") {
-            profType = profile.type;
-        }
         const userInputBoxOptions: vscode.InputBoxOptions = {
             placeHolder: vscode.l10n.t(`User Name`),
             prompt: vscode.l10n.t(`Enter the user name for the connection. Leave blank to not store.`),
@@ -890,40 +887,6 @@ export class Profiles extends ProfilesCache {
         return mergedArgs.knownArgs
             .filter((arg) => arg.secure || arg.argName === "tokenType" || arg.argName === "tokenValue")
             .map((arg) => arg.argName);
-    }
-
-    private async loginWithBaseProfile(serviceProfile: imperative.IProfileLoaded, loginTokenType: string, node?: Types.IZoweNodeType): Promise<void> {
-        const baseProfile = await this.fetchBaseProfile();
-        if (baseProfile) {
-            const creds = await this.loginCredentialPrompt();
-            if (!creds) {
-                return;
-            }
-            const updSession = new imperative.Session({
-                hostname: serviceProfile.profile.host,
-                port: serviceProfile.profile.port,
-                user: creds[0],
-                password: creds[1],
-                rejectUnauthorized: serviceProfile.profile.rejectUnauthorized,
-                tokenType: loginTokenType,
-                type: imperative.SessConstants.AUTH_TYPE_TOKEN,
-            });
-            const loginToken = await ZoweExplorerApiRegister.getInstance().getCommonApi(serviceProfile).login(updSession);
-            const updBaseProfile: imperative.IProfile = {
-                tokenType: loginTokenType,
-                tokenValue: loginToken,
-            };
-            await this.updateBaseProfileFileLogin(baseProfile, updBaseProfile);
-            const baseIndex = this.allProfiles.findIndex((profile) => profile.name === baseProfile.name);
-            this.allProfiles[baseIndex] = { ...baseProfile, profile: { ...baseProfile.profile, ...updBaseProfile } };
-            if (node) {
-                node.setProfileToChoice({
-                    ...node.getProfile(),
-                    profile: { ...node.getProfile().profile, ...updBaseProfile },
-                });
-            }
-            Gui.showMessage(vscode.l10n.t("Login to authentication service was successful."));
-        }
     }
 
     private async loginWithRegularProfile(serviceProfile: imperative.IProfileLoaded, node?: Types.IZoweNodeType): Promise<boolean> {

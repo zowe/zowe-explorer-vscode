@@ -19,4 +19,5 @@ export * from "./tree";
 export * from "./utils";
 export * from "./vscode";
 export * from "./Types";
+export * from "./fs";
 export * as imperative from "@zowe/imperative";

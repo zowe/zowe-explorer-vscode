@@ -348,6 +348,17 @@ describe("ZosmfUssApi", () => {
         expect(changeTagSpy).toHaveBeenCalledTimes(1);
     });
 
+    it("calls putUSSPayload to move a directory from old path to new path", async () => {
+        const api = new ZoweExplorerZosmf.UssApi();
+        const putUssPayloadSpy = jest.fn();
+        Object.defineProperty(zosfiles.Utilities, "putUSSPayload", {
+            value: putUssPayloadSpy,
+            configurable: true,
+        });
+        await expect(api.move("/old/path", "/new/path")).resolves.not.toThrow();
+        expect(putUssPayloadSpy).toHaveBeenCalledWith(api.getSession(), "/new/path", { request: "move", from: "/old/path" });
+    });
+
     const ussApis: ITestApi<ZoweExplorerZosmf.UssApi>[] = [
         {
             name: "isFileTagBinOrAscii",

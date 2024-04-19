@@ -456,21 +456,9 @@ describe("FtpMvsApi", () => {
             const buf = Buffer.from("abc123");
             const blockMocks = getBlockMocks();
 
-            await MvsApi.uploadFromBuffer(buf, "SOME.DS(MEMB)");
-            expect(blockMocks.tmpFileSyncMock).toHaveBeenCalled();
-            expect(blockMocks.writeSyncMock).toHaveBeenCalled();
-            expect(blockMocks.processNewlinesSpy).toHaveBeenCalled();
-        });
-
-        it("should not process new lines when uploading buffer as binary", async () => {
-            const buf = Buffer.from("abc123");
-            const blockMocks = getBlockMocks();
-            blockMocks.processNewlinesSpy.mockImplementation();
-
-            await MvsApi.uploadFromBuffer(buf, "SOME.DS(MEMB)", { binary: true });
-            expect(blockMocks.tmpFileSyncMock).toHaveBeenCalled();
-            expect(blockMocks.writeSyncMock).toHaveBeenCalled();
-            expect(blockMocks.processNewlinesSpy).not.toHaveBeenCalled();
+            const dsName = "SOME.DS(MEMB)";
+            await MvsApi.uploadFromBuffer(buf, dsName);
+            expect(blockMocks.putContents).toHaveBeenCalledWith(buf, dsName, undefined);
         });
     });
 });

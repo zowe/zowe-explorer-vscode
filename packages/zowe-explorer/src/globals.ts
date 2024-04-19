@@ -11,7 +11,7 @@
 
 import * as path from "path";
 import * as vscode from "vscode";
-import { FileManagement, imperative, IZoweTreeNode, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
+import { FileManagement, imperative, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
 import { ZoweLogger } from "./utils/ZoweLogger";
 import type { Profiles } from "./Profiles";
 
@@ -91,8 +91,6 @@ export const MEMBER_NAME_REGEX_CHECK = /^[a-zA-Z#@$][a-zA-Z0-9#@$]{0,7}$/;
 export let ACTIVATED = false;
 export let SAVED_PROFILE_CONTENTS = new Uint8Array();
 export const JOBS_MAX_PREFIX = 8;
-export let FILE_SELECTED_TO_COMPARE: boolean;
-export let filesToCompare: IZoweTreeNode[];
 export let PROFILES_CACHE: Profiles; // Works around circular dependency, see https://github.com/zowe/zowe-explorer-vscode/issues/2756
 
 // Dictionary describing translation from old configuration names to new standardized names
@@ -280,7 +278,7 @@ export enum JobPickerTypes {
 
 export const SEPARATORS = {
     BLANK: { kind: vscode.QuickPickItemKind.Separator, label: "" },
-    RECENT: { kind: vscode.QuickPickItemKind.Separator, label: vscode.l10n.t("zowe.separator.recent", "Recent") },
+    RECENT: { kind: vscode.QuickPickItemKind.Separator, label: vscode.l10n.t("Recent") },
     RECENT_FILTERS: { kind: vscode.QuickPickItemKind.Separator, label: vscode.l10n.t(`Recent Filters`) },
     OPTIONS: { kind: vscode.QuickPickItemKind.Separator, label: vscode.l10n.t(`Options`) },
 };
@@ -322,16 +320,6 @@ export function setActivated(value: boolean): void {
 
 export function setSavedProfileContents(value: Uint8Array): void {
     SAVED_PROFILE_CONTENTS = value;
-}
-
-export function setCompareSelection(val: boolean): void {
-    FILE_SELECTED_TO_COMPARE = val;
-    vscode.commands.executeCommand("setContext", "zowe.compareFileStarted", val);
-}
-
-export function resetCompareChoices(): void {
-    setCompareSelection(false);
-    filesToCompare = [];
 }
 
 export function setProfilesCache(profilesCache: Profiles): void {

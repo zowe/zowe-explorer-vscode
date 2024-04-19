@@ -26,11 +26,6 @@ describe("WebView unit tests", () => {
                 onDidDispose: jest.fn(),
             }),
         });
-        Object.defineProperty(vscode, "Uri", {
-            value: {
-                file: jest.fn(),
-            },
-        });
     });
     it("Successfully creates a WebView", () => {
         const createWebviewPanelSpy = jest.spyOn(vscode.window, "createWebviewPanel");

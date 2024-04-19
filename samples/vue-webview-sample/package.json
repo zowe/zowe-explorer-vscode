@@ -30,7 +30,7 @@
     "@zowe/zowe-explorer-api": "file:../../packages/zowe-explorer-api"
   },
   "devDependencies": {
-    "@types/node": "^16.18.41",
+    "@types/node": "^18.19.14",
     "@types/vscode": "^1.53.2",
     "@typescript-eslint/eslint-plugin": "^5.42.0",
     "@typescript-eslint/parser": "^5.42.0",

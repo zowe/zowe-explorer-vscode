@@ -18,14 +18,11 @@ import { Profiles } from "../../../src/Profiles";
 import * as profUtils from "../../../src/utils/ProfilesUtils";
 import * as tempFolder from "../../../src/utils/TempFolder";
 import * as core from "@zowe/core-for-zowe-sdk";
-import { IJestIt, ITestContext, processSubscriptions, spyOnSubscriptions } from "../../__common__/testUtils";
+import { IJestIt, ITestContext, processSubscriptions } from "../../__common__/testUtils";
 import { TsoCommandHandler } from "../../../src/command/TsoCommandHandler";
 import { MvsCommandHandler } from "../../../src/command/MvsCommandHandler";
 import { UnixCommandHandler } from "../../../src/command/UnixCommandHandler";
-import { saveFile } from "../../../src/dataset/actions";
-import { saveUSSFile } from "../../../src/uss/actions";
 import { ZoweLogger } from "../../../src/utils/ZoweLogger";
-import { ZoweSaveQueue } from "../../../src/abstract/ZoweSaveQueue";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import * as HistoryView from "../../../src/shared/HistoryView";
 import { LocalFileManagement } from "../../../src/utils/LocalFileManagement";
@@ -53,6 +50,7 @@ describe("Test src/shared/extension", () => {
             },
             _: { _: "_" },
         };
+        const profileMocks = { deleteProfile: jest.fn(), refresh: jest.fn() };
         const commands: IJestIt[] = [
             {
                 name: "zowe.updateSecureCredentials",
@@ -101,7 +99,7 @@ describe("Test src/shared/extension", () => {
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [globals.SETTINGS_LOGS_FOLDER_PATH], ret: false },
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [globals.SETTINGS_TEMP_FOLDER_PATH], ret: false },
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [globals.SETTINGS_AUTOMATIC_PROFILE_VALIDATION], ret: true },
-                    { spy: jest.spyOn(Profiles, "getInstance"), arg: [], ret: { refresh: jest.fn() } },
+                    { spy: jest.spyOn(Profiles, "getInstance"), arg: [], ret: profileMocks },
                     { spy: jest.spyOn(refreshActions, "refreshAll"), arg: ["ds"] },
                     { spy: jest.spyOn(refreshActions, "refreshAll"), arg: ["uss"] },
                     { spy: jest.spyOn(refreshActions, "refreshAll"), arg: ["job"] },
@@ -147,56 +145,24 @@ describe("Test src/shared/extension", () => {
             },
             {
                 name: "onDidSaveTextDocument:2",
-                parm: [{ fileName: "DS_DIR", isDirty: true, uri: vscode.Uri.parse("") }],
-                mock: [
-                    {
-                        spy: jest.spyOn(ZoweSaveQueue, "push"),
-                        arg: [
-                            {
-                                fileProvider: "ds",
-                                savedFile: { fileName: "DS_DIR", uri: vscode.Uri.parse(""), isDirty: true },
-                                uploadRequest: saveFile,
-                            },
-                        ],
-                    },
-                ],
-            },
-            {
-                name: "onDidSaveTextDocument:3",
-                parm: [{ fileName: "USS_DIR", isDirty: true, uri: vscode.Uri.parse("") }],
-                mock: [
-                    {
-                        spy: jest.spyOn(ZoweSaveQueue, "push"),
-                        arg: [
-                            {
-                                fileProvider: "uss",
-                                savedFile: { fileName: "USS_DIR", isDirty: true, uri: vscode.Uri.parse("") },
-                                uploadRequest: saveUSSFile,
-                            },
-                        ],
-                    },
-                ],
-            },
-            {
-                name: "onDidSaveTextDocument:4",
                 parm: [{ isDirty: true, fileName: "NOT_DATASET" }],
                 mock: [],
             },
             {
                 name: "zowe.ds.deleteProfile",
-                mock: [{ spy: jest.spyOn(Profiles, "getInstance"), arg: [], ret: { deleteProfile: jest.fn() } }],
+                mock: [{ spy: jest.spyOn(Profiles, "getInstance"), arg: [], ret: profileMocks }],
             },
             {
                 name: "zowe.cmd.deleteProfile",
-                mock: [{ spy: jest.spyOn(Profiles, "getInstance"), arg: [], ret: { deleteProfile: jest.fn() } }],
+                mock: [{ spy: jest.spyOn(Profiles, "getInstance"), arg: [], ret: profileMocks }],
             },
             {
                 name: "zowe.uss.deleteProfile",
-                mock: [{ spy: jest.spyOn(Profiles, "getInstance"), arg: [], ret: { deleteProfile: jest.fn() } }],
+                mock: [{ spy: jest.spyOn(Profiles, "getInstance"), arg: [], ret: profileMocks }],
             },
             {
                 name: "zowe.jobs.deleteProfile",
-                mock: [{ spy: jest.spyOn(Profiles, "getInstance"), arg: [], ret: { deleteProfile: jest.fn() } }],
+                mock: [{ spy: jest.spyOn(Profiles, "getInstance"), arg: [], ret: profileMocks }],
             },
             {
                 name: "zowe.issueTsoCmd:1",
@@ -261,7 +227,6 @@ describe("Test src/shared/extension", () => {
             Object.defineProperty(globals, "USS_DIR", { value: testGlobals.USS_DIR });
             Object.defineProperty(globals, "SETTINGS_TEMP_FOLDER_LOCATION", { value: "/some/old/temp/location" });
             Object.defineProperty(vscode.workspace, "onDidSaveTextDocument", { value: onDidSaveTextDocument });
-            spyOnSubscriptions(commands);
             await sharedExtension.registerCommonCommands(test.context, test.value.providers);
         });
         afterAll(() => {

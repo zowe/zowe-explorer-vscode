@@ -38,6 +38,7 @@ import { SettingsConfig } from "../../../src/utils/SettingsConfig";
 import { mocked } from "../../../__mocks__/mockUtils";
 import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
 import { TreeProviders } from "../../../src/shared/TreeProviders";
+import { JobFSProvider } from "../../../src/job/JobFSProvider";
 
 jest.mock("vscode");
 const showMock = jest.fn();
@@ -127,7 +128,14 @@ async function createGlobalMocks() {
                 WorkspaceFolder: 3,
             };
         }),
+        FileSystemProvider: {
+            createDirectory: jest.fn(),
+            delete: jest.fn(),
+        },
     };
+
+    jest.spyOn(JobFSProvider.instance, "createDirectory").mockImplementation(globalMocks.FileSystemProvider.createDirectory);
+    jest.spyOn(JobFSProvider.instance, "delete").mockImplementation(globalMocks.FileSystemProvider.delete);
     jest.spyOn(Gui, "createTreeView").mockImplementation(globalMocks.createTreeView);
     Object.defineProperty(ProfilesCache, "getConfigInstance", {
         value: jest.fn(() => {
@@ -361,7 +369,6 @@ describe("ZosJobsProvider unit tests - Function initializeFavChildNodeForProfile
             job: new MockJobDetail("testJob(JOB123)"),
         });
         node.contextValue = globals.JOBS_JOB_CONTEXT + globals.FAV_SUFFIX;
-        node.command = { command: "zowe.zosJobsSelectjob", title: "", arguments: [node] };
         const targetIcon = getIconByNode(node);
         if (targetIcon) {
             node.iconPath = targetIcon.path;
@@ -428,6 +435,7 @@ describe("ZosJobsProvider unit tests - Function loadProfilesForFavorites", () =>
             label: "testProfile",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             parentNode: blockMocks.jobFavoritesNode,
+            profile: blockMocks.imperativeProfile,
         });
         favProfileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
         const testTree = new ZosJobsProvider();
@@ -568,18 +576,24 @@ describe("ZosJobsProvider unit tests - Function loadProfilesForFavorites", () =>
         });
         favProfileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
         // Leave mParent parameter undefined for favJobNode and expectedFavPdsNode to test undefined profile/session condition
-        const favJobNode = new ZoweJobNode({ label: "JOBTEST(JOB1234)", collapsibleState: vscode.TreeItemCollapsibleState.Collapsed });
-        favJobNode.contextValue = globals.JOBS_JOB_CONTEXT + globals.FAV_SUFFIX;
+        const favJobNode = new ZoweJobNode({
+            label: "JOBTEST(JOB1234)",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            contextOverride: globals.JOBS_JOB_CONTEXT + globals.FAV_SUFFIX,
+            parentNode: blockMocks.jobFavoritesNode,
+            profile: blockMocks.imperativeProfile,
+        });
         const testTree = new ZosJobsProvider();
         favProfileNode.children.push(favJobNode);
         testTree.mFavorites.push(favProfileNode);
         const expectedFavJobNode = new ZoweJobNode({
             label: "JOBTEST(JOB1234)",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            contextOverride: globals.JOBS_JOB_CONTEXT + globals.FAV_SUFFIX,
             session: blockMocks.session,
+            parentNode: blockMocks.jobFavoritesNode,
             profile: blockMocks.imperativeProfile,
         });
-        expectedFavJobNode.contextValue = globals.JOBS_JOB_CONTEXT + globals.FAV_SUFFIX;
 
         await testTree.loadProfilesForFavorites(blockMocks.log, favProfileNode);
         const resultFavJobNode = testTree.mFavorites[0].children[0];

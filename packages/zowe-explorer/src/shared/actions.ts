@@ -11,15 +11,13 @@
 
 import * as vscode from "vscode";
 import * as globals from "../globals";
-import { Gui, IZoweDatasetTreeNode, IZoweUSSTreeNode, Types, imperative } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweDatasetTreeNode, IZoweUSSTreeNode, Types } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
-import { filterTreeByString, willForceUpload } from "../shared/utils";
+import { filterTreeByString } from "../shared/utils";
 import { FilterItem, FilterDescriptor } from "../utils/ProfilesUtils";
 import * as contextually from "../shared/context";
 import { getIconById, IconId } from "../generators/icons";
 import { ZoweLogger } from "../utils/ZoweLogger";
-import { markDocumentUnsaved } from "../utils/workspace";
-import { LocalFileManagement } from "../utils/LocalFileManagement";
 
 /**
  * Search for matching items loaded in data set or USS tree
@@ -132,7 +130,7 @@ export async function searchInAllLoadedItems(datasetProvider?: Types.IZoweDatase
 
                 // Open in workspace
                 datasetProvider.addSearchHistory(`${nodeName}(${memberName})`);
-                await member.openDs(false, true, datasetProvider);
+                await vscode.commands.executeCommand(member.command.command, member.resourceUri);
             } else {
                 // PDS & SDS
                 await datasetProvider.getTreeView().reveal(node, { select: true, focus: true, expand: false });
@@ -140,7 +138,7 @@ export async function searchInAllLoadedItems(datasetProvider?: Types.IZoweDatase
                 // If selected node was SDS, open it in workspace
                 if (contextually.isDs(node)) {
                     datasetProvider.addSearchHistory(nodeName);
-                    await node.openDs(false, true, datasetProvider);
+                    await vscode.commands.executeCommand(node.command.command, node.resourceUri);
                 }
             }
         }
@@ -218,39 +216,4 @@ export function resetValidationSettings(node: Types.IZoweNodeType, setting: bool
         Profiles.getInstance().disableValidationContext(node);
     }
     return node;
-}
-
-export function resolveFileConflict(
-    node: IZoweDatasetTreeNode | IZoweUSSTreeNode,
-    profile: imperative.IProfileLoaded,
-    doc: vscode.TextDocument,
-    label?: string
-): void {
-    const compareBtn = vscode.l10n.t("Compare");
-    const overwriteBtn = vscode.l10n.t("Overwrite");
-    const infoMsg = vscode.l10n.t(
-        "The content of the file is newer. Compare your version with latest or overwrite the content of the file with your changes."
-    );
-    ZoweLogger.info(infoMsg);
-    Gui.infoMessage(infoMsg, {
-        items: [compareBtn, overwriteBtn],
-    }).then(async (selection) => {
-        switch (selection) {
-            case compareBtn: {
-                ZoweLogger.info(`${compareBtn} chosen.`);
-                await LocalFileManagement.compareSavedFileContent(doc, node, label, profile);
-                break;
-            }
-            case overwriteBtn: {
-                ZoweLogger.info(`${overwriteBtn} chosen.`);
-                await willForceUpload(node, doc, label, profile);
-                break;
-            }
-            default: {
-                ZoweLogger.info("Operation cancelled, file unsaved.");
-                await markDocumentUnsaved(doc);
-                break;
-            }
-        }
-    });
 }

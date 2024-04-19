@@ -10,6 +10,7 @@
  */
 
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
+import * as crypto from "crypto";
 import { FTPConfig, IZosFTPProfile } from "@zowe/zos-ftp-for-zowe-cli";
 import { imperative, MainframeInteraction } from "@zowe/zowe-explorer-api";
 import * as globals from "./globals";
@@ -47,6 +48,12 @@ export abstract class AbstractFtpApi implements MainframeInteraction.ICommon {
             globals.SESSION_MAP.set(this.profile, this.session);
         }
         return this.session;
+    }
+
+    protected hashBuffer(buffer: Buffer): string {
+        const hash = crypto.createHash("sha1");
+        hash.update(buffer);
+        return hash.digest("hex");
     }
 
     public getProfileTypeName(): string {

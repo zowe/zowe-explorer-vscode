@@ -11,30 +11,21 @@
 
 import * as dsUtils from "../dataset/utils";
 import * as vscode from "vscode";
-import * as fs from "fs";
 import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
 import * as globals from "../globals";
 import * as path from "path";
 import { FilterItem, errorHandling } from "../utils/ProfilesUtils";
-import {
-    getDocumentFilePath,
-    concatChildNodes,
-    checkForAddedSuffix,
-    getSelectedNodeList,
-    JobSubmitDialogOpts,
-    JOB_SUBMIT_DIALOG_OPTS,
-    uploadContent,
-} from "../shared/utils";
+import { getSelectedNodeList, JobSubmitDialogOpts, JOB_SUBMIT_DIALOG_OPTS } from "../shared/utils";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { Profiles } from "../Profiles";
 import { getIconByNode } from "../generators/icons";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import * as contextually from "../shared/context";
-import { markDocumentUnsaved, setFileSaved } from "../utils/workspace";
 import { ZoweLogger } from "../utils/ZoweLogger";
 import { ProfileManagement } from "../utils/ProfileManagement";
 import { LocalFileManagement } from "../utils/LocalFileManagement";
-import { Gui, imperative, IZoweDatasetTreeNode, Validation, Types } from "@zowe/zowe-explorer-api";
+import { Gui, imperative, IZoweDatasetTreeNode, Validation, Types, confirmForUnsavedDoc } from "@zowe/zowe-explorer-api";
+import { DatasetFSProvider } from "./DatasetFSProvider";
 
 let typeEnum: zosfiles.CreateDataSetTypeEnum;
 // Make a nice new mutable array for the DS properties
@@ -326,7 +317,8 @@ export async function deleteDatasetPrompt(datasetProvider: Types.IZoweDatasetTre
     );
     const deleteButton = vscode.l10n.t("Delete");
     const message = vscode.l10n.t({
-        message: `Are you sure you want to delete the following {0} item(s)?\nThis will permanently remove these data sets and/or members from your system.\n\n{1}`,
+        message: `Are you sure you want to delete the following {0} item(s)?
+This will permanently remove these data sets and/or members from your system.\n\n{1}`,
         args: [nodesToDelete.length, nodesToDelete.toString().replace(/(,)/g, "\n")],
         comment: ["Data Sets to delete length", "Data Sets to delete"],
     });
@@ -436,19 +428,20 @@ export async function createMember(parent: IZoweDatasetTreeNode, datasetProvider
         parent.dirty = true;
         datasetProvider.refreshElement(parent);
 
-        await new ZoweDatasetNode({
+        const newNode = new ZoweDatasetNode({
             label: name,
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             parentNode: parent,
             profile: parent.getProfile(),
-        }).openDs(false, true, datasetProvider);
+        });
+        await vscode.workspace.fs.writeFile(newNode.resourceUri, new Uint8Array());
 
         // Refresh corresponding tree parent to reflect addition
         const otherTreeParent = datasetProvider.findEquivalentNode(parent, contextually.isFavorite(parent));
         if (otherTreeParent != null) {
             datasetProvider.refreshElement(otherTreeParent);
         }
-
+        await vscode.commands.executeCommand("vscode.open", newNode.resourceUri);
         datasetProvider.refresh();
     }
 }
@@ -650,7 +643,7 @@ function getTemplateNames(datasetProvider: Types.IZoweDatasetTreeType): string[]
     const templates = datasetProvider.getDsTemplates();
     const templateNames: string[] = [];
     templates?.forEach((template) => {
-        Object.entries(template).forEach(([key, value]) => {
+        Object.entries(template).forEach(([key, _value]) => {
             templateNames.push(key);
         });
     });
@@ -1179,8 +1172,7 @@ export async function deleteDataset(node: IZoweDatasetTreeNode, datasetProvider:
         }
         await datasetProvider.checkCurrentProfile(node);
         if (Profiles.getInstance().validProfile !== Validation.ValidationType.INVALID) {
-            const profile = node.getProfile();
-            await ZoweExplorerApiRegister.getMvsApi(profile).deleteDataSet(label, { responseTimeout: profile.profile?.responseTimeout });
+            await DatasetFSProvider.instance.delete(node.resourceUri, { recursive: false });
         } else {
             return;
         }
@@ -1231,16 +1223,6 @@ export async function deleteDataset(node: IZoweDatasetTreeNode, datasetProvider:
     }
 
     datasetProvider.refreshElement(node.getSessionNode());
-
-    // remove local copy of file
-    const fileName = getDocumentFilePath(label, node);
-    try {
-        if (fs.existsSync(fileName)) {
-            fs.unlinkSync(fileName);
-        }
-    } catch (err) {
-        ZoweLogger.warn(err);
-    }
 }
 
 /**
@@ -1257,6 +1239,7 @@ export async function refreshPS(node: IZoweDatasetTreeNode): Promise<void> {
             // For favorited or non-favorited sequential DS:
             case contextually.isFavorite(node):
             case contextually.isSessionNotFav(node.getParent()):
+            case contextually.isDs(node):
                 label = node.label as string;
                 break;
             // For favorited or non-favorited data set members:
@@ -1267,24 +1250,16 @@ export async function refreshPS(node: IZoweDatasetTreeNode): Promise<void> {
             default:
                 throw Error(vscode.l10n.t("Item invalid."));
         }
-        const documentFilePath = getDocumentFilePath(label, node);
-        const prof = node.getProfile();
-        const response = await ZoweExplorerApiRegister.getMvsApi(prof).getContents(label, {
-            file: documentFilePath,
-            returnEtag: true,
-            binary: node.binary,
-            encoding: node.encoding !== undefined ? node.encoding : prof.profile?.encoding,
-            responseTimeout: prof.profile?.responseTimeout,
-        });
-        node.setEtag(response.apiResponse.etag);
 
-        const document = await vscode.workspace.openTextDocument(documentFilePath);
-        Gui.showTextDocument(document, { preview: false });
-        // if there are unsaved changes, vscode won't automatically display the updates, so close and reopen
-        if (document.isDirty) {
-            await vscode.commands.executeCommand("workbench.action.closeActiveEditor");
-            Gui.showTextDocument(document, { preview: false });
+        if (!(await confirmForUnsavedDoc(node.resourceUri))) {
+            return;
         }
+
+        const statusMsg = Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Fetching data set..."));
+        await DatasetFSProvider.instance.fetchDatasetAtUri(node.resourceUri, {
+            editor: vscode.window.visibleTextEditors.find((v) => v.document.uri.path === node.resourceUri.path),
+        });
+        statusMsg.dispose();
     } catch (err) {
         if (err.message.includes(vscode.l10n.t("not found"))) {
             ZoweLogger.error(
@@ -1589,136 +1564,6 @@ export async function pasteMember(node: IZoweDatasetTreeNode, datasetProvider: T
                 }
             }
         }
-    }
-}
-
-/**
- * Uploads the file to the mainframe
- *
- * @export
- * @param {vscode.TextDocument} doc - TextDocument that is being saved
- */
-export async function saveFile(doc: vscode.TextDocument, datasetProvider: Types.IZoweDatasetTreeType): Promise<void> {
-    ZoweLogger.trace("dataset.actions.saveFile called.");
-    // Check if file is a data set, instead of some other file
-    const docPath = path.join(doc.fileName, "..");
-    ZoweLogger.debug(
-        vscode.l10n.t({
-            message: "Requested to save data set {0}",
-            args: [doc.fileName],
-            comment: ["Document file name"],
-        })
-    );
-    if (docPath.toUpperCase().indexOf(globals.DS_DIR.toUpperCase()) === -1) {
-        ZoweLogger.error(
-            vscode.l10n.t({
-                message: "path.relative returned a non-blank directory. Assuming we are not in the DS_DIR directory: {0}",
-                args: [path.relative(docPath, globals.DS_DIR)],
-                comment: ["Relative path to Data Set directory"],
-            })
-        );
-        return;
-    }
-    const start = path.join(globals.DS_DIR + path.sep).length;
-    const ending = doc.fileName.substring(start);
-    const sesName = ending.substring(0, ending.indexOf(path.sep));
-    const profile = Profiles.getInstance().loadNamedProfile(sesName);
-    const fileLabel = path.basename(doc.fileName);
-    const dataSetName = fileLabel.substring(0, fileLabel.indexOf("("));
-    const memberName = fileLabel.substring(fileLabel.indexOf("(") + 1, fileLabel.indexOf(")"));
-    if (!profile) {
-        const sessionError = vscode.l10n.t("Could not locate session when saving data set.");
-        ZoweLogger.error(sessionError);
-        await Gui.errorMessage(sessionError);
-        return;
-    }
-
-    const etagFavorites = (
-        datasetProvider.mFavorites
-            .find((child) => child.label.toString().trim() === sesName)
-            ?.children.find((child) => child.label.toString().trim() === dataSetName)
-            ?.children.find((child) => child.label.toString().trim() === memberName) as IZoweDatasetTreeNode
-    )?.getEtag();
-    const sesNode =
-        etagFavorites !== "" && etagFavorites !== undefined
-            ? datasetProvider.mFavorites.find((child) => child.label.toString().trim() === sesName)
-            : datasetProvider.mSessionNodes.find((child) => child.label.toString().trim() === sesName);
-    if (!sesNode) {
-        // if saving from favorites, a session might not exist for this node
-        ZoweLogger.debug(vscode.l10n.t("Could not find session node"));
-    }
-
-    // If not a member
-    let label = doc.fileName.substring(
-        doc.fileName.lastIndexOf(path.sep) + 1,
-        checkForAddedSuffix(doc.fileName) ? doc.fileName.lastIndexOf(".") : doc.fileName.length
-    );
-    label = label.toUpperCase().trim();
-    ZoweLogger.info(
-        vscode.l10n.t({
-            message: "Saving file {0}",
-            args: [label],
-            comment: ["Label"],
-        })
-    );
-    const dsname = label.includes("(") ? label.slice(0, label.indexOf("(")) : label;
-    try {
-        // Checks if file still exists on server
-        const response = await ZoweExplorerApiRegister.getMvsApi(profile).dataSet(dsname, { responseTimeout: profile.profile?.responseTimeout });
-        if (!response.apiResponse.items.length) {
-            const saveError = vscode.l10n.t("Data set failed to save. Data set may have been deleted or renamed on mainframe.");
-            ZoweLogger.error(saveError);
-            await Gui.errorMessage(saveError);
-            return;
-        }
-    } catch (err) {
-        await errorHandling(err, sesName);
-    }
-    // Get specific node based on label and parent tree (session / favorites)
-    const nodes = concatChildNodes(sesNode ? [sesNode] : datasetProvider.mSessionNodes);
-    const node: IZoweDatasetTreeNode =
-        nodes.find((zNode) => {
-            if (contextually.isDsMember(zNode)) {
-                const zNodeDetails = dsUtils.getProfileAndDataSetName(zNode);
-                return `${zNodeDetails.profileName}(${zNodeDetails.dataSetName})` === `${label}`;
-            } else if (contextually.isDs(zNode) || contextually.isDsSession(zNode)) {
-                return zNode.label.toString().trim() === label;
-            } else {
-                return false;
-            }
-        }) ?? datasetProvider.openFiles?.[doc.uri.fsPath];
-
-    // define upload options
-    const uploadOptions: zosfiles.IUploadOptions = {
-        etag: node?.getEtag(),
-        returnEtag: true,
-    };
-
-    const prof = node?.getProfile() ?? profile;
-    try {
-        const uploadResponse = await Gui.withProgress(
-            {
-                location: vscode.ProgressLocation.Window,
-                title: vscode.l10n.t("Saving data set..."),
-            },
-            () => {
-                return uploadContent(node, doc, label, prof, uploadOptions.etag, uploadOptions.returnEtag);
-            }
-        );
-        if (uploadResponse.success) {
-            Gui.setStatusBarMessage(uploadResponse.commandResponse, globals.STATUS_BAR_TIMEOUT_MS);
-            // set local etag with the new etag from the updated file on mainframe
-            node?.setEtag(uploadResponse.apiResponse[0].etag);
-            setFileSaved(true);
-        } else if (!uploadResponse.success && uploadResponse.commandResponse.includes("Rest API failure with HTTP(S) status 412")) {
-            await LocalFileManagement.compareSavedFileContent(doc, node, label, profile);
-        } else {
-            await markDocumentUnsaved(doc);
-            Gui.errorMessage(uploadResponse.commandResponse);
-        }
-    } catch (err) {
-        await markDocumentUnsaved(doc);
-        await errorHandling(err, sesName);
     }
 }
 
