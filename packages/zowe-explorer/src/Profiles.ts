@@ -1237,6 +1237,24 @@ export class Profiles extends ProfilesCache {
         }
     }
 
+    public async handleSwitchAuthentication(node?: IZoweNodeType, label?: string): Promise<void> {
+        // think it as basic to token based auth switch
+
+        const profName = "base";
+        const profAttrs = this.getProfileFromConfig(profName);
+        const configApi = (await this.getProfileInfo()).getTeamConfig();
+        configApi.set(`${(await profAttrs).profLoc.jsonLoc}.secure`, []);
+        await configApi.save();
+
+        const profName2 = "zosmf";
+        const profAttrs2 = this.getProfileFromConfig(profName2);
+        const configApi2 = (await this.getProfileInfo()).getTeamConfig();
+        configApi2.set(`${(await profAttrs2).profLoc.jsonLoc}.secure`, []);
+        await configApi2.save();
+
+        // await this.ssoLogin(node, label);
+    }
+
     public clearDSFilterFromTree(node: IZoweNodeType): void {
         if (!TreeProviders.ds?.mSessionNodes || !TreeProviders.ds?.mSessionNodes.length) {
             return;

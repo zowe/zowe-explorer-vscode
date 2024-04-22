@@ -76,6 +76,7 @@ export class ProfileManagement {
         edit: "edit-profile",
         enable: "enable-validation",
         hide: "hide-profile",
+        switch: "switch-auth",
         login: "obtain-token",
         logout: "invalidate-token",
         update: "update-credentials",
@@ -119,6 +120,12 @@ export class ProfileManagement {
         [this.AuthQpLabels.hide]: {
             label: localize("hideProfileQpItems.hideProfile.qpLabel", "$(eye-closed) Hide Profile"),
             description: localize("hideProfileQpItems.hideProfile.qpDetail", "Hide profile name from tree view"),
+        },
+    };
+    public static switchAuthenticationQpItems: Record<string, vscode.QuickPickItem> = {
+        [this.AuthQpLabels.switch]: {
+            label: localize("switchAuthenticationQpItems.switchAuthentication.qpLabel", "$(eye-closed) Change the Authentication Method"),
+            description: localize("switchAuthenticationQpItems.switchAuthentication.qpDetail", "To switch authentication method"),
         },
     };
     public static tokenAuthLoginQpItem: Record<string, vscode.QuickPickItem> = {
@@ -222,6 +229,11 @@ export class ProfileManagement {
                 await this.handleHideProfiles(node);
                 break;
             }
+            case this.switchAuthenticationQpItems[this.AuthQpLabels.switch]: {
+                await Profiles.getInstance().handleSwitchAuthentication(node, profile.name);
+                await Profiles.getInstance().ssoLogin(node, profile.name);
+                break;
+            }
             case this.deleteProfileQpItem[this.AuthQpLabels.delete]: {
                 await this.handleDeleteProfiles(node);
                 break;
@@ -279,6 +291,7 @@ export class ProfileManagement {
     private static addFinalQpOptions(node: IZoweTreeNode, quickPickOptions: vscode.QuickPickItem[]): vscode.QuickPickItem[] {
         quickPickOptions.push(this.editProfileQpItems[this.AuthQpLabels.edit]);
         quickPickOptions.push(this.hideProfileQpItems[this.AuthQpLabels.hide]);
+        quickPickOptions.push(this.switchAuthenticationQpItems[this.AuthQpLabels.switch]);
         if (node.contextValue.includes(globals.NO_VALIDATE_SUFFIX)) {
             quickPickOptions.push(this.enableProfileValildationQpItem[this.AuthQpLabels.enable]);
         } else {
