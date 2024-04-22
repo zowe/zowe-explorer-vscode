@@ -13,9 +13,9 @@ import { Then, When } from "@cucumber/cucumber";
 
 When("a user locates the Zowe Explorer icon in the side bar", async () => {
     (await browser.getWorkbench()).getSideBar();
-    expect($('.monaco-action-bar > .actions-container > .action-item > a[aria-label="Zowe Explorer"]')).toExist();
+    expect($('.action-item > a[aria-label="Zowe Explorer"]')).toExist();
 });
 
 Then("the user can click on the Zowe Explorer icon", () => {
-    $('.monaco-action-bar > .actions-container > .action-item > a[aria-label="Zowe Explorer"]').click();
+    $('.action-item > a[aria-label="Zowe Explorer"]').click();
 });
