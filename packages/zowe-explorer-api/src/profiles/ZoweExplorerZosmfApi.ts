@@ -383,7 +383,7 @@ export namespace ZoweExplorerZosmf {
 
         public async issueUnixCommand(command: string, cwd: string, sshSession: zosuss.SshSession): Promise<string> {
             let stdout = "";
-            if (cwd || cwd === "") {
+            if (cwd) {
                 await zosuss.Shell.executeSshCwd(sshSession, command, '"' + cwd + '"', (data: string) => {
                     stdout += data;
                 });

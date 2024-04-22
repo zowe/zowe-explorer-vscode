@@ -57,10 +57,10 @@ export class UnixCommandHandler extends ZoweCommandProvider {
             comment: ["Profile type"],
         }),
         sshSessionErrorMsg: vscode.l10n.t("Error preparring SSH connection for issueing UNIX commands, please check SSH profile for correctness."),
-        cwdRedirectingMsg: vscode.l10n.t("Redirecting to Home Directory"),
         sshProfNotFoundMsg: vscode.l10n.t("No SSH profile found. Please create an SSH profile."),
         sshProfMissingInfoMsg: vscode.l10n.t("SSH profile missing connection details. Please update."),
         noProfilesAvailableMsg: vscode.l10n.t("No profiles available."),
+        cwdRedirectingMsg: vscode.l10n.t("Redirecting to Home Directory"),
     };
 
     public profileInstance = Profiles.getInstance();
@@ -80,7 +80,10 @@ export class UnixCommandHandler extends ZoweCommandProvider {
             this.serviceProf = node.getProfile();
             cwd = node.fullPath;
         }
-
+        if (!this.serviceProf) {
+            this.serviceProf = await this.userSelectProfile();
+            if (!this.serviceProf) return;
+        }
         try {
             // check for availability of all needed ZE APIs for issuing UNIX commands
             const commandApi = ZoweExplorerApiRegister.getInstance().getCommandApi(this.serviceProf);
@@ -91,7 +94,13 @@ export class UnixCommandHandler extends ZoweCommandProvider {
             }
             if (!ZoweExplorerApiRegister.getCommandApi(this.serviceProf).issueUnixCommand) {
                 ZoweLogger.error(this.unixCmdMsgs.issueUnixCmdNotSupportedMsg);
-                Gui.errorMessage(this.unixCmdMsgs.issueUnixCmdNotSupportedMsg);
+                Gui.errorMessage(
+                    vscode.l10n.t({
+                        message: "Issuing UNIX commands is not supported for this profile type, {0}.",
+                        args: [this.serviceProf?.type],
+                        comment: ["Profile type"],
+                    })
+                );
                 return;
             }
             try {
@@ -108,17 +117,16 @@ export class UnixCommandHandler extends ZoweCommandProvider {
                     )
                 );
             }
-            if (!this.serviceProf) {
-                this.serviceProf = await this.userSelectProfile();
-            }
             if (this.isSshRequiredForProf) {
                 await this.setsshSession();
                 if (!this.sshSession) {
+                    this.serviceProf = undefined;
                     ZoweLogger.error(this.unixCmdMsgs.sshSessionErrorMsg);
                     Gui.errorMessage(this.unixCmdMsgs.sshSessionErrorMsg);
                     return;
                 }
             }
+
             await this.profileInstance.checkCurrentProfile(this.serviceProf);
 
             if (!cwd) {
@@ -131,6 +139,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
                     Gui.showMessage(this.unixCmdMsgs.cwdRedirectingMsg);
                 }
                 if (cwd == undefined) {
+                    this.serviceProf = undefined;
                     ZoweLogger.info(this.unixCmdMsgs.opCancelledMsg);
                     Gui.showMessage(this.unixCmdMsgs.opCancelledMsg);
                     return;
@@ -212,7 +221,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
     }
 
     private async getSshProfile(): Promise<void> {
-        ZoweLogger.trace("UnixCommandHandler.getsshParams called.");
+        ZoweLogger.trace("UnixCommandHandler.getsshProfile called.");
         const profiles = await this.profileInstance.fetchAllProfilesByType("ssh");
         if (!profiles.length) {
             ZoweLogger.error(this.unixCmdMsgs.sshProfNotFoundMsg);
@@ -304,6 +313,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
             const choice = await Gui.resolveQuickPick(quickpick);
             quickpick.hide();
             if (!choice) {
+                this.serviceProf = undefined;
                 ZoweLogger.info(this.unixCmdMsgs.opCancelledMsg);
                 Gui.showMessage(this.unixCmdMsgs.opCancelledMsg);
                 return;
@@ -325,6 +335,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
             // get user input
             response = await Gui.showInputBox(options2);
             if (!response) {
+                this.serviceProf = undefined;
                 ZoweLogger.info(this.unixCmdMsgs.opCancelledMsg);
                 Gui.showMessage(this.unixCmdMsgs.opCancelledMsg);
                 return;
@@ -356,6 +367,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
                 this.outputChannel.appendLine(submitResponse);
                 this.outputChannel.show(true);
                 this.history.addSearchHistory(command);
+                this.serviceProf = undefined;
             }
         } catch (error) {
             await errorHandling(error, profile.name);
