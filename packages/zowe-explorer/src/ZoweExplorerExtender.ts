@@ -12,7 +12,6 @@
 import * as PromiseQueue from "promise-queue";
 import * as path from "path";
 import * as fs from "fs";
-import * as globals from "./globals";
 import * as vscode from "vscode";
 import {
     IApiExplorerExtender,
@@ -26,6 +25,7 @@ import {
 } from "@zowe/zowe-explorer-api";
 import { getProfile, ProfilesUtils } from "./utils/ProfilesUtils";
 import { ZoweLogger } from "./utils/ZoweLogger";
+import * as globals from "./globals";
 
 /**
  * The Zowe Explorer API Register singleton that gets exposed to other VS Code

@@ -24,6 +24,7 @@ import { createIJobObject, createJobsTree } from "../../../__mocks__/mockCreator
 import { Gui } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../../src/Profiles";
 import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
+import { UssFSProvider } from "../../../src/uss/UssFSProvider";
 
 async function initializeHistoryViewMock(blockMocks: any, globalMocks: any): Promise<HistoryView> {
     return new HistoryView(
@@ -44,7 +45,12 @@ function createGlobalMocks(): any {
         testSession: createISession(),
         treeView: createTreeView(),
         imperativeProfile: createIProfile(),
+        FileSystemProvider: {
+            createDirectory: jest.fn(),
+        },
     };
+
+    jest.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation(globalMocks.FileSystemProvider.createDirectory);
     Object.defineProperty(Gui, "showMessage", { value: jest.fn(), configurable: true });
     Object.defineProperty(Gui, "resolveQuickPick", { value: jest.fn(), configurable: true });
     Object.defineProperty(Gui, "createQuickPick", { value: jest.fn(), configurable: true });

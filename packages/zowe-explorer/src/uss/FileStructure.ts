@@ -10,6 +10,7 @@
  */
 
 import { ZoweLogger } from "../utils/ZoweLogger";
+import * as vscode from "vscode";
 
 /**
  * File types within the USS tree structure
@@ -20,8 +21,7 @@ export enum UssFileType {
 }
 
 export interface UssFileTree {
-    // The path of the file on the local file system, if it exists
-    localPath?: string;
+    localUri?: vscode.Uri;
 
     // The path of the file/directory as defined in USS
     ussPath: string;
@@ -33,7 +33,7 @@ export interface UssFileTree {
     binary?: boolean;
 
     // Any files/directory trees within this file tree
-    children: UssFileTree[];
+    children?: UssFileTree[];
 
     // The session where this node comes from (optional for root)
     sessionName?: string;

@@ -11,8 +11,8 @@
 
 import * as vscode from "vscode";
 import { Gui } from "../../../src/globals/Gui";
-import { IProfileLoaded, Session } from "@zowe/imperative";
-import { MessageSeverity, IZoweLogger } from "../../../src/logger";
+import { Session } from "@zowe/imperative";
+import { MessageSeverity } from "../../../src/logger";
 import { PromptCredentialsOptions, ZoweVsCodeExtension } from "../../../src/vscode";
 import { ProfilesCache, Types } from "../../../src";
 import { Login, Logout } from "@zowe/core-for-zowe-sdk";
@@ -93,7 +93,7 @@ describe("ZoweVsCodeExtension", () => {
     describe("deprecated methods", () => {
         it("showVsCodeMessage should pass on params to Gui module", () => {
             const showMessageSpy = jest.spyOn(Gui, "showMessage").mockImplementation();
-            ZoweVsCodeExtension.showVsCodeMessage("test", MessageSeverity.INFO, undefined as unknown as IZoweLogger);
+            ZoweVsCodeExtension.showVsCodeMessage("test", MessageSeverity.INFO, undefined as any);
             expect(showMessageSpy).toHaveBeenCalledWith("test", {
                 severity: MessageSeverity.INFO,
                 logger: undefined,
@@ -126,7 +126,7 @@ describe("ZoweVsCodeExtension", () => {
                     }),
                 });
                 const showInputBoxSpy = jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("fakeUser").mockResolvedValueOnce("fakePassword");
-                const profileLoaded: IProfileLoaded = await ZoweVsCodeExtension.promptCredentials(promptCredsOptions);
+                const profileLoaded: imperative.IProfileLoaded = await ZoweVsCodeExtension.promptCredentials(promptCredsOptions);
                 expect(profileLoaded.profile?.user).toBe("fakeUser");
                 expect(profileLoaded.profile?.password).toBe("fakePassword");
                 expect(showInputBoxSpy).toHaveBeenCalledTimes(2);
@@ -402,7 +402,7 @@ describe("ZoweVsCodeExtension", () => {
             });
             const showInputBoxSpy = jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("fakeUser").mockResolvedValueOnce("fakePassword");
             const saveCredentialsSpy = jest.spyOn(ZoweVsCodeExtension as any, "saveCredentials");
-            const profileLoaded: IProfileLoaded = await ZoweVsCodeExtension.updateCredentials(
+            const profileLoaded: imperative.IProfileLoaded = await ZoweVsCodeExtension.updateCredentials(
                 promptCredsOptions,
                 undefined as unknown as Types.IApiRegisterClient
             );
@@ -427,7 +427,7 @@ describe("ZoweVsCodeExtension", () => {
             });
             const showInputBoxSpy = jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("fakeUser").mockResolvedValueOnce("fakePassword");
             const saveCredentialsSpy = jest.spyOn(ZoweVsCodeExtension as any, "saveCredentials");
-            const profileLoaded: IProfileLoaded = await ZoweVsCodeExtension.updateCredentials(
+            const profileLoaded: imperative.IProfileLoaded = await ZoweVsCodeExtension.updateCredentials(
                 {
                     ...promptCredsOptions,
                     rePrompt: true,
@@ -456,7 +456,7 @@ describe("ZoweVsCodeExtension", () => {
             const showInputBoxSpy = jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("fakeUser").mockResolvedValueOnce("fakePassword");
             jest.spyOn(Gui, "showMessage").mockResolvedValueOnce("yes");
             const saveCredentialsSpy = jest.spyOn(ZoweVsCodeExtension as any, "saveCredentials");
-            const profileLoaded: IProfileLoaded = await ZoweVsCodeExtension.updateCredentials(
+            const profileLoaded: imperative.IProfileLoaded = await ZoweVsCodeExtension.updateCredentials(
                 promptCredsOptions,
                 undefined as unknown as Types.IApiRegisterClient
             );
@@ -482,7 +482,7 @@ describe("ZoweVsCodeExtension", () => {
             const showInputBoxSpy = jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("fakeUser").mockResolvedValueOnce("fakePassword");
             jest.spyOn(Gui, "showMessage").mockResolvedValueOnce(undefined);
             const saveCredentialsSpy = jest.spyOn(ZoweVsCodeExtension as any, "saveCredentials");
-            const profileLoaded: IProfileLoaded = await ZoweVsCodeExtension.updateCredentials(
+            const profileLoaded: imperative.IProfileLoaded = await ZoweVsCodeExtension.updateCredentials(
                 promptCredsOptions,
                 undefined as unknown as Types.IApiRegisterClient
             );

@@ -126,12 +126,19 @@ export namespace ZoweExplorerZosmf {
             return zosfiles.Utilities.isFileTagBinOrAscii(this.getSession(), ussFilePath);
         }
 
-        public getContents(inputFilePath: string, options: zosfiles.IDownloadOptions): Promise<zosfiles.IZosFilesResponse> {
+        public getContents(inputFilePath: string, options: zosfiles.IDownloadSingleOptions): Promise<zosfiles.IZosFilesResponse> {
             return zosfiles.Download.ussFile(this.getSession(), inputFilePath, options);
         }
 
         public copy(outputPath: string, options?: Omit<object, "request">): Promise<Buffer> {
             return zosfiles.Utilities.putUSSPayload(this.getSession(), outputPath, { ...(options ?? {}), request: "copy" });
+        }
+
+        public async move(oldPath: string, newPath: string): Promise<void> {
+            await zosfiles.Utilities.putUSSPayload(this.getSession(), newPath, {
+                request: "move",
+                from: oldPath,
+            });
         }
 
         public uploadFromBuffer(buffer: Buffer, filePath: string, options?: zosfiles.IUploadOptions): Promise<zosfiles.IZosFilesResponse> {
@@ -235,7 +242,7 @@ export namespace ZoweExplorerZosmf {
             return zosfiles.List.allMembers(this.getSession(), dataSetName, options);
         }
 
-        public getContents(dataSetName: string, options?: zosfiles.IDownloadOptions): Promise<zosfiles.IZosFilesResponse> {
+        public getContents(dataSetName: string, options?: zosfiles.IDownloadSingleOptions): Promise<zosfiles.IZosFilesResponse> {
             return zosfiles.Download.dataSet(this.getSession(), dataSetName, options);
         }
 

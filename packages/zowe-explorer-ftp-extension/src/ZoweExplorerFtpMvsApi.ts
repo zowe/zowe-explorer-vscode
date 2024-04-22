@@ -12,10 +12,9 @@
 import * as fs from "fs";
 import * as crypto from "crypto";
 import * as tmp from "tmp";
-import * as path from "path";
 
 import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
-import { Gui, imperative, MainframeInteraction, MessageSeverity } from "@zowe/zowe-explorer-api";
+import { BufferBuilder, Gui, imperative, MainframeInteraction, MessageSeverity } from "@zowe/zowe-explorer-api";
 import { DataSetUtils, TRANSFER_TYPE_ASCII, TRANSFER_TYPE_BINARY } from "@zowe/zos-ftp-for-zowe-cli";
 import { AbstractFtpApi } from "./ZoweExplorerAbstractFtpApi";
 import * as globals from "./globals";
@@ -80,27 +79,34 @@ export class FtpMvsApi extends AbstractFtpApi implements MainframeInteraction.IM
         }
     }
 
-    public async getContents(dataSetName: string, options: zosfiles.IDownloadOptions): Promise<zosfiles.IZosFilesResponse> {
+    public async getContents(dataSetName: string, options: zosfiles.IDownloadSingleOptions): Promise<zosfiles.IZosFilesResponse> {
         const result = this.getDefaultResponse();
-        const targetFile = options.file;
         const transferOptions = {
-            transferType: options.binary ? TRANSFER_TYPE_BINARY : TRANSFER_TYPE_ASCII,
-            localFile: targetFile,
             encoding: options.encoding,
+            localFile: undefined,
+            transferType: options.binary ? TRANSFER_TYPE_BINARY : TRANSFER_TYPE_ASCII,
         };
+        const fileOrStreamSpecified = options.file != null || options.stream != null;
         let connection;
         try {
             connection = await this.ftpClient(this.checkedProfile());
-            if (connection && targetFile) {
-                imperative.IO.createDirsSyncFromFilePath(targetFile);
-                await DataSetUtils.downloadDataSet(connection, dataSetName, transferOptions);
-                result.success = true;
-                result.commandResponse = "";
-                result.apiResponse.etag = await this.hashFile(targetFile);
-            } else {
+            if (!connection || !fileOrStreamSpecified) {
                 globals.LOGGER.logImperativeMessage(result.commandResponse, MessageSeverity.ERROR);
                 throw new Error(result.commandResponse);
             }
+            if (options.file) {
+                transferOptions.localFile = options.file;
+                imperative.IO.createDirsSyncFromFilePath(transferOptions.localFile);
+                await DataSetUtils.downloadDataSet(connection, dataSetName, transferOptions);
+                result.apiResponse.etag = await this.hashFile(transferOptions.localFile);
+            } else if (options.stream) {
+                const buffer = await DataSetUtils.downloadDataSet(connection, dataSetName, transferOptions);
+                result.apiResponse.etag = this.hashBuffer(buffer);
+                options.stream.write(buffer);
+                options.stream.end();
+            }
+            result.success = true;
+            result.commandResponse = "";
             return result;
         } catch (err) {
             throw new ZoweFtpExtensionError(err.message);
@@ -110,47 +116,25 @@ export class FtpMvsApi extends AbstractFtpApi implements MainframeInteraction.IM
     }
 
     public async uploadFromBuffer(buffer: Buffer, dataSetName: string, options?: zosfiles.IUploadOptions): Promise<zosfiles.IZosFilesResponse> {
-        const tempFile = tmp.fileSync();
-        if (options?.binary) {
-            fs.writeSync(tempFile.fd, buffer);
-        } else {
-            const text = imperative.IO.processNewlines(buffer.toString());
-            fs.writeSync(tempFile.fd, text);
-        }
-
-        const result = await this.putContents(tempFile.name, dataSetName, options);
+        const result = await this.putContents(buffer, dataSetName, options);
         return result;
     }
 
-    public async putContents(inputFilePath: string, dataSetName: string, options: zosfiles.IUploadOptions): Promise<zosfiles.IZosFilesResponse> {
-        const file = path.basename(inputFilePath).replace(/[^a-z0-9]+/gi, "");
-        const member = file.substr(0, MAX_MEMBER_NAME_LEN);
-        let targetDataset: string;
-        const end = dataSetName.indexOf("(");
-        let dataSetNameWithoutMember: string;
-        if (end > 0) {
-            dataSetNameWithoutMember = dataSetName.substr(0, end);
-        } else {
-            dataSetNameWithoutMember = dataSetName;
-        }
+    public async putContents(input: string | Buffer, dataSetName: string, options: zosfiles.IUploadOptions): Promise<zosfiles.IZosFilesResponse> {
+        const openParens = dataSetName.indexOf("(");
+        const dataSetNameWithoutMember = openParens > 0 ? dataSetName.substring(0, openParens) : dataSetName;
         const dsAtrribute = await this.dataSet(dataSetNameWithoutMember);
-        const dsorg = dsAtrribute.apiResponse.items[0].dsorg;
-        if (dsorg === "PS" || dataSetName.substr(dataSetName.length - 1) == ")") {
-            targetDataset = dataSetName;
-        } else {
-            targetDataset = dataSetName + "(" + member + ")";
-        }
         const result = this.getDefaultResponse();
         const profile = this.checkedProfile();
+
+        const inputIsBuffer = input instanceof Buffer;
 
         // Save-Save with FTP requires loading the file first
         // (moved this block above connection request so only one connection is active at a time)
         if (options.returnEtag && options.etag) {
-            const contentsTag = await this.getContentsTag(dataSetName);
+            const contentsTag = await this.getContentsTag(dataSetName, inputIsBuffer);
             if (contentsTag && contentsTag !== options.etag) {
-                result.success = false;
-                result.commandResponse = "Rest API failure with HTTP(S) status 412 Save conflict.";
-                return result;
+                throw Error("Rest API failure with HTTP(S) status 412: Save conflict");
             }
         }
         let connection;
@@ -161,11 +145,12 @@ export class FtpMvsApi extends AbstractFtpApi implements MainframeInteraction.IM
                 throw new Error(result.commandResponse);
             }
             const lrecl: number = dsAtrribute.apiResponse.items[0].lrecl;
-            const data = fs.readFileSync(inputFilePath, { encoding: "utf8" });
+            const data = inputIsBuffer ? input.toString() : fs.readFileSync(input, { encoding: "utf8" });
             const transferOptions: Record<string, any> = {
-                transferType: options.binary ? TRANSFER_TYPE_BINARY : TRANSFER_TYPE_ASCII,
-                localFile: inputFilePath,
+                content: inputIsBuffer ? input : undefined,
                 encoding: options.encoding,
+                localFile: inputIsBuffer ? undefined : input,
+                transferType: options.binary ? TRANSFER_TYPE_BINARY : TRANSFER_TYPE_ASCII,
             };
             if (profile.profile.secureFtp && data === "") {
                 // substitute single space for empty DS contents when saving (avoids FTPS error)
@@ -188,18 +173,16 @@ export class FtpMvsApi extends AbstractFtpApi implements MainframeInteraction.IM
                     return result;
                 }
             }
-            await DataSetUtils.uploadDataSet(connection, targetDataset, transferOptions);
+            await DataSetUtils.uploadDataSet(connection, dataSetName, transferOptions);
             result.success = true;
             if (options.returnEtag) {
                 // release this connection instance because a new one will be made with getContentsTag
                 this.releaseConnection(connection);
                 connection = null;
-                const contentsTag = await this.getContentsTag(dataSetName);
-                result.apiResponse = [
-                    {
-                        etag: contentsTag,
-                    },
-                ];
+                const etag = await this.getContentsTag(dataSetName, inputIsBuffer);
+                result.apiResponse = {
+                    etag,
+                };
             }
             result.commandResponse = "Data set uploaded successfully.";
             return result;
@@ -375,16 +358,21 @@ export class FtpMvsApi extends AbstractFtpApi implements MainframeInteraction.IM
         }
     }
 
-    private async getContentsTag(dataSetName: string): Promise<string> {
+    private async getContentsTag(dataSetName: string, buffer?: boolean): Promise<string> {
+        if (buffer) {
+            const builder = new BufferBuilder();
+            const loadResult = await this.getContents(dataSetName, { binary: false, stream: builder });
+            return loadResult.apiResponse.etag as string;
+        }
+
         const tmpFileName = tmp.tmpNameSync();
         const options: zosfiles.IDownloadOptions = {
             binary: false,
             file: tmpFileName,
         };
         const loadResult = await this.getContents(dataSetName, options);
-        const etag: string = loadResult.apiResponse.etag;
         fs.rmSync(tmpFileName, { force: true });
-        return etag;
+        return loadResult.apiResponse.etag as string;
     }
     private getDefaultResponse(): zosfiles.IZosFilesResponse {
         return {

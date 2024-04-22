@@ -119,12 +119,21 @@ export namespace MainframeInteraction {
          * @param {string} ussFilePath
          * @param {zosfiles.IDownloadOptions} options
          */
-        getContents(ussFilePath: string, options: zosfiles.IDownloadOptions): Promise<zosfiles.IZosFilesResponse>;
+        getContents(ussFilePath: string, options: zosfiles.IDownloadSingleOptions): Promise<zosfiles.IZosFilesResponse>;
 
         /**
          * Uploads a given buffer as the contents of a file on USS.
+         * @param {Buffer} buffer
+         * @param {string} filePath
+         * @param [options] Upload options
+         * @returns {Promise<zosfiles.IZosFilesResponse>}
          */
         uploadFromBuffer(buffer: Buffer, filePath: string, options?: zosfiles.IUploadOptions): Promise<zosfiles.IZosFilesResponse>;
+
+        /**
+         * Moves a file or folder to the new path provided.
+         */
+        move?(oldPath: string, newPath: string): Promise<void>;
 
         /**
          * Uploads the file at the given path. Use for Save.
@@ -223,14 +232,14 @@ export namespace MainframeInteraction {
          * @param {zosfiles.IDownloadOptions} [options]
          * @returns {Promise<zosfiles.IZosFilesResponse>}
          */
-        getContents(dataSetName: string, options?: zosfiles.IDownloadOptions): Promise<zosfiles.IZosFilesResponse>;
+        getContents(dataSetName: string, options?: zosfiles.IDownloadSingleOptions): Promise<zosfiles.IZosFilesResponse>;
 
         /**
          * Uploads a given buffer as the contents of a file to a data set or member.
          *
          * @param {Buffer} buffer
          * @param {string} dataSetName
-         * @param {zowe.IUploadOptions} [options]
+         * @param [options] Upload options
          * @returns {Promise<zowe.IZosFilesResponse>}
          */
         uploadFromBuffer(buffer: Buffer, dataSetName: string, options?: zosfiles.IUploadOptions): Promise<zosfiles.IZosFilesResponse>;
@@ -486,7 +495,7 @@ export namespace MainframeInteraction {
          *
          * @param {string} command
          * @param {zostso.IStartTsoParms} parms
-         * @returns {zostso.IIssueResponse}
+         * @returns {Promise<zostso.IIssueResponse>}
          * @memberof ICommand
          */
         issueTsoCommandWithParms?(command: string, parms?: zostso.IStartTsoParms): Promise<zostso.IIssueResponse>;
@@ -495,7 +504,7 @@ export namespace MainframeInteraction {
          * Issues a MVS Command and returns a Console Command API response.
          *
          * @param {string} command
-         * @returns {zosconsole.IConsoleResponse}
+         * @returns {Promise<zosconsole.IConsoleResponse>}
          * @memberof ICommand
          */
         issueMvsCommand?(command: string): Promise<zosconsole.IConsoleResponse>;

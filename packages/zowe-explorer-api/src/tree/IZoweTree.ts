@@ -24,7 +24,7 @@ import { Types } from "../Types";
  * @extends {vscode.TreeDataProvider<T>}
  * @template T provide a subtype of vscode.TreeItem
  */
-export interface IZoweTree<T> extends vscode.TreeDataProvider<T> {
+export interface IZoweTree<T> extends vscode.TreeDataProvider<T>, Partial<vscode.TreeDragAndDropController<T>> {
     /**
      * Root session nodes
      */
@@ -134,6 +134,11 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T> {
      * @param favorite Node to refresh
      */
     refreshElement(node: IZoweTreeNode): void;
+    /**
+     * Signals that node data has changed in the tree view
+     * @param element to pass to event listener callback
+     */
+    nodeDataChanged?(node: IZoweTreeNode): void;
     /**
      * Event Emitters used to notify subscribers that the refresh event has fired
      */

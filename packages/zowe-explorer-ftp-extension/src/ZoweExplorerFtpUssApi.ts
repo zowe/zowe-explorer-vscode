@@ -15,11 +15,12 @@ import * as crypto from "crypto";
 import * as tmp from "tmp";
 import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
 
-import { imperative, MainframeInteraction } from "@zowe/zowe-explorer-api";
+import { BufferBuilder, imperative, MainframeInteraction, MessageSeverity } from "@zowe/zowe-explorer-api";
 import { CoreUtils, UssUtils, TRANSFER_TYPE_ASCII, TRANSFER_TYPE_BINARY } from "@zowe/zos-ftp-for-zowe-cli";
 import { Buffer } from "buffer";
 import { AbstractFtpApi } from "./ZoweExplorerAbstractFtpApi";
 import { ZoweFtpExtensionError } from "./ZoweFtpExtensionError";
+import { LOGGER } from "./globals";
 
 // The Zowe FTP CLI plugin is written and uses mostly JavaScript, so relax the rules here.
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
@@ -59,25 +60,32 @@ export class FtpUssApi extends AbstractFtpApi implements MainframeInteraction.IU
         return false; // TODO: needs to be implemented checking file type
     }
 
-    public async getContents(ussFilePath: string, options: zosfiles.IDownloadOptions): Promise<zosfiles.IZosFilesResponse> {
+    public async getContents(ussFilePath: string, options: zosfiles.IDownloadSingleOptions): Promise<zosfiles.IZosFilesResponse> {
         const result = this.getDefaultResponse();
-        const targetFile = options.file;
         const transferOptions = {
             transferType: options.binary ? TRANSFER_TYPE_BINARY : TRANSFER_TYPE_ASCII,
-            localFile: targetFile,
+            localFile: undefined,
             size: 1,
         };
+        const fileOrStreamSpecified = options.file != null || options.stream != null;
         let connection;
         try {
             connection = await this.ftpClient(this.checkedProfile());
-            if (connection && targetFile) {
-                imperative.IO.createDirsSyncFromFilePath(targetFile);
+            if (!connection || !fileOrStreamSpecified) {
+                LOGGER.logImperativeMessage(result.commandResponse, MessageSeverity.ERROR);
+                throw new Error(result.commandResponse);
+            }
+            if (options.file) {
+                imperative.IO.createDirsSyncFromFilePath(options.file);
                 await UssUtils.downloadFile(connection, ussFilePath, transferOptions);
                 result.success = true;
                 result.commandResponse = "";
-                result.apiResponse.etag = await this.hashFile(targetFile);
-            } else {
-                throw new Error(result.commandResponse);
+                result.apiResponse.etag = await this.hashFile(options.file);
+            } else if (options.stream) {
+                const buffer = await UssUtils.downloadFile(connection, ussFilePath, transferOptions);
+                result.apiResponse.etag = this.hashBuffer(buffer);
+                options.stream.write(buffer);
+                options.stream.end();
             }
             return result;
         } catch (err) {
@@ -87,62 +95,41 @@ export class FtpUssApi extends AbstractFtpApi implements MainframeInteraction.IU
         }
     }
 
+    /**
+     * Uploads a USS file from the given buffer.
+     * @param buffer The buffer containing the contents of the USS file
+     * @param filePath The path for the USS file
+     * @param options Any options for the upload
+     *
+     * @returns A file response with the results of the upload operation.
+     */
     public async uploadFromBuffer(buffer: Buffer, filePath: string, options?: zosfiles.IUploadOptions): Promise<zosfiles.IZosFilesResponse> {
-        const tempFile = tmp.fileSync();
-        if (options?.binary) {
-            fs.writeSync(tempFile.fd, buffer);
-        } else {
-            const text = imperative.IO.processNewlines(buffer.toString());
-            fs.writeSync(tempFile.fd, text);
-        }
-
-        const result = await this.putContent(tempFile.name, filePath, options);
+        const result = await this.putContent(buffer, filePath, options);
         return result;
     }
 
     /**
      * Upload a file (located at the input path) to the destination path.
-     * @param inputFilePath The input file path
+     *
+     * @param input The input file path or buffer to upload
      * @param ussFilePath The destination file path on USS
      * @param options Any options for the upload
      *
      * @returns A file response containing the results of the operation.
      */
-    public putContent(inputFilePath: string, ussFilePath: string, options?: zosfiles.IUploadOptions): Promise<zosfiles.IZosFilesResponse> {
-        return this.putContents(inputFilePath, ussFilePath, options?.binary, options?.localEncoding, options?.etag, options?.returnEtag);
-    }
-
-    /**
-     * Upload a file (located at the input path) to the destination path.
-     *
-     * @deprecated in favor of `putContent`
-     * @param inputFilePath The input file path
-     * @param ussFilePath The destination file path on USS
-     * @param binary Whether the contents are binary
-     * @param localEncoding The local encoding for the file
-     * @param etag The e-tag associated with the file on the mainframe (optional)
-     * @param returnEtag Whether to return the e-tag after uploading the file
-     *
-     * @returns A file response containing the results of the operation.
-     */
-    public async putContents(
-        inputFilePath: string,
-        ussFilePath: string,
-        binary?: boolean,
-        localEncoding?: string,
-        etag?: string,
-        returnEtag?: boolean
-    ): Promise<zosfiles.IZosFilesResponse> {
+    public async putContent(input: string | Buffer, ussFilePath: string, options?: zosfiles.IUploadOptions): Promise<zosfiles.IZosFilesResponse> {
+        const inputIsBuffer = input instanceof Buffer;
         const transferOptions = {
-            transferType: binary ? TRANSFER_TYPE_BINARY : TRANSFER_TYPE_ASCII,
-            localFile: inputFilePath,
+            content: inputIsBuffer ? input : undefined,
+            localFile: inputIsBuffer ? undefined : input,
+            transferType: options?.binary ? TRANSFER_TYPE_BINARY : TRANSFER_TYPE_ASCII,
         };
         const result = this.getDefaultResponse();
         // Save-Save with FTP requires loading the file first
         // (moved this block above connection request so only one connection is active at a time)
-        if (returnEtag && etag) {
-            const contentsTag = await this.getContentsTag(ussFilePath);
-            if (contentsTag && contentsTag !== etag) {
+        if (options?.returnEtag && options.etag) {
+            const contentsTag = await this.getContentsTag(ussFilePath, inputIsBuffer);
+            if (contentsTag && contentsTag !== options.etag) {
                 throw new Error("Rest API failure with HTTP(S) status 412 Save conflict.");
             }
         }
@@ -155,11 +142,11 @@ export class FtpUssApi extends AbstractFtpApi implements MainframeInteraction.IU
             await UssUtils.uploadFile(connection, ussFilePath, transferOptions);
 
             result.success = true;
-            if (returnEtag) {
+            if (options?.returnEtag) {
                 // release this connection instance because a new one will be made with getContentsTag
                 this.releaseConnection(connection);
                 connection = null;
-                const contentsTag = await this.getContentsTag(ussFilePath);
+                const contentsTag = await this.getContentsTag(ussFilePath, inputIsBuffer);
                 result.apiResponse.etag = contentsTag;
             }
             result.commandResponse = "File uploaded successfully.";
@@ -285,16 +272,21 @@ export class FtpUssApi extends AbstractFtpApi implements MainframeInteraction.IU
         }
     }
 
-    private async getContentsTag(ussFilePath: string): Promise<string> {
+    private async getContentsTag(ussFilePath: string, buffer?: boolean): Promise<string> {
+        if (buffer) {
+            const writable = new BufferBuilder();
+            const loadResult = await this.getContents(ussFilePath, { stream: writable });
+            return loadResult.apiResponse.etag as string;
+        }
+
         const tmpFileName = tmp.tmpNameSync();
         const options: zosfiles.IDownloadOptions = {
             binary: false,
             file: tmpFileName,
         };
         const loadResult = await this.getContents(ussFilePath, options);
-        const etag: string = loadResult.apiResponse.etag;
         fs.rmSync(tmpFileName, { force: true });
-        return etag;
+        return loadResult.apiResponse.etag as string;
     }
 
     private getDefaultResponse(): zosfiles.IZosFilesResponse {

@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "esModuleInterop": true,
     "types": ["node"],
     "target": "es2015",
     "module": "commonjs",
@@ -11,6 +12,7 @@
     "removeComments": false,
     "pretty": true,
     "sourceMap": true,
+    "stripInternal": true,
     "newLine": "lf",
     "resolveJsonModule": true,
     "composite": true,

@@ -16,19 +16,20 @@ import { Gui, Validation, imperative, IZoweTree, IZoweTreeNode, IZoweJobTreeNode
 import { FilterItem, errorHandling } from "../utils/ProfilesUtils";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
-import { ZoweJobNode, ZoweSpoolNode } from "./ZoweJobNode";
+import { ZoweJobNode } from "./ZoweJobNode";
 import { getAppName, sortTreeItems, jobStringValidator, updateOpenFiles } from "../shared/utils";
 import { ZoweTreeProvider } from "../abstract/ZoweTreeProvider";
 import { getIconByNode } from "../generators/icons";
 import * as contextually from "../shared/context";
 import { SettingsConfig } from "../utils/SettingsConfig";
 import { ZoweLogger } from "../utils/ZoweLogger";
-import SpoolProvider, { encodeJobFile } from "../SpoolProvider";
 import { Poller } from "@zowe/zowe-explorer-api/src/utils";
 import { PollDecorator } from "../utils/DecorationProviders";
 import { TreeViewUtils } from "../utils/TreeViewUtils";
 import { TreeProviders } from "../shared/TreeProviders";
 import { JOB_FILTER_OPTS } from "./utils";
+import * as path from "path";
+import { JobFSProvider } from "./JobFSProvider";
 
 interface IJobSearchCriteria {
     Owner: string | undefined;
@@ -63,7 +64,7 @@ interface IJobPickerOption {
 export async function createJobsTree(log: imperative.Logger): Promise<ZosJobsProvider> {
     ZoweLogger.trace("ZosJobsProvider.createJobsTree called.");
     const tree = new ZosJobsProvider();
-    await tree.initializeJobsTree(log);
+    tree.initializeJobsTree(log);
     await tree.addSession(undefined, undefined, tree);
     return tree;
 }
@@ -78,6 +79,8 @@ export class ZosJobsProvider extends ZoweTreeProvider implements Types.IZoweJobT
     private static readonly submitJobQueryLabel = vscode.l10n.t("$(check) Submit this query");
     private static readonly chooseJobStatusLabel = "Job Status";
     public openFiles: Record<string, IZoweJobTreeNode> = {};
+    public dragMimeTypes: string[] = ["application/vnd.code.tree.zowe.jobs.explorer"];
+    public dropMimeTypes: string[] = ["application/vnd.code.tree.zowe.jobs.explorer"];
 
     public JOB_PROPERTIES = [
         {
@@ -263,8 +266,11 @@ export class ZosJobsProvider extends ZoweTreeProvider implements Types.IZoweJobT
 
     public async delete(node: IZoweJobTreeNode): Promise<void> {
         ZoweLogger.trace("ZosJobsProvider.delete called.");
-        await ZoweExplorerApiRegister.getJesApi(node.getProfile()).deleteJob(node.job.jobname, node.job.jobid);
-        await this.removeFavorite(this.createJobsFavorite(node));
+
+        await JobFSProvider.instance.delete(node.resourceUri, { recursive: false, deleteRemote: true });
+        const favNode = this.relabelFavoritedJob(node);
+        favNode.contextValue = contextually.asFavorite(favNode);
+        await this.removeFavorite(favNode);
         node.getSessionNode().children = node.getSessionNode().children.filter((n) => n !== node);
         this.refresh();
     }
@@ -317,22 +323,22 @@ export class ZosJobsProvider extends ZoweTreeProvider implements Types.IZoweJobT
      * @param profileName Name of profile
      * @returns {ZoweJobNode}
      */
-    public createProfileNodeForFavs(profileName: string): ZoweJobNode {
+    public createProfileNodeForFavs(profileName: string, profile?: imperative.IProfileLoaded): ZoweJobNode {
         ZoweLogger.trace("ZosJobsProvider.createProfileNodeForFavs called.");
         const favProfileNode = new ZoweJobNode({
             label: profileName,
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             parentNode: this.mFavoriteSession,
+            profile,
         });
-
-        // Fake context value to pull correct icon
-        favProfileNode.contextValue = globals.JOBS_SESSION_CONTEXT + globals.HOME_SUFFIX;
+        favProfileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
+        if (!JobFSProvider.instance.exists(favProfileNode.resourceUri)) {
+            JobFSProvider.instance.createDirectory(favProfileNode.resourceUri);
+        }
         const icon = getIconByNode(favProfileNode);
         if (icon) {
             favProfileNode.iconPath = icon.path;
         }
-        favProfileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
-
         this.mFavorites.push(favProfileNode);
         return favProfileNode;
     }
@@ -341,7 +347,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements Types.IZoweJobT
      * Initialize the favorites and history information
      * @param log - Logger
      */
-    public async initializeJobsTree(log: imperative.Logger): Promise<void> {
+    public initializeJobsTree(log: imperative.Logger): void {
         ZoweLogger.trace("ZosJobsProvider.initializeJobsTree called.");
         this.log = log;
         ZoweLogger.debug(vscode.l10n.t("Initializing profiles with jobs favorites."));
@@ -358,10 +364,10 @@ export class ZosJobsProvider extends ZoweTreeProvider implements Types.IZoweJobT
             let profileNodeInFavorites = this.findMatchingProfileInArray(this.mFavorites, profileName);
             if (profileNodeInFavorites === undefined) {
                 // If favorite node for profile doesn't exist yet, create a new one for it
-                profileNodeInFavorites = this.createProfileNodeForFavs(profileName);
+                profileNodeInFavorites = this.createProfileNodeForFavs(profileName, Profiles.getInstance().loadNamedProfile(profileName));
             }
             // Initialize and attach favorited item nodes under their respective profile node in Favorrites
-            const favChildNodeForProfile = await this.initializeFavChildNodeForProfile(favLabel, favContextValue, profileNodeInFavorites);
+            const favChildNodeForProfile = this.initializeFavChildNodeForProfile(favLabel, favContextValue, profileNodeInFavorites);
             profileNodeInFavorites.children.push(favChildNodeForProfile);
         }
     }
@@ -381,20 +387,24 @@ export class ZosJobsProvider extends ZoweTreeProvider implements Types.IZoweJobT
             favJob = new ZoweJobNode({
                 label,
                 collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                contextOverride: globals.JOBS_JOB_CONTEXT + globals.FAV_SUFFIX,
                 parentNode,
+                profile: parentNode.getProfile(),
                 job: new JobDetail(label),
             });
-            favJob.contextValue = globals.JOBS_JOB_CONTEXT + globals.FAV_SUFFIX;
-            favJob.command = { command: "zowe.zosJobsSelectjob", title: "", arguments: [favJob] };
+            if (JobFSProvider.instance.exists(favJob.resourceUri)) {
+                JobFSProvider.instance.createDirectory(favJob.resourceUri, { job: favJob.job });
+            }
         } else {
             // for search
             favJob = new ZoweJobNode({
                 label,
                 collapsibleState: vscode.TreeItemCollapsibleState.None,
+                contextOverride: globals.JOBS_SESSION_CONTEXT + globals.FAV_SUFFIX,
                 parentNode,
+                profile: parentNode.getProfile(),
             });
             favJob.command = { command: "zowe.jobs.search", title: "", arguments: [favJob] };
-            favJob.contextValue = globals.JOBS_SESSION_CONTEXT + globals.FAV_SUFFIX;
         }
         const icon = getIconByNode(favJob);
         if (icon) {
@@ -500,7 +510,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements Types.IZoweJobT
         let profileNodeInFavorites = this.findMatchingProfileInArray(this.mFavorites, profileName);
         if (profileNodeInFavorites === undefined) {
             // If favorite node for profile doesn't exist yet, create a new one for it
-            profileNodeInFavorites = this.createProfileNodeForFavs(profileName);
+            profileNodeInFavorites = this.createProfileNodeForFavs(profileName, node.getProfile());
             profileNodeInFavorites.iconPath = node.iconPath;
         }
         if (contextually.isSession(node)) {
@@ -508,12 +518,12 @@ export class ZosJobsProvider extends ZoweTreeProvider implements Types.IZoweJobT
             favJob = new ZoweJobNode({
                 label: this.createSearchLabel(node.owner, node.prefix, node.searchId, node.status),
                 collapsibleState: vscode.TreeItemCollapsibleState.None,
+                contextOverride: globals.JOBS_SESSION_CONTEXT + globals.FAV_SUFFIX,
                 parentNode: profileNodeInFavorites,
                 session: node.getSession(),
                 profile: node.getProfile(),
                 job: node.job,
             });
-            favJob.contextValue = globals.JOBS_SESSION_CONTEXT + globals.FAV_SUFFIX;
             favJob.command = { command: "zowe.jobs.search", title: "", arguments: [favJob] };
             this.saveSearch(favJob);
         } else {
@@ -521,14 +531,13 @@ export class ZosJobsProvider extends ZoweTreeProvider implements Types.IZoweJobT
             favJob = new ZoweJobNode({
                 label: node.label as string,
                 collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                contextOverride: node.contextValue + globals.FAV_SUFFIX,
                 parentNode: profileNodeInFavorites,
                 session: node.getSession(),
                 profile: node.getProfile(),
                 job: node.job,
             });
-            favJob.contextValue = node.contextValue;
-            favJob.command = { command: "zowe.zosJobsSelectjob", title: "", arguments: [favJob] };
-            this.createJobsFavorite(favJob);
+            this.relabelFavoritedJob(favJob);
         }
         const icon = getIconByNode(favJob);
         if (icon) {
@@ -1006,10 +1015,9 @@ export class ZosJobsProvider extends ZoweTreeProvider implements Types.IZoweJobT
         }
     }
 
-    private createJobsFavorite(node: IZoweJobTreeNode): IZoweJobTreeNode {
-        ZoweLogger.trace("ZosJobsProvider.createJobsFavorite called.");
+    private relabelFavoritedJob(node: IZoweJobTreeNode): IZoweJobTreeNode {
+        ZoweLogger.trace("ZosJobsProvider.relabelFavoritedJob called.");
         node.label = node.label.toString().substring(0, node.label.toString().lastIndexOf(")") + 1);
-        node.contextValue = contextually.asFavorite(node);
         return node;
     }
 
@@ -1036,7 +1044,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements Types.IZoweJobT
         const intervalInput = await Gui.showInputBox({
             title: vscode.l10n.t({
                 message: "Poll interval (in ms) for: {0}",
-                args: [uri.path],
+                args: [path.posix.basename(uri.path)],
                 comment: ["URI path"],
             }),
             value: pollValue.toString(),
@@ -1055,37 +1063,25 @@ export class ZosJobsProvider extends ZoweTreeProvider implements Types.IZoweJobT
             return;
         }
 
-        const session = node.getSessionNode();
-
-        // Interpret node as spool to get spool data
-        const spoolData = (node as ZoweSpoolNode).spool;
-        const encodedUri = encodeJobFile(session.label as string, spoolData);
-
         // If the uri is already being polled, mark it as ready for removal
-        if (encodedUri.path in Poller.pollRequests && contextually.isPolling(node)) {
-            Poller.pollRequests[encodedUri.path].dispose = true;
-            PollDecorator.updateIcon(encodedUri);
+        if (node.resourceUri.path in Poller.pollRequests && contextually.isPolling(node)) {
+            Poller.pollRequests[node.resourceUri.path].dispose = true;
+            PollDecorator.updateIcon(node.resourceUri);
             node.contextValue = node.contextValue.replace(globals.POLL_CONTEXT, "");
 
             // Fire "tree changed event" to reflect removal of polling context value
-            this.mOnDidChangeTreeData.fire();
+            this.mOnDidChangeTreeData.fire(node);
             return;
         }
 
-        // Add spool file to provider if it wasn't previously opened in the editor
-        const fileInEditor = SpoolProvider.files[encodedUri.path];
-        if (!fileInEditor) {
-            await Gui.showTextDocument(encodedUri);
-        }
-
         // Always prompt the user for a poll interval
-        const pollInterval = await this.showPollOptions(encodedUri);
+        const pollInterval = await this.showPollOptions(node.resourceUri);
 
         if (pollInterval === 0) {
             Gui.showMessage(
                 vscode.l10n.t({
                     message: "Polling dismissed for {0}; operation cancelled.",
-                    args: [encodedUri.path],
+                    args: [node.resourceUri.path],
                     comment: ["Encoded URI path"],
                 })
             );
@@ -1093,26 +1089,26 @@ export class ZosJobsProvider extends ZoweTreeProvider implements Types.IZoweJobT
         }
 
         // Pass request function to the poller for continuous updates
-        Poller.addRequest(encodedUri.path, {
+        Poller.addRequest(node.resourceUri.path, {
             msInterval: pollInterval,
             request: async () => {
                 const statusMsg = Gui.setStatusBarMessage(
                     vscode.l10n.t({
                         message: `$(sync~spin) Polling: {0}...`,
-                        args: [encodedUri.path],
-                        comment: ["Encoded URI path"],
+                        args: [path.posix.basename(node.resourceUri.path)],
+                        comment: ["Unique Spool name"],
                     }),
                     globals.STATUS_BAR_TIMEOUT_MS
                 );
-                await fileInEditor.fetchContent.bind(SpoolProvider.files[encodedUri.path])();
+                await JobFSProvider.instance.fetchSpoolAtUri(node.resourceUri);
                 statusMsg.dispose();
             },
         });
-        PollDecorator.updateIcon(encodedUri);
+        PollDecorator.updateIcon(node.resourceUri);
         node.contextValue += globals.POLL_CONTEXT;
 
         // Fire "tree changed event" to reflect added polling context value
-        this.mOnDidChangeTreeData.fire();
+        this.refreshElement(node);
     }
 
     public sortBy(session: IZoweJobTreeNode): void {
@@ -1128,7 +1124,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements Types.IZoweJobT
      * @param newFilter Either a valid `JobFilter` object, or `null` to reset the filter
      * @param isSession Whether the node is a session
      */
-    public updateFilterForJob(job: IZoweJobTreeNode, newFilter: string | null, isSession: boolean): void {
+    public updateFilterForJob(job: IZoweJobTreeNode, newFilter: string | null): void {
         job.filter = newFilter;
         job.description = newFilter
             ? vscode.l10n.t({
@@ -1154,12 +1150,11 @@ export class ZosJobsProvider extends ZoweTreeProvider implements Types.IZoweJobT
         });
         const filterMethod = JOB_FILTER_OPTS.indexOf(selection);
 
-        const isSession = contextually.isSession(job);
         const userDismissed = filterMethod < 0;
         const clearFilterOpt = vscode.l10n.t("$(clear-all) Clear filter for profile");
         if (userDismissed || selection === clearFilterOpt) {
             if (selection === clearFilterOpt) {
-                this.updateFilterForJob(job, null, isSession);
+                this.updateFilterForJob(job, null);
                 Gui.setStatusBarMessage(
                     vscode.l10n.t({
                         message: "$(check) Filter cleared for {0}",
@@ -1190,7 +1185,7 @@ export class ZosJobsProvider extends ZoweTreeProvider implements Types.IZoweJobT
                     : `${item["job"].jobname}(${item["job"].jobid}) - ${item["job"].retcode}`.includes(query)
             );
             TreeProviders.job.refresh();
-            this.updateFilterForJob(job, query, isSession);
+            this.updateFilterForJob(job, query);
             Gui.setStatusBarMessage(
                 vscode.l10n.t({
                     message: "$(check) Filter updated for {0}",

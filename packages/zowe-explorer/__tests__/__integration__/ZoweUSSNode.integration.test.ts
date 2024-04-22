@@ -104,8 +104,8 @@ describe("ZoweUSSNode Integration Tests", async () => {
             new ZoweUSSNode({ label: path + "/group/aDir6", collapsibleState: vscode.TreeItemCollapsibleState.Collapsed, parentNode: sessNode }),
         ];
 
-        sampleChildren[0].command = { command: "zowe.uss.ZoweUSSNode.open", title: "", arguments: [sampleChildren[0]] };
-        sampleChildren[1].command = { command: "zowe.uss.ZoweUSSNode.open", title: "", arguments: [sampleChildren[1]] };
+        sampleChildren[0].command = { command: "vscode.open", title: "", arguments: [sampleChildren[0].resourceUri] };
+        sampleChildren[1].command = { command: "vscode.open", title: "", arguments: [sampleChildren[1].resourceUri] };
 
         // Checking that the rootChildren are what they are expected to be
         expect(sessChildren.length).toBe(4);

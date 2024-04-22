@@ -12,7 +12,7 @@
 import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
 import * as vscode from "vscode";
 import * as globals from "../globals";
-import { errorHandling } from "../utils/ProfilesUtils";
+import { errorHandling, getSessionLabel } from "../utils/ProfilesUtils";
 import {
     Sorting,
     Types,
@@ -23,6 +23,8 @@ import {
     ZoweTreeNode,
     ZosEncoding,
     Validation,
+    DsEntry,
+    ZoweScheme,
 } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { getIconByNode } from "../generators/icons";
@@ -30,10 +32,8 @@ import * as contextually from "../shared/context";
 import { Profiles } from "../Profiles";
 import { ZoweLogger } from "../utils/ZoweLogger";
 import * as dayjs from "dayjs";
-import * as fs from "fs";
-import { promiseStatus, PromiseStatuses } from "promise-status-async";
-import { LocalFileInfo, getDocumentFilePath } from "../shared/utils";
 import { IZoweDatasetTreeOpts } from "../shared/IZoweTreeOpts";
+import { DatasetFSProvider } from "./DatasetFSProvider";
 
 /**
  * A type of TreeItem used to represent sessions and data sets
@@ -49,7 +49,6 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     public dirty = true;
     public children: ZoweDatasetNode[] = [];
     public binary = false;
-    public encoding?: string;
     public encodingMap = {};
     public errorDetails: imperative.ImperativeError;
     public ongoingActions: Record<ZoweTreeNodeActions.Interactions | string, Promise<any>> = {};
@@ -57,7 +56,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     public stats: Types.DatasetStats;
     public sort?: Sorting.NodeSort;
     public filter?: Sorting.DatasetFilter;
-    private etag?: string;
+    public resourceUri?: vscode.Uri;
 
     /**
      * Creates an instance of ZoweDatasetNode
@@ -67,10 +66,9 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     public constructor(opts: IZoweDatasetTreeOpts) {
         super(opts.label, opts.collapsibleState, opts.parentNode, opts.session, opts.profile);
         this.binary = opts.encoding?.kind === "binary";
-        if (!this.binary && opts.encoding != null) {
-            this.encoding = opts.encoding.kind === "other" ? opts.encoding.codepage : null;
+        if (opts.encoding != null) {
+            this.setEncoding(opts.encoding);
         }
-        this.etag = opts.etag;
         if (opts.contextOverride) {
             this.contextValue = opts.contextOverride;
         } else if (opts.collapsibleState !== vscode.TreeItemCollapsibleState.None) {
@@ -96,6 +94,49 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
 
         if (contextually.isSession(this)) {
             this.id = this.label as string;
+        }
+
+        if (this.label !== vscode.l10n.t("Favorites")) {
+            const sessionLabel = opts.profile?.name ?? getSessionLabel(this);
+            if (this.getParent() == null) {
+                this.resourceUri = vscode.Uri.from({
+                    scheme: ZoweScheme.DS,
+                    path: `/${sessionLabel}/`,
+                });
+                DatasetFSProvider.instance.createDirectory(this.resourceUri, this.pattern);
+            } else if (
+                this.contextValue === globals.DS_DS_CONTEXT ||
+                this.contextValue === globals.DS_PDS_CONTEXT ||
+                this.contextValue === globals.DS_MIGRATED_FILE_CONTEXT
+            ) {
+                this.resourceUri = vscode.Uri.from({
+                    scheme: ZoweScheme.DS,
+                    path: `/${sessionLabel}/${this.label as string}`,
+                });
+                if (this.contextValue === globals.DS_DS_CONTEXT) {
+                    this.command = {
+                        command: "vscode.open",
+                        title: "",
+                        arguments: [this.resourceUri],
+                    };
+                }
+            } else if (this.contextValue === globals.DS_MEMBER_CONTEXT) {
+                this.resourceUri = vscode.Uri.from({
+                    scheme: ZoweScheme.DS,
+                    path: `/${sessionLabel}/${this.getParent().label as string}/${this.label as string}`,
+                });
+                this.command = {
+                    command: "vscode.open",
+                    title: "",
+                    arguments: [this.resourceUri],
+                };
+            } else {
+                this.resourceUri = null;
+            }
+
+            if (opts.encoding != null) {
+                DatasetFSProvider.instance.makeEmptyDsWithEncoding(this.resourceUri, opts.encoding);
+            }
         }
     }
 
@@ -125,14 +166,18 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     public async getChildren(): Promise<ZoweDatasetNode[]> {
         ZoweLogger.trace("ZoweDatasetNode.getChildren called.");
         if (!this.pattern && contextually.isSessionNotFav(this)) {
-            return [
-                new ZoweDatasetNode({
-                    label: vscode.l10n.t("Use the search button to display data sets"),
-                    collapsibleState: vscode.TreeItemCollapsibleState.None,
-                    parentNode: this,
-                    contextOverride: globals.INFORMATION_CONTEXT,
-                }),
-            ];
+            const placeholder = new ZoweDatasetNode({
+                label: vscode.l10n.t("Use the search button to display data sets"),
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                parentNode: this,
+                contextOverride: globals.INFORMATION_CONTEXT,
+                profile: null,
+            });
+            placeholder.command = {
+                command: "zowe.placeholderCommand",
+                title: "Placeholder",
+            };
+            return [placeholder];
         }
         if (contextually.isDocument(this) || contextually.isInformation(this)) {
             return [];
@@ -167,12 +212,13 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             for (const item of response.apiResponse.items ?? response.apiResponse) {
                 const dsEntry = item.dsname ?? item.member;
                 const existing = this.children.find((element) => element.label.toString() === dsEntry);
+                let temp = existing;
                 if (existing) {
                     existing.updateStats(item);
                     elementChildren[existing.label.toString()] = existing;
                     // Creates a ZoweDatasetNode for a PDS
                 } else if (item.dsorg === "PO" || item.dsorg === "PO-E") {
-                    const temp = new ZoweDatasetNode({
+                    temp = new ZoweDatasetNode({
                         label: item.dsname,
                         collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
                         parentNode: this,
@@ -181,7 +227,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     elementChildren[temp.label.toString()] = temp;
                     // Creates a ZoweDatasetNode for a dataset with imperative errors
                 } else if (item.error instanceof imperative.ImperativeError) {
-                    const temp = new ZoweDatasetNode({
+                    temp = new ZoweDatasetNode({
                         label: item.dsname,
                         collapsibleState: vscode.TreeItemCollapsibleState.None,
                         parentNode: this,
@@ -192,7 +238,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     elementChildren[temp.label.toString()] = temp;
                     // Creates a ZoweDatasetNode for a migrated dataset
                 } else if (item.migr && item.migr.toUpperCase() === "YES") {
-                    const temp = new ZoweDatasetNode({
+                    temp = new ZoweDatasetNode({
                         label: item.dsname,
                         collapsibleState: vscode.TreeItemCollapsibleState.None,
                         parentNode: this,
@@ -222,20 +268,20 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 } else if (contextually.isSessionNotFav(this)) {
                     // Creates a ZoweDatasetNode for a PS
                     const cachedEncoding = this.getSessionNode().encodingMap[item.dsname];
-                    const temp = new ZoweDatasetNode({
+                    temp = new ZoweDatasetNode({
                         label: item.dsname,
                         collapsibleState: vscode.TreeItemCollapsibleState.None,
                         parentNode: this,
                         encoding: cachedEncoding,
                         profile: this.getProfile(),
                     });
-                    temp.command = { command: "zowe.ds.ZoweNode.openPS", title: "", arguments: [temp] };
+                    temp.command = { command: "vscode.open", title: "", arguments: [temp.resourceUri] };
                     elementChildren[temp.label.toString()] = temp;
                 } else {
                     // Creates a ZoweDatasetNode for a PDS member
                     const memberInvalid = item.member?.includes("\ufffd");
                     const cachedEncoding = this.getSessionNode().encodingMap[`${item.dsname as string}(${item.member as string})`];
-                    const temp = new ZoweDatasetNode({
+                    temp = new ZoweDatasetNode({
                         label: item.member,
                         collapsibleState: vscode.TreeItemCollapsibleState.None,
                         parentNode: this,
@@ -244,7 +290,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                         profile: this.getProfile(),
                     });
                     if (!memberInvalid) {
-                        temp.command = { command: "zowe.ds.ZoweNode.openPS", title: "", arguments: [temp] };
+                        temp.command = { command: "vscode.open", title: "", arguments: [temp.resourceUri] };
                     } else {
                         temp.errorDetails = new imperative.ImperativeError({
                             msg: vscode.l10n.t({
@@ -259,19 +305,45 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     temp.updateStats(item);
                     elementChildren[temp.label.toString()] = temp;
                 }
+
+                if (temp == null) {
+                    continue;
+                }
+
+                if (temp.resourceUri) {
+                    if (temp.collapsibleState !== vscode.TreeItemCollapsibleState.None) {
+                        // Create an entry for the PDS if it doesn't exist.
+                        if (!DatasetFSProvider.instance.exists(temp.resourceUri)) {
+                            vscode.workspace.fs.createDirectory(temp.resourceUri);
+                        }
+                    } else {
+                        // Create an entry for the data set if it doesn't exist.
+                        if (!DatasetFSProvider.instance.exists(temp.resourceUri)) {
+                            await vscode.workspace.fs.writeFile(temp.resourceUri, new Uint8Array());
+                        }
+                        temp.command = {
+                            command: "vscode.open",
+                            title: vscode.l10n.t("Open"),
+                            arguments: [temp.resourceUri],
+                        };
+                    }
+                }
             }
         }
 
         this.dirty = false;
         if (Object.keys(elementChildren).length === 0) {
-            this.children = [
-                new ZoweDatasetNode({
-                    label: vscode.l10n.t("No data sets found"),
-                    collapsibleState: vscode.TreeItemCollapsibleState.None,
-                    parentNode: this,
-                    contextOverride: globals.INFORMATION_CONTEXT,
-                }),
-            ];
+            const placeholder = new ZoweDatasetNode({
+                label: vscode.l10n.t("No data sets found"),
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                parentNode: this,
+                contextOverride: globals.INFORMATION_CONTEXT,
+            });
+            placeholder.command = {
+                command: "zowe.placeholderCommand",
+                title: "Placeholder",
+            };
+            this.children = [placeholder];
         } else {
             const newChildren = Object.keys(elementChildren)
                 .filter((label) => this.children.find((c) => (c.label as string) === label) == null)
@@ -411,17 +483,8 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
      */
     public getEtag(): string {
         ZoweLogger.trace("ZoweDatasetNode.getEtag called.");
-        return this.etag;
-    }
-
-    /**
-     * Set the [etag] for this node
-     *
-     * @returns {void}
-     */
-    public setEtag(etagValue): void {
-        ZoweLogger.trace("ZoweDatasetNode.setEtag called.");
-        this.etag = etagValue;
+        const fileEntry = DatasetFSProvider.instance.stat(this.resourceUri) as DsEntry;
+        return fileEntry.etag;
     }
 
     private async getDatasets(): Promise<zosfiles.IZosFilesResponse[]> {
@@ -468,41 +531,35 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         return responses;
     }
 
-    public async openDs(forceDownload: boolean, previewMember: boolean, datasetProvider: Types.IZoweDatasetTreeType): Promise<void> {
+    public async openDs(forceDownload: boolean, _previewMember: boolean, datasetProvider: Types.IZoweDatasetTreeType): Promise<void> {
         ZoweLogger.trace("ZoweDatasetNode.openDs called.");
         await datasetProvider.checkCurrentProfile(this);
-
-        // Status of last "open action" promise
-        // If the node doesn't support pending actions, assume last action was resolved to pull new contents
-        const lastActionStatus =
-            this.ongoingActions?.[ZoweTreeNodeActions.Interactions.Download] != null
-                ? await promiseStatus(this.ongoingActions[ZoweTreeNodeActions.Interactions.Download])
-                : PromiseStatuses.PROMISE_RESOLVED;
-
-        // Cache status of double click if the node has the "wasDoubleClicked" property:
-        // allows subsequent clicks to register as double-click if node is not done fetching contents
-        const doubleClicked = Gui.utils.wasDoubleClicked(this, datasetProvider);
-        const shouldPreview = doubleClicked ? false : previewMember;
-        if (this.wasDoubleClicked != null) {
-            this.wasDoubleClicked = doubleClicked;
-        }
-
-        // Prevent future "open actions" until last action is completed
-        if (lastActionStatus == PromiseStatuses.PROMISE_PENDING) {
-            return;
+        const invalidItem = vscode.l10n.t("Cannot download, item invalid.");
+        switch (true) {
+            case contextually.isFavorite(this):
+            case contextually.isSessionNotFav(this.getParent()):
+                break;
+            case contextually.isFavoritePds(this.getParent()):
+            case contextually.isPdsNotFav(this.getParent()):
+                break;
+            default:
+                ZoweLogger.error("ZoweDatasetNode.openDs: " + invalidItem);
+                Gui.errorMessage(invalidItem);
+                throw Error(invalidItem);
         }
 
         if (Profiles.getInstance().validProfile !== Validation.ValidationType.INVALID) {
             try {
-                const fileInfo = await this.downloadDs(forceDownload);
-                const document = await vscode.workspace.openTextDocument(getDocumentFilePath(fileInfo.name, this));
-                await Gui.showTextDocument(document, { preview: this.wasDoubleClicked != null ? !this.wasDoubleClicked : shouldPreview });
-                // discard ongoing action to allow new requests on this node
-                if (this.ongoingActions) {
-                    this.ongoingActions[ZoweTreeNodeActions.Interactions.Download] = null;
+                if (forceDownload) {
+                    // if the encoding has changed, fetch the contents with the new encoding
+                    await DatasetFSProvider.instance.fetchDatasetAtUri(this.resourceUri);
+                    await vscode.commands.executeCommand("vscode.open", this.resourceUri);
+                    await DatasetFSProvider.revertFileInEditor();
+                } else {
+                    await vscode.commands.executeCommand("vscode.open", this.resourceUri);
                 }
                 if (datasetProvider) {
-                    datasetProvider.addFileHistory(`[${this.getProfileName()}]: ${fileInfo.name}`);
+                    datasetProvider.addFileHistory(`[${this.getProfileName()}]: ${this.label as string}`);
                 }
             } catch (err) {
                 await errorHandling(err, this.getProfileName());
@@ -511,68 +568,8 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         }
     }
 
-    public async downloadDs(forceDownload: boolean): Promise<LocalFileInfo> {
-        ZoweLogger.trace("dataset.actions.downloadDs called.");
-        const fileInfo = {} as LocalFileInfo;
-        const defaultMessage = vscode.l10n.t("Invalid data set or member.");
-        switch (true) {
-            // For favorited or non-favorited sequential DS:
-            case contextually.isFavorite(this):
-            case contextually.isSessionNotFav(this.getParent()):
-                fileInfo.name = this.label as string;
-                break;
-            // For favorited or non-favorited data set members:
-            case contextually.isFavoritePds(this.getParent()):
-            case contextually.isPdsNotFav(this.getParent()):
-                fileInfo.name = this.getParent().getLabel().toString() + "(" + this.getLabel().toString() + ")";
-                break;
-            default:
-                Gui.errorMessage(defaultMessage);
-                throw Error(defaultMessage);
-        }
-        // if local copy exists, open that instead of pulling from mainframe
-        fileInfo.path = getDocumentFilePath(fileInfo.name, this);
-        let responsePromise = this.ongoingActions ? this.ongoingActions[ZoweTreeNodeActions.Interactions.Download] : null;
-        // If there is no ongoing action and the local copy does not exist, fetch contents
-        if (forceDownload || (responsePromise == null && !fs.existsSync(fileInfo.path))) {
-            if (this.ongoingActions) {
-                this.ongoingActions[ZoweTreeNodeActions.Interactions.Download] = this.downloadDsApiCall(fileInfo.path, fileInfo.name);
-                responsePromise = this.ongoingActions[ZoweTreeNodeActions.Interactions.Download];
-            } else {
-                responsePromise = this.downloadDsApiCall(fileInfo.path, fileInfo.name);
-            }
-        }
-        if (responsePromise != null) {
-            const response = await responsePromise;
-            this.setEtag(response.apiResponse?.etag);
-        }
-        return fileInfo;
-    }
-
-    private async downloadDsApiCall(documentFilePath: string, label: string): Promise<zosfiles.IZosFilesResponse> {
-        const prof = this.getProfile();
-        ZoweLogger.info(
-            vscode.l10n.t({
-                message: "Downloading {0}",
-                args: [label],
-                comment: ["Label"],
-            })
-        );
-        const statusMsg = Gui.setStatusBarMessage(vscode.l10n.t("$(sync~spin) Downloading data set..."));
-        try {
-            const response = await ZoweExplorerApiRegister.getMvsApi(prof).getContents(label, {
-                file: documentFilePath,
-                returnEtag: true,
-                binary: this.binary,
-                encoding: this.encoding !== undefined ? this.encoding : prof.profile?.encoding,
-                responseTimeout: prof.profile?.responseTimeout,
-            });
-            statusMsg.dispose();
-            return response;
-        } catch (error) {
-            statusMsg.dispose();
-            throw error;
-        }
+    public getEncoding(): ZosEncoding {
+        return DatasetFSProvider.instance.getEncodingForFile(this.resourceUri);
     }
 
     public setEncoding(encoding: ZosEncoding): void {
@@ -584,12 +581,11 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         if (encoding?.kind === "binary") {
             this.contextValue = isMemberNode ? globals.DS_MEMBER_BINARY_CONTEXT : globals.DS_DS_BINARY_CONTEXT;
             this.binary = true;
-            this.encoding = undefined;
         } else {
             this.contextValue = isMemberNode ? globals.DS_MEMBER_CONTEXT : globals.DS_DS_CONTEXT;
             this.binary = false;
-            this.encoding = encoding?.kind === "text" ? null : encoding?.codepage;
         }
+        DatasetFSProvider.instance.setEncodingForFile(this.resourceUri, encoding);
         const fullPath = isMemberNode ? `${this.getParent().label as string}(${this.label as string})` : (this.label as string);
         if (encoding != null) {
             this.getSessionNode().encodingMap[fullPath] = encoding;

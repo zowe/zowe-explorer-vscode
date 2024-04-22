@@ -30,9 +30,9 @@ import { DatasetTree } from "../../src/dataset/DatasetTree";
 import { USSTree } from "../../src/uss/USSTree";
 import { ZoweSaveQueue } from "../../src/abstract/ZoweSaveQueue";
 import { ZoweLocalStorage } from "../../src/utils/ZoweLocalStorage";
+import { ProfilesUtils } from "../../src/utils/ProfilesUtils";
 jest.mock("../../src/utils/LoggerUtils");
 jest.mock("../../src/utils/ZoweLogger");
-import { ProfilesUtils } from "../../src/utils/ProfilesUtils";
 
 jest.mock("vscode");
 jest.mock("fs");
@@ -150,7 +150,6 @@ async function createGlobalMocks() {
             "zowe.ds.refreshDataset",
             "zowe.ds.pattern",
             "zowe.ds.editSession",
-            "zowe.ds.ZoweNode.openPS",
             "zowe.ds.createDataset",
             "zowe.ds.createMember",
             "zowe.ds.deleteDataset",
@@ -190,7 +189,6 @@ async function createGlobalMocks() {
             "zowe.uss.refreshDirectory",
             "zowe.uss.fullPath",
             "zowe.uss.editSession",
-            "zowe.uss.ZoweUSSNode.open",
             "zowe.uss.removeSession",
             "zowe.uss.createFile",
             "zowe.uss.createFolder",
@@ -210,7 +208,6 @@ async function createGlobalMocks() {
             "zowe.uss.pasteUssFile",
             "zowe.uss.copyUssFile",
             "zowe.uss.openWithEncoding",
-            "zowe.jobs.zosJobsOpenspool",
             "zowe.jobs.deleteJob",
             "zowe.jobs.runModifyCommand",
             "zowe.jobs.runStopCommand",
@@ -249,6 +246,8 @@ async function createGlobalMocks() {
             "zowe.editHistory",
             "zowe.promptCredentials",
             "zowe.profileManagement",
+            "zowe.diff.useLocalContent",
+            "zowe.diff.useRemoteContent",
             "zowe.openRecentMember",
             "zowe.searchInAllLoadedItems",
             "zowe.ds.deleteProfile",
@@ -262,6 +261,7 @@ async function createGlobalMocks() {
             "zowe.compareWithSelected",
             "zowe.compareWithSelectedReadOnly",
             "zowe.compareFileStarted",
+            "zowe.placeholderCommand",
             "zowe.extRefresh",
         ],
     };
@@ -275,7 +275,6 @@ async function createGlobalMocks() {
         value: globalMocks.mockCreateTreeView,
         configurable: true,
     });
-    Object.defineProperty(vscode, "Uri", { value: globalMocks.mockUri, configurable: true });
     Object.defineProperty(vscode.commands, "registerCommand", {
         value: globalMocks.mockRegisterCommand,
         configurable: true,
