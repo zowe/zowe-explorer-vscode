@@ -2092,12 +2092,18 @@
     "vscode": "^1.79.0"
   },
   "devDependencies": {
+    "@cucumber/cucumber": "9.5.1",
     "@napi-rs/cli": "^2.16.1",
     "@types/chai": "^4.2.6",
     "@types/chai-as-promised": "^7.1.0",
     "@types/expect": "^1.20.3",
     "@types/fs-extra": "^7.0.0",
     "@types/promise-queue": "^2.2.0",
+    "@wdio/cli": "^8.36.1",
+    "@wdio/cucumber-framework": "^8.36.1",
+    "@wdio/local-runner": "^8.36.1",
+    "@wdio/spec-reporter": "^8.36.1",
+    "@wdio/types": "^8.36.1",
     "chai": "^4.1.2",
     "chai-as-promised": "^7.1.1",
     "chalk": "^2.4.1",
@@ -2108,7 +2114,10 @@
     "jest-silent-reporter": "^0.5.0",
     "log4js": "^6.4.6",
     "markdownlint-cli": "^0.33.0",
-    "sinon": "^6.1.0"
+    "sinon": "^6.1.0",
+    "wdio-vscode-service": "^6.0.3",
+    "wdio-wait-for": "^3.0.11",
+    "webdriverio": "^8.36.1"
   },
   "dependencies": {
     "@zowe/core-for-zowe-sdk": "8.0.0-next.202404032038",
@@ -2116,11 +2125,14 @@
     "@zowe/zos-files-for-zowe-sdk": "8.0.0-next.202404032038",
     "@zowe/zos-jobs-for-zowe-sdk": "8.0.0-next.202404032038",
     "@zowe/zosmf-for-zowe-sdk": "8.0.0-next.202404032038",
-    "@zowe/zowe-explorer-api": "3.0.0-next-SNAPSHOT",
+    "@zowe/zowe-explorer-api": "workspace:3.0.0-next-SNAPSHOT",
     "dayjs": "^1.11.10",
     "fs-extra": "8.0.1",
     "isbinaryfile": "4.0.4",
     "promise-queue": "2.2.5"
+  },
+  "peerDependencies": {
+    "@cucumber/cucumber": "9.5.1"
   },
   "jest": {
     "moduleFileExtensions": [
