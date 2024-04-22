@@ -470,6 +470,13 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         if (ussFileProvider.nodeDataChanged) {
             ussFileProvider.nodeDataChanged(parent);
         }
+
+        const parentEquivNode = ussFileProvider.findEquivalentNode(parent, contextually.isFavorite(parent));
+
+        if (parentEquivNode != null) {
+            // Refresh the correct node (parent of node to delete) to reflect changes
+            ussFileProvider.refreshElement(parentEquivNode);
+        }
     }
 
     /**
