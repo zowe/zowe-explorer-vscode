@@ -192,7 +192,7 @@ export function parseFavorites(lines: string[]): FavoriteData[] {
                 return null;
             }
 
-            const profileName = line.substring(line.indexOf("[") + 1, closingSquareBracket);
+            const profileName = line.substring(1, closingSquareBracket);
 
             // label{context}
             const remainderOfLine = line.substring(closingSquareBracket + 2).trim();
