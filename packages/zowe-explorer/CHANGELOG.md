@@ -17,6 +17,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 ### Bug fixes
 
 - Fixed issue where "Allocate Like" input box placeholder was showing a localization ID instead of the intended message ("Enter a name for the new data set"). [#2759](https://github.com/zowe/vscode-extension-for-zowe/issues/2759)
+- Fix concerns regarding Unix command handling work. [#2866](https://github.com/zowe/zowe-explorer-vscode/pull/2866)
 
 ## `3.0.0-next.202403051607`
 
