@@ -6,6 +6,8 @@ All notable changes to the "zowe-explorer-ftp-extension" extension will be docum
 
 ### Bug fixes
 
+- Fix issue #2832 zFTP: Spool files are not listed properly for active jobs.
+
 ## `2.15.2`
 
 ### New features and enhancements
