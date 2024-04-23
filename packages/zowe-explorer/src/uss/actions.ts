@@ -272,9 +272,11 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
     }
 
     // TODO Handle case where same USS file is open as both favorite and non-favorite to prevent desync between equivalent nodes
-    const sesNode =
-        ussFileProvider.mFavorites.find((child) => child.label.toString().trim() === sesName) ??
-        ussFileProvider.mSessionNodes.find((child) => child.label.toString().trim() === sesName);
+    const isFavorite =
+        ussFileProvider.openFiles?.[doc.uri.fsPath] != null && contextually.isFavoriteDescendant(ussFileProvider.openFiles[doc.uri.fsPath]);
+    const sesNode = (isFavorite ? ussFileProvider.mFavorites : ussFileProvider.mSessionNodes).find(
+        (child) => child.label.toString().trim() === sesName
+    );
     if (!sesNode) {
         // if saving from favorites, a session might not exist for this node
         ZoweLogger.debug(localize("saveUSSFile.missingSessionNode", "Could not find session node"));
