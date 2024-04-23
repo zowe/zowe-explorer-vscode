@@ -31,7 +31,7 @@ import { Profiles } from "../../../src/Profiles";
 import * as utils from "../../../src/utils/ProfilesUtils";
 import { Gui, IZoweTreeNode, ProfilesCache, ZosEncoding } from "@zowe/zowe-explorer-api";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
-import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
+import { LocalStorageKey, ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
 import { LocalFileManagement } from "../../../src/utils/LocalFileManagement";
 import { TreeProviders } from "../../../src/shared/TreeProviders";
 
