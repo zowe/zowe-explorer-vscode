@@ -1195,14 +1195,20 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             node.resourceUri = newUri;
             node.label = afterMemberName;
             node.tooltip = afterMemberName;
-            const otherParent = this.findEquivalentNode(node.getParent() as IZoweDatasetTreeNode, contextually.isFavorite(node.getParent()) || contextually.isFavoriteDescendant(node));
+            node.command = { command: "vscode.open", title: "", arguments: [node.resourceUri] };
+            const otherParent = this.findEquivalentNode(
+                node.getParent() as IZoweDatasetTreeNode,
+                contextually.isFavorite(node.getParent()) || contextually.isFavoriteDescendant(node)
+            );
             if (otherParent) {
                 const otherMember = otherParent.children.find((child) => child.label === beforeMemberName);
                 if (otherMember) {
                     otherMember.label = afterMemberName;
                     otherMember.tooltip = afterMemberName;
-                    this.refreshElement(otherMember as IZoweDatasetTreeNode);
+                    otherMember.resourceUri = node.resourceUri;
+                    otherMember.command = node.command;
                 }
+                this.refreshElement(otherParent as IZoweDatasetTreeNode);
             }
             this.refreshElement(node.getParent() as IZoweDatasetTreeNode);
         }
