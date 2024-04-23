@@ -1,5 +1,7 @@
 {
+  "extension": ["ts"],
   "reporterEnabled": "spec,mocha-junit-reporter",
+  "require": "ts-node/register",
   "mochaJunitReporterReporterOptions": {
     "mochaFile": "./results/integration/junit.xml"
   }
