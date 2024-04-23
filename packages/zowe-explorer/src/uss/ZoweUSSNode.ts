@@ -347,7 +347,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         return vscode.workspace.textDocuments.find((doc) => doc.uri.toString() === this.resourceUri.toString());
     }
 
-    private renameChild(parentUri: vscode.Uri): void {
+    public renameChild(parentUri: vscode.Uri): void {
         const childPath = path.posix.join(parentUri.path, this.label as string);
         this.fullPath = childPath;
         this.resourceUri = parentUri.with({
@@ -355,6 +355,14 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         });
         this.label = path.posix.basename(this.fullPath);
         this.tooltip = injectAdditionalDataToTooltip(this, childPath);
+        if (!contextually.isUssDirectory(this)) {
+            this.command = {
+                command: "vscode.open",
+                title: vscode.l10n.t("Open"),
+                arguments: [this.resourceUri],
+            };
+            return;
+        }
 
         if (this.children.length > 0) {
             this.children.forEach((c) => {

@@ -270,17 +270,6 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
         const openedTextDocuments: readonly vscode.TextDocument[] = vscode.workspace.textDocuments; // Array of all documents open in VS Code
         const nodeType = contextually.isFolder(originalNode) ? "folder" : "file";
         const parentPath = path.dirname(originalNode.fullPath);
-        let originalNodeInFavorites: boolean = false;
-        let oldFavorite: IZoweUSSTreeNode;
-
-        // Could be a favorite or regular entry always deal with the regular entry
-        // Check if an old favorite exists for this node
-        if (contextually.isFavorite(originalNode) || contextually.isFavoriteDescendant(originalNode)) {
-            originalNodeInFavorites = true; // Node is a favorite or a descendant of a node in Favorites section
-            oldFavorite = originalNode;
-        } else {
-            oldFavorite = this.findFavoritedNode(originalNode);
-        }
 
         // If the USS node or any of its children are locally open with unsaved data, prevent rename until user saves their work.
         for (const doc of openedTextDocuments) {
@@ -316,20 +305,42 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
             try {
                 const newNamePath = path.posix.join(parentPath, newName);
 
-                // Handle rename in UI:
-                if (oldFavorite) {
-                    if (originalNodeInFavorites) {
-                        await this.renameUSSNode(originalNode, newNamePath); // Rename corresponding node in Sessions
-                    }
-                    // Below handles if originalNode is in a session node or is only indirectly in Favorites (e.g. is only a child of a favorite).
-                    // Also handles if there are multiple appearances of originalNode in Favorites.
-                    // This has to happen before renaming originalNode.rename, as originalNode's label is used to find the favorite equivalent.
-                    // Doesn't do anything if there aren't any appearances of originalNode in Favs
-                    await this.renameFavorite(originalNode, newNamePath);
-                }
-                // Rename originalNode in UI
+                const favDescendant = contextually.isFavoriteDescendant(originalNode);
+                const originalInFavorites = contextually.isFavorite(originalNode) || favDescendant;
+
+                const equivalentNode = this.findEquivalentNode(originalNode, originalInFavorites);
+
+                // Use the node implementation to do the actual rename operation
                 await originalNode.rename(newNamePath);
-                // only reassign URI for renamed files
+
+                if (equivalentNode != null) {
+                    if (originalInFavorites) {
+                        // this is a non-favorited node: refresh parent
+                        TreeProviders.uss.refreshElement(equivalentNode.getParent());
+                    } else {
+                        const nodeParent = equivalentNode.getParent();
+                        if (
+                            (contextually.isFavorite(nodeParent) || contextually.isFavoriteDescendant(nodeParent)) &&
+                            contextually.isUssDirectory(nodeParent)
+                        ) {
+                            // parent folder is favorited; refresh element
+                            this.refreshElement(nodeParent as ZoweUSSNode);
+                        } else {
+                            // equivalent node is favorited and not a descendant
+                            equivalentNode.fullPath = originalNode.fullPath;
+                            equivalentNode.label = originalNode.label;
+                            equivalentNode.resourceUri = originalNode.resourceUri;
+                            equivalentNode.tooltip = originalNode.tooltip;
+                            if (nodeType === "folder" && equivalentNode.children.length > 0) {
+                                equivalentNode.children.forEach((child) => {
+                                    (child as ZoweUSSNode).renameChild(equivalentNode.resourceUri);
+                                });
+                            }
+                        }
+                    }
+                }
+
+                // only reassign a command for renamed file nodes
                 if (!contextually.isUssDirectory(originalNode)) {
                     originalNode.command = {
                         command: "vscode.open",
@@ -427,20 +438,6 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
     public findEquivalentNode(node: IZoweUSSTreeNode, isFavorite: boolean): IZoweUSSTreeNode {
         ZoweLogger.trace("USSTree.findEquivalentNode called.");
         return isFavorite ? this.findNonFavoritedNode(node) : this.findFavoritedNode(node);
-    }
-
-    /**
-     * This function is for renaming the non-favorited equivalent of a favorited node for a given profile.
-     * @param profileLabel
-     * @param oldNamePath
-     * @param newNamePath
-     */
-    public async renameUSSNode(node: IZoweUSSTreeNode, newNamePath: string): Promise<void> {
-        ZoweLogger.trace("USSTree.renameUSSNode called.");
-        const matchingNode: IZoweUSSTreeNode = this.findNonFavoritedNode(node);
-        if (matchingNode) {
-            await matchingNode.rename(newNamePath);
-        }
     }
 
     /**
@@ -1128,6 +1125,9 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
         if (match === undefined) {
             // Is match contained within one of the children?
             for (const node of parentNode.children) {
+                if (node.collapsibleState === vscode.TreeItemCollapsibleState.Collapsed) {
+                    continue;
+                }
                 const isFullPathChild: boolean = checkIfChildPath(node.fullPath, fullPath);
                 if (isFullPathChild) {
                     return this.findMatchInLoadedChildren(node as IZoweUSSTreeNode, fullPath);
