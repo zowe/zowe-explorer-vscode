@@ -512,13 +512,21 @@ export namespace MainframeInteraction {
         /**
          * Issues a Unix Command and returns a Console Command API response.
          *
-         * @param {string} command
-         * @param {string} cwd
-         * @param {boolean} flag
-         * @returns {Promise<string>}
+         * @param {string} command                  - UNIX command
+         * @param {string} cwd                      - UNIX working directory for command to be issued
+         * @param {zosuss.SshSession} sshSession    - Optional Parameter, passed to extender if sshProfileRequired returns true
+         * @returns {string}                        - UNIX command output string
          * @memberof ICommand
          */
-        issueUnixCommand?(sshSession: zosuss.SshSession, command: string, cwd: string, flag: boolean): Promise<string>;
+        issueUnixCommand?(command: string, cwd: string, sshSession?: zosuss.SshSession): Promise<string>;
+
+        /**
+         * Extender will require this API and return true if Zowe SSH profile is to be used for issuing UNIX commands.
+         * Zowe Explorer will prepare the ssh session and pass it to extender with issueUnixCommand()
+         *
+         * @returns {boolean}                        - true if SSH profile is to be used for issuing UNIX commands
+         * @memberof ICommand
+         */
         sshProfileRequired?(): boolean;
     }
 }
