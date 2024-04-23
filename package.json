@@ -19,8 +19,10 @@
     "@vscode/l10n": "^0.0.18"
   },
   "devDependencies": {
+    "@swc/core": "^1.4.17",
     "@types/jest": "^29.2.3",
     "@types/mocha": "^10.0.1",
+    "@types/nightwatch": "^2.3.31",
     "@types/node": "^18.19.14",
     "@types/vscode": "^1.73.0",
     "@typescript-eslint/eslint-plugin": "^5.53.0",
@@ -41,6 +43,7 @@
     "mocha": "^10.2.0",
     "mocha-junit-reporter": "^2.2.0",
     "mocha-multi-reporters": "^1.5.1",
+    "nightwatch": "^3.6.1",
     "node-loader": "^2.0.0",
     "ovsx": "^0.8.3",
     "prettier": "2.6.0",
