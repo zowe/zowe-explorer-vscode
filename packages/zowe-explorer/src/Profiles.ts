@@ -626,7 +626,7 @@ export class Profiles extends ProfilesCache {
         return profileType;
     }
 
-    public async createZoweSchema(_zoweFileProvider: IZoweTree<IZoweTreeNode>): Promise<string> {
+    public async createZoweSchema(_zoweFileProvider: IZoweTree<IZoweTreeNode>): Promise<string | undefined> {
         ZoweLogger.trace("Profiles.createZoweSchema called.");
         try {
             let user = false;
@@ -669,12 +669,19 @@ export class Profiles extends ProfilesCache {
             const impConfig: zowe.imperative.IImperativeConfig = zowe.getImperativeConfig();
             const knownCliConfig: zowe.imperative.ICommandProfileTypeConfiguration[] = impConfig.profiles;
 
+            const knownProfileTypes = knownCliConfig.map((item) => item.type);
+
             const extenderinfo = this.getConfigArray();
             extenderinfo.forEach((item) => {
-                knownCliConfig.push(item);
+                if (!knownProfileTypes.includes(item.type)) {
+                    knownCliConfig.push(item);
+                }
             });
 
-            knownCliConfig.push(impConfig.baseProfile);
+            if (impConfig.baseProfile && !knownProfileTypes.includes(impConfig.baseProfile.type)) {
+                knownCliConfig.push(impConfig.baseProfile);
+            }
+
             config.setSchema(zowe.imperative.ConfigSchema.buildSchema(knownCliConfig));
 
             // Note: IConfigBuilderOpts not exported

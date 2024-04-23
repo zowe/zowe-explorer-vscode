@@ -4,8 +4,6 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ## TBD Release
 
-### New features and enhancements
-
 ### Bug fixes
 
 - Fixed an issue where `ProfilesCache` may return missing or incorrect profile values when multiple extensions call it during activation. [#2831](https://github.com/zowe/zowe-explorer-vscode/issues/2831)
