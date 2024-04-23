@@ -118,6 +118,8 @@ export class FtpJesApi extends AbstractFtpApi implements ZoweExplorerApi.IJes {
                             ddname: (file as ISpoolFileRefactor).ddName || file.ddname,
                         } as unknown as zowe.IJobFile;
                     });
+                } else {
+                    result.stepname = "No spool file available";
                 }
             }
             return [result];
