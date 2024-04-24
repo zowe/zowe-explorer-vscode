@@ -9,13 +9,12 @@
  *
  */
 
-import { describe, it } from "node:test";
-import { assert, browser } from "nightwatch";
+import { browser } from "nightwatch";
 
 describe("Activity Bar tests", () => {
-    it("can click on the Zowe Explorer icon in the Activity Bar", () => {
+    it("can click on the Zowe Explorer icon in the Activity Bar", async () => {
         const zeIcon = browser.element.find('.action-item > a[aria-label="Zowe Explorer"]');
-        assert.notEqual(zeIcon, undefined);
-        zeIcon.click();
+        browser.assert.visible(zeIcon);
+        await zeIcon.click();
     });
 });
