@@ -99,7 +99,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             this.iconPath = icon.path;
         }
 
-        if (this.getParent() == null || this.getParent().label === localize("Favorites", "Favorites")) {
+        if (this.getParent() == null || contextually.isFavorite(this.getParent())) {
             // set default sort options for session nodes
             this.sort = {
                 method: DatasetSortOpts.Name,
