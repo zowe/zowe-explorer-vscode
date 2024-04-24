@@ -8,6 +8,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
+- Fixed issue where expanding a favorited PDS resulted in an error message. [#2873](https://github.com/zowe/zowe-explorer-vscode/issues/2873)
+
 ## `2.15.3`
 
 ### Bug fixes
