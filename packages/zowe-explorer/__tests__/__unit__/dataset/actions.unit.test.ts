@@ -183,7 +183,10 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
 
         await dsActions.createMember(parent, blockMocks.testDatasetTree);
 
-        expect(parent.children.find((node) => node.label === "TESTMEMBER")).toBeDefined();
+        const newNode = parent.children.find((node) => node.label === "TESTMEMBER");
+        expect(newNode).toBeDefined();
+        expect(newNode?.contextValue).toBe(globals.DS_MEMBER_CONTEXT);
+        expect(newNode?.command.command).toBe("zowe.ds.ZoweNode.openPS");
         expect(mySpy).toBeCalledWith({
             placeHolder: "Name of Member",
             validateInput: expect.any(Function),
