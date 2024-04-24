@@ -144,7 +144,7 @@ importers:
         specifier: 8.0.0-next.202404032038
         version: 8.0.0-next.202404032038(@zowe/core-for-zowe-sdk@8.0.0-next.202404032038)(@zowe/imperative@8.0.0-next.202404032038)
       '@zowe/zowe-explorer-api':
-        specifier: 3.0.0-next-SNAPSHOT
+        specifier: 3.0.0-next.202404242037
         version: link:../zowe-explorer-api
       dayjs:
         specifier: ^1.11.10
@@ -202,7 +202,7 @@ importers:
         specifier: ^1.1.4
         version: 1.1.4
       eslint-plugin-zowe-explorer:
-        specifier: 3.0.0-next-SNAPSHOT
+        specifier: 3.0.0-next.202404242037
         version: link:../eslint-plugin-zowe-explorer
       event-stream:
         specifier: ^4.0.1
@@ -290,7 +290,7 @@ importers:
         specifier: 8.0.0-next.202404032038
         version: 8.0.0-next.202404032038(@zowe/core-for-zowe-sdk@8.0.0-next.202404032038)(@zowe/imperative@8.0.0-next.202404032038)
       '@zowe/zowe-explorer-api':
-        specifier: 3.0.0-next-SNAPSHOT
+        specifier: 3.0.0-next.202404242037
         version: link:../zowe-explorer-api
       tmp:
         specifier: 0.2.1
