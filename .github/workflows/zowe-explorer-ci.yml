@@ -39,8 +39,8 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
 
-      # install pnpm
-      - run: npm install -g pnpm@9
+      # install pnpm - use version 8 until Octorelease supports pnpm@9
+      - run: npm install -g pnpm@8
 
       - run: pnpm config set network-timeout 60000 && pnpm install && pnpm build
 
