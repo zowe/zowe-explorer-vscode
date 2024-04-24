@@ -10,18 +10,21 @@
  */
 
 import { writeFileSync } from "fs";
-import { Builder, By, Key, until } from "selenium-webdriver";
+import { Builder, By, Key, until, WebDriver } from "selenium-webdriver";
 import * as firefox from "selenium-webdriver/firefox";
 import { TheiaLocator, DatasetsLocators, UssLocators, JobsLocators } from "./Locators";
 
 const SHORTSLEEPTIME = 2000;
 const WAITTIME = 30000;
-let driverFirefox: any;
+let driverFirefox: WebDriver;
 
-export async function openBrowser() {
+export async function openBrowser(headless = true) {
     const firefoxOptions = new firefox.Options();
-    firefoxOptions.headless();
+    if (headless) {
+        firefoxOptions.headless();
+    }
     driverFirefox = new Builder().forBrowser("firefox").setFirefoxOptions(firefoxOptions).build();
+    return driverFirefox;
 }
 
 export async function takeScreenshot(filename: string) {
@@ -38,19 +41,18 @@ export async function clickOnZoweExplorer() {
 }
 
 export async function clickOnDatasetsTab() {
+    await driverFirefox.findElement(By.id(DatasetsLocators.datasetTabId)).click();
     await driverFirefox.findElement(By.xpath(DatasetsLocators.datasetTabXpath)).click();
 }
 
 export async function clickOnUssTab() {
     await driverFirefox.findElement(By.id(UssLocators.ussTabId)).click();
-}
-
-export async function clickOnUssTabs() {
     await driverFirefox.findElement(By.xpath(UssLocators.ussTabXpath)).click();
 }
 
 export async function clickOnJobsTab() {
     await driverFirefox.findElement(By.id(JobsLocators.jobTabId)).click();
+    await driverFirefox.findElement(By.xpath(JobsLocators.jobTabXpath)).click();
 }
 
 export async function clickOnUssPanel() {

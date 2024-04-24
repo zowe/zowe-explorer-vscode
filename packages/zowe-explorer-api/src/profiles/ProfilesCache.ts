@@ -70,7 +70,7 @@ export class ProfilesCache {
     public profilesValidationSetting: IValidationSetting[] = [];
     public allProfiles: zowe.imperative.IProfileLoaded[] = [];
     public profileTypeConfigurations: zowe.imperative.ICommandProfileTypeConfiguration[] = [];
-    protected allTypes: string[];
+    protected allTypes: string[] = [];
     protected allExternalTypes = new Set<string>();
     protected profilesByType = new Map<string, zowe.imperative.IProfileLoaded[]>();
     protected defaultProfileByType = new Map<string, zowe.imperative.IProfileLoaded>();
@@ -192,10 +192,7 @@ export class ProfilesCache {
     }
 
     public async refresh(apiRegister?: ZoweExplorerApi.IApiRegisterClient): Promise<void> {
-        this.allProfiles = [];
-        this.allTypes = [];
-        this.profilesByType.clear();
-        this.defaultProfileByType.clear();
+        const allProfiles: zowe.imperative.IProfileLoaded[] = [];
         let mProfileInfo: zowe.imperative.ProfileInfo;
         try {
             mProfileInfo = await this.getProfileInfo();
@@ -219,10 +216,15 @@ export class ProfilesCache {
                         // Step 3: Update allProfiles list
                         tmpAllProfiles.push(profileFix);
                     }
-                    this.allProfiles.push(...tmpAllProfiles);
+                    allProfiles.push(...tmpAllProfiles);
                     this.profilesByType.set(type, tmpAllProfiles);
                 }
-                this.allTypes.push(type);
+            }
+            this.allProfiles = allProfiles;
+            this.allTypes = allTypes;
+            for (const oldType of [...this.profilesByType.keys()].filter((type) => !allTypes.includes(type))) {
+                this.profilesByType.delete(oldType);
+                this.defaultProfileByType.delete(oldType);
             }
             // check for proper merging of apiml tokens
             this.checkMergingConfigAllProfiles();
