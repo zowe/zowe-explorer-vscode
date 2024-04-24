@@ -6,6 +6,7 @@
   "createUSSNode.error.create": "Unable to create node:",
   "uploadFile.response.upload.title": "Uploading file to USS tree",
   "uploadFile.uploadCancelled": "Upload action was cancelled.",
+  "uploadFile.operationCancelled": "Operation Cancelled",
   "uploadFile.putContents": "Uploading USS file",
   "copyPath.infoMessage": "Copy Path is not yet supported in Theia.",
   "saveUSSFile.log.debug.saveRequest": "save requested for USS file ",

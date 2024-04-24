@@ -229,6 +229,10 @@ export async function uploadContent(
     etagToUpload?: string,
     returnEtag?: boolean
 ): Promise<IZosFilesResponse> {
+    if (node == null) {
+        await errorHandling(localize("saveFile.nodeNotFound.error", "Could not find {0} in tree", doc.fileName));
+        return;
+    }
     const uploadOptions: IUploadOptions = {
         etag: etagToUpload,
         returnEtag: returnEtag ?? true,
@@ -375,9 +379,13 @@ export async function compareFileContent(
     label?: string,
     profile?: imperative.IProfileLoaded
 ): Promise<void> {
+    node = node ?? TreeProviders.ds.openFiles?.[doc.uri.fsPath] ?? TreeProviders.uss.openFiles?.[doc.uri.fsPath];
+    if (node == null) {
+        await errorHandling(localize("saveFile.nodeNotFound.error", "Could not find {0} in tree", doc.fileName));
+        return;
+    }
     await markDocumentUnsaved(doc);
     const prof = node ? node.getProfile() : profile;
-    node = node ?? TreeProviders.ds.openFiles?.[doc.uri.fsPath] ?? TreeProviders.uss.openFiles?.[doc.uri.fsPath];
     let downloadResponse;
 
     if (isTypeUssTreeNode(node)) {
