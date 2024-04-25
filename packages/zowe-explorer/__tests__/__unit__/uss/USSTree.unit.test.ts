@@ -289,6 +289,13 @@ describe("USSTree Unit Tests - Function createProfileNodeForFavs", () => {
             parentNode: globalMocks.testTree.mFavoriteSession,
             profile: globalMocks.testProfile,
         });
+        expectedFavProfileNode.contextValue = globals.USS_SESSION_CONTEXT;
+        const icon = getIconByNode(expectedFavProfileNode);
+        if (icon) {
+            expectedFavProfileNode.iconPath = icon.path;
+        }
+        expectedFavProfileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
+
         const createdFavProfileNode = await globalMocks.testTree.createProfileNodeForFavs("testProfile");
         expect(createdFavProfileNode).toEqual(expectedFavProfileNode);
     });
