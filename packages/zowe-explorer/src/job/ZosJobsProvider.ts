@@ -509,7 +509,6 @@ export class ZosJobsProvider extends ZoweTreeProvider<IZoweJobTreeNode> implemen
         if (profileNodeInFavorites === undefined) {
             // If favorite node for profile doesn't exist yet, create a new one for it
             profileNodeInFavorites = this.createProfileNodeForFavs(profileName, node.getProfile());
-            profileNodeInFavorites.iconPath = node.iconPath;
         }
         if (contextually.isSession(node)) {
             // Favorite a search/session

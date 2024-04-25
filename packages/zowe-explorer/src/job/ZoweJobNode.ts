@@ -65,7 +65,9 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
 
         if (!isFavoritesNode && this.job == null) {
             // non-favorited, session node
-            this.contextValue = globals.JOBS_SESSION_CONTEXT;
+            if (!contextually.isFavorite(this)) {
+                this.contextValue = globals.JOBS_SESSION_CONTEXT;
+            }
             this.resourceUri = vscode.Uri.from({
                 scheme: ZoweScheme.Jobs,
                 path: `/${sessionLabel}/`,
