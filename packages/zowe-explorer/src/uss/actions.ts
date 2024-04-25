@@ -84,7 +84,10 @@ export async function createUSSNode(
             await ussFileProvider.getTreeView().reveal(node, { select: true, focus: true });
             ussFileProvider.getTreeView().reveal(newNode, { select: true, focus: true });
 
-            const equivalentNodeParent = ussFileProvider.findEquivalentNode(node, contextually.isFavorite(node) || contextually.isFavoriteDescendant(node));
+            const equivalentNodeParent = ussFileProvider.findEquivalentNode(
+                node,
+                contextually.isFavorite(node) || contextually.isFavoriteDescendant(node)
+            );
             if (equivalentNodeParent != null) {
                 ussFileProvider.refreshElement(equivalentNodeParent);
             }
