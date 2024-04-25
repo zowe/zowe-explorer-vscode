@@ -30,7 +30,7 @@ import * as vscode from "vscode";
 import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
 import * as zosmf from "@zowe/zosmf-for-zowe-sdk";
 import { createUSSNode, createFavoriteUSSNode, createUSSSessionNode } from "../../../__mocks__/mockCreators/uss";
-import { getIconByNode } from "../../../src/generators/icons";
+import { getIconById, getIconByNode, IconId } from "../../../src/generators/icons";
 import { createUssApi, bindUssApi } from "../../../__mocks__/mockCreators/api";
 import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
 import { PersistentFilters } from "../../../src/PersistentFilters";
@@ -280,7 +280,7 @@ describe("USSTree Unit Tests - Function initializeFavChildNodeForProfile", () =>
 });
 
 describe("USSTree Unit Tests - Function createProfileNodeForFavs", () => {
-    it("Tests that profile grouping node is created correctly", async () => {
+    it("Tests that profile grouping node is created correctly - project-level profile", async () => {
         const globalMocks = await createGlobalMocks();
         const expectedFavProfileNode = new ZoweUSSNode({
             label: "testProfile",
@@ -299,6 +299,26 @@ describe("USSTree Unit Tests - Function createProfileNodeForFavs", () => {
         const createdFavProfileNode = await globalMocks.testTree.createProfileNodeForFavs("testProfile");
         expect(createdFavProfileNode).toEqual(expectedFavProfileNode);
     });
+
+    it("Tests that profile grouping node is created correctly - global profile", async () => {
+        const globalMocks = await createGlobalMocks();
+        const expectedFavProfileNode = new ZoweUSSNode({
+            label: "testProfile",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            contextOverride: globals.FAV_PROFILE_CONTEXT,
+            parentNode: globalMocks.testTree.mFavoriteSession,
+            profile: globalMocks.testProfile,
+        });
+        const isGlobalProfNodeMock = jest.spyOn(globalMocks.testTree as unknown as any, "isGlobalProfileNode").mockResolvedValueOnce(true);
+        const icon = getIconById(IconId.home);
+        expectedFavProfileNode.iconPath = icon.path;
+
+        const createdFavProfileNode = await globalMocks.testTree.createProfileNodeForFavs("testProfile");
+        expect(createdFavProfileNode).toEqual(expectedFavProfileNode);
+        expect(isGlobalProfNodeMock).toHaveBeenCalled();
+        isGlobalProfNodeMock.mockRestore();
+    });
+
     it("Tests that profile grouping node is created correctly if icon is defined", async () => {
         const globalMocks = await createGlobalMocks();
         const expectedFavProfileNode = new ZoweUSSNode({

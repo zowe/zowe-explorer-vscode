@@ -19,7 +19,7 @@ import { Gui, imperative, IZoweDatasetTreeNode, ProfilesCache, Validation, Sorti
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { Profiles } from "../../../src/Profiles";
 import * as utils from "../../../src/utils/ProfilesUtils";
-import { getIconByNode } from "../../../src/generators/icons";
+import { IconId, getIconById, getIconByNode } from "../../../src/generators/icons";
 import {
     createInstanceOfProfile,
     createIProfile,
@@ -3094,7 +3094,7 @@ describe("Dataset Tree Unit Tests - Function openWithEncoding", () => {
 });
 
 describe("Dataset Tree Unit Tests - Function createProfileNodeForFavs", () => {
-    it("Tests that profile grouping node is created correctly", async () => {
+    it("Tests that profile grouping node is created correctly - project-level profile", async () => {
         const globalMocks = await createGlobalMocks();
         const testTree = new DatasetTree();
         const expectedFavProfileNode = new ZoweDatasetNode({
@@ -3122,5 +3122,33 @@ describe("Dataset Tree Unit Tests - Function createProfileNodeForFavs", () => {
         expect(createDirMock).toHaveBeenCalledWith(expectedFavProfileNode.resourceUri);
         createDirMock.mockRestore();
         existsMock.mockRestore();
+    });
+
+    it("Tests that profile grouping node is created correctly - global profile", async () => {
+        const globalMocks = await createGlobalMocks();
+        const testTree = new DatasetTree();
+        const expectedFavProfileNode = new ZoweDatasetNode({
+            label: "testProfile",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            contextOverride: globals.FAV_PROFILE_CONTEXT,
+            parentNode: testTree.mFavoriteSession,
+            profile: globalMocks.testProfileLoaded,
+        });
+
+        const isGlobalProfNodeMock = jest.spyOn(testTree as any, "isGlobalProfileNode").mockResolvedValueOnce(true);
+        const icon = getIconById(IconId.home);
+        expectedFavProfileNode.iconPath = icon.path;
+
+        const createDirMock = jest.spyOn(DatasetFSProvider.instance, "createDirectory").mockImplementation();
+        const existsMock = jest.spyOn(DatasetFSProvider.instance, "exists").mockReturnValueOnce(false);
+
+        const createdFavProfileNode = await testTree.createProfileNodeForFavs("testProfile", globalMocks.testProfileLoaded);
+        expect(createdFavProfileNode).toEqual(expectedFavProfileNode);
+        expect(existsMock).toHaveBeenCalledWith(expectedFavProfileNode.resourceUri);
+        expect(createDirMock).toHaveBeenCalledWith(expectedFavProfileNode.resourceUri);
+        expect(isGlobalProfNodeMock).toHaveBeenCalled();
+        createDirMock.mockRestore();
+        existsMock.mockRestore();
+        isGlobalProfNodeMock.mockRestore();
     });
 });

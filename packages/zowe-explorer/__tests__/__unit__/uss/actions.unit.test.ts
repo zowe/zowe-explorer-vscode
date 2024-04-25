@@ -259,6 +259,31 @@ describe("USS Action Unit Tests - Function createUSSNodeDialog", () => {
         expect(createSpy).toHaveBeenCalledWith("/test/path/testFile", "file");
     });
 
+    it("Tests that createUSSNode refreshes the equivalent node (favorite/non-favorite)", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        const testProfile = createIProfile();
+        const ussApi = ZoweExplorerApiRegister.getUssApi(testProfile);
+        const getUssApiMock = jest.fn().mockReturnValue(ussApi);
+        ZoweExplorerApiRegister.getUssApi = getUssApiMock.bind(ZoweExplorerApiRegister);
+        const createSpy = jest.spyOn(ussApi, "create");
+
+        blockMocks.ussNode.contextValue = globals.USS_BINARY_FILE_CONTEXT;
+        blockMocks.ussNode.fullPath = "/test/path";
+
+        globalMocks.mockShowInputBox.mockReturnValueOnce("testFile");
+        jest.spyOn(blockMocks.testTreeView, "reveal").mockReturnValueOnce(new Promise((resolve) => resolve(null)));
+        const refreshElemSpy = jest.spyOn(blockMocks.testUSSTree as unknown as any, "refreshElement");
+        jest.spyOn(blockMocks.testUSSTree as unknown as any, "findEquivalentNode").mockReturnValueOnce(blockMocks.ussNode);
+
+        jest.spyOn(blockMocks.ussNode, "getChildren").mockResolvedValueOnce([]);
+
+        await ussNodeActions.createUSSNode(blockMocks.ussNode, blockMocks.testUSSTree, "file");
+        expect(createSpy).toHaveBeenCalledWith("/test/path/testFile", "file");
+        expect(refreshElemSpy).toHaveBeenCalled();
+    });
+
     it("Tests that createUSSNode fails if an error is thrown", async () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);

@@ -6,6 +6,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
+- Renamed `isHomeProfile` context helper function to `isGlobalProfile` for clarity.
+
 ### Bug fixes
 
 ## `3.0.0-next.202404242037`
