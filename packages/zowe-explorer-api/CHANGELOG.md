@@ -6,6 +6,14 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### New features and enhancements
 
+- Deprecated the following properties on Zowe tree interfaces in favor of setters and getters to incentivize encapsulation: [#2026](https://github.com/zowe/zowe-explorer-vscode/issues/2026)
+  - `binary` property on the `IZoweDatasetTreeNode` interface - use the `getEncoding` and `setEncoding` functions instead.
+  - `encodingMap` property on the `IZoweDatasetTreeNode` and `IZoweUSSTreeNode` interfaces - use the `getEncodingInMap` and `updateEncodingInMap` functions instead.
+  - `stats` property on the `IZoweDatasetTreeNode` interface - use the `getStats` and `setStats` functions instead.
+  - `encoding` property on the `IZoweDatasetTreeNode` and `IZoweUSSTreeNode` interfaces - use the `getEncoding` and `setEncoding` functions instead.
+  - `shortLabel` property on the `IZoweUSSTreeNode` interface - use the `getBaseName` function instead.
+  - `attributes` property on the `IZoweUSSTreeNode` interface - use the `getAttributes` and `setAttributes` functions instead.
+
 ### Bug fixes
 
 ## `3.0.0-next.202404242037`
@@ -26,13 +34,6 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 - Added optional function `move` to the `MainframeInteraction.IUss` interface to move USS folders/files from one path to another. [#2207](https://github.com/zowe/zowe-explorer-vscode/issues/2207)
 - Added the `buildUniqueSpoolName` function to build spool names for Zowe resource URIs and VS Code editor tabs. [#2207](https://github.com/zowe/zowe-explorer-vscode/issues/2207)
 - Added the `isNodeInEditor` function to determine whether a tree node is open in the editor. [#2207](https://github.com/zowe/zowe-explorer-vscode/issues/2207)
-- Deprecated the following properties on Zowe tree interfaces in favor of setters and getters to incentivize encapsulation: [#2026](https://github.com/zowe/zowe-explorer-vscode/issues/2026)
-  - `binary` property on the `IZoweDatasetTreeNode` interface - use the `getEncoding` and `setEncoding` functions instead.
-  - `encodingMap` property on the `IZoweDatasetTreeNode` and `IZoweUSSTreeNode` interfaces - use the `getEncodingInMap` and `updateEncodingInMap` functions instead.
-  - `stats` property on the `IZoweDatasetTreeNode` interface - use the `getStats` and `setStats` functions instead.
-  - `encoding` property on the `IZoweDatasetTreeNode` and `IZoweUSSTreeNode` interfaces - use the `getEncoding` and `setEncoding` functions instead.
-  - `shortLabel` property on the `IZoweUSSTreeNode` interface - use the `getBaseName` function instead.
-  - `attributes` property on the `IZoweUSSTreeNode` interface - use the `getAttributes` and `setAttributes` functions instead.
 
 ### Bug fixes
 
