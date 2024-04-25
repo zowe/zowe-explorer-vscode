@@ -31,7 +31,7 @@
     "@zowe/zos-uss-for-zowe-sdk": "8.0.0-next.202404032038",
     "@zowe/zosmf-for-zowe-sdk": "8.0.0-next.202404032038",
     "handlebars": "^4.7.7",
-    "semver": "^7.5.3"
+    "semver": "^7.6.0"
   },
   "scripts": {
     "build": "pnpm check-cli && pnpm copy-secrets && pnpm clean && pnpm license && tsc -p ./ && pnpm madge",
