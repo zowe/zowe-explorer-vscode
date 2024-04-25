@@ -1061,6 +1061,29 @@ describe("Shared utils unit tests - function initializeFileOpening", () => {
         expect(globalMocks.mockExecuteCommand).toHaveBeenCalledWith("zowe.ds.openWithEncoding", testNode, { kind: "binary" });
     });
 
+    it("successfully handles binary data sets that should be previewed", async () => {
+        const globalMocks = await createGlobalMocks();
+
+        // Creating a test node
+        const rootNode = new ZoweDatasetNode({
+            label: "root",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            session: globalMocks.session,
+            profile: globalMocks.profileOne,
+        });
+        rootNode.contextValue = globals.DS_SESSION_CONTEXT;
+        const testNode = new ZoweDatasetNode({
+            label: "TEST.DS",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: rootNode,
+            profile: globalMocks.profileOne,
+            encoding: { kind: "binary" },
+        });
+
+        await sharedUtils.initializeFileOpening(testNode, testNode.fullPath, true);
+        expect(globalMocks.mockExecuteCommand).toHaveBeenCalledWith("vscode.open", { path: "" });
+    });
+
     it("successfully handles text data sets that should be previewed", async () => {
         const globalMocks = await createGlobalMocks();
 
@@ -1133,6 +1156,30 @@ describe("Shared utils unit tests - function initializeFileOpening", () => {
 
         await sharedUtils.initializeFileOpening(testNode, testNode.fullPath);
         expect(globalMocks.mockExecuteCommand).toHaveBeenCalledWith("zowe.uss.openWithEncoding", testNode, { kind: "binary" });
+    });
+
+    it("successfully handles binary USS files that should be previewed", async () => {
+        const globalMocks = await createGlobalMocks();
+
+        // Creating a test node
+        const rootNode = new ZoweUSSNode({
+            label: "root",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            session: globalMocks.session,
+            profile: globalMocks.profileOne,
+        });
+        rootNode.contextValue = globals.USS_SESSION_CONTEXT;
+        const testNode = new ZoweUSSNode({
+            label: "testFile",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: rootNode,
+            profile: globalMocks.profileOne,
+            encoding: { kind: "binary" },
+        });
+        testNode.fullPath = "test/testFile";
+
+        await sharedUtils.initializeFileOpening(testNode, testNode.fullPath, true);
+        expect(globalMocks.mockExecuteCommand).toHaveBeenCalledWith("vscode.open", { path: testNode.fullPath });
     });
 
     it("successfully handles text USS files that should be previewed", async () => {
