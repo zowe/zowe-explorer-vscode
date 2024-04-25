@@ -800,6 +800,27 @@ describe("USSTree Unit Tests - Function findMatchInLoadedChildren", () => {
     });
 });
 
+describe("USSTree Unit Tests - Function renameFavorite", () => {
+    it("Checking common run of function", async () => {
+        const globalMocks = await createGlobalMocks();
+        const ussFavNode = createFavoriteUSSNode(globalMocks.testSession, globalMocks.testProfile);
+        const ussFavNodeParent = new ZoweUSSNode({
+            label: "sestest",
+            collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
+            session: globalMocks.testSession,
+            profile: globalMocks.testProfile,
+        });
+        ussFavNodeParent.children.push(ussFavNode);
+        globalMocks.testTree.mFavorites.push(ussFavNodeParent);
+        const renameSpy = jest.spyOn(ussFavNode, "rename");
+
+        await globalMocks.testTree.renameFavorite(ussFavNode, "/u/myuser/renamed");
+
+        expect(renameSpy).toHaveBeenCalledTimes(1);
+        expect(renameSpy).toHaveBeenCalledWith("/u/myuser/renamed");
+    });
+});
+
 describe("USSTree Unit Tests - Function saveSearch", () => {
     async function createBlockMocks(globalMocks) {
         const newMocks = {

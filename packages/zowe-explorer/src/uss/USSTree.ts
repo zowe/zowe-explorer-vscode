@@ -442,7 +442,8 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
 
     /**
      * Renames a node from the favorites list
-     *
+     * @deprecated No longer used as more info is now needed during the rename operation.
+     
      * @param node
      */
     public async renameFavorite(node: IZoweUSSTreeNode, newNamePath: string): Promise<void> {
