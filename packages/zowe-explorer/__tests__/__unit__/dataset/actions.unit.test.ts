@@ -183,7 +183,10 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
 
         await dsActions.createMember(parent, blockMocks.testDatasetTree);
 
-        expect(parent.children.find((node) => node.label === "TESTMEMBER")).toBeDefined();
+        const newNode = parent.children.find((node) => node.label === "TESTMEMBER");
+        expect(newNode).toBeDefined();
+        expect(newNode?.contextValue).toBe(globals.DS_MEMBER_CONTEXT);
+        expect(newNode?.command.command).toBe("zowe.ds.ZoweNode.openPS");
         expect(mySpy).toBeCalledWith({
             placeHolder: "Name of Member",
             validateInput: expect.any(Function),
@@ -1220,6 +1223,7 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
             collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
             parentNode: blockMocks.datasetFavoritesNode,
             contextOverride: globals.FAV_PROFILE_CONTEXT,
+            session: blockMocks.session,
         });
         const node = new ZoweDatasetNode({
             label: "HLQ.TEST.AFILE",
@@ -1253,6 +1257,7 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
         blockMocks.profileInstance.loadNamedProfile.mockReturnValue(blockMocks.imperativeProfile);
         const testDocument = createTextDocument("HLQ.TEST.AFILE", blockMocks.datasetSessionNode);
         (testDocument as any).fileName = path.join(globals.DS_DIR, blockMocks.imperativeProfile.name, testDocument.fileName);
+        blockMocks.testDatasetTree.openFiles = { [testDocument.uri.fsPath]: node };
 
         await dsActions.saveFile(testDocument, blockMocks.testDatasetTree);
 
@@ -1269,6 +1274,7 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
             collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
             parentNode: blockMocks.datasetFavoritesNode,
             contextOverride: globals.FAV_PROFILE_CONTEXT,
+            session: blockMocks.session,
         });
         const favoriteNode = new ZoweDatasetNode({
             label: "HLQ.TEST.AFILE",
@@ -1312,6 +1318,7 @@ describe("Dataset Actions Unit Tests - Function saveFile", () => {
         const mockSetEtag = jest.spyOn(favoriteChildNode, "setEtag").mockImplementation(() => null);
         const testDocument = createTextDocument("HLQ.TEST.AFILE(MEM)", blockMocks.datasetSessionNode);
         (testDocument as any).fileName = path.join(globals.DS_DIR, blockMocks.imperativeProfile.name, testDocument.fileName);
+        blockMocks.testDatasetTree.openFiles = { [testDocument.uri.fsPath]: favoriteChildNode };
 
         await dsActions.saveFile(testDocument, blockMocks.testDatasetTree);
 

@@ -440,6 +440,7 @@ describe("USS Action Unit Tests - Function saveUSSFile", () => {
 
         globalMocks.withProgress.mockImplementation((progLocation, callback) => callback());
         blockMocks.mockGetEtag.mockReturnValue("123fav");
+        blockMocks.testUSSTree.openFiles = { [blockMocks.testDoc.uri.fsPath]: blockMocks.ussFavoriteNode };
 
         await ussNodeActions.saveUSSFile(blockMocks.testDoc, blockMocks.testUSSTree);
 
@@ -780,12 +781,10 @@ describe("USS Action Unit Tests - copy file / directory", () => {
         newMocks.nodes[1].contextValue = globals.USS_DIR_CONTEXT;
         newMocks.nodes[0].refreshUSS = jest.fn().mockResolvedValueOnce(newMocks.nodes[0]);
         newMocks.nodes[1].refreshUSS = jest.fn().mockResolvedValueOnce(newMocks.nodes[1]);
-        newMocks.nodes[1].getParent = jest.fn().mockResolvedValueOnce(undefined);
-        newMocks.nodes[0].getParent = jest.fn().mockResolvedValueOnce(undefined);
-        newMocks.nodes[1].getChildren = jest.fn().mockResolvedValueOnce([]);
         newMocks.nodes[0].getChildren = jest.fn().mockResolvedValueOnce([]);
-        newMocks.nodes[1].getProfile = jest.fn().mockResolvedValueOnce({ name: "test" });
+        newMocks.nodes[1].getChildren = jest.fn().mockResolvedValueOnce([]);
         newMocks.nodes[0].getProfile = jest.fn().mockResolvedValueOnce({ name: "test" });
+        newMocks.nodes[1].getProfile = jest.fn().mockResolvedValueOnce({ name: "test" });
 
         newMocks.treeNodes = {
             testUSSTree: null,
