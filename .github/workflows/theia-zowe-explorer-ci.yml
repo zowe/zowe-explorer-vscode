@@ -48,7 +48,7 @@ jobs:
       - run: ls -la temp/plugins
 
       - name: Start Theia
-        run: docker run --name theia --init -d -p 3000:3000 --user theia -v "${PWD}/temp/plugins/:/home/theia/plugins" t1m0thyj/theia-alpine:community
+        run: docker run --name theia --init -d -p 3000:3000 --user theia -v "${PWD}/temp/plugins/:/home/theia/plugins" ghcr.io/zowe/zowe-sample-dockerfiles-ze-theia-slim
       # NOTE(Kelosky): alternatively, we could run docker via something like this; however, we cannot hot reload
       #                hosted VS Code extensions after theia is started (at least at the time this was written).
       # services:
