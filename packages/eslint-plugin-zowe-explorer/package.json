@@ -1,6 +1,6 @@
 {
   "name": "eslint-plugin-zowe-explorer",
-  "version": "3.0.0-next-SNAPSHOT",
+  "version": "3.0.0-next.202404242037",
   "description": "Custom ESLint Rules for ZOWE Explorer",
   "keywords": [
     "eslint",
@@ -21,7 +21,7 @@
     "pretty": "echo \"eslint-plugin: nothing to pretty.\"",
     "package": "echo \"eslint-plugin: nothing to package.\""
   },
-  "dependencies": {
+  "devDependencies": {
     "requireindex": "^1.1.0",
     "rewire": "^6.0.0"
   },
