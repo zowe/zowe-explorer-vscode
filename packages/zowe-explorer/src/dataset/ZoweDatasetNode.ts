@@ -37,7 +37,7 @@ import { ZoweLogger } from "../utils/LoggerUtils";
 import * as dayjs from "dayjs";
 import * as fs from "fs";
 import { promiseStatus, PromiseStatuses } from "promise-status-async";
-import { getDocumentFilePath, updateOpenFiles } from "../shared/utils";
+import { getDocumentFilePath, initializeFileOpening, updateOpenFiles } from "../shared/utils";
 import { IZoweDatasetTreeOpts } from "../shared/IZoweTreeOpts";
 import { LocalFileManagement } from "../utils/LocalFileManagement";
 
@@ -596,8 +596,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 }
                 statusMsg.dispose();
                 updateOpenFiles(datasetProvider, documentFilePath, this);
-                const document = await vscode.workspace.openTextDocument(documentFilePath);
-                await Gui.showTextDocument(document, { preview: this.wasDoubleClicked != null ? !this.wasDoubleClicked : shouldPreview });
+                await initializeFileOpening(this, documentFilePath, this.wasDoubleClicked != null ? !this.wasDoubleClicked : shouldPreview);
                 // discard ongoing action to allow new requests on this node
                 if (this.ongoingActions) {
                     this.ongoingActions[NodeAction.Download] = null;

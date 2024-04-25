@@ -27,6 +27,7 @@ import {
     SortDirection,
     NodeSort,
     DatasetFilterOpts,
+    ZosEncoding,
 } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
@@ -1522,8 +1523,8 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         }
     }
 
-    public async openWithEncoding(node: IZoweDatasetTreeNode): Promise<void> {
-        const encoding = await promptForEncoding(node);
+    public async openWithEncoding(node: IZoweDatasetTreeNode, encoding?: ZosEncoding): Promise<void> {
+        encoding = encoding ?? (await promptForEncoding(node));
         if (encoding !== undefined) {
             node.setEncoding(encoding);
             await node.openDs(true, false, this);

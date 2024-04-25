@@ -13,7 +13,7 @@ import * as globals from "../globals";
 import * as vscode from "vscode";
 import * as ussActions from "./actions";
 import * as refreshActions from "../shared/refresh";
-import { IZoweUSSTreeNode, IZoweTreeNode } from "@zowe/zowe-explorer-api";
+import { IZoweUSSTreeNode, IZoweTreeNode, ZosEncoding } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import * as contextuals from "../shared/context";
 import { getSelectedNodeList } from "../shared/utils";
@@ -194,7 +194,7 @@ export async function initUSSProvider(context: vscode.ExtensionContext): Promise
     context.subscriptions.push(
         vscode.commands.registerCommand(
             "zowe.uss.openWithEncoding",
-            (node: IZoweUSSTreeNode): Promise<void> => ussFileProvider.openWithEncoding(node)
+            (node: IZoweUSSTreeNode, encoding?: ZosEncoding): Promise<void> => ussFileProvider.openWithEncoding(node, encoding)
         )
     );
     context.subscriptions.push(
