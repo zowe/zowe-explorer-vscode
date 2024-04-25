@@ -13,7 +13,7 @@ import * as globals from "../globals";
 import * as vscode from "vscode";
 import * as ussActions from "./actions";
 import * as refreshActions from "../shared/refresh";
-import { IZoweUSSTreeNode, IZoweTreeNode } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweUSSTreeNode, IZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import * as contextuals from "../shared/context";
 import { getSelectedNodeList } from "../shared/utils";
@@ -21,6 +21,15 @@ import { USSTree, createUSSTree } from "./USSTree";
 import { initSubscribers } from "../shared/init";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { TreeViewUtils } from "../utils/TreeViewUtils";
+
+import * as nls from "vscode-nls";
+
+// Set up localization
+nls.config({
+    messageFormat: nls.MessageFormat.bundle,
+    bundleFormat: nls.BundleFormat.standalone,
+})();
+const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 export async function initUSSProvider(context: vscode.ExtensionContext): Promise<USSTree> {
     ZoweLogger.trace("init.initUSSProvider called.");
@@ -55,11 +64,13 @@ export async function initUSSProvider(context: vscode.ExtensionContext): Promise
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.uss.refreshUSS", async (node, nodeList) => {
+            const statusMsg = Gui.setStatusBarMessage(localize("uss.refreshUSS", "$(sync~spin) Pulling from Mainframe..."));
             let selectedNodes = getSelectedNodeList(node, nodeList) as IZoweUSSTreeNode[];
             selectedNodes = selectedNodes.filter((x) => contextuals.isDocument(x));
             for (const item of selectedNodes) {
                 await item.refreshUSS();
             }
+            statusMsg.dispose();
         })
     );
     context.subscriptions.push(

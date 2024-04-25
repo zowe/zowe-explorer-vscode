@@ -1,0 +1,3 @@
+{
+  "jobs.refreshSpool": "$(sync~spin) Pulling from Mainframe..."
+}
