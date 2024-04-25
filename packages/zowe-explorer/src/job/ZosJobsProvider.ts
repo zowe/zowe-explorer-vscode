@@ -64,7 +64,7 @@ interface IJobPickerOption {
 export async function createJobsTree(log: imperative.Logger): Promise<ZosJobsProvider> {
     ZoweLogger.trace("ZosJobsProvider.createJobsTree called.");
     const tree = new ZosJobsProvider();
-    tree.initializeJobsTree(log);
+    await tree.initializeJobsTree(log);
     await tree.addSession(undefined, undefined, tree);
     return tree;
 }
@@ -323,7 +323,7 @@ export class ZosJobsProvider extends ZoweTreeProvider<IZoweJobTreeNode> implemen
      * @param profileName Name of profile
      * @returns {ZoweJobNode}
      */
-    public createProfileNodeForFavs(profileName: string, profile?: imperative.IProfileLoaded): ZoweJobNode {
+    public async createProfileNodeForFavs(profileName: string, profile?: imperative.IProfileLoaded): Promise<ZoweJobNode> {
         ZoweLogger.trace("ZosJobsProvider.createProfileNodeForFavs called.");
         const favProfileNode = new ZoweJobNode({
             label: profileName,
@@ -332,6 +332,20 @@ export class ZosJobsProvider extends ZoweTreeProvider<IZoweJobTreeNode> implemen
             parentNode: this.mFavoriteSession,
             profile,
         });
+        if (await this.isGlobalProfileNode(favProfileNode)) {
+            favProfileNode.contextValue += globals.HOME_SUFFIX;
+            const icon = getIconByNode(favProfileNode);
+            if (icon) {
+                favProfileNode.iconPath = icon.path;
+            }
+        } else {
+            favProfileNode.contextValue = globals.JOBS_SESSION_CONTEXT;
+            const icon = getIconByNode(favProfileNode);
+            if (icon) {
+                favProfileNode.iconPath = icon.path;
+            }
+        }
+        favProfileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
         if (!JobFSProvider.instance.exists(favProfileNode.resourceUri)) {
             JobFSProvider.instance.createDirectory(favProfileNode.resourceUri);
         }
@@ -343,7 +357,7 @@ export class ZosJobsProvider extends ZoweTreeProvider<IZoweJobTreeNode> implemen
      * Initialize the favorites and history information
      * @param log - Logger
      */
-    public initializeJobsTree(log: imperative.Logger): void {
+    public async initializeJobsTree(log: imperative.Logger): Promise<void> {
         ZoweLogger.trace("ZosJobsProvider.initializeJobsTree called.");
         this.log = log;
         ZoweLogger.debug(vscode.l10n.t("Initializing profiles with jobs favorites."));
@@ -359,7 +373,7 @@ export class ZosJobsProvider extends ZoweTreeProvider<IZoweJobTreeNode> implemen
             // Create a node if it does not already exist in the Favorites array
             const profileNodeInFavorites =
                 this.findMatchingProfileInArray(this.mFavorites, fav.profileName) ??
-                this.createProfileNodeForFavs(fav.profileName, Profiles.getInstance().loadNamedProfile(fav.profileName));
+                (await this.createProfileNodeForFavs(fav.profileName, Profiles.getInstance().loadNamedProfile(fav.profileName)));
 
             if (fav.contextValue == null) {
                 continue;
@@ -391,7 +405,7 @@ export class ZosJobsProvider extends ZoweTreeProvider<IZoweJobTreeNode> implemen
                 profile: parentNode.getProfile(),
                 job: new JobDetail(label),
             });
-            if (JobFSProvider.instance.exists(favJob.resourceUri)) {
+            if (!JobFSProvider.instance.exists(favJob.resourceUri)) {
                 JobFSProvider.instance.createDirectory(favJob.resourceUri, { job: favJob.job });
             }
         } else {
@@ -500,7 +514,7 @@ export class ZosJobsProvider extends ZoweTreeProvider<IZoweJobTreeNode> implemen
      *
      * @param {IZoweJobTreeNode} node
      */
-    public addFavorite(node: IZoweJobTreeNode): void {
+    public async addFavorite(node: IZoweJobTreeNode): Promise<void> {
         ZoweLogger.trace("ZosJobsProvider.addFavorite called.");
         let favJob: ZoweJobNode;
         // Get node's profile node in favorites
@@ -508,7 +522,7 @@ export class ZosJobsProvider extends ZoweTreeProvider<IZoweJobTreeNode> implemen
         let profileNodeInFavorites = this.findMatchingProfileInArray(this.mFavorites, profileName);
         if (profileNodeInFavorites === undefined) {
             // If favorite node for profile doesn't exist yet, create a new one for it
-            profileNodeInFavorites = this.createProfileNodeForFavs(profileName, node.getProfile());
+            profileNodeInFavorites = await this.createProfileNodeForFavs(profileName, node.getProfile());
         }
         if (contextually.isSession(node)) {
             // Favorite a search/session

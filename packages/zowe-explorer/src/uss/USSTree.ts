@@ -561,13 +561,18 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
         let profileNodeInFavorites = this.findMatchingProfileInArray(this.mFavorites, profileName);
         if (profileNodeInFavorites === undefined) {
             // If favorite node for profile doesn't exist yet, create a new one for it
-            profileNodeInFavorites = this.createProfileNodeForFavs(profileName);
+            profileNodeInFavorites = await this.createProfileNodeForFavs(profileName);
         }
         if (contextually.isUssSession(node)) {
+            if (!node.fullPath) {
+                this.refreshElement(this.mFavoriteSession);
+                return;
+            }
+
             // Favorite a USS search
             temp = new ZoweUSSNode({
                 label,
-                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
                 parentNode: profileNodeInFavorites,
                 session: node.getSession(),
                 profile: node.getProfile(),
@@ -834,7 +839,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
      * @param profileName Name of profile
      * @returns {ZoweUSSNode}
      */
-    public createProfileNodeForFavs(profileName: string): ZoweUSSNode {
+    public async createProfileNodeForFavs(profileName: string): Promise<ZoweUSSNode> {
         ZoweLogger.trace("USSTree.createProfileNodeForFavs called.");
         const favProfileNode = new ZoweUSSNode({
             label: profileName,
@@ -843,6 +848,20 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
             parentNode: this.mFavoriteSession,
             profile: Profiles.getInstance().loadNamedProfile(profileName),
         });
+        if (await this.isGlobalProfileNode(favProfileNode)) {
+            favProfileNode.contextValue += globals.HOME_SUFFIX;
+            const icon = getIconByNode(favProfileNode);
+            if (icon) {
+                favProfileNode.iconPath = icon.path;
+            }
+        } else {
+            favProfileNode.contextValue = globals.USS_SESSION_CONTEXT;
+            const icon = getIconByNode(favProfileNode);
+            if (icon) {
+                favProfileNode.iconPath = icon.path;
+            }
+        }
+        favProfileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
         this.mFavorites.push(favProfileNode);
         return favProfileNode;
     }
@@ -868,7 +887,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
             // The profile node used for grouping respective favorited items.
             // Create a node if it does not already exist in the Favorites array
             const favProfileNode =
-                this.findMatchingProfileInArray(this.mFavorites, fav.profileName) ?? this.createProfileNodeForFavs(fav.profileName);
+                this.findMatchingProfileInArray(this.mFavorites, fav.profileName) ?? (await this.createProfileNodeForFavs(fav.profileName));
 
             if (fav.contextValue == null) {
                 continue;

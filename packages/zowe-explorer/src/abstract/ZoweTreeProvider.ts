@@ -62,19 +62,25 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
         treeView.reveal(item, { select: true, focus: true });
     }
 
+    protected async isGlobalProfileNode(node: T): Promise<boolean> {
+        const mProfileInfo = await Profiles.getInstance().getProfileInfo();
+        const prof = mProfileInfo.getAllProfiles().find((p) => p.profName === node.getProfileName());
+        const osLocInfo = mProfileInfo.getOsLocInfo(prof);
+        if (osLocInfo?.[0]?.global) {
+            return true;
+        }
+
+        return contextually.isGlobalProfile(node);
+    }
+
     /**
      * Call whenever the context of a node needs to be refreshed to add the home suffix
      * @param node Node to refresh
      */
-    public async refreshHomeProfileContext(node): Promise<void> {
+    public async refreshHomeProfileContext(node: T): Promise<void> {
         ZoweLogger.trace("ZoweTreeProvider.refreshHomeProfileContext called.");
-        const mProfileInfo = await Profiles.getInstance().getProfileInfo();
-        if (!contextually.isHomeProfile(node)) {
-            const prof = mProfileInfo.getAllProfiles().find((p) => p.profName === node.getProfileName());
-            const osLocInfo = mProfileInfo.getOsLocInfo(prof);
-            if (osLocInfo?.[0]?.global) {
-                node.contextValue += globals.HOME_SUFFIX;
-            }
+        if (await this.isGlobalProfileNode(node)) {
+            node.contextValue += globals.HOME_SUFFIX;
         }
     }
 

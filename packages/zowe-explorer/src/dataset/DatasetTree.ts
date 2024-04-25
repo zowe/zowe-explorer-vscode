@@ -211,7 +211,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
      * @param profileName Name of profile
      * @returns {ZoweDatasetNode}
      */
-    public createProfileNodeForFavs(profileName: string, profile?: imperative.IProfileLoaded): ZoweDatasetNode {
+    public async createProfileNodeForFavs(profileName: string, profile?: imperative.IProfileLoaded): Promise<ZoweDatasetNode> {
         ZoweLogger.trace("DatasetTree.createProfileNodeForFavs called.");
         const favProfileNode = new ZoweDatasetNode({
             label: profileName,
@@ -220,6 +220,21 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             parentNode: this.mFavoriteSession,
             profile,
         });
+        if (await this.isGlobalProfileNode(favProfileNode)) {
+            favProfileNode.contextValue += globals.HOME_SUFFIX;
+            const icon = getIconByNode(favProfileNode);
+            if (icon) {
+                favProfileNode.iconPath = icon.path;
+            }
+        } else {
+            favProfileNode.contextValue = globals.DS_SESSION_CONTEXT;
+            const icon = getIconByNode(favProfileNode);
+            if (icon) {
+                favProfileNode.iconPath = icon.path;
+            }
+        }
+        favProfileNode.contextValue = globals.FAV_PROFILE_CONTEXT;
+
         if (!DatasetFSProvider.instance.exists(favProfileNode.resourceUri)) {
             DatasetFSProvider.instance.createDirectory(favProfileNode.resourceUri);
         }
@@ -249,7 +264,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             // Create a node if it does not already exist in the Favorites array
             const favProfileNode =
                 this.findMatchingProfileInArray(this.mFavorites, fav.profileName) ??
-                this.createProfileNodeForFavs(fav.profileName, await Profiles.getInstance().getLoadedProfConfig(fav.profileName));
+                (await this.createProfileNodeForFavs(fav.profileName, await Profiles.getInstance().getLoadedProfConfig(fav.profileName)));
 
             if (fav.contextValue == null) {
                 continue;
@@ -491,7 +506,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         let profileNodeInFavorites = this.findMatchingProfileInArray(this.mFavorites, profileName);
         if (profileNodeInFavorites === undefined) {
             // If favorite node for profile doesn't exist yet, create a new one for it
-            profileNodeInFavorites = this.createProfileNodeForFavs(profileName, node.getProfile());
+            profileNodeInFavorites = await this.createProfileNodeForFavs(profileName, node.getProfile());
         }
         if (contextually.isDsMember(node)) {
             if (contextually.isFavoritePds(node.getParent())) {
@@ -502,6 +517,11 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             await this.addFavorite(node.getParent() as IZoweDatasetTreeNode);
             return;
         } else if (contextually.isDsSession(node)) {
+            if (!node.pattern) {
+                this.refreshElement(this.mFavoriteSession);
+                return;
+            }
+
             temp = new ZoweDatasetNode({
                 label: node.pattern,
                 collapsibleState: vscode.TreeItemCollapsibleState.None,
