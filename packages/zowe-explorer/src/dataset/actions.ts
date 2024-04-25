@@ -427,6 +427,7 @@ export async function createMember(parent: api.IZoweDatasetTreeNode, datasetProv
             parentNode: parent,
             profile: parent.getProfile(),
         });
+        newNode.command = { command: "zowe.ds.ZoweNode.openPS", title: "", arguments: [newNode] };
         await newNode.openDs(false, true, datasetProvider);
 
         parent.children.push(newNode);
