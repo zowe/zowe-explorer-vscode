@@ -5,6 +5,9 @@
 - Removed support for v1 Profiles
 - Updated supported VS Code engine to 1.79.0
 - Drop support for Theia IDE
+- Removed the `zowe.jobs.zosJobsOpenSpool` command in favor of using `vscode.open` with a spool URI.
+- Removed the `zowe.ds.ZoweNode.openPS` command in favor of using `vscode.open` with a data set URI.
+- Removed the `zowe.uss.ZoweUSSNode.open` command in favor of using `vscode.open` with a USS URI.
 
 ## Removal of deprecated APIs from Extensibility API for Zowe Explorer
 
@@ -68,3 +71,4 @@
 - `ICommand.issueUnixCommand` added for issuing Unix Commands
 - Optional `ICommand.sshProfileRequired` API returning a boolean value for extenders that would like to use the ssh profile for issuing UNIX commands via Zowe Explorer.
 - `ProfilesCache.convertV1ProfToConfig()` added for migrating v1 profiles to a global team configuration file.
+- Marked `getJobsByParameters` as a required function for the `MainframeInteraction.IJes` interface.
