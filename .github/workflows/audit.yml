@@ -18,7 +18,7 @@ jobs:
           node-version: lts/*
 
       - run: |
-          npm install -g pnpm
+          npm install -g pnpm@9
           pnpm install
 
       - name: Check Vulnerabilities

@@ -38,17 +38,16 @@ import * as dsActions from "../../../src/dataset/actions";
 import * as globals from "../../../src/globals";
 import { createDatasetSessionNode, createDatasetTree } from "../../../__mocks__/mockCreators/datasets";
 import { Profiles } from "../../../src/Profiles";
-import * as SpoolProvider from "../../../src/SpoolProvider";
+import * as SpoolProvider from "../../../src/SpoolUtils";
 import * as refreshActions from "../../../src/shared/refresh";
 import * as sharedUtils from "../../../src/shared/utils";
 import { ZoweLogger } from "../../../src/utils/ZoweLogger";
-import { SpoolFile } from "../../../src/SpoolProvider";
 import { ZosJobsProvider } from "../../../src/job/ZosJobsProvider";
 import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
 import { LocalFileManagement } from "../../../src/utils/LocalFileManagement";
 import { ProfileManagement } from "../../../src/utils/ProfileManagement";
-import { TreeProviders } from "../../../src/shared/TreeProviders";
 import { mocked } from "../../../__mocks__/mockUtils";
+import { JobFSProvider } from "../../../src/job/JobFSProvider";
 
 const activeTextEditorDocument = jest.fn();
 
@@ -870,6 +869,7 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
         createGlobalMocks();
 
         const blockMocks = createBlockMocks();
+        mocked(Profiles.getInstance).mockClear();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         const dataset = new ZoweDatasetNode({
             label: "TESTUSER.DATASET",
@@ -924,145 +924,6 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
             items: [{ title: "Submit" }],
             vsCodeOpts: { modal: true },
         });
-    });
-});
-
-describe("Jobs Actions Unit Tests - Function getSpoolContent", () => {
-    async function createBlockMocks() {
-        const session = createISessionWithoutCredentials();
-        const iJob = createIJobObject();
-        const iJobFile = createIJobFile();
-        const imperativeProfile = createIProfile();
-        const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
-        const profileInstance = createInstanceOfProfile(imperativeProfile);
-        const treeView = createTreeView();
-        const testJobTree = createJobsTree(session, iJob, imperativeProfile, treeView);
-        const jesApi = createJesApi(imperativeProfile);
-        jesApi.getSpoolFiles = jest.fn().mockReturnValue([
-            {
-                stepName: undefined,
-                ddname: "test",
-                "record-count": "testJob",
-                procstep: "testJob",
-            },
-        ]);
-        const mockCheckCurrentProfile = jest.fn();
-        const mockUri: vscode.Uri = {
-            scheme: "testScheme",
-            authority: "testAuthority",
-            path: "testPath",
-            query: "testQuery",
-            fragment: "testFragment",
-            fsPath: "testFsPath",
-            with: jest.fn(),
-            toJSON: jest.fn(),
-        };
-        bindJesApi(jesApi);
-        await TreeProviders.initializeProviders(null as any, {
-            ds: async (ctx) => null as any,
-            uss: async (ctx) => null as any,
-            job: async (ctx) => testJobTree,
-        });
-
-        return {
-            session,
-            iJob,
-            iJobFile,
-            imperativeProfile,
-            datasetSessionNode,
-            profileInstance,
-            jesApi,
-            testJobTree,
-            mockCheckCurrentProfile,
-            mockUri,
-        };
-    }
-
-    it("should call showTextDocument with encoded uri", async () => {
-        createGlobalMocks();
-        const blockMocks = await createBlockMocks();
-        const session = "sessionName";
-        const spoolFile = blockMocks.iJobFile;
-        mocked(SpoolProvider.encodeJobFile).mockReturnValueOnce(blockMocks.mockUri);
-        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
-
-        await jobActions.getSpoolContent(session, { spool: spoolFile } as any);
-
-        expect(mocked(Gui.showTextDocument)).toHaveBeenCalledWith(blockMocks.mockUri, { preview: false });
-    });
-    it("should call showTextDocument with encoded uri with unverified profile", async () => {
-        createGlobalMocks();
-        const blockMocks = await createBlockMocks();
-        const session = "sessionName";
-        const spoolFile = blockMocks.iJobFile;
-        Object.defineProperty(Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    checkCurrentProfile: blockMocks.mockCheckCurrentProfile.mockReturnValueOnce({
-                        name: blockMocks.imperativeProfile.name,
-                        status: "unverified",
-                    }),
-                    validProfile: Validation.ValidationType.UNVERIFIED,
-                };
-            }),
-        });
-        mocked(SpoolProvider.encodeJobFile).mockReturnValueOnce(blockMocks.mockUri);
-        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
-
-        await jobActions.getSpoolContent(session, { spool: spoolFile } as any);
-
-        expect(mocked(Gui.showTextDocument)).toHaveBeenCalledWith(blockMocks.mockUri, { preview: false });
-    });
-    it("should show error message for non existing profile", async () => {
-        createGlobalMocks();
-        const blockMocks = await createBlockMocks();
-        const session = "sessionName";
-        const spoolFile = blockMocks.iJobFile;
-        const anyTimestamp = Date.now();
-        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
-        mocked(blockMocks.profileInstance.loadNamedProfile).mockImplementationOnce(() => {
-            throw new Error("Test");
-        });
-
-        await jobActions.getSpoolContent(session, { spool: spoolFile } as any);
-
-        expect(mocked(vscode.window.showTextDocument)).not.toHaveBeenCalled();
-        expect(mocked(Gui.errorMessage)).toHaveBeenCalledWith("Error: Test");
-    });
-    it("should show an error message in case document cannot be shown for some reason", async () => {
-        createGlobalMocks();
-        const blockMocks = await createBlockMocks();
-        const session = "sessionName";
-        const spoolFile = blockMocks.iJobFile;
-        const anyTimestamp = Date.now();
-        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
-        mocked(SpoolProvider.encodeJobFile).mockReturnValueOnce(blockMocks.mockUri);
-        mocked(vscode.window.showTextDocument).mockImplementationOnce(() => {
-            throw new Error("Test");
-        });
-
-        await jobActions.getSpoolContent(session, { spool: spoolFile } as any);
-
-        expect(mocked(Gui.errorMessage)).toHaveBeenCalledWith("Error: Test");
-    });
-    it("should fetch the spool content successfully", async () => {
-        createGlobalMocks();
-        const blockMocks = await createBlockMocks();
-        const testNode = new ZoweJobNode({
-            label: "undefined:test - testJob",
-            collapsibleState: vscode.TreeItemCollapsibleState.None,
-            parentNode: createJobFavoritesNode(),
-            session: createISessionWithoutCredentials(),
-            profile: createIProfile(),
-        });
-        jest.spyOn(ZoweSpoolNode.prototype, "getProfile").mockReturnValue({
-            name: "test",
-        } as any);
-        mocked(SpoolProvider.toUniqueJobFileUri).mockReturnValueOnce(() => blockMocks.mockUri);
-        mocked(vscode.window.showTextDocument).mockImplementationOnce(() => {
-            throw new Error("Test");
-        });
-        await expect(jobActions.getSpoolContentFromMainframe(testNode)).resolves.not.toThrow();
     });
 });
 
@@ -1455,16 +1316,10 @@ describe("Job Actions Unit Tests - Misc. functions", () => {
                 query: '["some.profile",{"recfm":"UA","records-url":"https://some.url/","stepname":"STEP1","subsystem":"SUB1","job-correlator":"someid","byte-count":1298,"lrecl":133,"jobid":"JOB12345","ddname":"JESMSGLG","id":2,"record-count":19,"class":"A","jobname":"IEFBR14T","procstep":null}]',
             },
         } as unknown as vscode.TextDocument;
-        const eventEmitter = {
-            fire: jest.fn(),
-        };
-        // add a fake spool file to SpoolProvider
-        SpoolProvider.default.files[testDoc.uri.path] = new SpoolFile(testDoc.uri, eventEmitter as unknown as vscode.EventEmitter<vscode.Uri>);
-
-        const fetchContentSpy = jest.spyOn(SpoolFile.prototype, "fetchContent").mockImplementation();
+        const fetchSpoolAtUriSpy = jest.spyOn(JobFSProvider.instance, "fetchSpoolAtUri").mockImplementation();
         const statusMsgSpy = jest.spyOn(Gui, "setStatusBarMessage");
         await jobActions.spoolFilePollEvent(testDoc);
-        expect(fetchContentSpy).toHaveBeenCalled();
+        expect(fetchSpoolAtUriSpy).toHaveBeenCalled();
         expect(statusMsgSpy).toHaveBeenCalledWith(`$(sync~spin) Polling: ${testDoc.fileName}...`);
     });
 });

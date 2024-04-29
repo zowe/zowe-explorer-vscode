@@ -21,7 +21,7 @@
     "pretty": "echo \"eslint-plugin: nothing to pretty.\"",
     "package": "echo \"eslint-plugin: nothing to package.\""
   },
-  "dependencies": {
+  "devDependencies": {
     "requireindex": "^1.1.0",
     "rewire": "^6.0.0"
   },

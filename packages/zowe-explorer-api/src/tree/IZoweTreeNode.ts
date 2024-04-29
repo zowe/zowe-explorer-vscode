@@ -37,32 +37,11 @@ export type ZosEncoding = TextEncoding | BinaryEncoding | OtherEncoding;
  * @export
  * @interface IZoweTreeNode
  */
-export interface IZoweTreeNode {
-    /**
-     * The icon path or [ThemeIcon](#ThemeIcon) for the tree item.
-     */
-    iconPath?: string | vscode.Uri | { light: string | vscode.Uri; dark: string | vscode.Uri } | vscode.ThemeIcon;
+export interface IZoweTreeNode extends vscode.TreeItem {
     /**
      * Indicator that the child data may have become stale and requires refreshing.
      */
     dirty: boolean;
-    /**
-     *  A human-readable string describing this item.
-     */
-    label?: string | vscode.TreeItemLabel;
-    /**
-     * A description for this tree item.
-     */
-    description?: string | boolean;
-    /**
-     * A unique identifier for this tree item.
-     * Used to prevent VScode from losing track of TreeItems in a TreeProvider.
-     */
-    id?: string;
-    /**
-     * The tooltip text when you hover over this item.
-     */
-    tooltip?: string | vscode.MarkdownString | undefined;
     /**
      * Describes the full path of a file
      */
@@ -71,16 +50,6 @@ export interface IZoweTreeNode {
      * Children nodes of this node
      */
     children?: IZoweTreeNode[];
-    /**
-     * [TreeItemCollapsibleState](#TreeItemCollapsibleState) of the tree item.
-     */
-    collapsibleState?: vscode.TreeItemCollapsibleState;
-    /**
-     * Context value of the tree item. This can be used to contribute item specific actions in the tree.
-     *
-     * This will show action `extension.deleteFolder` only for items with `contextValue` is `folder`.
-     */
-    contextValue?: string;
     /**
      * Any ongoing actions that must be awaited before continuing
      */
@@ -200,6 +169,12 @@ export interface IZoweDatasetTreeNode extends IZoweTreeNode {
      */
     openDs?(download: boolean, previewFile: boolean, datasetFileProvider: Types.IZoweDatasetTreeType): Promise<void>;
     /**
+     * Gets the codepage value for the file
+     *
+     * @param {string}
+     */
+    getEncoding?(): ZosEncoding;
+    /**
      * Sets the codepage value for the file
      *
      * @param {string}
@@ -236,13 +211,6 @@ export interface IZoweUSSTreeNode extends IZoweTreeNode {
      */
     onUpdateEmitter?: vscode.EventEmitter<IZoweUSSTreeNode>;
     /**
-     * Remote encoding of the data set
-     *
-     * * `null` = user selected z/OS default codepage
-     * * `undefined` = user did not specify
-     */
-    encoding?: string;
-    /**
      * Event that fires whenever an existing node is updated.
      */
     onUpdate?: vscode.Event<IZoweUSSTreeNode>;
@@ -270,6 +238,12 @@ export interface IZoweUSSTreeNode extends IZoweTreeNode {
      * @param {string} newNamePath
      */
     rename?(newNamePath: string);
+    /**
+     * Gets the codepage value for the file
+     *
+     * @param {string}
+     */
+    getEncoding?(): ZosEncoding;
     /**
      * Sets the codepage value for the file
      *

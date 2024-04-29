@@ -10,10 +10,13 @@
  */
 
 import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
-import { imperative, MainframeInteraction, ZoweExplorerZosmf } from "@zowe/zowe-explorer-api";
+import { imperative, MainframeInteraction, ZoweExplorerZosmf, ZoweScheme } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import { createInstanceOfProfile, createValidIProfile } from "../../../__mocks__/mockCreators/shared";
 import { ZoweExplorerExtender } from "../../../src/ZoweExplorerExtender";
+import { DatasetFSProvider } from "../../../src/dataset/DatasetFSProvider";
+import { UssFSProvider } from "../../../src/uss/UssFSProvider";
+import { JobFSProvider } from "../../../src/job/JobFSProvider";
 
 class MockUssApi1 implements MainframeInteraction.IUss {
     public profile?: imperative.IProfileLoaded;
@@ -307,5 +310,17 @@ describe("ZoweExplorerApiRegister unit testing", () => {
         });
         expect(ZoweExplorerApiRegister.getInstance().onProfilesUpdate).toEqual({});
         ZoweExplorerApiRegister.getInstance()["onProfilesUpdateCallback"] = undefined;
+    });
+
+    it("provides access to the appropriate event for onResourceChanged", () => {
+        expect(ZoweExplorerApiRegister.onResourceChanged(ZoweScheme.DS)).toBe(DatasetFSProvider.instance.onDidChangeFile);
+    });
+
+    it("provides access to the onUssChanged event", () => {
+        expect(ZoweExplorerApiRegister.onResourceChanged(ZoweScheme.USS)).toBe(UssFSProvider.instance.onDidChangeFile);
+    });
+
+    it("provides access to the onJobChanged event", () => {
+        expect(ZoweExplorerApiRegister.onResourceChanged(ZoweScheme.Jobs)).toBe(JobFSProvider.instance.onDidChangeFile);
     });
 });

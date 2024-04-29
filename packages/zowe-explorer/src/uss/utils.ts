@@ -9,13 +9,22 @@
  *
  */
 
-import * as path from "path";
-import * as fs from "fs";
 import * as vscode from "vscode";
 import type { ZoweUSSNode } from "./ZoweUSSNode";
 import { ZoweLogger } from "../utils/ZoweLogger";
-import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
-import { imperative, IZoweUSSTreeNode } from "@zowe/zowe-explorer-api";
+import * as contextually from "../shared/context";
+import { ZosEncoding } from "@zowe/zowe-explorer-api";
+
+export function zosEncodingToString(encoding: ZosEncoding): string {
+    switch (encoding.kind) {
+        case "binary":
+            return vscode.l10n.t("Binary");
+        case "other":
+            return encoding.codepage;
+        case "text":
+            return null;
+    }
+}
 
 /**
  * Injects extra data to tooltip based on node status and other conditions
@@ -36,36 +45,20 @@ export function injectAdditionalDataToTooltip(node: ZoweUSSNode, tooltip: string
             });
     }
 
-    const encodingString = node.binary ? vscode.l10n.t("Binary") : node.encoding;
-    if (encodingString != null) {
-        tooltip +=
-            "  \n" +
-            vscode.l10n.t({
-                message: "Encoding: {0}",
-                args: [encodingString],
-                comment: ["Encoding name"],
-            });
+    if (!contextually.isUssDirectory(node)) {
+        const zosEncoding = node.getEncoding();
+        const encodingString = zosEncoding ? zosEncodingToString(zosEncoding) : null;
+        if (encodingString != null) {
+            tooltip +=
+                "  \n" +
+                vscode.l10n.t({
+                    message: "Encoding: {0}",
+                    args: [encodingString],
+                    comment: ["Encoding name"],
+                });
+        }
     }
-
     return tooltip;
-}
-
-/**
- * Checks whether file already exists while case sensitivity taken into account
- * @param filepath
- * @returns {boolean}
- */
-export function fileExistsCaseSensitiveSync(filepath: string): boolean {
-    ZoweLogger.trace("uss.utils.fileExistsCaseSensitveSync called.");
-    const dir = path.dirname(filepath);
-    if (dir === path.dirname(dir)) {
-        return true;
-    }
-    const filenames = fs.readdirSync(dir);
-    if (filenames.indexOf(path.basename(filepath)) === -1) {
-        return false;
-    }
-    return fileExistsCaseSensitiveSync(dir);
 }
 
 /**
@@ -75,22 +68,4 @@ export function fileExistsCaseSensitiveSync(filepath: string): boolean {
 export function disposeClipboardContents(): void {
     ZoweLogger.trace("uss.utils.disposeClipboardContents called.");
     vscode.env.clipboard.writeText("");
-}
-
-export async function autoDetectEncoding(node: IZoweUSSTreeNode, profile?: imperative.IProfileLoaded): Promise<void> {
-    if (node.binary || node.encoding !== undefined) {
-        return;
-    }
-    const ussApi = ZoweExplorerApiRegister.getUssApi(profile ?? node.getProfile());
-    if (ussApi.getTag != null) {
-        const taggedEncoding = await ussApi.getTag(node.fullPath);
-        if (taggedEncoding === "binary" || taggedEncoding === "mixed") {
-            node.setEncoding({ kind: "binary" });
-        } else {
-            node.setEncoding(taggedEncoding !== "untagged" ? { kind: "other", codepage: taggedEncoding } : undefined);
-        }
-    } else {
-        const isBinary = await ussApi.isFileTagBinOrAscii(node.fullPath);
-        node.setEncoding(isBinary ? { kind: "binary" } : undefined);
-    }
 }

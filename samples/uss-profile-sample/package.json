@@ -37,7 +37,7 @@
     "ssh2-sftp-client": "^9.1.0"
   },
   "devDependencies": {
-    "@types/node": "^16.18.34",
+    "@types/node": "^18.19.14",
     "@types/ssh2-sftp-client": "^9.0.0",
     "@types/vscode": "^1.53.2",
     "@typescript-eslint/eslint-plugin": "^5.42.0",

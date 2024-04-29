@@ -17,7 +17,7 @@ import * as jobActions from "../../../src/job/actions";
 import * as sharedExtension from "../../../src/shared/init";
 import { initJobsProvider } from "../../../src/job/init";
 import { Profiles } from "../../../src/Profiles";
-import { IJestIt, ITestContext, processSubscriptions, spyOnSubscriptions } from "../../__common__/testUtils";
+import { IJestIt, ITestContext, processSubscriptions } from "../../__common__/testUtils";
 import { ZoweLogger } from "../../../src/utils/ZoweLogger";
 import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
 import { createISession, createIProfile } from "../../../__mocks__/mockCreators/shared";
@@ -60,11 +60,6 @@ describe("Test src/jobs/extension", () => {
         };
         const commands: IJestIt[] = [
             {
-                name: "zowe.jobs.zosJobsOpenspool",
-                parm: [test._, test.value],
-                mock: [{ spy: jest.spyOn(jobActions, "getSpoolContent"), arg: [test._, test.value] }],
-            },
-            {
                 name: "zowe.jobs.deleteJob",
                 parm: [test.value, test._],
                 mock: [{ spy: jest.spyOn(jobActions, "deleteCommand"), arg: [jobsProvider, test.value, test._] }],
@@ -89,17 +84,6 @@ describe("Test src/jobs/extension", () => {
                 name: "zowe.jobs.refreshJob",
                 parm: [{ mParent: test.value }],
                 mock: [{ spy: jest.spyOn(jobActions, "refreshJob"), arg: [test.value, jobsProvider] }],
-            },
-            {
-                name: "zowe.jobs.refreshSpool",
-                parm: [{ mParent: { mParent: test.value } }],
-                mock: [
-                    {
-                        spy: jest.spyOn(jobActions, "getSpoolContentFromMainframe"),
-                        arg: [{ mParent: { mParent: test.value } }],
-                    },
-                    { spy: jest.spyOn(jobActions, "refreshJob"), arg: [test.value, jobsProvider] },
-                ],
             },
             {
                 name: "zowe.jobs.downloadSingleSpool",
@@ -193,7 +177,7 @@ describe("Test src/jobs/extension", () => {
                     {
                         spy: jest.spyOn(Profiles, "getInstance"),
                         arg: [],
-                        ret: { enableValidation: jest.fn() },
+                        ret: { enableValidation: jest.fn(), disableValidation: jest.fn() },
                     },
                 ],
             },
@@ -251,7 +235,6 @@ describe("Test src/jobs/extension", () => {
             });
 
             spyCreateJobsTree.mockResolvedValue(jobsProvider as any);
-            spyOnSubscriptions(commands);
             jest.spyOn(vscode.workspace, "onDidCloseTextDocument").mockImplementation(jobsProvider.onDidCloseTextDocument);
             await initJobsProvider(test.context);
         });
@@ -266,7 +249,7 @@ describe("Test src/jobs/extension", () => {
 
         it("should not initialize if it is unable to create the jobs tree", async () => {
             spyCreateJobsTree.mockResolvedValue(null);
-            const myProvider = await initJobsProvider({} as any);
+            const myProvider = await initJobsProvider(test.context);
             expect(myProvider).toBe(null);
         });
 

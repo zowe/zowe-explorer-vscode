@@ -13,17 +13,15 @@ import * as vscode from "vscode";
 import * as fs from "fs";
 import * as globals from "../globals";
 import * as path from "path";
-import { concatChildNodes, uploadContent, getSelectedNodeList } from "../shared/utils";
+import { getSelectedNodeList } from "../shared/utils";
 import { errorHandling } from "../utils/ProfilesUtils";
 import { Gui, imperative, Validation, IZoweUSSTreeNode, Types } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { isBinaryFileSync } from "isbinaryfile";
 import * as contextually from "../shared/context";
-import { markDocumentUnsaved, setFileSaved } from "../utils/workspace";
 import { refreshAll } from "../shared/refresh";
 import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
-import { autoDetectEncoding, fileExistsCaseSensitiveSync } from "./utils";
 import { UssFileTree, UssFileType } from "./FileStructure";
 import { ZoweLogger } from "../utils/ZoweLogger";
 import { AttributeView } from "./AttributeView";
@@ -70,7 +68,13 @@ export async function createUSSNode(
     if (name && filePath) {
         try {
             filePath = `${filePath}/${name}`;
+            const uri = node.resourceUri.with({ path: path.posix.join(node.resourceUri.path, name) });
             await ZoweExplorerApiRegister.getUssApi(node.getProfile()).create(filePath, nodeType);
+            if (nodeType === "file") {
+                await vscode.workspace.fs.writeFile(uri, new Uint8Array());
+            } else {
+                await vscode.workspace.fs.createDirectory(uri);
+            }
             if (isTopLevel) {
                 await refreshAll(ussFileProvider);
             } else {
@@ -79,17 +83,6 @@ export async function createUSSNode(
             const newNode = await node.getChildren().then((children) => children.find((child) => child.label === name));
             await ussFileProvider.getTreeView().reveal(node, { select: true, focus: true });
             ussFileProvider.getTreeView().reveal(newNode, { select: true, focus: true });
-            const localPath = `${node.getUSSDocumentFilePath()}/${name}`;
-            const fileExists = fs.existsSync(localPath);
-            if (fileExists && !fileExistsCaseSensitiveSync(localPath)) {
-                Gui.showMessage(
-                    vscode.l10n.t(
-                        `There is already a file with the same name.
-                        Please change your OS file system settings if you want to give case sensitive file names.`
-                    )
-                );
-                ussFileProvider.refreshElement(node);
-            }
         } catch (err) {
             if (err instanceof Error) {
                 await errorHandling(err, node.getProfileName(), vscode.l10n.t("Unable to create node:"));
@@ -171,7 +164,7 @@ export async function uploadDialog(node: IZoweUSSTreeNode, ussFileProvider: Type
             }
         })
     );
-    ussFileProvider.refresh();
+    ussFileProvider.refreshElement(node);
 }
 
 export async function uploadBinaryFile(node: IZoweUSSTreeNode, filePath: string): Promise<void> {
@@ -224,113 +217,6 @@ export function copyPath(node: IZoweUSSTreeNode): void {
     vscode.env.clipboard.writeText(node.fullPath);
 }
 
-function findEtag(node: IZoweUSSTreeNode, directories: Array<string>, index: number): boolean {
-    if (node === undefined || directories.indexOf(node.label.toString().trim()) === -1) {
-        return false;
-    }
-    if (directories.indexOf(node.label.toString().trim()) === directories.length - 1) {
-        return node.getEtag() !== "";
-    }
-
-    let flag: boolean = false;
-    for (const child of node.children) {
-        flag = flag || findEtag(child, directories, directories.indexOf(node.label.toString().trim()) + 1);
-    }
-    return flag;
-}
-
-/**
- * Uploads the file to the mainframe
- *
- * @export
- * @param {Session} session - Desired session
- * @param {vscode.TextDocument} doc - TextDocument that is being saved
- */
-export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: Types.IZoweUSSTreeType): Promise<void> {
-    ZoweLogger.trace("uss.actions.saveUSSFile called.");
-    ZoweLogger.debug(
-        vscode.l10n.t({
-            message: "save requested for USS file {0}",
-            args: [doc.fileName],
-            comment: ["Document file name"],
-        })
-    );
-    const start = path.join(globals.USS_DIR + path.sep).length;
-    const ending = doc.fileName.substring(start);
-    const sesName = ending.substring(0, ending.indexOf(path.sep));
-    const profile = Profiles.getInstance().loadNamedProfile(sesName);
-    if (!profile) {
-        const sessionError = vscode.l10n.t("Could not locate session when saving USS file.");
-        ZoweLogger.error(sessionError);
-        await Gui.errorMessage(sessionError);
-        return;
-    }
-
-    const remote = ending.substring(sesName.length).replace(/\\/g, "/");
-    const directories = doc.fileName.split(path.sep).splice(doc.fileName.split(path.sep).indexOf("_U_") + 1);
-    directories.splice(1, 2);
-    const profileSesnode: IZoweUSSTreeNode = ussFileProvider.mSessionNodes.find((child) => child.label.toString().trim() === sesName);
-    const etagProfiles = findEtag(profileSesnode, directories, 0);
-    const favoritesSesNode: IZoweUSSTreeNode = ussFileProvider.mFavorites.find((child) => child.label.toString().trim() === sesName);
-    const etagFavorites = findEtag(favoritesSesNode, directories, 0);
-
-    // get session from session name
-    let sesNode: IZoweUSSTreeNode;
-    if ((etagProfiles && etagFavorites) || etagProfiles) {
-        sesNode = profileSesnode;
-    } else if (etagFavorites) {
-        sesNode = favoritesSesNode;
-    }
-    // Get specific node based on label and parent tree (session / favorites)
-    const nodes: IZoweUSSTreeNode[] = concatChildNodes(sesNode ? [sesNode] : ussFileProvider.mSessionNodes);
-    const node: IZoweUSSTreeNode =
-        nodes.find((zNode) => {
-            if (contextually.isText(zNode)) {
-                return zNode.fullPath.trim() === remote;
-            } else {
-                return false;
-            }
-        }) ?? ussFileProvider.openFiles?.[doc.uri.fsPath];
-
-    // define upload options
-    const etagToUpload = node?.getEtag();
-    const returnEtag = etagToUpload != null;
-
-    const prof = node?.getProfile() ?? profile;
-    try {
-        await autoDetectEncoding(node, prof);
-
-        const uploadResponse: zosfiles.IZosFilesResponse = await Gui.withProgress(
-            {
-                location: vscode.ProgressLocation.Window,
-                title: vscode.l10n.t("Saving file..."),
-            },
-            () => {
-                return uploadContent(node, doc, remote, prof, etagToUpload, returnEtag);
-            }
-        );
-        if (uploadResponse.success) {
-            Gui.setStatusBarMessage(uploadResponse.commandResponse, globals.STATUS_BAR_TIMEOUT_MS);
-            // set local etag with the new etag from the updated file on mainframe
-            node?.setEtag(uploadResponse.apiResponse.etag);
-            setFileSaved(true);
-            // this part never runs! zowe.Upload.fileToUSSFile doesn't return success: false, it just throws the error which is caught below!!!!!
-        } else {
-            await markDocumentUnsaved(doc);
-            Gui.errorMessage(uploadResponse.commandResponse);
-        }
-    } catch (err) {
-        // TODO: error handling must not be zosmf specific
-        const errorMessage = err ? err.message : err.toString();
-        if (errorMessage.includes("Rest API failure with HTTP(S) status 412")) {
-            await LocalFileManagement.compareSavedFileContent(doc, node, remote, prof);
-        } else {
-            await markDocumentUnsaved(doc);
-            await errorHandling(err, sesName);
-        }
-    }
-}
-
 export async function deleteUSSFilesPrompt(nodes: IZoweUSSTreeNode[]): Promise<boolean> {
     ZoweLogger.trace("uss.actions.deleteUSSFilesPrompt called.");
     const fileNames = nodes.reduce((label, currentVal) => {
@@ -367,7 +253,7 @@ export async function buildFileStructure(node: IZoweUSSTreeNode): Promise<UssFil
     ZoweLogger.trace("uss.actions.buildFileStructure called.");
     if (contextually.isUssDirectory(node)) {
         const directory: UssFileTree = {
-            localPath: node.getUSSDocumentFilePath(),
+            localUri: node.resourceUri,
             ussPath: node.fullPath,
             baseName: node.getLabel() as string,
             sessionName: node.getSessionNode().getLabel() as string,
@@ -388,9 +274,8 @@ export async function buildFileStructure(node: IZoweUSSTreeNode): Promise<UssFil
     }
 
     return {
-        children: [],
         binary: node.binary,
-        localPath: node.getUSSDocumentFilePath(),
+        localUri: node.resourceUri,
         ussPath: node.fullPath,
         baseName: node.getLabel() as string,
         sessionName: node.getSessionNode().getLabel() as string,

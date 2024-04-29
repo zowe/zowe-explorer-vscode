@@ -25,6 +25,7 @@ import { ProfilesUtils } from "../../src/utils/ProfilesUtils";
 import { ZoweLogger } from "../../src/utils/ZoweLogger";
 import { ZoweLocalStorage } from "../../src/utils/ZoweLocalStorage";
 import { SettingsConfig } from "../../src/utils/SettingsConfig";
+import { UssFSProvider } from "../../src/uss/UssFSProvider";
 jest.mock("fs");
 
 describe("ZoweExplorerExtender unit tests", () => {
@@ -42,7 +43,12 @@ describe("ZoweExplorerExtender unit tests", () => {
             mockErrorMessage: jest.fn(),
             mockExistsSync: jest.fn(),
             mockTextDocument: jest.fn(),
+            FileSystemProvider: {
+                createDirectory: jest.fn(),
+            },
         };
+
+        jest.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation(newMocks.FileSystemProvider.createDirectory);
 
         Object.defineProperty(fs, "existsSync", { value: newMocks.mockExistsSync, configurable: true });
         jest.spyOn(ZoweExplorerExtender.prototype, "getProfilesCache").mockReturnValue(newMocks.profiles);
@@ -117,8 +123,8 @@ describe("ZoweExplorerExtender unit tests", () => {
         const blockMocks = await createBlockMocks();
         ZoweExplorerExtender.createInstance();
 
-        Object.defineProperty(vscode.Uri, "file", { value: jest.fn(), configurable: true });
         Object.defineProperty(Gui, "showTextDocument", { value: jest.fn(), configurable: true });
+        const uriFileMock = jest.spyOn(vscode.Uri, "file").mockImplementation();
 
         const zoweDir = FileManagement.getZoweDir();
         const userInputs = [
@@ -172,7 +178,7 @@ describe("ZoweExplorerExtender unit tests", () => {
                 expect(Gui.showTextDocument).not.toHaveBeenCalled();
             } else {
                 if (userInput.v1) {
-                    expect(vscode.Uri.file).toHaveBeenCalledWith(path.join(zoweDir, "profiles", "exampleType", "exampleType_meta.yaml"));
+                    expect(uriFileMock).toHaveBeenCalledWith(path.join(zoweDir, "profiles", "exampleType", "exampleType_meta.yaml"));
                 } else {
                     for (const fileName of userInput.fileChecks) {
                         expect(blockMocks.mockExistsSync).toHaveBeenCalledWith(path.join(zoweDir, fileName));

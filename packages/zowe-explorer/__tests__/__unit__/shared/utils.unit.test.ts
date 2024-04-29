@@ -13,22 +13,14 @@ import * as sharedUtils from "../../../src/shared/utils";
 import * as globals from "../../../src/globals";
 import { ZoweDatasetNode } from "../../../src/dataset/ZoweDatasetNode";
 import * as vscode from "vscode";
-import * as path from "path";
-import {
-    createIProfile,
-    createISessionWithoutCredentials,
-    createISession,
-    createFileResponse,
-    createInstanceOfProfile,
-    createTextDocument,
-} from "../../../__mocks__/mockCreators/shared";
+import { createIProfile, createISession, createInstanceOfProfile } from "../../../__mocks__/mockCreators/shared";
 import { createDatasetSessionNode } from "../../../__mocks__/mockCreators/datasets";
 import { ZoweUSSNode } from "../../../src/uss/ZoweUSSNode";
 import { ZoweJobNode } from "../../../src/job/ZoweJobNode";
-import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import * as utils from "../../../src/utils/ProfilesUtils";
-import { Gui, imperative, IZoweTreeNode, ProfilesCache, ZosEncoding } from "@zowe/zowe-explorer-api";
+import { BaseProvider, Gui, imperative, IZoweTreeNode, ProfilesCache, ZosEncoding } from "@zowe/zowe-explorer-api";
 import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
+import { UssFSProvider } from "../../../src/uss/UssFSProvider";
 
 async function createGlobalMocks() {
     const newMocks = {
@@ -37,7 +29,9 @@ async function createGlobalMocks() {
         mockGetInstance: jest.fn(),
         mockProfileInstance: null,
         mockProfilesCache: null,
+        createDirectory: jest.fn(),
     };
+    jest.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation(newMocks.createDirectory);
     newMocks.mockProfilesCache = new ProfilesCache(imperative.Logger.getAppLogger());
     newMocks.mockProfileInstance = createInstanceOfProfile(createIProfile());
     Object.defineProperty(globals, "PROFILES_CACHE", {
@@ -193,161 +187,6 @@ describe("Negative testing for ZoweJobTreeNode", () => {
     });
 });
 
-describe("Test uploadContents", () => {
-    it("should test with uss node that new API method is called if it exists", async () => {
-        const putContent = jest.fn();
-        ZoweExplorerApiRegister.getUssApi = jest.fn<any, Parameters<typeof ZoweExplorerApiRegister.getUssApi>>(
-            (profile: imperative.IProfileLoaded) => {
-                return {
-                    putContent,
-                };
-            }
-        );
-
-        await sharedUtils.uploadContent(
-            new ZoweUSSNode({ label: "", collapsibleState: vscode.TreeItemCollapsibleState.None }),
-            {
-                fileName: "whatever",
-            } as any,
-            null,
-            {
-                profile: {
-                    encoding: 123,
-                },
-            } as any
-        );
-        expect(ZoweExplorerApiRegister.getUssApi(null).putContent).toHaveBeenCalled();
-    });
-});
-
-describe("Test force upload", () => {
-    async function createBlockMocks() {
-        const newVariables = {
-            dsNode: new ZoweDatasetNode({ label: "", collapsibleState: vscode.TreeItemCollapsibleState.None }),
-            ussNode: new ZoweUSSNode({ label: "", collapsibleState: vscode.TreeItemCollapsibleState.None }),
-            showInformationMessage: jest.fn(),
-            showWarningMessage: jest.fn(),
-            showErrorMessage: jest.fn(),
-            getMvsApi: jest.fn(),
-            getUssApi: jest.fn(),
-            withProgress: jest.fn(),
-            fileResponse: createFileResponse([{ etag: null }]),
-            ProgressLocation: jest.fn().mockImplementation(() => {
-                return {
-                    Notification: 15,
-                };
-            }),
-            mockDoc: createTextDocument("mocDoc"),
-        };
-
-        Object.defineProperty(vscode.window, "showInformationMessage", {
-            value: newVariables.showInformationMessage,
-            configurable: true,
-        });
-        Object.defineProperty(vscode.window, "showWarningMessage", {
-            value: newVariables.showWarningMessage,
-            configurable: true,
-        });
-        Object.defineProperty(vscode.window, "showErrorMessage", {
-            value: newVariables.showErrorMessage,
-            configurable: true,
-        });
-        Object.defineProperty(ZoweExplorerApiRegister, "getMvsApi", {
-            value: newVariables.getMvsApi,
-            configurable: true,
-        });
-        Object.defineProperty(ZoweExplorerApiRegister, "getUssApi", {
-            value: newVariables.getUssApi,
-            configurable: true,
-        });
-        Object.defineProperty(vscode.window, "withProgress", { value: newVariables.withProgress, configurable: true });
-        Object.defineProperty(vscode.window, "activeTextEditor", { value: { edit: jest.fn() }, configurable: true });
-        Object.defineProperty(vscode, "Position", {
-            value: jest.fn(() => {
-                return {};
-            }),
-            configurable: true,
-        });
-        Object.defineProperty(vscode, "Range", {
-            value: jest.fn(() => {
-                return {};
-            }),
-            configurable: true,
-        });
-        Object.defineProperty(vscode, "ProgressLocation", { value: newVariables.ProgressLocation, configurable: true });
-
-        return newVariables;
-    }
-
-    it("should successfully call upload for a USS file if user clicks 'Yes'", async () => {
-        const blockMocks = await createBlockMocks();
-        blockMocks.showInformationMessage.mockResolvedValueOnce("Yes");
-        blockMocks.withProgress.mockResolvedValueOnce(blockMocks.fileResponse);
-        await sharedUtils.willForceUpload(blockMocks.ussNode, blockMocks.mockDoc, null);
-        expect(blockMocks.withProgress).toHaveBeenCalledWith(
-            {
-                location: vscode.ProgressLocation.Notification,
-                title: "Saving file...",
-            },
-            expect.any(Function)
-        );
-        expect(blockMocks.showInformationMessage.mock.calls[1][0]).toBe(blockMocks.fileResponse.commandResponse);
-    });
-
-    it("should successfully call upload for a data set if user clicks 'Yes'", async () => {
-        const blockMocks = await createBlockMocks();
-        blockMocks.showInformationMessage.mockResolvedValueOnce("Yes");
-        blockMocks.withProgress.mockResolvedValueOnce(blockMocks.fileResponse);
-        await sharedUtils.willForceUpload(blockMocks.dsNode, blockMocks.mockDoc, null);
-        expect(blockMocks.withProgress).toHaveBeenCalledWith(
-            {
-                location: vscode.ProgressLocation.Notification,
-                title: "Saving Data Set...",
-            },
-            expect.any(Function)
-        );
-        expect(blockMocks.showInformationMessage.mock.calls[1][0]).toBe(blockMocks.fileResponse.commandResponse);
-    });
-
-    it("should cancel upload if user clicks 'No'", async () => {
-        const blockMocks = await createBlockMocks();
-        blockMocks.showInformationMessage.mockResolvedValueOnce("No");
-        await sharedUtils.willForceUpload(blockMocks.dsNode, blockMocks.mockDoc, null);
-        expect(blockMocks.showInformationMessage.mock.calls[1][0]).toBe("Upload cancelled.");
-    });
-
-    it("should show error message if file fails to upload", async () => {
-        const blockMocks = await createBlockMocks();
-        blockMocks.showInformationMessage.mockResolvedValueOnce("Yes");
-        blockMocks.withProgress.mockResolvedValueOnce({ ...blockMocks.fileResponse, success: false });
-        await sharedUtils.willForceUpload(blockMocks.ussNode, blockMocks.mockDoc, null);
-        expect(blockMocks.withProgress).toHaveBeenCalledWith(
-            {
-                location: vscode.ProgressLocation.Notification,
-                title: "Saving file...",
-            },
-            expect.any(Function)
-        );
-        expect(blockMocks.showErrorMessage.mock.calls[0][0]).toBe(blockMocks.fileResponse.commandResponse);
-    });
-
-    it("should show error message if upload throws an error", async () => {
-        const blockMocks = await createBlockMocks();
-        blockMocks.showInformationMessage.mockResolvedValueOnce("Yes");
-        const testError = new Error("Task failed successfully");
-        blockMocks.withProgress.mockRejectedValueOnce(testError);
-        await sharedUtils.willForceUpload(blockMocks.ussNode, blockMocks.mockDoc, null, { name: "fakeProfile" } as any);
-        expect(blockMocks.withProgress).toHaveBeenCalledWith(
-            {
-                location: vscode.ProgressLocation.Notification,
-                title: "Saving file...",
-            },
-            expect.any(Function)
-        );
-        expect(blockMocks.showErrorMessage.mock.calls[0][0]).toBe(`Error: ${testError.message}`);
-    });
-});
-
 describe("Shared Utils Unit Tests - Function filterTreeByString", () => {
     it("Testing that filterTreeByString returns the correct array", async () => {
         const qpItems = [
@@ -368,188 +207,6 @@ describe("Shared Utils Unit Tests - Function filterTreeByString", () => {
         expect(filteredValues).toStrictEqual([qpItems[2]]);
         filteredValues = await sharedUtils.filterTreeByString("*/abc", qpItems);
         expect(filteredValues).toStrictEqual([qpItems[2]]);
-    });
-});
-
-describe("Shared Utils Unit Tests - Function getDocumentFilePath", () => {
-    let blockMocks;
-    function createBlockMocks() {
-        const session = createISessionWithoutCredentials();
-        const imperativeProfile = createIProfile();
-        const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
-
-        return {
-            session,
-            imperativeProfile,
-            datasetSessionNode,
-        };
-    }
-
-    it("Testing that the add Suffix for datasets works", async () => {
-        blockMocks = createBlockMocks();
-        globals.defineGlobals("/test/path/");
-
-        let node = new ZoweDatasetNode({
-            label: "AUSER.TEST.JCL(member)",
-            collapsibleState: vscode.TreeItemCollapsibleState.None,
-            parentNode: blockMocks.datasetSessionNode,
-        });
-        expect(sharedUtils.getDocumentFilePath(node.label.toString(), node)).toBe(
-            path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.TEST.JCL(member).jcl")
-        );
-        node = new ZoweDatasetNode({
-            label: "AUSER.TEST.ASM(member)",
-            collapsibleState: vscode.TreeItemCollapsibleState.None,
-            parentNode: blockMocks.datasetSessionNode,
-        });
-        expect(sharedUtils.getDocumentFilePath(node.label.toString(), node)).toBe(
-            path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.TEST.ASM(member).asm")
-        );
-        node = new ZoweDatasetNode({
-            label: "AUSER.COBOL.TEST(member)",
-            collapsibleState: vscode.TreeItemCollapsibleState.None,
-            parentNode: blockMocks.datasetSessionNode,
-        });
-        expect(sharedUtils.getDocumentFilePath(node.label.toString(), node)).toBe(
-            path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.COBOL.TEST(member).cbl")
-        );
-        node = new ZoweDatasetNode({
-            label: "AUSER.PROD.PLI(member)",
-            collapsibleState: vscode.TreeItemCollapsibleState.None,
-            parentNode: blockMocks.datasetSessionNode,
-        });
-        expect(sharedUtils.getDocumentFilePath(node.label.toString(), node)).toBe(
-            path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.PROD.PLI(member).pli")
-        );
-        node = new ZoweDatasetNode({
-            label: "AUSER.PROD.PLX(member)",
-            collapsibleState: vscode.TreeItemCollapsibleState.None,
-            parentNode: blockMocks.datasetSessionNode,
-        });
-        expect(sharedUtils.getDocumentFilePath(node.label.toString(), node)).toBe(
-            path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.PROD.PLX(member).pli")
-        );
-        node = new ZoweDatasetNode({
-            label: "AUSER.PROD.SH(member)",
-            collapsibleState: vscode.TreeItemCollapsibleState.None,
-            parentNode: blockMocks.datasetSessionNode,
-        });
-        expect(sharedUtils.getDocumentFilePath(node.label.toString(), node)).toBe(
-            path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.PROD.SH(member).sh")
-        );
-        node = new ZoweDatasetNode({
-            label: "AUSER.REXX.EXEC(member)",
-            collapsibleState: vscode.TreeItemCollapsibleState.None,
-            parentNode: blockMocks.datasetSessionNode,
-        });
-        expect(sharedUtils.getDocumentFilePath(node.label.toString(), node)).toBe(
-            path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.REXX.EXEC(member).rexx")
-        );
-        node = new ZoweDatasetNode({
-            label: "AUSER.TEST.XML(member)",
-            collapsibleState: vscode.TreeItemCollapsibleState.None,
-            parentNode: blockMocks.datasetSessionNode,
-        });
-        expect(sharedUtils.getDocumentFilePath(node.label.toString(), node)).toBe(
-            path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.TEST.XML(member).xml")
-        );
-
-        node = new ZoweDatasetNode({
-            label: "AUSER.TEST.XML",
-            collapsibleState: vscode.TreeItemCollapsibleState.None,
-            parentNode: blockMocks.datasetSessionNode,
-        });
-        expect(sharedUtils.getDocumentFilePath(node.label.toString(), node)).toBe(
-            path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.TEST.XML.xml")
-        );
-        node = new ZoweDatasetNode({
-            label: "AUSER.TEST.TXML",
-            collapsibleState: vscode.TreeItemCollapsibleState.None,
-            parentNode: blockMocks.datasetSessionNode,
-        });
-        expect(sharedUtils.getDocumentFilePath(node.label.toString(), node)).toBe(
-            path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.TEST.TXML")
-        );
-        node = new ZoweDatasetNode({
-            label: "AUSER.XML.TGML",
-            collapsibleState: vscode.TreeItemCollapsibleState.None,
-            parentNode: blockMocks.datasetSessionNode,
-        });
-        expect(sharedUtils.getDocumentFilePath(node.label.toString(), node)).toBe(
-            path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.XML.TGML.xml")
-        );
-        node = new ZoweDatasetNode({
-            label: "AUSER.XML.ASM",
-            collapsibleState: vscode.TreeItemCollapsibleState.None,
-            parentNode: blockMocks.datasetSessionNode,
-        });
-        expect(sharedUtils.getDocumentFilePath(node.label.toString(), node)).toBe(
-            path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.XML.ASM.asm")
-        );
-        node = new ZoweDatasetNode({
-            label: "AUSER",
-            collapsibleState: vscode.TreeItemCollapsibleState.None,
-            parentNode: blockMocks.datasetSessionNode,
-        });
-        expect(sharedUtils.getDocumentFilePath(node.label.toString(), node)).toBe(
-            path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER")
-        );
-        node = new ZoweDatasetNode({
-            label: "AUSER.XML.TEST(member)",
-            collapsibleState: vscode.TreeItemCollapsibleState.None,
-            parentNode: blockMocks.datasetSessionNode,
-        });
-        expect(sharedUtils.getDocumentFilePath(node.label.toString(), node)).toBe(
-            path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.XML.TEST(member).xml")
-        );
-        node = new ZoweDatasetNode({
-            label: "XML.AUSER.TEST(member)",
-            collapsibleState: vscode.TreeItemCollapsibleState.None,
-            parentNode: blockMocks.datasetSessionNode,
-        });
-        expect(sharedUtils.getDocumentFilePath(node.label.toString(), node)).toBe(
-            path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "XML.AUSER.TEST(member)")
-        );
-        node = new ZoweDatasetNode({
-            label: "AUSER.COBOL.PL1.XML.TEST(member)",
-            collapsibleState: vscode.TreeItemCollapsibleState.None,
-            parentNode: blockMocks.datasetSessionNode,
-        });
-        expect(sharedUtils.getDocumentFilePath(node.label.toString(), node)).toBe(
-            path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.COBOL.PL1.XML.TEST(member).xml")
-        );
-        node = new ZoweDatasetNode({
-            label: "AUSER.COBOL.PL1.XML.ASSEMBLER.TEST(member)",
-            collapsibleState: vscode.TreeItemCollapsibleState.None,
-            parentNode: blockMocks.datasetSessionNode,
-        });
-        expect(sharedUtils.getDocumentFilePath(node.label.toString(), node)).toBe(
-            path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.COBOL.PL1.XML.ASSEMBLER.TEST(member).asm")
-        );
-        node = new ZoweDatasetNode({
-            label: "AUSER.TEST.COPYBOOK",
-            collapsibleState: vscode.TreeItemCollapsibleState.None,
-            parentNode: blockMocks.datasetSessionNode,
-        });
-        expect(sharedUtils.getDocumentFilePath(node.label.toString(), node)).toBe(
-            path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.TEST.COPYBOOK.cpy")
-        );
-        node = new ZoweDatasetNode({
-            label: "AUSER.TEST.PLINC",
-            collapsibleState: vscode.TreeItemCollapsibleState.None,
-            parentNode: blockMocks.datasetSessionNode,
-        });
-        expect(sharedUtils.getDocumentFilePath(node.label.toString(), node)).toBe(
-            path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.TEST.PLINC.inc")
-        );
-        node = new ZoweDatasetNode({
-            label: "AUSER.TEST.SPFLOG1",
-            collapsibleState: vscode.TreeItemCollapsibleState.None,
-            parentNode: blockMocks.datasetSessionNode,
-        });
-        expect(sharedUtils.getDocumentFilePath(node.label.toString(), node)).toEqual(
-            path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.TEST.SPFLOG1.log")
-        );
     });
 });
 
@@ -646,6 +303,9 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
         const showQuickPick = jest.spyOn(Gui, "showQuickPick").mockResolvedValue(undefined);
         const localStorageGet = jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(undefined);
         const localStorageSet = jest.spyOn(ZoweLocalStorage, "setValue").mockReturnValue(undefined);
+        const getEncodingForFile = jest.spyOn((BaseProvider as any).prototype, "getEncodingForFile");
+        const setEncodingForFile = jest.spyOn((BaseProvider as any).prototype, "setEncodingForFile").mockReturnValue(undefined);
+        const fetchEncodingForUri = jest.spyOn(UssFSProvider.instance, "fetchEncodingForUri").mockResolvedValue(undefined as any);
 
         return {
             profile: createIProfile(),
@@ -654,6 +314,9 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
             showQuickPick,
             localStorageGet,
             localStorageSet,
+            getEncodingForFile,
+            setEncodingForFile,
+            fetchEncodingForUri,
         };
     }
 
@@ -671,6 +334,7 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
             parentPath: "/root",
         });
         blockMocks.showQuickPick.mockImplementationOnce(async (items) => items[0]);
+        blockMocks.getEncodingForFile.mockReturnValueOnce(undefined);
         const encoding = await sharedUtils.promptForEncoding(node);
         expect(blockMocks.showQuickPick).toHaveBeenCalled();
         expect(encoding).toEqual(textEncoding);
@@ -738,7 +402,9 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
         await sharedUtils.promptForEncoding(node, "IBM-1047");
         expect(blockMocks.showQuickPick).toHaveBeenCalled();
         expect(await blockMocks.showQuickPick.mock.calls[0][0][0]).toEqual({ label: "IBM-1047", description: "USS file tag" });
-        expect(blockMocks.showQuickPick.mock.calls[0][1]).toEqual(expect.objectContaining({ placeHolder: "Current encoding is Binary" }));
+        expect(blockMocks.showQuickPick.mock.calls[0][1]).toEqual(
+            expect.objectContaining({ placeHolder: "Current encoding is binary", title: "Choose encoding for testFile" })
+        );
     });
 
     it("prompts for encoding for USS file when profile contains encoding", async () => {
@@ -751,7 +417,7 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
             profile: blockMocks.profile,
             parentPath: "/root",
         });
-        node.setEncoding(textEncoding);
+        blockMocks.getEncodingForFile.mockReturnValueOnce({ kind: "text" });
         await sharedUtils.promptForEncoding(node);
         expect(blockMocks.showQuickPick).toHaveBeenCalled();
         expect(await blockMocks.showQuickPick.mock.calls[0][0][0]).toEqual({
@@ -771,6 +437,7 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
             parentPath: "/root",
         });
         node.setEncoding(otherEncoding);
+        blockMocks.getEncodingForFile.mockReturnValueOnce(otherEncoding);
         const encodingHistory = ["IBM-123", "IBM-456", "IBM-789"];
         blockMocks.localStorageGet.mockReturnValueOnce(encodingHistory);
         blockMocks.showQuickPick.mockImplementationOnce(async (items) => items[4]);
@@ -791,7 +458,7 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
             parentPath: "/root",
         });
         node.setEncoding(binaryEncoding);
-        delete node.encoding; // Reset encoding property so that cache is used
+        blockMocks.getEncodingForFile.mockReturnValueOnce(binaryEncoding);
         await sharedUtils.promptForEncoding(node);
         expect(blockMocks.showQuickPick).toHaveBeenCalled();
         expect(blockMocks.showQuickPick.mock.calls[0][1]).toEqual(expect.objectContaining({ placeHolder: "Current encoding is Binary" }));
@@ -799,14 +466,16 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
 
     it("remembers cached encoding for data set node", async () => {
         const blockMocks = createBlockMocks();
+        const sessionNode = createDatasetSessionNode(blockMocks.session, blockMocks.profile);
         const node = new ZoweDatasetNode({
             label: "TEST.PS",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             session: blockMocks.session,
             profile: blockMocks.profile,
+            parentNode: sessionNode,
         });
-        node.setEncoding(textEncoding);
-        delete node.encoding; // Reset encoding property so that cache is used
+        sessionNode.encodingMap["TEST.PS"] = { kind: "text" };
+        blockMocks.getEncodingForFile.mockReturnValueOnce(undefined);
         await sharedUtils.promptForEncoding(node);
         expect(blockMocks.showQuickPick).toHaveBeenCalled();
         expect(blockMocks.showQuickPick.mock.calls[0][1]).toEqual(expect.objectContaining({ placeHolder: "Current encoding is EBCDIC" }));
@@ -827,7 +496,7 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
             contextOverride: globals.DS_MEMBER_CONTEXT,
         });
         node.setEncoding(otherEncoding);
-        delete node.encoding; // Reset encoding property so that cache is used
+        blockMocks.getEncodingForFile.mockReturnValueOnce(undefined);
         await sharedUtils.promptForEncoding(node);
         expect(blockMocks.showQuickPick).toHaveBeenCalled();
         expect(blockMocks.showQuickPick.mock.calls[0][1]).toEqual(expect.objectContaining({ placeHolder: "Current encoding is IBM-1047" }));

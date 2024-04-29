@@ -13,7 +13,7 @@ import * as vscode from "vscode";
 import * as globals from "../globals";
 import * as dsActions from "./actions";
 import * as refreshActions from "../shared/refresh";
-import { IZoweDatasetTreeNode, IZoweTreeNode, ZosEncoding } from "@zowe/zowe-explorer-api";
+import { IZoweDatasetTreeNode, IZoweTreeNode, ZosEncoding, ZoweScheme } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { DatasetTree, createDatasetTree } from "./DatasetTree";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
@@ -22,9 +22,13 @@ import { getSelectedNodeList } from "../shared/utils";
 import { initSubscribers } from "../shared/init";
 import { ZoweLogger } from "../utils/ZoweLogger";
 import { TreeViewUtils } from "../utils/TreeViewUtils";
+import { DatasetFSProvider } from "./DatasetFSProvider";
 
 export async function initDatasetProvider(context: vscode.ExtensionContext): Promise<DatasetTree> {
     ZoweLogger.trace("dataset.init.initDatasetProvider called.");
+
+    context.subscriptions.push(vscode.workspace.registerFileSystemProvider(ZoweScheme.DS, DatasetFSProvider.instance, { isCaseSensitive: true }));
+
     const datasetProvider = await createDatasetTree(globals.LOG);
     if (datasetProvider == null) {
         return null;
@@ -71,9 +75,6 @@ export async function initDatasetProvider(context: vscode.ExtensionContext): Pro
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.ds.editSession", async (node) => datasetProvider.editSession(node, datasetProvider))
     );
-    context.subscriptions.push(
-        vscode.commands.registerCommand("zowe.ds.ZoweNode.openPS", async (node: IZoweDatasetTreeNode) => node.openDs(false, true, datasetProvider))
-    );
     context.subscriptions.push(vscode.commands.registerCommand("zowe.ds.createDataset", async (node) => dsActions.createFile(node, datasetProvider)));
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.ds.createMember", async (node) => dsActions.createMember(node, datasetProvider))
@@ -95,7 +96,7 @@ export async function initDatasetProvider(context: vscode.ExtensionContext): Pro
             let selectedNodes = getSelectedNodeList(node, nodeList) as IZoweDatasetTreeNode[];
             selectedNodes = selectedNodes.filter((element) => contextuals.isDs(element) || contextuals.isDsMember(element));
             for (const item of selectedNodes) {
-                await item.openDs(false, false, datasetProvider);
+                await vscode.commands.executeCommand(item.command.command, item.resourceUri);
             }
         })
     );
@@ -104,7 +105,7 @@ export async function initDatasetProvider(context: vscode.ExtensionContext): Pro
             let selectedNodes = getSelectedNodeList(node, nodeList) as IZoweDatasetTreeNode[];
             selectedNodes = selectedNodes.filter((element) => contextuals.isDs(element) || contextuals.isDsMember(element));
             for (const item of selectedNodes) {
-                await item.openDs(false, false, datasetProvider);
+                await vscode.commands.executeCommand(item.command.command, item.resourceUri);
             }
         })
     );
@@ -221,6 +222,7 @@ export async function initDatasetProvider(context: vscode.ExtensionContext): Pro
             await datasetProvider.onDidChangeConfiguration(e);
         })
     );
+    context.subscriptions.push(vscode.workspace.onDidOpenTextDocument(DatasetFSProvider.onDidOpenTextDocument));
     context.subscriptions.push(vscode.workspace.onDidCloseTextDocument(DatasetTree.onDidCloseTextDocument));
 
     initSubscribers(context, datasetProvider);

@@ -8,8 +8,21 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
+## `3.0.0-next.202404242037`
+
+### New features and enhancements
+
+- Implemented the FileSystemProvider for the Data Sets, Jobs and USS trees to handle all read/write actions as well as conflict resolution. [#2207](https://github.com/zowe/zowe-explorer-vscode/issues/2207)
+- **Breaking:** Removed the `zowe.jobs.zosJobsOpenSpool` command in favor of using `vscode.open` with a spool URI. See the [FileSystemProvider wiki page](https://github.com/zowe/zowe-explorer-vscode/wiki/FileSystemProvider#file-paths-vs-uris) for more information on spool URIs. [#2207](https://github.com/zowe/zowe-explorer-vscode/issues/2207)
+- **Breaking:** Removed the `zowe.ds.ZoweNode.openPS` command in favor of using `vscode.open` with a data set URI. See the [FileSystemProvider wiki page](https://github.com/zowe/zowe-explorer-vscode/wiki/FileSystemProvider#file-paths-vs-uris) for more information on data set URIs. [#2207](https://github.com/zowe/zowe-explorer-vscode/issues/2207)
+- **Breaking:** Removed the `zowe.uss.ZoweUSSNode.open` command in favor of using `vscode.open` with a USS URI. See the [FileSystemProvider wiki page](https://github.com/zowe/zowe-explorer-vscode/wiki/FileSystemProvider#file-paths-vs-uris) for more information on USS URIs. [#2207](https://github.com/zowe/zowe-explorer-vscode/issues/2207)
+- Added the `onResourceChanged` function to the `ZoweExplorerApiRegister` class to allow extenders to subscribe to any changes to Zowe resources (Data Sets, USS files/folders, Jobs, etc.). See the [FileSystemProvider wiki page](https://github.com/zowe/zowe-explorer-vscode/wiki/FileSystemProvider) for more information on Zowe resources.
+- Added the `addFileSystemEvent` function to the `ZoweExplorerApiRegister` class to allow extenders to register their FileSystemProvider "onDidChangeFile" events. See the [FileSystemProvider wiki page](https://github.com/zowe/zowe-explorer-vscode/wiki/FileSystemProvider) for more information on the FileSystemProvider.
+
+### Bug fixes
+
 - Fixed issue where "Allocate Like" input box placeholder was showing a localization ID instead of the intended message ("Enter a name for the new data set"). [#2759](https://github.com/zowe/vscode-extension-for-zowe/issues/2759)
-- Updated the SDK dependencies to `8.0.0-next.202404032038` for technical currency [#2783](https://github.com/zowe/vscode-extension-for-zowe/pull/2783).
+- Fix concerns regarding Unix command handling work. [#2866](https://github.com/zowe/zowe-explorer-vscode/pull/2866)
 
 ## `3.0.0-next.202403051607`
 

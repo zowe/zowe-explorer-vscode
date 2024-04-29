@@ -589,7 +589,7 @@ describe("ProfilesUtils unit tests", () => {
             await profUtils.ProfilesUtils.initializeZoweProfiles((msg) => ZoweExplorerExtender.showZoweConfigError(msg));
             expect(initZoweFolderSpy).toHaveBeenCalledTimes(1);
             expect(readConfigFromDiskSpy).toHaveBeenCalledTimes(1);
-            expect(Gui.errorMessage).toHaveBeenCalledWith(expect.stringContaining(testError.message));
+            expect(Gui.errorMessage).toHaveBeenCalledWith(expect.stringContaining("initializeZoweFolder failed"));
         });
 
         it("should handle Imperative error thrown on read config from disk", async () => {

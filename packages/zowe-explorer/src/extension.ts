@@ -15,7 +15,6 @@ import { ZoweExplorerApiRegister } from "./ZoweExplorerApiRegister";
 import { ZoweExplorerExtender } from "./ZoweExplorerExtender";
 import { Profiles } from "./Profiles";
 import { ProfilesUtils } from "./utils/ProfilesUtils";
-import { initializeSpoolProvider } from "./SpoolProvider";
 import { cleanTempDir } from "./utils/TempFolder";
 import { initZoweLogger, registerCommonCommands, registerRefreshCommand, watchConfigProfile, watchForZoweButtonClick } from "./shared/init";
 import { ZoweLogger } from "./utils/ZoweLogger";
@@ -39,14 +38,13 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
 
     await ProfilesUtils.initializeZoweProfiles((msg) => ZoweExplorerExtender.showZoweConfigError(msg));
     await Profiles.createInstance(ZoweLogger.imperativeLogger);
-    initializeSpoolProvider(context);
 
     const providers = await TreeProviders.initializeProviders(context, { ds: initDatasetProvider, uss: initUSSProvider, job: initJobsProvider });
     registerCommonCommands(context, providers);
     registerRefreshCommand(context, activate, deactivate);
     ZoweExplorerExtender.createInstance(providers.ds, providers.uss, providers.job);
 
-    await watchConfigProfile(context, providers);
+    watchConfigProfile(context, providers);
     await watchForZoweButtonClick();
 
     return ZoweExplorerApiRegister.getInstance();
