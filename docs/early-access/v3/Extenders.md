@@ -72,3 +72,7 @@
 - Optional `ICommand.sshProfileRequired` API returning a boolean value for extenders that would like to use the ssh profile for issuing UNIX commands via Zowe Explorer.
 - `ProfilesCache.convertV1ProfToConfig()` added for migrating v1 profiles to a global team configuration file.
 - Marked `getJobsByParameters` as a required function for the `MainframeInteraction.IJes` interface.
+- Added the `uploadFromBuffer` required function to the `MainframeInteraction.IMvs` and `MainframeInteraction.IUss` interfaces. This function will be used in v3 to upload contents of data sets and USS files to the mainframe.
+- Added optional function `move` to the `MainframeInteraction.IUss` interface to move USS folders/files from one path to another.
+- Added the `buildUniqueSpoolName` function to build spool names for Zowe resource URIs and VS Code editor tabs.
+- Added the `isNodeInEditor` function to determine whether a tree node's resource URI is open in the editor.
