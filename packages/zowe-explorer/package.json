@@ -2116,6 +2116,7 @@
     "eslint-plugin-zowe-explorer": "workspace:3.0.0-next-SNAPSHOT",
     "event-stream": "^4.0.1",
     "expect": "^24.8.0",
+    "expect-webdriverio": "^4.13.0",
     "glob": "^7.1.6",
     "jest-silent-reporter": "^0.5.0",
     "log4js": "^6.4.6",

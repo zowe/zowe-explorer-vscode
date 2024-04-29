@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "esModuleInterop": true,
     "module": "commonjs",
     "target": "es2019",
     "outDir": "out",
@@ -21,11 +22,12 @@
     "paths": {
       "@zowe/zowe-explorer-api": ["../zowe-explorer-api"]
     },
-    "types": ["node", "@wdio/cucumber-framework", "@wdio/globals/types", "wdio-vscode-service", "expect-webdriverio", "jest"]
+    "types": ["node", "@wdio/globals/types", "@wdio/cucumber-framework", "wdio-vscode-service", "expect-webdriverio", "jest"]
   },
   "exclude": ["node_modules", ".vscode-test"],
   "include": [
     "src/**/*.ts",
+    "__tests__/features/**/*.steps.ts",
     // Needed in production for vscode-nls localization to work:
     "./node_modules/vscode/vscode.d.ts",
     "./node_modules/vscode/lib/*"
