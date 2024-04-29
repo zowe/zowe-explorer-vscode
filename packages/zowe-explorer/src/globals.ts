@@ -330,7 +330,7 @@ export function defineGlobals(tempPath: string | undefined): void {
 
     SETTINGS_TEMP_FOLDER_LOCATION = tempPath;
     // Set temp path & folder paths
-    ZOWETEMPFOLDER = tempPath ? path.join(tempPath, "temp") : path.join(__dirname, "..", "..", "resources", "temp");
+    ZOWETEMPFOLDER = vscode.Uri.file(tempPath ? path.join(tempPath, "temp") : path.join(__dirname, "..", "..", "resources", "temp")).fsPath;
     ZoweLogger.info(localize("globals.defineGlobals.tempFolder", "Zowe Explorer's temp folder is located at {0}", ZOWETEMPFOLDER));
     ZOWE_TMP_FOLDER = path.join(ZOWETEMPFOLDER, "tmp");
     USS_DIR = path.join(ZOWETEMPFOLDER, "_U_");
