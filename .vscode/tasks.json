@@ -87,7 +87,7 @@
               "message": 1
             },
             {
-              "regexp": "webpack (.*) compiled (.*) error"
+              "regexp": "webpack(.*)compiled(.*)with(.*)error"
             }
           ],
           "background": {
@@ -96,7 +96,7 @@
               "regexp": "webpack --mode development"
             },
             "endsPattern": {
-              "regexp": "webpack (.*) compiled with"
+              "regexp": "webpack(.*)compiled(.*)with"
             }
           }
         }
