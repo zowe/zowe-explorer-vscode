@@ -20,19 +20,18 @@ export class FtpSession extends imperative.Session {
         super(newSession);
     }
 
-    /* eslint-disable zowe-explorer/no-floating-promises*/
     public releaseConnections(): void {
         if (this.ussListConnection) {
-            this.ussListConnection.close();
+            void this.ussListConnection.close();
             this.ussListConnection = undefined;
         }
         if (this.mvsListConnection) {
-            this.mvsListConnection.close();
+            void this.mvsListConnection.close();
             this.mvsListConnection = undefined;
         }
 
         if (this.jesListConnection) {
-            this.jesListConnection.close();
+            void this.jesListConnection.close();
             this.jesListConnection = undefined;
         }
     }

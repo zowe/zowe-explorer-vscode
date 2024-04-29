@@ -122,7 +122,7 @@ export class FtpUssApi extends AbstractFtpApi implements MainframeInteraction.IU
         const transferOptions = {
             content: inputIsBuffer ? input : undefined,
             localFile: inputIsBuffer ? undefined : input,
-            transferType: CoreUtils.getBinaryTransferModeOrDefault(options.binary),
+            transferType: CoreUtils.getBinaryTransferModeOrDefault(options?.binary),
         };
         const result = this.getDefaultResponse();
         // Save-Save with FTP requires loading the file first
