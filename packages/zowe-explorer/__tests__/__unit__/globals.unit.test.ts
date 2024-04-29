@@ -43,4 +43,10 @@ describe("Globals Unit Tests", () => {
         expect(globals.PROFILE_SECURITY).toBe(globals.ZOWE_CLI_SCM);
         expect(loggerInfoSpy).toBeCalledTimes(1);
     });
+
+    it("should set temp folder location to match VS Code URI path", () => {
+        globals.defineGlobals(__dirname);
+        const { URI } = jest.requireActual("vscode-uri");
+        expect(globals.ZOWETEMPFOLDER).toBe(URI.file(globals.ZOWETEMPFOLDER).fsPath);
+    });
 });

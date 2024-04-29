@@ -678,7 +678,7 @@ export class Uri {
     }
     public static parse(value: string, strict?: boolean): Uri {
         const newUri = new Uri();
-        newUri.path = value;
+        newUri.fsPath = value;
 
         return newUri;
     }
@@ -686,9 +686,9 @@ export class Uri {
         return this;
     }
 
-    public path: string;
+    public fsPath: string;
     public toString(): string {
-        return this.path;
+        return this.fsPath;
     }
 }
 
