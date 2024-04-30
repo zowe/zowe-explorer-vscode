@@ -323,15 +323,25 @@ export class ZosJobsProvider extends ZoweTreeProvider<IZoweJobTreeNode> implemen
      * @param profileName Name of profile
      * @returns {ZoweJobNode}
      */
-    public async createProfileNodeForFavs(profileName: string, profile?: imperative.IProfileLoaded): Promise<ZoweJobNode> {
+    public async createProfileNodeForFavs(profileName: string): Promise<ZoweJobNode | null> {
         ZoweLogger.trace("ZosJobsProvider.createProfileNodeForFavs called.");
-        const favProfileNode = new ZoweJobNode({
-            label: profileName,
-            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
-            contextOverride: globals.FAV_PROFILE_CONTEXT,
-            parentNode: this.mFavoriteSession,
-            profile,
-        });
+        let favProfileNode: ZoweJobNode;
+        try {
+            const profile = Profiles.getInstance().loadNamedProfile(profileName);
+            favProfileNode = new ZoweJobNode({
+                label: profileName,
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                contextOverride: globals.FAV_PROFILE_CONTEXT,
+                parentNode: this.mFavoriteSession,
+                profile,
+            });
+        } catch (err) {
+            if (err instanceof Error) {
+                ZoweLogger.warn(`Skipping creation of favorited profile. ${err.toString()}`);
+            }
+            return null;
+        }
+
         if (await this.isGlobalProfileNode(favProfileNode)) {
             favProfileNode.contextValue += globals.HOME_SUFFIX;
             const icon = getIconByNode(favProfileNode);
@@ -372,10 +382,9 @@ export class ZosJobsProvider extends ZoweTreeProvider<IZoweJobTreeNode> implemen
             // The profile node used for grouping respective favorited items.
             // Create a node if it does not already exist in the Favorites array
             const profileNodeInFavorites =
-                this.findMatchingProfileInArray(this.mFavorites, fav.profileName) ??
-                (await this.createProfileNodeForFavs(fav.profileName, Profiles.getInstance().loadNamedProfile(fav.profileName)));
+                this.findMatchingProfileInArray(this.mFavorites, fav.profileName) ?? (await this.createProfileNodeForFavs(fav.profileName));
 
-            if (fav.contextValue == null) {
+            if (profileNodeInFavorites == null || fav.contextValue == null) {
                 continue;
             }
 
@@ -522,7 +531,7 @@ export class ZosJobsProvider extends ZoweTreeProvider<IZoweJobTreeNode> implemen
         let profileNodeInFavorites = this.findMatchingProfileInArray(this.mFavorites, profileName);
         if (profileNodeInFavorites === undefined) {
             // If favorite node for profile doesn't exist yet, create a new one for it
-            profileNodeInFavorites = await this.createProfileNodeForFavs(profileName, node.getProfile());
+            profileNodeInFavorites = await this.createProfileNodeForFavs(profileName);
         }
         if (contextually.isSession(node)) {
             // Favorite a search/session

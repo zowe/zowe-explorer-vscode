@@ -840,15 +840,25 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
      * @param profileName Name of profile
      * @returns {ZoweUSSNode}
      */
-    public async createProfileNodeForFavs(profileName: string): Promise<ZoweUSSNode> {
+    public async createProfileNodeForFavs(profileName: string): Promise<ZoweUSSNode | null> {
         ZoweLogger.trace("USSTree.createProfileNodeForFavs called.");
-        const favProfileNode = new ZoweUSSNode({
-            label: profileName,
-            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
-            contextOverride: globals.FAV_PROFILE_CONTEXT,
-            parentNode: this.mFavoriteSession,
-            profile: Profiles.getInstance().loadNamedProfile(profileName),
-        });
+        let favProfileNode: ZoweUSSNode;
+        try {
+            const profile = Profiles.getInstance().loadNamedProfile(profileName);
+            favProfileNode = new ZoweUSSNode({
+                label: profileName,
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                contextOverride: globals.FAV_PROFILE_CONTEXT,
+                parentNode: this.mFavoriteSession,
+                profile,
+            });
+        } catch (err) {
+            if (err instanceof Error) {
+                ZoweLogger.warn(`Skipping creation of favorited profile. ${err.toString()}`);
+            }
+            return null;
+        }
+
         if (await this.isGlobalProfileNode(favProfileNode)) {
             favProfileNode.contextValue += globals.HOME_SUFFIX;
             const icon = getIconByNode(favProfileNode);
@@ -890,7 +900,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
             const favProfileNode =
                 this.findMatchingProfileInArray(this.mFavorites, fav.profileName) ?? (await this.createProfileNodeForFavs(fav.profileName));
 
-            if (fav.contextValue == null) {
+            if (favProfileNode == null || fav.contextValue == null) {
                 continue;
             }
 
