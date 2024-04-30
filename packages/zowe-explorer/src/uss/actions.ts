@@ -30,7 +30,7 @@ import { LocalFileManagement } from "../utils/LocalFileManagement";
 /**
  * Prompts the user for a path, and populates the [TreeView]{@link vscode.TreeView} based on the path
  *
- * @param {ZoweUSSNode} node - The session node
+ * @param {ZoweUSSNode} node - The session or directory node that serves as the parent
  * @param {ussTree} ussFileProvider - Current ussTree used to populate the TreeView
  * @returns {Promise<void>}
  */
@@ -83,6 +83,14 @@ export async function createUSSNode(
             const newNode = await node.getChildren().then((children) => children.find((child) => child.label === name));
             await ussFileProvider.getTreeView().reveal(node, { select: true, focus: true });
             ussFileProvider.getTreeView().reveal(newNode, { select: true, focus: true });
+
+            const equivalentNodeParent = ussFileProvider.findEquivalentNode(
+                node,
+                contextually.isFavorite(node) || contextually.isFavoriteDescendant(node)
+            );
+            if (equivalentNodeParent != null) {
+                ussFileProvider.refreshElement(equivalentNodeParent);
+            }
         } catch (err) {
             if (err instanceof Error) {
                 await errorHandling(err, node.getProfileName(), vscode.l10n.t("Unable to create node:"));
@@ -274,7 +282,7 @@ export async function buildFileStructure(node: IZoweUSSTreeNode): Promise<UssFil
     }
 
     return {
-        binary: node.binary,
+        binary: (await node.getEncoding())?.kind === "binary",
         localUri: node.resourceUri,
         ussPath: node.fullPath,
         baseName: node.getLabel() as string,

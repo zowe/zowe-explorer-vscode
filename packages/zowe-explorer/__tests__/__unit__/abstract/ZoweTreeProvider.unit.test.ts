@@ -577,3 +577,33 @@ describe("Tree Provider Unit Tests - function loadProfileByPersistedProfile", ()
         zoweLoggerWarnSpy.mockClear();
     });
 });
+
+describe("Tree Provider Unit Tests - function isGlobalProfileNode", () => {
+    it("returns true if the profile is located in the global config", async () => {
+        const globalMocks = await createGlobalMocks();
+        const getAllProfilesMock = jest.spyOn(globalMocks.mockProfileInfo, "getAllProfiles").mockReturnValue([
+            {
+                profName: "sestest",
+            },
+        ]);
+        const getOsLocInfoMock = jest.spyOn(globalMocks.mockProfileInfo, "getOsLocInfo").mockReturnValue([{ global: true }]);
+        await expect((globalMocks.testTreeProvider as any).isGlobalProfileNode({ getProfileName: () => "sestest" })).resolves.toBe(true);
+        getAllProfilesMock.mockRestore();
+        getOsLocInfoMock.mockRestore();
+    });
+
+    it("returns false if the node does not have HOME_SUFFIX in its contextValue", async () => {
+        const globalMocks = await createGlobalMocks();
+        const getAllProfilesMock = jest.spyOn(globalMocks.mockProfileInfo, "getAllProfiles").mockReturnValue([
+            {
+                profName: "sestest",
+            },
+        ]);
+        const getOsLocInfoMock = jest.spyOn(globalMocks.mockProfileInfo, "getOsLocInfo").mockReturnValue([{ global: false }]);
+        await expect(
+            (globalMocks.testTreeProvider as any).isGlobalProfileNode({ contextValue: globals.FAV_PROFILE_CONTEXT, getProfileName: () => "sestest" })
+        ).resolves.toBe(false);
+        getAllProfilesMock.mockRestore();
+        getOsLocInfoMock.mockRestore();
+    });
+});

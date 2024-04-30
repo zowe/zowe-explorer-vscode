@@ -25,6 +25,8 @@ import {
     Validation,
     DsEntry,
     ZoweScheme,
+    PdsEntry,
+    isPdsEntry,
 } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { getIconByNode } from "../generators/icons";
@@ -48,12 +50,9 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     public memberPattern = "";
     public dirty = true;
     public children: ZoweDatasetNode[] = [];
-    public binary = false;
-    public encodingMap = {};
     public errorDetails: imperative.ImperativeError;
     public ongoingActions: Record<ZoweTreeNodeActions.Interactions | string, Promise<any>> = {};
     public wasDoubleClicked: boolean = false;
-    public stats: Types.DatasetStats;
     public sort?: Sorting.NodeSort;
     public filter?: Sorting.DatasetFilter;
     public resourceUri?: vscode.Uri;
@@ -65,18 +64,18 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
      */
     public constructor(opts: IZoweDatasetTreeOpts) {
         super(opts.label, opts.collapsibleState, opts.parentNode, opts.session, opts.profile);
-        this.binary = opts.encoding?.kind === "binary";
         if (opts.encoding != null) {
             this.setEncoding(opts.encoding);
         }
+        const isBinary = opts.encoding?.kind === "binary";
         if (opts.contextOverride) {
             this.contextValue = opts.contextOverride;
         } else if (opts.collapsibleState !== vscode.TreeItemCollapsibleState.None) {
             this.contextValue = globals.DS_PDS_CONTEXT;
         } else if (opts.parentNode && opts.parentNode.getParent()) {
-            this.contextValue = this.binary ? globals.DS_MEMBER_BINARY_CONTEXT : globals.DS_MEMBER_CONTEXT;
+            this.contextValue = isBinary ? globals.DS_MEMBER_BINARY_CONTEXT : globals.DS_MEMBER_CONTEXT;
         } else {
-            this.contextValue = this.binary ? globals.DS_DS_BINARY_CONTEXT : globals.DS_DS_CONTEXT;
+            this.contextValue = isBinary ? globals.DS_DS_BINARY_CONTEXT : globals.DS_DS_CONTEXT;
         }
         this.tooltip = this.label as string;
         const icon = getIconByNode(this);
@@ -92,13 +91,13 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             };
         }
 
-        if (contextually.isSession(this)) {
+        if (contextually.isSession(this) && this.getParent() == null) {
             this.id = this.label as string;
         }
 
         if (this.label !== vscode.l10n.t("Favorites")) {
             const sessionLabel = opts.profile?.name ?? getSessionLabel(this);
-            if (this.getParent() == null) {
+            if (this.getParent() == null || this.getParent().label === vscode.l10n.t("Favorites")) {
                 this.resourceUri = vscode.Uri.from({
                     scheme: ZoweScheme.DS,
                     path: `/${sessionLabel}/`,
@@ -143,19 +142,54 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     public updateStats(item: any): void {
         if ("c4date" in item && "m4date" in item) {
             const { m4date, mtime, msec }: { m4date: string; mtime: string; msec: string } = item;
-            this.stats = {
+            this.setStats({
                 user: item.user,
                 createdDate: dayjs(item.c4date).toDate(),
                 modifiedDate: dayjs(`${m4date} ${mtime}:${msec}`).toDate(),
-            };
+            });
         } else if ("id" in item || "changed" in item) {
             // missing keys from API response; check for FTP keys
-            this.stats = {
+            this.setStats({
                 user: item.id,
                 createdDate: item.created ? dayjs(item.created).toDate() : undefined,
                 modifiedDate: item.changed ? dayjs(item.changed).toDate() : undefined,
-            };
+            });
         }
+    }
+
+    public getEncodingInMap(uriPath: string): ZosEncoding {
+        return DatasetFSProvider.instance.encodingMap[uriPath];
+    }
+
+    public updateEncodingInMap(uriPath: string, encoding: ZosEncoding): void {
+        DatasetFSProvider.instance.encodingMap[uriPath] = encoding;
+    }
+
+    public setEtag(etag: string): void {
+        const dsEntry = DatasetFSProvider.instance.stat(this.resourceUri) as DsEntry | PdsEntry;
+        if (isPdsEntry(dsEntry)) {
+            return;
+        }
+
+        dsEntry.etag = etag;
+    }
+
+    public setStats(stats: Partial<Types.DatasetStats>): void {
+        const dsEntry = DatasetFSProvider.instance.stat(this.resourceUri) as DsEntry | PdsEntry;
+        if (isPdsEntry(dsEntry)) {
+            return;
+        }
+
+        dsEntry.stats = { ...dsEntry.stats, ...stats };
+    }
+
+    public getStats(): Types.DatasetStats {
+        const dsEntry = DatasetFSProvider.instance.stat(this.resourceUri) as DsEntry | PdsEntry;
+        if (isPdsEntry(dsEntry)) {
+            return;
+        }
+
+        return dsEntry.stats;
     }
 
     /**
@@ -214,7 +248,6 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 const existing = this.children.find((element) => element.label.toString() === dsEntry);
                 let temp = existing;
                 if (existing) {
-                    existing.updateStats(item);
                     elementChildren[existing.label.toString()] = existing;
                     // Creates a ZoweDatasetNode for a PDS
                 } else if (item.dsorg === "PO" || item.dsorg === "PO-E") {
@@ -265,9 +298,9 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                             profile: this.getProfile(),
                         });
                     }
-                } else if (contextually.isSessionNotFav(this)) {
+                } else if (contextually.isSession(this)) {
                     // Creates a ZoweDatasetNode for a PS
-                    const cachedEncoding = this.getSessionNode().encodingMap[item.dsname];
+                    const cachedEncoding = this.getEncodingInMap(item.dsname);
                     temp = new ZoweDatasetNode({
                         label: item.dsname,
                         collapsibleState: vscode.TreeItemCollapsibleState.None,
@@ -277,10 +310,10 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     });
                     temp.command = { command: "vscode.open", title: "", arguments: [temp.resourceUri] };
                     elementChildren[temp.label.toString()] = temp;
-                } else {
+                } else if (item.member) {
                     // Creates a ZoweDatasetNode for a PDS member
-                    const memberInvalid = item.member?.includes("\ufffd");
-                    const cachedEncoding = this.getSessionNode().encodingMap[`${item.dsname as string}(${item.member as string})`];
+                    const memberInvalid = item.member.includes("\ufffd");
+                    const cachedEncoding = this.getEncodingInMap(`${item.dsname as string}(${item.member as string})`);
                     temp = new ZoweDatasetNode({
                         label: item.member,
                         collapsibleState: vscode.TreeItemCollapsibleState.None,
@@ -302,7 +335,6 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     }
 
                     // get user and last modified date for sorting, if available
-                    temp.updateStats(item);
                     elementChildren[temp.label.toString()] = temp;
                 }
 
@@ -314,7 +346,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     if (temp.collapsibleState !== vscode.TreeItemCollapsibleState.None) {
                         // Create an entry for the PDS if it doesn't exist.
                         if (!DatasetFSProvider.instance.exists(temp.resourceUri)) {
-                            vscode.workspace.fs.createDirectory(temp.resourceUri);
+                            await vscode.workspace.fs.createDirectory(temp.resourceUri);
                         }
                     } else {
                         // Create an entry for the data set if it doesn't exist.
@@ -327,6 +359,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                             arguments: [temp.resourceUri],
                         };
                     }
+                    temp.updateStats(item);
                 }
             }
         }
@@ -388,7 +421,10 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             const sortByName = (nodeA: IZoweDatasetTreeNode, nodeB: IZoweDatasetTreeNode): number =>
                 (nodeA.label as string) < (nodeB.label as string) ? sortLessThan : sortGreaterThan;
 
-            if (!a.stats && !b.stats) {
+            const aStats = a.getStats();
+            const bStats = b.getStats();
+
+            if (!aStats && !bStats) {
                 return sortByName(a, b);
             }
 
@@ -396,13 +432,13 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 const dateA = dayjs(aDate ?? null);
                 const dateB = dayjs(bDate ?? null);
 
-                const aVaild = dateA.isValid();
+                const aValid = dateA.isValid();
                 const bValid = dateB.isValid();
 
-                a.description = aVaild ? dateA.format("YYYY/MM/DD") : undefined;
+                a.description = aValid ? dateA.format("YYYY/MM/DD") : undefined;
                 b.description = bValid ? dateB.format("YYYY/MM/DD") : undefined;
 
-                if (!aVaild) {
+                if (!aValid) {
                     return sortGreaterThan;
                 }
 
@@ -418,14 +454,14 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
 
             switch (sort.method) {
                 case Sorting.DatasetSortOpts.DateCreated: {
-                    return sortByDate(a.stats?.createdDate, b.stats?.createdDate);
+                    return sortByDate(aStats?.createdDate, bStats?.createdDate);
                 }
                 case Sorting.DatasetSortOpts.LastModified: {
-                    return sortByDate(a.stats?.modifiedDate, b.stats?.modifiedDate);
+                    return sortByDate(aStats?.modifiedDate, bStats?.modifiedDate);
                 }
                 case Sorting.DatasetSortOpts.UserId: {
-                    const userA = a.stats?.user ?? "";
-                    const userB = b.stats?.user ?? "";
+                    const userA = aStats?.user ?? "";
+                    const userB = bStats?.user ?? "";
 
                     a.description = userA;
                     b.description = userB;
@@ -465,16 +501,16 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                         return true;
                     }
 
-                    return dayjs(node.stats?.modifiedDate).isSame(filter.value, "day");
+                    return dayjs(node.getStats()?.modifiedDate).isSame(filter.value, "day");
                 case Sorting.DatasetFilterOpts.UserId:
-                    return node.stats?.user === filter.value;
+                    return node.getStats()?.user === filter.value;
             }
         };
     }
 
     public getSessionNode(): IZoweDatasetTreeNode {
         ZoweLogger.trace("ZoweDatasetNode.getSessionNode called.");
-        return this.getParent() ? this.getParent().getSessionNode() : this;
+        return this.getParent() ? (this.getParent().getSessionNode() as IZoweDatasetTreeNode) : this;
     }
     /**
      * Returns the [etag] for this node
@@ -495,7 +531,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             attributes: true,
             responseTimeout: cachedProfile.profile.responseTimeout,
         };
-        if (contextually.isSessionNotFav(this)) {
+        if (contextually.isSession(this) && this.pattern) {
             const dsPatterns = [
                 ...new Set(
                     this.pattern
@@ -580,17 +616,15 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         const isMemberNode = this.contextValue.startsWith(globals.DS_MEMBER_CONTEXT);
         if (encoding?.kind === "binary") {
             this.contextValue = isMemberNode ? globals.DS_MEMBER_BINARY_CONTEXT : globals.DS_DS_BINARY_CONTEXT;
-            this.binary = true;
         } else {
             this.contextValue = isMemberNode ? globals.DS_MEMBER_CONTEXT : globals.DS_DS_CONTEXT;
-            this.binary = false;
         }
         DatasetFSProvider.instance.setEncodingForFile(this.resourceUri, encoding);
         const fullPath = isMemberNode ? `${this.getParent().label as string}(${this.label as string})` : (this.label as string);
         if (encoding != null) {
-            this.getSessionNode().encodingMap[fullPath] = encoding;
+            this.updateEncodingInMap(fullPath, encoding);
         } else {
-            delete this.getSessionNode().encodingMap[fullPath];
+            delete DatasetFSProvider.instance.encodingMap[fullPath];
         }
         if (this.getParent() && this.getParent().contextValue === globals.FAV_PROFILE_CONTEXT) {
             this.contextValue += globals.FAV_SUFFIX;

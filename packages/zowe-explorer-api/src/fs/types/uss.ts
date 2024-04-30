@@ -11,18 +11,24 @@
 
 import * as vscode from "vscode";
 import { ConflictData, DirEntry, EntryMetadata, FileEntry } from ".";
+import { Types } from "../..";
 
-export class UssFile extends FileEntry {
+export interface UssEntryProps {
+    attributes?: Types.FileAttributes;
+}
+
+export class UssFile extends FileEntry implements UssEntryProps {
     public name: string;
     public metadata: EntryMetadata;
     public type: vscode.FileType;
     public wasAccessed: boolean;
+    public attributes: Types.FileAttributes;
 
     public ctime: number;
     public mtime: number;
     public size: number;
     public conflictData?: ConflictData;
-    public data: Uint8Array;
+    public data?: Uint8Array;
     public etag?: string;
     public permissions?: vscode.FilePermission;
 
@@ -31,8 +37,9 @@ export class UssFile extends FileEntry {
     }
 }
 
-export class UssDirectory extends DirEntry {
+export class UssDirectory extends DirEntry implements UssEntryProps {
     public constructor(name?: string) {
         super(name ?? "");
     }
+    public attributes: Types.FileAttributes;
 }

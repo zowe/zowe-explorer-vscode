@@ -65,7 +65,9 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
 
         if (!isFavoritesNode && this.job == null) {
             // non-favorited, session node
-            this.contextValue = globals.JOBS_SESSION_CONTEXT;
+            if (!contextually.isFavorite(this)) {
+                this.contextValue = globals.JOBS_SESSION_CONTEXT;
+            }
             this.resourceUri = vscode.Uri.from({
                 scheme: ZoweScheme.Jobs,
                 path: `/${sessionLabel}/`,
@@ -94,7 +96,7 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
                 method: Sorting.JobSortOpts.Id,
                 direction: Sorting.SortDirection.Ascending,
             };
-            if (this.getParent()?.label !== vscode.l10n.t("Favorites")) {
+            if (this.getParent()?.label !== vscode.l10n.t("Favorites") && !contextually.isFavorite(this)) {
                 this.id = this.label as string;
             }
         } else if (this.job != null) {

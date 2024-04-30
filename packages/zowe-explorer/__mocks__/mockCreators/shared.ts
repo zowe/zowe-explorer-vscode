@@ -273,7 +273,7 @@ export function createAltTypeIProfile(): imperative.IProfileLoaded {
     };
 }
 
-export function createTreeView(selection?): vscode.TreeView<ZoweTreeProvider> {
+export function createTreeView(selection?): vscode.TreeView<ZoweTreeProvider<any>> {
     const currSelection = selection ? selection : [];
     return {
         reveal: jest.fn(),
@@ -285,7 +285,7 @@ export function createTreeView(selection?): vscode.TreeView<ZoweTreeProvider> {
         onDidChangeVisibility: jest.fn(),
         dispose: jest.fn(),
         addSingleSession: jest.fn(),
-    } as unknown as vscode.TreeView<ZoweTreeProvider>;
+    } as unknown as vscode.TreeView<ZoweTreeProvider<any>>;
 }
 
 export function createTextDocument(name: string, sessionNode?: ZoweDatasetNode | ZoweUSSNode): vscode.TextDocument {
