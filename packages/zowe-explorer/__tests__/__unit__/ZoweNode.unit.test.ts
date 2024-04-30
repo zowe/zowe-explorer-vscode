@@ -236,29 +236,6 @@ describe("Unit Tests (Jest)", () => {
     });
 
     /*************************************************************************************************************
-     * Run with a favorite
-     *************************************************************************************************************/
-    it("Testing Run with a favorite", async () => {
-        Object.defineProperty(Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    loadNamedProfile: jest.fn().mockReturnValue(profileOne),
-                };
-            }),
-        });
-        // Creating a rootNode
-        const pds = new ZoweDatasetNode({
-            label: "[root]: something",
-            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
-            session,
-            profile: profileOne,
-        });
-        pds.dirty = true;
-        pds.contextValue = globals.DS_PDS_CONTEXT;
-        expect((await pds.getChildren())[0].label).toEqual("BRTVS99");
-    });
-
-    /*************************************************************************************************************
      * Multiple member names returned
      *************************************************************************************************************/
     it("Testing what happens when response has multiple members", async () => {
@@ -269,6 +246,9 @@ describe("Unit Tests (Jest)", () => {
                 };
             }),
         });
+
+        const getStatsMock = jest.spyOn(ZoweDatasetNode.prototype, "getStats").mockImplementation();
+
         const sessionNode = {
             encodingMap: {},
             getSessionNode: jest.fn(),
@@ -304,38 +284,6 @@ describe("Unit Tests (Jest)", () => {
         expect(pdsChildren[1].label).toEqual("GOODMEM1");
         expect(pdsChildren[1].contextValue).toEqual(globals.DS_MEMBER_CONTEXT);
         getSessionNodeSpy.mockRestore();
-    });
-
-    /*************************************************************************************************************
-     * No values returned
-     *************************************************************************************************************/
-    it("Testing what happens when response has no members", async () => {
-        Object.defineProperty(Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    loadNamedProfile: jest.fn().mockReturnValue(profileOne),
-                };
-            }),
-        });
-        // Creating a rootNode
-        const pds = new ZoweDatasetNode({
-            label: "[root]: something",
-            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
-            session,
-            profile: profileOne,
-        });
-        pds.dirty = true;
-        pds.contextValue = globals.DS_PDS_CONTEXT;
-        const allMembers = jest.fn();
-        allMembers.mockImplementationOnce(() => {
-            return {
-                success: true,
-                apiResponse: {
-                    items: [],
-                },
-            };
-        });
-        Object.defineProperty(zosfiles.List, "allMembers", { value: allMembers });
-        expect((await pds.getChildren())[0].label).toEqual("No data sets found");
+        getStatsMock.mockRestore();
     });
 });

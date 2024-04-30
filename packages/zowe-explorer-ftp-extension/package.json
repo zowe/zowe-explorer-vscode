@@ -52,11 +52,10 @@
     "@zowe/zos-ftp-for-zowe-cli": "3.0.0-next.202403191358",
     "@zowe/zos-jobs-for-zowe-sdk": "8.0.0-next.202404032038",
     "@zowe/zowe-explorer-api": "3.0.0-next-SNAPSHOT",
-    "tmp": "0.2.1"
+    "tmp": "0.2.3"
   },
   "devDependencies": {
-    "@types/tmp": "0.2.0",
-    "concurrently": "^5.2.0"
+    "@types/tmp": "0.2.6"
   },
   "jest": {
     "moduleFileExtensions": [

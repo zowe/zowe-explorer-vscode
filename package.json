@@ -16,7 +16,8 @@
     "vscode": "^1.79.0"
   },
   "dependencies": {
-    "@vscode/l10n": "^0.0.18"
+    "@vscode/l10n": "^0.0.18",
+    "disposablestack": "^1.1.4"
   },
   "devDependencies": {
     "@types/jest": "^29.2.3",
@@ -28,6 +29,7 @@
     "@vscode/l10n-dev": "^0.0.35",
     "@vscode/test-electron": "^1.6.0",
     "@vscode/vsce": "2.15.0",
+    "concurrently": "^6.5.1",
     "eslint": "^8.34.0",
     "eslint-config-prettier": "^8.6.0",
     "eslint-plugin-prettier": "^4.2.1",
@@ -43,7 +45,6 @@
     "mocha-junit-reporter": "^2.2.0",
     "mocha-multi-reporters": "^1.5.1",
     "node-loader": "^2.0.0",
-    "ovsx": "^0.8.3",
     "prettier": "2.6.0",
     "rimraf": "^3.0.2",
     "terser-webpack-plugin": "^5.3.10",

@@ -45,7 +45,10 @@ export class TreeViewUtils {
      * @param treeProvider The tree provider that should update once the icons are changed
      * @returns An event listener built to update the node icons based on the given qualifiers
      */
-    public static refreshIconOnCollapse<T extends IZoweTreeNode>(qualifiers: ((node: IZoweTreeNode) => boolean)[], treeProvider: ZoweTreeProvider) {
+    public static refreshIconOnCollapse<T extends IZoweTreeNode>(
+        qualifiers: ((node: IZoweTreeNode) => boolean)[],
+        treeProvider: ZoweTreeProvider<T>
+    ) {
         return (e: TreeViewExpansionEvent<T>): any => {
             const newIcon = getIconByNode(e.element);
             if (qualifiers.some((q) => q(e.element)) && newIcon) {

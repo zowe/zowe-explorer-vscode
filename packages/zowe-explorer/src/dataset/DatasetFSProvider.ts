@@ -44,6 +44,8 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         this.root = new DirEntry("");
     }
 
+    public encodingMap: Record<string, ZosEncoding> = {};
+
     /**
      * @returns the Data Set FileSystemProvider singleton instance
      */

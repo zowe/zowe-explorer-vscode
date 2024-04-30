@@ -77,7 +77,7 @@ export class FileEntry implements IFileSystemEntry {
     public name: string;
     public metadata: EntryMetadata;
     public type: vscode.FileType;
-    public data: Uint8Array;
+    public data?: Uint8Array;
     public wasAccessed: boolean;
     public ctime: number;
     public mtime: number;

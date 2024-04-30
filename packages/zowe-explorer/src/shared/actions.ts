@@ -11,7 +11,7 @@
 
 import * as vscode from "vscode";
 import * as globals from "../globals";
-import { Gui, IZoweDatasetTreeNode, IZoweUSSTreeNode, Types } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweUSSTreeNode, Types } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { filterTreeByString } from "../shared/utils";
 import { FilterItem, FilterDescriptor } from "../utils/ProfilesUtils";
@@ -111,7 +111,7 @@ export async function searchInAllLoadedItems(datasetProvider?: Types.IZoweDatase
             if (node.contextValue !== globals.USS_DIR_CONTEXT) {
                 // If selected item is file, open it in workspace
                 ussFileProvider.addSearchHistory(node.fullPath);
-                const ussNode: IZoweUSSTreeNode = node;
+                const ussNode = node as IZoweUSSTreeNode;
                 await ussNode.openUSS(false, true, ussFileProvider);
             }
         } else {
@@ -177,13 +177,11 @@ export async function openRecentMemberPrompt(datasetTree: Types.IZoweDatasetTree
         if (pattern.indexOf("/") > -1) {
             // USS file was selected
             const filePath = pattern.substring(pattern.indexOf("/"));
-            const sessionNode: IZoweUSSTreeNode = ussTree.mSessionNodes.find((sessNode) => sessNode.getProfileName() === sessionName);
+            const sessionNode = ussTree.mSessionNodes.find((sessNode) => sessNode.getProfileName() === sessionName);
             await ussTree.openItemFromPath(filePath, sessionNode);
         } else {
             // Data set was selected
-            const sessionNode: IZoweDatasetTreeNode = datasetTree.mSessionNodes.find(
-                (sessNode) => sessNode.label.toString().toLowerCase() === sessionName.toLowerCase()
-            );
+            const sessionNode = datasetTree.mSessionNodes.find((sessNode) => sessNode.label.toString().toLowerCase() === sessionName.toLowerCase());
             await datasetTree.openItemFromPath(pattern, sessionNode);
         }
     } else {
