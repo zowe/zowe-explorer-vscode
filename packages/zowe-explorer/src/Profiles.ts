@@ -1237,22 +1237,86 @@ export class Profiles extends ProfilesCache {
         }
     }
 
-    public async handleSwitchAuthentication(node?: IZoweNodeType, label?: string): Promise<void> {
-        // think it as basic to token based auth switch
+    public async basicAuthClearSecureArray(profileName?: string): Promise<void> {
+        const profAttrs = this.getProfileFromConfig(profileName);
+        const configApi = (await this.getProfileInfo()).getTeamConfig();
+        configApi.set(`${(await profAttrs).profLoc.jsonLoc}.secure`, []);
+        configApi.delete(`${(await profAttrs).profLoc.jsonLoc}.properties.user`);
+        configApi.delete(`${(await profAttrs).profLoc.jsonLoc}.properties.password`);
+        await configApi.save();
+    }
 
-        const profName = "base";
-        const profAttrs = this.getProfileFromConfig(profName);
+    public async tokenAuthClearSecureArray(profileName?: string): Promise<void> {
+        const profAttrs = this.getProfileFromConfig(profileName);
         const configApi = (await this.getProfileInfo()).getTeamConfig();
         configApi.set(`${(await profAttrs).profLoc.jsonLoc}.secure`, []);
         await configApi.save();
+    }
 
-        const profName2 = "zosmf";
-        const profAttrs2 = this.getProfileFromConfig(profName2);
-        const configApi2 = (await this.getProfileInfo()).getTeamConfig();
-        configApi2.set(`${(await profAttrs2).profLoc.jsonLoc}.secure`, []);
-        await configApi2.save();
-
-        // await this.ssoLogin(node, label);
+    public async handleSwitchAuthentication(node?: IZoweNodeType): Promise<void> {
+        let loginTokenType: string;
+        let serviceProfile: zowe.imperative.IProfileLoaded;
+        if (node) {
+            serviceProfile = node.getProfile();
+        } else {
+            serviceProfile = this.loadNamedProfile(node.label.toString().trim());
+        }
+        const zeInstance = ZoweExplorerApiRegister.getInstance();
+        try {
+            loginTokenType = await zeInstance.getCommonApi(serviceProfile).getTokenTypeName();
+        } catch (error) {
+            ZoweLogger.warn(error);
+            Gui.showMessage(
+                localize("handleSwitchAuthentication.tokenType.error", "Cannot switch to Token Authentication for profile {0}", serviceProfile.name)
+            );
+            return;
+        }
+        switch (true) {
+            case ProfilesUtils.isProfileUsingBasicAuth(serviceProfile): {
+                Gui.infoMessage(
+                    localize(
+                        "handleSwitchAuthentication.switchBaseToTokenAuth",
+                        "Switching from Basic to Token Authentication for profile {0}",
+                        serviceProfile.name
+                    )
+                );
+                await this.basicAuthClearSecureArray(serviceProfile.name);
+                if (loginTokenType.startsWith(zowe.imperative.SessConstants.TOKEN_TYPE_APIML)) {
+                    await this.basicAuthClearSecureArray("base");
+                }
+                const updBaseProfile: zowe.imperative.IProfile = {
+                    user: undefined,
+                    password: undefined,
+                };
+                node.setProfileToChoice({
+                    ...node.getProfile(),
+                    profile: { ...node.getProfile().profile, ...updBaseProfile },
+                });
+                await this.ssoLogin(node, serviceProfile.name);
+                break;
+            }
+            case await ProfilesUtils.isUsingTokenAuth(serviceProfile.name): {
+                Gui.infoMessage(
+                    localize(
+                        "handleSwitchAuthentication.switchTokenToBaseAuth",
+                        "Switching from Token to Basic Authentication for profile {0}",
+                        serviceProfile.name
+                    )
+                );
+                await this.ssoLogout(node);
+                await this.tokenAuthClearSecureArray(serviceProfile.name);
+                if (loginTokenType.startsWith(zowe.imperative.SessConstants.TOKEN_TYPE_APIML)) {
+                    await this.tokenAuthClearSecureArray("base");
+                }
+                await ProfilesUtils.promptCredentials(node);
+                break;
+            }
+            default: {
+                Gui.infoMessage(
+                    localize("handleSwitchAuthentication.noAuth", "Unable to Switch Authentication for profile {0}", serviceProfile.name)
+                );
+            }
+        }
     }
 
     public clearDSFilterFromTree(node: IZoweNodeType): void {

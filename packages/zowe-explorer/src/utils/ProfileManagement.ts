@@ -125,7 +125,7 @@ export class ProfileManagement {
     public static switchAuthenticationQpItems: Record<string, vscode.QuickPickItem> = {
         [this.AuthQpLabels.switch]: {
             label: localize("switchAuthenticationQpItems.switchAuthentication.qpLabel", "$(eye-closed) Change the Authentication Method"),
-            description: localize("switchAuthenticationQpItems.switchAuthentication.qpDetail", "To switch authentication method"),
+            description: localize("switchAuthenticationQpItems.switchAuthentication.qpDetail", "To change the authentication method"),
         },
     };
     public static tokenAuthLoginQpItem: Record<string, vscode.QuickPickItem> = {
@@ -230,8 +230,7 @@ export class ProfileManagement {
                 break;
             }
             case this.switchAuthenticationQpItems[this.AuthQpLabels.switch]: {
-                await Profiles.getInstance().handleSwitchAuthentication(node, profile.name);
-                await Profiles.getInstance().ssoLogin(node, profile.name);
+                await Profiles.getInstance().handleSwitchAuthentication(node);
                 break;
             }
             case this.deleteProfileQpItem[this.AuthQpLabels.delete]: {
@@ -267,6 +266,7 @@ export class ProfileManagement {
 
     private static basicAuthQp(node: IZoweTreeNode): vscode.QuickPickItem[] {
         const quickPickOptions: vscode.QuickPickItem[] = Object.values(this.basicAuthUpdateQpItems);
+        quickPickOptions.push(this.switchAuthenticationQpItems[this.AuthQpLabels.switch]);
         return this.addFinalQpOptions(node, quickPickOptions);
     }
     private static tokenAuthQp(node: IZoweTreeNode): vscode.QuickPickItem[] {
@@ -275,6 +275,7 @@ export class ProfileManagement {
         if (profile.profile.tokenType) {
             quickPickOptions.push(this.tokenAuthLogoutQpItem[this.AuthQpLabels.logout]);
         }
+        quickPickOptions.push(this.switchAuthenticationQpItems[this.AuthQpLabels.switch]);
         return this.addFinalQpOptions(node, quickPickOptions);
     }
     private static chooseAuthQp(node: IZoweTreeNode): vscode.QuickPickItem[] {
@@ -283,6 +284,7 @@ export class ProfileManagement {
         try {
             ZoweExplorerApiRegister.getInstance().getCommonApi(profile).getTokenTypeName();
             quickPickOptions.push(this.tokenAuthLoginQpItem[this.AuthQpLabels.login]);
+            // quickPickOptions.push(this.switchAuthenticationQpItems[this.AuthQpLabels.switch]);
         } catch {
             ZoweLogger.debug(`Profile ${profile.name} doesn't support token authentication, will not provide option.`);
         }
@@ -291,7 +293,6 @@ export class ProfileManagement {
     private static addFinalQpOptions(node: IZoweTreeNode, quickPickOptions: vscode.QuickPickItem[]): vscode.QuickPickItem[] {
         quickPickOptions.push(this.editProfileQpItems[this.AuthQpLabels.edit]);
         quickPickOptions.push(this.hideProfileQpItems[this.AuthQpLabels.hide]);
-        quickPickOptions.push(this.switchAuthenticationQpItems[this.AuthQpLabels.switch]);
         if (node.contextValue.includes(globals.NO_VALIDATE_SUFFIX)) {
             quickPickOptions.push(this.enableProfileValildationQpItem[this.AuthQpLabels.enable]);
         } else {
