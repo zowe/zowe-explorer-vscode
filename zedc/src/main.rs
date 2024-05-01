@@ -3,23 +3,28 @@ use cmd::{Args, RootCommands};
 
 mod cmd;
 mod code;
+mod pm;
+mod setup;
 mod test;
-// TODO: look into option for installing CLI during bootstrap process
 
-fn main() -> anyhow::Result<()> {
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
+    octocrab::initialise(octocrab::Octocrab::default());
+
     let matches = Args::parse();
     match matches.command {
+        RootCommands::Setup { reference } => {}
         RootCommands::Test {
             subcommand,
-            vsc_version
+            vsc_version,
+            install_cli,
         } => {
-            test::handle_cmd(vsc_version, subcommand)?;
-            // todo: Use Octocrab to grab appropriate artifacts
-            // from branch/PR/commit, then set up VS Code and continue
+            test::handle_cmd(install_cli, vsc_version, subcommand).await?;
         }
         RootCommands::Version => {
             println!("zedc {}", env!("CARGO_PKG_VERSION"));
         }
+        RootCommands::PkgMgr {} => todo!(),
     }
 
     Ok(())

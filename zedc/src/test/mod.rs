@@ -1,4 +1,4 @@
 mod cmd;
 pub mod local;
 
-pub use cmd::{Commands, handle_cmd};
+pub use cmd::{handle_cmd, Commands};
