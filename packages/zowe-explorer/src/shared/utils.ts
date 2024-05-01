@@ -532,8 +532,9 @@ export async function promptForEncoding(node: IZoweDatasetTreeNode | IZoweUSSTre
             });
             if (response != null) {
                 encoding = { kind: "other", codepage: response };
-                encodingHistory.push(encoding.codepage);
-                ZoweLocalStorage.setValue(LocalStorageKey.ENCODING_HISTORY, encodingHistory.slice(0, globals.MAX_FILE_HISTORY));
+                const filterEncodingList = encodingHistory.filter((codepage) => codepage.toUpperCase() !== response.toUpperCase());
+                filterEncodingList.unshift(encoding.codepage.toUpperCase());
+                ZoweLocalStorage.setValue(LocalStorageKey.ENCODING_HISTORY, filterEncodingList.slice(0, globals.MAX_FILE_HISTORY));
             }
             break;
         default:

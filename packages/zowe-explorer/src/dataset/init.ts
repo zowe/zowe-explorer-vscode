@@ -13,7 +13,7 @@ import * as globals from "../globals";
 import * as vscode from "vscode";
 import * as dsActions from "./actions";
 import * as refreshActions from "../shared/refresh";
-import { IZoweDatasetTreeNode, IZoweTreeNode } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweDatasetTreeNode, IZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { DatasetTree, createDatasetTree } from "./DatasetTree";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
@@ -22,6 +22,14 @@ import { getSelectedNodeList } from "../shared/utils";
 import { initSubscribers } from "../shared/init";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { TreeViewUtils } from "../utils/TreeViewUtils";
+import * as nls from "vscode-nls";
+
+// Set up localization
+nls.config({
+    messageFormat: nls.MessageFormat.bundle,
+    bundleFormat: nls.BundleFormat.standalone,
+})();
+const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 export async function initDatasetProvider(context: vscode.ExtensionContext): Promise<DatasetTree> {
     ZoweLogger.trace("dataset.init.initDatasetProvider called.");
@@ -51,11 +59,13 @@ export async function initDatasetProvider(context: vscode.ExtensionContext): Pro
     );
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.ds.refreshNode", async (node, nodeList) => {
+            const statusMsg = Gui.setStatusBarMessage(localize("refreshNode", "$(sync~spin) Pulling from Mainframe..."));
             let selectedNodes = getSelectedNodeList(node, nodeList);
             selectedNodes = selectedNodes.filter((element) => contextuals.isDs(element) || contextuals.isDsMember(element));
             for (const item of selectedNodes) {
                 await dsActions.refreshPS(item);
             }
+            statusMsg.dispose();
         })
     );
     context.subscriptions.push(
@@ -165,7 +175,7 @@ export async function initDatasetProvider(context: vscode.ExtensionContext): Pro
             let selectedNodes = getSelectedNodeList(node, nodeList);
             selectedNodes = selectedNodes.filter((element) => contextuals.isDs(element) || contextuals.isPdsNotFav(element));
             for (const item of selectedNodes) {
-                await dsActions.hMigrateDataSet(item as ZoweDatasetNode);
+                await dsActions.hMigrateDataSet(datasetProvider, item as ZoweDatasetNode);
             }
         })
     );
@@ -174,7 +184,7 @@ export async function initDatasetProvider(context: vscode.ExtensionContext): Pro
             let selectedNodes = getSelectedNodeList(node, nodeList);
             selectedNodes = selectedNodes.filter((element) => contextuals.isMigrated(element));
             for (const item of selectedNodes) {
-                await dsActions.hRecallDataSet(item as ZoweDatasetNode);
+                await dsActions.hRecallDataSet(datasetProvider, item as ZoweDatasetNode);
             }
         })
     );

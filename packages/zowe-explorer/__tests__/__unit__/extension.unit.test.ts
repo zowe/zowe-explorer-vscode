@@ -200,6 +200,7 @@ async function createGlobalMocks() {
             "zowe.uss.text",
             "zowe.uss.renameNode",
             "zowe.uss.uploadDialog",
+            "zowe.uss.uploadDialogBinary",
             "zowe.uss.copyPath",
             "zowe.uss.editFile",
             "zowe.uss.editAttributes",
@@ -502,34 +503,16 @@ describe("Extension Unit Tests", () => {
         });
     });
 
+    afterEach(() => {
+        jest.resetAllMocks();
+        jest.restoreAllMocks();
+        jest.clearAllMocks();
+    });
+
     it("Testing that activate correctly executes", async () => {
         expect(allCommands.map((c) => c.cmd)).toEqual(globalMocks.expectedCommands);
     });
 
-    it("Tests that activate() fails when trying to load with an invalid config", async () => {
-        Object.defineProperty(zowe.imperative, "ProfileInfo", {
-            value: jest.fn().mockImplementation(() => {
-                throw new Error("Error in ProfileInfo to break activate function");
-            }),
-            configurable: true,
-        });
-        globalMocks.mockReadFileSync.mockReturnValueOnce('{ "overrides": { "CredentialManager": "Managed by ANO" }}');
-        globalMocks.mockExistsSync.mockReturnValueOnce(false);
-        globalMocks.mockGetConfiguration.mockReturnValue({
-            persistence: true,
-            get: (_setting: string) => "",
-            update: jest.fn(),
-            inspect: (_configuration: string) => {
-                return {
-                    workspaceValue: undefined,
-                    globalValue: undefined,
-                };
-            },
-        });
-
-        await extension.activate(globalMocks.mockExtension);
-        expect(ZoweExplorerExtender.showZoweConfigError).toHaveBeenCalled();
-    });
     it("should deactivate the extension", async () => {
         const spyAwaitAllSaves = jest.spyOn(ZoweSaveQueue, "all");
         const spyCleanTempDir = jest.spyOn(tempFolderUtils, "cleanTempDir");
@@ -608,23 +591,6 @@ describe("Extension Unit Tests - THEIA", () => {
         });
         expect(actualCommands).toEqual(globalMocks.expectedCommands);
     });
-
-    // it("Tests that onChangeProfileAction executes the proper profile commands", async () => {
-    //     const globalMocks = await createGlobalMocks();
-    //     Object.defineProperty(vscode.workspace, "fs", {
-    //         value: {
-    //             readFile: jest.fn().mockResolvedValue("somenewdata"),
-    //         },
-    //         configurable: true,
-    //     });
-    //     await extension.onChangeProfileAction(null);
-    //     expect(globalMocks.mockReadProfilesFromDisk).toHaveBeenCalledTimes(1);
-
-    //     // call again w/ same data to signal no change; verify nothing with profiles was changed
-    //     // (number of calls to readProfilesFromDisk should stay the same)
-    //     await extension.onChangeProfileAction(null);
-    //     expect(globalMocks.mockReadProfilesFromDisk).toHaveBeenCalledTimes(1);
-    // });
 
     it("Tests getSelectedNodeList executes successfully with multiple selection", async () => {
         const globalMocks = await createGlobalMocks();

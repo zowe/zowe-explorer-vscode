@@ -2,17 +2,14 @@
 
 All notable changes to the "zowe-explorer-api" extension will be documented in this file.
 
-## TBD Release
+## `2.16.0`
 
 ### New features and enhancements
 
-### Bug fixes
+- Added optional `consoleName` argument to `ZosmfCommandApi.issueMvsCommand`. [#1667](https://github.com/zowe/vscode-extension-for-zowe/issues/1667)
+- Added "Date Completed" attribute to JobSortOpts enum type. [#1685](https://github.com/zowe/vscode-extension-for-zowe/issues/1685)
 
 ## `2.15.4`
-
-### New features and enhancements
-
-### Bug fixes
 
 ## `2.15.3`
 

@@ -147,9 +147,9 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
     public uploadDialog(_node: IZoweDatasetTreeNode): void {
         throw new Error("Method not implemented.");
     }
-    public filterPrompt(node: IZoweDatasetTreeNode): Promise<void> {
+    public async filterPrompt(node: IZoweDatasetTreeNode): Promise<void> {
         ZoweLogger.trace("DatasetTree.filterPrompt called.");
-        return this.datasetFilterPrompt(node);
+        await this.datasetFilterPrompt(node);
     }
 
     /**
@@ -1026,7 +1026,9 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             }
             let response;
             try {
-                response = await this.getChildren(nonFaveNode);
+                await Gui.withProgress({ location: { viewId: "zowe.ds.explorer" } }, async () => {
+                    response = await this.getChildren(nonFaveNode);
+                });
             } catch (err) {
                 await errorHandling(err, String(node.label));
             }

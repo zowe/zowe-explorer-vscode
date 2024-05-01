@@ -1,6 +1,7 @@
 {
   "jobs.sortById": "$(list-ordered) Job ID (default)",
   "jobs.sortByDateSubmitted": "$(calendar) Date Submitted",
+  "jobs.sortByDateCompleted": "$(calendar) Date Completed",
   "jobs.sortByName": "$(case-sensitive) Job Name",
   "jobs.sortByReturnCode": "$(symbol-numeric) Return Code",
   "setSortDirection": "$(fold) Sort Direction",

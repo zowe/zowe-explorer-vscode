@@ -25,7 +25,7 @@ _Put an `x` in the boxes that apply_
 
 _Put an `x` in the boxes that apply. You can also fill these out after creating the PR. If you're unsure about any of them, don't hesitate to ask. We're here to help! This checklist will be used as reference for both the contributor and the reviewer_
 
-- [ ] I have read the [CONTRIBUTOR GUIDANCE](https://github.com/zowe/vscode-extension-for-zowe/wiki/Best-Practices:-Contributor-Guidance) wiki
+- [ ] I have read the [CONTRIBUTOR GUIDANCE](https://github.com/zowe/zowe-explorer-vscode/wiki/Best-Practices:-Contributor-Guidance) wiki
 - [ ] PR title follows [Conventional Commits Guidelines](https://www.conventionalcommits.org/en/v1.0.0-beta.2/)
 - [ ] PR Description is included
 - [ ] gif or screenshot is included if visual changes are made
