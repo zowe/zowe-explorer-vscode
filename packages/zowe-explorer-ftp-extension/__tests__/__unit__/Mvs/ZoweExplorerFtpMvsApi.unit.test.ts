@@ -91,7 +91,7 @@ describe("FtpMvsApi", () => {
         };
         const result = await MvsApi.getContents(mockParams.dataSetName, mockParams.options);
 
-        expect(result.apiResponse.etag).toHaveLength(40);
+        expect(result.apiResponse.etag).toHaveLength(64);
         expect(DataSetUtils.downloadDataSet).toBeCalledTimes(1);
         expect(MvsApi.releaseConnection).toBeCalled();
 
