@@ -2,7 +2,7 @@ const fs = require("fs");
 const poeditorJson = {};
 const packageNls = require(__dirname + "/../package.nls.json");
 for (const [k, v] of Object.entries(packageNls)) {
-    poeditorJson[k] = {[v]: ""};
+    poeditorJson[k] = { [v]: "" };
 }
 const l10nBundle = require(__dirname + "/../l10n/bundle.l10n.json");
 for (const [k, v] of Object.entries(l10nBundle)) {
