@@ -79,11 +79,13 @@ describe("FtpMvsApi", () => {
         };
         const result = await MvsApi.getContents(mockParams.dataSetName, mockParams.options);
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-        expect(result.apiResponse.etag).toHaveLength(40);
+        expect(result.apiResponse.etag).toHaveLength(64);
         expect(DataSetUtils.downloadDataSet).toBeCalledTimes(1);
         expect(MvsApi.releaseConnection).toBeCalled();
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,@typescript-eslint/no-unsafe-call
-        expect(response._readableState.buffer.head.data.toString()).toContain("Hello world");
+        expect((response._readableState.buffer.head?.data ?? response._readableState.buffer).toString()).toContain(
+            "Hello world"
+        );
     });
 
     it("should upload content to dataset.", async () => {

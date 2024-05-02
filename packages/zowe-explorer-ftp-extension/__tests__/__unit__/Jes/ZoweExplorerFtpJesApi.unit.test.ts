@@ -104,7 +104,9 @@ describe("FtpJesApi", () => {
         };
         await JesApi.getSpoolContentById(mockParams.jobname, mockParams.jobid, mockParams.spoolID);
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,@typescript-eslint/no-unsafe-call
-        expect(response._readableState.buffer.head.data.toString()).toContain("Hello world");
+        expect((response._readableState.buffer.head?.data ?? response._readableState.buffer).toString()).toContain(
+            "Hello world"
+        );
         expect(JobUtils.getSpoolFileContent).toBeCalledTimes(1);
         expect(JesApi.releaseConnection).toBeCalled();
     });
