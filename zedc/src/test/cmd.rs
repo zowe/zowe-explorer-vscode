@@ -2,6 +2,7 @@ use crate::test::local;
 
 use anyhow::bail;
 use clap::{command, Subcommand};
+use owo_colors::OwoColorize;
 #[derive(Subcommand)]
 pub enum Commands {
     #[command(
@@ -10,7 +11,11 @@ pub enum Commands {
         alias = "ghr"
     )]
     GhRepo {
-        #[arg(help = "The Git ref to grab the artifacts from (branch, commit hash, or tag)", long, short)]
+        #[arg(
+            help = "The Git ref to grab the artifacts from (branch, commit hash, or tag)",
+            long,
+            short
+        )]
         reference: String,
         #[arg(
             help = "Exclude artifacts matching the given list of names",
@@ -32,6 +37,7 @@ pub async fn handle_cmd(
     vsc_version: Option<String>,
     cmd: Commands,
 ) -> anyhow::Result<()> {
+    println!("{}", "zedc test".bold());
     match cmd {
         Commands::GhRepo {
             reference: _,
@@ -41,7 +47,7 @@ pub async fn handle_cmd(
             // then set up VS Code and continue
         }
         Commands::Local { files } => {
-            match local::setup(vsc_version, files) {
+            match local::setup(vsc_version, files).await {
                 Ok(_) => {}
                 Err(_e) => {
                     return Ok(());

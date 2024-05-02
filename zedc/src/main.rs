@@ -13,7 +13,9 @@ async fn main() -> anyhow::Result<()> {
 
     let matches = Args::parse();
     match matches.command {
-        RootCommands::Setup { reference } => {}
+        RootCommands::Setup { reference } => {
+            setup::handle_cmd(reference)?;
+        }
         RootCommands::Test {
             subcommand,
             vsc_version,

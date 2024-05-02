@@ -8,6 +8,9 @@ edition = "2021"
 [dependencies]
 anyhow = "1.0.82"
 clap = { version = "4.5.4", features = ["derive"] }
+indicatif = "0.17.8"
+json = "0.12.4"
 octocrab = "0.38.0"
 owo-colors = "=4.0.0"
-tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+reqwest = { version = "0.12.4", features = ["blocking"] }
+tokio = { version = "1", features = ["fs", "macros", "rt-multi-thread"] }

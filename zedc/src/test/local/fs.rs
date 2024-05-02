@@ -1,6 +1,6 @@
 use anyhow::bail;
 use owo_colors::OwoColorize;
-use std::path::Path;
+use std::{ffi::OsStr, path::Path};
 
 pub fn install_cli(version: String) -> anyhow::Result<()> {
     let nm_path = Path::new("./node_modules");
@@ -28,26 +28,34 @@ pub fn install_cli(version: String) -> anyhow::Result<()> {
 }
 
 pub fn install_from_paths(_vsc_dir: String, files: Vec<String>) -> anyhow::Result<()> {
-    let resolved_paths = resolve_paths(files);
-    if resolved_paths.is_empty() {
+    if files.is_empty() {
         println!(
-            "{}",
-            "At least one .vsix or .tgz file is required for this command.".red()
+            "\n{}\n{}",
+            "No valid files provided.".red(),
+            "Supported formats:\n.vsix, .tar.gz, .tgz"
         );
-        bail!("At least one .vsix or .tgz file is required for this command.");
+        bail!("At least one .vsix, .tar.gz, or .tgz file is required for this command.");
     }
-    println!("✔️ {} file(s) found!", resolved_paths.len());
     Ok(())
 }
 
 pub fn resolve_paths(files: Vec<String>) -> Vec<String> {
-    println!("🔍 Locating VSIX files...");
+    println!("\n{} {}", "🔍", "Resolving files...".underline());
     files
         .iter()
         .filter_map(|f| match std::fs::canonicalize(f) {
-            Ok(p) => Some(p.to_str().unwrap().to_owned()),
+            Ok(p) => match p.extension().unwrap_or(OsStr::new("")).to_str().unwrap() {
+                "gz" | "tgz" | "vsix" => {
+                    println!("\t✔️  {}", f.bold());
+                    Some(p.to_str().unwrap().to_owned())
+                }
+                _ => {
+                    println!("\t❌ {}", format!("{}: invalid extension", f).italic());
+                    None
+                }
+            },
             Err(e) => {
-                println!("\t❌ {}", format!("skipping {}: {}", f, e).italic());
+                println!("\t❌ {}", format!("{}: {}", f, e).italic());
                 None
             }
         })
