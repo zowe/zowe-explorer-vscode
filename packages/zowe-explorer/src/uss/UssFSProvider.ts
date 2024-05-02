@@ -472,7 +472,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             // If file names match, build the copy suffix
             let dupCount = 1;
             const extension = path.extname(fileName);
-            const baseNameForFile = path.parse(fileName)?.name;
+            const baseNameForFile = path.parse(fileName).name;
             let dupName = `${baseNameForFile} (${dupCount})${extension}`;
             while (fileList.find((file) => file.name === dupName) != null) {
                 dupCount++;

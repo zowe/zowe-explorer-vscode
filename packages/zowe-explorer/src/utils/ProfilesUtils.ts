@@ -229,20 +229,18 @@ export class ProfilesUtils {
     public static updateCredentialManagerSetting(credentialManager?: string): void {
         ZoweLogger.trace("ProfilesUtils.updateCredentialManagerSetting called.");
         const settingEnabled: boolean = SettingsConfig.getDirectValue(globals.SETTINGS_SECURE_CREDENTIALS_ENABLED);
-        if (settingEnabled) {
-            if (settingEnabled && credentialManager) {
-                this.PROFILE_SECURITY = credentialManager;
-                return;
-            } else if (!settingEnabled) {
-                this.PROFILE_SECURITY = false;
-                ZoweLogger.info(vscode.l10n.t(`Zowe explorer profiles are being set as unsecured.`));
-            } else {
-                this.PROFILE_SECURITY = globals.ZOWE_CLI_SCM;
-                ZoweLogger.info(vscode.l10n.t(`Zowe explorer profiles are being set as secured.`));
-            }
-            if (this.PROFILE_SECURITY) {
-                imperative.CredentialManagerOverride.recordCredMgrInConfig(this.PROFILE_SECURITY);
-            }
+        if (settingEnabled && credentialManager) {
+            this.PROFILE_SECURITY = credentialManager;
+            return;
+        } else if (!settingEnabled) {
+            this.PROFILE_SECURITY = false;
+            ZoweLogger.info(vscode.l10n.t(`Zowe explorer profiles are being set as unsecured.`));
+        } else {
+            this.PROFILE_SECURITY = globals.ZOWE_CLI_SCM;
+            ZoweLogger.info(vscode.l10n.t(`Zowe explorer profiles are being set as secured.`));
+        }
+        if (this.PROFILE_SECURITY) {
+            imperative.CredentialManagerOverride.recordCredMgrInConfig(this.PROFILE_SECURITY);
         }
     }
 
