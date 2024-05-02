@@ -111,7 +111,7 @@ export function registerCommonCommands(context: vscode.ExtensionContext, provide
             // If the temp folder location has been changed, update current temp folder preference
             if (e.affectsConfiguration(globals.SETTINGS_TEMP_FOLDER_PATH)) {
                 const updatedPreferencesTempPath: string = SettingsConfig.getDirectValue(globals.SETTINGS_TEMP_FOLDER_PATH);
-                await moveTempFolder(globals.SETTINGS_TEMP_FOLDER_LOCATION, updatedPreferencesTempPath);
+                await moveTempFolder(globals.ZOWETEMPFOLDER, updatedPreferencesTempPath);
             }
             if (e.affectsConfiguration(globals.SETTINGS_AUTOMATIC_PROFILE_VALIDATION)) {
                 await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
