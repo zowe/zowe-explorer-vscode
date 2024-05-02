@@ -2,6 +2,7 @@ extends:
   - eslint:recommended
   - plugin:@typescript-eslint/recommended-requiring-type-checking
   - prettier
+  - plugin:deprecation/recommended
 env:
   node: true
   es6: true

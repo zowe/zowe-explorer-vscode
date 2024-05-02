@@ -15,8 +15,8 @@ import * as crypto from "crypto";
 import * as tmp from "tmp";
 import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
 
+import { CoreUtils, UssUtils, TransferMode } from "@zowe/zos-ftp-for-zowe-cli";
 import { BufferBuilder, imperative, MainframeInteraction, MessageSeverity } from "@zowe/zowe-explorer-api";
-import { CoreUtils, UssUtils, TRANSFER_TYPE_ASCII, TRANSFER_TYPE_BINARY } from "@zowe/zos-ftp-for-zowe-cli";
 import { Buffer } from "buffer";
 import { AbstractFtpApi } from "./ZoweExplorerAbstractFtpApi";
 import { ZoweFtpExtensionError } from "./ZoweFtpExtensionError";
@@ -31,11 +31,11 @@ export class FtpUssApi extends AbstractFtpApi implements MainframeInteraction.IU
         const result = this.getDefaultResponse();
         const session = this.getSession(this.profile);
         try {
-            if (session.ussListConnection === undefined || session.ussListConnection.connected === false) {
+            if (!session.ussListConnection?.isConnected()) {
                 session.ussListConnection = await this.ftpClient(this.checkedProfile());
             }
 
-            if (session.ussListConnection.connected === true) {
+            if (session.ussListConnection.isConnected()) {
                 const response = await UssUtils.listFiles(session.ussListConnection, ussFilePath);
                 if (response) {
                     result.success = true;
@@ -63,7 +63,7 @@ export class FtpUssApi extends AbstractFtpApi implements MainframeInteraction.IU
     public async getContents(ussFilePath: string, options: zosfiles.IDownloadSingleOptions): Promise<zosfiles.IZosFilesResponse> {
         const result = this.getDefaultResponse();
         const transferOptions = {
-            transferType: options.binary ? TRANSFER_TYPE_BINARY : TRANSFER_TYPE_ASCII,
+            transferType: CoreUtils.getBinaryTransferModeOrDefault(options.binary),
             localFile: undefined,
             size: 1,
         };
@@ -122,7 +122,7 @@ export class FtpUssApi extends AbstractFtpApi implements MainframeInteraction.IU
         const transferOptions = {
             content: inputIsBuffer ? input : undefined,
             localFile: inputIsBuffer ? undefined : input,
-            transferType: options?.binary ? TRANSFER_TYPE_BINARY : TRANSFER_TYPE_ASCII,
+            transferType: CoreUtils.getBinaryTransferModeOrDefault(options?.binary),
         };
         const result = this.getDefaultResponse();
         // Save-Save with FTP requires loading the file first
@@ -176,7 +176,7 @@ export class FtpUssApi extends AbstractFtpApi implements MainframeInteraction.IU
 
             // getting list of files from directory
             const files = zosfiles.ZosFilesUtils.getFileListFromPath(inputDirectoryPath, false);
-            // TODO: this solution will not perform very well; rewrite this and putContents methods
+            // TODO: this solution will not perform very well; rewrite this and putContent methods
             for (const file of files) {
                 const relativePath = path.relative(inputDirectoryPath, file).replace(/\\/g, "/");
                 const putResult = await this.putContent(file, path.posix.join(ussDirectoryPath, relativePath));
@@ -199,7 +199,7 @@ export class FtpUssApi extends AbstractFtpApi implements MainframeInteraction.IU
                 } else if (type === "File" || type === "file") {
                     const content = Buffer.from(CoreUtils.addCarriageReturns(""));
                     const transferOptions = {
-                        transferType: TRANSFER_TYPE_ASCII,
+                        transferType: TransferMode.ASCII,
                         content: content,
                     };
                     await UssUtils.uploadFile(connection, ussPath, transferOptions);
