@@ -291,7 +291,7 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
 
     public getSessionNode(): IZoweJobTreeNode {
         ZoweLogger.trace("ZoweJobNode.getSessionNode called.");
-        return this.getParent() ? this.getParent().getSessionNode() : this;
+        return this.session ? this : this.getParent()?.getSessionNode() ?? this;
     }
 
     public set owner(newOwner: string) {
@@ -418,7 +418,7 @@ export class ZoweSpoolNode extends ZoweJobNode {
         const icon = getIconByNode(this);
 
         // parent of parent should be the session; tie resourceUri with TreeItem for file decorator
-        if (opts.parentNode && opts.parentNode.getParent()) {
+        if (opts.spool && opts.parentNode && opts.parentNode.getParent()) {
             this.resourceUri = encodeJobFile(opts.parentNode.getParent().label as string, opts.spool);
         }
         if (icon) {

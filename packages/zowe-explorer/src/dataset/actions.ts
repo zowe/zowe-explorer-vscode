@@ -427,6 +427,7 @@ export async function createMember(parent: api.IZoweDatasetTreeNode, datasetProv
             parentNode: parent,
             profile: parent.getProfile(),
         });
+        newNode.command = { command: "zowe.ds.ZoweNode.openPS", title: "", arguments: [newNode] };
         await newNode.openDs(false, true, datasetProvider);
 
         parent.children.push(newNode);
@@ -1549,9 +1550,11 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
     }
 
     // TODO Handle case where same data set is open as both favorite and non-favorite to prevent desync between equivalent nodes
-    const sesNode =
-        datasetProvider.mFavorites.find((child) => child.label.toString().trim() === sesName) ??
-        datasetProvider.mSessionNodes.find((child) => child.label.toString().trim() === sesName);
+    const isFavorite =
+        datasetProvider.openFiles?.[doc.uri.fsPath] != null && contextually.isFavoriteDescendant(datasetProvider.openFiles[doc.uri.fsPath]);
+    const sesNode = (isFavorite ? datasetProvider.mFavorites : datasetProvider.mSessionNodes).find(
+        (child) => child.label.toString().trim() === sesName
+    );
     if (!sesNode) {
         // if saving from favorites, a session might not exist for this node
         ZoweLogger.debug(localize("saveFile.missingSessionNode", "Could not find session node"));
