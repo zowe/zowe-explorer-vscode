@@ -16,6 +16,7 @@ import { FtpMvsApi } from "./ZoweExplorerFtpMvsApi";
 import { FtpJesApi } from "./ZoweExplorerFtpJesApi";
 import { CoreUtils } from "@zowe/zos-ftp-for-zowe-cli";
 import * as globals from "./globals";
+import { AbstractFtpApi } from "./ZoweExplorerAbstractFtpApi";
 
 export function activate(_context: vscode.ExtensionContext): void {
     void registerFtpApis();
@@ -38,9 +39,10 @@ async function registerFtpApis(): Promise<boolean> {
         zoweExplorerApi.registerMvsApi(new FtpMvsApi());
         zoweExplorerApi.registerJesApi(new FtpJesApi());
 
-        const meta = await CoreUtils.getProfileMeta();
-        await zoweExplorerApi.getExplorerExtenderApi().initForZowe("zftp", meta);
-        await zoweExplorerApi.getExplorerExtenderApi().reloadProfiles("zftp");
+        const schema = await CoreUtils.getProfileSchema();
+        const pType = AbstractFtpApi.getProfileTypeName();
+        await zoweExplorerApi.getExplorerExtenderApi().initForZowe(pType, schema);
+        await zoweExplorerApi.getExplorerExtenderApi().reloadProfiles(pType);
 
         await Gui.showMessage("Zowe Explorer was modified for FTP support.", { logger: globals.LOGGER });
 
