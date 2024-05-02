@@ -9,6 +9,7 @@
  *
  */
 
+import * as vscode from "vscode";
 import * as globals from "../../src/globals";
 import { ZoweLogger } from "../../src/utils/LoggerUtils";
 import * as SettingsConfig from "../../src/utils/SettingsConfig";
@@ -42,5 +43,12 @@ describe("Globals Unit Tests", () => {
         await expect(globals.setGlobalSecurityValue()).resolves.not.toThrow();
         expect(globals.PROFILE_SECURITY).toBe(globals.ZOWE_CLI_SCM);
         expect(loggerInfoSpy).toBeCalledTimes(1);
+    });
+
+    it("should set temp folder location to match VS Code URI path", () => {
+        const { URI } = jest.requireActual("vscode-uri");
+        jest.spyOn(vscode.Uri, "file").mockImplementationOnce(URI.file);
+        globals.defineGlobals(__dirname);
+        expect(globals.ZOWETEMPFOLDER).toBe(URI.file(globals.ZOWETEMPFOLDER).fsPath);
     });
 });

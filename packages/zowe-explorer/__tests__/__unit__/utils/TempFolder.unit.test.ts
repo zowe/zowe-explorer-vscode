@@ -74,7 +74,9 @@ describe("TempFolder Unit Tests", () => {
         jest.spyOn(fs, "mkdirSync").mockImplementation();
         jest.spyOn(fs, "existsSync").mockReturnValue(true);
         const moveSyncSpy = jest.spyOn(fsExtra, "moveSync");
-        await expect(TempFolder.moveTempFolder("testpath12", "testpath123")).resolves.toEqual(undefined);
+        await expect(
+            TempFolder.moveTempFolder(process.platform === "win32" ? blockMocks.winPath : blockMocks.unixPath, "testpath123")
+        ).resolves.toEqual(undefined);
         expect(moveSyncSpy).toBeCalledTimes(1);
         const expectedPath1 = process.platform === "win32" ? blockMocks.winPath : blockMocks.unixPath.split(path.sep).join(path.posix.sep);
         const expectedPath2 = process.platform === "win32" ? blockMocks.winPath2 : blockMocks.unixPath2.split(path.sep).join(path.posix.sep);
