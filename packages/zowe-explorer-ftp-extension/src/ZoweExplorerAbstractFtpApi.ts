@@ -51,7 +51,7 @@ export abstract class AbstractFtpApi implements MainframeInteraction.ICommon {
     }
 
     protected hashBuffer(buffer: Buffer): string {
-        const hash = crypto.createHash("sha1");
+        const hash = crypto.createHash("sha256");
         hash.update(buffer);
         return hash.digest("hex");
     }

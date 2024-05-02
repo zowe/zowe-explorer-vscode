@@ -76,7 +76,7 @@ describe("FtpUssApi", () => {
         };
         const result = await UssApi.getContents(mockParams.ussFilePath, mockParams.options);
 
-        expect(result.apiResponse.etag).toHaveLength(40);
+        expect(result.apiResponse.etag).toHaveLength(64);
         expect(UssUtils.downloadFile).toHaveBeenCalledTimes(1);
         expect(UssApi.releaseConnection).toHaveBeenCalled();
 

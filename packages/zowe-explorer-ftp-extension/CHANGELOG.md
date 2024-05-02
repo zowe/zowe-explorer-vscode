@@ -6,6 +6,7 @@ All notable changes to the "zowe-explorer-ftp-extension" extension will be docum
 
 ### Bug fixes
 
+- Changed the hashing algorithm for e-tag generation from `sha1` to `sha256` to avoid collisions. [#2890](https://github.com/zowe/zowe-explorer-vscode/pull/2890)
 - Updated the FTP plugin dependency to `3.0.0-next.202403191358` for technical currency [#2783](https://github.com/zowe/vscode-extension-for-zowe/pull/2783).
 
 ## `3.0.0-next.202404242037`
