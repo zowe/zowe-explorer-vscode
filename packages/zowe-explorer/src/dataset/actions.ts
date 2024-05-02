@@ -79,7 +79,7 @@ export async function allocateLike(datasetProvider: Types.IZoweDatasetTreeType, 
             return;
         } else {
             ZoweLogger.trace(`${selection?.toString()} was profile chosen to allocate a data set.`);
-            currSession = datasetProvider.mSessionNodes.find((thisSession) => thisSession.label === selection.label);
+            currSession = datasetProvider.mSessionNodes.find((thisSession) => thisSession.label === selection.label) as IZoweDatasetTreeNode;
             profile = currSession.getProfile();
         }
         quickpick.dispose();
@@ -140,7 +140,9 @@ export async function allocateLike(datasetProvider: Types.IZoweDatasetTreeType, 
 
     // Refresh tree and open new node, if applicable
     if (!currSession) {
-        currSession = datasetProvider.mSessionNodes.find((thisSession) => thisSession.label.toString().trim() === profile.name);
+        currSession = datasetProvider.mSessionNodes.find(
+            (thisSession) => thisSession.label.toString().trim() === profile.name
+        ) as IZoweDatasetTreeNode;
     }
 
     const theFilter = datasetProvider.createFilterString(newDSName, currSession);
@@ -257,18 +259,18 @@ export async function deleteDatasetPrompt(datasetProvider: Types.IZoweDatasetTre
         if (contextually.isDsMember(item)) {
             for (const parent of selectedNodes) {
                 if (parent.getLabel() === item.getParent().getLabel()) {
-                    childArray.push(item);
+                    childArray.push(item as IZoweDatasetTreeNode);
                 }
             }
         }
     }
-    selectedNodes = selectedNodes.filter((val) => !childArray.includes(val));
+    selectedNodes = selectedNodes.filter((val) => !childArray.includes(val as IZoweDatasetTreeNode));
 
     if (includedSelection || !node) {
         // Filter out sessions and information messages
         nodes = selectedNodes.filter(
             (selectedNode) => selectedNode.getParent() && !contextually.isSession(selectedNode) && !contextually.isInformation(selectedNode)
-        );
+        ) as IZoweDatasetTreeNode[];
     } else {
         if (node.getParent() && !contextually.isSession(node) && !contextually.isInformation(node)) {
             nodes = [];
@@ -296,7 +298,7 @@ export async function deleteDatasetPrompt(datasetProvider: Types.IZoweDatasetTre
     const memberParents: IZoweDatasetTreeNode[] = [];
     for (const deletedNode of nodes) {
         if (contextually.isDsMember(deletedNode)) {
-            const parent = deletedNode.getParent();
+            const parent = deletedNode.getParent() as IZoweDatasetTreeNode;
             if (memberParents.filter((alreadyAddedParent) => alreadyAddedParent.label.toString() === parent.label.toString()).length === 0) {
                 memberParents.push(parent);
             }
@@ -1333,7 +1335,7 @@ export async function enterPattern(node: IZoweDatasetTreeNode, datasetProvider: 
         pattern = node.label.toString().substring(node.label.toString().indexOf(":") + 2);
         const sessionName = node.label.toString().substring(node.label.toString().indexOf("[") + 1, node.label.toString().indexOf("]"));
         await datasetProvider.addSession(sessionName.trim());
-        node = datasetProvider.mSessionNodes.find((tempNode) => tempNode.label.toString().trim() === sessionName.trim());
+        node = datasetProvider.mSessionNodes.find((tempNode) => tempNode.label.toString().trim() === sessionName.trim()) as IZoweDatasetTreeNode;
     }
 
     // update the treeview with the new pattern
@@ -1394,10 +1396,10 @@ export async function copyDataSets(node, nodeList: ZoweDatasetNode[], datasetPro
     }
     if (contextually.isDs(selectedNodes[0])) {
         await copySequentialDatasets(selectedNodes);
-        return refreshDataset(selectedNodes[0].getParent(), datasetProvider);
+        return refreshDataset(selectedNodes[0].getParent() as IZoweDatasetTreeNode, datasetProvider);
     } else if (contextually.isPds(selectedNodes[0])) {
         await copyPartitionedDatasets(selectedNodes);
-        return refreshDataset(selectedNodes[0].getParent(), datasetProvider);
+        return refreshDataset(selectedNodes[0].getParent() as IZoweDatasetTreeNode, datasetProvider);
     }
 }
 

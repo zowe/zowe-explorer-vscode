@@ -157,16 +157,60 @@ export function updateOpenFiles<T extends IZoweTreeNode>(treeProvider: IZoweTree
     }
 }
 
-export function getCachedEncoding(node: IZoweTreeNode): string | undefined {
+export async function getCachedEncoding(node: IZoweTreeNode): Promise<string | undefined> {
     let cachedEncoding: ZosEncoding;
     if (isZoweUSSTreeNode(node)) {
-        cachedEncoding = (node.getSessionNode() as IZoweUSSTreeNode).encodingMap[node.fullPath];
+        cachedEncoding = await node.getEncodingInMap(node.fullPath);
     } else {
         const isMemberNode = node.contextValue.startsWith(globals.DS_MEMBER_CONTEXT);
         const dsKey = isMemberNode ? `${node.getParent().label as string}(${node.label as string})` : (node.label as string);
-        cachedEncoding = (node.getSessionNode() as IZoweDatasetTreeNode).encodingMap[dsKey];
+        cachedEncoding = await (node as IZoweDatasetTreeNode).getEncodingInMap(dsKey);
     }
     return cachedEncoding?.kind === "other" ? cachedEncoding.codepage : cachedEncoding?.kind;
+}
+
+export type FavoriteData = {
+    profileName: string;
+    label: string;
+    contextValue?: string;
+};
+
+export function parseFavorites(lines: string[]): FavoriteData[] {
+    const invalidFavoriteWarning = (line: string): void =>
+        ZoweLogger.warn(
+            vscode.l10n.t({ message: "Failed to parse a saved favorite. Attempted to parse: {0}", args: [line], comment: ["Plaintext line"] })
+        );
+
+    return lines
+        .map((line) => {
+            // [profile]: label{context}
+            const closingSquareBracket = line.indexOf("]");
+
+            // Filter out lines with a missing opening/closing square bracket as they are invalid
+            if (!line.startsWith("[") || closingSquareBracket === -1) {
+                invalidFavoriteWarning(line);
+                return null;
+            }
+
+            const profileName = line.substring(1, closingSquareBracket);
+
+            // label{context}
+            const remainderOfLine = line.substring(closingSquareBracket + 2).trim();
+
+            // Filter out lines that do not contain a label and context value
+            if (remainderOfLine.length === 0) {
+                invalidFavoriteWarning(line);
+                return null;
+            }
+
+            const openingCurlyBrace = remainderOfLine.indexOf("{");
+            return {
+                profileName,
+                label: remainderOfLine.substring(0, openingCurlyBrace).trim(),
+                contextValue: openingCurlyBrace > 0 ? remainderOfLine.substring(openingCurlyBrace + 1, remainderOfLine.indexOf("}")) : undefined,
+            };
+        })
+        .filter(Boolean);
 }
 
 export async function promptForEncoding(node: IZoweDatasetTreeNode | IZoweUSSTreeNode, taggedEncoding?: string): Promise<ZosEncoding | undefined> {
@@ -201,11 +245,11 @@ export async function promptForEncoding(node: IZoweDatasetTreeNode | IZoweUSSTre
         });
     }
 
-    let zosEncoding = node.getEncoding();
+    let zosEncoding = await node.getEncoding();
     if (zosEncoding === undefined && isZoweUSSTreeNode(node)) {
         zosEncoding = await UssFSProvider.instance.fetchEncodingForUri(node.resourceUri);
     }
-    let currentEncoding = zosEncoding ? zosEncodingToString(zosEncoding) : getCachedEncoding(node);
+    let currentEncoding = zosEncoding ? zosEncodingToString(zosEncoding) : await getCachedEncoding(node);
     if (zosEncoding?.kind === "binary") {
         currentEncoding = binaryItem.label;
     } else if (zosEncoding === null || zosEncoding?.kind === "text" || currentEncoding === null || currentEncoding === "text") {

@@ -151,6 +151,9 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
     public createDirectory(uri: vscode.Uri, options?: { isFilter?: boolean; job?: IJob }): void {
         const basename = path.posix.basename(uri.path);
         const parent = this._lookupParentDirectory(uri, false);
+        if (parent.entries.has(basename)) {
+            return;
+        }
 
         const EntryType = options?.isFilter ? FilterEntry : JobEntry;
         const entry = new EntryType(basename);

@@ -438,7 +438,7 @@ describe("Extension Integration Tests", async () => {
 
                         const inputBoxStub = sandbox.stub(vscode.window, "showInputBox");
                         inputBoxStub.returns(toMemberName);
-                        await dsActions.copyDataSet(fromNode);
+                        await dsActions.copyDataSets(fromNode, [], testTree);
                         await dsActions.pasteMember(parentNode, testTree);
 
                         contents = await zosfiles.Get.dataSet(sessionNode.getSession(), `${dataSetName}(${toMemberName})`);

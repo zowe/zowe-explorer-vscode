@@ -93,6 +93,7 @@ describe("ZoweVsCodeExtension", () => {
     describe("deprecated methods", () => {
         it("showVsCodeMessage should pass on params to Gui module", () => {
             const showMessageSpy = jest.spyOn(Gui, "showMessage").mockImplementation();
+            /* eslint-disable-next-line deprecation/deprecation */
             ZoweVsCodeExtension.showVsCodeMessage("test", MessageSeverity.INFO, undefined as any);
             expect(showMessageSpy).toHaveBeenCalledWith("test", {
                 severity: MessageSeverity.INFO,
@@ -106,6 +107,7 @@ describe("ZoweVsCodeExtension", () => {
                 title: "fakeTitle",
                 value: "fakeValue",
             };
+            /* eslint-disable-next-line deprecation/deprecation */
             await ZoweVsCodeExtension.inputBox(inputBoxOptions);
             expect(showInputBoxSpy).toHaveBeenCalledWith(inputBoxOptions);
         });
@@ -126,6 +128,7 @@ describe("ZoweVsCodeExtension", () => {
                     }),
                 });
                 const showInputBoxSpy = jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("fakeUser").mockResolvedValueOnce("fakePassword");
+                /* eslint-disable-next-line deprecation/deprecation */
                 const profileLoaded: imperative.IProfileLoaded = await ZoweVsCodeExtension.promptCredentials(promptCredsOptions);
                 expect(profileLoaded.profile?.user).toBe("fakeUser");
                 expect(profileLoaded.profile?.password).toBe("fakePassword");
@@ -139,6 +142,7 @@ describe("ZoweVsCodeExtension", () => {
                     getProfileInfo: jest.fn(),
                 });
                 const showInputBoxSpy = jest.spyOn(Gui, "showInputBox");
+                /* eslint-disable-next-line deprecation/deprecation */
                 const profileLoaded: any = await ZoweVsCodeExtension.promptCredentials(promptCredsOptions);
                 expect(profileLoaded).toBeUndefined();
                 expect(showInputBoxSpy).not.toHaveBeenCalled();
@@ -155,6 +159,7 @@ describe("ZoweVsCodeExtension", () => {
                     }),
                 });
                 const showInputBoxSpy = jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce(undefined);
+                /* eslint-disable-next-line deprecation/deprecation */
                 const profileLoaded: any = await ZoweVsCodeExtension.promptCredentials(promptCredsOptions);
                 expect(profileLoaded).toBeUndefined();
                 expect(showInputBoxSpy).toHaveBeenCalledTimes(1);
@@ -172,6 +177,7 @@ describe("ZoweVsCodeExtension", () => {
                     }),
                 });
                 const showInputBoxSpy = jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("fakeUser").mockResolvedValueOnce(undefined);
+                /* eslint-disable-next-line deprecation/deprecation */
                 const profileLoaded: any = await ZoweVsCodeExtension.promptCredentials(promptCredsOptions);
                 expect(profileLoaded).toBeUndefined();
                 expect(showInputBoxSpy).toHaveBeenCalledTimes(2);
