@@ -391,7 +391,7 @@ export class FtpMvsApi extends AbstractFtpApi implements ZoweExplorerApi.IMvs {
 
     private async hashFile(filename: string): Promise<string> {
         return await new Promise((resolve) => {
-            const hash = crypto.createHash("sha1");
+            const hash = crypto.createHash("sha256");
             const input = fs.createReadStream(filename);
             input.on("readable", () => {
                 const data = input.read();

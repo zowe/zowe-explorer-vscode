@@ -18,7 +18,7 @@ jobs:
       matrix:
         node-version: [14.x, 16.x, 18.x]
         # order operating systems from best to worst
-        os: [windows-latest, ubuntu-latest, macos-latest]
+        os: [windows-latest, ubuntu-latest, macos-13]
 
     steps:
       - name: Check out code

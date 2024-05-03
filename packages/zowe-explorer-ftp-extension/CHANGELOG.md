@@ -4,6 +4,8 @@
 
 ### Bug fixes
 
+- Changed the hashing algorithm for e-tag generation from `sha1` to `sha256` to avoid collisions. [#2890](https://github.com/zowe/zowe-explorer-vscode/pull/2890)
+
 ## `1.22.7`
 
 ### Bug fixes

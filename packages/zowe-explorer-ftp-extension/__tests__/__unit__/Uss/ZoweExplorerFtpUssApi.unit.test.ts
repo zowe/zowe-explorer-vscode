@@ -66,11 +66,13 @@ describe("FtpUssApi", () => {
         };
         const result = await UssApi.getContents(mockParams.ussFilePath, mockParams.options);
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-        expect(result.apiResponse.etag).toHaveLength(40);
+        expect(result.apiResponse.etag).toHaveLength(64);
         expect(UssUtils.downloadFile).toBeCalledTimes(1);
         expect(UssApi.releaseConnection).toBeCalled();
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,@typescript-eslint/no-unsafe-call
-        expect(response._readableState.buffer.head.data.toString()).toContain("Hello world");
+        expect((response._readableState.buffer.head?.data ?? response._readableState.buffer).toString()).toContain(
+            "Hello world"
+        );
     });
 
     it("should upload uss files.", async () => {
