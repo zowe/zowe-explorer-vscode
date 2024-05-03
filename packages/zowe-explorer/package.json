@@ -41,6 +41,13 @@
           "title": "%viewsContainers.activitybar%",
           "icon": "resources/zowe.svg"
         }
+      ],
+      "panel": [
+        {
+          "icon": "",
+          "id": "zosconsole",
+          "title": "z/OS Console"
+        }
       ]
     },
     "views": {
@@ -56,6 +63,13 @@
         {
           "id": "zowe.jobs.explorer",
           "name": "%zowe.jobs.explorer%"
+        }
+      ],
+      "zosconsole": [
+        {
+          "id": "zosconsole",
+          "name": "z/OS Console",
+          "type": "webview"
         }
       ]
     },
@@ -2081,6 +2095,7 @@
     "sinon": "^6.1.0"
   },
   "dependencies": {
+    "@vscode/codicons": "^0.0.35",
     "@zowe/secrets-for-zowe-sdk": "7.18.6",
     "@zowe/zowe-explorer-api": "2.16.0-SNAPSHOT",
     "dayjs": "^1.11.10",
