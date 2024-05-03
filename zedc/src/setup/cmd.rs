@@ -50,10 +50,16 @@ pub async fn handle_cmd(reference: Option<String>) -> anyhow::Result<()> {
         None => (),
     }
 
-    if Path::new("./node_modules/.pnpm").exists() {
+    let pnpm_cache_exists = ze_dir.join("node_modules").join(".pnpm").exists();
+    if (ze_dir.join("yarn.lock").exists() && pnpm_cache_exists) ||
+       (ze_dir.join("pnpm-lock.yaml").exists() && !pnpm_cache_exists) {
         println!("🧹 Cleaning node_modules...");
-        tokio::fs::remove_dir_all("./node_modules").await?;
-        let _ = tokio::fs::remove_dir_all("./packages/*/node_modules").await;
+        match tokio::fs::remove_dir_all("./node_modules").await {
+            _ => {}
+        };
+        match tokio::fs::remove_dir_all("./packages/*/node_modules").await {
+            _ => {}
+        };
     }
 
     let setup_pkg_mgr = setup_pkg_mgr(ze_dir).await?;
