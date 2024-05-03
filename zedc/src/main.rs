@@ -6,6 +6,7 @@ mod code;
 mod pm;
 mod setup;
 mod test;
+mod util;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {

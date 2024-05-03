@@ -6,13 +6,47 @@ use owo_colors::OwoColorize;
 
 pub async fn handle_cmd(reference: Option<String>) -> anyhow::Result<()> {
     println!("{}\n", "zedc setup".bold());
+    let ze_dir = crate::util::find_dir_match(&["package.json"])?;
+    if ze_dir.is_none() {
+        bail!("Could not find a repo folder containing package.json.");
+    }
+    let ze_dir = ze_dir.unwrap();
     match reference {
-        Some(r) => match Command::new("git").arg("checkout").arg(&r).output() {
-            Ok(o) => println!("🔀 Switched to Git ref '{}'", r),
-            Err(_) => {
-                println!("⚠️ {}", format!("Could not checkout Git ref '{}', using current working tree", r).italic());
+        Some(r) => {
+            // Check if any changes are present before switching branches
+            match Command::new("git")
+                .arg("diff")
+                .arg("--quiet")
+                .current_dir(&ze_dir)
+                .status()
+            {
+                Ok(s) => {
+                    if s.code().unwrap() == 1 {
+                        println!("{}", "There are changes in your working tree. Please commit or discard them before continuing.".red());
+                        return Ok(());
+                    }
+                }
+                Err(_) => todo!(),
             }
-        },
+            match Command::new("git")
+                .arg("checkout")
+                .arg(&r)
+                .current_dir(&ze_dir)
+                .output()
+            {
+                Ok(o) => println!("🔀 Switched to Git ref '{}'", r),
+                Err(_) => {
+                    println!(
+                        "⚠️ {}",
+                        format!(
+                            "Could not checkout Git ref '{}', using current working tree",
+                            r
+                        )
+                        .italic()
+                    );
+                }
+            }
+        }
         None => (),
     }
 
@@ -22,7 +56,7 @@ pub async fn handle_cmd(reference: Option<String>) -> anyhow::Result<()> {
         let _ = tokio::fs::remove_dir_all("./packages/*/node_modules").await;
     }
 
-    let setup_pkg_mgr = setup_pkg_mgr().await?;
+    let setup_pkg_mgr = setup_pkg_mgr(ze_dir).await?;
     let pkg_mgr_name = setup_pkg_mgr.as_str();
     let mut pm = crate::pm::pkg_mgr(pkg_mgr_name);
     if pkg_mgr_name != "yarn" {

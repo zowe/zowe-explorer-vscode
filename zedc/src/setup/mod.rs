@@ -2,7 +2,10 @@ mod cmd;
 
 use anyhow::bail;
 use owo_colors::OwoColorize;
-use std::process::{Command, Stdio};
+use std::{
+    path::PathBuf,
+    process::{Command, Stdio},
+};
 use tokio::io::{stdin, stdout, AsyncReadExt, AsyncWriteExt};
 use tokio_util::codec::{FramedRead, LinesCodec};
 
@@ -55,8 +58,8 @@ pub async fn setup_node_with_pkg_mgr(pkg_mgr: &String) -> anyhow::Result<()> {
     Ok(())
 }
 
-pub async fn setup_pkg_mgr() -> anyhow::Result<String> {
-    let pkg_mgr = crate::pm::detect_pkg_mgr()?;
+pub async fn setup_pkg_mgr(ze_dir: PathBuf) -> anyhow::Result<String> {
+    let pkg_mgr = crate::pm::detect_pkg_mgr(ze_dir)?;
 
     // check if the package manager actually exists
     match crate::pm::pkg_mgr(&pkg_mgr)
