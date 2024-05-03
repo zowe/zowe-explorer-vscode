@@ -25,7 +25,7 @@ fn build_url(version: String) -> anyhow::Result<String> {
 }
 
 pub async fn download_vscode(version: Option<String>) -> anyhow::Result<String> {
-    println!("⬇️  Downloading VS Code...");
+    println!("💿 Downloading VS Code...");
     let ver = match version {
         Some(v) => v,
         None => "latest".to_owned(),

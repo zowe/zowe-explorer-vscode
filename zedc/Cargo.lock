@@ -1942,6 +1942,7 @@ dependencies = [
  "owo-colors",
  "reqwest",
  "tokio",
+ "tokio-util",
 ]
 
 [[package]]

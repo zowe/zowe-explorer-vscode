@@ -7,7 +7,7 @@ pub fn npm() -> Command {
 }
 
 pub fn detect_pkg_mgr() -> anyhow::Result<String> {
-    let cur_dir = Path::new("../");
+    let cur_dir = Path::new("./");
     if cur_dir.join("pnpm-lock.yaml").exists() {
         return Ok("pnpm".to_owned());
     }
