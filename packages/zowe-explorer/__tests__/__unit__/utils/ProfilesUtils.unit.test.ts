@@ -845,7 +845,7 @@ describe("ProfilesUtils unit tests", () => {
                 })
             ).resolves.toEqual({} as imperative.ProfileInfo);
             expect(zoweLoggerTraceSpy).toHaveBeenCalledTimes(2);
-            expect(zoweLoggerInfoSpy).toHaveBeenCalledTimes(1);
+            expect(zoweLoggerInfoSpy).toHaveBeenCalledTimes(2);
         });
     });
 
