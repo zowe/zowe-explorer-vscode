@@ -40,22 +40,22 @@ pub fn install_from_paths(_vsc_dir: String, files: Vec<String>) -> anyhow::Resul
 }
 
 pub fn resolve_paths(files: Vec<String>) -> Vec<String> {
-    println!("\n{} {}", "🔍", "Resolving files...".underline());
+    println!("\n{} {}", "🔍", "Resolving files...");
     files
         .iter()
         .filter_map(|f| match std::fs::canonicalize(f) {
             Ok(p) => match p.extension().unwrap_or(OsStr::new("")).to_str().unwrap() {
                 "gz" | "tgz" | "vsix" => {
-                    println!("\t✔️  {}", f.bold());
+                    println!("  ✔️  {}", f.bold());
                     Some(p.to_str().unwrap().to_owned())
                 }
                 _ => {
-                    println!("\t❌ {}", format!("{}: invalid extension", f).italic());
+                    println!("  ❌ {}", format!("{}: invalid extension", f).italic());
                     None
                 }
             },
             Err(e) => {
-                println!("\t❌ {}", format!("{}: {}", f, e).italic());
+                println!("  ❌ {}", format!("{}: {}", f, e).italic());
                 None
             }
         })
