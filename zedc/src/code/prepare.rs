@@ -1,9 +1,10 @@
-use std::{fmt::Write, path::Path};
+use std::path::{Path, PathBuf};
 
 use anyhow::bail;
 use indicatif::{ProgressBar, ProgressStyle};
+use owo_colors::OwoColorize;
 use reqwest::{header, Client};
-use tokio::{fs::File, io::AsyncWriteExt};
+use tokio::io::AsyncWriteExt;
 
 fn build_url(version: &String) -> anyhow::Result<String> {
     Ok(format!(
@@ -24,6 +25,13 @@ fn build_url(version: &String) -> anyhow::Result<String> {
     ))
 }
 
+fn code_cli_binary(dir: &PathBuf) -> PathBuf {
+    match std::env::consts::OS {
+        "windows" => dir.join("bin").join("code.cmd"),
+        _ => dir.join("bin").join("code"),
+    }
+}
+
 pub async fn download_vscode(version: Option<String>) -> anyhow::Result<String> {
     println!("💿 Downloading VS Code...");
     let ver = match version {
@@ -35,6 +43,20 @@ pub async fn download_vscode(version: Option<String>) -> anyhow::Result<String> 
         .parent()
         .unwrap()
         .join("zedc_data");
+
+    let vsc_path = zedc_path.join(format!("vscode-{}", ver));
+    match tokio::fs::try_exists(&vsc_path).await {
+        Ok(v) => {
+            if v && ver != "latest" {
+                println!(
+                    "  ⏭️  {}",
+                    format!("Found VS Code {} in cache, skipping download...", ver).italic()
+                );
+                return Ok(code_cli_binary(&vsc_path).to_str().unwrap().to_owned());
+            }
+        }
+        Err(_) => {}
+    };
 
     match tokio::fs::create_dir(&zedc_path).await {
         Ok(_) => {}
@@ -81,13 +103,18 @@ pub async fn download_vscode(version: Option<String>) -> anyhow::Result<String> 
         progress_bar.inc(chunk.len() as u64);
         outfile.write(&chunk).await?;
     }
-    let vsc_path = zedc_path.join(format!("vscode-{}", ver));
 
     progress_bar.finish();
     if path.extension().unwrap_or_default() == "zip" {
         println!("📤 Unpacking VS Code archive...");
         zip_extensions::zip_extract(&path, &vsc_path)?;
+        tokio::fs::create_dir(vsc_path.join(if std::env::consts::OS == "macos" {
+            "code-portable-data"
+        } else {
+            "data"
+        }))
+        .await?;
     }
 
-    Ok(path.to_str().unwrap().to_owned())
+    Ok(code_cli_binary(&vsc_path).to_str().unwrap().to_owned())
 }

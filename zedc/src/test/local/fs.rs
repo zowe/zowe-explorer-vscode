@@ -1,6 +1,12 @@
 use anyhow::bail;
 use owo_colors::OwoColorize;
-use std::{ffi::OsStr, path::Path};
+use std::{
+    ffi::OsStr,
+    path::Path,
+    process::{Command, Stdio},
+};
+
+use crate::code::code_binary;
 
 pub fn install_cli(version: String) -> anyhow::Result<()> {
     let nm_path = Path::new("./node_modules");
@@ -27,7 +33,7 @@ pub fn install_cli(version: String) -> anyhow::Result<()> {
     Ok(())
 }
 
-pub fn install_from_paths(_vsc_dir: String, files: Vec<String>) -> anyhow::Result<()> {
+pub async fn install_from_paths(vsc_bin: String, files: Vec<String>) -> anyhow::Result<()> {
     if files.is_empty() {
         println!(
             "\n{}\n{}",
@@ -36,7 +42,40 @@ pub fn install_from_paths(_vsc_dir: String, files: Vec<String>) -> anyhow::Resul
         );
         bail!("At least one .vsix, .tar.gz, or .tgz file is required for this command.");
     }
-    Ok(())
+
+    let vsc_bin_path = Path::new(&vsc_bin);
+
+    println!("\n⌛ Installing extensions...");
+    let mut cmd = Command::new(vsc_bin_path);
+    for file in files.iter() {
+        cmd.args(["--install-extension", file]);
+    }
+
+    match cmd.stdout(Stdio::null()).spawn() {
+        Ok(s) => {}
+        Err(e) => {
+            todo!()
+        }
+    }
+
+    let vsc_dir = vsc_bin_path.parent().unwrap().parent().unwrap();
+    let sandbox_dir = vsc_dir.parent().unwrap().join("sandbox");
+    let sandbox_str = sandbox_dir.to_str().unwrap();
+    let zowe_dir = sandbox_dir.join(".zowe");
+    tokio::fs::create_dir_all(&zowe_dir).await?;
+    let vsc = vsc_dir.join(code_binary());
+    match Command::new(&vsc)
+        .arg(sandbox_str)
+        .env("ZOWE_CLI_HOME", zowe_dir.to_str().unwrap())
+        .stdout(Stdio::null())
+        .spawn()
+    {
+        Ok(s) => {
+            println!("🚀 Launched VS Code");
+            return Ok(());
+        }
+        Err(_) => todo!(),
+    }
 }
 
 pub fn resolve_paths(files: Vec<String>) -> Vec<String> {
