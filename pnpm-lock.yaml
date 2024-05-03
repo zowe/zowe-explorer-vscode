@@ -135,6 +135,9 @@ importers:
 
   packages/zowe-explorer:
     dependencies:
+      '@vscode/codicons':
+        specifier: ^0.0.35
+        version: 0.0.35
       '@zowe/core-for-zowe-sdk':
         specifier: 8.0.0-next.202407232256
         version: 8.0.0-next.202407232256(@zowe/imperative@8.0.0-next.202407232256)
@@ -3082,6 +3085,10 @@ packages:
       pathe: 1.1.2
       pretty-format: 29.7.0
     dev: true
+
+  /@vscode/codicons@0.0.35:
+    resolution: {integrity: sha512-7iiKdA5wHVYSbO7/Mm0hiHD3i4h+9hKUe1O4hISAe/nHhagMwb2ZbFC8jU6d7Cw+JNT2dWXN2j+WHbkhT5/l2w==}
+    dev: false
 
   /@vscode/codicons@0.0.36:
     resolution: {integrity: sha512-wsNOvNMMJ2BY8rC2N2MNBG7yOowV3ov8KlvUE/AiVUlHKTfWsw3OgAOQduX7h0Un6GssKD3aoTVH+TF3DSQwKQ==}
