@@ -1,10 +1,11 @@
-use std::process::Command;
+use std::{path::Path, process::Command};
 
 use super::setup_pkg_mgr;
 use anyhow::bail;
 use owo_colors::OwoColorize;
 
 pub async fn handle_cmd(reference: Option<String>) -> anyhow::Result<()> {
+    println!("{}\n", "zedc setup".bold());
     match reference {
         Some(r) => match Command::new("git").arg("checkout").arg(&r).output() {
             Ok(o) => println!("🔀 Switched to Git ref '{}'", r),
@@ -13,6 +14,12 @@ pub async fn handle_cmd(reference: Option<String>) -> anyhow::Result<()> {
             }
         },
         None => (),
+    }
+
+    if Path::new("./node_modules/.pnpm").exists() {
+        println!("🧹 Cleaning node_modules...");
+        tokio::fs::remove_dir_all("./node_modules").await?;
+        let _ = tokio::fs::remove_dir_all("./packages/*/node_modules").await;
     }
 
     let setup_pkg_mgr = setup_pkg_mgr().await?;

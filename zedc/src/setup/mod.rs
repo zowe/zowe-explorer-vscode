@@ -56,7 +56,6 @@ pub async fn setup_node_with_pkg_mgr(pkg_mgr: &String) -> anyhow::Result<()> {
 }
 
 pub async fn setup_pkg_mgr() -> anyhow::Result<String> {
-    println!("{}\n", "zedc setup".bold());
     let pkg_mgr = crate::pm::detect_pkg_mgr()?;
 
     // check if the package manager actually exists
