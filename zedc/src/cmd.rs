@@ -41,7 +41,7 @@ pub enum RootCommands {
             num_args = 0
         )]
         install_cli: Option<String>,
-        #[arg(help = "The VS Code version to use for testing", long)]
+        #[arg(default_value = None, help = "The VS Code version to use for testing", long, value_name = "VERSION", global = true)]
         vsc_version: Option<String>,
     },
     #[command(

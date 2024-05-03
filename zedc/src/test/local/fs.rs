@@ -65,6 +65,7 @@ pub async fn install_from_paths(vsc_bin: String, files: Vec<String>) -> anyhow::
     tokio::fs::create_dir_all(&zowe_dir).await?;
     let vsc = vsc_dir.join(code_binary());
     match Command::new(&vsc)
+        .arg("--disable-updates")
         .arg(sandbox_str)
         .env("ZOWE_CLI_HOME", zowe_dir.to_str().unwrap())
         .stdout(Stdio::null())
