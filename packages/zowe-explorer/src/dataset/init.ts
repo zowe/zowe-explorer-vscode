@@ -13,7 +13,7 @@ import * as globals from "../globals";
 import * as vscode from "vscode";
 import * as dsActions from "./actions";
 import * as refreshActions from "../shared/refresh";
-import { Gui, IZoweDatasetTreeNode, IZoweTreeNode } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweDatasetTreeNode, IZoweTreeNode, ZosEncoding } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../Profiles";
 import { DatasetTree, createDatasetTree } from "./DatasetTree";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
@@ -223,7 +223,7 @@ export async function initDatasetProvider(context: vscode.ExtensionContext): Pro
     context.subscriptions.push(
         vscode.commands.registerCommand(
             "zowe.ds.openWithEncoding",
-            (node: IZoweDatasetTreeNode): Promise<void> => datasetProvider.openWithEncoding(node)
+            (node: IZoweDatasetTreeNode, encoding?: ZosEncoding): Promise<void> => datasetProvider.openWithEncoding(node, encoding)
         )
     );
     context.subscriptions.push(
