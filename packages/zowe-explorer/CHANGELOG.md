@@ -8,6 +8,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
+- Fixed issue where data sets or members containing binary content cannot be opened. [#2696](https://github.com/zowe/zowe-explorer-vscode/issues/2696)
+
 ## `2.15.4`
 
 ### New features and enhancements

@@ -44,6 +44,10 @@ async function createGlobalMocks() {
         mockGetInstance: jest.fn(),
         mockProfileInstance: null,
         mockProfilesCache: null,
+        mockExecuteCommand: jest.fn(),
+        openTextDocument: jest.fn(),
+        mockShowTextDocument: jest.fn(),
+        mockTextDocument: { fileName: `/test/path/temp/_U_/sestest/test/node`, isDirty: true },
     };
     newMocks.mockProfilesCache = new ProfilesCache(imperative.Logger.getAppLogger());
     newMocks.mockProfileInstance = createInstanceOfProfile(createIProfile());
@@ -54,6 +58,18 @@ async function createGlobalMocks() {
     });
     Object.defineProperty(Profiles, "getInstance", {
         value: () => newMocks.mockProfileInstance,
+        configurable: true,
+    });
+    Object.defineProperty(vscode.commands, "executeCommand", {
+        value: newMocks.mockExecuteCommand,
+        configurable: true,
+    });
+    Object.defineProperty(vscode.workspace, "openTextDocument", {
+        value: newMocks.openTextDocument,
+        configurable: true,
+    });
+    Object.defineProperty(Gui, "showTextDocument", {
+        value: newMocks.mockShowTextDocument,
         configurable: true,
     });
 
@@ -1016,5 +1032,203 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
         await sharedUtils.promptForEncoding(node);
         expect(blockMocks.showQuickPick).toHaveBeenCalled();
         expect(blockMocks.showQuickPick.mock.calls[0][1]).toEqual(expect.objectContaining({ placeHolder: "Current encoding is IBM-1047" }));
+    });
+});
+
+describe("Shared utils unit tests - function initializeFileOpening", () => {
+    it("successfully handles binary data sets that should be re-downloaded", async () => {
+        const globalMocks = await createGlobalMocks();
+
+        jest.spyOn(vscode.workspace, "openTextDocument").mockRejectedValue("Test error!");
+        jest.spyOn(Gui, "errorMessage").mockResolvedValue("Re-download");
+
+        // Creating a test node
+        const rootNode = new ZoweDatasetNode({
+            label: "root",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            session: globalMocks.session,
+            profile: globalMocks.profileOne,
+        });
+        rootNode.contextValue = globals.DS_SESSION_CONTEXT;
+        const testNode = new ZoweDatasetNode({
+            label: "TEST.DS",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: rootNode,
+            profile: globalMocks.profileOne,
+        });
+
+        await sharedUtils.initializeFileOpening(testNode, testNode.fullPath);
+        expect(globalMocks.mockExecuteCommand).toHaveBeenCalledWith("zowe.ds.openWithEncoding", testNode, { kind: "binary" });
+    });
+
+    it("successfully handles binary data sets that should be previewed", async () => {
+        const globalMocks = await createGlobalMocks();
+
+        // Creating a test node
+        const rootNode = new ZoweDatasetNode({
+            label: "root",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            session: globalMocks.session,
+            profile: globalMocks.profileOne,
+        });
+        rootNode.contextValue = globals.DS_SESSION_CONTEXT;
+        const testNode = new ZoweDatasetNode({
+            label: "TEST.DS",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: rootNode,
+            profile: globalMocks.profileOne,
+            encoding: { kind: "binary" },
+        });
+
+        await sharedUtils.initializeFileOpening(testNode, testNode.fullPath, true);
+        expect(globalMocks.mockExecuteCommand).toHaveBeenCalledWith("vscode.open", { path: "" });
+    });
+
+    it("successfully handles text data sets that should be previewed", async () => {
+        const globalMocks = await createGlobalMocks();
+
+        jest.spyOn(vscode.workspace, "openTextDocument").mockResolvedValue(globalMocks.mockTextDocument as vscode.TextDocument);
+
+        // Creating a test node
+        const rootNode = new ZoweDatasetNode({
+            label: "root",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            session: globalMocks.session,
+            profile: globalMocks.profileOne,
+        });
+        rootNode.contextValue = globals.DS_SESSION_CONTEXT;
+        const testNode = new ZoweDatasetNode({
+            label: "TEST.DS",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: rootNode,
+            profile: globalMocks.profileOne,
+        });
+
+        await sharedUtils.initializeFileOpening(testNode, testNode.fullPath, true);
+        expect(globalMocks.mockShowTextDocument).toBeCalledWith(globalMocks.mockTextDocument, { preview: true });
+    });
+
+    it("successfully handles text data sets that shouldn't be previewed", async () => {
+        const globalMocks = await createGlobalMocks();
+
+        jest.spyOn(vscode.workspace, "openTextDocument").mockResolvedValue(globalMocks.mockTextDocument as vscode.TextDocument);
+
+        // Creating a test node
+        const rootNode = new ZoweDatasetNode({
+            label: "root",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            session: globalMocks.session,
+            profile: globalMocks.profileOne,
+        });
+        rootNode.contextValue = globals.DS_SESSION_CONTEXT;
+        const testNode = new ZoweDatasetNode({
+            label: "TEST.DS",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: rootNode,
+            profile: globalMocks.profileOne,
+        });
+
+        await sharedUtils.initializeFileOpening(testNode, testNode.fullPath, false);
+        expect(globalMocks.mockShowTextDocument).toBeCalledWith(globalMocks.mockTextDocument, { preview: false });
+    });
+
+    it("successfully handles binary USS files that should be re-downloaded", async () => {
+        const globalMocks = await createGlobalMocks();
+
+        jest.spyOn(vscode.workspace, "openTextDocument").mockRejectedValue("Test error!");
+        jest.spyOn(Gui, "errorMessage").mockResolvedValue("Re-download");
+
+        // Creating a test node
+        const rootNode = new ZoweUSSNode({
+            label: "root",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            session: globalMocks.session,
+            profile: globalMocks.profileOne,
+        });
+        rootNode.contextValue = globals.USS_SESSION_CONTEXT;
+        const testNode = new ZoweUSSNode({
+            label: "testFile",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: rootNode,
+            profile: globalMocks.profileOne,
+        });
+        testNode.fullPath = "test/testFile";
+
+        await sharedUtils.initializeFileOpening(testNode, testNode.fullPath);
+        expect(globalMocks.mockExecuteCommand).toHaveBeenCalledWith("zowe.uss.openWithEncoding", testNode, { kind: "binary" });
+    });
+
+    it("successfully handles binary USS files that should be previewed", async () => {
+        const globalMocks = await createGlobalMocks();
+
+        // Creating a test node
+        const rootNode = new ZoweUSSNode({
+            label: "root",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            session: globalMocks.session,
+            profile: globalMocks.profileOne,
+        });
+        rootNode.contextValue = globals.USS_SESSION_CONTEXT;
+        const testNode = new ZoweUSSNode({
+            label: "testFile",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: rootNode,
+            profile: globalMocks.profileOne,
+            encoding: { kind: "binary" },
+        });
+        testNode.fullPath = "test/testFile";
+
+        await sharedUtils.initializeFileOpening(testNode, testNode.fullPath, true);
+        expect(globalMocks.mockExecuteCommand).toHaveBeenCalledWith("vscode.open", { path: testNode.fullPath });
+    });
+
+    it("successfully handles text USS files that should be previewed", async () => {
+        const globalMocks = await createGlobalMocks();
+
+        jest.spyOn(vscode.workspace, "openTextDocument").mockResolvedValue(globalMocks.mockTextDocument as vscode.TextDocument);
+
+        // Creating a test node
+        const rootNode = new ZoweUSSNode({
+            label: "root",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            session: globalMocks.session,
+            profile: globalMocks.profileOne,
+        });
+        rootNode.contextValue = globals.USS_SESSION_CONTEXT;
+        const testNode = new ZoweUSSNode({
+            label: "testFile",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: rootNode,
+            profile: globalMocks.profileOne,
+        });
+        testNode.fullPath = "test/testFile";
+
+        await sharedUtils.initializeFileOpening(testNode, testNode.fullPath, true);
+        expect(globalMocks.mockShowTextDocument).toBeCalledWith(globalMocks.mockTextDocument, { preview: true });
+    });
+
+    it("successfully handles text USS files that shouldn't be previewed", async () => {
+        const globalMocks = await createGlobalMocks();
+
+        jest.spyOn(vscode.workspace, "openTextDocument").mockResolvedValue(globalMocks.mockTextDocument as vscode.TextDocument);
+
+        // Creating a test node
+        const rootNode = new ZoweUSSNode({
+            label: "root",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            session: globalMocks.session,
+            profile: globalMocks.profileOne,
+        });
+        rootNode.contextValue = globals.USS_SESSION_CONTEXT;
+        const testNode = new ZoweUSSNode({
+            label: "testFile",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: rootNode,
+            profile: globalMocks.profileOne,
+        });
+        testNode.fullPath = "test/testFile";
+
+        await sharedUtils.initializeFileOpening(testNode, testNode.fullPath, false);
+        expect(globalMocks.mockShowTextDocument).toBeCalledWith(globalMocks.mockTextDocument, { preview: false });
     });
 });

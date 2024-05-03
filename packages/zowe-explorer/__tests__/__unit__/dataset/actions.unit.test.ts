@@ -71,6 +71,7 @@ function createGlobalMocks() {
         statusBarMsgSpy: null,
         mvsApi: null,
         mockShowWarningMessage: jest.fn(),
+        mockTextDocuments: [],
         concatChildNodes: jest.spyOn(sharedUtils, "concatChildNodes"),
     };
 
@@ -100,6 +101,7 @@ function createGlobalMocks() {
     Object.defineProperty(vscode.workspace, "openTextDocument", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.workspace, "getConfiguration", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showTextDocument", { value: jest.fn(), configurable: true });
+    Object.defineProperty(vscode.workspace, "textDocuments", { value: newMocks.mockTextDocuments, configurable: true });
     Object.defineProperty(vscode.window, "showQuickPick", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "createQuickPick", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.commands, "executeCommand", { value: jest.fn(), configurable: true });
@@ -267,15 +269,16 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
 
     it("Checking common PS dataset refresh", async () => {
         globals.defineGlobals("");
-        createGlobalMocks();
+        const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocksShared();
         const node = new ZoweDatasetNode({
             label: "HLQ.TEST.AFILE7",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             parentNode: blockMocks.datasetSessionNode,
         });
+        const documentFilePath = path.join(globals.DS_DIR, node.getSessionNode().label.toString(), node.label.toString());
 
-        mocked(vscode.workspace.openTextDocument).mockResolvedValueOnce({ isDirty: true } as any);
+        globalMocks.mockTextDocuments.push({ fileName: documentFilePath, isDirty: true } as any);
         mocked(zowe.Download.dataSet).mockResolvedValueOnce({
             success: true,
             commandResponse: null,
@@ -290,27 +293,26 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
             blockMocks.zosmfSession,
             node.label,
             expect.objectContaining({
-                file: path.join(globals.DS_DIR, node.getSessionNode().label.toString(), node.label.toString()),
+                file: documentFilePath,
                 returnEtag: true,
             })
         );
-        expect(mocked(vscode.workspace.openTextDocument)).toBeCalledWith(
-            path.join(globals.DS_DIR, node.getSessionNode().label.toString(), node.label.toString())
-        );
+        expect(mocked(vscode.workspace.openTextDocument)).toBeCalledWith(documentFilePath);
         expect(mocked(vscode.window.showTextDocument)).toBeCalledTimes(2);
         expect(mocked(vscode.commands.executeCommand)).toBeCalledWith("workbench.action.closeActiveEditor");
     });
     it("Checking duplicate PS dataset refresh attempt", async () => {
         globals.defineGlobals("");
-        createGlobalMocks();
+        const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocksShared();
         const node = new ZoweDatasetNode({
             label: "HLQ.TEST.AFILE7",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             parentNode: blockMocks.datasetSessionNode,
         });
+        const documentFilePath = path.join(globals.DS_DIR, node.getSessionNode().label.toString(), node.label.toString());
 
-        mocked(vscode.workspace.openTextDocument).mockResolvedValueOnce({ isDirty: false } as any);
+        globalMocks.mockTextDocuments.push({ fileName: documentFilePath, isDirty: false } as any);
         mocked(zowe.Download.dataSet).mockResolvedValueOnce({
             success: true,
             commandResponse: null,
@@ -332,8 +334,9 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             parentNode: blockMocks.datasetSessionNode,
         });
+        const documentFilePath = path.join(globals.DS_DIR, node.getSessionNode().label.toString(), node.label.toString());
 
-        mocked(vscode.workspace.openTextDocument).mockResolvedValueOnce({ isDirty: true } as any);
+        globalMocks.mockTextDocuments.push({ fileName: documentFilePath, isDirty: true } as any);
         mocked(zowe.Download.dataSet).mockRejectedValueOnce(Error("not found"));
 
         globalMocks.getContentsSpy.mockRejectedValueOnce(new Error("not found"));
@@ -345,7 +348,7 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
     });
     it("Checking failed attempt to refresh PDS Member", async () => {
         globals.defineGlobals("");
-        createGlobalMocks();
+        const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocksShared();
         const parent = new ZoweDatasetNode({
             label: "parent",
@@ -353,8 +356,9 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
             parentNode: blockMocks.datasetSessionNode,
         });
         const child = new ZoweDatasetNode({ label: "child", collapsibleState: vscode.TreeItemCollapsibleState.None, parentNode: parent });
+        const documentFilePath = path.join(globals.DS_DIR, child.getSessionNode().label.toString(), child.label.toString());
 
-        mocked(vscode.workspace.openTextDocument).mockResolvedValueOnce({ isDirty: true } as any);
+        globalMocks.mockTextDocuments.push({ fileName: documentFilePath, isDirty: true } as any);
         mocked(zowe.Download.dataSet).mockRejectedValueOnce(Error(""));
 
         await dsActions.refreshPS(child);
@@ -371,16 +375,17 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
     });
     it("Checking favorite empty PDS refresh", async () => {
         globals.defineGlobals("");
-        createGlobalMocks();
+        const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocksShared();
         const node = new ZoweDatasetNode({
             label: "HLQ.TEST.AFILE7",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             parentNode: blockMocks.datasetSessionNode,
         });
+        const documentFilePath = path.join(globals.DS_DIR, node.getSessionNode().label.toString(), node.label.toString());
         node.contextValue = globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX;
 
-        mocked(vscode.workspace.openTextDocument).mockResolvedValueOnce({ isDirty: true } as any);
+        globalMocks.mockTextDocuments.push({ fileName: documentFilePath, isDirty: true } as any);
         mocked(zowe.Download.dataSet).mockResolvedValueOnce({
             success: true,
             commandResponse: null,
@@ -396,7 +401,7 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
     });
     it("Checking favorite PDS Member refresh", async () => {
         globals.defineGlobals("");
-        createGlobalMocks();
+        const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocksShared();
         const parent = new ZoweDatasetNode({
             label: "parent",
@@ -404,9 +409,14 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
             parentNode: blockMocks.datasetSessionNode,
         });
         const child = new ZoweDatasetNode({ label: "child", collapsibleState: vscode.TreeItemCollapsibleState.None, parentNode: parent });
+        const documentFilePath = path.join(
+            globals.DS_DIR,
+            child.getSessionNode().label.toString(),
+            parent.label.toString() + "(" + child.label.toString() + ")"
+        );
         parent.contextValue = globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX;
 
-        mocked(vscode.workspace.openTextDocument).mockResolvedValueOnce({ isDirty: true } as any);
+        globalMocks.mockTextDocuments.push({ fileName: documentFilePath, isDirty: true } as any);
         mocked(zowe.Download.dataSet).mockResolvedValueOnce({
             success: true,
             commandResponse: null,
@@ -422,7 +432,7 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
     });
     it("Checking favorite PS refresh", async () => {
         globals.defineGlobals("");
-        createGlobalMocks();
+        const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocksShared();
         const parent = new ZoweDatasetNode({
             label: "parent",
@@ -430,9 +440,10 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
             parentNode: blockMocks.datasetSessionNode,
         });
         const child = new ZoweDatasetNode({ label: "child", collapsibleState: vscode.TreeItemCollapsibleState.None, parentNode: parent });
+        const documentFilePath = path.join(globals.DS_DIR, child.getSessionNode().label.toString(), child.label.toString());
         child.contextValue = globals.DS_FAV_CONTEXT;
 
-        mocked(vscode.workspace.openTextDocument).mockResolvedValueOnce({ isDirty: true } as any);
+        globalMocks.mockTextDocuments.push({ fileName: documentFilePath, isDirty: true } as any);
         mocked(zowe.Download.dataSet).mockResolvedValueOnce({
             success: true,
             commandResponse: null,
