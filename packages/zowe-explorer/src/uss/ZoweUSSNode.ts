@@ -328,7 +328,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         }
         if (this.getParent() && this.getParent().contextValue === globals.FAV_PROFILE_CONTEXT) {
             this.contextValue =
-                encoding.kind === "binary"
+                encoding?.kind === "binary"
                     ? globals.USS_BINARY_FILE_CONTEXT + globals.FAV_SUFFIX
                     : globals.USS_TEXT_FILE_CONTEXT + globals.FAV_SUFFIX;
         }
