@@ -59,7 +59,7 @@ pub async fn setup_node_with_pkg_mgr(pkg_mgr: &String) -> anyhow::Result<()> {
 }
 
 pub async fn setup_pkg_mgr(ze_dir: PathBuf) -> anyhow::Result<String> {
-    let pkg_mgr = crate::pm::detect_pkg_mgr(ze_dir)?;
+    let pkg_mgr = crate::pm::detect_pkg_mgr(&ze_dir)?;
 
     // check if the package manager actually exists
     match crate::pm::pkg_mgr(&pkg_mgr)

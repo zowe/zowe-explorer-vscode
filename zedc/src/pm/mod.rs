@@ -1,15 +1,16 @@
 use std::{
-    path::{Path, PathBuf},
+    path::PathBuf,
     process::Command,
 };
 
-use anyhow::bail;
+mod cmd;
+pub use cmd::handle_cmd;
 
 pub fn npm() -> Command {
     pkg_mgr("npm")
 }
 
-pub fn detect_pkg_mgr(ze_dir: PathBuf) -> anyhow::Result<String> {
+pub fn detect_pkg_mgr(ze_dir: &PathBuf) -> anyhow::Result<String> {
     if ze_dir.join("pnpm-lock.yaml").exists() {
         return Ok("pnpm".to_owned());
     }

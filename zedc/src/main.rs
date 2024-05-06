@@ -27,7 +27,7 @@ async fn main() -> anyhow::Result<()> {
         RootCommands::Version => {
             println!("zedc {}", env!("CARGO_PKG_VERSION"));
         }
-        RootCommands::PkgMgr {} => todo!(),
+        RootCommands::PkgMgr { args } => pm::handle_cmd(args)?,
     }
 
     Ok(())

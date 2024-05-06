@@ -7,7 +7,10 @@ pub enum RootCommands {
         about = "Forward commands to the applicable package manager",
         visible_alias = "pm"
     )]
-    PkgMgr {},
+    PkgMgr {
+        #[arg(last = true)]
+        args: Vec<String>
+    },
     #[command(
         name = "setup",
         about = "Setup required dependencies to facilitate Zowe Explorer development",
