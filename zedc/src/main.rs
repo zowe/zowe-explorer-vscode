@@ -1,5 +1,6 @@
 use clap::Parser;
 use cmd::{Args, RootCommands};
+use owo_colors::OwoColorize;
 
 mod cmd;
 mod code;
@@ -22,7 +23,10 @@ async fn main() -> anyhow::Result<()> {
             vsc_version,
             install_cli,
         } => {
-            test::handle_cmd(install_cli, vsc_version, subcommand).await?;
+            match test::handle_cmd(install_cli, vsc_version, subcommand).await {
+                Err(e) => println!("{}", e.red()),
+                _ => ()
+            }
         }
         RootCommands::Version => {
             println!("zedc {}", env!("CARGO_PKG_VERSION"));

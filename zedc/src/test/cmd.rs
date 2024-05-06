@@ -1,8 +1,9 @@
-use crate::test::local;
+use crate::test::{ghr, local};
 
 use anyhow::bail;
 use clap::{command, Subcommand};
 use owo_colors::OwoColorize;
+use reqwest::header::ACCEPT;
 #[derive(Subcommand)]
 pub enum Commands {
     #[command(
@@ -12,17 +13,16 @@ pub enum Commands {
     )]
     GhRepo {
         #[arg(
-            help = "The Git ref to grab the artifacts from (branch, commit hash, or tag)",
-            long,
-            short
-        )]
-        reference: String,
-        #[arg(
             help = "Exclude artifacts matching the given list of names",
             long,
             short
         )]
         exclude: Vec<String>,
+        #[arg(
+            help = "The Git refs to grab the artifacts from (branch, commit hash, or tag)",
+            last = true
+        )]
+        references: Vec<String>,
     },
     #[command(
         name = "local",
@@ -37,14 +37,27 @@ pub async fn handle_cmd(
     vsc_version: Option<String>,
     cmd: Commands,
 ) -> anyhow::Result<()> {
-    println!("{}", "zedc test".bold());
+    println!("{}\n", "zedc test".bold());
     match cmd {
         Commands::GhRepo {
-            reference: _,
-            exclude: _,
+            references,
+            exclude,
         } => {
+            let pat = match std::env::var("ZEDC_PAT") {
+                Ok(p) => p,
+                Err(e) => {
+                    bail!("ZEDC_PAT must be defined with a personal access token to continue.");
+                }
+            };
             // todo: Use Octocrab to grab appropriate artifacts from branch/PR/commit hash
             // then set up VS Code and continue
+            let crab = octocrab::Octocrab::builder()
+                .base_uri("https://github.com")?
+                .add_header(ACCEPT, "application/json".to_string())
+                .personal_token(pat)
+                .build()?;
+
+            ghr::setup(references, vsc_version, &crab).await?;
         }
         Commands::Local { files } => {
             match local::setup(vsc_version, files).await {
