@@ -50,12 +50,15 @@ pub async fn handle_cmd(reference: Option<String>) -> anyhow::Result<()> {
         None => (),
     }
 
-    if ze_dir.join("node_modules").exists() {
+    let node_modules_dir = ze_dir.join("node_modules");
+    if node_modules_dir.exists() {
         println!("🧹 Cleaning node_modules...");
-        match tokio::fs::remove_dir_all("./node_modules").await {
+        match tokio::fs::remove_dir_all(node_modules_dir).await {
             _ => {}
         };
-        match tokio::fs::remove_dir_all("./packages/*/node_modules").await {
+        match tokio::fs::remove_dir_all(ze_dir.join("packages").join("*").join("node_modules"))
+            .await
+        {
             _ => {}
         };
     }
