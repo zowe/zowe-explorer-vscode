@@ -1,13 +1,14 @@
-use std::{
-    path::PathBuf,
-    process::Command,
-};
+use std::{path::PathBuf, process::Command};
 
 mod cmd;
 pub use cmd::handle_cmd;
 
 pub fn npm() -> Command {
     pkg_mgr("npm")
+}
+
+pub fn corepack() -> Command {
+    pkg_mgr("corepack")
 }
 
 pub fn detect_pkg_mgr(ze_dir: &PathBuf) -> anyhow::Result<String> {

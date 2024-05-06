@@ -1,18 +1,19 @@
 mod cmd;
 
 use anyhow::bail;
+use homedir::get_my_home;
 use owo_colors::OwoColorize;
 use std::{
+    io::Write,
     path::PathBuf,
     process::{Command, Stdio},
 };
-use tokio::io::{stdin, stdout, AsyncReadExt, AsyncWriteExt};
-use tokio_util::codec::{FramedRead, LinesCodec};
+use tokio::{fs::OpenOptions, io::AsyncWriteExt};
 
 pub use cmd::handle_cmd;
 
 pub fn activate_pkg_mgr(pkg_mgr: &String) {
-    match Command::new("corepack").arg("enable").arg(pkg_mgr).output() {
+    match crate::pm::corepack().arg("enable").arg(pkg_mgr).output() {
         Ok(_) => {
             println!("✔️  {} setup complete", pkg_mgr);
         }
@@ -22,23 +23,36 @@ pub fn activate_pkg_mgr(pkg_mgr: &String) {
     }
 }
 
-pub fn install_node() {
+pub async fn install_node() -> anyhow::Result<()> {
     match std::env::consts::OS {
-        "windows" => {
-            match Command::new("winget")
-                .arg("install")
-                .arg("Schniz.fnm")
-                .output()
+        _ => {
+            match Command::new("cargo")
+                .args(["install", "fnm"])
+                .stdout(Stdio::null())
+                .status()
             {
-                Ok(_) => {}
-                Err(_) => {}
+                Ok(_) => {
+                    println!("✔️  Installed fnm");
+                    //match std::env::consts::OS {
+                    //"windows" => {}
+                    //_ => {
+                    let mut bashrc = OpenOptions::new()
+                        .create(true)
+                        .append(true)
+                        .write(true)
+                        .open(get_my_home().unwrap().unwrap_or("~".into()).join(".bashrc"))
+                        .await?;
+                    bashrc.write_all(b"eval \"$(fnm env --use-on-cd)\"").await?;
+                    //}
+                    //}
+                    let install = Command::new("fnm").arg("install").arg("18").status();
+                }
+                Err(_) => todo!(),
             }
         }
-        _ => match Command::new("curl -fsSL https://fnm.vercel.app/install | bash").output() {
-            Ok(_) => {}
-            Err(_) => {}
-        },
     }
+
+    Ok(())
 }
 
 pub async fn setup_node_with_pkg_mgr(pkg_mgr: &String) -> anyhow::Result<()> {
@@ -52,7 +66,11 @@ pub async fn setup_node_with_pkg_mgr(pkg_mgr: &String) -> anyhow::Result<()> {
             println!("✔️  Found node {}", ver);
             activate_pkg_mgr(&pkg_mgr);
         }
-        Err(_) => {}
+        Err(_) => {
+            println!("\t❌ No Node.js installation found - installing...");
+            install_node().await?;
+            activate_pkg_mgr(&pkg_mgr);
+        }
     }
 
     Ok(())
@@ -72,14 +90,22 @@ pub async fn setup_pkg_mgr(ze_dir: PathBuf) -> anyhow::Result<String> {
             println!("✔️  Using {} {}", pkg_mgr, ver);
         }
         Err(_) => {
-            println!(
-                "❌ {} was not found. Would you like to install it? (y/N)",
+            print!(
+                "❌ {} was not found. Would you like to install it? (y/N) ",
                 pkg_mgr.bold()
             );
-
-            let mut stdin = stdin();
+            let _ = std::io::stdout().flush()?;
             let mut line = String::new();
-            stdin.read_to_string(&mut line).await?;
+            std::io::stdin()
+                .read_line(&mut line)
+                .expect("Unable to read user input");
+            if let Some('\n') = line.chars().next_back() {
+                line.pop();
+            }
+            if let Some('\r') = line.chars().next_back() {
+                line.pop();
+            }
+            line = line.trim().to_owned();
 
             match line.as_str() {
                 "y" | "Y" | "yes" => {
