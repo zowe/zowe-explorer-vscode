@@ -20,7 +20,7 @@ pub enum Commands {
         exclude: Vec<String>,
         #[arg(
             help = "The Git refs to grab the artifacts from (branch, commit hash, or tag)",
-            last = true
+            trailing_var_arg = true
         )]
         references: Vec<String>,
     },
@@ -72,7 +72,7 @@ pub async fn handle_cmd(
     if install_cli.is_some() {
         let ver = install_cli.unwrap();
         println!("💿 Installing Zowe CLI (version: {})...", ver);
-        local::install_cli(ver)?;
+        super::install_cli(ver)?;
     }
 
     Ok(())
