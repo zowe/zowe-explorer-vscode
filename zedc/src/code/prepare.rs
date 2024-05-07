@@ -55,7 +55,7 @@ pub async fn download_vscode(version: Option<String>) -> anyhow::Result<String> 
         }
     }
 
-    tokio::fs::create_dir(&zedc_path).await?;
+    let _ = tokio::fs::create_dir(&zedc_path).await;
     if !zedc_path.exists() {
         bail!("Failed to create the data dir for zedc.".red());
     }

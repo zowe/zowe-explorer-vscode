@@ -33,14 +33,14 @@ async fn fetch_artifacts(refs: Vec<String>, gh: &Octocrab) -> anyhow::Result<Vec
     tokio::fs::create_dir_all(&vsix_dir).await?;
 
     for r in refs {
-        print!("\t{}:", r);
+        print!("\t{}: ", r);
         let workflow_id = match workflow_runs
             .iter()
             .position(|wr| wr.head_branch == r || wr.head_sha == r)
         {
             Some(run) => run,
             None => {
-                println!("⏩  Skipping {} - no artifacts found for ref", r);
+                println!("no artifacts found");
                 continue;
             }
         };
@@ -54,10 +54,13 @@ async fn fetch_artifacts(refs: Vec<String>, gh: &Octocrab) -> anyhow::Result<Vec
             .value
             .unwrap()
             .items;
-        let artifact_list = artifact_list.into_iter().filter(|a| a.name == "zowe-explorer-vsix").collect::<Vec<_>>();
+        let artifact_list = artifact_list
+            .into_iter()
+            .filter(|a| a.name == "zowe-explorer-vsix")
+            .collect::<Vec<_>>();
 
         if artifact_list.is_empty() {
-            println!("⏩  skipping - no artifacts found for ref");
+            println!("no artifacts found");
             continue;
         }
 

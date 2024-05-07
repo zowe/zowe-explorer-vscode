@@ -32,11 +32,11 @@ pub fn install_cli(version: String) -> anyhow::Result<()> {
 
 pub async fn install_from_paths(vsc_bin: String, files: Vec<String>) -> anyhow::Result<()> {
     if files.is_empty() {
-        println!(
-            "\n{}\nSupported formats:\n.vsix, .tar.gz, .tgz",
-            "No valid files provided.".red()
-        );
-        bail!("At least one .vsix, .tar.gz, or .tgz file is required for this command.");
+        bail!(format!(
+            "{}\n{}\n.vsix, .tar.gz, .tgz",
+            "No valid files provided.".red(),
+            "Supported formats:".italic()
+        ));
     }
 
     let vsc_bin_path = Path::new(&vsc_bin);
