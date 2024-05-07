@@ -45,7 +45,9 @@ pub async fn install_node() -> anyhow::Result<()> {
                     bashrc.write_all(b"eval \"$(fnm env --use-on-cd)\"").await?;
                     //}
                     //}
-                    let install = Command::new("fnm").arg("install").arg("18").status();
+                    if let Err(e) = Command::new("fnm").arg("install").arg("18").status() {
+                        bail!("'fnm install 18' failed");
+                    }
                 }
                 Err(_) => todo!(),
             }

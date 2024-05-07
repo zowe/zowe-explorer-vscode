@@ -1,4 +1,4 @@
-use std::{path::Path, process::Command};
+use std::process::Command;
 
 use super::setup_pkg_mgr;
 use anyhow::bail;
@@ -21,9 +21,8 @@ pub async fn handle_cmd(reference: Option<String>) -> anyhow::Result<()> {
                 .status()
             {
                 Ok(s) => {
-                    if s.code().unwrap() == 1 {
-                        println!("{}", "There are changes in your working tree. Please commit or discard them before continuing.".red());
-                        return Ok(());
+                    if s.code().unwrap() != 0 {
+                        bail!("There are changes in your working tree. Please commit or discard them before continuing.");
                     }
                 }
                 Err(_) => todo!(),

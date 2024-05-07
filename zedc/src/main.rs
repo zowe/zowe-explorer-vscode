@@ -23,15 +23,20 @@ async fn main() -> anyhow::Result<()> {
     let matches = Args::parse();
     match matches.command {
         RootCommands::Setup { reference } => {
-            setup::handle_cmd(reference).await?;
+            if let Err(e) = setup::handle_cmd(reference).await {
+                println!("{}", format!("Error: {}", e).red());
+                return Err(e);   
+            }
         }
         RootCommands::Test {
             subcommand,
             vsc_version,
             install_cli,
-        } => match test::handle_cmd(install_cli, vsc_version, subcommand).await {
-            Err(e) => println!("{}", e.red()),
-            _ => (),
+        } => {
+            if let Err(e) = test::handle_cmd(install_cli, vsc_version, subcommand).await {
+                println!("{}", format!("Error: {}", e).red());
+                return Err(e);
+            }
         },
         RootCommands::Version => {
             println!("zedc {}", env!("CARGO_PKG_VERSION"));

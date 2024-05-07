@@ -58,9 +58,8 @@ pub async fn download_vscode(version: Option<String>) -> anyhow::Result<String> 
         Err(_) => {}
     };
 
-    match tokio::fs::create_dir(&zedc_path).await {
-        Ok(_) => {}
-        Err(e) => {}
+    if let Err(e) = tokio::fs::create_dir(&zedc_path).await {
+        bail!(e);
     }
     let url = build_url(&ver)?;
     let client = Client::new();
@@ -101,7 +100,7 @@ pub async fn download_vscode(version: Option<String>) -> anyhow::Result<String> 
 
     while let Some(chunk) = resp.chunk().await? {
         progress_bar.inc(chunk.len() as u64);
-        outfile.write(&chunk).await?;
+        outfile.write_all(&chunk).await?;
     }
 
     progress_bar.finish();

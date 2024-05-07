@@ -80,7 +80,7 @@ pub async fn install_from_paths(vsc_bin: String, files: Vec<String>) -> anyhow::
 }
 
 pub fn resolve_paths(files: Vec<String>) -> Vec<String> {
-    println!("\n{} {}", "🔍", "Resolving files...");
+    println!("\n🔍 Resolving files...");
     files
         .iter()
         .filter_map(|f| match std::fs::canonicalize(f) {
