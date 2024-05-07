@@ -108,5 +108,12 @@
   "jest-junit": {
     "outputDirectory": "<rootDir>/results/unit",
     "outputName": "junit.xml"
+  },
+  "madge": {
+    "detectiveOptions": {
+      "ts": {
+        "skipTypeImports": true
+      }
+    }
   }
 }

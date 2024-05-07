@@ -9,8 +9,8 @@
  *
  */
 
-import { Types } from "../..";
-import { DirEntry, EntryMetadata, FileEntry } from "../types";
+import type { Types } from "../..";
+import { DirEntry, EntryMetadata, FileEntry } from "./abstract";
 import { IProfileLoaded } from "@zowe/imperative";
 
 interface DsEntryProps {

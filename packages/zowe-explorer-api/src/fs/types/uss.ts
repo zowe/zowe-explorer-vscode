@@ -10,8 +10,8 @@
  */
 
 import * as vscode from "vscode";
-import { ConflictData, DirEntry, EntryMetadata, FileEntry } from ".";
-import { Types } from "../..";
+import { ConflictData, DirEntry, EntryMetadata, FileEntry } from "./abstract";
+import type { Types } from "../..";
 
 export interface UssEntryProps {
     attributes?: Types.FileAttributes;

@@ -17,7 +17,7 @@ import * as zosjobs from "@zowe/zos-jobs-for-zowe-sdk";
 import * as zostso from "@zowe/zos-tso-for-zowe-sdk";
 import * as zosuss from "@zowe/zos-uss-for-zowe-sdk";
 import * as zosmf from "@zowe/zosmf-for-zowe-sdk";
-import { MainframeInteraction } from "../extend";
+import { MainframeInteraction } from "../extend/MainframeInteraction";
 import { FileManagement } from "../utils";
 import { Types } from "../Types";
 

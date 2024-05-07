@@ -12,7 +12,7 @@
 import * as path from "path";
 import * as fs from "fs";
 import * as imperative from "@zowe/imperative";
-import * as extend from "../extend";
+import type { IRegisterClient } from "../extend/IRegisterClient";
 import { FileManagement } from "../utils";
 import { Validation } from "./Validation";
 import { ZeApiConvertResponse } from "../globals";
@@ -148,7 +148,7 @@ export class ProfilesCache {
         this.allExternalTypes.add(profileTypeName);
     }
 
-    public async refresh(apiRegister?: extend.IRegisterClient): Promise<void> {
+    public async refresh(apiRegister?: IRegisterClient): Promise<void> {
         this.allProfiles = [];
         this.allTypes = [];
         this.profilesByType.clear();
