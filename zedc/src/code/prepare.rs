@@ -25,7 +25,7 @@ fn build_url(version: &String) -> anyhow::Result<String> {
     ))
 }
 
-fn code_cli_binary(dir: &PathBuf) -> PathBuf {
+fn code_cli_binary(dir: &Path) -> PathBuf {
     match std::env::consts::OS {
         "windows" => dir.join("bin").join("code.cmd"),
         _ => dir.join("bin").join("code"),
@@ -45,22 +45,21 @@ pub async fn download_vscode(version: Option<String>) -> anyhow::Result<String> 
         .join("zedc_data");
 
     let vsc_path = zedc_path.join(format!("vscode-{}", ver));
-    match tokio::fs::try_exists(&vsc_path).await {
-        Ok(v) => {
-            if v && ver != "latest" {
-                println!(
-                    "  ⏭️  {}",
-                    format!("Found VS Code {} in cache, skipping download...", ver).italic()
-                );
-                return Ok(code_cli_binary(&vsc_path).to_str().unwrap().to_owned());
-            }
+    if let Ok(v) = tokio::fs::try_exists(&vsc_path).await {
+        if v && ver != "latest" {
+            println!(
+                "  ⏭️  {}",
+                format!("Found VS Code {} in cache, skipping download...", ver).italic()
+            );
+            return Ok(code_cli_binary(&vsc_path).to_str().unwrap().to_owned());
         }
-        Err(_) => {}
-    };
-
-    if let Err(e) = tokio::fs::create_dir(&zedc_path).await {
-        bail!(e);
     }
+
+    tokio::fs::create_dir(&zedc_path).await?;
+    if !zedc_path.exists() {
+        bail!("Failed to create the data dir for zedc.".red());
+    }
+
     let url = build_url(&ver)?;
     let client = Client::new();
 

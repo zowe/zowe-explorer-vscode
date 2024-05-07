@@ -11,55 +11,46 @@ pub async fn handle_cmd(reference: Option<String>) -> anyhow::Result<()> {
         bail!("Could not find a repo folder containing package.json.");
     }
     let ze_dir = ze_dir.unwrap();
-    match reference {
-        Some(r) => {
-            // Check if any changes are present before switching branches
-            match Command::new("git")
-                .arg("diff")
-                .arg("--quiet")
-                .current_dir(&ze_dir)
-                .status()
-            {
-                Ok(s) => {
-                    if s.code().unwrap() != 0 {
-                        bail!("There are changes in your working tree. Please commit or discard them before continuing.");
-                    }
+    if let Some(r) = reference {
+        // Check if any changes are present before switching branches
+        match Command::new("git")
+            .arg("diff")
+            .arg("--quiet")
+            .current_dir(&ze_dir)
+            .status()
+        {
+            Ok(s) => {
+                if s.code().unwrap() != 0 {
+                    bail!("There are changes in your working tree. Please commit or discard them before continuing.");
                 }
-                Err(_) => todo!(),
             }
-            match Command::new("git")
-                .arg("checkout")
-                .arg(&r)
-                .current_dir(&ze_dir)
-                .output()
-            {
-                Ok(o) => println!("🔀 Switched to Git ref '{}'", r),
-                Err(_) => {
-                    println!(
-                        "⚠️ {}",
-                        format!(
-                            "Could not checkout Git ref '{}', using current working tree",
-                            r
-                        )
-                        .italic()
-                    );
-                }
+            Err(_) => todo!(),
+        }
+        match Command::new("git")
+            .arg("checkout")
+            .arg(&r)
+            .current_dir(&ze_dir)
+            .output()
+        {
+            Ok(_o) => println!("🔀 Switched to Git ref '{}'", r),
+            Err(_) => {
+                println!(
+                    "⚠️ {}",
+                    format!(
+                        "Could not checkout Git ref '{}', using current working tree",
+                        r
+                    )
+                    .italic()
+                );
             }
         }
-        None => (),
     }
 
     let node_modules_dir = ze_dir.join("node_modules");
     if node_modules_dir.exists() {
         println!("🧹 Cleaning node_modules...");
-        match tokio::fs::remove_dir_all(node_modules_dir).await {
-            _ => {}
-        };
-        match tokio::fs::remove_dir_all(ze_dir.join("packages").join("*").join("node_modules"))
-            .await
-        {
-            _ => {}
-        };
+        let _ = tokio::fs::remove_dir_all(node_modules_dir).await;
+        let _ = tokio::fs::remove_dir_all(ze_dir.join("packages").join("*").join("node_modules")).await;
     }
 
     let setup_pkg_mgr = setup_pkg_mgr(ze_dir).await?;

@@ -1,4 +1,4 @@
-use std::{path::PathBuf, process::Command};
+use std::{path::Path, process::Command};
 
 mod cmd;
 pub use cmd::handle_cmd;
@@ -11,7 +11,7 @@ pub fn corepack() -> Command {
     pkg_mgr("corepack")
 }
 
-pub fn detect_pkg_mgr(ze_dir: &PathBuf) -> anyhow::Result<String> {
+pub fn detect_pkg_mgr(ze_dir: &Path) -> anyhow::Result<String> {
     if ze_dir.join("pnpm-lock.yaml").exists() {
         return Ok("pnpm".to_owned());
     }

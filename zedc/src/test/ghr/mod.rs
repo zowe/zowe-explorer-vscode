@@ -101,11 +101,11 @@ pub async fn setup(
     gh: &Octocrab,
 ) -> anyhow::Result<()> {
     if refs.is_empty() {
-        bail!("At least one reference is required to use this command.");
+        bail!("At least one reference is required to use this command.".red());
     }
 
     if std::env::var("ZEDC_PAT").is_err() {
-        bail!("A GitHub personal access token must be defined in the ZEDC_PAT environment variable to use this command.");
+        bail!("A GitHub personal access token must be defined in the ZEDC_PAT environment variable to use this command.".red());
     }
 
     let vsc_bin = crate::code::download_vscode(vsc_version).await?;

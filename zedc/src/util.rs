@@ -2,6 +2,15 @@ use std::path::PathBuf;
 
 use glob::glob;
 
+pub fn trim_newline(line: &mut String) {
+    if let Some('\n') = line.chars().next_back() {
+        line.pop();
+    }
+    if let Some('\r') = line.chars().next_back() {
+        line.pop();
+    }
+}
+
 pub fn find_dir_match(patterns: &[&str]) -> anyhow::Result<Option<PathBuf>> {
     let cur_dir = std::env::current_dir()?;
     let root = &cur_dir.ancestors().last().unwrap();
@@ -17,7 +26,7 @@ pub fn find_dir_match(patterns: &[&str]) -> anyhow::Result<Option<PathBuf>> {
                             return Ok(Some(path.parent().unwrap().to_path_buf()));
                         }
                     }
-                    Err(e) => continue,
+                    Err(_e) => continue,
                 }
             }
         }

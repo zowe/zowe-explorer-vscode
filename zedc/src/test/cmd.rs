@@ -11,12 +11,6 @@ pub enum Commands {
     )]
     GhRepo {
         #[arg(
-            help = "Exclude artifacts matching the given list of names",
-            long,
-            short
-        )]
-        exclude: Vec<String>,
-        #[arg(
             help = "The Git refs to grab the artifacts from (branch, commit hash, or tag)",
             trailing_var_arg = true
         )]
@@ -39,7 +33,6 @@ pub async fn handle_cmd(
     match cmd {
         Commands::GhRepo {
             references,
-            exclude,
         } => {
             // todo: Use Octocrab to grab appropriate artifacts from branch/PR/commit hash
             // then set up VS Code and continue

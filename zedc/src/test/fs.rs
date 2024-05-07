@@ -15,10 +15,7 @@ pub fn install_cli(version: String) -> anyhow::Result<()> {
     }
     std::fs::create_dir(nm_path)?;
     let _ = match crate::pm::npm()
-        .arg("install")
-        .arg("-g")
-        .arg("--no-save")
-        .arg("--prefix ./node_modules")
+        .args(["install", "-g", "--no-save", "--prefix", "./node_modules"])
         .arg(format!("@zowe/cli@{}", version))
         .status()
     {
@@ -36,9 +33,8 @@ pub fn install_cli(version: String) -> anyhow::Result<()> {
 pub async fn install_from_paths(vsc_bin: String, files: Vec<String>) -> anyhow::Result<()> {
     if files.is_empty() {
         println!(
-            "\n{}\n{}",
-            "No valid files provided.".red(),
-            "Supported formats:\n.vsix, .tar.gz, .tgz"
+            "\n{}\nSupported formats:\n.vsix, .tar.gz, .tgz",
+            "No valid files provided.".red()
         );
         bail!("At least one .vsix, .tar.gz, or .tgz file is required for this command.");
     }
@@ -51,11 +47,8 @@ pub async fn install_from_paths(vsc_bin: String, files: Vec<String>) -> anyhow::
         cmd.args(["--install-extension", file]);
     }
 
-    match cmd.stdout(Stdio::null()).spawn() {
-        Ok(s) => {}
-        Err(e) => {
-            todo!()
-        }
+    if let Err(e) = cmd.stdout(Stdio::null()).spawn() {
+        bail!(e);
     }
 
     let vsc_dir = vsc_bin_path.parent().unwrap().parent().unwrap();
@@ -64,16 +57,16 @@ pub async fn install_from_paths(vsc_bin: String, files: Vec<String>) -> anyhow::
     let zowe_dir = sandbox_dir.join(".zowe");
     tokio::fs::create_dir_all(&zowe_dir).await?;
     let vsc = vsc_dir.join(code_binary());
-    match Command::new(&vsc)
+    match Command::new(vsc)
         .arg("--disable-updates")
         .arg(sandbox_str)
         .env("ZOWE_CLI_HOME", zowe_dir.to_str().unwrap())
         .stdout(Stdio::null())
         .spawn()
     {
-        Ok(s) => {
+        Ok(_s) => {
             println!("🚀 Launched VS Code");
-            return Ok(());
+            Ok(())
         }
         Err(_) => todo!(),
     }
