@@ -50,6 +50,10 @@
     "webpack-cli": "^3.3.11",
     "yarn": "1.22.19"
   },
+  "resolutions": {
+    "glob-parent": "^5.1.2",
+    "xml2js": "^0.5.0"
+  },
   "scripts": {
     "clean": "yarn workspaces run clean",
     "fresh-clone": "yarn workspaces run fresh-clone && rimraf node_modules",
