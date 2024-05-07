@@ -1,9 +1,7 @@
 use crate::test::{ghr, local};
 
-use anyhow::bail;
 use clap::{command, Subcommand};
 use owo_colors::OwoColorize;
-use reqwest::header::ACCEPT;
 #[derive(Subcommand)]
 pub enum Commands {
     #[command(
@@ -43,20 +41,9 @@ pub async fn handle_cmd(
             references,
             exclude,
         } => {
-            let pat = match std::env::var("ZEDC_PAT") {
-                Ok(p) => p,
-                Err(e) => {
-                    bail!("ZEDC_PAT must be defined with a personal access token to continue.");
-                }
-            };
             // todo: Use Octocrab to grab appropriate artifacts from branch/PR/commit hash
             // then set up VS Code and continue
-            let crab = octocrab::Octocrab::builder()
-                .base_uri("https://github.com")?
-                .add_header(ACCEPT, "application/json".to_string())
-                .personal_token(pat)
-                .build()?;
-
+            let crab = octocrab::instance();
             ghr::setup(references, vsc_version, &crab).await?;
         }
         Commands::Local { files } => {

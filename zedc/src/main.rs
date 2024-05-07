@@ -11,7 +11,14 @@ mod util;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    octocrab::initialise(octocrab::Octocrab::default());
+    if std::env::var("ZEDC_PAT").is_ok() {
+        let pat = std::env::var("ZEDC_PAT").unwrap();
+        let crab = octocrab::Octocrab::builder()
+            .base_uri("https://api.github.com")?
+            .personal_token(pat)
+            .build()?;
+        octocrab::initialise(crab);
+    }
 
     let matches = Args::parse();
     match matches.command {
@@ -22,12 +29,10 @@ async fn main() -> anyhow::Result<()> {
             subcommand,
             vsc_version,
             install_cli,
-        } => {
-            match test::handle_cmd(install_cli, vsc_version, subcommand).await {
-                Err(e) => println!("{}", e.red()),
-                _ => ()
-            }
-        }
+        } => match test::handle_cmd(install_cli, vsc_version, subcommand).await {
+            Err(e) => println!("{}", e.red()),
+            _ => (),
+        },
         RootCommands::Version => {
             println!("zedc {}", env!("CARGO_PKG_VERSION"));
         }
