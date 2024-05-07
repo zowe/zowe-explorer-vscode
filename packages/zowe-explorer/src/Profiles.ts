@@ -423,7 +423,7 @@ export class Profiles extends ProfilesCache {
         return profileType;
     }
 
-    public async createZoweSchema(_zoweFileProvider: IZoweTree<IZoweTreeNode>): Promise<string> {
+    public async createZoweSchema(_zoweFileProvider: IZoweTree<IZoweTreeNode>): Promise<string | undefined> {
         ZoweLogger.trace("Profiles.createZoweSchema called.");
         try {
             let user = false;
