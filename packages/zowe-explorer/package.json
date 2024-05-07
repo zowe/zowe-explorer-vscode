@@ -1994,13 +1994,13 @@
         "zowe.settings.oldSettingsMigrated": {
           "default": false,
           "type": "boolean",
-          "description": "%zowe.settings.migrated%",
+          "description": "%zowe.settings.oldSettingsMigrated%",
           "scope": "window"
         },
         "zowe.settings.localStorageMigrated": {
           "default": false,
           "type": "boolean",
-          "description": "%zowe.settings.migrated%",
+          "description": "%zowe.settings.localStorageMigrated%",
           "scope": "window"
         },
         "zowe.security.checkForCustomCredentialManagers": {
