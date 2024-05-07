@@ -102,7 +102,6 @@ export class ZosConsoleViewProvider implements vscode.WebviewViewProvider {
                     const vscode = acquireVsCodeApi();
                     window.onload = function() {
                         vscode.postMessage({ command: 'startup' });
-                        console.log('HTML started up.');
                     };
                 </script>
                 <script type="module" nonce="${nonce}" src="${scriptUri.toString()}"></script>
