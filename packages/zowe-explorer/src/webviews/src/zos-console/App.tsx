@@ -14,8 +14,6 @@ export function App() {
           consoleResponse!.control.scrollTop = consoleResponse!.control.scrollHeight;
           break;
         case "optionsList":
-          console.log(message.profiles);
-          console.log(message.defaultProfile);
           const profileList = document.getElementById("systems") as Option;
           for (const profile in message.profiles) {
             const option = document.createElement("vscode-option");
