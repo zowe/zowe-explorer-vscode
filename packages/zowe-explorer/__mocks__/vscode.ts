@@ -690,7 +690,7 @@ export class Uri {
     public fsPath: string;
     public path: string;
     public toString(): string {
-        return this.path;
+        return this.fsPath;
     }
 }
 
