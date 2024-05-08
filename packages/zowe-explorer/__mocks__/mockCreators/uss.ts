@@ -60,7 +60,6 @@ export function createUSSNode(session, profile) {
         label: "testDir",
         collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
         parentNode,
-        session,
         profile,
     });
     parentNode.contextValue = globals.USS_SESSION_CONTEXT;

@@ -1015,3 +1015,24 @@ describe("USS Action Unit Tests - function editAttributes", () => {
         expect(view).toBeInstanceOf(AttributeView);
     });
 });
+
+describe("USS Action Unit Tests - function copyRelativePath", () => {
+    it("copies the correct path for a USS file", async () => {
+        const dir = createUSSNode(createISession(), createIProfile());
+        const textFile = new ZoweUSSNode({
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            label: "file.txt",
+            parentNode: dir,
+            parentPath: dir.fullPath,
+        });
+        textFile.fullPath = path.posix.join(dir.fullPath, "file.txt");
+        await ussNodeActions.copyRelativePath(textFile);
+        expect(mocked(vscode.env.clipboard.writeText)).toHaveBeenCalledWith("testDir/file.txt");
+    });
+
+    it("copies the correct path for a USS directory", async () => {
+        const testNode = createUSSNode(createISession(), createIProfile());
+        await ussNodeActions.copyRelativePath(testNode);
+        expect(mocked(vscode.env.clipboard.writeText)).toHaveBeenCalledWith("testDir");
+    });
+});

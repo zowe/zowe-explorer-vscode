@@ -503,7 +503,7 @@ export async function pasteUss(ussFileProvider: IZoweTree<IZoweUSSTreeNode>, nod
     ussFileProvider.refreshElement(node);
 }
 
-export function copyRelativePath(node: IZoweUSSTreeNode): void {
+export async function copyRelativePath(node: IZoweUSSTreeNode): Promise<void> {
     const sesNode = node.getSessionNode();
     if (!node.fullPath) {
         ZoweLogger.warn(
@@ -517,8 +517,8 @@ export function copyRelativePath(node: IZoweUSSTreeNode): void {
         if (relPath.startsWith("/")) {
             relPath = relPath.slice(1);
         }
-        vscode.env.clipboard.writeText(relPath);    
+        await vscode.env.clipboard.writeText(relPath);
     } else {
-        vscode.env.clipboard.writeText(node.fullPath);
+        await vscode.env.clipboard.writeText(node.fullPath);
     }
 }

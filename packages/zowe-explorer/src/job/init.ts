@@ -189,7 +189,7 @@ export async function initJobsProvider(context: vscode.ExtensionContext): Promis
     context.subscriptions.push(
         vscode.commands.registerCommand(
             "zowe.jobs.copyName",
-            (job: IZoweJobTreeNode): void => jobActions.copyName(job)
+            async (job: IZoweJobTreeNode): Promise<void> => jobActions.copyName(job)
         )
     );
     context.subscriptions.push(vscode.workspace.onDidCloseTextDocument(ZosJobsProvider.onDidCloseTextDocument));

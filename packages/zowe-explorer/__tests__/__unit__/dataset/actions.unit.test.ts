@@ -3565,3 +3565,56 @@ describe("Dataset Actions Unit Tests - Function getDsTypePropertiesFromWorkspace
         expect(dsActions.getDsTypePropertiesFromWorkspaceConfig(options).lrecl).toBe(80);
     });
 });
+
+describe("Dataset Actions Unit Tests - function copyName", () => {
+    const datasetSessionNode = createDatasetSessionNode(createISession(), createIProfile());
+    it("copies the correct path for a PDS", async () => {
+        const pds = new ZoweDatasetNode({
+            label: "A.PDS",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            contextOverride: globals.DS_PDS_CONTEXT,
+            parentNode: datasetSessionNode,
+        });
+        await dsActions.copyName(pds);
+        expect(mocked(vscode.env.clipboard.writeText)).toHaveBeenCalledWith("A.PDS");
+    });
+
+    it("copies the correct path for a PDS member", async () => {
+        const pds = new ZoweDatasetNode({
+            label: "A.PDS",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            contextOverride: globals.DS_PDS_CONTEXT,
+            parentNode: datasetSessionNode,
+        });
+        const pdsMember = new ZoweDatasetNode({
+            label: "MEM1",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            contextOverride: globals.DS_MEMBER_CONTEXT,
+            parentNode: pds,
+        });
+        await dsActions.copyName(pdsMember);
+        expect(mocked(vscode.env.clipboard.writeText)).toHaveBeenCalledWith("A.PDS(MEM1)");
+    });
+    
+    it("copies the correct path for a DS", async () => {
+        const ds = new ZoweDatasetNode({
+            label: "A.DS",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            contextOverride: globals.DS_DS_CONTEXT,
+            parentNode: datasetSessionNode,
+        });
+        await dsActions.copyName(ds);
+        expect(mocked(vscode.env.clipboard.writeText)).toHaveBeenCalledWith("A.DS");
+    });
+    
+    it("copies the correct path for a migrated DS", async () => {
+        const ds = new ZoweDatasetNode({
+            label: "A.DS.MIGRAT",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            contextOverride: globals.DS_MIGRATED_FILE_CONTEXT,
+            parentNode: datasetSessionNode,
+        });
+        await dsActions.copyName(ds);
+        expect(mocked(vscode.env.clipboard.writeText)).toHaveBeenCalledWith("A.DS.MIGRAT");
+    });
+});
